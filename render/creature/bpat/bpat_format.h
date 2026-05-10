@@ -6,19 +6,19 @@
 
 namespace Render::Creature::Bpat {
 
-inline constexpr std::array<std::uint8_t, 4> kMagic{'B', 'P', 'A', 'T'};
-inline constexpr std::uint32_t kVersion = 1U;
+inline constexpr std::array<std::uint8_t, 4> k_magic{'B', 'P', 'A', 'T'};
+inline constexpr std::uint32_t k_version = 1U;
 
-inline constexpr std::uint32_t kSpeciesHumanoid = 0U;
-inline constexpr std::uint32_t kSpeciesHorse = 1U;
-inline constexpr std::uint32_t kSpeciesElephant = 2U;
-inline constexpr std::uint32_t kSpeciesHumanoidSword = 3U;
-inline constexpr std::uint32_t kSpeciesCount = 4U;
-inline constexpr std::uint32_t kMaxSpeciesId = kSpeciesHumanoidSword;
+inline constexpr std::uint32_t k_species_humanoid = 0U;
+inline constexpr std::uint32_t k_species_horse = 1U;
+inline constexpr std::uint32_t k_species_elephant = 2U;
+inline constexpr std::uint32_t k_species_humanoid_sword = 3U;
+inline constexpr std::uint32_t k_species_count = 4U;
+inline constexpr std::uint32_t k_max_species_id = k_species_humanoid_sword;
 
-inline constexpr std::size_t kMatrixFloats = 16U;
-inline constexpr std::size_t kSocketMatrixFloats = 12U;
-inline constexpr std::size_t kSectionAlignment = 16U;
+inline constexpr std::size_t k_matrix_floats = 16U;
+inline constexpr std::size_t k_socket_matrix_floats = 12U;
+inline constexpr std::size_t k_section_alignment = 16U;
 
 struct BpatHeader {
   std::uint8_t magic[4];

@@ -25,16 +25,16 @@ struct MountedKnightRendererConfig {
   bool has_shoulder = false;
   float helmet_offset_moving = 0.0F;
   Render::Creature::Pipeline::CreatureAssetId rider_creature_asset_id{
-      Render::Creature::Pipeline::kInvalidCreatureAsset};
+      Render::Creature::Pipeline::k_invalid_creature_asset};
 
   Render::Creature::ArchetypeId rider_archetype_id{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
   Render::Creature::ArchetypeId mount_archetype_id{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
-  EquipmentHandle sword_handle{kInvalidEquipmentHandle};
-  EquipmentHandle shield_handle{kInvalidEquipmentHandle};
+  EquipmentHandle sword_handle{k_invalid_equipment_handle};
+  EquipmentHandle shield_handle{k_invalid_equipment_handle};
 };
 
 class MountedKnightRendererBase : public MountedHumanoidRendererBase {
@@ -65,8 +65,8 @@ protected:
 
 private:
   MountedKnightRendererConfig m_config;
-  EquipmentHandle m_sword_handle{kInvalidEquipmentHandle};
-  EquipmentHandle m_shield_handle{kInvalidEquipmentHandle};
+  EquipmentHandle m_sword_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_shield_handle{k_invalid_equipment_handle};
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
   void build_visual_spec();
 };

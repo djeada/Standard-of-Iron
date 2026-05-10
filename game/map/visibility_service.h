@@ -53,9 +53,9 @@ public:
 
   auto is_initialized() const -> bool { return m_initialized; }
 
-  auto getWidth() const -> int { return m_width; }
-  auto getHeight() const -> int { return m_height; }
-  auto getTileSize() const -> float { return m_tile_size; }
+  auto get_width() const -> int { return m_width; }
+  auto get_height() const -> int { return m_height; }
+  auto get_tile_size() const -> float { return m_tile_size; }
 
   auto state_at(int grid_x, int grid_z) const -> VisibilityState;
   auto is_visible_world(float world_x, float world_z) const -> bool;
@@ -118,25 +118,25 @@ private:
   float m_half_width = 0.0F;
   float m_half_height = 0.0F;
 
-  mutable std::shared_mutex m_cellsMutex;
+  mutable std::shared_mutex m_cells_mutex;
   std::vector<std::uint8_t> m_cells;
   std::atomic<std::uint64_t> m_version{0};
   mutable std::atomic<std::uint64_t> m_generation{0};
-  std::chrono::steady_clock::time_point m_lastJobStartTime{};
+  std::chrono::steady_clock::time_point m_last_job_start_time{};
 
-  std::mutex m_queueMutex;
-  std::condition_variable m_queueCv;
-  std::optional<JobPayload> m_pendingPayload;
-  std::optional<JobResult> m_completedResult;
-  std::thread m_workerThread;
-  std::atomic<bool> m_workerRunning{false};
-  std::atomic<bool> m_shutdownRequested{false};
+  std::mutex m_queue_mutex;
+  std::condition_variable m_queue_cv;
+  std::optional<JobPayload> m_pending_payload;
+  std::optional<JobResult> m_completed_result;
+  std::thread m_worker_thread;
+  std::atomic<bool> m_worker_running{false};
+  std::atomic<bool> m_shutdown_requested{false};
 
   struct CachedPosition {
     int grid_x;
     int grid_z;
   };
-  std::unordered_map<std::uint32_t, CachedPosition> m_lastPositions;
+  std::unordered_map<std::uint32_t, CachedPosition> m_last_positions;
   bool m_force_full_update{true};
 };
 

@@ -94,9 +94,9 @@ using MeshNodeData =
 
 struct MeshNode {
   std::string_view debug_name{};
-  BoneIndex anchor_bone{kInvalidBone};
+  BoneIndex anchor_bone{k_invalid_bone};
   std::uint8_t color_role{0U};
-  std::uint8_t lod_mask{kLodAll};
+  std::uint8_t lod_mask{k_lod_all};
   int material_id{0};
   MeshNodeData data{};
 };

@@ -70,10 +70,10 @@ auto CreatureAssetRegistry::instance() noexcept
 }
 
 CreatureAssetRegistry::CreatureAssetRegistry() {
-  m_humanoid.id = kHumanoidAsset;
+  m_humanoid.id = k_humanoid_asset;
   m_humanoid.debug_name = "humanoid.v1";
   m_humanoid.kind = CreatureKind::Humanoid;
-  m_humanoid.bpat_species_id = Render::Creature::Bpat::kSpeciesHumanoid;
+  m_humanoid.bpat_species_id = Render::Creature::Bpat::k_species_humanoid;
   m_humanoid.spec = &Render::Humanoid::humanoid_creature_spec();
   m_humanoid.topology = &m_humanoid.spec->topology;
   m_humanoid.role_count =
@@ -83,10 +83,10 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid.bind_palette = &humanoid_bind;
   m_humanoid.fill_role_colors = &humanoid_fill_roles;
 
-  m_horse.id = kHorseAsset;
+  m_horse.id = k_horse_asset;
   m_horse.debug_name = "horse.v1";
   m_horse.kind = CreatureKind::Horse;
-  m_horse.bpat_species_id = Render::Creature::Bpat::kSpeciesHorse;
+  m_horse.bpat_species_id = Render::Creature::Bpat::k_species_horse;
   m_horse.spec = &Render::Horse::horse_creature_spec();
   m_horse.topology = &m_horse.spec->topology;
   m_horse.role_count = 8;
@@ -94,15 +94,15 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
       static_cast<std::uint8_t>(Render::Horse::k_horse_bone_count);
   m_horse.bind_palette = &horse_bind;
   m_horse.fill_role_colors = &horse_fill_roles;
-  m_horse.snapshot_mesh_species_id = Render::Creature::Bpat::kSpeciesHorse;
+  m_horse.snapshot_mesh_species_id = Render::Creature::Bpat::k_species_horse;
   m_horse.snapshot_mesh_lod_mask = static_cast<std::uint8_t>(
       1U << static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal));
   m_horse.visual_definition = &horse_creature_visual_definition();
 
-  m_elephant.id = kElephantAsset;
+  m_elephant.id = k_elephant_asset;
   m_elephant.debug_name = "elephant.v1";
   m_elephant.kind = CreatureKind::Elephant;
-  m_elephant.bpat_species_id = Render::Creature::Bpat::kSpeciesElephant;
+  m_elephant.bpat_species_id = Render::Creature::Bpat::k_species_elephant;
   m_elephant.spec = &Render::Elephant::elephant_creature_spec();
   m_elephant.topology = &m_elephant.spec->topology;
   m_elephant.role_count =
@@ -112,16 +112,16 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_elephant.bind_palette = &elephant_bind;
   m_elephant.fill_role_colors = &elephant_fill_roles;
   m_elephant.snapshot_mesh_species_id =
-      Render::Creature::Bpat::kSpeciesElephant;
+      Render::Creature::Bpat::k_species_elephant;
   m_elephant.snapshot_mesh_lod_mask = static_cast<std::uint8_t>(
       1U << static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal));
   m_elephant.visual_definition = &elephant_creature_visual_definition();
 
-  m_humanoid_sword.id = kHumanoidSwordAsset;
+  m_humanoid_sword.id = k_humanoid_sword_asset;
   m_humanoid_sword.debug_name = "humanoid.sword_ready.v1";
   m_humanoid_sword.kind = CreatureKind::Humanoid;
   m_humanoid_sword.bpat_species_id =
-      Render::Creature::Bpat::kSpeciesHumanoidSword;
+      Render::Creature::Bpat::k_species_humanoid_sword;
   m_humanoid_sword.spec = &Render::Humanoid::humanoid_creature_spec();
   m_humanoid_sword.topology = &m_humanoid_sword.spec->topology;
   m_humanoid_sword.role_count =
@@ -135,13 +135,13 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
 auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
     -> const CreatureAsset * {
   switch (id) {
-  case kHumanoidAsset:
+  case k_humanoid_asset:
     return &m_humanoid;
-  case kHorseAsset:
+  case k_horse_asset:
     return &m_horse;
-  case kElephantAsset:
+  case k_elephant_asset:
     return &m_elephant;
-  case kHumanoidSwordAsset:
+  case k_humanoid_sword_asset:
     return &m_humanoid_sword;
   default:
     return nullptr;
@@ -150,7 +150,7 @@ auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
 
 auto CreatureAssetRegistry::resolve(const UnitVisualSpec &spec) const noexcept
     -> const CreatureAsset * {
-  if (spec.creature_asset_id != kInvalidCreatureAsset) {
+  if (spec.creature_asset_id != k_invalid_creature_asset) {
     if (const auto *asset = get(spec.creature_asset_id)) {
       return asset;
     }
@@ -187,7 +187,7 @@ auto resolve_creature_render_asset_handle(
     return handle;
   }
 
-  handle.asset = asset_id != kInvalidCreatureAsset
+  handle.asset = asset_id != k_invalid_creature_asset
                      ? asset_registry.get(asset_id)
                      : asset_registry.for_species(handle.archetype->species);
   if (handle.asset == nullptr || handle.asset->bind_palette == nullptr) {
@@ -215,7 +215,7 @@ auto resolve_creature_render_asset_handle(
     desc.snapshot = archetype_registry.is_snapshot(archetype_id, state);
     desc.blob = blob;
     if (blob != nullptr &&
-        desc.clip_id != Render::Creature::ArchetypeDescriptor::kUnmappedClip &&
+        desc.clip_id != Render::Creature::ArchetypeDescriptor::k_unmapped_clip &&
         desc.clip_id < blob->clip_count()) {
       auto const clip = blob->clip(desc.clip_id);
       desc.frame_count = clip.frame_count;
@@ -244,7 +244,7 @@ auto CreatureRenderAssetHandleRegistry::get_or_create(
   CreatureRenderAssetHandle handle =
       resolve_creature_render_asset_handle(asset_id, archetype_id);
   if (!handle.valid()) {
-    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+    return Render::Creature::k_invalid_creature_render_asset_handle;
   }
   const bool has_playback =
       std::any_of(handle.playback.begin(), handle.playback.end(),
@@ -252,15 +252,15 @@ auto CreatureRenderAssetHandleRegistry::get_or_create(
                     return desc.blob != nullptr && desc.frame_count > 0U;
                   });
   if (!has_playback) {
-    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+    return Render::Creature::k_invalid_creature_render_asset_handle;
   }
   handle.attachment_set_id = acquire_attachment_set_id(
       handle.archetype->attachments_view(), handle.attachments_hash);
-  if (handle.attachment_set_id == kInvalidAttachmentSetId) {
-    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+  if (handle.attachment_set_id == k_invalid_attachment_set_id) {
+    return Render::Creature::k_invalid_creature_render_asset_handle;
   }
-  if (handles_.size() >= Render::Creature::kInvalidCreatureRenderAssetHandle) {
-    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+  if (handles_.size() >= Render::Creature::k_invalid_creature_render_asset_handle) {
+    return Render::Creature::k_invalid_creature_render_asset_handle;
   }
 
   const auto id = static_cast<Render::Creature::CreatureRenderAssetHandleId>(
@@ -274,7 +274,7 @@ auto CreatureRenderAssetHandleRegistry::get_or_create(
 auto CreatureRenderAssetHandleRegistry::get(
     Render::Creature::CreatureRenderAssetHandleId id) const
     -> const CreatureRenderAssetHandle * {
-  if (id == Render::Creature::kInvalidCreatureRenderAssetHandle) {
+  if (id == Render::Creature::k_invalid_creature_render_asset_handle) {
     return nullptr;
   }
 
@@ -317,12 +317,12 @@ auto CreatureRenderAssetHandleRegistry::acquire_attachment_set_id(
     }
   }
 
-  if (next_attachment_set_id_ == kInvalidAttachmentSetId) {
-    return kInvalidAttachmentSetId;
+  if (next_attachment_set_id_ == k_invalid_attachment_set_id) {
+    return k_invalid_attachment_set_id;
   }
   const auto id = next_attachment_set_id_;
   if (next_attachment_set_id_ == std::numeric_limits<AttachmentSetId>::max()) {
-    next_attachment_set_id_ = kInvalidAttachmentSetId;
+    next_attachment_set_id_ = k_invalid_attachment_set_id;
   } else {
     ++next_attachment_set_id_;
   }

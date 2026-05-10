@@ -15,8 +15,8 @@
 
 namespace Render::Creature::Snapshot {
 
-inline constexpr std::array<std::uint8_t, 4> kMagic{'B', 'P', 'S', 'M'};
-inline constexpr std::uint32_t kVersion = 1U;
+inline constexpr std::array<std::uint8_t, 4> k_magic{'B', 'P', 'S', 'M'};
+inline constexpr std::uint32_t k_version = 1U;
 
 struct SnapshotMeshHeader {
   std::uint8_t magic[4];

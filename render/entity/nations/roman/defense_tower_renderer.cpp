@@ -15,7 +15,7 @@ namespace {
 
 using Render::Geom::clamp_vec_01;
 
-constexpr std::uint8_t kTowerTeamSlot = 0;
+constexpr std::uint8_t k_tower_team_slot = 0;
 
 struct TowerPalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
@@ -122,7 +122,7 @@ auto tower_archetype() -> const RenderArchetype & {
     desc.add_cylinder(QVector3D(0.0F, 2.28F, 0.0F),
                       QVector3D(0.0F, 3.20F, 0.0F), 0.07F, c.cedar_dark);
     desc.add_palette_box(QVector3D(0.12F, 2.84F, 0.0F),
-                         QVector3D(0.24F, 0.16F, 0.025F), kTowerTeamSlot);
+                         QVector3D(0.24F, 0.16F, 0.025F), k_tower_team_slot);
     for (int i = 0; i < 2; ++i) {
       float const ring_y = 2.72F + static_cast<float>(i) * 0.32F;
       desc.add_cylinder(QVector3D(0.0F, ring_y, 0.0F),

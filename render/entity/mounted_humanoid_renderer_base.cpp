@@ -76,7 +76,7 @@ auto rider_root_transform(Render::Creature::ArchetypeId archetype_id,
     return std::nullopt;
   }
   auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::kSpeciesHumanoid);
+      Render::Creature::Bpat::k_species_humanoid);
   if (blob == nullptr || playback->clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -120,15 +120,15 @@ auto MountedHumanoidRendererBase::mounted_visual_spec() const
     m_mounted_visual_spec_cache.rider.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
     if (m_mounted_visual_spec_cache.rider.archetype_id ==
-        Render::Creature::kInvalidArchetype) {
+        Render::Creature::k_invalid_archetype) {
       m_mounted_visual_spec_cache.rider.archetype_id =
-          Render::Creature::ArchetypeRegistry::kRiderBase;
+          Render::Creature::ArchetypeRegistry::k_rider_base;
     }
     m_mounted_visual_spec_cache.mount = m_horseRenderer.visual_spec();
     m_mounted_visual_spec_cache.mount.kind =
         Render::Creature::Pipeline::CreatureKind::Horse;
     m_mounted_visual_spec_cache.mount.archetype_id = m_mount_archetype_id;
-    m_mounted_visual_spec_cache.mount_socket = Render::Creature::kInvalidSocket;
+    m_mounted_visual_spec_cache.mount_socket = Render::Creature::k_invalid_socket;
     m_mounted_visual_spec_baked = true;
   }
   return m_mounted_visual_spec_cache;

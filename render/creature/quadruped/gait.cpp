@@ -8,7 +8,7 @@ namespace Render::Creature::Quadruped {
 
 namespace {
 
-constexpr float kTwoPi = 2.0F * std::numbers::pi_v<float>;
+constexpr float k_two_pi = 2.0F * std::numbers::pi_v<float>;
 
 }
 
@@ -73,9 +73,9 @@ auto body_sway(bool is_moving, float phase, float time, float move_intensity,
   if (!is_moving) {
     return std::sin(time * config.idle_frequency) * config.idle_amplitude;
   }
-  float const primary = std::sin(phase * kTwoPi);
+  float const primary = std::sin(phase * k_two_pi);
   float const secondary =
-      std::sin((phase + config.moving_secondary_phase) * 2.0F * kTwoPi) *
+      std::sin((phase + config.moving_secondary_phase) * 2.0F * k_two_pi) *
       config.moving_secondary_weight;
   float const amplitude =
       config.base_amplitude +
@@ -96,9 +96,9 @@ auto evaluate_cycle_motion(const Dimensions &dims, const Gait &gait, float time,
   if (is_moving) {
     float const cycle_time = std::max(gait.cycle_time, 0.001F);
     sample.phase = wrap_phase(time / cycle_time + gait.phase_offset);
-    float const primary = std::sin(sample.phase * kTwoPi);
+    float const primary = std::sin(sample.phase * k_two_pi);
     float const secondary = std::sin(
-        (sample.phase + motion.moving_secondary_phase) * 2.0F * kTwoPi);
+        (sample.phase + motion.moving_secondary_phase) * 2.0F * k_two_pi);
     float const bob_scale = is_running ? motion.running_bob_scale : 1.0F;
     sample.bob =
         (primary * 0.70F + secondary * motion.moving_secondary_weight) *

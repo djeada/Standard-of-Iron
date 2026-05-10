@@ -78,14 +78,14 @@ TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
   EXPECT_TRUE(height_map.isHillEntrance(kCenterX, 15));
   EXPECT_TRUE(height_map.is_walkable(kCenterX, 15));
   EXPECT_TRUE(height_map.is_walkable(kCenterX, 16));
-  EXPECT_LT(height_map.getHeightAtGrid(kCenterX, 15),
-            height_map.getHeightAtGrid(kCenterX - 2, 15));
-  EXPECT_LT(height_map.getHeightAtGrid(kCenterX, 16),
-            height_map.getHeightAtGrid(kCenterX - 2, 16));
-  EXPECT_LT(height_map.getHeightAtGrid(kCenterX, 14),
-            height_map.getHeightAtGrid(kCenterX, 15));
-  EXPECT_LT(height_map.getHeightAtGrid(kCenterX, 15),
-            height_map.getHeightAtGrid(kCenterX, 16));
+  EXPECT_LT(height_map.get_height_at_grid(kCenterX, 15),
+            height_map.get_height_at_grid(kCenterX - 2, 15));
+  EXPECT_LT(height_map.get_height_at_grid(kCenterX, 16),
+            height_map.get_height_at_grid(kCenterX - 2, 16));
+  EXPECT_LT(height_map.get_height_at_grid(kCenterX, 14),
+            height_map.get_height_at_grid(kCenterX, 15));
+  EXPECT_LT(height_map.get_height_at_grid(kCenterX, 15),
+            height_map.get_height_at_grid(kCenterX, 16));
 }
 
 TEST_F(TerrainServiceTest, RestoringTerrainRebuildsDerivedField) {
@@ -181,7 +181,7 @@ TEST_F(TerrainServiceTest, HillFootprintStaysInsidePlateauBounds) {
 
   for (auto const [x, z] : {std::pair{30, 19}, std::pair{41, 30},
                             std::pair{30, 41}, std::pair{19, 30}}) {
-    EXPECT_FLOAT_EQ(height_map.getHeightAtGrid(x, z), 0.0F);
+    EXPECT_FLOAT_EQ(height_map.get_height_at_grid(x, z), 0.0F);
     EXPECT_EQ(height_map.getTerrainType(x, z), Game::Map::TerrainType::Flat);
     EXPECT_TRUE(height_map.is_walkable(x, z));
   }

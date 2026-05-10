@@ -366,7 +366,7 @@ auto NationLoader::load_from_file(const QString &path)
   const QString building_str =
       root.value("primary_building").toString(QStringLiteral("barracks"));
   auto parsed_building =
-      Game::Units::buildingTypeFromString(building_str.toStdString());
+      Game::Units::building_type_from_string(building_str.toStdString());
   nation.primary_building =
       parsed_building.value_or(Game::Units::BuildingType::Barracks);
   if (auto formation =

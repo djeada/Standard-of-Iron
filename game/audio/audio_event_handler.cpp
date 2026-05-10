@@ -51,31 +51,31 @@ auto AudioEventHandler::initialize() -> bool {
     return true;
   }
 
-  m_unitSelectedSub =
+  m_unit_selected_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSelectedEvent>(
           [this](const Engine::Core::UnitSelectedEvent &event) {
             on_unit_selected(event);
           });
 
-  m_ambientChangedSub = Engine::Core::ScopedEventSubscription<
+  m_ambient_changed_sub = Engine::Core::ScopedEventSubscription<
       Engine::Core::AmbientStateChangedEvent>(
       [this](const Engine::Core::AmbientStateChangedEvent &event) {
-        onAmbientStateChanged(event);
+        on_ambient_state_changed(event);
       });
 
-  m_audioTriggerSub =
+  m_audio_trigger_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::AudioTriggerEvent>(
           [this](const Engine::Core::AudioTriggerEvent &event) {
             on_audio_trigger(event);
           });
 
-  m_musicTriggerSub =
+  m_music_trigger_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>(
           [this](const Engine::Core::MusicTriggerEvent &event) {
             on_music_trigger(event);
           });
 
-  m_combatHitSub =
+  m_combat_hit_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
           [](const Engine::Core::CombatHitEvent &event) {
             on_combat_hit(event);
@@ -90,30 +90,30 @@ void AudioEventHandler::shutdown() {
     return;
   }
 
-  m_unitSelectedSub.unsubscribe();
-  m_ambientChangedSub.unsubscribe();
-  m_audioTriggerSub.unsubscribe();
-  m_musicTriggerSub.unsubscribe();
-  m_combatHitSub.unsubscribe();
+  m_unit_selected_sub.unsubscribe();
+  m_ambient_changed_sub.unsubscribe();
+  m_audio_trigger_sub.unsubscribe();
+  m_music_trigger_sub.unsubscribe();
+  m_combat_hit_sub.unsubscribe();
 
-  m_unitVoiceMap.clear();
-  m_ambientMusicMap.clear();
+  m_unit_voice_map.clear();
+  m_ambient_music_map.clear();
 
   m_initialized = false;
 }
 
 void AudioEventHandler::load_unit_voice_mapping(const std::string &unit_type,
                                              const std::string &sound_id) {
-  m_unitVoiceMap[unit_type] = sound_id;
+  m_unit_voice_map[unit_type] = sound_id;
 }
 
 void AudioEventHandler::load_ambient_music(Engine::Core::AmbientState state,
                                          const std::string &music_id) {
-  m_ambientMusicMap[state] = music_id;
+  m_ambient_music_map[state] = music_id;
 }
 
-void AudioEventHandler::set_voice_sound_category(bool useVoiceCategory) {
-  m_use_voice_category = useVoiceCategory;
+void AudioEventHandler::set_voice_sound_category(bool use_voice_category) {
+  m_use_voice_category = use_voice_category;
 }
 
 void AudioEventHandler::on_unit_selected(
@@ -134,12 +134,12 @@ void AudioEventHandler::on_unit_selected(
 
   std::string const unit_type_str =
       Game::Units::spawn_typeToString(unit_component->spawn_type);
-  auto it = m_unitVoiceMap.find(unit_type_str);
-  if (it != m_unitVoiceMap.end()) {
+  auto it = m_unit_voice_map.find(unit_type_str);
+  if (it != m_unit_voice_map.end()) {
     auto now = std::chrono::steady_clock::now();
     auto time_since_last_sound =
         std::chrono::duration_cast<std::chrono::milliseconds>(
-            now - m_lastSelectionSoundTime)
+            now - m_last_selection_sound_time)
             .count();
 
     bool const should_play =
@@ -152,16 +152,16 @@ void AudioEventHandler::on_unit_selected(
       AudioSystem::get_instance().play_sound(it->second, UNIT_SELECTION_VOLUME,
                                            false, UNIT_SELECTION_PRIORITY,
                                            category);
-      m_lastSelectionSoundTime = now;
+      m_last_selection_sound_time = now;
       m_last_selection_unit_type = unit_type_str;
     }
   }
 }
 
-void AudioEventHandler::onAmbientStateChanged(
+void AudioEventHandler::on_ambient_state_changed(
     const Engine::Core::AmbientStateChangedEvent &event) {
-  auto it = m_ambientMusicMap.find(event.new_state);
-  if (it != m_ambientMusicMap.end()) {
+  auto it = m_ambient_music_map.find(event.new_state);
+  if (it != m_ambient_music_map.end()) {
     AudioSystem::get_instance().play_music(it->second);
   }
 }

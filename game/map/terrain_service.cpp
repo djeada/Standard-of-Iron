@@ -49,7 +49,7 @@ auto sample_surface_base_height(const TerrainHeightMap *height_map,
     }
   }
 
-  float const terrain_height = height_map->getHeightAt(world_x, world_z);
+  float const terrain_height = height_map->get_height_at(world_x, world_z);
   for (const auto &segment : road_segments) {
     const float dx = segment.end.x() - segment.start.x();
     const float dz = segment.end.z() - segment.start.z();
@@ -94,17 +94,17 @@ auto TerrainService::instance() -> TerrainService & {
   return s_instance;
 }
 
-void TerrainService::initialize(const MapDefinition &mapDef) {
+void TerrainService::initialize(const MapDefinition &map_def) {
   m_height_map = std::make_unique<TerrainHeightMap>(
-      mapDef.grid.width, mapDef.grid.height, mapDef.grid.tile_size);
+      map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
 
-  m_height_map->build_from_features(mapDef.terrain);
-  m_height_map->add_river_segments(mapDef.rivers);
-  m_height_map->add_bridges(mapDef.bridges);
-  m_biome_settings = mapDef.biome;
+  m_height_map->build_from_features(map_def.terrain);
+  m_height_map->add_river_segments(map_def.rivers);
+  m_height_map->add_bridges(map_def.bridges);
+  m_biome_settings = map_def.biome;
   m_height_map->apply_biome_variation(m_biome_settings);
-  m_fire_camps = mapDef.firecamps;
-  m_road_segments = mapDef.roads;
+  m_fire_camps = map_def.firecamps;
+  m_road_segments = map_def.roads;
   rebuild_terrain_field();
 }
 
@@ -161,7 +161,7 @@ auto TerrainService::get_terrain_height_grid(int grid_x,
   if (!m_height_map) {
     return 0.0F;
   }
-  return m_height_map->getHeightAtGrid(grid_x, grid_z);
+  return m_height_map->get_height_at_grid(grid_x, grid_z);
 }
 
 auto TerrainService::is_walkable(int grid_x, int grid_z) const -> bool {
@@ -183,12 +183,12 @@ auto TerrainService::is_forbidden(int grid_x, int grid_z) const -> bool {
   constexpr float k_half_cell_offset = 0.5F;
 
   const float half_width =
-      static_cast<float>(m_height_map->getWidth()) * k_half_cell_offset -
+      static_cast<float>(m_height_map->get_width()) * k_half_cell_offset -
       k_half_cell_offset;
   const float half_height =
-      static_cast<float>(m_height_map->getHeight()) * k_half_cell_offset -
+      static_cast<float>(m_height_map->get_height()) * k_half_cell_offset -
       k_half_cell_offset;
-  const float tile_size = m_height_map->getTileSize();
+  const float tile_size = m_height_map->get_tile_size();
 
   const float world_x = (static_cast<float>(grid_x) - half_width) * tile_size;
   const float world_z = (static_cast<float>(grid_z) - half_height) * tile_size;
@@ -206,14 +206,14 @@ auto TerrainService::is_forbidden_world(float world_x,
   constexpr float k_half_cell_offset = 0.5F;
 
   const float grid_half_width =
-      static_cast<float>(m_height_map->getWidth()) * k_half_cell_offset -
+      static_cast<float>(m_height_map->get_width()) * k_half_cell_offset -
       k_half_cell_offset;
   const float grid_half_height =
-      static_cast<float>(m_height_map->getHeight()) * k_half_cell_offset -
+      static_cast<float>(m_height_map->get_height()) * k_half_cell_offset -
       k_half_cell_offset;
 
-  const float grid_x = world_x / m_height_map->getTileSize() + grid_half_width;
-  const float grid_z = world_z / m_height_map->getTileSize() + grid_half_height;
+  const float grid_x = world_x / m_height_map->get_tile_size() + grid_half_width;
+  const float grid_z = world_z / m_height_map->get_tile_size() + grid_half_height;
 
   const int grid_x_int = static_cast<int>(std::round(grid_x));
   const int grid_z_int = static_cast<int>(std::round(grid_z));
@@ -278,10 +278,10 @@ void TerrainService::rebuild_terrain_field() {
     return;
   }
 
-  m_terrain_field.width = m_height_map->getWidth();
-  m_terrain_field.height = m_height_map->getHeight();
-  m_terrain_field.tile_size = m_height_map->getTileSize();
-  m_terrain_field.heights = m_height_map->getHeightData();
+  m_terrain_field.width = m_height_map->get_width();
+  m_terrain_field.height = m_height_map->get_height();
+  m_terrain_field.tile_size = m_height_map->get_tile_size();
+  m_terrain_field.heights = m_height_map->get_height_data();
 
   const int width = m_terrain_field.width;
   const int height = m_terrain_field.height;

@@ -22,7 +22,7 @@ void TerrainFeatureManager::configure(
     const std::vector<Game::Map::RoadSegment> &road_segments) {
   const auto &river_segments = height_map.get_river_segments();
   const auto &bridges = height_map.get_bridges();
-  const float tile_size = height_map.getTileSize();
+  const float tile_size = height_map.get_tile_size();
 
   m_river->configure(river_segments, tile_size);
   m_road->configure(road_segments, tile_size);

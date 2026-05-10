@@ -159,13 +159,13 @@ void QuiverRenderer::submit(const QuiverRenderConfig &config,
 auto quiver_fill_role_colors(const HumanoidPalette &palette,
                              const QuiverRenderConfig &config, QVector3D *out,
                              std::size_t max) -> std::uint32_t {
-  if (max < kQuiverRoleCount) {
+  if (max < k_quiver_role_count) {
     return 0;
   }
   out[k_leather_slot] = palette.leather;
   out[k_wood_slot] = palette.wood;
   out[k_fletching_slot] = config.fletching_color;
-  return kQuiverRoleCount;
+  return k_quiver_role_count;
 }
 
 auto quiver_make_static_attachments(const QuiverRenderConfig &config,

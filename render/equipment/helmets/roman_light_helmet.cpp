@@ -66,14 +66,14 @@ auto roman_light_helmet_archetype() -> const RenderArchetype & {
 auto roman_light_helmet_fill_role_colors(const HumanoidPalette &palette,
                                          QVector3D *out,
                                          std::size_t max) -> std::uint32_t {
-  if (max < kRomanLightHelmetRoleCount) {
+  if (max < k_roman_light_helmet_role_count) {
     return 0;
   }
   auto const colors = roman_light_palette(palette);
   out[0] = colors[0];
   out[1] = colors[1];
   out[2] = colors[2];
-  return kRomanLightHelmetRoleCount;
+  return k_roman_light_helmet_role_count;
 }
 
 auto roman_light_helmet_make_static_attachment(
@@ -81,12 +81,12 @@ auto roman_light_helmet_make_static_attachment(
     const QMatrix4x4 &bind_palette_socket_bone)
     -> Render::Creature::StaticAttachmentSpec {
 
-  constexpr float kHeadSocketRadius = 0.16F;
+  constexpr float k_head_socket_radius = 0.16F;
   auto spec = Render::Equipment::build_static_attachment({
       .archetype = &roman_light_helmet_archetype(),
       .socket_bone_index = socket_bone_index,
       .authored_local_offset = k_authored_local_offset,
-      .bind_radius = kHeadSocketRadius,
+      .bind_radius = k_head_socket_radius,
       .bind_socket_transform = bind_palette_socket_bone,
   });
   spec.palette_role_remap[k_metal_slot] = base_role_byte;

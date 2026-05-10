@@ -502,11 +502,11 @@ public:
       static const auto k_tool_belt_base_role_byte = static_cast<std::uint8_t>(
           Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_work_apron_base_role_byte = static_cast<std::uint8_t>(
-          k_tool_belt_base_role_byte + Render::GL::kToolBeltRoleCount);
+          k_tool_belt_base_role_byte + Render::GL::k_tool_belt_role_count);
       static const auto k_arm_guards_base_role_byte = static_cast<std::uint8_t>(
-          k_work_apron_base_role_byte + Render::GL::kWorkApronRoleCount);
+          k_work_apron_base_role_byte + Render::GL::k_work_apron_role_count);
       static const auto k_headwrap_base_role_byte = static_cast<std::uint8_t>(
-          k_arm_guards_base_role_byte + Render::GL::kArmGuardsRoleCount);
+          k_arm_guards_base_role_byte + Render::GL::k_arm_guards_role_count);
       static const auto k_robes_base_role_byte = static_cast<std::uint8_t>(
           k_headwrap_base_role_byte + k_carthage_headwrap_role_count);
       static const auto k_hammer_base_role_byte = static_cast<std::uint8_t>(

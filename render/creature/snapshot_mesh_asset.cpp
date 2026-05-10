@@ -103,15 +103,15 @@ bool SnapshotMeshBlob::validate() {
 
   auto const *header =
       reinterpret_cast<const SnapshotMeshHeader *>(m_bytes.data());
-  if (std::memcmp(header->magic, kMagic.data(), kMagic.size()) != 0) {
+  if (std::memcmp(header->magic, k_magic.data(), k_magic.size()) != 0) {
     m_last_error = "magic mismatch";
     return false;
   }
-  if (header->version != kVersion) {
+  if (header->version != k_version) {
     m_last_error = "unsupported version";
     return false;
   }
-  if (header->species_id > Render::Creature::Bpat::kMaxSpeciesId) {
+  if (header->species_id > Render::Creature::Bpat::k_max_species_id) {
     m_last_error = "unknown species_id";
     return false;
   }
@@ -337,14 +337,14 @@ auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
   std::uint64_t const string_table_offset = cursor;
   cursor += string_table.size();
   cursor = Render::Creature::Bpat::align_up(
-      cursor, Render::Creature::Bpat::kSectionAlignment);
+      cursor, Render::Creature::Bpat::k_section_alignment);
   std::uint64_t const index_data_offset = cursor;
   cursor += m_indices.size() * sizeof(std::uint32_t);
   std::uint64_t const vertex_data_offset = cursor;
 
   SnapshotMeshHeader header{};
-  std::memcpy(header.magic, kMagic.data(), kMagic.size());
-  header.version = kVersion;
+  std::memcpy(header.magic, k_magic.data(), k_magic.size());
+  header.version = k_version;
   header.species_id = m_species_id;
   header.lod = static_cast<std::uint32_t>(m_lod);
   header.vertex_count = m_vertex_count;
@@ -377,7 +377,7 @@ auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
     written += string_table.size();
   }
   if (!pad_to_alignment(out, written,
-                        Render::Creature::Bpat::kSectionAlignment)) {
+                        Render::Creature::Bpat::k_section_alignment)) {
     return false;
   }
 

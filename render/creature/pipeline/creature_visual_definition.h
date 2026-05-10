@@ -33,7 +33,7 @@ enum class CreatureLocomotionMode : std::uint8_t {
   Gallop = 4,
 };
 
-inline constexpr std::size_t kLargeCreatureLegCount = 4;
+inline constexpr std::size_t k_large_creature_leg_count = 4;
 
 using CreatureBindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
 using CreatureSpecResolveFn =
@@ -54,7 +54,7 @@ struct CreatureRigDefinition {
   std::uint8_t bone_count{0};
   CreatureBindPaletteFn bind_palette{nullptr};
   const Render::Creature::SkeletonTopology *topology{nullptr};
-  std::array<std::uint8_t, kLargeCreatureLegCount> contact_bones{};
+  std::array<std::uint8_t, k_large_creature_leg_count> contact_bones{};
   std::uint8_t seat_anchor_bone{0};
 };
 
@@ -90,21 +90,21 @@ struct CreatureMotionOutput {
   float body_sway{0.0F};
   float body_pitch{0.0F};
   float spine_bend{0.0F};
-  std::array<CreatureLegContactState, kLargeCreatureLegCount> contacts{};
+  std::array<CreatureLegContactState, k_large_creature_leg_count> contacts{};
   CreatureAttachmentSyncChannel attachment_sync{};
 };
 
 struct CreatureMotionState {
   float phase{0.0F};
   CreatureLocomotionMode locomotion_mode{CreatureLocomotionMode::Idle};
-  std::array<QVector3D, kLargeCreatureLegCount> planted_targets{};
-  std::array<bool, kLargeCreatureLegCount> planted{};
+  std::array<QVector3D, k_large_creature_leg_count> planted_targets{};
+  std::array<bool, k_large_creature_leg_count> planted{};
   bool initialized{false};
 };
 
 struct CreatureGroundingModel {
   std::string_view debug_name{};
-  std::uint8_t leg_count{kLargeCreatureLegCount};
+  std::uint8_t leg_count{k_large_creature_leg_count};
   float stance_duty_factor{0.5F};
   float stride_warp_scale{1.0F};
 };

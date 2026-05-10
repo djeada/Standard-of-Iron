@@ -53,7 +53,7 @@ private:
   BowRenderConfig m_base;
 };
 
-inline constexpr std::size_t kBowRoleCount = 2;
+inline constexpr std::size_t k_bow_role_count = 2;
 
 auto bow_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                           std::size_t max) -> std::uint32_t;

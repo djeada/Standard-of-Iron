@@ -90,7 +90,7 @@ auto is_two_bone_blend(PrimitiveShape shape) -> bool {
 
 auto bone_origin(std::span<const BoneWorldMatrix> bind_pose,
                  BoneIndex bone) -> QVector3D {
-  if (bone == kInvalidBone || bone >= bind_pose.size()) {
+  if (bone == k_invalid_bone || bone >= bind_pose.size()) {
     return QVector3D{};
   }
   return bind_pose[bone].column(3).toVector3D();
@@ -370,14 +370,14 @@ auto compute_unit_model(const PrimitiveInstance &prim,
                         QMatrix4x4 &out_model) -> bool {
   BoneIndex const anchor = prim.params.anchor_bone;
   BoneIndex const tail = prim.params.tail_bone;
-  if (anchor == kInvalidBone || anchor >= bind_pose.size()) {
+  if (anchor == k_invalid_bone || anchor >= bind_pose.size()) {
     return false;
   }
   bool const needs_tail = (prim.shape == PrimitiveShape::Cylinder ||
                            prim.shape == PrimitiveShape::Capsule ||
                            prim.shape == PrimitiveShape::Cone ||
                            prim.shape == PrimitiveShape::OrientedCylinder);
-  if (needs_tail && (tail == kInvalidBone || tail >= bind_pose.size())) {
+  if (needs_tail && (tail == k_invalid_bone || tail >= bind_pose.size())) {
     return false;
   }
 
@@ -578,7 +578,7 @@ void append_static_attachment(const StaticAttachmentSpec &spec,
         spec.local_offset * scale_mat * draw.local_model;
 
     std::uint8_t role = 0;
-    if (draw.palette_slot != Render::GL::kRenderArchetypeFixedColorSlot) {
+    if (draw.palette_slot != Render::GL::k_render_archetype_fixed_color_slot) {
       const auto slot = static_cast<std::size_t>(draw.palette_slot);
       if (slot < spec.palette_role_remap.size()) {
         role = spec.palette_role_remap[slot];

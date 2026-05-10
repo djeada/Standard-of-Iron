@@ -31,7 +31,7 @@ protected:
   mutable Render::Creature::Pipeline::MountedSpec m_mounted_visual_spec_cache{};
   mutable bool m_mounted_visual_spec_baked{false};
   Render::Creature::ArchetypeId m_mount_archetype_id{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
   auto resolve_entity_ground_offset(
       const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,

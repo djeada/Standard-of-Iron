@@ -13,7 +13,7 @@ namespace Render::GL {
 
 struct ArmorLightCarthageConfig {};
 
-inline constexpr std::uint32_t kArmorLightCarthageRoleCount = 4;
+inline constexpr std::uint32_t k_armor_light_carthage_role_count = 4;
 
 auto armor_light_carthage_fill_role_colors(const HumanoidPalette &palette,
                                            QVector3D *out,

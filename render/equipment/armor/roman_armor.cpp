@@ -354,7 +354,7 @@ void RomanLightArmorRenderer::submit(const RomanLightArmorConfig &,
 auto roman_heavy_armor_fill_role_colors(const HumanoidPalette &palette,
                                         QVector3D *out,
                                         std::size_t max) -> std::uint32_t {
-  if (max < kRomanHeavyArmorRoleCount) {
+  if (max < k_roman_heavy_armor_role_count) {
     return 0U;
   }
   QVector3D const steel =
@@ -365,7 +365,7 @@ auto roman_heavy_armor_fill_role_colors(const HumanoidPalette &palette,
   out[1] = steel * 0.98F;
   out[2] = steel * 0.94F;
   out[3] = brass;
-  return kRomanHeavyArmorRoleCount;
+  return k_roman_heavy_armor_role_count;
 }
 
 auto roman_heavy_armor_make_static_attachment(
@@ -455,14 +455,14 @@ auto roman_light_armor_fill_role_colors(const HumanoidPalette &palette,
                                         QVector3D *out,
                                         std::size_t max) -> std::uint32_t {
   (void)palette;
-  if (max < kRomanLightArmorRoleCount) {
+  if (max < k_roman_light_armor_role_count) {
     return 0U;
   }
   QVector3D const leather_color = QVector3D(0.44F, 0.30F, 0.19F);
   out[0] = leather_color * 1.08F;
   out[1] = leather_color * 1.08F * 0.95F;
   out[2] = leather_color * 0.90F;
-  return kRomanLightArmorRoleCount;
+  return k_roman_light_armor_role_count;
 }
 
 auto roman_light_armor_make_static_attachment(

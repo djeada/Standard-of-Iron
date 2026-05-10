@@ -39,9 +39,9 @@ void clamp_to_map_bounds(float &x, float &z) {
     return;
   }
 
-  const float tile = hm->getTileSize();
-  const int w = hm->getWidth();
-  const int h = hm->getHeight();
+  const float tile = hm->get_tile_size();
+  const int w = hm->get_width();
+  const int h = hm->get_height();
   if (w <= 0 || h <= 0) {
     return;
   }

@@ -646,9 +646,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         ctx.skip_ground_offset || requires_runtime_pose;
     if (!ctx.skip_ground_offset && requires_runtime_pose) {
       auto const grounding_archetype =
-          (visual_spec.archetype_id != Render::Creature::kInvalidArchetype)
+          (visual_spec.archetype_id != Render::Creature::k_invalid_archetype)
               ? visual_spec.archetype_id
-              : Render::Creature::ArchetypeRegistry::kHumanoidBase;
+              : Render::Creature::ArchetypeRegistry::k_humanoid_base;
       float const grounded_contact_y =
           RCP::grounded_humanoid_contact_y(grounding_archetype, pose, anim_ctx);
       RCP::ground_model_contact_to_surface(inst_ctx.model, grounded_contact_y,

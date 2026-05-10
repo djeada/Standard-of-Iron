@@ -13,7 +13,7 @@ namespace Render::GL {
 
 struct ArmorHeavyCarthageConfig {};
 
-inline constexpr std::uint32_t kArmorHeavyCarthageRoleCount = 3;
+inline constexpr std::uint32_t k_armor_heavy_carthage_role_count = 3;
 
 auto armor_heavy_carthage_fill_role_colors(const HumanoidPalette &palette,
                                            QVector3D *out,

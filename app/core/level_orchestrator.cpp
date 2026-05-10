@@ -128,21 +128,21 @@ auto LevelOrchestrator::load_skirmish(
   level.grid_height = load_result.grid_height;
   level.tile_size = load_result.tile_size;
   level.is_spectator_mode = load_result.is_spectator_mode;
-  level.rain = load_result.rainSettings;
+  level.rain = load_result.rain_settings;
   level.biome_seed = load_result.biome_seed;
 
   Game::GameConfig::instance().set_max_troops_per_player(
       load_result.max_troops_per_player);
 
   if (victory_service) {
-    victory_service->configure(load_result.victoryConfig,
+    victory_service->configure(load_result.victory_config,
                                result.updated_player_id);
   }
 
   if (load_result.has_focus_position && renderers.camera) {
     const auto &cam_config = Game::GameConfig::instance().camera();
     renderers.camera->set_rts_view(
-        load_result.focusPosition, cam_config.default_distance,
+        load_result.focus_position, cam_config.default_distance,
         cam_config.default_pitch, cam_config.default_yaw);
   }
 

@@ -27,9 +27,9 @@ auto register_horse_archer_rider_archetype() -> Render::Creature::ArchetypeId {
   static const auto k_helmet_base_role_byte =
       static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
   static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-      k_helmet_base_role_byte + Render::GL::kCarthageLightHelmetRoleCount);
+      k_helmet_base_role_byte + Render::GL::k_carthage_light_helmet_role_count);
   static const auto k_cloak_base_role_byte = static_cast<std::uint8_t>(
-      k_armor_base_role_byte + Render::GL::kArmorLightCarthageRoleCount);
+      k_armor_base_role_byte + Render::GL::k_armor_light_carthage_role_count);
   static const auto k_head_bind_matrix =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
           Render::Humanoid::HumanoidBone::Head)];

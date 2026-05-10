@@ -16,9 +16,9 @@ namespace Render::Humanoid {
 namespace {
 
 enum FacialHairPaletteSlot : std::uint8_t {
-  kHairDarkSlot = 0U,
-  kHairBaseSlot = 1U,
-  kHairHighlightSlot = 2U,
+  k_hair_dark_slot = 0U,
+  k_hair_base_slot = 1U,
+  k_hair_highlight_slot = 2U,
 };
 
 auto saturate_color(const QVector3D &color) -> QVector3D {
@@ -61,28 +61,28 @@ auto stubble_archetype() -> const Render::GL::RenderArchetype & {
     std::array<Render::GL::GeneratedEquipmentPrimitive, 8> const primitives{{
         Render::GL::generated_cone(QVector3D(-0.30F, -0.18F, 0.86F),
                                    QVector3D(-0.33F, -0.28F, 0.93F), 0.032F,
-                                   kHairDarkSlot),
+                                   k_hair_dark_slot),
         Render::GL::generated_cone(QVector3D(-0.12F, -0.28F, 0.95F),
                                    QVector3D(-0.10F, -0.37F, 1.00F), 0.028F,
-                                   kHairDarkSlot),
+                                   k_hair_dark_slot),
         Render::GL::generated_cone(QVector3D(0.00F, -0.34F, 0.98F),
                                    QVector3D(0.00F, -0.45F, 1.05F), 0.030F,
-                                   kHairBaseSlot),
+                                   k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(0.12F, -0.28F, 0.95F),
                                    QVector3D(0.10F, -0.37F, 1.00F), 0.028F,
-                                   kHairDarkSlot),
+                                   k_hair_dark_slot),
         Render::GL::generated_cone(QVector3D(0.30F, -0.18F, 0.86F),
                                    QVector3D(0.33F, -0.28F, 0.93F), 0.032F,
-                                   kHairDarkSlot),
+                                   k_hair_dark_slot),
         Render::GL::generated_cone(QVector3D(-0.20F, -0.08F, 0.91F),
                                    QVector3D(-0.39F, -0.06F, 0.88F), 0.026F,
-                                   kHairBaseSlot),
+                                   k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(0.20F, -0.08F, 0.91F),
                                    QVector3D(0.39F, -0.06F, 0.88F), 0.026F,
-                                   kHairBaseSlot),
+                                   k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(0.00F, -0.12F, 0.94F),
                                    QVector3D(0.00F, -0.16F, 0.98F), 0.022F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
     }};
     return Render::GL::build_generated_equipment_archetype(
         facial_hair_debug_name(Render::GL::FacialHairStyle::Stubble),
@@ -95,39 +95,39 @@ auto short_beard_archetype() -> const Render::GL::RenderArchetype & {
   static const auto archetype = [] {
     std::array<Render::GL::GeneratedEquipmentPrimitive, 13> const primitives{{
         Render::GL::generated_sphere(QVector3D(-0.24F, -0.06F, 0.90F), 0.050F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.24F, -0.06F, 0.90F), 0.050F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.24F, -0.06F, 0.90F),
                                        QVector3D(-0.42F, -0.04F, 0.84F), 0.040F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.24F, -0.06F, 0.90F),
                                        QVector3D(0.42F, -0.04F, 0.84F), 0.040F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_sphere(QVector3D(-0.28F, -0.26F, 0.86F), 0.060F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.28F, -0.26F, 0.86F), 0.060F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.28F, -0.26F, 0.86F),
                                        QVector3D(-0.18F, -0.58F, 0.98F), 0.056F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.28F, -0.26F, 0.86F),
                                        QVector3D(0.18F, -0.58F, 0.98F), 0.056F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -0.34F, 0.96F), 0.070F,
-                                     kHairBaseSlot),
+                                     k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.00F, -0.34F, 0.96F),
                                        QVector3D(0.00F, -0.74F, 1.08F), 0.070F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(0.00F, -0.56F, 1.02F),
                                    QVector3D(0.00F, -0.92F, 1.14F), 0.058F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(-0.16F, -0.46F, 0.98F),
                                    QVector3D(-0.12F, -0.76F, 1.08F), 0.046F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(0.16F, -0.46F, 0.98F),
                                    QVector3D(0.12F, -0.76F, 1.08F), 0.046F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
     }};
     return Render::GL::build_generated_equipment_archetype(
         facial_hair_debug_name(Render::GL::FacialHairStyle::ShortBeard),
@@ -140,47 +140,47 @@ auto full_beard_archetype() -> const Render::GL::RenderArchetype & {
   static const auto archetype = [] {
     std::array<Render::GL::GeneratedEquipmentPrimitive, 16> const primitives{{
         Render::GL::generated_sphere(QVector3D(-0.26F, -0.08F, 0.90F), 0.058F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.26F, -0.08F, 0.90F), 0.058F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.26F, -0.08F, 0.90F),
                                        QVector3D(-0.48F, -0.02F, 0.82F), 0.046F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.26F, -0.08F, 0.90F),
                                        QVector3D(0.48F, -0.02F, 0.82F), 0.046F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_sphere(QVector3D(-0.36F, -0.30F, 0.84F), 0.075F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.36F, -0.30F, 0.84F), 0.075F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.36F, -0.30F, 0.84F),
                                        QVector3D(-0.22F, -0.80F, 1.05F), 0.068F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.36F, -0.30F, 0.84F),
                                        QVector3D(0.22F, -0.80F, 1.05F), 0.068F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -0.38F, 0.98F), 0.082F,
-                                     kHairBaseSlot),
+                                     k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.00F, -0.38F, 0.98F),
                                        QVector3D(0.00F, -0.96F, 1.16F), 0.080F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(0.00F, -0.66F, 1.08F),
                                    QVector3D(0.00F, -1.20F, 1.24F), 0.068F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(-0.20F, -0.60F, 1.00F),
                                    QVector3D(-0.12F, -1.00F, 1.14F), 0.056F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(0.20F, -0.60F, 1.00F),
                                    QVector3D(0.12F, -1.00F, 1.14F), 0.056F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cylinder(QVector3D(-0.12F, -0.44F, 1.00F),
                                        QVector3D(-0.08F, -0.92F, 1.12F), 0.050F,
-                                       kHairDarkSlot),
+                                       k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(0.12F, -0.44F, 1.00F),
                                        QVector3D(0.08F, -0.92F, 1.12F), 0.050F,
-                                       kHairDarkSlot),
+                                       k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -0.92F, 1.18F), 0.050F,
-                                     kHairHighlightSlot),
+                                     k_hair_highlight_slot),
     }};
     return Render::GL::build_generated_equipment_archetype(
         facial_hair_debug_name(Render::GL::FacialHairStyle::FullBeard),
@@ -193,52 +193,52 @@ auto long_beard_archetype() -> const Render::GL::RenderArchetype & {
   static const auto archetype = [] {
     std::array<Render::GL::GeneratedEquipmentPrimitive, 18> const primitives{{
         Render::GL::generated_sphere(QVector3D(-0.28F, -0.08F, 0.90F), 0.060F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.28F, -0.08F, 0.90F), 0.060F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.28F, -0.08F, 0.90F),
                                        QVector3D(-0.48F, -0.02F, 0.82F), 0.046F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.28F, -0.08F, 0.90F),
                                        QVector3D(0.48F, -0.02F, 0.82F), 0.046F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_sphere(QVector3D(-0.38F, -0.32F, 0.84F), 0.078F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.38F, -0.32F, 0.84F), 0.078F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.38F, -0.32F, 0.84F),
                                        QVector3D(-0.22F, -0.98F, 1.10F), 0.070F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.38F, -0.32F, 0.84F),
                                        QVector3D(0.22F, -0.98F, 1.10F), 0.070F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -0.42F, 0.98F), 0.086F,
-                                     kHairBaseSlot),
+                                     k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.00F, -0.42F, 0.98F),
                                        QVector3D(0.00F, -1.14F, 1.22F), 0.082F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.00F, -1.14F, 1.22F),
                                        QVector3D(0.00F, -1.64F, 1.28F), 0.064F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(0.00F, -1.34F, 1.25F),
                                    QVector3D(0.00F, -1.90F, 1.30F), 0.056F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(-0.20F, -0.70F, 1.04F),
                                    QVector3D(-0.10F, -1.24F, 1.16F), 0.054F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(0.20F, -0.70F, 1.04F),
                                    QVector3D(0.10F, -1.24F, 1.16F), 0.054F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cylinder(QVector3D(-0.10F, -0.52F, 1.02F),
                                        QVector3D(-0.06F, -1.18F, 1.16F), 0.048F,
-                                       kHairDarkSlot),
+                                       k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(0.10F, -0.52F, 1.02F),
                                        QVector3D(0.06F, -1.18F, 1.16F), 0.048F,
-                                       kHairDarkSlot),
+                                       k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -1.62F, 1.28F), 0.040F,
-                                     kHairHighlightSlot),
+                                     k_hair_highlight_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -1.84F, 1.30F), 0.030F,
-                                     kHairHighlightSlot),
+                                     k_hair_highlight_slot),
     }};
     return Render::GL::build_generated_equipment_archetype(
         facial_hair_debug_name(Render::GL::FacialHairStyle::LongBeard),
@@ -251,31 +251,31 @@ auto goatee_archetype() -> const Render::GL::RenderArchetype & {
   static const auto archetype = [] {
     std::array<Render::GL::GeneratedEquipmentPrimitive, 10> const primitives{{
         Render::GL::generated_sphere(QVector3D(-0.18F, -0.08F, 0.90F), 0.046F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.18F, -0.08F, 0.90F), 0.046F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.18F, -0.08F, 0.90F),
                                        QVector3D(-0.36F, -0.04F, 0.86F), 0.036F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.18F, -0.08F, 0.90F),
                                        QVector3D(0.36F, -0.04F, 0.86F), 0.036F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -0.34F, 0.98F), 0.072F,
-                                     kHairBaseSlot),
+                                     k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.00F, -0.34F, 0.98F),
                                        QVector3D(0.00F, -0.94F, 1.20F), 0.068F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(0.00F, -0.60F, 1.06F),
                                    QVector3D(0.00F, -1.20F, 1.24F), 0.056F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(-0.10F, -0.46F, 1.02F),
                                    QVector3D(-0.05F, -0.92F, 1.16F), 0.040F,
-                                   kHairDarkSlot),
+                                   k_hair_dark_slot),
         Render::GL::generated_cone(QVector3D(0.10F, -0.46F, 1.02F),
                                    QVector3D(0.05F, -0.92F, 1.16F), 0.040F,
-                                   kHairDarkSlot),
+                                   k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -1.00F, 1.22F), 0.034F,
-                                     kHairHighlightSlot),
+                                     k_hair_highlight_slot),
     }};
     return Render::GL::build_generated_equipment_archetype(
         facial_hair_debug_name(Render::GL::FacialHairStyle::Goatee),
@@ -288,27 +288,27 @@ auto mustache_archetype() -> const Render::GL::RenderArchetype & {
   static const auto archetype = [] {
     std::array<Render::GL::GeneratedEquipmentPrimitive, 8> const primitives{{
         Render::GL::generated_sphere(QVector3D(-0.16F, -0.08F, 0.92F), 0.048F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.16F, -0.08F, 0.92F), 0.048F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.16F, -0.08F, 0.92F),
                                        QVector3D(-0.46F, -0.02F, 0.86F), 0.042F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.16F, -0.08F, 0.92F),
                                        QVector3D(0.46F, -0.02F, 0.86F), 0.042F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(-0.30F, -0.05F, 0.88F),
                                    QVector3D(-0.54F, 0.02F, 0.76F), 0.038F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(0.30F, -0.05F, 0.88F),
                                    QVector3D(0.54F, 0.02F, 0.76F), 0.038F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cylinder(QVector3D(-0.02F, -0.08F, 0.94F),
                                        QVector3D(-0.26F, -0.04F, 0.90F), 0.036F,
-                                       kHairDarkSlot),
+                                       k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(0.02F, -0.08F, 0.94F),
                                        QVector3D(0.26F, -0.04F, 0.90F), 0.036F,
-                                       kHairDarkSlot),
+                                       k_hair_dark_slot),
     }};
     return Render::GL::build_generated_equipment_archetype(
         facial_hair_debug_name(Render::GL::FacialHairStyle::Mustache),
@@ -321,53 +321,53 @@ auto mustache_and_beard_archetype() -> const Render::GL::RenderArchetype & {
   static const auto archetype = [] {
     std::array<Render::GL::GeneratedEquipmentPrimitive, 18> const primitives{{
         Render::GL::generated_sphere(QVector3D(-0.18F, -0.08F, 0.92F), 0.046F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.18F, -0.08F, 0.92F), 0.046F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.18F, -0.08F, 0.92F),
                                        QVector3D(-0.46F, -0.02F, 0.86F), 0.040F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.18F, -0.08F, 0.92F),
                                        QVector3D(0.46F, -0.02F, 0.86F), 0.040F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(-0.30F, -0.05F, 0.88F),
                                    QVector3D(-0.52F, 0.00F, 0.78F), 0.036F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(0.30F, -0.05F, 0.88F),
                                    QVector3D(0.52F, 0.00F, 0.78F), 0.036F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_sphere(QVector3D(-0.30F, -0.24F, 0.86F), 0.062F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.30F, -0.24F, 0.86F), 0.062F,
-                                     kHairDarkSlot),
+                                     k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(-0.30F, -0.24F, 0.86F),
                                        QVector3D(-0.16F, -0.66F, 1.02F), 0.056F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.30F, -0.24F, 0.86F),
                                        QVector3D(0.16F, -0.66F, 1.02F), 0.056F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -0.34F, 0.98F), 0.074F,
-                                     kHairBaseSlot),
+                                     k_hair_base_slot),
         Render::GL::generated_cylinder(QVector3D(0.00F, -0.34F, 0.98F),
                                        QVector3D(0.00F, -0.86F, 1.14F), 0.070F,
-                                       kHairBaseSlot),
+                                       k_hair_base_slot),
         Render::GL::generated_cone(QVector3D(0.00F, -0.58F, 1.06F),
                                    QVector3D(0.00F, -1.08F, 1.18F), 0.060F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(-0.16F, -0.50F, 1.00F),
                                    QVector3D(-0.10F, -0.86F, 1.10F), 0.044F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cone(QVector3D(0.16F, -0.50F, 1.00F),
                                    QVector3D(0.10F, -0.86F, 1.10F), 0.044F,
-                                   kHairHighlightSlot),
+                                   k_hair_highlight_slot),
         Render::GL::generated_cylinder(QVector3D(-0.06F, -0.12F, 0.94F),
                                        QVector3D(-0.24F, -0.06F, 0.90F), 0.032F,
-                                       kHairDarkSlot),
+                                       k_hair_dark_slot),
         Render::GL::generated_cylinder(QVector3D(0.06F, -0.12F, 0.94F),
                                        QVector3D(0.24F, -0.06F, 0.90F), 0.032F,
-                                       kHairDarkSlot),
+                                       k_hair_dark_slot),
         Render::GL::generated_sphere(QVector3D(0.00F, -0.90F, 1.16F), 0.038F,
-                                     kHairHighlightSlot),
+                                     k_hair_highlight_slot),
     }};
     return Render::GL::build_generated_equipment_archetype(
         facial_hair_debug_name(Render::GL::FacialHairStyle::MustacheAndBeard),
@@ -421,17 +421,17 @@ auto facial_hair_make_static_attachment(Render::GL::FacialHairStyle style,
       .bind_socket_transform = bind_palette[static_cast<std::size_t>(
           Render::Humanoid::HumanoidBone::Head)],
   });
-  spec.palette_role_remap[kHairDarkSlot] = base_role_byte;
-  spec.palette_role_remap[kHairBaseSlot] =
+  spec.palette_role_remap[k_hair_dark_slot] = base_role_byte;
+  spec.palette_role_remap[k_hair_base_slot] =
       static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[kHairHighlightSlot] =
+  spec.palette_role_remap[k_hair_highlight_slot] =
       static_cast<std::uint8_t>(base_role_byte + 2U);
   return spec;
 }
 
 struct FacialHairKey {
   Render::Creature::ArchetypeId base_archetype{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
   Render::GL::FacialHairStyle style{Render::GL::FacialHairStyle::None};
 
   auto operator==(const FacialHairKey &other) const noexcept -> bool = default;
@@ -486,8 +486,8 @@ auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
     return base_archetype;
   }
 
-  if (base_archetype == Render::Creature::kInvalidArchetype) {
-    base_archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  if (base_archetype == Render::Creature::k_invalid_archetype) {
+    base_archetype = Render::Creature::ArchetypeRegistry::k_humanoid_base;
   }
 
   FacialHairKey const key{base_archetype, variant.facial_hair.style};
@@ -503,7 +503,7 @@ auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
   auto const *base_desc = registry.get(base_archetype);
   if (base_desc == nullptr ||
       base_desc->bake_attachment_count >=
-          Render::Creature::ArchetypeDescriptor::kMaxBakeAttachments) {
+          Render::Creature::ArchetypeDescriptor::k_max_bake_attachments) {
     return base_archetype;
   }
 
@@ -526,7 +526,7 @@ auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
   });
 
   auto const id = registry.register_archetype(desc);
-  if (id == Render::Creature::kInvalidArchetype) {
+  if (id == Render::Creature::k_invalid_archetype) {
     return base_archetype;
   }
 

@@ -73,11 +73,11 @@ void BpatWriter::append_clip_palettes(
   assert(palette_frames.size() == expected &&
          "palette_frames.size() must equal bone_count * frame_count");
   std::size_t const base_floats = m_palette_floats.size();
-  m_palette_floats.resize(base_floats + (expected * kMatrixFloats));
+  m_palette_floats.resize(base_floats + (expected * k_matrix_floats));
   for (std::size_t i = 0; i < palette_frames.size(); ++i) {
     copy_matrix_row_major(palette_frames[i], m_palette_floats.data() +
                                                  base_floats +
-                                                 (i * kMatrixFloats));
+                                                 (i * k_matrix_floats));
   }
   pending.palette_appended = true;
 }
@@ -93,11 +93,11 @@ void BpatWriter::append_clip_socket_transforms(
   assert(socket_frames.size() == expected &&
          "socket_frames.size() must equal socket_count * frame_count");
   std::size_t const base_floats = m_socket_floats.size();
-  m_socket_floats.resize(base_floats + (expected * kSocketMatrixFloats));
+  m_socket_floats.resize(base_floats + (expected * k_socket_matrix_floats));
   for (std::size_t i = 0; i < socket_frames.size(); ++i) {
     copy_socket_row_major(socket_frames[i], m_socket_floats.data() +
                                                 base_floats +
-                                                (i * kSocketMatrixFloats));
+                                                (i * k_socket_matrix_floats));
   }
   pending.sockets_appended = true;
 }
@@ -166,12 +166,12 @@ auto BpatWriter::write(std::ostream &out) const -> bool {
   cursor += socket_entries.size() * sizeof(BpatSocketEntry);
   std::uint64_t const string_table_offset = cursor;
   cursor += string_table.size();
-  cursor = align_up(cursor, kSectionAlignment);
+  cursor = align_up(cursor, k_section_alignment);
   std::uint64_t const palette_data_offset = cursor;
 
   BpatHeader header{};
-  std::memcpy(header.magic, kMagic.data(), kMagic.size());
-  header.version = kVersion;
+  std::memcpy(header.magic, k_magic.data(), k_magic.size());
+  header.version = k_version;
   header.species_id = m_species_id;
   header.bone_count = m_bone_count;
   header.socket_count = static_cast<std::uint32_t>(socket_entries.size());
@@ -201,7 +201,7 @@ auto BpatWriter::write(std::ostream &out) const -> bool {
     write_pod(out, string_table.data(), string_table.size());
     written += string_table.size();
   }
-  pad_to_alignment(out, written, kSectionAlignment);
+  pad_to_alignment(out, written, k_section_alignment);
 
   if (!m_palette_floats.empty()) {
     write_pod(out, m_palette_floats.data(),

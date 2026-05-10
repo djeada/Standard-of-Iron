@@ -232,7 +232,7 @@ void MapCatalog::load_maps_async() {
   }
 
   m_maps.clear();
-  m_pendingFiles.clear();
+  m_pending_files.clear();
   ensure_campaign_map_paths_loaded();
   m_loading = true;
   emit loading_changed(true);
@@ -247,10 +247,10 @@ void MapCatalog::load_maps_async() {
     return;
   }
 
-  m_pendingFiles =
+  m_pending_files =
       maps_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
 
-  if (m_pendingFiles.isEmpty()) {
+  if (m_pending_files.isEmpty()) {
     m_loading = false;
     emit loading_changed(false);
     emit all_maps_loaded();
@@ -261,14 +261,14 @@ void MapCatalog::load_maps_async() {
 }
 
 void MapCatalog::load_next_map() {
-  if (m_pendingFiles.isEmpty()) {
+  if (m_pending_files.isEmpty()) {
     m_loading = false;
     emit loading_changed(false);
     emit all_maps_loaded();
     return;
   }
 
-  QString const file_name = m_pendingFiles.takeFirst();
+  QString const file_name = m_pending_files.takeFirst();
   const QString maps_root =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
   QDir const maps_dir(maps_root);
@@ -283,7 +283,7 @@ void MapCatalog::load_next_map() {
     }
   }
 
-  if (!m_pendingFiles.isEmpty()) {
+  if (!m_pending_files.isEmpty()) {
     QTimer::singleShot(10, this, &MapCatalog::load_next_map);
   } else {
     m_loading = false;

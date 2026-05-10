@@ -190,10 +190,10 @@ void GameStateRestorer::restore_environment_from_metadata(
   if (terrain_service.is_initialized()) {
     const auto *height_map = terrain_service.get_height_map();
     const int grid_width =
-        (height_map != nullptr) ? height_map->getWidth() : fallback_grid_width;
-    const int grid_height = (height_map != nullptr) ? height_map->getHeight()
+        (height_map != nullptr) ? height_map->get_width() : fallback_grid_width;
+    const int grid_height = (height_map != nullptr) ? height_map->get_height()
                                                     : fallback_grid_height;
-    const float tile_size = (height_map != nullptr) ? height_map->getTileSize()
+    const float tile_size = (height_map != nullptr) ? height_map->get_tile_size()
                                                     : fallback_tile_size;
 
     if (renderers.ground) {
@@ -229,8 +229,8 @@ void GameStateRestorer::restore_environment_from_metadata(
 
     if (renderers.fog && visibility_service.is_initialized()) {
       renderers.fog->update_mask(
-          visibility_service.getWidth(), visibility_service.getHeight(),
-          visibility_service.getTileSize(), visibility_service.snapshotCells());
+          visibility_service.get_width(), visibility_service.get_height(),
+          visibility_service.get_tile_size(), visibility_service.snapshotCells());
     }
   } else {
     Game::Map::MapDefinition fallback_def;
@@ -248,8 +248,8 @@ void GameStateRestorer::restore_environment_from_metadata(
 
     if (renderers.fog && visibility_service.is_initialized()) {
       renderers.fog->update_mask(
-          visibility_service.getWidth(), visibility_service.getHeight(),
-          visibility_service.getTileSize(), visibility_service.snapshotCells());
+          visibility_service.get_width(), visibility_service.get_height(),
+          visibility_service.get_tile_size(), visibility_service.snapshotCells());
     }
   }
 }

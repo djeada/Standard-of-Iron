@@ -93,7 +93,7 @@ void ProductionManager::place_building_at_screen(
   if (m_pending_building_type == QStringLiteral("defense_tower")) {
     params.spawn_type = Game::Units::SpawnType::DefenseTower;
 
-    auto registry = Game::Map::MapTransformer::getFactoryRegistry();
+    auto registry = Game::Map::MapTransformer::get_factory_registry();
     if (registry) {
       auto unit = registry->create(params.spawn_type, *m_world, params);
       if (unit) {

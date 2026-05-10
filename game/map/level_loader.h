@@ -29,8 +29,8 @@ struct LevelLoadResult {
   int grid_height = 50;
   float tile_size = 1.0F;
   int max_troops_per_player = 500;
-  VictoryConfig victoryConfig;
-  RainSettings rainSettings;
+  VictoryConfig victory_config;
+  RainSettings rain_settings;
   std::uint32_t biome_seed = 0;
 };
 

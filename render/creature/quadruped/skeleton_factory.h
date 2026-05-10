@@ -22,23 +22,23 @@ struct TopologyStorage {
   std::vector<BoneDef> bones{};
   std::vector<SocketDef> sockets{};
 
-  BoneIndex root{kInvalidBone};
-  BoneIndex body{kInvalidBone};
-  BoneIndex shoulder_fl{kInvalidBone};
-  BoneIndex knee_fl{kInvalidBone};
-  BoneIndex foot_fl{kInvalidBone};
-  BoneIndex shoulder_fr{kInvalidBone};
-  BoneIndex knee_fr{kInvalidBone};
-  BoneIndex foot_fr{kInvalidBone};
-  BoneIndex shoulder_bl{kInvalidBone};
-  BoneIndex knee_bl{kInvalidBone};
-  BoneIndex foot_bl{kInvalidBone};
-  BoneIndex shoulder_br{kInvalidBone};
-  BoneIndex knee_br{kInvalidBone};
-  BoneIndex foot_br{kInvalidBone};
-  BoneIndex neck_top{kInvalidBone};
-  BoneIndex head{kInvalidBone};
-  BoneIndex appendage_tip{kInvalidBone};
+  BoneIndex root{k_invalid_bone};
+  BoneIndex body{k_invalid_bone};
+  BoneIndex shoulder_fl{k_invalid_bone};
+  BoneIndex knee_fl{k_invalid_bone};
+  BoneIndex foot_fl{k_invalid_bone};
+  BoneIndex shoulder_fr{k_invalid_bone};
+  BoneIndex knee_fr{k_invalid_bone};
+  BoneIndex foot_fr{k_invalid_bone};
+  BoneIndex shoulder_bl{k_invalid_bone};
+  BoneIndex knee_bl{k_invalid_bone};
+  BoneIndex foot_bl{k_invalid_bone};
+  BoneIndex shoulder_br{k_invalid_bone};
+  BoneIndex knee_br{k_invalid_bone};
+  BoneIndex foot_br{k_invalid_bone};
+  BoneIndex neck_top{k_invalid_bone};
+  BoneIndex head{k_invalid_bone};
+  BoneIndex appendage_tip{k_invalid_bone};
 
   [[nodiscard]] auto topology() const noexcept -> SkeletonTopology {
     return {std::span<const BoneDef>(bones),

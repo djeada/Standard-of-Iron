@@ -609,9 +609,9 @@ void Camera::apply_soft_boundaries(bool is_panning) {
     return;
   }
 
-  const float tile = vis.getTileSize();
-  const float half_w = vis.getWidth() * 0.5F - 0.5F;
-  const float half_h = vis.getHeight() * 0.5F - 0.5F;
+  const float tile = vis.get_tile_size();
+  const float half_w = vis.get_width() * 0.5F - 0.5F;
+  const float half_h = vis.get_height() * 0.5F - 0.5F;
 
   if (tile <= 0.0F || half_w < 0.0F || half_h < 0.0F) {
     return;

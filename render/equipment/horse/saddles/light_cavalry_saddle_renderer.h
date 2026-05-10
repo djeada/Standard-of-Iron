@@ -13,7 +13,7 @@ namespace Render::GL {
 
 auto light_cavalry_saddle_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kLightCavalrySaddleRoleCount = 1;
+inline constexpr std::uint32_t k_light_cavalry_saddle_role_count = 1;
 
 auto light_cavalry_saddle_fill_role_colors(const HorseVariant &variant,
                                            QVector3D *out,

@@ -45,7 +45,7 @@ private:
   QuiverRenderConfig m_config;
 };
 
-inline constexpr std::uint32_t kQuiverRoleCount = 3;
+inline constexpr std::uint32_t k_quiver_role_count = 3;
 
 auto quiver_fill_role_colors(const HumanoidPalette &palette,
                              const QuiverRenderConfig &config, QVector3D *out,

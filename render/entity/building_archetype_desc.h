@@ -32,7 +32,7 @@ auto operator|(BuildingStateMask lhs,
 auto operator&(BuildingStateMask lhs,
                BuildingStateMask rhs) -> BuildingStateMask;
 
-inline constexpr auto kBuildingStateMaskIntact =
+inline constexpr auto k_building_state_mask_intact =
     static_cast<BuildingStateMask>((1U << 0U) | (1U << 1U));
 
 enum class BuildingLODMask : std::uint8_t {
@@ -51,7 +51,7 @@ struct BuildingPartDesc {
   QVector3D point_b{1.0F, 1.0F, 1.0F};
   QVector3D color{1.0F, 1.0F, 1.0F};
   float radius{0.0F};
-  std::uint8_t palette_slot{kRenderArchetypeFixedColorSlot};
+  std::uint8_t palette_slot{k_render_archetype_fixed_color_slot};
   Texture *texture{nullptr};
   float alpha{1.0F};
   int material_id{0};

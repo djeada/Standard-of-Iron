@@ -325,7 +325,7 @@ public:
 
   void ensure_initialized();
   void update(float dt);
-  void render(int pixelWidth, int pixelHeight);
+  void render(int pixel_width, int pixel_height);
 
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID> &out) const;
   bool get_unit_type_key(Engine::Core::EntityID id, QString &type_key) const;
@@ -365,8 +365,8 @@ private:
     std::vector<Game::Mission::WaveComposition> composition;
     bool spawned = false;
   };
-  bool screen_to_ground(const QPointF &screenPt, QVector3D &outWorld);
-  bool world_to_screen(const QVector3D &world, QPointF &outScreen) const;
+  bool screen_to_ground(const QPointF &screen_pt, QVector3D &out_world);
+  bool world_to_screen(const QVector3D &world, QPointF &out_screen) const;
   void sync_selection_flags();
   void update_civilian_delivery_availability();
   static void reset_movement(Engine::Core::Entity *entity);
@@ -413,18 +413,18 @@ private:
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
   std::unique_ptr<Render::GL::MapBoundaryFogRenderer> m_boundary_fog;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
-  std::unique_ptr<Game::Systems::RainManager> m_rainManager;
-  std::unique_ptr<Game::Systems::PickingService> m_pickingService;
-  std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
-  std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;
+  std::unique_ptr<Game::Systems::RainManager> m_rain_manager;
+  std::unique_ptr<Game::Systems::PickingService> m_picking_service;
+  std::unique_ptr<Game::Systems::VictoryService> m_victory_service;
+  std::unique_ptr<Game::Systems::SaveLoadService> m_save_load_service;
   std::unique_ptr<CursorManager> m_cursor_manager;
-  std::unique_ptr<HoverTracker> m_hoverTracker;
+  std::unique_ptr<HoverTracker> m_hover_tracker;
   bool m_civilian_delivery_available = false;
-  std::unique_ptr<Game::Systems::CameraService> m_cameraService;
-  std::unique_ptr<Game::Systems::SelectionController> m_selectionController;
-  std::unique_ptr<App::Controllers::CommandController> m_commandController;
-  std::unique_ptr<Game::Map::MapCatalog> m_mapCatalog;
-  std::unique_ptr<Game::Audio::AudioEventHandler> m_audioEventHandler;
+  std::unique_ptr<Game::Systems::CameraService> m_camera_service;
+  std::unique_ptr<Game::Systems::SelectionController> m_selection_controller;
+  std::unique_ptr<App::Controllers::CommandController> m_command_controller;
+  std::unique_ptr<Game::Map::MapCatalog> m_map_catalog;
+  std::unique_ptr<Game::Audio::AudioEventHandler> m_audio_event_handler;
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
   std::unique_ptr<MinimapManager> m_minimap_manager;
   std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
@@ -437,10 +437,10 @@ private:
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
-  bool m_followSelectionEnabled = false;
+  bool m_follow_selection_enabled = false;
   Game::Systems::LevelSnapshot m_level;
-  SelectedUnitsModel *m_selectedUnitsModel = nullptr;
-  int m_enemyTroopsDefeated = 0;
+  SelectedUnitsModel *m_selected_units_model = nullptr;
+  int m_enemy_troops_defeated = 0;
   int m_selected_player_id = 1;
   QVariantList m_available_maps;
   bool m_maps_loading = false;

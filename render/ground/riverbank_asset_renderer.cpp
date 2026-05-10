@@ -50,10 +50,10 @@ void RiverbankAssetRenderer::configure(
     const Game::Map::TerrainHeightMap &height_map,
     const Game::Map::BiomeSettings &biome_settings) {
   m_river_segments = river_segments;
-  m_width = height_map.getWidth();
-  m_height = height_map.getHeight();
-  m_tile_size = height_map.getTileSize();
-  m_height_data = height_map.getHeightData();
+  m_width = height_map.get_width();
+  m_height = height_map.get_height();
+  m_tile_size = height_map.get_tile_size();
+  m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;

@@ -22,7 +22,7 @@ struct ToolBeltConfig {
   bool include_pouches = true;
 };
 
-inline constexpr std::uint32_t kToolBeltRoleCount = 5;
+inline constexpr std::uint32_t k_tool_belt_role_count = 5;
 
 auto tool_belt_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                                 std::size_t max) -> std::uint32_t;

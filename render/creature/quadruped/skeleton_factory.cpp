@@ -17,7 +17,7 @@ auto make_topology(const TopologyOptions &options) -> TopologyStorage {
   TopologyStorage out;
   out.bones.reserve(17U);
 
-  out.root = push_bone(out, "Root", kInvalidBone);
+  out.root = push_bone(out, "Root", k_invalid_bone);
   if (options.include_body) {
     out.body = push_bone(out, "Body", out.root);
   }
@@ -47,7 +47,7 @@ auto make_topology(const TopologyOptions &options) -> TopologyStorage {
     out.head = push_bone(out, "Head", head_parent);
   }
   if (options.include_appendage_tip) {
-    BoneIndex const parent = out.head != kInvalidBone ? out.head : head_parent;
+    BoneIndex const parent = out.head != k_invalid_bone ? out.head : head_parent;
     out.appendage_tip = push_bone(out, options.appendage_tip_name, parent);
   }
 

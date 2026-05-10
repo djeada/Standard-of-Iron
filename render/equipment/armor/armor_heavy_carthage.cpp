@@ -159,13 +159,13 @@ auto armor_heavy_carthage_fill_role_colors(const HumanoidPalette &palette,
                                            QVector3D *out,
                                            std::size_t max) -> std::uint32_t {
   (void)palette;
-  if (max < kArmorHeavyCarthageRoleCount) {
+  if (max < k_armor_heavy_carthage_role_count) {
     return 0U;
   }
   out[0] = QVector3D(0.50F, 0.52F, 0.58F);
   out[1] = QVector3D(0.72F, 0.53F, 0.28F);
   out[2] = QVector3D(0.72F, 0.53F, 0.28F) * 0.92F;
-  return kArmorHeavyCarthageRoleCount;
+  return k_armor_heavy_carthage_role_count;
 }
 
 auto armor_heavy_carthage_make_static_attachment(

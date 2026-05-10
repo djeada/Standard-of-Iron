@@ -23,28 +23,28 @@ namespace Render::Creature::Pipeline {
 
 namespace {
 
-constexpr float kHumanoidFullDistance = 10.0F;
-constexpr float kHumanoidMinimalDistance = 40.0F;
+constexpr float k_humanoid_full_distance = 10.0F;
+constexpr float k_humanoid_minimal_distance = 40.0F;
 
-constexpr float kHorseFullDistance = 20.0F;
-constexpr float kHorseMinimalDistance = 60.0F;
+constexpr float k_horse_full_distance = 20.0F;
+constexpr float k_horse_minimal_distance = 60.0F;
 
-constexpr float kElephantFullDistance = 20.0F;
-constexpr float kElephantMinimalDistance = 60.0F;
+constexpr float k_elephant_full_distance = 20.0F;
+constexpr float k_elephant_minimal_distance = 60.0F;
 
-constexpr float kTemporalMinimalDistance = 45.0F;
-constexpr std::uint32_t kTemporalMinimalPeriod = 3;
+constexpr float k_temporal_minimal_distance = 45.0F;
+constexpr std::uint32_t k_temporal_minimal_period = 3;
 
-constexpr float kUltraTroopFullDistance =
+constexpr float k_ultra_troop_full_distance =
     std::numeric_limits<float>::max() / 4.0F;
-constexpr float kUltraTroopMinimalDistance =
+constexpr float k_ultra_troop_minimal_distance =
     std::numeric_limits<float>::max() / 2.0F;
 
 [[nodiscard]] auto ultra_troop_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
-  config.thresholds.full = kUltraTroopFullDistance;
-  config.thresholds.minimal = kUltraTroopMinimalDistance;
-  config.temporal.distance_minimal = kUltraTroopMinimalDistance;
+  config.thresholds.full = k_ultra_troop_full_distance;
+  config.thresholds.minimal = k_ultra_troop_minimal_distance;
+  config.temporal.distance_minimal = k_ultra_troop_minimal_distance;
   config.temporal.period_minimal = 1U;
   config.apply_visibility_budget = false;
   return config;
@@ -54,30 +54,30 @@ constexpr float kUltraTroopMinimalDistance =
 
 auto humanoid_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
-  config.thresholds.full = kHumanoidFullDistance;
-  config.thresholds.minimal = kHumanoidMinimalDistance;
-  config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_minimal = kTemporalMinimalPeriod;
+  config.thresholds.full = k_humanoid_full_distance;
+  config.thresholds.minimal = k_humanoid_minimal_distance;
+  config.temporal.distance_minimal = k_temporal_minimal_distance;
+  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = false;
   return config;
 }
 
 auto horse_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
-  config.thresholds.full = kHorseFullDistance;
-  config.thresholds.minimal = kHorseMinimalDistance;
-  config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_minimal = kTemporalMinimalPeriod;
+  config.thresholds.full = k_horse_full_distance;
+  config.thresholds.minimal = k_horse_minimal_distance;
+  config.temporal.distance_minimal = k_temporal_minimal_distance;
+  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = false;
   return config;
 }
 
 auto elephant_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
-  config.thresholds.full = kElephantFullDistance;
-  config.thresholds.minimal = kElephantMinimalDistance;
-  config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_minimal = kTemporalMinimalPeriod;
+  config.thresholds.full = k_elephant_full_distance;
+  config.thresholds.minimal = k_elephant_minimal_distance;
+  config.temporal.distance_minimal = k_temporal_minimal_distance;
+  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = false;
   return config;
 }
@@ -91,8 +91,8 @@ auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = gs.humanoid_full_detail_distance();
   config.thresholds.minimal = gs.humanoid_minimal_detail_distance();
-  config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_minimal = kTemporalMinimalPeriod;
+  config.temporal.distance_minimal = k_temporal_minimal_distance;
+  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
 }
@@ -106,8 +106,8 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = gs.horse_full_detail_distance();
   config.thresholds.minimal = gs.horse_minimal_detail_distance();
-  config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_minimal = kTemporalMinimalPeriod;
+  config.temporal.distance_minimal = k_temporal_minimal_distance;
+  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
 }
@@ -121,8 +121,8 @@ auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = gs.elephant_full_detail_distance();
   config.thresholds.minimal = gs.elephant_minimal_detail_distance();
-  config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_minimal = kTemporalMinimalPeriod;
+  config.temporal.distance_minimal = k_temporal_minimal_distance;
+  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
 }
@@ -220,7 +220,7 @@ build_request(const CreatureGraphOutput &output,
               float phase) noexcept -> Render::Creature::CreatureRenderRequest {
   Render::Creature::CreatureRenderRequest req;
   req.archetype = archetype;
-  req.variant = Render::Creature::kCanonicalVariant;
+  req.variant = Render::Creature::k_canonical_variant;
   req.state = state;
   req.phase = phase;
   req.world = output.world_matrix;
@@ -237,15 +237,15 @@ build_request(const CreatureGraphOutput &output,
     -> Render::Creature::ArchetypeId {
   switch (kind) {
   case CreatureKind::Horse:
-    return Render::Creature::ArchetypeRegistry::kHorseBase;
+    return Render::Creature::ArchetypeRegistry::k_horse_base;
   case CreatureKind::Elephant:
-    return Render::Creature::ArchetypeRegistry::kElephantBase;
+    return Render::Creature::ArchetypeRegistry::k_elephant_base;
   case CreatureKind::Humanoid:
-    return Render::Creature::ArchetypeRegistry::kHumanoidBase;
+    return Render::Creature::ArchetypeRegistry::k_humanoid_base;
   case CreatureKind::Mounted:
-    return Render::Creature::kInvalidArchetype;
+    return Render::Creature::k_invalid_archetype;
   }
-  return Render::Creature::kInvalidArchetype;
+  return Render::Creature::k_invalid_archetype;
 }
 
 template <typename Variant>
@@ -336,8 +336,8 @@ auto variant_hash(const Render::GL::ElephantVariant &variant) noexcept
 
 struct RoleColorCacheKey {
   Render::Creature::Pipeline::CreatureAssetId asset{
-      Render::Creature::Pipeline::kInvalidCreatureAsset};
-  Render::Creature::ArchetypeId archetype{Render::Creature::kInvalidArchetype};
+      Render::Creature::Pipeline::k_invalid_creature_asset};
+  Render::Creature::ArchetypeId archetype{Render::Creature::k_invalid_archetype};
   std::uint64_t variant_hash{0U};
 
   auto operator==(const RoleColorCacheKey &other) const noexcept -> bool {
@@ -357,7 +357,7 @@ struct RoleColorCacheKeyHash {
 
 struct RoleColorCacheValue {
   std::array<QVector3D,
-             Render::Creature::CreatureRenderRequest::kRoleColorCapacity>
+             Render::Creature::CreatureRenderRequest::k_role_color_capacity>
       colors{};
   std::uint8_t count{0U};
 };
@@ -412,8 +412,8 @@ void populate_role_colors(Render::Creature::CreatureRenderRequest &req,
 
   populate_role_colors_uncached(req, variant);
 
-  constexpr std::size_t kMaxRoleColorCacheEntries = 8192;
-  if (cache.size() >= kMaxRoleColorCacheEntries) {
+  constexpr std::size_t k_max_role_color_cache_entries = 8192;
+  if (cache.size() >= k_max_role_color_cache_entries) {
     cache.clear();
   }
   RoleColorCacheValue value;
@@ -433,9 +433,9 @@ void CreatureRenderBatch::add_humanoid(
   }
 
   auto const archetype_id =
-      (output.spec.archetype_id != Render::Creature::kInvalidArchetype)
+      (output.spec.archetype_id != Render::Creature::k_invalid_archetype)
           ? output.spec.archetype_id
-          : Render::Creature::ArchetypeRegistry::kHumanoidBase;
+          : Render::Creature::ArchetypeRegistry::k_humanoid_base;
 
   auto const state = humanoid_state_for_anim(anim);
   float const phase = humanoid_phase_for_anim(anim);
@@ -486,7 +486,7 @@ void CreatureRenderBatch::add_quadruped(
     rows_.push_back(std::move(row));
   }
   auto const archetype_id =
-      (output.spec.archetype_id != Render::Creature::kInvalidArchetype)
+      (output.spec.archetype_id != Render::Creature::k_invalid_archetype)
           ? output.spec.archetype_id
           : default_archetype_for(CreatureKind::Horse);
   auto req = build_request(output, archetype_id, state, phase);
@@ -524,7 +524,7 @@ void CreatureRenderBatch::add_quadruped(
     rows_.push_back(std::move(row));
   }
   auto const archetype_id =
-      (output.spec.archetype_id != Render::Creature::kInvalidArchetype)
+      (output.spec.archetype_id != Render::Creature::k_invalid_archetype)
           ? output.spec.archetype_id
           : default_archetype_for(CreatureKind::Elephant);
   auto req = build_request(output, archetype_id, state, phase);

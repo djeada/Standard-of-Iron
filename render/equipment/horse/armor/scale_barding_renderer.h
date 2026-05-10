@@ -15,7 +15,7 @@ auto scale_barding_chest_archetype() -> const RenderArchetype &;
 auto scale_barding_barrel_archetype() -> const RenderArchetype &;
 auto scale_barding_neck_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kScaleBardingRoleCount = 1;
+inline constexpr std::uint32_t k_scale_barding_role_count = 1;
 
 auto scale_barding_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                                     std::size_t max) -> std::uint32_t;

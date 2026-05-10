@@ -36,11 +36,11 @@ auto carthage_saddle_archetype() -> const RenderArchetype & {
 auto carthage_saddle_fill_role_colors(const HorseVariant &variant,
                                       QVector3D *out,
                                       std::size_t max) -> std::uint32_t {
-  if (max < kCarthageSaddleRoleCount) {
+  if (max < k_carthage_saddle_role_count) {
     return 0;
   }
   out[0] = variant.saddle_color;
-  return kCarthageSaddleRoleCount;
+  return k_carthage_saddle_role_count;
 }
 
 auto carthage_saddle_make_static_attachment(

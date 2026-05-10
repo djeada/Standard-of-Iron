@@ -35,11 +35,11 @@ auto blanket_archetype() -> const RenderArchetype & {
 
 auto blanket_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                               std::size_t max) -> std::uint32_t {
-  if (max < kBlanketRoleCount) {
+  if (max < k_blanket_role_count) {
     return 0;
   }
   out[0] = variant.blanket_color;
-  return kBlanketRoleCount;
+  return k_blanket_role_count;
 }
 
 auto blanket_make_static_attachment(std::uint16_t socket_bone_index,
