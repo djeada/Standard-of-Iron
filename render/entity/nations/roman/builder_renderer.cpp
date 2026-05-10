@@ -210,7 +210,7 @@ auto builder_work_tunic_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     using GP = Render::GL::GeneratedEquipmentPrimitive;
     std::vector<GP> primitives;
-    primitives.reserve(10);
+    primitives.reserve(64);
     const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
     const AttachmentFrame &torso = bind_frames.torso;
     const AttachmentFrame &waist = bind_frames.waist;
@@ -222,44 +222,83 @@ auto builder_work_tunic_archetype() -> const RenderArchetype & {
         (torso.depth > 0.0F) ? torso.depth * 0.92F : torso.radius * 0.80F;
     float const y_shoulder = 0.032F;
     float const y_waist = torso_local.point(waist.origin).y();
-    float const y_hem = y_waist - 0.16F;
-    float const y_torso_mid = (y_shoulder + y_waist) * 0.5F;
-    float const y_skirt_mid = (y_waist + y_hem) * 0.5F;
+    float const y_hem = y_waist - 0.18F;
+    constexpr int k_segments = 12;
+    constexpr int k_skirt_layers = 8;
+    constexpr float k_pi = std::numbers::pi_v<float>;
 
-    auto add_box = [&](const QVector3D &center, const QVector3D &scale,
-                       std::uint8_t slot) {
-      primitives.push_back(generated_box(center, scale, slot));
+    auto add_ring = [&](float y, float width, float depth, std::uint8_t slot,
+                        float thickness) {
+      for (int i = 0; i < k_segments; ++i) {
+        float const a0 = (static_cast<float>(i) / k_segments) * 2.0F * k_pi;
+        float const a1 = (static_cast<float>(i + 1) / k_segments) * 2.0F * k_pi;
+        primitives.push_back(generated_cylinder(
+            QVector3D(width * std::sin(a0), y, depth * std::cos(a0)),
+            QVector3D(width * std::sin(a1), y, depth * std::cos(a1)), thickness,
+            slot));
+      }
     };
 
-    add_box(QVector3D(0.0F, y_shoulder + 0.035F, 0.0F),
-            QVector3D(torso_r * 1.70F, 0.10F, torso_d * 1.35F),
-            k_builder_tunic_dark_slot);
-    add_box(QVector3D(0.0F, y_torso_mid, 0.0F),
-            QVector3D(torso_r * 1.52F, y_shoulder - y_waist + 0.14F,
-                      torso_d * 1.26F),
-            k_builder_tunic_base_slot);
-    add_box(QVector3D(0.0F, y_waist + 0.015F, 0.0F),
-            QVector3D(torso_r * 1.58F, 0.06F, torso_d * 1.18F),
-            k_builder_tunic_dark_slot);
-    add_box(
-        QVector3D(0.0F, y_skirt_mid, torso_d * 0.03F),
-        QVector3D(torso_r * 1.74F, y_waist - y_hem + 0.10F, torso_d * 1.42F),
-        k_builder_tunic_base_slot);
-    add_box(
-        QVector3D(0.0F, y_skirt_mid - 0.015F, torso_d * 0.46F),
-        QVector3D(torso_r * 1.32F, y_waist - y_hem + 0.06F, torso_d * 0.34F),
-        k_builder_tunic_dark_slot);
-    add_box(
-        QVector3D(0.0F, y_skirt_mid + 0.01F, -torso_d * 0.22F),
-        QVector3D(torso_r * 1.42F, y_waist - y_hem + 0.08F, torso_d * 0.52F),
-        k_builder_tunic_base_slot);
+    auto add_section = [&](float y_top, float y_bot, float width_top,
+                           float width_bot, float depth_top, float depth_bot,
+                           std::uint8_t slot) {
+      float const radius =
+          (width_top + width_bot + depth_top + depth_bot) * 0.25F;
+      primitives.push_back(generated_cylinder(QVector3D(0.0F, y_bot, 0.0F),
+                                              QVector3D(0.0F, y_top, 0.0F),
+                                              radius, slot));
+    };
+
+    add_ring(y_shoulder + 0.048F, torso_r * 0.70F, torso_d * 0.62F,
+             k_builder_tunic_dark_slot, 0.018F);
+    add_ring(y_shoulder + 0.030F, torso_r * 1.10F, torso_d * 1.02F,
+             k_builder_tunic_base_slot, 0.031F);
+    add_ring(y_shoulder - 0.002F, torso_r * 1.04F, torso_d * 0.98F,
+             k_builder_tunic_base_slot, 0.028F);
+
+    add_section(y_shoulder + 0.016F, y_shoulder - 0.08F, torso_r * 1.06F,
+                torso_r * 0.99F, torso_d * 0.98F, torso_d * 0.92F,
+                k_builder_tunic_base_slot);
+    add_section(y_shoulder - 0.08F, y_waist + 0.018F, torso_r * 0.97F,
+                torso_r * 0.88F, torso_d * 0.90F, torso_d * 0.82F,
+                k_builder_tunic_dark_slot);
+    add_ring(y_waist + 0.010F, torso_r * 0.90F, torso_d * 0.84F,
+             k_builder_tunic_dark_slot, 0.022F);
+
+    for (int layer = 0; layer < k_skirt_layers; ++layer) {
+      float const t =
+          static_cast<float>(layer) / static_cast<float>(k_skirt_layers - 1);
+      float const y = y_waist - 0.010F - t * (y_waist - y_hem);
+      float const flare = 1.0F + t * 0.30F;
+      float const thickness = 0.018F + t * 0.010F;
+      std::uint8_t const slot = (layer % 3 == 1) ? k_builder_tunic_dark_slot
+                                                 : k_builder_tunic_base_slot;
+      add_ring(y, torso_r * 0.88F * flare, torso_d * 0.82F * flare, slot,
+               thickness);
+    }
+    add_ring(y_hem + 0.010F, torso_r * 1.18F, torso_d * 1.10F,
+             k_builder_tunic_dark_slot, 0.020F);
+
+    for (int fold = -1; fold <= 1; ++fold) {
+      float const t = static_cast<float>(fold);
+      QVector3D const start(t * torso_r * 0.34F, y_waist - 0.005F,
+                            torso_d * 0.54F);
+      QVector3D const end(t * torso_r * 0.40F, y_hem + 0.025F, torso_d * 0.72F);
+      primitives.push_back(generated_cylinder(start, end, torso_r * 0.09F,
+                                              k_builder_tunic_base_slot));
+    }
 
     auto add_sleeve = [&](const AttachmentFrame &shoulder, float side_sign) {
       QVector3D const shoulder_local = torso_local.point(shoulder.origin);
-      add_box(shoulder_local + QVector3D(side_sign * torso_r * 0.18F, -0.05F,
-                                         torso_d * 0.12F),
-              QVector3D(torso_r * 0.44F, 0.18F, torso_d * 0.56F),
-              k_builder_tunic_dark_slot);
+      QVector3D const start =
+          shoulder_local +
+          QVector3D(side_sign * torso_r * 0.10F, -0.015F, torso_d * 0.04F);
+      QVector3D const end = start + QVector3D(side_sign * torso_r * 0.20F,
+                                              -0.085F, torso_d * 0.06F);
+      primitives.push_back(generated_cylinder(start, end, torso_r * 0.20F,
+                                              k_builder_tunic_dark_slot));
+      primitives.push_back(
+          generated_sphere(end, torso_r * 0.17F, k_builder_tunic_dark_slot));
     };
 
     add_sleeve(bind_frames.shoulder_l, -1.0F);

@@ -5,7 +5,7 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_texCoord;
 
 uniform mat4 u_model;
-uniform mat4 u_viewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 uniform float u_time;
 
 out vec2 v_texCoord;

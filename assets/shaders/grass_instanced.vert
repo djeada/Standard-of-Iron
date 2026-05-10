@@ -6,7 +6,7 @@ layout(location = 2) in vec4 a_posHeight;
 layout(location = 3) in vec4 a_colorWidth;
 layout(location = 4) in vec4 a_swayParams;
 
-uniform mat4 u_viewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 uniform float u_time;
 uniform float u_windStrength;
 uniform float u_windSpeed;

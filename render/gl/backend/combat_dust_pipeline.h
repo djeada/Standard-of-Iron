@@ -63,6 +63,18 @@ public:
                                   float intensity, float time,
                                   const QMatrix4x4 &view_proj);
 
+  struct DustInstanceData {
+    QVector3D position;
+    QVector3D color;
+    float radius{2.0F};
+    float intensity{0.6F};
+    float time{0.0F};
+    EffectType effect_type{EffectType::Dust};
+  };
+
+  void render_dust_batch(const DustInstanceData *instances, std::size_t count,
+                         const QMatrix4x4 &view_proj);
+
   void clear_data() { m_dust_data.clear(); }
 
   void add_dust_zone(const QVector3D &position, float radius, float intensity,

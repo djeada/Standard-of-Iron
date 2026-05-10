@@ -145,7 +145,7 @@ TEST(RiggedPipeline, QueueSubmitterShaderStateDoesNotAffectRiggedBatching) {
   EXPECT_EQ(batches.front().count, 2U);
 }
 
-TEST(RiggedPipeline, DifferentRolePalettesSplitRiggedPreparedBatches) {
+TEST(RiggedPipeline, DifferentRolePalettesShareRiggedPreparedBatch) {
   using namespace Render::GL;
 
   DrawQueue queue;
@@ -167,9 +167,56 @@ TEST(RiggedPipeline, DifferentRolePalettesSplitRiggedPreparedBatches) {
 
   queue.sort_for_batching();
   const auto &batches = queue.prepared_batches();
-  ASSERT_EQ(batches.size(), 2U);
+
+  ASSERT_EQ(batches.size(), 1U);
+  EXPECT_EQ(batches[0].kind, PreparedBatchKind::RiggedCreatureInstanced);
+  EXPECT_EQ(batches[0].count, 2U);
+}
+
+TEST(RiggedPipeline, MultipleSelectionRingsBatchedIntoInstanced) {
+  using namespace Render::GL;
+
+  DrawQueue queue;
+
+  SelectionRingCmd ring_a;
+  ring_a.priority = Render::CommandPriority::Critical;
+  ring_a.color = QVector3D(1.0F, 0.0F, 0.0F);
+  queue.submit(ring_a);
+
+  SelectionRingCmd ring_b;
+  ring_b.priority = Render::CommandPriority::Critical;
+  ring_b.color = QVector3D(0.0F, 0.0F, 1.0F);
+  queue.submit(ring_b);
+
+  SelectionRingCmd ring_c;
+  ring_c.priority = Render::CommandPriority::Critical;
+  ring_c.color = QVector3D(0.0F, 1.0F, 0.0F);
+  queue.submit(ring_c);
+
+  queue.sort_for_batching();
+  const auto &batches = queue.prepared_batches();
+
+  ASSERT_EQ(batches.size(), 1U);
+  EXPECT_EQ(batches[0].kind, PreparedBatchKind::SelectionRingInstanced);
+  EXPECT_EQ(batches[0].count, 3U);
+  EXPECT_EQ(batches[0].type, DrawCmdType::SelectionRing);
+}
+
+TEST(RiggedPipeline, SingleSelectionRingRemainsASingleBatch) {
+  using namespace Render::GL;
+
+  DrawQueue queue;
+
+  SelectionRingCmd ring;
+  ring.priority = Render::CommandPriority::Critical;
+  queue.submit(ring);
+
+  queue.sort_for_batching();
+  const auto &batches = queue.prepared_batches();
+
+  ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].kind, PreparedBatchKind::Single);
-  EXPECT_EQ(batches[1].kind, PreparedBatchKind::Single);
+  EXPECT_EQ(batches[0].count, 1U);
 }
 
 } // namespace

@@ -313,33 +313,71 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
         (torso.depth > 0.0F) ? torso.depth * 0.90F : torso.radius * 0.78F;
     float const y_sh = 0.035F;
     float const y_w = waist.origin.y() - torso.origin.y();
-    float const y_hem = y_w - 0.22F;
-    float const y_torso_mid = (y_sh + y_w) * 0.5F;
-    float const y_skirt_mid = (y_w + y_hem) * 0.5F;
+    float const y_hem = y_w - 0.24F;
+    constexpr int k_segments = 12;
+    constexpr int k_skirt_layers = 9;
+    constexpr float k_pi = std::numbers::pi_v<float>;
 
     std::vector<GeneratedEquipmentPrimitive> prims;
-    prims.reserve(10);
-    auto add_box = [&](const QVector3D &center, const QVector3D &scale,
-                       std::uint8_t slot) {
-      prims.push_back(generated_box(center, scale, slot));
+    prims.reserve(72);
+    auto add_ring = [&](float y, float width, float depth, std::uint8_t slot,
+                        float thickness) {
+      for (int i = 0; i < k_segments; ++i) {
+        float const a0 = (static_cast<float>(i) / k_segments) * 2.0F * k_pi;
+        float const a1 = (static_cast<float>(i + 1) / k_segments) * 2.0F * k_pi;
+        prims.push_back(generated_cylinder(
+            QVector3D(width * std::sin(a0), y, depth * std::cos(a0)),
+            QVector3D(width * std::sin(a1), y, depth * std::cos(a1)), thickness,
+            slot));
+      }
     };
 
-    add_box(QVector3D(0.0F, y_sh + 0.04F, 0.0F),
-            QVector3D(tr * 1.76F, 0.11F, td * 1.38F), k_dark);
-    add_box(QVector3D(0.0F, y_torso_mid, 0.0F),
-            QVector3D(tr * 1.62F, y_sh - y_w + 0.16F, td * 1.30F), k_main);
-    add_box(QVector3D(0.0F, y_w + 0.015F, 0.0F),
-            QVector3D(tr * 1.68F, 0.06F, td * 1.22F), k_dark);
-    add_box(QVector3D(0.0F, y_skirt_mid, td * 0.02F),
-            QVector3D(tr * 1.86F, y_w - y_hem + 0.16F, td * 1.52F), k_main);
-    add_box(QVector3D(0.0F, y_skirt_mid - 0.01F, td * 0.50F),
-            QVector3D(tr * 1.44F, y_w - y_hem + 0.10F, td * 0.36F), k_dark);
-    add_box(QVector3D(0.0F, y_skirt_mid + 0.02F, -td * 0.24F),
-            QVector3D(tr * 1.52F, y_w - y_hem + 0.14F, td * 0.54F), k_dark);
-    add_box(QVector3D(-tr * 0.68F, y_torso_mid - 0.02F, 0.0F),
-            QVector3D(tr * 0.30F, y_sh - y_hem, td * 1.08F), k_main);
-    add_box(QVector3D(tr * 0.68F, y_torso_mid - 0.02F, 0.0F),
-            QVector3D(tr * 0.30F, y_sh - y_hem, td * 1.08F), k_main);
+    auto add_section = [&](float y_top, float y_bot, float width_top,
+                           float width_bot, float depth_top, float depth_bot,
+                           std::uint8_t slot) {
+      float const radius =
+          (width_top + width_bot + depth_top + depth_bot) * 0.25F;
+      prims.push_back(generated_cylinder(QVector3D(0.0F, y_bot, 0.0F),
+                                         QVector3D(0.0F, y_top, 0.0F), radius,
+                                         slot));
+    };
+
+    add_ring(y_sh + 0.046F, tr * 0.68F, td * 0.60F, k_dark, 0.018F);
+    add_ring(y_sh + 0.030F, tr * 1.14F, td * 1.05F, k_main, 0.033F);
+    add_ring(y_sh - 0.004F, tr * 1.08F, td * 0.99F, k_main, 0.029F);
+
+    add_section(y_sh + 0.016F, y_sh - 0.09F, tr * 1.10F, tr * 1.02F, td * 0.99F,
+                td * 0.92F, k_main);
+    add_section(y_sh - 0.09F, y_w + 0.018F, tr * 1.00F, tr * 0.90F, td * 0.90F,
+                td * 0.82F, k_dark);
+    add_ring(y_w + 0.012F, tr * 0.92F, td * 0.84F, k_dark, 0.024F);
+
+    for (int layer = 0; layer < k_skirt_layers; ++layer) {
+      float const t =
+          static_cast<float>(layer) / static_cast<float>(k_skirt_layers - 1);
+      float const y = y_w - 0.012F - t * (y_w - y_hem);
+      float const flare = 1.0F + t * 0.34F;
+      float const thickness = 0.019F + t * 0.011F;
+      std::uint8_t const slot = (layer % 3 == 2) ? k_dark : k_main;
+      add_ring(y, tr * 0.90F * flare, td * 0.82F * flare, slot, thickness);
+    }
+    add_ring(y_hem + 0.012F, tr * 1.22F, td * 1.10F, k_dark, 0.021F);
+
+    QVector3D const left_top(-tr * 0.72F, y_sh - 0.010F, td * 0.10F);
+    QVector3D const right_top(tr * 0.72F, y_sh - 0.010F, td * 0.10F);
+    QVector3D const left_bottom(-tr * 0.86F, y_hem + 0.060F, td * 0.18F);
+    QVector3D const right_bottom(tr * 0.86F, y_hem + 0.060F, td * 0.18F);
+    prims.push_back(
+        generated_cylinder(left_top, left_bottom, tr * 0.16F, k_main));
+    prims.push_back(
+        generated_cylinder(right_top, right_bottom, tr * 0.16F, k_main));
+
+    for (int fold = -1; fold <= 1; ++fold) {
+      float const t = static_cast<float>(fold);
+      QVector3D const start(t * tr * 0.36F, y_w - 0.004F, td * 0.56F);
+      QVector3D const end(t * tr * 0.42F, y_hem + 0.030F, td * 0.76F);
+      prims.push_back(generated_cylinder(start, end, tr * 0.10F, k_main));
+    }
     return build_generated_equipment_archetype(
         "carthage_robes", std::span<const GeneratedEquipmentPrimitive>(
                               prims.data(), prims.size()));

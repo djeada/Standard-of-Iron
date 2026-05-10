@@ -9,7 +9,7 @@ layout(location = 4) in vec4 a_instanceModelCol1;
 layout(location = 5) in vec4 a_instanceModelCol2;
 layout(location = 6) in vec4 a_instanceColorAlpha;
 
-uniform mat4 u_viewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 
 out vec3 v_normal;
 out vec2 v_texCoord;

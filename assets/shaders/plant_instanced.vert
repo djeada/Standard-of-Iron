@@ -9,7 +9,7 @@ layout(location = 3) in vec4 aPosScale;
 layout(location = 4) in vec4 aColorSway;
 layout(location = 5) in vec4 aTypeParams;
 
-uniform mat4 uViewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 uniform float uTime;
 uniform float uWindStrength;
 uniform float uWindSpeed;
@@ -96,5 +96,5 @@ void main() {
 
   vAlpha = 1.0 - smoothstep(0.49, 0.56, abs(aTexCoord.x - 0.5));
 
-  gl_Position = uViewProj * vec4(vWorldPos, 1.0);
+  gl_Position = u_viewProj * vec4(vWorldPos, 1.0);
 }

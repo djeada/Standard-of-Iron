@@ -75,25 +75,11 @@ void flatten_role_colors(
   }
 }
 
-auto same_role_palette(const RiggedCreatureCmd &a,
-                       const RiggedCreatureCmd &b) -> bool {
-  if (a.role_color_count != b.role_color_count) {
-    return false;
-  }
-  const auto n =
-      std::min<std::size_t>(a.role_color_count, a.role_colors.size());
-  for (std::size_t i = 0; i < n; ++i) {
-    if (a.role_colors[i] != b.role_colors[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 auto same_instanced_batch_key(const RiggedCreatureCmd &head,
                               const RiggedCreatureCmd &cmd) -> bool {
+
   return cmd.mesh == head.mesh && cmd.material == head.material &&
-         cmd.texture == nullptr && same_role_palette(head, cmd);
+         cmd.texture == nullptr;
 }
 
 void set_role_palette_uniforms(GL::Shader *shader,
@@ -120,6 +106,24 @@ void set_role_palette_uniforms(GL::Shader *shader,
   fn->glUniform3fv(colors_handle,
                    static_cast<GLsizei>(RiggedCreatureCmd::k_max_role_colors),
                    flat.data());
+}
+
+template <typename GetCmd>
+void pack_role_colors_to_scratch(std::vector<float> &scratch, std::size_t count,
+                                 GetCmd get_cmd) {
+  constexpr std::size_t k = RiggedCreatureCmd::k_max_role_colors;
+  scratch.assign(count * k * 4, 0.0f);
+  for (std::size_t inst = 0; inst < count; ++inst) {
+    const auto &c = get_cmd(inst);
+    const std::size_t n =
+        std::min<std::size_t>(c.role_color_count, c.role_colors.size());
+    float *dst = scratch.data() + inst * k * 4;
+    for (std::size_t r = 0; r < n; ++r) {
+      dst[r * 4 + 0] = c.role_colors[r].x();
+      dst[r * 4 + 1] = c.role_colors[r].y();
+      dst[r * 4 + 2] = c.role_colors[r].z();
+    }
+  }
 }
 
 } // namespace
@@ -195,10 +199,8 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
   m_instanced_shader->bind_uniform_block("BonePalette",
                                          k_bone_palette_binding_point);
   m_instanced_view_proj = m_instanced_shader->uniform_handle("u_view_proj");
-  m_instanced_role_colors =
-      m_instanced_shader->optional_uniform_handle("u_role_colors[0]");
-  m_instanced_role_color_count =
-      m_instanced_shader->optional_uniform_handle("u_role_color_count");
+  m_instanced_role_color_tbo =
+      m_instanced_shader->optional_uniform_handle("u_role_color_tbo");
   return true;
 }
 
@@ -208,8 +210,7 @@ void RiggedCharacterPipeline::shutdown() {
   m_instanced_shader_storage.reset();
   m_uniforms = Uniforms{};
   m_instanced_view_proj = GL::Shader::InvalidUniform;
-  m_instanced_role_colors = GL::Shader::InvalidUniform;
-  m_instanced_role_color_count = GL::Shader::InvalidUniform;
+  m_instanced_role_color_tbo = GL::Shader::InvalidUniform;
 
   auto *fn = gl_funcs();
   if (fn != nullptr) {
@@ -218,6 +219,12 @@ void RiggedCharacterPipeline::shutdown() {
     }
     if (m_palette_ubo != 0) {
       fn->glDeleteBuffers(1, &m_palette_ubo);
+    }
+    if (m_role_color_tbo_tex != 0) {
+      fn->glDeleteTextures(1, &m_role_color_tbo_tex);
+    }
+    if (m_role_color_buffer != 0) {
+      fn->glDeleteBuffers(1, &m_role_color_buffer);
     }
     for (auto &kv : m_instanced_vaos) {
       if (kv.second.vao != 0) {
@@ -229,6 +236,9 @@ void RiggedCharacterPipeline::shutdown() {
   m_instance_vbo_capacity_bytes = 0;
   m_palette_ubo = 0;
   m_palette_ubo_capacity_bytes = 0;
+  m_role_color_buffer = 0;
+  m_role_color_tbo_tex = 0;
+  m_role_color_buffer_capacity_bytes = 0;
   m_instanced_vaos.clear();
 }
 
@@ -527,8 +537,35 @@ auto RiggedCharacterPipeline::draw_instanced(
   if (m_instanced_view_proj != Shader::InvalidUniform) {
     m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
   }
-  set_role_palette_uniforms(m_instanced_shader, m_instanced_role_colors,
-                            m_instanced_role_color_count, cmds[0]);
+
+  pack_role_colors_to_scratch(
+      m_role_color_scratch, count,
+      [&](std::size_t k) -> const RiggedCreatureCmd & { return cmds[k]; });
+  std::size_t const tbo_bytes =
+      count * RiggedCreatureCmd::k_max_role_colors * 4 * sizeof(float);
+  if (m_role_color_buffer == 0) {
+    fn->glGenBuffers(1, &m_role_color_buffer);
+  }
+  fn->glBindBuffer(GL_TEXTURE_BUFFER, m_role_color_buffer);
+  if (tbo_bytes > m_role_color_buffer_capacity_bytes) {
+    std::size_t const cap = ((tbo_bytes + 4095U) / 4096U) * 4096U;
+    fn->glBufferData(GL_TEXTURE_BUFFER, static_cast<GLsizeiptr>(cap), nullptr,
+                     GL_DYNAMIC_DRAW);
+    m_role_color_buffer_capacity_bytes = cap;
+  }
+  fn->glBufferSubData(GL_TEXTURE_BUFFER, 0, static_cast<GLsizeiptr>(tbo_bytes),
+                      m_role_color_scratch.data());
+  if (m_role_color_tbo_tex == 0) {
+    fn->glGenTextures(1, &m_role_color_tbo_tex);
+    fn->glBindTexture(GL_TEXTURE_BUFFER, m_role_color_tbo_tex);
+    fn->glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_role_color_buffer);
+    fn->glBindTexture(GL_TEXTURE_BUFFER, 0);
+  }
+  fn->glActiveTexture(GL_TEXTURE0);
+  fn->glBindTexture(GL_TEXTURE_BUFFER, m_role_color_tbo_tex);
+  if (m_instanced_role_color_tbo != Shader::InvalidUniform) {
+    m_instanced_shader->set_uniform(m_instanced_role_color_tbo, 0);
+  }
 
   std::size_t const upload_palette_bytes =
       count * BonePaletteArena::k_palette_bytes;
@@ -645,8 +682,35 @@ auto RiggedCharacterPipeline::draw_instanced(
   if (m_instanced_view_proj != Shader::InvalidUniform) {
     m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
   }
-  set_role_palette_uniforms(m_instanced_shader, m_instanced_role_colors,
-                            m_instanced_role_color_count, *cmds[0]);
+
+  pack_role_colors_to_scratch(
+      m_role_color_scratch, count,
+      [&](std::size_t k) -> const RiggedCreatureCmd & { return *cmds[k]; });
+  std::size_t const tbo_bytes =
+      count * RiggedCreatureCmd::k_max_role_colors * 4 * sizeof(float);
+  if (m_role_color_buffer == 0) {
+    fn->glGenBuffers(1, &m_role_color_buffer);
+  }
+  fn->glBindBuffer(GL_TEXTURE_BUFFER, m_role_color_buffer);
+  if (tbo_bytes > m_role_color_buffer_capacity_bytes) {
+    std::size_t const cap = ((tbo_bytes + 4095U) / 4096U) * 4096U;
+    fn->glBufferData(GL_TEXTURE_BUFFER, static_cast<GLsizeiptr>(cap), nullptr,
+                     GL_DYNAMIC_DRAW);
+    m_role_color_buffer_capacity_bytes = cap;
+  }
+  fn->glBufferSubData(GL_TEXTURE_BUFFER, 0, static_cast<GLsizeiptr>(tbo_bytes),
+                      m_role_color_scratch.data());
+  if (m_role_color_tbo_tex == 0) {
+    fn->glGenTextures(1, &m_role_color_tbo_tex);
+    fn->glBindTexture(GL_TEXTURE_BUFFER, m_role_color_tbo_tex);
+    fn->glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_role_color_buffer);
+    fn->glBindTexture(GL_TEXTURE_BUFFER, 0);
+  }
+  fn->glActiveTexture(GL_TEXTURE0);
+  fn->glBindTexture(GL_TEXTURE_BUFFER, m_role_color_tbo_tex);
+  if (m_instanced_role_color_tbo != Shader::InvalidUniform) {
+    m_instanced_shader->set_uniform(m_instanced_role_color_tbo, 0);
+  }
 
   std::size_t const upload_palette_bytes =
       count * BonePaletteArena::k_palette_bytes;

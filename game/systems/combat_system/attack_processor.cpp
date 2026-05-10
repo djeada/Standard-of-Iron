@@ -739,12 +739,17 @@ void process_attacks(Engine::Core::World *world,
     bool const has_attack_target =
         attacker->has_component<Engine::Core::AttackTargetComponent>();
     if ((best_target == nullptr) && !has_attack_target) {
-      best_target = find_nearest_enemy(attacker, query_context, range);
-      if (best_target != nullptr) {
-        best_target_unit =
-            best_target->get_component<Engine::Core::UnitComponent>();
-        best_target_transform =
-            best_target->get_component<Engine::Core::TransformComponent>();
+
+      auto const *cmdr =
+          attacker->get_component<Engine::Core::CommanderComponent>();
+      if (cmdr == nullptr || !cmdr->fpv_controlled) {
+        best_target = find_nearest_enemy(attacker, query_context, range);
+        if (best_target != nullptr) {
+          best_target_unit =
+              best_target->get_component<Engine::Core::UnitComponent>();
+          best_target_transform =
+              best_target->get_component<Engine::Core::TransformComponent>();
+        }
       }
     }
 
