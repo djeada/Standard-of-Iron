@@ -52,6 +52,8 @@
         <file>assets/shaders/healing_beam.vert</file>
         <file>assets/shaders/mode_indicator.frag</file>
         <file>assets/shaders/mode_indicator.vert</file>
+        <file>assets/shaders/mode_indicator_instanced.vert</file>
+        <file>assets/shaders/mode_indicator_instanced.frag</file>
         <file>assets/shaders/rain.frag</file>
         <file>assets/shaders/rain.vert</file>
         

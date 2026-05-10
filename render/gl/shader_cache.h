@@ -212,6 +212,10 @@ public:
     load(QStringLiteral("mode_indicator"),
          resolve(shader_base + QStringLiteral("mode_indicator.vert")),
          resolve(shader_base + QStringLiteral("mode_indicator.frag")));
+    load(
+        QStringLiteral("mode_indicator_instanced"),
+        resolve(shader_base + QStringLiteral("mode_indicator_instanced.vert")),
+        resolve(shader_base + QStringLiteral("mode_indicator_instanced.frag")));
   }
 
   void clear() {

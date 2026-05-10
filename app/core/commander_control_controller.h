@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPoint>
+#include <QVector3D>
 #include <Qt>
 
 class QQuickWindow;
@@ -69,7 +70,7 @@ public:
 
 private:
   void update_camera(Engine::Core::Entity &commander,
-                     Render::GL::Camera &camera);
+                     Render::GL::Camera &camera, float dt);
   InputState m_input;
   float m_view_yaw = 0.0F;
   float m_view_pitch = 0.0F;
@@ -79,4 +80,20 @@ private:
   bool m_last_mouse_valid = false;
   bool m_mouse_warp_supported = false;
   bool m_mouse_recentering = false;
+
+  float m_bob_phase = 0.0F;
+  float m_bob_amplitude = 0.0F;
+  float m_breath_phase = 0.0F;
+  float m_strafe_lean = 0.0F;
+  float m_fov_current = 75.0F;
+  QVector3D m_cam_eye_smooth{};
+  QVector3D m_cam_target_smooth{};
+  bool m_cam_smooth_valid = false;
+
+  float m_move_speed = 0.0F;
+  int m_move_right_axis = 0;
+  bool m_move_running = false;
+
+  float m_hit_trauma = 0.0F;
+  float m_hit_shake_phase = 0.0F;
 };

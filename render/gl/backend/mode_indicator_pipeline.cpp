@@ -48,11 +48,19 @@ auto ModeIndicatorPipeline::initialize() -> bool {
 
   cache_uniforms();
 
+  m_instanced_shader = m_shader_cache->get("mode_indicator_instanced");
+  if (m_instanced_shader != nullptr) {
+    cache_instanced_uniforms();
+  }
+
   qInfo() << "ModeIndicatorPipeline initialized successfully";
   return is_initialized();
 }
 
-void ModeIndicatorPipeline::shutdown() { m_indicator_shader = nullptr; }
+void ModeIndicatorPipeline::shutdown() {
+  m_indicator_shader = nullptr;
+  m_instanced_shader = nullptr;
+}
 
 void ModeIndicatorPipeline::cache_uniforms() {
   if (m_indicator_shader == nullptr) {
@@ -63,6 +71,13 @@ void ModeIndicatorPipeline::cache_uniforms() {
   m_uniforms.mode_color = m_indicator_shader->uniform_handle("u_modeColor");
   m_uniforms.alpha = m_indicator_shader->uniform_handle("u_alpha");
   m_uniforms.time = m_indicator_shader->uniform_handle("u_time");
+}
+
+void ModeIndicatorPipeline::cache_instanced_uniforms() {
+  if (m_instanced_shader == nullptr) {
+    return;
+  }
+  m_instanced_uniforms.time = m_instanced_shader->uniform_handle("u_time");
 }
 
 auto ModeIndicatorPipeline::is_initialized() const -> bool {

@@ -11,12 +11,11 @@ layout(location = 6) in vec4 a_instanceColorAlpha;
 
 layout(std140) uniform FrameData { mat4 u_viewProj; };
 
-out vec3 v_normal;
-out vec2 v_texCoord;
-out vec3 v_worldPos;
+uniform float u_time;
+
 flat out vec3 v_instanceColor;
 flat out float v_instanceAlpha;
-out float v_materialRegion;
+out float v_distFromCenter;
 
 void main() {
   mat4 model = mat4(vec4(a_instanceModelCol0.xyz, 0.0),
@@ -25,19 +24,13 @@ void main() {
                     vec4(a_instanceModelCol0.w, a_instanceModelCol1.w,
                          a_instanceModelCol2.w, 1.0));
 
-  vec4 worldPos4 = model * vec4(a_position, 1.0);
-  v_worldPos = worldPos4.xyz;
-  v_normal = mat3(model) * a_normal;
-  v_texCoord = a_texCoord;
+  vec3 pos = a_position;
+  float pulse = 1.0 + 0.03 * sin(u_time * 3.0);
+  pos *= pulse;
+
+  v_distFromCenter = length(a_position.xy);
   v_instanceColor = a_instanceColorAlpha.rgb;
   v_instanceAlpha = a_instanceColorAlpha.a;
-  gl_Position = u_viewProj * worldPos4;
 
-  if (v_worldPos.y < 0.25) {
-    v_materialRegion = 0.0;
-  } else if (v_worldPos.y < 0.55) {
-    v_materialRegion = 1.0;
-  } else {
-    v_materialRegion = 2.0;
-  }
+  gl_Position = u_viewProj * model * vec4(pos, 1.0);
 }

@@ -131,8 +131,13 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
       contains(source, "constexpr float k_camera_back_offset = 2.15F;"));
   EXPECT_TRUE(contains(source, "const QVector3D flat_forward("));
   EXPECT_TRUE(contains(source, "pivot - flat_forward * k_camera_back_offset"));
-  EXPECT_TRUE(contains(
-      source, "camera.look_at(eye, pivot + forward * k_target_distance,"));
+
+  EXPECT_TRUE(
+      contains(source, "camera.look_at(m_cam_eye_smooth + shake_offset"));
+  EXPECT_TRUE(contains(source, "m_cam_target_smooth + shake_offset"));
+
+  EXPECT_TRUE(contains(source, "bob_v + breath_v"));
+  EXPECT_TRUE(contains(source, "flat_right * bob_l"));
 }
 
 TEST(CommanderControlRegressionTest,
@@ -209,4 +214,71 @@ TEST(CommanderControlRegressionTest,
   EXPECT_TRUE(contains(engine_header,
                        "Q_INVOKABLE [[nodiscard]] QVariantMap "
                        "get_controlled_commander_status() const;"));
+}
+
+TEST(CommanderControlRegressionTest,
+     FpvMovementSetsHasTargetForAnimationSystem) {
+  const auto root = find_repo_root();
+  const auto source =
+      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  ASSERT_FALSE(source.empty());
+
+  EXPECT_TRUE(contains(source, "movement->has_target = true;"));
+
+  EXPECT_TRUE(contains(source, "stamina->run_requested = m_move_running;"));
+  EXPECT_TRUE(contains(source, "stamina->run_requested = false;"));
+}
+
+TEST(CommanderControlRegressionTest,
+     FpvAttackAlwaysTriggersAnimationEvenWithNoTarget) {
+  const auto root = find_repo_root();
+  const auto source =
+      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  ASSERT_FALSE(source.empty());
+
+  EXPECT_TRUE(contains(source, "combat_state->animation_state = "
+                               "Engine::Core::CombatAnimationState::Advance;"));
+
+  EXPECT_TRUE(contains(source, "// Air swing"));
+
+  EXPECT_TRUE(contains(source, "CombatAnimationState::Idle"));
+}
+
+TEST(CommanderControlRegressionTest, FpvAutoAttackBlockedByFpvControlledFlag) {
+  const auto root = find_repo_root();
+  const auto component_header =
+      read_text(root / "game" / "core" / "component.h");
+  const auto attack_processor = read_text(
+      root / "game" / "systems" / "combat_system" / "attack_processor.cpp");
+  const auto game_engine = read_text(root / "app" / "core" / "game_engine.cpp");
+  ASSERT_FALSE(component_header.empty());
+  ASSERT_FALSE(attack_processor.empty());
+  ASSERT_FALSE(game_engine.empty());
+
+  EXPECT_TRUE(contains(component_header, "bool fpv_controlled{false};"));
+
+  EXPECT_TRUE(contains(attack_processor, "fpv_controlled"));
+
+  EXPECT_TRUE(contains(game_engine, "commander_data->fpv_controlled = true;"));
+  EXPECT_TRUE(contains(game_engine, "commander_data->fpv_controlled = false;"));
+}
+
+TEST(CommanderControlRegressionTest,
+     FpvHitShakeUsesHitFeedbackComponentTrauma) {
+  const auto root = find_repo_root();
+  const auto controller_src =
+      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto controller_hdr =
+      read_text(root / "app" / "core" / "commander_control_controller.h");
+  ASSERT_FALSE(controller_src.empty());
+  ASSERT_FALSE(controller_hdr.empty());
+
+  EXPECT_TRUE(contains(controller_hdr, "m_hit_trauma"));
+  EXPECT_TRUE(contains(controller_hdr, "m_hit_shake_phase"));
+
+  EXPECT_TRUE(
+      contains(controller_src, "m_hit_trauma = fb->reaction_intensity;"));
+
+  EXPECT_TRUE(contains(controller_src, "shake_offset"));
+  EXPECT_TRUE(contains(controller_src, "m_cam_eye_smooth + shake_offset"));
 }

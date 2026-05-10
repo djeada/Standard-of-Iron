@@ -10,7 +10,7 @@ layout(location = 5) in float i_radius;
 layout(location = 6) in float i_alpha;
 layout(location = 7) in vec3 i_color;
 
-uniform mat4 u_viewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 
 out vec3 v_worldPos;
 out vec3 v_normal;

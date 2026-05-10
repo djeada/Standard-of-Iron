@@ -13,6 +13,7 @@ auto EffectsPipeline::initialize() -> bool {
   }
 
   m_basic_shader = m_shader_cache->get("basic");
+  m_basic_instanced_shader = m_shader_cache->get("basic_instanced");
   m_grid_shader = m_shader_cache->get("grid");
 
   if (m_basic_shader == nullptr) {
@@ -29,11 +30,13 @@ auto EffectsPipeline::initialize() -> bool {
 
 void EffectsPipeline::shutdown() {
   m_basic_shader = nullptr;
+  m_basic_instanced_shader = nullptr;
   m_grid_shader = nullptr;
 }
 
 void EffectsPipeline::cache_uniforms() {
   cache_basic_uniforms();
+  cache_basic_instanced_uniforms();
   cache_grid_uniforms();
 }
 
@@ -48,13 +51,24 @@ void EffectsPipeline::cache_basic_uniforms() {
 
   m_basic_uniforms.mvp = m_basic_shader->optional_uniform_handle("u_mvp");
   m_basic_uniforms.model = m_basic_shader->uniform_handle("u_model");
-  m_basic_uniforms.view_proj = m_basic_shader->uniform_handle("u_viewProj");
+  m_basic_uniforms.view_proj =
+      m_basic_shader->optional_uniform_handle("u_viewProj");
   m_basic_uniforms.texture = m_basic_shader->uniform_handle("u_texture");
   m_basic_uniforms.use_texture = m_basic_shader->uniform_handle("u_useTexture");
   m_basic_uniforms.color = m_basic_shader->uniform_handle("u_color");
   m_basic_uniforms.alpha = m_basic_shader->uniform_handle("u_alpha");
   m_basic_uniforms.instanced =
       m_basic_shader->optional_uniform_handle("u_instanced");
+}
+
+void EffectsPipeline::cache_basic_instanced_uniforms() {
+  if (m_basic_instanced_shader == nullptr) {
+    return;
+  }
+  m_basic_instanced_uniforms.view_proj =
+      m_basic_instanced_shader->optional_uniform_handle("u_viewProj");
+  m_basic_instanced_uniforms.use_texture =
+      m_basic_instanced_shader->optional_uniform_handle("u_useTexture");
 }
 
 void EffectsPipeline::cache_grid_uniforms() {

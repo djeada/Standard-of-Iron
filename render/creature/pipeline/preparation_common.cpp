@@ -37,7 +37,8 @@ auto hold_phase_for_anim(
   if (hold_phase > 0.0F) {
     return std::clamp(hold_phase, 0.0F, k_terminal_non_looping_phase);
   }
-  return k_terminal_non_looping_phase;
+
+  return 0.0F;
 }
 
 } // namespace

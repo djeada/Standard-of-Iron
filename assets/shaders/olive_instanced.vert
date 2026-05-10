@@ -7,7 +7,7 @@ layout(location = 3) in vec4 aPosScale;
 layout(location = 4) in vec4 aColorSway;
 layout(location = 5) in vec4 aRotation;
 
-uniform mat4 uViewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 uniform float uTime;
 uniform float uWindStrength;
 uniform float uWindSpeed;
@@ -79,5 +79,5 @@ void main() {
   vBranchId = branchId;
   vLocalPosXZ = modelPos.xz;
 
-  gl_Position = uViewProj * vec4(vWorldPos, 1.0);
+  gl_Position = u_viewProj * vec4(vWorldPos, 1.0);
 }

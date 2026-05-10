@@ -30,6 +30,7 @@ flat out vec3 v_color;
 flat out float v_alpha;
 flat out int v_material_id;
 flat out int v_color_role;
+flat out int v_instance_id;
 
 void main() {
   int base = gl_InstanceID * 64;
@@ -60,4 +61,5 @@ void main() {
   v_alpha = i_color_alpha.a;
   v_material_id = int(i_variation_material.w);
   v_color_role = int(a_color_role);
+  v_instance_id = gl_InstanceID;
 }

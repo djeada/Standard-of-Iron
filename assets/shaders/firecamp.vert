@@ -5,7 +5,7 @@ layout(location = 1) in vec2 aTexCoord;
 layout(location = 3) in vec4 i_posIntensity;
 layout(location = 4) in vec4 i_radiusPhase;
 
-uniform mat4 u_viewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 uniform float u_time;
 uniform float u_flickerSpeed;
 uniform float u_flickerAmount;

@@ -29,6 +29,15 @@ public:
                         const QMatrix4x4 &view_proj, const QVector3D &color,
                         float alpha, float time);
 
+  struct IndicatorInstancedUniforms {
+    GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
+  };
+
+  void cache_instanced_uniforms();
+
+  GL::Shader *m_instanced_shader{nullptr};
+  IndicatorInstancedUniforms m_instanced_uniforms;
+
 private:
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shader_cache = nullptr;
