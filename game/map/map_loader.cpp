@@ -71,7 +71,7 @@ auto read_camera(const QJsonObject &obj, CameraDefinition &cam) -> bool {
 }
 
 auto read_vector3(const QJsonValue &value,
-                 const QVector3D &fallback) -> QVector3D {
+                  const QVector3D &fallback) -> QVector3D {
   if (!value.isArray()) {
     return fallback;
   }
@@ -384,7 +384,7 @@ void read_fire_camps(const QJsonArray &arr, std::vector<FireCamp> &out) {
 }
 
 void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
-                 const GridDefinition &grid, CoordSystem coordSys) {
+                  const GridDefinition &grid, CoordSystem coord_sys) {
   out.clear();
   out.reserve(arr.size());
 
@@ -407,7 +407,7 @@ void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
     const float coord_x = float(terrain_obj.value("x").toDouble(0.0));
     const float coord_z = float(terrain_obj.value("z").toDouble(0.0));
 
-    if (coordSys == CoordSystem::Grid) {
+    if (coord_sys == CoordSystem::Grid) {
       const float tile = std::max(min_tile_size, grid.tile_size);
       feature.center_x =
           (coord_x - (grid.width * grid_center_offset - grid_center_offset)) *
@@ -443,7 +443,7 @@ void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
         const float entrance_z = float(entrance_obj.value("z").toDouble(0.0));
         float world_x = entrance_x;
         float world_z = entrance_z;
-        if (coordSys == CoordSystem::Grid) {
+        if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           world_x = (entrance_x -
                      (grid.width * grid_center_offset - grid_center_offset)) *
@@ -462,7 +462,7 @@ void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
 }
 
 void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
-                const GridDefinition &grid, CoordSystem coordSys) {
+                 const GridDefinition &grid, CoordSystem coord_sys) {
   out.clear();
   out.reserve(arr.size());
 
@@ -480,7 +480,7 @@ void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
         const float start_x = float(start_arr[0].toDouble(0.0));
         const float start_z = float(start_arr[1].toDouble(0.0));
 
-        if (coordSys == CoordSystem::Grid) {
+        if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           segment.start.setX((start_x - (grid.width * grid_center_offset -
                                          grid_center_offset)) *
@@ -501,7 +501,7 @@ void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
         const float end_x = float(end_arr[0].toDouble(0.0));
         const float end_z = float(end_arr[1].toDouble(0.0));
 
-        if (coordSys == CoordSystem::Grid) {
+        if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           segment.end.setX(
               (end_x - (grid.width * grid_center_offset - grid_center_offset)) *
@@ -594,7 +594,7 @@ void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
 }
 
 void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
-                 const GridDefinition &grid, CoordSystem coordSys) {
+                  const GridDefinition &grid, CoordSystem coord_sys) {
   out.clear();
   out.reserve(arr.size());
 
@@ -614,7 +614,7 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
         const float start_x = float(start_arr[0].toDouble(0.0));
         const float start_z = float(start_arr[1].toDouble(0.0));
 
-        if (coordSys == CoordSystem::Grid) {
+        if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           bridge.start.setX((start_x - (grid.width * grid_center_offset -
                                         grid_center_offset)) *
@@ -635,7 +635,7 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
         const float end_x = float(end_arr[0].toDouble(0.0));
         const float end_z = float(end_arr[1].toDouble(0.0));
 
-        if (coordSys == CoordSystem::Grid) {
+        if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           bridge.end.setX(
               (end_x - (grid.width * grid_center_offset - grid_center_offset)) *
@@ -667,7 +667,7 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
 } // namespace
 
 auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
-                                 QString *out_error) -> bool {
+                                    QString *out_error) -> bool {
   QFile map_file(path);
   if (!map_file.open(QIODevice::ReadOnly)) {
     if (out_error != nullptr) {
@@ -737,12 +737,12 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
 
   if (root.contains(TERRAIN) && root.value(TERRAIN).isArray()) {
     read_terrain(root.value(TERRAIN).toArray(), out_map.terrain, out_map.grid,
-                out_map.coordSystem);
+                 out_map.coordSystem);
   }
 
   if (root.contains(RIVERS) && root.value(RIVERS).isArray()) {
     read_rivers(root.value(RIVERS).toArray(), out_map.rivers, out_map.grid,
-               out_map.coordSystem);
+                out_map.coordSystem);
   }
 
   if (root.contains(ROADS) && root.value(ROADS).isArray()) {
@@ -752,7 +752,7 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
 
   if (root.contains(BRIDGES) && root.value(BRIDGES).isArray()) {
     read_bridges(root.value(BRIDGES).toArray(), out_map.bridges, out_map.grid,
-                out_map.coordSystem);
+                 out_map.coordSystem);
   }
 
   if (root.contains(BIOME) && root.value(BIOME).isObject()) {

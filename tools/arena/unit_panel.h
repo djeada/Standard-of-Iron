@@ -23,16 +23,16 @@ public:
 signals:
   void spawn_units_requested(int count);
   void clear_units_requested();
-  void spawn_owner_selected(int ownerId);
-  void nation_selected(const QString &nationId);
-  void unit_type_selected(const QString &unitType);
+  void spawn_owner_selected(int owner_id);
+  void nation_selected(const QString &nation_id);
+  void unit_type_selected(const QString &unit_type);
   void spawn_individuals_per_unit_changed(int count);
   void spawn_rider_visibility_changed(bool visible);
   void apply_visual_overrides_requested();
   void spawn_opposing_batch_requested(int count);
   void spawn_mirror_match_requested(int count);
   void reset_arena_requested();
-  void animation_selected(const QString &animationName);
+  void animation_selected(const QString &animation_name);
   void play_animation_requested();
   void animation_paused_toggled(bool paused);
   void move_selected_unit_requested();
@@ -41,7 +41,7 @@ signals:
 
 private:
   void populate_nation_options();
-  void populate_unit_options(const QString &nationId,
+  void populate_unit_options(const QString &nation_id,
                              const QString &preferred_unit_type = QString());
 
   QCheckBox *m_pause_checkbox = nullptr;

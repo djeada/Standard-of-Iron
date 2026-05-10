@@ -136,7 +136,8 @@ TEST(ArchetypeRegistryBaseline, IdleClipIsZeroForEverySpecies) {
       reg.bpat_clip(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle),
       0U);
   EXPECT_EQ(
-      reg.bpat_clip(ArchetypeRegistry::k_horse_base, AnimationStateId::Idle), 0U);
+      reg.bpat_clip(ArchetypeRegistry::k_horse_base, AnimationStateId::Idle),
+      0U);
   EXPECT_EQ(
       reg.bpat_clip(ArchetypeRegistry::k_elephant_base, AnimationStateId::Idle),
       0U);
@@ -148,8 +149,8 @@ TEST(ArchetypeRegistryBaseline, GameplayStatesUseSnapshotCoverage) {
                               AnimationStateId::Idle));
   EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::Walk));
-  EXPECT_TRUE(
-      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Run));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
+                              AnimationStateId::Run));
   EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::Hold));
   EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
@@ -158,8 +159,8 @@ TEST(ArchetypeRegistryBaseline, GameplayStatesUseSnapshotCoverage) {
                               AnimationStateId::AttackBow));
   EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::Dead));
-  EXPECT_FALSE(
-      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Die));
+  EXPECT_FALSE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
+                               AnimationStateId::Die));
   EXPECT_FALSE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                                AnimationStateId::RidingIdle));
   EXPECT_TRUE(
@@ -498,8 +499,8 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
 
   auto &reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
-  ASSERT_TRUE(
-      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid_sword,
+                               root + "/humanoid_sword.bpat"));
 
   auto make_request = [](Render::Creature::Pipeline::CreatureAssetId asset_id) {
     CreatureRenderRequest req{};

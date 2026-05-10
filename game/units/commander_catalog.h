@@ -34,11 +34,12 @@ struct CommanderDefinition {
   float death_morale_shock = 25.0F;
 };
 
-[[nodiscard]] auto all_commander_definitions()
-    -> const std::vector<CommanderDefinition> &;
-[[nodiscard]] auto commander_definition(TroopType troop_type)
-    -> const CommanderDefinition *;
-[[nodiscard]] auto commander_definitions_for_nation(
-    Game::Systems::NationID nation_id) -> std::vector<const CommanderDefinition *>;
+[[nodiscard]] auto
+all_commander_definitions() -> const std::vector<CommanderDefinition> &;
+[[nodiscard]] auto
+commander_definition(TroopType troop_type) -> const CommanderDefinition *;
+[[nodiscard]] auto
+commander_definitions_for_nation(Game::Systems::NationID nation_id)
+    -> std::vector<const CommanderDefinition *>;
 
 } // namespace Game::Units

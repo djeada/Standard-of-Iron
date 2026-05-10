@@ -23,8 +23,8 @@ void main() {
   float centerBias = 1.0 - abs(verticalPos * 2.0 - 1.0);
 
   float wavePhase = u_time * 2.3 + horizontalPos * 4.8 - verticalPos * 1.6;
-  float zOffset = sin(wavePhase) * u_windStrength * freeEdge *
-                  (0.18 + centerBias * 0.08);
+  float zOffset =
+      sin(wavePhase) * u_windStrength * freeEdge * (0.18 + centerBias * 0.08);
 
   float ripplePhase = u_time * 5.1 + horizontalPos * 10.5 + verticalPos * 6.0;
   float ripple = sin(ripplePhase) * u_windStrength * freeEdge * 0.045;

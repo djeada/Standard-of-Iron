@@ -6,13 +6,27 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
+#include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/horse_archer_renderer_base.h"
 #include "render/entity/horse_spearman_renderer_base.h"
 #include "render/entity/mounted_humanoid_renderer_base.h"
 #include "render/entity/mounted_knight_renderer_base.h"
 #include "render/entity/mounted_prepare.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
+#include "render/equipment/equipment_registry.h"
+#include "render/equipment/horse/armor/champion_renderer.h"
+#include "render/equipment/horse/armor/crupper_renderer.h"
+#include "render/equipment/horse/armor/scale_barding_renderer.h"
+#include "render/equipment/horse/decorations/saddle_bag_renderer.h"
+#include "render/equipment/horse/saddles/carthage_saddle_renderer.h"
+#include "render/equipment/horse/saddles/roman_saddle_renderer.h"
+#include "render/equipment/horse/tack/blanket_renderer.h"
+#include "render/equipment/horse/tack/bridle_renderer.h"
+#include "render/equipment/horse/tack/reins_renderer.h"
+#include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/pose_cache_components.h"
@@ -70,7 +84,13 @@ public:
   using Render::GL::MountedKnightRendererBase::MountedKnightRendererBase;
 };
 
+auto test_equipment_role_only_attachment(std::uint8_t)
+    -> std::vector<Render::Creature::StaticAttachmentSpec> {
+  return {};
+}
+
 auto rider_root_matrix(Render::Creature::ArchetypeId archetype_id,
+                       Render::Creature::Pipeline::CreatureAssetId asset_id,
                        Render::Creature::AnimationStateId state, float phase,
                        std::uint8_t clip_variant) -> std::optional<QMatrix4x4> {
   using Render::Creature::ArchetypeDescriptor;
@@ -82,8 +102,14 @@ auto rider_root_matrix(Render::Creature::ArchetypeId archetype_id,
   }
 
   auto const clip_id = static_cast<std::uint16_t>(base_clip + clip_variant);
-  auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::k_species_humanoid);
+  auto const *asset =
+      Render::Creature::Pipeline::CreatureAssetRegistry::instance().get(
+          asset_id);
+  std::uint32_t const species_id =
+      asset != nullptr ? asset->bpat_species_id
+                       : Render::Creature::Bpat::k_species_humanoid;
+  auto const *blob =
+      Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
   if (blob == nullptr || clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -189,6 +215,124 @@ TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
   EXPECT_EQ(stats.entities_submitted, 2u);
 }
 
+TEST(MountedPrepare, HorseMountArchetypeUsesHandleBackedEquipmentLoadout) {
+  Render::GL::register_built_in_equipment();
+
+  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/roman/horse_swordsman");
+  ASSERT_TRUE(loadout.found);
+
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+  cfg.horse_saddle_handle = loadout.horse_saddle_handle;
+  cfg.horse_bridle_handle = loadout.horse_bridle_handle;
+  cfg.horse_reins_handle = loadout.horse_reins_handle;
+  cfg.horse_blanket_handle = loadout.horse_blanket_handle;
+  cfg.horse_barding_handle = loadout.horse_barding_handle;
+  cfg.horse_crupper_handle = loadout.horse_crupper_handle;
+  cfg.horse_decoration_handle = loadout.horse_decoration_handle;
+
+  Render::GL::MountedKnightRendererBase renderer(cfg);
+  const auto mount_archetype_id =
+      renderer.mounted_visual_spec().mount.archetype_id;
+  ASSERT_NE(mount_archetype_id, Render::Creature::k_invalid_archetype);
+
+  const auto *desc =
+      Render::Creature::ArchetypeRegistry::instance().get(mount_archetype_id);
+  ASSERT_NE(desc, nullptr);
+  EXPECT_EQ(desc->species, Render::Creature::Pipeline::CreatureKind::Horse);
+  EXPECT_EQ(desc->bake_attachment_count, 8U);
+  EXPECT_EQ(desc->attachments_view()[0].archetype,
+            &Render::GL::roman_saddle_archetype());
+  EXPECT_EQ(desc->attachments_view()[1].archetype,
+            &Render::GL::bridle_archetype());
+  EXPECT_EQ(desc->attachments_view()[2].archetype,
+            &Render::GL::reins_archetype());
+  EXPECT_EQ(desc->attachments_view()[3].archetype,
+            &Render::GL::blanket_archetype());
+  EXPECT_EQ(desc->attachments_view()[4].archetype,
+            &Render::GL::scale_barding_chest_archetype());
+  EXPECT_EQ(desc->attachments_view()[5].archetype,
+            &Render::GL::scale_barding_barrel_archetype());
+  EXPECT_EQ(desc->attachments_view()[6].archetype,
+            &Render::GL::scale_barding_neck_archetype());
+  EXPECT_EQ(desc->attachments_view()[7].archetype,
+            &Render::GL::crupper_archetype());
+  EXPECT_EQ(desc->extra_role_color_fn_count, 6U);
+  EXPECT_EQ(
+      desc->role_count,
+      Render::Creature::Pipeline::CreatureAssetRegistry::instance()
+              .for_species(Render::Creature::Pipeline::CreatureKind::Horse)
+              ->role_count +
+          Render::GL::k_roman_saddle_role_count +
+          Render::GL::k_bridle_role_count + Render::GL::k_reins_role_count +
+          Render::GL::k_blanket_role_count +
+          Render::GL::k_scale_barding_role_count +
+          Render::GL::k_crupper_role_count);
+}
+
+TEST(MountedPrepare, RomanAndCarthageHorseMountArchetypesStayDistinct) {
+  Render::GL::register_built_in_equipment();
+
+  const auto roman_loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/roman/horse_archer");
+  const auto carthage_loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/carthage/horse_archer");
+  ASSERT_TRUE(roman_loadout.found);
+  ASSERT_TRUE(carthage_loadout.found);
+
+  Render::GL::HorseArcherRendererConfig roman_cfg;
+  roman_cfg.has_bow = false;
+  roman_cfg.has_quiver = false;
+  roman_cfg.has_cloak = false;
+  roman_cfg.horse_saddle_handle = roman_loadout.horse_saddle_handle;
+  roman_cfg.horse_bridle_handle = roman_loadout.horse_bridle_handle;
+  roman_cfg.horse_reins_handle = roman_loadout.horse_reins_handle;
+  roman_cfg.horse_blanket_handle = roman_loadout.horse_blanket_handle;
+  roman_cfg.horse_barding_handle = roman_loadout.horse_barding_handle;
+  roman_cfg.horse_crupper_handle = roman_loadout.horse_crupper_handle;
+  roman_cfg.horse_decoration_handle = roman_loadout.horse_decoration_handle;
+
+  Render::GL::HorseArcherRendererConfig carthage_cfg = roman_cfg;
+  carthage_cfg.horse_saddle_handle = carthage_loadout.horse_saddle_handle;
+  carthage_cfg.horse_bridle_handle = carthage_loadout.horse_bridle_handle;
+  carthage_cfg.horse_reins_handle = carthage_loadout.horse_reins_handle;
+  carthage_cfg.horse_blanket_handle = carthage_loadout.horse_blanket_handle;
+  carthage_cfg.horse_barding_handle = carthage_loadout.horse_barding_handle;
+  carthage_cfg.horse_crupper_handle = carthage_loadout.horse_crupper_handle;
+  carthage_cfg.horse_decoration_handle =
+      carthage_loadout.horse_decoration_handle;
+
+  Render::GL::HorseArcherRendererBase roman_renderer(roman_cfg);
+  Render::GL::HorseArcherRendererBase carthage_renderer(carthage_cfg);
+
+  const auto roman_mount =
+      roman_renderer.mounted_visual_spec().mount.archetype_id;
+  const auto carthage_mount =
+      carthage_renderer.mounted_visual_spec().mount.archetype_id;
+  ASSERT_NE(roman_mount, Render::Creature::k_invalid_archetype);
+  ASSERT_NE(carthage_mount, Render::Creature::k_invalid_archetype);
+  EXPECT_NE(roman_mount, carthage_mount);
+
+  const auto *roman_desc =
+      Render::Creature::ArchetypeRegistry::instance().get(roman_mount);
+  const auto *carthage_desc =
+      Render::Creature::ArchetypeRegistry::instance().get(carthage_mount);
+  ASSERT_NE(roman_desc, nullptr);
+  ASSERT_NE(carthage_desc, nullptr);
+  ASSERT_FALSE(roman_desc->attachments_view().empty());
+  ASSERT_FALSE(carthage_desc->attachments_view().empty());
+  EXPECT_EQ(roman_desc->attachments_view()[0].archetype,
+            &Render::GL::roman_saddle_archetype());
+  EXPECT_EQ(carthage_desc->attachments_view()[0].archetype,
+            &Render::GL::carthage_saddle_archetype());
+  EXPECT_EQ(roman_desc->attachments_view().back().archetype,
+            &Render::GL::saddle_bag_archetype());
+  EXPECT_EQ(carthage_desc->attachments_view().back().archetype,
+            &Render::GL::saddle_bag_archetype());
+}
+
 TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
   Render::GL::MountedKnightRendererConfig cfg;
   cfg.has_sword = false;
@@ -291,6 +435,33 @@ TEST(MountedPrepare, MountedRiderUsesSemanticAttackClipState) {
       });
   ASSERT_NE(rider_req, requests.end());
   EXPECT_EQ(rider_req->state, Render::Creature::AnimationStateId::AttackSpear);
+}
+
+TEST(MountedPrepare, HorseSpearmanShieldBuildsIntoRiderArchetype) {
+  auto &equipment = Render::GL::EquipmentRegistry::instance();
+  equipment.register_placeholder_equipment(
+      Render::GL::EquipmentCategory::Weapon, "test_horse_spearman_shield");
+  auto const shield_handle = equipment.resolve_handle(
+      Render::GL::EquipmentCategory::Weapon, "test_horse_spearman_shield");
+  ASSERT_NE(shield_handle, Render::GL::k_invalid_equipment_handle);
+  Render::GL::register_humanoid_equipment_contribution(
+      shield_handle, {.build_attachments = &test_equipment_role_only_attachment,
+                      .role_count = 1U});
+
+  Render::GL::HorseSpearmanRendererConfig cfg;
+  cfg.has_spear = false;
+  cfg.has_shield = true;
+  cfg.shield_handle = shield_handle;
+
+  Render::GL::HorseSpearmanRendererBase renderer(cfg);
+
+  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const *base_desc =
+      registry.get(Render::Creature::ArchetypeRegistry::k_rider_base);
+  auto const *rider_desc = registry.get(renderer.visual_spec().archetype_id);
+  ASSERT_NE(base_desc, nullptr);
+  ASSERT_NE(rider_desc, nullptr);
+  EXPECT_GT(rider_desc->role_count, base_desc->role_count);
 }
 
 TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
@@ -412,10 +583,15 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
   ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid,
                                 root + "/humanoid.bpat"));
+  ASSERT_TRUE(
+      bpat.load_species(Render::Creature::Bpat::k_species_humanoid_sword,
+                        root + "/humanoid_sword.bpat"));
 
   Render::GL::MountedKnightRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
+  cfg.rider_creature_asset_id =
+      Render::Creature::Pipeline::k_humanoid_sword_asset;
 
   InspectableMountedKnightRenderer renderer(cfg);
   Render::GL::DrawContext ctx{};
@@ -465,9 +641,9 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
   renderer.resolve_mount_render_state(ctx, seed, variant, anim_ctx, true,
                                       profile, dims, mount, motion);
 
-  auto const root_matrix =
-      rider_root_matrix(rider_req->archetype, rider_req->state,
-                        rider_req->phase, rider_req->clip_variant);
+  auto const root_matrix = rider_root_matrix(
+      rider_req->archetype, rider_req->creature_asset_id, rider_req->state,
+      rider_req->phase, rider_req->clip_variant);
   ASSERT_TRUE(root_matrix.has_value());
 
   bool invertible = false;
@@ -489,6 +665,127 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
     EXPECT_NEAR(actual.z(), expected.z(), 1.0e-4F);
     EXPECT_NEAR(actual.w(), expected.w(), 1.0e-4F);
   }
+}
+
+TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid,
+                                root + "/humanoid.bpat"));
+
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+
+  InspectableMountedKnightRenderer renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.allow_template_cache = false;
+  ctx.force_single_soldier = true;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  anim.is_moving = true;
+  anim.is_running = true;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+
+  auto const &requests = prep.bodies.requests();
+  auto const horse_req =
+      std::find_if(requests.begin(), requests.end(), [](const auto &req) {
+        return Render::Creature::ArchetypeRegistry::instance().species(
+                   req.archetype) ==
+               Render::Creature::Pipeline::CreatureKind::Horse;
+      });
+  auto const rider_req =
+      std::find_if(requests.begin(), requests.end(), [](const auto &req) {
+        return Render::Creature::ArchetypeRegistry::instance().species(
+                   req.archetype) ==
+               Render::Creature::Pipeline::CreatureKind::Humanoid;
+      });
+  ASSERT_NE(horse_req, requests.end());
+  ASSERT_NE(rider_req, requests.end());
+
+  Render::GL::HumanoidVariant variant{};
+  std::uint32_t const seed =
+      static_cast<std::uint32_t>(unit->owner_id * 2654435761U) ^
+      static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&entity) &
+                                 0xFFFFFFFFU);
+  renderer.get_variant(ctx, seed, variant);
+
+  Render::GL::HumanoidAnimationContext anim_ctx{};
+  anim_ctx.inputs = anim;
+  Render::GL::HorseProfile profile{};
+  Render::GL::HorseDimensions dims{};
+  Render::GL::MountedAttachmentFrame mount{};
+  Render::GL::HorseMotionSample motion{};
+  renderer.resolve_mount_render_state(ctx, seed, variant, anim_ctx, true,
+                                      profile, dims, mount, motion);
+
+  auto const root_matrix = rider_root_matrix(
+      rider_req->archetype, rider_req->creature_asset_id, rider_req->state,
+      rider_req->phase, rider_req->clip_variant);
+  ASSERT_TRUE(root_matrix.has_value());
+
+  bool invertible = false;
+  QMatrix4x4 const rider_from_horse =
+      horse_req->world.inverted(&invertible) * rider_req->world;
+  ASSERT_TRUE(invertible);
+  QMatrix4x4 const anchored_root = rider_from_horse * *root_matrix;
+  QMatrix4x4 expected_seat;
+  expected_seat.setColumn(0, QVector4D(mount.seat_right, 0.0F));
+  expected_seat.setColumn(1, QVector4D(mount.seat_up, 0.0F));
+  expected_seat.setColumn(2, QVector4D(mount.seat_forward, 0.0F));
+  expected_seat.setColumn(3, QVector4D(mount.seat_position, 1.0F));
+
+  for (int column = 0; column < 4; ++column) {
+    auto const actual = anchored_root.column(column);
+    auto const expected = expected_seat.column(column);
+    EXPECT_NEAR(actual.x(), expected.x(), 1.0e-4F);
+    EXPECT_NEAR(actual.y(), expected.y(), 1.0e-4F);
+    EXPECT_NEAR(actual.z(), expected.z(), 1.0e-4F);
+    EXPECT_NEAR(actual.w(), expected.w(), 1.0e-4F);
+  }
+}
+
+TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
+  Render::GL::register_built_in_equipment();
+
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.sword_equipment_id = "sword_roman";
+  cfg.shield_equipment_id = "roman_scutum";
+  cfg.helmet_equipment_id = "roman_heavy";
+  cfg.armor_equipment_id = "roman_heavy_armor";
+  cfg.shoulder_equipment_id = "roman_shoulder_cover_cavalry";
+  cfg.has_shoulder = true;
+
+  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Render::GL::AnimationInputs anim{};
+  anim.is_moving = true;
+  anim.is_running = true;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+
+  NullSubmitter sink;
+  auto const stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
+
+  EXPECT_EQ(stats.entities_submitted, 2u);
+  EXPECT_EQ(sink.rigged_calls, 2);
+  EXPECT_EQ(sink.meshes, 0);
 }
 
 TEST(MountedPrepare, MountedKnightKeepsConfiguredRiderArchetype) {

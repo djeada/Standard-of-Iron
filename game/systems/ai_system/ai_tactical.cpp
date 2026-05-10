@@ -122,7 +122,7 @@ auto TacticalUtils::select_focus_fire_target(
       score += 6.0F;
     }
 
-    if (context.primary_barracks != 0) {
+    if (context.has_base_anchor) {
       float const dist_to_base =
           distance(enemy->pos_x, enemy->pos_y, enemy->pos_z, context.base_pos_x,
                    context.base_pos_y, context.base_pos_z);

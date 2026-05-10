@@ -11,7 +11,7 @@ struct MountedKnightPoseTuning {
   float stirrup_inset_factor = 0.60F;
   float stirrup_drop_scale = 0.74F;
   float stirrup_forward_bias = 0.02F;
-  float stirrupBackOffset = -0.05F;
+  float stirrup_back_offset = -0.05F;
   float stirrup_height_bias = 0.18F;
   float stirrup_outward_bias = 0.08F;
   float thigh_wrap_factor = 0.64F;
@@ -20,12 +20,12 @@ struct MountedKnightPoseTuning {
   float knee_blend = 0.60F;
   float calf_surface_blend = 0.65F;
   float calf_out_offset = 0.24F;
-  float calfBackOffset = -0.16F;
+  float calf_back_offset = -0.16F;
   float calf_down_extra = 0.22F;
   float calf_behind_girth = -0.05F;
   float calf_relax = 0.32F;
   float calf_blend = 0.48F;
-  float footBackOffset = -0.12F;
+  float foot_back_offset = -0.12F;
   float foot_down_offset = 0.14F;
   float foot_blend = 0.55F;
   float shield_raise_speed = 8.0F;
@@ -46,7 +46,7 @@ inline void tune_mounted_knight_frame(const HorseDimensions &dims,
         mount.seat_up * (dims.stirrup_drop * cfg.stirrup_height_bias);
     QVector3D bottom =
         attach - mount.seat_up * (dims.stirrup_drop * cfg.stirrup_drop_scale) +
-        mount.seat_forward * (dims.body_length * cfg.stirrupBackOffset) +
+        mount.seat_forward * (dims.body_length * cfg.stirrup_back_offset) +
         mount.seat_right * (side * dims.body_width * cfg.stirrup_outward_bias);
 
     if (is_left) {
@@ -90,7 +90,7 @@ inline void apply_mounted_knight_lower_body(
     QVector3D calf_surface =
         knee +
         mount.seat_right * (side * dims.body_width * cfg.calf_out_offset) +
-        mount.seat_forward * (dims.body_length * cfg.calfBackOffset) -
+        mount.seat_forward * (dims.body_length * cfg.calf_back_offset) -
         mount.seat_up * (dims.stirrup_drop * cfg.calf_down_extra);
     QVector3D calf_from_foot =
         base_foot +
@@ -106,7 +106,7 @@ inline void apply_mounted_knight_lower_body(
 
     QVector3D foot_target =
         calf_target +
-        mount.seat_forward * (dims.body_length * cfg.footBackOffset) -
+        mount.seat_forward * (dims.body_length * cfg.foot_back_offset) -
         mount.seat_up * (dims.stirrup_drop * cfg.foot_down_offset);
     foot = foot * (1.0F - cfg.foot_blend) + foot_target * cfg.foot_blend;
   };

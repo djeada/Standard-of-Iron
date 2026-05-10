@@ -69,9 +69,9 @@ public slots:
   void set_rain_enabled(bool enabled);
   void set_rain_intensity(float intensity);
 
-  void set_spawn_owner(int ownerId);
-  void set_spawn_nation(const QString &nationId);
-  void set_spawn_unit_type(const QString &unitType);
+  void set_spawn_owner(int owner_id);
+  void set_spawn_nation(const QString &nation_id);
+  void set_spawn_unit_type(const QString &unit_type);
   void set_spawn_individuals_per_unit(int count);
   void set_spawn_rider_visible(bool visible);
   void spawn_unit();
@@ -80,8 +80,8 @@ public slots:
   void spawn_mirror_match(int count);
   void clear_units();
 
-  void set_spawn_building_owner(int ownerId);
-  void set_spawn_building_nation(const QString &nationId);
+  void set_spawn_building_owner(int owner_id);
+  void set_spawn_building_nation(const QString &nation_id);
   void set_spawn_building_type(const QString &building_type);
   void spawn_buildings(int count);
   void clear_buildings();
@@ -151,18 +151,18 @@ private:
   void select_spawned_entities(const std::vector<Engine::Core::EntityID> &ids);
   auto spawn_single_unit() -> Engine::Core::EntityID;
   auto
-  spawn_single_unit(int ownerId, Game::Systems::NationID nationId,
-                    Game::Units::TroopType unitType) -> Engine::Core::EntityID;
-  auto resolve_spawn_unit_type(Game::Systems::NationID nationId,
+  spawn_single_unit(int owner_id, Game::Systems::NationID nation_id,
+                    Game::Units::TroopType unit_type) -> Engine::Core::EntityID;
+  auto resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
-  auto spawn_single_building(int ownerId, Game::Systems::NationID nationId,
+  auto spawn_single_building(int owner_id, Game::Systems::NationID nation_id,
                              Game::Units::SpawnType building_type)
       -> Engine::Core::EntityID;
-  auto owner_display_name(int ownerId) const -> QString;
-  auto nation_display_name(Game::Systems::NationID nationId) const -> QString;
-  auto troop_display_name(Game::Systems::NationID nationId,
-                          Game::Units::SpawnType spawnType) const -> QString;
+  auto owner_display_name(int owner_id) const -> QString;
+  auto nation_display_name(Game::Systems::NationID nation_id) const -> QString;
+  auto troop_display_name(Game::Systems::NationID nation_id,
+                          Game::Units::SpawnType spawn_type) const -> QString;
   auto selection_system() const -> Game::Systems::SelectionSystem *;
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();

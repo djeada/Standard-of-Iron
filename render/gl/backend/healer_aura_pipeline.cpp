@@ -290,8 +290,8 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
   GLboolean blend_enabled = glIsEnabled(GL_BLEND);
-  GLboolean depthMaskEnabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
+  GLboolean depth_mask_enabled = GL_TRUE;
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -308,7 +308,7 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
 
   glBindVertexArray(0);
 
-  glDepthMask(depthMaskEnabled);
+  glDepthMask(depth_mask_enabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   if (!blend_enabled) {
     glDisable(GL_BLEND);
@@ -359,8 +359,8 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
   }
 
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depthMaskEnabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
+  GLboolean depth_mask_enabled = GL_TRUE;
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -389,7 +389,7 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
 
   glBindVertexArray(0);
 
-  glDepthMask(depthMaskEnabled);
+  glDepthMask(depth_mask_enabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   if (cull_enabled) {
     glEnable(GL_CULL_FACE);

@@ -6,43 +6,44 @@
 
 namespace MapEditor {
 
-ResizeDialog::ResizeDialog(int currentWidth, int currentHeight, QWidget *parent)
+ResizeDialog::ResizeDialog(int current_width, int current_height,
+                           QWidget *parent)
     : QDialog(parent) {
-  setupUI(currentWidth, currentHeight);
+  setupUI(current_width, current_height);
 }
 
-void ResizeDialog::setupUI(int currentWidth, int currentHeight) {
+void ResizeDialog::setupUI(int current_width, int current_height) {
   setWindowTitle("Resize Map");
   resize(300, 150);
 
   auto *layout = new QVBoxLayout(this);
 
-  auto *formLayout = new QFormLayout();
+  auto *form_layout = new QFormLayout();
 
   m_width_spin_box = new QSpinBox(this);
   m_width_spin_box->setRange(10, 1000);
-  m_width_spin_box->setValue(currentWidth);
-  formLayout->addRow("Width:", m_width_spin_box);
+  m_width_spin_box->setValue(current_width);
+  form_layout->addRow("Width:", m_width_spin_box);
 
   m_height_spin_box = new QSpinBox(this);
   m_height_spin_box->setRange(10, 1000);
-  m_height_spin_box->setValue(currentHeight);
-  formLayout->addRow("Height:", m_height_spin_box);
+  m_height_spin_box->setValue(current_height);
+  form_layout->addRow("Height:", m_height_spin_box);
 
-  layout->addLayout(formLayout);
+  layout->addLayout(form_layout);
 
-  auto *buttonLayout = new QHBoxLayout();
-  auto *cancelButton = new QPushButton("Cancel", this);
-  auto *okButton = new QPushButton("OK", this);
-  okButton->setDefault(true);
+  auto *button_layout = new QHBoxLayout();
+  auto *cancel_button = new QPushButton("Cancel", this);
+  auto *ok_button = new QPushButton("OK", this);
+  ok_button->setDefault(true);
 
-  buttonLayout->addStretch();
-  buttonLayout->addWidget(cancelButton);
-  buttonLayout->addWidget(okButton);
-  layout->addLayout(buttonLayout);
+  button_layout->addStretch();
+  button_layout->addWidget(cancel_button);
+  button_layout->addWidget(ok_button);
+  layout->addLayout(button_layout);
 
-  connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
-  connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
+  connect(cancel_button, &QPushButton::clicked, this, &QDialog::reject);
+  connect(ok_button, &QPushButton::clicked, this, &QDialog::accept);
 }
 
 int ResizeDialog::newWidth() const { return m_width_spin_box->value(); }

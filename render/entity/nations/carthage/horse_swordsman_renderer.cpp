@@ -1,25 +1,12 @@
 #include "horse_swordsman_renderer.h"
 
 #include "../../../creature/pipeline/creature_asset.h"
-#include "../../../equipment/armor/armor_heavy_carthage.h"
-#include "../../../equipment/armor/carthage_shoulder_cover.h"
-#include "../../../equipment/armor/shoulder_cover_archetype.h"
-#include "../../../equipment/helmets/carthage_heavy_helmet.h"
-#include "../../../equipment/horse/horse_attachment_archetype.h"
-#include "../../../equipment/horse/saddles/carthage_saddle_renderer.h"
-#include "../../../equipment/horse/saddles/horse_mount_archetype.h"
-#include "../../../equipment/weapons/shield_carthage.h"
-#include "../../../equipment/weapons/sword_renderer.h"
-#include "../../../humanoid/humanoid_renderer_base.h"
-#include "../../../humanoid/humanoid_spec.h"
-#include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../submitter.h"
 #include "../../mounted_knight_renderer_base.h"
 #include "../equipment_loadout_catalog.h"
 #include "swordsman_style.h"
 
-#include <memory>
 #include <optional>
 
 namespace Render::GL::Carthage {
@@ -61,147 +48,6 @@ public:
   }
 };
 
-auto register_horse_swordsman_rider_archetype()
-    -> Render::Creature::ArchetypeId {
-  static const auto k_head_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
-  static const auto k_shoulder_l_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ShoulderL);
-  static const auto k_shoulder_r_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ShoulderR);
-  static const auto k_hand_l_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::HandL);
-  static const auto k_hand_r_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::HandR);
-  static const auto k_hip_l_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::HipL);
-  static const auto k_chest_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
-  static const auto k_helmet_base_role_byte =
-      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
-  static const auto k_shield_base_role_byte = static_cast<std::uint8_t>(
-      k_helmet_base_role_byte + Render::GL::k_carthage_heavy_helmet_role_count);
-  static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(
-      k_shield_base_role_byte + Render::GL::k_carthage_shield_role_count);
-  static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-      k_shoulder_base_role_byte + Render::GL::k_carthage_shoulder_cover_role_count);
-  static const auto k_sword_base_role_byte = static_cast<std::uint8_t>(
-      k_armor_base_role_byte + Render::GL::k_armor_heavy_carthage_role_count);
-  static const auto k_scabbard_base_role_byte = static_cast<std::uint8_t>(
-      k_sword_base_role_byte + Render::GL::k_sword_role_count);
-  static const auto k_head_bind_matrix =
-      Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
-          Render::Humanoid::HumanoidBone::Head)];
-  const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
-  static const auto k_shoulder_l_bind_matrix =
-      Render::GL::make_shoulder_cover_transform(
-          QMatrix4x4{}, bind_frames.shoulder_l.origin, -bind_frames.torso.right,
-          bind_frames.torso.up);
-  static const auto k_shoulder_r_bind_matrix =
-      Render::GL::make_shoulder_cover_transform(
-          QMatrix4x4{}, bind_frames.shoulder_r.origin, bind_frames.torso.right,
-          bind_frames.torso.up);
-  static const auto k_hand_l_bind_matrix =
-      Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
-          Render::Humanoid::HumanoidBone::HandL)];
-  static const auto k_hand_r_bind_matrix =
-      Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
-          Render::Humanoid::HumanoidBone::HandR)];
-  static const SwordRenderConfig k_canonical_sword_cfg = []() {
-    SwordRenderConfig cfg;
-    cfg.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
-    cfg.sword_length = 0.80F;
-    cfg.sword_width = 0.060F;
-    cfg.guard_half_width = 0.120F;
-    cfg.handle_radius = 0.016F;
-    cfg.pommel_radius = 0.045F;
-    cfg.blade_ricasso = 0.14F;
-    cfg.material_id = 3;
-    return cfg;
-  }();
-  constexpr float k_canonical_sheath_r = 0.060F * 0.85F;
-  static const std::array<Render::Creature::StaticAttachmentSpec, 12>
-      k_attachments{
-          Render::GL::carthage_heavy_helmet_make_static_attachment(
-              Render::GL::carthage_heavy_helmet_shell_archetype(), k_head_bone,
-              k_helmet_base_role_byte, k_head_bind_matrix),
-          Render::GL::carthage_heavy_helmet_make_static_attachment(
-              Render::GL::carthage_heavy_helmet_neck_guard_archetype(),
-              k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-          Render::GL::carthage_heavy_helmet_make_static_attachment(
-              Render::GL::carthage_heavy_helmet_cheek_guards_archetype(),
-              k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-          Render::GL::carthage_heavy_helmet_make_static_attachment(
-              Render::GL::carthage_heavy_helmet_face_plate_archetype(),
-              k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-          Render::GL::carthage_heavy_helmet_make_static_attachment(
-              Render::GL::carthage_heavy_helmet_crest_archetype(), k_head_bone,
-              k_helmet_base_role_byte, k_head_bind_matrix),
-          Render::GL::carthage_heavy_helmet_make_static_attachment(
-              Render::GL::carthage_heavy_helmet_rivets_archetype(), k_head_bone,
-              k_helmet_base_role_byte, k_head_bind_matrix),
-          Render::GL::carthage_shield_make_static_attachment(
-              Render::GL::CarthageShieldConfig{}, k_shield_base_role_byte),
-          Render::GL::carthage_shoulder_cover_make_static_attachment(
-              k_shoulder_l_bone, k_shoulder_base_role_byte,
-              k_shoulder_l_bind_matrix),
-          Render::GL::carthage_shoulder_cover_make_static_attachment(
-              k_shoulder_r_bone, k_shoulder_base_role_byte,
-              k_shoulder_r_bind_matrix),
-          Render::GL::armor_heavy_carthage_make_static_attachment(
-              k_chest_bone, k_armor_base_role_byte),
-          Render::GL::sword_make_static_attachment(k_canonical_sword_cfg,
-                                                   k_sword_base_role_byte),
-          Render::GL::scabbard_make_static_attachment(
-              k_canonical_sheath_r, k_hip_l_bone, k_scabbard_base_role_byte),
-      };
-  static const auto k_id =
-      Render::Creature::ArchetypeRegistry::instance().register_unit_archetype(
-          "troops/carthage/horse_swordsman/rider",
-          Render::Creature::Pipeline::CreatureKind::Humanoid,
-          std::span<const Render::Creature::StaticAttachmentSpec>(
-              k_attachments.data(), k_attachments.size()),
-          +[](const void *variant_void, QVector3D *out,
-              std::uint32_t base_count,
-              std::size_t max_count) -> std::uint32_t {
-            if (variant_void == nullptr || max_count <= base_count) {
-              return base_count;
-            }
-            const auto &v = *static_cast<const HumanoidVariant *>(variant_void);
-            auto count = base_count;
-            count += Render::GL::carthage_heavy_helmet_fill_role_colors(
-                v.palette, out + count, max_count - count);
-            if (max_count <= count) {
-              return count;
-            }
-            count += Render::GL::carthage_shield_fill_role_colors(
-                v.palette, out + count, max_count - count);
-            if (max_count <= count) {
-              return count;
-            }
-            count += Render::GL::carthage_shoulder_cover_fill_role_colors(
-                v.palette, out + count, max_count - count);
-            if (max_count <= count) {
-              return count;
-            }
-            count += Render::GL::armor_heavy_carthage_fill_role_colors(
-                v.palette, out + count, max_count - count);
-            if (max_count <= count) {
-              return count;
-            }
-            count += Render::GL::sword_fill_role_colors(
-                v.palette, k_canonical_sword_cfg, out + count,
-                max_count - count);
-            if (max_count <= count) {
-              return count;
-            }
-            count += Render::GL::scabbard_fill_role_colors(
-                v.palette, out + count, max_count - count);
-            return count;
-          });
-  return k_id;
-}
-
 auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   MountedKnightRendererConfig config;
   const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
@@ -211,19 +57,31 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   config.helmet_equipment_id = loadout.ids.helmet;
   config.armor_equipment_id = loadout.ids.armor;
   config.shoulder_equipment_id = loadout.ids.shoulder;
+  config.horse_saddle_equipment_id = loadout.ids.horse_saddle;
+  config.horse_bridle_equipment_id = loadout.ids.horse_bridle;
+  config.horse_reins_equipment_id = loadout.ids.horse_reins;
+  config.horse_blanket_equipment_id = loadout.ids.horse_blanket;
+  config.horse_barding_equipment_id = loadout.ids.horse_barding;
+  config.horse_crupper_equipment_id = loadout.ids.horse_crupper;
+  config.horse_decoration_equipment_id = loadout.ids.horse_decoration;
   config.sword_handle = loadout.sword_handle;
   config.shield_handle = loadout.shield_handle;
+  config.helmet_handle = loadout.helmet_handle;
+  config.armor_handle = loadout.armor_handle;
+  config.shoulder_handle = loadout.shoulder_handle;
+  config.horse_saddle_handle = loadout.horse_saddle_handle;
+  config.horse_bridle_handle = loadout.horse_bridle_handle;
+  config.horse_reins_handle = loadout.horse_reins_handle;
+  config.horse_blanket_handle = loadout.horse_blanket_handle;
+  config.horse_barding_handle = loadout.horse_barding_handle;
+  config.horse_crupper_handle = loadout.horse_crupper_handle;
+  config.horse_decoration_handle = loadout.horse_decoration_handle;
   config.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
-  config.has_shoulder = true;
-  config.helmet_offset_moving = 0.03F;
+  config.has_shoulder = loadout.shoulder_handle != k_invalid_equipment_handle;
+  config.rider_debug_name = "troops/carthage/horse_swordsman/rider";
+  config.mount_debug_name = "troops/carthage/horse_swordsman/mount";
   config.rider_creature_asset_id =
       Render::Creature::Pipeline::k_humanoid_sword_asset;
-  config.rider_archetype_id = register_horse_swordsman_rider_archetype();
-  static const auto k_mount_archetype =
-      register_mount_saddle_archetype("troops/carthage/horse_swordsman/mount",
-                                      &carthage_saddle_make_static_attachment,
-                                      &carthage_saddle_fill_role_colors);
-  config.mount_archetype_id = k_mount_archetype;
   return config;
 }
 

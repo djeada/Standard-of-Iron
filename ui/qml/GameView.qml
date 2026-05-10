@@ -11,8 +11,7 @@ Item {
     property string cursor_mode: "normal"
     property bool is_placing_formation: false
     property bool is_placing_construction: false
-    property var pressed_keys: ({
-    })
+    property var pressed_keys: ({})
 
     signal map_clicked(real x, real y)
     signal unit_selected(int unitId)
@@ -49,11 +48,88 @@ Item {
 
     }
 
+    function is_commander_mode() {
+        return typeof game !== 'undefined' && game.control_mode === "commander";
+    }
+
+    function reset_rts_pan_keys() {
+        pressed_keys = ({});
+        if (keyPanTimer.running)
+            keyPanTimer.stop();
+
+        if (typeof renderArea !== 'undefined')
+            renderArea.key_pan_count = 0;
+
+        if (typeof mainWindow !== 'undefined' && typeof renderArea !== 'undefined' && !renderArea.mouse_pan_active)
+            mainWindow.edge_scroll_disabled = false;
+
+    }
+
+    function handle_commander_key_pressed(event) {
+        switch (event.key) {
+        case Qt.Key_Escape:
+            if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible)
+                mainWindow.menu_visible = true;
+
+            event.accepted = true;
+            return ;
+        case Qt.Key_Space:
+            if (typeof mainWindow !== 'undefined') {
+                mainWindow.game_paused = !mainWindow.game_paused;
+                game_view.set_paused(mainWindow.game_paused);
+            }
+            event.accepted = true;
+            return ;
+        case Qt.Key_W:
+        case Qt.Key_A:
+        case Qt.Key_S:
+        case Qt.Key_D:
+        case Qt.Key_Q:
+        case Qt.Key_E:
+        case Qt.Key_Shift:
+            if (game.commander_key_down)
+                game.commander_key_down(event.key, event.modifiers);
+
+            event.accepted = true;
+            return ;
+        }
+    }
+
+    function handle_commander_key_released(event) {
+        switch (event.key) {
+        case Qt.Key_W:
+        case Qt.Key_A:
+        case Qt.Key_S:
+        case Qt.Key_D:
+        case Qt.Key_Q:
+        case Qt.Key_E:
+        case Qt.Key_Shift:
+            if (game.commander_key_up)
+                game.commander_key_up(event.key, event.modifiers);
+
+            event.accepted = true;
+            return ;
+        }
+    }
+
     objectName: "GameView"
+    focus: true
     Keys.onPressed: function(event) {
         if (typeof game === 'undefined')
             return ;
 
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            reset_rts_pan_keys();
+            if (game.toggle_commander_control_mode)
+                game.toggle_commander_control_mode();
+
+            event.accepted = true;
+            return ;
+        }
+        if (is_commander_mode()) {
+            handle_commander_key_pressed(event);
+            return ;
+        }
         var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
         var inputStep = (event.modifiers & Qt.ShiftModifier) ? 2 : 1;
         var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
@@ -161,6 +237,10 @@ Item {
         if (typeof game === 'undefined')
             return ;
 
+        if (is_commander_mode()) {
+            handle_commander_key_released(event);
+            return ;
+        }
         var movementKeys = [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
         if (movementKeys.indexOf(event.key) !== -1) {
             if (pressed_keys[event.key]) {
@@ -189,38 +269,6 @@ Item {
 
         }
     }
-    focus: true
-
-    Timer {
-        id: keyPanTimer
-
-        interval: 16
-        repeat: true
-        running: false
-        onTriggered: {
-            if (typeof game === 'undefined')
-                return ;
-
-            var step = (Qt.inputModifiers & Qt.ShiftModifier) ? 2 : 1;
-            var dx = 0;
-            var dz = 0;
-            if (pressed_keys[Qt.Key_Up])
-                dz += step;
-
-            if (pressed_keys[Qt.Key_Down])
-                dz -= step;
-
-            if (pressed_keys[Qt.Key_Left])
-                dx -= step;
-
-            if (pressed_keys[Qt.Key_Right])
-                dx += step;
-
-            if (dx !== 0 || dz !== 0)
-                game.camera_move(dx, dz);
-
-        }
-    }
 
     GLView {
         id: renderArea
@@ -234,6 +282,9 @@ Item {
         Component.onCompleted: {
             if (typeof game !== 'undefined' && game.cursor_mode)
                 game_view.cursor_mode = game.cursor_mode;
+
+            if (typeof game !== 'undefined')
+                game_view.forceActiveFocus();
 
         }
 
@@ -258,6 +309,24 @@ Item {
 
             }
 
+            function onControl_mode_changed() {
+                if (typeof game === 'undefined')
+                    return ;
+
+                if (game.control_mode === "commander") {
+                    mouseArea.is_selecting = false;
+                    mouseArea.is_right_drag_orient = false;
+                    selectionBox.visible = false;
+                    game_view.set_rally_mode = false;
+                    game_view.forceActiveFocus();
+                    commanderInputLayer.center_mouse();
+                } else {
+                    renderArea.mouse_pan_active = false;
+                    mainWindow.edge_scroll_disabled = false;
+                    game_view.forceActiveFocus();
+                }
+            }
+
             target: game
         }
 
@@ -274,8 +343,8 @@ Item {
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
-            cursorShape: (game_view.cursor_mode === "normal") ? ((typeof game !== 'undefined' && game.civilian_delivery_available) ? Qt.PointingHandCursor : Qt.ArrowCursor) : Qt.BlankCursor
-            enabled: game_view.visible
+            cursorShape: game_view.cursor_mode !== "normal" ? Qt.BlankCursor : ((typeof game !== 'undefined' && game.civilian_delivery_available) ? Qt.PointingHandCursor : Qt.ArrowCursor)
+            enabled: game_view.visible && typeof game !== 'undefined' && game.control_mode !== "commander"
             onEntered: {
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
                     game.set_hover_at_screen(0, 0);
@@ -329,6 +398,7 @@ Item {
                 w.accepted = true;
             }
             onPressed: function(mouse) {
+                game_view.forceActiveFocus();
                 if (mouse.button === Qt.LeftButton) {
                     if (game_view.set_rally_mode) {
                         if (typeof game !== 'undefined' && game.set_rally_at_screen)
@@ -444,15 +514,76 @@ Item {
             }
         }
 
-        Rectangle {
-            id: selectionBox
+    }
 
-            visible: false
-            border.color: "white"
-            border.width: 1
-            color: "transparent"
+    CommanderInputLayer {
+        id: commanderInputLayer
+
+        anchors.fill: parent
+        active: game_view.visible && typeof game !== 'undefined' && game.control_mode === "commander"
+        commanderInput: typeof game !== 'undefined' ? game.commander_input : null
+        gameView: game_view
+        mainWindowRef: mainWindow
+        onInputCaptured: {
+            mouseArea.is_selecting = false;
+            mouseArea.is_right_drag_orient = false;
+            selectionBox.visible = false;
+        }
+    }
+
+    Rectangle {
+        id: selectionBox
+
+        visible: false
+        border.color: "white"
+        border.width: 1
+        color: "transparent"
+    }
+
+    Item {
+        id: commanderReticle
+
+        visible: typeof game !== 'undefined' && game.control_mode === "commander"
+        width: 22
+        height: 22
+        anchors.centerIn: parent
+        z: 999998
+
+        Rectangle {
+            width: 8
+            height: 2
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.horizontalCenter
+            anchors.rightMargin: 4
+            color: "#F4E6C0"
         }
 
+        Rectangle {
+            width: 8
+            height: 2
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.horizontalCenter
+            anchors.leftMargin: 4
+            color: "#F4E6C0"
+        }
+
+        Rectangle {
+            width: 2
+            height: 8
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.verticalCenter
+            anchors.bottomMargin: 4
+            color: "#F4E6C0"
+        }
+
+        Rectangle {
+            width: 2
+            height: 8
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.verticalCenter
+            anchors.topMargin: 4
+            color: "#F4E6C0"
+        }
     }
 
     Item {
@@ -614,6 +745,37 @@ Item {
             Component.onCompleted: requestPaint()
         }
 
+    }
+
+    Timer {
+        id: keyPanTimer
+
+        interval: 16
+        repeat: true
+        running: false
+        onTriggered: {
+            if (typeof game === 'undefined')
+                return ;
+
+            var step = (Qt.inputModifiers & Qt.ShiftModifier) ? 2 : 1;
+            var dx = 0;
+            var dz = 0;
+            if (pressed_keys[Qt.Key_Up])
+                dz += step;
+
+            if (pressed_keys[Qt.Key_Down])
+                dz -= step;
+
+            if (pressed_keys[Qt.Key_Left])
+                dx -= step;
+
+            if (pressed_keys[Qt.Key_Right])
+                dx += step;
+
+            if (dx !== 0 || dz !== 0)
+                game.camera_move(dx, dz);
+
+        }
     }
 
 }

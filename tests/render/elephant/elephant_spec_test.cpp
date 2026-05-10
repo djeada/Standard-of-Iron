@@ -151,6 +151,22 @@ auto baked_vertex_count_for_role(
       [&](auto const &vertex) { return vertex.color_role == role; }));
 }
 
+auto rigged_vertex_position(const Render::GL::RiggedVertex &vertex)
+    -> QVector3D {
+  return {vertex.position_bone_local[0], vertex.position_bone_local[1],
+          vertex.position_bone_local[2]};
+}
+
+auto bone_weight_for_vertex(const Render::GL::RiggedVertex &vertex,
+                            std::uint8_t bone) -> float {
+  for (std::size_t i = 0; i < vertex.bone_indices.size(); ++i) {
+    if (vertex.bone_indices[i] == bone) {
+      return vertex.bone_weights[i];
+    }
+  }
+  return 0.0F;
+}
+
 auto shader_role_color(
     const std::array<QVector3D, Render::Elephant::k_elephant_role_count> &roles,
     std::uint8_t role) -> QVector3D {
@@ -524,10 +540,13 @@ TEST(ElephantSpecTest, ManifestBridgesTrunkAndAddsEyes) {
       bridge_shape->center.z() + bridge_shape->radii.z();
   EXPECT_LT(bridge_shape->center.z(), head_front_z);
   EXPECT_GT(bridge_front_z, head_front_z);
-  EXPECT_LT(bridge_front_z, head_front_z + head_shape->radii.z() * 0.03F);
+  EXPECT_LT(bridge_front_z, head_front_z + head_shape->radii.z() * 0.14F);
   EXPECT_GT(bridge_front_z, trunk_snout->start.z() - 0.03F);
-  EXPECT_GT(bridge_shape->radii.y(), head_shape->radii.y() * 0.12F);
-  EXPECT_GT(bridge_shape->radii.z(), head_shape->radii.z() * 0.12F);
+  EXPECT_LT(bridge_shape->center.y(), head_shape->center.y());
+  EXPECT_GT(bridge_shape->radii.x(), head_shape->radii.x() * 0.22F);
+  EXPECT_GT(bridge_shape->radii.y(), head_shape->radii.y() * 0.18F);
+  EXPECT_GT(bridge_shape->radii.z(), head_shape->radii.z() * 0.18F);
+  EXPECT_GT(trunk_snout->base_radius, trunk_snout->tip_radius * 3.5F);
 
   std::size_t eye_count = 0U;
   for (auto const &node : manifest.lod_full.mesh_nodes) {
@@ -548,6 +567,47 @@ TEST(ElephantSpecTest, ManifestBridgesTrunkAndAddsEyes) {
   }
 
   EXPECT_EQ(eye_count, 2U);
+}
+
+TEST(ElephantSpecTest, LowerFaceBridgeVerticesStayHeadAnchored) {
+  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const bind_pose = Render::Elephant::elephant_bind_palette();
+  Render::Creature::BakeInput in{};
+  in.graph = &spec.lod_full;
+  in.bind_pose = bind_pose;
+
+  auto const baked = Render::Creature::bake_rigged_mesh_cpu(in);
+
+  using Bone = Render::Elephant::ElephantBone;
+  QVector3D const head_pos =
+      bind_pose[static_cast<std::size_t>(Bone::Head)].column(3).toVector3D();
+  std::uint8_t const head_bone = static_cast<std::uint8_t>(Bone::Head);
+  std::uint8_t const trunk_bone = static_cast<std::uint8_t>(Bone::TrunkTip);
+
+  std::size_t sampled_vertices = 0U;
+  for (auto const &vertex : baked.vertices) {
+    if (vertex.color_role != 1U) {
+      continue;
+    }
+    QVector3D const pos = rigged_vertex_position(vertex);
+    if (std::abs(pos.x()) > 0.20F) {
+      continue;
+    }
+    if (pos.z() <= head_pos.z() + 0.08F || pos.z() >= head_pos.z() + 0.40F) {
+      continue;
+    }
+    if (pos.y() >= head_pos.y() - 0.05F || pos.y() <= head_pos.y() - 0.45F) {
+      continue;
+    }
+
+    ++sampled_vertices;
+    float const head_weight = bone_weight_for_vertex(vertex, head_bone);
+    float const trunk_weight = bone_weight_for_vertex(vertex, trunk_bone);
+    EXPECT_GT(head_weight, trunk_weight);
+    EXPECT_GE(head_weight, 0.55F);
+  }
+
+  EXPECT_GT(sampled_vertices, 0U);
 }
 
 TEST(ElephantSpecTest, ManifestTailSitsSlightlyHigherAndFurtherBack) {
@@ -660,7 +720,7 @@ TEST(ElephantSpecTest, FightPoseRaisesFeetHigherThanIdlePose) {
   Render::Elephant::ElephantSpecPose fight_pose{};
   Render::Elephant::ElephantPoseMotion fight_motion{};
   fight_motion.phase = 0.55F;
-  fight_motion.anim_time = 0.55F * 1.15F;
+  fight_motion.anim_time = 0.55F * 0.95F;
   fight_motion.is_fighting = true;
   fight_motion.combat_phase = Render::GL::CombatAnimPhase::Idle;
   Render::Elephant::make_elephant_spec_pose_animated(dims, gait, fight_motion,
@@ -721,11 +781,15 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
                                                      idle_pose);
 
   EXPECT_GT(fight_pose.trunk_end.y(),
-            idle_pose.trunk_end.y() + dims.trunk_length * 0.20F);
+            idle_pose.trunk_end.y() + dims.trunk_length * 0.12F);
   EXPECT_GT(fight_pose.trunk_end.z(),
             idle_pose.trunk_end.z() + dims.trunk_length * 0.04F);
   EXPECT_GT(std::abs(fight_pose.trunk_end.x() - idle_pose.trunk_end.x()),
             dims.head_width * 0.10F);
+  EXPECT_LT(fight_pose.trunk_end.y(),
+            fight_pose.head_center.y() - dims.trunk_length * 0.08F);
+  EXPECT_LT(std::abs(fight_pose.trunk_end.x() - idle_pose.trunk_end.x()),
+            dims.head_width * 0.16F);
   EXPECT_NEAR(fight_pose.head_center.x(), idle_pose.head_center.x(), 0.0001F);
   EXPECT_NEAR(fight_pose.head_center.y(), idle_pose.head_center.y(), 0.0001F);
   EXPECT_NEAR(fight_pose.head_center.z(), idle_pose.head_center.z(), 0.0001F);

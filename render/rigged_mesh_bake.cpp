@@ -271,6 +271,8 @@ auto elephant_whole_mesh_blend(const QVector3D &pos,
     -> VertexBoneBlend {
   using Bone = Render::Elephant::ElephantBone;
   auto const root = static_cast<std::uint8_t>(Bone::Root);
+  auto const head = static_cast<std::uint8_t>(Bone::Head);
+  auto const trunk_tip = static_cast<std::uint8_t>(Bone::TrunkTip);
   QVector3D const root_pos =
       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Root));
   QVector3D const head_pos =
@@ -310,13 +312,18 @@ auto elephant_whole_mesh_blend(const QVector3D &pos,
 
   float const head_start = root_pos.z() + (head_pos.z() - root_pos.z()) * 0.45F;
   if (pos.z() > head_start) {
-    if (pos.y() < head_pos.y() - 0.04F && pos.z() > head_pos.z()) {
+    float const trunk_axis_dist_sq =
+        point_to_segment_distance_sq(pos, head_pos, trunk_pos);
+    float const trunk_gate_radius =
+        0.03F + (trunk_pos - head_pos).length() * 0.12F;
+    if (pos.y() < head_pos.y() - 0.08F && pos.z() > head_pos.z() + 0.02F &&
+        trunk_axis_dist_sq <= trunk_gate_radius * trunk_gate_radius) {
       float const t = projection_factor(pos, head_pos, trunk_pos);
-      return make_two_bone_blend(static_cast<std::uint8_t>(Bone::Head),
-                                 static_cast<std::uint8_t>(Bone::TrunkTip), t);
+      float const tip_weight = t * t;
+      return make_two_bone_blend(head, trunk_tip, tip_weight);
     }
     float const t = projection_factor(pos, root_pos, head_pos);
-    return make_two_bone_blend(root, static_cast<std::uint8_t>(Bone::Head), t);
+    return make_two_bone_blend(root, head, t);
   }
 
   return make_single_blend(root);

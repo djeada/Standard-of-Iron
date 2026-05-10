@@ -376,6 +376,12 @@
       }
     },
     {
+      "id": "civilian",
+      "visuals": {
+        "renderer_id": "troops/carthage/civilian"
+      }
+    },
+    {
       "id": "carthage_mercenary_broker",
       "display_name": "Hanno the Great",
       "production": {

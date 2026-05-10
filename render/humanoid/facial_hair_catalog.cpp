@@ -400,8 +400,8 @@ auto facial_hair_archetype(Render::GL::FacialHairStyle style)
   }
 }
 
-auto facial_hair_make_static_attachment(Render::GL::FacialHairStyle style,
-                                        std::uint8_t base_role_byte)
+auto build_facial_hair_static_attachment(Render::GL::FacialHairStyle style,
+                                         std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec {
   Render::Creature::StaticAttachmentSpec spec{};
   auto const *archetype = facial_hair_archetype(style);
@@ -460,6 +460,12 @@ auto facial_hair_cache_mutex() -> std::mutex & {
 
 } // namespace
 
+auto facial_hair_make_static_attachment(Render::GL::FacialHairStyle style,
+                                        std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec {
+  return build_facial_hair_static_attachment(style, base_role_byte);
+}
+
 auto facial_hair_role_colors(const Render::GL::HumanoidVariant &variant,
                              QVector3D *out, std::uint32_t base_count,
                              std::size_t max_count) -> std::uint32_t {
@@ -510,8 +516,8 @@ auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
   Render::Creature::ArchetypeDescriptor desc = *base_desc;
   desc.debug_name = facial_hair_debug_name(variant.facial_hair.style);
   desc.bake_attachments[desc.bake_attachment_count++] =
-      facial_hair_make_static_attachment(variant.facial_hair.style,
-                                         desc.role_count);
+      build_facial_hair_static_attachment(variant.facial_hair.style,
+                                          desc.role_count);
   desc.role_count =
       static_cast<std::uint8_t>(desc.role_count + k_facial_hair_role_count);
   desc.append_extra_role_colors_fn(+[](const void *variant_void, QVector3D *out,

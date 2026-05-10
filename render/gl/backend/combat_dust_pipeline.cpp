@@ -298,8 +298,8 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
     }
 
     CombatDustData data;
-    data.position =
-        QVector3D(transform->position.x, k_dust_y_offset, transform->position.z);
+    data.position = QVector3D(transform->position.x, k_dust_y_offset,
+                              transform->position.z);
     data.radius = k_default_dust_radius;
     data.intensity = k_default_dust_intensity;
     data.color = QVector3D(k_dust_color_r, k_dust_color_g, k_dust_color_b);
@@ -357,14 +357,14 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
 
     FlamePoint flame_points[] = {
 
-        {-k_building_half_width * 0.7F, -k_building_half_depth * 0.7F, 0.8F, 1.0F,
-         0.9F},
-        {k_building_half_width * 0.7F, -k_building_half_depth * 0.7F, 0.7F, 0.95F,
-         0.85F},
-        {-k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.6F, 0.9F,
-         0.8F},
-        {k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.75F, 1.0F,
-         0.9F},
+        {-k_building_half_width * 0.7F, -k_building_half_depth * 0.7F, 0.8F,
+         1.0F, 0.9F},
+        {k_building_half_width * 0.7F, -k_building_half_depth * 0.7F, 0.7F,
+         0.95F, 0.85F},
+        {-k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.6F,
+         0.9F, 0.8F},
+        {k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.75F,
+         1.0F, 0.9F},
 
         {0.0F, -k_building_half_depth * 0.8F, 0.9F, 0.85F, 0.7F},
         {0.0F, k_building_half_depth * 0.8F, 0.7F, 0.8F, 0.65F},
@@ -376,8 +376,8 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
 
     for (const auto &fp : flame_points) {
       CombatDustData data;
-      data.position =
-          QVector3D(cx + fp.dx, k_flame_y_offset + fp.height_offset, cz + fp.dz);
+      data.position = QVector3D(cx + fp.dx, k_flame_y_offset + fp.height_offset,
+                                cz + fp.dz);
       data.radius = k_default_flame_radius * fp.radius_mult;
       data.intensity = base_intensity * fp.intensity_mult;
       data.color = QVector3D(k_flame_color_r, k_flame_color_g, k_flame_color_b);

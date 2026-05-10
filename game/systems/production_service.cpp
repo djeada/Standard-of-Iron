@@ -73,7 +73,8 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
   prod->villager_cost = profile.production.cost;
 }
 
-auto production_owner(const Engine::Core::Entity *entity) -> std::optional<int> {
+auto production_owner(const Engine::Core::Entity *entity)
+    -> std::optional<int> {
   if (entity == nullptr) {
     return std::nullopt;
   }
@@ -84,14 +85,15 @@ auto production_owner(const Engine::Core::Entity *entity) -> std::optional<int> 
   return unit->owner_id;
 }
 
-auto owner_has_commander_committed(Engine::Core::World &world, int owner_id)
-    -> bool {
-  auto has_commander_in_queue = [](const Engine::Core::ProductionComponent *prod)
-      -> bool {
+auto owner_has_commander_committed(Engine::Core::World &world,
+                                   int owner_id) -> bool {
+  auto has_commander_in_queue =
+      [](const Engine::Core::ProductionComponent *prod) -> bool {
     if (prod == nullptr) {
       return false;
     }
-    if (prod->in_progress && Game::Units::is_commander_troop(prod->product_type)) {
+    if (prod->in_progress &&
+        Game::Units::is_commander_troop(prod->product_type)) {
       return true;
     }
     for (const auto queued : prod->production_queue) {
@@ -110,7 +112,8 @@ auto owner_has_commander_committed(Engine::Core::World &world, int owner_id)
 
     if (auto *unit = entity->get_component<Engine::Core::UnitComponent>()) {
       if (unit->owner_id == owner_id && unit->health > 0) {
-        const auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type);
+        const auto troop_type =
+            Game::Units::spawn_typeToTroopType(unit->spawn_type);
         if (troop_type.has_value() &&
             Game::Units::is_commander_troop(*troop_type)) {
           return true;
@@ -258,7 +261,8 @@ auto ProductionService::get_selected_barracks_state(
     out_state.max_units = p->max_units;
     out_state.villager_cost = p->villager_cost;
     out_state.manpower_available = p->manpower_available;
-    out_state.commander_committed = owner_has_commander_committed(world, owner_id);
+    out_state.commander_committed =
+        owner_has_commander_committed(world, owner_id);
     out_state.queue_size = static_cast<int>(p->production_queue.size());
     out_state.production_queue = p->production_queue;
   }

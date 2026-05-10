@@ -33,7 +33,8 @@ auto index_static(int grid_x, int grid_z, int width) -> int {
   return grid_z * width + grid_x;
 }
 
-auto world_to_grid_static(float world_coord, float half, float tile_size) -> int {
+auto world_to_grid_static(float world_coord, float half,
+                          float tile_size) -> int {
   const float grid_coord = world_coord / tile_size + half;
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }
@@ -113,7 +114,7 @@ auto VisibilityService::update(Engine::Core::World &world,
 }
 
 void VisibilityService::compute_immediate(Engine::Core::World &world,
-                                         int player_id) {
+                                          int player_id) {
   if (!m_initialized) {
     return;
   }
@@ -131,7 +132,7 @@ void VisibilityService::compute_immediate(Engine::Core::World &world,
 }
 
 auto VisibilityService::gather_vision_sources(Engine::Core::World &world,
-                                            int player_id)
+                                              int player_id)
     -> std::vector<VisibilityService::VisionSource> {
   std::vector<VisionSource> sources;
   const auto entities =
@@ -243,7 +244,7 @@ void VisibilityService::integrate_result(JobResult &&result) {
 void VisibilityService::ensure_worker_running() {
   bool expected = false;
   if (m_worker_running.compare_exchange_strong(expected, true,
-                                              std::memory_order_acq_rel)) {
+                                               std::memory_order_acq_rel)) {
     if (m_worker_thread.joinable()) {
       m_worker_thread.join();
     }
@@ -334,7 +335,7 @@ auto VisibilityService::execute_job(JobPayload payload)
 }
 
 auto VisibilityService::Snapshot::in_bounds(int grid_x,
-                                           int grid_z) const -> bool {
+                                            int grid_z) const -> bool {
   return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
 }
 
@@ -343,13 +344,13 @@ auto VisibilityService::Snapshot::index(int grid_x, int grid_z) const -> int {
 }
 
 auto VisibilityService::Snapshot::world_to_grid(float world_coord,
-                                              float half) const -> int {
+                                                float half) const -> int {
   const float grid_coord = world_coord / tile_size + half;
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }
 
-auto VisibilityService::Snapshot::state_at(int grid_x,
-                                          int grid_z) const -> VisibilityState {
+auto VisibilityService::Snapshot::state_at(int grid_x, int grid_z) const
+    -> VisibilityState {
   if (!initialized || !in_bounds(grid_x, grid_z)) {
     return VisibilityState::Visible;
   }
@@ -360,8 +361,8 @@ auto VisibilityService::Snapshot::state_at(int grid_x,
   return static_cast<VisibilityState>(cells[static_cast<std::size_t>(idx)]);
 }
 
-auto VisibilityService::Snapshot::is_visible_world(float world_x,
-                                                 float world_z) const -> bool {
+auto VisibilityService::Snapshot::is_visible_world(
+    float world_x, float world_z) const -> bool {
   if (!initialized) {
     return true;
   }
@@ -378,8 +379,8 @@ auto VisibilityService::Snapshot::is_visible_world(float world_x,
          static_cast<std::uint8_t>(VisibilityState::Visible);
 }
 
-auto VisibilityService::Snapshot::is_explored_world(float world_x,
-                                                  float world_z) const -> bool {
+auto VisibilityService::Snapshot::is_explored_world(
+    float world_x, float world_z) const -> bool {
   if (!initialized) {
     return true;
   }
@@ -398,7 +399,7 @@ auto VisibilityService::Snapshot::is_explored_world(float world_x,
 }
 
 auto VisibilityService::state_at(int grid_x,
-                                int grid_z) const -> VisibilityState {
+                                 int grid_z) const -> VisibilityState {
   if (!m_initialized || !in_bounds(grid_x, grid_z)) {
     return VisibilityState::Visible;
   }
@@ -407,7 +408,7 @@ auto VisibilityService::state_at(int grid_x,
 }
 
 auto VisibilityService::is_visible_world(float world_x,
-                                       float world_z) const -> bool {
+                                         float world_z) const -> bool {
   if (!m_initialized) {
     return true;
   }
@@ -422,7 +423,7 @@ auto VisibilityService::is_visible_world(float world_x,
 }
 
 auto VisibilityService::is_explored_world(float world_x,
-                                        float world_z) const -> bool {
+                                          float world_z) const -> bool {
   if (!m_initialized) {
     return true;
   }
@@ -475,7 +476,7 @@ auto VisibilityService::index(int grid_x, int grid_z) const -> int {
 }
 
 auto VisibilityService::world_to_grid(float world_coord,
-                                    float half) const -> int {
+                                      float half) const -> int {
   const float grid_coord = world_coord / m_tile_size + half;
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }

@@ -168,7 +168,8 @@ private:
   std::unique_ptr<BackendPipelines::PrimitiveBatchPipeline>
       m_primitive_batch_pipeline;
   std::unique_ptr<BackendPipelines::BannerPipeline> m_banner_pipeline;
-  std::unique_ptr<BackendPipelines::HealingBeamPipeline> m_healing_beam_pipeline;
+  std::unique_ptr<BackendPipelines::HealingBeamPipeline>
+      m_healing_beam_pipeline;
   std::unique_ptr<BackendPipelines::HealerAuraPipeline> m_healer_aura_pipeline;
   std::unique_ptr<BackendPipelines::CombatDustPipeline> m_combat_dust_pipeline;
   std::unique_ptr<BackendPipelines::RainPipeline> m_rain_pipeline;

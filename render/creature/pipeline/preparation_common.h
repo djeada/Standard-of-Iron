@@ -39,17 +39,17 @@ namespace Render::Creature::Pipeline {
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> std::uint8_t;
 
 [[nodiscard]] auto humanoid_bpat_playback_for_anim(
-    Render::Creature::ArchetypeId archetype_id,
+    Render::Creature::ArchetypeId archetype_id, std::uint32_t species_id,
     const Render::GL::HumanoidAnimationContext &anim) noexcept
     -> std::optional<BpatPlayback>;
 
 [[nodiscard]] auto humanoid_clip_contact_y(
-    Render::Creature::ArchetypeId archetype_id,
+    Render::Creature::ArchetypeId archetype_id, std::uint32_t species_id,
     const Render::GL::HumanoidAnimationContext &anim) noexcept
     -> std::optional<float>;
 
 [[nodiscard]] auto grounded_humanoid_contact_y(
-    Render::Creature::ArchetypeId archetype_id,
+    Render::Creature::ArchetypeId archetype_id, std::uint32_t species_id,
     const Render::GL::HumanoidPose &pose,
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> float;
 

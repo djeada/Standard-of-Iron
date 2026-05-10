@@ -13,7 +13,7 @@ auto vec3_to_json_array(const QVector3D &vec) -> QJsonArray {
 }
 
 auto json_array_to_vec3(const QJsonValue &value,
-                     const QVector3D &fallback) -> QVector3D {
+                        const QVector3D &fallback) -> QVector3D {
   if (!value.isArray()) {
     return fallback;
   }

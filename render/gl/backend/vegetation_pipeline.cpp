@@ -545,9 +545,9 @@ void VegetationPipeline::initialize_olive_pipeline() {
     }
   };
 
-  auto add_cap = [&](int ring, float capY, const QVector2D &offset, float v) {
+  auto add_cap = [&](int ring, float cap_y, const QVector2D &offset, float v) {
     const int top_idx = static_cast<int>(vertices.size());
-    vertices.push_back({QVector3D(offset.x(), capY, offset.y()),
+    vertices.push_back({QVector3D(offset.x(), cap_y, offset.y()),
                         QVector2D(0.5F, v), QVector3D(0.0F, 1.0F, 0.0F)});
     for (int i = 0; i < k_segments; ++i) {
       const int next = (i + 1) % k_segments;

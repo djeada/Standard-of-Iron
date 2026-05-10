@@ -59,13 +59,13 @@ public:
   void shutdown();
 
   void play_sound(const std::string &sound_id,
-                 float volume = AudioConstants::DEFAULT_VOLUME,
-                 bool loop = false,
-                 int priority = AudioConstants::DEFAULT_PRIORITY,
-                 AudioCategory category = AudioCategory::SFX);
+                  float volume = AudioConstants::DEFAULT_VOLUME,
+                  bool loop = false,
+                  int priority = AudioConstants::DEFAULT_PRIORITY,
+                  AudioCategory category = AudioCategory::SFX);
   void play_music(const std::string &music_id,
-                 float volume = AudioConstants::DEFAULT_VOLUME,
-                 bool crossfade = true);
+                  float volume = AudioConstants::DEFAULT_VOLUME,
+                  bool crossfade = true);
   void stop_sound(const std::string &sound_id);
   void stop_music();
   void set_master_volume(float volume);
@@ -76,9 +76,9 @@ public:
   void resume_all();
 
   auto load_sound(const std::string &sound_id, const std::string &file_path,
-                 AudioCategory category = AudioCategory::SFX) -> bool;
+                  AudioCategory category = AudioCategory::SFX) -> bool;
   auto load_music(const std::string &music_id,
-                 const std::string &file_path) -> bool;
+                  const std::string &file_path) -> bool;
   void unload_sound(const std::string &sound_id);
   void unload_music(const std::string &music_id);
   void unload_all_sounds();
@@ -88,9 +88,9 @@ public:
   auto get_active_channel_count() const -> size_t;
 
   auto get_master_volume() const -> float { return master_volume; }
-  auto get_sound_volume() const -> float { return soundVolume; }
+  auto get_sound_volume() const -> float { return sound_volume; }
   auto get_music_volume() const -> float { return music_volume; }
-  auto get_voice_volume() const -> float { return voiceVolume; }
+  auto get_voice_volume() const -> float { return voice_volume; }
 
 private:
   AudioSystem();
@@ -106,25 +106,25 @@ private:
   void evict_lowest_priority_sound();
   void evict_lowest_priority_sound_locked();
   auto get_effective_volume(AudioCategory category,
-                          float event_volume) const -> float;
+                            float event_volume) const -> float;
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
-  std::unordered_map<std::string, AudioCategory> soundCategories;
-  std::unordered_set<std::string> activeResources;
-  mutable std::mutex resourceMutex;
+  std::unordered_map<std::string, AudioCategory> sound_categories;
+  std::unordered_set<std::string> active_resources;
+  mutable std::mutex resource_mutex;
 
   Game::Audio::MusicPlayer *m_music_player{nullptr};
 
-  std::thread audioThread;
-  std::queue<AudioEvent> eventQueue;
-  mutable std::mutex queueMutex;
+  std::thread audio_thread;
+  std::queue<AudioEvent> event_queue;
+  mutable std::mutex queue_mutex;
   std::condition_variable queue_condition;
   std::atomic<bool> is_running;
 
   std::atomic<float> master_volume;
-  std::atomic<float> soundVolume;
+  std::atomic<float> sound_volume;
   std::atomic<float> music_volume;
-  std::atomic<float> voiceVolume;
+  std::atomic<float> voice_volume;
 
   size_t max_channels{AudioConstants::DEFAULT_MAX_CHANNELS};
 

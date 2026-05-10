@@ -90,8 +90,8 @@ auto load_campaign_map_paths() -> QSet<QString> {
   for (const auto &campaign_path : campaign_files) {
     Game::Campaign::CampaignDefinition campaign;
     QString error;
-    if (!Game::Campaign::CampaignLoader::load_from_json_file(campaign_path,
-                                                          campaign, &error)) {
+    if (!Game::Campaign::CampaignLoader::load_from_json_file(
+            campaign_path, campaign, &error)) {
       qWarning() << "Failed to load campaign for map filtering:"
                  << campaign_path << error;
       continue;

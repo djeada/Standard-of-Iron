@@ -1069,10 +1069,10 @@ void ArenaViewport::configure_rendering_from_terrain() {
   m_scatter->configure(*height_map, terrain_service.biome_settings(),
                        terrain_service.fire_camps());
   if (m_rain != nullptr) {
-    float const world_width =
-        static_cast<float>(height_map->get_width()) * height_map->get_tile_size();
-    float const world_height =
-        static_cast<float>(height_map->get_height()) * height_map->get_tile_size();
+    float const world_width = static_cast<float>(height_map->get_width()) *
+                              height_map->get_tile_size();
+    float const world_height = static_cast<float>(height_map->get_height()) *
+                               height_map->get_tile_size();
     m_rain->configure(
         world_width, world_height,
         static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)));

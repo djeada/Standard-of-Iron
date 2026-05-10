@@ -29,10 +29,12 @@ public:
   void register_equipment(EquipmentCategory category, const std::string &id,
                           std::shared_ptr<IEquipmentRenderer> renderer);
 
-  void register_horse_equipment(EquipmentCategory category,
-                                const std::string &id,
-                                std::shared_ptr<IHorseEquipmentRenderer>
-                                    renderer);
+  void register_placeholder_equipment(EquipmentCategory category,
+                                      const std::string &id);
+
+  void
+  register_horse_equipment(EquipmentCategory category, const std::string &id,
+                           std::shared_ptr<IHorseEquipmentRenderer> renderer);
 
   auto get(EquipmentCategory category,
            const std::string &id) const -> std::shared_ptr<IEquipmentRenderer>;
@@ -54,6 +56,9 @@ public:
 
 private:
   EquipmentRegistry() = default;
+  void register_equipment_entry(EquipmentCategory category,
+                                const std::string &id,
+                                std::shared_ptr<IEquipmentRenderer> renderer);
 
   EquipmentRegistry(const EquipmentRegistry &) = delete;
   EquipmentRegistry(EquipmentRegistry &&) = delete;

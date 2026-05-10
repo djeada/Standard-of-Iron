@@ -16,11 +16,11 @@ auto main(int argc, char *argv[]) -> int {
   qDebug() << "";
   qDebug() << "Step 1: Loading map from JSON...";
 
-  const QString mapPath = "assets/maps/map_rivers.json";
+  const QString map_path = "assets/maps/map_rivers.json";
   MapDefinition map_def;
   QString error;
 
-  if (!MapLoader::load_from_json_file(mapPath, map_def, &error)) {
+  if (!MapLoader::load_from_json_file(map_path, map_def, &error)) {
     qCritical() << "Failed to load map:" << error;
     return 1;
   }
@@ -37,24 +37,24 @@ auto main(int argc, char *argv[]) -> int {
   qDebug() << "Step 2: Generating minimap texture...";
 
   MinimapGenerator generator;
-  QImage minimapImage = generator.generate(map_def);
+  QImage minimap_image = generator.generate(map_def);
 
-  if (minimapImage.isNull()) {
+  if (minimap_image.isNull()) {
     qCritical() << "Failed to generate minimap image";
     return 1;
   }
 
   qDebug() << "  ✓ Generated minimap texture";
-  qDebug() << "  ✓ Size:" << minimapImage.width() << "x"
-           << minimapImage.height();
-  qDebug() << "  ✓ Format:" << minimapImage.format();
+  qDebug() << "  ✓ Size:" << minimap_image.width() << "x"
+           << minimap_image.height();
+  qDebug() << "  ✓ Format:" << minimap_image.format();
   qDebug() << "";
 
-  const QString outputPath = "/tmp/minimap_example.png";
-  if (minimapImage.save(outputPath)) {
-    qDebug() << "  ✓ Saved minimap to:" << outputPath;
+  const QString output_path = "/tmp/minimap_example.png";
+  if (minimap_image.save(output_path)) {
+    qDebug() << "  ✓ Saved minimap to:" << output_path;
   } else {
-    qWarning() << "  ⚠ Could not save minimap to:" << outputPath;
+    qWarning() << "  ⚠ Could not save minimap to:" << output_path;
   }
   qDebug() << "";
 

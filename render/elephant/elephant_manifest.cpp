@@ -180,8 +180,8 @@ auto build_elephant_whole_nodes()
   float const head_eye_z = head_front_z - 3.5F * eye_radius_z;
 
   EllipsoidNode trunk_bridge;
-  trunk_bridge.center = QVector3D(0.0F, bh * 0.08F, head_front_z - hl * 0.075F);
-  trunk_bridge.radii = QVector3D(hw * 0.16F, hh * 0.14F, hl * 0.095F);
+  trunk_bridge.center = QVector3D(0.0F, bh * 0.02F, head_front_z - hl * 0.045F);
+  trunk_bridge.radii = QVector3D(hw * 0.24F, hh * 0.22F, hl * 0.14F);
   trunk_bridge.ring_count = 4U;
   trunk_bridge.ring_vertices = 6U;
   nodes.push_back({"elephant.trunk.bridge",
@@ -294,7 +294,7 @@ auto build_elephant_whole_nodes()
   SnoutNode trunk;
   trunk.start = QVector3D(0.0F, bh * 0.06F, trunk_base_z);
   trunk.end = QVector3D(0.0F, -bh * 1.02F, bl * 1.04F);
-  trunk.base_radius = dims.trunk_base_radius * k_elephant_visual_scale * 0.304F;
+  trunk.base_radius = dims.trunk_base_radius * k_elephant_visual_scale * 0.38F;
   trunk.tip_radius = dims.trunk_tip_radius * k_elephant_visual_scale * 0.25F;
   trunk.sag = -bh * 0.16F;
   trunk.segment_count = 9U;

@@ -12,7 +12,7 @@ namespace App::Controllers {
 class ActionVFX {
 public:
   static void spawn_attack_arrow(Engine::Core::World *world,
-                               Engine::Core::EntityID target_id);
+                                 Engine::Core::EntityID target_id);
 };
 
 } // namespace App::Controllers

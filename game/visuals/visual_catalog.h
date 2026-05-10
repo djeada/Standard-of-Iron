@@ -22,7 +22,7 @@ struct VisualDef {
 class VisualCatalog {
 public:
   auto load_from_json_file(const QString &path,
-                        QString *out_error = nullptr) -> bool;
+                           QString *out_error = nullptr) -> bool;
   auto lookup(const std::string &unit_type, VisualDef &out) const -> bool;
 
 private:

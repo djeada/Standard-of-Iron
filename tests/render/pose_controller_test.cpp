@@ -44,7 +44,7 @@ protected:
   HumanoidAnimationContext anim_ctx;
 
   bool approx_equal(const QVector3D &a, const QVector3D &b,
-                   float epsilon = 0.01F) {
+                    float epsilon = 0.01F) {
     return std::abs(a.x() - b.x()) < epsilon &&
            std::abs(a.y() - b.y()) < epsilon &&
            std::abs(a.z() - b.z()) < epsilon;

@@ -386,10 +386,21 @@ public:
   float rally_morale_restore{25.0F};
   float rally_cooldown_remaining{0.0F};
   float rally_feedback_time{0.0F};
+  bool rally_requested{false};
+  bool rally_requires_manual_trigger{false};
   float death_shock_radius{14.0F};
   float death_morale_shock{25.0F};
   bool aura_active{true};
   bool wounded{false};
+};
+
+class CommanderGuardComponent : public Component {
+public:
+  CommanderGuardComponent() = default;
+
+  bool active{false};
+  float frontal_arc_dot{0.15F};
+  float damage_multiplier{0.45F};
 };
 
 class AIControlledComponent : public Component {

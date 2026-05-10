@@ -215,7 +215,8 @@ auto resolve_creature_render_asset_handle(
     desc.snapshot = archetype_registry.is_snapshot(archetype_id, state);
     desc.blob = blob;
     if (blob != nullptr &&
-        desc.clip_id != Render::Creature::ArchetypeDescriptor::k_unmapped_clip &&
+        desc.clip_id !=
+            Render::Creature::ArchetypeDescriptor::k_unmapped_clip &&
         desc.clip_id < blob->clip_count()) {
       auto const clip = blob->clip(desc.clip_id);
       desc.frame_count = clip.frame_count;
@@ -259,7 +260,8 @@ auto CreatureRenderAssetHandleRegistry::get_or_create(
   if (handle.attachment_set_id == k_invalid_attachment_set_id) {
     return Render::Creature::k_invalid_creature_render_asset_handle;
   }
-  if (handles_.size() >= Render::Creature::k_invalid_creature_render_asset_handle) {
+  if (handles_.size() >=
+      Render::Creature::k_invalid_creature_render_asset_handle) {
     return Render::Creature::k_invalid_creature_render_asset_handle;
   }
 

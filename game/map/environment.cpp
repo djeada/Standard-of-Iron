@@ -23,7 +23,7 @@ void Environment::apply(const MapDefinition &def,
 }
 
 void Environment::apply_default(Render::GL::Renderer &renderer,
-                               Render::GL::Camera &camera) {
+                                Render::GL::Camera &camera) {
   const auto &camera_config = Game::GameConfig::instance().camera();
   camera.set_rts_view(QVector3D(0, 0, 0), 15.0F, camera_config.default_pitch,
                       camera_config.default_yaw);

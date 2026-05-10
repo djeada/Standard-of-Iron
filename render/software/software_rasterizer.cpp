@@ -162,7 +162,7 @@ auto SoftwareRasterizer::render() -> QImage {
     painter.setBrush(p.fill);
     QPolygonF poly;
     poly << p.p0 << p.p1 << p.p2;
-    painter.draw_polygon(poly);
+    painter.drawPolygon(poly);
   }
   painter.end();
 
