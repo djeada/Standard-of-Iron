@@ -4,11 +4,16 @@
 # Test executable
 add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/mission_commander_setup.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/mission_definition_view.cpp
     ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
     core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     core/minimap_manager_test.cpp
+    core/commander_control_regression_test.cpp
+    core/mission_commander_setup_test.cpp
+    core/mission_definition_view_test.cpp
     core/selection_query_service_test.cpp
     db/save_storage_test.cpp
     db/mission_progress_test.cpp
@@ -29,6 +34,7 @@ add_executable(standard_of_iron_tests
     systems/civilian_delivery_system_test.cpp
     systems/building_collision_test.cpp
     systems/combat_mode_test.cpp
+    systems/command_service_test.cpp
     systems/commander_system_test.cpp
     systems/archer_bonus_test.cpp
     systems/ai_system_test.cpp

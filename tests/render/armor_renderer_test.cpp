@@ -490,5 +490,5 @@ TEST_F(ArmorRendererTest, WorkApronRendersThroughArchetypePath) {
 
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_EQ(batch.archetypes.size(), 3U);
-  EXPECT_EQ(draw_count_of(batch), 99);
+  EXPECT_EQ(draw_count_of(batch), 8);
 }

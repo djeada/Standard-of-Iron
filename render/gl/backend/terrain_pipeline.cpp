@@ -95,7 +95,8 @@ void TerrainPipeline::cache_ground_uniforms() {
   m_ground_uniforms.tint = m_ground_shader->uniform_handle("u_tint");
   m_ground_uniforms.noise_offset =
       m_ground_shader->uniform_handle("u_noiseOffset");
-  m_ground_uniforms.noise_angle = m_ground_shader->uniform_handle("u_noiseAngle");
+  m_ground_uniforms.noise_angle =
+      m_ground_shader->uniform_handle("u_noiseAngle");
   m_ground_uniforms.tile_size = m_ground_shader->uniform_handle("u_tileSize");
   m_ground_uniforms.macro_noise_scale =
       m_ground_shader->uniform_handle("u_macroNoiseScale");
@@ -153,7 +154,8 @@ void TerrainPipeline::cache_terrain_uniforms() {
   m_terrain_uniforms.grass_secondary =
       m_terrain_shader->uniform_handle("u_grassSecondary");
   m_terrain_uniforms.grass_dry = m_terrain_shader->uniform_handle("u_grassDry");
-  m_terrain_uniforms.soil_color = m_terrain_shader->uniform_handle("u_soilColor");
+  m_terrain_uniforms.soil_color =
+      m_terrain_shader->uniform_handle("u_soilColor");
   m_terrain_uniforms.rock_low = m_terrain_shader->uniform_handle("u_rockLow");
   m_terrain_uniforms.rock_high = m_terrain_shader->uniform_handle("u_rockHigh");
   m_terrain_uniforms.tint = m_terrain_shader->uniform_handle("u_tint");
@@ -200,7 +202,8 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrain_shader->uniform_handle("u_ridgeResponse");
   m_terrain_uniforms.gully_response =
       m_terrain_shader->uniform_handle("u_gullyResponse");
-  m_terrain_uniforms.snow_color = m_terrain_shader->uniform_handle("u_snowColor");
+  m_terrain_uniforms.snow_color =
+      m_terrain_shader->uniform_handle("u_snowColor");
   m_terrain_uniforms.soil_foot_height =
       m_terrain_shader->uniform_handle("u_soilFootHeight");
   m_terrain_uniforms.screen_toe_mul =

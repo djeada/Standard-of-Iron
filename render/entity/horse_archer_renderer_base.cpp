@@ -1,18 +1,11 @@
 #include "horse_archer_renderer_base.h"
 
 #include "../creature/archetype_registry.h"
-#include "../creature/pipeline/creature_render_graph.h"
-#include "../creature/pipeline/preparation_common.h"
 #include "../equipment/equipment_registry.h"
-#include "../equipment/equipment_submit.h"
-#include "../equipment/weapons/bow_renderer.h"
-#include "../equipment/weapons/quiver_renderer.h"
-#include "../humanoid/humanoid_full_builder.h"
+#include "../equipment/horse_equipment_archetype.h"
+#include "../equipment/humanoid_equipment_archetype.h"
 #include "../humanoid/humanoid_math.h"
-#include "../humanoid/humanoid_spec.h"
 #include "../humanoid/humanoid_specs.h"
-#include "../humanoid/mounted_pose_controller.h"
-#include "../humanoid/skeleton.h"
 #include "../palette.h"
 
 #include "../../game/core/component.h"
@@ -21,18 +14,9 @@
 #include "mounted_knight_pose.h"
 #include "renderer_constants.h"
 
-#include <QMatrix4x4>
 #include <QVector3D>
 
-#include <algorithm>
 #include <array>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <map>
-#include <mutex>
-#include <span>
-#include <tuple>
 #include <utility>
 
 namespace Render::GL {
@@ -41,66 +25,13 @@ namespace {
 
 constexpr QVector3D k_default_proportion_scale{0.82F, 0.90F, 0.90F};
 
-auto canonical_bow_config(const HorseArcherRendererConfig &config)
-    -> BowRenderConfig {
-  BowRenderConfig bow_cfg;
-  bow_cfg.metal_color = config.metal_color;
-  bow_cfg.fletching_color = config.fletching_color;
-  bow_cfg.bow_top_y = HumanProportions::SHOULDER_Y + 0.55F;
-  bow_cfg.bow_bot_y = HumanProportions::WAIST_Y - 0.25F;
-  bow_cfg.bow_x = 0.0F;
-  return bow_cfg;
 }
-
-auto horse_archer_extra_role_colors(const void *variant_void, QVector3D *out,
-                                    std::uint32_t base_count,
-                                    std::size_t max_count) -> std::uint32_t {
-  if (variant_void == nullptr) {
-    return base_count;
-  }
-  const auto &v = *static_cast<const HumanoidVariant *>(variant_void);
-  auto count = base_count;
-
-  if (count < max_count) {
-    count += bow_fill_role_colors(v.palette, out + count, max_count - count);
-  }
-  if (count < max_count) {
-    QuiverRenderConfig quiver_cfg;
-    quiver_cfg.fletching_color = QVector3D(0.85F, 0.40F, 0.40F);
-    count += quiver_fill_role_colors(v.palette, quiver_cfg, out + count,
-                                     max_count - count);
-  }
-  return count;
-}
-
-struct ArchetypeCacheKey {
-  Render::Creature::ArchetypeId base_id;
-  bool has_bow;
-  bool has_quiver;
-
-  auto operator<(const ArchetypeCacheKey &other) const -> bool {
-    return std::tie(base_id, has_bow, has_quiver) <
-           std::tie(other.base_id, other.has_bow, other.has_quiver);
-  }
-};
-
-auto archetype_cache()
-    -> std::map<ArchetypeCacheKey, Render::Creature::ArchetypeId> & {
-  static std::map<ArchetypeCacheKey, Render::Creature::ArchetypeId> cache;
-  return cache;
-}
-
-auto archetype_cache_mutex() -> std::mutex & {
-  static std::mutex m;
-  return m;
-}
-
-} // namespace
 
 HorseArcherRendererBase::HorseArcherRendererBase(
     HorseArcherRendererConfig config)
     : m_config(std::move(config)) {
   auto &equipment_registry = EquipmentRegistry::instance();
+
   m_bow_handle = m_config.bow_handle;
   if (m_bow_handle == k_invalid_equipment_handle) {
     m_bow_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
@@ -123,7 +54,59 @@ HorseArcherRendererBase::HorseArcherRendererBase(
     m_config.quiver_equipment_id.clear();
   }
 
-  set_mount_archetype_id(m_config.mount_archetype_id);
+  m_helmet_handle = m_config.helmet_handle;
+  if (m_helmet_handle == k_invalid_equipment_handle) {
+    m_helmet_handle = equipment_registry.resolve_handle(
+        EquipmentCategory::Helmet, m_config.helmet_equipment_id);
+  }
+
+  m_armor_handle = m_config.armor_handle;
+  if (m_armor_handle == k_invalid_equipment_handle) {
+    m_armor_handle = equipment_registry.resolve_handle(
+        EquipmentCategory::Armor, m_config.armor_equipment_id);
+  }
+
+  m_cloak_handle = m_config.cloak_handle;
+  if (m_cloak_handle == k_invalid_equipment_handle) {
+    m_cloak_handle = equipment_registry.resolve_handle(
+        EquipmentCategory::Armor, m_config.cloak_equipment_id);
+  }
+  m_config.has_cloak =
+      m_config.has_cloak && m_cloak_handle != k_invalid_equipment_handle;
+  if (!m_config.has_cloak) {
+    m_config.cloak_equipment_id.clear();
+  }
+
+  auto resolve_mount_handle = [&](EquipmentHandle &handle,
+                                  EquipmentCategory category,
+                                  std::string &equipment_id) {
+    if (handle == k_invalid_equipment_handle && !equipment_id.empty()) {
+      handle = equipment_registry.resolve_handle(category, equipment_id);
+    }
+  };
+
+  m_horse_saddle_handle = m_config.horse_saddle_handle;
+  resolve_mount_handle(m_horse_saddle_handle, EquipmentCategory::HorseTack,
+                       m_config.horse_saddle_equipment_id);
+  m_horse_bridle_handle = m_config.horse_bridle_handle;
+  resolve_mount_handle(m_horse_bridle_handle, EquipmentCategory::HorseTack,
+                       m_config.horse_bridle_equipment_id);
+  m_horse_reins_handle = m_config.horse_reins_handle;
+  resolve_mount_handle(m_horse_reins_handle, EquipmentCategory::HorseTack,
+                       m_config.horse_reins_equipment_id);
+  m_horse_blanket_handle = m_config.horse_blanket_handle;
+  resolve_mount_handle(m_horse_blanket_handle, EquipmentCategory::HorseTack,
+                       m_config.horse_blanket_equipment_id);
+  m_horse_barding_handle = m_config.horse_barding_handle;
+  resolve_mount_handle(m_horse_barding_handle, EquipmentCategory::HorseArmor,
+                       m_config.horse_barding_equipment_id);
+  m_horse_crupper_handle = m_config.horse_crupper_handle;
+  resolve_mount_handle(m_horse_crupper_handle, EquipmentCategory::HorseArmor,
+                       m_config.horse_crupper_equipment_id);
+  m_horse_decoration_handle = m_config.horse_decoration_handle;
+  resolve_mount_handle(m_horse_decoration_handle,
+                       EquipmentCategory::HorseDecoration,
+                       m_config.horse_decoration_equipment_id);
 
   build_visual_spec();
 }
@@ -140,16 +123,8 @@ auto HorseArcherRendererBase::mounted_visual_spec() const
     m_mounted_visual_spec_cache.rider = visual_spec();
     m_mounted_visual_spec_cache.rider.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
-    Render::Creature::ArchetypeId const rider_id =
-        m_rider_archetype_with_bow != Render::Creature::k_invalid_archetype
-            ? m_rider_archetype_with_bow
-            : (m_config.rider_archetype_id !=
-                       Render::Creature::k_invalid_archetype
-                   ? m_config.rider_archetype_id
-                   : Render::Creature::ArchetypeRegistry::k_rider_base);
-    m_mounted_visual_spec_cache.rider.archetype_id = rider_id;
-    m_mounted_visual_spec_cache.rider.debug_name = "troops/horse_archer/rider";
-    m_mounted_visual_spec_cache.mount.debug_name = "troops/horse_archer/horse";
+    m_mounted_visual_spec_cache.rider.debug_name = m_config.rider_debug_name;
+    m_mounted_visual_spec_cache.mount.debug_name = m_config.mount_debug_name;
     m_mounted_visual_spec_baked = true;
   }
   return m_mounted_visual_spec_cache;
@@ -183,89 +158,39 @@ void HorseArcherRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
 
 void HorseArcherRendererBase::build_visual_spec() {
   using namespace Render::Creature::Pipeline;
-  using Render::Creature::ArchetypeRegistry;
 
-  Render::Creature::ArchetypeId const base_rider_id =
-      m_config.rider_archetype_id != Render::Creature::k_invalid_archetype
+  const Render::Creature::ArchetypeId base_rider_id =
+      (m_config.rider_archetype_id != Render::Creature::k_invalid_archetype)
           ? m_config.rider_archetype_id
-          : ArchetypeRegistry::k_rider_base;
-
-  if (m_config.has_bow || m_config.has_quiver) {
-    ArchetypeCacheKey const key{base_rider_id, m_config.has_bow,
-                                m_config.has_quiver};
-    {
-      std::lock_guard<std::mutex> lock(archetype_cache_mutex());
-      auto it = archetype_cache().find(key);
-      if (it != archetype_cache().end()) {
-        m_rider_archetype_with_bow = it->second;
-      }
-    }
-
-    if (m_rider_archetype_with_bow == Render::Creature::k_invalid_archetype) {
-      auto const *base_desc = ArchetypeRegistry::instance().get(base_rider_id);
-      if (base_desc != nullptr) {
-        Render::Creature::ArchetypeDescriptor desc = *base_desc;
-        desc.debug_name = "troops/horse_archer/rider";
-
-        auto base_role_byte = static_cast<std::uint8_t>(desc.role_count);
-
-        if (m_config.has_bow) {
-          auto const bow_specs = bow_make_static_attachments(
-              canonical_bow_config(m_config), base_role_byte);
-          for (auto const &spec : bow_specs) {
-            if (desc.bake_attachment_count >=
-                Render::Creature::ArchetypeDescriptor::k_max_bake_attachments) {
-              break;
-            }
-            desc.bake_attachments[desc.bake_attachment_count++] = spec;
-          }
-          base_role_byte =
-              static_cast<std::uint8_t>(base_role_byte + k_bow_role_count);
-        }
-
-        if (m_config.has_quiver) {
-          auto const pelvis_bone = static_cast<std::uint16_t>(
-              Render::Humanoid::HumanoidBone::Pelvis);
-          QuiverRenderConfig quiver_cfg;
-          quiver_cfg.fletching_color = m_config.fletching_color;
-          quiver_cfg.quiver_radius = HumanProportions::HEAD_RADIUS * 0.45F;
-          auto const quiver_specs = quiver_make_static_attachments(
-              quiver_cfg, pelvis_bone, base_role_byte);
-          for (auto const &spec : quiver_specs) {
-            if (desc.bake_attachment_count >=
-                Render::Creature::ArchetypeDescriptor::k_max_bake_attachments) {
-              break;
-            }
-            desc.bake_attachments[desc.bake_attachment_count++] = spec;
-          }
-          base_role_byte =
-              static_cast<std::uint8_t>(base_role_byte + k_quiver_role_count);
-        }
-
-        desc.role_count = base_role_byte;
-        desc.append_extra_role_colors_fn(&horse_archer_extra_role_colors);
-
-        auto const new_id =
-            ArchetypeRegistry::instance().register_archetype(desc);
-        if (new_id != Render::Creature::k_invalid_archetype) {
-          std::lock_guard<std::mutex> lock(archetype_cache_mutex());
-          archetype_cache()[key] = new_id;
-        }
-        m_rider_archetype_with_bow = new_id;
-      }
-    }
-  }
+          : Render::Creature::ArchetypeRegistry::k_rider_base;
+  const std::array<EquipmentHandle, 5> handles{
+      m_helmet_handle,
+      m_armor_handle,
+      m_config.has_cloak ? m_cloak_handle : k_invalid_equipment_handle,
+      m_config.has_bow ? m_bow_handle : k_invalid_equipment_handle,
+      m_config.has_quiver ? m_quiver_handle : k_invalid_equipment_handle,
+  };
 
   m_spec = UnitVisualSpec{};
   m_spec.kind = CreatureKind::Humanoid;
-  m_spec.debug_name = "troops/horse_archer/rider";
-  QVector3D const ps = get_proportion_scaling();
-  m_spec.scaling = ProportionScaling{ps.x(), ps.y(), ps.z()};
+  m_spec.debug_name = m_config.rider_debug_name;
+  const QVector3D scale = get_proportion_scaling();
+  m_spec.scaling = ProportionScaling{scale.x(), scale.y(), scale.z()};
   m_spec.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-  m_spec.archetype_id =
-      m_rider_archetype_with_bow != Render::Creature::k_invalid_archetype
-          ? m_rider_archetype_with_bow
-          : base_rider_id;
+  m_spec.archetype_id = resolve_humanoid_equipment_archetype(
+      m_config.rider_debug_name, base_rider_id, handles);
+
+  const Render::Creature::ArchetypeId base_mount_id =
+      (m_config.mount_archetype_id != Render::Creature::k_invalid_archetype)
+          ? m_config.mount_archetype_id
+          : Render::Creature::ArchetypeRegistry::k_horse_base;
+  const std::array<EquipmentHandle, 7> mount_handles{
+      m_horse_saddle_handle,     m_horse_bridle_handle,  m_horse_reins_handle,
+      m_horse_blanket_handle,    m_horse_barding_handle, m_horse_crupper_handle,
+      m_horse_decoration_handle,
+  };
+  set_mount_archetype_id(resolve_horse_equipment_archetype(
+      m_config.mount_debug_name, base_mount_id, mount_handles));
 }
 
 void HorseArcherRendererBase::append_companion_preparation(

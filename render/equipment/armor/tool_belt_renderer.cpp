@@ -242,8 +242,8 @@ auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
         .socket_bone_index = waist_socket_bone_index,
         .unit_local_pose_at_bind = bind_mat,
     });
-    for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_tool_belt_role_count);
-         ++i) {
+    for (std::uint8_t i = 0;
+         i < static_cast<std::uint8_t>(k_tool_belt_role_count); ++i) {
       spec.palette_role_remap[i] =
           static_cast<std::uint8_t>(base_role_byte + i);
     }

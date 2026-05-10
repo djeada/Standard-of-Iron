@@ -29,11 +29,11 @@ inline auto resolve_resource_path(const QString &path) -> QString {
   // For Qt resource paths, prefer a filesystem override when available so live
   // shader edits are picked up without rebuilding the resource bundle.
   if (is_resource) {
-    auto search_upwards = [&](const QString &startDir) -> QString {
-      if (startDir.isEmpty()) {
+    auto search_upwards = [&](const QString &start_dir) -> QString {
+      if (start_dir.isEmpty()) {
         return {};
       }
-      QDir dir(startDir);
+      QDir dir(start_dir);
       for (int i = 0; i < 5; ++i) {
         QString candidate = dir.filePath(relative);
         if (exists(candidate)) {

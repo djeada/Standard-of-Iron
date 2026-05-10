@@ -20,13 +20,13 @@ public:
   [[nodiscard]] auto maps() const -> const QVariantList & { return m_maps; }
 
 signals:
-  void map_loaded(QVariantMap mapData);
+  void map_loaded(QVariantMap map_data);
   void all_maps_loaded();
   void loading_changed(bool loading);
 
 private:
   void load_next_map();
-  static auto load_single_map(const QString &filePath) -> QVariantMap;
+  static auto load_single_map(const QString &file_path) -> QVariantMap;
   void ensure_campaign_map_paths_loaded();
 
   QStringList m_pending_files;

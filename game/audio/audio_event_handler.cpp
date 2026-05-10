@@ -103,12 +103,12 @@ void AudioEventHandler::shutdown() {
 }
 
 void AudioEventHandler::load_unit_voice_mapping(const std::string &unit_type,
-                                             const std::string &sound_id) {
+                                                const std::string &sound_id) {
   m_unit_voice_map[unit_type] = sound_id;
 }
 
 void AudioEventHandler::load_ambient_music(Engine::Core::AmbientState state,
-                                         const std::string &music_id) {
+                                           const std::string &music_id) {
   m_ambient_music_map[state] = music_id;
 }
 
@@ -150,8 +150,8 @@ void AudioEventHandler::on_unit_selected(
       AudioCategory const category =
           m_use_voice_category ? AudioCategory::VOICE : AudioCategory::SFX;
       AudioSystem::get_instance().play_sound(it->second, UNIT_SELECTION_VOLUME,
-                                           false, UNIT_SELECTION_PRIORITY,
-                                           category);
+                                             false, UNIT_SELECTION_PRIORITY,
+                                             category);
       m_last_selection_sound_time = now;
       m_last_selection_unit_type = unit_type_str;
     }
@@ -168,27 +168,28 @@ void AudioEventHandler::on_ambient_state_changed(
 
 void AudioEventHandler::on_audio_trigger(
     const Engine::Core::AudioTriggerEvent &event) {
-  AudioSystem::get_instance().play_sound(event.sound_id, event.volume, event.loop,
-                                       event.priority);
+  AudioSystem::get_instance().play_sound(event.sound_id, event.volume,
+                                         event.loop, event.priority);
 }
 
 void AudioEventHandler::on_music_trigger(
     const Engine::Core::MusicTriggerEvent &event) {
   AudioSystem::get_instance().play_music(event.music_id, event.volume,
-                                       event.crossfade);
+                                         event.crossfade);
 }
 
-void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent &event) {
+void AudioEventHandler::on_combat_hit(
+    const Engine::Core::CombatHitEvent &event) {
   std::string const sound_id = get_hit_sound_for_type(event.attacker_type);
   float const volume = COMBAT_HIT_VOLUME * get_volume_variation();
 
-  AudioSystem::get_instance().play_sound(sound_id, volume, false,
-                                       COMBAT_HIT_PRIORITY, AudioCategory::SFX);
+  AudioSystem::get_instance().play_sound(
+      sound_id, volume, false, COMBAT_HIT_PRIORITY, AudioCategory::SFX);
 
   if (event.is_killing_blow) {
     AudioSystem::get_instance().play_sound("combat_death", volume * 0.9F, false,
-                                         COMBAT_HIT_PRIORITY + 1,
-                                         AudioCategory::SFX);
+                                           COMBAT_HIT_PRIORITY + 1,
+                                           AudioCategory::SFX);
   }
 }
 

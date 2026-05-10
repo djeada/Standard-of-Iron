@@ -83,7 +83,7 @@ public:
     m_on_visibility_mask_ready = std::move(callback);
   }
 
-  auto start(const QString &map_path, const QVariantList &playerConfigs,
+  auto start(const QString &map_path, const QVariantList &player_configs,
              int selected_player_id, bool allow_default_player_barracks,
              int &out_selected_player_id) -> SkirmishLoadResult;
 

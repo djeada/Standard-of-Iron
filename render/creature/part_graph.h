@@ -47,7 +47,8 @@ enum class CreatureLOD : std::uint8_t {
 inline constexpr std::uint8_t k_lod_full = 1U << 0;
 inline constexpr std::uint8_t k_lod_minimal = 1U << 1;
 inline constexpr std::uint8_t k_lod_billboard = 1U << 2;
-inline constexpr std::uint8_t k_lod_all = k_lod_full | k_lod_minimal | k_lod_billboard;
+inline constexpr std::uint8_t k_lod_all =
+    k_lod_full | k_lod_minimal | k_lod_billboard;
 
 [[nodiscard]] constexpr auto lod_bit(CreatureLOD l) noexcept -> std::uint8_t {
   switch (l) {

@@ -16,11 +16,12 @@ class MusicPlayer final : public QObject {
 public:
   static auto get_instance() -> MusicPlayer &;
 
-  auto initialize(int musicChannels = AudioConstants::DEFAULT_MUSIC_CHANNELS)
+  auto initialize(int music_channels = AudioConstants::DEFAULT_MUSIC_CHANNELS)
       -> bool;
   void shutdown();
 
-  void register_track(const std::string &track_id, const std::string &file_path);
+  void register_track(const std::string &track_id,
+                      const std::string &file_path);
 
   void play(const std::string &track_id,
             float volume = AudioConstants::DEFAULT_VOLUME, bool loop = true);
@@ -30,15 +31,16 @@ public:
   void set_volume(float volume);
 
   auto play(const std::string &track_id, float volume, bool loop, int channel,
-            int fadeMs) -> int;
-  void stop(int channel, int fadeMs = AudioConstants::DEFAULT_FADE_OUT_MS);
+            int fade_ms) -> int;
+  void stop(int channel, int fade_ms = AudioConstants::DEFAULT_FADE_OUT_MS);
   void pause(int channel);
   void resume(int channel);
   void set_volume(int channel, float volume,
-                 int fadeMs = AudioConstants::NO_FADE_MS);
+                  int fade_ms = AudioConstants::NO_FADE_MS);
 
-  void stop_all(int fadeMs = AudioConstants::DEFAULT_FADE_OUT_MS);
-  void set_master_volume(float volume, int fadeMs = AudioConstants::NO_FADE_MS);
+  void stop_all(int fade_ms = AudioConstants::DEFAULT_FADE_OUT_MS);
+  void set_master_volume(float volume,
+                         int fade_ms = AudioConstants::NO_FADE_MS);
 
   auto is_playing() const -> bool;
   auto is_playing(int channel) const -> bool;
@@ -52,13 +54,13 @@ private:
   static void ensure_on_gui_thread(const char *where);
 
   void play_gui(const std::string &track_id, float volume, bool loop,
-                int channel, int fadeMs);
-  void stop_gui(int channel, int fadeMs);
+                int channel, int fade_ms);
+  void stop_gui(int channel, int fade_ms);
   void pause_gui(int channel);
   void resume_gui(int channel);
-  void setVolume_gui(int channel, float volume, int fadeMs);
-  void setMasterVolume_gui(float volume, int fadeMs);
-  void stopAll_gui(int fadeMs);
+  void setVolume_gui(int channel, float volume, int fade_ms);
+  void setMasterVolume_gui(float volume, int fade_ms);
+  void stopAll_gui(int fade_ms);
   auto find_free_channel() const -> int;
 
   QPointer<MiniaudioBackend> m_backend;

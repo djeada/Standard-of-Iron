@@ -28,9 +28,9 @@ public:
   void shutdown();
 
   void load_unit_voice_mapping(const std::string &unit_type,
-                            const std::string &sound_id);
+                               const std::string &sound_id);
   void load_ambient_music(Engine::Core::AmbientState state,
-                        const std::string &music_id);
+                          const std::string &music_id);
 
   void set_voice_sound_category(bool use_voice_category);
 
@@ -44,7 +44,8 @@ private:
 
   Engine::Core::World *m_world;
   std::unordered_map<std::string, std::string> m_unit_voice_map;
-  std::unordered_map<Engine::Core::AmbientState, std::string> m_ambient_music_map;
+  std::unordered_map<Engine::Core::AmbientState, std::string>
+      m_ambient_music_map;
 
   bool m_use_voice_category{true};
 

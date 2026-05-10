@@ -11,6 +11,7 @@
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/command_service.h"
+#include "systems/movement_system.h"
 #include "systems/owner_registry.h"
 #include "units/troop_config.h"
 #include <algorithm>
@@ -761,6 +762,51 @@ TEST_F(CombatModeTest,
   EXPECT_FLOAT_EQ(combat_state->attack_offset, 0.123F);
   EXPECT_EQ(combat_state->attack_family, CombatAttackFamily::Spear);
   EXPECT_EQ(combat_state->attack_variant, 2);
+}
+
+TEST_F(CombatModeTest, MeleeLockedUnitsTurnToFaceEachOtherWhileStopped) {
+  auto *attacker = world->create_entity();
+  auto *attacker_transform =
+      attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker->add_component<MovementComponent>();
+  auto *attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_melee = true;
+  attacker_attack->can_ranged = false;
+  attacker_attack->in_melee_lock = true;
+
+  auto *enemy = world->create_entity();
+  auto *enemy_transform =
+      enemy->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
+  auto *enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+  enemy->add_component<MovementComponent>();
+  auto *enemy_attack = enemy->add_component<AttackComponent>();
+  enemy_attack->can_melee = true;
+  enemy_attack->can_ranged = false;
+  enemy_attack->in_melee_lock = true;
+
+  attacker_attack->melee_lock_target_id = enemy->get_id();
+  enemy_attack->melee_lock_target_id = attacker->get_id();
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_TRUE(attacker_transform->has_desired_yaw);
+  EXPECT_TRUE(enemy_transform->has_desired_yaw);
+  EXPECT_FLOAT_EQ(attacker_transform->desired_yaw, 90.0F);
+  EXPECT_FLOAT_EQ(enemy_transform->desired_yaw, -90.0F);
+
+  MovementSystem movement_system;
+  movement_system.update(world.get(), 0.25F);
+
+  EXPECT_FLOAT_EQ(attacker_transform->rotation.y, 90.0F);
+  EXPECT_FLOAT_EQ(enemy_transform->rotation.y, -90.0F);
+  EXPECT_FALSE(attacker_transform->has_desired_yaw);
+  EXPECT_FALSE(enemy_transform->has_desired_yaw);
 }
 
 TEST_F(CombatModeTest, AttackAnimationFamilyFollowsUnitTypeAndMode) {

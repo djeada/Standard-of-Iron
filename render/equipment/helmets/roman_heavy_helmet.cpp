@@ -2,6 +2,7 @@
 
 #include "../attachment_builder.h"
 #include "../generated_equipment.h"
+#include "../humanoid_attachment_archetype.h"
 
 #include "../../humanoid/style_palette.h"
 
@@ -98,6 +99,31 @@ auto roman_heavy_helmet_make_static_attachment(
   spec.palette_role_remap[k_crest_slot] =
       static_cast<std::uint8_t>(base_role_byte + 3U);
   return spec;
+}
+
+void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
+                                      const BodyFrames &frames,
+                                      const HumanoidPalette &palette,
+                                      const HumanoidAnimationContext &anim,
+                                      EquipmentBatch &batch) {
+  submit(m_config, ctx, frames, palette, anim, batch);
+}
+
+void RomanHeavyHelmetRenderer::submit(const RomanHeavyHelmetConfig &,
+                                      const DrawContext &ctx,
+                                      const BodyFrames &frames,
+                                      const HumanoidPalette &palette,
+                                      const HumanoidAnimationContext &anim,
+                                      EquipmentBatch &batch) {
+  (void)anim;
+
+  if (frames.head.radius <= 0.0F) {
+    return;
+  }
+
+  auto const colors = roman_heavy_palette(palette);
+  append_humanoid_attachment_archetype(batch, ctx, frames.head,
+                                       roman_heavy_helmet_archetype(), colors);
 }
 
 } // namespace Render::GL

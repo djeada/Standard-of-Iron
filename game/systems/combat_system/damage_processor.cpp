@@ -6,6 +6,7 @@
 #include "../../units/troop_config.h"
 #include "../building_collision_registry.h"
 
+#include <QVector3D>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -111,6 +112,50 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit)
       unit.spawn_type);
 }
 
+auto apply_commander_guard_reduction(
+    Engine::Core::World *world, Engine::Core::Entity *target, int damage,
+    Engine::Core::EntityID attacker_id) -> int {
+  if (world == nullptr || target == nullptr || attacker_id == 0 ||
+      damage <= 0) {
+    return damage;
+  }
+
+  auto *guard = target->get_component<Engine::Core::CommanderGuardComponent>();
+  if (guard == nullptr || !guard->active) {
+    return damage;
+  }
+
+  auto *target_transform =
+      target->get_component<Engine::Core::TransformComponent>();
+  auto *attacker = world->get_entity(attacker_id);
+  auto *attacker_transform =
+      attacker != nullptr
+          ? attacker->get_component<Engine::Core::TransformComponent>()
+          : nullptr;
+  if (target_transform == nullptr || attacker_transform == nullptr) {
+    return damage;
+  }
+
+  constexpr float k_degrees_to_radians = 0.017453292519943295F;
+  const float yaw = target_transform->rotation.y * k_degrees_to_radians;
+  const QVector3D forward(std::sin(yaw), 0.0F, std::cos(yaw));
+  QVector3D to_attacker(
+      attacker_transform->position.x - target_transform->position.x, 0.0F,
+      attacker_transform->position.z - target_transform->position.z);
+  if (to_attacker.lengthSquared() <= 0.0001F) {
+    return damage;
+  }
+  to_attacker.normalize();
+
+  if (QVector3D::dotProduct(forward, to_attacker) < guard->frontal_arc_dot) {
+    return damage;
+  }
+
+  return std::max(1, static_cast<int>(std::round(
+                         static_cast<float>(damage) *
+                         std::clamp(guard->damage_multiplier, 0.0F, 1.0F))));
+}
+
 void begin_soldier_casualties(Engine::Core::Entity *target,
                               Engine::Core::Entity *attacker, int prev_health,
                               int new_health) {
@@ -196,6 +241,7 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
     return;
   }
 
+  damage = apply_commander_guard_reduction(world, target, damage, attacker_id);
   int const prev_health = unit->health;
   int const new_health = std::max(0, prev_health - damage);
   bool const is_killing_blow = (prev_health > 0 && prev_health <= damage);

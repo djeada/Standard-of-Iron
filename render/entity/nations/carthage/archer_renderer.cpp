@@ -12,6 +12,7 @@
 #include "../../../equipment/equipment_registry.h"
 #include "../../../equipment/helmets/carthage_light_helmet.h"
 #include "../../../equipment/helmets/headwrap.h"
+#include "../../../equipment/humanoid_equipment_archetype.h"
 #include "../../../equipment/weapons/bow_renderer.h"
 #include "../../../equipment/weapons/quiver_renderer.h"
 #include "../../../geom/math_utils.h"
@@ -33,6 +34,7 @@
 #include "../../../submitter.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
+#include "../equipment_loadout_catalog.h"
 #include "archer_style.h"
 
 #include <QMatrix4x4>
@@ -148,152 +150,20 @@ public:
     using namespace Render::Creature::Pipeline;
 
     static const UnitVisualSpec spec = []() {
-      static const auto k_head_bone =
-          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
-      static const auto k_chest_bone =
-          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
-      static const auto k_pelvis_bone =
-          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Pelvis);
-      static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
-          Render::Humanoid::k_humanoid_role_count + 1U);
-      static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-          k_helmet_base_role_byte + Render::GL::k_carthage_light_helmet_role_count);
-      static const auto k_quiver_base_role_byte = static_cast<std::uint8_t>(
-          k_armor_base_role_byte + k_armor_light_carthage_role_count);
-      static const auto k_bow_base_role_byte = static_cast<std::uint8_t>(
-          k_quiver_base_role_byte + Render::GL::k_quiver_role_count);
-      static const auto k_head_bind_matrix =
-          Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
-              Render::Humanoid::HumanoidBone::Head)];
-      static const QuiverRenderConfig k_canonical_quiver_cfg = []() {
-        using HP = HumanProportions;
-        QuiverRenderConfig cfg;
-        cfg.fletching_color = QVector3D(0.90F, 0.82F, 0.28F);
-        cfg.quiver_radius = HP::HEAD_RADIUS * 0.45F;
-        return cfg;
-      }();
-      static const std::array<Render::Creature::StaticAttachmentSpec, 5>
-          k_quiver_specs = Render::GL::quiver_make_static_attachments(
-              k_canonical_quiver_cfg, k_pelvis_bone, k_quiver_base_role_byte);
-      static const std::array<Render::Creature::StaticAttachmentSpec, 2>
-          k_bow_specs = Render::GL::bow_make_static_attachments(
-              canonical_bow_config(), k_bow_base_role_byte);
-      static const Render::Creature::StaticAttachmentSpec k_armor_spec =
-          Render::GL::armor_light_carthage_make_static_attachment(
-              k_chest_bone, k_armor_base_role_byte);
-      static const auto k_cloak_base_role_byte = static_cast<std::uint8_t>(
-          k_bow_base_role_byte + Render::GL::k_bow_role_count);
-      static const auto k_torso_bone =
-          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
-      static const CloakConfig k_cloak_cfg = []() {
-        CloakConfig cfg;
-        cfg.primary_color = QVector3D(0.14F, 0.38F, 0.54F);
-        return cfg;
-      }();
-      static const CloakMeshes k_cloak_meshes = []() -> CloakMeshes {
-        auto &reg = Render::GL::EquipmentRegistry::instance();
-        const auto cloak_handle = reg.resolve_handle(
-            Render::GL::EquipmentCategory::Armor, "cloak_carthage");
-        auto cloak_inst = reg.get(cloak_handle);
-        if (cloak_inst) {
-          if (auto *cr = dynamic_cast<CloakRenderer *>(cloak_inst.get())) {
-            return cr->meshes();
-          }
-        }
-        return CloakMeshes{};
-      }();
-      static const Render::Creature::StaticAttachmentSpec k_cloak_spec =
-          Render::GL::cloak_make_static_attachment(k_cloak_cfg, k_cloak_meshes,
-                                                   k_torso_bone,
-                                                   k_cloak_base_role_byte);
-      static const std::array<Render::Creature::StaticAttachmentSpec, 15>
-          k_attachments{
-              Render::GL::carthage_light_helmet_make_static_attachment(
-                  Render::GL::carthage_light_helmet_shell_archetype(),
-                  k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-              Render::GL::carthage_light_helmet_make_static_attachment(
-                  Render::GL::carthage_light_helmet_neck_guard_archetype(),
-                  k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-              Render::GL::carthage_light_helmet_make_static_attachment(
-                  Render::GL::carthage_light_helmet_cheek_guards_archetype(),
-                  k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-              Render::GL::carthage_light_helmet_make_static_attachment(
-                  Render::GL::carthage_light_helmet_nasal_guard_archetype(),
-                  k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-              Render::GL::carthage_light_helmet_make_static_attachment(
-                  Render::GL::carthage_light_helmet_crest_archetype(true),
-                  k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-              Render::GL::carthage_light_helmet_make_static_attachment(
-                  Render::GL::carthage_light_helmet_rivets_archetype(),
-                  k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
-              k_armor_spec,
-              k_quiver_specs[0],
-              k_quiver_specs[1],
-              k_quiver_specs[2],
-              k_quiver_specs[3],
-              k_quiver_specs[4],
-              k_bow_specs[0],
-              k_bow_specs[1],
-              k_cloak_spec,
-          };
-      static const auto k_archer_archetype = []() {
+      static const auto k_archer_base_archetype = []() {
         using Render::Creature::AnimationStateId;
         using Render::Creature::ArchetypeDescriptor;
         using Render::Creature::ArchetypeRegistry;
 
         auto &registry = ArchetypeRegistry::instance();
-        auto const *base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
+        auto const *base_desc =
+            registry.get(ArchetypeRegistry::k_humanoid_base);
         if (base_desc == nullptr) {
           return Render::Creature::k_invalid_archetype;
         }
 
         ArchetypeDescriptor desc = *base_desc;
-        desc.debug_name = "troops/carthage/archer";
-        desc.bake_attachments = {};
-        for (std::size_t i = 0; i < k_attachments.size(); ++i) {
-          desc.bake_attachments[i] = k_attachments[i];
-        }
-        desc.bake_attachment_count =
-            static_cast<std::uint8_t>(k_attachments.size());
-        desc.extra_role_color_fns = {};
-        desc.extra_role_color_fn_count = 0;
-        desc.append_extra_role_colors_fn(
-            +[](const void *variant_void, QVector3D *out,
-                std::uint32_t base_count,
-                std::size_t max_count) -> std::uint32_t {
-              if (variant_void == nullptr || max_count <= base_count) {
-                return base_count;
-              }
-              const auto &v =
-                  *static_cast<const HumanoidVariant *>(variant_void);
-              auto count = base_count;
-              count += Render::GL::carthage_light_helmet_fill_role_colors(
-                  v.palette, out + count, max_count - count);
-              if (max_count <= count) {
-                return count;
-              }
-              count += Render::GL::armor_light_carthage_fill_role_colors(
-                  v.palette, out + count, max_count - count);
-              if (max_count <= count) {
-                return count;
-              }
-              count += Render::GL::quiver_fill_role_colors(
-                  v.palette, k_canonical_quiver_cfg, out + count,
-                  max_count - count);
-              if (max_count <= count) {
-                return count;
-              }
-              count += Render::GL::bow_fill_role_colors(v.palette, out + count,
-                                                        max_count - count);
-              if (max_count <= count) {
-                return count;
-              }
-              count += Render::GL::cloak_fill_role_colors_with_primary(
-                  QVector3D(0.14F, 0.38F, 0.54F), v.palette, out + count,
-                  max_count - count);
-              return count;
-            });
-
+        desc.debug_name = "troops/carthage/archer/base";
         auto const attack_bow_clip = desc.bpat_clip[static_cast<std::size_t>(
             AnimationStateId::AttackBow)];
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
@@ -302,13 +172,19 @@ public:
             Render::Creature::k_humanoid_hold_bow_clip;
         return registry.register_archetype(desc);
       }();
+      const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+          "troops/carthage/archer");
+      const std::array<EquipmentHandle, 5> handles{
+          loadout.helmet_handle, loadout.armor_handle, loadout.quiver_handle,
+          loadout.bow_handle, loadout.cloak_handle};
 
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/archer";
       s.scaling = ProportionScaling{1.03F, 1.08F, 0.98F};
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = k_archer_archetype;
+      s.archetype_id = resolve_humanoid_equipment_archetype(
+          "troops/carthage/archer", k_archer_base_archetype, handles);
       return s;
     }();
     return spec;

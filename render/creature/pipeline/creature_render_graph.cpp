@@ -337,7 +337,8 @@ auto variant_hash(const Render::GL::ElephantVariant &variant) noexcept
 struct RoleColorCacheKey {
   Render::Creature::Pipeline::CreatureAssetId asset{
       Render::Creature::Pipeline::k_invalid_creature_asset};
-  Render::Creature::ArchetypeId archetype{Render::Creature::k_invalid_archetype};
+  Render::Creature::ArchetypeId archetype{
+      Render::Creature::k_invalid_archetype};
   std::uint64_t variant_hash{0U};
 
   auto operator==(const RoleColorCacheKey &other) const noexcept -> bool {
@@ -437,10 +438,28 @@ void CreatureRenderBatch::add_humanoid(
           ? output.spec.archetype_id
           : Render::Creature::ArchetypeRegistry::k_humanoid_base;
 
-  auto const state = humanoid_state_for_anim(anim);
+  auto resolved_archetype_id = archetype_id;
+  auto state = humanoid_state_for_anim(anim);
   float const phase = humanoid_phase_for_anim(anim);
-  std::uint8_t const clip_var =
-      humanoid_clip_variant_for_anim(archetype_id, anim);
+  auto clip_var = humanoid_clip_variant_for_anim(resolved_archetype_id, anim);
+  if (output.spec.humanoid_render_hook != nullptr) {
+    HumanoidRenderSelection selection{};
+    selection.archetype = resolved_archetype_id;
+    selection.state = state;
+    selection.clip_variant = clip_var;
+    output.spec.humanoid_render_hook(anim, variant, output.seed, selection);
+    if (selection.archetype != Render::Creature::k_invalid_archetype) {
+      resolved_archetype_id = selection.archetype;
+    }
+    state = selection.state;
+    auto const variant_count =
+        Render::Creature::ArchetypeRegistry::instance().clip_variant_count(
+            resolved_archetype_id, state);
+    clip_var = (variant_count > 0U)
+                   ? static_cast<std::uint8_t>(std::min<std::uint32_t>(
+                         selection.clip_variant, variant_count - 1U))
+                   : 0U;
+  }
   const auto *asset = CreatureAssetRegistry::instance().resolve(output.spec);
   if (asset == nullptr) {
     return;
@@ -453,11 +472,11 @@ void CreatureRenderBatch::add_humanoid(
     rows_.push_back(std::move(row));
   }
 
-  auto req = build_request(output, archetype_id, state, phase);
+  auto req = build_request(output, resolved_archetype_id, state, phase);
   req.creature_asset_id = asset->id;
   req.render_asset_handle =
-      CreatureRenderAssetHandleRegistry::instance().get_or_create(asset->id,
-                                                                  archetype_id);
+      CreatureRenderAssetHandleRegistry::instance().get_or_create(
+          asset->id, resolved_archetype_id);
   req.clip_variant = clip_var;
   populate_role_colors(req, variant);
   requests_.push_back(req);

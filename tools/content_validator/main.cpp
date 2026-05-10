@@ -38,7 +38,7 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
   QString error_msg;
 
   if (!Game::Mission::MissionLoader::load_from_json_file(file_path, mission,
-                                                      &error_msg)) {
+                                                         &error_msg)) {
     result.addError(QString("Failed to parse mission %1: %2")
                         .arg(file_path)
                         .arg(error_msg));
@@ -122,7 +122,7 @@ auto validateCampaignFile(const QString &file_path,
   QString error_msg;
 
   if (!Game::Campaign::CampaignLoader::load_from_json_file(file_path, campaign,
-                                                        &error_msg)) {
+                                                           &error_msg)) {
     result.addError(QString("Failed to parse campaign %1: %2")
                         .arg(file_path)
                         .arg(error_msg));
@@ -246,7 +246,7 @@ auto main(int argc, char *argv[]) -> int {
 
         Game::Mission::MissionDefinition mission;
         if (Game::Mission::MissionLoader::load_from_json_file(mission_path,
-                                                           mission)) {
+                                                              mission)) {
           mission_ids.insert(mission.id);
         }
       } else {

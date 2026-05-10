@@ -16,7 +16,8 @@ using BoneIndex = std::uint16_t;
 using SocketIndex = std::uint16_t;
 
 inline constexpr BoneIndex k_invalid_bone = static_cast<BoneIndex>(0xFFFFu);
-inline constexpr SocketIndex k_invalid_socket = static_cast<SocketIndex>(0xFFFFu);
+inline constexpr SocketIndex k_invalid_socket =
+    static_cast<SocketIndex>(0xFFFFu);
 
 enum class BoneBasisKind : std::uint8_t {
   FromHeadTail = 0,

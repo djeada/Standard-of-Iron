@@ -664,7 +664,7 @@ void TerrainHeightMap::build_from_features(
 }
 
 auto TerrainHeightMap::get_height_at(float world_x,
-                                   float world_z) const -> float {
+                                     float world_z) const -> float {
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
@@ -704,7 +704,8 @@ auto TerrainHeightMap::get_height_at(float world_x,
   return base_height;
 }
 
-auto TerrainHeightMap::get_height_at_grid(int grid_x, int grid_z) const -> float {
+auto TerrainHeightMap::get_height_at_grid(int grid_x,
+                                          int grid_z) const -> float {
   if (!in_bounds(grid_x, grid_z)) {
     return 0.0F;
   }
@@ -845,10 +846,10 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings &settings) {
               value_noise_2d(sample_x, sample_z, surface_profile.seed);
           float const detail_noise =
               value_noise_2d(sample_x * 2.5F, sample_z * 2.5F,
-                           surface_profile.seed ^ 0xA21C9E37U);
+                             surface_profile.seed ^ 0xA21C9E37U);
           float const fine_noise =
               value_noise_2d(sample_x * 5.0F, sample_z * 5.0F,
-                           surface_profile.seed ^ 0x7E4B92F1U);
+                             surface_profile.seed ^ 0x7E4B92F1U);
 
           float const blended =
               0.5F * base_noise + 0.35F * detail_noise + 0.15F * fine_noise;
@@ -888,7 +889,7 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings &settings) {
             value_noise_2d(sample_x, sample_z, surface_profile.seed);
         float const detail_noise =
             value_noise_2d(sample_x * 2.0F, sample_z * 2.0F,
-                         surface_profile.seed ^ 0xA21C9E37U);
+                           surface_profile.seed ^ 0xA21C9E37U);
 
         float const blended = 0.65F * base_noise + 0.35F * detail_noise;
         float perturb = (blended - 0.5F) * 2.0F * legacy_amplitude;
@@ -906,13 +907,13 @@ void TerrainHeightMap::apply_biome_variation(const BiomeSettings &settings) {
 }
 
 void TerrainHeightMap::add_river_segments(
-    const std::vector<RiverSegment> &riverSegments) {
-  m_river_segments = riverSegments;
+    const std::vector<RiverSegment> &river_segments) {
+  m_river_segments = river_segments;
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
 
-  for (const auto &river : riverSegments) {
+  for (const auto &river : river_segments) {
     QVector3D dir = river.end - river.start;
     float const length = dir.length();
     if (length < 0.01F) {
@@ -985,7 +986,8 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge> &bridges) {
         std::clamp(bridge.width * 0.25F, k_bridge_sink_min, k_bridge_sink_max);
 
     Bridge adjusted = bridge;
-    float const start_ground = get_height_at(bridge.start.x(), bridge.start.z());
+    float const start_ground =
+        get_height_at(bridge.start.x(), bridge.start.z());
     float const end_ground = get_height_at(bridge.end.x(), bridge.end.z());
     adjusted.start.setY(std::max(bridge.start.y(), start_ground - sink_amount));
     adjusted.end.setY(std::max(bridge.end.y(), end_ground - sink_amount));
@@ -1020,7 +1022,8 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge> &bridges) {
       float const arch_height = stored_bridge.height * arch_curve * 0.8F;
       float const base_deck_height =
           stored_bridge.start.y() + stored_bridge.height + arch_height * 0.5F;
-      float const terrain_height = get_height_at(center_pos.x(), center_pos.z());
+      float const terrain_height =
+          get_height_at(center_pos.x(), center_pos.z());
       float const deck_height = std::max(base_deck_height - sink_amount,
                                          terrain_height - sink_amount);
 

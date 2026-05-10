@@ -215,10 +215,10 @@ TEST(CreatureRenderAssetHandleRegistry, CreatesStableHandleAfterBpatLoad) {
   auto const id = handles.get_or_create(
       k_humanoid_asset, Render::Creature::ArchetypeRegistry::k_humanoid_base);
   ASSERT_NE(id, Render::Creature::k_invalid_creature_render_asset_handle);
-  EXPECT_EQ(
-      handles.get_or_create(k_humanoid_asset,
-                            Render::Creature::ArchetypeRegistry::k_humanoid_base),
-      id);
+  EXPECT_EQ(handles.get_or_create(
+                k_humanoid_asset,
+                Render::Creature::ArchetypeRegistry::k_humanoid_base),
+            id);
 
   const auto *handle = handles.get(id);
   ASSERT_NE(handle, nullptr);
@@ -233,7 +233,8 @@ TEST(CreatureRenderAssetHandleRegistry, CreatesStableHandleAfterBpatLoad) {
   const auto &idle = handle->playback[static_cast<std::size_t>(
       Render::Creature::AnimationStateId::Idle)];
   EXPECT_NE(idle.blob, nullptr);
-  EXPECT_NE(idle.clip_id, Render::Creature::ArchetypeDescriptor::k_unmapped_clip);
+  EXPECT_NE(idle.clip_id,
+            Render::Creature::ArchetypeDescriptor::k_unmapped_clip);
   EXPECT_GT(idle.frame_count, 0U);
 }
 

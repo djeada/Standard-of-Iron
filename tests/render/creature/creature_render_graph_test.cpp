@@ -25,6 +25,7 @@ using namespace Render::Creature::Pipeline;
 using namespace Render::Creature;
 
 std::atomic<int> g_extra_role_color_calls{0};
+ArchetypeId g_hook_override_archetype{k_invalid_archetype};
 
 auto counted_extra_role_color(const void *, QVector3D *out,
                               std::uint32_t base_count,
@@ -35,6 +36,15 @@ auto counted_extra_role_color(const void *, QVector3D *out,
     return base_count + 1U;
   }
   return base_count;
+}
+
+void overriding_humanoid_render_hook(
+    const Render::GL::HumanoidAnimationContext &,
+    const Render::GL::HumanoidVariant &, std::uint32_t,
+    HumanoidRenderSelection &selection) {
+  selection.archetype = g_hook_override_archetype;
+  selection.state = AnimationStateId::AttackSpear;
+  selection.clip_variant = 2U;
 }
 
 class CountingSubmitter : public Render::GL::ISubmitter {
@@ -341,6 +351,31 @@ TEST(CreatureRenderBatch, StableRoleColorsAreCachedByVariant) {
             batch.requests()[1].role_color_count);
   EXPECT_EQ(g_extra_role_color_calls.load(std::memory_order_relaxed), 1)
       << "same asset/archetype/variant should reuse cached role colors";
+}
+
+TEST(CreatureRenderBatch, HumanoidRenderHookCanOverrideRequestSelection) {
+  auto const override_archetype =
+      ArchetypeRegistry::instance().register_unit_archetype(
+          "test.render_hook_override", CreatureKind::Humanoid, {});
+  ASSERT_NE(override_archetype, k_invalid_archetype);
+  g_hook_override_archetype = override_archetype;
+
+  CreatureRenderBatch batch;
+  CreatureGraphOutput output;
+  output.culled = false;
+  output.spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+  output.spec.humanoid_render_hook = overriding_humanoid_render_hook;
+
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+
+  batch.add_humanoid(output, pose, variant, anim);
+
+  ASSERT_EQ(batch.requests().size(), 1u);
+  EXPECT_EQ(batch.requests()[0].archetype, override_archetype);
+  EXPECT_EQ(batch.requests()[0].state, AnimationStateId::AttackSpear);
+  EXPECT_EQ(batch.requests()[0].clip_variant, 2U);
 }
 
 TEST(CreatureRenderBatch, CulledCreatureNotAdded) {

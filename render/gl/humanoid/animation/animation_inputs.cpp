@@ -142,10 +142,10 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     }
     if (builder_prod->in_progress) {
       anim.is_constructing = true;
-      float const build_elapsed =
-          std::max(0.0F, builder_prod->build_time - builder_prod->time_remaining);
-      anim.construction_progress =
-          std::fmod(build_elapsed * k_builder_construct_cycles_per_second, 1.0F);
+      float const build_elapsed = std::max(
+          0.0F, builder_prod->build_time - builder_prod->time_remaining);
+      anim.construction_progress = std::fmod(
+          build_elapsed * k_builder_construct_cycles_per_second, 1.0F);
       if (anim.construction_progress < 0.0F) {
         anim.construction_progress += 1.0F;
       }

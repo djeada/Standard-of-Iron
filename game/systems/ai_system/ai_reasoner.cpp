@@ -8,6 +8,69 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <optional>
+
+namespace {
+
+struct AnchorCandidate {
+  float x = 0.0F;
+  float z = 0.0F;
+};
+
+constexpr float k_anchor_cluster_radius = 12.0F;
+
+auto densest_anchor_cluster(const std::vector<AnchorCandidate> &candidates)
+    -> std::optional<AnchorCandidate> {
+  if (candidates.empty()) {
+    return std::nullopt;
+  }
+
+  const float cluster_radius_sq =
+      k_anchor_cluster_radius * k_anchor_cluster_radius;
+  int best_count = -1;
+  float best_distance_sum = std::numeric_limits<float>::infinity();
+  AnchorCandidate best_center{};
+
+  for (const auto &candidate : candidates) {
+    int cluster_count = 0;
+    float sum_x = 0.0F;
+    float sum_z = 0.0F;
+    float distance_sum = 0.0F;
+
+    for (const auto &other : candidates) {
+      const float dx = other.x - candidate.x;
+      const float dz = other.z - candidate.z;
+      const float distance_sq = dx * dx + dz * dz;
+      if (distance_sq > cluster_radius_sq) {
+        continue;
+      }
+
+      cluster_count++;
+      sum_x += other.x;
+      sum_z += other.z;
+      distance_sum += distance_sq;
+    }
+
+    if (cluster_count <= 0) {
+      continue;
+    }
+
+    if (cluster_count > best_count ||
+        (cluster_count == best_count && distance_sum < best_distance_sum)) {
+      best_count = cluster_count;
+      best_distance_sum = distance_sum;
+      const float scale = 1.0F / static_cast<float>(cluster_count);
+      best_center = {sum_x * scale, sum_z * scale};
+    }
+  }
+
+  if (best_count <= 0) {
+    return std::nullopt;
+  }
+  return best_center;
+}
+
+} // namespace
 
 namespace Game::Systems::AI {
 
@@ -42,6 +105,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.base_pos_x = 0.0F;
   ctx.base_pos_y = 0.0F;
   ctx.base_pos_z = 0.0F;
+  ctx.has_base_anchor = false;
   ctx.visible_enemy_count = 0;
   ctx.enemy_buildings_count = 0;
   ctx.neutral_barracks_count = 0;
@@ -93,6 +157,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
         ctx.base_pos_x = entity.pos_x;
         ctx.base_pos_y = entity.pos_y;
         ctx.base_pos_z = entity.pos_z;
+        ctx.has_base_anchor = true;
       }
       continue;
     }
@@ -132,6 +197,28 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
     }
   }
 
+  if (!ctx.has_base_anchor) {
+    std::vector<AnchorCandidate> unit_positions;
+    unit_positions.reserve(snapshot.friendly_units.size());
+    for (const auto &entity : snapshot.friendly_units) {
+      if (entity.is_building ||
+          entity.spawn_type == Game::Units::SpawnType::Builder) {
+        continue;
+      }
+      unit_positions.push_back({entity.pos_x, entity.pos_z});
+    }
+
+    if (const auto anchor = densest_anchor_cluster(unit_positions);
+        anchor.has_value()) {
+      ctx.base_pos_x = anchor->x;
+      ctx.base_pos_y = 0.0F;
+      ctx.base_pos_z = anchor->z;
+      ctx.rally_x = anchor->x - 5.0F;
+      ctx.rally_z = anchor->z;
+      ctx.has_base_anchor = true;
+    }
+  }
+
   ctx.average_health =
       (ctx.total_units > 0)
           ? (total_health_ratio / static_cast<float>(ctx.total_units))
@@ -150,7 +237,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
       }
     }
 
-    if (ctx.primary_barracks != 0) {
+    if (ctx.has_base_anchor) {
       float const dist =
           distance(enemy.pos_x, enemy.pos_y, enemy.pos_z, ctx.base_pos_x,
                    ctx.base_pos_y, ctx.base_pos_z);

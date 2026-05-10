@@ -335,7 +335,8 @@ void BiomeRenderer::generate_grass_instances() {
 
       float const avg_slope = chunk_slope_sum / float(sample_count);
 
-      uint32_t state = hash_coords(chunk_x, chunk_z, m_noise_seed ^ 0xC915872BU);
+      uint32_t state =
+          hash_coords(chunk_x, chunk_z, m_noise_seed ^ 0xC915872BU);
       float const slope_penalty =
           1.0F - std::clamp(avg_slope * 1.35F, 0.0F, 0.75F);
 

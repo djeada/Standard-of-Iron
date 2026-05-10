@@ -29,8 +29,8 @@ public:
     qInfo() << "GLSL Version:"
             << reinterpret_cast<const char *>(
                    gl->glGetString(GL_SHADING_LANGUAGE_VERSION));
-    qInfo() << "Context Version:" << format.major_version() << "."
-            << format.minor_version();
+    qInfo() << "Context Version:" << format.majorVersion() << "."
+            << format.minorVersion();
     qInfo() << "Profile:"
             << (format.profile() == QSurfaceFormat::CoreProfile ? "Core"
                 : format.profile() == QSurfaceFormat::CompatibilityProfile
@@ -61,8 +61,8 @@ public:
             << extensions.contains("GL_ARB_uniform_buffer_object");
 
     const bool has_persistent_mapping =
-        (format.major_version() > 4 ||
-         (format.major_version() == 4 && format.minor_version() >= 4)) ||
+        (format.majorVersion() > 4 ||
+         (format.majorVersion() == 4 && format.minorVersion() >= 4)) ||
         extensions.contains("GL_ARB_buffer_storage");
 
     qInfo() << "Persistent Buffer Mapping:"

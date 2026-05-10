@@ -33,8 +33,8 @@ auto CampaignLoader::parse_campaign_mission(const QJsonObject &obj)
 }
 
 auto CampaignLoader::load_from_json_file(const QString &file_path,
-                                      CampaignDefinition &out_campaign,
-                                      QString *error_msg) -> bool {
+                                         CampaignDefinition &out_campaign,
+                                         QString *error_msg) -> bool {
   QFile file(file_path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     if (error_msg != nullptr) {

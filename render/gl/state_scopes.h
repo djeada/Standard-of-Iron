@@ -5,9 +5,9 @@ namespace Render::GL {
 
 struct DepthMaskScope {
   GLboolean prev{};
-  explicit DepthMaskScope(bool enableWrite) {
+  explicit DepthMaskScope(bool enable_write) {
     glGetBooleanv(GL_DEPTH_WRITEMASK, &prev);
-    glDepthMask(enableWrite ? GL_TRUE : GL_FALSE);
+    glDepthMask(enable_write ? GL_TRUE : GL_FALSE);
   }
   ~DepthMaskScope() { glDepthMask(prev); }
 };

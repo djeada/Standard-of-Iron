@@ -4,6 +4,7 @@
 #include "../../palette.h"
 #include "../../render_archetype.h"
 #include "../../static_attachment_spec.h"
+#include "../i_equipment_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -11,6 +12,8 @@
 #include <cstdint>
 
 namespace Render::GL {
+
+struct RomanLightHelmetConfig {};
 
 auto roman_light_helmet_archetype() -> const RenderArchetype &;
 
@@ -24,5 +27,25 @@ auto roman_light_helmet_make_static_attachment(
     std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
     const QMatrix4x4 &bind_palette_socket_bone)
     -> Render::Creature::StaticAttachmentSpec;
+
+class RomanLightHelmetRenderer : public IEquipmentRenderer {
+public:
+  explicit RomanLightHelmetRenderer(const RomanLightHelmetConfig &cfg = {})
+      : m_config(cfg) {}
+
+  static void submit(const RomanLightHelmetConfig &config,
+                     const DrawContext &ctx, const BodyFrames &frames,
+                     const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  void render(const DrawContext &ctx, const BodyFrames &frames,
+              const HumanoidPalette &palette,
+              const HumanoidAnimationContext &anim,
+              EquipmentBatch &batch) override;
+
+private:
+  RomanLightHelmetConfig m_config;
+};
 
 } // namespace Render::GL

@@ -30,7 +30,6 @@ enum WorkApronSinglePaletteSlot : std::uint8_t {
 };
 
 constexpr int k_apron_rings = 6;
-constexpr int k_apron_ring_segments = 14;
 
 auto work_apron_body_palette(const WorkApronConfig &config)
     -> std::array<QVector3D, 7> {
@@ -69,54 +68,30 @@ auto work_apron_body_archetype(const WorkApronConfig &config,
     }
   }
 
-  constexpr float pi = std::numbers::pi_v<float>;
   std::vector<GeneratedEquipmentPrimitive> primitives;
-  primitives.reserve(78);
+  primitives.reserve(4);
 
-  float const y_top = 0.05F;
+  float const y_top = 0.03F;
   float const y_bottom = -config.apron_length;
+  float const apron_height = y_top - y_bottom;
+  float const mid_y = (y_top + y_bottom) * 0.5F;
+  float const face_z = waist_d * 0.76F;
 
-  for (int ring = 0; ring < k_apron_rings; ++ring) {
-    float const t = static_cast<float>(ring) / 5.0F;
-    float const y = y_top - t * (y_top - y_bottom);
-    float const flare = 1.0F + t * 0.15F;
-    float const w = waist_r * flare;
-    float const d = waist_d * flare;
-    float const thickness = 0.018F + t * 0.004F;
+  primitives.push_back(generated_box(
+      QVector3D(0.0F, mid_y, face_z),
+      QVector3D(waist_r * 2.28F, apron_height * 0.92F, 0.060F), k_ring_2_slot));
 
-    for (int i = 0; i < k_apron_ring_segments; ++i) {
-      float const angle_start =
-          (static_cast<float>(i) / k_apron_ring_segments - 0.25F) * pi;
-      float const angle_end =
-          (static_cast<float>(i + 1) / k_apron_ring_segments - 0.25F) * pi;
+  primitives.push_back(
+      generated_box(QVector3D(0.0F, y_top - 0.022F, face_z + 0.006F),
+                    QVector3D(waist_r * 2.44F, 0.055F, 0.060F), k_ring_0_slot));
 
-      if (angle_start < -pi * 0.5F || angle_start > pi * 0.5F) {
-        continue;
-      }
+  primitives.push_back(generated_box(
+      QVector3D(0.0F, mid_y, face_z + 0.004F),
+      QVector3D(0.06F, apron_height * 0.80F, 0.022F), k_ring_5_slot));
 
-      QVector3D const p1(w * std::sin(angle_start), y,
-                         d * std::cos(angle_start));
-      QVector3D const p2(w * std::sin(angle_end), y, d * std::cos(angle_end));
-      primitives.push_back(generated_cylinder(
-          p1, p2, thickness, static_cast<std::uint8_t>(k_ring_0_slot + ring)));
-    }
-  }
-
-  for (int edge = 0; edge < 2; ++edge) {
-    float const side_angle = (edge == 0) ? -pi * 0.25F : pi * 0.25F;
-
-    for (int i = 0; i < k_apron_rings; ++i) {
-      float const t = static_cast<float>(i) / 5.0F;
-      float const y = y_top - t * (y_top - y_bottom);
-      float const flare = 1.0F + t * 0.15F;
-      float const w = waist_r * flare;
-      float const d = waist_d * flare;
-
-      primitives.push_back(generated_sphere(
-          QVector3D(w * std::sin(side_angle), y, d * std::cos(side_angle)),
-          0.020F, k_edge_slot));
-    }
-  }
+  primitives.push_back(
+      generated_box(QVector3D(0.0F, y_bottom + 0.022F, face_z + 0.006F),
+                    QVector3D(waist_r * 2.44F, 0.045F, 0.055F), k_edge_slot));
 
   cache.push_back(
       {radius_key, depth_key, length_key, width_key,
@@ -144,15 +119,13 @@ auto work_apron_straps_archetype(const AttachmentFrame &torso)
     }
   }
 
-  QVector3D const chest_l(torso.radius * 0.30F, 0.08F, torso.radius * 0.80F);
-  QVector3D const chest_r(-torso.radius * 0.30F, 0.08F, torso.radius * 0.80F);
-  QVector3D const back_l(torso.radius * 0.20F, -0.02F, -torso.radius * 0.65F);
-  QVector3D const back_r(-torso.radius * 0.20F, -0.02F, -torso.radius * 0.65F);
-
-  std::array<GeneratedEquipmentPrimitive, 3> const primitives{{
-      generated_cylinder(chest_l, back_l, 0.020F, k_single_slot),
-      generated_cylinder(chest_r, back_r, 0.020F, k_single_slot),
-      generated_cylinder(back_l, back_r, 0.018F, k_single_slot),
+  std::array<GeneratedEquipmentPrimitive, 2> const primitives{{
+      generated_box(
+          QVector3D(torso.radius * 0.20F, 0.01F, -torso.radius * 0.56F),
+          QVector3D(0.040F, 0.24F, 0.034F), k_single_slot),
+      generated_box(
+          QVector3D(-torso.radius * 0.20F, 0.01F, -torso.radius * 0.56F),
+          QVector3D(0.040F, 0.24F, 0.034F), k_single_slot),
   }};
 
   cache.push_back(
@@ -177,28 +150,16 @@ auto work_apron_pockets_archetype(const AttachmentFrame &waist)
     }
   }
 
-  constexpr float pi = std::numbers::pi_v<float>;
   std::vector<GeneratedEquipmentPrimitive> primitives;
-  primitives.reserve(18);
+  primitives.reserve(2);
+  float const waist_d =
+      (waist.depth > 0.0F) ? waist.depth * 0.85F : waist.radius * 0.75F;
 
   for (int side = -1; side <= 1; side += 2) {
-    float const pocket_angle = static_cast<float>(side) * 0.12F * pi;
-    float const pocket_x = waist.radius * 0.55F * std::sin(pocket_angle);
-    float const pocket_z = waist.radius * 0.45F * std::cos(pocket_angle);
-    QVector3D const pocket_center(pocket_x, -0.12F, pocket_z);
-
-    for (int i = 0; i < 3; ++i) {
-      for (int j = 0; j < 3; ++j) {
-        float const x_off = (static_cast<float>(i) - 1.0F) * 0.018F;
-        float const y_off = (static_cast<float>(j) - 1.0F) * 0.022F;
-        float const radius = 0.012F - static_cast<float>(i + j) * 0.0005F;
-
-        primitives.push_back(generated_sphere(
-            pocket_center +
-                QVector3D(x_off * static_cast<float>(side), y_off, 0.0F),
-            radius, k_single_slot));
-      }
-    }
+    primitives.push_back(
+        generated_box(QVector3D(static_cast<float>(side) * waist.radius * 0.26F,
+                                -0.13F, waist_d * 0.82F),
+                      QVector3D(0.10F, 0.12F, 0.05F), k_single_slot));
   }
 
   cache.push_back(

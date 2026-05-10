@@ -317,8 +317,8 @@ public:
     m_items_high_water = std::max(m_items_high_water, m_items.size());
     m_prepared_high_water =
         std::max(m_prepared_high_water, m_prepared_batches.size());
-    m_submission_bucket_high_water =
-        std::max(m_submission_bucket_high_water, m_submission_bucket_spans.size());
+    m_submission_bucket_high_water = std::max(m_submission_bucket_high_water,
+                                              m_submission_bucket_spans.size());
     m_items.clear();
     m_sort_indices.clear();
     m_sort_keys.clear();
@@ -352,8 +352,8 @@ public:
   submission_bucket_high_water() const noexcept -> std::size_t {
     return m_submission_bucket_high_water;
   }
-  [[nodiscard]] auto submission_bucket_capacity() const noexcept
-      -> std::size_t {
+  [[nodiscard]] auto
+  submission_bucket_capacity() const noexcept -> std::size_t {
     return m_submission_bucket_spans.capacity();
   }
 

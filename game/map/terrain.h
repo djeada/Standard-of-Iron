@@ -96,7 +96,7 @@ inline auto terrain_type_to_string(TerrainType type) -> std::string {
 }
 
 inline auto try_parse_terrain_type(const QString &value,
-                                TerrainType &out) -> bool {
+                                   TerrainType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("flat")) {
     out = TerrainType::Flat;
@@ -631,7 +631,7 @@ public:
 
   void build_from_features(const std::vector<TerrainFeature> &features);
 
-  void add_river_segments(const std::vector<RiverSegment> &riverSegments);
+  void add_river_segments(const std::vector<RiverSegment> &river_segments);
 
   [[nodiscard]] auto get_height_at(float world_x, float world_z) const -> float;
 
@@ -682,9 +682,9 @@ public:
   void apply_biome_variation(const BiomeSettings &settings);
 
   void restore_from_data(const std::vector<float> &heights,
-                       const std::vector<TerrainType> &terrain_types,
-                       const std::vector<RiverSegment> &rivers,
-                       const std::vector<Bridge> &bridges);
+                         const std::vector<TerrainType> &terrain_types,
+                         const std::vector<RiverSegment> &rivers,
+                         const std::vector<Bridge> &bridges);
 
 private:
   int m_width;

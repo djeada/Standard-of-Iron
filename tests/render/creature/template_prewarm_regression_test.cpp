@@ -534,7 +534,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   nation_registry.clear();
 }
 
-TEST(TemplatePrewarmRegression, WorldPrewarmsCivilianAliases) {
+TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
   using Game::Systems::NationID;
   using Game::Units::SpawnType;
   using Render::Creature::CreatureLOD;
@@ -589,6 +589,208 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCivilianAliases) {
 
   renderer.shutdown();
   Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
+}
+
+TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+  using Render::Creature::CreatureLOD;
+
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  Game::Systems::Nation carthage{};
+  carthage.id = NationID::Carthage;
+  carthage.display_name = "Carthage";
+  carthage.formation_type = Game::Systems::FormationType::Carthage;
+  nation_registry.register_nation(std::move(carthage));
+  Game::Systems::TroopProfileService::instance().clear();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  Engine::Core::World world;
+  Engine::Core::Entity *civilian = world.create_entity();
+  ASSERT_NE(civilian, nullptr);
+  add_test_unit(*civilian, SpawnType::Civilian, NationID::Carthage, 1,
+                "troops/carthage/civilian");
+
+  renderer.prewarm_unit_templates(&world);
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto civilian_renderer = registry.get("troops/carthage/civilian");
+  ASSERT_TRUE(static_cast<bool>(civilian_renderer));
+
+  Engine::Core::Entity civilian_entity(9003);
+  add_test_unit(civilian_entity, SpawnType::Civilian, NationID::Carthage, 1,
+                "troops/carthage/civilian");
+
+  renderer.rigged_mesh_cache().reset_frame_stats();
+
+  Render::GL::DrawContext ctx{renderer.resources(), &civilian_entity, nullptr,
+                              QMatrix4x4()};
+  ctx.renderer_id = "troops/carthage/civilian";
+  ctx.backend = renderer.backend();
+  ctx.allow_template_cache = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = CreatureLOD::Full;
+  ctx.has_variant_override = true;
+  ctx.variant_override = 0;
+
+  civilian_renderer(ctx, renderer);
+
+  const auto &stats = renderer.rigged_mesh_cache().frame_stats();
+  EXPECT_EQ(stats.misses, 0U);
+  EXPECT_GT(stats.hits, 0U);
+
+  renderer.shutdown();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
+}
+
+TEST(TemplatePrewarmRegression,
+     WorldPrewarmsCarthageSpearmanFacialHairVariants) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+  using Render::Creature::CreatureLOD;
+
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  Game::Systems::Nation carthage{};
+  carthage.id = NationID::Carthage;
+  carthage.display_name = "Carthage";
+  carthage.formation_type = Game::Systems::FormationType::Carthage;
+  nation_registry.register_nation(std::move(carthage));
+  Game::Systems::TroopProfileService::instance().clear();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  Engine::Core::World world;
+  Engine::Core::Entity *spearman = world.create_entity();
+  ASSERT_NE(spearman, nullptr);
+  add_test_unit(*spearman, SpawnType::Spearman, NationID::Carthage, 1,
+                "troops/carthage/spearman");
+
+  renderer.prewarm_unit_templates(&world);
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto spearman_renderer = registry.get("troops/carthage/spearman");
+  ASSERT_TRUE(static_cast<bool>(spearman_renderer));
+
+  Engine::Core::Entity runtime_entity(9003);
+  add_test_unit(runtime_entity, SpawnType::Spearman, NationID::Carthage, 1,
+                "troops/carthage/spearman");
+
+  Render::GL::DrawContext ctx{renderer.resources(), &runtime_entity, nullptr,
+                              QMatrix4x4()};
+  ctx.renderer_id = "troops/carthage/spearman";
+  ctx.backend = renderer.backend();
+  ctx.allow_template_cache = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = CreatureLOD::Full;
+  ctx.has_seed_override = true;
+
+  for (std::uint32_t seed : {0U, 4U, 11U, 12U}) {
+    renderer.rigged_mesh_cache().reset_frame_stats();
+    ctx.seed_override = seed;
+    spearman_renderer(ctx, renderer);
+
+    const auto &stats = renderer.rigged_mesh_cache().frame_stats();
+    EXPECT_EQ(stats.misses, 0U) << "seed=" << seed;
+    EXPECT_GT(stats.hits, 0U) << "seed=" << seed;
+  }
+
+  renderer.shutdown();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
+}
+
+TEST(TemplatePrewarmRegression,
+     MixedCarthageSpearmanBeardVariantsRemainVisibleInQueuedFrame) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+  using Render::Creature::CreatureLOD;
+
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  Game::Systems::Nation carthage{};
+  carthage.id = NationID::Carthage;
+  carthage.display_name = "Carthage";
+  carthage.formation_type = Game::Systems::FormationType::Carthage;
+  nation_registry.register_nation(std::move(carthage));
+  Game::Systems::TroopProfileService::instance().clear();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  Render::GL::Camera camera;
+  camera.set_perspective(60.0F, 4.0F / 3.0F, 0.1F, 100.0F);
+  camera.look_at(QVector3D(0.0F, 3.0F, 8.0F), QVector3D(0.0F, 1.0F, 0.0F),
+                 QVector3D(0.0F, 1.0F, 0.0F));
+  renderer.set_camera(&camera);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto spearman_renderer = registry.get("troops/carthage/spearman");
+  ASSERT_TRUE(static_cast<bool>(spearman_renderer));
+
+  Engine::Core::Entity clean_entity(9101);
+  add_test_unit(clean_entity, SpawnType::Spearman, NationID::Carthage, 1,
+                "troops/carthage/spearman");
+  Engine::Core::Entity bearded_entity(9102);
+  add_test_unit(bearded_entity, SpawnType::Spearman, NationID::Carthage, 1,
+                "troops/carthage/spearman");
+
+  auto render_variant = [&](Engine::Core::Entity &entity, float x,
+                            std::uint32_t seed) {
+    QMatrix4x4 model;
+    model.translate(x, 0.0F, 0.0F);
+    Render::GL::DrawContext ctx{renderer.resources(), &entity, nullptr, model};
+    ctx.renderer_id = "troops/carthage/spearman";
+    ctx.backend = renderer.backend();
+    ctx.camera = &camera;
+    ctx.allow_template_cache = true;
+    ctx.force_humanoid_lod = true;
+    ctx.forced_humanoid_lod = CreatureLOD::Full;
+    ctx.force_single_soldier = true;
+    ctx.has_seed_override = true;
+    ctx.seed_override = seed;
+    spearman_renderer(ctx, renderer);
+  };
+
+  renderer.begin_frame();
+  render_variant(clean_entity, -1.6F, 0U);
+  render_variant(bearded_entity, 1.6F, 11U);
+  renderer.end_frame();
+
+  const QImage image = renderer.render_software_preview(160, 120);
+  ASSERT_FALSE(image.isNull());
+  const QColor clear = image.pixelColor(0, 0);
+
+  auto count_non_clear = [&](int start_x, int end_x) {
+    int count = 0;
+    for (int y = 0; y < image.height(); ++y) {
+      for (int x = start_x; x < end_x; ++x) {
+        if (image.pixelColor(x, y) != clear) {
+          ++count;
+        }
+      }
+    }
+    return count;
+  };
+
+  EXPECT_GT(count_non_clear(0, image.width() / 2), 20);
+  EXPECT_GT(count_non_clear(image.width() / 2, image.width()), 20);
+
+  renderer.shutdown();
   Game::Systems::TroopProfileService::instance().clear();
   nation_registry.clear();
 }

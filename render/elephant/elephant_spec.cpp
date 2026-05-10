@@ -54,11 +54,12 @@ constexpr SkeletonTopology k_elephant_topology{
 constexpr float k_pi = 3.14159265358979323846F;
 constexpr float k_rear_stride_scale = 0.58F;
 constexpr float k_rear_backward_stride_damping = 0.60F;
-constexpr float k_fight_trunk_side_swing = 0.18F;
-constexpr float k_fight_trunk_lift_base = 0.34F;
-constexpr float k_fight_trunk_lift_wave = 0.08F;
-constexpr float k_fight_trunk_forward_base = 0.08F;
-constexpr float k_fight_trunk_forward_wave = 0.06F;
+constexpr float k_fight_leg_cycle_time = 0.95F;
+constexpr float k_fight_trunk_side_swing = 0.12F;
+constexpr float k_fight_trunk_lift_base = 0.18F;
+constexpr float k_fight_trunk_lift_wave = 0.06F;
+constexpr float k_fight_trunk_forward_base = 0.03F;
+constexpr float k_fight_trunk_forward_wave = 0.05F;
 
 [[nodiscard]] auto
 translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
@@ -120,7 +121,8 @@ struct LegResult {
                                     float phase_offset) noexcept -> LegResult {
   float const leg_phase =
       motion.is_fighting
-          ? std::fmod(motion.anim_time / 1.15F + phase_offset, 1.0F)
+          ? std::fmod(motion.anim_time / k_fight_leg_cycle_time + phase_offset,
+                      1.0F)
           : std::fmod(motion.phase + phase_offset, 1.0F);
   bool const is_front = (forward_bias > 0.0F);
 
@@ -349,14 +351,35 @@ void make_elephant_spec_pose_animated(
   if (motion.is_fighting) {
     float const phase_wave = std::sin(motion.anim_time * k_pi * 2.0F / 1.15F);
     float const phase_push = 0.5F + 0.5F * phase_wave;
-    float const trunk_swing_x = dims.head_width * k_fight_trunk_side_swing *
-                                phase_wave;
+    float combat_lift = 0.0F;
+    float combat_reach = 0.0F;
+    switch (motion.combat_phase) {
+    case Render::GL::CombatAnimPhase::WindUp:
+      combat_lift = 0.05F;
+      combat_reach = -0.01F;
+      break;
+    case Render::GL::CombatAnimPhase::Strike:
+    case Render::GL::CombatAnimPhase::Impact:
+      combat_lift = -0.03F;
+      combat_reach = 0.07F;
+      break;
+    case Render::GL::CombatAnimPhase::Recover:
+      combat_lift = -0.01F;
+      combat_reach = 0.03F;
+      break;
+    default:
+      break;
+    }
+    float const trunk_swing_x =
+        dims.head_width * k_fight_trunk_side_swing * phase_wave;
     float const trunk_raise =
         dims.trunk_length *
-        (k_fight_trunk_lift_base + k_fight_trunk_lift_wave * phase_push);
+        (k_fight_trunk_lift_base + k_fight_trunk_lift_wave * phase_push +
+         combat_lift);
     float const trunk_reach_z =
         dims.trunk_length *
-        (k_fight_trunk_forward_base + k_fight_trunk_forward_wave * phase_push);
+        (k_fight_trunk_forward_base + k_fight_trunk_forward_wave * phase_push +
+         combat_reach);
     out_pose.trunk_end += QVector3D(trunk_swing_x, trunk_raise, trunk_reach_z);
   }
 

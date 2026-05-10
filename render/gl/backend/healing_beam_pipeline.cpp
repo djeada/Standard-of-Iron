@@ -240,8 +240,8 @@ void HealingBeamPipeline::render(
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
   GLboolean blend_enabled = glIsEnabled(GL_BLEND);
-  GLboolean depthMaskEnabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
+  GLboolean depth_mask_enabled = GL_TRUE;
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
   GLint prev_blend_src = 0;
   GLint prev_blend_dst = 0;
@@ -265,7 +265,7 @@ void HealingBeamPipeline::render(
 
   glBindVertexArray(0);
 
-  glDepthMask(depthMaskEnabled);
+  glDepthMask(depth_mask_enabled);
   glBlendFunc(static_cast<GLenum>(prev_blend_src),
               static_cast<GLenum>(prev_blend_dst));
   if (!blend_enabled) {
@@ -318,8 +318,8 @@ void HealingBeamPipeline::render_single_beam(const QVector3D &start,
   }
 
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depthMaskEnabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
+  GLboolean depth_mask_enabled = GL_TRUE;
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -333,19 +333,19 @@ void HealingBeamPipeline::render_single_beam(const QVector3D &start,
   m_beam_shader->set_uniform(m_uniforms.mvp, view_proj);
   m_beam_shader->set_uniform(m_uniforms.time, time);
   m_beam_shader->set_uniform(m_uniforms.progress,
-                            std::clamp(progress, 0.0F, 1.0F));
+                             std::clamp(progress, 0.0F, 1.0F));
   m_beam_shader->set_uniform(m_uniforms.start_pos, start);
   m_beam_shader->set_uniform(m_uniforms.end_pos, end);
   m_beam_shader->set_uniform(m_uniforms.beam_width, beam_width);
   m_beam_shader->set_uniform(m_uniforms.heal_color, color);
   m_beam_shader->set_uniform(m_uniforms.alpha,
-                            std::clamp(intensity, 0.0F, 1.0F));
+                             std::clamp(intensity, 0.0F, 1.0F));
 
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 
   glBindVertexArray(0);
 
-  glDepthMask(depthMaskEnabled);
+  glDepthMask(depth_mask_enabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   if (cull_enabled) {
     glEnable(GL_CULL_FACE);

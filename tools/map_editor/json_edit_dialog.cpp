@@ -43,7 +43,8 @@ void JsonEditDialog::setupUI(const QString &title, const QJsonObject &json) {
   layout->addLayout(buttonLayout);
 
   connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
-  connect(m_ok_button, &QPushButton::clicked, this, &JsonEditDialog::onAccepted);
+  connect(m_ok_button, &QPushButton::clicked, this,
+          &JsonEditDialog::onAccepted);
 
   validateJson();
 }

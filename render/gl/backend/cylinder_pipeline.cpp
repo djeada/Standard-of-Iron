@@ -118,8 +118,8 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 
   constexpr std::size_t k_cylinder_persistent_capacity = 10000;
-  if (m_cylinder_persistent_buffer.initialize(k_cylinder_persistent_capacity,
-                                            BufferCapacity::BuffersInFlight)) {
+  if (m_cylinder_persistent_buffer.initialize(
+          k_cylinder_persistent_capacity, BufferCapacity::BuffersInFlight)) {
     m_use_persistent_buffers = true;
     glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_persistent_buffer.buffer());
   } else {
@@ -168,8 +168,8 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   m_cylinder_scratch.reserve(m_use_persistent_buffers
-                                ? k_cylinder_persistent_capacity
-                                : m_cylinder_instance_capacity);
+                                 ? k_cylinder_persistent_capacity
+                                 : m_cylinder_instance_capacity);
 }
 
 void CylinderPipeline::shutdown_cylinder_pipeline() {
@@ -324,8 +324,9 @@ void CylinderPipeline::initialize_fog_pipeline() {
   glGenBuffers(1, &m_fog_instance_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_fog_instance_buffer);
   m_fog_instance_capacity = BufferCapacity::DefaultFogInstances;
-  glBufferData(GL_ARRAY_BUFFER, m_fog_instance_capacity * sizeof(FogInstanceGpu),
-               nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER,
+               m_fog_instance_capacity * sizeof(FogInstanceGpu), nullptr,
+               GL_DYNAMIC_DRAW);
 
   const auto stride = static_cast<GLsizei>(sizeof(FogInstanceGpu));
   glEnableVertexAttribArray(VertexAttrib::InstancePosition);

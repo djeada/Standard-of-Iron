@@ -21,9 +21,9 @@ public:
 signals:
   void spawn_buildings_requested(int count);
   void clear_buildings_requested();
-  void building_owner_selected(int ownerId);
-  void building_nation_selected(const QString &nationId);
-  void building_type_selected(const QString &buildingType);
+  void building_owner_selected(int owner_id);
+  void building_nation_selected(const QString &nation_id);
+  void building_type_selected(const QString &building_type);
 
 private:
   void populate_nation_options();

@@ -97,7 +97,8 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.tile_red, k_building_state_mask_intact);
   for (float z = -0.80F; z <= 0.80F; z += 0.32F) {
     desc.add_box(QVector3D(0.0F, 1.13F, z), QVector3D(0.96F, 0.02F, 0.06F),
-                 c.tile_dark, k_building_state_mask_intact, BuildingLODMask::Full);
+                 c.tile_dark, k_building_state_mask_intact,
+                 BuildingLODMask::Full);
   }
 
   float const parapet_y = 1.14F;
@@ -139,19 +140,23 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
 
   for (float xw : {-0.93F, 0.93F}) {
     desc.add_box(QVector3D(xw, 0.60F, -0.30F), QVector3D(0.015F, 0.20F, 0.07F),
-                 c.wood_dark, k_building_state_mask_intact, BuildingLODMask::Full);
+                 c.wood_dark, k_building_state_mask_intact,
+                 BuildingLODMask::Full);
     desc.add_box(QVector3D(xw, 0.60F, 0.30F), QVector3D(0.015F, 0.20F, 0.07F),
-                 c.wood_dark, k_building_state_mask_intact, BuildingLODMask::Full);
+                 c.wood_dark, k_building_state_mask_intact,
+                 BuildingLODMask::Full);
   }
 
   desc.add_box(QVector3D(0.0F, 0.25F, 0.0F), QVector3D(0.58F, 0.005F, 0.58F),
-               c.stone_dark, k_building_state_mask_intact, BuildingLODMask::Full);
+               c.stone_dark, k_building_state_mask_intact,
+               BuildingLODMask::Full);
 
   desc.add_cylinder(QVector3D(0.0F, 0.24F, 0.0F), QVector3D(0.0F, 0.34F, 0.0F),
                     0.15F, c.stone_light, k_building_state_mask_intact,
                     BuildingLODMask::Full);
   desc.add_box(QVector3D(0.0F, 0.34F, 0.0F), QVector3D(0.34F, 0.025F, 0.34F),
-               c.stone_base, k_building_state_mask_intact, BuildingLODMask::Full);
+               c.stone_base, k_building_state_mask_intact,
+               BuildingLODMask::Full);
 
   desc.add_palette_box(QVector3D(0.0F, 0.78F, 0.99F),
                        QVector3D(0.28F, 0.10F, 0.02F), k_home_team_slot,

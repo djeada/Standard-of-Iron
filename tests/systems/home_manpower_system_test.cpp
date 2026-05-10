@@ -162,8 +162,7 @@ TEST_F(HomeManpowerSystemTest,
   auto home = Game::Units::Home::Create(world, params);
   auto *entity = world.get_entity(home->id());
   ASSERT_NE(entity, nullptr);
-  auto *production =
-      entity->get_component<Engine::Core::ProductionComponent>();
+  auto *production = entity->get_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(production, nullptr);
 
   EXPECT_EQ(production->product_type, Game::Units::TroopType::Civilian);

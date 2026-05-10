@@ -21,6 +21,32 @@ static constexpr float repath_cooldown_seconds = 0.4F;
 
 namespace {
 
+constexpr float radius_aware_walkability_threshold = 0.5F;
+constexpr float hold_mode_turn_speed_degrees = 180.0F;
+constexpr float desired_yaw_turn_speed_degrees = 720.0F;
+
+void apply_desired_yaw(Engine::Core::TransformComponent *transform,
+                       float delta_time, float turn_speed_degrees) {
+  if ((transform == nullptr) || !transform->has_desired_yaw) {
+    return;
+  }
+
+  float const current = transform->rotation.y;
+  float const target_yaw = transform->desired_yaw;
+  float const diff =
+      std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
+  float const step = std::clamp(diff, -turn_speed_degrees * delta_time,
+                                turn_speed_degrees * delta_time);
+  transform->rotation.y = current + step;
+
+  float const remaining_diff =
+      std::fmod((target_yaw - transform->rotation.y + 540.0F), 360.0F) - 180.0F;
+  if (std::fabs(remaining_diff) < 0.5F) {
+    transform->rotation.y = target_yaw;
+    transform->has_desired_yaw = false;
+  }
+}
+
 auto is_point_allowed(const QVector3D &pos,
                       Engine::Core::EntityID ignore_entity,
                       float unit_radius = 0.5F) -> bool {
@@ -28,11 +54,12 @@ auto is_point_allowed(const QVector3D &pos,
   Pathfinding *pathfinder = CommandService::get_pathfinder();
 
   (void)ignore_entity;
-  (void)unit_radius;
-
   if (pathfinder != nullptr) {
     Point const grid = CommandService::world_to_grid(pos.x(), pos.z());
-    return pathfinder->is_walkable(grid.x, grid.y);
+    if (unit_radius <= radius_aware_walkability_threshold) {
+      return pathfinder->is_walkable(grid.x, grid.y);
+    }
+    return pathfinder->is_walkable_with_radius(grid.x, grid.y, unit_radius);
   } else if (terrain_service.is_initialized()) {
     int const grid_x = static_cast<int>(std::round(pos.x()));
     int const grid_z = static_cast<int>(std::round(pos.z()));
@@ -46,15 +73,20 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
                          Engine::Core::EntityID ignore_entity,
                          float unit_radius = 0.5F) -> bool {
   (void)ignore_entity;
-  (void)unit_radius;
-
   Pathfinding *pathfinder = CommandService::get_pathfinder();
   if (pathfinder == nullptr) {
     return true;
   }
 
   Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
-  if (!pathfinder->is_walkable(end_grid.x, end_grid.y)) {
+  auto const is_walkable_func = [pathfinder, unit_radius](int x, int y) {
+    if (unit_radius <= radius_aware_walkability_threshold) {
+      return pathfinder->is_walkable(x, y);
+    }
+    return pathfinder->is_walkable_with_radius(x, y, unit_radius);
+  };
+
+  if (!is_walkable_func(end_grid.x, end_grid.y)) {
     return false;
   }
 
@@ -72,7 +104,7 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
     QVector3D const sample_pos = from + direction * t;
     Point const sample_grid =
         CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
-    if (!pathfinder->is_walkable(sample_grid.x, sample_grid.y)) {
+    if (!is_walkable_func(sample_grid.x, sample_grid.y)) {
       return false;
     }
   }
@@ -142,32 +174,21 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
   if (in_hold_mode) {
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-      if (transform->has_desired_yaw) {
-        float const current = transform->rotation.y;
-        float const target_yaw = transform->desired_yaw;
-        float const diff =
-            std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-        float const turn_speed = 180.0F;
-        float const step =
-            std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
-        transform->rotation.y = current + step;
-
-        if (std::fabs(diff) < 0.5F) {
-          transform->has_desired_yaw = false;
-        }
-      }
+      apply_desired_yaw(transform, delta_time, hold_mode_turn_speed_degrees);
     }
     return;
   }
 
   auto *atk = entity->get_component<Engine::Core::AttackComponent>();
   if ((atk != nullptr) && atk->in_melee_lock) {
-
     movement->has_target = false;
     movement->vx = 0.0F;
     movement->vz = 0.0F;
     movement->clear_path();
     movement->path_pending = false;
+    if (!entity->has_component<Engine::Core::BuildingComponent>()) {
+      apply_desired_yaw(transform, delta_time, desired_yaw_turn_speed_degrees);
+    }
     return;
   }
 
