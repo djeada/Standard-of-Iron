@@ -38,6 +38,8 @@ Rectangle {
     property string casualty_forecast: calculate_casualty_forecast()
     property string success_estimate: calculate_success_estimate()
     property string reward_summary: reward_summary_text()
+    property var player_commander: mission_definition && mission_definition.player_setup ? mission_definition.player_setup.commander : null
+    property var opposing_forces: mission_definition && mission_definition.ai_setups ? mission_definition.ai_setups : []
 
     signal start_mission_clicked()
 
@@ -55,6 +57,43 @@ Rectangle {
             return "carthaginian";
 
         return "roman";
+    }
+
+    function resolve_setup_faction(setup) {
+        if (!setup)
+            return "";
+
+        if (setup.faction)
+            return setup.faction.toLowerCase();
+
+        if (setup.nation)
+            return setup.nation.toLowerCase();
+
+        return "";
+    }
+
+    function command_glyph_for_setup(setup) {
+        return resolve_setup_faction(setup).indexOf("carth") !== -1 ? StyleGuide["historical"]["carthageGlyph"] : StyleGuide["historical"]["romanGlyph"];
+    }
+
+    function command_banner_for_setup(setup) {
+        return resolve_setup_faction(setup).indexOf("carth") !== -1 ? qsTr("Carthaginian High Command") : qsTr("Roman High Command");
+    }
+
+    function setup_summary(setup) {
+        if (!setup)
+            return "";
+
+        var parts = [];
+        if (setup.faction)
+            parts.push(titleize(setup.faction));
+        else if (setup.nation)
+            parts.push(titleize(setup.nation));
+
+        if (setup.difficulty)
+            parts.push(titleize(setup.difficulty));
+
+        return parts.join(" • ");
     }
 
     function load_mission_definition() {
@@ -149,6 +188,7 @@ Rectangle {
 
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.minimumHeight: 0
             Layout.minimumWidth: 0
             clip: true
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -520,63 +560,167 @@ Rectangle {
             Layout.preferredWidth: 248
             Layout.maximumWidth: 248
             Layout.fillHeight: true
+            Layout.minimumHeight: 0
             Layout.alignment: Qt.AlignTop
             spacing: Theme.spacingSmall
 
-            Rectangle {
+            ScrollView {
                 Layout.fillWidth: true
-                implicitHeight: command_panel_layout.implicitHeight + Theme.spacingMedium * 2
-                Layout.preferredHeight: implicitHeight
-                radius: Theme.radiusSmall
-                color: "#281e16"
-                border.color: "#8f6d43"
-                border.width: 1
+                Layout.fillHeight: true
+                Layout.minimumHeight: 0
+                clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-                ColumnLayout {
-                    id: command_panel_layout
+                Item {
+                    width: parent.width
+                    implicitHeight: command_column.implicitHeight
 
-                    anchors.fill: parent
-                    anchors.margins: Theme.spacingMedium
-                    spacing: Theme.spacingSmall
+                    ColumnLayout {
+                        id: command_column
 
-                    Label {
-                        text: commander_title
-                        color: Theme.textMain
-                        font.pointSize: Theme.fontSizeSmall
-                        font.bold: true
-                        font.family: "serif"
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
+                        width: parent.width
+                        spacing: Theme.spacingSmall
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: command_panel_layout.implicitHeight + Theme.spacingMedium * 2
+                            Layout.preferredHeight: implicitHeight
+                            radius: Theme.radiusSmall
+                            color: "#281e16"
+                            border.color: "#8f6d43"
+                            border.width: 1
+
+                            ColumnLayout {
+                                id: command_panel_layout
+
+                                anchors.fill: parent
+                                anchors.margins: Theme.spacingMedium
+                                spacing: Theme.spacingSmall
+
+                                Label {
+                                    text: commander_title
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeSmall
+                                    font.bold: true
+                                    font.family: "serif"
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Label {
+                                    text: root.player_commander && root.player_commander.display_name ? root.player_commander.display_name : root.command_banner_text
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeMedium
+                                    font.bold: true
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Label {
+                                    text: root.player_commander && root.player_commander.battlefield_role ? root.player_commander.battlefield_role : root.commander_title
+                                    color: Theme.textDim
+                                    font.pointSize: Theme.fontSizeTiny
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Label {
+                                    visible: !!(root.player_commander && root.player_commander.bonus_summary)
+                                    text: root.player_commander && root.player_commander.bonus_summary ? root.player_commander.bonus_summary : ""
+                                    color: Theme.textSubLite
+                                    wrapMode: Text.WordWrap
+                                    font.pointSize: Theme.fontSizeTiny
+                                    Layout.fillWidth: true
+                                }
+
+                                Label {
+                                    text: root.reward_summary
+                                    color: Theme.textSubLite
+                                    wrapMode: Text.WordWrap
+                                    font.pointSize: Theme.fontSizeTiny
+                                    Layout.fillWidth: true
+                                }
+
+                                Label {
+                                    visible: root.opposing_forces.length > 0
+                                    text: qsTr("Opposition Command")
+                                    color: Theme.textDim
+                                    font.pointSize: Theme.fontSizeSmall
+                                    font.bold: true
+                                    Layout.fillWidth: true
+                                }
+
+                                Repeater {
+                                    model: root.opposing_forces
+
+                                    delegate: Rectangle {
+                                        Layout.fillWidth: true
+                                        implicitHeight: opposition_force_layout.implicitHeight + Theme.spacingSmall * 2
+                                        Layout.preferredHeight: implicitHeight
+                                        radius: Theme.radiusSmall
+                                        color: "#2f241a"
+                                        border.color: "#8f6d43"
+                                        border.width: 1
+
+                                        ColumnLayout {
+                                            id: opposition_force_layout
+
+                                            anchors.fill: parent
+                                            anchors.margins: Theme.spacingSmall
+                                            spacing: Theme.spacingTiny
+
+                                            RowLayout {
+                                                Layout.fillWidth: true
+                                                spacing: Theme.spacingSmall
+
+                                                Label {
+                                                    text: root.command_glyph_for_setup(modelData)
+                                                    color: "#c29555"
+                                                    font.pointSize: Theme.fontSizeSmall
+                                                    font.bold: true
+                                                }
+
+                                                Label {
+                                                    Layout.fillWidth: true
+                                                    text: modelData.commander && modelData.commander.display_name ? modelData.commander.display_name : qsTr("Field Command Pending")
+                                                    color: Theme.textMain
+                                                    font.pointSize: Theme.fontSizeSmall
+                                                    font.bold: true
+                                                    wrapMode: Text.WordWrap
+                                                }
+                                            }
+
+                                            Label {
+                                                Layout.fillWidth: true
+                                                text: root.setup_summary(modelData)
+                                                color: Theme.textDim
+                                                font.pointSize: Theme.fontSizeTiny
+                                                wrapMode: Text.WordWrap
+                                                visible: text.length > 0
+                                            }
+
+                                            Label {
+                                                Layout.fillWidth: true
+                                                text: modelData.commander && modelData.commander.battlefield_role ? modelData.commander.battlefield_role : root.command_banner_for_setup(modelData)
+                                                color: Theme.textSubLite
+                                                font.pointSize: Theme.fontSizeTiny
+                                                wrapMode: Text.WordWrap
+                                            }
+
+                                            Label {
+                                                Layout.fillWidth: true
+                                                text: modelData.commander && modelData.commander.bonus_summary ? modelData.commander.bonus_summary : qsTr("No named commander assigned to this force.")
+                                                color: Theme.textSubLite
+                                                font.pointSize: Theme.fontSizeTiny
+                                                wrapMode: Text.WordWrap
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-
-                    Label {
-                        text: command_glyph
-                        color: "#c29555"
-                        font.pointSize: Theme.fontSizeMedium
-                        font.bold: true
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                    }
-
-                    Label {
-                        text: command_banner_text
-                        color: Theme.textDim
-                        font.pointSize: Theme.fontSizeTiny
-                        font.bold: true
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                    }
-
-                    Label {
-                        text: reward_summary
-                        color: Theme.textSubLite
-                        wrapMode: Text.WordWrap
-                        font.pointSize: Theme.fontSizeTiny
-                        Layout.fillWidth: true
-                    }
-
                 }
-
             }
 
             Rectangle {
@@ -600,10 +744,6 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                 }
 
-            }
-
-            Item {
-                Layout.fillHeight: true
             }
 
             StyledButton {

@@ -63,7 +63,8 @@ public:
 
     m_buffer_mode = mode;
 
-    m_mapped_ptr = Platform::BufferStorageHelper::map_buffer(m_total_size, mode);
+    m_mapped_ptr =
+        Platform::BufferStorageHelper::map_buffer(m_total_size, mode);
 
     if (m_mapped_ptr == nullptr) {
       qWarning() << "PersistentRingBuffer: Failed to map buffer";
@@ -151,7 +152,8 @@ public:
       return 0;
     }
 
-    std::size_t const write_offset = m_frame_offset + m_current_count * sizeof(T);
+    std::size_t const write_offset =
+        m_frame_offset + m_current_count * sizeof(T);
     void *dest = static_cast<char *>(m_mapped_ptr) + write_offset;
     std::memcpy(dest, data, count * sizeof(T));
 

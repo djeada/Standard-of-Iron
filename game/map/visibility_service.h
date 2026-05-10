@@ -98,7 +98,7 @@ private:
   };
 
   auto gather_vision_sources(Engine::Core::World &world,
-                           int player_id) -> std::vector<VisionSource>;
+                             int player_id) -> std::vector<VisionSource>;
   auto compose_job_payload(const std::vector<VisionSource> &sources) const
       -> JobPayload;
   void enqueue_job(JobPayload &&payload);

@@ -34,9 +34,18 @@ constexpr float k_unit_radius_threshold = 0.5F;
 constexpr float k_jitter_distance = 1.5F;
 
 auto is_direct_path_walkable(const QVector3D &from, const QVector3D &to,
-                             const Pathfinding &pathfinder) -> bool {
+                             const Pathfinding &pathfinder,
+                             float unit_radius) -> bool {
+  auto const is_walkable_func = [&pathfinder, unit_radius](int x,
+                                                           int y) -> bool {
+    if (unit_radius <= k_unit_radius_threshold) {
+      return pathfinder.is_walkable(x, y);
+    }
+    return pathfinder.is_walkable_with_radius(x, y, unit_radius);
+  };
+
   Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
-  if (!pathfinder.is_walkable(end_grid.x, end_grid.y)) {
+  if (!is_walkable_func(end_grid.x, end_grid.y)) {
     return false;
   }
 
@@ -54,7 +63,7 @@ auto is_direct_path_walkable(const QVector3D &from, const QVector3D &to,
     QVector3D const sample_pos = from + direction * t;
     Point const sample_grid =
         CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
-    if (!pathfinder.is_walkable(sample_grid.x, sample_grid.y)) {
+    if (!is_walkable_func(sample_grid.x, sample_grid.y)) {
       return false;
     }
   }
@@ -154,7 +163,7 @@ auto CommandService::get_unit_radius(
       Game::Units::TroopConfig::instance().get_selection_ring_size(
           unit_comp->spawn_type);
 
-  return selection_ring_size * 0.5F;
+  return std::max(selection_ring_size, k_unit_radius_threshold);
 }
 
 void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
@@ -304,6 +313,7 @@ void CommandService::move_unit(Engine::Core::World &world,
   }
 
   if (s_pathfinder) {
+    float const unit_radius = get_unit_radius(world, unit_id);
     Point const start =
         world_to_grid(transform->position.x, transform->position.z);
     Point const end = world_to_grid(target.x(), target.z());
@@ -327,7 +337,8 @@ void CommandService::move_unit(Engine::Core::World &world,
                                 transform->position.z);
     bool const use_direct_path =
         ((dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD) &&
-        is_direct_path_walkable(current_pos, target, *s_pathfinder);
+        is_direct_path_walkable(current_pos, target, *s_pathfinder,
+                                unit_radius);
 
     if (use_direct_path) {
       mv->target_x = target_x;
@@ -383,8 +394,6 @@ void CommandService::move_unit(Engine::Core::World &world,
       std::uint64_t const request_id =
           s_next_request_id.fetch_add(1, std::memory_order_relaxed);
       mv->pending_request_id = request_id;
-
-      float const unit_radius = 1.0F;
 
       {
         std::lock_guard<std::mutex> const lock(s_pending_mutex);
@@ -482,6 +491,7 @@ void CommandService::move_group(
     bool is_engaged;
     float speed;
     Game::Units::SpawnType spawn_type;
+    float unit_radius;
     float distance_to_target;
   };
 
@@ -540,9 +550,10 @@ void CommandService::move_group(
     Game::Units::SpawnType const spawn_type =
         (unit_component != nullptr) ? unit_component->spawn_type
                                     : Game::Units::SpawnType::Archer;
+    float const member_radius = get_unit_radius(world, units[i]);
 
     members.push_back({units[i], entity, transform, movement, targets[i],
-                       engaged, member_speed, spawn_type, 0.0F});
+                       engaged, member_speed, spawn_type, member_radius, 0.0F});
   }
 
   if (members.empty()) {
@@ -584,7 +595,12 @@ void CommandService::move_group(
         break;
       }
 
-      if (!s_pathfinder->is_walkable(target_grid.x, target_grid.y)) {
+      bool const target_is_walkable =
+          member.unit_radius <= k_unit_radius_threshold
+              ? s_pathfinder->is_walkable(target_grid.x, target_grid.y)
+              : s_pathfinder->is_walkable_with_radius(
+                    target_grid.x, target_grid.y, member.unit_radius);
+      if (!target_is_walkable) {
         any_target_invalid = true;
         break;
       }
@@ -744,6 +760,16 @@ void CommandService::move_group(
 
   auto &leader = members[leader_index];
   QVector3D const leader_target = leader.target;
+  float const shared_path_radius = [&members, &leader_target]() -> float {
+    float max_member_radius = k_unit_radius_threshold;
+    float max_offset = 0.0F;
+    for (const auto &member : members) {
+      max_member_radius = std::max(max_member_radius, member.unit_radius);
+      QVector3D const offset = member.target - leader_target;
+      max_offset = std::max(max_offset, offset.length());
+    }
+    return max_member_radius + max_offset;
+  }();
 
   std::vector<MemberInfo *> units_needing_new_path;
 
@@ -797,7 +823,8 @@ void CommandService::move_group(
                              leader.transform->position.z);
   bool const use_direct_path =
       ((dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD) &&
-      is_direct_path_walkable(leader_pos, leader_target, *s_pathfinder);
+      is_direct_path_walkable(leader_pos, leader_target, *s_pathfinder,
+                              shared_path_radius);
 
   if (use_direct_path) {
     for (auto *member : units_needing_new_path) {
@@ -824,13 +851,11 @@ void CommandService::move_group(
     member->movement->last_goal_y = member->target.z();
   }
 
-  float const unit_radius = 1.0F;
-
   PendingPathRequest pending;
   pending.entity_id = leader.id;
   pending.target = leader_target;
   pending.options = options;
-  pending.unit_radius = unit_radius;
+  pending.unit_radius = shared_path_radius;
   pending.group_members.reserve(units_needing_new_path.size());
   pending.group_targets.reserve(units_needing_new_path.size());
   for (const auto *member : units_needing_new_path) {
@@ -846,7 +871,7 @@ void CommandService::move_group(
     }
   }
 
-  s_pathfinder->submit_path_request(request_id, start, end, unit_radius);
+  s_pathfinder->submit_path_request(request_id, start, end, shared_path_radius);
 }
 
 void CommandService::process_path_results(Engine::Core::World &world) {

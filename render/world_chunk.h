@@ -103,26 +103,31 @@ struct TerrainChunkParams {
             k_default_grass_secondary_b};
   }
   static auto default_grass_dry() -> QVector3D {
-    return {k_default_grass_dry_r, k_default_grass_dry_g, k_default_grass_dry_b};
+    return {k_default_grass_dry_r, k_default_grass_dry_g,
+            k_default_grass_dry_b};
   }
   static auto default_soil_color() -> QVector3D {
-    return {k_default_soil_color_r, k_default_soil_color_g, k_default_soil_color_b};
+    return {k_default_soil_color_r, k_default_soil_color_g,
+            k_default_soil_color_b};
   }
   static auto default_rock_low() -> QVector3D {
     return {k_default_rock_low_r, k_default_rock_low_g, k_default_rock_low_b};
   }
   static auto default_rock_high() -> QVector3D {
-    return {k_default_rock_high_r, k_default_rock_high_g, k_default_rock_high_b};
+    return {k_default_rock_high_r, k_default_rock_high_g,
+            k_default_rock_high_b};
   }
   static auto default_tint() -> QVector3D {
     return {k_default_tint_component, k_default_tint_component,
             k_default_tint_component};
   }
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y,
+            k_default_light_dir_z};
   }
   static auto default_snow_color() -> QVector3D {
-    return {k_default_snow_color_r, k_default_snow_color_g, k_default_snow_color_b};
+    return {k_default_snow_color_r, k_default_snow_color_g,
+            k_default_snow_color_b};
   }
 
   QVector3D grass_primary = default_grass_primary();

@@ -14,7 +14,7 @@ using namespace Render::Creature;
 
 constexpr std::array<BoneDef, 6> k_toy_bones = {
     BoneDef{"root", k_invalid_bone}, BoneDef{"torso", 0}, BoneDef{"head", 1},
-    BoneDef{"shoulder", 1},        BoneDef{"arm", 3},   BoneDef{"hand", 4},
+    BoneDef{"shoulder", 1},          BoneDef{"arm", 3},   BoneDef{"hand", 4},
 };
 
 constexpr std::array<SocketDef, 3> k_toy_sockets = {

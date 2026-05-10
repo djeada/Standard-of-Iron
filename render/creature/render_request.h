@@ -47,8 +47,9 @@ using VariantId = std::uint16_t;
 inline constexpr VariantId k_canonical_variant = static_cast<VariantId>(0u);
 using WorldKey = std::uint64_t;
 using CreatureRenderAssetHandleId = std::uint16_t;
-inline constexpr CreatureRenderAssetHandleId k_invalid_creature_render_asset_handle =
-    static_cast<CreatureRenderAssetHandleId>(0xFFFFu);
+inline constexpr CreatureRenderAssetHandleId
+    k_invalid_creature_render_asset_handle =
+        static_cast<CreatureRenderAssetHandleId>(0xFFFFu);
 
 struct CreatureRenderRequest {
   ArchetypeId archetype{k_invalid_archetype};

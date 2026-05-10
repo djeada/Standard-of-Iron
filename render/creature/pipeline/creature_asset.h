@@ -123,7 +123,8 @@ private:
 
   struct AttachmentSetRecord {
     std::uint64_t hash{0U};
-    std::array<Render::Creature::StaticAttachmentSpec, k_max_attachment_set_specs>
+    std::array<Render::Creature::StaticAttachmentSpec,
+               k_max_attachment_set_specs>
         attachments{};
     std::uint8_t attachment_count{0U};
     AttachmentSetId id{k_invalid_attachment_set_id};

@@ -157,6 +157,7 @@ struct AIContext {
   float base_pos_x = 0.0F;
   float base_pos_y = 0.0F;
   float base_pos_z = 0.0F;
+  bool has_base_anchor = false;
 
   struct UnitAssignment {
     BehaviorPriority owner_priority = BehaviorPriority::Normal;

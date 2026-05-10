@@ -57,7 +57,8 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
       new QCheckBox("Render Rider On Mounted Units", spawn_group);
 
   m_owner_box->addItem(QStringLiteral("Local Player"), k_arena_local_owner_id);
-  m_owner_box->addItem(QStringLiteral("Arena Opponent"), k_arena_opponent_owner_id);
+  m_owner_box->addItem(QStringLiteral("Arena Opponent"),
+                       k_arena_opponent_owner_id);
   m_spawn_count_box->setRange(1, 64);
   m_spawn_count_box->setValue(1);
   m_individuals_per_unit_box->setRange(0, 128);

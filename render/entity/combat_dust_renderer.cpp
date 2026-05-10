@@ -29,6 +29,7 @@ constexpr float k_flame_color_b = 0.1F;
 constexpr float k_building_health_threshold = 0.5F;
 
 constexpr float k_stone_impact_radius = 0.6F;
+constexpr float k_elephant_stomp_impact_radius = 0.52F;
 constexpr float k_stone_impact_intensity = 1.5F;
 constexpr float k_stone_impact_color_r = 0.75F;
 constexpr float k_stone_impact_color_g = 0.65F;
@@ -251,10 +252,12 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
         continue;
       }
 
-      QVector3D position(impact_pos.x(), impact_pos.y() + k_stone_impact_y_offset,
+      QVector3D position(impact_pos.x(),
+                         impact_pos.y() + k_stone_impact_y_offset,
                          impact_pos.z());
 
-      impact_tracker.add_impact(position, animation_time, k_stone_impact_radius,
+      impact_tracker.add_impact(position, animation_time,
+                                k_elephant_stomp_impact_radius,
                                 k_stone_impact_intensity);
     }
   }
@@ -289,8 +292,8 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
         continue;
       }
 
-      QVector3D position(impact.x, transform->position.y + k_stone_impact_y_offset,
-                         impact.z);
+      QVector3D position(
+          impact.x, transform->position.y + k_stone_impact_y_offset, impact.z);
 
       if (!is_fog_visible(position.x(), position.z())) {
         impact.time = -1.0F;
@@ -303,7 +306,8 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
         continue;
       }
 
-      impact_tracker.add_impact(position, animation_time, k_stone_impact_radius,
+      impact_tracker.add_impact(position, animation_time,
+                                k_elephant_stomp_impact_radius,
                                 k_stone_impact_intensity);
       impact.time = -1.0F;
     }
@@ -318,7 +322,8 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
   impact_tracker.update(animation_time);
 
-  QVector3D color(k_stone_impact_color_r, k_stone_impact_color_g, k_stone_impact_color_b);
+  QVector3D color(k_stone_impact_color_r, k_stone_impact_color_g,
+                  k_stone_impact_color_b);
   for (const auto &impact : impact_tracker.impacts()) {
     if (!is_fog_visible(impact.position.x(), impact.position.z())) {
       continue;

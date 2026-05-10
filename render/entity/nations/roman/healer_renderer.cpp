@@ -4,11 +4,10 @@
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
-#include "../../../equipment/armor/roman_armor.h"
 #include "../../../equipment/armor/torso_local_archetype_utils.h"
 #include "../../../equipment/attachment_builder.h"
 #include "../../../equipment/generated_equipment.h"
-#include "../../../equipment/helmets/roman_light_helmet.h"
+#include "../../../equipment/humanoid_equipment_archetype.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -26,11 +25,13 @@
 #include "../../../submitter.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
+#include "../equipment_loadout_catalog.h"
 #include "healer_style.h"
 
 #include <QMatrix4x4>
 #include <QString>
 #include <QVector3D>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <numbers>
@@ -245,11 +246,23 @@ auto healer_tunic_make_static_attachment(std::uint16_t chest_bone_index,
       .socket_bone_index = chest_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });
-  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_healer_tunic_role_count);
-       ++i) {
+  for (std::uint8_t i = 0;
+       i < static_cast<std::uint8_t>(k_healer_tunic_role_count); ++i) {
     spec.palette_role_remap[i] = static_cast<std::uint8_t>(base_role_byte + i);
   }
   return spec;
+}
+
+auto healer_tunic_extra_role_colors(const void *variant_void, QVector3D *out,
+                                    std::uint32_t base_count,
+                                    std::size_t max_count) -> std::uint32_t {
+  if (variant_void == nullptr || max_count <= base_count) {
+    return base_count;
+  }
+  const auto &variant = *static_cast<const HumanoidVariant *>(variant_void);
+  return base_count + healer_tunic_fill_role_colors(variant.palette,
+                                                    out + base_count,
+                                                    max_count - base_count);
 }
 
 } // namespace
@@ -290,71 +303,40 @@ public:
     }();
 
     static const UnitVisualSpec spec = []() {
-      static const auto k_head_bone =
-          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
-      static const auto k_chest_bone =
-          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
-      static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
-          Render::Humanoid::k_humanoid_role_count + 1U);
-      static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-          k_helmet_base_role_byte + Render::GL::k_roman_light_helmet_role_count);
-      static const auto k_tunic_base_role_byte = static_cast<std::uint8_t>(
-          k_armor_base_role_byte + Render::GL::k_roman_light_armor_role_count);
-      static const auto k_head_bind_matrix =
-          Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
-              Render::Humanoid::HumanoidBone::Head)];
-      static const Render::Creature::StaticAttachmentSpec k_helmet_spec =
-          Render::GL::roman_light_helmet_make_static_attachment(
-              k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix);
-      static const Render::Creature::StaticAttachmentSpec k_armor_spec =
-          Render::GL::roman_light_armor_make_static_attachment(
-              k_chest_bone, k_armor_base_role_byte);
-      static const Render::Creature::StaticAttachmentSpec k_tunic_spec =
-          healer_tunic_make_static_attachment(k_chest_bone,
-                                              k_tunic_base_role_byte);
-      static const std::array<Render::Creature::StaticAttachmentSpec, 3>
-          k_attachments_full{k_helmet_spec, k_armor_spec, k_tunic_spec};
-      const std::span<const Render::Creature::StaticAttachmentSpec> bake_span =
-          captured_style.show_helmet
-              ? std::span<const Render::Creature::StaticAttachmentSpec>(
-                    k_attachments_full.data(), 3)
-              : std::span<const Render::Creature::StaticAttachmentSpec>(
-                    k_attachments_full.data() + 1, 2);
-      static const auto extra_roles_fn =
-          +[](const void *variant_void, QVector3D *out,
-              std::uint32_t base_count,
-              std::size_t max_count) -> std::uint32_t {
-        if (variant_void == nullptr || max_count <= base_count) {
-          return base_count;
+      static const auto k_healer_base_archetype = []() {
+        auto &registry = Render::Creature::ArchetypeRegistry::instance();
+        const auto *base_desc =
+            registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
+        if (base_desc == nullptr) {
+          return Render::Creature::k_invalid_archetype;
         }
-        const auto &v = *static_cast<const HumanoidVariant *>(variant_void);
-        auto count = base_count;
-        count += Render::GL::roman_light_helmet_fill_role_colors(
-            v.palette, out + count, max_count - count);
-        if (max_count <= count) {
-          return count;
-        }
-        count += Render::GL::roman_light_armor_fill_role_colors(
-            v.palette, out + count, max_count - count);
-        if (max_count <= count) {
-          return count;
-        }
-        count += healer_tunic_fill_role_colors(v.palette, out + count,
-                                               max_count - count);
-        return count;
-      };
-      static const auto k_archetype =
-          Render::Creature::ArchetypeRegistry::instance()
-              .register_unit_archetype("troops/roman/healer",
-                                       CreatureKind::Humanoid, bake_span,
-                                       extra_roles_fn);
+
+        Render::Creature::ArchetypeDescriptor desc = *base_desc;
+        desc.debug_name = "troops/roman/healer/base";
+        desc.bake_attachments[desc.bake_attachment_count++] =
+            healer_tunic_make_static_attachment(
+                static_cast<std::uint16_t>(
+                    Render::Humanoid::HumanoidBone::Chest),
+                desc.role_count);
+        desc.role_count = static_cast<std::uint8_t>(desc.role_count +
+                                                    k_healer_tunic_role_count);
+        desc.append_extra_role_colors_fn(&healer_tunic_extra_role_colors);
+        return registry.register_archetype(desc);
+      }();
+      const auto loadout =
+          Render::GL::Nation::resolve_equipment_loadout("troops/roman/healer");
+      const std::array<EquipmentHandle, 2> handles{
+          captured_style.show_helmet ? loadout.helmet_handle
+                                     : k_invalid_equipment_handle,
+          loadout.armor_handle};
 
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/healer";
       s.scaling = ProportionScaling{0.86F, 0.99F, 0.90F};
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = k_archetype;
+      s.archetype_id = resolve_humanoid_equipment_archetype(
+          "troops/roman/healer", k_healer_base_archetype, handles);
       return s;
     }();
     return spec;

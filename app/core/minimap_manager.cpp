@@ -365,8 +365,8 @@ void MinimapManager::update_units(
               visibility_service.snapshot());
       visibility_check = [visibility_snapshot](float world_x,
                                                float world_z) -> bool {
-        return visibility_snapshot->isVisibleWorld(world_x, world_z) ||
-               visibility_snapshot->isExploredWorld(world_x, world_z);
+        return visibility_snapshot->is_visible_world(world_x, world_z) ||
+               visibility_snapshot->is_explored_world(world_x, world_z);
       };
     }
 

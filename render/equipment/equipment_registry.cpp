@@ -10,12 +10,9 @@ auto EquipmentRegistry::instance() -> EquipmentRegistry & {
   return registry;
 }
 
-void EquipmentRegistry::register_equipment(
+void EquipmentRegistry::register_equipment_entry(
     EquipmentCategory category, const std::string &id,
     std::shared_ptr<IEquipmentRenderer> renderer) {
-  if (renderer == nullptr) {
-    return;
-  }
   m_renderers[category][id] = std::move(renderer);
   const HandleKey key{category, id};
   if (const auto it = m_handles.find(key); it != m_handles.end()) {
@@ -37,11 +34,26 @@ void EquipmentRegistry::register_equipment(
   m_handles.emplace(key, handle);
 }
 
+void EquipmentRegistry::register_equipment(
+    EquipmentCategory category, const std::string &id,
+    std::shared_ptr<IEquipmentRenderer> renderer) {
+  if (renderer == nullptr) {
+    return;
+  }
+  register_equipment_entry(category, id, std::move(renderer));
+}
+
+void EquipmentRegistry::register_placeholder_equipment(
+    EquipmentCategory category, const std::string &id) {
+  register_equipment_entry(category, id, nullptr);
+}
+
 void EquipmentRegistry::register_horse_equipment(
     EquipmentCategory category, const std::string &id,
     std::shared_ptr<IHorseEquipmentRenderer> renderer) {
-  register_equipment(category, id, std::static_pointer_cast<IEquipmentRenderer>(
-                                       std::move(renderer)));
+  register_equipment(
+      category, id,
+      std::static_pointer_cast<IEquipmentRenderer>(std::move(renderer)));
 }
 
 auto EquipmentRegistry::get(EquipmentCategory category, const std::string &id)

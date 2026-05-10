@@ -417,8 +417,8 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
 
       Game::Campaign::CampaignDefinition campaign;
       QString error;
-      if (!Game::Campaign::CampaignLoader::load_from_json_file(campaign_path,
-                                                            campaign, &error)) {
+      if (!Game::Campaign::CampaignLoader::load_from_json_file(
+              campaign_path, campaign, &error)) {
         qWarning() << "Failed to load campaign from resources" << campaign_name
                    << ":" << error;
         continue;

@@ -112,7 +112,7 @@ auto prewarm_entity_id_for_variant(
                                               4U +
                                           static_cast<std::size_t>(lod)) *
                                              k_template_variant_count +
-                                          static_cast<std::size_t>(variant));
+                                         static_cast<std::size_t>(variant));
 }
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
@@ -1929,19 +1929,19 @@ void Renderer::prewarm_unit_templates(
   add_state_frames(full_anim_keys, AnimState::Heal, 1);
   add_state_frames(full_anim_keys, AnimState::Hit, 1);
   auto const &archetypes = Render::Creature::ArchetypeRegistry::instance();
-  auto const melee_variant_count =
-      std::max(std::max(archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::k_humanoid_base,
-                            Render::Creature::AnimationStateId::AttackSword),
-                        archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::k_humanoid_base,
-                            Render::Creature::AnimationStateId::AttackSpear)),
-               std::max(archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::k_rider_base,
-                            Render::Creature::AnimationStateId::AttackSword),
-                        archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::k_rider_base,
-                            Render::Creature::AnimationStateId::AttackSpear)));
+  auto const melee_variant_count = std::max(
+      std::max(archetypes.clip_variant_count(
+                   Render::Creature::ArchetypeRegistry::k_humanoid_base,
+                   Render::Creature::AnimationStateId::AttackSword),
+               archetypes.clip_variant_count(
+                   Render::Creature::ArchetypeRegistry::k_humanoid_base,
+                   Render::Creature::AnimationStateId::AttackSpear)),
+      std::max(archetypes.clip_variant_count(
+                   Render::Creature::ArchetypeRegistry::k_rider_base,
+                   Render::Creature::AnimationStateId::AttackSword),
+               archetypes.clip_variant_count(
+                   Render::Creature::ArchetypeRegistry::k_rider_base,
+                   Render::Creature::AnimationStateId::AttackSpear)));
   auto const ranged_variant_count = archetypes.clip_variant_count(
       Render::Creature::ArchetypeRegistry::k_humanoid_base,
       Render::Creature::AnimationStateId::AttackBow);
@@ -1993,6 +1993,8 @@ void Renderer::prewarm_unit_templates(
                                             k_template_variant_count);
   }
 
+  variant_count = std::max<std::size_t>(variant_count, 4U);
+
   std::size_t anim_count_budget =
       target_template_count /
       std::max<std::size_t>(1, domain_count * variant_count);
@@ -2004,9 +2006,9 @@ void Renderer::prewarm_unit_templates(
   std::vector<std::uint8_t> variant_values;
   variant_values.reserve(variant_count);
   for (std::size_t i = 0; i < variant_count; ++i) {
-    std::size_t idx = (i * k_template_variant_count) / variant_count;
-    if (idx >= k_template_variant_count) {
-      idx = k_template_variant_count - 1;
+    std::size_t idx = 0;
+    if (variant_count > 1) {
+      idx = (i * (k_template_variant_count - 1)) / (variant_count - 1);
     }
     variant_values.push_back(static_cast<std::uint8_t>(idx));
   }

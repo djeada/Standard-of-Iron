@@ -212,8 +212,10 @@ auto TerrainService::is_forbidden_world(float world_x,
       static_cast<float>(m_height_map->get_height()) * k_half_cell_offset -
       k_half_cell_offset;
 
-  const float grid_x = world_x / m_height_map->get_tile_size() + grid_half_width;
-  const float grid_z = world_z / m_height_map->get_tile_size() + grid_half_height;
+  const float grid_x =
+      world_x / m_height_map->get_tile_size() + grid_half_width;
+  const float grid_z =
+      world_z / m_height_map->get_tile_size() + grid_half_height;
 
   const int grid_x_int = static_cast<int>(std::round(grid_x));
   const int grid_z_int = static_cast<int>(std::round(grid_z));

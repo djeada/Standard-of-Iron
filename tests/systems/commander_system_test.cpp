@@ -4,6 +4,7 @@
 #include "game/systems/production_service.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/commander_catalog.h"
+#include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 
@@ -139,6 +140,36 @@ TEST(CommanderProductionTest, AllowsRecruitingReplacementCommanderAfterDeath) {
           world, {barracks->get_id()}, 1,
           Game::Units::TroopType::CarthageMercenaryBroker);
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
+}
+
+TEST(CommanderFactoryTest, RefusesSecondLivingCommanderForOwner) {
+  Engine::Core::World world;
+  Game::Units::UnitFactoryRegistry registry;
+  Game::Units::register_built_in_units(registry);
+
+  Game::Units::SpawnParams params;
+  params.position = {0.0F, 0.0F, 0.0F};
+  params.player_id = 1;
+  params.nation_id = Game::Systems::NationID::RomanRepublic;
+  params.spawn_type = Game::Units::SpawnType::RomanVeteranConsul;
+
+  auto first = registry.create(params.spawn_type, world, params);
+  ASSERT_NE(first, nullptr);
+
+  auto *first_entity = world.get_entity(first->id());
+  ASSERT_NE(first_entity, nullptr);
+  auto *first_unit = first_entity->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(first_unit, nullptr);
+  ASSERT_NE(first_entity->get_component<Engine::Core::CommanderComponent>(),
+            nullptr);
+
+  params.spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  auto second = registry.create(params.spawn_type, world, params);
+  EXPECT_EQ(second, nullptr);
+
+  first_unit->health = 0;
+  auto replacement = registry.create(params.spawn_type, world, params);
+  EXPECT_NE(replacement, nullptr);
 }
 
 TEST(CommanderSystemTest, CommanderDeathDisablesAuraAndShocksNearbyAllies) {
@@ -349,6 +380,101 @@ TEST(CommanderSystemTest, SpeedBoostFallsOffWhenCommanderIsWounded) {
   system.update(&world, 1.0F);
 
   EXPECT_FLOAT_EQ(ally_unit->speed, base_profile.combat.speed);
+}
+
+TEST(CommanderSystemTest, ManualRallyRequestRestoresNearbyWaveringAlly) {
+  Engine::Core::World world;
+
+  auto *commander = world.create_entity();
+  auto *commander_unit =
+      commander->add_component<Engine::Core::UnitComponent>();
+  auto *commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto *commander_data =
+      commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 0.5F;
+  commander_data->rally_range = 6.0F;
+  commander_data->rally_cooldown = 12.0F;
+  commander_data->rally_morale_restore = 20.0F;
+  commander_data->rally_requires_manual_trigger = true;
+  commander_data->rally_requested = true;
+
+  auto *ally = world.create_entity();
+  auto *ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto *ally_transform =
+      ally->add_component<Engine::Core::TransformComponent>();
+  auto *ally_morale = ally->add_component<Engine::Core::MoraleComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ASSERT_NE(ally_morale, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  ally_transform->position = {2.0F, 0.0F, 0.0F};
+  ally_morale->morale = 25.0F;
+  ally_morale->wavering = true;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_FALSE(commander_data->rally_requested);
+  EXPECT_FLOAT_EQ(commander_data->rally_cooldown_remaining, 12.0F);
+  EXPECT_FLOAT_EQ(commander_data->rally_feedback_time, 1.5F);
+  EXPECT_FLOAT_EQ(ally_morale->morale, 45.0F);
+  EXPECT_FALSE(ally_morale->wavering);
+  EXPECT_FALSE(ally_morale->routing);
+}
+
+TEST(CommanderSystemTest, ManualRallyModeDoesNotAutoTriggerWithoutRequest) {
+  Engine::Core::World world;
+
+  auto *commander = world.create_entity();
+  auto *commander_unit =
+      commander->add_component<Engine::Core::UnitComponent>();
+  auto *commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto *commander_data =
+      commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->aura_radius = 0.5F;
+  commander_data->rally_range = 6.0F;
+  commander_data->rally_cooldown = 12.0F;
+  commander_data->rally_morale_restore = 20.0F;
+  commander_data->rally_requires_manual_trigger = true;
+
+  auto *ally = world.create_entity();
+  auto *ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto *ally_transform =
+      ally->add_component<Engine::Core::TransformComponent>();
+  auto *ally_morale = ally->add_component<Engine::Core::MoraleComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ASSERT_NE(ally_morale, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  ally_transform->position = {2.0F, 0.0F, 0.0F};
+  ally_morale->morale = 25.0F;
+  ally_morale->wavering = true;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_FLOAT_EQ(commander_data->rally_cooldown_remaining, 0.0F);
+  EXPECT_FLOAT_EQ(commander_data->rally_feedback_time, 0.0F);
+  EXPECT_FLOAT_EQ(ally_morale->morale, 25.0F);
+  EXPECT_TRUE(ally_morale->wavering);
 }
 
 } // namespace

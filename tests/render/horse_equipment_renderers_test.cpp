@@ -103,7 +103,7 @@ TEST_F(HorseEquipmentRenderersTest, BridleRendererUsesArchetypePath) {
 
   EXPECT_EQ(cylinder_count_of(batch), 0);
   EXPECT_EQ(mesh_count_of(batch), 0);
-  ASSERT_EQ(archetype_count_of(batch), 5);
+  ASSERT_EQ(archetype_count_of(batch), 1);
 
   MockSubmitter submitter;
   BatchSubmitterAdapter adapter(submitter);

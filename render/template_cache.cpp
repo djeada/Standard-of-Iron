@@ -156,8 +156,9 @@ void TemplateRecorder::mesh(Mesh *mesh, const QMatrix4x4 &model,
 }
 
 void TemplateRecorder::banner(Mesh *mesh_obj, const QMatrix4x4 &model,
-                              const QVector3D &color, const QVector3D &trim_color,
-                              Texture *texture, float alpha, int material_id) {
+                              const QVector3D &color,
+                              const QVector3D &trim_color, Texture *texture,
+                              float alpha, int material_id) {
   (void)trim_color;
   this->mesh(mesh_obj, model, color, texture, alpha, material_id);
 }
@@ -380,8 +381,8 @@ auto make_anim_key(const AnimationInputs &anim, float phase_offset,
 
   if (anim.is_constructing) {
     key.state = AnimState::Construct;
-    key.frame = phase_to_frame(time_phase(anim.construction_progress +
-                                          phase_offset));
+    key.frame =
+        phase_to_frame(time_phase(anim.construction_progress + phase_offset));
     key.combat_phase = CombatAnimPhase::Idle;
     key.attack_variant = 0;
     return key;

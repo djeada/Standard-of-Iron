@@ -65,6 +65,19 @@ using VariantHookFn = void (*)(const Render::GL::DrawContext &ctx,
                                std::uint32_t seed,
                                Render::GL::VariationParams &io_variation);
 
+struct HumanoidRenderSelection {
+  Render::Creature::ArchetypeId archetype{
+      Render::Creature::k_invalid_archetype};
+  Render::Creature::AnimationStateId state{
+      Render::Creature::AnimationStateId::Idle};
+  std::uint8_t clip_variant{0U};
+};
+
+using HumanoidRenderHookFn =
+    void (*)(const Render::GL::HumanoidAnimationContext &anim,
+             const Render::GL::HumanoidVariant &variant, std::uint32_t seed,
+             HumanoidRenderSelection &io_selection);
+
 struct ProportionScaling {
   float x{1.0F};
   float y{1.0F};
@@ -118,10 +131,12 @@ struct UnitVisualSpec {
   PaletteId palette_id{k_default_palette};
   PoseHookFn pose_hook{nullptr};
   VariantHookFn variant_hook{nullptr};
+  HumanoidRenderHookFn humanoid_render_hook{nullptr};
   ProportionScaling scaling{};
   const CreatureVisualDefinition *creature_definition{nullptr};
 
   LegacySlotMask owned_legacy_slots{LegacySlotMask::None};
+  bool skip_default_facial_hair_archetype{false};
 
   Render::Creature::ArchetypeId archetype_id{
       Render::Creature::k_invalid_archetype};

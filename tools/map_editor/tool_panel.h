@@ -35,7 +35,8 @@ private slots:
 
 private:
   void setupUI();
-  void addToolItem(const QString &name, const QString &iconChar, ToolType tool);
+  void addToolItem(const QString &name, const QString &icon_char,
+                   ToolType tool);
 
   QListWidget *m_tool_list = nullptr;
   ToolType m_current_tool = ToolType::Select;

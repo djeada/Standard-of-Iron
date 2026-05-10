@@ -42,8 +42,8 @@ TEST_F(CampaignLoaderTest, LoadsValidCampaign) {
 
   CampaignDefinition campaign;
   QString error;
-  bool result =
-      CampaignLoader::load_from_json_file(temp_file.fileName(), campaign, &error);
+  bool result = CampaignLoader::load_from_json_file(temp_file.fileName(),
+                                                    campaign, &error);
 
   EXPECT_TRUE(result) << "Error: " << error.toStdString();
   EXPECT_EQ(campaign.id, "test_campaign");
@@ -60,8 +60,8 @@ TEST_F(CampaignLoaderTest, ParsesMissions) {
 
   CampaignDefinition campaign;
   QString error;
-  ASSERT_TRUE(
-      CampaignLoader::load_from_json_file(temp_file.fileName(), campaign, &error));
+  ASSERT_TRUE(CampaignLoader::load_from_json_file(temp_file.fileName(),
+                                                  campaign, &error));
 
   ASSERT_EQ(campaign.missions.size(), 2);
 
@@ -87,8 +87,8 @@ TEST_F(CampaignLoaderTest, FailsOnInvalidJSON) {
 
   CampaignDefinition campaign;
   QString error;
-  bool result =
-      CampaignLoader::load_from_json_file(temp_file.fileName(), campaign, &error);
+  bool result = CampaignLoader::load_from_json_file(temp_file.fileName(),
+                                                    campaign, &error);
 
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
@@ -98,7 +98,7 @@ TEST_F(CampaignLoaderTest, FailsOnNonexistentFile) {
   CampaignDefinition campaign;
   QString error;
   bool result = CampaignLoader::load_from_json_file("/nonexistent/file.json",
-                                                 campaign, &error);
+                                                    campaign, &error);
 
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
@@ -120,8 +120,8 @@ TEST_F(CampaignLoaderTest, HandlesEmptyMissions) {
 
   CampaignDefinition campaign;
   QString error;
-  ASSERT_TRUE(
-      CampaignLoader::load_from_json_file(temp_file.fileName(), campaign, &error));
+  ASSERT_TRUE(CampaignLoader::load_from_json_file(temp_file.fileName(),
+                                                  campaign, &error));
 
   EXPECT_EQ(campaign.missions.size(), 0);
 }
@@ -147,8 +147,8 @@ TEST_F(CampaignLoaderTest, HandlesOptionalFields) {
 
   CampaignDefinition campaign;
   QString error;
-  ASSERT_TRUE(
-      CampaignLoader::load_from_json_file(temp_file.fileName(), campaign, &error));
+  ASSERT_TRUE(CampaignLoader::load_from_json_file(temp_file.fileName(),
+                                                  campaign, &error));
 
   ASSERT_EQ(campaign.missions.size(), 1);
   EXPECT_EQ(campaign.missions[0].mission_id, "mission_1");

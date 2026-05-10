@@ -104,22 +104,37 @@ Item {
         anchors.right: parent.right
         height: Math.max(140, parent.height * 0.2)
 
-        HUDBottom {
-            id: hudBottom
-
+        Loader {
+            id: bottomPanelLoader
             anchors.fill: parent
-            current_command_mode: hud.current_command_mode
-            selection_tick: hud.selection_tick
-            has_movable_units: hud.has_movable_units
-            onCommand_mode_changed: function(m) {
-                hud.current_command_mode = m;
-                hud.command_mode_changed(m);
-            }
-            onRecruit_unit: function(unit_type) {
-                hud.recruit_unit(unit_type);
+            sourceComponent: typeof game !== 'undefined' && game.control_mode === "commander" ? commanderBottomHudComponent : rtsBottomHudComponent
+        }
+
+        Component {
+            id: rtsBottomHudComponent
+
+            HUDBottom {
+                anchors.fill: parent
+                current_command_mode: hud.current_command_mode
+                selection_tick: hud.selection_tick
+                has_movable_units: hud.has_movable_units
+                onCommand_mode_changed: function(m) {
+                    hud.current_command_mode = m;
+                    hud.command_mode_changed(m);
+                }
+                onRecruit_unit: function(unit_type) {
+                    hud.recruit_unit(unit_type);
+                }
             }
         }
 
+        Component {
+            id: commanderBottomHudComponent
+
+            HUDBottomCommander {
+                anchors.fill: parent
+            }
+        }
     }
 
     HUDVictory {

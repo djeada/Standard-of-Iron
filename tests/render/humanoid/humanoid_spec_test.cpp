@@ -95,7 +95,8 @@ TEST(HumanoidSpecTest, FindBoneByNameAgreesWithEnumIndex) {
   CreatureSpec const &s = humanoid_creature_spec();
   auto check = [&](HumanoidBone expected, const char *name) {
     auto idx = Render::Creature::find_bone(s.topology, name);
-    ASSERT_NE(idx, Render::Creature::k_invalid_bone) << "no bone named " << name;
+    ASSERT_NE(idx, Render::Creature::k_invalid_bone)
+        << "no bone named " << name;
     EXPECT_EQ(idx, static_cast<std::uint16_t>(expected))
         << "mismatch for " << name;
   };

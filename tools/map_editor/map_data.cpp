@@ -92,8 +92,8 @@ void MapData::redo() {
   emit undoRedoChanged();
 }
 
-bool MapData::loadFromJson(const QString &filePath) {
-  QFile file(filePath);
+bool MapData::loadFromJson(const QString &file_path) {
+  QFile file(file_path);
   if (!file.open(QIODevice::ReadOnly)) {
     return false;
   }
@@ -115,10 +115,10 @@ bool MapData::loadFromJson(const QString &filePath) {
   m_max_troops_per_player = root["maxTroopsPerPlayer"].toInt(2000);
 
   if (root.contains("grid")) {
-    QJsonObject gridObj = root["grid"].toObject();
-    m_grid.width = gridObj["width"].toInt(100);
-    m_grid.height = gridObj["height"].toInt(100);
-    m_grid.tile_size = static_cast<float>(gridObj["tile_size"].toDouble(1.0));
+    QJsonObject grid_obj = root["grid"].toObject();
+    m_grid.width = grid_obj["width"].toInt(100);
+    m_grid.height = grid_obj["height"].toInt(100);
+    m_grid.tile_size = static_cast<float>(grid_obj["tile_size"].toDouble(1.0));
   }
 
   m_biome = root["biome"].toObject();
@@ -161,7 +161,7 @@ bool MapData::loadFromJson(const QString &filePath) {
   return true;
 }
 
-bool MapData::saveToJson(const QString &filePath) const {
+bool MapData::saveToJson(const QString &file_path) const {
   QJsonObject root;
 
   root["name"] = m_name;
@@ -171,11 +171,11 @@ bool MapData::saveToJson(const QString &filePath) const {
   root["coordSystem"] = m_coord_system;
   root["maxTroopsPerPlayer"] = m_max_troops_per_player;
 
-  QJsonObject gridObj;
-  gridObj["width"] = m_grid.width;
-  gridObj["height"] = m_grid.height;
-  gridObj["tile_size"] = static_cast<double>(m_grid.tile_size);
-  root["grid"] = gridObj;
+  QJsonObject grid_obj;
+  grid_obj["width"] = m_grid.width;
+  grid_obj["height"] = m_grid.height;
+  grid_obj["tile_size"] = static_cast<double>(m_grid.tile_size);
+  root["grid"] = grid_obj;
 
   if (!m_biome.isEmpty()) {
     root["biome"] = m_biome;
@@ -190,46 +190,46 @@ bool MapData::saveToJson(const QString &filePath) const {
     root["rain"] = m_rain;
   }
 
-  QJsonArray terrainArr = terrainToJson();
-  if (!terrainArr.isEmpty()) {
-    root["terrain"] = terrainArr;
+  QJsonArray terrain_arr = terrainToJson();
+  if (!terrain_arr.isEmpty()) {
+    root["terrain"] = terrain_arr;
   }
 
-  QJsonArray firecampsArr = firecampsToJson();
-  if (!firecampsArr.isEmpty()) {
-    root["firecamps"] = firecampsArr;
+  QJsonArray firecamps_arr = firecampsToJson();
+  if (!firecamps_arr.isEmpty()) {
+    root["firecamps"] = firecamps_arr;
   }
 
-  QJsonArray riversArr = riversToJson();
-  if (!riversArr.isEmpty()) {
-    root["rivers"] = riversArr;
+  QJsonArray rivers_arr = riversToJson();
+  if (!rivers_arr.isEmpty()) {
+    root["rivers"] = rivers_arr;
   }
 
-  QJsonArray roadsArr = roadsToJson();
-  if (!roadsArr.isEmpty()) {
-    root["roads"] = roadsArr;
+  QJsonArray roads_arr = roadsToJson();
+  if (!roads_arr.isEmpty()) {
+    root["roads"] = roads_arr;
   }
 
-  QJsonArray bridgesArr = bridgesToJson();
-  if (!bridgesArr.isEmpty()) {
-    root["bridges"] = bridgesArr;
+  QJsonArray bridges_arr = bridgesToJson();
+  if (!bridges_arr.isEmpty()) {
+    root["bridges"] = bridges_arr;
   }
 
-  QJsonArray spawnsArr = structuresToSpawnsJson();
+  QJsonArray spawns_arr = structuresToSpawnsJson();
 
   for (const auto &spawn : m_spawns) {
-    QJsonObject spawnObj = spawn.toObject();
-    QString type = spawnObj["type"].toString();
+    QJsonObject spawn_obj = spawn.toObject();
+    QString type = spawn_obj["type"].toString();
     if (type != "barracks" && type != "village") {
-      spawnsArr.append(spawn);
+      spawns_arr.append(spawn);
     }
   }
-  if (!spawnsArr.isEmpty()) {
-    root["spawns"] = spawnsArr;
+  if (!spawns_arr.isEmpty()) {
+    root["spawns"] = spawns_arr;
   }
 
   QJsonDocument doc(root);
-  QFile file(filePath);
+  QFile file(file_path);
   if (!file.open(QIODevice::WriteOnly)) {
     return false;
   }
@@ -254,11 +254,12 @@ void MapData::parseTerrainArray(const QJsonArray &arr) {
     elem.rotation = static_cast<float>(obj["rotation"].toDouble(0.0));
     elem.entrances = obj["entrances"].toArray();
 
-    QStringList knownKeys = {"type",  "x",      "z",        "radius",   "width",
-                             "depth", "height", "rotation", "entrances"};
+    QStringList known_keys = {"type",   "x",        "z",
+                              "radius", "width",    "depth",
+                              "height", "rotation", "entrances"};
     for (const QString &key : obj.keys()) {
-      if (!knownKeys.contains(key)) {
-        elem.extraFields[key] = obj[key];
+      if (!known_keys.contains(key)) {
+        elem.extra_fields[key] = obj[key];
       }
     }
 
@@ -275,10 +276,10 @@ void MapData::parseFirecampsArray(const QJsonArray &arr) {
     elem.intensity = static_cast<float>(obj["intensity"].toDouble(1.0));
     elem.radius = static_cast<float>(obj["radius"].toDouble(3.0));
 
-    QStringList knownKeys = {"x", "z", "intensity", "radius"};
+    QStringList known_keys = {"x", "z", "intensity", "radius"};
     for (const QString &key : obj.keys()) {
-      if (!knownKeys.contains(key)) {
-        elem.extraFields[key] = obj[key];
+      if (!known_keys.contains(key)) {
+        elem.extra_fields[key] = obj[key];
       }
     }
 
@@ -292,20 +293,20 @@ void MapData::parseRiversArray(const QJsonArray &arr) {
     LinearElement elem;
     elem.type = "river";
 
-    QJsonArray startArr = obj["start"].toArray();
-    QJsonArray endArr = obj["end"].toArray();
-    if (startArr.size() >= 2 && endArr.size() >= 2) {
-      elem.start = QVector2D(static_cast<float>(startArr[0].toDouble()),
-                             static_cast<float>(startArr[1].toDouble()));
-      elem.end = QVector2D(static_cast<float>(endArr[0].toDouble()),
-                           static_cast<float>(endArr[1].toDouble()));
+    QJsonArray start_arr = obj["start"].toArray();
+    QJsonArray end_arr = obj["end"].toArray();
+    if (start_arr.size() >= 2 && end_arr.size() >= 2) {
+      elem.start = QVector2D(static_cast<float>(start_arr[0].toDouble()),
+                             static_cast<float>(start_arr[1].toDouble()));
+      elem.end = QVector2D(static_cast<float>(end_arr[0].toDouble()),
+                           static_cast<float>(end_arr[1].toDouble()));
     }
     elem.width = static_cast<float>(obj["width"].toDouble(3.0));
 
-    QStringList knownKeys = {"start", "end", "width"};
+    QStringList known_keys = {"start", "end", "width"};
     for (const QString &key : obj.keys()) {
-      if (!knownKeys.contains(key)) {
-        elem.extraFields[key] = obj[key];
+      if (!known_keys.contains(key)) {
+        elem.extra_fields[key] = obj[key];
       }
     }
 
@@ -319,21 +320,21 @@ void MapData::parseRoadsArray(const QJsonArray &arr) {
     LinearElement elem;
     elem.type = "road";
 
-    QJsonArray startArr = obj["start"].toArray();
-    QJsonArray endArr = obj["end"].toArray();
-    if (startArr.size() >= 2 && endArr.size() >= 2) {
-      elem.start = QVector2D(static_cast<float>(startArr[0].toDouble()),
-                             static_cast<float>(startArr[1].toDouble()));
-      elem.end = QVector2D(static_cast<float>(endArr[0].toDouble()),
-                           static_cast<float>(endArr[1].toDouble()));
+    QJsonArray start_arr = obj["start"].toArray();
+    QJsonArray end_arr = obj["end"].toArray();
+    if (start_arr.size() >= 2 && end_arr.size() >= 2) {
+      elem.start = QVector2D(static_cast<float>(start_arr[0].toDouble()),
+                             static_cast<float>(start_arr[1].toDouble()));
+      elem.end = QVector2D(static_cast<float>(end_arr[0].toDouble()),
+                           static_cast<float>(end_arr[1].toDouble()));
     }
     elem.width = static_cast<float>(obj["width"].toDouble(3.0));
     elem.style = obj["style"].toString("default");
 
-    QStringList knownKeys = {"start", "end", "width", "style"};
+    QStringList known_keys = {"start", "end", "width", "style"};
     for (const QString &key : obj.keys()) {
-      if (!knownKeys.contains(key)) {
-        elem.extraFields[key] = obj[key];
+      if (!known_keys.contains(key)) {
+        elem.extra_fields[key] = obj[key];
       }
     }
 
@@ -347,21 +348,21 @@ void MapData::parseBridgesArray(const QJsonArray &arr) {
     LinearElement elem;
     elem.type = "bridge";
 
-    QJsonArray startArr = obj["start"].toArray();
-    QJsonArray endArr = obj["end"].toArray();
-    if (startArr.size() >= 2 && endArr.size() >= 2) {
-      elem.start = QVector2D(static_cast<float>(startArr[0].toDouble()),
-                             static_cast<float>(startArr[1].toDouble()));
-      elem.end = QVector2D(static_cast<float>(endArr[0].toDouble()),
-                           static_cast<float>(endArr[1].toDouble()));
+    QJsonArray start_arr = obj["start"].toArray();
+    QJsonArray end_arr = obj["end"].toArray();
+    if (start_arr.size() >= 2 && end_arr.size() >= 2) {
+      elem.start = QVector2D(static_cast<float>(start_arr[0].toDouble()),
+                             static_cast<float>(start_arr[1].toDouble()));
+      elem.end = QVector2D(static_cast<float>(end_arr[0].toDouble()),
+                           static_cast<float>(end_arr[1].toDouble()));
     }
     elem.width = static_cast<float>(obj["width"].toDouble(4.0));
     elem.height = static_cast<float>(obj["height"].toDouble(0.5));
 
-    QStringList knownKeys = {"start", "end", "width", "height"};
+    QStringList known_keys = {"start", "end", "width", "height"};
     for (const QString &key : obj.keys()) {
-      if (!knownKeys.contains(key)) {
-        elem.extraFields[key] = obj[key];
+      if (!known_keys.contains(key)) {
+        elem.extra_fields[key] = obj[key];
       }
     }
 
@@ -379,10 +380,10 @@ QJsonArray MapData::terrainToJson() const {
 
     if (elem.type == "hill") {
 
-      bool hasCustomDimensions = (elem.width != 10.0F && elem.width > 0.0F) ||
-                                 (elem.depth != 10.0F && elem.depth > 0.0F);
+      bool has_custom_dimensions = (elem.width != 10.0F && elem.width > 0.0F) ||
+                                   (elem.depth != 10.0F && elem.depth > 0.0F);
 
-      if (hasCustomDimensions) {
+      if (has_custom_dimensions) {
         if (elem.width > 0.0F) {
           obj["width"] = static_cast<double>(elem.width);
         }
@@ -405,8 +406,8 @@ QJsonArray MapData::terrainToJson() const {
       obj["entrances"] = elem.entrances;
     }
 
-    for (const QString &key : elem.extraFields.keys()) {
-      obj[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
     }
 
     arr.append(obj);
@@ -423,8 +424,8 @@ QJsonArray MapData::firecampsToJson() const {
     obj["intensity"] = static_cast<double>(elem.intensity);
     obj["radius"] = static_cast<double>(elem.radius);
 
-    for (const QString &key : elem.extraFields.keys()) {
-      obj[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
     }
 
     arr.append(obj);
@@ -445,8 +446,8 @@ QJsonArray MapData::riversToJson() const {
                             static_cast<double>(elem.end.y())};
     obj["width"] = static_cast<double>(elem.width);
 
-    for (const QString &key : elem.extraFields.keys()) {
-      obj[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
     }
 
     arr.append(obj);
@@ -468,8 +469,8 @@ QJsonArray MapData::roadsToJson() const {
     obj["width"] = static_cast<double>(elem.width);
     obj["style"] = elem.style.isEmpty() ? "default" : elem.style;
 
-    for (const QString &key : elem.extraFields.keys()) {
-      obj[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
     }
 
     arr.append(obj);
@@ -491,8 +492,8 @@ QJsonArray MapData::bridgesToJson() const {
     obj["width"] = static_cast<double>(elem.width);
     obj["height"] = static_cast<double>(elem.height);
 
-    for (const QString &key : elem.extraFields.keys()) {
-      obj[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
     }
 
     arr.append(obj);
@@ -602,11 +603,11 @@ void MapData::parseStructuresFromSpawns(const QJsonArray &arr) {
       elem.max_population = obj["max_population"].toInt(150);
       elem.nation = obj["nation"].toString();
 
-      QStringList knownKeys = {"type",          "x",     "z", "player_id",
-                               "max_population", "nation"};
+      QStringList known_keys = {"type",           "x",     "z", "player_id",
+                                "max_population", "nation"};
       for (const QString &key : obj.keys()) {
-        if (!knownKeys.contains(key)) {
-          elem.extraFields[key] = obj[key];
+        if (!known_keys.contains(key)) {
+          elem.extra_fields[key] = obj[key];
         }
       }
 
@@ -630,8 +631,8 @@ QJsonArray MapData::structuresToSpawnsJson() const {
       obj["nation"] = elem.nation;
     }
 
-    for (const QString &key : elem.extraFields.keys()) {
-      obj[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
     }
 
     arr.append(obj);

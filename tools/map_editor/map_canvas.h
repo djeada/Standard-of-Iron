@@ -32,8 +32,8 @@ protected:
   void resizeEvent(QResizeEvent *event) override;
 
 private:
-  [[nodiscard]] QPointF mapToGrid(const QPoint &widgetPos) const;
-  [[nodiscard]] QPoint gridToWidget(float gridX, float gridZ) const;
+  [[nodiscard]] QPointF mapToGrid(const QPoint &widget_pos) const;
+  [[nodiscard]] QPoint gridToWidget(float grid_x, float grid_z) const;
 
   void drawGrid(QPainter &painter);
   void drawTerrainElements(QPainter &painter);
@@ -45,16 +45,16 @@ private:
                    int player_id = 0);
 
   struct HitResult {
-    int elementType = -1;
+    int element_type = -1;
     int index = -1;
     int endpoint = -1;
   };
   [[nodiscard]] HitResult hitTest(const QPoint &pos) const;
 
-  void placeElement(const QPointF &gridPos);
-  void startLinearElement(const QPointF &gridPos);
-  void finishLinearElement(const QPointF &gridPos);
-  void eraseAtPosition(const QPointF &gridPos);
+  void placeElement(const QPointF &grid_pos);
+  void startLinearElement(const QPointF &grid_pos);
+  void finishLinearElement(const QPointF &grid_pos);
+  void eraseAtPosition(const QPointF &grid_pos);
 
   MapData *m_map_data = nullptr;
   ToolType m_current_tool = ToolType::Select;
@@ -74,14 +74,14 @@ private:
 
   int m_current_player_id = 0;
 
-  static constexpr int GRID_CELL_SIZE = 8;
-  static constexpr int ICON_SIZE = 16;
-  static constexpr float HIT_RADIUS = 5.0F;
-  static constexpr float ENDPOINT_HIT_RADIUS = 3.0F;
-  static constexpr int MIN_PLAYER_ID = 0;
-  static constexpr int MAX_PLAYER_ID = 4;
-  static constexpr int DEFAULT_MAX_POPULATION = 150;
-  static inline const QString DEFAULT_NATION = "roman_republic";
+  static constexpr int grid_cell_size = 8;
+  static constexpr int icon_size = 16;
+  static constexpr float hit_radius = 5.0F;
+  static constexpr float endpoint_hit_radius = 3.0F;
+  static constexpr int min_player_id = 0;
+  static constexpr int max_player_id = 4;
+  static constexpr int default_max_population = 150;
+  static inline const QString default_nation = "roman_republic";
 };
 
 } // namespace MapEditor

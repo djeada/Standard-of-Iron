@@ -1,10 +1,81 @@
 {
   "loadouts": {
+    "troops/roman/archer": {
+      "bow": "bow_roman",
+      "quiver": "quiver_roman",
+      "helmet": "roman_light",
+      "greaves": "roman_greaves",
+      "armor": "roman_light_armor",
+      "cloak": "cloak_roman"
+    },
+    "troops/carthage/archer": {
+      "bow": "bow_carthage",
+      "quiver": "quiver_carthage",
+      "helmet": "carthage_light",
+      "armor": "armor_light_carthage",
+      "cloak": "cloak_carthage"
+    },
+    "troops/roman/spearman": {
+      "spear": "spear",
+      "helmet": "roman_heavy",
+      "greaves": "roman_greaves",
+      "armor": "roman_light_armor",
+      "shoulder": "roman_shoulder_cover"
+    },
+    "troops/carthage/spearman": {
+      "spear": "spear",
+      "helmet": "carthage_heavy",
+      "armor": "armor_light_carthage",
+      "shoulder": "carthage_shoulder_cover"
+    },
+    "troops/roman/swordsman": {
+      "sword": "sword_roman",
+      "shield": "roman_scutum",
+      "helmet": "roman_heavy",
+      "greaves": "roman_greaves",
+      "armor": "roman_heavy_armor",
+      "shoulder": "roman_shoulder_cover"
+    },
+    "troops/carthage/swordsman": {
+      "sword": "sword_carthage",
+      "shield": "shield_carthage",
+      "helmet": "carthage_heavy",
+      "armor": "armor_heavy_carthage",
+      "shoulder": "carthage_shoulder_cover"
+    },
+    "troops/roman/healer": {
+      "helmet": "roman_light",
+      "armor": "roman_light_armor"
+    },
+    "troops/carthage/healer": {
+      "armor": "armor_light_carthage"
+    },
+    "troops/roman/builder": {
+      "helmet": "roman_light",
+      "tool_belt": "tool_belt_roman",
+      "work_apron": "work_apron_roman",
+      "arm_guards": "arm_guards_roman"
+    },
+    "troops/carthage/builder": {
+      "tool_belt": "tool_belt_carthage",
+      "work_apron": "work_apron_carthage",
+      "arm_guards": "arm_guards_carthage"
+    },
+    "troops/roman/civilian": {
+      "armor": "builder_tunic_roman",
+      "cloak": "roman_civilian_mantle"
+    },
+    "troops/carthage/civilian": {
+      "helmet": "headwrap_carthage_civilian",
+      "armor": "carthage_robes",
+      "cloak": "carthage_civilian_sash"
+    },
     "troops/roman/horse_archer": {
       "bow": "bow_roman",
       "quiver": "quiver",
       "armor": "roman_light_armor",
-      "cloak": "cloak_carthage",
+      "cloak": "cloak_roman",
+      "horse_saddle": "roman_horse_saddle",
       "horse_bridle": "horse_bridle",
       "horse_reins": "horse_reins",
       "horse_blanket": "horse_blanket",
@@ -16,6 +87,7 @@
       "helmet": "carthage_light",
       "armor": "armor_light_carthage",
       "cloak": "cloak_carthage",
+      "horse_saddle": "carthage_horse_saddle",
       "horse_bridle": "horse_bridle",
       "horse_reins": "horse_reins",
       "horse_blanket": "horse_blanket",
@@ -23,8 +95,10 @@
     },
     "troops/roman/horse_spearman": {
       "spear": "spear",
+      "helmet": "roman_heavy",
       "armor": "roman_heavy_armor",
       "shoulder": "roman_shoulder_cover_cavalry",
+      "horse_saddle": "roman_horse_saddle",
       "horse_bridle": "horse_bridle",
       "horse_reins": "horse_reins",
       "horse_blanket": "horse_blanket",
@@ -35,6 +109,7 @@
       "helmet": "carthage_heavy",
       "armor": "armor_heavy_carthage",
       "shoulder": "carthage_shoulder_cover_cavalry",
+      "horse_saddle": "carthage_horse_saddle",
       "horse_bridle": "horse_bridle",
       "horse_reins": "horse_reins",
       "horse_blanket": "horse_blanket",
@@ -43,8 +118,10 @@
     "troops/roman/horse_swordsman": {
       "sword": "sword_roman",
       "shield": "roman_scutum",
+      "helmet": "roman_heavy",
       "armor": "roman_heavy_armor",
       "shoulder": "roman_shoulder_cover_cavalry",
+      "horse_saddle": "roman_horse_saddle",
       "horse_bridle": "horse_bridle",
       "horse_reins": "horse_reins",
       "horse_blanket": "horse_blanket",
@@ -57,6 +134,7 @@
       "helmet": "carthage_heavy",
       "armor": "armor_heavy_carthage",
       "shoulder": "carthage_shoulder_cover_cavalry",
+      "horse_saddle": "carthage_horse_saddle",
       "horse_bridle": "horse_bridle",
       "horse_reins": "horse_reins",
       "horse_blanket": "horse_blanket",

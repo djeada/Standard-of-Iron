@@ -9,8 +9,8 @@ namespace Game::Campaign {
 class CampaignLoader {
 public:
   static auto load_from_json_file(const QString &file_path,
-                               CampaignDefinition &out_campaign,
-                               QString *error_msg = nullptr) -> bool;
+                                  CampaignDefinition &out_campaign,
+                                  QString *error_msg = nullptr) -> bool;
 
 private:
   static auto parse_campaign_mission(const QJsonObject &obj) -> CampaignMission;

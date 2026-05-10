@@ -47,6 +47,49 @@ auto is_living_troop(const Engine::Core::UnitComponent *unit) -> bool {
          Game::Units::is_troop_spawn(unit->spawn_type);
 }
 
+auto try_trigger_rally(Engine::Core::World *world,
+                       Engine::Core::Entity *commander_entity,
+                       Engine::Core::CommanderComponent &commander,
+                       const Engine::Core::UnitComponent &unit,
+                       const Engine::Core::TransformComponent &origin) -> bool {
+  if (world == nullptr || commander_entity == nullptr ||
+      commander.rally_cooldown_remaining > 0.0F) {
+    return false;
+  }
+
+  const float rally_radius_sq = commander.rally_range * commander.rally_range;
+  for (auto *candidate :
+       world->get_entities_with<Engine::Core::UnitComponent>()) {
+    if (candidate == commander_entity) {
+      continue;
+    }
+
+    auto *candidate_unit =
+        candidate->get_component<Engine::Core::UnitComponent>();
+    auto *candidate_transform =
+        candidate->get_component<Engine::Core::TransformComponent>();
+    if (!is_living_troop(candidate_unit) || candidate_transform == nullptr ||
+        candidate_unit->owner_id != unit.owner_id ||
+        distance_sq(origin, *candidate_transform) > rally_radius_sq) {
+      continue;
+    }
+
+    auto *morale = candidate->get_component<Engine::Core::MoraleComponent>();
+    if (morale == nullptr || (!morale->wavering && !morale->routing)) {
+      continue;
+    }
+
+    morale->morale += commander.rally_morale_restore;
+    morale->shock_timer = 0.0F;
+    refresh_morale_state(*morale);
+    commander.rally_cooldown_remaining = commander.rally_cooldown;
+    commander.rally_feedback_time = 1.5F;
+    return true;
+  }
+
+  return false;
+}
+
 void reset_commander_modified_stats(Engine::Core::World *world) {
   for (auto *entity : world->get_entities_with<Engine::Core::UnitComponent>()) {
     auto *unit = entity->get_component<Engine::Core::UnitComponent>();
@@ -149,6 +192,12 @@ void CommanderSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
+    if (commander->rally_requested) {
+      commander->rally_requested = false;
+      (void)try_trigger_rally(world, commander_entity, *commander, *unit,
+                              *transform);
+    }
+
     const float aura_radius_sq =
         commander->aura_radius * commander->aura_radius;
     const float rally_radius_sq =
@@ -213,8 +262,9 @@ void CommanderSystem::update(Engine::Core::World *world, float delta_time) {
         }
       }
 
-      if (!rallied_this_tick && commander->rally_cooldown_remaining <= 0.0F &&
-          candidate_is_troop && dist_sq <= rally_radius_sq) {
+      if (!commander->rally_requires_manual_trigger && !rallied_this_tick &&
+          commander->rally_cooldown_remaining <= 0.0F && candidate_is_troop &&
+          dist_sq <= rally_radius_sq) {
         if (auto *morale =
                 candidate->get_component<Engine::Core::MoraleComponent>();
             morale != nullptr && (morale->wavering || morale->routing)) {

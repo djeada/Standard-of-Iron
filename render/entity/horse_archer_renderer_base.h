@@ -3,14 +3,11 @@
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/render_request.h"
 #include "../equipment/equipment_registry.h"
-#include "../equipment/i_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
 
 #include <QVector3D>
 
-#include <memory>
 #include <string>
-#include <vector>
 
 namespace Render::GL {
 
@@ -20,6 +17,13 @@ struct HorseArcherRendererConfig {
   std::string helmet_equipment_id;
   std::string armor_equipment_id;
   std::string cloak_equipment_id;
+  std::string horse_saddle_equipment_id;
+  std::string horse_bridle_equipment_id;
+  std::string horse_reins_equipment_id;
+  std::string horse_blanket_equipment_id;
+  std::string horse_barding_equipment_id;
+  std::string horse_crupper_equipment_id;
+  std::string horse_decoration_equipment_id;
   QVector3D metal_color{0.72F, 0.73F, 0.78F};
   QVector3D fletching_color{0.85F, 0.40F, 0.40F};
   QVector3D cloak_color{0.14F, 0.38F, 0.54F};
@@ -38,8 +42,21 @@ struct HorseArcherRendererConfig {
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::k_invalid_archetype};
 
+  std::string rider_debug_name{"troops/horse_archer/rider"};
+  std::string mount_debug_name{"troops/horse_archer/horse"};
+
   EquipmentHandle bow_handle{k_invalid_equipment_handle};
   EquipmentHandle quiver_handle{k_invalid_equipment_handle};
+  EquipmentHandle helmet_handle{k_invalid_equipment_handle};
+  EquipmentHandle armor_handle{k_invalid_equipment_handle};
+  EquipmentHandle cloak_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_saddle_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_bridle_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_reins_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_blanket_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_barding_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_crupper_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_decoration_handle{k_invalid_equipment_handle};
 };
 
 class HorseArcherRendererBase : public MountedHumanoidRendererBase {
@@ -79,8 +96,16 @@ private:
   HorseArcherRendererConfig m_config;
   EquipmentHandle m_bow_handle{k_invalid_equipment_handle};
   EquipmentHandle m_quiver_handle{k_invalid_equipment_handle};
-  Render::Creature::ArchetypeId m_rider_archetype_with_bow{
-      Render::Creature::k_invalid_archetype};
+  EquipmentHandle m_helmet_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_armor_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_cloak_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_saddle_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_bridle_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_reins_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_blanket_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_barding_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_crupper_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_decoration_handle{k_invalid_equipment_handle};
 
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
 };

@@ -6,7 +6,7 @@
 #include <QDir>
 
 void AudioResourceLoader::load_audio_resources() {
-  auto &audio_sys = AudioSystem::getInstance();
+  auto &audio_sys = AudioSystem::get_instance();
 
   QString const base_path =
       QCoreApplication::applicationDirPath() + "/assets/audio/";
@@ -20,16 +20,16 @@ void AudioResourceLoader::load_audio_resources() {
     return;
   }
 
-  if (audio_sys.loadSound("archer_voice",
-                          (base_path + "voices/archer_voice.wav").toStdString(),
-                          AudioCategory::VOICE)) {
+  if (audio_sys.load_sound(
+          "archer_voice", (base_path + "voices/archer_voice.wav").toStdString(),
+          AudioCategory::VOICE)) {
     qInfo() << "Loaded archer voice";
   } else {
     qWarning() << "Failed to load archer voice from:"
                << (base_path + "voices/archer_voice.wav");
   }
 
-  if (audio_sys.loadSound(
+  if (audio_sys.load_sound(
           "swordsman_voice",
           (base_path + "voices/swordsman_voice.wav").toStdString(),
           AudioCategory::VOICE)) {
@@ -39,7 +39,7 @@ void AudioResourceLoader::load_audio_resources() {
                << (base_path + "voices/swordsman_voice.wav");
   }
 
-  if (audio_sys.loadSound(
+  if (audio_sys.load_sound(
           "spearman_voice",
           (base_path + "voices/spearman_voice.wav").toStdString(),
           AudioCategory::VOICE)) {
@@ -49,40 +49,40 @@ void AudioResourceLoader::load_audio_resources() {
                << (base_path + "voices/spearman_voice.wav");
   }
 
-  if (audio_sys.loadMusic("music_peaceful",
-                          (base_path + "music/peaceful.wav").toStdString())) {
+  if (audio_sys.load_music("music_peaceful",
+                           (base_path + "music/peaceful.wav").toStdString())) {
     qInfo() << "Loaded peaceful music";
   } else {
     qWarning() << "Failed to load peaceful music from:"
                << (base_path + "music/peaceful.wav");
   }
 
-  if (audio_sys.loadMusic("music_tense",
-                          (base_path + "music/tense.wav").toStdString())) {
+  if (audio_sys.load_music("music_tense",
+                           (base_path + "music/tense.wav").toStdString())) {
     qInfo() << "Loaded tense music";
   } else {
     qWarning() << "Failed to load tense music from:"
                << (base_path + "music/tense.wav");
   }
 
-  if (audio_sys.loadMusic("music_combat",
-                          (base_path + "music/combat.wav").toStdString())) {
+  if (audio_sys.load_music("music_combat",
+                           (base_path + "music/combat.wav").toStdString())) {
     qInfo() << "Loaded combat music";
   } else {
     qWarning() << "Failed to load combat music from:"
                << (base_path + "music/combat.wav");
   }
 
-  if (audio_sys.loadMusic("music_victory",
-                          (base_path + "music/victory.wav").toStdString())) {
+  if (audio_sys.load_music("music_victory",
+                           (base_path + "music/victory.wav").toStdString())) {
     qInfo() << "Loaded victory music";
   } else {
     qWarning() << "Failed to load victory music from:"
                << (base_path + "music/victory.wav");
   }
 
-  if (audio_sys.loadMusic("music_defeat",
-                          (base_path + "music/defeat.wav").toStdString())) {
+  if (audio_sys.load_music("music_defeat",
+                           (base_path + "music/defeat.wav").toStdString())) {
     qInfo() << "Loaded defeat music";
   } else {
     qWarning() << "Failed to load defeat music from:"

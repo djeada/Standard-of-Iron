@@ -125,6 +125,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
     qt6_add_executable(standard_of_iron
         main.cpp
         app/core/game_engine.cpp
+        app/core/commander_control_controller.cpp
+        app/core/commander_input_adapter.cpp
+        app/core/mission_commander_setup.cpp
+        app/core/mission_definition_view.cpp
         app/core/production_manager.cpp
         app/core/campaign_manager.cpp
         app/core/selection_query_service.cpp
@@ -156,6 +160,10 @@ else()
     add_executable(standard_of_iron
         main.cpp
         app/core/game_engine.cpp
+        app/core/commander_control_controller.cpp
+        app/core/commander_input_adapter.cpp
+        app/core/mission_commander_setup.cpp
+        app/core/mission_definition_view.cpp
         app/core/production_manager.cpp
         app/core/campaign_manager.cpp
         app/core/selection_query_service.cpp
@@ -209,6 +217,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUD.qml
             ui/qml/HUDTop.qml
             ui/qml/HUDBottom.qml
+            ui/qml/HUDBottomCommander.qml
             ui/qml/ProductionPanel.qml
             ui/qml/SaveGamePanel.qml
             ui/qml/LoadGamePanel.qml
@@ -217,6 +226,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDVictory.qml
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
+            ui/qml/CommanderInputLayer.qml
+            ui/qml/RtsInputLayer.qml
             ui/qml/CursorManager.qml
             ui/qml/LoadScreen.qml
         RESOURCES

@@ -61,14 +61,14 @@ public:
     auto it = m_handlers.find(std::type_index(typeid(T)));
     if (it != m_handlers.end()) {
       auto &handlers = it->second;
-      auto sizeBefore = handlers.size();
+      auto size_before = handlers.size();
       handlers.erase(std::remove_if(handlers.begin(), handlers.end(),
                                     [handle](const HandlerEntry &e) {
                                       return e.handle == handle;
                                     }),
                      handlers.end());
 
-      if (handlers.size() < sizeBefore) {
+      if (handlers.size() < size_before) {
         m_stats[std::type_index(typeid(T))].subscriber_count--;
       }
     }
@@ -76,18 +76,18 @@ public:
 
   template <typename T> void publish(const T &event) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
-    std::vector<HandlerEntry> handlersCopy;
+    std::vector<HandlerEntry> handlers_copy;
 
     {
       std::lock_guard<std::mutex> const lock(m_mutex);
       auto it = m_handlers.find(std::type_index(typeid(T)));
       if (it != m_handlers.end()) {
-        handlersCopy = it->second;
+        handlers_copy = it->second;
         m_stats[std::type_index(typeid(T))].publish_count++;
       }
     }
 
-    for (const auto &entry : handlersCopy) {
+    for (const auto &entry : handlers_copy) {
       entry.handler(&event);
     }
   }

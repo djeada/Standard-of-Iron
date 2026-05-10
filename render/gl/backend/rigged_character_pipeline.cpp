@@ -35,7 +35,8 @@ auto gl_funcs() -> QOpenGLFunctions_3_3_Core * {
 }
 
 auto load_shader_source(const QString &resource_path) -> QString {
-  QString const resolved = Utils::Resources::resolve_resource_path(resource_path);
+  QString const resolved =
+      Utils::Resources::resolve_resource_path(resource_path);
   QFile file(resolved);
   if (!file.open(QIODevice::ReadOnly)) {
     qWarning() << "RiggedCharacterPipeline: Failed to open shader" << resolved;
@@ -305,8 +306,8 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd &cmd,
           fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
           fn->glBufferData(
               GL_UNIFORM_BUFFER,
-              static_cast<GLsizeiptr>(BonePaletteArena::k_palette_bytes), nullptr,
-              GL_DYNAMIC_DRAW);
+              static_cast<GLsizeiptr>(BonePaletteArena::k_palette_bytes),
+              nullptr, GL_DYNAMIC_DRAW);
           m_palette_ubo_capacity_bytes = BonePaletteArena::k_palette_bytes;
         }
         copy_palette_to_scratch(cmd.bone_palette, m_palette_scratch);

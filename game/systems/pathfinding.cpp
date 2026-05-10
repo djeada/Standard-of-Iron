@@ -16,6 +16,25 @@
 
 namespace Game::Systems {
 
+namespace {
+
+auto blocked_cell_intersects_footprint(int candidate_x, int candidate_y,
+                                       int blocked_x, int blocked_y,
+                                       float cell_size,
+                                       float unit_radius) -> bool {
+  float const half_extent = cell_size * 0.5F;
+  float const world_dx =
+      std::abs(static_cast<float>(blocked_x - candidate_x)) * cell_size;
+  float const world_dy =
+      std::abs(static_cast<float>(blocked_y - candidate_y)) * cell_size;
+  float const clearance_x = std::max(0.0F, world_dx - half_extent);
+  float const clearance_y = std::max(0.0F, world_dy - half_extent);
+  return clearance_x * clearance_x + clearance_y * clearance_y <=
+         unit_radius * unit_radius;
+}
+
+} // namespace
+
 Pathfinding::Pathfinding(int width, int height)
     : m_width(width), m_height(height) {
   m_obstacles.resize(height, std::vector<std::uint8_t>(width, 0));
@@ -53,8 +72,39 @@ auto Pathfinding::is_walkable(int x, int y) const -> bool {
 
 auto Pathfinding::is_walkable_with_radius(int x, int y,
                                           float unit_radius) const -> bool {
-  (void)unit_radius;
-  return is_walkable(x, y);
+  if (!is_walkable(x, y)) {
+    return false;
+  }
+
+  if (unit_radius <= 0.0F) {
+    return true;
+  }
+
+  float const half_extent = m_grid_cell_size * 0.5F;
+  int const search_radius = static_cast<int>(
+      std::ceil((unit_radius + half_extent) / m_grid_cell_size));
+
+  for (int check_y = y - search_radius; check_y <= y + search_radius;
+       ++check_y) {
+    for (int check_x = x - search_radius; check_x <= x + search_radius;
+         ++check_x) {
+      if (check_x < 0 || check_x >= m_width || check_y < 0 ||
+          check_y >= m_height) {
+        return false;
+      }
+
+      if (m_obstacles[check_y][check_x] == 0) {
+        continue;
+      }
+
+      if (blocked_cell_intersects_footprint(x, y, check_x, check_y,
+                                            m_grid_cell_size, unit_radius)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 void Pathfinding::mark_obstacles_dirty() {
@@ -365,6 +415,13 @@ auto Pathfinding::find_path_internal(const Point &start, const Point &end,
       const Point &neighbor = neighbors[i];
       if (!is_walkableFunc(neighbor.x, neighbor.y)) {
         continue;
+      }
+
+      if (neighbor.x != current_point.x && neighbor.y != current_point.y) {
+        if (!is_walkableFunc(current_point.x, neighbor.y) ||
+            !is_walkableFunc(neighbor.x, current_point.y)) {
+          continue;
+        }
       }
 
       const int neighbor_idx = to_index(neighbor);

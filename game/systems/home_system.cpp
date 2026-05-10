@@ -10,8 +10,8 @@ namespace Game::Systems {
 
 namespace {
 
-auto home_manpower_capacity(
-    const Engine::Core::ProductionComponent *home_prod) -> int {
+auto home_manpower_capacity(const Engine::Core::ProductionComponent *home_prod)
+    -> int {
   if (home_prod == nullptr) {
     return 0;
   }

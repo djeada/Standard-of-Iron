@@ -156,31 +156,31 @@ void EditorWindow::openMap() {
     return;
   }
 
-  QString filePath = QFileDialog::getOpenFileName(
+  QString file_path = QFileDialog::getOpenFileName(
       this, "Open Map", QString(), "JSON Files (*.json);;All Files (*)");
 
-  if (filePath.isEmpty()) {
+  if (file_path.isEmpty()) {
     return;
   }
 
-  if (m_map_data->loadFromJson(filePath)) {
-    m_current_file_path = filePath;
+  if (m_map_data->loadFromJson(file_path)) {
+    m_current_file_path = file_path;
     updateWindowTitle();
-    m_status_label->setText("Loaded: " + filePath);
+    m_status_label->setText("Loaded: " + file_path);
   } else {
     QMessageBox::critical(this, "Error",
-                          "Failed to load map file: " + filePath);
+                          "Failed to load map file: " + file_path);
   }
 }
 
-bool EditorWindow::loadFile(const QString &filePath) {
-  if (m_map_data->loadFromJson(filePath)) {
-    m_current_file_path = filePath;
+bool EditorWindow::loadFile(const QString &file_path) {
+  if (m_map_data->loadFromJson(file_path)) {
+    m_current_file_path = file_path;
     updateWindowTitle();
-    m_status_label->setText("Loaded: " + filePath);
+    m_status_label->setText("Loaded: " + file_path);
     return true;
   }
-  QMessageBox::critical(this, "Error", "Failed to load map file: " + filePath);
+  QMessageBox::critical(this, "Error", "Failed to load map file: " + file_path);
   return false;
 }
 
@@ -199,25 +199,25 @@ void EditorWindow::saveMap() {
 }
 
 void EditorWindow::saveMapAs() {
-  QString filePath = QFileDialog::getSaveFileName(
+  QString file_path = QFileDialog::getSaveFileName(
       this, "Save Map As", QString(), "JSON Files (*.json);;All Files (*)");
 
-  if (filePath.isEmpty()) {
+  if (file_path.isEmpty()) {
     return;
   }
 
-  if (!filePath.endsWith(".json", Qt::CaseInsensitive)) {
-    filePath += ".json";
+  if (!file_path.endsWith(".json", Qt::CaseInsensitive)) {
+    file_path += ".json";
   }
 
-  if (m_map_data->saveToJson(filePath)) {
-    m_current_file_path = filePath;
+  if (m_map_data->saveToJson(file_path)) {
+    m_current_file_path = file_path;
     m_map_data->setModified(false);
     updateWindowTitle();
-    m_status_label->setText("Saved: " + filePath);
+    m_status_label->setText("Saved: " + file_path);
   } else {
     QMessageBox::critical(this, "Error",
-                          "Failed to save map file: " + filePath);
+                          "Failed to save map file: " + file_path);
   }
 }
 
@@ -231,8 +231,9 @@ void EditorWindow::resizeMap() {
     new_grid.height = dialog.newHeight();
     m_map_data->setGrid(new_grid);
     m_canvas->update();
-    m_status_label->setText(
-        QString("Map resized to %1x%2").arg(new_grid.width).arg(new_grid.height));
+    m_status_label->setText(QString("Map resized to %1x%2")
+                                .arg(new_grid.width)
+                                .arg(new_grid.height));
   }
 }
 
@@ -249,41 +250,41 @@ void EditorWindow::redo() {
 void EditorWindow::onToolSelected(ToolType tool) {
   m_canvas->setCurrentTool(tool);
 
-  QString toolName;
+  QString tool_name;
   switch (tool) {
   case ToolType::Select:
-    toolName = "Select";
+    tool_name = "Select";
     break;
   case ToolType::Hill:
-    toolName = "Hill";
+    tool_name = "Hill";
     break;
   case ToolType::Mountain:
-    toolName = "Mountain";
+    tool_name = "Mountain";
     break;
   case ToolType::River:
-    toolName = "River (click start, then end)";
+    tool_name = "River (click start, then end)";
     break;
   case ToolType::Road:
-    toolName = "Road (click start, then end)";
+    tool_name = "Road (click start, then end)";
     break;
   case ToolType::Bridge:
-    toolName = "Bridge (click start, then end)";
+    tool_name = "Bridge (click start, then end)";
     break;
   case ToolType::Firecamp:
-    toolName = "Firecamp";
+    tool_name = "Firecamp";
     break;
   case ToolType::Barracks:
-    toolName = "Barracks (assign to team)";
+    tool_name = "Barracks (assign to team)";
     break;
   case ToolType::Village:
-    toolName = "Village (assign to team)";
+    tool_name = "Village (assign to team)";
     break;
   case ToolType::Eraser:
-    toolName = "Eraser";
+    tool_name = "Eraser";
     break;
   }
 
-  m_status_label->setText("Tool: " + toolName);
+  m_status_label->setText("Tool: " + tool_name);
 }
 
 void EditorWindow::onToolCleared() {
@@ -304,11 +305,11 @@ void EditorWindow::updateDimensionsLabel() {
       QString("Map: %1 x %2").arg(grid.width).arg(grid.height));
 }
 
-void EditorWindow::onElementDoubleClicked(int elementType, int index) {
+void EditorWindow::onElementDoubleClicked(int element_type, int index) {
   QJsonObject json;
   QString title;
 
-  if (elementType == 0) {
+  if (element_type == 0) {
 
     const auto &terrain = m_map_data->terrainElements();
     if (index < 0 || index >= terrain.size()) {
@@ -327,12 +328,12 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
     if (!elem.entrances.isEmpty()) {
       json["entrances"] = elem.entrances;
     }
-    for (const QString &key : elem.extraFields.keys()) {
-      json[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      json[key] = elem.extra_fields[key];
     }
 
     title = "Edit Terrain: " + elem.type;
-  } else if (elementType == 1) {
+  } else if (element_type == 1) {
 
     const auto &firecamps = m_map_data->firecamps();
     if (index < 0 || index >= firecamps.size()) {
@@ -344,12 +345,12 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
     json["z"] = static_cast<double>(elem.z);
     json["intensity"] = static_cast<double>(elem.intensity);
     json["radius"] = static_cast<double>(elem.radius);
-    for (const QString &key : elem.extraFields.keys()) {
-      json[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      json[key] = elem.extra_fields[key];
     }
 
     title = "Edit Firecamp";
-  } else if (elementType == 2) {
+  } else if (element_type == 2) {
 
     const auto &linear = m_map_data->linearElements();
     if (index < 0 || index >= linear.size()) {
@@ -369,12 +370,12 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
     if (elem.type == "road" && !elem.style.isEmpty()) {
       json["style"] = elem.style;
     }
-    for (const QString &key : elem.extraFields.keys()) {
-      json[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      json[key] = elem.extra_fields[key];
     }
 
     title = "Edit " + elem.type;
-  } else if (elementType == 3) {
+  } else if (element_type == 3) {
 
     const auto &structures = m_map_data->structures();
     if (index < 0 || index >= structures.size()) {
@@ -390,8 +391,8 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
     if (!elem.nation.isEmpty()) {
       json["nation"] = elem.nation;
     }
-    for (const QString &key : elem.extraFields.keys()) {
-      json[key] = elem.extraFields[key];
+    for (const QString &key : elem.extra_fields.keys()) {
+      json[key] = elem.extra_fields[key];
     }
 
     title = "Edit " + elem.type;
@@ -401,84 +402,84 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
 
   JsonEditDialog dialog(title, json, this);
   if (dialog.exec() == QDialog::Accepted && dialog.isValid()) {
-    QJsonObject newJson = dialog.getJson();
+    QJsonObject new_json = dialog.getJson();
 
-    if (elementType == 0) {
+    if (element_type == 0) {
       TerrainElement elem;
-      elem.type = newJson["type"].toString();
-      elem.x = static_cast<float>(newJson["x"].toDouble());
-      elem.z = static_cast<float>(newJson["z"].toDouble());
-      elem.radius = static_cast<float>(newJson["radius"].toDouble(10.0));
-      elem.width = static_cast<float>(newJson["width"].toDouble(0.0));
-      elem.depth = static_cast<float>(newJson["depth"].toDouble(0.0));
-      elem.height = static_cast<float>(newJson["height"].toDouble(3.0));
-      elem.rotation = static_cast<float>(newJson["rotation"].toDouble(0.0));
-      elem.entrances = newJson["entrances"].toArray();
+      elem.type = new_json["type"].toString();
+      elem.x = static_cast<float>(new_json["x"].toDouble());
+      elem.z = static_cast<float>(new_json["z"].toDouble());
+      elem.radius = static_cast<float>(new_json["radius"].toDouble(10.0));
+      elem.width = static_cast<float>(new_json["width"].toDouble(0.0));
+      elem.depth = static_cast<float>(new_json["depth"].toDouble(0.0));
+      elem.height = static_cast<float>(new_json["height"].toDouble(3.0));
+      elem.rotation = static_cast<float>(new_json["rotation"].toDouble(0.0));
+      elem.entrances = new_json["entrances"].toArray();
 
-      QStringList knownKeys = {"type",   "x",        "z",
-                               "radius", "width",    "depth",
-                               "height", "rotation", "entrances"};
-      for (const QString &key : newJson.keys()) {
-        if (!knownKeys.contains(key)) {
-          elem.extraFields[key] = newJson[key];
+      QStringList known_keys = {"type",   "x",        "z",
+                                "radius", "width",    "depth",
+                                "height", "rotation", "entrances"};
+      for (const QString &key : new_json.keys()) {
+        if (!known_keys.contains(key)) {
+          elem.extra_fields[key] = new_json[key];
         }
       }
 
       m_map_data->updateTerrainElement(index, elem);
-    } else if (elementType == 1) {
+    } else if (element_type == 1) {
       FirecampElement elem;
-      elem.x = static_cast<float>(newJson["x"].toDouble());
-      elem.z = static_cast<float>(newJson["z"].toDouble());
-      elem.intensity = static_cast<float>(newJson["intensity"].toDouble(1.0));
-      elem.radius = static_cast<float>(newJson["radius"].toDouble(3.0));
+      elem.x = static_cast<float>(new_json["x"].toDouble());
+      elem.z = static_cast<float>(new_json["z"].toDouble());
+      elem.intensity = static_cast<float>(new_json["intensity"].toDouble(1.0));
+      elem.radius = static_cast<float>(new_json["radius"].toDouble(3.0));
 
-      QStringList knownKeys = {"x", "z", "intensity", "radius"};
-      for (const QString &key : newJson.keys()) {
-        if (!knownKeys.contains(key)) {
-          elem.extraFields[key] = newJson[key];
+      QStringList known_keys = {"x", "z", "intensity", "radius"};
+      for (const QString &key : new_json.keys()) {
+        if (!known_keys.contains(key)) {
+          elem.extra_fields[key] = new_json[key];
         }
       }
 
       m_map_data->updateFirecamp(index, elem);
-    } else if (elementType == 2) {
+    } else if (element_type == 2) {
       LinearElement elem;
-      elem.type = newJson["type"].toString();
+      elem.type = new_json["type"].toString();
 
-      QJsonArray startArr = newJson["start"].toArray();
-      QJsonArray endArr = newJson["end"].toArray();
-      if (startArr.size() >= 2 && endArr.size() >= 2) {
-        elem.start = QVector2D(static_cast<float>(startArr[0].toDouble()),
-                               static_cast<float>(startArr[1].toDouble()));
-        elem.end = QVector2D(static_cast<float>(endArr[0].toDouble()),
-                             static_cast<float>(endArr[1].toDouble()));
+      QJsonArray start_arr = new_json["start"].toArray();
+      QJsonArray end_arr = new_json["end"].toArray();
+      if (start_arr.size() >= 2 && end_arr.size() >= 2) {
+        elem.start = QVector2D(static_cast<float>(start_arr[0].toDouble()),
+                               static_cast<float>(start_arr[1].toDouble()));
+        elem.end = QVector2D(static_cast<float>(end_arr[0].toDouble()),
+                             static_cast<float>(end_arr[1].toDouble()));
       }
-      elem.width = static_cast<float>(newJson["width"].toDouble(3.0));
-      elem.height = static_cast<float>(newJson["height"].toDouble(0.5));
-      elem.style = newJson["style"].toString("default");
+      elem.width = static_cast<float>(new_json["width"].toDouble(3.0));
+      elem.height = static_cast<float>(new_json["height"].toDouble(0.5));
+      elem.style = new_json["style"].toString("default");
 
-      QStringList knownKeys = {"type",  "start",  "end",
-                               "width", "height", "style"};
-      for (const QString &key : newJson.keys()) {
-        if (!knownKeys.contains(key)) {
-          elem.extraFields[key] = newJson[key];
+      QStringList known_keys = {"type",  "start",  "end",
+                                "width", "height", "style"};
+      for (const QString &key : new_json.keys()) {
+        if (!known_keys.contains(key)) {
+          elem.extra_fields[key] = new_json[key];
         }
       }
 
       m_map_data->updateLinearElement(index, elem);
-    } else if (elementType == 3) {
+    } else if (element_type == 3) {
       StructureElement elem;
-      elem.type = newJson["type"].toString();
-      elem.x = static_cast<float>(newJson["x"].toDouble());
-      elem.z = static_cast<float>(newJson["z"].toDouble());
-      elem.player_id = newJson["player_id"].toInt(0);
-      elem.max_population = newJson["max_population"].toInt(150);
-      elem.nation = newJson["nation"].toString();
+      elem.type = new_json["type"].toString();
+      elem.x = static_cast<float>(new_json["x"].toDouble());
+      elem.z = static_cast<float>(new_json["z"].toDouble());
+      elem.player_id = new_json["player_id"].toInt(0);
+      elem.max_population = new_json["max_population"].toInt(150);
+      elem.nation = new_json["nation"].toString();
 
-      QStringList knownKeys = {"type",          "x",     "z", "player_id",
-                               "max_population", "nation"};
-      for (const QString &key : newJson.keys()) {
-        if (!knownKeys.contains(key)) {
-          elem.extraFields[key] = newJson[key];
+      QStringList known_keys = {"type",           "x",     "z", "player_id",
+                                "max_population", "nation"};
+      for (const QString &key : new_json.keys()) {
+        if (!known_keys.contains(key)) {
+          elem.extra_fields[key] = new_json[key];
         }
       }
 

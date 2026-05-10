@@ -32,8 +32,9 @@ TEST(RidingClip, RidingIdleClipDiffersFromInfantryIdle) {
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
   auto const *blob = reg.blob(k_species_humanoid);
   ASSERT_NE(blob, nullptr);
-  ASSERT_GT(blob->clip_count(), static_cast<std::uint32_t>(
-                                    Render::Creature::k_humanoid_riding_idle_clip));
+  ASSERT_GT(blob->clip_count(),
+            static_cast<std::uint32_t>(
+                Render::Creature::k_humanoid_riding_idle_clip));
 
   constexpr std::uint16_t k_riding_idle_clip =
       Render::Creature::k_humanoid_riding_idle_clip;
@@ -68,9 +69,9 @@ TEST(RidingClip, RidingChargeClipIsNonLooping) {
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
   auto const *blob = reg.blob(k_species_humanoid);
   ASSERT_NE(blob, nullptr);
-  ASSERT_GT(
-      blob->clip_count(),
-      static_cast<std::uint32_t>(Render::Creature::k_humanoid_riding_charge_clip));
+  ASSERT_GT(blob->clip_count(),
+            static_cast<std::uint32_t>(
+                Render::Creature::k_humanoid_riding_charge_clip));
 
   constexpr std::uint16_t k_riding_charge_clip =
       Render::Creature::k_humanoid_riding_charge_clip;

@@ -113,7 +113,8 @@ TEST(RiggedPipelineInstanced, PaletteRangeCoversDeclaredShaderBatch) {
   constexpr std::size_t k_shader_batch_size = 16;
   EXPECT_EQ(RiggedCharacterPipeline::palette_range_bytes_for_instanced_shader(
                 k_shader_batch_size),
-            k_shader_batch_size * Render::GL::BonePaletteArena::k_palette_bytes);
+            k_shader_batch_size *
+                Render::GL::BonePaletteArena::k_palette_bytes);
 }
 
 TEST(RiggedPipelineInstanced, HeadlessDrawInstancedRecordsBatchSize) {

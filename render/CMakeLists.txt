@@ -191,8 +191,10 @@ add_library(render_gl STATIC
     unit_render_cache.cpp
     pose_palette_cache.cpp
     mesh_geometry_pool.cpp
-    equipment/equipment_registry.cpp
-    equipment/equipment_submit.cpp
+     equipment/equipment_registry.cpp
+     equipment/humanoid_equipment_archetype.cpp
+     equipment/horse_equipment_archetype.cpp
+     equipment/equipment_submit.cpp
     equipment/attachment_builder.cpp
     equipment/register_equipment.cpp
     equipment/armor/roman_armor.cpp
