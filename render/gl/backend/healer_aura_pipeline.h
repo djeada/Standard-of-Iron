@@ -46,6 +46,17 @@ public:
                           float radius, float intensity, float time,
                           const QMatrix4x4 &view_proj);
 
+  struct AuraInstanceData {
+    QVector3D position;
+    QVector3D color;
+    float radius{1.0F};
+    float intensity{1.0F};
+    float time{0.0F};
+  };
+
+  void render_aura_batch(const AuraInstanceData *instances, std::size_t count,
+                         const QMatrix4x4 &view_proj);
+
   void clear_data() { m_healer_data.clear(); }
 
 private:

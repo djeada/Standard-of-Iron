@@ -904,6 +904,7 @@ bool GameEngine::enter_commander_control_mode() {
           commander->get_component<Engine::Core::CommanderComponent>()) {
     commander_data->rally_requested = false;
     commander_data->rally_requires_manual_trigger = true;
+    commander_data->fpv_controlled = true;
   }
   if (auto *transform =
           commander->get_component<Engine::Core::TransformComponent>()) {
@@ -1202,6 +1203,7 @@ void GameEngine::clear_controlled_commander_state() {
           commander->get_component<Engine::Core::CommanderComponent>()) {
     commander_data->rally_requested = false;
     commander_data->rally_requires_manual_trigger = false;
+    commander_data->fpv_controlled = false;
   }
   if (auto *guard =
           commander->get_component<Engine::Core::CommanderGuardComponent>()) {

@@ -105,6 +105,10 @@ Backend::~Backend() {
     (void)m_mesh_instancing_pipeline.release();
   } else {
 
+    if (m_frame_ubo != 0) {
+      glDeleteBuffers(1, &m_frame_ubo);
+      m_frame_ubo = 0;
+    }
     m_cylinder_pipeline.reset();
     m_vegetation_pipeline.reset();
     m_terrain_pipeline.reset();
@@ -121,6 +125,12 @@ void Backend::initialize() {
 
   qInfo() << "Backend: Initializing OpenGL functions...";
   initializeOpenGLFunctions();
+  glGenBuffers(1, &m_frame_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
+  glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);
+  glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_frame_ubo);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  qInfo() << "Backend: Frame UBO created at binding 0";
   qInfo() << "Backend: OpenGL functions initialized";
 
   qInfo() << "Backend: Setting up depth test...";
@@ -318,6 +328,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
   const QMatrix4x4 view = cam.get_view_matrix();
   const QMatrix4x4 projection = cam.get_projection_matrix();
   const QMatrix4x4 view_proj = projection * view;
+  if (m_frame_ubo != 0) {
+    glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, view_proj.constData());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  }
   const float banner_wind_strength =
       0.8F + 0.2F * std::sin(m_animation_time * 0.5F);
 
@@ -2038,24 +2053,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       break;
     }
     case SelectionRingCmdIndex: {
-      const auto &sc = std::get<SelectionRingCmdIndex>(cmd);
       Mesh *ring = Render::Geom::SelectionRing::get();
       if (ring == nullptr) {
         break;
       }
-
-      if (m_last_bound_shader != m_effects_pipeline->m_basic_shader) {
-        m_effects_pipeline->m_basic_shader->use();
-        m_last_bound_shader = m_effects_pipeline->m_basic_shader;
-      }
-      m_effects_pipeline->m_basic_shader->set_uniform(
-          m_effects_pipeline->m_basic_uniforms.use_texture, false);
-      m_effects_pipeline->m_basic_shader->set_uniform(
-          m_effects_pipeline->m_basic_uniforms.instanced, false);
-      m_effects_pipeline->m_basic_shader->set_uniform(
-          m_effects_pipeline->m_basic_uniforms.view_proj, view_proj);
-      m_effects_pipeline->m_basic_shader->set_uniform(
-          m_effects_pipeline->m_basic_uniforms.color, sc.color);
 
       DepthMaskScope const depth_mask(false);
       DepthTestScope const depth_test(true);
@@ -2063,28 +2064,84 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       BlendScope const blend(true);
       CullFaceScope const cull(false);
 
-      {
-        QMatrix4x4 m = sc.model;
-        m.scale(1.08F, 1.0F, 1.08F);
-        const QMatrix4x4 mvp = view_proj * m;
-        m_effects_pipeline->m_basic_shader->set_uniform(
-            m_effects_pipeline->m_basic_uniforms.mvp, mvp);
-        m_effects_pipeline->m_basic_shader->set_uniform(
-            m_effects_pipeline->m_basic_uniforms.model, m);
-        m_effects_pipeline->m_basic_shader->set_uniform(
-            m_effects_pipeline->m_basic_uniforms.alpha, sc.alpha_outer);
-        ring->draw();
-      }
+      const bool can_instance_rings =
+          prepared.kind == PreparedBatchKind::SelectionRingInstanced &&
+          m_mesh_instancing_pipeline &&
+          m_mesh_instancing_pipeline->is_initialized() &&
+          m_effects_pipeline->m_basic_instanced_shader != nullptr;
 
-      {
-        const QMatrix4x4 mvp = view_proj * sc.model;
+      if (can_instance_rings) {
+        GL::Shader *ring_shader = m_effects_pipeline->m_basic_instanced_shader;
+        ring_shader->use();
+        m_last_bound_shader = ring_shader;
+        const auto vp_handle =
+            m_effects_pipeline->m_basic_instanced_uniforms.view_proj;
+        if (vp_handle != Shader::InvalidUniform) {
+          ring_shader->set_uniform(vp_handle, view_proj);
+        }
+        const auto ut_handle =
+            m_effects_pipeline->m_basic_instanced_uniforms.use_texture;
+        if (ut_handle != Shader::InvalidUniform) {
+          ring_shader->set_uniform(ut_handle, false);
+        }
+
+        m_mesh_instancing_pipeline->begin_batch(ring, ring_shader, nullptr);
+        for (std::size_t j = i; j < batch_end; ++j) {
+          const auto &sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
+          QMatrix4x4 m = sc.model;
+          m.scale(1.08F, 1.0F, 1.08F);
+          m_mesh_instancing_pipeline->accumulate(m, sc.color, sc.alpha_outer);
+        }
+        m_mesh_instancing_pipeline->flush();
+
+        m_mesh_instancing_pipeline->begin_batch(ring, ring_shader, nullptr);
+        for (std::size_t j = i; j < batch_end; ++j) {
+          const auto &sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
+          m_mesh_instancing_pipeline->accumulate(sc.model, sc.color,
+                                                 sc.alpha_inner);
+        }
+        m_mesh_instancing_pipeline->flush();
+      } else {
+        if (m_last_bound_shader != m_effects_pipeline->m_basic_shader) {
+          m_effects_pipeline->m_basic_shader->use();
+          m_last_bound_shader = m_effects_pipeline->m_basic_shader;
+        }
         m_effects_pipeline->m_basic_shader->set_uniform(
-            m_effects_pipeline->m_basic_uniforms.mvp, mvp);
+            m_effects_pipeline->m_basic_uniforms.use_texture, false);
         m_effects_pipeline->m_basic_shader->set_uniform(
-            m_effects_pipeline->m_basic_uniforms.model, sc.model);
+            m_effects_pipeline->m_basic_uniforms.instanced, false);
         m_effects_pipeline->m_basic_shader->set_uniform(
-            m_effects_pipeline->m_basic_uniforms.alpha, sc.alpha_inner);
-        ring->draw();
+            m_effects_pipeline->m_basic_uniforms.view_proj, view_proj);
+
+        for (std::size_t j = i; j < batch_end; ++j) {
+          const auto &sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
+          m_effects_pipeline->m_basic_shader->set_uniform(
+              m_effects_pipeline->m_basic_uniforms.color, sc.color);
+
+          {
+            QMatrix4x4 m = sc.model;
+            m.scale(1.08F, 1.0F, 1.08F);
+            const QMatrix4x4 mvp = view_proj * m;
+            m_effects_pipeline->m_basic_shader->set_uniform(
+                m_effects_pipeline->m_basic_uniforms.mvp, mvp);
+            m_effects_pipeline->m_basic_shader->set_uniform(
+                m_effects_pipeline->m_basic_uniforms.model, m);
+            m_effects_pipeline->m_basic_shader->set_uniform(
+                m_effects_pipeline->m_basic_uniforms.alpha, sc.alpha_outer);
+            ring->draw();
+          }
+
+          {
+            const QMatrix4x4 mvp = view_proj * sc.model;
+            m_effects_pipeline->m_basic_shader->set_uniform(
+                m_effects_pipeline->m_basic_uniforms.mvp, mvp);
+            m_effects_pipeline->m_basic_shader->set_uniform(
+                m_effects_pipeline->m_basic_uniforms.model, sc.model);
+            m_effects_pipeline->m_basic_shader->set_uniform(
+                m_effects_pipeline->m_basic_uniforms.alpha, sc.alpha_inner);
+            ring->draw();
+          }
+        }
       }
       break;
     }
@@ -2164,6 +2221,64 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       break;
     }
     case EffectBatchCmdIndex: {
+      if (prepared.kind == PreparedBatchKind::EffectInstanced) {
+        const auto &first_eff =
+            std::get<EffectBatchCmdIndex>(queue.get_sorted(prepared.start));
+        switch (first_eff.kind) {
+        case EffectBatchCmd::Kind::HealerAura: {
+          if (m_healer_aura_pipeline == nullptr ||
+              !m_healer_aura_pipeline->is_initialized()) {
+            break;
+          }
+          std::vector<BackendPipelines::HealerAuraPipeline::AuraInstanceData>
+              aura_instances;
+          aura_instances.reserve(prepared.count);
+          for (std::size_t idx = prepared.start;
+               idx < prepared.start + prepared.count; ++idx) {
+            const auto &eff =
+                std::get<EffectBatchCmdIndex>(queue.get_sorted(idx));
+            aura_instances.push_back(
+                {eff.position, eff.color, eff.radius, eff.intensity, eff.time});
+          }
+          m_healer_aura_pipeline->render_aura_batch(
+              aura_instances.data(), aura_instances.size(), view_proj);
+          m_last_bound_shader = nullptr;
+          break;
+        }
+        case EffectBatchCmd::Kind::CombatDust:
+        case EffectBatchCmd::Kind::BuildingFlame:
+        case EffectBatchCmd::Kind::StoneImpact: {
+          if (m_combat_dust_pipeline == nullptr ||
+              !m_combat_dust_pipeline->is_initialized()) {
+            break;
+          }
+          std::vector<BackendPipelines::CombatDustPipeline::DustInstanceData>
+              dust_instances;
+          dust_instances.reserve(prepared.count);
+          for (std::size_t idx = prepared.start;
+               idx < prepared.start + prepared.count; ++idx) {
+            const auto &eff =
+                std::get<EffectBatchCmdIndex>(queue.get_sorted(idx));
+            BackendPipelines::EffectType etype =
+                (eff.kind == EffectBatchCmd::Kind::BuildingFlame)
+                    ? BackendPipelines::EffectType::Flame
+                : (eff.kind == EffectBatchCmd::Kind::StoneImpact)
+                    ? BackendPipelines::EffectType::StoneImpact
+                    : BackendPipelines::EffectType::Dust;
+            dust_instances.push_back({eff.position, eff.color, eff.radius,
+                                      eff.intensity, eff.time, etype});
+          }
+          m_combat_dust_pipeline->render_dust_batch(
+              dust_instances.data(), dust_instances.size(), view_proj);
+          m_last_bound_shader = nullptr;
+          break;
+        }
+        default:
+          break;
+        }
+        break;
+      }
+
       const auto &eff_cmd_ = std::get<EffectBatchCmdIndex>(cmd);
       switch (eff_cmd_.kind) {
       case EffectBatchCmd::Kind::HealingBeam: {
@@ -2278,12 +2393,62 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       break;
     }
     case ModeIndicatorCmdIndex: {
-      const auto &mc = std::get<ModeIndicatorCmdIndex>(cmd);
-
       if (m_mode_indicator_pipeline == nullptr ||
           !m_mode_indicator_pipeline->is_initialized()) {
         break;
       }
+
+      if (prepared.kind == PreparedBatchKind::ModeIndicatorInstanced &&
+          m_mesh_instancing_pipeline != nullptr &&
+          m_mesh_instancing_pipeline->is_initialized() &&
+          m_mode_indicator_pipeline->m_instanced_shader != nullptr) {
+        const auto &first_mc =
+            std::get<ModeIndicatorCmdIndex>(queue.get_sorted(prepared.start));
+
+        Mesh *indicator_mesh = nullptr;
+        if (first_mc.mode_type == Render::Geom::k_mode_type_attack) {
+          indicator_mesh = Render::Geom::ModeIndicator::get_attack_mode_mesh();
+        } else if (first_mc.mode_type == Render::Geom::k_mode_type_guard) {
+          indicator_mesh = Render::Geom::ModeIndicator::get_guard_mode_mesh();
+        } else if (first_mc.mode_type == Render::Geom::k_mode_type_hold) {
+          indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
+        } else if (first_mc.mode_type == Render::Geom::k_mode_type_patrol) {
+          indicator_mesh = Render::Geom::ModeIndicator::get_patrol_mode_mesh();
+        }
+
+        if (indicator_mesh != nullptr) {
+          GL::Shader *inst_shader =
+              m_mode_indicator_pipeline->m_instanced_shader;
+          inst_shader->use();
+          if (m_mode_indicator_pipeline->m_instanced_uniforms.time !=
+              Shader::InvalidUniform) {
+            inst_shader->set_uniform(
+                m_mode_indicator_pipeline->m_instanced_uniforms.time,
+                m_animation_time);
+          }
+
+          m_mesh_instancing_pipeline->begin_batch(indicator_mesh, inst_shader,
+                                                  nullptr);
+          for (std::size_t idx = prepared.start;
+               idx < prepared.start + prepared.count; ++idx) {
+            const auto &mc =
+                std::get<ModeIndicatorCmdIndex>(queue.get_sorted(idx));
+            m_mesh_instancing_pipeline->accumulate(mc.model, mc.color,
+                                                   mc.alpha);
+          }
+
+          DepthMaskScope const depth_mask(false);
+          BlendScope const blend(true);
+          glEnable(GL_DEPTH_TEST);
+          glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+          m_mesh_instancing_pipeline->flush();
+          m_last_bound_shader = nullptr;
+        }
+        break;
+      }
+
+      const auto &mc = std::get<ModeIndicatorCmdIndex>(cmd);
 
       Mesh *indicator_mesh = nullptr;
       if (mc.mode_type == Render::Geom::k_mode_type_attack) {

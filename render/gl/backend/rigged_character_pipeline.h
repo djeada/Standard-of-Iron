@@ -102,14 +102,17 @@ private:
   Uniforms m_uniforms{};
 
   GL::Shader::UniformHandle m_instanced_view_proj{GL::Shader::InvalidUniform};
-  GL::Shader::UniformHandle m_instanced_role_colors{GL::Shader::InvalidUniform};
-  GL::Shader::UniformHandle m_instanced_role_color_count{
+  GL::Shader::UniformHandle m_instanced_role_color_tbo{
       GL::Shader::InvalidUniform};
 
   std::size_t m_max_instances_per_batch = 0;
 
   unsigned int m_instance_vbo = 0;
   std::size_t m_instance_vbo_capacity_bytes = 0;
+
+  unsigned int m_role_color_buffer = 0;
+  unsigned int m_role_color_tbo_tex = 0;
+  std::size_t m_role_color_buffer_capacity_bytes = 0;
 
   unsigned int m_palette_ubo = 0;
   std::size_t m_palette_ubo_capacity_bytes = 0;
@@ -129,6 +132,7 @@ private:
     float variation_material[4];
   };
   std::vector<InstanceAttrib> m_instance_scratch;
+  std::vector<float> m_role_color_scratch;
 
   auto build_instanced_shader_source() -> bool;
   auto ensure_instance_vbo(std::size_t bytes_needed) -> bool;

@@ -292,7 +292,10 @@ enum class PreparedBatchKind : std::uint8_t {
   CylinderInstanced,
   MeshInstanced,
   DrawPartInstanced,
-  RiggedCreatureInstanced
+  RiggedCreatureInstanced,
+  SelectionRingInstanced,
+  EffectInstanced,
+  ModeIndicatorInstanced
 };
 
 struct PreparedBatch {
@@ -777,6 +780,45 @@ private:
         if (end - i > 1U) {
           kind = PreparedBatchKind::RiggedCreatureInstanced;
         }
+      } else if (head.index() == SelectionRingCmdIndex) {
+        while (end < count &&
+               get_sorted(end).index() == SelectionRingCmdIndex) {
+          ++end;
+        }
+        if (end - i > 1U) {
+          kind = PreparedBatchKind::SelectionRingInstanced;
+        }
+      } else if (head.index() == EffectBatchCmdIndex) {
+        const auto &head_eff = std::get<EffectBatchCmdIndex>(head);
+        while (end < count) {
+          const DrawCmd &next_cmd = get_sorted(end);
+          if (next_cmd.index() != EffectBatchCmdIndex) {
+            break;
+          }
+          if (std::get<EffectBatchCmdIndex>(next_cmd).kind != head_eff.kind) {
+            break;
+          }
+          ++end;
+        }
+        if (end - i > 1U) {
+          kind = PreparedBatchKind::EffectInstanced;
+        }
+      } else if (head.index() == ModeIndicatorCmdIndex) {
+        const auto &head_mode = std::get<ModeIndicatorCmdIndex>(head);
+        while (end < count) {
+          const DrawCmd &next_cmd = get_sorted(end);
+          if (next_cmd.index() != ModeIndicatorCmdIndex) {
+            break;
+          }
+          if (std::get<ModeIndicatorCmdIndex>(next_cmd).mode_type !=
+              head_mode.mode_type) {
+            break;
+          }
+          ++end;
+        }
+        if (end - i > 1U) {
+          kind = PreparedBatchKind::ModeIndicatorInstanced;
+        }
       } else if (head.index() == TerrainSurfaceCmdIndex) {
         while (end < count && can_batch_terrain_surface(i, end)) {
           ++end;
@@ -834,18 +876,7 @@ private:
     }
     const auto &rig_a = std::get<RiggedCreatureCmdIndex>(a);
     const auto &rig_b = std::get<RiggedCreatureCmdIndex>(b);
-    if (rig_a.role_color_count != rig_b.role_color_count) {
-      return false;
-    }
-    if (rig_a.role_color_count > rig_a.role_colors.size() ||
-        rig_b.role_color_count > rig_b.role_colors.size()) {
-      return false;
-    }
-    for (std::size_t i = 0; i < rig_a.role_color_count; ++i) {
-      if (rig_a.role_colors[i] != rig_b.role_colors[i]) {
-        return false;
-      }
-    }
+
     return rig_a.mesh != nullptr && rig_a.texture == nullptr &&
            rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
            rig_a.material == rig_b.material;

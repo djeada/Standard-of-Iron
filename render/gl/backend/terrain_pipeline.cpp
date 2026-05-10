@@ -68,7 +68,8 @@ void TerrainPipeline::cache_grass_uniforms() {
     return;
   }
 
-  m_grass_uniforms.view_proj = m_grass_shader->uniform_handle("u_viewProj");
+  m_grass_uniforms.view_proj =
+      m_grass_shader->optional_uniform_handle("u_viewProj");
   m_grass_uniforms.time = m_grass_shader->uniform_handle("u_time");
   m_grass_uniforms.wind_strength =
       m_grass_shader->uniform_handle("u_windStrength");

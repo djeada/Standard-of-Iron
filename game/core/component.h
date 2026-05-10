@@ -392,6 +392,7 @@ public:
   float death_morale_shock{25.0F};
   bool aura_active{true};
   bool wounded{false};
+  bool fpv_controlled{false};
 };
 
 class CommanderGuardComponent : public Component {

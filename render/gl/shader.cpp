@@ -368,6 +368,11 @@ auto Shader::link_program(GLuint vertex_shader,
     return false;
   }
 
+  GLuint const frame_block_idx = glGetUniformBlockIndex(m_program, "FrameData");
+  if (frame_block_idx != GL_INVALID_INDEX) {
+    glUniformBlockBinding(m_program, frame_block_idx, 0);
+  }
+
   return true;
 }
 

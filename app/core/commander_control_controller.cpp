@@ -19,6 +19,17 @@ void CommanderControlController::reset() {
   m_last_mouse_valid = false;
   m_mouse_warp_supported = false;
   m_mouse_recentering = false;
+  m_bob_phase = 0.0F;
+  m_bob_amplitude = 0.0F;
+  m_breath_phase = 0.0F;
+  m_strafe_lean = 0.0F;
+  m_fov_current = 75.0F;
+  m_cam_smooth_valid = false;
+  m_move_speed = 0.0F;
+  m_move_right_axis = 0;
+  m_move_running = false;
+  m_hit_trauma = 0.0F;
+  m_hit_shake_phase = 0.0F;
 }
 
 void CommanderControlController::set_view_yaw(float yaw) { m_view_yaw = yaw; }
@@ -302,27 +313,64 @@ auto CommanderControlController::primary_action(
     return false;
   }
 
+  auto *combat_state =
+      commander->get_component<Engine::Core::CombatStateComponent>();
+  if (combat_state != nullptr && combat_state->animation_state !=
+                                     Engine::Core::CombatAnimationState::Idle) {
+    return true;
+  }
+
+  auto *unit = commander->get_component<Engine::Core::UnitComponent>();
+  auto *attack = commander->get_component<Engine::Core::AttackComponent>();
+
+  if (attack != nullptr && attack->can_melee) {
+    attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  }
+
+  if (combat_state == nullptr) {
+    combat_state =
+        commander->add_component<Engine::Core::CombatStateComponent>();
+  }
+  if (combat_state != nullptr) {
+    combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
+    combat_state->state_time = 0.0F;
+    combat_state->state_duration =
+        Engine::Core::CombatStateComponent::k_advance_duration;
+    if (unit != nullptr && attack != nullptr) {
+      combat_state->attack_family = Engine::Core::resolve_combat_attack_family(
+          unit->spawn_type, attack->current_mode);
+    } else {
+      combat_state->attack_family = Engine::Core::CombatAttackFamily::None;
+    }
+
+    static std::uint8_t s_fpv_attack_seed = 0;
+    combat_state->attack_offset =
+        static_cast<float>(s_fpv_attack_seed % 7) * 0.022F;
+    combat_state->attack_variant =
+        s_fpv_attack_seed %
+        Engine::Core::CombatStateComponent::k_attack_variant_seed_slots;
+    ++s_fpv_attack_seed;
+  }
+
   const auto target_id =
       find_primary_target(world, commander_id, local_owner_id);
   if (target_id == 0) {
     return true;
   }
 
-  if (auto *attack =
-          commander->get_component<Engine::Core::AttackComponent>()) {
-    if (attack->can_melee) {
-      attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
-    }
+  if (attack != nullptr) {
+    attack->time_since_last = attack->get_current_cooldown();
   }
 
-  auto *target =
+  auto *target_comp =
       commander->get_component<Engine::Core::AttackTargetComponent>();
-  if (target == nullptr) {
-    target = commander->add_component<Engine::Core::AttackTargetComponent>();
+  if (target_comp == nullptr) {
+    target_comp =
+        commander->add_component<Engine::Core::AttackTargetComponent>();
   }
-  if (target != nullptr) {
-    target->target_id = target_id;
-    target->should_chase = false;
+  if (target_comp != nullptr) {
+    target_comp->target_id = target_id;
+    target_comp->should_chase = false;
   }
   return true;
 }
@@ -371,6 +419,12 @@ auto CommanderControlController::update(Engine::Core::World &world,
     movement->clear_path();
   }
 
+  if (auto *atk = commander->get_component<Engine::Core::AttackComponent>()) {
+    atk->in_melee_lock = false;
+    atk->melee_lock_target_id = 0;
+  }
+  commander->remove_component<Engine::Core::AttackTargetComponent>();
+
   constexpr float k_degrees_to_radians = 0.017453292519943295F;
   constexpr float k_turn_speed_degrees = 105.0F;
   if (m_input.turn_left) {
@@ -393,6 +447,10 @@ auto CommanderControlController::update(Engine::Core::World &world,
   const QVector3D right(-forward.z(), 0.0F, forward.x());
   QVector3D move = forward * static_cast<float>(forward_axis) +
                    right * static_cast<float>(right_axis);
+
+  float actual_speed_for_bob = 0.0F;
+  bool run_for_bob = false;
+
   if (move.lengthSquared() > 0.0001F) {
     move.normalize();
     float speed = std::max(0.1F, unit->speed);
@@ -424,6 +482,8 @@ auto CommanderControlController::update(Engine::Core::World &world,
         movement->vx = move.x() * speed;
         movement->vz = move.z() * speed;
       }
+      actual_speed_for_bob = speed;
+      run_for_bob = m_input.run;
     } else if (movement != nullptr) {
       movement->vx = 0.0F;
       movement->vz = 0.0F;
@@ -431,6 +491,26 @@ auto CommanderControlController::update(Engine::Core::World &world,
   } else if (movement != nullptr) {
     movement->vx = 0.0F;
     movement->vz = 0.0F;
+  }
+
+  m_move_speed = actual_speed_for_bob;
+  m_move_right_axis = right_axis;
+  m_move_running = run_for_bob;
+
+  if (movement != nullptr && actual_speed_for_bob > 0.05F) {
+    movement->has_target = true;
+    movement->goal_x = transform->position.x;
+    movement->goal_y = transform->position.z;
+    movement->target_x = transform->position.x;
+    movement->target_y = transform->position.z;
+
+    if (auto *stamina =
+            commander->get_component<Engine::Core::StaminaComponent>()) {
+      stamina->run_requested = m_move_running;
+    }
+  } else if (auto *stamina =
+                 commander->get_component<Engine::Core::StaminaComponent>()) {
+    stamina->run_requested = false;
   }
 
   transform->rotation.y = m_view_yaw;
@@ -461,35 +541,138 @@ auto CommanderControlController::update(Engine::Core::World &world,
     m_input.primary_action_scan_cooldown = 0.08F;
   }
 
-  update_camera(*commander, camera);
+  update_camera(*commander, camera, dt);
   return true;
 }
 
 void CommanderControlController::update_camera(Engine::Core::Entity &commander,
-                                               Render::GL::Camera &camera) {
+                                               Render::GL::Camera &camera,
+                                               float dt) {
   auto *transform = commander.get_component<Engine::Core::TransformComponent>();
   if (transform == nullptr) {
     return;
   }
 
-  constexpr float k_degrees_to_radians = 0.017453292519943295F;
-  constexpr float k_focus_height = 1.4F;
+  constexpr float k_pi = 3.14159265358979F;
+  constexpr float k_deg2rad = 0.017453292519943295F;
+
+  constexpr float k_focus_height = 1.45F;
   constexpr float k_camera_back_offset = 2.15F;
-  constexpr float k_camera_up_offset = 0.7F;
-  constexpr float k_target_distance = 5.0F;
+  constexpr float k_camera_up_offset = 0.65F;
+  constexpr float k_target_distance = 6.0F;
+
+  constexpr float k_bob_freq = 3.2F;
+  constexpr float k_bob_vert_amp = 0.055F;
+  constexpr float k_bob_run_mult = 1.45F;
+  constexpr float k_bob_lat_amp = 0.018F;
+  constexpr float k_bob_decay = 5.5F;
+
+  constexpr float k_breath_freq = 0.2F;
+  constexpr float k_breath_vert_amp = 0.008F;
+
+  constexpr float k_cam_spring = 14.0F;
+
+  constexpr float k_lean_max_deg = 1.2F;
+  constexpr float k_lean_follow = 5.0F;
+
+  constexpr float k_fov_walk = 75.0F;
+  constexpr float k_fov_run_boost = 4.0F;
+  constexpr float k_fov_lerp = 4.0F;
+
   set_view_pitch(m_view_pitch);
 
-  const float yaw_rad = m_view_yaw * k_degrees_to_radians;
-  const float pitch_rad = m_view_pitch * k_degrees_to_radians;
+  const float bob_amp_target = (m_move_speed > 0.05F) ? 1.0F : 0.0F;
+  m_bob_amplitude += (bob_amp_target - m_bob_amplitude) *
+                     (1.0F - std::exp(-k_bob_decay * std::max(dt, 0.0F)));
+  if (m_move_speed > 0.05F) {
+    m_bob_phase += m_move_speed * k_bob_freq * dt;
+  }
+  const float bob_run_factor = m_move_running ? k_bob_run_mult : 1.0F;
+  const float bob_v =
+      std::sin(m_bob_phase) * k_bob_vert_amp * bob_run_factor * m_bob_amplitude;
+
+  const float bob_l = std::sin(m_bob_phase * 0.5F) * k_bob_lat_amp *
+                      bob_run_factor * m_bob_amplitude;
+
+  m_breath_phase += k_breath_freq * 2.0F * k_pi * std::max(dt, 0.0F);
+  const float breath_idle = 1.0F - m_bob_amplitude;
+  const float breath_v =
+      std::sin(m_breath_phase) * k_breath_vert_amp * breath_idle;
+
+  const float lean_target =
+      -static_cast<float>(m_move_right_axis) * k_lean_max_deg;
+  m_strafe_lean += (lean_target - m_strafe_lean) *
+                   (1.0F - std::exp(-k_lean_follow * std::max(dt, 0.0F)));
+
+  const float fov_target =
+      k_fov_walk +
+      ((m_move_running && m_move_speed > 0.05F) ? k_fov_run_boost : 0.0F);
+  m_fov_current += (fov_target - m_fov_current) *
+                   (1.0F - std::exp(-k_fov_lerp * std::max(dt, 0.0F)));
+  camera.set_perspective(m_fov_current, camera.get_aspect(), camera.get_near(),
+                         camera.get_far());
+
+  const float yaw_rad = m_view_yaw * k_deg2rad;
+  const float pitch_rad = m_view_pitch * k_deg2rad;
   const float pitch_cos = std::cos(pitch_rad);
-  const QVector3D forward(std::sin(yaw_rad) * pitch_cos, std::sin(pitch_rad),
-                          std::cos(yaw_rad) * pitch_cos);
+  const QVector3D forward_vec(std::sin(yaw_rad) * pitch_cos,
+                              std::sin(pitch_rad),
+                              std::cos(yaw_rad) * pitch_cos);
   const QVector3D flat_forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
+  const QVector3D flat_right(-flat_forward.z(), 0.0F, flat_forward.x());
+
   const QVector3D pivot(transform->position.x,
                         transform->position.y + k_focus_height,
                         transform->position.z);
-  const QVector3D eye = pivot - flat_forward * k_camera_back_offset +
-                        QVector3D(0.0F, k_camera_up_offset, 0.0F);
-  camera.look_at(eye, pivot + forward * k_target_distance,
-                 QVector3D(0.0F, 1.0F, 0.0F));
+
+  const QVector3D eye_desired =
+      pivot - flat_forward * k_camera_back_offset +
+      QVector3D(0.0F, k_camera_up_offset + bob_v + breath_v, 0.0F) +
+      flat_right * bob_l;
+  const QVector3D target_desired = pivot + forward_vec * k_target_distance;
+
+  if (!m_cam_smooth_valid) {
+    m_cam_eye_smooth = eye_desired;
+    m_cam_target_smooth = target_desired;
+    m_cam_smooth_valid = true;
+  } else {
+    const float alpha = 1.0F - std::exp(-k_cam_spring * std::max(dt, 0.0F));
+    m_cam_eye_smooth += (eye_desired - m_cam_eye_smooth) * alpha;
+    m_cam_target_smooth += (target_desired - m_cam_target_smooth) * alpha;
+  }
+
+  const float lean_rad = m_strafe_lean * k_deg2rad;
+  const QVector3D world_up(0.0F, 1.0F, 0.0F);
+
+  const QVector3D right_world =
+      QVector3D::crossProduct(forward_vec.normalized(), world_up).normalized();
+  const QVector3D up_leaned =
+      (world_up + right_world * std::sin(lean_rad)).normalized();
+
+  constexpr float k_shake_freq = 22.0F;
+  constexpr float k_shake_decay = 9.5F;
+  constexpr float k_shake_lateral = 0.14F;
+  constexpr float k_shake_vert = 0.05F;
+
+  if (auto const *fb =
+          commander.get_component<Engine::Core::HitFeedbackComponent>()) {
+
+    if (fb->is_reacting && fb->reaction_time < 0.05F &&
+        fb->reaction_intensity > m_hit_trauma * 0.5F) {
+      m_hit_trauma = fb->reaction_intensity;
+      m_hit_shake_phase = 0.0F;
+    }
+  }
+  m_hit_shake_phase += k_shake_freq * std::max(dt, 0.0F);
+  m_hit_trauma *= std::exp(-k_shake_decay * std::max(dt, 0.0F));
+
+  const float shake_lat =
+      std::sin(m_hit_shake_phase) * m_hit_trauma * k_shake_lateral;
+  const float shake_v = std::abs(std::sin(m_hit_shake_phase * 0.6F)) *
+                        m_hit_trauma * k_shake_vert;
+  const QVector3D shake_offset =
+      flat_right * shake_lat - QVector3D(0.0F, shake_v, 0.0F);
+
+  camera.look_at(m_cam_eye_smooth + shake_offset,
+                 m_cam_target_smooth + shake_offset, up_leaned);
 }
