@@ -9,7 +9,7 @@ layout(location = 4) in vec4 i_modelCol1;
 layout(location = 5) in vec4 i_modelCol2;
 layout(location = 6) in vec4 i_colorAlpha;
 
-uniform mat4 u_viewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 uniform vec3 u_lightDir;
 
 out vec3 v_worldPos;

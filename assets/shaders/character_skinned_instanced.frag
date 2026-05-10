@@ -7,16 +7,17 @@ flat in vec3 v_color;
 flat in float v_alpha;
 flat in int v_material_id;
 flat in int v_color_role;
+flat in int v_instance_id;
 
-uniform vec3 u_role_colors[32];
-uniform int u_role_color_count;
+uniform samplerBuffer u_role_color_tbo;
 
 out vec4 FragColor;
 
 void main() {
   vec3 base = v_color;
-  if (v_color_role > 0 && v_color_role <= u_role_color_count) {
-    base = u_role_colors[v_color_role - 1];
+  if (v_color_role > 0) {
+    base =
+        texelFetch(u_role_color_tbo, v_instance_id * 32 + v_color_role - 1).rgb;
   }
 
   vec3 normal = normalize(v_normal_ws);

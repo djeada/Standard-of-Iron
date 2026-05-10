@@ -40,10 +40,17 @@ public:
     GL::Shader::UniformHandle instanced{GL::Shader::InvalidUniform};
   };
 
+  struct BasicInstancedUniforms {
+    GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle use_texture{GL::Shader::InvalidUniform};
+  };
+
   GL::Shader *m_basic_shader = nullptr;
+  GL::Shader *m_basic_instanced_shader = nullptr;
   GL::Shader *m_grid_shader = nullptr;
 
   BasicUniforms m_basic_uniforms;
+  BasicInstancedUniforms m_basic_instanced_uniforms;
   GridUniforms m_grid_uniforms;
 
 private:
@@ -51,6 +58,7 @@ private:
   GL::ShaderCache *m_shader_cache = nullptr;
 
   void cache_basic_uniforms();
+  void cache_basic_instanced_uniforms();
   void cache_grid_uniforms();
 };
 

@@ -105,8 +105,7 @@ auto CommandController::on_stop_command() -> CommandResult {
 
     auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
-      hold_mode->active = false;
-      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+      hold_mode->begin_exit();
       emit hold_mode_changed(false);
     }
 
@@ -217,8 +216,7 @@ auto CommandController::on_hold_command() -> CommandResult {
     } else {
 
       if ((hold_mode != nullptr) && hold_mode->active) {
-        hold_mode->active = false;
-        hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+        hold_mode->begin_exit();
       }
     }
   }

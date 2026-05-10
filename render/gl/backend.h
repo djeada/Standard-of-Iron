@@ -187,6 +187,7 @@ private:
   bool m_depth_testEnabled = true;
   bool m_blend_enabled = false;
   float m_animation_time = 0.0F;
+  GLuint m_frame_ubo{0};
 
   Render::FrameBudgetConfig m_frame_budget_config;
   Render::FrameTimeTracker m_frame_tracker;

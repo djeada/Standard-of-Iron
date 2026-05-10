@@ -76,13 +76,15 @@ void VegetationPipeline::shutdown() {
 
 void VegetationPipeline::cache_uniforms() {
   if (m_stone_shader != nullptr) {
-    m_stone_uniforms.view_proj = m_stone_shader->uniform_handle("uViewProj");
+    m_stone_uniforms.view_proj =
+        m_stone_shader->optional_uniform_handle("u_viewProj");
     m_stone_uniforms.light_direction =
         m_stone_shader->uniform_handle("uLightDirection");
   }
 
   if (m_plant_shader != nullptr) {
-    m_plant_uniforms.view_proj = m_plant_shader->uniform_handle("uViewProj");
+    m_plant_uniforms.view_proj =
+        m_plant_shader->optional_uniform_handle("u_viewProj");
     m_plant_uniforms.time = m_plant_shader->uniform_handle("uTime");
     m_plant_uniforms.wind_strength =
         m_plant_shader->uniform_handle("uWindStrength");
@@ -92,7 +94,8 @@ void VegetationPipeline::cache_uniforms() {
   }
 
   if (m_pine_shader != nullptr) {
-    m_pine_uniforms.view_proj = m_pine_shader->uniform_handle("uViewProj");
+    m_pine_uniforms.view_proj =
+        m_pine_shader->optional_uniform_handle("u_viewProj");
     m_pine_uniforms.time = m_pine_shader->uniform_handle("uTime");
     m_pine_uniforms.wind_strength =
         m_pine_shader->uniform_handle("uWindStrength");
@@ -102,7 +105,8 @@ void VegetationPipeline::cache_uniforms() {
   }
 
   if (m_olive_shader != nullptr) {
-    m_olive_uniforms.view_proj = m_olive_shader->uniform_handle("uViewProj");
+    m_olive_uniforms.view_proj =
+        m_olive_shader->optional_uniform_handle("u_viewProj");
     m_olive_uniforms.time = m_olive_shader->uniform_handle("uTime");
     m_olive_uniforms.wind_strength =
         m_olive_shader->uniform_handle("uWindStrength");
@@ -113,7 +117,7 @@ void VegetationPipeline::cache_uniforms() {
 
   if (m_firecamp_shader != nullptr) {
     m_firecamp_uniforms.view_proj =
-        m_firecamp_shader->uniform_handle("u_viewProj");
+        m_firecamp_shader->optional_uniform_handle("u_viewProj");
     m_firecamp_uniforms.time = m_firecamp_shader->uniform_handle("u_time");
     m_firecamp_uniforms.flicker_speed =
         m_firecamp_shader->uniform_handle("u_flickerSpeed");

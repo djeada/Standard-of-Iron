@@ -5,7 +5,7 @@ layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec4 aPosScale;
 layout(location = 3) in vec4 aColorRot;
 
-uniform mat4 uViewProj;
+layout(std140) uniform FrameData { mat4 u_viewProj; };
 
 out vec3 vWorldPos;
 out vec3 vNormal;
@@ -31,5 +31,5 @@ void main() {
 
   vColor = aColorRot.rgb;
 
-  gl_Position = uViewProj * vec4(vWorldPos, 1.0);
+  gl_Position = u_viewProj * vec4(vWorldPos, 1.0);
 }
