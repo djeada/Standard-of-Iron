@@ -58,7 +58,7 @@ auto humanoid_topology() noexcept -> const Creature::SkeletonTopology & {
     for (std::size_t i = 0; i < k_bone_count; ++i) {
       out[i].name = k_bone_names[i];
       out[i].parent = (k_bone_parents[i] == k_invalid_bone)
-                          ? Creature::kInvalidBone
+                          ? Creature::k_invalid_bone
                           : static_cast<Creature::BoneIndex>(k_bone_parents[i]);
     }
     return out;

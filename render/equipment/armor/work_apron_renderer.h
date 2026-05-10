@@ -21,7 +21,7 @@ struct WorkApronConfig {
   bool include_pockets = true;
 };
 
-inline constexpr std::uint32_t kWorkApronRoleCount = 9;
+inline constexpr std::uint32_t k_work_apron_role_count = 9;
 
 auto work_apron_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                                  std::size_t max) -> std::uint32_t;

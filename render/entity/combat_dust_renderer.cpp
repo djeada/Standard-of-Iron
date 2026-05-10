@@ -12,30 +12,30 @@
 namespace Render::GL {
 
 namespace {
-constexpr float kDustRadius = 2.0F;
-constexpr float kDustIntensity = 0.6F;
-constexpr float kDustYOffset = 0.05F;
-constexpr float kDustColorR = 0.6F;
-constexpr float kDustColorG = 0.55F;
-constexpr float kDustColorB = 0.45F;
-constexpr float kVisibilityCheckRadius = 3.0F;
+constexpr float k_dust_radius = 2.0F;
+constexpr float k_dust_intensity = 0.6F;
+constexpr float k_dust_y_offset = 0.05F;
+constexpr float k_dust_color_r = 0.6F;
+constexpr float k_dust_color_g = 0.55F;
+constexpr float k_dust_color_b = 0.45F;
+constexpr float k_visibility_check_radius = 3.0F;
 
-constexpr float kFlameRadius = 3.0F;
-constexpr float kFlameIntensity = 0.8F;
-constexpr float kFlameYOffset = 0.5F;
-constexpr float kFlameColorR = 1.0F;
-constexpr float kFlameColorG = 0.4F;
-constexpr float kFlameColorB = 0.1F;
-constexpr float kBuildingHealthThreshold = 0.5F;
+constexpr float k_flame_radius = 3.0F;
+constexpr float k_flame_intensity = 0.8F;
+constexpr float k_flame_y_offset = 0.5F;
+constexpr float k_flame_color_r = 1.0F;
+constexpr float k_flame_color_g = 0.4F;
+constexpr float k_flame_color_b = 0.1F;
+constexpr float k_building_health_threshold = 0.5F;
 
-constexpr float kStoneImpactRadius = 0.6F;
-constexpr float kStoneImpactIntensity = 1.5F;
-constexpr float kStoneImpactColorR = 0.75F;
-constexpr float kStoneImpactColorG = 0.65F;
-constexpr float kStoneImpactColorB = 0.45F;
-constexpr float kStoneImpactYOffset = 0.1F;
-constexpr float kStoneImpactDuration = 10.0F;
-constexpr float kStoneImpactTriggerProgress = 0.99F;
+constexpr float k_stone_impact_radius = 0.6F;
+constexpr float k_stone_impact_intensity = 1.5F;
+constexpr float k_stone_impact_color_r = 0.75F;
+constexpr float k_stone_impact_color_g = 0.65F;
+constexpr float k_stone_impact_color_b = 0.45F;
+constexpr float k_stone_impact_y_offset = 0.1F;
+constexpr float k_stone_impact_duration = 10.0F;
+constexpr float k_stone_impact_trigger_progress = 0.99F;
 
 std::unordered_set<const void *> g_tracked_projectiles;
 } // namespace
@@ -51,7 +51,7 @@ void StoneImpactTracker::add_impact(const QVector3D &position,
   StoneImpactEffect effect;
   effect.position = position;
   effect.start_time = current_time;
-  effect.duration = kStoneImpactDuration;
+  effect.duration = k_stone_impact_duration;
   effect.radius = radius;
   effect.intensity = intensity;
   m_impacts.push_back(effect);
@@ -113,15 +113,15 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
     if (!visibility.is_entity_visible(transform->position.x,
                                       transform->position.z,
-                                      kVisibilityCheckRadius)) {
+                                      k_visibility_check_radius)) {
       continue;
     }
 
-    QVector3D position(transform->position.x, kDustYOffset,
+    QVector3D position(transform->position.x, k_dust_y_offset,
                        transform->position.z);
-    QVector3D color(kDustColorR, kDustColorG, kDustColorB);
+    QVector3D color(k_dust_color_r, k_dust_color_g, k_dust_color_b);
 
-    renderer->combat_dust(position, color, kDustRadius, kDustIntensity,
+    renderer->combat_dust(position, color, k_dust_radius, k_dust_intensity,
                           animation_time);
   }
 
@@ -157,15 +157,15 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
     if (!visibility.is_entity_visible(transform->position.x,
                                       transform->position.z,
-                                      kVisibilityCheckRadius)) {
+                                      k_visibility_check_radius)) {
       continue;
     }
 
-    QVector3D position(transform->position.x, kDustYOffset,
+    QVector3D position(transform->position.x, k_dust_y_offset,
                        transform->position.z);
-    QVector3D color(kDustColorR, kDustColorG, kDustColorB);
+    QVector3D color(k_dust_color_r, k_dust_color_g, k_dust_color_b);
 
-    renderer->combat_dust(position, color, kDustRadius, kDustIntensity,
+    renderer->combat_dust(position, color, k_dust_radius, k_dust_intensity,
                           animation_time);
   }
 
@@ -191,7 +191,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     float health_ratio = static_cast<float>(unit_comp->health) /
                          static_cast<float>(unit_comp->max_health);
 
-    if (health_ratio > kBuildingHealthThreshold) {
+    if (health_ratio > k_building_health_threshold) {
       continue;
     }
 
@@ -201,17 +201,17 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
     if (!visibility.is_entity_visible(transform->position.x,
                                       transform->position.z,
-                                      kVisibilityCheckRadius)) {
+                                      k_visibility_check_radius)) {
       continue;
     }
 
-    float flame_intensity = kFlameIntensity * (1.0F - health_ratio);
+    float flame_intensity = k_flame_intensity * (1.0F - health_ratio);
 
-    QVector3D position(transform->position.x, kFlameYOffset,
+    QVector3D position(transform->position.x, k_flame_y_offset,
                        transform->position.z);
-    QVector3D color(kFlameColorR, kFlameColorG, kFlameColorB);
+    QVector3D color(k_flame_color_r, k_flame_color_g, k_flame_color_b);
 
-    renderer->building_flame(position, color, kFlameRadius, flame_intensity,
+    renderer->building_flame(position, color, k_flame_radius, flame_intensity,
                              animation_time);
   }
 
@@ -229,7 +229,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       }
 
       float progress = stone_proj->get_progress();
-      if (progress < kStoneImpactTriggerProgress) {
+      if (progress < k_stone_impact_trigger_progress) {
         continue;
       }
 
@@ -247,15 +247,15 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       }
 
       if (!visibility.is_entity_visible(impact_pos.x(), impact_pos.z(),
-                                        kVisibilityCheckRadius * 2.0F)) {
+                                        k_visibility_check_radius * 2.0F)) {
         continue;
       }
 
-      QVector3D position(impact_pos.x(), impact_pos.y() + kStoneImpactYOffset,
+      QVector3D position(impact_pos.x(), impact_pos.y() + k_stone_impact_y_offset,
                          impact_pos.z());
 
-      impact_tracker.add_impact(position, animation_time, kStoneImpactRadius,
-                                kStoneImpactIntensity);
+      impact_tracker.add_impact(position, animation_time, k_stone_impact_radius,
+                                k_stone_impact_intensity);
     }
   }
 
@@ -289,7 +289,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
         continue;
       }
 
-      QVector3D position(impact.x, transform->position.y + kStoneImpactYOffset,
+      QVector3D position(impact.x, transform->position.y + k_stone_impact_y_offset,
                          impact.z);
 
       if (!is_fog_visible(position.x(), position.z())) {
@@ -298,13 +298,13 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       }
 
       if (!visibility.is_entity_visible(position.x(), position.z(),
-                                        kVisibilityCheckRadius * 2.0F)) {
+                                        k_visibility_check_radius * 2.0F)) {
         impact.time = -1.0F;
         continue;
       }
 
-      impact_tracker.add_impact(position, animation_time, kStoneImpactRadius,
-                                kStoneImpactIntensity);
+      impact_tracker.add_impact(position, animation_time, k_stone_impact_radius,
+                                k_stone_impact_intensity);
       impact.time = -1.0F;
     }
 
@@ -318,7 +318,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
   impact_tracker.update(animation_time);
 
-  QVector3D color(kStoneImpactColorR, kStoneImpactColorG, kStoneImpactColorB);
+  QVector3D color(k_stone_impact_color_r, k_stone_impact_color_g, k_stone_impact_color_b);
   for (const auto &impact : impact_tracker.impacts()) {
     if (!is_fog_visible(impact.position.x(), impact.position.z())) {
       continue;

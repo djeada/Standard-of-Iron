@@ -59,11 +59,11 @@ auto scale_barding_neck_archetype() -> const RenderArchetype & {
 
 auto scale_barding_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                                     std::size_t max) -> std::uint32_t {
-  if (max < kScaleBardingRoleCount) {
+  if (max < k_scale_barding_role_count) {
     return 0;
   }
   out[0] = variant.tack_color * 0.85F;
-  return kScaleBardingRoleCount;
+  return k_scale_barding_role_count;
 }
 
 auto scale_barding_make_static_attachment(

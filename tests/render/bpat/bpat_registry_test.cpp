@@ -22,18 +22,18 @@ TEST(BpatRegistry, LoadsAllSpecies) {
   auto &reg = BpatRegistry::instance();
   std::size_t const loaded =
       static_cast<std::size_t>(
-          reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat")) +
+          reg.load_species(k_species_humanoid, root + "/humanoid.bpat")) +
       static_cast<std::size_t>(
-          reg.load_species(kSpeciesHorse, root + "/horse.bpat")) +
+          reg.load_species(k_species_horse, root + "/horse.bpat")) +
       static_cast<std::size_t>(
-          reg.load_species(kSpeciesElephant, root + "/elephant.bpat")) +
-      static_cast<std::size_t>(reg.load_species(kSpeciesHumanoidSword,
+          reg.load_species(k_species_elephant, root + "/elephant.bpat")) +
+      static_cast<std::size_t>(reg.load_species(k_species_humanoid_sword,
                                                 root + "/humanoid_sword.bpat"));
   EXPECT_EQ(loaded, 4U);
-  EXPECT_TRUE(reg.has_species(kSpeciesHumanoid));
-  EXPECT_TRUE(reg.has_species(kSpeciesHorse));
-  EXPECT_TRUE(reg.has_species(kSpeciesElephant));
-  EXPECT_TRUE(reg.has_species(kSpeciesHumanoidSword));
+  EXPECT_TRUE(reg.has_species(k_species_humanoid));
+  EXPECT_TRUE(reg.has_species(k_species_horse));
+  EXPECT_TRUE(reg.has_species(k_species_elephant));
+  EXPECT_TRUE(reg.has_species(k_species_humanoid_sword));
 }
 
 TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
@@ -59,10 +59,10 @@ TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
   restore_cwd();
 
   EXPECT_EQ(loaded, 4U);
-  EXPECT_TRUE(reg.has_species(kSpeciesHumanoid));
-  EXPECT_TRUE(reg.has_species(kSpeciesHorse));
-  EXPECT_TRUE(reg.has_species(kSpeciesElephant));
-  EXPECT_TRUE(reg.has_species(kSpeciesHumanoidSword));
+  EXPECT_TRUE(reg.has_species(k_species_humanoid));
+  EXPECT_TRUE(reg.has_species(k_species_horse));
+  EXPECT_TRUE(reg.has_species(k_species_elephant));
+  EXPECT_TRUE(reg.has_species(k_species_humanoid_sword));
 }
 
 TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
@@ -71,14 +71,14 @@ TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
-  ASSERT_TRUE(reg.load_species(kSpeciesHorse, root + "/horse.bpat"));
-  ASSERT_TRUE(reg.load_species(kSpeciesElephant, root + "/elephant.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_horse, root + "/horse.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_elephant, root + "/elephant.bpat"));
   ASSERT_TRUE(
-      reg.load_species(kSpeciesHumanoidSword, root + "/humanoid_sword.bpat"));
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
 
-  for (auto const species : {kSpeciesHumanoid, kSpeciesHorse, kSpeciesElephant,
-                             kSpeciesHumanoidSword}) {
+  for (auto const species : {k_species_humanoid, k_species_horse, k_species_elephant,
+                             k_species_humanoid_sword}) {
     auto const *blob = reg.blob(species);
     ASSERT_NE(blob, nullptr) << "species " << species;
     ASSERT_GT(blob->clip_count(), 0U);
@@ -109,17 +109,17 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
-  auto const *blob = reg.blob(kSpeciesHumanoid);
+  auto const *blob = reg.blob(k_species_humanoid);
   ASSERT_NE(blob, nullptr);
 
-  constexpr std::uint16_t kAttackSwordAClip =
-      Render::Creature::kHumanoidAttackSwordAClip;
-  ASSERT_GT(blob->clip_count(), static_cast<std::uint32_t>(kAttackSwordAClip))
+  constexpr std::uint16_t k_attack_sword_a_clip =
+      Render::Creature::k_humanoid_attack_sword_a_clip;
+  ASSERT_GT(blob->clip_count(), static_cast<std::uint32_t>(k_attack_sword_a_clip))
       << "humanoid.bpat is missing attack_sword_a (re-run bpat_baker)";
 
-  auto const attack_clip = blob->clip(kAttackSwordAClip);
+  auto const attack_clip = blob->clip(k_attack_sword_a_clip);
   ASSERT_GT(attack_clip.frame_count, 0U);
   EXPECT_FALSE(attack_clip.loops)
       << "attack_sword_a must be a non-looping clip";
@@ -127,12 +127,12 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
   std::uint32_t const mid_frame = attack_clip.frame_count / 2U;
   std::array<QMatrix4x4, 64> attack_palette{};
   auto const n =
-      reg.sample_palette(kSpeciesHumanoid, kAttackSwordAClip, mid_frame,
+      reg.sample_palette(k_species_humanoid, k_attack_sword_a_clip, mid_frame,
                          std::span<QMatrix4x4>(attack_palette));
   ASSERT_GT(n, 0U);
 
   std::array<QMatrix4x4, 64> idle_palette{};
-  reg.sample_palette(kSpeciesHumanoid, 0U, 0U,
+  reg.sample_palette(k_species_humanoid, 0U, 0U,
                      std::span<QMatrix4x4>(idle_palette));
 
   bool any_different = false;
@@ -154,9 +154,9 @@ TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
   ASSERT_TRUE(
-      reg.load_species(kSpeciesHumanoidSword, root + "/humanoid_sword.bpat"));
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
 
   auto sample_bone = [&](std::uint32_t species_id, std::uint16_t clip_index,
                          std::uint32_t frame_in_clip, HumanoidBone bone) {
@@ -168,48 +168,48 @@ TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {
     return palette[bone_index].column(3).toVector3D();
   };
 
-  auto const *default_blob = reg.blob(kSpeciesHumanoid);
-  auto const *sword_blob = reg.blob(kSpeciesHumanoidSword);
+  auto const *default_blob = reg.blob(k_species_humanoid);
+  auto const *sword_blob = reg.blob(k_species_humanoid_sword);
   ASSERT_NE(default_blob, nullptr);
   ASSERT_NE(sword_blob, nullptr);
 
   auto const idle_pelvis =
-      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidIdleClip, 0U,
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip, 0U,
                   HumanoidBone::Pelvis);
   auto const idle_hand_r =
-      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidIdleClip, 0U,
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip, 0U,
                   HumanoidBone::HandR);
   auto const idle_hand_l =
-      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidIdleClip, 0U,
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip, 0U,
                   HumanoidBone::HandL);
 
   auto const spear_hold_frame =
-      default_blob->clip(Render::Creature::kHumanoidHoldClip).frame_count - 1U;
+      default_blob->clip(Render::Creature::k_humanoid_hold_clip).frame_count - 1U;
   auto const bow_hold_frame =
-      default_blob->clip(Render::Creature::kHumanoidHoldBowClip).frame_count -
+      default_blob->clip(Render::Creature::k_humanoid_hold_bow_clip).frame_count -
       1U;
   auto const sword_hold_frame =
-      sword_blob->clip(Render::Creature::kHumanoidHoldClip).frame_count - 1U;
+      sword_blob->clip(Render::Creature::k_humanoid_hold_clip).frame_count - 1U;
 
   auto const spear_hold_pelvis =
-      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidHoldClip,
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_hold_clip,
                   spear_hold_frame, HumanoidBone::Pelvis);
   auto const spear_hold_hand_r =
-      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidHoldClip,
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_hold_clip,
                   spear_hold_frame, HumanoidBone::HandR);
 
   auto const bow_hold_pelvis =
-      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidHoldBowClip,
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_hold_bow_clip,
                   bow_hold_frame, HumanoidBone::Pelvis);
   auto const bow_hold_hand_l =
-      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidHoldBowClip,
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_hold_bow_clip,
                   bow_hold_frame, HumanoidBone::HandL);
 
   auto const sword_idle_pelvis =
-      sample_bone(kSpeciesHumanoidSword, Render::Creature::kHumanoidIdleClip,
+      sample_bone(k_species_humanoid_sword, Render::Creature::k_humanoid_idle_clip,
                   0U, HumanoidBone::Pelvis);
   auto const sword_hold_pelvis =
-      sample_bone(kSpeciesHumanoidSword, Render::Creature::kHumanoidHoldClip,
+      sample_bone(k_species_humanoid_sword, Render::Creature::k_humanoid_hold_clip,
                   sword_hold_frame, HumanoidBone::Pelvis);
 
   EXPECT_LT(spear_hold_pelvis.y(), idle_pelvis.y());
@@ -226,16 +226,16 @@ TEST(BpatRegistry, SwordHumanoidIdleDiffersFromDefaultHumanoid) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
   ASSERT_TRUE(
-      reg.load_species(kSpeciesHumanoidSword, root + "/humanoid_sword.bpat"));
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
 
   std::array<QMatrix4x4, 64> default_palette{};
   std::array<QMatrix4x4, 64> sword_palette{};
-  auto const n = reg.sample_palette(kSpeciesHumanoid, 0U, 0U,
+  auto const n = reg.sample_palette(k_species_humanoid, 0U, 0U,
                                     std::span<QMatrix4x4>(default_palette));
   ASSERT_GT(n, 0U);
-  ASSERT_EQ(reg.sample_palette(kSpeciesHumanoidSword, 0U, 0U,
+  ASSERT_EQ(reg.sample_palette(k_species_humanoid_sword, 0U, 0U,
                                std::span<QMatrix4x4>(sword_palette)),
             n);
 

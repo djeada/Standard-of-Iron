@@ -46,11 +46,11 @@ auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
 auto species_to_bpat_id(CreatureKind kind) noexcept -> std::uint32_t {
   switch (kind) {
   case CreatureKind::Humanoid:
-    return Render::Creature::Bpat::kSpeciesHumanoid;
+    return Render::Creature::Bpat::k_species_humanoid;
   case CreatureKind::Horse:
-    return Render::Creature::Bpat::kSpeciesHorse;
+    return Render::Creature::Bpat::k_species_horse;
   case CreatureKind::Elephant:
-    return Render::Creature::Bpat::kSpeciesElephant;
+    return Render::Creature::Bpat::k_species_elephant;
   case CreatureKind::Mounted:
     return 0xFFFFFFFFu;
   }
@@ -91,7 +91,7 @@ void report_submit_cache_miss(std::string_view path,
          << " archetype=" << static_cast<std::uint32_t>(archetype) << " asset="
          << static_cast<std::uint32_t>(handle.asset != nullptr
                                            ? handle.asset->id
-                                           : kInvalidCreatureAsset)
+                                           : k_invalid_creature_asset)
          << " lod=" << static_cast<int>(lod)
          << " state=" << static_cast<int>(state) << " clip=" << clip_id
          << " frame_in_clip=" << frame_in_clip
@@ -123,7 +123,7 @@ void ensure_skin_ubo_for_submit(Render::GL::RiggedMeshCache &cache,
   Render::GL::rigged_entry_ensure_skin_ubo(entry);
   if (!had_ubo && entry.skin_palette_ubo != 0U) {
     const auto bytes = static_cast<std::uint64_t>(entry.skinned_frame_total) *
-                       Render::GL::BonePaletteArena::kPaletteBytes;
+                       Render::GL::BonePaletteArena::k_palette_bytes;
     cache.record_skin_ubo_upload(bytes);
   }
 }
@@ -136,7 +136,7 @@ auto make_snapshot_key(const CreatureRenderAssetHandle &handle,
     -> Render::GL::SnapshotMeshCache::Key {
   Render::GL::SnapshotMeshCache::Key key{};
   key.asset_id =
-      handle.asset != nullptr ? handle.asset->id : kInvalidCreatureAsset;
+      handle.asset != nullptr ? handle.asset->id : k_invalid_creature_asset;
   key.archetype = archetype;
   key.attachment_set_id = handle.attachment_set_id;
   key.variant = variant;
@@ -350,7 +350,7 @@ struct ResolvedPlayback {
 auto resolve_clip_playback(std::uint32_t species_id, std::uint16_t clip_id,
                            float phase) noexcept -> ResolvedPlayback {
   ResolvedPlayback r{};
-  if (clip_id == Render::Creature::ArchetypeDescriptor::kUnmappedClip) {
+  if (clip_id == Render::Creature::ArchetypeDescriptor::k_unmapped_clip) {
     return r;
   }
   const auto *blob =
@@ -384,7 +384,7 @@ auto resolve_clip_playback(const CreatureClipPlaybackDesc &desc,
                            float phase) noexcept -> ResolvedPlayback {
   ResolvedPlayback r{};
   if (desc.blob == nullptr ||
-      desc.clip_id == Render::Creature::ArchetypeDescriptor::kUnmappedClip ||
+      desc.clip_id == Render::Creature::ArchetypeDescriptor::k_unmapped_clip ||
       desc.frame_count == 0U) {
     return r;
   }
@@ -412,7 +412,7 @@ auto resolve_blob_palette(std::uint32_t species_id, BpatPlayback playback,
     -> std::span<const QMatrix4x4> {
   out_blob = nullptr;
   out_global_frame = 0U;
-  if (playback.clip_id == kInvalidBpatClip) {
+  if (playback.clip_id == k_invalid_bpat_clip) {
     return {};
   }
   if (species_id == 0xFFFFFFFFu) {
@@ -456,7 +456,7 @@ auto CreaturePipeline::submit_requests(
     bump_lod_counters(req.lod, stats);
 
     auto handle_id = req.render_asset_handle;
-    if (handle_id == Render::Creature::kInvalidCreatureRenderAssetHandle) {
+    if (handle_id == Render::Creature::k_invalid_creature_render_asset_handle) {
       handle_id = CreatureRenderAssetHandleRegistry::instance().get_or_create(
           req.creature_asset_id, req.archetype);
     }

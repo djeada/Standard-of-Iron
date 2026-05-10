@@ -74,7 +74,7 @@ struct HumanoidClipSpec {
   bool loops;
 };
 
-constexpr std::array<HumanoidClipSpec, 20> kHumanoidClips{{
+constexpr std::array<HumanoidClipSpec, 20> k_humanoid_clips{{
     {"idle", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None, 0,
      BakerDeathType::None, BakerRidingType::None, BakerHoldType::None, 24U,
      24.0F, 1.6F, true},
@@ -142,7 +142,7 @@ struct HumanoidSocketSpec {
   Render::Humanoid::HumanoidSocket socket;
 };
 
-constexpr std::array<HumanoidSocketSpec, 10> kHumanoidSockets{{
+constexpr std::array<HumanoidSocketSpec, 10> k_humanoid_sockets{{
     {"head", Render::Humanoid::HumanoidSocket::Head},
     {"hand_r", Render::Humanoid::HumanoidSocket::HandR},
     {"hand_l", Render::Humanoid::HumanoidSocket::HandL},
@@ -487,7 +487,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     out_palettes.push_back(palette[b]);
   }
 
-  for (auto const &spec : kHumanoidSockets) {
+  for (auto const &spec : k_humanoid_sockets) {
     out_sockets.push_back(
         Render::Humanoid::socket_transform(palette, spec.socket));
   }
@@ -498,7 +498,7 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
                    HumanoidBakeProfile profile) {
   bpat::BpatWriter writer(
       species_id, static_cast<std::uint32_t>(Render::Humanoid::k_bone_count));
-  for (auto const &spec : kHumanoidSockets) {
+  for (auto const &spec : k_humanoid_sockets) {
     Render::Humanoid::SocketDef const &def =
         Render::Humanoid::socket_def(spec.socket);
     bpat::SocketDescriptor s{};
@@ -508,7 +508,7 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
     writer.add_socket(std::move(s));
   }
 
-  for (auto const &clip : kHumanoidClips) {
+  for (auto const &clip : k_humanoid_clips) {
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -521,7 +521,7 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
                      Render::Humanoid::k_bone_count);
     std::vector<QMatrix4x4> sockets;
     sockets.reserve(static_cast<std::size_t>(clip.frames) *
-                    kHumanoidSockets.size());
+                    k_humanoid_sockets.size());
     for (std::uint32_t f = 0; f < clip.frames; ++f) {
       bake_humanoid_clip_frame(profile, clip, f, palettes, sockets);
     }
@@ -542,9 +542,9 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
   }
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
-            << " frames, " << kHumanoidClips.size() << " clips, "
+            << " frames, " << k_humanoid_clips.size() << " clips, "
             << Render::Humanoid::k_bone_count << " bones, "
-            << kHumanoidSockets.size() << " sockets)\n";
+            << k_humanoid_sockets.size() << " sockets)\n";
   return true;
 }
 
@@ -676,7 +676,7 @@ struct HorseClipSpec {
   float bob_scale{0.0F};
 };
 
-constexpr std::array<HorseClipSpec, 6> kHorseClips{{
+constexpr std::array<HorseClipSpec, 6> k_horse_clips{{
     {"idle", Render::GL::GaitType::IDLE, 24U, 24.0F, true, false, false, 0.0F},
     {"walk", Render::GL::GaitType::WALK, 24U, 24.0F, true, true, false, 0.50F},
     {"trot", Render::GL::GaitType::TROT, 16U, 24.0F, true, true, false, 0.85F},
@@ -727,13 +727,13 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
 
 bool bake_horse(const std::filesystem::path &out_dir) {
   bpat::BpatWriter writer(
-      bpat::kSpeciesHorse,
+      bpat::k_species_horse,
       static_cast<std::uint32_t>(Render::Horse::k_horse_bone_count));
 
   Render::GL::HorseDimensions const dims =
       Render::GL::make_horse_dimensions(0U);
 
-  for (auto const &clip : kHorseClips) {
+  for (auto const &clip : k_horse_clips) {
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -763,7 +763,7 @@ bool bake_horse(const std::filesystem::path &out_dir) {
   }
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
-            << " frames, " << kHorseClips.size() << " clips, "
+            << " frames, " << k_horse_clips.size() << " clips, "
             << Render::Horse::k_horse_bone_count << " bones)\n";
 
   Render::Creature::BakeInput mesh_input{};
@@ -773,9 +773,9 @@ bool bake_horse(const std::filesystem::path &out_dir) {
   mesh_input.bind_pose = Render::Horse::horse_bind_palette();
   auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
   snapshot::SnapshotMeshWriter snapshot_writer(
-      bpat::kSpeciesHorse, Render::Creature::CreatureLOD::Minimal,
+      bpat::k_species_horse, Render::Creature::CreatureLOD::Minimal,
       static_cast<std::uint32_t>(source.vertices.size()), source.indices);
-  for (auto const &clip : kHorseClips) {
+  for (auto const &clip : k_horse_clips) {
     snapshot::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -828,7 +828,7 @@ struct ElephantClipSpec {
   float bob_scale{0.0F};
 };
 
-const std::array<ElephantClipSpec, 4> kElephantClips{{
+const std::array<ElephantClipSpec, 4> k_elephant_clips{{
     {"idle", 24U, 24.0F, true, false,
      Render::GL::ElephantGait{2.0F, 0.0F, 0.0F, 0.02F, 0.01F}, false, 0.0F},
     {"walk", 24U, 24.0F, true, true,
@@ -879,13 +879,13 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
 
 bool bake_elephant(const std::filesystem::path &out_dir) {
   bpat::BpatWriter writer(
-      bpat::kSpeciesElephant,
+      bpat::k_species_elephant,
       static_cast<std::uint32_t>(Render::Elephant::k_elephant_bone_count));
 
   Render::GL::ElephantDimensions const dims =
       Render::GL::make_elephant_dimensions(0U);
 
-  for (auto const &clip : kElephantClips) {
+  for (auto const &clip : k_elephant_clips) {
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -915,7 +915,7 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
   }
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
-            << " frames, " << kElephantClips.size() << " clips, "
+            << " frames, " << k_elephant_clips.size() << " clips, "
             << Render::Elephant::k_elephant_bone_count << " bones)\n";
 
   Render::Creature::BakeInput mesh_input{};
@@ -925,9 +925,9 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
   mesh_input.bind_pose = Render::Elephant::elephant_bind_palette();
   auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
   snapshot::SnapshotMeshWriter snapshot_writer(
-      bpat::kSpeciesElephant, Render::Creature::CreatureLOD::Minimal,
+      bpat::k_species_elephant, Render::Creature::CreatureLOD::Minimal,
       static_cast<std::uint32_t>(source.vertices.size()), source.indices);
-  for (auto const &clip : kElephantClips) {
+  for (auto const &clip : k_elephant_clips) {
     snapshot::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -972,24 +972,24 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
 } // namespace
 
 int main(int argc, char **argv) {
-  static_assert(Render::Creature::kHumanoidHoldClip == 3U);
-  static_assert(Render::Creature::kHumanoidHoldBowClip == 4U);
-  static_assert(Render::Creature::kHumanoidAttackSwordAClip == 5U);
-  static_assert(Render::Creature::kHumanoidAttackSpearAClip == 8U);
-  static_assert(Render::Creature::kHumanoidAttackBowClip == 11U);
-  static_assert(Render::Creature::kHumanoidRidingIdleClip == 12U);
-  static_assert(Render::Creature::kHumanoidRidingBowShotClip == 15U);
-  static_assert(Render::Creature::kHumanoidDieInfantryClip == 16U);
-  static_assert(Render::Creature::kHumanoidDeadMountedClip == 19U);
+  static_assert(Render::Creature::k_humanoid_hold_clip == 3U);
+  static_assert(Render::Creature::k_humanoid_hold_bow_clip == 4U);
+  static_assert(Render::Creature::k_humanoid_attack_sword_a_clip == 5U);
+  static_assert(Render::Creature::k_humanoid_attack_spear_a_clip == 8U);
+  static_assert(Render::Creature::k_humanoid_attack_bow_clip == 11U);
+  static_assert(Render::Creature::k_humanoid_riding_idle_clip == 12U);
+  static_assert(Render::Creature::k_humanoid_riding_bow_shot_clip == 15U);
+  static_assert(Render::Creature::k_humanoid_die_infantry_clip == 16U);
+  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 19U);
   std::filesystem::path out_dir = "assets/creatures";
   if (argc >= 2) {
     out_dir = argv[1];
   }
   bool ok = true;
-  ok = bake_humanoid(out_dir, bpat::kSpeciesHumanoid, "humanoid.bpat",
+  ok = bake_humanoid(out_dir, bpat::k_species_humanoid, "humanoid.bpat",
                      HumanoidBakeProfile::Default) &&
        ok;
-  ok = bake_humanoid(out_dir, bpat::kSpeciesHumanoidSword,
+  ok = bake_humanoid(out_dir, bpat::k_species_humanoid_sword,
                      "humanoid_sword.bpat", HumanoidBakeProfile::SwordReady) &&
        ok;
   ok = bake_species_manifest(out_dir, Render::Horse::horse_manifest()) && ok;

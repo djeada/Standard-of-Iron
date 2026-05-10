@@ -182,12 +182,12 @@ auto cloak_fill_role_colors_with_primary(const QVector3D &primary_color,
                                          const HumanoidPalette &palette,
                                          QVector3D *out,
                                          std::size_t max) -> std::uint32_t {
-  if (max < kCloakRoleCount) {
+  if (max < k_cloak_role_count) {
     return 0U;
   }
   out[0] = primary_color;
   out[1] = palette.metal;
-  return kCloakRoleCount;
+  return k_cloak_role_count;
 }
 
 auto cloak_make_static_attachment(

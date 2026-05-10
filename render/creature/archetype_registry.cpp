@@ -19,7 +19,7 @@ constexpr auto
 make_unmapped_clip_table() -> std::array<std::uint16_t, k_state_count> {
   std::array<std::uint16_t, k_state_count> t{};
   for (std::size_t i = 0; i < k_state_count; ++i) {
-    t[i] = ArchetypeDescriptor::kUnmappedClip;
+    t[i] = ArchetypeDescriptor::k_unmapped_clip;
   }
   return t;
 }
@@ -29,7 +29,7 @@ constexpr auto make_variant_count_table_for_clips(
     -> std::array<std::uint8_t, k_state_count> {
   std::array<std::uint8_t, k_state_count> t{};
   for (std::size_t i = 0; i < k_state_count; ++i) {
-    t[i] = (clips[i] != ArchetypeDescriptor::kUnmappedClip) ? 1U : 0U;
+    t[i] = (clips[i] != ArchetypeDescriptor::k_unmapped_clip) ? 1U : 0U;
   }
   return t;
 }
@@ -39,7 +39,7 @@ constexpr auto make_snapshot_table_for_clips(
     -> std::array<bool, k_state_count> {
   std::array<bool, k_state_count> t{};
   for (std::size_t i = 0; i < k_state_count; ++i) {
-    t[i] = (clips[i] != ArchetypeDescriptor::kUnmappedClip);
+    t[i] = (clips[i] != ArchetypeDescriptor::k_unmapped_clip);
   }
   t[static_cast<std::size_t>(AnimationStateId::Die)] = false;
   return t;
@@ -48,23 +48,23 @@ constexpr auto make_snapshot_table_for_clips(
 constexpr auto
 make_humanoid_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
-  t[static_cast<std::size_t>(AnimationStateId::Idle)] = kHumanoidIdleClip;
-  t[static_cast<std::size_t>(AnimationStateId::Walk)] = kHumanoidWalkClip;
-  t[static_cast<std::size_t>(AnimationStateId::Run)] = kHumanoidRunClip;
-  t[static_cast<std::size_t>(AnimationStateId::Hold)] = kHumanoidHoldClip;
+  t[static_cast<std::size_t>(AnimationStateId::Idle)] = k_humanoid_idle_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Walk)] = k_humanoid_walk_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Run)] = k_humanoid_run_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Hold)] = k_humanoid_hold_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] =
-      kHumanoidHoldClip;
+      k_humanoid_hold_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
-      kHumanoidHoldClip;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidDieInfantryClip;
+      k_humanoid_hold_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = k_humanoid_die_infantry_clip;
   t[static_cast<std::size_t>(AnimationStateId::Dead)] =
-      kHumanoidDeadInfantryClip;
+      k_humanoid_dead_infantry_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
-      kHumanoidAttackSwordAClip;
+      k_humanoid_attack_sword_a_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =
-      kHumanoidAttackSpearAClip;
+      k_humanoid_attack_spear_a_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] =
-      kHumanoidAttackBowClip;
+      k_humanoid_attack_bow_clip;
   return t;
 }
 
@@ -105,32 +105,32 @@ make_elephant_clip_table() -> std::array<std::uint16_t, k_state_count> {
 constexpr auto
 make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
-  t[static_cast<std::size_t>(AnimationStateId::Idle)] = kHumanoidRidingIdleClip;
-  t[static_cast<std::size_t>(AnimationStateId::Walk)] = kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Idle)] = k_humanoid_riding_idle_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Walk)] = k_humanoid_riding_idle_clip;
   t[static_cast<std::size_t>(AnimationStateId::Run)] =
-      kHumanoidRidingChargeClip;
-  t[static_cast<std::size_t>(AnimationStateId::Hold)] = kHumanoidRidingIdleClip;
+      k_humanoid_riding_charge_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Hold)] = k_humanoid_riding_idle_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] =
-      kHumanoidAttackSwordAClip;
+      k_humanoid_attack_sword_a_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
-      kHumanoidAttackBowClip;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidDieMountedClip;
+      k_humanoid_attack_bow_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = k_humanoid_die_mounted_clip;
   t[static_cast<std::size_t>(AnimationStateId::Dead)] =
-      kHumanoidDeadMountedClip;
+      k_humanoid_dead_mounted_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
-      kHumanoidAttackSwordAClip;
+      k_humanoid_attack_sword_a_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =
-      kHumanoidAttackSpearAClip;
+      k_humanoid_attack_spear_a_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] =
-      kHumanoidAttackBowClip;
+      k_humanoid_attack_bow_clip;
   t[static_cast<std::size_t>(AnimationStateId::RidingIdle)] =
-      kHumanoidRidingIdleClip;
+      k_humanoid_riding_idle_clip;
   t[static_cast<std::size_t>(AnimationStateId::RidingCharge)] =
-      kHumanoidRidingChargeClip;
+      k_humanoid_riding_charge_clip;
   t[static_cast<std::size_t>(AnimationStateId::RidingReining)] =
-      kHumanoidRidingReiningClip;
+      k_humanoid_riding_reining_clip;
   t[static_cast<std::size_t>(AnimationStateId::RidingBowShot)] =
-      kHumanoidRidingBowShotClip;
+      k_humanoid_riding_bow_shot_clip;
   return t;
 }
 
@@ -213,8 +213,8 @@ void ArchetypeRegistry::seed_baseline() {
 
 auto ArchetypeRegistry::register_archetype(ArchetypeDescriptor desc)
     -> ArchetypeId {
-  if (m_count >= kMaxArchetypes) {
-    return kInvalidArchetype;
+  if (m_count >= k_max_archetypes) {
+    return k_invalid_archetype;
   }
   auto const id = static_cast<ArchetypeId>(m_count);
   desc.id = id;
@@ -229,23 +229,23 @@ auto ArchetypeRegistry::register_unit_archetype(
     std::span<const StaticAttachmentSpec> attachments,
     ArchetypeDescriptor::ExtraRoleColorsFn extra_role_colors_fn)
     -> ArchetypeId {
-  ArchetypeId base = kInvalidArchetype;
+  ArchetypeId base = k_invalid_archetype;
   switch (species) {
   case Render::Creature::Pipeline::CreatureKind::Humanoid:
-    base = kHumanoidBase;
+    base = k_humanoid_base;
     break;
   case Render::Creature::Pipeline::CreatureKind::Horse:
-    base = kHorseBase;
+    base = k_horse_base;
     break;
   case Render::Creature::Pipeline::CreatureKind::Elephant:
-    base = kElephantBase;
+    base = k_elephant_base;
     break;
   case Render::Creature::Pipeline::CreatureKind::Mounted:
-    return kInvalidArchetype;
+    return k_invalid_archetype;
   }
   auto const *base_desc = get(base);
   if (base_desc == nullptr) {
-    return kInvalidArchetype;
+    return k_invalid_archetype;
   }
   ArchetypeDescriptor desc = *base_desc;
   desc.debug_name = debug_name;
@@ -253,7 +253,7 @@ auto ArchetypeRegistry::register_unit_archetype(
   desc.bake_attachments = {};
   desc.bake_attachment_count = 0;
   std::size_t const n = std::min<std::size_t>(
-      attachments.size(), ArchetypeDescriptor::kMaxBakeAttachments);
+      attachments.size(), ArchetypeDescriptor::k_max_bake_attachments);
   for (std::size_t i = 0; i < n; ++i) {
     desc.bake_attachments[i] = attachments[i];
   }
@@ -284,11 +284,11 @@ auto ArchetypeRegistry::bpat_clip(
     ArchetypeId id, AnimationStateId state) const noexcept -> std::uint16_t {
   auto const *d = get(id);
   if (d == nullptr) {
-    return ArchetypeDescriptor::kUnmappedClip;
+    return ArchetypeDescriptor::k_unmapped_clip;
   }
   auto const idx = static_cast<std::size_t>(state);
   if (idx >= k_state_count) {
-    return ArchetypeDescriptor::kUnmappedClip;
+    return ArchetypeDescriptor::k_unmapped_clip;
   }
   return d->bpat_clip[idx];
 }
@@ -310,7 +310,7 @@ auto ArchetypeRegistry::resolve_bpat_clip(
     ArchetypeId id, AnimationStateId state,
     std::uint8_t clip_variant) const noexcept -> std::uint16_t {
   auto const base_clip = bpat_clip(id, state);
-  if (base_clip == ArchetypeDescriptor::kUnmappedClip) {
+  if (base_clip == ArchetypeDescriptor::k_unmapped_clip) {
     return base_clip;
   }
   auto const variant_count = clip_variant_count(id, state);

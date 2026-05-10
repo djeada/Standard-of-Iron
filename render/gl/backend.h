@@ -56,7 +56,7 @@ public:
   void set_viewport(int w, int h) override;
   void set_clear_color(float r, float g, float b, float a) override;
   void set_animation_time(float time) noexcept override {
-    m_animationTime = time;
+    m_animation_time = time;
   }
   void execute(const DrawQueue &queue, const Camera &cam) override;
 
@@ -65,7 +65,7 @@ public:
   }
 
   [[nodiscard]] auto shader(const QString &name) const -> Shader * override {
-    return m_shaderCache ? m_shaderCache->get(name) : nullptr;
+    return m_shader_cache ? m_shader_cache->get(name) : nullptr;
   }
 
   [[nodiscard]] auto supports_shaders() const -> bool override { return true; }
@@ -75,10 +75,10 @@ public:
   void set_shader_quality(ShaderQuality q) noexcept { m_shader_quality = q; }
   auto get_or_load_shader(const QString &name, const QString &vert_path,
                           const QString &frag_path) -> Shader * {
-    if (!m_shaderCache) {
+    if (!m_shader_cache) {
       return nullptr;
     }
-    return m_shaderCache->load(name, vert_path, frag_path);
+    return m_shader_cache->load(name, vert_path, frag_path);
   }
 
   [[nodiscard]] auto banner_mesh() const -> Mesh *;
@@ -86,31 +86,31 @@ public:
   [[nodiscard]] auto banner_shader() const -> Shader *;
 
   [[nodiscard]] auto troop_shadow_shader() const noexcept -> Shader * {
-    return m_shadowShader;
+    return m_shadow_shader;
   }
 
   [[nodiscard]] auto
   healing_beam_pipeline() -> BackendPipelines::HealingBeamPipeline * {
-    return m_healingBeamPipeline.get();
+    return m_healing_beam_pipeline.get();
   }
 
   [[nodiscard]] auto
   healer_aura_pipeline() -> BackendPipelines::HealerAuraPipeline * {
-    return m_healerAuraPipeline.get();
+    return m_healer_aura_pipeline.get();
   }
 
   [[nodiscard]] auto
   combat_dust_pipeline() -> BackendPipelines::CombatDustPipeline * {
-    return m_combatDustPipeline.get();
+    return m_combat_dust_pipeline.get();
   }
 
   [[nodiscard]] auto rain_pipeline() -> BackendPipelines::RainPipeline * {
-    return m_rainPipeline.get();
+    return m_rain_pipeline.get();
   }
 
   [[nodiscard]] auto
   mode_indicator_pipeline() -> BackendPipelines::ModeIndicatorPipeline * {
-    return m_modeIndicatorPipeline.get();
+    return m_mode_indicator_pipeline.get();
   }
 
   void enable_depth_test(bool enable) {
@@ -152,40 +152,40 @@ public:
   }
 
 private:
-  int m_viewportWidth{0};
-  int m_viewportHeight{0};
-  std::array<float, 4> m_clearColor{0.65F, 0.69F, 0.67F, 1.0F};
-  std::unique_ptr<ShaderCache> m_shaderCache;
+  int m_viewport_width{0};
+  int m_viewport_height{0};
+  std::array<float, 4> m_clear_color{0.65F, 0.69F, 0.67F, 1.0F};
+  std::unique_ptr<ShaderCache> m_shader_cache;
   std::unique_ptr<ResourceManager> m_resources;
-  std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinderPipeline;
-  std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetationPipeline;
-  std::unique_ptr<BackendPipelines::TerrainPipeline> m_terrainPipeline;
-  std::unique_ptr<BackendPipelines::CharacterPipeline> m_characterPipeline;
+  std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;
+  std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetation_pipeline;
+  std::unique_ptr<BackendPipelines::TerrainPipeline> m_terrain_pipeline;
+  std::unique_ptr<BackendPipelines::CharacterPipeline> m_character_pipeline;
   std::unique_ptr<BackendPipelines::RiggedCharacterPipeline>
-      m_riggedCharacterPipeline;
-  std::unique_ptr<BackendPipelines::WaterPipeline> m_waterPipeline;
-  std::unique_ptr<BackendPipelines::EffectsPipeline> m_effectsPipeline;
+      m_rigged_character_pipeline;
+  std::unique_ptr<BackendPipelines::WaterPipeline> m_water_pipeline;
+  std::unique_ptr<BackendPipelines::EffectsPipeline> m_effects_pipeline;
   std::unique_ptr<BackendPipelines::PrimitiveBatchPipeline>
-      m_primitiveBatchPipeline;
-  std::unique_ptr<BackendPipelines::BannerPipeline> m_bannerPipeline;
-  std::unique_ptr<BackendPipelines::HealingBeamPipeline> m_healingBeamPipeline;
-  std::unique_ptr<BackendPipelines::HealerAuraPipeline> m_healerAuraPipeline;
-  std::unique_ptr<BackendPipelines::CombatDustPipeline> m_combatDustPipeline;
-  std::unique_ptr<BackendPipelines::RainPipeline> m_rainPipeline;
+      m_primitive_batch_pipeline;
+  std::unique_ptr<BackendPipelines::BannerPipeline> m_banner_pipeline;
+  std::unique_ptr<BackendPipelines::HealingBeamPipeline> m_healing_beam_pipeline;
+  std::unique_ptr<BackendPipelines::HealerAuraPipeline> m_healer_aura_pipeline;
+  std::unique_ptr<BackendPipelines::CombatDustPipeline> m_combat_dust_pipeline;
+  std::unique_ptr<BackendPipelines::RainPipeline> m_rain_pipeline;
   std::unique_ptr<BackendPipelines::ModeIndicatorPipeline>
-      m_modeIndicatorPipeline;
+      m_mode_indicator_pipeline;
   std::unique_ptr<BackendPipelines::MeshInstancingPipeline>
-      m_meshInstancingPipeline;
+      m_mesh_instancing_pipeline;
 
-  Shader *m_basicShader = nullptr;
-  Shader *m_gridShader = nullptr;
-  Shader *m_shadowShader = nullptr;
+  Shader *m_basic_shader = nullptr;
+  Shader *m_grid_shader = nullptr;
+  Shader *m_shadow_shader = nullptr;
 
-  Shader *m_lastBoundShader = nullptr;
-  Texture *m_lastBoundTexture = nullptr;
+  Shader *m_last_bound_shader = nullptr;
+  Texture *m_last_bound_texture = nullptr;
   bool m_depth_testEnabled = true;
-  bool m_blendEnabled = false;
-  float m_animationTime = 0.0F;
+  bool m_blend_enabled = false;
+  float m_animation_time = 0.0F;
 
   Render::FrameBudgetConfig m_frame_budget_config;
   Render::FrameTimeTracker m_frame_tracker;

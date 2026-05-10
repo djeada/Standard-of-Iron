@@ -207,7 +207,7 @@ void ToolBeltRenderer::submit(const ToolBeltConfig &config,
 auto tool_belt_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                                 std::size_t max) -> std::uint32_t {
   (void)palette;
-  if (max < kToolBeltRoleCount) {
+  if (max < k_tool_belt_role_count) {
     return 0U;
   }
   constexpr ToolBeltConfig cfg{};
@@ -216,7 +216,7 @@ auto tool_belt_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
   out[2] = cfg.metal_color;
   out[3] = cfg.metal_color * 0.92F;
   out[4] = cfg.wood_color;
-  return kToolBeltRoleCount;
+  return k_tool_belt_role_count;
 }
 
 auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
@@ -242,7 +242,7 @@ auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
         .socket_bone_index = waist_socket_bone_index,
         .unit_local_pose_at_bind = bind_mat,
     });
-    for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(kToolBeltRoleCount);
+    for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_tool_belt_role_count);
          ++i) {
       spec.palette_role_remap[i] =
           static_cast<std::uint8_t>(base_role_byte + i);

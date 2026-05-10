@@ -1931,19 +1931,19 @@ void Renderer::prewarm_unit_templates(
   auto const &archetypes = Render::Creature::ArchetypeRegistry::instance();
   auto const melee_variant_count =
       std::max(std::max(archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::kHumanoidBase,
+                            Render::Creature::ArchetypeRegistry::k_humanoid_base,
                             Render::Creature::AnimationStateId::AttackSword),
                         archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::kHumanoidBase,
+                            Render::Creature::ArchetypeRegistry::k_humanoid_base,
                             Render::Creature::AnimationStateId::AttackSpear)),
                std::max(archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::kRiderBase,
+                            Render::Creature::ArchetypeRegistry::k_rider_base,
                             Render::Creature::AnimationStateId::AttackSword),
                         archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::kRiderBase,
+                            Render::Creature::ArchetypeRegistry::k_rider_base,
                             Render::Creature::AnimationStateId::AttackSpear)));
   auto const ranged_variant_count = archetypes.clip_variant_count(
-      Render::Creature::ArchetypeRegistry::kHumanoidBase,
+      Render::Creature::ArchetypeRegistry::k_humanoid_base,
       Render::Creature::AnimationStateId::AttackBow);
   add_attack_frames(full_anim_keys, AnimState::AttackMelee, 1,
                     melee_variant_count);

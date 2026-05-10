@@ -751,9 +751,9 @@ auto SaveStorage::create_base_schema(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::migrate_schema(int fromVersion,
+auto SaveStorage::migrate_schema(int from_version,
                                  QString *out_error) const -> bool {
-  int version = fromVersion;
+  int version = from_version;
 
   while (version < k_current_schema_version) {
     switch (version) {

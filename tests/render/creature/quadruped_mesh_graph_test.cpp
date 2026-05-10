@@ -85,14 +85,14 @@ TEST(QuadrupedMeshGraphTest, CompilesAllSupportedNodeKindsToValidPartGraph) {
   tail.sag = -0.04F;
 
   std::vector<MeshNode> nodes;
-  nodes.push_back({"body", topology_storage.body, 1U, kLodAll, 0, barrel});
-  nodes.push_back({"head", topology_storage.head, 1U, kLodAll, 0, head});
-  nodes.push_back({"leg", topology_storage.foot_fl, 2U, kLodAll, 0, leg});
+  nodes.push_back({"body", topology_storage.body, 1U, k_lod_all, 0, barrel});
+  nodes.push_back({"head", topology_storage.head, 1U, k_lod_all, 0, head});
+  nodes.push_back({"leg", topology_storage.foot_fl, 2U, k_lod_all, 0, leg});
   nodes.push_back(
-      {"snout", topology_storage.appendage_tip, 3U, kLodAll, 0, snout});
-  nodes.push_back({"ear", topology_storage.head, 4U, kLodFull, 0, ear});
-  nodes.push_back({"tusk", topology_storage.head, 5U, kLodFull, 0, tusk});
-  nodes.push_back({"tail", topology_storage.body, 6U, kLodAll, 0, tail});
+      {"snout", topology_storage.appendage_tip, 3U, k_lod_all, 0, snout});
+  nodes.push_back({"ear", topology_storage.head, 4U, k_lod_full, 0, ear});
+  nodes.push_back({"tusk", topology_storage.head, 5U, k_lod_full, 0, tusk});
+  nodes.push_back({"tail", topology_storage.body, 6U, k_lod_all, 0, tail});
 
   auto compiled = compile_mesh_graph(nodes);
 
@@ -121,8 +121,8 @@ TEST(QuadrupedMeshGraphTest, BarrelAndLegBoundsFollowAuthoringDimensions) {
   leg.top_radius_z = 0.12F;
 
   std::vector<MeshNode> nodes;
-  nodes.push_back({"body", 0, 1U, kLodAll, 0, barrel});
-  nodes.push_back({"leg", 0, 2U, kLodAll, 0, leg});
+  nodes.push_back({"body", 0, 1U, k_lod_all, 0, barrel});
+  nodes.push_back({"leg", 0, 2U, k_lod_all, 0, leg});
 
   auto compiled = compile_mesh_graph(nodes);
   ASSERT_EQ(compiled.meshes.size(), 2U);
@@ -148,8 +148,8 @@ TEST(QuadrupedMeshGraphTest, CombinedMeshGraphMergesNodesIntoSingleMesh) {
   horn.base_radius = 0.08F;
 
   std::vector<MeshNode> nodes;
-  nodes.push_back({"body", 0, 1U, kLodAll, 0, body});
-  nodes.push_back({"horn", 0, 2U, kLodAll, 0, horn});
+  nodes.push_back({"body", 0, 1U, k_lod_all, 0, body});
+  nodes.push_back({"horn", 0, 2U, k_lod_all, 0, horn});
 
   auto combined = compile_combined_mesh_graph(nodes);
   ASSERT_NE(combined, nullptr);

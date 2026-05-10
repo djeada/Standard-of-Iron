@@ -33,13 +33,13 @@ OliveRenderer::~OliveRenderer() = default;
 
 void OliveRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
                               const Game::Map::BiomeSettings &biome_settings) {
-  m_width = height_map.getWidth();
-  m_height = height_map.getHeight();
-  m_tile_size = height_map.getTileSize();
-  m_height_data = height_map.getHeightData();
+  m_width = height_map.get_width();
+  m_height = height_map.get_height();
+  m_tile_size = height_map.get_tile_size();
+  m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
-  m_noiseSeed = biome_settings.seed;
+  m_noise_seed = biome_settings.seed;
 
   m_olive_state.reset_instances();
 
@@ -181,7 +181,7 @@ void OliveRenderer::generate_olive_instances() {
       }
 
       uint32_t state = hash_coords(
-          x, z, m_noiseSeed ^ 0xCD34EF56U ^ static_cast<uint32_t>(idx));
+          x, z, m_noise_seed ^ 0xCD34EF56U ^ static_cast<uint32_t>(idx));
 
       Game::Map::TerrainType const terrain_type =
           terrain_cache.get_terrain_type_at(sample_x, sample_z);

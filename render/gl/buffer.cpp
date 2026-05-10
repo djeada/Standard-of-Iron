@@ -103,11 +103,11 @@ void VertexArray::add_vertexBuffer(Buffer &buffer,
 
   int offset = 0;
   for (int const size : layout) {
-    glEnableVertexAttribArray(m_currentAttribIndex);
-    glVertexAttribPointer(m_currentAttribIndex, size, GL_FLOAT, GL_FALSE,
+    glEnableVertexAttribArray(m_current_attrib_index);
+    glVertexAttribPointer(m_current_attrib_index, size, GL_FLOAT, GL_FALSE,
                           stride, reinterpret_cast<void *>(offset));
     offset += size * sizeof(float);
-    m_currentAttribIndex++;
+    m_current_attrib_index++;
   }
 }
 

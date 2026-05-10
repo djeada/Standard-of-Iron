@@ -40,11 +40,11 @@ struct SkirmishLoadResult {
   int grid_height = 50;
   float tile_size = 1.0F;
   int max_troops_per_player = 500;
-  VictoryConfig victoryConfig;
-  QVector3D focusPosition;
+  VictoryConfig victory_config;
+  QVector3D focus_position;
   bool has_focus_position = false;
   bool is_spectator_mode = false;
-  RainSettings rainSettings;
+  RainSettings rain_settings;
   std::uint32_t biome_seed = 0;
 };
 
@@ -76,11 +76,11 @@ public:
   void set_rain_renderer(Render::GL::RainRenderer *rain) { m_rain = rain; }
 
   void set_on_owners_updated(OwnersUpdatedCallback callback) {
-    m_onOwnersUpdated = std::move(callback);
+    m_on_owners_updated = std::move(callback);
   }
 
   void set_on_visibility_mask_ready(VisibilityMaskReadyCallback callback) {
-    m_onVisibilityMaskReady = std::move(callback);
+    m_on_visibility_mask_ready = std::move(callback);
   }
 
   auto start(const QString &map_path, const QVariantList &playerConfigs,
@@ -99,8 +99,8 @@ private:
   Render::GL::FogRenderer *m_fog = nullptr;
   Render::GL::MapBoundaryFogRenderer *m_boundary_fog = nullptr;
   Render::GL::RainRenderer *m_rain = nullptr;
-  OwnersUpdatedCallback m_onOwnersUpdated;
-  VisibilityMaskReadyCallback m_onVisibilityMaskReady;
+  OwnersUpdatedCallback m_on_owners_updated;
+  VisibilityMaskReadyCallback m_on_visibility_mask_ready;
 };
 
 } // namespace Game::Map

@@ -633,9 +633,9 @@ public:
 
   void add_river_segments(const std::vector<RiverSegment> &riverSegments);
 
-  [[nodiscard]] auto getHeightAt(float world_x, float world_z) const -> float;
+  [[nodiscard]] auto get_height_at(float world_x, float world_z) const -> float;
 
-  [[nodiscard]] auto getHeightAtGrid(int grid_x, int grid_z) const -> float;
+  [[nodiscard]] auto get_height_at_grid(int grid_x, int grid_z) const -> float;
 
   [[nodiscard]] auto is_walkable(int grid_x, int grid_z) const -> bool;
 
@@ -647,11 +647,11 @@ public:
   [[nodiscard]] auto isRiverOrNearby(int grid_x, int grid_z,
                                      int margin = 1) const -> bool;
 
-  [[nodiscard]] auto getWidth() const -> int { return m_width; }
-  [[nodiscard]] auto getHeight() const -> int { return m_height; }
-  [[nodiscard]] auto getTileSize() const -> float { return m_tile_size; }
+  [[nodiscard]] auto get_width() const -> int { return m_width; }
+  [[nodiscard]] auto get_height() const -> int { return m_height; }
+  [[nodiscard]] auto get_tile_size() const -> float { return m_tile_size; }
 
-  [[nodiscard]] auto getHeightData() const -> const std::vector<float> & {
+  [[nodiscard]] auto get_height_data() const -> const std::vector<float> & {
     return m_heights;
   }
   [[nodiscard]] auto
@@ -659,11 +659,11 @@ public:
     return m_terrain_types;
   }
   [[nodiscard]] auto getHillEntrances() const -> const std::vector<bool> & {
-    return m_hillEntrances;
+    return m_hill_entrances;
   }
   [[nodiscard]] auto
   get_river_segments() const -> const std::vector<RiverSegment> & {
-    return m_riverSegments;
+    return m_river_segments;
   }
 
   void add_bridges(const std::vector<Bridge> &bridges);
@@ -693,13 +693,13 @@ private:
 
   std::vector<float> m_heights;
   std::vector<TerrainType> m_terrain_types;
-  std::vector<bool> m_hillEntrances;
-  std::vector<bool> m_hillWalkable;
-  std::vector<RiverSegment> m_riverSegments;
+  std::vector<bool> m_hill_entrances;
+  std::vector<bool> m_hill_walkable;
+  std::vector<RiverSegment> m_river_segments;
   std::vector<Bridge> m_bridges;
 
-  std::vector<bool> m_onBridge;
-  std::vector<QVector3D> m_bridgeCenters;
+  std::vector<bool> m_on_bridge;
+  std::vector<QVector3D> m_bridge_centers;
 
   [[nodiscard]] auto indexAt(int x, int z) const -> int;
   [[nodiscard]] auto in_bounds(int x, int z) const -> bool;

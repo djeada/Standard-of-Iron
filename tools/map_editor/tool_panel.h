@@ -24,7 +24,7 @@ class ToolPanel : public QWidget {
 public:
   explicit ToolPanel(QWidget *parent = nullptr);
 
-  [[nodiscard]] ToolType currentTool() const { return m_currentTool; }
+  [[nodiscard]] ToolType currentTool() const { return m_current_tool; }
   void clearSelection();
 
 signals:
@@ -37,8 +37,8 @@ private:
   void setupUI();
   void addToolItem(const QString &name, const QString &iconChar, ToolType tool);
 
-  QListWidget *m_toolList = nullptr;
-  ToolType m_currentTool = ToolType::Select;
+  QListWidget *m_tool_list = nullptr;
+  ToolType m_current_tool = ToolType::Select;
 };
 
 } // namespace MapEditor

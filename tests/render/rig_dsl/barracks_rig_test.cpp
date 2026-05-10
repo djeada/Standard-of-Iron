@@ -97,7 +97,7 @@ TEST(BarracksRigTest, PlatformBaseBoxHasExpectedCenterAndScale) {
   ctx.global_alpha = 1.0F;
 
   RecordingSubmitter sub;
-  Render::RigDSL::render_part(kParts[0], ctx, sub);
+  Render::RigDSL::render_part(k_parts[0], ctx, sub);
 
   ASSERT_EQ(sub.records().size(), 1U);
   auto const &m = sub.records()[0].model;
@@ -122,7 +122,7 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
     QVector3D legacy_half_extent;
   };
 
-  const LegacyBox kLegacyBoxes[] = {
+  const LegacyBox k_legacy_boxes[] = {
       {Platform_BaseLow,
        Platform_BaseHigh,
        {0.0F, 0.08F, 0.0F},
@@ -182,11 +182,11 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
     anchors.set(lo, c - h);
     anchors.set(hi, c + h);
   };
-  for (auto const &b : kLegacyBoxes) {
+  for (auto const &b : k_legacy_boxes) {
     set_pair(b.low, b.high, b.legacy_center, b.legacy_half_extent);
   }
 
-  for (auto const &b : kLegacyBoxes) {
+  for (auto const &b : k_legacy_boxes) {
     Render::RigDSL::PartDef part{Render::RigDSL::PartKind::Box,
                                  0,
                                  0xFFU,
@@ -194,7 +194,7 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
                                  Render::RigDSL::PackedColor{0, 0, 0, 255},
                                  b.low,
                                  b.high,
-                                 Render::RigDSL::kInvalidScalar,
+                                 Render::RigDSL::k_invalid_scalar,
                                  1.0F,
                                  1.0F,
                                  1.0F,
@@ -250,7 +250,7 @@ TEST(BarracksRigTest, RigIteratesAllParts) {
   ctx.global_alpha = 1.0F;
 
   RecordingSubmitter sub;
-  Render::RigDSL::render_rig(kRig, ctx, sub);
+  Render::RigDSL::render_rig(k_rig, ctx, sub);
 
-  EXPECT_EQ(sub.records().size(), kRig.part_count);
+  EXPECT_EQ(sub.records().size(), k_rig.part_count);
 }

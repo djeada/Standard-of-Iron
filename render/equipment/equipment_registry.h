@@ -20,7 +20,7 @@ enum class EquipmentCategory {
   HorseDecoration
 };
 using EquipmentHandle = std::uint32_t;
-inline constexpr EquipmentHandle kInvalidEquipmentHandle = 0;
+inline constexpr EquipmentHandle k_invalid_equipment_handle = 0;
 
 class EquipmentRegistry {
 public:

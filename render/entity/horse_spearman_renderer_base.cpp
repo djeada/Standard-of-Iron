@@ -31,23 +31,23 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(
     : m_config(std::move(config)) {
   auto &equipment_registry = EquipmentRegistry::instance();
   m_spear_handle = m_config.spear_handle;
-  if (m_spear_handle == kInvalidEquipmentHandle) {
+  if (m_spear_handle == k_invalid_equipment_handle) {
     m_spear_handle = equipment_registry.resolve_handle(
         EquipmentCategory::Weapon, m_config.spear_equipment_id);
   }
   m_config.has_spear =
-      m_config.has_spear && m_spear_handle != kInvalidEquipmentHandle;
+      m_config.has_spear && m_spear_handle != k_invalid_equipment_handle;
   if (!m_config.has_spear) {
     m_config.spear_equipment_id.clear();
   }
 
   m_shield_handle = m_config.shield_handle;
-  if (m_shield_handle == kInvalidEquipmentHandle) {
+  if (m_shield_handle == k_invalid_equipment_handle) {
     m_shield_handle = equipment_registry.resolve_handle(
         EquipmentCategory::Weapon, m_config.shield_equipment_id);
   }
   m_config.has_shield =
-      m_config.has_shield && m_shield_handle != kInvalidEquipmentHandle;
+      m_config.has_shield && m_shield_handle != k_invalid_equipment_handle;
   if (!m_config.has_shield) {
     m_config.shield_equipment_id.clear();
   }
@@ -114,9 +114,9 @@ void HorseSpearmanRendererBase::build_visual_spec() {
   m_spec.scaling = ProportionScaling{ps.x(), ps.y(), ps.z()};
   m_spec.owned_legacy_slots = LegacySlotMask::AllHumanoid;
   m_spec.archetype_id =
-      (m_config.rider_archetype_id != Render::Creature::kInvalidArchetype)
+      (m_config.rider_archetype_id != Render::Creature::k_invalid_archetype)
           ? m_config.rider_archetype_id
-          : Render::Creature::ArchetypeRegistry::kRiderBase;
+          : Render::Creature::ArchetypeRegistry::k_rider_base;
 }
 
 } // namespace Render::GL

@@ -28,21 +28,21 @@ struct EquipmentLoadoutIds {
 struct ResolvedEquipmentLoadout {
   EquipmentLoadoutIds ids{};
 
-  EquipmentHandle bow_handle{kInvalidEquipmentHandle};
-  EquipmentHandle quiver_handle{kInvalidEquipmentHandle};
-  EquipmentHandle sword_handle{kInvalidEquipmentHandle};
-  EquipmentHandle spear_handle{kInvalidEquipmentHandle};
-  EquipmentHandle shield_handle{kInvalidEquipmentHandle};
-  EquipmentHandle helmet_handle{kInvalidEquipmentHandle};
-  EquipmentHandle armor_handle{kInvalidEquipmentHandle};
-  EquipmentHandle shoulder_handle{kInvalidEquipmentHandle};
-  EquipmentHandle cloak_handle{kInvalidEquipmentHandle};
-  EquipmentHandle horse_bridle_handle{kInvalidEquipmentHandle};
-  EquipmentHandle horse_reins_handle{kInvalidEquipmentHandle};
-  EquipmentHandle horse_blanket_handle{kInvalidEquipmentHandle};
-  EquipmentHandle horse_barding_handle{kInvalidEquipmentHandle};
-  EquipmentHandle horse_crupper_handle{kInvalidEquipmentHandle};
-  EquipmentHandle horse_decoration_handle{kInvalidEquipmentHandle};
+  EquipmentHandle bow_handle{k_invalid_equipment_handle};
+  EquipmentHandle quiver_handle{k_invalid_equipment_handle};
+  EquipmentHandle sword_handle{k_invalid_equipment_handle};
+  EquipmentHandle spear_handle{k_invalid_equipment_handle};
+  EquipmentHandle shield_handle{k_invalid_equipment_handle};
+  EquipmentHandle helmet_handle{k_invalid_equipment_handle};
+  EquipmentHandle armor_handle{k_invalid_equipment_handle};
+  EquipmentHandle shoulder_handle{k_invalid_equipment_handle};
+  EquipmentHandle cloak_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_bridle_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_reins_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_blanket_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_barding_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_crupper_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_decoration_handle{k_invalid_equipment_handle};
 
   bool found{false};
 };

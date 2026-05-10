@@ -80,15 +80,15 @@ auto register_horse_swordsman_rider_archetype()
   static const auto k_helmet_base_role_byte =
       static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
   static const auto k_shield_base_role_byte = static_cast<std::uint8_t>(
-      k_helmet_base_role_byte + Render::GL::kCarthageHeavyHelmetRoleCount);
+      k_helmet_base_role_byte + Render::GL::k_carthage_heavy_helmet_role_count);
   static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(
       k_shield_base_role_byte + Render::GL::k_carthage_shield_role_count);
   static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-      k_shoulder_base_role_byte + Render::GL::kCarthageShoulderCoverRoleCount);
+      k_shoulder_base_role_byte + Render::GL::k_carthage_shoulder_cover_role_count);
   static const auto k_sword_base_role_byte = static_cast<std::uint8_t>(
-      k_armor_base_role_byte + Render::GL::kArmorHeavyCarthageRoleCount);
+      k_armor_base_role_byte + Render::GL::k_armor_heavy_carthage_role_count);
   static const auto k_scabbard_base_role_byte = static_cast<std::uint8_t>(
-      k_sword_base_role_byte + Render::GL::kSwordRoleCount);
+      k_sword_base_role_byte + Render::GL::k_sword_role_count);
   static const auto k_head_bind_matrix =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
           Render::Humanoid::HumanoidBone::Head)];
@@ -217,7 +217,7 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   config.has_shoulder = true;
   config.helmet_offset_moving = 0.03F;
   config.rider_creature_asset_id =
-      Render::Creature::Pipeline::kHumanoidSwordAsset;
+      Render::Creature::Pipeline::k_humanoid_sword_asset;
   config.rider_archetype_id = register_horse_swordsman_rider_archetype();
   static const auto k_mount_archetype =
       register_mount_saddle_archetype("troops/carthage/horse_swordsman/mount",

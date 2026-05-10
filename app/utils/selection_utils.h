@@ -16,21 +16,21 @@ sanitize_selection(Engine::Core::World *world,
     return;
   }
   const auto &sel = selection_system->get_selected_units();
-  std::vector<Engine::Core::EntityID> toKeep;
-  toKeep.reserve(sel.size());
+  std::vector<Engine::Core::EntityID> to_keep;
+  to_keep.reserve(sel.size());
   for (auto id : sel) {
     if (auto *e = world->get_entity(id)) {
       if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
         if (u->health > 0) {
-          toKeep.push_back(id);
+          to_keep.push_back(id);
         }
       }
     }
   }
-  if (toKeep.size() != sel.size() ||
-      !std::equal(toKeep.begin(), toKeep.end(), sel.begin())) {
+  if (to_keep.size() != sel.size() ||
+      !std::equal(to_keep.begin(), to_keep.end(), sel.begin())) {
     selection_system->clear_selection();
-    for (auto id : toKeep) {
+    for (auto id : to_keep) {
       selection_system->select_unit(id);
     }
   }

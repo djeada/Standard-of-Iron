@@ -284,7 +284,7 @@ void WorkApronRenderer::render_pockets(const WorkApronConfig &config,
 auto work_apron_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                                  std::size_t max) -> std::uint32_t {
   (void)palette;
-  if (max < kWorkApronRoleCount) {
+  if (max < k_work_apron_role_count) {
     return 0U;
   }
   constexpr WorkApronConfig cfg{};
@@ -297,7 +297,7 @@ auto work_apron_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
   out[7] = cfg.leather_color * 0.88F;
 
   out[8] = cfg.strap_color;
-  return kWorkApronRoleCount;
+  return k_work_apron_role_count;
 }
 
 auto work_apron_make_static_attachments(std::uint16_t waist_socket_bone_index,

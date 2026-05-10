@@ -77,7 +77,7 @@ TEST(HumanoidSpecTest, ParentIndexIsAlwaysLessThanChild) {
   CreatureSpec const &s = humanoid_creature_spec();
   for (std::size_t i = 0; i < s.topology.bones.size(); ++i) {
     auto const parent = s.topology.bones[i].parent;
-    if (parent == Render::Creature::kInvalidBone) {
+    if (parent == Render::Creature::k_invalid_bone) {
       continue;
     }
     EXPECT_LT(static_cast<std::size_t>(parent), i)
@@ -88,14 +88,14 @@ TEST(HumanoidSpecTest, ParentIndexIsAlwaysLessThanChild) {
 TEST(HumanoidSpecTest, RootHasNoParent) {
   CreatureSpec const &s = humanoid_creature_spec();
   ASSERT_FALSE(s.topology.bones.empty());
-  EXPECT_EQ(s.topology.bones[0].parent, Render::Creature::kInvalidBone);
+  EXPECT_EQ(s.topology.bones[0].parent, Render::Creature::k_invalid_bone);
 }
 
 TEST(HumanoidSpecTest, FindBoneByNameAgreesWithEnumIndex) {
   CreatureSpec const &s = humanoid_creature_spec();
   auto check = [&](HumanoidBone expected, const char *name) {
     auto idx = Render::Creature::find_bone(s.topology, name);
-    ASSERT_NE(idx, Render::Creature::kInvalidBone) << "no bone named " << name;
+    ASSERT_NE(idx, Render::Creature::k_invalid_bone) << "no bone named " << name;
     EXPECT_EQ(idx, static_cast<std::uint16_t>(expected))
         << "mismatch for " << name;
   };

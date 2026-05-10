@@ -495,7 +495,7 @@ TEST(CreatureRenderGraph, PrewarmContextSetsShadowPassIntent) {
 TEST(CreatureRenderGraph, ShadowPassRowsSubmitZeroDrawCalls) {
   CreaturePreparationResult prep;
   Render::Creature::CreatureRenderRequest req{};
-  req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  req.archetype = Render::Creature::ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
   req.lod = CreatureLOD::Full;
   req.pass = RenderPassIntent::Shadow;
@@ -514,7 +514,7 @@ TEST(CreatureRenderGraph, ShadowPassRowsSubmitZeroDrawCalls) {
 TEST(CreatureRenderGraph, MainPassRowsSubmitDrawCalls) {
   CreaturePreparationResult prep;
   Render::Creature::CreatureRenderRequest req{};
-  req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  req.archetype = Render::Creature::ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
   req.lod = CreatureLOD::Full;
   req.pass = RenderPassIntent::Main;

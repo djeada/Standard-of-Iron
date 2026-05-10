@@ -43,7 +43,7 @@ private:
   SpearRenderConfig m_base;
 };
 
-inline constexpr std::size_t kSpearRoleCount = 4;
+inline constexpr std::size_t k_spear_role_count = 4;
 
 auto spear_fill_role_colors(const HumanoidPalette &palette,
                             const SpearRenderConfig &config, QVector3D *out,

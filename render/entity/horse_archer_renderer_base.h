@@ -33,13 +33,13 @@ struct HorseArcherRendererConfig {
   float helmet_offset_moving = 0.0F;
 
   Render::Creature::ArchetypeId rider_archetype_id{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
   Render::Creature::ArchetypeId mount_archetype_id{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
-  EquipmentHandle bow_handle{kInvalidEquipmentHandle};
-  EquipmentHandle quiver_handle{kInvalidEquipmentHandle};
+  EquipmentHandle bow_handle{k_invalid_equipment_handle};
+  EquipmentHandle quiver_handle{k_invalid_equipment_handle};
 };
 
 class HorseArcherRendererBase : public MountedHumanoidRendererBase {
@@ -77,10 +77,10 @@ private:
   void build_visual_spec();
 
   HorseArcherRendererConfig m_config;
-  EquipmentHandle m_bow_handle{kInvalidEquipmentHandle};
-  EquipmentHandle m_quiver_handle{kInvalidEquipmentHandle};
+  EquipmentHandle m_bow_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_quiver_handle{k_invalid_equipment_handle};
   Render::Creature::ArchetypeId m_rider_archetype_with_bow{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
 };

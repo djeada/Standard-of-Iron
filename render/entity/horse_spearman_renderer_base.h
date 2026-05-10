@@ -26,13 +26,13 @@ struct HorseSpearmanRendererConfig {
   float helmet_offset_moving = 0.0F;
 
   Render::Creature::ArchetypeId rider_archetype_id{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
   Render::Creature::ArchetypeId mount_archetype_id{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
-  EquipmentHandle spear_handle{kInvalidEquipmentHandle};
-  EquipmentHandle shield_handle{kInvalidEquipmentHandle};
+  EquipmentHandle spear_handle{k_invalid_equipment_handle};
+  EquipmentHandle shield_handle{k_invalid_equipment_handle};
 };
 
 class HorseSpearmanRendererBase : public MountedHumanoidRendererBase {
@@ -65,8 +65,8 @@ private:
   void build_visual_spec();
 
   HorseSpearmanRendererConfig m_config;
-  EquipmentHandle m_spear_handle{kInvalidEquipmentHandle};
-  EquipmentHandle m_shield_handle{kInvalidEquipmentHandle};
+  EquipmentHandle m_spear_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_shield_handle{k_invalid_equipment_handle};
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
 };
 

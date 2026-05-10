@@ -20,16 +20,16 @@ public:
       -> bool;
   void shutdown();
 
-  void register_track(const std::string &trackId, const std::string &filePath);
+  void register_track(const std::string &track_id, const std::string &file_path);
 
-  void play(const std::string &trackId,
+  void play(const std::string &track_id,
             float volume = AudioConstants::DEFAULT_VOLUME, bool loop = true);
   void stop();
   void pause();
   void resume();
   void set_volume(float volume);
 
-  auto play(const std::string &trackId, float volume, bool loop, int channel,
+  auto play(const std::string &track_id, float volume, bool loop, int channel,
             int fadeMs) -> int;
   void stop(int channel, int fadeMs = AudioConstants::DEFAULT_FADE_OUT_MS);
   void pause(int channel);
@@ -51,7 +51,7 @@ private:
 
   static void ensure_on_gui_thread(const char *where);
 
-  void play_gui(const std::string &trackId, float volume, bool loop,
+  void play_gui(const std::string &track_id, float volume, bool loop,
                 int channel, int fadeMs);
   void stop_gui(int channel, int fadeMs);
   void pause_gui(int channel);

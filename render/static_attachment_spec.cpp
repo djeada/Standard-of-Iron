@@ -6,15 +6,15 @@ namespace Render::Creature {
 
 namespace {
 
-constexpr std::uint64_t kFnvOffset = 1469598103934665603ULL;
-constexpr std::uint64_t kFnvPrime = 1099511628211ULL;
+constexpr std::uint64_t k_fnv_offset = 1469598103934665603ULL;
+constexpr std::uint64_t k_fnv_prime = 1099511628211ULL;
 
 inline auto mix_bytes(std::uint64_t h, const void *bytes,
                       std::size_t n) noexcept -> std::uint64_t {
   const auto *p = static_cast<const unsigned char *>(bytes);
   for (std::size_t i = 0; i < n; ++i) {
     h ^= static_cast<std::uint64_t>(p[i]);
-    h *= kFnvPrime;
+    h *= k_fnv_prime;
   }
   return h;
 }
@@ -23,7 +23,7 @@ inline auto mix_bytes(std::uint64_t h, const void *bytes,
 
 auto static_attachment_hash(const StaticAttachmentSpec &spec) noexcept
     -> std::uint64_t {
-  std::uint64_t h = kFnvOffset;
+  std::uint64_t h = k_fnv_offset;
   const auto arch_bits = reinterpret_cast<std::uintptr_t>(spec.archetype);
   h = mix_bytes(h, &arch_bits, sizeof(arch_bits));
   h = mix_bytes(h, &spec.socket_bone_index, sizeof(spec.socket_bone_index));
@@ -39,7 +39,7 @@ auto static_attachment_hash(const StaticAttachmentSpec &spec) noexcept
 
 auto static_attachments_hash(const StaticAttachmentSpec *attachments,
                              std::size_t count) noexcept -> std::uint64_t {
-  std::uint64_t h = kFnvOffset ^ (count * 0x9E3779B97F4A7C15ULL);
+  std::uint64_t h = k_fnv_offset ^ (count * 0x9E3779B97F4A7C15ULL);
   for (std::size_t i = 0; i < count; ++i) {
     const std::uint64_t entry = static_attachment_hash(attachments[i]);
     h = mix_bytes(h, &entry, sizeof(entry));

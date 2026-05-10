@@ -21,7 +21,7 @@ class ISubmitter;
 
 namespace Render::GL {
 
-inline constexpr std::uint8_t kRenderArchetypeFixedColorSlot =
+inline constexpr std::uint8_t k_render_archetype_fixed_color_slot =
     std::numeric_limits<std::uint8_t>::max();
 
 enum class RenderArchetypeLod : std::uint8_t { Full = 0, Minimal = 1, Count };
@@ -34,7 +34,7 @@ struct RenderArchetypeDraw {
   Texture *texture = nullptr;
   float alpha = 1.0F;
   int material_id = 0;
-  std::uint8_t palette_slot = kRenderArchetypeFixedColorSlot;
+  std::uint8_t palette_slot = k_render_archetype_fixed_color_slot;
 };
 
 struct RenderArchetypeSlice {

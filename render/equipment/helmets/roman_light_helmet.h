@@ -14,7 +14,7 @@ namespace Render::GL {
 
 auto roman_light_helmet_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kRomanLightHelmetRoleCount = 3;
+inline constexpr std::uint32_t k_roman_light_helmet_role_count = 3;
 
 auto roman_light_helmet_fill_role_colors(const HumanoidPalette &palette,
                                          QVector3D *out,

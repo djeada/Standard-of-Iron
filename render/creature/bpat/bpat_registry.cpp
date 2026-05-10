@@ -15,7 +15,7 @@ matrix_from_row_major(std::span<const float> row_major) -> QMatrix4x4 {
   return QMatrix4x4(row_major.data());
 }
 
-constexpr std::array<std::string_view, kSpeciesCount> kSpeciesAssetName{
+constexpr std::array<std::string_view, k_species_count> k_species_asset_name{
     "humanoid.bpat",
     "horse.bpat",
     "elephant.bpat",
@@ -41,7 +41,7 @@ auto find_existing_asset_root(const std::string &asset_root) -> std::string {
   };
 
   for (const auto &candidate : candidates) {
-    if (fs::exists(candidate / kSpeciesAssetName[0])) {
+    if (fs::exists(candidate / k_species_asset_name[0])) {
       return fs::absolute(candidate).lexically_normal().string();
     }
   }
@@ -88,12 +88,12 @@ auto BpatRegistry::load_species(std::uint32_t species_id,
 auto BpatRegistry::load_all(const std::string &asset_root) -> std::size_t {
   const std::string resolved_root = find_existing_asset_root(asset_root);
   std::size_t loaded = 0U;
-  for (std::uint32_t i = 0; i < kSpeciesAssetName.size(); ++i) {
+  for (std::uint32_t i = 0; i < k_species_asset_name.size(); ++i) {
     std::string path = resolved_root;
     if (!path.empty() && path.back() != '/' && path.back() != '\\') {
       path += '/';
     }
-    path.append(kSpeciesAssetName[i]);
+    path.append(k_species_asset_name[i]);
     if (load_species(i, path)) {
       ++loaded;
     }
@@ -116,14 +116,14 @@ auto BpatRegistry::find_clip(std::uint32_t species_id,
                              std::string_view name) const -> std::uint32_t {
   const auto *b = blob(species_id);
   if (b == nullptr) {
-    return kInvalidClip;
+    return k_invalid_clip;
   }
   for (std::uint32_t i = 0; i < b->clip_count(); ++i) {
     if (b->clip(i).name == name) {
       return i;
     }
   }
-  return kInvalidClip;
+  return k_invalid_clip;
 }
 
 auto BpatRegistry::sample_palette(
@@ -145,7 +145,7 @@ auto BpatRegistry::sample_palette(
       std::min<std::uint32_t>(bones, static_cast<std::uint32_t>(out.size()));
   for (std::uint32_t bone = 0; bone < n; ++bone) {
     auto row = b->palette_matrix(global_frame, bone);
-    if (row.size() < kMatrixFloats) {
+    if (row.size() < k_matrix_floats) {
       return bone;
     }
     out[bone] = matrix_from_row_major(row);
@@ -170,7 +170,7 @@ auto BpatRegistry::sample_socket(std::uint32_t species_id,
   std::uint32_t const wrapped = frame_in_clip % c.frame_count;
   std::uint32_t const global_frame = c.frame_offset + wrapped;
   auto row = b->socket_matrix(global_frame, socket_index);
-  if (row.size() < kSocketMatrixFloats) {
+  if (row.size() < k_socket_matrix_floats) {
     return false;
   }
 

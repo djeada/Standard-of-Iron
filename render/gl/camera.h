@@ -55,13 +55,13 @@ public:
   auto world_to_screen(const QVector3D &world, qreal screen_w, qreal screen_h,
                        QPointF &out_screen) const -> bool;
 
-  void set_follow_enabled(bool enable) { m_followEnabled = enable; }
+  void set_follow_enabled(bool enable) { m_follow_enabled = enable; }
   [[nodiscard]] auto is_follow_enabled() const -> bool {
-    return m_followEnabled;
+    return m_follow_enabled;
   }
-  void set_follow_lerp(float alpha) { m_followLerp = alpha; }
-  void set_follow_offset(const QVector3D &off) { m_followOffset = off; }
-  void capture_follow_offset() { m_followOffset = m_position - m_target; }
+  void set_follow_lerp(float alpha) { m_follow_lerp = alpha; }
+  void set_follow_offset(const QVector3D &off) { m_follow_offset = off; }
+  void capture_follow_offset() { m_follow_offset = m_position - m_target; }
   void update_follow(const QVector3D &target_center);
 
   void set_rts_view(const QVector3D &center,
@@ -106,37 +106,37 @@ private:
   QVector3D m_up{0.0F, 1.0F, 0.0F};
   QVector3D m_front{0.0F, 0.0F, -1.0F};
   QVector3D m_right{1.0F, 0.0F, 0.0F};
-  QVector3D m_lastPosition;
+  QVector3D m_last_position;
 
-  bool m_isPerspective = true;
+  bool m_is_perspective = true;
   float m_fov = CameraDefaults::k_default_fov;
   float m_aspect = CameraDefaults::k_default_aspect_ratio;
 
   float m_near_plane = 1.0F;
   float m_far_plane = CameraDefaults::k_default_far_plane;
 
-  float m_orthoLeft = -CameraDefaults::k_default_ortho_size;
-  float m_orthoRight = CameraDefaults::k_default_ortho_size;
-  float m_orthoBottom = -CameraDefaults::k_default_ortho_size;
-  float m_orthoTop = CameraDefaults::k_default_ortho_size;
+  float m_ortho_left = -CameraDefaults::k_default_ortho_size;
+  float m_ortho_right = CameraDefaults::k_default_ortho_size;
+  float m_ortho_bottom = -CameraDefaults::k_default_ortho_size;
+  float m_ortho_top = CameraDefaults::k_default_ortho_size;
 
-  bool m_followEnabled = false;
-  QVector3D m_followOffset{0, 0, 0};
-  float m_followLerp = 0.15F;
+  bool m_follow_enabled = false;
+  QVector3D m_follow_offset{0, 0, 0};
+  float m_follow_lerp = 0.15F;
 
   float m_ground_y = 0.0F;
   float m_min_height = 0.5F;
 
-  float m_pitchMinDeg = CameraDefaults::k_default_pitch_min;
-  float m_pitchMaxDeg = -5.0F;
+  float m_pitch_min_deg = CameraDefaults::k_default_pitch_min;
+  float m_pitch_max_deg = -5.0F;
 
-  bool m_orbitPending = false;
-  float m_orbitStartYaw = 0.0F;
-  float m_orbitStartPitch = 0.0F;
-  float m_orbitTargetYaw = 0.0F;
-  float m_orbitTargetPitch = 0.0F;
-  float m_orbitTime = 0.0F;
-  float m_orbitDuration = 0.12F;
+  bool m_orbit_pending = false;
+  float m_orbit_start_yaw = 0.0F;
+  float m_orbit_start_pitch = 0.0F;
+  float m_orbit_target_yaw = 0.0F;
+  float m_orbit_target_pitch = 0.0F;
+  float m_orbit_time = 0.0F;
+  float m_orbit_duration = 0.12F;
 
   void update_vectors();
 

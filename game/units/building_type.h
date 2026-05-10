@@ -44,7 +44,7 @@ inline auto try_parse_building_type(const QString &value,
 }
 
 inline auto
-buildingTypeFromString(const std::string &str) -> std::optional<BuildingType> {
+building_type_from_string(const std::string &str) -> std::optional<BuildingType> {
   BuildingType result;
   if (try_parse_building_type(QString::fromStdString(str), result)) {
     return result;

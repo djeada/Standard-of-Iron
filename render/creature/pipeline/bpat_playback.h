@@ -9,6 +9,6 @@ struct BpatPlayback {
   std::uint16_t frame_in_clip{0U};
 };
 
-inline constexpr std::uint16_t kInvalidBpatClip = 0xFFFFu;
+inline constexpr std::uint16_t k_invalid_bpat_clip = 0xFFFFu;
 
 } // namespace Render::Creature::Pipeline

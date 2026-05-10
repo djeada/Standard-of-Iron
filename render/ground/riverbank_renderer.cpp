@@ -25,7 +25,7 @@ void RiverbankRenderer::configure(
     const std::vector<Game::Map::RiverSegment> &river_segments,
     const Game::Map::TerrainHeightMap &height_map) {
   m_river_segments = river_segments;
-  m_tile_size = height_map.getTileSize();
+  m_tile_size = height_map.get_tile_size();
   m_visibility_texture.reset();
   m_cached_visibility_version = 0;
   m_visibility_width = 0;

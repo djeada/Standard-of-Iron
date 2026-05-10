@@ -11,7 +11,7 @@ namespace App::Controllers {
 
 class ActionVFX {
 public:
-  static void spawnAttackArrow(Engine::Core::World *world,
+  static void spawn_attack_arrow(Engine::Core::World *world,
                                Engine::Core::EntityID target_id);
 };
 

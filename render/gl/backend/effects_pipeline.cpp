@@ -7,18 +7,18 @@
 namespace Render::GL::BackendPipelines {
 
 auto EffectsPipeline::initialize() -> bool {
-  if (m_shaderCache == nullptr) {
+  if (m_shader_cache == nullptr) {
     qWarning() << "EffectsPipeline::initialize: null ShaderCache";
     return false;
   }
 
-  m_basicShader = m_shaderCache->get("basic");
-  m_gridShader = m_shaderCache->get("grid");
+  m_basic_shader = m_shader_cache->get("basic");
+  m_grid_shader = m_shader_cache->get("grid");
 
-  if (m_basicShader == nullptr) {
+  if (m_basic_shader == nullptr) {
     qWarning() << "EffectsPipeline: Failed to load basic shader";
   }
-  if (m_gridShader == nullptr) {
+  if (m_grid_shader == nullptr) {
     qWarning() << "EffectsPipeline: Failed to load grid shader";
   }
 
@@ -28,8 +28,8 @@ auto EffectsPipeline::initialize() -> bool {
 }
 
 void EffectsPipeline::shutdown() {
-  m_basicShader = nullptr;
-  m_gridShader = nullptr;
+  m_basic_shader = nullptr;
+  m_grid_shader = nullptr;
 }
 
 void EffectsPipeline::cache_uniforms() {
@@ -38,36 +38,36 @@ void EffectsPipeline::cache_uniforms() {
 }
 
 auto EffectsPipeline::is_initialized() const -> bool {
-  return m_basicShader != nullptr && m_gridShader != nullptr;
+  return m_basic_shader != nullptr && m_grid_shader != nullptr;
 }
 
 void EffectsPipeline::cache_basic_uniforms() {
-  if (m_basicShader == nullptr) {
+  if (m_basic_shader == nullptr) {
     return;
   }
 
-  m_basicUniforms.mvp = m_basicShader->optional_uniform_handle("u_mvp");
-  m_basicUniforms.model = m_basicShader->uniform_handle("u_model");
-  m_basicUniforms.view_proj = m_basicShader->uniform_handle("u_viewProj");
-  m_basicUniforms.texture = m_basicShader->uniform_handle("u_texture");
-  m_basicUniforms.use_texture = m_basicShader->uniform_handle("u_useTexture");
-  m_basicUniforms.color = m_basicShader->uniform_handle("u_color");
-  m_basicUniforms.alpha = m_basicShader->uniform_handle("u_alpha");
-  m_basicUniforms.instanced =
-      m_basicShader->optional_uniform_handle("u_instanced");
+  m_basic_uniforms.mvp = m_basic_shader->optional_uniform_handle("u_mvp");
+  m_basic_uniforms.model = m_basic_shader->uniform_handle("u_model");
+  m_basic_uniforms.view_proj = m_basic_shader->uniform_handle("u_viewProj");
+  m_basic_uniforms.texture = m_basic_shader->uniform_handle("u_texture");
+  m_basic_uniforms.use_texture = m_basic_shader->uniform_handle("u_useTexture");
+  m_basic_uniforms.color = m_basic_shader->uniform_handle("u_color");
+  m_basic_uniforms.alpha = m_basic_shader->uniform_handle("u_alpha");
+  m_basic_uniforms.instanced =
+      m_basic_shader->optional_uniform_handle("u_instanced");
 }
 
 void EffectsPipeline::cache_grid_uniforms() {
-  if (m_gridShader == nullptr) {
+  if (m_grid_shader == nullptr) {
     return;
   }
 
-  m_gridUniforms.mvp = m_gridShader->optional_uniform_handle("u_mvp");
-  m_gridUniforms.model = m_gridShader->uniform_handle("u_model");
-  m_gridUniforms.grid_color = m_gridShader->uniform_handle("u_gridColor");
-  m_gridUniforms.line_color = m_gridShader->uniform_handle("u_lineColor");
-  m_gridUniforms.cell_size = m_gridShader->uniform_handle("u_cellSize");
-  m_gridUniforms.thickness = m_gridShader->uniform_handle("u_thickness");
+  m_grid_uniforms.mvp = m_grid_shader->optional_uniform_handle("u_mvp");
+  m_grid_uniforms.model = m_grid_shader->uniform_handle("u_model");
+  m_grid_uniforms.grid_color = m_grid_shader->uniform_handle("u_gridColor");
+  m_grid_uniforms.line_color = m_grid_shader->uniform_handle("u_lineColor");
+  m_grid_uniforms.cell_size = m_grid_shader->uniform_handle("u_cellSize");
+  m_grid_uniforms.thickness = m_grid_shader->uniform_handle("u_thickness");
 }
 
 } // namespace Render::GL::BackendPipelines

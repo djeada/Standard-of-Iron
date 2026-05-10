@@ -149,7 +149,7 @@ TEST(TemplatePrewarmRegression, ShadowPassFiltersPreparedBatch) {
   std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 5; ++i) {
     requests.push_back(make_request(
-        ArchetypeRegistry::kHumanoidBase, CreatureLOD::Full,
+        ArchetypeRegistry::k_humanoid_base, CreatureLOD::Full,
         (i < 3) ? RenderPassIntent::Main : RenderPassIntent::Shadow,
         static_cast<std::uint32_t>(i)));
   }
@@ -163,7 +163,7 @@ TEST(TemplatePrewarmRegression, ShadowPassFiltersPreparedBatch) {
 TEST(TemplatePrewarmRegression, AllShadowPassRowsProduceZeroDraws) {
   std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 10; ++i) {
-    requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
+    requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
                                     CreatureLOD::Full, RenderPassIntent::Shadow,
                                     static_cast<std::uint32_t>(i)));
   }
@@ -325,7 +325,7 @@ TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {
   std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 10; ++i) {
     requests.push_back(
-        make_request(ArchetypeRegistry::kHumanoidBase, CreatureLOD::Full,
+        make_request(ArchetypeRegistry::k_humanoid_base, CreatureLOD::Full,
                      (i % 2 == 0) ? pass_intent_from_ctx(normal_ctx)
                                   : pass_intent_from_ctx(prewarm_ctx),
                      static_cast<std::uint32_t>(i)));
@@ -343,7 +343,7 @@ TEST(TemplatePrewarmRegression, HorsePrewarmProducesZeroDraws) {
 
   PrewarmCountingSubmitter sink;
   auto const request =
-      make_request(ArchetypeRegistry::kHorseBase, CreatureLOD::Full,
+      make_request(ArchetypeRegistry::k_horse_base, CreatureLOD::Full,
                    pass_intent_from_ctx(prewarm_ctx), 123U);
   const auto stats = submit_requests_for_test(
       std::span<const CreatureRenderRequest>(&request, 1u), sink);
@@ -357,7 +357,7 @@ TEST(TemplatePrewarmRegression, ElephantPrewarmProducesZeroDraws) {
 
   PrewarmCountingSubmitter sink;
   auto const request =
-      make_request(ArchetypeRegistry::kElephantBase, CreatureLOD::Full,
+      make_request(ArchetypeRegistry::k_elephant_base, CreatureLOD::Full,
                    pass_intent_from_ctx(prewarm_ctx), 456U);
   const auto stats = submit_requests_for_test(
       std::span<const CreatureRenderRequest>(&request, 1u), sink);
@@ -371,7 +371,7 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
 
   std::vector<CreatureRenderRequest> requests;
   for (auto lod : {CreatureLOD::Full, CreatureLOD::Minimal}) {
-    requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase, lod,
+    requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base, lod,
                                     pass_intent_from_ctx(prewarm_ctx),
                                     static_cast<std::uint32_t>(lod)));
   }
@@ -407,9 +407,9 @@ TEST(TemplatePrewarmRegression, SeedOverrideRespected) {
 
 TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
   std::vector<CreatureRenderRequest> requests;
-  requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
+  requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
                                   CreatureLOD::Full, RenderPassIntent::Shadow));
-  requests.push_back(make_request(ArchetypeRegistry::kHorseBase,
+  requests.push_back(make_request(ArchetypeRegistry::k_horse_base,
                                   CreatureLOD::Minimal,
                                   RenderPassIntent::Shadow));
 
@@ -423,9 +423,9 @@ TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
 
 TEST(TemplatePrewarmRegression, MainRowsIncrementLodStats) {
   std::vector<CreatureRenderRequest> requests;
-  requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
+  requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
                                   CreatureLOD::Full, RenderPassIntent::Main));
-  requests.push_back(make_request(ArchetypeRegistry::kHorseBase,
+  requests.push_back(make_request(ArchetypeRegistry::k_horse_base,
                                   CreatureLOD::Minimal,
                                   RenderPassIntent::Main));
 

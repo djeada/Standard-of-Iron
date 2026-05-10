@@ -152,13 +152,13 @@ void ArmGuardsRenderer::render_arm_guard(const ArmGuardsConfig &config,
 auto arm_guards_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                                  std::size_t max) -> std::uint32_t {
   (void)palette;
-  if (max < kArmGuardsRoleCount) {
+  if (max < k_arm_guards_role_count) {
     return 0U;
   }
   constexpr ArmGuardsConfig cfg{};
   out[0] = cfg.leather_color;
   out[1] = cfg.strap_color;
-  return kArmGuardsRoleCount;
+  return k_arm_guards_role_count;
 }
 
 auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,

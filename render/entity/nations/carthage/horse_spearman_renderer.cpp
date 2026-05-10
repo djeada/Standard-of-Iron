@@ -35,11 +35,11 @@ auto register_horse_spearman_rider_archetype()
   static const auto k_helmet_base_role_byte =
       static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
   static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(
-      k_helmet_base_role_byte + Render::GL::kCarthageHeavyHelmetRoleCount);
+      k_helmet_base_role_byte + Render::GL::k_carthage_heavy_helmet_role_count);
   static const auto k_spear_base_role_byte = static_cast<std::uint8_t>(
-      k_shoulder_base_role_byte + Render::GL::kCarthageShoulderCoverRoleCount);
+      k_shoulder_base_role_byte + Render::GL::k_carthage_shoulder_cover_role_count);
   static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-      k_spear_base_role_byte + Render::GL::kSpearRoleCount);
+      k_spear_base_role_byte + Render::GL::k_spear_role_count);
   static const auto k_head_bind_matrix =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
           Render::Humanoid::HumanoidBone::Head)];

@@ -16,13 +16,13 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 namespace {
-constexpr float kRainColorR = 0.7F;
-constexpr float kRainColorG = 0.75F;
-constexpr float kRainColorB = 0.85F;
+constexpr float k_rain_color_r = 0.7F;
+constexpr float k_rain_color_g = 0.75F;
+constexpr float k_rain_color_b = 0.85F;
 
-constexpr float kSnowColorR = 1.0F;
-constexpr float kSnowColorG = 1.0F;
-constexpr float kSnowColorB = 1.0F;
+constexpr float k_snow_color_r = 1.0F;
+constexpr float k_snow_color_g = 1.0F;
+constexpr float k_snow_color_b = 1.0F;
 
 void clear_gl_errors() {
 #ifndef NDEBUG
@@ -284,10 +284,10 @@ void RainPipeline::render(const Camera &cam, const RainBatchParams &params) {
   QVector3D particle_color;
   if (params.weather_type == Game::Map::WeatherType::Snow) {
 
-    particle_color = QVector3D(kSnowColorR, kSnowColorG, kSnowColorB);
+    particle_color = QVector3D(k_snow_color_r, k_snow_color_g, k_snow_color_b);
   } else {
 
-    particle_color = QVector3D(kRainColorR, kRainColorG, kRainColorB);
+    particle_color = QVector3D(k_rain_color_r, k_rain_color_g, k_rain_color_b);
   }
 
   m_rain_shader->set_uniform(m_uniforms.view_proj, view_proj);

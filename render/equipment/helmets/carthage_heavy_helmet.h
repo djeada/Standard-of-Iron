@@ -29,7 +29,7 @@ auto carthage_heavy_helmet_face_plate_archetype() -> const RenderArchetype &;
 auto carthage_heavy_helmet_crest_archetype() -> const RenderArchetype &;
 auto carthage_heavy_helmet_rivets_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kCarthageHeavyHelmetRoleCount = 4;
+inline constexpr std::uint32_t k_carthage_heavy_helmet_role_count = 4;
 
 auto carthage_heavy_helmet_fill_role_colors(const HumanoidPalette &palette,
                                             QVector3D *out,

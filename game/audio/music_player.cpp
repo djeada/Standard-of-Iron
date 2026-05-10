@@ -86,29 +86,29 @@ void MusicPlayer::shutdown() {
   m_initialized = false;
 }
 
-void MusicPlayer::register_track(const std::string &trackId,
-                                const std::string &filePath) {
+void MusicPlayer::register_track(const std::string &track_id,
+                                const std::string &file_path) {
 
   if ((QCoreApplication::instance() != nullptr) &&
       QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
-        this, [this, trackId, filePath]() { register_track(trackId, filePath); },
+        this, [this, track_id, file_path]() { register_track(track_id, file_path); },
         Qt::QueuedConnection);
     return;
   }
   ensure_on_gui_thread("MusicPlayer::register_track");
 
-  QFileInfo const fi(QString::fromStdString(filePath));
+  QFileInfo const fi(QString::fromStdString(file_path));
   if (!fi.exists()) {
     qWarning() << "MusicPlayer: Missing asset"
-               << QString::fromStdString(trackId) << "->"
+               << QString::fromStdString(track_id) << "->"
                << fi.absoluteFilePath();
     return;
   }
-  m_tracks[trackId] = fi.absoluteFilePath();
+  m_tracks[track_id] = fi.absoluteFilePath();
 
   if (m_backend != nullptr) {
-    if (!m_backend->predecode(QString::fromStdString(trackId),
+    if (!m_backend->predecode(QString::fromStdString(track_id),
                               fi.absoluteFilePath())) {
       qWarning() << "MusicPlayer: predecode failed for"
                  << fi.absoluteFilePath();
@@ -253,7 +253,7 @@ void MusicPlayer::play_gui(const std::string &id, float vol, bool loop, int ch,
   }
   auto it = m_tracks.find(id);
   if (it == m_tracks.end()) {
-    qWarning() << "Unknown trackId:" << QString::fromStdString(id);
+    qWarning() << "Unknown track_id:" << QString::fromStdString(id);
     return;
   }
   m_backend->play(ch, QString::fromStdString(id), vol, loop, fadeMs);

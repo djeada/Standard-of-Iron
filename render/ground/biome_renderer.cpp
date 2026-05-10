@@ -53,13 +53,13 @@ BiomeRenderer::~BiomeRenderer() = default;
 
 void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
                               const Game::Map::BiomeSettings &biome_settings) {
-  m_width = height_map.getWidth();
-  m_height = height_map.getHeight();
-  m_tile_size = height_map.getTileSize();
-  m_height_data = height_map.getHeightData();
+  m_width = height_map.get_width();
+  m_height = height_map.get_height();
+  m_tile_size = height_map.get_tile_size();
+  m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
-  m_noiseSeed = biome_settings.seed;
+  m_noise_seed = biome_settings.seed;
 
   m_grass_state.reset_instances();
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
@@ -210,9 +210,9 @@ void BiomeRenderer::generate_grass_instances() {
     float const slope = terrain_cache.get_slope_at(ix, iz);
 
     float const lush_noise =
-        value_noise(world_x * 0.06F, world_z * 0.06F, m_noiseSeed ^ 0x9235U);
+        value_noise(world_x * 0.06F, world_z * 0.06F, m_noise_seed ^ 0x9235U);
     float const dryness_noise =
-        value_noise(world_x * 0.12F, world_z * 0.12F, m_noiseSeed ^ 0x47d2U);
+        value_noise(world_x * 0.12F, world_z * 0.12F, m_noise_seed ^ 0x47d2U);
     float const dryness =
         std::clamp(dryness_noise * 0.6F + slope * 0.4F, 0.0F, 1.0F);
     QVector3D const lush_mix =
@@ -335,7 +335,7 @@ void BiomeRenderer::generate_grass_instances() {
 
       float const avg_slope = chunk_slope_sum / float(sample_count);
 
-      uint32_t state = hash_coords(chunk_x, chunk_z, m_noiseSeed ^ 0xC915872BU);
+      uint32_t state = hash_coords(chunk_x, chunk_z, m_noise_seed ^ 0xC915872BU);
       float const slope_penalty =
           1.0F - std::clamp(avg_slope * 1.35F, 0.0F, 0.75F);
 
@@ -433,7 +433,7 @@ void BiomeRenderer::generate_grass_instances() {
 
         int const idx = z * m_width + x;
         uint32_t state = hash_coords(
-            x, z, m_noiseSeed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
+            x, z, m_noise_seed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
         int base_count = static_cast<int>(std::floor(background_density));
         float const frac = background_density - float(base_count);
         if (rand_01(state) < frac) {

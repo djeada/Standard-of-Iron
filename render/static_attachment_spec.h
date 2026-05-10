@@ -16,7 +16,7 @@ struct RenderArchetype;
 namespace Render::Creature {
 
 struct StaticAttachmentSpec {
-  static constexpr std::size_t kPaletteSlotCount = 8;
+  static constexpr std::size_t k_palette_slot_count = 8;
 
   const Render::GL::RenderArchetype *archetype{nullptr};
 
@@ -24,7 +24,7 @@ struct StaticAttachmentSpec {
 
   QMatrix4x4 local_offset{};
 
-  std::array<std::uint8_t, kPaletteSlotCount> palette_role_remap{};
+  std::array<std::uint8_t, k_palette_slot_count> palette_role_remap{};
 
   std::uint8_t override_color_role{0};
 

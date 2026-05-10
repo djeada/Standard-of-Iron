@@ -15,25 +15,25 @@ using Render::Creature::Pipeline::TemporalSkipParams;
 
 namespace {
 
-constexpr LodDistanceThresholds kDefaults{12.0F, 40.0F};
+constexpr LodDistanceThresholds k_defaults{12.0F, 40.0F};
 
 auto make_inputs(float distance) -> CreatureLodDecisionInputs {
   CreatureLodDecisionInputs in{};
   in.has_camera = true;
   in.distance = distance;
-  in.thresholds = kDefaults;
+  in.thresholds = k_defaults;
   return in;
 }
 
 } // namespace
 
 TEST(CreatureLodDecision, SelectDistanceLodMatchesThresholds) {
-  EXPECT_EQ(select_distance_lod(0.0F, kDefaults), CreatureLOD::Full);
-  EXPECT_EQ(select_distance_lod(11.99F, kDefaults), CreatureLOD::Full);
-  EXPECT_EQ(select_distance_lod(12.0F, kDefaults), CreatureLOD::Minimal);
-  EXPECT_EQ(select_distance_lod(39.99F, kDefaults), CreatureLOD::Minimal);
-  EXPECT_EQ(select_distance_lod(40.0F, kDefaults), CreatureLOD::Billboard);
-  EXPECT_EQ(select_distance_lod(1000.0F, kDefaults), CreatureLOD::Billboard);
+  EXPECT_EQ(select_distance_lod(0.0F, k_defaults), CreatureLOD::Full);
+  EXPECT_EQ(select_distance_lod(11.99F, k_defaults), CreatureLOD::Full);
+  EXPECT_EQ(select_distance_lod(12.0F, k_defaults), CreatureLOD::Minimal);
+  EXPECT_EQ(select_distance_lod(39.99F, k_defaults), CreatureLOD::Minimal);
+  EXPECT_EQ(select_distance_lod(40.0F, k_defaults), CreatureLOD::Billboard);
+  EXPECT_EQ(select_distance_lod(1000.0F, k_defaults), CreatureLOD::Billboard);
 }
 
 TEST(CreatureLodDecision, ForcedLodBypassesEverything) {

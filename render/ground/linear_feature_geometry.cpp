@@ -28,10 +28,10 @@ auto value_noise(float x, float y) -> float {
 
 auto sample_height_clamped(const Game::Map::TerrainHeightMap &height_map,
                            float world_x, float world_z) -> float {
-  const auto &heights = height_map.getHeightData();
-  const int grid_width = height_map.getWidth();
-  const int grid_height = height_map.getHeight();
-  const float tile_size = height_map.getTileSize();
+  const auto &heights = height_map.get_height_data();
+  const int grid_width = height_map.get_width();
+  const int grid_height = height_map.get_height();
+  const float tile_size = height_map.get_tile_size();
 
   if (heights.empty() || grid_width <= 0 || grid_height <= 0) {
     return 0.0F;
@@ -373,7 +373,7 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
   dir.normalize();
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
   float const half_width = segment.width * 0.5F;
-  float const tile_size = height_map.getTileSize();
+  float const tile_size = height_map.get_tile_size();
 
   constexpr int k_rings_per_side = 5;
   constexpr int k_total_rings = k_rings_per_side * 2;

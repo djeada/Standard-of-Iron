@@ -31,7 +31,7 @@ auto carthage_light_helmet_crest_archetype(bool high_detail)
     -> const RenderArchetype &;
 auto carthage_light_helmet_rivets_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kCarthageLightHelmetRoleCount = 4;
+inline constexpr std::uint32_t k_carthage_light_helmet_role_count = 4;
 
 auto carthage_light_helmet_fill_role_colors(const HumanoidPalette &palette,
                                             QVector3D *out,

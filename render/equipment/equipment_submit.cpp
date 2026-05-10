@@ -10,7 +10,7 @@ void append_equipment_archetype(
     EquipmentBatch &batch, const RenderArchetype &archetype,
     const QMatrix4x4 &world, std::span<const QVector3D> palette,
     Texture *default_texture, float alpha_multiplier, RenderArchetypeLod lod) {
-  assert(palette.size() <= kEquipmentArchetypePaletteCapacity);
+  assert(palette.size() <= k_equipment_archetype_palette_capacity);
 
   EquipmentArchetypePrim prim;
   prim.archetype = &archetype;

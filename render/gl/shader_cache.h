@@ -22,9 +22,9 @@ public:
       return it->second.get();
     }
     const QString resolved_vert =
-        Utils::Resources::resolveResourcePath(vert_path);
+        Utils::Resources::resolve_resource_path(vert_path);
     const QString resolved_frag =
-        Utils::Resources::resolveResourcePath(frag_path);
+        Utils::Resources::resolve_resource_path(frag_path);
     auto sh = std::make_unique<Shader>();
     sh->set_debug_name(name);
     if (!sh->load_from_files(resolved_vert, resolved_frag)) {
@@ -44,9 +44,9 @@ public:
   auto get_or_load(const QString &vert_path,
                    const QString &frag_path) -> Shader * {
     const QString resolved_vert =
-        Utils::Resources::resolveResourcePath(vert_path);
+        Utils::Resources::resolve_resource_path(vert_path);
     const QString resolved_frag =
-        Utils::Resources::resolveResourcePath(frag_path);
+        Utils::Resources::resolve_resource_path(frag_path);
     auto key = resolved_vert + "|" + resolved_frag;
     auto it = m_by_path.find(key);
     if (it != m_by_path.end()) {
@@ -67,7 +67,7 @@ public:
   void initialize_defaults() {
     static const QString shader_base = QStringLiteral(":/assets/shaders/");
     auto resolve = [](const QString &path) {
-      return Utils::Resources::resolveResourcePath(path);
+      return Utils::Resources::resolve_resource_path(path);
     };
 
     const QString basic_vert =
