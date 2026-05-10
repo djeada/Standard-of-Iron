@@ -42,7 +42,7 @@ private:
 
 auto carthage_shoulder_cover_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kCarthageShoulderCoverRoleCount = 2;
+inline constexpr std::uint32_t k_carthage_shoulder_cover_role_count = 2;
 
 auto carthage_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
                                               QVector3D *out,

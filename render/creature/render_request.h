@@ -40,19 +40,19 @@ enum class AnimationStateId : std::uint8_t {
 }
 
 using ArchetypeId = std::uint16_t;
-inline constexpr ArchetypeId kInvalidArchetype =
+inline constexpr ArchetypeId k_invalid_archetype =
     static_cast<ArchetypeId>(0xFFFFu);
 
 using VariantId = std::uint16_t;
-inline constexpr VariantId kCanonicalVariant = static_cast<VariantId>(0u);
+inline constexpr VariantId k_canonical_variant = static_cast<VariantId>(0u);
 using WorldKey = std::uint64_t;
 using CreatureRenderAssetHandleId = std::uint16_t;
-inline constexpr CreatureRenderAssetHandleId kInvalidCreatureRenderAssetHandle =
+inline constexpr CreatureRenderAssetHandleId k_invalid_creature_render_asset_handle =
     static_cast<CreatureRenderAssetHandleId>(0xFFFFu);
 
 struct CreatureRenderRequest {
-  ArchetypeId archetype{kInvalidArchetype};
-  VariantId variant{kCanonicalVariant};
+  ArchetypeId archetype{k_invalid_archetype};
+  VariantId variant{k_canonical_variant};
   AnimationStateId state{AnimationStateId::Idle};
 
   float phase{0.0F};
@@ -63,7 +63,7 @@ struct CreatureRenderRequest {
   std::uint32_t seed{0};
   std::uint16_t creature_asset_id{0xFFFFu};
   CreatureRenderAssetHandleId render_asset_handle{
-      kInvalidCreatureRenderAssetHandle};
+      k_invalid_creature_render_asset_handle};
   WorldKey world_key{0};
 
   Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
@@ -71,8 +71,8 @@ struct CreatureRenderRequest {
       Render::Creature::Pipeline::RenderPassIntent::Main};
   bool world_already_grounded{false};
 
-  static constexpr std::size_t kRoleColorCapacity = 32;
-  std::array<QVector3D, kRoleColorCapacity> role_colors{};
+  static constexpr std::size_t k_role_color_capacity = 32;
+  std::array<QVector3D, k_role_color_capacity> role_colors{};
   std::uint8_t clip_variant{0};
   std::uint8_t role_color_count{0};
   QVector3D base_color{0.5F, 0.5F, 0.5F};

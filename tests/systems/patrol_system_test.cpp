@@ -7,7 +7,7 @@
 using namespace Engine::Core;
 using namespace Game::Systems;
 
-constexpr float kPatrolDetectionRangeSq = 25.0F;
+constexpr float k_patrol_detection_range_sq = 25.0F;
 
 class PatrolSystemTest : public ::testing::Test {
 protected:

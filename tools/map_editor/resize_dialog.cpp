@@ -19,15 +19,15 @@ void ResizeDialog::setupUI(int currentWidth, int currentHeight) {
 
   auto *formLayout = new QFormLayout();
 
-  m_widthSpinBox = new QSpinBox(this);
-  m_widthSpinBox->setRange(10, 1000);
-  m_widthSpinBox->setValue(currentWidth);
-  formLayout->addRow("Width:", m_widthSpinBox);
+  m_width_spin_box = new QSpinBox(this);
+  m_width_spin_box->setRange(10, 1000);
+  m_width_spin_box->setValue(currentWidth);
+  formLayout->addRow("Width:", m_width_spin_box);
 
-  m_heightSpinBox = new QSpinBox(this);
-  m_heightSpinBox->setRange(10, 1000);
-  m_heightSpinBox->setValue(currentHeight);
-  formLayout->addRow("Height:", m_heightSpinBox);
+  m_height_spin_box = new QSpinBox(this);
+  m_height_spin_box->setRange(10, 1000);
+  m_height_spin_box->setValue(currentHeight);
+  formLayout->addRow("Height:", m_height_spin_box);
 
   layout->addLayout(formLayout);
 
@@ -45,8 +45,8 @@ void ResizeDialog::setupUI(int currentWidth, int currentHeight) {
   connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
 }
 
-int ResizeDialog::newWidth() const { return m_widthSpinBox->value(); }
+int ResizeDialog::newWidth() const { return m_width_spin_box->value(); }
 
-int ResizeDialog::newHeight() const { return m_heightSpinBox->value(); }
+int ResizeDialog::newHeight() const { return m_height_spin_box->value(); }
 
 } // namespace MapEditor

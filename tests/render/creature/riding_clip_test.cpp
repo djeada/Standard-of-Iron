@@ -16,8 +16,8 @@ TEST(RidingClip, HumanoidBpatHasAtLeast16Clips) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
-  auto const *blob = reg.blob(kSpeciesHumanoid);
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  auto const *blob = reg.blob(k_species_humanoid);
   ASSERT_NE(blob, nullptr);
   EXPECT_GE(blob->clip_count(), 16U)
       << "humanoid.bpat must contain riding clips (re-run bpat_baker)";
@@ -29,23 +29,23 @@ TEST(RidingClip, RidingIdleClipDiffersFromInfantryIdle) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
-  auto const *blob = reg.blob(kSpeciesHumanoid);
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  auto const *blob = reg.blob(k_species_humanoid);
   ASSERT_NE(blob, nullptr);
   ASSERT_GT(blob->clip_count(), static_cast<std::uint32_t>(
-                                    Render::Creature::kHumanoidRidingIdleClip));
+                                    Render::Creature::k_humanoid_riding_idle_clip));
 
-  constexpr std::uint16_t kRidingIdleClip =
-      Render::Creature::kHumanoidRidingIdleClip;
-  constexpr std::uint16_t kIdleClip = Render::Creature::kHumanoidIdleClip;
+  constexpr std::uint16_t k_riding_idle_clip =
+      Render::Creature::k_humanoid_riding_idle_clip;
+  constexpr std::uint16_t k_idle_clip = Render::Creature::k_humanoid_idle_clip;
 
   std::array<QMatrix4x4, 64> riding_palette{};
-  auto const n = reg.sample_palette(kSpeciesHumanoid, kRidingIdleClip, 0U,
+  auto const n = reg.sample_palette(k_species_humanoid, k_riding_idle_clip, 0U,
                                     std::span<QMatrix4x4>(riding_palette));
   ASSERT_GT(n, 0U);
 
   std::array<QMatrix4x4, 64> idle_palette{};
-  reg.sample_palette(kSpeciesHumanoid, kIdleClip, 0U,
+  reg.sample_palette(k_species_humanoid, k_idle_clip, 0U,
                      std::span<QMatrix4x4>(idle_palette));
 
   bool any_different = false;
@@ -65,16 +65,16 @@ TEST(RidingClip, RidingChargeClipIsNonLooping) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
-  auto const *blob = reg.blob(kSpeciesHumanoid);
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  auto const *blob = reg.blob(k_species_humanoid);
   ASSERT_NE(blob, nullptr);
   ASSERT_GT(
       blob->clip_count(),
-      static_cast<std::uint32_t>(Render::Creature::kHumanoidRidingChargeClip));
+      static_cast<std::uint32_t>(Render::Creature::k_humanoid_riding_charge_clip));
 
-  constexpr std::uint16_t kRidingChargeClip =
-      Render::Creature::kHumanoidRidingChargeClip;
-  auto const clip = blob->clip(kRidingChargeClip);
+  constexpr std::uint16_t k_riding_charge_clip =
+      Render::Creature::k_humanoid_riding_charge_clip;
+  auto const clip = blob->clip(k_riding_charge_clip);
   EXPECT_FALSE(clip.loops) << "riding_charge must be non-looping";
   EXPECT_GT(clip.frame_count, 0U);
 }

@@ -13,7 +13,7 @@ namespace Render::GL {
 
 auto carthage_saddle_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kCarthageSaddleRoleCount = 1;
+inline constexpr std::uint32_t k_carthage_saddle_role_count = 1;
 
 auto carthage_saddle_fill_role_colors(const HorseVariant &variant,
                                       QVector3D *out,

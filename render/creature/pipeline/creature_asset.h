@@ -29,22 +29,22 @@ namespace Render::Creature::Pipeline {
 
 struct CreatureVisualDefinition;
 
-inline constexpr std::size_t kMaxCreatureBones = 24;
-inline constexpr std::size_t kMaxAttachmentSetSpecs = 16;
+inline constexpr std::size_t k_max_creature_bones = 24;
+inline constexpr std::size_t k_max_attachment_set_specs = 16;
 using AttachmentSetId = std::uint32_t;
-inline constexpr AttachmentSetId kInvalidAttachmentSetId = 0U;
+inline constexpr AttachmentSetId k_invalid_attachment_set_id = 0U;
 
 using BindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
 using FillRoleColorsFn = std::uint32_t (*)(const void *variant, QVector3D *out,
                                            std::size_t max_roles);
 
-inline constexpr CreatureAssetId kHumanoidAsset = 0;
-inline constexpr CreatureAssetId kHorseAsset = 1;
-inline constexpr CreatureAssetId kElephantAsset = 2;
-inline constexpr CreatureAssetId kHumanoidSwordAsset = 3;
+inline constexpr CreatureAssetId k_humanoid_asset = 0;
+inline constexpr CreatureAssetId k_horse_asset = 1;
+inline constexpr CreatureAssetId k_elephant_asset = 2;
+inline constexpr CreatureAssetId k_humanoid_sword_asset = 3;
 
 struct CreatureAsset {
-  CreatureAssetId id{kInvalidCreatureAsset};
+  CreatureAssetId id{k_invalid_creature_asset};
   std::string_view debug_name{};
   CreatureKind kind{CreatureKind::Humanoid};
   std::uint32_t bpat_species_id{0};
@@ -69,13 +69,13 @@ struct CreatureClipPlaybackDesc {
 
 struct CreatureRenderAssetHandle {
   Render::Creature::CreatureRenderAssetHandleId id{
-      Render::Creature::kInvalidCreatureRenderAssetHandle};
+      Render::Creature::k_invalid_creature_render_asset_handle};
   const CreatureAsset *asset{nullptr};
   const Render::Creature::ArchetypeDescriptor *archetype{nullptr};
   std::span<const QMatrix4x4> bind_palette{};
   std::span<const Render::Creature::StaticAttachmentSpec> attachments{};
   std::uint64_t attachments_hash{0U};
-  AttachmentSetId attachment_set_id{kInvalidAttachmentSetId};
+  AttachmentSetId attachment_set_id{k_invalid_attachment_set_id};
   bool has_static_attachments{false};
   bool requires_prebaked_minimal_snapshot{false};
   std::array<CreatureClipPlaybackDesc,
@@ -103,9 +103,9 @@ public:
 
 private:
   struct Key {
-    CreatureAssetId asset_id{kInvalidCreatureAsset};
+    CreatureAssetId asset_id{k_invalid_creature_asset};
     Render::Creature::ArchetypeId archetype_id{
-        Render::Creature::kInvalidArchetype};
+        Render::Creature::k_invalid_archetype};
 
     auto operator==(const Key &other) const noexcept -> bool {
       return asset_id == other.asset_id && archetype_id == other.archetype_id;
@@ -123,10 +123,10 @@ private:
 
   struct AttachmentSetRecord {
     std::uint64_t hash{0U};
-    std::array<Render::Creature::StaticAttachmentSpec, kMaxAttachmentSetSpecs>
+    std::array<Render::Creature::StaticAttachmentSpec, k_max_attachment_set_specs>
         attachments{};
     std::uint8_t attachment_count{0U};
-    AttachmentSetId id{kInvalidAttachmentSetId};
+    AttachmentSetId id{k_invalid_attachment_set_id};
   };
 
   [[nodiscard]] auto acquire_attachment_set_id(

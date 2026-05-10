@@ -33,7 +33,7 @@ auto LevelLoader::loadFromAssets(
   auto &owners = Game::Systems::OwnerRegistry::instance();
 
   Game::Visuals::VisualCatalog visual_catalog;
-  const QString visuals_path = Utils::Resources::resolveResourcePath(
+  const QString visuals_path = Utils::Resources::resolve_resource_path(
       QStringLiteral(":/assets/visuals/unit_visuals.json"));
   bool visuals_loaded = false;
   if (QFile::exists(visuals_path)) {
@@ -53,14 +53,14 @@ auto LevelLoader::loadFromAssets(
   Game::Map::MapTransformer::setFactoryRegistry(unit_reg);
 
   const QString resolved_map_path =
-      Utils::Resources::resolveResourcePath(map_path);
+      Utils::Resources::resolve_resource_path(map_path);
 
   Game::Map::MapDefinition def;
   QString err;
   if (Game::Map::MapLoader::load_from_json_file(resolved_map_path, def, &err)) {
     res.ok = true;
     res.map_name = def.name;
-    res.rainSettings = def.rain;
+    res.rain_settings = def.rain;
     res.biome_seed = def.biome.seed;
 
     Game::Map::TerrainService::instance().initialize(def);
@@ -73,7 +73,7 @@ auto LevelLoader::loadFromAssets(
     res.grid_height = def.grid.height;
     res.tile_size = def.grid.tile_size;
     res.max_troops_per_player = def.max_troops_per_player;
-    res.victoryConfig = def.victory;
+    res.victory_config = def.victory;
 
     const Game::Visuals::VisualCatalog *catalog_ptr =
         visuals_loaded ? &visual_catalog : nullptr;
@@ -84,7 +84,7 @@ auto LevelLoader::loadFromAssets(
     } else {
 
       auto &nationRegistry = Game::Systems::NationRegistry::instance();
-      auto reg = Game::Map::MapTransformer::getFactoryRegistry();
+      auto reg = Game::Map::MapTransformer::get_factory_registry();
       if (reg) {
         Game::Units::SpawnParams sp;
         sp.position = QVector3D(0.0F, 0.0F, 0.0F);
@@ -119,7 +119,7 @@ auto LevelLoader::loadFromAssets(
       }
       if (!has_barracks) {
         auto &nationRegistry = Game::Systems::NationRegistry::instance();
-        auto reg2 = Game::Map::MapTransformer::getFactoryRegistry();
+        auto reg2 = Game::Map::MapTransformer::get_factory_registry();
         if (reg2) {
           Game::Units::SpawnParams sp;
           sp.position = QVector3D(-4.0F, 0.0F, -3.0F);
@@ -152,7 +152,7 @@ auto LevelLoader::loadFromAssets(
     res.tile_size = 1.0F;
 
     auto &nationRegistry = Game::Systems::NationRegistry::instance();
-    auto reg = Game::Map::MapTransformer::getFactoryRegistry();
+    auto reg = Game::Map::MapTransformer::get_factory_registry();
     if (reg) {
       Game::Units::SpawnParams sp;
       sp.position = QVector3D(0.0F, 0.0F, 0.0F);

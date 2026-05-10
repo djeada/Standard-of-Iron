@@ -47,8 +47,8 @@ struct StructureElement {
   QString type;
   float x = 0.0F;
   float z = 0.0F;
-  int playerId = 0;
-  int maxPopulation = 150;
+  int player_id = 0;
+  int max_population = 150;
   QString nation;
   QJsonObject extraFields;
 };
@@ -56,7 +56,7 @@ struct StructureElement {
 struct GridSettings {
   int width = 100;
   int height = 100;
-  float tileSize = 1.0F;
+  float tile_size = 1.0F;
 };
 
 class MapData;
@@ -98,7 +98,7 @@ public:
   void removeFirecamp(int index);
 
   [[nodiscard]] const QVector<LinearElement> &linearElements() const {
-    return m_linearElements;
+    return m_linear_elements;
   }
   void addLinearElement(const LinearElement &element);
   void updateLinearElement(int index, const LinearElement &element);
@@ -114,8 +114,8 @@ public:
   void executeCommand(std::unique_ptr<Command> cmd);
   void undo();
   void redo();
-  [[nodiscard]] bool canUndo() const { return !m_undoStack.empty(); }
-  [[nodiscard]] bool canRedo() const { return !m_redoStack.empty(); }
+  [[nodiscard]] bool canUndo() const { return !m_undo_stack.empty(); }
+  [[nodiscard]] bool canRedo() const { return !m_redo_stack.empty(); }
 
   void clear();
 
@@ -132,7 +132,7 @@ private:
   GridSettings m_grid;
   QVector<TerrainElement> m_terrain;
   QVector<FirecampElement> m_firecamps;
-  QVector<LinearElement> m_linearElements;
+  QVector<LinearElement> m_linear_elements;
   QVector<StructureElement> m_structures;
 
   QJsonObject m_biome;
@@ -141,13 +141,13 @@ private:
   QJsonObject m_victory;
   QJsonObject m_rain;
   QString m_description;
-  QString m_coordSystem;
-  int m_maxTroopsPerPlayer = 2000;
+  QString m_coord_system;
+  int m_max_troops_per_player = 2000;
 
   bool m_modified = false;
 
-  std::vector<std::unique_ptr<Command>> m_undoStack;
-  std::vector<std::unique_ptr<Command>> m_redoStack;
+  std::vector<std::unique_ptr<Command>> m_undo_stack;
+  std::vector<std::unique_ptr<Command>> m_redo_stack;
 
   void parseTerrainArray(const QJsonArray &arr);
   void parseFirecampsArray(const QJsonArray &arr);

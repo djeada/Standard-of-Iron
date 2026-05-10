@@ -37,7 +37,7 @@ private:
   std::vector<float> m_height_data;
   std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biome_settings;
-  std::uint32_t m_noiseSeed = 0U;
+  std::uint32_t m_noise_seed = 0U;
 
   Render::Ground::Scatter::FilteredRendererState<RiverbankAssetInstanceGpu,
                                                  RiverbankAssetBatchParams>

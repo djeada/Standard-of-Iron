@@ -7,23 +7,23 @@
 namespace Render::GL::BackendPipelines {
 
 auto WaterPipeline::initialize() -> bool {
-  if (m_shaderCache == nullptr) {
+  if (m_shader_cache == nullptr) {
     qWarning() << "WaterPipeline::initialize: null ShaderCache";
     return false;
   }
 
-  m_riverShader = m_shaderCache->get("river");
-  m_riverbankShader = m_shaderCache->get("riverbank");
-  m_bridgeShader = m_shaderCache->get("bridge");
-  m_road_shader = m_shaderCache->get("road");
+  m_river_shader = m_shader_cache->get("river");
+  m_riverbank_shader = m_shader_cache->get("riverbank");
+  m_bridge_shader = m_shader_cache->get("bridge");
+  m_road_shader = m_shader_cache->get("road");
 
-  if (m_riverShader == nullptr) {
+  if (m_river_shader == nullptr) {
     qWarning() << "WaterPipeline: Failed to load river shader";
   }
-  if (m_riverbankShader == nullptr) {
+  if (m_riverbank_shader == nullptr) {
     qWarning() << "WaterPipeline: Failed to load riverbank shader";
   }
-  if (m_bridgeShader == nullptr) {
+  if (m_bridge_shader == nullptr) {
     qWarning() << "WaterPipeline: Failed to load bridge shader";
   }
   if (m_road_shader == nullptr) {
@@ -36,9 +36,9 @@ auto WaterPipeline::initialize() -> bool {
 }
 
 void WaterPipeline::shutdown() {
-  m_riverShader = nullptr;
-  m_riverbankShader = nullptr;
-  m_bridgeShader = nullptr;
+  m_river_shader = nullptr;
+  m_riverbank_shader = nullptr;
+  m_bridge_shader = nullptr;
   m_road_shader = nullptr;
 }
 
@@ -50,55 +50,55 @@ void WaterPipeline::cache_uniforms() {
 }
 
 auto WaterPipeline::is_initialized() const -> bool {
-  return m_riverShader != nullptr && m_riverbankShader != nullptr &&
-         m_bridgeShader != nullptr && m_road_shader != nullptr;
+  return m_river_shader != nullptr && m_riverbank_shader != nullptr &&
+         m_bridge_shader != nullptr && m_road_shader != nullptr;
 }
 
 void WaterPipeline::cache_river_uniforms() {
-  if (m_riverShader == nullptr) {
+  if (m_river_shader == nullptr) {
     return;
   }
 
-  m_riverUniforms.model = m_riverShader->uniform_handle("model");
-  m_riverUniforms.view = m_riverShader->uniform_handle("view");
-  m_riverUniforms.projection = m_riverShader->uniform_handle("projection");
-  m_riverUniforms.time = m_riverShader->uniform_handle("time");
+  m_river_uniforms.model = m_river_shader->uniform_handle("model");
+  m_river_uniforms.view = m_river_shader->uniform_handle("view");
+  m_river_uniforms.projection = m_river_shader->uniform_handle("projection");
+  m_river_uniforms.time = m_river_shader->uniform_handle("time");
 }
 
 void WaterPipeline::cache_riverbank_uniforms() {
-  if (m_riverbankShader == nullptr) {
+  if (m_riverbank_shader == nullptr) {
     return;
   }
 
-  m_riverbankUniforms.model = m_riverbankShader->uniform_handle("model");
-  m_riverbankUniforms.view = m_riverbankShader->uniform_handle("view");
-  m_riverbankUniforms.projection =
-      m_riverbankShader->uniform_handle("projection");
-  m_riverbankUniforms.time = m_riverbankShader->uniform_handle("time");
-  m_riverbankUniforms.visibility_texture =
-      m_riverbankShader->uniform_handle("u_visibilityTex");
-  m_riverbankUniforms.visibility_size =
-      m_riverbankShader->uniform_handle("u_visibilitySize");
-  m_riverbankUniforms.visibility_tile_size =
-      m_riverbankShader->uniform_handle("u_visibilityTileSize");
-  m_riverbankUniforms.explored_alpha =
-      m_riverbankShader->uniform_handle("u_exploredAlpha");
-  m_riverbankUniforms.has_visibility =
-      m_riverbankShader->uniform_handle("u_hasVisibility");
-  m_riverbankUniforms.segment_visibility =
-      m_riverbankShader->uniform_handle("u_segmentVisibility");
+  m_riverbank_uniforms.model = m_riverbank_shader->uniform_handle("model");
+  m_riverbank_uniforms.view = m_riverbank_shader->uniform_handle("view");
+  m_riverbank_uniforms.projection =
+      m_riverbank_shader->uniform_handle("projection");
+  m_riverbank_uniforms.time = m_riverbank_shader->uniform_handle("time");
+  m_riverbank_uniforms.visibility_texture =
+      m_riverbank_shader->uniform_handle("u_visibilityTex");
+  m_riverbank_uniforms.visibility_size =
+      m_riverbank_shader->uniform_handle("u_visibilitySize");
+  m_riverbank_uniforms.visibility_tile_size =
+      m_riverbank_shader->uniform_handle("u_visibilityTileSize");
+  m_riverbank_uniforms.explored_alpha =
+      m_riverbank_shader->uniform_handle("u_exploredAlpha");
+  m_riverbank_uniforms.has_visibility =
+      m_riverbank_shader->uniform_handle("u_hasVisibility");
+  m_riverbank_uniforms.segment_visibility =
+      m_riverbank_shader->uniform_handle("u_segmentVisibility");
 }
 
 void WaterPipeline::cache_bridge_uniforms() {
-  if (m_bridgeShader == nullptr) {
+  if (m_bridge_shader == nullptr) {
     return;
   }
 
-  m_bridgeUniforms.mvp = m_bridgeShader->uniform_handle("u_mvp");
-  m_bridgeUniforms.model = m_bridgeShader->uniform_handle("u_model");
-  m_bridgeUniforms.color = m_bridgeShader->uniform_handle("u_color");
-  m_bridgeUniforms.light_direction =
-      m_bridgeShader->uniform_handle("u_lightDirection");
+  m_bridge_uniforms.mvp = m_bridge_shader->uniform_handle("u_mvp");
+  m_bridge_uniforms.model = m_bridge_shader->uniform_handle("u_model");
+  m_bridge_uniforms.color = m_bridge_shader->uniform_handle("u_color");
+  m_bridge_uniforms.light_direction =
+      m_bridge_shader->uniform_handle("u_lightDirection");
 }
 
 void WaterPipeline::cache_road_uniforms() {

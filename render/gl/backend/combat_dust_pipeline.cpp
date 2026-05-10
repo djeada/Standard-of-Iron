@@ -17,21 +17,21 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 namespace {
-constexpr float kMinDustIntensity = 0.01F;
-constexpr float kDefaultDustRadius = 2.0F;
-constexpr float kDefaultDustIntensity = 0.6F;
-constexpr float kDustColorR = 0.6F;
-constexpr float kDustColorG = 0.55F;
-constexpr float kDustColorB = 0.45F;
-constexpr float kDustYOffset = 0.05F;
+constexpr float k_min_dust_intensity = 0.01F;
+constexpr float k_default_dust_radius = 2.0F;
+constexpr float k_default_dust_intensity = 0.6F;
+constexpr float k_dust_color_r = 0.6F;
+constexpr float k_dust_color_g = 0.55F;
+constexpr float k_dust_color_b = 0.45F;
+constexpr float k_dust_y_offset = 0.05F;
 
-constexpr float kDefaultFlameRadius = 3.0F;
-constexpr float kDefaultFlameIntensity = 0.8F;
-constexpr float kFlameColorR = 1.0F;
-constexpr float kFlameColorG = 0.4F;
-constexpr float kFlameColorB = 0.1F;
-constexpr float kFlameYOffset = 0.5F;
-constexpr float kBuildingHealthThreshold = 0.5F;
+constexpr float k_default_flame_radius = 3.0F;
+constexpr float k_default_flame_intensity = 0.8F;
+constexpr float k_flame_color_r = 1.0F;
+constexpr float k_flame_color_g = 0.4F;
+constexpr float k_flame_color_b = 0.1F;
+constexpr float k_flame_y_offset = 0.5F;
+constexpr float k_building_health_threshold = 0.5F;
 
 void clear_gl_errors() {
 #ifndef NDEBUG
@@ -299,10 +299,10 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
 
     CombatDustData data;
     data.position =
-        QVector3D(transform->position.x, kDustYOffset, transform->position.z);
-    data.radius = kDefaultDustRadius;
-    data.intensity = kDefaultDustIntensity;
-    data.color = QVector3D(kDustColorR, kDustColorG, kDustColorB);
+        QVector3D(transform->position.x, k_dust_y_offset, transform->position.z);
+    data.radius = k_default_dust_radius;
+    data.intensity = k_default_dust_intensity;
+    data.color = QVector3D(k_dust_color_r, k_dust_color_g, k_dust_color_b);
     data.time = animation_time;
     data.effect_type = EffectType::Dust;
 
@@ -338,18 +338,18 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
     float health_ratio = static_cast<float>(unit_comp->health) /
                          static_cast<float>(unit_comp->max_health);
 
-    if (health_ratio > kBuildingHealthThreshold) {
+    if (health_ratio > k_building_health_threshold) {
       continue;
     }
 
-    float base_intensity = kDefaultFlameIntensity * (1.0F - health_ratio);
+    float base_intensity = k_default_flame_intensity * (1.0F - health_ratio);
 
     float cx = transform->position.x;
     float cz = transform->position.z;
 
-    constexpr float kBuildingHalfWidth = 1.5F;
-    constexpr float kBuildingHalfDepth = 1.2F;
-    constexpr float kFlameSpacing = 0.8F;
+    constexpr float k_building_half_width = 1.5F;
+    constexpr float k_building_half_depth = 1.2F;
+    constexpr float k_flame_spacing = 0.8F;
 
     struct FlamePoint {
       float dx, dz, height_offset, intensity_mult, radius_mult;
@@ -357,19 +357,19 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
 
     FlamePoint flame_points[] = {
 
-        {-kBuildingHalfWidth * 0.7F, -kBuildingHalfDepth * 0.7F, 0.8F, 1.0F,
+        {-k_building_half_width * 0.7F, -k_building_half_depth * 0.7F, 0.8F, 1.0F,
          0.9F},
-        {kBuildingHalfWidth * 0.7F, -kBuildingHalfDepth * 0.7F, 0.7F, 0.95F,
+        {k_building_half_width * 0.7F, -k_building_half_depth * 0.7F, 0.7F, 0.95F,
          0.85F},
-        {-kBuildingHalfWidth * 0.7F, kBuildingHalfDepth * 0.7F, 0.6F, 0.9F,
+        {-k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.6F, 0.9F,
          0.8F},
-        {kBuildingHalfWidth * 0.7F, kBuildingHalfDepth * 0.7F, 0.75F, 1.0F,
+        {k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.75F, 1.0F,
          0.9F},
 
-        {0.0F, -kBuildingHalfDepth * 0.8F, 0.9F, 0.85F, 0.7F},
-        {0.0F, kBuildingHalfDepth * 0.8F, 0.7F, 0.8F, 0.65F},
-        {-kBuildingHalfWidth * 0.8F, 0.0F, 0.65F, 0.75F, 0.7F},
-        {kBuildingHalfWidth * 0.8F, 0.0F, 0.8F, 0.85F, 0.75F},
+        {0.0F, -k_building_half_depth * 0.8F, 0.9F, 0.85F, 0.7F},
+        {0.0F, k_building_half_depth * 0.8F, 0.7F, 0.8F, 0.65F},
+        {-k_building_half_width * 0.8F, 0.0F, 0.65F, 0.75F, 0.7F},
+        {k_building_half_width * 0.8F, 0.0F, 0.8F, 0.85F, 0.75F},
 
         {0.0F, 0.0F, 1.0F, 1.1F, 1.0F},
     };
@@ -377,10 +377,10 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
     for (const auto &fp : flame_points) {
       CombatDustData data;
       data.position =
-          QVector3D(cx + fp.dx, kFlameYOffset + fp.height_offset, cz + fp.dz);
-      data.radius = kDefaultFlameRadius * fp.radius_mult;
+          QVector3D(cx + fp.dx, k_flame_y_offset + fp.height_offset, cz + fp.dz);
+      data.radius = k_default_flame_radius * fp.radius_mult;
       data.intensity = base_intensity * fp.intensity_mult;
-      data.color = QVector3D(kFlameColorR, kFlameColorG, kFlameColorB);
+      data.color = QVector3D(k_flame_color_r, k_flame_color_g, k_flame_color_b);
       data.time = animation_time;
       data.effect_type = EffectType::Flame;
       m_dust_data.push_back(data);
@@ -496,7 +496,7 @@ void CombatDustPipeline::render_single_dust(const QVector3D &position,
   if (!is_initialized()) {
     return;
   }
-  if (intensity < kMinDustIntensity) {
+  if (intensity < k_min_dust_intensity) {
     return;
   }
 
@@ -548,7 +548,7 @@ void CombatDustPipeline::render_single_flame(const QVector3D &position,
   if (!is_initialized()) {
     return;
   }
-  if (intensity < kMinDustIntensity) {
+  if (intensity < k_min_dust_intensity) {
     return;
   }
 
@@ -598,7 +598,7 @@ void CombatDustPipeline::render_single_stone_impact(
   if (!is_initialized()) {
     return;
   }
-  if (intensity < kMinDustIntensity) {
+  if (intensity < k_min_dust_intensity) {
     return;
   }
 

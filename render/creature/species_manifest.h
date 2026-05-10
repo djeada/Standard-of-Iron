@@ -30,11 +30,11 @@ using BakeClipPaletteFn = void (*)(std::size_t clip_index,
 
 struct WholeMeshLodManifest {
   std::string_view primitive_name{};
-  BoneIndex anchor_bone{kInvalidBone};
+  BoneIndex anchor_bone{k_invalid_bone};
   MeshSkinning mesh_skinning{MeshSkinning::Rigid};
   std::uint8_t color_role{0U};
   int material_id{0};
-  std::uint8_t lod_mask{kLodAll};
+  std::uint8_t lod_mask{k_lod_all};
   std::span<const Quadruped::MeshNode> mesh_nodes{};
   std::span<const std::string_view> excluded_node_name_prefixes{};
   std::span<const PrimitiveInstance> overlay_primitives{};

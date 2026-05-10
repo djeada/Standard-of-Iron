@@ -49,14 +49,14 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
 
   if (config.victory_type == "elimination") {
     m_victory_type = VictoryType::Elimination;
-    m_key_structures = config.keyStructures;
+    m_key_structures = config.key_structures;
   } else if (config.victory_type == "control_structures") {
     m_victory_type = VictoryType::ControlStructures;
-    m_key_structures = config.keyStructures;
+    m_key_structures = config.key_structures;
     m_required_key_structures = config.required_key_structures;
   } else if (config.victory_type == "capture_structures") {
     m_victory_type = VictoryType::CaptureStructures;
-    m_key_structures = config.keyStructures;
+    m_key_structures = config.key_structures;
     m_required_key_structures = config.required_key_structures;
   } else if (config.victory_type == "survive_time") {
     m_victory_type = VictoryType::SurviveTime;
@@ -67,7 +67,7 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
   }
 
   m_defeat_conditions.clear();
-  for (const auto &condition : config.defeatConditions) {
+  for (const auto &condition : config.defeat_conditions) {
     if (condition == "no_units") {
       m_defeat_conditions.push_back(DefeatCondition::NoUnits);
     } else if (condition == "no_key_structures") {

@@ -29,7 +29,7 @@ TEST(CreatureAssetRegistry, ResolvesHumanoidByKindFallback) {
 TEST(CreatureAssetRegistry, ExplicitAssetIdWinsWhenProvided) {
   UnitVisualSpec spec{};
   spec.kind = CreatureKind::Horse;
-  spec.creature_asset_id = kHumanoidAsset;
+  spec.creature_asset_id = k_humanoid_asset;
 
   const auto *asset = CreatureAssetRegistry::instance().resolve(spec);
   ASSERT_NE(asset, nullptr);
@@ -40,14 +40,14 @@ TEST(CreatureAssetRegistry, ExplicitAssetIdWinsWhenProvided) {
 TEST(CreatureAssetRegistry, SwordHumanoidAssetUsesDedicatedBpatSpecies) {
   UnitVisualSpec spec{};
   spec.kind = CreatureKind::Humanoid;
-  spec.creature_asset_id = kHumanoidSwordAsset;
+  spec.creature_asset_id = k_humanoid_sword_asset;
 
   const auto *asset = CreatureAssetRegistry::instance().resolve(spec);
   ASSERT_NE(asset, nullptr);
-  EXPECT_EQ(asset->id, kHumanoidSwordAsset);
+  EXPECT_EQ(asset->id, k_humanoid_sword_asset);
   EXPECT_EQ(asset->kind, CreatureKind::Humanoid);
   EXPECT_EQ(asset->bpat_species_id,
-            Render::Creature::Bpat::kSpeciesHumanoidSword);
+            Render::Creature::Bpat::k_species_humanoid_sword);
 }
 
 TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
@@ -59,7 +59,7 @@ TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
   EXPECT_EQ(horse_asset->spec, &Render::Horse::horse_creature_spec());
   EXPECT_EQ(horse_asset->role_count, 8u);
   EXPECT_EQ(horse_asset->snapshot_mesh_species_id,
-            Render::Creature::Bpat::kSpeciesHorse);
+            Render::Creature::Bpat::k_species_horse);
   EXPECT_NE(horse_asset->snapshot_mesh_lod_mask, 0U);
 
   UnitVisualSpec elephant{};
@@ -72,7 +72,7 @@ TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
   EXPECT_EQ(elephant_asset->role_count,
             Render::Elephant::k_elephant_role_count);
   EXPECT_EQ(elephant_asset->snapshot_mesh_species_id,
-            Render::Creature::Bpat::kSpeciesElephant);
+            Render::Creature::Bpat::k_species_elephant);
   EXPECT_NE(elephant_asset->snapshot_mesh_lod_mask, 0U);
 }
 
@@ -134,9 +134,9 @@ TEST(CreatureAssetRegistry, BindPaletteCallbacksProduceValidOutput) {
 }
 
 TEST(CreatureAssetRegistry, MaxCreatureBonesCoversAllSpecies) {
-  EXPECT_GE(kMaxCreatureBones, Render::Humanoid::k_bone_count);
-  EXPECT_GE(kMaxCreatureBones, Render::Horse::k_horse_bone_count);
-  EXPECT_GE(kMaxCreatureBones, Render::Elephant::k_elephant_bone_count);
+  EXPECT_GE(k_max_creature_bones, Render::Humanoid::k_bone_count);
+  EXPECT_GE(k_max_creature_bones, Render::Horse::k_horse_bone_count);
+  EXPECT_GE(k_max_creature_bones, Render::Elephant::k_elephant_bone_count);
 }
 
 TEST(CreatureAssetRegistry, AllAssetsHaveFillRoleColorsCallback) {
@@ -206,18 +206,18 @@ TEST(CreatureRenderAssetHandleRegistry, CreatesStableHandleAfterBpatLoad) {
   }
 
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHumanoid,
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid,
                                 root + "/humanoid.bpat"));
 
   auto &handles = CreatureRenderAssetHandleRegistry::instance();
   handles.clear();
 
   auto const id = handles.get_or_create(
-      kHumanoidAsset, Render::Creature::ArchetypeRegistry::kHumanoidBase);
-  ASSERT_NE(id, Render::Creature::kInvalidCreatureRenderAssetHandle);
+      k_humanoid_asset, Render::Creature::ArchetypeRegistry::k_humanoid_base);
+  ASSERT_NE(id, Render::Creature::k_invalid_creature_render_asset_handle);
   EXPECT_EQ(
-      handles.get_or_create(kHumanoidAsset,
-                            Render::Creature::ArchetypeRegistry::kHumanoidBase),
+      handles.get_or_create(k_humanoid_asset,
+                            Render::Creature::ArchetypeRegistry::k_humanoid_base),
       id);
 
   const auto *handle = handles.get(id);
@@ -225,15 +225,15 @@ TEST(CreatureRenderAssetHandleRegistry, CreatesStableHandleAfterBpatLoad) {
   ASSERT_TRUE(handle->valid());
   ASSERT_NE(handle->asset, nullptr);
   ASSERT_NE(handle->archetype, nullptr);
-  EXPECT_EQ(handle->asset->id, kHumanoidAsset);
+  EXPECT_EQ(handle->asset->id, k_humanoid_asset);
   EXPECT_EQ(handle->archetype->id,
-            Render::Creature::ArchetypeRegistry::kHumanoidBase);
-  EXPECT_NE(handle->attachment_set_id, kInvalidAttachmentSetId);
+            Render::Creature::ArchetypeRegistry::k_humanoid_base);
+  EXPECT_NE(handle->attachment_set_id, k_invalid_attachment_set_id);
 
   const auto &idle = handle->playback[static_cast<std::size_t>(
       Render::Creature::AnimationStateId::Idle)];
   EXPECT_NE(idle.blob, nullptr);
-  EXPECT_NE(idle.clip_id, Render::Creature::ArchetypeDescriptor::kUnmappedClip);
+  EXPECT_NE(idle.clip_id, Render::Creature::ArchetypeDescriptor::k_unmapped_clip);
   EXPECT_GT(idle.frame_count, 0U);
 }
 
@@ -245,29 +245,29 @@ TEST(CreatureRenderAssetHandleRegistry,
   }
 
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHumanoid,
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid,
                                 root + "/humanoid.bpat"));
 
   auto &handles = CreatureRenderAssetHandleRegistry::instance();
   handles.clear();
 
   const auto base_id = handles.get_or_create(
-      kHumanoidAsset, Render::Creature::ArchetypeRegistry::kHumanoidBase);
+      k_humanoid_asset, Render::Creature::ArchetypeRegistry::k_humanoid_base);
   const auto rider_id = handles.get_or_create(
-      kHumanoidAsset, Render::Creature::ArchetypeRegistry::kRiderBase);
-  ASSERT_NE(base_id, Render::Creature::kInvalidCreatureRenderAssetHandle);
-  ASSERT_NE(rider_id, Render::Creature::kInvalidCreatureRenderAssetHandle);
+      k_humanoid_asset, Render::Creature::ArchetypeRegistry::k_rider_base);
+  ASSERT_NE(base_id, Render::Creature::k_invalid_creature_render_asset_handle);
+  ASSERT_NE(rider_id, Render::Creature::k_invalid_creature_render_asset_handle);
 
   const auto *base = handles.get(base_id);
   const auto *rider = handles.get(rider_id);
   ASSERT_NE(base, nullptr);
   ASSERT_NE(rider, nullptr);
-  EXPECT_NE(base->attachment_set_id, kInvalidAttachmentSetId);
-  EXPECT_NE(rider->attachment_set_id, kInvalidAttachmentSetId);
+  EXPECT_NE(base->attachment_set_id, k_invalid_attachment_set_id);
+  EXPECT_NE(rider->attachment_set_id, k_invalid_attachment_set_id);
   EXPECT_EQ(base->attachment_set_id, rider->attachment_set_id);
 
   const auto base_id_again = handles.get_or_create(
-      kHumanoidAsset, Render::Creature::ArchetypeRegistry::kHumanoidBase);
+      k_humanoid_asset, Render::Creature::ArchetypeRegistry::k_humanoid_base);
   const auto *base_again = handles.get(base_id_again);
   ASSERT_NE(base_again, nullptr);
   EXPECT_EQ(base_again->attachment_set_id, base->attachment_set_id);

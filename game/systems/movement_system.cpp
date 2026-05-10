@@ -461,9 +461,9 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   if (terrain.is_initialized()) {
     const Game::Map::TerrainHeightMap *hm = terrain.get_height_map();
     if (hm != nullptr) {
-      const float tile = hm->getTileSize();
-      const int w = hm->getWidth();
-      const int h = hm->getHeight();
+      const float tile = hm->get_tile_size();
+      const int w = hm->get_width();
+      const int h = hm->get_height();
       if (w > 0 && h > 0) {
         const float half_w = w * 0.5F - 0.5F;
         const float half_h = h * 0.5F - 0.5F;

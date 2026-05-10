@@ -40,15 +40,15 @@ auto check_gl_error(const char *operation) -> bool {
 } // namespace
 
 auto HealingBeamPipeline::initialize() -> bool {
-  if (m_shaderCache == nullptr) {
+  if (m_shader_cache == nullptr) {
     qWarning() << "HealingBeamPipeline::initialize: null ShaderCache";
     return false;
   }
 
   clear_gl_errors();
 
-  m_beamShader = m_shaderCache->get("healing_beam");
-  if (m_beamShader == nullptr) {
+  m_beam_shader = m_shader_cache->get("healing_beam");
+  if (m_beam_shader == nullptr) {
     qWarning() << "HealingBeamPipeline: Failed to get healing_beam shader";
     return false;
   }
@@ -66,16 +66,16 @@ auto HealingBeamPipeline::initialize() -> bool {
 
 void HealingBeamPipeline::shutdown() {
   shutdown_geometry();
-  m_beamShader = nullptr;
+  m_beam_shader = nullptr;
 }
 
 void HealingBeamPipeline::shutdown_geometry() {
   if (QOpenGLContext::currentContext() == nullptr) {
 
     m_vao = 0;
-    m_vertexBuffer = 0;
-    m_indexBuffer = 0;
-    m_indexCount = 0;
+    m_vertex_buffer = 0;
+    m_index_buffer = 0;
+    m_index_count = 0;
     return;
   }
 
@@ -85,34 +85,34 @@ void HealingBeamPipeline::shutdown_geometry() {
     glDeleteVertexArrays(1, &m_vao);
     m_vao = 0;
   }
-  if (m_vertexBuffer != 0) {
-    glDeleteBuffers(1, &m_vertexBuffer);
-    m_vertexBuffer = 0;
+  if (m_vertex_buffer != 0) {
+    glDeleteBuffers(1, &m_vertex_buffer);
+    m_vertex_buffer = 0;
   }
-  if (m_indexBuffer != 0) {
-    glDeleteBuffers(1, &m_indexBuffer);
-    m_indexBuffer = 0;
+  if (m_index_buffer != 0) {
+    glDeleteBuffers(1, &m_index_buffer);
+    m_index_buffer = 0;
   }
-  m_indexCount = 0;
+  m_index_count = 0;
 }
 
 void HealingBeamPipeline::cache_uniforms() {
-  if (m_beamShader == nullptr) {
+  if (m_beam_shader == nullptr) {
     return;
   }
 
-  m_uniforms.mvp = m_beamShader->uniform_handle("u_mvp");
-  m_uniforms.time = m_beamShader->uniform_handle("u_time");
-  m_uniforms.progress = m_beamShader->uniform_handle("u_progress");
-  m_uniforms.start_pos = m_beamShader->uniform_handle("u_startPos");
-  m_uniforms.end_pos = m_beamShader->uniform_handle("u_endPos");
-  m_uniforms.beam_width = m_beamShader->uniform_handle("u_beamWidth");
-  m_uniforms.heal_color = m_beamShader->uniform_handle("u_healColor");
-  m_uniforms.alpha = m_beamShader->uniform_handle("u_alpha");
+  m_uniforms.mvp = m_beam_shader->uniform_handle("u_mvp");
+  m_uniforms.time = m_beam_shader->uniform_handle("u_time");
+  m_uniforms.progress = m_beam_shader->uniform_handle("u_progress");
+  m_uniforms.start_pos = m_beam_shader->uniform_handle("u_startPos");
+  m_uniforms.end_pos = m_beam_shader->uniform_handle("u_endPos");
+  m_uniforms.beam_width = m_beam_shader->uniform_handle("u_beamWidth");
+  m_uniforms.heal_color = m_beam_shader->uniform_handle("u_healColor");
+  m_uniforms.alpha = m_beam_shader->uniform_handle("u_alpha");
 }
 
 auto HealingBeamPipeline::is_initialized() const -> bool {
-  return m_beamShader != nullptr && m_vao != 0 && m_indexCount > 0;
+  return m_beam_shader != nullptr && m_vao != 0 && m_index_count > 0;
 }
 
 auto HealingBeamPipeline::create_beam_geometry() -> bool {
@@ -178,8 +178,8 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
     return false;
   }
 
-  glGenBuffers(1, &m_vertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
+  glGenBuffers(1, &m_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
                vertices.data(), GL_STATIC_DRAW);
@@ -188,8 +188,8 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
     return false;
   }
 
-  glGenBuffers(1, &m_indexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer);
+  glGenBuffers(1, &m_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
                indices.data(), GL_STATIC_DRAW);
@@ -198,7 +198,7 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
     return false;
   }
 
-  m_indexCount = static_cast<GLsizei>(indices.size());
+  m_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::Position);
   glVertexAttribPointer(VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT,
@@ -254,7 +254,7 @@ void HealingBeamPipeline::render(
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-  m_beamShader->use();
+  m_beam_shader->use();
   glBindVertexArray(m_vao);
 
   for (const auto &beam : beam_system->get_beams()) {
@@ -292,16 +292,16 @@ void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
     return;
   }
 
-  m_beamShader->set_uniform(m_uniforms.mvp, mvp);
-  m_beamShader->set_uniform(m_uniforms.time, animation_time);
-  m_beamShader->set_uniform(m_uniforms.progress, progress);
-  m_beamShader->set_uniform(m_uniforms.start_pos, beam.get_start());
-  m_beamShader->set_uniform(m_uniforms.end_pos, beam.get_end());
-  m_beamShader->set_uniform(m_uniforms.beam_width, beam.get_beam_width());
-  m_beamShader->set_uniform(m_uniforms.heal_color, beam.get_color());
-  m_beamShader->set_uniform(m_uniforms.alpha, alpha);
+  m_beam_shader->set_uniform(m_uniforms.mvp, mvp);
+  m_beam_shader->set_uniform(m_uniforms.time, animation_time);
+  m_beam_shader->set_uniform(m_uniforms.progress, progress);
+  m_beam_shader->set_uniform(m_uniforms.start_pos, beam.get_start());
+  m_beam_shader->set_uniform(m_uniforms.end_pos, beam.get_end());
+  m_beam_shader->set_uniform(m_uniforms.beam_width, beam.get_beam_width());
+  m_beam_shader->set_uniform(m_uniforms.heal_color, beam.get_color());
+  m_beam_shader->set_uniform(m_uniforms.alpha, alpha);
 
-  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 }
 
 void HealingBeamPipeline::render_single_beam(const QVector3D &start,
@@ -327,21 +327,21 @@ void HealingBeamPipeline::render_single_beam(const QVector3D &start,
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-  m_beamShader->use();
+  m_beam_shader->use();
   glBindVertexArray(m_vao);
 
-  m_beamShader->set_uniform(m_uniforms.mvp, view_proj);
-  m_beamShader->set_uniform(m_uniforms.time, time);
-  m_beamShader->set_uniform(m_uniforms.progress,
+  m_beam_shader->set_uniform(m_uniforms.mvp, view_proj);
+  m_beam_shader->set_uniform(m_uniforms.time, time);
+  m_beam_shader->set_uniform(m_uniforms.progress,
                             std::clamp(progress, 0.0F, 1.0F));
-  m_beamShader->set_uniform(m_uniforms.start_pos, start);
-  m_beamShader->set_uniform(m_uniforms.end_pos, end);
-  m_beamShader->set_uniform(m_uniforms.beam_width, beam_width);
-  m_beamShader->set_uniform(m_uniforms.heal_color, color);
-  m_beamShader->set_uniform(m_uniforms.alpha,
+  m_beam_shader->set_uniform(m_uniforms.start_pos, start);
+  m_beam_shader->set_uniform(m_uniforms.end_pos, end);
+  m_beam_shader->set_uniform(m_uniforms.beam_width, beam_width);
+  m_beam_shader->set_uniform(m_uniforms.heal_color, color);
+  m_beam_shader->set_uniform(m_uniforms.alpha,
                             std::clamp(intensity, 0.0F, 1.0F));
 
-  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 
   glBindVertexArray(0);
 

@@ -36,19 +36,19 @@ TEST(BpatFormat, HeaderAndEntrySizesAreFrozen) {
   EXPECT_EQ(sizeof(BpatHeader), 64U);
   EXPECT_EQ(sizeof(BpatClipEntry), 32U);
   EXPECT_EQ(sizeof(BpatSocketEntry), 32U);
-  EXPECT_EQ(kMagic[0], 'B');
-  EXPECT_EQ(kMagic[3], 'T');
+  EXPECT_EQ(k_magic[0], 'B');
+  EXPECT_EQ(k_magic[3], 'T');
 }
 
 TEST(BpatWriter, RejectsEmptyClipList) {
-  BpatWriter w(kSpeciesHumanoid, 20U);
+  BpatWriter w(k_species_humanoid, 20U);
   std::stringstream ss;
   EXPECT_FALSE(w.write(ss));
 }
 
 TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
   constexpr std::uint32_t bone_count = 20U;
-  BpatWriter w(kSpeciesHumanoid, bone_count);
+  BpatWriter w(k_species_humanoid, bone_count);
 
   ClipDescriptor idle{"idle", 4U, 30.0F, true};
   ClipDescriptor walk{"walk", 6U, 30.0F, true};
@@ -72,7 +72,7 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
 
   auto blob = BpatBlob::from_bytes(std::move(bytes));
   ASSERT_TRUE(blob.loaded()) << blob.last_error();
-  EXPECT_EQ(blob.species_id(), kSpeciesHumanoid);
+  EXPECT_EQ(blob.species_id(), k_species_humanoid);
   EXPECT_EQ(blob.bone_count(), bone_count);
   EXPECT_EQ(blob.clip_count(), 2U);
   EXPECT_EQ(blob.frame_total(), idle.frame_count + walk.frame_count);
@@ -105,7 +105,7 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
 
 TEST(BpatWriter, BakedSocketsRoundTrip) {
   constexpr std::uint32_t bone_count = 20U;
-  BpatWriter w(kSpeciesHumanoid, bone_count);
+  BpatWriter w(k_species_humanoid, bone_count);
   w.add_socket({"hand_r", 13U, QVector3D(0.1F, -0.2F, 0.0F)});
   w.add_socket({"head", 5U, QVector3D(0.0F, 0.05F, 0.0F)});
 
@@ -151,7 +151,7 @@ TEST(BpatReader, RejectsBadMagic) {
 }
 
 TEST(BpatReader, RejectsTruncatedFile) {
-  BpatWriter w(kSpeciesHumanoid, 20U);
+  BpatWriter w(k_species_humanoid, 20U);
   ClipDescriptor c{"idle", 1U, 30.0F, true};
   w.add_clip(c);
   std::vector<QMatrix4x4> palettes(20U);
@@ -165,7 +165,7 @@ TEST(BpatReader, RejectsTruncatedFile) {
 }
 
 TEST(BpatReader, RejectsBadVersion) {
-  BpatWriter w(kSpeciesHumanoid, 20U);
+  BpatWriter w(k_species_humanoid, 20U);
   ClipDescriptor c{"idle", 1U, 30.0F, true};
   w.add_clip(c);
   std::vector<QMatrix4x4> palettes(20U);

@@ -13,7 +13,7 @@ namespace Render::GL {
 
 auto champion_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kChampionRoleCount = 3;
+inline constexpr std::uint32_t k_champion_role_count = 3;
 
 auto champion_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                                std::size_t max) -> std::uint32_t;

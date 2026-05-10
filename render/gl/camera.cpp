@@ -191,7 +191,7 @@ void Camera::set_perspective(float fov, float aspect, float near_plane,
     return;
   }
 
-  m_isPerspective = true;
+  m_is_perspective = true;
 
   m_fov = std::clamp(fov, k_min_fov, k_max_fov);
   m_aspect = std::max(aspect, 1e-6F);
@@ -206,12 +206,12 @@ void Camera::set_orthographic(float left, float right, float bottom, float top,
     return;
   }
 
-  m_isPerspective = false;
+  m_is_perspective = false;
   clamp_ortho_box(left, right, bottom, top);
-  m_orthoLeft = left;
-  m_orthoRight = right;
-  m_orthoBottom = bottom;
-  m_orthoTop = top;
+  m_ortho_left = left;
+  m_ortho_right = right;
+  m_ortho_bottom = bottom;
+  m_ortho_top = top;
   m_near_plane = std::min(near_plane, far_plane - 1e-3F);
   m_far_plane = std::max(far_plane, m_near_plane + 1e-3F);
 }
@@ -247,7 +247,7 @@ void Camera::zoom(float delta) {
   if (!finite(delta)) {
     return;
   }
-  if (m_isPerspective) {
+  if (m_is_perspective) {
     m_fov = qBound(k_min_fov, m_fov - delta, k_max_fov);
   } else {
     float scale = 1.0F + delta * k_zoom_delta_multiplier;
@@ -257,11 +257,11 @@ void Camera::zoom(float delta) {
     if (scale > k_max_ortho_scale) {
       scale = k_max_ortho_scale;
     }
-    m_orthoLeft *= scale;
-    m_orthoRight *= scale;
-    m_orthoBottom *= scale;
-    m_orthoTop *= scale;
-    clamp_ortho_box(m_orthoLeft, m_orthoRight, m_orthoBottom, m_orthoTop);
+    m_ortho_left *= scale;
+    m_ortho_right *= scale;
+    m_ortho_bottom *= scale;
+    m_ortho_top *= scale;
+    clamp_ortho_box(m_ortho_left, m_ortho_right, m_ortho_bottom, m_ortho_top);
   }
 }
 
@@ -345,34 +345,34 @@ void Camera::orbit(float yaw_deg, float pitch_deg) {
   float cur_pitch = 0.F;
   compute_yaw_pitch_from_offset(offset, cur_yaw, cur_pitch);
 
-  m_orbitStartYaw = cur_yaw;
-  m_orbitStartPitch = cur_pitch;
-  m_orbitTargetYaw = cur_yaw + yaw_deg;
-  m_orbitTargetPitch =
-      qBound(m_pitchMinDeg, cur_pitch + pitch_deg, m_pitchMaxDeg);
-  m_orbitTime = 0.0F;
-  m_orbitPending = true;
+  m_orbit_start_yaw = cur_yaw;
+  m_orbit_start_pitch = cur_pitch;
+  m_orbit_target_yaw = cur_yaw + yaw_deg;
+  m_orbit_target_pitch =
+      qBound(m_pitch_min_deg, cur_pitch + pitch_deg, m_pitch_max_deg);
+  m_orbit_time = 0.0F;
+  m_orbit_pending = true;
 }
 
 void Camera::update(float dt) {
-  if (!m_orbitPending) {
+  if (!m_orbit_pending) {
     return;
   }
   if (!finite(dt)) {
     return;
   }
 
-  m_orbitTime += std::max(0.0F, dt);
-  float const t = (m_orbitDuration <= 0.0F)
+  m_orbit_time += std::max(0.0F, dt);
+  float const t = (m_orbit_duration <= 0.0F)
                       ? 1.0F
-                      : std::clamp(m_orbitTime / m_orbitDuration, 0.0F, 1.0F);
+                      : std::clamp(m_orbit_time / m_orbit_duration, 0.0F, 1.0F);
 
   float const s = t * t * (3.0F - 2.0F * t);
 
   float const new_yaw =
-      m_orbitStartYaw + (m_orbitTargetYaw - m_orbitStartYaw) * s;
+      m_orbit_start_yaw + (m_orbit_target_yaw - m_orbit_start_yaw) * s;
   float const new_pitch =
-      m_orbitStartPitch + (m_orbitTargetPitch - m_orbitStartPitch) * s;
+      m_orbit_start_pitch + (m_orbit_target_pitch - m_orbit_start_pitch) * s;
 
   QVector3D const offset = m_position - m_target;
   float r = offset.length();
@@ -394,7 +394,7 @@ void Camera::update(float dt) {
   orthonormalize((m_target - m_position), m_front, m_right, m_up);
 
   if (t >= 1.0F) {
-    m_orbitPending = false;
+    m_orbit_pending = false;
   }
 }
 
@@ -480,22 +480,22 @@ auto Camera::world_to_screen(const QVector3D &world, qreal screen_w,
 }
 
 void Camera::update_follow(const QVector3D &target_center) {
-  if (!m_followEnabled) {
+  if (!m_follow_enabled) {
     return;
   }
   if (!finite(target_center)) {
     return;
   }
 
-  if (m_followOffset.lengthSquared() < 1e-5F) {
-    m_followOffset = m_position - m_target;
+  if (m_follow_offset.lengthSquared() < 1e-5F) {
+    m_follow_offset = m_position - m_target;
   }
-  QVector3D const desired_pos = target_center + m_followOffset;
+  QVector3D const desired_pos = target_center + m_follow_offset;
   QVector3D const new_pos =
-      (m_followLerp >= 0.999F)
+      (m_follow_lerp >= 0.999F)
           ? desired_pos
           : (m_position +
-             (desired_pos - m_position) * std::clamp(m_followLerp, 0.0F, 1.0F));
+             (desired_pos - m_position) * std::clamp(m_follow_lerp, 0.0F, 1.0F));
 
   if (!finite(new_pos)) {
     return;
@@ -558,13 +558,13 @@ auto Camera::get_view_matrix() const -> QMatrix4x4 {
 
 auto Camera::get_projection_matrix() const -> QMatrix4x4 {
   QMatrix4x4 projection;
-  if (m_isPerspective) {
+  if (m_is_perspective) {
     projection.perspective(m_fov, m_aspect, m_near_plane, m_far_plane);
   } else {
-    float left = m_orthoLeft;
-    float right = m_orthoRight;
-    float bottom = m_orthoBottom;
-    float top = m_orthoTop;
+    float left = m_ortho_left;
+    float right = m_ortho_right;
+    float bottom = m_ortho_bottom;
+    float top = m_ortho_top;
     clamp_ortho_box(left, right, bottom, top);
     projection.ortho(left, right, bottom, top, m_near_plane, m_far_plane);
   }
@@ -609,9 +609,9 @@ void Camera::apply_soft_boundaries(bool is_panning) {
     return;
   }
 
-  const float tile = vis.getTileSize();
-  const float half_w = vis.getWidth() * 0.5F - 0.5F;
-  const float half_h = vis.getHeight() * 0.5F - 0.5F;
+  const float tile = vis.get_tile_size();
+  const float half_w = vis.get_width() * 0.5F - 0.5F;
+  const float half_h = vis.get_height() * 0.5F - 0.5F;
 
   if (tile <= 0.0F || half_w < 0.0F || half_h < 0.0F) {
     return;
@@ -676,13 +676,13 @@ void Camera::apply_soft_boundaries(bool is_panning) {
 
   if (is_panning) {
 
-    if ((position_adjustment.x() > 0 && m_lastPosition.x() < m_position.x()) ||
-        (position_adjustment.x() < 0 && m_lastPosition.x() > m_position.x())) {
+    if ((position_adjustment.x() > 0 && m_last_position.x() < m_position.x()) ||
+        (position_adjustment.x() < 0 && m_last_position.x() > m_position.x())) {
       position_adjustment.setX(0);
     }
 
-    if ((position_adjustment.z() > 0 && m_lastPosition.z() < m_position.z()) ||
-        (position_adjustment.z() < 0 && m_lastPosition.z() > m_position.z())) {
+    if ((position_adjustment.z() > 0 && m_last_position.z() < m_position.z()) ||
+        (position_adjustment.z() < 0 && m_last_position.z() > m_position.z())) {
       position_adjustment.setZ(0);
     }
   }
@@ -703,7 +703,7 @@ void Camera::apply_soft_boundaries(bool is_panning) {
     }
   }
 
-  m_lastPosition = m_position;
+  m_last_position = m_position;
 }
 
 void Camera::clamp_above_ground() {

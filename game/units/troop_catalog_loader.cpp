@@ -80,14 +80,14 @@ auto TroopCatalogLoader::resolve_data_path(const QString &relative) -> QString {
     return direct;
   }
 
-  const QString appDir = QCoreApplication::applicationDirPath();
-  if (!appDir.isEmpty()) {
-    const QString fromApp = QDir(appDir).filePath(relative);
-    if (QFile::exists(fromApp)) {
-      return fromApp;
+  const QString app_dir = QCoreApplication::applicationDirPath();
+  if (!app_dir.isEmpty()) {
+    const QString from_app = QDir(app_dir).filePath(relative);
+    if (QFile::exists(from_app)) {
+      return from_app;
     }
 
-    const QString parent = QDir(appDir).filePath("../" + relative);
+    const QString parent = QDir(app_dir).filePath("../" + relative);
     if (QFile::exists(parent)) {
       return QDir(parent).canonicalPath();
     }
@@ -128,11 +128,11 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
   }
 
   const QByteArray data = file.readAll();
-  QJsonParseError parseError;
-  const QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-  if (parseError.error != QJsonParseError::NoError) {
+  QJsonParseError parse_error;
+  const QJsonDocument doc = QJsonDocument::fromJson(data, &parse_error);
+  if (parse_error.error != QJsonParseError::NoError) {
     qCWarning(logger()) << "Failed to parse troop catalog" << path << ":"
-                        << parseError.errorString();
+                        << parse_error.errorString();
     return false;
   }
 

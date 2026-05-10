@@ -105,14 +105,14 @@ auto roman_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
                                            QVector3D *out,
                                            std::size_t max) -> std::uint32_t {
   (void)palette;
-  if (max < kRomanShoulderCoverRoleCount) {
+  if (max < k_roman_shoulder_cover_role_count) {
     return 0;
   }
   auto const colors = roman_shoulder_cover_palette();
   out[0] = colors[0];
   out[1] = colors[1];
   out[2] = colors[2];
-  return kRomanShoulderCoverRoleCount;
+  return k_roman_shoulder_cover_role_count;
 }
 
 auto roman_shoulder_cover_make_static_attachment(

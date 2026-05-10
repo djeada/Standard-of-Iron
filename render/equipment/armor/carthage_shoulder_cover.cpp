@@ -111,13 +111,13 @@ auto carthage_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
                                               QVector3D *out, std::size_t max)
     -> std::uint32_t {
   (void)palette;
-  if (max < kCarthageShoulderCoverRoleCount) {
+  if (max < k_carthage_shoulder_cover_role_count) {
     return 0;
   }
   auto const colors = carthage_shoulder_cover_palette();
   out[0] = colors[0];
   out[1] = colors[1];
-  return kCarthageShoulderCoverRoleCount;
+  return k_carthage_shoulder_cover_role_count;
 }
 
 auto carthage_shoulder_cover_make_static_attachment(

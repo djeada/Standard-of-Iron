@@ -40,13 +40,13 @@ auto crupper_archetype() -> const RenderArchetype & {
 
 auto crupper_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                               std::size_t max) -> std::uint32_t {
-  if (max < kCrupperRoleCount) {
+  if (max < k_crupper_role_count) {
     return 0;
   }
   const QVector3D armor_color = variant.tack_color * 0.88F;
   out[k_armor_slot] = armor_color;
   out[k_flap_slot] = armor_color * 0.95F;
-  return kCrupperRoleCount;
+  return k_crupper_role_count;
 }
 
 auto crupper_make_static_attachment(std::uint16_t socket_bone_index,

@@ -19,16 +19,16 @@
 namespace MapEditor {
 
 EditorWindow::EditorWindow(QWidget *parent) : QMainWindow(parent) {
-  m_mapData = new MapData(this);
+  m_map_data = new MapData(this);
 
   setupUI();
   setupMenus();
 
-  connect(m_mapData, &MapData::modifiedChanged, this,
+  connect(m_map_data, &MapData::modifiedChanged, this,
           &EditorWindow::onModifiedChanged);
-  connect(m_mapData, &MapData::undoRedoChanged, this,
+  connect(m_map_data, &MapData::undoRedoChanged, this,
           &EditorWindow::onUndoRedoChanged);
-  connect(m_mapData, &MapData::dataChanged, this,
+  connect(m_map_data, &MapData::dataChanged, this,
           &EditorWindow::updateDimensionsLabel);
 
   setWindowTitle("Standard of Iron - Map Editor");
@@ -47,12 +47,12 @@ void EditorWindow::setupUI() {
   mainLayout->setContentsMargins(0, 0, 0, 0);
   mainLayout->setSpacing(0);
 
-  m_toolPanel = new ToolPanel(this);
-  connect(m_toolPanel, &ToolPanel::toolSelected, this,
+  m_tool_panel = new ToolPanel(this);
+  connect(m_tool_panel, &ToolPanel::toolSelected, this,
           &EditorWindow::onToolSelected);
 
   m_canvas = new MapCanvas(this);
-  m_canvas->setMapData(m_mapData);
+  m_canvas->setMapData(m_map_data);
   connect(m_canvas, &MapCanvas::elementDoubleClicked, this,
           &EditorWindow::onElementDoubleClicked);
   connect(m_canvas, &MapCanvas::gridDoubleClicked, this,
@@ -61,19 +61,19 @@ void EditorWindow::setupUI() {
           &EditorWindow::onToolCleared);
 
   auto *splitter = new QSplitter(Qt::Horizontal, this);
-  splitter->addWidget(m_toolPanel);
+  splitter->addWidget(m_tool_panel);
   splitter->addWidget(m_canvas);
   splitter->setStretchFactor(0, 0);
   splitter->setStretchFactor(1, 1);
 
   mainLayout->addWidget(splitter);
 
-  m_statusLabel = new QLabel("Ready", this);
-  m_dimensionsLabel = new QLabel("", this);
-  m_dimensionsLabel->setToolTip(
+  m_status_label = new QLabel("Ready", this);
+  m_dimensions_label = new QLabel("", this);
+  m_dimensions_label->setToolTip(
       "Double-click on empty canvas area to edit dimensions");
-  statusBar()->addWidget(m_statusLabel);
-  statusBar()->addPermanentWidget(m_dimensionsLabel);
+  statusBar()->addWidget(m_status_label);
+  statusBar()->addPermanentWidget(m_dimensions_label);
 }
 
 void EditorWindow::setupMenus() {
@@ -111,17 +111,17 @@ void EditorWindow::setupMenus() {
 
   auto *editMenu = menuBar()->addMenu("&Edit");
 
-  m_undoAction = new QAction("&Undo", this);
-  m_undoAction->setShortcut(QKeySequence::Undo);
-  m_undoAction->setEnabled(false);
-  connect(m_undoAction, &QAction::triggered, this, &EditorWindow::undo);
-  editMenu->addAction(m_undoAction);
+  m_undo_action = new QAction("&Undo", this);
+  m_undo_action->setShortcut(QKeySequence::Undo);
+  m_undo_action->setEnabled(false);
+  connect(m_undo_action, &QAction::triggered, this, &EditorWindow::undo);
+  editMenu->addAction(m_undo_action);
 
-  m_redoAction = new QAction("&Redo", this);
-  m_redoAction->setShortcut(QKeySequence::Redo);
-  m_redoAction->setEnabled(false);
-  connect(m_redoAction, &QAction::triggered, this, &EditorWindow::redo);
-  editMenu->addAction(m_redoAction);
+  m_redo_action = new QAction("&Redo", this);
+  m_redo_action->setShortcut(QKeySequence::Redo);
+  m_redo_action->setEnabled(false);
+  connect(m_redo_action, &QAction::triggered, this, &EditorWindow::redo);
+  editMenu->addAction(m_redo_action);
 
   editMenu->addSeparator();
 
@@ -134,8 +134,8 @@ void EditorWindow::setupMenus() {
   toolbar->addAction(openAction);
   toolbar->addAction(saveAction);
   toolbar->addSeparator();
-  toolbar->addAction(m_undoAction);
-  toolbar->addAction(m_redoAction);
+  toolbar->addAction(m_undo_action);
+  toolbar->addAction(m_redo_action);
   toolbar->addSeparator();
   toolbar->addAction(resizeAction);
 }
@@ -145,10 +145,10 @@ void EditorWindow::newMap() {
     return;
   }
 
-  m_mapData->clear();
-  m_currentFilePath.clear();
+  m_map_data->clear();
+  m_current_file_path.clear();
   updateWindowTitle();
-  m_statusLabel->setText("New map created");
+  m_status_label->setText("New map created");
 }
 
 void EditorWindow::openMap() {
@@ -163,10 +163,10 @@ void EditorWindow::openMap() {
     return;
   }
 
-  if (m_mapData->loadFromJson(filePath)) {
-    m_currentFilePath = filePath;
+  if (m_map_data->loadFromJson(filePath)) {
+    m_current_file_path = filePath;
     updateWindowTitle();
-    m_statusLabel->setText("Loaded: " + filePath);
+    m_status_label->setText("Loaded: " + filePath);
   } else {
     QMessageBox::critical(this, "Error",
                           "Failed to load map file: " + filePath);
@@ -174,10 +174,10 @@ void EditorWindow::openMap() {
 }
 
 bool EditorWindow::loadFile(const QString &filePath) {
-  if (m_mapData->loadFromJson(filePath)) {
-    m_currentFilePath = filePath;
+  if (m_map_data->loadFromJson(filePath)) {
+    m_current_file_path = filePath;
     updateWindowTitle();
-    m_statusLabel->setText("Loaded: " + filePath);
+    m_status_label->setText("Loaded: " + filePath);
     return true;
   }
   QMessageBox::critical(this, "Error", "Failed to load map file: " + filePath);
@@ -185,15 +185,15 @@ bool EditorWindow::loadFile(const QString &filePath) {
 }
 
 void EditorWindow::saveMap() {
-  if (m_currentFilePath.isEmpty()) {
+  if (m_current_file_path.isEmpty()) {
     saveMapAs();
   } else {
-    if (m_mapData->saveToJson(m_currentFilePath)) {
-      m_mapData->setModified(false);
-      m_statusLabel->setText("Saved: " + m_currentFilePath);
+    if (m_map_data->saveToJson(m_current_file_path)) {
+      m_map_data->setModified(false);
+      m_status_label->setText("Saved: " + m_current_file_path);
     } else {
       QMessageBox::critical(this, "Error",
-                            "Failed to save map file: " + m_currentFilePath);
+                            "Failed to save map file: " + m_current_file_path);
     }
   }
 }
@@ -210,11 +210,11 @@ void EditorWindow::saveMapAs() {
     filePath += ".json";
   }
 
-  if (m_mapData->saveToJson(filePath)) {
-    m_currentFilePath = filePath;
-    m_mapData->setModified(false);
+  if (m_map_data->saveToJson(filePath)) {
+    m_current_file_path = filePath;
+    m_map_data->setModified(false);
     updateWindowTitle();
-    m_statusLabel->setText("Saved: " + filePath);
+    m_status_label->setText("Saved: " + filePath);
   } else {
     QMessageBox::critical(this, "Error",
                           "Failed to save map file: " + filePath);
@@ -222,28 +222,28 @@ void EditorWindow::saveMapAs() {
 }
 
 void EditorWindow::resizeMap() {
-  const GridSettings &grid = m_mapData->grid();
+  const GridSettings &grid = m_map_data->grid();
   ResizeDialog dialog(grid.width, grid.height, this);
 
   if (dialog.exec() == QDialog::Accepted) {
-    GridSettings newGrid = grid;
-    newGrid.width = dialog.newWidth();
-    newGrid.height = dialog.newHeight();
-    m_mapData->setGrid(newGrid);
+    GridSettings new_grid = grid;
+    new_grid.width = dialog.newWidth();
+    new_grid.height = dialog.newHeight();
+    m_map_data->setGrid(new_grid);
     m_canvas->update();
-    m_statusLabel->setText(
-        QString("Map resized to %1x%2").arg(newGrid.width).arg(newGrid.height));
+    m_status_label->setText(
+        QString("Map resized to %1x%2").arg(new_grid.width).arg(new_grid.height));
   }
 }
 
 void EditorWindow::undo() {
-  m_mapData->undo();
-  m_statusLabel->setText("Undo");
+  m_map_data->undo();
+  m_status_label->setText("Undo");
 }
 
 void EditorWindow::redo() {
-  m_mapData->redo();
-  m_statusLabel->setText("Redo");
+  m_map_data->redo();
+  m_status_label->setText("Redo");
 }
 
 void EditorWindow::onToolSelected(ToolType tool) {
@@ -283,24 +283,24 @@ void EditorWindow::onToolSelected(ToolType tool) {
     break;
   }
 
-  m_statusLabel->setText("Tool: " + toolName);
+  m_status_label->setText("Tool: " + toolName);
 }
 
 void EditorWindow::onToolCleared() {
-  m_toolPanel->clearSelection();
-  m_statusLabel->setText("Tool: Select");
+  m_tool_panel->clearSelection();
+  m_status_label->setText("Tool: Select");
 }
 
 void EditorWindow::onGridDoubleClicked() { resizeMap(); }
 
 void EditorWindow::onUndoRedoChanged() {
-  m_undoAction->setEnabled(m_mapData->canUndo());
-  m_redoAction->setEnabled(m_mapData->canRedo());
+  m_undo_action->setEnabled(m_map_data->canUndo());
+  m_redo_action->setEnabled(m_map_data->canRedo());
 }
 
 void EditorWindow::updateDimensionsLabel() {
-  const GridSettings &grid = m_mapData->grid();
-  m_dimensionsLabel->setText(
+  const GridSettings &grid = m_map_data->grid();
+  m_dimensions_label->setText(
       QString("Map: %1 x %2").arg(grid.width).arg(grid.height));
 }
 
@@ -310,7 +310,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
 
   if (elementType == 0) {
 
-    const auto &terrain = m_mapData->terrainElements();
+    const auto &terrain = m_map_data->terrainElements();
     if (index < 0 || index >= terrain.size()) {
       return;
     }
@@ -334,7 +334,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
     title = "Edit Terrain: " + elem.type;
   } else if (elementType == 1) {
 
-    const auto &firecamps = m_mapData->firecamps();
+    const auto &firecamps = m_map_data->firecamps();
     if (index < 0 || index >= firecamps.size()) {
       return;
     }
@@ -351,7 +351,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
     title = "Edit Firecamp";
   } else if (elementType == 2) {
 
-    const auto &linear = m_mapData->linearElements();
+    const auto &linear = m_map_data->linearElements();
     if (index < 0 || index >= linear.size()) {
       return;
     }
@@ -376,7 +376,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
     title = "Edit " + elem.type;
   } else if (elementType == 3) {
 
-    const auto &structures = m_mapData->structures();
+    const auto &structures = m_map_data->structures();
     if (index < 0 || index >= structures.size()) {
       return;
     }
@@ -385,8 +385,8 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
     json["type"] = elem.type;
     json["x"] = static_cast<double>(elem.x);
     json["z"] = static_cast<double>(elem.z);
-    json["playerId"] = elem.playerId;
-    json["maxPopulation"] = elem.maxPopulation;
+    json["player_id"] = elem.player_id;
+    json["max_population"] = elem.max_population;
     if (!elem.nation.isEmpty()) {
       json["nation"] = elem.nation;
     }
@@ -424,7 +424,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
         }
       }
 
-      m_mapData->updateTerrainElement(index, elem);
+      m_map_data->updateTerrainElement(index, elem);
     } else if (elementType == 1) {
       FirecampElement elem;
       elem.x = static_cast<float>(newJson["x"].toDouble());
@@ -439,7 +439,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
         }
       }
 
-      m_mapData->updateFirecamp(index, elem);
+      m_map_data->updateFirecamp(index, elem);
     } else if (elementType == 2) {
       LinearElement elem;
       elem.type = newJson["type"].toString();
@@ -464,25 +464,25 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
         }
       }
 
-      m_mapData->updateLinearElement(index, elem);
+      m_map_data->updateLinearElement(index, elem);
     } else if (elementType == 3) {
       StructureElement elem;
       elem.type = newJson["type"].toString();
       elem.x = static_cast<float>(newJson["x"].toDouble());
       elem.z = static_cast<float>(newJson["z"].toDouble());
-      elem.playerId = newJson["playerId"].toInt(0);
-      elem.maxPopulation = newJson["maxPopulation"].toInt(150);
+      elem.player_id = newJson["player_id"].toInt(0);
+      elem.max_population = newJson["max_population"].toInt(150);
       elem.nation = newJson["nation"].toString();
 
-      QStringList knownKeys = {"type",          "x",     "z", "playerId",
-                               "maxPopulation", "nation"};
+      QStringList knownKeys = {"type",          "x",     "z", "player_id",
+                               "max_population", "nation"};
       for (const QString &key : newJson.keys()) {
         if (!knownKeys.contains(key)) {
           elem.extraFields[key] = newJson[key];
         }
       }
 
-      m_mapData->updateStructure(index, elem);
+      m_map_data->updateStructure(index, elem);
     }
   }
 }
@@ -494,19 +494,19 @@ void EditorWindow::onModifiedChanged(bool modified) {
 
 void EditorWindow::updateWindowTitle() {
   QString title = "Standard of Iron - Map Editor";
-  if (!m_currentFilePath.isEmpty()) {
-    title += " - " + QFileInfo(m_currentFilePath).fileName();
+  if (!m_current_file_path.isEmpty()) {
+    title += " - " + QFileInfo(m_current_file_path).fileName();
   } else {
-    title += " - " + m_mapData->name();
+    title += " - " + m_map_data->name();
   }
-  if (m_mapData->isModified()) {
+  if (m_map_data->isModified()) {
     title += " *";
   }
   setWindowTitle(title);
 }
 
 bool EditorWindow::maybeSave() {
-  if (!m_mapData->isModified()) {
+  if (!m_map_data->isModified()) {
     return true;
   }
 
@@ -517,7 +517,7 @@ bool EditorWindow::maybeSave() {
 
   if (ret == QMessageBox::Save) {
     saveMap();
-    return !m_mapData->isModified();
+    return !m_map_data->isModified();
   }
   if (ret == QMessageBox::Cancel) {
     return false;

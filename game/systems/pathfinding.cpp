@@ -117,9 +117,9 @@ void Pathfinding::process_dirty_regions() {
         const Game::Map::TerrainHeightMap *height_map =
             terrain_service.get_height_map();
         const int terrain_width =
-            (height_map != nullptr) ? height_map->getWidth() : 0;
+            (height_map != nullptr) ? height_map->get_width() : 0;
         const int terrain_height =
-            (height_map != nullptr) ? height_map->getHeight() : 0;
+            (height_map != nullptr) ? height_map->get_height() : 0;
 
         for (int z = 0; z < m_height; ++z) {
           for (int x = 0; x < m_width; ++x) {
@@ -181,8 +181,8 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
 
   if (terrain_service.is_initialized()) {
     height_map = terrain_service.get_height_map();
-    terrain_width = (height_map != nullptr) ? height_map->getWidth() : 0;
-    terrain_height = (height_map != nullptr) ? height_map->getHeight() : 0;
+    terrain_width = (height_map != nullptr) ? height_map->get_width() : 0;
+    terrain_height = (height_map != nullptr) ? height_map->get_height() : 0;
   }
 
   for (int z = min_z; z <= max_z; ++z) {

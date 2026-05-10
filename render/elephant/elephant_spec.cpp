@@ -24,7 +24,7 @@ using Render::Creature::PrimitiveInstance;
 using Render::Creature::SkeletonTopology;
 
 constexpr std::array<BoneDef, k_elephant_bone_count> k_elephant_bones = {{
-    {"Root", Render::Creature::kInvalidBone},
+    {"Root", Render::Creature::k_invalid_bone},
     {"Body", static_cast<BoneIndex>(ElephantBone::Root)},
     {"ShoulderFL", static_cast<BoneIndex>(ElephantBone::Root)},
     {"KneeFL", static_cast<BoneIndex>(ElephantBone::ShoulderFL)},

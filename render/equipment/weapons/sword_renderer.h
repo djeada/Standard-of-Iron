@@ -48,8 +48,8 @@ private:
   SwordRenderConfig m_base;
 };
 
-inline constexpr std::uint32_t kSwordRoleCount = 4U;
-inline constexpr std::uint32_t kScabbardRoleCount = 2U;
+inline constexpr std::uint32_t k_sword_role_count = 4U;
+inline constexpr std::uint32_t k_scabbard_role_count = 2U;
 
 auto sword_fill_role_colors(const HumanoidPalette &palette,
                             const SwordRenderConfig &config, QVector3D *out,

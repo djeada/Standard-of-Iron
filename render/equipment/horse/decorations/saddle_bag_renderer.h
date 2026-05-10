@@ -13,7 +13,7 @@ namespace Render::GL {
 
 auto saddle_bag_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kSaddleBagRoleCount = 2;
+inline constexpr std::uint32_t k_saddle_bag_role_count = 2;
 
 auto saddle_bag_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                                  std::size_t max) -> std::uint32_t;

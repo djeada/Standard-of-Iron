@@ -25,9 +25,9 @@ signals:
   void languageChanged();
 
 private:
-  QString m_currentLanguage;
+  QString m_current_language;
   QTranslator *m_translator;
-  QStringList m_availableLanguages;
+  QStringList m_available_languages;
 
   void loadLanguage(const QString &language);
 };

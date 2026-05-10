@@ -42,7 +42,7 @@ public:
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
     std::lock_guard<std::mutex> const lock(m_mutex);
 
-    SubscriptionHandle const handle = m_nextHandle++;
+    SubscriptionHandle const handle = m_next_handle++;
     auto wrapper = [handler, handle](const void *event) {
       handler(*static_cast<const T *>(event));
     };
@@ -125,7 +125,7 @@ private:
   mutable std::mutex m_mutex;
   std::unordered_map<std::type_index, std::vector<HandlerEntry>> m_handlers;
   std::unordered_map<std::type_index, EventStats> m_stats;
-  SubscriptionHandle m_nextHandle = 1;
+  SubscriptionHandle m_next_handle = 1;
 };
 
 template <typename T> class ScopedEventSubscription {

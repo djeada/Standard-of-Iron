@@ -8,16 +8,16 @@
 #include <qtranslator.h>
 
 LanguageManager::LanguageManager(QObject *parent)
-    : QObject(parent), m_currentLanguage("en"),
+    : QObject(parent), m_current_language("en"),
       m_translator(new QTranslator(this)) {
-  m_availableLanguages << "en" << "de" << "pt_br";
+  m_available_languages << "en" << "de" << "pt_br";
 
 #ifndef DEFAULT_LANG
 #define DEFAULT_LANG "en"
 #endif
 
   QString const default_lang = QString(DEFAULT_LANG);
-  if (m_availableLanguages.contains(default_lang)) {
+  if (m_available_languages.contains(default_lang)) {
     loadLanguage(default_lang);
   } else {
     loadLanguage("en");
@@ -27,16 +27,16 @@ LanguageManager::LanguageManager(QObject *parent)
 LanguageManager::~LanguageManager() = default;
 
 auto LanguageManager::currentLanguage() const -> QString {
-  return m_currentLanguage;
+  return m_current_language;
 }
 
 auto LanguageManager::availableLanguages() const -> QStringList {
-  return m_availableLanguages;
+  return m_available_languages;
 }
 
 void LanguageManager::setLanguage(const QString &language) {
-  if (language == m_currentLanguage ||
-      !m_availableLanguages.contains(language)) {
+  if (language == m_current_language ||
+      !m_available_languages.contains(language)) {
     return;
   }
 
@@ -51,7 +51,7 @@ void LanguageManager::loadLanguage(const QString &language) {
 
   if (m_translator->load(qm_file)) {
     QCoreApplication::installTranslator(m_translator);
-    m_currentLanguage = language;
+    m_current_language = language;
     qInfo() << "Language changed to:" << language;
     emit languageChanged();
   } else {

@@ -57,11 +57,11 @@ auto reins_archetype() -> const RenderArchetype & {
 
 auto reins_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                             std::size_t max) -> std::uint32_t {
-  if (max < kReinsRoleCount) {
+  if (max < k_reins_role_count) {
     return 0;
   }
   out[0] = variant.tack_color;
-  return kReinsRoleCount;
+  return k_reins_role_count;
 }
 
 auto reins_make_static_attachment(std::uint16_t socket_bone_index,

@@ -82,7 +82,7 @@ void submit_render_instance(ISubmitter &out, const RenderInstance &instance) {
       instance.archetype->lods[lod_index(instance.lod)];
   for (const RenderArchetypeDraw &draw : slice.draws) {
     QVector3D color = draw.color;
-    if (draw.palette_slot != kRenderArchetypeFixedColorSlot &&
+    if (draw.palette_slot != k_render_archetype_fixed_color_slot &&
         draw.palette_slot < instance.palette.size()) {
       color = instance.palette[draw.palette_slot];
     }

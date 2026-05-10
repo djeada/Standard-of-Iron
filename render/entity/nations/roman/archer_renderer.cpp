@@ -123,13 +123,13 @@ public:
       static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
           Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_greaves_base_role_byte = static_cast<std::uint8_t>(
-          k_helmet_base_role_byte + Render::GL::kRomanLightHelmetRoleCount);
+          k_helmet_base_role_byte + Render::GL::k_roman_light_helmet_role_count);
       static const auto k_quiver_base_role_byte = static_cast<std::uint8_t>(
-          k_greaves_base_role_byte + Render::GL::kRomanGreavesRoleCount);
+          k_greaves_base_role_byte + Render::GL::k_roman_greaves_role_count);
       static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-          k_quiver_base_role_byte + Render::GL::kQuiverRoleCount);
+          k_quiver_base_role_byte + Render::GL::k_quiver_role_count);
       static const auto k_bow_base_role_byte = static_cast<std::uint8_t>(
-          k_armor_base_role_byte + Render::GL::kRomanLightArmorRoleCount);
+          k_armor_base_role_byte + Render::GL::k_roman_light_armor_role_count);
       static const auto k_pelvis_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Pelvis);
       static const auto k_chest_bone =
@@ -174,7 +174,7 @@ public:
           Render::GL::roman_light_armor_make_static_attachment(
               k_chest_bone, k_armor_base_role_byte);
       static const auto k_cloak_base_role_byte = static_cast<std::uint8_t>(
-          k_bow_base_role_byte + Render::GL::kBowRoleCount);
+          k_bow_base_role_byte + Render::GL::k_bow_role_count);
       static const auto k_torso_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
       static const CloakConfig k_cloak_cfg = []() {
@@ -209,9 +209,9 @@ public:
         using Render::Creature::ArchetypeRegistry;
 
         auto &registry = ArchetypeRegistry::instance();
-        auto const *base_desc = registry.get(ArchetypeRegistry::kHumanoidBase);
+        auto const *base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
         if (base_desc == nullptr) {
-          return Render::Creature::kInvalidArchetype;
+          return Render::Creature::k_invalid_archetype;
         }
 
         ArchetypeDescriptor desc = *base_desc;
@@ -274,7 +274,7 @@ public:
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
             attack_bow_clip;
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
-            Render::Creature::kHumanoidHoldBowClip;
+            Render::Creature::k_humanoid_hold_bow_clip;
         return registry.register_archetype(desc);
       }();
 

@@ -1059,9 +1059,9 @@ void ArenaViewport::configure_rendering_from_terrain() {
     return;
   }
 
-  m_surface->ground()->configure(height_map->getTileSize(),
-                                 height_map->getWidth(),
-                                 height_map->getHeight());
+  m_surface->ground()->configure(height_map->get_tile_size(),
+                                 height_map->get_width(),
+                                 height_map->get_height());
   m_surface->ground()->set_biome(terrain_service.biome_settings());
   m_surface->terrain()->configure(*height_map,
                                   terrain_service.biome_settings());
@@ -1070,16 +1070,16 @@ void ArenaViewport::configure_rendering_from_terrain() {
                        terrain_service.fire_camps());
   if (m_rain != nullptr) {
     float const world_width =
-        static_cast<float>(height_map->getWidth()) * height_map->getTileSize();
+        static_cast<float>(height_map->get_width()) * height_map->get_tile_size();
     float const world_height =
-        static_cast<float>(height_map->getHeight()) * height_map->getTileSize();
+        static_cast<float>(height_map->get_height()) * height_map->get_tile_size();
     m_rain->configure(
         world_width, world_height,
         static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)));
   }
   if (m_boundary_fog != nullptr) {
-    m_boundary_fog->configure(height_map->getWidth(), height_map->getHeight(),
-                              height_map->getTileSize());
+    m_boundary_fog->configure(height_map->get_width(), height_map->get_height(),
+                              height_map->get_tile_size());
   }
   set_wireframe_enabled(m_wireframe_enabled);
 }

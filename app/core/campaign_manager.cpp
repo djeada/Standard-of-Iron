@@ -143,53 +143,53 @@ void CampaignManager::configure_mission_victory_conditions(
   if (!mission.victory_conditions.empty()) {
     const auto &first_condition = mission.victory_conditions[0];
     if (first_condition.type == "destroy_all_enemies") {
-      mission_victory_config.victoryType = "elimination";
-      mission_victory_config.keyStructures = {"barracks"};
+      mission_victory_config.victory_type = "elimination";
+      mission_victory_config.key_structures = {"barracks"};
     } else if (first_condition.type == "survive_duration" &&
                first_condition.duration.has_value()) {
-      mission_victory_config.victoryType = "survive_time";
-      mission_victory_config.surviveTimeDuration = *first_condition.duration;
+      mission_victory_config.victory_type = "survive_time";
+      mission_victory_config.survive_time_duration = *first_condition.duration;
     } else if (first_condition.type == "control_structures" ||
                first_condition.type == "capture_structures") {
-      mission_victory_config.victoryType = first_condition.type;
+      mission_victory_config.victory_type = first_condition.type;
       if (!first_condition.structure_types.empty()) {
-        mission_victory_config.keyStructures.clear();
+        mission_victory_config.key_structures.clear();
         for (const auto &structure_type : first_condition.structure_types) {
           if (structure_type == "village") {
-            mission_victory_config.keyStructures.push_back("barracks");
+            mission_victory_config.key_structures.push_back("barracks");
           } else {
-            mission_victory_config.keyStructures.push_back(structure_type);
+            mission_victory_config.key_structures.push_back(structure_type);
           }
         }
       } else if (first_condition.structure_type.has_value()) {
         if (*first_condition.structure_type == "village") {
-          mission_victory_config.keyStructures = {"barracks"};
+          mission_victory_config.key_structures = {"barracks"};
         } else {
-          mission_victory_config.keyStructures = {
+          mission_victory_config.key_structures = {
               *first_condition.structure_type};
         }
       } else {
-        mission_victory_config.keyStructures = {"barracks"};
+        mission_victory_config.key_structures = {"barracks"};
       }
-      mission_victory_config.requiredKeyStructures =
+      mission_victory_config.required_key_structures =
           first_condition.min_count.value_or(1);
     } else {
-      mission_victory_config.victoryType = "elimination";
-      mission_victory_config.keyStructures = {"barracks"};
+      mission_victory_config.victory_type = "elimination";
+      mission_victory_config.key_structures = {"barracks"};
     }
   }
 
   if (!mission.defeat_conditions.empty()) {
-    mission_victory_config.defeatConditions.clear();
+    mission_victory_config.defeat_conditions.clear();
   }
   for (const auto &defeat_condition : mission.defeat_conditions) {
     if (defeat_condition.type == "lose_structure" &&
         defeat_condition.structure_type.has_value()) {
-      mission_victory_config.defeatConditions.push_back("no_key_structures");
-      mission_victory_config.keyStructures.push_back(
+      mission_victory_config.defeat_conditions.push_back("no_key_structures");
+      mission_victory_config.key_structures.push_back(
           *defeat_condition.structure_type);
     } else if (defeat_condition.type == "lose_all_units") {
-      mission_victory_config.defeatConditions.push_back("no_units");
+      mission_victory_config.defeat_conditions.push_back("no_units");
     }
   }
 

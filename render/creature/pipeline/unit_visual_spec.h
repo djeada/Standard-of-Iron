@@ -47,13 +47,13 @@ enum class CreatureKind : std::uint8_t {
 };
 
 using PaletteId = std::uint32_t;
-inline constexpr PaletteId kDefaultPalette = 0u;
+inline constexpr PaletteId k_default_palette = 0u;
 
 using SpecId = std::uint32_t;
-inline constexpr SpecId kInvalidSpec = static_cast<SpecId>(0xFFFFFFFFu);
+inline constexpr SpecId k_invalid_spec = static_cast<SpecId>(0xFFFFFFFFu);
 
 using CreatureAssetId = std::uint16_t;
-inline constexpr CreatureAssetId kInvalidCreatureAsset =
+inline constexpr CreatureAssetId k_invalid_creature_asset =
     static_cast<CreatureAssetId>(0xFFFFu);
 
 using PoseHookFn = void (*)(const Render::GL::DrawContext &ctx,
@@ -114,8 +114,8 @@ struct MountedSpec;
 struct UnitVisualSpec {
   std::string_view debug_name{};
   CreatureKind kind{CreatureKind::Humanoid};
-  CreatureAssetId creature_asset_id{kInvalidCreatureAsset};
-  PaletteId palette_id{kDefaultPalette};
+  CreatureAssetId creature_asset_id{k_invalid_creature_asset};
+  PaletteId palette_id{k_default_palette};
   PoseHookFn pose_hook{nullptr};
   VariantHookFn variant_hook{nullptr};
   ProportionScaling scaling{};
@@ -124,7 +124,7 @@ struct UnitVisualSpec {
   LegacySlotMask owned_legacy_slots{LegacySlotMask::None};
 
   Render::Creature::ArchetypeId archetype_id{
-      Render::Creature::kInvalidArchetype};
+      Render::Creature::k_invalid_archetype};
 
   const MountedSpec *mounted{nullptr};
 };
@@ -132,7 +132,7 @@ struct UnitVisualSpec {
 struct MountedSpec {
   UnitVisualSpec rider{};
   UnitVisualSpec mount{};
-  SocketIndex mount_socket{kInvalidSocket};
+  SocketIndex mount_socket{k_invalid_socket};
 };
 
 } // namespace Render::Creature::Pipeline

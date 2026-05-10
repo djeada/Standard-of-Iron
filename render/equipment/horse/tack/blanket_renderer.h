@@ -13,7 +13,7 @@ namespace Render::GL {
 
 auto blanket_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kBlanketRoleCount = 1;
+inline constexpr std::uint32_t k_blanket_role_count = 1;
 
 auto blanket_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                               std::size_t max) -> std::uint32_t;

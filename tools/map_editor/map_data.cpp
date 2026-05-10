@@ -9,14 +9,14 @@ MapData::MapData(QObject *parent) : QObject(parent) { clear(); }
 void MapData::clear() {
   m_name = "New Map";
   m_description.clear();
-  m_coordSystem = "grid";
-  m_maxTroopsPerPlayer = 2000;
+  m_coord_system = "grid";
+  m_max_troops_per_player = 2000;
 
   m_grid = GridSettings{100, 100, 1.0F};
 
   m_terrain.clear();
   m_firecamps.clear();
-  m_linearElements.clear();
+  m_linear_elements.clear();
   m_structures.clear();
 
   m_biome = QJsonObject();
@@ -25,8 +25,8 @@ void MapData::clear() {
   m_victory = QJsonObject();
   m_rain = QJsonObject();
 
-  m_undoStack.clear();
-  m_redoStack.clear();
+  m_undo_stack.clear();
+  m_redo_stack.clear();
 
   setModified(false);
   emit dataChanged();
@@ -59,34 +59,34 @@ void MapData::executeCommand(std::unique_ptr<Command> cmd) {
     return;
   }
   cmd->execute();
-  m_undoStack.push_back(std::move(cmd));
+  m_undo_stack.push_back(std::move(cmd));
 
-  m_redoStack.clear();
+  m_redo_stack.clear();
   setModified(true);
   emit undoRedoChanged();
 }
 
 void MapData::undo() {
-  if (m_undoStack.empty()) {
+  if (m_undo_stack.empty()) {
     return;
   }
-  auto cmd = std::move(m_undoStack.back());
-  m_undoStack.pop_back();
+  auto cmd = std::move(m_undo_stack.back());
+  m_undo_stack.pop_back();
   cmd->undo();
-  m_redoStack.push_back(std::move(cmd));
+  m_redo_stack.push_back(std::move(cmd));
   setModified(true);
   emit dataChanged();
   emit undoRedoChanged();
 }
 
 void MapData::redo() {
-  if (m_redoStack.empty()) {
+  if (m_redo_stack.empty()) {
     return;
   }
-  auto cmd = std::move(m_redoStack.back());
-  m_redoStack.pop_back();
+  auto cmd = std::move(m_redo_stack.back());
+  m_redo_stack.pop_back();
   cmd->execute();
-  m_undoStack.push_back(std::move(cmd));
+  m_undo_stack.push_back(std::move(cmd));
   setModified(true);
   emit dataChanged();
   emit undoRedoChanged();
@@ -111,14 +111,14 @@ bool MapData::loadFromJson(const QString &filePath) {
 
   m_name = root["name"].toString("Untitled Map");
   m_description = root["description"].toString();
-  m_coordSystem = root["coordSystem"].toString("grid");
-  m_maxTroopsPerPlayer = root["maxTroopsPerPlayer"].toInt(2000);
+  m_coord_system = root["coordSystem"].toString("grid");
+  m_max_troops_per_player = root["maxTroopsPerPlayer"].toInt(2000);
 
   if (root.contains("grid")) {
     QJsonObject gridObj = root["grid"].toObject();
     m_grid.width = gridObj["width"].toInt(100);
     m_grid.height = gridObj["height"].toInt(100);
-    m_grid.tileSize = static_cast<float>(gridObj["tileSize"].toDouble(1.0));
+    m_grid.tile_size = static_cast<float>(gridObj["tile_size"].toDouble(1.0));
   }
 
   m_biome = root["biome"].toObject();
@@ -129,7 +129,7 @@ bool MapData::loadFromJson(const QString &filePath) {
 
   m_terrain.clear();
   m_firecamps.clear();
-  m_linearElements.clear();
+  m_linear_elements.clear();
   m_structures.clear();
 
   if (root.contains("terrain")) {
@@ -152,8 +152,8 @@ bool MapData::loadFromJson(const QString &filePath) {
     parseStructuresFromSpawns(root["spawns"].toArray());
   }
 
-  m_undoStack.clear();
-  m_redoStack.clear();
+  m_undo_stack.clear();
+  m_redo_stack.clear();
 
   setModified(false);
   emit dataChanged();
@@ -168,13 +168,13 @@ bool MapData::saveToJson(const QString &filePath) const {
   if (!m_description.isEmpty()) {
     root["description"] = m_description;
   }
-  root["coordSystem"] = m_coordSystem;
-  root["maxTroopsPerPlayer"] = m_maxTroopsPerPlayer;
+  root["coordSystem"] = m_coord_system;
+  root["maxTroopsPerPlayer"] = m_max_troops_per_player;
 
   QJsonObject gridObj;
   gridObj["width"] = m_grid.width;
   gridObj["height"] = m_grid.height;
-  gridObj["tileSize"] = static_cast<double>(m_grid.tileSize);
+  gridObj["tile_size"] = static_cast<double>(m_grid.tile_size);
   root["grid"] = gridObj;
 
   if (!m_biome.isEmpty()) {
@@ -309,7 +309,7 @@ void MapData::parseRiversArray(const QJsonArray &arr) {
       }
     }
 
-    m_linearElements.append(elem);
+    m_linear_elements.append(elem);
   }
 }
 
@@ -337,7 +337,7 @@ void MapData::parseRoadsArray(const QJsonArray &arr) {
       }
     }
 
-    m_linearElements.append(elem);
+    m_linear_elements.append(elem);
   }
 }
 
@@ -365,7 +365,7 @@ void MapData::parseBridgesArray(const QJsonArray &arr) {
       }
     }
 
-    m_linearElements.append(elem);
+    m_linear_elements.append(elem);
   }
 }
 
@@ -434,7 +434,7 @@ QJsonArray MapData::firecampsToJson() const {
 
 QJsonArray MapData::riversToJson() const {
   QJsonArray arr;
-  for (const auto &elem : m_linearElements) {
+  for (const auto &elem : m_linear_elements) {
     if (elem.type != "river") {
       continue;
     }
@@ -456,7 +456,7 @@ QJsonArray MapData::riversToJson() const {
 
 QJsonArray MapData::roadsToJson() const {
   QJsonArray arr;
-  for (const auto &elem : m_linearElements) {
+  for (const auto &elem : m_linear_elements) {
     if (elem.type != "road") {
       continue;
     }
@@ -479,7 +479,7 @@ QJsonArray MapData::roadsToJson() const {
 
 QJsonArray MapData::bridgesToJson() const {
   QJsonArray arr;
-  for (const auto &elem : m_linearElements) {
+  for (const auto &elem : m_linear_elements) {
     if (elem.type != "bridge") {
       continue;
     }
@@ -545,22 +545,22 @@ void MapData::removeFirecamp(int index) {
 }
 
 void MapData::addLinearElement(const LinearElement &element) {
-  m_linearElements.append(element);
+  m_linear_elements.append(element);
   setModified(true);
   emit dataChanged();
 }
 
 void MapData::updateLinearElement(int index, const LinearElement &element) {
-  if (index >= 0 && index < m_linearElements.size()) {
-    m_linearElements[index] = element;
+  if (index >= 0 && index < m_linear_elements.size()) {
+    m_linear_elements[index] = element;
     setModified(true);
     emit dataChanged();
   }
 }
 
 void MapData::removeLinearElement(int index) {
-  if (index >= 0 && index < m_linearElements.size()) {
-    m_linearElements.removeAt(index);
+  if (index >= 0 && index < m_linear_elements.size()) {
+    m_linear_elements.removeAt(index);
     setModified(true);
     emit dataChanged();
   }
@@ -598,12 +598,12 @@ void MapData::parseStructuresFromSpawns(const QJsonArray &arr) {
       elem.type = type;
       elem.x = static_cast<float>(obj["x"].toDouble());
       elem.z = static_cast<float>(obj["z"].toDouble());
-      elem.playerId = obj["playerId"].toInt(0);
-      elem.maxPopulation = obj["maxPopulation"].toInt(150);
+      elem.player_id = obj["player_id"].toInt(0);
+      elem.max_population = obj["max_population"].toInt(150);
       elem.nation = obj["nation"].toString();
 
-      QStringList knownKeys = {"type",          "x",     "z", "playerId",
-                               "maxPopulation", "nation"};
+      QStringList knownKeys = {"type",          "x",     "z", "player_id",
+                               "max_population", "nation"};
       for (const QString &key : obj.keys()) {
         if (!knownKeys.contains(key)) {
           elem.extraFields[key] = obj[key];
@@ -622,10 +622,10 @@ QJsonArray MapData::structuresToSpawnsJson() const {
     obj["type"] = elem.type;
     obj["x"] = static_cast<double>(elem.x);
     obj["z"] = static_cast<double>(elem.z);
-    if (elem.playerId > 0) {
-      obj["playerId"] = elem.playerId;
+    if (elem.player_id > 0) {
+      obj["player_id"] = elem.player_id;
     }
-    obj["maxPopulation"] = elem.maxPopulation;
+    obj["max_population"] = elem.max_population;
     if (!elem.nation.isEmpty()) {
       obj["nation"] = elem.nation;
     }

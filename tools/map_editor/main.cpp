@@ -22,8 +22,8 @@ auto main(int argc, char *argv[]) -> int {
 
   const QStringList args = parser.positionalArguments();
   if (!args.isEmpty()) {
-    const QString &filePath = args.first();
-    QTimer::singleShot(0, [&window, filePath]() { window.loadFile(filePath); });
+    const QString &file_path = args.first();
+    QTimer::singleShot(0, [&window, file_path]() { window.loadFile(file_path); });
   }
 
   return QApplication::exec();

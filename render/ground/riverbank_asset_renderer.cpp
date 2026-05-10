@@ -50,13 +50,13 @@ void RiverbankAssetRenderer::configure(
     const Game::Map::TerrainHeightMap &height_map,
     const Game::Map::BiomeSettings &biome_settings) {
   m_river_segments = river_segments;
-  m_width = height_map.getWidth();
-  m_height = height_map.getHeight();
-  m_tile_size = height_map.getTileSize();
-  m_height_data = height_map.getHeightData();
+  m_width = height_map.get_width();
+  m_height = height_map.get_height();
+  m_tile_size = height_map.get_tile_size();
+  m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
-  m_noiseSeed = biome_settings.seed;
+  m_noise_seed = biome_settings.seed;
 
   m_asset_state.reset_instances();
 
@@ -140,7 +140,7 @@ void RiverbankAssetRenderer::generate_asset_instances() {
 
     constexpr uint32_t k_rng_segment_multiplier = 1000;
     uint32_t rng =
-        m_noiseSeed + static_cast<uint32_t>(seg_idx * k_rng_segment_multiplier);
+        m_noise_seed + static_cast<uint32_t>(seg_idx * k_rng_segment_multiplier);
 
     for (int i = 0; i < num_steps; ++i) {
       float const t = static_cast<float>(i) /

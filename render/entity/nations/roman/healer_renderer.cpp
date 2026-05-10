@@ -66,7 +66,7 @@ void ensure_healer_styles_registered() {
 
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
-constexpr std::uint32_t kHealerTunicRoleCount = 6;
+constexpr std::uint32_t k_healer_tunic_role_count = 6;
 
 enum HealerTunicPaletteSlot : std::uint8_t {
   k_healer_white_slot = 0U,
@@ -80,7 +80,7 @@ enum HealerTunicPaletteSlot : std::uint8_t {
 auto healer_tunic_fill_role_colors(const HumanoidPalette &palette,
                                    QVector3D *out,
                                    std::size_t max) -> std::uint32_t {
-  if (max < kHealerTunicRoleCount) {
+  if (max < k_healer_tunic_role_count) {
     return 0U;
   }
   out[0] = QVector3D(0.96F, 0.95F, 0.92F);
@@ -90,7 +90,7 @@ auto healer_tunic_fill_role_colors(const HumanoidPalette &palette,
   out[4] = Render::GL::Humanoid::saturate_color(palette.metal * 0.92F +
                                                 QVector3D(0.05F, 0.04F, 0.0F));
   out[5] = palette.leather;
-  return kHealerTunicRoleCount;
+  return k_healer_tunic_role_count;
 }
 
 auto healer_tunic_archetype() -> const RenderArchetype & {
@@ -245,7 +245,7 @@ auto healer_tunic_make_static_attachment(std::uint16_t chest_bone_index,
       .socket_bone_index = chest_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });
-  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(kHealerTunicRoleCount);
+  for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(k_healer_tunic_role_count);
        ++i) {
     spec.palette_role_remap[i] = static_cast<std::uint8_t>(base_role_byte + i);
   }
@@ -297,9 +297,9 @@ public:
       static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
           Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-          k_helmet_base_role_byte + Render::GL::kRomanLightHelmetRoleCount);
+          k_helmet_base_role_byte + Render::GL::k_roman_light_helmet_role_count);
       static const auto k_tunic_base_role_byte = static_cast<std::uint8_t>(
-          k_armor_base_role_byte + Render::GL::kRomanLightArmorRoleCount);
+          k_armor_base_role_byte + Render::GL::k_roman_light_armor_role_count);
       static const auto k_head_bind_matrix =
           Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
               Render::Humanoid::HumanoidBone::Head)];

@@ -14,7 +14,7 @@ namespace Render::GL {
 struct RomanHeavyArmorConfig {};
 struct RomanLightArmorConfig {};
 
-inline constexpr std::uint32_t kRomanHeavyArmorRoleCount = 4;
+inline constexpr std::uint32_t k_roman_heavy_armor_role_count = 4;
 
 auto roman_heavy_armor_fill_role_colors(const HumanoidPalette &palette,
                                         QVector3D *out,
@@ -24,7 +24,7 @@ auto roman_heavy_armor_make_static_attachment(
     std::uint16_t torso_socket_bone_index,
     std::uint8_t base_role_byte) -> Render::Creature::StaticAttachmentSpec;
 
-inline constexpr std::uint32_t kRomanLightArmorRoleCount = 3;
+inline constexpr std::uint32_t k_roman_light_armor_role_count = 3;
 
 auto roman_light_armor_fill_role_colors(const HumanoidPalette &palette,
                                         QVector3D *out,

@@ -32,7 +32,7 @@ auto make_test_archetype() -> const RenderArchetype & {
 
 TEST(PerUnitArchetype, UnitVisualSpecDefaultsToInvalidArchetype) {
   UnitVisualSpec spec{};
-  EXPECT_EQ(spec.archetype_id, kInvalidArchetype);
+  EXPECT_EQ(spec.archetype_id, k_invalid_archetype);
 }
 
 TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
@@ -48,10 +48,10 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
       "per_unit_archetype_test/humanoid_unit", CreatureKind::Humanoid,
       std::span<const StaticAttachmentSpec>{attachments});
 
-  ASSERT_NE(id, kInvalidArchetype);
-  EXPECT_NE(id, ArchetypeRegistry::kHumanoidBase);
-  EXPECT_NE(id, ArchetypeRegistry::kHorseBase);
-  EXPECT_NE(id, ArchetypeRegistry::kElephantBase);
+  ASSERT_NE(id, k_invalid_archetype);
+  EXPECT_NE(id, ArchetypeRegistry::k_humanoid_base);
+  EXPECT_NE(id, ArchetypeRegistry::k_horse_base);
+  EXPECT_NE(id, ArchetypeRegistry::k_elephant_base);
 
   auto const *desc = reg.get(id);
   ASSERT_NE(desc, nullptr);
@@ -61,7 +61,7 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
   EXPECT_EQ(desc->attachments_view()[0].archetype, &make_test_archetype());
   EXPECT_EQ(desc->attachments_view()[0].palette_role_remap[1], 5U);
 
-  auto const *base = reg.get(ArchetypeRegistry::kHumanoidBase);
+  auto const *base = reg.get(ArchetypeRegistry::k_humanoid_base);
   ASSERT_NE(base, nullptr);
   for (std::size_t i = 0; i < animation_state_count(); ++i) {
     EXPECT_EQ(desc->bpat_clip[i], base->bpat_clip[i]) << "state idx " << i;
@@ -71,7 +71,7 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
 
 TEST(PerUnitArchetype, BaselineStillExposesNoAttachments) {
   auto const &reg = ArchetypeRegistry::instance();
-  auto const *humanoid = reg.get(ArchetypeRegistry::kHumanoidBase);
+  auto const *humanoid = reg.get(ArchetypeRegistry::k_humanoid_base);
   ASSERT_NE(humanoid, nullptr);
   EXPECT_EQ(humanoid->bake_attachment_count, 0U);
   EXPECT_TRUE(humanoid->attachments_view().empty());
@@ -81,14 +81,14 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeForHorseInheritsHorseClipTable) {
   auto &reg = ArchetypeRegistry::instance();
   auto const id = reg.register_unit_archetype(
       "per_unit_archetype_test/horse_unit", CreatureKind::Horse, {});
-  ASSERT_NE(id, kInvalidArchetype);
+  ASSERT_NE(id, k_invalid_archetype);
 
   auto const *desc = reg.get(id);
   ASSERT_NE(desc, nullptr);
   EXPECT_EQ(desc->species, CreatureKind::Horse);
   EXPECT_EQ(desc->bake_attachment_count, 0U);
 
-  auto const *base = reg.get(ArchetypeRegistry::kHorseBase);
+  auto const *base = reg.get(ArchetypeRegistry::k_horse_base);
   ASSERT_NE(base, nullptr);
   for (std::size_t i = 0; i < animation_state_count(); ++i) {
     EXPECT_EQ(desc->bpat_clip[i], base->bpat_clip[i]);
@@ -99,7 +99,7 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeForHorseInheritsHorseClipTable) {
 TEST(PerUnitArchetype, ExcessAttachmentsAreClampedToCap) {
   auto &reg = ArchetypeRegistry::instance();
 
-  std::array<StaticAttachmentSpec, ArchetypeDescriptor::kMaxBakeAttachments + 4>
+  std::array<StaticAttachmentSpec, ArchetypeDescriptor::k_max_bake_attachments + 4>
       lots{};
   for (auto &a : lots) {
     a.archetype = &make_test_archetype();
@@ -109,19 +109,19 @@ TEST(PerUnitArchetype, ExcessAttachmentsAreClampedToCap) {
   auto const id = reg.register_unit_archetype(
       "per_unit_archetype_test/clamp", CreatureKind::Humanoid,
       std::span<const StaticAttachmentSpec>{lots});
-  ASSERT_NE(id, kInvalidArchetype);
+  ASSERT_NE(id, k_invalid_archetype);
 
   auto const *desc = reg.get(id);
   ASSERT_NE(desc, nullptr);
   EXPECT_EQ(desc->bake_attachment_count,
-            ArchetypeDescriptor::kMaxBakeAttachments);
+            ArchetypeDescriptor::k_max_bake_attachments);
 }
 
 TEST(PerUnitArchetype, MountedSpeciesIsRejected) {
   auto &reg = ArchetypeRegistry::instance();
   auto const id = reg.register_unit_archetype(
       "per_unit_archetype_test/mounted_should_fail", CreatureKind::Mounted, {});
-  EXPECT_EQ(id, kInvalidArchetype);
+  EXPECT_EQ(id, k_invalid_archetype);
 }
 
 } // namespace

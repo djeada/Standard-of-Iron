@@ -139,13 +139,13 @@ public:
       static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
           Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_greaves_base_role_byte = static_cast<std::uint8_t>(
-          k_helmet_base_role_byte + Render::GL::kRomanHeavyHelmetRoleCount);
+          k_helmet_base_role_byte + Render::GL::k_roman_heavy_helmet_role_count);
       static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(
-          k_greaves_base_role_byte + Render::GL::kRomanGreavesRoleCount);
+          k_greaves_base_role_byte + Render::GL::k_roman_greaves_role_count);
       static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-          k_shoulder_base_role_byte + Render::GL::kRomanShoulderCoverRoleCount);
+          k_shoulder_base_role_byte + Render::GL::k_roman_shoulder_cover_role_count);
       static const auto k_spear_base_role_byte = static_cast<std::uint8_t>(
-          k_armor_base_role_byte + Render::GL::kRomanLightArmorRoleCount);
+          k_armor_base_role_byte + Render::GL::k_roman_light_armor_role_count);
       static const auto k_chest_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
       static const auto k_hand_r_bone =

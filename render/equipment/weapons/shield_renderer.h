@@ -47,7 +47,7 @@ private:
   ShieldRenderConfig m_base;
 };
 
-inline constexpr std::uint32_t kShieldRoleCount = 6;
+inline constexpr std::uint32_t k_shield_role_count = 6;
 
 auto shield_fill_role_colors(const HumanoidPalette &palette,
                              const ShieldRenderConfig &config, QVector3D *out,

@@ -36,11 +36,11 @@ auto light_cavalry_saddle_archetype() -> const RenderArchetype & {
 auto light_cavalry_saddle_fill_role_colors(const HorseVariant &variant,
                                            QVector3D *out,
                                            std::size_t max) -> std::uint32_t {
-  if (max < kLightCavalrySaddleRoleCount) {
+  if (max < k_light_cavalry_saddle_role_count) {
     return 0;
   }
   out[0] = variant.saddle_color;
-  return kLightCavalrySaddleRoleCount;
+  return k_light_cavalry_saddle_role_count;
 }
 
 auto light_cavalry_saddle_make_static_attachment(

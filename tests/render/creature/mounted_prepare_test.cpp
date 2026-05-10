@@ -77,13 +77,13 @@ auto rider_root_matrix(Render::Creature::ArchetypeId archetype_id,
   auto const base_clip =
       Render::Creature::ArchetypeRegistry::instance().bpat_clip(archetype_id,
                                                                 state);
-  if (base_clip == ArchetypeDescriptor::kUnmappedClip) {
+  if (base_clip == ArchetypeDescriptor::k_unmapped_clip) {
     return std::nullopt;
   }
 
   auto const clip_id = static_cast<std::uint16_t>(base_clip + clip_variant);
   auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::kSpeciesHumanoid);
+      Render::Creature::Bpat::k_species_humanoid);
   if (blob == nullptr || clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -410,7 +410,7 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHumanoid,
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid,
                                 root + "/humanoid.bpat"));
 
   Render::GL::MountedKnightRendererConfig cfg;

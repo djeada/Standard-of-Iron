@@ -21,7 +21,7 @@ enum Anchor : AnchorId {
   Roof_Apex,
 };
 
-inline constexpr PartDef kParts[] = {
+inline constexpr PartDef k_parts[] = {
 
     {PartKind::Cylinder,
      0,
@@ -30,7 +30,7 @@ inline constexpr PartDef kParts[] = {
      {180, 165, 140, 255},
      Base_Centre,
      Base_Top_Centre,
-     kInvalidScalar,
+     k_invalid_scalar,
      0.9F,
      1.0F,
      1.0F,
@@ -44,7 +44,7 @@ inline constexpr PartDef kParts[] = {
      {128, 90, 50, 255},
      Leg_Front_Left_Bot,
      Leg_Front_Left_Top,
-     kInvalidScalar,
+     k_invalid_scalar,
      0.12F,
      1.0F,
      1.0F,
@@ -57,7 +57,7 @@ inline constexpr PartDef kParts[] = {
      {128, 90, 50, 255},
      Leg_Front_Right_Bot,
      Leg_Front_Right_Top,
-     kInvalidScalar,
+     k_invalid_scalar,
      0.12F,
      1.0F,
      1.0F,
@@ -70,7 +70,7 @@ inline constexpr PartDef kParts[] = {
      {128, 90, 50, 255},
      Leg_Back_Left_Bot,
      Leg_Back_Left_Top,
-     kInvalidScalar,
+     k_invalid_scalar,
      0.12F,
      1.0F,
      1.0F,
@@ -83,7 +83,7 @@ inline constexpr PartDef kParts[] = {
      {128, 90, 50, 255},
      Leg_Back_Right_Bot,
      Leg_Back_Right_Top,
-     kInvalidScalar,
+     k_invalid_scalar,
      0.12F,
      1.0F,
      1.0F,
@@ -97,7 +97,7 @@ inline constexpr PartDef kParts[] = {
      {150, 110, 70, 255},
      Platform_Low_Corner,
      Platform_High_Corner,
-     kInvalidScalar,
+     k_invalid_scalar,
      1.0F,
      1.0F,
      1.0F,
@@ -111,7 +111,7 @@ inline constexpr PartDef kParts[] = {
      {90, 55, 35, 255},
      Roof_Base,
      Roof_Apex,
-     kInvalidScalar,
+     k_invalid_scalar,
      1.3F,
      1.0F,
      1.0F,
@@ -119,6 +119,6 @@ inline constexpr PartDef kParts[] = {
      1.0F},
 };
 
-inline constexpr RigDef kRig = make_rig("watchtower", kParts);
+inline constexpr RigDef k_rig = make_rig("watchtower", k_parts);
 
 } // namespace Render::RigDSL::Watchtower

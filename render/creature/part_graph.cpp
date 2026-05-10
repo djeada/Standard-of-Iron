@@ -102,7 +102,7 @@ auto submit_part_graph(
 
     BoneIndex const anchor = prim.params.anchor_bone;
     BoneIndex const tail = prim.params.tail_bone;
-    if (anchor == kInvalidBone || anchor >= bone_count ||
+    if (anchor == k_invalid_bone || anchor >= bone_count ||
         anchor >= palette.size()) {
       ++stats.skipped_invalid;
       continue;
@@ -111,7 +111,7 @@ auto submit_part_graph(
                              prim.shape == PrimitiveShape::Capsule ||
                              prim.shape == PrimitiveShape::Cone ||
                              prim.shape == PrimitiveShape::OrientedCylinder);
-    if (needs_tail && (tail == kInvalidBone || tail >= bone_count ||
+    if (needs_tail && (tail == k_invalid_bone || tail >= bone_count ||
                        tail >= palette.size())) {
       ++stats.skipped_invalid;
       continue;
@@ -255,7 +255,7 @@ auto validate_part_graph(const SkeletonTopology &topology,
     if (p.shape == PrimitiveShape::None) {
       return false;
     }
-    if (p.params.anchor_bone == kInvalidBone || p.params.anchor_bone >= n) {
+    if (p.params.anchor_bone == k_invalid_bone || p.params.anchor_bone >= n) {
       return false;
     }
     bool const needs_tail = (p.shape == PrimitiveShape::Cylinder ||
@@ -263,7 +263,7 @@ auto validate_part_graph(const SkeletonTopology &topology,
                              p.shape == PrimitiveShape::Cone ||
                              p.shape == PrimitiveShape::OrientedCylinder);
     if (needs_tail) {
-      if (p.params.tail_bone == kInvalidBone || p.params.tail_bone >= n) {
+      if (p.params.tail_bone == k_invalid_bone || p.params.tail_bone >= n) {
         return false;
       }
     }

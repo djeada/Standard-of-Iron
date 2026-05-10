@@ -26,7 +26,7 @@ struct CloakMeshes {
   Mesh *shoulder = nullptr;
 };
 
-inline constexpr std::uint32_t kCloakRoleCount = 2;
+inline constexpr std::uint32_t k_cloak_role_count = 2;
 
 auto cloak_fill_role_colors_with_primary(const QVector3D &primary_color,
                                          const HumanoidPalette &palette,

@@ -48,11 +48,11 @@ auto leather_barding_barrel_archetype() -> const RenderArchetype & {
 auto leather_barding_fill_role_colors(const HorseVariant &variant,
                                       QVector3D *out,
                                       std::size_t max) -> std::uint32_t {
-  if (max < kLeatherBardingRoleCount) {
+  if (max < k_leather_barding_role_count) {
     return 0;
   }
   out[0] = variant.saddle_color * 0.90F;
-  return kLeatherBardingRoleCount;
+  return k_leather_barding_role_count;
 }
 
 auto leather_barding_make_static_attachment(

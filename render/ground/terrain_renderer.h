@@ -43,12 +43,12 @@ private:
     int min_z = 0;
     int max_z = 0;
     Game::Map::TerrainType type = Game::Map::TerrainType::Flat;
-    static constexpr float kDefaultColorR = 0.3F;
-    static constexpr float kDefaultColorG = 0.5F;
-    static constexpr float kDefaultColorB = 0.3F;
+    static constexpr float k_default_color_r = 0.3F;
+    static constexpr float k_default_color_g = 0.5F;
+    static constexpr float k_default_color_b = 0.3F;
 
     static auto default_color() -> QVector3D {
-      return {kDefaultColorR, kDefaultColorG, kDefaultColorB};
+      return {k_default_color_r, k_default_color_g, k_default_color_b};
     }
 
     QVector3D color = default_color();

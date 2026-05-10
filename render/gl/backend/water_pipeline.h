@@ -12,7 +12,7 @@ namespace BackendPipelines {
 class WaterPipeline final : public IPipeline {
 public:
   explicit WaterPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shaderCache(shader_cache) {}
+      : m_backend(backend), m_shader_cache(shader_cache) {}
   ~WaterPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -55,19 +55,19 @@ public:
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
   };
 
-  GL::Shader *m_riverShader = nullptr;
-  GL::Shader *m_riverbankShader = nullptr;
-  GL::Shader *m_bridgeShader = nullptr;
+  GL::Shader *m_river_shader = nullptr;
+  GL::Shader *m_riverbank_shader = nullptr;
+  GL::Shader *m_bridge_shader = nullptr;
   GL::Shader *m_road_shader = nullptr;
 
-  RiverUniforms m_riverUniforms;
-  RiverbankUniforms m_riverbankUniforms;
-  BridgeUniforms m_bridgeUniforms;
+  RiverUniforms m_river_uniforms;
+  RiverbankUniforms m_riverbank_uniforms;
+  BridgeUniforms m_bridge_uniforms;
   RoadUniforms m_road_uniforms;
 
 private:
   GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shaderCache = nullptr;
+  GL::ShaderCache *m_shader_cache = nullptr;
 
   void cache_river_uniforms();
   void cache_riverbank_uniforms();

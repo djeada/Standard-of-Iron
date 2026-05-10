@@ -41,14 +41,14 @@ auto champion_archetype() -> const RenderArchetype & {
 
 auto champion_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                                std::size_t max) -> std::uint32_t {
-  if (max < kChampionRoleCount) {
+  if (max < k_champion_role_count) {
     return 0;
   }
   const QVector3D armor_color = variant.tack_color * 0.82F;
   out[k_body_slot] = armor_color;
   out[k_trim_slot] = armor_color * 1.05F;
   out[k_shadow_slot] = armor_color * 0.95F;
-  return kChampionRoleCount;
+  return k_champion_role_count;
 }
 
 auto champion_make_static_attachment(

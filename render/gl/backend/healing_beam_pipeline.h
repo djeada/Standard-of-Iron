@@ -23,7 +23,7 @@ class HealingBeamPipeline final : public IPipeline {
 public:
   explicit HealingBeamPipeline(GL::Backend *backend,
                                GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shaderCache(shader_cache) {}
+      : m_backend(backend), m_shader_cache(shader_cache) {}
   ~HealingBeamPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -46,13 +46,13 @@ private:
   void shutdown_geometry();
 
   GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shaderCache = nullptr;
-  GL::Shader *m_beamShader = nullptr;
+  GL::ShaderCache *m_shader_cache = nullptr;
+  GL::Shader *m_beam_shader = nullptr;
 
   GLuint m_vao = 0;
-  GLuint m_vertexBuffer = 0;
-  GLuint m_indexBuffer = 0;
-  GLsizei m_indexCount = 0;
+  GLuint m_vertex_buffer = 0;
+  GLuint m_index_buffer = 0;
+  GLsizei m_index_count = 0;
 
   struct BeamUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};

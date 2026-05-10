@@ -15,8 +15,8 @@ namespace Render::Creature {
 using BoneIndex = std::uint16_t;
 using SocketIndex = std::uint16_t;
 
-inline constexpr BoneIndex kInvalidBone = static_cast<BoneIndex>(0xFFFFu);
-inline constexpr SocketIndex kInvalidSocket = static_cast<SocketIndex>(0xFFFFu);
+inline constexpr BoneIndex k_invalid_bone = static_cast<BoneIndex>(0xFFFFu);
+inline constexpr SocketIndex k_invalid_socket = static_cast<SocketIndex>(0xFFFFu);
 
 enum class BoneBasisKind : std::uint8_t {
   FromHeadTail = 0,
@@ -34,12 +34,12 @@ using JointProviderFn = BoneResolution (*)(void *user, BoneIndex bone);
 
 struct BoneDef {
   std::string_view name;
-  BoneIndex parent{kInvalidBone};
+  BoneIndex parent{k_invalid_bone};
 };
 
 struct SocketDef {
   std::string_view name;
-  BoneIndex bone{kInvalidBone};
+  BoneIndex bone{k_invalid_bone};
 
   QVector3D local_offset{};
   QVector3D local_right{1.0F, 0.0F, 0.0F};

@@ -13,11 +13,11 @@ namespace Render::Equipment {
 
 namespace {
 
-constexpr float kAxisEpsilonSq = 1.0e-6F;
+constexpr float k_axis_epsilon_sq = 1.0e-6F;
 
 auto safe_normalize(const QVector3D &v,
                     const QVector3D &fallback) -> QVector3D {
-  if (v.lengthSquared() <= kAxisEpsilonSq) {
+  if (v.lengthSquared() <= k_axis_epsilon_sq) {
     return fallback;
   }
   QVector3D n = v;
@@ -49,7 +49,7 @@ auto build_static_attachment(const AttachmentBuildInput &in)
 
   const std::size_t copy_count =
       std::min(in.palette_role_remap.size(),
-               Render::Creature::StaticAttachmentSpec::kPaletteSlotCount);
+               Render::Creature::StaticAttachmentSpec::k_palette_slot_count);
   for (std::size_t i = 0; i < copy_count; ++i) {
     spec.palette_role_remap[i] = in.palette_role_remap[i];
   }
@@ -68,7 +68,7 @@ auto build_socket_static_attachment(const SocketAttachmentBuildInput &in)
 
   const std::size_t copy_count =
       std::min(in.palette_role_remap.size(),
-               Render::Creature::StaticAttachmentSpec::kPaletteSlotCount);
+               Render::Creature::StaticAttachmentSpec::k_palette_slot_count);
   for (std::size_t i = 0; i < copy_count; ++i) {
     spec.palette_role_remap[i] = in.palette_role_remap[i];
   }
@@ -95,7 +95,7 @@ auto compose_axis_aligned_unit_local(const QVector3D &origin,
   const QVector3D y = safe_normalize(y_axis, QVector3D(0.0F, 1.0F, 0.0F));
 
   QVector3D x = QVector3D::crossProduct(QVector3D(0.0F, 1.0F, 0.0F), y);
-  if (x.lengthSquared() <= kAxisEpsilonSq) {
+  if (x.lengthSquared() <= k_axis_epsilon_sq) {
     x = QVector3D::crossProduct(QVector3D(1.0F, 0.0F, 0.0F), y);
   }
   x = safe_normalize(x, QVector3D(1.0F, 0.0F, 0.0F));

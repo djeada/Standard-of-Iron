@@ -221,7 +221,7 @@ void ShieldRenderer::submit(const ShieldRenderConfig &m_config,
 auto shield_fill_role_colors(const HumanoidPalette &palette,
                              const ShieldRenderConfig &config, QVector3D *out,
                              std::size_t max) -> std::uint32_t {
-  if (max < kShieldRoleCount) {
+  if (max < k_shield_role_count) {
     return 0;
   }
   out[k_shield_slot] = config.shield_color;
@@ -230,7 +230,7 @@ auto shield_fill_role_colors(const HumanoidPalette &palette,
   out[k_inner_ring_slot] = palette.leather * 0.90F;
   out[k_metal_slot] = config.metal_color;
   out[k_grip_slot] = palette.leather;
-  return kShieldRoleCount;
+  return k_shield_role_count;
 }
 
 auto shield_make_static_attachment(const ShieldRenderConfig &config,

@@ -50,9 +50,9 @@ enum class CoordSystem { Grid, World };
 
 struct VictoryConfig {
   QString victory_type = "elimination";
-  std::vector<QString> keyStructures = {"barracks"};
+  std::vector<QString> key_structures = {"barracks"};
   float survive_time_duration = 0.0F;
-  std::vector<QString> defeatConditions = {"no_key_structures"};
+  std::vector<QString> defeat_conditions = {"no_key_structures"};
   int required_key_structures = 0;
 };
 

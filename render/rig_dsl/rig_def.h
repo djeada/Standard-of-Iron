@@ -36,10 +36,10 @@ struct PackedColor {
 };
 
 using AnchorId = std::uint16_t;
-inline constexpr AnchorId kInvalidAnchor = 0xFFFFU;
+inline constexpr AnchorId k_invalid_anchor = 0xFFFFU;
 
 using ScalarId = std::uint16_t;
-inline constexpr ScalarId kInvalidScalar = 0xFFFFU;
+inline constexpr ScalarId k_invalid_scalar = 0xFFFFU;
 
 struct PartDef {
   PartKind kind{PartKind::Cylinder};
@@ -47,9 +47,9 @@ struct PartDef {
   std::uint8_t lod_mask{0xFFU};
   PaletteSlot color_slot{PaletteSlot::Literal};
   PackedColor literal_color{};
-  AnchorId anchor_a{kInvalidAnchor};
-  AnchorId anchor_b{kInvalidAnchor};
-  ScalarId scale_id{kInvalidScalar};
+  AnchorId anchor_a{k_invalid_anchor};
+  AnchorId anchor_b{k_invalid_anchor};
+  ScalarId scale_id{k_invalid_scalar};
   float size_x{1.0F};
   float size_y{1.0F};
   float size_z{1.0F};

@@ -99,10 +99,10 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry &entry) {
     return;
   }
 
-  const std::size_t stride = BonePaletteArena::kPaletteBytes;
+  const std::size_t stride = BonePaletteArena::k_palette_bytes;
   std::vector<float> staging(
       static_cast<std::size_t>(entry.skinned_frame_total) *
-          BonePaletteArena::kPaletteFloats,
+          BonePaletteArena::k_palette_floats,
       0.0F);
   for (std::uint32_t f = 0; f < entry.skinned_frame_total; ++f) {
     const QMatrix4x4 *frame_src =
@@ -110,19 +110,19 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry &entry) {
         static_cast<std::size_t>(f) * entry.skinned_bone_count;
 
     float *frame_dst = staging.data() + static_cast<std::size_t>(f) *
-                                            BonePaletteArena::kPaletteFloats;
+                                            BonePaletteArena::k_palette_floats;
     for (std::uint32_t b = 0; b < entry.skinned_bone_count; ++b) {
-      std::memcpy(frame_dst + b * BonePaletteArena::kMatrixFloats,
+      std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
                   frame_src[b].constData(),
-                  sizeof(float) * BonePaletteArena::kMatrixFloats);
+                  sizeof(float) * BonePaletteArena::k_matrix_floats);
     }
 
     for (std::uint32_t b = entry.skinned_bone_count;
-         b < BonePaletteArena::kPaletteWidth; ++b) {
+         b < BonePaletteArena::k_palette_width; ++b) {
       QMatrix4x4 ident;
-      std::memcpy(frame_dst + b * BonePaletteArena::kMatrixFloats,
+      std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
                   ident.constData(),
-                  sizeof(float) * BonePaletteArena::kMatrixFloats);
+                  sizeof(float) * BonePaletteArena::k_matrix_floats);
     }
   }
   GLuint ubo = 0;

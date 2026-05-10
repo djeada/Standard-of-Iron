@@ -14,7 +14,7 @@ namespace Render::GL {
 auto leather_barding_chest_archetype() -> const RenderArchetype &;
 auto leather_barding_barrel_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kLeatherBardingRoleCount = 1;
+inline constexpr std::uint32_t k_leather_barding_role_count = 1;
 
 auto leather_barding_fill_role_colors(const HorseVariant &variant,
                                       QVector3D *out,

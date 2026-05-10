@@ -13,7 +13,7 @@ namespace Render::GL {
 
 auto crupper_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kCrupperRoleCount = 2;
+inline constexpr std::uint32_t k_crupper_role_count = 2;
 
 auto crupper_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                               std::size_t max) -> std::uint32_t;
