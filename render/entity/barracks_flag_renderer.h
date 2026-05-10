@@ -40,7 +40,7 @@ struct BannerShaderScope {
 
     if (auto *queue = dynamic_cast<QueueSubmitter *>(&submitter)) {
       m_queue = queue;
-      m_previousQueueShader = queue->shader();
+      m_previous_queue_shader = queue->shader();
       queue->set_shader(shader);
       return;
     }
@@ -54,25 +54,25 @@ struct BannerShaderScope {
 
     m_renderer = dynamic_cast<Renderer *>(fallback);
     if (m_renderer != nullptr) {
-      m_previousRendererShader = m_renderer->get_current_shader();
+      m_previous_renderer_shader = m_renderer->get_current_shader();
       m_renderer->set_current_shader(shader);
     }
   }
 
   ~BannerShaderScope() {
     if (m_queue != nullptr) {
-      m_queue->set_shader(m_previousQueueShader);
+      m_queue->set_shader(m_previous_queue_shader);
     }
     if (m_renderer != nullptr) {
-      m_renderer->set_current_shader(m_previousRendererShader);
+      m_renderer->set_current_shader(m_previous_renderer_shader);
     }
   }
 
 private:
   QueueSubmitter *m_queue = nullptr;
-  Shader *m_previousQueueShader = nullptr;
+  Shader *m_previous_queue_shader = nullptr;
   Renderer *m_renderer = nullptr;
-  Shader *m_previousRendererShader = nullptr;
+  Shader *m_previous_renderer_shader = nullptr;
 };
 
 inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,

@@ -16,17 +16,17 @@ public:
 
   auto initialize() -> bool;
 
-  [[nodiscard]] auto quad() const -> Mesh * { return m_quadMesh.get(); }
-  [[nodiscard]] auto ground() const -> Mesh * { return m_groundMesh.get(); }
-  [[nodiscard]] auto unit() const -> Mesh * { return m_unitMesh.get(); }
-  [[nodiscard]] auto white() const -> Texture * { return m_whiteTexture.get(); }
+  [[nodiscard]] auto quad() const -> Mesh * { return m_quad_mesh.get(); }
+  [[nodiscard]] auto ground() const -> Mesh * { return m_ground_mesh.get(); }
+  [[nodiscard]] auto unit() const -> Mesh * { return m_unit_mesh.get(); }
+  [[nodiscard]] auto white() const -> Texture * { return m_white_texture.get(); }
 
 private:
-  std::unique_ptr<Mesh> m_quadMesh;
-  std::unique_ptr<Mesh> m_groundMesh;
-  std::unique_ptr<Mesh> m_unitMesh;
+  std::unique_ptr<Mesh> m_quad_mesh;
+  std::unique_ptr<Mesh> m_ground_mesh;
+  std::unique_ptr<Mesh> m_unit_mesh;
 
-  std::unique_ptr<Texture> m_whiteTexture;
+  std::unique_ptr<Texture> m_white_texture;
 };
 
 } // namespace Render::GL

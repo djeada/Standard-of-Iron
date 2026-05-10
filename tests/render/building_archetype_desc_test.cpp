@@ -50,7 +50,7 @@ TEST(BuildingArchetypeDesc, FiltersPartsByBuildingStateMask) {
   desc.add_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
                QVector3D(1.0F, 0.0F, 0.0F));
   desc.add_box(QVector3D(1.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
-               QVector3D(0.0F, 1.0F, 0.0F), kBuildingStateMaskIntact);
+               QVector3D(0.0F, 1.0F, 0.0F), k_building_state_mask_intact);
 
   const RenderArchetype normal =
       build_building_archetype(desc, BuildingState::Normal);

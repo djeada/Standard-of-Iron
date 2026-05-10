@@ -70,8 +70,8 @@ public:
                       float) override {}
 };
 
-constexpr std::array<BoneDef, 5> kBeastBones = {
-    BoneDef{"root", kInvalidBone},
+constexpr std::array<BoneDef, 5> k_beast_bones = {
+    BoneDef{"root", k_invalid_bone},
     BoneDef{"spine_base", 0},
     BoneDef{"neck", 1},
     BoneDef{"head", 2},
@@ -80,7 +80,7 @@ constexpr std::array<BoneDef, 5> kBeastBones = {
 
 auto beast_topology() noexcept -> SkeletonTopology {
   return SkeletonTopology{
-      std::span<const BoneDef>(kBeastBones.data(), kBeastBones.size()),
+      std::span<const BoneDef>(k_beast_bones.data(), k_beast_bones.size()),
       {},
   };
 }
@@ -194,7 +194,7 @@ TEST(PartGraphWalkerTest, ValidateRejectsCylinderMissingTail) {
   std::array<PrimitiveInstance, 1> primitives;
   primitives[0].shape = PrimitiveShape::Cylinder;
   primitives[0].params.anchor_bone = 0;
-  primitives[0].params.tail_bone = kInvalidBone;
+  primitives[0].params.tail_bone = k_invalid_bone;
 
   PartGraph g{std::span<const PrimitiveInstance>(primitives.data(), 1)};
   EXPECT_FALSE(validate_part_graph(beast_topology(), g));
@@ -254,13 +254,13 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
   auto palette = evaluate_beast();
 
   auto only_full = make_head_sphere();
-  only_full.lod_mask = kLodFull;
+  only_full.lod_mask = k_lod_full;
 
   auto all = make_torso_cylinder();
-  all.lod_mask = kLodAll;
+  all.lod_mask = k_lod_all;
 
   auto minimal_only = make_chest_box();
-  minimal_only.lod_mask = kLodMinimal;
+  minimal_only.lod_mask = k_lod_minimal;
 
   std::array<PrimitiveInstance, 3> primitives = {only_full, all, minimal_only};
   PartGraph g{std::span<const PrimitiveInstance>(primitives.data(), 3)};
@@ -497,7 +497,7 @@ TEST(PartGraphWalkerTest, OrientedCylinderRequiresTailAndRejectsWhenMissing) {
   PrimitiveInstance p;
   p.shape = PrimitiveShape::OrientedCylinder;
   p.params.anchor_bone = 0;
-  p.params.tail_bone = kInvalidBone;
+  p.params.tail_bone = k_invalid_bone;
   p.params.radius = 0.3F;
   p.params.depth_radius = 0.1F;
   std::array<PrimitiveInstance, 1> prims = {p};

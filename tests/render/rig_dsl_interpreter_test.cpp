@@ -71,9 +71,9 @@ TEST(RigDSL, WatchtowerEmitsOnePartPerDef) {
   ctx.palette = &palette;
   ctx.lod = 0;
 
-  Render::RigDSL::render_rig(Render::RigDSL::Watchtower::kRig, ctx, submitter);
+  Render::RigDSL::render_rig(Render::RigDSL::Watchtower::k_rig, ctx, submitter);
 
-  EXPECT_EQ(queue.size(), Render::RigDSL::Watchtower::kRig.part_count);
+  EXPECT_EQ(queue.size(), Render::RigDSL::Watchtower::k_rig.part_count);
 }
 
 TEST(RigDSL, SphereOnlyConsultsAnchorAOnce) {
@@ -90,8 +90,8 @@ TEST(RigDSL, SphereOnlyConsultsAnchorAOnce) {
       Render::RigDSL::PaletteSlot::Literal,
       {255, 0, 0, 255},
       0,
-      Render::RigDSL::kInvalidAnchor,
-      Render::RigDSL::kInvalidScalar,
+      Render::RigDSL::k_invalid_anchor,
+      Render::RigDSL::k_invalid_scalar,
       0.5F,
       1.0F,
       1.0F,
@@ -122,7 +122,7 @@ TEST(RigDSL, LodMaskSkipsPartsWithoutResolvingAnchors) {
                                       {255, 255, 255, 255},
                                       0,
                                       1,
-                                      Render::RigDSL::kInvalidScalar,
+                                      Render::RigDSL::k_invalid_scalar,
                                       0.1F,
                                       1.0F,
                                       1.0F,
@@ -163,7 +163,7 @@ TEST(RigDSL, MaterialContextRoutesThroughDrawPartCmd) {
                                       {255, 255, 255, 255},
                                       0,
                                       1,
-                                      Render::RigDSL::kInvalidScalar,
+                                      Render::RigDSL::k_invalid_scalar,
                                       0.1F,
                                       1.0F,
                                       1.0F,
@@ -197,7 +197,7 @@ TEST(RigDSL, NoMaterialContextFallsBackToMeshCmd) {
                                       {255, 255, 255, 255},
                                       0,
                                       1,
-                                      Render::RigDSL::kInvalidScalar,
+                                      Render::RigDSL::k_invalid_scalar,
                                       0.1F,
                                       1.0F,
                                       1.0F,
@@ -233,8 +233,8 @@ TEST(RigDSL, LiteralPaletteBypassesResolver) {
                                       Render::RigDSL::PaletteSlot::Literal,
                                       {200, 100, 50, 255},
                                       0,
-                                      Render::RigDSL::kInvalidAnchor,
-                                      Render::RigDSL::kInvalidScalar,
+                                      Render::RigDSL::k_invalid_anchor,
+                                      Render::RigDSL::k_invalid_scalar,
                                       0.1F,
                                       1.0F,
                                       1.0F,
@@ -270,7 +270,7 @@ TEST(RigDSL, ScalarResolverScalesSphereRadius) {
                                       Render::RigDSL::PaletteSlot::Literal,
                                       {255, 255, 255, 255},
                                       0,
-                                      Render::RigDSL::kInvalidAnchor,
+                                      Render::RigDSL::k_invalid_anchor,
                                       7,
                                       0.2F,
                                       1.0F,

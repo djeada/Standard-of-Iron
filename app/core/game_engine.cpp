@@ -198,7 +198,7 @@ auto resolve_mission_file_path(const QString &mission_id) -> QString {
 
   for (const auto &pattern : search_paths) {
     QString candidate = pattern.arg(mission_id);
-    candidate = Utils::Resources::resolveResourcePath(candidate);
+    candidate = Utils::Resources::resolve_resource_path(candidate);
     if (QFile::exists(candidate)) {
       return candidate;
     }
@@ -2016,7 +2016,7 @@ void GameEngine::apply_mission_setup() {
   Game::Map::MapDefinition map_def;
   QString map_error;
   const QString resolved_map_path =
-      Utils::Resources::resolveResourcePath(m_level.map_path);
+      Utils::Resources::resolve_resource_path(m_level.map_path);
   bool map_loaded = Game::Map::MapLoader::loadFromJsonFile(resolved_map_path,
                                                            map_def, &map_error);
   if (!map_loaded) {

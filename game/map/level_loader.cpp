@@ -33,7 +33,7 @@ auto LevelLoader::loadFromAssets(
   auto &owners = Game::Systems::OwnerRegistry::instance();
 
   Game::Visuals::VisualCatalog visual_catalog;
-  const QString visuals_path = Utils::Resources::resolveResourcePath(
+  const QString visuals_path = Utils::Resources::resolve_resource_path(
       QStringLiteral(":/assets/visuals/unit_visuals.json"));
   bool visuals_loaded = false;
   if (QFile::exists(visuals_path)) {
@@ -53,7 +53,7 @@ auto LevelLoader::loadFromAssets(
   Game::Map::MapTransformer::setFactoryRegistry(unit_reg);
 
   const QString resolved_map_path =
-      Utils::Resources::resolveResourcePath(map_path);
+      Utils::Resources::resolve_resource_path(map_path);
 
   Game::Map::MapDefinition def;
   QString err;

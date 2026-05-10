@@ -122,7 +122,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   QSet<int> map_player_ids;
   const QString resolved_map_path =
-      Utils::Resources::resolveResourcePath(map_path);
+      Utils::Resources::resolve_resource_path(map_path);
   QFile map_file(resolved_map_path);
   if (map_file.open(QIODevice::ReadOnly)) {
     const QByteArray data = map_file.readAll();

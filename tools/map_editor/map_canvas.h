@@ -42,7 +42,7 @@ private:
   void drawLinearElements(QPainter &painter);
   void drawCurrentPlacement(QPainter &painter);
   void drawElement(QPainter &painter, const QString &type, const QPoint &pos,
-                   int playerId = 0);
+                   int player_id = 0);
 
   struct HitResult {
     int elementType = -1;
@@ -56,23 +56,23 @@ private:
   void finishLinearElement(const QPointF &gridPos);
   void eraseAtPosition(const QPointF &gridPos);
 
-  MapData *m_mapData = nullptr;
-  ToolType m_currentTool = ToolType::Select;
+  MapData *m_map_data = nullptr;
+  ToolType m_current_tool = ToolType::Select;
 
   float m_zoom = 1.0F;
-  QPointF m_panOffset{0, 0};
+  QPointF m_pan_offset{0, 0};
 
-  bool m_isPanning = false;
-  QPoint m_lastMousePos;
-  bool m_isPlacingLinear = false;
-  QPointF m_linearStart;
+  bool m_is_panning = false;
+  QPoint m_last_mouse_pos;
+  bool m_is_placing_linear = false;
+  QPointF m_linear_start;
 
-  int m_selectedType = -1;
-  int m_selectedIndex = -1;
-  bool m_isDragging = false;
-  int m_draggedEndpoint = -1;
+  int m_selected_type = -1;
+  int m_selected_index = -1;
+  bool m_is_dragging = false;
+  int m_dragged_endpoint = -1;
 
-  int m_currentPlayerId = 0;
+  int m_current_player_id = 0;
 
   static constexpr int GRID_CELL_SIZE = 8;
   static constexpr int ICON_SIZE = 16;

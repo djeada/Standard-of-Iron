@@ -123,89 +123,89 @@ TEST(ArchetypeRegistryBaseline, HasThreeSpeciesArchetypes) {
   const auto &reg = ArchetypeRegistry::instance();
   ASSERT_GE(reg.size(), 3U);
 
-  EXPECT_EQ(reg.species(ArchetypeRegistry::kHumanoidBase),
+  EXPECT_EQ(reg.species(ArchetypeRegistry::k_humanoid_base),
             CreatureKind::Humanoid);
-  EXPECT_EQ(reg.species(ArchetypeRegistry::kHorseBase), CreatureKind::Horse);
-  EXPECT_EQ(reg.species(ArchetypeRegistry::kElephantBase),
+  EXPECT_EQ(reg.species(ArchetypeRegistry::k_horse_base), CreatureKind::Horse);
+  EXPECT_EQ(reg.species(ArchetypeRegistry::k_elephant_base),
             CreatureKind::Elephant);
 }
 
 TEST(ArchetypeRegistryBaseline, IdleClipIsZeroForEverySpecies) {
   const auto &reg = ArchetypeRegistry::instance();
   EXPECT_EQ(
-      reg.bpat_clip(ArchetypeRegistry::kHumanoidBase, AnimationStateId::Idle),
+      reg.bpat_clip(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle),
       0U);
   EXPECT_EQ(
-      reg.bpat_clip(ArchetypeRegistry::kHorseBase, AnimationStateId::Idle), 0U);
+      reg.bpat_clip(ArchetypeRegistry::k_horse_base, AnimationStateId::Idle), 0U);
   EXPECT_EQ(
-      reg.bpat_clip(ArchetypeRegistry::kElephantBase, AnimationStateId::Idle),
+      reg.bpat_clip(ArchetypeRegistry::k_elephant_base, AnimationStateId::Idle),
       0U);
 }
 
 TEST(ArchetypeRegistryBaseline, GameplayStatesUseSnapshotCoverage) {
   const auto &reg = ArchetypeRegistry::instance();
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::Idle));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::Walk));
   EXPECT_TRUE(
-      reg.is_snapshot(ArchetypeRegistry::kHumanoidBase, AnimationStateId::Run));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Run));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::Hold));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::AttackSword));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::AttackBow));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::Dead));
   EXPECT_FALSE(
-      reg.is_snapshot(ArchetypeRegistry::kHumanoidBase, AnimationStateId::Die));
-  EXPECT_FALSE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Die));
+  EXPECT_FALSE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                                AnimationStateId::RidingIdle));
   EXPECT_TRUE(
-      reg.is_snapshot(ArchetypeRegistry::kHorseBase, AnimationStateId::Run));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kElephantBase,
+      reg.is_snapshot(ArchetypeRegistry::k_horse_base, AnimationStateId::Run));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_elephant_base,
                               AnimationStateId::Walk));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kRiderBase,
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_rider_base,
                               AnimationStateId::RidingIdle));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kRiderBase,
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_rider_base,
                               AnimationStateId::RidingCharge));
 }
 
 TEST(ArchetypeRegistryBaseline, UnknownArchetypeReturnsUnmappedClip) {
   const auto &reg = ArchetypeRegistry::instance();
   EXPECT_EQ(reg.bpat_clip(9999, AnimationStateId::Idle),
-            ArchetypeDescriptor::kUnmappedClip);
+            ArchetypeDescriptor::k_unmapped_clip);
   EXPECT_EQ(reg.get(9999), nullptr);
 }
 
 TEST(ArchetypeRegistryBaseline, VariantCountsReflectBakedClipFamilies) {
   const auto &reg = ArchetypeRegistry::instance();
-  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::kHumanoidBase,
+  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::AttackSword),
             3U);
-  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::kHumanoidBase,
+  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::AttackBow),
             1U);
-  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::kRiderBase,
+  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_rider_base,
                                    AnimationStateId::Die),
             1U);
 }
 
 TEST(ArchetypeRegistryBaseline, ResolveBpatClipClampsInsideClipFamily) {
   const auto &reg = ArchetypeRegistry::instance();
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::kHumanoidBase,
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
                                   AnimationStateId::AttackSword, 2U),
-            Render::Creature::kHumanoidAttackSwordCClip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::kHumanoidBase,
+            Render::Creature::k_humanoid_attack_sword_c_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
                                   AnimationStateId::AttackSword, 99U),
-            Render::Creature::kHumanoidAttackSwordCClip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::kRiderBase,
+            Render::Creature::k_humanoid_attack_sword_c_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_rider_base,
                                   AnimationStateId::Die, 3U),
-            Render::Creature::kHumanoidDieMountedClip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::kRiderBase,
+            Render::Creature::k_humanoid_die_mounted_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_rider_base,
                                   AnimationStateId::Dead, 3U),
-            Render::Creature::kHumanoidDeadMountedClip);
+            Render::Creature::k_humanoid_dead_mounted_clip);
 }
 
 TEST(SubmitRequests, EmptySpanProducesZeroStats) {
@@ -224,11 +224,11 @@ TEST(SubmitPreparation, RequestOnlyPreparationStillDrawsBodies) {
   }
 
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
   Render::Creature::Pipeline::CreaturePreparationResult prep;
   CreatureRenderRequest req{};
-  req.archetype = ArchetypeRegistry::kHumanoidBase;
+  req.archetype = ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   prep.bodies.add_request(req);
@@ -247,11 +247,11 @@ TEST(SubmitPreparation, ShadowRequestsAreSkipped) {
   }
 
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
   Render::Creature::Pipeline::CreaturePreparationResult prep;
   CreatureRenderRequest req{};
-  req.archetype = ArchetypeRegistry::kHumanoidBase;
+  req.archetype = ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.pass = Render::Creature::Pipeline::RenderPassIntent::Shadow;
@@ -271,7 +271,7 @@ TEST(SubmitPreparation, ExplicitMainRequestDoesNotDependOnShadowRows) {
   }
 
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
   Render::Creature::Pipeline::CreaturePreparationResult prep;
   Render::Creature::Pipeline::CreatureGraphOutput output{};
@@ -285,7 +285,7 @@ TEST(SubmitPreparation, ExplicitMainRequestDoesNotDependOnShadowRows) {
   prep.bodies.add_humanoid(output, pose, variant, anim);
 
   CreatureRenderRequest req{};
-  req.archetype = ArchetypeRegistry::kHumanoidBase;
+  req.archetype = ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.pass = Render::Creature::Pipeline::RenderPassIntent::Main;
@@ -303,7 +303,7 @@ TEST(SubmitRequests, BillboardLodCountsButDoesNotDraw) {
   CountingSubmitter sink;
 
   CreatureRenderRequest req{};
-  req.archetype = ArchetypeRegistry::kHumanoidBase;
+  req.archetype = ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Billboard;
   req.world.setToIdentity();
@@ -337,16 +337,16 @@ TEST(SubmitRequests, BatchOfMixedRequestsCountsCorrectly) {
   CountingSubmitter sink;
 
   std::array<CreatureRenderRequest, 4> reqs{};
-  reqs[0].archetype = ArchetypeRegistry::kHumanoidBase;
+  reqs[0].archetype = ArchetypeRegistry::k_humanoid_base;
   reqs[0].state = AnimationStateId::Walk;
   reqs[0].lod = Render::Creature::CreatureLOD::Full;
-  reqs[1].archetype = ArchetypeRegistry::kHorseBase;
+  reqs[1].archetype = ArchetypeRegistry::k_horse_base;
   reqs[1].state = AnimationStateId::Run;
   reqs[1].lod = Render::Creature::CreatureLOD::Minimal;
-  reqs[2].archetype = ArchetypeRegistry::kElephantBase;
+  reqs[2].archetype = ArchetypeRegistry::k_elephant_base;
   reqs[2].state = AnimationStateId::Idle;
   reqs[2].lod = Render::Creature::CreatureLOD::Minimal;
-  reqs[3].archetype = ArchetypeRegistry::kHumanoidBase;
+  reqs[3].archetype = ArchetypeRegistry::k_humanoid_base;
   reqs[3].state = AnimationStateId::Hold;
   reqs[3].lod = Render::Creature::CreatureLOD::Billboard;
 
@@ -363,7 +363,7 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
 
   std::array<CreatureRenderRequest, 4> reqs{};
 
-  reqs[0].archetype = ArchetypeRegistry::kHorseBase;
+  reqs[0].archetype = ArchetypeRegistry::k_horse_base;
   reqs[0].state = AnimationStateId::Run;
   reqs[0].lod = Render::Creature::CreatureLOD::Full;
   reqs[0].entity_id = 77U;
@@ -371,7 +371,7 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
   reqs[0].world_already_grounded = true;
   reqs[0].world.translate(0.0F, 1.0F, 0.0F);
 
-  reqs[1].archetype = ArchetypeRegistry::kHorseBase;
+  reqs[1].archetype = ArchetypeRegistry::k_horse_base;
   reqs[1].state = AnimationStateId::Run;
   reqs[1].lod = Render::Creature::CreatureLOD::Full;
   reqs[1].entity_id = 77U;
@@ -379,7 +379,7 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
   reqs[1].world_already_grounded = true;
   reqs[1].world.translate(0.0F, 2.0F, 0.0F);
 
-  reqs[2].archetype = ArchetypeRegistry::kHumanoidBase;
+  reqs[2].archetype = ArchetypeRegistry::k_humanoid_base;
   reqs[2].state = AnimationStateId::Run;
   reqs[2].lod = Render::Creature::CreatureLOD::Full;
   reqs[2].entity_id = 77U;
@@ -387,7 +387,7 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
   reqs[2].world_already_grounded = true;
   reqs[2].world.translate(0.0F, 1.75F, 0.10F);
 
-  reqs[3].archetype = ArchetypeRegistry::kHumanoidBase;
+  reqs[3].archetype = ArchetypeRegistry::k_humanoid_base;
   reqs[3].state = AnimationStateId::Run;
   reqs[3].lod = Render::Creature::CreatureLOD::Full;
   reqs[3].entity_id = 77U;
@@ -419,13 +419,13 @@ TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
   }
 
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
-  ASSERT_TRUE(reg.load_species(kSpeciesHorse, root + "/horse.bpat"));
-  ASSERT_TRUE(reg.load_species(kSpeciesElephant, root + "/elephant.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_horse, root + "/horse.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_elephant, root + "/elephant.bpat"));
 
-  auto const *humanoid_blob = reg.blob(kSpeciesHumanoid);
-  auto const *horse_blob = reg.blob(kSpeciesHorse);
-  auto const *elephant_blob = reg.blob(kSpeciesElephant);
+  auto const *humanoid_blob = reg.blob(k_species_humanoid);
+  auto const *horse_blob = reg.blob(k_species_horse);
+  auto const *elephant_blob = reg.blob(k_species_elephant);
   ASSERT_NE(humanoid_blob, nullptr);
   ASSERT_NE(horse_blob, nullptr);
   ASSERT_NE(elephant_blob, nullptr);
@@ -434,13 +434,13 @@ TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
   CountingSubmitter sink;
 
   std::array<CreatureRenderRequest, 3> reqs{};
-  reqs[0].archetype = ArchetypeRegistry::kHumanoidBase;
+  reqs[0].archetype = ArchetypeRegistry::k_humanoid_base;
   reqs[0].state = AnimationStateId::Idle;
   reqs[0].lod = Render::Creature::CreatureLOD::Full;
-  reqs[1].archetype = ArchetypeRegistry::kHorseBase;
+  reqs[1].archetype = ArchetypeRegistry::k_horse_base;
   reqs[1].state = AnimationStateId::Idle;
   reqs[1].lod = Render::Creature::CreatureLOD::Full;
-  reqs[2].archetype = ArchetypeRegistry::kElephantBase;
+  reqs[2].archetype = ArchetypeRegistry::k_elephant_base;
   reqs[2].state = AnimationStateId::Idle;
   reqs[2].lod = Render::Creature::CreatureLOD::Full;
 
@@ -469,13 +469,13 @@ TEST(SubmitRequests, GroundedRootCreaturesPreserveProvidedWorldHeight) {
   }
 
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
   CreaturePipeline pipeline;
   CountingSubmitter sink;
 
   CreatureRenderRequest req{};
-  req.archetype = ArchetypeRegistry::kHumanoidBase;
+  req.archetype = ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.world.translate(0.0F, 2.75F, 0.0F);
@@ -497,13 +497,13 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
   }
 
   auto &reg = BpatRegistry::instance();
-  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
   ASSERT_TRUE(
-      reg.load_species(kSpeciesHumanoidSword, root + "/humanoid_sword.bpat"));
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
 
   auto make_request = [](Render::Creature::Pipeline::CreatureAssetId asset_id) {
     CreatureRenderRequest req{};
-    req.archetype = ArchetypeRegistry::kHumanoidBase;
+    req.archetype = ArchetypeRegistry::k_humanoid_base;
     req.state = AnimationStateId::Walk;
     req.phase = 0.25F;
     req.lod = Render::Creature::CreatureLOD::Full;
@@ -514,12 +514,12 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
   CreaturePipeline pipeline;
   CountingSubmitter default_sink;
   std::array<CreatureRenderRequest, 1> default_reqs{
-      make_request(Render::Creature::Pipeline::kHumanoidAsset)};
+      make_request(Render::Creature::Pipeline::k_humanoid_asset)};
   pipeline.submit_requests(default_reqs, default_sink);
 
   CountingSubmitter sword_sink;
   std::array<CreatureRenderRequest, 1> sword_reqs{
-      make_request(Render::Creature::Pipeline::kHumanoidSwordAsset)};
+      make_request(Render::Creature::Pipeline::k_humanoid_sword_asset)};
   pipeline.submit_requests(sword_reqs, sword_sink);
 
   ASSERT_EQ(default_sink.rigged_calls, 1U);
@@ -551,7 +551,7 @@ TEST(ArchetypeRegistry, RegisterArchetypeAssignsStableId) {
   desc.role_count = 6;
 
   const auto new_id = reg.register_archetype(desc);
-  ASSERT_NE(new_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(new_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(reg.size(), baseline_size + 1U);
 
   const auto *fetched = reg.get(new_id);

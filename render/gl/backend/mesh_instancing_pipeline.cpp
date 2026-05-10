@@ -20,7 +20,7 @@ constexpr GLuint k_instance_color_alpha_loc = 6;
 
 MeshInstancingPipeline::MeshInstancingPipeline(GL::Backend *backend,
                                                GL::ShaderCache *shader_cache)
-    : m_backend(backend), m_shaderCache(shader_cache) {
+    : m_backend(backend), m_shader_cache(shader_cache) {
   m_instances.reserve(k_initial_capacity);
 }
 
@@ -39,23 +39,23 @@ auto MeshInstancingPipeline::initialize() -> bool {
 
   initializeOpenGLFunctions();
 
-  glGenBuffers(1, &m_instanceBuffer);
-  if (m_instanceBuffer == 0) {
+  glGenBuffers(1, &m_instance_buffer);
+  if (m_instance_buffer == 0) {
     qWarning() << "MeshInstancingPipeline: failed to create instance buffer";
     return false;
   }
 
-  m_instanceCapacity = k_initial_capacity;
-  glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
+  m_instance_capacity = k_initial_capacity;
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
   glBufferData(
       GL_ARRAY_BUFFER,
-      static_cast<GLsizeiptr>(m_instanceCapacity * sizeof(MeshInstanceGpu)),
+      static_cast<GLsizeiptr>(m_instance_capacity * sizeof(MeshInstanceGpu)),
       nullptr, GL_DYNAMIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_initialized = true;
   qInfo() << "MeshInstancingPipeline initialized with capacity"
-          << m_instanceCapacity;
+          << m_instance_capacity;
   return true;
 }
 
@@ -65,16 +65,16 @@ void MeshInstancingPipeline::shutdown() {
   }
 
   if (QOpenGLContext::currentContext() != nullptr) {
-    if (m_instanceBuffer != 0) {
-      glDeleteBuffers(1, &m_instanceBuffer);
-      m_instanceBuffer = 0;
+    if (m_instance_buffer != 0) {
+      glDeleteBuffers(1, &m_instance_buffer);
+      m_instance_buffer = 0;
     }
   }
 
   m_instances.clear();
-  m_currentMesh = nullptr;
-  m_currentShader = nullptr;
-  m_currentTexture = nullptr;
+  m_current_mesh = nullptr;
+  m_current_shader = nullptr;
+  m_current_texture = nullptr;
   m_initialized = false;
 }
 
@@ -86,9 +86,9 @@ auto MeshInstancingPipeline::is_initialized() const -> bool {
 
 void MeshInstancingPipeline::begin_frame() {
   m_instances.clear();
-  m_currentMesh = nullptr;
-  m_currentShader = nullptr;
-  m_currentTexture = nullptr;
+  m_current_mesh = nullptr;
+  m_current_shader = nullptr;
+  m_current_texture = nullptr;
 }
 
 auto MeshInstancingPipeline::can_batch(Mesh *mesh, Shader *shader,
@@ -99,8 +99,8 @@ auto MeshInstancingPipeline::can_batch(Mesh *mesh, Shader *shader,
   if (m_instances.size() >= k_max_instances_per_batch) {
     return false;
   }
-  return mesh == m_currentMesh && shader == m_currentShader &&
-         texture == m_currentTexture;
+  return mesh == m_current_mesh && shader == m_current_shader &&
+         texture == m_current_texture;
 }
 
 void MeshInstancingPipeline::accumulate(const QMatrix4x4 &model,
@@ -135,19 +135,19 @@ void MeshInstancingPipeline::accumulate(const QMatrix4x4 &model,
 
 void MeshInstancingPipeline::begin_batch(Mesh *mesh, Shader *shader,
                                          Texture *texture) {
-  m_currentMesh = mesh;
-  m_currentShader = shader;
-  m_currentTexture = texture;
+  m_current_mesh = mesh;
+  m_current_shader = shader;
+  m_current_texture = texture;
 }
 
 void MeshInstancingPipeline::flush() {
   if (m_instances.empty()) {
     return;
   }
-  if (m_currentMesh == nullptr || m_currentShader == nullptr ||
+  if (m_current_mesh == nullptr || m_current_shader == nullptr ||
       !m_initialized) {
     qWarning() << "MeshInstancingPipeline::flush called with invalid state:"
-               << "mesh=" << m_currentMesh << "shader=" << m_currentShader
+               << "mesh=" << m_current_mesh << "shader=" << m_current_shader
                << "initialized=" << m_initialized
                << "instances=" << m_instances.size();
     m_instances.clear();
@@ -156,22 +156,22 @@ void MeshInstancingPipeline::flush() {
 
   const std::size_t count = m_instances.size();
 
-  if (count > m_instanceCapacity) {
-    std::size_t new_capacity = m_instanceCapacity;
+  if (count > m_instance_capacity) {
+    std::size_t new_capacity = m_instance_capacity;
     while (new_capacity < count) {
       new_capacity *= 2;
     }
     new_capacity = std::min(new_capacity, k_max_instances_per_batch);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
     glBufferData(
         GL_ARRAY_BUFFER,
         static_cast<GLsizeiptr>(new_capacity * sizeof(MeshInstanceGpu)),
         nullptr, GL_DYNAMIC_DRAW);
-    m_instanceCapacity = new_capacity;
+    m_instance_capacity = new_capacity;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
   GLsizeiptr const upload_size =
       static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu));
 
@@ -186,23 +186,23 @@ void MeshInstancingPipeline::flush() {
     glBufferSubData(GL_ARRAY_BUFFER, 0, upload_size, m_instances.data());
   }
 
-  if (!m_currentMesh->bind_vao()) {
+  if (!m_current_mesh->bind_vao()) {
     m_instances.clear();
     return;
   }
 
-  if (!m_currentMesh->bind_vao()) {
+  if (!m_current_mesh->bind_vao()) {
     m_instances.clear();
     return;
   }
 
   setup_instance_attributes();
 
-  if (m_currentTexture != nullptr) {
-    m_currentTexture->bind(0);
+  if (m_current_texture != nullptr) {
+    m_current_texture->bind(0);
   }
 
-  m_currentMesh->draw_instanced_raw(count);
+  m_current_mesh->draw_instanced_raw(count);
 
   glVertexAttribDivisor(k_instance_model_col0_loc, 0);
   glVertexAttribDivisor(k_instance_model_col1_loc, 0);
@@ -213,7 +213,7 @@ void MeshInstancingPipeline::flush() {
   glDisableVertexAttribArray(k_instance_model_col2_loc);
   glDisableVertexAttribArray(k_instance_color_alpha_loc);
 
-  m_currentMesh->unbind_vao();
+  m_current_mesh->unbind_vao();
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_instances.clear();
@@ -228,7 +228,7 @@ auto MeshInstancingPipeline::has_pending() const -> bool {
 }
 
 void MeshInstancingPipeline::setup_instance_attributes() {
-  glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
 
   const auto stride = static_cast<GLsizei>(sizeof(MeshInstanceGpu));
 

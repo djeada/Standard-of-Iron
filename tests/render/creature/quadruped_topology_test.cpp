@@ -37,11 +37,11 @@ TEST(QuadrupedTopologyTest, OptionalHeadChainCanBeRemoved) {
   auto const topology = storage.topology();
 
   EXPECT_TRUE(validate_topology(topology));
-  EXPECT_EQ(storage.neck_top, kInvalidBone);
-  EXPECT_EQ(storage.head, kInvalidBone);
-  EXPECT_EQ(storage.appendage_tip, kInvalidBone);
-  EXPECT_EQ(find_bone(topology, "NeckTop"), kInvalidBone);
-  EXPECT_EQ(find_bone(topology, "Head"), kInvalidBone);
+  EXPECT_EQ(storage.neck_top, k_invalid_bone);
+  EXPECT_EQ(storage.head, k_invalid_bone);
+  EXPECT_EQ(storage.appendage_tip, k_invalid_bone);
+  EXPECT_EQ(find_bone(topology, "NeckTop"), k_invalid_bone);
+  EXPECT_EQ(find_bone(topology, "Head"), k_invalid_bone);
   EXPECT_EQ(storage.bones.size(), 14U);
 }
 

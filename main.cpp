@@ -91,10 +91,10 @@ static bool testNativeOpenGL() {
   pfd.cStencilBits = 8;
   pfd.iLayerType = PFD_MAIN_PLANE;
 
-  int pixelFormat = ChoosePixelFormat(hdc, &pfd);
+  int pixel_format = ChoosePixelFormat(hdc, &pfd);
   bool success = false;
 
-  if (pixelFormat != 0 && SetPixelFormat(hdc, pixelFormat, &pfd)) {
+  if (pixel_format != 0 && SetPixelFormat(hdc, pixel_format, &pfd)) {
     HGLRC hglrc = wglCreateContext(hdc);
     if (hglrc) {
       if (wglMakeCurrent(hdc, hglrc)) {

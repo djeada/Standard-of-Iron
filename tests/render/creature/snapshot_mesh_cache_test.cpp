@@ -80,7 +80,7 @@ auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
 TEST(SnapshotMeshCache, IdentityPaletteIsAllIdentity) {
   const QMatrix4x4 *p = SnapshotMeshCache::identity_palette();
   ASSERT_NE(p, nullptr);
-  for (std::size_t i = 0; i < Render::GL::BonePaletteArena::kPaletteWidth;
+  for (std::size_t i = 0; i < Render::GL::BonePaletteArena::k_palette_width;
        ++i) {
     EXPECT_TRUE(p[i].isIdentity()) << "slot " << i;
   }
@@ -245,13 +245,13 @@ TEST(SnapshotMeshCache, KeyDistinguishesAssetAndAttachmentSet) {
   SnapshotMeshCache cache;
 
   SnapshotMeshCache::Key base{};
-  base.asset_id = Render::Creature::Pipeline::kHumanoidAsset;
+  base.asset_id = Render::Creature::Pipeline::k_humanoid_asset;
   base.archetype = 0U;
   base.attachment_set_id = 1U;
   base.frame_in_clip = 0U;
 
   SnapshotMeshCache::Key different_asset = base;
-  different_asset.asset_id = Render::Creature::Pipeline::kHumanoidSwordAsset;
+  different_asset.asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
 
   SnapshotMeshCache::Key different_attachment_set = base;
   different_attachment_set.attachment_set_id = 2U;

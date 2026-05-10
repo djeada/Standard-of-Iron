@@ -9,7 +9,7 @@
 namespace Utils::Resources {
 
 // Resolve resources that may have been relocated under a Qt QML module prefix.
-inline auto resolveResourcePath(const QString &path) -> QString {
+inline auto resolve_resource_path(const QString &path) -> QString {
   if (path.isEmpty()) {
     return path;
   }
@@ -65,12 +65,12 @@ inline auto resolveResourcePath(const QString &path) -> QString {
     return path;
   }
 
-  static const QStringList kAlternateRoots = {
+  static const QStringList k_alternate_roots = {
       QStringLiteral(":/StandardOfIron"),
       QStringLiteral(":/qt/qml/StandardOfIron"),
       QStringLiteral(":/qt/qml/default")};
 
-  for (const auto &root : kAlternateRoots) {
+  for (const auto &root : k_alternate_roots) {
     QString candidate = root;
     if (!candidate.endsWith('/')) {
       candidate.append('/');

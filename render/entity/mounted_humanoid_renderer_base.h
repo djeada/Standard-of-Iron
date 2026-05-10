@@ -39,7 +39,7 @@ protected:
 
   auto get_scaled_horse_dimensions(uint32_t seed) const -> HorseDimensions;
 
-  HorseRenderer m_horseRenderer;
+  HorseRenderer m_horse_renderer;
 
   void append_companion_preparation(
       const DrawContext &ctx, const HumanoidVariant &variant,

@@ -39,7 +39,7 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
-  m_noiseSeed = biome_settings.seed;
+  m_noise_seed = biome_settings.seed;
 
   m_plant_state.reset_instances();
 
@@ -179,7 +179,7 @@ void PlantRenderer::generate_plant_instances() {
       }
 
       uint32_t state = hash_coords(
-          x, z, m_noiseSeed ^ 0x8F3C5A7EU ^ static_cast<uint32_t>(idx));
+          x, z, m_noise_seed ^ 0x8F3C5A7EU ^ static_cast<uint32_t>(idx));
 
       float density_mult = 1.0F;
       if (terrain_type == Game::Map::TerrainType::Hill) {

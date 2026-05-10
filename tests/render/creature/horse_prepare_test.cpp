@@ -107,7 +107,7 @@ TEST(HorsePrepare, ShadowHorseRowProducesNoDraw) {
   NullSubmitter sink;
   Render::Creature::Pipeline::CreaturePreparationResult prep;
   Render::Creature::CreatureRenderRequest req{};
-  req.archetype = Render::Creature::ArchetypeRegistry::kHorseBase;
+  req.archetype = Render::Creature::ArchetypeRegistry::k_horse_base;
   req.state = Render::Creature::AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.pass = Render::Creature::Pipeline::RenderPassIntent::Shadow;
@@ -122,7 +122,7 @@ TEST(HorsePrepare, MainHorseRowProducesEntitySubmission) {
   NullSubmitter sink;
   Render::Creature::Pipeline::CreaturePreparationResult prep;
   Render::Creature::CreatureRenderRequest req{};
-  req.archetype = Render::Creature::ArchetypeRegistry::kHorseBase;
+  req.archetype = Render::Creature::ArchetypeRegistry::k_horse_base;
   req.state = Render::Creature::AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.pass = Render::Creature::Pipeline::RenderPassIntent::Main;
@@ -188,7 +188,7 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHorse,
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_horse,
                                 root + "/horse.bpat"));
 
   auto &snapshot_reg =
@@ -201,7 +201,7 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   auto const asset_path = temp_dir / "horse_minimal.bpsm";
 
   Render::Creature::Snapshot::SnapshotMeshWriter writer(
-      Render::Creature::Bpat::kSpeciesHorse,
+      Render::Creature::Bpat::k_species_horse,
       Render::Creature::CreatureLOD::Minimal, 3U,
       std::array<std::uint32_t, 3>{0U, 1U, 2U});
   writer.add_clip({"idle", 1U});
@@ -220,7 +220,7 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   ASSERT_TRUE(out.good());
   ASSERT_TRUE(writer.write(out));
   out.close();
-  ASSERT_TRUE(snapshot_reg.load_species(Render::Creature::Bpat::kSpeciesHorse,
+  ASSERT_TRUE(snapshot_reg.load_species(Render::Creature::Bpat::k_species_horse,
                                         Render::Creature::CreatureLOD::Minimal,
                                         asset_path.string()))
       << snapshot_reg.last_error();
@@ -265,7 +265,7 @@ TEST(HorsePrepare,
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHorse,
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_horse,
                                 root + "/horse.bpat"));
 
   auto &snapshot_reg =

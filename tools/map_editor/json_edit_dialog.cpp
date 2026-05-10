@@ -34,16 +34,16 @@ void JsonEditDialog::setupUI(const QString &title, const QJsonObject &json) {
 
   auto *buttonLayout = new QHBoxLayout();
   auto *cancelButton = new QPushButton("Cancel", this);
-  m_okButton = new QPushButton("OK", this);
-  m_okButton->setDefault(true);
+  m_ok_button = new QPushButton("OK", this);
+  m_ok_button->setDefault(true);
 
   buttonLayout->addStretch();
   buttonLayout->addWidget(cancelButton);
-  buttonLayout->addWidget(m_okButton);
+  buttonLayout->addWidget(m_ok_button);
   layout->addLayout(buttonLayout);
 
   connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
-  connect(m_okButton, &QPushButton::clicked, this, &JsonEditDialog::onAccepted);
+  connect(m_ok_button, &QPushButton::clicked, this, &JsonEditDialog::onAccepted);
 
   validateJson();
 }
@@ -53,10 +53,10 @@ void JsonEditDialog::validateJson() {
   QJsonDocument doc =
       QJsonDocument::fromJson(m_editor->toPlainText().toUtf8(), &error);
 
-  m_isValid = (error.error == QJsonParseError::NoError && doc.isObject());
-  m_okButton->setEnabled(m_isValid);
+  m_is_valid = (error.error == QJsonParseError::NoError && doc.isObject());
+  m_ok_button->setEnabled(m_is_valid);
 
-  if (!m_isValid) {
+  if (!m_is_valid) {
     m_editor->setStyleSheet("QPlainTextEdit { border: 2px solid red; }");
   } else {
     m_editor->setStyleSheet("");
@@ -70,7 +70,7 @@ void JsonEditDialog::onAccepted() {
 
   if (error.error == QJsonParseError::NoError && doc.isObject()) {
     m_result = doc.object();
-    m_isValid = true;
+    m_is_valid = true;
     accept();
   } else {
     QMessageBox::warning(this, "Invalid JSON",

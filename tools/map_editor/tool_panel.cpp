@@ -10,15 +10,15 @@ void ToolPanel::setupUI() {
   auto *layout = new QVBoxLayout(this);
   layout->setContentsMargins(4, 4, 4, 4);
 
-  m_toolList = new QListWidget(this);
-  m_toolList->setIconSize(QSize(32, 32));
-  m_toolList->setSpacing(4);
-  m_toolList->setDragEnabled(true);
-  m_toolList->setDragDropMode(QAbstractItemView::DragOnly);
+  m_tool_list = new QListWidget(this);
+  m_tool_list->setIconSize(QSize(32, 32));
+  m_tool_list->setSpacing(4);
+  m_tool_list->setDragEnabled(true);
+  m_tool_list->setDragDropMode(QAbstractItemView::DragOnly);
 
-  QFont font = m_toolList->font();
+  QFont font = m_tool_list->font();
   font.setPointSize(16);
-  m_toolList->setFont(font);
+  m_tool_list->setFont(font);
 
   addToolItem("Select", "⬚", ToolType::Select);
   addToolItem("Hill", "⛰", ToolType::Hill);
@@ -31,10 +31,10 @@ void ToolPanel::setupUI() {
   addToolItem("Village", "🏘", ToolType::Village);
   addToolItem("Eraser", "🗑", ToolType::Eraser);
 
-  connect(m_toolList, &QListWidget::itemClicked, this,
+  connect(m_tool_list, &QListWidget::itemClicked, this,
           &ToolPanel::onItemClicked);
 
-  layout->addWidget(m_toolList);
+  layout->addWidget(m_tool_list);
 
   setMinimumWidth(120);
   setMaximumWidth(180);
@@ -45,18 +45,18 @@ void ToolPanel::addToolItem(const QString &name, const QString &iconChar,
   auto *item = new QListWidgetItem(iconChar + "  " + name);
   item->setData(Qt::UserRole, static_cast<int>(tool));
   item->setToolTip(name);
-  m_toolList->addItem(item);
+  m_tool_list->addItem(item);
 }
 
 void ToolPanel::onItemClicked(QListWidgetItem *item) {
-  m_currentTool = static_cast<ToolType>(item->data(Qt::UserRole).toInt());
-  emit toolSelected(m_currentTool);
+  m_current_tool = static_cast<ToolType>(item->data(Qt::UserRole).toInt());
+  emit toolSelected(m_current_tool);
 }
 
 void ToolPanel::clearSelection() {
-  m_currentTool = ToolType::Select;
-  m_toolList->setCurrentRow(0);
-  emit toolSelected(m_currentTool);
+  m_current_tool = ToolType::Select;
+  m_tool_list->setCurrentRow(0);
+  emit toolSelected(m_current_tool);
 }
 
 } // namespace MapEditor

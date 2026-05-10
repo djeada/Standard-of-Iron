@@ -35,7 +35,7 @@ auto gl_funcs() -> QOpenGLFunctions_3_3_Core * {
 }
 
 auto load_shader_source(const QString &resource_path) -> QString {
-  QString const resolved = Utils::Resources::resolveResourcePath(resource_path);
+  QString const resolved = Utils::Resources::resolve_resource_path(resource_path);
   QFile file(resolved);
   if (!file.open(QIODevice::ReadOnly)) {
     qWarning() << "RiggedCharacterPipeline: Failed to open shader" << resolved;

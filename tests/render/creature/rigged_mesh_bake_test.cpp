@@ -22,15 +22,15 @@ namespace {
 using namespace Render::Creature;
 using Render::GL::RiggedVertex;
 
-constexpr float kEps = 1e-5F;
+constexpr float k_eps = 1e-5F;
 
 struct ToyGraph {
-  static constexpr BoneIndex kBoneA = 0;
-  static constexpr BoneIndex kBoneB = 1;
+  static constexpr BoneIndex k_bone_a = 0;
+  static constexpr BoneIndex k_bone_b = 1;
 
   std::array<BoneDef, 2> bones{
-      BoneDef{"A", kInvalidBone},
-      BoneDef{"B", kBoneA},
+      BoneDef{"A", k_invalid_bone},
+      BoneDef{"B", k_bone_a},
   };
   SkeletonTopology topology{std::span<const BoneDef>{bones}, {}};
 
@@ -42,14 +42,14 @@ struct ToyGraph {
   ToyGraph() {
     prims[0].debug_name = "sphere_on_A";
     prims[0].shape = PrimitiveShape::Sphere;
-    prims[0].params.anchor_bone = kBoneA;
+    prims[0].params.anchor_bone = k_bone_a;
     prims[0].params.radius = 1.0F;
     prims[0].color_role = 3;
 
     prims[1].debug_name = "cylinder_A_to_B";
     prims[1].shape = PrimitiveShape::Cylinder;
-    prims[1].params.anchor_bone = kBoneA;
-    prims[1].params.tail_bone = kBoneB;
+    prims[1].params.anchor_bone = k_bone_a;
+    prims[1].params.tail_bone = k_bone_b;
     prims[1].params.head_offset = QVector3D{0.0F, 0.0F, 0.0F};
     prims[1].params.tail_offset = QVector3D{0.0F, 2.0F, 0.0F};
     prims[1].params.radius = 0.5F;
@@ -201,7 +201,7 @@ TEST(RiggedMeshBake, SphereVerticesAreSingleBoneAnchor) {
 
   for (std::size_t i = 0; i < sphere_n; ++i) {
     RiggedVertex const &v = baked.vertices[i];
-    EXPECT_EQ(v.bone_indices[0], ToyGraph::kBoneA) << "vertex " << i;
+    EXPECT_EQ(v.bone_indices[0], ToyGraph::k_bone_a) << "vertex " << i;
     EXPECT_FLOAT_EQ(v.bone_weights[0], 1.0F) << "vertex " << i;
     EXPECT_FLOAT_EQ(v.bone_weights[1], 0.0F) << "vertex " << i;
     EXPECT_FLOAT_EQ(v.bone_weights[2], 0.0F) << "vertex " << i;
@@ -232,23 +232,23 @@ TEST(RiggedMeshBake, CylinderVerticesBlendAlongAxis) {
 
     float const sum = v.bone_weights[0] + v.bone_weights[1] +
                       v.bone_weights[2] + v.bone_weights[3];
-    EXPECT_NEAR(sum, 1.0F, kEps) << "cyl vertex " << i;
+    EXPECT_NEAR(sum, 1.0F, k_eps) << "cyl vertex " << i;
 
     EXPECT_FLOAT_EQ(v.bone_weights[2], 0.0F);
     EXPECT_FLOAT_EQ(v.bone_weights[3], 0.0F);
 
-    EXPECT_EQ(v.bone_indices[0], ToyGraph::kBoneA);
-    EXPECT_EQ(v.bone_indices[1], ToyGraph::kBoneB);
+    EXPECT_EQ(v.bone_indices[0], ToyGraph::k_bone_a);
+    EXPECT_EQ(v.bone_indices[1], ToyGraph::k_bone_b);
 
     if (std::abs(src_y + 0.5F) < 1e-4F) {
 
-      EXPECT_NEAR(v.bone_weights[0], 1.0F, kEps);
-      EXPECT_NEAR(v.bone_weights[1], 0.0F, kEps);
+      EXPECT_NEAR(v.bone_weights[0], 1.0F, k_eps);
+      EXPECT_NEAR(v.bone_weights[1], 0.0F, k_eps);
       saw_anchor_end = true;
     } else if (std::abs(src_y - 0.5F) < 1e-4F) {
 
-      EXPECT_NEAR(v.bone_weights[0], 0.0F, kEps);
-      EXPECT_NEAR(v.bone_weights[1], 1.0F, kEps);
+      EXPECT_NEAR(v.bone_weights[0], 0.0F, k_eps);
+      EXPECT_NEAR(v.bone_weights[1], 1.0F, k_eps);
       saw_tail_end = true;
     }
     EXPECT_EQ(v.color_role, 5U);

@@ -155,7 +155,7 @@ auto LevelOrchestrator::load_skirmish(
   Game::Map::MapDefinition map_def;
   QString map_error;
   const QString resolved_map_path =
-      Utils::Resources::resolveResourcePath(map_path);
+      Utils::Resources::resolve_resource_path(map_path);
   if (Game::Map::MapLoader::loadFromJsonFile(resolved_map_path, map_def,
                                              &map_error)) {
     if (minimap_manager) {

@@ -18,8 +18,8 @@ public:
 private:
   void setupUI(int currentWidth, int currentHeight);
 
-  QSpinBox *m_widthSpinBox = nullptr;
-  QSpinBox *m_heightSpinBox = nullptr;
+  QSpinBox *m_width_spin_box = nullptr;
+  QSpinBox *m_height_spin_box = nullptr;
 };
 
 } // namespace MapEditor

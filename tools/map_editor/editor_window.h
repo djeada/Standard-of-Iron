@@ -41,15 +41,15 @@ private:
   bool maybeSave();
   void closeEvent(QCloseEvent *event) override;
 
-  MapData *m_mapData = nullptr;
+  MapData *m_map_data = nullptr;
   MapCanvas *m_canvas = nullptr;
-  ToolPanel *m_toolPanel = nullptr;
-  QLabel *m_statusLabel = nullptr;
-  QLabel *m_dimensionsLabel = nullptr;
-  QString m_currentFilePath;
+  ToolPanel *m_tool_panel = nullptr;
+  QLabel *m_status_label = nullptr;
+  QLabel *m_dimensions_label = nullptr;
+  QString m_current_file_path;
 
-  QAction *m_undoAction = nullptr;
-  QAction *m_redoAction = nullptr;
+  QAction *m_undo_action = nullptr;
+  QAction *m_redo_action = nullptr;
 };
 
 } // namespace MapEditor
