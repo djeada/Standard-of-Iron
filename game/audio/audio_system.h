@@ -75,21 +75,21 @@ public:
   void pause_all();
   void resume_all();
 
-  auto load_sound(const std::string &sound_id, const std::string &filePath,
+  auto load_sound(const std::string &sound_id, const std::string &file_path,
                  AudioCategory category = AudioCategory::SFX) -> bool;
   auto load_music(const std::string &music_id,
-                 const std::string &filePath) -> bool;
+                 const std::string &file_path) -> bool;
   void unload_sound(const std::string &sound_id);
   void unload_music(const std::string &music_id);
   void unload_all_sounds();
   void unload_all_music();
 
-  void set_max_channels(size_t maxChannels);
+  void set_max_channels(size_t max_channels);
   auto get_active_channel_count() const -> size_t;
 
-  auto get_master_volume() const -> float { return masterVolume; }
+  auto get_master_volume() const -> float { return master_volume; }
   auto get_sound_volume() const -> float { return soundVolume; }
-  auto get_music_volume() const -> float { return musicVolume; }
+  auto get_music_volume() const -> float { return music_volume; }
   auto get_voice_volume() const -> float { return voiceVolume; }
 
 private:
@@ -106,35 +106,35 @@ private:
   void evict_lowest_priority_sound();
   void evict_lowest_priority_sound_locked();
   auto get_effective_volume(AudioCategory category,
-                          float eventVolume) const -> float;
+                          float event_volume) const -> float;
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
   std::unordered_map<std::string, AudioCategory> soundCategories;
   std::unordered_set<std::string> activeResources;
   mutable std::mutex resourceMutex;
 
-  Game::Audio::MusicPlayer *m_musicPlayer{nullptr};
+  Game::Audio::MusicPlayer *m_music_player{nullptr};
 
   std::thread audioThread;
   std::queue<AudioEvent> eventQueue;
   mutable std::mutex queueMutex;
   std::condition_variable queue_condition;
-  std::atomic<bool> isRunning;
+  std::atomic<bool> is_running;
 
-  std::atomic<float> masterVolume;
+  std::atomic<float> master_volume;
   std::atomic<float> soundVolume;
-  std::atomic<float> musicVolume;
+  std::atomic<float> music_volume;
   std::atomic<float> voiceVolume;
 
-  size_t maxChannels{AudioConstants::DEFAULT_MAX_CHANNELS};
+  size_t max_channels{AudioConstants::DEFAULT_MAX_CHANNELS};
 
   struct ActiveSound {
     std::string id;
     int priority;
     bool loop;
     AudioCategory category;
-    std::chrono::steady_clock::time_point startTime;
+    std::chrono::steady_clock::time_point start_time;
   };
-  std::vector<ActiveSound> activeSounds;
-  mutable std::mutex activeSoundsMutex;
+  std::vector<ActiveSound> active_sounds;
+  mutable std::mutex active_sounds_mutex;
 };

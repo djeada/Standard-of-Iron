@@ -45,12 +45,12 @@ auto saddle_bag_archetype() -> const RenderArchetype & {
 
 auto saddle_bag_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                                  std::size_t max) -> std::uint32_t {
-  if (max < kSaddleBagRoleCount) {
+  if (max < k_saddle_bag_role_count) {
     return 0;
   }
   out[k_bag_slot] = variant.saddle_color * 0.85F;
   out[k_strap_slot] = variant.tack_color;
-  return kSaddleBagRoleCount;
+  return k_saddle_bag_role_count;
 }
 
 auto saddle_bag_make_static_attachment(

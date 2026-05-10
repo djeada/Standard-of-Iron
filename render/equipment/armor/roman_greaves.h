@@ -32,7 +32,7 @@ public:
 
 auto roman_greaves_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kRomanGreavesRoleCount = 1;
+inline constexpr std::uint32_t k_roman_greaves_role_count = 1;
 
 auto roman_greaves_fill_role_colors(const HumanoidPalette &palette,
                                     QVector3D *out,

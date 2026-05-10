@@ -57,13 +57,13 @@ FireCampRenderer::~FireCampRenderer() = default;
 void FireCampRenderer::configure(
     const Game::Map::TerrainHeightMap &height_map,
     const Game::Map::BiomeSettings &biome_settings) {
-  m_width = height_map.getWidth();
-  m_height = height_map.getHeight();
-  m_tile_size = height_map.getTileSize();
-  m_height_data = height_map.getHeightData();
+  m_width = height_map.get_width();
+  m_height = height_map.get_height();
+  m_tile_size = height_map.get_tile_size();
+  m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
-  m_noiseSeed = biome_settings.seed;
+  m_noise_seed = biome_settings.seed;
 
   m_firecamp_state.reset_instances();
   auto &firecamp_params = m_firecamp_state.params;
@@ -158,17 +158,17 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
 void FireCampRenderer::clear() {
   m_firecamp_state.reset_instances();
-  m_explicitPositions.clear();
-  m_explicitIntensities.clear();
-  m_explicitRadii.clear();
+  m_explicit_positions.clear();
+  m_explicit_intensities.clear();
+  m_explicit_radii.clear();
 }
 
 void FireCampRenderer::set_explicit_fire_camps(
     const std::vector<QVector3D> &positions,
     const std::vector<float> &intensities, const std::vector<float> &radii) {
-  m_explicitPositions = positions;
-  m_explicitIntensities = intensities;
-  m_explicitRadii = radii;
+  m_explicit_positions = positions;
+  m_explicit_intensities = intensities;
+  m_explicit_radii = radii;
   m_firecamp_state.instances_dirty = true;
   if (m_width > 0 && m_height > 0 && !m_height_data.empty()) {
     generate_firecamp_instances();
@@ -176,25 +176,25 @@ void FireCampRenderer::set_explicit_fire_camps(
 }
 
 void FireCampRenderer::add_explicit_firecamps(const SpawnValidator &validator) {
-  if (m_explicitPositions.empty()) {
+  if (m_explicit_positions.empty()) {
     return;
   }
 
-  for (size_t i = 0; i < m_explicitPositions.size(); ++i) {
-    const QVector3D &pos = m_explicitPositions[i];
+  for (size_t i = 0; i < m_explicit_positions.size(); ++i) {
+    const QVector3D &pos = m_explicit_positions[i];
 
     if (!validator.can_spawn_at_world(pos.x(), pos.z())) {
       continue;
     }
 
     float intensity = 1.0F;
-    if (i < m_explicitIntensities.size()) {
-      intensity = m_explicitIntensities[i];
+    if (i < m_explicit_intensities.size()) {
+      intensity = m_explicit_intensities[i];
     }
 
     float radius = 3.0F;
-    if (i < m_explicitRadii.size()) {
-      radius = m_explicitRadii[i];
+    if (i < m_explicit_radii.size()) {
+      radius = m_explicit_radii[i];
     }
 
     float const phase = static_cast<float>(i) * 1.234567F;
@@ -278,7 +278,7 @@ void FireCampRenderer::generate_firecamp_instances() {
       }
 
       uint32_t state = hash_coords(
-          x, z, m_noiseSeed ^ 0xF12ECA3FU ^ static_cast<uint32_t>(idx));
+          x, z, m_noise_seed ^ 0xF12ECA3FU ^ static_cast<uint32_t>(idx));
 
       float world_x = 0.0F;
       float world_z = 0.0F;
@@ -286,7 +286,7 @@ void FireCampRenderer::generate_firecamp_instances() {
                               world_x, world_z);
 
       float const cluster_noise = smooth_value_noise(
-          world_x * 0.02F, world_z * 0.02F, m_noiseSeed ^ 0xCA3F12E0U);
+          world_x * 0.02F, world_z * 0.02F, m_noise_seed ^ 0xCA3F12E0U);
 
       if (cluster_noise < 0.4F) {
         continue;

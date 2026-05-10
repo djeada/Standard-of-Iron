@@ -4,7 +4,7 @@
 using namespace Game::Systems;
 
 namespace {
-constexpr float kDefaultGridCellSize = 1.0F;
+constexpr float k_default_grid_cell_size = 1.0F;
 }
 
 class BuildingCollisionRegistryTest : public ::testing::Test {
@@ -121,7 +121,7 @@ TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
   ASSERT_EQ(buildings.size(), 1);
 
   auto cells = BuildingCollisionRegistry::get_occupied_grid_cells(
-      buildings[0], kDefaultGridCellSize);
+      buildings[0], k_default_grid_cell_size);
 
   bool has_min_x = false;
   bool has_max_x = false;

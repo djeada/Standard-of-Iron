@@ -237,14 +237,14 @@ auto Render::GL::spear_fill_role_colors(const HumanoidPalette &palette,
                                         const SpearRenderConfig &config,
                                         QVector3D *out,
                                         std::size_t max) -> std::uint32_t {
-  if (max < kSpearRoleCount) {
+  if (max < k_spear_role_count) {
     return 0U;
   }
   out[k_shaft_slot] = config.shaft_color;
   out[k_shaft_dark_slot] = config.shaft_color * 0.98F;
   out[k_head_slot] = config.spearhead_color;
   out[k_grip_slot] = palette.leather * 0.92F;
-  return static_cast<std::uint32_t>(kSpearRoleCount);
+  return static_cast<std::uint32_t>(k_spear_role_count);
 }
 
 auto Render::GL::spear_make_static_attachments(const SpearRenderConfig &config,

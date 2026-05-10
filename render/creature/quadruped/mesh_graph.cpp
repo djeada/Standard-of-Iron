@@ -10,8 +10,8 @@ namespace Render::Creature::Quadruped {
 
 namespace {
 
-constexpr float kPi = std::numbers::pi_v<float>;
-constexpr float kTwoPi = 2.0F * kPi;
+constexpr float k_pi = std::numbers::pi_v<float>;
+constexpr float k_two_pi = 2.0F * k_pi;
 
 auto make_vertex(const QVector3D &pos,
                  const QVector3D &normal) -> Render::GL::Vertex {
@@ -97,7 +97,7 @@ auto make_oriented_ring(const QVector3D &center, const QVector3D &tangent,
   ring.reserve(vertex_count);
   for (std::size_t i = 0; i < vertex_count; ++i) {
     float const angle =
-        (static_cast<float>(i) / static_cast<float>(vertex_count)) * kTwoPi;
+        (static_cast<float>(i) / static_cast<float>(vertex_count)) * k_two_pi;
     ring.push_back(center + right * (std::cos(angle) * radius_x) +
                    up * (std::sin(angle) * radius_y));
   }
@@ -323,7 +323,7 @@ auto build_ellipsoid_mesh(const EllipsoidNode &node)
   rings.reserve(ring_count);
   for (std::size_t i = 0; i < ring_count; ++i) {
     float const t = static_cast<float>(i) / static_cast<float>(ring_count - 1U);
-    float const phi = -0.5F * kPi + t * kPi;
+    float const phi = -0.5F * k_pi + t * k_pi;
     float const cross = std::max(std::abs(std::cos(phi)), 0.04F);
     float const z = node.center.z() + std::sin(phi) * node.radii.z();
     rings.push_back(make_round_ring({node.center.x(), node.center.y(), z},
@@ -378,9 +378,9 @@ auto build_path_tube_mesh(const QVector3D &start, const QVector3D &end,
     float const t =
         static_cast<float>(i) / static_cast<float>(segment_count - 1U);
     QVector3D center = start * (1.0F - t) + end * t;
-    center += QVector3D(0.0F, std::sin(t * kPi) * sag, 0.0F);
+    center += QVector3D(0.0F, std::sin(t * k_pi) * sag, 0.0F);
     QVector3D const tangent =
-        (end - start) + QVector3D(0.0F, std::cos(t * kPi) * sag * 0.5F, 0.0F);
+        (end - start) + QVector3D(0.0F, std::cos(t * k_pi) * sag * 0.5F, 0.0F);
     float const radius = start_radius + (end_radius - start_radius) * t;
     rings.push_back(make_oriented_ring(center, tangent, radius, radius * 0.9F,
                                        ring_vertices));

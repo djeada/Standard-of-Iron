@@ -377,13 +377,13 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
 
 auto bow_fill_role_colors(const HumanoidPalette &, QVector3D *out,
                           std::size_t max) -> std::uint32_t {
-  if (max < kBowRoleCount) {
+  if (max < k_bow_role_count) {
     return 0;
   }
   constexpr BowRenderConfig cfg{};
   out[k_bow_body_slot] = k_dark_bow_color;
   out[k_bow_string_slot] = cfg.string_color;
-  return kBowRoleCount;
+  return k_bow_role_count;
 }
 
 auto bow_make_static_attachments(const BowRenderConfig &config,

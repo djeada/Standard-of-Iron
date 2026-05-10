@@ -43,7 +43,7 @@ private:
 
 auto roman_shoulder_cover_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kRomanShoulderCoverRoleCount = 3;
+inline constexpr std::uint32_t k_roman_shoulder_cover_role_count = 3;
 
 auto roman_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
                                            QVector3D *out,

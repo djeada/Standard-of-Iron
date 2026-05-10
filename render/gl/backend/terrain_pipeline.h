@@ -15,7 +15,7 @@ namespace BackendPipelines {
 class TerrainPipeline final : public IPipeline {
 public:
   explicit TerrainPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shaderCache(shader_cache) {}
+      : m_backend(backend), m_shader_cache(shader_cache) {}
   ~TerrainPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -116,21 +116,21 @@ public:
     GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
   };
 
-  GL::Shader *m_grassShader = nullptr;
-  GL::Shader *m_groundShader = nullptr;
-  GL::Shader *m_terrainShader = nullptr;
+  GL::Shader *m_grass_shader = nullptr;
+  GL::Shader *m_ground_shader = nullptr;
+  GL::Shader *m_terrain_shader = nullptr;
 
-  GrassUniforms m_grassUniforms;
-  GroundUniforms m_groundUniforms;
-  TerrainUniforms m_terrainUniforms;
+  GrassUniforms m_grass_uniforms;
+  GroundUniforms m_ground_uniforms;
+  TerrainUniforms m_terrain_uniforms;
 
-  GLuint m_grassVao = 0;
-  GLuint m_grassVertexBuffer = 0;
-  GLsizei m_grassVertexCount = 0;
+  GLuint m_grass_vao = 0;
+  GLuint m_grass_vertex_buffer = 0;
+  GLsizei m_grass_vertex_count = 0;
 
 private:
   GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shaderCache = nullptr;
+  GL::ShaderCache *m_shader_cache = nullptr;
 
   void cache_grass_uniforms();
   void cache_ground_uniforms();

@@ -40,15 +40,15 @@ auto check_gl_error(const char *operation) -> bool {
 } // namespace
 
 auto HealerAuraPipeline::initialize() -> bool {
-  if (m_shaderCache == nullptr) {
+  if (m_shader_cache == nullptr) {
     qWarning() << "HealerAuraPipeline::initialize: null ShaderCache";
     return false;
   }
 
   clear_gl_errors();
 
-  m_auraShader = m_shaderCache->get("healing_aura");
-  if (m_auraShader == nullptr) {
+  m_aura_shader = m_shader_cache->get("healing_aura");
+  if (m_aura_shader == nullptr) {
     qWarning() << "HealerAuraPipeline: Failed to get healing_aura shader";
     return false;
   }
@@ -66,16 +66,16 @@ auto HealerAuraPipeline::initialize() -> bool {
 
 void HealerAuraPipeline::shutdown() {
   shutdown_geometry();
-  m_auraShader = nullptr;
+  m_aura_shader = nullptr;
 }
 
 void HealerAuraPipeline::shutdown_geometry() {
   if (QOpenGLContext::currentContext() == nullptr) {
 
     m_vao = 0;
-    m_vertexBuffer = 0;
-    m_indexBuffer = 0;
-    m_indexCount = 0;
+    m_vertex_buffer = 0;
+    m_index_buffer = 0;
+    m_index_count = 0;
     return;
   }
 
@@ -85,32 +85,32 @@ void HealerAuraPipeline::shutdown_geometry() {
     glDeleteVertexArrays(1, &m_vao);
     m_vao = 0;
   }
-  if (m_vertexBuffer != 0) {
-    glDeleteBuffers(1, &m_vertexBuffer);
-    m_vertexBuffer = 0;
+  if (m_vertex_buffer != 0) {
+    glDeleteBuffers(1, &m_vertex_buffer);
+    m_vertex_buffer = 0;
   }
-  if (m_indexBuffer != 0) {
-    glDeleteBuffers(1, &m_indexBuffer);
-    m_indexBuffer = 0;
+  if (m_index_buffer != 0) {
+    glDeleteBuffers(1, &m_index_buffer);
+    m_index_buffer = 0;
   }
-  m_indexCount = 0;
+  m_index_count = 0;
 }
 
 void HealerAuraPipeline::cache_uniforms() {
-  if (m_auraShader == nullptr) {
+  if (m_aura_shader == nullptr) {
     return;
   }
 
-  m_uniforms.mvp = m_auraShader->uniform_handle("u_mvp");
-  m_uniforms.model = m_auraShader->uniform_handle("u_model");
-  m_uniforms.time = m_auraShader->uniform_handle("u_time");
-  m_uniforms.aura_radius = m_auraShader->uniform_handle("u_auraRadius");
-  m_uniforms.intensity = m_auraShader->uniform_handle("u_intensity");
-  m_uniforms.aura_color = m_auraShader->uniform_handle("u_auraColor");
+  m_uniforms.mvp = m_aura_shader->uniform_handle("u_mvp");
+  m_uniforms.model = m_aura_shader->uniform_handle("u_model");
+  m_uniforms.time = m_aura_shader->uniform_handle("u_time");
+  m_uniforms.aura_radius = m_aura_shader->uniform_handle("u_auraRadius");
+  m_uniforms.intensity = m_aura_shader->uniform_handle("u_intensity");
+  m_uniforms.aura_color = m_aura_shader->uniform_handle("u_auraColor");
 }
 
 auto HealerAuraPipeline::is_initialized() const -> bool {
-  return m_auraShader != nullptr && m_vao != 0 && m_indexCount > 0;
+  return m_aura_shader != nullptr && m_vao != 0 && m_index_count > 0;
 }
 
 struct AuraVertex {
@@ -186,8 +186,8 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
     return false;
   }
 
-  glGenBuffers(1, &m_vertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
+  glGenBuffers(1, &m_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(AuraVertex)),
                vertices.data(), GL_STATIC_DRAW);
@@ -196,8 +196,8 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
     return false;
   }
 
-  glGenBuffers(1, &m_indexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer);
+  glGenBuffers(1, &m_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
                indices.data(), GL_STATIC_DRAW);
@@ -206,7 +206,7 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
     return false;
   }
 
-  m_indexCount = static_cast<GLsizei>(indices.size());
+  m_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::Position);
   glVertexAttribPointer(
@@ -236,7 +236,7 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
 }
 
 void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
-  m_healerData.clear();
+  m_healer_data.clear();
 
   if (world == nullptr) {
     return;
@@ -276,12 +276,12 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
 
     data.color = QVector3D(0.4F, 1.0F, 0.5F);
 
-    m_healerData.push_back(data);
+    m_healer_data.push_back(data);
   }
 }
 
 void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
-  if (!is_initialized() || m_healerData.empty()) {
+  if (!is_initialized() || m_healer_data.empty()) {
     return;
   }
 
@@ -299,10 +299,10 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-  m_auraShader->use();
+  m_aura_shader->use();
   glBindVertexArray(m_vao);
 
-  for (const auto &data : m_healerData) {
+  for (const auto &data : m_healer_data) {
     render_aura(data, cam, animation_time);
   }
 
@@ -335,15 +335,15 @@ void HealerAuraPipeline::render_aura(const HealerAuraData &data,
   QMatrix4x4 vp = cam.get_projection_matrix() * cam.get_view_matrix();
   QMatrix4x4 mvp = vp * model;
 
-  m_auraShader->set_uniform(m_uniforms.mvp, mvp);
-  m_auraShader->set_uniform(m_uniforms.model, model);
-  m_auraShader->set_uniform(m_uniforms.time, animation_time);
+  m_aura_shader->set_uniform(m_uniforms.mvp, mvp);
+  m_aura_shader->set_uniform(m_uniforms.model, model);
+  m_aura_shader->set_uniform(m_uniforms.time, animation_time);
 
-  m_auraShader->set_uniform(m_uniforms.aura_radius, 1.0F);
-  m_auraShader->set_uniform(m_uniforms.intensity, data.intensity);
-  m_auraShader->set_uniform(m_uniforms.aura_color, data.color);
+  m_aura_shader->set_uniform(m_uniforms.aura_radius, 1.0F);
+  m_aura_shader->set_uniform(m_uniforms.intensity, data.intensity);
+  m_aura_shader->set_uniform(m_uniforms.aura_color, data.color);
 
-  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 }
 
 void HealerAuraPipeline::render_single_aura(const QVector3D &position,
@@ -368,7 +368,7 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-  m_auraShader->use();
+  m_aura_shader->use();
   glBindVertexArray(m_vao);
 
   QMatrix4x4 model;
@@ -378,14 +378,14 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
 
   QMatrix4x4 mvp = view_proj * model;
 
-  m_auraShader->set_uniform(m_uniforms.mvp, mvp);
-  m_auraShader->set_uniform(m_uniforms.model, model);
-  m_auraShader->set_uniform(m_uniforms.time, time);
-  m_auraShader->set_uniform(m_uniforms.aura_radius, 1.0F);
-  m_auraShader->set_uniform(m_uniforms.intensity, intensity);
-  m_auraShader->set_uniform(m_uniforms.aura_color, color);
+  m_aura_shader->set_uniform(m_uniforms.mvp, mvp);
+  m_aura_shader->set_uniform(m_uniforms.model, model);
+  m_aura_shader->set_uniform(m_uniforms.time, time);
+  m_aura_shader->set_uniform(m_uniforms.aura_radius, 1.0F);
+  m_aura_shader->set_uniform(m_uniforms.intensity, intensity);
+  m_aura_shader->set_uniform(m_uniforms.aura_color, color);
 
-  glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 
   glBindVertexArray(0);
 

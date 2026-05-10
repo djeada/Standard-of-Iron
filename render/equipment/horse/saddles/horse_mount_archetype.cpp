@@ -18,8 +18,8 @@ struct Slot {
   std::uint32_t (*saddle_fn)(const HorseVariant &, QVector3D *, std::size_t);
   std::uint32_t (*reins_fn)(const HorseVariant &, QVector3D *, std::size_t);
 };
-constexpr std::size_t kMaxSlots = 16;
-std::array<Slot, kMaxSlots> g_slots{};
+constexpr std::size_t k_max_slots = 16;
+std::array<Slot, k_max_slots> g_slots{};
 std::size_t g_slot_count = 0;
 
 template <std::size_t IDX>
@@ -45,7 +45,7 @@ auto trampoline(const void *variant_void, QVector3D *out,
 
 using ExtraFn = Render::Creature::ArchetypeDescriptor::ExtraRoleColorsFn;
 
-constexpr std::array<ExtraFn, kMaxSlots> g_trampolines = {
+constexpr std::array<ExtraFn, k_max_slots> g_trampolines = {
     &trampoline<0>,  &trampoline<1>,  &trampoline<2>,  &trampoline<3>,
     &trampoline<4>,  &trampoline<5>,  &trampoline<6>,  &trampoline<7>,
     &trampoline<8>,  &trampoline<9>,  &trampoline<10>, &trampoline<11>,
@@ -62,8 +62,8 @@ auto register_mount_saddle_archetype(
     std::uint32_t (*fill_role_colors)(const HorseVariant &, QVector3D *,
                                       std::size_t))
     -> Render::Creature::ArchetypeId {
-  if (g_slot_count >= kMaxSlots) {
-    return Render::Creature::kInvalidArchetype;
+  if (g_slot_count >= k_max_slots) {
+    return Render::Creature::k_invalid_archetype;
   }
 
   constexpr std::uint16_t k_root_bone =

@@ -13,7 +13,7 @@ namespace Render::GL {
 
 auto roman_saddle_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kRomanSaddleRoleCount = 1;
+inline constexpr std::uint32_t k_roman_saddle_role_count = 1;
 
 auto roman_saddle_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                                    std::size_t max) -> std::uint32_t;

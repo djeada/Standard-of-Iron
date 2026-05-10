@@ -47,7 +47,7 @@ auto resolve_mission_file_path(const QString &mission_id) -> QString {
 
   for (const auto &pattern : search_paths) {
     QString candidate = pattern.arg(mission_id);
-    candidate = Utils::Resources::resolveResourcePath(candidate);
+    candidate = Utils::Resources::resolve_resource_path(candidate);
     if (QFileInfo::exists(candidate)) {
       return candidate;
     }
@@ -66,7 +66,7 @@ auto collect_campaign_files() -> QStringList {
   QStringList files;
   QSet<QString> seen;
   for (const auto &path : search_paths) {
-    const QString resolved = Utils::Resources::resolveResourcePath(path);
+    const QString resolved = Utils::Resources::resolve_resource_path(path);
     QDir campaigns_dir(resolved);
     if (!campaigns_dir.exists()) {
       continue;
@@ -115,7 +115,7 @@ auto load_campaign_map_paths() -> QSet<QString> {
       }
 
       const QString map_path =
-          Utils::Resources::resolveResourcePath(mission_def.map_path);
+          Utils::Resources::resolve_resource_path(mission_def.map_path);
       if (!map_path.isEmpty()) {
         map_paths.insert(map_path);
       }
@@ -133,7 +133,7 @@ auto MapCatalog::available_maps() -> QVariantList {
   QVariantList list;
   const QSet<QString> campaign_map_paths = load_campaign_map_paths();
   const QString maps_root =
-      Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
+      Utils::Resources::resolve_resource_path(QStringLiteral(":/assets/maps"));
   QDir const maps_dir(maps_root);
   if (!maps_dir.exists()) {
     return list;
@@ -143,7 +143,7 @@ auto MapCatalog::available_maps() -> QVariantList {
       maps_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
   for (const QString &f : files) {
     QString const path =
-        Utils::Resources::resolveResourcePath(maps_dir.filePath(f));
+        Utils::Resources::resolve_resource_path(maps_dir.filePath(f));
     if (campaign_map_paths.contains(path)) {
       continue;
     }
@@ -210,7 +210,7 @@ auto MapCatalog::available_maps() -> QVariantList {
 
     if (thumbnail.isEmpty()) {
       QString const base_name = QFileInfo(f).baseName();
-      QString const thumb_candidate = Utils::Resources::resolveResourcePath(
+      QString const thumb_candidate = Utils::Resources::resolve_resource_path(
           QString(":/assets/maps/%1_thumb.png").arg(base_name));
 
       if (QFileInfo::exists(thumb_candidate)) {
@@ -232,13 +232,13 @@ void MapCatalog::load_maps_async() {
   }
 
   m_maps.clear();
-  m_pendingFiles.clear();
+  m_pending_files.clear();
   ensure_campaign_map_paths_loaded();
   m_loading = true;
   emit loading_changed(true);
 
   const QString maps_root =
-      Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
+      Utils::Resources::resolve_resource_path(QStringLiteral(":/assets/maps"));
   QDir const maps_dir(maps_root);
   if (!maps_dir.exists()) {
     m_loading = false;
@@ -247,10 +247,10 @@ void MapCatalog::load_maps_async() {
     return;
   }
 
-  m_pendingFiles =
+  m_pending_files =
       maps_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
 
-  if (m_pendingFiles.isEmpty()) {
+  if (m_pending_files.isEmpty()) {
     m_loading = false;
     emit loading_changed(false);
     emit all_maps_loaded();
@@ -261,19 +261,19 @@ void MapCatalog::load_maps_async() {
 }
 
 void MapCatalog::load_next_map() {
-  if (m_pendingFiles.isEmpty()) {
+  if (m_pending_files.isEmpty()) {
     m_loading = false;
     emit loading_changed(false);
     emit all_maps_loaded();
     return;
   }
 
-  QString const file_name = m_pendingFiles.takeFirst();
+  QString const file_name = m_pending_files.takeFirst();
   const QString maps_root =
-      Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
+      Utils::Resources::resolve_resource_path(QStringLiteral(":/assets/maps"));
   QDir const maps_dir(maps_root);
   QString const path =
-      Utils::Resources::resolveResourcePath(maps_dir.filePath(file_name));
+      Utils::Resources::resolve_resource_path(maps_dir.filePath(file_name));
 
   if (!m_campaign_map_paths.contains(path)) {
     QVariantMap const entry = load_single_map(path);
@@ -283,7 +283,7 @@ void MapCatalog::load_next_map() {
     }
   }
 
-  if (!m_pendingFiles.isEmpty()) {
+  if (!m_pending_files.isEmpty()) {
     QTimer::singleShot(10, this, &MapCatalog::load_next_map);
   } else {
     m_loading = false;
@@ -293,7 +293,7 @@ void MapCatalog::load_next_map() {
 }
 
 auto MapCatalog::load_single_map(const QString &path) -> QVariantMap {
-  const QString resolved_path = Utils::Resources::resolveResourcePath(path);
+  const QString resolved_path = Utils::Resources::resolve_resource_path(path);
   QFile file(resolved_path);
   QString name = QFileInfo(resolved_path).fileName();
   QString desc;
@@ -359,7 +359,7 @@ auto MapCatalog::load_single_map(const QString &path) -> QVariantMap {
   }
   if (thumbnail.isEmpty()) {
     QString const base_name = QFileInfo(resolved_path).baseName();
-    QString const thumb_candidate = Utils::Resources::resolveResourcePath(
+    QString const thumb_candidate = Utils::Resources::resolve_resource_path(
         QString(":/assets/maps/%1_thumb.png").arg(base_name));
 
     if (QFileInfo::exists(thumb_candidate)) {

@@ -16,7 +16,7 @@ struct HeadwrapConfig {};
 
 auto headwrap_helmet_archetype() -> const RenderArchetype &;
 
-inline constexpr std::uint32_t kHeadwrapRoleCount = 3;
+inline constexpr std::uint32_t k_headwrap_role_count = 3;
 
 auto headwrap_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                                std::size_t max) -> std::uint32_t;

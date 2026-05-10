@@ -102,23 +102,23 @@ HorseArcherRendererBase::HorseArcherRendererBase(
     : m_config(std::move(config)) {
   auto &equipment_registry = EquipmentRegistry::instance();
   m_bow_handle = m_config.bow_handle;
-  if (m_bow_handle == kInvalidEquipmentHandle) {
+  if (m_bow_handle == k_invalid_equipment_handle) {
     m_bow_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
                                                      m_config.bow_equipment_id);
   }
   m_config.has_bow =
-      m_config.has_bow && m_bow_handle != kInvalidEquipmentHandle;
+      m_config.has_bow && m_bow_handle != k_invalid_equipment_handle;
   if (!m_config.has_bow) {
     m_config.bow_equipment_id.clear();
   }
 
   m_quiver_handle = m_config.quiver_handle;
-  if (m_quiver_handle == kInvalidEquipmentHandle) {
+  if (m_quiver_handle == k_invalid_equipment_handle) {
     m_quiver_handle = equipment_registry.resolve_handle(
         EquipmentCategory::Weapon, m_config.quiver_equipment_id);
   }
   m_config.has_quiver =
-      m_config.has_quiver && m_quiver_handle != kInvalidEquipmentHandle;
+      m_config.has_quiver && m_quiver_handle != k_invalid_equipment_handle;
   if (!m_config.has_quiver) {
     m_config.quiver_equipment_id.clear();
   }
@@ -141,12 +141,12 @@ auto HorseArcherRendererBase::mounted_visual_spec() const
     m_mounted_visual_spec_cache.rider.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
     Render::Creature::ArchetypeId const rider_id =
-        m_rider_archetype_with_bow != Render::Creature::kInvalidArchetype
+        m_rider_archetype_with_bow != Render::Creature::k_invalid_archetype
             ? m_rider_archetype_with_bow
             : (m_config.rider_archetype_id !=
-                       Render::Creature::kInvalidArchetype
+                       Render::Creature::k_invalid_archetype
                    ? m_config.rider_archetype_id
-                   : Render::Creature::ArchetypeRegistry::kRiderBase);
+                   : Render::Creature::ArchetypeRegistry::k_rider_base);
     m_mounted_visual_spec_cache.rider.archetype_id = rider_id;
     m_mounted_visual_spec_cache.rider.debug_name = "troops/horse_archer/rider";
     m_mounted_visual_spec_cache.mount.debug_name = "troops/horse_archer/horse";
@@ -186,9 +186,9 @@ void HorseArcherRendererBase::build_visual_spec() {
   using Render::Creature::ArchetypeRegistry;
 
   Render::Creature::ArchetypeId const base_rider_id =
-      m_config.rider_archetype_id != Render::Creature::kInvalidArchetype
+      m_config.rider_archetype_id != Render::Creature::k_invalid_archetype
           ? m_config.rider_archetype_id
-          : ArchetypeRegistry::kRiderBase;
+          : ArchetypeRegistry::k_rider_base;
 
   if (m_config.has_bow || m_config.has_quiver) {
     ArchetypeCacheKey const key{base_rider_id, m_config.has_bow,
@@ -201,7 +201,7 @@ void HorseArcherRendererBase::build_visual_spec() {
       }
     }
 
-    if (m_rider_archetype_with_bow == Render::Creature::kInvalidArchetype) {
+    if (m_rider_archetype_with_bow == Render::Creature::k_invalid_archetype) {
       auto const *base_desc = ArchetypeRegistry::instance().get(base_rider_id);
       if (base_desc != nullptr) {
         Render::Creature::ArchetypeDescriptor desc = *base_desc;
@@ -214,13 +214,13 @@ void HorseArcherRendererBase::build_visual_spec() {
               canonical_bow_config(m_config), base_role_byte);
           for (auto const &spec : bow_specs) {
             if (desc.bake_attachment_count >=
-                Render::Creature::ArchetypeDescriptor::kMaxBakeAttachments) {
+                Render::Creature::ArchetypeDescriptor::k_max_bake_attachments) {
               break;
             }
             desc.bake_attachments[desc.bake_attachment_count++] = spec;
           }
           base_role_byte =
-              static_cast<std::uint8_t>(base_role_byte + kBowRoleCount);
+              static_cast<std::uint8_t>(base_role_byte + k_bow_role_count);
         }
 
         if (m_config.has_quiver) {
@@ -233,13 +233,13 @@ void HorseArcherRendererBase::build_visual_spec() {
               quiver_cfg, pelvis_bone, base_role_byte);
           for (auto const &spec : quiver_specs) {
             if (desc.bake_attachment_count >=
-                Render::Creature::ArchetypeDescriptor::kMaxBakeAttachments) {
+                Render::Creature::ArchetypeDescriptor::k_max_bake_attachments) {
               break;
             }
             desc.bake_attachments[desc.bake_attachment_count++] = spec;
           }
           base_role_byte =
-              static_cast<std::uint8_t>(base_role_byte + kQuiverRoleCount);
+              static_cast<std::uint8_t>(base_role_byte + k_quiver_role_count);
         }
 
         desc.role_count = base_role_byte;
@@ -247,7 +247,7 @@ void HorseArcherRendererBase::build_visual_spec() {
 
         auto const new_id =
             ArchetypeRegistry::instance().register_archetype(desc);
-        if (new_id != Render::Creature::kInvalidArchetype) {
+        if (new_id != Render::Creature::k_invalid_archetype) {
           std::lock_guard<std::mutex> lock(archetype_cache_mutex());
           archetype_cache()[key] = new_id;
         }
@@ -263,7 +263,7 @@ void HorseArcherRendererBase::build_visual_spec() {
   m_spec.scaling = ProportionScaling{ps.x(), ps.y(), ps.z()};
   m_spec.owned_legacy_slots = LegacySlotMask::AllHumanoid;
   m_spec.archetype_id =
-      m_rider_archetype_with_bow != Render::Creature::kInvalidArchetype
+      m_rider_archetype_with_bow != Render::Creature::k_invalid_archetype
           ? m_rider_archetype_with_bow
           : base_rider_id;
 }

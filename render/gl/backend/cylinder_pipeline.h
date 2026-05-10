@@ -35,9 +35,9 @@ public:
   void draw_fog(std::size_t count);
 
   [[nodiscard]] auto cylinder_shader() const -> GL::Shader * {
-    return m_cylinderShader;
+    return m_cylinder_shader;
   }
-  [[nodiscard]] auto fog_shader() const -> GL::Shader * { return m_fogShader; }
+  [[nodiscard]] auto fog_shader() const -> GL::Shader * { return m_fog_shader; }
 
   struct CylinderUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -64,10 +64,10 @@ public:
     float alpha{1.0F};
   };
 
-  CylinderUniforms m_cylinderUniforms;
-  FogUniforms m_fogUniforms;
-  std::vector<CylinderInstanceGpu> m_cylinderScratch;
-  std::vector<FogInstanceGpu> m_fogScratch;
+  CylinderUniforms m_cylinder_uniforms;
+  FogUniforms m_fog_uniforms;
+  std::vector<CylinderInstanceGpu> m_cylinder_scratch;
+  std::vector<FogInstanceGpu> m_fog_scratch;
 
 private:
   void initialize_cylinder_pipeline();
@@ -75,27 +75,27 @@ private:
   void initialize_fog_pipeline();
   void shutdown_fog_pipeline();
 
-  GL::ShaderCache *m_shaderCache;
+  GL::ShaderCache *m_shader_cache;
   bool m_initialized{false};
-  bool m_usePersistentBuffers{false};
+  bool m_use_persistent_buffers{false};
 
-  GL::Shader *m_cylinderShader{nullptr};
-  GLuint m_cylinderVao{0};
-  GLuint m_cylinderVertexBuffer{0};
-  GLuint m_cylinderIndexBuffer{0};
-  GLuint m_cylinderInstanceBuffer{0};
-  GLsizei m_cylinderIndexCount{0};
-  std::size_t m_cylinderInstanceCapacity{0};
-  GL::PersistentRingBuffer<CylinderInstanceGpu> m_cylinderPersistentBuffer;
+  GL::Shader *m_cylinder_shader{nullptr};
+  GLuint m_cylinder_vao{0};
+  GLuint m_cylinder_vertex_buffer{0};
+  GLuint m_cylinder_index_buffer{0};
+  GLuint m_cylinder_instance_buffer{0};
+  GLsizei m_cylinder_index_count{0};
+  std::size_t m_cylinder_instance_capacity{0};
+  GL::PersistentRingBuffer<CylinderInstanceGpu> m_cylinder_persistent_buffer;
 
-  GL::Shader *m_fogShader{nullptr};
-  GLuint m_fogVao{0};
-  GLuint m_fogVertexBuffer{0};
-  GLuint m_fogIndexBuffer{0};
-  GLuint m_fogInstanceBuffer{0};
-  GLsizei m_fogIndexCount{0};
-  std::size_t m_fogInstanceCapacity{0};
-  GL::PersistentRingBuffer<FogInstanceGpu> m_fogPersistentBuffer;
+  GL::Shader *m_fog_shader{nullptr};
+  GLuint m_fog_vao{0};
+  GLuint m_fog_vertex_buffer{0};
+  GLuint m_fog_index_buffer{0};
+  GLuint m_fog_instance_buffer{0};
+  GLsizei m_fog_index_count{0};
+  std::size_t m_fog_instance_capacity{0};
+  GL::PersistentRingBuffer<FogInstanceGpu> m_fog_persistent_buffer;
 };
 
 } // namespace Render::GL::BackendPipelines

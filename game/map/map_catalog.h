@@ -29,7 +29,7 @@ private:
   static auto load_single_map(const QString &filePath) -> QVariantMap;
   void ensure_campaign_map_paths_loaded();
 
-  QStringList m_pendingFiles;
+  QStringList m_pending_files;
   QVariantList m_maps;
   QSet<QString> m_campaign_map_paths;
   bool m_campaign_map_paths_loaded = false;

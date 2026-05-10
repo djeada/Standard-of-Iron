@@ -45,7 +45,7 @@ public:
 
 private:
   GLuint m_vao = 0;
-  int m_currentAttribIndex = 0;
+  int m_current_attrib_index = 0;
 };
 
 } // namespace Render::GL

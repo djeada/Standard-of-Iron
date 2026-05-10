@@ -208,7 +208,7 @@ void ArmorLightCarthageRenderer::submit(const ArmorLightCarthageConfig &,
 auto armor_light_carthage_fill_role_colors(const HumanoidPalette &palette,
                                            QVector3D *out,
                                            std::size_t max) -> std::uint32_t {
-  if (max < kArmorLightCarthageRoleCount) {
+  if (max < k_armor_light_carthage_role_count) {
     return 0U;
   }
   using Render::GL::Humanoid::saturate_color;
@@ -223,7 +223,7 @@ auto armor_light_carthage_fill_role_colors(const HumanoidPalette &palette,
   out[1] = leather_highlight * 0.95F;
   out[2] = cloth_accent;
   out[3] = metal_color * 0.94F;
-  return kArmorLightCarthageRoleCount;
+  return k_armor_light_carthage_role_count;
 }
 
 auto armor_light_carthage_make_static_attachment(

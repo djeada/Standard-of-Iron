@@ -49,15 +49,15 @@ auto register_horse_swordsman_rider_archetype()
   static const auto k_helmet_base_role_byte =
       static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
   static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(
-      k_helmet_base_role_byte + Render::GL::kRomanHeavyHelmetRoleCount);
+      k_helmet_base_role_byte + Render::GL::k_roman_heavy_helmet_role_count);
   static const auto k_shield_base_role_byte = static_cast<std::uint8_t>(
-      k_shoulder_base_role_byte + Render::GL::kRomanShoulderCoverRoleCount);
+      k_shoulder_base_role_byte + Render::GL::k_roman_shoulder_cover_role_count);
   static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
       k_shield_base_role_byte + Render::GL::k_roman_scutum_role_count);
   static const auto k_sword_base_role_byte = static_cast<std::uint8_t>(
-      k_armor_base_role_byte + Render::GL::kRomanHeavyArmorRoleCount);
+      k_armor_base_role_byte + Render::GL::k_roman_heavy_armor_role_count);
   static const auto k_scabbard_base_role_byte = static_cast<std::uint8_t>(
-      k_sword_base_role_byte + Render::GL::kSwordRoleCount);
+      k_sword_base_role_byte + Render::GL::k_sword_role_count);
   static const auto k_head_bind_matrix =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
           Render::Humanoid::HumanoidBone::Head)];
@@ -173,7 +173,7 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   config.shield_handle = loadout.shield_handle;
   config.has_shoulder = true;
   config.rider_creature_asset_id =
-      Render::Creature::Pipeline::kHumanoidSwordAsset;
+      Render::Creature::Pipeline::k_humanoid_sword_asset;
   config.rider_archetype_id = register_horse_swordsman_rider_archetype();
 
   static const auto k_mount_archetype = register_mount_saddle_archetype(

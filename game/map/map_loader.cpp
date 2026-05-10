@@ -268,10 +268,10 @@ void read_victory_config(const QJsonObject &obj, VictoryConfig &out) {
   }
 
   if (obj.contains("key_structures") && obj.value("key_structures").isArray()) {
-    out.keyStructures.clear();
+    out.key_structures.clear();
     auto arr = obj.value("key_structures").toArray();
     for (const auto &val : arr) {
-      out.keyStructures.push_back(val.toString());
+      out.key_structures.push_back(val.toString());
     }
   }
 
@@ -281,10 +281,10 @@ void read_victory_config(const QJsonObject &obj, VictoryConfig &out) {
 
   if (obj.contains("defeat_conditions") &&
       obj.value("defeat_conditions").isArray()) {
-    out.defeatConditions.clear();
+    out.defeat_conditions.clear();
     auto arr = obj.value("defeat_conditions").toArray();
     for (const auto &val : arr) {
-      out.defeatConditions.push_back(val.toString());
+      out.defeat_conditions.push_back(val.toString());
     }
   }
 
@@ -666,7 +666,7 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
 
 } // namespace
 
-auto MapLoader::load_from_json_file(const QString &path, MapDefinition &outMap,
+auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
                                  QString *out_error) -> bool {
   QFile map_file(path);
   if (!map_file.open(QIODevice::ReadOnly)) {
@@ -696,26 +696,26 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &outMap,
   }
   auto root = doc.object();
 
-  outMap.name = root.value(NAME).toString("Unnamed Map");
+  out_map.name = root.value(NAME).toString("Unnamed Map");
 
   if (root.contains(COORD_SYSTEM)) {
     const QString coord_system =
         root.value(COORD_SYSTEM).toString().trimmed().toLower();
     if (coord_system == "world") {
-      outMap.coordSystem = CoordSystem::World;
+      out_map.coordSystem = CoordSystem::World;
     } else {
-      outMap.coordSystem = CoordSystem::Grid;
+      out_map.coordSystem = CoordSystem::Grid;
     }
   }
 
   constexpr int default_max_troops = 500;
   if (root.contains(MAX_TROOPS_PER_PLAYER)) {
-    outMap.max_troops_per_player =
+    out_map.max_troops_per_player =
         root.value(MAX_TROOPS_PER_PLAYER).toInt(default_max_troops);
   }
 
   if (root.contains(GRID) && root.value(GRID).isObject()) {
-    if (!read_grid(root.value(GRID).toObject(), outMap.grid)) {
+    if (!read_grid(root.value(GRID).toObject(), out_map.grid)) {
       if (out_error != nullptr) {
         *out_error = "Invalid grid definition";
       }
@@ -724,47 +724,47 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &outMap,
   }
 
   if (root.contains(CAMERA) && root.value(CAMERA).isObject()) {
-    read_camera(root.value(CAMERA).toObject(), outMap.camera);
+    read_camera(root.value(CAMERA).toObject(), out_map.camera);
   }
 
   if (root.contains(SPAWNS) && root.value(SPAWNS).isArray()) {
-    read_spawns(root.value(SPAWNS).toArray(), outMap.spawns);
+    read_spawns(root.value(SPAWNS).toArray(), out_map.spawns);
   }
 
   if (root.contains(FIRECAMPS) && root.value(FIRECAMPS).isArray()) {
-    read_fire_camps(root.value(FIRECAMPS).toArray(), outMap.firecamps);
+    read_fire_camps(root.value(FIRECAMPS).toArray(), out_map.firecamps);
   }
 
   if (root.contains(TERRAIN) && root.value(TERRAIN).isArray()) {
-    read_terrain(root.value(TERRAIN).toArray(), outMap.terrain, outMap.grid,
-                outMap.coordSystem);
+    read_terrain(root.value(TERRAIN).toArray(), out_map.terrain, out_map.grid,
+                out_map.coordSystem);
   }
 
   if (root.contains(RIVERS) && root.value(RIVERS).isArray()) {
-    read_rivers(root.value(RIVERS).toArray(), outMap.rivers, outMap.grid,
-               outMap.coordSystem);
+    read_rivers(root.value(RIVERS).toArray(), out_map.rivers, out_map.grid,
+               out_map.coordSystem);
   }
 
   if (root.contains(ROADS) && root.value(ROADS).isArray()) {
-    read_roads(root.value(ROADS).toArray(), outMap.roads, outMap.grid,
-               outMap.coordSystem);
+    read_roads(root.value(ROADS).toArray(), out_map.roads, out_map.grid,
+               out_map.coordSystem);
   }
 
   if (root.contains(BRIDGES) && root.value(BRIDGES).isArray()) {
-    read_bridges(root.value(BRIDGES).toArray(), outMap.bridges, outMap.grid,
-                outMap.coordSystem);
+    read_bridges(root.value(BRIDGES).toArray(), out_map.bridges, out_map.grid,
+                out_map.coordSystem);
   }
 
   if (root.contains(BIOME) && root.value(BIOME).isObject()) {
-    read_biome(root.value(BIOME).toObject(), outMap.biome);
+    read_biome(root.value(BIOME).toObject(), out_map.biome);
   }
 
   if (root.contains(VICTORY) && root.value(VICTORY).isObject()) {
-    read_victory_config(root.value(VICTORY).toObject(), outMap.victory);
+    read_victory_config(root.value(VICTORY).toObject(), out_map.victory);
   }
 
   if (root.contains(RAIN) && root.value(RAIN).isObject()) {
-    read_rain_config(root.value(RAIN).toObject(), outMap.rain);
+    read_rain_config(root.value(RAIN).toObject(), out_map.rain);
   }
 
   return true;

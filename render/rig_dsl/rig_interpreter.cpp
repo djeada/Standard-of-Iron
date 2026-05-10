@@ -67,7 +67,7 @@ void render_part(const PartDef &part, const InterpretContext &ctx,
       (part.kind == PartKind::Sphere) ? a : ctx.anchors->resolve(part.anchor_b);
 
   float const scale =
-      (part.scale_id != kInvalidScalar && ctx.scalars != nullptr)
+      (part.scale_id != k_invalid_scalar && ctx.scalars != nullptr)
           ? ctx.scalars->resolve(part.scale_id)
           : 1.0F;
   float const sx = part.size_x * scale;

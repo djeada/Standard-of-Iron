@@ -36,7 +36,7 @@ private:
                           Render::Creature::CreatureLOD lod) const noexcept
       -> const SnapshotMeshBlob *;
 
-  std::array<SnapshotMeshBlob, Render::Creature::Bpat::kSpeciesCount * 2U>
+  std::array<SnapshotMeshBlob, Render::Creature::Bpat::k_species_count * 2U>
       m_blobs{};
   std::string m_last_error{};
 };

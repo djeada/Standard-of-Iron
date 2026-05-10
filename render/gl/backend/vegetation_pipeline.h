@@ -21,25 +21,25 @@ public:
   }
 
   [[nodiscard]] auto stone_shader() const -> GL::Shader * {
-    return m_stoneShader;
+    return m_stone_shader;
   }
   [[nodiscard]] auto plant_shader() const -> GL::Shader * {
-    return m_plantShader;
+    return m_plant_shader;
   }
   [[nodiscard]] auto pine_shader() const -> GL::Shader * {
-    return m_pineShader;
+    return m_pine_shader;
   }
   [[nodiscard]] auto olive_shader() const -> GL::Shader * {
-    return m_oliveShader;
+    return m_olive_shader;
   }
   [[nodiscard]] auto firecamp_shader() const -> GL::Shader * {
-    return m_firecampShader;
+    return m_firecamp_shader;
   }
 
   struct StoneUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
-  } m_stoneUniforms;
+  } m_stone_uniforms;
 
   struct PlantUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -47,7 +47,7 @@ public:
     GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
-  } m_plantUniforms;
+  } m_plant_uniforms;
 
   struct PineUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -55,7 +55,7 @@ public:
     GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
-  } m_pineUniforms;
+  } m_pine_uniforms;
 
   struct OliveUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -63,7 +63,7 @@ public:
     GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle wind_speed{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
-  } m_oliveUniforms;
+  } m_olive_uniforms;
 
   struct FireCampUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -74,37 +74,37 @@ public:
     GL::Shader::UniformHandle fire_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_right{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_forward{GL::Shader::InvalidUniform};
-  } m_firecampUniforms;
+  } m_firecamp_uniforms;
 
-  GLuint m_stoneVao{0};
-  GLuint m_stoneVertexBuffer{0};
-  GLuint m_stoneIndexBuffer{0};
-  GLsizei m_stoneIndexCount{0};
-  GLsizei m_stoneVertexCount{0};
+  GLuint m_stone_vao{0};
+  GLuint m_stone_vertex_buffer{0};
+  GLuint m_stone_index_buffer{0};
+  GLsizei m_stone_index_count{0};
+  GLsizei m_stone_vertex_count{0};
 
-  GLuint m_plantVao{0};
-  GLuint m_plantVertexBuffer{0};
-  GLuint m_plantIndexBuffer{0};
-  GLsizei m_plantIndexCount{0};
-  GLsizei m_plantVertexCount{0};
+  GLuint m_plant_vao{0};
+  GLuint m_plant_vertex_buffer{0};
+  GLuint m_plant_index_buffer{0};
+  GLsizei m_plant_index_count{0};
+  GLsizei m_plant_vertex_count{0};
 
-  GLuint m_pineVao{0};
-  GLuint m_pineVertexBuffer{0};
-  GLuint m_pineIndexBuffer{0};
-  GLsizei m_pineIndexCount{0};
-  GLsizei m_pineVertexCount{0};
+  GLuint m_pine_vao{0};
+  GLuint m_pine_vertex_buffer{0};
+  GLuint m_pine_index_buffer{0};
+  GLsizei m_pine_index_count{0};
+  GLsizei m_pine_vertex_count{0};
 
-  GLuint m_oliveVao{0};
-  GLuint m_oliveVertexBuffer{0};
-  GLuint m_oliveIndexBuffer{0};
-  GLsizei m_oliveIndexCount{0};
-  GLsizei m_oliveVertexCount{0};
+  GLuint m_olive_vao{0};
+  GLuint m_olive_vertex_buffer{0};
+  GLuint m_olive_index_buffer{0};
+  GLsizei m_olive_index_count{0};
+  GLsizei m_olive_vertex_count{0};
 
-  GLuint m_firecampVao{0};
-  GLuint m_firecampVertexBuffer{0};
-  GLuint m_firecampIndexBuffer{0};
-  GLsizei m_firecampIndexCount{0};
-  GLsizei m_firecampVertexCount{0};
+  GLuint m_firecamp_vao{0};
+  GLuint m_firecamp_vertex_buffer{0};
+  GLuint m_firecamp_index_buffer{0};
+  GLsizei m_firecamp_index_count{0};
+  GLsizei m_firecamp_vertex_count{0};
 
 private:
   void initialize_stone_pipeline();
@@ -118,14 +118,14 @@ private:
   void initialize_fire_camp_pipeline();
   void shutdown_fire_camp_pipeline();
 
-  GL::ShaderCache *m_shaderCache;
+  GL::ShaderCache *m_shader_cache;
   bool m_initialized{false};
 
-  GL::Shader *m_stoneShader{nullptr};
-  GL::Shader *m_plantShader{nullptr};
-  GL::Shader *m_pineShader{nullptr};
-  GL::Shader *m_oliveShader{nullptr};
-  GL::Shader *m_firecampShader{nullptr};
+  GL::Shader *m_stone_shader{nullptr};
+  GL::Shader *m_plant_shader{nullptr};
+  GL::Shader *m_pine_shader{nullptr};
+  GL::Shader *m_olive_shader{nullptr};
+  GL::Shader *m_firecamp_shader{nullptr};
 };
 
 } // namespace Render::GL::BackendPipelines

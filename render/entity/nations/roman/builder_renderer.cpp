@@ -68,8 +68,8 @@ void ensure_builder_styles_registered() {
 
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
-constexpr std::uint32_t kBuilderWorkTunicRoleCount = 2;
-constexpr std::uint32_t kBuilderHammerRoleCount = 3;
+constexpr std::uint32_t k_builder_work_tunic_role_count = 2;
+constexpr std::uint32_t k_builder_hammer_role_count = 3;
 
 enum BuilderWorkTunicPaletteSlot : std::uint8_t {
   k_builder_tunic_base_slot = 0U,
@@ -85,24 +85,24 @@ enum BuilderHammerPaletteSlot : std::uint8_t {
 auto builder_work_tunic_fill_role_colors(const HumanoidPalette &palette,
                                          QVector3D *out,
                                          std::size_t max) -> std::uint32_t {
-  if (max < kBuilderWorkTunicRoleCount) {
+  if (max < k_builder_work_tunic_role_count) {
     return 0U;
   }
   out[0] = palette.cloth;
   out[1] = palette.cloth * 0.85F;
-  return kBuilderWorkTunicRoleCount;
+  return k_builder_work_tunic_role_count;
 }
 
 auto builder_hammer_fill_role_colors(const HumanoidPalette &palette,
                                      QVector3D *out,
                                      std::size_t max) -> std::uint32_t {
-  if (max < kBuilderHammerRoleCount) {
+  if (max < k_builder_hammer_role_count) {
     return 0U;
   }
   out[0] = palette.wood;
   out[1] = QVector3D(0.55F, 0.52F, 0.48F);
   out[2] = QVector3D(0.45F, 0.42F, 0.38F);
-  return kBuilderHammerRoleCount;
+  return k_builder_hammer_role_count;
 }
 
 auto builder_work_tunic_archetype() -> const RenderArchetype & {
@@ -280,15 +280,15 @@ public:
       static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
           Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_tool_belt_base_role_byte = static_cast<std::uint8_t>(
-          k_helmet_base_role_byte + Render::GL::kRomanLightHelmetRoleCount);
+          k_helmet_base_role_byte + Render::GL::k_roman_light_helmet_role_count);
       static const auto k_work_apron_base_role_byte = static_cast<std::uint8_t>(
-          k_tool_belt_base_role_byte + Render::GL::kToolBeltRoleCount);
+          k_tool_belt_base_role_byte + Render::GL::k_tool_belt_role_count);
       static const auto k_arm_guards_base_role_byte = static_cast<std::uint8_t>(
-          k_work_apron_base_role_byte + Render::GL::kWorkApronRoleCount);
+          k_work_apron_base_role_byte + Render::GL::k_work_apron_role_count);
       static const auto k_work_tunic_base_role_byte = static_cast<std::uint8_t>(
-          k_arm_guards_base_role_byte + Render::GL::kArmGuardsRoleCount);
+          k_arm_guards_base_role_byte + Render::GL::k_arm_guards_role_count);
       static const auto k_hammer_base_role_byte = static_cast<std::uint8_t>(
-          k_work_tunic_base_role_byte + kBuilderWorkTunicRoleCount);
+          k_work_tunic_base_role_byte + k_builder_work_tunic_role_count);
       static const auto k_forearm_l_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ForearmL);
       static const auto k_forearm_r_bone =

@@ -41,7 +41,7 @@ auto serialize(const SnapshotMeshWriter &writer) -> std::vector<std::uint8_t> {
 
 TEST(SnapshotMeshAsset, WriteAndReadbackRoundTripsMinimalClip) {
   const std::array<std::uint32_t, 3> indices{0U, 1U, 2U};
-  SnapshotMeshWriter writer(Render::Creature::Bpat::kSpeciesHorse,
+  SnapshotMeshWriter writer(Render::Creature::Bpat::k_species_horse,
                             CreatureLOD::Minimal, 3U, indices);
   writer.add_clip(ClipDescriptor{"idle", 1U});
   auto vertices = make_test_vertices();
@@ -49,7 +49,7 @@ TEST(SnapshotMeshAsset, WriteAndReadbackRoundTripsMinimalClip) {
 
   auto blob = SnapshotMeshBlob::from_bytes(serialize(writer));
   ASSERT_TRUE(blob.loaded()) << blob.last_error();
-  EXPECT_EQ(blob.species_id(), Render::Creature::Bpat::kSpeciesHorse);
+  EXPECT_EQ(blob.species_id(), Render::Creature::Bpat::k_species_horse);
   EXPECT_EQ(blob.lod(), CreatureLOD::Minimal);
   EXPECT_EQ(blob.clip_count(), 1U);
   EXPECT_EQ(blob.frame_total(), 1U);
@@ -72,7 +72,7 @@ TEST(SnapshotMeshRegistry, LoadsMinimalHorseAssetFromFile) {
   auto const asset_path = temp_dir / "horse_minimal.bpsm";
 
   const std::array<std::uint32_t, 3> indices{0U, 1U, 2U};
-  SnapshotMeshWriter writer(Render::Creature::Bpat::kSpeciesHorse,
+  SnapshotMeshWriter writer(Render::Creature::Bpat::k_species_horse,
                             CreatureLOD::Minimal, 3U, indices);
   writer.add_clip(ClipDescriptor{"idle", 1U});
   auto vertices = make_test_vertices();
@@ -85,11 +85,11 @@ TEST(SnapshotMeshRegistry, LoadsMinimalHorseAssetFromFile) {
 
   auto &registry = SnapshotMeshRegistry::instance();
   registry.clear();
-  ASSERT_TRUE(registry.load_species(Render::Creature::Bpat::kSpeciesHorse,
+  ASSERT_TRUE(registry.load_species(Render::Creature::Bpat::k_species_horse,
                                     CreatureLOD::Minimal, asset_path.string()))
       << registry.last_error();
 
-  auto const *blob = registry.blob(Render::Creature::Bpat::kSpeciesHorse,
+  auto const *blob = registry.blob(Render::Creature::Bpat::k_species_horse,
                                    CreatureLOD::Minimal);
   ASSERT_NE(blob, nullptr);
   EXPECT_EQ(blob->clip(0).name, "idle");

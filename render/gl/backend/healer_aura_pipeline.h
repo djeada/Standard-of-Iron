@@ -30,7 +30,7 @@ class HealerAuraPipeline final : public IPipeline {
 public:
   explicit HealerAuraPipeline(GL::Backend *backend,
                               GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shaderCache(shader_cache) {}
+      : m_backend(backend), m_shader_cache(shader_cache) {}
   ~HealerAuraPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -46,7 +46,7 @@ public:
                           float radius, float intensity, float time,
                           const QMatrix4x4 &view_proj);
 
-  void clear_data() { m_healerData.clear(); }
+  void clear_data() { m_healer_data.clear(); }
 
 private:
   void render_aura(const HealerAuraData &data, const Camera &cam,
@@ -55,15 +55,15 @@ private:
   void shutdown_geometry();
 
   GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shaderCache = nullptr;
-  GL::Shader *m_auraShader = nullptr;
+  GL::ShaderCache *m_shader_cache = nullptr;
+  GL::Shader *m_aura_shader = nullptr;
 
   GLuint m_vao = 0;
-  GLuint m_vertexBuffer = 0;
-  GLuint m_indexBuffer = 0;
-  GLsizei m_indexCount = 0;
+  GLuint m_vertex_buffer = 0;
+  GLuint m_index_buffer = 0;
+  GLsizei m_index_count = 0;
 
-  std::vector<HealerAuraData> m_healerData;
+  std::vector<HealerAuraData> m_healer_data;
 
   struct AuraUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};

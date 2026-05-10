@@ -44,7 +44,7 @@ TEST(CreatureRenderBatch, RequestMirrorsHumanoidAdd) {
   ASSERT_EQ(batch.requests().size(), 1u);
 
   const auto &req = batch.requests()[0];
-  EXPECT_EQ(req.archetype, ArchetypeRegistry::kHumanoidBase);
+  EXPECT_EQ(req.archetype, ArchetypeRegistry::k_humanoid_base);
   EXPECT_EQ(req.state, AnimationStateId::Walk);
   EXPECT_FLOAT_EQ(req.phase, 0.42F);
   EXPECT_EQ(req.entity_id, output.entity_id);
@@ -79,7 +79,7 @@ TEST(CreatureRenderBatch, RequestMirrorsPassIntent) {
 TEST(CreatureRenderBatch, RiderArchetypeStillUsesAbsoluteRequestWorld) {
   CreatureRenderBatch batch;
   auto output = make_output(CreatureKind::Humanoid, 9U, 3.25F);
-  output.spec.archetype_id = ArchetypeRegistry::kRiderBase;
+  output.spec.archetype_id = ArchetypeRegistry::k_rider_base;
 
   Render::GL::HumanoidPose pose{};
   Render::GL::HumanoidVariant variant{};
@@ -214,7 +214,7 @@ TEST(CreatureRenderBatch, RequestMirrorsHorseQuadrupedState) {
   batch.add_quadruped(output, variant, AnimationStateId::Idle, 0.0F);
 
   ASSERT_EQ(batch.requests().size(), 3u);
-  EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::kHorseBase);
+  EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::k_horse_base);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Run);
   EXPECT_EQ(batch.requests()[1].state, AnimationStateId::Walk);
   EXPECT_EQ(batch.requests()[2].state, AnimationStateId::Idle);
@@ -231,7 +231,7 @@ TEST(CreatureRenderBatch, RequestMirrorsElephantQuadrupedState) {
   batch.add_quadruped(output, variant, AnimationStateId::Idle, 0.0F);
 
   ASSERT_EQ(batch.requests().size(), 2u);
-  EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::kElephantBase);
+  EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::k_elephant_base);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Run);
   EXPECT_EQ(batch.requests()[1].state, AnimationStateId::Idle);
 }
@@ -253,7 +253,7 @@ TEST(CreatureRenderBatch, CulledOutputDoesNotEmitRequest) {
 TEST(CreatureRenderBatch, AddRequestAppendsDirectly) {
   CreatureRenderBatch batch;
   Render::Creature::CreatureRenderRequest req;
-  req.archetype = ArchetypeRegistry::kHumanoidBase;
+  req.archetype = ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
   req.entity_id = 0xDEADU;
   batch.add_request(req);

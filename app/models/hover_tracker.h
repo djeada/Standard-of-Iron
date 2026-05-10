@@ -14,17 +14,17 @@ class Camera;
 
 class HoverTracker {
 public:
-  HoverTracker(Game::Systems::PickingService *pickingService);
+  HoverTracker(Game::Systems::PickingService *picking_service);
 
   auto update_hover(float sx, float sy, Engine::Core::World &world,
-                    const Render::GL::Camera &camera, int viewportWidth,
-                    int viewportHeight) -> Engine::Core::EntityID;
+                    const Render::GL::Camera &camera, int viewport_width,
+                    int viewport_height) -> Engine::Core::EntityID;
 
-  [[nodiscard]] auto getLastHoveredEntity() const -> Engine::Core::EntityID {
-    return m_hoveredEntityId;
+  [[nodiscard]] auto get_last_hovered_entity() const -> Engine::Core::EntityID {
+    return m_hovered_entity_id;
   }
 
 private:
-  Game::Systems::PickingService *m_pickingService;
-  Engine::Core::EntityID m_hoveredEntityId = 0;
+  Game::Systems::PickingService *m_picking_service;
+  Engine::Core::EntityID m_hovered_entity_id = 0;
 };

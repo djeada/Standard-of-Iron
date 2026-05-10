@@ -19,7 +19,7 @@ struct ArmGuardsConfig {
   bool include_straps = true;
 };
 
-inline constexpr std::uint32_t kArmGuardsRoleCount = 2;
+inline constexpr std::uint32_t k_arm_guards_role_count = 2;
 
 auto arm_guards_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                                  std::size_t max) -> std::uint32_t;

@@ -238,7 +238,7 @@ void InputCommandHandler::on_attack_click(qreal sx, qreal sy,
         auto *target_unit =
             target_entity->get_component<Engine::Core::UnitComponent>();
         if ((target_unit != nullptr)) {
-          App::Controllers::ActionVFX::spawnAttackArrow(m_world, target_id);
+          App::Controllers::ActionVFX::spawn_attack_arrow(m_world, target_id);
         }
       }
     }

@@ -8,7 +8,7 @@
 
 namespace App::Controllers {
 
-void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
+void ActionVFX::spawn_attack_arrow(Engine::Core::World *world,
                                  Engine::Core::EntityID target_id) {
   if (world == nullptr) {
     return;

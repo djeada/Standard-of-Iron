@@ -28,9 +28,9 @@ auto convert_fire_camps(const std::vector<Game::Map::FireCamp> &fire_camps,
   intensities.reserve(fire_camps.size());
   radii.reserve(fire_camps.size());
 
-  const float tile_size = height_map.getTileSize();
-  const int width = height_map.getWidth();
-  const int height = height_map.getHeight();
+  const float tile_size = height_map.get_tile_size();
+  const int width = height_map.get_width();
+  const int height = height_map.get_height();
   const float half_width = width * 0.5F;
   const float half_height = height * 0.5F;
   auto &terrain_service = Game::Map::TerrainService::instance();

@@ -6,9 +6,9 @@
 
 namespace App::JsonUtils {
 
-auto vec3ToJsonArray(const QVector3D &vec) -> QJsonArray;
+auto vec3_to_json_array(const QVector3D &vec) -> QJsonArray;
 
-auto jsonArrayToVec3(const QJsonValue &value,
+auto json_array_to_vec3(const QJsonValue &value,
                      const QVector3D &fallback) -> QVector3D;
 
 } // namespace App::JsonUtils

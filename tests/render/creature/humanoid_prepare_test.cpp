@@ -296,7 +296,7 @@ auto find_archetype_id(std::string_view debug_name)
       return id;
     }
   }
-  return Render::Creature::kInvalidArchetype;
+  return Render::Creature::k_invalid_archetype;
 }
 
 auto extra_role_color_count(Render::Creature::ArchetypeId archetype_id)
@@ -573,7 +573,7 @@ public:
       using Render::Creature::ArchetypeRegistry;
 
       auto &registry = ArchetypeRegistry::instance();
-      auto const *base_desc = registry.get(ArchetypeRegistry::kHumanoidBase);
+      auto const *base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
       EXPECT_NE(base_desc, nullptr);
 
       Render::Creature::Pipeline::UnitVisualSpec s{};
@@ -608,7 +608,7 @@ public:
       Render::Creature::Pipeline::UnitVisualSpec s{};
       s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
       s.debug_name = "tests/snapshot_prewarm_renderer";
-      s.archetype_id = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+      s.archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
       return s;
     }();
     return spec;
@@ -630,7 +630,7 @@ TEST(HumanoidPrepare, ShadowRowSubmitsZeroDrawCalls) {
   CountingSubmitter sink;
   CreaturePreparationResult prep;
   Render::Creature::CreatureRenderRequest req{};
-  req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  req.archetype = Render::Creature::ArchetypeRegistry::k_humanoid_base;
   req.state = Render::Creature::AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.pass = RenderPassIntent::Shadow;
@@ -650,7 +650,7 @@ TEST(HumanoidPrepare, MainRowStillSubmitsOneRiggedCall) {
   CountingSubmitter sink;
   CreaturePreparationResult prep;
   Render::Creature::CreatureRenderRequest req{};
-  req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  req.archetype = Render::Creature::ArchetypeRegistry::k_humanoid_base;
   req.state = Render::Creature::AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.pass = RenderPassIntent::Main;
@@ -707,7 +707,7 @@ TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
   EXPECT_TRUE(prep.post_body_draws.empty());
 
   auto const &req = prep.bodies.requests().front();
-  EXPECT_NE(req.archetype, Render::Creature::ArchetypeRegistry::kHumanoidBase);
+  EXPECT_NE(req.archetype, Render::Creature::ArchetypeRegistry::k_humanoid_base);
 
   auto const *desc =
       Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
@@ -728,7 +728,7 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   auto const *roman_idle_palette =
       render_archer_idle_bone_palette("troops/roman/archer");
   auto const roman_id = find_archetype_id("troops/roman/archer");
-  ASSERT_NE(roman_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(registry.bpat_clip(roman_id, AnimationStateId::Idle),
             registry.bpat_clip(roman_id, AnimationStateId::AttackBow));
   EXPECT_EQ(roman_idle_palette, request_idle_bone_palette(roman_id, 0.5F));
@@ -737,7 +737,7 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   auto const *carthage_idle_palette =
       render_archer_idle_bone_palette("troops/carthage/archer");
   auto const carthage_id = find_archetype_id("troops/carthage/archer");
-  ASSERT_NE(carthage_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(carthage_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(registry.bpat_clip(carthage_id, AnimationStateId::Idle),
             registry.bpat_clip(carthage_id, AnimationStateId::AttackBow));
   EXPECT_EQ(carthage_idle_palette,
@@ -802,7 +802,7 @@ TEST(HumanoidPrepare, BuilderConstructionPlaybackUsesWorkClip) {
 
   auto &registry = Render::Creature::ArchetypeRegistry::instance();
   auto const builder_id = find_archetype_id("troops/roman/builder");
-  ASSERT_NE(builder_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(builder_id, Render::Creature::k_invalid_archetype);
 
   Render::GL::HumanoidAnimationContext construct_anim{};
   construct_anim.inputs.is_constructing = true;
@@ -846,16 +846,16 @@ TEST(HumanoidPrepare, BuiltInArchersUseDedicatedBowHoldClip) {
   auto &registry = Render::Creature::ArchetypeRegistry::instance();
 
   auto const roman_id = find_archetype_id("troops/roman/archer");
-  ASSERT_NE(roman_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(registry.bpat_clip(roman_id, AnimationStateId::Hold),
-            Render::Creature::kHumanoidHoldBowClip);
+            Render::Creature::k_humanoid_hold_bow_clip);
   EXPECT_NE(registry.bpat_clip(roman_id, AnimationStateId::Hold),
             registry.bpat_clip(roman_id, AnimationStateId::AttackBow));
 
   auto const carthage_id = find_archetype_id("troops/carthage/archer");
-  ASSERT_NE(carthage_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(carthage_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(registry.bpat_clip(carthage_id, AnimationStateId::Hold),
-            Render::Creature::kHumanoidHoldBowClip);
+            Render::Creature::k_humanoid_hold_bow_clip);
   EXPECT_NE(registry.bpat_clip(carthage_id, AnimationStateId::Hold),
             registry.bpat_clip(carthage_id, AnimationStateId::AttackBow));
 }
@@ -947,7 +947,7 @@ TEST(HumanoidPrepare, HumanoidBpatPlaybackFollowsArcherVisibleClipState) {
 
   auto &registry = Render::Creature::ArchetypeRegistry::instance();
   auto const roman_id = find_archetype_id("troops/roman/archer");
-  ASSERT_NE(roman_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
 
   Render::GL::HumanoidAnimationContext moving_anim{};
   moving_anim.inputs.is_moving = true;
@@ -978,17 +978,17 @@ TEST(HumanoidPrepare, RiderDeathPlaybackUsesMountedDeathClips) {
   dying_anim.inputs.is_dying = true;
   dying_anim.inputs.death_progress = 0.5F;
   auto const dying = humanoid_bpat_playback_for_anim(
-      Render::Creature::ArchetypeRegistry::kRiderBase, dying_anim);
+      Render::Creature::ArchetypeRegistry::k_rider_base, dying_anim);
   ASSERT_TRUE(dying.has_value());
-  EXPECT_EQ(dying->clip_id, Render::Creature::kHumanoidDieMountedClip);
+  EXPECT_EQ(dying->clip_id, Render::Creature::k_humanoid_die_mounted_clip);
 
   Render::GL::HumanoidAnimationContext dead_anim{};
   dead_anim.inputs.is_dead = true;
   dead_anim.inputs.death_progress = 1.0F;
   auto const dead = humanoid_bpat_playback_for_anim(
-      Render::Creature::ArchetypeRegistry::kRiderBase, dead_anim);
+      Render::Creature::ArchetypeRegistry::k_rider_base, dead_anim);
   ASSERT_TRUE(dead.has_value());
-  EXPECT_EQ(dead->clip_id, Render::Creature::kHumanoidDeadMountedClip);
+  EXPECT_EQ(dead->clip_id, Render::Creature::k_humanoid_dead_mounted_clip);
 }
 
 TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
@@ -996,7 +996,7 @@ TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
   using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
 
   auto &registry = Render::Creature::ArchetypeRegistry::instance();
-  auto const archetype_id = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  auto const archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
 
   Render::GL::HumanoidAnimationContext attack_anim{};
   attack_anim.inputs.is_attacking = true;
@@ -1038,14 +1038,14 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
   ASSERT_GT(sink.rigged_calls, 0);
 
   auto const archetype_id = find_archetype_id("troops/roman/swordsman");
-  ASSERT_NE(archetype_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
-            Render::GL::kRomanHeavyHelmetRoleCount +
-                Render::GL::kRomanGreavesRoleCount +
-                Render::GL::kRomanShoulderCoverRoleCount +
+            Render::GL::k_roman_heavy_helmet_role_count +
+                Render::GL::k_roman_greaves_role_count +
+                Render::GL::k_roman_shoulder_cover_role_count +
                 Render::GL::k_roman_scutum_role_count +
-                Render::GL::kRomanHeavyArmorRoleCount +
-                Render::GL::kSwordRoleCount + Render::GL::kScabbardRoleCount);
+                Render::GL::k_roman_heavy_armor_role_count +
+                Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
 TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
@@ -1071,13 +1071,13 @@ TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
   ASSERT_GT(sink.rigged_calls, 0);
 
   auto const archetype_id = find_archetype_id("troops/carthage/swordsman");
-  ASSERT_NE(archetype_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
-            Render::GL::kCarthageHeavyHelmetRoleCount +
+            Render::GL::k_carthage_heavy_helmet_role_count +
                 Render::GL::k_carthage_shield_role_count +
-                Render::GL::kCarthageShoulderCoverRoleCount +
-                Render::GL::kArmorHeavyCarthageRoleCount +
-                Render::GL::kSwordRoleCount + Render::GL::kScabbardRoleCount);
+                Render::GL::k_carthage_shoulder_cover_role_count +
+                Render::GL::k_armor_heavy_carthage_role_count +
+                Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
 TEST(HumanoidPrepare, RomanMountedSwordsmanUsesRomanScutumRoleLayout) {
@@ -1104,13 +1104,13 @@ TEST(HumanoidPrepare, RomanMountedSwordsmanUsesRomanScutumRoleLayout) {
 
   auto const archetype_id =
       find_archetype_id("troops/roman/horse_swordsman/rider");
-  ASSERT_NE(archetype_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
-            Render::GL::kRomanHeavyHelmetRoleCount +
-                Render::GL::kRomanShoulderCoverRoleCount +
+            Render::GL::k_roman_heavy_helmet_role_count +
+                Render::GL::k_roman_shoulder_cover_role_count +
                 Render::GL::k_roman_scutum_role_count +
-                Render::GL::kRomanHeavyArmorRoleCount +
-                Render::GL::kSwordRoleCount + Render::GL::kScabbardRoleCount);
+                Render::GL::k_roman_heavy_armor_role_count +
+                Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
 TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
@@ -1137,13 +1137,13 @@ TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
 
   auto const archetype_id =
       find_archetype_id("troops/carthage/horse_swordsman/rider");
-  ASSERT_NE(archetype_id, Render::Creature::kInvalidArchetype);
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
-            Render::GL::kCarthageHeavyHelmetRoleCount +
+            Render::GL::k_carthage_heavy_helmet_role_count +
                 Render::GL::k_carthage_shield_role_count +
-                Render::GL::kCarthageShoulderCoverRoleCount +
-                Render::GL::kArmorHeavyCarthageRoleCount +
-                Render::GL::kSwordRoleCount + Render::GL::kScabbardRoleCount);
+                Render::GL::k_carthage_shoulder_cover_role_count +
+                Render::GL::k_armor_heavy_carthage_role_count +
+                Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
 TEST(HumanoidPrepare, BowReadyRootRequestUsesSurfaceGroundingContract) {
@@ -1428,7 +1428,7 @@ TEST(HumanoidPrepare, MixedBatchOnlySubmitsMainRows) {
   CreaturePreparationResult prep;
   for (int i = 0; i < 5; ++i) {
     Render::Creature::CreatureRenderRequest req{};
-    req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+    req.archetype = Render::Creature::ArchetypeRegistry::k_humanoid_base;
     req.state = Render::Creature::AnimationStateId::Idle;
     req.lod = Render::Creature::CreatureLOD::Full;
     req.pass = (i % 2 == 0) ? RenderPassIntent::Main : RenderPassIntent::Shadow;

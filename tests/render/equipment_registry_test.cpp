@@ -174,7 +174,7 @@ TEST_F(EquipmentRegistryTest, ResolveHandleForRegisteredEquipment) {
   const auto handle =
       registry->resolve_handle(EquipmentCategory::Helmet, "handle_helmet");
 
-  EXPECT_NE(handle, kInvalidEquipmentHandle);
+  EXPECT_NE(handle, k_invalid_equipment_handle);
   EXPECT_TRUE(registry->has(handle));
   EXPECT_EQ(registry->get(handle), helmet);
 }
@@ -183,7 +183,7 @@ TEST_F(EquipmentRegistryTest, ResolveHandleForMissingEquipment) {
   const auto handle =
       registry->resolve_handle(EquipmentCategory::Weapon, "missing_weapon");
 
-  EXPECT_EQ(handle, kInvalidEquipmentHandle);
+  EXPECT_EQ(handle, k_invalid_equipment_handle);
   EXPECT_FALSE(registry->has(handle));
   EXPECT_EQ(registry->get(handle), nullptr);
 }
@@ -202,7 +202,7 @@ TEST_F(EquipmentRegistryTest, OverwriteKeepsStableHandle) {
       registry->resolve_handle(EquipmentCategory::Armor, "stable_armor");
 
   EXPECT_EQ(handle_v1, handle_v2);
-  EXPECT_NE(handle_v1, kInvalidEquipmentHandle);
+  EXPECT_NE(handle_v1, k_invalid_equipment_handle);
   EXPECT_EQ(registry->get(handle_v2), armor_v2);
 }
 
@@ -225,6 +225,6 @@ TEST_F(EquipmentRegistryTest, HorseEquipmentResolvesHandleFromSameRegistry) {
   const auto handle =
       registry->resolve_handle(EquipmentCategory::HorseTack, "horse_bridle_handle");
 
-  EXPECT_NE(handle, kInvalidEquipmentHandle);
+  EXPECT_NE(handle, k_invalid_equipment_handle);
   EXPECT_EQ(registry->get_horse(handle), horse_bridle);
 }

@@ -31,7 +31,7 @@ auto elephant_part_graph(Render::Creature::CreatureLOD lod) noexcept
       Render::Elephant::elephant_creature_spec(), lod);
 }
 
-const CreatureMeshRecipe kHorseMeshRecipe{
+const CreatureMeshRecipe k_horse_mesh_recipe{
     "horse.procedural.low_poly",
     lod_mask({CreatureMeshLod::Full, CreatureMeshLod::Minimal}),
     &Render::Horse::horse_creature_spec,
@@ -39,7 +39,7 @@ const CreatureMeshRecipe kHorseMeshRecipe{
     {1, 1},
 };
 
-const CreatureRigDefinition kHorseRigDefinition{
+const CreatureRigDefinition k_horse_rig_definition{
     "horse.runtime_rig",
     static_cast<std::uint8_t>(Render::Horse::k_horse_bone_count),
     &Render::Horse::horse_bind_palette,
@@ -51,41 +51,41 @@ const CreatureRigDefinition kHorseRigDefinition{
     static_cast<std::uint8_t>(Render::Horse::HorseBone::Body),
 };
 
-const CreatureGroundingModel kHorseGroundingModel{
+const CreatureGroundingModel k_horse_grounding_model{
     "horse.hoof_grounding",
-    static_cast<std::uint8_t>(kLargeCreatureLegCount),
+    static_cast<std::uint8_t>(k_large_creature_leg_count),
     0.58F,
     1.0F,
 };
 
-const CreatureMotionController kHorseMotionController{
+const CreatureMotionController k_horse_motion_controller{
     "horse.gait_controller",
     CreatureLocomotionMode::Idle,
 };
 
-const CreatureAttachmentFrameExtractor kHorseAttachmentFrameExtractor{
+const CreatureAttachmentFrameExtractor k_horse_attachment_frame_extractor{
     "horse.mount_frames",
 };
 
-const CreatureLodStrategy kHorseLodStrategy{
+const CreatureLodStrategy k_horse_lod_strategy{
     "horse.large_creature_lod",
-    kHorseMeshRecipe.lod_mask,
+    k_horse_mesh_recipe.lod_mask,
 };
 
-const CreatureVisualDefinition kHorseVisualDefinition{
+const CreatureVisualDefinition k_horse_visual_definition{
     "horse.large_creature.v1",
     CreatureKind::Horse,
-    &kHorseMeshRecipe,
-    &kHorseRigDefinition,
-    &kHorseMotionController,
-    &kHorseGroundingModel,
-    &kHorseAttachmentFrameExtractor,
-    &kHorseLodStrategy,
+    &k_horse_mesh_recipe,
+    &k_horse_rig_definition,
+    &k_horse_motion_controller,
+    &k_horse_grounding_model,
+    &k_horse_attachment_frame_extractor,
+    &k_horse_lod_strategy,
     8,
     LegacySlotMask::HorseAttachments,
 };
 
-const CreatureMeshRecipe kElephantMeshRecipe{
+const CreatureMeshRecipe k_elephant_mesh_recipe{
     "elephant.procedural.low_poly",
     lod_mask({CreatureMeshLod::Full, CreatureMeshLod::Minimal}),
     &Render::Elephant::elephant_creature_spec,
@@ -93,7 +93,7 @@ const CreatureMeshRecipe kElephantMeshRecipe{
     {1, 1},
 };
 
-const CreatureRigDefinition kElephantRigDefinition{
+const CreatureRigDefinition k_elephant_rig_definition{
     "elephant.runtime_rig",
     static_cast<std::uint8_t>(Render::Elephant::k_elephant_bone_count),
     &Render::Elephant::elephant_bind_palette,
@@ -105,36 +105,36 @@ const CreatureRigDefinition kElephantRigDefinition{
     static_cast<std::uint8_t>(Render::Elephant::ElephantBone::Body),
 };
 
-const CreatureGroundingModel kElephantGroundingModel{
+const CreatureGroundingModel k_elephant_grounding_model{
     "elephant.foot_grounding",
-    static_cast<std::uint8_t>(kLargeCreatureLegCount),
+    static_cast<std::uint8_t>(k_large_creature_leg_count),
     0.70F,
     0.75F,
 };
 
-const CreatureMotionController kElephantMotionController{
+const CreatureMotionController k_elephant_motion_controller{
     "elephant.gait_controller",
     CreatureLocomotionMode::Idle,
 };
 
-const CreatureAttachmentFrameExtractor kElephantAttachmentFrameExtractor{
+const CreatureAttachmentFrameExtractor k_elephant_attachment_frame_extractor{
     "elephant.howdah_frames",
 };
 
-const CreatureLodStrategy kElephantLodStrategy{
+const CreatureLodStrategy k_elephant_lod_strategy{
     "elephant.large_creature_lod",
-    kElephantMeshRecipe.lod_mask,
+    k_elephant_mesh_recipe.lod_mask,
 };
 
-const CreatureVisualDefinition kElephantVisualDefinition{
+const CreatureVisualDefinition k_elephant_visual_definition{
     "elephant.large_creature.v1",
     CreatureKind::Elephant,
-    &kElephantMeshRecipe,
-    &kElephantRigDefinition,
-    &kElephantMotionController,
-    &kElephantGroundingModel,
-    &kElephantAttachmentFrameExtractor,
-    &kElephantLodStrategy,
+    &k_elephant_mesh_recipe,
+    &k_elephant_rig_definition,
+    &k_elephant_motion_controller,
+    &k_elephant_grounding_model,
+    &k_elephant_attachment_frame_extractor,
+    &k_elephant_lod_strategy,
     static_cast<std::uint8_t>(Render::Elephant::k_elephant_role_count),
     LegacySlotMask::ElephantHowdah,
 };
@@ -143,12 +143,12 @@ const CreatureVisualDefinition kElephantVisualDefinition{
 
 auto horse_creature_visual_definition() noexcept
     -> const CreatureVisualDefinition & {
-  return kHorseVisualDefinition;
+  return k_horse_visual_definition;
 }
 
 auto elephant_creature_visual_definition() noexcept
     -> const CreatureVisualDefinition & {
-  return kElephantVisualDefinition;
+  return k_elephant_visual_definition;
 }
 
 auto resolve_creature_visual_definition(const UnitVisualSpec &spec) noexcept

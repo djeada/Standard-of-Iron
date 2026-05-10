@@ -17,7 +17,7 @@ class ModeIndicatorPipeline final : public IPipeline {
 public:
   explicit ModeIndicatorPipeline(GL::Backend *backend,
                                  GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shaderCache(shader_cache) {}
+      : m_backend(backend), m_shader_cache(shader_cache) {}
   ~ModeIndicatorPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -31,8 +31,8 @@ public:
 
 private:
   GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shaderCache = nullptr;
-  GL::Shader *m_indicatorShader = nullptr;
+  GL::ShaderCache *m_shader_cache = nullptr;
+  GL::Shader *m_indicator_shader = nullptr;
 
   struct IndicatorUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};

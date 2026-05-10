@@ -42,10 +42,10 @@ struct EquipmentCylinderPrim {
   float alpha{1.0F};
 };
 
-inline constexpr std::size_t kEquipmentArchetypePaletteCapacity = 8;
+inline constexpr std::size_t k_equipment_archetype_palette_capacity = 8;
 
 using EquipmentArchetypePrim =
-    StoredRenderInstance<kEquipmentArchetypePaletteCapacity>;
+    StoredRenderInstance<k_equipment_archetype_palette_capacity>;
 
 struct EquipmentBatch {
   std::vector<EquipmentMeshPrim> meshes;

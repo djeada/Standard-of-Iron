@@ -116,9 +116,9 @@ void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
 void draw_static_structure(const DrawContext &p, ISubmitter &out) {
   using namespace Render::RigDSL::Barracks;
 
-  constexpr std::size_t kAnchorCount =
+  constexpr std::size_t k_anchor_count =
       static_cast<std::size_t>(Goods_Amp3Top) + 1U;
-  Render::RigDSL::StaticAnchorResolver<kAnchorCount> anchors;
+  Render::RigDSL::StaticAnchorResolver<k_anchor_count> anchors;
 
   auto set = [&](Render::RigDSL::AnchorId id, float x, float y, float z) {
     anchors.set(id, QVector3D(x, y, z));
@@ -173,7 +173,7 @@ void draw_static_structure(const DrawContext &p, ISubmitter &out) {
   ictx.material = nullptr;
   ictx.lod = 0;
   ictx.global_alpha = 1.0F;
-  Render::RigDSL::render_rig(kRig, ictx, out);
+  Render::RigDSL::render_rig(k_rig, ictx, out);
 }
 
 void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,

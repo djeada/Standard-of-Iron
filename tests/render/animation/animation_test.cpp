@@ -13,7 +13,7 @@ using namespace Render::Animation;
 
 namespace {
 
-constexpr float kEps = 1e-5F;
+constexpr float k_eps = 1e-5F;
 
 auto make_float_clip(std::initializer_list<std::pair<float, float>> kvs)
     -> Clip<float> {
@@ -29,46 +29,46 @@ auto make_float_clip(std::initializer_list<std::pair<float, float>> kvs)
 
 TEST(AnimationClipTest, EmptyClipReturnsDefault) {
   Clip<float> c{};
-  EXPECT_NEAR(evaluate(c, 0.0F), 0.0F, kEps);
-  EXPECT_NEAR(evaluate(c, 10.0F), 0.0F, kEps);
+  EXPECT_NEAR(evaluate(c, 0.0F), 0.0F, k_eps);
+  EXPECT_NEAR(evaluate(c, 10.0F), 0.0F, k_eps);
   EXPECT_EQ(c.duration(), 0.0F);
 }
 
 TEST(AnimationClipTest, SingleKeyframeClipReturnsValue) {
   auto c = make_float_clip({{0.5F, 1.25F}});
-  EXPECT_NEAR(evaluate(c, 0.0F), 1.25F, kEps);
-  EXPECT_NEAR(evaluate(c, 100.0F), 1.25F, kEps);
+  EXPECT_NEAR(evaluate(c, 0.0F), 1.25F, k_eps);
+  EXPECT_NEAR(evaluate(c, 100.0F), 1.25F, k_eps);
   EXPECT_EQ(c.key_count(), 1U);
 }
 
 TEST(AnimationClipTest, LerpsBetweenTwoKeys) {
   auto c = make_float_clip({{0.0F, 0.0F}, {1.0F, 10.0F}});
-  EXPECT_NEAR(evaluate(c, 0.0F), 0.0F, kEps);
-  EXPECT_NEAR(evaluate(c, 0.25F), 2.5F, kEps);
-  EXPECT_NEAR(evaluate(c, 0.5F), 5.0F, kEps);
-  EXPECT_NEAR(evaluate(c, 1.0F), 10.0F, kEps);
+  EXPECT_NEAR(evaluate(c, 0.0F), 0.0F, k_eps);
+  EXPECT_NEAR(evaluate(c, 0.25F), 2.5F, k_eps);
+  EXPECT_NEAR(evaluate(c, 0.5F), 5.0F, k_eps);
+  EXPECT_NEAR(evaluate(c, 1.0F), 10.0F, k_eps);
 }
 
 TEST(AnimationClipTest, ClampWrapModeHoldsEndpoints) {
   auto c = make_float_clip({{0.0F, 0.0F}, {1.0F, 10.0F}});
-  EXPECT_NEAR(evaluate(c, -5.0F, WrapMode::Clamp), 0.0F, kEps);
-  EXPECT_NEAR(evaluate(c, 5.0F, WrapMode::Clamp), 10.0F, kEps);
+  EXPECT_NEAR(evaluate(c, -5.0F, WrapMode::Clamp), 0.0F, k_eps);
+  EXPECT_NEAR(evaluate(c, 5.0F, WrapMode::Clamp), 10.0F, k_eps);
 }
 
 TEST(AnimationClipTest, LoopWrapModeRepeatsInTime) {
   auto c = make_float_clip({{0.0F, 0.0F}, {1.0F, 10.0F}, {2.0F, 0.0F}});
 
-  EXPECT_NEAR(evaluate(c, 2.5F, WrapMode::Loop), 5.0F, kEps);
+  EXPECT_NEAR(evaluate(c, 2.5F, WrapMode::Loop), 5.0F, k_eps);
 
-  EXPECT_NEAR(evaluate(c, -0.5F, WrapMode::Loop), 5.0F, kEps);
+  EXPECT_NEAR(evaluate(c, -0.5F, WrapMode::Loop), 5.0F, k_eps);
 }
 
 TEST(AnimationClipTest, SortsUnorderedKeyframes) {
 
   Clip<float> c("unordered", {{1.0F, 10.0F}, {0.0F, 0.0F}, {0.5F, 5.0F}});
-  EXPECT_NEAR(evaluate(c, 0.0F), 0.0F, kEps);
-  EXPECT_NEAR(evaluate(c, 0.5F), 5.0F, kEps);
-  EXPECT_NEAR(evaluate(c, 1.0F), 10.0F, kEps);
+  EXPECT_NEAR(evaluate(c, 0.0F), 0.0F, k_eps);
+  EXPECT_NEAR(evaluate(c, 0.5F), 5.0F, k_eps);
+  EXPECT_NEAR(evaluate(c, 1.0F), 10.0F, k_eps);
 }
 
 TEST(AnimationClipTest, Vec3ClipLerps) {
@@ -78,16 +78,16 @@ TEST(AnimationClipTest, Vec3ClipLerps) {
   };
   Clip<QVector3D> c("vec", std::move(keys));
   auto v = evaluate(c, 0.5F);
-  EXPECT_NEAR(v.x(), 5.0F, kEps);
-  EXPECT_NEAR(v.y(), 10.0F, kEps);
-  EXPECT_NEAR(v.z(), -15.0F, kEps);
+  EXPECT_NEAR(v.x(), 5.0F, k_eps);
+  EXPECT_NEAR(v.y(), 10.0F, k_eps);
+  EXPECT_NEAR(v.z(), -15.0F, k_eps);
 }
 
 TEST(AnimationStateMachineTest, DefaultStateIsZero) {
   StateMachine sm;
   EXPECT_EQ(sm.current(), 0U);
   EXPECT_FALSE(sm.is_blending());
-  EXPECT_NEAR(sm.weight(), 1.0F, kEps);
+  EXPECT_NEAR(sm.weight(), 1.0F, k_eps);
 }
 
 TEST(AnimationStateMachineTest, InstantTransitionHasFullWeight) {
@@ -95,7 +95,7 @@ TEST(AnimationStateMachineTest, InstantTransitionHasFullWeight) {
   sm.request(2, 0.0F);
   EXPECT_EQ(sm.current(), 2U);
   EXPECT_FALSE(sm.is_blending());
-  EXPECT_NEAR(sm.weight(), 1.0F, kEps);
+  EXPECT_NEAR(sm.weight(), 1.0F, k_eps);
 }
 
 TEST(AnimationStateMachineTest, BlendedTransitionRampsWeight) {
@@ -104,11 +104,11 @@ TEST(AnimationStateMachineTest, BlendedTransitionRampsWeight) {
   EXPECT_EQ(sm.current(), 2U);
   EXPECT_EQ(sm.previous(), 1U);
   EXPECT_TRUE(sm.is_blending());
-  EXPECT_NEAR(sm.weight(), 0.0F, kEps);
+  EXPECT_NEAR(sm.weight(), 0.0F, k_eps);
   sm.tick(0.5F);
-  EXPECT_NEAR(sm.weight(), 0.5F, kEps);
+  EXPECT_NEAR(sm.weight(), 0.5F, k_eps);
   sm.tick(0.5F);
-  EXPECT_NEAR(sm.weight(), 1.0F, kEps);
+  EXPECT_NEAR(sm.weight(), 1.0F, k_eps);
   EXPECT_FALSE(sm.is_blending());
 }
 
@@ -125,7 +125,7 @@ TEST(AnimationChannelEvaluatorTest, SamplesCurrentStateClip) {
   clips.push_back(make_float_clip({{0.0F, 0.0F}, {1.0F, 10.0F}}));
   clips.push_back(make_float_clip({{0.0F, 100.0F}, {1.0F, 200.0F}}));
   ChannelEvaluator<float> ch(std::move(clips), &sm);
-  EXPECT_NEAR(ch.sample(0.5F), 5.0F, kEps);
+  EXPECT_NEAR(ch.sample(0.5F), 5.0F, k_eps);
 }
 
 TEST(AnimationChannelEvaluatorTest, BlendsBetweenTwoClipsDuringTransition) {
@@ -138,13 +138,13 @@ TEST(AnimationChannelEvaluatorTest, BlendsBetweenTwoClipsDuringTransition) {
   sm.request(1, 1.0F);
   sm.tick(0.25F);
 
-  EXPECT_NEAR(ch.sample(0.0F), 25.0F, kEps);
+  EXPECT_NEAR(ch.sample(0.0F), 25.0F, k_eps);
 
   sm.tick(0.5F);
-  EXPECT_NEAR(ch.sample(0.0F), 75.0F, kEps);
+  EXPECT_NEAR(ch.sample(0.0F), 75.0F, k_eps);
 
   sm.tick(0.25F);
-  EXPECT_NEAR(ch.sample(0.0F), 100.0F, kEps);
+  EXPECT_NEAR(ch.sample(0.0F), 100.0F, k_eps);
 }
 
 TEST(AnimationChannelEvaluatorTest, MissingClipSlotReturnsZero) {
@@ -153,12 +153,12 @@ TEST(AnimationChannelEvaluatorTest, MissingClipSlotReturnsZero) {
   clips.push_back(make_float_clip({{0.0F, 7.0F}}));
   clips.push_back(make_float_clip({{0.0F, 9.0F}}));
   ChannelEvaluator<float> ch(std::move(clips), &sm);
-  EXPECT_NEAR(ch.sample(0.0F), 0.0F, kEps);
+  EXPECT_NEAR(ch.sample(0.0F), 0.0F, k_eps);
 }
 
 TEST(AnimationAuthoredClipsTest, ArcherIdleSwayIsLoopable) {
   auto c = Clips::make_archer_idle_sway_x();
-  EXPECT_NEAR(c.duration(), 2.0F, kEps);
+  EXPECT_NEAR(c.duration(), 2.0F, k_eps);
   EXPECT_GT(c.key_count(), 2U);
 
   auto start = evaluate(c, 0.0F, WrapMode::Loop);

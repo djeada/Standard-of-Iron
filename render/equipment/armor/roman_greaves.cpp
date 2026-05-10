@@ -134,11 +134,11 @@ auto roman_greaves_archetype() -> const RenderArchetype & {
 auto roman_greaves_fill_role_colors(const HumanoidPalette &palette,
                                     QVector3D *out,
                                     std::size_t max) -> std::uint32_t {
-  if (max < kRomanGreavesRoleCount) {
+  if (max < k_roman_greaves_role_count) {
     return 0;
   }
   out[0] = saturate_color(palette.metal * QVector3D(0.95F, 0.88F, 0.68F));
-  return kRomanGreavesRoleCount;
+  return k_roman_greaves_role_count;
 }
 
 auto roman_greaves_make_static_attachment(std::uint16_t socket_bone_index,

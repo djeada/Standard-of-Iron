@@ -57,7 +57,7 @@ constexpr auto make_minimal_capsule() noexcept -> Creature::PrimitiveInstance {
   p.params.tail_offset = QVector3D(0.0F, 0.0F, 0.0F);
   p.params.radius = HP::TORSO_TOP_R;
   p.color_role = Cloth;
-  p.lod_mask = Creature::kLodMinimal;
+  p.lod_mask = Creature::k_lod_minimal;
   return p;
 }
 
@@ -80,7 +80,7 @@ constexpr auto make_full_chest() noexcept -> Creature::PrimitiveInstance {
   p.params.radius = HP::TORSO_TOP_R * 0.98F;
   p.params.depth_radius = HP::TORSO_TOP_R * 0.74F;
   p.color_role = Cloth;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -96,7 +96,7 @@ make_full_pectoral(bool left) noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::TORSO_TOP_R * 0.48F, HP::TORSO_TOP_R * 0.32F,
                 HP::TORSO_TOP_R * 0.22F);
   p.color_role = Cloth;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -110,7 +110,7 @@ constexpr auto make_full_upper_back() noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::TORSO_TOP_R * 0.84F, HP::TORSO_TOP_R * 0.44F,
                 HP::TORSO_TOP_R * 0.22F);
   p.color_role = Cloth;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -124,7 +124,7 @@ constexpr auto make_full_abdomen() noexcept -> Creature::PrimitiveInstance {
   p.params.radius = HP::TORSO_BOT_R * 0.72F;
   p.params.depth_radius = HP::TORSO_BOT_R * 0.50F;
   p.color_role = Cloth;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -140,7 +140,7 @@ make_full_pelvis_block() noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::TORSO_BOT_R * 0.96F, HP::TORSO_BOT_R * 0.34F,
                 HP::TORSO_BOT_R * 0.56F);
   p.color_role = ClothDark;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -156,7 +156,7 @@ make_full_buttock(bool left) noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::TORSO_BOT_R * 0.30F, HP::TORSO_BOT_R * 0.27F,
                 HP::TORSO_BOT_R * 0.24F);
   p.color_role = ClothDark;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -171,7 +171,7 @@ make_full_deltoid(bool left) noexcept -> Creature::PrimitiveInstance {
   float const r = HP::UPPER_ARM_R * 1.75F;
   p.params.half_extents = QVector3D(r, r * 0.84F, r * 0.96F);
   p.color_role = Cloth;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -190,7 +190,7 @@ constexpr auto make_full_upper_arm_proximal(bool left) noexcept
   p.params.tail_offset = QVector3D(0.0F, k_upper_arm_half, 0.0F);
   p.params.radius = HP::UPPER_ARM_R * 1.28F;
   p.color_role = Cloth;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -207,7 +207,7 @@ make_full_upper_arm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
       bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
   p.params.radius = HP::UPPER_ARM_R * 0.98F;
   p.color_role = Cloth;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -220,7 +220,7 @@ make_full_elbow(bool left) noexcept -> Creature::PrimitiveInstance {
       bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
   p.params.radius = HP::UPPER_ARM_R * 1.00F;
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -237,7 +237,7 @@ make_full_forearm_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.tail_offset = QVector3D(0.0F, k_fore_arm_half, 0.0F);
   p.params.radius = HP::FORE_ARM_R * 1.28F;
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -253,7 +253,7 @@ make_full_forearm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.tail_bone = bone(left ? HumanoidBone::HandL : HumanoidBone::HandR);
   p.params.radius = HP::FORE_ARM_R * 0.86F;
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -269,7 +269,7 @@ make_full_hand(bool left) noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::HAND_RADIUS * 1.18F, HP::HAND_RADIUS * 1.38F,
                 HP::HAND_RADIUS * 0.56F);
   p.color_role = LeatherDark;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -281,7 +281,7 @@ constexpr auto make_full_neck() noexcept -> Creature::PrimitiveInstance {
   p.params.tail_bone = bone(HumanoidBone::Head);
   p.params.radius = HP::NECK_RADIUS * 0.88F;
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -296,7 +296,7 @@ constexpr auto make_full_cranium() noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::HEAD_RADIUS * 0.80F, HP::HEAD_RADIUS * 0.98F,
                 HP::HEAD_RADIUS * 0.88F);
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -311,7 +311,7 @@ constexpr auto make_full_jaw() noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::HEAD_RADIUS * 0.42F, HP::HEAD_RADIUS * 0.24F,
                 HP::HEAD_RADIUS * 0.34F);
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -326,7 +326,7 @@ constexpr auto make_full_brow() noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::HEAD_RADIUS * 0.60F, HP::HEAD_RADIUS * 0.12F,
                 HP::HEAD_RADIUS * 0.22F);
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -341,7 +341,7 @@ constexpr auto make_full_nose() noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::HEAD_RADIUS * 0.09F, HP::HEAD_RADIUS * 0.18F,
                 HP::HEAD_RADIUS * 0.18F);
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -361,7 +361,7 @@ make_full_thigh_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.tail_offset = QVector3D(0.0F, k_upper_leg_half, 0.0F);
   p.params.radius = HP::UPPER_LEG_R * 1.50F;
   p.color_role = ClothDark;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -376,7 +376,7 @@ make_full_thigh_distal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.tail_bone = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
   p.params.radius = HP::UPPER_LEG_R * 1.02F;
   p.color_role = ClothDark;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -388,7 +388,7 @@ make_full_knee(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.anchor_bone = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
   p.params.radius = HP::LOWER_LEG_R * 1.18F;
   p.color_role = Leather;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -404,7 +404,7 @@ make_full_calf_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.tail_offset = QVector3D(0.0F, k_lower_leg_half, 0.0F);
   p.params.radius = HP::LOWER_LEG_R * 1.48F;
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -419,7 +419,7 @@ make_full_calf_distal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.tail_bone = bone(left ? HumanoidBone::FootL : HumanoidBone::FootR);
   p.params.radius = HP::LOWER_LEG_R * 0.88F;
   p.color_role = Skin;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -431,7 +431,7 @@ make_full_ankle(bool left) noexcept -> Creature::PrimitiveInstance {
   p.params.anchor_bone = bone(left ? HumanoidBone::FootL : HumanoidBone::FootR);
   p.params.radius = HP::LOWER_LEG_R * 0.74F;
   p.color_role = Leather;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 
@@ -448,7 +448,7 @@ make_full_foot(bool left) noexcept -> Creature::PrimitiveInstance {
       QVector3D(HP::LOWER_LEG_R * 0.78F, HP::LOWER_LEG_R * 0.28F,
                 HP::LOWER_LEG_R * 1.55F);
   p.color_role = LeatherDark;
-  p.lod_mask = Creature::kLodFull;
+  p.lod_mask = Creature::k_lod_full;
   return p;
 }
 

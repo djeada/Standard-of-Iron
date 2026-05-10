@@ -144,7 +144,7 @@ auto loadouts() -> const LoadoutMap & {
 auto resolve_slot_handle(EquipmentCategory category,
                          const std::string &id) -> EquipmentHandle {
   if (id.empty()) {
-    return kInvalidEquipmentHandle;
+    return k_invalid_equipment_handle;
   }
   return EquipmentRegistry::instance().resolve_handle(category, id);
 }

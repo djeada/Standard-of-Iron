@@ -1031,12 +1031,12 @@ auto Serialization::serialize_terrain(
     return terrain_obj;
   }
 
-  terrain_obj["width"] = height_map->getWidth();
-  terrain_obj["height"] = height_map->getHeight();
-  terrain_obj["tile_size"] = height_map->getTileSize();
+  terrain_obj["width"] = height_map->get_width();
+  terrain_obj["height"] = height_map->get_height();
+  terrain_obj["tile_size"] = height_map->get_tile_size();
 
   QJsonArray heights_array;
-  const auto &heights = height_map->getHeightData();
+  const auto &heights = height_map->get_height_data();
   for (float const h : heights) {
     heights_array.append(h);
   }
@@ -1440,7 +1440,7 @@ void Serialization::deserialize_world(World *world, const QJsonDocument &doc) {
 
     auto &terrain_service = Game::Map::TerrainService::instance();
     terrain_service.restore_from_serialized(
-        width, height, tile_size, temp_height_map->getHeightData(),
+        width, height, tile_size, temp_height_map->get_height_data(),
         temp_height_map->getTerrainTypes(),
         temp_height_map->get_river_segments(), roads,
         temp_height_map->get_bridges(), biome);

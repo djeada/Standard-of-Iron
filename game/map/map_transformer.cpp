@@ -34,7 +34,7 @@ void MapTransformer::setFactoryRegistry(
     std::shared_ptr<Game::Units::UnitFactoryRegistry> reg) {
   s_registry = std::move(reg);
 }
-auto MapTransformer::getFactoryRegistry()
+auto MapTransformer::get_factory_registry()
     -> std::shared_ptr<Game::Units::UnitFactoryRegistry> {
   return s_registry;
 }

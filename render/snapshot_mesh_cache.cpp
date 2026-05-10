@@ -17,8 +17,8 @@ namespace Render::GL {
 namespace {
 
 auto build_identity_palette() noexcept
-    -> std::array<QMatrix4x4, BonePaletteArena::kPaletteWidth> {
-  std::array<QMatrix4x4, BonePaletteArena::kPaletteWidth> arr{};
+    -> std::array<QMatrix4x4, BonePaletteArena::k_palette_width> {
+  std::array<QMatrix4x4, BonePaletteArena::k_palette_width> arr{};
   for (auto &m : arr) {
     m.setToIdentity();
   }
@@ -28,8 +28,8 @@ auto build_identity_palette() noexcept
 } // namespace
 
 auto SnapshotMeshCache::identity_palette() noexcept -> const QMatrix4x4 * {
-  static const auto kPalette = build_identity_palette();
-  return kPalette.data();
+  static const auto k_palette = build_identity_palette();
+  return k_palette.data();
 }
 
 namespace {

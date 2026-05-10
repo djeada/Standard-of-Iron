@@ -96,7 +96,7 @@ auto resolve_shader_includes(const QString &source,
         const QString include_path =
             QStringLiteral(":/assets/shaders/include/") + include_name;
         const QString resolved =
-            Utils::Resources::resolveResourcePath(include_path);
+            Utils::Resources::resolve_resource_path(include_path);
         QFile include_file(resolved);
         if (include_file.open(QIODevice::ReadOnly)) {
           QTextStream stream(&include_file);
@@ -128,9 +128,9 @@ Shader::~Shader() {
 auto Shader::load_from_files(const QString &vertex_path,
                              const QString &fragment_path) -> bool {
   const QString resolved_vert =
-      Utils::Resources::resolveResourcePath(vertex_path);
+      Utils::Resources::resolve_resource_path(vertex_path);
   const QString resolved_frag =
-      Utils::Resources::resolveResourcePath(fragment_path);
+      Utils::Resources::resolve_resource_path(fragment_path);
 
   QFile vertex_file(resolved_vert);
   QFile fragment_file(resolved_frag);

@@ -82,12 +82,12 @@ auto EquipmentRegistry::resolve_handle(EquipmentCategory category,
   if (const auto it = m_handles.find(key); it != m_handles.end()) {
     return it->second;
   }
-  return kInvalidEquipmentHandle;
+  return k_invalid_equipment_handle;
 }
 
 auto EquipmentRegistry::get(EquipmentHandle handle) const
     -> std::shared_ptr<IEquipmentRenderer> {
-  if (handle == kInvalidEquipmentHandle) {
+  if (handle == k_invalid_equipment_handle) {
     return nullptr;
   }
   const std::size_t index = static_cast<std::size_t>(handle - 1U);

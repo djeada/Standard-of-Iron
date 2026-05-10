@@ -217,7 +217,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
             QVector3D(t->position.x + exit_offset * std::cos(exit_angle), 0.0F,
                       t->position.z + exit_offset * std::sin(exit_angle));
 
-        auto reg = Game::Map::MapTransformer::getFactoryRegistry();
+        auto reg = Game::Map::MapTransformer::get_factory_registry();
         if (reg) {
           Game::Units::SpawnParams sp;
           sp.position = exit_pos;
@@ -333,7 +333,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
       auto *t = e->get_component<Engine::Core::TransformComponent>();
       auto *u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
-        auto reg = Game::Map::MapTransformer::getFactoryRegistry();
+        auto reg = Game::Map::MapTransformer::get_factory_registry();
         if (reg) {
           Game::Units::SpawnParams sp;
 

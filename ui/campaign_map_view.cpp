@@ -251,7 +251,7 @@ struct CampaignMapTextureCache {
       return it->second;
     }
 
-    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QImage image(path);
     if (image.isNull()) {
       qWarning() << "CampaignMapTextureCache: Failed to load texture" << path;
@@ -490,7 +490,7 @@ private:
   }
 
   auto init_shaders() -> bool {
-    static const char *kTexVert = R"(
+    static const char *k_tex_vert = R"(
 #version 330 core
 layout(location = 0) in vec2 a_pos;
 
@@ -506,7 +506,7 @@ void main() {
 }
 )";
 
-    static const char *kTexFrag = R"(
+    static const char *k_tex_frag = R"(
 #version 330 core
 in vec2 v_uv;
 
@@ -522,7 +522,7 @@ void main() {
 }
 )";
 
-    static const char *kLineVert = R"(
+    static const char *k_line_vert = R"(
 #version 330 core
 layout(location = 0) in vec2 a_pos;
 
@@ -535,7 +535,7 @@ void main() {
 }
 )";
 
-    static const char *kLineFrag = R"(
+    static const char *k_line_frag = R"(
 #version 330 core
 uniform vec4 u_color;
 
@@ -547,13 +547,13 @@ void main() {
 )";
 
     if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                   kTexVert)) {
+                                                   k_tex_vert)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile texture vertex shader";
       return false;
     }
     if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
-                                                   kTexFrag)) {
+                                                   k_tex_frag)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile texture fragment shader";
       return false;
@@ -564,12 +564,12 @@ void main() {
     }
 
     if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                kLineVert)) {
+                                                k_line_vert)) {
       qWarning() << "CampaignMapRenderer: Failed to compile line vertex shader";
       return false;
     }
     if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
-                                                kLineFrag)) {
+                                                k_line_frag)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile line fragment shader";
       return false;
@@ -584,9 +584,9 @@ void main() {
   }
 
   void init_terrain_shader() {
-    const QString vert_path = Utils::Resources::resolveResourcePath(
+    const QString vert_path = Utils::Resources::resolve_resource_path(
         QStringLiteral(":/assets/shaders/campaign_terrain.vert"));
-    const QString frag_path = Utils::Resources::resolveResourcePath(
+    const QString frag_path = Utils::Resources::resolve_resource_path(
         QStringLiteral(":/assets/shaders/campaign_terrain.frag"));
 
     if (!m_terrain_program.addShaderFromSourceFile(QOpenGLShader::Vertex,
@@ -614,7 +614,7 @@ void main() {
       return;
     }
 
-    static const float kQuadVerts[] = {
+    static const float k_quad_verts[] = {
         0.0F, 0.0F, 1.0F, 0.0F, 1.0F, 1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 1.0F,
     };
 
@@ -623,7 +623,7 @@ void main() {
 
     glBindVertexArray(m_quad_vao);
     glBindBuffer(GL_ARRAY_BUFFER, m_quad_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(kQuadVerts), kQuadVerts,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(k_quad_verts), k_quad_verts,
                  GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
@@ -632,7 +632,7 @@ void main() {
   }
 
   void init_land_mesh() {
-    const QString path = Utils::Resources::resolveResourcePath(
+    const QString path = Utils::Resources::resolve_resource_path(
         QStringLiteral(":/assets/campaign_map/land_mesh.bin"));
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -646,16 +646,16 @@ void main() {
       return;
     }
 
-    const int floatCount = data.size() / static_cast<int>(sizeof(float));
-    if (floatCount % 2 != 0) {
+    const int float_count = data.size() / static_cast<int>(sizeof(float));
+    if (float_count % 2 != 0) {
       qWarning() << "CampaignMapRenderer: Land mesh float count is odd";
       return;
     }
 
-    std::vector<float> verts(static_cast<size_t>(floatCount));
+    std::vector<float> verts(static_cast<size_t>(float_count));
     memcpy(verts.data(), data.constData(), static_cast<size_t>(data.size()));
 
-    m_land_vertex_count = floatCount / 2;
+    m_land_vertex_count = float_count / 2;
     if (m_land_vertex_count == 0) {
       return;
     }
@@ -675,7 +675,7 @@ void main() {
 
   void init_line_layer(LineLayer &layer, const QString &resource_path,
                        const QVector4D &color, float width) {
-    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
       qWarning() << "CampaignMapRenderer: Failed to open line layer" << path;
@@ -743,7 +743,7 @@ void main() {
   }
 
   void init_province_layer(ProvinceLayer &layer, const QString &resource_path) {
-    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
       qWarning() << "CampaignMapRenderer: Failed to open provinces" << path;
@@ -822,7 +822,7 @@ void main() {
 
   void init_borders_layer(LineLayer &layer, const QString &resource_path,
                           const QVector4D &color, float width) {
-    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
       qWarning() << "CampaignMapRenderer: Failed to open borders" << path;
@@ -890,7 +890,7 @@ void main() {
   }
 
   void init_path_layer(PathLayer &layer, const QString &resource_path) {
-    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
       qWarning() << "CampaignMapRenderer: Failed to open path layer" << path;
@@ -941,7 +941,7 @@ void main() {
 
   void init_symbol_layer(CartographicSymbolLayer &layer,
                          const QString &resource_path) {
-    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
       qWarning() << "CampaignMapRenderer: Failed to open symbols source"
@@ -1333,7 +1333,7 @@ void main() {
     HeightmapData data;
 
     const QString resolved_image =
-        Utils::Resources::resolveResourcePath(image_path);
+        Utils::Resources::resolve_resource_path(image_path);
     QImage image(resolved_image);
     if (image.isNull()) {
       qWarning() << "CampaignMapRenderer: Failed to load heightmap"
@@ -1355,7 +1355,7 @@ void main() {
     float max_m = 4000.0F;
 
     const QString resolved_meta =
-        Utils::Resources::resolveResourcePath(meta_path);
+        Utils::Resources::resolve_resource_path(meta_path);
     QFile meta_file(resolved_meta);
     if (meta_file.open(QIODevice::ReadOnly)) {
       const QJsonDocument doc = QJsonDocument::fromJson(meta_file.readAll());
@@ -1410,7 +1410,7 @@ void main() {
   }
 
   void init_label_layer(LabelLayer &layer, const QString &resource_path) {
-    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
       qWarning() << "CampaignMapRenderer: Failed to open labels source" << path;
@@ -1540,7 +1540,7 @@ void main() {
   }
 
   auto load_texture(const QString &resource_path) -> QOpenGLTexture * {
-    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QImage image(path);
     if (image.isNull()) {
       qWarning() << "CampaignMapRenderer: Failed to load texture" << path;
@@ -2244,7 +2244,7 @@ void CampaignMapView::load_provinces_for_hit_test() {
   m_provinces_loaded = true;
   m_provinces.clear();
 
-  const QString path = Utils::Resources::resolveResourcePath(
+  const QString path = Utils::Resources::resolve_resource_path(
       QStringLiteral(":/assets/campaign_map/provinces.json"));
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
@@ -2302,7 +2302,7 @@ void CampaignMapView::load_province_labels() {
   m_province_labels_loaded = true;
   m_province_labels.clear();
 
-  const QString path = Utils::Resources::resolveResourcePath(
+  const QString path = Utils::Resources::resolve_resource_path(
       QStringLiteral(":/assets/campaign_map/provinces.json"));
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
@@ -2598,7 +2598,7 @@ void CampaignMapView::load_hannibal_paths() {
   m_hannibal_paths_loaded = true;
   m_hannibal_paths.clear();
 
-  const QString path = Utils::Resources::resolveResourcePath(
+  const QString path = Utils::Resources::resolve_resource_path(
       QStringLiteral(":/assets/campaign_map/hannibal_path.json"));
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {

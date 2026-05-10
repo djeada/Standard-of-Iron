@@ -12,12 +12,12 @@ namespace {
 
 using namespace Render::Creature;
 
-constexpr std::array<BoneDef, 6> kToyBones = {
-    BoneDef{"root", kInvalidBone}, BoneDef{"torso", 0}, BoneDef{"head", 1},
+constexpr std::array<BoneDef, 6> k_toy_bones = {
+    BoneDef{"root", k_invalid_bone}, BoneDef{"torso", 0}, BoneDef{"head", 1},
     BoneDef{"shoulder", 1},        BoneDef{"arm", 3},   BoneDef{"hand", 4},
 };
 
-constexpr std::array<SocketDef, 3> kToySockets = {
+constexpr std::array<SocketDef, 3> k_toy_sockets = {
     SocketDef{"head_crown", 2, QVector3D(0.0F, 0.1F, 0.0F)},
     SocketDef{"hand_grip", 5, QVector3D(0.0F, 0.0F, 0.0F)},
     SocketDef{"chest_front", 1, QVector3D(0.0F, 0.0F, 0.2F)},
@@ -25,8 +25,8 @@ constexpr std::array<SocketDef, 3> kToySockets = {
 
 auto toy_topology() noexcept -> SkeletonTopology {
   return SkeletonTopology{
-      std::span<const BoneDef>(kToyBones.data(), kToyBones.size()),
-      std::span<const SocketDef>(kToySockets.data(), kToySockets.size()),
+      std::span<const BoneDef>(k_toy_bones.data(), k_toy_bones.size()),
+      std::span<const SocketDef>(k_toy_sockets.data(), k_toy_sockets.size()),
   };
 }
 
@@ -102,7 +102,7 @@ TEST(CreatureTopologyTest, ToyTopologyValidates) {
 TEST(CreatureTopologyTest, RejectsNonTopologicalParentOrder) {
   std::array<BoneDef, 2> bad = {
       BoneDef{"a", 1},
-      BoneDef{"b", kInvalidBone},
+      BoneDef{"b", k_invalid_bone},
   };
   SkeletonTopology t{std::span<const BoneDef>(bad.data(), bad.size()), {}};
   EXPECT_FALSE(validate_topology(t));
@@ -110,8 +110,8 @@ TEST(CreatureTopologyTest, RejectsNonTopologicalParentOrder) {
 
 TEST(CreatureTopologyTest, RejectsMultipleRoots) {
   std::array<BoneDef, 2> bad = {
-      BoneDef{"r1", kInvalidBone},
-      BoneDef{"r2", kInvalidBone},
+      BoneDef{"r1", k_invalid_bone},
+      BoneDef{"r2", k_invalid_bone},
   };
   SkeletonTopology t{std::span<const BoneDef>(bad.data(), bad.size()), {}};
   EXPECT_FALSE(validate_topology(t));
@@ -119,7 +119,7 @@ TEST(CreatureTopologyTest, RejectsMultipleRoots) {
 
 TEST(CreatureTopologyTest, RejectsDuplicateNames) {
   std::array<BoneDef, 2> bad = {
-      BoneDef{"a", kInvalidBone},
+      BoneDef{"a", k_invalid_bone},
       BoneDef{"a", 0},
   };
   SkeletonTopology t{std::span<const BoneDef>(bad.data(), bad.size()), {}};
@@ -127,7 +127,7 @@ TEST(CreatureTopologyTest, RejectsDuplicateNames) {
 }
 
 TEST(CreatureTopologyTest, RejectsSocketWithInvalidBone) {
-  std::array<BoneDef, 1> bones = {BoneDef{"r", kInvalidBone}};
+  std::array<BoneDef, 1> bones = {BoneDef{"r", k_invalid_bone}};
   std::array<SocketDef, 1> sockets = {SocketDef{"s", 5, {}}};
   SkeletonTopology t{
       std::span<const BoneDef>(bones.data(), bones.size()),
@@ -140,14 +140,14 @@ TEST(CreatureTopologyTest, FindBoneByName) {
   auto const t = toy_topology();
   EXPECT_EQ(find_bone(t, "torso"), 1);
   EXPECT_EQ(find_bone(t, "arm"), 4);
-  EXPECT_EQ(find_bone(t, "does_not_exist"), kInvalidBone);
+  EXPECT_EQ(find_bone(t, "does_not_exist"), k_invalid_bone);
 }
 
 TEST(CreatureTopologyTest, FindSocketByName) {
   auto const t = toy_topology();
   EXPECT_EQ(find_socket(t, "head_crown"), 0);
   EXPECT_EQ(find_socket(t, "chest_front"), 2);
-  EXPECT_EQ(find_socket(t, "missing"), kInvalidSocket);
+  EXPECT_EQ(find_socket(t, "missing"), k_invalid_socket);
 }
 
 TEST(CreatureEvaluatorTest, EveryBoneBasisIsOrthonormal) {

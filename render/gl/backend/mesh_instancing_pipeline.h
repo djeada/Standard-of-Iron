@@ -55,17 +55,17 @@ private:
   void setup_instance_attributes();
 
   GL::Backend *m_backend{nullptr};
-  GL::ShaderCache *m_shaderCache{nullptr};
+  GL::ShaderCache *m_shader_cache{nullptr};
   bool m_initialized{false};
 
-  Mesh *m_currentMesh{nullptr};
-  Shader *m_currentShader{nullptr};
-  Texture *m_currentTexture{nullptr};
+  Mesh *m_current_mesh{nullptr};
+  Shader *m_current_shader{nullptr};
+  Texture *m_current_texture{nullptr};
 
   std::vector<MeshInstanceGpu> m_instances;
-  std::size_t m_instanceCapacity{0};
+  std::size_t m_instance_capacity{0};
 
-  GLuint m_instanceBuffer{0};
+  GLuint m_instance_buffer{0};
 };
 
 } // namespace Render::GL::BackendPipelines

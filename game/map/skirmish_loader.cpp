@@ -122,7 +122,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   QSet<int> map_player_ids;
   const QString resolved_map_path =
-      Utils::Resources::resolveResourcePath(map_path);
+      Utils::Resources::resolve_resource_path(map_path);
   QFile map_file(resolved_map_path);
   if (map_file.open(QIODevice::ReadOnly)) {
     const QByteArray data = map_file.readAll();
@@ -317,8 +317,8 @@ auto SkirmishLoader::start(const QString &map_path,
   }
   pump_events();
 
-  if (m_onOwnersUpdated) {
-    m_onOwnersUpdated();
+  if (m_on_owners_updated) {
+    m_on_owners_updated();
   }
 
   auto &terrain_service = Game::Map::TerrainService::instance();
@@ -367,9 +367,9 @@ auto SkirmishLoader::start(const QString &map_path,
     const float world_height =
         level_result.grid_height * level_result.tile_size;
     m_rain->configure(world_width, world_height, level_result.biome_seed);
-    m_rain->set_enabled(level_result.rainSettings.enabled);
-    m_rain->set_intensity(level_result.rainSettings.enabled
-                              ? level_result.rainSettings.intensity
+    m_rain->set_enabled(level_result.rain_settings.enabled);
+    m_rain->set_intensity(level_result.rain_settings.enabled
+                              ? level_result.rain_settings.intensity
                               : 0.0F);
   }
 
@@ -403,11 +403,11 @@ auto SkirmishLoader::start(const QString &map_path,
 
   if ((m_fog != nullptr) && visibility_service.is_initialized()) {
     m_fog->update_mask(
-        visibility_service.getWidth(), visibility_service.getHeight(),
-        visibility_service.getTileSize(), visibility_service.snapshot_cells());
+        visibility_service.get_width(), visibility_service.get_height(),
+        visibility_service.get_tile_size(), visibility_service.snapshot_cells());
 
-    if (m_onVisibilityMaskReady) {
-      m_onVisibilityMaskReady();
+    if (m_on_visibility_mask_ready) {
+      m_on_visibility_mask_ready();
     }
   }
   pump_events();
@@ -444,7 +444,7 @@ auto SkirmishLoader::start(const QString &map_path,
   if (focus_entity != nullptr) {
     if (auto *transform =
             focus_entity->get_component<Engine::Core::TransformComponent>()) {
-      result.focusPosition = QVector3D(
+      result.focus_position = QVector3D(
           transform->position.x, transform->position.y, transform->position.z);
       result.has_focus_position = true;
     }
@@ -460,8 +460,8 @@ auto SkirmishLoader::start(const QString &map_path,
   result.grid_height = level_result.grid_height;
   result.tile_size = level_result.tile_size;
   result.max_troops_per_player = level_result.max_troops_per_player;
-  result.victoryConfig = level_result.victoryConfig;
-  result.rainSettings = level_result.rainSettings;
+  result.victory_config = level_result.victory_config;
+  result.rain_settings = level_result.rain_settings;
   result.biome_seed = level_result.biome_seed;
   result.is_spectator_mode = is_spectator_mode;
 

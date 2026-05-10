@@ -130,16 +130,16 @@ struct KnightExtras {
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
-  static constexpr float kLimbWidthScale = 0.90F;
-  static constexpr float kTorsoWidthScale = 0.75F;
-  static constexpr float kHeightScale = 1.03F;
-  static constexpr float kDepthScale = 0.46F;
+  static constexpr float k_limb_width_scale = 0.90F;
+  static constexpr float k_torso_width_scale = 0.75F;
+  static constexpr float k_height_scale = 1.03F;
+  static constexpr float k_depth_scale = 0.46F;
 
   auto get_proportion_scaling() const -> QVector3D override {
-    return {kLimbWidthScale, kHeightScale, kDepthScale};
+    return {k_limb_width_scale, k_height_scale, k_depth_scale};
   }
 
-  auto get_torso_scale() const -> float override { return kTorsoWidthScale; }
+  auto get_torso_scale() const -> float override { return k_torso_width_scale; }
 
   auto get_hold_kneel_depth() const -> float override {
     return k_kneel_depth_multiplier;
@@ -172,16 +172,16 @@ public:
       static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
           Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_shield_base_role_byte = static_cast<std::uint8_t>(
-          k_helmet_base_role_byte + Render::GL::kCarthageHeavyHelmetRoleCount);
+          k_helmet_base_role_byte + Render::GL::k_carthage_heavy_helmet_role_count);
       static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(
           k_shield_base_role_byte + Render::GL::k_carthage_shield_role_count);
       static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
           k_shoulder_base_role_byte +
-          Render::GL::kCarthageShoulderCoverRoleCount);
+          Render::GL::k_carthage_shoulder_cover_role_count);
       static const auto k_sword_base_role_byte = static_cast<std::uint8_t>(
-          k_armor_base_role_byte + Render::GL::kArmorHeavyCarthageRoleCount);
+          k_armor_base_role_byte + Render::GL::k_armor_heavy_carthage_role_count);
       static const auto k_scabbard_base_role_byte = static_cast<std::uint8_t>(
-          k_sword_base_role_byte + Render::GL::kSwordRoleCount);
+          k_sword_base_role_byte + Render::GL::k_sword_role_count);
       static const auto k_chest_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
       static const auto k_hand_l_bone =
@@ -324,7 +324,7 @@ public:
       s.scaling = ProportionScaling{0.90F, 1.03F, 0.46F};
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = k_archetype;
-      s.creature_asset_id = Render::Creature::Pipeline::kHumanoidSwordAsset;
+      s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
       return s;
     }();
     return spec;

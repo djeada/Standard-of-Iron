@@ -8,8 +8,8 @@
 using Render::GL::MapBoundaryFogRenderer;
 
 namespace {
-constexpr std::size_t kCardsPerSide = 3U;
-constexpr std::size_t kCurtainRings = 2U;
+constexpr std::size_t k_cards_per_side = 3U;
+constexpr std::size_t k_curtain_rings = 2U;
 
 struct TerrainServiceScopeReset {
   ~TerrainServiceScopeReset() { Game::Map::TerrainService::instance().clear(); }
@@ -19,7 +19,7 @@ auto expected_fog_count(int width, int height) -> std::size_t {
   if (width <= 0 || height <= 0) {
     return 0U;
   }
-  return (4U * kCardsPerSide + 4U) * kCurtainRings;
+  return (4U * k_cards_per_side + 4U) * k_curtain_rings;
 }
 
 void restore_flat_terrain(int width, int height, float tile_size,

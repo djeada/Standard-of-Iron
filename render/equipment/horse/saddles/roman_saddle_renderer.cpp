@@ -41,11 +41,11 @@ auto roman_saddle_archetype() -> const RenderArchetype & {
 
 auto roman_saddle_fill_role_colors(const HorseVariant &variant, QVector3D *out,
                                    std::size_t max) -> std::uint32_t {
-  if (max < kRomanSaddleRoleCount) {
+  if (max < k_roman_saddle_role_count) {
     return 0;
   }
   out[0] = variant.saddle_color;
-  return kRomanSaddleRoleCount;
+  return k_roman_saddle_role_count;
 }
 
 auto roman_saddle_make_static_attachment(

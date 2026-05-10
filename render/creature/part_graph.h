@@ -44,26 +44,26 @@ enum class CreatureLOD : std::uint8_t {
   Billboard = 2,
 };
 
-inline constexpr std::uint8_t kLodFull = 1U << 0;
-inline constexpr std::uint8_t kLodMinimal = 1U << 1;
-inline constexpr std::uint8_t kLodBillboard = 1U << 2;
-inline constexpr std::uint8_t kLodAll = kLodFull | kLodMinimal | kLodBillboard;
+inline constexpr std::uint8_t k_lod_full = 1U << 0;
+inline constexpr std::uint8_t k_lod_minimal = 1U << 1;
+inline constexpr std::uint8_t k_lod_billboard = 1U << 2;
+inline constexpr std::uint8_t k_lod_all = k_lod_full | k_lod_minimal | k_lod_billboard;
 
 [[nodiscard]] constexpr auto lod_bit(CreatureLOD l) noexcept -> std::uint8_t {
   switch (l) {
   case CreatureLOD::Full:
-    return kLodFull;
+    return k_lod_full;
   case CreatureLOD::Minimal:
-    return kLodMinimal;
+    return k_lod_minimal;
   case CreatureLOD::Billboard:
-    return kLodBillboard;
+    return k_lod_billboard;
   }
   return 0;
 }
 
 struct PrimitiveParams {
-  BoneIndex anchor_bone{kInvalidBone};
-  BoneIndex tail_bone{kInvalidBone};
+  BoneIndex anchor_bone{k_invalid_bone};
+  BoneIndex tail_bone{k_invalid_bone};
 
   QVector3D head_offset{};
   QVector3D tail_offset{};
@@ -89,7 +89,7 @@ struct PrimitiveInstance {
   float alpha{1.0F};
   int material_id{0};
 
-  std::uint8_t lod_mask{kLodAll};
+  std::uint8_t lod_mask{k_lod_all};
 };
 
 struct PartGraph {

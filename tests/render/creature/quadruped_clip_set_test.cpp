@@ -24,8 +24,8 @@ TEST(QuadrupedClipSet, RunningFallsBackWhenFasterClipsAreMissing) {
   constexpr ClipSet k_elephant_clips{0U,
                                      1U,
                                      2U,
-                                     Render::Creature::Quadruped::kInvalidClip,
-                                     Render::Creature::Quadruped::kInvalidClip,
+                                     Render::Creature::Quadruped::k_invalid_clip,
+                                     Render::Creature::Quadruped::k_invalid_clip,
                                      3U};
 
   EXPECT_EQ(clip_for_motion(k_elephant_clips, false, false, false), 0U);
@@ -35,16 +35,16 @@ TEST(QuadrupedClipSet, RunningFallsBackWhenFasterClipsAreMissing) {
 }
 
 TEST(QuadrupedClipSet, GaitFallbackWalksBackTowardAvailableLocomotion) {
-  constexpr ClipSet kSparseClips{10U,
-                                 Render::Creature::Quadruped::kInvalidClip,
+  constexpr ClipSet k_sparse_clips{10U,
+                                 Render::Creature::Quadruped::k_invalid_clip,
                                  12U,
-                                 Render::Creature::Quadruped::kInvalidClip,
-                                 Render::Creature::Quadruped::kInvalidClip,
+                                 Render::Creature::Quadruped::k_invalid_clip,
+                                 Render::Creature::Quadruped::k_invalid_clip,
                                  19U};
 
-  EXPECT_EQ(clip_for_gait(kSparseClips, GaitType::WALK), 12U);
-  EXPECT_EQ(clip_for_gait(kSparseClips, GaitType::GALLOP), 12U);
-  EXPECT_EQ(clip_for_motion(kSparseClips, GaitType::IDLE, true), 19U);
+  EXPECT_EQ(clip_for_gait(k_sparse_clips, GaitType::WALK), 12U);
+  EXPECT_EQ(clip_for_gait(k_sparse_clips, GaitType::GALLOP), 12U);
+  EXPECT_EQ(clip_for_motion(k_sparse_clips, GaitType::IDLE, true), 19U);
 }
 
 } // namespace

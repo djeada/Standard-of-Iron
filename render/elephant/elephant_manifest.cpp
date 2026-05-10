@@ -162,7 +162,7 @@ auto build_elephant_whole_nodes()
        bh * 0.04F * k_elephant_torso_height_scale},
   };
   nodes.push_back({"elephant.body", static_cast<BoneIndex>(ElephantBone::Body),
-                   k_role_skin, kLodAll, 0, body});
+                   k_role_skin, k_lod_all, 0, body});
 
   EllipsoidNode head;
   head.center = QVector3D(0.0F, bh * 0.28F, bl * 0.72F);
@@ -172,7 +172,7 @@ auto build_elephant_whole_nodes()
   head.ring_count = 5U;
   head.ring_vertices = 8U;
   nodes.push_back({"elephant.head", static_cast<BoneIndex>(ElephantBone::Head),
-                   k_role_skin, kLodAll, 0, head});
+                   k_role_skin, k_lod_all, 0, head});
 
   float const head_front_z = head.center.z() + head.radii.z();
   float const trunk_base_z = bl * 1.16F;
@@ -186,7 +186,7 @@ auto build_elephant_whole_nodes()
   trunk_bridge.ring_vertices = 6U;
   nodes.push_back({"elephant.trunk.bridge",
                    static_cast<BoneIndex>(ElephantBone::Head), k_role_skin,
-                   kLodAll, 0, trunk_bridge});
+                   k_lod_all, 0, trunk_bridge});
 
   auto add_eye = [&](float side) {
     EllipsoidNode eye;
@@ -195,7 +195,7 @@ auto build_elephant_whole_nodes()
     eye.ring_count = 4U;
     eye.ring_vertices = 6U;
     nodes.push_back({"elephant.eye", static_cast<BoneIndex>(ElephantBone::Head),
-                     k_role_eye, kLodAll, 0, eye});
+                     k_role_eye, k_lod_all, 0, eye});
   };
   add_eye(1.0F);
   add_eye(-1.0F);
@@ -249,7 +249,7 @@ auto build_elephant_whole_nodes()
     thigh.segment_count = 4U;
     thigh.ring_vertices = 6U;
     nodes.push_back(
-        {thigh_name, shoulder_bone, k_role_skin, kLodAll, 0, thigh});
+        {thigh_name, shoulder_bone, k_role_skin, k_lod_all, 0, thigh});
 
     TubeNode calf;
     calf.start = knee_local + calf_axis * knee_gap;
@@ -258,7 +258,7 @@ auto build_elephant_whole_nodes()
     calf.end_radius = leg_scale * 0.10F;
     calf.segment_count = 4U;
     calf.ring_vertices = 6U;
-    nodes.push_back({calf_name, knee_bone, k_role_skin, kLodAll, 0, calf});
+    nodes.push_back({calf_name, knee_bone, k_role_skin, k_lod_all, 0, calf});
 
     EllipsoidNode hoof;
     hoof.center = QVector3D(ankle_x, hoof_top_y - hoof_radius_y, ankle_z);
@@ -268,7 +268,7 @@ auto build_elephant_whole_nodes()
         foot_scale * (front ? 1.42F : 1.28F) * k_elephant_hoof_thickness_scale);
     hoof.ring_count = 4U;
     hoof.ring_vertices = 6U;
-    nodes.push_back({hoof_name, foot_bone, k_role_skin, kLodAll, 0, hoof});
+    nodes.push_back({hoof_name, foot_bone, k_role_skin, k_lod_all, 0, hoof});
   };
   add_leg("elephant.leg.fl.thigh", "elephant.leg.fl.calf",
           "elephant.leg.fl.hoof", bw * 0.40F, bl * 0.42F,
@@ -301,7 +301,7 @@ auto build_elephant_whole_nodes()
   trunk.ring_vertices = 6U;
   nodes.push_back({"elephant.trunk",
                    static_cast<BoneIndex>(ElephantBone::TrunkTip),
-                   k_role_skin_trunk, kLodAll, 0, trunk});
+                   k_role_skin_trunk, k_lod_all, 0, trunk});
 
   auto add_tusk = [&](float side) {
     ConeNode tusk;
@@ -313,7 +313,7 @@ auto build_elephant_whole_nodes()
     tusk.ring_vertices = 6U;
     nodes.push_back({"elephant.tusk",
                      static_cast<BoneIndex>(ElephantBone::Head), k_role_tusk,
-                     kLodAll, 0, tusk});
+                     k_lod_all, 0, tusk});
   };
   add_tusk(1.0F);
   add_tusk(-1.0F);
@@ -341,7 +341,7 @@ auto build_elephant_whole_nodes()
     ear.thickness = dims.ear_thickness * k_elephant_visual_scale * 1.15F *
                     k_elephant_ear_scale;
     nodes.push_back({"elephant.ear", static_cast<BoneIndex>(ElephantBone::Head),
-                     k_role_skin, kLodAll, 0, ear});
+                     k_role_skin, k_lod_all, 0, ear});
   };
   make_ear(1.0F);
   make_ear(-1.0F);
@@ -355,7 +355,7 @@ auto build_elephant_whole_nodes()
   tail.ring_vertices = 6U;
   tail.sag = -bh * 0.05F;
   nodes.push_back({"elephant.tail", static_cast<BoneIndex>(ElephantBone::Body),
-                   k_role_skin, kLodAll, 0, tail});
+                   k_role_skin, k_lod_all, 0, tail});
 
   return nodes;
 }
@@ -522,7 +522,7 @@ auto build_elephant_full_leg_overlays()
         front ? elephant_front_thigh_mesh() : elephant_rear_thigh_mesh();
     thigh.color_role = k_role_skin;
     thigh.material_id = k_elephant_material_id;
-    thigh.lod_mask = Render::Creature::kLodFull;
+    thigh.lod_mask = Render::Creature::k_lod_full;
 
     PrimitiveInstance &calf = out[idx++];
     calf.debug_name = calf_name;
@@ -536,7 +536,7 @@ auto build_elephant_full_leg_overlays()
     calf.custom_mesh = elephant_leg_segment_mesh();
     calf.color_role = k_role_skin;
     calf.material_id = k_elephant_material_id;
-    calf.lod_mask = Render::Creature::kLodFull;
+    calf.lod_mask = Render::Creature::k_lod_full;
 
     PrimitiveInstance &hoof = out[idx++];
     hoof.debug_name = hoof_name;
@@ -555,7 +555,7 @@ auto build_elephant_full_leg_overlays()
             k_elephant_hoof_thickness_scale);
     hoof.color_role = k_role_skin;
     hoof.material_id = k_elephant_material_id;
-    hoof.lod_mask = Render::Creature::kLodFull;
+    hoof.lod_mask = Render::Creature::k_lod_full;
   };
 
   add_leg("elephant.leg.fl.thigh", "elephant.leg.fl.calf",
@@ -650,7 +650,7 @@ auto elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest & {
   static const Render::Creature::SpeciesManifest manifest = [] {
     Render::Creature::SpeciesManifest m;
     m.species_name = "elephant";
-    m.species_id = Render::Creature::Bpat::kSpeciesElephant;
+    m.species_id = Render::Creature::Bpat::k_species_elephant;
     m.bpat_file_name = "elephant.bpat";
     m.minimal_snapshot_file_name = "elephant_minimal.bpsm";
     m.topology = &elephant_topology_ref();
@@ -660,7 +660,7 @@ auto elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest & {
     m.lod_full.mesh_skinning = Render::Creature::MeshSkinning::ElephantWhole;
     m.lod_full.color_role = k_role_skin;
     m.lod_full.material_id = k_elephant_material_id;
-    m.lod_full.lod_mask = Render::Creature::kLodFull;
+    m.lod_full.lod_mask = Render::Creature::k_lod_full;
     m.lod_full.mesh_nodes =
         std::span<const Render::Creature::Quadruped::MeshNode>(
             k_elephant_whole_nodes);
@@ -672,7 +672,7 @@ auto elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest & {
     m.lod_minimal.mesh_skinning = Render::Creature::MeshSkinning::ElephantWhole;
     m.lod_minimal.color_role = k_role_skin;
     m.lod_minimal.material_id = k_elephant_material_id;
-    m.lod_minimal.lod_mask = Render::Creature::kLodMinimal;
+    m.lod_minimal.lod_mask = Render::Creature::k_lod_minimal;
     m.lod_minimal.mesh_nodes =
         std::span<const Render::Creature::Quadruped::MeshNode>(
             k_elephant_whole_nodes);

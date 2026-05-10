@@ -17,27 +17,27 @@ auto main(int argc, char *argv[]) -> int {
   qDebug() << "Step 1: Loading map from JSON...";
 
   const QString mapPath = "assets/maps/map_rivers.json";
-  MapDefinition mapDef;
+  MapDefinition map_def;
   QString error;
 
-  if (!MapLoader::load_from_json_file(mapPath, mapDef, &error)) {
+  if (!MapLoader::load_from_json_file(mapPath, map_def, &error)) {
     qCritical() << "Failed to load map:" << error;
     return 1;
   }
 
-  qDebug() << "  ✓ Loaded map:" << mapDef.name;
-  qDebug() << "  ✓ Grid size:" << mapDef.grid.width << "x"
-           << mapDef.grid.height;
-  qDebug() << "  ✓ Terrain features:" << mapDef.terrain.size();
-  qDebug() << "  ✓ Rivers:" << mapDef.rivers.size();
-  qDebug() << "  ✓ Roads:" << mapDef.roads.size();
-  qDebug() << "  ✓ Spawns:" << mapDef.spawns.size();
+  qDebug() << "  ✓ Loaded map:" << map_def.name;
+  qDebug() << "  ✓ Grid size:" << map_def.grid.width << "x"
+           << map_def.grid.height;
+  qDebug() << "  ✓ Terrain features:" << map_def.terrain.size();
+  qDebug() << "  ✓ Rivers:" << map_def.rivers.size();
+  qDebug() << "  ✓ Roads:" << map_def.roads.size();
+  qDebug() << "  ✓ Spawns:" << map_def.spawns.size();
   qDebug() << "";
 
   qDebug() << "Step 2: Generating minimap texture...";
 
   MinimapGenerator generator;
-  QImage minimapImage = generator.generate(mapDef);
+  QImage minimapImage = generator.generate(map_def);
 
   if (minimapImage.isNull()) {
     qCritical() << "Failed to generate minimap image";
@@ -61,7 +61,7 @@ auto main(int argc, char *argv[]) -> int {
   qDebug() << "Step 4: Using MinimapTextureManager (recommended approach)...";
 
   MinimapTextureManager manager;
-  if (!manager.generate_for_map(mapDef)) {
+  if (!manager.generate_for_map(map_def)) {
     qCritical() << "Failed to generate minimap via manager";
     return 1;
   }
@@ -75,12 +75,12 @@ auto main(int argc, char *argv[]) -> int {
   qDebug() << "In your game initialization code:";
   qDebug() << "";
   qDebug() << "  1. Load your map JSON:";
-  qDebug() << "     MapDefinition mapDef;";
-  qDebug() << "     MapLoader::load_from_json_file(path, mapDef);";
+  qDebug() << "     MapDefinition map_def;";
+  qDebug() << "     MapLoader::load_from_json_file(path, map_def);";
   qDebug() << "";
   qDebug() << "  2. Generate the minimap:";
   qDebug() << "     MinimapTextureManager minimap;";
-  qDebug() << "     minimap.generateForMap(mapDef);";
+  qDebug() << "     minimap.generateForMap(map_def);";
   qDebug() << "";
   qDebug() << "  3. Use the texture in your renderer:";
   qDebug() << "     auto* texture = minimap.getTexture();";

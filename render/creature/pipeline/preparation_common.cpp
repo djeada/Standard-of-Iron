@@ -136,9 +136,9 @@ namespace {
 auto default_humanoid_archetype(
     Render::Creature::ArchetypeId archetype_id) noexcept
     -> Render::Creature::ArchetypeId {
-  return (archetype_id != Render::Creature::kInvalidArchetype)
+  return (archetype_id != Render::Creature::k_invalid_archetype)
              ? archetype_id
-             : Render::Creature::ArchetypeRegistry::kHumanoidBase;
+             : Render::Creature::ArchetypeRegistry::k_humanoid_base;
 }
 
 auto humanoid_requested_clip_variant_for_anim(
@@ -191,11 +191,11 @@ auto humanoid_bpat_playback_for_anim(
       Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
           archetype_id, state,
           humanoid_clip_variant_for_anim(archetype_id, anim));
-  if (clip_id == ArchetypeDescriptor::kUnmappedClip) {
+  if (clip_id == ArchetypeDescriptor::k_unmapped_clip) {
     return std::nullopt;
   }
   auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::kSpeciesHumanoid);
+      Render::Creature::Bpat::k_species_humanoid);
   if (blob == nullptr || clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -233,7 +233,7 @@ auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
   }
 
   auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::kSpeciesHumanoid);
+      Render::Creature::Bpat::k_species_humanoid);
   if (blob == nullptr || playback->clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -270,7 +270,7 @@ auto grounded_humanoid_contact_y(
 auto horse_clip_contact_y(std::uint16_t clip_id,
                           float phase) noexcept -> std::optional<float> {
   auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::kSpeciesHorse);
+      Render::Creature::Bpat::k_species_horse);
   if (blob == nullptr || clip_id >= blob->clip_count()) {
     return std::nullopt;
   }

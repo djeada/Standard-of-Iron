@@ -12,7 +12,7 @@ enum class LegId : std::uint8_t {
   BackRight = 3,
 };
 
-inline constexpr std::array<LegId, 4> kAllLegs{
+inline constexpr std::array<LegId, 4> k_all_legs{
     LegId::FrontLeft, LegId::FrontRight, LegId::BackLeft, LegId::BackRight};
 
 struct Dimensions {

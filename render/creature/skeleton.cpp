@@ -8,13 +8,13 @@ namespace Render::Creature {
 
 namespace {
 
-constexpr float kAxisEpsilonSq = 1.0e-6F;
-constexpr float kLengthEpsilon = 1.0e-5F;
+constexpr float k_axis_epsilon_sq = 1.0e-6F;
+constexpr float k_length_epsilon = 1.0e-5F;
 
 auto normalised_or(const QVector3D &v,
                    const QVector3D &fallback) noexcept -> QVector3D {
   float const len = v.length();
-  if (len < kLengthEpsilon) {
+  if (len < k_length_epsilon) {
     return fallback;
   }
   return v / len;
@@ -23,9 +23,9 @@ auto normalised_or(const QVector3D &v,
 auto orthonormalise_x(const QVector3D &right_hint, const QVector3D &y_axis,
                       const QVector3D &world_fallback) noexcept -> QVector3D {
   QVector3D x = right_hint - y_axis * QVector3D::dotProduct(right_hint, y_axis);
-  if (x.lengthSquared() < kAxisEpsilonSq) {
+  if (x.lengthSquared() < k_axis_epsilon_sq) {
     x = world_fallback - y_axis * QVector3D::dotProduct(world_fallback, y_axis);
-    if (x.lengthSquared() < kAxisEpsilonSq) {
+    if (x.lengthSquared() < k_axis_epsilon_sq) {
       QVector3D const alt(0.0F, 0.0F, 1.0F);
       x = alt - y_axis * QVector3D::dotProduct(alt, y_axis);
     }
@@ -91,7 +91,7 @@ void evaluate_skeleton(const SkeletonTopology &topo, JointProviderFn provider,
   assert(out_palette.size() >= topo.bones.size());
 
   QVector3D right = right_axis;
-  if (right.lengthSquared() < kAxisEpsilonSq) {
+  if (right.lengthSquared() < k_axis_epsilon_sq) {
     right = QVector3D(1.0F, 0.0F, 0.0F);
   } else {
     right.normalize();
@@ -108,9 +108,9 @@ void evaluate_skeleton(const SkeletonTopology &topo, JointProviderFn provider,
 
     case BoneBasisKind::FromHeadTail: {
 
-      if ((r.tail - r.head).lengthSquared() < kAxisEpsilonSq) {
+      if ((r.tail - r.head).lengthSquared() < k_axis_epsilon_sq) {
         BoneIndex const p = topo.bones[i].parent;
-        if (p != kInvalidBone && p < i) {
+        if (p != k_invalid_bone && p < i) {
           out_palette[i] = basis_from_parent(out_palette[p], r.head);
         } else {
           out_palette[i] = basis_from_root_up(r.head, right);
@@ -124,7 +124,7 @@ void evaluate_skeleton(const SkeletonTopology &topo, JointProviderFn provider,
     case BoneBasisKind::FromParent:
     default: {
       BoneIndex const p = topo.bones[i].parent;
-      if (p != kInvalidBone && p < i) {
+      if (p != k_invalid_bone && p < i) {
         out_palette[i] = basis_from_parent(out_palette[p], r.head);
       } else {
         out_palette[i] = basis_from_root_up(r.head, right);
@@ -142,7 +142,7 @@ auto socket_transform(const SkeletonTopology &topo,
     return QMatrix4x4{};
   }
   SocketDef const &def = topo.sockets[socket];
-  if (def.bone == kInvalidBone || def.bone >= palette.size()) {
+  if (def.bone == k_invalid_bone || def.bone >= palette.size()) {
     return QMatrix4x4{};
   }
   return socket_transform(palette[def.bone], def);
@@ -197,7 +197,7 @@ auto find_bone(const SkeletonTopology &topo,
       return static_cast<BoneIndex>(i);
     }
   }
-  return kInvalidBone;
+  return k_invalid_bone;
 }
 
 auto find_socket(const SkeletonTopology &topo,
@@ -207,14 +207,14 @@ auto find_socket(const SkeletonTopology &topo,
       return static_cast<SocketIndex>(i);
     }
   }
-  return kInvalidSocket;
+  return k_invalid_socket;
 }
 
 auto validate_topology(const SkeletonTopology &topo) noexcept -> bool {
   bool has_root = false;
   for (std::size_t i = 0; i < topo.bones.size(); ++i) {
     BoneDef const &b = topo.bones[i];
-    if (b.parent == kInvalidBone) {
+    if (b.parent == k_invalid_bone) {
       if (has_root) {
         return false;
       }
@@ -232,7 +232,7 @@ auto validate_topology(const SkeletonTopology &topo) noexcept -> bool {
     return false;
   }
   for (SocketDef const &s : topo.sockets) {
-    if (s.bone == kInvalidBone || s.bone >= topo.bones.size()) {
+    if (s.bone == k_invalid_bone || s.bone >= topo.bones.size()) {
       return false;
     }
   }

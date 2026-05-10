@@ -118,7 +118,7 @@ TEST(ElephantPrepare, ShadowElephantRowProducesNoDraw) {
   NullSubmitter sink;
   Render::Creature::Pipeline::CreaturePreparationResult prep;
   Render::Creature::CreatureRenderRequest req{};
-  req.archetype = Render::Creature::ArchetypeRegistry::kElephantBase;
+  req.archetype = Render::Creature::ArchetypeRegistry::k_elephant_base;
   req.state = Render::Creature::AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.pass = Render::Creature::Pipeline::RenderPassIntent::Shadow;
@@ -133,7 +133,7 @@ TEST(ElephantPrepare, MainElephantRowProducesEntitySubmission) {
   NullSubmitter sink;
   Render::Creature::Pipeline::CreaturePreparationResult prep;
   Render::Creature::CreatureRenderRequest req{};
-  req.archetype = Render::Creature::ArchetypeRegistry::kElephantBase;
+  req.archetype = Render::Creature::ArchetypeRegistry::k_elephant_base;
   req.state = Render::Creature::AnimationStateId::Idle;
   req.lod = Render::Creature::CreatureLOD::Full;
   req.pass = Render::Creature::Pipeline::RenderPassIntent::Main;
@@ -150,7 +150,7 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesElephant,
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_elephant,
                                 root + "/elephant.bpat"));
 
   auto &snapshot_reg =
@@ -163,7 +163,7 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   auto const asset_path = temp_dir / "elephant_minimal.bpsm";
 
   Render::Creature::Snapshot::SnapshotMeshWriter writer(
-      Render::Creature::Bpat::kSpeciesElephant,
+      Render::Creature::Bpat::k_species_elephant,
       Render::Creature::CreatureLOD::Minimal, 3U,
       std::array<std::uint32_t, 3>{0U, 1U, 2U});
   writer.add_clip({"idle", 1U});
@@ -183,7 +183,7 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   ASSERT_TRUE(writer.write(out));
   out.close();
   ASSERT_TRUE(snapshot_reg.load_species(
-      Render::Creature::Bpat::kSpeciesElephant,
+      Render::Creature::Bpat::k_species_elephant,
       Render::Creature::CreatureLOD::Minimal, asset_path.string()))
       << snapshot_reg.last_error();
 
@@ -225,7 +225,7 @@ TEST(ElephantPrepare,
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesElephant,
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_elephant,
                                 root + "/elephant.bpat"));
 
   auto &snapshot_reg =

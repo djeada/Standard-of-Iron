@@ -29,11 +29,11 @@ using Render::GL::RenderArchetypeLod;
 using Render::GL::RiggedMeshCache;
 using Render::GL::RiggedVertex;
 
-constexpr float kEps = 1e-4F;
+constexpr float k_eps = 1e-4F;
 
 struct OneBoneGraph {
-  static constexpr BoneIndex kBoneA = 0;
-  std::array<BoneDef, 1> bones{BoneDef{"A", kInvalidBone}};
+  static constexpr BoneIndex k_bone_a = 0;
+  std::array<BoneDef, 1> bones{BoneDef{"A", k_invalid_bone}};
   SkeletonTopology topology{std::span<const BoneDef>{bones}, {}};
   PartGraph graph{};
   std::array<BoneWorldMatrix, 1> bind_pose{QMatrix4x4{}};
@@ -72,7 +72,7 @@ TEST(StaticAttachmentBake, AttachmentVerticesAppendedToBodyMesh) {
 
   StaticAttachmentSpec spec{};
   spec.archetype = &make_simple_archetype();
-  spec.socket_bone_index = OneBoneGraph::kBoneA;
+  spec.socket_bone_index = OneBoneGraph::k_bone_a;
   spec.palette_role_remap[2] = 7;
   spec.override_color_role = 4;
   std::array<StaticAttachmentSpec, 1> attachments{spec};
@@ -88,7 +88,7 @@ TEST(StaticAttachmentBake, AttachmentVerticesAppendedToBodyMesh) {
   EXPECT_EQ(baked.indices.size(), unit_cube->get_indices().size() * 2);
 
   for (RiggedVertex const &v : baked.vertices) {
-    EXPECT_EQ(v.bone_indices[0], OneBoneGraph::kBoneA);
+    EXPECT_EQ(v.bone_indices[0], OneBoneGraph::k_bone_a);
     EXPECT_FLOAT_EQ(v.bone_weights[0], 1.0F);
     EXPECT_FLOAT_EQ(v.bone_weights[1], 0.0F);
     EXPECT_FLOAT_EQ(v.bone_weights[2], 0.0F);
@@ -100,7 +100,7 @@ TEST(StaticAttachmentBake, PaletteRemapAndOverrideRoleAreApplied) {
   OneBoneGraph t;
   StaticAttachmentSpec spec{};
   spec.archetype = &make_simple_archetype();
-  spec.socket_bone_index = OneBoneGraph::kBoneA;
+  spec.socket_bone_index = OneBoneGraph::k_bone_a;
   spec.palette_role_remap[2] = 9;
   spec.override_color_role = 3;
   std::array<StaticAttachmentSpec, 1> attachments{spec};
@@ -124,7 +124,7 @@ TEST(StaticAttachmentBake, LocalOffsetTranslatesAttachmentVertices) {
   OneBoneGraph t;
   StaticAttachmentSpec spec{};
   spec.archetype = &make_simple_archetype();
-  spec.socket_bone_index = OneBoneGraph::kBoneA;
+  spec.socket_bone_index = OneBoneGraph::k_bone_a;
   spec.palette_role_remap[2] = 1;
   spec.override_color_role = 1;
   spec.local_offset.translate(10.0F, 0.0F, 0.0F);
@@ -198,7 +198,7 @@ TEST(StaticAttachmentBake, AttachmentsHashKeysCacheEntries) {
 
 TEST(StaticAttachmentBake, AttachmentsCoexistWithPrimitiveGraph) {
 
-  std::array<BoneDef, 1> bones{BoneDef{"A", kInvalidBone}};
+  std::array<BoneDef, 1> bones{BoneDef{"A", k_invalid_bone}};
   SkeletonTopology topology{std::span<const BoneDef>{bones}, {}};
   std::array<PrimitiveInstance, 1> prims{};
   prims[0].debug_name = "sphere";

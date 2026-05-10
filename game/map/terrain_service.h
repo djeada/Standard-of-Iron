@@ -27,7 +27,7 @@ class TerrainService {
 public:
   static auto instance() -> TerrainService &;
 
-  void initialize(const MapDefinition &mapDef);
+  void initialize(const MapDefinition &map_def);
 
   void clear();
 

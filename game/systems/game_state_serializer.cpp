@@ -42,17 +42,17 @@ auto GameStateSerializer::build_metadata(
 
   const auto &terrain_service = Game::Map::TerrainService::instance();
   if (const auto *height_map = terrain_service.get_height_map()) {
-    metadata["grid_width"] = height_map->getWidth();
-    metadata["grid_height"] = height_map->getHeight();
-    metadata["tile_size"] = height_map->getTileSize();
+    metadata["grid_width"] = height_map->get_width();
+    metadata["grid_height"] = height_map->get_height();
+    metadata["tile_size"] = height_map->get_tile_size();
   }
 
   if (camera != nullptr) {
     QJsonObject camera_obj;
     camera_obj["position"] =
-        App::JsonUtils::vec3ToJsonArray(camera->get_position());
+        App::JsonUtils::vec3_to_json_array(camera->get_position());
     camera_obj["target"] =
-        App::JsonUtils::vec3ToJsonArray(camera->get_target());
+        App::JsonUtils::vec3_to_json_array(camera->get_target());
     camera_obj["distance"] = camera->get_distance();
     camera_obj["pitch_deg"] = camera->get_pitch_deg();
     camera_obj["fov"] = camera->get_fov();
@@ -81,9 +81,9 @@ void GameStateSerializer::restore_camera_from_metadata(
   }
 
   const auto camera_obj = metadata.value("camera").toObject();
-  const QVector3D position = App::JsonUtils::jsonArrayToVec3(
+  const QVector3D position = App::JsonUtils::json_array_to_vec3(
       camera_obj.value("position"), camera->get_position());
-  const QVector3D target = App::JsonUtils::jsonArrayToVec3(
+  const QVector3D target = App::JsonUtils::json_array_to_vec3(
       camera_obj.value("target"), camera->get_target());
   camera->look_at(position, target, QVector3D(0.0F, 1.0F, 0.0F));
 

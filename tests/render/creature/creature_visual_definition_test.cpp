@@ -99,11 +99,11 @@ TEST(CreatureVisualDefinition, SharedMotionContractsDefaultSafely) {
 
   CreatureMotionOutput output{};
   EXPECT_EQ(output.locomotion_mode, CreatureLocomotionMode::Idle);
-  EXPECT_EQ(output.contacts.size(), kLargeCreatureLegCount);
+  EXPECT_EQ(output.contacts.size(), k_large_creature_leg_count);
 
   CreatureMotionState state{};
   EXPECT_FALSE(state.initialized);
-  EXPECT_EQ(state.planted_targets.size(), kLargeCreatureLegCount);
+  EXPECT_EQ(state.planted_targets.size(), k_large_creature_leg_count);
 }
 
 } // namespace

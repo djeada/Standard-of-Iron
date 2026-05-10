@@ -15,13 +15,13 @@
 namespace Render::Creature {
 
 struct ArchetypeDescriptor {
-  ArchetypeId id{kInvalidArchetype};
+  ArchetypeId id{k_invalid_archetype};
   std::string_view debug_name{};
 
   Render::Creature::Pipeline::CreatureKind species{
       Render::Creature::Pipeline::CreatureKind::Humanoid};
 
-  static constexpr std::uint16_t kUnmappedClip = 0xFFFFu;
+  static constexpr std::uint16_t k_unmapped_clip = 0xFFFFu;
   std::array<std::uint16_t, animation_state_count()> bpat_clip{};
   std::array<std::uint8_t, animation_state_count()> bpat_clip_variant_count{};
 
@@ -33,12 +33,12 @@ struct ArchetypeDescriptor {
                                               QVector3D *out,
                                               std::uint32_t base_count,
                                               std::size_t max_count);
-  static constexpr std::size_t kMaxExtraRoleColorFns = 4;
-  std::array<ExtraRoleColorsFn, kMaxExtraRoleColorFns> extra_role_color_fns{};
+  static constexpr std::size_t k_max_extra_role_color_fns = 4;
+  std::array<ExtraRoleColorsFn, k_max_extra_role_color_fns> extra_role_color_fns{};
   std::uint8_t extra_role_color_fn_count{0};
 
-  static constexpr std::size_t kMaxBakeAttachments = 16;
-  std::array<StaticAttachmentSpec, kMaxBakeAttachments> bake_attachments{};
+  static constexpr std::size_t k_max_bake_attachments = 16;
+  std::array<StaticAttachmentSpec, k_max_bake_attachments> bake_attachments{};
   std::uint8_t bake_attachment_count{0};
 
   [[nodiscard]] auto
@@ -82,10 +82,10 @@ public:
   [[nodiscard]] auto is_snapshot(ArchetypeId id,
                                  AnimationStateId state) const noexcept -> bool;
 
-  static constexpr ArchetypeId kHumanoidBase = 0;
-  static constexpr ArchetypeId kHorseBase = 1;
-  static constexpr ArchetypeId kElephantBase = 2;
-  static constexpr ArchetypeId kRiderBase = 3;
+  static constexpr ArchetypeId k_humanoid_base = 0;
+  static constexpr ArchetypeId k_horse_base = 1;
+  static constexpr ArchetypeId k_elephant_base = 2;
+  static constexpr ArchetypeId k_rider_base = 3;
 
   auto register_archetype(ArchetypeDescriptor desc) -> ArchetypeId;
 
@@ -102,8 +102,8 @@ private:
   ArchetypeRegistry();
   void seed_baseline();
 
-  static constexpr std::size_t kMaxArchetypes = 256;
-  std::array<ArchetypeDescriptor, kMaxArchetypes> m_table{};
+  static constexpr std::size_t k_max_archetypes = 256;
+  std::array<ArchetypeDescriptor, k_max_archetypes> m_table{};
   std::size_t m_count{0};
 };
 

@@ -405,14 +405,14 @@ void SwordRenderer::submit(const SwordRenderConfig &m_config,
 auto sword_fill_role_colors(const HumanoidPalette &palette,
                             const SwordRenderConfig &, QVector3D *out,
                             std::size_t max) -> std::uint32_t {
-  if (max < kSwordRoleCount) {
+  if (max < k_sword_role_count) {
     return 0U;
   }
   out[k_metal_slot] = palette.metal;
   out[k_metal_dark_slot] = palette.metal * 0.92F;
   out[k_fuller_slot] = palette.metal * 0.65F;
   out[k_leather_slot] = palette.leather;
-  return kSwordRoleCount;
+  return k_sword_role_count;
 }
 
 auto sword_make_static_attachment(const SwordRenderConfig &config,
@@ -444,12 +444,12 @@ auto sword_make_static_attachment(const SwordRenderConfig &config,
 
 auto scabbard_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
                                std::size_t max) -> std::uint32_t {
-  if (max < kScabbardRoleCount) {
+  if (max < k_scabbard_role_count) {
     return 0U;
   }
   out[k_scabbard_leather_slot] = palette.leather * 0.9F;
   out[k_scabbard_metal_slot] = palette.metal;
-  return kScabbardRoleCount;
+  return k_scabbard_role_count;
 }
 
 auto scabbard_make_static_attachment(

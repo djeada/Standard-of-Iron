@@ -15,7 +15,7 @@ namespace Render::Creature::Bpat {
 
 class BpatRegistry {
 public:
-  static constexpr std::uint32_t kInvalidClip = 0xFFFFu;
+  static constexpr std::uint32_t k_invalid_clip = 0xFFFFu;
 
   [[nodiscard]] static auto instance() noexcept -> BpatRegistry &;
 
@@ -51,7 +51,7 @@ private:
   [[nodiscard]] auto
   species_slot(std::uint32_t id) const noexcept -> const BpatBlob *;
 
-  std::array<BpatBlob, kSpeciesCount> m_blobs{};
+  std::array<BpatBlob, k_species_count> m_blobs{};
   std::string m_last_error{};
 };
 

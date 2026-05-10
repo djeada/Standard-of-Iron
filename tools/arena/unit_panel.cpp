@@ -20,8 +20,8 @@
 
 namespace {
 
-constexpr int kArenaLocalOwnerId = 1;
-constexpr int kArenaOpponentOwnerId = 2;
+constexpr int k_arena_local_owner_id = 1;
+constexpr int k_arena_opponent_owner_id = 2;
 
 auto prettify_identifier(const QString &value) -> QString {
   QString label = value;
@@ -56,8 +56,8 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
   m_render_rider_checkbox =
       new QCheckBox("Render Rider On Mounted Units", spawn_group);
 
-  m_owner_box->addItem(QStringLiteral("Local Player"), kArenaLocalOwnerId);
-  m_owner_box->addItem(QStringLiteral("Arena Opponent"), kArenaOpponentOwnerId);
+  m_owner_box->addItem(QStringLiteral("Local Player"), k_arena_local_owner_id);
+  m_owner_box->addItem(QStringLiteral("Arena Opponent"), k_arena_opponent_owner_id);
   m_spawn_count_box->setRange(1, 64);
   m_spawn_count_box->setValue(1);
   m_individuals_per_unit_box->setRange(0, 128);
@@ -259,7 +259,7 @@ void UnitPanel::set_selection_summary(const QString &summary) {
 
 auto UnitPanel::selected_owner_id() const -> int {
   return m_owner_box != nullptr ? m_owner_box->currentData().toInt()
-                                : kArenaLocalOwnerId;
+                                : k_arena_local_owner_id;
 }
 
 auto UnitPanel::selected_nation_id() const -> QString {

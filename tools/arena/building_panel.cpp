@@ -16,8 +16,8 @@
 
 namespace {
 
-constexpr int kArenaBuildingLocalOwnerId = 1;
-constexpr int kArenaBuildingOpponentOwnerId = 2;
+constexpr int k_arena_building_local_owner_id = 1;
+constexpr int k_arena_building_opponent_owner_id = 2;
 
 auto prettify_building_identifier(const QString &value) -> QString {
   QString label = value;
@@ -50,9 +50,9 @@ BuildingPanel::BuildingPanel(QWidget *parent) : QWidget(parent) {
   m_spawn_count_box = new QSpinBox(spawn_group);
 
   m_owner_box->addItem(QStringLiteral("Local Player"),
-                       kArenaBuildingLocalOwnerId);
+                       k_arena_building_local_owner_id);
   m_owner_box->addItem(QStringLiteral("Arena Opponent"),
-                       kArenaBuildingOpponentOwnerId);
+                       k_arena_building_opponent_owner_id);
   m_spawn_count_box->setRange(1, 16);
   m_spawn_count_box->setValue(1);
 
@@ -124,7 +124,7 @@ void BuildingPanel::set_selection_summary(const QString &summary) {
 
 auto BuildingPanel::selected_owner_id() const -> int {
   return m_owner_box != nullptr ? m_owner_box->currentData().toInt()
-                                : kArenaBuildingLocalOwnerId;
+                                : k_arena_building_local_owner_id;
 }
 
 auto BuildingPanel::selected_nation_id() const -> QString {

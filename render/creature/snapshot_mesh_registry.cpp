@@ -9,9 +9,9 @@ namespace Render::Creature::Snapshot {
 
 namespace {
 
-constexpr std::array<std::pair<std::uint32_t, std::string_view>, 2> kAssets{{
-    {Render::Creature::Bpat::kSpeciesHorse, "horse_minimal.bpsm"},
-    {Render::Creature::Bpat::kSpeciesElephant, "elephant_minimal.bpsm"},
+constexpr std::array<std::pair<std::uint32_t, std::string_view>, 2> k_assets{{
+    {Render::Creature::Bpat::k_species_horse, "horse_minimal.bpsm"},
+    {Render::Creature::Bpat::k_species_elephant, "elephant_minimal.bpsm"},
 }};
 
 auto lod_slot_index(Render::Creature::CreatureLOD lod) -> std::size_t {
@@ -45,7 +45,7 @@ auto find_existing_asset_root(const std::string &asset_root) -> std::string {
   };
 
   for (const auto &candidate : candidates) {
-    if (fs::exists(candidate / kAssets[0].second)) {
+    if (fs::exists(candidate / k_assets[0].second)) {
       return fs::absolute(candidate).lexically_normal().string();
     }
   }
@@ -63,7 +63,7 @@ auto SnapshotMeshRegistry::slot(std::uint32_t species_id,
                                 Render::Creature::CreatureLOD lod) noexcept
     -> SnapshotMeshBlob * {
   auto const lod_slot = lod_slot_index(lod);
-  if (species_id >= Render::Creature::Bpat::kSpeciesCount || lod_slot >= 2U) {
+  if (species_id >= Render::Creature::Bpat::k_species_count || lod_slot >= 2U) {
     return nullptr;
   }
   return &m_blobs[(species_id * 2U) + lod_slot];
@@ -73,7 +73,7 @@ auto SnapshotMeshRegistry::slot(std::uint32_t species_id,
                                 Render::Creature::CreatureLOD lod)
     const noexcept -> const SnapshotMeshBlob * {
   auto const lod_slot = lod_slot_index(lod);
-  if (species_id >= Render::Creature::Bpat::kSpeciesCount || lod_slot >= 2U) {
+  if (species_id >= Render::Creature::Bpat::k_species_count || lod_slot >= 2U) {
     return nullptr;
   }
   return &m_blobs[(species_id * 2U) + lod_slot];
@@ -105,7 +105,7 @@ auto SnapshotMeshRegistry::load_all(const std::string &asset_root)
     -> std::size_t {
   const std::string resolved_root = find_existing_asset_root(asset_root);
   std::size_t loaded = 0U;
-  for (auto const &[species_id, file_name] : kAssets) {
+  for (auto const &[species_id, file_name] : k_assets) {
     std::string path = resolved_root;
     if (!path.empty() && path.back() != '/' && path.back() != '\\') {
       path += '/';

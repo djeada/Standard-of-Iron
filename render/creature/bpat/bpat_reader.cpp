@@ -40,15 +40,15 @@ bool BpatBlob::validate() {
     return false;
   }
   auto const *header = reinterpret_cast<const BpatHeader *>(m_bytes.data());
-  if (std::memcmp(header->magic, kMagic.data(), kMagic.size()) != 0) {
+  if (std::memcmp(header->magic, k_magic.data(), k_magic.size()) != 0) {
     m_last_error = "magic mismatch";
     return false;
   }
-  if (header->version != kVersion) {
+  if (header->version != k_version) {
     m_last_error = "unsupported version";
     return false;
   }
-  if (header->species_id > kMaxSpeciesId) {
+  if (header->species_id > k_max_species_id) {
     m_last_error = "unknown species_id";
     return false;
   }
@@ -84,7 +84,7 @@ bool BpatBlob::validate() {
   }
 
   std::uint64_t const palette_bytes = std::uint64_t{header->frame_total} *
-                                      header->bone_count * kMatrixFloats *
+                                      header->bone_count * k_matrix_floats *
                                       sizeof(float);
   if (!in_bounds(header->palette_data_offset, palette_bytes)) {
     m_last_error = "palette data out of bounds";
@@ -94,7 +94,7 @@ bool BpatBlob::validate() {
   std::uint64_t const socket_bytes =
       header->socket_count > 0U
           ? std::uint64_t{header->frame_total} * header->socket_count *
-                kSocketMatrixFloats * sizeof(float)
+                k_socket_matrix_floats * sizeof(float)
           : 0U;
   std::uint64_t const socket_data_offset =
       header->socket_count > 0U ? header->palette_data_offset + palette_bytes
@@ -223,8 +223,8 @@ auto BpatBlob::palette_matrix(std::uint32_t global_frame_index,
   std::uint64_t const offset =
       ((std::uint64_t{global_frame_index} * m_header->bone_count) +
        bone_index) *
-      kMatrixFloats;
-  return std::span<const float>(m_palette_data + offset, kMatrixFloats);
+      k_matrix_floats;
+  return std::span<const float>(m_palette_data + offset, k_matrix_floats);
 }
 
 auto BpatBlob::frame_palette_view(std::uint32_t global_frame_index) const
@@ -250,8 +250,8 @@ auto BpatBlob::socket_matrix(std::uint32_t global_frame_index,
   std::uint64_t const offset =
       ((std::uint64_t{global_frame_index} * m_header->socket_count) +
        socket_index) *
-      kSocketMatrixFloats;
-  return std::span<const float>(m_socket_data + offset, kSocketMatrixFloats);
+      k_socket_matrix_floats;
+  return std::span<const float>(m_socket_data + offset, k_socket_matrix_floats);
 }
 
 void BpatBlob::decode_palette_cache() {
@@ -265,7 +265,7 @@ void BpatBlob::decode_palette_cache() {
   }
   m_decoded_palette.assign(total, QMatrix4x4{});
   for (std::size_t i = 0; i < total; ++i) {
-    m_decoded_palette[i] = QMatrix4x4(m_palette_data + i * kMatrixFloats);
+    m_decoded_palette[i] = QMatrix4x4(m_palette_data + i * k_matrix_floats);
   }
 }
 

@@ -124,35 +124,35 @@ public:
   }
 
   [[nodiscard]] auto humanoid_full_detail_distance() const noexcept -> float {
-    return kBaseHumanoidFull * m_lod_multipliers.humanoid_full;
+    return k_base_humanoid_full * m_lod_multipliers.humanoid_full;
   }
   [[nodiscard]] auto
   humanoid_minimal_detail_distance() const noexcept -> float {
-    return kBaseHumanoidMinimal * m_lod_multipliers.humanoid_minimal;
+    return k_base_humanoid_minimal * m_lod_multipliers.humanoid_minimal;
   }
   [[nodiscard]] auto humanoid_billboard_distance() const noexcept -> float {
-    return kBaseHumanoidBillboard * m_lod_multipliers.humanoid_billboard;
+    return k_base_humanoid_billboard * m_lod_multipliers.humanoid_billboard;
   }
 
   [[nodiscard]] auto horse_full_detail_distance() const noexcept -> float {
-    return kBaseHorseFull * m_lod_multipliers.horse_full;
+    return k_base_horse_full * m_lod_multipliers.horse_full;
   }
   [[nodiscard]] auto horse_minimal_detail_distance() const noexcept -> float {
-    return kBaseHorseMinimal * m_lod_multipliers.horse_minimal;
+    return k_base_horse_minimal * m_lod_multipliers.horse_minimal;
   }
   [[nodiscard]] auto horse_billboard_distance() const noexcept -> float {
-    return kBaseHorseBillboard * m_lod_multipliers.horse_billboard;
+    return k_base_horse_billboard * m_lod_multipliers.horse_billboard;
   }
 
   [[nodiscard]] auto elephant_full_detail_distance() const noexcept -> float {
-    return kBaseElephantFull * m_lod_multipliers.elephant_full;
+    return k_base_elephant_full * m_lod_multipliers.elephant_full;
   }
   [[nodiscard]] auto
   elephant_minimal_detail_distance() const noexcept -> float {
-    return kBaseElephantMinimal * m_lod_multipliers.elephant_minimal;
+    return k_base_elephant_minimal * m_lod_multipliers.elephant_minimal;
   }
   [[nodiscard]] auto elephant_billboard_distance() const noexcept -> float {
-    return kBaseElephantBillboard * m_lod_multipliers.elephant_billboard;
+    return k_base_elephant_billboard * m_lod_multipliers.elephant_billboard;
   }
 
   [[nodiscard]] auto shadow_max_distance() const noexcept -> float {
@@ -284,17 +284,17 @@ private:
     }
   }
 
-  static constexpr float kBaseHumanoidFull = 10.0F;
-  static constexpr float kBaseHumanoidMinimal = 70.0F;
-  static constexpr float kBaseHumanoidBillboard = 80.0F;
+  static constexpr float k_base_humanoid_full = 10.0F;
+  static constexpr float k_base_humanoid_minimal = 70.0F;
+  static constexpr float k_base_humanoid_billboard = 80.0F;
 
-  static constexpr float kBaseHorseFull = 20.0F;
-  static constexpr float kBaseHorseMinimal = 110.0F;
-  static constexpr float kBaseHorseBillboard = 100.0F;
+  static constexpr float k_base_horse_full = 20.0F;
+  static constexpr float k_base_horse_minimal = 110.0F;
+  static constexpr float k_base_horse_billboard = 100.0F;
 
-  static constexpr float kBaseElephantFull = 35.0F;
-  static constexpr float kBaseElephantMinimal = 150.0F;
-  static constexpr float kBaseElephantBillboard = 140.0F;
+  static constexpr float k_base_elephant_full = 35.0F;
+  static constexpr float k_base_elephant_minimal = 150.0F;
+  static constexpr float k_base_elephant_billboard = 140.0F;
 
   GraphicsQuality m_quality{GraphicsQuality::Ultra};
   LODMultipliers m_lod_multipliers{};

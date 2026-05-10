@@ -52,77 +52,77 @@ enum Anchor : AnchorId {
 };
 
 namespace C {
-inline constexpr PackedColor kLimestone{245, 239, 224, 255};
-inline constexpr PackedColor kLimestoneShade{224, 217, 199, 255};
-inline constexpr PackedColor kLimestoneDark{204, 194, 178, 255};
-inline constexpr PackedColor kMarble{250, 247, 242, 255};
-inline constexpr PackedColor kCedarDark{97, 66, 41, 255};
-inline constexpr PackedColor kTerracotta{209, 158, 115, 255};
-inline constexpr PackedColor kTerracottaDark{173, 122, 82, 255};
-inline constexpr PackedColor kBlueAccent{71, 122, 173, 255};
-inline constexpr PackedColor kBlueLight{102, 153, 204, 255};
+inline constexpr PackedColor k_limestone{245, 239, 224, 255};
+inline constexpr PackedColor k_limestone_shade{224, 217, 199, 255};
+inline constexpr PackedColor k_limestone_dark{204, 194, 178, 255};
+inline constexpr PackedColor k_marble{250, 247, 242, 255};
+inline constexpr PackedColor k_cedar_dark{97, 66, 41, 255};
+inline constexpr PackedColor k_terracotta{209, 158, 115, 255};
+inline constexpr PackedColor k_terracotta_dark{173, 122, 82, 255};
+inline constexpr PackedColor k_blue_accent{71, 122, 173, 255};
+inline constexpr PackedColor k_blue_light{102, 153, 204, 255};
 } // namespace C
 
-inline constexpr PartDef kParts[] = {
+inline constexpr PartDef k_parts[] = {
 
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kLimestoneDark,
-     Platform_BaseLow, Platform_BaseHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_limestone_dark,
+     Platform_BaseLow, Platform_BaseHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F,
      1.0F, 1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kLimestone,
-     Platform_TopLow, Platform_TopHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_limestone,
+     Platform_TopLow, Platform_TopHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F,
      1.0F},
 
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kLimestoneShade,
-     Court_StoneLow, Court_StoneHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_limestone_shade,
+     Court_StoneLow, Court_StoneHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F,
      1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kBlueLight,
-     Court_PoolLow, Court_PoolHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_blue_light,
+     Court_PoolLow, Court_PoolHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F,
      1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kBlueAccent,
-     Court_PoolTrimSLow, Court_PoolTrimSHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_blue_accent,
+     Court_PoolTrimSLow, Court_PoolTrimSHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F,
      1.0F, 1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kBlueAccent,
-     Court_PoolTrimNLow, Court_PoolTrimNHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_blue_accent,
+     Court_PoolTrimNLow, Court_PoolTrimNHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F,
      1.0F, 1.0F},
-    {PartKind::Cylinder, 0, 0xFFU, PaletteSlot::Literal, C::kMarble,
-     Court_PillarBot, Court_PillarTop, kInvalidScalar, 0.06F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Cylinder, 0, 0xFFU, PaletteSlot::Literal, C::k_marble,
+     Court_PillarBot, Court_PillarTop, k_invalid_scalar, 0.06F, 1.0F, 1.0F, 1.0F,
      1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kBlueAccent,
-     Court_PillarCapLow, Court_PillarCapHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_blue_accent,
+     Court_PillarCapLow, Court_PillarCapHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F,
      1.0F, 1.0F},
 
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kLimestone, Wall_BackLow,
-     Wall_BackHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kLimestone, Wall_LeftLow,
-     Wall_LeftHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kLimestone,
-     Wall_RightLow, Wall_RightHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_limestone, Wall_BackLow,
+     Wall_BackHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F},
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_limestone, Wall_LeftLow,
+     Wall_LeftHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F},
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_limestone,
+     Wall_RightLow, Wall_RightHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F,
      1.0F},
 
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kCedarDark,
-     Door_LDoorLow, Door_LDoorHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_cedar_dark,
+     Door_LDoorLow, Door_LDoorHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F,
      1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kBlueAccent,
-     Door_LLintelLow, Door_LLintelHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_blue_accent,
+     Door_LLintelLow, Door_LLintelHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F,
      1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kCedarDark,
-     Door_RDoorLow, Door_RDoorHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_cedar_dark,
+     Door_RDoorLow, Door_RDoorHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F,
      1.0F},
-    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::kBlueAccent,
-     Door_RLintelLow, Door_RLintelHigh, kInvalidScalar, 1.0F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Box, 0, 0xFFU, PaletteSlot::Literal, C::k_blue_accent,
+     Door_RLintelLow, Door_RLintelHigh, k_invalid_scalar, 1.0F, 1.0F, 1.0F, 1.0F,
      1.0F},
 
-    {PartKind::Cylinder, 0, 0xFFU, PaletteSlot::Literal, C::kTerracottaDark,
-     Goods_Amp1Bot, Goods_Amp1Top, kInvalidScalar, 0.08F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Cylinder, 0, 0xFFU, PaletteSlot::Literal, C::k_terracotta_dark,
+     Goods_Amp1Bot, Goods_Amp1Top, k_invalid_scalar, 0.08F, 1.0F, 1.0F, 1.0F,
      1.0F},
-    {PartKind::Cylinder, 0, 0xFFU, PaletteSlot::Literal, C::kTerracotta,
-     Goods_Amp2Bot, Goods_Amp2Top, kInvalidScalar, 0.07F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Cylinder, 0, 0xFFU, PaletteSlot::Literal, C::k_terracotta,
+     Goods_Amp2Bot, Goods_Amp2Top, k_invalid_scalar, 0.07F, 1.0F, 1.0F, 1.0F,
      1.0F},
-    {PartKind::Cylinder, 0, 0xFFU, PaletteSlot::Literal, C::kBlueAccent,
-     Goods_Amp3Bot, Goods_Amp3Top, kInvalidScalar, 0.06F, 1.0F, 1.0F, 1.0F,
+    {PartKind::Cylinder, 0, 0xFFU, PaletteSlot::Literal, C::k_blue_accent,
+     Goods_Amp3Bot, Goods_Amp3Top, k_invalid_scalar, 0.06F, 1.0F, 1.0F, 1.0F,
      1.0F},
 };
 
-inline constexpr RigDef kRig = make_rig("barracks_roman_structure", kParts);
+inline constexpr RigDef k_rig = make_rig("barracks_roman_structure", k_parts);
 
 } // namespace Render::RigDSL::Barracks

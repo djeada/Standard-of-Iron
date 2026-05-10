@@ -21,36 +21,36 @@ using namespace Render::GL::ComponentCount;
 using namespace Render::GL::Geometry;
 
 VegetationPipeline::VegetationPipeline(ShaderCache *shader_cache)
-    : m_shaderCache(shader_cache) {}
+    : m_shader_cache(shader_cache) {}
 
 VegetationPipeline::~VegetationPipeline() { shutdown(); }
 
 auto VegetationPipeline::initialize() -> bool {
   initializeOpenGLFunctions();
 
-  if (m_shaderCache == nullptr) {
+  if (m_shader_cache == nullptr) {
     return false;
   }
 
-  m_stoneShader = m_shaderCache->get(QStringLiteral("stone_instanced"));
-  m_plantShader = m_shaderCache->get(QStringLiteral("plant_instanced"));
-  m_pineShader = m_shaderCache->get(QStringLiteral("pine_instanced"));
-  m_oliveShader = m_shaderCache->get(QStringLiteral("olive_instanced"));
-  m_firecampShader = m_shaderCache->get(QStringLiteral("firecamp"));
+  m_stone_shader = m_shader_cache->get(QStringLiteral("stone_instanced"));
+  m_plant_shader = m_shader_cache->get(QStringLiteral("plant_instanced"));
+  m_pine_shader = m_shader_cache->get(QStringLiteral("pine_instanced"));
+  m_olive_shader = m_shader_cache->get(QStringLiteral("olive_instanced"));
+  m_firecamp_shader = m_shader_cache->get(QStringLiteral("firecamp"));
 
-  if (m_stoneShader == nullptr) {
+  if (m_stone_shader == nullptr) {
     qWarning() << "VegetationPipeline: stone shader missing";
   }
-  if (m_plantShader == nullptr) {
+  if (m_plant_shader == nullptr) {
     qWarning() << "VegetationPipeline: plant shader missing";
   }
-  if (m_pineShader == nullptr) {
+  if (m_pine_shader == nullptr) {
     qWarning() << "VegetationPipeline: pine shader missing";
   }
-  if (m_oliveShader == nullptr) {
+  if (m_olive_shader == nullptr) {
     qWarning() << "VegetationPipeline: olive shader missing";
   }
-  if (m_firecampShader == nullptr) {
+  if (m_firecamp_shader == nullptr) {
     qWarning() << "VegetationPipeline: firecamp shader missing";
   }
 
@@ -75,58 +75,58 @@ void VegetationPipeline::shutdown() {
 }
 
 void VegetationPipeline::cache_uniforms() {
-  if (m_stoneShader != nullptr) {
-    m_stoneUniforms.view_proj = m_stoneShader->uniform_handle("uViewProj");
-    m_stoneUniforms.light_direction =
-        m_stoneShader->uniform_handle("uLightDirection");
+  if (m_stone_shader != nullptr) {
+    m_stone_uniforms.view_proj = m_stone_shader->uniform_handle("uViewProj");
+    m_stone_uniforms.light_direction =
+        m_stone_shader->uniform_handle("uLightDirection");
   }
 
-  if (m_plantShader != nullptr) {
-    m_plantUniforms.view_proj = m_plantShader->uniform_handle("uViewProj");
-    m_plantUniforms.time = m_plantShader->uniform_handle("uTime");
-    m_plantUniforms.wind_strength =
-        m_plantShader->uniform_handle("uWindStrength");
-    m_plantUniforms.wind_speed = m_plantShader->uniform_handle("uWindSpeed");
-    m_plantUniforms.light_direction =
-        m_plantShader->uniform_handle("uLightDirection");
+  if (m_plant_shader != nullptr) {
+    m_plant_uniforms.view_proj = m_plant_shader->uniform_handle("uViewProj");
+    m_plant_uniforms.time = m_plant_shader->uniform_handle("uTime");
+    m_plant_uniforms.wind_strength =
+        m_plant_shader->uniform_handle("uWindStrength");
+    m_plant_uniforms.wind_speed = m_plant_shader->uniform_handle("uWindSpeed");
+    m_plant_uniforms.light_direction =
+        m_plant_shader->uniform_handle("uLightDirection");
   }
 
-  if (m_pineShader != nullptr) {
-    m_pineUniforms.view_proj = m_pineShader->uniform_handle("uViewProj");
-    m_pineUniforms.time = m_pineShader->uniform_handle("uTime");
-    m_pineUniforms.wind_strength =
-        m_pineShader->uniform_handle("uWindStrength");
-    m_pineUniforms.wind_speed = m_pineShader->uniform_handle("uWindSpeed");
-    m_pineUniforms.light_direction =
-        m_pineShader->uniform_handle("uLightDirection");
+  if (m_pine_shader != nullptr) {
+    m_pine_uniforms.view_proj = m_pine_shader->uniform_handle("uViewProj");
+    m_pine_uniforms.time = m_pine_shader->uniform_handle("uTime");
+    m_pine_uniforms.wind_strength =
+        m_pine_shader->uniform_handle("uWindStrength");
+    m_pine_uniforms.wind_speed = m_pine_shader->uniform_handle("uWindSpeed");
+    m_pine_uniforms.light_direction =
+        m_pine_shader->uniform_handle("uLightDirection");
   }
 
-  if (m_oliveShader != nullptr) {
-    m_oliveUniforms.view_proj = m_oliveShader->uniform_handle("uViewProj");
-    m_oliveUniforms.time = m_oliveShader->uniform_handle("uTime");
-    m_oliveUniforms.wind_strength =
-        m_oliveShader->uniform_handle("uWindStrength");
-    m_oliveUniforms.wind_speed = m_oliveShader->uniform_handle("uWindSpeed");
-    m_oliveUniforms.light_direction =
-        m_oliveShader->uniform_handle("uLightDirection");
+  if (m_olive_shader != nullptr) {
+    m_olive_uniforms.view_proj = m_olive_shader->uniform_handle("uViewProj");
+    m_olive_uniforms.time = m_olive_shader->uniform_handle("uTime");
+    m_olive_uniforms.wind_strength =
+        m_olive_shader->uniform_handle("uWindStrength");
+    m_olive_uniforms.wind_speed = m_olive_shader->uniform_handle("uWindSpeed");
+    m_olive_uniforms.light_direction =
+        m_olive_shader->uniform_handle("uLightDirection");
   }
 
-  if (m_firecampShader != nullptr) {
-    m_firecampUniforms.view_proj =
-        m_firecampShader->uniform_handle("u_viewProj");
-    m_firecampUniforms.time = m_firecampShader->uniform_handle("u_time");
-    m_firecampUniforms.flicker_speed =
-        m_firecampShader->uniform_handle("u_flickerSpeed");
-    m_firecampUniforms.flicker_amount =
-        m_firecampShader->uniform_handle("u_flickerAmount");
-    m_firecampUniforms.glow_strength =
-        m_firecampShader->uniform_handle("u_glowStrength");
-    m_firecampUniforms.fire_texture =
-        m_firecampShader->uniform_handle("fire_texture");
-    m_firecampUniforms.camera_right =
-        m_firecampShader->uniform_handle("u_cameraRight");
-    m_firecampUniforms.camera_forward =
-        m_firecampShader->uniform_handle("u_cameraForward");
+  if (m_firecamp_shader != nullptr) {
+    m_firecamp_uniforms.view_proj =
+        m_firecamp_shader->uniform_handle("u_viewProj");
+    m_firecamp_uniforms.time = m_firecamp_shader->uniform_handle("u_time");
+    m_firecamp_uniforms.flicker_speed =
+        m_firecamp_shader->uniform_handle("u_flickerSpeed");
+    m_firecamp_uniforms.flicker_amount =
+        m_firecamp_shader->uniform_handle("u_flickerAmount");
+    m_firecamp_uniforms.glow_strength =
+        m_firecamp_shader->uniform_handle("u_glowStrength");
+    m_firecamp_uniforms.fire_texture =
+        m_firecamp_shader->uniform_handle("fire_texture");
+    m_firecamp_uniforms.camera_right =
+        m_firecamp_shader->uniform_handle("u_cameraRight");
+    m_firecamp_uniforms.camera_forward =
+        m_firecamp_shader->uniform_handle("u_cameraForward");
   }
 }
 
@@ -170,21 +170,21 @@ void VegetationPipeline::initialize_stone_pipeline() {
       0,  1,  2,  2,  3,  0,  4,  5,  6,  6,  7,  4,  8,  9,  10, 10, 11, 8,
       12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20};
 
-  glGenVertexArrays(1, &m_stoneVao);
-  glBindVertexArray(m_stoneVao);
+  glGenVertexArrays(1, &m_stone_vao);
+  glBindVertexArray(m_stone_vao);
 
-  glGenBuffers(1, &m_stoneVertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_stoneVertexBuffer);
+  glGenBuffers(1, &m_stone_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_stone_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(stone_vertices), stone_vertices,
                GL_STATIC_DRAW);
-  m_stoneVertexCount = CubeVertexCount;
+  m_stone_vertex_count = CubeVertexCount;
 
-  glGenBuffers(1, &m_stoneIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_stoneIndexBuffer);
+  glGenBuffers(1, &m_stone_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_stone_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(stone_indices), stone_indices,
                GL_STATIC_DRAW);
   constexpr int k_stone_index_count = 36;
-  m_stoneIndexCount = k_stone_index_count;
+  m_stone_index_count = k_stone_index_count;
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(
@@ -208,29 +208,29 @@ void VegetationPipeline::initialize_stone_pipeline() {
 void VegetationPipeline::shutdown_stone_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
-    m_stoneVao = 0;
-    m_stoneVertexBuffer = 0;
-    m_stoneIndexBuffer = 0;
-    m_stoneVertexCount = 0;
-    m_stoneIndexCount = 0;
+    m_stone_vao = 0;
+    m_stone_vertex_buffer = 0;
+    m_stone_index_buffer = 0;
+    m_stone_vertex_count = 0;
+    m_stone_index_count = 0;
     return;
   }
 
   initializeOpenGLFunctions();
-  if (m_stoneIndexBuffer != 0U) {
-    glDeleteBuffers(1, &m_stoneIndexBuffer);
-    m_stoneIndexBuffer = 0;
+  if (m_stone_index_buffer != 0U) {
+    glDeleteBuffers(1, &m_stone_index_buffer);
+    m_stone_index_buffer = 0;
   }
-  if (m_stoneVertexBuffer != 0U) {
-    glDeleteBuffers(1, &m_stoneVertexBuffer);
-    m_stoneVertexBuffer = 0;
+  if (m_stone_vertex_buffer != 0U) {
+    glDeleteBuffers(1, &m_stone_vertex_buffer);
+    m_stone_vertex_buffer = 0;
   }
-  if (m_stoneVao != 0U) {
-    glDeleteVertexArrays(1, &m_stoneVao);
-    m_stoneVao = 0;
+  if (m_stone_vao != 0U) {
+    glDeleteVertexArrays(1, &m_stone_vao);
+    m_stone_vao = 0;
   }
-  m_stoneVertexCount = 0;
-  m_stoneIndexCount = 0;
+  m_stone_vertex_count = 0;
+  m_stone_index_count = 0;
 }
 
 void VegetationPipeline::initialize_plant_pipeline() {
@@ -267,14 +267,14 @@ void VegetationPipeline::initialize_plant_pipeline() {
       8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15,
   };
 
-  glGenVertexArrays(1, &m_plantVao);
-  glBindVertexArray(m_plantVao);
+  glGenVertexArrays(1, &m_plant_vao);
+  glBindVertexArray(m_plant_vao);
 
-  glGenBuffers(1, &m_plantVertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_plantVertexBuffer);
+  glGenBuffers(1, &m_plant_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_plant_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(plant_vertices), plant_vertices,
                GL_STATIC_DRAW);
-  m_plantVertexCount = PlantCrossQuadVertexCount;
+  m_plant_vertex_count = PlantCrossQuadVertexCount;
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(
@@ -291,11 +291,11 @@ void VegetationPipeline::initialize_plant_pipeline() {
       TexCoord, Vec3, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
       reinterpret_cast<void *>(offsetof(PlantVertex, normal)));
 
-  glGenBuffers(1, &m_plantIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_plantIndexBuffer);
+  glGenBuffers(1, &m_plant_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_plant_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(plant_indices), plant_indices,
                GL_STATIC_DRAW);
-  m_plantIndexCount = PlantCrossQuadIndexCount;
+  m_plant_index_count = PlantCrossQuadIndexCount;
 
   glEnableVertexAttribArray(InstancePosition);
   glVertexAttribDivisor(InstancePosition, 1);
@@ -312,29 +312,29 @@ void VegetationPipeline::initialize_plant_pipeline() {
 void VegetationPipeline::shutdown_plant_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
-    m_plantVao = 0;
-    m_plantVertexBuffer = 0;
-    m_plantIndexBuffer = 0;
-    m_plantVertexCount = 0;
-    m_plantIndexCount = 0;
+    m_plant_vao = 0;
+    m_plant_vertex_buffer = 0;
+    m_plant_index_buffer = 0;
+    m_plant_vertex_count = 0;
+    m_plant_index_count = 0;
     return;
   }
 
   initializeOpenGLFunctions();
-  if (m_plantIndexBuffer != 0U) {
-    glDeleteBuffers(1, &m_plantIndexBuffer);
-    m_plantIndexBuffer = 0;
+  if (m_plant_index_buffer != 0U) {
+    glDeleteBuffers(1, &m_plant_index_buffer);
+    m_plant_index_buffer = 0;
   }
-  if (m_plantVertexBuffer != 0U) {
-    glDeleteBuffers(1, &m_plantVertexBuffer);
-    m_plantVertexBuffer = 0;
+  if (m_plant_vertex_buffer != 0U) {
+    glDeleteBuffers(1, &m_plant_vertex_buffer);
+    m_plant_vertex_buffer = 0;
   }
-  if (m_plantVao != 0U) {
-    glDeleteVertexArrays(1, &m_plantVao);
-    m_plantVao = 0;
+  if (m_plant_vao != 0U) {
+    glDeleteVertexArrays(1, &m_plant_vao);
+    m_plant_vao = 0;
   }
-  m_plantVertexCount = 0;
-  m_plantIndexCount = 0;
+  m_plant_vertex_count = 0;
+  m_plant_index_count = 0;
 }
 
 void VegetationPipeline::initialize_pine_pipeline() {
@@ -427,15 +427,15 @@ void VegetationPipeline::initialize_pine_pipeline() {
     indices.push_back(apex_index);
   }
 
-  glGenVertexArrays(1, &m_pineVao);
-  glBindVertexArray(m_pineVao);
+  glGenVertexArrays(1, &m_pine_vao);
+  glBindVertexArray(m_pine_vao);
 
-  glGenBuffers(1, &m_pineVertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_pineVertexBuffer);
+  glGenBuffers(1, &m_pine_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_pine_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(PineVertex)),
                vertices.data(), GL_STATIC_DRAW);
-  m_pineVertexCount = static_cast<GLsizei>(vertices.size());
+  m_pine_vertex_count = static_cast<GLsizei>(vertices.size());
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(
@@ -451,12 +451,12 @@ void VegetationPipeline::initialize_pine_pipeline() {
   glVertexAttribPointer(TexCoord, Vec3, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
                         reinterpret_cast<void *>(offsetof(PineVertex, normal)));
 
-  glGenBuffers(1, &m_pineIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_pineIndexBuffer);
+  glGenBuffers(1, &m_pine_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_pine_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
                indices.data(), GL_STATIC_DRAW);
-  m_pineIndexCount = static_cast<GLsizei>(indices.size());
+  m_pine_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(InstancePosition);
   glVertexAttribDivisor(InstancePosition, 1);
@@ -473,29 +473,29 @@ void VegetationPipeline::initialize_pine_pipeline() {
 void VegetationPipeline::shutdown_pine_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
-    m_pineVao = 0;
-    m_pineVertexBuffer = 0;
-    m_pineIndexBuffer = 0;
-    m_pineVertexCount = 0;
-    m_pineIndexCount = 0;
+    m_pine_vao = 0;
+    m_pine_vertex_buffer = 0;
+    m_pine_index_buffer = 0;
+    m_pine_vertex_count = 0;
+    m_pine_index_count = 0;
     return;
   }
 
   initializeOpenGLFunctions();
-  if (m_pineIndexBuffer != 0U) {
-    glDeleteBuffers(1, &m_pineIndexBuffer);
-    m_pineIndexBuffer = 0;
+  if (m_pine_index_buffer != 0U) {
+    glDeleteBuffers(1, &m_pine_index_buffer);
+    m_pine_index_buffer = 0;
   }
-  if (m_pineVertexBuffer != 0U) {
-    glDeleteBuffers(1, &m_pineVertexBuffer);
-    m_pineVertexBuffer = 0;
+  if (m_pine_vertex_buffer != 0U) {
+    glDeleteBuffers(1, &m_pine_vertex_buffer);
+    m_pine_vertex_buffer = 0;
   }
-  if (m_pineVao != 0U) {
-    glDeleteVertexArrays(1, &m_pineVao);
-    m_pineVao = 0;
+  if (m_pine_vao != 0U) {
+    glDeleteVertexArrays(1, &m_pine_vao);
+    m_pine_vao = 0;
   }
-  m_pineVertexCount = 0;
-  m_pineIndexCount = 0;
+  m_pine_vertex_count = 0;
+  m_pine_index_count = 0;
 }
 
 void VegetationPipeline::initialize_olive_pipeline() {
@@ -610,20 +610,20 @@ void VegetationPipeline::initialize_olive_pipeline() {
   add_branch(0.4F, -0.9F, 0.16F, 0.28F, 0.020F, 0.16F, 0.22F);
   add_branch(-0.5F, -0.7F, 0.14F, 0.34F, 0.024F, 0.19F, 0.19F);
 
-  m_oliveVertexCount = static_cast<GLsizei>(vertices.size());
-  m_oliveIndexCount = static_cast<GLsizei>(indices.size());
+  m_olive_vertex_count = static_cast<GLsizei>(vertices.size());
+  m_olive_index_count = static_cast<GLsizei>(indices.size());
 
-  glGenVertexArrays(1, &m_oliveVao);
-  glBindVertexArray(m_oliveVao);
+  glGenVertexArrays(1, &m_olive_vao);
+  glBindVertexArray(m_olive_vao);
 
-  glGenBuffers(1, &m_oliveVertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_oliveVertexBuffer);
+  glGenBuffers(1, &m_olive_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_olive_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(OliveVertex)),
                vertices.data(), GL_STATIC_DRAW);
 
-  glGenBuffers(1, &m_oliveIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_oliveIndexBuffer);
+  glGenBuffers(1, &m_olive_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_olive_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
                indices.data(), GL_STATIC_DRAW);
@@ -658,29 +658,29 @@ void VegetationPipeline::initialize_olive_pipeline() {
 void VegetationPipeline::shutdown_olive_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
-    m_oliveVao = 0;
-    m_oliveVertexBuffer = 0;
-    m_oliveIndexBuffer = 0;
-    m_oliveVertexCount = 0;
-    m_oliveIndexCount = 0;
+    m_olive_vao = 0;
+    m_olive_vertex_buffer = 0;
+    m_olive_index_buffer = 0;
+    m_olive_vertex_count = 0;
+    m_olive_index_count = 0;
     return;
   }
 
   initializeOpenGLFunctions();
-  if (m_oliveIndexBuffer != 0U) {
-    glDeleteBuffers(1, &m_oliveIndexBuffer);
-    m_oliveIndexBuffer = 0;
+  if (m_olive_index_buffer != 0U) {
+    glDeleteBuffers(1, &m_olive_index_buffer);
+    m_olive_index_buffer = 0;
   }
-  if (m_oliveVertexBuffer != 0U) {
-    glDeleteBuffers(1, &m_oliveVertexBuffer);
-    m_oliveVertexBuffer = 0;
+  if (m_olive_vertex_buffer != 0U) {
+    glDeleteBuffers(1, &m_olive_vertex_buffer);
+    m_olive_vertex_buffer = 0;
   }
-  if (m_oliveVao != 0U) {
-    glDeleteVertexArrays(1, &m_oliveVao);
-    m_oliveVao = 0;
+  if (m_olive_vao != 0U) {
+    glDeleteVertexArrays(1, &m_olive_vao);
+    m_olive_vao = 0;
   }
-  m_oliveVertexCount = 0;
-  m_oliveIndexCount = 0;
+  m_olive_vertex_count = 0;
+  m_olive_index_count = 0;
 }
 
 void VegetationPipeline::initialize_fire_camp_pipeline() {
@@ -722,16 +722,16 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
   append_plane(1.0F);
   append_plane(2.0F);
 
-  glGenVertexArrays(1, &m_firecampVao);
-  glBindVertexArray(m_firecampVao);
+  glGenVertexArrays(1, &m_firecamp_vao);
+  glBindVertexArray(m_firecamp_vao);
 
-  glGenBuffers(1, &m_firecampVertexBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_firecampVertexBuffer);
+  glGenBuffers(1, &m_firecamp_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_firecamp_vertex_buffer);
   glBufferData(
       GL_ARRAY_BUFFER,
       static_cast<GLsizeiptr>(vertices.size() * sizeof(FireCampVertex)),
       vertices.data(), GL_STATIC_DRAW);
-  m_firecampVertexCount = static_cast<GLsizei>(vertices.size());
+  m_firecamp_vertex_count = static_cast<GLsizei>(vertices.size());
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(Position, Vec3, GL_FLOAT, GL_FALSE,
@@ -742,12 +742,12 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
       Normal, Vec2, GL_FLOAT, GL_FALSE, sizeof(FireCampVertex),
       reinterpret_cast<void *>(offsetof(FireCampVertex, tex_coord)));
 
-  glGenBuffers(1, &m_firecampIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_firecampIndexBuffer);
+  glGenBuffers(1, &m_firecamp_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_firecamp_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
                indices.data(), GL_STATIC_DRAW);
-  m_firecampIndexCount = static_cast<GLsizei>(indices.size());
+  m_firecamp_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(InstancePosition);
   glVertexAttribDivisor(InstancePosition, 1);
@@ -763,29 +763,29 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
 void VegetationPipeline::shutdown_fire_camp_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
-    m_firecampVao = 0;
-    m_firecampVertexBuffer = 0;
-    m_firecampIndexBuffer = 0;
-    m_firecampVertexCount = 0;
-    m_firecampIndexCount = 0;
+    m_firecamp_vao = 0;
+    m_firecamp_vertex_buffer = 0;
+    m_firecamp_index_buffer = 0;
+    m_firecamp_vertex_count = 0;
+    m_firecamp_index_count = 0;
     return;
   }
 
   initializeOpenGLFunctions();
-  if (m_firecampIndexBuffer != 0U) {
-    glDeleteBuffers(1, &m_firecampIndexBuffer);
-    m_firecampIndexBuffer = 0;
+  if (m_firecamp_index_buffer != 0U) {
+    glDeleteBuffers(1, &m_firecamp_index_buffer);
+    m_firecamp_index_buffer = 0;
   }
-  if (m_firecampVertexBuffer != 0U) {
-    glDeleteBuffers(1, &m_firecampVertexBuffer);
-    m_firecampVertexBuffer = 0;
+  if (m_firecamp_vertex_buffer != 0U) {
+    glDeleteBuffers(1, &m_firecamp_vertex_buffer);
+    m_firecamp_vertex_buffer = 0;
   }
-  if (m_firecampVao != 0U) {
-    glDeleteVertexArrays(1, &m_firecampVao);
-    m_firecampVao = 0;
+  if (m_firecamp_vao != 0U) {
+    glDeleteVertexArrays(1, &m_firecamp_vao);
+    m_firecamp_vao = 0;
   }
-  m_firecampVertexCount = 0;
-  m_firecampIndexCount = 0;
+  m_firecamp_vertex_count = 0;
+  m_firecamp_index_count = 0;
 }
 
 } // namespace Render::GL::BackendPipelines

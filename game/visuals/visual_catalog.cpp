@@ -92,9 +92,9 @@ auto VisualCatalog::load_from_json_file(const QString &path,
   return true;
 }
 
-auto VisualCatalog::lookup(const std::string &unitType,
+auto VisualCatalog::lookup(const std::string &unit_type,
                            VisualDef &out) const -> bool {
-  auto it = m_units.find(unitType);
+  auto it = m_units.find(unit_type);
   if (it == m_units.end()) {
     return false;
   }

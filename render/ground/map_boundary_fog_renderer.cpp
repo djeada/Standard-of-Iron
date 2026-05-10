@@ -53,7 +53,7 @@ auto boundary_height_at(float world_x, float world_z) -> float {
   if (!terrain_service.is_initialized() || height_map == nullptr) {
     return 0.0F;
   }
-  return std::max(0.0F, height_map->getHeightAt(world_x, world_z));
+  return std::max(0.0F, height_map->get_height_at(world_x, world_z));
 }
 
 struct MountainPatchConfig {

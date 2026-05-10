@@ -4,7 +4,7 @@
 
 namespace {
 
-using Render::GL::kInvalidEquipmentHandle;
+using Render::GL::k_invalid_equipment_handle;
 
 class EquipmentLoadoutCatalogTest : public ::testing::Test {
 protected:
@@ -22,10 +22,10 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanMountedKnightLoadoutFromData) {
   EXPECT_EQ(loadout.ids.shoulder, "roman_shoulder_cover_cavalry");
   EXPECT_EQ(loadout.ids.horse_barding, "horse_scale_barding");
   EXPECT_EQ(loadout.ids.horse_crupper, "horse_crupper");
-  EXPECT_NE(loadout.sword_handle, kInvalidEquipmentHandle);
-  EXPECT_NE(loadout.shield_handle, kInvalidEquipmentHandle);
-  EXPECT_NE(loadout.horse_barding_handle, kInvalidEquipmentHandle);
-  EXPECT_NE(loadout.horse_crupper_handle, kInvalidEquipmentHandle);
+  EXPECT_NE(loadout.sword_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.shield_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.horse_barding_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.horse_crupper_handle, k_invalid_equipment_handle);
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, CarthageHorseArcherLoadoutResolvesHandles) {
@@ -39,12 +39,12 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageHorseArcherLoadoutResolvesHandles) {
   EXPECT_EQ(loadout.ids.cloak, "cloak_carthage");
   EXPECT_EQ(loadout.ids.horse_bridle, "horse_bridle");
   EXPECT_EQ(loadout.ids.horse_decoration, "horse_saddle_bag");
-  EXPECT_NE(loadout.bow_handle, kInvalidEquipmentHandle);
-  EXPECT_NE(loadout.quiver_handle, kInvalidEquipmentHandle);
-  EXPECT_NE(loadout.armor_handle, kInvalidEquipmentHandle);
-  EXPECT_NE(loadout.cloak_handle, kInvalidEquipmentHandle);
-  EXPECT_NE(loadout.horse_bridle_handle, kInvalidEquipmentHandle);
-  EXPECT_NE(loadout.horse_decoration_handle, kInvalidEquipmentHandle);
+  EXPECT_NE(loadout.bow_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.quiver_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.armor_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.cloak_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.horse_bridle_handle, k_invalid_equipment_handle);
+  EXPECT_NE(loadout.horse_decoration_handle, k_invalid_equipment_handle);
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, MissingLoadoutReturnsNotFound) {
@@ -52,8 +52,8 @@ TEST_F(EquipmentLoadoutCatalogTest, MissingLoadoutReturnsNotFound) {
       Render::GL::Nation::resolve_equipment_loadout("troops/unknown/unit");
 
   EXPECT_FALSE(loadout.found);
-  EXPECT_EQ(loadout.bow_handle, kInvalidEquipmentHandle);
-  EXPECT_EQ(loadout.sword_handle, kInvalidEquipmentHandle);
+  EXPECT_EQ(loadout.bow_handle, k_invalid_equipment_handle);
+  EXPECT_EQ(loadout.sword_handle, k_invalid_equipment_handle);
   EXPECT_TRUE(loadout.ids.bow.empty());
   EXPECT_TRUE(loadout.ids.sword.empty());
 }

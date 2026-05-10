@@ -33,12 +33,12 @@ class SnapshotMeshCache {
 public:
   struct Key {
     Render::Creature::Pipeline::CreatureAssetId asset_id{
-        Render::Creature::Pipeline::kInvalidCreatureAsset};
+        Render::Creature::Pipeline::k_invalid_creature_asset};
     Render::Creature::ArchetypeId archetype{
-        Render::Creature::kInvalidArchetype};
+        Render::Creature::k_invalid_archetype};
     Render::Creature::Pipeline::AttachmentSetId attachment_set_id{
-        Render::Creature::Pipeline::kInvalidAttachmentSetId};
-    Render::Creature::VariantId variant{Render::Creature::kCanonicalVariant};
+        Render::Creature::Pipeline::k_invalid_attachment_set_id};
+    Render::Creature::VariantId variant{Render::Creature::k_canonical_variant};
     Render::Creature::AnimationStateId state{
         Render::Creature::AnimationStateId::Idle};
     std::uint16_t clip_id{0xFFFFu};
