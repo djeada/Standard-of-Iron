@@ -54,7 +54,7 @@ static auto to_renderable_mesh(VisualDef::MeshKind k)
 }
 
 auto VisualCatalog::load_from_json_file(const QString &path,
-                                     QString *out_error) -> bool {
+                                        QString *out_error) -> bool {
   QFile f(path);
   if (!f.open(QIODevice::ReadOnly)) {
     if (out_error != nullptr) {

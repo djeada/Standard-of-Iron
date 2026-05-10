@@ -1,6 +1,8 @@
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
 #include "render/creature/humanoid_clip_ids.h"
+#include "render/entity/mounted_knight_pose.h"
+#include "render/horse/horse_motion.h"
 #include "render/humanoid/skeleton.h"
 #include "tests/render/test_asset_paths.h"
 
@@ -74,11 +76,11 @@ TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
   ASSERT_TRUE(reg.load_species(k_species_horse, root + "/horse.bpat"));
   ASSERT_TRUE(reg.load_species(k_species_elephant, root + "/elephant.bpat"));
-  ASSERT_TRUE(
-      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid_sword,
+                               root + "/humanoid_sword.bpat"));
 
-  for (auto const species : {k_species_humanoid, k_species_horse, k_species_elephant,
-                             k_species_humanoid_sword}) {
+  for (auto const species : {k_species_humanoid, k_species_horse,
+                             k_species_elephant, k_species_humanoid_sword}) {
     auto const *blob = reg.blob(species);
     ASSERT_NE(blob, nullptr) << "species " << species;
     ASSERT_GT(blob->clip_count(), 0U);
@@ -116,7 +118,8 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
 
   constexpr std::uint16_t k_attack_sword_a_clip =
       Render::Creature::k_humanoid_attack_sword_a_clip;
-  ASSERT_GT(blob->clip_count(), static_cast<std::uint32_t>(k_attack_sword_a_clip))
+  ASSERT_GT(blob->clip_count(),
+            static_cast<std::uint32_t>(k_attack_sword_a_clip))
       << "humanoid.bpat is missing attack_sword_a (re-run bpat_baker)";
 
   auto const attack_clip = blob->clip(k_attack_sword_a_clip);
@@ -155,8 +158,8 @@ TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {
   }
   auto &reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
-  ASSERT_TRUE(
-      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid_sword,
+                               root + "/humanoid_sword.bpat"));
 
   auto sample_bone = [&](std::uint32_t species_id, std::uint16_t clip_index,
                          std::uint32_t frame_in_clip, HumanoidBone bone) {
@@ -174,19 +177,21 @@ TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {
   ASSERT_NE(sword_blob, nullptr);
 
   auto const idle_pelvis =
-      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip, 0U,
-                  HumanoidBone::Pelvis);
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip,
+                  0U, HumanoidBone::Pelvis);
   auto const idle_hand_r =
-      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip, 0U,
-                  HumanoidBone::HandR);
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip,
+                  0U, HumanoidBone::HandR);
   auto const idle_hand_l =
-      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip, 0U,
-                  HumanoidBone::HandL);
+      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_idle_clip,
+                  0U, HumanoidBone::HandL);
 
   auto const spear_hold_frame =
-      default_blob->clip(Render::Creature::k_humanoid_hold_clip).frame_count - 1U;
+      default_blob->clip(Render::Creature::k_humanoid_hold_clip).frame_count -
+      1U;
   auto const bow_hold_frame =
-      default_blob->clip(Render::Creature::k_humanoid_hold_bow_clip).frame_count -
+      default_blob->clip(Render::Creature::k_humanoid_hold_bow_clip)
+          .frame_count -
       1U;
   auto const sword_hold_frame =
       sword_blob->clip(Render::Creature::k_humanoid_hold_clip).frame_count - 1U;
@@ -198,19 +203,19 @@ TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {
       sample_bone(k_species_humanoid, Render::Creature::k_humanoid_hold_clip,
                   spear_hold_frame, HumanoidBone::HandR);
 
-  auto const bow_hold_pelvis =
-      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_hold_bow_clip,
-                  bow_hold_frame, HumanoidBone::Pelvis);
-  auto const bow_hold_hand_l =
-      sample_bone(k_species_humanoid, Render::Creature::k_humanoid_hold_bow_clip,
-                  bow_hold_frame, HumanoidBone::HandL);
+  auto const bow_hold_pelvis = sample_bone(
+      k_species_humanoid, Render::Creature::k_humanoid_hold_bow_clip,
+      bow_hold_frame, HumanoidBone::Pelvis);
+  auto const bow_hold_hand_l = sample_bone(
+      k_species_humanoid, Render::Creature::k_humanoid_hold_bow_clip,
+      bow_hold_frame, HumanoidBone::HandL);
 
-  auto const sword_idle_pelvis =
-      sample_bone(k_species_humanoid_sword, Render::Creature::k_humanoid_idle_clip,
-                  0U, HumanoidBone::Pelvis);
-  auto const sword_hold_pelvis =
-      sample_bone(k_species_humanoid_sword, Render::Creature::k_humanoid_hold_clip,
-                  sword_hold_frame, HumanoidBone::Pelvis);
+  auto const sword_idle_pelvis = sample_bone(
+      k_species_humanoid_sword, Render::Creature::k_humanoid_idle_clip, 0U,
+      HumanoidBone::Pelvis);
+  auto const sword_hold_pelvis = sample_bone(
+      k_species_humanoid_sword, Render::Creature::k_humanoid_hold_clip,
+      sword_hold_frame, HumanoidBone::Pelvis);
 
   EXPECT_LT(spear_hold_pelvis.y(), idle_pelvis.y());
   EXPECT_LT(bow_hold_pelvis.y(), idle_pelvis.y());
@@ -227,8 +232,8 @@ TEST(BpatRegistry, SwordHumanoidIdleDiffersFromDefaultHumanoid) {
   }
   auto &reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
-  ASSERT_TRUE(
-      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_humanoid_sword,
+                               root + "/humanoid_sword.bpat"));
 
   std::array<QMatrix4x4, 64> default_palette{};
   std::array<QMatrix4x4, 64> sword_palette{};
@@ -248,4 +253,35 @@ TEST(BpatRegistry, SwordHumanoidIdleDiffersFromDefaultHumanoid) {
   }
   EXPECT_TRUE(any_different)
       << "humanoid_sword idle must differ from generic humanoid idle";
+}
+
+TEST(BpatRegistry, SwordHumanoidRidingChargeKeepsShieldHandMountedRelative) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto &reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid_sword,
+                               root + "/humanoid_sword.bpat"));
+
+  std::array<QMatrix4x4, 64> palette{};
+  auto const n = reg.sample_palette(
+      k_species_humanoid_sword, Render::Creature::k_humanoid_riding_charge_clip,
+      0U, std::span<QMatrix4x4>(palette));
+  auto const hand_index = static_cast<std::size_t>(HumanoidBone::HandL);
+  ASSERT_GT(n, hand_index);
+  QVector3D const hand_l = palette[hand_index].column(3).toVector3D();
+
+  auto horse_profile = Render::GL::make_horse_profile(0U, {}, {});
+  auto mount = Render::GL::compute_mount_frame(horse_profile);
+  Render::GL::tune_mounted_knight_frame(horse_profile.dims, mount);
+  QVector3D const expected = mount.seat_position + mount.seat_forward * 0.05F +
+                             mount.seat_right * -0.16F + mount.seat_up * 0.22F;
+
+  EXPECT_NEAR(hand_l.x(), expected.x(), 0.12F);
+  EXPECT_NEAR(hand_l.y(), expected.y(), 0.12F);
+  EXPECT_NEAR(hand_l.z(), expected.z(), 0.12F);
 }

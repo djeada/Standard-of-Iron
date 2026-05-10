@@ -85,6 +85,14 @@ void ground_horse_model(QMatrix4x4 &model, std::uint16_t clip_id,
 
 } // namespace
 
+auto grounded_horse_world(const Render::GL::DrawContext &ctx,
+                          const Render::GL::HorseMotionSample &motion) noexcept
+    -> QMatrix4x4 {
+  QMatrix4x4 world = ctx.model;
+  ground_horse_model(world, horse_clip_for_motion(motion), motion.phase);
+  return world;
+}
+
 } // namespace Render::Horse
 
 namespace Render::GL {
@@ -159,7 +167,8 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
                         const Render::GL::HorseMotionSample *shared_motion,
                         HorsePreparation &out,
                         Render::Creature::CreatureLOD lod,
-                        std::uint32_t request_seed) {
+                        std::uint32_t request_seed,
+                        const QMatrix4x4 *shared_grounded_world) {
   using Render::GL::HorseMotionSample;
   using Render::GL::HorseVariant;
   const HorseVariant &v = profile.variant;
@@ -172,15 +181,15 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
                               Render::Creature::HorseAnimationStateComponent>(
                               ctx.entity));
   (void)shared_mount;
-  std::uint16_t const horse_clip = horse_clip_for_motion(motion);
   auto *death_anim =
       (ctx.entity != nullptr)
           ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()
           : nullptr;
 
   Render::GL::DrawContext horse_ctx = ctx;
-  horse_ctx.model = ctx.model;
-  ground_horse_model(horse_ctx.model, horse_clip, motion.phase);
+  horse_ctx.model = (shared_grounded_world != nullptr)
+                        ? *shared_grounded_world
+                        : grounded_horse_world(ctx, motion);
 
   namespace RCP = Render::Creature::Pipeline;
   RCP::CreatureGraphInputs graph_inputs{};
@@ -241,13 +250,15 @@ void prepare_horse_render(
     const Render::GL::MountedAttachmentFrame *shared_mount,
     const Render::GL::HorseMotionSample *shared_motion,
     Render::Creature::CreatureLOD lod, HorsePreparation &out,
-    std::optional<std::uint32_t> request_seed) {
+    std::optional<std::uint32_t> request_seed,
+    const QMatrix4x4 *shared_grounded_world) {
   if (lod == Render::Creature::CreatureLOD::Billboard) {
     return;
   }
   prepare_horse_impl(
       owner, ctx, anim, rider_ctx, profile, shared_mount, shared_motion, out,
-      lod, request_seed.value_or(default_full_horse_request_seed(ctx)));
+      lod, request_seed.value_or(default_full_horse_request_seed(ctx)),
+      shared_grounded_world);
 }
 
 } // namespace Render::Horse

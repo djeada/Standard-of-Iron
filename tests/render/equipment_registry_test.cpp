@@ -1,6 +1,6 @@
 #include "render/equipment/equipment_registry.h"
-#include "render/equipment/horse/tack/bridle_renderer.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/equipment/horse/tack/bridle_renderer.h"
 #include "render/equipment/i_equipment_renderer.h"
 #include <gtest/gtest.h>
 #include <memory>
@@ -206,6 +206,20 @@ TEST_F(EquipmentRegistryTest, OverwriteKeepsStableHandle) {
   EXPECT_EQ(registry->get(handle_v2), armor_v2);
 }
 
+TEST_F(EquipmentRegistryTest,
+       PlaceholderEquipmentResolvesStableHandleWithoutRenderer) {
+  registry->register_placeholder_equipment(EquipmentCategory::Armor,
+                                           "placeholder_robe");
+
+  const auto handle =
+      registry->resolve_handle(EquipmentCategory::Armor, "placeholder_robe");
+
+  EXPECT_NE(handle, k_invalid_equipment_handle);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "placeholder_robe"));
+  EXPECT_FALSE(registry->has(handle));
+  EXPECT_EQ(registry->get(handle), nullptr);
+}
+
 TEST_F(EquipmentRegistryTest, RegisterAndGetHorseEquipment) {
   auto horse_bridle = std::make_shared<BridleRenderer>();
   registry->register_horse_equipment(EquipmentCategory::HorseTack,
@@ -222,8 +236,8 @@ TEST_F(EquipmentRegistryTest, HorseEquipmentResolvesHandleFromSameRegistry) {
   registry->register_horse_equipment(EquipmentCategory::HorseTack,
                                      "horse_bridle_handle", horse_bridle);
 
-  const auto handle =
-      registry->resolve_handle(EquipmentCategory::HorseTack, "horse_bridle_handle");
+  const auto handle = registry->resolve_handle(EquipmentCategory::HorseTack,
+                                               "horse_bridle_handle");
 
   EXPECT_NE(handle, k_invalid_equipment_handle);
   EXPECT_EQ(registry->get_horse(handle), horse_bridle);

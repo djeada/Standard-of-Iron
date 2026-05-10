@@ -40,9 +40,9 @@ void ToolPanel::setupUI() {
   setMaximumWidth(180);
 }
 
-void ToolPanel::addToolItem(const QString &name, const QString &iconChar,
+void ToolPanel::addToolItem(const QString &name, const QString &icon_char,
                             ToolType tool) {
-  auto *item = new QListWidgetItem(iconChar + "  " + name);
+  auto *item = new QListWidgetItem(icon_char + "  " + name);
   item->setData(Qt::UserRole, static_cast<int>(tool));
   item->setToolTip(name);
   m_tool_list->addItem(item);

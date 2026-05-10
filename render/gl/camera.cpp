@@ -494,8 +494,8 @@ void Camera::update_follow(const QVector3D &target_center) {
   QVector3D const new_pos =
       (m_follow_lerp >= 0.999F)
           ? desired_pos
-          : (m_position +
-             (desired_pos - m_position) * std::clamp(m_follow_lerp, 0.0F, 1.0F));
+          : (m_position + (desired_pos - m_position) *
+                              std::clamp(m_follow_lerp, 0.0F, 1.0F));
 
   if (!finite(new_pos)) {
     return;

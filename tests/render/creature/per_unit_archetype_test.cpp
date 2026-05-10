@@ -99,7 +99,8 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeForHorseInheritsHorseClipTable) {
 TEST(PerUnitArchetype, ExcessAttachmentsAreClampedToCap) {
   auto &reg = ArchetypeRegistry::instance();
 
-  std::array<StaticAttachmentSpec, ArchetypeDescriptor::k_max_bake_attachments + 4>
+  std::array<StaticAttachmentSpec,
+             ArchetypeDescriptor::k_max_bake_attachments + 4>
       lots{};
   for (auto &a : lots) {
     a.archetype = &make_test_archetype();

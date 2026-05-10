@@ -158,7 +158,7 @@ void GameStateRestorer::restore_environment_from_metadata(
 
   if (!terrain_already_restored && !map_path.isEmpty()) {
     loaded_definition =
-        Game::Map::MapLoader::loadFromJsonFile(map_path, def, &map_error);
+        Game::Map::MapLoader::load_from_json_file(map_path, def, &map_error);
     if (!loaded_definition) {
       qWarning() << "GameStateRestorer: Failed to load map definition from"
                  << map_path << "during save load:" << map_error;
@@ -172,7 +172,7 @@ void GameStateRestorer::restore_environment_from_metadata(
       level.map_name = def.name;
     }
 
-    level.cam_fov = def.camera.fovY;
+    level.cam_fov = def.camera.fov_y;
     level.cam_near = def.camera.near_plane;
     level.cam_far = def.camera.far_plane;
   }
@@ -182,8 +182,8 @@ void GameStateRestorer::restore_environment_from_metadata(
       Game::Map::Environment::apply(def, *renderers.renderer,
                                     *renderers.camera);
     } else {
-      Game::Map::Environment::applyDefault(*renderers.renderer,
-                                           *renderers.camera);
+      Game::Map::Environment::apply_default(*renderers.renderer,
+                                            *renderers.camera);
     }
   }
 
@@ -193,8 +193,9 @@ void GameStateRestorer::restore_environment_from_metadata(
         (height_map != nullptr) ? height_map->get_width() : fallback_grid_width;
     const int grid_height = (height_map != nullptr) ? height_map->get_height()
                                                     : fallback_grid_height;
-    const float tile_size = (height_map != nullptr) ? height_map->get_tile_size()
-                                                    : fallback_tile_size;
+    const float tile_size = (height_map != nullptr)
+                                ? height_map->get_tile_size()
+                                : fallback_tile_size;
 
     if (renderers.ground) {
       renderers.ground->configure(tile_size, grid_width, grid_height);
@@ -225,12 +226,13 @@ void GameStateRestorer::restore_environment_from_metadata(
 
     auto &visibility_service = Game::Map::VisibilityService::instance();
     visibility_service.initialize(grid_width, grid_height, tile_size);
-    visibility_service.computeImmediate(*world, local_owner_id);
+    visibility_service.compute_immediate(*world, local_owner_id);
 
     if (renderers.fog && visibility_service.is_initialized()) {
-      renderers.fog->update_mask(
-          visibility_service.get_width(), visibility_service.get_height(),
-          visibility_service.get_tile_size(), visibility_service.snapshotCells());
+      renderers.fog->update_mask(visibility_service.get_width(),
+                                 visibility_service.get_height(),
+                                 visibility_service.get_tile_size(),
+                                 visibility_service.snapshot_cells());
     }
   } else {
     Game::Map::MapDefinition fallback_def;
@@ -244,12 +246,13 @@ void GameStateRestorer::restore_environment_from_metadata(
     auto &visibility_service = Game::Map::VisibilityService::instance();
     visibility_service.initialize(fallback_grid_width, fallback_grid_height,
                                   fallback_tile_size);
-    visibility_service.computeImmediate(*world, local_owner_id);
+    visibility_service.compute_immediate(*world, local_owner_id);
 
     if (renderers.fog && visibility_service.is_initialized()) {
-      renderers.fog->update_mask(
-          visibility_service.get_width(), visibility_service.get_height(),
-          visibility_service.get_tile_size(), visibility_service.snapshotCells());
+      renderers.fog->update_mask(visibility_service.get_width(),
+                                 visibility_service.get_height(),
+                                 visibility_service.get_tile_size(),
+                                 visibility_service.snapshot_cells());
     }
   }
 }

@@ -22,7 +22,7 @@ struct TerrainElement {
   float height = 3.0F;
   float rotation = 0.0F;
   QJsonArray entrances;
-  QJsonObject extraFields;
+  QJsonObject extra_fields;
 };
 
 struct FirecampElement {
@@ -30,7 +30,7 @@ struct FirecampElement {
   float z = 0.0F;
   float intensity = 1.0F;
   float radius = 3.0F;
-  QJsonObject extraFields;
+  QJsonObject extra_fields;
 };
 
 struct LinearElement {
@@ -40,7 +40,7 @@ struct LinearElement {
   float width = 3.0F;
   float height = 0.5F;
   QString style;
-  QJsonObject extraFields;
+  QJsonObject extra_fields;
 };
 
 struct StructureElement {
@@ -50,7 +50,7 @@ struct StructureElement {
   int player_id = 0;
   int max_population = 150;
   QString nation;
-  QJsonObject extraFields;
+  QJsonObject extra_fields;
 };
 
 struct GridSettings {
@@ -74,8 +74,8 @@ class MapData : public QObject {
 public:
   explicit MapData(QObject *parent = nullptr);
 
-  bool loadFromJson(const QString &filePath);
-  bool saveToJson(const QString &filePath) const;
+  bool loadFromJson(const QString &file_path);
+  bool saveToJson(const QString &file_path) const;
 
   [[nodiscard]] QString name() const { return m_name; }
   void setName(const QString &name);

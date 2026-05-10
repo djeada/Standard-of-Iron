@@ -33,8 +33,9 @@ struct ArchetypeDescriptor {
                                               QVector3D *out,
                                               std::uint32_t base_count,
                                               std::size_t max_count);
-  static constexpr std::size_t k_max_extra_role_color_fns = 4;
-  std::array<ExtraRoleColorsFn, k_max_extra_role_color_fns> extra_role_color_fns{};
+  static constexpr std::size_t k_max_extra_role_color_fns = 8;
+  std::array<ExtraRoleColorsFn, k_max_extra_role_color_fns>
+      extra_role_color_fns{};
   std::uint8_t extra_role_color_fn_count{0};
 
   static constexpr std::size_t k_max_bake_attachments = 16;

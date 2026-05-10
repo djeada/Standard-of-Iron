@@ -9,6 +9,8 @@
 #include "../utils/selection_utils.h"
 #include "ambient_state_manager.h"
 #include "camera_controller.h"
+#include "commander_control_controller.h"
+#include "commander_input_adapter.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
@@ -21,6 +23,7 @@
 #include <QList>
 #include <QMatrix4x4>
 #include <QObject>
+#include <QPoint>
 #include <QPointF>
 #include <QStringList>
 #include <QVariant>
@@ -162,6 +165,10 @@ public:
                  campaign_mission_changed)
   Q_PROPERTY(bool civilian_delivery_available READ civilian_delivery_available
                  NOTIFY civilian_delivery_available_changed)
+  Q_PROPERTY(QString control_mode READ control_mode NOTIFY control_mode_changed)
+  Q_PROPERTY(bool commander_control_available READ commander_control_available
+                 NOTIFY commander_control_available_changed)
+  Q_PROPERTY(QObject *commander_input READ commander_input CONSTANT)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -172,7 +179,7 @@ public:
   Q_INVOKABLE void on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
                                     bool additive = false);
   Q_INVOKABLE void select_all_troops();
-  Q_INVOKABLE void select_unit_by_id(int unitId);
+  Q_INVOKABLE void select_unit_by_id(int unit_id);
   Q_INVOKABLE void set_hover_at_screen(qreal sx, qreal sy);
   Q_INVOKABLE void on_attack_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_stop_command();
@@ -197,6 +204,19 @@ public:
   Q_INVOKABLE void on_construction_confirm();
   Q_INVOKABLE void on_construction_cancel();
   Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
+  Q_INVOKABLE void toggle_commander_control_mode();
+  Q_INVOKABLE void commander_key_down(int key, int modifiers = 0);
+  Q_INVOKABLE void commander_key_up(int key, int modifiers = 0);
+  Q_INVOKABLE void commander_primary_action();
+  Q_INVOKABLE void commander_primary_action_down();
+  Q_INVOKABLE void commander_primary_action_up();
+  Q_INVOKABLE void commander_secondary_action_down();
+  Q_INVOKABLE void commander_secondary_action_up();
+  Q_INVOKABLE void commander_trigger_rally();
+  Q_INVOKABLE void commander_mouse_move(qreal dx, qreal dy);
+  Q_INVOKABLE void commander_mouse_look_at(qreal sx, qreal sy, qreal center_sx,
+                                           qreal center_sy);
+  Q_INVOKABLE void commander_center_mouse(qreal center_sx, qreal center_sy);
 
   Q_INVOKABLE void camera_move(float dx, float dz);
   Q_INVOKABLE void camera_elevate(float dy);
@@ -265,6 +285,7 @@ public:
   get_selected_home_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_selected_builder_production_state() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap get_controlled_commander_status() const;
   Q_INVOKABLE void start_builder_construction(const QString &item_type);
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString &unit_type,
@@ -281,7 +302,7 @@ public:
   [[nodiscard]] bool maps_loading() const { return m_maps_loading; }
   Q_INVOKABLE void
   start_skirmish(const QString &map_path,
-                 const QVariantList &playerConfigs = QVariantList());
+                 const QVariantList &player_configs = QVariantList());
   Q_INVOKABLE void start_campaign_mission(const QString &campaign_id);
   Q_INVOKABLE void mark_current_mission_completed();
   Q_INVOKABLE [[nodiscard]] QVariantMap get_current_mission_objectives() const;
@@ -318,6 +339,9 @@ public:
   [[nodiscard]] bool civilian_delivery_available() const {
     return m_civilian_delivery_available;
   }
+  [[nodiscard]] QString control_mode() const;
+  [[nodiscard]] bool commander_control_available() const;
+  [[nodiscard]] QObject *commander_input();
 
   QObject *audio_system();
 
@@ -365,8 +389,33 @@ private:
     std::vector<Game::Mission::WaveComposition> composition;
     bool spawned = false;
   };
+  enum class PlayerControlMode { Rts, Commander };
+  using ControlModeUpdate = void (GameEngine::*)(float dt);
+  using ControlModeToggle = void (GameEngine::*)();
+  struct CameraSnapshot {
+    QVector3D position{0.0F, 0.0F, 0.0F};
+    QVector3D target{0.0F, 0.0F, 1.0F};
+    QVector3D up{0.0F, 1.0F, 0.0F};
+    bool follow_selection = false;
+    bool valid = false;
+  };
   bool screen_to_ground(const QPointF &screen_pt, QVector3D &out_world);
   bool world_to_screen(const QVector3D &world, QPointF &out_screen) const;
+  [[nodiscard]] Engine::Core::Entity *find_local_commander() const;
+  bool enter_commander_control_mode();
+  void exit_commander_control_mode();
+  void request_enter_commander_control_mode();
+  void request_exit_commander_control_mode();
+  void set_active_camera(Render::GL::Camera *camera);
+  void update_rts_control_mode(float dt);
+  void update_commander_control_mode(float dt);
+  [[nodiscard]] Engine::Core::Entity *controlled_commander_entity();
+  void store_rts_selection();
+  void select_controlled_commander();
+  void restore_rts_selection();
+  void clear_controlled_commander_state();
+  void poll_commander_mouse_look();
+  void reset_commander_input();
   void sync_selection_flags();
   void update_civilian_delivery_availability();
   static void reset_movement(Engine::Core::Entity *entity);
@@ -377,18 +426,18 @@ private:
   void rebuild_registries_after_load();
   void rebuild_building_collisions();
   void restore_environment_from_metadata(const QJsonObject &metadata);
-  void update_cursor(Qt::CursorShape newCursor);
-  void set_error(const QString &errorMessage);
+  void update_cursor(Qt::CursorShape new_cursor);
+  void set_error(const QString &error_message);
   bool load_from_slot(const QString &slot);
   bool save_to_slot(const QString &slot, const QString &title);
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot &snapshot);
   [[nodiscard]] QByteArray capture_screenshot() const;
   void start_skirmish_internal(const QString &map_path,
-                               const QVariantList &playerConfigs,
+                               const QVariantList &player_configs,
                                bool set_skirmish_context);
   void perform_skirmish_load(const QString &map_path,
-                             const QVariantList &playerConfigs);
+                             const QVariantList &player_configs);
   void apply_mission_setup();
   void configure_mission_victory_conditions();
   void configure_rain_system();
@@ -404,7 +453,9 @@ private:
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
-  std::unique_ptr<Render::GL::Camera> m_camera;
+  std::unique_ptr<Render::GL::Camera> m_rts_camera;
+  std::unique_ptr<Render::GL::Camera> m_commander_camera;
+  Render::GL::Camera *m_camera = nullptr;
   std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::shared_ptr<Render::GL::ResourceManager> m_resources;
   std::unique_ptr<Render::GL::TerrainSurfaceManager> m_surface;
@@ -438,6 +489,16 @@ private:
   RuntimeState m_runtime;
   ViewportState m_viewport;
   bool m_follow_selection_enabled = false;
+  PlayerControlMode m_control_mode = PlayerControlMode::Rts;
+  ControlModeUpdate m_control_mode_update =
+      &GameEngine::update_rts_control_mode;
+  ControlModeToggle m_control_mode_toggle =
+      &GameEngine::request_enter_commander_control_mode;
+  Engine::Core::EntityID m_controlled_commander_id = 0;
+  std::vector<Engine::Core::EntityID> m_saved_rts_selection_ids;
+  CameraSnapshot m_rts_camera_snapshot;
+  CommanderControlController m_commander_control;
+  CommanderInputAdapter m_commander_input;
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel *m_selected_units_model = nullptr;
   int m_enemy_troops_defeated = 0;
@@ -487,5 +548,7 @@ signals:
   void placing_construction_changed();
   void campaign_mission_changed();
   void civilian_delivery_available_changed();
+  void control_mode_changed();
+  void commander_control_available_changed();
   void mission_announcement(QString text);
 };

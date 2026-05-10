@@ -4,8 +4,8 @@
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
-#include "../../../equipment/armor/armor_light_carthage.h"
 #include "../../../equipment/equipment_submit.h"
+#include "../../../equipment/humanoid_equipment_archetype.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -23,6 +23,7 @@
 #include "../../../submitter.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
+#include "../equipment_loadout_catalog.h"
 #include "healer_style.h"
 
 #include <QMatrix4x4>
@@ -91,41 +92,18 @@ public:
     ensure_healer_styles_registered();
 
     static const UnitVisualSpec spec = []() {
-      static const auto k_chest_bone =
-          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
-      static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
-          Render::Humanoid::k_humanoid_role_count + 1U);
-      static const Render::Creature::StaticAttachmentSpec k_armor_spec =
-          Render::GL::armor_light_carthage_make_static_attachment(
-              k_chest_bone, k_armor_base_role_byte);
-      static const std::array<Render::Creature::StaticAttachmentSpec, 1>
-          k_attachments{k_armor_spec};
-      static const auto extra_roles_fn =
-          +[](const void *variant_void, QVector3D *out,
-              std::uint32_t base_count,
-              std::size_t max_count) -> std::uint32_t {
-        if (variant_void == nullptr || max_count <= base_count) {
-          return base_count;
-        }
-        const auto &v = *static_cast<const HumanoidVariant *>(variant_void);
-        return base_count +
-               Render::GL::armor_light_carthage_fill_role_colors(
-                   v.palette, out + base_count, max_count - base_count);
-      };
-      static const auto k_archetype =
-          Render::Creature::ArchetypeRegistry::instance()
-              .register_unit_archetype(
-                  "troops/carthage/healer", CreatureKind::Humanoid,
-                  std::span<const Render::Creature::StaticAttachmentSpec>(
-                      k_attachments.data(), k_attachments.size()),
-                  extra_roles_fn);
+      const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+          "troops/carthage/healer");
+      const std::array<EquipmentHandle, 1> handles{loadout.armor_handle};
 
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/healer";
       s.scaling = ProportionScaling{0.88F, 0.99F, 0.90F};
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = k_archetype;
+      s.archetype_id = resolve_humanoid_equipment_archetype(
+          "troops/carthage/healer",
+          Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
       return s;
     }();
     return spec;

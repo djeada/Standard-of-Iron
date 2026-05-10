@@ -8,7 +8,6 @@
 #include <QVector3D>
 
 #include <string>
-#include <vector>
 
 namespace Render::GL {
 
@@ -18,6 +17,13 @@ struct HorseSpearmanRendererConfig {
   std::string helmet_equipment_id;
   std::string armor_equipment_id;
   std::string shoulder_equipment_id;
+  std::string horse_saddle_equipment_id;
+  std::string horse_bridle_equipment_id;
+  std::string horse_reins_equipment_id;
+  std::string horse_blanket_equipment_id;
+  std::string horse_barding_equipment_id;
+  std::string horse_crupper_equipment_id;
+  std::string horse_decoration_equipment_id;
   QVector3D metal_color{0.72F, 0.73F, 0.78F};
   float mount_scale = 0.95F;
   bool has_spear = true;
@@ -31,8 +37,21 @@ struct HorseSpearmanRendererConfig {
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::k_invalid_archetype};
 
+  std::string rider_debug_name{"troops/horse_spearman/rider"};
+  std::string mount_debug_name{"troops/horse_spearman/horse"};
+
   EquipmentHandle spear_handle{k_invalid_equipment_handle};
   EquipmentHandle shield_handle{k_invalid_equipment_handle};
+  EquipmentHandle helmet_handle{k_invalid_equipment_handle};
+  EquipmentHandle armor_handle{k_invalid_equipment_handle};
+  EquipmentHandle shoulder_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_saddle_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_bridle_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_reins_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_blanket_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_barding_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_crupper_handle{k_invalid_equipment_handle};
+  EquipmentHandle horse_decoration_handle{k_invalid_equipment_handle};
 };
 
 class HorseSpearmanRendererBase : public MountedHumanoidRendererBase {
@@ -67,6 +86,16 @@ private:
   HorseSpearmanRendererConfig m_config;
   EquipmentHandle m_spear_handle{k_invalid_equipment_handle};
   EquipmentHandle m_shield_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_helmet_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_armor_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_shoulder_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_saddle_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_bridle_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_reins_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_blanket_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_barding_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_crupper_handle{k_invalid_equipment_handle};
+  EquipmentHandle m_horse_decoration_handle{k_invalid_equipment_handle};
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
 };
 

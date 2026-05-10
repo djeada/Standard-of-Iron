@@ -8,6 +8,8 @@
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
 #include "../creature/archetype_registry.h"
+#include "../creature/bpat/bpat_format.h"
+#include "../creature/pipeline/creature_asset.h"
 #include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
@@ -645,12 +647,19 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     bool world_already_grounded =
         ctx.skip_ground_offset || requires_runtime_pose;
     if (!ctx.skip_ground_offset && requires_runtime_pose) {
+      auto const *grounding_asset =
+          Render::Creature::Pipeline::CreatureAssetRegistry::instance().resolve(
+              visual_spec);
+      std::uint32_t const grounding_species =
+          grounding_asset != nullptr
+              ? grounding_asset->bpat_species_id
+              : Render::Creature::Bpat::k_species_humanoid;
       auto const grounding_archetype =
           (visual_spec.archetype_id != Render::Creature::k_invalid_archetype)
               ? visual_spec.archetype_id
               : Render::Creature::ArchetypeRegistry::k_humanoid_base;
-      float const grounded_contact_y =
-          RCP::grounded_humanoid_contact_y(grounding_archetype, pose, anim_ctx);
+      float const grounded_contact_y = RCP::grounded_humanoid_contact_y(
+          grounding_archetype, grounding_species, pose, anim_ctx);
       RCP::ground_model_contact_to_surface(inst_ctx.model, grounded_contact_y,
                                            combined_height_scale,
                                            entity_ground_offset);
@@ -702,9 +711,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     graph_output.spec.owned_legacy_slots =
         graph_output.spec.owned_legacy_slots |
         Render::Creature::Pipeline::LegacySlotMask::FacialHair;
-    graph_output.spec.archetype_id =
-        Render::Humanoid::resolve_facial_hair_archetype(
-            graph_output.spec.archetype_id, variant);
+    if (!graph_output.spec.skip_default_facial_hair_archetype) {
+      graph_output.spec.archetype_id =
+          Render::Humanoid::resolve_facial_hair_archetype(
+              graph_output.spec.archetype_id, variant);
+    }
     graph_output.seed = inst_seed;
     graph_output.world_already_grounded = world_already_grounded;
 

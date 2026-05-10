@@ -107,7 +107,7 @@ void SkirmishLoader::reset_game_state() {
 }
 
 auto SkirmishLoader::start(const QString &map_path,
-                           const QVariantList &playerConfigs,
+                           const QVariantList &player_configs,
                            int selected_player_id,
                            bool allow_default_player_barracks,
                            int &out_selected_player_id) -> SkirmishLoadResult {
@@ -180,9 +180,9 @@ auto SkirmishLoader::start(const QString &map_path,
   bool is_spectator_mode = false;
   bool has_human_player = false;
 
-  if (!playerConfigs.isEmpty()) {
+  if (!player_configs.isEmpty()) {
 
-    for (const QVariant &config_var : playerConfigs) {
+    for (const QVariant &config_var : player_configs) {
       const QVariantMap config = config_var.toMap();
       int player_id = config.value("player_id", -1).toInt();
       const int team_id = config.value("team_id", 0).toInt();
@@ -232,8 +232,9 @@ auto SkirmishLoader::start(const QString &map_path,
   }
 
   if (team_overrides.size() >= 2 && unique_teams.size() < 2) {
-    result.error_message = "Invalid team configuration: At least two teams must "
-                          "be selected to start a match.";
+    result.error_message =
+        "Invalid team configuration: At least two teams must "
+        "be selected to start a match.";
     m_renderer.unlock_world_for_modification();
     m_renderer.resume();
     qWarning() << "SkirmishLoader: " << result.error_message;
@@ -402,9 +403,10 @@ auto SkirmishLoader::start(const QString &map_path,
   }
 
   if ((m_fog != nullptr) && visibility_service.is_initialized()) {
-    m_fog->update_mask(
-        visibility_service.get_width(), visibility_service.get_height(),
-        visibility_service.get_tile_size(), visibility_service.snapshot_cells());
+    m_fog->update_mask(visibility_service.get_width(),
+                       visibility_service.get_height(),
+                       visibility_service.get_tile_size(),
+                       visibility_service.snapshot_cells());
 
     if (m_on_visibility_mask_ready) {
       m_on_visibility_mask_ready();

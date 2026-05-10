@@ -94,7 +94,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       float scout_x = 0.0F;
       float scout_z = 0.0F;
 
-      if (context.primary_barracks != 0) {
+      if (context.has_base_anchor) {
 
         switch (m_scout_direction) {
         case 0:
@@ -409,6 +409,9 @@ auto AttackBehavior::should_execute(const AISnapshot &snapshot,
   }
 
   if (context.state == AIState::Defending) {
+    if (context.primary_barracks == 0) {
+      return !snapshot.visible_enemies.empty() && ready_units >= 1;
+    }
     return context.barracks_under_threat && ready_units >= 2;
   }
 

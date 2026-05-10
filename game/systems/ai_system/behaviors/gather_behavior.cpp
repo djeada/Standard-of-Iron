@@ -23,7 +23,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_gather_timer = 0.0F;
 
-  if (context.primary_barracks == 0) {
+  if (!context.has_base_anchor) {
     return;
   }
 
@@ -123,7 +123,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
 auto GatherBehavior::should_execute(const AISnapshot &snapshot,
                                     const AIContext &context) const -> bool {
-  if (context.primary_barracks == 0) {
+  if (!context.has_base_anchor) {
     return false;
   }
 

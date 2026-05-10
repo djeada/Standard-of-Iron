@@ -146,14 +146,15 @@ void Backend::initialize() {
   qInfo() << "Backend: ShaderCache created";
 
   qInfo() << "Backend: Creating CylinderPipeline...";
-  m_cylinder_pipeline =
-      std::make_unique<BackendPipelines::CylinderPipeline>(m_shader_cache.get());
+  m_cylinder_pipeline = std::make_unique<BackendPipelines::CylinderPipeline>(
+      m_shader_cache.get());
   m_cylinder_pipeline->initialize();
   qInfo() << "Backend: CylinderPipeline initialized";
 
   qInfo() << "Backend: Creating VegetationPipeline...";
-  m_vegetation_pipeline = std::make_unique<BackendPipelines::VegetationPipeline>(
-      m_shader_cache.get());
+  m_vegetation_pipeline =
+      std::make_unique<BackendPipelines::VegetationPipeline>(
+          m_shader_cache.get());
   m_vegetation_pipeline->initialize();
   qInfo() << "Backend: VegetationPipeline initialized";
 
@@ -209,14 +210,16 @@ void Backend::initialize() {
   qInfo() << "Backend: HealingBeamPipeline initialized";
 
   qInfo() << "Backend: Creating HealerAuraPipeline...";
-  m_healer_aura_pipeline = std::make_unique<BackendPipelines::HealerAuraPipeline>(
-      this, m_shader_cache.get());
+  m_healer_aura_pipeline =
+      std::make_unique<BackendPipelines::HealerAuraPipeline>(
+          this, m_shader_cache.get());
   m_healer_aura_pipeline->initialize();
   qInfo() << "Backend: HealerAuraPipeline initialized";
 
   qInfo() << "Backend: Creating CombatDustPipeline...";
-  m_combat_dust_pipeline = std::make_unique<BackendPipelines::CombatDustPipeline>(
-      this, m_shader_cache.get());
+  m_combat_dust_pipeline =
+      std::make_unique<BackendPipelines::CombatDustPipeline>(
+          this, m_shader_cache.get());
   m_combat_dust_pipeline->initialize();
   qInfo() << "Backend: CombatDustPipeline initialized";
 
@@ -395,7 +398,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const FogInstanceData *instances = batch.instances;
       const std::size_t instance_count = batch.count;
       if (((instances != nullptr) || (batch.instance_buffer != nullptr)) &&
-          instance_count > 0 && (m_cylinder_pipeline->fog_shader() != nullptr)) {
+          instance_count > 0 &&
+          (m_cylinder_pipeline->fog_shader() != nullptr)) {
         DepthMaskScope const depth_mask(false);
         BlendScope const blend(true);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -414,7 +418,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.view_proj,
                                   view_proj);
         }
-        if (m_cylinder_pipeline->m_fog_uniforms.time != Shader::InvalidUniform) {
+        if (m_cylinder_pipeline->m_fog_uniforms.time !=
+            Shader::InvalidUniform) {
           fog_shader->set_uniform(m_cylinder_pipeline->m_fog_uniforms.time,
                                   m_animation_time);
         }
@@ -473,7 +478,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_terrain_pipeline->m_grass_shader->set_uniform(
               m_terrain_pipeline->m_grass_uniforms.view_proj, view_proj);
         }
-        if (m_terrain_pipeline->m_grass_uniforms.time != Shader::InvalidUniform) {
+        if (m_terrain_pipeline->m_grass_uniforms.time !=
+            Shader::InvalidUniform) {
           m_terrain_pipeline->m_grass_shader->set_uniform(
               m_terrain_pipeline->m_grass_uniforms.time, grass.params.time);
         }
@@ -570,7 +576,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             light_dir.normalize();
           }
           stone_shader->set_uniform(
-              m_vegetation_pipeline->m_stone_uniforms.light_direction, light_dir);
+              m_vegetation_pipeline->m_stone_uniforms.light_direction,
+              light_dir);
         }
 
         glBindVertexArray(m_vegetation_pipeline->m_stone_vao);
@@ -635,8 +642,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         if (m_vegetation_pipeline->m_plant_uniforms.time !=
             Shader::InvalidUniform) {
-          plant_shader->set_uniform(m_vegetation_pipeline->m_plant_uniforms.time,
-                                    plant.params.time);
+          plant_shader->set_uniform(
+              m_vegetation_pipeline->m_plant_uniforms.time, plant.params.time);
         }
         if (m_vegetation_pipeline->m_plant_uniforms.wind_strength !=
             Shader::InvalidUniform) {
@@ -657,7 +664,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             light_dir.normalize();
           }
           plant_shader->set_uniform(
-              m_vegetation_pipeline->m_plant_uniforms.light_direction, light_dir);
+              m_vegetation_pipeline->m_plant_uniforms.light_direction,
+              light_dir);
         }
 
         glBindVertexArray(m_vegetation_pipeline->m_plant_vao);
@@ -750,7 +758,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             light_dir.normalize();
           }
           pine_shader->set_uniform(
-              m_vegetation_pipeline->m_pine_uniforms.light_direction, light_dir);
+              m_vegetation_pipeline->m_pine_uniforms.light_direction,
+              light_dir);
         }
 
         glBindVertexArray(m_vegetation_pipeline->m_pine_vao);
@@ -821,8 +830,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         if (m_vegetation_pipeline->m_olive_uniforms.time !=
             Shader::InvalidUniform) {
-          olive_shader->set_uniform(m_vegetation_pipeline->m_olive_uniforms.time,
-                                    olive.params.time);
+          olive_shader->set_uniform(
+              m_vegetation_pipeline->m_olive_uniforms.time, olive.params.time);
         }
         if (m_vegetation_pipeline->m_olive_uniforms.wind_strength !=
             Shader::InvalidUniform) {
@@ -843,7 +852,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             light_dir.normalize();
           }
           olive_shader->set_uniform(
-              m_vegetation_pipeline->m_olive_uniforms.light_direction, light_dir);
+              m_vegetation_pipeline->m_olive_uniforms.light_direction,
+              light_dir);
         }
 
         glBindVertexArray(m_vegetation_pipeline->m_olive_vao);
@@ -1052,8 +1062,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (single.params.is_ground_plane) {
           if (m_terrain_pipeline->m_ground_uniforms.mvp !=
               Shader::InvalidUniform) {
-            active_shader->set_uniform(m_terrain_pipeline->m_ground_uniforms.mvp,
-                                       mvp);
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_ground_uniforms.mvp, mvp);
           }
           if (m_terrain_pipeline->m_ground_uniforms.model !=
               Shader::InvalidUniform) {
@@ -1098,8 +1108,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           }
           if (m_terrain_pipeline->m_ground_uniforms.tint !=
               Shader::InvalidUniform) {
-            active_shader->set_uniform(m_terrain_pipeline->m_ground_uniforms.tint,
-                                       single.params.tint);
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_ground_uniforms.tint, single.params.tint);
           }
           if (m_terrain_pipeline->m_ground_uniforms.noise_offset !=
               Shader::InvalidUniform) {
@@ -1240,8 +1250,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         } else {
           if (m_terrain_pipeline->m_terrain_uniforms.mvp !=
               Shader::InvalidUniform) {
-            active_shader->set_uniform(m_terrain_pipeline->m_terrain_uniforms.mvp,
-                                       mvp);
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_terrain_uniforms.mvp, mvp);
           }
           if (m_terrain_pipeline->m_terrain_uniforms.model !=
               Shader::InvalidUniform) {
@@ -1287,7 +1297,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           if (m_terrain_pipeline->m_terrain_uniforms.tint !=
               Shader::InvalidUniform) {
             active_shader->set_uniform(
-                m_terrain_pipeline->m_terrain_uniforms.tint, single.params.tint);
+                m_terrain_pipeline->m_terrain_uniforms.tint,
+                single.params.tint);
           }
           if (m_terrain_pipeline->m_terrain_uniforms.noise_offset !=
               Shader::InvalidUniform) {
@@ -1530,14 +1541,15 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           river_shader->use();
           river_shader->set_uniform(m_water_pipeline->m_river_uniforms.view,
                                     view);
-          river_shader->set_uniform(m_water_pipeline->m_river_uniforms.projection,
-                                    projection);
+          river_shader->set_uniform(
+              m_water_pipeline->m_river_uniforms.projection, projection);
           river_shader->set_uniform(m_water_pipeline->m_river_uniforms.time,
                                     m_animation_time);
           m_last_bound_shader = river_shader;
           m_last_bound_texture = nullptr;
         }
-        draw_feature_model(river_shader, m_water_pipeline->m_river_uniforms.model,
+        draw_feature_model(river_shader,
+                           m_water_pipeline->m_river_uniforms.model,
                            Shader::InvalidUniform, Shader::InvalidUniform);
         break;
       }
@@ -1815,12 +1827,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         m_mesh_instancing_pipeline->begin_batch(it.mesh, batch_shader,
-                                              it.texture);
+                                                it.texture);
         for (std::size_t j = i; j < batch_end; ++j) {
           const auto &batch_it = std::get<MeshCmdIndex>(queue.get_sorted(j));
           m_mesh_instancing_pipeline->accumulate(batch_it.model, batch_it.color,
-                                               batch_it.alpha,
-                                               batch_it.material_id);
+                                                 batch_it.alpha,
+                                                 batch_it.material_id);
         }
         m_mesh_instancing_pipeline->flush();
 
@@ -1944,7 +1956,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(uniforms->instanced, true);
 
         m_mesh_instancing_pipeline->begin_batch(part.mesh, active_shader,
-                                              part.texture);
+                                                part.texture);
         for (std::size_t j = i; j < batch_end; ++j) {
           const auto &batch_part =
               std::get<DrawPartCmdIndex>(queue.get_sorted(j));
@@ -2119,7 +2131,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     case PrimitiveBatchCmdIndex: {
       const auto &batch = std::get<PrimitiveBatchCmdIndex>(cmd);
-      if (batch.instance_count() == 0 || m_primitive_batch_pipeline == nullptr ||
+      if (batch.instance_count() == 0 ||
+          m_primitive_batch_pipeline == nullptr ||
           !m_primitive_batch_pipeline->is_initialized()) {
         break;
       }
@@ -2131,18 +2144,19 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_primitive_batch_pipeline->upload_sphere_instances(
             data, batch.instance_count());
         m_primitive_batch_pipeline->draw_spheres(batch.instance_count(),
-                                               view_proj);
+                                                 view_proj);
         break;
       case PrimitiveType::Cylinder:
         m_primitive_batch_pipeline->upload_cylinder_instances(
             data, batch.instance_count());
         m_primitive_batch_pipeline->draw_cylinders(batch.instance_count(),
-                                                 view_proj);
+                                                   view_proj);
         break;
       case PrimitiveType::Cone:
-        m_primitive_batch_pipeline->upload_cone_instances(data,
-                                                        batch.instance_count());
-        m_primitive_batch_pipeline->draw_cones(batch.instance_count(), view_proj);
+        m_primitive_batch_pipeline->upload_cone_instances(
+            data, batch.instance_count());
+        m_primitive_batch_pipeline->draw_cones(batch.instance_count(),
+                                               view_proj);
         break;
       }
 
@@ -2192,8 +2206,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           break;
         }
         m_healer_aura_pipeline->render_single_aura(aura.position, aura.color,
-                                                 aura.radius, aura.intensity,
-                                                 aura.time, view_proj);
+                                                   aura.radius, aura.intensity,
+                                                   aura.time, view_proj);
         m_last_bound_shader = nullptr;
         break;
       }
@@ -2213,8 +2227,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           break;
         }
         m_combat_dust_pipeline->render_single_dust(dust.position, dust.color,
-                                                 dust.radius, dust.intensity,
-                                                 dust.time, view_proj);
+                                                   dust.radius, dust.intensity,
+                                                   dust.time, view_proj);
         m_last_bound_shader = nullptr;
         break;
       }
@@ -2233,9 +2247,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             !m_combat_dust_pipeline->is_initialized()) {
           break;
         }
-        m_combat_dust_pipeline->render_single_flame(flame.position, flame.color,
-                                                  flame.radius, flame.intensity,
-                                                  flame.time, view_proj);
+        m_combat_dust_pipeline->render_single_flame(
+            flame.position, flame.color, flame.radius, flame.intensity,
+            flame.time, view_proj);
         m_last_bound_shader = nullptr;
         break;
       }
@@ -2287,8 +2301,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       m_mode_indicator_pipeline->render_indicator(indicator_mesh, mc.model,
-                                                view_proj, mc.color, mc.alpha,
-                                                m_animation_time);
+                                                  view_proj, mc.color, mc.alpha,
+                                                  m_animation_time);
 
       m_last_bound_shader = nullptr;
       break;
@@ -2339,10 +2353,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           }
           ++debug_rigged_instanced_attempts;
           if (m_rigged_character_pipeline->draw_instanced(
-                  rig_batch_refs.data(), rig_batch_refs.size(),
-                  view_proj)) {
+                  rig_batch_refs.data(), rig_batch_refs.size(), view_proj)) {
             ++debug_rigged_instanced_successes;
-            m_last_bound_shader = m_rigged_character_pipeline->instanced_shader();
+            m_last_bound_shader =
+                m_rigged_character_pipeline->instanced_shader();
             m_last_bound_texture = nullptr;
             j = chunk_end;
             rig_fallback_start = j;

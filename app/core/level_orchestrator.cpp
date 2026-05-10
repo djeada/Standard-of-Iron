@@ -105,9 +105,9 @@ auto LevelOrchestrator::load_skirmish(
 
   if (!load_result.ok) {
     result.success = false;
-    result.error_message = load_result.errorMessage;
+    result.error_message = load_result.error_message;
     if (progress_tracker) {
-      progress_tracker->report_error(load_result.errorMessage);
+      progress_tracker->report_error(load_result.error_message);
     }
     return result;
   }
@@ -156,8 +156,8 @@ auto LevelOrchestrator::load_skirmish(
   QString map_error;
   const QString resolved_map_path =
       Utils::Resources::resolve_resource_path(map_path);
-  if (Game::Map::MapLoader::loadFromJsonFile(resolved_map_path, map_def,
-                                             &map_error)) {
+  if (Game::Map::MapLoader::load_from_json_file(resolved_map_path, map_def,
+                                                &map_error)) {
     if (minimap_manager) {
       minimap_manager->generate_for_map(map_def);
     }

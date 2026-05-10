@@ -11,8 +11,8 @@ namespace App::Utils {
 inline auto
 screen_to_ground(const Game::Systems::PickingService *picking_service,
                  const Render::GL::Camera *camera, QQuickWindow *window,
-                 int viewport_width, int viewport_height, const QPointF &screen_pt,
-                 QVector3D &out_world) -> bool {
+                 int viewport_width, int viewport_height,
+                 const QPointF &screen_pt, QVector3D &out_world) -> bool {
   if ((window == nullptr) || (camera == nullptr) ||
       (picking_service == nullptr)) {
     return false;
@@ -23,11 +23,11 @@ screen_to_ground(const Game::Systems::PickingService *picking_service,
                                                          screen_pt, out_world);
 }
 
-inline auto world_to_screen(const Game::Systems::PickingService *picking_service,
-                            const Render::GL::Camera *camera,
-                            QQuickWindow *window, int viewport_width,
-                            int viewport_height, const QVector3D &world,
-                            QPointF &out_screen) -> bool {
+inline auto
+world_to_screen(const Game::Systems::PickingService *picking_service,
+                const Render::GL::Camera *camera, QQuickWindow *window,
+                int viewport_width, int viewport_height, const QVector3D &world,
+                QPointF &out_screen) -> bool {
   if ((window == nullptr) || (camera == nullptr) ||
       (picking_service == nullptr)) {
     return false;

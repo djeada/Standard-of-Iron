@@ -22,6 +22,8 @@ auto horse_baseline_rump_frame() noexcept -> HorseAttachmentFrame;
 
 auto horse_baseline_neck_base_frame() noexcept -> HorseAttachmentFrame;
 
+auto horse_baseline_head_frame() noexcept -> HorseAttachmentFrame;
+
 auto horse_baseline_muzzle_frame() noexcept -> HorseAttachmentFrame;
 
 inline void append_horse_attachment_archetype(

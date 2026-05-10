@@ -174,7 +174,8 @@ auto MissionLoader::parse_condition(const QJsonObject &obj) -> Condition {
   return cond;
 }
 
-auto MissionLoader::parse_event_trigger(const QJsonObject &obj) -> EventTrigger {
+auto MissionLoader::parse_event_trigger(const QJsonObject &obj)
+    -> EventTrigger {
   EventTrigger trigger;
   trigger.type = obj["type"].toString();
 
@@ -209,8 +210,8 @@ auto MissionLoader::parse_game_event(const QJsonObject &obj) -> GameEvent {
 }
 
 auto MissionLoader::load_from_json_file(const QString &file_path,
-                                     MissionDefinition &out_mission,
-                                     QString *error_msg) -> bool {
+                                        MissionDefinition &out_mission,
+                                        QString *error_msg) -> bool {
   QFile file(file_path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     if (error_msg != nullptr) {

@@ -75,9 +75,10 @@ private:
   Shader *m_previous_renderer_shader = nullptr;
 };
 
-inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
-                                   Texture *white, const FlagColors &colors,
-                                   const ClothBannerResources *cloth = nullptr) {
+inline void
+draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out, Texture *white,
+                       const FlagColors &colors,
+                       const ClothBannerResources *cloth = nullptr) {
   if (auto *prod =
           p.entity->get_component<Engine::Core::ProductionComponent>()) {
     if (prod->rally_set && (p.resources != nullptr)) {
@@ -141,10 +142,10 @@ inline void draw_pole_with_banner(
     const QVector3D &pole_start, const QVector3D &pole_end, float pole_radius,
     const QVector3D &pole_color, const QVector3D &banner_center,
     const QVector3D &banner_half_size, const QVector3D &banner_color,
-    bool enableCapture = false) {
+    bool enable_capture = false) {
   QVector3D actual_banner_color = banner_color;
 
-  if (enableCapture && p.entity != nullptr) {
+  if (enable_capture && p.entity != nullptr) {
     auto *capture = p.entity->get_component<Engine::Core::CaptureComponent>();
     if ((capture != nullptr) && capture->is_being_captured) {
       float const progress = std::clamp(
@@ -170,7 +171,7 @@ inline void draw_pole_with_banner(
 }
 
 struct CaptureColors {
-  QVector3D teamColor;
+  QVector3D team_color;
   QVector3D team_trim_color;
   float lowering_offset;
 };
@@ -214,12 +215,12 @@ inline CaptureColors get_capture_colors(const DrawContext &p,
 
       QVector3D const new_team_color =
           Game::Visuals::team_colorForOwner(capture->capturing_player_id);
-      result.teamColor = QVector3D(base_team_color.x() * (1.0F - progress) +
-                                       new_team_color.x() * progress,
-                                   base_team_color.y() * (1.0F - progress) +
-                                       new_team_color.y() * progress,
-                                   base_team_color.z() * (1.0F - progress) +
-                                       new_team_color.z() * progress);
+      result.team_color = QVector3D(base_team_color.x() * (1.0F - progress) +
+                                        new_team_color.x() * progress,
+                                    base_team_color.y() * (1.0F - progress) +
+                                        new_team_color.y() * progress,
+                                    base_team_color.z() * (1.0F - progress) +
+                                        new_team_color.z() * progress);
       result.team_trim_color =
           QVector3D(base_team_trim.x() * (1.0F - progress) +
                         new_team_color.x() * 0.6F * progress,
@@ -282,7 +283,7 @@ inline void draw_hanging_banner(const DrawContext &p, ISubmitter &out,
                                 style.pole_base.z() + style.banner_z_offset);
   draw_banner_with_tassels(
       p, out, unit, white, banner_center, style.banner_width * 0.5F,
-      style.banner_height * 0.5F, style.banner_depth, capture_colors.teamColor,
+      style.banner_height * 0.5F, style.banner_depth, capture_colors.team_color,
       capture_colors.team_trim_color, cloth);
 
   QMatrix4x4 ornament_transform = p.model;

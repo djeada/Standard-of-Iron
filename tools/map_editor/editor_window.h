@@ -16,7 +16,7 @@ public:
   explicit EditorWindow(QWidget *parent = nullptr);
   ~EditorWindow() override;
 
-  bool loadFile(const QString &filePath);
+  bool loadFile(const QString &file_path);
 
 private slots:
   void newMap();
@@ -28,7 +28,7 @@ private slots:
   void redo();
   void onToolSelected(ToolType tool);
   void onToolCleared();
-  void onElementDoubleClicked(int elementType, int index);
+  void onElementDoubleClicked(int element_type, int index);
   void onGridDoubleClicked();
   void onModifiedChanged(bool modified);
   void onUndoRedoChanged();

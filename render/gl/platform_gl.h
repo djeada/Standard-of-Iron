@@ -12,9 +12,9 @@ inline auto supports_persistent_mapping() -> bool {
     return false;
   }
 
-  const auto glVersion = ctx->format().version();
-  const int major_version = glVersion.first;
-  const int minor_version = glVersion.second;
+  const auto gl_version = ctx->format().version();
+  const int major_version = gl_version.first;
+  const int minor_version = gl_version.second;
 
   if (major_version > 4 || (major_version == 4 && minor_version >= 4)) {
     return true;
@@ -74,16 +74,16 @@ public:
       typedef void(QOPENGLF_APIENTRYP type_glBufferStorage)(
           GLenum target, GLsizeiptr size, const void *data, GLbitfield flags);
 
-      auto glBufferStorage =
+      auto gl_buffer_storage =
           reinterpret_cast<type_glBufferStorage>(get_buffer_storage_function());
 
-      if (glBufferStorage != nullptr) {
+      if (gl_buffer_storage != nullptr) {
         const GLbitfield storage_flags = GL_DYNAMIC_STORAGE_BIT;
         const GLbitfield map_flags =
             GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 
-        glBufferStorage(GL_ARRAY_BUFFER, size, nullptr,
-                        storage_flags | map_flags);
+        gl_buffer_storage(GL_ARRAY_BUFFER, size, nullptr,
+                          storage_flags | map_flags);
 
         GLenum const err =
             QOpenGLContext::currentContext()->extraFunctions()->glGetError();

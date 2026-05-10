@@ -9,8 +9,8 @@ namespace Game::Mission {
 class MissionLoader {
 public:
   static auto load_from_json_file(const QString &file_path,
-                               MissionDefinition &out_mission,
-                               QString *error_msg = nullptr) -> bool;
+                                  MissionDefinition &out_mission,
+                                  QString *error_msg = nullptr) -> bool;
 
 private:
   static auto parse_position(const QJsonObject &obj) -> Position;

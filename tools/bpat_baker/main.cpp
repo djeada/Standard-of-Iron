@@ -409,28 +409,61 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     Render::GL::tune_mounted_knight_frame(horse_profile.dims, mount);
 
     Render::GL::MountedPoseController ctrl(pose, anim_ctx_r);
-    ctrl.mount_on_horse(mount);
-
-    switch (clip.riding_type) {
-    case BakerRidingType::Idle:
-      ctrl.riding_idle(mount);
-      break;
-    case BakerRidingType::Charge:
-      ctrl.riding_charging(mount, 1.0F);
-      break;
-    case BakerRidingType::Reining:
-      ctrl.riding_reining(mount, 0.7F, 0.7F);
-      break;
-    case BakerRidingType::BowShot:
-      ctrl.riding_bow_shot(mount, phase);
-      break;
-    default:
-      break;
-    }
     if (profile == HumanoidBakeProfile::SwordReady &&
         clip.riding_type != BakerRidingType::BowShot) {
-      Render::GL::HumanoidPoseController ready_ctrl(pose, anim_ctx_r);
-      ready_ctrl.hold_sword_and_shield();
+      Render::GL::MountedPoseController::MountedRiderPoseRequest request{};
+      request.dims = horse_profile.dims;
+      request.weapon_pose =
+          Render::GL::MountedPoseController::MountedWeaponPose::SwordIdle;
+      request.shield_pose =
+          Render::GL::MountedPoseController::MountedShieldPose::Guard;
+      request.left_hand_on_reins = false;
+      request.right_hand_on_reins = false;
+
+      switch (clip.riding_type) {
+      case BakerRidingType::Idle:
+        request.seat_pose =
+            Render::GL::MountedPoseController::MountedSeatPose::Neutral;
+        break;
+      case BakerRidingType::Charge:
+        request.seat_pose =
+            Render::GL::MountedPoseController::MountedSeatPose::Forward;
+        request.forward_bias = 0.30F;
+        request.clearance_forward = 1.15F;
+        break;
+      case BakerRidingType::Reining:
+        request.seat_pose =
+            Render::GL::MountedPoseController::MountedSeatPose::Defensive;
+        request.forward_bias = -0.15F;
+        request.rein_tension_left = 0.55F;
+        request.rein_tension_right = 0.55F;
+        break;
+      case BakerRidingType::BowShot:
+      default:
+        break;
+      }
+
+      ctrl.apply_pose(mount, request);
+      ctrl.finalize_head_sync(mount, "sword_ready_riding");
+    } else {
+      ctrl.mount_on_horse(mount);
+
+      switch (clip.riding_type) {
+      case BakerRidingType::Idle:
+        ctrl.riding_idle(mount);
+        break;
+      case BakerRidingType::Charge:
+        ctrl.riding_charging(mount, 1.0F);
+        break;
+      case BakerRidingType::Reining:
+        ctrl.riding_reining(mount, 0.7F, 0.7F);
+        break;
+      case BakerRidingType::BowShot:
+        ctrl.riding_bow_shot(mount, phase);
+        break;
+      default:
+        break;
+      }
     }
   } else {
     Render::GL::HumanoidGaitDescriptor gait{};

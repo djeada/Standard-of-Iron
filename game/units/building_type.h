@@ -26,7 +26,7 @@ inline auto building_type_to_string(BuildingType type) -> std::string {
 }
 
 inline auto try_parse_building_type(const QString &value,
-                                 BuildingType &out) -> bool {
+                                    BuildingType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("barracks")) {
     out = BuildingType::Barracks;
@@ -43,8 +43,8 @@ inline auto try_parse_building_type(const QString &value,
   return false;
 }
 
-inline auto
-building_type_from_string(const std::string &str) -> std::optional<BuildingType> {
+inline auto building_type_from_string(const std::string &str)
+    -> std::optional<BuildingType> {
   BuildingType result;
   if (try_parse_building_type(QString::fromStdString(str), result)) {
     return result;

@@ -60,8 +60,8 @@ void CampaignManager::start_campaign_mission(const QString &mission_path,
 
   Game::Mission::MissionDefinition mission;
   QString error;
-  if (!Game::Mission::MissionLoader::loadFromJsonFile(mission_file_path,
-                                                      mission, &error)) {
+  if (!Game::Mission::MissionLoader::load_from_json_file(mission_file_path,
+                                                         mission, &error)) {
     qWarning()
         << QString("Failed to load mission %1: %2").arg(mission_id).arg(error);
     return;

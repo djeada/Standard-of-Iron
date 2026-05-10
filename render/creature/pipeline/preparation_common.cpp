@@ -179,7 +179,7 @@ auto humanoid_clip_variant_for_anim(
 }
 
 auto humanoid_bpat_playback_for_anim(
-    Render::Creature::ArchetypeId archetype_id,
+    Render::Creature::ArchetypeId archetype_id, std::uint32_t species_id,
     const Render::GL::HumanoidAnimationContext &anim) noexcept
     -> std::optional<BpatPlayback> {
   using Render::Creature::ArchetypeDescriptor;
@@ -194,8 +194,8 @@ auto humanoid_bpat_playback_for_anim(
   if (clip_id == ArchetypeDescriptor::k_unmapped_clip) {
     return std::nullopt;
   }
-  auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::k_species_humanoid);
+  auto const *blob =
+      Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
   if (blob == nullptr || clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -225,15 +225,17 @@ auto humanoid_bpat_playback_for_anim(
 }
 
 auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
+                             std::uint32_t species_id,
                              const Render::GL::HumanoidAnimationContext
                                  &anim) noexcept -> std::optional<float> {
-  auto const playback = humanoid_bpat_playback_for_anim(archetype_id, anim);
+  auto const playback =
+      humanoid_bpat_playback_for_anim(archetype_id, species_id, anim);
   if (!playback.has_value()) {
     return std::nullopt;
   }
 
-  auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::k_species_humanoid);
+  auto const *blob =
+      Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
   if (blob == nullptr || playback->clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -257,10 +259,11 @@ auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
 }
 
 auto grounded_humanoid_contact_y(
-    Render::Creature::ArchetypeId archetype_id,
+    Render::Creature::ArchetypeId archetype_id, std::uint32_t species_id,
     const Render::GL::HumanoidPose &pose,
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> float {
-  if (auto const clip_contact = humanoid_clip_contact_y(archetype_id, anim);
+  if (auto const clip_contact =
+          humanoid_clip_contact_y(archetype_id, species_id, anim);
       clip_contact.has_value()) {
     return *clip_contact;
   }

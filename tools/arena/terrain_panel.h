@@ -17,7 +17,7 @@ signals:
   void regenerate_requested();
   void wireframe_toggled(bool enabled);
   void normals_toggled(bool enabled);
-  void ground_type_changed(const QString &groundType);
+  void ground_type_changed(const QString &ground_type);
   void rain_toggled(bool enabled);
   void rain_intensity_changed(float intensity);
 };

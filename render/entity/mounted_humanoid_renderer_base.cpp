@@ -5,10 +5,10 @@
 #include "../creature/archetype_registry.h"
 #include "../creature/bpat/bpat_format.h"
 #include "../creature/bpat/bpat_registry.h"
+#include "../creature/pipeline/creature_asset.h"
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../creature/pipeline/preparation_common.h"
-#include "../creature/quadruped/clip_set.h"
 #include "../gl/camera.h"
 #include "../graphics_settings.h"
 #include "../horse/horse_motion.h"
@@ -32,25 +32,6 @@ namespace Render::GL {
 
 namespace {
 
-constexpr Render::Creature::Quadruped::ClipSet k_horse_clips{0U, 1U, 2U,
-                                                             3U, 4U, 5U};
-
-auto grounded_horse_world_from_mount(
-    const DrawContext &ctx, const HorseProfile &profile,
-    const HorseMotionSample &motion) noexcept -> QMatrix4x4 {
-  QMatrix4x4 world = ctx.model;
-  (void)profile;
-  float const y_scale = world.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
-  auto const clip_id = Render::Creature::Quadruped::clip_for_gait(
-      k_horse_clips, motion.gait_type);
-  Render::Creature::Pipeline::ground_model_contact_to_surface(
-      world,
-      Render::Creature::Pipeline::horse_clip_contact_y(clip_id, motion.phase)
-          .value_or(0.0F),
-      y_scale);
-  return world;
-}
-
 auto rider_mount_frame(const MountedAttachmentFrame &mount) noexcept
     -> QMatrix4x4 {
   QMatrix4x4 local;
@@ -67,16 +48,23 @@ auto rider_state_for_anim(const HumanoidAnimationContext &anim) noexcept
 }
 
 auto rider_root_transform(Render::Creature::ArchetypeId archetype_id,
+                          Render::Creature::Pipeline::CreatureAssetId asset_id,
                           const HumanoidAnimationContext &anim) noexcept
     -> std::optional<QMatrix4x4> {
+  auto const *asset =
+      Render::Creature::Pipeline::CreatureAssetRegistry::instance().get(
+          asset_id);
+  std::uint32_t const species_id =
+      asset != nullptr ? asset->bpat_species_id
+                       : Render::Creature::Bpat::k_species_humanoid;
   auto const playback =
-      Render::Creature::Pipeline::humanoid_bpat_playback_for_anim(archetype_id,
-                                                                  anim);
+      Render::Creature::Pipeline::humanoid_bpat_playback_for_anim(
+          archetype_id, species_id, anim);
   if (!playback.has_value()) {
     return std::nullopt;
   }
-  auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
-      Render::Creature::Bpat::k_species_humanoid);
+  auto const *blob =
+      Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
   if (blob == nullptr || playback->clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -95,12 +83,13 @@ auto rider_root_transform(Render::Creature::ArchetypeId archetype_id,
   return palette[root_index];
 }
 
-auto rider_local_world_from_mount(const MountedAttachmentFrame &mount,
-                                  Render::Creature::ArchetypeId archetype_id,
-                                  const HumanoidAnimationContext &anim) noexcept
-    -> QMatrix4x4 {
+auto rider_local_world_from_mount(
+    const MountedAttachmentFrame &mount,
+    const Render::Creature::Pipeline::UnitVisualSpec &spec,
+    const HumanoidAnimationContext &anim) noexcept -> QMatrix4x4 {
   QMatrix4x4 const seat_frame = rider_mount_frame(mount);
-  auto const root = rider_root_transform(archetype_id, anim);
+  auto const root =
+      rider_root_transform(spec.archetype_id, spec.creature_asset_id, anim);
   if (!root.has_value()) {
     return seat_frame;
   }
@@ -128,7 +117,8 @@ auto MountedHumanoidRendererBase::mounted_visual_spec() const
     m_mounted_visual_spec_cache.mount.kind =
         Render::Creature::Pipeline::CreatureKind::Horse;
     m_mounted_visual_spec_cache.mount.archetype_id = m_mount_archetype_id;
-    m_mounted_visual_spec_cache.mount_socket = Render::Creature::k_invalid_socket;
+    m_mounted_visual_spec_cache.mount_socket =
+        Render::Creature::k_invalid_socket;
     m_mounted_visual_spec_baked = true;
   }
   return m_mounted_visual_spec_cache;
@@ -247,10 +237,12 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   HorseMotionSample motion{};
   resolve_mount_render_state(ctx, seed, variant, anim_ctx, true, profile, dims,
                              mount, motion);
+  QMatrix4x4 const grounded_horse_world =
+      Render::Horse::grounded_horse_world(ctx, motion);
 
-  Render::Horse::prepare_horse_render(m_horse_renderer, ctx, anim_ctx.inputs,
-                                      anim_ctx, profile, &mount, &motion,
-                                      resolve_mount_lod(ctx), out, seed);
+  Render::Horse::prepare_horse_render(
+      m_horse_renderer, ctx, anim_ctx.inputs, anim_ctx, profile, &mount,
+      &motion, resolve_mount_lod(ctx), out, seed, &grounded_horse_world);
 
   auto *unit_comp =
       ctx.entity != nullptr
@@ -261,7 +253,7 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   }
 
   DrawContext rider_ctx = ctx;
-  rider_ctx.model = grounded_horse_world_from_mount(ctx, profile, motion);
+  rider_ctx.model = grounded_horse_world;
 
   namespace RCP = Render::Creature::Pipeline;
   RCP::CreatureGraphInputs rider_inputs{};
@@ -274,8 +266,8 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   rider_output.spec = mounted_visual_spec().rider;
   rider_output.seed = seed;
   rider_output.world_matrix =
-      rider_ctx.model * rider_local_world_from_mount(
-                            mount, rider_output.spec.archetype_id, anim_ctx);
+      rider_ctx.model *
+      rider_local_world_from_mount(mount, rider_output.spec, anim_ctx);
   out.bodies.add_humanoid(rider_output, pose, variant, anim_ctx);
 }
 
