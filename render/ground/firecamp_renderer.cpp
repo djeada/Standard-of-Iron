@@ -47,6 +47,173 @@ inline auto smooth_value_noise(float x, float z, uint32_t seed) -> float {
   return v0 * (1.0F - fz) + v1 * fz;
 }
 
+auto rotate_xz(const QVector3D &v, float yaw) -> QVector3D {
+  float const c = std::cos(yaw);
+  float const s = std::sin(yaw);
+  return QVector3D(v.x() * c - v.z() * s, v.y(), v.x() * s + v.z() * c);
+}
+
+void draw_storytelling_objects(Render::GL::Renderer &renderer,
+                               const QVector3D &camp_pos, float base_radius,
+                               float intensity, uint32_t seed_state) {
+  uint32_t state = seed_state;
+  float const layout_radius = std::max(2.0F, base_radius * 1.35F);
+  float const story_scale =
+      std::clamp(0.85F + intensity * 0.15F, 0.8F, 1.2F) * base_radius;
+
+  auto place_around = [&](float angle, float distance_scale) -> QVector3D {
+    QVector3D const dir(std::cos(angle), 0.0F, std::sin(angle));
+    return camp_pos + dir * (layout_radius * distance_scale);
+  };
+
+  // Roman tent
+  {
+    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    QVector3D const center = place_around(angle, 1.25F);
+    QVector3D const axis = rotate_xz(QVector3D(1.0F, 0.0F, 0.0F), angle);
+    QVector3D const side = QVector3D(-axis.z(), 0.0F, axis.x());
+    float const half_len = story_scale * 0.70F;
+    float const half_width = story_scale * 0.45F;
+    float const peak_h = story_scale * 0.45F;
+    QVector3D const left = center - side * half_width;
+    QVector3D const right = center + side * half_width;
+    QVector3D const front_left = left - axis * half_len;
+    QVector3D const front_right = right - axis * half_len;
+    QVector3D const back_left = left + axis * half_len;
+    QVector3D const back_right = right + axis * half_len;
+    QVector3D const front_peak =
+        center - axis * half_len + QVector3D(0, peak_h, 0);
+    QVector3D const back_peak =
+        center + axis * half_len + QVector3D(0, peak_h, 0);
+    QVector3D const tent_color(0.74F, 0.68F, 0.57F);
+    renderer.cylinder(front_left, front_peak, 0.04F * story_scale, tent_color);
+    renderer.cylinder(front_right, front_peak, 0.04F * story_scale, tent_color);
+    renderer.cylinder(back_left, back_peak, 0.04F * story_scale, tent_color);
+    renderer.cylinder(back_right, back_peak, 0.04F * story_scale, tent_color);
+    renderer.cylinder(front_peak, back_peak, 0.03F * story_scale, tent_color);
+  }
+
+  // Supply cart
+  {
+    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    QVector3D const center = place_around(angle, 1.55F);
+    QVector3D const forward = rotate_xz(QVector3D(1.0F, 0.0F, 0.0F), angle);
+    QVector3D const right = QVector3D(-forward.z(), 0.0F, forward.x());
+    float const cart_half_len = story_scale * 0.50F;
+    float const cart_half_width = story_scale * 0.30F;
+    float const bed_y = story_scale * 0.18F;
+    QVector3D const wood_color(0.40F, 0.26F, 0.13F);
+    QVector3D const wheel_color(0.30F, 0.20F, 0.10F);
+    QVector3D const rear =
+        center - forward * cart_half_len + QVector3D(0, bed_y, 0);
+    QVector3D const front =
+        center + forward * cart_half_len + QVector3D(0, bed_y, 0);
+    renderer.cylinder(rear - right * cart_half_width,
+                      rear + right * cart_half_width, 0.04F * story_scale,
+                      wood_color);
+    renderer.cylinder(front - right * cart_half_width,
+                      front + right * cart_half_width, 0.04F * story_scale,
+                      wood_color);
+    renderer.cylinder(rear - right * cart_half_width,
+                      front - right * cart_half_width, 0.03F * story_scale,
+                      wood_color);
+    renderer.cylinder(rear + right * cart_half_width,
+                      front + right * cart_half_width, 0.03F * story_scale,
+                      wood_color);
+    QVector3D const axle = center + QVector3D(0, story_scale * 0.10F, 0);
+    renderer.cylinder(axle - right * (cart_half_width * 1.2F),
+                      axle + right * (cart_half_width * 1.2F),
+                      0.025F * story_scale, wood_color);
+    renderer.cylinder(axle - right * (cart_half_width * 1.2F) -
+                          QVector3D(0, story_scale * 0.20F, 0),
+                      axle - right * (cart_half_width * 1.2F) +
+                          QVector3D(0, story_scale * 0.20F, 0),
+                      0.07F * story_scale, wheel_color);
+    renderer.cylinder(axle + right * (cart_half_width * 1.2F) -
+                          QVector3D(0, story_scale * 0.20F, 0),
+                      axle + right * (cart_half_width * 1.2F) +
+                          QVector3D(0, story_scale * 0.20F, 0),
+                      0.07F * story_scale, wheel_color);
+  }
+
+  // Weapon rack
+  {
+    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    QVector3D const center = place_around(angle, 1.35F);
+    QVector3D const side = rotate_xz(QVector3D(1.0F, 0.0F, 0.0F), angle);
+    QVector3D const up(0.0F, 1.0F, 0.0F);
+    QVector3D const rack_color(0.35F, 0.22F, 0.12F);
+    QVector3D const spear_color(0.55F, 0.56F, 0.58F);
+    float const post_h = story_scale * 0.65F;
+    QVector3D const left = center - side * (story_scale * 0.35F);
+    QVector3D const right = center + side * (story_scale * 0.35F);
+    renderer.cylinder(left, left + up * post_h, 0.035F * story_scale,
+                      rack_color);
+    renderer.cylinder(right, right + up * post_h, 0.035F * story_scale,
+                      rack_color);
+    renderer.cylinder(left + up * (post_h * 0.7F), right + up * (post_h * 0.7F),
+                      0.03F * story_scale, rack_color);
+    QVector3D const lean_dir =
+        rotate_xz(QVector3D(0.15F, 1.0F, 0.0F), angle).normalized();
+    renderer.cylinder(center - side * (story_scale * 0.2F),
+                      center - side * (story_scale * 0.2F) +
+                          lean_dir * (story_scale * 0.95F),
+                      0.018F * story_scale, spear_color);
+    renderer.cylinder(center + side * (story_scale * 0.05F),
+                      center + side * (story_scale * 0.05F) +
+                          lean_dir * (story_scale * 0.9F),
+                      0.018F * story_scale, spear_color);
+    renderer.cylinder(center + side * (story_scale * 0.3F),
+                      center + side * (story_scale * 0.3F) +
+                          lean_dir * (story_scale * 0.92F),
+                      0.018F * story_scale, spear_color);
+  }
+
+  // Ruins
+  {
+    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    QVector3D const center = place_around(angle, 1.75F);
+    QVector3D const right = rotate_xz(QVector3D(1.0F, 0.0F, 0.0F), angle);
+    QVector3D const ruin_color(0.55F, 0.52F, 0.46F);
+    float const col_h_a = story_scale * 0.50F;
+    float const col_h_b = story_scale * 0.36F;
+    float const col_h_c = story_scale * 0.62F;
+    renderer.cylinder(center - right * (story_scale * 0.25F),
+                      center - right * (story_scale * 0.25F) +
+                          QVector3D(0, col_h_a, 0),
+                      0.07F * story_scale, ruin_color);
+    renderer.cylinder(center + right * (story_scale * 0.25F),
+                      center + right * (story_scale * 0.25F) +
+                          QVector3D(0, col_h_b, 0),
+                      0.07F * story_scale, ruin_color);
+    renderer.cylinder(center + QVector3D(0, 0, story_scale * 0.2F),
+                      center + QVector3D(0, col_h_c, story_scale * 0.2F),
+                      0.07F * story_scale, ruin_color);
+    renderer.cylinder(
+        center - right * (story_scale * 0.3F) + QVector3D(0, col_h_a * 0.9F, 0),
+        center + right * (story_scale * 0.3F) + QVector3D(0, col_h_b * 0.9F, 0),
+        0.03F * story_scale, ruin_color);
+  }
+
+  // Dead tree
+  {
+    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    QVector3D const base = place_around(angle, 1.9F);
+    QVector3D const trunk_top = base + QVector3D(0, story_scale * 0.95F, 0);
+    QVector3D const branch_a =
+        trunk_top +
+        rotate_xz(QVector3D(0.45F, 0.35F, 0.0F), angle) * story_scale;
+    QVector3D const branch_b =
+        trunk_top +
+        rotate_xz(QVector3D(-0.35F, 0.28F, 0.3F), angle) * story_scale;
+    QVector3D const bark_color(0.22F, 0.14F, 0.08F);
+    renderer.cylinder(base, trunk_top, 0.06F * story_scale, bark_color);
+    renderer.cylinder(trunk_top, branch_a, 0.035F * story_scale, bark_color);
+    renderer.cylinder(trunk_top - QVector3D(0, story_scale * 0.1F, 0), branch_b,
+                      0.03F * story_scale, bark_color);
+  }
+}
+
 } // namespace
 
 namespace Render::GL {
@@ -153,6 +320,9 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       renderer.cylinder(top_center - top_half, top_center + top_half,
                         top_radius, blended_log_color, 1.0F);
     }
+
+    draw_storytelling_objects(renderer, camp_pos, base_radius, intensity,
+                              state);
   }
 }
 
