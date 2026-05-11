@@ -45,10 +45,15 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_stone_state.reset_instances();
   auto &stone_params = m_stone_state.params;
 
-  stone_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  stone_params.light_direction = m_light_direction;
   stone_params.time = 0.0F;
 
   generate_stone_instances();
+}
+
+void StoneRenderer::set_light_direction(const QVector3D &dir) {
+  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
+  m_stone_state.params.light_direction = m_light_direction;
 }
 
 void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {

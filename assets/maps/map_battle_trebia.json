@@ -19,7 +19,11 @@
     "irregularity_amplitude": 0.07
   },
   "camera": {
-    "center": [70, 0, 60],
+    "center": [
+      70,
+      0,
+      60
+    ],
     "distance": 32.0,
     "tilt_deg": 45.0,
     "yaw": 225.0,
@@ -307,9 +311,18 @@
       "height": 2.5,
       "description": "Carthaginian command position overlooking river",
       "entrances": [
-        {"x": 45, "z": 90},
-        {"x": 75, "z": 90},
-        {"x": 60, "z": 82}
+        {
+          "x": 45,
+          "z": 90
+        },
+        {
+          "x": 75,
+          "z": 90
+        },
+        {
+          "x": 60,
+          "z": 82
+        }
       ]
     },
     {
@@ -382,35 +395,65 @@
   ],
   "rivers": [
     {
-      "start": [0, 55],
-      "end": [140, 55],
+      "start": [
+        0,
+        55
+      ],
+      "end": [
+        140,
+        55
+      ],
       "width": 12,
       "description": "The freezing Trebia River"
     },
     {
-      "start": [18, 46],
-      "end": [44, 55],
+      "start": [
+        18,
+        46
+      ],
+      "end": [
+        44,
+        55
+      ],
       "width": 4.0,
       "description": "Braided western channel"
     },
     {
-      "start": [78, 56],
-      "end": [112, 46],
+      "start": [
+        78,
+        56
+      ],
+      "end": [
+        112,
+        46
+      ],
       "width": 4.0,
       "description": "Braided eastern channel"
     }
   ],
   "bridges": [
     {
-      "start": [44, 53],
-      "end": [50, 57],
+      "start": [
+        44,
+        53
+      ],
+      "end": [
+        50,
+        57
+      ],
       "width": 4.0,
       "height": 0.7,
       "description": "Western timber crossing"
     },
     {
-      "start": [72, 57],
-      "end": [78, 53],
+      "start": [
+        72,
+        57
+      ],
+      "end": [
+        78,
+        53
+      ],
       "width": 4.0,
       "height": 0.7,
       "description": "Eastern timber crossing"
@@ -418,55 +461,130 @@
   ],
   "roads": [
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 3.5,
       "style": "default",
       "waypoints": [
-        [60, 5],
-        [60, 20],
-        [60, 35],
-        [60, 55],
-        [60, 70],
-        [60, 85],
-        [60, 110]
+        [
+          60,
+          5
+        ],
+        [
+          60,
+          20
+        ],
+        [
+          60,
+          35
+        ],
+        [
+          60,
+          55
+        ],
+        [
+          60,
+          70
+        ],
+        [
+          60,
+          85
+        ],
+        [
+          60,
+          110
+        ]
       ],
       "description": "Main north-south road through river ford"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [10, 55],
-        [25, 50],
-        [35, 55]
+        [
+          10,
+          55
+        ],
+        [
+          25,
+          50
+        ],
+        [
+          35,
+          55
+        ]
       ],
       "description": "Western flanking path"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [130, 55],
-        [95, 50],
-        [85, 55]
+        [
+          130,
+          55
+        ],
+        [
+          95,
+          50
+        ],
+        [
+          85,
+          55
+        ]
       ],
       "description": "Eastern flanking path"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [30, 22],
-        [40, 32],
-        [52, 42],
-        [60, 55]
+        [
+          30,
+          22
+        ],
+        [
+          40,
+          32
+        ],
+        [
+          52,
+          42
+        ],
+        [
+          60,
+          55
+        ]
       ],
       "description": "Roman advance lane into the central ford"
     }
@@ -480,5 +598,6 @@
     "intensity": 0.7,
     "temperature": "freezing",
     "description": "Heavy winter conditions - Romans suffer attrition crossing the icy river"
-  }
+  },
+  "time_of_day": "morning"
 }

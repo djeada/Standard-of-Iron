@@ -66,6 +66,12 @@ void RiverbankAssetRenderer::configure(
   generate_asset_instances();
 }
 
+void RiverbankAssetRenderer::set_light_direction(const QVector3D &dir) {
+  const QVector3D normalized =
+      dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
+  m_asset_state.params.light_direction = normalized;
+}
+
 void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
   Q_UNUSED(resources);
 

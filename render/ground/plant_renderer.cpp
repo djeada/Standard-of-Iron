@@ -46,12 +46,17 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
   const auto &wind_profile = profiles.wind;
   auto &plant_params = m_plant_state.params;
-  plant_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  plant_params.light_direction = m_light_direction;
   plant_params.time = 0.0F;
   plant_params.wind_strength = wind_profile.sway_strength;
   plant_params.wind_speed = wind_profile.sway_speed;
 
   generate_plant_instances();
+}
+
+void PlantRenderer::set_light_direction(const QVector3D &dir) {
+  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
+  m_plant_state.params.light_direction = m_light_direction;
 }
 
 void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {

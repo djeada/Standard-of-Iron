@@ -3,6 +3,7 @@
 #include "../../game/map/map_definition.h"
 #include "../i_render_pass.h"
 #include "../terrain_scene_types.h"
+#include <QVector3D>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -24,6 +25,8 @@ public:
   void configure(const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biome_settings,
                  const std::vector<Game::Map::FireCamp> &fire_camps = {});
+
+  void set_light_direction(const QVector3D &dir);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 

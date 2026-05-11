@@ -19,7 +19,11 @@
     "irregularity_amplitude": 0.05
   },
   "camera": {
-    "center": [90, 0, 60],
+    "center": [
+      90,
+      0,
+      60
+    ],
     "distance": 40.0,
     "tilt_deg": 45.0,
     "yaw": 225.0,
@@ -349,9 +353,18 @@
       "height": 2.5,
       "description": "Carthaginian command position",
       "entrances": [
-        {"x": 38, "z": 100},
-        {"x": 62, "z": 100},
-        {"x": 50, "z": 88}
+        {
+          "x": 38,
+          "z": 100
+        },
+        {
+          "x": 62,
+          "z": 100
+        },
+        {
+          "x": 50,
+          "z": 88
+        }
       ]
     },
     {
@@ -362,9 +375,18 @@
       "height": 2.0,
       "description": "Roman camp elevation",
       "entrances": [
-        {"x": 150, "z": 60},
-        {"x": 160, "z": 50},
-        {"x": 160, "z": 70}
+        {
+          "x": 150,
+          "z": 60
+        },
+        {
+          "x": 160,
+          "z": 50
+        },
+        {
+          "x": 160,
+          "z": 70
+        }
       ]
     },
     {
@@ -423,29 +445,53 @@
   ],
   "rivers": [
     {
-      "start": [80, 0],
-      "end": [100, 25],
+      "start": [
+        80,
+        0
+      ],
+      "end": [
+        100,
+        25
+      ],
       "width": 10,
       "description": "Aufidus River - northern boundary"
     },
     {
-      "start": [100, 25],
-      "end": [138, 38],
+      "start": [
+        100,
+        25
+      ],
+      "end": [
+        138,
+        38
+      ],
       "width": 7,
       "description": "Aufidus bend toward the Roman rear"
     }
   ],
   "bridges": [
     {
-      "start": [96, 25],
-      "end": [104, 27],
+      "start": [
+        96,
+        25
+      ],
+      "end": [
+        104,
+        27
+      ],
       "width": 5.0,
       "height": 0.8,
       "description": "Main ford bridge near the center"
     },
     {
-      "start": [124, 34],
-      "end": [132, 36],
+      "start": [
+        124,
+        34
+      ],
+      "end": [
+        132,
+        36
+      ],
       "width": 4.0,
       "height": 0.7,
       "description": "Roman logistics bridge on the river bend"
@@ -453,68 +499,161 @@
   ],
   "roads": [
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 4.0,
       "style": "default",
       "waypoints": [
-        [5, 60],
-        [30, 58],
-        [60, 60],
-        [90, 60],
-        [120, 60],
-        [150, 58],
-        [175, 60]
+        [
+          5,
+          60
+        ],
+        [
+          30,
+          58
+        ],
+        [
+          60,
+          60
+        ],
+        [
+          90,
+          60
+        ],
+        [
+          120,
+          60
+        ],
+        [
+          150,
+          58
+        ],
+        [
+          175,
+          60
+        ]
       ],
       "description": "Main east-west Roman road - Appian Way"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [50, 90],
-        [50, 75],
-        [55, 60]
+        [
+          50,
+          90
+        ],
+        [
+          50,
+          75
+        ],
+        [
+          55,
+          60
+        ]
       ],
       "description": "Path from Carthaginian camp to battle line"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [155, 60],
-        [155, 45],
-        [160, 30]
+        [
+          155,
+          60
+        ],
+        [
+          155,
+          45
+        ],
+        [
+          160,
+          30
+        ]
       ],
       "description": "Roman supply route"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [20, 96],
-        [40, 82],
-        [65, 70],
-        [90, 60]
+        [
+          20,
+          96
+        ],
+        [
+          40,
+          82
+        ],
+        [
+          65,
+          70
+        ],
+        [
+          90,
+          60
+        ]
       ],
       "description": "Carthaginian left-hook route toward the encirclement pocket"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [158, 28],
-        [145, 40],
-        [130, 52],
-        [110, 60]
+        [
+          158,
+          28
+        ],
+        [
+          145,
+          40
+        ],
+        [
+          130,
+          52
+        ],
+        [
+          110,
+          60
+        ]
       ],
       "description": "Roman reserve lane vulnerable to interception"
     }
@@ -522,5 +661,6 @@
   "victory": {
     "type": "encirclement",
     "description": "Execute the legendary double envelopment - surround and destroy Rome's greatest army"
-  }
+  },
+  "time_of_day": "afternoon"
 }

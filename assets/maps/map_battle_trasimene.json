@@ -19,7 +19,11 @@
     "irregularity_amplitude": 0.06
   },
   "camera": {
-    "center": [75, 0, 50],
+    "center": [
+      75,
+      0,
+      50
+    ],
     "distance": 35.0,
     "tilt_deg": 45.0,
     "yaw": 225.0,
@@ -249,9 +253,18 @@
       "height": 4.0,
       "description": "Western blocking hill - cuts off Roman retreat",
       "entrances": [
-        {"x": 45, "z": 46},
-        {"x": 35, "z": 60},
-        {"x": 55, "z": 60}
+        {
+          "x": 45,
+          "z": 46
+        },
+        {
+          "x": 35,
+          "z": 60
+        },
+        {
+          "x": 55,
+          "z": 60
+        }
       ]
     },
     {
@@ -263,9 +276,18 @@
       "height": 3.5,
       "description": "Central ridge for Carthaginian ambush positions",
       "entrances": [
-        {"x": 55, "z": 65},
-        {"x": 95, "z": 65},
-        {"x": 75, "z": 56}
+        {
+          "x": 55,
+          "z": 65
+        },
+        {
+          "x": 95,
+          "z": 65
+        },
+        {
+          "x": 75,
+          "z": 56
+        }
       ]
     },
     {
@@ -276,9 +298,18 @@
       "height": 4.5,
       "description": "Eastern hill - cavalry staging area",
       "entrances": [
-        {"x": 110, "z": 55},
-        {"x": 95, "z": 70},
-        {"x": 125, "z": 70}
+        {
+          "x": 110,
+          "z": 55
+        },
+        {
+          "x": 95,
+          "z": 70
+        },
+        {
+          "x": 125,
+          "z": 70
+        }
       ]
     },
     {
@@ -362,29 +393,53 @@
   ],
   "rivers": [
     {
-      "start": [0, 34],
-      "end": [62, 24],
+      "start": [
+        0,
+        34
+      ],
+      "end": [
+        62,
+        24
+      ],
       "width": 3.0,
       "description": "Western runoff stream feeding into the lake"
     },
     {
-      "start": [148, 36],
-      "end": [92, 24],
+      "start": [
+        148,
+        36
+      ],
+      "end": [
+        92,
+        24
+      ],
       "width": 3.0,
       "description": "Eastern runoff stream narrowing the retreat corridor"
     }
   ],
   "bridges": [
     {
-      "start": [58, 31],
-      "end": [64, 29],
+      "start": [
+        58,
+        31
+      ],
+      "end": [
+        64,
+        29
+      ],
       "width": 3.5,
       "height": 0.6,
       "description": "Roman plank bridge over western runoff"
     },
     {
-      "start": [90, 28],
-      "end": [96, 30],
+      "start": [
+        90,
+        28
+      ],
+      "end": [
+        96,
+        30
+      ],
       "width": 3.5,
       "height": 0.6,
       "description": "Roman plank bridge over eastern runoff"
@@ -392,45 +447,111 @@
   ],
   "roads": [
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 5.0,
       "style": "default",
       "waypoints": [
-        [5, 50],
-        [25, 48],
-        [50, 45],
-        [75, 42],
-        [100, 45],
-        [125, 48],
-        [145, 50]
+        [
+          5,
+          50
+        ],
+        [
+          25,
+          48
+        ],
+        [
+          50,
+          45
+        ],
+        [
+          75,
+          42
+        ],
+        [
+          100,
+          45
+        ],
+        [
+          125,
+          48
+        ],
+        [
+          145,
+          50
+        ]
       ],
       "description": "Narrow lakeside road - Roman march route into the trap"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [100, 45],
-        [110, 55],
-        [118, 70],
-        [130, 85]
+        [
+          100,
+          45
+        ],
+        [
+          110,
+          55
+        ],
+        [
+          118,
+          70
+        ],
+        [
+          130,
+          85
+        ]
       ],
       "description": "Path to Carthaginian staging area"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.0,
       "style": "default",
       "waypoints": [
-        [20, 34],
-        [40, 38],
-        [62, 42],
-        [88, 46],
-        [112, 50]
+        [
+          20,
+          34
+        ],
+        [
+          40,
+          38
+        ],
+        [
+          62,
+          42
+        ],
+        [
+          88,
+          46
+        ],
+        [
+          112,
+          50
+        ]
       ],
       "description": "Ridge track used by Roman scouts above the corridor"
     }
@@ -444,5 +565,6 @@
     "intensity": 0.85,
     "duration": 180.0,
     "description": "Dense morning mist - essential for concealing the ambush"
-  }
+  },
+  "time_of_day": "morning"
 }

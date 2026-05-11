@@ -23,6 +23,7 @@ add_executable(standard_of_iron_tests
     map/minimap_utils_test.cpp
     map/mission_loader_test.cpp
     map/campaign_loader_test.cpp
+    map/time_of_day_test.cpp
     systems/rain_manager_test.cpp
     systems/patrol_system_test.cpp
     systems/formation_system_test.cpp

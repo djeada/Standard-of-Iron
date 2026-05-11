@@ -19,7 +19,11 @@
     "irregularity_amplitude": 0.07
   },
   "camera": {
-    "center": [70, 0, 80],
+    "center": [
+      70,
+      0,
+      80
+    ],
     "distance": 38.0,
     "tilt_deg": 45.0,
     "yaw": 225.0,
@@ -274,10 +278,22 @@
       "height": 4.0,
       "description": "Central Carthaginian defensive stronghold",
       "entrances": [
-        {"x": 55, "z": 80},
-        {"x": 85, "z": 80},
-        {"x": 70, "z": 70},
-        {"x": 70, "z": 90}
+        {
+          "x": 55,
+          "z": 80
+        },
+        {
+          "x": 85,
+          "z": 80
+        },
+        {
+          "x": 70,
+          "z": 70
+        },
+        {
+          "x": 70,
+          "z": 90
+        }
       ]
     },
     {
@@ -288,9 +304,18 @@
       "height": 3.0,
       "description": "Western village defensive position",
       "entrances": [
-        {"x": 30, "z": 95},
-        {"x": 50, "z": 95},
-        {"x": 40, "z": 85}
+        {
+          "x": 30,
+          "z": 95
+        },
+        {
+          "x": 50,
+          "z": 95
+        },
+        {
+          "x": 40,
+          "z": 85
+        }
       ]
     },
     {
@@ -301,9 +326,18 @@
       "height": 3.0,
       "description": "Eastern village defensive position",
       "entrances": [
-        {"x": 90, "z": 95},
-        {"x": 110, "z": 95},
-        {"x": 100, "z": 85}
+        {
+          "x": 90,
+          "z": 95
+        },
+        {
+          "x": 110,
+          "z": 95
+        },
+        {
+          "x": 100,
+          "z": 85
+        }
       ]
     },
     {
@@ -314,9 +348,18 @@
       "height": 2.5,
       "description": "Forward observation position",
       "entrances": [
-        {"x": 60, "z": 50},
-        {"x": 80, "z": 50},
-        {"x": 70, "z": 60}
+        {
+          "x": 60,
+          "z": 50
+        },
+        {
+          "x": 80,
+          "z": 50
+        },
+        {
+          "x": 70,
+          "z": 60
+        }
       ]
     },
     {
@@ -410,49 +453,91 @@
   ],
   "rivers": [
     {
-      "start": [0, 60],
-      "end": [30, 55],
+      "start": [
+        0,
+        60
+      ],
+      "end": [
+        30,
+        55
+      ],
       "width": 5,
       "description": "Western stream"
     },
     {
-      "start": [110, 55],
-      "end": [140, 60],
+      "start": [
+        110,
+        55
+      ],
+      "end": [
+        140,
+        60
+      ],
       "width": 5,
       "description": "Eastern stream"
     },
     {
-      "start": [54, 34],
-      "end": [86, 34],
+      "start": [
+        54,
+        34
+      ],
+      "end": [
+        86,
+        34
+      ],
       "width": 4,
       "description": "Central irrigation canal across the lower approach"
     }
   ],
   "bridges": [
     {
-      "start": [28, 53],
-      "end": [32, 57],
+      "start": [
+        28,
+        53
+      ],
+      "end": [
+        32,
+        57
+      ],
       "width": 4,
       "height": 0.6,
       "description": "Western stream crossing"
     },
     {
-      "start": [108, 53],
-      "end": [112, 57],
+      "start": [
+        108,
+        53
+      ],
+      "end": [
+        112,
+        57
+      ],
       "width": 4,
       "height": 0.6,
       "description": "Eastern stream crossing"
     },
     {
-      "start": [62, 32],
-      "end": [68, 36],
+      "start": [
+        62,
+        32
+      ],
+      "end": [
+        68,
+        36
+      ],
       "width": 4,
       "height": 0.6,
       "description": "Canal crossing near the central road"
     },
     {
-      "start": [74, 32],
-      "end": [80, 36],
+      "start": [
+        74,
+        32
+      ],
+      "end": [
+        80,
+        36
+      ],
       "width": 4,
       "height": 0.6,
       "description": "Eastern canal crossing for village relief"
@@ -460,78 +545,201 @@
   ],
   "roads": [
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 4.0,
       "style": "default",
       "waypoints": [
-        [70, 0],
-        [70, 30],
-        [70, 50],
-        [70, 80],
-        [70, 110],
-        [70, 140],
-        [70, 160]
+        [
+          70,
+          0
+        ],
+        [
+          70,
+          30
+        ],
+        [
+          70,
+          50
+        ],
+        [
+          70,
+          80
+        ],
+        [
+          70,
+          110
+        ],
+        [
+          70,
+          140
+        ],
+        [
+          70,
+          160
+        ]
       ],
       "description": "Main north-south road through Campania"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 3.5,
       "style": "default",
       "waypoints": [
-        [0, 80],
-        [25, 82],
-        [40, 85],
-        [70, 80],
-        [100, 85],
-        [115, 82],
-        [140, 80]
+        [
+          0,
+          80
+        ],
+        [
+          25,
+          82
+        ],
+        [
+          40,
+          85
+        ],
+        [
+          70,
+          80
+        ],
+        [
+          100,
+          85
+        ],
+        [
+          115,
+          82
+        ],
+        [
+          140,
+          80
+        ]
       ],
       "description": "East-west supply road connecting villages"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [40, 95],
-        [45, 88],
-        [55, 82],
-        [70, 80]
+        [
+          40,
+          95
+        ],
+        [
+          45,
+          88
+        ],
+        [
+          55,
+          82
+        ],
+        [
+          70,
+          80
+        ]
       ],
       "description": "Path to western village"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [100, 95],
-        [95, 88],
-        [85, 82],
-        [70, 80]
+        [
+          100,
+          95
+        ],
+        [
+          95,
+          88
+        ],
+        [
+          85,
+          82
+        ],
+        [
+          70,
+          80
+        ]
       ],
       "description": "Path to eastern village"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.2,
       "style": "default",
       "waypoints": [
-        [12, 130],
-        [28, 118],
-        [44, 104],
-        [58, 90],
-        [70, 80],
-        [82, 90],
-        [96, 104],
-        [112, 118],
-        [128, 130]
+        [
+          12,
+          130
+        ],
+        [
+          28,
+          118
+        ],
+        [
+          44,
+          104
+        ],
+        [
+          58,
+          90
+        ],
+        [
+          70,
+          80
+        ],
+        [
+          82,
+          90
+        ],
+        [
+          96,
+          104
+        ],
+        [
+          112,
+          118
+        ],
+        [
+          128,
+          130
+        ]
       ],
       "description": "Northern perimeter road linking both outer villages"
     }
@@ -540,5 +748,6 @@
     "type": "defend_duration",
     "duration": 720.0,
     "description": "Hold Campania for 12 minutes while maintaining control of at least 2 villages"
-  }
+  },
+  "time_of_day": "day"
 }

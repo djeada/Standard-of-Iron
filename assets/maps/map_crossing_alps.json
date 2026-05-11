@@ -19,7 +19,11 @@
     "irregularity_amplitude": 0.12
   },
   "camera": {
-    "center": [90, 0, 90],
+    "center": [
+      90,
+      0,
+      90
+    ],
     "distance": 42.0,
     "tilt_deg": 45.0,
     "yaw": 225.0,
@@ -358,8 +362,14 @@
       "height": 3.0,
       "description": "Starting camp elevation",
       "entrances": [
-        {"x": 40, "z": 25},
-        {"x": 25, "z": 40}
+        {
+          "x": 40,
+          "z": 25
+        },
+        {
+          "x": 25,
+          "z": 40
+        }
       ]
     },
     {
@@ -370,21 +380,51 @@
       "height": 3.0,
       "description": "Italian side - destination",
       "entrances": [
-        {"x": 145, "z": 160},
-        {"x": 160, "z": 145}
+        {
+          "x": 145,
+          "z": 160
+        },
+        {
+          "x": 160,
+          "z": 145
+        }
       ]
     },
     {
       "type": "pass",
       "path": [
-        {"x": 35, "z": 35},
-        {"x": 55, "z": 50},
-        {"x": 70, "z": 60},
-        {"x": 85, "z": 80},
-        {"x": 100, "z": 95},
-        {"x": 115, "z": 110},
-        {"x": 135, "z": 130},
-        {"x": 155, "z": 155}
+        {
+          "x": 35,
+          "z": 35
+        },
+        {
+          "x": 55,
+          "z": 50
+        },
+        {
+          "x": 70,
+          "z": 60
+        },
+        {
+          "x": 85,
+          "z": 80
+        },
+        {
+          "x": 100,
+          "z": 95
+        },
+        {
+          "x": 115,
+          "z": 110
+        },
+        {
+          "x": 135,
+          "z": 130
+        },
+        {
+          "x": 155,
+          "z": 155
+        }
       ],
       "width": 10.0,
       "description": "Treacherous mountain pass through the Alps"
@@ -459,29 +499,53 @@
   ],
   "rivers": [
     {
-      "start": [42, 18],
-      "end": [72, 46],
+      "start": [
+        42,
+        18
+      ],
+      "end": [
+        72,
+        46
+      ],
       "width": 3.0,
       "description": "Meltwater torrent cutting across the lower pass"
     },
     {
-      "start": [112, 122],
-      "end": [168, 172],
+      "start": [
+        112,
+        122
+      ],
+      "end": [
+        168,
+        172
+      ],
       "width": 3.5,
       "description": "Alpine runoff stream near the final descent"
     }
   ],
   "bridges": [
     {
-      "start": [58, 34],
-      "end": [64, 40],
+      "start": [
+        58,
+        34
+      ],
+      "end": [
+        64,
+        40
+      ],
       "width": 4.0,
       "height": 0.8,
       "description": "Rope bridge over the lower meltwater torrent"
     },
     {
-      "start": [142, 148],
-      "end": [148, 154],
+      "start": [
+        142,
+        148
+      ],
+      "end": [
+        148,
+        154
+      ],
       "width": 4.0,
       "height": 0.7,
       "description": "Stone bridge on the Italian approach stream"
@@ -489,57 +553,141 @@
   ],
   "roads": [
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 4.0,
       "style": "default",
       "waypoints": [
-        [20, 20],
-        [35, 35],
-        [50, 48],
-        [65, 58],
-        [80, 75],
-        [95, 90],
-        [110, 105],
-        [130, 125],
-        [150, 150],
-        [165, 165]
+        [
+          20,
+          20
+        ],
+        [
+          35,
+          35
+        ],
+        [
+          50,
+          48
+        ],
+        [
+          65,
+          58
+        ],
+        [
+          80,
+          75
+        ],
+        [
+          95,
+          90
+        ],
+        [
+          110,
+          105
+        ],
+        [
+          130,
+          125
+        ],
+        [
+          150,
+          150
+        ],
+        [
+          165,
+          165
+        ]
       ],
       "description": "Main mountain pass route through the Alps"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [20, 20],
-        [15, 35],
-        [20, 50],
-        [35, 65],
-        [50, 80]
+        [
+          20,
+          20
+        ],
+        [
+          15,
+          35
+        ],
+        [
+          20,
+          50
+        ],
+        [
+          35,
+          65
+        ],
+        [
+          50,
+          80
+        ]
       ],
       "description": "Alternative western route - longer but safer"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.4,
       "style": "default",
       "waypoints": [
-        [70, 60],
-        [85, 68],
-        [102, 84],
-        [118, 98],
-        [132, 116],
-        [150, 138]
+        [
+          70,
+          60
+        ],
+        [
+          85,
+          68
+        ],
+        [
+          102,
+          84
+        ],
+        [
+          118,
+          98
+        ],
+        [
+          132,
+          116
+        ],
+        [
+          150,
+          138
+        ]
       ],
       "description": "Exposed eastern traverse that shortens the final climb"
     }
   ],
   "victory": {
     "type": "reach_destination",
-    "destination": {"x": 160, "z": 160},
+    "destination": {
+      "x": 160,
+      "z": 160
+    },
     "description": "Lead your army through the Alps to the Italian side while preserving at least 20 units"
   },
   "weather": {
@@ -547,5 +695,6 @@
     "intensity": 0.85,
     "temperature": "extreme_cold",
     "description": "Harsh Alpine winter - the cold claims lives every moment"
-  }
+  },
+  "time_of_day": "morning"
 }
