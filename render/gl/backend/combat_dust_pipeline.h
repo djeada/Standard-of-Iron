@@ -29,6 +29,11 @@ struct CombatDustData {
   EffectType effect_type{EffectType::Dust};
 };
 
+struct BloodPoolData {
+  QVector3D position;
+  float radius;
+};
+
 class CombatDustPipeline final : public IPipeline {
 public:
   explicit CombatDustPipeline(GL::Backend *backend,
@@ -47,6 +52,7 @@ public:
                                float animation_time);
 
   void collect_all_effects(Engine::Core::World *world, float animation_time);
+  void collect_blood_pools(Engine::Core::World *world);
 
   void render(const Camera &cam, float animation_time);
 
@@ -75,7 +81,10 @@ public:
   void render_dust_batch(const DustInstanceData *instances, std::size_t count,
                          const QMatrix4x4 &view_proj);
 
-  void clear_data() { m_dust_data.clear(); }
+  void clear_data() {
+    m_dust_data.clear();
+    m_blood_data.clear();
+  }
 
   void add_dust_zone(const QVector3D &position, float radius, float intensity,
                      const QVector3D &color, float time);
@@ -87,17 +96,26 @@ private:
   void render_dust(const CombatDustData &data, const Camera &cam);
   auto create_dust_geometry() -> bool;
   void shutdown_geometry();
+  auto create_blood_geometry() -> bool;
+  void shutdown_blood_geometry();
+  void render_blood_pools(const Camera &cam);
 
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shader_cache = nullptr;
   GL::Shader *m_dust_shader = nullptr;
+  GL::Shader *m_blood_shader = nullptr;
 
   GLuint m_vao = 0;
   GLuint m_vertex_buffer = 0;
   GLuint m_index_buffer = 0;
   GLsizei m_index_count = 0;
+  GLuint m_blood_vao = 0;
+  GLuint m_blood_vertex_buffer = 0;
+  GLuint m_blood_index_buffer = 0;
+  GLsizei m_blood_index_count = 0;
 
   std::vector<CombatDustData> m_dust_data;
+  std::vector<BloodPoolData> m_blood_data;
 
   struct DustUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
@@ -110,7 +128,14 @@ private:
     GL::Shader::UniformHandle effect_type{GL::Shader::InvalidUniform};
   };
 
+  struct BloodUniforms {
+    GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle radius{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle alpha_scale{GL::Shader::InvalidUniform};
+  };
+
   DustUniforms m_uniforms;
+  BloodUniforms m_blood_uniforms;
 };
 
 } // namespace BackendPipelines

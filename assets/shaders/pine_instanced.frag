@@ -24,8 +24,14 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 l = normalize(uLightDirection);
   float diffuse = max(dot(n, l), 0.0);
-  float ambient = 0.4;
-  float lighting = ambient + diffuse * 0.7;
+  float ambient = 0.22;
+  float lighting = ambient + diffuse * 0.72;
+
+  // Warm sun, cool sky color grading
+  vec3 sun_color = vec3(1.08, 0.92, 0.74);
+  vec3 sky_color = vec3(0.72, 0.80, 1.00);
+  float lit_t = clamp(diffuse * 1.4, 0.0, 1.0);
+  vec3 light_tint = mix(sky_color * 0.50, sun_color, lit_t);
 
   float needleNoise = hash(vec2(vTexCoord.x * 28.0 + vNeedleSeed * 7.1,
                                 vTexCoord.y * 24.0 + vNeedleSeed * 5.3));
@@ -48,7 +54,7 @@ void main() {
   vec3 trunkColor = trunkBase * (0.85 + barkNoise * 0.35);
 
   vec3 baseColor = mix(trunkColor, needleColor, vFoliageMask);
-  vec3 color = baseColor * lighting;
+  vec3 color = baseColor * lighting * light_tint;
 
   float silhouetteNoise = hash(vec2(vTexCoord.x * 30.0 + vNeedleSeed * 9.0,
                                     vTexCoord.y * 40.0 + vNeedleSeed * 5.5));

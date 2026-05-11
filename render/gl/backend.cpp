@@ -1061,8 +1061,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                                 m_clear_color[Blue]);
       QVector3D const camera_position = cam.get_position();
       float const fog_start =
-          std::max(cam.get_near() + 8.0F, cam.get_far() * 0.30F);
-      float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.78F);
+          std::max(cam.get_near() + 5.0F, cam.get_far() * 0.18F);
+      float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.62F);
 
       auto draw_surface = [&](const TerrainSurfaceCmd &single) {
         const QMatrix4x4 mvp = view_proj * single.model;
@@ -1650,7 +1650,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         if (m_last_bound_shader != bridge_shader) {
           bridge_shader->use();
-          QVector3D const light_dir(0.35F, 0.8F, 0.45F);
+          QVector3D const light_dir(0.65F, 0.50F, 0.40F);
           bridge_shader->set_uniform(
               m_water_pipeline->m_bridge_uniforms.light_direction, light_dir);
           m_last_bound_shader = bridge_shader;
@@ -1669,7 +1669,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         if (m_last_bound_shader != road_shader) {
           road_shader->use();
-          QVector3D const light_dir(0.35F, 0.8F, 0.45F);
+          QVector3D const light_dir(0.65F, 0.50F, 0.40F);
           road_shader->set_uniform(
               m_water_pipeline->m_road_uniforms.light_direction, light_dir);
           m_last_bound_shader = road_shader;

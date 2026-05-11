@@ -417,4 +417,77 @@ private:
   bool m_enabled = true;
 };
 
+// Wraps an ISubmitter and overrides mesh/part/banner material_id for damaged
+// buildings. When damage_material_id == 0, passes through unchanged.
+class DamageStateSubmitter : public ISubmitter {
+public:
+  explicit DamageStateSubmitter(ISubmitter &inner, int damage_material_id)
+      : m_inner(inner), m_damage_id(damage_material_id) {}
+
+  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
+            Texture *tex = nullptr, float alpha = 1.0F,
+            int material_id = 0) override {
+    m_inner.mesh(mesh, model, color, tex, alpha, pick(material_id));
+  }
+  void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
+            const QVector3D &color, Texture *tex = nullptr,
+            float alpha = 1.0F, int material_id = 0) override {
+    m_inner.part(mesh, material, model, color, tex, alpha, pick(material_id));
+  }
+  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
+              const QVector3D &trim_color, Texture *tex = nullptr,
+              float alpha = 1.0F, int material_id = 0) override {
+    m_inner.banner(mesh, model, color, trim_color, tex, alpha,
+                   pick(material_id));
+  }
+
+  void rigged(const RiggedCreatureCmd &cmd) override { m_inner.rigged(cmd); }
+  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
+                const QVector3D &color, float alpha = 1.0F) override {
+    m_inner.cylinder(start, end, radius, color, alpha);
+  }
+  void selection_ring(const QMatrix4x4 &model, float alpha_inner,
+                      float alpha_outer, const QVector3D &color) override {
+    m_inner.selection_ring(model, alpha_inner, alpha_outer, color);
+  }
+  void grid(const QMatrix4x4 &model, const QVector3D &color, float cell_size,
+            float thickness, float extent) override {
+    m_inner.grid(model, color, cell_size, thickness, extent);
+  }
+  void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+                       float base_alpha = 0.15F) override {
+    m_inner.selection_smoke(model, color, base_alpha);
+  }
+  void healing_beam(const QVector3D &start, const QVector3D &end,
+                    const QVector3D &color, float progress, float beam_width,
+                    float intensity, float time) override {
+    m_inner.healing_beam(start, end, color, progress, beam_width, intensity,
+                         time);
+  }
+  void healer_aura(const QVector3D &position, const QVector3D &color,
+                   float radius, float intensity, float time) override {
+    m_inner.healer_aura(position, color, radius, intensity, time);
+  }
+  void combat_dust(const QVector3D &position, const QVector3D &color,
+                   float radius, float intensity, float time) override {
+    m_inner.combat_dust(position, color, radius, intensity, time);
+  }
+  void stone_impact(const QVector3D &position, const QVector3D &color,
+                    float radius, float intensity, float time) override {
+    m_inner.stone_impact(position, color, radius, intensity, time);
+  }
+  void mode_indicator(const QMatrix4x4 &model, int mode_type,
+                      const QVector3D &color, float alpha = 1.0F) override {
+    m_inner.mode_indicator(model, mode_type, color, alpha);
+  }
+
+private:
+  [[nodiscard]] auto pick(int incoming_id) const noexcept -> int {
+    return (m_damage_id != 0 && incoming_id == 0) ? m_damage_id : incoming_id;
+  }
+
+  ISubmitter &m_inner;
+  int m_damage_id;
+};
+
 } // namespace Render::GL

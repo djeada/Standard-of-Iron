@@ -26,8 +26,8 @@ constexpr float k_shadow_size_mounted = 0.35F;
 constexpr float k_shadow_size_horse = 0.38F;
 constexpr float k_shadow_size_elephant = 0.55F;
 constexpr float k_shadow_ground_offset = 0.02F;
-constexpr float k_shadow_base_alpha = 0.24F;
-const QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
+constexpr float k_shadow_base_alpha = 0.32F;
+const QVector3D k_shadow_light_dir(0.65F, 0.50F, 0.40F);
 
 const QVector3D k_shadow_light_dir_normalized = k_shadow_light_dir.normalized();
 const QVector2D k_shadow_dir_xz_normalized = []() {

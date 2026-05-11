@@ -47,6 +47,25 @@ void main() {
     modelPos.z += twist * 0.7 * trunkMask;
   }
 
+  // Per-instance trunk lean: each tree tilts in a unique direction
+  float heightNorm = clamp(aPos.y / 0.55, 0.0, 1.0);
+  float leanAngle = (silhouetteSeed - 0.5) * 0.22;
+  float leanYaw = barkSeed * TWO_PI;
+  modelPos.x += cos(leanYaw) * leanAngle * heightNorm * heightNorm;
+  modelPos.z += sin(leanYaw) * leanAngle * heightNorm * heightNorm;
+
+  // Canopy lumps: break the perfect-sphere blob at each branch tip
+  if (foliageMask > 0.1) {
+    float ang = atan(modelPos.z, modelPos.x);
+    float lumpBase = sin(ang * 3.0 + silhouetteSeed * TWO_PI) * 0.22;
+    float lumpFine = sin(ang * 5.0 + leafSeed * TWO_PI * 1.7) * 0.10;
+    float lumpMag = (lumpBase + lumpFine) * foliageMask;
+    modelPos.xz *= (1.0 + lumpMag);
+    // Per-instance canopy stretch: some trees tall-narrow, others wide-flat
+    float stretch = mix(0.78, 1.28, leafSeed);
+    modelPos.y *= mix(1.0, stretch, foliageMask);
+  }
+
   vec3 localPos = modelPos * scale;
 
   float heightFactor = clamp(aPos.y * 2.0, 0.0, 1.0);
