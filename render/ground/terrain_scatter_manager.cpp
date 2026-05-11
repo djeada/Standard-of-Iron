@@ -79,6 +79,15 @@ void TerrainScatterManager::configure(
   m_firecamp->set_explicit_fire_camps(positions, intensities, radii);
 }
 
+void TerrainScatterManager::set_light_direction(const QVector3D &dir) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+  m_biome->set_light_direction(dir);
+  m_stone->set_light_direction(dir);
+  m_plant->set_light_direction(dir);
+  m_pine->set_light_direction(dir);
+  m_olive->set_light_direction(dir);
+}
+
 void TerrainScatterManager::submit(Renderer &renderer,
                                    ResourceManager *resources) {
   std::lock_guard<std::mutex> lock(m_mutex);

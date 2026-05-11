@@ -62,6 +62,7 @@ auto LevelLoader::loadFromAssets(
     res.map_name = def.name;
     res.rain_settings = def.rain;
     res.biome_seed = def.biome.seed;
+    res.lighting_settings = lighting_for_time_of_day(def.time_of_day);
 
     Game::Map::TerrainService::instance().initialize(def);
 

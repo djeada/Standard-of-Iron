@@ -78,6 +78,11 @@ void TerrainRenderer::configure(
   build_meshes();
 }
 
+void TerrainRenderer::set_light_direction(const QVector3D &dir) {
+  m_light_direction =
+      dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : dir.normalized();
+}
+
 void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   if (m_chunks.empty()) {
     return;
@@ -129,6 +134,7 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     cmd.mesh = chunk.mesh.get();
     cmd.model = k_identity_matrix;
     cmd.params = chunk.params;
+    cmd.params.light_direction = m_light_direction;
     cmd.sort_key = 0x0080U;
     cmd.depth_write = true;
     cmd.wireframe = m_wireframe;

@@ -38,6 +38,11 @@ public:
 
   void set_color(const QVector3D &c) { m_color = c; }
 
+  void set_light_direction(const QVector3D &dir) {
+    m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.85F, 0.42F) : dir.normalized();
+    invalidate_params_cache();
+  }
+
   void set_biome(const Game::Map::BiomeSettings &settings) {
     m_biome_settings = settings;
     m_has_biome = true;
@@ -63,6 +68,7 @@ private:
 
   QVector3D m_color{0.15F, 0.18F, 0.15F};
   QMatrix4x4 m_model;
+  QVector3D m_light_direction{0.35F, 0.85F, 0.42F};
   Game::Map::BiomeSettings m_biome_settings;
   bool m_has_biome = false;
   QVector2D m_noise_offset{0.0F, 0.0F};

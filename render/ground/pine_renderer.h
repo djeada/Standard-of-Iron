@@ -21,6 +21,8 @@ public:
   void configure(const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biome_settings);
 
+  void set_light_direction(const QVector3D &dir);
+
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
   void clear();
@@ -48,6 +50,7 @@ private:
   std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
+  QVector3D m_light_direction{0.35F, 0.8F, 0.45F};
 
   Render::Ground::Scatter::FilteredRendererState<PineInstanceGpu,
                                                  PineBatchParams>

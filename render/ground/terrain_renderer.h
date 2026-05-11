@@ -26,6 +26,8 @@ public:
   void configure(const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biome_settings);
 
+  void set_light_direction(const QVector3D &dir);
+
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
   void set_wireframe(bool enable) { m_wireframe = enable; }
@@ -75,6 +77,7 @@ private:
   std::vector<ChunkVisibilityCacheEntry> m_chunk_visibility_cache;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
+  QVector3D m_light_direction{0.65F, 0.50F, 0.40F};
 };
 
 } // namespace Render::GL

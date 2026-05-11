@@ -526,38 +526,74 @@
   ],
   "roads": [
     {
-      "start": [15, 30],
-      "end": [105, 30],
+      "start": [
+        15,
+        30
+      ],
+      "end": [
+        105,
+        30
+      ],
       "width": 3.0,
       "style": "default"
     },
     {
-      "start": [15, 90],
-      "end": [105, 90],
+      "start": [
+        15,
+        90
+      ],
+      "end": [
+        105,
+        90
+      ],
       "width": 3.0,
       "style": "default"
     },
     {
-      "start": [30, 15],
-      "end": [30, 105],
+      "start": [
+        30,
+        15
+      ],
+      "end": [
+        30,
+        105
+      ],
       "width": 3.0,
       "style": "default"
     },
     {
-      "start": [90, 15],
-      "end": [90, 105],
+      "start": [
+        90,
+        15
+      ],
+      "end": [
+        90,
+        105
+      ],
       "width": 3.0,
       "style": "default"
     },
     {
-      "start": [30, 30],
-      "end": [90, 90],
+      "start": [
+        30,
+        30
+      ],
+      "end": [
+        90,
+        90
+      ],
       "width": 2.5,
       "style": "default"
     },
     {
-      "start": [30, 90],
-      "end": [90, 30],
+      "start": [
+        30,
+        90
+      ],
+      "end": [
+        90,
+        30
+      ],
       "width": 2.5,
       "style": "default"
     }
@@ -570,5 +606,6 @@
     "defeat_conditions": [
       "no_key_structures"
     ]
-  }
+  },
+  "time_of_day": "day"
 }

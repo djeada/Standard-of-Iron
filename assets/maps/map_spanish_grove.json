@@ -28,13 +28,13 @@
       0.06
     ],
     "grass_primary": [
-      0.10,
+      0.1,
       0.22,
       0.06
     ],
     "grass_secondary": [
       0.16,
-      0.30,
+      0.3,
       0.08
     ],
     "grass_dry": [
@@ -43,7 +43,7 @@
       0.12
     ],
     "soil_color": [
-      0.80,
+      0.8,
       0.69,
       0.49
     ],
@@ -325,7 +325,7 @@
     {
       "x": 90,
       "z": 190,
-      "intensity": 0.90,
+      "intensity": 0.9,
       "radius": 2.7
     },
     {
@@ -630,62 +630,122 @@
   ],
   "roads": [
     {
-      "start": [70, 70],
-      "end": [140, 140],
+      "start": [
+        70,
+        70
+      ],
+      "end": [
+        140,
+        140
+      ],
       "width": 3.2,
       "style": "default"
     },
     {
-      "start": [140, 140],
-      "end": [210, 210],
+      "start": [
+        140,
+        140
+      ],
+      "end": [
+        210,
+        210
+      ],
       "width": 3.2,
       "style": "default"
     },
     {
-      "start": [70, 210],
-      "end": [140, 140],
+      "start": [
+        70,
+        210
+      ],
+      "end": [
+        140,
+        140
+      ],
       "width": 3.0,
       "style": "default"
     },
     {
-      "start": [210, 70],
-      "end": [140, 140],
+      "start": [
+        210,
+        70
+      ],
+      "end": [
+        140,
+        140
+      ],
       "width": 3.0,
       "style": "default"
     },
     {
-      "start": [70, 70],
-      "end": [70, 210],
+      "start": [
+        70,
+        70
+      ],
+      "end": [
+        70,
+        210
+      ],
       "width": 2.8,
       "style": "default"
     },
     {
-      "start": [210, 70],
-      "end": [210, 210],
+      "start": [
+        210,
+        70
+      ],
+      "end": [
+        210,
+        210
+      ],
       "width": 2.8,
       "style": "default"
     },
     {
-      "start": [70, 70],
-      "end": [210, 70],
+      "start": [
+        70,
+        70
+      ],
+      "end": [
+        210,
+        70
+      ],
       "width": 2.8,
       "style": "default"
     },
     {
-      "start": [70, 210],
-      "end": [210, 210],
+      "start": [
+        70,
+        210
+      ],
+      "end": [
+        210,
+        210
+      ],
       "width": 2.8,
       "style": "default"
     },
     {
-      "start": [90, 90],
-      "end": [140, 140],
+      "start": [
+        90,
+        90
+      ],
+      "end": [
+        140,
+        140
+      ],
       "width": 2.5,
       "style": "default"
     },
     {
-      "start": [190, 190],
-      "end": [140, 140],
+      "start": [
+        190,
+        190
+      ],
+      "end": [
+        140,
+        140
+      ],
       "width": 2.5,
       "style": "default"
     }
@@ -698,5 +758,6 @@
     "defeat_conditions": [
       "no_key_structures"
     ]
-  }
+  },
+  "time_of_day": "afternoon"
 }

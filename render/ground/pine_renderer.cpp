@@ -45,12 +45,17 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 
   const auto wind_profile = Game::Map::make_wind_profile(m_biome_settings);
   auto &pine_params = m_pine_state.params;
-  pine_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  pine_params.light_direction = m_light_direction;
   pine_params.time = 0.0F;
   pine_params.wind_strength = wind_profile.sway_strength;
   pine_params.wind_speed = wind_profile.sway_speed;
 
   generate_pine_instances();
+}
+
+void PineRenderer::set_light_direction(const QVector3D &dir) {
+  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
+  m_pine_state.params.light_direction = m_light_direction;
 }
 
 void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
