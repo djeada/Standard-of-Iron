@@ -191,6 +191,28 @@ TEST(ArchetypeRegistryBaseline, VariantCountsReflectBakedClipFamilies) {
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_rider_base,
                                    AnimationStateId::Die),
             1U);
+  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
+                                   AnimationStateId::Idle),
+            5U);
+}
+
+TEST(ArchetypeRegistryBaseline, IdleVariantsResolveToAmbientIdleClips) {
+  const auto &reg = ArchetypeRegistry::instance();
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::Idle, 0U),
+            Render::Creature::k_humanoid_idle_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::Idle, 1U),
+            Render::Creature::k_humanoid_idle_squat_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::Idle, 2U),
+            Render::Creature::k_humanoid_idle_jump_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::Idle, 3U),
+            Render::Creature::k_humanoid_idle_weapon_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                                  AnimationStateId::Idle, 4U),
+            Render::Creature::k_humanoid_idle_weave_clip);
 }
 
 TEST(ArchetypeRegistryBaseline, ResolveBpatClipClampsInsideClipFamily) {

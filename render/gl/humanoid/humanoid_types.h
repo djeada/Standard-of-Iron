@@ -8,6 +8,36 @@
 
 namespace Render::GL {
 
+enum class AmbientIdleType : std::uint8_t {
+  None = 0,
+  SitDown,
+  ShuffleFeet,
+  TapFoot,
+  ShiftWeight,
+  StepInPlace,
+  BendKnee,
+  RaiseWeapon,
+  Jump
+};
+
+/// Returns the BPAT idle clip variant index (1-4) for a baked ambient idle
+/// type, or 0 for None / unbaked types. Variant 0 is the normal idle clip.
+[[nodiscard]] inline constexpr auto
+ambient_idle_clip_variant(AmbientIdleType t) noexcept -> std::uint8_t {
+  switch (t) {
+  case AmbientIdleType::SitDown:
+    return 1U;
+  case AmbientIdleType::Jump:
+    return 2U;
+  case AmbientIdleType::RaiseWeapon:
+    return 3U;
+  case AmbientIdleType::ShiftWeight:
+    return 4U;
+  default:
+    return 0U;
+  }
+}
+
 enum class CombatAnimPhase : std::uint8_t {
   Idle,
   Advance,
@@ -46,6 +76,7 @@ struct AnimationInputs {
   bool is_dead{false};
   float death_progress{0.0F};
   std::uint8_t death_variant{0};
+  float idle_duration{0.0F};
 };
 
 inline auto hold_transition_amount(const AnimationInputs &inputs) -> float {
@@ -221,6 +252,8 @@ struct HumanoidAnimationContext {
   bool has_movement_target{false};
   float yaw_radians{0.0F};
   float yaw_degrees{0.0F};
+  AmbientIdleType ambient_idle_type{AmbientIdleType::None};
+  float ambient_idle_phase{0.0F};
 
   auto locomotion_speed() const -> float { return gait.speed; }
   auto locomotion_normalized_speed() const -> float {

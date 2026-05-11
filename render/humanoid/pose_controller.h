@@ -7,18 +7,6 @@
 
 namespace Render::GL {
 
-enum class AmbientIdleType : std::uint8_t {
-  None = 0,
-  SitDown,
-  ShuffleFeet,
-  TapFoot,
-  ShiftWeight,
-  StepInPlace,
-  BendKnee,
-  RaiseWeapon,
-  Jump
-};
-
 class HumanoidPoseController {
 public:
   HumanoidPoseController(HumanoidPose &pose,
@@ -34,6 +22,9 @@ public:
 
   static auto get_ambient_idle_type(float time, std::uint32_t seed,
                                     float idle_duration) -> AmbientIdleType;
+
+  static auto compute_ambient_idle_phase(float time,
+                                         std::uint32_t seed) -> float;
 
   void kneel(float depth);
   void kneel_transition(float progress, bool standing_up);

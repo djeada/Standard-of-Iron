@@ -626,6 +626,25 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       }
     }
 
+    if (!is_mounted_spawn) {
+      bool const is_ambient_idle_eligible =
+          !soldier_anim.is_moving && !soldier_anim.is_attacking &&
+          !soldier_anim.is_in_hold_mode && !soldier_anim.is_constructing &&
+          !soldier_anim.is_healing && !soldier_anim.is_hit_reacting &&
+          !soldier_anim.is_dying && !soldier_anim.is_dead;
+      if (is_ambient_idle_eligible) {
+        AmbientIdleType const ambient_type =
+            HumanoidPoseController::get_ambient_idle_type(
+                anim.time, inst_seed, soldier_anim.idle_duration);
+        if (ambient_type != AmbientIdleType::None) {
+          anim_ctx.ambient_idle_type = ambient_type;
+          anim_ctx.ambient_idle_phase =
+              HumanoidPoseController::compute_ambient_idle_phase(anim.time,
+                                                                 inst_seed);
+        }
+      }
+    }
+
     auto const visual_spec = owner.visual_spec();
     HumanoidPose pose{};
     bool const requires_runtime_pose =
