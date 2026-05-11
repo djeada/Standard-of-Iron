@@ -233,6 +233,16 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.is_constructing = false;
   }
 
+  bool const is_active = anim.is_moving || anim.is_attacking ||
+                         anim.is_constructing || anim.is_healing ||
+                         anim.is_hit_reacting || anim.is_dying || anim.is_dead ||
+                         anim.is_in_hold_mode;
+  // idle_duration tracks continuous idle eligibility; while the soldier is
+  // active it resets to 0. When idle, anim.time acts as a lower bound on how
+  // long the entity has been in the game session, which is sufficient for the
+  // ambient idle gate check.
+  anim.idle_duration = is_active ? 0.0F : anim.time;
+
   return anim;
 }
 

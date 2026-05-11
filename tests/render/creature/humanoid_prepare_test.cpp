@@ -1159,6 +1159,54 @@ TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
                                        AnimationStateId::AttackSpear, 1U));
 }
 
+TEST(HumanoidPrepare, AmbientIdleContextSelectsCorrectIdleClipVariant) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+  using Render::GL::AmbientIdleType;
+
+  auto const archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+
+  Render::GL::HumanoidAnimationContext idle_no_ambient{};
+  idle_no_ambient.ambient_idle_type = AmbientIdleType::None;
+  auto const no_ambient = humanoid_bpat_playback_for_anim(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, idle_no_ambient);
+  ASSERT_TRUE(no_ambient.has_value());
+  EXPECT_EQ(no_ambient->clip_id, Render::Creature::k_humanoid_idle_clip);
+
+  Render::GL::HumanoidAnimationContext idle_squat{};
+  idle_squat.ambient_idle_type = AmbientIdleType::SitDown;
+  idle_squat.ambient_idle_phase = 0.5F;
+  auto const squat = humanoid_bpat_playback_for_anim(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, idle_squat);
+  ASSERT_TRUE(squat.has_value());
+  EXPECT_EQ(squat->clip_id, Render::Creature::k_humanoid_idle_squat_clip);
+
+  Render::GL::HumanoidAnimationContext idle_jump{};
+  idle_jump.ambient_idle_type = AmbientIdleType::Jump;
+  idle_jump.ambient_idle_phase = 0.5F;
+  auto const jump = humanoid_bpat_playback_for_anim(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, idle_jump);
+  ASSERT_TRUE(jump.has_value());
+  EXPECT_EQ(jump->clip_id, Render::Creature::k_humanoid_idle_jump_clip);
+
+  Render::GL::HumanoidAnimationContext idle_weapon{};
+  idle_weapon.ambient_idle_type = AmbientIdleType::RaiseWeapon;
+  idle_weapon.ambient_idle_phase = 0.5F;
+  auto const weapon = humanoid_bpat_playback_for_anim(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, idle_weapon);
+  ASSERT_TRUE(weapon.has_value());
+  EXPECT_EQ(weapon->clip_id, Render::Creature::k_humanoid_idle_weapon_clip);
+
+  Render::GL::HumanoidAnimationContext idle_weave{};
+  idle_weave.ambient_idle_type = AmbientIdleType::ShiftWeight;
+  idle_weave.ambient_idle_phase = 0.5F;
+  auto const weave = humanoid_bpat_playback_for_anim(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, idle_weave);
+  ASSERT_TRUE(weave.has_value());
+  EXPECT_EQ(weave->clip_id, Render::Creature::k_humanoid_idle_weave_clip);
+}
+
 TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
