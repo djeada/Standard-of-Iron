@@ -162,8 +162,11 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<const ContactSnapshot *> nearby_enemies;
   nearby_enemies.reserve(snapshot.visible_enemies.size());
 
+  const float harassment_r = context.strategy_config.harassment_range;
   const float engagement_range =
-      (context.damaged_units_count > 0) ? 35.0F : 20.0F;
+      (harassment_r > 0.0F)
+          ? harassment_r
+          : ((context.damaged_units_count > 0) ? 35.0F : 20.0F);
   const float engage_range_sq = engagement_range * engagement_range;
 
   for (const auto &enemy : snapshot.visible_enemies) {

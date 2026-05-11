@@ -191,6 +191,22 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
   RenderArchetypeLod lod =
       select_render_archetype_lod(archetype, std::sqrt(ctx.distance_sq));
 
+  int damage_id = 0;
+  if (ctx.entity != nullptr) {
+    switch (resolve_building_state(ctx)) {
+    case BuildingState::Damaged:
+      damage_id = 10;
+      break;
+    case BuildingState::Destroyed:
+      damage_id = 11;
+      break;
+    case BuildingState::Normal:
+    default:
+      break;
+    }
+  }
+  DamageStateSubmitter damage_out(out, damage_id);
+
   if (ctx.entity == nullptr ||
       palette.size() > k_cached_building_palette_capacity) {
     RenderInstance instance;
@@ -199,7 +215,7 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
     instance.palette = palette;
     instance.default_texture = default_texture;
     instance.lod = lod;
-    submit_render_instance(out, instance);
+    submit_render_instance(damage_out, instance);
     return;
   }
 
@@ -234,7 +250,7 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
     cached.instance.set_palette(palette);
   }
 
-  submit_render_instance(out, cached.instance.render_instance());
+  submit_render_instance(damage_out, cached.instance.render_instance());
 }
 
 auto get_building_instance_cache_stats() -> BuildingInstanceCacheStats {

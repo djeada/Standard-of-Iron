@@ -29,7 +29,7 @@ class IRenderBackend {
 public:
   virtual ~IRenderBackend() = default;
 
-  virtual void initialize() = 0;
+  [[nodiscard]] virtual auto initialize() -> bool = 0;
   virtual void begin_frame() = 0;
   virtual void execute(const DrawQueue &queue, const Camera &cam) = 0;
 

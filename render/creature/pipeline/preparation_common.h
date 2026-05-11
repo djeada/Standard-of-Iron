@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../pose_intent_enum.h"
 #include "../render_request.h"
 #include "creature_render_state.h"
 
@@ -29,6 +30,11 @@ namespace Render::Creature::Pipeline {
 
 [[nodiscard]] auto humanoid_state_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept
+    -> Render::Creature::AnimationStateId;
+
+[[nodiscard]] auto
+humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext &anim,
+                        Render::Creature::PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId;
 
 [[nodiscard]] auto humanoid_phase_for_anim(

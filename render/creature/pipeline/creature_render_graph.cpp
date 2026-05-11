@@ -439,26 +439,62 @@ void CreatureRenderBatch::add_humanoid(
           : Render::Creature::ArchetypeRegistry::k_humanoid_base;
 
   auto resolved_archetype_id = archetype_id;
-  auto state = humanoid_state_for_anim(anim);
+  auto const intent = Render::Creature::resolve_pose_intent(anim.inputs);
+  auto state = humanoid_state_for_anim(anim, intent);
   float const phase = humanoid_phase_for_anim(anim);
   auto clip_var = humanoid_clip_variant_for_anim(resolved_archetype_id, anim);
-  if (output.spec.humanoid_render_hook != nullptr) {
-    HumanoidRenderSelection selection{};
-    selection.archetype = resolved_archetype_id;
-    selection.state = state;
-    selection.clip_variant = clip_var;
-    output.spec.humanoid_render_hook(anim, variant, output.seed, selection);
-    if (selection.archetype != Render::Creature::k_invalid_archetype) {
-      resolved_archetype_id = selection.archetype;
+  if (output.spec.variant_table != nullptr) {
+    auto const *t = output.spec.variant_table;
+    auto const pose_idx = static_cast<std::size_t>(intent);
+
+    bool changed = false;
+
+    auto const pose_arch = t->archetype_for_pose[pose_idx];
+    if (pose_arch != Render::Creature::k_invalid_archetype) {
+      resolved_archetype_id = pose_arch;
+      changed = true;
     }
-    state = selection.state;
-    auto const variant_count =
-        Render::Creature::ArchetypeRegistry::instance().clip_variant_count(
-            resolved_archetype_id, state);
-    clip_var = (variant_count > 0U)
-                   ? static_cast<std::uint8_t>(std::min<std::uint32_t>(
-                         selection.clip_variant, variant_count - 1U))
-                   : 0U;
+    auto const pose_state = t->state_for_pose[pose_idx];
+    if (pose_state != Render::Creature::AnimationStateId::Count) {
+      state = pose_state;
+      changed = true;
+    }
+
+    if (t->variant_stride > 0U) {
+      bool const trigger_matches =
+          (t->variant_trigger_pose == Render::Creature::PoseIntent::Count) ||
+          (intent == t->variant_trigger_pose);
+      if (trigger_matches) {
+        std::size_t var_idx{0};
+        if (t->variant_is_seed_based) {
+          var_idx = output.seed % t->variant_stride;
+        } else {
+          var_idx = std::min<std::size_t>(
+              static_cast<std::size_t>(variant.facial_hair.style),
+              static_cast<std::size_t>(t->variant_stride) - 1U);
+        }
+        auto const var_arch = t->archetype_for_variant[var_idx];
+        if (var_arch != Render::Creature::k_invalid_archetype) {
+          resolved_archetype_id = var_arch;
+          changed = true;
+        }
+        auto const var_state = t->state_for_variant[var_idx];
+        if (var_state != Render::Creature::AnimationStateId::Count) {
+          state = var_state;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      auto const new_variant_count =
+          Render::Creature::ArchetypeRegistry::instance().clip_variant_count(
+              resolved_archetype_id, state);
+      clip_var = (new_variant_count > 0U)
+                     ? static_cast<std::uint8_t>(std::min<std::uint32_t>(
+                           clip_var, new_variant_count - 1U))
+                     : 0U;
+    }
   }
   const auto *asset = CreatureAssetRegistry::instance().resolve(output.spec);
   if (asset == nullptr) {

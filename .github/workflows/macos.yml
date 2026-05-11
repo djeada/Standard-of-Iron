@@ -17,6 +17,8 @@ jobs:
       QML_DIR: ui/qml
     steps:
       - uses: actions/checkout@v4
+      - name: Install build tools
+        run: brew install ninja
       - uses: jurplel/install-qt-action@v4
         with:
           version: '6.6.3'
@@ -25,14 +27,20 @@ jobs:
           cache: true
           modules: 'qt5compat qtmultimedia'
       - name: Configure
-        run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DDEFAULT_LANG=en
+        # clang_64 is the x86_64 Qt variant; target x86_64 explicitly so that
+        # the build is consistent on both Intel and Apple Silicon runners.
+        # The resulting binary runs on Apple Silicon via Rosetta 2.
+        run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DDEFAULT_LANG=en -DCMAKE_OSX_ARCHITECTURES=x86_64
       - name: Build
         run: cmake --build build --config ${BUILD_TYPE}
+      - name: Validate OpenGL requirements
+        run: python3 scripts/validate_opengl_requirements.py
       - name: Deploy Qt (macdeployqt)
         run: |
           macdeployqt "${APP_DIR}/${APP_NAME}.app" -qmldir="${QML_DIR}" -verbose=1
       - name: Copy assets into .app bundle
         run: |
+          # Place assets in Contents/Resources/assets/ (standard macOS bundle location)
           mkdir -p "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets"
           rsync -a assets/ "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets/"
       - name: Create DMG

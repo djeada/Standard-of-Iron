@@ -120,11 +120,18 @@ Backend::~Backend() {
   }
 }
 
-void Backend::initialize() {
+auto Backend::initialize() -> bool {
   qInfo() << "Backend::initialize() - Starting...";
 
   qInfo() << "Backend: Initializing OpenGL functions...";
-  initializeOpenGLFunctions();
+  if (!initializeOpenGLFunctions()) {
+    qCritical()
+        << "Backend::initialize() FAILED: QOpenGLFunctions_3_3_Core could not"
+           " be initialized. The current OpenGL context does not support"
+           " OpenGL 3.3 Core Profile. Check that GPU drivers are up to date"
+           " and that the application window has a valid Core Profile context.";
+    return false;
+  }
   glGenBuffers(1, &m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
   glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);
@@ -266,6 +273,7 @@ void Backend::initialize() {
 
   MaterialRegistry::instance().init(m_basic_shader, m_shadow_shader);
   qInfo() << "Backend::initialize() - Complete!";
+  return true;
 }
 
 auto Backend::banner_mesh() const -> Mesh * {
@@ -1053,8 +1061,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                                 m_clear_color[Blue]);
       QVector3D const camera_position = cam.get_position();
       float const fog_start =
-          std::max(cam.get_near() + 8.0F, cam.get_far() * 0.30F);
-      float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.78F);
+          std::max(cam.get_near() + 5.0F, cam.get_far() * 0.18F);
+      float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.62F);
 
       auto draw_surface = [&](const TerrainSurfaceCmd &single) {
         const QMatrix4x4 mvp = view_proj * single.model;
@@ -1642,7 +1650,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         if (m_last_bound_shader != bridge_shader) {
           bridge_shader->use();
-          QVector3D const light_dir(0.35F, 0.8F, 0.45F);
+          QVector3D const light_dir(0.65F, 0.50F, 0.40F);
           bridge_shader->set_uniform(
               m_water_pipeline->m_bridge_uniforms.light_direction, light_dir);
           m_last_bound_shader = bridge_shader;
@@ -1661,7 +1669,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         if (m_last_bound_shader != road_shader) {
           road_shader->use();
-          QVector3D const light_dir(0.35F, 0.8F, 0.45F);
+          QVector3D const light_dir(0.65F, 0.50F, 0.40F);
           road_shader->set_uniform(
               m_water_pipeline->m_road_uniforms.light_direction, light_dir);
           m_last_bound_shader = road_shader;

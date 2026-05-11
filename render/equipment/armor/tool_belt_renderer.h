@@ -2,6 +2,7 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../render_archetype.h"
 #include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
 
@@ -52,5 +53,12 @@ public:
 private:
   ToolBeltConfig m_config;
 };
+
+auto tool_belt_ring_archetype() -> const RenderArchetype &;
+auto tool_belt_buckle_archetype() -> const RenderArchetype &;
+auto tool_belt_hammer_archetype() -> const RenderArchetype &;
+auto tool_belt_chisel_archetype() -> const RenderArchetype &;
+auto tool_belt_saw_archetype() -> const RenderArchetype &;
+auto tool_belt_pouches_archetype() -> const RenderArchetype &;
 
 } // namespace Render::GL

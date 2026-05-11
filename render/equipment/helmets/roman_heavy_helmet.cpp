@@ -37,26 +37,51 @@ constexpr QVector3D k_authored_local_offset(0.0F, 0.05F, 0.0F);
 
 auto roman_heavy_helmet_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
-    std::array<GeneratedEquipmentPrimitive, 7> const primitives{{
+    std::array<GeneratedEquipmentPrimitive, 12> const primitives{{
+
         generated_cylinder(QVector3D(0.0F, -0.38F, 0.0F),
                            QVector3D(0.0F, 1.70F, 0.0F), 1.52F, k_steel_slot,
                            1.0F, 2),
-        generated_cylinder(QVector3D(0.0F, 1.70F, 0.0F),
-                           QVector3D(0.0F, 1.92F, 0.0F), 1.43F,
-                           k_steel_light_slot, 1.0F, 2),
+
+        generated_cone(QVector3D(0.0F, 1.70F, 0.0F),
+                       QVector3D(0.0F, 2.04F, 0.0F), 1.42F, k_steel_light_slot,
+                       1.0F, 2),
+
         generated_cylinder(QVector3D(0.0F, 0.068F, 0.0F),
-                           QVector3D(0.0F, 0.145F, 0.0F), 1.61F, k_brass_slot,
+                           QVector3D(0.0F, 0.145F, 0.0F), 1.62F, k_brass_slot,
                            1.0F, 2),
-        generated_cylinder(QVector3D(0.0F, -0.35F, -1.02F),
-                           QVector3D(0.0F, -0.12F, -1.08F), 1.37F, k_steel_slot,
+
+        generated_cylinder(QVector3D(0.0F, 1.62F, 0.0F),
+                           QVector3D(0.0F, 1.70F, 0.0F), 1.54F, k_brass_slot,
                            1.0F, 2),
-        generated_cylinder(QVector3D(0.0F, 1.92F, 0.0F),
-                           QVector3D(0.0F, 2.07F, 0.0F), 0.032F, k_brass_slot,
+
+        generated_cylinder(QVector3D(0.0F, -0.55F, -0.90F),
+                           QVector3D(0.0F, -0.22F, -1.18F), 1.70F, k_steel_slot,
                            1.0F, 2),
-        generated_cone(QVector3D(0.0F, 2.07F, 0.0F),
-                       QVector3D(0.0F, 2.35F, 0.0F), 0.075F, k_crest_slot, 1.0F,
-                       0),
-        generated_sphere(QVector3D(0.0F, 2.35F, 0.0F), 0.034F, k_brass_slot,
+
+        generated_cylinder(QVector3D(0.0F, -0.22F, -1.18F),
+                           QVector3D(0.0F, -0.18F, -1.22F), 1.72F, k_brass_slot,
+                           1.0F, 2),
+
+        generated_cylinder(QVector3D(-1.40F, 0.46F, 0.88F),
+                           QVector3D(1.40F, 0.46F, 0.88F), 0.12F,
+                           k_steel_light_slot, 1.0F, 2),
+
+        generated_cylinder(QVector3D(-1.52F, 0.08F, 0.18F),
+                           QVector3D(-1.24F, -0.52F, 0.30F), 0.25F,
+                           k_steel_slot, 1.0F, 2),
+
+        generated_cylinder(QVector3D(1.52F, 0.08F, 0.18F),
+                           QVector3D(1.24F, -0.52F, 0.30F), 0.25F, k_steel_slot,
+                           1.0F, 2),
+
+        generated_box(QVector3D(0.0F, 2.04F, 0.0F),
+                      QVector3D(2.80F, 0.22F, 0.36F), k_brass_slot, 1.0F, 2),
+
+        generated_box(QVector3D(0.0F, 2.44F, 0.0F),
+                      QVector3D(2.60F, 0.76F, 0.22F), k_crest_slot, 1.0F, 0),
+
+        generated_sphere(QVector3D(0.0F, 2.04F, 0.0F), 0.10F, k_brass_slot,
                          1.0F, 2),
     }};
     return build_generated_equipment_archetype("roman_heavy_helmet",

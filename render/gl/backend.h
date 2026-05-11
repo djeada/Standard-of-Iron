@@ -51,7 +51,7 @@ public:
   Backend(Backend &&) = delete;
   auto operator=(Backend &&) -> Backend & = delete;
 
-  void initialize() override;
+  [[nodiscard]] auto initialize() -> bool override;
   void begin_frame() override;
   void set_viewport(int w, int h) override;
   void set_clear_color(float r, float g, float b, float a) override;
@@ -154,7 +154,7 @@ public:
 private:
   int m_viewport_width{0};
   int m_viewport_height{0};
-  std::array<float, 4> m_clear_color{0.65F, 0.69F, 0.67F, 1.0F};
+  std::array<float, 4> m_clear_color{0.70F, 0.73F, 0.80F, 1.0F};
   std::unique_ptr<ShaderCache> m_shader_cache;
   std::unique_ptr<ResourceManager> m_resources;
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;

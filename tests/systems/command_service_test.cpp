@@ -157,4 +157,148 @@ TEST_F(CommandServiceTest,
   EXPECT_TRUE(right_movement->path.empty());
 }
 
+TEST_F(CommandServiceTest, GroupMoveFailureNearBoundaryDoesNotTeleportUnits) {
+  Game::Systems::CommandService::initialize(16, 16);
+  Engine::Core::World world;
+
+  auto *left = create_unit(world, -7.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto *center =
+      create_unit(world, -7.0F, 0.0F, Game::Units::SpawnType::Archer);
+  auto *right = create_unit(world, -7.0F, 2.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(left, nullptr);
+  ASSERT_NE(center, nullptr);
+  ASSERT_NE(right, nullptr);
+
+  auto *left_transform =
+      left->get_component<Engine::Core::TransformComponent>();
+  auto *center_transform =
+      center->get_component<Engine::Core::TransformComponent>();
+  auto *right_transform =
+      right->get_component<Engine::Core::TransformComponent>();
+  auto *left_movement = left->get_component<Engine::Core::MovementComponent>();
+  auto *center_movement =
+      center->get_component<Engine::Core::MovementComponent>();
+  auto *right_movement =
+      right->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(left_transform, nullptr);
+  ASSERT_NE(center_transform, nullptr);
+  ASSERT_NE(right_transform, nullptr);
+  ASSERT_NE(left_movement, nullptr);
+  ASSERT_NE(center_movement, nullptr);
+  ASSERT_NE(right_movement, nullptr);
+
+  auto *pathfinder = Game::Systems::CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_building_obstacles();
+
+  for (int world_z = -7; world_z <= 7; ++world_z) {
+    Game::Systems::Point const wall_cell =
+        Game::Systems::CommandService::world_to_grid(
+            0.0F, static_cast<float>(world_z));
+    pathfinder->set_obstacle(wall_cell.x, wall_cell.y, true);
+  }
+
+  Game::Systems::CommandService::MoveOptions options;
+  options.allow_direct_fallback = false;
+  options.group_move = true;
+
+  Game::Systems::CommandService::move_units(
+      world, {left->get_id(), center->get_id(), right->get_id()},
+      {QVector3D(7.0F, 0.0F, -2.0F), QVector3D(7.0F, 0.0F, 0.0F),
+       QVector3D(7.0F, 0.0F, 2.0F)},
+      options);
+
+  wait_for_path_results(world,
+                        {left_movement, center_movement, right_movement});
+
+  EXPECT_FLOAT_EQ(left_transform->position.x, -7.0F);
+  EXPECT_FLOAT_EQ(left_transform->position.z, -2.0F);
+  EXPECT_FLOAT_EQ(center_transform->position.x, -7.0F);
+  EXPECT_FLOAT_EQ(center_transform->position.z, 0.0F);
+  EXPECT_FLOAT_EQ(right_transform->position.x, -7.0F);
+  EXPECT_FLOAT_EQ(right_transform->position.z, 2.0F);
+}
+
+TEST_F(CommandServiceTest,
+       GroupMoveCanRetryMembersIndividuallyAfterGroupFailure) {
+  Engine::Core::World world;
+
+  auto *left =
+      create_unit(world, -10.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto *center =
+      create_unit(world, -10.0F, 0.0F, Game::Units::SpawnType::Archer);
+  auto *right =
+      create_unit(world, -10.0F, 2.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(left, nullptr);
+  ASSERT_NE(center, nullptr);
+  ASSERT_NE(right, nullptr);
+
+  auto *left_movement = left->get_component<Engine::Core::MovementComponent>();
+  auto *center_movement =
+      center->get_component<Engine::Core::MovementComponent>();
+  auto *right_movement =
+      right->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(left_movement, nullptr);
+  ASSERT_NE(center_movement, nullptr);
+  ASSERT_NE(right_movement, nullptr);
+
+  auto *pathfinder = Game::Systems::CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_building_obstacles();
+
+  for (int world_z = -15; world_z <= 15; ++world_z) {
+    if (world_z >= -2 && world_z <= 2) {
+      continue;
+    }
+    Game::Systems::Point const wall_cell =
+        Game::Systems::CommandService::world_to_grid(
+            0.0F, static_cast<float>(world_z));
+    pathfinder->set_obstacle(wall_cell.x, wall_cell.y, true);
+  }
+
+  Game::Systems::CommandService::MoveOptions options;
+  options.allow_direct_fallback = false;
+  options.group_move = true;
+  options.retry_individual_on_group_failure = true;
+
+  Game::Systems::CommandService::move_units(
+      world, {left->get_id(), center->get_id(), right->get_id()},
+      {QVector3D(10.0F, 0.0F, -2.0F), QVector3D(10.0F, 0.0F, 0.0F),
+       QVector3D(10.0F, 0.0F, 2.0F)},
+      options);
+
+  wait_for_path_results(world,
+                        {left_movement, center_movement, right_movement});
+
+  EXPECT_TRUE(left_movement->has_target);
+  EXPECT_TRUE(center_movement->has_target);
+  EXPECT_TRUE(right_movement->has_target);
+  EXPECT_FALSE(left_movement->path.empty());
+  EXPECT_FALSE(center_movement->path.empty());
+  EXPECT_FALSE(right_movement->path.empty());
+}
+
+TEST_F(CommandServiceTest, LocalRecoveryCanRelaxRadiusToEscapeBoundaryTrap) {
+  Game::Systems::CommandService::initialize(16, 16);
+  Engine::Core::World world;
+
+  auto *unit = create_unit(world, -7.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+
+  auto *movement = unit->get_component<Engine::Core::MovementComponent>();
+  auto *transform = unit->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+
+  EXPECT_TRUE(Game::Systems::CommandService::try_queue_local_recovery_move(
+      world, unit->get_id(),
+      QVector3D(transform->position.x, 0.0F, transform->position.z),
+      QVector3D(5.0F, 0.0F, 0.0F), movement));
+
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_GT(movement->target_x, transform->position.x);
+  EXPECT_FLOAT_EQ(movement->goal_x, 5.0F);
+  EXPECT_FLOAT_EQ(movement->goal_y, 0.0F);
+}
+
 } // namespace

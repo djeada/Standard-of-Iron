@@ -1,5 +1,7 @@
 #include "humanoid_state_machine.h"
 
+#include "../creature/pose_intent.h"
+
 #include <array>
 
 namespace Render::Humanoid {
@@ -23,29 +25,8 @@ auto select_state(const Render::GL::AnimationInputs &inputs,
   if (dead_flag) {
     return HumanoidState::Death;
   }
-  if (inputs.is_hit_reacting) {
-    return HumanoidState::HitReaction;
-  }
-  if (inputs.is_attacking) {
-    return inputs.is_melee ? HumanoidState::AttackMelee
-                           : HumanoidState::AttackRanged;
-  }
-  if (inputs.is_constructing) {
-    return HumanoidState::Construct;
-  }
-  if (inputs.is_healing) {
-    return HumanoidState::Healing;
-  }
-  if (inputs.is_in_hold_mode || inputs.is_exiting_hold) {
-    return HumanoidState::Hold;
-  }
-  if (inputs.is_running) {
-    return HumanoidState::Run;
-  }
-  if (inputs.is_moving) {
-    return HumanoidState::Walk;
-  }
-  return HumanoidState::Idle;
+  return Render::Creature::to_humanoid_state(
+      Render::Creature::resolve_pose_intent(inputs));
 }
 
 HumanoidStateMachine::HumanoidStateMachine()

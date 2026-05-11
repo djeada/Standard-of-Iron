@@ -6,7 +6,7 @@ This is the story of how Standard of Iron's AI thinks, decides, and acts. We'll 
 
 ## What we'll cover
 
-We'll start with the philosophy behind the design: why centralized decisions, why throttled updates, why background threads. Then we'll trace the data flow from world state to AI commands. We'll look at how behaviors compete for control, how strategies shape personality, and how the whole thing avoids getting stuck in deadlocks. Finally, we'll cover debugging and tuning.
+We'll start with the philosophy behind the design: why centralized decisions, why throttled updates, why background threads. Then we'll trace the data flow from world state to AI commands. We'll look at how behaviors compete for control, how strategies shape personality, how commanders get used, and how the whole thing avoids getting stuck in deadlocks. Finally, we'll cover debugging, tuning, and how to add new behaviors.
 
 
 ## The core insight: think less, think smarter
@@ -70,9 +70,11 @@ ai_system/
 ├── ai_worker.cpp           # Background thread wrapper
 ├── ai_command_applier.cpp  # Applies commands back to world
 ├── ai_command_filter.cpp   # Prevents command spam
-├── ai_strategy.cpp         # Strategy presets (aggressive, defensive, etc.)
+├── ai_behavior_registry.h  # Sorted list of behaviors per AI player
 ├── ai_behavior.h           # Base class for behaviors
+├── ai_strategy.cpp         # Strategy presets (aggressive, defensive, etc.)
 ├── ai_tactical.cpp         # Utility functions for combat math
+├── ai_utils.h              # Shared utilities: claim_units, cleanup, distance
 └── behaviors/              # Individual behavior implementations
     ├── attack_behavior.cpp
     ├── defend_behavior.cpp
@@ -80,7 +82,8 @@ ai_system/
     ├── production_behavior.cpp
     ├── gather_behavior.cpp
     ├── expand_behavior.cpp
-    └── builder_behavior.cpp
+    ├── builder_behavior.cpp
+    └── commander_behavior.cpp
 ```
 
 The main coordinator is [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp) in the parent folder. It owns all the AI instances and orchestrates the update loop.
@@ -101,7 +104,7 @@ struct AISnapshot {
 };
 ```
 
-Each entity gets serialized into an EntitySnapshot with everything the AI might need: position, health, whether it's a building, what it's producing, whether it has a movement target. The snapshot builder in [ai_snapshot_builder.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_snapshot_builder.cpp) walks through the world and copies this data.
+Each entity gets serialized into an `EntitySnapshot` with everything the AI might need: position, health, whether it's a building, whether it's a commander, what it's producing, and whether it has a movement target. The snapshot builder in [ai_snapshot_builder.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_snapshot_builder.cpp) walks through the world and copies this data.
 
 The context persists between updates. It tracks things like which state the AI is in, how long it's been in that state, which units are assigned to which tasks, and metrics like average health and unit counts:
 
@@ -110,36 +113,43 @@ struct AIContext {
   int player_id = 0;
   AIState state = AIState::Idle;
   float state_timer = 0.0F;
-  
+
   std::vector<EntityID> military_units;
   std::vector<EntityID> buildings;
+  std::vector<EntityID> commander_ids;  // Active commander entities
   EntityID primary_barracks = 0;
-  
+
   int total_units = 0;
   int idle_units = 0;
   float average_health = 1.0F;
   bool barracks_under_threat = false;
-  
+
+  float base_pos_x = 0.0F;  // Barracks position, or densest unit cluster
+  float base_pos_z = 0.0F;
+  float rally_x = 0.0F;     // 5 units in front of base
+  float rally_z = 0.0F;
+
   // Tracks which units are assigned to which behavior
   std::unordered_map<EntityID, UnitAssignment> assigned_units;
-  
+
   // Deadlock detection
   int consecutive_no_progress_cycles = 0;
   float last_meaningful_action_time = 0.0F;
-  
+
   // Strategy modifiers
   AIStrategyConfig strategy_config;
 };
 ```
 
-Commands are simple orders: move these units here, attack this target, start producing this unit type:
+Commands are simple orders. Each command carries the entity IDs it applies to and whatever extra data that command type needs:
 
 ```cpp
 enum class AICommandType {
-  MoveUnits,
-  AttackTarget,
-  StartProduction,
-  StartBuilderConstruction
+  MoveUnits,               // Move a list of units to formation positions
+  AttackTarget,            // Order units to attack a specific entity
+  StartProduction,         // Queue a unit type in a barracks
+  StartBuilderConstruction,// Send a builder to construct a building
+  TriggerCommanderRally    // Activate the rally ability on a commander unit
 };
 ```
 
@@ -235,25 +245,31 @@ Here are the behaviors and their priorities:
 |----------|----------|-------------|--------------|
 | RetreatBehavior | Critical | No | Fall back when health is low |
 | DefendBehavior | Critical | No | Protect base from threats |
+| CommanderBehavior | High | **Yes** | Position commanders, trigger rally ability |
 | ProductionBehavior | High | Yes | Keep barracks producing |
 | BuilderBehavior | High | Yes | Construct new buildings |
 | ExpandBehavior | Normal | No | Capture neutral buildings |
 | AttackBehavior | Normal | No | Push into enemy territory |
 | GatherBehavior | Low | No | Rally scattered units |
 
-The behaviors are registered in [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp) at startup:
+Note that `CommanderBehavior`, `ProductionBehavior`, and `BuilderBehavior` are concurrent: they run alongside whatever strategic behavior is active, so production and commander management never stop even during a full-scale assault.
+
+Each AI player has its own independent registry created by the `populate_behavior_registry()` helper in [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp):
 
 ```cpp
-AISystem::AISystem() {
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::RetreatBehavior>());
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::DefendBehavior>());
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::ProductionBehavior>());
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::BuilderBehavior>());
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::ExpandBehavior>());
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::AttackBehavior>());
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::GatherBehavior>());
+static void populate_behavior_registry(AIBehaviorRegistry &reg) {
+  reg.register_behavior(std::make_unique<AI::RetreatBehavior>());
+  reg.register_behavior(std::make_unique<AI::DefendBehavior>());
+  reg.register_behavior(std::make_unique<AI::CommanderBehavior>());
+  reg.register_behavior(std::make_unique<AI::ProductionBehavior>());
+  reg.register_behavior(std::make_unique<AI::BuilderBehavior>());
+  reg.register_behavior(std::make_unique<AI::ExpandBehavior>());
+  reg.register_behavior(std::make_unique<AI::AttackBehavior>());
+  reg.register_behavior(std::make_unique<AI::GatherBehavior>());
 }
 ```
+
+`register_behavior` inserts each behavior in descending priority order (using `std::lower_bound`), so the executor always visits the highest-priority behaviors first without any runtime sorting.
 
 
 ## Inside a behavior: AttackBehavior
@@ -288,6 +304,21 @@ outCommands.push_back(cmd);
 ```
 
 The behavior has internal timers to prevent spamming commands. It only issues new orders every 1.5 seconds or so, giving units time to actually move before being redirected.
+
+
+## Inside a behavior: CommanderBehavior
+
+Commanders are special hero units that can use a rally ability to boost nearby troops. Without dedicated management, AI commanders would just sit idle while the army fought.
+
+`CommanderBehavior` in [commander_behavior.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/behaviors/commander_behavior.cpp) runs on a 2-second timer and does two things:
+
+1. **Positioning**: places each commander 4 units behind the army centroid (the average position of all living military units), offset toward the enemy. This keeps commanders protected while still influencing the front line.
+
+2. **Rally triggering**: every 5 seconds, issues a `TriggerCommanderRally` command for each commander. The command applier sets `commander->rally_requested = true` on the actual entity, which causes the game's rally system to fire the ability.
+
+Because `can_run_concurrently()` returns `true`, this behavior runs in parallel with whatever strategic behavior is active (attacking, defending, etc.). Commanders are never claimed as part of a behavior's unit pool — the behavior only moves and activates them by ID.
+
+`should_execute` returns `true` whenever `ctx.commander_ids` is non-empty. The context's `commander_ids` vector is populated by the reasoner from `is_commander` flags on entity snapshots.
 
 
 ## Strategies: AI personality
@@ -408,6 +439,17 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 ```
 
 This design means AI thinking time doesn't affect frame rate. If an AI takes 50ms to decide, the game keeps running. The next frame picks up the result.
+
+
+## Per-instance behavior registries: why it matters
+
+Each `AIInstance` owns its own `AIBehaviorRegistry`, created fresh by `populate_behavior_registry()` when the AI player joins. This is not just a clean architecture choice—it's a correctness requirement.
+
+Behaviors have timer state. `CommanderBehavior` has `m_update_timer` and `m_rally_timer`. `AttackBehavior` has `m_attackTimer`. If two AI players shared one registry (and therefore one set of behavior instances), their timers would interfere. Player A's attack timer would reset when Player B issued attack commands.
+
+With per-instance registries, every AI player's behaviors are completely independent objects with their own state. There is no shared mutable state between AI players. The workers can run truly in parallel without any locks beyond the job queue mutex.
+
+The registry pointer is stored as a `unique_ptr<AIBehaviorRegistry>` inside `AIInstance`. This gives the behavior objects a stable heap address that won't move if the `m_aiInstances` vector ever reallocates.
 
 
 ## Deadlock prevention
@@ -531,32 +573,68 @@ public:
 };
 ```
 
-Implement should_execute to check if scouting makes sense (early game, no visible enemies, have spare units). Implement execute to pick a unit, pick a direction, and issue a move command.
+Implement `should_execute` to check if scouting makes sense (early game, no visible enemies, have spare units). Implement `execute` to pick a unit, pick a direction, and issue a move command.
 
-Register it in AISystem::AISystem():
+Add it to the `populate_behavior_registry` helper in `ai_system.cpp`:
 
 ```cpp
-m_behaviorRegistry.register_behavior(std::make_unique<AI::ScoutBehavior>());
+static void populate_behavior_registry(AIBehaviorRegistry &reg) {
+  // ... existing behaviors ...
+  reg.register_behavior(std::make_unique<AI::ScoutBehavior>());
+}
 ```
 
-The behavior will automatically run when its conditions are met.
+Add the new files to `game/CMakeLists.txt` under the behavior sources list so they get compiled.
+
+The behavior will automatically run when its conditions are met, for every AI player independently.
+
+One thing to keep in mind: `should_execute` is called every update cycle (every 300ms). Keep it cheap—a few comparisons is fine, but don't do full spatial queries there. Heavy computation belongs in `execute`, which only runs when `should_execute` returns `true`.
+
+
+## Scalability: what works well, what to watch
+
+This section is an honest assessment of the system's strengths and current limits.
+
+**What scales well**
+
+The thread-per-player model is surprisingly robust. With 8 AI players, you have 8 background threads, each blocked on a condition variable between updates. Modern OSes handle hundreds of sleeping threads cheaply. The 300ms throttle means each thread is active only ~0.3% of the time.
+
+Per-instance registries eliminate all inter-player lock contention. When player A's `CommanderBehavior` updates its `m_rally_timer`, it touches only its own object. Nothing is shared.
+
+The snapshot+context copy-on-submit design is also clean: main thread has the authoritative context, worker thread gets a full copy. No partial reads, no stale pointers. Commands come back as a plain vector and are applied safely on the main thread.
+
+Adding new behaviors has O(1) impact on existing behavior performance. Each behavior only runs when its `should_execute` returns true, and non-concurrent behaviors skip the rest once one claims the run slot.
+
+**Current limitations worth knowing**
+
+*Perfect information*: the AI always sees all enemy units regardless of distance. There's no perception radius or fog-of-war equivalent for AI. This makes the AI feel omniscient in battles—it will always rally toward distant threats it couldn't realistically see. Adding a range filter in the snapshot builder is the right fix if you want believable AI.
+
+*No inter-player coordination*: two allied AIs don't talk to each other. Each one decides independently. They might both retreat at the same time, or both attack the same target. The architecture doesn't block this—you could add an `AICoordinator` that reads from all contexts and writes suggestions into each one—but nothing implements it today.
+
+*Context copy size*: the entire `AIContext` is copied into every job, including the `assigned_units` map. For 500 units with active assignments, this is ~30–50 KB of copying per AI player per 300ms tick. That's about 1.5 MB/s per player. Manageable for typical unit counts, but worth profiling at extreme scales.
+
+*Three-vector float layout for positions*: move commands store target positions as three separate float vectors (`move_target_x`, `move_target_y`, `move_target_z`). This works but means three heap allocations per move command. If you add behaviors that issue many small move commands, consider a single vector of `glm::vec3` positions instead.
+
+*Early-game cluster detection is O(N²)*: `densest_anchor_cluster` finds the tightest group of units to use as a base anchor when no barracks exists. This is O(N²) in unit count. It only runs pre-barracks with very few units, so in practice N is never more than 5–10. Not a real concern.
+
+**Practical ceiling**: the system handles 8 AI players comfortably on modern hardware. Getting to 20+ players would require either snapshot streaming (send only changed entities rather than all entities) or reducing the context copy size. Neither is needed for the game's current design.
 
 
 ## Future improvements
 
-The current system is solid for RTS basics but has room to grow:
+The system is well-structured for growth in these directions:
 
-Hierarchical planning could set high-level goals ("control the north side of the map") and let behaviors figure out details. Right now the state machine is flat.
+**Hierarchical planning** could let a high-level planner set goals ("control the north side of the map", "pressure their economy") while behaviors execute the details. Right now the state machine is flat—there's no concept of strategic objectives above the individual behavior level.
 
-Adaptive learning could adjust strategy based on what's working. If aggressive attacks keep failing, become more defensive.
+**Adaptive strategy switching** could shift from Aggressive to Defensive mid-game based on measured outcomes. If three consecutive attacks failed, that's a signal to change approach. The `AIStrategyConfig` is already the right place to make this data-driven.
 
-Better scouting would maintain a mental map of explored areas and send units to unexplored regions.
+**Perception radius** would make the AI believable—only seeing enemies within a realistic sight distance. The snapshot builder is the right place to add this filter.
 
-Team coordination for allied AI players would let them focus different objectives instead of all doing the same thing.
+**Team coordination** between allied AI players would prevent doubling up. An `AICoordinator` component could read all AI contexts and write target suggestions so two allied AIs attack different flanks instead of the same one.
 
-Dynamic strategy switching could change from Aggressive to Defensive mid-game based on relative strength.
+**Scripted event hooks** could let mission designers trigger behavior changes (e.g., "when player captures the bridge, all AIs switch to Aggressive"). A simple callback registry on `AISystem` would be enough.
 
-The architecture supports all of these—behaviors are modular, strategies are data-driven, and the threading model can handle more computation. It's a matter of implementation time.
+The architecture supports all of these—behaviors are self-contained, strategies are data-driven, and the threading model is extensible. They're waiting for implementation time.
 
 
 ## Finding your way around
@@ -565,12 +643,14 @@ The architecture supports all of these—behaviors are modular, strategies are d
 |---------------------|---------------|
 | Adjust AI update rate | [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp) - set_update_interval() |
 | Add a new strategy | [ai_strategy.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_strategy.cpp) - add case in create_config() |
-| Create a new behavior | [behaviors/](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/behaviors) - create new file, register in ai_system.cpp |
+| Create a new behavior | [behaviors/](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/behaviors) - new file, register in populate_behavior_registry(), add to CMakeLists |
+| Change commander positioning | [commander_behavior.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/behaviors/commander_behavior.cpp) - k_protected_offset, k_rally_interval |
 | Tune attack timing | [attack_behavior.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/behaviors/attack_behavior.cpp) - m_attackTimer threshold |
 | Debug state transitions | [ai_reasoner.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_reasoner.cpp) - update_state_machine() |
 | Understand what AI sees | [ai_snapshot_builder.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_snapshot_builder.cpp) - build() |
 | Configure AI per mission | Mission JSON files - ai_setups section |
+| Add a new AI command type | [ai_types.h](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_types.h) - AICommandType enum, then handle in ai_command_applier.cpp |
 
 The code follows snake_case for variables and functions, PascalCase for types. All background thread access goes through mutexes or atomics. The snapshot is immutable once built. Commands are queued and applied on the main thread only.
 
-When in doubt, start with the AISystem::update() method and follow the data flow: snapshot → worker → result → apply. That covers 90% of what the AI does.
+When in doubt, start with `AISystem::update()` and follow the data flow: snapshot → worker → result → apply. That covers 90% of what the AI does.

@@ -72,9 +72,9 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsForestMud) {
   apply_ground_type_defaults(settings, GroundType::ForestMud);
 
   EXPECT_EQ(settings.ground_type, GroundType::ForestMud);
-  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.30F);
-  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.60F);
-  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.28F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.26F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.52F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.24F);
   EXPECT_FLOAT_EQ(settings.soil_color.x(), 0.28F);
   EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.24F);
   EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.18F);
@@ -85,10 +85,10 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsGrassDry) {
   apply_ground_type_defaults(settings, GroundType::GrassDry);
 
   EXPECT_EQ(settings.ground_type, GroundType::GrassDry);
-  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.58F);
-  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.54F);
-  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.32F);
-  EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.18F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.52F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.48F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.29F);
+  EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.06F);
 
   EXPECT_FLOAT_EQ(settings.crack_intensity, 0.65F);
   EXPECT_FLOAT_EQ(settings.moisture_level, 0.15F);
@@ -117,7 +117,7 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsAlpineMix) {
   EXPECT_FLOAT_EQ(settings.rock_high.x(), 0.88F);
   EXPECT_FLOAT_EQ(settings.rock_high.y(), 0.90F);
   EXPECT_FLOAT_EQ(settings.rock_high.z(), 0.94F);
-  EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.25F);
+  EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.12F);
 
   EXPECT_FLOAT_EQ(settings.snow_coverage, 0.55F);
   EXPECT_FLOAT_EQ(settings.snow_color.x(), 0.94F);
