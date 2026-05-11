@@ -56,10 +56,19 @@ auto rotate_xz(const QVector3D &v, float yaw) -> QVector3D {
 void draw_storytelling_objects(Render::GL::Renderer &renderer,
                                const QVector3D &camp_pos, float base_radius,
                                float intensity, uint32_t seed_state) {
+  constexpr float k_layout_radius_scale = 1.35F;
+  constexpr float k_story_base_scale = 0.85F;
+  constexpr float k_story_intensity_factor = 0.15F;
+  constexpr float k_story_min_scale = 0.8F;
+  constexpr float k_story_max_scale = 1.2F;
+
   uint32_t state = seed_state;
-  float const layout_radius = std::max(2.0F, base_radius * 1.35F);
+  float const layout_radius =
+      std::max(2.0F, base_radius * k_layout_radius_scale);
   float const story_scale =
-      std::clamp(0.85F + intensity * 0.15F, 0.8F, 1.2F) * base_radius;
+      std::clamp(k_story_base_scale + intensity * k_story_intensity_factor,
+                 k_story_min_scale, k_story_max_scale) *
+      base_radius;
 
   auto place_around = [&](float angle, float distance_scale) -> QVector3D {
     QVector3D const dir(std::cos(angle), 0.0F, std::sin(angle));
