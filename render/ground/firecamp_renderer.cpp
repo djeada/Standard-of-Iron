@@ -70,14 +70,18 @@ void draw_storytelling_objects(Render::GL::Renderer &renderer,
                  k_story_min_scale, k_story_max_scale) *
       base_radius;
 
+  // Position storytelling props on a ring around the fire camp center.
   auto place_around = [&](float angle, float distance_scale) -> QVector3D {
     QVector3D const dir(std::cos(angle), 0.0F, std::sin(angle));
     return camp_pos + dir * (layout_radius * distance_scale);
   };
+  auto random_angle = [&]() -> float {
+    return rand_01(state) * MathConstants::k_two_pi;
+  };
 
   // Roman tent
   {
-    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    float const angle = random_angle();
     QVector3D const center = place_around(angle, 1.25F);
     QVector3D const axis = rotate_xz(QVector3D(1.0F, 0.0F, 0.0F), angle);
     QVector3D const side = QVector3D(-axis.z(), 0.0F, axis.x());
@@ -104,7 +108,7 @@ void draw_storytelling_objects(Render::GL::Renderer &renderer,
 
   // Supply cart
   {
-    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    float const angle = random_angle();
     QVector3D const center = place_around(angle, 1.55F);
     QVector3D const forward = rotate_xz(QVector3D(1.0F, 0.0F, 0.0F), angle);
     QVector3D const right = QVector3D(-forward.z(), 0.0F, forward.x());
@@ -147,7 +151,7 @@ void draw_storytelling_objects(Render::GL::Renderer &renderer,
 
   // Weapon rack
   {
-    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    float const angle = random_angle();
     QVector3D const center = place_around(angle, 1.35F);
     QVector3D const side = rotate_xz(QVector3D(1.0F, 0.0F, 0.0F), angle);
     QVector3D const up(0.0F, 1.0F, 0.0F);
@@ -180,7 +184,7 @@ void draw_storytelling_objects(Render::GL::Renderer &renderer,
 
   // Ruins
   {
-    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    float const angle = random_angle();
     QVector3D const center = place_around(angle, 1.75F);
     QVector3D const right = rotate_xz(QVector3D(1.0F, 0.0F, 0.0F), angle);
     QVector3D const ruin_color(0.55F, 0.52F, 0.46F);
@@ -206,7 +210,7 @@ void draw_storytelling_objects(Render::GL::Renderer &renderer,
 
   // Dead tree
   {
-    float const angle = rand_01(state) * MathConstants::k_two_pi;
+    float const angle = random_angle();
     QVector3D const base = place_around(angle, 1.9F);
     QVector3D const trunk_top = base + QVector3D(0, story_scale * 0.95F, 0);
     QVector3D const branch_a =
