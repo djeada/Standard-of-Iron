@@ -45,12 +45,17 @@ void OliveRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 
   const auto wind_profile = Game::Map::make_wind_profile(m_biome_settings);
   auto &olive_params = m_olive_state.params;
-  olive_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  olive_params.light_direction = m_light_direction;
   olive_params.time = 0.0F;
   olive_params.wind_strength = wind_profile.sway_strength;
   olive_params.wind_speed = wind_profile.sway_speed;
 
   generate_olive_instances();
+}
+
+void OliveRenderer::set_light_direction(const QVector3D &dir) {
+  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
+  m_olive_state.params.light_direction = m_light_direction;
 }
 
 void OliveRenderer::submit(Renderer &renderer, ResourceManager *resources) {

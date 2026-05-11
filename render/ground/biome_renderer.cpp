@@ -70,10 +70,15 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   grass_params.soil_color = scatter_profile.soil_color;
   grass_params.wind_strength = wind_profile.sway_strength;
   grass_params.wind_speed = wind_profile.sway_speed;
-  grass_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  grass_params.light_direction = m_light_direction;
   grass_params.time = 0.0F;
 
   generate_grass_instances();
+}
+
+void BiomeRenderer::set_light_direction(const QVector3D &dir) {
+  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
+  m_grass_state.params.light_direction = m_light_direction;
 }
 
 void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {

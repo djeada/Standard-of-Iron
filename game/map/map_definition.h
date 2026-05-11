@@ -10,6 +10,27 @@
 
 namespace Game::Map {
 
+enum class TimeOfDay { Morning, Day, Afternoon, Night };
+
+struct LightingSettings {
+  QVector3D light_direction{0.35F, 0.85F, 0.42F};
+  float ambient_strength = 0.30F;
+};
+
+inline auto lighting_for_time_of_day(TimeOfDay tod) -> LightingSettings {
+  switch (tod) {
+  case TimeOfDay::Morning:
+    return {QVector3D(0.60F, 0.30F, 0.20F).normalized(), 0.22F};
+  case TimeOfDay::Day:
+    return {QVector3D(0.35F, 0.85F, 0.42F).normalized(), 0.30F};
+  case TimeOfDay::Afternoon:
+    return {QVector3D(0.55F, 0.55F, 0.35F).normalized(), 0.27F};
+  case TimeOfDay::Night:
+    return {QVector3D(-0.20F, 0.35F, 0.50F).normalized(), 0.12F};
+  }
+  return {};
+}
+
 struct GridDefinition {
   int width = 50;
   int height = 50;
@@ -83,6 +104,7 @@ struct MapDefinition {
   int max_troops_per_player = 500;
   VictoryConfig victory;
   RainSettings rain;
+  TimeOfDay time_of_day = TimeOfDay::Day;
 };
 
 } // namespace Game::Map

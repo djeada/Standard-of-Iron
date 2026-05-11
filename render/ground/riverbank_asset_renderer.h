@@ -22,6 +22,8 @@ public:
                  const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biome_settings);
 
+  void set_light_direction(const QVector3D &dir);
+
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
   void clear();

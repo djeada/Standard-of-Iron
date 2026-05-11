@@ -46,6 +46,7 @@ struct SkirmishLoadResult {
   bool is_spectator_mode = false;
   RainSettings rain_settings;
   std::uint32_t biome_seed = 0;
+  LightingSettings lighting_settings;
 };
 
 class SkirmishLoader {
