@@ -12,6 +12,7 @@
 #include "../../../equipment/generated_equipment.h"
 #include "../../../equipment/helmets/roman_light_helmet.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
+#include "../../../equipment/render_archetype_registry.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -38,7 +39,6 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <numbers>
 #include <optional>
 #include <qmatrix4x4.h>
 #include <qstringliteral.h>
@@ -208,105 +208,78 @@ auto builder_chisel_fill_role_colors(const HumanoidPalette &palette,
 
 auto builder_work_tunic_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
-    using GP = Render::GL::GeneratedEquipmentPrimitive;
-    std::vector<GP> primitives;
-    primitives.reserve(64);
-    const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
-    const AttachmentFrame &torso = bind_frames.torso;
-    const AttachmentFrame &waist = bind_frames.waist;
-    const TorsoLocalFrame torso_local =
-        make_torso_local_frame(QMatrix4x4{}, torso);
+    const auto &bind = Render::Humanoid::humanoid_bind_body_frames();
+    const AttachmentFrame &torso = bind.torso;
+    const AttachmentFrame &waist = bind.waist;
+    const TorsoLocalFrame local = make_torso_local_frame(QMatrix4x4{}, torso);
 
-    float const torso_r = torso.radius * 1.08F;
-    float const torso_d =
-        (torso.depth > 0.0F) ? torso.depth * 0.92F : torso.radius * 0.80F;
-    float const y_shoulder = 0.032F;
-    float const y_waist = torso_local.point(waist.origin).y();
-    float const y_hem = y_waist - 0.18F;
-    constexpr int k_segments = 12;
-    constexpr int k_skirt_layers = 8;
-    constexpr float k_pi = std::numbers::pi_v<float>;
+    float const tr = torso.radius * 1.05F;
+    float const td =
+        (torso.depth > 0.0F) ? torso.depth * 0.95F : torso.radius * 0.84F;
+    float const y_sh = 0.032F;
+    float const y_w = local.point(waist.origin).y();
+    float const y_hem = y_w - 0.18F;
 
-    auto add_ring = [&](float y, float width, float depth, std::uint8_t slot,
-                        float thickness) {
-      for (int i = 0; i < k_segments; ++i) {
-        float const a0 = (static_cast<float>(i) / k_segments) * 2.0F * k_pi;
-        float const a1 = (static_cast<float>(i + 1) / k_segments) * 2.0F * k_pi;
-        primitives.push_back(generated_cylinder(
-            QVector3D(width * std::sin(a0), y, depth * std::cos(a0)),
-            QVector3D(width * std::sin(a1), y, depth * std::cos(a1)), thickness,
-            slot));
-      }
-    };
+    RenderArchetypeBuilder builder{"roman_builder_work_tunic"};
 
-    auto add_section = [&](float y_top, float y_bot, float width_top,
-                           float width_bot, float depth_top, float depth_bot,
-                           std::uint8_t slot) {
-      float const radius =
-          (width_top + width_bot + depth_top + depth_bot) * 0.25F;
-      primitives.push_back(generated_cylinder(QVector3D(0.0F, y_bot, 0.0F),
-                                              QVector3D(0.0F, y_top, 0.0F),
-                                              radius, slot));
-    };
-
-    add_ring(y_shoulder + 0.048F, torso_r * 0.70F, torso_d * 0.62F,
-             k_builder_tunic_dark_slot, 0.018F);
-    add_ring(y_shoulder + 0.030F, torso_r * 1.10F, torso_d * 1.02F,
-             k_builder_tunic_base_slot, 0.031F);
-    add_ring(y_shoulder - 0.002F, torso_r * 1.04F, torso_d * 0.98F,
-             k_builder_tunic_base_slot, 0.028F);
-
-    add_section(y_shoulder + 0.016F, y_shoulder - 0.08F, torso_r * 1.06F,
-                torso_r * 0.99F, torso_d * 0.98F, torso_d * 0.92F,
-                k_builder_tunic_base_slot);
-    add_section(y_shoulder - 0.08F, y_waist + 0.018F, torso_r * 0.97F,
-                torso_r * 0.88F, torso_d * 0.90F, torso_d * 0.82F,
-                k_builder_tunic_dark_slot);
-    add_ring(y_waist + 0.010F, torso_r * 0.90F, torso_d * 0.84F,
-             k_builder_tunic_dark_slot, 0.022F);
-
-    for (int layer = 0; layer < k_skirt_layers; ++layer) {
-      float const t =
-          static_cast<float>(layer) / static_cast<float>(k_skirt_layers - 1);
-      float const y = y_waist - 0.010F - t * (y_waist - y_hem);
-      float const flare = 1.0F + t * 0.30F;
-      float const thickness = 0.018F + t * 0.010F;
-      std::uint8_t const slot = (layer % 3 == 1) ? k_builder_tunic_dark_slot
-                                                 : k_builder_tunic_base_slot;
-      add_ring(y, torso_r * 0.88F * flare, torso_d * 0.82F * flare, slot,
-               thickness);
-    }
-    add_ring(y_hem + 0.010F, torso_r * 1.18F, torso_d * 1.10F,
-             k_builder_tunic_dark_slot, 0.020F);
-
-    for (int fold = -1; fold <= 1; ++fold) {
-      float const t = static_cast<float>(fold);
-      QVector3D const start(t * torso_r * 0.34F, y_waist - 0.005F,
-                            torso_d * 0.54F);
-      QVector3D const end(t * torso_r * 0.40F, y_hem + 0.025F, torso_d * 0.72F);
-      primitives.push_back(generated_cylinder(start, end, torso_r * 0.09F,
-                                              k_builder_tunic_base_slot));
+    {
+      float const h = y_sh - y_w;
+      float const cy = (y_sh + y_w) * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr, h, td);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(0.86F, 1.02F, 8), m,
+                               k_builder_tunic_base_slot);
     }
 
-    auto add_sleeve = [&](const AttachmentFrame &shoulder, float side_sign) {
-      QVector3D const shoulder_local = torso_local.point(shoulder.origin);
-      QVector3D const start =
-          shoulder_local +
-          QVector3D(side_sign * torso_r * 0.10F, -0.015F, torso_d * 0.04F);
-      QVector3D const end = start + QVector3D(side_sign * torso_r * 0.20F,
-                                              -0.085F, torso_d * 0.06F);
-      primitives.push_back(generated_cylinder(start, end, torso_r * 0.20F,
-                                              k_builder_tunic_dark_slot));
-      primitives.push_back(
-          generated_sphere(end, torso_r * 0.17F, k_builder_tunic_dark_slot));
-    };
+    {
+      float const h = y_w - y_hem;
+      float const cy = (y_w + y_hem) * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr, h, td);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.44F, 0.86F, 8), m,
+                               k_builder_tunic_base_slot);
+    }
 
-    add_sleeve(bind_frames.shoulder_l, -1.0F);
-    add_sleeve(bind_frames.shoulder_r, 1.0F);
+    {
+      float const h = 0.026F;
+      float const cy = y_w + 0.004F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 0.92F, h, td * 0.90F);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 8), m,
+                               k_builder_tunic_dark_slot);
+    }
 
-    return build_generated_equipment_archetype(
-        "roman_builder_work_tunic",
-        std::span<const GP>(primitives.data(), primitives.size()));
+    {
+      float const h = 0.022F;
+      float const cy = y_hem + h * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 1.50F, h, td * 1.50F);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 8), m,
+                               k_builder_tunic_dark_slot);
+    }
+
+    {
+      const QVector3D sh_r = local.point(bind.shoulder_r.origin);
+      QVector3D const pin_top(sh_r.x() * 0.50F, y_sh + 0.012F, td * 0.12F);
+      QVector3D const pin_bot(sh_r.x() * 0.38F, y_sh - 0.032F, td * 0.22F);
+      builder.add_palette_mesh(get_unit_cylinder(8),
+                               cylinder_between(pin_top, pin_bot, tr * 0.11F),
+                               k_builder_tunic_dark_slot);
+    }
+
+    {
+      const QVector3D sh_l = local.point(bind.shoulder_l.origin);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          sphere_at(QVector3D(sh_l.x(), y_sh - 0.010F, td * 0.06F), tr * 0.21F),
+          k_builder_tunic_base_slot);
+    }
+
+    return std::move(builder).build();
   }();
   return archetype;
 }
@@ -350,45 +323,75 @@ auto builder_work_tunic_contribution_attachments(std::uint8_t base_role_byte)
 
 auto roman_civilian_mantle_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
-    using GP = Render::GL::GeneratedEquipmentPrimitive;
-    std::vector<GP> primitives;
-    primitives.reserve(4);
+    const auto &bind = Render::Humanoid::humanoid_bind_body_frames();
+    const AttachmentFrame &torso = bind.torso;
+    const AttachmentFrame &waist = bind.waist;
+    const TorsoLocalFrame local = make_torso_local_frame(QMatrix4x4{}, torso);
 
-    const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
-    const AttachmentFrame &torso = bind_frames.torso;
-    const AttachmentFrame &waist = bind_frames.waist;
-    const TorsoLocalFrame torso_local =
-        make_torso_local_frame(QMatrix4x4{}, torso);
-
-    float const torso_r = torso.radius * 1.06F;
-    float const torso_d =
+    float const tr = torso.radius * 1.06F;
+    float const td =
         (torso.depth > 0.0F) ? torso.depth * 0.94F : torso.radius * 0.82F;
-    float const y_shoulder = 0.038F;
-    float const y_waist = torso_local.point(waist.origin).y();
-    float const sash_y = y_waist - 0.015F;
-    auto add_box = [&](const QVector3D &center, const QVector3D &scale,
-                       std::uint8_t slot) {
-      primitives.push_back(generated_box(center, scale, slot));
-    };
+    float const y_sh = 0.038F;
+    float const y_w = local.point(waist.origin).y();
+    float const y_hem = y_w - 0.20F;
 
-    add_box(QVector3D(-torso_r * 0.10F, y_shoulder + 0.04F, -torso_d * 0.08F),
-            QVector3D(torso_r * 1.28F, 0.12F, torso_d * 1.00F), 0U);
+    RenderArchetypeBuilder builder{"roman_civilian_mantle"};
 
-    add_box(QVector3D(torso_r * 0.18F, (y_shoulder + y_waist) * 0.5F,
-                      torso_d * 0.70F),
-            QVector3D(torso_r * 0.54F, y_shoulder - y_waist + 0.08F,
-                      torso_d * 0.28F),
-            1U);
+    {
+      float const h = y_sh - y_w;
+      float const cy = (y_sh + y_w) * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr, h, td);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(0.88F, 1.04F, 8), m,
+                               0U);
+    }
 
-    add_box(QVector3D(0.0F, sash_y, 0.0F),
-            QVector3D(torso_r * 1.52F, 0.095F, torso_d * 1.54F), 0U);
+    {
+      float const h = y_w - y_hem;
+      float const cy = (y_w + y_hem) * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr, h, td);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.38F, 0.88F, 8), m,
+                               0U);
+    }
 
-    add_box(QVector3D(torso_r * 0.20F, sash_y - 0.11F, torso_d * 0.84F),
-            QVector3D(0.07F, 0.18F, 0.05F), 1U);
+    {
+      const QVector3D sh_l = local.point(bind.shoulder_l.origin);
+      QVector3D const drape_top(sh_l.x() * 0.80F, y_sh + 0.006F, td * 0.40F);
+      QVector3D const drape_bot(tr * 0.30F, y_w + 0.020F, td * 0.68F);
+      builder.add_palette_mesh(
+          get_unit_cylinder(8),
+          cylinder_between(drape_top, drape_bot, tr * 0.32F), 1U);
+    }
 
-    return build_generated_equipment_archetype(
-        "roman_civilian_mantle",
-        std::span<const GP>(primitives.data(), primitives.size()));
+    {
+      QVector3D const roll_l(-tr * 0.72F, y_sh + 0.014F, td * 0.22F);
+      QVector3D const roll_r(tr * 0.52F, y_sh + 0.014F, td * 0.22F);
+      builder.add_palette_mesh(get_unit_cylinder(8),
+                               cylinder_between(roll_l, roll_r, tr * 0.14F),
+                               1U);
+    }
+
+    {
+      float const h = 0.024F;
+      float const cy = y_w + 0.004F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 0.92F, h, td * 0.90F);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 8), m, 0U);
+    }
+
+    {
+      QVector3D const umbo_top(tr * 0.22F, y_w - 0.006F, td * 0.82F);
+      QVector3D const umbo_bot(tr * 0.26F, y_w - 0.110F, td * 0.88F);
+      builder.add_palette_mesh(get_unit_cylinder(8),
+                               cylinder_between(umbo_top, umbo_bot, tr * 0.20F),
+                               1U);
+    }
+
+    return std::move(builder).build();
   }();
   return archetype;
 }
@@ -787,27 +790,25 @@ auto roman_builder_chisel_unit_archetype() -> Render::Creature::ArchetypeId {
   return k_archetype;
 }
 
-void roman_builder_render_hook(
-    const Render::GL::HumanoidAnimationContext &anim,
-    const Render::GL::HumanoidVariant &, std::uint32_t seed,
-    Render::Creature::Pipeline::HumanoidRenderSelection &io_selection) {
-  if (!anim.inputs.is_constructing) {
-    return;
-  }
-  switch (static_cast<BuilderConstructionTool>(seed % 3U)) {
-  case BuilderConstructionTool::Hammer:
-    io_selection.archetype = roman_builder_hammer_unit_archetype();
-    io_selection.state = Render::Creature::AnimationStateId::AttackSword;
-    break;
-  case BuilderConstructionTool::Saw:
-    io_selection.archetype = roman_builder_saw_unit_archetype();
-    io_selection.state = Render::Creature::AnimationStateId::AttackSword;
-    break;
-  case BuilderConstructionTool::Chisel:
-    io_selection.archetype = roman_builder_chisel_unit_archetype();
-    io_selection.state = Render::Creature::AnimationStateId::AttackSpear;
-    break;
-  }
+static auto roman_builder_variant_table()
+    -> const Render::Creature::ArchetypeVariantTable & {
+  static const Render::Creature::ArchetypeVariantTable k_table = []() {
+    Render::Creature::ArchetypeVariantTable t{};
+    t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
+    t.variant_stride = 3;
+    t.variant_is_seed_based = true;
+
+    t.archetype_for_variant[0] = roman_builder_hammer_unit_archetype();
+    t.state_for_variant[0] = Render::Creature::AnimationStateId::AttackSword;
+
+    t.archetype_for_variant[1] = roman_builder_saw_unit_archetype();
+    t.state_for_variant[1] = Render::Creature::AnimationStateId::AttackSword;
+
+    t.archetype_for_variant[2] = roman_builder_chisel_unit_archetype();
+    t.state_for_variant[2] = Render::Creature::AnimationStateId::AttackSpear;
+    return t;
+  }();
+  return k_table;
 }
 
 } // namespace
@@ -901,7 +902,7 @@ public:
       s.scaling = ProportionScaling{1.05F, 0.98F, 1.02F};
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = roman_builder_idle_archetype();
-      s.humanoid_render_hook = roman_builder_render_hook;
+      s.variant_table = &roman_builder_variant_table();
       return s;
     }();
     return spec;
@@ -959,6 +960,18 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry &registry) {
                                static BuilderRenderer const r;
                                r.render(ctx, out);
                              });
+
+  auto &ar = Render::GL::RenderArchetypeRegistry::instance();
+  ar.register_archetype("roman_builder_work_tunic",
+                        [] { (void)builder_work_tunic_archetype(); });
+  ar.register_archetype("roman_civilian_mantle",
+                        [] { (void)roman_civilian_mantle_archetype(); });
+  ar.register_archetype("roman_builder_hammer",
+                        [] { (void)builder_hammer_archetype(); });
+  ar.register_archetype("roman_builder_saw",
+                        [] { (void)builder_saw_archetype(); });
+  ar.register_archetype("roman_builder_chisel",
+                        [] { (void)builder_chisel_archetype(); });
 }
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry &registry) {

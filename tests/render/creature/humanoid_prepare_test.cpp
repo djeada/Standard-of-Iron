@@ -905,11 +905,28 @@ TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
   ASSERT_NE(calculator, nullptr);
 
   float const spacing = 2.0F;
-  auto const offset =
-      calculator->calculate_offset(1, 0, 1, 1, 4, spacing, 0x12345678U);
-  float const expected_yaw = std::atan2(-offset.offset_x, -offset.offset_z) *
-                             (180.0F / 3.14159265358979F);
-  EXPECT_NEAR(offset.yaw_offset, expected_yaw, 0.0001F);
+  constexpr int total = 8;
+  for (int idx = 0; idx < total; ++idx) {
+    auto const offset = calculator->calculate_offset(idx, 0, idx, 1, total,
+                                                     spacing, 0x12345678U);
+    float const yaw_rad = offset.yaw_offset * (3.14159265358979F / 180.0F);
+    float const cos_yaw = std::cos(yaw_rad);
+    float const sin_yaw = std::sin(yaw_rad);
+
+    float const world_x = cos_yaw * offset.offset_x + sin_yaw * offset.offset_z;
+    float const world_z =
+        -sin_yaw * offset.offset_x + cos_yaw * offset.offset_z;
+
+    float const face_x = sin_yaw;
+    float const face_z = cos_yaw;
+
+    float const world_r = std::sqrt(world_x * world_x + world_z * world_z);
+    ASSERT_GT(world_r, 0.001F);
+    float const inward_x = -world_x / world_r;
+    float const inward_z = -world_z / world_r;
+    EXPECT_NEAR(face_x, inward_x, 0.01F) << "idx=" << idx;
+    EXPECT_NEAR(face_z, inward_z, 0.01F) << "idx=" << idx;
+  }
 }
 
 TEST(HumanoidPrepare, BuilderConstructionPlaybackUsesWorkClip) {

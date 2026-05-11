@@ -13,7 +13,7 @@ namespace Render::GL {
 
 class SoftwareBackend : public IRenderBackend {
 public:
-  void initialize() override {}
+  [[nodiscard]] auto initialize() -> bool override { return true; }
   void begin_frame() override { m_rasterizer.clear(); }
   void execute(const DrawQueue &queue, const Camera &cam) override;
 

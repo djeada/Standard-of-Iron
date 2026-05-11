@@ -8,17 +8,31 @@
 void AudioResourceLoader::load_audio_resources() {
   auto &audio_sys = AudioSystem::get_instance();
 
-  QString const base_path =
-      QCoreApplication::applicationDirPath() + "/assets/audio/";
-  qInfo() << "Loading audio resources from:" << base_path;
+  const QString app_dir = QCoreApplication::applicationDirPath();
+  const QStringList candidates = {
+      app_dir + "/assets/audio/",
+      app_dir + "/../Resources/assets/audio/",
+      app_dir + "/../../assets/audio/",
+  };
 
-  QDir const audio_dir(base_path);
-  if (!audio_dir.exists()) {
-    qWarning() << "Audio assets directory does not exist:" << base_path;
-    qWarning() << "Application directory:"
-               << QCoreApplication::applicationDirPath();
+  QString base_path;
+  for (const QString &candidate : candidates) {
+    if (QDir(candidate).exists()) {
+      base_path = candidate;
+      break;
+    }
+  }
+
+  if (base_path.isEmpty()) {
+    qWarning() << "Audio assets directory not found. Searched:";
+    for (const QString &c : candidates) {
+      qWarning() << " " << c;
+    }
+    qWarning() << "Application directory:" << app_dir;
     return;
   }
+
+  qInfo() << "Loading audio resources from:" << base_path;
 
   if (audio_sys.load_sound(
           "archer_voice", (base_path + "voices/archer_voice.wav").toStdString(),

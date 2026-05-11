@@ -16,6 +16,9 @@ public:
 
   static void apply_personality(AIStrategyConfig &config, float aggression,
                                 float defense, float harassment);
+
+  static void apply_difficulty(AIStrategyConfig &config,
+                               const QString &difficulty);
 };
 
 } // namespace Game::Systems::AI

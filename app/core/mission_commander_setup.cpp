@@ -121,28 +121,32 @@ auto resolve_commander_position(
     const std::vector<Game::Mission::UnitSetup> &units,
     const std::vector<Game::Mission::BuildingSetup> &buildings,
     const std::vector<ExistingOwnerSpawnAnchor> &existing_owner_spawns,
-    const Game::Mission::Position &fallback) -> Game::Mission::Position {
+    const Game::Mission::Position &fallback) -> ResolvedCommanderPosition {
   if (const auto authored_units =
           densest_cluster_position(weighted_unit_positions(units));
       authored_units.has_value()) {
-    return authored_units.value();
+    return {.position = authored_units.value(),
+            .space = CommanderPositionSpace::Mission};
   }
   if (const auto authored_buildings =
           densest_cluster_position(building_positions(buildings));
       authored_buildings.has_value()) {
-    return authored_buildings.value();
+    return {.position = authored_buildings.value(),
+            .space = CommanderPositionSpace::Mission};
   }
   if (const auto existing_units = densest_cluster_position(
           existing_positions(existing_owner_spawns, false));
       existing_units.has_value()) {
-    return existing_units.value();
+    return {.position = existing_units.value(),
+            .space = CommanderPositionSpace::World};
   }
   if (const auto existing_buildings = densest_cluster_position(
           existing_positions(existing_owner_spawns, true));
       existing_buildings.has_value()) {
-    return existing_buildings.value();
+    return {.position = existing_buildings.value(),
+            .space = CommanderPositionSpace::World};
   }
-  return fallback;
+  return {.position = fallback, .space = CommanderPositionSpace::Mission};
 }
 
 } // namespace App::Core

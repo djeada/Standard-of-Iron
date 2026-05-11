@@ -2,6 +2,7 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../render_archetype.h"
 #include "../i_equipment_renderer.h"
 #include "shield_renderer.h"
 
@@ -23,5 +24,7 @@ public:
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 };
+
+[[nodiscard]] auto roman_shield_archetype() -> const RenderArchetype &;
 
 } // namespace Render::GL

@@ -2,7 +2,6 @@
 
 #include "../../units/spawn_type.h"
 #include "../../units/troop_type.h"
-#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -39,7 +38,8 @@ enum class AICommandType {
   MoveUnits,
   AttackTarget,
   StartProduction,
-  StartBuilderConstruction
+  StartBuilderConstruction,
+  TriggerCommanderRally
 };
 
 enum class BehaviorPriority {
@@ -84,6 +84,7 @@ struct EntitySnapshot {
   int health = 0;
   int max_health = 0;
   bool is_building = false;
+  bool is_commander = false;
 
   float pos_x = 0.0F;
   float pos_y = 0.0F;
@@ -140,6 +141,7 @@ struct AIContext {
 
   std::vector<Engine::Core::EntityID> military_units;
   std::vector<Engine::Core::EntityID> buildings;
+  std::vector<Engine::Core::EntityID> commander_ids;
   Engine::Core::EntityID primary_barracks = 0;
 
   float rally_x = 0.0F;
@@ -162,7 +164,7 @@ struct AIContext {
   struct UnitAssignment {
     BehaviorPriority owner_priority = BehaviorPriority::Normal;
     float assignment_time = 0.0F;
-    std::string assigned_task;
+    const char *assigned_task = "";
   };
   std::unordered_map<Engine::Core::EntityID, UnitAssignment> assigned_units;
 
@@ -214,7 +216,7 @@ struct AICommand {
   Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
 
-  std::string construction_type;
+  const char *construction_type = nullptr;
   float construction_site_x = 0.0F;
   float construction_site_z = 0.0F;
 };

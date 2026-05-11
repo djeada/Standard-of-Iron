@@ -61,7 +61,11 @@ else()
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
     else()
         # GCC/Clang Release flags
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math -march=x86-64-v2 -funroll-loops -ftree-vectorize")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math -funroll-loops -ftree-vectorize")
+        # x86-64-v2 targets SSE4.2/POPCNT — safe on x86_64 but invalid on arm64 (Apple Silicon)
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|amd64")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64-v2")
+        endif()
     endif()
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)  # Enable LTO
     message(STATUS "Building in RELEASE mode with optimizations")

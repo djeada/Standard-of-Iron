@@ -142,6 +142,26 @@ public:
     return 0.0F;
   }
 
+  auto get_formation_spacing(TroopType unit_type) const -> float {
+    auto it = m_formation_spacing.find(unit_type);
+    if (it != m_formation_spacing.end()) {
+      return it->second;
+    }
+    return 0.75F;
+  }
+
+  auto get_formation_spacing(const std::string &unit_type) const -> float {
+    return get_formation_spacing(troop_typeFromString(unit_type));
+  }
+
+  auto get_formation_spacing(SpawnType spawn_type) const -> float {
+    auto troop_type_opt = spawn_typeToTroopType(spawn_type);
+    if (troop_type_opt) {
+      return get_formation_spacing(*troop_type_opt);
+    }
+    return 0.75F;
+  }
+
   void register_troop_type(TroopType unit_type, int individuals_per_unit) {
     m_individuals_per_unit[unit_type] = individuals_per_unit;
   }
@@ -160,6 +180,10 @@ public:
     m_selection_ring_ground_offset[unit_type] = offset;
   }
 
+  void register_formation_spacing(TroopType unit_type, float spacing) {
+    m_formation_spacing[unit_type] = spacing;
+  }
+
   void refresh_from_catalog() { reload_from_catalog(); }
 
 private:
@@ -172,6 +196,7 @@ private:
     m_max_units_per_row.clear();
     m_selection_ring_size.clear();
     m_selection_ring_ground_offset.clear();
+    m_formation_spacing.clear();
 
     const auto &classes = TroopCatalog::instance().get_all_classes();
     for (const auto &entry : classes) {
@@ -184,6 +209,7 @@ private:
       m_selection_ring_size[type] = troop_class.visuals.selection_ring_size;
       m_selection_ring_ground_offset[type] =
           troop_class.visuals.selection_ring_ground_offset;
+      m_formation_spacing[type] = troop_class.visuals.formation_spacing;
     }
   }
 
@@ -193,6 +219,7 @@ private:
   std::unordered_map<TroopType, int> m_max_units_per_row;
   std::unordered_map<TroopType, float> m_selection_ring_size;
   std::unordered_map<TroopType, float> m_selection_ring_ground_offset;
+  std::unordered_map<TroopType, float> m_formation_spacing;
 };
 
 } // namespace Game::Units

@@ -88,7 +88,7 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  std::string building_to_construct;
+  const char *building_to_construct = nullptr;
 
   int catapult_count = 0;
   for (const auto &entity : snapshot.friendly_units) {
@@ -117,7 +117,7 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     building_to_construct = BUILDING_TYPE_CATAPULT;
   }
 
-  if (building_to_construct.empty()) {
+  if (building_to_construct == nullptr) {
     return;
   }
 

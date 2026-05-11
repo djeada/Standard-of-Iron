@@ -230,6 +230,10 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
     variant.selection_ring_ground_offset = value;
     has_variant = true;
   }
+  if (auto value = read_float_opt(visuals, "formation_spacing")) {
+    variant.formation_spacing = value;
+    has_variant = true;
+  }
   if (visuals.contains("renderer_id")) {
     variant.renderer_id = visuals.value("renderer_id").toString().toStdString();
     has_variant = true;

@@ -3,6 +3,7 @@
 #include "ai_system/ai_strategy.h"
 #include "ai_system/behaviors/attack_behavior.h"
 #include "ai_system/behaviors/builder_behavior.h"
+#include "ai_system/behaviors/commander_behavior.h"
 #include "ai_system/behaviors/defend_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
@@ -37,23 +38,6 @@ auto initial_ai_update_timer(std::size_t index, std::size_t count,
 
 AISystem::AISystem() {
 
-  m_behavior_registry.register_behavior(
-      std::make_unique<AI::RetreatBehavior>());
-
-  m_behavior_registry.register_behavior(std::make_unique<AI::DefendBehavior>());
-
-  m_behavior_registry.register_behavior(
-      std::make_unique<AI::ProductionBehavior>());
-
-  m_behavior_registry.register_behavior(
-      std::make_unique<AI::BuilderBehavior>());
-
-  m_behavior_registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
-
-  m_behavior_registry.register_behavior(std::make_unique<AI::AttackBehavior>());
-
-  m_behavior_registry.register_behavior(std::make_unique<AI::GatherBehavior>());
-
   m_building_attacked_subscription = Engine::Core::ScopedEventSubscription<
       Engine::Core::BuildingAttackedEvent>(
       [this](const Engine::Core::BuildingAttackedEvent &event) {
@@ -61,6 +45,17 @@ AISystem::AISystem() {
       });
 
   initialize_ai_players();
+}
+
+void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry &registry) {
+  registry.register_behavior(std::make_unique<AI::RetreatBehavior>());
+  registry.register_behavior(std::make_unique<AI::DefendBehavior>());
+  registry.register_behavior(std::make_unique<AI::ProductionBehavior>());
+  registry.register_behavior(std::make_unique<AI::BuilderBehavior>());
+  registry.register_behavior(std::make_unique<AI::CommanderBehavior>());
+  registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
+  registry.register_behavior(std::make_unique<AI::AttackBehavior>());
+  registry.register_behavior(std::make_unique<AI::GatherBehavior>());
 }
 
 void AISystem::reinitialize() {
@@ -85,8 +80,10 @@ void AISystem::initialize_ai_players() {
     instance.context.state = AI::AIState::Idle;
     instance.context.allow_commander_recruitment =
         m_allow_commander_recruitment;
-    instance.worker = std::make_unique<AI::AIWorker>(m_reasoner, m_executor,
-                                                     m_behavior_registry);
+    instance.behavior_registry = std::make_unique<AI::AIBehaviorRegistry>();
+    populate_behavior_registry(*instance.behavior_registry);
+    instance.worker = std::make_unique<AI::AIWorker>(
+        m_reasoner, m_executor, *instance.behavior_registry);
     instance.update_timer =
         initial_ai_update_timer(index, ai_owner_ids.size(), m_update_interval);
 
@@ -98,13 +95,17 @@ AISystem::~AISystem() = default;
 
 void AISystem::set_ai_strategy(int player_id, AI::AIStrategy strategy,
                                float aggression, float defense,
-                               float harassment) {
+                               float harassment, const QString &difficulty) {
   for (auto &ai : m_ai_instances) {
     if (ai.context.player_id == player_id) {
       ai.context.strategy_config =
           AI::AIStrategyFactory::create_config(strategy);
       AI::AIStrategyFactory::apply_personality(ai.context.strategy_config,
                                                aggression, defense, harassment);
+      if (!difficulty.isEmpty()) {
+        AI::AIStrategyFactory::apply_difficulty(ai.context.strategy_config,
+                                                difficulty);
+      }
       break;
     }
   }

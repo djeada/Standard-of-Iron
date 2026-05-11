@@ -357,6 +357,7 @@ inline void issue_move_or_attack_command(
 
   Game::Systems::CommandService::MoveOptions opts;
   opts.group_move = selected.size() > 1;
+  opts.retry_individual_on_group_failure = selected.size() > 1;
   Game::Systems::CommandService::move_units(*world, selected,
                                             formation_result.positions, opts);
 }

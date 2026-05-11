@@ -9,7 +9,7 @@ ComboBox {
     property int text_pixel_size: -1
     property color text_color: Theme.textMain
     property color background_color: Theme.cardBase
-    property color border_color: activeFocus ? Theme.accentBr : Theme.cardBorder
+    property color border_color: Theme.cardBorder
     property color popup_background: Theme.panelBase
     property color popup_border: Theme.cardBorder
     property color highlight_background: Theme.hoverBg
@@ -39,45 +39,82 @@ ComboBox {
     background: Rectangle {
         radius: Theme.radiusSmall
         color: root.background_color
-        border.color: root.border_color
-        border.width: 1
+        border.color: {
+            if (root.popup.visible || root.activeFocus)
+                return StyleGuide.historical.bronze;
+            if (root.hovered)
+                return StyleGuide.palette.thumbBr;
+            return root.border_color;
+        }
+        border.width: (root.popup.visible || root.activeFocus) ? 2 : 1
+
+        
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 1
+            radius: Math.max(1, parent.radius - 1)
+            opacity: 0.09
+            gradient: Gradient {
+                GradientStop {
+                    position: 0.0
+                    color: "#FFFFFF"
+                }
+
+                GradientStop {
+                    position: 0.5
+                    color: "#FFFFFF"
+                }
+
+                GradientStop {
+                    position: 1.0
+                    color: "#000000"
+                }
+            }
+        }
+
+        
+        Rectangle {
+            anchors.top: parent.top
+            anchors.topMargin: 1
+            anchors.left: parent.left
+            anchors.leftMargin: Math.max(3, parent.radius)
+            anchors.right: parent.right
+            anchors.rightMargin: Math.max(3, parent.radius)
+            height: 1
+            color: StyleGuide.palette.accentBright
+            opacity: root.enabled ? 0.30 : 0.0
+        }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 140
+            }
+        }
+
+        Behavior on border.width {
+            NumberAnimation {
+                duration: 100
+            }
+        }
     }
 
-    indicator: Canvas {
-        id: rootIndicator
-
-        width: 12
-        height: 8
+    indicator: Text {
+        text: root.popup.visible ? "\u25B2" : "\u25BC"
+        color: (root.hovered || root.popup.visible) ? StyleGuide.palette.accentBright : StyleGuide.palette.textSub
+        font.pixelSize: 8
         anchors.right: parent.right
-        anchors.rightMargin: Theme.spacingSmall
+        anchors.rightMargin: Theme.spacingSmall + 1
         anchors.verticalCenter: parent.verticalCenter
-        onPaint: {
-            var ctx = getContext("2d");
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = root.text_color;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(width, 0);
-            ctx.lineTo(width / 2, height);
-            ctx.closePath();
-            ctx.fill();
-        }
-        Component.onCompleted: requestPaint()
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
 
-        Connections {
-            function onText_colorChanged() {
-                rootIndicator.requestPaint();
+        Behavior on color {
+            ColorAnimation {
+                duration: 140
             }
-
-            target: root
         }
-
     }
 
     popup: Popup {
-        y: root.height
+        y: root.height + 2
         width: root.width
         implicitHeight: contentItem.implicitHeight
         padding: 0
@@ -92,10 +129,22 @@ ComboBox {
         background: Rectangle {
             radius: Theme.radiusSmall
             color: root.popup_background
-            border.color: root.popup_border
+            border.color: StyleGuide.historical.bronzeDeep
             border.width: 1
-        }
 
+            
+            Rectangle {
+                anchors.top: parent.top
+                anchors.topMargin: 1
+                anchors.left: parent.left
+                anchors.leftMargin: Math.max(3, parent.radius)
+                anchors.right: parent.right
+                anchors.rightMargin: Math.max(3, parent.radius)
+                height: 1
+                color: StyleGuide.palette.accentBright
+                opacity: 0.25
+            }
+        }
     }
 
     delegate: ItemDelegate {
@@ -106,17 +155,45 @@ ComboBox {
             color: highlighted ? root.highlight_background : root.item_background
             border.color: highlighted ? root.highlight_border : root.item_border
             border.width: 1
+
+            
+            Rectangle {
+                anchors.fill: parent
+                opacity: highlighted ? 0.08 : 0.0
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: "#FFFFFF"
+                    }
+
+                    GradientStop {
+                        position: 1.0
+                        color: "#000000"
+                    }
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                    }
+                }
+            }
         }
 
         contentItem: Text {
             text: root.resolve_delegate_text(modelData)
-            color: root.text_color
+            color: highlighted ? StyleGuide.palette.textBright : root.text_color
             font.pointSize: root.text_pixel_size > 0 ? -1 : root.text_point_size
             font.pixelSize: root.text_pixel_size > 0 ? root.text_pixel_size : -1
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
+            leftPadding: Theme.spacingSmall
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 100
+                }
+            }
         }
-
     }
-
 }

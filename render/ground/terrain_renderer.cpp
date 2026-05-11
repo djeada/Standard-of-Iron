@@ -970,7 +970,7 @@ void TerrainRenderer::build_meshes() {
         }
 
         params.tint = clamp01(QVector3D(chunk.tint, chunk.tint, chunk.tint));
-        params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+        params.light_direction = QVector3D(0.65F, 0.50F, 0.40F);
         params.curvature_response = curvature_response.curvature_emphasis;
         params.ridge_response = curvature_response.ridge_response;
         params.gully_response = curvature_response.gully_response;

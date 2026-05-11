@@ -2,6 +2,7 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../render_archetype.h"
 #include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
 #include <QMatrix4x4>
@@ -35,5 +36,7 @@ roman_scutum_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
 
 [[nodiscard]] auto roman_scutum_make_static_attachment(
     std::uint8_t base_role_byte) -> Render::Creature::StaticAttachmentSpec;
+
+[[nodiscard]] auto roman_scutum_archetype() -> const RenderArchetype &;
 
 } // namespace Render::GL

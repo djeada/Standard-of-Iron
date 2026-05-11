@@ -61,6 +61,7 @@
         "render_scale": 0.6,
         "selection_ring_size": 1.1,
         "selection_ring_ground_offset": 0.0,
+        "formation_spacing": 1.05,
         "renderer_id": "troops/roman/swordsman"
       },
       "formation": {
@@ -95,6 +96,7 @@
         "render_scale": 0.55,
         "selection_ring_size": 1.4,
         "selection_ring_ground_offset": 0.0,
+        "formation_spacing": 1.05,
         "renderer_id": "troops/roman/spearman"
       },
       "formation": {

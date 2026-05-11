@@ -25,6 +25,7 @@ public:
     bool allow_direct_fallback = true;
     bool clear_attack_intent = true;
     bool group_move = false;
+    bool retry_individual_on_group_failure = false;
   };
 
   struct MoveIntent {
@@ -43,6 +44,10 @@ public:
   static auto grid_to_world(const Point &grid_pos) -> QVector3D;
   static auto get_unit_radius(Engine::Core::World &world,
                               Engine::Core::EntityID entity_id) -> float;
+  static auto try_queue_local_recovery_move(
+      Engine::Core::World &world, Engine::Core::EntityID entity_id,
+      const QVector3D &current_position, const QVector3D &goal,
+      Engine::Core::MovementComponent *movement) -> bool;
 
   static void move_unit(Engine::Core::World &world,
                         Engine::Core::EntityID unit_id,
