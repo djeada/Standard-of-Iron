@@ -2,17 +2,15 @@
 
 #pragma once
 
-#include "pose_intent_enum.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "../humanoid/humanoid_state_machine.h"
+#include "pose_intent_enum.h"
 #include "render_request.h"
 
 namespace Render::Creature {
 
-// Single priority resolver — replaces all per-system if/else chains.
-[[nodiscard]] inline auto
-resolve_pose_intent(const Render::GL::AnimationInputs &inputs) noexcept
-    -> PoseIntent {
+[[nodiscard]] inline auto resolve_pose_intent(
+    const Render::GL::AnimationInputs &inputs) noexcept -> PoseIntent {
   if (inputs.is_dying) {
     return PoseIntent::Dying;
   }
@@ -32,7 +30,8 @@ resolve_pose_intent(const Render::GL::AnimationInputs &inputs) noexcept
       return PoseIntent::AttackMelee;
     case Engine::Core::CombatAttackFamily::None:
     default:
-      return inputs.is_melee ? PoseIntent::AttackMelee : PoseIntent::AttackRanged;
+      return inputs.is_melee ? PoseIntent::AttackMelee
+                             : PoseIntent::AttackRanged;
     }
   }
   if (inputs.is_healing) {
@@ -53,46 +52,69 @@ resolve_pose_intent(const Render::GL::AnimationInputs &inputs) noexcept
   return PoseIntent::Idle;
 }
 
-// Conversion: PoseIntent → HumanoidState (for the clip-driver state machine).
-[[nodiscard]] inline auto
-to_humanoid_state(PoseIntent intent) noexcept -> Render::Humanoid::HumanoidState {
+[[nodiscard]] inline auto to_humanoid_state(PoseIntent intent) noexcept
+    -> Render::Humanoid::HumanoidState {
   using S = Render::Humanoid::HumanoidState;
   switch (intent) {
-  case PoseIntent::Walk:         return S::Walk;
-  case PoseIntent::Run:          return S::Run;
-  case PoseIntent::Hold:         return S::Hold;
-  case PoseIntent::AttackMelee:  return S::AttackMelee;
-  case PoseIntent::AttackSpear:  return S::AttackMelee;
-  case PoseIntent::AttackRanged: return S::AttackRanged;
-  case PoseIntent::HitReaction:  return S::HitReaction;
-  case PoseIntent::Healing:      return S::Healing;
-  case PoseIntent::Construct:    return S::Construct;
-  case PoseIntent::Dying:        return S::Death;
-  case PoseIntent::Dead:         return S::Death;
-  default:                       return S::Idle;
+  case PoseIntent::Walk:
+    return S::Walk;
+  case PoseIntent::Run:
+    return S::Run;
+  case PoseIntent::Hold:
+    return S::Hold;
+  case PoseIntent::AttackMelee:
+    return S::AttackMelee;
+  case PoseIntent::AttackSpear:
+    return S::AttackMelee;
+  case PoseIntent::AttackRanged:
+    return S::AttackRanged;
+  case PoseIntent::HitReaction:
+    return S::HitReaction;
+  case PoseIntent::Healing:
+    return S::Healing;
+  case PoseIntent::Construct:
+    return S::Construct;
+  case PoseIntent::Dying:
+    return S::Death;
+  case PoseIntent::Dead:
+    return S::Death;
+  default:
+    return S::Idle;
   }
 }
 
-// Conversion: PoseIntent → AnimationStateId (for BPAT clip selection).
-[[nodiscard]] inline auto
-to_animation_state_id(PoseIntent intent) noexcept
+[[nodiscard]] inline auto to_animation_state_id(PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId {
   using S = Render::Creature::AnimationStateId;
   switch (intent) {
-  case PoseIntent::Walk:          return S::Walk;
-  case PoseIntent::Run:           return S::Run;
-  case PoseIntent::Hold:          return S::Hold;
-  case PoseIntent::AttackMelee:   return S::AttackSword;
-  case PoseIntent::AttackSpear:   return S::AttackSpear;
-  case PoseIntent::AttackRanged:  return S::AttackBow;
-  case PoseIntent::Construct:     return S::AttackSword; // builder hook overrides archetype
-  case PoseIntent::Dying:         return S::Die;
-  case PoseIntent::Dead:          return S::Dead;
-  case PoseIntent::RidingIdle:    return S::RidingIdle;
-  case PoseIntent::RidingCharge:  return S::RidingCharge;
-  case PoseIntent::RidingReining: return S::RidingReining;
-  case PoseIntent::RidingBowShot: return S::RidingBowShot;
-  default:                        return S::Idle;
+  case PoseIntent::Walk:
+    return S::Walk;
+  case PoseIntent::Run:
+    return S::Run;
+  case PoseIntent::Hold:
+    return S::Hold;
+  case PoseIntent::AttackMelee:
+    return S::AttackSword;
+  case PoseIntent::AttackSpear:
+    return S::AttackSpear;
+  case PoseIntent::AttackRanged:
+    return S::AttackBow;
+  case PoseIntent::Construct:
+    return S::AttackSword;
+  case PoseIntent::Dying:
+    return S::Die;
+  case PoseIntent::Dead:
+    return S::Dead;
+  case PoseIntent::RidingIdle:
+    return S::RidingIdle;
+  case PoseIntent::RidingCharge:
+    return S::RidingCharge;
+  case PoseIntent::RidingReining:
+    return S::RidingReining;
+  case PoseIntent::RidingBowShot:
+    return S::RidingBowShot;
+  default:
+    return S::Idle;
   }
 }
 

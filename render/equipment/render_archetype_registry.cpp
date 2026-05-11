@@ -7,8 +7,8 @@ auto RenderArchetypeRegistry::instance() -> RenderArchetypeRegistry & {
   return s_instance;
 }
 
-void RenderArchetypeRegistry::register_archetype(std::string name,
-                                                 std::function<void()> warm_fn) {
+void RenderArchetypeRegistry::register_archetype(
+    std::string name, std::function<void()> warm_fn) {
   m_entries.push_back({std::move(name), std::move(warm_fn)});
 }
 

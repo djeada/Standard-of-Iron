@@ -331,16 +331,16 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet & {
   return ids;
 }
 
-static auto spearman_variant_table()
-    -> const Render::Creature::ArchetypeVariantTable & {
+static auto
+spearman_variant_table() -> const Render::Creature::ArchetypeVariantTable & {
   static const Render::Creature::ArchetypeVariantTable k_table = []() {
     Render::Creature::ArchetypeVariantTable t{};
-    // Always-on: active regardless of pose.
+
     t.variant_trigger_pose = Render::Creature::PoseIntent::Count;
-    t.variant_stride = 8; // covers all FacialHairStyle enum values
+    t.variant_stride = 8;
     t.variant_is_seed_based = false;
     auto const &a = spearman_archetypes();
-    // Default / non-beard styles → clean archetype
+
     t.archetype_for_variant[static_cast<std::size_t>(
         Render::GL::FacialHairStyle::None)] = a.clean;
     t.archetype_for_variant[static_cast<std::size_t>(
@@ -351,7 +351,7 @@ static auto spearman_variant_table()
         Render::GL::FacialHairStyle::Mustache)] = a.clean;
     t.archetype_for_variant[static_cast<std::size_t>(
         Render::GL::FacialHairStyle::MustacheAndBeard)] = a.clean;
-    // Beard styles → matching archetype
+
     t.archetype_for_variant[static_cast<std::size_t>(
         Render::GL::FacialHairStyle::ShortBeard)] = a.short_beard;
     t.archetype_for_variant[static_cast<std::size_t>(

@@ -60,8 +60,9 @@ TEST(NationLoader, FrontlineProfilesKeepCatalogFormationSpacing) {
   auto &profiles = Game::Systems::TroopProfileService::instance();
   profiles.clear();
 
-  auto const roman = profiles.get_profile(
-      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Swordsman);
+  auto const roman =
+      profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                           Game::Units::TroopType::Swordsman);
   auto const carthage = profiles.get_profile(Game::Systems::NationID::Carthage,
                                              Game::Units::TroopType::Spearman);
 

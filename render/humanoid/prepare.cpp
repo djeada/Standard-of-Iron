@@ -104,16 +104,17 @@ auto HumanoidRendererBase::resolve_formation(const HumanoidRendererBase &owner,
       params.max_per_row =
           Game::Units::TroopConfig::instance().get_max_units_per_row(
               unit->spawn_type);
-      if (auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type)) {
-        auto const profile = Game::Systems::TroopProfileService::instance()
-                                 .get_profile(unit->nation_id, *troop_type);
+      if (auto troop_type =
+              Game::Units::spawn_typeToTroopType(unit->spawn_type)) {
+        auto const profile =
+            Game::Systems::TroopProfileService::instance().get_profile(
+                unit->nation_id, *troop_type);
         params.spacing = resolve_formation_spacing(
             unit->spawn_type, profile.visuals.formation_spacing,
             owner.get_mount_scale());
       } else {
-        params.spacing =
-            resolve_formation_spacing(unit->spawn_type, 0.0F,
-                                      owner.get_mount_scale());
+        params.spacing = resolve_formation_spacing(unit->spawn_type, 0.0F,
+                                                   owner.get_mount_scale());
       }
     }
   } else if (owner.uses_mounted_pipeline()) {

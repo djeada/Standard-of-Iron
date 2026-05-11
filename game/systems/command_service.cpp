@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cmath>
 #include <cstddef>
@@ -15,7 +16,6 @@
 #include <memory>
 #include <mutex>
 #include <qvectornd.h>
-#include <array>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -131,8 +131,7 @@ auto find_recovery_cell(const Point &origin, const Pathfinding &pathfinder,
             continue;
           }
 
-          float const distance_sq =
-              static_cast<float>(dx * dx + dy * dy);
+          float const distance_sq = static_cast<float>(dx * dx + dy * dy);
           if (distance_sq < best_distance_sq) {
             best_distance_sq = distance_sq;
             best_candidate = {check_x, check_y};
@@ -247,8 +246,7 @@ auto CommandService::try_queue_local_recovery_move(
   Point recovery_cell{};
   if (!find_recovery_cell(current_grid, *pathfinder, unit_radius,
                           recovery_cell)) {
-    // Emergency fallback: search a much larger area while ignoring exact
-    // radius fit.  Any walkable cell is better than remaining stuck forever.
+
     constexpr int k_emergency_search_radius = 64;
     Point const nearest = Pathfinding::find_nearest_walkable_point(
         current_grid, k_emergency_search_radius, *pathfinder, 0.0F);
@@ -1063,7 +1061,8 @@ void CommandService::process_path_results(Engine::Core::World &world) {
       };
 
       add_retry_target(request_info.entity_id, request_info.target);
-      for (std::size_t idx = 0; idx < request_info.group_members.size(); ++idx) {
+      for (std::size_t idx = 0; idx < request_info.group_members.size();
+           ++idx) {
         QVector3D const target = (idx < request_info.group_targets.size())
                                      ? request_info.group_targets[idx]
                                      : request_info.target;

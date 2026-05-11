@@ -115,7 +115,6 @@ void main() {
   float diff_raw = n_dot_l * (1.0 - wrap) + wrap;
   float diff = max(diff_raw, 0.18);
 
-  // Warm sun, cool sky color grading
   vec3 sun_color = vec3(1.08, 0.92, 0.74);
   vec3 sky_color = vec3(0.72, 0.80, 1.00);
   float lit_t = clamp((diff_raw + 1.0) / 2.5, 0.0, 1.0);

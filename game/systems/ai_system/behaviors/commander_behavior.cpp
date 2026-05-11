@@ -38,8 +38,6 @@ auto compute_army_centre(const AISnapshot &snapshot) -> ArmyCentre {
   return centre;
 }
 
-// Returns the unit direction vector pointing from the army centre toward the
-// nearest non-building enemy, or {0,1} if there are no enemies.
 void nearest_enemy_direction(const AISnapshot &snapshot, float army_x,
                              float army_z, float &out_dx, float &out_dz) {
   out_dx = 0.0F;
@@ -75,8 +73,6 @@ void CommanderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   m_update_timer += delta_time;
   m_rally_timer += delta_time;
 
-  // Periodically trigger rally on all active commanders regardless of
-  // movement update cadence.
   if (m_rally_timer >= k_rally_interval) {
     m_rally_timer = 0.0F;
     for (auto commander_id : context.commander_ids) {
@@ -97,8 +93,7 @@ void CommanderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   float enemy_dir_x = 0.0F;
   float enemy_dir_z = 1.0F;
   if (!snapshot.visible_enemies.empty() && army.count > 0) {
-    nearest_enemy_direction(snapshot, army.x, army.z, enemy_dir_x,
-                            enemy_dir_z);
+    nearest_enemy_direction(snapshot, army.x, army.z, enemy_dir_x, enemy_dir_z);
   }
 
   for (auto commander_id : context.commander_ids) {
@@ -117,8 +112,7 @@ void CommanderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     float target_z;
 
     if (army.count > 0) {
-      // Keep commander at army centre, offset slightly away from the enemy to
-      // protect them while still letting the aura reach the front line.
+
       target_x = army.x - enemy_dir_x * k_protected_offset;
       target_z = army.z - enemy_dir_z * k_protected_offset;
     } else if (context.has_base_anchor) {

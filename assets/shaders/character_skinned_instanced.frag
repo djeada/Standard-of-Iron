@@ -23,7 +23,6 @@ void main() {
   vec3 normal = normalize(v_normal_ws);
   vec3 light_dir = normalize(vec3(0.65, 0.50, 0.40));
 
-  // Warm sun, cool sky ambient
   vec3 sun_color = vec3(1.08, 0.92, 0.74);
   vec3 sky_color = vec3(0.72, 0.80, 1.00);
 

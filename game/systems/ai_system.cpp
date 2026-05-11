@@ -80,11 +80,10 @@ void AISystem::initialize_ai_players() {
     instance.context.state = AI::AIState::Idle;
     instance.context.allow_commander_recruitment =
         m_allow_commander_recruitment;
-    instance.behavior_registry =
-        std::make_unique<AI::AIBehaviorRegistry>();
+    instance.behavior_registry = std::make_unique<AI::AIBehaviorRegistry>();
     populate_behavior_registry(*instance.behavior_registry);
-    instance.worker = std::make_unique<AI::AIWorker>(m_reasoner, m_executor,
-                                                     *instance.behavior_registry);
+    instance.worker = std::make_unique<AI::AIWorker>(
+        m_reasoner, m_executor, *instance.behavior_registry);
     instance.update_timer =
         initial_ai_update_timer(index, ai_owner_ids.size(), m_update_interval);
 

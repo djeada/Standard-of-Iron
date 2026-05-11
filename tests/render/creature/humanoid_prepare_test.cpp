@@ -904,34 +904,24 @@ TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
       FormationCalculatorFactory::UnitCategory::BuilderConstruction);
   ASSERT_NE(calculator, nullptr);
 
-  // Test several slots in a ring of 8.
   float const spacing = 2.0F;
   constexpr int total = 8;
   for (int idx = 0; idx < total; ++idx) {
-    auto const offset =
-        calculator->calculate_offset(idx, 0, idx, 1, total, spacing, 0x12345678U);
-    float const yaw_rad =
-        offset.yaw_offset * (3.14159265358979F / 180.0F);
+    auto const offset = calculator->calculate_offset(idx, 0, idx, 1, total,
+                                                     spacing, 0x12345678U);
+    float const yaw_rad = offset.yaw_offset * (3.14159265358979F / 180.0F);
     float const cos_yaw = std::cos(yaw_rad);
     float const sin_yaw = std::sin(yaw_rad);
 
-    // The prepare pipeline places the soldier at:
-    //   world_offset = R(yaw) * (local_x, 0, local_z)
-    // where R(yaw) uses the Qt right-hand convention:
-    //   R * (x,0,z) = (cos*x + sin*z, 0, -sin*x + cos*z)
-    float const world_x =
-        cos_yaw * offset.offset_x + sin_yaw * offset.offset_z;
+    float const world_x = cos_yaw * offset.offset_x + sin_yaw * offset.offset_z;
     float const world_z =
         -sin_yaw * offset.offset_x + cos_yaw * offset.offset_z;
 
-    // The soldier's model-forward (+Z) direction in world space:
-    //   R(yaw) * (0,0,1) = (sin, 0, cos)
     float const face_x = sin_yaw;
     float const face_z = cos_yaw;
 
-    // The soldier must face toward entity center, i.e. toward (-world_x, -world_z).
     float const world_r = std::sqrt(world_x * world_x + world_z * world_z);
-    ASSERT_GT(world_r, 0.001F);  // must be on the ring, not at origin
+    ASSERT_GT(world_r, 0.001F);
     float const inward_x = -world_x / world_r;
     float const inward_z = -world_z / world_r;
     EXPECT_NEAR(face_x, inward_x, 0.01F) << "idx=" << idx;

@@ -26,8 +26,7 @@ TEST(MissionCommanderSetupTest, PrefersAuthoredTroopPositions) {
   EXPECT_FLOAT_EQ(resolved.position.z, 22.0F);
 }
 
-TEST(MissionCommanderSetupTest,
-     UsesExistingWorldTroopsWhenMissionHasNoSpawns) {
+TEST(MissionCommanderSetupTest, UsesExistingWorldTroopsWhenMissionHasNoSpawns) {
   std::vector<App::Core::ExistingOwnerSpawnAnchor> existing_spawns = {
       {{-64.5F, -36.5F}, false}, {{-64.5F, -32.5F}, false},
       {{-68.5F, -34.5F}, false}, {{-68.5F, -38.5F}, false},
@@ -47,9 +46,8 @@ TEST(MissionCommanderSetupTest,
 TEST(MissionCommanderSetupTest,
      UsesLocalWorldClusterWhenExistingSpawnsAreSpreadAcrossMap) {
   std::vector<App::Core::ExistingOwnerSpawnAnchor> existing_spawns = {
-      {{32.5F, 57.5F}, false}, {{36.5F, 57.5F}, false},
-      {{35.5F, 61.5F}, false}, {{63.5F, 57.5F}, false},
-      {{67.5F, 57.5F}, false},
+      {{32.5F, 57.5F}, false}, {{36.5F, 57.5F}, false}, {{35.5F, 61.5F}, false},
+      {{63.5F, 57.5F}, false}, {{67.5F, 57.5F}, false},
   };
 
   const auto resolved = App::Core::resolve_commander_position(

@@ -48,7 +48,7 @@ ComboBox {
         }
         border.width: (root.popup.visible || root.activeFocus) ? 2 : 1
 
-        // Subtle luminosity bevel
+        
         Rectangle {
             anchors.fill: parent
             anchors.margins: 1
@@ -72,7 +72,7 @@ ComboBox {
             }
         }
 
-        // Top-edge highlight
+        
         Rectangle {
             anchors.top: parent.top
             anchors.topMargin: 1
@@ -132,7 +132,7 @@ ComboBox {
             border.color: StyleGuide.historical.bronzeDeep
             border.width: 1
 
-            // Top-edge highlight on popup
+            
             Rectangle {
                 anchors.top: parent.top
                 anchors.topMargin: 1
@@ -156,7 +156,7 @@ ComboBox {
             border.color: highlighted ? root.highlight_border : root.item_border
             border.width: 1
 
-            // Subtle highlight overlay on hovered item
+            
             Rectangle {
                 anchors.fill: parent
                 opacity: highlighted ? 0.08 : 0.0

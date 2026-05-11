@@ -70,21 +70,20 @@ auto derive_unit_seed(const Render::GL::DrawContext &ctx,
 auto humanoid_state_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept
     -> Render::Creature::AnimationStateId {
-  return humanoid_state_for_anim(anim,
-                                 Render::Creature::resolve_pose_intent(anim.inputs));
+  return humanoid_state_for_anim(
+      anim, Render::Creature::resolve_pose_intent(anim.inputs));
 }
 
-auto humanoid_state_for_anim(
-    const Render::GL::HumanoidAnimationContext &anim,
-    Render::Creature::PoseIntent intent) noexcept
+auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext &anim,
+                             Render::Creature::PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId {
-  // Use canonical resolver for all action states.
+
   if (intent != Render::Creature::PoseIntent::Idle &&
       intent != Render::Creature::PoseIntent::Walk &&
       intent != Render::Creature::PoseIntent::Run) {
     return Render::Creature::to_animation_state_id(intent);
   }
-  // Locomotion: use the gait-derived motion_state (preserves original behaviour).
+
   switch (anim.motion_state) {
   case Render::GL::HumanoidMotionState::Walk:
     return Render::Creature::AnimationStateId::Walk;

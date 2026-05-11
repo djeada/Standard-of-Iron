@@ -1,6 +1,6 @@
-#include "render/selection_ring_layout.h"
-#include "render/humanoid/prepare.h"
 #include "game/units/troop_config.h"
+#include "render/humanoid/prepare.h"
+#include "render/selection_ring_layout.h"
 
 #include <gtest/gtest.h>
 
@@ -20,8 +20,9 @@ auto build_expected_soldier_positions(
           ? Render::GL::FormationCalculatorFactory::UnitCategory::
                 BuilderConstruction
           : Render::GL::Detail::selection_ring_category(input.spawn_type);
-  auto const *calculator = Render::GL::FormationCalculatorFactory::get_calculator(
-      Render::GL::Detail::selection_ring_nation(input.nation_id), category);
+  auto const *calculator =
+      Render::GL::FormationCalculatorFactory::get_calculator(
+          Render::GL::Detail::selection_ring_nation(input.nation_id), category);
   EXPECT_NE(calculator, nullptr);
 
   std::vector<Render::GL::SelectionRingPlacement> placements;
@@ -157,7 +158,8 @@ TEST(SelectionRingLayout, SwordsmanRingsFollowSameLayoutAsHumanoidFormation) {
   input.individuals_per_unit = 6;
   input.max_units_per_row = 3;
   input.formation_spacing =
-      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
+      Game::Units::TroopConfig::instance().get_formation_spacing(
+          input.spawn_type);
   input.seed = 0x12345678U;
   input.position = QVector3D(3.0F, 0.0F, -4.0F);
 
@@ -177,7 +179,8 @@ TEST(SelectionRingLayout, SpearmanRingsFollowSameLayoutAsHumanoidFormation) {
   input.individuals_per_unit = 6;
   input.max_units_per_row = 3;
   input.formation_spacing =
-      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
+      Game::Units::TroopConfig::instance().get_formation_spacing(
+          input.spawn_type);
   input.seed = 0x5A17B00BU;
   input.position = QVector3D(-2.0F, 0.0F, 6.0F);
 
@@ -191,13 +194,15 @@ TEST(SelectionRingLayout, SpearmanRingsFollowSameLayoutAsHumanoidFormation) {
   }
 }
 
-TEST(SelectionRingLayout, BuilderConstructionRingsFollowSameLayoutAsHumanoidFormation) {
+TEST(SelectionRingLayout,
+     BuilderConstructionRingsFollowSameLayoutAsHumanoidFormation) {
   Render::GL::SelectionRingLayoutInput input;
   input.spawn_type = Game::Units::SpawnType::Builder;
   input.individuals_per_unit = 8;
   input.max_units_per_row = 8;
   input.formation_spacing =
-      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
+      Game::Units::TroopConfig::instance().get_formation_spacing(
+          input.spawn_type);
   input.seed = 0x00C0FFEEU;
   input.position = QVector3D(1.0F, 0.0F, 2.0F);
   input.is_builder_constructing = true;

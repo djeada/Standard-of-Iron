@@ -126,8 +126,6 @@ inline void release_units(const std::vector<Engine::Core::EntityID> &units,
   }
 }
 
-// Returns the set of all alive entity IDs from the snapshot (buildings +
-// units) so callers can reuse it for further membership tests.
 inline auto cleanup_dead_units(const AISnapshot &snapshot, AIContext &context)
     -> std::unordered_set<Engine::Core::EntityID> {
 

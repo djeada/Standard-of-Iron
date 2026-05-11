@@ -396,53 +396,46 @@ void VegetationPipeline::initialize_pine_pipeline() {
     }
   };
 
-  // Trunk: slightly curved via constant ring offsets
   const int trunk_bottom = add_ring(0.12F, 0.00F, 0.00F, 0.00F);
-  const int trunk_kink   = add_ring(0.11F, 0.22F, 0.00F, 0.09F,
-                                    QVector2D( 0.014F,  0.009F));
-  const int trunk_mid    = add_ring(0.10F, 0.40F, 0.02F, 0.17F,
-                                    QVector2D( 0.020F,  0.013F));
-  const int trunk_top    = add_ring(0.09F, 0.54F, 0.05F, 0.28F,
-                                    QVector2D( 0.018F,  0.015F));
+  const int trunk_kink =
+      add_ring(0.11F, 0.22F, 0.00F, 0.09F, QVector2D(0.014F, 0.009F));
+  const int trunk_mid =
+      add_ring(0.10F, 0.40F, 0.02F, 0.17F, QVector2D(0.020F, 0.013F));
+  const int trunk_top =
+      add_ring(0.09F, 0.54F, 0.05F, 0.28F, QVector2D(0.018F, 0.015F));
 
-  // Foliage tier 1 (lowest / widest boughs) – offset toward one side
   const QVector2D t1o(-0.040F, 0.055F);
-  const int c1_base  = add_ring(0.65F, 0.60F, 0.28F, 0.44F, t1o);
+  const int c1_base = add_ring(0.65F, 0.60F, 0.28F, 0.44F, t1o);
   const int c1_outer = add_ring(0.56F, 0.67F, 0.40F, 0.51F, t1o * 0.70F);
-  const int c1_mid   = add_ring(0.40F, 0.74F, 0.56F, 0.57F, t1o * 0.40F);
-  const int c1_top   = add_ring(0.22F, 0.79F, 0.72F, 0.63F, t1o * 0.20F);
+  const int c1_mid = add_ring(0.40F, 0.74F, 0.56F, 0.57F, t1o * 0.40F);
+  const int c1_top = add_ring(0.22F, 0.79F, 0.72F, 0.63F, t1o * 0.20F);
 
-  // Foliage tier 2 – offset in a different direction; radius jumps at junction
-  // (c1_top r=0.22 → c2_base r=0.48 creates the characteristic shelf)
-  const QVector2D t2o( 0.045F, -0.032F);
-  const int c2_base  = add_ring(0.48F, 0.81F, 0.22F, 0.64F, t2o);
+  const QVector2D t2o(0.045F, -0.032F);
+  const int c2_base = add_ring(0.48F, 0.81F, 0.22F, 0.64F, t2o);
   const int c2_outer = add_ring(0.34F, 0.88F, 0.50F, 0.71F, t2o * 0.65F);
-  const int c2_top   = add_ring(0.16F, 0.93F, 0.72F, 0.77F, t2o * 0.30F);
+  const int c2_top = add_ring(0.16F, 0.93F, 0.72F, 0.77F, t2o * 0.30F);
 
-  // Foliage tier 3 (uppermost crown) – offset in yet another direction
-  // (c2_top r=0.16 → c3_base r=0.30 = second shelf)
   const QVector2D t3o(-0.028F, -0.040F);
-  const int c3_base  = add_ring(0.30F, 0.95F, 0.28F, 0.78F, t3o);
+  const int c3_base = add_ring(0.30F, 0.95F, 0.28F, 0.78F, t3o);
   const int c3_outer = add_ring(0.20F, 1.01F, 0.58F, 0.84F, t3o * 0.55F);
-  const int c3_top   = add_ring(0.09F, 1.06F, 0.82F, 0.89F, t3o * 0.20F);
+  const int c3_top = add_ring(0.09F, 1.06F, 0.82F, 0.89F, t3o * 0.20F);
 
-  // Tip
   const int tip_ring = add_ring(0.04F, 1.13F, 0.90F, 0.95F);
 
   connect_rings(trunk_bottom, trunk_kink);
-  connect_rings(trunk_kink,   trunk_mid);
-  connect_rings(trunk_mid,    trunk_top);
-  connect_rings(trunk_top,    c1_base);
-  connect_rings(c1_base,  c1_outer);
+  connect_rings(trunk_kink, trunk_mid);
+  connect_rings(trunk_mid, trunk_top);
+  connect_rings(trunk_top, c1_base);
+  connect_rings(c1_base, c1_outer);
   connect_rings(c1_outer, c1_mid);
-  connect_rings(c1_mid,   c1_top);
-  connect_rings(c1_top,   c2_base);   // tier-1 → tier-2 shelf
-  connect_rings(c2_base,  c2_outer);
+  connect_rings(c1_mid, c1_top);
+  connect_rings(c1_top, c2_base);
+  connect_rings(c2_base, c2_outer);
   connect_rings(c2_outer, c2_top);
-  connect_rings(c2_top,   c3_base);   // tier-2 → tier-3 shelf
-  connect_rings(c3_base,  c3_outer);
+  connect_rings(c2_top, c3_base);
+  connect_rings(c3_base, c3_outer);
   connect_rings(c3_outer, c3_top);
-  connect_rings(c3_top,   tip_ring);
+  connect_rings(c3_top, tip_ring);
 
   const auto trunk_cap_index = static_cast<unsigned short>(vertices.size());
   vertices.push_back({QVector3D(0.0F, 0.0F, 0.0F), QVector2D(0.5F, 0.0F),

@@ -41,7 +41,6 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
 
   float avgColor = (baseColor.r + baseColor.g + baseColor.b) / 3.0;
 
-  // Explicit material override
   bool bIsWood = false, bIsMetal = false, bIsCloth = false;
   if (u_materialId == 2) {
     bIsWood = true;
@@ -50,10 +49,10 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
   } else if (u_materialId == 3) {
     bIsCloth = true;
   } else if (u_materialId != 4) {
-    // Heuristic: wood FIRST (warm mid tones), then metal (dark), then cloth (bright)
-    bIsWood = (baseColor.r < baseColor.g * 2.5 &&
-               baseColor.r > baseColor.b * 1.45 && avgColor > 0.18 &&
-               avgColor < 0.50);
+
+    bIsWood =
+        (baseColor.r < baseColor.g * 2.5 && baseColor.r > baseColor.b * 1.45 &&
+         avgColor > 0.18 && avgColor < 0.50);
     bIsMetal = (!bIsWood && avgColor < 0.40);
     bIsCloth = (!bIsWood && !bIsMetal && avgColor > 0.65);
   }
@@ -98,7 +97,6 @@ void main() {
   vec3 normal = normalize(v_normal);
   color = proceduralMaterialVariation(color, v_worldPos, normal);
 
-  // Burn marks for damaged/destroyed buildings
   if (u_materialId >= 10) {
     float sootAmt = float(u_materialId - 9) * 0.45;
     vec2 sootUv = v_worldPos.xz * 3.5;
@@ -117,7 +115,6 @@ void main() {
   float diff_raw = nDotL * (1.0 - wrapAmount) + wrapAmount;
   float diff = max(diff_raw, 0.18);
 
-  // Warm sun, cool sky color grading
   vec3 sun_color = vec3(1.08, 0.92, 0.74);
   vec3 sky_color = vec3(0.72, 0.80, 1.00);
   float lit_t = clamp((diff_raw + 1.0) / 2.5, 0.0, 1.0);

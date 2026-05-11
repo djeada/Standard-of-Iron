@@ -796,7 +796,8 @@ TEST_F(SerializationTest, BuildingComponentRoundTrip) {
 
   auto *deserialized = new_entity->get_component<BuildingComponent>();
   ASSERT_NE(deserialized, nullptr);
-  EXPECT_EQ(deserialized->original_nation_id, Game::Systems::NationID::Carthage);
+  EXPECT_EQ(deserialized->original_nation_id,
+            Game::Systems::NationID::Carthage);
 }
 
 TEST_F(SerializationTest, AIControlledComponentSerialization) {

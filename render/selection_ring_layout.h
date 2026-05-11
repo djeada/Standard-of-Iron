@@ -26,8 +26,7 @@ struct SelectionRingLayoutInput {
   QVector3D position{0.0F, 0.0F, 0.0F};
   QVector3D rotation{0.0F, 0.0F, 0.0F};
   QVector3D scale{1.0F, 1.0F, 1.0F};
-  // Set to true when a Builder unit is actively constructing so the ring
-  // layout mirrors the circle formation used by the humanoid renderer.
+
   bool is_builder_constructing{false};
 };
 
@@ -63,15 +62,15 @@ selection_ring_category(Game::Units::SpawnType spawn_type)
   }
 }
 
-[[nodiscard]] inline auto selection_ring_spacing(
-    Game::Units::SpawnType spawn_type, float configured_spacing) -> float {
+[[nodiscard]] inline auto
+selection_ring_spacing(Game::Units::SpawnType spawn_type,
+                       float configured_spacing) -> float {
   return resolve_formation_spacing(spawn_type, configured_spacing);
 }
 
 [[nodiscard]] inline auto
 selection_ring_visual_size(Game::Units::SpawnType spawn_type,
-                           int individuals_per_unit,
-                           float unit_ring_size,
+                           int individuals_per_unit, float unit_ring_size,
                            float formation_spacing = 0.0F) -> float {
   if (individuals_per_unit <= 1) {
     return unit_ring_size;
@@ -129,7 +128,7 @@ build_selection_ring_layout(const SelectionRingLayoutInput &input)
     if (total_units > 1) {
       std::uint32_t rng_state =
           input.seed ^ static_cast<std::uint32_t>(idx * 9176U);
-      (void)Detail::fast_random(rng_state); // Matches soldier vertical jitter.
+      (void)Detail::fast_random(rng_state);
       yaw += (Detail::fast_random(rng_state) - 0.5F) * 5.0F;
     }
 

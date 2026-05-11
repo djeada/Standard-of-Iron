@@ -417,8 +417,6 @@ private:
   bool m_enabled = true;
 };
 
-// Wraps an ISubmitter and overrides mesh/part/banner material_id for damaged
-// buildings. When damage_material_id == 0, passes through unchanged.
 class DamageStateSubmitter : public ISubmitter {
 public:
   explicit DamageStateSubmitter(ISubmitter &inner, int damage_material_id)
@@ -430,8 +428,8 @@ public:
     m_inner.mesh(mesh, model, color, tex, alpha, pick(material_id));
   }
   void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
-            const QVector3D &color, Texture *tex = nullptr,
-            float alpha = 1.0F, int material_id = 0) override {
+            const QVector3D &color, Texture *tex = nullptr, float alpha = 1.0F,
+            int material_id = 0) override {
     m_inner.part(mesh, material, model, color, tex, alpha, pick(material_id));
   }
   void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,

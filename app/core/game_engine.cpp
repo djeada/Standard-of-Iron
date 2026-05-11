@@ -1433,8 +1433,9 @@ void GameEngine::render_game_effects() {
     Render::GL::FormationPlacementInfo placement;
     placement.position =
         m_command_controller->get_formation_placement_position();
-    placement.position.setY(Game::Map::TerrainService::instance().get_terrain_height(
-        placement.position.x(), placement.position.z()));
+    placement.position.setY(
+        Game::Map::TerrainService::instance().get_terrain_height(
+            placement.position.x(), placement.position.z()));
     placement.angle_degrees =
         m_command_controller->get_formation_placement_angle();
     placement.active = true;
@@ -2528,58 +2529,62 @@ void GameEngine::apply_mission_setup() {
         }
       };
 
-  auto spawn_commander_for_owner = [&](int owner_id,
-                                       const Game::Systems::NationID nation_id,
-                                       const QString &commander_troop,
-                                       const App::Core::ResolvedCommanderPosition
-                                           &position) {
-    if (commander_troop.trimmed().isEmpty()) {
-      return;
-    }
-    const auto spawn_type = Game::Units::spawn_typeFromString(
-        commander_troop.trimmed().toStdString());
-    if (!spawn_type.has_value()) {
-      qWarning() << "Mission setup: unknown commander troop" << commander_troop;
-      return;
-    }
-    const auto troop_type = Game::Units::spawn_typeToTroopType(*spawn_type);
-    if (!troop_type.has_value() ||
-        !Game::Units::is_commander_troop(*troop_type)) {
-      qWarning() << "Mission setup: non-commander troop configured as commander"
-                 << commander_troop;
-      return;
-    }
-    if (m_world == nullptr) {
-      return;
-    }
-    for (auto *entity :
-         m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
-      if (entity == nullptr) {
-        continue;
-      }
-      const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
-        return;
-      }
-    }
-    Game::Units::SpawnParams sp;
-    if (position.space == App::Core::CommanderPositionSpace::World) {
-      sp.position = QVector3D(position.position.x, 0.0F, position.position.z);
-    } else {
-      sp.position = mission_position_to_world(position.position);
-    }
-    sp.player_id = owner_id;
-    sp.spawn_type = *spawn_type;
-    sp.ai_controlled = owner_registry.is_ai(owner_id);
-    sp.nation_id = nation_id;
-    auto unit = reg->create(sp.spawn_type, *m_world, sp);
-    if (!unit) {
-      qWarning() << "Mission setup: failed to spawn commander"
-                 << commander_troop << "for owner" << owner_id;
-      return;
-    }
-    apply_team_color(m_world->get_entity(unit->id()), owner_id);
-  };
+  auto spawn_commander_for_owner =
+      [&](int owner_id, const Game::Systems::NationID nation_id,
+          const QString &commander_troop,
+          const App::Core::ResolvedCommanderPosition &position) {
+        if (commander_troop.trimmed().isEmpty()) {
+          return;
+        }
+        const auto spawn_type = Game::Units::spawn_typeFromString(
+            commander_troop.trimmed().toStdString());
+        if (!spawn_type.has_value()) {
+          qWarning() << "Mission setup: unknown commander troop"
+                     << commander_troop;
+          return;
+        }
+        const auto troop_type = Game::Units::spawn_typeToTroopType(*spawn_type);
+        if (!troop_type.has_value() ||
+            !Game::Units::is_commander_troop(*troop_type)) {
+          qWarning()
+              << "Mission setup: non-commander troop configured as commander"
+              << commander_troop;
+          return;
+        }
+        if (m_world == nullptr) {
+          return;
+        }
+        for (auto *entity :
+             m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
+          if (entity == nullptr) {
+            continue;
+          }
+          const auto *unit =
+              entity->get_component<Engine::Core::UnitComponent>();
+          if (unit != nullptr && unit->owner_id == owner_id &&
+              unit->health > 0) {
+            return;
+          }
+        }
+        Game::Units::SpawnParams sp;
+        if (position.space == App::Core::CommanderPositionSpace::World) {
+          sp.position =
+              QVector3D(position.position.x, 0.0F, position.position.z);
+        } else {
+          sp.position = mission_position_to_world(position.position);
+        }
+        sp.player_id = owner_id;
+        sp.spawn_type = *spawn_type;
+        sp.ai_controlled = owner_registry.is_ai(owner_id);
+        sp.nation_id = nation_id;
+        auto unit = reg->create(sp.spawn_type, *m_world, sp);
+        if (!unit) {
+          qWarning() << "Mission setup: failed to spawn commander"
+                     << commander_troop << "for owner" << owner_id;
+          return;
+        }
+        apply_team_color(m_world->get_entity(unit->id()), owner_id);
+      };
 
   auto existing_owner_spawn_anchors = [&](int owner_id) {
     std::vector<App::Core::ExistingOwnerSpawnAnchor> anchors;

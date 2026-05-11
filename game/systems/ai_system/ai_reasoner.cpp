@@ -19,9 +19,6 @@ struct AnchorCandidate {
 
 constexpr float k_anchor_cluster_radius = 12.0F;
 
-// Finds the centre of the densest cluster within k_anchor_cluster_radius.
-// Runs only when there is no barracks (early game, low N), so the O(N²)
-// cost is acceptable in practice.
 auto densest_anchor_cluster(const std::vector<AnchorCandidate> &candidates)
     -> std::optional<AnchorCandidate> {
   if (candidates.empty()) {
@@ -85,8 +82,6 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
             ctx.player_id);
   }
 
-  // Build alive-entity set once; reused for both assigned-unit and
-  // buildings-under-attack pruning.
   const auto alive_ids = cleanup_dead_units(snapshot, ctx);
 
   int previous_unit_count = ctx.total_units;

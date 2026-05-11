@@ -222,7 +222,6 @@ auto builder_work_tunic_archetype() -> const RenderArchetype & {
 
     RenderArchetypeBuilder builder{"roman_builder_work_tunic"};
 
-    // Body (waist → shoulder): widens toward shoulder
     {
       float const h = y_sh - y_w;
       float const cy = (y_sh + y_w) * 0.5F;
@@ -233,7 +232,6 @@ auto builder_work_tunic_archetype() -> const RenderArchetype & {
                                k_builder_tunic_base_slot);
     }
 
-    // Skirt (hem → waist): flares at hem, seamless waist join
     {
       float const h = y_w - y_hem;
       float const cy = (y_w + y_hem) * 0.5F;
@@ -244,7 +242,6 @@ auto builder_work_tunic_archetype() -> const RenderArchetype & {
                                k_builder_tunic_base_slot);
     }
 
-    // Belt band (dark, slightly proud of waist)
     {
       float const h = 0.026F;
       float const cy = y_w + 0.004F;
@@ -255,7 +252,6 @@ auto builder_work_tunic_archetype() -> const RenderArchetype & {
                                k_builder_tunic_dark_slot);
     }
 
-    // Hem border (dark, slightly proud of skirt hem)
     {
       float const h = 0.022F;
       float const cy = y_hem + h * 0.5F;
@@ -266,17 +262,15 @@ auto builder_work_tunic_archetype() -> const RenderArchetype & {
                                k_builder_tunic_dark_slot);
     }
 
-    // Right shoulder strap pin (exomis: one-shouldered clasp on right)
     {
       const QVector3D sh_r = local.point(bind.shoulder_r.origin);
       QVector3D const pin_top(sh_r.x() * 0.50F, y_sh + 0.012F, td * 0.12F);
       QVector3D const pin_bot(sh_r.x() * 0.38F, y_sh - 0.032F, td * 0.22F);
-      builder.add_palette_mesh(
-          get_unit_cylinder(8), cylinder_between(pin_top, pin_bot, tr * 0.11F),
-          k_builder_tunic_dark_slot);
+      builder.add_palette_mesh(get_unit_cylinder(8),
+                               cylinder_between(pin_top, pin_bot, tr * 0.11F),
+                               k_builder_tunic_dark_slot);
     }
 
-    // Left sleeve cap (left shoulder bare on exomis)
     {
       const QVector3D sh_l = local.point(bind.shoulder_l.origin);
       builder.add_palette_mesh(
@@ -343,7 +337,6 @@ auto roman_civilian_mantle_archetype() -> const RenderArchetype & {
 
     RenderArchetypeBuilder builder{"roman_civilian_mantle"};
 
-    // Tunic body (waist → shoulder, slot 0)
     {
       float const h = y_sh - y_w;
       float const cy = (y_sh + y_w) * 0.5F;
@@ -354,7 +347,6 @@ auto roman_civilian_mantle_archetype() -> const RenderArchetype & {
                                0U);
     }
 
-    // Tunic skirt (hem → waist, slot 0)
     {
       float const h = y_w - y_hem;
       float const cy = (y_w + y_hem) * 0.5F;
@@ -365,44 +357,38 @@ auto roman_civilian_mantle_archetype() -> const RenderArchetype & {
                                0U);
     }
 
-    // Toga drape: diagonal slab from left shoulder toward right hip (slot 1)
     {
       const QVector3D sh_l = local.point(bind.shoulder_l.origin);
       QVector3D const drape_top(sh_l.x() * 0.80F, y_sh + 0.006F, td * 0.40F);
       QVector3D const drape_bot(tr * 0.30F, y_w + 0.020F, td * 0.68F);
-      builder.add_palette_mesh(get_unit_cylinder(8),
-                               cylinder_between(drape_top, drape_bot,
-                                                tr * 0.32F),
-                               1U);
+      builder.add_palette_mesh(
+          get_unit_cylinder(8),
+          cylinder_between(drape_top, drape_bot, tr * 0.32F), 1U);
     }
 
-    // Shoulder fold roll: horizontal across upper chest (slot 1)
     {
       QVector3D const roll_l(-tr * 0.72F, y_sh + 0.014F, td * 0.22F);
       QVector3D const roll_r(tr * 0.52F, y_sh + 0.014F, td * 0.22F);
-      builder.add_palette_mesh(
-          get_unit_cylinder(8), cylinder_between(roll_l, roll_r, tr * 0.14F),
-          1U);
+      builder.add_palette_mesh(get_unit_cylinder(8),
+                               cylinder_between(roll_l, roll_r, tr * 0.14F),
+                               1U);
     }
 
-    // Belt / cinctus (slot 0)
     {
       float const h = 0.024F;
       float const cy = y_w + 0.004F;
       QMatrix4x4 m;
       m.translate(0.0F, cy, 0.0F);
       m.scale(tr * 0.92F, h, td * 0.90F);
-      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 8), m,
-                               0U);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 8), m, 0U);
     }
 
-    // Umbo: front fold hanging below belt (slot 1)
     {
       QVector3D const umbo_top(tr * 0.22F, y_w - 0.006F, td * 0.82F);
       QVector3D const umbo_bot(tr * 0.26F, y_w - 0.110F, td * 0.88F);
-      builder.add_palette_mesh(
-          get_unit_cylinder(8), cylinder_between(umbo_top, umbo_bot, tr * 0.20F),
-          1U);
+      builder.add_palette_mesh(get_unit_cylinder(8),
+                               cylinder_between(umbo_top, umbo_bot, tr * 0.20F),
+                               1U);
     }
 
     return std::move(builder).build();
@@ -811,13 +797,13 @@ static auto roman_builder_variant_table()
     t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
     t.variant_stride = 3;
     t.variant_is_seed_based = true;
-    // Hammer (seed%3 == 0)
+
     t.archetype_for_variant[0] = roman_builder_hammer_unit_archetype();
     t.state_for_variant[0] = Render::Creature::AnimationStateId::AttackSword;
-    // Saw (seed%3 == 1)
+
     t.archetype_for_variant[1] = roman_builder_saw_unit_archetype();
     t.state_for_variant[1] = Render::Creature::AnimationStateId::AttackSword;
-    // Chisel (seed%3 == 2)
+
     t.archetype_for_variant[2] = roman_builder_chisel_unit_archetype();
     t.state_for_variant[2] = Render::Creature::AnimationStateId::AttackSpear;
     return t;

@@ -60,20 +60,25 @@ template <> struct hash<::Render::GL::PoseKey> {
 
 namespace Render::GL {
 
-[[nodiscard]] inline auto
-to_pose_key_anim_state(Render::Creature::PoseIntent intent) noexcept
-    -> AnimationState {
+[[nodiscard]] inline auto to_pose_key_anim_state(
+    Render::Creature::PoseIntent intent) noexcept -> AnimationState {
   switch (intent) {
-  case Render::Creature::PoseIntent::Walk:          return AnimationState::Walk;
-  case Render::Creature::PoseIntent::Run:           return AnimationState::Run;
+  case Render::Creature::PoseIntent::Walk:
+    return AnimationState::Walk;
+  case Render::Creature::PoseIntent::Run:
+    return AnimationState::Run;
   case Render::Creature::PoseIntent::AttackMelee:
   case Render::Creature::PoseIntent::AttackSpear:
   case Render::Creature::PoseIntent::AttackRanged:
-  case Render::Creature::PoseIntent::HitReaction:  return AnimationState::Attack;
+  case Render::Creature::PoseIntent::HitReaction:
+    return AnimationState::Attack;
   case Render::Creature::PoseIntent::Dying:
-  case Render::Creature::PoseIntent::Dead:          return AnimationState::Death;
-  case Render::Creature::PoseIntent::Hold:          return AnimationState::Stance;
-  default:                                          return AnimationState::Idle;
+  case Render::Creature::PoseIntent::Dead:
+    return AnimationState::Death;
+  case Render::Creature::PoseIntent::Hold:
+    return AnimationState::Stance;
+  default:
+    return AnimationState::Idle;
   }
 }
 

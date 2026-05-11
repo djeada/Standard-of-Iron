@@ -349,8 +349,6 @@ TEST(CreatureRenderBatch, VariantTableCanOverrideRequestSelection) {
           "test.variant_table_override", CreatureKind::Humanoid, {});
   ASSERT_NE(override_archetype, k_invalid_archetype);
 
-  // Build a table that overrides archetype + state for Idle pose
-  // (a default anim context resolves to PoseIntent::Idle).
   ArchetypeVariantTable table{};
   auto const idle_idx =
       static_cast<std::size_t>(Render::Creature::PoseIntent::Idle);

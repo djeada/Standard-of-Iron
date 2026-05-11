@@ -23,9 +23,7 @@ from pathlib import Path
 
 def check_shader_versions(shader_dir: Path) -> list[str]:
     errors: list[str] = []
-    shaders = sorted(
-        list(shader_dir.glob("*.vert")) + list(shader_dir.glob("*.frag"))
-    )
+    shaders = sorted(list(shader_dir.glob("*.vert")) + list(shader_dir.glob("*.frag")))
     if not shaders:
         errors.append(f"No shaders found in {shader_dir}")
         return errors
@@ -63,9 +61,7 @@ def main() -> int:
     print("=== OpenGL 3.3 Core Profile Requirements ===")
     total_errors: list[str] = []
 
-    shaders = sorted(
-        list(shader_dir.glob("*.vert")) + list(shader_dir.glob("*.frag"))
-    )
+    shaders = sorted(list(shader_dir.glob("*.vert")) + list(shader_dir.glob("*.frag")))
     print(f"\n[1/2] Shader GLSL version headers  ({len(shaders)} files)")
     errs = check_shader_versions(shader_dir)
     if errs:

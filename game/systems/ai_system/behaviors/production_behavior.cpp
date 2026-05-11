@@ -97,13 +97,12 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           (context.total_units > 0)
               ? static_cast<float>(context.ranged_count) / context.total_units
               : 0.0F;
-      // Defensive AIs lean toward ranged (archers hold the line).
-      // Aggressive/Rusher AIs lean toward melee (smash through).
-      const float target_ranged_ratio = std::clamp(
-          0.5F + (context.strategy_config.defense_modifier -
-                  context.strategy_config.aggression_modifier) *
-                     0.1F,
-          0.25F, 0.75F);
+
+      const float target_ranged_ratio =
+          std::clamp(0.5F + (context.strategy_config.defense_modifier -
+                             context.strategy_config.aggression_modifier) *
+                                0.1F,
+                     0.25F, 0.75F);
       produce_ranged = (ranged_ratio < target_ranged_ratio);
     }
 

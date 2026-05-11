@@ -6,6 +6,6 @@ uniform mat4 u_mvp;
 out vec2 v_uv;
 
 void main() {
-    v_uv = a_texCoord;
-    gl_Position = u_mvp * vec4(a_position, 1.0);
+  v_uv = a_texCoord;
+  gl_Position = u_mvp * vec4(a_position, 1.0);
 }

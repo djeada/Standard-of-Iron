@@ -39,14 +39,12 @@ TEST(TroopCatalogLoader, FrontlineInfantryKeepConfiguredFormationSpacing) {
 
   EXPECT_FLOAT_EQ(swordsman->visuals.formation_spacing, 1.05F);
   EXPECT_FLOAT_EQ(spearman->visuals.formation_spacing, 1.05F);
-  EXPECT_FLOAT_EQ(
-      Game::Units::TroopConfig::instance().get_formation_spacing(
-          Game::Units::TroopType::Swordsman),
-      1.05F);
-  EXPECT_FLOAT_EQ(
-      Game::Units::TroopConfig::instance().get_formation_spacing(
-          Game::Units::TroopType::Spearman),
-      1.05F);
+  EXPECT_FLOAT_EQ(Game::Units::TroopConfig::instance().get_formation_spacing(
+                      Game::Units::TroopType::Swordsman),
+                  1.05F);
+  EXPECT_FLOAT_EQ(Game::Units::TroopConfig::instance().get_formation_spacing(
+                      Game::Units::TroopType::Spearman),
+                  1.05F);
 }
 
 } // namespace

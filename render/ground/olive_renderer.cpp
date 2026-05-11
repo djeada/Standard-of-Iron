@@ -192,7 +192,6 @@ void OliveRenderer::generate_olive_instances() {
         density_mult = 0.5F;
       }
 
-      // Two-scale clustering noise: macro patches + mid-scale variation
       uint32_t cls_state =
           hash_coords(x / 8, z / 8, m_noise_seed ^ 0xC7E4F1A3U);
       float const macro_noise = rand_01(cls_state);
@@ -200,11 +199,10 @@ void OliveRenderer::generate_olive_instances() {
           hash_coords(x / 4, z / 4, m_noise_seed ^ 0xA2B5D8E6U);
       float const mid_noise = rand_01(mid_state);
       float const cluster_noise = macro_noise * 0.65F + mid_noise * 0.35F;
-      float const cluster_mult  = cluster_noise * cluster_noise * 2.2F;
+      float const cluster_mult = cluster_noise * cluster_noise * 2.2F;
 
-      float const effective_density =
-          olive_density * density_mult * k_tree_density_area_scale *
-          cluster_mult;
+      float const effective_density = olive_density * density_mult *
+                                      k_tree_density_area_scale * cluster_mult;
       int olive_count = static_cast<int>(std::ceil(effective_density));
 
       for (int i = 0; i < olive_count; ++i) {

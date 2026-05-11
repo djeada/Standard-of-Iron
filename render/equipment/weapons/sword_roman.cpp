@@ -5,7 +5,7 @@ namespace Render::GL {
 RomanSwordRenderer::RomanSwordRenderer()
     : SwordRenderer([]() {
         SwordRenderConfig config;
-        // Gladius Hispaniensis: wide leaf-shaped blade, cool blue-grey steel
+
         config.metal_color = {0.72F, 0.74F, 0.83F};
         config.sword_length = 0.82F;
         config.sword_width = 0.082F;

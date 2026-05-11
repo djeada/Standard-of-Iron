@@ -17,7 +17,6 @@ void main() {
   float ambient = 0.22;
   float lighting = ambient + diffuse * 0.70;
 
-  // Warm sun, cool sky color grading
   vec3 sun_color = vec3(1.08, 0.92, 0.74);
   vec3 sky_color = vec3(0.72, 0.80, 1.00);
   float lit_t = clamp(diffuse * 1.4, 0.0, 1.0);

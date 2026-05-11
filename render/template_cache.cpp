@@ -101,15 +101,23 @@ inline auto dense_anim_state_slot_index(AnimState state, CombatAnimPhase phase,
 
 auto to_anim_state(Render::Creature::PoseIntent intent) noexcept -> AnimState {
   switch (intent) {
-  case Render::Creature::PoseIntent::HitReaction:  return AnimState::Hit;
+  case Render::Creature::PoseIntent::HitReaction:
+    return AnimState::Hit;
   case Render::Creature::PoseIntent::AttackMelee:
-  case Render::Creature::PoseIntent::AttackSpear:  return AnimState::AttackMelee;
-  case Render::Creature::PoseIntent::AttackRanged: return AnimState::AttackRanged;
-  case Render::Creature::PoseIntent::Healing:      return AnimState::Heal;
-  case Render::Creature::PoseIntent::Construct:    return AnimState::Construct;
-  case Render::Creature::PoseIntent::Run:          return AnimState::Run;
-  case Render::Creature::PoseIntent::Walk:         return AnimState::Move;
-  default:                                         return AnimState::Idle;
+  case Render::Creature::PoseIntent::AttackSpear:
+    return AnimState::AttackMelee;
+  case Render::Creature::PoseIntent::AttackRanged:
+    return AnimState::AttackRanged;
+  case Render::Creature::PoseIntent::Healing:
+    return AnimState::Heal;
+  case Render::Creature::PoseIntent::Construct:
+    return AnimState::Construct;
+  case Render::Creature::PoseIntent::Run:
+    return AnimState::Run;
+  case Render::Creature::PoseIntent::Walk:
+    return AnimState::Move;
+  default:
+    return AnimState::Idle;
   }
 }
 } // namespace

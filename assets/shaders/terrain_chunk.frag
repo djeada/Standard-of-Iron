@@ -431,8 +431,6 @@ void main() {
   float gullyDarkness = 1.0 - isGully * (0.04 + 0.07 * gullyResponse);
   float rimContrast = 1.0 + rimFactor * (0.03 + 0.05 * ridgeResponse);
 
-  // Mud tracks: irregular footprint smudges when ground is wet
-  // (u_moistureLevel > 0.2)
   {
     float trackStrength =
         smoothstep(0.2, 0.7, u_moistureLevel) * (1.0 - rockMask * 0.9);
@@ -447,7 +445,6 @@ void main() {
   terrainColor *= plateauBrightness * gullyDarkness * rimContrast;
   vec3 litColor = terrainColor * shade * u_ambientBoost;
 
-  // Warm sun / cool shadow color grading
   vec3 sun_tint = vec3(1.08, 0.94, 0.80);
   vec3 shadow_tint = vec3(0.78, 0.86, 1.04);
   float grade_t = clamp(ndl * 1.4, 0.0, 1.0);

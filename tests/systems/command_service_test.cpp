@@ -161,17 +161,16 @@ TEST_F(CommandServiceTest, GroupMoveFailureNearBoundaryDoesNotTeleportUnits) {
   Game::Systems::CommandService::initialize(16, 16);
   Engine::Core::World world;
 
-  auto *left =
-      create_unit(world, -7.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto *left = create_unit(world, -7.0F, -2.0F, Game::Units::SpawnType::Archer);
   auto *center =
       create_unit(world, -7.0F, 0.0F, Game::Units::SpawnType::Archer);
-  auto *right =
-      create_unit(world, -7.0F, 2.0F, Game::Units::SpawnType::Archer);
+  auto *right = create_unit(world, -7.0F, 2.0F, Game::Units::SpawnType::Archer);
   ASSERT_NE(left, nullptr);
   ASSERT_NE(center, nullptr);
   ASSERT_NE(right, nullptr);
 
-  auto *left_transform = left->get_component<Engine::Core::TransformComponent>();
+  auto *left_transform =
+      left->get_component<Engine::Core::TransformComponent>();
   auto *center_transform =
       center->get_component<Engine::Core::TransformComponent>();
   auto *right_transform =
@@ -220,7 +219,8 @@ TEST_F(CommandServiceTest, GroupMoveFailureNearBoundaryDoesNotTeleportUnits) {
   EXPECT_FLOAT_EQ(right_transform->position.z, 2.0F);
 }
 
-TEST_F(CommandServiceTest, GroupMoveCanRetryMembersIndividuallyAfterGroupFailure) {
+TEST_F(CommandServiceTest,
+       GroupMoveCanRetryMembersIndividuallyAfterGroupFailure) {
   Engine::Core::World world;
 
   auto *left =
@@ -282,8 +282,7 @@ TEST_F(CommandServiceTest, LocalRecoveryCanRelaxRadiusToEscapeBoundaryTrap) {
   Game::Systems::CommandService::initialize(16, 16);
   Engine::Core::World world;
 
-  auto *unit =
-      create_unit(world, -7.0F, 0.0F, Game::Units::SpawnType::Archer);
+  auto *unit = create_unit(world, -7.0F, 0.0F, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
 
   auto *movement = unit->get_component<Engine::Core::MovementComponent>();

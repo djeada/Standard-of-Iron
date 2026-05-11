@@ -5,7 +5,7 @@ namespace Render::GL {
 CarthageSwordRenderer::CarthageSwordRenderer()
     : SwordRenderer([]() {
         SwordRenderConfig config;
-        // Kopis/falcata style: long, slender, warm bronze-tinted steel, swept guard
+
         config.metal_color = {0.76F, 0.70F, 0.58F};
         config.sword_length = 0.96F;
         config.sword_width = 0.070F;

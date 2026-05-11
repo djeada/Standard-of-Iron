@@ -760,12 +760,10 @@ void Serialization::deserialize_entity(Entity *entity,
     commander->aura_active =
         commander_obj["aura_active"].toBool(commander->aura_active);
     commander->wounded = commander_obj["wounded"].toBool(commander->wounded);
-    commander->rally_requested =
-        commander_obj["rally_requested"].toBool(false);
+    commander->rally_requested = commander_obj["rally_requested"].toBool(false);
     commander->rally_requires_manual_trigger =
         commander_obj["rally_requires_manual_trigger"].toBool(false);
-    commander->fpv_controlled =
-        commander_obj["fpv_controlled"].toBool(false);
+    commander->fpv_controlled = commander_obj["fpv_controlled"].toBool(false);
   }
 
   if (json.contains("morale")) {
@@ -908,8 +906,7 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(healer_obj["healing_cooldown"].toDouble(2.0));
     healer->time_since_last_heal =
         static_cast<float>(healer_obj["time_since_last_heal"].toDouble(0.0));
-    healer->is_healing_active =
-        healer_obj["is_healing_active"].toBool(false);
+    healer->is_healing_active = healer_obj["is_healing_active"].toBool(false);
     healer->healing_target_x =
         static_cast<float>(healer_obj["healing_target_x"].toDouble(0.0));
     healer->healing_target_z =

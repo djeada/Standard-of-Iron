@@ -240,7 +240,8 @@ auto main(int argc, char *argv[]) -> int {
   if (qEnvironmentVariableIsSet("WAYLAND_DISPLAY") &&
       qEnvironmentVariableIsSet("DISPLAY")) {
     qputenv("QT_QPA_PLATFORM", "xcb");
-    qInfo() << "Linux: Using X11 (xcb) platform for better OpenGL compatibility";
+    qInfo()
+        << "Linux: Using X11 (xcb) platform for better OpenGL compatibility";
   }
 #endif
 

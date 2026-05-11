@@ -119,8 +119,6 @@ auto sword_local_pose(const QVector3D &blade_axis_local) -> QMatrix4x4 {
     blade_dir.normalize();
   }
 
-  // guard_right = Z (forward) rotates the blade 90° around its own long axis
-  // so the flat of the blade faces left/right and the edge faces the camera.
   QVector3D guard_right(0.0F, 0.0F, 1.0F);
   guard_right -= blade_dir * QVector3D::dotProduct(guard_right, blade_dir);
   if (guard_right.lengthSquared() <= 1e-6F) {
@@ -230,7 +228,6 @@ auto sword_archetype(const SwordRenderConfig &config)
   add_flat_section(0.0F, ricasso_len, base_w);
   add_flat_section(ricasso_len, tip_start_dist, mid_w);
 
-  // Tapered tip: converging cones give a sharp, realistic point
   {
     float const t_offset = base_w * 0.33F;
     builder.add_palette_mesh(
@@ -332,11 +329,9 @@ void SwordRenderer::submit(const SwordRenderConfig &m_config,
         std::fmod(anim.inputs.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
   }
 
-  // Local character space: Y=up, Z=forward (toward enemy), X=right.
-  // Idle: nearly vertical, slight forward lean.  Attack: pull up → thrust forward → recover.
-  QVector3D upish(0.02F, 0.97F, 0.24F);   // neutral guard: nearly vertical, small forward lean
-  QVector3D midish(0.02F, 0.70F, 0.71F);  // wind-up: raised 45° forward-up
-  QVector3D downish(0.02F, 0.20F, 0.98F); // strike follow-through: mostly forward thrust
+  QVector3D upish(0.02F, 0.97F, 0.24F);
+  QVector3D midish(0.02F, 0.70F, 0.71F);
+  QVector3D downish(0.02F, 0.20F, 0.98F);
   if (upish.lengthSquared() > 1e-6F) {
     upish.normalize();
   }
@@ -351,19 +346,19 @@ void SwordRenderer::submit(const SwordRenderConfig &m_config,
 
   if (is_attacking) {
     if (attack_phase < 0.20F) {
-      // Wind-up: raise sword from idle forward to overhead
+
       float const t = ease_in_out_cubic(attack_phase / 0.20F);
       sword_dir = nlerp(upish, midish, t);
     } else if (attack_phase < 0.30F) {
-      // Brief hold cocked overhead
+
       sword_dir = midish;
     } else if (attack_phase < 0.50F) {
-      // Strike: fast overhead slash to forward-low (cubic acceleration)
+
       float t = (attack_phase - 0.30F) / 0.20F;
       t = t * t * t;
       sword_dir = nlerp(midish, downish, clamp_f(t * 1.5F, 0.0F, 1.0F));
     } else if (attack_phase < 0.72F) {
-      // Recover: return from strike to idle
+
       float const t = ease_in_out_cubic((attack_phase - 0.50F) / 0.22F);
       sword_dir = nlerp(downish, upish, t);
     } else {

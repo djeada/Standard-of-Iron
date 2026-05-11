@@ -32,12 +32,9 @@ namespace Render::Creature::Pipeline {
     const Render::GL::HumanoidAnimationContext &anim) noexcept
     -> Render::Creature::AnimationStateId;
 
-// Overload for callers that have already resolved the intent — avoids a second
-// resolve_pose_intent() call when the caller needs the PoseIntent for other
-// purposes (e.g. variant_table dispatch in creature_render_graph.cpp).
-[[nodiscard]] auto humanoid_state_for_anim(
-    const Render::GL::HumanoidAnimationContext &anim,
-    Render::Creature::PoseIntent intent) noexcept
+[[nodiscard]] auto
+humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext &anim,
+                        Render::Creature::PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId;
 
 [[nodiscard]] auto humanoid_phase_for_anim(

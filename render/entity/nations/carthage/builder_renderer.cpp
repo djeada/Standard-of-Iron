@@ -75,7 +75,6 @@ void ensure_builder_styles_registered() {
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
 
-
 } // namespace
 
 namespace {
@@ -136,7 +135,6 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
 
     RenderArchetypeBuilder builder{"carthage_robes"};
 
-    // Body (waist → shoulder): slightly puffier than Roman
     {
       float const h = y_sh - y_w;
       float const cy = (y_sh + y_w) * 0.5F;
@@ -147,7 +145,6 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
                                k_main);
     }
 
-    // Skirt (hem → waist): longer fuller Phoenician style
     {
       float const h = y_w - y_hem;
       float const cy = (y_w + y_hem) * 0.5F;
@@ -158,7 +155,6 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
                                k_main);
     }
 
-    // Wrapped waist belt (dark)
     {
       float const h = 0.030F;
       float const cy = y_w + 0.004F;
@@ -169,7 +165,6 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
                                k_dark);
     }
 
-    // Hem border (dark)
     {
       float const h = 0.024F;
       float const cy = y_hem + h * 0.5F;
@@ -180,7 +175,6 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
                                k_dark);
     }
 
-    // Left shoulder cap (Phoenician robe covers both shoulders)
     {
       builder.add_palette_mesh(
           get_unit_sphere(),
@@ -189,7 +183,6 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
           k_main);
     }
 
-    // Right shoulder cap
     {
       builder.add_palette_mesh(
           get_unit_sphere(),
@@ -198,7 +191,6 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
           k_main);
     }
 
-    // Collar detail (dark band at top of neckline)
     {
       float const h = 0.018F;
       float const cy = y_sh + 0.028F;
@@ -229,7 +221,6 @@ auto carthage_civilian_sash_archetype() -> const RenderArchetype & {
 
     RenderArchetypeBuilder builder{"carthage_civilian_sash"};
 
-    // Outer robe body (slot 0)
     {
       float const h = y_sh - y_w;
       float const cy = (y_sh + y_w) * 0.5F;
@@ -240,7 +231,6 @@ auto carthage_civilian_sash_archetype() -> const RenderArchetype & {
                                0U);
     }
 
-    // Outer robe skirt (slot 0)
     {
       float const h = y_w - y_hem;
       float const cy = (y_w + y_hem) * 0.5F;
@@ -251,16 +241,14 @@ auto carthage_civilian_sash_archetype() -> const RenderArchetype & {
                                0U);
     }
 
-    // Diagonal sash (slot 1): right shoulder across to left hip
     {
       QVector3D const sash_top(tr * 0.72F, y_sh + 0.008F, td * 0.28F);
       QVector3D const sash_bot(-tr * 0.68F, y_w + 0.018F, td * 0.52F);
-      builder.add_palette_mesh(
-          get_unit_cylinder(8), cylinder_between(sash_top, sash_bot, tr * 0.28F),
-          1U);
+      builder.add_palette_mesh(get_unit_cylinder(8),
+                               cylinder_between(sash_top, sash_bot, tr * 0.28F),
+                               1U);
     }
 
-    // Waist knot where sash crosses (slot 1)
     {
       builder.add_palette_mesh(
           get_unit_sphere(),
@@ -867,13 +855,13 @@ static auto carthage_builder_variant_table()
     t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
     t.variant_stride = 3;
     t.variant_is_seed_based = true;
-    // Hammer (seed%3 == 0)
+
     t.archetype_for_variant[0] = carthage_builder_hammer_unit_archetype();
     t.state_for_variant[0] = Render::Creature::AnimationStateId::AttackSword;
-    // Saw (seed%3 == 1)
+
     t.archetype_for_variant[1] = carthage_builder_saw_unit_archetype();
     t.state_for_variant[1] = Render::Creature::AnimationStateId::AttackSword;
-    // Chisel (seed%3 == 2)
+
     t.archetype_for_variant[2] = carthage_builder_chisel_unit_archetype();
     t.state_for_variant[2] = Render::Creature::AnimationStateId::AttackSpear;
     return t;

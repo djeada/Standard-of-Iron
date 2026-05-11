@@ -184,7 +184,6 @@ void AIStrategyFactory::apply_difficulty(AIStrategyConfig &config,
     config.min_attack_force *= 0.75F;
     config.retreat_threshold *= 0.70F;
   }
-  // "medium" and unrecognised values: no change
 
   config.aggression_modifier =
       std::max(0.3F, std::min(3.0F, config.aggression_modifier));

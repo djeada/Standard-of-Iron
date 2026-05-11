@@ -25,10 +25,10 @@ private:
   RenderArchetypeRegistry() = default;
   RenderArchetypeRegistry(const RenderArchetypeRegistry &) = delete;
   RenderArchetypeRegistry(RenderArchetypeRegistry &&) = delete;
-  auto operator=(const RenderArchetypeRegistry &)
-      -> RenderArchetypeRegistry & = delete;
-  auto operator=(RenderArchetypeRegistry &&)
-      -> RenderArchetypeRegistry & = delete;
+  auto operator=(const RenderArchetypeRegistry &) -> RenderArchetypeRegistry & =
+                                                         delete;
+  auto
+  operator=(RenderArchetypeRegistry &&) -> RenderArchetypeRegistry & = delete;
 
   std::vector<Entry> m_entries;
 };

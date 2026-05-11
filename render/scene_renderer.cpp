@@ -282,8 +282,7 @@ auto Renderer::initialize() -> bool {
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
-  const auto warmed_archetypes =
-      RenderArchetypeRegistry::instance().warm_all();
+  const auto warmed_archetypes = RenderArchetypeRegistry::instance().warm_all();
   log_render_first_use_once(
       "renderer-registries",
       QStringLiteral("registered entity renderers and equipment renderers; "
@@ -977,11 +976,11 @@ void Renderer::enqueue_selection_ring(
                                                 float(unit_comp->max_health),
                                             0.0F, 1.0F)
                                : 1.0F,
-            .ring_size = ring_size,
-            .formation_spacing = formation_spacing,
-            .seed = layout_seed,
-            .position = QVector3D(transform->position.x, transform->position.y,
-                                  transform->position.z),
+           .ring_size = ring_size,
+           .formation_spacing = formation_spacing,
+           .seed = layout_seed,
+           .position = QVector3D(transform->position.x, transform->position.y,
+                                 transform->position.z),
            .rotation = QVector3D(transform->rotation.x, transform->rotation.y,
                                  transform->rotation.z),
            .scale = QVector3D(transform->scale.x, transform->scale.y,

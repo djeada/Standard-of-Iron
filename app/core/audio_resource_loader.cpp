@@ -8,10 +8,6 @@
 void AudioResourceLoader::load_audio_resources() {
   auto &audio_sys = AudioSystem::get_instance();
 
-  // On macOS inside a .app bundle the executable lives in Contents/MacOS/ while
-  // assets are deployed to Contents/Resources/.  Search both locations so the
-  // same binary works during development (assets next to the exe) and when
-  // distributed as a .app bundle.
   const QString app_dir = QCoreApplication::applicationDirPath();
   const QStringList candidates = {
       app_dir + "/assets/audio/",

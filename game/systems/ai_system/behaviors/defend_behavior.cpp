@@ -33,7 +33,6 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  // The reasoner stores the barracks position as the base anchor.
   const float defend_pos_x = context.base_pos_x;
   const float defend_pos_y = context.base_pos_y;
   const float defend_pos_z = context.base_pos_z;
@@ -89,10 +88,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     desired_count = total_available;
   } else {
 
-    // Defensive AIs (high defense_modifier) hold back more units in formation;
-    // Aggressive AIs send almost everyone forward.
-    const auto max_defenders = static_cast<std::size_t>(std::max(
-        2.0F, 6.0F * context.strategy_config.defense_modifier));
+    const auto max_defenders = static_cast<std::size_t>(
+        std::max(2.0F, 6.0F * context.strategy_config.defense_modifier));
     desired_count = std::min<std::size_t>(desired_count, max_defenders);
   }
 

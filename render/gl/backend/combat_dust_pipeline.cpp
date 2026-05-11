@@ -354,7 +354,8 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   vertices.push_back(center);
 
   for (int i = 0; i < segments; ++i) {
-    float angle = static_cast<float>(i) / static_cast<float>(segments) * pi * 2.0F;
+    float angle =
+        static_cast<float>(i) / static_cast<float>(segments) * pi * 2.0F;
     float x = std::cos(angle);
     float z = std::sin(angle);
 
@@ -713,8 +714,7 @@ void CombatDustPipeline::render_blood_pools(const Camera &cam) {
     m_blood_shader->set_uniform(m_blood_uniforms.alpha_scale,
                                 k_blood_alpha_scale);
 
-    glDrawElements(GL_TRIANGLES, m_blood_index_count, GL_UNSIGNED_INT,
-                   nullptr);
+    glDrawElements(GL_TRIANGLES, m_blood_index_count, GL_UNSIGNED_INT, nullptr);
   }
 
   glBindVertexArray(0);

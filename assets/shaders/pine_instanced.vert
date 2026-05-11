@@ -37,26 +37,23 @@ void main() {
   float tipMask = smoothstep(0.88, 1.02, aTexCoord.y);
   float angle = aTexCoord.x * TWO_PI;
 
-  // Per-instance aspect ratio: needleSeed drives wide/squat vs tall/thin
   float aspectW = mix(0.72, 1.38, needleSeed);
   float aspectH = mix(1.12, 0.84, needleSeed);
   modelPos.xz *= mix(1.0, aspectW, foliageMask);
-  modelPos.y  *= mix(1.0, aspectH, foliageMask);
+  modelPos.y *= mix(1.0, aspectH, foliageMask);
 
-  // Three-frequency silhouette bumps for lumpy, irregular canopy
   float irregularBase = sin(angle * 3.0 + silhouetteSeed * TWO_PI);
-  float irregularMid  = sin(angle * 5.0 + silhouetteSeed * TWO_PI * 2.3 + 1.1);
+  float irregularMid = sin(angle * 5.0 + silhouetteSeed * TWO_PI * 2.3 + 1.1);
   float irregularFine = sin(angle * 7.0 + silhouetteSeed * TWO_PI * 3.7 + 2.3);
-  float irregular = (irregularBase * 0.22 + irregularMid * 0.10 + irregularFine * 0.05)
-                    * foliageMask * (1.0 - tipMask * 0.5);
+  float irregular =
+      (irregularBase * 0.22 + irregularMid * 0.10 + irregularFine * 0.05) *
+      foliageMask * (1.0 - tipMask * 0.5);
 
   modelPos.xz *= (1.0 + irregular);
 
-  // Branches droop under their own weight
   float droop = foliageMask * (1.0 - tipMask) * 0.12;
   modelPos.y -= droop;
 
-  // Per-instance trunk lean (uses original height before shape changes)
   float leanNorm = clamp(aPos.y / 1.13, 0.0, 1.0);
   float leanAngle = (silhouetteSeed - 0.5) * 0.18;
   float leanYaw = barkSeed * TWO_PI;

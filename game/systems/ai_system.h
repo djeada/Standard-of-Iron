@@ -43,15 +43,13 @@ public:
 
   void set_ai_strategy(int player_id, AI::AIStrategy strategy,
                        float aggression = 0.5F, float defense = 0.5F,
-                       float harassment = 0.5F,
-                       const QString &difficulty = {});
+                       float harassment = 0.5F, const QString &difficulty = {});
   void set_commander_recruitment_enabled(bool enabled);
 
 private:
   struct AIInstance {
     AI::AIContext context;
-    // Heap-allocated so its address is stable across vector moves; AIWorker
-    // holds a reference to this registry.
+
     std::unique_ptr<AI::AIBehaviorRegistry> behavior_registry;
     std::unique_ptr<AI::AIWorker> worker;
     float update_timer = 0.0F;

@@ -16,25 +16,23 @@ public:
   auto operator=(const AIBehaviorRegistry &) -> AIBehaviorRegistry & = delete;
 
   void register_behavior(std::unique_ptr<AIBehavior> behavior) {
-    // Insert in descending priority order so for_each visits highest first.
-    auto pos = std::lower_bound(
-        m_behaviors.begin(), m_behaviors.end(), behavior,
-        [](const std::unique_ptr<AIBehavior> &a,
-           const std::unique_ptr<AIBehavior> &b) {
-          return a->get_priority() > b->get_priority();
-        });
+
+    auto pos =
+        std::lower_bound(m_behaviors.begin(), m_behaviors.end(), behavior,
+                         [](const std::unique_ptr<AIBehavior> &a,
+                            const std::unique_ptr<AIBehavior> &b) {
+                           return a->get_priority() > b->get_priority();
+                         });
     m_behaviors.insert(pos, std::move(behavior));
   }
 
-  template <typename Fn>
-  void for_each(Fn &&func) {
+  template <typename Fn> void for_each(Fn &&func) {
     for (auto &behavior : m_behaviors) {
       func(*behavior);
     }
   }
 
-  template <typename Fn>
-  void for_each(Fn &&func) const {
+  template <typename Fn> void for_each(Fn &&func) const {
     for (const auto &behavior : m_behaviors) {
       func(*behavior);
     }

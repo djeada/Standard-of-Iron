@@ -79,7 +79,7 @@ Button {
         implicitWidth: style_config.minWidth
         implicitHeight: style_config.height
 
-        // Drop shadow
+        
         Rectangle {
             x: 1
             y: 2
@@ -96,7 +96,7 @@ Button {
             }
         }
 
-        // Main button body
+        
         Rectangle {
             id: bodyRect
 
@@ -125,7 +125,7 @@ Button {
                 return style_config.normalBorder;
             }
 
-            // Luminosity bevel: lighter at top, darker at bottom
+            
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 1
@@ -155,7 +155,7 @@ Button {
                 }
             }
 
-            // Top-edge gold highlight — the "forged metal" rim
+            
             Rectangle {
                 anchors.top: parent.top
                 anchors.topMargin: 1
@@ -174,7 +174,7 @@ Button {
                 }
             }
 
-            // Inner decorative border — visible for primary and secondary
+            
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 2

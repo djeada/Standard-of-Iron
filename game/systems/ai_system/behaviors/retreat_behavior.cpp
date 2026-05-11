@@ -29,9 +29,6 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<const EntitySnapshot *> retreating_units;
   retreating_units.reserve(snapshot.friendly_units.size());
 
-  // Scale per-unit retreat thresholds from strategy config so that, e.g.,
-  // Harasser (retreat_threshold=0.50) retreats early to enable hit-and-run,
-  // while Rusher (retreat_threshold=0.10) fights until nearly dead.
   const float critical_health = context.strategy_config.retreat_threshold;
   const float low_health =
       std::min(0.70F, context.strategy_config.retreat_threshold + 0.15F);
