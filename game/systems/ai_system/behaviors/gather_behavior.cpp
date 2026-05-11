@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <qvectornd.h>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -102,12 +103,15 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<float> filtered_x;
   std::vector<float> filtered_y;
   std::vector<float> filtered_z;
-  for (size_t i = 0; i < units_to_move.size(); ++i) {
-    if (std::find(claimed_units.begin(), claimed_units.end(),
-                  units_to_move[i]) != claimed_units.end()) {
-      filtered_x.push_back(target_x[i]);
-      filtered_y.push_back(target_y[i]);
-      filtered_z.push_back(target_z[i]);
+  {
+    const std::unordered_set<Engine::Core::EntityID> claimed_set(
+        claimed_units.begin(), claimed_units.end());
+    for (size_t i = 0; i < units_to_move.size(); ++i) {
+      if (claimed_set.count(units_to_move[i])) {
+        filtered_x.push_back(target_x[i]);
+        filtered_y.push_back(target_y[i]);
+        filtered_z.push_back(target_z[i]);
+      }
     }
   }
 

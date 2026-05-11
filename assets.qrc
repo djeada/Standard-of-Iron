@@ -46,6 +46,8 @@
         <file>assets/shaders/troop_shadow.vert</file>
         <file>assets/shaders/combat_dust.frag</file>
         <file>assets/shaders/combat_dust.vert</file>
+        <file>assets/shaders/blood_pool.vert</file>
+        <file>assets/shaders/blood_pool.frag</file>
         <file>assets/shaders/healing_aura.frag</file>
         <file>assets/shaders/healing_aura.vert</file>
         <file>assets/shaders/healing_beam.frag</file>

@@ -188,8 +188,17 @@ void PineRenderer::generate_pine_instances() {
         density_mult = 0.4F;
       }
 
-      float const effective_density =
-          pine_density * density_mult * 0.8F * k_tree_density_area_scale;
+      uint32_t cls_state =
+          hash_coords(x / 8, z / 8, m_noise_seed ^ 0x4F2E9A7BU);
+      float const macro_noise = rand_01(cls_state);
+      uint32_t mid_state =
+          hash_coords(x / 4, z / 4, m_noise_seed ^ 0xB3C71E4DU);
+      float const mid_noise = rand_01(mid_state);
+      float const cluster_noise = macro_noise * 0.65F + mid_noise * 0.35F;
+      float const cluster_mult = cluster_noise * cluster_noise * 2.2F;
+
+      float const effective_density = pine_density * density_mult * 0.8F *
+                                      k_tree_density_area_scale * cluster_mult;
       int pine_count = static_cast<int>(std::floor(effective_density));
       float const frac = effective_density - float(pine_count);
       if (rand_01(state) < frac) {

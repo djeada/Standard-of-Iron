@@ -623,17 +623,30 @@ jobs:
                 break
               }
               
-              # Check logs for success markers
+              # Check logs for success markers (use -notcontains to avoid duplicates)
               if ((Test-Path $logFile)) {
                 $content = Get-Content $logFile -Raw
-                if ($content -match "QGuiApplication created successfully") {
+                if ($content -match "QGuiApplication created successfully" -and
+                    $successMarkers -notcontains "QGuiApplication initialized") {
                   $successMarkers += "QGuiApplication initialized"
                 }
-                if ($content -match "GameEngine created") {
+                if ($content -match "GameEngine created" -and
+                    $successMarkers -notcontains "GameEngine created") {
                   $successMarkers += "GameEngine created"
                 }
-                if ($content -match "QML engine.*loading") {
+                if ($content -match "QML engine.*loading" -and
+                    $successMarkers -notcontains "QML loading") {
                   $successMarkers += "QML loading"
+                }
+                # GL-specific markers: these prove the Core Profile backend
+                # actually initialized via QOpenGLFunctions_3_3_Core.
+                if ($content -match "Backend: OpenGL functions initialized" -and
+                    $successMarkers -notcontains "GL functions initialized") {
+                  $successMarkers += "GL functions initialized"
+                }
+                if ($content -match "Backend::initialize\(\) - Complete!" -and
+                    $successMarkers -notcontains "Backend init complete") {
+                  $successMarkers += "Backend init complete"
                 }
               }
               
@@ -644,17 +657,27 @@ jobs:
             if (-not $exited) {
               Write-Host "`n✓ SUCCESS: Application is running after $timeoutSeconds seconds"
               Write-Host "  Found initialization markers: $($successMarkers -join ', ')"
-              
+
+              # Report whether the GL backend itself was confirmed healthy.
+              if ($successMarkers -contains "Backend init complete") {
+                Write-Host "✓ OpenGL 3.3 Core Profile backend initialized successfully (Mesa software renderer)"
+              } elseif ($successMarkers -contains "GL functions initialized") {
+                Write-Host "✓ QOpenGLFunctions_3_3_Core loaded; backend pipeline initialization in progress"
+              } else {
+                Write-Warning "GL backend markers not yet visible in log within timeout."
+                Write-Warning "The render thread may need more time. Verify on a real machine."
+              }
+
               # Kill process gracefully
               $process.Kill()
               $process.WaitForExit(3000)
-              
+
               # Show relevant log excerpts
               if (Test-Path $logFile) {
                 Write-Host "`n=== Application Output (last 30 lines) ==="
                 Get-Content $logFile -Tail 30 | Write-Host
               }
-              
+
               Write-Host "`n✓ Smoke test PASSED - application starts and runs correctly"
               exit 0
             }
@@ -721,46 +744,12 @@ jobs:
             Pop-Location
           }
 
-      # Test ANGLE backend to ensure compatibility mode works
-      - name: Verify ANGLE backend (compatibility test)
-        shell: pwsh
-        run: |
-          Write-Host "=== ANGLE Backend Verification ==="
-          Write-Host "Testing ANGLE (OpenGL ES via D3D11) for maximum compatibility"
-          
-          Push-Location "$env:APP_DIR"
-          try {
-            $env:QT_DEBUG_PLUGINS  = "0"
-            $env:QT_OPENGL         = "angle"
-            $env:QT_ANGLE_PLATFORM = "d3d11"
-            $env:QT_QPA_PLATFORM   = "windows"
-            
-            $logFile = "angle_test.log"
-            $process = Start-Process -FilePath ".\${{ env.APP_NAME }}.exe" `
-              -RedirectStandardOutput $logFile `
-              -RedirectStandardError "${logFile}.err" `
-              -PassThru -NoNewWindow
-            
-            # Give ANGLE mode 5 seconds to initialize
-            Start-Sleep -Seconds 5
-            
-            if (-not $process.HasExited) {
-              Write-Host "✓ ANGLE mode: Process running successfully"
-              $process.Kill()
-              $process.WaitForExit(2000)
-            } else {
-              $code = $process.ExitCode
-              # ANGLE might fail on headless CI, that's OK
-              Write-Warning "ANGLE mode exited with code: $code"
-              Write-Warning "This is expected on headless CI without D3D11"
-            }
-            
-            Write-Host "✓ ANGLE backend verification complete"
-          } catch {
-            Write-Warning "ANGLE test failed (expected on headless CI): $_"
-          } finally {
-            Pop-Location
-          }
+      # ANGLE (OpenGL ES via D3D11) is NOT compatible with this game's shaders,
+      # which use desktop GLSL (#version 330 core, not GLSL ES).  The software-GL
+      # smoke test above already covers OpenGL 3.3 Core Profile validation via
+      # Mesa llvmpipe (opengl32sw.dll).  Run the static requirements check here.
+      - name: Validate OpenGL requirements
+        run: python3 scripts/validate_opengl_requirements.py
 
       # Final readiness check
       - name: Final runtime readiness verification

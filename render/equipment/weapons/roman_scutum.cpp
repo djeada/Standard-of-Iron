@@ -32,6 +32,8 @@ constexpr std::uint8_t k_bronze_rim = 5;
 constexpr std::uint8_t k_bronze_rivet = 6;
 constexpr QVector3D k_shield_center{0.0F, 0.0F, 0.15F};
 
+} // namespace
+
 auto roman_scutum_archetype() -> const RenderArchetype & {
   static const RenderArchetype k_archetype = []() {
     constexpr float shield_height = 1.2F;
@@ -108,6 +110,8 @@ auto roman_scutum_archetype() -> const RenderArchetype & {
   }();
   return k_archetype;
 }
+
+namespace {
 
 auto hand_l_basis_transform(const QMatrix4x4 &parent,
                             const AttachmentFrame &hand_l) -> QMatrix4x4 {

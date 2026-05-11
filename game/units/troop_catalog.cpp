@@ -99,6 +99,7 @@ void TroopCatalog::register_defaults() {
   swordsman.visuals.render_scale = 0.6F;
   swordsman.visuals.selection_ring_size = 1.1F;
   swordsman.visuals.selection_ring_ground_offset = 0.0F;
+  swordsman.visuals.formation_spacing = 1.05F;
   swordsman.visuals.renderer_id = "troops/roman/swordsman";
 
   swordsman.individuals_per_unit = 15;
@@ -130,6 +131,7 @@ void TroopCatalog::register_defaults() {
   spearman.visuals.render_scale = 0.55F;
   spearman.visuals.selection_ring_size = 1.4F;
   spearman.visuals.selection_ring_ground_offset = 0.0F;
+  spearman.visuals.formation_spacing = 1.05F;
   spearman.visuals.renderer_id = "troops/roman/spearman";
 
   spearman.individuals_per_unit = 24;

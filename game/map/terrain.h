@@ -155,7 +155,7 @@ struct BiomeSettings {
   float terrain_soil_sharpness = 3.8F;
   float terrain_rock_threshold = 0.42F;
   float terrain_rock_sharpness = 3.1F;
-  float terrain_ambient_boost = 1.08F;
+  float terrain_ambient_boost = 0.96F;
   float terrain_rock_detail_strength = 0.35F;
   float background_sway_variance = 0.2F;
   float background_scatter_radius = 0.35F;
@@ -191,7 +191,7 @@ struct TerrainSurfaceProfile {
   float terrain_soil_sharpness = 3.8F;
   float terrain_rock_threshold = 0.42F;
   float terrain_rock_sharpness = 3.1F;
-  float terrain_ambient_boost = 1.08F;
+  float terrain_ambient_boost = 0.96F;
   float terrain_rock_detail_strength = 0.35F;
   bool ground_irregularity_enabled = true;
   float irregularity_scale = 0.15F;
@@ -362,13 +362,13 @@ inline void apply_ground_type_defaults(BiomeSettings &settings,
   switch (ground_type) {
   case GroundType::ForestMud:
 
-    settings.grass_primary = QVector3D(0.30F, 0.60F, 0.28F);
-    settings.grass_secondary = QVector3D(0.44F, 0.70F, 0.32F);
+    settings.grass_primary = QVector3D(0.26F, 0.52F, 0.24F);
+    settings.grass_secondary = QVector3D(0.38F, 0.61F, 0.28F);
     settings.grass_dry = QVector3D(0.72F, 0.66F, 0.48F);
     settings.soil_color = QVector3D(0.28F, 0.24F, 0.18F);
     settings.rock_low = QVector3D(0.48F, 0.46F, 0.44F);
     settings.rock_high = QVector3D(0.68F, 0.69F, 0.73F);
-    settings.terrain_ambient_boost = 1.08F;
+    settings.terrain_ambient_boost = 0.96F;
     settings.terrain_rock_detail_strength = 0.35F;
 
     settings.patch_density = 4.5F;
@@ -404,13 +404,13 @@ inline void apply_ground_type_defaults(BiomeSettings &settings,
 
   case GroundType::GrassDry:
 
-    settings.grass_primary = QVector3D(0.58F, 0.54F, 0.32F);
-    settings.grass_secondary = QVector3D(0.65F, 0.60F, 0.38F);
+    settings.grass_primary = QVector3D(0.52F, 0.48F, 0.29F);
+    settings.grass_secondary = QVector3D(0.58F, 0.54F, 0.34F);
     settings.grass_dry = QVector3D(0.78F, 0.72F, 0.45F);
     settings.soil_color = QVector3D(0.52F, 0.44F, 0.32F);
     settings.rock_low = QVector3D(0.62F, 0.58F, 0.52F);
     settings.rock_high = QVector3D(0.78F, 0.75F, 0.70F);
-    settings.terrain_ambient_boost = 1.18F;
+    settings.terrain_ambient_boost = 1.06F;
     settings.terrain_rock_detail_strength = 0.28F;
 
     settings.patch_density = 2.8F;
@@ -446,13 +446,13 @@ inline void apply_ground_type_defaults(BiomeSettings &settings,
 
   case GroundType::SoilRocky:
 
-    settings.grass_primary = QVector3D(0.40F, 0.45F, 0.28F);
-    settings.grass_secondary = QVector3D(0.48F, 0.52F, 0.32F);
+    settings.grass_primary = QVector3D(0.36F, 0.40F, 0.25F);
+    settings.grass_secondary = QVector3D(0.43F, 0.47F, 0.29F);
     settings.grass_dry = QVector3D(0.58F, 0.52F, 0.38F);
     settings.soil_color = QVector3D(0.55F, 0.48F, 0.38F);
     settings.rock_low = QVector3D(0.52F, 0.50F, 0.46F);
     settings.rock_high = QVector3D(0.72F, 0.70F, 0.66F);
-    settings.terrain_ambient_boost = 1.05F;
+    settings.terrain_ambient_boost = 0.96F;
     settings.terrain_rock_detail_strength = 0.65F;
 
     settings.patch_density = 2.2F;
@@ -488,13 +488,13 @@ inline void apply_ground_type_defaults(BiomeSettings &settings,
 
   case GroundType::AlpineMix:
 
-    settings.grass_primary = QVector3D(0.32F, 0.40F, 0.30F);
-    settings.grass_secondary = QVector3D(0.38F, 0.46F, 0.36F);
+    settings.grass_primary = QVector3D(0.29F, 0.36F, 0.27F);
+    settings.grass_secondary = QVector3D(0.34F, 0.41F, 0.32F);
     settings.grass_dry = QVector3D(0.50F, 0.48F, 0.42F);
     settings.soil_color = QVector3D(0.42F, 0.40F, 0.38F);
     settings.rock_low = QVector3D(0.58F, 0.60F, 0.64F);
     settings.rock_high = QVector3D(0.88F, 0.90F, 0.94F);
-    settings.terrain_ambient_boost = 1.25F;
+    settings.terrain_ambient_boost = 1.12F;
     settings.terrain_rock_detail_strength = 0.52F;
 
     settings.patch_density = 1.8F;
@@ -530,13 +530,13 @@ inline void apply_ground_type_defaults(BiomeSettings &settings,
 
   case GroundType::SoilFertile:
 
-    settings.grass_primary = QVector3D(0.25F, 0.55F, 0.22F);
-    settings.grass_secondary = QVector3D(0.35F, 0.65F, 0.30F);
+    settings.grass_primary = QVector3D(0.22F, 0.49F, 0.20F);
+    settings.grass_secondary = QVector3D(0.31F, 0.58F, 0.27F);
     settings.grass_dry = QVector3D(0.52F, 0.48F, 0.32F);
     settings.soil_color = QVector3D(0.20F, 0.16F, 0.12F);
     settings.rock_low = QVector3D(0.38F, 0.36F, 0.34F);
     settings.rock_high = QVector3D(0.52F, 0.50F, 0.48F);
-    settings.terrain_ambient_boost = 1.02F;
+    settings.terrain_ambient_boost = 0.94F;
     settings.terrain_rock_detail_strength = 0.22F;
 
     settings.patch_density = 5.2F;

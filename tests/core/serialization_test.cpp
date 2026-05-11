@@ -780,12 +780,14 @@ TEST_F(SerializationTest, BuildingComponentSerialization) {
   QJsonObject json = Serialization::serialize_entity(entity);
 
   ASSERT_TRUE(json.contains("building"));
-  EXPECT_TRUE(json["building"].toBool());
+  EXPECT_TRUE(json["building"].isObject());
+  EXPECT_TRUE(json["building"].toObject().contains("original_nation_id"));
 }
 
 TEST_F(SerializationTest, BuildingComponentRoundTrip) {
   auto *original_entity = world->create_entity();
-  original_entity->add_component<BuildingComponent>();
+  auto *building = original_entity->add_component<BuildingComponent>();
+  building->original_nation_id = Game::Systems::NationID::Carthage;
 
   QJsonObject json = Serialization::serialize_entity(original_entity);
 
@@ -794,6 +796,8 @@ TEST_F(SerializationTest, BuildingComponentRoundTrip) {
 
   auto *deserialized = new_entity->get_component<BuildingComponent>();
   ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->original_nation_id,
+            Game::Systems::NationID::Carthage);
 }
 
 TEST_F(SerializationTest, AIControlledComponentSerialization) {

@@ -116,6 +116,9 @@ auto TroopProfileService::build_profile(
       profile.visuals.selection_ring_ground_offset =
           *variant.selection_ring_ground_offset;
     }
+    if (variant.formation_spacing) {
+      profile.visuals.formation_spacing = *variant.formation_spacing;
+    }
     if (variant.renderer_id) {
       profile.visuals.renderer_id = *variant.renderer_id;
     }

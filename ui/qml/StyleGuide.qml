@@ -62,7 +62,8 @@ QtObject {
             "height": 40,
             "minWidth": 120,
             "fontSize": 12,
-            "hoverFontSize": 13
+            "hoverFontSize": 13,
+            "letterSpacing": 1.5
         },
         "secondary": {
             "normalBg": historical.parchmentDark,
@@ -78,23 +79,25 @@ QtObject {
             "height": 38,
             "minWidth": 100,
             "fontSize": 11,
-            "hoverFontSize": 12
+            "hoverFontSize": 12,
+            "letterSpacing": 1.0
         },
         "small": {
-            "normalBg": palette.addColor,
-            "hoverBg": Qt.lighter(palette.addColor, 1.2),
-            "pressBg": Qt.darker(palette.addColor, 1.2),
+            "normalBg": "#3E5C24",
+            "hoverBg": "#4C7030",
+            "pressBg": "#2D4318",
             "disabledBg": palette.cardBase,
-            "normalBorder": Qt.lighter(palette.addColor, 1.1),
-            "hoverBorder": Qt.lighter(palette.addColor, 1.3),
+            "normalBorder": "#6E8A40",
+            "hoverBorder": "#8AAA52",
             "disabledBorder": palette.thumbBr,
-            "text_color": "white",
+            "text_color": "#CBE0A8",
             "disabledTextColor": palette.textDim,
             "radius": 6,
             "height": 32,
             "minWidth": 80,
             "fontSize": 11,
-            "hoverFontSize": 11
+            "hoverFontSize": 11,
+            "letterSpacing": 0.5
         },
         "danger": {
             "normalBg": "transparent",
@@ -111,7 +114,8 @@ QtObject {
             "height": 32,
             "minWidth": 32,
             "fontSize": 14,
-            "hoverFontSize": 14
+            "hoverFontSize": 14,
+            "letterSpacing": 0.0
         }
     })
     readonly property var card: ({

@@ -331,25 +331,36 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet & {
   return ids;
 }
 
-void spearman_render_hook(
-    const Render::GL::HumanoidAnimationContext &,
-    const Render::GL::HumanoidVariant &variant, std::uint32_t,
-    Render::Creature::Pipeline::HumanoidRenderSelection &io_selection) {
-  auto const &archetypes = spearman_archetypes();
-  switch (variant.facial_hair.style) {
-  case Render::GL::FacialHairStyle::FullBeard:
-    io_selection.archetype = archetypes.full_beard;
-    break;
-  case Render::GL::FacialHairStyle::LongBeard:
-    io_selection.archetype = archetypes.long_beard;
-    break;
-  case Render::GL::FacialHairStyle::ShortBeard:
-    io_selection.archetype = archetypes.short_beard;
-    break;
-  default:
-    io_selection.archetype = archetypes.clean;
-    break;
-  }
+static auto
+spearman_variant_table() -> const Render::Creature::ArchetypeVariantTable & {
+  static const Render::Creature::ArchetypeVariantTable k_table = []() {
+    Render::Creature::ArchetypeVariantTable t{};
+
+    t.variant_trigger_pose = Render::Creature::PoseIntent::Count;
+    t.variant_stride = 8;
+    t.variant_is_seed_based = false;
+    auto const &a = spearman_archetypes();
+
+    t.archetype_for_variant[static_cast<std::size_t>(
+        Render::GL::FacialHairStyle::None)] = a.clean;
+    t.archetype_for_variant[static_cast<std::size_t>(
+        Render::GL::FacialHairStyle::Stubble)] = a.clean;
+    t.archetype_for_variant[static_cast<std::size_t>(
+        Render::GL::FacialHairStyle::Goatee)] = a.clean;
+    t.archetype_for_variant[static_cast<std::size_t>(
+        Render::GL::FacialHairStyle::Mustache)] = a.clean;
+    t.archetype_for_variant[static_cast<std::size_t>(
+        Render::GL::FacialHairStyle::MustacheAndBeard)] = a.clean;
+
+    t.archetype_for_variant[static_cast<std::size_t>(
+        Render::GL::FacialHairStyle::ShortBeard)] = a.short_beard;
+    t.archetype_for_variant[static_cast<std::size_t>(
+        Render::GL::FacialHairStyle::FullBeard)] = a.full_beard;
+    t.archetype_for_variant[static_cast<std::size_t>(
+        Render::GL::FacialHairStyle::LongBeard)] = a.long_beard;
+    return t;
+  }();
+  return k_table;
 }
 
 class SpearmanRenderer : public HumanoidRendererBase {
@@ -388,6 +399,7 @@ public:
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/spearman",
           Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+      s.variant_table = &spearman_variant_table();
       return s;
     }();
     return spec;

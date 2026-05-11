@@ -166,4 +166,33 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig &config,
       std::max(0.0F, std::min(100.0F, config.harassment_range));
 }
 
+void AIStrategyFactory::apply_difficulty(AIStrategyConfig &config,
+                                         const QString &difficulty) {
+  if (difficulty == "easy") {
+    config.aggression_modifier *= 0.7F;
+    config.production_rate_modifier *= 0.7F;
+    config.min_attack_force *= 1.3F;
+    config.retreat_threshold *= 1.4F;
+  } else if (difficulty == "hard") {
+    config.aggression_modifier *= 1.2F;
+    config.production_rate_modifier *= 1.2F;
+    config.min_attack_force *= 0.9F;
+    config.retreat_threshold *= 0.85F;
+  } else if (difficulty == "very_hard") {
+    config.aggression_modifier *= 1.5F;
+    config.production_rate_modifier *= 1.4F;
+    config.min_attack_force *= 0.75F;
+    config.retreat_threshold *= 0.70F;
+  }
+
+  config.aggression_modifier =
+      std::max(0.3F, std::min(3.0F, config.aggression_modifier));
+  config.production_rate_modifier =
+      std::max(0.5F, std::min(3.0F, config.production_rate_modifier));
+  config.min_attack_force =
+      std::max(0.2F, std::min(2.5F, config.min_attack_force));
+  config.retreat_threshold =
+      std::max(0.05F, std::min(0.60F, config.retreat_threshold));
+}
+
 } // namespace Game::Systems::AI

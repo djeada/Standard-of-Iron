@@ -431,8 +431,24 @@ void main() {
   float gullyDarkness = 1.0 - isGully * (0.04 + 0.07 * gullyResponse);
   float rimContrast = 1.0 + rimFactor * (0.03 + 0.05 * ridgeResponse);
 
+  {
+    float trackStrength =
+        smoothstep(0.2, 0.7, u_moistureLevel) * (1.0 - rockMask * 0.9);
+    float track1 = step(0.76, noise21(world_coord * 2.8 + vec2(3.17, 7.53)));
+    float track2 = step(0.76, noise21(world_coord * 2.8 + vec2(11.4, 2.81)));
+    float track3 = step(0.80, noise21(world_coord * 5.5 + vec2(19.2, 5.6)));
+    float trackMask = max(max(track1, track2), track3) * trackStrength;
+    vec3 mudColor = mix(terrainColor * 0.68, vec3(0.30, 0.22, 0.14), 0.35);
+    terrainColor = mix(terrainColor, mudColor, clamp(trackMask, 0.0, 0.55));
+  }
+
   terrainColor *= plateauBrightness * gullyDarkness * rimContrast;
   vec3 litColor = terrainColor * shade * u_ambientBoost;
+
+  vec3 sun_tint = vec3(1.08, 0.94, 0.80);
+  vec3 shadow_tint = vec3(0.78, 0.86, 1.04);
+  float grade_t = clamp(ndl * 1.4, 0.0, 1.0);
+  litColor *= mix(shadow_tint, sun_tint, grade_t);
 
   vec3 toCamera = u_cameraPos - v_worldPos;
   float viewDistance = max(length(toCamera), 1e-4);

@@ -229,6 +229,10 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.is_attacking = stationary && (target_in_range || recently_fired);
   }
 
+  if (anim.is_attacking || anim.is_hit_reacting) {
+    anim.is_constructing = false;
+  }
+
   return anim;
 }
 

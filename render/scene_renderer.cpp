@@ -21,6 +21,7 @@
 #include "entity/building_render_common.h"
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
+#include "equipment/render_archetype_registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "geom/mode_indicator.h"
@@ -273,13 +274,20 @@ auto Renderer::initialize() -> bool {
         "backend-create",
         QStringLiteral("created render backend for QSG/FBO render thread"));
   }
-  m_backend->initialize();
+  if (!m_backend->initialize()) {
+    qCritical() << "Renderer::initialize() - backend initialization failed;"
+                   " rendering is disabled.";
+    return false;
+  }
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
+  const auto warmed_archetypes = RenderArchetypeRegistry::instance().warm_all();
   log_render_first_use_once(
       "renderer-registries",
-      QStringLiteral("registered entity renderers and equipment renderers"));
+      QStringLiteral("registered entity renderers and equipment renderers; "
+                     "warmed %1 render archetypes")
+          .arg(static_cast<qulonglong>(warmed_archetypes)));
 
   const std::size_t loaded_bpat =
       Render::Creature::Bpat::BpatRegistry::instance().load_all(
@@ -939,11 +947,25 @@ void Renderer::enqueue_selection_ring(
         layout_seed ^= static_cast<std::uint32_t>(
             reinterpret_cast<std::uintptr_t>(entity) & 0xFFFFFFFFU);
       }
+      float const formation_spacing = resolve_formation_spacing(
+          unit_comp->spawn_type, profile.visuals.formation_spacing);
 
       ring_size = Detail::selection_ring_visual_size(
           unit_comp->spawn_type, individuals_per_unit,
-          profile.visuals.selection_ring_size);
+          profile.visuals.selection_ring_size, formation_spacing);
       ground_offset = profile.visuals.selection_ring_ground_offset;
+
+      bool is_builder_constructing = false;
+      if (entity != nullptr &&
+          unit_comp->spawn_type == Game::Units::SpawnType::Builder) {
+        auto *builder_prod =
+            entity->get_component<Engine::Core::BuilderProductionComponent>();
+        if (builder_prod != nullptr && builder_prod->in_progress &&
+            builder_prod->at_construction_site) {
+          is_builder_constructing = true;
+        }
+      }
+
       placements = build_selection_ring_layout(
           {.spawn_type = unit_comp->spawn_type,
            .nation_id = unit_comp->nation_id,
@@ -955,13 +977,15 @@ void Renderer::enqueue_selection_ring(
                                             0.0F, 1.0F)
                                : 1.0F,
            .ring_size = ring_size,
+           .formation_spacing = formation_spacing,
            .seed = layout_seed,
            .position = QVector3D(transform->position.x, transform->position.y,
                                  transform->position.z),
            .rotation = QVector3D(transform->rotation.x, transform->rotation.y,
                                  transform->rotation.z),
            .scale = QVector3D(transform->scale.x, transform->scale.y,
-                              transform->scale.z)});
+                              transform->scale.z),
+           .is_builder_constructing = is_builder_constructing});
     } else {
 
       ring_size = config.get_selection_ring_size(unit_comp->spawn_type);

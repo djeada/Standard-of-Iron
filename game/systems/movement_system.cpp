@@ -25,6 +25,10 @@ constexpr float radius_aware_walkability_threshold = 0.5F;
 constexpr float hold_mode_turn_speed_degrees = 180.0F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 
+constexpr float k_stuck_check_dist_sq = 0.01F;
+constexpr float k_time_stuck_threshold = 1.5F;
+constexpr float k_unstuck_cooldown_seconds = 1.5F;
+
 void apply_desired_yaw(Engine::Core::TransformComponent *transform,
                        float delta_time, float turn_speed_degrees) {
   if ((transform == nullptr) || !transform->has_desired_yaw) {
@@ -246,10 +250,53 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
   QVector3D const current_pos_3d(transform->position.x, 0.0F,
                                  transform->position.z);
+  bool const current_position_allowed =
+      is_point_allowed(current_pos_3d, entity->get_id(), unit_radius);
   bool const destination_allowed =
       is_point_allowed(final_goal, entity->get_id(), unit_radius);
 
-  if (movement->has_target && !destination_allowed) {
+  if (movement->unstuck_cooldown > 0.0F) {
+    movement->unstuck_cooldown =
+        std::max(0.0F, movement->unstuck_cooldown - delta_time);
+  }
+  {
+    float const dpx = transform->position.x - movement->last_position_x;
+    float const dpz = transform->position.z - movement->last_position_z;
+    bool const moved_enough = (dpx * dpx + dpz * dpz) > k_stuck_check_dist_sq;
+    bool const is_trying_to_move =
+        movement->has_target || !current_position_allowed;
+    if (!is_trying_to_move || moved_enough) {
+      movement->last_position_x = transform->position.x;
+      movement->last_position_z = transform->position.z;
+      movement->time_stuck = 0.0F;
+    } else {
+      movement->time_stuck += delta_time;
+    }
+  }
+
+  bool const needs_recovery = !movement->path_pending &&
+                              movement->repath_cooldown <= 0.0F &&
+                              !current_position_allowed;
+  bool const has_no_valid_target =
+      !movement->has_target || !destination_allowed;
+
+  bool const force_recovery = !current_position_allowed &&
+                              !movement->path_pending &&
+                              movement->unstuck_cooldown <= 0.0F &&
+                              movement->time_stuck >= k_time_stuck_threshold;
+
+  if ((needs_recovery && has_no_valid_target || force_recovery) &&
+      CommandService::try_queue_local_recovery_move(
+          *world, entity->get_id(), current_pos_3d, final_goal, movement)) {
+    movement->repath_cooldown = repath_cooldown_seconds;
+    if (force_recovery) {
+      movement->time_stuck = 0.0F;
+      movement->unstuck_cooldown = k_unstuck_cooldown_seconds;
+    }
+  }
+
+  if (movement->has_target && !destination_allowed &&
+      current_position_allowed) {
     movement->clear_path();
     movement->has_target = false;
     movement->path_pending = false;
@@ -345,7 +392,21 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       return recovered;
     };
 
-    if (!is_segment_walkable(current_pos, segment_target, entity->get_id(),
+    bool const escaping_invalid_ground = !current_position_allowed;
+    bool const destination_tile_walkable = [&]() -> bool {
+      Pathfinding *pf = CommandService::get_pathfinder();
+      if (pf == nullptr) {
+        return true;
+      }
+      Point const d =
+          CommandService::world_to_grid(segment_target.x(), segment_target.z());
+      return unit_radius <= radius_aware_walkability_threshold
+                 ? pf->is_walkable(d.x, d.y)
+                 : pf->is_walkable_with_radius(d.x, d.y, unit_radius);
+    }();
+
+    if (!(escaping_invalid_ground && destination_tile_walkable) &&
+        !is_segment_walkable(current_pos, segment_target, entity->get_id(),
                              unit_radius)) {
       if (try_advance_past_blocked_segment()) {
 
@@ -444,35 +505,54 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
+  bool was_on_valid_tile = true;
+  Pathfinding *pathfinder_check = CommandService::get_pathfinder();
+  if (pathfinder_check != nullptr) {
+    Point const pre_grid = CommandService::world_to_grid(transform->position.x,
+                                                         transform->position.z);
+    was_on_valid_tile = pathfinder_check->is_walkable(pre_grid.x, pre_grid.y);
+  }
+
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
 
-  Pathfinding *pathfinder_check = CommandService::get_pathfinder();
   if (pathfinder_check != nullptr) {
     Point const new_grid = CommandService::world_to_grid(transform->position.x,
                                                          transform->position.z);
     if (!pathfinder_check->is_walkable(new_grid.x, new_grid.y)) {
+      if (was_on_valid_tile) {
 
-      transform->position.x -= movement->vx * delta_time;
-      transform->position.z -= movement->vz * delta_time;
+        transform->position.x -= movement->vx * delta_time;
+        transform->position.z -= movement->vz * delta_time;
 
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
-      movement->has_target = false;
-      movement->clear_path();
-      movement->path_pending = false;
+        movement->vx = 0.0F;
+        movement->vz = 0.0F;
+        movement->has_target = false;
+        movement->clear_path();
+        movement->path_pending = false;
 
-      if (movement->goal_x != 0.0F || movement->goal_y != 0.0F) {
-        Point const goal_grid =
-            CommandService::world_to_grid(movement->goal_x, movement->goal_y);
-        if (pathfinder_check->is_walkable(goal_grid.x, goal_grid.y)) {
-          CommandService::MoveOptions opts;
-          opts.clear_attack_intent = false;
-          opts.allow_direct_fallback = false;
-          std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
-          std::vector<QVector3D> const targets = {
-              QVector3D(movement->goal_x, 0.0F, movement->goal_y)};
-          CommandService::move_units(*world, ids, targets, opts);
+        QVector3D const reverted_pos(transform->position.x, 0.0F,
+                                     transform->position.z);
+        QVector3D const goal(movement->goal_x, 0.0F, movement->goal_y);
+        bool recovered_locally = false;
+        if (movement->goal_x != 0.0F || movement->goal_y != 0.0F) {
+          recovered_locally = CommandService::try_queue_local_recovery_move(
+              *world, entity->get_id(), reverted_pos, goal, movement);
+        }
+
+        if (!recovered_locally &&
+            (movement->goal_x != 0.0F || movement->goal_y != 0.0F)) {
+          Point const goal_grid =
+              CommandService::world_to_grid(movement->goal_x, movement->goal_y);
+          if (pathfinder_check->is_walkable(goal_grid.x, goal_grid.y)) {
+            CommandService::MoveOptions opts;
+            opts.clear_attack_intent = false;
+            opts.allow_direct_fallback = false;
+            std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+            std::vector<QVector3D> const targets = {
+                QVector3D(movement->goal_x, 0.0F, movement->goal_y)};
+            CommandService::move_units(*world, ids, targets, opts);
+          }
         }
       }
     }

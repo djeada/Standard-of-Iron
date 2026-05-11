@@ -214,14 +214,13 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
 
         float const exit_offset = 2.5F + 0.2F * float(prod->produced_count % 5);
         float const exit_angle = 0.5F * float(prod->produced_count % 8);
-        QVector3D const exit_pos =
+        QVector3D const raw_exit_pos =
             QVector3D(t->position.x + exit_offset * std::cos(exit_angle), 0.0F,
                       t->position.z + exit_offset * std::sin(exit_angle));
 
         auto reg = Game::Map::MapTransformer::get_factory_registry();
         if (reg) {
           Game::Units::SpawnParams sp;
-          sp.position = exit_pos;
           sp.player_id = u->owner_id;
           sp.spawn_type =
               Game::Units::spawn_typeFromTroopType(prod->product_type);
@@ -229,6 +228,14 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
               e->has_component<Engine::Core::AIControlledComponent>();
           sp.nation_id = nation_id;
           sp.is_initial_spawn = false;
+
+          float const unit_radius =
+              Game::Units::TroopConfig::instance().get_selection_ring_size(
+                  sp.spawn_type);
+          QVector3D const safe_exit = find_guaranteed_valid_exit(
+              raw_exit_pos.x(), raw_exit_pos.z(), unit_radius);
+          sp.position = safe_exit;
+
           auto unit = reg->create(sp.spawn_type, *world, sp);
 
           if (unit && prod->rally_set) {

@@ -23,14 +23,10 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_production_timer = 0.0F;
 
-  static int const exec_counter = 0;
-
   auto &nation_registry = Game::Systems::NationRegistry::instance();
   const auto *nation = nation_registry.get_nation_for_player(context.player_id);
 
   if (nation == nullptr) {
-
-    static int const log_counter = 0;
     return;
   }
 
@@ -101,7 +97,13 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           (context.total_units > 0)
               ? static_cast<float>(context.ranged_count) / context.total_units
               : 0.0F;
-      produce_ranged = (ranged_ratio < 0.6F);
+
+      const float target_ranged_ratio =
+          std::clamp(0.5F + (context.strategy_config.defense_modifier -
+                             context.strategy_config.aggression_modifier) *
+                                0.1F,
+                     0.25F, 0.75F);
+      produce_ranged = (ranged_ratio < target_ranged_ratio);
     }
 
     troop_type = produce_ranged ? nation->get_best_ranged_troop()
@@ -114,7 +116,6 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   if (troop_type == nullptr) {
-    static int const log_counter = 0;
     return;
   }
   const bool producing_commander =
@@ -129,8 +130,6 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     if (Game::Core::is_neutral_owner(entity.owner_id)) {
       continue;
     }
-
-    static int const log_counter = 0;
 
     if (!entity.production.has_component) {
       continue;

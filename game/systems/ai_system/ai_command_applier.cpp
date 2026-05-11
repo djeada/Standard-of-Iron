@@ -13,6 +13,7 @@
 #include <QVector3D>
 #include <cstddef>
 #include <qvectornd.h>
+#include <string_view>
 #include <vector>
 
 namespace Game::Systems::AI {
@@ -165,8 +166,27 @@ void AICommandApplier::apply(Engine::Core::World &world, int ai_owner_id,
       break;
     }
 
+    case AICommandType::TriggerCommanderRally: {
+      for (auto entity_id : command.units) {
+        auto *entity = world.get_entity(entity_id);
+        if (entity == nullptr) {
+          continue;
+        }
+        auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
+          continue;
+        }
+        auto *commander =
+            entity->get_component<Engine::Core::CommanderComponent>();
+        if (commander != nullptr) {
+          commander->rally_requested = true;
+        }
+      }
+      break;
+    }
+
     case AICommandType::StartBuilderConstruction: {
-      if (command.units.empty() || command.construction_type.empty()) {
+      if (command.units.empty() || command.construction_type == nullptr) {
         break;
       }
 
@@ -191,6 +211,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int ai_owner_id,
           continue;
         }
 
+        const std::string_view ctype(command.construction_type);
         builder_prod->product_type = command.construction_type;
         builder_prod->has_construction_site = true;
         builder_prod->construction_site_x = command.construction_site_x;
@@ -200,11 +221,11 @@ void AICommandApplier::apply(Engine::Core::World &world, int ai_owner_id,
         builder_prod->construction_complete = false;
         builder_prod->is_placement_preview = false;
 
-        if (command.construction_type == BUILDING_TYPE_HOME) {
+        if (ctype == BUILDING_TYPE_HOME) {
           builder_prod->build_time = BUILD_TIME_HOME;
-        } else if (command.construction_type == BUILDING_TYPE_DEFENSE_TOWER) {
+        } else if (ctype == BUILDING_TYPE_DEFENSE_TOWER) {
           builder_prod->build_time = BUILD_TIME_DEFENSE_TOWER;
-        } else if (command.construction_type == BUILDING_TYPE_BARRACKS) {
+        } else if (ctype == BUILDING_TYPE_BARRACKS) {
           builder_prod->build_time = BUILD_TIME_BARRACKS;
         } else {
           builder_prod->build_time = BUILD_TIME_DEFAULT;

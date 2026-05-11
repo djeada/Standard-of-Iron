@@ -196,6 +196,7 @@ add_library(render_gl STATIC
      equipment/horse_equipment_archetype.cpp
      equipment/equipment_submit.cpp
     equipment/attachment_builder.cpp
+    equipment/render_archetype_registry.cpp
     equipment/register_equipment.cpp
     equipment/armor/roman_armor.cpp
     equipment/armor/armor_light_carthage.cpp

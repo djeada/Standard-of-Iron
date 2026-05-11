@@ -888,6 +888,7 @@ void CommandController::confirm_formation_placement() {
   Game::Systems::CommandService::MoveOptions opts;
   opts.group_move = m_formation_units.size() > 1;
   opts.clear_attack_intent = true;
+  opts.retry_individual_on_group_failure = m_formation_units.size() > 1;
   Game::Systems::CommandService::move_units(*m_world, m_formation_units,
                                             formation_result.positions, opts);
 

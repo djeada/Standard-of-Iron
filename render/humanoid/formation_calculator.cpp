@@ -1,6 +1,7 @@
 #include "formation_calculator.h"
 
 #include "../../game/systems/formation_system.h"
+#include "../../game/units/troop_config.h"
 #include "../horse/dimensions.h"
 
 #include <algorithm>
@@ -13,6 +14,24 @@ auto cavalry_formation_spacing(float mount_scale) -> float {
   float const horse_length =
       dims.body_length + dims.head_length * 0.85F + dims.tail_length * 0.10F;
   return horse_length * 1.10F;
+}
+
+auto resolve_formation_spacing(Game::Units::SpawnType spawn_type,
+                               float configured_spacing,
+                               float mount_scale) -> float {
+  switch (spawn_type) {
+  case Game::Units::SpawnType::MountedKnight:
+  case Game::Units::SpawnType::HorseArcher:
+  case Game::Units::SpawnType::HorseSpearman:
+    return cavalry_formation_spacing(mount_scale);
+  default:
+    break;
+  }
+
+  if (configured_spacing > 0.0F) {
+    return configured_spacing;
+  }
+  return Game::Units::TroopConfig::instance().get_formation_spacing(spawn_type);
 }
 
 auto RomanInfantryFormation::calculate_offset(
