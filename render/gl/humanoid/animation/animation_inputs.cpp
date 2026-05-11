@@ -233,6 +233,12 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.is_constructing = false;
   }
 
+  bool const is_active = anim.is_moving || anim.is_attacking ||
+                         anim.is_constructing || anim.is_healing ||
+                         anim.is_hit_reacting || anim.is_dying || anim.is_dead ||
+                         anim.is_in_hold_mode;
+  anim.idle_duration = is_active ? 0.0F : anim.time;
+
   return anim;
 }
 

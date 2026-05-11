@@ -8,6 +8,18 @@
 
 namespace Render::GL {
 
+enum class AmbientIdleType : std::uint8_t {
+  None = 0,
+  SitDown,
+  ShuffleFeet,
+  TapFoot,
+  ShiftWeight,
+  StepInPlace,
+  BendKnee,
+  RaiseWeapon,
+  Jump
+};
+
 enum class CombatAnimPhase : std::uint8_t {
   Idle,
   Advance,
@@ -46,6 +58,7 @@ struct AnimationInputs {
   bool is_dead{false};
   float death_progress{0.0F};
   std::uint8_t death_variant{0};
+  float idle_duration{0.0F};
 };
 
 inline auto hold_transition_amount(const AnimationInputs &inputs) -> float {
@@ -221,6 +234,8 @@ struct HumanoidAnimationContext {
   bool has_movement_target{false};
   float yaw_radians{0.0F};
   float yaw_degrees{0.0F};
+  AmbientIdleType ambient_idle_type{AmbientIdleType::None};
+  float ambient_idle_phase{0.0F};
 
   auto locomotion_speed() const -> float { return gait.speed; }
   auto locomotion_normalized_speed() const -> float {
