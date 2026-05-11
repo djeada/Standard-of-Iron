@@ -146,7 +146,7 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   params.rock_detail_strength =
       surface_profile.terrain_rock_detail_strength * 0.42F;
 
-  params.light_direction = m_light_direction.normalized();
+  params.light_direction = m_light_direction;
 
   params.is_ground_plane = true;
 

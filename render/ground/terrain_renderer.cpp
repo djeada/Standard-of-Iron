@@ -134,7 +134,7 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     cmd.mesh = chunk.mesh.get();
     cmd.model = k_identity_matrix;
     cmd.params = chunk.params;
-    cmd.params.light_direction = m_light_direction.normalized();
+    cmd.params.light_direction = m_light_direction;
     cmd.sort_key = 0x0080U;
     cmd.depth_write = true;
     cmd.wireframe = m_wireframe;

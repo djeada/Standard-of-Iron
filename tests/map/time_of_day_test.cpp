@@ -44,16 +44,18 @@ TEST(TimeOfDayTest, AllTimesProduceNormalizedLightDirections) {
   }
 }
 
-TEST(TimeOfDayTest, AmbientStrengthDecreasesMorningToNight) {
+TEST(TimeOfDayTest, AmbientStrengthOrderingAcrossTimesOfDay) {
   const float morning = lighting_for_time_of_day(TimeOfDay::Morning).ambient_strength;
   const float day = lighting_for_time_of_day(TimeOfDay::Day).ambient_strength;
   const float afternoon = lighting_for_time_of_day(TimeOfDay::Afternoon).ambient_strength;
   const float night = lighting_for_time_of_day(TimeOfDay::Night).ambient_strength;
 
+  // Day has the highest ambient (peak sunlight)
   EXPECT_LT(morning, day);
   EXPECT_LT(afternoon, day);
-  EXPECT_LT(night, afternoon);
+  // Night has the lowest ambient
   EXPECT_LT(night, morning);
+  EXPECT_LT(night, afternoon);
 }
 
 TEST(TimeOfDayTest, DefaultMapTimeOfDayIsDay) {
