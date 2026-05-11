@@ -361,6 +361,19 @@ auto SkirmishLoader::start(const QString &map_path,
     }
   }
 
+  if (level_result.ok) {
+    const QVector3D light_dir = level_result.lighting_settings.light_direction;
+    if (m_ground != nullptr) {
+      m_ground->set_light_direction(light_dir);
+    }
+    if (m_terrain != nullptr) {
+      m_terrain->set_light_direction(light_dir);
+    }
+    if (m_scatter != nullptr) {
+      m_scatter->set_light_direction(light_dir);
+    }
+  }
+
   pump_events();
 
   if (m_rain != nullptr) {
@@ -465,6 +478,7 @@ auto SkirmishLoader::start(const QString &map_path,
   result.victory_config = level_result.victory_config;
   result.rain_settings = level_result.rain_settings;
   result.biome_seed = level_result.biome_seed;
+  result.lighting_settings = level_result.lighting_settings;
   result.is_spectator_mode = is_spectator_mode;
 
   return result;

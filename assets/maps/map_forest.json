@@ -422,5 +422,6 @@
     "active_duration": 60.0,
     "intensity": 0.5,
     "fade_duration": 5.0
-  }
+  },
+  "time_of_day": "afternoon"
 }
