@@ -1433,6 +1433,8 @@ void GameEngine::render_game_effects() {
     Render::GL::FormationPlacementInfo placement;
     placement.position =
         m_command_controller->get_formation_placement_position();
+    placement.position.setY(Game::Map::TerrainService::instance().get_terrain_height(
+        placement.position.x(), placement.position.z()));
     placement.angle_degrees =
         m_command_controller->get_formation_placement_angle();
     placement.active = true;
