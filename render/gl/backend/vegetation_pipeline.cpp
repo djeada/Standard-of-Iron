@@ -37,6 +37,11 @@ auto VegetationPipeline::initialize() -> bool {
   m_pine_shader = m_shader_cache->get(QStringLiteral("pine_instanced"));
   m_olive_shader = m_shader_cache->get(QStringLiteral("olive_instanced"));
   m_firecamp_shader = m_shader_cache->get(QStringLiteral("firecamp"));
+  m_tent_shader = m_shader_cache->get(QStringLiteral("tent_instanced"));
+  m_supply_cart_shader = m_shader_cache->get(QStringLiteral("supply_cart_instanced"));
+  m_weapon_rack_shader = m_shader_cache->get(QStringLiteral("weapon_rack_instanced"));
+  m_ruins_shader = m_shader_cache->get(QStringLiteral("ruins_instanced"));
+  m_dead_tree_shader = m_shader_cache->get(QStringLiteral("dead_tree_instanced"));
 
   if (m_stone_shader == nullptr) {
     qWarning() << "VegetationPipeline: stone shader missing";
@@ -53,12 +58,32 @@ auto VegetationPipeline::initialize() -> bool {
   if (m_firecamp_shader == nullptr) {
     qWarning() << "VegetationPipeline: firecamp shader missing";
   }
+  if (m_tent_shader == nullptr) {
+    qWarning() << "VegetationPipeline: tent_instanced shader missing";
+  }
+  if (m_supply_cart_shader == nullptr) {
+    qWarning() << "VegetationPipeline: supply_cart_instanced shader missing";
+  }
+  if (m_weapon_rack_shader == nullptr) {
+    qWarning() << "VegetationPipeline: weapon_rack_instanced shader missing";
+  }
+  if (m_ruins_shader == nullptr) {
+    qWarning() << "VegetationPipeline: ruins_instanced shader missing";
+  }
+  if (m_dead_tree_shader == nullptr) {
+    qWarning() << "VegetationPipeline: dead_tree_instanced shader missing";
+  }
 
   initialize_stone_pipeline();
   initialize_plant_pipeline();
   initialize_pine_pipeline();
   initialize_olive_pipeline();
   initialize_fire_camp_pipeline();
+  initialize_tent_pipeline();
+  initialize_supply_cart_pipeline();
+  initialize_weapon_rack_pipeline();
+  initialize_ruins_pipeline();
+  initialize_dead_tree_pipeline();
   cache_uniforms();
 
   m_initialized = true;
@@ -71,6 +96,11 @@ void VegetationPipeline::shutdown() {
   shutdown_pine_pipeline();
   shutdown_olive_pipeline();
   shutdown_fire_camp_pipeline();
+  shutdown_tent_pipeline();
+  shutdown_supply_cart_pipeline();
+  shutdown_weapon_rack_pipeline();
+  shutdown_ruins_pipeline();
+  shutdown_dead_tree_pipeline();
   m_initialized = false;
 }
 
@@ -132,6 +162,20 @@ void VegetationPipeline::cache_uniforms() {
     m_firecamp_uniforms.camera_forward =
         m_firecamp_shader->uniform_handle("u_cameraForward");
   }
+
+  auto cache_prop_uniforms = [&](PropUniforms &u, GL::Shader *shader) {
+    if (shader == nullptr) {
+      return;
+    }
+    u.view_proj = shader->optional_uniform_handle("u_viewProj");
+    u.light_direction = shader->uniform_handle("uLightDirection");
+  };
+
+  cache_prop_uniforms(m_tent_uniforms, m_tent_shader);
+  cache_prop_uniforms(m_supply_cart_uniforms, m_supply_cart_shader);
+  cache_prop_uniforms(m_weapon_rack_uniforms, m_weapon_rack_shader);
+  cache_prop_uniforms(m_ruins_uniforms, m_ruins_shader);
+  cache_prop_uniforms(m_dead_tree_uniforms, m_dead_tree_shader);
 }
 
 void VegetationPipeline::initialize_stone_pipeline() {
@@ -816,6 +860,353 @@ void VegetationPipeline::shutdown_fire_camp_pipeline() {
   }
   m_firecamp_vertex_count = 0;
   m_firecamp_index_count = 0;
+}
+
+void VegetationPipeline::upload_prop_mesh_impl(
+    const std::vector<std::pair<QVector3D, QVector3D>> &verts,
+    const std::vector<uint16_t> &idx,
+    GLuint &vao, GLuint &vbo, GLuint &ibo,
+    GLsizei &vert_count, GLsizei &idx_count) {
+
+  using namespace Render::GL::VertexAttrib;
+  using namespace Render::GL::ComponentCount;
+
+  struct V { QVector3D pos; QVector3D nrm; };
+  std::vector<V> flat;
+  flat.reserve(verts.size());
+  for (const auto &[p, n] : verts) {
+    flat.push_back({p, n});
+  }
+
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(flat.size() * sizeof(V)),
+               flat.data(), GL_STATIC_DRAW);
+  vert_count = static_cast<GLsizei>(flat.size());
+
+  glEnableVertexAttribArray(Position);
+  glVertexAttribPointer(Position, Vec3, GL_FLOAT, GL_FALSE, sizeof(V),
+                        reinterpret_cast<void *>(offsetof(V, pos)));
+  glEnableVertexAttribArray(Normal);
+  glVertexAttribPointer(Normal, Vec3, GL_FLOAT, GL_FALSE, sizeof(V),
+                        reinterpret_cast<void *>(offsetof(V, nrm)));
+
+  glGenBuffers(1, &ibo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
+               idx.data(), GL_STATIC_DRAW);
+  idx_count = static_cast<GLsizei>(idx.size());
+
+  glEnableVertexAttribArray(TexCoord);
+  glVertexAttribDivisor(TexCoord, 1);
+  glEnableVertexAttribArray(InstancePosition);
+  glVertexAttribDivisor(InstancePosition, 1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void VegetationPipeline::delete_prop_pipeline_impl(
+    GLuint &vao, GLuint &vbo, GLuint &ibo, GLsizei &vc, GLsizei &ic) {
+  if (ibo != 0U) { glDeleteBuffers(1, &ibo); ibo = 0; }
+  if (vbo != 0U) { glDeleteBuffers(1, &vbo); vbo = 0; }
+  if (vao != 0U) { glDeleteVertexArrays(1, &vao); vao = 0; }
+  vc = 0;
+  ic = 0;
+}
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+// Append a box from minP to maxP with face normals into vertex/index vectors.
+static void append_box(
+    std::vector<std::pair<QVector3D, QVector3D>> &verts,
+    std::vector<uint16_t> &idx,
+    const QVector3D &lo, const QVector3D &hi) {
+
+  using F = std::pair<QVector3D, QVector3D>;
+  const float x0 = lo.x(), y0 = lo.y(), z0 = lo.z();
+  const float x1 = hi.x(), y1 = hi.y(), z1 = hi.z();
+
+  // +Z
+  {
+    auto b = static_cast<uint16_t>(verts.size());
+    QVector3D n(0, 0, 1);
+    verts.insert(verts.end(), {F{{x0,y0,z1},n}, F{{x1,y0,z1},n},
+                                F{{x1,y1,z1},n}, F{{x0,y1,z1},n}});
+    idx.insert(idx.end(), {b,uint16_t(b+1),uint16_t(b+2),
+                            b,uint16_t(b+2),uint16_t(b+3)});
+  }
+  // -Z
+  {
+    auto b = static_cast<uint16_t>(verts.size());
+    QVector3D n(0, 0, -1);
+    verts.insert(verts.end(), {F{{x1,y0,z0},n}, F{{x0,y0,z0},n},
+                                F{{x0,y1,z0},n}, F{{x1,y1,z0},n}});
+    idx.insert(idx.end(), {b,uint16_t(b+1),uint16_t(b+2),
+                            b,uint16_t(b+2),uint16_t(b+3)});
+  }
+  // +X
+  {
+    auto b = static_cast<uint16_t>(verts.size());
+    QVector3D n(1, 0, 0);
+    verts.insert(verts.end(), {F{{x1,y0,z0},n}, F{{x1,y0,z1},n},
+                                F{{x1,y1,z1},n}, F{{x1,y1,z0},n}});
+    idx.insert(idx.end(), {b,uint16_t(b+1),uint16_t(b+2),
+                            b,uint16_t(b+2),uint16_t(b+3)});
+  }
+  // -X
+  {
+    auto b = static_cast<uint16_t>(verts.size());
+    QVector3D n(-1, 0, 0);
+    verts.insert(verts.end(), {F{{x0,y0,z1},n}, F{{x0,y0,z0},n},
+                                F{{x0,y1,z0},n}, F{{x0,y1,z1},n}});
+    idx.insert(idx.end(), {b,uint16_t(b+1),uint16_t(b+2),
+                            b,uint16_t(b+2),uint16_t(b+3)});
+  }
+  // +Y
+  {
+    auto b = static_cast<uint16_t>(verts.size());
+    QVector3D n(0, 1, 0);
+    verts.insert(verts.end(), {F{{x0,y1,z0},n}, F{{x0,y1,z1},n},
+                                F{{x1,y1,z1},n}, F{{x1,y1,z0},n}});
+    idx.insert(idx.end(), {b,uint16_t(b+1),uint16_t(b+2),
+                            b,uint16_t(b+2),uint16_t(b+3)});
+  }
+  // -Y
+  {
+    auto b = static_cast<uint16_t>(verts.size());
+    QVector3D n(0, -1, 0);
+    verts.insert(verts.end(), {F{{x0,y0,z1},n}, F{{x0,y0,z0},n},
+                                F{{x1,y0,z0},n}, F{{x1,y0,z1},n}});
+    idx.insert(idx.end(), {b,uint16_t(b+1),uint16_t(b+2),
+                            b,uint16_t(b+2),uint16_t(b+3)});
+  }
+}
+
+
+
+// ── Tent pipeline ─────────────────────────────────────────────────────────────
+void VegetationPipeline::initialize_tent_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_tent_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+  verts.reserve(14);
+  idx.reserve(18);
+
+  // Ridge tent: 4 corners + 2 ridge peaks.
+  // A=front-left, B=front-right, C=front-peak, D=back-left, E=back-right, F=back-peak
+  constexpr float H = 0.7F;  // peak height
+  const QVector3D A(-0.5F,  0.0F, -0.5F);
+  const QVector3D B( 0.5F,  0.0F, -0.5F);
+  const QVector3D C( 0.0F,  H,    -0.5F);
+  const QVector3D D(-0.5F,  0.0F,  0.5F);
+  const QVector3D E( 0.5F,  0.0F,  0.5F);
+  const QVector3D F( 0.0F,  H,     0.5F);
+
+  constexpr float inv_sqrt2 = 0.70711F;
+  const QVector3D nL(-inv_sqrt2, inv_sqrt2, 0.0F);  // left slope normal
+  const QVector3D nR( inv_sqrt2, inv_sqrt2, 0.0F);  // right slope normal
+
+  using P = std::pair<QVector3D, QVector3D>;
+
+  // Left slope quad: A, D, F, C  (CCW facing left-up)
+  {
+    auto b = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(), {P{A,nL}, P{D,nL}, P{F,nL}, P{C,nL}});
+    idx.insert(idx.end(), {b, uint16_t(b+1), uint16_t(b+2),
+                            b, uint16_t(b+2), uint16_t(b+3)});
+  }
+  // Right slope quad: B, C, F, E  (CCW facing right-up)
+  {
+    auto b = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(), {P{B,nR}, P{C,nR}, P{F,nR}, P{E,nR}});
+    idx.insert(idx.end(), {b, uint16_t(b+1), uint16_t(b+2),
+                            b, uint16_t(b+2), uint16_t(b+3)});
+  }
+  // Front gable tri: A, C, B  (CCW facing -Z)
+  {
+    const QVector3D nF(0.0F, 0.0F, -1.0F);
+    auto b = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(), {P{A,nF}, P{C,nF}, P{B,nF}});
+    idx.insert(idx.end(), {b, uint16_t(b+1), uint16_t(b+2)});
+  }
+  // Back gable tri: D, E, F  (CCW facing +Z)
+  {
+    const QVector3D nBk(0.0F, 0.0F, 1.0F);
+    auto b = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(), {P{D,nBk}, P{E,nBk}, P{F,nBk}});
+    idx.insert(idx.end(), {b, uint16_t(b+1), uint16_t(b+2)});
+  }
+
+  upload_prop_mesh_impl(verts, idx,
+                   m_tent_vao, m_tent_vertex_buffer, m_tent_index_buffer,
+                   m_tent_vertex_count, m_tent_index_count);
+}
+
+void VegetationPipeline::shutdown_tent_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_tent_vao = m_tent_vertex_buffer = m_tent_index_buffer = 0;
+    m_tent_vertex_count = m_tent_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_tent_vao, m_tent_vertex_buffer,
+                       m_tent_index_buffer, m_tent_vertex_count, m_tent_index_count);
+}
+
+// ── Supply Cart pipeline ───────────────────────────────────────────────────────
+void VegetationPipeline::initialize_supply_cart_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_supply_cart_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+  verts.reserve(72);
+  idx.reserve(108);
+
+  // Cart body: wide flat box
+  append_box(verts, idx, {-0.50F, 0.0F, -0.30F}, {0.50F, 0.22F, 0.30F});
+  // Left wheel (thin disc represented as a flat box)
+  append_box(verts, idx, {-0.56F, 0.0F, -0.18F}, {-0.46F, 0.36F, 0.18F});
+  // Right wheel
+  append_box(verts, idx, { 0.46F, 0.0F, -0.18F}, { 0.56F, 0.36F, 0.18F});
+
+  upload_prop_mesh_impl(verts, idx,
+                   m_supply_cart_vao, m_supply_cart_vertex_buffer,
+                   m_supply_cart_index_buffer,
+                   m_supply_cart_vertex_count, m_supply_cart_index_count);
+}
+
+void VegetationPipeline::shutdown_supply_cart_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_supply_cart_vao = m_supply_cart_vertex_buffer = m_supply_cart_index_buffer = 0;
+    m_supply_cart_vertex_count = m_supply_cart_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_supply_cart_vao, m_supply_cart_vertex_buffer,
+                       m_supply_cart_index_buffer,
+                       m_supply_cart_vertex_count, m_supply_cart_index_count);
+}
+
+// ── Weapon Rack pipeline ───────────────────────────────────────────────────────
+void VegetationPipeline::initialize_weapon_rack_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_weapon_rack_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+  verts.reserve(144);
+  idx.reserve(216);
+
+  // Left post
+  append_box(verts, idx, {-0.38F, 0.0F, -0.04F}, {-0.30F, 0.65F,  0.04F});
+  // Right post
+  append_box(verts, idx, { 0.30F, 0.0F, -0.04F}, { 0.38F, 0.65F,  0.04F});
+  // Horizontal crossbeam
+  append_box(verts, idx, {-0.38F, 0.46F, -0.03F}, { 0.38F, 0.52F,  0.03F});
+  // Three leaning spear shafts (thin diagonal approximated as offset thin boxes)
+  append_box(verts, idx, {-0.18F, 0.0F, -0.015F}, {-0.10F, 0.90F,  0.015F});
+  append_box(verts, idx, { -0.04F, 0.0F, -0.015F}, { 0.04F, 0.92F,  0.015F});
+  append_box(verts, idx, {  0.10F, 0.0F, -0.015F}, { 0.18F, 0.88F,  0.015F});
+
+  upload_prop_mesh_impl(verts, idx,
+                   m_weapon_rack_vao, m_weapon_rack_vertex_buffer,
+                   m_weapon_rack_index_buffer,
+                   m_weapon_rack_vertex_count, m_weapon_rack_index_count);
+}
+
+void VegetationPipeline::shutdown_weapon_rack_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_weapon_rack_vao = m_weapon_rack_vertex_buffer = m_weapon_rack_index_buffer = 0;
+    m_weapon_rack_vertex_count = m_weapon_rack_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_weapon_rack_vao, m_weapon_rack_vertex_buffer,
+                       m_weapon_rack_index_buffer,
+                       m_weapon_rack_vertex_count, m_weapon_rack_index_count);
+}
+
+// ── Ruins pipeline ─────────────────────────────────────────────────────────────
+void VegetationPipeline::initialize_ruins_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_ruins_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+  verts.reserve(144);
+  idx.reserve(216);
+
+  // Three broken column stubs at different heights
+  append_box(verts, idx, {-0.26F, 0.0F, -0.08F}, {-0.10F, 0.50F, 0.08F});
+  append_box(verts, idx, { 0.10F, 0.0F, -0.08F}, { 0.26F, 0.36F, 0.08F});
+  append_box(verts, idx, {-0.08F, 0.0F,  0.10F}, { 0.08F, 0.62F, 0.26F});
+  // A fallen lintel fragment (flat horizontal slab)
+  append_box(verts, idx, {-0.30F, 0.0F, -0.05F}, { 0.08F, 0.06F, 0.18F});
+
+  upload_prop_mesh_impl(verts, idx,
+                   m_ruins_vao, m_ruins_vertex_buffer,
+                   m_ruins_index_buffer,
+                   m_ruins_vertex_count, m_ruins_index_count);
+}
+
+void VegetationPipeline::shutdown_ruins_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_ruins_vao = m_ruins_vertex_buffer = m_ruins_index_buffer = 0;
+    m_ruins_vertex_count = m_ruins_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_ruins_vao, m_ruins_vertex_buffer,
+                       m_ruins_index_buffer,
+                       m_ruins_vertex_count, m_ruins_index_count);
+}
+
+// ── Dead Tree pipeline ─────────────────────────────────────────────────────────
+void VegetationPipeline::initialize_dead_tree_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_dead_tree_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+  verts.reserve(144);
+  idx.reserve(216);
+
+  // Tapered trunk (wider at base)
+  append_box(verts, idx, {-0.09F, 0.00F, -0.09F}, { 0.09F, 0.68F,  0.09F});
+  // Narrower upper trunk
+  append_box(verts, idx, {-0.06F, 0.65F, -0.06F}, { 0.06F, 0.95F,  0.06F});
+  // Left branch (angled outward, approximated as diagonal thin box)
+  append_box(verts, idx, {-0.04F, 0.50F, -0.03F}, { 0.38F, 0.68F,  0.03F});
+  // Right branch
+  append_box(verts, idx, {-0.38F, 0.55F, -0.03F}, { 0.04F, 0.72F,  0.03F});
+  // Top stub
+  append_box(verts, idx, {-0.03F, 0.90F, -0.03F}, { 0.03F, 1.08F,  0.03F});
+
+  upload_prop_mesh_impl(verts, idx,
+                   m_dead_tree_vao, m_dead_tree_vertex_buffer,
+                   m_dead_tree_index_buffer,
+                   m_dead_tree_vertex_count, m_dead_tree_index_count);
+}
+
+void VegetationPipeline::shutdown_dead_tree_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_dead_tree_vao = m_dead_tree_vertex_buffer = m_dead_tree_index_buffer = 0;
+    m_dead_tree_vertex_count = m_dead_tree_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_dead_tree_vao, m_dead_tree_vertex_buffer,
+                       m_dead_tree_index_buffer,
+                       m_dead_tree_vertex_count, m_dead_tree_index_count);
 }
 
 } // namespace Render::GL::BackendPipelines

@@ -6,6 +6,7 @@
 
 #include <QDebug>
 #include <QFile>
+#include <QHash>
 #include <QIODevice>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -383,6 +384,36 @@ void read_fire_camps(const QJsonArray &arr, std::vector<FireCamp> &out) {
   }
 }
 
+void read_world_props(const QJsonArray &arr, std::vector<WorldProp> &out) {
+  static const QHash<QString, WorldProp::Type> k_type_map{
+      {QStringLiteral("tent"),         WorldProp::Type::Tent},
+      {QStringLiteral("supply_cart"),  WorldProp::Type::SupplyCart},
+      {QStringLiteral("weapon_rack"),  WorldProp::Type::WeaponRack},
+      {QStringLiteral("ruins"),        WorldProp::Type::Ruins},
+      {QStringLiteral("dead_tree"),    WorldProp::Type::DeadTree},
+  };
+
+  out.clear();
+  out.reserve(arr.size());
+  for (const auto &val : arr) {
+    auto obj = val.toObject();
+    const QString type_str = obj.value(JsonKeys::TYPE).toString();
+    const auto it = k_type_map.find(type_str);
+    if (it == k_type_map.end()) {
+      qWarning() << "MapLoader: unknown world_prop type" << type_str
+                 << "- skipping";
+      continue;
+    }
+    WorldProp prop;
+    prop.type = it.value();
+    prop.x = float(obj.value(JsonKeys::X).toDouble(0.0));
+    prop.z = float(obj.value(JsonKeys::Z).toDouble(0.0));
+    prop.scale = float(obj.value(JsonKeys::SCALE).toDouble(1.0));
+    prop.rotation = float(obj.value(JsonKeys::ROTATION).toDouble(0.0));
+    out.push_back(prop);
+  }
+}
+
 void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
                   const GridDefinition &grid, CoordSystem coord_sys) {
   out.clear();
@@ -733,6 +764,10 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
 
   if (root.contains(FIRECAMPS) && root.value(FIRECAMPS).isArray()) {
     read_fire_camps(root.value(FIRECAMPS).toArray(), out_map.firecamps);
+  }
+
+  if (root.contains(WORLD_PROPS) && root.value(WORLD_PROPS).isArray()) {
+    read_world_props(root.value(WORLD_PROPS).toArray(), out_map.world_props);
   }
 
   if (root.contains(TERRAIN) && root.value(TERRAIN).isArray()) {

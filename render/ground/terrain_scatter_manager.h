@@ -10,11 +10,16 @@
 namespace Render::GL {
 
 class BiomeRenderer;
+class DeadTreeRenderer;
 class FireCampRenderer;
 class OliveRenderer;
 class PineRenderer;
 class PlantRenderer;
+class RuinsRenderer;
 class StoneRenderer;
+class SupplyCartRenderer;
+class TentRenderer;
+class WeaponRackRenderer;
 
 class TerrainScatterManager : public IRenderPass {
 public:
@@ -23,7 +28,8 @@ public:
 
   void configure(const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biome_settings,
-                 const std::vector<Game::Map::FireCamp> &fire_camps = {});
+                 const std::vector<Game::Map::FireCamp> &fire_camps = {},
+                 const std::vector<Game::Map::WorldProp> &world_props = {});
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -38,6 +44,11 @@ public:
   [[nodiscard]] auto pine() const -> PineRenderer *;
   [[nodiscard]] auto olive() const -> OliveRenderer *;
   [[nodiscard]] auto firecamp() const -> FireCampRenderer *;
+  [[nodiscard]] auto tent() const -> TentRenderer *;
+  [[nodiscard]] auto supply_cart() const -> SupplyCartRenderer *;
+  [[nodiscard]] auto weapon_rack() const -> WeaponRackRenderer *;
+  [[nodiscard]] auto ruins() const -> RuinsRenderer *;
+  [[nodiscard]] auto dead_tree() const -> DeadTreeRenderer *;
   [[nodiscard]] auto chunks() const -> std::vector<ScatterChunk>;
   [[nodiscard]] auto
   last_sync_stats() const -> Render::Ground::Scatter::SyncStats;
@@ -50,6 +61,11 @@ private:
   std::unique_ptr<PineRenderer> m_pine;
   std::unique_ptr<OliveRenderer> m_olive;
   std::unique_ptr<FireCampRenderer> m_firecamp;
+  std::unique_ptr<TentRenderer> m_tent;
+  std::unique_ptr<SupplyCartRenderer> m_supply_cart;
+  std::unique_ptr<WeaponRackRenderer> m_weapon_rack;
+  std::unique_ptr<RuinsRenderer> m_ruins;
+  std::unique_ptr<DeadTreeRenderer> m_dead_tree;
   std::vector<IRenderPass *> m_passes;
   mutable std::mutex m_mutex;
 };

@@ -31,7 +31,7 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
 
   const auto &passes = proxy.passes();
 
-  ASSERT_EQ(passes.size(), 15U);
+  ASSERT_EQ(passes.size(), 20U);
   EXPECT_EQ(proxy.surface(), &surface);
   EXPECT_EQ(proxy.ground(), surface.ground());
   EXPECT_EQ(proxy.terrain(), surface.terrain());
@@ -68,9 +68,14 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_EQ(passes[10], static_cast<Render::GL::IRenderPass *>(proxy.olive()));
   EXPECT_EQ(passes[11],
             static_cast<Render::GL::IRenderPass *>(proxy.firecamp()));
-  EXPECT_EQ(passes[12], &rain);
-  EXPECT_EQ(passes[13], &fog);
-  EXPECT_EQ(passes[14], &boundary_fog);
+  EXPECT_NE(passes[12], nullptr);  // tent
+  EXPECT_NE(passes[13], nullptr);  // supply_cart
+  EXPECT_NE(passes[14], nullptr);  // weapon_rack
+  EXPECT_NE(passes[15], nullptr);  // ruins
+  EXPECT_NE(passes[16], nullptr);  // dead_tree
+  EXPECT_EQ(passes[17], &rain);
+  EXPECT_EQ(passes[18], &fog);
+  EXPECT_EQ(passes[19], &boundary_fog);
 }
 
 TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
@@ -130,7 +135,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(feature_chunks[3].geometry_count, 1U);
 
   const auto scatters = proxy.scatter_chunks();
-  ASSERT_EQ(scatters.size(), 6U);
+  ASSERT_EQ(scatters.size(), 11U);
   EXPECT_EQ(scatters[0].species, Render::GL::ScatterSpeciesId::Grass);
   EXPECT_EQ(scatters[0].visibility_mode,
             Render::GL::ScatterVisibilityMode::InstanceFiltered);
@@ -147,6 +152,16 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(scatters[4].species, Render::GL::ScatterSpeciesId::Olive);
   EXPECT_EQ(scatters[5].species, Render::GL::ScatterSpeciesId::FireCamp);
   EXPECT_TRUE(scatters[5].gpu_ready);
+  EXPECT_EQ(scatters[6].species, Render::GL::ScatterSpeciesId::Tent);
+  EXPECT_TRUE(scatters[6].gpu_ready);
+  EXPECT_EQ(scatters[7].species, Render::GL::ScatterSpeciesId::SupplyCart);
+  EXPECT_TRUE(scatters[7].gpu_ready);
+  EXPECT_EQ(scatters[8].species, Render::GL::ScatterSpeciesId::WeaponRack);
+  EXPECT_TRUE(scatters[8].gpu_ready);
+  EXPECT_EQ(scatters[9].species, Render::GL::ScatterSpeciesId::Ruins);
+  EXPECT_TRUE(scatters[9].gpu_ready);
+  EXPECT_EQ(scatters[10].species, Render::GL::ScatterSpeciesId::DeadTree);
+  EXPECT_TRUE(scatters[10].gpu_ready);
   EXPECT_FALSE(scatter.last_sync_stats().did_upload_or_rebuild());
 }
 

@@ -150,4 +150,99 @@ struct FireCampBatchParams {
   float glow_strength = k_default_glow_strength;
 };
 
+// --- World prop GPU instances ---
+// Each prop type uses the same per-instance layout as StoneInstanceGpu:
+//   pos_scale.xyz = world position, pos_scale.w = uniform scale
+//   color_rot.rgb  = base tint colour, color_rot.a = yaw rotation (radians)
+
+struct TentInstanceGpu {
+  QVector4D pos_scale;
+  QVector4D color_rot;
+};
+
+struct TentBatchParams {
+  static constexpr float k_default_light_dir_x = 0.35F;
+  static constexpr float k_default_light_dir_y = 0.8F;
+  static constexpr float k_default_light_dir_z = 0.45F;
+
+  static auto default_light_direction() -> QVector3D {
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
+  }
+
+  QVector3D light_direction = default_light_direction();
+  float time = 0.0F;
+};
+
+struct SupplyCartInstanceGpu {
+  QVector4D pos_scale;
+  QVector4D color_rot;
+};
+
+struct SupplyCartBatchParams {
+  static constexpr float k_default_light_dir_x = 0.35F;
+  static constexpr float k_default_light_dir_y = 0.8F;
+  static constexpr float k_default_light_dir_z = 0.45F;
+
+  static auto default_light_direction() -> QVector3D {
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
+  }
+
+  QVector3D light_direction = default_light_direction();
+  float time = 0.0F;
+};
+
+struct WeaponRackInstanceGpu {
+  QVector4D pos_scale;
+  QVector4D color_rot;
+};
+
+struct WeaponRackBatchParams {
+  static constexpr float k_default_light_dir_x = 0.35F;
+  static constexpr float k_default_light_dir_y = 0.8F;
+  static constexpr float k_default_light_dir_z = 0.45F;
+
+  static auto default_light_direction() -> QVector3D {
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
+  }
+
+  QVector3D light_direction = default_light_direction();
+  float time = 0.0F;
+};
+
+struct RuinsInstanceGpu {
+  QVector4D pos_scale;
+  QVector4D color_rot;
+};
+
+struct RuinsBatchParams {
+  static constexpr float k_default_light_dir_x = 0.35F;
+  static constexpr float k_default_light_dir_y = 0.8F;
+  static constexpr float k_default_light_dir_z = 0.45F;
+
+  static auto default_light_direction() -> QVector3D {
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
+  }
+
+  QVector3D light_direction = default_light_direction();
+  float time = 0.0F;
+};
+
+struct DeadTreeInstanceGpu {
+  QVector4D pos_scale;
+  QVector4D color_rot;
+};
+
+struct DeadTreeBatchParams {
+  static constexpr float k_default_light_dir_x = 0.35F;
+  static constexpr float k_default_light_dir_y = 0.8F;
+  static constexpr float k_default_light_dir_z = 0.45F;
+
+  static auto default_light_direction() -> QVector3D {
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
+  }
+
+  QVector3D light_direction = default_light_direction();
+  float time = 0.0F;
+};
+
 } // namespace Render::GL

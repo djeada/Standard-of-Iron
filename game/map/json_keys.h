@@ -116,4 +116,7 @@ inline constexpr const char *RAIN_INTENSITY = "intensity";
 inline constexpr const char *RAIN_FADE_DURATION = "fade_duration";
 inline constexpr const char *RAIN_WIND_STRENGTH = "wind_strength";
 
+inline constexpr const char *WORLD_PROPS = "world_props";
+inline constexpr const char *PERSISTENT = "persistent";
+
 } // namespace Game::Map::JsonKeys

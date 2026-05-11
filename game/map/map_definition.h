@@ -5,6 +5,7 @@
 #include "terrain.h"
 #include <QString>
 #include <QVector3D>
+#include <cstdint>
 #include <optional>
 #include <vector>
 
@@ -46,6 +47,22 @@ struct FireCamp {
   bool persistent = true;
 };
 
+struct WorldProp {
+  enum class Type : std::uint8_t {
+    Tent = 0,
+    SupplyCart,
+    WeaponRack,
+    Ruins,
+    DeadTree
+  };
+
+  Type type = Type::Tent;
+  float x = 0.0F;
+  float z = 0.0F;
+  float scale = 1.0F;
+  float rotation = 0.0F;
+};
+
 enum class CoordSystem { Grid, World };
 
 struct VictoryConfig {
@@ -78,6 +95,7 @@ struct MapDefinition {
   std::vector<RoadSegment> roads;
   std::vector<Bridge> bridges;
   std::vector<FireCamp> firecamps;
+  std::vector<WorldProp> world_props;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int max_troops_per_player = 500;
