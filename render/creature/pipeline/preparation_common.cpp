@@ -115,7 +115,14 @@ auto humanoid_phase_for_anim(
       (state == Render::Creature::AnimationStateId::AttackSword ||
        state == Render::Creature::AnimationStateId::AttackSpear ||
        state == Render::Creature::AnimationStateId::AttackBow);
-  return is_attack_state ? anim.attack_phase : anim.gait.cycle_phase;
+  if (is_attack_state) {
+    return anim.attack_phase;
+  }
+  if (state == Render::Creature::AnimationStateId::Idle &&
+      anim.ambient_idle_type != Render::GL::AmbientIdleType::None) {
+    return anim.ambient_idle_phase;
+  }
+  return anim.gait.cycle_phase;
 }
 
 namespace {
@@ -145,7 +152,14 @@ auto humanoid_requested_clip_variant_for_anim(
       (state == Render::Creature::AnimationStateId::AttackSword ||
        state == Render::Creature::AnimationStateId::AttackSpear ||
        state == Render::Creature::AnimationStateId::AttackBow);
-  return is_attack_state ? anim.inputs.attack_variant : 0U;
+  if (is_attack_state) {
+    return anim.inputs.attack_variant;
+  }
+  if (state == Render::Creature::AnimationStateId::Idle &&
+      anim.ambient_idle_type != Render::GL::AmbientIdleType::None) {
+    return Render::GL::ambient_idle_clip_variant(anim.ambient_idle_type);
+  }
+  return 0U;
 }
 
 } // namespace
