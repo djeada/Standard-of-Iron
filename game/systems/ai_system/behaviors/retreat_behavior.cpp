@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <qvectornd.h>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -28,8 +29,12 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<const EntitySnapshot *> retreating_units;
   retreating_units.reserve(snapshot.friendly_units.size());
 
-  constexpr float critical_health = 0.35F;
-  constexpr float low_health = 0.50F;
+  // Scale per-unit retreat thresholds from strategy config so that, e.g.,
+  // Harasser (retreat_threshold=0.50) retreats early to enable hit-and-run,
+  // while Rusher (retreat_threshold=0.10) fights until nearly dead.
+  const float critical_health = context.strategy_config.retreat_threshold;
+  const float low_health =
+      std::min(0.70F, context.strategy_config.retreat_threshold + 0.15F);
 
   for (const auto &entity : snapshot.friendly_units) {
     if (entity.is_building) {
@@ -95,12 +100,15 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<float> filtered_x;
   std::vector<float> filtered_y;
   std::vector<float> filtered_z;
-  for (size_t i = 0; i < unit_ids.size(); ++i) {
-    if (std::find(claimed_units.begin(), claimed_units.end(), unit_ids[i]) !=
-        claimed_units.end()) {
-      filtered_x.push_back(target_x[i]);
-      filtered_y.push_back(target_y[i]);
-      filtered_z.push_back(target_z[i]);
+  {
+    const std::unordered_set<Engine::Core::EntityID> claimed_set(
+        claimed_units.begin(), claimed_units.end());
+    for (size_t i = 0; i < unit_ids.size(); ++i) {
+      if (claimed_set.count(unit_ids[i])) {
+        filtered_x.push_back(target_x[i]);
+        filtered_y.push_back(target_y[i]);
+        filtered_z.push_back(target_z[i]);
+      }
     }
   }
 
@@ -123,7 +131,7 @@ auto RetreatBehavior::should_execute(const AISnapshot &snapshot,
     return true;
   }
 
-  constexpr float critical_health = 0.35F;
+  const float critical_health = context.strategy_config.retreat_threshold;
 
   for (const auto &entity : snapshot.friendly_units) {
     if (entity.is_building) {

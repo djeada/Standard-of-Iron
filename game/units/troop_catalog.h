@@ -39,6 +39,7 @@ struct TroopVisualStats {
   float render_scale = 1.0F;
   float selection_ring_size = 0.5F;
   float selection_ring_ground_offset = 0.0F;
+  float formation_spacing = 0.75F;
   std::string renderer_id;
 };
 

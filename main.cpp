@@ -234,17 +234,22 @@ auto main(int argc, char *argv[]) -> int {
   qInfo() << "=== Standard of Iron - Starting ===";
   qInfo() << "Qt version:" << QT_VERSION_STR;
 
-  // Linux-specific: prefer X11 over Wayland for better OpenGL compatibility
-#ifndef Q_OS_WIN
+  // On Linux with a Wayland compositor that also exports DISPLAY (XWayland),
+  // prefer the X11/xcb platform for better desktop OpenGL compatibility.
+#ifdef Q_OS_LINUX
   if (qEnvironmentVariableIsSet("WAYLAND_DISPLAY") &&
       qEnvironmentVariableIsSet("DISPLAY")) {
     qputenv("QT_QPA_PLATFORM", "xcb");
-    qInfo() << "Linux: Using X11 (xcb) platform";
+    qInfo() << "Linux: Using X11 (xcb) platform for better OpenGL compatibility";
   }
 #endif
 
   qInfo() << "Setting OpenGL environment...";
-  qputenv("QT_OPENGL", "desktop");
+  // Only force desktop OpenGL if the pre-init code (Windows) or the user
+  // hasn't already selected a different backend (e.g. software fallback).
+  if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
+    qputenv("QT_OPENGL", "desktop");
+  }
   qputenv("QSG_RHI_BACKEND", "opengl");
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -255,17 +260,15 @@ auto main(int argc, char *argv[]) -> int {
   qInfo() << "Configuring OpenGL surface format...";
   QSurfaceFormat fmt;
   fmt.setVersion(3, 3);
+  // Use Core Profile on all platforms.  All render classes derive from
+  // QOpenGLFunctions_3_3_Core, which on some Qt/driver combinations refuses
+  // to initialize when the context profile is Compatibility rather than Core.
+  // Requesting Compatibility Profile while using Core Profile functions was
+  // the primary cause of blank-screen issues reported on Windows.
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   fmt.setDepthBufferSize(k_depth_buffer_bits);
   fmt.setStencilBufferSize(k_stencil_buffer_bits);
   fmt.setSamples(0);
-
-#ifdef Q_OS_WIN
-  // Windows: Request compatibility profile for better driver support
-  // Some Windows drivers have issues with Core profile on older hardware
-  fmt.setProfile(QSurfaceFormat::CompatibilityProfile);
-  qInfo() << "Windows detected: Using OpenGL Compatibility Profile";
-#endif
 
   QSurfaceFormat::setDefaultFormat(fmt);
   qInfo() << "Surface format configured: OpenGL" << fmt.majorVersion() << "."

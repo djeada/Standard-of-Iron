@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <limits>
 #include <qvectornd.h>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -32,24 +33,10 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  float defend_pos_x = 0.0F;
-  float defend_pos_y = 0.0F;
-  float defend_pos_z = 0.0F;
-  bool found_barracks = false;
-
-  for (const auto &entity : snapshot.friendly_units) {
-    if (entity.id == context.primary_barracks) {
-      defend_pos_x = entity.pos_x;
-      defend_pos_y = entity.pos_y;
-      defend_pos_z = entity.pos_z;
-      found_barracks = true;
-      break;
-    }
-  }
-
-  if (!found_barracks) {
-    return;
-  }
+  // The reasoner stores the barracks position as the base anchor.
+  const float defend_pos_x = context.base_pos_x;
+  const float defend_pos_y = context.base_pos_y;
+  const float defend_pos_z = context.base_pos_z;
 
   std::vector<const EntitySnapshot *> ready_defenders;
   std::vector<const EntitySnapshot *> engaged_defenders;
@@ -102,8 +89,11 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     desired_count = total_available;
   } else {
 
-    desired_count =
-        std::min<std::size_t>(desired_count, static_cast<std::size_t>(6));
+    // Defensive AIs (high defense_modifier) hold back more units in formation;
+    // Aggressive AIs send almost everyone forward.
+    const auto max_defenders = static_cast<std::size_t>(std::max(
+        2.0F, 6.0F * context.strategy_config.defense_modifier));
+    desired_count = std::min<std::size_t>(desired_count, max_defenders);
   }
 
   std::size_t const ready_count =
@@ -120,7 +110,10 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     std::vector<const ContactSnapshot *> nearby_threats;
     nearby_threats.reserve(snapshot.visible_enemies.size());
 
-    constexpr float defend_radius = 40.0F;
+    constexpr float k_base_defend_radius = 30.0F;
+    const float defend_radius =
+        k_base_defend_radius +
+        10.0F * std::min(2.0F, context.strategy_config.defense_modifier);
     const float defend_radius_sq = defend_radius * defend_radius;
 
     for (const auto &enemy : snapshot.visible_enemies) {
@@ -137,7 +130,6 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       auto target_info = TacticalUtils::select_focus_fire_target(
           ready_defenders, nearby_threats, defend_pos_x, defend_pos_y,
           defend_pos_z, context, 0);
-
       if (target_info.target_id != 0) {
 
         std::vector<Engine::Core::EntityID> defender_ids;
@@ -199,12 +191,15 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           std::vector<float> filtered_x;
           std::vector<float> filtered_y;
           std::vector<float> filtered_z;
-          for (size_t i = 0; i < defender_ids.size(); ++i) {
-            if (std::find(claimed_units.begin(), claimed_units.end(),
-                          defender_ids[i]) != claimed_units.end()) {
-              filtered_x.push_back(target_x[i]);
-              filtered_y.push_back(target_y[i]);
-              filtered_z.push_back(target_z[i]);
+          {
+            const std::unordered_set<Engine::Core::EntityID> claimed_set(
+                claimed_units.begin(), claimed_units.end());
+            for (size_t i = 0; i < defender_ids.size(); ++i) {
+              if (claimed_set.count(defender_ids[i])) {
+                filtered_x.push_back(target_x[i]);
+                filtered_y.push_back(target_y[i]);
+                filtered_z.push_back(target_z[i]);
+              }
             }
           }
 
@@ -287,12 +282,15 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<float> filtered_x;
   std::vector<float> filtered_y;
   std::vector<float> filtered_z;
-  for (size_t i = 0; i < units_to_move.size(); ++i) {
-    if (std::find(claimed_for_move.begin(), claimed_for_move.end(),
-                  units_to_move[i]) != claimed_for_move.end()) {
-      filtered_x.push_back(target_x[i]);
-      filtered_y.push_back(target_y[i]);
-      filtered_z.push_back(target_z[i]);
+  {
+    const std::unordered_set<Engine::Core::EntityID> claimed_set(
+        claimed_for_move.begin(), claimed_for_move.end());
+    for (size_t i = 0; i < units_to_move.size(); ++i) {
+      if (claimed_set.count(units_to_move[i])) {
+        filtered_x.push_back(target_x[i]);
+        filtered_y.push_back(target_y[i]);
+        filtered_z.push_back(target_z[i]);
+      }
     }
   }
 

@@ -16,6 +16,12 @@ public:
 
   static void apply_personality(AIStrategyConfig &config, float aggression,
                                 float defense, float harassment);
+
+  // Scales the config based on a difficulty string ("easy", "medium", "hard",
+  // "very_hard"). "medium" is the neutral baseline; other levels scale
+  // aggression, production rate, min_attack_force, and retreat_threshold.
+  static void apply_difficulty(AIStrategyConfig &config,
+                               const QString &difficulty);
 };
 
 } // namespace Game::Systems::AI

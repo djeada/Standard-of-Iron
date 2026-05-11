@@ -120,11 +120,18 @@ Backend::~Backend() {
   }
 }
 
-void Backend::initialize() {
+auto Backend::initialize() -> bool {
   qInfo() << "Backend::initialize() - Starting...";
 
   qInfo() << "Backend: Initializing OpenGL functions...";
-  initializeOpenGLFunctions();
+  if (!initializeOpenGLFunctions()) {
+    qCritical()
+        << "Backend::initialize() FAILED: QOpenGLFunctions_3_3_Core could not"
+           " be initialized. The current OpenGL context does not support"
+           " OpenGL 3.3 Core Profile. Check that GPU drivers are up to date"
+           " and that the application window has a valid Core Profile context.";
+    return false;
+  }
   glGenBuffers(1, &m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
   glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);
@@ -266,6 +273,7 @@ void Backend::initialize() {
 
   MaterialRegistry::instance().init(m_basic_shader, m_shadow_shader);
   qInfo() << "Backend::initialize() - Complete!";
+  return true;
 }
 
 auto Backend::banner_mesh() const -> Mesh * {

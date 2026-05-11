@@ -77,7 +77,7 @@ inline auto distance(float x1, float y1, float z1, float x2, float y2,
 
 inline auto claim_units(
     const std::vector<Engine::Core::EntityID> &requested_units,
-    BehaviorPriority priority, const std::string &task_name, AIContext &context,
+    BehaviorPriority priority, const char *task_name, AIContext &context,
     float current_time,
     float min_lock_duration = 2.0F) -> std::vector<Engine::Core::EntityID> {
 
@@ -126,23 +126,27 @@ inline void release_units(const std::vector<Engine::Core::EntityID> &units,
   }
 }
 
-inline void cleanup_dead_units(const AISnapshot &snapshot, AIContext &context) {
+// Returns the set of all alive entity IDs from the snapshot (buildings +
+// units) so callers can reuse it for further membership tests.
+inline auto cleanup_dead_units(const AISnapshot &snapshot, AIContext &context)
+    -> std::unordered_set<Engine::Core::EntityID> {
 
-  std::unordered_set<Engine::Core::EntityID> alive_units;
+  std::unordered_set<Engine::Core::EntityID> alive;
+  alive.reserve(snapshot.friendly_units.size());
   for (const auto &entity : snapshot.friendly_units) {
-    if (!entity.is_building) {
-      alive_units.insert(entity.id);
-    }
+    alive.insert(entity.id);
   }
 
   for (auto it = context.assigned_units.begin();
        it != context.assigned_units.end();) {
-    if (alive_units.find(it->first) == alive_units.end()) {
+    if (alive.find(it->first) == alive.end()) {
       it = context.assigned_units.erase(it);
     } else {
       ++it;
     }
   }
+
+  return alive;
 }
 
 } // namespace Game::Systems::AI

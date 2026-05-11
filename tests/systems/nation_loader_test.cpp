@@ -46,6 +46,29 @@ TEST(NationLoader, ArcherProfilesKeepDefaultSelectionRingGroundOffset) {
   EXPECT_FLOAT_EQ(carthage.visuals.selection_ring_ground_offset, 0.0F);
 }
 
+TEST(NationLoader, FrontlineProfilesKeepCatalogFormationSpacing) {
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  ASSERT_FALSE(nations.empty());
+
+  auto &registry = Game::Systems::NationRegistry::instance();
+  registry.clear();
+  registry.clear_player_assignments();
+  for (const auto &nation : nations) {
+    registry.register_nation(nation);
+  }
+
+  auto &profiles = Game::Systems::TroopProfileService::instance();
+  profiles.clear();
+
+  auto const roman = profiles.get_profile(
+      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Swordsman);
+  auto const carthage = profiles.get_profile(Game::Systems::NationID::Carthage,
+                                             Game::Units::TroopType::Spearman);
+
+  EXPECT_FLOAT_EQ(roman.visuals.formation_spacing, 1.05F);
+  EXPECT_FLOAT_EQ(carthage.visuals.formation_spacing, 1.05F);
+}
+
 TEST(NationLoader, CivilianProfilesUseNationSpecificRenderersWhenAvailable) {
   auto const nations = Game::Systems::NationLoader::load_default_nations();
   ASSERT_FALSE(nations.empty());

@@ -1773,6 +1773,7 @@ void GameEngine::on_minimap_right_click(qreal mx, qreal my, qreal minimap_width,
 
   Game::Systems::CommandService::MoveOptions opts;
   opts.group_move = selected.size() > 1;
+  opts.retry_individual_on_group_failure = selected.size() > 1;
   Game::Systems::CommandService::move_units(*m_world, selected, targets, opts);
 }
 
@@ -2530,7 +2531,7 @@ void GameEngine::apply_mission_setup() {
   auto spawn_commander_for_owner = [&](int owner_id,
                                        const Game::Systems::NationID nation_id,
                                        const QString &commander_troop,
-                                       const Game::Mission::Position
+                                       const App::Core::ResolvedCommanderPosition
                                            &position) {
     if (commander_troop.trimmed().isEmpty()) {
       return;
@@ -2562,7 +2563,11 @@ void GameEngine::apply_mission_setup() {
       }
     }
     Game::Units::SpawnParams sp;
-    sp.position = mission_position_to_world(position);
+    if (position.space == App::Core::CommanderPositionSpace::World) {
+      sp.position = QVector3D(position.position.x, 0.0F, position.position.z);
+    } else {
+      sp.position = mission_position_to_world(position.position);
+    }
     sp.player_id = owner_id;
     sp.spawn_type = *spawn_type;
     sp.ai_controlled = owner_registry.is_ai(owner_id);
@@ -2741,7 +2746,8 @@ void GameEngine::apply_mission_setup() {
 
       ai_system->set_ai_strategy(
           ai_id, strategy, ai_setup.personality.aggression,
-          ai_setup.personality.defense, ai_setup.personality.harassment);
+          ai_setup.personality.defense, ai_setup.personality.harassment,
+          ai_setup.difficulty);
       ai_id++;
     }
   }

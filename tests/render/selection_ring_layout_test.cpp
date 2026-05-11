@@ -1,10 +1,56 @@
 #include "render/selection_ring_layout.h"
+#include "render/humanoid/prepare.h"
+#include "game/units/troop_config.h"
 
 #include <gtest/gtest.h>
 
+#include <QMatrix4x4>
 #include <cmath>
 
 namespace {
+
+auto build_expected_soldier_positions(
+    const Render::GL::SelectionRingLayoutInput &input)
+    -> std::vector<Render::GL::SelectionRingPlacement> {
+  int const total_units = std::max(1, input.individuals_per_unit);
+  int const cols = std::max(1, std::min(input.max_units_per_row, total_units));
+  int const rows = std::max(1, (total_units + cols - 1) / cols);
+  auto const category =
+      input.is_builder_constructing
+          ? Render::GL::FormationCalculatorFactory::UnitCategory::
+                BuilderConstruction
+          : Render::GL::Detail::selection_ring_category(input.spawn_type);
+  auto const *calculator = Render::GL::FormationCalculatorFactory::get_calculator(
+      Render::GL::Detail::selection_ring_nation(input.nation_id), category);
+  EXPECT_NE(calculator, nullptr);
+
+  std::vector<Render::GL::SelectionRingPlacement> placements;
+  placements.reserve(static_cast<std::size_t>(total_units));
+  for (int idx = 0; idx < total_units; ++idx) {
+    Render::Humanoid::SoldierLayoutInputs soldier_inputs{};
+    soldier_inputs.idx = idx;
+    soldier_inputs.row = idx / cols;
+    soldier_inputs.col = idx % cols;
+    soldier_inputs.rows = rows;
+    soldier_inputs.cols = cols;
+    soldier_inputs.formation_spacing = input.formation_spacing;
+    soldier_inputs.seed = input.seed;
+
+    auto const layout =
+        Render::Humanoid::build_soldier_layout(*calculator, soldier_inputs);
+
+    QMatrix4x4 model;
+    model.translate(input.position);
+    model.rotate(input.rotation.y() + layout.yaw_offset, 0.0F, 1.0F, 0.0F);
+    model.scale(input.scale);
+    model.translate(layout.offset_x, 0.0F, layout.offset_z);
+
+    QVector3D const world = model.map(QVector3D(0.0F, 0.0F, 0.0F));
+    placements.push_back({world.x(), world.z(), input.ring_size});
+  }
+
+  return placements;
+}
 
 TEST(SelectionRingLayout, SingleUnitUsesTransformOrigin) {
   Render::GL::SelectionRingLayoutInput input;
@@ -103,6 +149,67 @@ TEST(SelectionRingLayout, SingleSoldierRingKeepsConfiguredSize) {
       Game::Units::SpawnType::Healer, 1, 1.2F);
 
   EXPECT_FLOAT_EQ(size, 1.2F);
+}
+
+TEST(SelectionRingLayout, SwordsmanRingsFollowSameLayoutAsHumanoidFormation) {
+  Render::GL::SelectionRingLayoutInput input;
+  input.spawn_type = Game::Units::SpawnType::Knight;
+  input.individuals_per_unit = 6;
+  input.max_units_per_row = 3;
+  input.formation_spacing =
+      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
+  input.seed = 0x12345678U;
+  input.position = QVector3D(3.0F, 0.0F, -4.0F);
+
+  auto const rings = Render::GL::build_selection_ring_layout(input);
+  auto const expected = build_expected_soldier_positions(input);
+
+  ASSERT_EQ(rings.size(), expected.size());
+  for (std::size_t i = 0; i < rings.size(); ++i) {
+    EXPECT_NEAR(rings[i].world_x, expected[i].world_x, 1.0e-4F) << "idx=" << i;
+    EXPECT_NEAR(rings[i].world_z, expected[i].world_z, 1.0e-4F) << "idx=" << i;
+  }
+}
+
+TEST(SelectionRingLayout, SpearmanRingsFollowSameLayoutAsHumanoidFormation) {
+  Render::GL::SelectionRingLayoutInput input;
+  input.spawn_type = Game::Units::SpawnType::Spearman;
+  input.individuals_per_unit = 6;
+  input.max_units_per_row = 3;
+  input.formation_spacing =
+      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
+  input.seed = 0x5A17B00BU;
+  input.position = QVector3D(-2.0F, 0.0F, 6.0F);
+
+  auto const rings = Render::GL::build_selection_ring_layout(input);
+  auto const expected = build_expected_soldier_positions(input);
+
+  ASSERT_EQ(rings.size(), expected.size());
+  for (std::size_t i = 0; i < rings.size(); ++i) {
+    EXPECT_NEAR(rings[i].world_x, expected[i].world_x, 1.0e-4F) << "idx=" << i;
+    EXPECT_NEAR(rings[i].world_z, expected[i].world_z, 1.0e-4F) << "idx=" << i;
+  }
+}
+
+TEST(SelectionRingLayout, BuilderConstructionRingsFollowSameLayoutAsHumanoidFormation) {
+  Render::GL::SelectionRingLayoutInput input;
+  input.spawn_type = Game::Units::SpawnType::Builder;
+  input.individuals_per_unit = 8;
+  input.max_units_per_row = 8;
+  input.formation_spacing =
+      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
+  input.seed = 0x00C0FFEEU;
+  input.position = QVector3D(1.0F, 0.0F, 2.0F);
+  input.is_builder_constructing = true;
+
+  auto const rings = Render::GL::build_selection_ring_layout(input);
+  auto const expected = build_expected_soldier_positions(input);
+
+  ASSERT_EQ(rings.size(), expected.size());
+  for (std::size_t i = 0; i < rings.size(); ++i) {
+    EXPECT_NEAR(rings[i].world_x, expected[i].world_x, 1.0e-4F) << "idx=" << i;
+    EXPECT_NEAR(rings[i].world_z, expected[i].world_z, 1.0e-4F) << "idx=" << i;
+  }
 }
 
 } // namespace

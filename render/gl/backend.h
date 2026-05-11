@@ -51,7 +51,7 @@ public:
   Backend(Backend &&) = delete;
   auto operator=(Backend &&) -> Backend & = delete;
 
-  void initialize() override;
+  [[nodiscard]] auto initialize() -> bool override;
   void begin_frame() override;
   void set_viewport(int w, int h) override;
   void set_clear_color(float r, float g, float b, float a) override;

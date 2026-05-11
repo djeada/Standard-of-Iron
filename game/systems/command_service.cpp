@@ -15,7 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <qvectornd.h>
-#include <random>
+#include <array>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -30,8 +30,7 @@ constexpr float pathfinding_request_cooldown = 1.0F;
 constexpr float target_movement_threshold_sq = 4.0F;
 
 constexpr float k_unit_radius_threshold = 0.5F;
-
-constexpr float k_jitter_distance = 1.5F;
+constexpr int k_recovery_search_radius = 16;
 
 auto is_direct_path_walkable(const QVector3D &from, const QVector3D &to,
                              const Pathfinding &pathfinder,
@@ -97,6 +96,72 @@ auto are_all_surrounding_cells_invalid(const Point &position,
   }
 
   return true;
+}
+
+auto is_walkable_for_radius(const Pathfinding &pathfinder, int x, int y,
+                            float unit_radius) -> bool {
+  if (unit_radius <= k_unit_radius_threshold) {
+    return pathfinder.is_walkable(x, y);
+  }
+  return pathfinder.is_walkable_with_radius(x, y, unit_radius);
+}
+
+auto find_recovery_cell(const Point &origin, const Pathfinding &pathfinder,
+                        float unit_radius, Point &recovery_cell) -> bool {
+  std::array<float, 4> const candidate_radii = {
+      unit_radius, std::max(k_unit_radius_threshold, unit_radius * 0.85F),
+      k_unit_radius_threshold, 0.0F};
+
+  for (float const candidate_radius : candidate_radii) {
+    for (int radius = 1; radius <= k_recovery_search_radius; ++radius) {
+      bool found_candidate = false;
+      float best_distance_sq = std::numeric_limits<float>::infinity();
+      Point best_candidate{};
+
+      for (int dy = -radius; dy <= radius; ++dy) {
+        for (int dx = -radius; dx <= radius; ++dx) {
+          if (std::abs(dx) != radius && std::abs(dy) != radius) {
+            continue;
+          }
+
+          int const check_x = origin.x + dx;
+          int const check_y = origin.y + dy;
+          if (!is_walkable_for_radius(pathfinder, check_x, check_y,
+                                      candidate_radius)) {
+            continue;
+          }
+
+          float const distance_sq =
+              static_cast<float>(dx * dx + dy * dy);
+          if (distance_sq < best_distance_sq) {
+            best_distance_sq = distance_sq;
+            best_candidate = {check_x, check_y};
+            found_candidate = true;
+          }
+        }
+      }
+
+      if (found_candidate) {
+        recovery_cell = best_candidate;
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+void clear_pending_movement_state(
+    Engine::Core::MovementComponent *movement_component) {
+  if (movement_component == nullptr) {
+    return;
+  }
+
+  movement_component->path_pending = false;
+  movement_component->pending_request_id = 0;
+  movement_component->clear_path();
+  movement_component->vx = 0.0F;
+  movement_component->vz = 0.0F;
 }
 } // namespace
 
@@ -164,6 +229,44 @@ auto CommandService::get_unit_radius(
           unit_comp->spawn_type);
 
   return std::max(selection_ring_size, k_unit_radius_threshold);
+}
+
+auto CommandService::try_queue_local_recovery_move(
+    Engine::Core::World &world, Engine::Core::EntityID entity_id,
+    const QVector3D &current_position, const QVector3D &goal,
+    Engine::Core::MovementComponent *movement) -> bool {
+  auto *pathfinder = get_pathfinder();
+  if (pathfinder == nullptr || movement == nullptr) {
+    return false;
+  }
+
+  float const unit_radius = get_unit_radius(world, entity_id);
+  Point const current_grid =
+      world_to_grid(current_position.x(), current_position.z());
+
+  Point recovery_cell{};
+  if (!find_recovery_cell(current_grid, *pathfinder, unit_radius,
+                          recovery_cell)) {
+    // Emergency fallback: search a much larger area while ignoring exact
+    // radius fit.  Any walkable cell is better than remaining stuck forever.
+    constexpr int k_emergency_search_radius = 64;
+    Point const nearest = Pathfinding::find_nearest_walkable_point(
+        current_grid, k_emergency_search_radius, *pathfinder, 0.0F);
+    if (!pathfinder->is_walkable(nearest.x, nearest.y)) {
+      return false;
+    }
+    recovery_cell = nearest;
+  }
+
+  QVector3D const safe_pos = grid_to_world(recovery_cell);
+  clear_pending_movement_state(movement);
+  movement->target_x = safe_pos.x();
+  movement->target_y = safe_pos.z();
+  movement->goal_x = goal.x();
+  movement->goal_y = goal.z();
+  movement->has_target = true;
+  movement->repath_cooldown = 0.0F;
+  return true;
 }
 
 void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
@@ -908,6 +1011,71 @@ void CommandService::process_path_results(Engine::Core::World &world) {
     const float skip_threshold_sq = CommandService::WAYPOINT_SKIP_THRESHOLD_SQ;
     const bool has_path = path_points.size() > 1;
 
+    auto remove_entry = [&](Engine::Core::EntityID id) {
+      auto entry = s_entity_to_request.find(id);
+      if (entry != s_entity_to_request.end() &&
+          entry->second == result.request_id) {
+        s_entity_to_request.erase(entry);
+      }
+    };
+
+    {
+      std::lock_guard<std::mutex> const lock(s_pending_mutex);
+      remove_entry(request_info.entity_id);
+      for (auto member_id : request_info.group_members) {
+        remove_entry(member_id);
+      }
+    }
+
+    if (result.path.empty() && request_info.options.group_move &&
+        request_info.options.retry_individual_on_group_failure &&
+        !request_info.group_members.empty()) {
+      MoveOptions individual_options = request_info.options;
+      individual_options.group_move = false;
+
+      std::vector<Engine::Core::EntityID> retry_ids;
+      std::vector<QVector3D> retry_targets;
+      retry_ids.reserve(request_info.group_members.size() + 1);
+      retry_targets.reserve(request_info.group_members.size() + 1);
+
+      auto add_retry_target = [&](Engine::Core::EntityID member_id,
+                                  const QVector3D &target) {
+        if (std::find(retry_ids.begin(), retry_ids.end(), member_id) !=
+            retry_ids.end()) {
+          return;
+        }
+
+        auto *member_entity = world.get_entity(member_id);
+        if (member_entity == nullptr) {
+          return;
+        }
+
+        auto *movement_component =
+            member_entity->get_component<Engine::Core::MovementComponent>();
+        if (movement_component == nullptr) {
+          return;
+        }
+
+        clear_pending_movement_state(movement_component);
+        movement_component->has_target = false;
+        retry_ids.push_back(member_id);
+        retry_targets.push_back(target);
+      };
+
+      add_retry_target(request_info.entity_id, request_info.target);
+      for (std::size_t idx = 0; idx < request_info.group_members.size(); ++idx) {
+        QVector3D const target = (idx < request_info.group_targets.size())
+                                     ? request_info.group_targets[idx]
+                                     : request_info.target;
+        add_retry_target(request_info.group_members[idx], target);
+      }
+
+      if (!retry_ids.empty()) {
+        move_units(world, retry_ids, retry_targets, individual_options);
+      }
+      continue;
+    }
+
     auto apply_to_member = [&](Engine::Core::EntityID member_id,
                                const QVector3D &target,
                                const QVector3D &offset) {
@@ -928,20 +1096,17 @@ void CommandService::process_path_results(Engine::Core::World &world) {
         return;
       }
 
+      float const member_unit_radius = get_unit_radius(world, member_id);
+
       if (!movement_component->path_pending ||
           movement_component->pending_request_id != result.request_id) {
-        movement_component->path_pending = false;
-        movement_component->pending_request_id = 0;
+        clear_pending_movement_state(movement_component);
         return;
       }
 
-      movement_component->path_pending = false;
-      movement_component->pending_request_id = 0;
-      movement_component->clear_path();
+      clear_pending_movement_state(movement_component);
       movement_component->goal_x = target.x();
       movement_component->goal_y = target.z();
-      movement_component->vx = 0.0F;
-      movement_component->vz = 0.0F;
 
       if (has_path) {
         movement_component->path.reserve(path_points.size() - 1);
@@ -976,68 +1141,31 @@ void CommandService::process_path_results(Engine::Core::World &world) {
                                                  member_transform->position.z);
 
         bool const current_cell_invalid =
-            request_info.unit_radius <= k_unit_radius_threshold
+            member_unit_radius <= k_unit_radius_threshold
                 ? !s_pathfinder->is_walkable(current_grid.x, current_grid.y)
                 : !s_pathfinder->is_walkable_with_radius(
-                      current_grid.x, current_grid.y, request_info.unit_radius);
+                      current_grid.x, current_grid.y, member_unit_radius);
 
         if (current_cell_invalid) {
-
-          constexpr int k_nearest_point_search_radius = 5;
-          Point const nearest = Pathfinding::find_nearest_walkable_point(
-              current_grid, k_nearest_point_search_radius, *s_pathfinder,
-              request_info.unit_radius);
-
-          if (!(nearest == current_grid)) {
-
-            QVector3D safe_pos = grid_to_world(nearest);
-
-            thread_local std::random_device rd;
-            thread_local std::mt19937 gen(rd());
-            std::uniform_real_distribution<float> dist(-k_jitter_distance,
-                                                       k_jitter_distance);
-
-            float const jitter_x = dist(gen);
-            float const jitter_z = dist(gen);
-
-            member_transform->position.x = safe_pos.x() + jitter_x;
-            member_transform->position.z = safe_pos.z() + jitter_z;
-          } else {
-
-            thread_local std::random_device rd;
-            thread_local std::mt19937 gen(rd());
-            std::uniform_real_distribution<float> dist(-k_jitter_distance,
-                                                       k_jitter_distance);
-
-            member_transform->position.x += dist(gen);
-            member_transform->position.z += dist(gen);
+          QVector3D const current_position(member_transform->position.x, 0.0F,
+                                           member_transform->position.z);
+          if (try_queue_local_recovery_move(world, member_id, current_position,
+                                            target, movement_component)) {
+            return;
           }
-
           movement_component->has_target = false;
-          movement_component->vx = 0.0F;
-          movement_component->vz = 0.0F;
-
           return;
         }
 
         if (are_all_surrounding_cells_invalid(current_grid, *s_pathfinder,
-                                              request_info.unit_radius)) {
-
-          thread_local std::random_device rd;
-          thread_local std::mt19937 gen(rd());
-          std::uniform_real_distribution<float> dist(-k_jitter_distance,
-                                                     k_jitter_distance);
-
-          float const jitter_x = dist(gen);
-          float const jitter_z = dist(gen);
-
-          member_transform->position.x += jitter_x;
-          member_transform->position.z += jitter_z;
-
+                                              member_unit_radius)) {
+          QVector3D const current_position(member_transform->position.x, 0.0F,
+                                           member_transform->position.z);
+          if (try_queue_local_recovery_move(world, member_id, current_position,
+                                            target, movement_component)) {
+            return;
+          }
           movement_component->has_target = false;
-          movement_component->vx = 0.0F;
-          movement_component->vz = 0.0F;
-
           return;
         }
       }
@@ -1050,22 +1178,6 @@ void CommandService::process_path_results(Engine::Core::World &world) {
         movement_component->has_target = false;
       }
     };
-
-    auto remove_entry = [&](Engine::Core::EntityID id) {
-      auto entry = s_entity_to_request.find(id);
-      if (entry != s_entity_to_request.end() &&
-          entry->second == result.request_id) {
-        s_entity_to_request.erase(entry);
-      }
-    };
-
-    {
-      std::lock_guard<std::mutex> const lock(s_pending_mutex);
-      remove_entry(request_info.entity_id);
-      for (auto member_id : request_info.group_members) {
-        remove_entry(member_id);
-      }
-    }
 
     QVector3D leader_target = request_info.target;
     std::vector<Engine::Core::EntityID> processed;

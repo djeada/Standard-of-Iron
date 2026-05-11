@@ -96,11 +96,43 @@ Item {
                     focusPolicy: Qt.NoFocus
                     onClicked: topRoot.pause_toggled()
 
-                    background: Rectangle {
-                        color: parent.pressed ? hs.waxDark : parent.hovered ? hs.waxHover : hs.wax
-                        radius: 6
-                        border.color: hs.bronzeDeep
-                        border.width: 1
+                    background: Item {
+                        Rectangle {
+                            x: 1; y: 2
+                            width: parent.width; height: parent.height
+                            radius: 7
+                            color: "#000000"
+                            opacity: pauseBtn.pressed ? 0.0 : 0.22
+                        }
+
+                        Rectangle {
+                            id: pauseBg
+                            anchors.fill: parent
+                            color: pauseBtn.pressed ? hs.waxDark : pauseBtn.hovered ? hs.waxHover : hs.wax
+                            radius: 6
+                            border.color: hs.bronzeDeep
+                            border.width: 1
+
+                            Rectangle {
+                                anchors.fill: parent; anchors.margins: 1
+                                radius: Math.max(1, parent.radius - 1)
+                                opacity: pauseBtn.pressed ? 0.0 : 0.12
+                                gradient: Gradient {
+                                    GradientStop { position: 0.0; color: "#FFFFFF" }
+                                    GradientStop { position: 0.45; color: "#FFFFFF" }
+                                    GradientStop { position: 1.0; color: "#000000" }
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.top: parent.top; anchors.topMargin: 1
+                                anchors.left: parent.left; anchors.leftMargin: 6
+                                anchors.right: parent.right; anchors.rightMargin: 6
+                                height: 1
+                                color: StyleGuide.palette.accentBright
+                                opacity: pauseBtn.pressed ? 0.0 : 0.50
+                            }
+                        }
                     }
 
                     contentItem: Text {
@@ -109,6 +141,7 @@ Item {
                         color: Theme.textMain
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
+                        topPadding: pauseBtn.pressed ? 1 : 0
                     }
 
                 }
@@ -179,11 +212,42 @@ Item {
                                 ButtonGroup.group: speedGroup
                                 onClicked: topRoot.speed_changed(modelData)
 
-                                background: Rectangle {
-                                    color: parent.checked ? hs.wax : parent.hovered ? hs.parchmentLight : hs.parchmentDark
-                                    radius: 6
-                                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
-                                    border.width: 1
+                                background: Item {
+                                    Rectangle {
+                                        x: 1; y: 2
+                                        width: parent.width; height: parent.height
+                                        radius: 7
+                                        color: "#000000"
+                                        opacity: parent.parent.pressed ? 0.0 : 0.20
+                                    }
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        color: parent.parent.checked ? hs.wax : parent.parent.hovered ? hs.parchmentLight : hs.parchmentDark
+                                        radius: 6
+                                        border.color: parent.parent.checked ? hs.bronze : hs.bronzeDeep
+                                        border.width: 1
+
+                                        Rectangle {
+                                            anchors.fill: parent; anchors.margins: 1
+                                            radius: Math.max(1, parent.radius - 1)
+                                            opacity: parent.parent.parent.pressed ? 0.0 : 0.11
+                                            gradient: Gradient {
+                                                GradientStop { position: 0.0; color: "#FFFFFF" }
+                                                GradientStop { position: 0.45; color: "#FFFFFF" }
+                                                GradientStop { position: 1.0; color: "#000000" }
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            anchors.top: parent.top; anchors.topMargin: 1
+                                            anchors.left: parent.left; anchors.leftMargin: 5
+                                            anchors.right: parent.right; anchors.rightMargin: 5
+                                            height: 1
+                                            color: StyleGuide.palette.accentBright
+                                            opacity: parent.parent.parent.pressed ? 0.0 : 0.45
+                                        }
+                                    }
                                 }
 
                                 contentItem: Text {
@@ -193,6 +257,7 @@ Item {
                                     color: parent.enabled ? Theme.textMain : Theme.textDim
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
+                                    topPadding: parent.pressed ? 1 : 0
                                 }
 
                             }
@@ -272,11 +337,42 @@ Item {
 
                         }
 
-                        background: Rectangle {
-                            color: parent.checked ? hs.wax : parent.hovered ? hs.parchmentLight : hs.parchmentDark
-                            radius: 6
-                            border.color: parent.checked ? hs.bronze : hs.bronzeDeep
-                            border.width: 1
+                        background: Item {
+                            Rectangle {
+                                x: 1; y: 2
+                                width: parent.width; height: parent.height
+                                radius: 7
+                                color: "#000000"
+                                opacity: followBtn.pressed ? 0.0 : 0.20
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: followBtn.checked ? hs.wax : followBtn.hovered ? hs.parchmentLight : hs.parchmentDark
+                                radius: 6
+                                border.color: followBtn.checked ? hs.bronze : hs.bronzeDeep
+                                border.width: 1
+
+                                Rectangle {
+                                    anchors.fill: parent; anchors.margins: 1
+                                    radius: Math.max(1, parent.radius - 1)
+                                    opacity: followBtn.pressed ? 0.0 : 0.11
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: "#FFFFFF" }
+                                        GradientStop { position: 0.45; color: "#FFFFFF" }
+                                        GradientStop { position: 1.0; color: "#000000" }
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.top: parent.top; anchors.topMargin: 1
+                                    anchors.left: parent.left; anchors.leftMargin: 5
+                                    anchors.right: parent.right; anchors.rightMargin: 5
+                                    height: 1
+                                    color: StyleGuide.palette.accentBright
+                                    opacity: followBtn.pressed ? 0.0 : 0.45
+                                }
+                            }
                         }
 
                         contentItem: Text {
@@ -285,6 +381,7 @@ Item {
                             color: Theme.textMain
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+                            topPadding: followBtn.pressed ? 1 : 0
                         }
 
                     }
@@ -303,11 +400,42 @@ Item {
 
                         }
 
-                        background: Rectangle {
-                            color: parent.hovered ? hs.parchmentLight : hs.parchmentDark
-                            radius: 6
-                            border.color: hs.bronzeDeep
-                            border.width: 1
+                        background: Item {
+                            Rectangle {
+                                x: 1; y: 2
+                                width: parent.width; height: parent.height
+                                radius: 7
+                                color: "#000000"
+                                opacity: resetBtn.pressed ? 0.0 : 0.20
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: resetBtn.hovered ? hs.parchmentLight : hs.parchmentDark
+                                radius: 6
+                                border.color: hs.bronzeDeep
+                                border.width: 1
+
+                                Rectangle {
+                                    anchors.fill: parent; anchors.margins: 1
+                                    radius: Math.max(1, parent.radius - 1)
+                                    opacity: resetBtn.pressed ? 0.0 : 0.11
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: "#FFFFFF" }
+                                        GradientStop { position: 0.45; color: "#FFFFFF" }
+                                        GradientStop { position: 1.0; color: "#000000" }
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.top: parent.top; anchors.topMargin: 1
+                                    anchors.left: parent.left; anchors.leftMargin: 5
+                                    anchors.right: parent.right; anchors.rightMargin: 5
+                                    height: 1
+                                    color: StyleGuide.palette.accentBright
+                                    opacity: resetBtn.pressed ? 0.0 : 0.45
+                                }
+                            }
                         }
 
                         contentItem: Text {
@@ -316,6 +444,7 @@ Item {
                             color: Theme.textMain
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+                            topPadding: resetBtn.pressed ? 1 : 0
                         }
 
                     }

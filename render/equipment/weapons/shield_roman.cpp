@@ -28,6 +28,8 @@ enum RomanShieldPaletteSlot : std::uint8_t {
 constexpr float k_shield_width = 0.38F;
 constexpr float k_shield_height = 0.90F;
 
+} // namespace
+
 auto roman_shield_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     RenderArchetypeBuilder builder{"roman_shield"};
@@ -79,6 +81,8 @@ auto roman_shield_archetype() -> const RenderArchetype & {
   }();
   return archetype;
 }
+
+namespace {
 
 auto hand_basis_transform(const QMatrix4x4 &parent,
                           const AttachmentFrame &hand) -> QMatrix4x4 {

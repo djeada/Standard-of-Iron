@@ -122,6 +122,11 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     unit_obj["owner_id"] = unit->owner_id;
     unit_obj["nation_id"] =
         Game::Systems::nation_id_to_qstring(unit->nation_id);
+    unit_obj["render_individuals_per_unit_override"] =
+        unit->render_individuals_per_unit_override;
+    unit_obj["render_rider"] = unit->render_rider;
+    unit_obj["death_sequence_override"] =
+        static_cast<int>(unit->death_sequence_override);
     entity_obj["unit"] = unit_obj;
   }
 
@@ -152,6 +157,13 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
       path_array.append(waypoint_obj);
     }
     movement_obj["path"] = path_array;
+    movement_obj["last_position_x"] =
+        static_cast<double>(movement->last_position_x);
+    movement_obj["last_position_z"] =
+        static_cast<double>(movement->last_position_z);
+    movement_obj["time_stuck"] = static_cast<double>(movement->time_stuck);
+    movement_obj["unstuck_cooldown"] =
+        static_cast<double>(movement->unstuck_cooldown);
     entity_obj["movement"] = movement_obj;
   }
 
@@ -216,6 +228,10 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     commander_obj["death_morale_shock"] = commander->death_morale_shock;
     commander_obj["aura_active"] = commander->aura_active;
     commander_obj["wounded"] = commander->wounded;
+    commander_obj["rally_requested"] = commander->rally_requested;
+    commander_obj["rally_requires_manual_trigger"] =
+        commander->rally_requires_manual_trigger;
+    commander_obj["fpv_controlled"] = commander->fpv_controlled;
     entity_obj["commander"] = commander_obj;
   }
 
@@ -246,7 +262,11 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
   }
 
   if (entity->get_component<BuildingComponent>() != nullptr) {
-    entity_obj["building"] = true;
+    const auto *building = entity->get_component<BuildingComponent>();
+    QJsonObject building_obj;
+    building_obj["original_nation_id"] =
+        Game::Systems::nation_id_to_qstring(building->original_nation_id);
+    entity_obj["building"] = building_obj;
   }
 
   if (const auto *production = entity->get_component<ProductionComponent>()) {
@@ -327,7 +347,23 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
         static_cast<double>(healer->healing_cooldown);
     healer_obj["time_since_last_heal"] =
         static_cast<double>(healer->time_since_last_heal);
+    healer_obj["is_healing_active"] = healer->is_healing_active;
+    healer_obj["healing_target_x"] =
+        static_cast<double>(healer->healing_target_x);
+    healer_obj["healing_target_z"] =
+        static_cast<double>(healer->healing_target_z);
     entity_obj["healer"] = healer_obj;
+  }
+
+  if (const auto *commander_guard =
+          entity->get_component<CommanderGuardComponent>()) {
+    QJsonObject guard_obj;
+    guard_obj["active"] = commander_guard->active;
+    guard_obj["frontal_arc_dot"] =
+        static_cast<double>(commander_guard->frontal_arc_dot);
+    guard_obj["damage_multiplier"] =
+        static_cast<double>(commander_guard->damage_multiplier);
+    entity_obj["commander_guard"] = guard_obj;
   }
 
   if (const auto *catapult =
@@ -491,6 +527,14 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     entity_obj["home"] = home_obj;
   }
 
+  if (const auto *delivery =
+          entity->get_component<CivilianDeliveryComponent>()) {
+    QJsonObject delivery_obj;
+    delivery_obj["target_barracks_id"] =
+        static_cast<qint64>(delivery->target_barracks_id);
+    entity_obj["civilian_delivery"] = delivery_obj;
+  }
+
   return entity_obj;
 }
 
@@ -572,6 +616,11 @@ void Serialization::deserialize_entity(Entity *entity,
         unit->nation_id = Game::Systems::NationID::RomanRepublic;
       }
     }
+    unit->render_individuals_per_unit_override =
+        unit_obj["render_individuals_per_unit_override"].toInt(0);
+    unit->render_rider = unit_obj["render_rider"].toBool(true);
+    unit->death_sequence_override = static_cast<std::uint8_t>(
+        unit_obj["death_sequence_override"].toInt(0xFF));
   }
 
   if (json.contains("movement")) {
@@ -614,6 +663,14 @@ void Serialization::deserialize_entity(Entity *entity,
     }
 
     movement->validate_path_index();
+    movement->last_position_x =
+        static_cast<float>(movement_obj["last_position_x"].toDouble(0.0));
+    movement->last_position_z =
+        static_cast<float>(movement_obj["last_position_z"].toDouble(0.0));
+    movement->time_stuck =
+        static_cast<float>(movement_obj["time_stuck"].toDouble(0.0));
+    movement->unstuck_cooldown =
+        static_cast<float>(movement_obj["unstuck_cooldown"].toDouble(0.0));
   }
 
   if (json.contains("attack")) {
@@ -703,6 +760,12 @@ void Serialization::deserialize_entity(Entity *entity,
     commander->aura_active =
         commander_obj["aura_active"].toBool(commander->aura_active);
     commander->wounded = commander_obj["wounded"].toBool(commander->wounded);
+    commander->rally_requested =
+        commander_obj["rally_requested"].toBool(false);
+    commander->rally_requires_manual_trigger =
+        commander_obj["rally_requires_manual_trigger"].toBool(false);
+    commander->fpv_controlled =
+        commander_obj["fpv_controlled"].toBool(false);
   }
 
   if (json.contains("morale")) {
@@ -737,8 +800,19 @@ void Serialization::deserialize_entity(Entity *entity,
     }
   }
 
-  if (json.contains("building") && json["building"].toBool()) {
-    entity->add_component<BuildingComponent>();
+  if (json.contains("building")) {
+    auto *building = entity->add_component<BuildingComponent>();
+    if (json["building"].isObject()) {
+      const auto building_obj = json["building"].toObject();
+      if (building_obj.contains("original_nation_id")) {
+        const QString nation_str =
+            building_obj["original_nation_id"].toString();
+        Game::Systems::NationID nation_id;
+        if (Game::Systems::try_parse_nation_id(nation_str, nation_id)) {
+          building->original_nation_id = nation_id;
+        }
+      }
+    }
   }
 
   if (json.contains("production")) {
@@ -834,6 +908,22 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(healer_obj["healing_cooldown"].toDouble(2.0));
     healer->time_since_last_heal =
         static_cast<float>(healer_obj["time_since_last_heal"].toDouble(0.0));
+    healer->is_healing_active =
+        healer_obj["is_healing_active"].toBool(false);
+    healer->healing_target_x =
+        static_cast<float>(healer_obj["healing_target_x"].toDouble(0.0));
+    healer->healing_target_z =
+        static_cast<float>(healer_obj["healing_target_z"].toDouble(0.0));
+  }
+
+  if (json.contains("commander_guard")) {
+    const auto guard_obj = json["commander_guard"].toObject();
+    auto *commander_guard = entity->add_component<CommanderGuardComponent>();
+    commander_guard->active = guard_obj["active"].toBool(false);
+    commander_guard->frontal_arc_dot =
+        static_cast<float>(guard_obj["frontal_arc_dot"].toDouble(0.15));
+    commander_guard->damage_multiplier =
+        static_cast<float>(guard_obj["damage_multiplier"].toDouble(0.45));
   }
 
   if (json.contains("catapult_loading")) {
@@ -1018,6 +1108,13 @@ void Serialization::deserialize_entity(Entity *entity,
     home->family_generation_interval = static_cast<float>(
         home_obj["family_generation_interval"].toDouble(12.0));
     home->family_manpower_value = home_obj["family_manpower_value"].toInt(8);
+  }
+
+  if (json.contains("civilian_delivery")) {
+    const auto delivery_obj = json["civilian_delivery"].toObject();
+    auto *delivery = entity->add_component<CivilianDeliveryComponent>();
+    delivery->target_barracks_id = static_cast<EntityID>(
+        delivery_obj["target_barracks_id"].toVariant().toULongLong());
   }
 }
 
@@ -1379,7 +1476,7 @@ auto Serialization::serialize_world(const World *world) -> QJsonDocument {
 
   world_obj["entities"] = entities_array;
   world_obj["nextEntityId"] = static_cast<qint64>(world->get_next_entity_id());
-  world_obj["schemaVersion"] = 1;
+  world_obj["schemaVersion"] = 2;
   world_obj["owner_registry"] =
       Game::Systems::OwnerRegistry::instance().to_json();
 

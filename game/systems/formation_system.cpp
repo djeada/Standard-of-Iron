@@ -189,11 +189,20 @@ auto carthage_cavalry_local_offset(int idx, int row, int col, int rows,
 auto builder_circle_local_offset(int idx, int rows, int cols, float spacing,
                                  std::uint32_t seed) -> FormationOffset {
   int const total_units = rows * cols;
+
+  // A single individual sits at the entity origin — no ring offset needed.
+  if (total_units <= 1) {
+    return {0.0F, 0.0F, 0.0F};
+  }
+
   float const angle =
       (float(idx) / float(total_units)) * 2.0F * 3.14159265358979F;
-  float const radius = spacing * 1.8F;
-  float offset_x = std::cos(angle) * radius;
-  float offset_z = std::sin(angle) * radius;
+  float const radius = spacing * 2.8F;
+
+  // Compute the intended world-space ring position so we can derive the
+  // correct inward-facing yaw.
+  float world_x = std::cos(angle) * radius;
+  float world_z = std::sin(angle) * radius;
 
   auto fast_random = [](std::uint32_t &state) -> float {
     state = state * 1664525U + 1013904223U;
@@ -201,11 +210,22 @@ auto builder_circle_local_offset(int idx, int rows, int cols, float spacing,
   };
   std::uint32_t rng_state = seed ^ (std::uint32_t(idx) * 2654435761U);
   float const jitter = spacing * 0.08F;
-  offset_x += (fast_random(rng_state) - 0.5F) * jitter;
-  offset_z += (fast_random(rng_state) - 0.5F) * jitter;
+  world_x += (fast_random(rng_state) - 0.5F) * jitter;
+  world_z += (fast_random(rng_state) - 0.5F) * jitter;
+
+  // Yaw that faces the soldier toward the entity/building center.
   float const yaw_offset =
-      std::atan2(-offset_x, -offset_z) * (180.0F / 3.14159265358979F);
-  return {offset_x, offset_z, yaw_offset};
+      std::atan2(-world_x, -world_z) * (180.0F / 3.14159265358979F);
+
+  // The prepare pipeline positions each individual as:
+  //   world_pos = entity_pos + R(yaw_offset) * (local_x, 0, local_z)
+  // To land at (world_x, world_z) we need local = R(-yaw)*world.
+  // It can be shown that this always equals (0, -|world|), i.e. directly
+  // in front of the rotated model. Using the approximate radius is
+  // sufficient; the small jitter shifts are absorbed through yaw variation.
+  float const local_r =
+      std::sqrt(world_x * world_x + world_z * world_z);
+  return {0.0F, -local_r, yaw_offset};
 }
 } // namespace
 

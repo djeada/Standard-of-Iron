@@ -229,6 +229,15 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.is_attacking = stationary && (target_in_range || recently_fired);
   }
 
+  // Combat always takes priority over construction: a builder that is
+  // fighting or reacting to a hit should never show the construction
+  // animation.  Clearing is_constructing here ensures every downstream
+  // animation selector (select_state, humanoid_state_for_anim,
+  // make_anim_key) and both nation render hooks see a consistent state.
+  if (anim.is_attacking || anim.is_hit_reacting) {
+    anim.is_constructing = false;
+  }
+
   return anim;
 }
 

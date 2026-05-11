@@ -12,6 +12,7 @@
 #include "../../../equipment/generated_equipment.h"
 #include "../../../equipment/humanoid_attachment_archetype.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
+#include "../../../equipment/render_archetype_registry.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -39,7 +40,6 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <numbers>
 #include <optional>
 #include <qmatrix4x4.h>
 #include <qstringliteral.h>
@@ -75,189 +75,6 @@ void ensure_builder_styles_registered() {
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
 
-void draw_stone_hammer_into(const DrawContext &ctx,
-                            const HumanoidPalette &palette,
-                            const BodyFrames &frames,
-                            const AnimationInputs &anim,
-                            EquipmentBatch &batch) {
-  QVector3D const wood = palette.wood;
-  QVector3D const stone_color(0.52F, 0.50F, 0.46F);
-  QVector3D const stone_dark(0.42F, 0.40F, 0.36F);
-
-  QVector3D const hand = frames.hand_l.origin;
-  QVector3D const up(0.0F, 1.0F, 0.0F);
-  QVector3D const forward(0.0F, 0.0F, 1.0F);
-  QVector3D const right(1.0F, 0.0F, 0.0F);
-
-  QVector3D handle_axis;
-  QVector3D head_axis;
-  if (anim.is_constructing) {
-    handle_axis = forward;
-    head_axis = up;
-  } else {
-    handle_axis = up;
-    head_axis = right;
-  }
-
-  float const h_len = 0.30F;
-  QVector3D const handle_offset = anim.is_constructing
-                                      ? (forward * 0.11F + up * 0.02F)
-                                      : (up * 0.11F + forward * 0.02F);
-  QVector3D const h_top = hand + handle_offset;
-  QVector3D const h_bot = h_top - handle_axis * h_len;
-
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                          cylinder_between(ctx.model, h_bot, h_top, 0.015F),
-                          wood, nullptr, 1.0F, 0});
-
-  float const head_len = 0.09F;
-  float const head_r = 0.028F;
-  QVector3D const head_center = h_top + handle_axis * 0.03F;
-
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                        head_center + head_axis * (head_len * 0.5F), head_r),
-       stone_color, nullptr, 1.0F, 0});
-
-  batch.meshes.push_back(
-      {get_unit_sphere(), nullptr,
-       sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
-                 head_r * 1.1F),
-       stone_dark, nullptr, 1.0F, 0});
-
-  batch.meshes.push_back(
-      {get_unit_sphere(), nullptr,
-       sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                 head_r * 0.85F),
-       stone_color * 0.92F, nullptr, 1.0F, 0});
-}
-
-void draw_headwrap_into(const DrawContext &ctx, const BodyFrames &frames,
-                        EquipmentBatch &batch) {
-  QVector3D const wrap_color(0.88F, 0.82F, 0.72F);
-  QVector3D const head_top = frames.head.origin + frames.head.up * 0.05F;
-  QVector3D const head_back =
-      frames.head.origin - frames.head.forward * 0.03F + frames.head.up * 0.02F;
-
-  batch.meshes.push_back({get_unit_sphere(), nullptr,
-                          sphere_at(ctx.model, head_top, 0.052F), wrap_color,
-                          nullptr, 1.0F, 0});
-  batch.meshes.push_back({get_unit_sphere(), nullptr,
-                          sphere_at(ctx.model, head_back, 0.048F),
-                          wrap_color * 0.95F, nullptr, 1.0F, 0});
-}
-
-void draw_extended_forearm_into(const DrawContext &ctx,
-                                const HumanoidPalette &palette,
-                                const BodyFrames &frames,
-                                EquipmentBatch &batch) {
-  QVector3D const skin_color = palette.skin;
-
-  QVector3D const elbow_r =
-      frames.shoulder_r.origin +
-      (frames.hand_r.origin - frames.shoulder_r.origin) * 0.55F;
-  QVector3D const hand_r = frames.hand_r.origin;
-  for (int i = 0; i < 4; ++i) {
-    float const t = 0.25F + static_cast<float>(i) * 0.20F;
-    QVector3D const pos = elbow_r * (1.0F - t) + hand_r * t;
-    float const r = 0.022F - static_cast<float>(i) * 0.002F;
-    batch.meshes.push_back({get_unit_sphere(), nullptr,
-                            sphere_at(ctx.model, pos, r), skin_color, nullptr,
-                            1.0F, 0});
-  }
-}
-
-void draw_craftsman_robes_into(const DrawContext &ctx,
-                               const HumanoidPalette &palette,
-                               const BodyFrames &frames, uint32_t seed,
-                               EquipmentBatch &batch) {
-  using HP = HumanProportions;
-  const AttachmentFrame &torso = frames.torso;
-  const AttachmentFrame &waist = frames.waist;
-
-  if (torso.radius <= 0.0F) {
-    return;
-  }
-
-  float const var = hash_01(seed ^ 0xCDEU);
-  QVector3D robe_color;
-  if (var < 0.35F) {
-    robe_color = QVector3D(0.85F, 0.78F, 0.68F);
-  } else if (var < 0.65F) {
-    robe_color = QVector3D(0.72F, 0.65F, 0.55F);
-  } else {
-    robe_color = QVector3D(0.62F, 0.58F, 0.52F);
-  }
-  QVector3D const robe_dark = robe_color * 0.88F;
-
-  const QVector3D &origin = torso.origin;
-  const QVector3D &right = torso.right;
-  const QVector3D &up = torso.up;
-  const QVector3D &forward = torso.forward;
-  float const tr = torso.radius * 1.06F;
-  float const td =
-      (torso.depth > 0.0F) ? torso.depth * 0.90F : torso.radius * 0.78F;
-
-  float const y_sh = origin.y() + 0.035F;
-  float const y_w = waist.origin.y();
-  float const y_hem = y_w - 0.22F;
-
-  constexpr int segs = 12;
-  constexpr float pi = std::numbers::pi_v<float>;
-
-  auto ring = [&](float y, float w, float d, const QVector3D &c, float th) {
-    for (int i = 0; i < segs; ++i) {
-      float const a1 = (static_cast<float>(i) / segs) * 2.0F * pi;
-      float const a2 = (static_cast<float>(i + 1) / segs) * 2.0F * pi;
-      QVector3D const p1 = origin + right * (w * std::sin(a1)) +
-                           forward * (d * std::cos(a1)) + up * (y - origin.y());
-      QVector3D const p2 = origin + right * (w * std::sin(a2)) +
-                           forward * (d * std::cos(a2)) + up * (y - origin.y());
-      batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                              cylinder_between(ctx.model, p1, p2, th), c,
-                              nullptr, 1.0F, 0});
-    }
-  };
-
-  ring(y_sh + 0.045F, tr * 0.65F, td * 0.58F, robe_dark, 0.020F);
-  ring(y_sh + 0.03F, tr * 1.15F, td * 1.08F, robe_color, 0.035F);
-  ring(y_sh, tr * 1.10F, td * 1.04F, robe_color, 0.032F);
-
-  for (int i = 0; i < 5; ++i) {
-    float const t = static_cast<float>(i) / 4.0F;
-    float const y = y_sh - 0.02F - t * (y_sh - y_w - 0.02F);
-    QVector3D const c = robe_color * (1.0F - t * 0.05F);
-    ring(y, tr * (1.06F - t * 0.12F), td * (1.00F - t * 0.10F), c,
-         0.026F - t * 0.003F);
-  }
-
-  for (int i = 0; i < 6; ++i) {
-    float const t = static_cast<float>(i) / 5.0F;
-    float const y = y_w - 0.02F - t * (y_w - y_hem);
-    float const flare = 1.0F + t * 0.28F;
-    QVector3D const c = robe_color * (1.0F - t * 0.06F);
-    ring(y, tr * 0.85F * flare, td * 0.80F * flare, c, 0.020F + t * 0.008F);
-  }
-
-  auto sleeve = [&](const QVector3D &sh, const QVector3D &out_dir) {
-    QVector3D const back = -forward;
-    QVector3D anchor = sh + up * 0.055F + back * 0.012F;
-    for (int i = 0; i < 4; ++i) {
-      float const t = static_cast<float>(i) / 4.0F;
-      QVector3D const pos = anchor + out_dir * (0.012F + t * 0.022F) +
-                            forward * (-0.012F + t * 0.05F) - up * (t * 0.035F);
-      float const r = HP::UPPER_ARM_R * (1.48F - t * 0.08F);
-      batch.meshes.push_back(
-          {get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r),
-           robe_color * (1.0F - t * 0.03F), nullptr, 1.0F, 0});
-    }
-  };
-  sleeve(frames.shoulder_l.origin, -right);
-  sleeve(frames.shoulder_r.origin, right);
-
-  draw_extended_forearm_into(ctx, palette, frames, batch);
-}
 
 } // namespace
 
@@ -306,81 +123,93 @@ auto carthage_robes_archetype() -> const RenderArchetype & {
     const auto &bind = Render::Humanoid::humanoid_bind_body_frames();
     const AttachmentFrame &torso = bind.torso;
     const AttachmentFrame &waist = bind.waist;
+
     constexpr std::uint8_t k_main = 0U;
     constexpr std::uint8_t k_dark = 1U;
+
     float const tr = torso.radius * 1.06F;
     float const td =
         (torso.depth > 0.0F) ? torso.depth * 0.90F : torso.radius * 0.78F;
     float const y_sh = 0.035F;
     float const y_w = waist.origin.y() - torso.origin.y();
     float const y_hem = y_w - 0.24F;
-    constexpr int k_segments = 12;
-    constexpr int k_skirt_layers = 9;
-    constexpr float k_pi = std::numbers::pi_v<float>;
 
-    std::vector<GeneratedEquipmentPrimitive> prims;
-    prims.reserve(72);
-    auto add_ring = [&](float y, float width, float depth, std::uint8_t slot,
-                        float thickness) {
-      for (int i = 0; i < k_segments; ++i) {
-        float const a0 = (static_cast<float>(i) / k_segments) * 2.0F * k_pi;
-        float const a1 = (static_cast<float>(i + 1) / k_segments) * 2.0F * k_pi;
-        prims.push_back(generated_cylinder(
-            QVector3D(width * std::sin(a0), y, depth * std::cos(a0)),
-            QVector3D(width * std::sin(a1), y, depth * std::cos(a1)), thickness,
-            slot));
-      }
-    };
+    RenderArchetypeBuilder builder{"carthage_robes"};
 
-    auto add_section = [&](float y_top, float y_bot, float width_top,
-                           float width_bot, float depth_top, float depth_bot,
-                           std::uint8_t slot) {
-      float const radius =
-          (width_top + width_bot + depth_top + depth_bot) * 0.25F;
-      prims.push_back(generated_cylinder(QVector3D(0.0F, y_bot, 0.0F),
-                                         QVector3D(0.0F, y_top, 0.0F), radius,
-                                         slot));
-    };
-
-    add_ring(y_sh + 0.046F, tr * 0.68F, td * 0.60F, k_dark, 0.018F);
-    add_ring(y_sh + 0.030F, tr * 1.14F, td * 1.05F, k_main, 0.033F);
-    add_ring(y_sh - 0.004F, tr * 1.08F, td * 0.99F, k_main, 0.029F);
-
-    add_section(y_sh + 0.016F, y_sh - 0.09F, tr * 1.10F, tr * 1.02F, td * 0.99F,
-                td * 0.92F, k_main);
-    add_section(y_sh - 0.09F, y_w + 0.018F, tr * 1.00F, tr * 0.90F, td * 0.90F,
-                td * 0.82F, k_dark);
-    add_ring(y_w + 0.012F, tr * 0.92F, td * 0.84F, k_dark, 0.024F);
-
-    for (int layer = 0; layer < k_skirt_layers; ++layer) {
-      float const t =
-          static_cast<float>(layer) / static_cast<float>(k_skirt_layers - 1);
-      float const y = y_w - 0.012F - t * (y_w - y_hem);
-      float const flare = 1.0F + t * 0.34F;
-      float const thickness = 0.019F + t * 0.011F;
-      std::uint8_t const slot = (layer % 3 == 2) ? k_dark : k_main;
-      add_ring(y, tr * 0.90F * flare, td * 0.82F * flare, slot, thickness);
+    // Body (waist → shoulder): slightly puffier than Roman
+    {
+      float const h = y_sh - y_w;
+      float const cy = (y_sh + y_w) * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 1.05F, h, td);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(0.88F, 1.04F, 8), m,
+                               k_main);
     }
-    add_ring(y_hem + 0.012F, tr * 1.22F, td * 1.10F, k_dark, 0.021F);
 
-    QVector3D const left_top(-tr * 0.72F, y_sh - 0.010F, td * 0.10F);
-    QVector3D const right_top(tr * 0.72F, y_sh - 0.010F, td * 0.10F);
-    QVector3D const left_bottom(-tr * 0.86F, y_hem + 0.060F, td * 0.18F);
-    QVector3D const right_bottom(tr * 0.86F, y_hem + 0.060F, td * 0.18F);
-    prims.push_back(
-        generated_cylinder(left_top, left_bottom, tr * 0.16F, k_main));
-    prims.push_back(
-        generated_cylinder(right_top, right_bottom, tr * 0.16F, k_main));
-
-    for (int fold = -1; fold <= 1; ++fold) {
-      float const t = static_cast<float>(fold);
-      QVector3D const start(t * tr * 0.36F, y_w - 0.004F, td * 0.56F);
-      QVector3D const end(t * tr * 0.42F, y_hem + 0.030F, td * 0.76F);
-      prims.push_back(generated_cylinder(start, end, tr * 0.10F, k_main));
+    // Skirt (hem → waist): longer fuller Phoenician style
+    {
+      float const h = y_w - y_hem;
+      float const cy = (y_w + y_hem) * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 1.05F, h, td);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.42F, 0.88F, 8), m,
+                               k_main);
     }
-    return build_generated_equipment_archetype(
-        "carthage_robes", std::span<const GeneratedEquipmentPrimitive>(
-                              prims.data(), prims.size()));
+
+    // Wrapped waist belt (dark)
+    {
+      float const h = 0.030F;
+      float const cy = y_w + 0.004F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 1.10F, h, td * 1.05F);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 8), m,
+                               k_dark);
+    }
+
+    // Hem border (dark)
+    {
+      float const h = 0.024F;
+      float const cy = y_hem + h * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 1.58F, h, td * 1.50F);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 8), m,
+                               k_dark);
+    }
+
+    // Left shoulder cap (Phoenician robe covers both shoulders)
+    {
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          sphere_at(QVector3D(-(tr * 0.76F), y_sh - 0.008F, td * 0.06F),
+                    tr * 0.24F),
+          k_main);
+    }
+
+    // Right shoulder cap
+    {
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          sphere_at(QVector3D(tr * 0.76F, y_sh - 0.008F, td * 0.06F),
+                    tr * 0.24F),
+          k_main);
+    }
+
+    // Collar detail (dark band at top of neckline)
+    {
+      float const h = 0.018F;
+      float const cy = y_sh + 0.028F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 0.72F, h, td * 0.66F);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 8), m,
+                               k_dark);
+    }
+
+    return std::move(builder).build();
   }();
   return arch;
 }
@@ -390,27 +219,57 @@ auto carthage_civilian_sash_archetype() -> const RenderArchetype & {
     const auto &bind = Render::Humanoid::humanoid_bind_body_frames();
     const AttachmentFrame &torso = bind.torso;
     const AttachmentFrame &waist = bind.waist;
+
     float const tr = torso.radius * 1.02F;
     float const td =
         (torso.depth > 0.0F) ? torso.depth * 0.88F : torso.radius * 0.76F;
     float const y_w = waist.origin.y() - torso.origin.y();
+    float const y_sh = 0.035F;
+    float const y_hem = y_w - 0.22F;
 
-    std::vector<GeneratedEquipmentPrimitive> prims;
-    prims.reserve(2);
-    auto add_box = [&](const QVector3D &center, const QVector3D &scale,
-                       std::uint8_t slot) {
-      prims.push_back(generated_box(center, scale, slot));
-    };
+    RenderArchetypeBuilder builder{"carthage_civilian_sash"};
 
-    add_box(QVector3D(0.0F, y_w - 0.01F, 0.0F),
-            QVector3D(tr * 1.44F, 0.095F, td * 1.46F), 0U);
+    // Outer robe body (slot 0)
+    {
+      float const h = y_sh - y_w;
+      float const cy = (y_sh + y_w) * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 1.08F, h, td * 1.04F);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(0.90F, 1.06F, 8), m,
+                               0U);
+    }
 
-    add_box(QVector3D(tr * 0.22F, y_w - 0.11F, td * 0.84F),
-            QVector3D(0.08F, 0.18F, 0.05F), 1U);
+    // Outer robe skirt (slot 0)
+    {
+      float const h = y_w - y_hem;
+      float const cy = (y_w + y_hem) * 0.5F;
+      QMatrix4x4 m;
+      m.translate(0.0F, cy, 0.0F);
+      m.scale(tr * 1.08F, h, td * 1.04F);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.40F, 0.90F, 8), m,
+                               0U);
+    }
 
-    return build_generated_equipment_archetype(
-        "carthage_civilian_sash", std::span<const GeneratedEquipmentPrimitive>(
-                                      prims.data(), prims.size()));
+    // Diagonal sash (slot 1): right shoulder across to left hip
+    {
+      QVector3D const sash_top(tr * 0.72F, y_sh + 0.008F, td * 0.28F);
+      QVector3D const sash_bot(-tr * 0.68F, y_w + 0.018F, td * 0.52F);
+      builder.add_palette_mesh(
+          get_unit_cylinder(8), cylinder_between(sash_top, sash_bot, tr * 0.28F),
+          1U);
+    }
+
+    // Waist knot where sash crosses (slot 1)
+    {
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          sphere_at(QVector3D(-tr * 0.08F, y_w + 0.020F, td * 0.62F),
+                    tr * 0.22F),
+          1U);
+    }
+
+    return std::move(builder).build();
   }();
   return arch;
 }
@@ -1001,27 +860,25 @@ auto carthage_builder_chisel_unit_archetype() -> Render::Creature::ArchetypeId {
   return k_archetype;
 }
 
-void carthage_builder_render_hook(
-    const Render::GL::HumanoidAnimationContext &anim,
-    const Render::GL::HumanoidVariant &, std::uint32_t seed,
-    Render::Creature::Pipeline::HumanoidRenderSelection &io_selection) {
-  if (!anim.inputs.is_constructing) {
-    return;
-  }
-  switch (static_cast<BuilderConstructionTool>(seed % 3U)) {
-  case BuilderConstructionTool::Hammer:
-    io_selection.archetype = carthage_builder_hammer_unit_archetype();
-    io_selection.state = Render::Creature::AnimationStateId::AttackSword;
-    break;
-  case BuilderConstructionTool::Saw:
-    io_selection.archetype = carthage_builder_saw_unit_archetype();
-    io_selection.state = Render::Creature::AnimationStateId::AttackSword;
-    break;
-  case BuilderConstructionTool::Chisel:
-    io_selection.archetype = carthage_builder_chisel_unit_archetype();
-    io_selection.state = Render::Creature::AnimationStateId::AttackSpear;
-    break;
-  }
+static auto carthage_builder_variant_table()
+    -> const Render::Creature::ArchetypeVariantTable & {
+  static const Render::Creature::ArchetypeVariantTable k_table = []() {
+    Render::Creature::ArchetypeVariantTable t{};
+    t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
+    t.variant_stride = 3;
+    t.variant_is_seed_based = true;
+    // Hammer (seed%3 == 0)
+    t.archetype_for_variant[0] = carthage_builder_hammer_unit_archetype();
+    t.state_for_variant[0] = Render::Creature::AnimationStateId::AttackSword;
+    // Saw (seed%3 == 1)
+    t.archetype_for_variant[1] = carthage_builder_saw_unit_archetype();
+    t.state_for_variant[1] = Render::Creature::AnimationStateId::AttackSword;
+    // Chisel (seed%3 == 2)
+    t.archetype_for_variant[2] = carthage_builder_chisel_unit_archetype();
+    t.state_for_variant[2] = Render::Creature::AnimationStateId::AttackSpear;
+    return t;
+  }();
+  return k_table;
 }
 
 } // namespace
@@ -1139,7 +996,7 @@ public:
       s.scaling = ProportionScaling{0.98F, 1.01F, 0.96F};
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = carthage_builder_idle_archetype();
-      s.humanoid_render_hook = carthage_builder_render_hook;
+      s.variant_table = &carthage_builder_variant_table();
       return s;
     }();
     return spec;
@@ -1200,6 +1057,20 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry &registry) {
                                static BuilderRenderer const r;
                                r.render(ctx, out);
                              });
+
+  auto &ar = Render::GL::RenderArchetypeRegistry::instance();
+  ar.register_archetype("carthage_headwrap",
+                        [] { (void)carthage_headwrap_archetype(); });
+  ar.register_archetype("carthage_robes",
+                        [] { (void)carthage_robes_archetype(); });
+  ar.register_archetype("carthage_civilian_sash",
+                        [] { (void)carthage_civilian_sash_archetype(); });
+  ar.register_archetype("carthage_builder_hammer",
+                        [] { (void)carthage_hammer_archetype(); });
+  ar.register_archetype("carthage_builder_saw",
+                        [] { (void)carthage_saw_archetype(); });
+  ar.register_archetype("carthage_builder_chisel",
+                        [] { (void)carthage_chisel_archetype(); });
 }
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry &registry) {

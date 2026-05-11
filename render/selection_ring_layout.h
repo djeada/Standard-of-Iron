@@ -21,10 +21,14 @@ struct SelectionRingLayoutInput {
   int max_units_per_row{1};
   float health_ratio{1.0F};
   float ring_size{0.5F};
+  float formation_spacing{0.0F};
   std::uint32_t seed{0U};
   QVector3D position{0.0F, 0.0F, 0.0F};
   QVector3D rotation{0.0F, 0.0F, 0.0F};
   QVector3D scale{1.0F, 1.0F, 1.0F};
+  // Set to true when a Builder unit is actively constructing so the ring
+  // layout mirrors the circle formation used by the humanoid renderer.
+  bool is_builder_constructing{false};
 };
 
 struct SelectionRingPlacement {
@@ -60,22 +64,21 @@ selection_ring_category(Game::Units::SpawnType spawn_type)
 }
 
 [[nodiscard]] inline auto selection_ring_spacing(
-    FormationCalculatorFactory::UnitCategory category) -> float {
-  return (category == FormationCalculatorFactory::UnitCategory::Cavalry)
-             ? cavalry_formation_spacing()
-             : 0.75F;
+    Game::Units::SpawnType spawn_type, float configured_spacing) -> float {
+  return resolve_formation_spacing(spawn_type, configured_spacing);
 }
 
 [[nodiscard]] inline auto
 selection_ring_visual_size(Game::Units::SpawnType spawn_type,
                            int individuals_per_unit,
-                           float unit_ring_size) -> float {
+                           float unit_ring_size,
+                           float formation_spacing = 0.0F) -> float {
   if (individuals_per_unit <= 1) {
     return unit_ring_size;
   }
 
-  auto const category = selection_ring_category(spawn_type);
-  float const max_visual_size = selection_ring_spacing(category) * 0.48F;
+  float const max_visual_size =
+      selection_ring_spacing(spawn_type, formation_spacing) * 0.48F;
   return std::min(unit_ring_size * 0.25F, max_visual_size);
 }
 
@@ -99,7 +102,10 @@ build_selection_ring_layout(const SelectionRingLayoutInput &input)
   std::vector<SelectionRingPlacement> placements;
   placements.reserve(static_cast<std::size_t>(visible_count));
 
-  auto const category = Detail::selection_ring_category(input.spawn_type);
+  auto const category =
+      input.is_builder_constructing
+          ? FormationCalculatorFactory::UnitCategory::BuilderConstruction
+          : Detail::selection_ring_category(input.spawn_type);
   auto const *calculator = FormationCalculatorFactory::get_calculator(
       Detail::selection_ring_nation(input.nation_id), category);
   if (calculator == nullptr) {
@@ -110,7 +116,8 @@ build_selection_ring_layout(const SelectionRingLayoutInput &input)
 
   int const cols = std::max(1, std::min(input.max_units_per_row, total_units));
   int const rows = std::max(1, (total_units + cols - 1) / cols);
-  float const spacing = Detail::selection_ring_spacing(category);
+  float const spacing =
+      Detail::selection_ring_spacing(input.spawn_type, input.formation_spacing);
 
   for (int idx = 0; idx < visible_count; ++idx) {
     int const row = idx / cols;
@@ -118,10 +125,11 @@ build_selection_ring_layout(const SelectionRingLayoutInput &input)
     auto const offset = calculator->calculate_offset(idx, row, col, rows, cols,
                                                      spacing, input.seed);
 
-    float yaw = input.rotation.y();
+    float yaw = input.rotation.y() + offset.yaw_offset;
     if (total_units > 1) {
       std::uint32_t rng_state =
           input.seed ^ static_cast<std::uint32_t>(idx * 9176U);
+      (void)Detail::fast_random(rng_state); // Matches soldier vertical jitter.
       yaw += (Detail::fast_random(rng_state) - 0.5F) * 5.0F;
     }
 

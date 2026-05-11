@@ -1,5 +1,6 @@
 #include "template_cache.h"
 
+#include "creature/pose_intent.h"
 #include "gl/humanoid/animation/animation_inputs.h"
 #include <algorithm>
 #include <cmath>
@@ -96,6 +97,20 @@ inline auto dense_anim_state_slot_index(AnimState state, CombatAnimPhase phase,
     return k_hit_base + frame_idx;
   }
   return k_idle_base;
+}
+
+auto to_anim_state(Render::Creature::PoseIntent intent) noexcept -> AnimState {
+  switch (intent) {
+  case Render::Creature::PoseIntent::HitReaction:  return AnimState::Hit;
+  case Render::Creature::PoseIntent::AttackMelee:
+  case Render::Creature::PoseIntent::AttackSpear:  return AnimState::AttackMelee;
+  case Render::Creature::PoseIntent::AttackRanged: return AnimState::AttackRanged;
+  case Render::Creature::PoseIntent::Healing:      return AnimState::Heal;
+  case Render::Creature::PoseIntent::Construct:    return AnimState::Construct;
+  case Render::Creature::PoseIntent::Run:          return AnimState::Run;
+  case Render::Creature::PoseIntent::Walk:         return AnimState::Move;
+  default:                                         return AnimState::Idle;
+  }
 }
 } // namespace
 
@@ -370,35 +385,19 @@ void TemplateCache::evict_lru() {
 auto make_anim_key(const AnimationInputs &anim, float phase_offset,
                    std::uint8_t attack_variant) -> AnimKey {
   AnimKey key{};
+  auto const intent = Render::Creature::resolve_pose_intent(anim);
+  key.state = to_anim_state(intent);
 
-  if (anim.is_hit_reacting) {
-    key.state = AnimState::Hit;
+  switch (intent) {
+  case Render::Creature::PoseIntent::HitReaction:
     key.frame = phase_to_frame(1.0F - clamp01(anim.hit_reaction_intensity));
     key.combat_phase = CombatAnimPhase::Idle;
     key.attack_variant = 0;
     return key;
-  }
 
-  if (anim.is_constructing) {
-    key.state = AnimState::Construct;
-    key.frame =
-        phase_to_frame(time_phase(anim.construction_progress + phase_offset));
-    key.combat_phase = CombatAnimPhase::Idle;
-    key.attack_variant = 0;
-    return key;
-  }
-
-  if (anim.is_healing) {
-    key.state = AnimState::Heal;
-    key.frame = phase_to_frame(time_phase(anim.time + phase_offset));
-    key.combat_phase = CombatAnimPhase::Idle;
-    key.attack_variant = 0;
-    return key;
-  }
-
-  if (anim.is_attacking) {
-    key.state =
-        anim.is_melee ? AnimState::AttackMelee : AnimState::AttackRanged;
+  case Render::Creature::PoseIntent::AttackMelee:
+  case Render::Creature::PoseIntent::AttackSpear:
+  case Render::Creature::PoseIntent::AttackRanged: {
     key.combat_phase = anim.combat_phase;
     key.attack_family = anim.attack_family;
     key.attack_variant = attack_variant;
@@ -412,27 +411,38 @@ auto make_anim_key(const AnimationInputs &anim, float phase_offset,
     return key;
   }
 
-  if (anim.is_running) {
-    key.state = AnimState::Run;
+  case Render::Creature::PoseIntent::Construct:
+    key.frame =
+        phase_to_frame(time_phase(anim.construction_progress + phase_offset));
+    key.combat_phase = CombatAnimPhase::Idle;
+    key.attack_variant = 0;
+    return key;
+
+  case Render::Creature::PoseIntent::Healing:
     key.frame = phase_to_frame(time_phase(anim.time + phase_offset));
     key.combat_phase = CombatAnimPhase::Idle;
     key.attack_variant = 0;
     return key;
-  }
 
-  if (anim.is_moving) {
-    key.state = AnimState::Move;
+  case Render::Creature::PoseIntent::Run:
     key.frame = phase_to_frame(time_phase(anim.time + phase_offset));
     key.combat_phase = CombatAnimPhase::Idle;
     key.attack_variant = 0;
     return key;
-  }
 
-  key.state = AnimState::Idle;
-  key.frame = 0;
-  key.combat_phase = CombatAnimPhase::Idle;
-  key.attack_variant = 0;
-  return key;
+  case Render::Creature::PoseIntent::Walk:
+    key.frame = phase_to_frame(time_phase(anim.time + phase_offset));
+    key.combat_phase = CombatAnimPhase::Idle;
+    key.attack_variant = 0;
+    return key;
+
+  default:
+    key.state = AnimState::Idle;
+    key.frame = 0;
+    key.combat_phase = CombatAnimPhase::Idle;
+    key.attack_variant = 0;
+    return key;
+  }
 }
 
 auto make_animation_inputs(const AnimKey &key) -> AnimationInputs {

@@ -1,5 +1,7 @@
 #include "preparation_common.h"
 
+#include "../pose_intent.h"
+
 #include "../../../game/core/component.h"
 #include "../../../game/core/entity.h"
 #include "../../../game/map/terrain_service.h"
@@ -68,37 +70,22 @@ auto derive_unit_seed(const Render::GL::DrawContext &ctx,
 auto humanoid_state_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept
     -> Render::Creature::AnimationStateId {
-  if (anim.inputs.is_dying) {
-    return Render::Creature::AnimationStateId::Die;
+  return humanoid_state_for_anim(anim,
+                                 Render::Creature::resolve_pose_intent(anim.inputs));
+}
+
+auto humanoid_state_for_anim(
+    const Render::GL::HumanoidAnimationContext &anim,
+    Render::Creature::PoseIntent intent) noexcept
+    -> Render::Creature::AnimationStateId {
+  // Use canonical resolver for all action states.
+  if (intent != Render::Creature::PoseIntent::Idle &&
+      intent != Render::Creature::PoseIntent::Walk &&
+      intent != Render::Creature::PoseIntent::Run) {
+    return Render::Creature::to_animation_state_id(intent);
   }
-  if (anim.inputs.is_dead) {
-    return Render::Creature::AnimationStateId::Dead;
-  }
-  if (anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold) {
-    return Render::Creature::AnimationStateId::Hold;
-  }
-  if (anim.is_attacking()) {
-    switch (anim.inputs.attack_family) {
-    case Engine::Core::CombatAttackFamily::Spear:
-      return Render::Creature::AnimationStateId::AttackSpear;
-    case Engine::Core::CombatAttackFamily::Bow:
-      return Render::Creature::AnimationStateId::AttackBow;
-    case Engine::Core::CombatAttackFamily::Sword:
-      return Render::Creature::AnimationStateId::AttackSword;
-    case Engine::Core::CombatAttackFamily::None:
-    default:
-      if (anim.inputs.is_melee) {
-        return Render::Creature::AnimationStateId::AttackSword;
-      }
-      return Render::Creature::AnimationStateId::AttackBow;
-    }
-  }
-  if (anim.inputs.is_constructing) {
-    return Render::Creature::AnimationStateId::AttackSword;
-  }
+  // Locomotion: use the gait-derived motion_state (preserves original behaviour).
   switch (anim.motion_state) {
-  case Render::GL::HumanoidMotionState::Idle:
-    return Render::Creature::AnimationStateId::Idle;
   case Render::GL::HumanoidMotionState::Walk:
     return Render::Creature::AnimationStateId::Walk;
   case Render::GL::HumanoidMotionState::Run:

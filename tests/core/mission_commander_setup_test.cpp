@@ -18,38 +18,44 @@ TEST(MissionCommanderSetupTest, PrefersAuthoredTroopPositions) {
       {.type = "spearman", .count = 2, .position = {10.0F, 20.0F}},
       {.type = "archer", .count = 1, .position = {16.0F, 26.0F}}};
 
-  const auto position =
+  const auto resolved =
       App::Core::resolve_commander_position(units, {}, {}, {90.0F, 90.0F});
 
-  EXPECT_FLOAT_EQ(position.x, 12.0F);
-  EXPECT_FLOAT_EQ(position.z, 22.0F);
-}
-
-TEST(MissionCommanderSetupTest, UsesExistingMapTroopsWhenMissionHasNoSpawns) {
-  std::vector<App::Core::ExistingOwnerSpawnAnchor> existing_spawns = {
-      {{10.0F, 38.0F}, false}, {{10.0F, 42.0F}, false}, {{6.0F, 40.0F}, false},
-      {{6.0F, 36.0F}, false},  {{12.0F, 34.0F}, false}, {{12.0F, 46.0F}, false},
-      {{4.0F, 38.0F}, false},  {{4.0F, 42.0F}, false},  {{5.0F, 40.0F}, false},
-  };
-
-  const auto position = App::Core::resolve_commander_position(
-      {}, {}, existing_spawns, {68.0F, 70.0F});
-
-  EXPECT_FLOAT_EQ(position.x, 7.66666651F);
-  EXPECT_FLOAT_EQ(position.z, 39.5555573F);
+  EXPECT_EQ(resolved.space, App::Core::CommanderPositionSpace::Mission);
+  EXPECT_FLOAT_EQ(resolved.position.x, 12.0F);
+  EXPECT_FLOAT_EQ(resolved.position.z, 22.0F);
 }
 
 TEST(MissionCommanderSetupTest,
-     UsesLocalClusterWhenExistingSpawnsAreSpreadAcrossMap) {
+     UsesExistingWorldTroopsWhenMissionHasNoSpawns) {
   std::vector<App::Core::ExistingOwnerSpawnAnchor> existing_spawns = {
-      {{108.0F, 132.0F}, false}, {{112.0F, 132.0F}, false},
-      {{110.0F, 136.0F}, false}, {{138.0F, 132.0F}, false},
-      {{142.0F, 132.0F}, false},
+      {{-64.5F, -36.5F}, false}, {{-64.5F, -32.5F}, false},
+      {{-68.5F, -34.5F}, false}, {{-68.5F, -38.5F}, false},
+      {{-62.5F, -40.5F}, false}, {{-62.5F, -28.5F}, false},
+      {{-70.5F, -36.5F}, false}, {{-70.5F, -32.5F}, false},
+      {{-69.5F, -34.5F}, false},
   };
 
-  const auto position = App::Core::resolve_commander_position(
+  const auto resolved = App::Core::resolve_commander_position(
+      {}, {}, existing_spawns, {68.0F, 70.0F});
+
+  EXPECT_EQ(resolved.space, App::Core::CommanderPositionSpace::World);
+  EXPECT_FLOAT_EQ(resolved.position.x, -66.8333359F);
+  EXPECT_FLOAT_EQ(resolved.position.z, -34.9444427F);
+}
+
+TEST(MissionCommanderSetupTest,
+     UsesLocalWorldClusterWhenExistingSpawnsAreSpreadAcrossMap) {
+  std::vector<App::Core::ExistingOwnerSpawnAnchor> existing_spawns = {
+      {{32.5F, 57.5F}, false}, {{36.5F, 57.5F}, false},
+      {{35.5F, 61.5F}, false}, {{63.5F, 57.5F}, false},
+      {{67.5F, 57.5F}, false},
+  };
+
+  const auto resolved = App::Core::resolve_commander_position(
       {}, {}, existing_spawns, {132.0F, 80.0F});
 
-  EXPECT_FLOAT_EQ(position.x, 110.0F);
-  EXPECT_FLOAT_EQ(position.z, 133.333328F);
+  EXPECT_EQ(resolved.space, App::Core::CommanderPositionSpace::World);
+  EXPECT_FLOAT_EQ(resolved.position.x, 34.8333321F);
+  EXPECT_FLOAT_EQ(resolved.position.z, 58.8333321F);
 }

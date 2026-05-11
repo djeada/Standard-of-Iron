@@ -43,19 +43,22 @@ public:
 
   void set_ai_strategy(int player_id, AI::AIStrategy strategy,
                        float aggression = 0.5F, float defense = 0.5F,
-                       float harassment = 0.5F);
+                       float harassment = 0.5F,
+                       const QString &difficulty = {});
   void set_commander_recruitment_enabled(bool enabled);
 
 private:
   struct AIInstance {
     AI::AIContext context;
+    // Heap-allocated so its address is stable across vector moves; AIWorker
+    // holds a reference to this registry.
+    std::unique_ptr<AI::AIBehaviorRegistry> behavior_registry;
     std::unique_ptr<AI::AIWorker> worker;
     float update_timer = 0.0F;
   };
 
   std::vector<AIInstance> m_ai_instances;
 
-  AI::AIBehaviorRegistry m_behavior_registry;
   AI::AISnapshotBuilder m_snapshot_builder;
   AI::AIReasoner m_reasoner;
   AI::AIExecutor m_executor;
@@ -70,6 +73,8 @@ private:
       m_building_attacked_subscription;
 
   void initialize_ai_players();
+
+  static void populate_behavior_registry(AI::AIBehaviorRegistry &registry);
 
   void process_results(Engine::Core::World &world);
 

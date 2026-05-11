@@ -35,6 +35,8 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     data.health = unit->health;
     data.max_health = unit->max_health;
     data.is_building = entity->has_component<Engine::Core::BuildingComponent>();
+    data.is_commander =
+        entity->has_component<Engine::Core::CommanderComponent>();
 
     if (auto *transform =
             entity->get_component<Engine::Core::TransformComponent>()) {

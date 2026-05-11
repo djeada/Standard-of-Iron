@@ -33,6 +33,7 @@
 #include "horse/tack/reins_renderer.h"
 #include "horse_equipment_archetype.h"
 #include "humanoid_equipment_archetype.h"
+#include "render_archetype_registry.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
@@ -1680,6 +1681,98 @@ void register_built_in_equipment() {
        .append_role_colors = &carthage_arm_guards_role_colors,
        .role_count =
            static_cast<std::uint8_t>(Render::GL::k_arm_guards_role_count)});
+
+  auto &ar = RenderArchetypeRegistry::instance();
+  // Helmets
+  ar.register_archetype("roman_light_helmet",
+                        [] { (void)roman_light_helmet_archetype(); });
+  ar.register_archetype("roman_heavy_helmet",
+                        [] { (void)roman_heavy_helmet_archetype(); });
+  ar.register_archetype("headwrap_helmet",
+                        [] { (void)headwrap_helmet_archetype(); });
+  ar.register_archetype("carthage_light_helmet_shell",
+                        [] { (void)carthage_light_helmet_shell_archetype(); });
+  ar.register_archetype("carthage_light_helmet_neck_guard", [] {
+    (void)carthage_light_helmet_neck_guard_archetype();
+  });
+  ar.register_archetype("carthage_light_helmet_cheek_guards", [] {
+    (void)carthage_light_helmet_cheek_guards_archetype();
+  });
+  ar.register_archetype("carthage_light_helmet_nasal_guard", [] {
+    (void)carthage_light_helmet_nasal_guard_archetype();
+  });
+  ar.register_archetype("carthage_light_helmet_crest_low",
+                        [] { (void)carthage_light_helmet_crest_archetype(false); });
+  ar.register_archetype("carthage_light_helmet_crest_high",
+                        [] { (void)carthage_light_helmet_crest_archetype(true); });
+  ar.register_archetype("carthage_light_helmet_rivets",
+                        [] { (void)carthage_light_helmet_rivets_archetype(); });
+  ar.register_archetype("carthage_heavy_helmet_shell",
+                        [] { (void)carthage_heavy_helmet_shell_archetype(); });
+  ar.register_archetype("carthage_heavy_helmet_neck_guard", [] {
+    (void)carthage_heavy_helmet_neck_guard_archetype();
+  });
+  ar.register_archetype("carthage_heavy_helmet_cheek_guards", [] {
+    (void)carthage_heavy_helmet_cheek_guards_archetype();
+  });
+  ar.register_archetype("carthage_heavy_helmet_face_plate", [] {
+    (void)carthage_heavy_helmet_face_plate_archetype();
+  });
+  ar.register_archetype("carthage_heavy_helmet_crest",
+                        [] { (void)carthage_heavy_helmet_crest_archetype(); });
+  ar.register_archetype("carthage_heavy_helmet_rivets",
+                        [] { (void)carthage_heavy_helmet_rivets_archetype(); });
+  // Armor
+  ar.register_archetype("roman_shoulder_cover",
+                        [] { (void)roman_shoulder_cover_archetype(); });
+  ar.register_archetype("carthage_shoulder_cover",
+                        [] { (void)carthage_shoulder_cover_archetype(); });
+  ar.register_archetype("roman_greaves",
+                        [] { (void)roman_greaves_archetype(); });
+  // Weapons
+  ar.register_archetype("roman_scutum",
+                        [] { (void)roman_scutum_archetype(); });
+  ar.register_archetype("roman_shield",
+                        [] { (void)roman_shield_archetype(); });
+  // Tool belt
+  ar.register_archetype("tool_belt_ring",
+                        [] { (void)tool_belt_ring_archetype(); });
+  ar.register_archetype("tool_belt_buckle",
+                        [] { (void)tool_belt_buckle_archetype(); });
+  ar.register_archetype("tool_belt_hammer",
+                        [] { (void)tool_belt_hammer_archetype(); });
+  ar.register_archetype("tool_belt_chisel",
+                        [] { (void)tool_belt_chisel_archetype(); });
+  ar.register_archetype("tool_belt_saw",
+                        [] { (void)tool_belt_saw_archetype(); });
+  ar.register_archetype("tool_belt_pouches",
+                        [] { (void)tool_belt_pouches_archetype(); });
+  // Horse tack
+  ar.register_archetype("reins", [] { (void)reins_archetype(); });
+  ar.register_archetype("blanket", [] { (void)blanket_archetype(); });
+  ar.register_archetype("bridle", [] { (void)bridle_archetype(); });
+  // Horse saddles
+  ar.register_archetype("roman_saddle", [] { (void)roman_saddle_archetype(); });
+  ar.register_archetype("carthage_saddle",
+                        [] { (void)carthage_saddle_archetype(); });
+  ar.register_archetype("light_cavalry_saddle",
+                        [] { (void)light_cavalry_saddle_archetype(); });
+  // Horse armor
+  ar.register_archetype("champion_barding",
+                        [] { (void)champion_archetype(); });
+  ar.register_archetype("crupper", [] { (void)crupper_archetype(); });
+  ar.register_archetype("leather_barding_chest",
+                        [] { (void)leather_barding_chest_archetype(); });
+  ar.register_archetype("leather_barding_barrel",
+                        [] { (void)leather_barding_barrel_archetype(); });
+  ar.register_archetype("scale_barding_chest",
+                        [] { (void)scale_barding_chest_archetype(); });
+  ar.register_archetype("scale_barding_barrel",
+                        [] { (void)scale_barding_barrel_archetype(); });
+  ar.register_archetype("scale_barding_neck",
+                        [] { (void)scale_barding_neck_archetype(); });
+  // Horse decorations
+  ar.register_archetype("saddle_bag", [] { (void)saddle_bag_archetype(); });
 }
 
 } // namespace Render::GL

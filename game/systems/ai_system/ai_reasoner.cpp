@@ -19,6 +19,9 @@ struct AnchorCandidate {
 
 constexpr float k_anchor_cluster_radius = 12.0F;
 
+// Finds the centre of the densest cluster within k_anchor_cluster_radius.
+// Runs only when there is no barracks (early game, low N), so the O(N²)
+// cost is acceptable in practice.
 auto densest_anchor_cluster(const std::vector<AnchorCandidate> &candidates)
     -> std::optional<AnchorCandidate> {
   if (candidates.empty()) {
@@ -82,12 +85,15 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
             ctx.player_id);
   }
 
-  cleanup_dead_units(snapshot, ctx);
+  // Build alive-entity set once; reused for both assigned-unit and
+  // buildings-under-attack pruning.
+  const auto alive_ids = cleanup_dead_units(snapshot, ctx);
 
   int previous_unit_count = ctx.total_units;
 
   ctx.military_units.clear();
   ctx.buildings.clear();
+  ctx.commander_ids.clear();
   ctx.primary_barracks = 0;
   ctx.total_units = 0;
   ctx.idle_units = 0;
@@ -119,15 +125,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
   constexpr float attack_record_timeout = 10.0F;
   auto it = ctx.buildings_under_attack.begin();
   while (it != ctx.buildings_under_attack.end()) {
-    bool still_exists = false;
-    for (const auto &entity : snapshot.friendly_units) {
-      if (entity.id == it->first && entity.is_building) {
-        still_exists = true;
-        break;
-      }
-    }
-
-    if (!still_exists ||
+    if (alive_ids.find(it->first) == alive_ids.end() ||
         (snapshot.game_time - it->second) > attack_record_timeout) {
       it = ctx.buildings_under_attack.erase(it);
     } else {
@@ -164,6 +162,10 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
 
     ctx.military_units.push_back(entity.id);
     ctx.total_units++;
+
+    if (entity.is_commander) {
+      ctx.commander_ids.push_back(entity.id);
+    }
 
     if (ctx.nation != nullptr) {
       auto troop_type_opt =
@@ -252,10 +254,11 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
 
   if (ctx.primary_barracks != 0) {
 
-    constexpr float defend_radius = 40.0F;
-    constexpr float critical_radius = 20.0F;
+    constexpr float k_base_defend_radius = 30.0F;
+    const float defend_radius =
+        k_base_defend_radius +
+        10.0F * std::min(2.0F, ctx.strategy_config.defense_modifier);
     const float defend_radius_sq = defend_radius * defend_radius;
-    const float critical_radius_sq = critical_radius * critical_radius;
 
     for (const auto &enemy : snapshot.visible_enemies) {
       float const dist_sq =

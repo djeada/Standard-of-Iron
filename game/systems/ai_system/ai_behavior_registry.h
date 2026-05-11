@@ -2,7 +2,6 @@
 
 #include "ai_behavior.h"
 #include <algorithm>
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -17,22 +16,25 @@ public:
   auto operator=(const AIBehaviorRegistry &) -> AIBehaviorRegistry & = delete;
 
   void register_behavior(std::unique_ptr<AIBehavior> behavior) {
-    m_behaviors.push_back(std::move(behavior));
-
-    std::sort(m_behaviors.begin(), m_behaviors.end(),
-              [](const std::unique_ptr<AIBehavior> &a,
-                 const std::unique_ptr<AIBehavior> &b) {
-                return a->get_priority() > b->get_priority();
-              });
+    // Insert in descending priority order so for_each visits highest first.
+    auto pos = std::lower_bound(
+        m_behaviors.begin(), m_behaviors.end(), behavior,
+        [](const std::unique_ptr<AIBehavior> &a,
+           const std::unique_ptr<AIBehavior> &b) {
+          return a->get_priority() > b->get_priority();
+        });
+    m_behaviors.insert(pos, std::move(behavior));
   }
 
-  void for_each(const std::function<void(AIBehavior &)> &func) {
+  template <typename Fn>
+  void for_each(Fn &&func) {
     for (auto &behavior : m_behaviors) {
       func(*behavior);
     }
   }
 
-  void for_each(const std::function<void(const AIBehavior &)> &func) const {
+  template <typename Fn>
+  void for_each(Fn &&func) const {
     for (const auto &behavior : m_behaviors) {
       func(*behavior);
     }

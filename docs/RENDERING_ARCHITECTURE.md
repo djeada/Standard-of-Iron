@@ -467,6 +467,32 @@ The entity system stores a unit type string like "spearman_carthage" on each uni
 
 Troop bodies no longer get per-nation shader files. The rigged creature backend owns the shared `character_skinned` and `character_skinned_instanced` programs, while nation, role, and equipment variation is supplied as declarative render data: palette values, material IDs, visual specs, equipment records, and texture slots.
 
+## Centralized pose selection
+
+Every humanoid entity produces exactly one `AnimationInputs` struct per render frame—a snapshot of its state from game components (is it attacking? dying? constructing?). Previously, each downstream system had its own if/else chain to map these flags to the animation it needed. We replaced all of those with a single function.
+
+```
+AnimationInputs  ──►  resolve_pose_intent()  ──►  PoseIntent
+                          [pose_intent.h]
+                                │
+               ┌────────────────┼────────────────┐
+               ▼                ▼                ▼
+   to_humanoid_state()  to_animation_state_id()  ArchetypeVariantTable
+   [clip driver]        [BPAT key builder,        [creature_render_graph.cpp]
+                         render graph]
+```
+
+`PoseIntent` is a small enum (17 values) that names the *canonical* animation intent—`Idle`, `Walk`, `Run`, `AttackMelee`, `Dying`, etc.—in strict priority order. The resolver applies that priority once: dying beats dead, dead beats hit-reaction, hit-reaction beats attacking, and so on. All downstream systems convert from this single value instead of re-implementing the priority logic.
+
+**ArchetypeVariantTable** is the data-driven replacement for the old runtime hook function pointers. Each `UnitVisualSpec` can carry an optional pointer to a `constexpr`-constructible table that maps:
+
+- `archetype_for_pose[intent]` / `state_for_pose[intent]` — override archetype or clip state for a specific intent
+- `archetype_for_variant[k]` / `state_for_variant[k]` — per-variant overrides (e.g. by seed for builders, by `FacialHairStyle` for spearmen), optionally gated on a trigger intent
+
+Nation renderers that need per-variant animation (builders with different tools, spearmen with beards) simply fill in the table's arrays at static init time instead of registering a function pointer.
+
+**Caching.** `CreatureRenderBatch::add_humanoid` calls `resolve_pose_intent` once and passes the result into both `humanoid_state_for_anim` (via its two-argument overload) and the variant-table dispatch block. No system in the critical render path calls the resolver more than once per entity per frame.
+
 
 ## Procedural shaders
 

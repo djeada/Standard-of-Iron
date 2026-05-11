@@ -217,6 +217,9 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
     troop_class.visuals.selection_ring_ground_offset =
         read_float(visuals, "selection_ring_ground_offset",
                    troop_class.visuals.selection_ring_ground_offset);
+    troop_class.visuals.formation_spacing =
+        read_float(visuals, "formation_spacing",
+                   troop_class.visuals.formation_spacing);
     const QString default_renderer = QStringLiteral("troops/") + troop_id;
     troop_class.visuals.renderer_id =
         visuals.value("renderer_id").toString(default_renderer).toStdString();

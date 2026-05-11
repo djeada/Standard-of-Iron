@@ -41,6 +41,7 @@ Button {
         text: control.text
         font.pointSize: control.enabled ? (hoverArea.containsMouse ? style_config.hoverFontSize : style_config.fontSize) : style_config.fontSize
         font.bold: true
+        font.letterSpacing: style_config.letterSpacing !== undefined ? style_config.letterSpacing : 0.0
         color: {
             if (!control.enabled)
                 return style_config.disabledTextColor;
@@ -53,74 +54,154 @@ Button {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
+        topPadding: control.down ? 1 : 0
 
         Behavior on font.pointSize {
             NumberAnimation {
                 duration: StyleGuide.animation.fast
             }
-
         }
 
         Behavior on color {
             ColorAnimation {
                 duration: StyleGuide.animation.normal
             }
-
         }
 
+        Behavior on topPadding {
+            NumberAnimation {
+                duration: StyleGuide.animation.fast
+            }
+        }
     }
 
-    background: Rectangle {
+    background: Item {
         implicitWidth: style_config.minWidth
         implicitHeight: style_config.height
-        radius: style_config.radius
-        color: {
-            if (!control.enabled)
-                return style_config.disabledBg;
 
-            if (control.down)
-                return style_config.pressBg;
-
-            if (hoverArea.containsMouse)
-                return style_config.hoverBg;
-
-            return style_config.normalBg;
-        }
-        border.width: 1
-        border.color: {
-            if (!control.enabled)
-                return style_config.disabledBorder;
-
-            if (hoverArea.containsMouse)
-                return style_config.hoverBorder;
-
-            return style_config.normalBorder;
-        }
-
-        Behavior on color {
-            ColorAnimation {
-                duration: StyleGuide.animation.normal
-            }
-
-        }
-
-        Behavior on border.color {
-            ColorAnimation {
-                duration: StyleGuide.animation.normal
-            }
-
-        }
-
+        // Drop shadow
         Rectangle {
-            anchors.fill: parent
-            anchors.margins: 2
-            radius: Math.max(2, parent.radius - 2)
-            color: "transparent"
-            border.width: button_style === "primary" ? 1 : 0
-            border.color: button_style === "primary" ? StyleGuide.historical.bronze : "transparent"
-            opacity: 0.65
+            x: 1
+            y: 2
+            width: parent.width
+            height: parent.height
+            radius: style_config.radius + 1
+            color: "#000000"
+            opacity: control.enabled && !control.down ? 0.28 : 0.0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: StyleGuide.animation.fast
+                }
+            }
         }
 
-    }
+        // Main button body
+        Rectangle {
+            id: bodyRect
 
+            anchors.fill: parent
+            radius: style_config.radius
+            color: {
+                if (!control.enabled)
+                    return style_config.disabledBg;
+
+                if (control.down)
+                    return style_config.pressBg;
+
+                if (hoverArea.containsMouse)
+                    return style_config.hoverBg;
+
+                return style_config.normalBg;
+            }
+            border.width: button_style === "primary" ? 2 : 1
+            border.color: {
+                if (!control.enabled)
+                    return style_config.disabledBorder;
+
+                if (hoverArea.containsMouse)
+                    return style_config.hoverBorder;
+
+                return style_config.normalBorder;
+            }
+
+            // Luminosity bevel: lighter at top, darker at bottom
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1
+                radius: Math.max(1, parent.radius - 1)
+                opacity: control.down ? 0.0 : 0.13
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: "#FFFFFF"
+                    }
+
+                    GradientStop {
+                        position: 0.45
+                        color: "#FFFFFF"
+                    }
+
+                    GradientStop {
+                        position: 1.0
+                        color: "#000000"
+                    }
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: StyleGuide.animation.fast
+                    }
+                }
+            }
+
+            // Top-edge gold highlight — the "forged metal" rim
+            Rectangle {
+                anchors.top: parent.top
+                anchors.topMargin: 1
+                anchors.left: parent.left
+                anchors.leftMargin: Math.max(4, parent.radius)
+                anchors.right: parent.right
+                anchors.rightMargin: Math.max(4, parent.radius)
+                height: 1
+                color: StyleGuide.palette.accentBright
+                opacity: control.enabled && !control.down ? 0.55 : 0.0
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: StyleGuide.animation.fast
+                    }
+                }
+            }
+
+            // Inner decorative border — visible for primary and secondary
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 2
+                radius: Math.max(2, parent.radius - 2)
+                color: "transparent"
+                border.width: (button_style === "primary" || button_style === "secondary") ? 1 : 0
+                border.color: StyleGuide.historical.bronze
+                opacity: control.enabled && !control.down ? 0.42 : 0.0
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: StyleGuide.animation.fast
+                    }
+                }
+            }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: StyleGuide.animation.normal
+                }
+            }
+
+            Behavior on border.color {
+                ColorAnimation {
+                    duration: StyleGuide.animation.normal
+                }
+            }
+        }
+    }
 }

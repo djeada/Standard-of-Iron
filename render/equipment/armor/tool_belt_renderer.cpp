@@ -27,6 +27,8 @@ constexpr float k_belt_thickness_norm = 0.022F / k_basis_radius;
 constexpr float k_small_sphere_norm = 0.030F / k_basis_radius;
 constexpr float k_pin_radius_norm = 0.008F / k_basis_radius;
 
+} // namespace
+
 auto tool_belt_ring_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     std::array<GeneratedEquipmentPrimitive, 16> primitives{};
@@ -146,6 +148,8 @@ auto tool_belt_pouches_archetype() -> const RenderArchetype & {
   }();
   return archetype;
 }
+
+namespace {
 
 auto tool_belt_palette(const ToolBeltConfig &config)
     -> std::array<QVector3D, 5> {
