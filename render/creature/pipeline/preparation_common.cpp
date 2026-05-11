@@ -157,18 +157,7 @@ auto humanoid_requested_clip_variant_for_anim(
   }
   if (state == Render::Creature::AnimationStateId::Idle &&
       anim.ambient_idle_type != Render::GL::AmbientIdleType::None) {
-    switch (anim.ambient_idle_type) {
-    case Render::GL::AmbientIdleType::SitDown:
-      return 1U;
-    case Render::GL::AmbientIdleType::Jump:
-      return 2U;
-    case Render::GL::AmbientIdleType::RaiseWeapon:
-      return 3U;
-    case Render::GL::AmbientIdleType::ShiftWeight:
-      return 4U;
-    default:
-      break;
-    }
+    return Render::GL::ambient_idle_clip_variant(anim.ambient_idle_type);
   }
   return 0U;
 }
