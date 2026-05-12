@@ -7,7 +7,7 @@ flat in vec3 v_instance_color;
 flat in float v_instance_alpha;
 in float v_material_region;
 
-uniform sampler2D u_texture;
+uniform sampler2_d u_texture;
 uniform bool u_use_texture;
 
 out vec4 frag_color;

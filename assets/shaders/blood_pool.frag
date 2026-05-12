@@ -22,14 +22,14 @@ void main() {
   vec2 c = v_uv * 2.0 - 1.0;
   float dist = length(c);
 
-  float edgeNoise = (noise(c * 4.5) - 0.5) * 0.35;
-  float alpha = smoothstep(1.0 + edgeNoise, 0.55 + edgeNoise * 0.5, dist);
+  float edge_noise = (noise(c * 4.5) - 0.5) * 0.35;
+  float alpha = smoothstep(1.0 + edge_noise, 0.55 + edge_noise * 0.5, dist);
   alpha *= u_alpha_scale;
 
   vec3 color = vec3(0.28, 0.04, 0.03);
   float crust = (noise(c * 9.0) - 0.5) * 0.08;
-  float dryRing = smoothstep(0.45, 0.85, dist) * 0.35;
-  color = clamp(color + vec3(crust) - vec3(dryRing * 0.1), 0.0, 1.0);
+  float dry_ring = smoothstep(0.45, 0.85, dist) * 0.35;
+  color = clamp(color + vec3(crust) - vec3(dry_ring * 0.1), 0.0, 1.0);
 
   if (alpha < 0.01)
     discard;

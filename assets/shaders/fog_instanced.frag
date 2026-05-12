@@ -48,8 +48,8 @@ void main() {
                          vec2(v_seed * 11.0, -v_seed * 6.0));
 
   float body = smoothstep(0.18, 0.88, large * 0.72 + detail * 0.40);
-  float edgeBreak = mix(0.08, 0.24, erosion);
-  float mask = 1.0 - smoothstep(0.68 - edgeBreak, 1.0, outer);
+  float edge_break = mix(0.08, 0.24, erosion);
+  float mask = 1.0 - smoothstep(0.68 - edge_break, 1.0, outer);
   mask *= body;
   mask *= 1.0 - smoothstep(0.80, 1.06, length(p));
 
@@ -58,8 +58,8 @@ void main() {
   }
 
   float interior = 1.0 - smoothstep(0.15, 0.90, outer);
-  float brightJitter = mix(0.90, 1.10, hash11(v_seed + 2.71));
-  vec3 base = v_color * brightJitter;
+  float bright_jitter = mix(0.90, 1.10, hash11(v_seed + 2.71));
+  vec3 base = v_color * bright_jitter;
   vec3 lit = mix(base * 0.78, base * 1.08, interior);
   lit *= mix(0.90, 1.08, detail);
   lit *= 0.94 + 0.08 * large;

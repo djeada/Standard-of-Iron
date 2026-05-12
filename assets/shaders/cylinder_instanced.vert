@@ -37,20 +37,20 @@ void main() {
   }
   tangent = normalize(cross(bitangent, dir));
 
-  vec3 localPos = a_position;
-  float along = (localPos.y + 0.5) * len;
-  vec3 radial = tangent * localPos.x + bitangent * localPos.z;
+  vec3 local_pos = a_position;
+  float along = (local_pos.y + 0.5) * len;
+  vec3 radial = tangent * local_pos.x + bitangent * local_pos.z;
 
-  vec3 worldPos = i_start + dir * along + radial * i_radius;
+  vec3 world_pos = i_start + dir * along + radial * i_radius;
 
-  vec3 localNormal = a_normal;
-  vec3 worldNormal = normalize(tangent * localNormal.x + dir * localNormal.y +
-                               bitangent * localNormal.z);
+  vec3 local_normal = a_normal;
+  vec3 world_normal = normalize(tangent * local_normal.x + dir * local_normal.y +
+                               bitangent * local_normal.z);
 
-  v_world_pos = worldPos;
-  v_normal = worldNormal;
+  v_world_pos = world_pos;
+  v_normal = world_normal;
   v_color = i_color;
   v_alpha = i_alpha;
 
-  gl_Position = u_view_proj * vec4(worldPos, 1.0);
+  gl_Position = u_view_proj * vec4(world_pos, 1.0);
 }

@@ -5,9 +5,9 @@ in vec3 v_normal;
 in vec3 v_world_pos;
 in float v_height;
 
-uniform sampler2D u_base_texture;
-uniform sampler2D u_hillshade_texture;
-uniform sampler2D u_parchment_texture;
+uniform sampler2_d u_base_texture;
+uniform sampler2_d u_hillshade_texture;
+uniform sampler2_d u_parchment_texture;
 
 uniform vec3 u_light_direction;
 uniform float u_ambient_strength;
@@ -32,7 +32,7 @@ float hash(vec2 p) {
   return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-float valueNoise(vec2 p) {
+float value_noise(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
 
@@ -52,7 +52,7 @@ float fbm(vec2 p, int octaves) {
   float frequency = 1.0;
 
   for (int i = 0; i < octaves; i++) {
-    value += amplitude * valueNoise(p * frequency);
+    value += amplitude * value_noise(p * frequency);
     amplitude *= 0.5;
     frequency *= 2.0;
   }
@@ -60,19 +60,19 @@ float fbm(vec2 p, int octaves) {
   return value;
 }
 
-float computeAO(vec3 normal) {
+float compute_ao(vec3 normal) {
 
   float ao = clamp(normal.y * 0.5 + 0.5, 0.0, 1.0);
 
   return mix(1.0, ao, u_ao_strength);
 }
 
-float computeHillshade(vec3 normal, vec3 lightDir) {
-  float ndotl = max(0.0, dot(normal, lightDir));
+float compute_hillshade(vec3 normal, vec3 light_dir) {
+  float ndotl = max(0.0, dot(normal, light_dir));
   return u_ambient_strength + (1.0 - u_ambient_strength) * ndotl;
 }
 
-vec3 getElevationTint(float height) {
+vec3 get_elevation_tint(float height) {
   if (height < 0.0) {
 
     float depth = clamp(-height, 0.0, 1.0);
@@ -92,7 +92,7 @@ vec3 getElevationTint(float height) {
   }
 }
 
-float getParchmentPattern(vec2 uv) {
+float get_parchment_pattern(vec2 uv) {
 
   float n1 = fbm(uv * 8.0, 3);
   float n2 = fbm(uv * 20.0 + vec2(100.0), 2);
@@ -105,42 +105,42 @@ float getParchmentPattern(vec2 uv) {
 void main() {
 
   vec2 uv = vec2(v_uv.x, 1.0 - v_uv.y);
-  vec4 baseColor = texture(u_base_texture, uv);
+  vec4 base_color = texture(u_base_texture, uv);
 
-  vec3 color = baseColor.rgb;
+  vec3 color = base_color.rgb;
 
-  vec3 elevationTint = getElevationTint(v_height * u_elevation_scale);
-  color *= elevationTint;
+  vec3 elevation_tint = get_elevation_tint(v_height * u_elevation_scale);
+  color *= elevation_tint;
 
   if (u_use_hillshade) {
 
-    float hillshade = computeHillshade(v_normal, normalize(u_light_direction));
+    float hillshade = compute_hillshade(v_normal, normalize(u_light_direction));
 
     color *= mix(1.0, hillshade, u_hillshade_strength);
   }
 
   if (u_use_lighting) {
 
-    vec3 lightDir = normalize(u_light_direction);
-    float diffuse = max(0.0, dot(v_normal, lightDir));
+    vec3 light_dir = normalize(u_light_direction);
+    float diffuse = max(0.0, dot(v_normal, light_dir));
     float lighting = u_ambient_strength + (1.0 - u_ambient_strength) * diffuse;
 
-    float ao = computeAO(v_normal);
+    float ao = compute_ao(v_normal);
 
     color *= lighting * ao;
   }
 
   if (u_use_parchment) {
-    float parchment = getParchmentPattern(v_uv);
+    float parchment = get_parchment_pattern(v_uv);
 
     color *= parchment;
 
     color = mix(color, color * vec3(1.02, 1.0, 0.96), 0.3);
   }
 
-  vec2 vignetteCoord = v_uv * 2.0 - 1.0;
-  float vignette = 1.0 - dot(vignetteCoord, vignetteCoord) * 0.15;
+  vec2 vignette_coord = v_uv * 2.0 - 1.0;
+  float vignette = 1.0 - dot(vignette_coord, vignette_coord) * 0.15;
   color *= vignette;
 
-  frag_color = vec4(color, baseColor.a);
+  frag_color = vec4(color, base_color.a);
 }

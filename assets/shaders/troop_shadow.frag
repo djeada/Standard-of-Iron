@@ -6,7 +6,7 @@ in vec3 v_world_pos;
 uniform float u_alpha;
 uniform vec3 u_color;
 uniform bool u_use_texture;
-uniform sampler2D u_texture;
+uniform sampler2_d u_texture;
 uniform vec2 u_light_dir;
 
 out vec4 frag_color;
@@ -24,11 +24,11 @@ void main() {
   float along = dot(uv, dir);
   float across = dot(uv, tangent);
 
-  float alongScale = 1.15;
-  float acrossScale = 0.95;
+  float along_scale = 1.15;
+  float across_scale = 0.95;
 
-  float ax = along / alongScale;
-  float ay = across / acrossScale;
+  float ax = along / along_scale;
+  float ay = across / across_scale;
 
   float r = length(vec2(ax, ay));
 
@@ -37,27 +37,27 @@ void main() {
 
   float gaussian = exp(-r * r * 2.2);
   float feather = clamp(1.0 - r, 0.0, 1.0);
-  float shadowIntensity = mix(feather, gaussian, 0.7);
-  shadowIntensity = pow(shadowIntensity, 1.35);
+  float shadow_intensity = mix(feather, gaussian, 0.7);
+  shadow_intensity = pow(shadow_intensity, 1.35);
 
-  float heightFade = clamp(1.0 - max(v_world_pos.y, 0.0) * 0.08, 0.6, 1.0);
-  shadowIntensity *= heightFade;
+  float height_fade = clamp(1.0 - max(v_world_pos.y, 0.0) * 0.08, 0.6, 1.0);
+  shadow_intensity *= height_fade;
 
-  vec3 texColor = vec3(1.0);
-  float texAlpha = 1.0;
+  vec3 tex_color = vec3(1.0);
+  float tex_alpha = 1.0;
   if (u_use_texture) {
     vec4 tex = texture(u_texture, v_tex_coord);
-    texColor = tex.rgb;
-    texAlpha = tex.a;
+    tex_color = tex.rgb;
+    tex_alpha = tex.a;
   }
 
-  shadowIntensity *= texAlpha;
+  shadow_intensity *= tex_alpha;
 
-  vec3 shadowColor = vec3(0.013) * u_color * texColor;
+  vec3 shadow_color = vec3(0.013) * u_color * tex_color;
 
-  float finalAlpha = shadowIntensity * u_alpha * 0.95;
+  float final_alpha = shadow_intensity * u_alpha * 0.95;
 
-  vec3 finalColor = shadowColor * shadowIntensity;
+  vec3 final_color = shadow_color * shadow_intensity;
 
-  frag_color = vec4(finalColor, finalAlpha);
+  frag_color = vec4(final_color, final_alpha);
 }

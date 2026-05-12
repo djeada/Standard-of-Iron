@@ -25,7 +25,7 @@ float hash3(vec3 p) {
   return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
 }
 
-float noise2D(vec2 p) {
+float noise2_d(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
@@ -49,79 +49,79 @@ void main() {
   float lit_t = clamp(diffuse * 1.4, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.50, sun_color, lit_t);
 
-  vec2 leafPos = v_local_pos_xz * 120.0 + vec2(v_leaf_seed * 17.3, v_bark_seed * 23.1);
+  vec2 leaf_pos = v_local_pos_xz * 120.0 + vec2(v_leaf_seed * 17.3, v_bark_seed * 23.1);
 
-  float leafLayer1 = hash(floor(leafPos));
-  float leafLayer2 = hash(floor(leafPos * 1.7 + vec2(5.3, 8.7)));
-  float leafLayer3 = hash(floor(leafPos * 0.6 + vec2(13.1, 3.9)));
+  float leaf_layer1 = hash(floor(leaf_pos));
+  float leaf_layer2 = hash(floor(leaf_pos * 1.7 + vec2(5.3, 8.7)));
+  float leaf_layer3 = hash(floor(leaf_pos * 0.6 + vec2(13.1, 3.9)));
 
-  float leafDensity = (leafLayer1 + leafLayer2 + leafLayer3) / 3.0;
+  float leaf_density = (leaf_layer1 + leaf_layer2 + leaf_layer3) / 3.0;
 
-  float leafEdge = noise2D(leafPos * 2.5);
-  float leafFine = hash(leafPos * 0.37 + vec2(v_branch_id * 7.0));
+  float leaf_edge = noise2_d(leaf_pos * 2.5);
+  float leaf_fine = hash(leaf_pos * 0.37 + vec2(v_branch_id * 7.0));
 
-  vec3 leafDarkGreen = vec3(0.22, 0.32, 0.20);
-  vec3 leafMidGreen = vec3(0.32, 0.42, 0.28);
-  vec3 leafLightGreen = vec3(0.42, 0.50, 0.38);
-  vec3 leafSilver = vec3(0.52, 0.56, 0.50);
+  vec3 leaf_dark_green = vec3(0.22, 0.32, 0.20);
+  vec3 leaf_mid_green = vec3(0.32, 0.42, 0.28);
+  vec3 leaf_light_green = vec3(0.42, 0.50, 0.38);
+  vec3 leaf_silver = vec3(0.52, 0.56, 0.50);
 
-  float colorChoice = leafFine;
-  vec3 leafColor = mix(leafDarkGreen, leafMidGreen, colorChoice);
+  float color_choice = leaf_fine;
+  vec3 leaf_color = mix(leaf_dark_green, leaf_mid_green, color_choice);
 
   float backfacing = 1.0 - max(dot(n, l), 0.0);
-  float silverShow = smoothstep(0.4, 0.8, backfacing) * leafLayer2;
-  leafColor = mix(leafColor, leafSilver, silverShow * 0.5);
+  float silver_show = smoothstep(0.4, 0.8, backfacing) * leaf_layer2;
+  leaf_color = mix(leaf_color, leaf_silver, silver_show * 0.5);
 
-  float highlight = smoothstep(0.7, 0.9, leafLayer1 * leafEdge);
-  leafColor = mix(leafColor, leafLightGreen, highlight * 0.4);
+  float highlight = smoothstep(0.7, 0.9, leaf_layer1 * leaf_edge);
+  leaf_color = mix(leaf_color, leaf_light_green, highlight * 0.4);
 
-  leafColor = mix(leafColor, v_color, 0.15);
+  leaf_color = mix(leaf_color, v_color, 0.15);
 
-  float canopyDepth = 1.0 - smoothstep(0.0, 0.35, length(v_local_pos_xz));
-  leafColor *= mix(0.75, 1.0, canopyDepth);
+  float canopy_depth = 1.0 - smoothstep(0.0, 0.35, length(v_local_pos_xz));
+  leaf_color *= mix(0.75, 1.0, canopy_depth);
 
-  float barkU = v_tex_coord.x * TWO_PI;
-  float barkV = v_tex_coord.y;
+  float bark_u = v_tex_coord.x * TWO_PI;
+  float bark_v = v_tex_coord.y;
 
-  float furrows = pow(abs(sin(barkU * 5.0 + v_bark_seed * TWO_PI)), 0.4);
-  float verticalGrain =
-      noise2D(vec2(barkU * 3.0, barkV * 25.0 + v_bark_seed * 7.0));
-  float barkNoise = noise2D(vec2(barkU * 8.0, barkV * 15.0)) * 0.3;
-  float barkTexture = furrows * 0.5 + verticalGrain * 0.35 + barkNoise;
+  float furrows = pow(abs(sin(bark_u * 5.0 + v_bark_seed * TWO_PI)), 0.4);
+  float vertical_grain =
+      noise2_d(vec2(bark_u * 3.0, bark_v * 25.0 + v_bark_seed * 7.0));
+  float bark_noise = noise2_d(vec2(bark_u * 8.0, bark_v * 15.0)) * 0.3;
+  float bark_texture = furrows * 0.5 + vertical_grain * 0.35 + bark_noise;
 
-  vec3 barkDark = vec3(0.18, 0.16, 0.13);
-  vec3 barkMid = vec3(0.30, 0.27, 0.23);
-  vec3 barkLight = vec3(0.42, 0.38, 0.33);
+  vec3 bark_dark = vec3(0.18, 0.16, 0.13);
+  vec3 bark_mid = vec3(0.30, 0.27, 0.23);
+  vec3 bark_light = vec3(0.42, 0.38, 0.33);
 
-  vec3 barkColor = mix(barkDark, barkMid, barkTexture);
-  float barkHighlight =
-      smoothstep(0.75, 0.95, hash(vec2(barkV * 15.0, barkU * 3.0)));
-  barkColor = mix(barkColor, barkLight, barkHighlight * 0.35);
+  vec3 bark_color = mix(bark_dark, bark_mid, bark_texture);
+  float bark_highlight =
+      smoothstep(0.75, 0.95, hash(vec2(bark_v * 15.0, bark_u * 3.0)));
+  bark_color = mix(bark_color, bark_light, bark_highlight * 0.35);
 
-  vec3 baseColor = mix(barkColor, leafColor, v_foliage_mask);
-  vec3 color = baseColor * lighting * light_tint;
+  vec3 base_color = mix(bark_color, leaf_color, v_foliage_mask);
+  vec3 color = base_color * lighting * light_tint;
 
   float alpha = 1.0;
 
   if (v_foliage_mask > 0.1) {
 
-    float leafMask = leafDensity;
+    float leaf_mask = leaf_density;
 
-    float holePattern = noise2D(leafPos * 0.8);
-    float holes = smoothstep(0.20, 0.35, holePattern);
+    float hole_pattern = noise2_d(leaf_pos * 0.8);
+    float holes = smoothstep(0.20, 0.35, hole_pattern);
 
-    float clusterGaps = noise2D(v_local_pos_xz * 15.0 + vec2(v_leaf_seed * 3.0));
-    float gaps = smoothstep(0.15, 0.40, clusterGaps);
+    float cluster_gaps = noise2_d(v_local_pos_xz * 15.0 + vec2(v_leaf_seed * 3.0));
+    float gaps = smoothstep(0.15, 0.40, cluster_gaps);
 
-    float edgeDist = length(v_local_pos_xz);
-    float edgeFade = 1.0 - smoothstep(0.25, 0.50, edgeDist) * 0.5;
+    float edge_dist = length(v_local_pos_xz);
+    float edge_fade = 1.0 - smoothstep(0.25, 0.50, edge_dist) * 0.5;
 
-    float topFade = 1.0 - smoothstep(0.85, 1.0, v_tex_coord.y) * 0.4;
+    float top_fade = 1.0 - smoothstep(0.85, 1.0, v_tex_coord.y) * 0.4;
 
-    alpha = leafMask * holes * gaps * edgeFade * topFade;
+    alpha = leaf_mask * holes * gaps * edge_fade * top_fade;
     alpha = mix(1.0, alpha, v_foliage_mask);
 
-    if (leafFine > 0.82) {
+    if (leaf_fine > 0.82) {
       alpha *= 0.2;
     }
   }

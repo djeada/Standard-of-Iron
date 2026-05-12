@@ -4,7 +4,7 @@ in vec2 v_uv;
 in vec2 v_local;
 in vec2 v_world_pos;
 
-uniform sampler2D u_font_atlas;
+uniform sampler2_d u_font_atlas;
 uniform vec4 u_fill_color;
 uniform vec4 u_stroke_color;
 uniform float u_stroke_width;
@@ -15,7 +15,7 @@ uniform bool u_use_stroke;
 
 out vec4 frag_color;
 
-float sampleSDF(vec2 uv) {
+float sample_sdf(vec2 uv) {
 
   float dist = texture(u_font_atlas, uv).r;
 
@@ -25,7 +25,7 @@ float sampleSDF(vec2 uv) {
 void main() {
   if (u_use_sdf) {
 
-    float dist = sampleSDF(v_uv);
+    float dist = sample_sdf(v_uv);
 
     float alpha = smoothstep(-u_smoothing, u_smoothing, dist);
 
@@ -33,39 +33,39 @@ void main() {
     color.a *= alpha;
 
     if (u_use_stroke && u_stroke_width > 0.0) {
-      float strokeDist = dist + u_stroke_width * 0.1;
-      float strokeAlpha = smoothstep(-u_smoothing, u_smoothing, strokeDist);
+      float stroke_dist = dist + u_stroke_width * 0.1;
+      float stroke_alpha = smoothstep(-u_smoothing, u_smoothing, stroke_dist);
 
-      vec4 strokeColor = u_stroke_color;
-      strokeColor.a *= strokeAlpha;
+      vec4 stroke_color = u_stroke_color;
+      stroke_color.a *= stroke_alpha;
 
-      color = mix(strokeColor, color, alpha);
-      color.a = max(strokeColor.a, color.a * alpha);
+      color = mix(stroke_color, color, alpha);
+      color.a = max(stroke_color.a, color.a * alpha);
     }
 
     frag_color = color;
   } else {
 
-    vec4 texColor = texture(u_font_atlas, v_uv);
+    vec4 tex_color = texture(u_font_atlas, v_uv);
 
     vec4 color = u_fill_color;
-    color.a *= texColor.a;
+    color.a *= tex_color.a;
 
     if (u_use_stroke && u_stroke_width > 0.0) {
-      float strokeOffset = u_stroke_width * 0.002;
+      float stroke_offset = u_stroke_width * 0.002;
 
       float neighbors = 0.0;
-      neighbors += texture(u_font_atlas, v_uv + vec2(strokeOffset, 0.0)).a;
-      neighbors += texture(u_font_atlas, v_uv - vec2(strokeOffset, 0.0)).a;
-      neighbors += texture(u_font_atlas, v_uv + vec2(0.0, strokeOffset)).a;
-      neighbors += texture(u_font_atlas, v_uv - vec2(0.0, strokeOffset)).a;
+      neighbors += texture(u_font_atlas, v_uv + vec2(stroke_offset, 0.0)).a;
+      neighbors += texture(u_font_atlas, v_uv - vec2(stroke_offset, 0.0)).a;
+      neighbors += texture(u_font_atlas, v_uv + vec2(0.0, stroke_offset)).a;
+      neighbors += texture(u_font_atlas, v_uv - vec2(0.0, stroke_offset)).a;
       neighbors *= 0.25;
 
-      vec4 strokeColor = u_stroke_color;
-      strokeColor.a *= neighbors;
+      vec4 stroke_color = u_stroke_color;
+      stroke_color.a *= neighbors;
 
-      color = mix(strokeColor, color, texColor.a);
-      color.a = max(strokeColor.a, color.a);
+      color = mix(stroke_color, color, tex_color.a);
+      color.a = max(stroke_color.a, color.a);
     }
 
     frag_color = color;
