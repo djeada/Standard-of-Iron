@@ -2,16 +2,16 @@
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
-layout(location = 2) in vec2 a_texCoord;
+layout(location = 2) in vec2 a_tex_coord;
 
 uniform mat4 u_model;
-layout(std140) uniform FrameData { mat4 u_viewProj; };
+layout(std140) uniform FrameData { mat4 u_view_proj; };
 uniform float u_time;
 
-out vec2 v_texCoord;
-out vec3 v_worldPos;
-out vec3 v_worldNormal;
-out float v_sheetDrift;
+out vec2 v_tex_coord;
+out vec3 v_world_pos;
+out vec3 v_world_normal;
+out float v_sheet_drift;
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -34,25 +34,25 @@ void main() {
   vec3 worldNormal = normalize(mat3(u_model) * a_normal);
   vec3 worldPos = (u_model * vec4(a_position, 1.0)).xyz;
 
-  float baseNoise = noise(worldPos.xz * 0.06 + vec2(a_texCoord.y * 1.6, 0.0));
-  float upperNoise = noise(worldPos.xz * 0.11 + vec2(0.0, a_texCoord.y * 2.3) -
+  float baseNoise = noise(worldPos.xz * 0.06 + vec2(a_tex_coord.y * 1.6, 0.0));
+  float upperNoise = noise(worldPos.xz * 0.11 + vec2(0.0, a_tex_coord.y * 2.3) -
                            u_time * 0.015);
   float driftPhase = u_time * 0.55 + worldPos.y * 0.22 + baseNoise * 4.0;
 
   float lateralDrift =
-      sin(driftPhase) * (0.18 + 0.22 * upperNoise) * a_texCoord.y;
+      sin(driftPhase) * (0.18 + 0.22 * upperNoise) * a_tex_coord.y;
   float breathing = sin(u_time * 0.32 + worldPos.x * 0.04 + worldPos.z * 0.05) *
-                    0.12 * (0.35 + 0.65 * a_texCoord.y);
+                    0.12 * (0.35 + 0.65 * a_tex_coord.y);
   float verticalCurl =
       sin(u_time * 0.40 + worldPos.x * 0.05 + baseNoise * 6.0) * 0.18;
 
   worldPos += worldNormal * (lateralDrift + breathing);
-  worldPos.y += verticalCurl * (0.18 + 0.82 * a_texCoord.y);
+  worldPos.y += verticalCurl * (0.18 + 0.82 * a_tex_coord.y);
 
-  v_texCoord = a_texCoord;
-  v_worldPos = worldPos;
-  v_worldNormal = worldNormal;
-  v_sheetDrift = lateralDrift + breathing;
+  v_tex_coord = a_tex_coord;
+  v_world_pos = worldPos;
+  v_world_normal = worldNormal;
+  v_sheet_drift = lateralDrift + breathing;
 
-  gl_Position = u_viewProj * vec4(worldPos, 1.0);
+  gl_Position = u_view_proj * vec4(worldPos, 1.0);
 }

@@ -109,14 +109,14 @@ auto CharacterPipeline::build_uniform_set(GL::Shader *shader) const
   uniforms.mvp = shader->optional_uniform_handle("u_mvp");
   uniforms.model = shader->optional_uniform_handle("u_model");
   uniforms.texture = shader->optional_uniform_handle("u_texture");
-  uniforms.use_texture = shader->optional_uniform_handle("u_useTexture");
+  uniforms.use_texture = shader->optional_uniform_handle("u_use_texture");
   uniforms.color = shader->optional_uniform_handle("u_color");
   uniforms.alpha = shader->optional_uniform_handle("u_alpha");
-  uniforms.material_id = shader->optional_uniform_handle("u_materialId");
+  uniforms.material_id = shader->optional_uniform_handle("u_material_id");
   uniforms.instanced = shader->optional_uniform_handle("u_instanced");
-  uniforms.view_proj = shader->optional_uniform_handle("u_viewProj");
-  uniforms.light_dir = shader->optional_uniform_handle("u_lightDir");
-  uniforms.ambient_strength = shader->optional_uniform_handle("u_ambientStrength");
+  uniforms.view_proj = shader->optional_uniform_handle("u_view_proj");
+  uniforms.light_dir = shader->optional_uniform_handle("u_light_dir");
+  uniforms.ambient_strength = shader->optional_uniform_handle("u_ambient_strength");
   return uniforms;
 }
 

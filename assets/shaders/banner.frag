@@ -1,18 +1,18 @@
 #version 330 core
 
 in vec3 v_normal;
-in vec2 v_texCoord;
-in float v_waveOffset;
-in float v_clothDepth;
+in vec2 v_tex_coord;
+in float v_wave_offset;
+in float v_cloth_depth;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
-uniform vec3 u_trimColor;
-uniform bool u_useTexture;
+uniform vec3 u_trim_color;
+uniform bool u_use_texture;
 uniform float u_alpha;
 uniform float u_time;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -62,9 +62,9 @@ float diamondMask(vec2 uv, vec2 center, vec2 size) {
 }
 
 void main() {
-  vec2 uv = v_texCoord;
+  vec2 uv = v_tex_coord;
   vec3 color = u_color;
-  if (u_useTexture) {
+  if (u_use_texture) {
     color *= texture(u_texture, uv).rgb;
   }
 
@@ -75,7 +75,7 @@ void main() {
 
   float weave = clothWeave(uv);
 
-  float foldShadow = clamp(1.0 - abs(v_waveOffset) * 2.2, 0.76, 1.0);
+  float foldShadow = clamp(1.0 - abs(v_wave_offset) * 2.2, 0.76, 1.0);
   float mastShadow = 1.0 - smoothstep(0.0, 0.22, uv.x) * 0.16;
   float hemTone = mix(0.94, 1.04, uv.y);
   float fabricNoise =
@@ -92,7 +92,7 @@ void main() {
   float diamond = diamondMask(uv, vec2(0.52, 0.54), vec2(0.055, 0.09));
   float motif =
       max(borderMask, max(mastBand * 0.65, max(roundel, diamond * 0.85)));
-  color = mix(color, u_trimColor, motif * 0.92);
+  color = mix(color, u_trim_color, motif * 0.92);
 
   vec3 lightDir = normalize(vec3(0.55, 0.80, 0.40));
   float nDotL = dot(normal, lightDir);
@@ -100,17 +100,17 @@ void main() {
   float wrapAmount = 0.55;
   float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.22);
 
-  float ao = 1.0 - v_clothDepth * 0.12;
+  float ao = 1.0 - v_cloth_depth * 0.12;
   float backscatter =
-      max(dot(-normal, lightDir), 0.0) * 0.12 * (1.0 - v_clothDepth * 0.35);
+      max(dot(-normal, lightDir), 0.0) * 0.12 * (1.0 - v_cloth_depth * 0.35);
   vec3 viewDir = normalize(vec3(0.0, 0.7, 0.7));
   vec3 halfDir = normalize(lightDir + viewDir);
   float sheen = pow(max(dot(normal, halfDir), 0.0), 18.0) * 0.08;
 
   color *= diff * ao;
   color += u_color * (0.24 + backscatter);
-  color += u_trimColor * sheen;
-  color = mix(color, color * 0.94, v_clothDepth * 0.28);
+  color += u_trim_color * sheen;
+  color = mix(color, color * 0.94, v_cloth_depth * 0.28);
 
-  FragColor = vec4(clamp(color, 0.0, 1.0), u_alpha);
+  frag_color = vec4(clamp(color, 0.0, 1.0), u_alpha);
 }

@@ -10,7 +10,7 @@ uniform float u_stroke_width;
 uniform float u_shadow_offset;
 uniform bool u_show_shadow;
 
-out vec4 fragColor;
+out vec4 frag_color;
 
 const float SYMBOL_MOUNTAIN = 0.0;
 const float SYMBOL_CITY = 1.0;
@@ -164,5 +164,5 @@ void main() {
     result.a = max(result.a, shadowAlpha);
   }
 
-  fragColor = result;
+  frag_color = result;
 }

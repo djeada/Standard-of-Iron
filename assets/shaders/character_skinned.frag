@@ -7,20 +7,20 @@ flat in int v_color_role;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
-uniform bool u_useTexture;
+uniform bool u_use_texture;
 uniform float u_alpha;
-uniform int u_materialId;
+uniform int u_material_id;
 uniform vec3 u_role_colors[32];
 uniform int u_role_color_count;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 void main() {
   vec3 base = u_color;
   if (v_color_role > 0 && v_color_role <= u_role_color_count) {
     base = u_role_colors[v_color_role - 1];
   }
-  if (u_useTexture) {
+  if (u_use_texture) {
     base *= texture(u_texture, v_tex).rgb;
   }
 
@@ -39,5 +39,5 @@ void main() {
   vec3 light_tint = mix(sky_color * 0.34, sun_color, lit_t);
 
   vec3 color = clamp(base * diff * light_tint, 0.0, 1.0);
-  FragColor = vec4(color, u_alpha);
+  frag_color = vec4(color, u_alpha);
 }

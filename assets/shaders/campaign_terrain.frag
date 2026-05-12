@@ -26,7 +26,7 @@ uniform vec3 u_mountain_tint;
 
 uniform float u_elevation_scale;
 
-out vec4 fragColor;
+out vec4 frag_color;
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -142,5 +142,5 @@ void main() {
   float vignette = 1.0 - dot(vignetteCoord, vignetteCoord) * 0.15;
   color *= vignette;
 
-  fragColor = vec4(color, baseColor.a);
+  frag_color = vec4(color, baseColor.a);
 }
