@@ -32,6 +32,7 @@ struct LevelSnapshot {
   bool is_spectator_mode = false;
   Game::Map::RainSettings rain;
   std::uint32_t biome_seed = 0;
+  Game::Map::LightingSettings lighting;
 };
 
 struct RuntimeSnapshot {

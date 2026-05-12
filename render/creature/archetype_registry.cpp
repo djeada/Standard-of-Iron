@@ -142,6 +142,7 @@ make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
 constexpr auto
 make_humanoid_variant_count_table() -> std::array<std::uint8_t, k_state_count> {
   auto t = make_variant_count_table_for_clips(make_humanoid_clip_table());
+  t[static_cast<std::size_t>(AnimationStateId::Idle)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;
   return t;

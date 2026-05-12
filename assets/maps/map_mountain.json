@@ -59,7 +59,7 @@
     ],
     "plant_density": 0.5,
     "ground_irregularity_enabled": true,
-    "irregularity_scale": 0.10,
+    "irregularity_scale": 0.1,
     "irregularity_amplitude": 0.05
   },
   "camera": {
@@ -580,50 +580,98 @@
   ],
   "roads": [
     {
-      "start": [75, 75],
-      "end": [150, 150],
+      "start": [
+        75,
+        75
+      ],
+      "end": [
+        150,
+        150
+      ],
       "width": 3.5,
       "style": "default"
     },
     {
-      "start": [150, 150],
-      "end": [225, 225],
+      "start": [
+        150,
+        150
+      ],
+      "end": [
+        225,
+        225
+      ],
       "width": 3.5,
       "style": "default"
     },
     {
-      "start": [75, 225],
-      "end": [150, 150],
+      "start": [
+        75,
+        225
+      ],
+      "end": [
+        150,
+        150
+      ],
       "width": 3.0,
       "style": "default"
     },
     {
-      "start": [225, 75],
-      "end": [150, 150],
+      "start": [
+        225,
+        75
+      ],
+      "end": [
+        150,
+        150
+      ],
       "width": 3.0,
       "style": "default"
     },
     {
-      "start": [75, 75],
-      "end": [75, 225],
+      "start": [
+        75,
+        75
+      ],
+      "end": [
+        75,
+        225
+      ],
       "width": 2.5,
       "style": "default"
     },
     {
-      "start": [225, 75],
-      "end": [225, 225],
+      "start": [
+        225,
+        75
+      ],
+      "end": [
+        225,
+        225
+      ],
       "width": 2.5,
       "style": "default"
     },
     {
-      "start": [75, 75],
-      "end": [225, 75],
+      "start": [
+        75,
+        75
+      ],
+      "end": [
+        225,
+        75
+      ],
       "width": 2.5,
       "style": "default"
     },
     {
-      "start": [75, 225],
-      "end": [225, 225],
+      "start": [
+        75,
+        225
+      ],
+      "end": [
+        225,
+        225
+      ],
       "width": 2.5,
       "style": "default"
     }
@@ -645,5 +693,6 @@
     "intensity": 0.65,
     "fade_duration": 8.0,
     "wind_strength": 0.3
-  }
+  },
+  "time_of_day": "morning"
 }

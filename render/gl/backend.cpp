@@ -1761,9 +1761,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         if (m_last_bound_shader != bridge_shader) {
           bridge_shader->use();
-          QVector3D const light_dir(0.65F, 0.50F, 0.40F);
           bridge_shader->set_uniform(
-              m_water_pipeline->m_bridge_uniforms.light_direction, light_dir);
+              m_water_pipeline->m_bridge_uniforms.light_direction, m_light_dir);
           m_last_bound_shader = bridge_shader;
           m_last_bound_texture = nullptr;
         }
@@ -1780,9 +1779,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         if (m_last_bound_shader != road_shader) {
           road_shader->use();
-          QVector3D const light_dir(0.65F, 0.50F, 0.40F);
           road_shader->set_uniform(
-              m_water_pipeline->m_road_uniforms.light_direction, light_dir);
+              m_water_pipeline->m_road_uniforms.light_direction, m_light_dir);
           m_last_bound_shader = road_shader;
           m_last_bound_texture = nullptr;
         }
@@ -1896,6 +1894,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (time_uniform != Shader::InvalidUniform) {
           active_shader->set_uniform(time_uniform, m_animation_time);
         }
+        if (uniforms->light_dir != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->light_dir, m_light_dir);
+        }
+        if (uniforms->ambient_strength != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->ambient_strength, m_ambient_strength);
+        }
         m_last_bound_shader = active_shader;
       }
 
@@ -1927,6 +1931,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                 batch_shader->optional_uniform_handle("u_time");
             if (time_uniform != Shader::InvalidUniform) {
               batch_shader->set_uniform(time_uniform, m_animation_time);
+            }
+            if (inst_uniforms->light_dir != Shader::InvalidUniform) {
+              batch_shader->set_uniform(inst_uniforms->light_dir, m_light_dir);
+            }
+            if (inst_uniforms->ambient_strength != Shader::InvalidUniform) {
+              batch_shader->set_uniform(inst_uniforms->ambient_strength, m_ambient_strength);
             }
             Texture *tex_to_use =
                 (it.texture != nullptr)
@@ -2320,19 +2330,25 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_primitive_batch_pipeline->upload_sphere_instances(
             data, batch.instance_count());
         m_primitive_batch_pipeline->draw_spheres(batch.instance_count(),
-                                                 view_proj);
+                                                 view_proj,
+                                                 batch.params.light_direction,
+                                                 batch.params.ambient_strength);
         break;
       case PrimitiveType::Cylinder:
         m_primitive_batch_pipeline->upload_cylinder_instances(
             data, batch.instance_count());
         m_primitive_batch_pipeline->draw_cylinders(batch.instance_count(),
-                                                   view_proj);
+                                                   view_proj,
+                                                   batch.params.light_direction,
+                                                   batch.params.ambient_strength);
         break;
       case PrimitiveType::Cone:
         m_primitive_batch_pipeline->upload_cone_instances(
             data, batch.instance_count());
         m_primitive_batch_pipeline->draw_cones(batch.instance_count(),
-                                               view_proj);
+                                               view_proj,
+                                               batch.params.light_direction,
+                                               batch.params.ambient_strength);
         break;
       }
 

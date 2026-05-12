@@ -802,6 +802,24 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
     read_rain_config(root.value(RAIN).toObject(), out_map.rain);
   }
 
+  if (root.contains(TIME_OF_DAY)) {
+    const QString tod_str =
+        root.value(TIME_OF_DAY).toString().trimmed().toLower();
+    if (tod_str == "morning") {
+      out_map.time_of_day = TimeOfDay::Morning;
+    } else if (tod_str == "day") {
+      out_map.time_of_day = TimeOfDay::Day;
+    } else if (tod_str == "afternoon") {
+      out_map.time_of_day = TimeOfDay::Afternoon;
+    } else if (tod_str == "night") {
+      out_map.time_of_day = TimeOfDay::Night;
+    } else {
+      qWarning() << "MapLoader: unknown time_of_day value" << tod_str
+                 << "- defaulting to day";
+      out_map.time_of_day = TimeOfDay::Day;
+    }
+  }
+
   return true;
 }
 

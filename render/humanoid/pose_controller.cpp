@@ -3,6 +3,7 @@
 #include "spear_pose_utils.h"
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 
@@ -117,8 +118,10 @@ auto HumanoidPoseController::get_ambient_idle_type(
   }
 
   std::uint32_t const anim_selector = seed ^ (cycle_number * 1664525U);
-  auto const idle_type = static_cast<std::uint8_t>(anim_selector % 8);
-  return static_cast<AmbientIdleType>(idle_type + 1);
+  constexpr std::array<AmbientIdleType, 4> k_baked_types{
+      AmbientIdleType::SitDown, AmbientIdleType::Jump,
+      AmbientIdleType::RaiseWeapon, AmbientIdleType::ShiftWeight};
+  return k_baked_types[anim_selector % k_baked_types.size()];
 }
 
 void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
@@ -138,6 +141,17 @@ void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
 
   float phase = cycle_time / k_ambient_duration;
   apply_ambient_idle_explicit(idle_type, phase);
+}
+
+auto HumanoidPoseController::compute_ambient_idle_phase(
+    float time, std::uint32_t seed) -> float {
+  float const seed_offset =
+      static_cast<float>(seed % 1000) / k_seed_offset_divisor;
+  float const cycle_period =
+      k_base_cycle_period +
+      static_cast<float>(seed % 1500) / (1500.0F / k_cycle_period_range);
+  float const cycle_time = std::fmod(time + seed_offset, cycle_period);
+  return std::clamp(cycle_time / k_ambient_duration, 0.0F, 1.0F);
 }
 
 void HumanoidPoseController::apply_ambient_idle_explicit(

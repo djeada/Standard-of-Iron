@@ -19,7 +19,11 @@
     "irregularity_amplitude": 0.06
   },
   "camera": {
-    "center": [100, 0, 60],
+    "center": [
+      100,
+      0,
+      60
+    ],
     "distance": 35.0,
     "tilt_deg": 45.0,
     "yaw": 225.0,
@@ -206,9 +210,18 @@
       "height": 2.5,
       "description": "Carthaginian observation point",
       "entrances": [
-        {"x": 50, "z": 50},
-        {"x": 60, "z": 60},
-        {"x": 50, "z": 70}
+        {
+          "x": 50,
+          "z": 50
+        },
+        {
+          "x": 60,
+          "z": 60
+        },
+        {
+          "x": 50,
+          "z": 70
+        }
       ]
     },
     {
@@ -219,9 +232,18 @@
       "height": 2.0,
       "description": "Roman defensive position",
       "entrances": [
-        {"x": 150, "z": 52},
-        {"x": 142, "z": 60},
-        {"x": 150, "z": 68}
+        {
+          "x": 150,
+          "z": 52
+        },
+        {
+          "x": 142,
+          "z": 60
+        },
+        {
+          "x": 150,
+          "z": 68
+        }
       ]
     },
     {
@@ -233,8 +255,14 @@
       "height": 3.0,
       "description": "Southern ridge overlooking valley",
       "entrances": [
-        {"x": 85, "z": 110},
-        {"x": 115, "z": 110}
+        {
+          "x": 85,
+          "z": 110
+        },
+        {
+          "x": 115,
+          "z": 110
+        }
       ]
     },
     {
@@ -246,8 +274,14 @@
       "height": 3.5,
       "description": "Northern foothills",
       "entrances": [
-        {"x": 82, "z": 10},
-        {"x": 118, "z": 10}
+        {
+          "x": 82,
+          "z": 10
+        },
+        {
+          "x": 118,
+          "z": 10
+        }
       ]
     },
     {
@@ -290,9 +324,18 @@
       "height": 2.8,
       "description": "Southern spur controlling the retreat track",
       "entrances": [
-        {"x": 126, "z": 95},
-        {"x": 144, "z": 95},
-        {"x": 135, "z": 86}
+        {
+          "x": 126,
+          "z": 95
+        },
+        {
+          "x": 144,
+          "z": 95
+        },
+        {
+          "x": 135,
+          "z": 86
+        }
       ]
     },
     {
@@ -312,42 +355,78 @@
   ],
   "rivers": [
     {
-      "start": [188, 0],
-      "end": [192, 120],
+      "start": [
+        188,
+        0
+      ],
+      "end": [
+        192,
+        120
+      ],
       "width": 8,
       "description": "Ticino River - eastern boundary"
     },
     {
-      "start": [0, 25],
-      "end": [60, 20],
+      "start": [
+        0,
+        25
+      ],
+      "end": [
+        60,
+        20
+      ],
       "width": 4,
       "description": "Small tributary stream"
     },
     {
-      "start": [60, 102],
-      "end": [140, 108],
+      "start": [
+        60,
+        102
+      ],
+      "end": [
+        140,
+        108
+      ],
       "width": 3.5,
       "description": "Southern irrigation channel that complicates cavalry pursuit"
     }
   ],
   "bridges": [
     {
-      "start": [186, 40],
-      "end": [194, 40],
+      "start": [
+        186,
+        40
+      ],
+      "end": [
+        194,
+        40
+      ],
       "width": 5,
       "height": 0.8,
       "description": "Roman supply bridge"
     },
     {
-      "start": [186, 80],
-      "end": [194, 80],
+      "start": [
+        186,
+        80
+      ],
+      "end": [
+        194,
+        80
+      ],
       "width": 5,
       "height": 0.8,
       "description": "Southern crossing"
     },
     {
-      "start": [96, 104],
-      "end": [102, 106],
+      "start": [
+        96,
+        104
+      ],
+      "end": [
+        102,
+        106
+      ],
       "width": 4,
       "height": 0.6,
       "description": "Field bridge over the southern channel"
@@ -355,59 +434,146 @@
   ],
   "roads": [
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 3.5,
       "style": "default",
       "waypoints": [
-        [10, 60],
-        [30, 58],
-        [50, 55],
-        [80, 58],
-        [100, 60],
-        [120, 58],
-        [150, 55],
-        [170, 58],
-        [190, 60]
+        [
+          10,
+          60
+        ],
+        [
+          30,
+          58
+        ],
+        [
+          50,
+          55
+        ],
+        [
+          80,
+          58
+        ],
+        [
+          100,
+          60
+        ],
+        [
+          120,
+          58
+        ],
+        [
+          150,
+          55
+        ],
+        [
+          170,
+          58
+        ],
+        [
+          190,
+          60
+        ]
       ],
       "description": "Main east-west road through valley"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [175, 60],
-        [180, 50],
-        [185, 40],
-        [190, 40]
+        [
+          175,
+          60
+        ],
+        [
+          180,
+          50
+        ],
+        [
+          185,
+          40
+        ],
+        [
+          190,
+          40
+        ]
       ],
       "description": "Road to Roman camp"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [30, 60],
-        [28, 45],
-        [25, 30]
+        [
+          30,
+          60
+        ],
+        [
+          28,
+          45
+        ],
+        [
+          25,
+          30
+        ]
       ],
       "description": "Path to Carthaginian flanking position"
     },
     {
-      "start": [0, 0],
-      "end": [0, 0],
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        0,
+        0
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [175, 60],
-        [165, 72],
-        [148, 86],
-        [132, 96],
-        [105, 105]
+        [
+          175,
+          60
+        ],
+        [
+          165,
+          72
+        ],
+        [
+          148,
+          86
+        ],
+        [
+          132,
+          96
+        ],
+        [
+          105,
+          105
+        ]
       ],
       "description": "Roman fallback track along the southern spur"
     }
@@ -415,5 +581,6 @@
   "victory": {
     "type": "elimination",
     "description": "Defeat Roman cavalry forces and capture their camp"
-  }
+  },
+  "time_of_day": "afternoon"
 }
