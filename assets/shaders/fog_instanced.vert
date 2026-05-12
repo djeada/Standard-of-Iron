@@ -34,18 +34,18 @@ void main() {
   float jitter = 0.92 + hash11(seed + 3.17) * 0.18;
   vec2 local = vec2(a_position.x, a_position.z) * (i_size * jitter);
   vec2 rot = vec2(c * local.x - s * local.y, s * local.x + c * local.y);
-  vec3 worldPos = vec3(i_center.x + rot.x,
+  vec3 world_pos = vec3(i_center.x + rot.x,
                        i_center.y + a_position.y +
                            sin(dot(i_center.xz, vec2(0.041, 0.033)) +
                                u_time * 0.10 + seed * 5.0) *
                                i_size * 0.012,
                        i_center.z + rot.y);
 
-  v_world_pos = worldPos;
+  v_world_pos = world_pos;
   v_color = i_color;
   v_alpha = i_alpha;
   v_local_coord = rot / max(i_size * jitter, 0.001);
   v_seed = seed;
 
-  gl_Position = u_view_proj * vec4(worldPos, 1.0);
+  gl_Position = u_view_proj * vec4(world_pos, 1.0);
 }

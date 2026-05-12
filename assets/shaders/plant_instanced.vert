@@ -31,45 +31,45 @@ float h31(vec3 p) {
 
 void main() {
   float scale = a_pos_scale.w;
-  vec3 worldOrigin = a_pos_scale.xyz;
+  vec3 world_origin = a_pos_scale.xyz;
   float rotation = a_type_params.y;
-  float swayStrength = a_type_params.z;
-  float swaySpeed = a_type_params.w;
-  float swayPhase = a_color_sway.a;
+  float sway_strength = a_type_params.z;
+  float sway_speed = a_type_params.w;
+  float sway_phase = a_color_sway.a;
 
-  float seed = h31(worldOrigin * 0.173 + vec3(0.27, 0.49, 0.19));
+  float seed = h31(world_origin * 0.173 + vec3(0.27, 0.49, 0.19));
 
   const float SIZE_MULT = 1.85;
-  float sizeJitter = mix(0.90, 1.45, h11(seed * 3.9));
-  float finalScale = scale * SIZE_MULT * sizeJitter;
+  float size_jitter = mix(0.90, 1.45, h11(seed * 3.9));
+  float final_scale = scale * SIZE_MULT * size_jitter;
 
-  vec3 localPos = a_pos * finalScale;
+  vec3 local_pos = a_pos * final_scale;
   float h = clamp(a_pos.y, 0.0, 1.0);
 
-  float leanAngle = (h11(seed * 2.1) - 0.5) * 0.18;
-  float leanYaw = h11(seed * 3.7) * 6.28318;
-  vec2 leanDir = vec2(cos(leanYaw), sin(leanYaw));
-  localPos.xz += leanDir * (h * h) * tan(leanAngle) * finalScale;
+  float lean_angle = (h11(seed * 2.1) - 0.5) * 0.18;
+  float lean_yaw = h11(seed * 3.7) * 6.28318;
+  vec2 lean_dir = vec2(cos(lean_yaw), sin(lean_yaw));
+  local_pos.xz += lean_dir * (h * h) * tan(lean_angle) * final_scale;
 
   float gust = sin(u_time * 0.35 + seed * 6.0) * 0.5 + 0.5;
-  float sway = sin(u_time * swaySpeed * u_wind_speed + swayPhase + seed * 4.0);
-  sway *= (0.22 + 0.55 * gust) * swayStrength * u_wind_strength * pow(h, 1.25);
+  float sway = sin(u_time * sway_speed * u_wind_speed + sway_phase + seed * 4.0);
+  sway *= (0.22 + 0.55 * gust) * sway_strength * u_wind_strength * pow(h, 1.25);
 
-  float windYaw = seed * 9.0;
-  vec2 windDir = normalize(vec2(cos(windYaw), sin(windYaw)) + vec2(0.6, 0.8));
-  localPos.xz += windDir * (0.10 * sway);
+  float wind_yaw = seed * 9.0;
+  vec2 wind_dir = normalize(vec2(cos(wind_yaw), sin(wind_yaw)) + vec2(0.6, 0.8));
+  local_pos.xz += wind_dir * (0.10 * sway);
 
   float twist = (h11(seed * 5.5) - 0.5) * 0.30;
-  float twistAngle = twist * h;
+  float twist_angle = twist * h;
   mat2 tw =
-      mat2(cos(twistAngle), -sin(twistAngle), sin(twistAngle), cos(twistAngle));
-  localPos.xz = tw * localPos.xz;
+      mat2(cos(twist_angle), -sin(twist_angle), sin(twist_angle), cos(twist_angle));
+  local_pos.xz = tw * local_pos.xz;
 
   float cs = cos(rotation), sn = sin(rotation);
   mat2 rot = mat2(cs, -sn, sn, cs);
-  localPos.xz = rot * localPos.xz;
+  local_pos.xz = rot * local_pos.xz;
 
-  v_world_pos = localPos + worldOrigin;
+  v_world_pos = local_pos + world_origin;
 
   vec3 n = a_normal;
   n.xz = tw * n.xz;

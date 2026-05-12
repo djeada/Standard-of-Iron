@@ -17,7 +17,7 @@ out vec4 frag_color;
 
 float h11(float n) { return fract(sin(n) * 43758.5453123); }
 
-float aawidthUV(vec2 uv) {
+float aawidth_uv(vec2 uv) {
   vec2 dx = dFdx(uv), dy = dFdy(uv);
   float w = 0.5 * (length(dx) + length(dy));
   float q = exp2(floor(log2(max(w, 1e-6)) + 0.5));
@@ -25,7 +25,7 @@ float aawidthUV(vec2 uv) {
 }
 
 float sdf_to_alpha_uv_stable(float sdf, vec2 uv) {
-  float w = aawidthUV(uv);
+  float w = aawidth_uv(uv);
 
   sdf -= 0.25 * w;
 
@@ -37,22 +37,22 @@ float sdf_to_alpha_uv_stable(float sdf, vec2 uv) {
   return a;
 }
 
-float interleavedGradientNoise(vec2 p) {
+float interleaved_gradient_noise(vec2 p) {
   float f = dot(p, vec2(0.06711056, 0.00583715));
   return fract(52.9829189 * fract(f));
 }
 
-float stableDither(float seed) {
+float stable_dither(float seed) {
 #ifdef DITHER_SCREEN_ANCHORED
-  return interleavedGradientNoise(gl_FragCoord.xy);
+  return interleaved_gradient_noise(gl_FragCoord.xy);
 #else
-  return interleavedGradientNoise(floor(v_world_pos.xz * 4.0 + seed * 17.0));
+  return interleaved_gradient_noise(floor(v_world_pos.xz * 4.0 + seed * 17.0));
 #endif
 }
 
-float quantStep(float w) { return exp2(floor(log2(max(w, 1e-6)) + 0.5)); }
+float quant_step(float w) { return exp2(floor(log2(max(w, 1e-6)) + 0.5)); }
 
-float bushSDF(vec2 uv, float seed) {
+float bush_sdf(vec2 uv, float seed) {
   vec2 p = (uv - 0.5) * vec2(1.08, 0.96);
   float sdf = 1e9;
   for (int i = 0; i < 5; i++) {
@@ -66,7 +66,7 @@ float bushSDF(vec2 uv, float seed) {
   return sdf - 0.007;
 }
 
-float rosetteSDF(vec2 uv, float seed) {
+float rosette_sdf(vec2 uv, float seed) {
   vec2 p = uv - 0.5;
   float a = atan(p.y, p.x);
   float r = length(p);
@@ -75,7 +75,7 @@ float rosetteSDF(vec2 uv, float seed) {
   return (r - wave) - 0.006;
 }
 
-float cactusSDF(vec2 uv, float seed) {
+float cactus_sdf(vec2 uv, float seed) {
   vec2 p = (uv - 0.5) * vec2(0.92, 1.08);
   float sdf = length(p) - 0.48;
   for (int i = 0; i < 3; i++) {
@@ -89,22 +89,22 @@ float cactusSDF(vec2 uv, float seed) {
   return sdf - 0.006;
 }
 
-float plantSDF(vec2 uv, float typeVal, float seed) {
-  if (typeVal < 0.45)
-    return bushSDF(uv, seed);
-  if (typeVal < 0.80)
-    return rosetteSDF(uv, seed);
-  return cactusSDF(uv, seed);
+float plant_sdf(vec2 uv, float type_val, float seed) {
+  if (type_val < 0.45)
+    return bush_sdf(uv, seed);
+  if (type_val < 0.80)
+    return rosette_sdf(uv, seed);
+  return cactus_sdf(uv, seed);
 }
 
-vec2 sdfGrad(vec2 uv, float typeVal, float seed, float stepUV) {
-  stepUV = quantStep(stepUV);
-  vec2 e = vec2(stepUV, 0.0);
-  float sx1 = plantSDF(uv + e.xy, typeVal, seed);
-  float sx2 = plantSDF(uv - e.xy, typeVal, seed);
-  float sy1 = plantSDF(uv + e.yx, typeVal, seed);
-  float sy2 = plantSDF(uv - e.yx, typeVal, seed);
-  return vec2(sx1 - sx2, sy1 - sy2) * (0.5 / stepUV);
+vec2 sdf_grad(vec2 uv, float type_val, float seed, float step_uv) {
+  step_uv = quant_step(step_uv);
+  vec2 e = vec2(step_uv, 0.0);
+  float sx1 = plant_sdf(uv + e.xy, type_val, seed);
+  float sx2 = plant_sdf(uv - e.xy, type_val, seed);
+  float sy1 = plant_sdf(uv + e.yx, type_val, seed);
+  float sy2 = plant_sdf(uv - e.yx, type_val, seed);
+  return vec2(sx1 - sx2, sy1 - sy2) * (0.5 / step_uv);
 }
 
 void main() {
@@ -123,8 +123,8 @@ void main() {
       normalize(v_tangent * uv2.x + v_bitangent * uv2.y + v_normal * (z * 1.8));
   vec3 N = normalize(mix(v_normal, Nbulge, 0.85));
 
-  float typeVal = fract(v_type);
-  float sdf = plantSDF(v_tex_coord, typeVal, v_seed);
+  float type_val = fract(v_type);
+  float sdf = plant_sdf(v_tex_coord, type_val, v_seed);
   float alpha = sdf_to_alpha_uv_stable(sdf, v_tex_coord);
 
   if (alpha <= 0.002)
@@ -132,45 +132,45 @@ void main() {
 
 #ifdef USE_HASHED_ALPHA
   {
-    float w = aawidthUV(v_tex_coord);
+    float w = aawidth_uv(v_tex_coord);
     float thin = smoothstep(0.0, 2.0 * w, alpha);
     if (thin < 0.98) {
-      if (thin < stableDither(v_seed))
+      if (thin < stable_dither(v_seed))
         discard;
       alpha = 1.0;
     }
   }
 #endif
 
-  float stepUV = aawidthUV(v_tex_coord);
-  vec2 g = sdfGrad(v_tex_coord, typeVal, v_seed, stepUV);
+  float step_uv = aawidth_uv(v_tex_coord);
+  vec2 g = sdf_grad(v_tex_coord, type_val, v_seed, step_uv);
   vec3 Nshape =
       normalize(v_tangent * (-g.x) + v_bitangent * (-g.y) + v_normal * 3.0);
-  float edgeMix = smoothstep(0.30, 0.0, sdf);
-  vec3 Ntemp = normalize(mix(N, Nshape, 0.6 * edgeMix));
+  float edge_mix = smoothstep(0.30, 0.0, sdf);
+  vec3 Ntemp = normalize(mix(N, Nshape, 0.6 * edge_mix));
 
-  float wAA = aawidthUV(v_tex_coord);
-  float edge1 = 1.0 - smoothstep(-wAA, wAA, sdf);
+  float w_aa = aawidth_uv(v_tex_coord);
+  float edge1 = 1.0 - smoothstep(-w_aa, w_aa, sdf);
   N = normalize(mix(Ntemp, v_normal, edge1 * 0.5));
-  float edgeAtten = mix(0.6, 1.0, pow(1.0 - edge1, 1.5));
+  float edge_atten = mix(0.6, 1.0, pow(1.0 - edge1, 1.5));
 
   vec3 L = normalize(u_light_direction);
   float nl = max(dot(N, L), 0.0);
-  float halfLambert = nl * 0.5 + 0.5;
+  float half_lambert = nl * 0.5 + 0.5;
   float wrap = clamp((dot(N, L) + 0.20) / 1.20, 0.0, 1.0);
-  float diffuse = mix(halfLambert, wrap, 0.30) * edgeAtten;
-  float sss = pow(clamp(dot(-N, L), 0.0, 1.0), 2.2) * 0.22 * edgeAtten;
+  float diffuse = mix(half_lambert, wrap, 0.30) * edge_atten;
+  float sss = pow(clamp(dot(-N, L), 0.0, 1.0), 2.2) * 0.22 * edge_atten;
   float ambient = 0.16;
 
-  float aoStem = mix(0.50, 1.0, smoothstep(0.0, 0.55, v_height));
+  float ao_stem = mix(0.50, 1.0, smoothstep(0.0, 0.55, v_height));
 
   float tip = smoothstep(0.25, 1.0, r2);
-  float inner = smoothstep(-2.0 * wAA, -0.2 * wAA, sdf);
+  float inner = smoothstep(-2.0 * w_aa, -0.2 * w_aa, sdf);
   vec3 albedo = base;
   albedo *= mix(1.0, 1.08, tip);
   albedo *= mix(0.95, 1.0, inner);
 
-  vec3 color = albedo * (ambient + diffuse * aoStem) +
+  vec3 color = albedo * (ambient + diffuse * ao_stem) +
                albedo * sss * vec3(1.0, 0.95, 0.85);
 
   frag_color = vec4(color, alpha);

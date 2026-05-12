@@ -38,53 +38,53 @@ float wood_grain(vec2 p, float y) {
   return grain * 0.13 + fine - knot;
 }
 
-vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
-  vec2 uv = worldPos.xz * 4.0;
+vec3 procedural_material_variation(vec3 base_color, vec3 world_pos, vec3 normal) {
+  vec2 uv = world_pos.xz * 4.0;
 
-  float avgColor = (baseColor.r + baseColor.g + baseColor.b) / 3.0;
+  float avg_color = (base_color.r + base_color.g + base_color.b) / 3.0;
 
-  bool bIsWood = false, bIsMetal = false, bIsCloth = false;
+  bool b_is_wood = false, b_is_metal = false, b_is_cloth = false;
   if (u_material_id == 2) {
-    bIsWood = true;
+    b_is_wood = true;
   } else if (u_material_id == 1) {
-    bIsMetal = true;
+    b_is_metal = true;
   } else if (u_material_id == 3) {
-    bIsCloth = true;
+    b_is_cloth = true;
   } else if (u_material_id != 4) {
 
-    bIsWood =
-        (baseColor.r < baseColor.g * 2.5 && baseColor.r > baseColor.b * 1.45 &&
-         avgColor > 0.18 && avgColor < 0.50);
-    bIsMetal = (!bIsWood && avgColor < 0.40);
-    bIsCloth = (!bIsWood && !bIsMetal && avgColor > 0.65);
+    b_is_wood =
+        (base_color.r < base_color.g * 2.5 && base_color.r > base_color.b * 1.45 &&
+         avg_color > 0.18 && avg_color < 0.50);
+    b_is_metal = (!b_is_wood && avg_color < 0.40);
+    b_is_cloth = (!b_is_wood && !b_is_metal && avg_color > 0.65);
   }
 
-  vec3 variation = baseColor;
+  vec3 variation = base_color;
 
-  if (bIsWood) {
-    float woodNoise = wood_grain(uv, worldPos.y);
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
-    float sheen = pow(1.0 - viewAngle, 4.0) * 0.06;
-    variation = baseColor * (1.0 + woodNoise) + vec3(sheen);
-  } else if (bIsMetal) {
-    float metalNoise = noise(uv * 9.0) * 0.018;
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
-    float fresnel = pow(1.0 - viewAngle, 2.0) * 0.10;
-    variation = baseColor + vec3(metalNoise + fresnel);
-  } else if (bIsCloth) {
-    float weaveX = sin(worldPos.x * 55.0);
-    float weaveZ = sin(worldPos.z * 55.0);
-    float weavePattern = weaveX * weaveZ * 0.025;
-    float clothNoise = noise(uv * 2.5) * 0.10 - 0.05;
+  if (b_is_wood) {
+    float wood_noise = wood_grain(uv, world_pos.y);
+    float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
+    float sheen = pow(1.0 - view_angle, 4.0) * 0.06;
+    variation = base_color * (1.0 + wood_noise) + vec3(sheen);
+  } else if (b_is_metal) {
+    float metal_noise = noise(uv * 9.0) * 0.018;
+    float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+    float fresnel = pow(1.0 - view_angle, 2.0) * 0.10;
+    variation = base_color + vec3(metal_noise + fresnel);
+  } else if (b_is_cloth) {
+    float weave_x = sin(world_pos.x * 55.0);
+    float weave_z = sin(world_pos.z * 55.0);
+    float weave_pattern = weave_x * weave_z * 0.025;
+    float cloth_noise = noise(uv * 2.5) * 0.10 - 0.05;
 
-    float viewAngle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
-    float sheen = pow(1.0 - viewAngle, 3.0) * 0.15;
+    float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.5))));
+    float sheen = pow(1.0 - view_angle, 3.0) * 0.15;
 
-    variation = baseColor * (1.0 + clothNoise + weavePattern) + vec3(sheen);
+    variation = base_color * (1.0 + cloth_noise + weave_pattern) + vec3(sheen);
   } else {
-    float leatherNoise = noise(uv * 5.5);
+    float leather_noise = noise(uv * 5.5);
     float blotches = noise(uv * 1.8) * 0.12 - 0.06;
-    variation = baseColor * (1.0 + leatherNoise * 0.14 - 0.07 + blotches);
+    variation = base_color * (1.0 + leather_noise * 0.14 - 0.07 + blotches);
   }
 
   return clamp(variation, 0.0, 1.0);
@@ -97,25 +97,25 @@ void main() {
   }
 
   vec3 normal = normalize(v_normal);
-  color = proceduralMaterialVariation(color, v_world_pos, normal);
+  color = procedural_material_variation(color, v_world_pos, normal);
 
   if (u_material_id >= 10) {
-    float sootAmt = float(u_material_id - 9) * 0.45;
-    vec2 sootUv = v_world_pos.xz * 3.5;
-    float sootPatch = noise(sootUv) * 0.6 + noise(sootUv * 4.1) * 0.4;
-    float sootMask = smoothstep(0.42, 0.65, sootPatch) * sootAmt;
-    vec3 charColor = mix(color * 0.25, vec3(0.08, 0.07, 0.06), 0.5);
-    color = mix(color, charColor, clamp(sootMask, 0.0, 0.85));
+    float soot_amt = float(u_material_id - 9) * 0.45;
+    vec2 soot_uv = v_world_pos.xz * 3.5;
+    float soot_patch = noise(soot_uv) * 0.6 + noise(soot_uv * 4.1) * 0.4;
+    float soot_mask = smoothstep(0.42, 0.65, soot_patch) * soot_amt;
+    vec3 char_color = mix(color * 0.25, vec3(0.08, 0.07, 0.06), 0.5);
+    color = mix(color, char_color, clamp(soot_mask, 0.0, 0.85));
   }
 
-  vec3 lightDir = length(u_light_dir) > 0.001
+  vec3 light_dir = length(u_light_dir) > 0.001
                       ? u_light_dir
                       : normalize(vec3(0.65, 0.50, 0.40));
-  float avgColor = (u_color.r + u_color.g + u_color.b) / 3.0;
-  float wrapAmount = avgColor > 0.65 ? 0.52 : (avgColor > 0.40 ? 0.20 : 0.05);
+  float avg_color = (u_color.r + u_color.g + u_color.b) / 3.0;
+  float wrap_amount = avg_color > 0.65 ? 0.52 : (avg_color > 0.40 ? 0.20 : 0.05);
 
-  float nDotL = dot(normal, lightDir);
-  float diff_raw = nDotL * (1.0 - wrapAmount) + wrapAmount;
+  float n_dot_l = dot(normal, light_dir);
+  float diff_raw = n_dot_l * (1.0 - wrap_amount) + wrap_amount;
   float ambient = u_ambient_strength > 0.001 ? u_ambient_strength : 0.18;
   float diff = max(diff_raw, ambient);
 

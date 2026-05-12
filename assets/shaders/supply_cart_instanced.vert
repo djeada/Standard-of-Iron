@@ -13,21 +13,21 @@ out vec3 v_color;
 
 void main() {
   float scale = a_pos_scale.w;
-  vec3 worldPos = a_pos_scale.xyz;
+  vec3 world_pos = a_pos_scale.xyz;
   float rotation = a_color_rot.a;
 
-  float cosR = cos(rotation);
-  float sinR = sin(rotation);
-  mat2 rot = mat2(cosR, -sinR, sinR, cosR);
+  float cos_r = cos(rotation);
+  float sin_r = sin(rotation);
+  mat2 rot = mat2(cos_r, -sin_r, sin_r, cos_r);
 
-  vec3 localPos = a_pos * scale;
-  vec2 rotatedXZ = rot * localPos.xz;
-  localPos = vec3(rotatedXZ.x, localPos.y, rotatedXZ.y);
+  vec3 local_pos = a_pos * scale;
+  vec2 rotated_xz = rot * local_pos.xz;
+  local_pos = vec3(rotated_xz.x, local_pos.y, rotated_xz.y);
 
-  v_world_pos = localPos + worldPos;
+  v_world_pos = local_pos + world_pos;
 
-  vec2 rotatedNormalXZ = rot * a_normal.xz;
-  v_normal = normalize(vec3(rotatedNormalXZ.x, a_normal.y, rotatedNormalXZ.y));
+  vec2 rotated_normal_xz = rot * a_normal.xz;
+  v_normal = normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
 
   v_color = a_color_rot.rgb;
 

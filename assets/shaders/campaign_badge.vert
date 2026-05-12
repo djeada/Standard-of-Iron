@@ -13,8 +13,8 @@ out vec2 v_uv;
 
 void main() {
 
-  vec2 worldPos = u_screen_pos + a_local * u_size;
-  vec3 world = vec3(1.0 - worldPos.x, u_z, worldPos.y);
+  vec2 world_pos = u_screen_pos + a_local * u_size;
+  vec3 world = vec3(1.0 - world_pos.x, u_z, world_pos.y);
 
   gl_Position = u_mvp * vec4(world, 1.0);
 

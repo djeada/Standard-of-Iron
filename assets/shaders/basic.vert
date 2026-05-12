@@ -13,9 +13,9 @@ out vec2 v_tex_coord;
 out vec3 v_world_pos;
 
 void main() {
-  vec4 worldPos4 = u_model * vec4(a_position, 1.0);
-  gl_Position = u_view_proj * worldPos4;
+  vec4 world_pos4 = u_model * vec4(a_position, 1.0);
+  gl_Position = u_view_proj * world_pos4;
   v_normal = mat3(u_model) * a_normal;
   v_tex_coord = a_tex_coord;
-  v_world_pos = worldPos4.xyz;
+  v_world_pos = world_pos4.xyz;
 }
