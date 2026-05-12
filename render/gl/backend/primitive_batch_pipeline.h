@@ -32,9 +32,12 @@ public:
   void upload_cone_instances(const GL::PrimitiveInstanceGpu *data,
                              std::size_t count);
 
-  void draw_spheres(std::size_t count, const QMatrix4x4 &view_proj);
-  void draw_cylinders(std::size_t count, const QMatrix4x4 &view_proj);
-  void draw_cones(std::size_t count, const QMatrix4x4 &view_proj);
+  void draw_spheres(std::size_t count, const QMatrix4x4 &view_proj,
+                    const QVector3D &light_dir, float ambient_strength);
+  void draw_cylinders(std::size_t count, const QMatrix4x4 &view_proj,
+                      const QVector3D &light_dir, float ambient_strength);
+  void draw_cones(std::size_t count, const QMatrix4x4 &view_proj,
+                  const QVector3D &light_dir, float ambient_strength);
 
   [[nodiscard]] auto shader() const -> GL::Shader * { return m_shader; }
 

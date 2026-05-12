@@ -5,6 +5,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <string_view>
 #include <vector>

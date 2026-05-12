@@ -9,6 +9,8 @@ uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
 uniform int u_materialId;
+uniform vec3 u_lightDir;
+uniform float u_ambientStrength;
 
 out vec4 FragColor;
 
@@ -106,19 +108,20 @@ void main() {
     color = mix(color, charColor, clamp(sootMask, 0.0, 0.85));
   }
 
-  vec3 lightDir = normalize(vec3(0.65, 0.50, 0.40));
+  vec3 lightDir = length(u_lightDir) > 0.001 ? normalize(u_lightDir) : normalize(vec3(0.65, 0.50, 0.40));
 
   float avgColor = (u_color.r + u_color.g + u_color.b) / 3.0;
   float wrapAmount = avgColor > 0.65 ? 0.52 : (avgColor > 0.40 ? 0.20 : 0.05);
 
   float nDotL = dot(normal, lightDir);
   float diff_raw = nDotL * (1.0 - wrapAmount) + wrapAmount;
-  float diff = max(diff_raw, 0.18);
+  float ambient = u_ambientStrength > 0.001 ? u_ambientStrength : 0.18;
+  float diff = max(diff_raw, ambient);
 
   vec3 sun_color = vec3(1.08, 0.92, 0.74);
   vec3 sky_color = vec3(0.72, 0.80, 1.00);
   float lit_t = clamp((diff_raw + 1.0) / 2.5, 0.0, 1.0);
-  vec3 light_tint = mix(sky_color * 0.34, sun_color, lit_t);
+  vec3 light_tint = mix(sky_color * (ambient * 1.1), sun_color, lit_t);
 
   color *= diff * light_tint;
   FragColor = vec4(color, u_alpha);
