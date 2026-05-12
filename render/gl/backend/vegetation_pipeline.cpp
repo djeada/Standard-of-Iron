@@ -1212,14 +1212,14 @@ void VegetationPipeline::initialize_tent_pipeline() {
   // Main ridge tent: taller and wider than before
   constexpr float H = 0.88F;   // ridge height
   constexpr float W = 0.62F;   // half-width
-  constexpr float D = 0.60F;   // half-depth
+  constexpr float Dp = 0.60F;  // half-depth
 
-  const QVector3D A(-W, 0.0F, -D);
-  const QVector3D B( W, 0.0F, -D);
-  const QVector3D C( 0.0F, H, -D);
-  const QVector3D Dv(-W, 0.0F,  D);
-  const QVector3D E( W, 0.0F,  D);
-  const QVector3D F( 0.0F, H,  D);
+  const QVector3D A(-W, 0.0F, -Dp);
+  const QVector3D B( W, 0.0F, -Dp);
+  const QVector3D C( 0.0F, H, -Dp);
+  const QVector3D D(-W, 0.0F,  Dp);
+  const QVector3D E( W, 0.0F,  Dp);
+  const QVector3D F( 0.0F, H,  Dp);
 
   // Ridge line spans the full length (used for visual reference)
   constexpr float inv_sqrt2 = 0.70711F;
@@ -1231,7 +1231,7 @@ void VegetationPipeline::initialize_tent_pipeline() {
   // Left roof panel
   {
     auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{A, nL}, P{Dv, nL}, P{F, nL}, P{C, nL}});
+    verts.insert(verts.end(), {P{A, nL}, P{D, nL}, P{F, nL}, P{C, nL}});
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
                            uint16_t(b + 2), uint16_t(b + 3)});
   }
@@ -1256,20 +1256,20 @@ void VegetationPipeline::initialize_tent_pipeline() {
   {
     const QVector3D nBk(0.0F, 0.0F, 1.0F);
     auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{Dv, nBk}, P{E, nBk}, P{F, nBk}});
+    verts.insert(verts.end(), {P{D, nBk}, P{E, nBk}, P{F, nBk}});
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
   }
 
   // Ground base flap
-  append_box(verts, idx, {-W, -0.02F, -D}, {W, 0.00F, D});
+  append_box(verts, idx, {-W, -0.02F, -Dp}, {W, 0.00F, Dp});
 
   // Center ridge pole
   append_box(verts, idx, {-0.030F, 0.00F, -0.035F}, {0.030F, H * 0.90F, 0.035F});
 
   // Front door frame: two uprights + crossbar
-  append_box(verts, idx, {-0.24F, 0.00F, -D - 0.02F}, {-0.16F, 0.44F, -D + 0.02F});
-  append_box(verts, idx, { 0.16F, 0.00F, -D - 0.02F}, { 0.24F, 0.44F, -D + 0.02F});
-  append_box(verts, idx, {-0.24F, 0.41F, -D - 0.02F}, { 0.24F, 0.47F, -D + 0.02F});
+  append_box(verts, idx, {-0.24F, 0.00F, -Dp - 0.02F}, {-0.16F, 0.44F, -Dp + 0.02F});
+  append_box(verts, idx, { 0.16F, 0.00F, -Dp - 0.02F}, { 0.24F, 0.44F, -Dp + 0.02F});
+  append_box(verts, idx, {-0.24F, 0.41F, -Dp - 0.02F}, { 0.24F, 0.47F, -Dp + 0.02F});
 
   // Front awning — fabric overhang projecting forward from front edge
   {
@@ -1278,10 +1278,10 @@ void VegetationPipeline::initialize_tent_pipeline() {
     constexpr float inv_aw = 0.83205F; // 1/sqrt(1 + (aw_ext/aw_y)^2) approx
     const QVector3D nAw(0.0F, inv_aw, -inv_aw);
 
-    const QVector3D al(-W * 0.72F, aw_y, -D);
-    const QVector3D ar( W * 0.72F, aw_y, -D);
-    const QVector3D bl(-W * 0.72F, 0.04F, -D - aw_ext);
-    const QVector3D br( W * 0.72F, 0.04F, -D - aw_ext);
+    const QVector3D al(-W * 0.72F, aw_y, -Dp);
+    const QVector3D ar( W * 0.72F, aw_y, -Dp);
+    const QVector3D bl(-W * 0.72F, 0.04F, -Dp - aw_ext);
+    const QVector3D br( W * 0.72F, 0.04F, -Dp - aw_ext);
 
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(), {P{al, nAw}, P{ar, nAw}, P{br, nAw}, P{bl, nAw}});
@@ -1295,18 +1295,18 @@ void VegetationPipeline::initialize_tent_pipeline() {
                            uint16_t(bu + 2), uint16_t(bu + 3)});
 
     // Two awning support poles
-    append_box(verts, idx, {-W * 0.72F - 0.025F, 0.00F, -D - aw_ext},
-               {-W * 0.72F + 0.025F, aw_y,          -D - aw_ext + 0.025F});
-    append_box(verts, idx, { W * 0.72F - 0.025F, 0.00F, -D - aw_ext},
-               { W * 0.72F + 0.025F, aw_y,          -D - aw_ext + 0.025F});
+    append_box(verts, idx, {-W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
+               {-W * 0.72F + 0.025F, aw_y,          -Dp - aw_ext + 0.025F});
+    append_box(verts, idx, { W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
+               { W * 0.72F + 0.025F, aw_y,          -Dp - aw_ext + 0.025F});
   }
 
   // Four corner guy-rope stakes (small rectangular pegs)
   constexpr float sk = 0.07F;
-  append_box(verts, idx, {-W - sk, 0.00F, -D - sk}, {-W, 0.07F, -D});
-  append_box(verts, idx, { W,      0.00F, -D - sk}, { W + sk, 0.07F, -D});
-  append_box(verts, idx, {-W - sk, 0.00F,  D},      {-W, 0.07F,  D + sk});
-  append_box(verts, idx, { W,      0.00F,  D},      { W + sk, 0.07F,  D + sk});
+  append_box(verts, idx, {-W - sk, 0.00F, -Dp - sk}, {-W, 0.07F, -Dp});
+  append_box(verts, idx, { W,      0.00F, -Dp - sk}, { W + sk, 0.07F, -Dp});
+  append_box(verts, idx, {-W - sk, 0.00F,  Dp},      {-W, 0.07F,  Dp + sk});
+  append_box(verts, idx, { W,      0.00F,  Dp},      { W + sk, 0.07F,  Dp + sk});
 
   upload_prop_mesh_impl(verts, idx, m_tent_vao, m_tent_vertex_buffer,
                         m_tent_index_buffer, m_tent_vertex_count,
