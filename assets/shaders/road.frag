@@ -7,11 +7,11 @@ in vec3 v_world_pos;
 uniform vec3 u_color;
 uniform vec3 u_light_direction;
 uniform float u_alpha;
-uniform sampler2D u_visibilityTex;
-uniform vec2 u_visibilitySize;
-uniform float u_visibilityTileSize;
-uniform float u_exploredAlpha;
-uniform int u_hasVisibility;
+uniform sampler2D u_visibility_tex;
+uniform vec2 u_visibility_size;
+uniform float u_visibility_tile_size;
+uniform float u_explored_alpha;
+uniform int u_has_visibility;
 
 out vec4 frag_color;
 
@@ -182,17 +182,17 @@ void main() {
   lit_color *= mix(0.75, 1.0, edge_fade);
 
   float visibility_factor = 1.0;
-  if (u_hasVisibility == 1 && u_visibilitySize.x > 0.0 &&
-      u_visibilitySize.y > 0.0) {
-    float tile_size = max(u_visibilityTileSize, 0.0001);
+  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 &&
+      u_visibility_size.y > 0.0) {
+    float tile_size = max(u_visibility_tile_size, 0.0001);
     vec2 grid = vec2(v_world_pos.x / tile_size, v_world_pos.z / tile_size);
-    grid += (u_visibilitySize * 0.5) - vec2(0.5);
-    vec2 vis_uv = (grid + vec2(0.5)) / u_visibilitySize;
-    float vis_sample = texture(u_visibilityTex, vis_uv).r;
+    grid += (u_visibility_size * 0.5) - vec2(0.5);
+    vec2 vis_uv = (grid + vec2(0.5)) / u_visibility_size;
+    float vis_sample = texture(u_visibility_tex, vis_uv).r;
     if (vis_sample < 0.25) {
       discard;
     } else if (vis_sample < 0.75) {
-      visibility_factor = u_exploredAlpha;
+      visibility_factor = u_explored_alpha;
     }
   }
   lit_color *= visibility_factor;

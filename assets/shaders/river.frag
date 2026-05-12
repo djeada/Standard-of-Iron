@@ -4,12 +4,12 @@ in vec2 tex_coord;
 in vec3 world_pos;
 
 uniform float time;
-uniform sampler2D u_visibilityTex;
-uniform vec2 u_visibilitySize;
-uniform float u_visibilityTileSize;
-uniform float u_exploredAlpha;
-uniform int u_hasVisibility;
-uniform float u_segmentVisibility;
+uniform sampler2D u_visibility_tex;
+uniform vec2 u_visibility_size;
+uniform float u_visibility_tile_size;
+uniform float u_explored_alpha;
+uniform int u_has_visibility;
+uniform float u_segment_visibility;
 
 const float PI = 3.14159265359;
 float saturate(float x) { return clamp(x, 0.0, 1.0); }
@@ -162,20 +162,20 @@ void main() {
   color += vec3(0.03, 0.06, 0.12) * pow(1.0 - NdotV, 3.0);
 
   float visibility_factor = 1.0;
-  if (u_hasVisibility == 1 && u_visibilitySize.x > 0.0 &&
-      u_visibilitySize.y > 0.0) {
-    float tile_size = max(u_visibilityTileSize, 0.0001);
-    vec2 grid = vec2(WorldPos.x / tile_size, WorldPos.z / tile_size);
-    grid += (u_visibilitySize * 0.5) - vec2(0.5);
-    vec2 vis_uv = (grid + vec2(0.5)) / u_visibilitySize;
-    float vis_sample = texture(u_visibilityTex, vis_uv).r;
+  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 &&
+      u_visibility_size.y > 0.0) {
+    float tile_size = max(u_visibility_tile_size, 0.0001);
+    vec2 grid = vec2(world_pos.x / tile_size, world_pos.z / tile_size);
+    grid += (u_visibility_size * 0.5) - vec2(0.5);
+    vec2 vis_uv = (grid + vec2(0.5)) / u_visibility_size;
+    float vis_sample = texture(u_visibility_tex, vis_uv).r;
     if (vis_sample < 0.25) {
       discard;
     } else if (vis_sample < 0.75) {
-      visibility_factor = u_exploredAlpha;
+      visibility_factor = u_explored_alpha;
     }
   }
-  visibility_factor *= u_segmentVisibility;
+  visibility_factor *= u_segment_visibility;
   color *= visibility_factor;
 
   frag_color = vec4(saturate(color), 0.85);
