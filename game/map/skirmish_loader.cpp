@@ -363,6 +363,8 @@ auto SkirmishLoader::start(const QString &map_path,
 
   if (level_result.ok) {
     const QVector3D light_dir = level_result.lighting_settings.light_direction;
+    const float ambient = level_result.lighting_settings.ambient_strength;
+    m_renderer.set_lighting(light_dir, ambient);
     if (m_ground != nullptr) {
       m_ground->set_light_direction(light_dir);
     }

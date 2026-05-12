@@ -344,15 +344,17 @@ void PrimitiveBatchPipeline::upload_cone_instances(
 }
 
 void PrimitiveBatchPipeline::draw_spheres(std::size_t count,
-                                          const QMatrix4x4 &view_proj) {
+                                          const QMatrix4x4 &view_proj,
+                                          const QVector3D &light_dir,
+                                          float ambient_strength) {
   if (count == 0 || m_sphere_vao == 0 || m_shader == nullptr) {
     return;
   }
 
   m_shader->use();
   m_shader->set_uniform(m_uniforms.view_proj, view_proj);
-  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.light_dir, light_dir);
+  m_shader->set_uniform(m_uniforms.ambient_strength, ambient_strength);
 
   glBindVertexArray(m_sphere_vao);
   glDrawElementsInstanced(GL_TRIANGLES, m_sphere_index_count, GL_UNSIGNED_INT,
@@ -361,15 +363,17 @@ void PrimitiveBatchPipeline::draw_spheres(std::size_t count,
 }
 
 void PrimitiveBatchPipeline::draw_cylinders(std::size_t count,
-                                            const QMatrix4x4 &view_proj) {
+                                            const QMatrix4x4 &view_proj,
+                                            const QVector3D &light_dir,
+                                            float ambient_strength) {
   if (count == 0 || m_cylinder_vao == 0 || m_shader == nullptr) {
     return;
   }
 
   m_shader->use();
   m_shader->set_uniform(m_uniforms.view_proj, view_proj);
-  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.light_dir, light_dir);
+  m_shader->set_uniform(m_uniforms.ambient_strength, ambient_strength);
 
   glBindVertexArray(m_cylinder_vao);
   glDrawElementsInstanced(GL_TRIANGLES, m_cylinder_index_count, GL_UNSIGNED_INT,
@@ -378,15 +382,17 @@ void PrimitiveBatchPipeline::draw_cylinders(std::size_t count,
 }
 
 void PrimitiveBatchPipeline::draw_cones(std::size_t count,
-                                        const QMatrix4x4 &view_proj) {
+                                        const QMatrix4x4 &view_proj,
+                                        const QVector3D &light_dir,
+                                        float ambient_strength) {
   if (count == 0 || m_cone_vao == 0 || m_shader == nullptr) {
     return;
   }
 
   m_shader->use();
   m_shader->set_uniform(m_uniforms.view_proj, view_proj);
-  m_shader->set_uniform(m_uniforms.light_dir, QVector3D(0.35F, 0.8F, 0.45F));
-  m_shader->set_uniform(m_uniforms.ambient_strength, 0.3F);
+  m_shader->set_uniform(m_uniforms.light_dir, light_dir);
+  m_shader->set_uniform(m_uniforms.ambient_strength, ambient_strength);
 
   glBindVertexArray(m_cone_vao);
   glDrawElementsInstanced(GL_TRIANGLES, m_cone_index_count, GL_UNSIGNED_INT,

@@ -1596,6 +1596,8 @@ void Renderer::render_world(Engine::Core::World *world) {
     pass_ctx.primitive_batcher = &batcher;
     pass_ctx.visibility = const_cast<Game::Map::VisibilityService *>(&vis);
     pass_ctx.visibility_enabled = visibility_enabled;
+    pass_ctx.light_direction = m_light_dir;
+    pass_ctx.ambient_strength = m_ambient_strength;
 
     Render::Pass::FramePassRunner runner;
     runner.add(std::make_unique<Render::Pass::PrimitiveFlushPass>());
