@@ -32,34 +32,34 @@ void main() {
   float lit_t = clamp(diffuse * 1.4, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.50, sun_color, lit_t);
 
-  float needleNoise = hash(vec2(v_tex_coord.x * 28.0 + v_needle_seed * 7.1,
+  float needle_noise = hash(vec2(v_tex_coord.x * 28.0 + v_needle_seed * 7.1,
                                 v_tex_coord.y * 24.0 + v_needle_seed * 5.3));
 
-  float needleStreak = hash(vec2(v_tex_coord.x * 12.0 + v_needle_seed * 3.7,
+  float needle_streak = hash(vec2(v_tex_coord.x * 12.0 + v_needle_seed * 3.7,
                                  floor(v_tex_coord.y * 6.0 + v_needle_seed * 2.0)));
 
-  vec3 needleColor = v_color * (0.78 + needleNoise * 0.28);
-  needleColor += vec3(0.02, 0.05, 0.02) * needleStreak;
+  vec3 needle_color = v_color * (0.78 + needle_noise * 0.28);
+  needle_color += vec3(0.02, 0.05, 0.02) * needle_streak;
 
-  float tipBlend = smoothstep(0.82, 1.02, v_tex_coord.y);
-  needleColor =
-      mix(needleColor, needleColor * vec3(1.08, 1.04, 1.10), tipBlend);
+  float tip_blend = smoothstep(0.82, 1.02, v_tex_coord.y);
+  needle_color =
+      mix(needle_color, needle_color * vec3(1.08, 1.04, 1.10), tip_blend);
 
-  float barkStripe = sin(v_tex_coord.y * 45.0 + v_bark_seed * TWO_PI) * 0.1 + 0.9;
-  float barkNoise = hash(vec2(v_tex_coord.x * 18.0 + v_bark_seed * 4.3,
+  float bark_stripe = sin(v_tex_coord.y * 45.0 + v_bark_seed * TWO_PI) * 0.1 + 0.9;
+  float bark_noise = hash(vec2(v_tex_coord.x * 18.0 + v_bark_seed * 4.3,
                               v_tex_coord.y * 10.0 + v_bark_seed * 7.7));
 
-  vec3 trunkBase = vec3(0.32, 0.24, 0.16) * barkStripe;
-  vec3 trunkColor = trunkBase * (0.85 + barkNoise * 0.35);
+  vec3 trunk_base = vec3(0.32, 0.24, 0.16) * bark_stripe;
+  vec3 trunk_color = trunk_base * (0.85 + bark_noise * 0.35);
 
-  vec3 baseColor = mix(trunkColor, needleColor, v_foliage_mask);
-  vec3 color = baseColor * lighting * light_tint;
+  vec3 base_color = mix(trunk_color, needle_color, v_foliage_mask);
+  vec3 color = base_color * lighting * light_tint;
 
-  float silhouetteNoise = hash(vec2(v_tex_coord.x * 30.0 + v_needle_seed * 9.0,
+  float silhouette_noise = hash(vec2(v_tex_coord.x * 30.0 + v_needle_seed * 9.0,
                                     v_tex_coord.y * 40.0 + v_needle_seed * 5.5));
 
-  float alphaFoliage = 0.70 + silhouetteNoise * 0.25;
-  float alpha = mix(1.0, alphaFoliage, v_foliage_mask);
+  float alpha_foliage = 0.70 + silhouette_noise * 0.25;
+  float alpha = mix(1.0, alpha_foliage, v_foliage_mask);
 
   alpha *= smoothstep(0.00, 0.05, v_tex_coord.y);
 

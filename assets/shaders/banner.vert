@@ -17,39 +17,39 @@ out float v_cloth_depth;
 void main() {
   vec3 pos = a_position;
 
-  float horizontalPos = clamp(a_tex_coord.x, 0.0, 1.0);
-  float verticalPos = clamp(1.0 - a_tex_coord.y, 0.0, 1.0);
-  float freeEdge = horizontalPos * horizontalPos;
-  float centerBias = 1.0 - abs(verticalPos * 2.0 - 1.0);
+  float horizontal_pos = clamp(a_tex_coord.x, 0.0, 1.0);
+  float vertical_pos = clamp(1.0 - a_tex_coord.y, 0.0, 1.0);
+  float free_edge = horizontal_pos * horizontal_pos;
+  float center_bias = 1.0 - abs(vertical_pos * 2.0 - 1.0);
 
-  float wavePhase = u_time * 2.3 + horizontalPos * 4.8 - verticalPos * 1.6;
-  float zOffset =
-      sin(wavePhase) * u_wind_strength * freeEdge * (0.18 + centerBias * 0.08);
+  float wave_phase = u_time * 2.3 + horizontal_pos * 4.8 - vertical_pos * 1.6;
+  float z_offset =
+      sin(wave_phase) * u_wind_strength * free_edge * (0.18 + center_bias * 0.08);
 
-  float ripplePhase = u_time * 5.1 + horizontalPos * 10.5 + verticalPos * 6.0;
-  float ripple = sin(ripplePhase) * u_wind_strength * freeEdge * 0.045;
+  float ripple_phase = u_time * 5.1 + horizontal_pos * 10.5 + vertical_pos * 6.0;
+  float ripple = sin(ripple_phase) * u_wind_strength * free_edge * 0.045;
 
-  float curlPhase = u_time * 7.8 + verticalPos * 3.5 + horizontalPos * 13.0;
-  float trailingCurl =
-      sin(curlPhase) * u_wind_strength * freeEdge * freeEdge * 0.03;
+  float curl_phase = u_time * 7.8 + vertical_pos * 3.5 + horizontal_pos * 13.0;
+  float trailing_curl =
+      sin(curl_phase) * u_wind_strength * free_edge * free_edge * 0.03;
 
-  float swayPhase = u_time * 1.6 + horizontalPos * 1.4 + verticalPos * 2.4;
-  float yOffset = sin(swayPhase) * u_wind_strength * freeEdge * 0.04;
-  float sag = freeEdge * (0.014 + (1.0 - verticalPos) * 0.02) * u_wind_strength;
+  float sway_phase = u_time * 1.6 + horizontal_pos * 1.4 + vertical_pos * 2.4;
+  float y_offset = sin(sway_phase) * u_wind_strength * free_edge * 0.04;
+  float sag = free_edge * (0.014 + (1.0 - vertical_pos) * 0.02) * u_wind_strength;
 
-  pos.z += zOffset + ripple + trailingCurl;
-  pos.y += yOffset - sag;
-  pos.x -= freeEdge * u_wind_strength * 0.035;
+  pos.z += z_offset + ripple + trailing_curl;
+  pos.y += y_offset - sag;
+  pos.x -= free_edge * u_wind_strength * 0.035;
 
   vec3 normal = a_normal;
-  normal.z += cos(wavePhase) * u_wind_strength * freeEdge * 0.45;
-  normal.x -= sin(ripplePhase) * u_wind_strength * freeEdge * 0.12;
+  normal.z += cos(wave_phase) * u_wind_strength * free_edge * 0.45;
+  normal.x -= sin(ripple_phase) * u_wind_strength * free_edge * 0.12;
   normal = normalize(normal);
 
   v_normal = mat3(transpose(inverse(u_model))) * normal;
   v_tex_coord = a_tex_coord;
-  v_wave_offset = zOffset + ripple;
-  v_cloth_depth = horizontalPos;
+  v_wave_offset = z_offset + ripple;
+  v_cloth_depth = horizontal_pos;
 
   gl_Position = u_mvp * vec4(pos, 1.0);
 }

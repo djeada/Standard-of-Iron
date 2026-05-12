@@ -181,21 +181,21 @@ void main() {
                     smoothstep(0.0, 0.08, 1.0 - v_tex_coord.x);
   lit_color *= mix(0.75, 1.0, edge_fade);
 
-  float visibilityFactor = 1.0;
+  float visibility_factor = 1.0;
   if (u_hasVisibility == 1 && u_visibilitySize.x > 0.0 &&
       u_visibilitySize.y > 0.0) {
-    float tileSize = max(u_visibilityTileSize, 0.0001);
-    vec2 grid = vec2(v_world_pos.x / tileSize, v_world_pos.z / tileSize);
+    float tile_size = max(u_visibilityTileSize, 0.0001);
+    vec2 grid = vec2(v_world_pos.x / tile_size, v_world_pos.z / tile_size);
     grid += (u_visibilitySize * 0.5) - vec2(0.5);
-    vec2 visUV = (grid + vec2(0.5)) / u_visibilitySize;
-    float visSample = texture(u_visibilityTex, visUV).r;
-    if (visSample < 0.25) {
+    vec2 vis_uv = (grid + vec2(0.5)) / u_visibilitySize;
+    float vis_sample = texture(u_visibilityTex, vis_uv).r;
+    if (vis_sample < 0.25) {
       discard;
-    } else if (visSample < 0.75) {
-      visibilityFactor = u_exploredAlpha;
+    } else if (vis_sample < 0.75) {
+      visibility_factor = u_exploredAlpha;
     }
   }
-  lit_color *= visibilityFactor;
+  lit_color *= visibility_factor;
 
   frag_color = vec4(clamp(lit_color, 0.0, 1.0), u_alpha);
 }

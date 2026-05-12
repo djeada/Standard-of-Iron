@@ -24,11 +24,11 @@ void main() {
                     vec4(a_instance_model_col0.w, a_instance_model_col1.w,
                          a_instance_model_col2.w, 1.0));
 
-  vec4 worldPos4 = model * vec4(a_position, 1.0);
-  v_world_pos = worldPos4.xyz;
+  vec4 world_pos4 = model * vec4(a_position, 1.0);
+  v_world_pos = world_pos4.xyz;
   v_normal = mat3(model) * a_normal;
   v_tex_coord = a_tex_coord;
   v_instance_color = a_instance_color_alpha.rgb;
   v_instance_alpha = a_instance_color_alpha.a;
-  gl_Position = u_view_proj * worldPos4;
+  gl_Position = u_view_proj * world_pos4;
 }

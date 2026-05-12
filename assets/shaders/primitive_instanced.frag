@@ -12,9 +12,9 @@ out vec4 frag_color;
 
 void main() {
   vec3 normal = normalize(v_normal);
-  vec3 lightDir = normalize(u_light_dir);
+  vec3 light_dir = normalize(u_light_dir);
 
-  float diff = max(dot(normal, lightDir), 0.0);
+  float diff = max(dot(normal, light_dir), 0.0);
 
   float lighting = u_ambient_strength + (1.0 - u_ambient_strength) * diff;
 

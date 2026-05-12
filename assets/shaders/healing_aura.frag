@@ -28,32 +28,32 @@ float noise(vec2 p) {
 
 void main() {
 
-  vec3 coreColor = vec3(1.0, 1.0, 0.7);
-  vec3 midColor = u_aura_color;
-  vec3 edgeColor = u_aura_color * 0.7;
+  vec3 core_color = vec3(1.0, 1.0, 0.7);
+  vec3 mid_color = u_aura_color;
+  vec3 edge_color = u_aura_color * 0.7;
 
-  float edgeFade = smoothstep(0.2, 0.9, v_radial_dist);
-  float heightFade = 1.0 - smoothstep(0.0, 1.0, v_height);
+  float edge_fade = smoothstep(0.2, 0.9, v_radial_dist);
+  float height_fade = 1.0 - smoothstep(0.0, 1.0, v_height);
 
-  float shellFade = edgeFade * heightFade;
+  float shell_fade = edge_fade * height_fade;
 
-  vec3 color = mix(midColor, edgeColor, v_radial_dist);
+  vec3 color = mix(mid_color, edge_color, v_radial_dist);
 
   float angle = atan(v_world_pos.z, v_world_pos.x);
   float swirl = sin(angle * 4.0 + u_time * 2.0 + v_height * 5.0) * 0.5 + 0.5;
-  color += coreColor * swirl * 0.2 * shellFade;
+  color += core_color * swirl * 0.2 * shell_fade;
 
   float ring = sin(v_height * 15.0 - u_time * 3.0) * 0.5 + 0.5;
   ring = pow(ring, 2.0);
-  color += midColor * ring * 0.3 * edgeFade;
+  color += mid_color * ring * 0.3 * edge_fade;
 
-  vec2 particleUV = vec2(angle * 2.0, v_height * 3.0 - u_time * 1.5);
-  float particles = noise(particleUV * 6.0);
+  vec2 particle_uv = vec2(angle * 2.0, v_height * 3.0 - u_time * 1.5);
+  float particles = noise(particle_uv * 6.0);
   particles = pow(particles, 2.0) * 2.0;
-  color += coreColor * particles * shellFade * 0.2;
+  color += core_color * particles * shell_fade * 0.2;
 
-  float alpha = shellFade * u_intensity * 0.7;
-  alpha += edgeFade * 0.15 * u_intensity;
+  float alpha = shell_fade * u_intensity * 0.7;
+  alpha += edge_fade * 0.15 * u_intensity;
 
   frag_color = vec4(color, clamp(alpha, 0.0, 0.85));
 }

@@ -18,19 +18,19 @@ uniform bool u_animate;
 
 out vec4 frag_color;
 
-float sdCircle(vec2 p, float r) { return length(p) - r; }
+float sd_circle(vec2 p, float r) { return length(p) - r; }
 
-float sdBox(vec2 p, vec2 b) {
+float sd_box(vec2 p, vec2 b) {
   vec2 d = abs(p) - b;
   return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0);
 }
 
-float sdShield(vec2 p) {
+float sd_shield(vec2 p) {
 
   vec2 q = abs(p);
 
   if (p.y < 0.0) {
-    float d = sdBox(vec2(q.x, 0.0), vec2(0.4, 0.3));
+    float d = sd_box(vec2(q.x, 0.0), vec2(0.4, 0.3));
     return d;
   }
 
@@ -39,18 +39,18 @@ float sdShield(vec2 p) {
   return max(d, p.y - 0.6);
 }
 
-float sdBanner(vec2 p) {
+float sd_banner(vec2 p) {
 
   vec2 q = abs(p);
 
-  float rect = sdBox(vec2(q.x, p.y + 0.1), vec2(0.35, 0.5));
+  float rect = sd_box(vec2(q.x, p.y + 0.1), vec2(0.35, 0.5));
 
-  float vCut = (p.y + 0.4) - q.x * 0.5;
+  float v_cut = (p.y + 0.4) - q.x * 0.5;
 
-  return max(rect, -vCut);
+  return max(rect, -v_cut);
 }
 
-float sdMedallion(vec2 p) {
+float sd_medallion(vec2 p) {
 
   float r = 0.42;
   float d = length(p) - r;
@@ -61,7 +61,7 @@ float sdMedallion(vec2 p) {
   return d + scallops;
 }
 
-float sdSeal(vec2 p) {
+float sd_seal(vec2 p) {
 
   float r = 0.4;
   float angle = atan(p.y, p.x);
@@ -75,32 +75,32 @@ float sdSeal(vec2 p) {
   return length(p) - r - irregularity;
 }
 
-float sdStandard(vec2 p) {
+float sd_standard(vec2 p) {
 
   vec2 q = abs(p);
 
-  float flag = sdBox(vec2(p.x + 0.1, p.y - 0.1), vec2(0.35, 0.3));
+  float flag = sd_box(vec2(p.x + 0.1, p.y - 0.1), vec2(0.35, 0.3));
 
-  float pole = sdBox(vec2(p.x + 0.4, p.y), vec2(0.03, 0.5));
+  float pole = sd_box(vec2(p.x + 0.4, p.y), vec2(0.03, 0.5));
 
   return min(flag, pole);
 }
 
-float getBadgeSDF(vec2 p, int style) {
+float get_badge_sdf(vec2 p, int style) {
   if (style == 0)
-    return sdStandard(p);
+    return sd_standard(p);
   if (style == 1)
-    return sdSeal(p);
+    return sd_seal(p);
   if (style == 2)
-    return sdBanner(p);
+    return sd_banner(p);
   if (style == 3)
-    return sdShield(p);
+    return sd_shield(p);
   if (style == 4)
-    return sdMedallion(p);
-  return sdCircle(p, 0.4);
+    return sd_medallion(p);
+  return sd_circle(p, 0.4);
 }
 
-float getEmblemPattern(vec2 p, int style) {
+float get_emblem_pattern(vec2 p, int style) {
   if (style == 1) {
 
     float angle = atan(p.y, p.x);
@@ -130,50 +130,50 @@ void main() {
     p.x += wobble * p.y;
   }
 
-  float d = getBadgeSDF(p, u_badge_style);
+  float d = get_badge_sdf(p, u_badge_style);
 
-  float shadowAlpha = 0.0;
+  float shadow_alpha = 0.0;
   if (u_show_shadow) {
-    vec2 shadowP = p + vec2(u_shadow_offset, -u_shadow_offset);
-    float shadowD = getBadgeSDF(shadowP, u_badge_style);
-    shadowAlpha = smoothstep(0.02, -0.02, shadowD) * u_shadow_color.a;
+    vec2 shadow_p = p + vec2(u_shadow_offset, -u_shadow_offset);
+    float shadow_d = get_badge_sdf(shadow_p, u_badge_style);
+    shadow_alpha = smoothstep(0.02, -0.02, shadow_d) * u_shadow_color.a;
   }
 
-  float mainAlpha = smoothstep(0.02, -0.02, d);
+  float main_alpha = smoothstep(0.02, -0.02, d);
 
-  float borderD = abs(d) - u_border_width * 0.01;
-  float borderAlpha = smoothstep(0.01, -0.01, borderD);
+  float border_d = abs(d) - u_border_width * 0.01;
+  float border_alpha = smoothstep(0.01, -0.01, border_d);
 
-  float interiorD = d + u_border_width * 0.01;
-  float interiorAlpha = smoothstep(0.01, -0.01, interiorD);
+  float interior_d = d + u_border_width * 0.01;
+  float interior_alpha = smoothstep(0.01, -0.01, interior_d);
 
   float gradient = (p.y + 0.5) * 0.8;
-  vec4 fillColor = mix(u_primary_color, u_secondary_color, gradient);
+  vec4 fill_color = mix(u_primary_color, u_secondary_color, gradient);
 
-  float pattern = getEmblemPattern(p, u_badge_style);
-  fillColor.rgb = mix(fillColor.rgb, u_secondary_color.rgb, pattern);
+  float pattern = get_emblem_pattern(p, u_badge_style);
+  fill_color.rgb = mix(fill_color.rgb, u_secondary_color.rgb, pattern);
 
-  vec2 lightDir = normalize(vec2(0.5, 0.7));
-  float lighting = dot(normalize(vec2(-d, -d)), lightDir) * 0.3 + 0.85;
-  fillColor.rgb *= lighting;
+  vec2 light_dir = normalize(vec2(0.5, 0.7));
+  float lighting = dot(normalize(vec2(-d, -d)), light_dir) * 0.3 + 0.85;
+  fill_color.rgb *= lighting;
 
   vec4 result = vec4(0.0);
 
-  if (u_show_shadow && shadowAlpha > 0.0) {
-    result = mix(result, u_shadow_color, shadowAlpha);
+  if (u_show_shadow && shadow_alpha > 0.0) {
+    result = mix(result, u_shadow_color, shadow_alpha);
   }
 
-  if (interiorAlpha > 0.0) {
-    result = mix(result, fillColor, interiorAlpha * fillColor.a);
+  if (interior_alpha > 0.0) {
+    result = mix(result, fill_color, interior_alpha * fill_color.a);
   }
 
-  if (borderAlpha > 0.0 && interiorAlpha < 0.99) {
-    result = mix(result, u_border_color, borderAlpha * u_border_color.a);
+  if (border_alpha > 0.0 && interior_alpha < 0.99) {
+    result = mix(result, u_border_color, border_alpha * u_border_color.a);
   }
 
-  result.a = max(result.a, mainAlpha * max(fillColor.a, u_border_color.a));
+  result.a = max(result.a, main_alpha * max(fill_color.a, u_border_color.a));
   if (u_show_shadow) {
-    result.a = max(result.a, shadowAlpha);
+    result.a = max(result.a, shadow_alpha);
   }
 
   frag_color = result;
