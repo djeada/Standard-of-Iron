@@ -64,17 +64,17 @@ void WaterPipeline::cache_river_uniforms() {
   m_river_uniforms.projection = m_river_shader->uniform_handle("projection");
   m_river_uniforms.time = m_river_shader->uniform_handle("time");
   m_river_uniforms.visibility_texture =
-      m_river_shader->optional_uniform_handle("u_visibilityTex");
+      m_river_shader->optional_uniform_handle("u_visibility_tex");
   m_river_uniforms.visibility_size =
-      m_river_shader->optional_uniform_handle("u_visibilitySize");
+      m_river_shader->optional_uniform_handle("u_visibility_size");
   m_river_uniforms.visibility_tile_size =
-      m_river_shader->optional_uniform_handle("u_visibilityTileSize");
+      m_river_shader->optional_uniform_handle("u_visibility_tile_size");
   m_river_uniforms.explored_alpha =
-      m_river_shader->optional_uniform_handle("u_exploredAlpha");
+      m_river_shader->optional_uniform_handle("u_explored_alpha");
   m_river_uniforms.has_visibility =
-      m_river_shader->optional_uniform_handle("u_hasVisibility");
+      m_river_shader->optional_uniform_handle("u_has_visibility");
   m_river_uniforms.segment_visibility =
-      m_river_shader->optional_uniform_handle("u_segmentVisibility");
+      m_river_shader->optional_uniform_handle("u_segment_visibility");
 }
 
 void WaterPipeline::cache_riverbank_uniforms() {
@@ -125,15 +125,15 @@ void WaterPipeline::cache_road_uniforms() {
       m_road_shader->uniform_handle("u_light_direction");
   m_road_uniforms.alpha = m_road_shader->uniform_handle("u_alpha");
   m_road_uniforms.visibility_texture =
-      m_road_shader->optional_uniform_handle("u_visibilityTex");
+      m_road_shader->optional_uniform_handle("u_visibility_tex");
   m_road_uniforms.visibility_size =
-      m_road_shader->optional_uniform_handle("u_visibilitySize");
+      m_road_shader->optional_uniform_handle("u_visibility_size");
   m_road_uniforms.visibility_tile_size =
-      m_road_shader->optional_uniform_handle("u_visibilityTileSize");
+      m_road_shader->optional_uniform_handle("u_visibility_tile_size");
   m_road_uniforms.explored_alpha =
-      m_road_shader->optional_uniform_handle("u_exploredAlpha");
+      m_road_shader->optional_uniform_handle("u_explored_alpha");
   m_road_uniforms.has_visibility =
-      m_road_shader->optional_uniform_handle("u_hasVisibility");
+      m_road_shader->optional_uniform_handle("u_has_visibility");
 }
 
 } // namespace Render::GL::BackendPipelines
