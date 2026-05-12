@@ -116,7 +116,8 @@ auto CharacterPipeline::build_uniform_set(GL::Shader *shader) const
   uniforms.instanced = shader->optional_uniform_handle("u_instanced");
   uniforms.view_proj = shader->optional_uniform_handle("u_viewProj");
   uniforms.light_dir = shader->optional_uniform_handle("u_lightDir");
-  uniforms.ambient_strength = shader->optional_uniform_handle("u_ambientStrength");
+  uniforms.ambient_strength =
+      shader->optional_uniform_handle("u_ambientStrength");
   return uniforms;
 }
 

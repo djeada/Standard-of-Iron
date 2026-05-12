@@ -20,8 +20,6 @@ enum class AmbientIdleType : std::uint8_t {
   Jump
 };
 
-/// Returns the BPAT idle clip variant index (1-4) for a baked ambient idle
-/// type, or 0 for None / unbaked types. Variant 0 is the normal idle clip.
 [[nodiscard]] inline constexpr auto
 ambient_idle_clip_variant(AmbientIdleType t) noexcept -> std::uint8_t {
   switch (t) {

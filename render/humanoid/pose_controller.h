@@ -23,7 +23,7 @@ public:
   static auto get_ambient_idle_type(float time, std::uint32_t seed,
                                     float idle_duration) -> AmbientIdleType;
 
-  static auto compute_ambient_idle_phase(float time,
+  static auto compute_ambient_idle_phase(float idle_duration,
                                          std::uint32_t seed) -> float;
 
   void kneel(float depth);

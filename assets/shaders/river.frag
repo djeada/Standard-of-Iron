@@ -4,6 +4,12 @@ in vec2 TexCoord;
 in vec3 WorldPos;
 
 uniform float time;
+uniform sampler2D u_visibilityTex;
+uniform vec2 u_visibilitySize;
+uniform float u_visibilityTileSize;
+uniform float u_exploredAlpha;
+uniform int u_hasVisibility;
+uniform float u_segmentVisibility;
 
 const float PI = 3.14159265359;
 float saturate(float x) { return clamp(x, 0.0, 1.0); }
@@ -154,6 +160,23 @@ void main() {
   color = mix(color, foamCol * mix(0.82, 1.0, NdotL), foam);
 
   color += vec3(0.03, 0.06, 0.12) * pow(1.0 - NdotV, 3.0);
+
+  float visibilityFactor = 1.0;
+  if (u_hasVisibility == 1 && u_visibilitySize.x > 0.0 &&
+      u_visibilitySize.y > 0.0) {
+    float tileSize = max(u_visibilityTileSize, 0.0001);
+    vec2 grid = vec2(WorldPos.x / tileSize, WorldPos.z / tileSize);
+    grid += (u_visibilitySize * 0.5) - vec2(0.5);
+    vec2 visUV = (grid + vec2(0.5)) / u_visibilitySize;
+    float visSample = texture(u_visibilityTex, visUV).r;
+    if (visSample < 0.25) {
+      discard;
+    } else if (visSample < 0.75) {
+      visibilityFactor = u_exploredAlpha;
+    }
+  }
+  visibilityFactor *= u_segmentVisibility;
+  color *= visibilityFactor;
 
   FragColor = vec4(saturate(color), 0.85);
 }

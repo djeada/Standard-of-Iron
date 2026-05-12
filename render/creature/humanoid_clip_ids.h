@@ -4,7 +4,6 @@
 
 namespace Render::Creature {
 
-// Idle clip family (base + 4 ambient variants, clips 0-4)
 inline constexpr std::uint16_t k_humanoid_idle_clip = 0U;
 inline constexpr std::uint16_t k_humanoid_idle_squat_clip = 1U;
 inline constexpr std::uint16_t k_humanoid_idle_jump_clip = 2U;

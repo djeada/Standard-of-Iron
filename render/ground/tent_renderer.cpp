@@ -15,7 +15,6 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-// Ring distance and type salt – unique per prop type so props spread out.
 constexpr float k_ring_distance_scale = 1.35F;
 constexpr uint32_t k_type_salt = 0xA1B2C3D4U;
 constexpr float k_base_scale = 0.55F;
@@ -45,8 +44,7 @@ void TentRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_state,
-      [](const TentInstanceGpu &inst) -> const QVector4D & {
+      m_state, [](const TentInstanceGpu &inst) -> const QVector4D & {
         return inst.pos_scale;
       });
   if (visible_count == 0 || !m_state.instance_buffer) {
@@ -77,15 +75,13 @@ void TentRenderer::generate_instances(
   const float half_w = static_cast<float>(width) * 0.5F;
   const float half_h = static_cast<float>(map_height) * 0.5F;
 
-  // Auto-place one tent per firecamp on a deterministic ring.
   for (const auto &camp : fire_camps) {
     const float world_cx = (camp.x - half_w) * tile_size;
     const float world_cz = (camp.z - half_h) * tile_size;
 
-    uint32_t state = hash_coords(
-        static_cast<int>(std::floor(world_cx)),
-        static_cast<int>(std::floor(world_cz)),
-        k_type_salt);
+    uint32_t state =
+        hash_coords(static_cast<int>(std::floor(world_cx)),
+                    static_cast<int>(std::floor(world_cz)), k_type_salt);
 
     const float angle = rand_01(state) * MathConstants::k_two_pi;
     const float dist = std::max(camp.radius, 1.5F) * k_ring_distance_scale;
@@ -95,16 +91,17 @@ void TentRenderer::generate_instances(
     const QVector3D resolved =
         terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
 
-    const float scale = k_base_scale * std::clamp(camp.radius * 0.4F, 0.6F, 1.4F);
+    const float scale =
+        k_base_scale * std::clamp(camp.radius * 0.4F, 0.6F, 1.4F);
     const float rotation = rand_01(state) * MathConstants::k_two_pi;
 
     TentInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(), resolved.y(), resolved.z(), scale);
-    inst.color_rot = QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, rotation);
+    inst.color_rot =
+        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, rotation);
     m_state.instances.push_back(inst);
   }
 
-  // Explicit world props from the map definition.
   for (const auto &prop : world_props) {
     if (prop.type != Game::Map::WorldProp::Type::Tent) {
       continue;
@@ -117,8 +114,8 @@ void TentRenderer::generate_instances(
     TentInstanceGpu inst;
     inst.pos_scale =
         QVector4D(resolved.x(), resolved.y(), resolved.z(), prop.scale);
-    inst.color_rot =
-        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, prop.rotation);
+    inst.color_rot = QVector4D(k_base_color_r, k_base_color_g, k_base_color_b,
+                               prop.rotation);
     m_state.instances.push_back(inst);
   }
 

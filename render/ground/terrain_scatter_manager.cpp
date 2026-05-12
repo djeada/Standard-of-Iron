@@ -67,8 +67,8 @@ TerrainScatterManager::TerrainScatterManager()
       m_ruins(std::make_unique<RuinsRenderer>()),
       m_dead_tree(std::make_unique<DeadTreeRenderer>()),
       m_passes{m_biome.get(), m_stone.get(),       m_plant.get(),
-               m_pine.get(),  m_olive.get(),        m_firecamp.get(),
-               m_tent.get(),  m_supply_cart.get(),  m_weapon_rack.get(),
+               m_pine.get(),  m_olive.get(),       m_firecamp.get(),
+               m_tent.get(),  m_supply_cart.get(), m_weapon_rack.get(),
                m_ruins.get(), m_dead_tree.get()} {}
 
 TerrainScatterManager::~TerrainScatterManager() = default;
@@ -231,21 +231,20 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
            m_tent == nullptr || m_tent->is_gpu_ready(),
            m_tent != nullptr ? m_tent->last_sync_stats()
                              : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::SupplyCart, ScatterVisibilityMode::InstanceFiltered,
-           m_supply_cart.get(),
+          {ScatterSpeciesId::SupplyCart,
+           ScatterVisibilityMode::InstanceFiltered, m_supply_cart.get(),
            m_supply_cart != nullptr ? m_supply_cart->instance_count() : 0U,
            m_supply_cart == nullptr || m_supply_cart->is_gpu_ready(),
            m_supply_cart != nullptr ? m_supply_cart->last_sync_stats()
                                     : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::WeaponRack, ScatterVisibilityMode::InstanceFiltered,
-           m_weapon_rack.get(),
+          {ScatterSpeciesId::WeaponRack,
+           ScatterVisibilityMode::InstanceFiltered, m_weapon_rack.get(),
            m_weapon_rack != nullptr ? m_weapon_rack->instance_count() : 0U,
            m_weapon_rack == nullptr || m_weapon_rack->is_gpu_ready(),
            m_weapon_rack != nullptr ? m_weapon_rack->last_sync_stats()
                                     : Render::Ground::Scatter::SyncStats{}},
           {ScatterSpeciesId::Ruins, ScatterVisibilityMode::InstanceFiltered,
-           m_ruins.get(),
-           m_ruins != nullptr ? m_ruins->instance_count() : 0U,
+           m_ruins.get(), m_ruins != nullptr ? m_ruins->instance_count() : 0U,
            m_ruins == nullptr || m_ruins->is_gpu_ready(),
            m_ruins != nullptr ? m_ruins->last_sync_stats()
                               : Render::Ground::Scatter::SyncStats{}},

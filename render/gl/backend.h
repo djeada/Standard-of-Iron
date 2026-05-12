@@ -60,8 +60,10 @@ public:
   }
   void execute(const DrawQueue &queue, const Camera &cam) override;
 
-  void set_lighting(const QVector3D &light_dir, float ambient_strength) noexcept {
-    m_light_dir = light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : light_dir.normalized();
+  void set_lighting(const QVector3D &light_dir,
+                    float ambient_strength) noexcept {
+    m_light_dir = light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F)
+                                     : light_dir.normalized();
     m_ambient_strength = ambient_strength;
   }
 

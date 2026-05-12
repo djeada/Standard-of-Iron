@@ -9,10 +9,8 @@
 #include "../../../equipment/armor/roman_shoulder_cover.h"
 #include "../../../equipment/armor/shoulder_cover_archetype.h"
 #include "../../../equipment/equipment_registry.h"
-#include "../../../equipment/equipment_submit.h"
 #include "../../../equipment/helmets/roman_heavy_helmet.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
-#include "../../../equipment/weapons/roman_scutum.h"
 #include "../../../equipment/weapons/sword_renderer.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
@@ -90,24 +88,6 @@ using Render::Geom::sphere_at;
 using Render::GL::Humanoid::mix_palette_color;
 using Render::GL::Humanoid::saturate_color;
 
-struct KnightExtras {
-  QVector3D metal_color;
-  QVector3D shield_color;
-  QVector3D shield_trim_color;
-  float sword_length = 0.80F;
-  float sword_width = 0.065F;
-  float shield_radius = 0.18F;
-  float shield_aspect = 1.0F;
-
-  float guard_half_width = 0.12F;
-  float handle_radius = 0.016F;
-  float pommel_radius = 0.045F;
-  float blade_ricasso = 0.16F;
-  float blade_taper_bias = 0.65F;
-  bool shield_cross_decal = false;
-  bool has_scabbard = true;
-};
-
 class KnightRenderer : public HumanoidRendererBase {
 public:
   static constexpr float k_limb_width_scale = 1.00F;
@@ -162,42 +142,6 @@ public:
   }
 
 private:
-  static auto compute_knight_extras(uint32_t seed,
-                                    const HumanoidVariant &v) -> KnightExtras {
-    KnightExtras e;
-
-    e.metal_color = QVector3D(0.72F, 0.73F, 0.78F);
-
-    float const shield_hue = hash_01(seed ^ 0x12345U);
-    if (shield_hue < 0.45F) {
-      e.shield_color = v.palette.cloth * 1.10F;
-    } else if (shield_hue < 0.90F) {
-      e.shield_color = v.palette.leather * 1.25F;
-    } else {
-
-      e.shield_color = e.metal_color * 0.95F;
-    }
-
-    e.sword_length = 0.80F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.16F;
-    e.sword_width = 0.060F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.010F;
-    e.shield_radius = 0.16F + (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
-    e.guard_half_width = 0.120F + (hash_01(seed ^ 0x3456U) - 0.5F) * 0.020F;
-    e.handle_radius = 0.016F + (hash_01(seed ^ 0x88AAU) - 0.5F) * 0.003F;
-    e.pommel_radius = 0.045F + (hash_01(seed ^ 0x19C3U) - 0.5F) * 0.006F;
-
-    e.blade_ricasso =
-        clamp_f(0.14F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F, 0.10F, 0.20F);
-    e.blade_taper_bias =
-        clamp01(0.6F + (hash_01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
-
-    e.shield_cross_decal = (hash_01(seed ^ 0xA11CU) > 0.55F);
-    e.has_scabbard = (hash_01(seed ^ 0x5CABU) > 0.15F);
-    e.shield_trim_color = e.metal_color * 0.95F;
-    e.shield_aspect = 1.0F;
-    return e;
-  }
-
   auto
   resolve_style(const DrawContext &ctx) const -> const KnightStyleConfig & {
     ensure_swordsman_styles_registered();
@@ -238,39 +182,6 @@ private:
     apply_color(style.leather_color, variant.palette.leather);
     apply_color(style.leather_dark_color, variant.palette.leather_dark);
     apply_color(style.metal_color, variant.palette.metal);
-  }
-
-  void apply_extras_overrides(const KnightStyleConfig &style,
-                              const QVector3D &team_tint,
-                              const HumanoidVariant &variant,
-                              KnightExtras &extras) const {
-    extras.metal_color = saturate_color(variant.palette.metal);
-    extras.shield_color = saturate_color(extras.shield_color);
-    extras.shield_trim_color = saturate_color(extras.shield_trim_color);
-
-    auto apply_shield_color =
-        [&](const std::optional<QVector3D> &override_color, QVector3D &target) {
-          target = mix_palette_color(target, override_color, team_tint,
-                                     k_swordsman_team_mix_weight,
-                                     k_swordsman_style_mix_weight);
-        };
-
-    apply_shield_color(style.shield_color, extras.shield_color);
-    apply_shield_color(style.shield_trim_color, extras.shield_trim_color);
-
-    if (style.shield_radius_scale) {
-      extras.shield_radius =
-          std::max(0.10F, extras.shield_radius * *style.shield_radius_scale);
-    }
-    if (style.shield_aspect_ratio) {
-      extras.shield_aspect = std::max(0.40F, *style.shield_aspect_ratio);
-    }
-    if (style.has_scabbard) {
-      extras.has_scabbard = *style.has_scabbard;
-    }
-    if (style.shield_cross_decal) {
-      extras.shield_cross_decal = *style.shield_cross_decal;
-    }
   }
 };
 
