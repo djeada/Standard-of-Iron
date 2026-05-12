@@ -1,19 +1,19 @@
 #version 330 core
 
-in vec3 vWorldPos;
-in vec3 vNormal;
-in vec3 vColor;
-in vec2 vTexCoord;
-in float vAlpha;
-in float vHeight;
-in float vSeed;
-in float vType;
-in vec3 vTangent;
-in vec3 vBitangent;
+in vec3 v_world_pos;
+in vec3 v_normal;
+in vec3 v_color;
+in vec2 v_tex_coord;
+in float v_alpha;
+in float v_height;
+in float v_seed;
+in float v_type;
+in vec3 v_tangent;
+in vec3 v_bitangent;
 
-uniform vec3 uLightDirection;
+uniform vec3 u_light_direction;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 float h11(float n) { return fract(sin(n) * 43758.5453123); }
 
@@ -46,7 +46,7 @@ float stableDither(float seed) {
 #ifdef DITHER_SCREEN_ANCHORED
   return interleavedGradientNoise(gl_FragCoord.xy);
 #else
-  return interleavedGradientNoise(floor(vWorldPos.xz * 4.0 + seed * 17.0));
+  return interleavedGradientNoise(floor(v_world_pos.xz * 4.0 + seed * 17.0));
 #endif
 }
 
@@ -109,52 +109,52 @@ vec2 sdfGrad(vec2 uv, float typeVal, float seed, float stepUV) {
 
 void main() {
 
-  float dryness = mix(0.35, 0.92, h11(vSeed * 2.7 + vType * 0.73));
+  float dryness = mix(0.35, 0.92, h11(v_seed * 2.7 + v_type * 0.73));
   vec3 lush = vec3(0.17, 0.32, 0.19);
   vec3 dry = vec3(0.46, 0.44, 0.28);
   vec3 base = mix(lush, dry, dryness);
-  base = mix(base, vColor, 0.40);
+  base = mix(base, v_color, 0.40);
   base *= 0.88;
 
-  vec2 uv2 = (vTexCoord - 0.5) * 2.0;
+  vec2 uv2 = (v_tex_coord - 0.5) * 2.0;
   float r2 = clamp(dot(uv2, uv2), 0.0, 1.0);
   float z = sqrt(max(1.0 - r2, 0.0));
   vec3 Nbulge =
-      normalize(vTangent * uv2.x + vBitangent * uv2.y + vNormal * (z * 1.8));
-  vec3 N = normalize(mix(vNormal, Nbulge, 0.85));
+      normalize(v_tangent * uv2.x + v_bitangent * uv2.y + v_normal * (z * 1.8));
+  vec3 N = normalize(mix(v_normal, Nbulge, 0.85));
 
-  float typeVal = fract(vType);
-  float sdf = plantSDF(vTexCoord, typeVal, vSeed);
-  float alpha = sdf_to_alpha_uv_stable(sdf, vTexCoord);
+  float typeVal = fract(v_type);
+  float sdf = plantSDF(v_tex_coord, typeVal, v_seed);
+  float alpha = sdf_to_alpha_uv_stable(sdf, v_tex_coord);
 
   if (alpha <= 0.002)
     discard;
 
 #ifdef USE_HASHED_ALPHA
   {
-    float w = aawidthUV(vTexCoord);
+    float w = aawidthUV(v_tex_coord);
     float thin = smoothstep(0.0, 2.0 * w, alpha);
     if (thin < 0.98) {
-      if (thin < stableDither(vSeed))
+      if (thin < stableDither(v_seed))
         discard;
       alpha = 1.0;
     }
   }
 #endif
 
-  float stepUV = aawidthUV(vTexCoord);
-  vec2 g = sdfGrad(vTexCoord, typeVal, vSeed, stepUV);
+  float stepUV = aawidthUV(v_tex_coord);
+  vec2 g = sdfGrad(v_tex_coord, typeVal, v_seed, stepUV);
   vec3 Nshape =
-      normalize(vTangent * (-g.x) + vBitangent * (-g.y) + vNormal * 3.0);
+      normalize(v_tangent * (-g.x) + v_bitangent * (-g.y) + v_normal * 3.0);
   float edgeMix = smoothstep(0.30, 0.0, sdf);
   vec3 Ntemp = normalize(mix(N, Nshape, 0.6 * edgeMix));
 
-  float wAA = aawidthUV(vTexCoord);
+  float wAA = aawidthUV(v_tex_coord);
   float edge1 = 1.0 - smoothstep(-wAA, wAA, sdf);
-  N = normalize(mix(Ntemp, vNormal, edge1 * 0.5));
+  N = normalize(mix(Ntemp, v_normal, edge1 * 0.5));
   float edgeAtten = mix(0.6, 1.0, pow(1.0 - edge1, 1.5));
 
-  vec3 L = normalize(uLightDirection);
+  vec3 L = normalize(u_light_direction);
   float nl = max(dot(N, L), 0.0);
   float halfLambert = nl * 0.5 + 0.5;
   float wrap = clamp((dot(N, L) + 0.20) / 1.20, 0.0, 1.0);
@@ -162,7 +162,7 @@ void main() {
   float sss = pow(clamp(dot(-N, L), 0.0, 1.0), 2.2) * 0.22 * edgeAtten;
   float ambient = 0.16;
 
-  float aoStem = mix(0.50, 1.0, smoothstep(0.0, 0.55, vHeight));
+  float aoStem = mix(0.50, 1.0, smoothstep(0.0, 0.55, v_height));
 
   float tip = smoothstep(0.25, 1.0, r2);
   float inner = smoothstep(-2.0 * wAA, -0.2 * wAA, sdf);
@@ -173,5 +173,5 @@ void main() {
   vec3 color = albedo * (ambient + diffuse * aoStem) +
                albedo * sss * vec3(1.0, 0.95, 0.85);
 
-  FragColor = vec4(color, alpha);
+  frag_color = vec4(color, alpha);
 }

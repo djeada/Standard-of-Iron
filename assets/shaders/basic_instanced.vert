@@ -2,33 +2,33 @@
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
-layout(location = 2) in vec2 a_texCoord;
+layout(location = 2) in vec2 a_tex_coord;
 
-layout(location = 3) in vec4 a_instanceModelCol0;
-layout(location = 4) in vec4 a_instanceModelCol1;
-layout(location = 5) in vec4 a_instanceModelCol2;
-layout(location = 6) in vec4 a_instanceColorAlpha;
+layout(location = 3) in vec4 a_instance_model_col0;
+layout(location = 4) in vec4 a_instance_model_col1;
+layout(location = 5) in vec4 a_instance_model_col2;
+layout(location = 6) in vec4 a_instance_color_alpha;
 
-layout(std140) uniform FrameData { mat4 u_viewProj; };
+layout(std140) uniform FrameData { mat4 u_view_proj; };
 
 out vec3 v_normal;
-out vec2 v_texCoord;
-out vec3 v_worldPos;
-flat out vec3 v_instanceColor;
-flat out float v_instanceAlpha;
+out vec2 v_tex_coord;
+out vec3 v_world_pos;
+flat out vec3 v_instance_color;
+flat out float v_instance_alpha;
 
 void main() {
-  mat4 model = mat4(vec4(a_instanceModelCol0.xyz, 0.0),
-                    vec4(a_instanceModelCol1.xyz, 0.0),
-                    vec4(a_instanceModelCol2.xyz, 0.0),
-                    vec4(a_instanceModelCol0.w, a_instanceModelCol1.w,
-                         a_instanceModelCol2.w, 1.0));
+  mat4 model = mat4(vec4(a_instance_model_col0.xyz, 0.0),
+                    vec4(a_instance_model_col1.xyz, 0.0),
+                    vec4(a_instance_model_col2.xyz, 0.0),
+                    vec4(a_instance_model_col0.w, a_instance_model_col1.w,
+                         a_instance_model_col2.w, 1.0));
 
   vec4 worldPos4 = model * vec4(a_position, 1.0);
-  v_worldPos = worldPos4.xyz;
+  v_world_pos = worldPos4.xyz;
   v_normal = mat3(model) * a_normal;
-  v_texCoord = a_texCoord;
-  v_instanceColor = a_instanceColorAlpha.rgb;
-  v_instanceAlpha = a_instanceColorAlpha.a;
-  gl_Position = u_viewProj * worldPos4;
+  v_tex_coord = a_tex_coord;
+  v_instance_color = a_instance_color_alpha.rgb;
+  v_instance_alpha = a_instance_color_alpha.a;
+  gl_Position = u_view_proj * worldPos4;
 }

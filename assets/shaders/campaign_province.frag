@@ -17,7 +17,7 @@ uniform bool u_is_hovered;
 uniform float u_pulse_speed;
 uniform float u_pulse_amplitude;
 
-out vec4 fragColor;
+out vec4 frag_color;
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -107,5 +107,5 @@ void main() {
   float provinceVignette = 1.0 - distFromCenter * distFromCenter * 0.1;
   color.rgb *= provinceVignette;
 
-  fragColor = vec4(color.rgb * color.a, color.a);
+  frag_color = vec4(color.rgb * color.a, color.a);
 }

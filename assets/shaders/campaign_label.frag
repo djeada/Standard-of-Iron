@@ -13,7 +13,7 @@ uniform float u_smoothing;
 uniform bool u_use_sdf;
 uniform bool u_use_stroke;
 
-out vec4 fragColor;
+out vec4 frag_color;
 
 float sampleSDF(vec2 uv) {
 
@@ -43,7 +43,7 @@ void main() {
       color.a = max(strokeColor.a, color.a * alpha);
     }
 
-    fragColor = color;
+    frag_color = color;
   } else {
 
     vec4 texColor = texture(u_font_atlas, v_uv);
@@ -68,10 +68,10 @@ void main() {
       color.a = max(strokeColor.a, color.a);
     }
 
-    fragColor = color;
+    frag_color = color;
   }
 
-  if (fragColor.a < 0.01) {
+  if (frag_color.a < 0.01) {
     discard;
   }
 }

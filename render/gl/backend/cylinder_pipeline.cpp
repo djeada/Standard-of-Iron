@@ -56,12 +56,12 @@ void CylinderPipeline::shutdown() {
 void CylinderPipeline::cache_uniforms() {
   if (m_cylinder_shader != nullptr) {
     m_cylinder_uniforms.view_proj =
-        m_cylinder_shader->optional_uniform_handle("u_viewProj");
+        m_cylinder_shader->optional_uniform_handle("u_view_proj");
   }
 
   if (m_fog_shader != nullptr) {
     m_fog_uniforms.view_proj =
-        m_fog_shader->optional_uniform_handle("u_viewProj");
+        m_fog_shader->optional_uniform_handle("u_view_proj");
     m_fog_uniforms.time = m_fog_shader->optional_uniform_handle("u_time");
   }
 }

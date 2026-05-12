@@ -68,7 +68,7 @@ void ModeIndicatorPipeline::cache_uniforms() {
   }
 
   m_uniforms.mvp = m_indicator_shader->uniform_handle("u_mvp");
-  m_uniforms.mode_color = m_indicator_shader->uniform_handle("u_modeColor");
+  m_uniforms.mode_color = m_indicator_shader->uniform_handle("u_mode_color");
   m_uniforms.alpha = m_indicator_shader->uniform_handle("u_alpha");
   m_uniforms.time = m_indicator_shader->uniform_handle("u_time");
 }

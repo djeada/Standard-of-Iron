@@ -104,9 +104,9 @@ void HealerAuraPipeline::cache_uniforms() {
   m_uniforms.mvp = m_aura_shader->uniform_handle("u_mvp");
   m_uniforms.model = m_aura_shader->uniform_handle("u_model");
   m_uniforms.time = m_aura_shader->uniform_handle("u_time");
-  m_uniforms.aura_radius = m_aura_shader->uniform_handle("u_auraRadius");
+  m_uniforms.aura_radius = m_aura_shader->uniform_handle("u_aura_radius");
   m_uniforms.intensity = m_aura_shader->uniform_handle("u_intensity");
-  m_uniforms.aura_color = m_aura_shader->uniform_handle("u_auraColor");
+  m_uniforms.aura_color = m_aura_shader->uniform_handle("u_aura_color");
 }
 
 auto HealerAuraPipeline::is_initialized() const -> bool {

@@ -52,9 +52,9 @@ void EffectsPipeline::cache_basic_uniforms() {
   m_basic_uniforms.mvp = m_basic_shader->optional_uniform_handle("u_mvp");
   m_basic_uniforms.model = m_basic_shader->uniform_handle("u_model");
   m_basic_uniforms.view_proj =
-      m_basic_shader->optional_uniform_handle("u_viewProj");
+      m_basic_shader->optional_uniform_handle("u_view_proj");
   m_basic_uniforms.texture = m_basic_shader->uniform_handle("u_texture");
-  m_basic_uniforms.use_texture = m_basic_shader->uniform_handle("u_useTexture");
+  m_basic_uniforms.use_texture = m_basic_shader->uniform_handle("u_use_texture");
   m_basic_uniforms.color = m_basic_shader->uniform_handle("u_color");
   m_basic_uniforms.alpha = m_basic_shader->uniform_handle("u_alpha");
   m_basic_uniforms.instanced =
@@ -66,9 +66,9 @@ void EffectsPipeline::cache_basic_instanced_uniforms() {
     return;
   }
   m_basic_instanced_uniforms.view_proj =
-      m_basic_instanced_shader->optional_uniform_handle("u_viewProj");
+      m_basic_instanced_shader->optional_uniform_handle("u_view_proj");
   m_basic_instanced_uniforms.use_texture =
-      m_basic_instanced_shader->optional_uniform_handle("u_useTexture");
+      m_basic_instanced_shader->optional_uniform_handle("u_use_texture");
 }
 
 void EffectsPipeline::cache_grid_uniforms() {
@@ -78,9 +78,9 @@ void EffectsPipeline::cache_grid_uniforms() {
 
   m_grid_uniforms.mvp = m_grid_shader->optional_uniform_handle("u_mvp");
   m_grid_uniforms.model = m_grid_shader->uniform_handle("u_model");
-  m_grid_uniforms.grid_color = m_grid_shader->uniform_handle("u_gridColor");
-  m_grid_uniforms.line_color = m_grid_shader->uniform_handle("u_lineColor");
-  m_grid_uniforms.cell_size = m_grid_shader->uniform_handle("u_cellSize");
+  m_grid_uniforms.grid_color = m_grid_shader->uniform_handle("u_grid_color");
+  m_grid_uniforms.line_color = m_grid_shader->uniform_handle("u_line_color");
+  m_grid_uniforms.cell_size = m_grid_shader->uniform_handle("u_cell_size");
   m_grid_uniforms.thickness = m_grid_shader->uniform_handle("u_thickness");
 }
 
