@@ -22,7 +22,9 @@ void main() {
   float lit_t = clamp(diffuse * 1.4, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.50, sun_color, lit_t);
 
-  // Specular highlight using approximate overhead camera direction
+  // Specular highlight using approximate overhead camera direction.
+  // This is an isometric strategy game with a fixed elevated camera angle,
+  // so a constant view direction provides good results without a uniform.
   vec3 view_dir = normalize(vec3(0.0, 0.85, 0.53));
   vec3 half_vec = normalize(light_dir + view_dir);
   float spec_base = max(dot(normal, half_vec), 0.0);

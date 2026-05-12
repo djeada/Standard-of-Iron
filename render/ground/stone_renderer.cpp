@@ -149,8 +149,11 @@ void StoneRenderer::generate_stone_instances() {
     return true;
   };
 
+  // Cluster noise frequency: lower frequency = larger cluster zones
+  constexpr float kClusterNoiseFrequency = 0.025F;
+
   // Use a moderate density with wider spacing (stride 4 instead of 2)
-  // This prevents stones from clustering too densely while still allowing groups
+  // to distribute stones across larger cells and reduce tight clustering.
   const float stone_density = 0.22F;
 
   for (int z = 0; z < m_height; z += 4) {
@@ -175,7 +178,8 @@ void StoneRenderer::generate_stone_instances() {
       float world_z = 0.0F;
       validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
                               world_x, world_z);
-      float const cluster_noise = value_noise(world_x * 0.025F, world_z * 0.025F,
+      float const cluster_noise = value_noise(world_x * kClusterNoiseFrequency,
+                                              world_z * kClusterNoiseFrequency,
                                               m_noise_seed ^ 0x7F3A9B2CU);
 
       if (cluster_noise < 0.55F) {

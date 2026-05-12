@@ -199,8 +199,23 @@ void VegetationPipeline::initialize_stone_pipeline() {
   std::vector<F> verts;
   std::vector<uint16_t> idx;
 
-  constexpr int kN = 8; // 8-sided cross-section per ring
+  constexpr int kN = 8;         // 8-sided cross-section per ring
   constexpr float kTau = 6.28318530F;
+  constexpr int kRings = 4;
+
+  // Per-vertex radius perturbation constants for organic shape variation
+  constexpr float kPerturbAmount = 0.07F;
+  constexpr float kPerturbFreqVertex = 2.3F;
+  constexpr float kPerturbFreqRing = 1.7F;
+  // Per-vertex y jitter to avoid perfectly flat rings
+  constexpr float kYJitterAmount = 0.025F;
+  constexpr float kYJitterFreqVertex = 1.9F;
+  constexpr float kYJitterFreqRing = 0.9F;
+
+  // Apex of the top cap: slightly off-center for natural asymmetry
+  constexpr float kApexOffsetX = 0.02F;
+  constexpr float kApexHeight = 0.64F;
+  constexpr float kApexOffsetZ = -0.04F;
 
   // Ring definitions: {y, base_radius, phase_offset, squash_x, squash_z}
   // squash_x/z scale the x/z independently to create an elongated, irregular shape
@@ -217,7 +232,6 @@ void VegetationPipeline::initialize_stone_pipeline() {
       {0.40F, 0.38F, 0.20F, 0.95F, 1.05F}, // upper ring (rotated, slightly narrower)
       {0.54F, 0.20F, 0.08F, 1.00F, 0.92F}, // near-apex ring
   };
-  constexpr int kRings = 4;
 
   // Generate ring vertex positions
   QVector3D ring_pts[kRings][kN];
@@ -227,11 +241,15 @@ void VegetationPipeline::initialize_stone_pipeline() {
       float t = static_cast<float>(i) / kN;
       float angle = t * kTau + r.phase;
       // Add subtle per-vertex radius perturbation for organic look
-      float perturb = 1.0F + 0.07F * std::sin(float(i) * 2.3F + float(ri) * 1.7F);
+      float perturb = 1.0F + kPerturbAmount *
+                             std::sin(float(i) * kPerturbFreqVertex +
+                                      float(ri) * kPerturbFreqRing);
       float rx = r.radius * perturb * r.sx * std::cos(angle);
       float rz = r.radius * perturb * r.sz * std::sin(angle);
       // Slight y variation per vertex to avoid perfectly flat rings
-      float ry = r.y + 0.025F * std::cos(float(i) * 1.9F + float(ri) * 0.9F);
+      float ry = r.y + kYJitterAmount *
+                      std::cos(float(i) * kYJitterFreqVertex +
+                               float(ri) * kYJitterFreqRing);
       ring_pts[ri][i] = QVector3D(rx, ry, rz);
     }
   }
@@ -290,7 +308,7 @@ void VegetationPipeline::initialize_stone_pipeline() {
   }
 
   // Top cap: fan of triangles from apex point to the topmost ring
-  QVector3D apex(0.02F, 0.64F, -0.04F); // slightly off-center apex for realism
+  QVector3D apex(kApexOffsetX, kApexHeight, kApexOffsetZ);
   for (int i = 0; i < kN; ++i) {
     int next = (i + 1) % kN;
     emit_tri(ring_pts[kRings - 1][i], ring_pts[kRings - 1][next], apex);
