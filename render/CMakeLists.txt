@@ -58,6 +58,11 @@ add_library(render_gl STATIC
     ground/pine_renderer.cpp
     ground/firecamp_renderer.cpp
     ground/terrain_scatter_manager.cpp
+    ground/tent_renderer.cpp
+    ground/supply_cart_renderer.cpp
+    ground/weapon_rack_renderer.cpp
+    ground/ruins_renderer.cpp
+    ground/dead_tree_renderer.cpp
     ground/rain_renderer.cpp
     entity/registry.cpp
     entity/nations/roman/archer_renderer.cpp

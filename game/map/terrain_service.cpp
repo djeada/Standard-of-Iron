@@ -104,6 +104,7 @@ void TerrainService::initialize(const MapDefinition &map_def) {
   m_biome_settings = map_def.biome;
   m_height_map->apply_biome_variation(m_biome_settings);
   m_fire_camps = map_def.firecamps;
+  m_world_props = map_def.world_props;
   m_road_segments = map_def.roads;
   rebuild_terrain_field();
 }
@@ -113,6 +114,7 @@ void TerrainService::clear() {
   m_terrain_field.clear();
   m_biome_settings = BiomeSettings();
   m_fire_camps.clear();
+  m_world_props.clear();
   m_road_segments.clear();
 }
 

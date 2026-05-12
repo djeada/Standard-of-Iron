@@ -79,7 +79,12 @@ struct TerrainScatterCmd {
     Plant,
     Pine,
     Olive,
-    FireCamp
+    FireCamp,
+    Tent,
+    SupplyCart,
+    WeaponRack,
+    Ruins,
+    DeadTree
   };
 
   Species species = Species::Grass;
@@ -93,6 +98,11 @@ struct TerrainScatterCmd {
   PineBatchParams pine{};
   OliveBatchParams olive{};
   FireCampBatchParams firecamp{};
+  TentBatchParams tent{};
+  SupplyCartBatchParams supply_cart{};
+  WeaponRackBatchParams weapon_rack{};
+  RuinsBatchParams ruins{};
+  DeadTreeBatchParams dead_tree{};
 
   CommandPriority priority{CommandPriority::Low};
 };

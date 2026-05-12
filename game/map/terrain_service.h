@@ -10,6 +10,7 @@ namespace Game::Map {
 
 struct MapDefinition;
 struct FireCamp;
+struct WorldProp;
 
 enum class SurfaceHeightKind {
   Fallback,
@@ -79,6 +80,10 @@ public:
     return m_fire_camps;
   }
 
+  [[nodiscard]] auto world_props() const -> const std::vector<WorldProp> & {
+    return m_world_props;
+  }
+
   [[nodiscard]] auto road_segments() const -> const std::vector<RoadSegment> & {
     return m_road_segments;
   }
@@ -117,6 +122,7 @@ private:
   TerrainField m_terrain_field;
   BiomeSettings m_biome_settings;
   std::vector<FireCamp> m_fire_camps;
+  std::vector<WorldProp> m_world_props;
   std::vector<RoadSegment> m_road_segments;
 };
 
