@@ -6,7 +6,7 @@ in vec3 v_world_pos;
 
 uniform vec3 u_color;
 uniform vec3 u_light_direction;
-uniform sampler2_d u_fog_texture;
+uniform sampler2D u_fog_texture;
 
 out vec4 frag_color;
 

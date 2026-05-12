@@ -5,9 +5,9 @@ in vec3 v_normal;
 in vec3 v_world_pos;
 in float v_height;
 
-uniform sampler2_d u_base_texture;
-uniform sampler2_d u_hillshade_texture;
-uniform sampler2_d u_parchment_texture;
+uniform sampler2D u_base_texture;
+uniform sampler2D u_hillshade_texture;
+uniform sampler2D u_parchment_texture;
 
 uniform vec3 u_light_direction;
 uniform float u_ambient_strength;

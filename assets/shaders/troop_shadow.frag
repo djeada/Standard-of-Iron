@@ -6,7 +6,7 @@ in vec3 v_world_pos;
 uniform float u_alpha;
 uniform vec3 u_color;
 uniform bool u_use_texture;
-uniform sampler2_d u_texture;
+uniform sampler2D u_texture;
 uniform vec2 u_light_dir;
 
 out vec4 frag_color;

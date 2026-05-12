@@ -4,7 +4,7 @@ in vec2 v_uv;
 in vec2 v_local;
 in vec2 v_world_pos;
 
-uniform sampler2_d u_font_atlas;
+uniform sampler2D u_font_atlas;
 uniform vec4 u_fill_color;
 uniform vec4 u_stroke_color;
 uniform float u_stroke_width;

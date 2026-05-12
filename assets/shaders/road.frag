@@ -7,7 +7,7 @@ in vec3 v_world_pos;
 uniform vec3 u_color;
 uniform vec3 u_light_direction;
 uniform float u_alpha;
-uniform sampler2_d u_visibilityTex;
+uniform sampler2D u_visibilityTex;
 uniform vec2 u_visibilitySize;
 uniform float u_visibilityTileSize;
 uniform float u_exploredAlpha;

@@ -31,7 +31,7 @@ uniform vec3 u_snow_color;
 uniform float u_soil_foot_height;
 
 uniform int u_has_height_tex;
-uniform sampler2_d u_height_tex;
+uniform sampler2D u_height_tex;
 uniform vec2 u_height_texel_size;
 uniform vec2 u_height_uv_scale, u_height_uv_offset;
 uniform float u_height_tex_to_world;

@@ -5,7 +5,7 @@ in float intensity_val;
 in float flame_phase;
 in float flame_height;
 
-uniform sampler2_d fire_texture;
+uniform sampler2D fire_texture;
 uniform float u_time;
 uniform float u_glow_strength;
 

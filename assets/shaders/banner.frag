@@ -5,7 +5,7 @@ in vec2 v_tex_coord;
 in float v_wave_offset;
 in float v_cloth_depth;
 
-uniform sampler2_d u_texture;
+uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform vec3 u_trim_color;
 uniform bool u_use_texture;

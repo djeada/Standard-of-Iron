@@ -8,7 +8,7 @@ uniform vec4 u_hover_color;
 uniform float u_hover_blend;
 uniform float u_time;
 
-uniform sampler2_d u_parchment_texture;
+uniform sampler2D u_parchment_texture;
 uniform bool u_use_parchment;
 uniform float u_parchment_scale;
 uniform float u_parchment_strength;

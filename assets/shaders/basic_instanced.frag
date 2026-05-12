@@ -6,7 +6,7 @@ in vec3 v_world_pos;
 flat in vec3 v_instance_color;
 flat in float v_instance_alpha;
 
-uniform sampler2_d u_texture;
+uniform sampler2D u_texture;
 uniform bool u_use_texture;
 uniform int u_material_id;
 

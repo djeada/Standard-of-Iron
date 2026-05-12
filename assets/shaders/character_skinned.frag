@@ -5,7 +5,7 @@ in vec2 v_tex;
 in vec3 v_pos_ws;
 flat in int v_color_role;
 
-uniform sampler2_d u_texture;
+uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_use_texture;
 uniform float u_alpha;

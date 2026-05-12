@@ -5,7 +5,7 @@ in vec2 v_tex_coord;
 in vec3 v_world_pos;
 in float v_material_region;
 
-uniform sampler2_d u_texture;
+uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_use_texture;
 uniform float u_alpha;

@@ -6,7 +6,7 @@ in vec3 world_pos;
 in vec3 v_normal;
 
 uniform float time;
-uniform sampler2_d u_visibility_tex;
+uniform sampler2D u_visibility_tex;
 uniform vec2 u_visibility_size;
 uniform float u_visibility_tile_size;
 uniform float u_explored_alpha;
