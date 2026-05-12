@@ -749,5 +749,91 @@
     "duration": 720.0,
     "description": "Hold Campania for 12 minutes while maintaining control of at least 2 villages"
   },
-  "time_of_day": "day"
+  "time_of_day": "day",
+  "world_props": [
+    {
+      "type": "dead_tree",
+      "x": 20.0,
+      "z": 67.0,
+      "scale": 1.1,
+      "rotation": 0.6
+    },
+    {
+      "type": "dead_tree",
+      "x": 27.0,
+      "z": 63.0,
+      "scale": 1.0,
+      "rotation": 2.4
+    },
+    {
+      "type": "dead_tree",
+      "x": 19.0,
+      "z": 73.0,
+      "scale": 0.9,
+      "rotation": 4.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 110.0,
+      "z": 67.0,
+      "scale": 1.1,
+      "rotation": 1.3
+    },
+    {
+      "type": "dead_tree",
+      "x": 118.0,
+      "z": 63.0,
+      "scale": 1.0,
+      "rotation": 3.5
+    },
+    {
+      "type": "dead_tree",
+      "x": 121.0,
+      "z": 73.0,
+      "scale": 0.9,
+      "rotation": 5.6
+    },
+    {
+      "type": "dead_tree",
+      "x": 65.0,
+      "z": 106.0,
+      "scale": 1.0,
+      "rotation": 2.0
+    },
+    {
+      "type": "dead_tree",
+      "x": 73.0,
+      "z": 103.0,
+      "scale": 1.1,
+      "rotation": 4.3
+    },
+    {
+      "type": "dead_tree",
+      "x": 35.0,
+      "z": 104.0,
+      "scale": 1.0,
+      "rotation": 0.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 43.0,
+      "z": 101.0,
+      "scale": 0.9,
+      "rotation": 3.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 95.0,
+      "z": 104.0,
+      "scale": 1.0,
+      "rotation": 1.7
+    },
+    {
+      "type": "dead_tree",
+      "x": 103.0,
+      "z": 101.0,
+      "scale": 1.1,
+      "rotation": 4.8
+    }
+  ]
 }

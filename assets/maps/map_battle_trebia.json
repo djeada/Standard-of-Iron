@@ -599,5 +599,119 @@
     "temperature": "freezing",
     "description": "Heavy winter conditions - Romans suffer attrition crossing the icy river"
   },
-  "time_of_day": "morning"
+  "time_of_day": "morning",
+  "world_props": [
+    {
+      "type": "ruins",
+      "x": 57.0,
+      "z": 57.0,
+      "scale": 1.2,
+      "rotation": 0.8
+    },
+    {
+      "type": "ruins",
+      "x": 63.0,
+      "z": 63.0,
+      "scale": 1.0,
+      "rotation": 2.5
+    },
+    {
+      "type": "ruins",
+      "x": 58.0,
+      "z": 64.0,
+      "scale": 0.9,
+      "rotation": 4.3
+    },
+    {
+      "type": "ruins",
+      "x": 64.0,
+      "z": 57.0,
+      "scale": 1.1,
+      "rotation": 5.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 17.0,
+      "z": 47.0,
+      "scale": 1.2,
+      "rotation": 0.5
+    },
+    {
+      "type": "dead_tree",
+      "x": 22.0,
+      "z": 42.0,
+      "scale": 1.1,
+      "rotation": 2.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 19.0,
+      "z": 54.0,
+      "scale": 1.0,
+      "rotation": 4.0
+    },
+    {
+      "type": "dead_tree",
+      "x": 25.0,
+      "z": 39.0,
+      "scale": 0.9,
+      "rotation": 5.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 99.0,
+      "z": 47.0,
+      "scale": 1.2,
+      "rotation": 1.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 104.0,
+      "z": 43.0,
+      "scale": 1.0,
+      "rotation": 3.0
+    },
+    {
+      "type": "dead_tree",
+      "x": 101.0,
+      "z": 54.0,
+      "scale": 1.1,
+      "rotation": 4.7
+    },
+    {
+      "type": "dead_tree",
+      "x": 107.0,
+      "z": 50.0,
+      "scale": 0.9,
+      "rotation": 6.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 41.0,
+      "z": 76.0,
+      "scale": 1.0,
+      "rotation": 1.7
+    },
+    {
+      "type": "dead_tree",
+      "x": 48.0,
+      "z": 74.0,
+      "scale": 0.9,
+      "rotation": 3.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 71.0,
+      "z": 76.0,
+      "scale": 1.0,
+      "rotation": 2.4
+    },
+    {
+      "type": "dead_tree",
+      "x": 78.0,
+      "z": 74.0,
+      "scale": 1.1,
+      "rotation": 5.0
+    }
+  ]
 }

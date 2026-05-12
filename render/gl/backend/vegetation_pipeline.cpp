@@ -1332,26 +1332,46 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.48F, 0.22F, -0.28F}, {0.48F, 0.28F, 0.28F});
+  // ── Undercarriage ──────────────────────────────────────────────────────
+  // Axle bar spanning wheel hubs
+  append_box(verts, idx, {-0.64F, 0.18F, -0.05F}, {0.64F, 0.26F, 0.05F});
 
-  append_box(verts, idx, {-0.48F, 0.22F, -0.30F}, {0.48F, 0.44F, -0.25F});
-  append_box(verts, idx, {-0.48F, 0.22F, 0.25F}, {0.48F, 0.44F, 0.30F});
+  // Wheels — two discs with a small hub box for depth
+  constexpr int k_wheel_sides = 10;
+  constexpr float k_wheel_r   = 0.22F;
+  constexpr float k_wheel_t   = 0.06F;
+  append_disc_xaxis(verts, idx, -0.64F, 0.22F, 0.0F, k_wheel_r, k_wheel_t, k_wheel_sides);
+  append_disc_xaxis(verts, idx,  0.64F, 0.22F, 0.0F, k_wheel_r, k_wheel_t, k_wheel_sides);
+  // Wheel hub caps (small thick box at wheel center)
+  append_box(verts, idx, {-0.68F, 0.18F, -0.04F}, {-0.62F, 0.26F, 0.04F});
+  append_box(verts, idx, { 0.62F, 0.18F, -0.04F}, { 0.68F, 0.26F, 0.04F});
 
-  append_box(verts, idx, {-0.50F, 0.22F, -0.28F}, {-0.44F, 0.44F, 0.28F});
-  append_box(verts, idx, {0.44F, 0.22F, -0.28F}, {0.50F, 0.44F, 0.28F});
+  // ── Cart bed ───────────────────────────────────────────────────────────
+  // Floor planks
+  append_box(verts, idx, {-0.50F, 0.24F, -0.32F}, {0.50F, 0.30F, 0.32F});
+  // Side walls (left/right boards)
+  append_box(verts, idx, {-0.52F, 0.24F, -0.34F}, {-0.44F, 0.52F, 0.34F});
+  append_box(verts, idx, { 0.44F, 0.24F, -0.34F}, { 0.52F, 0.52F, 0.34F});
+  // Front and back boards
+  append_box(verts, idx, {-0.50F, 0.24F, -0.34F}, {0.50F, 0.52F, -0.28F});
+  append_box(verts, idx, {-0.50F, 0.24F,  0.28F}, {0.50F, 0.52F,  0.34F});
 
-  append_box(verts, idx, {-0.56F, 0.18F, -0.04F}, {0.56F, 0.24F, 0.04F});
+  // ── Shaft poles (horse traces) ─────────────────────────────────────────
+  append_box(verts, idx, {-0.20F, 0.22F, -0.32F}, {-0.12F, 0.28F, -0.96F});
+  append_box(verts, idx, { 0.12F, 0.22F, -0.32F}, { 0.20F, 0.28F, -0.96F});
+  // Crossbar connecting shafts at the end
+  append_box(verts, idx, {-0.20F, 0.22F, -0.92F}, {0.20F, 0.28F, -0.88F});
 
-  append_disc_xaxis(verts, idx, -0.56F, 0.20F, 0.0F, 0.20F, 0.05F, 8);
+  // ── Cargo on the cart ──────────────────────────────────────────────────
+  // Main cargo box (wooden crate / provisions)
+  append_box(verts, idx, {-0.38F, 0.52F, -0.26F}, {0.38F, 0.80F, 0.26F});
+  // Second smaller box offset to one side (stacked supply)
+  append_box(verts, idx, {-0.36F, 0.80F, -0.20F}, {0.10F, 1.00F, 0.18F});
+  // Rolled canvas/sack (small fat box on the other side)
+  append_box(verts, idx, { 0.10F, 0.52F, -0.22F}, {0.36F, 0.82F, 0.20F});
 
-  append_disc_xaxis(verts, idx, 0.56F, 0.20F, 0.0F, 0.20F, 0.05F, 8);
-
-  append_box(verts, idx, {-0.18F, 0.18F, -0.28F}, {-0.12F, 0.24F, -0.82F});
-  append_box(verts, idx, {0.12F, 0.18F, -0.28F}, {0.18F, 0.24F, -0.82F});
-
-  append_box(verts, idx, {-0.18F, 0.18F, -0.78F}, {0.18F, 0.24F, -0.74F});
-
-  append_box(verts, idx, {-0.34F, 0.44F, -0.22F}, {0.34F, 0.66F, 0.22F});
+  // Rear vertical support post (holds tall loads)
+  append_box(verts, idx, {-0.04F, 0.52F, 0.28F}, {0.04F, 1.08F, 0.36F});
 
   upload_prop_mesh_impl(verts, idx, m_supply_cart_vao,
                         m_supply_cart_vertex_buffer, m_supply_cart_index_buffer,
@@ -1379,42 +1399,90 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.38F, 0.00F, -0.05F}, {-0.30F, 0.72F, 0.05F});
+  // ── Frame ──────────────────────────────────────────────────────────────
+  // Two thick upright posts
+  append_box(verts, idx, {-0.42F, 0.00F, -0.06F}, {-0.32F, 0.82F, 0.06F});
+  append_box(verts, idx, { 0.32F, 0.00F, -0.06F}, { 0.42F, 0.82F, 0.06F});
 
-  append_box(verts, idx, {0.30F, 0.00F, -0.05F}, {0.38F, 0.72F, 0.05F});
+  // Top crossbar (wider, thicker than before)
+  append_box(verts, idx, {-0.42F, 0.62F, -0.05F}, { 0.42F, 0.70F, 0.05F});
 
-  append_box(verts, idx, {-0.38F, 0.52F, -0.04F}, {0.38F, 0.59F, 0.04F});
+  // Middle crossbar
+  append_box(verts, idx, {-0.42F, 0.22F, -0.05F}, { 0.42F, 0.28F, 0.05F});
 
-  append_box(verts, idx, {-0.38F, 0.16F, -0.04F}, {0.38F, 0.21F, 0.04F});
+  // Base footing (small wide box at the bottom to stabilise)
+  append_box(verts, idx, {-0.48F, 0.00F, -0.08F}, {-0.26F, 0.05F,  0.08F});
+  append_box(verts, idx, { 0.26F, 0.00F, -0.08F}, { 0.48F, 0.05F,  0.08F});
 
-  constexpr float T = 0.025F;
-
+  // Rear diagonal cross-brace (visible from side)
   {
-    QVector3D bL(-0.20F, 0.0F, T), bR(-0.20F, 0.0F, -T);
-    QVector3D eL(-0.24F, 0.98F, T - 0.09F), eR(-0.24F, 0.98F, -T - 0.09F);
+    constexpr float T = 0.028F;
+    QVector3D bL(-0.32F, 0.06F,  T), bR(-0.32F, 0.06F, -T);
+    QVector3D eL( 0.32F, 0.60F,  T), eR( 0.32F, 0.60F, -T);
     QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
-    append_quad(verts, idx, bL, bR, eR, eL, n);
+    append_quad(verts, idx, bL, bR, eR, eL,  n);
     append_quad(verts, idx, eL, eR, bR, bL, -n);
-
-    append_box(verts, idx, {-0.26F, 0.96F, -0.10F}, {-0.22F, 1.06F, -0.06F});
   }
 
+  // ── Weapons hanging from the rack ─────────────────────────────────────
+  constexpr float T = 0.024F;
+
+  // Weapon 1: long spear (leaning slightly outward, left)
   {
-    QVector3D bL(0.00F, 0.0F, T), bR(0.00F, 0.0F, -T);
-    QVector3D eL(0.00F, 1.00F, T - 0.08F), eR(0.00F, 1.00F, -T - 0.08F);
+    QVector3D bL(-0.24F, 0.06F, T), bR(-0.24F, 0.06F, -T);
+    QVector3D eL(-0.28F, 1.08F, T - 0.08F), eR(-0.28F, 1.08F, -T - 0.08F);
     QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
     append_quad(verts, idx, bL, bR, eR, eL, n);
     append_quad(verts, idx, eL, eR, bR, bL, -n);
-    append_box(verts, idx, {-0.02F, 0.98F, -0.10F}, {0.02F, 1.08F, -0.06F});
+    // Spear tip
+    append_box(verts, idx, {-0.30F, 1.06F, -0.10F}, {-0.26F, 1.18F, -0.05F});
   }
 
+  // Weapon 2: sword (straighter, centre-left)
   {
-    QVector3D bL(0.20F, 0.0F, T), bR(0.20F, 0.0F, -T);
-    QVector3D eL(0.24F, 0.98F, T - 0.09F), eR(0.24F, 0.98F, -T - 0.09F);
+    QVector3D bL(-0.06F, 0.06F, T), bR(-0.06F, 0.06F, -T);
+    QVector3D eL(-0.04F, 1.02F, T - 0.06F), eR(-0.04F, 1.02F, -T - 0.06F);
     QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
     append_quad(verts, idx, bL, bR, eR, eL, n);
     append_quad(verts, idx, eL, eR, bR, bL, -n);
-    append_box(verts, idx, {0.22F, 0.96F, -0.10F}, {0.26F, 1.06F, -0.06F});
+    // Sword crossguard
+    append_box(verts, idx, {-0.12F, 0.26F, -0.06F}, { 0.04F, 0.32F, 0.06F});
+    // Pommel
+    append_box(verts, idx, {-0.08F, 0.06F, -0.05F}, {-0.02F, 0.14F, 0.05F});
+  }
+
+  // Weapon 3: spear (leaning slightly outward, right)
+  {
+    QVector3D bL(0.24F, 0.06F, T), bR(0.24F, 0.06F, -T);
+    QVector3D eL(0.28F, 1.08F, T - 0.08F), eR(0.28F, 1.08F, -T - 0.08F);
+    QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
+    append_quad(verts, idx, bL, bR, eR, eL, n);
+    append_quad(verts, idx, eL, eR, bR, bL, -n);
+    // Spear tip
+    append_box(verts, idx, { 0.26F, 1.06F, -0.10F}, { 0.30F, 1.18F, -0.05F});
+  }
+
+  // Weapon 4: axe/sword hung horizontally across the middle crossbar
+  {
+    constexpr float aT = 0.028F;
+    // Horizontal blade
+    QVector3D bL( 0.08F, 0.36F, aT), bR( 0.08F, 0.36F, -aT);
+    QVector3D eL( 0.30F, 0.56F, aT), eR( 0.30F, 0.56F, -aT);
+    QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
+    append_quad(verts, idx, bL, bR, eR, eL,  n);
+    append_quad(verts, idx, eL, eR, bR, bL, -n);
+    // Handle
+    append_box(verts, idx, { 0.04F, 0.24F, -aT}, {0.12F, 0.42F, aT});
+  }
+
+  // ── Round shield leaning against the left post ────────────────────────
+  {
+    // Shield disc: thin box approximation (front face facing the camera)
+    constexpr float sR = 0.18F;
+    constexpr float sT = 0.030F;
+    append_disc_xaxis(verts, idx, -0.42F - sT, 0.40F, 0.0F, sR, sT, 10);
+    // Shield rim (thin ring box)
+    append_box(verts, idx, {-0.46F, 0.22F, -sR}, {-0.40F, 0.58F, sR});
   }
 
   upload_prop_mesh_impl(verts, idx, m_weapon_rack_vao,
