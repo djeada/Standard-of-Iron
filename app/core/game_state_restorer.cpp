@@ -218,7 +218,8 @@ void GameStateRestorer::restore_environment_from_metadata(
       if (renderers.scatter) {
         renderers.scatter->configure(*height_map,
                                      terrain_service.biome_settings(),
-                                     terrain_service.fire_camps());
+                                     terrain_service.fire_camps(),
+                                     terrain_service.world_props());
       }
     }
 

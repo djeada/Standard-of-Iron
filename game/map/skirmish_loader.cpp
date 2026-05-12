@@ -349,7 +349,8 @@ auto SkirmishLoader::start(const QString &map_path,
         (terrain_service.get_height_map() != nullptr)) {
       m_scatter->configure(*terrain_service.get_height_map(),
                            terrain_service.biome_settings(),
-                           terrain_service.fire_camps());
+                           terrain_service.fire_camps(),
+                           terrain_service.world_props());
     }
   }
 

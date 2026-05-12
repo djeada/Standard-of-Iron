@@ -264,6 +264,16 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/riverbank.vert
             assets/shaders/stone_instanced.frag
             assets/shaders/stone_instanced.vert
+            assets/shaders/tent_instanced.frag
+            assets/shaders/tent_instanced.vert
+            assets/shaders/supply_cart_instanced.frag
+            assets/shaders/supply_cart_instanced.vert
+            assets/shaders/weapon_rack_instanced.frag
+            assets/shaders/weapon_rack_instanced.vert
+            assets/shaders/ruins_instanced.frag
+            assets/shaders/ruins_instanced.vert
+            assets/shaders/dead_tree_instanced.frag
+            assets/shaders/dead_tree_instanced.vert
             assets/shaders/terrain_chunk.frag
             assets/shaders/terrain_chunk.vert
             assets/maps/map_forest.json
