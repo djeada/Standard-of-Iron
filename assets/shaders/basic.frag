@@ -108,7 +108,8 @@ void main() {
     color = mix(color, charColor, clamp(sootMask, 0.0, 0.85));
   }
 
-  vec3 lightDir = length(u_lightDir) > 0.001 ? normalize(u_lightDir) : normalize(vec3(0.65, 0.50, 0.40));
+  // u_lightDir is pre-normalized by the backend; fallback handles uninitialized state
+  vec3 lightDir = length(u_lightDir) > 0.001 ? u_lightDir : normalize(vec3(0.65, 0.50, 0.40));
 
   float avgColor = (u_color.r + u_color.g + u_color.b) / 3.0;
   float wrapAmount = avgColor > 0.65 ? 0.52 : (avgColor > 0.40 ? 0.20 : 0.05);
