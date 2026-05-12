@@ -104,10 +104,10 @@ void HealingBeamPipeline::cache_uniforms() {
   m_uniforms.mvp = m_beam_shader->uniform_handle("u_mvp");
   m_uniforms.time = m_beam_shader->uniform_handle("u_time");
   m_uniforms.progress = m_beam_shader->uniform_handle("u_progress");
-  m_uniforms.start_pos = m_beam_shader->uniform_handle("u_startPos");
-  m_uniforms.end_pos = m_beam_shader->uniform_handle("u_endPos");
-  m_uniforms.beam_width = m_beam_shader->uniform_handle("u_beamWidth");
-  m_uniforms.heal_color = m_beam_shader->uniform_handle("u_healColor");
+  m_uniforms.start_pos = m_beam_shader->uniform_handle("u_start_pos");
+  m_uniforms.end_pos = m_beam_shader->uniform_handle("u_end_pos");
+  m_uniforms.beam_width = m_beam_shader->uniform_handle("u_beam_width");
+  m_uniforms.heal_color = m_beam_shader->uniform_handle("u_heal_color");
   m_uniforms.alpha = m_beam_shader->uniform_handle("u_alpha");
 }
 

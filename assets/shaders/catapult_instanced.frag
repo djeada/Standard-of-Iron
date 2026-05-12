@@ -1,16 +1,16 @@
 #version 330 core
 
 in vec3 v_normal;
-in vec2 v_texCoord;
-in vec3 v_worldPos;
-flat in vec3 v_instanceColor;
-flat in float v_instanceAlpha;
-in float v_materialRegion;
+in vec2 v_tex_coord;
+in vec3 v_world_pos;
+flat in vec3 v_instance_color;
+flat in float v_instance_alpha;
+in float v_material_region;
 
 uniform sampler2D u_texture;
-uniform bool u_useTexture;
+uniform bool u_use_texture;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -42,13 +42,13 @@ float metal_surface(vec2 p) {
 }
 
 void main() {
-  vec3 color = v_instanceColor;
-  if (u_useTexture) {
-    color *= texture(u_texture, v_texCoord).rgb;
+  vec3 color = v_instance_color;
+  if (u_use_texture) {
+    color *= texture(u_texture, v_tex_coord).rgb;
   }
 
   vec3 normal = normalize(v_normal);
-  vec2 uv = v_worldPos.xz * 4.0;
+  vec2 uv = v_world_pos.xz * 4.0;
   float avg_color = (color.r + color.g + color.b) / 3.0;
 
   bool is_wood =
@@ -61,7 +61,7 @@ void main() {
       (avg_color > 0.20 && avg_color < 0.45 && color.r > color.b * 1.3);
 
   if (is_wood) {
-    float grain = wood_grain(v_worldPos.xz);
+    float grain = wood_grain(v_world_pos.xz);
     float knots = step(0.92, noise(uv * 3.0)) * 0.15;
 
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.3))));
@@ -72,7 +72,7 @@ void main() {
   }
 
   else if (is_metal) {
-    float surface = metal_surface(v_worldPos.xz);
+    float surface = metal_surface(v_world_pos.xz);
 
     float view_angle = abs(dot(normal, normalize(vec3(0.0, 1.0, 0.4))));
     float metal_sheen = pow(1.0 - view_angle, 4.0) * 0.18;
@@ -85,7 +85,7 @@ void main() {
 
   else if (is_rope) {
 
-    float twist = sin(v_worldPos.y * 40.0 + v_worldPos.x * 10.0) * 0.08;
+    float twist = sin(v_world_pos.y * 40.0 + v_world_pos.x * 10.0) * 0.08;
     float fiber = noise(uv * 60.0) * 0.12;
 
     color *= 1.0 + twist + fiber - 0.05;
@@ -121,5 +121,5 @@ void main() {
   vec3 light_tint = mix(sky_color * 0.34, sun_color, lit_t);
 
   color *= diff * light_tint;
-  FragColor = vec4(color, v_instanceAlpha);
+  frag_color = vec4(color, v_instance_alpha);
 }

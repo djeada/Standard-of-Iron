@@ -1,6 +1,6 @@
 #version 330 core
 in vec2 v_uv;
-out vec4 FragColor;
+out vec4 frag_color;
 
 uniform float u_radius;
 uniform float u_alpha_scale;
@@ -33,5 +33,5 @@ void main() {
 
   if (alpha < 0.01)
     discard;
-  FragColor = vec4(color, alpha * 0.78);
+  frag_color = vec4(color, alpha * 0.78);
 }

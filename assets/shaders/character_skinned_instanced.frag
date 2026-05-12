@@ -11,7 +11,7 @@ flat in int v_instance_id;
 
 uniform samplerBuffer u_role_color_tbo;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 void main() {
   vec3 base = v_color;
@@ -35,5 +35,5 @@ void main() {
   vec3 light_tint = mix(sky_color * 0.34, sun_color, lit_t);
 
   vec3 color = clamp(base * diff * light_tint, 0.0, 1.0);
-  FragColor = vec4(color, v_alpha);
+  frag_color = vec4(color, v_alpha);
 }

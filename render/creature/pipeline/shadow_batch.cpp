@@ -39,7 +39,7 @@ void flush_shadow_batch(HumanoidShadowBatch &batch,
 
   Render::GL::Shader *previous_shader = renderer->get_current_shader();
   renderer->set_current_shader(batch.shader());
-  batch.shader()->set_uniform(QStringLiteral("u_lightDir"), batch.light_dir());
+  batch.shader()->set_uniform(QStringLiteral("u_light_dir"), batch.light_dir());
 
   for (const auto &inst : batch.instances()) {
     if (inst.pass == RenderPassIntent::Shadow) {

@@ -110,68 +110,68 @@ void VegetationPipeline::shutdown() {
 void VegetationPipeline::cache_uniforms() {
   if (m_stone_shader != nullptr) {
     m_stone_uniforms.view_proj =
-        m_stone_shader->optional_uniform_handle("u_viewProj");
+        m_stone_shader->optional_uniform_handle("u_view_proj");
     m_stone_uniforms.light_direction =
-        m_stone_shader->uniform_handle("uLightDirection");
+        m_stone_shader->uniform_handle("u_light_direction");
   }
 
   if (m_plant_shader != nullptr) {
     m_plant_uniforms.view_proj =
-        m_plant_shader->optional_uniform_handle("u_viewProj");
-    m_plant_uniforms.time = m_plant_shader->uniform_handle("uTime");
+        m_plant_shader->optional_uniform_handle("u_view_proj");
+    m_plant_uniforms.time = m_plant_shader->uniform_handle("u_time");
     m_plant_uniforms.wind_strength =
-        m_plant_shader->uniform_handle("uWindStrength");
-    m_plant_uniforms.wind_speed = m_plant_shader->uniform_handle("uWindSpeed");
+        m_plant_shader->uniform_handle("u_wind_strength");
+    m_plant_uniforms.wind_speed = m_plant_shader->uniform_handle("u_wind_speed");
     m_plant_uniforms.light_direction =
-        m_plant_shader->uniform_handle("uLightDirection");
+        m_plant_shader->uniform_handle("u_light_direction");
   }
 
   if (m_pine_shader != nullptr) {
     m_pine_uniforms.view_proj =
-        m_pine_shader->optional_uniform_handle("u_viewProj");
-    m_pine_uniforms.time = m_pine_shader->uniform_handle("uTime");
+        m_pine_shader->optional_uniform_handle("u_view_proj");
+    m_pine_uniforms.time = m_pine_shader->uniform_handle("u_time");
     m_pine_uniforms.wind_strength =
-        m_pine_shader->uniform_handle("uWindStrength");
-    m_pine_uniforms.wind_speed = m_pine_shader->uniform_handle("uWindSpeed");
+        m_pine_shader->uniform_handle("u_wind_strength");
+    m_pine_uniforms.wind_speed = m_pine_shader->uniform_handle("u_wind_speed");
     m_pine_uniforms.light_direction =
-        m_pine_shader->uniform_handle("uLightDirection");
+        m_pine_shader->uniform_handle("u_light_direction");
   }
 
   if (m_olive_shader != nullptr) {
     m_olive_uniforms.view_proj =
-        m_olive_shader->optional_uniform_handle("u_viewProj");
-    m_olive_uniforms.time = m_olive_shader->uniform_handle("uTime");
+        m_olive_shader->optional_uniform_handle("u_view_proj");
+    m_olive_uniforms.time = m_olive_shader->uniform_handle("u_time");
     m_olive_uniforms.wind_strength =
-        m_olive_shader->uniform_handle("uWindStrength");
-    m_olive_uniforms.wind_speed = m_olive_shader->uniform_handle("uWindSpeed");
+        m_olive_shader->uniform_handle("u_wind_strength");
+    m_olive_uniforms.wind_speed = m_olive_shader->uniform_handle("u_wind_speed");
     m_olive_uniforms.light_direction =
-        m_olive_shader->uniform_handle("uLightDirection");
+        m_olive_shader->uniform_handle("u_light_direction");
   }
 
   if (m_firecamp_shader != nullptr) {
     m_firecamp_uniforms.view_proj =
-        m_firecamp_shader->optional_uniform_handle("u_viewProj");
+        m_firecamp_shader->optional_uniform_handle("u_view_proj");
     m_firecamp_uniforms.time = m_firecamp_shader->uniform_handle("u_time");
     m_firecamp_uniforms.flicker_speed =
-        m_firecamp_shader->uniform_handle("u_flickerSpeed");
+        m_firecamp_shader->uniform_handle("u_flicker_speed");
     m_firecamp_uniforms.flicker_amount =
-        m_firecamp_shader->uniform_handle("u_flickerAmount");
+        m_firecamp_shader->uniform_handle("u_flicker_amount");
     m_firecamp_uniforms.glow_strength =
-        m_firecamp_shader->uniform_handle("u_glowStrength");
+        m_firecamp_shader->uniform_handle("u_glow_strength");
     m_firecamp_uniforms.fire_texture =
         m_firecamp_shader->uniform_handle("fire_texture");
     m_firecamp_uniforms.camera_right =
-        m_firecamp_shader->uniform_handle("u_cameraRight");
+        m_firecamp_shader->uniform_handle("u_camera_right");
     m_firecamp_uniforms.camera_forward =
-        m_firecamp_shader->uniform_handle("u_cameraForward");
+        m_firecamp_shader->uniform_handle("u_camera_forward");
   }
 
   auto cache_prop_uniforms = [&](PropUniforms &u, GL::Shader *shader) {
     if (shader == nullptr) {
       return;
     }
-    u.view_proj = shader->optional_uniform_handle("u_viewProj");
-    u.light_direction = shader->uniform_handle("uLightDirection");
+    u.view_proj = shader->optional_uniform_handle("u_view_proj");
+    u.light_direction = shader->uniform_handle("u_light_direction");
   };
 
   cache_prop_uniforms(m_tent_uniforms, m_tent_shader);

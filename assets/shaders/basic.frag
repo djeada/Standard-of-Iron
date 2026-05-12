@@ -1,18 +1,18 @@
 #version 330 core
 
 in vec3 v_normal;
-in vec2 v_texCoord;
-in vec3 v_worldPos;
+in vec2 v_tex_coord;
+in vec3 v_world_pos;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
-uniform bool u_useTexture;
+uniform bool u_use_texture;
 uniform float u_alpha;
-uniform int u_materialId;
-uniform vec3 u_lightDir;
-uniform float u_ambientStrength;
+uniform int u_material_id;
+uniform vec3 u_light_dir;
+uniform float u_ambient_strength;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -44,13 +44,13 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
   float avgColor = (baseColor.r + baseColor.g + baseColor.b) / 3.0;
 
   bool bIsWood = false, bIsMetal = false, bIsCloth = false;
-  if (u_materialId == 2) {
+  if (u_material_id == 2) {
     bIsWood = true;
-  } else if (u_materialId == 1) {
+  } else if (u_material_id == 1) {
     bIsMetal = true;
-  } else if (u_materialId == 3) {
+  } else if (u_material_id == 3) {
     bIsCloth = true;
-  } else if (u_materialId != 4) {
+  } else if (u_material_id != 4) {
 
     bIsWood =
         (baseColor.r < baseColor.g * 2.5 && baseColor.r > baseColor.b * 1.45 &&
@@ -92,32 +92,31 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
 
 void main() {
   vec3 color = u_color;
-  if (u_useTexture) {
-    color *= texture(u_texture, v_texCoord).rgb;
+  if (u_use_texture) {
+    color *= texture(u_texture, v_tex_coord).rgb;
   }
 
   vec3 normal = normalize(v_normal);
-  color = proceduralMaterialVariation(color, v_worldPos, normal);
+  color = proceduralMaterialVariation(color, v_world_pos, normal);
 
-  if (u_materialId >= 10) {
-    float sootAmt = float(u_materialId - 9) * 0.45;
-    vec2 sootUv = v_worldPos.xz * 3.5;
+  if (u_material_id >= 10) {
+    float sootAmt = float(u_material_id - 9) * 0.45;
+    vec2 sootUv = v_world_pos.xz * 3.5;
     float sootPatch = noise(sootUv) * 0.6 + noise(sootUv * 4.1) * 0.4;
     float sootMask = smoothstep(0.42, 0.65, sootPatch) * sootAmt;
     vec3 charColor = mix(color * 0.25, vec3(0.08, 0.07, 0.06), 0.5);
     color = mix(color, charColor, clamp(sootMask, 0.0, 0.85));
   }
 
-  vec3 lightDir = length(u_lightDir) > 0.001
-                      ? u_lightDir
+  vec3 lightDir = length(u_light_dir) > 0.001
+                      ? u_light_dir
                       : normalize(vec3(0.65, 0.50, 0.40));
-
   float avgColor = (u_color.r + u_color.g + u_color.b) / 3.0;
   float wrapAmount = avgColor > 0.65 ? 0.52 : (avgColor > 0.40 ? 0.20 : 0.05);
 
   float nDotL = dot(normal, lightDir);
   float diff_raw = nDotL * (1.0 - wrapAmount) + wrapAmount;
-  float ambient = u_ambientStrength > 0.001 ? u_ambientStrength : 0.18;
+  float ambient = u_ambient_strength > 0.001 ? u_ambient_strength : 0.18;
   float diff = max(diff_raw, ambient);
 
   vec3 sun_color = vec3(1.08, 0.92, 0.74);
@@ -126,5 +125,5 @@ void main() {
   vec3 light_tint = mix(sky_color * (ambient * 1.1), sun_color, lit_t);
 
   color *= diff * light_tint;
-  FragColor = vec4(color, u_alpha);
+  frag_color = vec4(color, u_alpha);
 }

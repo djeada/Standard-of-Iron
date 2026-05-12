@@ -6,15 +6,15 @@ layout(location = 2) in vec2 a_uv;
 
 uniform mat4 u_mvp;
 uniform mat4 u_model;
-uniform vec2 u_noiseOffset;
-uniform float u_heightNoiseStrength;
-uniform float u_heightNoiseFrequency;
+uniform vec2 u_noise_offset;
+uniform float u_height_noise_strength;
+uniform float u_height_noise_frequency;
 
-out vec3 v_worldPos;
+out vec3 v_world_pos;
 out vec3 v_normal;
 out vec2 v_uv;
-out float v_vertexDisplacement;
-out float v_entryMask;
+out float v_vertex_displacement;
+out float v_entry_mask;
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -82,8 +82,8 @@ void main() {
   float entryMask = clamp(a_uv.y, 0.0, 1.0);
 
   float displacement = sampleTerrainDisplacement(
-      baseWp, worldNormal, u_noiseOffset, u_heightNoiseStrength,
-      u_heightNoiseFrequency, entryMask);
+      baseWp, worldNormal, u_noise_offset, u_height_noise_strength,
+      u_height_noise_frequency, entryMask);
   vec3 wp = baseWp;
   wp.y += displacement;
 
@@ -92,22 +92,22 @@ void main() {
   vec3 dz = vec3(0.0, 0.0, sampleStep);
   vec3 px = baseWp + dx;
   vec3 pz = baseWp + dz;
-  px.y += sampleTerrainDisplacement(px, worldNormal, u_noiseOffset,
-                                    u_heightNoiseStrength,
-                                    u_heightNoiseFrequency, entryMask);
-  pz.y += sampleTerrainDisplacement(pz, worldNormal, u_noiseOffset,
-                                    u_heightNoiseStrength,
-                                    u_heightNoiseFrequency, entryMask);
+  px.y += sampleTerrainDisplacement(px, worldNormal, u_noise_offset,
+                                    u_height_noise_strength,
+                                    u_height_noise_frequency, entryMask);
+  pz.y += sampleTerrainDisplacement(pz, worldNormal, u_noise_offset,
+                                    u_height_noise_strength,
+                                    u_height_noise_frequency, entryMask);
   vec3 displacedNormal = normalize(cross(pz - wp, px - wp));
   if (dot(displacedNormal, worldNormal) < 0.0) {
     displacedNormal = -displacedNormal;
   }
 
-  v_worldPos = wp;
+  v_world_pos = wp;
   v_normal = normalize(mix(worldNormal, displacedNormal, 0.75));
   v_uv = a_uv;
-  v_vertexDisplacement = displacement;
-  v_entryMask = entryMask;
+  v_vertex_displacement = displacement;
+  v_entry_mask = entryMask;
 
   gl_Position = u_mvp * vec4(wp, 1.0);
 }

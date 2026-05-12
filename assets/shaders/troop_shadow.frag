@@ -1,21 +1,21 @@
 #version 330 core
 
-in vec2 v_texCoord;
-in vec3 v_worldPos;
+in vec2 v_tex_coord;
+in vec3 v_world_pos;
 
 uniform float u_alpha;
 uniform vec3 u_color;
-uniform bool u_useTexture;
+uniform bool u_use_texture;
 uniform sampler2D u_texture;
-uniform vec2 u_lightDir;
+uniform vec2 u_light_dir;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 void main() {
 
-  vec2 uv = v_texCoord * 2.0 - 1.0;
+  vec2 uv = v_tex_coord * 2.0 - 1.0;
 
-  vec2 dir = u_lightDir;
+  vec2 dir = u_light_dir;
   if (length(dir) < 1e-4)
     dir = vec2(0.0, 1.0);
   dir = normalize(dir);
@@ -40,13 +40,13 @@ void main() {
   float shadowIntensity = mix(feather, gaussian, 0.7);
   shadowIntensity = pow(shadowIntensity, 1.35);
 
-  float heightFade = clamp(1.0 - max(v_worldPos.y, 0.0) * 0.08, 0.6, 1.0);
+  float heightFade = clamp(1.0 - max(v_world_pos.y, 0.0) * 0.08, 0.6, 1.0);
   shadowIntensity *= heightFade;
 
   vec3 texColor = vec3(1.0);
   float texAlpha = 1.0;
-  if (u_useTexture) {
-    vec4 tex = texture(u_texture, v_texCoord);
+  if (u_use_texture) {
+    vec4 tex = texture(u_texture, v_tex_coord);
     texColor = tex.rgb;
     texAlpha = tex.a;
   }
@@ -59,5 +59,5 @@ void main() {
 
   vec3 finalColor = shadowColor * shadowIntensity;
 
-  FragColor = vec4(finalColor, finalAlpha);
+  frag_color = vec4(finalColor, finalAlpha);
 }

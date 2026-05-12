@@ -1,31 +1,31 @@
 #version 330 core
 
-in float v_distFromCenter;
+in float v_dist_from_center;
 
-uniform vec3 u_modeColor;
+uniform vec3 u_mode_color;
 uniform float u_alpha;
 uniform float u_time;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 void main() {
 
-  vec3 color = u_modeColor;
+  vec3 color = u_mode_color;
 
-  float edgeGlow = smoothstep(0.3, 0.8, v_distFromCenter);
-  vec3 glowColor = u_modeColor * 1.5;
+  float edgeGlow = smoothstep(0.3, 0.8, v_dist_from_center);
+  vec3 glowColor = u_mode_color * 1.5;
   color = mix(color, glowColor, edgeGlow * 0.4);
 
   float pulse = sin(u_time * 2.5) * 0.5 + 0.5;
-  color += u_modeColor * pulse * 0.2;
+  color += u_mode_color * pulse * 0.2;
 
-  float ripple = sin(v_distFromCenter * 10.0 - u_time * 4.0) * 0.5 + 0.5;
-  color += u_modeColor * ripple * 0.15 * edgeGlow;
+  float ripple = sin(v_dist_from_center * 10.0 - u_time * 4.0) * 0.5 + 0.5;
+  color += u_mode_color * ripple * 0.15 * edgeGlow;
 
-  float edgeFade = 1.0 - smoothstep(0.7, 1.0, v_distFromCenter);
+  float edgeFade = 1.0 - smoothstep(0.7, 1.0, v_dist_from_center);
   float alpha = u_alpha * edgeFade;
 
   alpha += edgeGlow * 0.3;
 
-  FragColor = vec4(color, clamp(alpha, 0.0, 1.0));
+  frag_color = vec4(color, clamp(alpha, 0.0, 1.0));
 }

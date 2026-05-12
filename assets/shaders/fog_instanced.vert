@@ -2,20 +2,20 @@
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
-layout(location = 2) in vec2 a_texCoord;
+layout(location = 2) in vec2 a_tex_coord;
 
 layout(location = 3) in vec3 i_center;
 layout(location = 4) in float i_size;
 layout(location = 5) in vec3 i_color;
 layout(location = 6) in float i_alpha;
 
-layout(std140) uniform FrameData { mat4 u_viewProj; };
+layout(std140) uniform FrameData { mat4 u_view_proj; };
 uniform float u_time;
 
-out vec3 v_worldPos;
+out vec3 v_world_pos;
 out vec3 v_color;
 out float v_alpha;
-out vec2 v_localCoord;
+out vec2 v_local_coord;
 out float v_seed;
 
 float hash11(float x) { return fract(sin(x * 91.345) * 43758.5453); }
@@ -41,11 +41,11 @@ void main() {
                                i_size * 0.012,
                        i_center.z + rot.y);
 
-  v_worldPos = worldPos;
+  v_world_pos = worldPos;
   v_color = i_color;
   v_alpha = i_alpha;
-  v_localCoord = rot / max(i_size * jitter, 0.001);
+  v_local_coord = rot / max(i_size * jitter, 0.001);
   v_seed = seed;
 
-  gl_Position = u_viewProj * vec4(worldPos, 1.0);
+  gl_Position = u_view_proj * vec4(worldPos, 1.0);
 }

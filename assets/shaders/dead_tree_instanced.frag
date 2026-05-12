@@ -1,16 +1,16 @@
 #version 330 core
 
-in vec3 vWorldPos;
-in vec3 vNormal;
-in vec3 vColor;
+in vec3 v_world_pos;
+in vec3 v_normal;
+in vec3 v_color;
 
-uniform vec3 uLightDirection;
+uniform vec3 u_light_direction;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 void main() {
-  vec3 normal = normalize(vNormal);
-  vec3 lightDir = normalize(uLightDirection);
+  vec3 normal = normalize(v_normal);
+  vec3 lightDir = normalize(u_light_direction);
 
   float diffuse = max(dot(normal, lightDir), 0.0);
 
@@ -21,7 +21,7 @@ void main() {
   vec3 light_tint = mix(sky_color * 0.45, sun_color, lit_t);
 
   float lighting = ambient + diffuse * 0.65;
-  vec3 color = vColor * lighting * light_tint;
+  vec3 color = v_color * lighting * light_tint;
 
-  FragColor = vec4(color, 1.0);
+  frag_color = vec4(color, 1.0);
 }
