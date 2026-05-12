@@ -1,12 +1,12 @@
 #version 330 core
 
-in vec3 v_worldPos;
+in vec3 v_world_pos;
 in vec3 v_color;
 in float v_alpha;
-in vec2 v_localCoord;
+in vec2 v_local_coord;
 in float v_seed;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 uniform float u_time;
 
@@ -32,14 +32,14 @@ float vnoise(vec2 p) {
 }
 
 void main() {
-  vec2 p = v_localCoord * 2.0;
+  vec2 p = v_local_coord * 2.0;
   vec2 ap = abs(p);
   float outer = max(ap.x, ap.y);
   if (outer >= 1.08) {
     discard;
   }
 
-  vec2 wp = v_worldPos.xz;
+  vec2 wp = v_world_pos.xz;
   vec2 drift = vec2(u_time * 0.010, -u_time * 0.007);
   float large = vnoise(wp * 0.045 + vec2(v_seed * 7.0, -v_seed * 5.0) + drift);
   float detail =
@@ -71,5 +71,5 @@ void main() {
     discard;
   }
 
-  FragColor = vec4(lit, clamp(alpha, 0.0, 1.0));
+  frag_color = vec4(lit, clamp(alpha, 0.0, 1.0));
 }

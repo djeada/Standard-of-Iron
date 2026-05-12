@@ -1,18 +1,18 @@
 #version 330 core
 
-in vec3 vWorldPos;
-in vec3 vNormal;
-in vec3 vColor;
-in vec2 vTexCoord;
-in float vFoliageMask;
-in float vLeafSeed;
-in float vBarkSeed;
-in float vBranchId;
-in vec2 vLocalPosXZ;
+in vec3 v_world_pos;
+in vec3 v_normal;
+in vec3 v_color;
+in vec2 v_tex_coord;
+in float v_foliage_mask;
+in float v_leaf_seed;
+in float v_bark_seed;
+in float v_branch_id;
+in vec2 v_local_pos_xz;
 
-uniform vec3 uLightDirection;
+uniform vec3 u_light_direction;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
@@ -38,8 +38,8 @@ float noise2D(vec2 p) {
 
 void main() {
 
-  vec3 n = normalize(vNormal);
-  vec3 l = normalize(uLightDirection);
+  vec3 n = normalize(v_normal);
+  vec3 l = normalize(u_light_direction);
   float diffuse = max(dot(n, l), 0.0);
   float ambient = 0.25;
   float lighting = ambient + diffuse * 0.62;
@@ -49,7 +49,7 @@ void main() {
   float lit_t = clamp(diffuse * 1.4, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.50, sun_color, lit_t);
 
-  vec2 leafPos = vLocalPosXZ * 120.0 + vec2(vLeafSeed * 17.3, vBarkSeed * 23.1);
+  vec2 leafPos = v_local_pos_xz * 120.0 + vec2(v_leaf_seed * 17.3, v_bark_seed * 23.1);
 
   float leafLayer1 = hash(floor(leafPos));
   float leafLayer2 = hash(floor(leafPos * 1.7 + vec2(5.3, 8.7)));
@@ -58,7 +58,7 @@ void main() {
   float leafDensity = (leafLayer1 + leafLayer2 + leafLayer3) / 3.0;
 
   float leafEdge = noise2D(leafPos * 2.5);
-  float leafFine = hash(leafPos * 0.37 + vec2(vBranchId * 7.0));
+  float leafFine = hash(leafPos * 0.37 + vec2(v_branch_id * 7.0));
 
   vec3 leafDarkGreen = vec3(0.22, 0.32, 0.20);
   vec3 leafMidGreen = vec3(0.32, 0.42, 0.28);
@@ -75,17 +75,17 @@ void main() {
   float highlight = smoothstep(0.7, 0.9, leafLayer1 * leafEdge);
   leafColor = mix(leafColor, leafLightGreen, highlight * 0.4);
 
-  leafColor = mix(leafColor, vColor, 0.15);
+  leafColor = mix(leafColor, v_color, 0.15);
 
-  float canopyDepth = 1.0 - smoothstep(0.0, 0.35, length(vLocalPosXZ));
+  float canopyDepth = 1.0 - smoothstep(0.0, 0.35, length(v_local_pos_xz));
   leafColor *= mix(0.75, 1.0, canopyDepth);
 
-  float barkU = vTexCoord.x * TWO_PI;
-  float barkV = vTexCoord.y;
+  float barkU = v_tex_coord.x * TWO_PI;
+  float barkV = v_tex_coord.y;
 
-  float furrows = pow(abs(sin(barkU * 5.0 + vBarkSeed * TWO_PI)), 0.4);
+  float furrows = pow(abs(sin(barkU * 5.0 + v_bark_seed * TWO_PI)), 0.4);
   float verticalGrain =
-      noise2D(vec2(barkU * 3.0, barkV * 25.0 + vBarkSeed * 7.0));
+      noise2D(vec2(barkU * 3.0, barkV * 25.0 + v_bark_seed * 7.0));
   float barkNoise = noise2D(vec2(barkU * 8.0, barkV * 15.0)) * 0.3;
   float barkTexture = furrows * 0.5 + verticalGrain * 0.35 + barkNoise;
 
@@ -98,40 +98,40 @@ void main() {
       smoothstep(0.75, 0.95, hash(vec2(barkV * 15.0, barkU * 3.0)));
   barkColor = mix(barkColor, barkLight, barkHighlight * 0.35);
 
-  vec3 baseColor = mix(barkColor, leafColor, vFoliageMask);
+  vec3 baseColor = mix(barkColor, leafColor, v_foliage_mask);
   vec3 color = baseColor * lighting * light_tint;
 
   float alpha = 1.0;
 
-  if (vFoliageMask > 0.1) {
+  if (v_foliage_mask > 0.1) {
 
     float leafMask = leafDensity;
 
     float holePattern = noise2D(leafPos * 0.8);
     float holes = smoothstep(0.20, 0.35, holePattern);
 
-    float clusterGaps = noise2D(vLocalPosXZ * 15.0 + vec2(vLeafSeed * 3.0));
+    float clusterGaps = noise2D(v_local_pos_xz * 15.0 + vec2(v_leaf_seed * 3.0));
     float gaps = smoothstep(0.15, 0.40, clusterGaps);
 
-    float edgeDist = length(vLocalPosXZ);
+    float edgeDist = length(v_local_pos_xz);
     float edgeFade = 1.0 - smoothstep(0.25, 0.50, edgeDist) * 0.5;
 
-    float topFade = 1.0 - smoothstep(0.85, 1.0, vTexCoord.y) * 0.4;
+    float topFade = 1.0 - smoothstep(0.85, 1.0, v_tex_coord.y) * 0.4;
 
     alpha = leafMask * holes * gaps * edgeFade * topFade;
-    alpha = mix(1.0, alpha, vFoliageMask);
+    alpha = mix(1.0, alpha, v_foliage_mask);
 
     if (leafFine > 0.82) {
       alpha *= 0.2;
     }
   }
 
-  alpha *= smoothstep(0.0, 0.06, vTexCoord.y);
+  alpha *= smoothstep(0.0, 0.06, v_tex_coord.y);
 
   if (alpha < 0.15)
     discard;
 
   alpha = clamp(alpha * 1.3, 0.0, 1.0);
 
-  FragColor = vec4(color, alpha);
+  frag_color = vec4(color, alpha);
 }

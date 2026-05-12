@@ -13,7 +13,7 @@ uniform float u_total_width;
 uniform float u_smoothing;
 uniform float u_ink_variation;
 
-out vec4 fragColor;
+out vec4 frag_color;
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -84,5 +84,5 @@ void main() {
   float inkTexture = 0.95 + valueNoise(v_world_uv * 200.0) * 0.05;
   color.a *= inkTexture;
 
-  fragColor = color;
+  frag_color = color;
 }

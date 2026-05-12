@@ -1,7 +1,7 @@
 #version 330 core
-out vec4 FragColor;
-in vec2 TexCoord;
-in vec3 WorldPos;
+out vec4 frag_color;
+in vec2 tex_coord;
+in vec3 world_pos;
 
 uniform float time;
 
@@ -106,7 +106,7 @@ vec3 waterNormal(vec2 uv, vec2 grad) {
 
 void main() {
 
-  vec2 uv = rot(0.35) * (WorldPos.xz * 0.38);
+  vec2 uv = rot(0.35) * (world_pos.xz * 0.38);
 
   float h, lap;
   vec2 grad;
@@ -143,8 +143,8 @@ void main() {
   vec3 specCol = vec3(0.75, 0.85, 1.10) * spec;
   vec3 sunDiffuse = transmission * NdotL * 0.20;
 
-  float shore = 1.0 - (smoothstep(0.07, 0.28, TexCoord.y) *
-                       smoothstep(0.07, 0.28, 1.0 - TexCoord.y));
+  float shore = 1.0 - (smoothstep(0.07, 0.28, tex_coord.y) *
+                       smoothstep(0.07, 0.28, 1.0 - tex_coord.y));
   float foam = shore * (0.45 + 0.55 * fbm(uv * 3.0 + time * 0.6));
   vec3 foamCol = vec3(0.92, 0.96, 1.0);
   foam = clamp(foam * 0.35, 0.0, 1.0);
@@ -155,5 +155,5 @@ void main() {
 
   color += vec3(0.03, 0.06, 0.12) * pow(1.0 - NdotV, 3.0);
 
-  FragColor = vec4(saturate(color), 0.85);
+  frag_color = vec4(saturate(color), 0.85);
 }

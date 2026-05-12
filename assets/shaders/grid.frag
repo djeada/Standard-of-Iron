@@ -1,15 +1,15 @@
 #version 330 core
 
 in vec3 v_normal;
-in vec2 v_texCoord;
-in vec3 v_worldPos;
+in vec2 v_tex_coord;
+in vec3 v_world_pos;
 
-uniform vec3 u_gridColor;
-uniform vec3 u_lineColor;
-uniform float u_cellSize;
+uniform vec3 u_grid_color;
+uniform vec3 u_line_color;
+uniform float u_cell_size;
 uniform float u_thickness;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 float hash12(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -18,7 +18,7 @@ float hash12(vec2 p) {
 }
 
 void main() {
-  vec2 coord = v_worldPos.xz / u_cellSize;
+  vec2 coord = v_world_pos.xz / u_cell_size;
   vec2 f = fract(coord) - 0.5;
   vec2 af = abs(f);
 
@@ -33,11 +33,11 @@ void main() {
   vec2 cell = floor(coord);
   float major =
       (abs(mod(cell.x, 5.0)) < 0.5 || abs(mod(cell.y, 5.0)) < 0.5) ? 1.0 : 0.0;
-  vec3 lineCol = mix(u_lineColor, u_lineColor * 1.2, major);
+  vec3 lineCol = mix(u_line_color, u_line_color * 1.2, major);
 
   float jitter = (hash12(cell) - 0.5) * 0.06;
-  vec3 base = u_gridColor * (1.0 + jitter);
+  vec3 base = u_grid_color * (1.0 + jitter);
 
   vec3 col = mix(base, lineCol, lineMask);
-  FragColor = vec4(col, 1.0);
+  frag_color = vec4(col, 1.0);
 }

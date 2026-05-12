@@ -1,14 +1,14 @@
 #version 330 core
 
 in vec3 v_normal;
-in vec2 v_texCoord;
-in vec3 v_worldPos;
+in vec2 v_tex_coord;
+in vec3 v_world_pos;
 
 uniform vec3 u_color;
-uniform vec3 u_lightDirection;
-uniform sampler2D u_fogTexture;
+uniform vec3 u_light_direction;
+uniform sampler2D u_fog_texture;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 const float PI = 3.14159265359;
 
@@ -99,7 +99,7 @@ float ggxSpecular(vec3 N, vec3 V, vec3 L, float rough, float F0) {
 
 void main() {
 
-  vec2 uv = v_worldPos.xz * 0.6;
+  vec2 uv = v_world_pos.xz * 0.6;
 
   vec2 F = worleyF(uv * 1.2);
   float edgeMetric = F.y - F.x;
@@ -137,7 +137,7 @@ void main() {
   vec3 Ng = normalize(v_normal);
   vec3 N = normalize(mix(Ng, nBump, 0.65));
 
-  vec3 L = normalize(u_lightDirection);
+  vec3 L = normalize(u_light_direction);
   vec3 V = normalize(vec3(0.0, 0.9, 0.4));
 
   float NdotL = max(dot(N, L), 0.0);
@@ -163,9 +163,9 @@ void main() {
   float gray = dot(litColor, vec3(0.299, 0.587, 0.114));
   litColor = mix(litColor, vec3(gray * 0.9), grime);
 
-  float fogMask = texture(u_fogTexture, v_texCoord).r;
+  float fogMask = texture(u_fog_texture, v_tex_coord).r;
   float fogAmt = 1.0 - fogMask;
   litColor *= mix(1.0, 0.85, fogAmt * 0.5);
 
-  FragColor = vec4(litColor, 1.0);
+  frag_color = vec4(litColor, 1.0);
 }
