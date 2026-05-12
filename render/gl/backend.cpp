@@ -1029,6 +1029,117 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
         break;
       }
+      // ── World prop species (Tent, SupplyCart, WeaponRack, Ruins, DeadTree) ──
+      // All use the same per-instance layout as Stone (pos_scale + color_rot)
+      // and the same simple diffuse lighting fragment shader.
+      case TerrainScatterCmd::Species::Tent:
+      case TerrainScatterCmd::Species::SupplyCart:
+      case TerrainScatterCmd::Species::WeaponRack:
+      case TerrainScatterCmd::Species::Ruins:
+      case TerrainScatterCmd::Species::DeadTree: {
+        if (!m_vegetation_pipeline) {
+          break;
+        }
+
+        // Select per-species resources.
+        Shader *prop_shader = nullptr;
+        GLuint prop_vao = 0U;
+        GLsizei prop_idx_count = 0;
+        const BackendPipelines::VegetationPipeline::PropUniforms *prop_uniforms = nullptr;
+        QVector3D prop_light_dir;
+
+        switch (deco_cmd_.species) {
+        case TerrainScatterCmd::Species::Tent:
+          prop_shader = m_vegetation_pipeline->tent_shader();
+          prop_vao = m_vegetation_pipeline->m_tent_vao;
+          prop_idx_count = m_vegetation_pipeline->m_tent_index_count;
+          prop_uniforms = &m_vegetation_pipeline->m_tent_uniforms;
+          prop_light_dir = deco_cmd_.tent.light_direction;
+          break;
+        case TerrainScatterCmd::Species::SupplyCart:
+          prop_shader = m_vegetation_pipeline->supply_cart_shader();
+          prop_vao = m_vegetation_pipeline->m_supply_cart_vao;
+          prop_idx_count = m_vegetation_pipeline->m_supply_cart_index_count;
+          prop_uniforms = &m_vegetation_pipeline->m_supply_cart_uniforms;
+          prop_light_dir = deco_cmd_.supply_cart.light_direction;
+          break;
+        case TerrainScatterCmd::Species::WeaponRack:
+          prop_shader = m_vegetation_pipeline->weapon_rack_shader();
+          prop_vao = m_vegetation_pipeline->m_weapon_rack_vao;
+          prop_idx_count = m_vegetation_pipeline->m_weapon_rack_index_count;
+          prop_uniforms = &m_vegetation_pipeline->m_weapon_rack_uniforms;
+          prop_light_dir = deco_cmd_.weapon_rack.light_direction;
+          break;
+        case TerrainScatterCmd::Species::Ruins:
+          prop_shader = m_vegetation_pipeline->ruins_shader();
+          prop_vao = m_vegetation_pipeline->m_ruins_vao;
+          prop_idx_count = m_vegetation_pipeline->m_ruins_index_count;
+          prop_uniforms = &m_vegetation_pipeline->m_ruins_uniforms;
+          prop_light_dir = deco_cmd_.ruins.light_direction;
+          break;
+        case TerrainScatterCmd::Species::DeadTree:
+          prop_shader = m_vegetation_pipeline->dead_tree_shader();
+          prop_vao = m_vegetation_pipeline->m_dead_tree_vao;
+          prop_idx_count = m_vegetation_pipeline->m_dead_tree_index_count;
+          prop_uniforms = &m_vegetation_pipeline->m_dead_tree_uniforms;
+          prop_light_dir = deco_cmd_.dead_tree.light_direction;
+          break;
+        default:
+          break;
+        }
+
+        if (prop_shader == nullptr || prop_vao == 0U || prop_idx_count == 0 ||
+            deco_cmd_.instance_buffer == nullptr ||
+            deco_cmd_.instance_count == 0 || prop_uniforms == nullptr) {
+          break;
+        }
+
+        DepthMaskScope const depth_mask(true);
+        BlendScope const blend(false);
+        GLboolean const prev_cull2 = glIsEnabled(GL_CULL_FACE);
+        if (prev_cull2 != 0U) {
+          glDisable(GL_CULL_FACE);
+        }
+
+        if (m_last_bound_shader != prop_shader) {
+          prop_shader->use();
+          m_last_bound_shader = prop_shader;
+          m_last_bound_texture = nullptr;
+        }
+
+        if (prop_uniforms->view_proj != Shader::InvalidUniform) {
+          prop_shader->set_uniform(prop_uniforms->view_proj, view_proj);
+        }
+        if (prop_uniforms->light_direction != Shader::InvalidUniform) {
+          QVector3D ld = prop_light_dir;
+          if (!ld.isNull()) {
+            ld.normalize();
+          }
+          prop_shader->set_uniform(prop_uniforms->light_direction, ld);
+        }
+
+        glBindVertexArray(prop_vao);
+        deco_cmd_.instance_buffer->bind();
+        const auto stride2 = static_cast<GLsizei>(sizeof(TentInstanceGpu));
+        glVertexAttribPointer(
+            TexCoord, Vec4, GL_FLOAT, GL_FALSE, stride2,
+            reinterpret_cast<void *>(offsetof(TentInstanceGpu, pos_scale)));
+        glVertexAttribPointer(
+            InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride2,
+            reinterpret_cast<void *>(offsetof(TentInstanceGpu, color_rot)));
+        deco_cmd_.instance_buffer->unbind();
+
+        glDrawElementsInstanced(GL_TRIANGLES, prop_idx_count,
+                                GL_UNSIGNED_SHORT, nullptr,
+                                static_cast<GLsizei>(deco_cmd_.instance_count));
+        glBindVertexArray(0);
+
+        if (prev_cull2 != 0U) {
+          glEnable(GL_CULL_FACE);
+        }
+
+        break;
+      }
       }
       break;
     }

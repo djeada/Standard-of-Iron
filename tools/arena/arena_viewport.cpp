@@ -1067,7 +1067,8 @@ void ArenaViewport::configure_rendering_from_terrain() {
                                   terrain_service.biome_settings());
   m_features->configure(*height_map, terrain_service.road_segments());
   m_scatter->configure(*height_map, terrain_service.biome_settings(),
-                       terrain_service.fire_camps());
+                       terrain_service.fire_camps(),
+                       terrain_service.world_props());
   if (m_rain != nullptr) {
     float const world_width = static_cast<float>(height_map->get_width()) *
                               height_map->get_tile_size();
