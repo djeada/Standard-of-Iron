@@ -39,7 +39,6 @@
 #include "weapons/roman_scutum.h"
 #include "weapons/shield_carthage.h"
 #include "weapons/shield_renderer.h"
-#include "weapons/shield_roman.h"
 #include "weapons/spear_renderer.h"
 #include "weapons/sword_carthage.h"
 #include "weapons/sword_renderer.h"
@@ -1348,10 +1347,6 @@ void register_built_in_equipment() {
                               "shield_carthage_cavalry",
                               shield_carthage_cavalry);
 
-  auto shield_roman = std::make_shared<RomanShieldRenderer>();
-  registry.register_equipment(EquipmentCategory::Weapon, "shield_roman",
-                              shield_roman);
-
   WorkApronConfig roman_apron_config;
   roman_apron_config.leather_color = QVector3D(0.48F, 0.35F, 0.22F);
   auto work_apron_roman =
@@ -1733,7 +1728,6 @@ void register_built_in_equipment() {
                         [] { (void)roman_greaves_archetype(); });
 
   ar.register_archetype("roman_scutum", [] { (void)roman_scutum_archetype(); });
-  ar.register_archetype("roman_shield", [] { (void)roman_shield_archetype(); });
 
   ar.register_archetype("tool_belt_ring",
                         [] { (void)tool_belt_ring_archetype(); });

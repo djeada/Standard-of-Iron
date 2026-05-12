@@ -386,11 +386,11 @@ void read_fire_camps(const QJsonArray &arr, std::vector<FireCamp> &out) {
 
 void read_world_props(const QJsonArray &arr, std::vector<WorldProp> &out) {
   static const QHash<QString, WorldProp::Type> k_type_map{
-      {QStringLiteral("tent"),         WorldProp::Type::Tent},
-      {QStringLiteral("supply_cart"),  WorldProp::Type::SupplyCart},
-      {QStringLiteral("weapon_rack"),  WorldProp::Type::WeaponRack},
-      {QStringLiteral("ruins"),        WorldProp::Type::Ruins},
-      {QStringLiteral("dead_tree"),    WorldProp::Type::DeadTree},
+      {QStringLiteral("tent"), WorldProp::Type::Tent},
+      {QStringLiteral("supply_cart"), WorldProp::Type::SupplyCart},
+      {QStringLiteral("weapon_rack"), WorldProp::Type::WeaponRack},
+      {QStringLiteral("ruins"), WorldProp::Type::Ruins},
+      {QStringLiteral("dead_tree"), WorldProp::Type::DeadTree},
   };
 
   out.clear();

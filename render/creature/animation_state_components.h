@@ -12,6 +12,12 @@
 
 namespace Render::Creature {
 
+struct HumanoidAnimationStateComponent : public Engine::Core::Component {
+  float idle_duration{0.0F};
+  float last_sample_time{0.0F};
+  bool initialized{false};
+};
+
 struct HorseAnimationStateComponent : public Engine::Core::Component {
   Render::GL::GaitType current_gait{Render::GL::GaitType::IDLE};
   Render::GL::GaitType target_gait{Render::GL::GaitType::IDLE};

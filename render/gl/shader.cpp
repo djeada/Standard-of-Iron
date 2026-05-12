@@ -450,7 +450,12 @@ auto classify_shader_for_audit(const QString &name) -> QString {
       QStringLiteral("healing_aura"),
       QStringLiteral("combat_dust"),
       QStringLiteral("mode_indicator"),
-      QStringLiteral("rain")};
+      QStringLiteral("rain"),
+      QStringLiteral("tent_instanced"),
+      QStringLiteral("supply_cart_instanced"),
+      QStringLiteral("weapon_rack_instanced"),
+      QStringLiteral("ruins_instanced"),
+      QStringLiteral("dead_tree_instanced")};
 
   if (pipeline_owned.contains(name)) {
     return QStringLiteral("pipeline-owned");

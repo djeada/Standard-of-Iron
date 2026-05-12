@@ -106,13 +106,21 @@ public:
   GLsizei m_firecamp_index_count{0};
   GLsizei m_firecamp_vertex_count{0};
 
-  // --- World prop pipeline resources ---
-
-  [[nodiscard]] auto tent_shader() const -> GL::Shader * { return m_tent_shader; }
-  [[nodiscard]] auto supply_cart_shader() const -> GL::Shader * { return m_supply_cart_shader; }
-  [[nodiscard]] auto weapon_rack_shader() const -> GL::Shader * { return m_weapon_rack_shader; }
-  [[nodiscard]] auto ruins_shader() const -> GL::Shader * { return m_ruins_shader; }
-  [[nodiscard]] auto dead_tree_shader() const -> GL::Shader * { return m_dead_tree_shader; }
+  [[nodiscard]] auto tent_shader() const -> GL::Shader * {
+    return m_tent_shader;
+  }
+  [[nodiscard]] auto supply_cart_shader() const -> GL::Shader * {
+    return m_supply_cart_shader;
+  }
+  [[nodiscard]] auto weapon_rack_shader() const -> GL::Shader * {
+    return m_weapon_rack_shader;
+  }
+  [[nodiscard]] auto ruins_shader() const -> GL::Shader * {
+    return m_ruins_shader;
+  }
+  [[nodiscard]] auto dead_tree_shader() const -> GL::Shader * {
+    return m_dead_tree_shader;
+  }
 
   struct PropUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -178,11 +186,10 @@ private:
   void shutdown_dead_tree_pipeline();
   void upload_prop_mesh_impl(
       const std::vector<std::pair<QVector3D, QVector3D>> &verts,
-      const std::vector<uint16_t> &idx,
-      GLuint &vao, GLuint &vbo, GLuint &ibo,
+      const std::vector<uint16_t> &idx, GLuint &vao, GLuint &vbo, GLuint &ibo,
       GLsizei &vert_count, GLsizei &idx_count);
   void delete_prop_pipeline_impl(GLuint &vao, GLuint &vbo, GLuint &ibo,
-                                  GLsizei &vc, GLsizei &ic);
+                                 GLsizei &vc, GLsizei &ic);
 
   GL::ShaderCache *m_shader_cache;
   bool m_initialized{false};

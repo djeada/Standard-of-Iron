@@ -1029,9 +1029,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
         break;
       }
-      // ── World prop species (Tent, SupplyCart, WeaponRack, Ruins, DeadTree) ──
-      // All use the same per-instance layout as Stone (pos_scale + color_rot)
-      // and the same simple diffuse lighting fragment shader.
+
       case TerrainScatterCmd::Species::Tent:
       case TerrainScatterCmd::Species::SupplyCart:
       case TerrainScatterCmd::Species::WeaponRack:
@@ -1041,11 +1039,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           break;
         }
 
-        // Select per-species resources.
         Shader *prop_shader = nullptr;
         GLuint prop_vao = 0U;
         GLsizei prop_idx_count = 0;
-        const BackendPipelines::VegetationPipeline::PropUniforms *prop_uniforms = nullptr;
+        const BackendPipelines::VegetationPipeline::PropUniforms
+            *prop_uniforms = nullptr;
         QVector3D prop_light_dir;
 
         switch (deco_cmd_.species) {
@@ -1129,8 +1127,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             reinterpret_cast<void *>(offsetof(TentInstanceGpu, color_rot)));
         deco_cmd_.instance_buffer->unbind();
 
-        glDrawElementsInstanced(GL_TRIANGLES, prop_idx_count,
-                                GL_UNSIGNED_SHORT, nullptr,
+        glDrawElementsInstanced(GL_TRIANGLES, prop_idx_count, GL_UNSIGNED_SHORT,
+                                nullptr,
                                 static_cast<GLsizei>(deco_cmd_.instance_count));
         glBindVertexArray(0);
 
@@ -1671,6 +1669,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (river_shader == nullptr) {
           break;
         }
+        const auto &visibility = feature.visibility;
         if (m_last_bound_shader != river_shader) {
           river_shader->use();
           river_shader->set_uniform(m_water_pipeline->m_river_uniforms.view,
@@ -1682,9 +1681,49 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_last_bound_shader = river_shader;
           m_last_bound_texture = nullptr;
         }
-        draw_feature_model(river_shader,
-                           m_water_pipeline->m_river_uniforms.model,
-                           Shader::InvalidUniform, Shader::InvalidUniform);
+        if (m_water_pipeline->m_river_uniforms.has_visibility !=
+            Shader::InvalidUniform) {
+          int const has_vis =
+              visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
+          river_shader->set_uniform(
+              m_water_pipeline->m_river_uniforms.has_visibility, has_vis);
+        }
+        if (visibility.enabled && visibility.texture != nullptr) {
+          if (m_water_pipeline->m_river_uniforms.visibility_size !=
+              Shader::InvalidUniform) {
+            river_shader->set_uniform(
+                m_water_pipeline->m_river_uniforms.visibility_size,
+                visibility.size);
+          }
+          if (m_water_pipeline->m_river_uniforms.visibility_tile_size !=
+              Shader::InvalidUniform) {
+            river_shader->set_uniform(
+                m_water_pipeline->m_river_uniforms.visibility_tile_size,
+                visibility.tile_size);
+          }
+          if (m_water_pipeline->m_river_uniforms.explored_alpha !=
+              Shader::InvalidUniform) {
+            river_shader->set_uniform(
+                m_water_pipeline->m_river_uniforms.explored_alpha,
+                visibility.explored_alpha);
+          }
+          constexpr int k_river_vis_texture_unit = 7;
+          visibility.texture->bind(k_river_vis_texture_unit);
+          m_last_bound_texture = visibility.texture;
+          if (m_water_pipeline->m_river_uniforms.visibility_texture !=
+              Shader::InvalidUniform) {
+            river_shader->set_uniform(
+                m_water_pipeline->m_river_uniforms.visibility_texture,
+                k_river_vis_texture_unit);
+          }
+        }
+        {
+          PolygonOffsetScope const poly(-1.0F, -1.0F);
+          draw_feature_model(
+              river_shader, m_water_pipeline->m_river_uniforms.model,
+              Shader::InvalidUniform, Shader::InvalidUniform,
+              m_water_pipeline->m_river_uniforms.segment_visibility);
+        }
         break;
       }
       case LinearFeatureKind::Riverbank: {
@@ -1739,18 +1778,21 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           }
           m_last_bound_texture = visibility.texture;
         }
-        for (std::size_t j = i; j < batch_end; ++j) {
-          const auto &single =
-              std::get<TerrainFeatureCmdIndex>(queue.get_sorted(j));
-          riverbank_shader->set_uniform(
-              m_water_pipeline->m_riverbank_uniforms.model, single.model);
-          if (m_water_pipeline->m_riverbank_uniforms.segment_visibility !=
-              Shader::InvalidUniform) {
+        {
+          PolygonOffsetScope const poly(-1.0F, -1.0F);
+          for (std::size_t j = i; j < batch_end; ++j) {
+            const auto &single =
+                std::get<TerrainFeatureCmdIndex>(queue.get_sorted(j));
             riverbank_shader->set_uniform(
-                m_water_pipeline->m_riverbank_uniforms.segment_visibility,
-                single.alpha);
+                m_water_pipeline->m_riverbank_uniforms.model, single.model);
+            if (m_water_pipeline->m_riverbank_uniforms.segment_visibility !=
+                Shader::InvalidUniform) {
+              riverbank_shader->set_uniform(
+                  m_water_pipeline->m_riverbank_uniforms.segment_visibility,
+                  single.alpha);
+            }
+            single.mesh->draw();
           }
-          single.mesh->draw();
         }
         break;
       }
@@ -1777,6 +1819,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (road_shader == nullptr) {
           break;
         }
+        const auto &visibility = feature.visibility;
         if (m_last_bound_shader != road_shader) {
           road_shader->use();
           road_shader->set_uniform(
@@ -1784,10 +1827,50 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_last_bound_shader = road_shader;
           m_last_bound_texture = nullptr;
         }
-        draw_feature_model(road_shader, m_water_pipeline->m_road_uniforms.model,
-                           m_water_pipeline->m_road_uniforms.mvp,
-                           m_water_pipeline->m_road_uniforms.color,
-                           m_water_pipeline->m_road_uniforms.alpha);
+        if (m_water_pipeline->m_road_uniforms.has_visibility !=
+            Shader::InvalidUniform) {
+          int const has_vis =
+              visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
+          road_shader->set_uniform(
+              m_water_pipeline->m_road_uniforms.has_visibility, has_vis);
+        }
+        if (visibility.enabled && visibility.texture != nullptr) {
+          if (m_water_pipeline->m_road_uniforms.visibility_size !=
+              Shader::InvalidUniform) {
+            road_shader->set_uniform(
+                m_water_pipeline->m_road_uniforms.visibility_size,
+                visibility.size);
+          }
+          if (m_water_pipeline->m_road_uniforms.visibility_tile_size !=
+              Shader::InvalidUniform) {
+            road_shader->set_uniform(
+                m_water_pipeline->m_road_uniforms.visibility_tile_size,
+                visibility.tile_size);
+          }
+          if (m_water_pipeline->m_road_uniforms.explored_alpha !=
+              Shader::InvalidUniform) {
+            road_shader->set_uniform(
+                m_water_pipeline->m_road_uniforms.explored_alpha,
+                visibility.explored_alpha);
+          }
+          constexpr int k_road_vis_texture_unit = 7;
+          visibility.texture->bind(k_road_vis_texture_unit);
+          m_last_bound_texture = visibility.texture;
+          if (m_water_pipeline->m_road_uniforms.visibility_texture !=
+              Shader::InvalidUniform) {
+            road_shader->set_uniform(
+                m_water_pipeline->m_road_uniforms.visibility_texture,
+                k_road_vis_texture_unit);
+          }
+        }
+        {
+          PolygonOffsetScope const poly(-1.0F, -1.0F);
+          draw_feature_model(road_shader,
+                             m_water_pipeline->m_road_uniforms.model,
+                             m_water_pipeline->m_road_uniforms.mvp,
+                             m_water_pipeline->m_road_uniforms.color,
+                             m_water_pipeline->m_road_uniforms.alpha);
+        }
         break;
       }
       }
@@ -1898,7 +1981,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           active_shader->set_uniform(uniforms->light_dir, m_light_dir);
         }
         if (uniforms->ambient_strength != Shader::InvalidUniform) {
-          active_shader->set_uniform(uniforms->ambient_strength, m_ambient_strength);
+          active_shader->set_uniform(uniforms->ambient_strength,
+                                     m_ambient_strength);
         }
         m_last_bound_shader = active_shader;
       }
@@ -1936,7 +2020,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
               batch_shader->set_uniform(inst_uniforms->light_dir, m_light_dir);
             }
             if (inst_uniforms->ambient_strength != Shader::InvalidUniform) {
-              batch_shader->set_uniform(inst_uniforms->ambient_strength, m_ambient_strength);
+              batch_shader->set_uniform(inst_uniforms->ambient_strength,
+                                        m_ambient_strength);
             }
             Texture *tex_to_use =
                 (it.texture != nullptr)
@@ -2329,26 +2414,23 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       case PrimitiveType::Sphere:
         m_primitive_batch_pipeline->upload_sphere_instances(
             data, batch.instance_count());
-        m_primitive_batch_pipeline->draw_spheres(batch.instance_count(),
-                                                 view_proj,
-                                                 batch.params.light_direction,
-                                                 batch.params.ambient_strength);
+        m_primitive_batch_pipeline->draw_spheres(
+            batch.instance_count(), view_proj, batch.params.light_direction,
+            batch.params.ambient_strength);
         break;
       case PrimitiveType::Cylinder:
         m_primitive_batch_pipeline->upload_cylinder_instances(
             data, batch.instance_count());
-        m_primitive_batch_pipeline->draw_cylinders(batch.instance_count(),
-                                                   view_proj,
-                                                   batch.params.light_direction,
-                                                   batch.params.ambient_strength);
+        m_primitive_batch_pipeline->draw_cylinders(
+            batch.instance_count(), view_proj, batch.params.light_direction,
+            batch.params.ambient_strength);
         break;
       case PrimitiveType::Cone:
         m_primitive_batch_pipeline->upload_cone_instances(
             data, batch.instance_count());
-        m_primitive_batch_pipeline->draw_cones(batch.instance_count(),
-                                               view_proj,
-                                               batch.params.light_direction,
-                                               batch.params.ambient_strength);
+        m_primitive_batch_pipeline->draw_cones(
+            batch.instance_count(), view_proj, batch.params.light_direction,
+            batch.params.ambient_strength);
         break;
       }
 

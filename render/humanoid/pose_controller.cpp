@@ -6,8 +6,72 @@
 #include <array>
 #include <cmath>
 #include <numbers>
+#include <optional>
 
 namespace Render::GL {
+
+namespace {
+
+auto hash_to_unit(std::uint32_t x) -> float {
+  x ^= x >> 16;
+  x *= 0x7feb352dU;
+  x ^= x >> 15;
+  x *= 0x846ca68bU;
+  x ^= x >> 16;
+  return float(x & 0x7FFFFFU) / float(0x7FFFFFU);
+}
+
+constexpr float k_min_idle_duration = 5.0F;
+constexpr float k_ambient_duration = 6.0F;
+constexpr float k_initial_delay_base = 0.35F;
+constexpr float k_initial_delay_range = 1.50F;
+constexpr float k_base_cycle_period = 14.0F;
+constexpr float k_cycle_period_range = 8.0F;
+constexpr float k_tap_frequency_multiplier = 6.0F;
+
+struct AmbientIdleSchedule {
+  AmbientIdleType type{AmbientIdleType::None};
+  float phase{0.0F};
+};
+
+auto compute_ambient_idle_schedule(std::uint32_t seed, float idle_duration)
+    -> std::optional<AmbientIdleSchedule> {
+  if (idle_duration < k_min_idle_duration) {
+    return std::nullopt;
+  }
+
+  float const initial_delay =
+      k_initial_delay_base +
+      hash_to_unit(seed ^ 0x41D64E6DU) * k_initial_delay_range;
+  float const ambient_elapsed =
+      idle_duration - k_min_idle_duration - initial_delay;
+  if (ambient_elapsed < 0.0F) {
+    return std::nullopt;
+  }
+
+  float const cycle_period =
+      k_base_cycle_period +
+      hash_to_unit(seed ^ 0x9E3779B9U) * k_cycle_period_range;
+  float const cycle_time = std::fmod(ambient_elapsed, cycle_period);
+  if (cycle_time < 0.0F || cycle_time >= k_ambient_duration) {
+    return std::nullopt;
+  }
+
+  auto const cycle_number =
+      static_cast<std::uint32_t>(ambient_elapsed / cycle_period);
+  std::uint32_t const anim_selector =
+      seed ^ (cycle_number * 1664525U) ^ 0xB5297A4DU;
+  constexpr std::array<AmbientIdleType, 4> k_baked_types{
+      AmbientIdleType::SitDown, AmbientIdleType::Jump,
+      AmbientIdleType::RaiseWeapon, AmbientIdleType::ShiftWeight};
+
+  AmbientIdleSchedule schedule;
+  schedule.type = k_baked_types[anim_selector % k_baked_types.size()];
+  schedule.phase = std::clamp(cycle_time / k_ambient_duration, 0.0F, 1.0F);
+  return schedule;
+}
+
+} // namespace
 
 HumanoidPoseController::HumanoidPoseController(
     HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx)
@@ -17,15 +81,6 @@ void HumanoidPoseController::stand_idle() {}
 
 void HumanoidPoseController::apply_micro_idle(float time, std::uint32_t seed) {
   using HP = HumanProportions;
-
-  auto hash_to_unit = [](std::uint32_t x) -> float {
-    x ^= x >> 16;
-    x *= 0x7feb352dU;
-    x ^= x >> 15;
-    x *= 0x846ca68bU;
-    x ^= x >> 16;
-    return float(x & 0x7FFFFFU) / float(0x7FFFFFU);
-  };
 
   float const breath_phase_off =
       hash_to_unit(seed ^ 0x1A2B3C4DU) * 2.0F * std::numbers::pi_v<float>;
@@ -81,77 +136,27 @@ void HumanoidPoseController::apply_micro_idle(float time, std::uint32_t seed) {
   (void)HP::SHOULDER_Y;
 }
 
-namespace {
-constexpr float k_min_idle_duration = 5.0F;
-constexpr float k_ambient_duration = 6.0F;
-constexpr float k_seed_offset_divisor = 50.0F;
-constexpr float k_base_cycle_period = 25.0F;
-constexpr float k_cycle_period_range = 15.0F;
-constexpr float k_tap_frequency_multiplier = 6.0F;
-} // namespace
-
 auto HumanoidPoseController::get_ambient_idle_type(
     float time, std::uint32_t seed, float idle_duration) -> AmbientIdleType {
-
-  if (idle_duration < k_min_idle_duration) {
-    return AmbientIdleType::None;
-  }
-
-  float const seed_offset =
-      static_cast<float>(seed % 1000) / k_seed_offset_divisor;
-
-  float const cycle_period =
-      k_base_cycle_period +
-      static_cast<float>(seed % 1500) / (1500.0F / k_cycle_period_range);
-  float const cycle_time = std::fmod(time + seed_offset, cycle_period);
-
-  auto const cycle_number =
-      static_cast<std::uint32_t>((time + seed_offset) / cycle_period);
-
-  std::uint32_t const soldier_selector = seed ^ (cycle_number * 2654435761U);
-  if ((soldier_selector % 10) > 1) {
-    return AmbientIdleType::None;
-  }
-
-  if (cycle_time > k_ambient_duration) {
-    return AmbientIdleType::None;
-  }
-
-  std::uint32_t const anim_selector = seed ^ (cycle_number * 1664525U);
-  constexpr std::array<AmbientIdleType, 4> k_baked_types{
-      AmbientIdleType::SitDown, AmbientIdleType::Jump,
-      AmbientIdleType::RaiseWeapon, AmbientIdleType::ShiftWeight};
-  return k_baked_types[anim_selector % k_baked_types.size()];
+  (void)time;
+  auto const schedule = compute_ambient_idle_schedule(seed, idle_duration);
+  return schedule.has_value() ? schedule->type : AmbientIdleType::None;
 }
 
 void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
                                                 float idle_duration) {
-  AmbientIdleType const idle_type =
-      get_ambient_idle_type(time, seed, idle_duration);
-  if (idle_type == AmbientIdleType::None) {
+  (void)time;
+  auto const schedule = compute_ambient_idle_schedule(seed, idle_duration);
+  if (!schedule.has_value()) {
     return;
   }
-
-  float const seed_offset =
-      static_cast<float>(seed % 1000) / k_seed_offset_divisor;
-  float const cycle_period =
-      k_base_cycle_period +
-      static_cast<float>(seed % 1500) / (1500.0F / k_cycle_period_range);
-  float const cycle_time = std::fmod(time + seed_offset, cycle_period);
-
-  float phase = cycle_time / k_ambient_duration;
-  apply_ambient_idle_explicit(idle_type, phase);
+  apply_ambient_idle_explicit(schedule->type, schedule->phase);
 }
 
 auto HumanoidPoseController::compute_ambient_idle_phase(
-    float time, std::uint32_t seed) -> float {
-  float const seed_offset =
-      static_cast<float>(seed % 1000) / k_seed_offset_divisor;
-  float const cycle_period =
-      k_base_cycle_period +
-      static_cast<float>(seed % 1500) / (1500.0F / k_cycle_period_range);
-  float const cycle_time = std::fmod(time + seed_offset, cycle_period);
-  return std::clamp(cycle_time / k_ambient_duration, 0.0F, 1.0F);
+    float idle_duration, std::uint32_t seed) -> float {
+  auto const schedule = compute_ambient_idle_schedule(seed, idle_duration);
+  return schedule.has_value() ? schedule->phase : 0.0F;
 }
 
 void HumanoidPoseController::apply_ambient_idle_explicit(

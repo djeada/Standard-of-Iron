@@ -191,7 +191,12 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     movement->clear_path();
     movement->path_pending = false;
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-      apply_desired_yaw(transform, delta_time, desired_yaw_turn_speed_degrees);
+      constexpr float k_cavalry_melee_turn_speed_degrees = 90.0F;
+      bool const is_cavalry_unit = Game::Units::is_cavalry(unit->spawn_type);
+      float const melee_turn_speed = is_cavalry_unit
+                                         ? k_cavalry_melee_turn_speed_degrees
+                                         : desired_yaw_turn_speed_degrees;
+      apply_desired_yaw(transform, delta_time, melee_turn_speed);
     }
     return;
   }

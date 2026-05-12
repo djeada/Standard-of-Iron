@@ -393,6 +393,7 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
     if (species == CreatureKind::Humanoid) {
       ++rider_requests;
       rider_world_y = req.world.column(3).y();
+      EXPECT_TRUE(req.world_already_grounded);
     }
     if (species == CreatureKind::Horse) {
       ++horse_requests;
@@ -624,6 +625,108 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
       });
   ASSERT_NE(horse_req, requests.end());
   ASSERT_NE(rider_req, requests.end());
+
+  Render::GL::HumanoidVariant variant{};
+  std::uint32_t const seed =
+      static_cast<std::uint32_t>(unit->owner_id * 2654435761U) ^
+      static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&entity) &
+                                 0xFFFFFFFFU);
+  renderer.get_variant(ctx, seed, variant);
+
+  Render::GL::HumanoidAnimationContext anim_ctx{};
+  anim_ctx.inputs = anim;
+  Render::GL::HorseProfile profile{};
+  Render::GL::HorseDimensions dims{};
+  Render::GL::MountedAttachmentFrame mount{};
+  Render::GL::HorseMotionSample motion{};
+  renderer.resolve_mount_render_state(ctx, seed, variant, anim_ctx, true,
+                                      profile, dims, mount, motion);
+
+  auto const root_matrix = rider_root_matrix(
+      rider_req->archetype, rider_req->creature_asset_id, rider_req->state,
+      rider_req->phase, rider_req->clip_variant);
+  ASSERT_TRUE(root_matrix.has_value());
+
+  bool invertible = false;
+  QMatrix4x4 const rider_from_horse =
+      horse_req->world.inverted(&invertible) * rider_req->world;
+  ASSERT_TRUE(invertible);
+  QMatrix4x4 const anchored_root = rider_from_horse * *root_matrix;
+  QMatrix4x4 expected_seat;
+  expected_seat.setColumn(0, QVector4D(mount.seat_right, 0.0F));
+  expected_seat.setColumn(1, QVector4D(mount.seat_up, 0.0F));
+  expected_seat.setColumn(2, QVector4D(mount.seat_forward, 0.0F));
+  expected_seat.setColumn(3, QVector4D(mount.seat_position, 1.0F));
+
+  for (int column = 0; column < 4; ++column) {
+    auto const actual = anchored_root.column(column);
+    auto const expected = expected_seat.column(column);
+    EXPECT_NEAR(actual.x(), expected.x(), 1.0e-4F);
+    EXPECT_NEAR(actual.y(), expected.y(), 1.0e-4F);
+    EXPECT_NEAR(actual.z(), expected.z(), 1.0e-4F);
+    EXPECT_NEAR(actual.w(), expected.w(), 1.0e-4F);
+  }
+}
+
+TEST(MountedPrepare, AttackingMountedRiderRootAttachesToHorseSeatFrame) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_humanoid,
+                                root + "/humanoid.bpat"));
+  ASSERT_TRUE(
+      bpat.load_species(Render::Creature::Bpat::k_species_humanoid_sword,
+                        root + "/humanoid_sword.bpat"));
+
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+  cfg.rider_creature_asset_id =
+      Render::Creature::Pipeline::k_humanoid_sword_asset;
+
+  InspectableMountedKnightRenderer renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.allow_template_cache = false;
+  ctx.force_single_soldier = true;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 0.35F;
+  anim.is_attacking = true;
+  anim.is_melee = true;
+  anim.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.attack_variant = 1U;
+  anim.has_attack_offset = true;
+  anim.attack_offset = 0.0F;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+
+  auto const &requests = prep.bodies.requests();
+  auto const horse_req =
+      std::find_if(requests.begin(), requests.end(), [](const auto &req) {
+        return Render::Creature::ArchetypeRegistry::instance().species(
+                   req.archetype) ==
+               Render::Creature::Pipeline::CreatureKind::Horse;
+      });
+  auto const rider_req =
+      std::find_if(requests.begin(), requests.end(), [](const auto &req) {
+        return Render::Creature::ArchetypeRegistry::instance().species(
+                   req.archetype) ==
+               Render::Creature::Pipeline::CreatureKind::Humanoid;
+      });
+  ASSERT_NE(horse_req, requests.end());
+  ASSERT_NE(rider_req, requests.end());
+  ASSERT_EQ(rider_req->state, Render::Creature::AnimationStateId::AttackSword);
+  EXPECT_TRUE(rider_req->world_already_grounded);
 
   Render::GL::HumanoidVariant variant{};
   std::uint32_t const seed =

@@ -222,7 +222,6 @@ add_library(render_gl STATIC
     equipment/weapons/spear_renderer.cpp
     equipment/weapons/shield_renderer.cpp
     equipment/weapons/shield_carthage.cpp
-    equipment/weapons/shield_roman.cpp
     equipment/helmets/headwrap.cpp
     equipment/helmets/roman_heavy_helmet.cpp
     equipment/helmets/roman_light_helmet.cpp

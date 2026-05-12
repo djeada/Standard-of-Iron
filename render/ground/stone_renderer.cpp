@@ -52,7 +52,8 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 }
 
 void StoneRenderer::set_light_direction(const QVector3D &dir) {
-  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
+  m_light_direction =
+      dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
   m_stone_state.params.light_direction = m_light_direction;
 }
 

@@ -125,7 +125,7 @@ auto hand_l_basis_transform(const QMatrix4x4 &parent,
 
 auto scutum_local_pose() -> QMatrix4x4 {
   QMatrix4x4 pose;
-  pose.translate(0.16F, -0.04F, 0.02F);
+  pose.translate(0.16F, -0.04F, -0.07F);
   pose.translate(k_shield_center);
   pose.rotate(90.0F, 0.0F, 1.0F, 0.0F);
   pose.translate(-k_shield_center);
