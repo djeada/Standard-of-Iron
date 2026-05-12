@@ -1209,27 +1209,34 @@ void VegetationPipeline::initialize_tent_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  constexpr float H = 0.72F;
-  const QVector3D A(-0.50F, 0.0F, -0.50F);
-  const QVector3D B(0.50F, 0.0F, -0.50F);
-  const QVector3D C(0.0F, H, -0.50F);
-  const QVector3D D(-0.50F, 0.0F, 0.50F);
-  const QVector3D E(0.50F, 0.0F, 0.50F);
-  const QVector3D F(0.0F, H, 0.50F);
+  // Main ridge tent: taller and wider than before
+  constexpr float H = 0.88F;   // ridge height
+  constexpr float W = 0.62F;   // half-width
+  constexpr float D = 0.60F;   // half-depth
 
+  const QVector3D A(-W, 0.0F, -D);
+  const QVector3D B( W, 0.0F, -D);
+  const QVector3D C( 0.0F, H, -D);
+  const QVector3D Dv(-W, 0.0F,  D);
+  const QVector3D E( W, 0.0F,  D);
+  const QVector3D F( 0.0F, H,  D);
+
+  // Ridge line spans the full length (used for visual reference)
   constexpr float inv_sqrt2 = 0.70711F;
   const QVector3D nL(-inv_sqrt2, inv_sqrt2, 0.0F);
-  const QVector3D nR(inv_sqrt2, inv_sqrt2, 0.0F);
+  const QVector3D nR( inv_sqrt2, inv_sqrt2, 0.0F);
 
   using P = std::pair<QVector3D, QVector3D>;
 
+  // Left roof panel
   {
     auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{A, nL}, P{D, nL}, P{F, nL}, P{C, nL}});
+    verts.insert(verts.end(), {P{A, nL}, P{Dv, nL}, P{F, nL}, P{C, nL}});
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
                            uint16_t(b + 2), uint16_t(b + 3)});
   }
 
+  // Right roof panel
   {
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(), {P{B, nR}, P{C, nR}, P{F, nR}, P{E, nR}});
@@ -1237,6 +1244,7 @@ void VegetationPipeline::initialize_tent_pipeline() {
                            uint16_t(b + 2), uint16_t(b + 3)});
   }
 
+  // Front end triangle
   {
     const QVector3D nF(0.0F, 0.0F, -1.0F);
     auto b = static_cast<uint16_t>(verts.size());
@@ -1244,25 +1252,61 @@ void VegetationPipeline::initialize_tent_pipeline() {
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
   }
 
+  // Rear end triangle
   {
     const QVector3D nBk(0.0F, 0.0F, 1.0F);
     auto b = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(), {P{D, nBk}, P{E, nBk}, P{F, nBk}});
+    verts.insert(verts.end(), {P{Dv, nBk}, P{E, nBk}, P{F, nBk}});
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
   }
 
-  append_box(verts, idx, {-0.50F, -0.02F, -0.50F}, {0.50F, 0.00F, 0.50F});
+  // Ground base flap
+  append_box(verts, idx, {-W, -0.02F, -D}, {W, 0.00F, D});
 
-  append_box(verts, idx, {-0.025F, 0.00F, -0.03F}, {0.025F, H * 0.88F, 0.03F});
+  // Center ridge pole
+  append_box(verts, idx, {-0.030F, 0.00F, -0.035F}, {0.030F, H * 0.90F, 0.035F});
 
-  append_box(verts, idx, {-0.22F, 0.00F, -0.51F}, {-0.16F, 0.40F, -0.48F});
-  append_box(verts, idx, {0.16F, 0.00F, -0.51F}, {0.22F, 0.40F, -0.48F});
-  append_box(verts, idx, {-0.22F, 0.37F, -0.51F}, {0.22F, 0.43F, -0.48F});
+  // Front door frame: two uprights + crossbar
+  append_box(verts, idx, {-0.24F, 0.00F, -D - 0.02F}, {-0.16F, 0.44F, -D + 0.02F});
+  append_box(verts, idx, { 0.16F, 0.00F, -D - 0.02F}, { 0.24F, 0.44F, -D + 0.02F});
+  append_box(verts, idx, {-0.24F, 0.41F, -D - 0.02F}, { 0.24F, 0.47F, -D + 0.02F});
 
-  append_box(verts, idx, {-0.62F, 0.00F, -0.62F}, {-0.55F, 0.07F, -0.55F});
-  append_box(verts, idx, {0.55F, 0.00F, -0.62F}, {0.62F, 0.07F, -0.55F});
-  append_box(verts, idx, {-0.62F, 0.00F, 0.55F}, {-0.55F, 0.07F, 0.62F});
-  append_box(verts, idx, {0.55F, 0.00F, 0.55F}, {0.62F, 0.07F, 0.62F});
+  // Front awning — fabric overhang projecting forward from front edge
+  {
+    constexpr float aw_ext = 0.30F; // awning depth forward
+    constexpr float aw_y   = H * 0.46F; // height of awning attachment at ridge
+    constexpr float inv_aw = 0.83205F; // 1/sqrt(1 + (aw_ext/aw_y)^2) approx
+    const QVector3D nAw(0.0F, inv_aw, -inv_aw);
+
+    const QVector3D al(-W * 0.72F, aw_y, -D);
+    const QVector3D ar( W * 0.72F, aw_y, -D);
+    const QVector3D bl(-W * 0.72F, 0.04F, -D - aw_ext);
+    const QVector3D br( W * 0.72F, 0.04F, -D - aw_ext);
+
+    auto b = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(), {P{al, nAw}, P{ar, nAw}, P{br, nAw}, P{bl, nAw}});
+    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
+                           uint16_t(b + 2), uint16_t(b + 3)});
+    // Underside of awning
+    const QVector3D nAwU(0.0F, -inv_aw, inv_aw);
+    auto bu = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(), {P{bl, nAwU}, P{br, nAwU}, P{ar, nAwU}, P{al, nAwU}});
+    idx.insert(idx.end(), {bu, uint16_t(bu + 1), uint16_t(bu + 2), bu,
+                           uint16_t(bu + 2), uint16_t(bu + 3)});
+
+    // Two awning support poles
+    append_box(verts, idx, {-W * 0.72F - 0.025F, 0.00F, -D - aw_ext},
+               {-W * 0.72F + 0.025F, aw_y,          -D - aw_ext + 0.025F});
+    append_box(verts, idx, { W * 0.72F - 0.025F, 0.00F, -D - aw_ext},
+               { W * 0.72F + 0.025F, aw_y,          -D - aw_ext + 0.025F});
+  }
+
+  // Four corner guy-rope stakes (small rectangular pegs)
+  constexpr float sk = 0.07F;
+  append_box(verts, idx, {-W - sk, 0.00F, -D - sk}, {-W, 0.07F, -D});
+  append_box(verts, idx, { W,      0.00F, -D - sk}, { W + sk, 0.07F, -D});
+  append_box(verts, idx, {-W - sk, 0.00F,  D},      {-W, 0.07F,  D + sk});
+  append_box(verts, idx, { W,      0.00F,  D},      { W + sk, 0.07F,  D + sk});
 
   upload_prop_mesh_impl(verts, idx, m_tent_vao, m_tent_vertex_buffer,
                         m_tent_index_buffer, m_tent_vertex_count,
@@ -1399,21 +1443,30 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.27F, 0.00F, -0.11F}, {-0.07F, 0.05F, 0.11F});
-  append_vert_prism(verts, idx, -0.17F, 0.05F, 0.00F, 0.08F, 0.48F, 6);
-  append_box(verts, idx, {-0.27F, 0.53F, -0.11F}, {-0.07F, 0.62F, 0.11F});
+  // Column A: standing tall, left side — has capital (cap block) on top
+  append_box(verts, idx, {-0.36F, 0.00F, -0.14F}, {-0.12F, 0.06F, 0.14F});
+  append_vert_prism(verts, idx, -0.24F, 0.06F, 0.00F, 0.10F, 0.72F, 6);
+  append_box(verts, idx, {-0.36F, 0.78F, -0.14F}, {-0.12F, 0.90F, 0.14F});
 
-  append_box(verts, idx, {0.07F, 0.00F, -0.11F}, {0.27F, 0.05F, 0.11F});
-  append_vert_prism(verts, idx, 0.17F, 0.05F, 0.00F, 0.08F, 0.32F, 6);
+  // Column B: broken, shorter — no cap
+  append_box(verts, idx, {0.10F, 0.00F, -0.14F}, {0.34F, 0.06F, 0.14F});
+  append_vert_prism(verts, idx, 0.22F, 0.06F, 0.00F, 0.10F, 0.48F, 6);
+  // Broken top slab (tilted box approximated as a box)
+  append_box(verts, idx, {0.10F, 0.54F, -0.10F}, {0.38F, 0.64F, 0.12F});
 
-  append_box(verts, idx, {-0.10F, 0.00F, 0.07F}, {0.10F, 0.05F, 0.28F});
-  append_vert_prism(verts, idx, 0.00F, 0.05F, 0.175F, 0.09F, 0.60F, 6);
-  append_box(verts, idx, {-0.12F, 0.65F, 0.055F}, {0.12F, 0.74F, 0.295F});
+  // Column C: larger, partially fallen at rear — standing but with lintel
+  append_box(verts, idx, {-0.14F, 0.00F, 0.10F}, {0.14F, 0.06F, 0.38F});
+  append_vert_prism(verts, idx, 0.00F, 0.06F, 0.24F, 0.12F, 0.88F, 6);
+  append_box(verts, idx, {-0.18F, 0.94F, 0.06F}, {0.18F, 1.06F, 0.42F});
 
-  append_box(verts, idx, {-0.32F, 0.05F, -0.06F}, {0.10F, 0.12F, 0.18F});
+  // Entablature fragment: horizontal beam between column A and C tops
+  append_box(verts, idx, {-0.38F, 0.72F, -0.06F}, {0.06F, 0.82F, 0.22F});
 
-  append_box(verts, idx, {0.10F, 0.00F, -0.12F}, {0.28F, 0.09F, 0.04F});
-  append_box(verts, idx, {-0.30F, 0.00F, 0.04F}, {-0.14F, 0.07F, 0.20F});
+  // Ground debris / rubble: scattered flat slabs and rough chunks
+  append_box(verts, idx, {0.10F, 0.00F, -0.18F}, {0.40F, 0.08F, 0.06F});
+  append_box(verts, idx, {-0.42F, 0.00F, 0.05F}, {-0.18F, 0.09F, 0.26F});
+  append_box(verts, idx, {-0.08F, 0.00F, 0.40F}, {0.20F, 0.06F, 0.58F});
+  append_box(verts, idx, {0.24F,  0.00F, 0.18F}, {0.44F, 0.07F, 0.42F});
 
   upload_prop_mesh_impl(verts, idx, m_ruins_vao, m_ruins_vertex_buffer,
                         m_ruins_index_buffer, m_ruins_vertex_count,
