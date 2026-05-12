@@ -57,12 +57,12 @@ void BannerPipeline::cache_banner_uniforms() {
   m_banner_uniforms.model = m_banner_shader->uniform_handle("u_model");
   m_banner_uniforms.time = m_banner_shader->uniform_handle("u_time");
   m_banner_uniforms.wind_strength =
-      m_banner_shader->uniform_handle("u_windStrength");
+      m_banner_shader->uniform_handle("u_wind_strength");
   m_banner_uniforms.color = m_banner_shader->uniform_handle("u_color");
-  m_banner_uniforms.trim_color = m_banner_shader->uniform_handle("u_trimColor");
+  m_banner_uniforms.trim_color = m_banner_shader->uniform_handle("u_trim_color");
   m_banner_uniforms.texture = m_banner_shader->uniform_handle("u_texture");
   m_banner_uniforms.use_texture =
-      m_banner_shader->uniform_handle("u_useTexture");
+      m_banner_shader->uniform_handle("u_use_texture");
   m_banner_uniforms.alpha = m_banner_shader->uniform_handle("u_alpha");
 }
 

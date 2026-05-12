@@ -1,17 +1,17 @@
 #version 330 core
-out vec4 FragColor;
+out vec4 frag_color;
 
-in vec2 TexCoord;
-in vec3 WorldPos;
-in vec3 Normal;
+in vec2 tex_coord;
+in vec3 world_pos;
+in vec3 v_normal;
 
 uniform float time;
-uniform sampler2D u_visibilityTex;
-uniform vec2 u_visibilitySize;
-uniform float u_visibilityTileSize;
-uniform float u_exploredAlpha;
-uniform int u_hasVisibility;
-uniform float u_segmentVisibility;
+uniform sampler2D u_visibility_tex;
+uniform vec2 u_visibility_size;
+uniform float u_visibility_tile_size;
+uniform float u_explored_alpha;
+uniform int u_has_visibility;
+uniform float u_segment_visibility;
 
 float saturate(float x) { return clamp(x, 0.0, 1.0); }
 vec2 saturate(vec2 v) { return clamp(v, vec2(0.0), vec2(1.0)); }
@@ -46,45 +46,45 @@ vec2 warp(vec2 uv) {
 
 void main() {
 
-  vec2 uv = warp(WorldPos.xz * 0.45);
+  vec2 uv = warp(world_pos.xz * 0.45);
 
   float visibilityFactor = 1.0;
-  if (u_hasVisibility == 1 && u_visibilitySize.x > 0.0 &&
-      u_visibilitySize.y > 0.0) {
-    float tileSize = max(u_visibilityTileSize, 0.0001);
-    vec2 grid = vec2(WorldPos.x / tileSize, WorldPos.z / tileSize);
-    grid += (u_visibilitySize * 0.5) - vec2(0.5);
-    vec2 visUV = (grid + vec2(0.5)) / u_visibilitySize;
-    float visSample = texture(u_visibilityTex, visUV).r;
+  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 &&
+      u_visibility_size.y > 0.0) {
+    float tileSize = max(u_visibility_tile_size, 0.0001);
+    vec2 grid = vec2(world_pos.x / tileSize, world_pos.z / tileSize);
+    grid += (u_visibility_size * 0.5) - vec2(0.5);
+    vec2 visUV = (grid + vec2(0.5)) / u_visibility_size;
+    float visSample = texture(u_visibility_tex, visUV).r;
     if (visSample < 0.25) {
       discard;
     } else if (visSample < 0.75) {
-      visibilityFactor = u_exploredAlpha;
+      visibilityFactor = u_explored_alpha;
     }
   }
-  visibilityFactor *= u_segmentVisibility;
+  visibilityFactor *= u_segment_visibility;
 
   vec3 wetSoil = vec3(0.20, 0.17, 0.14);
   vec3 dampSoil = vec3(0.32, 0.27, 0.22);
   vec3 drySoil = vec3(0.46, 0.40, 0.33);
   vec3 grassTint = vec3(0.30, 0.50, 0.25);
 
-  float baseWet = smoothstep(0.30, 0.04, TexCoord.x);
+  float baseWet = smoothstep(0.30, 0.04, tex_coord.x);
 
   float edgeJitter = (fbm(uv * 2.5) - 0.5) * 0.12 +
-                     (fbm(vec2(TexCoord.y * 3.0, 0.0)) - 0.5) * 0.10;
+                     (fbm(vec2(tex_coord.y * 3.0, 0.0)) - 0.5) * 0.10;
   baseWet = saturate(baseWet + edgeJitter);
 
-  float slope = 1.0 - saturate(normalize(Normal).y);
+  float slope = 1.0 - saturate(normalize(v_normal).y);
   float wetness = saturate(baseWet - slope * 0.45);
 
   float contact =
-      smoothstep(0.10, 0.95, wetness) * smoothstep(0.04, 0.00, TexCoord.x);
+      smoothstep(0.10, 0.95, wetness) * smoothstep(0.04, 0.00, tex_coord.x);
   contact *= 0.6 + 0.4 * fbm(uv * 4.0 + time * 0.2);
 
   float macro = fbm(uv * 0.8);
   float streaks =
-      fbm(vec2(TexCoord.y * 6.0 + macro * 0.7, TexCoord.x * 0.6 - time * 0.03));
+      fbm(vec2(tex_coord.y * 6.0 + macro * 0.7, tex_coord.x * 0.6 - time * 0.03));
   streaks = pow(saturate(streaks), 3.0);
 
   float grit = noise(uv * 18.0);
@@ -106,7 +106,7 @@ void main() {
 
   vec3 L = normalize(vec3(0.3, 0.8, 0.4));
   vec3 V = normalize(vec3(0.0, 1.0, 0.5));
-  vec3 N = normalize(Normal);
+  vec3 N = normalize(v_normal);
 
   float NdotL = max(dot(N, L), 0.0);
 
@@ -125,5 +125,5 @@ void main() {
 
   color *= visibilityFactor;
 
-  FragColor = vec4(saturate(color), 1.0);
+  frag_color = vec4(saturate(color), 1.0);
 }

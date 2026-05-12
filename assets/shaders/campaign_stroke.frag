@@ -17,7 +17,7 @@ uniform bool u_use_animation;
 uniform bool u_use_feather;
 uniform bool u_use_ink_texture;
 
-out vec4 fragColor;
+out vec4 frag_color;
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -91,5 +91,5 @@ void main() {
     color.a *= feather;
   }
 
-  fragColor = vec4(color.rgb * color.a, color.a);
+  frag_color = vec4(color.rgb * color.a, color.a);
 }

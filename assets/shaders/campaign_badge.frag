@@ -16,7 +16,7 @@ uniform int u_badge_style;
 uniform bool u_show_shadow;
 uniform bool u_animate;
 
-out vec4 fragColor;
+out vec4 frag_color;
 
 float sdCircle(vec2 p, float r) { return length(p) - r; }
 
@@ -176,5 +176,5 @@ void main() {
     result.a = max(result.a, shadowAlpha);
   }
 
-  fragColor = result;
+  frag_color = result;
 }

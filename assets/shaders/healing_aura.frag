@@ -1,16 +1,16 @@
 #version 330 core
 
-in vec3 v_worldPos;
+in vec3 v_world_pos;
 in vec3 v_normal;
-in vec2 v_texCoord;
+in vec2 v_tex_coord;
 in float v_height;
-in float v_radialDist;
+in float v_radial_dist;
 
 uniform float u_time;
 uniform float u_intensity;
-uniform vec3 u_auraColor;
+uniform vec3 u_aura_color;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -29,17 +29,17 @@ float noise(vec2 p) {
 void main() {
 
   vec3 coreColor = vec3(1.0, 1.0, 0.7);
-  vec3 midColor = u_auraColor;
-  vec3 edgeColor = u_auraColor * 0.7;
+  vec3 midColor = u_aura_color;
+  vec3 edgeColor = u_aura_color * 0.7;
 
-  float edgeFade = smoothstep(0.2, 0.9, v_radialDist);
+  float edgeFade = smoothstep(0.2, 0.9, v_radial_dist);
   float heightFade = 1.0 - smoothstep(0.0, 1.0, v_height);
 
   float shellFade = edgeFade * heightFade;
 
-  vec3 color = mix(midColor, edgeColor, v_radialDist);
+  vec3 color = mix(midColor, edgeColor, v_radial_dist);
 
-  float angle = atan(v_worldPos.z, v_worldPos.x);
+  float angle = atan(v_world_pos.z, v_world_pos.x);
   float swirl = sin(angle * 4.0 + u_time * 2.0 + v_height * 5.0) * 0.5 + 0.5;
   color += coreColor * swirl * 0.2 * shellFade;
 
@@ -55,5 +55,5 @@ void main() {
   float alpha = shellFade * u_intensity * 0.7;
   alpha += edgeFade * 0.15 * u_intensity;
 
-  FragColor = vec4(color, clamp(alpha, 0.0, 0.85));
+  frag_color = vec4(color, clamp(alpha, 0.0, 0.85));
 }

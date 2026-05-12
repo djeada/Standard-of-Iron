@@ -1,41 +1,41 @@
 #version 330 core
 
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec2 aTexCoord;
-layout(location = 2) in vec3 aNormal;
-layout(location = 3) in vec4 aPosScale;
-layout(location = 4) in vec4 aColorSway;
-layout(location = 5) in vec4 aRotation;
+layout(location = 0) in vec3 a_pos;
+layout(location = 1) in vec2 a_tex_coord;
+layout(location = 2) in vec3 a_normal;
+layout(location = 3) in vec4 a_pos_scale;
+layout(location = 4) in vec4 a_color_sway;
+layout(location = 5) in vec4 a_rotation;
 
-layout(std140) uniform FrameData { mat4 u_viewProj; };
-uniform float uTime;
-uniform float uWindStrength;
-uniform float uWindSpeed;
+layout(std140) uniform FrameData { mat4 u_view_proj; };
+uniform float u_time;
+uniform float u_wind_strength;
+uniform float u_wind_speed;
 
-out vec3 vWorldPos;
-out vec3 vNormal;
-out vec3 vColor;
-out vec2 vTexCoord;
-out float vFoliageMask;
-out float vNeedleSeed;
-out float vBarkSeed;
+out vec3 v_world_pos;
+out vec3 v_normal;
+out vec3 v_color;
+out vec2 v_tex_coord;
+out float v_foliage_mask;
+out float v_needle_seed;
+out float v_bark_seed;
 
 void main() {
   const float TWO_PI = 6.2831853;
 
-  float scale = aPosScale.w;
-  vec3 worldPos = aPosScale.xyz;
-  float swayPhase = aColorSway.a;
-  float rotation = aRotation.x;
-  float silhouetteSeed = aRotation.y;
-  float needleSeed = aRotation.z;
-  float barkSeed = aRotation.w;
+  float scale = a_pos_scale.w;
+  vec3 worldPos = a_pos_scale.xyz;
+  float swayPhase = a_color_sway.a;
+  float rotation = a_rotation.x;
+  float silhouetteSeed = a_rotation.y;
+  float needleSeed = a_rotation.z;
+  float barkSeed = a_rotation.w;
 
-  vec3 modelPos = aPos;
+  vec3 modelPos = a_pos;
 
-  float foliageMask = smoothstep(0.34, 0.42, aTexCoord.y);
-  float tipMask = smoothstep(0.88, 1.02, aTexCoord.y);
-  float angle = aTexCoord.x * TWO_PI;
+  float foliageMask = smoothstep(0.34, 0.42, a_tex_coord.y);
+  float tipMask = smoothstep(0.88, 1.02, a_tex_coord.y);
+  float angle = a_tex_coord.x * TWO_PI;
 
   float aspectW = mix(0.72, 1.38, needleSeed);
   float aspectH = mix(1.12, 0.84, needleSeed);
@@ -54,7 +54,7 @@ void main() {
   float droop = foliageMask * (1.0 - tipMask) * 0.12;
   modelPos.y -= droop;
 
-  float leanNorm = clamp(aPos.y / 1.13, 0.0, 1.0);
+  float leanNorm = clamp(a_pos.y / 1.13, 0.0, 1.0);
   float leanAngle = (silhouetteSeed - 0.5) * 0.18;
   float leanYaw = barkSeed * TWO_PI;
   modelPos.x += cos(leanYaw) * leanAngle * leanNorm;
@@ -63,7 +63,7 @@ void main() {
   float heightFactor = clamp(modelPos.y, 0.0, 1.1);
   vec3 localPos = modelPos * scale;
 
-  float sway = sin(uTime * uWindSpeed * 0.5 + swayPhase) * uWindStrength * 0.8 *
+  float sway = sin(u_time * u_wind_speed * 0.5 + swayPhase) * u_wind_strength * 0.8 *
                heightFactor * heightFactor;
 
   float swayInfluence = mix(0.04, 0.12, foliageMask);
@@ -71,7 +71,7 @@ void main() {
 
   localPos.y -= sway * 0.02 * foliageMask;
 
-  vec3 localNormal = aNormal;
+  vec3 localNormal = a_normal;
   if (foliageMask > 0.0) {
     float normalScale = 1.0 + irregular;
     localNormal = normalize(vec3(localNormal.x * normalScale,
@@ -90,13 +90,13 @@ void main() {
   vec3 finalNormal =
       normalize(vec3(rotatedNormalXZ.x, localNormal.y, rotatedNormalXZ.y));
 
-  vWorldPos = localPos + worldPos;
-  vNormal = finalNormal;
-  vColor = aColorSway.rgb;
-  vTexCoord = aTexCoord;
-  vFoliageMask = foliageMask;
-  vNeedleSeed = needleSeed;
-  vBarkSeed = barkSeed;
+  v_world_pos = localPos + worldPos;
+  v_normal = finalNormal;
+  v_color = a_color_sway.rgb;
+  v_tex_coord = a_tex_coord;
+  v_foliage_mask = foliageMask;
+  v_needle_seed = needleSeed;
+  v_bark_seed = barkSeed;
 
-  gl_Position = u_viewProj * vec4(vWorldPos, 1.0);
+  gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }

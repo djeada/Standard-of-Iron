@@ -253,9 +253,9 @@ void RiggedCharacterPipeline::cache_uniforms() {
       m_shader->optional_uniform_handle("u_variation_scale");
   m_uniforms.color = m_shader->uniform_handle("u_color");
   m_uniforms.alpha = m_shader->uniform_handle("u_alpha");
-  m_uniforms.use_texture = m_shader->optional_uniform_handle("u_useTexture");
+  m_uniforms.use_texture = m_shader->optional_uniform_handle("u_use_texture");
   m_uniforms.texture = m_shader->optional_uniform_handle("u_texture");
-  m_uniforms.material_id = m_shader->optional_uniform_handle("u_materialId");
+  m_uniforms.material_id = m_shader->optional_uniform_handle("u_material_id");
   m_uniforms.role_colors =
       m_shader->optional_uniform_handle("u_role_colors[0]");
   m_uniforms.role_color_count =

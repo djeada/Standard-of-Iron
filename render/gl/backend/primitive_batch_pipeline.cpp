@@ -46,9 +46,9 @@ void PrimitiveBatchPipeline::shutdown() {
 
 void PrimitiveBatchPipeline::cache_uniforms() {
   if (m_shader != nullptr) {
-    m_uniforms.view_proj = m_shader->uniform_handle("u_viewProj");
-    m_uniforms.light_dir = m_shader->uniform_handle("u_lightDir");
-    m_uniforms.ambient_strength = m_shader->uniform_handle("u_ambientStrength");
+    m_uniforms.view_proj = m_shader->uniform_handle("u_view_proj");
+    m_uniforms.light_dir = m_shader->uniform_handle("u_light_dir");
+    m_uniforms.ambient_strength = m_shader->uniform_handle("u_ambient_strength");
   }
 }
 
