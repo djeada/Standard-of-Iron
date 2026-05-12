@@ -190,58 +190,136 @@ void VegetationPipeline::initialize_stone_pipeline() {
     QVector3D normal;
   };
 
-  const StoneVertex stone_vertices[] = {
+  // Build a realistic multi-faceted boulder mesh procedurally.
+  // The boulder uses 3 lateral rings (each 8-sided) plus top/bottom fans,
+  // with per-face flat normals for a natural, angular look.
+  // Each ring has slight rotational offsets and radius variation to break
+  // up the regular symmetry.
+  using F = StoneVertex;
+  std::vector<F> verts;
+  std::vector<uint16_t> idx;
 
-      {{-0.4400F, 0.0200F, -0.3800F}, {-0.0254F, -0.9994F, -0.0225F}},
-      {{0.4000F, 0.0000F, -0.4400F}, {-0.0254F, -0.9994F, -0.0225F}},
-      {{0.4600F, 0.0100F, 0.4000F}, {-0.0254F, -0.9994F, -0.0225F}},
-      {{-0.3800F, 0.0000F, 0.4400F}, {-0.0254F, -0.9994F, -0.0225F}},
+  constexpr int kN = 8; // 8-sided cross-section per ring
+  constexpr float kTau = 6.28318530F;
 
-      {{-0.3800F, 0.0000F, 0.4400F}, {0.0418F, 0.3018F, 0.9524F}},
-      {{0.4600F, 0.0100F, 0.4000F}, {0.0418F, 0.3018F, 0.9524F}},
-      {{0.3000F, 0.4400F, 0.2200F}, {0.0418F, 0.3018F, 0.9524F}},
-      {{-0.2000F, 0.4800F, 0.2800F}, {0.0418F, 0.3018F, 0.9524F}},
+  // Ring definitions: {y, base_radius, phase_offset, squash_x, squash_z}
+  // squash_x/z scale the x/z independently to create an elongated, irregular shape
+  struct Ring {
+    float y;
+    float radius;
+    float phase;
+    float sx;
+    float sz;
+  };
+  const Ring rings[] = {
+      {0.00F, 0.38F, 0.12F, 1.00F, 1.10F}, // base (ground level, slightly wider in z)
+      {0.22F, 0.52F, 0.00F, 1.10F, 1.00F}, // widest ring (offset in x)
+      {0.40F, 0.38F, 0.20F, 0.95F, 1.05F}, // upper ring (rotated, slightly narrower)
+      {0.54F, 0.20F, 0.08F, 1.00F, 0.92F}, // near-apex ring
+  };
+  constexpr int kRings = 4;
 
-      {{0.4600F, 0.0100F, 0.4000F}, {0.9442F, 0.3215F, -0.0713F}},
-      {{0.4000F, 0.0000F, -0.4400F}, {0.9442F, 0.3215F, -0.0713F}},
-      {{0.2000F, 0.3600F, -0.3000F}, {0.9442F, 0.3215F, -0.0713F}},
-      {{0.3000F, 0.4400F, 0.2200F}, {0.9442F, 0.3215F, -0.0713F}},
+  // Generate ring vertex positions
+  QVector3D ring_pts[kRings][kN];
+  for (int ri = 0; ri < kRings; ++ri) {
+    const Ring &r = rings[ri];
+    for (int i = 0; i < kN; ++i) {
+      float t = static_cast<float>(i) / kN;
+      float angle = t * kTau + r.phase;
+      // Add subtle per-vertex radius perturbation for organic look
+      float perturb = 1.0F + 0.07F * std::sin(float(i) * 2.3F + float(ri) * 1.7F);
+      float rx = r.radius * perturb * r.sx * std::cos(angle);
+      float rz = r.radius * perturb * r.sz * std::sin(angle);
+      // Slight y variation per vertex to avoid perfectly flat rings
+      float ry = r.y + 0.025F * std::cos(float(i) * 1.9F + float(ri) * 0.9F);
+      ring_pts[ri][i] = QVector3D(rx, ry, rz);
+    }
+  }
 
-      {{0.4000F, 0.0000F, -0.4400F}, {-0.0593F, 0.3330F, -0.9411F}},
-      {{-0.4400F, 0.0200F, -0.3800F}, {-0.0593F, 0.3330F, -0.9411F}},
-      {{-0.2800F, 0.5000F, -0.2200F}, {-0.0593F, 0.3330F, -0.9411F}},
-      {{0.2000F, 0.3600F, -0.3000F}, {-0.0593F, 0.3330F, -0.9411F}},
-
-      {{-0.4400F, 0.0200F, -0.3800F}, {-0.9533F, 0.2921F, 0.0769F}},
-      {{-0.3800F, 0.0000F, 0.4400F}, {-0.9533F, 0.2921F, 0.0769F}},
-      {{-0.2000F, 0.4800F, 0.2800F}, {-0.9533F, 0.2921F, 0.0769F}},
-      {{-0.2800F, 0.5000F, -0.2200F}, {-0.9533F, 0.2921F, 0.0769F}},
-
-      {{-0.2800F, 0.5000F, -0.2200F}, {0.2790F, 0.9603F, -0.0062F}},
-      {{-0.2000F, 0.4800F, 0.2800F}, {0.2790F, 0.9603F, -0.0062F}},
-      {{0.3000F, 0.4400F, 0.2200F}, {0.2790F, 0.9603F, -0.0062F}},
-      {{0.2000F, 0.3600F, -0.3000F}, {0.2790F, 0.9603F, -0.0062F}},
+  // Helper: emit a quad face (4 verts, 2 tris) with computed face normal
+  auto emit_quad = [&](const QVector3D &a, const QVector3D &b,
+                       const QVector3D &c, const QVector3D &d) {
+    QVector3D n = QVector3D::crossProduct(b - a, d - a);
+    if (n.lengthSquared() > 1.0e-8F) {
+      n.normalize();
+    } else {
+      n = QVector3D(0.0F, 1.0F, 0.0F);
+    }
+    auto base = static_cast<uint16_t>(verts.size());
+    verts.push_back({a, n});
+    verts.push_back({b, n});
+    verts.push_back({c, n});
+    verts.push_back({d, n});
+    idx.push_back(base);
+    idx.push_back(uint16_t(base + 1));
+    idx.push_back(uint16_t(base + 2));
+    idx.push_back(base);
+    idx.push_back(uint16_t(base + 2));
+    idx.push_back(uint16_t(base + 3));
   };
 
-  const uint16_t stone_indices[] = {
-      0,  1,  2,  0,  2,  3,  4,  5,  6,  4,  6,  7,  8,  9,  10, 8,  10, 11,
-      12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23};
+  // Helper: emit a triangular face with computed face normal
+  auto emit_tri = [&](const QVector3D &a, const QVector3D &b,
+                      const QVector3D &c) {
+    QVector3D n = QVector3D::crossProduct(b - a, c - a);
+    if (n.lengthSquared() > 1.0e-8F) {
+      n.normalize();
+    } else {
+      n = QVector3D(0.0F, 1.0F, 0.0F);
+    }
+    auto base = static_cast<uint16_t>(verts.size());
+    verts.push_back({a, n});
+    verts.push_back({b, n});
+    verts.push_back({c, n});
+    idx.push_back(base);
+    idx.push_back(uint16_t(base + 1));
+    idx.push_back(uint16_t(base + 2));
+  };
+
+  // Lateral quad strips connecting adjacent rings
+  for (int ri = 0; ri < kRings - 1; ++ri) {
+    for (int i = 0; i < kN; ++i) {
+      int next = (i + 1) % kN;
+      // a, b = lower ring; c, d = upper ring (quad: a-b-c-d, CCW looking outward)
+      const QVector3D &a = ring_pts[ri][i];
+      const QVector3D &b = ring_pts[ri][next];
+      const QVector3D &c = ring_pts[ri + 1][next];
+      const QVector3D &d = ring_pts[ri + 1][i];
+      emit_quad(a, b, c, d);
+    }
+  }
+
+  // Top cap: fan of triangles from apex point to the topmost ring
+  QVector3D apex(0.02F, 0.64F, -0.04F); // slightly off-center apex for realism
+  for (int i = 0; i < kN; ++i) {
+    int next = (i + 1) % kN;
+    emit_tri(ring_pts[kRings - 1][i], ring_pts[kRings - 1][next], apex);
+  }
+
+  // Bottom cap: fan of downward-facing triangles from a slightly sunken center
+  QVector3D bot_center(0.0F, -0.01F, 0.0F);
+  for (int i = 0; i < kN; ++i) {
+    int next = (i + 1) % kN;
+    // Reverse winding for outward-facing bottom normal
+    emit_tri(ring_pts[0][next], ring_pts[0][i], bot_center);
+  }
 
   glGenVertexArrays(1, &m_stone_vao);
   glBindVertexArray(m_stone_vao);
 
   glGenBuffers(1, &m_stone_vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_stone_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(stone_vertices), stone_vertices,
-               GL_STATIC_DRAW);
-  m_stone_vertex_count = CubeVertexCount;
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(verts.size() * sizeof(StoneVertex)),
+               verts.data(), GL_STATIC_DRAW);
+  m_stone_vertex_count = static_cast<GLsizei>(verts.size());
 
   glGenBuffers(1, &m_stone_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_stone_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(stone_indices), stone_indices,
-               GL_STATIC_DRAW);
-  constexpr int k_stone_index_count = 36;
-  m_stone_index_count = k_stone_index_count;
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
+               idx.data(), GL_STATIC_DRAW);
+  m_stone_index_count = static_cast<GLsizei>(idx.size());
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(

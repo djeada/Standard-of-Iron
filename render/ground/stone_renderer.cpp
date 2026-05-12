@@ -6,6 +6,7 @@
 #include "gl/resources.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "map/terrain_service.h"
 #include "scatter_runtime.h"
 #include "spawn_validator.h"
 #include <QDebug>
@@ -33,7 +34,8 @@ StoneRenderer::StoneRenderer() = default;
 StoneRenderer::~StoneRenderer() = default;
 
 void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
-                              const Game::Map::BiomeSettings &biome_settings) {
+                              const Game::Map::BiomeSettings &biome_settings,
+                              const std::vector<Game::Map::WorldProp> &world_props) {
   m_width = height_map.get_width();
   m_height = height_map.get_height();
   m_tile_size = height_map.get_tile_size();
@@ -41,6 +43,7 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
   m_noise_seed = biome_settings.seed;
+  m_world_props = world_props;
 
   m_stone_state.reset_instances();
   auto &stone_params = m_stone_state.params;
@@ -125,7 +128,8 @@ void StoneRenderer::generate_stone_instances() {
     validator.grid_to_world(gx, gz, world_x, world_z);
     float const world_y = terrain_cache.sample_height_at(sgx, sgz);
 
-    float const scale = remap(rand_01(state), 0.08F, 0.25F) * tile_safe;
+    // Larger boulders: range [0.35, 0.90] instead of [0.08, 0.25]
+    float const scale = remap(rand_01(state), 0.35F, 0.90F) * tile_safe;
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
     QVector3D const base_rock = surface_profile.rock_low;
@@ -145,10 +149,12 @@ void StoneRenderer::generate_stone_instances() {
     return true;
   };
 
-  const float stone_density = 0.15F;
+  // Use a moderate density with wider spacing (stride 4 instead of 2)
+  // This prevents stones from clustering too densely while still allowing groups
+  const float stone_density = 0.22F;
 
-  for (int z = 0; z < m_height; z += 2) {
-    for (int x = 0; x < m_width; x += 2) {
+  for (int z = 0; z < m_height; z += 4) {
+    for (int x = 0; x < m_width; x += 4) {
       int const idx = z * m_width + x;
 
       Game::Map::TerrainType const terrain_type =
@@ -169,10 +175,10 @@ void StoneRenderer::generate_stone_instances() {
       float world_z = 0.0F;
       validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
                               world_x, world_z);
-      float const cluster_noise = value_noise(world_x * 0.03F, world_z * 0.03F,
+      float const cluster_noise = value_noise(world_x * 0.025F, world_z * 0.025F,
                                               m_noise_seed ^ 0x7F3A9B2CU);
 
-      if (cluster_noise < 0.6F) {
+      if (cluster_noise < 0.55F) {
         continue;
       }
 
@@ -183,11 +189,45 @@ void StoneRenderer::generate_stone_instances() {
       }
 
       for (int i = 0; i < stone_count; ++i) {
-        float const gx = float(x) + rand_01(state) * 2.0F;
-        float const gz = float(z) + rand_01(state) * 2.0F;
+        // Spread stones across the 4x4 cell with larger jitter
+        float const gx = float(x) + rand_01(state) * 4.0F;
+        float const gz = float(z) + rand_01(state) * 4.0F;
         add_stone(gx, gz, state);
       }
     }
+  }
+
+  // Add explicit WorldProp::Boulder placements
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  const float half_w = static_cast<float>(m_width) * 0.5F;
+  const float half_h = static_cast<float>(m_height) * 0.5F;
+
+  for (const auto &prop : m_world_props) {
+    if (prop.type != Game::Map::WorldProp::Type::Boulder) {
+      continue;
+    }
+    const float wx = (prop.x - half_w) * m_tile_size;
+    const float wz = (prop.z - half_h) * m_tile_size;
+    const QVector3D resolved =
+        terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
+
+    // Use biome rock colors for explicitly placed boulders
+    uint32_t state = hash_coords(static_cast<int>(prop.x),
+                                 static_cast<int>(prop.z), m_noise_seed ^ 0xD3A4B1C2U);
+    float const color_var = remap(rand_01(state), 0.0F, 1.0F);
+    QVector3D const base_rock = surface_profile.rock_low;
+    QVector3D const high_rock = surface_profile.rock_high;
+    QVector3D color = base_rock * (1.0F - color_var) + high_rock * color_var;
+    float const brown_mix = remap(rand_01(state), 0.0F, 0.35F);
+    QVector3D const brown_tint(0.45F, 0.38F, 0.30F);
+    color = color * (1.0F - brown_mix) + brown_tint * brown_mix;
+
+    StoneInstanceGpu inst;
+    inst.pos_scale =
+        QVector4D(resolved.x(), resolved.y(), resolved.z(), prop.scale);
+    inst.color_rot =
+        QVector4D(color.x(), color.y(), color.z(), prop.rotation);
+    stone_instances.push_back(inst);
   }
 
   stone_instance_count = stone_instances.size();
