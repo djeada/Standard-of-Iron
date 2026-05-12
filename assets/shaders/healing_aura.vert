@@ -28,10 +28,10 @@ void main() {
   float breathe = 1.0 + 0.05 * sin(u_time * 2.0);
   pos.xz *= breathe;
 
-  float spiralAngle = atan(pos.z, pos.x);
-  float spiralOffset =
-      sin(spiralAngle * 3.0 + u_time * 2.0 + v_height * 5.0) * 0.1;
-  pos.xz *= (1.0 + spiralOffset * u_intensity);
+  float spiral_angle = atan(pos.z, pos.x);
+  float spiral_offset =
+      sin(spiral_angle * 3.0 + u_time * 2.0 + v_height * 5.0) * 0.1;
+  pos.xz *= (1.0 + spiral_offset * u_intensity);
 
   float wave = sin(v_radial_dist * 10.0 - u_time * 3.0) * 0.05 * u_intensity;
   pos.y += wave;

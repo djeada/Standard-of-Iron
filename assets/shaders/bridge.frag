@@ -49,7 +49,7 @@ vec2 hash2(vec2 p) {
   return fract(vec2(n, n * 1.2154));
 }
 
-vec2 worleyF(vec2 p) {
+vec2 worley_f(vec2 p) {
   vec2 n = floor(p);
   vec2 f = fract(p);
   float F1 = 1e9;
@@ -71,11 +71,11 @@ vec2 worleyF(vec2 p) {
   return vec2(sqrt(F1), sqrt(F2));
 }
 
-float fresnelSchlick(float cosTheta, float F0) {
-  return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+float fresnel_schlick(float cos_theta, float F0) {
+  return F0 + (1.0 - F0) * pow(1.0 - cos_theta, 5.0);
 }
 
-float ggxSpecular(vec3 N, vec3 V, vec3 L, float rough, float F0) {
+float ggx_specular(vec3 N, vec3 V, vec3 L, float rough, float F0) {
   vec3 H = normalize(V + L);
   float NdotV = max(dot(N, V), 0.0);
   float NdotL = max(dot(N, L), 0.0);
@@ -93,7 +93,7 @@ float ggxSpecular(vec3 N, vec3 V, vec3 L, float rough, float F0) {
   float Gl = NdotL / (NdotL * (1.0 - k) + k);
   float G = Gv * Gl;
 
-  float F = fresnelSchlick(VdotH, F0);
+  float F = fresnel_schlick(VdotH, F0);
   return (D * G * F) / max(4.0 * NdotV * NdotL, 1e-4);
 }
 
@@ -101,41 +101,41 @@ void main() {
 
   vec2 uv = v_world_pos.xz * 0.6;
 
-  vec2 F = worleyF(uv * 1.2);
-  float edgeMetric = F.y - F.x;
-  float stoneMask = smoothstep(0.05, 0.30, edgeMetric);
-  float mortarMask = 1.0 - stoneMask;
+  vec2 F = worley_f(uv * 1.2);
+  float edge_metric = F.y - F.x;
+  float stone_mask = smoothstep(0.05, 0.30, edge_metric);
+  float mortar_mask = 1.0 - stone_mask;
 
   vec2 cell = floor(uv * 1.2);
-  float cellRnd = hash(cell);
+  float cell_rnd = hash(cell);
   vec2 local = fract(uv);
-  vec2 uvVar = (rot(cellRnd * 6.2831853) * (local - 0.5) + 0.5) + floor(uv);
+  vec2 uv_var = (rot(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + floor(uv);
 
-  float varLow = (fbm(uv * 0.5) - 0.5) * 0.20;
-  float varMid = (fbm(uvVar * 3.0) - 0.5) * 0.15;
-  float grain = (noise(uvVar * 18.0) - 0.5) * 0.08;
+  float var_low = (fbm(uv * 0.5) - 0.5) * 0.20;
+  float var_mid = (fbm(uv_var * 3.0) - 0.5) * 0.15;
+  float grain = (noise(uv_var * 18.0) - 0.5) * 0.08;
 
-  vec3 stoneColor = u_color * (1.0 + varLow + varMid + grain);
-  vec3 mortarColor = u_color * 0.55;
+  vec3 stone_color = u_color * (1.0 + var_low + var_mid + grain);
+  vec3 mortar_color = u_color * 0.55;
 
   float crack = smoothstep(0.02, 0.0, abs(noise(uv * 10.0) - 0.5)) * 0.25;
-  stoneColor *= (1.0 - crack * stoneMask);
+  stone_color *= (1.0 - crack * stone_mask);
 
-  float cavity = smoothstep(0.0, 0.18, edgeMetric);
+  float cavity = smoothstep(0.0, 0.18, edge_metric);
   float ao = mix(0.55, 1.0, cavity) * (0.92 + 0.08 * fbm(uv * 2.5));
 
-  float microBump = (fbm(uvVar * 4.0) - 0.5) * 0.06 * stoneMask;
-  float macroWarp = (fbm(uv * 1.2) - 0.5) * 0.03 * stoneMask;
-  float mortarDip = -0.06 * mortarMask;
-  float h = microBump + macroWarp + mortarDip;
+  float micro_bump = (fbm(uv_var * 4.0) - 0.5) * 0.06 * stone_mask;
+  float macro_warp = (fbm(uv * 1.2) - 0.5) * 0.03 * stone_mask;
+  float mortar_dip = -0.06 * mortar_mask;
+  float h = micro_bump + macro_warp + mortar_dip;
 
   float sx = dFdx(h);
   float sy = dFdy(h);
-  float bumpStrength = 14.0;
-  vec3 nBump = normalize(vec3(-sx * bumpStrength, 1.0, -sy * bumpStrength));
+  float bump_strength = 14.0;
+  vec3 n_bump = normalize(vec3(-sx * bump_strength, 1.0, -sy * bump_strength));
 
   vec3 Ng = normalize(v_normal);
-  vec3 N = normalize(mix(Ng, nBump, 0.65));
+  vec3 N = normalize(mix(Ng, n_bump, 0.65));
 
   vec3 L = normalize(u_light_direction);
   vec3 V = normalize(vec3(0.0, 0.9, 0.4));
@@ -143,29 +143,29 @@ void main() {
   float NdotL = max(dot(N, L), 0.0);
   float diffuse = NdotL;
 
-  float steep = saturate(length(vec2(sx, sy)) * bumpStrength);
+  float steep = saturate(length(vec2(sx, sy)) * bump_strength);
   float roughness = clamp(mix(0.65, 0.95, steep), 0.02, 1.0);
   float F0 = 0.035;
 
-  float spec = ggxSpecular(N, V, L, roughness, F0);
+  float spec = ggx_specular(N, V, L, roughness, F0);
 
-  vec3 baseColor = mix(mortarColor, stoneColor, stoneMask);
+  vec3 base_color = mix(mortar_color, stone_color, stone_mask);
 
-  vec3 hemiSky = vec3(0.18, 0.24, 0.30);
-  vec3 hemiGround = vec3(0.12, 0.10, 0.09);
+  vec3 hemi_sky = vec3(0.18, 0.24, 0.30);
+  vec3 hemi_ground = vec3(0.12, 0.10, 0.09);
   float hemi = N.y * 0.5 + 0.5;
 
-  vec3 litColor = baseColor * (0.35 + 0.70 * diffuse) * ao;
-  litColor += mix(hemiGround, hemiSky, hemi) * 0.15;
-  litColor += vec3(1.0) * spec * 0.25;
+  vec3 lit_color = base_color * (0.35 + 0.70 * diffuse) * ao;
+  lit_color += mix(hemi_ground, hemi_sky, hemi) * 0.15;
+  lit_color += vec3(1.0) * spec * 0.25;
 
   float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * noise(uv * 7.0));
-  float gray = dot(litColor, vec3(0.299, 0.587, 0.114));
-  litColor = mix(litColor, vec3(gray * 0.9), grime);
+  float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
+  lit_color = mix(lit_color, vec3(gray * 0.9), grime);
 
-  float fogMask = texture(u_fog_texture, v_tex_coord).r;
-  float fogAmt = 1.0 - fogMask;
-  litColor *= mix(1.0, 0.85, fogAmt * 0.5);
+  float fog_mask = texture(u_fog_texture, v_tex_coord).r;
+  float fog_amt = 1.0 - fog_mask;
+  lit_color *= mix(1.0, 0.85, fog_amt * 0.5);
 
-  frag_color = vec4(litColor, 1.0);
+  frag_color = vec4(lit_color, 1.0);
 }
