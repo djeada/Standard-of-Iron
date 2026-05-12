@@ -1,3 +1,7 @@
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "render/entity/registry.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_specs.h"
 #include "render/humanoid/pose_controller.h"
@@ -68,6 +72,67 @@ TEST_F(HumanoidPoseControllerTest, StandIdleDoesNotModifyPose) {
 
   EXPECT_TRUE(approx_equal(pose.pelvis_pos, original_pelvis));
   EXPECT_TRUE(approx_equal(pose.shoulder_l, original_shoulder_l));
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       AmbientIdleSelectionDependsOnContinuousIdleTimeNotWorldTime) {
+  std::uint32_t const seed = 1337U;
+  float activation_time = -1.0F;
+  for (float idle_duration = 5.0F; idle_duration <= 12.0F;
+       idle_duration += 0.01F) {
+    if (HumanoidPoseController::get_ambient_idle_type(
+            10.0F, seed, idle_duration) != AmbientIdleType::None) {
+      activation_time = idle_duration;
+      break;
+    }
+  }
+
+  ASSERT_GT(activation_time, 0.0F);
+  auto const idle_type_now = HumanoidPoseController::get_ambient_idle_type(
+      10.0F, seed, activation_time);
+  auto const idle_type_later = HumanoidPoseController::get_ambient_idle_type(
+      1000.0F, seed, activation_time);
+  EXPECT_EQ(idle_type_now, idle_type_later);
+  EXPECT_NE(idle_type_now, AmbientIdleType::None);
+
+  float const start_phase =
+      HumanoidPoseController::compute_ambient_idle_phase(activation_time, seed);
+  float const progressed_phase =
+      HumanoidPoseController::compute_ambient_idle_phase(activation_time + 1.0F,
+                                                         seed);
+  EXPECT_LT(start_phase, 0.05F);
+  EXPECT_GT(progressed_phase, start_phase);
+}
+
+TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
+  Engine::Core::Entity entity(1);
+  auto *movement = entity.add_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+
+  ctx.animation_time = 1.0F;
+  auto anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_FLOAT_EQ(anim.idle_duration, 0.0F);
+
+  ctx.animation_time = 3.0F;
+  anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_FLOAT_EQ(anim.idle_duration, 2.0F);
+
+  movement->has_target = true;
+  ctx.animation_time = 4.0F;
+  anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_FLOAT_EQ(anim.idle_duration, 0.0F);
+
+  movement->has_target = false;
+  ctx.animation_time = 5.0F;
+  anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_FLOAT_EQ(anim.idle_duration, 1.0F);
+
+  ctx.animation_time = 7.0F;
+  anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_FLOAT_EQ(anim.idle_duration, 3.0F);
 }
 
 TEST_F(HumanoidPoseControllerTest, KneelLowersPelvis) {

@@ -58,6 +58,16 @@
         <file>assets/shaders/mode_indicator_instanced.frag</file>
         <file>assets/shaders/rain.frag</file>
         <file>assets/shaders/rain.vert</file>
+        <file>assets/shaders/tent_instanced.frag</file>
+        <file>assets/shaders/tent_instanced.vert</file>
+        <file>assets/shaders/supply_cart_instanced.frag</file>
+        <file>assets/shaders/supply_cart_instanced.vert</file>
+        <file>assets/shaders/weapon_rack_instanced.frag</file>
+        <file>assets/shaders/weapon_rack_instanced.vert</file>
+        <file>assets/shaders/ruins_instanced.frag</file>
+        <file>assets/shaders/ruins_instanced.vert</file>
+        <file>assets/shaders/dead_tree_instanced.frag</file>
+        <file>assets/shaders/dead_tree_instanced.vert</file>
         
         <!-- Map files -->
         <file>assets/maps/map_battle_trebia.json</file>

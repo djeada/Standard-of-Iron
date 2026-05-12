@@ -216,6 +216,22 @@ public:
         QStringLiteral("mode_indicator_instanced"),
         resolve(shader_base + QStringLiteral("mode_indicator_instanced.vert")),
         resolve(shader_base + QStringLiteral("mode_indicator_instanced.frag")));
+
+    load(QStringLiteral("tent_instanced"),
+         resolve(shader_base + QStringLiteral("tent_instanced.vert")),
+         resolve(shader_base + QStringLiteral("tent_instanced.frag")));
+    load(QStringLiteral("supply_cart_instanced"),
+         resolve(shader_base + QStringLiteral("supply_cart_instanced.vert")),
+         resolve(shader_base + QStringLiteral("supply_cart_instanced.frag")));
+    load(QStringLiteral("weapon_rack_instanced"),
+         resolve(shader_base + QStringLiteral("weapon_rack_instanced.vert")),
+         resolve(shader_base + QStringLiteral("weapon_rack_instanced.frag")));
+    load(QStringLiteral("ruins_instanced"),
+         resolve(shader_base + QStringLiteral("ruins_instanced.vert")),
+         resolve(shader_base + QStringLiteral("ruins_instanced.frag")));
+    load(QStringLiteral("dead_tree_instanced"),
+         resolve(shader_base + QStringLiteral("dead_tree_instanced.vert")),
+         resolve(shader_base + QStringLiteral("dead_tree_instanced.frag")));
   }
 
   void clear() {

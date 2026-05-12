@@ -260,6 +260,11 @@ inline auto is_building_spawn(SpawnType type) -> bool {
          type == SpawnType::Home;
 }
 
+[[nodiscard]] inline auto is_cavalry(SpawnType type) noexcept -> bool {
+  return type == SpawnType::MountedKnight || type == SpawnType::HorseArcher ||
+         type == SpawnType::HorseSpearman;
+}
+
 inline auto can_use_attack_mode(SpawnType type) -> bool {
   return type != SpawnType::Healer && type != SpawnType::Builder &&
          type != SpawnType::Barracks && type != SpawnType::DefenseTower &&

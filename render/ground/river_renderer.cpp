@@ -1,11 +1,11 @@
 #include "river_renderer.h"
 #include "../../game/map/visibility_service.h"
+#include "../draw_queue.h"
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "ground_utils.h"
 #include "linear_feature_geometry.h"
-#include "linear_feature_submission.h"
 #include "linear_feature_visibility.h"
 #include "map/terrain.h"
 #include <QVector2D>
@@ -29,6 +29,7 @@ void RiverRenderer::configure(
     float tile_size) {
   m_river_segments = river_segments;
   m_tile_size = tile_size;
+  m_vis_helper.reset();
   build_meshes();
 }
 
@@ -48,7 +49,7 @@ void RiverRenderer::build_meshes() {
   settings.meander_frequency = 3.0F;
   settings.meander_length_scale = 0.1F;
   settings.meander_amplitude = 0.3F;
-  settings.y_offset = 0.0F;
+  settings.y_offset = 0.30F;
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_river_segments.size());
@@ -62,11 +63,59 @@ void RiverRenderer::build_meshes() {
 
 void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
-  Ground::LinearFeatureVisibilityOptions visibility_options;
-  visibility_options.treat_out_of_bounds_as_visible = true;
-  Ground::submit_linear_feature_segments(
-      renderer, m_river_segments, m_meshes, LinearFeatureKind::River,
-      QVector3D(1.0F, 1.0F, 1.0F), visibility_options);
+
+  if (m_river_segments.empty() || m_meshes.empty()) {
+    return;
+  }
+
+  auto &visibility = Game::Map::VisibilityService::instance();
+  const bool use_visibility = visibility.is_initialized();
+
+  Game::Map::VisibilityService::Snapshot vis_snapshot;
+  if (use_visibility) {
+    vis_snapshot = visibility.snapshot();
+  }
+
+  TerrainFeatureCmd::VisibilityResources vis_res;
+  if (use_visibility) {
+    vis_res = m_vis_helper.update(vis_snapshot, m_tile_size);
+  }
+
+  QMatrix4x4 model;
+  model.setToIdentity();
+
+  Ground::LinearFeatureVisibilityOptions vis_opts;
+  vis_opts.treat_out_of_bounds_as_visible = true;
+
+  std::size_t mesh_index = 0;
+  for (const auto &segment : m_river_segments) {
+    if (mesh_index >= m_meshes.size()) {
+      break;
+    }
+
+    auto *mesh = m_meshes[mesh_index].get();
+    ++mesh_index;
+    if (mesh == nullptr) {
+      continue;
+    }
+
+    if (use_visibility) {
+      const auto vis_result = Ground::evaluate_linear_feature_visibility(
+          &vis_snapshot, segment.start, segment.end, vis_opts);
+      if (!vis_result.visible) {
+        continue;
+      }
+    }
+
+    TerrainFeatureCmd cmd;
+    cmd.mesh = mesh;
+    cmd.kind = LinearFeatureKind::River;
+    cmd.model = model;
+    cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
+    cmd.alpha = 1.0F;
+    cmd.visibility = vis_res;
+    renderer.terrain_feature(cmd);
+  }
 }
 
 } // namespace Render::GL

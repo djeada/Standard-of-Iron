@@ -36,7 +36,8 @@ void DeadTreeRenderer::configure(
     const std::vector<Game::Map::WorldProp> &world_props) {
   m_biome_settings = biome_settings;
   m_state.reset_instances();
-  m_state.params.light_direction = DeadTreeBatchParams::default_light_direction();
+  m_state.params.light_direction =
+      DeadTreeBatchParams::default_light_direction();
   generate_instances(fire_camps, world_props, height_map);
 }
 
@@ -44,8 +45,7 @@ void DeadTreeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_state,
-      [](const DeadTreeInstanceGpu &inst) -> const QVector4D & {
+      m_state, [](const DeadTreeInstanceGpu &inst) -> const QVector4D & {
         return inst.pos_scale;
       });
   if (visible_count == 0 || !m_state.instance_buffer) {
@@ -80,10 +80,9 @@ void DeadTreeRenderer::generate_instances(
     const float world_cx = (camp.x - half_w) * tile_size;
     const float world_cz = (camp.z - half_h) * tile_size;
 
-    uint32_t state = hash_coords(
-        static_cast<int>(std::floor(world_cx)),
-        static_cast<int>(std::floor(world_cz)),
-        k_type_salt);
+    uint32_t state =
+        hash_coords(static_cast<int>(std::floor(world_cx)),
+                    static_cast<int>(std::floor(world_cz)), k_type_salt);
 
     const float angle = rand_01(state) * MathConstants::k_two_pi;
     const float dist = std::max(camp.radius, 1.5F) * k_ring_distance_scale;
@@ -93,12 +92,14 @@ void DeadTreeRenderer::generate_instances(
     const QVector3D resolved =
         terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
 
-    const float scale = k_base_scale * std::clamp(camp.radius * 0.4F, 0.6F, 1.4F);
+    const float scale =
+        k_base_scale * std::clamp(camp.radius * 0.4F, 0.6F, 1.4F);
     const float rotation = rand_01(state) * MathConstants::k_two_pi;
 
     DeadTreeInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(), resolved.y(), resolved.z(), scale);
-    inst.color_rot = QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, rotation);
+    inst.color_rot =
+        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, rotation);
     m_state.instances.push_back(inst);
   }
 
@@ -114,8 +115,8 @@ void DeadTreeRenderer::generate_instances(
     DeadTreeInstanceGpu inst;
     inst.pos_scale =
         QVector4D(resolved.x(), resolved.y(), resolved.z(), prop.scale);
-    inst.color_rot =
-        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, prop.rotation);
+    inst.color_rot = QVector4D(k_base_color_r, k_base_color_g, k_base_color_b,
+                               prop.rotation);
     m_state.instances.push_back(inst);
   }
 

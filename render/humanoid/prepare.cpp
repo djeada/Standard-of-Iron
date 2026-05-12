@@ -639,8 +639,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         if (ambient_type != AmbientIdleType::None) {
           anim_ctx.ambient_idle_type = ambient_type;
           anim_ctx.ambient_idle_phase =
-              HumanoidPoseController::compute_ambient_idle_phase(anim.time,
-                                                                 inst_seed);
+              HumanoidPoseController::compute_ambient_idle_phase(
+                  soldier_anim.idle_duration, inst_seed);
         }
       }
     }

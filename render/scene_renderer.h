@@ -140,7 +140,8 @@ public:
   auto grid_params() const -> const GridParams & { return m_grid_params; }
 
   void set_lighting(const QVector3D &light_dir, float ambient_strength) {
-    m_light_dir = light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : light_dir.normalized();
+    m_light_dir = light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F)
+                                     : light_dir.normalized();
     m_ambient_strength = ambient_strength;
     if (m_gl_backend) {
       m_gl_backend->set_lighting(m_light_dir, m_ambient_strength);

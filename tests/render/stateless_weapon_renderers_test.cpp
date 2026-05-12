@@ -5,7 +5,6 @@
 #include "render/equipment/weapons/roman_scutum.h"
 #include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/shield_renderer.h"
-#include "render/equipment/weapons/shield_roman.h"
 #include "render/equipment/weapons/spear_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
 
@@ -38,8 +37,6 @@ using Render::GL::QuiverRenderConfig;
 using Render::GL::QuiverRenderer;
 using Render::GL::RomanScutumConfig;
 using Render::GL::RomanScutumRenderer;
-using Render::GL::RomanShieldConfig;
-using Render::GL::RomanShieldRenderer;
 using Render::GL::ShieldRenderConfig;
 using Render::GL::ShieldRenderer;
 using Render::GL::SpearRenderConfig;
@@ -564,42 +561,6 @@ TEST(StatelessWeaponRenderers, QuiverSubmitIsStateless) {
   b.num_arrows = 2;
   b.fletching_color = {0.2F, 0.7F, 0.3F};
   run_stateless_battery<QuiverRenderer>(renderer, a, b);
-}
-
-TEST(StatelessWeaponRenderers, RomanShieldUsesArchetypePath) {
-  const auto frames = make_frames();
-  const auto anim = make_anim();
-  const auto palette = make_palette();
-  const auto ctx = make_ctx();
-
-  EquipmentBatch via_submit;
-  EquipmentBatch via_render;
-  RomanShieldRenderer::submit(RomanShieldConfig{}, ctx, frames, palette, anim,
-                              via_submit);
-  RomanShieldRenderer renderer;
-  renderer.render(ctx, frames, palette, anim, via_render);
-
-  EXPECT_TRUE(via_submit.meshes.empty());
-  EXPECT_EQ(via_submit.archetypes.size(), 1U);
-  EXPECT_EQ(draw_count_of(via_submit), 5);
-  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
-}
-
-TEST(StatelessWeaponRenderers, RomanShieldOffsetsFromHandOrigin) {
-  const auto frames = make_frames();
-  const auto anim = make_anim();
-  const auto palette = make_palette();
-  const auto ctx = make_ctx();
-
-  EquipmentBatch batch;
-  RomanShieldRenderer::submit(RomanShieldConfig{}, ctx, frames, palette, anim,
-                              batch);
-
-  ASSERT_EQ(batch.archetypes.size(), 1U);
-  QVector3D const actual =
-      batch.archetypes.front().world.column(3).toVector3D();
-  EXPECT_LT(actual.x(), frames.hand_l.origin.x() - 0.05F);
-  EXPECT_GT(std::abs(actual.z() - frames.hand_l.origin.z()), 0.05F);
 }
 
 TEST(StatelessWeaponRenderers, CarthageShieldUsesArchetypePath) {

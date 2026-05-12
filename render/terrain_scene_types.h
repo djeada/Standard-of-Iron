@@ -33,8 +33,19 @@ struct LinearFeatureChunk {
   std::size_t geometry_count = 0;
 };
 
-enum class ScatterSpeciesId { Grass, Stone, Plant, Pine, Olive, FireCamp,
-                              Tent, SupplyCart, WeaponRack, Ruins, DeadTree };
+enum class ScatterSpeciesId {
+  Grass,
+  Stone,
+  Plant,
+  Pine,
+  Olive,
+  FireCamp,
+  Tent,
+  SupplyCart,
+  WeaponRack,
+  Ruins,
+  DeadTree
+};
 
 enum class ScatterVisibilityMode { None, InstanceFiltered };
 

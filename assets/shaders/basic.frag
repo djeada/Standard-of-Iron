@@ -108,9 +108,9 @@ void main() {
     color = mix(color, charColor, clamp(sootMask, 0.0, 0.85));
   }
 
-  // u_light_dir is pre-normalized by the backend; fallback handles uninitialized state
-  vec3 lightDir = length(u_light_dir) > 0.001 ? u_light_dir : normalize(vec3(0.65, 0.50, 0.40));
-
+  vec3 lightDir = length(u_light_dir) > 0.001
+                      ? u_light_dir
+                      : normalize(vec3(0.65, 0.50, 0.40));
   float avgColor = (u_color.r + u_color.g + u_color.b) / 3.0;
   float wrapAmount = avgColor > 0.65 ? 0.52 : (avgColor > 0.40 ? 0.20 : 0.05);
 
