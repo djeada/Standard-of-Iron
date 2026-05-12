@@ -33,6 +33,9 @@ struct FrameContext {
 
   Game::Map::VisibilityService *visibility{nullptr};
   bool visibility_enabled{false};
+
+  QVector3D light_direction{0.65F, 0.50F, 0.40F};
+  float ambient_strength{0.30F};
 };
 
 } // namespace Render::Pass

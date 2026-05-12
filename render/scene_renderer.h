@@ -139,6 +139,14 @@ public:
   void set_grid_params(const GridParams &gp) { m_grid_params = gp; }
   auto grid_params() const -> const GridParams & { return m_grid_params; }
 
+  void set_lighting(const QVector3D &light_dir, float ambient_strength) {
+    m_light_dir = light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : light_dir.normalized();
+    m_ambient_strength = ambient_strength;
+    if (m_gl_backend) {
+      m_gl_backend->set_lighting(m_light_dir, m_ambient_strength);
+    }
+  }
+
   void pause() { m_paused = true; }
   void resume() { m_paused = false; }
   auto is_paused() const -> bool { return m_paused; }
@@ -311,6 +319,8 @@ private:
 
   QMatrix4x4 m_view_proj;
   Shader *m_current_shader = nullptr;
+  QVector3D m_light_dir{0.65F, 0.50F, 0.40F};
+  float m_ambient_strength{0.30F};
 
   std::unordered_map<uint32_t, AnimationTimeCacheEntry> m_animation_time_cache;
   UnitRenderCache m_unit_render_cache;

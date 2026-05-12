@@ -60,6 +60,11 @@ public:
   }
   void execute(const DrawQueue &queue, const Camera &cam) override;
 
+  void set_lighting(const QVector3D &light_dir, float ambient_strength) noexcept {
+    m_light_dir = light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : light_dir.normalized();
+    m_ambient_strength = ambient_strength;
+  }
+
   [[nodiscard]] auto resources() const -> ResourceManager * override {
     return m_resources.get();
   }
@@ -188,6 +193,9 @@ private:
   bool m_blend_enabled = false;
   float m_animation_time = 0.0F;
   GLuint m_frame_ubo{0};
+
+  QVector3D m_light_dir{0.65F, 0.50F, 0.40F};
+  float m_ambient_strength{0.30F};
 
   Render::FrameBudgetConfig m_frame_budget_config;
   Render::FrameTimeTracker m_frame_tracker;

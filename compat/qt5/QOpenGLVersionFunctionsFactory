@@ -1,0 +1,14 @@
+// Qt5 compatibility shim for <QOpenGLVersionFunctionsFactory> (Qt6 only).
+// In Qt5, use QOpenGLContext::versionFunctions<T>() instead.
+#pragma once
+#include <QOpenGLContext>
+
+struct QOpenGLVersionFunctionsFactory {
+  template <typename T>
+  static T *get(QOpenGLContext *ctx) {
+    if (ctx == nullptr) {
+      return nullptr;
+    }
+    return ctx->versionFunctions<T>();
+  }
+};
