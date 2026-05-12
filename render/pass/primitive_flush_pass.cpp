@@ -18,6 +18,8 @@ void PrimitiveFlushPass::execute(FrameContext &ctx) {
 
   Render::GL::PrimitiveBatchParams params;
   params.view_proj = ctx.view_proj;
+  params.light_direction = ctx.light_direction;
+  params.ambient_strength = ctx.ambient_strength;
 
   if (batcher->sphere_count() > 0) {
     Render::GL::PrimitiveBatchCmd cmd;

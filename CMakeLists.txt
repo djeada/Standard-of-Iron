@@ -94,6 +94,10 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+if(QT_VERSION_MAJOR EQUAL 5)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/compat/qt5)
+endif()
+
 set(CMAKE_AUTOMOC ON)
 
 # ---- Google Test Setup ----

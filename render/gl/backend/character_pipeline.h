@@ -32,6 +32,8 @@ public:
     GL::Shader::UniformHandle material_id{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle instanced{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ambient_strength{GL::Shader::InvalidUniform};
     GL::Shader *instanced_variant{nullptr};
   };
 
