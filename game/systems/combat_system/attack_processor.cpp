@@ -587,6 +587,9 @@ void process_attacks(Engine::Core::World *world,
       continue;
     }
 
+    bool const in_melee_lock =
+        (attacker_atk != nullptr) && attacker_atk->in_melee_lock;
+
     auto *attack_target =
         attacker->get_component<Engine::Core::AttackTargetComponent>();
     Engine::Core::Entity *best_target = nullptr;
@@ -616,7 +619,9 @@ void process_attacks(Engine::Core::World *world,
           if (ranged_unit) {
             stop_unit_movement(attacker, attacker_transform);
           }
-          face_target(attacker_transform, target_transform);
+          if (!in_melee_lock) {
+            face_target(attacker_transform, target_transform);
+          }
         } else {
           if (!attack_target->should_chase) {
             attacker->remove_component<Engine::Core::AttackTargetComponent>();
@@ -776,7 +781,9 @@ void process_attacks(Engine::Core::World *world,
         begin_attack_animation(attacker);
       }
 
-      face_target(attacker_transform, best_target_transform);
+      if (!in_melee_lock) {
+        face_target(attacker_transform, best_target_transform);
+      }
 
       bool const should_show_arrow_vfx =
           attacker_unit->spawn_type != Game::Units::SpawnType::Catapult &&

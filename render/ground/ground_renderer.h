@@ -39,7 +39,8 @@ public:
   void set_color(const QVector3D &c) { m_color = c; }
 
   void set_light_direction(const QVector3D &dir) {
-    m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.85F, 0.42F) : dir.normalized();
+    m_light_direction =
+        dir.isNull() ? QVector3D(0.35F, 0.85F, 0.42F) : dir.normalized();
     invalidate_params_cache();
   }
 

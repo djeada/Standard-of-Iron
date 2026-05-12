@@ -477,7 +477,18 @@ auto CreaturePipeline::submit_requests(
 
     const CreatureClipPlaybackDesc &playback_desc =
         handle->playback[state_index];
-    auto const playback = resolve_clip_playback(playback_desc, req.phase);
+
+    std::uint16_t const effective_clip_id =
+        (req.clip_variant == 0U)
+            ? playback_desc.clip_id
+            : Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+                  req.archetype, req.state, req.clip_variant);
+
+    auto const playback =
+        (effective_clip_id == playback_desc.clip_id)
+            ? resolve_clip_playback(playback_desc, req.phase)
+            : resolve_clip_playback(handle->asset->bpat_species_id,
+                                    effective_clip_id, req.phase);
     if (playback.blob == nullptr) {
       return;
     }
@@ -495,7 +506,7 @@ auto CreaturePipeline::submit_requests(
     if (playback_desc.snapshot) {
       const bool emitted = submit_snapshot_creature(
           *handle, req.lod, req.archetype, req.variant, req.state,
-          playback_desc.clip_id, req.clip_variant, req.role_colors_view(),
+          effective_clip_id, req.clip_variant, req.role_colors_view(),
           static_cast<std::uint16_t>(req.variant), req.base_color, draw_world,
           *playback.blob, playback.global_frame, playback.frame_in_clip, out,
           renderer, !prebaked_lowpoly_required);
@@ -506,14 +517,14 @@ auto CreaturePipeline::submit_requests(
     if (prebaked_lowpoly_required) {
       report_submit_cache_miss(
           "snapshot_prebaked_required", *handle, req.lod, req.archetype,
-          req.variant, req.state, playback_desc.clip_id, req.clip_variant,
+          req.variant, req.state, effective_clip_id, req.clip_variant,
           playback.frame_in_clip, handle->attachment_set_id,
           handle->attachments_hash);
       return;
     }
 
     submit_rigged_creature(*handle, req.lod, req.archetype, req.variant,
-                           req.state, playback_desc.clip_id, req.clip_variant,
+                           req.state, effective_clip_id, req.clip_variant,
                            playback.frame_in_clip, req.role_colors_view(),
                            static_cast<std::uint16_t>(req.variant),
                            req.base_color, draw_world, *playback.blob,

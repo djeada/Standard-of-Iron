@@ -26,13 +26,12 @@ public:
 
   void clear();
 
-  [[nodiscard]] bool is_gpu_ready() const {
-    return m_state.is_gpu_ready();
-  }
+  [[nodiscard]] bool is_gpu_ready() const { return m_state.is_gpu_ready(); }
   [[nodiscard]] auto instance_count() const -> std::size_t {
     return m_state.instances.size();
   }
-  [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
+  [[nodiscard]] auto
+  last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
     return m_state.last_sync_stats;
   }
 

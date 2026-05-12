@@ -25,6 +25,12 @@ public:
     GL::Shader::UniformHandle view{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle projection{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle segment_visibility{GL::Shader::InvalidUniform};
   };
 
   struct RiverbankUniforms {
@@ -53,6 +59,11 @@ public:
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
   };
 
   GL::Shader *m_river_shader = nullptr;

@@ -68,11 +68,11 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_EQ(passes[10], static_cast<Render::GL::IRenderPass *>(proxy.olive()));
   EXPECT_EQ(passes[11],
             static_cast<Render::GL::IRenderPass *>(proxy.firecamp()));
-  EXPECT_NE(passes[12], nullptr);  // tent
-  EXPECT_NE(passes[13], nullptr);  // supply_cart
-  EXPECT_NE(passes[14], nullptr);  // weapon_rack
-  EXPECT_NE(passes[15], nullptr);  // ruins
-  EXPECT_NE(passes[16], nullptr);  // dead_tree
+  EXPECT_NE(passes[12], nullptr);
+  EXPECT_NE(passes[13], nullptr);
+  EXPECT_NE(passes[14], nullptr);
+  EXPECT_NE(passes[15], nullptr);
+  EXPECT_NE(passes[16], nullptr);
   EXPECT_EQ(passes[17], &rain);
   EXPECT_EQ(passes[18], &fog);
   EXPECT_EQ(passes[19], &boundary_fog);

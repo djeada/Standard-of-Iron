@@ -1164,13 +1164,15 @@ TEST(HumanoidPrepare, AmbientIdleContextSelectsCorrectIdleClipVariant) {
   using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
   using Render::GL::AmbientIdleType;
 
-  auto const archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+  auto const archetype_id =
+      Render::Creature::ArchetypeRegistry::k_humanoid_base;
   auto &registry = Render::Creature::ArchetypeRegistry::instance();
 
   Render::GL::HumanoidAnimationContext idle_no_ambient{};
   idle_no_ambient.ambient_idle_type = AmbientIdleType::None;
   auto const no_ambient = humanoid_bpat_playback_for_anim(
-      archetype_id, Render::Creature::Bpat::k_species_humanoid, idle_no_ambient);
+      archetype_id, Render::Creature::Bpat::k_species_humanoid,
+      idle_no_ambient);
   ASSERT_TRUE(no_ambient.has_value());
   EXPECT_EQ(no_ambient->clip_id, Render::Creature::k_humanoid_idle_clip);
 

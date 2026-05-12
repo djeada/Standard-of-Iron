@@ -3,6 +3,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/core/world.h"
+#include "../../../creature/animation_state_components.h"
 #include "../../../entity/registry.h"
 #include <algorithm>
 #include <cmath>
@@ -233,15 +234,36 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.is_constructing = false;
   }
 
-  bool const is_active = anim.is_moving || anim.is_attacking ||
-                         anim.is_constructing || anim.is_healing ||
-                         anim.is_hit_reacting || anim.is_dying || anim.is_dead ||
-                         anim.is_in_hold_mode;
-  // idle_duration tracks continuous idle eligibility; while the soldier is
-  // active it resets to 0. When idle, anim.time acts as a lower bound on how
-  // long the entity has been in the game session, which is sufficient for the
-  // ambient idle gate check.
-  anim.idle_duration = is_active ? 0.0F : anim.time;
+  bool const is_active =
+      anim.is_moving || anim.is_attacking || anim.is_constructing ||
+      anim.is_healing || anim.is_hit_reacting || anim.is_dying ||
+      anim.is_dead || anim.is_in_hold_mode || anim.is_exiting_hold;
+
+  auto *humanoid_state = Engine::Core::get_or_add_component<
+      Render::Creature::HumanoidAnimationStateComponent>(ctx.entity);
+  if (humanoid_state == nullptr) {
+    anim.idle_duration = 0.0F;
+    return anim;
+  }
+
+  float delta_time = 0.0F;
+  if (humanoid_state->initialized) {
+    delta_time = std::max(0.0F, anim.time - humanoid_state->last_sample_time);
+    if (anim.time < humanoid_state->last_sample_time) {
+      humanoid_state->idle_duration = 0.0F;
+    }
+  } else {
+    humanoid_state->initialized = true;
+    humanoid_state->idle_duration = 0.0F;
+  }
+
+  humanoid_state->last_sample_time = anim.time;
+  if (is_active) {
+    humanoid_state->idle_duration = 0.0F;
+  } else {
+    humanoid_state->idle_duration += delta_time;
+  }
+  anim.idle_duration = humanoid_state->idle_duration;
 
   return anim;
 }

@@ -7,6 +7,11 @@ in vec3 v_world_pos;
 uniform vec3 u_color;
 uniform vec3 u_light_direction;
 uniform float u_alpha;
+uniform sampler2D u_visibilityTex;
+uniform vec2 u_visibilitySize;
+uniform float u_visibilityTileSize;
+uniform float u_exploredAlpha;
+uniform int u_hasVisibility;
 
 out vec4 frag_color;
 
@@ -175,6 +180,22 @@ void main() {
   float edge_fade = smoothstep(0.0, 0.08, v_tex_coord.x) *
                     smoothstep(0.0, 0.08, 1.0 - v_tex_coord.x);
   lit_color *= mix(0.75, 1.0, edge_fade);
+
+  float visibilityFactor = 1.0;
+  if (u_hasVisibility == 1 && u_visibilitySize.x > 0.0 &&
+      u_visibilitySize.y > 0.0) {
+    float tileSize = max(u_visibilityTileSize, 0.0001);
+    vec2 grid = vec2(v_world_pos.x / tileSize, v_world_pos.z / tileSize);
+    grid += (u_visibilitySize * 0.5) - vec2(0.5);
+    vec2 visUV = (grid + vec2(0.5)) / u_visibilitySize;
+    float visSample = texture(u_visibilityTex, visUV).r;
+    if (visSample < 0.25) {
+      discard;
+    } else if (visSample < 0.75) {
+      visibilityFactor = u_exploredAlpha;
+    }
+  }
+  lit_color *= visibilityFactor;
 
   frag_color = vec4(clamp(lit_color, 0.0, 1.0), u_alpha);
 }

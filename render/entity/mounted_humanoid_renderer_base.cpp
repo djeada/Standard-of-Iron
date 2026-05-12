@@ -57,6 +57,7 @@ auto rider_root_transform(Render::Creature::ArchetypeId archetype_id,
   std::uint32_t const species_id =
       asset != nullptr ? asset->bpat_species_id
                        : Render::Creature::Bpat::k_species_humanoid;
+
   auto const playback =
       Render::Creature::Pipeline::humanoid_bpat_playback_for_anim(
           archetype_id, species_id, anim);
@@ -265,6 +266,7 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   auto rider_output = RCP::build_base_graph_output(rider_inputs, rider_lod);
   rider_output.spec = mounted_visual_spec().rider;
   rider_output.seed = seed;
+  rider_output.world_already_grounded = true;
   rider_output.world_matrix =
       rider_ctx.model *
       rider_local_world_from_mount(mount, rider_output.spec, anim_ctx);

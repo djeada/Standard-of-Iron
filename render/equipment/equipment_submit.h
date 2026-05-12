@@ -21,8 +21,6 @@ struct HumanoidPalette;
 struct HumanoidAnimationContext;
 struct HorseVariant;
 struct HorseAnimationContext;
-class IEquipmentRenderer;
-class IHorseEquipmentRenderer;
 
 struct EquipmentMeshPrim {
   Mesh *mesh{nullptr};
@@ -121,17 +119,5 @@ public:
 private:
   EquipmentBatch &m_batch;
 };
-
-void render_equipment(IEquipmentRenderer &renderer, const DrawContext &ctx,
-                      const BodyFrames &frames, const HumanoidPalette &palette,
-                      const HumanoidAnimationContext &anim,
-                      ISubmitter &out) noexcept;
-
-void render_horse_equipment(const IHorseEquipmentRenderer &renderer,
-                            const DrawContext &ctx,
-                            const HorseBodyFrames &frames,
-                            const HorseVariant &variant,
-                            const HorseAnimationContext &anim,
-                            ISubmitter &out) noexcept;
 
 } // namespace Render::GL
