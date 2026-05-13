@@ -582,5 +582,98 @@
     "type": "elimination",
     "description": "Defeat Roman cavalry forces and capture their camp"
   },
-  "time_of_day": "afternoon"
+  "time_of_day": "afternoon",
+  "world_props": [
+    {
+      "type": "ruins",
+      "x": 102.0,
+      "z": 57.0,
+      "scale": 1.1,
+      "rotation": 1.2
+    },
+    {
+      "type": "ruins",
+      "x": 107.0,
+      "z": 63.0,
+      "scale": 1.0,
+      "rotation": 3.0
+    },
+    {
+      "type": "ruins",
+      "x": 100.0,
+      "z": 61.0,
+      "scale": 0.9,
+      "rotation": 4.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 19.0,
+      "z": 27.0,
+      "scale": 1.2,
+      "rotation": 0.6
+    },
+    {
+      "type": "dead_tree",
+      "x": 28.0,
+      "z": 23.0,
+      "scale": 1.0,
+      "rotation": 2.3
+    },
+    {
+      "type": "dead_tree",
+      "x": 17.0,
+      "z": 33.0,
+      "scale": 1.1,
+      "rotation": 4.1
+    },
+    {
+      "type": "dead_tree",
+      "x": 172.0,
+      "z": 85.0,
+      "scale": 1.0,
+      "rotation": 1.5
+    },
+    {
+      "type": "dead_tree",
+      "x": 180.0,
+      "z": 83.0,
+      "scale": 1.2,
+      "rotation": 3.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 179.0,
+      "z": 93.0,
+      "scale": 0.9,
+      "rotation": 5.7
+    },
+    {
+      "type": "dead_tree",
+      "x": 75.0,
+      "z": 76.0,
+      "scale": 1.0,
+      "rotation": 2.1
+    },
+    {
+      "type": "dead_tree",
+      "x": 84.0,
+      "z": 74.0,
+      "scale": 0.9,
+      "rotation": 4.5
+    },
+    {
+      "type": "dead_tree",
+      "x": 115.0,
+      "z": 30.0,
+      "scale": 1.1,
+      "rotation": 0.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 124.0,
+      "z": 31.0,
+      "scale": 1.0,
+      "rotation": 3.2
+    }
+  ]
 }

@@ -190,58 +190,154 @@ void VegetationPipeline::initialize_stone_pipeline() {
     QVector3D normal;
   };
 
-  const StoneVertex stone_vertices[] = {
+  // Build a realistic multi-faceted boulder mesh procedurally.
+  // The boulder uses 3 lateral rings (each 8-sided) plus top/bottom fans,
+  // with per-face flat normals for a natural, angular look.
+  // Each ring has slight rotational offsets and radius variation to break
+  // up the regular symmetry.
+  using F = StoneVertex;
+  std::vector<F> verts;
+  std::vector<uint16_t> idx;
 
-      {{-0.4400F, 0.0200F, -0.3800F}, {-0.0254F, -0.9994F, -0.0225F}},
-      {{0.4000F, 0.0000F, -0.4400F}, {-0.0254F, -0.9994F, -0.0225F}},
-      {{0.4600F, 0.0100F, 0.4000F}, {-0.0254F, -0.9994F, -0.0225F}},
-      {{-0.3800F, 0.0000F, 0.4400F}, {-0.0254F, -0.9994F, -0.0225F}},
+  constexpr int kN = 8;         // 8-sided cross-section per ring
+  constexpr float kTau = 6.28318530F;
+  constexpr int kRings = 4;
 
-      {{-0.3800F, 0.0000F, 0.4400F}, {0.0418F, 0.3018F, 0.9524F}},
-      {{0.4600F, 0.0100F, 0.4000F}, {0.0418F, 0.3018F, 0.9524F}},
-      {{0.3000F, 0.4400F, 0.2200F}, {0.0418F, 0.3018F, 0.9524F}},
-      {{-0.2000F, 0.4800F, 0.2800F}, {0.0418F, 0.3018F, 0.9524F}},
+  // Per-vertex radius perturbation constants for organic shape variation
+  constexpr float kPerturbAmount = 0.07F;
+  constexpr float kPerturbFreqVertex = 2.3F;
+  constexpr float kPerturbFreqRing = 1.7F;
+  // Per-vertex y jitter to avoid perfectly flat rings
+  constexpr float kYJitterAmount = 0.025F;
+  constexpr float kYJitterFreqVertex = 1.9F;
+  constexpr float kYJitterFreqRing = 0.9F;
 
-      {{0.4600F, 0.0100F, 0.4000F}, {0.9442F, 0.3215F, -0.0713F}},
-      {{0.4000F, 0.0000F, -0.4400F}, {0.9442F, 0.3215F, -0.0713F}},
-      {{0.2000F, 0.3600F, -0.3000F}, {0.9442F, 0.3215F, -0.0713F}},
-      {{0.3000F, 0.4400F, 0.2200F}, {0.9442F, 0.3215F, -0.0713F}},
+  // Apex of the top cap: slightly off-center for natural asymmetry
+  constexpr float kApexOffsetX = 0.02F;
+  constexpr float kApexHeight = 0.64F;
+  constexpr float kApexOffsetZ = -0.04F;
 
-      {{0.4000F, 0.0000F, -0.4400F}, {-0.0593F, 0.3330F, -0.9411F}},
-      {{-0.4400F, 0.0200F, -0.3800F}, {-0.0593F, 0.3330F, -0.9411F}},
-      {{-0.2800F, 0.5000F, -0.2200F}, {-0.0593F, 0.3330F, -0.9411F}},
-      {{0.2000F, 0.3600F, -0.3000F}, {-0.0593F, 0.3330F, -0.9411F}},
-
-      {{-0.4400F, 0.0200F, -0.3800F}, {-0.9533F, 0.2921F, 0.0769F}},
-      {{-0.3800F, 0.0000F, 0.4400F}, {-0.9533F, 0.2921F, 0.0769F}},
-      {{-0.2000F, 0.4800F, 0.2800F}, {-0.9533F, 0.2921F, 0.0769F}},
-      {{-0.2800F, 0.5000F, -0.2200F}, {-0.9533F, 0.2921F, 0.0769F}},
-
-      {{-0.2800F, 0.5000F, -0.2200F}, {0.2790F, 0.9603F, -0.0062F}},
-      {{-0.2000F, 0.4800F, 0.2800F}, {0.2790F, 0.9603F, -0.0062F}},
-      {{0.3000F, 0.4400F, 0.2200F}, {0.2790F, 0.9603F, -0.0062F}},
-      {{0.2000F, 0.3600F, -0.3000F}, {0.2790F, 0.9603F, -0.0062F}},
+  // Ring definitions: {y, base_radius, phase_offset, squash_x, squash_z}
+  // squash_x/z scale the x/z independently to create an elongated, irregular shape
+  struct Ring {
+    float y;
+    float radius;
+    float phase;
+    float sx;
+    float sz;
+  };
+  const Ring rings[] = {
+      {0.00F, 0.38F, 0.12F, 1.00F, 1.10F}, // base (ground level, slightly wider in z)
+      {0.22F, 0.52F, 0.00F, 1.10F, 1.00F}, // widest ring (offset in x)
+      {0.40F, 0.38F, 0.20F, 0.95F, 1.05F}, // upper ring (rotated, slightly narrower)
+      {0.54F, 0.20F, 0.08F, 1.00F, 0.92F}, // near-apex ring
   };
 
-  const uint16_t stone_indices[] = {
-      0,  1,  2,  0,  2,  3,  4,  5,  6,  4,  6,  7,  8,  9,  10, 8,  10, 11,
-      12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23};
+  // Generate ring vertex positions
+  QVector3D ring_pts[kRings][kN];
+  for (int ri = 0; ri < kRings; ++ri) {
+    const Ring &r = rings[ri];
+    for (int i = 0; i < kN; ++i) {
+      float t = static_cast<float>(i) / kN;
+      float angle = t * kTau + r.phase;
+      // Add subtle per-vertex radius perturbation for organic look
+      float perturb = 1.0F + kPerturbAmount *
+                             std::sin(float(i) * kPerturbFreqVertex +
+                                      float(ri) * kPerturbFreqRing);
+      float rx = r.radius * perturb * r.sx * std::cos(angle);
+      float rz = r.radius * perturb * r.sz * std::sin(angle);
+      // Slight y variation per vertex to avoid perfectly flat rings
+      float ry = r.y + kYJitterAmount *
+                      std::cos(float(i) * kYJitterFreqVertex +
+                               float(ri) * kYJitterFreqRing);
+      ring_pts[ri][i] = QVector3D(rx, ry, rz);
+    }
+  }
+
+  // Helper: emit a quad face (4 verts, 2 tris) with computed face normal
+  auto emit_quad = [&](const QVector3D &a, const QVector3D &b,
+                       const QVector3D &c, const QVector3D &d) {
+    QVector3D n = QVector3D::crossProduct(b - a, d - a);
+    if (n.lengthSquared() > 1.0e-8F) {
+      n.normalize();
+    } else {
+      n = QVector3D(0.0F, 1.0F, 0.0F);
+    }
+    auto base = static_cast<uint16_t>(verts.size());
+    verts.push_back({a, n});
+    verts.push_back({b, n});
+    verts.push_back({c, n});
+    verts.push_back({d, n});
+    idx.push_back(base);
+    idx.push_back(uint16_t(base + 1));
+    idx.push_back(uint16_t(base + 2));
+    idx.push_back(base);
+    idx.push_back(uint16_t(base + 2));
+    idx.push_back(uint16_t(base + 3));
+  };
+
+  // Helper: emit a triangular face with computed face normal
+  auto emit_tri = [&](const QVector3D &a, const QVector3D &b,
+                      const QVector3D &c) {
+    QVector3D n = QVector3D::crossProduct(b - a, c - a);
+    if (n.lengthSquared() > 1.0e-8F) {
+      n.normalize();
+    } else {
+      n = QVector3D(0.0F, 1.0F, 0.0F);
+    }
+    auto base = static_cast<uint16_t>(verts.size());
+    verts.push_back({a, n});
+    verts.push_back({b, n});
+    verts.push_back({c, n});
+    idx.push_back(base);
+    idx.push_back(uint16_t(base + 1));
+    idx.push_back(uint16_t(base + 2));
+  };
+
+  // Lateral quad strips connecting adjacent rings
+  for (int ri = 0; ri < kRings - 1; ++ri) {
+    for (int i = 0; i < kN; ++i) {
+      int next = (i + 1) % kN;
+      // a, b = lower ring; c, d = upper ring (quad: a-b-c-d, CCW looking outward)
+      const QVector3D &a = ring_pts[ri][i];
+      const QVector3D &b = ring_pts[ri][next];
+      const QVector3D &c = ring_pts[ri + 1][next];
+      const QVector3D &d = ring_pts[ri + 1][i];
+      emit_quad(a, b, c, d);
+    }
+  }
+
+  // Top cap: fan of triangles from apex point to the topmost ring
+  QVector3D apex(kApexOffsetX, kApexHeight, kApexOffsetZ);
+  for (int i = 0; i < kN; ++i) {
+    int next = (i + 1) % kN;
+    emit_tri(ring_pts[kRings - 1][i], ring_pts[kRings - 1][next], apex);
+  }
+
+  // Bottom cap: fan of downward-facing triangles from a slightly sunken center
+  QVector3D bot_center(0.0F, -0.01F, 0.0F);
+  for (int i = 0; i < kN; ++i) {
+    int next = (i + 1) % kN;
+    // Reverse winding for outward-facing bottom normal
+    emit_tri(ring_pts[0][next], ring_pts[0][i], bot_center);
+  }
 
   glGenVertexArrays(1, &m_stone_vao);
   glBindVertexArray(m_stone_vao);
 
   glGenBuffers(1, &m_stone_vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_stone_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(stone_vertices), stone_vertices,
-               GL_STATIC_DRAW);
-  m_stone_vertex_count = CubeVertexCount;
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(verts.size() * sizeof(StoneVertex)),
+               verts.data(), GL_STATIC_DRAW);
+  m_stone_vertex_count = static_cast<GLsizei>(verts.size());
 
   glGenBuffers(1, &m_stone_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_stone_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(stone_indices), stone_indices,
-               GL_STATIC_DRAW);
-  constexpr int k_stone_index_count = 36;
-  m_stone_index_count = k_stone_index_count;
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
+               idx.data(), GL_STATIC_DRAW);
+  m_stone_index_count = static_cast<GLsizei>(idx.size());
 
   glEnableVertexAttribArray(Position);
   glVertexAttribPointer(
@@ -1113,20 +1209,26 @@ void VegetationPipeline::initialize_tent_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  constexpr float H = 0.72F;
-  const QVector3D A(-0.50F, 0.0F, -0.50F);
-  const QVector3D B(0.50F, 0.0F, -0.50F);
-  const QVector3D C(0.0F, H, -0.50F);
-  const QVector3D D(-0.50F, 0.0F, 0.50F);
-  const QVector3D E(0.50F, 0.0F, 0.50F);
-  const QVector3D F(0.0F, H, 0.50F);
+  // Main ridge tent: taller and wider than before
+  constexpr float H = 0.88F;   // ridge height
+  constexpr float W = 0.62F;   // half-width
+  constexpr float Dp = 0.60F;  // half-depth
 
+  const QVector3D A(-W, 0.0F, -Dp);
+  const QVector3D B( W, 0.0F, -Dp);
+  const QVector3D C( 0.0F, H, -Dp);
+  const QVector3D D(-W, 0.0F,  Dp);
+  const QVector3D E( W, 0.0F,  Dp);
+  const QVector3D F( 0.0F, H,  Dp);
+
+  // Ridge line spans the full length (used for visual reference)
   constexpr float inv_sqrt2 = 0.70711F;
   const QVector3D nL(-inv_sqrt2, inv_sqrt2, 0.0F);
-  const QVector3D nR(inv_sqrt2, inv_sqrt2, 0.0F);
+  const QVector3D nR( inv_sqrt2, inv_sqrt2, 0.0F);
 
   using P = std::pair<QVector3D, QVector3D>;
 
+  // Left roof panel
   {
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(), {P{A, nL}, P{D, nL}, P{F, nL}, P{C, nL}});
@@ -1134,6 +1236,7 @@ void VegetationPipeline::initialize_tent_pipeline() {
                            uint16_t(b + 2), uint16_t(b + 3)});
   }
 
+  // Right roof panel
   {
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(), {P{B, nR}, P{C, nR}, P{F, nR}, P{E, nR}});
@@ -1141,6 +1244,7 @@ void VegetationPipeline::initialize_tent_pipeline() {
                            uint16_t(b + 2), uint16_t(b + 3)});
   }
 
+  // Front end triangle
   {
     const QVector3D nF(0.0F, 0.0F, -1.0F);
     auto b = static_cast<uint16_t>(verts.size());
@@ -1148,6 +1252,7 @@ void VegetationPipeline::initialize_tent_pipeline() {
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
   }
 
+  // Rear end triangle
   {
     const QVector3D nBk(0.0F, 0.0F, 1.0F);
     auto b = static_cast<uint16_t>(verts.size());
@@ -1155,18 +1260,53 @@ void VegetationPipeline::initialize_tent_pipeline() {
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
   }
 
-  append_box(verts, idx, {-0.50F, -0.02F, -0.50F}, {0.50F, 0.00F, 0.50F});
+  // Ground base flap
+  append_box(verts, idx, {-W, -0.02F, -Dp}, {W, 0.00F, Dp});
 
-  append_box(verts, idx, {-0.025F, 0.00F, -0.03F}, {0.025F, H * 0.88F, 0.03F});
+  // Center ridge pole
+  append_box(verts, idx, {-0.030F, 0.00F, -0.035F}, {0.030F, H * 0.90F, 0.035F});
 
-  append_box(verts, idx, {-0.22F, 0.00F, -0.51F}, {-0.16F, 0.40F, -0.48F});
-  append_box(verts, idx, {0.16F, 0.00F, -0.51F}, {0.22F, 0.40F, -0.48F});
-  append_box(verts, idx, {-0.22F, 0.37F, -0.51F}, {0.22F, 0.43F, -0.48F});
+  // Front door frame: two uprights + crossbar
+  append_box(verts, idx, {-0.24F, 0.00F, -Dp - 0.02F}, {-0.16F, 0.44F, -Dp + 0.02F});
+  append_box(verts, idx, { 0.16F, 0.00F, -Dp - 0.02F}, { 0.24F, 0.44F, -Dp + 0.02F});
+  append_box(verts, idx, {-0.24F, 0.41F, -Dp - 0.02F}, { 0.24F, 0.47F, -Dp + 0.02F});
 
-  append_box(verts, idx, {-0.62F, 0.00F, -0.62F}, {-0.55F, 0.07F, -0.55F});
-  append_box(verts, idx, {0.55F, 0.00F, -0.62F}, {0.62F, 0.07F, -0.55F});
-  append_box(verts, idx, {-0.62F, 0.00F, 0.55F}, {-0.55F, 0.07F, 0.62F});
-  append_box(verts, idx, {0.55F, 0.00F, 0.55F}, {0.62F, 0.07F, 0.62F});
+  // Front awning — fabric overhang projecting forward from front edge
+  {
+    constexpr float aw_ext = 0.30F; // awning depth forward
+    constexpr float aw_y   = H * 0.46F; // height of awning attachment at ridge
+    constexpr float inv_aw = 0.83205F; // 1/sqrt(1 + (aw_ext/aw_y)^2) approx
+    const QVector3D nAw(0.0F, inv_aw, -inv_aw);
+
+    const QVector3D al(-W * 0.72F, aw_y, -Dp);
+    const QVector3D ar( W * 0.72F, aw_y, -Dp);
+    const QVector3D bl(-W * 0.72F, 0.04F, -Dp - aw_ext);
+    const QVector3D br( W * 0.72F, 0.04F, -Dp - aw_ext);
+
+    auto b = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(), {P{al, nAw}, P{ar, nAw}, P{br, nAw}, P{bl, nAw}});
+    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
+                           uint16_t(b + 2), uint16_t(b + 3)});
+    // Underside of awning
+    const QVector3D nAwU(0.0F, -inv_aw, inv_aw);
+    auto bu = static_cast<uint16_t>(verts.size());
+    verts.insert(verts.end(), {P{bl, nAwU}, P{br, nAwU}, P{ar, nAwU}, P{al, nAwU}});
+    idx.insert(idx.end(), {bu, uint16_t(bu + 1), uint16_t(bu + 2), bu,
+                           uint16_t(bu + 2), uint16_t(bu + 3)});
+
+    // Two awning support poles
+    append_box(verts, idx, {-W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
+               {-W * 0.72F + 0.025F, aw_y,          -Dp - aw_ext + 0.025F});
+    append_box(verts, idx, { W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
+               { W * 0.72F + 0.025F, aw_y,          -Dp - aw_ext + 0.025F});
+  }
+
+  // Four corner guy-rope stakes (small rectangular pegs)
+  constexpr float sk = 0.07F;
+  append_box(verts, idx, {-W - sk, 0.00F, -Dp - sk}, {-W, 0.07F, -Dp});
+  append_box(verts, idx, { W,      0.00F, -Dp - sk}, { W + sk, 0.07F, -Dp});
+  append_box(verts, idx, {-W - sk, 0.00F,  Dp},      {-W, 0.07F,  Dp + sk});
+  append_box(verts, idx, { W,      0.00F,  Dp},      { W + sk, 0.07F,  Dp + sk});
 
   upload_prop_mesh_impl(verts, idx, m_tent_vao, m_tent_vertex_buffer,
                         m_tent_index_buffer, m_tent_vertex_count,
@@ -1192,26 +1332,46 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.48F, 0.22F, -0.28F}, {0.48F, 0.28F, 0.28F});
+  // ── Undercarriage ──────────────────────────────────────────────────────
+  // Axle bar spanning wheel hubs
+  append_box(verts, idx, {-0.64F, 0.18F, -0.05F}, {0.64F, 0.26F, 0.05F});
 
-  append_box(verts, idx, {-0.48F, 0.22F, -0.30F}, {0.48F, 0.44F, -0.25F});
-  append_box(verts, idx, {-0.48F, 0.22F, 0.25F}, {0.48F, 0.44F, 0.30F});
+  // Wheels — two discs with a small hub box for depth
+  constexpr int k_wheel_sides = 10;
+  constexpr float k_wheel_r   = 0.22F;
+  constexpr float k_wheel_t   = 0.06F;
+  append_disc_xaxis(verts, idx, -0.64F, 0.22F, 0.0F, k_wheel_r, k_wheel_t, k_wheel_sides);
+  append_disc_xaxis(verts, idx,  0.64F, 0.22F, 0.0F, k_wheel_r, k_wheel_t, k_wheel_sides);
+  // Wheel hub caps (small thick box at wheel center)
+  append_box(verts, idx, {-0.68F, 0.18F, -0.04F}, {-0.62F, 0.26F, 0.04F});
+  append_box(verts, idx, { 0.62F, 0.18F, -0.04F}, { 0.68F, 0.26F, 0.04F});
 
-  append_box(verts, idx, {-0.50F, 0.22F, -0.28F}, {-0.44F, 0.44F, 0.28F});
-  append_box(verts, idx, {0.44F, 0.22F, -0.28F}, {0.50F, 0.44F, 0.28F});
+  // ── Cart bed ───────────────────────────────────────────────────────────
+  // Floor planks
+  append_box(verts, idx, {-0.50F, 0.24F, -0.32F}, {0.50F, 0.30F, 0.32F});
+  // Side walls (left/right boards)
+  append_box(verts, idx, {-0.52F, 0.24F, -0.34F}, {-0.44F, 0.52F, 0.34F});
+  append_box(verts, idx, { 0.44F, 0.24F, -0.34F}, { 0.52F, 0.52F, 0.34F});
+  // Front and back boards
+  append_box(verts, idx, {-0.50F, 0.24F, -0.34F}, {0.50F, 0.52F, -0.28F});
+  append_box(verts, idx, {-0.50F, 0.24F,  0.28F}, {0.50F, 0.52F,  0.34F});
 
-  append_box(verts, idx, {-0.56F, 0.18F, -0.04F}, {0.56F, 0.24F, 0.04F});
+  // ── Shaft poles (horse traces) ─────────────────────────────────────────
+  append_box(verts, idx, {-0.20F, 0.22F, -0.32F}, {-0.12F, 0.28F, -0.96F});
+  append_box(verts, idx, { 0.12F, 0.22F, -0.32F}, { 0.20F, 0.28F, -0.96F});
+  // Crossbar connecting shafts at the end
+  append_box(verts, idx, {-0.20F, 0.22F, -0.92F}, {0.20F, 0.28F, -0.88F});
 
-  append_disc_xaxis(verts, idx, -0.56F, 0.20F, 0.0F, 0.20F, 0.05F, 8);
+  // ── Cargo on the cart ──────────────────────────────────────────────────
+  // Main cargo box (wooden crate / provisions)
+  append_box(verts, idx, {-0.38F, 0.52F, -0.26F}, {0.38F, 0.80F, 0.26F});
+  // Second smaller box offset to one side (stacked supply)
+  append_box(verts, idx, {-0.36F, 0.80F, -0.20F}, {0.10F, 1.00F, 0.18F});
+  // Rolled canvas/sack (small fat box on the other side)
+  append_box(verts, idx, { 0.10F, 0.52F, -0.22F}, {0.36F, 0.82F, 0.20F});
 
-  append_disc_xaxis(verts, idx, 0.56F, 0.20F, 0.0F, 0.20F, 0.05F, 8);
-
-  append_box(verts, idx, {-0.18F, 0.18F, -0.28F}, {-0.12F, 0.24F, -0.82F});
-  append_box(verts, idx, {0.12F, 0.18F, -0.28F}, {0.18F, 0.24F, -0.82F});
-
-  append_box(verts, idx, {-0.18F, 0.18F, -0.78F}, {0.18F, 0.24F, -0.74F});
-
-  append_box(verts, idx, {-0.34F, 0.44F, -0.22F}, {0.34F, 0.66F, 0.22F});
+  // Rear vertical support post (holds tall loads)
+  append_box(verts, idx, {-0.04F, 0.52F, 0.28F}, {0.04F, 1.08F, 0.36F});
 
   upload_prop_mesh_impl(verts, idx, m_supply_cart_vao,
                         m_supply_cart_vertex_buffer, m_supply_cart_index_buffer,
@@ -1239,42 +1399,90 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.38F, 0.00F, -0.05F}, {-0.30F, 0.72F, 0.05F});
+  // ── Frame ──────────────────────────────────────────────────────────────
+  // Two thick upright posts
+  append_box(verts, idx, {-0.42F, 0.00F, -0.06F}, {-0.32F, 0.82F, 0.06F});
+  append_box(verts, idx, { 0.32F, 0.00F, -0.06F}, { 0.42F, 0.82F, 0.06F});
 
-  append_box(verts, idx, {0.30F, 0.00F, -0.05F}, {0.38F, 0.72F, 0.05F});
+  // Top crossbar (wider, thicker than before)
+  append_box(verts, idx, {-0.42F, 0.62F, -0.05F}, { 0.42F, 0.70F, 0.05F});
 
-  append_box(verts, idx, {-0.38F, 0.52F, -0.04F}, {0.38F, 0.59F, 0.04F});
+  // Middle crossbar
+  append_box(verts, idx, {-0.42F, 0.22F, -0.05F}, { 0.42F, 0.28F, 0.05F});
 
-  append_box(verts, idx, {-0.38F, 0.16F, -0.04F}, {0.38F, 0.21F, 0.04F});
+  // Base footing (small wide box at the bottom to stabilise)
+  append_box(verts, idx, {-0.48F, 0.00F, -0.08F}, {-0.26F, 0.05F,  0.08F});
+  append_box(verts, idx, { 0.26F, 0.00F, -0.08F}, { 0.48F, 0.05F,  0.08F});
 
-  constexpr float T = 0.025F;
-
+  // Rear diagonal cross-brace (visible from side)
   {
-    QVector3D bL(-0.20F, 0.0F, T), bR(-0.20F, 0.0F, -T);
-    QVector3D eL(-0.24F, 0.98F, T - 0.09F), eR(-0.24F, 0.98F, -T - 0.09F);
+    constexpr float T = 0.028F;
+    QVector3D bL(-0.32F, 0.06F,  T), bR(-0.32F, 0.06F, -T);
+    QVector3D eL( 0.32F, 0.60F,  T), eR( 0.32F, 0.60F, -T);
     QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
-    append_quad(verts, idx, bL, bR, eR, eL, n);
+    append_quad(verts, idx, bL, bR, eR, eL,  n);
     append_quad(verts, idx, eL, eR, bR, bL, -n);
-
-    append_box(verts, idx, {-0.26F, 0.96F, -0.10F}, {-0.22F, 1.06F, -0.06F});
   }
 
+  // ── Weapons hanging from the rack ─────────────────────────────────────
+  constexpr float T = 0.024F;
+
+  // Weapon 1: long spear (leaning slightly outward, left)
   {
-    QVector3D bL(0.00F, 0.0F, T), bR(0.00F, 0.0F, -T);
-    QVector3D eL(0.00F, 1.00F, T - 0.08F), eR(0.00F, 1.00F, -T - 0.08F);
+    QVector3D bL(-0.24F, 0.06F, T), bR(-0.24F, 0.06F, -T);
+    QVector3D eL(-0.28F, 1.08F, T - 0.08F), eR(-0.28F, 1.08F, -T - 0.08F);
     QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
     append_quad(verts, idx, bL, bR, eR, eL, n);
     append_quad(verts, idx, eL, eR, bR, bL, -n);
-    append_box(verts, idx, {-0.02F, 0.98F, -0.10F}, {0.02F, 1.08F, -0.06F});
+    // Spear tip
+    append_box(verts, idx, {-0.30F, 1.06F, -0.10F}, {-0.26F, 1.18F, -0.05F});
   }
 
+  // Weapon 2: sword (straighter, centre-left)
   {
-    QVector3D bL(0.20F, 0.0F, T), bR(0.20F, 0.0F, -T);
-    QVector3D eL(0.24F, 0.98F, T - 0.09F), eR(0.24F, 0.98F, -T - 0.09F);
+    QVector3D bL(-0.06F, 0.06F, T), bR(-0.06F, 0.06F, -T);
+    QVector3D eL(-0.04F, 1.02F, T - 0.06F), eR(-0.04F, 1.02F, -T - 0.06F);
     QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
     append_quad(verts, idx, bL, bR, eR, eL, n);
     append_quad(verts, idx, eL, eR, bR, bL, -n);
-    append_box(verts, idx, {0.22F, 0.96F, -0.10F}, {0.26F, 1.06F, -0.06F});
+    // Sword crossguard
+    append_box(verts, idx, {-0.12F, 0.26F, -0.06F}, { 0.04F, 0.32F, 0.06F});
+    // Pommel
+    append_box(verts, idx, {-0.08F, 0.06F, -0.05F}, {-0.02F, 0.14F, 0.05F});
+  }
+
+  // Weapon 3: spear (leaning slightly outward, right)
+  {
+    QVector3D bL(0.24F, 0.06F, T), bR(0.24F, 0.06F, -T);
+    QVector3D eL(0.28F, 1.08F, T - 0.08F), eR(0.28F, 1.08F, -T - 0.08F);
+    QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
+    append_quad(verts, idx, bL, bR, eR, eL, n);
+    append_quad(verts, idx, eL, eR, bR, bL, -n);
+    // Spear tip
+    append_box(verts, idx, { 0.26F, 1.06F, -0.10F}, { 0.30F, 1.18F, -0.05F});
+  }
+
+  // Weapon 4: axe/sword hung horizontally across the middle crossbar
+  {
+    constexpr float aT = 0.028F;
+    // Horizontal blade
+    QVector3D bL( 0.08F, 0.36F, aT), bR( 0.08F, 0.36F, -aT);
+    QVector3D eL( 0.30F, 0.56F, aT), eR( 0.30F, 0.56F, -aT);
+    QVector3D n = QVector3D::crossProduct(eL - bL, bR - bL).normalized();
+    append_quad(verts, idx, bL, bR, eR, eL,  n);
+    append_quad(verts, idx, eL, eR, bR, bL, -n);
+    // Handle
+    append_box(verts, idx, { 0.04F, 0.24F, -aT}, {0.12F, 0.42F, aT});
+  }
+
+  // ── Round shield leaning against the left post ────────────────────────
+  {
+    // Shield disc: thin box approximation (front face facing the camera)
+    constexpr float sR = 0.18F;
+    constexpr float sT = 0.030F;
+    append_disc_xaxis(verts, idx, -0.42F - sT, 0.40F, 0.0F, sR, sT, 10);
+    // Shield rim (thin ring box)
+    append_box(verts, idx, {-0.46F, 0.22F, -sR}, {-0.40F, 0.58F, sR});
   }
 
   upload_prop_mesh_impl(verts, idx, m_weapon_rack_vao,
@@ -1303,21 +1511,30 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.27F, 0.00F, -0.11F}, {-0.07F, 0.05F, 0.11F});
-  append_vert_prism(verts, idx, -0.17F, 0.05F, 0.00F, 0.08F, 0.48F, 6);
-  append_box(verts, idx, {-0.27F, 0.53F, -0.11F}, {-0.07F, 0.62F, 0.11F});
+  // Column A: standing tall, left side — has capital (cap block) on top
+  append_box(verts, idx, {-0.36F, 0.00F, -0.14F}, {-0.12F, 0.06F, 0.14F});
+  append_vert_prism(verts, idx, -0.24F, 0.06F, 0.00F, 0.10F, 0.72F, 6);
+  append_box(verts, idx, {-0.36F, 0.78F, -0.14F}, {-0.12F, 0.90F, 0.14F});
 
-  append_box(verts, idx, {0.07F, 0.00F, -0.11F}, {0.27F, 0.05F, 0.11F});
-  append_vert_prism(verts, idx, 0.17F, 0.05F, 0.00F, 0.08F, 0.32F, 6);
+  // Column B: broken, shorter — no cap
+  append_box(verts, idx, {0.10F, 0.00F, -0.14F}, {0.34F, 0.06F, 0.14F});
+  append_vert_prism(verts, idx, 0.22F, 0.06F, 0.00F, 0.10F, 0.48F, 6);
+  // Broken top slab (tilted box approximated as a box)
+  append_box(verts, idx, {0.10F, 0.54F, -0.10F}, {0.38F, 0.64F, 0.12F});
 
-  append_box(verts, idx, {-0.10F, 0.00F, 0.07F}, {0.10F, 0.05F, 0.28F});
-  append_vert_prism(verts, idx, 0.00F, 0.05F, 0.175F, 0.09F, 0.60F, 6);
-  append_box(verts, idx, {-0.12F, 0.65F, 0.055F}, {0.12F, 0.74F, 0.295F});
+  // Column C: larger, partially fallen at rear — standing but with lintel
+  append_box(verts, idx, {-0.14F, 0.00F, 0.10F}, {0.14F, 0.06F, 0.38F});
+  append_vert_prism(verts, idx, 0.00F, 0.06F, 0.24F, 0.12F, 0.88F, 6);
+  append_box(verts, idx, {-0.18F, 0.94F, 0.06F}, {0.18F, 1.06F, 0.42F});
 
-  append_box(verts, idx, {-0.32F, 0.05F, -0.06F}, {0.10F, 0.12F, 0.18F});
+  // Entablature fragment: horizontal beam between column A and C tops
+  append_box(verts, idx, {-0.38F, 0.72F, -0.06F}, {0.06F, 0.82F, 0.22F});
 
-  append_box(verts, idx, {0.10F, 0.00F, -0.12F}, {0.28F, 0.09F, 0.04F});
-  append_box(verts, idx, {-0.30F, 0.00F, 0.04F}, {-0.14F, 0.07F, 0.20F});
+  // Ground debris / rubble: scattered flat slabs and rough chunks
+  append_box(verts, idx, {0.10F, 0.00F, -0.18F}, {0.40F, 0.08F, 0.06F});
+  append_box(verts, idx, {-0.42F, 0.00F, 0.05F}, {-0.18F, 0.09F, 0.26F});
+  append_box(verts, idx, {-0.08F, 0.00F, 0.40F}, {0.20F, 0.06F, 0.58F});
+  append_box(verts, idx, {0.24F,  0.00F, 0.18F}, {0.44F, 0.07F, 0.42F});
 
   upload_prop_mesh_impl(verts, idx, m_ruins_vao, m_ruins_vertex_buffer,
                         m_ruins_index_buffer, m_ruins_vertex_count,

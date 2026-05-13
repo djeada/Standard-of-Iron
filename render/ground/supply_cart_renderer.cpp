@@ -15,9 +15,9 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-constexpr float k_ring_distance_scale = 1.65F;
+constexpr float k_ring_distance_scale = 2.10F;
 constexpr uint32_t k_type_salt = 0xB3C4D5E6U;
-constexpr float k_base_scale = 0.50F;
+constexpr float k_base_scale = 0.80F;
 constexpr float k_base_color_r = 0.40F;
 constexpr float k_base_color_g = 0.26F;
 constexpr float k_base_color_b = 0.13F;

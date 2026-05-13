@@ -81,7 +81,7 @@ void TerrainScatterManager::configure(
   std::lock_guard<std::mutex> lock(m_mutex);
 
   m_biome->configure(height_map, biome_settings);
-  m_stone->configure(height_map, biome_settings);
+  m_stone->configure(height_map, biome_settings, world_props);
   m_plant->configure(height_map, biome_settings);
   m_pine->configure(height_map, biome_settings);
   m_olive->configure(height_map, biome_settings);

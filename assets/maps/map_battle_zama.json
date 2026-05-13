@@ -736,5 +736,91 @@
     "type": "elimination",
     "description": "Defeat Scipio's Roman army and secure Carthage's future"
   },
-  "time_of_day": "day"
+  "time_of_day": "day",
+  "world_props": [
+    {
+      "type": "ruins",
+      "x": 12.0,
+      "z": 86.0,
+      "scale": 1.2,
+      "rotation": 1.0
+    },
+    {
+      "type": "ruins",
+      "x": 17.0,
+      "z": 93.0,
+      "scale": 1.0,
+      "rotation": 2.8
+    },
+    {
+      "type": "ruins",
+      "x": 11.0,
+      "z": 92.0,
+      "scale": 0.9,
+      "rotation": 4.6
+    },
+    {
+      "type": "ruins",
+      "x": 206.0,
+      "z": 27.0,
+      "scale": 1.2,
+      "rotation": 0.4
+    },
+    {
+      "type": "ruins",
+      "x": 213.0,
+      "z": 33.0,
+      "scale": 1.0,
+      "rotation": 2.1
+    },
+    {
+      "type": "ruins",
+      "x": 208.0,
+      "z": 35.0,
+      "scale": 0.9,
+      "rotation": 3.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 104.0,
+      "z": 40.0,
+      "scale": 1.1,
+      "rotation": 0.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 112.0,
+      "z": 38.0,
+      "scale": 1.0,
+      "rotation": 2.7
+    },
+    {
+      "type": "dead_tree",
+      "x": 114.0,
+      "z": 47.0,
+      "scale": 0.9,
+      "rotation": 5.3
+    },
+    {
+      "type": "dead_tree",
+      "x": 91.0,
+      "z": 84.0,
+      "scale": 1.0,
+      "rotation": 1.5
+    },
+    {
+      "type": "dead_tree",
+      "x": 99.0,
+      "z": 80.0,
+      "scale": 1.1,
+      "rotation": 3.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 101.0,
+      "z": 90.0,
+      "scale": 0.9,
+      "rotation": 5.7
+    }
+  ]
 }
