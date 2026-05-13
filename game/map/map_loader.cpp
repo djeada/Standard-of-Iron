@@ -391,6 +391,7 @@ void read_world_props(const QJsonArray &arr, std::vector<WorldProp> &out) {
       {QStringLiteral("weapon_rack"), WorldProp::Type::WeaponRack},
       {QStringLiteral("ruins"), WorldProp::Type::Ruins},
       {QStringLiteral("dead_tree"), WorldProp::Type::DeadTree},
+      {QStringLiteral("boulder"), WorldProp::Type::Boulder},
   };
 
   out.clear();

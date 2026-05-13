@@ -74,7 +74,8 @@ struct WorldProp {
     SupplyCart,
     WeaponRack,
     Ruins,
-    DeadTree
+    DeadTree,
+    Boulder
   };
 
   Type type = Type::Tent;
