@@ -1,17 +1,13 @@
 #pragma once
 
+#include "../../game/map/map_definition.h"
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
 #include "../i_render_pass.h"
 #include "scatter_renderer_state.h"
-#include <QVector3D>
 #include <cstdint>
 #include <memory>
 #include <vector>
-
-namespace Render::Ground {
-class SpawnValidator;
-}
 
 namespace Render::GL {
 class Buffer;
@@ -23,11 +19,8 @@ public:
   ~FireCampRenderer() override;
 
   void configure(const Game::Map::TerrainHeightMap &height_map,
-                 const Game::Map::BiomeSettings &biome_settings);
-
-  void set_explicit_fire_camps(const std::vector<QVector3D> &positions,
-                               const std::vector<float> &intensities = {},
-                               const std::vector<float> &radii = {});
+                 const Game::Map::BiomeSettings &biome_settings,
+                 const std::vector<Game::Map::WorldProp> &world_props = {});
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -47,7 +40,6 @@ public:
 
 private:
   void generate_firecamp_instances();
-  void add_explicit_firecamps(const Render::Ground::SpawnValidator &validator);
 
   int m_width = 0;
   int m_height = 0;
@@ -57,14 +49,11 @@ private:
   std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
+  std::vector<Game::Map::WorldProp> m_world_props;
 
   Render::Ground::Scatter::FilteredRendererState<FireCampInstanceGpu,
                                                  FireCampBatchParams>
       m_firecamp_state;
-
-  std::vector<QVector3D> m_explicit_positions;
-  std::vector<float> m_explicit_intensities;
-  std::vector<float> m_explicit_radii;
 };
 
 } // namespace Render::GL

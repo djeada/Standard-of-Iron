@@ -88,17 +88,17 @@ constexpr std::array<HumanoidClipSpec, 24> k_humanoid_clips{{
      BakerAmbientIdleType::None, 24U, 24.0F, 1.6F, true},
     {"idle_squat", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None,
      0, BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::SitDown, 24U, 24.0F, 1.0F, false},
+     BakerAmbientIdleType::SitDown, 72U, 24.0F, 3.0F, false},
     {"idle_jump", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None,
      0, BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::Jump, 24U, 24.0F, 1.0F, false},
+     BakerAmbientIdleType::Jump, 72U, 24.0F, 3.0F, false},
     {"idle_weapon", Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::RaiseWeapon, 24U, 24.0F, 1.0F,
+     BakerHoldType::None, BakerAmbientIdleType::RaiseWeapon, 72U, 24.0F, 3.0F,
      false},
     {"idle_weave", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None,
      0, BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::ShiftWeight, 24U, 24.0F, 1.0F, false},
+     BakerAmbientIdleType::ShiftWeight, 72U, 24.0F, 3.0F, false},
     {"walk", Render::GL::HumanoidMotionState::Walk, BakerAttackType::None, 0,
      BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
      BakerAmbientIdleType::None, 24U, 24.0F, 0.92F, true},
@@ -526,6 +526,9 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       anim_ctx.gait = gait;
       anim_ctx.motion_state = Render::GL::HumanoidMotionState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+      if (profile == HumanoidBakeProfile::SwordReady) {
+        ctrl.hold_sword_and_shield();
+      }
       auto to_ambient_type =
           [](BakerAmbientIdleType t) -> Render::GL::AmbientIdleType {
         switch (t) {

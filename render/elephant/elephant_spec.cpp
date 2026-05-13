@@ -188,7 +188,7 @@ struct LegResult {
     lift = lift_raw > 0.0F ? lift_raw * g.stride_lift * lift_scale : 0.0F;
   }
 
-  QVector3D const shoulder(lateral_sign * d.body_width * 0.40F,
+  QVector3D const shoulder(lateral_sign * d.body_width * 0.46F,
                            -d.body_height * 0.30F, forward_bias + stride);
   QVector3D const foot =
       shoulder + QVector3D(0.0F, -d.leg_length * 0.85F + lift, stride * 0.45F);
@@ -271,7 +271,7 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   out_pose.body_ellipsoid_y = dims.body_height + dims.neck_length * 0.3F;
   out_pose.body_ellipsoid_z = dims.body_length + dims.head_length * 0.3F;
 
-  float const shoulder_dx = dims.body_width * 0.38F;
+  float const shoulder_dx = dims.body_width * 0.44F;
   float const shoulder_dy = -dims.body_height * 0.25F;
   float const front_dz = dims.body_length * 0.30F;
   float const rear_dz = -dims.body_length * 0.30F;

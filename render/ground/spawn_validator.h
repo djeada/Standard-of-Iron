@@ -16,6 +16,10 @@ struct SpawnValidationConfig {
   float edge_padding = 0.08F;
 
   float max_slope = 0.65F;
+  float building_clearance = 0.0F;
+  float road_clearance = 0.0F;
+  float bridge_clearance = 0.0F;
+  float river_clearance = 0.0F;
 
   int river_margin = 1;
 
@@ -92,6 +96,9 @@ private:
 
   [[nodiscard]] auto check_bridge_collision(float world_x,
                                             float world_z) const -> bool;
+
+  [[nodiscard]] auto check_river_clearance(float world_x,
+                                           float world_z) const -> bool;
 };
 
 [[nodiscard]] auto make_plant_spawn_config() -> SpawnValidationConfig;
@@ -103,5 +110,12 @@ private:
 [[nodiscard]] auto make_firecamp_spawn_config() -> SpawnValidationConfig;
 
 [[nodiscard]] auto make_grass_spawn_config() -> SpawnValidationConfig;
+
+[[nodiscard]] auto make_camp_prop_spawn_config() -> SpawnValidationConfig;
+
+[[nodiscard]] auto find_valid_ring_spawn_position(
+    const SpawnValidator &validator, float center_world_x, float center_world_z,
+    float preferred_distance, uint32_t &state, float &out_world_x,
+    float &out_world_z, int max_attempts = 10) -> bool;
 
 } // namespace Render::Ground

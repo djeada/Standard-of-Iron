@@ -1003,7 +1003,8 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge> &bridges) {
 
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
-    float const bridge_half_width = stored_bridge.width * 0.5F;
+    float const bridge_half_width =
+        stored_bridge.width * 0.5F / std::max(m_tile_size, 0.0001F);
 
     float const entry_margin = m_tile_size * k_bridge_entry_margin_tiles;
     float const extended_length = length + (entry_margin * 2.0F);
@@ -1073,6 +1074,8 @@ void TerrainHeightMap::precompute_bridge_data() {
   const size_t grid_size = static_cast<size_t>(m_width * m_height);
   m_on_bridge.clear();
   m_on_bridge.resize(grid_size, false);
+  m_bridge_centerline.clear();
+  m_bridge_centerline.resize(grid_size, false);
   m_bridge_centers.clear();
   m_bridge_centers.resize(grid_size, QVector3D(0.0F, 0.0F, 0.0F));
 
@@ -1089,7 +1092,8 @@ void TerrainHeightMap::precompute_bridge_data() {
 
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
-    float const bridge_half_width = bridge.width * 0.5F;
+    float const bridge_half_width =
+        bridge.width * 0.5F / std::max(m_tile_size, 0.0001F);
 
     float const entry_margin = m_tile_size * k_bridge_entry_margin_tiles;
     float const extended_length = length + (entry_margin * 2.0F);
@@ -1101,6 +1105,14 @@ void TerrainHeightMap::precompute_bridge_data() {
           static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
       float const along = -entry_margin + extended_length * t;
       QVector3D const center_pos = bridge.start + dir * along;
+
+      int const center_x = static_cast<int>(
+          std::round((center_pos.x() / m_tile_size) + grid_half_width));
+      int const center_z = static_cast<int>(
+          std::round((center_pos.z() / m_tile_size) + grid_half_height));
+      if (in_bounds(center_x, center_z)) {
+        m_bridge_centerline[indexAt(center_x, center_z)] = true;
+      }
 
       float const grid_center_x =
           (center_pos.x() / m_tile_size) + grid_half_width;
@@ -1243,6 +1255,21 @@ auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
   return m_on_bridge[indexAt(grid_x, grid_z)];
 }
 
+auto TerrainHeightMap::isBridgeCell(int grid_x, int grid_z) const -> bool {
+  if (!in_bounds(grid_x, grid_z) || m_on_bridge.empty()) {
+    return false;
+  }
+  return m_on_bridge[indexAt(grid_x, grid_z)];
+}
+
+auto TerrainHeightMap::isBridgeCenterline(int grid_x,
+                                          int grid_z) const -> bool {
+  if (!in_bounds(grid_x, grid_z) || m_bridge_centerline.empty()) {
+    return false;
+  }
+  return m_bridge_centerline[indexAt(grid_x, grid_z)];
+}
+
 auto TerrainHeightMap::getBridgeCenterPosition(
     float world_x, float world_z) const -> std::optional<QVector3D> {
 
@@ -1267,6 +1294,42 @@ auto TerrainHeightMap::getBridgeCenterPosition(
   }
 
   return m_bridge_centers[idx];
+}
+
+auto TerrainHeightMap::getBridgeTraversalPosition(
+    float world_x, float world_z) const -> std::optional<QVector3D> {
+
+  for (const auto &bridge : m_bridges) {
+    QVector3D dir = bridge.end - bridge.start;
+    float const length = dir.length();
+    if (length < 0.01F) {
+      continue;
+    }
+
+    dir.normalize();
+    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+    float const entry_margin =
+        bridge_crossing_entry_margin(bridge.width, m_tile_size);
+    float const alignment_half_width =
+        bridge_crossing_alignment_half_width(bridge.width, m_tile_size);
+
+    QVector3D const query_point(world_x, 0.0F, world_z);
+    QVector3D const to_query = query_point - bridge.start;
+    float const along = QVector3D::dotProduct(to_query, dir);
+    if (along < -entry_margin || along > length + entry_margin) {
+      continue;
+    }
+
+    float const perp_dist =
+        std::abs(QVector3D::dotProduct(to_query, perpendicular));
+    if (perp_dist > alignment_half_width) {
+      continue;
+    }
+
+    return bridge.start + dir * along;
+  }
+
+  return std::nullopt;
 }
 
 } // namespace Game::Map

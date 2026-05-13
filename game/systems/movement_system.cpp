@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <qvectornd.h>
 #include <random>
 #include <vector>
@@ -28,6 +29,40 @@ constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 constexpr float k_stuck_check_dist_sq = 0.01F;
 constexpr float k_time_stuck_threshold = 1.5F;
 constexpr float k_unstuck_cooldown_seconds = 1.5F;
+
+void synchronize_with_bridge_centerline(
+    Engine::Core::TransformComponent *transform,
+    const Engine::Core::MovementComponent *movement,
+    Engine::Core::TerrainContextComponent *terrain_ctx) {
+  if (transform == nullptr) {
+    return;
+  }
+
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  bool const is_on_bridge = terrain_service.is_on_bridge(transform->position.x,
+                                                         transform->position.z);
+  auto const bridge_center = terrain_service.get_bridge_traversal_position(
+      transform->position.x, transform->position.z);
+  auto const target_bridge_center =
+      (movement != nullptr && movement->has_target)
+          ? terrain_service.get_bridge_traversal_position(movement->target_x,
+                                                          movement->target_y)
+          : std::nullopt;
+  if (!bridge_center.has_value() ||
+      (!is_on_bridge && !target_bridge_center.has_value())) {
+    if (terrain_ctx != nullptr) {
+      terrain_ctx->is_on_bridge = is_on_bridge;
+    }
+    return;
+  }
+
+  transform->position.x = bridge_center->x();
+  transform->position.z = bridge_center->z();
+  if (terrain_ctx != nullptr) {
+    terrain_ctx->is_on_bridge = terrain_service.is_on_bridge(
+        transform->position.x, transform->position.z);
+  }
+}
 
 void apply_desired_yaw(Engine::Core::TransformComponent *transform,
                        float delta_time, float turn_speed_degrees) {
@@ -521,6 +556,13 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
 
+  auto &terrain = Game::Map::TerrainService::instance();
+  auto *terrain_ctx =
+      entity->get_component<Engine::Core::TerrainContextComponent>();
+  if (terrain.is_initialized()) {
+    synchronize_with_bridge_centerline(transform, movement, terrain_ctx);
+  }
+
   if (pathfinder_check != nullptr) {
     Point const new_grid = CommandService::world_to_grid(transform->position.x,
                                                          transform->position.z);
@@ -563,7 +605,6 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
-  auto &terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized()) {
     const Game::Map::TerrainHeightMap *hm = terrain.get_height_map();
     if (hm != nullptr) {
@@ -588,16 +629,14 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   bool const is_moving = speed2 > 1e-5F;
 
   if (terrain.is_initialized() && is_moving) {
-    auto *terrain_ctx =
-        entity->get_component<Engine::Core::TerrainContextComponent>();
     if (terrain_ctx != nullptr) {
-      terrain_ctx->is_on_bridge = false;
+      terrain_ctx->is_on_bridge =
+          terrain.is_on_bridge(transform->position.x, transform->position.z);
       terrain_ctx->is_at_hill_entrance = false;
     }
   }
 
-  auto *terrain_ctx =
-      entity->get_component<Engine::Core::TerrainContextComponent>();
+  terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
   if (terrain_ctx != nullptr && terrain_ctx->audio_cooldown > 0.0F) {
     terrain_ctx->audio_cooldown =
         std::max(0.0F, terrain_ctx->audio_cooldown - delta_time);

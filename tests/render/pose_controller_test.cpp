@@ -7,8 +7,10 @@
 #include "render/humanoid/pose_controller.h"
 #include "render/humanoid/spear_pose_utils.h"
 #include <QVector3D>
+#include <array>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <unordered_set>
 
 using namespace Render::GL;
 
@@ -78,7 +80,7 @@ TEST_F(HumanoidPoseControllerTest,
        AmbientIdleSelectionDependsOnContinuousIdleTimeNotWorldTime) {
   std::uint32_t const seed = 1337U;
   float activation_time = -1.0F;
-  for (float idle_duration = 5.0F; idle_duration <= 12.0F;
+  for (float idle_duration = 5.0F; idle_duration <= 80.0F;
        idle_duration += 0.01F) {
     if (HumanoidPoseController::get_ambient_idle_type(
             10.0F, seed, idle_duration) != AmbientIdleType::None) {
@@ -102,6 +104,35 @@ TEST_F(HumanoidPoseControllerTest,
                                                          seed);
   EXPECT_LT(start_phase, 0.05F);
   EXPECT_GT(progressed_phase, start_phase);
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       AmbientIdleSelectionVariesAcrossFormationSeeds) {
+  constexpr std::uint32_t base_seed = 1234U;
+  constexpr int soldier_count = 64;
+  constexpr std::array<float, 4> sample_idle_durations{12.0F, 14.0F, 16.0F,
+                                                       40.0F};
+
+  std::unordered_set<int> selected_types;
+  int peak_active = 0;
+  for (float idle_duration : sample_idle_durations) {
+    int active = 0;
+    for (int idx = 0; idx < soldier_count; ++idx) {
+      std::uint32_t const seed =
+          base_seed ^ static_cast<std::uint32_t>(idx * 9176);
+      auto const type = HumanoidPoseController::get_ambient_idle_type(
+          10.0F, seed, idle_duration);
+      if (type == AmbientIdleType::None) {
+        continue;
+      }
+      ++active;
+      selected_types.insert(static_cast<int>(type));
+    }
+    peak_active = std::max(peak_active, active);
+  }
+
+  EXPECT_GE(selected_types.size(), 4U);
+  EXPECT_LT(peak_active, soldier_count / 3);
 }
 
 TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {

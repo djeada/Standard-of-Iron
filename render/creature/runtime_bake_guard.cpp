@@ -1,6 +1,5 @@
 #include "runtime_bake_guard.h"
 
-#include <QDebug>
 #include <atomic>
 
 namespace Render::Creature {
@@ -47,11 +46,8 @@ auto runtime_bake_operation_name(RuntimeBakeOperation operation)
 
 void report_runtime_bake_violation(RuntimeBakeOperation operation,
                                    std::string_view detail) {
-  qWarning().noquote() << "Runtime creature render bake/load after warmup:"
-                       << runtime_bake_operation_name(operation).data() << "-"
-                       << QString::fromUtf8(
-                              detail.data(),
-                              static_cast<qsizetype>(detail.size()));
+  (void)operation;
+  (void)detail;
 }
 
 } // namespace Render::Creature

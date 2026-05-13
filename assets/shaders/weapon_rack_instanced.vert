@@ -10,6 +10,7 @@ layout(std140) uniform FrameData { mat4 u_view_proj; };
 out vec3 v_world_pos;
 out vec3 v_normal;
 out vec3 v_color;
+out vec3 v_local_pos;
 
 void main() {
   float scale = a_pos_scale.w;
@@ -27,9 +28,11 @@ void main() {
   v_world_pos = local_pos + world_pos;
 
   vec2 rotated_normal_xz = rot * a_normal.xz;
-  v_normal = normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
+  v_normal =
+      normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
 
   v_color = a_color_rot.rgb;
+  v_local_pos = a_pos;
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }

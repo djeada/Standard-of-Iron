@@ -276,6 +276,107 @@ TEST_F(CombatModeTest, InitialMeleeLockClampsRepositionInsteadOfSnapping) {
                 0.0001F);
 }
 
+TEST_F(CombatModeTest, MeleeAttackUsesElephantCombatRadius) {
+  auto *attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto *attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+  attack->melee_range = 0.75F;
+  attack->melee_cooldown = 0.0F;
+
+  auto *elephant = world->create_entity();
+  elephant->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  auto *elephant_unit =
+      elephant->add_component<UnitComponent>(300, 300, 1.0F, 12.0F);
+  elephant_unit->owner_id = 2;
+  elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
+  auto *elephant_comp = elephant->add_component<ElephantComponent>();
+  elephant_comp->trample_radius = 2.5F;
+
+  auto *attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = elephant->get_id();
+  attack_target->should_chase = true;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_TRUE(attack->in_melee_lock);
+  EXPECT_EQ(attack->melee_lock_target_id, elephant->get_id());
+
+  auto *combat_state = attacker->get_component<CombatStateComponent>();
+  ASSERT_NE(combat_state, nullptr);
+  EXPECT_NE(combat_state->animation_state, CombatAnimationState::Idle);
+  EXPECT_EQ(combat_state->attack_family, CombatAttackFamily::Spear);
+}
+
+TEST_F(CombatModeTest, SurroundedElephantKeepsStableMeleeFacing) {
+  auto *front_attacker = world->create_entity();
+  front_attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *front_unit =
+      front_attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  front_unit->owner_id = 1;
+  auto *front_attack = front_attacker->add_component<AttackComponent>();
+  front_attack->can_melee = true;
+  front_attack->can_ranged = false;
+  front_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  front_attack->current_mode = AttackComponent::CombatMode::Melee;
+  front_attack->in_melee_lock = true;
+
+  auto *elephant = world->create_entity();
+  auto *elephant_transform =
+      elephant->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  auto *elephant_unit =
+      elephant->add_component<UnitComponent>(300, 300, 1.0F, 12.0F);
+  elephant_unit->owner_id = 2;
+  elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
+  elephant->add_component<ElephantComponent>();
+  auto *elephant_attack = elephant->add_component<AttackComponent>();
+  elephant_attack->can_melee = true;
+  elephant_attack->can_ranged = false;
+  elephant_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  elephant_attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto *side_attacker = world->create_entity();
+  side_attacker->add_component<TransformComponent>(3.0F, 0.0F, 3.0F);
+  auto *side_unit =
+      side_attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  side_unit->owner_id = 1;
+  auto *side_attack = side_attacker->add_component<AttackComponent>();
+  side_attack->can_melee = true;
+  side_attack->can_ranged = false;
+  side_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  side_attack->current_mode = AttackComponent::CombatMode::Melee;
+  side_attack->in_melee_lock = true;
+
+  front_attack->melee_lock_target_id = elephant->get_id();
+  side_attack->melee_lock_target_id = elephant->get_id();
+  elephant_attack->in_melee_lock = true;
+  elephant_attack->melee_lock_target_id = front_attacker->get_id();
+
+  float const initial_x = elephant_transform->position.x;
+  float const initial_z = elephant_transform->position.z;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_LT(elephant_transform->position.x, initial_x);
+  EXPECT_LE(initial_x - elephant_transform->position.x,
+            Game::Systems::Combat::Constants::k_max_displacement_per_frame +
+                0.0001F);
+  EXPECT_FLOAT_EQ(elephant_transform->position.z, initial_z);
+  EXPECT_TRUE(elephant_transform->has_desired_yaw);
+  EXPECT_FLOAT_EQ(elephant_transform->desired_yaw, -90.0F);
+}
+
 TEST_F(CombatModeTest, NearestEnemyPrefersClosestValidUnit) {
   auto *attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -762,6 +863,131 @@ TEST_F(CombatModeTest,
   EXPECT_FLOAT_EQ(combat_state->attack_offset, 0.123F);
   EXPECT_EQ(combat_state->attack_family, CombatAttackFamily::Spear);
   EXPECT_EQ(combat_state->attack_variant, 2);
+}
+
+TEST_F(CombatModeTest, MeleeLockKeepsCurrentTargetEvenWhenCloserEnemyExists) {
+  auto *attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto *attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_melee = true;
+  attacker_attack->can_ranged = false;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Melee;
+  attacker_attack->melee_cooldown = 0.0F;
+  attacker_attack->time_since_last = 1.0F;
+
+  auto *locked_enemy = world->create_entity();
+  locked_enemy->add_component<TransformComponent>(0.7F, 0.0F, 0.0F);
+  auto *locked_enemy_unit =
+      locked_enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  locked_enemy_unit->owner_id = 2;
+  auto *locked_enemy_attack = locked_enemy->add_component<AttackComponent>();
+
+  auto *closer_enemy = world->create_entity();
+  closer_enemy->add_component<TransformComponent>(0.35F, 0.0F, 0.0F);
+  auto *closer_enemy_unit =
+      closer_enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  closer_enemy_unit->owner_id = 2;
+
+  attacker_attack->in_melee_lock = true;
+  attacker_attack->melee_lock_target_id = locked_enemy->get_id();
+  locked_enemy_attack->in_melee_lock = true;
+  locked_enemy_attack->melee_lock_target_id = attacker->get_id();
+
+  auto *attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = closer_enemy->get_id();
+  attack_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_EQ(attack_target->target_id, locked_enemy->get_id());
+  EXPECT_LT(locked_enemy_unit->health, 100);
+  EXPECT_EQ(closer_enemy_unit->health, 100);
+}
+
+TEST_F(CombatModeTest, AdditionalAttackerDoesNotStealDefenderMeleeLock) {
+  auto *primary = world->create_entity();
+  primary->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *primary_unit =
+      primary->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  primary_unit->owner_id = 1;
+  auto *primary_attack = primary->add_component<AttackComponent>();
+  primary_attack->can_melee = true;
+  primary_attack->can_ranged = false;
+  primary_attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto *defender = world->create_entity();
+  defender->add_component<TransformComponent>(0.55F, 0.0F, 0.0F);
+  auto *defender_unit =
+      defender->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  defender_unit->owner_id = 2;
+  auto *defender_attack = defender->add_component<AttackComponent>();
+  defender_attack->can_melee = true;
+  defender_attack->can_ranged = false;
+  defender_attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  primary_attack->in_melee_lock = true;
+  primary_attack->melee_lock_target_id = defender->get_id();
+  defender_attack->in_melee_lock = true;
+  defender_attack->melee_lock_target_id = primary->get_id();
+
+  auto *second_attacker = world->create_entity();
+  second_attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.55F);
+  auto *second_unit =
+      second_attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  second_unit->owner_id = 1;
+  auto *second_attack = second_attacker->add_component<AttackComponent>();
+  second_attack->can_melee = true;
+  second_attack->can_ranged = false;
+  second_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  second_attack->current_mode = AttackComponent::CombatMode::Melee;
+  second_attack->melee_cooldown = 0.0F;
+  second_attack->time_since_last = 1.0F;
+  auto *second_target = second_attacker->add_component<AttackTargetComponent>();
+  second_target->target_id = defender->get_id();
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_TRUE(second_attack->in_melee_lock);
+  EXPECT_EQ(second_attack->melee_lock_target_id, defender->get_id());
+  EXPECT_EQ(defender_attack->melee_lock_target_id, primary->get_id());
+}
+
+TEST_F(CombatModeTest, RepeatedMeleeAttacksUsePerPairCooldownStagger) {
+  auto *attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto *attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_melee = true;
+  attacker_attack->can_ranged = false;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Melee;
+  attacker_attack->melee_cooldown = 1.0F;
+  attacker_attack->time_since_last = 1.0F;
+
+  auto *enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(0.5F, 0.0F, 0.0F);
+  auto *enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto *attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_LT(attacker_attack->time_since_last, 0.0F);
+  EXPECT_GT(attacker_attack->time_since_last, -0.29F);
 }
 
 TEST_F(CombatModeTest, MeleeLockedUnitsTurnToFaceEachOtherWhileStopped) {

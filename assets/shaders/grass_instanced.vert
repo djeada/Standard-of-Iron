@@ -34,7 +34,7 @@ void main() {
   float sway_offset = sway * bend;
 
   vec3 local_pos = vec3(a_position.x * blade_width + sway_offset,
-                       a_position.y * blade_height, 0.0);
+                        a_position.y * blade_height, 0.0);
 
   float sin_o = sin(orientation);
   float cos_o = cos(orientation);

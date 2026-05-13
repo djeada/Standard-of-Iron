@@ -200,18 +200,18 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
 
   m_index_count = static_cast<GLsizei>(indices.size());
 
-  glEnableVertexAttribArray(VertexAttrib::Position);
-  glVertexAttribPointer(VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT,
+  glEnableVertexAttribArray(VertexAttrib::position);
+  glVertexAttribPointer(VertexAttrib::position, ComponentCount::vec3, GL_FLOAT,
                         GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, position)));
 
-  glEnableVertexAttribArray(VertexAttrib::Normal);
-  glVertexAttribPointer(VertexAttrib::Normal, ComponentCount::Vec3, GL_FLOAT,
+  glEnableVertexAttribArray(VertexAttrib::normal);
+  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
                         GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, normal)));
 
-  glEnableVertexAttribArray(VertexAttrib::TexCoord);
-  glVertexAttribPointer(VertexAttrib::TexCoord, ComponentCount::Vec2, GL_FLOAT,
+  glEnableVertexAttribArray(VertexAttrib::tex_coord);
+  glVertexAttribPointer(VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT,
                         GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 

@@ -26,6 +26,29 @@ namespace Game::Systems::Combat {
 namespace {
 thread_local std::mt19937 gen(std::random_device{}());
 
+auto hash_to_unit(std::uint32_t value) -> float {
+  value ^= value >> 16U;
+  value *= 0x7feb352dU;
+  value ^= value >> 15U;
+  value *= 0x846ca68bU;
+  value ^= value >> 16U;
+  return static_cast<float>(value & 0x00FFFFFFU) /
+         static_cast<float>(0x00FFFFFFU);
+}
+
+auto deterministic_attack_delay(Engine::Core::EntityID attacker_id,
+                                Engine::Core::EntityID target_id,
+                                float cooldown) -> float {
+  if (cooldown <= 0.05F) {
+    return 0.0F;
+  }
+  float const max_delay = std::clamp(cooldown * 0.22F, 0.05F, 0.28F);
+  std::uint32_t const seed =
+      static_cast<std::uint32_t>(attacker_id * 2246822519U) ^
+      static_cast<std::uint32_t>(target_id * 3266489917U) ^ 0x9E3779B9U;
+  return hash_to_unit(seed) * max_delay;
+}
+
 void begin_attack_animation(Engine::Core::Entity *attacker,
                             bool preserve_seed = false) {
   if (attacker == nullptr) {
@@ -161,6 +184,35 @@ void face_target(Engine::Core::TransformComponent *attacker_transform,
   attacker_transform->has_desired_yaw = true;
 }
 
+auto has_valid_melee_lock(Engine::Core::Entity *entity,
+                          Engine::Core::World *world) -> bool {
+  if ((entity == nullptr) || (world == nullptr)) {
+    return false;
+  }
+
+  auto *attack = entity->get_component<Engine::Core::AttackComponent>();
+  auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  if ((attack == nullptr) || (unit == nullptr) || !attack->in_melee_lock ||
+      attack->melee_lock_target_id == 0) {
+    return false;
+  }
+
+  auto *target = world->get_entity(attack->melee_lock_target_id);
+  return is_valid_enemy_unit(unit, target, true);
+}
+
+auto is_large_melee_anchor(Engine::Core::Entity *entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+
+  auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  return entity->has_component<Engine::Core::BuildingComponent>() ||
+         entity->has_component<Engine::Core::ElephantComponent>() ||
+         ((unit != nullptr) &&
+          unit->spawn_type == Game::Units::SpawnType::Elephant);
+}
+
 auto is_ranged_mode(Engine::Core::AttackComponent *attack_comp) -> bool {
   return (attack_comp != nullptr) && attack_comp->can_ranged &&
          attack_comp->current_mode ==
@@ -222,7 +274,14 @@ void process_melee_lock(Engine::Core::Entity *attacker,
   }
 
   face_target(att_t, tgt_t);
-  face_target(tgt_t, att_t);
+  auto *lock_target_atk =
+      lock_target->get_component<Engine::Core::AttackComponent>();
+  bool const reciprocal_lock =
+      (lock_target_atk != nullptr) && lock_target_atk->in_melee_lock &&
+      lock_target_atk->melee_lock_target_id == attacker->get_id();
+  if (reciprocal_lock || !has_valid_melee_lock(lock_target, world)) {
+    face_target(tgt_t, att_t);
+  }
 
   float const dx = tgt_t->position.x - att_t->position.x;
   float const dz = tgt_t->position.z - att_t->position.z;
@@ -261,6 +320,28 @@ void process_melee_lock(Engine::Core::Entity *attacker,
       }
     }
   }
+}
+
+auto locked_target_for_attack(
+    Engine::Core::Entity *attacker, Engine::Core::AttackComponent *attack_comp,
+    Engine::Core::World *world) -> Engine::Core::Entity * {
+  if ((attacker == nullptr) || (attack_comp == nullptr) || (world == nullptr) ||
+      !attack_comp->in_melee_lock || attack_comp->melee_lock_target_id == 0) {
+    return nullptr;
+  }
+
+  auto *target = world->get_entity(attack_comp->melee_lock_target_id);
+  auto *attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  if ((target == nullptr) || (attacker_unit == nullptr) ||
+      !is_valid_enemy_unit(attacker_unit, target, true)) {
+    return nullptr;
+  }
+
+  if (target->get_component<Engine::Core::TransformComponent>() == nullptr) {
+    return nullptr;
+  }
+
+  return target;
 }
 
 void sync_melee_lock_target(Engine::Core::Entity *attacker,
@@ -484,8 +565,18 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
       attack_comp->melee_lock_target_id == target->get_id()) {
     begin_attack_animation(attacker, true);
     if (target_atk != nullptr) {
-      target_atk->in_melee_lock = true;
-      target_atk->melee_lock_target_id = attacker->get_id();
+      auto *existing_target =
+          world->get_entity(target_atk->melee_lock_target_id);
+      auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
+      bool const has_valid_existing_lock =
+          target_atk->in_melee_lock && existing_target != nullptr &&
+          target_unit != nullptr &&
+          is_valid_enemy_unit(target_unit, existing_target, true);
+      if (!has_valid_existing_lock ||
+          target_atk->melee_lock_target_id == attacker->get_id()) {
+        target_atk->in_melee_lock = true;
+        target_atk->melee_lock_target_id = attacker->get_id();
+      }
     }
     return;
   }
@@ -495,15 +586,30 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
   begin_attack_animation(attacker);
 
   if (target_atk != nullptr) {
-    target_atk->in_melee_lock = true;
-    target_atk->melee_lock_target_id = attacker->get_id();
+    auto *existing_target = world->get_entity(target_atk->melee_lock_target_id);
+    auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
+    bool const has_valid_existing_lock =
+        target_atk->in_melee_lock && existing_target != nullptr &&
+        target_unit != nullptr &&
+        is_valid_enemy_unit(target_unit, existing_target, true);
+    if (!has_valid_existing_lock) {
+      target_atk->in_melee_lock = true;
+      target_atk->melee_lock_target_id = attacker->get_id();
+    }
   }
 
   auto *att_t = attacker->get_component<Engine::Core::TransformComponent>();
   auto *tgt_t = target->get_component<Engine::Core::TransformComponent>();
   if ((att_t != nullptr) && (tgt_t != nullptr)) {
     face_target(att_t, tgt_t);
-    face_target(tgt_t, att_t);
+    auto *target_atk_after =
+        target->get_component<Engine::Core::AttackComponent>();
+    bool const reciprocal_lock =
+        (target_atk_after != nullptr) && target_atk_after->in_melee_lock &&
+        target_atk_after->melee_lock_target_id == attacker->get_id();
+    if (reciprocal_lock || !has_valid_melee_lock(target, world)) {
+      face_target(tgt_t, att_t);
+    }
 
     float const dx = tgt_t->position.x - att_t->position.x;
     float const dz = tgt_t->position.z - att_t->position.z;
@@ -520,7 +626,7 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
           clamp_and_apply_displacement(att_t, direction, move_amount);
         }
 
-        if (!is_unit_in_hold_mode(target) && !is_building(target)) {
+        if (!is_unit_in_hold_mode(target) && !is_large_melee_anchor(target)) {
           clamp_and_apply_displacement(tgt_t, -direction, move_amount);
         }
       }
@@ -540,6 +646,10 @@ void process_attacks(Engine::Core::World *world,
 
   for (auto *attacker : units) {
     if (attacker->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    if (attacker->has_component<Engine::Core::StaggerComponent>()) {
       continue;
     }
 
@@ -596,7 +706,21 @@ void process_attacks(Engine::Core::World *world,
     Engine::Core::UnitComponent *best_target_unit = nullptr;
     Engine::Core::TransformComponent *best_target_transform = nullptr;
 
-    if ((attack_target != nullptr) && attack_target->target_id != 0) {
+    if (in_melee_lock) {
+      best_target = locked_target_for_attack(attacker, attacker_atk, world);
+      if (best_target != nullptr) {
+        best_target_unit =
+            best_target->get_component<Engine::Core::UnitComponent>();
+        best_target_transform =
+            best_target->get_component<Engine::Core::TransformComponent>();
+        if (best_target_transform != nullptr) {
+          face_target(attacker_transform, best_target_transform);
+        }
+      }
+    }
+
+    if ((best_target == nullptr) && (attack_target != nullptr) &&
+        attack_target->target_id != 0) {
       auto *target = world->get_entity(attack_target->target_id);
       auto *target_unit =
           is_valid_enemy_unit(attacker_unit, target, true)
@@ -672,10 +796,9 @@ void process_attacks(Engine::Core::World *world,
           QVector3D desired_pos = target_pos;
           bool hold_position = false;
 
-          if (target_is_building) {
-            float const scale_x = target_transform->scale.x;
-            float const scale_z = target_transform->scale.z;
-            float const target_radius = std::max(scale_x, scale_z) * 0.5F;
+          if (target_is_building ||
+              target->has_component<Engine::Core::ElephantComponent>()) {
+            float const target_radius = combat_radius(target);
             QVector3D direction = target_pos - attacker_pos;
             float const distance_sq = direction.lengthSquared();
             if (distance_sq > 0.000001F) {
@@ -817,7 +940,8 @@ void process_attacks(Engine::Core::World *world,
                                         damage);
 
       deal_damage(world, best_target, damage, attacker->get_id());
-      *t_accum = 0.0F;
+      *t_accum = -deterministic_attack_delay(attacker->get_id(),
+                                             best_target->get_id(), cooldown);
 
       auto *guard_mode =
           attacker->get_component<Engine::Core::GuardModeComponent>();

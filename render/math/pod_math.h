@@ -32,12 +32,12 @@ struct alignas(16) Vec3 {
     return {y * o.z - z * o.y, z * o.x - x * o.z, x * o.y - y * o.x};
   }
 
-  [[nodiscard]] auto lengthSquared() const noexcept -> float {
+  [[nodiscard]] auto length_squared() const noexcept -> float {
     return x * x + y * y + z * z;
   }
 
   [[nodiscard]] auto length() const noexcept -> float {
-    return std::sqrt(lengthSquared());
+    return std::sqrt(length_squared());
   }
 
   [[nodiscard]] auto normalized() const noexcept -> Vec3 {
@@ -128,13 +128,13 @@ struct CylinderTransform {
   float length{};
   float radius{};
 
-  static auto fromPoints(const Vec3 &start, const Vec3 &end,
-                         float radius) noexcept -> CylinderTransform {
+  static auto from_points(const Vec3 &start, const Vec3 &end,
+                          float radius) noexcept -> CylinderTransform {
     CylinderTransform ct;
     ct.radius = radius;
 
     Vec3 const diff = end - start;
-    float const len_sq = diff.lengthSquared();
+    float const len_sq = diff.length_squared();
 
     if (len_sq < 1e-10F) {
 
@@ -189,12 +189,12 @@ inline auto cylinder_between_fast(const Vec3 &a, const Vec3 &b,
   const float dz = b.z - a.z;
   const float len_sq = dx * dx + dy * dy + dz * dz;
 
-  constexpr float k_epsilonSq = 1e-12F;
+  constexpr float k_epsilon_sq = 1e-12F;
   constexpr float k_rad_to_deg = 57.2957795131F;
 
   Vec3 const center((a.x + b.x) * 0.5F, (a.y + b.y) * 0.5F, (a.z + b.z) * 0.5F);
 
-  if (len_sq < k_epsilonSq) {
+  if (len_sq < k_epsilon_sq) {
 
     Mat3x4 m;
     m.m[0][0] = radius;
@@ -223,7 +223,7 @@ inline auto cylinder_between_fast(const Vec3 &a, const Vec3 &b,
 
   std::array<std::array<float, 3>, 3> rot{};
 
-  if (axis_len_sq < k_epsilonSq) {
+  if (axis_len_sq < k_epsilon_sq) {
 
     if (ndy < 0.0F) {
 

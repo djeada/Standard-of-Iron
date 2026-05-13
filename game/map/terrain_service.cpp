@@ -15,8 +15,6 @@ namespace Game::Map {
 
 namespace {
 
-constexpr float k_road_surface_y_offset = 0.02F;
-
 struct SurfaceBaseSample {
   float world_y{0.0F};
   SurfaceHeightKind kind{SurfaceHeightKind::Fallback};
@@ -31,6 +29,36 @@ auto sample_grid_clamped(const std::vector<float> &values, int width,
   x = std::clamp(x, 0, width - 1);
   z = std::clamp(z, 0, height - 1);
   return values[static_cast<size_t>(z * width + x)];
+}
+
+auto is_point_within_linear_feature(float world_x, float world_z,
+                                    const QVector3D &start,
+                                    const QVector3D &end, float width,
+                                    float clearance) -> bool {
+  const float effective_half_width =
+      std::max(0.0F, width * 0.5F + std::max(clearance, 0.0F));
+  const float dx = end.x() - start.x();
+  const float dz = end.z() - start.z();
+  const float segment_length_sq = dx * dx + dz * dz;
+
+  if (segment_length_sq < 0.0001F) {
+    const float dist_x = world_x - start.x();
+    const float dist_z = world_z - start.z();
+    return dist_x * dist_x + dist_z * dist_z <=
+           effective_half_width * effective_half_width;
+  }
+
+  const float px = world_x - start.x();
+  const float pz = world_z - start.z();
+  float t = (px * dx + pz * dz) / segment_length_sq;
+  t = std::clamp(t, 0.0F, 1.0F);
+
+  const float closest_x = start.x() + t * dx;
+  const float closest_z = start.z() + t * dz;
+  const float dist_x = world_x - closest_x;
+  const float dist_z = world_z - closest_z;
+  return dist_x * dist_x + dist_z * dist_z <=
+         effective_half_width * effective_half_width;
 }
 
 auto sample_surface_base_height(const TerrainHeightMap *height_map,
@@ -103,7 +131,6 @@ void TerrainService::initialize(const MapDefinition &map_def) {
   m_height_map->add_bridges(map_def.bridges);
   m_biome_settings = map_def.biome;
   m_height_map->apply_biome_variation(m_biome_settings);
-  m_fire_camps = map_def.firecamps;
   m_world_props = map_def.world_props;
   m_road_segments = map_def.roads;
   rebuild_terrain_field();
@@ -113,9 +140,15 @@ void TerrainService::clear() {
   m_height_map.reset();
   m_terrain_field.clear();
   m_biome_settings = BiomeSettings();
-  m_fire_camps.clear();
   m_world_props.clear();
   m_road_segments.clear();
+}
+
+void TerrainService::remove_non_persistent_props() {
+  m_world_props.erase(
+      std::remove_if(m_world_props.begin(), m_world_props.end(),
+                     [](const WorldProp &p) { return !p.persistent; }),
+      m_world_props.end());
 }
 
 auto TerrainService::get_terrain_height(float world_x,
@@ -129,7 +162,7 @@ auto TerrainService::sample_surface_height(float world_x, float world_z,
   auto const base_sample = sample_surface_base_height(
       m_height_map.get(), m_road_segments, world_x, world_z, fallback_y);
   if (base_sample.kind == SurfaceHeightKind::Road) {
-    return {.world_y = base_sample.world_y + k_road_surface_y_offset,
+    return {.world_y = road_surface_world_y(base_sample.world_y),
             .kind = base_sample.kind};
   }
   return {.world_y = base_sample.world_y, .kind = base_sample.kind};
@@ -141,11 +174,11 @@ auto TerrainService::resolve_surface_world_y(float world_x, float world_z,
   auto const base_sample = sample_surface_base_height(
       m_height_map.get(), m_road_segments, world_x, world_z, fallback_y);
 
-  double resolved_world_y = static_cast<double>(base_sample.world_y) +
+  float const surface_world_y = base_sample.kind == SurfaceHeightKind::Road
+                                    ? road_surface_world_y(base_sample.world_y)
+                                    : base_sample.world_y;
+  double resolved_world_y = static_cast<double>(surface_world_y) +
                             static_cast<double>(world_y_offset);
-  if (base_sample.kind == SurfaceHeightKind::Road) {
-    resolved_world_y += static_cast<double>(k_road_surface_y_offset);
-  }
 
   return static_cast<float>(resolved_world_y);
 }
@@ -245,10 +278,11 @@ void TerrainService::restore_from_serialized(
     const std::vector<TerrainType> &terrain_types,
     const std::vector<RiverSegment> &rivers,
     const std::vector<RoadSegment> &roads, const std::vector<Bridge> &bridges,
-    const BiomeSettings &biome) {
+    const BiomeSettings &biome, const std::vector<WorldProp> &world_props) {
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
   m_height_map->restore_from_data(heights, terrain_types, rivers, bridges);
   m_biome_settings = biome;
+  m_world_props = world_props;
   m_road_segments = roads;
   rebuild_terrain_field();
 }
@@ -260,11 +294,50 @@ auto TerrainService::is_point_on_road(float world_x,
              .kind == SurfaceHeightKind::Road;
 }
 
+auto TerrainService::is_point_near_road(float world_x, float world_z,
+                                        float clearance) const -> bool {
+  for (const auto &segment : m_road_segments) {
+    if (is_point_within_linear_feature(world_x, world_z, segment.start,
+                                       segment.end, segment.width, clearance)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 auto TerrainService::is_on_bridge(float world_x, float world_z) const -> bool {
   if (!m_height_map) {
     return false;
   }
   return m_height_map->isOnBridge(world_x, world_z);
+}
+
+auto TerrainService::is_point_near_bridge(float world_x, float world_z,
+                                          float clearance) const -> bool {
+  if (!m_height_map) {
+    return false;
+  }
+  for (const auto &bridge : m_height_map->get_bridges()) {
+    if (is_point_within_linear_feature(world_x, world_z, bridge.start,
+                                       bridge.end, bridge.width, clearance)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto TerrainService::is_point_near_river(float world_x, float world_z,
+                                         float clearance) const -> bool {
+  if (!m_height_map) {
+    return false;
+  }
+  for (const auto &river : m_height_map->get_river_segments()) {
+    if (is_point_within_linear_feature(world_x, world_z, river.start, river.end,
+                                       river.width, clearance)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 auto TerrainService::get_bridge_center_position(
@@ -273,6 +346,14 @@ auto TerrainService::get_bridge_center_position(
     return std::nullopt;
   }
   return m_height_map->getBridgeCenterPosition(world_x, world_z);
+}
+
+auto TerrainService::get_bridge_traversal_position(
+    float world_x, float world_z) const -> std::optional<QVector3D> {
+  if (!m_height_map) {
+    return std::nullopt;
+  }
+  return m_height_map->getBridgeTraversalPosition(world_x, world_z);
 }
 
 void TerrainService::rebuild_terrain_field() {

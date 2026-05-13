@@ -145,7 +145,7 @@ void BiomeRenderer::generate_grass_instances() {
   config.check_river_margin = false;
 
   SpawnValidator validator(terrain_cache, config);
-  const int chunk_size = DefaultChunkSize;
+  const int chunk_size = default_chunk_size;
 
   const std::size_t cell_count =
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);

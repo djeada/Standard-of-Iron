@@ -26,7 +26,8 @@ void main() {
   vec3 right_vec = normalize(vec3(u_camera_right.x, 0.0, u_camera_right.z));
   if (length(right_vec) < 1e-4)
     right_vec = vec3(1.0, 0.0, 0.0);
-  vec3 forward_vec = normalize(vec3(u_camera_forward.x, 0.0, u_camera_forward.z));
+  vec3 forward_vec =
+      normalize(vec3(u_camera_forward.x, 0.0, u_camera_forward.z));
   if (length(forward_vec) < 1e-4)
     forward_vec = normalize(vec3(-right_vec.z, 0.0, right_vec.x));
   vec3 up_vec = vec3(0.0, 1.0, 0.0);
@@ -51,17 +52,18 @@ void main() {
   float sway =
       sin(u_time * (u_flicker_speed * 1.05) + phase * 2.1 + height_t * 2.7);
   vec3 wobble_offset = horizontal_axis * (sway * u_flicker_amount * radius *
-                                        (0.18 + height_t * 0.35));
+                                          (0.18 + height_t * 0.35));
 
-  vec3 local_offset = horizontal_axis * (a_pos.x * width_scale) +
-                     up_vec * (a_pos.y * height_scale * (0.85 + height_t * 0.25));
+  vec3 local_offset =
+      horizontal_axis * (a_pos.x * width_scale) +
+      up_vec * (a_pos.y * height_scale * (0.85 + height_t * 0.25));
 
   float taper = mix(0.0, width_base * 0.25, height_t * height_t);
   local_offset += horizontal_axis * (-a_pos.x * taper);
 
   float base_lift = radius * 0.02 + intensity * 0.04;
-  vec3 pos =
-      camp_pos + local_offset + wobble_offset + up_vec * (flicker_offset + base_lift);
+  vec3 pos = camp_pos + local_offset + wobble_offset +
+             up_vec * (flicker_offset + base_lift);
 
   gl_Position = u_view_proj * vec4(pos, 1.0);
   tex_coord = a_tex_coord;

@@ -12,11 +12,11 @@ public:
   explicit ResizeDialog(int current_width, int current_height,
                         QWidget *parent = nullptr);
 
-  [[nodiscard]] int newWidth() const;
-  [[nodiscard]] int newHeight() const;
+  [[nodiscard]] int new_width() const;
+  [[nodiscard]] int new_height() const;
 
 private:
-  void setupUI(int current_width, int current_height);
+  void setup_ui(int current_width, int current_height);
 
   QSpinBox *m_width_spin_box = nullptr;
   QSpinBox *m_height_spin_box = nullptr;

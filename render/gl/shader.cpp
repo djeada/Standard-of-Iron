@@ -339,8 +339,8 @@ auto Shader::compile_shader(const QString &source, GLenum type) -> GLuint {
   GLint success = 0;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
   if (success == 0) {
-    GLchar info_log[ShaderInfoLogSize];
-    glGetShaderInfoLog(shader, ShaderInfoLogSize, nullptr, info_log);
+    GLchar info_log[shader_info_log_size];
+    glGetShaderInfoLog(shader, shader_info_log_size, nullptr, info_log);
     qWarning() << "Shader compilation failed:" << info_log;
     glDeleteShader(shader);
     return 0;
@@ -360,8 +360,8 @@ auto Shader::link_program(GLuint vertex_shader,
   GLint success = 0;
   glGetProgramiv(m_program, GL_LINK_STATUS, &success);
   if (success == 0) {
-    GLchar info_log[ShaderInfoLogSize];
-    glGetProgramInfoLog(m_program, ShaderInfoLogSize, nullptr, info_log);
+    GLchar info_log[shader_info_log_size];
+    glGetProgramInfoLog(m_program, shader_info_log_size, nullptr, info_log);
     qWarning() << "Shader linking failed:" << info_log;
     glDeleteProgram(m_program);
     m_program = 0;

@@ -132,12 +132,19 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
         center_pos - perpendicular * (half_width + width_variation);
     QVector3D const right =
         center_pos + perpendicular * (half_width + width_variation);
+    float left_y = left.y();
+    float right_y = right.y();
+    if (settings.height_map != nullptr) {
+      left_y = sample_height_clamped(*settings.height_map, left.x(), left.z());
+      right_y =
+          sample_height_clamped(*settings.height_map, right.x(), right.z());
+    }
 
     float const normal[3] = {0.0F, 1.0F, 0.0F};
 
     Render::GL::Vertex left_vertex{};
     left_vertex.position[0] = left.x();
-    left_vertex.position[1] = left.y() + settings.y_offset;
+    left_vertex.position[1] = left_y + settings.y_offset;
     left_vertex.position[2] = left.z();
     left_vertex.normal[0] = normal[0];
     left_vertex.normal[1] = normal[1];
@@ -148,7 +155,7 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
 
     Render::GL::Vertex right_vertex{};
     right_vertex.position[0] = right.x();
-    right_vertex.position[1] = right.y() + settings.y_offset;
+    right_vertex.position[1] = right_y + settings.y_offset;
     right_vertex.position[2] = right.z();
     right_vertex.normal[0] = normal[0];
     right_vertex.normal[1] = normal[1];
@@ -207,7 +214,7 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
   int length_segments =
       static_cast<int>(std::ceil(length / (tile_size * 0.3F)));
   length_segments =
-      std::max(length_segments, Render::GL::Geometry::MinLengthSegments);
+      std::max(length_segments, Render::GL::Geometry::min_length_segments);
 
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;
@@ -246,11 +253,8 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
     float const t = static_cast<float>(i) / static_cast<float>(length_segments);
     QVector3D const center_pos = bridge.start + dir * (length * t);
 
-    float const arch_curve = 4.0F * t * (1.0F - t);
-    float const arch_height = bridge.height * arch_curve * 0.8F;
-
-    float const deck_height =
-        bridge.start.y() + bridge.height + arch_height * 0.3F;
+    float const arch_curve = Game::Map::bridge_arch_curve(t);
+    float const deck_height = Game::Map::bridge_deck_world_y(bridge, t);
 
     float const stone_noise = std::sin(center_pos.x() * 3.0F) *
                               std::cos(center_pos.z() * 2.5F) * 0.02F;

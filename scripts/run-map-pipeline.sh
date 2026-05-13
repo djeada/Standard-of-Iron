@@ -37,6 +37,28 @@ else
   missing_outputs=("${required_outputs[@]}")
 fi
 
+pipeline_sources=(
+  "$root_dir/tools/map_pipeline/map_bounds.json"
+  "$root_dir/tools/map_pipeline/pipeline.py"
+  "$root_dir/tools/map_pipeline/provinces.py"
+  "$root_dir/tools/map_pipeline/hannibal_path.py"
+  "$root_dir/tools/map_pipeline/requirements.txt"
+)
+
+if [ "$rebuild_maps" != "1" ] && [ "${#missing_outputs[@]}" -eq 0 ]; then
+  for src in "${pipeline_sources[@]}"; do
+    if [ -f "$src" ]; then
+      for output in "${required_outputs[@]}"; do
+        if [ "$src" -nt "$output" ]; then
+          echo "Map definition changed ($src); regenerating outputs."
+          rebuild_maps=1
+          break 2
+        fi
+      done
+    fi
+  done
+fi
+
 if [ "$rebuild_maps" != "1" ] && [ "${#missing_outputs[@]}" -eq 0 ]; then
   echo "Map pipeline output already present; skipping. Use --rebuild to force."
   exit 0

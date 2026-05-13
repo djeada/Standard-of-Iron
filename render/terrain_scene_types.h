@@ -44,7 +44,8 @@ enum class ScatterSpeciesId {
   SupplyCart,
   WeaponRack,
   Ruins,
-  DeadTree
+  DeadTree,
+  Boulder
 };
 
 enum class ScatterVisibilityMode { None, InstanceFiltered };

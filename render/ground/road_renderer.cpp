@@ -25,9 +25,11 @@ RoadRenderer::RoadRenderer() = default;
 RoadRenderer::~RoadRenderer() = default;
 
 void RoadRenderer::configure(
-    const std::vector<Game::Map::RoadSegment> &road_segments, float tile_size) {
+    const std::vector<Game::Map::RoadSegment> &road_segments,
+    const Game::Map::TerrainHeightMap &height_map) {
   m_road_segments = road_segments;
-  m_tile_size = tile_size;
+  m_height_map = &height_map;
+  m_tile_size = height_map.get_tile_size();
   m_vis_helper.reset();
   build_meshes();
 }
@@ -48,7 +50,8 @@ void RoadRenderer::build_meshes() {
   settings.meander_frequency = 0.0F;
   settings.meander_length_scale = 0.1F;
   settings.meander_amplitude = 0.0F;
-  settings.y_offset = 0.30F;
+  settings.y_offset = Game::Map::k_road_surface_y_offset;
+  settings.height_map = m_height_map;
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_road_segments.size());

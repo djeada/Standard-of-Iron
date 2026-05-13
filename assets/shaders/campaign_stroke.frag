@@ -50,7 +50,7 @@ float feather_edge(float dist, float width, float feather_amount) {
 }
 
 float dash_pattern(float distance, float dash_len, float gap_len,
-                  float anim_offset) {
+                   float anim_offset) {
   float total_len = dash_len + gap_len;
   float t = mod(distance + anim_offset, total_len);
   return step(t, dash_len);
@@ -79,7 +79,7 @@ void main() {
     float total_len = u_dash_length + u_gap_length;
     float t = mod(v_distance + anim_offset, total_len);
     float dash_fade = smoothstep(0.0, u_dash_length * 0.1, t) *
-                     smoothstep(u_dash_length, u_dash_length * 0.9, t);
+                      smoothstep(u_dash_length, u_dash_length * 0.9, t);
 
     color.a *= mix(dash_mask, dash_fade, 0.5);
   }

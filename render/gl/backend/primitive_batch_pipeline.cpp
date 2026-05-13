@@ -46,9 +46,10 @@ void PrimitiveBatchPipeline::shutdown() {
 
 void PrimitiveBatchPipeline::cache_uniforms() {
   if (m_shader != nullptr) {
-    m_uniforms.view_proj = m_shader->uniform_handle("u_view_proj");
+    m_uniforms.view_proj = m_shader->optional_uniform_handle("u_view_proj");
     m_uniforms.light_dir = m_shader->uniform_handle("u_light_dir");
-    m_uniforms.ambient_strength = m_shader->uniform_handle("u_ambient_strength");
+    m_uniforms.ambient_strength =
+        m_shader->uniform_handle("u_ambient_strength");
   }
 }
 
@@ -63,24 +64,24 @@ void PrimitiveBatchPipeline::setup_instance_attributes(GLuint vao,
 
   glEnableVertexAttribArray(3);
   glVertexAttribPointer(
-      3, Vec4, GL_FLOAT, GL_FALSE, stride,
+      3, vec4, GL_FLOAT, GL_FALSE, stride,
       reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, model_col0)));
   glVertexAttribDivisor(3, 1);
 
   glEnableVertexAttribArray(4);
   glVertexAttribPointer(
-      4, Vec4, GL_FLOAT, GL_FALSE, stride,
+      4, vec4, GL_FLOAT, GL_FALSE, stride,
       reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, model_col1)));
   glVertexAttribDivisor(4, 1);
 
   glEnableVertexAttribArray(5);
   glVertexAttribPointer(
-      5, Vec4, GL_FLOAT, GL_FALSE, stride,
+      5, vec4, GL_FLOAT, GL_FALSE, stride,
       reinterpret_cast<void *>(offsetof(GL::PrimitiveInstanceGpu, model_col2)));
   glVertexAttribDivisor(5, 1);
 
   glEnableVertexAttribArray(6);
-  glVertexAttribPointer(6, Vec4, GL_FLOAT, GL_FALSE, stride,
+  glVertexAttribPointer(6, vec4, GL_FLOAT, GL_FALSE, stride,
                         reinterpret_cast<void *>(
                             offsetof(GL::PrimitiveInstanceGpu, color_alpha)));
   glVertexAttribDivisor(6, 1);
@@ -114,14 +115,14 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
                indices.data(), GL_STATIC_DRAW);
   m_sphere_index_count = static_cast<GLsizei>(indices.size());
 
-  glEnableVertexAttribArray(Position);
-  glVertexAttribPointer(Position, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(position);
+  glVertexAttribPointer(position, vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, position)));
-  glEnableVertexAttribArray(Normal);
-  glVertexAttribPointer(Normal, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(normal);
+  glVertexAttribPointer(normal, vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, normal)));
-  glEnableVertexAttribArray(TexCoord);
-  glVertexAttribPointer(TexCoord, Vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(tex_coord);
+  glVertexAttribPointer(tex_coord, vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 
   glGenBuffers(1, &m_sphere_instance_buffer);
@@ -161,14 +162,14 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
                indices.data(), GL_STATIC_DRAW);
   m_cylinder_index_count = static_cast<GLsizei>(indices.size());
 
-  glEnableVertexAttribArray(Position);
-  glVertexAttribPointer(Position, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(position);
+  glVertexAttribPointer(position, vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, position)));
-  glEnableVertexAttribArray(Normal);
-  glVertexAttribPointer(Normal, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(normal);
+  glVertexAttribPointer(normal, vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, normal)));
-  glEnableVertexAttribArray(TexCoord);
-  glVertexAttribPointer(TexCoord, Vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(tex_coord);
+  glVertexAttribPointer(tex_coord, vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 
   glGenBuffers(1, &m_cylinder_instance_buffer);
@@ -208,14 +209,14 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
                indices.data(), GL_STATIC_DRAW);
   m_cone_index_count = static_cast<GLsizei>(indices.size());
 
-  glEnableVertexAttribArray(Position);
-  glVertexAttribPointer(Position, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(position);
+  glVertexAttribPointer(position, vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, position)));
-  glEnableVertexAttribArray(Normal);
-  glVertexAttribPointer(Normal, Vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(normal);
+  glVertexAttribPointer(normal, vec3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, normal)));
-  glEnableVertexAttribArray(TexCoord);
-  glVertexAttribPointer(TexCoord, Vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+  glEnableVertexAttribArray(tex_coord);
+  glVertexAttribPointer(tex_coord, vec2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
 
   glGenBuffers(1, &m_cone_instance_buffer);

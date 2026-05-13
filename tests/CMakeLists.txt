@@ -3,6 +3,7 @@
 
 # Test executable
 add_executable(standard_of_iron_tests
+    ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_commander_setup.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_definition_view.cpp
@@ -64,6 +65,7 @@ add_executable(standard_of_iron_tests
     render/linear_feature_geometry_test.cpp
     render/linear_feature_visibility_test.cpp
     render/ground_utils_test.cpp
+    render/scatter_composition_test.cpp
     render/scatter_runtime_test.cpp
     render/terrain_scene_proxy_test.cpp
     render/render_thread_boundary_test.cpp
@@ -120,6 +122,8 @@ add_executable(standard_of_iron_tests
     render/software/software_backend_integration_test.cpp
     render/software/render_backend_factory_test.cpp
     render/profiling/frame_profile_test.cpp
+    tools/map_editor_map_data_test.cpp
+    tools/arena_unit_spawn_options_test.cpp
     test_main.cpp
 )
 
@@ -143,10 +147,6 @@ target_include_directories(standard_of_iron_tests
         ${CMAKE_SOURCE_DIR}/game
 )
 
-# Add tests to CTest
-include(GoogleTest)
-gtest_discover_tests(standard_of_iron_tests)
-
 # Set output directory
 set_target_properties(standard_of_iron_tests PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
@@ -155,6 +155,10 @@ set_target_properties(standard_of_iron_tests PROPERTIES
 if(TARGET bake_creature_assets)
     add_dependencies(standard_of_iron_tests bake_creature_assets)
 endif()
+
+# Add tests to CTest after target properties are finalized.
+include(GoogleTest)
+gtest_discover_tests(standard_of_iron_tests)
 
 # --- Subset test binary -------------------------------------------------
 # Three test files have pre-existing compile breakage as of Stage 15.5c

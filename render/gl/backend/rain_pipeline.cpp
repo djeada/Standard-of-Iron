@@ -228,19 +228,19 @@ auto RainPipeline::create_rain_geometry() -> bool {
 
   m_index_count = static_cast<GLsizei>(indices.size());
 
-  glEnableVertexAttribArray(VertexAttrib::Position);
+  glEnableVertexAttribArray(VertexAttrib::position);
   glVertexAttribPointer(
-      VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT, GL_FALSE,
+      VertexAttrib::position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
       sizeof(RainVertex),
       reinterpret_cast<void *>(offsetof(RainVertex, position)));
 
-  glEnableVertexAttribArray(VertexAttrib::Normal);
-  glVertexAttribPointer(VertexAttrib::Normal, ComponentCount::Vec3, GL_FLOAT,
+  glEnableVertexAttribArray(VertexAttrib::normal);
+  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
                         GL_FALSE, sizeof(RainVertex),
                         reinterpret_cast<void *>(offsetof(RainVertex, offset)));
 
-  glEnableVertexAttribArray(VertexAttrib::TexCoord);
-  glVertexAttribPointer(VertexAttrib::TexCoord, 1, GL_FLOAT, GL_FALSE,
+  glEnableVertexAttribArray(VertexAttrib::tex_coord);
+  glVertexAttribPointer(VertexAttrib::tex_coord, 1, GL_FLOAT, GL_FALSE,
                         sizeof(RainVertex),
                         reinterpret_cast<void *>(offsetof(RainVertex, alpha)));
 

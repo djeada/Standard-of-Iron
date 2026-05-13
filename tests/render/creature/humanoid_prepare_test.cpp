@@ -1159,6 +1159,48 @@ TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
                                        AnimationStateId::AttackSpear, 1U));
 }
 
+TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
+  Render::GL::HumanoidRendererBase owner;
+  Render::GL::DrawContext ctx{};
+  ctx.has_seed_override = true;
+  ctx.seed_override = 0x1234ABCDU;
+
+  Engine::Core::Entity entity(42);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->render_individuals_per_unit_override = 4;
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 10.0F;
+  anim.is_attacking = true;
+  anim.is_melee = true;
+  anim.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.attack_variant = 0U;
+  anim.combat_phase = Render::GL::CombatAnimPhase::WindUp;
+  anim.combat_phase_progress = 0.5F;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  auto const &requests = prep.bodies.requests();
+  ASSERT_GE(requests.size(), 4u);
+
+  float min_phase = requests.front().phase;
+  float max_phase = requests.front().phase;
+  for (auto const &request : requests) {
+    EXPECT_EQ(request.state, Render::Creature::AnimationStateId::AttackSword);
+    min_phase = std::min(min_phase, request.phase);
+    max_phase = std::max(max_phase, request.phase);
+  }
+
+  EXPECT_GT(max_phase - min_phase, 0.001F);
+  EXPECT_LT(max_phase - min_phase, 0.08F);
+}
+
 TEST(HumanoidPrepare, AmbientIdleContextSelectsCorrectIdleClipVariant) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;

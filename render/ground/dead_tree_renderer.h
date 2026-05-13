@@ -19,8 +19,8 @@ public:
 
   void configure(const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biome_settings,
-                 const std::vector<Game::Map::FireCamp> &fire_camps = {},
                  const std::vector<Game::Map::WorldProp> &world_props = {});
+  void set_light_direction(const QVector3D &dir);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -36,11 +36,11 @@ public:
   }
 
 private:
-  void generate_instances(const std::vector<Game::Map::FireCamp> &fire_camps,
-                          const std::vector<Game::Map::WorldProp> &world_props,
+  void generate_instances(const std::vector<Game::Map::WorldProp> &world_props,
                           const Game::Map::TerrainHeightMap &height_map);
 
   Game::Map::BiomeSettings m_biome_settings;
+  QVector3D m_light_direction = DeadTreeBatchParams::default_light_direction();
 
   Render::Ground::Scatter::FilteredRendererState<DeadTreeInstanceGpu,
                                                  DeadTreeBatchParams>

@@ -292,9 +292,9 @@ auto Renderer::initialize() -> bool {
   const std::size_t loaded_bpat =
       Render::Creature::Bpat::BpatRegistry::instance().load_all(
           "assets/creatures");
-  if (loaded_bpat != 3U) {
+  if (loaded_bpat != 4U) {
     qWarning()
-        << "Renderer: loaded" << loaded_bpat << "of 3 BPAT creature assets:"
+        << "Renderer: loaded" << loaded_bpat << "of 4 BPAT creature assets:"
         << QString::fromStdString(std::string(
                Render::Creature::Bpat::BpatRegistry::instance().last_error()));
   }

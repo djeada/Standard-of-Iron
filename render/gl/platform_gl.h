@@ -68,8 +68,8 @@ class BufferStorageHelper {
 public:
   enum class Mode { Persistent, Fallback };
 
-  static auto createBuffer(GLuint buffer, GLsizeiptr size,
-                           Mode *out_mode) -> bool {
+  static auto create_buffer(GLuint buffer, GLsizeiptr size,
+                            Mode *out_mode) -> bool {
     if (supports_persistent_mapping()) {
       typedef void(QOPENGLF_APIENTRYP type_glBufferStorage)(
           GLenum target, GLsizeiptr size, const void *data, GLbitfield flags);

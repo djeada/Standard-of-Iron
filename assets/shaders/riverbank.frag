@@ -72,7 +72,7 @@ void main() {
   float base_wet = smoothstep(0.30, 0.04, tex_coord.x);
 
   float edge_jitter = (fbm(uv * 2.5) - 0.5) * 0.12 +
-                     (fbm(vec2(tex_coord.y * 3.0, 0.0)) - 0.5) * 0.10;
+                      (fbm(vec2(tex_coord.y * 3.0, 0.0)) - 0.5) * 0.10;
   base_wet = saturate(base_wet + edge_jitter);
 
   float slope = 1.0 - saturate(normalize(v_normal).y);
@@ -83,8 +83,8 @@ void main() {
   contact *= 0.6 + 0.4 * fbm(uv * 4.0 + time * 0.2);
 
   float macro = fbm(uv * 0.8);
-  float streaks =
-      fbm(vec2(tex_coord.y * 6.0 + macro * 0.7, tex_coord.x * 0.6 - time * 0.03));
+  float streaks = fbm(
+      vec2(tex_coord.y * 6.0 + macro * 0.7, tex_coord.x * 0.6 - time * 0.03));
   streaks = pow(saturate(streaks), 3.0);
 
   float grit = noise(uv * 18.0);
@@ -95,7 +95,7 @@ void main() {
   vec3 base = mix(soil_wet, soil_dry, 1.0 - wetness);
 
   float grass_mask = smoothstep(0.50, 0.92, 1.0 - wetness) *
-                    smoothstep(0.25, 0.75, fbm(uv * 1.2 + 5.1));
+                     smoothstep(0.25, 0.75, fbm(uv * 1.2 + 5.1));
   base = mix(base, mix(base, grass_tint, 0.6), grass_mask);
 
   base = mix(base, base * vec3(0.92, 0.96, 1.02), contact * 0.35);

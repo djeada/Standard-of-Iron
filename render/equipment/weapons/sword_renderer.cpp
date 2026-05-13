@@ -431,7 +431,7 @@ auto sword_make_static_attachment(const SwordRenderConfig &config,
           k_bone)];
   auto const &bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_r;
   QMatrix4x4 const bind_socket = hand_basis_transform(QMatrix4x4{}, bind_grip);
-  QVector3D blade_dir_local(0.02F, 0.97F, 0.24F);
+  QVector3D blade_dir_local(0.02F, 0.97F, 0.0F);
   auto spec = Render::Equipment::build_socket_static_attachment({
       .archetype = &sword_archetype(config),
       .socket_bone_index = static_cast<std::uint16_t>(k_bone),
