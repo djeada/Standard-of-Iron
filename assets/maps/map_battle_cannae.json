@@ -662,5 +662,98 @@
     "type": "encirclement",
     "description": "Execute the legendary double envelopment - surround and destroy Rome's greatest army"
   },
-  "time_of_day": "afternoon"
+  "time_of_day": "afternoon",
+  "world_props": [
+    {
+      "type": "ruins",
+      "x": 17.0,
+      "z": 97.0,
+      "scale": 1.2,
+      "rotation": 0.4
+    },
+    {
+      "type": "ruins",
+      "x": 22.0,
+      "z": 101.0,
+      "scale": 1.0,
+      "rotation": 2.1
+    },
+    {
+      "type": "ruins",
+      "x": 19.0,
+      "z": 104.0,
+      "scale": 0.9,
+      "rotation": 3.8
+    },
+    {
+      "type": "ruins",
+      "x": 15.0,
+      "z": 100.0,
+      "scale": 1.1,
+      "rotation": 5.2
+    },
+    {
+      "type": "ruins",
+      "x": 154.0,
+      "z": 25.0,
+      "scale": 1.0,
+      "rotation": 1.0
+    },
+    {
+      "type": "ruins",
+      "x": 161.0,
+      "z": 30.0,
+      "scale": 0.8,
+      "rotation": 2.7
+    },
+    {
+      "type": "dead_tree",
+      "x": 27.0,
+      "z": 41.0,
+      "scale": 1.2,
+      "rotation": 0.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 33.0,
+      "z": 37.0,
+      "scale": 1.0,
+      "rotation": 2.5
+    },
+    {
+      "type": "dead_tree",
+      "x": 25.0,
+      "z": 47.0,
+      "scale": 1.1,
+      "rotation": 4.3
+    },
+    {
+      "type": "dead_tree",
+      "x": 38.0,
+      "z": 40.0,
+      "scale": 0.9,
+      "rotation": 5.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 150.0,
+      "z": 72.0,
+      "scale": 1.1,
+      "rotation": 1.4
+    },
+    {
+      "type": "dead_tree",
+      "x": 154.0,
+      "z": 79.0,
+      "scale": 1.0,
+      "rotation": 3.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 146.0,
+      "z": 83.0,
+      "scale": 0.9,
+      "rotation": 5.5
+    }
+  ]
 }

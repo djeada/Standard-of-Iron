@@ -566,5 +566,112 @@
     "duration": 180.0,
     "description": "Dense morning mist - essential for concealing the ambush"
   },
-  "time_of_day": "morning"
+  "time_of_day": "morning",
+  "world_props": [
+    {
+      "type": "ruins",
+      "x": 25.0,
+      "z": 21.0,
+      "scale": 1.1,
+      "rotation": 0.5
+    },
+    {
+      "type": "ruins",
+      "x": 31.0,
+      "z": 26.0,
+      "scale": 1.0,
+      "rotation": 2.4
+    },
+    {
+      "type": "ruins",
+      "x": 27.0,
+      "z": 29.0,
+      "scale": 0.9,
+      "rotation": 4.6
+    },
+    {
+      "type": "dead_tree",
+      "x": 64.0,
+      "z": 38.0,
+      "scale": 1.2,
+      "rotation": 1.1
+    },
+    {
+      "type": "dead_tree",
+      "x": 73.0,
+      "z": 34.0,
+      "scale": 1.0,
+      "rotation": 2.9
+    },
+    {
+      "type": "dead_tree",
+      "x": 67.0,
+      "z": 46.0,
+      "scale": 1.1,
+      "rotation": 4.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 77.0,
+      "z": 43.0,
+      "scale": 0.9,
+      "rotation": 6.0
+    },
+    {
+      "type": "dead_tree",
+      "x": 91.0,
+      "z": 51.0,
+      "scale": 1.0,
+      "rotation": 0.7
+    },
+    {
+      "type": "dead_tree",
+      "x": 99.0,
+      "z": 49.0,
+      "scale": 1.1,
+      "rotation": 3.4
+    },
+    {
+      "type": "dead_tree",
+      "x": 101.0,
+      "z": 57.0,
+      "scale": 0.9,
+      "rotation": 5.1
+    },
+    {
+      "type": "dead_tree",
+      "x": 113.0,
+      "z": 67.0,
+      "scale": 1.0,
+      "rotation": 1.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 121.0,
+      "z": 65.0,
+      "scale": 0.9,
+      "rotation": 4.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 48.0,
+      "z": 26.0,
+      "scale": 1.1,
+      "rotation": 2.5
+    },
+    {
+      "type": "dead_tree",
+      "x": 55.0,
+      "z": 24.0,
+      "scale": 1.0,
+      "rotation": 5.6
+    },
+    {
+      "type": "dead_tree",
+      "x": 57.0,
+      "z": 33.0,
+      "scale": 0.9,
+      "rotation": 0.3
+    }
+  ]
 }

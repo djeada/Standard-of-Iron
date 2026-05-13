@@ -696,5 +696,91 @@
     "temperature": "extreme_cold",
     "description": "Harsh Alpine winter - the cold claims lives every moment"
   },
-  "time_of_day": "morning"
+  "time_of_day": "morning",
+  "world_props": [
+    {
+      "type": "ruins",
+      "x": 149.0,
+      "z": 147.0,
+      "scale": 1.1,
+      "rotation": 1.5
+    },
+    {
+      "type": "ruins",
+      "x": 155.0,
+      "z": 153.0,
+      "scale": 1.0,
+      "rotation": 3.4
+    },
+    {
+      "type": "ruins",
+      "x": 148.0,
+      "z": 154.0,
+      "scale": 0.9,
+      "rotation": 5.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 40.0,
+      "z": 51.0,
+      "scale": 1.1,
+      "rotation": 0.7
+    },
+    {
+      "type": "dead_tree",
+      "x": 48.0,
+      "z": 49.0,
+      "scale": 1.0,
+      "rotation": 2.6
+    },
+    {
+      "type": "dead_tree",
+      "x": 39.0,
+      "z": 58.0,
+      "scale": 0.9,
+      "rotation": 4.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 129.0,
+      "z": 135.0,
+      "scale": 1.2,
+      "rotation": 1.3
+    },
+    {
+      "type": "dead_tree",
+      "x": 138.0,
+      "z": 131.0,
+      "scale": 1.0,
+      "rotation": 3.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 131.0,
+      "z": 145.0,
+      "scale": 1.1,
+      "rotation": 5.4
+    },
+    {
+      "type": "dead_tree",
+      "x": 87.0,
+      "z": 118.0,
+      "scale": 1.0,
+      "rotation": 2.0
+    },
+    {
+      "type": "dead_tree",
+      "x": 95.0,
+      "z": 115.0,
+      "scale": 0.9,
+      "rotation": 4.4
+    },
+    {
+      "type": "dead_tree",
+      "x": 89.0,
+      "z": 126.0,
+      "scale": 1.1,
+      "rotation": 6.0
+    }
+  ]
 }

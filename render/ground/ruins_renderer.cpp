@@ -15,9 +15,9 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-constexpr float k_ring_distance_scale = 1.85F;
+constexpr float k_ring_distance_scale = 2.50F;
 constexpr uint32_t k_type_salt = 0xD7E8F901U;
-constexpr float k_base_scale = 0.60F;
+constexpr float k_base_scale = 0.90F;
 constexpr float k_base_color_r = 0.55F;
 constexpr float k_base_color_g = 0.52F;
 constexpr float k_base_color_b = 0.46F;
@@ -75,32 +75,10 @@ void RuinsRenderer::generate_instances(
   const float half_w = static_cast<float>(width) * 0.5F;
   const float half_h = static_cast<float>(map_height) * 0.5F;
 
-  for (const auto &camp : fire_camps) {
-    const float world_cx = (camp.x - half_w) * tile_size;
-    const float world_cz = (camp.z - half_h) * tile_size;
-
-    uint32_t state =
-        hash_coords(static_cast<int>(std::floor(world_cx)),
-                    static_cast<int>(std::floor(world_cz)), k_type_salt);
-
-    const float angle = rand_01(state) * MathConstants::k_two_pi;
-    const float dist = std::max(camp.radius, 1.5F) * k_ring_distance_scale;
-
-    const float wx = world_cx + std::cos(angle) * dist;
-    const float wz = world_cz + std::sin(angle) * dist;
-    const QVector3D resolved =
-        terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
-
-    const float scale =
-        k_base_scale * std::clamp(camp.radius * 0.4F, 0.6F, 1.4F);
-    const float rotation = rand_01(state) * MathConstants::k_two_pi;
-
-    RuinsInstanceGpu inst;
-    inst.pos_scale = QVector4D(resolved.x(), resolved.y(), resolved.z(), scale);
-    inst.color_rot =
-        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, rotation);
-    m_state.instances.push_back(inst);
-  }
+  // Ruins are placed only via explicit world_props in the map definition.
+  // They do not scatter near fire camps since ancient ruins near military
+  // camps would be historically incongruous.
+  Q_UNUSED(fire_camps);
 
   for (const auto &prop : world_props) {
     if (prop.type != Game::Map::WorldProp::Type::Ruins) {
