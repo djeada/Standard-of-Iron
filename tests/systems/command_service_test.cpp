@@ -1,7 +1,10 @@
 #include "core/component.h"
 #include "core/world.h"
+#include "game/map/map_definition.h"
+#include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/movement_system.h"
 #include "game/systems/pathfinding.h"
 #include "game/units/troop_config.h"
 #include <QVector3D>
@@ -16,7 +19,13 @@ class CommandServiceTest : public ::testing::Test {
 protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
+    Game::Map::TerrainService::instance().clear();
     Game::Systems::CommandService::initialize(32, 32);
+  }
+
+  void TearDown() override {
+    Game::Map::TerrainService::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
   static auto
@@ -299,6 +308,152 @@ TEST_F(CommandServiceTest, LocalRecoveryCanRelaxRadiusToEscapeBoundaryTrap) {
   EXPECT_GT(movement->target_x, transform->position.x);
   EXPECT_FLOAT_EQ(movement->goal_x, 5.0F);
   EXPECT_FLOAT_EQ(movement->goal_y, 0.0F);
+}
+
+TEST_F(CommandServiceTest,
+       GroupBridgeCrossingUsesSharedBridgeCenterlineWaypoints) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -10.0F), QVector3D(0.0F, 0.0F, 10.0F), 2.0F});
+  map_def.bridges.push_back(
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F, 0.6F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::CommandService::initialize(map_def.grid.width,
+                                            map_def.grid.height);
+
+  auto *pathfinder = Game::Systems::CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->mark_obstacles_dirty();
+  pathfinder->update_building_obstacles();
+
+  Engine::Core::World world;
+  auto *left = create_unit(world, -8.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto *center =
+      create_unit(world, -8.0F, 0.0F, Game::Units::SpawnType::Archer);
+  auto *right = create_unit(world, -8.0F, 2.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(left, nullptr);
+  ASSERT_NE(center, nullptr);
+  ASSERT_NE(right, nullptr);
+
+  auto *left_movement = left->get_component<Engine::Core::MovementComponent>();
+  auto *center_movement =
+      center->get_component<Engine::Core::MovementComponent>();
+  auto *right_movement =
+      right->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(left_movement, nullptr);
+  ASSERT_NE(center_movement, nullptr);
+  ASSERT_NE(right_movement, nullptr);
+
+  Game::Systems::CommandService::MoveOptions options;
+  options.allow_direct_fallback = false;
+  options.group_move = true;
+
+  Game::Systems::CommandService::move_units(
+      world, {left->get_id(), center->get_id(), right->get_id()},
+      {QVector3D(8.0F, 0.0F, -2.0F), QVector3D(8.0F, 0.0F, 0.0F),
+       QVector3D(8.0F, 0.0F, 2.0F)},
+      options);
+
+  wait_for_path_results(world,
+                        {left_movement, center_movement, right_movement});
+
+  auto const bridge = map_def.bridges.front();
+  QVector3D bridge_dir = bridge.end - bridge.start;
+  float const bridge_length = bridge_dir.length();
+  ASSERT_GT(bridge_length, 0.0F);
+  bridge_dir.normalize();
+
+  auto assert_uses_bridge_centerline =
+      [bridge, bridge_dir,
+       bridge_length](const Engine::Core::MovementComponent *movement) {
+        ASSERT_NE(movement, nullptr);
+        ASSERT_FALSE(movement->path.empty())
+            << "has_target=" << movement->has_target
+            << " path_pending=" << movement->path_pending << " target=("
+            << movement->target_x << ", " << movement->target_y << ") goal=("
+            << movement->goal_x << ", " << movement->goal_y << ")";
+
+        bool found_bridge_waypoint = false;
+        bool found_bridge_approach_waypoint = false;
+        for (auto const &[x, z] : movement->path) {
+          auto const traversal_center =
+              Game::Map::TerrainService::instance()
+                  .get_bridge_traversal_position(x, z);
+          if (!traversal_center.has_value()) {
+            continue;
+          }
+
+          EXPECT_NEAR(x, traversal_center->x(), 1.0e-4F);
+          EXPECT_NEAR(z, traversal_center->z(), 1.0e-4F);
+          QVector3D const waypoint(x, 0.0F, z);
+          float const along =
+              QVector3D::dotProduct(waypoint - bridge.start, bridge_dir);
+          if (along >= 0.0F && along <= bridge_length) {
+            found_bridge_waypoint = true;
+          } else {
+            found_bridge_approach_waypoint = true;
+          }
+        }
+
+        EXPECT_TRUE(found_bridge_waypoint);
+        EXPECT_TRUE(found_bridge_approach_waypoint);
+      };
+
+  assert_uses_bridge_centerline(left_movement);
+  assert_uses_bridge_centerline(center_movement);
+  assert_uses_bridge_centerline(right_movement);
+}
+
+TEST_F(CommandServiceTest,
+       UnitApproachingBridgeSnapsToTraversalCenterBeforeDeck) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -10.0F), QVector3D(0.0F, 0.0F, 10.0F), 2.0F});
+  map_def.bridges.push_back(
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F, 0.6F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::CommandService::initialize(map_def.grid.width,
+                                            map_def.grid.height);
+
+  auto *pathfinder = Game::Systems::CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->mark_obstacles_dirty();
+  pathfinder->update_building_obstacles();
+
+  Engine::Core::World world;
+  auto *unit = create_unit(world, -4.0F, 1.25F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+
+  auto *transform = unit->get_component<Engine::Core::TransformComponent>();
+  auto *movement = unit->get_component<Engine::Core::MovementComponent>();
+  auto *terrain_ctx =
+      unit->add_component<Engine::Core::TerrainContextComponent>();
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(terrain_ctx, nullptr);
+
+  movement->target_x = -1.5F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 6.0F;
+  movement->goal_y = 0.0F;
+  movement->has_target = true;
+
+  Game::Systems::MovementSystem movement_system;
+  movement_system.update(&world, 0.1F);
+
+  EXPECT_NEAR(transform->position.z, 0.0F, 1.0e-4F);
+  EXPECT_LT(transform->position.x, -3.0F);
+  EXPECT_GT(transform->position.x, -4.1F);
+  EXPECT_TRUE(Game::Map::TerrainService::instance()
+                  .get_bridge_traversal_position(transform->position.x,
+                                                 transform->position.z)
+                  .has_value());
 }
 
 } // namespace

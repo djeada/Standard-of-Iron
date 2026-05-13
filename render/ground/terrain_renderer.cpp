@@ -415,7 +415,7 @@ void TerrainRenderer::build_meshes() {
     return result;
   };
 
-  const int chunk_size = DefaultChunkSize;
+  const int chunk_size = default_chunk_size;
   std::size_t total_triangles = 0;
 
   for (int chunk_z = 0; chunk_z < m_height - 1; chunk_z += chunk_size) {

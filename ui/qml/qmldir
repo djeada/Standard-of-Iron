@@ -7,3 +7,6 @@ LoadGamePanel 1.0 LoadGamePanel.qml
 MapPreview 1.0 MapPreview.qml
 ObjectivesPanel 1.0 ObjectivesPanel.qml
 HUDBottomCommander 1.0 HUDBottomCommander.qml
+RpgTargetBar 1.0 RpgTargetBar.qml
+RpgFpvOverlay 1.0 RpgFpvOverlay.qml
+RpgDamageNumbers 1.0 RpgDamageNumbers.qml

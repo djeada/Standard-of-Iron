@@ -137,6 +137,57 @@ Item {
         }
     }
 
+    
+    RpgTargetBar {
+        id: rpgTargetBar
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: topPanel.bottom
+        anchors.topMargin: 8
+        visible: typeof game !== 'undefined' && game.game_mode === "rpg" &&
+                 target_max_hp > 0
+
+        property var _status: typeof game !== 'undefined' && game.get_controlled_commander_status
+                               ? game.get_controlled_commander_status() : null
+
+        target_name: _status ? (_status["locked_target_name"] || "") : ""
+        target_hp: _status ? (_status["locked_target_hp"] || 0) : 0
+        target_max_hp: _status ? (_status["locked_target_max_hp"] || 0) : 0
+        target_hp_ratio: _status ? (_status["locked_target_hp_ratio"] || 0.0) : 0.0
+
+        Timer {
+            interval: 100
+            repeat: true
+            running: true
+            onTriggered: {
+                if (typeof game !== 'undefined' && game.game_mode === "rpg" &&
+                        game.get_controlled_commander_status) {
+                    var s = game.get_controlled_commander_status();
+                    rpgTargetBar.target_name = s["locked_target_name"] || "";
+                    rpgTargetBar.target_hp = s["locked_target_hp"] || 0;
+                    rpgTargetBar.target_max_hp = s["locked_target_max_hp"] || 0;
+                    rpgTargetBar.target_hp_ratio = s["locked_target_hp_ratio"] || 0.0;
+                }
+            }
+        }
+    }
+
+    
+    RpgFpvOverlay {
+        id: rpgFpvOverlay
+        anchors.fill: parent
+        visible: typeof game !== 'undefined' &&
+                 game.control_mode === "commander"
+    }
+
+    
+    RpgDamageNumbers {
+        id: rpgDamageNumbers
+        anchors.fill: parent
+        engine: typeof game !== 'undefined' ? game : null
+        visible: typeof game !== 'undefined' && game.game_mode === "rpg"
+    }
+
     HUDVictory {
         id: hudVictory
 

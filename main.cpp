@@ -234,10 +234,16 @@ auto main(int argc, char *argv[]) -> int {
   qInfo() << "=== Standard of Iron - Starting ===";
   qInfo() << "Qt version:" << QT_VERSION_STR;
 
-  // On Linux with a Wayland compositor that also exports DISPLAY (XWayland),
-  // prefer the X11/xcb platform for better desktop OpenGL compatibility.
+  // Allow the existing QML campaign/mission loaders to read local JSON files
+  // without triggering Qt's local-file XHR warning on every startup.
+  if (!qEnvironmentVariableIsSet("QML_XHR_ALLOW_FILE_READ")) {
+    qputenv("QML_XHR_ALLOW_FILE_READ", "1");
+  }
+
+  // On Linux, prefer the X11/xcb platform whenever a DISPLAY is available,
+  // unless the user already picked a different Qt platform explicitly.
 #ifdef Q_OS_LINUX
-  if (qEnvironmentVariableIsSet("WAYLAND_DISPLAY") &&
+  if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") &&
       qEnvironmentVariableIsSet("DISPLAY")) {
     qputenv("QT_QPA_PLATFORM", "xcb");
     qInfo()

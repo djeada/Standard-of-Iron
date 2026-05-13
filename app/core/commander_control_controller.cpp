@@ -12,6 +12,7 @@
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 void CommanderControlController::reset() {
   m_input = {};
@@ -30,6 +31,14 @@ void CommanderControlController::reset() {
   m_move_running = false;
   m_hit_trauma = 0.0F;
   m_hit_shake_phase = 0.0F;
+  m_strike_punch_fwd = 0.0F;
+  m_dodge_state = DodgeState::None;
+  m_dodge_timer = 0.0F;
+  m_dodge_fov_kick = 0.0F;
+  m_locked_target_id = 0;
+  m_combo_miss_timer = 0.0F;
+  m_primary_held_duration = 0.0F;
+  m_special_cooldown = 0.0F;
 }
 
 void CommanderControlController::set_view_yaw(float yaw) { m_view_yaw = yaw; }
@@ -210,13 +219,149 @@ void CommanderControlController::poll_mouse_look(QQuickWindow *window) {
   m_last_mouse_global = current_global;
 }
 
+void CommanderControlController::request_dodge() {
+  m_input.dodge_requested = true;
+}
+
+void CommanderControlController::special_action() {
+  m_input.special_action = true;
+}
+
+auto CommanderControlController::locked_target_id() const
+    -> Engine::Core::EntityID {
+  return m_locked_target_id;
+}
+
+void CommanderControlController::cycle_lock_on_target(
+    Engine::Core::World &world, Engine::Core::EntityID commander_id,
+    int local_owner_id) {
+  auto *commander = controlled_commander(world, commander_id, local_owner_id);
+  if (commander == nullptr) {
+    return;
+  }
+  auto *transform =
+      commander->get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return;
+  }
+
+  constexpr float k_lock_range = 15.0F;
+  constexpr float k_lock_range_sq = k_lock_range * k_lock_range;
+
+  auto &owners = Game::Systems::OwnerRegistry::instance();
+  const float yaw_rad = m_view_yaw * 0.017453292519943295F;
+  const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
+
+  struct Candidate {
+    Engine::Core::EntityID id;
+    float angle_diff;
+  };
+  std::vector<Candidate> candidates;
+
+  for (auto *candidate :
+       world.get_entities_with<Engine::Core::UnitComponent>()) {
+    if (candidate == nullptr || candidate->get_id() == commander_id) {
+      continue;
+    }
+    auto *u = candidate->get_component<Engine::Core::UnitComponent>();
+    auto *t = candidate->get_component<Engine::Core::TransformComponent>();
+    if (u == nullptr || t == nullptr || u->health <= 0) {
+      continue;
+    }
+    if (!owners.are_enemies(local_owner_id, u->owner_id)) {
+      continue;
+    }
+    const float dx = t->position.x - origin.x();
+    const float dz = t->position.z - origin.z();
+    if (dx * dx + dz * dz > k_lock_range_sq) {
+      continue;
+    }
+    float diff = std::atan2(dx, dz) * 57.29577951308232F - m_view_yaw;
+    while (diff > 180.0F) {
+      diff -= 360.0F;
+    }
+    while (diff < -180.0F) {
+      diff += 360.0F;
+    }
+    candidates.push_back({candidate->get_id(), diff});
+  }
+
+  if (candidates.empty()) {
+    m_locked_target_id = 0;
+    return;
+  }
+
+  std::sort(candidates.begin(), candidates.end(),
+            [](const Candidate &a, const Candidate &b) {
+              return std::abs(a.angle_diff) < std::abs(b.angle_diff);
+            });
+
+  if (m_locked_target_id == 0) {
+    m_locked_target_id = candidates[0].id;
+  } else {
+    auto it = std::find_if(
+        candidates.begin(), candidates.end(),
+        [this](const Candidate &c) { return c.id == m_locked_target_id; });
+    if (it == candidates.end() || std::next(it) == candidates.end()) {
+      m_locked_target_id = 0;
+    } else {
+      m_locked_target_id = std::next(it)->id;
+    }
+  }
+}
+
+void CommanderControlController::update_lock_on_yaw(
+    Engine::Core::World &world, Engine::Core::Entity &commander, float dt) {
+  if (m_locked_target_id == 0) {
+    return;
+  }
+
+  auto *cmd_transform =
+      commander.get_component<Engine::Core::TransformComponent>();
+  if (cmd_transform == nullptr) {
+    return;
+  }
+
+  auto *target = world.get_entity(m_locked_target_id);
+  auto *target_unit =
+      target ? target->get_component<Engine::Core::UnitComponent>() : nullptr;
+  auto *target_transform =
+      target ? target->get_component<Engine::Core::TransformComponent>()
+             : nullptr;
+
+  if (target_unit == nullptr || target_unit->health <= 0 ||
+      target_transform == nullptr) {
+    m_locked_target_id = 0;
+    return;
+  }
+
+  const float dx = target_transform->position.x - cmd_transform->position.x;
+  const float dz = target_transform->position.z - cmd_transform->position.z;
+  constexpr float k_lock_drop_sq = 15.0F * 15.0F;
+  if (dx * dx + dz * dz > k_lock_drop_sq) {
+    m_locked_target_id = 0;
+    return;
+  }
+
+  float target_yaw = std::atan2(dx, dz) * 57.29577951308232F;
+  float diff = target_yaw - m_view_yaw;
+  while (diff > 180.0F) {
+    diff -= 360.0F;
+  }
+  while (diff < -180.0F) {
+    diff += 360.0F;
+  }
+  constexpr float k_lock_spring = 8.0F;
+  m_view_yaw += diff * (1.0F - std::exp(-k_lock_spring * dt));
+  m_view_yaw = std::fmod(m_view_yaw, 360.0F);
+  if (m_view_yaw < 0.0F) {
+    m_view_yaw += 360.0F;
+  }
+}
+
 auto CommanderControlController::controlled_commander(
     Engine::Core::World &world, Engine::Core::EntityID commander_id,
     int local_owner_id) const -> Engine::Core::Entity * {
-  if (commander_id == 0) {
-    return nullptr;
-  }
-
   auto *entity = world.get_entity(commander_id);
   if (entity == nullptr) {
     return nullptr;
@@ -234,7 +379,7 @@ auto CommanderControlController::controlled_commander(
 
 auto CommanderControlController::find_primary_target(
     Engine::Core::World &world, Engine::Core::EntityID commander_id,
-    int local_owner_id) const -> Engine::Core::EntityID {
+    int local_owner_id) -> Engine::Core::EntityID {
   auto *commander = controlled_commander(world, commander_id, local_owner_id);
   if (commander == nullptr) {
     return 0;
@@ -255,6 +400,29 @@ auto CommanderControlController::find_primary_target(
     max_range = std::max(max_range, commander_attack->melee_range + 0.65F);
   }
   const float max_range_sq = max_range * max_range;
+
+  if (m_locked_target_id != 0) {
+    auto *locked_ent = world.get_entity(m_locked_target_id);
+    auto *locked_unit =
+        locked_ent ? locked_ent->get_component<Engine::Core::UnitComponent>()
+                   : nullptr;
+    if (locked_unit == nullptr || locked_unit->health <= 0) {
+      m_locked_target_id = 0;
+    } else {
+      auto *locked_transform =
+          locked_ent->get_component<Engine::Core::TransformComponent>();
+      if (locked_transform != nullptr) {
+        const float dx =
+            locked_transform->position.x - commander_transform->position.x;
+        const float dz =
+            locked_transform->position.z - commander_transform->position.z;
+        if (dx * dx + dz * dz <= max_range_sq) {
+          return m_locked_target_id;
+        }
+      }
+    }
+  }
+
   const float yaw_rad = m_view_yaw * k_degrees_to_radians;
   const QVector3D forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
   const QVector3D origin(commander_transform->position.x, 0.0F,
@@ -352,9 +520,22 @@ auto CommanderControlController::primary_action(
     ++s_fpv_attack_seed;
   }
 
+  auto *cmd_comp = commander->get_component<Engine::Core::CommanderComponent>();
+  if (cmd_comp != nullptr) {
+    if (m_primary_held_duration >= 0.4F) {
+      cmd_comp->power_strike_active = true;
+      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 10.0F);
+    }
+    m_combo_miss_timer = 0.0F;
+
+    if (cmd_comp->special_cooldown_remaining > 0.0F) {
+    }
+  }
+
   const auto target_id =
       find_primary_target(world, commander_id, local_owner_id);
   if (target_id == 0) {
+
     return true;
   }
 
@@ -425,13 +606,17 @@ auto CommanderControlController::update(Engine::Core::World &world,
   }
   commander->remove_component<Engine::Core::AttackTargetComponent>();
 
+  update_lock_on_yaw(world, *commander, dt);
+
   constexpr float k_degrees_to_radians = 0.017453292519943295F;
   constexpr float k_turn_speed_degrees = 105.0F;
-  if (m_input.turn_left) {
-    m_view_yaw -= k_turn_speed_degrees * dt;
-  }
-  if (m_input.turn_right) {
-    m_view_yaw += k_turn_speed_degrees * dt;
+  if (m_locked_target_id == 0) {
+    if (m_input.turn_left) {
+      m_view_yaw -= k_turn_speed_degrees * dt;
+    }
+    if (m_input.turn_right) {
+      m_view_yaw += k_turn_speed_degrees * dt;
+    }
   }
   m_view_yaw = std::fmod(m_view_yaw, 360.0F);
   if (m_view_yaw < 0.0F) {
@@ -451,46 +636,124 @@ auto CommanderControlController::update(Engine::Core::World &world,
   float actual_speed_for_bob = 0.0F;
   bool run_for_bob = false;
 
-  if (move.lengthSquared() > 0.0001F) {
-    move.normalize();
-    float speed = std::max(0.1F, unit->speed);
-    if (m_input.run) {
-      speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
-    }
+  constexpr float k_fov_kick_decay = 30.0F;
+  m_dodge_fov_kick = std::max(0.0F, m_dodge_fov_kick - k_fov_kick_decay * dt);
 
-    const QVector3D current(transform->position.x, transform->position.y,
-                            transform->position.z);
-    const QVector3D next = current + move * speed * dt;
-    bool can_move = true;
+  const bool should_dodge =
+      m_input.dodge_requested && m_dodge_state == DodgeState::None;
+  m_input.dodge_requested = false;
+
+  if (should_dodge) {
+    m_dodge_direction =
+        (move.lengthSquared() > 0.0001F) ? move.normalized() : forward;
+    m_dodge_state = DodgeState::Rolling;
+    constexpr float k_dodge_roll_duration = 0.22F;
+    m_dodge_timer = k_dodge_roll_duration;
+    m_dodge_fov_kick = 8.0F;
+    if (auto *rpg =
+            commander->get_component<Engine::Core::RpgHealthComponent>()) {
+      rpg->dodge_invincible = true;
+    }
+  }
+
+  auto can_move_to = [](float nx, float nz) -> bool {
     if (auto *pathfinder = Game::Systems::CommandService::get_pathfinder()) {
-      const auto grid =
-          Game::Systems::CommandService::world_to_grid(next.x(), next.z());
-      can_move = pathfinder->is_walkable(grid.x, grid.y);
-    } else {
-      auto &terrain_service = Game::Map::TerrainService::instance();
-      if (terrain_service.is_initialized()) {
-        can_move =
-            terrain_service.is_walkable(static_cast<int>(std::round(next.x())),
-                                        static_cast<int>(std::round(next.z())));
+      const auto grid = Game::Systems::CommandService::world_to_grid(nx, nz);
+      return pathfinder->is_walkable(grid.x, grid.y);
+    }
+    auto &terrain = Game::Map::TerrainService::instance();
+    if (terrain.is_initialized()) {
+      return terrain.is_walkable(static_cast<int>(std::round(nx)),
+                                 static_cast<int>(std::round(nz)));
+    }
+    return true;
+  };
+
+  if (m_dodge_state == DodgeState::Rolling) {
+    constexpr float k_dodge_speed = 6.5F;
+    constexpr float k_dodge_roll_duration = 0.22F;
+    const float roll_dt = std::min(dt, m_dodge_timer);
+    m_dodge_timer -= dt;
+
+    const float nx =
+        transform->position.x + m_dodge_direction.x() * k_dodge_speed * roll_dt;
+    const float nz =
+        transform->position.z + m_dodge_direction.z() * k_dodge_speed * roll_dt;
+    if (can_move_to(nx, nz)) {
+      transform->position.x = nx;
+      transform->position.z = nz;
+    }
+    if (movement != nullptr) {
+      movement->vx = m_dodge_direction.x() * k_dodge_speed;
+      movement->vz = m_dodge_direction.z() * k_dodge_speed;
+    }
+    actual_speed_for_bob = k_dodge_speed;
+    run_for_bob = true;
+
+    if (m_dodge_timer <= 0.0F) {
+      m_dodge_state = DodgeState::Recovering;
+      constexpr float k_dodge_recover_duration = 0.18F;
+      m_dodge_timer = k_dodge_recover_duration;
+      if (auto *rpg =
+              commander->get_component<Engine::Core::RpgHealthComponent>()) {
+        rpg->dodge_invincible = false;
       }
     }
+  } else if (m_dodge_state == DodgeState::Recovering) {
+    m_dodge_timer -= dt;
+    if (m_dodge_timer <= 0.0F) {
+      m_dodge_state = DodgeState::None;
+      m_dodge_timer = 0.0F;
+    }
 
-    if (can_move) {
-      transform->position.x = next.x();
-      transform->position.z = next.z();
-      if (movement != nullptr) {
-        movement->vx = move.x() * speed;
-        movement->vz = move.z() * speed;
+    if (move.lengthSquared() > 0.0001F) {
+      move.normalize();
+      const float speed = std::max(0.1F, unit->speed) * 0.4F;
+      const float nx = transform->position.x + move.x() * speed * dt;
+      const float nz = transform->position.z + move.z() * speed * dt;
+      if (can_move_to(nx, nz)) {
+        transform->position.x = nx;
+        transform->position.z = nz;
+        if (movement != nullptr) {
+          movement->vx = move.x() * speed;
+          movement->vz = move.z() * speed;
+        }
+        actual_speed_for_bob = speed;
+      } else if (movement != nullptr) {
+        movement->vx = 0.0F;
+        movement->vz = 0.0F;
       }
-      actual_speed_for_bob = speed;
-      run_for_bob = m_input.run;
     } else if (movement != nullptr) {
       movement->vx = 0.0F;
       movement->vz = 0.0F;
     }
-  } else if (movement != nullptr) {
-    movement->vx = 0.0F;
-    movement->vz = 0.0F;
+  } else {
+
+    if (move.lengthSquared() > 0.0001F) {
+      move.normalize();
+      float speed = std::max(0.1F, unit->speed);
+      if (m_input.run) {
+        speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
+      }
+      const float nx = transform->position.x + move.x() * speed * dt;
+      const float nz = transform->position.z + move.z() * speed * dt;
+      if (can_move_to(nx, nz)) {
+        transform->position.x = nx;
+        transform->position.z = nz;
+        if (movement != nullptr) {
+          movement->vx = move.x() * speed;
+          movement->vz = move.z() * speed;
+        }
+        actual_speed_for_bob = speed;
+        run_for_bob = m_input.run;
+      } else if (movement != nullptr) {
+        movement->vx = 0.0F;
+        movement->vz = 0.0F;
+      }
+    } else if (movement != nullptr) {
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
+    }
   }
 
   m_move_speed = actual_speed_for_bob;
@@ -530,11 +793,82 @@ auto CommanderControlController::update(Engine::Core::World &world,
     guard->active = false;
   }
 
+  auto *cmd_comp = commander->get_component<Engine::Core::CommanderComponent>();
+
+  if (m_special_cooldown > 0.0F) {
+    m_special_cooldown = std::max(0.0F, m_special_cooldown - dt);
+    if (cmd_comp != nullptr) {
+      cmd_comp->special_cooldown_remaining = m_special_cooldown;
+    }
+  }
+
+  constexpr float k_bash_range = 2.5F;
+  constexpr float k_bash_stagger_duration = 0.5F;
+  constexpr float k_bash_cooldown = 3.0F;
+  const bool bash_active = m_input.special_action && guard != nullptr &&
+                           guard->active && m_special_cooldown <= 0.0F;
+  if (bash_active) {
+    auto *transform =
+        commander->get_component<Engine::Core::TransformComponent>();
+    if (transform != nullptr) {
+      const QVector3D cmd_pos{transform->position.x, transform->position.y,
+                              transform->position.z};
+      for (auto *entity :
+           world.get_entities_with<Engine::Core::UnitComponent>()) {
+        if (entity->get_id() == commander_id) {
+          continue;
+        }
+        auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+        auto *ent_tf =
+            entity->get_component<Engine::Core::TransformComponent>();
+        if (unit == nullptr || ent_tf == nullptr || unit->health <= 0) {
+          continue;
+        }
+        if (unit->owner_id == local_owner_id) {
+          continue;
+        }
+        const QVector3D epos{ent_tf->position.x, ent_tf->position.y,
+                             ent_tf->position.z};
+        if ((epos - cmd_pos).length() <= k_bash_range) {
+          auto *existing_stagger =
+              entity->get_component<Engine::Core::StaggerComponent>();
+          if (existing_stagger != nullptr) {
+            existing_stagger->remaining =
+                std::max(existing_stagger->remaining, k_bash_stagger_duration);
+          } else {
+            entity->add_component<Engine::Core::StaggerComponent>(
+                k_bash_stagger_duration);
+          }
+        }
+      }
+    }
+    m_special_cooldown = k_bash_cooldown;
+    if (cmd_comp != nullptr) {
+      cmd_comp->special_cooldown_remaining = m_special_cooldown;
+    }
+  }
+  m_input.special_action = false;
+
+  if (m_input.primary_action) {
+    m_combo_miss_timer = 0.0F;
+    m_primary_held_duration += dt;
+  } else {
+    m_primary_held_duration = 0.0F;
+    m_combo_miss_timer += dt;
+    constexpr float k_combo_reset_window = 1.0F;
+    if (m_combo_miss_timer >= k_combo_reset_window && cmd_comp != nullptr) {
+      cmd_comp->combo_step = 0;
+      m_combo_miss_timer = 0.0F;
+    }
+  }
+
   if (m_input.primary_action_scan_cooldown > 0.0F) {
     m_input.primary_action_scan_cooldown =
         std::max(0.0F, m_input.primary_action_scan_cooldown - dt);
   }
-  if (m_input.primary_action && m_input.primary_action_scan_cooldown <= 0.0F) {
+
+  if (m_dodge_state != DodgeState::Rolling && m_input.primary_action &&
+      m_input.primary_action_scan_cooldown <= 0.0F) {
     if (!primary_action(world, commander_id, local_owner_id)) {
       return false;
     }
@@ -606,7 +940,8 @@ void CommanderControlController::update_camera(Engine::Core::Entity &commander,
 
   const float fov_target =
       k_fov_walk +
-      ((m_move_running && m_move_speed > 0.05F) ? k_fov_run_boost : 0.0F);
+      ((m_move_running && m_move_speed > 0.05F) ? k_fov_run_boost : 0.0F) +
+      m_dodge_fov_kick;
   m_fov_current += (fov_target - m_fov_current) *
                    (1.0F - std::exp(-k_fov_lerp * std::max(dt, 0.0F)));
   camera.set_perspective(m_fov_current, camera.get_aspect(), camera.get_near(),
@@ -673,6 +1008,16 @@ void CommanderControlController::update_camera(Engine::Core::Entity &commander,
   const QVector3D shake_offset =
       flat_right * shake_lat - QVector3D(0.0F, shake_v, 0.0F);
 
-  camera.look_at(m_cam_eye_smooth + shake_offset,
-                 m_cam_target_smooth + shake_offset, up_leaned);
+  if (auto const *cmd =
+          commander.get_component<Engine::Core::CommanderComponent>()) {
+    if (cmd->just_struck_enemy) {
+      m_strike_punch_fwd = 0.25F;
+    }
+  }
+  constexpr float k_punch_decay = 14.0F;
+  m_strike_punch_fwd *= std::exp(-k_punch_decay * std::max(dt, 0.0F));
+  const QVector3D punch_offset = forward_vec * m_strike_punch_fwd;
+
+  camera.look_at(m_cam_eye_smooth + shake_offset + punch_offset,
+                 m_cam_target_smooth + shake_offset + punch_offset, up_leaned);
 }

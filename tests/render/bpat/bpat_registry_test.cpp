@@ -255,6 +255,37 @@ TEST(BpatRegistry, SwordHumanoidIdleDiffersFromDefaultHumanoid) {
       << "humanoid_sword idle must differ from generic humanoid idle";
 }
 
+TEST(BpatRegistry, SwordHumanoidAmbientIdleStartsFromShieldReadyIdle) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+  auto &reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid_sword,
+                               root + "/humanoid_sword.bpat"));
+
+  std::array<QMatrix4x4, 64> idle_palette{};
+  auto const n = reg.sample_palette(k_species_humanoid_sword,
+                                    Render::Creature::k_humanoid_idle_clip, 0U,
+                                    std::span<QMatrix4x4>(idle_palette));
+  ASSERT_GT(n, 0U);
+
+  for (auto clip : {Render::Creature::k_humanoid_idle_squat_clip,
+                    Render::Creature::k_humanoid_idle_jump_clip,
+                    Render::Creature::k_humanoid_idle_weapon_clip,
+                    Render::Creature::k_humanoid_idle_weave_clip}) {
+    std::array<QMatrix4x4, 64> ambient_palette{};
+    ASSERT_EQ(reg.sample_palette(k_species_humanoid_sword, clip, 0U,
+                                 std::span<QMatrix4x4>(ambient_palette)),
+              n)
+        << "clip " << clip;
+    for (std::uint32_t bone = 0U; bone < n; ++bone) {
+      EXPECT_EQ(ambient_palette[bone], idle_palette[bone])
+          << "clip " << clip << " bone " << bone;
+    }
+  }
+}
+
 TEST(BpatRegistry, SwordHumanoidRidingChargeKeepsShieldHandMountedRelative) {
   using Render::Humanoid::HumanoidBone;
 

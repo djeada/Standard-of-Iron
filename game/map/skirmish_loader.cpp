@@ -101,7 +101,7 @@ void SkirmishLoader::reset_game_state() {
   Game::Systems::NationRegistry::instance().clear_player_assignments();
 
   if (m_fog != nullptr) {
-    m_fog->setEnabled(true);
+    m_fog->set_enabled(true);
     m_fog->update_mask(0, 0, 1.0F, {});
   }
 }
@@ -324,6 +324,10 @@ auto SkirmishLoader::start(const QString &map_path,
 
   auto &terrain_service = Game::Map::TerrainService::instance();
 
+  if (terrain_service.is_initialized()) {
+    terrain_service.remove_non_persistent_props();
+  }
+
   if (m_ground != nullptr) {
     if (level_result.ok) {
       m_ground->configure(level_result.tile_size, level_result.grid_width,
@@ -347,9 +351,9 @@ auto SkirmishLoader::start(const QString &map_path,
   if (m_scatter != nullptr) {
     if (terrain_service.is_initialized() &&
         (terrain_service.get_height_map() != nullptr)) {
-      m_scatter->configure(
-          *terrain_service.get_height_map(), terrain_service.biome_settings(),
-          terrain_service.fire_camps(), terrain_service.world_props());
+      m_scatter->configure(*terrain_service.get_height_map(),
+                           terrain_service.biome_settings(),
+                           terrain_service.world_props());
     }
   }
 
@@ -408,12 +412,12 @@ auto SkirmishLoader::start(const QString &map_path,
   if (is_spectator_mode) {
     visibility_service.reveal_all();
     if (m_fog != nullptr) {
-      m_fog->setEnabled(false);
+      m_fog->set_enabled(false);
     }
   } else {
     visibility_service.compute_immediate(m_world, player_owner_id);
     if (m_fog != nullptr) {
-      m_fog->setEnabled(true);
+      m_fog->set_enabled(true);
     }
   }
 

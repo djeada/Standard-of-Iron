@@ -40,6 +40,7 @@ signals:
   void skeleton_debug_toggled(bool enabled);
 
 private:
+  void apply_special_unit_defaults(const QString &unit_id);
   void populate_nation_options();
   void populate_unit_options(const QString &nation_id,
                              const QString &preferred_unit_type = QString());
@@ -52,4 +53,7 @@ private:
   QSpinBox *m_individuals_per_unit_box = nullptr;
   QCheckBox *m_render_rider_checkbox = nullptr;
   QLabel *m_selection_summary_label = nullptr;
+  bool m_special_unit_option_active = false;
+  int m_saved_manual_individuals_per_unit = 0;
+  bool m_saved_manual_rider_visible = true;
 };

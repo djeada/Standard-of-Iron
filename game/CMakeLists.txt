@@ -22,6 +22,8 @@ add_library(game_systems STATIC
     systems/combat_system/combat_state_processor.cpp
     systems/combat_system/attack_processor.cpp
     systems/cleanup_system.cpp
+    systems/rpg_combat_system/rpg_damage_resolver.cpp
+    systems/rpg_combat_system/rpg_combat_processor.cpp
     systems/ai_system.cpp
     systems/ai_system/ai_command_applier.cpp
     systems/ai_system/ai_command_filter.cpp

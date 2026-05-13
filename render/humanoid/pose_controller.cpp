@@ -21,12 +21,21 @@ auto hash_to_unit(std::uint32_t x) -> float {
   return float(x & 0x7FFFFFU) / float(0x7FFFFFU);
 }
 
+auto hash_u32(std::uint32_t x) -> std::uint32_t {
+  x ^= x >> 16;
+  x *= 0x7feb352dU;
+  x ^= x >> 15;
+  x *= 0x846ca68bU;
+  x ^= x >> 16;
+  return x;
+}
+
 constexpr float k_min_idle_duration = 5.0F;
 constexpr float k_ambient_duration = 6.0F;
-constexpr float k_initial_delay_base = 0.35F;
-constexpr float k_initial_delay_range = 1.50F;
-constexpr float k_base_cycle_period = 14.0F;
-constexpr float k_cycle_period_range = 8.0F;
+constexpr float k_initial_delay_base = 0.60F;
+constexpr float k_initial_delay_range = 40.0F;
+constexpr float k_base_cycle_period = 60.0F;
+constexpr float k_cycle_period_range = 40.0F;
 constexpr float k_tap_frequency_multiplier = 6.0F;
 
 struct AmbientIdleSchedule {
@@ -60,7 +69,7 @@ auto compute_ambient_idle_schedule(std::uint32_t seed, float idle_duration)
   auto const cycle_number =
       static_cast<std::uint32_t>(ambient_elapsed / cycle_period);
   std::uint32_t const anim_selector =
-      seed ^ (cycle_number * 1664525U) ^ 0xB5297A4DU;
+      hash_u32(seed ^ (cycle_number * 1664525U) ^ 0xB5297A4DU);
   constexpr std::array<AmbientIdleType, 4> k_baked_types{
       AmbientIdleType::SitDown, AmbientIdleType::Jump,
       AmbientIdleType::RaiseWeapon, AmbientIdleType::ShiftWeight};
@@ -69,6 +78,22 @@ auto compute_ambient_idle_schedule(std::uint32_t seed, float idle_duration)
   schedule.type = k_baked_types[anim_selector % k_baked_types.size()];
   schedule.phase = std::clamp(cycle_time / k_ambient_duration, 0.0F, 1.0F);
   return schedule;
+}
+
+auto smooth01(float t) noexcept -> float {
+  t = std::clamp(t, 0.0F, 1.0F);
+  return t * t * (3.0F - 2.0F * t);
+}
+
+auto plateau01(float phase, float enter_end,
+               float exit_start) noexcept -> float {
+  if (phase < enter_end) {
+    return smooth01(phase / enter_end);
+  }
+  if (phase < exit_start) {
+    return 1.0F;
+  }
+  return smooth01((1.0F - phase) / (1.0F - exit_start));
 }
 
 } // namespace
@@ -169,39 +194,29 @@ void HumanoidPoseController::apply_ambient_idle_explicit(
 
   phase = std::clamp(phase, 0.0F, 1.0F);
 
-  float const intensity =
-      (phase < 0.5F) ? (2.0F * phase * phase)
-                     : (1.0F - std::pow(-2.0F * phase + 2.0F, 2.0F) / 2.0F);
+  float const intensity = std::sin(phase * std::numbers::pi_v<float>);
 
   switch (idle_type) {
   case AmbientIdleType::SitDown: {
 
-    float sit_intensity = 0.0F;
-    if (phase < 0.4F) {
-      sit_intensity = phase / 0.4F;
-    } else if (phase < 0.6F) {
-      sit_intensity = 1.0F;
-    } else {
-      sit_intensity = 1.0F - (phase - 0.6F) / 0.4F;
-    }
-    sit_intensity =
-        sit_intensity * sit_intensity * (3.0F - 2.0F * sit_intensity);
+    float const sit_intensity = plateau01(phase, 0.30F, 0.74F);
 
-    float const sit_drop = sit_intensity * 0.35F;
+    float const sit_drop = sit_intensity * 0.18F;
 
     m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - sit_drop);
-    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - sit_drop);
-    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - sit_drop);
-    m_pose.neck_base.setY(m_pose.neck_base.y() - sit_drop);
-    m_pose.head_pos.setY(m_pose.head_pos.y() - sit_drop);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - sit_drop * 0.70F);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - sit_drop * 0.70F);
+    m_pose.neck_base.setY(m_pose.neck_base.y() - sit_drop * 0.62F);
+    m_pose.head_pos.setY(m_pose.head_pos.y() - sit_drop * 0.55F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() + sit_intensity * 0.025F);
 
-    m_pose.knee_l.setY(m_pose.knee_l.y() - sit_drop * 0.5F);
-    m_pose.knee_r.setY(m_pose.knee_r.y() - sit_drop * 0.5F);
-    m_pose.knee_l.setZ(m_pose.knee_l.z() + sit_intensity * 0.12F);
-    m_pose.knee_r.setZ(m_pose.knee_r.z() + sit_intensity * 0.12F);
+    m_pose.knee_l.setY(m_pose.knee_l.y() - sit_drop * 0.30F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() - sit_drop * 0.30F);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + sit_intensity * 0.09F);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + sit_intensity * 0.09F);
 
-    m_pose.foot_l.setX(m_pose.foot_l.x() - sit_intensity * 0.04F);
-    m_pose.foot_r.setX(m_pose.foot_r.x() + sit_intensity * 0.04F);
+    m_pose.foot_l.setX(m_pose.foot_l.x() - sit_intensity * 0.025F);
+    m_pose.foot_r.setX(m_pose.foot_r.x() + sit_intensity * 0.025F);
     break;
   }
 
@@ -233,17 +248,20 @@ void HumanoidPoseController::apply_ambient_idle_explicit(
 
   case AmbientIdleType::ShiftWeight: {
 
-    float const shift_phase = phase * std::numbers::pi_v<float>;
-    float const shift_amount = std::sin(shift_phase) * intensity * 0.04F;
+    float const shift_hold = plateau01(phase, 0.32F, 0.78F);
+    float const settle =
+        std::sin(phase * 2.0F * std::numbers::pi_v<float>) * 0.012F;
+    float const shift_amount = shift_hold * 0.075F + settle * intensity;
 
     m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + shift_amount);
-    m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + shift_amount);
-    m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + shift_amount);
-    m_pose.neck_base.setX(m_pose.neck_base.x() + shift_amount);
-    m_pose.head_pos.setX(m_pose.head_pos.x() + shift_amount);
+    m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + shift_amount * 0.45F);
+    m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + shift_amount * 0.45F);
+    m_pose.neck_base.setX(m_pose.neck_base.x() + shift_amount * 0.30F);
+    m_pose.head_pos.setX(m_pose.head_pos.x() + shift_amount * 0.22F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() - shift_hold * 0.018F);
 
-    m_pose.knee_l.setY(m_pose.knee_l.y() - shift_amount * 0.3F);
-    m_pose.knee_r.setY(m_pose.knee_r.y() + shift_amount * 0.2F);
+    m_pose.knee_l.setY(m_pose.knee_l.y() - shift_hold * 0.025F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + shift_hold * 0.012F);
     break;
   }
 
@@ -287,72 +305,61 @@ void HumanoidPoseController::apply_ambient_idle_explicit(
 
   case AmbientIdleType::RaiseWeapon: {
 
-    float raise_intensity = 0.0F;
-    if (phase < 0.3F) {
-      raise_intensity = phase / 0.3F;
-    } else if (phase < 0.7F) {
-      raise_intensity = 1.0F;
-    } else {
-      raise_intensity = 1.0F - (phase - 0.7F) / 0.3F;
-    }
-    raise_intensity =
-        raise_intensity * raise_intensity * (3.0F - 2.0F * raise_intensity);
+    float const raise_intensity = plateau01(phase, 0.34F, 0.78F);
+    float const wave =
+        std::sin(phase * 4.0F * std::numbers::pi_v<float>) * raise_intensity;
 
-    float const raise_amount = raise_intensity * 0.15F;
-    m_pose.hand_l.setY(m_pose.hand_l.y() + raise_amount);
-    m_pose.hand_r.setY(m_pose.hand_r.y() + raise_amount);
-    m_pose.elbow_l.setY(m_pose.elbow_l.y() + raise_amount * 0.6F);
-    m_pose.elbow_r.setY(m_pose.elbow_r.y() + raise_amount * 0.6F);
+    float const right_raise = raise_intensity * 0.28F;
+    float const left_raise = raise_intensity * 0.07F;
+    m_pose.hand_r.setY(m_pose.hand_r.y() + right_raise);
+    m_pose.elbow_r.setY(m_pose.elbow_r.y() + right_raise * 0.55F);
+    m_pose.hand_r.setX(m_pose.hand_r.x() + wave * 0.035F);
+    m_pose.elbow_r.setX(m_pose.elbow_r.x() + wave * 0.020F);
+    m_pose.hand_r.setZ(m_pose.hand_r.z() - raise_intensity * 0.06F);
 
-    m_pose.head_pos.setZ(m_pose.head_pos.z() - raise_intensity * 0.02F);
+    m_pose.hand_l.setY(m_pose.hand_l.y() + left_raise);
+    m_pose.elbow_l.setY(m_pose.elbow_l.y() + left_raise * 0.45F);
+
+    m_pose.head_pos.setY(m_pose.head_pos.y() + raise_intensity * 0.018F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() - raise_intensity * 0.035F);
     break;
   }
 
   case AmbientIdleType::Jump: {
 
-    float jump_height = 0.0F;
-    float crouch_amount = 0.0F;
+    float const prep_crouch =
+        (phase < 0.34F) ? std::sin((phase / 0.34F) * std::numbers::pi_v<float>)
+                        : 0.0F;
+    float const landing_crouch =
+        (phase > 0.58F && phase < 0.90F)
+            ? std::sin(((phase - 0.58F) / 0.32F) * std::numbers::pi_v<float>)
+            : 0.0F;
+    float const air =
+        (phase > 0.26F && phase < 0.66F)
+            ? std::sin(((phase - 0.26F) / 0.40F) * std::numbers::pi_v<float>)
+            : 0.0F;
 
-    if (phase < 0.15F) {
+    float const crouch_amount = prep_crouch * 0.75F + landing_crouch;
+    float const max_jump = 0.055F;
+    float const max_crouch = 0.055F;
 
-      crouch_amount = phase / 0.15F;
-    } else if (phase < 0.4F) {
-
-      float const launch_phase = (phase - 0.15F) / 0.25F;
-      jump_height = std::sin(launch_phase * std::numbers::pi_v<float> * 0.5F);
-    } else if (phase < 0.6F) {
-
-      jump_height = 1.0F;
-    } else if (phase < 0.85F) {
-
-      float const land_phase = (phase - 0.6F) / 0.25F;
-      jump_height =
-          1.0F - std::sin(land_phase * std::numbers::pi_v<float> * 0.5F);
-    } else {
-
-      crouch_amount = 1.0F - (phase - 0.85F) / 0.15F;
-    }
-
-    crouch_amount =
-        crouch_amount * crouch_amount * (3.0F - 2.0F * crouch_amount);
-    float const max_jump = 0.12F;
-    float const max_crouch = 0.06F;
-
-    float const vertical = jump_height * max_jump - crouch_amount * max_crouch;
+    float const vertical = air * max_jump - crouch_amount * max_crouch;
     m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + vertical);
     m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + vertical);
     m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + vertical);
     m_pose.neck_base.setY(m_pose.neck_base.y() + vertical);
     m_pose.head_pos.setY(m_pose.head_pos.y() + vertical);
-    m_pose.foot_l.setY(m_pose.foot_l.y() + vertical);
-    m_pose.foot_r.setY(m_pose.foot_r.y() + vertical);
-    m_pose.knee_l.setY(m_pose.knee_l.y() + vertical);
-    m_pose.knee_r.setY(m_pose.knee_r.y() + vertical);
+    m_pose.knee_l.setY(m_pose.knee_l.y() + vertical * 0.55F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + vertical * 0.55F);
 
     if (crouch_amount > 0.0F) {
-      m_pose.knee_l.setZ(m_pose.knee_l.z() + crouch_amount * 0.08F);
-      m_pose.knee_r.setZ(m_pose.knee_r.z() + crouch_amount * 0.08F);
+      m_pose.knee_l.setZ(m_pose.knee_l.z() + crouch_amount * 0.06F);
+      m_pose.knee_r.setZ(m_pose.knee_r.z() + crouch_amount * 0.06F);
     }
+    m_pose.hand_l.setY(m_pose.hand_l.y() - crouch_amount * 0.025F +
+                       air * 0.025F);
+    m_pose.hand_r.setY(m_pose.hand_r.y() - crouch_amount * 0.025F +
+                       air * 0.025F);
     break;
   }
 

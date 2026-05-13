@@ -48,6 +48,24 @@ void CommanderInputAdapter::trigger_rally() {
   }
 }
 
+void CommanderInputAdapter::dodge() {
+  if (m_engine != nullptr) {
+    m_engine->commander_dodge();
+  }
+}
+
+void CommanderInputAdapter::cycle_lock_on() {
+  if (m_engine != nullptr) {
+    m_engine->commander_cycle_lock_on();
+  }
+}
+
+void CommanderInputAdapter::special_action() {
+  if (m_engine != nullptr) {
+    m_engine->commander_special_action();
+  }
+}
+
 void CommanderInputAdapter::center_mouse(qreal center_sx, qreal center_sy) {
   if (m_engine != nullptr) {
     m_engine->commander_center_mouse(center_sx, center_sy);

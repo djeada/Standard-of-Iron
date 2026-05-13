@@ -170,6 +170,7 @@ run-map-pipeline:
 .PHONY: run
 run: run-map-pipeline build
 	@echo "$(BOLD)$(BLUE)Running Standard of Iron...$(RESET)"
+	@python3 scripts/purge-stale-saves.py "$(CURDIR)"
 	@cd $(BUILD_DIR) && \
 	BIN_PATH="./bin/$(BINARY_NAME)"; \
 	if [ ! -x "$$BIN_PATH" ]; then \

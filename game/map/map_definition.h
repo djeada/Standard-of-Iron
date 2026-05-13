@@ -60,22 +60,18 @@ struct UnitSpawn {
   std::optional<Game::Systems::NationID> nation;
 };
 
-struct FireCamp {
-  float x = 0.0F;
-  float z = 0.0F;
-  float intensity = 1.0F;
-  float radius = 3.0F;
-  bool persistent = true;
-};
-
 struct WorldProp {
   enum class Type : std::uint8_t {
-    Tent = 0,
+    FireCamp = 0,
+    Tent,
     SupplyCart,
     WeaponRack,
     Ruins,
     DeadTree,
-    Boulder
+    Boulder,
+    PineTree,
+    OliveTree,
+    Plant
   };
 
   Type type = Type::Tent;
@@ -83,7 +79,110 @@ struct WorldProp {
   float z = 0.0F;
   float scale = 1.0F;
   float rotation = 0.0F;
+  float intensity = 1.0F;
+  float radius = 3.0F;
+  bool persistent = true;
 };
+
+[[nodiscard]] inline auto
+world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
+  switch (type) {
+  case WorldProp::Type::FireCamp:
+    return QLatin1String("firecamp");
+  case WorldProp::Type::Tent:
+    return QLatin1String("tent");
+  case WorldProp::Type::SupplyCart:
+    return QLatin1String("supply_cart");
+  case WorldProp::Type::WeaponRack:
+    return QLatin1String("weapon_rack");
+  case WorldProp::Type::Ruins:
+    return QLatin1String("ruins");
+  case WorldProp::Type::DeadTree:
+    return QLatin1String("dead_tree");
+  case WorldProp::Type::Boulder:
+    return QLatin1String("boulder");
+  case WorldProp::Type::PineTree:
+    return QLatin1String("pine_tree");
+  case WorldProp::Type::OliveTree:
+    return QLatin1String("olive_tree");
+  case WorldProp::Type::Plant:
+    return QLatin1String("plant");
+  }
+  Q_UNREACHABLE();
+}
+
+[[nodiscard]] inline auto
+world_prop_type_from_string(const QString &value,
+                            WorldProp::Type &out) -> bool {
+  if (value == QLatin1String("firecamp")) {
+    out = WorldProp::Type::FireCamp;
+    return true;
+  }
+  if (value == QLatin1String("tent")) {
+    out = WorldProp::Type::Tent;
+    return true;
+  }
+  if (value == QLatin1String("supply_cart")) {
+    out = WorldProp::Type::SupplyCart;
+    return true;
+  }
+  if (value == QLatin1String("weapon_rack")) {
+    out = WorldProp::Type::WeaponRack;
+    return true;
+  }
+  if (value == QLatin1String("ruins")) {
+    out = WorldProp::Type::Ruins;
+    return true;
+  }
+  if (value == QLatin1String("dead_tree")) {
+    out = WorldProp::Type::DeadTree;
+    return true;
+  }
+  if (value == QLatin1String("boulder")) {
+    out = WorldProp::Type::Boulder;
+    return true;
+  }
+  if (value == QLatin1String("pine_tree")) {
+    out = WorldProp::Type::PineTree;
+    return true;
+  }
+  if (value == QLatin1String("olive_tree")) {
+    out = WorldProp::Type::OliveTree;
+    return true;
+  }
+  if (value == QLatin1String("plant")) {
+    out = WorldProp::Type::Plant;
+    return true;
+  }
+  return false;
+}
+
+[[nodiscard]] constexpr auto
+world_prop_render_scale(WorldProp::Type type) -> float {
+  switch (type) {
+  case WorldProp::Type::FireCamp:
+    return 1.0F;
+  case WorldProp::Type::Tent:
+    return 3.0F;
+  case WorldProp::Type::SupplyCart:
+    return 1.28F;
+  case WorldProp::Type::WeaponRack:
+    return 1.35F;
+  case WorldProp::Type::Ruins:
+    return 1.45F;
+  case WorldProp::Type::DeadTree:
+    return 1.55F;
+  case WorldProp::Type::Boulder:
+    return 1.20F;
+  case WorldProp::Type::PineTree:
+    return 4.50F;
+  case WorldProp::Type::OliveTree:
+    return 4.00F;
+  case WorldProp::Type::Plant:
+    return 0.55F;
+  }
+  return 1.0F;
+}
 
 enum class CoordSystem { Grid, World };
 
@@ -116,7 +215,6 @@ struct MapDefinition {
   std::vector<RiverSegment> rivers;
   std::vector<RoadSegment> roads;
   std::vector<Bridge> bridges;
-  std::vector<FireCamp> firecamps;
   std::vector<WorldProp> world_props;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;

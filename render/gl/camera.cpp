@@ -53,8 +53,8 @@ inline auto finite(const QVector3D &v) -> bool {
 }
 inline auto finite(float v) -> bool { return qIsFinite(v); }
 
-inline auto safeNormalize(const QVector3D &v, const QVector3D &fallback,
-                          float eps = k_eps) -> QVector3D {
+inline auto safe_normalize(const QVector3D &v, const QVector3D &fallback,
+                           float eps = k_eps) -> QVector3D {
   if (!finite(v)) {
     return fallback;
   }
@@ -65,10 +65,10 @@ inline auto safeNormalize(const QVector3D &v, const QVector3D &fallback,
   return v / std::sqrt(len2);
 }
 
-inline void orthonormalize(const QVector3D &frontIn, QVector3D &front_out,
+inline void orthonormalize(const QVector3D &front_in, QVector3D &front_out,
                            QVector3D &right_out, QVector3D &up_out) {
   QVector3D const world_up(0.F, 1.F, 0.F);
-  QVector3D const f = safeNormalize(frontIn, QVector3D(0, 0, -1));
+  QVector3D const f = safe_normalize(front_in, QVector3D(0, 0, -1));
 
   QVector3D u = (std::abs(QVector3D::dotProduct(f, world_up)) > 1.F - 1e-3F)
                     ? QVector3D(0, 0, 1)
@@ -283,7 +283,7 @@ void Camera::zoom_distance(float delta) {
   factor = std::clamp(factor, k_zoom_factor_min, k_zoom_factor_max);
 
   float const new_r = std::clamp(r * factor, k_min_dist, k_max_dist);
-  QVector3D const dir = safeNormalize(offset, QVector3D(0, 0, 1));
+  QVector3D const dir = safe_normalize(offset, QVector3D(0, 0, 1));
   QVector3D const new_pos = m_target + dir * new_r;
 
   m_position = new_pos;
@@ -386,7 +386,7 @@ void Camera::update(float dt) {
                           std::sin(pitch_rad),
                           std::cos(yaw_rad) * std::cos(pitch_rad));
 
-  QVector3D const fwd = safeNormalize(new_dir, m_front);
+  QVector3D const fwd = safe_normalize(new_dir, m_front);
   m_position = m_target - fwd * r;
 
   apply_soft_boundaries();
@@ -434,7 +434,7 @@ auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screen_w,
   }
 
   QVector3D const ray_dir =
-      safeNormalize(ray_end - ray_origin, QVector3D(0, -1, 0));
+      safe_normalize(ray_end - ray_origin, QVector3D(0, -1, 0));
   if (std::abs(ray_dir.y()) < k_eps) {
     return false;
   }
@@ -544,7 +544,7 @@ void Camera::set_top_down_view(const QVector3D &center, float distance) {
   m_target = center;
   m_position = center + QVector3D(0, std::max(distance, 0.01F), 0);
   m_up = QVector3D(0, 0, -1);
-  m_front = safeNormalize((m_target - m_position), QVector3D(0, 0, 1));
+  m_front = safe_normalize((m_target - m_position), QVector3D(0, 0, 1));
   update_vectors();
 
   apply_soft_boundaries();
@@ -736,34 +736,34 @@ auto Camera::is_in_frustum(const QVector3D &center,
 
   QMatrix4x4 const vp = get_view_projection_matrix();
 
-  float m[MatrixSize];
+  float m[matrix_size];
   const float *data = vp.constData();
-  for (int i = 0; i < MatrixSize; ++i) {
+  for (int i = 0; i < matrix_size; ++i) {
     m[i] = data[i];
   }
 
-  QVector3D const left_n(m[Index3] + m[Index0], m[Index7] + m[Index4],
-                         m[Index11] + m[Index8]);
+  QVector3D const left_n(m[index_3] + m[index_0], m[index_7] + m[index_4],
+                         m[index_11] + m[index_8]);
   float const left_d = m[15] + m[12];
 
-  QVector3D const right_n(m[Index3] - m[Index0], m[Index7] - m[Index4],
-                          m[Index11] - m[Index8]);
+  QVector3D const right_n(m[index_3] - m[index_0], m[index_7] - m[index_4],
+                          m[index_11] - m[index_8]);
   float const right_d = m[15] - m[12];
 
-  QVector3D const bottom_n(m[Index3] + m[Index1], m[Index7] + m[Index5],
-                           m[Index11] + m[Index9]);
+  QVector3D const bottom_n(m[index_3] + m[index_1], m[index_7] + m[index_5],
+                           m[index_11] + m[index_9]);
   float const bottom_d = m[15] + m[13];
 
-  QVector3D const top_n(m[Index3] - m[Index1], m[Index7] - m[Index5],
-                        m[Index11] - m[Index9]);
+  QVector3D const top_n(m[index_3] - m[index_1], m[index_7] - m[index_5],
+                        m[index_11] - m[index_9]);
   float const top_d = m[15] - m[13];
 
-  QVector3D const near_n(m[Index3] + m[Index2], m[Index7] + m[Index6],
-                         m[Index11] + m[Index10]);
+  QVector3D const near_n(m[index_3] + m[index_2], m[index_7] + m[index_6],
+                         m[index_11] + m[index_10]);
   float const near_d = m[15] + m[14];
 
-  QVector3D const far_n(m[Index3] - m[Index2], m[Index7] - m[Index6],
-                        m[Index11] - m[Index10]);
+  QVector3D const far_n(m[index_3] - m[index_2], m[index_7] - m[index_6],
+                        m[index_11] - m[index_10]);
   float const far_d = m[15] - m[14];
 
   auto test_plane = [&center, radius](const QVector3D &n, float d) -> bool {

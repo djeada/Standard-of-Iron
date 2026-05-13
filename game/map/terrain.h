@@ -2,6 +2,7 @@
 
 #include <QString>
 #include <QVector3D>
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -250,8 +251,8 @@ struct TerrainScatterRules {
   float pine_density_scale = 0.3F;
   float olive_base_density = 0.05F;
   float olive_density_scale = 0.08F;
-  float olive_scale_min = 2.8F;
-  float olive_scale_max = 5.5F;
+  float olive_scale_min = 5.6F;
+  float olive_scale_max = 11.0F;
 };
 
 inline auto
@@ -344,13 +345,28 @@ inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
     rules.allow_olives = true;
     rules.olive_base_density = 0.12F;
     rules.olive_density_scale = 0.15F;
-    rules.olive_scale_min = 3.2F;
-    rules.olive_scale_max = 6.5F;
+    rules.olive_scale_min = 6.4F;
+    rules.olive_scale_max = 13.0F;
     break;
   case GroundType::ForestMud:
-  case GroundType::SoilRocky:
-  case GroundType::AlpineMix:
+    rules.pine_base_density = 0.32F;
+    rules.pine_density_scale = 0.42F;
+    break;
   case GroundType::SoilFertile:
+    rules.allow_pines = false;
+    rules.allow_olives = true;
+    rules.olive_base_density = 0.08F;
+    rules.olive_density_scale = 0.12F;
+    rules.olive_scale_min = 5.6F;
+    rules.olive_scale_max = 10.5F;
+    break;
+  case GroundType::SoilRocky:
+    rules.allow_pines = false;
+    rules.allow_olives = false;
+    break;
+  case GroundType::AlpineMix:
+    rules.pine_base_density = 0.10F;
+    rules.pine_density_scale = 0.20F;
     break;
   }
   return rules;
@@ -606,6 +622,34 @@ struct Bridge {
   float height = 0.5F;
 };
 
+inline constexpr float k_road_surface_y_offset = 0.02F;
+
+[[nodiscard]] inline auto road_surface_world_y(float terrain_height) -> float {
+  return terrain_height + k_road_surface_y_offset;
+}
+
+[[nodiscard]] inline auto bridge_arch_curve(float t) -> float {
+  float const clamped_t = std::clamp(t, 0.0F, 1.0F);
+  return 4.0F * clamped_t * (1.0F - clamped_t);
+}
+
+[[nodiscard]] inline auto bridge_deck_world_y(const Bridge &bridge,
+                                              float t) -> float {
+  float const arch_height = bridge.height * bridge_arch_curve(t) * 0.8F;
+  return bridge.start.y() + bridge.height + arch_height * 0.3F;
+}
+
+[[nodiscard]] inline auto
+bridge_crossing_entry_margin(float bridge_width, float tile_size) -> float {
+  return std::max(tile_size * 2.0F, bridge_width);
+}
+
+[[nodiscard]] inline auto
+bridge_crossing_alignment_half_width(float bridge_width,
+                                     float tile_size) -> float {
+  return std::max(bridge_width * 0.5F + tile_size, tile_size * 1.5F);
+}
+
 struct TerrainField {
   int width = 0;
   int height = 0;
@@ -673,8 +717,16 @@ public:
 
   [[nodiscard]] auto isOnBridge(float world_x, float world_z) const -> bool;
 
+  [[nodiscard]] auto isBridgeCell(int grid_x, int grid_z) const -> bool;
+
+  [[nodiscard]] auto isBridgeCenterline(int grid_x, int grid_z) const -> bool;
+
   [[nodiscard]] auto getBridgeCenterPosition(float world_x, float world_z) const
       -> std::optional<QVector3D>;
+
+  [[nodiscard]] auto
+  getBridgeTraversalPosition(float world_x,
+                             float world_z) const -> std::optional<QVector3D>;
 
   [[nodiscard]] auto getBridgeDeckHeight(float world_x, float world_z) const
       -> std::optional<float>;
@@ -699,6 +751,7 @@ private:
   std::vector<Bridge> m_bridges;
 
   std::vector<bool> m_on_bridge;
+  std::vector<bool> m_bridge_centerline;
   std::vector<QVector3D> m_bridge_centers;
 
   [[nodiscard]] auto indexAt(int x, int z) const -> int;

@@ -51,8 +51,9 @@ mat2 rot2(float angle) {
 }
 
 float sample_terrain_displacement(vec3 wp, vec3 world_normal, vec2 noise_offset,
-                                float height_noise_strength,
-                                float height_noise_frequency, float entry_mask) {
+                                  float height_noise_strength,
+                                  float height_noise_frequency,
+                                  float entry_mask) {
   float frequency = max(height_noise_frequency, 0.0001);
   float angle =
       fract(sin(dot(noise_offset, vec2(12.9898, 78.233))) * 43758.5453) *
@@ -93,11 +94,11 @@ void main() {
   vec3 px = base_wp + dx;
   vec3 pz = base_wp + dz;
   px.y += sample_terrain_displacement(px, world_normal, u_noise_offset,
-                                    u_height_noise_strength,
-                                    u_height_noise_frequency, entry_mask);
+                                      u_height_noise_strength,
+                                      u_height_noise_frequency, entry_mask);
   pz.y += sample_terrain_displacement(pz, world_normal, u_noise_offset,
-                                    u_height_noise_strength,
-                                    u_height_noise_frequency, entry_mask);
+                                      u_height_noise_strength,
+                                      u_height_noise_frequency, entry_mask);
   vec3 displaced_normal = normalize(cross(pz - wp, px - wp));
   if (dot(displaced_normal, world_normal) < 0.0) {
     displaced_normal = -displaced_normal;

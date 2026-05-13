@@ -3,6 +3,8 @@
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../owner_registry.h"
+#include <algorithm>
+#include <cmath>
 
 namespace Game::Systems::Combat {
 
@@ -124,6 +126,25 @@ auto is_valid_enemy_unit(const Engine::Core::UnitComponent *attacker_unit,
   return true;
 }
 
+auto combat_radius(Engine::Core::Entity *entity) -> float {
+  if (entity == nullptr) {
+    return 0.0F;
+  }
+
+  float radius = 0.0F;
+  auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+  if (transform != nullptr) {
+    radius = std::max(transform->scale.x, transform->scale.z) * 0.5F;
+  }
+
+  auto *elephant = entity->get_component<Engine::Core::ElephantComponent>();
+  if (elephant != nullptr) {
+    radius = std::max(radius, elephant->trample_radius);
+  }
+
+  return radius;
+}
+
 auto is_in_range(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                  float range) -> bool {
   auto *attacker_transform =
@@ -143,10 +164,7 @@ auto is_in_range(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
       target_transform->position.y - attacker_transform->position.y;
   float const distance_squared = dx * dx + dz * dz;
 
-  float const scale_x = target_transform->scale.x;
-  float const scale_z = target_transform->scale.z;
-  float const target_radius = std::max(scale_x, scale_z) * 0.5F;
-  float const effective_range = range + target_radius;
+  float const effective_range = range + combat_radius(target);
 
   if (distance_squared > effective_range * effective_range) {
     return false;

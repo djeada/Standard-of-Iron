@@ -39,7 +39,7 @@ public:
   void bind();
   void unbind();
 
-  void add_vertexBuffer(Buffer &buffer, const std::vector<int> &layout);
+  void add_vertex_buffer(Buffer &buffer, const std::vector<int> &layout);
   void set_index_buffer(Buffer &buffer);
   [[nodiscard]] auto id() const -> GLuint { return m_vao; }
 

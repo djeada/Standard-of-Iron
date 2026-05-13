@@ -2,6 +2,7 @@
 #include "core/entity.h"
 #include "core/serialization.h"
 #include "core/world.h"
+#include "map/terrain_service.h"
 #include "systems/nation_id.h"
 #include "systems/owner_registry.h"
 #include "units/spawn_type.h"
@@ -18,7 +19,10 @@ class SerializationTest : public ::testing::Test {
 protected:
   void SetUp() override { world = std::make_unique<World>(); }
 
-  void TearDown() override { world.reset(); }
+  void TearDown() override {
+    Game::Map::TerrainService::instance().clear();
+    world.reset();
+  }
 
   std::unique_ptr<World> world;
 };
@@ -369,6 +373,39 @@ TEST_F(SerializationTest, SaveAndLoadFromFile) {
     EXPECT_FLOAT_EQ(loaded_transform->position.y, 43.0F);
     EXPECT_FLOAT_EQ(loaded_transform->position.z, 44.0F);
   }
+}
+
+TEST_F(SerializationTest, WorldSerializationPreservesScatterSources) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 5;
+  map_def.grid.height = 5;
+  map_def.grid.tile_size = 1.0F;
+  map_def.world_props.push_back({.type = Game::Map::WorldProp::Type::FireCamp,
+                                 .x = 2.0F,
+                                 .z = 1.0F,
+                                 .intensity = 1.15F,
+                                 .radius = 3.75F,
+                                 .persistent = false});
+  map_def.world_props.push_back({.type = Game::Map::WorldProp::Type::DeadTree,
+                                 .x = 1.0F,
+                                 .z = 3.0F,
+                                 .scale = 1.4F,
+                                 .rotation = 0.6F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  QJsonDocument doc = Serialization::serialize_world(world.get());
+  auto new_world = std::make_unique<World>();
+  Serialization::deserialize_world(new_world.get(), doc);
+
+  auto &terrain = Game::Map::TerrainService::instance();
+  ASSERT_EQ(terrain.world_props().size(), 2U);
+  EXPECT_EQ(terrain.world_props().front().type,
+            Game::Map::WorldProp::Type::FireCamp);
+  EXPECT_FLOAT_EQ(terrain.world_props().front().intensity, 1.15F);
+  EXPECT_FALSE(terrain.world_props().front().persistent);
+  EXPECT_EQ(terrain.world_props().back().type,
+            Game::Map::WorldProp::Type::DeadTree);
+  EXPECT_FLOAT_EQ(terrain.world_props().back().scale, 1.4F);
 }
 
 TEST_F(SerializationTest, ProductionComponentSerialization) {

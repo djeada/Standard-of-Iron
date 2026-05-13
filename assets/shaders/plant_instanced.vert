@@ -52,17 +52,19 @@ void main() {
   local_pos.xz += lean_dir * (h * h) * tan(lean_angle) * final_scale;
 
   float gust = sin(u_time * 0.35 + seed * 6.0) * 0.5 + 0.5;
-  float sway = sin(u_time * sway_speed * u_wind_speed + sway_phase + seed * 4.0);
+  float sway =
+      sin(u_time * sway_speed * u_wind_speed + sway_phase + seed * 4.0);
   sway *= (0.22 + 0.55 * gust) * sway_strength * u_wind_strength * pow(h, 1.25);
 
   float wind_yaw = seed * 9.0;
-  vec2 wind_dir = normalize(vec2(cos(wind_yaw), sin(wind_yaw)) + vec2(0.6, 0.8));
+  vec2 wind_dir =
+      normalize(vec2(cos(wind_yaw), sin(wind_yaw)) + vec2(0.6, 0.8));
   local_pos.xz += wind_dir * (0.10 * sway);
 
   float twist = (h11(seed * 5.5) - 0.5) * 0.30;
   float twist_angle = twist * h;
-  mat2 tw =
-      mat2(cos(twist_angle), -sin(twist_angle), sin(twist_angle), cos(twist_angle));
+  mat2 tw = mat2(cos(twist_angle), -sin(twist_angle), sin(twist_angle),
+                 cos(twist_angle));
   local_pos.xz = tw * local_pos.xz;
 
   float cs = cos(rotation), sn = sin(rotation);
