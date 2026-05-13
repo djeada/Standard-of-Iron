@@ -13,7 +13,7 @@ TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshWithConfiguredYOffset) {
   settings.edge_noise_weights = {0.6F, 0.4F, 0.0F};
   settings.width_variation_scale = 0.15F;
   settings.meander_length_scale = 0.1F;
-  settings.y_offset = 0.02F;
+  settings.y_offset = Game::Map::k_road_surface_y_offset;
 
   auto mesh = Render::Ground::build_linear_ribbon_mesh(
       {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F}, 1.0F,
@@ -22,7 +22,68 @@ TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshWithConfiguredYOffset) {
   ASSERT_NE(mesh, nullptr);
   EXPECT_FALSE(mesh->get_vertices().empty());
   EXPECT_FALSE(mesh->get_indices().empty());
-  EXPECT_FLOAT_EQ(mesh->get_vertices().front().position[1], 0.02F);
+  EXPECT_FLOAT_EQ(mesh->get_vertices().front().position[1],
+                  Game::Map::k_road_surface_y_offset);
+}
+
+TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshAlongTerrainHeightMap) {
+  std::vector<float> heights = {0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 0.0F, 1.0F,
+                                2.0F, 3.0F, 4.0F, 0.0F, 1.0F, 2.0F, 3.0F,
+                                4.0F, 0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 0.0F,
+                                1.0F, 2.0F, 3.0F, 4.0F};
+  std::vector<Game::Map::TerrainType> terrain_types(
+      heights.size(), Game::Map::TerrainType::Flat);
+  Game::Map::TerrainHeightMap height_map(5, 5, 1.0F);
+  height_map.restore_from_data(heights, terrain_types, {}, {});
+
+  Render::Ground::LinearFeatureRibbonSettings settings;
+  settings.sample_step = 1.0F;
+  settings.min_length_steps = 2;
+  settings.y_offset = Game::Map::k_road_surface_y_offset;
+  settings.height_map = &height_map;
+
+  auto mesh = Render::Ground::build_linear_ribbon_mesh(
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F}, 1.0F,
+      settings);
+
+  ASSERT_NE(mesh, nullptr);
+  ASSERT_GE(mesh->get_vertices().size(), 4U);
+  EXPECT_FLOAT_EQ(
+      mesh->get_vertices().front().position[1],
+      Game::Map::road_surface_world_y(height_map.get_height_at(-2.0F, 0.0F)));
+  EXPECT_FLOAT_EQ(
+      mesh->get_vertices().back().position[1],
+      Game::Map::road_surface_world_y(height_map.get_height_at(2.0F, 0.0F)));
+}
+
+TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshAboveCrossSlopeTerrain) {
+  std::vector<float> heights = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F,
+                                1.0F, 1.0F, 1.0F, 2.0F, 2.0F, 2.0F, 2.0F,
+                                2.0F, 3.0F, 3.0F, 3.0F, 3.0F, 3.0F, 4.0F,
+                                4.0F, 4.0F, 4.0F, 4.0F};
+  std::vector<Game::Map::TerrainType> terrain_types(
+      heights.size(), Game::Map::TerrainType::Flat);
+  Game::Map::TerrainHeightMap height_map(5, 5, 1.0F);
+  height_map.restore_from_data(heights, terrain_types, {}, {});
+
+  Render::Ground::LinearFeatureRibbonSettings settings;
+  settings.sample_step = 1.0F;
+  settings.min_length_steps = 2;
+  settings.y_offset = Game::Map::k_road_surface_y_offset;
+  settings.height_map = &height_map;
+
+  auto mesh = Render::Ground::build_linear_ribbon_mesh(
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F}, 1.0F,
+      settings);
+
+  ASSERT_NE(mesh, nullptr);
+  ASSERT_GE(mesh->get_vertices().size(), 4U);
+  EXPECT_FLOAT_EQ(
+      mesh->get_vertices()[0].position[1],
+      Game::Map::road_surface_world_y(height_map.get_height_at(-2.0F, -1.0F)));
+  EXPECT_FLOAT_EQ(
+      mesh->get_vertices()[1].position[1],
+      Game::Map::road_surface_world_y(height_map.get_height_at(-2.0F, 1.0F)));
 }
 
 TEST(LinearFeatureGeometryTest, BuildsRiverRibbonMeshWithMeanderSupport) {

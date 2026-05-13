@@ -3,6 +3,7 @@
 #include "../../game/map/map_definition.h"
 #include "../../game/map/terrain_service.h"
 #include "../ground/biome_renderer.h"
+#include "../ground/boulder_renderer.h"
 #include "../ground/dead_tree_renderer.h"
 #include "../ground/firecamp_renderer.h"
 #include "../ground/olive_renderer.h"
@@ -14,45 +15,8 @@
 #include "../ground/tent_renderer.h"
 #include "../ground/weapon_rack_renderer.h"
 #include <QVector3D>
-#include <tuple>
-#include <utility>
 
 namespace Render::GL {
-
-namespace {
-
-auto convert_fire_camps(const std::vector<Game::Map::FireCamp> &fire_camps,
-                        const Game::Map::TerrainHeightMap &height_map)
-    -> std::tuple<std::vector<QVector3D>, std::vector<float>,
-                  std::vector<float>> {
-  std::vector<QVector3D> positions;
-  std::vector<float> intensities;
-  std::vector<float> radii;
-
-  positions.reserve(fire_camps.size());
-  intensities.reserve(fire_camps.size());
-  radii.reserve(fire_camps.size());
-
-  const float tile_size = height_map.get_tile_size();
-  const int width = height_map.get_width();
-  const int height = height_map.get_height();
-  const float half_width = width * 0.5F;
-  const float half_height = height * 0.5F;
-  auto &terrain_service = Game::Map::TerrainService::instance();
-
-  for (const auto &fire_camp : fire_camps) {
-    const float world_x = (fire_camp.x - half_width) * tile_size;
-    const float world_z = (fire_camp.z - half_height) * tile_size;
-    positions.push_back(terrain_service.resolve_surface_world_position(
-        world_x, world_z, 0.0F, 0.0F));
-    intensities.push_back(fire_camp.intensity);
-    radii.push_back(fire_camp.radius);
-  }
-
-  return {std::move(positions), std::move(intensities), std::move(radii)};
-}
-
-} // namespace
 
 TerrainScatterManager::TerrainScatterManager()
     : m_biome(std::make_unique<BiomeRenderer>()),
@@ -66,35 +30,32 @@ TerrainScatterManager::TerrainScatterManager()
       m_weapon_rack(std::make_unique<WeaponRackRenderer>()),
       m_ruins(std::make_unique<RuinsRenderer>()),
       m_dead_tree(std::make_unique<DeadTreeRenderer>()),
+      m_boulder(std::make_unique<BoulderRenderer>()),
       m_passes{m_biome.get(), m_stone.get(),       m_plant.get(),
                m_pine.get(),  m_olive.get(),       m_firecamp.get(),
                m_tent.get(),  m_supply_cart.get(), m_weapon_rack.get(),
-               m_ruins.get(), m_dead_tree.get()} {}
+               m_ruins.get(), m_dead_tree.get(),   m_boulder.get()} {}
 
 TerrainScatterManager::~TerrainScatterManager() = default;
 
 void TerrainScatterManager::configure(
     const Game::Map::TerrainHeightMap &height_map,
     const Game::Map::BiomeSettings &biome_settings,
-    const std::vector<Game::Map::FireCamp> &fire_camps,
     const std::vector<Game::Map::WorldProp> &world_props) {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   m_biome->configure(height_map, biome_settings);
   m_stone->configure(height_map, biome_settings, world_props);
-  m_plant->configure(height_map, biome_settings);
-  m_pine->configure(height_map, biome_settings);
-  m_olive->configure(height_map, biome_settings);
-  m_firecamp->configure(height_map, biome_settings);
-  m_tent->configure(height_map, biome_settings, fire_camps, world_props);
-  m_supply_cart->configure(height_map, biome_settings, fire_camps, world_props);
-  m_weapon_rack->configure(height_map, biome_settings, fire_camps, world_props);
-  m_ruins->configure(height_map, biome_settings, fire_camps, world_props);
-  m_dead_tree->configure(height_map, biome_settings, fire_camps, world_props);
-
-  const auto [positions, intensities, radii] =
-      convert_fire_camps(fire_camps, height_map);
-  m_firecamp->set_explicit_fire_camps(positions, intensities, radii);
+  m_plant->configure(height_map, biome_settings, world_props);
+  m_pine->configure(height_map, biome_settings, world_props);
+  m_olive->configure(height_map, biome_settings, world_props);
+  m_firecamp->configure(height_map, biome_settings, world_props);
+  m_tent->configure(height_map, biome_settings, world_props);
+  m_supply_cart->configure(height_map, biome_settings, world_props);
+  m_weapon_rack->configure(height_map, biome_settings, world_props);
+  m_ruins->configure(height_map, biome_settings, world_props);
+  m_dead_tree->configure(height_map, biome_settings, world_props);
+  m_boulder->configure(height_map, biome_settings, world_props);
 }
 
 void TerrainScatterManager::set_light_direction(const QVector3D &dir) {
@@ -104,6 +65,12 @@ void TerrainScatterManager::set_light_direction(const QVector3D &dir) {
   m_plant->set_light_direction(dir);
   m_pine->set_light_direction(dir);
   m_olive->set_light_direction(dir);
+  m_tent->set_light_direction(dir);
+  m_supply_cart->set_light_direction(dir);
+  m_weapon_rack->set_light_direction(dir);
+  m_ruins->set_light_direction(dir);
+  m_dead_tree->set_light_direction(dir);
+  m_boulder->set_light_direction(dir);
 }
 
 void TerrainScatterManager::submit(Renderer &renderer,
@@ -131,6 +98,7 @@ void TerrainScatterManager::clear() {
   m_weapon_rack->clear();
   m_ruins->clear();
   m_dead_tree->clear();
+  m_boulder->clear();
 }
 
 void TerrainScatterManager::refresh_grass() {
@@ -145,7 +113,7 @@ auto TerrainScatterManager::is_gpu_ready() const -> bool {
          m_olive->is_gpu_ready() && m_firecamp->is_gpu_ready() &&
          m_tent->is_gpu_ready() && m_supply_cart->is_gpu_ready() &&
          m_weapon_rack->is_gpu_ready() && m_ruins->is_gpu_ready() &&
-         m_dead_tree->is_gpu_ready();
+         m_dead_tree->is_gpu_ready() && m_boulder->is_gpu_ready();
 }
 
 auto TerrainScatterManager::biome() const -> BiomeRenderer * {
@@ -190,6 +158,10 @@ auto TerrainScatterManager::ruins() const -> RuinsRenderer * {
 
 auto TerrainScatterManager::dead_tree() const -> DeadTreeRenderer * {
   return m_dead_tree.get();
+}
+
+auto TerrainScatterManager::boulder() const -> BoulderRenderer * {
+  return m_boulder.get();
 }
 
 auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
@@ -253,7 +225,13 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
            m_dead_tree != nullptr ? m_dead_tree->instance_count() : 0U,
            m_dead_tree == nullptr || m_dead_tree->is_gpu_ready(),
            m_dead_tree != nullptr ? m_dead_tree->last_sync_stats()
-                                  : Render::Ground::Scatter::SyncStats{}}};
+                                  : Render::Ground::Scatter::SyncStats{}},
+          {ScatterSpeciesId::Boulder, ScatterVisibilityMode::InstanceFiltered,
+           m_boulder.get(),
+           m_boulder != nullptr ? m_boulder->instance_count() : 0U,
+           m_boulder == nullptr || m_boulder->is_gpu_ready(),
+           m_boulder != nullptr ? m_boulder->last_sync_stats()
+                                : Render::Ground::Scatter::SyncStats{}}};
 }
 
 auto TerrainScatterManager::last_sync_stats() const
@@ -293,6 +271,9 @@ auto TerrainScatterManager::last_sync_stats() const
   }
   if (m_dead_tree != nullptr) {
     stats += m_dead_tree->last_sync_stats();
+  }
+  if (m_boulder != nullptr) {
+    stats += m_boulder->last_sync_stats();
   }
   return stats;
 }

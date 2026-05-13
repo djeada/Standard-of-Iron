@@ -1,10 +1,8 @@
 #version 330 core
 
-in vec3 v_world_pos;
 in vec3 v_normal;
 in vec3 v_color;
 in vec2 v_tex_coord;
-in float v_alpha;
 in float v_height;
 in float v_seed;
 in float v_type;
@@ -22,32 +20,6 @@ float aawidth_uv(vec2 uv) {
   float w = 0.5 * (length(dx) + length(dy));
   float q = exp2(floor(log2(max(w, 1e-6)) + 0.5));
   return clamp(q, 0.0015, 0.0060);
-}
-
-float sdf_to_alpha_uv_stable(float sdf, vec2 uv) {
-  float w = aawidth_uv(uv);
-
-  sdf -= 0.25 * w;
-
-  float a = 1.0 - smoothstep(-w, w, sdf);
-
-  float steps = mix(24.0, 64.0, a);
-  a = floor(a * steps + 0.5) / steps;
-
-  return a;
-}
-
-float interleaved_gradient_noise(vec2 p) {
-  float f = dot(p, vec2(0.06711056, 0.00583715));
-  return fract(52.9829189 * fract(f));
-}
-
-float stable_dither(float seed) {
-#ifdef DITHER_SCREEN_ANCHORED
-  return interleaved_gradient_noise(gl_FragCoord.xy);
-#else
-  return interleaved_gradient_noise(floor(v_world_pos.xz * 4.0 + seed * 17.0));
-#endif
 }
 
 float quant_step(float w) { return exp2(floor(log2(max(w, 1e-6)) + 0.5)); }
@@ -125,22 +97,8 @@ void main() {
 
   float type_val = fract(v_type);
   float sdf = plant_sdf(v_tex_coord, type_val, v_seed);
-  float alpha = sdf_to_alpha_uv_stable(sdf, v_tex_coord);
-
-  if (alpha <= 0.002)
+  if (sdf > -0.004)
     discard;
-
-#ifdef USE_HASHED_ALPHA
-  {
-    float w = aawidth_uv(v_tex_coord);
-    float thin = smoothstep(0.0, 2.0 * w, alpha);
-    if (thin < 0.98) {
-      if (thin < stable_dither(v_seed))
-        discard;
-      alpha = 1.0;
-    }
-  }
-#endif
 
   float step_uv = aawidth_uv(v_tex_coord);
   vec2 g = sdf_grad(v_tex_coord, type_val, v_seed, step_uv);
@@ -173,5 +131,5 @@ void main() {
   vec3 color = albedo * (ambient + diffuse * ao_stem) +
                albedo * sss * vec3(1.0, 0.95, 0.85);
 
-  frag_color = vec4(color, alpha);
+  frag_color = vec4(color, 1.0);
 }

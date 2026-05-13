@@ -18,7 +18,7 @@ public:
   ~RoadRenderer() override;
 
   void configure(const std::vector<Game::Map::RoadSegment> &road_segments,
-                 float tile_size);
+                 const Game::Map::TerrainHeightMap &height_map);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
@@ -26,6 +26,7 @@ private:
   void build_meshes();
 
   std::vector<Game::Map::RoadSegment> m_road_segments;
+  const Game::Map::TerrainHeightMap *m_height_map = nullptr;
   float m_tile_size = 1.0F;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
   Ground::VisibilityTextureHelper m_vis_helper;

@@ -17,6 +17,7 @@
 #include "game/systems/game_state_serializer.h"
 #include "input_command_handler.h"
 #include "minimap_manager.h"
+#include "render/entity/combat_dust_renderer.h"
 #include "renderer_bootstrap.h"
 #include <QElapsedTimer>
 #include <QJsonObject>
@@ -166,6 +167,7 @@ public:
   Q_PROPERTY(bool civilian_delivery_available READ civilian_delivery_available
                  NOTIFY civilian_delivery_available_changed)
   Q_PROPERTY(QString control_mode READ control_mode NOTIFY control_mode_changed)
+  Q_PROPERTY(QString game_mode READ game_mode NOTIFY game_mode_changed)
   Q_PROPERTY(bool commander_control_available READ commander_control_available
                  NOTIFY commander_control_available_changed)
   Q_PROPERTY(QObject *commander_input READ commander_input CONSTANT)
@@ -213,6 +215,9 @@ public:
   Q_INVOKABLE void commander_secondary_action_down();
   Q_INVOKABLE void commander_secondary_action_up();
   Q_INVOKABLE void commander_trigger_rally();
+  Q_INVOKABLE void commander_dodge();
+  Q_INVOKABLE void commander_cycle_lock_on();
+  Q_INVOKABLE void commander_special_action();
   Q_INVOKABLE void commander_mouse_move(qreal dx, qreal dy);
   Q_INVOKABLE void commander_mouse_look_at(qreal sx, qreal sy, qreal center_sx,
                                            qreal center_sy);
@@ -286,6 +291,8 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_selected_builder_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_controlled_commander_status() const;
+  Q_INVOKABLE QVariantList pop_rpg_damage_events();
+  Q_INVOKABLE QVariantMap rpg_project_world(float x, float y, float z) const;
   Q_INVOKABLE void start_builder_construction(const QString &item_type);
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString &unit_type,
@@ -340,6 +347,7 @@ public:
     return m_civilian_delivery_available;
   }
   [[nodiscard]] QString control_mode() const;
+  [[nodiscard]] QString game_mode() const;
   [[nodiscard]] bool commander_control_available() const;
   [[nodiscard]] QObject *commander_input();
 
@@ -390,6 +398,7 @@ private:
     bool spawned = false;
   };
   enum class PlayerControlMode { Rts, Commander };
+  enum class GameMode { Rts, Rpg };
   using ControlModeUpdate = void (GameEngine::*)(float dt);
   using ControlModeToggle = void (GameEngine::*)();
   struct CameraSnapshot {
@@ -490,6 +499,7 @@ private:
   ViewportState m_viewport;
   bool m_follow_selection_enabled = false;
   PlayerControlMode m_control_mode = PlayerControlMode::Rts;
+  GameMode m_game_mode = GameMode::Rts;
   ControlModeUpdate m_control_mode_update =
       &GameEngine::update_rts_control_mode;
   ControlModeToggle m_control_mode_toggle =
@@ -498,6 +508,7 @@ private:
   std::vector<Engine::Core::EntityID> m_saved_rts_selection_ids;
   CameraSnapshot m_rts_camera_snapshot;
   CommanderControlController m_commander_control;
+  Render::GL::RpgTelegraphRenderer m_rpg_telegraphs;
   CommanderInputAdapter m_commander_input;
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel *m_selected_units_model = nullptr;
@@ -518,6 +529,17 @@ private:
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
       m_unit_spawned_subscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>
+      m_combat_hit_subscription;
+
+  struct RpgDamageEvent {
+    float wx{0.0F};
+    float wy{0.0F};
+    float wz{0.0F};
+    int damage{0};
+  };
+  std::vector<RpgDamageEvent> m_rpg_damage_events;
+  float m_rpg_hit_stop_timer{0.0F};
   EntityCache m_entity_cache;
 
 signals:
@@ -549,6 +571,7 @@ signals:
   void campaign_mission_changed();
   void civilian_delivery_available_changed();
   void control_mode_changed();
+  void game_mode_changed();
   void commander_control_available_changed();
   void mission_announcement(QString text);
 };

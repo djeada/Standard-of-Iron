@@ -25,7 +25,7 @@ void TerrainFeatureManager::configure(
   const float tile_size = height_map.get_tile_size();
 
   m_river->configure(river_segments, tile_size);
-  m_road->configure(road_segments, tile_size);
+  m_road->configure(road_segments, height_map);
   m_riverbank->configure(river_segments, height_map);
   m_bridge->configure(bridges, tile_size);
 }

@@ -187,7 +187,8 @@ void CombatDustPipeline::cache_uniforms() {
 
   if (m_blood_shader != nullptr) {
     m_blood_uniforms.mvp = m_blood_shader->uniform_handle("u_mvp");
-    m_blood_uniforms.radius = m_blood_shader->uniform_handle("u_radius");
+    m_blood_uniforms.radius =
+        m_blood_shader->optional_uniform_handle("u_radius");
     m_blood_uniforms.alpha_scale =
         m_blood_shader->uniform_handle("u_alpha_scale");
   }
@@ -301,20 +302,20 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
 
   m_index_count = static_cast<GLsizei>(indices.size());
 
-  glEnableVertexAttribArray(VertexAttrib::Position);
+  glEnableVertexAttribArray(VertexAttrib::position);
   glVertexAttribPointer(
-      VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT, GL_FALSE,
+      VertexAttrib::position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
       sizeof(DustVertex),
       reinterpret_cast<void *>(offsetof(DustVertex, position)));
 
-  glEnableVertexAttribArray(VertexAttrib::Normal);
-  glVertexAttribPointer(VertexAttrib::Normal, ComponentCount::Vec3, GL_FLOAT,
+  glEnableVertexAttribArray(VertexAttrib::normal);
+  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
                         GL_FALSE, sizeof(DustVertex),
                         reinterpret_cast<void *>(offsetof(DustVertex, normal)));
 
-  glEnableVertexAttribArray(VertexAttrib::TexCoord);
+  glEnableVertexAttribArray(VertexAttrib::tex_coord);
   glVertexAttribPointer(
-      VertexAttrib::TexCoord, ComponentCount::Vec2, GL_FLOAT, GL_FALSE,
+      VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT, GL_FALSE,
       sizeof(DustVertex),
       reinterpret_cast<void *>(offsetof(DustVertex, tex_coord)));
 
@@ -412,20 +413,20 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
 
   m_blood_index_count = static_cast<GLsizei>(indices.size());
 
-  glEnableVertexAttribArray(VertexAttrib::Position);
+  glEnableVertexAttribArray(VertexAttrib::position);
   glVertexAttribPointer(
-      VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT, GL_FALSE,
+      VertexAttrib::position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
       sizeof(DustVertex),
       reinterpret_cast<void *>(offsetof(DustVertex, position)));
 
-  glEnableVertexAttribArray(VertexAttrib::Normal);
-  glVertexAttribPointer(VertexAttrib::Normal, ComponentCount::Vec3, GL_FLOAT,
+  glEnableVertexAttribArray(VertexAttrib::normal);
+  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
                         GL_FALSE, sizeof(DustVertex),
                         reinterpret_cast<void *>(offsetof(DustVertex, normal)));
 
-  glEnableVertexAttribArray(VertexAttrib::TexCoord);
+  glEnableVertexAttribArray(VertexAttrib::tex_coord);
   glVertexAttribPointer(
-      VertexAttrib::TexCoord, ComponentCount::Vec2, GL_FLOAT, GL_FALSE,
+      VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT, GL_FALSE,
       sizeof(DustVertex),
       reinterpret_cast<void *>(offsetof(DustVertex, tex_coord)));
 

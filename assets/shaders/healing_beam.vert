@@ -60,11 +60,11 @@ void main() {
   float spiral_radius = u_beam_width * (0.3 + 0.7 * sin(t * 3.14159));
 
   vec3 spiral_offset = right * cos(spiral_angle) * spiral_radius +
-                      local_up * sin(spiral_angle) * spiral_radius;
+                       local_up * sin(spiral_angle) * spiral_radius;
 
   float section_radius = u_beam_width * (1.0 - abs(a_position.x));
   vec3 section_offset = right * a_position.x * section_radius +
-                       local_up * a_position.y * section_radius;
+                        local_up * a_position.y * section_radius;
 
   vec3 world_pos = beam_center + section_offset * 0.3 + spiral_offset * 0.7;
 

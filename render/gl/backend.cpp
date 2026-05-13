@@ -294,8 +294,8 @@ void Backend::begin_frame() {
   if (m_viewport_width > 0 && m_viewport_height > 0) {
     glViewport(0, 0, m_viewport_width, m_viewport_height);
   }
-  glClearColor(m_clear_color[Red], m_clear_color[Green], m_clear_color[Blue],
-               m_clear_color[Alpha]);
+  glClearColor(m_clear_color[red], m_clear_color[green], m_clear_color[blue],
+               m_clear_color[alpha]);
 
   glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -318,10 +318,10 @@ void Backend::set_viewport(int w, int h) {
 }
 
 void Backend::set_clear_color(float r, float g, float b, float a) {
-  m_clear_color[Red] = r;
-  m_clear_color[Green] = g;
-  m_clear_color[Blue] = b;
-  m_clear_color[Alpha] = a;
+  m_clear_color[red] = r;
+  m_clear_color[green] = g;
+  m_clear_color[blue] = b;
+  m_clear_color[alpha] = a;
 }
 
 void Backend::execute(const DrawQueue &queue, const Camera &cam) {
@@ -538,13 +538,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         grass.instance_buffer->bind();
         const auto stride = static_cast<GLsizei>(sizeof(GrassInstanceGpu));
         glVertexAttribPointer(
-            TexCoord, Vec4, GL_FLOAT, GL_FALSE, stride,
+            tex_coord, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(GrassInstanceGpu, pos_height)));
         glVertexAttribPointer(
-            InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_position, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(GrassInstanceGpu, color_width)));
         glVertexAttribPointer(
-            InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_scale, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(GrassInstanceGpu, sway_params)));
         grass.instance_buffer->unbind();
 
@@ -607,10 +607,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         stone.instance_buffer->bind();
         const auto stride = static_cast<GLsizei>(sizeof(StoneInstanceGpu));
         glVertexAttribPointer(
-            TexCoord, Vec4, GL_FLOAT, GL_FALSE, stride,
+            tex_coord, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(StoneInstanceGpu, pos_scale)));
         glVertexAttribPointer(
-            InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_position, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(StoneInstanceGpu, color_rot)));
         stone.instance_buffer->unbind();
 
@@ -644,8 +644,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         DepthMaskScope const depth_mask(true);
 
         glEnable(GL_DEPTH_TEST);
-        BlendScope const blend(true);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        BlendScope const blend(false);
         GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
         if (prev_cull != 0U) {
           glDisable(GL_CULL_FACE);
@@ -695,13 +694,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         plant.instance_buffer->bind();
         const auto stride = static_cast<GLsizei>(sizeof(PlantInstanceGpu));
         glVertexAttribPointer(
-            InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_position, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(PlantInstanceGpu, pos_scale)));
         glVertexAttribPointer(
-            InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_scale, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(PlantInstanceGpu, color_sway)));
         glVertexAttribPointer(
-            InstanceColor, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_color, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(PlantInstanceGpu, type_params)));
         plant.instance_buffer->unbind();
 
@@ -738,8 +737,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
         DepthMaskScope const depth_mask(true);
         glEnable(GL_DEPTH_TEST);
-        BlendScope const blend(true);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        BlendScope const blend(false);
         GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
         if (prev_cull != 0U) {
           glDisable(GL_CULL_FACE);
@@ -789,13 +787,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         pine.instance_buffer->bind();
         const auto stride = static_cast<GLsizei>(sizeof(PineInstanceGpu));
         glVertexAttribPointer(
-            InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_position, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(PineInstanceGpu, pos_scale)));
         glVertexAttribPointer(
-            InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_scale, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(PineInstanceGpu, color_sway)));
         glVertexAttribPointer(
-            InstanceColor, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_color, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(PineInstanceGpu, rotation)));
         pine.instance_buffer->unbind();
 
@@ -832,8 +830,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
         DepthMaskScope const depth_mask(true);
         glEnable(GL_DEPTH_TEST);
-        BlendScope const blend(true);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        BlendScope const blend(false);
         GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
         if (prev_cull != 0U) {
           glDisable(GL_CULL_FACE);
@@ -883,13 +880,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         olive.instance_buffer->bind();
         const auto stride = static_cast<GLsizei>(sizeof(OliveInstanceGpu));
         glVertexAttribPointer(
-            InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_position, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(OliveInstanceGpu, pos_scale)));
         glVertexAttribPointer(
-            InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_scale, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(OliveInstanceGpu, color_sway)));
         glVertexAttribPointer(
-            InstanceColor, Vec4, GL_FLOAT, GL_FALSE, stride,
+            instance_color, vec4, GL_FLOAT, GL_FALSE, stride,
             reinterpret_cast<void *>(offsetof(OliveInstanceGpu, rotation)));
         olive.instance_buffer->unbind();
 
@@ -1008,11 +1005,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glBindVertexArray(m_vegetation_pipeline->m_firecamp_vao);
         firecamp.instance_buffer->bind();
         const auto stride = static_cast<GLsizei>(sizeof(FireCampInstanceGpu));
-        glVertexAttribPointer(InstancePosition, Vec4, GL_FLOAT, GL_FALSE,
+        glVertexAttribPointer(instance_position, vec4, GL_FLOAT, GL_FALSE,
                               stride,
                               reinterpret_cast<void *>(offsetof(
                                   FireCampInstanceGpu, pos_intensity)));
-        glVertexAttribPointer(InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
+        glVertexAttribPointer(instance_scale, vec4, GL_FLOAT, GL_FALSE, stride,
                               reinterpret_cast<void *>(
                                   offsetof(FireCampInstanceGpu, radius_phase)));
         firecamp.instance_buffer->unbind();
@@ -1120,10 +1117,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         deco_cmd_.instance_buffer->bind();
         const auto stride2 = static_cast<GLsizei>(sizeof(TentInstanceGpu));
         glVertexAttribPointer(
-            TexCoord, Vec4, GL_FLOAT, GL_FALSE, stride2,
+            tex_coord, vec4, GL_FLOAT, GL_FALSE, stride2,
             reinterpret_cast<void *>(offsetof(TentInstanceGpu, pos_scale)));
         glVertexAttribPointer(
-            InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride2,
+            instance_position, vec4, GL_FLOAT, GL_FALSE, stride2,
             reinterpret_cast<void *>(offsetof(TentInstanceGpu, color_rot)));
         deco_cmd_.instance_buffer->unbind();
 
@@ -1166,8 +1163,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_last_bound_texture = nullptr;
       }
 
-      QVector3D const fog_color(m_clear_color[Red], m_clear_color[Green],
-                                m_clear_color[Blue]);
+      QVector3D const fog_color(m_clear_color[red], m_clear_color[green],
+                                m_clear_color[blue]);
       QVector3D const camera_position = cam.get_position();
       float const fog_start =
           std::max(cam.get_near() + 5.0F, cam.get_far() * 0.18F);

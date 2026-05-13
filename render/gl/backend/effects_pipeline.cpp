@@ -54,7 +54,8 @@ void EffectsPipeline::cache_basic_uniforms() {
   m_basic_uniforms.view_proj =
       m_basic_shader->optional_uniform_handle("u_view_proj");
   m_basic_uniforms.texture = m_basic_shader->uniform_handle("u_texture");
-  m_basic_uniforms.use_texture = m_basic_shader->uniform_handle("u_use_texture");
+  m_basic_uniforms.use_texture =
+      m_basic_shader->uniform_handle("u_use_texture");
   m_basic_uniforms.color = m_basic_shader->uniform_handle("u_color");
   m_basic_uniforms.alpha = m_basic_shader->uniform_handle("u_alpha");
   m_basic_uniforms.instanced =

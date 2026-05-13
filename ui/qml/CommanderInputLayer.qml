@@ -46,10 +46,18 @@ Item {
             event.accepted = true;
             return ;
         case Qt.Key_Space:
-            if (typeof root.mainWindowRef !== 'undefined') {
-                root.mainWindowRef.game_paused = !root.mainWindowRef.game_paused;
-                root.gameView.set_paused(root.mainWindowRef.game_paused);
-            }
+            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.dodge)
+                root.commanderInput.dodge();
+            event.accepted = true;
+            return ;
+        case Qt.Key_Tab:
+            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.cycle_lock_on)
+                root.commanderInput.cycle_lock_on();
+            event.accepted = true;
+            return ;
+        case Qt.Key_F:
+            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.special_action)
+                root.commanderInput.special_action();
             event.accepted = true;
             return ;
         case Qt.Key_Return:

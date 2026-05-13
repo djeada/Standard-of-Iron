@@ -63,6 +63,7 @@ add_library(render_gl STATIC
     ground/weapon_rack_renderer.cpp
     ground/ruins_renderer.cpp
     ground/dead_tree_renderer.cpp
+    ground/boulder_renderer.cpp
     ground/rain_renderer.cpp
     entity/registry.cpp
     entity/nations/roman/archer_renderer.cpp

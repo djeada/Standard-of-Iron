@@ -31,6 +31,7 @@
 #include "render/ground/terrain_surface_manager.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
+#include "unit_spawn_options.h"
 
 #include <QDebug>
 #include <QEvent>
@@ -43,6 +44,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
+#include <QVector2D>
 #include <QVector3D>
 #include <QWheelEvent>
 #include <QtMath>
@@ -109,6 +111,53 @@ auto terrain_world_position(const Game::Map::TerrainField &field, int x,
   float const world_z = (static_cast<float>(z) - half_height) * field.tile_size;
   float const world_y = sample_grid(field, x, z);
   return {world_x, world_y, world_z};
+}
+
+auto grid_position_from_world(const Game::Map::TerrainField &field,
+                              const QVector3D &world_position) -> QVector2D {
+  float const half_width = static_cast<float>(field.width) * 0.5F - 0.5F;
+  float const half_height = static_cast<float>(field.height) * 0.5F - 0.5F;
+  float const grid_x = world_position.x() / field.tile_size + half_width;
+  float const grid_z = world_position.z() / field.tile_size + half_height;
+  return {std::clamp(grid_x, 0.0F, static_cast<float>(field.width - 1)),
+          std::clamp(grid_z, 0.0F, static_cast<float>(field.height - 1))};
+}
+
+auto world_prop_type_from_string(const QString &prop_type)
+    -> Game::Map::WorldProp::Type {
+  QString const normalized = prop_type.trimmed().toLower();
+  if (normalized == QStringLiteral("firecamp") ||
+      normalized == QStringLiteral("fire_camp")) {
+    return Game::Map::WorldProp::Type::FireCamp;
+  }
+  if (normalized == QStringLiteral("tent")) {
+    return Game::Map::WorldProp::Type::Tent;
+  }
+  if (normalized == QStringLiteral("supply_cart")) {
+    return Game::Map::WorldProp::Type::SupplyCart;
+  }
+  if (normalized == QStringLiteral("weapon_rack")) {
+    return Game::Map::WorldProp::Type::WeaponRack;
+  }
+  if (normalized == QStringLiteral("ruins")) {
+    return Game::Map::WorldProp::Type::Ruins;
+  }
+  if (normalized == QStringLiteral("dead_tree")) {
+    return Game::Map::WorldProp::Type::DeadTree;
+  }
+  if (normalized == QStringLiteral("boulder")) {
+    return Game::Map::WorldProp::Type::Boulder;
+  }
+  if (normalized == QStringLiteral("pine_tree")) {
+    return Game::Map::WorldProp::Type::PineTree;
+  }
+  if (normalized == QStringLiteral("olive_tree")) {
+    return Game::Map::WorldProp::Type::OliveTree;
+  }
+  if (normalized == QStringLiteral("plant")) {
+    return Game::Map::WorldProp::Type::Plant;
+  }
+  return Game::Map::WorldProp::Type::FireCamp;
 }
 
 auto classify_terrain(float normalized_height) -> Game::Map::TerrainType {
@@ -1041,7 +1090,7 @@ void ArenaViewport::regenerate_terrain() {
 
   Game::Map::TerrainService::instance().restore_from_serialized(
       k_terrain_width, k_terrain_height, k_terrain_tile_size, heights,
-      terrain_types, {}, {}, {}, biome);
+      terrain_types, {}, {}, {}, biome, m_world_props);
   Game::Systems::CommandService::initialize(k_terrain_width, k_terrain_height);
 
   align_units_to_terrain();
@@ -1050,6 +1099,8 @@ void ArenaViewport::regenerate_terrain() {
   }
   update();
 }
+
+void ArenaViewport::reconfigure_terrain_from_state() { regenerate_terrain(); }
 
 void ArenaViewport::configure_rendering_from_terrain() {
   auto &terrain_service = Game::Map::TerrainService::instance();
@@ -1067,7 +1118,6 @@ void ArenaViewport::configure_rendering_from_terrain() {
                                   terrain_service.biome_settings());
   m_features->configure(*height_map, terrain_service.road_segments());
   m_scatter->configure(*height_map, terrain_service.biome_settings(),
-                       terrain_service.fire_camps(),
                        terrain_service.world_props());
   if (m_rain != nullptr) {
     float const world_width = static_cast<float>(height_map->get_width()) *
@@ -1159,6 +1209,13 @@ void ArenaViewport::set_spawn_nation(const QString &nation_id) {
 }
 
 void ArenaViewport::set_spawn_unit_type(const QString &unit_type) {
+  if (auto special =
+          Arena::UnitSpawnOptions::parse_special_unit_option(unit_type);
+      special.has_value()) {
+    m_spawn_unit_type = special->troop_type;
+    return;
+  }
+
   Game::Units::TroopType parsed{};
   if (!Game::Units::try_parse_troop_type(unit_type, parsed)) {
     return;
@@ -1483,8 +1540,70 @@ void ArenaViewport::clear_buildings() {
   update();
 }
 
+void ArenaViewport::set_spawn_world_prop_type(const QString &prop_type) {
+  m_spawn_world_prop_type = world_prop_type_from_string(prop_type);
+}
+
+void ArenaViewport::set_spawn_world_prop_scale(float value) {
+  m_spawn_world_prop_scale = std::max(0.1F, value);
+}
+
+void ArenaViewport::set_spawn_world_prop_rotation_degrees(float value) {
+  m_spawn_world_prop_rotation = qDegreesToRadians(value);
+}
+
+void ArenaViewport::set_spawn_fire_camp_intensity(float value) {
+  m_spawn_fire_camp_intensity = std::max(0.1F, value);
+}
+
+void ArenaViewport::set_spawn_fire_camp_radius(float value) {
+  m_spawn_fire_camp_radius = std::max(0.5F, value);
+}
+
+void ArenaViewport::spawn_world_prop() {
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  if (terrain_service.terrain_field().empty()) {
+    return;
+  }
+
+  QVector3D const anchor = resolve_spawn_anchor_world();
+  QVector2D const grid_position =
+      grid_position_from_world(terrain_service.terrain_field(), anchor);
+
+  Game::Map::WorldProp prop;
+  prop.type = m_spawn_world_prop_type;
+  prop.x = grid_position.x();
+  prop.z = grid_position.y();
+  prop.scale = m_spawn_world_prop_scale;
+  prop.rotation = m_spawn_world_prop_rotation;
+  prop.intensity = m_spawn_fire_camp_intensity;
+  prop.radius = m_spawn_fire_camp_radius;
+  prop.persistent = true;
+  m_world_props.push_back(prop);
+  reconfigure_terrain_from_state();
+}
+
+void ArenaViewport::clear_world_props() {
+  if (m_world_props.empty()) {
+    return;
+  }
+  m_world_props.clear();
+  reconfigure_terrain_from_state();
+}
+
+void ArenaViewport::clear_world_props_of_type() {
+  size_t const before = m_world_props.size();
+  std::erase_if(m_world_props, [this](const Game::Map::WorldProp &prop) {
+    return prop.type == m_spawn_world_prop_type;
+  });
+  if (m_world_props.size() != before) {
+    reconfigure_terrain_from_state();
+  }
+}
+
 void ArenaViewport::reset_arena() {
   clear_units();
+  clear_world_props();
   pause_simulation(false);
   reset_camera();
 }

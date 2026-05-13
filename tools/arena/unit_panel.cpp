@@ -3,6 +3,7 @@
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/units/troop_type.h"
+#include "unit_spawn_options.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -65,6 +66,8 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
   m_individuals_per_unit_box->setSpecialValueText(QStringLiteral("Default"));
   m_individuals_per_unit_box->setValue(0);
   m_render_rider_checkbox->setChecked(true);
+  m_saved_manual_individuals_per_unit = m_individuals_per_unit_box->value();
+  m_saved_manual_rider_visible = m_render_rider_checkbox->isChecked();
 
   spawn_form->addRow("Side", m_owner_box);
   spawn_form->addRow("Nation", m_nation_box);
@@ -187,11 +190,24 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
             emit nation_selected(nation_id);
           });
   connect(m_unit_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) { emit unit_type_selected(selected_unit_type_id()); });
+          [this](int) {
+            apply_special_unit_defaults(selected_unit_type_id());
+            emit unit_type_selected(selected_unit_type_id());
+          });
   connect(m_individuals_per_unit_box, qOverload<int>(&QSpinBox::valueChanged),
-          this, &UnitPanel::spawn_individuals_per_unit_changed);
+          this, [this](int value) {
+            if (!m_special_unit_option_active) {
+              m_saved_manual_individuals_per_unit = value;
+            }
+            emit spawn_individuals_per_unit_changed(value);
+          });
   connect(m_render_rider_checkbox, &QCheckBox::toggled, this,
-          &UnitPanel::spawn_rider_visibility_changed);
+          [this](bool checked) {
+            if (!m_special_unit_option_active) {
+              m_saved_manual_rider_visible = checked;
+            }
+            emit spawn_rider_visibility_changed(checked);
+          });
   connect(animation_box, &QComboBox::currentTextChanged, this,
           &UnitPanel::animation_selected);
   connect(play_button, &QPushButton::clicked, this,
@@ -239,6 +255,52 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
 
   populate_nation_options();
   populate_unit_options(selected_nation_id());
+}
+
+void UnitPanel::apply_special_unit_defaults(const QString &unit_id) {
+  auto const special =
+      Arena::UnitSpawnOptions::parse_special_unit_option(unit_id);
+  if (!special.has_value()) {
+    if (!m_special_unit_option_active) {
+      return;
+    }
+
+    m_special_unit_option_active = false;
+    if (m_individuals_per_unit_box != nullptr) {
+      const QSignalBlocker blocker(m_individuals_per_unit_box);
+      m_individuals_per_unit_box->setValue(m_saved_manual_individuals_per_unit);
+    }
+    if (m_render_rider_checkbox != nullptr) {
+      const QSignalBlocker blocker(m_render_rider_checkbox);
+      m_render_rider_checkbox->setChecked(m_saved_manual_rider_visible);
+    }
+    emit spawn_individuals_per_unit_changed(
+        m_saved_manual_individuals_per_unit);
+    emit spawn_rider_visibility_changed(m_saved_manual_rider_visible);
+    return;
+  }
+
+  if (!m_special_unit_option_active) {
+    m_saved_manual_individuals_per_unit =
+        m_individuals_per_unit_box != nullptr
+            ? m_individuals_per_unit_box->value()
+            : 0;
+    m_saved_manual_rider_visible = m_render_rider_checkbox == nullptr ||
+                                   m_render_rider_checkbox->isChecked();
+  }
+  m_special_unit_option_active = true;
+
+  if (m_individuals_per_unit_box != nullptr) {
+    const QSignalBlocker blocker(m_individuals_per_unit_box);
+    m_individuals_per_unit_box->setValue(special->individuals_per_unit);
+  }
+  if (m_render_rider_checkbox != nullptr) {
+    const QSignalBlocker blocker(m_render_rider_checkbox);
+    m_render_rider_checkbox->setChecked(special->render_rider);
+  }
+
+  emit spawn_individuals_per_unit_changed(special->individuals_per_unit);
+  emit spawn_rider_visibility_changed(special->render_rider);
 }
 
 void UnitPanel::set_animation_paused(bool paused) {
@@ -327,6 +389,8 @@ void UnitPanel::populate_unit_options(const QString &nation_id,
                                                     : preferred_unit_type;
 
   m_unit_box->clear();
+  std::optional<Game::Units::TroopType> cavalry_option;
+  bool has_elephant_option = false;
   for (const auto &troop : nation->available_troops) {
     QString const troop_id = Game::Units::troop_typeToQString(troop.unit_type);
     QString label = QString::fromStdString(troop.display_name);
@@ -334,6 +398,31 @@ void UnitPanel::populate_unit_options(const QString &nation_id,
       label = prettify_identifier(troop_id);
     }
     m_unit_box->addItem(label, troop_id);
+
+    if (!cavalry_option.has_value() &&
+        (troop.unit_type == Game::Units::TroopType::MountedKnight ||
+         troop.unit_type == Game::Units::TroopType::HorseArcher ||
+         troop.unit_type == Game::Units::TroopType::HorseSpearman)) {
+      cavalry_option = troop.unit_type;
+    }
+    if (troop.unit_type == Game::Units::TroopType::Elephant) {
+      has_elephant_option = true;
+    }
+  }
+
+  if (cavalry_option.has_value() || has_elephant_option) {
+    m_unit_box->insertSeparator(m_unit_box->count());
+  }
+  if (cavalry_option.has_value()) {
+    auto const option = Arena::UnitSpawnOptions::make_special_unit_option(
+        Arena::UnitSpawnOptions::Kind::SingleHorse, *cavalry_option);
+    m_unit_box->addItem(option.label, option.id);
+  }
+  if (has_elephant_option) {
+    auto const option = Arena::UnitSpawnOptions::make_special_unit_option(
+        Arena::UnitSpawnOptions::Kind::SingleElephant,
+        Game::Units::TroopType::Elephant);
+    m_unit_box->addItem(option.label, option.id);
   }
 
   if (m_unit_box->count() == 0) {

@@ -1,6 +1,7 @@
 #include "spawn_validator.h"
 #include "../../game/map/terrain_service.h"
 #include "../../game/systems/building_collision_registry.h"
+#include "ground_utils.h"
 #include <algorithm>
 #include <cmath>
 
@@ -156,6 +157,11 @@ auto SpawnValidator::can_spawn_at_grid(float gx, float gz) const -> bool {
     return false;
   }
 
+  if (m_config.river_clearance > 0.0F &&
+      !check_river_clearance(world_x, world_z)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -241,25 +247,42 @@ auto SpawnValidator::check_building_collision(float world_x,
                                               float world_z) const -> bool {
   auto &building_registry =
       Game::Systems::BuildingCollisionRegistry::instance();
+  if (m_config.building_clearance > 0.0F) {
+    return !building_registry.is_circle_overlapping_building(
+        world_x, world_z, m_config.building_clearance);
+  }
   return !building_registry.is_point_in_building(world_x, world_z);
 }
 
 auto SpawnValidator::check_road_collision(float world_x,
                                           float world_z) const -> bool {
   auto &terrain_service = Game::Map::TerrainService::instance();
-  return !terrain_service.is_point_on_road(world_x, world_z);
+  return !terrain_service.is_point_near_road(world_x, world_z,
+                                             m_config.road_clearance);
 }
 
 auto SpawnValidator::check_bridge_collision(float world_x,
                                             float world_z) const -> bool {
   auto &terrain_service = Game::Map::TerrainService::instance();
-  return !terrain_service.is_on_bridge(world_x, world_z);
+  return !terrain_service.is_point_near_bridge(world_x, world_z,
+                                               m_config.bridge_clearance);
+}
+
+auto SpawnValidator::check_river_clearance(float world_x,
+                                           float world_z) const -> bool {
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  return !terrain_service.is_point_near_river(world_x, world_z,
+                                              m_config.river_clearance);
 }
 
 auto make_plant_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
   config.edge_padding = 0.08F;
   config.max_slope = 0.65F;
+  config.building_clearance = 1.6F;
+  config.road_clearance = 0.45F;
+  config.bridge_clearance = 0.6F;
+  config.river_clearance = 0.3F;
   config.river_margin = 1;
   config.allow_flat = true;
   config.allow_hill = false;
@@ -276,13 +299,17 @@ auto make_stone_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
   config.edge_padding = 0.08F;
   config.max_slope = 0.15F;
+  config.building_clearance = 2.8F;
+  config.road_clearance = 1.3F;
+  config.bridge_clearance = 1.6F;
+  config.river_clearance = 1.0F;
   config.river_margin = 1;
   config.allow_flat = true;
   config.allow_hill = false;
   config.allow_mountain = false;
   config.allow_river = false;
   config.check_buildings = true;
-  config.check_roads = false;
+  config.check_roads = true;
   config.check_slope = true;
   config.check_river_margin = true;
   return config;
@@ -292,6 +319,10 @@ auto make_tree_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
   config.edge_padding = 0.08F;
   config.max_slope = 0.75F;
+  config.building_clearance = 4.5F;
+  config.road_clearance = 2.0F;
+  config.bridge_clearance = 2.2F;
+  config.river_clearance = 1.5F;
   config.river_margin = 1;
   config.allow_flat = true;
   config.allow_hill = false;
@@ -308,6 +339,10 @@ auto make_firecamp_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
   config.edge_padding = 0.08F;
   config.max_slope = 0.30F;
+  config.building_clearance = 6.0F;
+  config.road_clearance = 2.4F;
+  config.bridge_clearance = 2.6F;
+  config.river_clearance = 2.0F;
   config.river_margin = 0;
   config.allow_flat = true;
   config.allow_hill = true;
@@ -324,6 +359,9 @@ auto make_grass_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
   config.edge_padding = 0.08F;
   config.max_slope = 0.92F;
+  config.building_clearance = 0.8F;
+  config.road_clearance = 0.15F;
+  config.bridge_clearance = 0.2F;
   config.river_margin = 1;
   config.allow_flat = true;
   config.allow_hill = false;
@@ -334,6 +372,52 @@ auto make_grass_spawn_config() -> SpawnValidationConfig {
   config.check_slope = true;
   config.check_river_margin = true;
   return config;
+}
+
+auto make_camp_prop_spawn_config() -> SpawnValidationConfig {
+  SpawnValidationConfig config;
+  config.edge_padding = 0.08F;
+  config.max_slope = 0.35F;
+  config.building_clearance = 4.0F;
+  config.road_clearance = 1.6F;
+  config.bridge_clearance = 1.8F;
+  config.river_clearance = 1.2F;
+  config.river_margin = 1;
+  config.allow_flat = true;
+  config.allow_hill = true;
+  config.allow_mountain = false;
+  config.allow_river = false;
+  config.check_buildings = true;
+  config.check_roads = true;
+  config.check_bridges = true;
+  config.check_slope = true;
+  config.check_river_margin = true;
+  return config;
+}
+
+auto find_valid_ring_spawn_position(const SpawnValidator &validator,
+                                    float center_world_x, float center_world_z,
+                                    float preferred_distance, uint32_t &state,
+                                    float &out_world_x, float &out_world_z,
+                                    int max_attempts) -> bool {
+  constexpr float k_min_distance_scale = 0.82F;
+  constexpr float k_max_distance_scale = 1.35F;
+  for (int attempt = 0; attempt < max_attempts; ++attempt) {
+    const float angle = rand_01(state) * MathConstants::k_two_pi;
+    const float distance_scale =
+        remap(rand_01(state), k_min_distance_scale, k_max_distance_scale) +
+        static_cast<float>(attempt) * 0.04F;
+    const float distance = preferred_distance * distance_scale;
+    const float candidate_x = center_world_x + std::cos(angle) * distance;
+    const float candidate_z = center_world_z + std::sin(angle) * distance;
+    if (!validator.can_spawn_at_world(candidate_x, candidate_z)) {
+      continue;
+    }
+    out_world_x = candidate_x;
+    out_world_z = candidate_z;
+    return true;
+  }
+  return false;
 }
 
 } // namespace Render::Ground

@@ -208,20 +208,20 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
 
   m_index_count = static_cast<GLsizei>(indices.size());
 
-  glEnableVertexAttribArray(VertexAttrib::Position);
+  glEnableVertexAttribArray(VertexAttrib::position);
   glVertexAttribPointer(
-      VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT, GL_FALSE,
+      VertexAttrib::position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
       sizeof(AuraVertex),
       reinterpret_cast<void *>(offsetof(AuraVertex, position)));
 
-  glEnableVertexAttribArray(VertexAttrib::Normal);
-  glVertexAttribPointer(VertexAttrib::Normal, ComponentCount::Vec3, GL_FLOAT,
+  glEnableVertexAttribArray(VertexAttrib::normal);
+  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
                         GL_FALSE, sizeof(AuraVertex),
                         reinterpret_cast<void *>(offsetof(AuraVertex, normal)));
 
-  glEnableVertexAttribArray(VertexAttrib::TexCoord);
+  glEnableVertexAttribArray(VertexAttrib::tex_coord);
   glVertexAttribPointer(
-      VertexAttrib::TexCoord, ComponentCount::Vec2, GL_FLOAT, GL_FALSE,
+      VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT, GL_FALSE,
       sizeof(AuraVertex),
       reinterpret_cast<void *>(offsetof(AuraVertex, tex_coord)));
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
@@ -85,6 +86,14 @@ public slots:
   void set_spawn_building_type(const QString &building_type);
   void spawn_buildings(int count);
   void clear_buildings();
+  void set_spawn_world_prop_type(const QString &prop_type);
+  void set_spawn_world_prop_scale(float value);
+  void set_spawn_world_prop_rotation_degrees(float value);
+  void set_spawn_fire_camp_intensity(float value);
+  void set_spawn_fire_camp_radius(float value);
+  void spawn_world_prop();
+  void clear_world_props();
+  void clear_world_props_of_type();
   void reset_arena();
   void apply_visual_overrides_to_selection();
   void set_animation_name(const QString &animation_name);
@@ -156,6 +165,7 @@ private:
   auto resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
+  void reconfigure_terrain_from_state();
   auto spawn_single_building(int owner_id, Game::Systems::NationID nation_id,
                              Game::Units::SpawnType building_type)
       -> Engine::Core::EntityID;
@@ -206,6 +216,13 @@ private:
   Game::Systems::NationID m_spawn_building_nation_id;
   Game::Units::SpawnType m_spawn_building_type =
       Game::Units::SpawnType::Barracks;
+  std::vector<Game::Map::WorldProp> m_world_props;
+  Game::Map::WorldProp::Type m_spawn_world_prop_type =
+      Game::Map::WorldProp::Type::FireCamp;
+  float m_spawn_world_prop_scale = 1.0F;
+  float m_spawn_world_prop_rotation = 0.0F;
+  float m_spawn_fire_camp_intensity = 1.0F;
+  float m_spawn_fire_camp_radius = 3.0F;
 
   QPoint m_last_mouse_pos;
   bool m_last_mouse_pos_valid = false;

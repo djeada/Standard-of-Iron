@@ -2,6 +2,8 @@
 #include "game/map/visibility_service.h"
 #include "render/decoration_gpu.h"
 #include "render/ground/biome_renderer.h"
+#include "render/ground/boulder_renderer.h"
+#include "render/ground/dead_tree_renderer.h"
 #include "render/ground/ground_utils.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_runtime.h"
@@ -191,6 +193,27 @@ TEST(ScatterRuntimeTest,
 
   renderer.configure(height_map, biome_settings);
   EXPECT_GT(renderer.instance_count(), 0U);
+}
+
+TEST(ScatterRuntimeTest, LargeRockyMapsGetProceduralBouldersAndLogs) {
+  Game::Map::TerrainHeightMap height_map(96, 96, 1.0F);
+  Game::Map::BiomeSettings biome_settings;
+  Game::Map::apply_ground_type_defaults(biome_settings,
+                                        Game::Map::GroundType::SoilRocky);
+  biome_settings.seed = 4242U;
+  biome_settings.rock_exposure = 0.85F;
+  biome_settings.moisture_level = 0.20F;
+  biome_settings.plant_density = 0.35F;
+
+  std::vector<Game::Map::WorldProp> no_authored_props;
+
+  Render::GL::BoulderRenderer boulders;
+  boulders.configure(height_map, biome_settings, no_authored_props);
+  EXPECT_GT(boulders.instance_count(), 0U);
+
+  Render::GL::DeadTreeRenderer dead_trees;
+  dead_trees.configure(height_map, biome_settings, no_authored_props);
+  EXPECT_GT(dead_trees.instance_count(), 0U);
 }
 
 } // namespace

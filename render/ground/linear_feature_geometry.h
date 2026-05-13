@@ -25,6 +25,7 @@ struct LinearFeatureRibbonSettings {
   float meander_length_scale = 0.1F;
   float meander_amplitude = 0.0F;
   float y_offset = 0.0F;
+  const Game::Map::TerrainHeightMap *height_map = nullptr;
 };
 
 struct RiverbankMeshBuildResult {

@@ -32,26 +32,33 @@ void main() {
   float bark_seed = a_rotation.w;
 
   vec3 model_pos = a_pos;
+  float source_radius = length(a_pos.xz);
 
   float foliage_mask = smoothstep(0.34, 0.42, a_tex_coord.y);
   float tip_mask = smoothstep(0.88, 1.02, a_tex_coord.y);
   float angle = a_tex_coord.x * TWO_PI;
 
-  float aspect_w = mix(0.72, 1.38, needle_seed);
-  float aspect_h = mix(1.12, 0.84, needle_seed);
+  float aspect_w = mix(0.78, 1.22, needle_seed);
+  float aspect_h = mix(1.08, 0.92, needle_seed);
   model_pos.xz *= mix(1.0, aspect_w, foliage_mask);
   model_pos.y *= mix(1.0, aspect_h, foliage_mask);
 
   float irregular_base = sin(angle * 3.0 + silhouette_seed * TWO_PI);
   float irregular_mid = sin(angle * 5.0 + silhouette_seed * TWO_PI * 2.3 + 1.1);
-  float irregular_fine = sin(angle * 7.0 + silhouette_seed * TWO_PI * 3.7 + 2.3);
+  float irregular_fine =
+      sin(angle * 7.0 + silhouette_seed * TWO_PI * 3.7 + 2.3);
+  float tier_wave = sin(a_tex_coord.y * 24.0 + silhouette_seed * TWO_PI * 1.6);
   float irregular =
       (irregular_base * 0.22 + irregular_mid * 0.10 + irregular_fine * 0.05) *
-      foliage_mask * (1.0 - tip_mask * 0.5);
+      foliage_mask * (1.0 - tip_mask * 0.35);
+  float scallop =
+      tier_wave * 0.035 * foliage_mask * smoothstep(0.18, 0.52, source_radius);
 
-  model_pos.xz *= (1.0 + irregular);
+  model_pos.xz *= (1.0 + irregular + scallop);
 
-  float droop = foliage_mask * (1.0 - tip_mask) * 0.12;
+  float skirt_mask =
+      foliage_mask * (1.0 - tip_mask) * smoothstep(0.18, 0.55, source_radius);
+  float droop = skirt_mask * mix(0.10, 0.04, clamp(a_tex_coord.y, 0.0, 1.0));
   model_pos.y -= droop;
 
   float lean_norm = clamp(a_pos.y / 1.13, 0.0, 1.0);
@@ -63,8 +70,8 @@ void main() {
   float height_factor = clamp(model_pos.y, 0.0, 1.1);
   vec3 local_pos = model_pos * scale;
 
-  float sway = sin(u_time * u_wind_speed * 0.5 + sway_phase) * u_wind_strength * 0.8 *
-               height_factor * height_factor;
+  float sway = sin(u_time * u_wind_speed * 0.5 + sway_phase) * u_wind_strength *
+               0.8 * height_factor * height_factor;
 
   float sway_influence = mix(0.04, 0.12, foliage_mask);
   local_pos.x += sway * sway_influence;
@@ -73,10 +80,11 @@ void main() {
 
   vec3 local_normal = a_normal;
   if (foliage_mask > 0.0) {
-    float normal_scale = 1.0 + irregular;
-    local_normal = normalize(vec3(local_normal.x * normal_scale,
-                                 local_normal.y - foliage_mask * 0.2,
-                                 local_normal.z * normal_scale));
+    float normal_scale = 1.0 + irregular + scallop * 0.6;
+    local_normal =
+        normalize(vec3(local_normal.x * normal_scale,
+                       local_normal.y + foliage_mask * 0.18 + skirt_mask * 0.10,
+                       local_normal.z * normal_scale));
   }
 
   float cos_r = cos(rotation);

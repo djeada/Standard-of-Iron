@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <string_view>
 
 namespace Render::Creature::Pipeline {
 
@@ -162,6 +163,36 @@ auto humanoid_requested_clip_variant_for_anim(
   return 0U;
 }
 
+auto expected_humanoid_idle_variant_name(std::uint8_t clip_variant) noexcept
+    -> std::string_view {
+  switch (clip_variant) {
+  case 1U:
+    return "idle_squat";
+  case 2U:
+    return "idle_jump";
+  case 3U:
+    return "idle_weapon";
+  case 4U:
+    return "idle_weave";
+  default:
+    return "idle";
+  }
+}
+
+auto humanoid_clip_matches_requested_idle_variant(
+    const Render::Creature::Bpat::BpatBlob &blob, std::uint16_t clip_id,
+    Render::Creature::AnimationStateId state,
+    std::uint8_t clip_variant) noexcept -> bool {
+  if (state != Render::Creature::AnimationStateId::Idle || clip_variant == 0U) {
+    return true;
+  }
+  if (clip_id >= blob.clip_count()) {
+    return false;
+  }
+  return blob.clip(clip_id).name ==
+         expected_humanoid_idle_variant_name(clip_variant);
+}
+
 } // namespace
 
 auto humanoid_clip_variant_for_anim(
@@ -188,17 +219,29 @@ auto humanoid_bpat_playback_for_anim(
   archetype_id = default_humanoid_archetype(archetype_id);
 
   auto const state = humanoid_state_for_anim(anim);
-  auto const clip_id =
+  auto clip_variant = humanoid_clip_variant_for_anim(archetype_id, anim);
+  auto clip_id =
       Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
-          archetype_id, state,
-          humanoid_clip_variant_for_anim(archetype_id, anim));
+          archetype_id, state, clip_variant);
   if (clip_id == ArchetypeDescriptor::k_unmapped_clip) {
     return std::nullopt;
   }
   auto const *blob =
       Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
-  if (blob == nullptr || clip_id >= blob->clip_count()) {
+  if (blob == nullptr) {
     return std::nullopt;
+  }
+
+  if (clip_id >= blob->clip_count() ||
+      !humanoid_clip_matches_requested_idle_variant(*blob, clip_id, state,
+                                                    clip_variant)) {
+    clip_variant = 0U;
+    clip_id = Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+        archetype_id, state, clip_variant);
+    if (clip_id == ArchetypeDescriptor::k_unmapped_clip ||
+        clip_id >= blob->clip_count()) {
+      return std::nullopt;
+    }
   }
 
   auto const clip = blob->clip(clip_id);

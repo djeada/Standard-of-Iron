@@ -26,6 +26,7 @@
 #include <cmath>
 #include <cstddef>
 #include <sstream>
+#include <string_view>
 #include <unordered_map>
 
 namespace Render::Creature::Pipeline {
@@ -433,6 +434,36 @@ auto resolve_blob_palette(std::uint32_t species_id, BpatPlayback playback,
   return blob->frame_palette_view(out_global_frame);
 }
 
+auto expected_humanoid_idle_variant_name(std::uint8_t clip_variant) noexcept
+    -> std::string_view {
+  switch (clip_variant) {
+  case 1U:
+    return "idle_squat";
+  case 2U:
+    return "idle_jump";
+  case 3U:
+    return "idle_weapon";
+  case 4U:
+    return "idle_weave";
+  default:
+    return "idle";
+  }
+}
+
+auto humanoid_idle_variant_clip_is_usable(
+    const Render::Creature::Bpat::BpatBlob *blob, std::uint16_t clip_id,
+    Render::Creature::AnimationStateId state,
+    std::uint8_t clip_variant) noexcept -> bool {
+  if (state != Render::Creature::AnimationStateId::Idle || clip_variant == 0U) {
+    return true;
+  }
+  if (blob == nullptr || clip_id >= blob->clip_count()) {
+    return false;
+  }
+  return blob->clip(clip_id).name ==
+         expected_humanoid_idle_variant_name(clip_variant);
+}
+
 } // namespace
 
 auto CreaturePipeline::submit_requests(
@@ -478,17 +509,24 @@ auto CreaturePipeline::submit_requests(
     const CreatureClipPlaybackDesc &playback_desc =
         handle->playback[state_index];
 
-    std::uint16_t const effective_clip_id =
+    std::uint8_t effective_clip_variant = req.clip_variant;
+    std::uint16_t effective_clip_id =
         (req.clip_variant == 0U)
             ? playback_desc.clip_id
             : Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
                   req.archetype, req.state, req.clip_variant);
 
-    auto const playback =
-        (effective_clip_id == playback_desc.clip_id)
-            ? resolve_clip_playback(playback_desc, req.phase)
-            : resolve_clip_playback(handle->asset->bpat_species_id,
-                                    effective_clip_id, req.phase);
+    auto playback = (effective_clip_id == playback_desc.clip_id)
+                        ? resolve_clip_playback(playback_desc, req.phase)
+                        : resolve_clip_playback(handle->asset->bpat_species_id,
+                                                effective_clip_id, req.phase);
+    if (!humanoid_idle_variant_clip_is_usable(playback.blob, effective_clip_id,
+                                              req.state,
+                                              effective_clip_variant)) {
+      effective_clip_variant = 0U;
+      effective_clip_id = playback_desc.clip_id;
+      playback = resolve_clip_playback(playback_desc, req.phase);
+    }
     if (playback.blob == nullptr) {
       return;
     }
@@ -506,7 +544,7 @@ auto CreaturePipeline::submit_requests(
     if (playback_desc.snapshot) {
       const bool emitted = submit_snapshot_creature(
           *handle, req.lod, req.archetype, req.variant, req.state,
-          effective_clip_id, req.clip_variant, req.role_colors_view(),
+          effective_clip_id, effective_clip_variant, req.role_colors_view(),
           static_cast<std::uint16_t>(req.variant), req.base_color, draw_world,
           *playback.blob, playback.global_frame, playback.frame_in_clip, out,
           renderer, !prebaked_lowpoly_required);
@@ -517,14 +555,14 @@ auto CreaturePipeline::submit_requests(
     if (prebaked_lowpoly_required) {
       report_submit_cache_miss(
           "snapshot_prebaked_required", *handle, req.lod, req.archetype,
-          req.variant, req.state, effective_clip_id, req.clip_variant,
+          req.variant, req.state, effective_clip_id, effective_clip_variant,
           playback.frame_in_clip, handle->attachment_set_id,
           handle->attachments_hash);
       return;
     }
 
     submit_rigged_creature(*handle, req.lod, req.archetype, req.variant,
-                           req.state, effective_clip_id, req.clip_variant,
+                           req.state, effective_clip_id, effective_clip_variant,
                            playback.frame_in_clip, req.role_colors_view(),
                            static_cast<std::uint16_t>(req.variant),
                            req.base_color, draw_world, *playback.blob,

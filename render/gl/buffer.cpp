@@ -65,6 +65,10 @@ VertexArray::~VertexArray() {
 void VertexArray::bind() {
   if (m_vao == 0U) {
     initializeOpenGLFunctions();
+#ifndef NDEBUG
+    while (glGetError() != GL_NO_ERROR) {
+    }
+#endif
     glGenVertexArrays(1, &m_vao);
 #ifndef NDEBUG
     GLenum gen_err = glGetError();
@@ -91,8 +95,8 @@ void VertexArray::bind() {
 
 void VertexArray::unbind() { glBindVertexArray(0); }
 
-void VertexArray::add_vertexBuffer(Buffer &buffer,
-                                   const std::vector<int> &layout) {
+void VertexArray::add_vertex_buffer(Buffer &buffer,
+                                    const std::vector<int> &layout) {
   bind();
   buffer.bind();
 

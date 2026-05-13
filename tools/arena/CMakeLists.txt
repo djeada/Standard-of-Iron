@@ -6,6 +6,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         terrain_panel.cpp
         unit_panel.cpp
         building_panel.cpp
+        prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
     )
 else()
@@ -16,6 +17,7 @@ else()
         terrain_panel.cpp
         unit_panel.cpp
         building_panel.cpp
+        prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
     )
 endif()

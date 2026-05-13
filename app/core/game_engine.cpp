@@ -119,6 +119,7 @@
 #include "game/systems/production_system.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rain_manager.h"
+#include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/save_load_service.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
@@ -491,6 +492,28 @@ GameEngine::GameEngine(QObject *parent)
           [this](const Engine::Core::UnitSpawnedEvent &e) {
             on_unit_spawned(e);
           });
+
+  m_combat_hit_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
+          [this](const Engine::Core::CombatHitEvent &e) {
+            if (m_controlled_commander_id == 0 ||
+                e.attacker_id != m_controlled_commander_id ||
+                m_world == nullptr) {
+              return;
+            }
+            auto *target_ent = m_world->get_entity(e.target_id);
+            if (target_ent == nullptr) {
+              return;
+            }
+            auto *tf =
+                target_ent->get_component<Engine::Core::TransformComponent>();
+            if (tf == nullptr) {
+              return;
+            }
+            m_rpg_damage_events.push_back({tf->position.x,
+                                           tf->position.y + 1.8F,
+                                           tf->position.z, e.damage});
+          });
 }
 
 GameEngine::~GameEngine() {
@@ -778,6 +801,11 @@ auto GameEngine::control_mode() const -> QString {
              : QStringLiteral("rts");
 }
 
+auto GameEngine::game_mode() const -> QString {
+  return m_game_mode == GameMode::Rpg ? QStringLiteral("rpg")
+                                      : QStringLiteral("rts");
+}
+
 auto GameEngine::commander_control_available() const -> bool {
   return find_local_commander() != nullptr;
 }
@@ -916,6 +944,34 @@ bool GameEngine::enter_commander_control_mode() {
   m_control_mode_update = &GameEngine::update_commander_control_mode;
   m_control_mode_toggle = &GameEngine::request_exit_commander_control_mode;
   set_active_camera(m_commander_camera.get());
+
+  m_game_mode = GameMode::Rpg;
+  if (auto *rpg =
+          Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(
+              commander)) {
+    auto *unit = commander->get_component<Engine::Core::UnitComponent>();
+    if (!rpg->active) {
+
+      rpg->rpg_max_hp = (unit != nullptr) ? unit->max_health * 3 : 150;
+      rpg->rpg_hp = rpg->rpg_max_hp;
+    }
+    rpg->active = true;
+  }
+
+  if (m_world != nullptr) {
+    for (auto *entity :
+         m_world->get_entities_with<Engine::Core::AttackTargetComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      auto *atk = entity->get_component<Engine::Core::AttackTargetComponent>();
+      if (atk != nullptr && atk->target_id == m_controlled_commander_id) {
+        entity->remove_component<Engine::Core::AttackTargetComponent>();
+      }
+    }
+  }
+
+  emit game_mode_changed();
   if (m_world != nullptr && m_commander_camera != nullptr) {
     (void)m_commander_control.update(*m_world, m_controlled_commander_id,
                                      m_runtime.local_owner_id,
@@ -929,7 +985,9 @@ bool GameEngine::enter_commander_control_mode() {
 void GameEngine::exit_commander_control_mode() {
   reset_commander_input();
   clear_controlled_commander_state();
+  m_rpg_telegraphs.clear();
   m_control_mode = PlayerControlMode::Rts;
+  m_game_mode = GameMode::Rts;
   m_control_mode_update = &GameEngine::update_rts_control_mode;
   m_control_mode_toggle = &GameEngine::request_enter_commander_control_mode;
   m_controlled_commander_id = 0;
@@ -943,6 +1001,7 @@ void GameEngine::exit_commander_control_mode() {
   }
   restore_rts_selection();
 
+  emit game_mode_changed();
   emit control_mode_changed();
 }
 
@@ -1021,6 +1080,31 @@ void GameEngine::commander_trigger_rally() {
   }
 
   commander_data->rally_requested = true;
+}
+
+void GameEngine::commander_dodge() {
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return;
+  }
+  m_commander_control.request_dodge();
+}
+
+void GameEngine::commander_cycle_lock_on() {
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return;
+  }
+  if (m_world == nullptr) {
+    return;
+  }
+  m_commander_control.cycle_lock_on_target(*m_world, m_controlled_commander_id,
+                                           m_runtime.local_owner_id);
+}
+
+void GameEngine::commander_special_action() {
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return;
+  }
+  m_commander_control.special_action();
 }
 
 void GameEngine::commander_mouse_move(qreal dx, qreal dy) {
@@ -1209,6 +1293,11 @@ void GameEngine::clear_controlled_commander_state() {
           commander->get_component<Engine::Core::CommanderGuardComponent>()) {
     guard->active = false;
   }
+  if (auto *rpg =
+          commander->get_component<Engine::Core::RpgHealthComponent>()) {
+    rpg->active = false;
+    rpg->dodge_invincible = false;
+  }
   reset_movement(commander);
 }
 
@@ -1223,7 +1312,20 @@ void GameEngine::update_commander_control_mode(float dt) {
                                   m_runtime.local_owner_id, *m_commander_camera,
                                   dt)) {
     exit_commander_control_mode();
+    return;
   }
+
+  auto *cmd_ent = m_world->get_entity(m_controlled_commander_id);
+  if (cmd_ent != nullptr) {
+    auto *cmd = cmd_ent->get_component<Engine::Core::CommanderComponent>();
+    if (cmd != nullptr && cmd->just_struck_enemy) {
+      cmd->just_struck_enemy = false;
+      m_rpg_hit_stop_timer = 0.10F;
+    }
+  }
+
+  Game::Systems::RpgCombat::tick_rpg_combat(m_world.get(),
+                                            m_controlled_commander_id, dt);
 }
 
 void GameEngine::update(float dt) {
@@ -1236,6 +1338,15 @@ void GameEngine::update(float dt) {
     dt = 0.0F;
   } else {
     dt *= m_runtime.time_scale;
+
+    if (!m_runtime.paused && m_rpg_hit_stop_timer > 0.0F) {
+      m_rpg_hit_stop_timer -= dt;
+      if (m_rpg_hit_stop_timer < 0.0F) {
+        m_rpg_hit_stop_timer = 0.0F;
+      } else {
+        dt *= 0.10F;
+      }
+    }
   }
 
   update_mission_waves(dt);
@@ -1420,6 +1531,15 @@ void GameEngine::render_game_effects() {
 
   Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
   Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
+
+  if (m_game_mode == GameMode::Rpg &&
+      m_control_mode == PlayerControlMode::Commander &&
+      m_controlled_commander_id != 0) {
+    m_rpg_telegraphs.render(m_renderer.get(), m_world.get(),
+                            m_controlled_commander_id,
+                            m_commander_control.locked_target_id(),
+                            m_renderer->get_animation_time());
+  }
 
   std::optional<QVector3D> preview_waypoint;
   if (m_command_controller &&
@@ -1930,11 +2050,27 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["name"] = name;
   result["nation"] = nation;
   result["alive"] = alive;
-  result["health"] = health;
-  result["max_health"] = max_health;
-  result["health_ratio"] = max_health > 0 ? static_cast<double>(health) /
-                                                static_cast<double>(max_health)
-                                          : 0.0;
+
+  auto *commander_entity = m_world->get_entity(m_controlled_commander_id);
+  auto *rpg =
+      commander_entity != nullptr
+          ? commander_entity->get_component<Engine::Core::RpgHealthComponent>()
+          : nullptr;
+  if (rpg != nullptr && rpg->active) {
+    result["health"] = rpg->rpg_hp;
+    result["max_health"] = rpg->rpg_max_hp;
+    result["health_ratio"] = rpg->rpg_max_hp > 0
+                                 ? static_cast<double>(rpg->rpg_hp) /
+                                       static_cast<double>(rpg->rpg_max_hp)
+                                 : 0.0;
+  } else {
+    result["health"] = health;
+    result["max_health"] = max_health;
+    result["health_ratio"] =
+        max_health > 0
+            ? static_cast<double>(health) / static_cast<double>(max_health)
+            : 0.0;
+  }
   result["stamina_ratio"] = stamina_ratio;
   result["is_running"] = is_running;
   result["can_run"] = can_run;
@@ -1943,6 +2079,78 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["rally_feedback_time"] = commander->rally_feedback_time;
   result["rally_ready"] = commander->rally_cooldown_remaining <= 0.0F;
   result["aura_active"] = commander->aura_active && !commander->wounded;
+
+  result["combo_step"] = commander->combo_step;
+  result["special_cooldown"] = 3.0;
+  result["special_cooldown_remaining"] =
+      static_cast<double>(commander->special_cooldown_remaining);
+  result["special_ready"] = commander->special_cooldown_remaining <= 0.0F;
+
+  result["locked_target_name"] = QString();
+  result["locked_target_hp"] = 0;
+  result["locked_target_max_hp"] = 0;
+  result["locked_target_hp_ratio"] = 0.0;
+
+  const auto locked_id = m_commander_control.locked_target_id();
+  if (locked_id != 0 && m_world != nullptr) {
+    auto *locked_ent = m_world->get_entity(locked_id);
+    if (locked_ent != nullptr) {
+      auto *locked_unit =
+          locked_ent->get_component<Engine::Core::UnitComponent>();
+      auto *locked_cmd =
+          locked_ent->get_component<Engine::Core::CommanderComponent>();
+      if (locked_unit != nullptr && locked_unit->health > 0) {
+        QString lname;
+        int lhp = 0;
+        int lmax = 0;
+        bool lb = false;
+        bool la = false;
+        QString lnation;
+        if (get_unit_info(locked_id, lname, lhp, lmax, lb, la, lnation)) {
+          if (locked_cmd != nullptr && !locked_cmd->display_name.empty()) {
+            lname = QString::fromStdString(locked_cmd->display_name);
+          }
+          result["locked_target_name"] = lname;
+          result["locked_target_hp"] = lhp;
+          result["locked_target_max_hp"] = lmax;
+          result["locked_target_hp_ratio"] =
+              lmax > 0 ? static_cast<double>(lhp) / static_cast<double>(lmax)
+                       : 0.0;
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+auto GameEngine::pop_rpg_damage_events() -> QVariantList {
+  QVariantList list;
+  list.reserve(static_cast<int>(m_rpg_damage_events.size()));
+  for (const auto &ev : m_rpg_damage_events) {
+    QVariantMap m;
+    m["x"] = static_cast<double>(ev.wx);
+    m["y"] = static_cast<double>(ev.wy);
+    m["z"] = static_cast<double>(ev.wz);
+    m["damage"] = ev.damage;
+    list.append(m);
+  }
+  m_rpg_damage_events.clear();
+  return list;
+}
+
+auto GameEngine::rpg_project_world(float x, float y,
+                                   float z) const -> QVariantMap {
+  QVariantMap result;
+  result["valid"] = false;
+  result["x"] = 0.0;
+  result["y"] = 0.0;
+  QPointF screen;
+  if (world_to_screen(QVector3D(x, y, z), screen)) {
+    result["valid"] = true;
+    result["x"] = screen.x();
+    result["y"] = screen.y();
+  }
   return result;
 }
 

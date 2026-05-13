@@ -6,7 +6,9 @@
 #include "../../game/systems/projectile_system.h"
 #include "../../game/systems/stone_projectile.h"
 #include "../scene_renderer.h"
+#include <QMatrix4x4>
 #include <algorithm>
+#include <cmath>
 #include <unordered_set>
 
 namespace Render::GL {
@@ -338,6 +340,211 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
     renderer->stone_impact(impact.position, color, impact.radius,
                            impact.intensity, impact_time);
+  }
+}
+
+} // namespace Render::GL
+
+namespace {
+
+using Engine::Core::CombatAnimationState;
+
+constexpr float k_telegraph_range = 7.5F;
+constexpr float k_ring_y_offset = 0.025F;
+
+constexpr QVector3D k_danger_red{1.0F, 0.12F, 0.03F};
+constexpr QVector3D k_warning_orange{1.0F, 0.48F, 0.05F};
+constexpr QVector3D k_stagger_cyan{0.2F, 0.85F, 1.0F};
+constexpr QVector3D k_flash_white{1.0F, 0.75F, 0.35F};
+constexpr QVector3D k_lock_gold{1.0F, 0.80F, 0.15F};
+constexpr QVector3D k_lock_white{0.95F, 1.0F, 0.90F};
+
+inline float pulse(float t, float hz, float phase = 0.0F) {
+  return 0.5F + 0.5F * std::sin(t * 6.2832F * hz + phase);
+}
+
+inline void submit_ring(Render::GL::Renderer *renderer, float px, float py,
+                        float pz, float radius, float alpha_inner,
+                        float alpha_outer, const QVector3D &color) {
+  QMatrix4x4 model;
+  model.translate(px, py + k_ring_y_offset, pz);
+  model.scale(radius, 1.0F, radius);
+  renderer->selection_ring(model, alpha_inner, alpha_outer, color);
+}
+
+} // namespace
+
+namespace Render::GL {
+
+void RpgTelegraphRenderer::clear() {
+  m_cache.clear();
+  m_strike_flashes.clear();
+}
+
+void RpgTelegraphRenderer::render(Renderer *renderer,
+                                  Engine::Core::World *world,
+                                  Engine::Core::EntityID commander_id,
+                                  Engine::Core::EntityID locked_target_id,
+                                  float anim_time) {
+  using Engine::Core::CombatStateComponent;
+  using Engine::Core::StaggerComponent;
+  using Engine::Core::TransformComponent;
+
+  auto *commander_ent = world->get_entity(commander_id);
+  if (commander_ent == nullptr) {
+    return;
+  }
+  auto *cmd_tf = commander_ent->get_component<TransformComponent>();
+  if (cmd_tf == nullptr) {
+    return;
+  }
+  const float cx = cmd_tf->position.x;
+  const float cz = cmd_tf->position.z;
+
+  std::vector<Engine::Core::EntityID> seen;
+  seen.reserve(16);
+
+  for (auto *entity : world->get_entities_with<CombatStateComponent>()) {
+    const auto id = entity->get_id();
+    if (id == commander_id) {
+      continue;
+    }
+    auto *csc = entity->get_component<CombatStateComponent>();
+    auto *tf = entity->get_component<TransformComponent>();
+    if (csc == nullptr || tf == nullptr) {
+      continue;
+    }
+    const float ex = tf->position.x;
+    const float ez = tf->position.z;
+    const float ey = tf->position.y;
+    const float dx = ex - cx;
+    const float dz = ez - cz;
+    if (dx * dx + dz * dz > k_telegraph_range * k_telegraph_range) {
+      continue;
+    }
+
+    const auto cur_state = csc->animation_state;
+    auto it = m_cache.find(id);
+
+    if (cur_state == CombatAnimationState::WindUp) {
+      seen.push_back(id);
+      if (it == m_cache.end()) {
+        m_cache[id] = TelegraphEntry{ex, ez, ey, CombatAnimationState::WindUp};
+      } else {
+
+        constexpr float k_pos_epsilon = 0.01F;
+        if (std::abs(it->second.last_pos_x - ex) > k_pos_epsilon ||
+            std::abs(it->second.last_pos_z - ez) > k_pos_epsilon) {
+          it->second.last_pos_x = ex;
+          it->second.last_pos_z = ez;
+          it->second.base_y = ey;
+        }
+        it->second.prev_state = CombatAnimationState::WindUp;
+      }
+    } else if (cur_state == CombatAnimationState::Strike &&
+               it != m_cache.end() &&
+               it->second.prev_state == CombatAnimationState::WindUp) {
+
+      m_strike_flashes.push_back(StrikeFlash{{ex, ey, ez}, anim_time});
+      m_cache.erase(it);
+    }
+  }
+
+  for (auto it = m_cache.begin(); it != m_cache.end();) {
+    const bool still_seen =
+        std::find(seen.begin(), seen.end(), it->first) != seen.end();
+    if (!still_seen) {
+      it = m_cache.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  m_strike_flashes.erase(std::remove_if(m_strike_flashes.begin(),
+                                        m_strike_flashes.end(),
+                                        [anim_time](const StrikeFlash &f) {
+                                          return (anim_time - f.start_time) >=
+                                                 StrikeFlash::k_duration;
+                                        }),
+                         m_strike_flashes.end());
+
+  for (const auto &[id, entry] : m_cache) {
+    auto *entity = world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+    auto *csc = entity->get_component<CombatStateComponent>();
+    if (csc == nullptr) {
+      continue;
+    }
+    const float progress = std::clamp(
+        csc->state_time / CombatStateComponent::k_wind_up_duration, 0.0F, 1.0F);
+
+    const float inner_r = 0.55F + 0.33F * progress;
+
+    constexpr float outer_r = 1.20F;
+
+    const float inner_alpha = 0.55F + 0.20F * pulse(anim_time, 4.0F);
+
+    const float outer_alpha = 0.20F + 0.10F * pulse(anim_time, 2.0F, 1.047F);
+
+    submit_ring(renderer, entry.last_pos_x, entry.base_y, entry.last_pos_z,
+                inner_r, inner_alpha, inner_alpha * 0.55F, k_danger_red);
+    submit_ring(renderer, entry.last_pos_x, entry.base_y, entry.last_pos_z,
+                outer_r, outer_alpha, outer_alpha * 0.4F, k_warning_orange);
+  }
+
+  for (auto *entity : world->get_entities_with<StaggerComponent>()) {
+    if (entity->get_id() == commander_id) {
+      continue;
+    }
+    auto *tf = entity->get_component<TransformComponent>();
+    auto *sc = entity->get_component<StaggerComponent>();
+    if (tf == nullptr || sc == nullptr) {
+      continue;
+    }
+    const float ex = tf->position.x;
+    const float ez = tf->position.z;
+    const float dx = ex - cx;
+    const float dz = ez - cz;
+    if (dx * dx + dz * dz > k_telegraph_range * k_telegraph_range) {
+      continue;
+    }
+
+    const float fade = std::clamp(sc->remaining / 0.5F, 0.0F, 1.0F);
+    const float stagger_alpha =
+        0.55F * fade * (0.7F + 0.3F * pulse(anim_time, 6.0F));
+    submit_ring(renderer, ex, tf->position.y, ez, 0.70F, stagger_alpha,
+                stagger_alpha * 0.35F, k_stagger_cyan);
+  }
+
+  for (const auto &flash : m_strike_flashes) {
+    const float elapsed = anim_time - flash.start_time;
+    const float t = elapsed / StrikeFlash::k_duration;
+
+    const float flash_r = 0.8F + 0.6F * t;
+    const float flash_alpha = (1.0F - t) * 0.75F;
+    submit_ring(renderer, flash.pos.x(), flash.pos.y(), flash.pos.z(), flash_r,
+                flash_alpha, flash_alpha * 0.3F, k_flash_white);
+  }
+
+  if (locked_target_id != 0) {
+    auto *lock_ent = world->get_entity(locked_target_id);
+    if (lock_ent != nullptr) {
+      auto *lock_tf = lock_ent->get_component<TransformComponent>();
+      auto *lock_unit = lock_ent->get_component<Engine::Core::UnitComponent>();
+      if (lock_tf != nullptr && lock_unit != nullptr && lock_unit->health > 0) {
+        const float lx = lock_tf->position.x;
+        const float lz = lock_tf->position.z;
+        const float ly = lock_tf->position.y;
+        const float lock_alpha = 0.55F + 0.20F * pulse(anim_time, 3.0F);
+        const float lock_outer = 0.22F + 0.08F * pulse(anim_time, 3.0F, 1.047F);
+        submit_ring(renderer, lx, ly, lz, 0.90F, lock_alpha, lock_alpha * 0.40F,
+                    k_lock_gold);
+        submit_ring(renderer, lx, ly, lz, 1.10F, lock_outer, lock_outer * 0.30F,
+                    k_lock_white);
+      }
+    }
   }
 }
 

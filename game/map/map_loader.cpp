@@ -6,7 +6,6 @@
 
 #include <QDebug>
 #include <QFile>
-#include <QHash>
 #include <QIODevice>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -367,12 +366,13 @@ void read_spawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   }
 }
 
-void read_fire_camps(const QJsonArray &arr, std::vector<FireCamp> &out) {
-  out.clear();
-  out.reserve(arr.size());
+void append_fire_camps_as_world_props(const QJsonArray &arr,
+                                      std::vector<WorldProp> &out) {
+  out.reserve(out.size() + arr.size());
   for (const auto &camp_val : arr) {
     auto camp_obj = camp_val.toObject();
-    FireCamp fire_camp;
+    WorldProp fire_camp;
+    fire_camp.type = WorldProp::Type::FireCamp;
     fire_camp.x = float(camp_obj.value("x").toDouble(0.0));
     fire_camp.z = float(camp_obj.value("z").toDouble(0.0));
     fire_camp.intensity = float(camp_obj.value("intensity").toDouble(1.0));
@@ -384,33 +384,24 @@ void read_fire_camps(const QJsonArray &arr, std::vector<FireCamp> &out) {
   }
 }
 
-void read_world_props(const QJsonArray &arr, std::vector<WorldProp> &out) {
-  static const QHash<QString, WorldProp::Type> k_type_map{
-      {QStringLiteral("tent"), WorldProp::Type::Tent},
-      {QStringLiteral("supply_cart"), WorldProp::Type::SupplyCart},
-      {QStringLiteral("weapon_rack"), WorldProp::Type::WeaponRack},
-      {QStringLiteral("ruins"), WorldProp::Type::Ruins},
-      {QStringLiteral("dead_tree"), WorldProp::Type::DeadTree},
-      {QStringLiteral("boulder"), WorldProp::Type::Boulder},
-  };
-
-  out.clear();
-  out.reserve(arr.size());
+void append_world_props(const QJsonArray &arr, std::vector<WorldProp> &out) {
+  out.reserve(out.size() + arr.size());
   for (const auto &val : arr) {
     auto obj = val.toObject();
     const QString type_str = obj.value(JsonKeys::TYPE).toString();
-    const auto it = k_type_map.find(type_str);
-    if (it == k_type_map.end()) {
+    WorldProp prop;
+    if (!world_prop_type_from_string(type_str, prop.type)) {
       qWarning() << "MapLoader: unknown world_prop type" << type_str
                  << "- skipping";
       continue;
     }
-    WorldProp prop;
-    prop.type = it.value();
     prop.x = float(obj.value(JsonKeys::X).toDouble(0.0));
     prop.z = float(obj.value(JsonKeys::Z).toDouble(0.0));
     prop.scale = float(obj.value(JsonKeys::SCALE).toDouble(1.0));
     prop.rotation = float(obj.value(JsonKeys::ROTATION).toDouble(0.0));
+    prop.intensity = float(obj.value(JsonKeys::INTENSITY).toDouble(1.0));
+    prop.radius = float(obj.value(JsonKeys::RADIUS).toDouble(3.0));
+    prop.persistent = obj.value(JsonKeys::PERSISTENT).toBool(true);
     out.push_back(prop);
   }
 }
@@ -763,12 +754,14 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
     read_spawns(root.value(SPAWNS).toArray(), out_map.spawns);
   }
 
+  out_map.world_props.clear();
   if (root.contains(FIRECAMPS) && root.value(FIRECAMPS).isArray()) {
-    read_fire_camps(root.value(FIRECAMPS).toArray(), out_map.firecamps);
+    append_fire_camps_as_world_props(root.value(FIRECAMPS).toArray(),
+                                     out_map.world_props);
   }
 
   if (root.contains(WORLD_PROPS) && root.value(WORLD_PROPS).isArray()) {
-    read_world_props(root.value(WORLD_PROPS).toArray(), out_map.world_props);
+    append_world_props(root.value(WORLD_PROPS).toArray(), out_map.world_props);
   }
 
   if (root.contains(TERRAIN) && root.value(TERRAIN).isArray()) {

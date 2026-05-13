@@ -20,9 +20,9 @@ public:
   auto
   operator=(const PersistentRingBuffer &) -> PersistentRingBuffer & = delete;
 
-  auto
-  initialize(std::size_t capacity,
-             int buffers_in_flight = BufferCapacity::BuffersInFlight) -> bool {
+  auto initialize(std::size_t capacity,
+                  int buffers_in_flight = BufferCapacity::buffers_in_flight)
+      -> bool {
     if (m_buffer != 0) {
       return false;
     }
@@ -52,8 +52,8 @@ public:
     }
 
     Platform::BufferStorageHelper::Mode mode;
-    if (!Platform::BufferStorageHelper::createBuffer(m_buffer, m_total_size,
-                                                     &mode)) {
+    if (!Platform::BufferStorageHelper::create_buffer(m_buffer, m_total_size,
+                                                      &mode)) {
       qWarning() << "PersistentRingBuffer: Failed to create buffer storage";
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glDeleteBuffers(1, &m_buffer);
@@ -186,7 +186,7 @@ private:
   std::size_t m_total_size = 0;
   std::size_t m_frame_offset = 0;
   std::size_t m_current_count = 0;
-  int m_buffers_in_flight = BufferCapacity::BuffersInFlight;
+  int m_buffers_in_flight = BufferCapacity::buffers_in_flight;
   int m_current_frame = 0;
   Platform::BufferStorageHelper::Mode m_buffer_mode =
       Platform::BufferStorageHelper::Mode::Persistent;

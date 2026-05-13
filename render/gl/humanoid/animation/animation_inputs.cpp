@@ -221,6 +221,11 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
                 std::max(target_transform->scale.x, target_transform->scale.z) *
                 0.5F;
           }
+          auto *elephant =
+              target->get_component<Engine::Core::ElephantComponent>();
+          if (elephant != nullptr) {
+            target_radius = std::max(target_radius, elephant->trample_radius);
+          }
           float const effective_range = attack->range + target_radius + 0.25F;
           target_in_range = (dist_squared <= effective_range * effective_range);
         }
