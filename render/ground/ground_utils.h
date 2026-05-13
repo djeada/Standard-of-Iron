@@ -45,9 +45,9 @@ inline auto hash_coords(int x, int z, uint32_t salt = 0U) -> uint32_t {
 inline auto rand_01(uint32_t &state) -> float {
   state = state * HashConstants::k_linear_congruential_multiplier +
           HashConstants::k_linear_congruential_increment;
-  return static_cast<float>((state >> ::Render::GL::BitShift::Shift8) &
-                            ::Render::GL::BitShift::Mask24Bit) /
-         ::Render::GL::BitShift::Mask24BitFloat;
+  return static_cast<float>((state >> ::Render::GL::BitShift::shift_8) &
+                            ::Render::GL::BitShift::mask_24_bit) /
+         ::Render::GL::BitShift::mask_24_bit_float;
 }
 
 inline auto remap(float value, float min_out, float max_out) -> float {
@@ -62,9 +62,9 @@ inline auto hash_to_01(uint32_t h) -> float {
   h ^= h >> HashConstants::k_xor_shift_amount_15;
   h *= HashConstants::k_hash_mix_multiplier_3;
   h ^= h >> HashConstants::k_xor_shift_amount_14;
-  return static_cast<float>((h >> ::Render::GL::BitShift::Shift8) &
-                            ::Render::GL::BitShift::Mask24Bit) /
-         ::Render::GL::BitShift::Mask24BitFloat;
+  return static_cast<float>((h >> ::Render::GL::BitShift::shift_8) &
+                            ::Render::GL::BitShift::mask_24_bit) /
+         ::Render::GL::BitShift::mask_24_bit_float;
 }
 
 inline auto noise_hash(float x, float y) -> float {

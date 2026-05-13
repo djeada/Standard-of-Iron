@@ -5,9 +5,11 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_config.h"
 #include "../building_collision_registry.h"
+#include "../rpg_combat_system/rpg_damage_resolver.h"
 
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <numbers>
@@ -242,6 +244,58 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
   }
 
   damage = apply_commander_guard_reduction(world, target, damage, attacker_id);
+
+  if (attacker_id != 0 && world != nullptr) {
+    auto *attacker_ent = world->get_entity(attacker_id);
+    if (attacker_ent != nullptr) {
+      auto *cmd =
+          attacker_ent->get_component<Engine::Core::CommanderComponent>();
+      if (cmd != nullptr) {
+        constexpr std::array<float, 4> k_combo_mult = {1.0F, 1.1F, 1.2F, 1.5F};
+        const int step = std::min(cmd->combo_step, 3);
+        damage = static_cast<int>(
+            std::roundf(static_cast<float>(damage) * k_combo_mult[step]));
+        if (cmd->power_strike_active) {
+          damage =
+              static_cast<int>(std::roundf(static_cast<float>(damage) * 1.8F));
+          cmd->power_strike_active = false;
+        }
+        cmd->combo_step = (cmd->combo_step + 1) % 4;
+        cmd->just_struck_enemy = true;
+      }
+    }
+  }
+
+  if (auto *rpg = target->get_component<Engine::Core::RpgHealthComponent>();
+      rpg != nullptr && rpg->active) {
+    auto const rpg_result = Game::Systems::RpgCombat::resolve_rpg_damage(
+        world, target, damage, attacker_id);
+    if (!rpg_result.killed) {
+      if (rpg_result.effective_damage > 0) {
+        apply_hit_feedback(target, attacker_id, world);
+        Game::Units::SpawnType attacker_type_hit =
+            Game::Units::SpawnType::Knight;
+        if (attacker_id != 0 && world != nullptr) {
+          auto *atk_ent = world->get_entity(attacker_id);
+          if (atk_ent != nullptr) {
+            auto *atk_unit =
+                atk_ent->get_component<Engine::Core::UnitComponent>();
+            if (atk_unit != nullptr) {
+              attacker_type_hit = atk_unit->spawn_type;
+            }
+          }
+        }
+        Engine::Core::EventManager::instance().publish(
+            Engine::Core::CombatHitEvent(attacker_id, target->get_id(),
+                                         rpg_result.effective_damage,
+                                         attacker_type_hit, false));
+      }
+      return;
+    }
+
+    damage = unit->health;
+  }
+
   int const prev_health = unit->health;
   int const new_health = std::max(0, prev_health - damage);
   bool const is_killing_blow = (prev_health > 0 && prev_health <= damage);

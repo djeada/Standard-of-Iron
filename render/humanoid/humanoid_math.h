@@ -11,7 +11,7 @@ inline auto hash_01(uint32_t x) -> float {
   x ^= x << HashXorShift::k_xor_shift_amount_13;
   x ^= x >> HashXorShift::k_xor_shift_amount_17;
   x ^= x << HashXorShift::k_xor_shift_amount_5;
-  return (x & BitShift::Mask24Bit) / float(BitShift::k_mask_24bit_hex);
+  return (x & BitShift::mask_24_bit) / float(BitShift::k_mask_24bit_hex);
 }
 
 inline auto rot_y(const QVector3D &v, float angle_rad) -> QVector3D {

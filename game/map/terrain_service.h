@@ -1,5 +1,6 @@
 #pragma once
 
+#include "map_definition.h"
 #include "terrain.h"
 #include <QVector3D>
 #include <memory>
@@ -9,9 +10,6 @@
 namespace Game::Map {
 
 struct MapDefinition;
-struct FireCamp;
-struct WorldProp;
-
 enum class SurfaceHeightKind {
   Fallback,
   Terrain,
@@ -76,13 +74,11 @@ public:
     return m_terrain_field;
   }
 
-  [[nodiscard]] auto fire_camps() const -> const std::vector<FireCamp> & {
-    return m_fire_camps;
-  }
-
   [[nodiscard]] auto world_props() const -> const std::vector<WorldProp> & {
     return m_world_props;
   }
+
+  void remove_non_persistent_props();
 
   [[nodiscard]] auto road_segments() const -> const std::vector<RoadSegment> & {
     return m_road_segments;
@@ -90,12 +86,21 @@ public:
 
   [[nodiscard]] auto is_point_on_road(float world_x,
                                       float world_z) const -> bool;
+  [[nodiscard]] auto is_point_near_road(float world_x, float world_z,
+                                        float clearance) const -> bool;
 
   [[nodiscard]] auto is_on_bridge(float world_x, float world_z) const -> bool;
+  [[nodiscard]] auto is_point_near_bridge(float world_x, float world_z,
+                                          float clearance) const -> bool;
+  [[nodiscard]] auto is_point_near_river(float world_x, float world_z,
+                                         float clearance) const -> bool;
 
   [[nodiscard]] auto
   get_bridge_center_position(float world_x,
                              float world_z) const -> std::optional<QVector3D>;
+
+  [[nodiscard]] auto get_bridge_traversal_position(
+      float world_x, float world_z) const -> std::optional<QVector3D>;
 
   [[nodiscard]] auto is_initialized() const -> bool {
     return m_height_map != nullptr;
@@ -107,7 +112,8 @@ public:
                                const std::vector<RiverSegment> &rivers,
                                const std::vector<RoadSegment> &roads,
                                const std::vector<Bridge> &bridges,
-                               const BiomeSettings &biome);
+                               const BiomeSettings &biome,
+                               const std::vector<WorldProp> &world_props = {});
 
 private:
   TerrainService() = default;
@@ -121,7 +127,6 @@ private:
   std::unique_ptr<TerrainHeightMap> m_height_map;
   TerrainField m_terrain_field;
   BiomeSettings m_biome_settings;
-  std::vector<FireCamp> m_fire_camps;
   std::vector<WorldProp> m_world_props;
   std::vector<RoadSegment> m_road_segments;
 };

@@ -44,8 +44,9 @@ void main() {
   vec3 world_pos = i_start + dir * along + radial * i_radius;
 
   vec3 local_normal = a_normal;
-  vec3 world_normal = normalize(tangent * local_normal.x + dir * local_normal.y +
-                               bitangent * local_normal.z);
+  vec3 world_normal =
+      normalize(tangent * local_normal.x + dir * local_normal.y +
+                bitangent * local_normal.z);
 
   v_world_pos = world_pos;
   v_normal = world_normal;

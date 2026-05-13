@@ -2,7 +2,9 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../owner_registry.h"
+#include "combat_utils.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -85,7 +87,10 @@ void update_combat_mode(Engine::Core::Entity *attacker,
         target_transform->position.z - attacker_transform->position.z;
     float const dy =
         target_transform->position.y - attacker_transform->position.y;
-    float const dist_sq = dx * dx + dz * dz;
+    float const target_radius = combat_radius(target);
+    float const surface_dist =
+        std::max(0.0F, std::sqrt(dx * dx + dz * dz) - target_radius);
+    float const dist_sq = surface_dist * surface_dist;
 
     if (dist_sq < closest_enemy_dist_sq) {
       closest_enemy_dist_sq = dist_sq;

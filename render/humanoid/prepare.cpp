@@ -89,6 +89,60 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit)
       unit.spawn_type);
 }
 
+auto combat_phase_to_attack_phase(const AnimationInputs &anim,
+                                  float visual_phase_offset) noexcept -> float {
+  auto segment = [](float start, float end, float progress) noexcept {
+    return start + (end - start) * std::clamp(progress, 0.0F, 1.0F);
+  };
+  auto progress_with_offset =
+      [visual_phase_offset](float progress, float weight) noexcept -> float {
+    return std::clamp(progress + visual_phase_offset * weight, 0.0F, 1.0F);
+  };
+
+  switch (anim.combat_phase) {
+  case CombatAnimPhase::Advance:
+    return segment(0.00F, 0.14F,
+                   progress_with_offset(anim.combat_phase_progress, 0.90F));
+  case CombatAnimPhase::WindUp:
+    return segment(0.14F, 0.34F,
+                   progress_with_offset(anim.combat_phase_progress, 0.75F));
+  case CombatAnimPhase::Strike:
+    return segment(0.34F, 0.52F,
+                   progress_with_offset(anim.combat_phase_progress, 0.25F));
+  case CombatAnimPhase::Impact:
+    return segment(0.52F, 0.60F,
+                   progress_with_offset(anim.combat_phase_progress, 0.15F));
+  case CombatAnimPhase::Recover:
+    return segment(0.60F, 0.86F,
+                   progress_with_offset(anim.combat_phase_progress, 0.80F));
+  case CombatAnimPhase::Reposition:
+    return segment(0.86F, 0.995F,
+                   progress_with_offset(anim.combat_phase_progress, 0.70F));
+  case CombatAnimPhase::Idle:
+  default:
+    break;
+  }
+
+  float const attack_offset =
+      anim.has_attack_offset ? anim.attack_offset : 0.0F;
+  float phase = std::fmod(anim.time + attack_offset, 1.0F);
+  return (phase < 0.0F) ? phase + 1.0F : phase;
+}
+
+auto visual_attack_phase_offset(float layout_phase_offset) noexcept -> float {
+  return std::clamp((layout_phase_offset - 0.125F) * 1.20F, -0.15F, 0.15F);
+}
+
+auto visual_attack_variant(std::uint8_t base_variant,
+                           std::uint32_t inst_seed) noexcept -> std::uint8_t {
+  constexpr std::uint8_t k_variant_slots =
+      Engine::Core::CombatStateComponent::k_attack_variant_seed_slots;
+  std::uint8_t const variant_jitter =
+      static_cast<std::uint8_t>((inst_seed >> 11U) % 3U);
+  return static_cast<std::uint8_t>((base_variant + variant_jitter) %
+                                   k_variant_slots);
+}
+
 auto HumanoidRendererBase::resolve_formation(const HumanoidRendererBase &owner,
                                              const DrawContext &ctx)
     -> FormationParams {
@@ -616,13 +670,16 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     anim_ctx.locomotion_cycle_time = locomotion_state.gait.cycle_time;
     anim_ctx.locomotion_phase = locomotion_state.gait.cycle_phase;
     if (soldier_anim.is_attacking) {
-      float const attack_offset = soldier_anim.has_attack_offset
-                                      ? soldier_anim.attack_offset
-                                      : (phase_offset * 1.5F);
+      float const attack_visual_offset =
+          ctx.force_single_soldier ? 0.0F
+                                   : visual_attack_phase_offset(phase_offset);
       anim_ctx.attack_phase =
-          std::fmod(soldier_anim.time + attack_offset, 1.0F);
+          combat_phase_to_attack_phase(soldier_anim, attack_visual_offset);
       if (ctx.has_attack_variant_override) {
         anim_ctx.inputs.attack_variant = ctx.attack_variant_override;
+      } else if (!ctx.force_single_soldier) {
+        anim_ctx.inputs.attack_variant =
+            visual_attack_variant(soldier_anim.attack_variant, inst_seed);
       }
     }
 

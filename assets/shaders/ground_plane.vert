@@ -52,7 +52,8 @@ void main() {
   float broad_a = fbm2(uv_warp * max(freq * 0.105, 0.045));
   float broad_b = fbm2((uv_warp + vec2(-19.4, 27.1)) * max(freq * 0.19, 0.070));
   float broad_ridge = 1.0 - abs(broad_a * 2.0 - 1.0);
-  float broad = (broad_a * 0.58 + broad_b * 0.27 + broad_ridge * 0.15) * 2.0 - 1.0;
+  float broad =
+      (broad_a * 0.58 + broad_b * 0.27 + broad_ridge * 0.15) * 2.0 - 1.0;
   float base = fbm2(uv_warp * freq * 0.55);
   float detail = fbm2(uv_warp * freq * 1.35);
   float fine = noise21(uv_warp * freq * 3.4);
@@ -75,8 +76,9 @@ void main() {
   float grad_step = max(0.08, 0.22 / max(freq, 0.05));
   float broad_a_x =
       fbm2((uv_warp + vec2(grad_step, 0.0)) * max(freq * 0.105, 0.045));
-  float broad_b_x = fbm2(((uv_warp + vec2(grad_step, 0.0)) + vec2(-19.4, 27.1)) *
-                         max(freq * 0.19, 0.070));
+  float broad_b_x =
+      fbm2(((uv_warp + vec2(grad_step, 0.0)) + vec2(-19.4, 27.1)) *
+           max(freq * 0.19, 0.070));
   float broad_x = (broad_a_x * 0.58 + broad_b_x * 0.27 +
                    (1.0 - abs(broad_a_x * 2.0 - 1.0)) * 0.15) *
                       2.0 -
@@ -93,8 +95,9 @@ void main() {
 
   float broad_a_z =
       fbm2((uv_warp + vec2(0.0, grad_step)) * max(freq * 0.105, 0.045));
-  float broad_b_z = fbm2(((uv_warp + vec2(0.0, grad_step)) + vec2(-19.4, 27.1)) *
-                         max(freq * 0.19, 0.070));
+  float broad_b_z =
+      fbm2(((uv_warp + vec2(0.0, grad_step)) + vec2(-19.4, 27.1)) *
+           max(freq * 0.19, 0.070));
   float broad_z = (broad_a_z * 0.58 + broad_b_z * 0.27 +
                    (1.0 - abs(broad_a_z * 2.0 - 1.0)) * 0.15) *
                       2.0 -

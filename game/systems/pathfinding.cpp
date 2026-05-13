@@ -80,6 +80,14 @@ auto Pathfinding::is_walkable_with_radius(int x, int y,
     return true;
   }
 
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  if (terrain_service.is_initialized()) {
+    auto const *height_map = terrain_service.get_height_map();
+    if (height_map != nullptr && height_map->isBridgeCell(x, y)) {
+      return true;
+    }
+  }
+
   float const half_extent = m_grid_cell_size * 0.5F;
   int const search_radius = static_cast<int>(
       std::ceil((unit_radius + half_extent) / m_grid_cell_size));

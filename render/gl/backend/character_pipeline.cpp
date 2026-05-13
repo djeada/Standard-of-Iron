@@ -8,6 +8,21 @@
 
 namespace Render::GL::BackendPipelines {
 
+namespace {
+
+auto resolve_unit_shader(GL::ShaderCache *shader_cache, GL::Shader *fallback,
+                         const QString &name) -> GL::Shader * {
+  if (shader_cache == nullptr) {
+    return fallback;
+  }
+  if (GL::Shader *shader = shader_cache->get(name)) {
+    return shader;
+  }
+  return fallback;
+}
+
+} // namespace
+
 auto CharacterPipeline::initialize() -> bool {
   if (m_shader_cache == nullptr) {
     qWarning() << "CharacterPipeline::initialize: null ShaderCache";
@@ -15,21 +30,15 @@ auto CharacterPipeline::initialize() -> bool {
   }
 
   m_basic_shader = m_shader_cache->get("basic");
-  m_archer_shader = m_shader_cache->get("archer");
-  m_swordsman_shader = m_shader_cache->get("swordsman");
-  m_spearman_shader = m_shader_cache->get("spearman");
+  m_archer_shader = resolve_unit_shader(m_shader_cache, m_basic_shader,
+                                        QStringLiteral("archer"));
+  m_swordsman_shader = resolve_unit_shader(m_shader_cache, m_basic_shader,
+                                           QStringLiteral("swordsman"));
+  m_spearman_shader = resolve_unit_shader(m_shader_cache, m_basic_shader,
+                                          QStringLiteral("spearman"));
 
   if (m_basic_shader == nullptr) {
     qWarning() << "CharacterPipeline: Failed to load basic shader";
-  }
-  if (m_archer_shader == nullptr) {
-    qWarning() << "CharacterPipeline: Failed to load archer shader";
-  }
-  if (m_swordsman_shader == nullptr) {
-    qWarning() << "CharacterPipeline: Failed to load swordsman shader";
-  }
-  if (m_spearman_shader == nullptr) {
-    qWarning() << "CharacterPipeline: Failed to load spearman shader";
   }
 
   cache_uniforms();
@@ -53,8 +62,7 @@ void CharacterPipeline::cache_uniforms() {
 }
 
 auto CharacterPipeline::is_initialized() const -> bool {
-  return m_basic_shader != nullptr && m_archer_shader != nullptr &&
-         m_swordsman_shader != nullptr && m_spearman_shader != nullptr;
+  return m_basic_shader != nullptr;
 }
 
 void CharacterPipeline::cache_basic_uniforms() {
@@ -116,7 +124,8 @@ auto CharacterPipeline::build_uniform_set(GL::Shader *shader) const
   uniforms.instanced = shader->optional_uniform_handle("u_instanced");
   uniforms.view_proj = shader->optional_uniform_handle("u_view_proj");
   uniforms.light_dir = shader->optional_uniform_handle("u_light_dir");
-  uniforms.ambient_strength = shader->optional_uniform_handle("u_ambient_strength");
+  uniforms.ambient_strength =
+      shader->optional_uniform_handle("u_ambient_strength");
   return uniforms;
 }
 

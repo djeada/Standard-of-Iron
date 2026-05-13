@@ -42,6 +42,8 @@ auto is_valid_enemy_unit(const Engine::Core::UnitComponent *attacker_unit,
                          Engine::Core::Entity *target,
                          bool allow_buildings) -> bool;
 
+auto combat_radius(Engine::Core::Entity *entity) -> float;
+
 auto is_in_range(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                  float range) -> bool;
 

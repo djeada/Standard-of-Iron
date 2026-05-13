@@ -55,12 +55,12 @@ void main() {
 
   if (foliage_mask > 0.1) {
     float ang = atan(model_pos.z, model_pos.x);
-    float lump_base = sin(ang * 3.0 + silhouette_seed * TWO_PI) * 0.22;
-    float lump_fine = sin(ang * 5.0 + leaf_seed * TWO_PI * 1.7) * 0.10;
+    float lump_base = sin(ang * 3.0 + silhouette_seed * TWO_PI) * 0.10;
+    float lump_fine = sin(ang * 5.0 + leaf_seed * TWO_PI * 1.7) * 0.04;
     float lump_mag = (lump_base + lump_fine) * foliage_mask;
     model_pos.xz *= (1.0 + lump_mag);
 
-    float stretch = mix(0.78, 1.28, leaf_seed);
+    float stretch = mix(0.88, 1.14, leaf_seed);
     model_pos.y *= mix(1.0, stretch, foliage_mask);
   }
 
@@ -69,7 +69,8 @@ void main() {
   float height_factor = clamp(a_pos.y * 2.0, 0.0, 1.0);
   float wind_time = u_time * u_wind_speed * 0.4;
   float sway = sin(wind_time + sway_phase) * u_wind_strength * 0.3;
-  float sway2 = sin(wind_time * 1.7 + sway_phase * 2.3) * u_wind_strength * 0.15;
+  float sway2 =
+      sin(wind_time * 1.7 + sway_phase * 2.3) * u_wind_strength * 0.15;
 
   float sway_amount = mix(0.02, 0.12, foliage_mask) * height_factor;
   local_pos.x += sway * sway_amount;

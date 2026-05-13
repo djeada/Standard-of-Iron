@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include "game/map/map_definition.h"
+#include "game/map/terrain_service.h"
+#include "game/systems/building_collision_registry.h"
 #include "render/ground/spawn_validator.h"
 
 using namespace Render::Ground;
@@ -8,6 +11,8 @@ using namespace Game::Map;
 class SpawnValidatorTest : public ::testing::Test {
 protected:
   void SetUp() override {
+    Game::Map::TerrainService::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
 
     width = 10;
     height = 10;
@@ -17,6 +22,11 @@ protected:
 
     terrain_types.resize(static_cast<size_t>(width * height),
                          TerrainType::Flat);
+  }
+
+  void TearDown() override {
+    Game::Map::TerrainService::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
   void build_cache() {
@@ -189,6 +199,7 @@ TEST_F(SpawnValidatorTest, MakePlantSpawnConfigDefaults) {
   EXPECT_TRUE(config.check_roads);
   EXPECT_TRUE(config.check_slope);
   EXPECT_TRUE(config.check_river_margin);
+  EXPECT_GT(config.building_clearance, 0.0F);
 }
 
 TEST_F(SpawnValidatorTest, MakeStoneSpawnConfigDefaults) {
@@ -199,7 +210,8 @@ TEST_F(SpawnValidatorTest, MakeStoneSpawnConfigDefaults) {
   EXPECT_FALSE(config.allow_mountain);
   EXPECT_FALSE(config.allow_river);
   EXPECT_TRUE(config.check_buildings);
-  EXPECT_FALSE(config.check_roads);
+  EXPECT_TRUE(config.check_roads);
+  EXPECT_GT(config.road_clearance, 0.0F);
 }
 
 TEST_F(SpawnValidatorTest, MakeFirecampSpawnConfigDefaults) {
@@ -263,4 +275,106 @@ TEST_F(SpawnValidatorTest, TreeSpawnConfigRespectsRiverMargin) {
   EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 6.0F));
 
   EXPECT_TRUE(validator.can_spawn_at_grid(0.0F, 0.0F));
+}
+
+TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBuildingClearance) {
+  build_cache();
+
+  auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
+  registry.register_building(1U, "barracks", 0.0F, 0.0F, 0);
+
+  SpawnValidationConfig config = make_tree_spawn_config();
+  config.grid_width = width;
+  config.grid_height = height;
+  config.tile_size = tile_size;
+  config.edge_padding = 0.0F;
+  config.building_clearance = 2.0F;
+  config.check_roads = false;
+  config.check_bridges = false;
+  config.check_river_margin = false;
+  config.river_clearance = 0.0F;
+
+  SpawnValidator validator(terrain_cache, config);
+
+  EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 0.0F));
+  EXPECT_FALSE(validator.can_spawn_at_world(3.5F, 0.0F));
+  EXPECT_TRUE(validator.can_spawn_at_world(4.2F, 0.0F));
+}
+
+TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRoadClearance) {
+  build_cache();
+
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = width;
+  map_def.grid.height = height;
+  map_def.grid.tile_size = tile_size;
+  map_def.roads.push_back(
+      {QVector3D(-4.0F, 0.0F, 0.0F), QVector3D(4.0F, 0.0F, 0.0F), 2.0F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  SpawnValidationConfig config = make_plant_spawn_config();
+  config.grid_width = width;
+  config.grid_height = height;
+  config.tile_size = tile_size;
+  config.edge_padding = 0.0F;
+  config.check_bridges = false;
+  config.check_river_margin = false;
+  config.river_clearance = 0.0F;
+
+  SpawnValidator validator(terrain_cache, config);
+
+  EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 1.2F));
+  EXPECT_TRUE(validator.can_spawn_at_world(0.0F, 1.8F));
+}
+
+TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBridgeClearance) {
+  build_cache();
+
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = width;
+  map_def.grid.height = height;
+  map_def.grid.tile_size = tile_size;
+  map_def.bridges.push_back(
+      {QVector3D(-3.0F, 0.0F, 0.0F), QVector3D(3.0F, 0.0F, 0.0F), 2.0F, 0.5F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  SpawnValidationConfig config = make_tree_spawn_config();
+  config.grid_width = width;
+  config.grid_height = height;
+  config.tile_size = tile_size;
+  config.edge_padding = 0.0F;
+  config.check_roads = false;
+  config.check_river_margin = false;
+  config.river_clearance = 0.0F;
+
+  SpawnValidator validator(terrain_cache, config);
+
+  EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 1.8F));
+  EXPECT_TRUE(validator.can_spawn_at_world(0.0F, 3.3F));
+}
+
+TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRiverClearance) {
+  build_cache();
+
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = width;
+  map_def.grid.height = height;
+  map_def.grid.tile_size = tile_size;
+  map_def.rivers.push_back(
+      {QVector3D(-4.0F, 0.0F, 0.0F), QVector3D(4.0F, 0.0F, 0.0F), 2.0F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  SpawnValidationConfig config = make_tree_spawn_config();
+  config.grid_width = width;
+  config.grid_height = height;
+  config.tile_size = tile_size;
+  config.edge_padding = 0.0F;
+  config.check_roads = false;
+  config.check_bridges = false;
+  config.check_river_margin = false;
+
+  SpawnValidator validator(terrain_cache, config);
+
+  EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 2.2F));
+  EXPECT_TRUE(validator.can_spawn_at_world(0.0F, 2.8F));
 }

@@ -14,15 +14,15 @@ public:
   explicit JsonEditDialog(const QString &title, const QJsonObject &json,
                           QWidget *parent = nullptr);
 
-  [[nodiscard]] QJsonObject getJson() const;
-  [[nodiscard]] bool isValid() const { return m_is_valid; }
+  [[nodiscard]] QJsonObject get_json() const;
+  [[nodiscard]] bool is_valid() const { return m_is_valid; }
 
 private slots:
-  void validateJson();
-  void onAccepted();
+  void validate_json();
+  void on_accepted();
 
 private:
-  void setupUI(const QString &title, const QJsonObject &json);
+  void setup_ui(const QString &title, const QJsonObject &json);
 
   QPlainTextEdit *m_editor = nullptr;
   QPushButton *m_ok_button = nullptr;

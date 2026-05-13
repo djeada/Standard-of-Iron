@@ -74,10 +74,13 @@ Item {
             event.accepted = true;
             return ;
         case Qt.Key_Space:
-            if (typeof mainWindow !== 'undefined') {
-                mainWindow.game_paused = !mainWindow.game_paused;
-                game_view.set_paused(mainWindow.game_paused);
-            }
+            if (game.commander_dodge)
+                game.commander_dodge();
+            event.accepted = true;
+            return ;
+        case Qt.Key_Tab:
+            if (game.commander_cycle_lock_on)
+                game.commander_cycle_lock_on();
             event.accepted = true;
             return ;
         case Qt.Key_W:

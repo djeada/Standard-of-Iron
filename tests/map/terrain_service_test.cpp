@@ -106,6 +106,52 @@ TEST_F(TerrainServiceTest, RestoringTerrainRebuildsDerivedField) {
   EXPECT_NE(field.sample_curvature_at(1, 1), 0.0F);
 }
 
+TEST_F(TerrainServiceTest, RestoringTerrainUpdatesScatterSources) {
+  Game::Map::MapDefinition map_def;
+  map_def.world_props.push_back({.type = Game::Map::WorldProp::Type::FireCamp,
+                                 .x = 1.0F,
+                                 .z = 2.0F,
+                                 .intensity = 1.1F,
+                                 .radius = 3.5F,
+                                 .persistent = true});
+  map_def.world_props.push_back({.type = Game::Map::WorldProp::Type::Boulder,
+                                 .x = 3.0F,
+                                 .z = 4.0F,
+                                 .scale = 1.25F,
+                                 .rotation = 0.75F});
+
+  auto &terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+
+  std::vector<float> heights(9, 0.0F);
+  std::vector<Game::Map::TerrainType> terrain_types(
+      heights.size(), Game::Map::TerrainType::Flat);
+  std::vector<Game::Map::WorldProp> restored_world_props{
+      {.type = Game::Map::WorldProp::Type::FireCamp,
+       .x = 5.0F,
+       .z = 6.0F,
+       .intensity = 0.8F,
+       .radius = 2.5F,
+       .persistent = false},
+      {.type = Game::Map::WorldProp::Type::Tent,
+       .x = 7.0F,
+       .z = 8.0F,
+       .scale = 1.5F,
+       .rotation = 1.2F}};
+
+  terrain.restore_from_serialized(3, 3, 1.0F, heights, terrain_types, {}, {},
+                                  {}, {}, restored_world_props);
+
+  ASSERT_EQ(terrain.world_props().size(), 2U);
+  EXPECT_EQ(terrain.world_props().front().type,
+            Game::Map::WorldProp::Type::FireCamp);
+  EXPECT_FLOAT_EQ(terrain.world_props().front().x, 5.0F);
+  EXPECT_FALSE(terrain.world_props().front().persistent);
+  EXPECT_EQ(terrain.world_props().back().type,
+            Game::Map::WorldProp::Type::Tent);
+  EXPECT_FLOAT_EQ(terrain.world_props().back().rotation, 1.2F);
+}
+
 TEST_F(TerrainServiceTest, SurfaceHeightResolverUsesFallbackWhenUninitialized) {
   auto &terrain = Game::Map::TerrainService::instance();
 
@@ -133,13 +179,14 @@ TEST_F(TerrainServiceTest, SurfaceHeightResolverMarksRoadSurface) {
                                   {}, {});
 
   auto const sample = terrain.sample_surface_height(0.0F, 0.0F);
+  float const road_surface_y = Game::Map::road_surface_world_y(1.0F);
 
-  EXPECT_NEAR(sample.world_y, 1.02F, 0.0001F);
+  EXPECT_NEAR(sample.world_y, road_surface_y, 0.0001F);
   EXPECT_EQ(sample.kind, Game::Map::SurfaceHeightKind::Road);
-  EXPECT_NEAR(terrain.resolve_surface_world_y(0.0F, 0.0F, 0.30F, 0.0F), 1.32F,
-              0.0001F);
+  EXPECT_NEAR(terrain.resolve_surface_world_y(0.0F, 0.0F, 0.30F, 0.0F),
+              road_surface_y + 0.30F, 0.0001F);
   EXPECT_EQ(terrain.resolve_surface_world_position(0.5F, -0.5F, 0.30F, 0.0F),
-            QVector3D(0.5F, 1.32F, -0.5F));
+            QVector3D(0.5F, road_surface_y + 0.30F, -0.5F));
 }
 
 TEST_F(TerrainServiceTest, SurfaceHeightResolverPrefersBridgeDeckOverRoad) {
@@ -160,11 +207,34 @@ TEST_F(TerrainServiceTest, SurfaceHeightResolverPrefersBridgeDeckOverRoad) {
                                   bridges, {});
 
   auto const sample = terrain.sample_surface_height(0.0F, 0.0F);
+  float const bridge_surface_y =
+      Game::Map::bridge_deck_world_y(bridges.front(), 0.5F);
 
-  EXPECT_NEAR(sample.world_y, 1.744F, 0.0001F);
+  EXPECT_NEAR(sample.world_y, bridge_surface_y, 0.0001F);
   EXPECT_EQ(sample.kind, Game::Map::SurfaceHeightKind::Bridge);
-  EXPECT_NEAR(terrain.resolve_surface_world_y(0.0F, 0.0F, 0.25F, 0.0F), 1.994F,
-              0.0001F);
+  EXPECT_NEAR(terrain.resolve_surface_world_y(0.0F, 0.0F, 0.25F, 0.0F),
+              bridge_surface_y + 0.25F, 0.0001F);
+}
+
+TEST_F(TerrainServiceTest,
+       BridgeWalkabilityRespectsBridgeWidthWhenTileSizeExceedsOne) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 9;
+  map_def.grid.height = 9;
+  map_def.grid.tile_size = 2.0F;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -8.0F), QVector3D(0.0F, 0.0F, 8.0F), 2.0F});
+  map_def.bridges.push_back(
+      {QVector3D(-4.0F, 0.0F, 0.0F), QVector3D(4.0F, 0.0F, 0.0F), 2.0F, 0.6F});
+
+  auto &terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+
+  EXPECT_TRUE(terrain.is_on_bridge(0.0F, 0.0F));
+  EXPECT_FALSE(terrain.is_on_bridge(0.0F, 2.0F));
+
+  EXPECT_TRUE(terrain.is_walkable(4, 4));
+  EXPECT_FALSE(terrain.is_walkable(4, 5));
 }
 
 TEST_F(TerrainServiceTest, HillFootprintStaysInsidePlateauBounds) {

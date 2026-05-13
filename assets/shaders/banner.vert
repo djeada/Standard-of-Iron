@@ -23,10 +23,11 @@ void main() {
   float center_bias = 1.0 - abs(vertical_pos * 2.0 - 1.0);
 
   float wave_phase = u_time * 2.3 + horizontal_pos * 4.8 - vertical_pos * 1.6;
-  float z_offset =
-      sin(wave_phase) * u_wind_strength * free_edge * (0.18 + center_bias * 0.08);
+  float z_offset = sin(wave_phase) * u_wind_strength * free_edge *
+                   (0.18 + center_bias * 0.08);
 
-  float ripple_phase = u_time * 5.1 + horizontal_pos * 10.5 + vertical_pos * 6.0;
+  float ripple_phase =
+      u_time * 5.1 + horizontal_pos * 10.5 + vertical_pos * 6.0;
   float ripple = sin(ripple_phase) * u_wind_strength * free_edge * 0.045;
 
   float curl_phase = u_time * 7.8 + vertical_pos * 3.5 + horizontal_pos * 13.0;
@@ -35,7 +36,8 @@ void main() {
 
   float sway_phase = u_time * 1.6 + horizontal_pos * 1.4 + vertical_pos * 2.4;
   float y_offset = sin(sway_phase) * u_wind_strength * free_edge * 0.04;
-  float sag = free_edge * (0.014 + (1.0 - vertical_pos) * 0.02) * u_wind_strength;
+  float sag =
+      free_edge * (0.014 + (1.0 - vertical_pos) * 0.02) * u_wind_strength;
 
   pos.z += z_offset + ripple + trailing_curl;
   pos.y += y_offset - sag;

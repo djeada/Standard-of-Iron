@@ -3,6 +3,7 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/troop_profile_service.h"
+#include "render/elephant/dimensions.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
 #include <memory>
@@ -102,6 +103,12 @@ void Elephant::init(const SpawnParams &params) {
   m_atk->max_height_difference = 5.0F;
 
   e->add_component<Engine::Core::ElephantComponent>();
+  auto *eleph_comp = e->get_component<Engine::Core::ElephantComponent>();
+  if (eleph_comp != nullptr) {
+    auto const dims = Render::GL::make_elephant_dimensions(0U);
+    eleph_comp->foot_lateral = dims.body_width * 0.46F;
+    eleph_comp->foot_forward = dims.body_length * 0.35F;
+  }
 
   Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(
       m_id, m_u->owner_id, m_u->spawn_type, params.is_initial_spawn));

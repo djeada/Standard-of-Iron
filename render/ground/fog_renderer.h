@@ -18,7 +18,7 @@ public:
   FogRenderer() = default;
   ~FogRenderer() override = default;
 
-  void setEnabled(bool enabled) { m_enabled = enabled; }
+  void set_enabled(bool enabled) { m_enabled = enabled; }
   [[nodiscard]] auto is_enabled() const -> bool { return m_enabled; }
 
   void update_mask(int width, int height, float tile_size,

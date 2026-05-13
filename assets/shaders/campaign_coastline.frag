@@ -64,14 +64,14 @@ void main() {
   float inner_start = (half_total - u_inner_width) / half_total;
   float outer_start = (half_total - u_outer_width) / half_total;
 
-  float outer_mask =
-      smoothstep(outer_start - u_smoothing, outer_start + u_smoothing, cross_pos);
+  float outer_mask = smoothstep(outer_start - u_smoothing,
+                                outer_start + u_smoothing, cross_pos);
 
   float inner_end = outer_start;
-  float inner_mask =
-      smoothstep(inner_start - u_smoothing, inner_start + u_smoothing, cross_pos) *
-      (1.0 -
-       smoothstep(inner_end - u_smoothing, inner_end + u_smoothing, cross_pos));
+  float inner_mask = smoothstep(inner_start - u_smoothing,
+                                inner_start + u_smoothing, cross_pos) *
+                     (1.0 - smoothstep(inner_end - u_smoothing,
+                                       inner_end + u_smoothing, cross_pos));
 
   float edge_fade = 1.0 - smoothstep(1.0 - u_smoothing * 2.0, 1.0, cross_pos);
 

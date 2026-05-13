@@ -26,7 +26,11 @@ RowLayout {
             "rally_cooldown_remaining": 0.0,
             "rally_feedback_time": 0.0,
             "rally_ready": false,
-            "aura_active": false
+            "aura_active": false,
+            "combo_step": 0,
+            "special_cooldown": 3.0,
+            "special_cooldown_remaining": 0.0,
+            "special_ready": true
         };
     }
 
@@ -340,6 +344,100 @@ RowLayout {
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    
+                    RowLayout {
+                        spacing: 6
+                        visible: bottomRoot.status_value("has_commander", false)
+
+                        Text {
+                            text: qsTr("Combo")
+                            color: hs.bronze
+                            font.pointSize: 9
+                        }
+
+                        Repeater {
+                            model: 4
+                            Item {
+                                width: 18
+                                height: 18
+
+                                property bool lit: index < bottomRoot.status_value("combo_step", 0)
+                                property bool is_finisher: index === 3
+
+                                Rectangle {
+                                    id: combo_dot
+                                    anchors.centerIn: parent
+                                    width: 14
+                                    height: 14
+                                    radius: 7
+                                    color: parent.lit
+                                           ? (parent.is_finisher ? "#ff8800" : Theme.accent)
+                                           : hs.parchmentDark
+                                    border.color: parent.lit ? (parent.is_finisher ? "#ffcc44" : Theme.accent) : hs.bronze
+                                    border.width: parent.lit ? 2 : 1
+
+                                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                                    
+                                    property real pop_scale: 1.0
+                                    transform: Scale {
+                                        origin.x: combo_dot.width / 2
+                                        origin.y: combo_dot.height / 2
+                                        xScale: combo_dot.pop_scale
+                                        yScale: combo_dot.pop_scale
+                                    }
+
+                                    onColorChanged: {
+                                        if (parent.lit) {
+                                            pop_scale = 1.55;
+                                            pop_anim.restart();
+                                        }
+                                    }
+
+                                    NumberAnimation {
+                                        id: pop_anim
+                                        target: combo_dot
+                                        property: "pop_scale"
+                                        from: 1.55
+                                        to: 1.0
+                                        duration: 220
+                                        easing.type: Easing.OutBack
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    
+                    ColumnLayout {
+                        visible: bottomRoot.status_value("has_commander", false)
+                        spacing: 4
+
+                        Text {
+                            text: qsTr("Shield Bash [F]")
+                            color: bottomRoot.status_value("special_ready", true) ? hs.bronze : hs.bronzeDeep
+                            font.pointSize: 9
+                        }
+
+                        Rectangle {
+                            width: 120
+                            height: 8
+                            radius: 4
+                            color: hs.parchmentDark
+                            border.color: hs.bronze
+                            border.width: 1
+
+                            Rectangle {
+                                width: parent.width *
+                                       (1.0 - Number(bottomRoot.status_value("special_cooldown_remaining", 0)) /
+                                        Math.max(1.0, Number(bottomRoot.status_value("special_cooldown", 3.0))))
+                                height: parent.height
+                                radius: 4
+                                color: bottomRoot.status_value("special_ready", true) ? Theme.accent : hs.bronze
+                            }
                         }
                     }
                 }

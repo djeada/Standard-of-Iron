@@ -2,6 +2,7 @@
 
 #include "arena_viewport.h"
 #include "building_panel.h"
+#include "prop_panel.h"
 #include "terrain_panel.h"
 #include "unit_panel.h"
 
@@ -72,6 +73,13 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   building_scroll->setWidgetResizable(true);
   building_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   tab_widget->addTab(building_scroll, "Buildings");
+
+  m_prop_panel = new PropPanel();
+  auto *prop_scroll = new QScrollArea();
+  prop_scroll->setWidget(m_prop_panel);
+  prop_scroll->setWidgetResizable(true);
+  prop_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  tab_widget->addTab(prop_scroll, "Props");
 
   splitter->addWidget(tab_widget);
   splitter->setStretchFactor(0, 1);
@@ -173,6 +181,23 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   connect(m_viewport, &ArenaViewport::selection_summary_changed,
           m_building_panel, &BuildingPanel::set_selection_summary);
 
+  connect(m_prop_panel, &PropPanel::world_prop_type_selected, m_viewport,
+          &ArenaViewport::set_spawn_world_prop_type);
+  connect(m_prop_panel, &PropPanel::world_prop_scale_changed, m_viewport,
+          &ArenaViewport::set_spawn_world_prop_scale);
+  connect(m_prop_panel, &PropPanel::world_prop_rotation_degrees_changed,
+          m_viewport, &ArenaViewport::set_spawn_world_prop_rotation_degrees);
+  connect(m_prop_panel, &PropPanel::fire_camp_intensity_changed, m_viewport,
+          &ArenaViewport::set_spawn_fire_camp_intensity);
+  connect(m_prop_panel, &PropPanel::fire_camp_radius_changed, m_viewport,
+          &ArenaViewport::set_spawn_fire_camp_radius);
+  connect(m_prop_panel, &PropPanel::spawn_world_prop_requested, m_viewport,
+          &ArenaViewport::spawn_world_prop);
+  connect(m_prop_panel, &PropPanel::clear_world_props_requested, m_viewport,
+          &ArenaViewport::clear_world_props);
+  connect(m_prop_panel, &PropPanel::clear_world_props_of_type_requested,
+          m_viewport, &ArenaViewport::clear_world_props_of_type);
+
   m_viewport->set_spawn_owner(m_unit_panel->selected_owner_id());
   m_viewport->set_spawn_nation(m_unit_panel->selected_nation_id());
   m_viewport->set_spawn_unit_type(m_unit_panel->selected_unit_type_id());
@@ -181,4 +206,12 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   m_viewport->set_spawn_building_nation(m_building_panel->selected_nation_id());
   m_viewport->set_spawn_building_type(
       m_building_panel->selected_building_type_id());
+  m_viewport->set_spawn_world_prop_type(m_prop_panel->selected_prop_type_id());
+  m_viewport->set_spawn_world_prop_scale(m_prop_panel->selected_scale());
+  m_viewport->set_spawn_world_prop_rotation_degrees(
+      m_prop_panel->selected_rotation_degrees());
+  m_viewport->set_spawn_fire_camp_intensity(
+      m_prop_panel->selected_fire_camp_intensity());
+  m_viewport->set_spawn_fire_camp_radius(
+      m_prop_panel->selected_fire_camp_radius());
 }

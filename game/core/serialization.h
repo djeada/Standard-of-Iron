@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../map/map_definition.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QString>
@@ -8,7 +9,6 @@
 namespace Game::Map {
 class TerrainHeightMap;
 struct BiomeSettings;
-struct RoadSegment;
 } // namespace Game::Map
 
 namespace Engine::Core {
@@ -24,11 +24,12 @@ public:
   static auto serialize_terrain(
       const Game::Map::TerrainHeightMap *height_map,
       const Game::Map::BiomeSettings &biome,
-      const std::vector<Game::Map::RoadSegment> &roads) -> QJsonObject;
-  static void deserialize_terrain(Game::Map::TerrainHeightMap *height_map,
-                                  Game::Map::BiomeSettings &biome,
-                                  std::vector<Game::Map::RoadSegment> &roads,
-                                  const QJsonObject &json);
+      const std::vector<Game::Map::RoadSegment> &roads,
+      const std::vector<Game::Map::WorldProp> &world_props) -> QJsonObject;
+  static void deserialize_terrain(
+      Game::Map::TerrainHeightMap *height_map, Game::Map::BiomeSettings &biome,
+      std::vector<Game::Map::RoadSegment> &roads,
+      std::vector<Game::Map::WorldProp> &world_props, const QJsonObject &json);
 
   static auto save_to_file(const QString &filename,
                            const QJsonDocument &doc) -> bool;

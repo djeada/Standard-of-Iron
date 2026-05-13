@@ -5,6 +5,8 @@
 #include "gl/resources.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "map/terrain_service.h"
+#include "scatter_composition.h"
 #include "scatter_runtime.h"
 #include "spawn_validator.h"
 #include <QVector2D>
@@ -31,13 +33,16 @@ namespace Render::GL {
 PineRenderer::PineRenderer() = default;
 PineRenderer::~PineRenderer() = default;
 
-void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
-                             const Game::Map::BiomeSettings &biome_settings) {
+void PineRenderer::configure(
+    const Game::Map::TerrainHeightMap &height_map,
+    const Game::Map::BiomeSettings &biome_settings,
+    const std::vector<Game::Map::WorldProp> &world_props) {
   m_width = height_map.get_width();
   m_height = height_map.get_height();
   m_tile_size = height_map.get_tile_size();
   m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
+  m_world_props = world_props;
   m_biome_settings = biome_settings;
   m_noise_seed = biome_settings.seed;
 
@@ -89,7 +94,47 @@ void PineRenderer::generate_pine_instances() {
 
   pine_instances.clear();
 
+  {
+    const float half_w = static_cast<float>(m_width) * 0.5F;
+    const float half_h = static_cast<float>(m_height) * 0.5F;
+    auto &terrain_service = Game::Map::TerrainService::instance();
+    for (const auto &prop : m_world_props) {
+      if (prop.type != Game::Map::WorldProp::Type::PineTree) {
+        continue;
+      }
+      const float wx = (prop.x - half_w) * m_tile_size;
+      const float wz = (prop.z - half_h) * m_tile_size;
+      const QVector3D pos =
+          terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
+
+      uint32_t var_state = hash_coords(static_cast<int>(std::round(prop.x)),
+                                       static_cast<int>(std::round(prop.z)),
+                                       m_noise_seed ^ 0x4A7F2C9EU);
+      const float color_var = rand_01(var_state);
+      const QVector3D base_color(0.16F, 0.34F, 0.20F);
+      const QVector3D var_color(0.24F, 0.44F, 0.28F);
+      const QVector3D tint =
+          base_color * (1.0F - color_var) + var_color * color_var;
+      const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
+      const float silhouette_seed = rand_01(var_state);
+      const float needle_seed = rand_01(var_state);
+      const float bark_seed = rand_01(var_state);
+
+      PineInstanceGpu inst;
+      inst.pos_scale =
+          QVector4D(pos.x(), pos.y(), pos.z(),
+                    prop.scale * Game::Map::world_prop_render_scale(
+                                     Game::Map::WorldProp::Type::PineTree));
+      inst.color_sway = QVector4D(tint.x(), tint.y(), tint.z(), sway_phase);
+      inst.rotation =
+          QVector4D(prop.rotation, silhouette_seed, needle_seed, bark_seed);
+      pine_instances.push_back(inst);
+    }
+  }
+
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
+    pine_instance_count = pine_instances.size();
+    pine_instances_dirty = pine_instance_count > 0;
     return;
   }
 
@@ -98,7 +143,8 @@ void PineRenderer::generate_pine_instances() {
   const auto scatter_rules =
       Game::Map::make_scatter_rules(scatter_profile.ground_type);
   if (!scatter_rules.allow_pines) {
-    pine_instances_dirty = false;
+    pine_instance_count = pine_instances.size();
+    pine_instances_dirty = pine_instance_count > 0;
     return;
   }
 
@@ -122,9 +168,18 @@ void PineRenderer::generate_pine_instances() {
       scatter_profile.spawn_edge_padding * k_tree_edge_padding_scale;
 
   SpawnValidator validator(terrain_cache, config);
+  ScatterCompositionContext composition(terrain_cache, m_width, m_height,
+                                        m_tile_size, m_biome_settings,
+                                        m_world_props);
 
   auto add_pine = [&](float gx, float gz, uint32_t &state) -> bool {
     if (!validator.can_spawn_at_grid(gx, gz)) {
+      return false;
+    }
+
+    auto const scene = composition.sample_grid(gx, gz, state ^ 0x92C3B17FU);
+    if (rand_01(state) >
+        scatter_spawn_chance(ScatterRuleSpecies::Pine, scene)) {
       return false;
     }
 
@@ -140,16 +195,22 @@ void PineRenderer::generate_pine_instances() {
     validator.grid_to_world(gx, gz, world_x, world_z);
     float const world_y = m_height_data[static_cast<size_t>(normal_idx)];
 
-    float const scale = remap(rand_01(state), 3.0F, 6.0F) * tile_safe;
+    float const scale = remap(rand_01(state), 3.0F, 6.0F) * tile_safe *
+                        scatter_scale_bias(ScatterRuleSpecies::Pine, scene);
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color(0.15F, 0.35F, 0.20F);
-    QVector3D const var_color(0.20F, 0.40F, 0.25F);
+    QVector3D const base_color(0.16F + scene.shelter * 0.04F,
+                               0.34F + scene.shelter * 0.10F,
+                               0.20F + scene.shelter * 0.06F);
+    QVector3D const var_color(0.24F + scene.cluster_bias * 0.04F,
+                              0.44F + scene.shelter * 0.08F,
+                              0.28F + scene.cluster_bias * 0.04F);
     QVector3D tint_color =
         base_color * (1.0F - color_var) + var_color * color_var;
 
-    float const brown_mix = remap(rand_01(state), 0.10F, 0.25F);
-    QVector3D const brown_tint(0.35F, 0.30F, 0.20F);
+    float const brown_mix = remap(rand_01(state), 0.03F + scene.dryness * 0.05F,
+                                  0.10F + scene.rockiness * 0.06F);
+    QVector3D const brown_tint(0.32F, 0.29F, 0.19F);
     tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
     float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
@@ -184,6 +245,9 @@ void PineRenderer::generate_pine_instances() {
 
       uint32_t state = hash_coords(
           x, z, m_noise_seed ^ 0xAB12CD34U ^ static_cast<uint32_t>(idx));
+      auto const cell_scene = composition.sample_grid(
+          static_cast<float>(sample_x), static_cast<float>(sample_z),
+          state ^ 0x5E2C4B81U);
 
       Game::Map::TerrainType const terrain_type =
           terrain_cache.get_terrain_type_at(sample_x, sample_z);
@@ -192,6 +256,8 @@ void PineRenderer::generate_pine_instances() {
         density_mult = 1.2F;
       } else if (terrain_type == Game::Map::TerrainType::Mountain) {
         density_mult = 0.4F;
+      } else if (terrain_type == Game::Map::TerrainType::Forest) {
+        density_mult = 2.25F;
       }
 
       uint32_t cls_state =
@@ -201,10 +267,21 @@ void PineRenderer::generate_pine_instances() {
           hash_coords(x / 4, z / 4, m_noise_seed ^ 0xB3C71E4DU);
       float const mid_noise = rand_01(mid_state);
       float const cluster_noise = macro_noise * 0.65F + mid_noise * 0.35F;
-      float const cluster_mult = cluster_noise * cluster_noise * 2.2F;
+      float const cluster_mult = 0.45F + cluster_noise * cluster_noise * 1.75F;
+      density_mult *=
+          scatter_density_multiplier(ScatterRuleSpecies::Pine, cell_scene);
 
-      float const effective_density = pine_density * density_mult * 0.8F *
-                                      k_tree_density_area_scale * cluster_mult;
+      float const effective_density =
+          pine_density * density_mult *
+          (0.70F + cell_scene.cluster_bias * 1.10F) *
+          k_tree_density_area_scale * cluster_mult;
+      if (effective_density < 0.04F) {
+        continue;
+      }
+      if (rand_01(state) >
+          scatter_spawn_chance(ScatterRuleSpecies::Pine, cell_scene)) {
+        continue;
+      }
       int pine_count = static_cast<int>(std::floor(effective_density));
       float const frac = effective_density - float(pine_count);
       if (rand_01(state) < frac) {
@@ -214,7 +291,21 @@ void PineRenderer::generate_pine_instances() {
       for (int i = 0; i < pine_count; ++i) {
         float const gx = float(x) + rand_01(state) * float(k_tree_cell_span);
         float const gz = float(z) + rand_01(state) * float(k_tree_cell_span);
-        add_pine(gx, gz, state);
+        if (!add_pine(gx, gz, state)) {
+          continue;
+        }
+
+        auto const leader_scene =
+            composition.sample_grid(gx, gz, state ^ 0x07E84CD3U);
+        int const satellite_count = scatter_cluster_satellite_count(
+            ScatterRuleSpecies::Pine, leader_scene, state);
+        for (int satellite = 0; satellite < satellite_count; ++satellite) {
+          float const angle = rand_01(state) * MathConstants::k_two_pi;
+          float const radius_tiles = scatter_cluster_radius_tiles(
+              ScatterRuleSpecies::Pine, leader_scene, state);
+          add_pine(gx + std::cos(angle) * radius_tiles,
+                   gz + std::sin(angle) * radius_tiles, state);
+        }
       }
     }
   }

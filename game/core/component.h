@@ -289,12 +289,12 @@ public:
   float hit_pause_remaining{0.0F};
 
   static constexpr float k_combat_animation_hit_pause_duration = 0.05F;
-  static constexpr float k_advance_duration = 0.12F;
-  static constexpr float k_wind_up_duration = 0.15F;
-  static constexpr float k_strike_duration = 0.20F;
-  static constexpr float k_impact_duration = 0.08F;
-  static constexpr float k_recover_duration = 0.25F;
-  static constexpr float k_reposition_duration = 0.15F;
+  static constexpr float k_advance_duration = 0.16F;
+  static constexpr float k_wind_up_duration = 0.22F;
+  static constexpr float k_strike_duration = 0.18F;
+  static constexpr float k_impact_duration = 0.10F;
+  static constexpr float k_recover_duration = 0.36F;
+  static constexpr float k_reposition_duration = 0.24F;
   static constexpr std::uint8_t k_attack_variant_seed_slots = 8;
 };
 
@@ -393,6 +393,10 @@ public:
   bool aura_active{true};
   bool wounded{false};
   bool fpv_controlled{false};
+  int combo_step{0};
+  bool power_strike_active{false};
+  float special_cooldown_remaining{0.0F};
+  bool just_struck_enemy{false};
 };
 
 class CommanderGuardComponent : public Component {
@@ -402,6 +406,25 @@ public:
   bool active{false};
   float frontal_arc_dot{0.15F};
   float damage_multiplier{0.45F};
+};
+
+class RpgHealthComponent : public Component {
+public:
+  RpgHealthComponent() = default;
+
+  int rpg_hp{150};
+  int rpg_max_hp{150};
+  float armor{0.0F};
+  float crit_chance{0.05F};
+  float crit_multiplier{1.8F};
+  bool active{false};
+  bool dodge_invincible{false};
+};
+
+class StaggerComponent : public Component {
+public:
+  explicit StaggerComponent(float duration = 0.5F) : remaining(duration) {}
+  float remaining;
 };
 
 class AIControlledComponent : public Component {
@@ -649,6 +672,9 @@ public:
   float trample_radius{2.5F};
   int trample_damage{40};
   float trample_damage_accumulator{0.0F};
+
+  float foot_lateral{0.153F};
+  float foot_forward{0.280F};
   bool is_panicked{false};
   float panic_duration{0.0F};
 };

@@ -20,36 +20,33 @@ struct FootOffset {
 
 constexpr float k_pi = 3.14159265F;
 
-auto pick_stomp_position(Engine::Core::TransformComponent *transform,
-                         Engine::Core::ElephantComponent *elephant_comp)
-    -> FootOffset {
-  float scale =
+void add_all_foot_stomps(
+    Engine::Core::TransformComponent *transform,
+    Engine::Core::ElephantComponent *elephant_comp,
+    Engine::Core::ElephantStompImpactComponent *stomp_impact) {
+  float const scale =
       std::max(1.0F, (transform->scale.x + transform->scale.z) * 0.5F);
-  float forward = 0.6F * scale;
-  float side = 0.45F * scale;
-  float const max_offset = elephant_comp->trample_radius * 0.95F;
-  if (max_offset > 0.0F) {
-    forward = std::min(forward, max_offset);
-    side = std::min(side, max_offset);
-  }
+  float const lat = elephant_comp->foot_lateral * scale;
+  float const fwd = elephant_comp->foot_forward * scale;
 
-  std::array<FootOffset, 4> const offsets = {
-      FootOffset{side, forward},
-      FootOffset{-side, forward},
-      FootOffset{side, -forward},
-      FootOffset{-side, -forward},
-  };
-
-  int const index = std::rand() % static_cast<int>(offsets.size());
-  FootOffset const local = offsets[index];
+  std::array<FootOffset, 4> const foot_locals = {{
+      {lat, fwd},
+      {-lat, fwd},
+      {lat, -fwd},
+      {-lat, -fwd},
+  }};
 
   float const yaw = transform->rotation.y * (k_pi / 180.0F);
   float const cos_y = std::cos(yaw);
   float const sin_y = std::sin(yaw);
-  FootOffset world;
-  world.x = transform->position.x + local.x * cos_y + local.z * sin_y;
-  world.z = transform->position.z - local.x * sin_y + local.z * cos_y;
-  return world;
+
+  for (const auto &local : foot_locals) {
+    Engine::Core::ElephantStompImpactComponent::ImpactRecord impact;
+    impact.x = transform->position.x + local.x * cos_y + local.z * sin_y;
+    impact.z = transform->position.z - local.x * sin_y + local.z * cos_y;
+    impact.time = 0.0F;
+    stomp_impact->impacts.push_back(impact);
+  }
 }
 
 } // namespace
@@ -266,19 +263,13 @@ void ElephantAttackSystem::process_trample_damage(
                                          elephant->get_id());
 
       if (old_health > 0 && other_unit->health < old_health) {
-        FootOffset const stomp_pos =
-            pick_stomp_position(transform, elephant_comp);
-        Engine::Core::ElephantStompImpactComponent::ImpactRecord impact;
-        impact.x = stomp_pos.x;
-        impact.z = stomp_pos.z;
-        impact.time = 0.0F;
-        stomp_impact->impacts.push_back(impact);
         hit_any = true;
       }
     }
   }
 
   if (hit_any) {
+    add_all_foot_stomps(transform, elephant_comp, stomp_impact);
     elephant_comp->trample_damage_accumulator -= damage;
   } else {
     elephant_comp->trample_damage_accumulator = 0.0F;

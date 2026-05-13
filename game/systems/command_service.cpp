@@ -1,6 +1,7 @@
 #include "command_service.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../map/terrain_service.h"
 #include "../units/troop_config.h"
 #include "pathfinding.h"
 #include "units/spawn_type.h"
@@ -1004,7 +1005,39 @@ void CommandService::process_path_results(Engine::Core::World &world) {
       continue;
     }
 
-    const auto &path_points = result.path;
+    std::vector<Point> resolved_path = std::move(result.path);
+    if (resolved_path.empty() && request_info.options.group_move &&
+        s_pathfinder != nullptr) {
+      auto *leader_entity = world.get_entity(request_info.entity_id);
+      auto *leader_transform =
+          leader_entity != nullptr
+              ? leader_entity->get_component<Engine::Core::TransformComponent>()
+              : nullptr;
+      if (leader_transform != nullptr) {
+        float relaxed_radius = get_unit_radius(world, request_info.entity_id);
+        for (auto member_id : request_info.group_members) {
+          relaxed_radius =
+              std::max(relaxed_radius, get_unit_radius(world, member_id));
+        }
+
+        Point const start = world_to_grid(leader_transform->position.x,
+                                          leader_transform->position.z);
+        Point const end =
+            world_to_grid(request_info.target.x(), request_info.target.z());
+        auto bridge_path = s_pathfinder->find_path(start, end, relaxed_radius);
+        bool const path_uses_bridge = std::any_of(
+            bridge_path.begin(), bridge_path.end(), [](const Point &point) {
+              QVector3D const world_pos = grid_to_world(point);
+              return Game::Map::TerrainService::instance().is_on_bridge(
+                  world_pos.x(), world_pos.z());
+            });
+        if (path_uses_bridge) {
+          resolved_path = std::move(bridge_path);
+        }
+      }
+    }
+
+    const auto &path_points = resolved_path;
 
     const float skip_threshold_sq = CommandService::WAYPOINT_SKIP_THRESHOLD_SQ;
     const bool has_path = path_points.size() > 1;
@@ -1025,7 +1058,7 @@ void CommandService::process_path_results(Engine::Core::World &world) {
       }
     }
 
-    if (result.path.empty() && request_info.options.group_move &&
+    if (resolved_path.empty() && request_info.options.group_move &&
         request_info.options.retry_individual_on_group_failure &&
         !request_info.group_members.empty()) {
       MoveOptions individual_options = request_info.options;
@@ -1111,8 +1144,18 @@ void CommandService::process_path_results(Engine::Core::World &world) {
         movement_component->path.reserve(path_points.size() - 1);
         for (size_t idx = 1; idx < path_points.size(); ++idx) {
           QVector3D const world_pos = grid_to_world(path_points[idx]);
-          movement_component->path.emplace_back(world_pos.x() + offset.x(),
-                                                world_pos.z() + offset.z());
+          QVector3D waypoint = world_pos;
+          if (auto const bridge_center = Game::Map::TerrainService::instance()
+                                             .get_bridge_traversal_position(
+                                                 world_pos.x(), world_pos.z());
+              bridge_center.has_value()) {
+            waypoint.setX(bridge_center->x());
+            waypoint.setZ(bridge_center->z());
+          } else {
+            waypoint.setX(world_pos.x() + offset.x());
+            waypoint.setZ(world_pos.z() + offset.z());
+          }
+          movement_component->path.emplace_back(waypoint.x(), waypoint.z());
         }
 
         while (movement_component->has_waypoints()) {
