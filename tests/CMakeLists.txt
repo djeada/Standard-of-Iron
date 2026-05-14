@@ -68,6 +68,7 @@ add_executable(standard_of_iron_tests
     render/linear_feature_geometry_test.cpp
     render/linear_feature_visibility_test.cpp
     render/ground_utils_test.cpp
+    render/dead_tree_mesh_test.cpp
     render/scatter_composition_test.cpp
     render/scatter_runtime_test.cpp
     render/terrain_scene_proxy_test.cpp

@@ -37,6 +37,7 @@ constexpr float k_horse_muzzle_transition_fraction = 0.31F;
 constexpr float k_horse_whole_leg_thickness_scale = 1.08F;
 constexpr float k_horse_thigh_thickness_scale = 1.18F;
 constexpr float k_horse_calf_thickness_scale = 1.10F;
+constexpr float k_horse_segmented_leg_width_scale = 1.10F;
 
 struct HorseClipSpec {
   Render::Creature::BakeClipDescriptor desc;
@@ -653,6 +654,14 @@ void scale_leg_span_thickness(std::array<LegRingProfile, N>& rings, float scale)
   }
 }
 
+template <std::size_t N>
+void scale_leg_span_width(std::array<LegRingProfile, N>& rings, float scale) {
+  for (LegRingProfile& ring : rings) {
+    ring.x_outer *= scale;
+    ring.x_inner *= scale;
+  }
+}
+
 auto build_horse_leg_span_mesh(std::span<const LegRingProfile> rings)
     -> std::unique_ptr<Render::GL::Mesh> {
   constexpr int k_ring_vertices = 8;
@@ -749,6 +758,7 @@ auto horse_front_thigh_mesh() noexcept -> Render::GL::Mesh* {
         {0.50F, 0.00F, 0.00F, 0.11F, 0.10F, 0.12F, 0.08F},
     }};
     scale_leg_span_thickness(rings, k_horse_thigh_thickness_scale);
+    scale_leg_span_width(rings, k_horse_segmented_leg_width_scale);
     return build_horse_leg_span_mesh(rings);
   }();
   return mesh.get();
@@ -763,6 +773,7 @@ auto horse_rear_thigh_mesh() noexcept -> Render::GL::Mesh* {
         {0.50F, 0.00F, 0.00F, 0.12F, 0.11F, 0.12F, 0.08F},
     }};
     scale_leg_span_thickness(rings, k_horse_thigh_thickness_scale);
+    scale_leg_span_width(rings, k_horse_segmented_leg_width_scale);
     return build_horse_leg_span_mesh(rings);
   }();
   return mesh.get();
@@ -777,6 +788,7 @@ auto horse_front_calf_mesh() noexcept -> Render::GL::Mesh* {
         {0.50F, 0.00F, -0.01F, 0.16F, 0.15F, 0.19F, 0.18F},
     }};
     scale_leg_span_thickness(rings, k_horse_calf_thickness_scale);
+    scale_leg_span_width(rings, k_horse_segmented_leg_width_scale);
     return build_horse_leg_span_mesh(rings);
   }();
   return mesh.get();
@@ -791,6 +803,7 @@ auto horse_rear_calf_mesh() noexcept -> Render::GL::Mesh* {
         {0.50F, 0.00F, 0.00F, 0.16F, 0.15F, 0.18F, 0.20F},
     }};
     scale_leg_span_thickness(rings, k_horse_calf_thickness_scale);
+    scale_leg_span_width(rings, k_horse_segmented_leg_width_scale);
     return build_horse_leg_span_mesh(rings);
   }();
   return mesh.get();
@@ -860,7 +873,8 @@ auto build_horse_full_leg_overlays()
     thigh.params.head_offset = QVector3D(0.0F, adjusted_thigh_head_y, thigh_head_z);
     thigh.params.tail_offset = QVector3D(0.0F, thigh_tail_y, thigh_tail_z);
     thigh.params.radius = dims.body_width * (front ? 0.690F : 0.780F) * 2.0F *
-                          k_horse_thigh_thickness_scale;
+                          k_horse_thigh_thickness_scale *
+                          k_horse_segmented_leg_width_scale;
     thigh.params.depth_radius = dims.body_width * (front ? 1.050F : 1.200F) * 2.0F *
                                 k_horse_thigh_thickness_scale;
     thigh.custom_mesh = front ? horse_front_thigh_mesh() : horse_rear_thigh_mesh();
@@ -878,7 +892,8 @@ auto build_horse_full_leg_overlays()
                                         dims.hoof_height * (front ? 0.14F : 0.12F),
                                         dims.body_length * (front ? 0.010F : 0.020F));
     calf.params.radius = dims.body_width * (front ? 0.290F : 0.310F) * 2.0F *
-                         k_horse_calf_thickness_scale;
+                         k_horse_calf_thickness_scale *
+                         k_horse_segmented_leg_width_scale;
     calf.params.depth_radius = dims.body_width * (front ? 0.410F : 0.450F) * 2.0F *
                                k_horse_calf_thickness_scale;
     calf.custom_mesh = front ? horse_front_calf_mesh() : horse_rear_calf_mesh();

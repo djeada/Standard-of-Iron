@@ -118,7 +118,7 @@ Item {
 
     objectName: "GameView"
     focus: true
-    Keys.onPressed: function (event) {
+    Keys.onPressed: function(event) {
         if (typeof game === 'undefined')
             return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {

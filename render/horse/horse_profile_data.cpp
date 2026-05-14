@@ -165,6 +165,8 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
   d.saddle_height = d.barrel_center_y + d.body_height * k_saddle_height_body_scale +
                     d.saddle_thickness;
 
+  scale_horse_dimensions(d, k_overall_scale);
+
   return d;
 }
 
