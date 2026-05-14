@@ -100,6 +100,7 @@
 #include "game/systems/capture_system.h"
 #include "game/systems/catapult_attack_system.h"
 #include "game/systems/cleanup_system.h"
+#include "game/systems/combat_rules.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
@@ -493,27 +494,49 @@ GameEngine::GameEngine(QObject *parent)
             on_unit_spawned(e);
           });
 
-  m_combat_hit_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
-          [this](const Engine::Core::CombatHitEvent &e) {
-            if (m_controlled_commander_id == 0 ||
-                e.attacker_id != m_controlled_commander_id ||
-                m_world == nullptr) {
-              return;
-            }
-            auto *target_ent = m_world->get_entity(e.target_id);
-            if (target_ent == nullptr) {
-              return;
-            }
-            auto *tf =
-                target_ent->get_component<Engine::Core::TransformComponent>();
-            if (tf == nullptr) {
-              return;
-            }
-            m_rpg_damage_events.push_back({tf->position.x,
-                                           tf->position.y + 1.8F,
-                                           tf->position.z, e.damage});
-          });
+  m_combat_hit_subscription = Engine::Core::ScopedEventSubscription<
+      Engine::Core::CombatHitEvent>([this](
+                                        const Engine::Core::CombatHitEvent &e) {
+    if (m_controlled_commander_id == 0 ||
+        e.attacker_id != m_controlled_commander_id || m_world == nullptr) {
+      return;
+    }
+    auto *target_ent = m_world->get_entity(e.target_id);
+    if (target_ent == nullptr) {
+      return;
+    }
+    auto *tf = target_ent->get_component<Engine::Core::TransformComponent>();
+    if (tf == nullptr) {
+      return;
+    }
+
+    float max_health = 0.0F;
+    if (const auto *rpg_health =
+            target_ent->get_component<Engine::Core::RpgHealthComponent>();
+        rpg_health != nullptr && rpg_health->rpg_max_hp > 0) {
+      max_health = static_cast<float>(rpg_health->rpg_max_hp);
+    } else if (const auto *unit =
+                   target_ent->get_component<Engine::Core::UnitComponent>();
+               unit != nullptr && unit->max_health > 0) {
+      max_health = static_cast<float>(unit->max_health);
+    }
+
+    float const damage_ratio =
+        max_health > 0.0F
+            ? std::clamp(static_cast<float>(e.damage) / max_health, 0.0F, 1.5F)
+            : 0.0F;
+    int const lane = static_cast<int>(m_rpg_damage_event_sequence % 5U) - 2;
+    ++m_rpg_damage_event_sequence;
+
+    if (static_cast<int>(m_rpg_damage_events.size()) >=
+        k_max_rpg_damage_events) {
+      m_rpg_damage_events.erase(m_rpg_damage_events.begin());
+    }
+
+    m_rpg_damage_events.push_back({tf->position.x, tf->position.y + 1.8F,
+                                   tf->position.z, e.damage, damage_ratio, lane,
+                                   e.is_killing_blow});
+  });
 }
 
 GameEngine::~GameEngine() {
@@ -933,6 +956,9 @@ bool GameEngine::enter_commander_control_mode() {
     commander_data->rally_requested = false;
     commander_data->rally_requires_manual_trigger = true;
     commander_data->fpv_controlled = true;
+    commander_data->jump_active = false;
+    commander_data->jump_phase = 0.0F;
+    commander_data->jump_height_offset = 0.0F;
   }
   if (auto *transform =
           commander->get_component<Engine::Core::TransformComponent>()) {
@@ -957,6 +983,8 @@ bool GameEngine::enter_commander_control_mode() {
     }
     rpg->active = true;
   }
+
+  Game::Systems::CombatRules::clear_rts_combat_tracking(commander);
 
   if (m_world != nullptr) {
     for (auto *entity :
@@ -1087,6 +1115,13 @@ void GameEngine::commander_dodge() {
     return;
   }
   m_commander_control.request_dodge();
+}
+
+void GameEngine::commander_jump() {
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return;
+  }
+  m_commander_control.request_jump();
 }
 
 void GameEngine::commander_cycle_lock_on() {
@@ -1288,6 +1323,9 @@ void GameEngine::clear_controlled_commander_state() {
     commander_data->rally_requested = false;
     commander_data->rally_requires_manual_trigger = false;
     commander_data->fpv_controlled = false;
+    commander_data->jump_active = false;
+    commander_data->jump_phase = 0.0F;
+    commander_data->jump_height_offset = 0.0F;
   }
   if (auto *guard =
           commander->get_component<Engine::Core::CommanderGuardComponent>()) {
@@ -1298,6 +1336,7 @@ void GameEngine::clear_controlled_commander_state() {
     rpg->active = false;
     rpg->dodge_invincible = false;
   }
+  Game::Systems::CombatRules::clear_rts_combat_tracking(commander);
   reset_movement(commander);
 }
 
@@ -2133,6 +2172,9 @@ auto GameEngine::pop_rpg_damage_events() -> QVariantList {
     m["y"] = static_cast<double>(ev.wy);
     m["z"] = static_cast<double>(ev.wz);
     m["damage"] = ev.damage;
+    m["damageRatio"] = static_cast<double>(ev.damage_ratio);
+    m["lane"] = ev.lane;
+    m["killingBlow"] = ev.killing_blow;
     list.append(m);
   }
   m_rpg_damage_events.clear();

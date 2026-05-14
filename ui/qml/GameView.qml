@@ -78,6 +78,12 @@ Item {
                 game.commander_dodge();
             event.accepted = true;
             return ;
+        case Qt.Key_Alt:
+        case Qt.Key_AltGr:
+            if (!event.isAutoRepeat && game.commander_jump)
+                game.commander_jump();
+            event.accepted = true;
+            return ;
         case Qt.Key_Tab:
             if (game.commander_cycle_lock_on)
                 game.commander_cycle_lock_on();
@@ -100,6 +106,10 @@ Item {
 
     function handle_commander_key_released(event) {
         switch (event.key) {
+        case Qt.Key_Alt:
+        case Qt.Key_AltGr:
+            event.accepted = true;
+            return ;
         case Qt.Key_W:
         case Qt.Key_A:
         case Qt.Key_S:

@@ -105,7 +105,7 @@ TEST_F(BattleRenderOptimizerTest, ActiveCombatUnitsAlwaysRender) {
   EXPECT_TRUE(optimizer.should_render_unit(1, false, false, false, true));
 }
 
-TEST_F(BattleRenderOptimizerTest, DistantCombatUnitsCanBeTemporallyCulled) {
+TEST_F(BattleRenderOptimizerTest, DistantCombatUnitsAlwaysRender) {
   auto &optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   float const far_distance_sq = 100.0F * 100.0F;
@@ -118,7 +118,8 @@ TEST_F(BattleRenderOptimizerTest, DistantCombatUnitsCanBeTemporallyCulled) {
   bool const frame2 = optimizer.should_render_unit(1, false, false, false, true,
                                                    far_distance_sq);
 
-  EXPECT_NE(frame1, frame2);
+  EXPECT_TRUE(frame1);
+  EXPECT_TRUE(frame2);
 }
 
 TEST_F(BattleRenderOptimizerTest,
@@ -179,23 +180,15 @@ TEST_F(BattleRenderOptimizerTest, NearbyCombatAnimationsAreNeverThrottled) {
   }
 }
 
-TEST_F(BattleRenderOptimizerTest, DistantCombatAnimationsCanBeThrottled) {
+TEST_F(BattleRenderOptimizerTest, DistantCombatAnimationsAlwaysUpdate) {
   auto &optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
-  int updated = 0;
-  int throttled = 0;
   for (int frame = 0; frame < 6; ++frame) {
     optimizer.begin_frame();
-    if (optimizer.should_update_animation(1, 100.0F * 100.0F, false, true)) {
-      ++updated;
-    } else {
-      ++throttled;
-    }
+    EXPECT_TRUE(
+        optimizer.should_update_animation(1, 100.0F * 100.0F, false, true));
   }
-
-  EXPECT_GT(throttled, 0);
-  EXPECT_GT(updated, 0);
 }
 
 TEST_F(BattleRenderOptimizerTest, BatchingBoostIncreasesWithUnitCount) {

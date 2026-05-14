@@ -70,6 +70,31 @@ ApplicationWindow {
         }
     }
 
+    MouseArea {
+        id: commanderCursorOverlay
+
+        anchors.fill: parent
+        z: 11
+        visible: game_started &&
+                 !mainWindow.menu_visible &&
+                 typeof game !== 'undefined' &&
+                 game.control_mode === "commander" &&
+                 game.game_mode === "rpg" &&
+                 !mapSelect.visible &&
+                 !campaign_screen.visible &&
+                 !save_game_panel.visible &&
+                 !load_game_panel.visible &&
+                 !settingsPanel.visible &&
+                 !objectivesPanel.visible &&
+                 !error_dialog.visible
+        enabled: visible
+        acceptedButtons: Qt.NoButton
+        hoverEnabled: true
+        propagateComposedEvents: true
+        preventStealing: false
+        cursorShape: Qt.BlankCursor
+    }
+
     Rectangle {
         id: mission_announcement_toast
 

@@ -50,6 +50,12 @@ Item {
                 root.commanderInput.dodge();
             event.accepted = true;
             return ;
+        case Qt.Key_Alt:
+        case Qt.Key_AltGr:
+            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.jump)
+                root.commanderInput.jump();
+            event.accepted = true;
+            return ;
         case Qt.Key_Tab:
             if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.cycle_lock_on)
                 root.commanderInput.cycle_lock_on();
@@ -93,6 +99,10 @@ Item {
             return ;
 
         switch (event.key) {
+        case Qt.Key_Alt:
+        case Qt.Key_AltGr:
+            event.accepted = true;
+            return ;
         case Qt.Key_W:
         case Qt.Key_A:
         case Qt.Key_S:

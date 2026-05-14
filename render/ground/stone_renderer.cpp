@@ -114,6 +114,8 @@ void StoneRenderer::generate_stone_instances() {
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
   config.edge_padding = scatter_profile.spawn_edge_padding;
+  config.max_slope = 0.30F;
+  config.allow_hill = true;
 
   SpawnValidator validator(terrain_cache, config);
   ScatterCompositionContext composition(terrain_cache, m_width, m_height,
@@ -126,10 +128,7 @@ void StoneRenderer::generate_stone_instances() {
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0x5D17F2A1U);
-    if (rand_01(state) >
-        scatter_spawn_chance(ScatterRuleSpecies::Stone, scene)) {
-      return false;
-    }
+    (void)rand_01(state);
 
     float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
     float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
@@ -169,12 +168,13 @@ void StoneRenderer::generate_stone_instances() {
 
       Game::Map::TerrainType const terrain_type =
           terrain_cache.get_terrain_type_at(x, z);
-      if (terrain_type != Game::Map::TerrainType::Flat) {
+      if (terrain_type == Game::Map::TerrainType::Mountain ||
+          terrain_type == Game::Map::TerrainType::River) {
         continue;
       }
 
       float const slope = terrain_cache.get_slope_at(x, z);
-      if (slope > 0.15F) {
+      if (slope > 0.30F) {
         continue;
       }
 
@@ -185,18 +185,18 @@ void StoneRenderer::generate_stone_instances() {
       auto const cell_scene = composition.sample_grid(
           static_cast<float>(sample_x), static_cast<float>(sample_z),
           state ^ 0x3AA5B08BU);
-      float const density_mult =
+      float density_mult =
           scatter_density_multiplier(ScatterRuleSpecies::Stone, cell_scene);
+      if (terrain_type == Game::Map::TerrainType::Hill) {
+        density_mult *= 1.22F;
+      }
       float const cluster_mult = 0.55F + cell_scene.cluster_bias * 1.15F;
       float const effective_density =
-          stone_density * density_mult * cluster_mult;
+          stone_density * density_mult * cluster_mult * 1.20F;
       if (effective_density < 0.05F) {
         continue;
       }
-      if (rand_01(state) >
-          scatter_spawn_chance(ScatterRuleSpecies::Stone, cell_scene)) {
-        continue;
-      }
+      (void)rand_01(state);
 
       int stone_count = static_cast<int>(std::floor(effective_density));
       float const frac = effective_density - float(stone_count);

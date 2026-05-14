@@ -3,6 +3,7 @@
 #include "../../game/core/world.h"
 #include "../../game/map/visibility_service.h"
 #include "../../game/systems/camera_visibility_service.h"
+#include "../../game/systems/combat_rules.h"
 #include "../../game/systems/projectile_system.h"
 #include "../../game/systems/stone_projectile.h"
 #include "../scene_renderer.h"
@@ -106,7 +107,8 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    if (!attack->in_melee_lock) {
+    if (!attack->in_melee_lock ||
+        !Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
       continue;
     }
 

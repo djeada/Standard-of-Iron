@@ -1,6 +1,7 @@
 #include "scene_renderer.h"
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
+#include "../game/systems/combat_rules.h"
 #include "../game/systems/nation_registry.h"
 #include "../game/systems/owner_registry.h"
 #include "../game/systems/troop_profile_service.h"
@@ -167,6 +168,7 @@ auto is_unit_moving(const Engine::Core::MovementComponent *move_comp) -> bool {
 }
 
 auto is_unit_combat_active(
+    const Engine::Core::Entity *entity,
     const Engine::Core::AttackComponent *attack_comp,
     const Engine::Core::AttackTargetComponent *attack_target,
     const Engine::Core::CombatStateComponent *combat_state,
@@ -184,7 +186,8 @@ auto is_unit_combat_active(
     return false;
   }
 
-  if (attack_comp->in_melee_lock) {
+  if (attack_comp->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(entity)) {
     return true;
   }
 
@@ -193,6 +196,31 @@ auto is_unit_combat_active(
   }
 
   return attack_comp->time_since_last < attack_comp->get_current_cooldown();
+}
+
+auto stable_combat_creature_lod(const Engine::Core::UnitComponent *unit,
+                                float distance_sq) noexcept -> HumanoidLOD {
+  const auto &settings = Render::GraphicsSettings::instance();
+  float full_distance = settings.humanoid_full_detail_distance();
+
+  if (unit != nullptr) {
+    using Game::Units::SpawnType;
+    switch (unit->spawn_type) {
+    case SpawnType::HorseArcher:
+    case SpawnType::HorseSpearman:
+    case SpawnType::MountedKnight:
+      full_distance = settings.horse_full_detail_distance();
+      break;
+    case SpawnType::Elephant:
+      full_distance = settings.elephant_full_detail_distance();
+      break;
+    default:
+      break;
+    }
+  }
+
+  return distance_sq <= full_distance * full_distance ? HumanoidLOD::Full
+                                                      : HumanoidLOD::Minimal;
 }
 
 struct UnitRenderEntry {
@@ -1245,9 +1273,11 @@ void Renderer::render_world(Engine::Core::World *world) {
           entity->get_component<Engine::Core::CombatStateComponent>();
       auto *hit_feedback =
           entity->get_component<Engine::Core::HitFeedbackComponent>();
-      entry.combat_active = is_unit_combat_active(attack_comp, attack_target,
-                                                  combat_state, hit_feedback);
-      entry.has_attack = (attack_comp != nullptr) && attack_comp->in_melee_lock;
+      entry.combat_active = is_unit_combat_active(
+          entity, attack_comp, attack_target, combat_state, hit_feedback);
+      entry.has_attack =
+          (attack_comp != nullptr) && attack_comp->in_melee_lock &&
+          Game::Systems::CombatRules::participates_in_rts_melee_lock(entity);
 
       auto *guard_mode =
           entity->get_component<Engine::Core::GuardModeComponent>();
@@ -1482,10 +1512,18 @@ void Renderer::render_world(Engine::Core::World *world) {
           ctx.forced_humanoid_lod = HumanoidLOD::Full;
           ctx.force_horse_lod = true;
           ctx.forced_horse_lod = HorseLOD::Full;
+        } else if (entry.combat_active) {
+          auto const stable_lod =
+              stable_combat_creature_lod(entry.unit, entry.distance_sq);
+          ctx.force_humanoid_lod = true;
+          ctx.forced_humanoid_lod = stable_lod;
+          ctx.force_horse_lod = true;
+          ctx.forced_horse_lod = stable_lod;
         }
 
-        const bool batching_available =
-            !m_force_full_creature_lod && batching_ratio > 0.0F;
+        const bool batching_available = !m_force_full_creature_lod &&
+                                        !entry.combat_active &&
+                                        batching_ratio > 0.0F;
         const auto tier = m_force_full_creature_lod
                               ? Render::Pipeline::LodTier::Full
                               : Render::Pipeline::select_lod(lod_in);

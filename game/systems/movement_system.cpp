@@ -1,6 +1,7 @@
 #include "movement_system.h"
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
+#include "combat_rules.h"
 #include "command_service.h"
 #include "core/component.h"
 #include "core/event_manager.h"
@@ -177,6 +178,13 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     return;
   }
 
+  if (auto const *commander =
+          entity->get_component<Engine::Core::CommanderComponent>();
+      commander != nullptr && commander->jump_active) {
+
+    return;
+  }
+
   auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
   bool in_hold_mode = false;
   if (hold_mode != nullptr) {
@@ -219,7 +227,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   }
 
   auto *atk = entity->get_component<Engine::Core::AttackComponent>();
-  if ((atk != nullptr) && atk->in_melee_lock) {
+  if ((atk != nullptr) && atk->in_melee_lock &&
+      CombatRules::participates_in_rts_melee_lock(entity)) {
     movement->has_target = false;
     movement->vx = 0.0F;
     movement->vz = 0.0F;

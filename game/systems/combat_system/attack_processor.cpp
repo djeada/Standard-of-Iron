@@ -5,6 +5,7 @@
 #include "../../units/troop_config.h"
 #include "../../visuals/team_colors.h"
 #include "../arrow_system.h"
+#include "../combat_rules.h"
 #include "../command_service.h"
 #include "../owner_registry.h"
 #include "../pathfinding.h"
@@ -190,6 +191,10 @@ auto has_valid_melee_lock(Engine::Core::Entity *entity,
     return false;
   }
 
+  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(entity)) {
+    return false;
+  }
+
   auto *attack = entity->get_component<Engine::Core::AttackComponent>();
   auto *unit = entity->get_component<Engine::Core::UnitComponent>();
   if ((attack == nullptr) || (unit == nullptr) || !attack->in_melee_lock ||
@@ -251,11 +256,22 @@ void process_melee_lock(Engine::Core::Entity *attacker,
     return;
   }
 
+  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
+    Game::Systems::CombatRules::clear_rts_melee_lock(attacker);
+    return;
+  }
+
   auto *lock_target = world->get_entity(attack_comp->melee_lock_target_id);
   if ((lock_target == nullptr) ||
       lock_target->has_component<Engine::Core::PendingRemovalComponent>()) {
     attack_comp->in_melee_lock = false;
     attack_comp->melee_lock_target_id = 0;
+    return;
+  }
+
+  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(
+          lock_target)) {
+    Game::Systems::CombatRules::clear_rts_melee_lock(attacker);
     return;
   }
 
@@ -330,9 +346,14 @@ auto locked_target_for_attack(
     return nullptr;
   }
 
+  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
+    return nullptr;
+  }
+
   auto *target = world->get_entity(attack_comp->melee_lock_target_id);
   auto *attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
   if ((target == nullptr) || (attacker_unit == nullptr) ||
+      !Game::Systems::CombatRules::participates_in_rts_melee_lock(target) ||
       !is_valid_enemy_unit(attacker_unit, target, true)) {
     return nullptr;
   }
@@ -347,7 +368,8 @@ auto locked_target_for_attack(
 void sync_melee_lock_target(Engine::Core::Entity *attacker,
                             Engine::Core::AttackComponent *attack_comp) {
   if (attack_comp == nullptr || !attack_comp->in_melee_lock ||
-      attack_comp->melee_lock_target_id == 0) {
+      attack_comp->melee_lock_target_id == 0 ||
+      !Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
     return;
   }
 
@@ -560,6 +582,32 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
                            Engine::Core::Entity *target,
                            Engine::Core::AttackComponent *attack_comp,
                            Engine::Core::World *world) {
+  if ((attacker == nullptr) || (target == nullptr) ||
+      (attack_comp == nullptr)) {
+    return;
+  }
+
+  bool const attacker_uses_rts_lock =
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
+  bool const target_uses_rts_lock =
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(target);
+  auto *att_t = attacker->get_component<Engine::Core::TransformComponent>();
+  auto *tgt_t = target->get_component<Engine::Core::TransformComponent>();
+
+  if (!attacker_uses_rts_lock || !target_uses_rts_lock) {
+    if (!attacker_uses_rts_lock) {
+      Game::Systems::CombatRules::clear_rts_melee_lock(attacker);
+    }
+    if (!target_uses_rts_lock) {
+      Game::Systems::CombatRules::clear_rts_melee_lock(target);
+    }
+    if ((att_t != nullptr) && (tgt_t != nullptr)) {
+      face_target(att_t, tgt_t);
+    }
+    begin_attack_animation(attacker);
+    return;
+  }
+
   auto *target_atk = target->get_component<Engine::Core::AttackComponent>();
   if (attack_comp->in_melee_lock &&
       attack_comp->melee_lock_target_id == target->get_id()) {
@@ -598,8 +646,6 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
     }
   }
 
-  auto *att_t = attacker->get_component<Engine::Core::TransformComponent>();
-  auto *tgt_t = target->get_component<Engine::Core::TransformComponent>();
   if ((att_t != nullptr) && (tgt_t != nullptr)) {
     face_target(att_t, tgt_t);
     auto *target_atk_after =
@@ -698,7 +744,8 @@ void process_attacks(Engine::Core::World *world,
     }
 
     bool const in_melee_lock =
-        (attacker_atk != nullptr) && attacker_atk->in_melee_lock;
+        (attacker_atk != nullptr) && attacker_atk->in_melee_lock &&
+        Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
 
     auto *attack_target =
         attacker->get_component<Engine::Core::AttackTargetComponent>();
@@ -867,10 +914,8 @@ void process_attacks(Engine::Core::World *world,
     bool const has_attack_target =
         attacker->has_component<Engine::Core::AttackTargetComponent>();
     if ((best_target == nullptr) && !has_attack_target) {
-
-      auto const *cmdr =
-          attacker->get_component<Engine::Core::CommanderComponent>();
-      if (cmdr == nullptr || !cmdr->fpv_controlled) {
+      if (Game::Systems::CombatRules::participates_in_rts_melee_lock(
+              attacker)) {
         best_target = find_nearest_enemy(attacker, query_context, range);
         if (best_target != nullptr) {
           best_target_unit =
