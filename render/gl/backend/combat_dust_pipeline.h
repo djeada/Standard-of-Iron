@@ -94,11 +94,6 @@ public:
                                 float seed,
                                 const QMatrix4x4& view_proj);
 
-  void render_single_blood_pool(const QVector3D &position, float radius,
-                                float alpha_scale, float rotation,
-                                float aspect_ratio, float seed,
-                                const QMatrix4x4 &view_proj);
-
   struct DustInstanceData {
     QVector3D position;
     QVector3D color;
@@ -124,18 +119,6 @@ public:
   void render_blood_pool_batch(const BloodPoolInstanceData* instances,
                                std::size_t count,
                                const QMatrix4x4& view_proj);
-
-  struct BloodPoolInstanceData {
-    QVector3D position;
-    float radius{0.6F};
-    float alpha_scale{1.0F};
-    float rotation{0.0F};
-    float aspect_ratio{1.0F};
-    float seed{0.0F};
-  };
-
-  void render_blood_pool_batch(const BloodPoolInstanceData *instances,
-                               std::size_t count, const QMatrix4x4 &view_proj);
 
   void clear_data() {
     m_dust_data.clear();

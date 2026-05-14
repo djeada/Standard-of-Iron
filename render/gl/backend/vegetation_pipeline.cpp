@@ -1,5 +1,7 @@
 #include "vegetation_pipeline.h"
 
+#include "dead_tree_mesh.h"
+
 #include <QDebug>
 #include <QOpenGLContext>
 #include <qglobal.h>
@@ -1886,121 +1888,10 @@ void VegetationPipeline::initialize_dead_tree_pipeline() {
   initializeOpenGLFunctions();
   shutdown_dead_tree_pipeline();
 
-  std::vector<std::pair<QVector3D, QVector3D>> verts;
-  std::vector<uint16_t> idx;
+  const auto mesh = build_dead_tree_mesh();
 
-  using V3 = QVector3D;
-  using F = std::pair<QVector3D, QVector3D>;
-  constexpr float k_tau = 6.28318530F;
-
-  auto add_ring = [&](float x,
-                      float center_y,
-                      float center_z,
-                      float radius_y,
-                      float radius_z,
-                      float phase,
-                      float bottom_flatten,
-                      float wobble) {
-    std::vector<V3> ring;
-    ring.reserve(8);
-    for (int i = 0; i < 8; ++i) {
-      float const angle = phase + k_tau * static_cast<float>(i) / 8.0F;
-      float const s = std::sin(angle);
-      float const c = std::cos(angle);
-      float y_scale = 1.0F;
-      if (s < 0.0F) {
-        y_scale = 1.0F - bottom_flatten;
-      }
-      float const wobble_y = std::sin(angle * 2.0F + x * 3.4F) * wobble * radius_y;
-      float const wobble_z = std::cos(angle * 3.0F - x * 2.2F) * wobble * radius_z;
-      ring.emplace_back(x,
-                        center_y + radius_y * s * y_scale + wobble_y,
-                        center_z + radius_z * c + wobble_z);
-    }
-    return ring;
-  };
-
-  auto connect_rings = [&](const std::vector<V3>& r0, const std::vector<V3>& r1) {
-    int const n = static_cast<int>(r0.size());
-    for (int i = 0; i < n; ++i) {
-      int const j = (i + 1) % n;
-      const V3& a = r0[i];
-      const V3& b = r1[i];
-      const V3& c = r1[j];
-      const V3& d = r0[j];
-      append_quad(verts, idx, a, b, c, d, V3::crossProduct(b - a, d - a).normalized());
-    }
-  };
-
-  auto end_cap = [&](const std::vector<V3>& ring, const V3& centre, bool minus_x) {
-    const V3 n(minus_x ? -1.0F : 1.0F, 0.0F, 0.0F);
-    int const sz = static_cast<int>(ring.size());
-    for (int i = 0; i < sz; ++i) {
-      int const j = (i + 1) % sz;
-      auto b = static_cast<uint16_t>(verts.size());
-      if (minus_x) {
-        verts.insert(verts.end(), {F{centre, n}, F{ring[i], n}, F{ring[j], n}});
-      } else {
-        verts.insert(verts.end(), {F{centre, n}, F{ring[j], n}, F{ring[i], n}});
-      }
-      idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
-    }
-  };
-
-  const std::vector<V3> rA =
-      add_ring(-1.16F, 0.19F, -0.02F, 0.15F, 0.14F, 0.22F, 0.46F, 0.10F);
-  const std::vector<V3> rB =
-      add_ring(-0.82F, 0.18F, -0.03F, 0.19F, 0.18F, 0.10F, 0.42F, 0.08F);
-  const std::vector<V3> rC =
-      add_ring(-0.40F, 0.17F, -0.01F, 0.22F, 0.24F, 0.16F, 0.38F, 0.08F);
-  const std::vector<V3> rD =
-      add_ring(0.02F, 0.16F, 0.02F, 0.24F, 0.27F, 0.04F, 0.36F, 0.06F);
-  const std::vector<V3> rE =
-      add_ring(0.48F, 0.16F, 0.03F, 0.22F, 0.25F, 0.14F, 0.34F, 0.07F);
-  const std::vector<V3> rF =
-      add_ring(0.92F, 0.18F, 0.01F, 0.19F, 0.21F, 0.06F, 0.38F, 0.08F);
-  const std::vector<V3> rG =
-      add_ring(1.22F, 0.20F, -0.01F, 0.14F, 0.16F, 0.24F, 0.44F, 0.10F);
-
-  connect_rings(rA, rB);
-  connect_rings(rB, rC);
-  connect_rings(rC, rD);
-  connect_rings(rD, rE);
-  connect_rings(rE, rF);
-  connect_rings(rF, rG);
-
-  end_cap(rA, V3(-1.24F, 0.20F, -0.02F), true);
-  end_cap(rG, V3(1.28F, 0.22F, -0.01F), false);
-
-  append_disc_xaxis(verts, idx, 1.27F, 0.20F, -0.01F, 0.17F, 0.030F, 7);
-
-  append_oriented_box(
-      verts, idx, {-1.04F, 0.17F, -0.02F}, {-1.42F, 0.03F, -0.24F}, 0.050F, 0.035F);
-  append_oriented_box(
-      verts, idx, {-1.00F, 0.15F, 0.04F}, {-1.34F, 0.02F, 0.22F}, 0.046F, 0.032F);
-  append_oriented_box(
-      verts, idx, {-0.92F, 0.13F, -0.10F}, {-1.16F, 0.01F, 0.04F}, 0.040F, 0.028F);
-
-  append_oriented_box(
-      verts, idx, {-0.12F, 0.28F, 0.21F}, {0.24F, 0.54F, 0.29F}, 0.050F, 0.032F);
-  append_oriented_box(
-      verts, idx, {0.34F, 0.25F, -0.24F}, {0.70F, 0.58F, -0.17F}, 0.046F, 0.030F);
-  append_oriented_box(
-      verts, idx, {0.72F, 0.30F, 0.13F}, {0.96F, 0.52F, 0.21F}, 0.034F, 0.024F);
-
-  append_oriented_box(
-      verts, idx, {1.04F, 0.24F, 0.05F}, {1.30F, 0.56F, 0.13F}, 0.034F, 0.024F);
-  append_oriented_box(
-      verts, idx, {1.08F, 0.22F, -0.09F}, {1.32F, 0.47F, -0.17F}, 0.030F, 0.022F);
-  append_oriented_box(
-      verts, idx, {1.12F, 0.20F, -0.01F}, {1.38F, 0.38F, 0.04F}, 0.026F, 0.020F);
-
-  append_box(verts, idx, {-0.62F, 0.02F, -0.30F}, {-0.18F, 0.07F, -0.20F});
-  append_box(verts, idx, {0.10F, 0.01F, 0.22F}, {0.52F, 0.06F, 0.32F});
-  append_box(verts, idx, {0.58F, 0.00F, -0.33F}, {1.00F, 0.05F, -0.23F});
-
-  upload_prop_mesh_impl(verts,
-                        idx,
+  upload_prop_mesh_impl(mesh.vertices,
+                        mesh.indices,
                         m_dead_tree_vao,
                         m_dead_tree_vertex_buffer,
                         m_dead_tree_index_buffer,

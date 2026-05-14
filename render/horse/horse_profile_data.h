@@ -57,6 +57,7 @@ constexpr float k_leg_segment_ratio_lower = 0.12F;
 constexpr float k_shoulder_barrel_offset_scale = 0.05F;
 constexpr float k_shoulder_barrel_offset_base = 0.05F;
 constexpr float k_saddle_height_body_scale = 0.55F;
+constexpr float k_overall_scale = 0.80F;
 
 constexpr uint32_t k_salt_body_length = 0x12U;
 constexpr uint32_t k_salt_body_width = 0x34U;
