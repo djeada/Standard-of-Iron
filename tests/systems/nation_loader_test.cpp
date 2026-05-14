@@ -1,6 +1,7 @@
 #include "game/systems/nation_loader.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
+#include "game/units/troop_catalog.h"
 
 #include <gtest/gtest.h>
 
@@ -44,6 +45,36 @@ TEST(NationLoader, ArcherProfilesKeepDefaultSelectionRingGroundOffset) {
 
   EXPECT_FLOAT_EQ(roman.visuals.selection_ring_ground_offset, 0.0F);
   EXPECT_FLOAT_EQ(carthage.visuals.selection_ring_ground_offset, 0.0F);
+}
+
+TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierAcrossNations) {
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  ASSERT_FALSE(nations.empty());
+
+  auto &registry = Game::Systems::NationRegistry::instance();
+  registry.clear();
+  registry.clear_player_assignments();
+  for (const auto &nation : nations) {
+    registry.register_nation(nation);
+  }
+
+  auto &profiles = Game::Systems::TroopProfileService::instance();
+  profiles.clear();
+
+  auto const roman_archer = profiles.get_profile(
+      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Archer);
+  auto const roman_horse_archer =
+      profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                           Game::Units::TroopType::HorseArcher);
+  auto const carthage_archer = profiles.get_profile(
+      Game::Systems::NationID::Carthage, Game::Units::TroopType::Archer);
+  auto const carthage_horse_archer = profiles.get_profile(
+      Game::Systems::NationID::Carthage, Game::Units::TroopType::HorseArcher);
+
+  EXPECT_FLOAT_EQ(roman_archer.combat.ranged_range, 11.4F);
+  EXPECT_FLOAT_EQ(roman_horse_archer.combat.ranged_range, 12.9F);
+  EXPECT_FLOAT_EQ(carthage_archer.combat.ranged_range, 10.8F);
+  EXPECT_FLOAT_EQ(carthage_horse_archer.combat.ranged_range, 12.0F);
 }
 
 TEST(NationLoader, FrontlineProfilesKeepCatalogFormationSpacing) {
@@ -93,6 +124,26 @@ TEST(NationLoader, CivilianProfilesUseNationSpecificRenderersWhenAvailable) {
   EXPECT_EQ(roman.visuals.renderer_id, "troops/roman/civilian");
   EXPECT_EQ(carthage.display_name, "Civilian");
   EXPECT_EQ(carthage.visuals.renderer_id, "troops/carthage/civilian");
+}
+
+TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierWithoutNationData) {
+  auto &registry = Game::Systems::NationRegistry::instance();
+  registry.clear();
+  registry.clear_player_assignments();
+
+  Game::Units::TroopCatalog::instance().reset_to_defaults();
+
+  auto &profiles = Game::Systems::TroopProfileService::instance();
+  profiles.clear();
+
+  auto const archer = profiles.get_profile(
+      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Archer);
+  auto const horse_archer =
+      profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                           Game::Units::TroopType::HorseArcher);
+
+  EXPECT_FLOAT_EQ(archer.combat.ranged_range, 9.0F);
+  EXPECT_FLOAT_EQ(horse_archer.combat.ranged_range, 10.5F);
 }
 
 } // namespace

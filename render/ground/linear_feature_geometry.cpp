@@ -63,6 +63,13 @@ auto sample_height_clamped(const Game::Map::TerrainHeightMap &height_map,
   return h0 * (1.0F - tz) + h1 * tz;
 }
 
+auto smoothstep01(float value) -> float {
+  float const t = std::clamp(value, 0.0F, 1.0F);
+  return t * t * (3.0F - 2.0F * t);
+}
+
+auto mixf(float a, float b, float t) -> float { return a + (b - a) * t; }
+
 } // namespace
 
 namespace Render::Ground {
@@ -210,19 +217,22 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
   dir.normalize();
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
   float const half_width = bridge.width * 0.5F;
+  float const segment_step = std::max(tile_size * 0.28F, 0.16F);
+  float const end_fade_length = std::min(
+      std::clamp(bridge.width * 0.70F, tile_size * 0.45F, tile_size * 1.20F),
+      length * 0.45F);
 
-  int length_segments =
-      static_cast<int>(std::ceil(length / (tile_size * 0.3F)));
+  int length_segments = static_cast<int>(std::ceil(length / segment_step));
   length_segments =
-      std::max(length_segments, Render::GL::Geometry::min_length_segments);
+      std::max(length_segments, Render::GL::Geometry::min_length_segments + 2);
 
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;
 
   constexpr int k_vertices_per_bridge_segment = 12;
-  float const deck_thickness = std::clamp(bridge.width * 0.25F, 0.35F, 0.8F);
-  float const parapet_height = std::clamp(bridge.width * 0.25F, 0.25F, 0.55F);
-  float const parapet_offset = half_width * 1.05F;
+  float const deck_thickness = std::clamp(bridge.width * 0.24F, 0.32F, 0.72F);
+  float const parapet_height = std::clamp(bridge.width * 0.18F, 0.18F, 0.42F);
+  float const side_bevel = std::clamp(bridge.width * 0.12F, 0.10F, 0.30F);
 
   auto add_vertex = [&](const QVector3D &position, const QVector3D &normal,
                         float u, float v) {
@@ -250,31 +260,48 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
   };
 
   for (int i = 0; i <= length_segments; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(length_segments);
-    QVector3D const center_pos = bridge.start + dir * (length * t);
+    float const mesh_t =
+        static_cast<float>(i) / static_cast<float>(length_segments);
+    float const span_distance = length * mesh_t;
+    QVector3D const center_pos = bridge.start + dir * span_distance;
 
-    float const arch_curve = Game::Map::bridge_arch_curve(t);
-    float const deck_height = Game::Map::bridge_deck_world_y(bridge, t);
+    float const start_blend =
+        smoothstep01(span_distance / std::max(end_fade_length, 0.001F));
+    float const end_blend = smoothstep01((length - span_distance) /
+                                         std::max(end_fade_length, 0.001F));
+    float const profile_blend = start_blend * end_blend;
+
+    float const arch_curve =
+        Game::Map::bridge_arch_curve(mesh_t) * (0.85F + 0.15F * profile_blend);
+    float const deck_height = Game::Map::bridge_deck_world_y(bridge, mesh_t);
 
     float const stone_noise = std::sin(center_pos.x() * 3.0F) *
                               std::cos(center_pos.z() * 2.5F) * 0.02F;
 
-    float const deck_y = deck_height + stone_noise;
-    float const underside_y =
-        deck_height - deck_thickness - arch_curve * bridge.height * 0.55F;
-    float const rail_top_y = deck_y + parapet_height;
+    float const bottom_half_width =
+        std::max(half_width - side_bevel * (0.55F + 0.45F * profile_blend),
+                 half_width * 0.68F);
+    float const ring_thickness =
+        mixf(deck_thickness * 0.72F, deck_thickness, profile_blend);
+    float const ring_parapet_height =
+        parapet_height * (0.35F + 0.65F * profile_blend);
+    float const ring_parapet_offset =
+        half_width + side_bevel * (0.20F + 0.35F * profile_blend);
 
-    QVector3D const left_normal = (-perpendicular).normalized();
-    QVector3D const right_normal = perpendicular.normalized();
+    float const deck_y =
+        deck_height + stone_noise * (0.55F + 0.45F * profile_blend);
+    float const underside_y =
+        deck_y - ring_thickness - arch_curve * bridge.height * 0.60F;
+    float const rail_top_y = deck_y + ring_parapet_height;
 
     QVector3D top_left = center_pos + perpendicular * (-half_width);
     top_left.setY(deck_y);
     QVector3D top_right = center_pos + perpendicular * half_width;
     top_right.setY(deck_y);
 
-    QVector3D bottom_left = top_left;
+    QVector3D bottom_left = center_pos + perpendicular * (-bottom_half_width);
     bottom_left.setY(underside_y);
-    QVector3D bottom_right = top_right;
+    QVector3D bottom_right = center_pos + perpendicular * bottom_half_width;
     bottom_right.setY(underside_y);
 
     QVector3D const side_left_top = top_left;
@@ -282,21 +309,34 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
     QVector3D const side_right_top = top_right;
     QVector3D const side_right_bottom = bottom_right;
 
+    QVector3D left_normal =
+        QVector3D::crossProduct(dir, side_left_bottom - side_left_top)
+            .normalized();
+    QVector3D right_normal =
+        QVector3D::crossProduct(side_right_bottom - side_right_top, dir)
+            .normalized();
+    if (left_normal.lengthSquared() < 0.0001F) {
+      left_normal = (-perpendicular).normalized();
+    }
+    if (right_normal.lengthSquared() < 0.0001F) {
+      right_normal = perpendicular.normalized();
+    }
+
     QVector3D parapet_left_bottom =
-        center_pos + perpendicular * (-parapet_offset);
+        center_pos + perpendicular * (-ring_parapet_offset);
     parapet_left_bottom.setY(deck_y);
     QVector3D parapet_left_top = parapet_left_bottom;
     parapet_left_top.setY(rail_top_y);
 
     QVector3D parapet_right_bottom =
-        center_pos + perpendicular * parapet_offset;
+        center_pos + perpendicular * ring_parapet_offset;
     parapet_right_bottom.setY(deck_y);
     QVector3D parapet_right_top = parapet_right_bottom;
     parapet_right_top.setY(rail_top_y);
 
     float const tex_u0 = 0.0F;
     float const tex_u1 = 1.0F;
-    float const tex_v = t * length * 0.4F;
+    float const tex_v = mesh_t * length * 0.4F;
 
     add_vertex(top_left, QVector3D(0.0F, 1.0F, 0.0F), tex_u0, tex_v);
     add_vertex(top_right, QVector3D(0.0F, 1.0F, 0.0F), tex_u1, tex_v);

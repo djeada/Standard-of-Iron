@@ -12,7 +12,7 @@ public:
   static auto get_shaft() -> GL::Mesh *;
   static auto get_tip() -> GL::Mesh *;
 
-  static constexpr float k_arrow_z_scale = 0.55F;
+  static constexpr float k_arrow_z_scale = 0.44F;
   static constexpr float k_arrow_xy_scale = 0.36F;
   static constexpr float k_arrow_z_translate_factor = 0.5F;
   static constexpr float k_fletch_z_offset_factor = 0.2F;

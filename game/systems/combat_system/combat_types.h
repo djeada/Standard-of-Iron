@@ -37,6 +37,10 @@ inline constexpr float k_arrow_depth_spread_factor = 3.0F;
 inline constexpr float k_arrow_start_height = 0.6F;
 inline constexpr float k_arrow_start_offset = 0.35F;
 inline constexpr float k_arrow_target_offset = 0.5F;
+inline constexpr int k_arrow_volley_wave_count = 3;
+inline constexpr float k_arrow_volley_rank_spacing = 0.42F;
+inline constexpr float k_arrow_volley_wave_height = 0.28F;
+inline constexpr float k_arrow_volley_wave_depth = 0.40F;
 inline constexpr float k_arrow_speed = 14.0F;
 inline constexpr int k_max_visual_arrows_per_volley = 20;
 } // namespace Constants
