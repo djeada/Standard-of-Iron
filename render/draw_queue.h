@@ -182,6 +182,7 @@ struct EffectBatchCmd {
     HealerAura,
     CombatDust,
     BuildingFlame,
+    BloodPool,
     StoneImpact
   };
 
@@ -194,6 +195,10 @@ struct EffectBatchCmd {
   float radius = 1.0F;
   float intensity = 1.0F;
   float time = 0.0F;
+  float alpha_scale = 1.0F;
+  float rotation = 0.0F;
+  float aspect_ratio = 1.0F;
+  float seed = 0.0F;
 
   float progress = 1.0F;
   float beam_width = 0.15F;

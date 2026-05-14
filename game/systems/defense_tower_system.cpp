@@ -123,7 +123,8 @@ void spawn_tower_arrows(Engine::Core::Entity *tower,
     QVector3D const end = target_pos + QVector3D(0.0F, 0.8F, 0.0F) +
                           perpendicular * lateral_offset;
 
-    arrow_sys->spawn_arrow(start, end, color, k_arrow_speed);
+    arrow_sys->spawn_arrow(start, end, color, k_arrow_speed,
+                           ArrowVisualStyle::Focused);
   }
 }
 

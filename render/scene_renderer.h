@@ -182,6 +182,9 @@ public:
                    float radius, float intensity, float time) override;
   void building_flame(const QVector3D &position, const QVector3D &color,
                       float radius, float intensity, float time);
+  void blood_pool(const QVector3D &position, float radius, float alpha_scale,
+                  float rotation = 0.0F, float aspect_ratio = 1.0F,
+                  float seed = 0.0F);
   void stone_impact(const QVector3D &position, const QVector3D &color,
                     float radius, float intensity, float time) override;
   void mode_indicator(const QMatrix4x4 &model, int mode_type,
