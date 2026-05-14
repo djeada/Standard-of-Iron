@@ -1,4 +1,5 @@
 #include "troop_count_registry.h"
+
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/troop_config.h"
@@ -7,7 +8,7 @@
 
 namespace Game::Systems {
 
-auto TroopCountRegistry::instance() -> TroopCountRegistry & {
+auto TroopCountRegistry::instance() -> TroopCountRegistry& {
   static TroopCountRegistry inst;
   return inst;
 }
@@ -15,16 +16,16 @@ auto TroopCountRegistry::instance() -> TroopCountRegistry & {
 void TroopCountRegistry::initialize() {
   m_unit_spawned_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
-          [this](const Engine::Core::UnitSpawnedEvent &e) {
-            on_unit_spawned(e);
-          });
+          [this](const Engine::Core::UnitSpawnedEvent& e) { on_unit_spawned(e); });
 
   m_unit_died_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
-          [this](const Engine::Core::UnitDiedEvent &e) { on_unit_died(e); });
+          [this](const Engine::Core::UnitDiedEvent& e) { on_unit_died(e); });
 }
 
-void TroopCountRegistry::clear() { m_troop_counts.clear(); }
+void TroopCountRegistry::clear() {
+  m_troop_counts.clear();
+}
 
 auto TroopCountRegistry::get_troop_count(int owner_id) const -> int {
   auto it = m_troop_counts.find(owner_id);
@@ -34,27 +35,23 @@ auto TroopCountRegistry::get_troop_count(int owner_id) const -> int {
   return 0;
 }
 
-void TroopCountRegistry::on_unit_spawned(
-    const Engine::Core::UnitSpawnedEvent &event) {
+void TroopCountRegistry::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
   if (!Game::Units::is_troop_spawn(event.spawn_type)) {
     return;
   }
 
   int const production_cost =
-      Game::Units::TroopConfig::instance().get_production_cost(
-          event.spawn_type);
+      Game::Units::TroopConfig::instance().get_production_cost(event.spawn_type);
   m_troop_counts[event.owner_id] += production_cost;
 }
 
-void TroopCountRegistry::on_unit_died(
-    const Engine::Core::UnitDiedEvent &event) {
+void TroopCountRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
   if (!Game::Units::is_troop_spawn(event.spawn_type)) {
     return;
   }
 
   int const production_cost =
-      Game::Units::TroopConfig::instance().get_production_cost(
-          event.spawn_type);
+      Game::Units::TroopConfig::instance().get_production_cost(event.spawn_type);
   int old_count = m_troop_counts[event.owner_id];
   m_troop_counts[event.owner_id] -= production_cost;
   if (m_troop_counts[event.owner_id] < 0) {
@@ -62,12 +59,12 @@ void TroopCountRegistry::on_unit_died(
   }
 }
 
-void TroopCountRegistry::rebuild_from_world(Engine::Core::World &world) {
+void TroopCountRegistry::rebuild_from_world(Engine::Core::World& world) {
   m_troop_counts.clear();
 
   auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *unit = e->get_component<Engine::Core::UnitComponent>();
+  for (auto* e : entities) {
+    auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
@@ -77,8 +74,7 @@ void TroopCountRegistry::rebuild_from_world(Engine::Core::World &world) {
     }
 
     int const production_cost =
-        Game::Units::TroopConfig::instance().get_production_cost(
-            unit->spawn_type);
+        Game::Units::TroopConfig::instance().get_production_cost(unit->spawn_type);
     m_troop_counts[unit->owner_id] += production_cost;
   }
 }

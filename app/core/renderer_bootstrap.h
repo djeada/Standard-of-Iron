@@ -33,5 +33,5 @@ public:
   };
 
   static RenderingComponents initialize_rendering();
-  static void initialize_world_systems(Engine::Core::World &world);
+  static void initialize_world_systems(Engine::Core::World& world);
 };

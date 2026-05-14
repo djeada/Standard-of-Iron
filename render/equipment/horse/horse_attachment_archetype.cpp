@@ -1,10 +1,10 @@
 #include "horse_attachment_archetype.h"
 
+#include <QVector3D>
+
 #include "../../horse/dimensions.h"
 #include "../../horse/horse_layout.h"
 #include "../../horse/horse_motion.h"
-
-#include <QVector3D>
 
 namespace Render::GL {
 
@@ -15,8 +15,7 @@ auto make_baseline_dims() noexcept -> HorseDimensions {
   return profile.dims;
 }
 
-auto make_identity_frame(const QVector3D &origin) noexcept
-    -> HorseAttachmentFrame {
+auto make_identity_frame(const QVector3D& origin) noexcept -> HorseAttachmentFrame {
   HorseAttachmentFrame f;
   f.origin = origin;
   f.right = QVector3D(1.0F, 0.0F, 0.0F);
@@ -52,8 +51,8 @@ auto horse_baseline_chest_frame() noexcept -> HorseAttachmentFrame {
 
   const QVector3D barrel(0.0F, d.barrel_center_y, 0.0F);
   const QVector3D chest =
-      barrel + QVector3D(0.0F, d.body_height * 0.12F - torso_drop,
-                         d.body_length * 0.34F);
+      barrel +
+      QVector3D(0.0F, d.body_height * 0.12F - torso_drop, d.body_length * 0.34F);
   return make_identity_frame(chest);
 }
 
@@ -63,8 +62,8 @@ auto horse_baseline_rump_frame() noexcept -> HorseAttachmentFrame {
 
   const QVector3D barrel(0.0F, d.barrel_center_y, 0.0F);
   const QVector3D rump =
-      barrel + QVector3D(0.0F, d.body_height * 0.08F - torso_drop,
-                         -d.body_length * 0.36F);
+      barrel +
+      QVector3D(0.0F, d.body_height * 0.08F - torso_drop, -d.body_length * 0.36F);
   return make_identity_frame(rump);
 }
 
@@ -85,10 +84,8 @@ auto horse_baseline_head_frame() noexcept -> HorseAttachmentFrame {
       neck_top +
       QVector3D(
           0.0F,
-          d.head_height *
-              Render::GL::MountFrameConstants::k_head_center_height_scale,
-          d.head_length *
-              Render::GL::MountFrameConstants::k_head_center_length_scale);
+          d.head_height * Render::GL::MountFrameConstants::k_head_center_height_scale,
+          d.head_length * Render::GL::MountFrameConstants::k_head_center_length_scale);
   return make_identity_frame(head_center);
 }
 
@@ -101,14 +98,13 @@ auto horse_baseline_muzzle_frame() noexcept -> HorseAttachmentFrame {
       neck_top +
       QVector3D(
           0.0F,
-          d.head_height *
-              Render::GL::MountFrameConstants::k_head_center_height_scale,
-          d.head_length *
-              Render::GL::MountFrameConstants::k_head_center_length_scale);
+          d.head_height * Render::GL::MountFrameConstants::k_head_center_height_scale,
+          d.head_length * Render::GL::MountFrameConstants::k_head_center_length_scale);
   const QVector3D muzzle =
-      head_center + QVector3D(0.0F, -d.head_height * 0.18F,
-                              d.head_length * 0.58F *
-                                  Render::Horse::k_horse_muzzle_length_scale);
+      head_center +
+      QVector3D(0.0F,
+                -d.head_height * 0.18F,
+                d.head_length * 0.58F * Render::Horse::k_horse_muzzle_length_scale);
   return make_identity_frame(muzzle);
 }
 

@@ -2,16 +2,17 @@
 
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstdint>
+#include <span>
+#include <string_view>
+
 #include "../archetype_variant_table.h"
 #include "../part_graph.h"
 #include "../render_request.h"
 #include "../skeleton.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cstdint>
-#include <span>
-#include <string_view>
 
 namespace Render::GL {
 struct DrawContext;
@@ -56,23 +57,21 @@ using CreatureAssetId = std::uint16_t;
 inline constexpr CreatureAssetId k_invalid_creature_asset =
     static_cast<CreatureAssetId>(0xFFFFu);
 
-using PoseHookFn = void (*)(const Render::GL::DrawContext &ctx,
-                            const Render::GL::HumanoidAnimationContext &anim,
+using PoseHookFn = void (*)(const Render::GL::DrawContext& ctx,
+                            const Render::GL::HumanoidAnimationContext& anim,
                             std::uint32_t seed,
-                            Render::GL::HumanoidPose &io_pose);
+                            Render::GL::HumanoidPose& io_pose);
 
-using VariantHookFn = void (*)(const Render::GL::DrawContext &ctx,
+using VariantHookFn = void (*)(const Render::GL::DrawContext& ctx,
                                std::uint32_t seed,
-                               Render::GL::VariationParams &io_variation);
+                               Render::GL::VariationParams& io_variation);
 
 struct ProportionScaling {
   float x{1.0F};
   float y{1.0F};
   float z{1.0F};
 
-  [[nodiscard]] constexpr auto as_vector() const -> QVector3D {
-    return {x, y, z};
-  }
+  [[nodiscard]] constexpr auto as_vector() const -> QVector3D { return {x, y, z}; }
 };
 
 enum class LegacySlotMask : std::uint8_t {
@@ -84,29 +83,28 @@ enum class LegacySlotMask : std::uint8_t {
   FacialHair = 1U << 4U,
   Attachments = 1U << 5U,
 
-  AllHumanoid = Helmet | Armor | ArmorOverlay | ShoulderDecorations |
-                FacialHair | Attachments,
+  AllHumanoid =
+      Helmet | Armor | ArmorOverlay | ShoulderDecorations | FacialHair | Attachments,
 
   HorseAttachments = Attachments,
   ElephantHowdah = Attachments,
 };
 
-[[nodiscard]] constexpr auto
-operator|(LegacySlotMask a, LegacySlotMask b) noexcept -> LegacySlotMask {
+[[nodiscard]] constexpr auto operator|(LegacySlotMask a,
+                                       LegacySlotMask b) noexcept -> LegacySlotMask {
   return static_cast<LegacySlotMask>(static_cast<std::uint8_t>(a) |
                                      static_cast<std::uint8_t>(b));
 }
 
-[[nodiscard]] constexpr auto
-operator&(LegacySlotMask a, LegacySlotMask b) noexcept -> LegacySlotMask {
+[[nodiscard]] constexpr auto operator&(LegacySlotMask a,
+                                       LegacySlotMask b) noexcept -> LegacySlotMask {
   return static_cast<LegacySlotMask>(static_cast<std::uint8_t>(a) &
                                      static_cast<std::uint8_t>(b));
 }
 
 [[nodiscard]] constexpr auto owns_slot(LegacySlotMask mask,
                                        LegacySlotMask slot) noexcept -> bool {
-  return (static_cast<std::uint8_t>(mask) & static_cast<std::uint8_t>(slot)) !=
-         0U;
+  return (static_cast<std::uint8_t>(mask) & static_cast<std::uint8_t>(slot)) != 0U;
 }
 
 struct MountedSpec;
@@ -118,17 +116,16 @@ struct UnitVisualSpec {
   PaletteId palette_id{k_default_palette};
   PoseHookFn pose_hook{nullptr};
   VariantHookFn variant_hook{nullptr};
-  const Render::Creature::ArchetypeVariantTable *variant_table{nullptr};
+  const Render::Creature::ArchetypeVariantTable* variant_table{nullptr};
   ProportionScaling scaling{};
-  const CreatureVisualDefinition *creature_definition{nullptr};
+  const CreatureVisualDefinition* creature_definition{nullptr};
 
   LegacySlotMask owned_legacy_slots{LegacySlotMask::None};
   bool skip_default_facial_hair_archetype{false};
 
-  Render::Creature::ArchetypeId archetype_id{
-      Render::Creature::k_invalid_archetype};
+  Render::Creature::ArchetypeId archetype_id{Render::Creature::k_invalid_archetype};
 
-  const MountedSpec *mounted{nullptr};
+  const MountedSpec* mounted{nullptr};
 };
 
 struct MountedSpec {

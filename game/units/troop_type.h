@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+
 #include <algorithm>
 #include <cctype>
 #include <functional>
@@ -76,7 +77,7 @@ inline auto troop_typeToString(TroopType type) -> std::string {
   return troop_typeToQString(type).toStdString();
 }
 
-inline auto try_parse_troop_type(const QString &value, TroopType &out) -> bool {
+inline auto try_parse_troop_type(const QString& value, TroopType& out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("archer")) {
     out = TroopType::Archer;
@@ -157,7 +158,7 @@ inline auto try_parse_troop_type(const QString &value, TroopType &out) -> bool {
   return false;
 }
 
-inline auto troop_typeFromString(const std::string &str) -> TroopType {
+inline auto troop_typeFromString(const std::string& str) -> TroopType {
   TroopType result;
   if (try_parse_troop_type(QString::fromStdString(str), result)) {
     return result;
@@ -165,8 +166,7 @@ inline auto troop_typeFromString(const std::string &str) -> TroopType {
   return TroopType::Archer;
 }
 
-inline auto
-try_parse_troop_type(const std::string &str) -> std::optional<TroopType> {
+inline auto try_parse_troop_type(const std::string& str) -> std::optional<TroopType> {
   TroopType result;
   if (try_parse_troop_type(QString::fromStdString(str), result)) {
     return result;
@@ -191,7 +191,8 @@ try_parse_troop_type(const std::string &str) -> std::optional<TroopType> {
 } // namespace Game::Units
 
 namespace std {
-template <> struct hash<Game::Units::TroopType> {
+template <>
+struct hash<Game::Units::TroopType> {
   auto operator()(Game::Units::TroopType type) const -> size_t {
     return hash<int>()(static_cast<int>(type));
   }

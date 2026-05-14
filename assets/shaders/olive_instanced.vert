@@ -7,7 +7,9 @@ layout(location = 3) in vec4 a_pos_scale;
 layout(location = 4) in vec4 a_color_sway;
 layout(location = 5) in vec4 a_rotation;
 
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 uniform float u_time;
 uniform float u_wind_strength;
 uniform float u_wind_speed;
@@ -69,8 +71,7 @@ void main() {
   float height_factor = clamp(a_pos.y * 2.0, 0.0, 1.0);
   float wind_time = u_time * u_wind_speed * 0.4;
   float sway = sin(wind_time + sway_phase) * u_wind_strength * 0.3;
-  float sway2 =
-      sin(wind_time * 1.7 + sway_phase * 2.3) * u_wind_strength * 0.15;
+  float sway2 = sin(wind_time * 1.7 + sway_phase * 2.3) * u_wind_strength * 0.15;
 
   float sway_amount = mix(0.02, 0.12, foliage_mask) * height_factor;
   local_pos.x += sway * sway_amount;

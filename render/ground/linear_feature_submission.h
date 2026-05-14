@@ -1,29 +1,33 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstddef>
+#include <memory>
+#include <vector>
+
 #include "../../game/map/visibility_service.h"
 #include "../gl/mesh.h"
 #include "../scene_renderer.h"
 #include "../terrain_scene_types.h"
 #include "linear_feature_visibility.h"
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cstddef>
-#include <memory>
-#include <vector>
 
 namespace Render::Ground {
 
 template <typename Segment>
 void submit_linear_feature_segments(
-    GL::Renderer &renderer, const std::vector<Segment> &segments,
-    const std::vector<std::unique_ptr<GL::Mesh>> &meshes,
-    GL::LinearFeatureKind kind, const QVector3D &base_color,
-    const LinearFeatureVisibilityOptions &visibility_options = {}) {
+    GL::Renderer& renderer,
+    const std::vector<Segment>& segments,
+    const std::vector<std::unique_ptr<GL::Mesh>>& meshes,
+    GL::LinearFeatureKind kind,
+    const QVector3D& base_color,
+    const LinearFeatureVisibilityOptions& visibility_options = {}) {
   if (segments.empty() || meshes.empty()) {
     return;
   }
 
-  auto &visibility = Game::Map::VisibilityService::instance();
+  auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
   if (use_visibility) {
@@ -34,12 +38,12 @@ void submit_linear_feature_segments(
   model.setToIdentity();
 
   std::size_t mesh_index = 0;
-  for (const auto &segment : segments) {
+  for (const auto& segment : segments) {
     if (mesh_index >= meshes.size()) {
       break;
     }
 
-    auto *mesh = meshes[mesh_index].get();
+    auto* mesh = meshes[mesh_index].get();
     ++mesh_index;
     if (mesh == nullptr) {
       continue;

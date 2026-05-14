@@ -1,9 +1,5 @@
 #pragma once
 
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../render_archetype.h"
-
 #include <QVector3D>
 
 #include <array>
@@ -11,6 +7,10 @@
 #include <span>
 #include <string>
 #include <string_view>
+
+#include "../geom/transforms.h"
+#include "../gl/primitives.h"
+#include "../render_archetype.h"
 
 namespace Render::GL {
 
@@ -32,10 +32,11 @@ struct GeneratedEquipmentPrimitive {
   int material_id{0};
 };
 
-inline auto
-generated_sphere(const QVector3D &center, float radius,
-                 std::uint8_t palette_slot, float alpha = 1.0F,
-                 int material_id = 0) -> GeneratedEquipmentPrimitive {
+inline auto generated_sphere(const QVector3D& center,
+                             float radius,
+                             std::uint8_t palette_slot,
+                             float alpha = 1.0F,
+                             int material_id = 0) -> GeneratedEquipmentPrimitive {
   return {GeneratedEquipmentPrimitiveKind::Sphere,
           center,
           {},
@@ -46,10 +47,12 @@ generated_sphere(const QVector3D &center, float radius,
           material_id};
 }
 
-inline auto
-generated_cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                   std::uint8_t palette_slot, float alpha = 1.0F,
-                   int material_id = 0) -> GeneratedEquipmentPrimitive {
+inline auto generated_cylinder(const QVector3D& start,
+                               const QVector3D& end,
+                               float radius,
+                               std::uint8_t palette_slot,
+                               float alpha = 1.0F,
+                               int material_id = 0) -> GeneratedEquipmentPrimitive {
   return {GeneratedEquipmentPrimitiveKind::Cylinder,
           start,
           end,
@@ -60,8 +63,10 @@ generated_cylinder(const QVector3D &start, const QVector3D &end, float radius,
           material_id};
 }
 
-inline auto generated_cone(const QVector3D &base, const QVector3D &tip,
-                           float base_radius, std::uint8_t palette_slot,
+inline auto generated_cone(const QVector3D& base,
+                           const QVector3D& tip,
+                           float base_radius,
+                           std::uint8_t palette_slot,
                            float alpha = 1.0F,
                            int material_id = 0) -> GeneratedEquipmentPrimitive {
   return {GeneratedEquipmentPrimitiveKind::Cone,
@@ -74,8 +79,10 @@ inline auto generated_cone(const QVector3D &base, const QVector3D &tip,
           material_id};
 }
 
-inline auto generated_box(const QVector3D &center, const QVector3D &scale,
-                          std::uint8_t palette_slot, float alpha = 1.0F,
+inline auto generated_box(const QVector3D& center,
+                          const QVector3D& scale,
+                          std::uint8_t palette_slot,
+                          float alpha = 1.0F,
                           int material_id = 0) -> GeneratedEquipmentPrimitive {
   return {GeneratedEquipmentPrimitiveKind::Box,
           center,
@@ -87,36 +94,42 @@ inline auto generated_box(const QVector3D &center, const QVector3D &scale,
           material_id};
 }
 
-inline void add_generated_equipment_primitive(
-    RenderArchetypeBuilder &builder,
-    const GeneratedEquipmentPrimitive &primitive) {
+inline void
+add_generated_equipment_primitive(RenderArchetypeBuilder& builder,
+                                  const GeneratedEquipmentPrimitive& primitive) {
   switch (primitive.kind) {
   case GeneratedEquipmentPrimitiveKind::Sphere:
-    builder.add_palette_mesh(
-        get_unit_sphere(),
-        Render::Geom::sphere_at(primitive.from, primitive.radius),
-        primitive.palette_slot, nullptr, primitive.alpha,
-        primitive.material_id);
+    builder.add_palette_mesh(get_unit_sphere(),
+                             Render::Geom::sphere_at(primitive.from, primitive.radius),
+                             primitive.palette_slot,
+                             nullptr,
+                             primitive.alpha,
+                             primitive.material_id);
     break;
   case GeneratedEquipmentPrimitiveKind::Cylinder:
-    builder.add_palette_mesh(get_unit_cylinder(),
-                             Render::Geom::cylinder_between(primitive.from,
-                                                            primitive.to,
-                                                            primitive.radius),
-                             primitive.palette_slot, nullptr, primitive.alpha,
-                             primitive.material_id);
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        Render::Geom::cylinder_between(primitive.from, primitive.to, primitive.radius),
+        primitive.palette_slot,
+        nullptr,
+        primitive.alpha,
+        primitive.material_id);
     break;
   case GeneratedEquipmentPrimitiveKind::Cone:
-    builder.add_palette_mesh(get_unit_cone(),
-                             Render::Geom::cone_from_to(primitive.from,
-                                                        primitive.to,
-                                                        primitive.radius),
-                             primitive.palette_slot, nullptr, primitive.alpha,
-                             primitive.material_id);
+    builder.add_palette_mesh(
+        get_unit_cone(),
+        Render::Geom::cone_from_to(primitive.from, primitive.to, primitive.radius),
+        primitive.palette_slot,
+        nullptr,
+        primitive.alpha,
+        primitive.material_id);
     break;
   case GeneratedEquipmentPrimitiveKind::Box:
-    builder.add_palette_box(primitive.from, primitive.scale,
-                            primitive.palette_slot, nullptr, primitive.alpha,
+    builder.add_palette_box(primitive.from,
+                            primitive.scale,
+                            primitive.palette_slot,
+                            nullptr,
+                            primitive.alpha,
                             primitive.material_id);
     break;
   }
@@ -124,10 +137,9 @@ inline void add_generated_equipment_primitive(
 
 inline auto build_generated_equipment_archetype(
     std::string_view debug_name,
-    std::span<const GeneratedEquipmentPrimitive> primitives)
-    -> RenderArchetype {
+    std::span<const GeneratedEquipmentPrimitive> primitives) -> RenderArchetype {
   RenderArchetypeBuilder builder{std::string(debug_name)};
-  for (const auto &primitive : primitives) {
+  for (const auto& primitive : primitives) {
     add_generated_equipment_primitive(builder, primitive);
   }
   return std::move(builder).build();
@@ -136,11 +148,12 @@ inline auto build_generated_equipment_archetype(
 template <std::size_t Count>
 inline auto build_generated_equipment_archetype(
     std::string_view debug_name,
-    const std::array<GeneratedEquipmentPrimitive, Count> &primitives)
+    const std::array<GeneratedEquipmentPrimitive, Count>& primitives)
     -> RenderArchetype {
   return build_generated_equipment_archetype(
-      debug_name, std::span<const GeneratedEquipmentPrimitive>(
-                      primitives.data(), primitives.size()));
+      debug_name,
+      std::span<const GeneratedEquipmentPrimitive>(primitives.data(),
+                                                   primitives.size()));
 }
 
 } // namespace Render::GL

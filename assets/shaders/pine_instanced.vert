@@ -7,7 +7,9 @@ layout(location = 3) in vec4 a_pos_scale;
 layout(location = 4) in vec4 a_color_sway;
 layout(location = 5) in vec4 a_rotation;
 
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 uniform float u_time;
 uniform float u_wind_strength;
 uniform float u_wind_speed;
@@ -45,8 +47,7 @@ void main() {
 
   float irregular_base = sin(angle * 3.0 + silhouette_seed * TWO_PI);
   float irregular_mid = sin(angle * 5.0 + silhouette_seed * TWO_PI * 2.3 + 1.1);
-  float irregular_fine =
-      sin(angle * 7.0 + silhouette_seed * TWO_PI * 3.7 + 2.3);
+  float irregular_fine = sin(angle * 7.0 + silhouette_seed * TWO_PI * 3.7 + 2.3);
   float tier_wave = sin(a_tex_coord.y * 24.0 + silhouette_seed * TWO_PI * 1.6);
   float irregular =
       (irregular_base * 0.22 + irregular_mid * 0.10 + irregular_fine * 0.05) *
@@ -70,8 +71,8 @@ void main() {
   float height_factor = clamp(model_pos.y, 0.0, 1.1);
   vec3 local_pos = model_pos * scale;
 
-  float sway = sin(u_time * u_wind_speed * 0.5 + sway_phase) * u_wind_strength *
-               0.8 * height_factor * height_factor;
+  float sway = sin(u_time * u_wind_speed * 0.5 + sway_phase) * u_wind_strength * 0.8 *
+               height_factor * height_factor;
 
   float sway_influence = mix(0.04, 0.12, foliage_mask);
   local_pos.x += sway * sway_influence;

@@ -9,16 +9,12 @@ Button {
     property var style_config: {
         if (button_style === "primary")
             return StyleGuide.button.primary;
-
         if (button_style === "secondary")
             return StyleGuide.button.secondary;
-
         if (button_style === "small")
             return StyleGuide.button.small;
-
         if (button_style === "danger")
             return StyleGuide.button.danger;
-
         return StyleGuide.button.primary;
     }
 
@@ -45,10 +41,8 @@ Button {
         color: {
             if (!control.enabled)
                 return style_config.disabledTextColor;
-
             if (button_style === "danger" && hoverArea.containsMouse)
                 return style_config.hoverTextColor || style_config.text_color;
-
             return style_config.text_color;
         }
         horizontalAlignment: Text.AlignHCenter
@@ -56,19 +50,19 @@ Button {
         elide: Text.ElideRight
         topPadding: control.down ? 1 : 0
 
-        Behavior on font.pointSize {
+        Behavior on font.pointSize  {
             NumberAnimation {
                 duration: StyleGuide.animation.fast
             }
         }
 
-        Behavior on color {
+        Behavior on color  {
             ColorAnimation {
                 duration: StyleGuide.animation.normal
             }
         }
 
-        Behavior on topPadding {
+        Behavior on topPadding  {
             NumberAnimation {
                 duration: StyleGuide.animation.fast
             }
@@ -79,7 +73,6 @@ Button {
         implicitWidth: style_config.minWidth
         implicitHeight: style_config.height
 
-        
         Rectangle {
             x: 1
             y: 2
@@ -89,14 +82,13 @@ Button {
             color: "#000000"
             opacity: control.enabled && !control.down ? 0.28 : 0.0
 
-            Behavior on opacity {
+            Behavior on opacity  {
                 NumberAnimation {
                     duration: StyleGuide.animation.fast
                 }
             }
         }
 
-        
         Rectangle {
             id: bodyRect
 
@@ -105,27 +97,21 @@ Button {
             color: {
                 if (!control.enabled)
                     return style_config.disabledBg;
-
                 if (control.down)
                     return style_config.pressBg;
-
                 if (hoverArea.containsMouse)
                     return style_config.hoverBg;
-
                 return style_config.normalBg;
             }
             border.width: button_style === "primary" ? 2 : 1
             border.color: {
                 if (!control.enabled)
                     return style_config.disabledBorder;
-
                 if (hoverArea.containsMouse)
                     return style_config.hoverBorder;
-
                 return style_config.normalBorder;
             }
 
-            
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 1
@@ -148,14 +134,13 @@ Button {
                     }
                 }
 
-                Behavior on opacity {
+                Behavior on opacity  {
                     NumberAnimation {
                         duration: StyleGuide.animation.fast
                     }
                 }
             }
 
-            
             Rectangle {
                 anchors.top: parent.top
                 anchors.topMargin: 1
@@ -167,14 +152,13 @@ Button {
                 color: StyleGuide.palette.accentBright
                 opacity: control.enabled && !control.down ? 0.55 : 0.0
 
-                Behavior on opacity {
+                Behavior on opacity  {
                     NumberAnimation {
                         duration: StyleGuide.animation.fast
                     }
                 }
             }
 
-            
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 2
@@ -184,20 +168,20 @@ Button {
                 border.color: StyleGuide.historical.bronze
                 opacity: control.enabled && !control.down ? 0.42 : 0.0
 
-                Behavior on opacity {
+                Behavior on opacity  {
                     NumberAnimation {
                         duration: StyleGuide.animation.fast
                     }
                 }
             }
 
-            Behavior on color {
+            Behavior on color  {
                 ColorAnimation {
                     duration: StyleGuide.animation.normal
                 }
             }
 
-            Behavior on border.color {
+            Behavior on border.color  {
                 ColorAnimation {
                     duration: StyleGuide.animation.normal
                 }

@@ -25,8 +25,8 @@ void main() {
   vec3 half_vec = normalize(light_dir + view_dir);
   float spec_base = max(dot(normal, half_vec), 0.0);
 
-  float bark_grain = 0.5 + 0.5 * sin(v_local_pos.x * 22.0 +
-                                     v_local_pos.y * 8.0 - v_local_pos.z * 5.0);
+  float bark_grain =
+      0.5 + 0.5 * sin(v_local_pos.x * 22.0 + v_local_pos.y * 8.0 - v_local_pos.z * 5.0);
 
   float end_wood = smoothstep(0.58, 0.76, abs(v_local_pos.x));
 
@@ -35,8 +35,7 @@ void main() {
 
   float top_face = clamp(normal.y, 0.0, 1.0);
   float moss_density = top_face * top_face * top_face;
-  float moss_noise = 0.5 + 0.5 *
-                               sin(v_local_pos.x * 4.3 + v_world_pos.z * 3.1) *
+  float moss_noise = 0.5 + 0.5 * sin(v_local_pos.x * 4.3 + v_world_pos.z * 3.1) *
                                sin(v_local_pos.z * 5.7 + v_world_pos.x * 2.8);
   float moss_t = clamp(moss_density * moss_noise * 1.2, 0.0, 1.0);
 

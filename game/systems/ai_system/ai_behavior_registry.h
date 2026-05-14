@@ -1,9 +1,10 @@
 #pragma once
 
-#include "ai_behavior.h"
 #include <algorithm>
 #include <memory>
 #include <vector>
+
+#include "ai_behavior.h"
 
 namespace Game::Systems::AI {
 
@@ -12,28 +13,31 @@ public:
   AIBehaviorRegistry() = default;
   ~AIBehaviorRegistry() = default;
 
-  AIBehaviorRegistry(const AIBehaviorRegistry &) = delete;
-  auto operator=(const AIBehaviorRegistry &) -> AIBehaviorRegistry & = delete;
+  AIBehaviorRegistry(const AIBehaviorRegistry&) = delete;
+  auto operator=(const AIBehaviorRegistry&) -> AIBehaviorRegistry& = delete;
 
   void register_behavior(std::unique_ptr<AIBehavior> behavior) {
 
-    auto pos =
-        std::lower_bound(m_behaviors.begin(), m_behaviors.end(), behavior,
-                         [](const std::unique_ptr<AIBehavior> &a,
-                            const std::unique_ptr<AIBehavior> &b) {
-                           return a->get_priority() > b->get_priority();
-                         });
+    auto pos = std::lower_bound(
+        m_behaviors.begin(),
+        m_behaviors.end(),
+        behavior,
+        [](const std::unique_ptr<AIBehavior>& a, const std::unique_ptr<AIBehavior>& b) {
+          return a->get_priority() > b->get_priority();
+        });
     m_behaviors.insert(pos, std::move(behavior));
   }
 
-  template <typename Fn> void for_each(Fn &&func) {
-    for (auto &behavior : m_behaviors) {
+  template <typename Fn>
+  void for_each(Fn&& func) {
+    for (auto& behavior : m_behaviors) {
       func(*behavior);
     }
   }
 
-  template <typename Fn> void for_each(Fn &&func) const {
-    for (const auto &behavior : m_behaviors) {
+  template <typename Fn>
+  void for_each(Fn&& func) const {
+    for (const auto& behavior : m_behaviors) {
       func(*behavior);
     }
   }

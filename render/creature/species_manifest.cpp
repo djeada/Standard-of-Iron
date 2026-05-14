@@ -4,9 +4,9 @@ namespace Render::Creature {
 
 namespace {
 
-auto is_excluded_node(
-    std::string_view debug_name,
-    std::span<const std::string_view> excluded_prefixes) noexcept -> bool {
+auto is_excluded_node(std::string_view debug_name,
+                      std::span<const std::string_view> excluded_prefixes) noexcept
+    -> bool {
   for (std::string_view prefix : excluded_prefixes) {
     if (!prefix.empty() && debug_name.rfind(prefix, 0) == 0) {
       return true;
@@ -17,14 +17,13 @@ auto is_excluded_node(
 
 } // namespace
 
-auto compile_whole_mesh_lod(const WholeMeshLodManifest &manifest)
+auto compile_whole_mesh_lod(const WholeMeshLodManifest& manifest)
     -> CompiledWholeMeshLod {
   CompiledWholeMeshLod compiled;
   std::vector<Render::Creature::Quadruped::MeshNode> filtered_nodes;
   filtered_nodes.reserve(manifest.mesh_nodes.size());
-  for (auto const &node : manifest.mesh_nodes) {
-    if (is_excluded_node(node.debug_name,
-                         manifest.excluded_node_name_prefixes)) {
+  for (auto const& node : manifest.mesh_nodes) {
+    if (is_excluded_node(node.debug_name, manifest.excluded_node_name_prefixes)) {
       continue;
     }
     filtered_nodes.push_back(node);

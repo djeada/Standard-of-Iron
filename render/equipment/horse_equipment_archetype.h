@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../creature/archetype_registry.h"
-#include "equipment_registry.h"
-
 #include <QVector3D>
 
 #include <cstdint>
 #include <span>
 #include <string_view>
 #include <vector>
+
+#include "../creature/archetype_registry.h"
+#include "equipment_registry.h"
 
 namespace Render::GL {
 
@@ -17,13 +17,12 @@ struct HorseEquipmentContribution {
       std::vector<Render::Creature::StaticAttachmentSpec> (*)(std::uint8_t);
 
   BuildAttachmentsFn build_attachments{nullptr};
-  Render::Creature::ArchetypeDescriptor::ExtraRoleColorsFn append_role_colors{
-      nullptr};
+  Render::Creature::ArchetypeDescriptor::ExtraRoleColorsFn append_role_colors{nullptr};
   std::uint8_t role_count{0};
 };
 
-void register_horse_equipment_contribution(
-    EquipmentHandle handle, HorseEquipmentContribution contribution);
+void register_horse_equipment_contribution(EquipmentHandle handle,
+                                           HorseEquipmentContribution contribution);
 
 [[nodiscard]] auto resolve_horse_equipment_archetype(
     std::string_view debug_name,

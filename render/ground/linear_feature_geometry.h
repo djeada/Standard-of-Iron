@@ -1,11 +1,13 @@
 #pragma once
 
-#include "../../game/map/terrain.h"
-#include "../gl/mesh.h"
 #include <QVector3D>
+
 #include <array>
 #include <memory>
 #include <vector>
+
+#include "../../game/map/terrain.h"
+#include "../gl/mesh.h"
 
 namespace Render::Ground {
 
@@ -25,7 +27,7 @@ struct LinearFeatureRibbonSettings {
   float meander_length_scale = 0.1F;
   float meander_amplitude = 0.0F;
   float y_offset = 0.0F;
-  const Game::Map::TerrainHeightMap *height_map = nullptr;
+  const Game::Map::TerrainHeightMap* height_map = nullptr;
 };
 
 struct RiverbankMeshBuildResult {
@@ -33,23 +35,22 @@ struct RiverbankMeshBuildResult {
   std::vector<QVector3D> visibility_samples;
 };
 
-[[nodiscard]] auto
-build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
-                         float tile_size,
-                         const LinearFeatureRibbonSettings &settings)
+[[nodiscard]] auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
+                                            float tile_size,
+                                            const LinearFeatureRibbonSettings& settings)
     -> std::unique_ptr<Render::GL::Mesh>;
 
-[[nodiscard]] auto build_linear_ribbon_meshes(
-    const std::vector<LinearFeatureRibbonSegment> &segments, float tile_size,
-    const LinearFeatureRibbonSettings &settings)
+[[nodiscard]] auto
+build_linear_ribbon_meshes(const std::vector<LinearFeatureRibbonSegment>& segments,
+                           float tile_size,
+                           const LinearFeatureRibbonSettings& settings)
     -> std::vector<std::unique_ptr<Render::GL::Mesh>>;
 
-[[nodiscard]] auto
-build_bridge_mesh(const Game::Map::Bridge &bridge,
-                  float tile_size) -> std::unique_ptr<Render::GL::Mesh>;
+[[nodiscard]] auto build_bridge_mesh(const Game::Map::Bridge& bridge, float tile_size)
+    -> std::unique_ptr<Render::GL::Mesh>;
 
-[[nodiscard]] auto build_riverbank_mesh(
-    const Game::Map::RiverSegment &segment,
-    const Game::Map::TerrainHeightMap &height_map) -> RiverbankMeshBuildResult;
+[[nodiscard]] auto build_riverbank_mesh(const Game::Map::RiverSegment& segment,
+                                        const Game::Map::TerrainHeightMap& height_map)
+    -> RiverbankMeshBuildResult;
 
 } // namespace Render::Ground

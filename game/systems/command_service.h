@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QVector3D>
+
 #include <atomic>
 #include <cstdint>
 #include <memory>
@@ -39,44 +40,47 @@ public:
 
   static void initialize(int world_width, int world_height);
 
-  static auto get_pathfinder() -> Pathfinding *;
+  static auto get_pathfinder() -> Pathfinding*;
   static auto world_to_grid(float world_x, float world_z) -> Point;
-  static auto grid_to_world(const Point &grid_pos) -> QVector3D;
-  static auto get_unit_radius(Engine::Core::World &world,
+  static auto grid_to_world(const Point& grid_pos) -> QVector3D;
+  static auto get_unit_radius(Engine::Core::World& world,
                               Engine::Core::EntityID entity_id) -> float;
-  static auto try_queue_local_recovery_move(
-      Engine::Core::World &world, Engine::Core::EntityID entity_id,
-      const QVector3D &current_position, const QVector3D &goal,
-      Engine::Core::MovementComponent *movement) -> bool;
+  static auto
+  try_queue_local_recovery_move(Engine::Core::World& world,
+                                Engine::Core::EntityID entity_id,
+                                const QVector3D& current_position,
+                                const QVector3D& goal,
+                                Engine::Core::MovementComponent* movement) -> bool;
 
-  static void move_unit(Engine::Core::World &world,
+  static void move_unit(Engine::Core::World& world,
                         Engine::Core::EntityID unit_id,
-                        const QVector3D &target);
+                        const QVector3D& target);
 
-  static void move_unit(Engine::Core::World &world,
-                        Engine::Core::EntityID unit_id, const QVector3D &target,
-                        const MoveOptions &options);
+  static void move_unit(Engine::Core::World& world,
+                        Engine::Core::EntityID unit_id,
+                        const QVector3D& target,
+                        const MoveOptions& options);
 
-  static void move_units(Engine::Core::World &world,
-                         const std::vector<Engine::Core::EntityID> &units,
-                         const std::vector<QVector3D> &targets);
+  static void move_units(Engine::Core::World& world,
+                         const std::vector<Engine::Core::EntityID>& units,
+                         const std::vector<QVector3D>& targets);
 
-  static void move_units(Engine::Core::World &world,
-                         const std::vector<Engine::Core::EntityID> &units,
-                         const std::vector<QVector3D> &targets,
-                         const MoveOptions &options);
+  static void move_units(Engine::Core::World& world,
+                         const std::vector<Engine::Core::EntityID>& units,
+                         const std::vector<QVector3D>& targets,
+                         const MoveOptions& options);
 
-  static void move_units(Engine::Core::World &world,
-                         const std::vector<MoveIntent> &intents);
+  static void move_units(Engine::Core::World& world,
+                         const std::vector<MoveIntent>& intents);
 
-  static void move_units(Engine::Core::World &world,
-                         const std::vector<MoveIntent> &intents,
-                         const MoveOptions &options);
+  static void move_units(Engine::Core::World& world,
+                         const std::vector<MoveIntent>& intents,
+                         const MoveOptions& options);
 
-  static void process_path_results(Engine::Core::World &world);
+  static void process_path_results(Engine::Core::World& world);
 
-  static void attack_target(Engine::Core::World &world,
-                            const std::vector<Engine::Core::EntityID> &units,
+  static void attack_target(Engine::Core::World& world,
+                            const std::vector<Engine::Core::EntityID>& units,
                             Engine::Core::EntityID target_id,
                             bool should_chase = true);
 
@@ -91,17 +95,15 @@ private:
   };
 
   static std::unique_ptr<Pathfinding> s_pathfinder;
-  static std::unordered_map<std::uint64_t, PendingPathRequest>
-      s_pending_requests;
-  static std::unordered_map<Engine::Core::EntityID, std::uint64_t>
-      s_entity_to_request;
+  static std::unordered_map<std::uint64_t, PendingPathRequest> s_pending_requests;
+  static std::unordered_map<Engine::Core::EntityID, std::uint64_t> s_entity_to_request;
   static std::mutex s_pending_mutex;
   static std::atomic<std::uint64_t> s_next_request_id;
   static void clear_pending_request(Engine::Core::EntityID entity_id);
-  static void move_group(Engine::Core::World &world,
-                         const std::vector<Engine::Core::EntityID> &units,
-                         const std::vector<QVector3D> &targets,
-                         const MoveOptions &options);
+  static void move_group(Engine::Core::World& world,
+                         const std::vector<Engine::Core::EntityID>& units,
+                         const std::vector<QVector3D>& targets,
+                         const MoveOptions& options);
 };
 
 } // namespace Game::Systems

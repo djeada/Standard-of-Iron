@@ -4,6 +4,6 @@
 
 namespace Render::GL::Carthage {
 
-void register_barracks_renderer(EntityRendererRegistry &registry);
+void register_barracks_renderer(EntityRendererRegistry& registry);
 
 }

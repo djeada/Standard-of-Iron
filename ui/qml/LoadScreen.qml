@@ -32,8 +32,7 @@ Rectangle {
     }
     onProgressChanged: {
         if (!use_real_progress)
-            return ;
-
+            return;
         target_progress = Math.max(target_progress, progress);
     }
 
@@ -47,12 +46,10 @@ Rectangle {
             var target = target_progress;
             if (use_real_progress && target < 0.98)
                 target = Math.min(0.98, Math.max(target, display_progress + 0.002));
-
             var delta = target - display_progress;
             var step = delta * 0.15;
             if (step < 0.001 && delta > 0)
                 step = 0.001;
-
             display_progress = Math.min(1, Math.max(0, display_progress + step));
         }
     }
@@ -132,11 +129,8 @@ Rectangle {
                             position: 1
                             color: "#40ffffff"
                         }
-
                     }
-
                 }
-
             }
 
             Text {
@@ -146,7 +140,6 @@ Rectangle {
                 font.pixelSize: 18
                 font.bold: true
             }
-
         }
 
         Text {
@@ -155,7 +148,5 @@ Rectangle {
             font.pixelSize: 18
             anchors.horizontalCenter: parent.horizontalCenter
         }
-
     }
-
 }

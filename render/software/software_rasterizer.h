@@ -33,14 +33,11 @@ public:
   explicit SoftwareRasterizer(RasterSettings settings = {})
       : m_settings(std::move(settings)) {}
 
-  void set_view_projection(const QMatrix4x4 &view_proj) {
-    m_view_proj = view_proj;
-  }
+  void set_view_projection(const QMatrix4x4& view_proj) { m_view_proj = view_proj; }
 
-  void submit(const ColoredTriangle &tri) { m_triangles.push_back(tri); }
+  void submit(const ColoredTriangle& tri) { m_triangles.push_back(tri); }
 
-  void submit_cube(const QMatrix4x4 &model, const QVector3D &color,
-                   float alpha = 1.0F);
+  void submit_cube(const QMatrix4x4& model, const QVector3D& color, float alpha = 1.0F);
 
   [[nodiscard]] auto render() -> QImage;
 
@@ -50,7 +47,7 @@ public:
     return m_triangles.size();
   }
 
-  [[nodiscard]] auto settings() const noexcept -> const RasterSettings & {
+  [[nodiscard]] auto settings() const noexcept -> const RasterSettings& {
     return m_settings;
   }
 

@@ -1,9 +1,9 @@
+#include <gtest/gtest.h>
+
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_visual_definition.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/horse_spec.h"
-
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -12,7 +12,7 @@ using namespace Render::Creature::Pipeline;
 TEST(CreatureVisualDefinition, ResolvesHorseAndElephantThroughSharedShape) {
   UnitVisualSpec horse{};
   horse.kind = CreatureKind::Horse;
-  const auto *horse_definition = resolve_creature_visual_definition(horse);
+  const auto* horse_definition = resolve_creature_visual_definition(horse);
   ASSERT_NE(horse_definition, nullptr);
   EXPECT_EQ(horse_definition->species, CreatureKind::Horse);
   ASSERT_NE(horse_definition->mesh_recipe, nullptr);
@@ -33,8 +33,7 @@ TEST(CreatureVisualDefinition, ResolvesHorseAndElephantThroughSharedShape) {
 
   UnitVisualSpec elephant{};
   elephant.kind = CreatureKind::Elephant;
-  const auto *elephant_definition =
-      resolve_creature_visual_definition(elephant);
+  const auto* elephant_definition = resolve_creature_visual_definition(elephant);
   ASSERT_NE(elephant_definition, nullptr);
   EXPECT_EQ(elephant_definition->species, CreatureKind::Elephant);
   ASSERT_NE(elephant_definition->mesh_recipe, nullptr);
@@ -48,11 +47,10 @@ TEST(CreatureVisualDefinition, ResolvesHorseAndElephantThroughSharedShape) {
   EXPECT_EQ(elephant_definition->mesh_recipe->resolve_spec,
             &Render::Elephant::elephant_creature_spec);
   ASSERT_NE(elephant_definition->mesh_recipe->resolve_part_graph, nullptr);
-  EXPECT_EQ(
-      elephant_definition->mesh_recipe
-          ->resolve_part_graph(Render::Creature::CreatureLOD::Full)
-          .primitives.size(),
-      Render::Elephant::elephant_creature_spec().lod_full.primitives.size());
+  EXPECT_EQ(elephant_definition->mesh_recipe
+                ->resolve_part_graph(Render::Creature::CreatureLOD::Full)
+                .primitives.size(),
+            Render::Elephant::elephant_creature_spec().lod_full.primitives.size());
 }
 
 TEST(CreatureVisualDefinition, ExplicitUnitVisualDefinitionWins) {
@@ -60,7 +58,7 @@ TEST(CreatureVisualDefinition, ExplicitUnitVisualDefinitionWins) {
   spec.kind = CreatureKind::Elephant;
   spec.creature_definition = &horse_creature_visual_definition();
 
-  const auto *definition = resolve_creature_visual_definition(spec);
+  const auto* definition = resolve_creature_visual_definition(spec);
   ASSERT_NE(definition, nullptr);
   EXPECT_EQ(definition->species, CreatureKind::Horse);
 }
@@ -76,21 +74,19 @@ TEST(CreatureVisualDefinition, HumanoidAndMountedStayHighLevelOnly) {
 }
 
 TEST(CreatureVisualDefinition, CreatureAssetsExposeLargeCreatureDefinitions) {
-  const auto &registry = CreatureAssetRegistry::instance();
+  const auto& registry = CreatureAssetRegistry::instance();
 
   UnitVisualSpec horse{};
   horse.kind = CreatureKind::Horse;
-  const auto *horse_asset = registry.resolve(horse);
+  const auto* horse_asset = registry.resolve(horse);
   ASSERT_NE(horse_asset, nullptr);
-  EXPECT_EQ(horse_asset->visual_definition,
-            &horse_creature_visual_definition());
+  EXPECT_EQ(horse_asset->visual_definition, &horse_creature_visual_definition());
 
   UnitVisualSpec elephant{};
   elephant.kind = CreatureKind::Elephant;
-  const auto *elephant_asset = registry.resolve(elephant);
+  const auto* elephant_asset = registry.resolve(elephant);
   ASSERT_NE(elephant_asset, nullptr);
-  EXPECT_EQ(elephant_asset->visual_definition,
-            &elephant_creature_visual_definition());
+  EXPECT_EQ(elephant_asset->visual_definition, &elephant_creature_visual_definition());
 }
 
 TEST(CreatureVisualDefinition, SharedMotionContractsDefaultSafely) {

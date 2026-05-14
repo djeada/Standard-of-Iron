@@ -1,14 +1,15 @@
 #pragma once
 
-#include "bpat_format.h"
-
 #include <QMatrix4x4>
+
 #include <cstddef>
 #include <cstdint>
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "bpat_format.h"
 
 namespace Render::Creature::Bpat {
 
@@ -29,7 +30,7 @@ struct SocketView {
 class BpatBlob {
 public:
   static auto from_bytes(std::vector<std::uint8_t> bytes) -> BpatBlob;
-  static auto from_file(const std::string &path) -> BpatBlob;
+  static auto from_file(const std::string& path) -> BpatBlob;
 
   [[nodiscard]] auto loaded() const noexcept -> bool { return m_loaded; }
   [[nodiscard]] auto last_error() const noexcept -> std::string_view {
@@ -56,8 +57,7 @@ public:
   socket_matrix(std::uint32_t global_frame_index,
                 std::uint32_t socket_index) const -> std::span<const float>;
 
-  [[nodiscard]] auto
-  raw_bytes() const noexcept -> std::span<const std::uint8_t> {
+  [[nodiscard]] auto raw_bytes() const noexcept -> std::span<const std::uint8_t> {
     return {m_bytes.data(), m_bytes.size()};
   }
 
@@ -68,12 +68,12 @@ private:
   std::vector<std::uint8_t> m_bytes{};
   bool m_loaded{false};
   std::string m_last_error{};
-  const BpatHeader *m_header{nullptr};
-  const BpatClipEntry *m_clip_table{nullptr};
-  const BpatSocketEntry *m_socket_table{nullptr};
-  const char *m_string_table{nullptr};
-  const float *m_palette_data{nullptr};
-  const float *m_socket_data{nullptr};
+  const BpatHeader* m_header{nullptr};
+  const BpatClipEntry* m_clip_table{nullptr};
+  const BpatSocketEntry* m_socket_table{nullptr};
+  const char* m_string_table{nullptr};
+  const float* m_palette_data{nullptr};
+  const float* m_socket_data{nullptr};
 
   std::vector<QMatrix4x4> m_decoded_palette{};
 };

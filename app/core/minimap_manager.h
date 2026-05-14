@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -32,23 +33,23 @@ public:
   MinimapManager();
   ~MinimapManager();
 
-  void generate_for_map(const Game::Map::MapDefinition &map_def);
-  void update_fog(int vis_width, int vis_height,
-                  const std::vector<std::uint8_t> &cells,
+  void generate_for_map(const Game::Map::MapDefinition& map_def);
+  void update_fog(int vis_width,
+                  int vis_height,
+                  const std::vector<std::uint8_t>& cells,
                   std::uint64_t visibility_version);
   void clear_fog();
-  void update_units(Engine::Core::World *world,
-                    Game::Systems::SelectionSystem *selection_system,
+  void update_units(Engine::Core::World* world,
+                    Game::Systems::SelectionSystem* selection_system,
                     int local_owner_id);
-  void update_camera_viewport(const Render::GL::Camera *camera,
-                              float screen_width, float screen_height);
+  void update_camera_viewport(const Render::GL::Camera* camera,
+                              float screen_width,
+                              float screen_height);
 
   [[nodiscard]] bool consume_dirty_flag();
 
-  [[nodiscard]] const QImage &get_image() const { return m_minimap_image; }
-  [[nodiscard]] bool has_minimap() const {
-    return !m_minimap_base_image.isNull();
-  }
+  [[nodiscard]] const QImage& get_image() const { return m_minimap_image; }
+  [[nodiscard]] bool has_minimap() const { return !m_minimap_base_image.isNull(); }
   [[nodiscard]] float get_world_width() const { return m_world_width; }
   [[nodiscard]] float get_world_height() const { return m_world_height; }
   [[nodiscard]] float get_tile_size() const { return m_tile_size; }
@@ -76,8 +77,7 @@ private:
   int m_fog_lookup_img_height = 0;
   std::vector<FogLookupEntry> m_fog_lookup_entries;
   std::unique_ptr<Game::Map::Minimap::UnitLayer> m_unit_layer;
-  std::unique_ptr<Game::Map::Minimap::CameraViewportLayer>
-      m_camera_viewport_layer;
+  std::unique_ptr<Game::Map::Minimap::CameraViewportLayer> m_camera_viewport_layer;
   float m_world_width = 0.0F;
   float m_world_height = 0.0F;
   float m_tile_size = 1.0F;

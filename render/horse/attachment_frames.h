@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../instance_transform.h"
-#include "horse_gait.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
+#include "../instance_transform.h"
+#include "horse_gait.h"
 
 namespace Render::GL {
 
@@ -14,11 +14,11 @@ struct HorseAttachmentFrame {
   QVector3D up{0.0F, 1.0F, 0.0F};
   QVector3D forward{0.0F, 0.0F, 1.0F};
 
-  auto make_local_transform(const QMatrix4x4 &parent,
-                            const QVector3D &local_offset,
+  auto make_local_transform(const QMatrix4x4& parent,
+                            const QVector3D& local_offset,
                             float uniform_scale) const -> QMatrix4x4 {
-    return make_basis_attachment_transform(parent, origin, right, up, forward,
-                                           local_offset, uniform_scale);
+    return make_basis_attachment_transform(
+        parent, origin, right, up, forward, local_offset, uniform_scale);
   }
 };
 
@@ -51,8 +51,8 @@ struct MountedAttachmentFrame {
   QVector3D rein_bit_right;
   QVector3D bridle_base;
   QVector3D ground_offset;
-  auto stirrup_attach(bool is_left) const -> const QVector3D &;
-  auto stirrup_bottom(bool is_left) const -> const QVector3D &;
+  auto stirrup_attach(bool is_left) const -> const QVector3D&;
+  auto stirrup_bottom(bool is_left) const -> const QVector3D&;
 };
 
 struct ReinState {

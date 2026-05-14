@@ -1,5 +1,6 @@
-#include "render/ground/ground_utils.h"
 #include <gtest/gtest.h>
+
+#include "render/ground/ground_utils.h"
 
 namespace {
 

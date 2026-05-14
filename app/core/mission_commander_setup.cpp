@@ -1,7 +1,8 @@
 #include "mission_commander_setup.h"
 
-#include "game/systems/nation_id.h"
 #include <algorithm>
+
+#include "game/systems/nation_id.h"
 
 namespace App::Core {
 namespace {
@@ -13,7 +14,7 @@ struct WeightedPosition {
 
 constexpr float k_cluster_radius = 12.0F;
 
-auto densest_cluster_position(const std::vector<WeightedPosition> &positions)
+auto densest_cluster_position(const std::vector<WeightedPosition>& positions)
     -> std::optional<Game::Mission::Position> {
   if (positions.empty()) {
     return std::nullopt;
@@ -24,13 +25,13 @@ auto densest_cluster_position(const std::vector<WeightedPosition> &positions)
   float best_distance_sum = std::numeric_limits<float>::infinity();
   Game::Mission::Position best_center{};
 
-  for (const auto &candidate : positions) {
+  for (const auto& candidate : positions) {
     float cluster_weight = 0.0F;
     float weighted_sum_x = 0.0F;
     float weighted_sum_z = 0.0F;
     float distance_sum = 0.0F;
 
-    for (const auto &position : positions) {
+    for (const auto& position : positions) {
       const float dx = position.position.x - candidate.position.x;
       const float dz = position.position.z - candidate.position.z;
       const float distance_sq = dx * dx + dz * dz;
@@ -53,8 +54,7 @@ auto densest_cluster_position(const std::vector<WeightedPosition> &positions)
       best_weight = cluster_weight;
       best_distance_sum = distance_sum;
       const float inverse_weight = 1.0F / cluster_weight;
-      best_center = {weighted_sum_x * inverse_weight,
-                     weighted_sum_z * inverse_weight};
+      best_center = {weighted_sum_x * inverse_weight, weighted_sum_z * inverse_weight};
     }
   }
 
@@ -64,33 +64,32 @@ auto densest_cluster_position(const std::vector<WeightedPosition> &positions)
   return best_center;
 }
 
-auto weighted_unit_positions(const std::vector<Game::Mission::UnitSetup> &units)
+auto weighted_unit_positions(const std::vector<Game::Mission::UnitSetup>& units)
     -> std::vector<WeightedPosition> {
   std::vector<WeightedPosition> positions;
   positions.reserve(units.size());
-  for (const auto &unit : units) {
-    positions.push_back(
-        {.position = unit.position,
-         .weight = static_cast<float>(std::max(1, unit.count))});
+  for (const auto& unit : units) {
+    positions.push_back({.position = unit.position,
+                         .weight = static_cast<float>(std::max(1, unit.count))});
   }
   return positions;
 }
 
-auto building_positions(const std::vector<Game::Mission::BuildingSetup>
-                            &buildings) -> std::vector<WeightedPosition> {
+auto building_positions(const std::vector<Game::Mission::BuildingSetup>& buildings)
+    -> std::vector<WeightedPosition> {
   std::vector<WeightedPosition> positions;
   positions.reserve(buildings.size());
-  for (const auto &building : buildings) {
+  for (const auto& building : buildings) {
     positions.push_back({.position = building.position});
   }
   return positions;
 }
 
-auto existing_positions(const std::vector<ExistingOwnerSpawnAnchor> &anchors,
+auto existing_positions(const std::vector<ExistingOwnerSpawnAnchor>& anchors,
                         bool want_buildings) -> std::vector<WeightedPosition> {
   std::vector<WeightedPosition> positions;
   positions.reserve(anchors.size());
-  for (const auto &anchor : anchors) {
+  for (const auto& anchor : anchors) {
     if (anchor.is_building == want_buildings) {
       positions.push_back({.position = anchor.position});
     }
@@ -100,11 +99,10 @@ auto existing_positions(const std::vector<ExistingOwnerSpawnAnchor> &anchors,
 
 } // namespace
 
-auto resolve_commander_troop(const QString &nation,
-                             const std::optional<QString> &configured_commander)
+auto resolve_commander_troop(const QString& nation,
+                             const std::optional<QString>& configured_commander)
     -> QString {
-  if (configured_commander.has_value() &&
-      !configured_commander->trimmed().isEmpty()) {
+  if (configured_commander.has_value() && !configured_commander->trimmed().isEmpty()) {
     return configured_commander->trimmed();
   }
 
@@ -118,10 +116,10 @@ auto resolve_commander_troop(const QString &nation,
 }
 
 auto resolve_commander_position(
-    const std::vector<Game::Mission::UnitSetup> &units,
-    const std::vector<Game::Mission::BuildingSetup> &buildings,
-    const std::vector<ExistingOwnerSpawnAnchor> &existing_owner_spawns,
-    const Game::Mission::Position &fallback) -> ResolvedCommanderPosition {
+    const std::vector<Game::Mission::UnitSetup>& units,
+    const std::vector<Game::Mission::BuildingSetup>& buildings,
+    const std::vector<ExistingOwnerSpawnAnchor>& existing_owner_spawns,
+    const Game::Mission::Position& fallback) -> ResolvedCommanderPosition {
   if (const auto authored_units =
           densest_cluster_position(weighted_unit_positions(units));
       authored_units.has_value()) {
@@ -134,14 +132,13 @@ auto resolve_commander_position(
     return {.position = authored_buildings.value(),
             .space = CommanderPositionSpace::Mission};
   }
-  if (const auto existing_units = densest_cluster_position(
-          existing_positions(existing_owner_spawns, false));
+  if (const auto existing_units =
+          densest_cluster_position(existing_positions(existing_owner_spawns, false));
       existing_units.has_value()) {
-    return {.position = existing_units.value(),
-            .space = CommanderPositionSpace::World};
+    return {.position = existing_units.value(), .space = CommanderPositionSpace::World};
   }
-  if (const auto existing_buildings = densest_cluster_position(
-          existing_positions(existing_owner_spawns, true));
+  if (const auto existing_buildings =
+          densest_cluster_position(existing_positions(existing_owner_spawns, true));
       existing_buildings.has_value()) {
     return {.position = existing_buildings.value(),
             .space = CommanderPositionSpace::World};

@@ -1,15 +1,16 @@
 
 
+#include <QCoreApplication>
+#include <QDebug>
+
 #include "map/map_loader.h"
 #include "map/minimap/minimap_generator.h"
 #include "map/minimap/minimap_texture_manager.h"
-#include <QCoreApplication>
-#include <QDebug>
 
 using namespace Game::Map;
 using namespace Game::Map::Minimap;
 
-auto main(int argc, char *argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
   QCoreApplication app(argc, argv);
 
   qDebug() << "=== Minimap Generation Example ===";
@@ -26,8 +27,7 @@ auto main(int argc, char *argv[]) -> int {
   }
 
   qDebug() << "  ✓ Loaded map:" << map_def.name;
-  qDebug() << "  ✓ Grid size:" << map_def.grid.width << "x"
-           << map_def.grid.height;
+  qDebug() << "  ✓ Grid size:" << map_def.grid.width << "x" << map_def.grid.height;
   qDebug() << "  ✓ Terrain features:" << map_def.terrain.size();
   qDebug() << "  ✓ Rivers:" << map_def.rivers.size();
   qDebug() << "  ✓ Roads:" << map_def.roads.size();
@@ -45,8 +45,7 @@ auto main(int argc, char *argv[]) -> int {
   }
 
   qDebug() << "  ✓ Generated minimap texture";
-  qDebug() << "  ✓ Size:" << minimap_image.width() << "x"
-           << minimap_image.height();
+  qDebug() << "  ✓ Size:" << minimap_image.width() << "x" << minimap_image.height();
   qDebug() << "  ✓ Format:" << minimap_image.format();
   qDebug() << "";
 

@@ -14,7 +14,7 @@ public:
   GuardSystem() = default;
   ~GuardSystem() override = default;
 
-  void update(Engine::Core::World *world, float delta_time) override;
+  void update(Engine::Core::World* world, float delta_time) override;
 };
 
 } // namespace Game::Systems

@@ -1,4 +1,21 @@
 #include "healer_renderer.h"
+
+#include <QMatrix4x4>
+#include <QString>
+#include <QVector3D>
+#include <qmatrix4x4.h>
+#include <qstringliteral.h>
+#include <qvectornd.h>
+
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <numbers>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
@@ -26,21 +43,6 @@
 #include "../equipment_loadout_catalog.h"
 #include "healer_style.h"
 
-#include <QMatrix4x4>
-#include <QString>
-#include <QVector3D>
-#include <array>
-#include <cmath>
-#include <cstdint>
-#include <numbers>
-#include <optional>
-#include <qmatrix4x4.h>
-#include <qstringliteral.h>
-#include <qvectornd.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 
@@ -50,7 +52,7 @@ namespace {
 
 constexpr std::string_view k_default_style_key = "default";
 
-auto style_registry() -> std::unordered_map<std::string, HealerStyleConfig> & {
+auto style_registry() -> std::unordered_map<std::string, HealerStyleConfig>& {
   static std::unordered_map<std::string, HealerStyleConfig> styles;
   return styles;
 }
@@ -68,8 +70,8 @@ constexpr float k_style_mix_weight = 0.35F;
 
 } // namespace
 
-void register_healer_style(const std::string &nation_id,
-                           const HealerStyleConfig &style) {
+void register_healer_style(const std::string& nation_id,
+                           const HealerStyleConfig& style) {
   style_registry()[nation_id] = style;
 }
 
@@ -85,15 +87,15 @@ public:
     return {0.88F, 0.99F, 0.90F};
   }
 
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
     ensure_healer_styles_registered();
 
     static const UnitVisualSpec spec = []() {
-      const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-          "troops/carthage/healer");
+      const auto loadout =
+          Render::GL::Nation::resolve_equipment_loadout("troops/carthage/healer");
       const std::array<EquipmentHandle, 1> handles{loadout.armor_handle};
 
       UnitVisualSpec s{};
@@ -103,20 +105,22 @@ public:
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/healer",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+          Render::Creature::ArchetypeRegistry::k_humanoid_base,
+          handles);
       return s;
     }();
     return spec;
   }
 
-  void get_variant(const DrawContext &ctx, uint32_t seed,
-                   HumanoidVariant &v) const override {
+  void get_variant(const DrawContext& ctx,
+                   uint32_t seed,
+                   HumanoidVariant& v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = make_humanoid_palette(team_tint, seed);
-    auto const &style = resolve_style(ctx);
+    auto const& style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
-    auto next_rand = [](uint32_t &s) -> float {
+    auto next_rand = [](uint32_t& s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
@@ -170,14 +174,12 @@ public:
   }
 
 private:
-  auto
-  resolve_style(const DrawContext &ctx) const -> const HealerStyleConfig & {
+  auto resolve_style(const DrawContext& ctx) const -> const HealerStyleConfig& {
     ensure_healer_styles_registered();
-    auto &styles = style_registry();
+    auto& styles = style_registry();
     std::string nation_id;
     if (ctx.entity != nullptr) {
-      if (auto *unit =
-              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+      if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
       }
     }
@@ -196,14 +198,15 @@ private:
   }
 
 private:
-  void apply_palette_overrides(const HealerStyleConfig &style,
-                               const QVector3D &team_tint,
-                               HumanoidVariant &variant) const {
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target, float team_weight,
+  void apply_palette_overrides(const HealerStyleConfig& style,
+                               const QVector3D& team_tint,
+                               HumanoidVariant& variant) const {
+    auto apply_color = [&](const std::optional<QVector3D>& override_color,
+                           QVector3D& target,
+                           float team_weight,
                            float style_weight) {
-      target = mix_palette_color(target, override_color, team_tint, team_weight,
-                                 style_weight);
+      target = mix_palette_color(
+          target, override_color, team_tint, team_weight, style_weight);
     };
 
     constexpr float k_skin_team_mix_weight = 0.0F;
@@ -212,26 +215,36 @@ private:
     constexpr float k_cloth_team_mix_weight = 0.0F;
     constexpr float k_cloth_style_mix_weight = 1.0F;
 
-    apply_color(style.skin_color, variant.palette.skin, k_skin_team_mix_weight,
+    apply_color(style.skin_color,
+                variant.palette.skin,
+                k_skin_team_mix_weight,
                 k_skin_style_mix_weight);
-    apply_color(style.cloth_color, variant.palette.cloth,
-                k_cloth_team_mix_weight, k_cloth_style_mix_weight);
-    apply_color(style.leather_color, variant.palette.leather, k_team_mix_weight,
+    apply_color(style.cloth_color,
+                variant.palette.cloth,
+                k_cloth_team_mix_weight,
+                k_cloth_style_mix_weight);
+    apply_color(style.leather_color,
+                variant.palette.leather,
+                k_team_mix_weight,
                 k_style_mix_weight);
-    apply_color(style.leather_dark_color, variant.palette.leather_dark,
-                k_team_mix_weight, k_style_mix_weight);
-    apply_color(style.metal_color, variant.palette.metal, k_team_mix_weight,
+    apply_color(style.leather_dark_color,
+                variant.palette.leather_dark,
+                k_team_mix_weight,
                 k_style_mix_weight);
-    apply_color(style.wood_color, variant.palette.wood, k_team_mix_weight,
+    apply_color(style.metal_color,
+                variant.palette.metal,
+                k_team_mix_weight,
                 k_style_mix_weight);
+    apply_color(
+        style.wood_color, variant.palette.wood, k_team_mix_weight, k_style_mix_weight);
   }
 };
 
-void register_healer_renderer(Render::GL::EntityRendererRegistry &registry) {
+void register_healer_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_healer_styles_registered();
   static HealerRenderer const renderer;
   registry.register_renderer("troops/carthage/healer",
-                             [](const DrawContext &ctx, ISubmitter &out) {
+                             [](const DrawContext& ctx, ISubmitter& out) {
                                static HealerRenderer const static_renderer;
                                static_renderer.render(ctx, out);
                              });

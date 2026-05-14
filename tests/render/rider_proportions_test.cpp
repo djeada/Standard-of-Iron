@@ -1,8 +1,10 @@
-#include "render/entity/registry.h"
-#include "render/humanoid/humanoid_renderer_base.h"
 #include <QVector3D>
+
 #include <cmath>
 #include <gtest/gtest.h>
+
+#include "render/entity/registry.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 
 using namespace Render::GL;
 
@@ -35,7 +37,9 @@ protected:
   }
 };
 
-TEST_F(RiderProportionsTest, KingdomRiderHasRealisticProportions) { SUCCEED(); }
+TEST_F(RiderProportionsTest, KingdomRiderHasRealisticProportions) {
+  SUCCEED();
+}
 
 TEST_F(RiderProportionsTest, RomanRiderHasRealisticProportions) {
   TestMocks::RomanHorseSwordsmanRenderer renderer;
@@ -91,6 +95,5 @@ TEST_F(RiderProportionsTest, ProportionsPreventOverlyElongatedLimbs) {
   float const avg_lateral = (proportions.x() + proportions.z()) / 2.0F;
   float const height_vs_lateral = proportions.y() / avg_lateral;
   EXPECT_TRUE(in_range(height_vs_lateral, 0.7F, 1.3F))
-      << "Height vs lateral proportion ratio " << height_vs_lateral
-      << " is unbalanced";
+      << "Height vs lateral proportion ratio " << height_vs_lateral << " is unbalanced";
 }

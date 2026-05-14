@@ -1,15 +1,17 @@
 #pragma once
 
-#include "../../game/map/map_definition.h"
-#include "../../game/map/terrain_service.h"
-#include "ground_utils.h"
-#include "spawn_validator.h"
 #include <QVector2D>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <utility>
 #include <vector>
+
+#include "../../game/map/map_definition.h"
+#include "../../game/map/terrain_service.h"
+#include "ground_utils.h"
+#include "spawn_validator.h"
 
 namespace Render::Ground {
 
@@ -35,7 +37,12 @@ enum class ScatterRuleSpecies {
   DeadTree,
 };
 
-enum class CampPropRole { Tent, SupplyCart, WeaponRack, DeadTree };
+enum class CampPropRole {
+  Tent,
+  SupplyCart,
+  WeaponRack,
+  DeadTree
+};
 
 struct ScatterCompositionSample {
   Game::Map::TerrainType terrain_type = Game::Map::TerrainType::Flat;
@@ -65,30 +72,30 @@ struct LinearAnchor {
   float width = 1.0F;
 };
 
-inline auto distance_to_segment(const QVector2D &point,
-                                const LinearAnchor &anchor) -> float {
+inline auto distance_to_segment(const QVector2D& point,
+                                const LinearAnchor& anchor) -> float {
   QVector2D const segment = anchor.end - anchor.start;
   float const length_sq = QVector2D::dotProduct(segment, segment);
   if (length_sq < 1e-4F) {
     return (point - anchor.start).length();
   }
   float const t = std::clamp(
-      QVector2D::dotProduct(point - anchor.start, segment) / length_sq, 0.0F,
-      1.0F);
+      QVector2D::dotProduct(point - anchor.start, segment) / length_sq, 0.0F, 1.0F);
   QVector2D const closest = anchor.start + segment * t;
   return (point - closest).length();
 }
 
-inline auto distance_to_point(const QVector2D &point,
-                              const PointAnchor &anchor) -> float {
+inline auto distance_to_point(const QVector2D& point,
+                              const PointAnchor& anchor) -> float {
   return (point - anchor.position).length();
 }
 
-inline auto point_influence(const QVector2D &point,
-                            const std::vector<PointAnchor> &anchors,
-                            float inner_scale, float outer_scale) -> float {
+inline auto point_influence(const QVector2D& point,
+                            const std::vector<PointAnchor>& anchors,
+                            float inner_scale,
+                            float outer_scale) -> float {
   float strongest = 0.0F;
-  for (const auto &anchor : anchors) {
+  for (const auto& anchor : anchors) {
     float const inner = std::max(0.0F, anchor.radius * inner_scale);
     float const outer = std::max(inner + 0.1F, anchor.radius * outer_scale);
     float const influence =
@@ -98,11 +105,12 @@ inline auto point_influence(const QVector2D &point,
   return strongest;
 }
 
-inline auto line_influence(const QVector2D &point,
-                           const std::vector<LinearAnchor> &anchors,
-                           float inner_extra, float outer_extra) -> float {
+inline auto line_influence(const QVector2D& point,
+                           const std::vector<LinearAnchor>& anchors,
+                           float inner_extra,
+                           float outer_extra) -> float {
   float strongest = 0.0F;
-  for (const auto &anchor : anchors) {
+  for (const auto& anchor : anchors) {
     float const inner = std::max(0.0F, anchor.width * 0.5F + inner_extra);
     float const outer = std::max(inner + 0.1F, inner + outer_extra);
     float const influence =
@@ -119,18 +127,17 @@ inline auto camp_layout_seed(float center_world_x,
                      0x6CB5E33AU);
 }
 
-inline auto camp_layout_angle(float center_world_x,
-                              float center_world_z) -> float {
+inline auto camp_layout_angle(float center_world_x, float center_world_z) -> float {
   std::uint32_t state = camp_layout_seed(center_world_x, center_world_z);
   return rand_01(state) * MathConstants::k_two_pi;
 }
 
-inline auto role_angle_offset(CampPropRole role, int slot_index,
-                              int slot_count) -> float {
-  float const slot_center = slot_count > 1
-                                ? static_cast<float>(slot_index) -
-                                      static_cast<float>(slot_count - 1) * 0.5F
-                                : 0.0F;
+inline auto
+role_angle_offset(CampPropRole role, int slot_index, int slot_count) -> float {
+  float const slot_center =
+      slot_count > 1
+          ? static_cast<float>(slot_index) - static_cast<float>(slot_count - 1) * 0.5F
+          : 0.0F;
   switch (role) {
   case CampPropRole::Tent:
     return 0.65F + slot_center * 0.74F;
@@ -144,9 +151,9 @@ inline auto role_angle_offset(CampPropRole role, int slot_index,
   return 0.0F;
 }
 
-inline auto role_distance_range(CampPropRole role,
-                                const ScatterCompositionSample &sample)
-    -> std::pair<float, float> {
+inline auto
+role_distance_range(CampPropRole role,
+                    const ScatterCompositionSample& sample) -> std::pair<float, float> {
   switch (role) {
   case CampPropRole::Tent:
     return {0.84F, 0.98F + sample.dryness * 0.06F};
@@ -179,40 +186,42 @@ inline auto to_species(CampPropRole role) -> ScatterRuleSpecies {
 
 class ScatterCompositionContext {
 public:
-  ScatterCompositionContext(
-      const SpawnTerrainCache &cache, int width, int height, float tile_size,
-      const Game::Map::BiomeSettings &biome_settings,
-      const std::vector<Game::Map::WorldProp> &world_props = {})
-      : m_cache(cache), m_width(width), m_height(height),
-        m_tile_size(tile_size),
-        m_half_grid_width(static_cast<float>(width) * 0.5F - 0.5F),
-        m_half_grid_height(static_cast<float>(height) * 0.5F - 0.5F),
-        m_biome_settings(biome_settings),
-        m_climate_profile(Game::Map::make_climate_profile(biome_settings)) {
+  ScatterCompositionContext(const SpawnTerrainCache& cache,
+                            int width,
+                            int height,
+                            float tile_size,
+                            const Game::Map::BiomeSettings& biome_settings,
+                            const std::vector<Game::Map::WorldProp>& world_props = {})
+      : m_cache(cache)
+      , m_width(width)
+      , m_height(height)
+      , m_tile_size(tile_size)
+      , m_half_grid_width(static_cast<float>(width) * 0.5F - 0.5F)
+      , m_half_grid_height(static_cast<float>(height) * 0.5F - 0.5F)
+      , m_biome_settings(biome_settings)
+      , m_climate_profile(Game::Map::make_climate_profile(biome_settings)) {
     build_point_anchors(world_props);
     build_linear_anchors();
   }
 
-  [[nodiscard]] auto
-  sample_grid(float gx, float gz,
-              std::uint32_t salt = 0U) const -> ScatterCompositionSample {
+  [[nodiscard]] auto sample_grid(float gx, float gz, std::uint32_t salt = 0U) const
+      -> ScatterCompositionSample {
     float world_x = 0.0F;
     float world_z = 0.0F;
     grid_to_world(gx, gz, world_x, world_z);
     return sample_world(world_x, world_z, salt);
   }
 
-  [[nodiscard]] auto
-  sample_world(float world_x, float world_z,
-               std::uint32_t salt = 0U) const -> ScatterCompositionSample {
+  [[nodiscard]] auto sample_world(float world_x, float world_z, std::uint32_t salt = 0U)
+      const -> ScatterCompositionSample {
     QVector2D const point(world_x, world_z);
     float gx = 0.0F;
     float gz = 0.0F;
     world_to_grid(world_x, world_z, gx, gz);
-    int const grid_x = std::clamp(static_cast<int>(std::floor(gx + 0.5F)), 0,
-                                  std::max(0, m_width - 1));
-    int const grid_z = std::clamp(static_cast<int>(std::floor(gz + 0.5F)), 0,
-                                  std::max(0, m_height - 1));
+    int const grid_x = std::clamp(
+        static_cast<int>(std::floor(gx + 0.5F)), 0, std::max(0, m_width - 1));
+    int const grid_z = std::clamp(
+        static_cast<int>(std::floor(gz + 0.5F)), 0, std::max(0, m_height - 1));
 
     ScatterCompositionSample sample;
     sample.terrain_type = m_cache.get_terrain_type_at(grid_x, grid_z);
@@ -223,59 +232,53 @@ public:
         Detail::point_influence(point, m_structure_anchors, 0.55F, 3.80F);
     sample.river_influence =
         Detail::line_influence(point, m_river_anchors, 0.30F, 3.00F);
-    sample.road_influence =
-        Detail::line_influence(point, m_road_anchors, 0.60F, 5.20F);
+    sample.road_influence = Detail::line_influence(point, m_road_anchors, 0.60F, 5.20F);
     float const bridge_influence =
         Detail::line_influence(point, m_bridge_anchors, 0.40F, 3.60F);
 
-    float const macro_noise =
-        value_noise(world_x * 0.018F, world_z * 0.018F,
-                    m_biome_settings.seed ^ salt ^ 0x84A35F21U);
-    float const micro_noise =
-        value_noise(world_x * 0.043F, world_z * 0.043F,
-                    m_biome_settings.seed ^ salt ^ 0x1E4C9AB3U);
-    float const ridge_noise =
-        value_noise(world_x * 0.071F, world_z * 0.071F,
-                    m_biome_settings.seed ^ salt ^ 0x5C83D12FU);
-    sample.cluster_bias = std::clamp(macro_noise * 0.55F + micro_noise * 0.30F +
-                                         ridge_noise * 0.15F,
-                                     0.0F, 1.0F);
+    float const macro_noise = value_noise(
+        world_x * 0.018F, world_z * 0.018F, m_biome_settings.seed ^ salt ^ 0x84A35F21U);
+    float const micro_noise = value_noise(
+        world_x * 0.043F, world_z * 0.043F, m_biome_settings.seed ^ salt ^ 0x1E4C9AB3U);
+    float const ridge_noise = value_noise(
+        world_x * 0.071F, world_z * 0.071F, m_biome_settings.seed ^ salt ^ 0x5C83D12FU);
+    sample.cluster_bias = std::clamp(
+        macro_noise * 0.55F + micro_noise * 0.30F + ridge_noise * 0.15F, 0.0F, 1.0F);
 
     float const terrain_rock_bonus =
         sample.terrain_type == Game::Map::TerrainType::Mountain
             ? 0.32F
-            : (sample.terrain_type == Game::Map::TerrainType::Hill ? 0.14F
-                                                                   : 0.0F);
+            : (sample.terrain_type == Game::Map::TerrainType::Hill ? 0.14F : 0.0F);
     float const terrain_fertility_bonus =
         sample.terrain_type == Game::Map::TerrainType::Forest
             ? 0.18F
-            : (sample.terrain_type == Game::Map::TerrainType::Flat ? 0.10F
-                                                                   : 0.0F);
+            : (sample.terrain_type == Game::Map::TerrainType::Flat ? 0.10F : 0.0F);
 
     sample.rockiness = std::clamp(
         m_climate_profile.rock_exposure * 0.55F + sample.slope * 0.85F +
-            sample.prop_influence * 0.35F + terrain_rock_bonus +
-            macro_noise * 0.22F - sample.river_influence * 0.20F +
-            bridge_influence * 0.10F,
-        0.0F, 1.0F);
+            sample.prop_influence * 0.35F + terrain_rock_bonus + macro_noise * 0.22F -
+            sample.river_influence * 0.20F + bridge_influence * 0.10F,
+        0.0F,
+        1.0F);
     sample.dryness = std::clamp(
         (1.0F - m_climate_profile.moisture_level) * 0.65F +
             m_climate_profile.crack_intensity * 0.55F + sample.slope * 0.35F +
             macro_noise * 0.18F + sample.road_influence * 0.08F -
             sample.river_influence * 0.50F - sample.camp_influence * 0.12F,
-        0.0F, 1.0F);
+        0.0F,
+        1.0F);
     sample.shelter = std::clamp(
         (1.0F - sample.slope) * 0.45F + sample.camp_influence * 0.18F +
-            (sample.terrain_type == Game::Map::TerrainType::Forest ? 0.35F
-                                                                   : 0.0F) +
+            (sample.terrain_type == Game::Map::TerrainType::Forest ? 0.35F : 0.0F) +
             (1.0F - sample.cluster_bias) * 0.18F + bridge_influence * 0.05F,
-        0.0F, 1.0F);
-    sample.fertility =
-        std::clamp(m_climate_profile.moisture_level * 0.55F +
-                       (1.0F - sample.dryness) * 0.30F +
-                       sample.river_influence * 0.45F + sample.shelter * 0.25F +
-                       terrain_fertility_bonus - sample.rockiness * 0.25F,
-                   0.0F, 1.0F);
+        0.0F,
+        1.0F);
+    sample.fertility = std::clamp(
+        m_climate_profile.moisture_level * 0.55F + (1.0F - sample.dryness) * 0.30F +
+            sample.river_influence * 0.45F + sample.shelter * 0.25F +
+            terrain_fertility_bonus - sample.rockiness * 0.25F,
+        0.0F,
+        1.0F);
 
     if (sample.camp_influence > 0.42F && sample.river_influence < 0.45F) {
       sample.archetype = ScatterSceneArchetype::CampOutskirts;
@@ -297,12 +300,11 @@ public:
   }
 
 private:
-  void
-  build_point_anchors(const std::vector<Game::Map::WorldProp> &world_props) {
+  void build_point_anchors(const std::vector<Game::Map::WorldProp>& world_props) {
     float const half_anchor_width = static_cast<float>(m_width) * 0.5F;
     float const half_anchor_height = static_cast<float>(m_height) * 0.5F;
 
-    for (const auto &world_prop : world_props) {
+    for (const auto& world_prop : world_props) {
       float const world_x = (world_prop.x - half_anchor_width) * m_tile_size;
       float const world_z = (world_prop.z - half_anchor_height) * m_tile_size;
       if (world_prop.type == Game::Map::WorldProp::Type::FireCamp) {
@@ -326,43 +328,40 @@ private:
   }
 
   void build_linear_anchors() {
-    auto &terrain_service = Game::Map::TerrainService::instance();
-    for (const auto &road : terrain_service.road_segments()) {
-      m_road_anchors.push_back({{road.start.x(), road.start.z()},
-                                {road.end.x(), road.end.z()},
-                                road.width});
+    auto& terrain_service = Game::Map::TerrainService::instance();
+    for (const auto& road : terrain_service.road_segments()) {
+      m_road_anchors.push_back(
+          {{road.start.x(), road.start.z()}, {road.end.x(), road.end.z()}, road.width});
     }
 
-    auto const *height_map = terrain_service.get_height_map();
+    auto const* height_map = terrain_service.get_height_map();
     if (height_map == nullptr) {
       return;
     }
 
-    for (const auto &river : height_map->get_river_segments()) {
+    for (const auto& river : height_map->get_river_segments()) {
       m_river_anchors.push_back({{river.start.x(), river.start.z()},
                                  {river.end.x(), river.end.z()},
                                  river.width});
     }
-    for (const auto &bridge : height_map->get_bridges()) {
+    for (const auto& bridge : height_map->get_bridges()) {
       m_bridge_anchors.push_back({{bridge.start.x(), bridge.start.z()},
                                   {bridge.end.x(), bridge.end.z()},
                                   bridge.width});
     }
   }
 
-  void grid_to_world(float gx, float gz, float &out_world_x,
-                     float &out_world_z) const {
+  void grid_to_world(float gx, float gz, float& out_world_x, float& out_world_z) const {
     out_world_x = (gx - m_half_grid_width) * m_tile_size;
     out_world_z = (gz - m_half_grid_height) * m_tile_size;
   }
 
-  void world_to_grid(float world_x, float world_z, float &out_gx,
-                     float &out_gz) const {
+  void world_to_grid(float world_x, float world_z, float& out_gx, float& out_gz) const {
     out_gx = world_x / m_tile_size + m_half_grid_width;
     out_gz = world_z / m_tile_size + m_half_grid_height;
   }
 
-  const SpawnTerrainCache &m_cache;
+  const SpawnTerrainCache& m_cache;
   int m_width = 0;
   int m_height = 0;
   float m_tile_size = 1.0F;
@@ -379,7 +378,7 @@ private:
 
 [[nodiscard]] inline auto
 scatter_density_multiplier(ScatterRuleSpecies species,
-                           const ScatterCompositionSample &sample) -> float {
+                           const ScatterCompositionSample& sample) -> float {
   float scene_multiplier = 1.0F;
   switch (species) {
   case ScatterRuleSpecies::Stone:
@@ -406,8 +405,8 @@ scatter_density_multiplier(ScatterRuleSpecies species,
       scene_multiplier = 1.00F;
       break;
     }
-    scene_multiplier *= 0.75F + sample.rockiness * 0.85F +
-                        sample.cluster_bias * 0.35F - sample.fertility * 0.20F;
+    scene_multiplier *= 0.75F + sample.rockiness * 0.85F + sample.cluster_bias * 0.35F -
+                        sample.fertility * 0.20F;
     break;
   case ScatterRuleSpecies::Plant:
     switch (sample.archetype) {
@@ -433,8 +432,8 @@ scatter_density_multiplier(ScatterRuleSpecies species,
       scene_multiplier = 1.00F;
       break;
     }
-    scene_multiplier *= 0.60F + sample.fertility * 0.90F +
-                        sample.cluster_bias * 0.40F - sample.rockiness * 0.25F;
+    scene_multiplier *= 0.60F + sample.fertility * 0.90F + sample.cluster_bias * 0.40F -
+                        sample.rockiness * 0.25F;
     break;
   case ScatterRuleSpecies::Pine:
     switch (sample.archetype) {
@@ -460,8 +459,8 @@ scatter_density_multiplier(ScatterRuleSpecies species,
       scene_multiplier = 1.00F;
       break;
     }
-    scene_multiplier *= 0.55F + sample.shelter * 0.95F +
-                        sample.rockiness * 0.20F - sample.dryness * 0.35F;
+    scene_multiplier *= 0.55F + sample.shelter * 0.95F + sample.rockiness * 0.20F -
+                        sample.dryness * 0.35F;
     break;
   case ScatterRuleSpecies::Olive:
     switch (sample.archetype) {
@@ -487,8 +486,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
       scene_multiplier = 1.00F;
       break;
     }
-    scene_multiplier *= 0.55F + sample.dryness * 0.95F +
-                        sample.rockiness * 0.30F -
+    scene_multiplier *= 0.55F + sample.dryness * 0.95F + sample.rockiness * 0.30F -
                         sample.river_influence * 0.40F;
     break;
   case ScatterRuleSpecies::FireCamp:
@@ -515,28 +513,23 @@ scatter_density_multiplier(ScatterRuleSpecies species,
       scene_multiplier = 0.55F;
       break;
     }
-    scene_multiplier *= 0.70F + sample.dryness * 0.45F +
-                        sample.cluster_bias * 0.20F -
+    scene_multiplier *= 0.70F + sample.dryness * 0.45F + sample.cluster_bias * 0.20F -
                         sample.river_influence * 0.45F;
     break;
   case ScatterRuleSpecies::Tent:
-    scene_multiplier = sample.archetype == ScatterSceneArchetype::CampOutskirts
-                           ? 1.30F
-                           : 0.75F;
-    scene_multiplier *=
-        0.80F + sample.dryness * 0.20F + sample.camp_influence * 0.30F;
+    scene_multiplier =
+        sample.archetype == ScatterSceneArchetype::CampOutskirts ? 1.30F : 0.75F;
+    scene_multiplier *= 0.80F + sample.dryness * 0.20F + sample.camp_influence * 0.30F;
     break;
   case ScatterRuleSpecies::SupplyCart:
-    scene_multiplier = sample.archetype == ScatterSceneArchetype::CampOutskirts
-                           ? 1.20F
-                           : 0.70F;
+    scene_multiplier =
+        sample.archetype == ScatterSceneArchetype::CampOutskirts ? 1.20F : 0.70F;
     scene_multiplier *=
         0.75F + sample.road_influence * 0.35F + sample.camp_influence * 0.25F;
     break;
   case ScatterRuleSpecies::WeaponRack:
-    scene_multiplier = sample.archetype == ScatterSceneArchetype::CampOutskirts
-                           ? 1.25F
-                           : 0.65F;
+    scene_multiplier =
+        sample.archetype == ScatterSceneArchetype::CampOutskirts ? 1.25F : 0.65F;
     scene_multiplier *=
         0.80F + sample.cluster_bias * 0.20F + sample.camp_influence * 0.35F;
     break;
@@ -564,8 +557,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
       scene_multiplier = 0.45F;
       break;
     }
-    scene_multiplier *= 0.65F + sample.dryness * 0.60F +
-                        sample.rockiness * 0.25F -
+    scene_multiplier *= 0.65F + sample.dryness * 0.60F + sample.rockiness * 0.25F -
                         sample.river_influence * 0.25F;
     break;
   }
@@ -574,7 +566,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
 
 [[nodiscard]] inline auto
 scatter_spawn_chance(ScatterRuleSpecies species,
-                     const ScatterCompositionSample &sample) -> float {
+                     const ScatterCompositionSample& sample) -> float {
   float const density = scatter_density_multiplier(species, sample);
   float chance = 0.20F + density * 0.30F;
   switch (species) {
@@ -608,21 +600,20 @@ scatter_spawn_chance(ScatterRuleSpecies species,
 
 [[nodiscard]] inline auto
 scatter_scale_bias(ScatterRuleSpecies species,
-                   const ScatterCompositionSample &sample) -> float {
+                   const ScatterCompositionSample& sample) -> float {
   switch (species) {
   case ScatterRuleSpecies::Stone:
-    return std::clamp(0.90F + sample.rockiness * 0.22F + sample.dryness * 0.10F,
-                      0.80F, 1.30F);
+    return std::clamp(
+        0.90F + sample.rockiness * 0.22F + sample.dryness * 0.10F, 0.80F, 1.30F);
   case ScatterRuleSpecies::Plant:
-    return std::clamp(0.84F + sample.fertility * 0.22F - sample.dryness * 0.08F,
-                      0.75F, 1.20F);
+    return std::clamp(
+        0.84F + sample.fertility * 0.22F - sample.dryness * 0.08F, 0.75F, 1.20F);
   case ScatterRuleSpecies::Pine:
-    return std::clamp(0.86F + sample.shelter * 0.18F +
-                          sample.cluster_bias * 0.10F,
-                      0.80F, 1.18F);
+    return std::clamp(
+        0.86F + sample.shelter * 0.18F + sample.cluster_bias * 0.10F, 0.80F, 1.18F);
   case ScatterRuleSpecies::Olive:
-    return std::clamp(0.88F + sample.dryness * 0.18F + sample.rockiness * 0.08F,
-                      0.80F, 1.22F);
+    return std::clamp(
+        0.88F + sample.dryness * 0.18F + sample.rockiness * 0.08F, 0.80F, 1.22F);
   case ScatterRuleSpecies::FireCamp:
     return std::clamp(0.92F + sample.dryness * 0.12F, 0.85F, 1.12F);
   case ScatterRuleSpecies::Tent:
@@ -630,16 +621,16 @@ scatter_scale_bias(ScatterRuleSpecies species,
   case ScatterRuleSpecies::WeaponRack:
     return std::clamp(0.92F + sample.camp_influence * 0.10F, 0.85F, 1.15F);
   case ScatterRuleSpecies::DeadTree:
-    return std::clamp(0.92F + sample.dryness * 0.18F + sample.rockiness * 0.08F,
-                      0.85F, 1.18F);
+    return std::clamp(
+        0.92F + sample.dryness * 0.18F + sample.rockiness * 0.08F, 0.85F, 1.18F);
   }
   return 1.0F;
 }
 
 [[nodiscard]] inline auto
 scatter_cluster_satellite_count(ScatterRuleSpecies species,
-                                const ScatterCompositionSample &sample,
-                                std::uint32_t &state) -> int {
+                                const ScatterCompositionSample& sample,
+                                std::uint32_t& state) -> int {
   int min_satellites = 0;
   int max_satellites = 0;
   switch (species) {
@@ -665,8 +656,7 @@ scatter_cluster_satellite_count(ScatterRuleSpecies species,
     }
     break;
   case ScatterRuleSpecies::Pine:
-    max_satellites =
-        sample.archetype == ScatterSceneArchetype::ShelteredGrove ? 2 : 1;
+    max_satellites = sample.archetype == ScatterSceneArchetype::ShelteredGrove ? 2 : 1;
     break;
   case ScatterRuleSpecies::Olive:
     max_satellites = (sample.archetype == ScatterSceneArchetype::DryClearing ||
@@ -686,14 +676,13 @@ scatter_cluster_satellite_count(ScatterRuleSpecies species,
   }
   return min_satellites +
          static_cast<int>(std::floor(
-             rand_01(state) *
-             static_cast<float>(max_satellites - min_satellites + 1)));
+             rand_01(state) * static_cast<float>(max_satellites - min_satellites + 1)));
 }
 
 [[nodiscard]] inline auto
 scatter_cluster_radius_tiles(ScatterRuleSpecies species,
-                             const ScatterCompositionSample &sample,
-                             std::uint32_t &state) -> float {
+                             const ScatterCompositionSample& sample,
+                             std::uint32_t& state) -> float {
   float min_radius = 0.35F;
   float max_radius = 1.00F;
   switch (species) {
@@ -724,8 +713,9 @@ scatter_cluster_radius_tiles(ScatterRuleSpecies species,
 
 [[nodiscard]] inline auto
 camp_prop_slot_count(CampPropRole role,
-                     const ScatterCompositionSample &camp_sample,
-                     float camp_radius, std::uint32_t &state) -> int {
+                     const ScatterCompositionSample& camp_sample,
+                     float camp_radius,
+                     std::uint32_t& state) -> int {
   float const size_factor = smoothstep(1.8F, 4.2F, camp_radius);
   switch (role) {
   case CampPropRole::Tent: {
@@ -736,8 +726,7 @@ camp_prop_slot_count(CampPropRole role,
     return count;
   }
   case CampPropRole::SupplyCart: {
-    int count =
-        (camp_radius > 1.7F || camp_sample.road_influence > 0.25F) ? 1 : 0;
+    int count = (camp_radius > 1.7F || camp_sample.road_influence > 0.25F) ? 1 : 0;
     if (count > 0 && size_factor > 0.85F && rand_01(state) < 0.35F) {
       ++count;
     }
@@ -767,17 +756,22 @@ camp_prop_slot_count(CampPropRole role,
   return 0;
 }
 
-inline auto find_contextual_camp_prop_spawn_position(
-    const SpawnValidator &validator, const ScatterCompositionContext &context,
-    CampPropRole role, float center_world_x, float center_world_z,
-    float preferred_distance, const ScatterCompositionSample &camp_sample,
-    int slot_index, int slot_count, std::uint32_t &state, float &out_world_x,
-    float &out_world_z) -> bool {
-  float const base_angle =
-      Detail::camp_layout_angle(center_world_x, center_world_z) +
-      Detail::role_angle_offset(role, slot_index, slot_count);
-  auto const [min_scale, max_scale] =
-      Detail::role_distance_range(role, camp_sample);
+inline auto
+find_contextual_camp_prop_spawn_position(const SpawnValidator& validator,
+                                         const ScatterCompositionContext& context,
+                                         CampPropRole role,
+                                         float center_world_x,
+                                         float center_world_z,
+                                         float preferred_distance,
+                                         const ScatterCompositionSample& camp_sample,
+                                         int slot_index,
+                                         int slot_count,
+                                         std::uint32_t& state,
+                                         float& out_world_x,
+                                         float& out_world_z) -> bool {
+  float const base_angle = Detail::camp_layout_angle(center_world_x, center_world_z) +
+                           Detail::role_angle_offset(role, slot_index, slot_count);
+  auto const [min_scale, max_scale] = Detail::role_distance_range(role, camp_sample);
 
   for (int attempt = 0; attempt < 12; ++attempt) {
     float const angle = base_angle + remap(rand_01(state), -0.22F, 0.22F) +
@@ -793,8 +787,7 @@ inline auto find_contextual_camp_prop_spawn_position(
 
     auto const sample =
         context.sample_world(candidate_x, candidate_z, state ^ 0x4D92F1B7U);
-    if (rand_01(state) >
-        scatter_spawn_chance(Detail::to_species(role), sample)) {
+    if (rand_01(state) > scatter_spawn_chance(Detail::to_species(role), sample)) {
       continue;
     }
     out_world_x = candidate_x;

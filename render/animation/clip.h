@@ -12,7 +12,8 @@
 
 namespace Render::Animation {
 
-template <typename T> struct Keyframe {
+template <typename T>
+struct Keyframe {
   float time{0.0F};
   T value{};
 };
@@ -20,32 +21,31 @@ template <typename T> struct Keyframe {
 inline auto lerp(float a, float b, float t) noexcept -> float {
   return a + (b - a) * t;
 }
-inline auto lerp(const QVector3D &a, const QVector3D &b, float t) -> QVector3D {
-  return QVector3D(a.x() + (b.x() - a.x()) * t, a.y() + (b.y() - a.y()) * t,
+inline auto lerp(const QVector3D& a, const QVector3D& b, float t) -> QVector3D {
+  return QVector3D(a.x() + (b.x() - a.x()) * t,
+                   a.y() + (b.y() - a.y()) * t,
                    a.z() + (b.z() - a.z()) * t);
 }
 
-template <typename T> class Clip {
+template <typename T>
+class Clip {
 public:
   Clip() = default;
   Clip(std::string_view name, std::vector<Keyframe<T>> keys)
-      : m_name(name), m_keys(std::move(keys)) {
+      : m_name(name)
+      , m_keys(std::move(keys)) {
 
-    std::sort(m_keys.begin(), m_keys.end(),
-              [](const Keyframe<T> &a, const Keyframe<T> &b) {
-                return a.time < b.time;
-              });
+    std::sort(
+        m_keys.begin(), m_keys.end(), [](const Keyframe<T>& a, const Keyframe<T>& b) {
+          return a.time < b.time;
+        });
     m_duration = m_keys.empty() ? 0.0F : m_keys.back().time;
   }
 
-  [[nodiscard]] auto name() const noexcept -> std::string_view {
-    return m_name;
-  }
+  [[nodiscard]] auto name() const noexcept -> std::string_view { return m_name; }
   [[nodiscard]] auto duration() const noexcept -> float { return m_duration; }
-  [[nodiscard]] auto key_count() const noexcept -> std::size_t {
-    return m_keys.size();
-  }
-  [[nodiscard]] auto keys() const noexcept -> const std::vector<Keyframe<T>> & {
+  [[nodiscard]] auto key_count() const noexcept -> std::size_t { return m_keys.size(); }
+  [[nodiscard]] auto keys() const noexcept -> const std::vector<Keyframe<T>>& {
     return m_keys;
   }
 
@@ -61,9 +61,9 @@ enum class WrapMode : std::uint8_t {
 };
 
 template <typename T>
-[[nodiscard]] auto evaluate(const Clip<T> &clip, float time,
-                            WrapMode wrap = WrapMode::Clamp) -> T {
-  auto const &keys = clip.keys();
+[[nodiscard]] auto
+evaluate(const Clip<T>& clip, float time, WrapMode wrap = WrapMode::Clamp) -> T {
+  auto const& keys = clip.keys();
   if (keys.empty()) {
     return T{};
   }

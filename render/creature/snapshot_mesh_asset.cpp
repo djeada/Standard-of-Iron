@@ -16,14 +16,14 @@ namespace {
 
 constexpr std::size_t k_write_chunk_bytes = 1U << 20;
 
-auto write_pod(std::ostream &out, const void *src, std::size_t bytes) -> bool {
-  auto const *cursor = static_cast<const char *>(src);
+auto write_pod(std::ostream& out, const void* src, std::size_t bytes) -> bool {
+  auto const* cursor = static_cast<const char*>(src);
   while (bytes != 0U) {
     std::size_t const chunk_size = std::min<std::size_t>(
-        bytes, std::min<std::size_t>(
-                   k_write_chunk_bytes,
-                   static_cast<std::size_t>(
-                       std::numeric_limits<std::streamsize>::max())));
+        bytes,
+        std::min<std::size_t>(
+            k_write_chunk_bytes,
+            static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())));
     out.write(cursor, static_cast<std::streamsize>(chunk_size));
     if (!out.good()) {
       return false;
@@ -34,15 +34,15 @@ auto write_pod(std::ostream &out, const void *src, std::size_t bytes) -> bool {
   return true;
 }
 
-auto pad_to_alignment(std::ostream &out, std::uint64_t current,
+auto pad_to_alignment(std::ostream& out,
+                      std::uint64_t current,
                       std::uint64_t alignment) -> bool {
-  std::uint64_t const padded =
-      Render::Creature::Bpat::align_up(current, alignment);
+  std::uint64_t const padded = Render::Creature::Bpat::align_up(current, alignment);
   std::uint64_t const pad = padded - current;
   static constexpr std::array<char, 16> zeros{};
   for (std::uint64_t remaining = pad; remaining != 0U;) {
-    auto const chunk = static_cast<std::streamsize>(
-        std::min<std::uint64_t>(remaining, zeros.size()));
+    auto const chunk =
+        static_cast<std::streamsize>(std::min<std::uint64_t>(remaining, zeros.size()));
     out.write(zeros.data(), chunk);
     if (!out.good()) {
       return false;
@@ -52,8 +52,7 @@ auto pad_to_alignment(std::ostream &out, std::uint64_t current,
   return true;
 }
 
-auto lod_from_u32(std::uint32_t raw,
-                  Render::Creature::CreatureLOD &out) -> bool {
+auto lod_from_u32(std::uint32_t raw, Render::Creature::CreatureLOD& out) -> bool {
   switch (raw) {
   case static_cast<std::uint32_t>(Render::Creature::CreatureLOD::Full):
     out = Render::Creature::CreatureLOD::Full;
@@ -68,15 +67,14 @@ auto lod_from_u32(std::uint32_t raw,
 
 } // namespace
 
-auto SnapshotMeshBlob::from_bytes(std::vector<std::uint8_t> bytes)
-    -> SnapshotMeshBlob {
+auto SnapshotMeshBlob::from_bytes(std::vector<std::uint8_t> bytes) -> SnapshotMeshBlob {
   SnapshotMeshBlob blob{};
   blob.m_bytes = std::move(bytes);
   blob.m_loaded = blob.validate();
   return blob;
 }
 
-auto SnapshotMeshBlob::from_file(const std::string &path) -> SnapshotMeshBlob {
+auto SnapshotMeshBlob::from_file(const std::string& path) -> SnapshotMeshBlob {
   std::ifstream in(path, std::ios::binary);
   if (!in) {
     SnapshotMeshBlob blob{};
@@ -101,8 +99,7 @@ bool SnapshotMeshBlob::validate() {
     return false;
   }
 
-  auto const *header =
-      reinterpret_cast<const SnapshotMeshHeader *>(m_bytes.data());
+  auto const* header = reinterpret_cast<const SnapshotMeshHeader*>(m_bytes.data());
   if (std::memcmp(header->magic, k_magic.data(), k_magic.size()) != 0) {
     m_last_error = "magic mismatch";
     return false;
@@ -132,8 +129,7 @@ bool SnapshotMeshBlob::validate() {
   };
 
   if (!in_bounds(header->clip_table_offset,
-                 std::uint64_t{header->clip_count} *
-                     sizeof(SnapshotMeshClipEntry))) {
+                 std::uint64_t{header->clip_count} * sizeof(SnapshotMeshClipEntry))) {
     m_last_error = "clip table out of bounds";
     return false;
   }
@@ -153,18 +149,18 @@ bool SnapshotMeshBlob::validate() {
     return false;
   }
 
-  m_clip_table = reinterpret_cast<const SnapshotMeshClipEntry *>(
+  m_clip_table = reinterpret_cast<const SnapshotMeshClipEntry*>(
       m_bytes.data() + header->clip_table_offset);
-  m_string_table = reinterpret_cast<const char *>(m_bytes.data() +
-                                                  header->string_table_offset);
-  m_indices = reinterpret_cast<const std::uint32_t *>(
-      m_bytes.data() + header->index_data_offset);
-  m_vertices = reinterpret_cast<const Render::GL::RiggedVertex *>(
+  m_string_table =
+      reinterpret_cast<const char*>(m_bytes.data() + header->string_table_offset);
+  m_indices = reinterpret_cast<const std::uint32_t*>(m_bytes.data() +
+                                                     header->index_data_offset);
+  m_vertices = reinterpret_cast<const Render::GL::RiggedVertex*>(
       m_bytes.data() + header->vertex_data_offset);
 
   std::uint32_t computed_total = 0U;
   for (std::uint32_t i = 0; i < header->clip_count; ++i) {
-    auto const &c = m_clip_table[i];
+    auto const& c = m_clip_table[i];
     if (c.frame_count == 0U) {
       m_last_error = "clip frame_count == 0";
       return false;
@@ -174,8 +170,7 @@ bool SnapshotMeshBlob::validate() {
       return false;
     }
     computed_total += c.frame_count;
-    if (std::uint64_t{c.name_offset} + c.name_length + 1U >
-        header->string_table_size) {
+    if (std::uint64_t{c.name_offset} + c.name_length + 1U > header->string_table_size) {
       m_last_error = "clip name out of string table";
       return false;
     }
@@ -228,7 +223,7 @@ auto SnapshotMeshBlob::clip(std::uint32_t index) const -> ClipView {
   if (m_header == nullptr || index >= m_header->clip_count) {
     return v;
   }
-  auto const &e = m_clip_table[index];
+  auto const& e = m_clip_table[index];
   v.name = std::string_view(m_string_table + e.name_offset, e.name_length);
   v.frame_count = e.frame_count;
   v.frame_offset = e.frame_offset;
@@ -242,8 +237,8 @@ auto SnapshotMeshBlob::indices_view() const -> std::span<const std::uint32_t> {
   return {m_indices, m_header->index_count};
 }
 
-auto SnapshotMeshBlob::frame_vertices_view(std::uint32_t global_frame_index)
-    const -> std::span<const Render::GL::RiggedVertex> {
+auto SnapshotMeshBlob::frame_vertices_view(std::uint32_t global_frame_index) const
+    -> std::span<const Render::GL::RiggedVertex> {
   if (m_header == nullptr || m_vertices == nullptr ||
       global_frame_index >= m_header->frame_total) {
     return {};
@@ -255,7 +250,7 @@ auto SnapshotMeshBlob::frame_vertices_view(std::uint32_t global_frame_index)
 
 auto SnapshotMeshBlob::resolve_global_frame(std::uint32_t clip_index,
                                             std::uint32_t frame_in_clip,
-                                            std::uint32_t &out) const -> bool {
+                                            std::uint32_t& out) const -> bool {
   out = 0U;
   if (m_header == nullptr || clip_index >= m_header->clip_count) {
     return false;
@@ -268,11 +263,15 @@ auto SnapshotMeshBlob::resolve_global_frame(std::uint32_t clip_index,
   return true;
 }
 
-SnapshotMeshWriter::SnapshotMeshWriter(
-    std::uint32_t species_id, Render::Creature::CreatureLOD lod,
-    std::uint32_t vertex_count, std::span<const std::uint32_t> indices) noexcept
-    : m_species_id(species_id), m_lod(lod), m_vertex_count(vertex_count),
-      m_indices(indices.begin(), indices.end()) {}
+SnapshotMeshWriter::SnapshotMeshWriter(std::uint32_t species_id,
+                                       Render::Creature::CreatureLOD lod,
+                                       std::uint32_t vertex_count,
+                                       std::span<const std::uint32_t> indices) noexcept
+    : m_species_id(species_id)
+    , m_lod(lod)
+    , m_vertex_count(vertex_count)
+    , m_indices(indices.begin(), indices.end()) {
+}
 
 void SnapshotMeshWriter::add_clip(ClipDescriptor desc) {
   PendingClip pending{};
@@ -285,22 +284,21 @@ void SnapshotMeshWriter::add_clip(ClipDescriptor desc) {
 void SnapshotMeshWriter::append_clip_vertices(
     std::span<const Render::GL::RiggedVertex> frame_vertices) {
   assert(!m_clips.empty() && "add_clip() before append_clip_vertices()");
-  auto &pending = m_clips.back();
+  auto& pending = m_clips.back();
   assert(!pending.vertices_appended && "vertices already appended for clip");
   std::size_t const expected =
       static_cast<std::size_t>(m_vertex_count) * pending.desc.frame_count;
   assert(frame_vertices.size() == expected &&
          "frame_vertices.size() must equal vertex_count * frame_count");
-  m_vertices.insert(m_vertices.end(), frame_vertices.begin(),
-                    frame_vertices.end());
+  m_vertices.insert(m_vertices.end(), frame_vertices.begin(), frame_vertices.end());
   pending.vertices_appended = true;
 }
 
-auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
+auto SnapshotMeshWriter::write(std::ostream& out) const -> bool {
   if (m_vertex_count == 0U || m_indices.empty() || m_clips.empty()) {
     return false;
   }
-  for (auto const &c : m_clips) {
+  for (auto const& c : m_clips) {
     if (!c.vertices_appended || c.desc.frame_count == 0U) {
       return false;
     }
@@ -308,7 +306,7 @@ auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
 
   std::vector<char> string_table;
   std::unordered_map<std::string, std::uint32_t> string_offsets;
-  auto intern = [&](const std::string &s) -> std::uint32_t {
+  auto intern = [&](const std::string& s) -> std::uint32_t {
     auto it = string_offsets.find(s);
     if (it != string_offsets.end()) {
       return it->second;
@@ -322,7 +320,7 @@ auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
 
   std::vector<SnapshotMeshClipEntry> clip_entries;
   clip_entries.reserve(m_clips.size());
-  for (auto const &c : m_clips) {
+  for (auto const& c : m_clips) {
     SnapshotMeshClipEntry e{};
     e.name_offset = intern(c.desc.name);
     e.name_length = static_cast<std::uint32_t>(c.desc.name.size());
@@ -364,7 +362,8 @@ auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
   written += sizeof(header);
 
   if (!clip_entries.empty()) {
-    if (!write_pod(out, clip_entries.data(),
+    if (!write_pod(out,
+                   clip_entries.data(),
                    clip_entries.size() * sizeof(SnapshotMeshClipEntry))) {
       return false;
     }
@@ -376,19 +375,18 @@ auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
     }
     written += string_table.size();
   }
-  if (!pad_to_alignment(out, written,
-                        Render::Creature::Bpat::k_section_alignment)) {
+  if (!pad_to_alignment(out, written, Render::Creature::Bpat::k_section_alignment)) {
     return false;
   }
 
   if (!m_indices.empty()) {
-    if (!write_pod(out, m_indices.data(),
-                   m_indices.size() * sizeof(std::uint32_t))) {
+    if (!write_pod(out, m_indices.data(), m_indices.size() * sizeof(std::uint32_t))) {
       return false;
     }
   }
   if (!m_vertices.empty()) {
-    if (!write_pod(out, m_vertices.data(),
+    if (!write_pod(out,
+                   m_vertices.data(),
                    m_vertices.size() * sizeof(Render::GL::RiggedVertex))) {
       return false;
     }

@@ -1,12 +1,15 @@
 #include "healer.h"
+
+#include <qvectornd.h>
+
+#include <memory>
+
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/troop_profile_service.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
-#include <memory>
-#include <qvectornd.h>
 
 static inline auto team_color(int owner_id) -> QVector3D {
   switch (owner_id) {
@@ -25,18 +28,20 @@ static inline auto team_color(int owner_id) -> QVector3D {
 
 namespace Game::Units {
 
-Healer::Healer(Engine::Core::World &world) : Unit(world, TroopType::Healer) {}
+Healer::Healer(Engine::Core::World& world)
+    : Unit(world, TroopType::Healer) {
+}
 
-auto Healer::Create(Engine::Core::World &world,
-                    const SpawnParams &params) -> std::unique_ptr<Healer> {
+auto Healer::Create(Engine::Core::World& world,
+                    const SpawnParams& params) -> std::unique_ptr<Healer> {
   auto unit = std::unique_ptr<Healer>(new Healer(world));
   unit->init(params);
   return unit;
 }
 
-void Healer::init(const SpawnParams &params) {
+void Healer::init(const SpawnParams& params) {
 
-  auto *e = m_world->create_entity();
+  auto* e = m_world->create_entity();
   m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
@@ -44,8 +49,7 @@ void Healer::init(const SpawnParams &params) {
       nation_id, TroopType::Healer);
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
-  m_t->position = {params.position.x(), params.position.y(),
-                   params.position.z()};
+  m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   float const scale = profile.visuals.render_scale;
   m_t->scale = {scale, scale, scale};
 
@@ -89,19 +93,17 @@ void Healer::init(const SpawnParams &params) {
     m_atk->melee_damage = profile.combat.melee_damage;
     m_atk->melee_cooldown = profile.combat.melee_cooldown;
 
-    m_atk->preferred_mode =
-        profile.combat.can_ranged
-            ? Engine::Core::AttackComponent::CombatMode::Ranged
-            : Engine::Core::AttackComponent::CombatMode::Melee;
-    m_atk->current_mode =
-        profile.combat.can_ranged
-            ? Engine::Core::AttackComponent::CombatMode::Ranged
-            : Engine::Core::AttackComponent::CombatMode::Melee;
+    m_atk->preferred_mode = profile.combat.can_ranged
+                                ? Engine::Core::AttackComponent::CombatMode::Ranged
+                                : Engine::Core::AttackComponent::CombatMode::Melee;
+    m_atk->current_mode = profile.combat.can_ranged
+                              ? Engine::Core::AttackComponent::CombatMode::Ranged
+                              : Engine::Core::AttackComponent::CombatMode::Melee;
     m_atk->can_ranged = profile.combat.can_ranged;
     m_atk->can_melee = profile.combat.can_melee;
   }
 
-  auto *healer_comp = e->add_component<Engine::Core::HealerComponent>();
+  auto* healer_comp = e->add_component<Engine::Core::HealerComponent>();
   if (healer_comp != nullptr) {
     healer_comp->healing_range = profile.combat.vision_range * 0.6F;
     healer_comp->healing_amount =

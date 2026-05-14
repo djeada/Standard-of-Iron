@@ -1,14 +1,15 @@
 
 
+#include <QVector3D>
+
+#include <array>
+#include <gtest/gtest.h>
+
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/render_request.h"
 #include "render/render_archetype.h"
 #include "render/static_attachment_spec.h"
-
-#include <QVector3D>
-#include <array>
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -19,12 +20,11 @@ using Render::GL::RenderArchetype;
 using Render::GL::RenderArchetypeBuilder;
 using Render::GL::RenderArchetypeLod;
 
-auto make_test_archetype() -> const RenderArchetype & {
+auto make_test_archetype() -> const RenderArchetype& {
   static const RenderArchetype arch = [] {
     RenderArchetypeBuilder b("per_unit_archetype_test_helmet");
     b.use_lod(RenderArchetypeLod::Full);
-    b.add_palette_box(QVector3D{0.0F, 0.0F, 0.0F}, QVector3D{1.0F, 1.0F, 1.0F},
-                      1);
+    b.add_palette_box(QVector3D{0.0F, 0.0F, 0.0F}, QVector3D{1.0F, 1.0F, 1.0F}, 1);
     return std::move(b).build();
   }();
   return arch;
@@ -36,7 +36,7 @@ TEST(PerUnitArchetype, UnitVisualSpecDefaultsToInvalidArchetype) {
 }
 
 TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
-  auto &reg = ArchetypeRegistry::instance();
+  auto& reg = ArchetypeRegistry::instance();
 
   StaticAttachmentSpec att{};
   att.archetype = &make_test_archetype();
@@ -44,16 +44,17 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
   att.palette_role_remap[1] = 5;
   std::array<StaticAttachmentSpec, 1> attachments{att};
 
-  auto const id = reg.register_unit_archetype(
-      "per_unit_archetype_test/humanoid_unit", CreatureKind::Humanoid,
-      std::span<const StaticAttachmentSpec>{attachments});
+  auto const id =
+      reg.register_unit_archetype("per_unit_archetype_test/humanoid_unit",
+                                  CreatureKind::Humanoid,
+                                  std::span<const StaticAttachmentSpec>{attachments});
 
   ASSERT_NE(id, k_invalid_archetype);
   EXPECT_NE(id, ArchetypeRegistry::k_humanoid_base);
   EXPECT_NE(id, ArchetypeRegistry::k_horse_base);
   EXPECT_NE(id, ArchetypeRegistry::k_elephant_base);
 
-  auto const *desc = reg.get(id);
+  auto const* desc = reg.get(id);
   ASSERT_NE(desc, nullptr);
   EXPECT_EQ(desc->species, CreatureKind::Humanoid);
   EXPECT_EQ(desc->bake_attachment_count, 1U);
@@ -61,7 +62,7 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
   EXPECT_EQ(desc->attachments_view()[0].archetype, &make_test_archetype());
   EXPECT_EQ(desc->attachments_view()[0].palette_role_remap[1], 5U);
 
-  auto const *base = reg.get(ArchetypeRegistry::k_humanoid_base);
+  auto const* base = reg.get(ArchetypeRegistry::k_humanoid_base);
   ASSERT_NE(base, nullptr);
   for (std::size_t i = 0; i < animation_state_count(); ++i) {
     EXPECT_EQ(desc->bpat_clip[i], base->bpat_clip[i]) << "state idx " << i;
@@ -70,25 +71,25 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
 }
 
 TEST(PerUnitArchetype, BaselineStillExposesNoAttachments) {
-  auto const &reg = ArchetypeRegistry::instance();
-  auto const *humanoid = reg.get(ArchetypeRegistry::k_humanoid_base);
+  auto const& reg = ArchetypeRegistry::instance();
+  auto const* humanoid = reg.get(ArchetypeRegistry::k_humanoid_base);
   ASSERT_NE(humanoid, nullptr);
   EXPECT_EQ(humanoid->bake_attachment_count, 0U);
   EXPECT_TRUE(humanoid->attachments_view().empty());
 }
 
 TEST(PerUnitArchetype, RegisterUnitArchetypeForHorseInheritsHorseClipTable) {
-  auto &reg = ArchetypeRegistry::instance();
+  auto& reg = ArchetypeRegistry::instance();
   auto const id = reg.register_unit_archetype(
       "per_unit_archetype_test/horse_unit", CreatureKind::Horse, {});
   ASSERT_NE(id, k_invalid_archetype);
 
-  auto const *desc = reg.get(id);
+  auto const* desc = reg.get(id);
   ASSERT_NE(desc, nullptr);
   EXPECT_EQ(desc->species, CreatureKind::Horse);
   EXPECT_EQ(desc->bake_attachment_count, 0U);
 
-  auto const *base = reg.get(ArchetypeRegistry::k_horse_base);
+  auto const* base = reg.get(ArchetypeRegistry::k_horse_base);
   ASSERT_NE(base, nullptr);
   for (std::size_t i = 0; i < animation_state_count(); ++i) {
     EXPECT_EQ(desc->bpat_clip[i], base->bpat_clip[i]);
@@ -97,29 +98,28 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeForHorseInheritsHorseClipTable) {
 }
 
 TEST(PerUnitArchetype, ExcessAttachmentsAreClampedToCap) {
-  auto &reg = ArchetypeRegistry::instance();
+  auto& reg = ArchetypeRegistry::instance();
 
-  std::array<StaticAttachmentSpec,
-             ArchetypeDescriptor::k_max_bake_attachments + 4>
+  std::array<StaticAttachmentSpec, ArchetypeDescriptor::k_max_bake_attachments + 4>
       lots{};
-  for (auto &a : lots) {
+  for (auto& a : lots) {
     a.archetype = &make_test_archetype();
     a.socket_bone_index = 0;
   }
 
-  auto const id = reg.register_unit_archetype(
-      "per_unit_archetype_test/clamp", CreatureKind::Humanoid,
-      std::span<const StaticAttachmentSpec>{lots});
+  auto const id =
+      reg.register_unit_archetype("per_unit_archetype_test/clamp",
+                                  CreatureKind::Humanoid,
+                                  std::span<const StaticAttachmentSpec>{lots});
   ASSERT_NE(id, k_invalid_archetype);
 
-  auto const *desc = reg.get(id);
+  auto const* desc = reg.get(id);
   ASSERT_NE(desc, nullptr);
-  EXPECT_EQ(desc->bake_attachment_count,
-            ArchetypeDescriptor::k_max_bake_attachments);
+  EXPECT_EQ(desc->bake_attachment_count, ArchetypeDescriptor::k_max_bake_attachments);
 }
 
 TEST(PerUnitArchetype, MountedSpeciesIsRejected) {
-  auto &reg = ArchetypeRegistry::instance();
+  auto& reg = ArchetypeRegistry::instance();
   auto const id = reg.register_unit_archetype(
       "per_unit_archetype_test/mounted_should_fail", CreatureKind::Mounted, {});
   EXPECT_EQ(id, k_invalid_archetype);

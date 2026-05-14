@@ -4,15 +4,14 @@ import QtQuick.Controls 2.15
 Item {
     id: root
 
-    property var colors: ({
-    })
+    property var colors: ({})
     property var players_model: null
     property var team_icons: []
     property var current_map_data: null
     property string map_title: "Select a map"
     property string map_preview: ""
 
-    signal add_cpu_clicked()
+    signal add_cpu_clicked
     signal remove_player_clicked(int index)
     signal player_color_clicked(int index)
     signal player_team_clicked(int index)
@@ -31,33 +30,32 @@ Item {
 
             source: "./PlayerListItem.qml"
             onLoaded: {
-                item.colors = Qt.binding(function() {
-                    return item_colors;
-                });
-                item.player_data = Qt.binding(function() {
-                    return item_player_data;
-                });
-                item.team_icons = Qt.binding(function() {
-                    return item_team_icons;
-                });
-                item.can_remove = Qt.binding(function() {
-                    return item_can_remove;
-                });
-                item.remove_clicked.connect(function() {
-                    root.remove_player_clicked(index);
-                });
-                item.color_clicked.connect(function() {
-                    root.player_color_clicked(index);
-                });
-                item.team_clicked.connect(function() {
-                    root.player_team_clicked(index);
-                });
-                item.faction_clicked.connect(function() {
-                    root.player_faction_clicked(index);
-                });
+                item.colors = Qt.binding(function () {
+                        return item_colors;
+                    });
+                item.player_data = Qt.binding(function () {
+                        return item_player_data;
+                    });
+                item.team_icons = Qt.binding(function () {
+                        return item_team_icons;
+                    });
+                item.can_remove = Qt.binding(function () {
+                        return item_can_remove;
+                    });
+                item.remove_clicked.connect(function () {
+                        root.remove_player_clicked(index);
+                    });
+                item.color_clicked.connect(function () {
+                        root.player_color_clicked(index);
+                    });
+                item.team_clicked.connect(function () {
+                        root.player_team_clicked(index);
+                    });
+                item.faction_clicked.connect(function () {
+                        root.player_faction_clicked(index);
+                    });
             }
         }
-
     }
 
     Text {
@@ -74,7 +72,6 @@ Item {
             left: parent.left
             right: parent.right
         }
-
     }
 
     Item {
@@ -111,7 +108,6 @@ Item {
                 leftMargin: 10
                 verticalCenter: playerSectionTitle.verticalCenter
             }
-
         }
 
         Rectangle {
@@ -153,15 +149,12 @@ Item {
                         color: colors.textSub
                         font.pixelSize: 13
                     }
-
                 }
 
                 ScrollBar.vertical: ScrollBar {
                     policy: ScrollBar.AsNeeded
                 }
-
             }
-
         }
 
         Button {
@@ -171,10 +164,8 @@ Item {
             enabled: {
                 if (!current_map_data || !current_map_data.player_ids)
                     return false;
-
                 if (!players_model)
                     return false;
-
                 return players_model.count < current_map_data.player_ids.length;
             }
             hoverEnabled: true
@@ -217,29 +208,23 @@ Item {
                 border.width: 1
                 border.color: enabled ? colors.addColor : colors.thumbBr
 
-                Behavior on color {
+                Behavior on color  {
                     ColorAnimation {
                         duration: 150
                     }
-
                 }
-
             }
-
         }
 
         Text {
             text: {
                 if (!current_map_data || !current_map_data.player_ids)
                     return "";
-
                 if (!players_model)
                     return "";
-
                 var available = current_map_data.player_ids.length - players_model.count;
                 if (available <= 0)
                     return "Max players reached";
-
                 return available + " slot" + (available > 1 ? "s" : "") + " available";
             }
             color: colors.textSubLite
@@ -250,9 +235,7 @@ Item {
                 leftMargin: 10
                 verticalCenter: addCPUBtn.verticalCenter
             }
-
         }
-
     }
 
     Rectangle {
@@ -289,7 +272,5 @@ Item {
             color: colors.hint
             font.pixelSize: 14
         }
-
     }
-
 }

@@ -1,11 +1,13 @@
 #pragma once
 
-#include "../shader.h"
-#include "pipeline_interface.h"
-#include <GL/gl.h>
 #include <QMatrix4x4>
 #include <QVector3D>
+
+#include <GL/gl.h>
 #include <vector>
+
+#include "../shader.h"
+#include "pipeline_interface.h"
 
 namespace Engine::Core {
 class World;
@@ -28,9 +30,9 @@ struct HealerAuraData {
 
 class HealerAuraPipeline final : public IPipeline {
 public:
-  explicit HealerAuraPipeline(GL::Backend *backend,
-                              GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shader_cache(shader_cache) {}
+  explicit HealerAuraPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
+      : m_backend(backend)
+      , m_shader_cache(shader_cache) {}
   ~HealerAuraPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -38,13 +40,16 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  void collect_healers(Engine::Core::World *world);
+  void collect_healers(Engine::Core::World* world);
 
-  void render(const Camera &cam, float animation_time);
+  void render(const Camera& cam, float animation_time);
 
-  void render_single_aura(const QVector3D &position, const QVector3D &color,
-                          float radius, float intensity, float time,
-                          const QMatrix4x4 &view_proj);
+  void render_single_aura(const QVector3D& position,
+                          const QVector3D& color,
+                          float radius,
+                          float intensity,
+                          float time,
+                          const QMatrix4x4& view_proj);
 
   struct AuraInstanceData {
     QVector3D position;
@@ -54,20 +59,20 @@ public:
     float time{0.0F};
   };
 
-  void render_aura_batch(const AuraInstanceData *instances, std::size_t count,
-                         const QMatrix4x4 &view_proj);
+  void render_aura_batch(const AuraInstanceData* instances,
+                         std::size_t count,
+                         const QMatrix4x4& view_proj);
 
   void clear_data() { m_healer_data.clear(); }
 
 private:
-  void render_aura(const HealerAuraData &data, const Camera &cam,
-                   float animation_time);
+  void render_aura(const HealerAuraData& data, const Camera& cam, float animation_time);
   auto create_dome_geometry() -> bool;
   void shutdown_geometry();
 
-  GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shader_cache = nullptr;
-  GL::Shader *m_aura_shader = nullptr;
+  GL::Backend* m_backend = nullptr;
+  GL::ShaderCache* m_shader_cache = nullptr;
+  GL::Shader* m_aura_shader = nullptr;
 
   GLuint m_vao = 0;
   GLuint m_vertex_buffer = 0;

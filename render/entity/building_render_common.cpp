@@ -1,20 +1,21 @@
 #include "building_render_common.h"
 
-#include "../../game/core/component.h"
-#include "../../game/systems/nation_id.h"
-#include "../geom/math_utils.h"
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../gl/resources.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+
+#include "../../game/core/component.h"
+#include "../../game/systems/nation_id.h"
+#include "../geom/math_utils.h"
+#include "../geom/transforms.h"
+#include "../gl/primitives.h"
+#include "../gl/resources.h"
 
 namespace Render::GL {
 namespace {
@@ -34,7 +35,7 @@ thread_local std::unordered_map<std::uint32_t, CachedBuildingInstance>
 thread_local std::uint64_t s_building_submit_tick{0};
 thread_local BuildingInstanceCacheStats s_building_instance_cache_stats;
 
-auto matrix_equals(const QMatrix4x4 &lhs, const QMatrix4x4 &rhs) -> bool {
+auto matrix_equals(const QMatrix4x4& lhs, const QMatrix4x4& rhs) -> bool {
   for (int row = 0; row < 4; ++row) {
     for (int col = 0; col < 4; ++col) {
       if (lhs(row, col) != rhs(row, col)) {
@@ -46,7 +47,7 @@ auto matrix_equals(const QMatrix4x4 &lhs, const QMatrix4x4 &rhs) -> bool {
 }
 
 auto palette_equals(
-    const StoredRenderInstance<k_cached_building_palette_capacity> &stored,
+    const StoredRenderInstance<k_cached_building_palette_capacity>& stored,
     std::span<const QVector3D> palette) -> bool {
   if (stored.palette_count != palette.size()) {
     return false;
@@ -73,30 +74,32 @@ void prune_building_instance_cache(std::uint64_t current_tick) {
   }
 }
 
-auto building_unit(const DrawContext &ctx) -> Engine::Core::UnitComponent * {
+auto building_unit(const DrawContext& ctx) -> Engine::Core::UnitComponent* {
   return (ctx.entity != nullptr)
              ? ctx.entity->get_component<Engine::Core::UnitComponent>()
              : nullptr;
 }
 
-auto building_capture(const DrawContext &ctx)
-    -> Engine::Core::CaptureComponent * {
+auto building_capture(const DrawContext& ctx) -> Engine::Core::CaptureComponent* {
   return (ctx.entity != nullptr)
              ? ctx.entity->get_component<Engine::Core::CaptureComponent>()
              : nullptr;
 }
 
-auto building_box_mesh(const DrawContext &ctx) -> Mesh * {
+auto building_box_mesh(const DrawContext& ctx) -> Mesh* {
   return (ctx.resources != nullptr) ? ctx.resources->unit() : nullptr;
 }
 
-auto building_white_texture(const DrawContext &ctx) -> Texture * {
+auto building_white_texture(const DrawContext& ctx) -> Texture* {
   return (ctx.resources != nullptr) ? ctx.resources->white() : nullptr;
 }
 
-void submit_box(ISubmitter &out, const DrawContext &ctx, const QVector3D &pos,
-                const QVector3D &size, const QVector3D &color) {
-  Mesh *mesh = building_box_mesh(ctx);
+void submit_box(ISubmitter& out,
+                const DrawContext& ctx,
+                const QVector3D& pos,
+                const QVector3D& size,
+                const QVector3D& color) {
+  Mesh* mesh = building_box_mesh(ctx);
   if (mesh == nullptr) {
     return;
   }
@@ -129,18 +132,17 @@ auto resolve_bar_colors(float ratio) -> std::pair<QVector3D, QVector3D> {
 
 } // namespace
 
-auto resolve_building_health_ratio(const DrawContext &ctx) -> float {
-  auto *unit = building_unit(ctx);
+auto resolve_building_health_ratio(const DrawContext& ctx) -> float {
+  auto* unit = building_unit(ctx);
   if (unit == nullptr) {
     return 0.0F;
   }
 
-  return std::clamp(unit->health / float(std::max(1, unit->max_health)), 0.0F,
-                    1.0F);
+  return std::clamp(unit->health / float(std::max(1, unit->max_health)), 0.0F, 1.0F);
 }
 
-auto resolve_building_state(const DrawContext &ctx) -> BuildingState {
-  auto *unit = building_unit(ctx);
+auto resolve_building_state(const DrawContext& ctx) -> BuildingState {
+  auto* unit = building_unit(ctx);
   if (unit == nullptr) {
     return BuildingState::Normal;
   }
@@ -149,8 +151,7 @@ auto resolve_building_state(const DrawContext &ctx) -> BuildingState {
 
 auto building_renderer_key(std::string_view nation_slug,
                            std::string_view building_type) -> std::string {
-  return "troops/" + std::string(nation_slug) + "/" +
-         std::string(building_type);
+  return "troops/" + std::string(nation_slug) + "/" + std::string(building_type);
 }
 
 auto building_renderer_key(Game::Systems::NationID nation_id,
@@ -175,19 +176,20 @@ auto canonicalize_building_renderer_key(std::string_view renderer_key)
   return renderer_key;
 }
 
-auto resolve_building_renderer_key(
-    std::string_view renderer_key, std::string_view building_type,
-    Game::Systems::NationID nation_id) -> std::string {
+auto resolve_building_renderer_key(std::string_view renderer_key,
+                                   std::string_view building_type,
+                                   Game::Systems::NationID nation_id) -> std::string {
   if (renderer_key.empty() || renderer_key == building_type) {
     return building_renderer_key(nation_id, building_type);
   }
   return std::string(canonicalize_building_renderer_key(renderer_key));
 }
 
-void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
-                              const RenderArchetype &archetype,
+void submit_building_instance(ISubmitter& out,
+                              const DrawContext& ctx,
+                              const RenderArchetype& archetype,
                               std::span<const QVector3D> palette) {
-  Texture *default_texture = building_white_texture(ctx);
+  Texture* default_texture = building_white_texture(ctx);
   RenderArchetypeLod lod =
       select_render_archetype_lod(archetype, std::sqrt(ctx.distance_sq));
 
@@ -207,8 +209,7 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
   }
   DamageStateSubmitter damage_out(out, damage_id);
 
-  if (ctx.entity == nullptr ||
-      palette.size() > k_cached_building_palette_capacity) {
+  if (ctx.entity == nullptr || palette.size() > k_cached_building_palette_capacity) {
     RenderInstance instance;
     instance.archetype = &archetype;
     instance.world = ctx.model;
@@ -223,9 +224,9 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
   prune_building_instance_cache(s_building_submit_tick);
 
   std::uint32_t const entity_id = ctx.entity->get_id();
-  auto [it, inserted] = s_building_instance_cache.try_emplace(
-      entity_id, CachedBuildingInstance{});
-  auto &cached = it->second;
+  auto [it, inserted] =
+      s_building_instance_cache.try_emplace(entity_id, CachedBuildingInstance{});
+  auto& cached = it->second;
   cached.last_seen_tick = s_building_submit_tick;
 
   if (inserted) {
@@ -234,12 +235,11 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
     ++s_building_instance_cache_stats.hits;
   }
 
-  const bool needs_rebuild =
-      inserted || cached.instance.archetype != &archetype ||
-      cached.instance.default_texture != default_texture ||
-      cached.instance.lod != lod ||
-      !matrix_equals(cached.instance.world, ctx.model) ||
-      !palette_equals(cached.instance, palette);
+  const bool needs_rebuild = inserted || cached.instance.archetype != &archetype ||
+                             cached.instance.default_texture != default_texture ||
+                             cached.instance.lod != lod ||
+                             !matrix_equals(cached.instance.world, ctx.model) ||
+                             !palette_equals(cached.instance, palette);
 
   if (needs_rebuild) {
     ++s_building_instance_cache_stats.rebuilds;
@@ -263,9 +263,13 @@ void reset_building_instance_cache_for_tests() {
   s_building_instance_cache_stats = {};
 }
 
-void submit_building_box(ISubmitter &out, Mesh *mesh, Texture *texture,
-                         const QMatrix4x4 &model, const QVector3D &pos,
-                         const QVector3D &size, const QVector3D &color,
+void submit_building_box(ISubmitter& out,
+                         Mesh* mesh,
+                         Texture* texture,
+                         const QMatrix4x4& model,
+                         const QVector3D& pos,
+                         const QVector3D& size,
+                         const QVector3D& color,
                          float alpha) {
   if (mesh == nullptr) {
     return;
@@ -277,22 +281,29 @@ void submit_building_box(ISubmitter &out, Mesh *mesh, Texture *texture,
   out.mesh(mesh, local, color, texture, alpha);
 }
 
-void submit_building_cylinder(ISubmitter &out, const QMatrix4x4 &model,
-                              const QVector3D &start, const QVector3D &end,
-                              float radius, const QVector3D &color,
-                              Texture *texture, float alpha) {
+void submit_building_cylinder(ISubmitter& out,
+                              const QMatrix4x4& model,
+                              const QVector3D& start,
+                              const QVector3D& end,
+                              float radius,
+                              const QVector3D& color,
+                              Texture* texture,
+                              float alpha) {
   out.mesh(get_unit_cylinder(),
-           model * Render::Geom::cylinder_between(start, end, radius), color,
-           texture, alpha);
+           model * Render::Geom::cylinder_between(start, end, radius),
+           color,
+           texture,
+           alpha);
 }
 
-void draw_building_health_bar(ISubmitter &out, const DrawContext &ctx,
-                              const BuildingHealthBarStyle &style) {
+void draw_building_health_bar(ISubmitter& out,
+                              const DrawContext& ctx,
+                              const BuildingHealthBarStyle& style) {
   if (building_box_mesh(ctx) == nullptr) {
     return;
   }
 
-  auto *unit = building_unit(ctx);
+  auto* unit = building_unit(ctx);
   if (unit == nullptr) {
     return;
   }
@@ -302,7 +313,7 @@ void draw_building_health_bar(ISubmitter &out, const DrawContext &ctx,
     return;
   }
 
-  auto *capture = building_capture(ctx);
+  auto* capture = building_capture(ctx);
   bool const under_attack = (capture != nullptr) && capture->is_being_captured;
   if (!under_attack && unit->health >= unit->max_health) {
     return;
@@ -315,77 +326,94 @@ void draw_building_health_bar(ISubmitter &out, const DrawContext &ctx,
 
   if (under_attack) {
     float const pulse =
-        HEALTHBAR_PULSE_MIN +
-        HEALTHBAR_PULSE_AMPLITUDE *
-            std::sin(ctx.animation_time * HEALTHBAR_PULSE_SPEED);
-    submit_box(out, ctx, QVector3D(0.0F, bar_y, 0.0F),
+        HEALTHBAR_PULSE_MIN + HEALTHBAR_PULSE_AMPLITUDE *
+                                  std::sin(ctx.animation_time * HEALTHBAR_PULSE_SPEED);
+    submit_box(out,
+               ctx,
+               QVector3D(0.0F, bar_y, 0.0F),
                QVector3D(bar_width * 0.5F + k_border_thickness * 3.0F,
-                         bar_height * 0.5F + k_border_thickness * 3.0F, 0.095F),
+                         bar_height * 0.5F + k_border_thickness * 3.0F,
+                         0.095F),
                HealthBarColors::GLOW_ATTACK * pulse * 0.6F);
   }
 
-  submit_box(out, ctx, QVector3D(0.0F, bar_y, 0.0F),
+  submit_box(out,
+             ctx,
+             QVector3D(0.0F, bar_y, 0.0F),
              QVector3D(bar_width * 0.5F + k_border_thickness,
-                       bar_height * 0.5F + k_border_thickness, 0.09F),
+                       bar_height * 0.5F + k_border_thickness,
+                       0.09F),
              HealthBarColors::BORDER);
-  submit_box(out, ctx, QVector3D(0.0F, bar_y, 0.0F),
+  submit_box(out,
+             ctx,
+             QVector3D(0.0F, bar_y, 0.0F),
              QVector3D(bar_width * 0.5F + k_border_thickness * 0.5F,
-                       bar_height * 0.5F + k_border_thickness * 0.5F, 0.088F),
+                       bar_height * 0.5F + k_border_thickness * 0.5F,
+                       0.088F),
              HealthBarColors::INNER_BORDER);
-  submit_box(out, ctx, QVector3D(0.0F, bar_y + 0.003F, 0.0F),
+  submit_box(out,
+             ctx,
+             QVector3D(0.0F, bar_y + 0.003F, 0.0F),
              QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.085F),
              HealthBarColors::BACKGROUND);
 
   auto [fg_color, fg_dark] = resolve_bar_colors(ratio);
-  submit_box(
-      out, ctx,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.005F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.48F, 0.08F), fg_dark);
-  submit_box(
-      out, ctx,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.008F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.40F, 0.078F),
-      fg_color);
+  submit_box(out,
+             ctx,
+             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.005F, 0.0F),
+             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.48F, 0.08F),
+             fg_dark);
+  submit_box(out,
+             ctx,
+             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.008F, 0.0F),
+             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.40F, 0.078F),
+             fg_color);
 
   QVector3D const highlight = clamp_vec_01(fg_color * 1.6F);
-  submit_box(out, ctx,
-             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
-                       bar_y + bar_height * 0.35F, 0.0F),
-             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.20F, 0.075F),
-             highlight);
-  submit_box(out, ctx,
-             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
-                       bar_y + bar_height * 0.48F, 0.0F),
-             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.08F, 0.073F),
-             HealthBarColors::SHINE * 0.8F);
+  submit_box(
+      out,
+      ctx,
+      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.35F, 0.0F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.20F, 0.075F),
+      highlight);
+  submit_box(
+      out,
+      ctx,
+      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.48F, 0.0F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.08F, 0.073F),
+      HealthBarColors::SHINE * 0.8F);
 
   float const marker_70_x = bar_width * 0.5F * (HEALTH_THRESHOLD_NORMAL - 0.5F);
-  submit_box(out, ctx, QVector3D(marker_70_x, bar_y, 0.0F),
+  submit_box(out,
+             ctx,
+             QVector3D(marker_70_x, bar_y, 0.0F),
              QVector3D(0.015F, bar_height * 0.55F, 0.09F),
              HealthBarColors::SEGMENT);
   if (style.draw_segment_highlights) {
-    submit_box(
-        out, ctx,
-        QVector3D(marker_70_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
-        QVector3D(0.008F, bar_height * 0.15F, 0.091F),
-        HealthBarColors::SEGMENT_HIGHLIGHT);
+    submit_box(out,
+               ctx,
+               QVector3D(marker_70_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
+               QVector3D(0.008F, bar_height * 0.15F, 0.091F),
+               HealthBarColors::SEGMENT_HIGHLIGHT);
   }
 
-  float const marker_30_x =
-      bar_width * 0.5F * (HEALTH_THRESHOLD_DAMAGED - 0.5F);
-  submit_box(out, ctx, QVector3D(marker_30_x, bar_y, 0.0F),
+  float const marker_30_x = bar_width * 0.5F * (HEALTH_THRESHOLD_DAMAGED - 0.5F);
+  submit_box(out,
+             ctx,
+             QVector3D(marker_30_x, bar_y, 0.0F),
              QVector3D(0.015F, bar_height * 0.55F, 0.09F),
              HealthBarColors::SEGMENT);
   if (style.draw_segment_highlights) {
-    submit_box(
-        out, ctx,
-        QVector3D(marker_30_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
-        QVector3D(0.008F, bar_height * 0.15F, 0.091F),
-        HealthBarColors::SEGMENT_HIGHLIGHT);
+    submit_box(out,
+               ctx,
+               QVector3D(marker_30_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
+               QVector3D(0.008F, bar_height * 0.15F, 0.091F),
+               HealthBarColors::SEGMENT_HIGHLIGHT);
   }
 }
 
-void draw_building_compact_health_bar(ISubmitter &out, const DrawContext &ctx,
+void draw_building_compact_health_bar(ISubmitter& out,
+                                      const DrawContext& ctx,
                                       float y) {
   if (building_box_mesh(ctx) == nullptr) {
     return;
@@ -396,17 +424,24 @@ void draw_building_compact_health_bar(ISubmitter &out, const DrawContext &ctx,
     return;
   }
 
-  submit_box(out, ctx, QVector3D(0.0F, y, 0.0F), QVector3D(0.6F, 0.03F, 0.05F),
+  submit_box(out,
+             ctx,
+             QVector3D(0.0F, y, 0.0F),
+             QVector3D(0.6F, 0.03F, 0.05F),
              QVector3D(0.06F, 0.06F, 0.06F));
 
   QVector3D const fg = QVector3D(0.22F, 0.78F, 0.22F) * ratio +
                        QVector3D(0.85F, 0.15F, 0.15F) * (1.0F - ratio);
-  submit_box(out, ctx, QVector3D(-0.3F * (1.0F - ratio), y + 0.01F, 0.0F),
-             QVector3D(0.3F * ratio, 0.025F, 0.045F), fg);
+  submit_box(out,
+             ctx,
+             QVector3D(-0.3F * (1.0F - ratio), y + 0.01F, 0.0F),
+             QVector3D(0.3F * ratio, 0.025F, 0.045F),
+             fg);
 }
 
-void draw_building_selection_overlay(ISubmitter &out, const DrawContext &ctx,
-                                     const BuildingSelectionStyle &style) {
+void draw_building_selection_overlay(ISubmitter& out,
+                                     const DrawContext& ctx,
+                                     const BuildingSelectionStyle& style) {
   QMatrix4x4 model;
   QVector3D const pos = ctx.model.column(3).toVector3D();
   model.translate(pos.x(), 0.0F, pos.z());
@@ -419,9 +454,10 @@ void draw_building_selection_overlay(ISubmitter &out, const DrawContext &ctx,
   }
 }
 
-auto select_nation_variant_renderer_key(
-    std::string_view roman_key, std::string_view carthage_key,
-    Game::Systems::NationID nation_id) -> std::string_view {
+auto select_nation_variant_renderer_key(std::string_view roman_key,
+                                        std::string_view carthage_key,
+                                        Game::Systems::NationID nation_id)
+    -> std::string_view {
   switch (nation_id) {
   case Game::Systems::NationID::Carthage:
     return carthage_key;
@@ -431,15 +467,17 @@ auto select_nation_variant_renderer_key(
   }
 }
 
-void register_nation_variant_renderer(EntityRendererRegistry &registry,
-                                      const std::string &public_key,
+void register_nation_variant_renderer(EntityRendererRegistry& registry,
+                                      const std::string& public_key,
                                       std::string roman_key,
                                       std::string carthage_key) {
   registry.register_renderer(
-      public_key, [&registry, roman_key = std::move(roman_key),
-                   carthage_key = std::move(carthage_key)](
-                      const DrawContext &ctx, ISubmitter &out) {
-        auto *unit = building_unit(ctx);
+      public_key,
+      [&registry,
+       roman_key = std::move(roman_key),
+       carthage_key = std::move(carthage_key)](const DrawContext& ctx,
+                                               ISubmitter& out) {
+        auto* unit = building_unit(ctx);
         if (unit == nullptr) {
           return;
         }
@@ -453,12 +491,11 @@ void register_nation_variant_renderer(EntityRendererRegistry &registry,
       });
 }
 
-void register_building_renderer(EntityRendererRegistry &registry,
+void register_building_renderer(EntityRendererRegistry& registry,
                                 std::string_view nation_slug,
                                 std::string_view building_type,
                                 RenderFunc func) {
-  const std::string canonical_key =
-      building_renderer_key(nation_slug, building_type);
+  const std::string canonical_key = building_renderer_key(nation_slug, building_type);
   registry.register_renderer(canonical_key, func);
 }
 

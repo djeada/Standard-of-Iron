@@ -11,7 +11,7 @@ class ResourceManager;
 
 class RenderBootstrap {
 public:
-  static auto initialize(Renderer &renderer, Camera &camera) -> bool;
+  static auto initialize(Renderer& renderer, Camera& camera) -> bool;
 };
 
 } // namespace Render::GL

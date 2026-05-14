@@ -1,14 +1,15 @@
 
 
-#include "render/draw_queue.h"
-#include "render/submitter.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <variant>
+
+#include "render/draw_queue.h"
+#include "render/submitter.h"
 
 namespace {
 
@@ -40,7 +41,7 @@ TEST(RiggedPipeline, DrawQueueSubmitAndSort) {
   using namespace Render::GL;
 
   std::array<QMatrix4x4, 4> palette{};
-  for (auto &m : palette) {
+  for (auto& m : palette) {
     m.setToIdentity();
   }
 
@@ -58,16 +59,16 @@ TEST(RiggedPipeline, DrawQueueSubmitAndSort) {
   queue.submit(rigged);
   ASSERT_EQ(queue.size(), 1U);
 
-  const DrawCmd &stored = queue.items().front();
+  const DrawCmd& stored = queue.items().front();
   ASSERT_EQ(stored.index(), RiggedCreatureCmdIndex);
-  const auto &round_trip = std::get<RiggedCreatureCmdIndex>(stored);
+  const auto& round_trip = std::get<RiggedCreatureCmdIndex>(stored);
   EXPECT_EQ(round_trip.bone_count, 4U);
   EXPECT_EQ(round_trip.bone_palette, palette.data());
   EXPECT_FLOAT_EQ(round_trip.alpha, 0.75F);
   EXPECT_EQ(round_trip.material_id, 42);
 
   queue.sort_for_batching();
-  const DrawCmd &sorted = queue.get_sorted(0);
+  const DrawCmd& sorted = queue.get_sorted(0);
   EXPECT_EQ(sorted.index(), RiggedCreatureCmdIndex);
 }
 
@@ -121,9 +122,9 @@ TEST(RiggedPipeline, QueueSubmitterShaderStateDoesNotAffectRiggedBatching) {
   DrawQueue queue;
   QueueSubmitter submitter(&queue);
 
-  auto *mesh = reinterpret_cast<RiggedMesh *>(0x1000);
-  auto *shader_a = reinterpret_cast<Shader *>(0x2000);
-  auto *shader_b = reinterpret_cast<Shader *>(0x3000);
+  auto* mesh = reinterpret_cast<RiggedMesh*>(0x1000);
+  auto* shader_a = reinterpret_cast<Shader*>(0x2000);
+  auto* shader_b = reinterpret_cast<Shader*>(0x3000);
 
   RiggedCreatureCmd first;
   first.mesh = mesh;
@@ -139,7 +140,7 @@ TEST(RiggedPipeline, QueueSubmitterShaderStateDoesNotAffectRiggedBatching) {
   ASSERT_EQ(queue.size(), 2U);
 
   queue.sort_for_batching();
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches.front().kind, PreparedBatchKind::RiggedCreatureInstanced);
   EXPECT_EQ(batches.front().count, 2U);
@@ -150,8 +151,8 @@ TEST(RiggedPipeline, DifferentRolePalettesShareRiggedPreparedBatch) {
 
   DrawQueue queue;
 
-  auto *mesh = reinterpret_cast<RiggedMesh *>(0x1000);
-  auto *material = reinterpret_cast<const Material *>(0x2000);
+  auto* mesh = reinterpret_cast<RiggedMesh*>(0x1000);
+  auto* material = reinterpret_cast<const Material*>(0x2000);
 
   RiggedCreatureCmd first;
   first.mesh = mesh;
@@ -166,7 +167,7 @@ TEST(RiggedPipeline, DifferentRolePalettesShareRiggedPreparedBatch) {
   queue.submit(second);
 
   queue.sort_for_batching();
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
 
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].kind, PreparedBatchKind::RiggedCreatureInstanced);
@@ -194,7 +195,7 @@ TEST(RiggedPipeline, MultipleSelectionRingsBatchedIntoInstanced) {
   queue.submit(ring_c);
 
   queue.sort_for_batching();
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
 
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].kind, PreparedBatchKind::SelectionRingInstanced);
@@ -212,7 +213,7 @@ TEST(RiggedPipeline, SingleSelectionRingRemainsASingleBatch) {
   queue.submit(ring);
 
   queue.sort_for_batching();
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
 
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].kind, PreparedBatchKind::Single);

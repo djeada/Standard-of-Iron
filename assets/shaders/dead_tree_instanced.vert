@@ -5,7 +5,9 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec4 a_pos_scale;
 layout(location = 3) in vec4 a_color_rot;
 
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 
 out vec3 v_world_pos;
 out vec3 v_normal;
@@ -28,8 +30,7 @@ void main() {
   v_world_pos = local_pos + world_pos;
 
   vec2 rotated_normal_xz = rot * a_normal.xz;
-  v_normal =
-      normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
+  v_normal = normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
 
   v_color = a_color_rot.rgb;
   v_local_pos = a_pos;

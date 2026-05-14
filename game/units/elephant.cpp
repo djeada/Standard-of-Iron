@@ -1,4 +1,9 @@
 #include "elephant.h"
+
+#include <qvectornd.h>
+
+#include <memory>
+
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
@@ -6,8 +11,6 @@
 #include "render/elephant/dimensions.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
-#include <memory>
-#include <qvectornd.h>
 
 static inline auto team_color(int owner_id) -> QVector3D {
   switch (owner_id) {
@@ -26,19 +29,20 @@ static inline auto team_color(int owner_id) -> QVector3D {
 
 namespace Game::Units {
 
-Elephant::Elephant(Engine::Core::World &world)
-    : Unit(world, TroopType::Elephant) {}
+Elephant::Elephant(Engine::Core::World& world)
+    : Unit(world, TroopType::Elephant) {
+}
 
-auto Elephant::Create(Engine::Core::World &world,
-                      const SpawnParams &params) -> std::unique_ptr<Elephant> {
+auto Elephant::Create(Engine::Core::World& world,
+                      const SpawnParams& params) -> std::unique_ptr<Elephant> {
   auto unit = std::unique_ptr<Elephant>(new Elephant(world));
   unit->init(params);
   return unit;
 }
 
-void Elephant::init(const SpawnParams &params) {
+void Elephant::init(const SpawnParams& params) {
 
-  auto *e = m_world->create_entity();
+  auto* e = m_world->create_entity();
   m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
@@ -46,8 +50,7 @@ void Elephant::init(const SpawnParams &params) {
       nation_id, TroopType::Elephant);
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
-  m_t->position = {params.position.x(), params.position.y(),
-                   params.position.z()};
+  m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   float const scale = profile.visuals.render_scale;
   m_t->scale = {scale, scale, scale};
 
@@ -91,10 +94,9 @@ void Elephant::init(const SpawnParams &params) {
   m_atk->melee_damage = profile.combat.melee_damage;
   m_atk->melee_cooldown = profile.combat.melee_cooldown;
 
-  m_atk->preferred_mode =
-      profile.combat.can_ranged
-          ? Engine::Core::AttackComponent::CombatMode::Ranged
-          : Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->preferred_mode = profile.combat.can_ranged
+                              ? Engine::Core::AttackComponent::CombatMode::Ranged
+                              : Engine::Core::AttackComponent::CombatMode::Melee;
   m_atk->current_mode = profile.combat.can_ranged
                             ? Engine::Core::AttackComponent::CombatMode::Ranged
                             : Engine::Core::AttackComponent::CombatMode::Melee;
@@ -103,7 +105,7 @@ void Elephant::init(const SpawnParams &params) {
   m_atk->max_height_difference = 5.0F;
 
   e->add_component<Engine::Core::ElephantComponent>();
-  auto *eleph_comp = e->get_component<Engine::Core::ElephantComponent>();
+  auto* eleph_comp = e->get_component<Engine::Core::ElephantComponent>();
   if (eleph_comp != nullptr) {
     auto const dims = Render::GL::make_elephant_dimensions(0U);
     eleph_comp->foot_lateral = dims.body_width * 0.46F;

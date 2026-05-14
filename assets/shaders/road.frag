@@ -17,7 +17,9 @@ out vec4 frag_color;
 
 const float PI = 3.14159265359;
 
-float saturate_val(float x) { return clamp(x, 0.0, 1.0); }
+float saturate_val(float x) {
+  return clamp(x, 0.0, 1.0);
+}
 
 mat2 rotate_2d(float a) {
   float c = cos(a), s = sin(a);
@@ -116,8 +118,7 @@ void main() {
   vec2 cell = floor(uv * 1.5);
   float cell_rnd = hash_2d(cell);
   vec2 local = fract(uv);
-  vec2 uv_var =
-      (rotate_2d(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + floor(uv);
+  vec2 uv_var = (rotate_2d(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + floor(uv);
 
   float var_low = (fbm_2d(uv * 0.4) - 0.5) * 0.18;
   float var_mid = (fbm_2d(uv_var * 2.5) - 0.5) * 0.12;
@@ -177,13 +178,12 @@ void main() {
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
   lit_color = mix(lit_color, vec3(gray * 0.85), grime);
 
-  float edge_fade = smoothstep(0.0, 0.08, v_tex_coord.x) *
-                    smoothstep(0.0, 0.08, 1.0 - v_tex_coord.x);
+  float edge_fade =
+      smoothstep(0.0, 0.08, v_tex_coord.x) * smoothstep(0.0, 0.08, 1.0 - v_tex_coord.x);
   lit_color *= mix(0.75, 1.0, edge_fade);
 
   float visibility_factor = 1.0;
-  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 &&
-      u_visibility_size.y > 0.0) {
+  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
     float tile_size = max(u_visibility_tile_size, 0.0001);
     vec2 grid = vec2(v_world_pos.x / tile_size, v_world_pos.z / tile_size);
     grid += (u_visibility_size * 0.5) - vec2(0.5);

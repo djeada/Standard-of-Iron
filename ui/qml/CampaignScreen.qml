@@ -13,14 +13,13 @@ Item {
     readonly property string theater_heading: qsTr("Campaign War Table • Mediterranean Theater")
 
     signal mission_selected(string campaign_id, string mission_id)
-    signal cancelled()
+    signal cancelled
 
     function refresh_campaigns() {
         if (typeof game !== "undefined" && game.available_campaigns) {
             campaigns = game.available_campaigns;
             if (campaigns.length > 0 && !current_campaign)
                 current_campaign = campaigns[0];
-
         }
         build_campaign_state();
         ensure_mission_selection();
@@ -28,18 +27,16 @@ Item {
 
     function select_next_unlocked_mission() {
         if (!current_campaign || !current_campaign.missions)
-            return ;
-
+            return;
         var all_completed = current_campaign.missions.length > 0;
         for (var i = 0; i < current_campaign.missions.length; i++) {
             var mission = current_campaign.missions[i];
             if (mission && mission.unlocked && !mission.completed) {
                 selected_mission_index = i;
-                return ;
+                return;
             }
             if (!mission || !mission.completed)
                 all_completed = false;
-
         }
         if (all_completed) {
             var last_index = current_campaign.missions.length - 1;
@@ -50,23 +47,21 @@ Item {
     function ensure_mission_selection() {
         if (!current_campaign || !current_campaign.missions || current_campaign.missions.length === 0) {
             selected_mission_index = -1;
-            return ;
+            return;
         }
         if (selected_mission_index >= 0 && selected_mission_index < current_campaign.missions.length)
-            return ;
-
+            return;
         select_next_unlocked_mission();
     }
 
     function select_mission_by_region(region_id) {
         if (!current_campaign || !current_campaign.missions || !region_id)
-            return ;
-
+            return;
         for (var i = 0; i < current_campaign.missions.length; i++) {
             var mission = current_campaign.missions[i];
             if (mission.world_region_id === region_id) {
                 selected_mission_index = i;
-                return ;
+                return;
             }
         }
     }
@@ -74,40 +69,34 @@ Item {
     function build_campaign_state() {
         if (!current_campaign || !current_campaign.missions) {
             campaign_map_state = null;
-            return ;
+            return;
         }
-        var region_stats = {
-        };
+        var region_stats = {};
         for (var i = 0; i < current_campaign.missions.length; i++) {
             var mission = current_campaign.missions[i];
             if (!mission || !mission.world_region_id)
                 continue;
-
             var region_id = mission.world_region_id;
             if (!region_stats[region_id])
                 region_stats[region_id] = {
-                "completed": false,
-                "unlocked": false
-            };
-
+                    "completed": false,
+                    "unlocked": false
+                };
             if (mission.completed)
                 region_stats[region_id].completed = true;
-
             if (mission.unlocked)
                 region_stats[region_id].unlocked = true;
-
         }
         var provinces = [];
         for (var key in region_stats) {
             if (!region_stats.hasOwnProperty(key))
                 continue;
-
             var state = region_stats[key];
             var owner = state.completed ? "carthage" : (state.unlocked ? "neutral" : "rome");
             provinces.push({
-                "id": key,
-                "owner": owner
-            });
+                    "id": key,
+                    "owner": owner
+                });
         }
         campaign_map_state = {
             "provinces": provinces
@@ -126,7 +115,7 @@ Item {
     }
     anchors.fill: parent
     focus: true
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
             event.accepted = true;
@@ -163,7 +152,6 @@ Item {
                 position: 1
                 color: "#1a140f"
             }
-
         }
         border.color: "#8f6d43"
         border.width: 2
@@ -211,14 +199,12 @@ Item {
                         maximumLineCount: 3
                         elide: Text.ElideRight
                     }
-
                 }
 
                 StyledButton {
                     text: qsTr("← Back")
                     onClicked: root.cancelled()
                 }
-
             }
 
             RowLayout {
@@ -241,7 +227,6 @@ Item {
                             position: 1
                             color: "#241b14"
                         }
-
                     }
                     border.color: "#a7814a"
                     border.width: 2
@@ -299,12 +284,10 @@ Item {
                                             property int completed_count: {
                                                 if (!current_campaign || !current_campaign.missions)
                                                     return 0;
-
                                                 var count = 0;
                                                 for (var i = 0; i < current_campaign.missions.length; i++) {
                                                     if (current_campaign.missions[i].completed)
                                                         count++;
-
                                                 }
                                                 return count;
                                             }
@@ -318,27 +301,22 @@ Item {
                                             border.color: Theme.successBr
                                             border.width: 1
 
-                                            Behavior on width {
+                                            Behavior on width  {
                                                 NumberAnimation {
                                                     duration: Theme.animNormal
                                                 }
-
                                             }
-
                                         }
-
                                     }
 
                                     Label {
                                         property int completed_count: {
                                             if (!current_campaign || !current_campaign.missions)
                                                 return 0;
-
                                             var count = 0;
                                             for (var i = 0; i < current_campaign.missions.length; i++) {
                                                 if (current_campaign.missions[i].completed)
                                                     count++;
-
                                             }
                                             return count;
                                         }
@@ -349,11 +327,8 @@ Item {
                                         font.pointSize: Theme.fontSizeSmall
                                         font.bold: true
                                     }
-
                                 }
-
                             }
-
                         }
 
                         ScrollView {
@@ -376,13 +351,9 @@ Item {
                                         selected_mission_index = index;
                                     }
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
 
                 Rectangle {
@@ -422,15 +393,12 @@ Item {
                             Layout.fillHeight: true
                             selected_mission: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
                             campaign_state: root.campaign_map_state
-                            onRegion_selected: function(region_id) {
+                            onRegion_selected: function (region_id) {
                                 select_mission_by_region(region_id);
                             }
                         }
-
                     }
-
                 }
-
             }
 
             MissionDetailPanel {
@@ -444,20 +412,14 @@ Item {
                 onStart_mission_clicked: {
                     if (current_campaign && mission_data && mission_data.mission_id)
                         root.mission_selected(current_campaign.id, mission_data.mission_id);
-
                 }
 
-                Behavior on Layout.preferredHeight {
+                Behavior on Layout.preferredHeight  {
                     NumberAnimation {
                         duration: Theme.animNormal
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }

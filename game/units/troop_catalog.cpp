@@ -4,12 +4,14 @@
 
 namespace Game::Units {
 
-auto TroopCatalog::instance() -> TroopCatalog & {
+auto TroopCatalog::instance() -> TroopCatalog& {
   static TroopCatalog inst;
   return inst;
 }
 
-TroopCatalog::TroopCatalog() { register_defaults(); }
+TroopCatalog::TroopCatalog() {
+  register_defaults();
+}
 
 void TroopCatalog::register_class(TroopClass troop_class) {
   m_classes[troop_class.unit_type] = std::move(troop_class);
@@ -20,8 +22,7 @@ void TroopCatalog::reset_to_defaults() {
   register_defaults();
 }
 
-auto TroopCatalog::get_class(Game::Units::TroopType type) const
-    -> const TroopClass * {
+auto TroopCatalog::get_class(Game::Units::TroopType type) const -> const TroopClass* {
   auto it = m_classes.find(type);
   if (it != m_classes.end()) {
     return &it->second;
@@ -30,7 +31,7 @@ auto TroopCatalog::get_class(Game::Units::TroopType type) const
 }
 
 auto TroopCatalog::get_class_or_fallback(Game::Units::TroopType type) const
-    -> const TroopClass & {
+    -> const TroopClass& {
   auto it = m_classes.find(type);
   if (it != m_classes.end()) {
     return it->second;
@@ -38,7 +39,9 @@ auto TroopCatalog::get_class_or_fallback(Game::Units::TroopType type) const
   return m_fallback;
 }
 
-void TroopCatalog::clear() { m_classes.clear(); }
+void TroopCatalog::clear() {
+  m_classes.clear();
+}
 
 void TroopCatalog::register_defaults() {
   m_fallback.display_name = "Unknown Troop";

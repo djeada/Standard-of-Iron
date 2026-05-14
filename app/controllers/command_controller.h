@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QVector3D>
+
 #include <vector>
 
 namespace Engine::Core {
@@ -26,13 +27,16 @@ struct CommandResult {
 class CommandController : public QObject {
   Q_OBJECT
 public:
-  CommandController(Engine::Core::World *world,
-                    Game::Systems::SelectionSystem *selection_system,
-                    Game::Systems::PickingService *picking_service,
-                    QObject *parent = nullptr);
+  CommandController(Engine::Core::World* world,
+                    Game::Systems::SelectionSystem* selection_system,
+                    Game::Systems::PickingService* picking_service,
+                    QObject* parent = nullptr);
 
-  auto on_attack_click(qreal sx, qreal sy, int viewport_width,
-                       int viewport_height, void *camera) -> CommandResult;
+  auto on_attack_click(qreal sx,
+                       qreal sy,
+                       int viewport_width,
+                       int viewport_height,
+                       void* camera) -> CommandResult;
   auto on_stop_command() -> CommandResult;
   auto on_hold_command() -> CommandResult;
   auto on_guard_command() -> CommandResult;
@@ -40,14 +44,23 @@ public:
   auto on_run_command() -> CommandResult;
   void enable_run_mode_for_selected();
   void disable_run_mode_for_selected();
-  auto on_guard_click(qreal sx, qreal sy, int viewport_width,
-                      int viewport_height, void *camera) -> CommandResult;
-  auto on_patrol_click(qreal sx, qreal sy, int viewport_width,
-                       int viewport_height, void *camera) -> CommandResult;
-  auto set_rally_at_screen(qreal sx, qreal sy, int viewport_width,
-                           int viewport_height, void *camera,
+  auto on_guard_click(qreal sx,
+                      qreal sy,
+                      int viewport_width,
+                      int viewport_height,
+                      void* camera) -> CommandResult;
+  auto on_patrol_click(qreal sx,
+                       qreal sy,
+                       int viewport_width,
+                       int viewport_height,
+                       void* camera) -> CommandResult;
+  auto set_rally_at_screen(qreal sx,
+                           qreal sy,
+                           int viewport_width,
+                           int viewport_height,
+                           void* camera,
                            int local_owner_id) -> CommandResult;
-  void recruit_near_selected(const QString &unit_type, int local_owner_id);
+  void recruit_near_selected(const QString& unit_type, int local_owner_id);
 
   [[nodiscard]] bool has_patrol_first_waypoint() const {
     return m_has_patrol_first_waypoint;
@@ -58,11 +71,9 @@ public:
   void clear_patrol_first_waypoint() { m_has_patrol_first_waypoint = false; }
   void reset_transient_state();
 
-  [[nodiscard]] bool is_placing_formation() const {
-    return m_is_placing_formation;
-  }
-  void begin_move_placement_at_position(const QVector3D &position);
-  void update_formation_placement(const QVector3D &position);
+  [[nodiscard]] bool is_placing_formation() const { return m_is_placing_formation; }
+  void begin_move_placement_at_position(const QVector3D& position);
+  void update_formation_placement(const QVector3D& position);
   void update_formation_rotation(float angle_degrees);
   void confirm_formation_placement();
   void cancel_formation_placement();
@@ -91,9 +102,9 @@ signals:
   void formation_placement_ended();
 
 private:
-  Engine::Core::World *m_world;
-  Game::Systems::SelectionSystem *m_selection_system;
-  Game::Systems::PickingService *m_picking_service;
+  Engine::Core::World* m_world;
+  Game::Systems::SelectionSystem* m_selection_system;
+  Game::Systems::PickingService* m_picking_service;
 
   bool m_has_patrol_first_waypoint = false;
   QVector3D m_patrol_first_waypoint;
@@ -104,7 +115,7 @@ private:
   float m_formation_placement_angle = 0.0F;
   std::vector<Engine::Core::EntityID> m_formation_units;
 
-  static void reset_movement(Engine::Core::Entity *entity);
+  static void reset_movement(Engine::Core::Entity* entity);
 };
 
 } // namespace App::Controllers

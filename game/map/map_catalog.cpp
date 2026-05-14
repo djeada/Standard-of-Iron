@@ -1,8 +1,5 @@
 #include "map_catalog.h"
-#include "campaign_loader.h"
-#include "json_keys.h"
-#include "mission_loader.h"
-#include "utils/resource_utils.h"
+
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -14,7 +11,6 @@
 #include <QStringList>
 #include <QTimer>
 #include <QVariantMap>
-#include <algorithm>
 #include <qdir.h>
 #include <qfiledevice.h>
 #include <qglobal.h>
@@ -30,22 +26,28 @@
 #include <qtimer.h>
 #include <qtmetamacros.h>
 
+#include <algorithm>
+
+#include "campaign_loader.h"
+#include "json_keys.h"
+#include "mission_loader.h"
+#include "utils/resource_utils.h"
+
 namespace Game::Map {
 
 using namespace JsonKeys;
 
 namespace {
 
-auto resolve_mission_file_path(const QString &mission_id) -> QString {
-  const QStringList search_paths = {
-      QStringLiteral("assets/missions/%1.json"),
-      QStringLiteral("../assets/missions/%1.json"),
-      QStringLiteral("../../assets/missions/%1.json"),
-      QStringLiteral(":/assets/missions/%1.json"),
-      QStringLiteral("/assets/missions/%1.json"),
-      QStringLiteral("/../assets/missions/%1.json")};
+auto resolve_mission_file_path(const QString& mission_id) -> QString {
+  const QStringList search_paths = {QStringLiteral("assets/missions/%1.json"),
+                                    QStringLiteral("../assets/missions/%1.json"),
+                                    QStringLiteral("../../assets/missions/%1.json"),
+                                    QStringLiteral(":/assets/missions/%1.json"),
+                                    QStringLiteral("/assets/missions/%1.json"),
+                                    QStringLiteral("/../assets/missions/%1.json")};
 
-  for (const auto &pattern : search_paths) {
+  for (const auto& pattern : search_paths) {
     QString candidate = pattern.arg(mission_id);
     candidate = Utils::Resources::resolve_resource_path(candidate);
     if (QFileInfo::exists(candidate)) {
@@ -65,15 +67,15 @@ auto collect_campaign_files() -> QStringList {
 
   QStringList files;
   QSet<QString> seen;
-  for (const auto &path : search_paths) {
+  for (const auto& path : search_paths) {
     const QString resolved = Utils::Resources::resolve_resource_path(path);
     QDir campaigns_dir(resolved);
     if (!campaigns_dir.exists()) {
       continue;
     }
-    const QStringList entries = campaigns_dir.entryList(
-        QStringList() << "*.json", QDir::Files, QDir::Name);
-    for (const auto &entry : entries) {
+    const QStringList entries =
+        campaigns_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
+    for (const auto& entry : entries) {
       const QString campaign_path = campaigns_dir.filePath(entry);
       if (!seen.contains(campaign_path)) {
         seen.insert(campaign_path);
@@ -87,19 +89,18 @@ auto collect_campaign_files() -> QStringList {
 auto load_campaign_map_paths() -> QSet<QString> {
   QSet<QString> map_paths;
   const QStringList campaign_files = collect_campaign_files();
-  for (const auto &campaign_path : campaign_files) {
+  for (const auto& campaign_path : campaign_files) {
     Game::Campaign::CampaignDefinition campaign;
     QString error;
     if (!Game::Campaign::CampaignLoader::load_from_json_file(
             campaign_path, campaign, &error)) {
-      qWarning() << "Failed to load campaign for map filtering:"
-                 << campaign_path << error;
+      qWarning() << "Failed to load campaign for map filtering:" << campaign_path
+                 << error;
       continue;
     }
 
-    for (const auto &mission : campaign.missions) {
-      const QString mission_file =
-          resolve_mission_file_path(mission.mission_id);
+    for (const auto& mission : campaign.missions) {
+      const QString mission_file = resolve_mission_file_path(mission.mission_id);
       if (mission_file.isEmpty()) {
         qWarning() << "Missing mission file for campaign map filtering:"
                    << mission.mission_id;
@@ -109,8 +110,8 @@ auto load_campaign_map_paths() -> QSet<QString> {
       Game::Mission::MissionDefinition mission_def;
       if (!Game::Mission::MissionLoader::load_from_json_file(
               mission_file, mission_def, &error)) {
-        qWarning() << "Failed to load mission for map filtering:"
-                   << mission_file << error;
+        qWarning() << "Failed to load mission for map filtering:" << mission_file
+                   << error;
         continue;
       }
 
@@ -127,7 +128,9 @@ auto load_campaign_map_paths() -> QSet<QString> {
 
 } // namespace
 
-MapCatalog::MapCatalog(QObject *parent) : QObject(parent) {}
+MapCatalog::MapCatalog(QObject* parent)
+    : QObject(parent) {
+}
 
 auto MapCatalog::available_maps() -> QVariantList {
   QVariantList list;
@@ -141,9 +144,8 @@ auto MapCatalog::available_maps() -> QVariantList {
 
   QStringList const files =
       maps_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
-  for (const QString &f : files) {
-    QString const path =
-        Utils::Resources::resolve_resource_path(maps_dir.filePath(f));
+  for (const QString& f : files) {
+    QString const path = Utils::Resources::resolve_resource_path(maps_dir.filePath(f));
     if (campaign_map_paths.contains(path)) {
       continue;
     }
@@ -167,7 +169,7 @@ auto MapCatalog::available_maps() -> QVariantList {
 
         if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
           QJsonArray const spawns = obj[SPAWNS].toArray();
-          for (const QJsonValue &spawn_val : spawns) {
+          for (const QJsonValue& spawn_val : spawns) {
             if (spawn_val.isObject()) {
               QJsonObject spawn = spawn_val.toObject();
               if (spawn.contains(PLAYER_ID)) {
@@ -292,7 +294,7 @@ void MapCatalog::load_next_map() {
   }
 }
 
-auto MapCatalog::load_single_map(const QString &path) -> QVariantMap {
+auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
   const QString resolved_path = Utils::Resources::resolve_resource_path(path);
   QFile file(resolved_path);
   QString name = QFileInfo(resolved_path).fileName();
@@ -315,7 +317,7 @@ auto MapCatalog::load_single_map(const QString &path) -> QVariantMap {
 
       if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
         QJsonArray const spawns = obj[SPAWNS].toArray();
-        for (const QJsonValue &spawn_val : spawns) {
+        for (const QJsonValue& spawn_val : spawns) {
           if (spawn_val.isObject()) {
             QJsonObject spawn = spawn_val.toObject();
             if (spawn.contains(PLAYER_ID)) {

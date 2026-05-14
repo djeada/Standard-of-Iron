@@ -1,12 +1,14 @@
 #include "ai_snapshot_builder.h"
+
+#include <utility>
+
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "systems/ai_system/ai_types.h"
-#include <utility>
 
 namespace Game::Systems::AI {
 
-auto AISnapshotBuilder::build(const Engine::Core::World &world,
+auto AISnapshotBuilder::build(const Engine::Core::World& world,
                               int ai_owner_id) -> AISnapshot {
   AISnapshot snapshot;
   snapshot.player_id = ai_owner_id;
@@ -14,12 +16,12 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
   auto friendlies = world.get_units_owned_by(ai_owner_id);
   snapshot.friendly_units.reserve(friendlies.size());
 
-  for (auto *entity : friendlies) {
+  for (auto* entity : friendlies) {
     if (!entity->has_component<Engine::Core::AIControlledComponent>()) {
       continue;
     }
 
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -35,24 +37,20 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     data.health = unit->health;
     data.max_health = unit->max_health;
     data.is_building = entity->has_component<Engine::Core::BuildingComponent>();
-    data.is_commander =
-        entity->has_component<Engine::Core::CommanderComponent>();
+    data.is_commander = entity->has_component<Engine::Core::CommanderComponent>();
 
-    if (auto *transform =
-            entity->get_component<Engine::Core::TransformComponent>()) {
+    if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
       data.pos_x = transform->position.x;
       data.pos_y = 0.0F;
       data.pos_z = transform->position.z;
     }
 
-    if (auto *movement =
-            entity->get_component<Engine::Core::MovementComponent>()) {
+    if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
       data.movement.has_component = true;
       data.movement.has_target = movement->has_target;
     }
 
-    if (auto *production =
-            entity->get_component<Engine::Core::ProductionComponent>()) {
+    if (auto* production = entity->get_component<Engine::Core::ProductionComponent>()) {
       data.production.has_component = true;
       data.production.in_progress = production->in_progress;
       data.production.commander_committed = production->commander_committed;
@@ -68,14 +66,13 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
           static_cast<int>(production->production_queue.size());
     }
 
-    if (auto *builder_prod =
+    if (auto* builder_prod =
             entity->get_component<Engine::Core::BuilderProductionComponent>()) {
       data.builder_production.has_component = true;
       data.builder_production.has_construction_site =
           builder_prod->has_construction_site;
       data.builder_production.in_progress = builder_prod->in_progress;
-      data.builder_production.at_construction_site =
-          builder_prod->at_construction_site;
+      data.builder_production.at_construction_site = builder_prod->at_construction_site;
     }
 
     snapshot.friendly_units.push_back(std::move(data));
@@ -84,13 +81,13 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
   auto enemies = world.get_enemy_units(ai_owner_id);
   snapshot.visible_enemies.reserve(enemies.size());
 
-  for (auto *entity : enemies) {
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (auto* entity : enemies) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
 
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
       continue;
     }
@@ -98,8 +95,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     ContactSnapshot contact;
     contact.id = entity->get_id();
     contact.owner_id = unit->owner_id;
-    contact.is_building =
-        entity->has_component<Engine::Core::BuildingComponent>();
+    contact.is_building = entity->has_component<Engine::Core::BuildingComponent>();
     contact.pos_x = transform->position.x;
     contact.pos_y = 0.0F;
     contact.pos_z = transform->position.z;

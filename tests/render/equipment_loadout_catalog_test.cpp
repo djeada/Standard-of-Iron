@@ -1,6 +1,7 @@
+#include <gtest/gtest.h>
+
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -12,8 +13,8 @@ protected:
 };
 
 TEST_F(EquipmentLoadoutCatalogTest, RomanMountedKnightLoadoutFromData) {
-  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/roman/horse_swordsman");
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_swordsman");
 
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.sword, "sword_roman");
@@ -30,10 +31,9 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanMountedKnightLoadoutFromData) {
   EXPECT_NE(loadout.horse_crupper_handle, k_invalid_equipment_handle);
 }
 
-TEST_F(EquipmentLoadoutCatalogTest,
-       RomanHorseArcherLoadoutUsesRomanCloakHandle) {
-  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/roman/horse_archer");
+TEST_F(EquipmentLoadoutCatalogTest, RomanHorseArcherLoadoutUsesRomanCloakHandle) {
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_archer");
 
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.bow, "bow_roman");
@@ -65,8 +65,7 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanArcherLoadoutResolvesFootEquipment) {
   EXPECT_NE(loadout.cloak_handle, k_invalid_equipment_handle);
 }
 
-TEST_F(EquipmentLoadoutCatalogTest,
-       RomanSpearmanLoadoutResolvesGreavesAndShoulder) {
+TEST_F(EquipmentLoadoutCatalogTest, RomanSpearmanLoadoutResolvesGreavesAndShoulder) {
   const auto loadout =
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/spearman");
 
@@ -85,8 +84,8 @@ TEST_F(EquipmentLoadoutCatalogTest,
 
 TEST_F(EquipmentLoadoutCatalogTest,
        CarthageSwordsmanLoadoutResolvesFootShieldAndArmor) {
-  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/carthage/swordsman");
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/carthage/swordsman");
 
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.sword, "sword_carthage");
@@ -149,8 +148,7 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageBuilderLoadoutResolvesSupportGear) {
   EXPECT_NE(loadout.arm_guards_handle, k_invalid_equipment_handle);
 }
 
-TEST_F(EquipmentLoadoutCatalogTest,
-       RomanCivilianLoadoutResolvesHandleOnlyGarments) {
+TEST_F(EquipmentLoadoutCatalogTest, RomanCivilianLoadoutResolvesHandleOnlyGarments) {
   const auto loadout =
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/civilian");
 
@@ -161,8 +159,7 @@ TEST_F(EquipmentLoadoutCatalogTest,
   EXPECT_NE(loadout.cloak_handle, k_invalid_equipment_handle);
 }
 
-TEST_F(EquipmentLoadoutCatalogTest,
-       CarthageCivilianLoadoutResolvesHandleOnlyGarments) {
+TEST_F(EquipmentLoadoutCatalogTest, CarthageCivilianLoadoutResolvesHandleOnlyGarments) {
   const auto loadout =
       Render::GL::Nation::resolve_equipment_loadout("troops/carthage/civilian");
 
@@ -176,8 +173,8 @@ TEST_F(EquipmentLoadoutCatalogTest,
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, CarthageHorseArcherLoadoutResolvesHandles) {
-  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/carthage/horse_archer");
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/carthage/horse_archer");
 
   ASSERT_TRUE(loadout.found);
   EXPECT_EQ(loadout.ids.bow, "bow_carthage");
@@ -197,10 +194,10 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageHorseArcherLoadoutResolvesHandles) {
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, MountedNationsUseDistinctHorseSaddles) {
-  const auto roman = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/roman/horse_archer");
-  const auto carthage = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/carthage/horse_archer");
+  const auto roman =
+      Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_archer");
+  const auto carthage =
+      Render::GL::Nation::resolve_equipment_loadout("troops/carthage/horse_archer");
 
   ASSERT_TRUE(roman.found);
   ASSERT_TRUE(carthage.found);

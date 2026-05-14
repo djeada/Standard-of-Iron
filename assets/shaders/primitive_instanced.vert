@@ -9,7 +9,9 @@ layout(location = 4) in vec4 i_model_col1;
 layout(location = 5) in vec4 i_model_col2;
 layout(location = 6) in vec4 i_color_alpha;
 
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 uniform vec3 u_light_dir;
 
 out vec3 v_world_pos;
@@ -19,10 +21,10 @@ out float v_alpha;
 
 void main() {
 
-  mat4 model_matrix =
-      mat4(vec4(i_model_col0.xyz, 0.0), vec4(i_model_col1.xyz, 0.0),
-           vec4(i_model_col2.xyz, 0.0),
-           vec4(i_model_col0.w, i_model_col1.w, i_model_col2.w, 1.0));
+  mat4 model_matrix = mat4(vec4(i_model_col0.xyz, 0.0),
+                           vec4(i_model_col1.xyz, 0.0),
+                           vec4(i_model_col2.xyz, 0.0),
+                           vec4(i_model_col0.w, i_model_col1.w, i_model_col2.w, 1.0));
 
   vec4 world_pos4 = model_matrix * vec4(a_position, 1.0);
   v_world_pos = world_pos4.xyz;

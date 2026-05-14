@@ -1,11 +1,12 @@
 #include "rain_manager.h"
+
 #include <algorithm>
 
 namespace Game::Systems {
 
 RainManager::RainManager() = default;
 
-void RainManager::configure(const Game::Map::RainSettings &settings,
+void RainManager::configure(const Game::Map::RainSettings& settings,
                             std::uint32_t map_seed) {
   m_settings = settings;
   m_seed = map_seed;
@@ -18,8 +19,8 @@ void RainManager::reset() {
   m_state_time = 0.0F;
 
   if (m_settings.enabled && m_seed != 0 && m_settings.cycle_duration >= 1.0F) {
-    const auto cycle_ms = static_cast<std::uint32_t>(
-        std::max(1.0F, m_settings.cycle_duration) * 1000.0F);
+    const auto cycle_ms =
+        static_cast<std::uint32_t>(std::max(1.0F, m_settings.cycle_duration) * 1000.0F);
     m_cycle_time = static_cast<float>(m_seed % cycle_ms) / 1000.0F;
   } else {
     m_cycle_time = 0.0F;
@@ -91,8 +92,8 @@ void RainManager::update_intensity(float) {
     break;
 
   case RainState::FadingIn: {
-    const float progress = std::min(
-        1.0F, m_state_time / std::max(0.001F, m_settings.fade_duration));
+    const float progress =
+        std::min(1.0F, m_state_time / std::max(0.001F, m_settings.fade_duration));
     m_current_intensity = progress * m_settings.intensity;
     break;
   }
@@ -102,8 +103,8 @@ void RainManager::update_intensity(float) {
     break;
 
   case RainState::FadingOut: {
-    const float progress = std::min(
-        1.0F, m_state_time / std::max(0.001F, m_settings.fade_duration));
+    const float progress =
+        std::min(1.0F, m_state_time / std::max(0.001F, m_settings.fade_duration));
     m_current_intensity = (1.0F - progress) * m_settings.intensity;
     break;
   }

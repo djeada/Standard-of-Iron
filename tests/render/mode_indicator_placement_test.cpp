@@ -19,16 +19,14 @@ TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   transform.position = {1.0F, 2.0F, 3.0F};
   transform.scale = {0.5F, 0.5F, 0.5F};
 
-  renderer.enqueue_mode_indicator(&transform, nullptr, true, false, false,
-                                  false);
+  renderer.enqueue_mode_indicator(&transform, nullptr, true, false, false, false);
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
-  auto const &items = renderer.m_active_queue->items();
+  auto const& items = renderer.m_active_queue->items();
   ASSERT_EQ(items.size(), 1U);
-  ASSERT_TRUE(
-      std::holds_alternative<Render::GL::ModeIndicatorCmd>(items.front()));
+  ASSERT_TRUE(std::holds_alternative<Render::GL::ModeIndicatorCmd>(items.front()));
 
-  auto const &cmd = std::get<Render::GL::ModeIndicatorCmd>(items.front());
+  auto const& cmd = std::get<Render::GL::ModeIndicatorCmd>(items.front());
   QVector3D const translation = cmd.model.column(3).toVector3D();
 
   EXPECT_FLOAT_EQ(translation.x(), transform.position.x);
@@ -44,12 +42,11 @@ TEST(SceneRendererEffects, BloodPoolEnqueuesEffectBatchCommand) {
   renderer.blood_pool(position, 0.6F, 0.75F, 0.4F, 1.2F, 0.33F);
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
-  auto const &items = renderer.m_active_queue->items();
+  auto const& items = renderer.m_active_queue->items();
   ASSERT_EQ(items.size(), 1U);
-  ASSERT_TRUE(
-      std::holds_alternative<Render::GL::EffectBatchCmd>(items.front()));
+  ASSERT_TRUE(std::holds_alternative<Render::GL::EffectBatchCmd>(items.front()));
 
-  auto const &cmd = std::get<Render::GL::EffectBatchCmd>(items.front());
+  auto const& cmd = std::get<Render::GL::EffectBatchCmd>(items.front());
   EXPECT_EQ(cmd.kind, Render::GL::EffectBatchCmd::Kind::BloodPool);
   EXPECT_FLOAT_EQ(cmd.position.x(), position.x());
   EXPECT_FLOAT_EQ(cmd.position.y(), position.y());
@@ -65,25 +62,49 @@ TEST(SceneRendererEffects, BloodStainUsesTerrainAlignedHeight) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;
 
-  auto *blood_entity = world.create_entity();
-  blood_entity->add_component<Engine::Core::TransformComponent>(4.0F, 1.75F,
-                                                                -2.0F);
+  auto* blood_entity = world.create_entity();
+  blood_entity->add_component<Engine::Core::TransformComponent>(4.0F, 1.75F, -2.0F);
   blood_entity->add_component<Engine::Core::BloodStainComponent>(
       0.8F, 8.0F, 0.2F, 1.1F, 0.4F);
 
   Render::GL::render_combat_dust(&renderer, nullptr, &world);
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
-  auto const &items = renderer.m_active_queue->items();
+  auto const& items = renderer.m_active_queue->items();
   ASSERT_EQ(items.size(), 1U);
-  ASSERT_TRUE(
-      std::holds_alternative<Render::GL::EffectBatchCmd>(items.front()));
+  ASSERT_TRUE(std::holds_alternative<Render::GL::EffectBatchCmd>(items.front()));
 
-  auto const &cmd = std::get<Render::GL::EffectBatchCmd>(items.front());
+  auto const& cmd = std::get<Render::GL::EffectBatchCmd>(items.front());
   EXPECT_EQ(cmd.kind, Render::GL::EffectBatchCmd::Kind::BloodPool);
   EXPECT_FLOAT_EQ(cmd.position.x(), 4.0F);
   EXPECT_FLOAT_EQ(cmd.position.y(), 1.77F);
   EXPECT_FLOAT_EQ(cmd.position.z(), -2.0F);
+}
+
+TEST(SceneRendererEffects, CombatDustUsesStrongerDefaultsForMeleeLockUnits) {
+  Render::GL::Renderer renderer;
+  Engine::Core::World world;
+
+  auto* unit = world.create_entity();
+  unit->add_component<Engine::Core::TransformComponent>(4.0F, 1.25F, -2.0F);
+  unit->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 6.0F);
+  auto* attack = unit->add_component<Engine::Core::AttackComponent>();
+  attack->in_melee_lock = true;
+
+  Render::GL::render_combat_dust(&renderer, nullptr, &world);
+
+  ASSERT_NE(renderer.m_active_queue, nullptr);
+  auto const& items = renderer.m_active_queue->items();
+  ASSERT_EQ(items.size(), 1U);
+  ASSERT_TRUE(std::holds_alternative<Render::GL::EffectBatchCmd>(items.front()));
+
+  auto const& cmd = std::get<Render::GL::EffectBatchCmd>(items.front());
+  EXPECT_EQ(cmd.kind, Render::GL::EffectBatchCmd::Kind::CombatDust);
+  EXPECT_FLOAT_EQ(cmd.position.x(), 4.0F);
+  EXPECT_FLOAT_EQ(cmd.position.y(), 0.05F);
+  EXPECT_FLOAT_EQ(cmd.position.z(), -2.0F);
+  EXPECT_FLOAT_EQ(cmd.radius, 2.8F);
+  EXPECT_FLOAT_EQ(cmd.intensity, 0.9F);
 }
 
 } // namespace

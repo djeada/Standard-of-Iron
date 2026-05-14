@@ -1,8 +1,8 @@
 
 
-#include "render/creature/pipeline/lod_decision.h"
-
 #include <gtest/gtest.h>
+
+#include "render/creature/pipeline/lod_decision.h"
 
 using Render::Creature::CreatureLOD;
 using Render::Creature::Pipeline::CreatureLodDecisionInputs;

@@ -1,14 +1,15 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <cstdint>
+
 #include "../../game/core/entity.h"
 #include "../elephant/attachment_frames.h"
 #include "../elephant/dimensions.h"
 #include "../horse/attachment_frames.h"
 #include "../horse/dimensions.h"
 #include "../horse/horse_gait.h"
-
-#include <QVector3D>
-#include <cstdint>
 
 namespace Render::Creature {
 

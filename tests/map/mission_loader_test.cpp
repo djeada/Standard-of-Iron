@@ -1,10 +1,12 @@
-#include "game/map/mission_definition.h"
-#include "game/map/mission_loader.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QTemporaryFile>
+
 #include <algorithm>
 #include <gtest/gtest.h>
+
+#include "game/map/mission_definition.h"
+#include "game/map/mission_loader.h"
 
 using namespace Game::Mission;
 
@@ -12,10 +14,9 @@ class MissionLoaderTest : public ::testing::Test {
 protected:
   void SetUp() override {}
 
-  auto assetMissionPath(const QString &file_name) -> QString {
+  auto assetMissionPath(const QString& file_name) -> QString {
     return QDir(QCoreApplication::applicationDirPath())
-        .absoluteFilePath(
-            QStringLiteral("../../assets/missions/%1").arg(file_name));
+        .absoluteFilePath(QStringLiteral("../../assets/missions/%1").arg(file_name));
   }
 
   auto createTestMission() -> QString {
@@ -121,8 +122,8 @@ TEST_F(MissionLoaderTest, ParsesPlayerSetup) {
 
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission,
-                                                 &error));
+  ASSERT_TRUE(
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
 
   EXPECT_EQ(mission.player_setup.nation, "roman_republic");
   EXPECT_EQ(mission.player_setup.faction, "roman");
@@ -144,8 +145,8 @@ TEST_F(MissionLoaderTest, ParsesAISetups) {
 
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission,
-                                                 &error));
+  ASSERT_TRUE(
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
 
   ASSERT_EQ(mission.ai_setups.size(), 1);
   EXPECT_EQ(mission.ai_setups[0].id, "enemy_1");
@@ -166,8 +167,8 @@ TEST_F(MissionLoaderTest, ParsesVictoryConditions) {
 
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission,
-                                                 &error));
+  ASSERT_TRUE(
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
 
   ASSERT_EQ(mission.victory_conditions.size(), 1);
   EXPECT_EQ(mission.victory_conditions[0].type, "survive_duration");
@@ -184,8 +185,8 @@ TEST_F(MissionLoaderTest, ParsesDefeatConditions) {
 
   MissionDefinition mission;
   QString error;
-  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission,
-                                                 &error));
+  ASSERT_TRUE(
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
 
   ASSERT_EQ(mission.defeat_conditions.size(), 1);
   EXPECT_EQ(mission.defeat_conditions[0].type, "lose_structure");
@@ -212,8 +213,8 @@ TEST_F(MissionLoaderTest, FailsOnInvalidJSON) {
 TEST_F(MissionLoaderTest, FailsOnNonexistentFile) {
   MissionDefinition mission;
   QString error;
-  bool result = MissionLoader::load_from_json_file("/nonexistent/file.json",
-                                                   mission, &error);
+  bool result =
+      MissionLoader::load_from_json_file("/nonexistent/file.json", mission, &error);
 
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
@@ -223,13 +224,13 @@ TEST_F(MissionLoaderTest, CrossingTheRhonePatrolForcesStayDefensive) {
   MissionDefinition mission;
   QString error;
   ASSERT_TRUE(MissionLoader::load_from_json_file(
-      assetMissionPath(QStringLiteral("crossing_the_rhone.json")), mission,
-      &error))
+      assetMissionPath(QStringLiteral("crossing_the_rhone.json")), mission, &error))
       << error.toStdString();
 
   const auto patrol_it = std::find_if(
-      mission.ai_setups.begin(), mission.ai_setups.end(),
-      [](const AISetup &setup) { return setup.id == "roman_patrol_forces"; });
+      mission.ai_setups.begin(), mission.ai_setups.end(), [](const AISetup& setup) {
+        return setup.id == "roman_patrol_forces";
+      });
   ASSERT_NE(patrol_it, mission.ai_setups.end());
   ASSERT_TRUE(patrol_it->strategy.has_value());
   EXPECT_EQ(*patrol_it->strategy, "defensive");

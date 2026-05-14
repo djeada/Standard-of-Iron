@@ -4,7 +4,8 @@ namespace Render::Creature::Quadruped {
 
 namespace {
 
-auto push_bone(TopologyStorage &out, std::string_view name,
+auto push_bone(TopologyStorage& out,
+               std::string_view name,
                BoneIndex parent) -> BoneIndex {
   out.owned_names.emplace_back(name);
   out.bones.push_back(BoneDef{out.owned_names.back(), parent});
@@ -13,7 +14,7 @@ auto push_bone(TopologyStorage &out, std::string_view name,
 
 } // namespace
 
-auto make_topology(const TopologyOptions &options) -> TopologyStorage {
+auto make_topology(const TopologyOptions& options) -> TopologyStorage {
   TopologyStorage out;
   out.bones.reserve(17U);
 
@@ -47,8 +48,7 @@ auto make_topology(const TopologyOptions &options) -> TopologyStorage {
     out.head = push_bone(out, "Head", head_parent);
   }
   if (options.include_appendage_tip) {
-    BoneIndex const parent =
-        out.head != k_invalid_bone ? out.head : head_parent;
+    BoneIndex const parent = out.head != k_invalid_bone ? out.head : head_parent;
     out.appendage_tip = push_bone(out, options.appendage_tip_name, parent);
   }
 

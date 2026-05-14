@@ -59,14 +59,14 @@ struct PartDef {
 
 struct RigDef {
   std::string_view name;
-  const PartDef *parts{nullptr};
+  const PartDef* parts{nullptr};
   std::size_t part_count{0};
 
   [[nodiscard]] constexpr auto size() const noexcept -> std::size_t {
     return part_count;
   }
   [[nodiscard]] constexpr auto
-  operator[](std::size_t i) const noexcept -> const PartDef & {
+  operator[](std::size_t i) const noexcept -> const PartDef& {
     return parts[i];
   }
 };

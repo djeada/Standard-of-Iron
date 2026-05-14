@@ -23,8 +23,7 @@ float snowflake(vec2 uv, float rotation) {
 
   float arms = ray * (1.0 - smoothstep(0.1, 0.5, dist));
 
-  float details =
-      abs(sin(angle * 6.0)) * 0.5 * (1.0 - smoothstep(0.2, 0.4, dist));
+  float details = abs(sin(angle * 6.0)) * 0.5 * (1.0 - smoothstep(0.2, 0.4, dist));
 
   return clamp(center + arms + details, 0.0, 1.0);
 }

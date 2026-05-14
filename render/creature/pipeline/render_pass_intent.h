@@ -9,4 +9,4 @@ enum class RenderPassIntent : std::uint8_t {
   Shadow = 1,
 };
 
-}
+} // namespace Render::Creature::Pipeline

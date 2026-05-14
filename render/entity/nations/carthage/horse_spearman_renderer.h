@@ -4,6 +4,6 @@
 
 namespace Render::GL::Carthage {
 
-void register_horse_spearman_renderer(EntityRendererRegistry &registry);
+void register_horse_spearman_renderer(EntityRendererRegistry& registry);
 
 }

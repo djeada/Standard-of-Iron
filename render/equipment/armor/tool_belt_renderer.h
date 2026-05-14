@@ -1,15 +1,16 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../../render_archetype.h"
 #include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
-
-#include <QVector3D>
-#include <array>
-#include <cstddef>
-#include <cstdint>
 
 namespace Render::GL {
 
@@ -25,7 +26,8 @@ struct ToolBeltConfig {
 
 inline constexpr std::uint32_t k_tool_belt_role_count = 5;
 
-auto tool_belt_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+auto tool_belt_fill_role_colors(const HumanoidPalette& palette,
+                                QVector3D* out,
                                 std::size_t max) -> std::uint32_t;
 
 auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
@@ -34,31 +36,34 @@ auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
 
 class ToolBeltRenderer : public IEquipmentRenderer {
 public:
-  explicit ToolBeltRenderer(const ToolBeltConfig &config = ToolBeltConfig{});
+  explicit ToolBeltRenderer(const ToolBeltConfig& config = ToolBeltConfig{});
 
-  static void submit(const ToolBeltConfig &config, const DrawContext &ctx,
-                     const BodyFrames &frames, const HumanoidPalette &palette,
-                     const HumanoidAnimationContext &anim,
-                     EquipmentBatch &batch);
+  static void submit(const ToolBeltConfig& config,
+                     const DrawContext& ctx,
+                     const BodyFrames& frames,
+                     const HumanoidPalette& palette,
+                     const HumanoidAnimationContext& anim,
+                     EquipmentBatch& batch);
 
-  [[nodiscard]] auto base_config() const noexcept -> const ToolBeltConfig & {
+  [[nodiscard]] auto base_config() const noexcept -> const ToolBeltConfig& {
     return m_config;
   }
 
-  void render(const DrawContext &ctx, const BodyFrames &frames,
-              const HumanoidPalette &palette,
-              const HumanoidAnimationContext &anim,
-              EquipmentBatch &batch) override;
+  void render(const DrawContext& ctx,
+              const BodyFrames& frames,
+              const HumanoidPalette& palette,
+              const HumanoidAnimationContext& anim,
+              EquipmentBatch& batch) override;
 
 private:
   ToolBeltConfig m_config;
 };
 
-auto tool_belt_ring_archetype() -> const RenderArchetype &;
-auto tool_belt_buckle_archetype() -> const RenderArchetype &;
-auto tool_belt_hammer_archetype() -> const RenderArchetype &;
-auto tool_belt_chisel_archetype() -> const RenderArchetype &;
-auto tool_belt_saw_archetype() -> const RenderArchetype &;
-auto tool_belt_pouches_archetype() -> const RenderArchetype &;
+auto tool_belt_ring_archetype() -> const RenderArchetype&;
+auto tool_belt_buckle_archetype() -> const RenderArchetype&;
+auto tool_belt_hammer_archetype() -> const RenderArchetype&;
+auto tool_belt_chisel_archetype() -> const RenderArchetype&;
+auto tool_belt_saw_archetype() -> const RenderArchetype&;
+auto tool_belt_pouches_archetype() -> const RenderArchetype&;
 
 } // namespace Render::GL

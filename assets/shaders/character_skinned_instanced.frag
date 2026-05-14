@@ -16,8 +16,7 @@ out vec4 frag_color;
 void main() {
   vec3 base = v_color;
   if (v_color_role > 0) {
-    base =
-        texelFetch(u_role_color_tbo, v_instance_id * 32 + v_color_role - 1).rgb;
+    base = texelFetch(u_role_color_tbo, v_instance_id * 32 + v_color_role - 1).rgb;
   }
 
   vec3 normal = normalize(v_normal_ws);

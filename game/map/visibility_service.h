@@ -44,12 +44,12 @@ public:
     auto world_to_grid(float world_coord, float half) const -> int;
   };
 
-  static auto instance() -> VisibilityService &;
+  static auto instance() -> VisibilityService&;
 
   void initialize(int width, int height, float tile_size);
   void reset();
-  auto update(Engine::Core::World &world, int player_id) -> bool;
-  void compute_immediate(Engine::Core::World &world, int player_id);
+  auto update(Engine::Core::World& world, int player_id) -> bool;
+  void compute_immediate(Engine::Core::World& world, int player_id);
 
   auto is_initialized() const -> bool { return m_initialized; }
 
@@ -97,12 +97,12 @@ private:
     bool changed;
   };
 
-  auto gather_vision_sources(Engine::Core::World &world,
+  auto gather_vision_sources(Engine::Core::World& world,
                              int player_id) -> std::vector<VisionSource>;
-  auto compose_job_payload(const std::vector<VisionSource> &sources) const
-      -> JobPayload;
-  void enqueue_job(JobPayload &&payload);
-  void integrate_result(JobResult &&result);
+  auto
+  compose_job_payload(const std::vector<VisionSource>& sources) const -> JobPayload;
+  void enqueue_job(JobPayload&& payload);
+  void integrate_result(JobResult&& result);
   auto should_start_new_job() const -> bool;
   void reset_throttle();
   void worker_loop();

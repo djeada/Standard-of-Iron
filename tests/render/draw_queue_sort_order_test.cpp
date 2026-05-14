@@ -1,10 +1,10 @@
 
 
-#include "render/draw_queue.h"
-#include "render/frame_budget.h"
-
 #include <cstdint>
 #include <gtest/gtest.h>
+
+#include "render/draw_queue.h"
+#include "render/frame_budget.h"
 
 namespace {
 
@@ -95,13 +95,13 @@ TEST(DrawQueueSortOrder, RiverbankVisibilityTextureAffectsSortKey) {
   TerrainFeatureCmd first;
   first.kind = Render::GL::LinearFeatureKind::Riverbank;
   first.visibility.texture =
-      reinterpret_cast<Texture *>(static_cast<std::uintptr_t>(0x1));
+      reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x1));
   queue.submit(first);
 
   TerrainFeatureCmd second;
   second.kind = Render::GL::LinearFeatureKind::Riverbank;
   second.visibility.texture =
-      reinterpret_cast<Texture *>(static_cast<std::uintptr_t>(0x2));
+      reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x2));
   queue.submit(second);
 
   queue.sort_for_batching();
@@ -114,41 +114,40 @@ TEST(DrawQueuePreparedBatches, TerrainSurfaceCommandsSharePreparedBatch) {
   DrawQueue queue;
 
   TerrainSurfaceCmd first;
-  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  first.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x1));
   first.params.is_ground_plane = false;
   queue.submit(first);
 
   TerrainSurfaceCmd second;
-  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  second.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x2));
   second.params.is_ground_plane = false;
   queue.submit(second);
 
   queue.sort_for_batching();
 
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].type, Render::GL::DrawCmdType::TerrainSurface);
   EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::Single);
   EXPECT_EQ(batches[0].count, 2U);
 }
 
-TEST(DrawQueuePreparedBatches,
-     TerrainSurfaceCommandsSplitWhenGroundPlaneStateDiffers) {
+TEST(DrawQueuePreparedBatches, TerrainSurfaceCommandsSplitWhenGroundPlaneStateDiffers) {
   DrawQueue queue;
 
   TerrainSurfaceCmd first;
-  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  first.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x1));
   first.params.is_ground_plane = false;
   queue.submit(first);
 
   TerrainSurfaceCmd second;
-  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  second.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x2));
   second.params.is_ground_plane = true;
   queue.submit(second);
 
   queue.sort_for_batching();
 
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].count, 1U);
   EXPECT_EQ(batches[1].count, 1U);
@@ -158,18 +157,18 @@ TEST(DrawQueuePreparedBatches, TerrainFeatureCommandsSharePreparedBatch) {
   DrawQueue queue;
 
   TerrainFeatureCmd first;
-  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  first.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x1));
   first.kind = Render::GL::LinearFeatureKind::Road;
   queue.submit(first);
 
   TerrainFeatureCmd second;
-  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  second.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x2));
   second.kind = Render::GL::LinearFeatureKind::Road;
   queue.submit(second);
 
   queue.sort_for_batching();
 
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].type, Render::GL::DrawCmdType::TerrainFeature);
   EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::Single);
@@ -181,24 +180,24 @@ TEST(DrawQueuePreparedBatches,
   DrawQueue queue;
 
   TerrainFeatureCmd first;
-  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  first.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x1));
   first.kind = Render::GL::LinearFeatureKind::Riverbank;
   first.visibility.enabled = true;
   first.visibility.texture =
-      reinterpret_cast<Texture *>(static_cast<std::uintptr_t>(0x1));
+      reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x1));
   queue.submit(first);
 
   TerrainFeatureCmd second;
-  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  second.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x2));
   second.kind = Render::GL::LinearFeatureKind::Riverbank;
   second.visibility.enabled = true;
   second.visibility.texture =
-      reinterpret_cast<Texture *>(static_cast<std::uintptr_t>(0x2));
+      reinterpret_cast<Texture*>(static_cast<std::uintptr_t>(0x2));
   queue.submit(second);
 
   queue.sort_for_batching();
 
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].count, 1U);
   EXPECT_EQ(batches[1].count, 1U);
@@ -231,13 +230,13 @@ TEST(DrawQueueSortOrder, BucketedInputsOnlySortWithinMatchingBucket) {
   queue.submit(terrain);
 
   MeshCmd mesh_a;
-  mesh_a.shader = reinterpret_cast<Shader *>(static_cast<std::uintptr_t>(0x1));
-  mesh_a.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  mesh_a.shader = reinterpret_cast<Shader*>(static_cast<std::uintptr_t>(0x1));
+  mesh_a.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x1));
   queue.submit(mesh_a);
 
   MeshCmd mesh_b;
-  mesh_b.shader = reinterpret_cast<Shader *>(static_cast<std::uintptr_t>(0x2));
-  mesh_b.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  mesh_b.shader = reinterpret_cast<Shader*>(static_cast<std::uintptr_t>(0x2));
+  mesh_b.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x2));
   queue.submit(mesh_b);
 
   MeshCmd mesh_c = mesh_a;
@@ -262,12 +261,12 @@ TEST(DrawQueueSortOrder, TerrainSurfaceBucketPreservesAppendOrder) {
   DrawQueue queue;
 
   TerrainSurfaceCmd first;
-  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  first.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x2));
   first.sort_key = 20;
   queue.submit(first);
 
   TerrainSurfaceCmd second;
-  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  second.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x1));
   second.sort_key = 10;
   queue.submit(second);
 
@@ -285,8 +284,8 @@ TEST(DrawQueueSortOrder, NonMonotonicBucketSequenceFallsBackToGlobalSort) {
   DrawQueue queue;
 
   MeshCmd mesh_a;
-  mesh_a.shader = reinterpret_cast<Shader *>(static_cast<std::uintptr_t>(0x1));
-  mesh_a.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  mesh_a.shader = reinterpret_cast<Shader*>(static_cast<std::uintptr_t>(0x1));
+  mesh_a.mesh = reinterpret_cast<Mesh*>(static_cast<std::uintptr_t>(0x1));
   queue.submit(mesh_a);
 
   TerrainSurfaceCmd terrain;
@@ -339,8 +338,7 @@ TEST(DrawQueueMemory, ReserveForFramePreservesCapacityAcrossClear) {
   EXPECT_GE(queue.items().capacity(), 100U)
       << "reserve_for_frame() must retain capacity from previous frame "
          "high-water mark.";
-  EXPECT_GE(queue.submission_bucket_capacity(),
-            queue.submission_bucket_high_water())
+  EXPECT_GE(queue.submission_bucket_capacity(), queue.submission_bucket_high_water())
       << "reserve_for_frame() should pre-reserve submission bucket spans "
          "based on previous frame high-water mark.";
 

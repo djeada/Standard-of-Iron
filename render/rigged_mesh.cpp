@@ -1,17 +1,20 @@
 #include "rigged_mesh.h"
 
-#include <GL/gl.h>
 #include <QDebug>
 #include <QOpenGLContext>
-#include <cstddef>
 #include <qopenglext.h>
+
+#include <GL/gl.h>
+#include <cstddef>
 #include <utility>
 
 namespace Render::GL {
 
 RiggedMesh::RiggedMesh(std::vector<RiggedVertex> vertices,
                        std::vector<std::uint32_t> indices)
-    : m_vertices(std::move(vertices)), m_indices(std::move(indices)) {}
+    : m_vertices(std::move(vertices))
+    , m_indices(std::move(indices)) {
+}
 
 RiggedMesh::~RiggedMesh() = default;
 
@@ -34,7 +37,7 @@ void RiggedMesh::setup_buffers() {
   constexpr GLsizei k_stride = sizeof(RiggedVertex);
   constexpr auto offset_of = [](auto member_ptr) -> std::size_t {
     return reinterpret_cast<std::size_t>(
-        &(reinterpret_cast<RiggedVertex const *>(0)->*member_ptr));
+        &(reinterpret_cast<RiggedVertex const*>(0)->*member_ptr));
   };
   auto const pos_off = offset_of(&RiggedVertex::position_bone_local);
   auto const norm_off = offset_of(&RiggedVertex::normal_bone_local);
@@ -44,23 +47,23 @@ void RiggedMesh::setup_buffers() {
   auto const role_off = offset_of(&RiggedVertex::color_role);
 
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, k_stride,
-                        reinterpret_cast<void *>(pos_off));
+  glVertexAttribPointer(
+      0, 3, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(pos_off));
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, k_stride,
-                        reinterpret_cast<void *>(norm_off));
+  glVertexAttribPointer(
+      1, 3, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(norm_off));
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, k_stride,
-                        reinterpret_cast<void *>(tex_off));
+  glVertexAttribPointer(
+      2, 2, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(tex_off));
   glEnableVertexAttribArray(3);
-  glVertexAttribIPointer(3, 4, GL_UNSIGNED_BYTE, k_stride,
-                         reinterpret_cast<void *>(bi_off));
+  glVertexAttribIPointer(
+      3, 4, GL_UNSIGNED_BYTE, k_stride, reinterpret_cast<void*>(bi_off));
   glEnableVertexAttribArray(4);
-  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, k_stride,
-                        reinterpret_cast<void *>(bw_off));
+  glVertexAttribPointer(
+      4, 4, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(bw_off));
   glEnableVertexAttribArray(5);
-  glVertexAttribIPointer(5, 1, GL_UNSIGNED_BYTE, k_stride,
-                         reinterpret_cast<void *>(role_off));
+  glVertexAttribIPointer(
+      5, 1, GL_UNSIGNED_BYTE, k_stride, reinterpret_cast<void*>(role_off));
 
   m_vao->unbind();
 
@@ -98,15 +101,14 @@ void RiggedMesh::draw() {
   if (!bind_vao()) {
     return;
   }
-  glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
-                 GL_UNSIGNED_INT, nullptr);
+  glDrawElements(
+      GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, nullptr);
   m_vao->unbind();
 
 #ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
-    qWarning() << "RiggedMesh::draw GL error" << err << "indices"
-               << m_indices.size();
+    qWarning() << "RiggedMesh::draw GL error" << err << "indices" << m_indices.size();
   }
 #endif
 }

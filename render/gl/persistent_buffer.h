@@ -1,12 +1,14 @@
 #pragma once
 
-#include "platform_gl.h"
-#include "render_constants.h"
 #include <QDebug>
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
+
 #include <cstddef>
 #include <cstring>
+
+#include "platform_gl.h"
+#include "render_constants.h"
 
 namespace Render::GL {
 
@@ -16,13 +18,11 @@ public:
   PersistentRingBuffer() = default;
   ~PersistentRingBuffer() { destroy(); }
 
-  PersistentRingBuffer(const PersistentRingBuffer &) = delete;
-  auto
-  operator=(const PersistentRingBuffer &) -> PersistentRingBuffer & = delete;
+  PersistentRingBuffer(const PersistentRingBuffer&) = delete;
+  auto operator=(const PersistentRingBuffer&) -> PersistentRingBuffer& = delete;
 
   auto initialize(std::size_t capacity,
-                  int buffers_in_flight = BufferCapacity::buffers_in_flight)
-      -> bool {
+                  int buffers_in_flight = BufferCapacity::buffers_in_flight) -> bool {
     if (m_buffer != 0) {
       return false;
     }
@@ -42,7 +42,7 @@ public:
     glGenBuffers(1, &m_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
 
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QOpenGLContext* ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr) {
       qWarning() << "PersistentRingBuffer: No current OpenGL context";
       glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -52,8 +52,7 @@ public:
     }
 
     Platform::BufferStorageHelper::Mode mode;
-    if (!Platform::BufferStorageHelper::create_buffer(m_buffer, m_total_size,
-                                                      &mode)) {
+    if (!Platform::BufferStorageHelper::create_buffer(m_buffer, m_total_size, &mode)) {
       qWarning() << "PersistentRingBuffer: Failed to create buffer storage";
       glBindBuffer(GL_ARRAY_BUFFER, 0);
       glDeleteBuffers(1, &m_buffer);
@@ -63,8 +62,7 @@ public:
 
     m_buffer_mode = mode;
 
-    m_mapped_ptr =
-        Platform::BufferStorageHelper::map_buffer(m_total_size, mode);
+    m_mapped_ptr = Platform::BufferStorageHelper::map_buffer(m_total_size, mode);
 
     if (m_mapped_ptr == nullptr) {
       qWarning() << "PersistentRingBuffer: Failed to map buffer";
@@ -119,7 +117,7 @@ public:
     m_current_count = 0;
   }
 
-  auto write(const T *data, std::size_t count) -> std::size_t {
+  auto write(const T* data, std::size_t count) -> std::size_t {
     if (count == 0 || count > m_capacity || m_buffer == 0) {
       return 0;
     }
@@ -127,11 +125,11 @@ public:
     if (m_buffer_mode == Platform::BufferStorageHelper::Mode::Fallback) {
       glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
 
-      std::size_t const write_offset =
-          m_frame_offset + m_current_count * sizeof(T);
-      void *ptr =
-          glMapBufferRange(GL_ARRAY_BUFFER, write_offset, count * sizeof(T),
-                           GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+      std::size_t const write_offset = m_frame_offset + m_current_count * sizeof(T);
+      void* ptr = glMapBufferRange(GL_ARRAY_BUFFER,
+                                   write_offset,
+                                   count * sizeof(T),
+                                   GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
 
       if (ptr == nullptr) {
         qWarning() << "PersistentRingBuffer: Failed to map buffer for write";
@@ -152,9 +150,8 @@ public:
       return 0;
     }
 
-    std::size_t const write_offset =
-        m_frame_offset + m_current_count * sizeof(T);
-    void *dest = static_cast<char *>(m_mapped_ptr) + write_offset;
+    std::size_t const write_offset = m_frame_offset + m_current_count * sizeof(T);
+    void* dest = static_cast<char*>(m_mapped_ptr) + write_offset;
     std::memcpy(dest, data, count * sizeof(T));
 
     std::size_t const element_offset = m_current_count;
@@ -165,9 +162,7 @@ public:
 
   [[nodiscard]] auto buffer() const -> GLuint { return m_buffer; }
 
-  [[nodiscard]] auto current_offset() const -> std::size_t {
-    return m_frame_offset;
-  }
+  [[nodiscard]] auto current_offset() const -> std::size_t { return m_frame_offset; }
 
   [[nodiscard]] auto capacity() const -> std::size_t { return m_capacity; }
 
@@ -181,7 +176,7 @@ public:
 
 private:
   GLuint m_buffer = 0;
-  void *m_mapped_ptr = nullptr;
+  void* m_mapped_ptr = nullptr;
   std::size_t m_capacity = 0;
   std::size_t m_total_size = 0;
   std::size_t m_frame_offset = 0;

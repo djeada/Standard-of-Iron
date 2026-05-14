@@ -10,7 +10,9 @@ layout(location = 5) in float i_radius;
 layout(location = 6) in float i_alpha;
 layout(location = 7) in vec3 i_color;
 
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 
 out vec3 v_world_pos;
 out vec3 v_normal;
@@ -44,9 +46,8 @@ void main() {
   vec3 world_pos = i_start + dir * along + radial * i_radius;
 
   vec3 local_normal = a_normal;
-  vec3 world_normal =
-      normalize(tangent * local_normal.x + dir * local_normal.y +
-                bitangent * local_normal.z);
+  vec3 world_normal = normalize(tangent * local_normal.x + dir * local_normal.y +
+                                bitangent * local_normal.z);
 
   v_world_pos = world_pos;
   v_normal = world_normal;

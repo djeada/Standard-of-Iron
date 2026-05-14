@@ -1,9 +1,10 @@
 #include "rpg_damage_resolver.h"
-#include "../../core/component.h"
 
 #include <algorithm>
 #include <cmath>
 #include <random>
+
+#include "../../core/component.h"
 
 namespace Game::Systems::RpgCombat {
 
@@ -17,15 +18,16 @@ auto random_float_01() -> float {
 
 } // namespace
 
-RpgDamageResult resolve_rpg_damage(Engine::Core::World *,
-                                   Engine::Core::Entity *target, int raw_damage,
+RpgDamageResult resolve_rpg_damage(Engine::Core::World*,
+                                   Engine::Core::Entity* target,
+                                   int raw_damage,
                                    Engine::Core::EntityID) {
   RpgDamageResult result;
   if (target == nullptr) {
     return result;
   }
 
-  auto *rpg = target->get_component<Engine::Core::RpgHealthComponent>();
+  auto* rpg = target->get_component<Engine::Core::RpgHealthComponent>();
   if (rpg == nullptr || !rpg->active || rpg->rpg_hp <= 0) {
     return result;
   }
@@ -34,8 +36,7 @@ RpgDamageResult resolve_rpg_damage(Engine::Core::World *,
     return result;
   }
 
-  int effective =
-      std::max(1, raw_damage - static_cast<int>(std::roundf(rpg->armor)));
+  int effective = std::max(1, raw_damage - static_cast<int>(std::roundf(rpg->armor)));
 
   result.is_crit = (random_float_01() < rpg->crit_chance);
   if (result.is_crit) {

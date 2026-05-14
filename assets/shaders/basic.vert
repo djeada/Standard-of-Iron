@@ -6,7 +6,9 @@ layout(location = 2) in vec2 a_tex_coord;
 
 uniform mat4 u_mvp;
 uniform mat4 u_model;
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 
 out vec3 v_normal;
 out vec2 v_tex_coord;

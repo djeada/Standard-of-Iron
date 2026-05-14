@@ -10,7 +10,6 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QVariant>
-
 #include <qglobal.h>
 #include <qjsonarray.h>
 #include <qjsonobject.h>
@@ -20,6 +19,7 @@
 #include <qsqlquery.h>
 #include <qstringliteral.h>
 #include <qvariant.h>
+
 #include <utility>
 
 #include "../map/campaign_definition.h"
@@ -30,15 +30,15 @@
 namespace Game::Systems {
 
 namespace {
-constexpr const char *k_driver_name = "QSQLITE";
+constexpr const char* k_driver_name = "QSQLITE";
 constexpr int k_current_schema_version = 3;
 
-auto build_connection_name(const SaveStorage *instance) -> QString {
+auto build_connection_name(const SaveStorage* instance) -> QString {
   return QStringLiteral("SaveStorage_%1")
       .arg(reinterpret_cast<quintptr>(instance), 0, 16);
 }
 
-auto last_error_string(const QSqlError &error) -> QString {
+auto last_error_string(const QSqlError& error) -> QString {
   if (error.type() == QSqlError::NoError) {
     return {};
   }
@@ -47,9 +47,10 @@ auto last_error_string(const QSqlError &error) -> QString {
 
 class TransactionGuard {
 public:
-  explicit TransactionGuard(QSqlDatabase &database) : m_database(database) {}
+  explicit TransactionGuard(QSqlDatabase& database)
+      : m_database(database) {}
 
-  auto begin(QString *out_error) -> bool {
+  auto begin(QString* out_error) -> bool {
     if (!m_database.transaction()) {
       if (out_error != nullptr) {
         *out_error = QStringLiteral("Failed to begin transaction: %1")
@@ -61,7 +62,7 @@ public:
     return true;
   }
 
-  auto commit(QString *out_error) -> bool {
+  auto commit(QString* out_error) -> bool {
     if (!m_active) {
       return true;
     }
@@ -89,14 +90,15 @@ public:
   ~TransactionGuard() { rollback(); }
 
 private:
-  QSqlDatabase &m_database;
+  QSqlDatabase& m_database;
   bool m_active = false;
 };
 } // namespace
 
 SaveStorage::SaveStorage(QString database_path)
-    : m_database_path(std::move(database_path)),
-      m_connection_name(build_connection_name(this)) {}
+    : m_database_path(std::move(database_path))
+    , m_connection_name(build_connection_name(this)) {
+}
 
 SaveStorage::~SaveStorage() {
   if (m_database.isValid()) {
@@ -109,7 +111,7 @@ SaveStorage::~SaveStorage() {
   }
 }
 
-auto SaveStorage::initialize(QString *out_error) const -> bool {
+auto SaveStorage::initialize(QString* out_error) const -> bool {
   if (m_initialized && m_database.isValid() && m_database.isOpen()) {
     return true;
   }
@@ -123,11 +125,12 @@ auto SaveStorage::initialize(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::save_slot(const QString &slot_name, const QString &title,
-                            const QJsonObject &metadata,
-                            const QByteArray &world_state,
-                            const QByteArray &screenshot,
-                            QString *out_error) -> bool {
+auto SaveStorage::save_slot(const QString& slot_name,
+                            const QString& title,
+                            const QJsonObject& metadata,
+                            const QByteArray& world_state,
+                            const QByteArray& screenshot,
+                            QString* out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -138,19 +141,19 @@ auto SaveStorage::save_slot(const QString &slot_name, const QString &title,
   }
 
   QSqlQuery query(m_database);
-  const QString insert_sql = QStringLiteral(
-      "INSERT INTO saves (slot_name, title, map_name, timestamp, "
-      "metadata, world_state, screenshot, created_at, updated_at) "
-      "VALUES (:slot_name, :title, :map_name, :timestamp, :metadata, "
-      ":world_state, :screenshot, :created_at, :updated_at) "
-      "ON CONFLICT(slot_name) DO UPDATE SET "
-      "title = excluded.title, "
-      "map_name = excluded.map_name, "
-      "timestamp = excluded.timestamp, "
-      "metadata = excluded.metadata, "
-      "world_state = excluded.world_state, "
-      "screenshot = excluded.screenshot, "
-      "updated_at = excluded.updated_at");
+  const QString insert_sql =
+      QStringLiteral("INSERT INTO saves (slot_name, title, map_name, timestamp, "
+                     "metadata, world_state, screenshot, created_at, updated_at) "
+                     "VALUES (:slot_name, :title, :map_name, :timestamp, :metadata, "
+                     ":world_state, :screenshot, :created_at, :updated_at) "
+                     "ON CONFLICT(slot_name) DO UPDATE SET "
+                     "title = excluded.title, "
+                     "map_name = excluded.map_name, "
+                     "timestamp = excluded.timestamp, "
+                     "metadata = excluded.metadata, "
+                     "world_state = excluded.world_state, "
+                     "screenshot = excluded.screenshot, "
+                     "updated_at = excluded.updated_at");
 
   if (!query.prepare(insert_sql)) {
     if (out_error != nullptr) {
@@ -160,8 +163,7 @@ auto SaveStorage::save_slot(const QString &slot_name, const QString &title,
     return false;
   }
 
-  const QString now_iso =
-      QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+  const QString now_iso = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
   QString map_name = metadata.value("map_name").toString();
   if (map_name.isEmpty()) {
     map_name = QStringLiteral("Unknown Map");
@@ -200,17 +202,20 @@ auto SaveStorage::save_slot(const QString &slot_name, const QString &title,
   return true;
 }
 
-auto SaveStorage::load_slot(const QString &slot_name, QByteArray &world_state,
-                            QJsonObject &metadata, QByteArray &screenshot,
-                            QString &title, QString *out_error) -> bool {
+auto SaveStorage::load_slot(const QString& slot_name,
+                            QByteArray& world_state,
+                            QJsonObject& metadata,
+                            QByteArray& screenshot,
+                            QString& title,
+                            QString* out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
 
   QSqlQuery query(m_database);
-  query.prepare(QStringLiteral(
-      "SELECT title, metadata, world_state, screenshot FROM saves "
-      "WHERE slot_name = :slot_name"));
+  query.prepare(
+      QStringLiteral("SELECT title, metadata, world_state, screenshot FROM saves "
+                     "WHERE slot_name = :slot_name"));
   query.bindValue(QStringLiteral(":slot_name"), slot_name);
 
   if (!query.exec()) {
@@ -236,7 +241,7 @@ auto SaveStorage::load_slot(const QString &slot_name, QByteArray &world_state,
   return true;
 }
 
-auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
+auto SaveStorage::list_slots(QString* out_error) const -> QVariantList {
   QVariantList result;
   if (!initialize(out_error)) {
     return result;
@@ -261,8 +266,7 @@ auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
     slot.insert(QStringLiteral("timestamp"), query.value(3).toString());
 
     const QByteArray metadata_bytes = query.value(4).toByteArray();
-    const QJsonObject metadata_obj =
-        QJsonDocument::fromJson(metadata_bytes).object();
+    const QJsonObject metadata_obj = QJsonDocument::fromJson(metadata_bytes).object();
     slot.insert(QStringLiteral("metadata"), metadata_obj.toVariantMap());
 
     const QByteArray screenshot_bytes = query.value(5).toByteArray();
@@ -284,7 +288,7 @@ auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
   return result;
 }
 
-auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
+auto SaveStorage::list_campaigns(QString* out_error) -> QVariantList {
   QVariantList result;
 
   if (!initialize(out_error)) {
@@ -293,41 +297,38 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
 
   QStringList campaign_files;
 
-  QStringList search_paths = {QStringLiteral("assets/campaigns"),
-                              QStringLiteral("../assets/campaigns"),
-                              QStringLiteral("../../assets/campaigns"),
-                              QCoreApplication::applicationDirPath() +
-                                  QStringLiteral("/assets/campaigns"),
-                              QCoreApplication::applicationDirPath() +
-                                  QStringLiteral("/../assets/campaigns")};
+  QStringList search_paths = {
+      QStringLiteral("assets/campaigns"),
+      QStringLiteral("../assets/campaigns"),
+      QStringLiteral("../../assets/campaigns"),
+      QCoreApplication::applicationDirPath() + QStringLiteral("/assets/campaigns"),
+      QCoreApplication::applicationDirPath() + QStringLiteral("/../assets/campaigns")};
 
   bool found_filesystem = false;
-  for (const QString &campaigns_path : search_paths) {
+  for (const QString& campaigns_path : search_paths) {
     QDir campaigns_dir(campaigns_path);
     if (campaigns_dir.exists()) {
       campaign_files = campaigns_dir.entryList(
           QStringList() << QStringLiteral("*.json"), QDir::Files);
 
       if (!campaign_files.isEmpty()) {
-        qInfo() << "Loading campaigns from filesystem:"
-                << campaigns_dir.absolutePath();
+        qInfo() << "Loading campaigns from filesystem:" << campaigns_dir.absolutePath();
 
-        for (const auto &campaign_file : campaign_files) {
+        for (const auto& campaign_file : campaign_files) {
           const QString campaign_path = campaigns_dir.filePath(campaign_file);
 
           Game::Campaign::CampaignDefinition campaign;
           QString error;
           if (!Game::Campaign::CampaignLoader::load_from_json_file(
                   campaign_path, campaign, &error)) {
-            qWarning() << "Failed to load campaign" << campaign_file << ":"
-                       << error;
+            qWarning() << "Failed to load campaign" << campaign_file << ":" << error;
             continue;
           }
 
           QString db_error;
           if (!ensure_campaign_in_db(campaign, &db_error)) {
-            qWarning() << "Failed to initialize campaign in DB for"
-                       << campaign.id << ":" << db_error;
+            qWarning() << "Failed to initialize campaign in DB for" << campaign.id
+                       << ":" << db_error;
             continue;
           }
           if (!ensure_campaign_missions_in_db(campaign, &db_error)) {
@@ -337,31 +338,25 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
             continue;
           }
 
-          QVariantList missions_progress =
-              get_campaign_mission_progress(campaign.id);
+          QVariantList missions_progress = get_campaign_mission_progress(campaign.id);
 
           QVariantMap campaign_map;
           campaign_map.insert(QStringLiteral("id"), campaign.id);
           campaign_map.insert(QStringLiteral("title"), campaign.title);
-          campaign_map.insert(QStringLiteral("description"),
-                              campaign.description);
+          campaign_map.insert(QStringLiteral("description"), campaign.description);
           campaign_map.insert(QStringLiteral("unlocked"), true);
 
           bool all_completed = true;
           QVariantList missions_list;
-          for (const auto &mission : campaign.missions) {
+          for (const auto& mission : campaign.missions) {
             QVariantMap mission_map;
-            mission_map.insert(QStringLiteral("mission_id"),
-                               mission.mission_id);
-            mission_map.insert(QStringLiteral("order_index"),
-                               mission.order_index);
+            mission_map.insert(QStringLiteral("mission_id"), mission.mission_id);
+            mission_map.insert(QStringLiteral("order_index"), mission.order_index);
             if (mission.intro_text.has_value()) {
-              mission_map.insert(QStringLiteral("intro_text"),
-                                 *mission.intro_text);
+              mission_map.insert(QStringLiteral("intro_text"), *mission.intro_text);
             }
             if (mission.outro_text.has_value()) {
-              mission_map.insert(QStringLiteral("outro_text"),
-                                 *mission.outro_text);
+              mission_map.insert(QStringLiteral("outro_text"), *mission.outro_text);
             }
             if (mission.difficulty_modifier.has_value()) {
               mission_map.insert(QStringLiteral("difficulty_modifier"),
@@ -370,7 +365,7 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
 
             bool unlocked = mission.order_index == 0;
             bool completed = false;
-            for (const QVariant &progress_var : missions_progress) {
+            for (const QVariant& progress_var : missions_progress) {
               QVariantMap progress = progress_var.toMap();
               if (progress["mission_id"].toString() == mission.mission_id) {
                 unlocked = progress["unlocked"].toBool();
@@ -405,7 +400,7 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
 
     QStringList known_campaigns = {QStringLiteral("second_punic_war")};
 
-    for (const auto &campaign_name : known_campaigns) {
+    for (const auto& campaign_name : known_campaigns) {
       const QString campaign_path =
           QString(":/assets/campaigns/%1.json").arg(campaign_name);
 
@@ -419,26 +414,25 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
       QString error;
       if (!Game::Campaign::CampaignLoader::load_from_json_file(
               campaign_path, campaign, &error)) {
-        qWarning() << "Failed to load campaign from resources" << campaign_name
-                   << ":" << error;
+        qWarning() << "Failed to load campaign from resources" << campaign_name << ":"
+                   << error;
         continue;
       }
 
       QString db_error;
       if (!ensure_campaign_in_db(campaign, &db_error)) {
-        qWarning() << "Failed to initialize campaign in DB for" << campaign.id
-                   << ":" << db_error;
+        qWarning() << "Failed to initialize campaign in DB for" << campaign.id << ":"
+                   << db_error;
         continue;
       }
       if (!ensure_campaign_missions_in_db(campaign, &db_error)) {
-        qWarning() << "Failed to initialize campaign missions in DB for"
-                   << campaign.id << ":" << db_error;
+        qWarning() << "Failed to initialize campaign missions in DB for" << campaign.id
+                   << ":" << db_error;
 
         continue;
       }
 
-      QVariantList missions_progress =
-          get_campaign_mission_progress(campaign.id);
+      QVariantList missions_progress = get_campaign_mission_progress(campaign.id);
 
       QVariantMap campaign_map;
       campaign_map.insert(QStringLiteral("id"), campaign.id);
@@ -448,7 +442,7 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
 
       bool all_completed = true;
       QVariantList missions_list;
-      for (const auto &mission : campaign.missions) {
+      for (const auto& mission : campaign.missions) {
         QVariantMap mission_map;
         mission_map.insert(QStringLiteral("mission_id"), mission.mission_id);
         mission_map.insert(QStringLiteral("order_index"), mission.order_index);
@@ -465,7 +459,7 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
 
         bool unlocked = mission.order_index == 0;
         bool completed = false;
-        for (const QVariant &progress_var : missions_progress) {
+        for (const QVariant& progress_var : missions_progress) {
           QVariantMap progress = progress_var.toMap();
           if (progress["mission_id"].toString() == mission.mission_id) {
             unlocked = progress["unlocked"].toBool();
@@ -501,17 +495,17 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
   return result;
 }
 
-auto SaveStorage::get_campaign_progress(
-    const QString &campaign_id, QString *out_error) const -> QVariantMap {
+auto SaveStorage::get_campaign_progress(const QString& campaign_id,
+                                        QString* out_error) const -> QVariantMap {
   QVariantMap result;
-  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+  if (!const_cast<SaveStorage*>(this)->initialize(out_error)) {
     return result;
   }
 
   QSqlQuery query(m_database);
-  query.prepare(QStringLiteral(
-      "SELECT completed, unlocked, completed_at FROM campaign_progress "
-      "WHERE campaign_id = :campaign_id"));
+  query.prepare(
+      QStringLiteral("SELECT completed, unlocked, completed_at FROM campaign_progress "
+                     "WHERE campaign_id = :campaign_id"));
   query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
 
   if (!query.exec()) {
@@ -531,8 +525,8 @@ auto SaveStorage::get_campaign_progress(
   return result;
 }
 
-auto SaveStorage::mark_campaign_completed(const QString &campaign_id,
-                                          QString *out_error) -> bool {
+auto SaveStorage::mark_campaign_completed(const QString& campaign_id,
+                                          QString* out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -542,16 +536,14 @@ auto SaveStorage::mark_campaign_completed(const QString &campaign_id,
     return false;
   }
 
-  const QString now_iso =
-      QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+  const QString now_iso = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
 
   QSqlQuery query(m_database);
-  query.prepare(
-      QStringLiteral("INSERT INTO campaign_progress (campaign_id, completed, "
-                     "unlocked, completed_at) "
-                     "VALUES (:campaign_id, 1, 1, :completed_at) "
-                     "ON CONFLICT(campaign_id) DO UPDATE SET "
-                     "completed = 1, completed_at = excluded.completed_at"));
+  query.prepare(QStringLiteral("INSERT INTO campaign_progress (campaign_id, completed, "
+                               "unlocked, completed_at) "
+                               "VALUES (:campaign_id, 1, 1, :completed_at) "
+                               "ON CONFLICT(campaign_id) DO UPDATE SET "
+                               "completed = 1, completed_at = excluded.completed_at"));
   query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
   query.bindValue(QStringLiteral(":completed_at"), now_iso);
 
@@ -571,8 +563,7 @@ auto SaveStorage::mark_campaign_completed(const QString &campaign_id,
   return true;
 }
 
-auto SaveStorage::delete_slot(const QString &slot_name,
-                              QString *out_error) -> bool {
+auto SaveStorage::delete_slot(const QString& slot_name, QString* out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -583,8 +574,7 @@ auto SaveStorage::delete_slot(const QString &slot_name,
   }
 
   QSqlQuery query(m_database);
-  query.prepare(
-      QStringLiteral("DELETE FROM saves WHERE slot_name = :slot_name"));
+  query.prepare(QStringLiteral("DELETE FROM saves WHERE slot_name = :slot_name"));
   query.bindValue(QStringLiteral(":slot_name"), slot_name);
 
   if (!query.exec()) {
@@ -611,7 +601,7 @@ auto SaveStorage::delete_slot(const QString &slot_name,
   return true;
 }
 
-auto SaveStorage::open(QString *out_error) const -> bool {
+auto SaveStorage::open(QString* out_error) const -> bool {
   if (m_database.isValid() && m_database.isOpen()) {
     return true;
   }
@@ -639,7 +629,7 @@ auto SaveStorage::open(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::ensure_schema(QString *out_error) const -> bool {
+auto SaveStorage::ensure_schema(QString* out_error) const -> bool {
   const int current_version = schema_version(out_error);
   if (current_version < 0) {
     return false;
@@ -648,8 +638,7 @@ auto SaveStorage::ensure_schema(QString *out_error) const -> bool {
   if (current_version > k_current_schema_version) {
     if (out_error != nullptr) {
       *out_error =
-          QStringLiteral(
-              "Save database schema version %1 is newer than supported %2")
+          QStringLiteral("Save database schema version %1 is newer than supported %2")
               .arg(current_version)
               .arg(k_current_schema_version);
     }
@@ -682,7 +671,7 @@ auto SaveStorage::ensure_schema(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::schema_version(QString *out_error) const -> int {
+auto SaveStorage::schema_version(QString* out_error) const -> int {
   QSqlQuery pragma_query(m_database);
   if (!pragma_query.exec(QStringLiteral("PRAGMA user_version"))) {
     if (out_error != nullptr) {
@@ -699,11 +688,9 @@ auto SaveStorage::schema_version(QString *out_error) const -> int {
   return 0;
 }
 
-auto SaveStorage::set_schema_version(int version,
-                                     QString *out_error) const -> bool {
+auto SaveStorage::set_schema_version(int version, QString* out_error) const -> bool {
   QSqlQuery pragma_query(m_database);
-  if (!pragma_query.exec(
-          QStringLiteral("PRAGMA user_version = %1").arg(version))) {
+  if (!pragma_query.exec(QStringLiteral("PRAGMA user_version = %1").arg(version))) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to update schema version: %1")
                        .arg(last_error_string(pragma_query.lastError()));
@@ -713,21 +700,20 @@ auto SaveStorage::set_schema_version(int version,
   return true;
 }
 
-auto SaveStorage::create_base_schema(QString *out_error) const -> bool {
+auto SaveStorage::create_base_schema(QString* out_error) const -> bool {
   QSqlQuery query(m_database);
-  const QString create_sql =
-      QStringLiteral("CREATE TABLE IF NOT EXISTS saves ("
-                     "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                     "slot_name TEXT UNIQUE NOT NULL, "
-                     "title TEXT NOT NULL, "
-                     "map_name TEXT, "
-                     "timestamp TEXT NOT NULL, "
-                     "metadata BLOB NOT NULL, "
-                     "world_state BLOB NOT NULL, "
-                     "screenshot BLOB, "
-                     "created_at TEXT NOT NULL, "
-                     "updated_at TEXT NOT NULL"
-                     ")");
+  const QString create_sql = QStringLiteral("CREATE TABLE IF NOT EXISTS saves ("
+                                            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                            "slot_name TEXT UNIQUE NOT NULL, "
+                                            "title TEXT NOT NULL, "
+                                            "map_name TEXT, "
+                                            "timestamp TEXT NOT NULL, "
+                                            "metadata BLOB NOT NULL, "
+                                            "world_state BLOB NOT NULL, "
+                                            "screenshot BLOB, "
+                                            "created_at TEXT NOT NULL, "
+                                            "updated_at TEXT NOT NULL"
+                                            ")");
 
   if (!query.exec(create_sql)) {
     if (out_error != nullptr) {
@@ -738,9 +724,9 @@ auto SaveStorage::create_base_schema(QString *out_error) const -> bool {
   }
 
   QSqlQuery index_query(m_database);
-  if (!index_query.exec(QStringLiteral(
-          "CREATE INDEX IF NOT EXISTS idx_saves_updated_at ON saves "
-          "(updated_at DESC)"))) {
+  if (!index_query.exec(
+          QStringLiteral("CREATE INDEX IF NOT EXISTS idx_saves_updated_at ON saves "
+                         "(updated_at DESC)"))) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("Failed to build save index: %1")
                        .arg(last_error_string(index_query.lastError()));
@@ -751,8 +737,7 @@ auto SaveStorage::create_base_schema(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::migrate_schema(int from_version,
-                                 QString *out_error) const -> bool {
+auto SaveStorage::migrate_schema(int from_version, QString* out_error) const -> bool {
   int version = from_version;
 
   while (version < k_current_schema_version) {
@@ -777,8 +762,7 @@ auto SaveStorage::migrate_schema(int from_version,
       break;
     default:
       if (out_error != nullptr) {
-        *out_error =
-            QStringLiteral("Unsupported migration path from %1").arg(version);
+        *out_error = QStringLiteral("Unsupported migration path from %1").arg(version);
       }
       return false;
     }
@@ -787,7 +771,7 @@ auto SaveStorage::migrate_schema(int from_version,
   return true;
 }
 
-auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
+auto SaveStorage::migrate_to_2(QString* out_error) const -> bool {
 
   QSqlQuery query(m_database);
   const QString create_campaigns_sql =
@@ -819,9 +803,8 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
 
   if (!progress_query.exec(create_progress_sql)) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Failed to create campaign_progress table: %1")
-              .arg(last_error_string(progress_query.lastError()));
+      *out_error = QStringLiteral("Failed to create campaign_progress table: %1")
+                       .arg(last_error_string(progress_query.lastError()));
     }
     return false;
   }
@@ -843,15 +826,14 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
   }
 
   QSqlQuery progress_insert_query(m_database);
-  const QString insert_progress_sql = QStringLiteral(
-      "INSERT INTO campaign_progress (campaign_id, completed, unlocked) "
-      "VALUES ('carthage_vs_rome', 0, 1)");
+  const QString insert_progress_sql =
+      QStringLiteral("INSERT INTO campaign_progress (campaign_id, completed, unlocked) "
+                     "VALUES ('carthage_vs_rome', 0, 1)");
 
   if (!progress_insert_query.exec(insert_progress_sql)) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Failed to initialize campaign progress: %1")
-              .arg(last_error_string(progress_insert_query.lastError()));
+      *out_error = QStringLiteral("Failed to initialize campaign progress: %1")
+                       .arg(last_error_string(progress_insert_query.lastError()));
     }
     return false;
   }
@@ -859,7 +841,7 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::migrate_to_3(QString *out_error) const -> bool {
+auto SaveStorage::migrate_to_3(QString* out_error) const -> bool {
 
   QSqlQuery query(m_database);
   const QString create_mission_progress_sql =
@@ -901,9 +883,8 @@ auto SaveStorage::migrate_to_3(QString *out_error) const -> bool {
 
   if (!missions_query.exec(create_campaign_missions_sql)) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Failed to create campaign_missions table: %1")
-              .arg(last_error_string(missions_query.lastError()));
+      *out_error = QStringLiteral("Failed to create campaign_missions table: %1")
+                       .arg(last_error_string(missions_query.lastError()));
     }
     return false;
   }
@@ -924,9 +905,8 @@ auto SaveStorage::migrate_to_3(QString *out_error) const -> bool {
           "CREATE INDEX IF NOT EXISTS idx_campaign_missions_campaign_id ON "
           "campaign_missions (campaign_id)"))) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Failed to create campaign_missions index: %1")
-              .arg(last_error_string(campaign_index_query.lastError()));
+      *out_error = QStringLiteral("Failed to create campaign_missions index: %1")
+                       .arg(last_error_string(campaign_index_query.lastError()));
     }
     return false;
   }
@@ -934,10 +914,14 @@ auto SaveStorage::migrate_to_3(QString *out_error) const -> bool {
   return true;
 }
 
-auto SaveStorage::save_mission_result(
-    const QString &mission_id, const QString &mode, const QString &campaign_id,
-    bool completed, const QString &result, const QString &difficulty,
-    float completion_time, QString *out_error) -> bool {
+auto SaveStorage::save_mission_result(const QString& mission_id,
+                                      const QString& mode,
+                                      const QString& campaign_id,
+                                      bool completed,
+                                      const QString& result,
+                                      const QString& difficulty,
+                                      float completion_time,
+                                      QString* out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -947,8 +931,7 @@ auto SaveStorage::save_mission_result(
     return false;
   }
 
-  const QString now_iso =
-      QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+  const QString now_iso = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
 
   QSqlQuery query(m_database);
   const QString insert_sql = QStringLiteral(
@@ -967,9 +950,8 @@ auto SaveStorage::save_mission_result(
 
   if (!query.prepare(insert_sql)) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Failed to prepare mission_progress insert: %1")
-              .arg(last_error_string(query.lastError()));
+      *out_error = QStringLiteral("Failed to prepare mission_progress insert: %1")
+                       .arg(last_error_string(query.lastError()));
     }
     return false;
   }
@@ -985,8 +967,7 @@ auto SaveStorage::save_mission_result(
   query.bindValue(QStringLiteral(":completion_time"), completion_time);
   query.bindValue(QStringLiteral(":difficulty"), difficulty);
   query.bindValue(QStringLiteral(":result"), result);
-  query.bindValue(QStringLiteral(":completed_at"),
-                  completed ? now_iso : QVariant());
+  query.bindValue(QStringLiteral(":completed_at"), completed ? now_iso : QVariant());
   query.bindValue(QStringLiteral(":created_at"), now_iso);
   query.bindValue(QStringLiteral(":updated_at"), now_iso);
 
@@ -1006,8 +987,8 @@ auto SaveStorage::save_mission_result(
   return true;
 }
 
-auto SaveStorage::get_mission_progress(
-    const QString &mission_id, QString *out_error) const -> QVariantMap {
+auto SaveStorage::get_mission_progress(const QString& mission_id,
+                                       QString* out_error) const -> QVariantMap {
   QVariantMap result;
   if (!initialize(out_error)) {
     return result;
@@ -1042,7 +1023,7 @@ auto SaveStorage::get_mission_progress(
 }
 
 auto SaveStorage::get_campaign_mission_progress(
-    const QString &campaign_id, QString *out_error) const -> QVariantList {
+    const QString& campaign_id, QString* out_error) const -> QVariantList {
   QVariantList result;
   if (!initialize(out_error)) {
     return result;
@@ -1077,8 +1058,7 @@ auto SaveStorage::get_campaign_mission_progress(
 }
 
 auto SaveStorage::ensure_campaign_missions_in_db(
-    const Game::Campaign::CampaignDefinition &campaign,
-    QString *out_error) -> bool {
+    const Game::Campaign::CampaignDefinition& campaign, QString* out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -1088,7 +1068,7 @@ auto SaveStorage::ensure_campaign_missions_in_db(
     return false;
   }
 
-  for (const auto &mission : campaign.missions) {
+  for (const auto& mission : campaign.missions) {
     QSqlQuery check_query(m_database);
     check_query.prepare(QStringLiteral(
         "SELECT COUNT(*) FROM campaign_missions "
@@ -1098,9 +1078,8 @@ auto SaveStorage::ensure_campaign_missions_in_db(
 
     if (!check_query.exec() || !check_query.next()) {
       if (out_error != nullptr) {
-        *out_error =
-            QStringLiteral("Failed to check campaign mission existence: %1")
-                .arg(last_error_string(check_query.lastError()));
+        *out_error = QStringLiteral("Failed to check campaign mission existence: %1")
+                         .arg(last_error_string(check_query.lastError()));
       }
       transaction.rollback();
       return false;
@@ -1116,8 +1095,7 @@ auto SaveStorage::ensure_campaign_missions_in_db(
           "VALUES (:campaign_id, :mission_id, :order_index, :unlocked, 0)"));
       insert_query.bindValue(QStringLiteral(":campaign_id"), campaign.id);
       insert_query.bindValue(QStringLiteral(":mission_id"), mission.mission_id);
-      insert_query.bindValue(QStringLiteral(":order_index"),
-                             mission.order_index);
+      insert_query.bindValue(QStringLiteral(":order_index"), mission.order_index);
 
       insert_query.bindValue(QStringLiteral(":unlocked"),
                              mission.order_index == 0 ? 1 : 0);
@@ -1141,8 +1119,7 @@ auto SaveStorage::ensure_campaign_missions_in_db(
 }
 
 auto SaveStorage::ensure_campaign_in_db(
-    const Game::Campaign::CampaignDefinition &campaign,
-    QString *out_error) -> bool {
+    const Game::Campaign::CampaignDefinition& campaign, QString* out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -1182,9 +1159,9 @@ auto SaveStorage::ensure_campaign_in_db(
   return true;
 }
 
-auto SaveStorage::unlock_next_mission(const QString &campaign_id,
-                                      const QString &completed_mission_id,
-                                      QString *out_error) -> bool {
+auto SaveStorage::unlock_next_mission(const QString& campaign_id,
+                                      const QString& completed_mission_id,
+                                      QString* out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -1194,14 +1171,13 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
     return false;
   }
 
-  const QString now_iso =
-      QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+  const QString now_iso = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
 
   QSqlQuery update_query(m_database);
-  update_query.prepare(QStringLiteral(
-      "UPDATE campaign_missions SET completed = 1, completed_at = "
-      ":completed_at "
-      "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
+  update_query.prepare(
+      QStringLiteral("UPDATE campaign_missions SET completed = 1, completed_at = "
+                     ":completed_at "
+                     "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
   update_query.bindValue(QStringLiteral(":completed_at"), now_iso);
   update_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
   update_query.bindValue(QStringLiteral(":mission_id"), completed_mission_id);
@@ -1216,9 +1192,9 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
   }
 
   QSqlQuery order_query(m_database);
-  order_query.prepare(QStringLiteral(
-      "SELECT order_index FROM campaign_missions "
-      "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
+  order_query.prepare(
+      QStringLiteral("SELECT order_index FROM campaign_missions "
+                     "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
   order_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
   order_query.bindValue(QStringLiteral(":mission_id"), completed_mission_id);
 
@@ -1239,8 +1215,7 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
                      "WHERE campaign_id = :campaign_id AND order_index = "
                      ":next_order_index"));
   unlock_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
-  unlock_query.bindValue(QStringLiteral(":next_order_index"),
-                         completed_order + 1);
+  unlock_query.bindValue(QStringLiteral(":next_order_index"), completed_order + 1);
 
   if (!unlock_query.exec()) {
     if (out_error != nullptr) {
@@ -1253,10 +1228,9 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
 
   if (unlock_query.numRowsAffected() == 0) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("No next mission found to unlock (completed mission "
-                         "order: %1)")
-              .arg(completed_order);
+      *out_error = QStringLiteral("No next mission found to unlock (completed mission "
+                                  "order: %1)")
+                       .arg(completed_order);
     }
     transaction.rollback();
     return false;

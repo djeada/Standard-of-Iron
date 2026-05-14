@@ -1,11 +1,14 @@
 #include "mode_indicator.h"
-#include "../gl/mesh.h"
+
 #include <QVector2D>
 #include <QVector3D>
+
 #include <cmath>
 #include <cstddef>
 #include <memory>
 #include <vector>
+
+#include "../gl/mesh.h"
 
 namespace {
 constexpr float k_pi = 3.14159265358979323846F;
@@ -18,8 +21,7 @@ std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_guard_mesh;
 std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_hold_mesh;
 std::unique_ptr<Render::GL::Mesh> ModeIndicator::s_patrol_mesh;
 
-auto ModeIndicator::create_attack_mode_mesh()
-    -> std::unique_ptr<Render::GL::Mesh> {
+auto ModeIndicator::create_attack_mode_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
@@ -78,11 +80,10 @@ auto ModeIndicator::create_attack_mode_mesh()
     float const guard_half_height = cross_guard_height * 0.5F;
     float const guard_y = blade_length * guard_position_ratio;
 
-    float guard_verts[4][2] = {
-        {-guard_half_width, guard_y - guard_half_height},
-        {guard_half_width, guard_y - guard_half_height},
-        {guard_half_width, guard_y + guard_half_height},
-        {-guard_half_width, guard_y + guard_half_height}};
+    float guard_verts[4][2] = {{-guard_half_width, guard_y - guard_half_height},
+                               {guard_half_width, guard_y - guard_half_height},
+                               {guard_half_width, guard_y + guard_half_height},
+                               {-guard_half_width, guard_y + guard_half_height}};
 
     for (int i = 0; i < 4; ++i) {
       float const local_x = guard_verts[i][0];
@@ -133,8 +134,7 @@ auto ModeIndicator::create_attack_mode_mesh()
   return std::make_unique<Mesh>(verts, idx);
 }
 
-auto ModeIndicator::create_guard_mode_mesh()
-    -> std::unique_ptr<Render::GL::Mesh> {
+auto ModeIndicator::create_guard_mode_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
 
   std::vector<Vertex> verts;
@@ -183,7 +183,7 @@ auto ModeIndicator::create_guard_mode_mesh()
   std::vector<unsigned int> outer_idx;
   std::vector<unsigned int> inner_idx;
 
-  for (auto const &p : outline) {
+  for (auto const& p : outline) {
     auto uv = uv_for(p.x(), p.y());
     outer_idx.push_back(add_vert(p.x(), p.y(), uv.x(), uv.y(), 0.0F));
 
@@ -198,8 +198,13 @@ auto ModeIndicator::create_guard_mode_mesh()
   for (size_t i = 0; i < outer_idx.size(); ++i) {
     size_t next = (i + 1) % outer_idx.size();
 
-    idx.insert(idx.end(), {outer_idx[i], outer_idx[next], inner_idx[i],
-                           inner_idx[i], outer_idx[next], inner_idx[next]});
+    idx.insert(idx.end(),
+               {outer_idx[i],
+                outer_idx[next],
+                inner_idx[i],
+                inner_idx[i],
+                outer_idx[next],
+                inner_idx[next]});
   }
 
   unsigned int face_center =
@@ -233,8 +238,7 @@ auto ModeIndicator::create_guard_mode_mesh()
   return std::make_unique<Mesh>(verts, idx);
 }
 
-auto ModeIndicator::create_hold_mode_mesh()
-    -> std::unique_ptr<Render::GL::Mesh> {
+auto ModeIndicator::create_hold_mode_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
 
   std::vector<Vertex> verts;
@@ -293,15 +297,19 @@ auto ModeIndicator::create_hold_mode_mesh()
   unsigned int shank_base = verts.size();
   verts.push_back(
       {{-shank_half, shank_top, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
-  verts.push_back(
-      {{shank_half, shank_top, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
+  verts.push_back({{shank_half, shank_top, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
   verts.push_back(
       {{shank_half, shank_bottom, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
   verts.push_back(
       {{-shank_half, shank_bottom, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
 
-  idx.insert(idx.end(), {shank_base + 0, shank_base + 1, shank_base + 2,
-                         shank_base + 2, shank_base + 3, shank_base + 0});
+  idx.insert(idx.end(),
+             {shank_base + 0,
+              shank_base + 1,
+              shank_base + 2,
+              shank_base + 2,
+              shank_base + 3,
+              shank_base + 0});
 
   float const cross_y = shank_bottom;
   float const cross_half_w = cross_width * 0.5F;
@@ -321,8 +329,13 @@ auto ModeIndicator::create_hold_mode_mesh()
                    {n.x(), n.y(), n.z()},
                    {0.0F, 0.5F}});
 
-  idx.insert(idx.end(), {cross_base + 0, cross_base + 1, cross_base + 2,
-                         cross_base + 2, cross_base + 3, cross_base + 0});
+  idx.insert(idx.end(),
+             {cross_base + 0,
+              cross_base + 1,
+              cross_base + 2,
+              cross_base + 2,
+              cross_base + 3,
+              cross_base + 0});
 
   float const fluke_y = cross_y - fluke_drop;
   float const fluke_tip_y = -anchor_height * 0.58F;
@@ -334,20 +347,21 @@ auto ModeIndicator::create_hold_mode_mesh()
     idx.insert(idx.end(), {ia, ib, ic});
   };
 
-  add_tri({-cross_half_w * 0.9F, cross_y}, {-fluke_span * 0.6F, fluke_y},
+  add_tri({-cross_half_w * 0.9F, cross_y},
+          {-fluke_span * 0.6F, fluke_y},
           {-fluke_span, fluke_tip_y});
 
-  add_tri({cross_half_w * 0.9F, cross_y}, {fluke_span * 0.6F, fluke_y},
+  add_tri({cross_half_w * 0.9F, cross_y},
+          {fluke_span * 0.6F, fluke_y},
           {fluke_span, fluke_tip_y});
 
-  add_tri({-shank_half * 0.8F, cross_y}, {shank_half * 0.8F, cross_y},
-          {0.0F, fluke_tip_y});
+  add_tri(
+      {-shank_half * 0.8F, cross_y}, {shank_half * 0.8F, cross_y}, {0.0F, fluke_tip_y});
 
   return std::make_unique<Mesh>(verts, idx);
 }
 
-auto ModeIndicator::create_patrol_mode_mesh()
-    -> std::unique_ptr<Render::GL::Mesh> {
+auto ModeIndicator::create_patrol_mode_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
@@ -374,23 +388,15 @@ auto ModeIndicator::create_patrol_mode_mesh()
       float const angle1 = start_angle + (end_angle - start_angle) * t1;
       float const angle2 = start_angle + (end_angle - start_angle) * t2;
 
-      float const x1_inner =
-          (circle_radius - arrow_width * 0.5F) * std::cos(angle1);
-      float const y1_inner =
-          (circle_radius - arrow_width * 0.5F) * std::sin(angle1);
-      float const x1_outer =
-          (circle_radius + arrow_width * 0.5F) * std::cos(angle1);
-      float const y1_outer =
-          (circle_radius + arrow_width * 0.5F) * std::sin(angle1);
+      float const x1_inner = (circle_radius - arrow_width * 0.5F) * std::cos(angle1);
+      float const y1_inner = (circle_radius - arrow_width * 0.5F) * std::sin(angle1);
+      float const x1_outer = (circle_radius + arrow_width * 0.5F) * std::cos(angle1);
+      float const y1_outer = (circle_radius + arrow_width * 0.5F) * std::sin(angle1);
 
-      float const x2_inner =
-          (circle_radius - arrow_width * 0.5F) * std::cos(angle2);
-      float const y2_inner =
-          (circle_radius - arrow_width * 0.5F) * std::sin(angle2);
-      float const x2_outer =
-          (circle_radius + arrow_width * 0.5F) * std::cos(angle2);
-      float const y2_outer =
-          (circle_radius + arrow_width * 0.5F) * std::sin(angle2);
+      float const x2_inner = (circle_radius - arrow_width * 0.5F) * std::cos(angle2);
+      float const y2_inner = (circle_radius - arrow_width * 0.5F) * std::sin(angle2);
+      float const x2_outer = (circle_radius + arrow_width * 0.5F) * std::cos(angle2);
+      float const y2_outer = (circle_radius + arrow_width * 0.5F) * std::sin(angle2);
 
       size_t const base = verts.size();
       verts.push_back(
@@ -429,12 +435,9 @@ auto ModeIndicator::create_patrol_mode_mesh()
     float const base2_y = arrow_y - normal_y * arrow_head_width * 0.5F;
 
     size_t const arrow_base = verts.size();
-    verts.push_back(
-        {{tip_x, tip_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 1.0F}});
-    verts.push_back(
-        {{base1_x, base1_y, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
-    verts.push_back(
-        {{base2_x, base2_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
+    verts.push_back({{tip_x, tip_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.5F, 1.0F}});
+    verts.push_back({{base1_x, base1_y, 0.0F}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
+    verts.push_back({{base2_x, base2_y, 0.0F}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
 
     idx.push_back(arrow_base + 0);
     idx.push_back(arrow_base + 1);
@@ -444,28 +447,28 @@ auto ModeIndicator::create_patrol_mode_mesh()
   return std::make_unique<Mesh>(verts, idx);
 }
 
-auto ModeIndicator::get_attack_mode_mesh() -> Render::GL::Mesh * {
+auto ModeIndicator::get_attack_mode_mesh() -> Render::GL::Mesh* {
   if (!s_attack_mesh) {
     s_attack_mesh = create_attack_mode_mesh();
   }
   return s_attack_mesh.get();
 }
 
-auto ModeIndicator::get_guard_mode_mesh() -> Render::GL::Mesh * {
+auto ModeIndicator::get_guard_mode_mesh() -> Render::GL::Mesh* {
   if (!s_guard_mesh) {
     s_guard_mesh = create_guard_mode_mesh();
   }
   return s_guard_mesh.get();
 }
 
-auto ModeIndicator::get_hold_mode_mesh() -> Render::GL::Mesh * {
+auto ModeIndicator::get_hold_mode_mesh() -> Render::GL::Mesh* {
   if (!s_hold_mesh) {
     s_hold_mesh = create_hold_mode_mesh();
   }
   return s_hold_mesh.get();
 }
 
-auto ModeIndicator::get_patrol_mode_mesh() -> Render::GL::Mesh * {
+auto ModeIndicator::get_patrol_mode_mesh() -> Render::GL::Mesh* {
   if (!s_patrol_mesh) {
     s_patrol_mesh = create_patrol_mode_mesh();
   }

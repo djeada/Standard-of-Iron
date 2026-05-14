@@ -2,52 +2,51 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
 
-
-
 Item {
     id: root
 
     property string target_name: ""
-    property int    target_hp: 0
-    property int    target_max_hp: 0
-    property real   target_hp_ratio: 0.0
+    property int target_hp: 0
+    property int target_max_hp: 0
+    property real target_hp_ratio: 0.0
 
-    
     property real displayed_ratio: target_hp_ratio
 
-    
-    property int  _prev_hp: 0
-    property int  _prev_max_hp: 0
+    property int _prev_hp: 0
+    property int _prev_max_hp: 0
     property real _flash_opacity: 0.0
 
     implicitWidth: 360
     implicitHeight: 54
 
-    
     opacity: target_max_hp > 0 ? 1.0 : 0.0
     visible: opacity > 0.0
-    Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutQuad } }
+    Behavior on opacity  {
+        NumberAnimation {
+            duration: 220
+            easing.type: Easing.OutQuad
+        }
+    }
 
-    
-    Behavior on displayed_ratio {
-        NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
+    Behavior on displayed_ratio  {
+        NumberAnimation {
+            duration: 280
+            easing.type: Easing.OutCubic
+        }
     }
 
     onTarget_hp_ratioChanged: {
         displayed_ratio = target_hp_ratio;
     }
 
-    
     onTarget_hpChanged: {
-        if (target_max_hp === _prev_max_hp && target_max_hp > 0 &&
-                target_hp < _prev_hp && _prev_hp > 0) {
+        if (target_max_hp === _prev_max_hp && target_max_hp > 0 && target_hp < _prev_hp && _prev_hp > 0) {
             _flash_opacity = 1.0;
             flash_decay.restart();
         }
         _prev_hp = target_hp;
     }
 
-    
     onTarget_max_hpChanged: {
         if (target_max_hp !== _prev_max_hp) {
             _flash_opacity = 0.0;
@@ -69,7 +68,6 @@ Item {
         }
     }
 
-    
     Rectangle {
         anchors.fill: parent
         color: "#d91a1008"
@@ -77,7 +75,6 @@ Item {
         border.color: Theme.border
         border.width: 2
 
-        
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
@@ -102,12 +99,10 @@ Item {
                 elide: Text.ElideRight
             }
 
-            
             Item {
                 Layout.fillWidth: true
                 height: 14
 
-                
                 Rectangle {
                     anchors.fill: parent
                     radius: 7
@@ -116,8 +111,6 @@ Item {
                     border.width: 1
                 }
 
-                
-                
                 Rectangle {
                     width: parent.width * root.target_hp_ratio
                     height: parent.height
@@ -125,19 +118,19 @@ Item {
                     color: "#88cc2200"
                 }
 
-                
                 Rectangle {
                     id: hp_fill
                     width: parent.width * root.displayed_ratio
                     height: parent.height
                     radius: 7
-                    color: root.displayed_ratio > 0.55
-                           ? "#cc1a7a22"
-                           : (root.displayed_ratio > 0.28 ? "#ccbb6600" : "#cccc1a00")
-                    Behavior on color { ColorAnimation { duration: 350 } }
+                    color: root.displayed_ratio > 0.55 ? "#cc1a7a22" : (root.displayed_ratio > 0.28 ? "#ccbb6600" : "#cccc1a00")
+                    Behavior on color  {
+                        ColorAnimation {
+                            duration: 350
+                        }
+                    }
                 }
 
-                
                 Text {
                     anchors.centerIn: parent
                     text: root.target_hp + " / " + root.target_max_hp

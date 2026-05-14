@@ -1,12 +1,13 @@
-#include "render/battle_render_optimizer.h"
 #include <gtest/gtest.h>
+
+#include "render/battle_render_optimizer.h"
 
 using namespace Render;
 
 class BattleRenderOptimizerTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    auto &optimizer = BattleRenderOptimizer::instance();
+    auto& optimizer = BattleRenderOptimizer::instance();
     BattleRenderConfig config;
     config.temporal_culling_threshold = 15;
     config.animation_throttle_threshold = 30;
@@ -20,7 +21,7 @@ protected:
 };
 
 TEST_F(BattleRenderOptimizerTest, DisabledOptimizerAlwaysRendersUnits) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   BattleRenderConfig config = optimizer.config();
   config.enabled = false;
   optimizer.set_config(config);
@@ -33,7 +34,7 @@ TEST_F(BattleRenderOptimizerTest, DisabledOptimizerAlwaysRendersUnits) {
 }
 
 TEST_F(BattleRenderOptimizerTest, SelectedUnitsAlwaysRender) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
@@ -42,7 +43,7 @@ TEST_F(BattleRenderOptimizerTest, SelectedUnitsAlwaysRender) {
 }
 
 TEST_F(BattleRenderOptimizerTest, HoveredUnitsAlwaysRender) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
@@ -51,7 +52,7 @@ TEST_F(BattleRenderOptimizerTest, HoveredUnitsAlwaysRender) {
 }
 
 TEST_F(BattleRenderOptimizerTest, MovingUnitsAlwaysRender) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
@@ -60,7 +61,7 @@ TEST_F(BattleRenderOptimizerTest, MovingUnitsAlwaysRender) {
 }
 
 TEST_F(BattleRenderOptimizerTest, BelowThresholdAlwaysRenders) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(10);
   optimizer.begin_frame();
 
@@ -70,7 +71,7 @@ TEST_F(BattleRenderOptimizerTest, BelowThresholdAlwaysRenders) {
 }
 
 TEST_F(BattleRenderOptimizerTest, AboveThresholdSkipsIdleUnitsAlternately) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
@@ -82,7 +83,7 @@ TEST_F(BattleRenderOptimizerTest, AboveThresholdSkipsIdleUnitsAlternately) {
 }
 
 TEST_F(BattleRenderOptimizerTest, TemporalCullingAlternatesBetweenFrames) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
   optimizer.begin_frame();
@@ -95,7 +96,7 @@ TEST_F(BattleRenderOptimizerTest, TemporalCullingAlternatesBetweenFrames) {
 }
 
 TEST_F(BattleRenderOptimizerTest, ActiveCombatUnitsAlwaysRender) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
   optimizer.begin_frame();
@@ -106,25 +107,24 @@ TEST_F(BattleRenderOptimizerTest, ActiveCombatUnitsAlwaysRender) {
 }
 
 TEST_F(BattleRenderOptimizerTest, DistantCombatUnitsAlwaysRender) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   float const far_distance_sq = 100.0F * 100.0F;
 
   optimizer.begin_frame();
-  bool const frame1 = optimizer.should_render_unit(1, false, false, false, true,
-                                                   far_distance_sq);
+  bool const frame1 =
+      optimizer.should_render_unit(1, false, false, false, true, far_distance_sq);
 
   optimizer.begin_frame();
-  bool const frame2 = optimizer.should_render_unit(1, false, false, false, true,
-                                                   far_distance_sq);
+  bool const frame2 =
+      optimizer.should_render_unit(1, false, false, false, true, far_distance_sq);
 
   EXPECT_TRUE(frame1);
   EXPECT_TRUE(frame2);
 }
 
-TEST_F(BattleRenderOptimizerTest,
-       AnimationThrottlingBelowThresholdAlwaysUpdates) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+TEST_F(BattleRenderOptimizerTest, AnimationThrottlingBelowThresholdAlwaysUpdates) {
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(20);
   optimizer.begin_frame();
 
@@ -133,7 +133,7 @@ TEST_F(BattleRenderOptimizerTest,
 }
 
 TEST_F(BattleRenderOptimizerTest, AnimationThrottlingSelectedAlwaysUpdates) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
@@ -142,7 +142,7 @@ TEST_F(BattleRenderOptimizerTest, AnimationThrottlingSelectedAlwaysUpdates) {
 }
 
 TEST_F(BattleRenderOptimizerTest, AnimationThrottlingCloseUnitsAlwaysUpdate) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
@@ -151,7 +151,7 @@ TEST_F(BattleRenderOptimizerTest, AnimationThrottlingCloseUnitsAlwaysUpdate) {
 }
 
 TEST_F(BattleRenderOptimizerTest, AnimationThrottlingDistantUnitsThrottled) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
   int updated = 0;
@@ -170,29 +170,27 @@ TEST_F(BattleRenderOptimizerTest, AnimationThrottlingDistantUnitsThrottled) {
 }
 
 TEST_F(BattleRenderOptimizerTest, NearbyCombatAnimationsAreNeverThrottled) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
   for (int frame = 0; frame < 6; ++frame) {
     optimizer.begin_frame();
-    EXPECT_TRUE(
-        optimizer.should_update_animation(1, 10.0F * 10.0F, false, true));
+    EXPECT_TRUE(optimizer.should_update_animation(1, 10.0F * 10.0F, false, true));
   }
 }
 
 TEST_F(BattleRenderOptimizerTest, DistantCombatAnimationsAlwaysUpdate) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
   for (int frame = 0; frame < 6; ++frame) {
     optimizer.begin_frame();
-    EXPECT_TRUE(
-        optimizer.should_update_animation(1, 100.0F * 100.0F, false, true));
+    EXPECT_TRUE(optimizer.should_update_animation(1, 100.0F * 100.0F, false, true));
   }
 }
 
 TEST_F(BattleRenderOptimizerTest, BatchingBoostIncreasesWithUnitCount) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
 
   optimizer.set_visible_unit_count(10);
   float boost_low = optimizer.get_batching_boost();
@@ -205,7 +203,7 @@ TEST_F(BattleRenderOptimizerTest, BatchingBoostIncreasesWithUnitCount) {
 }
 
 TEST_F(BattleRenderOptimizerTest, IsBattleModeDetectsBattles) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
 
   optimizer.set_visible_unit_count(10);
   EXPECT_FALSE(optimizer.is_battle_mode());
@@ -215,7 +213,7 @@ TEST_F(BattleRenderOptimizerTest, IsBattleModeDetectsBattles) {
 }
 
 TEST_F(BattleRenderOptimizerTest, FrameCounterIncrements) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
 
   uint32_t frame1 = optimizer.frame_counter();
   optimizer.begin_frame();
@@ -225,7 +223,7 @@ TEST_F(BattleRenderOptimizerTest, FrameCounterIncrements) {
 }
 
 TEST_F(BattleRenderOptimizerTest, StatsResetOnBeginFrame) {
-  auto &optimizer = BattleRenderOptimizer::instance();
+  auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
   optimizer.begin_frame();

@@ -1,10 +1,10 @@
 #include "ai_strategy.h"
+
 #include <algorithm>
 
 namespace Game::Systems::AI {
 
-auto AIStrategyFactory::parse_strategy(const QString &strategy_str)
-    -> AIStrategy {
+auto AIStrategyFactory::parse_strategy(const QString& strategy_str) -> AIStrategy {
   QString lower = strategy_str.toLower();
 
   if (lower == "aggressive") {
@@ -136,8 +136,9 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
   return config;
 }
 
-void AIStrategyFactory::apply_personality(AIStrategyConfig &config,
-                                          float aggression, float defense,
+void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
+                                          float aggression,
+                                          float defense,
                                           float harassment) {
 
   float aggression_factor = (aggression - 0.5F) * 2.0F;
@@ -156,18 +157,14 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig &config,
 
   config.aggression_modifier =
       std::max(0.3F, std::min(3.0F, config.aggression_modifier));
-  config.defense_modifier =
-      std::max(0.3F, std::min(3.0F, config.defense_modifier));
-  config.min_attack_force =
-      std::max(0.2F, std::min(2.5F, config.min_attack_force));
-  config.retreat_threshold =
-      std::max(0.05F, std::min(0.60F, config.retreat_threshold));
-  config.harassment_range =
-      std::max(0.0F, std::min(100.0F, config.harassment_range));
+  config.defense_modifier = std::max(0.3F, std::min(3.0F, config.defense_modifier));
+  config.min_attack_force = std::max(0.2F, std::min(2.5F, config.min_attack_force));
+  config.retreat_threshold = std::max(0.05F, std::min(0.60F, config.retreat_threshold));
+  config.harassment_range = std::max(0.0F, std::min(100.0F, config.harassment_range));
 }
 
-void AIStrategyFactory::apply_difficulty(AIStrategyConfig &config,
-                                         const QString &difficulty) {
+void AIStrategyFactory::apply_difficulty(AIStrategyConfig& config,
+                                         const QString& difficulty) {
   if (difficulty == "easy") {
     config.aggression_modifier *= 0.7F;
     config.production_rate_modifier *= 0.7F;
@@ -189,10 +186,8 @@ void AIStrategyFactory::apply_difficulty(AIStrategyConfig &config,
       std::max(0.3F, std::min(3.0F, config.aggression_modifier));
   config.production_rate_modifier =
       std::max(0.5F, std::min(3.0F, config.production_rate_modifier));
-  config.min_attack_force =
-      std::max(0.2F, std::min(2.5F, config.min_attack_force));
-  config.retreat_threshold =
-      std::max(0.05F, std::min(0.60F, config.retreat_threshold));
+  config.min_attack_force = std::max(0.2F, std::min(2.5F, config.min_attack_force));
+  config.retreat_threshold = std::max(0.05F, std::min(0.60F, config.retreat_threshold));
 }
 
 } // namespace Game::Systems::AI

@@ -2,7 +2,7 @@
 
 namespace Game::Units {
 
-auto all_commander_definitions() -> const std::vector<CommanderDefinition> & {
+auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
   using Game::Systems::NationID;
   static const std::vector<CommanderDefinition> definitions = {
       {TroopType::RomanLegionOrganizer,
@@ -177,8 +177,8 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition> & {
   return definitions;
 }
 
-auto commander_definition(TroopType troop_type) -> const CommanderDefinition * {
-  for (const auto &definition : all_commander_definitions()) {
+auto commander_definition(TroopType troop_type) -> const CommanderDefinition* {
+  for (const auto& definition : all_commander_definitions()) {
     if (definition.troop_type == troop_type) {
       return &definition;
     }
@@ -187,9 +187,9 @@ auto commander_definition(TroopType troop_type) -> const CommanderDefinition * {
 }
 
 auto commander_definitions_for_nation(Game::Systems::NationID nation_id)
-    -> std::vector<const CommanderDefinition *> {
-  std::vector<const CommanderDefinition *> result;
-  for (const auto &definition : all_commander_definitions()) {
+    -> std::vector<const CommanderDefinition*> {
+  std::vector<const CommanderDefinition*> result;
+  for (const auto& definition : all_commander_definitions()) {
     if (definition.nation_id == nation_id) {
       result.push_back(&definition);
     }

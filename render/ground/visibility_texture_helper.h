@@ -1,13 +1,15 @@
 #pragma once
 
-#include "../../game/map/visibility_service.h"
-#include "../draw_queue.h"
-#include "../gl/texture.h"
-#include <GL/gl.h>
 #include <QVector2D>
+
+#include <GL/gl.h>
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "../../game/map/visibility_service.h"
+#include "../draw_queue.h"
+#include "../gl/texture.h"
 
 namespace Render::Ground {
 
@@ -22,7 +24,7 @@ public:
     m_height = 0;
   }
 
-  auto update(const Game::Map::VisibilityService::Snapshot &snapshot,
+  auto update(const Game::Map::VisibilityService::Snapshot& snapshot,
               float tile_size,
               float explored_alpha = 0.6F) -> VisibilityResources {
     const int vis_w = snapshot.width;
@@ -32,8 +34,7 @@ public:
     if (!m_texture || size_changed) {
       m_texture = std::make_unique<GL::Texture>();
       m_texture->create_empty(vis_w, vis_h, GL::Texture::Format::RGBA);
-      m_texture->set_filter(GL::Texture::Filter::Nearest,
-                            GL::Texture::Filter::Nearest);
+      m_texture->set_filter(GL::Texture::Filter::Nearest, GL::Texture::Filter::Nearest);
       m_texture->set_wrap(GL::Texture::Wrap::ClampToEdge,
                           GL::Texture::Wrap::ClampToEdge);
       m_width = vis_w;
@@ -41,12 +42,11 @@ public:
       m_cached_version = 0;
     }
 
-    const std::uint64_t version =
-        Game::Map::VisibilityService::instance().version();
+    const std::uint64_t version = Game::Map::VisibilityService::instance().version();
     if (version != m_cached_version || size_changed) {
-      const auto &cells = snapshot.cells;
-      std::vector<unsigned char> texels(
-          static_cast<std::size_t>(vis_w * vis_h * 4), 0U);
+      const auto& cells = snapshot.cells;
+      std::vector<unsigned char> texels(static_cast<std::size_t>(vis_w * vis_h * 4),
+                                        0U);
 
       for (int z = 0; z < vis_h; ++z) {
         for (int x = 0; x < vis_w; ++x) {
@@ -70,8 +70,15 @@ public:
       }
 
       m_texture->bind();
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, vis_w, vis_h, GL_RGBA,
-                      GL_UNSIGNED_BYTE, texels.data());
+      glTexSubImage2D(GL_TEXTURE_2D,
+                      0,
+                      0,
+                      0,
+                      vis_w,
+                      vis_h,
+                      GL_RGBA,
+                      GL_UNSIGNED_BYTE,
+                      texels.data());
       m_cached_version = version;
     }
 

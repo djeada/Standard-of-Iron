@@ -8,7 +8,7 @@ Item {
 
     property var mission_objectives: null
 
-    signal close_requested()
+    signal close_requested
 
     function refresh_objectives() {
         if (typeof game !== 'undefined' && game.get_current_mission_objectives)
@@ -20,7 +20,7 @@ Item {
     anchors.fill: parent
     z: 10
     focus: true
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
             root.close_requested();
             event.accepted = true;
@@ -32,7 +32,6 @@ Item {
     onVisibleChanged: {
         if (visible)
             refresh_objectives();
-
     }
 
     Rectangle {
@@ -75,7 +74,6 @@ Item {
                     Layout.preferredHeight: 40
                     onClicked: root.close_requested()
                 }
-
             }
 
             Rectangle {
@@ -117,7 +115,6 @@ Item {
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
                         }
-
                     }
 
                     ColumnLayout {
@@ -166,13 +163,9 @@ Item {
                                         wrapMode: Text.WordWrap
                                         Layout.fillWidth: true
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
 
                     ColumnLayout {
@@ -221,13 +214,9 @@ Item {
                                         wrapMode: Text.WordWrap
                                         Layout.fillWidth: true
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
 
                     ColumnLayout {
@@ -276,13 +265,9 @@ Item {
                                         wrapMode: Text.WordWrap
                                         Layout.fillWidth: true
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
 
                     Label {
@@ -295,9 +280,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.topMargin: Theme.spacingXLarge
                     }
-
                 }
-
             }
 
             RowLayout {
@@ -312,11 +295,7 @@ Item {
                     text: qsTr("Close")
                     onClicked: root.close_requested()
                 }
-
             }
-
         }
-
     }
-
 }

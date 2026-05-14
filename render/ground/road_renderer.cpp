@@ -1,4 +1,17 @@
 #include "road_renderer.h"
+
+#include <QVector2D>
+#include <QVector3D>
+#include <qglobal.h>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <vector>
+
 #include "../../game/map/terrain.h"
 #include "../../game/map/visibility_service.h"
 #include "../draw_queue.h"
@@ -8,25 +21,14 @@
 #include "ground_utils.h"
 #include "linear_feature_geometry.h"
 #include "linear_feature_visibility.h"
-#include <QVector2D>
-#include <QVector3D>
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <memory>
-#include <qglobal.h>
-#include <qmatrix4x4.h>
-#include <qvectornd.h>
-#include <vector>
 
 namespace Render::GL {
 
 RoadRenderer::RoadRenderer() = default;
 RoadRenderer::~RoadRenderer() = default;
 
-void RoadRenderer::configure(
-    const std::vector<Game::Map::RoadSegment> &road_segments,
-    const Game::Map::TerrainHeightMap &height_map) {
+void RoadRenderer::configure(const std::vector<Game::Map::RoadSegment>& road_segments,
+                             const Game::Map::TerrainHeightMap& height_map) {
   m_road_segments = road_segments;
   m_height_map = &height_map;
   m_tile_size = height_map.get_tile_size();
@@ -55,22 +57,21 @@ void RoadRenderer::build_meshes() {
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_road_segments.size());
-  for (const auto &segment : m_road_segments) {
+  for (const auto& segment : m_road_segments) {
     segments.push_back({segment.start, segment.end, segment.width});
   }
 
-  m_meshes =
-      Ground::build_linear_ribbon_meshes(segments, m_tile_size, settings);
+  m_meshes = Ground::build_linear_ribbon_meshes(segments, m_tile_size, settings);
 }
 
-void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   if (m_road_segments.empty() || m_meshes.empty()) {
     return;
   }
 
-  auto &visibility = Game::Map::VisibilityService::instance();
+  auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
 
   Game::Map::VisibilityService::Snapshot vis_snapshot;
@@ -88,12 +89,12 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   const QVector3D base_color(0.45F, 0.42F, 0.38F);
 
   std::size_t mesh_index = 0;
-  for (const auto &segment : m_road_segments) {
+  for (const auto& segment : m_road_segments) {
     if (mesh_index >= m_meshes.size()) {
       break;
     }
 
-    auto *mesh = m_meshes[mesh_index].get();
+    auto* mesh = m_meshes[mesh_index].get();
     ++mesh_index;
     if (mesh == nullptr) {
       continue;

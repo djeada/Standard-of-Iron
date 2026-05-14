@@ -1,13 +1,15 @@
 #include "elephant_attack_system.h"
-#include "../core/component.h"
-#include "../core/world.h"
-#include "../units/spawn_type.h"
-#include "combat_system/damage_processor.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdlib>
 #include <vector>
+
+#include "../core/component.h"
+#include "../core/world.h"
+#include "../units/spawn_type.h"
+#include "combat_system/damage_processor.h"
 
 namespace Game::Systems {
 
@@ -20,12 +22,10 @@ struct FootOffset {
 
 constexpr float k_pi = 3.14159265F;
 
-void add_all_foot_stomps(
-    Engine::Core::TransformComponent *transform,
-    Engine::Core::ElephantComponent *elephant_comp,
-    Engine::Core::ElephantStompImpactComponent *stomp_impact) {
-  float const scale =
-      std::max(1.0F, (transform->scale.x + transform->scale.z) * 0.5F);
+void add_all_foot_stomps(Engine::Core::TransformComponent* transform,
+                         Engine::Core::ElephantComponent* elephant_comp,
+                         Engine::Core::ElephantStompImpactComponent* stomp_impact) {
+  float const scale = std::max(1.0F, (transform->scale.x + transform->scale.z) * 0.5F);
   float const lat = elephant_comp->foot_lateral * scale;
   float const fwd = elephant_comp->foot_forward * scale;
 
@@ -40,7 +40,7 @@ void add_all_foot_stomps(
   float const cos_y = std::cos(yaw);
   float const sin_y = std::sin(yaw);
 
-  for (const auto &local : foot_locals) {
+  for (const auto& local : foot_locals) {
     Engine::Core::ElephantStompImpactComponent::ImpactRecord impact;
     impact.x = transform->position.x + local.x * cos_y + local.z * sin_y;
     impact.z = transform->position.z - local.x * sin_y + local.z * cos_y;
@@ -51,17 +51,16 @@ void add_all_foot_stomps(
 
 } // namespace
 
-void ElephantAttackSystem::update(Engine::Core::World *world,
-                                  float delta_time) {
+void ElephantAttackSystem::update(Engine::Core::World* world, float delta_time) {
   process_elephant_behavior(world, delta_time);
 }
 
-void ElephantAttackSystem::process_elephant_behavior(Engine::Core::World *world,
+void ElephantAttackSystem::process_elephant_behavior(Engine::Core::World* world,
                                                      float delta_time) {
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
 
-  for (auto *entity : entities) {
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (auto* entity : entities) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr || unit->health <= 0) {
       continue;
     }
@@ -74,7 +73,7 @@ void ElephantAttackSystem::process_elephant_behavior(Engine::Core::World *world,
       continue;
     }
 
-    auto *elephant = entity->get_component<Engine::Core::ElephantComponent>();
+    auto* elephant = entity->get_component<Engine::Core::ElephantComponent>();
     if (elephant == nullptr) {
       elephant = entity->add_component<Engine::Core::ElephantComponent>();
     }
@@ -105,16 +104,14 @@ void ElephantAttackSystem::process_elephant_behavior(Engine::Core::World *world,
   }
 }
 
-void ElephantAttackSystem::process_charge_attack(Engine::Core::Entity *elephant,
-                                                 Engine::Core::World *world,
+void ElephantAttackSystem::process_charge_attack(Engine::Core::Entity* elephant,
+                                                 Engine::Core::World* world,
                                                  float delta_time) {
-  auto *elephant_comp =
-      elephant->get_component<Engine::Core::ElephantComponent>();
-  auto *unit = elephant->get_component<Engine::Core::UnitComponent>();
-  auto *transform = elephant->get_component<Engine::Core::TransformComponent>();
-  auto *movement = elephant->get_component<Engine::Core::MovementComponent>();
-  auto *attack_target =
-      elephant->get_component<Engine::Core::AttackTargetComponent>();
+  auto* elephant_comp = elephant->get_component<Engine::Core::ElephantComponent>();
+  auto* unit = elephant->get_component<Engine::Core::UnitComponent>();
+  auto* transform = elephant->get_component<Engine::Core::TransformComponent>();
+  auto* movement = elephant->get_component<Engine::Core::MovementComponent>();
+  auto* attack_target = elephant->get_component<Engine::Core::AttackTargetComponent>();
 
   if (elephant_comp == nullptr || unit == nullptr || transform == nullptr ||
       movement == nullptr) {
@@ -126,9 +123,9 @@ void ElephantAttackSystem::process_charge_attack(Engine::Core::Entity *elephant,
 
     if (attack_target != nullptr && attack_target->target_id != 0 &&
         elephant_comp->charge_cooldown <= 0.0F && !elephant_comp->is_panicked) {
-      auto *target = world->get_entity(attack_target->target_id);
+      auto* target = world->get_entity(attack_target->target_id);
       if (target != nullptr) {
-        auto *target_transform =
+        auto* target_transform =
             target->get_component<Engine::Core::TransformComponent>();
         if (target_transform != nullptr) {
           float const dx = target_transform->position.x - transform->position.x;
@@ -159,8 +156,7 @@ void ElephantAttackSystem::process_charge_attack(Engine::Core::Entity *elephant,
   }
 
   case Engine::Core::ElephantComponent::ChargeState::Recovering: {
-    elephant_comp->charge_state =
-        Engine::Core::ElephantComponent::ChargeState::Idle;
+    elephant_comp->charge_state = Engine::Core::ElephantComponent::ChargeState::Idle;
     break;
   }
 
@@ -169,17 +165,15 @@ void ElephantAttackSystem::process_charge_attack(Engine::Core::Entity *elephant,
   }
 }
 
-void ElephantAttackSystem::process_trample_damage(
-    Engine::Core::Entity *elephant, Engine::Core::World *world,
-    float delta_time) {
-  auto *elephant_comp =
-      elephant->get_component<Engine::Core::ElephantComponent>();
-  auto *unit = elephant->get_component<Engine::Core::UnitComponent>();
-  auto *transform = elephant->get_component<Engine::Core::TransformComponent>();
-  auto *movement = elephant->get_component<Engine::Core::MovementComponent>();
-  auto *attack = elephant->get_component<Engine::Core::AttackComponent>();
-  auto *attack_target =
-      elephant->get_component<Engine::Core::AttackTargetComponent>();
+void ElephantAttackSystem::process_trample_damage(Engine::Core::Entity* elephant,
+                                                  Engine::Core::World* world,
+                                                  float delta_time) {
+  auto* elephant_comp = elephant->get_component<Engine::Core::ElephantComponent>();
+  auto* unit = elephant->get_component<Engine::Core::UnitComponent>();
+  auto* transform = elephant->get_component<Engine::Core::TransformComponent>();
+  auto* movement = elephant->get_component<Engine::Core::MovementComponent>();
+  auto* attack = elephant->get_component<Engine::Core::AttackComponent>();
+  auto* attack_target = elephant->get_component<Engine::Core::AttackTargetComponent>();
 
   if (elephant_comp == nullptr || unit == nullptr || transform == nullptr ||
       movement == nullptr) {
@@ -192,9 +186,9 @@ void ElephantAttackSystem::process_trample_damage(
 
   bool has_close_target = false;
   if (!is_moving && attack_target != nullptr && attack_target->target_id != 0) {
-    auto *target = world->get_entity(attack_target->target_id);
+    auto* target = world->get_entity(attack_target->target_id);
     if (target != nullptr) {
-      auto *target_transform =
+      auto* target_transform =
           target->get_component<Engine::Core::TransformComponent>();
       if (target_transform != nullptr) {
         float const dx = target_transform->position.x - transform->position.x;
@@ -216,13 +210,12 @@ void ElephantAttackSystem::process_trample_damage(
 
   elephant_comp->trample_damage_accumulator +=
       static_cast<float>(elephant_comp->trample_damage) * delta_time;
-  int const damage =
-      static_cast<int>(elephant_comp->trample_damage_accumulator);
+  int const damage = static_cast<int>(elephant_comp->trample_damage_accumulator);
   if (damage <= 0) {
     return;
   }
 
-  auto *stomp_impact =
+  auto* stomp_impact =
       elephant->get_component<Engine::Core::ElephantStompImpactComponent>();
   if (stomp_impact == nullptr) {
     stomp_impact =
@@ -231,14 +224,13 @@ void ElephantAttackSystem::process_trample_damage(
 
   bool hit_any = false;
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *other_entity : entities) {
+  for (auto* other_entity : entities) {
     if (other_entity == elephant) {
       continue;
     }
 
-    auto *other_unit =
-        other_entity->get_component<Engine::Core::UnitComponent>();
-    auto *other_transform =
+    auto* other_unit = other_entity->get_component<Engine::Core::UnitComponent>();
+    auto* other_transform =
         other_entity->get_component<Engine::Core::TransformComponent>();
 
     if (other_unit == nullptr || other_transform == nullptr ||
@@ -259,8 +251,8 @@ void ElephantAttackSystem::process_trample_damage(
 
     if (dist <= elephant_comp->trample_radius) {
       int const old_health = other_unit->health;
-      Game::Systems::Combat::deal_damage(world, other_entity, damage,
-                                         elephant->get_id());
+      Game::Systems::Combat::deal_damage(
+          world, other_entity, damage, elephant->get_id());
 
       if (old_health > 0 && other_unit->health < old_health) {
         hit_any = true;
@@ -276,12 +268,11 @@ void ElephantAttackSystem::process_trample_damage(
   }
 }
 
-void ElephantAttackSystem::process_panic_mechanic(
-    Engine::Core::Entity *elephant, Engine::Core::World *world,
-    float delta_time) {
-  auto *elephant_comp =
-      elephant->get_component<Engine::Core::ElephantComponent>();
-  auto *movement = elephant->get_component<Engine::Core::MovementComponent>();
+void ElephantAttackSystem::process_panic_mechanic(Engine::Core::Entity* elephant,
+                                                  Engine::Core::World* world,
+                                                  float delta_time) {
+  auto* elephant_comp = elephant->get_component<Engine::Core::ElephantComponent>();
+  auto* movement = elephant->get_component<Engine::Core::MovementComponent>();
 
   if (elephant_comp == nullptr || movement == nullptr) {
     return;
@@ -301,8 +292,7 @@ void ElephantAttackSystem::process_panic_mechanic(
   if (random_target_timer >= 2.0F) {
     random_target_timer = 0.0F;
 
-    auto *transform =
-        elephant->get_component<Engine::Core::TransformComponent>();
+    auto* transform = elephant->get_component<Engine::Core::TransformComponent>();
     if (transform != nullptr) {
 
       float const angle = static_cast<float>(std::rand()) /
@@ -316,8 +306,9 @@ void ElephantAttackSystem::process_panic_mechanic(
   }
 }
 
-void ElephantAttackSystem::process_melee_attack(Engine::Core::Entity *elephant,
-                                                Engine::Core::World *world,
-                                                float delta_time) {}
+void ElephantAttackSystem::process_melee_attack(Engine::Core::Entity* elephant,
+                                                Engine::Core::World* world,
+                                                float delta_time) {
+}
 
 } // namespace Game::Systems

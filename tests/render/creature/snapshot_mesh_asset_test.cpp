@@ -1,12 +1,11 @@
-#include "render/creature/snapshot_mesh_asset.h"
-#include "render/creature/snapshot_mesh_registry.h"
-
-#include <gtest/gtest.h>
-
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <sstream>
+
+#include "render/creature/snapshot_mesh_asset.h"
+#include "render/creature/snapshot_mesh_registry.h"
 
 namespace {
 
@@ -22,7 +21,7 @@ auto make_test_vertices() -> std::vector<RiggedVertex> {
   vertices[0].position_bone_local = {-1.0F, 0.0F, 0.0F};
   vertices[1].position_bone_local = {1.0F, 0.0F, 0.0F};
   vertices[2].position_bone_local = {0.0F, 1.0F, 0.0F};
-  for (auto &v : vertices) {
+  for (auto& v : vertices) {
     v.normal_bone_local = {0.0F, 1.0F, 0.0F};
     v.bone_indices = {0, 0, 0, 0};
     v.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
@@ -30,7 +29,7 @@ auto make_test_vertices() -> std::vector<RiggedVertex> {
   return vertices;
 }
 
-auto serialize(const SnapshotMeshWriter &writer) -> std::vector<std::uint8_t> {
+auto serialize(const SnapshotMeshWriter& writer) -> std::vector<std::uint8_t> {
   std::stringstream ss(std::ios::out | std::ios::binary | std::ios::in);
   EXPECT_TRUE(writer.write(ss));
   std::string s = ss.str();
@@ -41,8 +40,8 @@ auto serialize(const SnapshotMeshWriter &writer) -> std::vector<std::uint8_t> {
 
 TEST(SnapshotMeshAsset, WriteAndReadbackRoundTripsMinimalClip) {
   const std::array<std::uint32_t, 3> indices{0U, 1U, 2U};
-  SnapshotMeshWriter writer(Render::Creature::Bpat::k_species_horse,
-                            CreatureLOD::Minimal, 3U, indices);
+  SnapshotMeshWriter writer(
+      Render::Creature::Bpat::k_species_horse, CreatureLOD::Minimal, 3U, indices);
   writer.add_clip(ClipDescriptor{"idle", 1U});
   auto vertices = make_test_vertices();
   writer.append_clip_vertices(vertices);
@@ -72,8 +71,8 @@ TEST(SnapshotMeshRegistry, LoadsMinimalHorseAssetFromFile) {
   auto const asset_path = temp_dir / "horse_minimal.bpsm";
 
   const std::array<std::uint32_t, 3> indices{0U, 1U, 2U};
-  SnapshotMeshWriter writer(Render::Creature::Bpat::k_species_horse,
-                            CreatureLOD::Minimal, 3U, indices);
+  SnapshotMeshWriter writer(
+      Render::Creature::Bpat::k_species_horse, CreatureLOD::Minimal, 3U, indices);
   writer.add_clip(ClipDescriptor{"idle", 1U});
   auto vertices = make_test_vertices();
   writer.append_clip_vertices(vertices);
@@ -83,14 +82,15 @@ TEST(SnapshotMeshRegistry, LoadsMinimalHorseAssetFromFile) {
   ASSERT_TRUE(writer.write(out));
   out.close();
 
-  auto &registry = SnapshotMeshRegistry::instance();
+  auto& registry = SnapshotMeshRegistry::instance();
   registry.clear();
   ASSERT_TRUE(registry.load_species(Render::Creature::Bpat::k_species_horse,
-                                    CreatureLOD::Minimal, asset_path.string()))
+                                    CreatureLOD::Minimal,
+                                    asset_path.string()))
       << registry.last_error();
 
-  auto const *blob = registry.blob(Render::Creature::Bpat::k_species_horse,
-                                   CreatureLOD::Minimal);
+  auto const* blob =
+      registry.blob(Render::Creature::Bpat::k_species_horse, CreatureLOD::Minimal);
   ASSERT_NE(blob, nullptr);
   EXPECT_EQ(blob->clip(0).name, "idle");
 }

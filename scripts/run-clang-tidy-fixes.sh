@@ -12,7 +12,7 @@ SEARCH_PATHS_DEFAULT="app game render tools ui utils"
 GIT_ONLY=1
 GIT_BASE="${CLANG_TIDY_GIT_BASE:-origin/main}"
 
-DEFAULT_CHECKS="-*,readability-braces-around-statements"
+DEFAULT_CHECKS=""
 CHECKS_OVERRIDE="${CLANG_TIDY_AUTO_FIX_CHECKS:-$DEFAULT_CHECKS}"
 
 HEADER_FILTER="${CLANG_TIDY_HEADER_FILTER:-^(?!.*third_party).*$}"
@@ -43,7 +43,7 @@ Options:
   --base=<ref>             Git base to diff against (default: origin/main)
   --paths="<p1 p2 ...>"    Space- or comma-separated root paths to search
   --jobs=<N>               Parallel jobs (xargs -P). Default: ~half cores
-  --checks="<pattern>"     Override -checks (e.g., "-*,bugprone-*")
+  --checks="<pattern>"     Override -checks. Defaults to the repo .clang-tidy.
   --nice | --no-nice       Lower (or not) CPU/IO priority for clang-tidy
   --build-dir=<dir>        Build dir with compile_commands.json (default: build)
   --default-lang=<val>     CMake DEFAULT_LANG cache var (default: en)
@@ -161,7 +161,11 @@ else
 fi
 
 if [ ${#FS_SOURCES[@]} -eq 0 ]; then
-  echo "No C/C++ sources found under: ${SEARCH_PATHS[*]}"
+  if [[ "$GIT_ONLY" -eq 1 ]]; then
+    echo "No changed C/C++ sources found against ${GIT_BASE}."
+  else
+    echo "No C/C++ sources found under: ${SEARCH_PATHS[*]}"
+  fi
   exit 0
 fi
 
@@ -239,7 +243,11 @@ TMP_EXPORT_DIR="$(mktemp -d "${BUILD_DIR}/clang-tidy-fixes-XXXX")"
 trap 'rm -rf "$TMP_EXPORT_DIR"' EXIT
 
 echo "Running clang-tidy fixes on ${#SOURCES[@]} file(s) ..."
-echo "  checks: ${CHECKS_OVERRIDE}"
+if [[ -n "$CHECKS_OVERRIDE" ]]; then
+  echo "  checks: ${CHECKS_OVERRIDE}"
+else
+  echo "  checks: .clang-tidy"
+fi
 echo "  parallel jobs: ${JOBS}"
 [[ "$FIX_ERRORS" -eq 1 ]] && echo "  using -fix-errors"
 [[ "$PASSES" -gt 1 ]] && echo "  multi-pass: ${PASSES} passes (aggressive=${AGGRESSIVE})"
@@ -249,8 +257,8 @@ TMP_HELPER="$(mktemp "${BUILD_DIR}/clang-tidy-one-XXXX.sh")"
 cat > "$TMP_HELPER" <<'HLP'
 #!/usr/bin/env bash
 set -euo pipefail
-f="$1"
-export_dir="$2"
+export_dir="$1"
+f="$2"
 
 yaml="${export_dir}/$(echo "$f" | tr '/ ' '__').yaml"
 
@@ -314,9 +322,9 @@ while [[ $pass -le $PASSES ]]; do
   [[ $PASSES -gt 1 ]] && echo "==> Pass ${pass}/${PASSES}"
 
   if command -v xargs >/dev/null 2>&1; then
-    printf '%s\0' "${SOURCES[@]}" | xargs -0 -P "$JOBS" -I{} bash "$TMP_HELPER" "{}" "$TMP_EXPORT_DIR"
+    printf '%s\0' "${SOURCES[@]}" | xargs -0 -n 1 -P "$JOBS" bash "$TMP_HELPER" "$TMP_EXPORT_DIR"
   else
-    for f in "${SOURCES[@]}"; do bash "$TMP_HELPER" "$f" "$TMP_EXPORT_DIR"; done
+    for f in "${SOURCES[@]}"; do bash "$TMP_HELPER" "$TMP_EXPORT_DIR" "$f"; done
   fi
 
   # Early stop if using multiple passes and nothing else changed

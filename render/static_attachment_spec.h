@@ -3,6 +3,7 @@
 #pragma once
 
 #include <QMatrix4x4>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -18,7 +19,7 @@ namespace Render::Creature {
 struct StaticAttachmentSpec {
   static constexpr std::size_t k_palette_slot_count = 8;
 
-  const Render::GL::RenderArchetype *archetype{nullptr};
+  const Render::GL::RenderArchetype* archetype{nullptr};
 
   std::uint16_t socket_bone_index{0};
 
@@ -33,15 +34,14 @@ struct StaticAttachmentSpec {
   std::uint32_t material_id{0};
 };
 
-[[nodiscard]] auto static_attachment_hash(
-    const StaticAttachmentSpec &spec) noexcept -> std::uint64_t;
+[[nodiscard]] auto
+static_attachment_hash(const StaticAttachmentSpec& spec) noexcept -> std::uint64_t;
+
+[[nodiscard]] auto static_attachments_hash(const StaticAttachmentSpec* attachments,
+                                           std::size_t count) noexcept -> std::uint64_t;
 
 [[nodiscard]] auto
-static_attachments_hash(const StaticAttachmentSpec *attachments,
-                        std::size_t count) noexcept -> std::uint64_t;
-
-[[nodiscard]] auto
-static_attachment_equal(const StaticAttachmentSpec &a,
-                        const StaticAttachmentSpec &b) noexcept -> bool;
+static_attachment_equal(const StaticAttachmentSpec& a,
+                        const StaticAttachmentSpec& b) noexcept -> bool;
 
 } // namespace Render::Creature

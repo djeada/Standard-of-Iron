@@ -1,6 +1,6 @@
-#include "app/core/mission_definition_view.h"
-
 #include <gtest/gtest.h>
+
+#include "app/core/mission_definition_view.h"
 
 TEST(MissionDefinitionViewTest, ResolvesFallbackPlayerCommanderForCarthage) {
   Game::Mission::MissionDefinition mission;
@@ -18,10 +18,9 @@ TEST(MissionDefinitionViewTest, ResolvesFallbackPlayerCommanderForCarthage) {
             QStringLiteral("carthage_elephant_master"));
   EXPECT_EQ(commander.value("display_name").toString(),
             QStringLiteral("Hannibal Barca"));
-  EXPECT_EQ(
-      commander.value("battlefield_role").toString(),
-      QStringLiteral("Elite infantry commander with sacred-band bodyguard "
-                     "and iconic command standard."));
+  EXPECT_EQ(commander.value("battlefield_role").toString(),
+            QStringLiteral("Elite infantry commander with sacred-band bodyguard "
+                           "and iconic command standard."));
 }
 
 TEST(MissionDefinitionViewTest, IncludesEveryEnemySetupAndCommanderDetails) {
@@ -57,12 +56,10 @@ TEST(MissionDefinitionViewTest, IncludesEveryEnemySetupAndCommanderDetails) {
   const QVariantMap second_force = ai_setups[1].toMap();
 
   EXPECT_EQ(first_force.value("id").toString(), QStringLiteral("north"));
-  EXPECT_EQ(
-      first_force.value("commander").toMap().value("display_name").toString(),
-      QStringLiteral("Quintus Fabius Maximus"));
+  EXPECT_EQ(first_force.value("commander").toMap().value("display_name").toString(),
+            QStringLiteral("Quintus Fabius Maximus"));
 
   EXPECT_EQ(second_force.value("id").toString(), QStringLiteral("south"));
-  EXPECT_EQ(
-      second_force.value("commander").toMap().value("display_name").toString(),
-      QStringLiteral("Publius Cornelius Scipio"));
+  EXPECT_EQ(second_force.value("commander").toMap().value("display_name").toString(),
+            QStringLiteral("Publius Cornelius Scipio"));
 }

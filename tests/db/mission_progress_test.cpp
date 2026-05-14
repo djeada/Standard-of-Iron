@@ -1,7 +1,9 @@
-#include "systems/save_storage.h"
 #include <QByteArray>
 #include <QString>
+
 #include <gtest/gtest.h>
+
+#include "systems/save_storage.h"
 
 using namespace Game::Systems;
 
@@ -21,30 +23,40 @@ protected:
 
 TEST_F(MissionProgressTest, SaveCampaignMissionResult) {
   QString error;
-  bool saved =
-      storage->save_mission_result("mission_1", "campaign", "test_campaign",
-                                   true, "victory", "normal", 300.5F, &error);
+  bool saved = storage->save_mission_result("mission_1",
+                                            "campaign",
+                                            "test_campaign",
+                                            true,
+                                            "victory",
+                                            "normal",
+                                            300.5F,
+                                            &error);
 
   EXPECT_TRUE(saved) << "Failed to save: " << error.toStdString();
 }
 
 TEST_F(MissionProgressTest, SaveSkirmishMissionResult) {
   QString error;
-  bool saved = storage->save_mission_result("mission_1", "skirmish", "", true,
-                                            "victory", "hard", 150.0F, &error);
+  bool saved = storage->save_mission_result(
+      "mission_1", "skirmish", "", true, "victory", "hard", 150.0F, &error);
 
   EXPECT_TRUE(saved) << "Failed to save: " << error.toStdString();
 }
 
 TEST_F(MissionProgressTest, GetMissionProgress) {
   QString error;
-  storage->save_mission_result("mission_2", "campaign", "test_campaign", true,
-                               "victory", "normal", 200.0F, &error);
+  storage->save_mission_result("mission_2",
+                               "campaign",
+                               "test_campaign",
+                               true,
+                               "victory",
+                               "normal",
+                               200.0F,
+                               &error);
 
   QVariantMap progress = storage->get_mission_progress("mission_2", &error);
 
-  EXPECT_TRUE(error.isEmpty())
-      << "Failed to get progress: " << error.toStdString();
+  EXPECT_TRUE(error.isEmpty()) << "Failed to get progress: " << error.toStdString();
   EXPECT_EQ(progress["mode"].toString(), QString("campaign"));
   EXPECT_EQ(progress["campaign_id"].toString(), QString("test_campaign"));
   EXPECT_TRUE(progress["completed"].toBool());
@@ -56,11 +68,17 @@ TEST_F(MissionProgressTest, GetMissionProgress) {
 TEST_F(MissionProgressTest, CampaignAndSkirmishSeparate) {
   QString error;
 
-  storage->save_mission_result("mission_1", "campaign", "test_campaign", true,
-                               "victory", "normal", 100.0F, &error);
+  storage->save_mission_result("mission_1",
+                               "campaign",
+                               "test_campaign",
+                               true,
+                               "victory",
+                               "normal",
+                               100.0F,
+                               &error);
 
-  storage->save_mission_result("mission_1", "skirmish", "", false, "defeat",
-                               "hard", 50.0F, &error);
+  storage->save_mission_result(
+      "mission_1", "skirmish", "", false, "defeat", "hard", 50.0F, &error);
 
   QVariantMap progress = storage->get_mission_progress("mission_1", &error);
   EXPECT_TRUE(error.isEmpty());
@@ -69,12 +87,24 @@ TEST_F(MissionProgressTest, CampaignAndSkirmishSeparate) {
 TEST_F(MissionProgressTest, UpdateMissionProgress) {
   QString error;
 
-  storage->save_mission_result("mission_3", "campaign", "test_campaign", false,
-                               "defeat", "normal", 100.0F, &error);
+  storage->save_mission_result("mission_3",
+                               "campaign",
+                               "test_campaign",
+                               false,
+                               "defeat",
+                               "normal",
+                               100.0F,
+                               &error);
   EXPECT_TRUE(error.isEmpty());
 
-  storage->save_mission_result("mission_3", "campaign", "test_campaign", true,
-                               "victory", "normal", 250.0F, &error);
+  storage->save_mission_result("mission_3",
+                               "campaign",
+                               "test_campaign",
+                               true,
+                               "victory",
+                               "normal",
+                               250.0F,
+                               &error);
   EXPECT_TRUE(error.isEmpty());
 
   QVariantMap progress = storage->get_mission_progress("mission_3", &error);
@@ -86,8 +116,7 @@ TEST_F(MissionProgressTest, UpdateMissionProgress) {
 TEST_F(MissionProgressTest, UnlockNextMission) {
   QString error;
 
-  bool unlocked =
-      storage->unlock_next_mission("test_campaign", "mission_1", &error);
+  bool unlocked = storage->unlock_next_mission("test_campaign", "mission_1", &error);
 
   EXPECT_FALSE(unlocked);
   EXPECT_FALSE(error.isEmpty());
@@ -96,14 +125,14 @@ TEST_F(MissionProgressTest, UnlockNextMission) {
 TEST_F(MissionProgressTest, SaveMultipleMissionResults) {
   QString error;
 
-  storage->save_mission_result("mission_1", "campaign", "campaign_1", true,
-                               "victory", "normal", 100.0F, &error);
-  storage->save_mission_result("mission_2", "campaign", "campaign_1", true,
-                               "victory", "normal", 150.0F, &error);
-  storage->save_mission_result("mission_3", "campaign", "campaign_1", false,
-                               "defeat", "hard", 200.0F, &error);
-  storage->save_mission_result("skirmish_1", "skirmish", "", true, "victory",
-                               "easy", 50.0F, &error);
+  storage->save_mission_result(
+      "mission_1", "campaign", "campaign_1", true, "victory", "normal", 100.0F, &error);
+  storage->save_mission_result(
+      "mission_2", "campaign", "campaign_1", true, "victory", "normal", 150.0F, &error);
+  storage->save_mission_result(
+      "mission_3", "campaign", "campaign_1", false, "defeat", "hard", 200.0F, &error);
+  storage->save_mission_result(
+      "skirmish_1", "skirmish", "", true, "victory", "easy", 50.0F, &error);
 
   EXPECT_TRUE(error.isEmpty());
 
@@ -116,8 +145,7 @@ TEST_F(MissionProgressTest, SaveMultipleMissionResults) {
   QVariantMap progress3 = storage->get_mission_progress("mission_3", &error);
   EXPECT_FALSE(progress3["completed"].toBool());
 
-  QVariantMap progress_skirmish =
-      storage->get_mission_progress("skirmish_1", &error);
+  QVariantMap progress_skirmish = storage->get_mission_progress("skirmish_1", &error);
   EXPECT_TRUE(progress_skirmish["completed"].toBool());
   EXPECT_EQ(progress_skirmish["mode"].toString(), QString("skirmish"));
 }

@@ -1,22 +1,22 @@
 
 
+#include <gtest/gtest.h>
+
 #include "render/draw_part.h"
 #include "render/draw_queue.h"
 #include "render/material.h"
 #include "render/submitter.h"
 
-#include <gtest/gtest.h>
-
 namespace {
 
-auto fake_shader(std::uintptr_t tag) -> Render::GL::Shader * {
-  return reinterpret_cast<Render::GL::Shader *>(tag);
+auto fake_shader(std::uintptr_t tag) -> Render::GL::Shader* {
+  return reinterpret_cast<Render::GL::Shader*>(tag);
 }
-auto fake_mesh(std::uintptr_t tag) -> Render::GL::Mesh * {
-  return reinterpret_cast<Render::GL::Mesh *>(tag);
+auto fake_mesh(std::uintptr_t tag) -> Render::GL::Mesh* {
+  return reinterpret_cast<Render::GL::Mesh*>(tag);
 }
-auto fake_texture(std::uintptr_t tag) -> Render::GL::Texture * {
-  return reinterpret_cast<Render::GL::Texture *>(tag);
+auto fake_texture(std::uintptr_t tag) -> Render::GL::Texture* {
+  return reinterpret_cast<Render::GL::Texture*>(tag);
 }
 
 } // namespace
@@ -73,12 +73,11 @@ TEST(DrawPartCmdSortOrder, BatchesByMaterialThenMesh) {
     EXPECT_EQ(queue.get_sorted(idx).index(), Render::GL::DrawPartCmdIndex);
   }
   auto is_mat_a = [&](std::size_t i) {
-    return std::get<Render::GL::DrawPartCmdIndex>(queue.get_sorted(i))
-               .material == &mat_a;
+    return std::get<Render::GL::DrawPartCmdIndex>(queue.get_sorted(i)).material ==
+           &mat_a;
   };
 
-  bool const adjacent_a =
-      (is_mat_a(0) && is_mat_a(1)) || (is_mat_a(1) && is_mat_a(2));
+  bool const adjacent_a = (is_mat_a(0) && is_mat_a(1)) || (is_mat_a(1) && is_mat_a(2));
   EXPECT_TRUE(adjacent_a);
 }
 
@@ -104,10 +103,8 @@ TEST(DrawPartCmdSortOrder, FullKeyGroupsSameMeshWithinMaterial) {
   queue.sort_for_batching();
 
   ASSERT_EQ(queue.size(), 3U);
-  const auto &first =
-      std::get<Render::GL::DrawPartCmdIndex>(queue.get_sorted(0));
-  const auto &second =
-      std::get<Render::GL::DrawPartCmdIndex>(queue.get_sorted(1));
+  const auto& first = std::get<Render::GL::DrawPartCmdIndex>(queue.get_sorted(0));
+  const auto& second = std::get<Render::GL::DrawPartCmdIndex>(queue.get_sorted(1));
   EXPECT_EQ(first.mesh, fake_mesh(0x1110));
   EXPECT_EQ(second.mesh, fake_mesh(0x1110));
   EXPECT_LE(queue.sort_key_for_sorted(0), queue.sort_key_for_sorted(1));
@@ -131,7 +128,7 @@ TEST(DrawQueuePreparedBatches, MeshCommandsExposeInstancedBatch) {
   queue.submit(b);
   queue.sort_for_batching();
 
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::MeshInstanced);
   EXPECT_EQ(batches[0].type, Render::GL::DrawCmdType::Mesh);
@@ -160,7 +157,7 @@ TEST(DrawQueuePreparedBatches, DrawPartMinRunBecomesPreparedBatch) {
   queue.submit(common);
   queue.sort_for_batching();
 
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::DrawPartInstanced);
   EXPECT_EQ(batches[0].count, 4U);
@@ -200,10 +197,8 @@ TEST(MaterialResolve, FallsBackWhenRequestedTierMissing) {
   minimal_only.shader_minimal = fake_shader(20);
 
   EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Full), fake_shader(20));
-  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Reduced),
-            fake_shader(20));
-  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Minimal),
-            fake_shader(20));
+  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Reduced), fake_shader(20));
+  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Minimal), fake_shader(20));
 }
 
 TEST(MaterialResolve, AllTiersEmptyReturnsNullptr) {
@@ -229,9 +224,9 @@ TEST(QueueSubmitterPart, EmitsDrawPartCmdWithPerInstanceOverrides) {
   submitter.part(fake_mesh(0xBEEF), &mat, model, tint, nullptr, 0.4F, 42);
 
   ASSERT_EQ(queue.size(), 1U);
-  auto const &cmd = queue.items().front();
+  auto const& cmd = queue.items().front();
   ASSERT_EQ(cmd.index(), Render::GL::DrawPartCmdIndex);
-  auto const &part = std::get<Render::GL::DrawPartCmdIndex>(cmd);
+  auto const& part = std::get<Render::GL::DrawPartCmdIndex>(cmd);
   EXPECT_EQ(part.material, &mat);
   EXPECT_EQ(part.mesh, fake_mesh(0xBEEF));
   EXPECT_FLOAT_EQ(part.color.x(), 0.25F);
@@ -244,15 +239,13 @@ TEST(QueueSubmitterPart, NullMaterialFallsBackToMeshCmd) {
   Render::GL::QueueSubmitter submitter(&queue);
 
   QMatrix4x4 model;
-  submitter.part(fake_mesh(0x1234), nullptr, model,
-                 QVector3D(1.0F, 1.0F, 1.0F));
+  submitter.part(fake_mesh(0x1234), nullptr, model, QVector3D(1.0F, 1.0F, 1.0F));
 
   ASSERT_EQ(queue.size(), 1U);
   EXPECT_EQ(queue.items().front().index(), Render::GL::MeshCmdIndex);
 }
 
-TEST(DrawQueuePreparedBatches,
-     MeshCommandsWithDifferentMaterialIdAreNotBatched) {
+TEST(DrawQueuePreparedBatches, MeshCommandsWithDifferentMaterialIdAreNotBatched) {
   Render::GL::DrawQueue queue;
 
   Render::GL::MeshCmd a{};
@@ -268,7 +261,7 @@ TEST(DrawQueuePreparedBatches,
   queue.submit(b);
   queue.sort_for_batching();
 
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::Single);
   EXPECT_EQ(batches[0].count, 1U);
@@ -291,7 +284,7 @@ TEST(DrawQueuePreparedBatches, MeshCommandsWithSameMaterialIdAreBatched) {
   queue.submit(b);
   queue.sort_for_batching();
 
-  const auto &batches = queue.prepared_batches();
+  const auto& batches = queue.prepared_batches();
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::MeshInstanced);
   EXPECT_EQ(batches[0].count, 2U);

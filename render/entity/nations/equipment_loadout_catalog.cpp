@@ -145,8 +145,7 @@ auto default_loadouts() -> LoadoutMap {
   carthage_horse_spearman.horse_reins = "horse_reins";
   carthage_horse_spearman.horse_blanket = "horse_blanket";
   carthage_horse_spearman.horse_barding = "horse_leather_barding";
-  map.emplace("troops/carthage/horse_spearman",
-              std::move(carthage_horse_spearman));
+  map.emplace("troops/carthage/horse_spearman", std::move(carthage_horse_spearman));
 
   EquipmentLoadoutIds roman_horse_swordsman{};
   roman_horse_swordsman.sword = "sword_roman";
@@ -174,12 +173,11 @@ auto default_loadouts() -> LoadoutMap {
   carthage_horse_swordsman.horse_blanket = "horse_blanket";
   carthage_horse_swordsman.horse_barding = "horse_champion_barding";
   carthage_horse_swordsman.horse_crupper = "horse_crupper";
-  map.emplace("troops/carthage/horse_swordsman",
-              std::move(carthage_horse_swordsman));
+  map.emplace("troops/carthage/horse_swordsman", std::move(carthage_horse_swordsman));
   return map;
 }
 
-void parse_loadout_object(const QJsonObject &obj, EquipmentLoadoutIds &out) {
+void parse_loadout_object(const QJsonObject& obj, EquipmentLoadoutIds& out) {
   out.bow = obj.value("bow").toString().toStdString();
   out.quiver = obj.value("quiver").toString().toStdString();
   out.sword = obj.value("sword").toString().toStdString();
@@ -202,7 +200,7 @@ void parse_loadout_object(const QJsonObject &obj, EquipmentLoadoutIds &out) {
   out.horse_decoration = obj.value("horse_decoration").toString().toStdString();
 }
 
-void merge_json_loadouts(LoadoutMap &map) {
+void merge_json_loadouts(LoadoutMap& map) {
   QFile file(QStringLiteral(":/assets/visuals/unit_equipment_loadouts.json"));
   if (!file.open(QIODevice::ReadOnly)) {
     return;
@@ -227,7 +225,7 @@ void merge_json_loadouts(LoadoutMap &map) {
   }
 }
 
-auto loadouts() -> const LoadoutMap & {
+auto loadouts() -> const LoadoutMap& {
   static const LoadoutMap k_loadouts = []() {
     auto map = default_loadouts();
     merge_json_loadouts(map);
@@ -237,7 +235,7 @@ auto loadouts() -> const LoadoutMap & {
 }
 
 auto resolve_slot_handle(EquipmentCategory category,
-                         const std::string &id) -> EquipmentHandle {
+                         const std::string& id) -> EquipmentHandle {
   if (id.empty()) {
     return k_invalid_equipment_handle;
   }
@@ -250,7 +248,7 @@ auto resolve_equipment_loadout(std::string_view renderer_key)
     -> ResolvedEquipmentLoadout {
   register_built_in_equipment();
   ResolvedEquipmentLoadout out{};
-  const auto &map = loadouts();
+  const auto& map = loadouts();
   const auto it = map.find(std::string(renderer_key));
   if (it == map.end()) {
     return out;
@@ -259,24 +257,15 @@ auto resolve_equipment_loadout(std::string_view renderer_key)
   out.found = true;
   out.ids = it->second;
   out.bow_handle = resolve_slot_handle(EquipmentCategory::Weapon, out.ids.bow);
-  out.quiver_handle =
-      resolve_slot_handle(EquipmentCategory::Weapon, out.ids.quiver);
-  out.sword_handle =
-      resolve_slot_handle(EquipmentCategory::Weapon, out.ids.sword);
-  out.spear_handle =
-      resolve_slot_handle(EquipmentCategory::Weapon, out.ids.spear);
-  out.shield_handle =
-      resolve_slot_handle(EquipmentCategory::Weapon, out.ids.shield);
-  out.helmet_handle =
-      resolve_slot_handle(EquipmentCategory::Helmet, out.ids.helmet);
-  out.greaves_handle =
-      resolve_slot_handle(EquipmentCategory::Armor, out.ids.greaves);
-  out.armor_handle =
-      resolve_slot_handle(EquipmentCategory::Armor, out.ids.armor);
-  out.shoulder_handle =
-      resolve_slot_handle(EquipmentCategory::Armor, out.ids.shoulder);
-  out.cloak_handle =
-      resolve_slot_handle(EquipmentCategory::Armor, out.ids.cloak);
+  out.quiver_handle = resolve_slot_handle(EquipmentCategory::Weapon, out.ids.quiver);
+  out.sword_handle = resolve_slot_handle(EquipmentCategory::Weapon, out.ids.sword);
+  out.spear_handle = resolve_slot_handle(EquipmentCategory::Weapon, out.ids.spear);
+  out.shield_handle = resolve_slot_handle(EquipmentCategory::Weapon, out.ids.shield);
+  out.helmet_handle = resolve_slot_handle(EquipmentCategory::Helmet, out.ids.helmet);
+  out.greaves_handle = resolve_slot_handle(EquipmentCategory::Armor, out.ids.greaves);
+  out.armor_handle = resolve_slot_handle(EquipmentCategory::Armor, out.ids.armor);
+  out.shoulder_handle = resolve_slot_handle(EquipmentCategory::Armor, out.ids.shoulder);
+  out.cloak_handle = resolve_slot_handle(EquipmentCategory::Armor, out.ids.cloak);
   out.tool_belt_handle =
       resolve_slot_handle(EquipmentCategory::Armor, out.ids.tool_belt);
   out.work_apron_handle =
@@ -295,8 +284,8 @@ auto resolve_equipment_loadout(std::string_view renderer_key)
       resolve_slot_handle(EquipmentCategory::HorseArmor, out.ids.horse_barding);
   out.horse_crupper_handle =
       resolve_slot_handle(EquipmentCategory::HorseArmor, out.ids.horse_crupper);
-  out.horse_decoration_handle = resolve_slot_handle(
-      EquipmentCategory::HorseDecoration, out.ids.horse_decoration);
+  out.horse_decoration_handle =
+      resolve_slot_handle(EquipmentCategory::HorseDecoration, out.ids.horse_decoration);
   return out;
 }
 

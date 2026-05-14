@@ -1,8 +1,9 @@
 #pragma once
 
+#include <vector>
+
 #include "ai_behavior_registry.h"
 #include "ai_types.h"
-#include <vector>
 
 namespace Game::Systems::AI {
 
@@ -11,12 +12,14 @@ public:
   AIExecutor() = default;
   ~AIExecutor() = default;
 
-  AIExecutor(const AIExecutor &) = delete;
-  auto operator=(const AIExecutor &) -> AIExecutor & = delete;
+  AIExecutor(const AIExecutor&) = delete;
+  auto operator=(const AIExecutor&) -> AIExecutor& = delete;
 
-  static void run(const AISnapshot &snapshot, AIContext &context,
-                  float delta_time, AIBehaviorRegistry &registry,
-                  std::vector<AICommand> &out_commands);
+  static void run(const AISnapshot& snapshot,
+                  AIContext& context,
+                  float delta_time,
+                  AIBehaviorRegistry& registry,
+                  std::vector<AICommand>& out_commands);
 };
 
 } // namespace Game::Systems::AI

@@ -1,19 +1,20 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <gtest/gtest.h>
+
 #include "render/geom/parts.h"
 #include "render/math/bone_frame.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <gtest/gtest.h>
-
 namespace {
 
-QVector3D col(const QMatrix4x4 &m, int c) {
+QVector3D col(const QMatrix4x4& m, int c) {
   return {m.data()[c * 4 + 0], m.data()[c * 4 + 1], m.data()[c * 4 + 2]};
 }
 
-bool approx(const QVector3D &a, const QVector3D &b, float eps = 1e-4F) {
+bool approx(const QVector3D& a, const QVector3D& b, float eps = 1e-4F) {
   return (a - b).length() < eps;
 }
 
@@ -25,8 +26,7 @@ TEST(OrientedCylinder, VerticalSegmentHonoursRightAxis) {
   const float r_right = 0.25F;
   const float r_forward = 0.15F;
 
-  QMatrix4x4 m =
-      Render::Geom::oriented_cylinder(top, bot, right, r_right, r_forward);
+  QMatrix4x4 m = Render::Geom::oriented_cylinder(top, bot, right, r_right, r_forward);
 
   QVector3D const x_col = col(m, 0);
   EXPECT_NEAR(x_col.length(), r_right, 1e-4F);
@@ -63,8 +63,7 @@ TEST(OrientedCylinder, RightAxisVariesOverride) {
 TEST(OrientedCylinder, DegenerateSegmentStillProducesValidFrame) {
 
   const QVector3D p{1.0F, 2.0F, 3.0F};
-  QMatrix4x4 m =
-      Render::Geom::oriented_cylinder(p, p, QVector3D{1, 0, 0}, 0.2F, 0.1F);
+  QMatrix4x4 m = Render::Geom::oriented_cylinder(p, p, QVector3D{1, 0, 0}, 0.2F, 0.1F);
 
   EXPECT_GT(col(m, 0).length(), 0.0F);
   EXPECT_GT(col(m, 1).length(), 0.0F);

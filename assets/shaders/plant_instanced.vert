@@ -7,7 +7,9 @@ layout(location = 3) in vec4 a_pos_scale;
 layout(location = 4) in vec4 a_color_sway;
 layout(location = 5) in vec4 a_type_params;
 
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 uniform float u_time;
 uniform float u_wind_strength;
 uniform float u_wind_speed;
@@ -23,7 +25,9 @@ out float v_type;
 out vec3 v_tangent;
 out vec3 v_bitangent;
 
-float h11(float n) { return fract(sin(n) * 43758.5453123); }
+float h11(float n) {
+  return fract(sin(n) * 43758.5453123);
+}
 
 float h31(vec3 p) {
   return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
@@ -52,19 +56,17 @@ void main() {
   local_pos.xz += lean_dir * (h * h) * tan(lean_angle) * final_scale;
 
   float gust = sin(u_time * 0.35 + seed * 6.0) * 0.5 + 0.5;
-  float sway =
-      sin(u_time * sway_speed * u_wind_speed + sway_phase + seed * 4.0);
+  float sway = sin(u_time * sway_speed * u_wind_speed + sway_phase + seed * 4.0);
   sway *= (0.22 + 0.55 * gust) * sway_strength * u_wind_strength * pow(h, 1.25);
 
   float wind_yaw = seed * 9.0;
-  vec2 wind_dir =
-      normalize(vec2(cos(wind_yaw), sin(wind_yaw)) + vec2(0.6, 0.8));
+  vec2 wind_dir = normalize(vec2(cos(wind_yaw), sin(wind_yaw)) + vec2(0.6, 0.8));
   local_pos.xz += wind_dir * (0.10 * sway);
 
   float twist = (h11(seed * 5.5) - 0.5) * 0.30;
   float twist_angle = twist * h;
-  mat2 tw = mat2(cos(twist_angle), -sin(twist_angle), sin(twist_angle),
-                 cos(twist_angle));
+  mat2 tw =
+      mat2(cos(twist_angle), -sin(twist_angle), sin(twist_angle), cos(twist_angle));
   local_pos.xz = tw * local_pos.xz;
 
   float cs = cos(rotation), sn = sin(rotation);

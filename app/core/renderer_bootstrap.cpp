@@ -44,18 +44,20 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   components.features = std::make_unique<Render::GL::TerrainFeatureManager>();
   components.scatter = std::make_unique<Render::GL::TerrainScatterManager>();
   components.fog = std::make_unique<Render::GL::FogRenderer>();
-  components.boundary_fog =
-      std::make_unique<Render::GL::MapBoundaryFogRenderer>();
+  components.boundary_fog = std::make_unique<Render::GL::MapBoundaryFogRenderer>();
   components.rain = std::make_unique<Render::GL::RainRenderer>();
-  components.terrain_scene = std::make_unique<Render::GL::TerrainSceneProxy>(
-      components.surface.get(), components.features.get(),
-      components.scatter.get(), components.rain.get(), components.fog.get(),
-      components.boundary_fog.get());
+  components.terrain_scene =
+      std::make_unique<Render::GL::TerrainSceneProxy>(components.surface.get(),
+                                                      components.features.get(),
+                                                      components.scatter.get(),
+                                                      components.rain.get(),
+                                                      components.fog.get(),
+                                                      components.boundary_fog.get());
 
   return components;
 }
 
-void RendererBootstrap::initialize_world_systems(Engine::Core::World &world) {
+void RendererBootstrap::initialize_world_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<Game::Systems::ArrowSystem>());
   world.add_system(std::make_unique<Game::Systems::ProjectileSystem>());
   world.add_system(std::make_unique<Game::Systems::StaminaSystem>());

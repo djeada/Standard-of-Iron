@@ -2,6 +2,7 @@
 #include <QMatrix4x4>
 #include <QVector2D>
 #include <QVector3D>
+
 #include <cstdint>
 #include <vector>
 
@@ -36,15 +37,15 @@ public:
     invalidate_params_cache();
   }
 
-  void set_color(const QVector3D &c) { m_color = c; }
+  void set_color(const QVector3D& c) { m_color = c; }
 
-  void set_light_direction(const QVector3D &dir) {
+  void set_light_direction(const QVector3D& dir) {
     m_light_direction =
         dir.isNull() ? QVector3D(0.35F, 0.85F, 0.42F) : dir.normalized();
     invalidate_params_cache();
   }
 
-  void set_biome(const Game::Map::BiomeSettings &settings) {
+  void set_biome(const Game::Map::BiomeSettings& settings) {
     m_biome_settings = settings;
     m_has_biome = true;
     update_noise_offset();
@@ -52,15 +53,15 @@ public:
     invalidate_params_cache();
   }
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
 private:
   void recompute_model();
   void update_noise_offset();
   auto build_params() const -> Render::GL::TerrainChunkParams;
   void sync_biome_from_service();
-  static auto biome_equals(const Game::Map::BiomeSettings &a,
-                           const Game::Map::BiomeSettings &b) -> bool;
+  static auto biome_equals(const Game::Map::BiomeSettings& a,
+                           const Game::Map::BiomeSettings& b) -> bool;
 
   float m_tile_size = 1.0F;
   int m_width = 50;

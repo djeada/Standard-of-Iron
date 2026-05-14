@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../gl/mesh.h"
 #include <QVector3D>
+
 #include <algorithm>
 #include <memory>
+
+#include "../gl/mesh.h"
 
 namespace Render::Geom {
 
@@ -32,17 +34,17 @@ indicator_height_for_unit(float selection_ring_size,
       std::max(selection_ring_size, 0.0F) * k_indicator_height_multiplier;
   float const scaled_height =
       std::max(render_scale, 0.0F) * k_indicator_render_scale_height_multiplier;
-  float const anchor_height = std::max(
-      k_indicator_height_base, std::max(footprint_height, scaled_height));
+  float const anchor_height =
+      std::max(k_indicator_height_base, std::max(footprint_height, scaled_height));
   return anchor_height + k_indicator_head_gap;
 }
 
 class ModeIndicator {
 public:
-  static auto get_attack_mode_mesh() -> Render::GL::Mesh *;
-  static auto get_guard_mode_mesh() -> Render::GL::Mesh *;
-  static auto get_hold_mode_mesh() -> Render::GL::Mesh *;
-  static auto get_patrol_mode_mesh() -> Render::GL::Mesh *;
+  static auto get_attack_mode_mesh() -> Render::GL::Mesh*;
+  static auto get_guard_mode_mesh() -> Render::GL::Mesh*;
+  static auto get_hold_mode_mesh() -> Render::GL::Mesh*;
+  static auto get_patrol_mode_mesh() -> Render::GL::Mesh*;
 
 private:
   static auto create_attack_mode_mesh() -> std::unique_ptr<Render::GL::Mesh>;

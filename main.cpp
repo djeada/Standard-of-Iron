@@ -16,9 +16,6 @@
 #include <QSurfaceFormat>
 #include <QTextStream>
 #include <QUrl>
-#include <cstdio>
-#include <memory>
-#include <optional>
 #include <qglobal.h>
 #include <qguiapplication.h>
 #include <qnamespace.h>
@@ -31,8 +28,13 @@
 #include <qsurfaceformat.h>
 #include <qurl.h>
 
+#include <cstdio>
+#include <memory>
+#include <optional>
+
 #ifdef Q_OS_WIN
 #include <QProcess>
+
 #include <gl/gl.h>
 #include <windows.h>
 #pragma comment(lib, "opengl32.lib")
@@ -67,8 +69,18 @@ static bool testNativeOpenGL() {
     return false;
   }
 
-  HWND hwnd = CreateWindowExA(0, "OpenGLTest", "", WS_OVERLAPPEDWINDOW, 0, 0, 1,
-                              1, nullptr, nullptr, wc.hInstance, nullptr);
+  HWND hwnd = CreateWindowExA(0,
+                              "OpenGLTest",
+                              "",
+                              WS_OVERLAPPEDWINDOW,
+                              0,
+                              0,
+                              1,
+                              1,
+                              nullptr,
+                              nullptr,
+                              wc.hInstance,
+                              nullptr);
   if (!hwnd) {
     UnregisterClassA("OpenGLTest", wc.hInstance);
     return false;
@@ -99,13 +111,12 @@ static bool testNativeOpenGL() {
     if (hglrc) {
       if (wglMakeCurrent(hdc, hglrc)) {
         // Successfully created OpenGL context
-        const char *vendor = (const char *)glGetString(GL_VENDOR);
-        const char *renderer = (const char *)glGetString(GL_RENDERER);
-        const char *version = (const char *)glGetString(GL_VERSION);
+        const char* vendor = (const char*)glGetString(GL_VENDOR);
+        const char* renderer = (const char*)glGetString(GL_RENDERER);
+        const char* version = (const char*)glGetString(GL_VERSION);
 
         if (vendor && renderer && version) {
-          fprintf(stderr,
-                  "[OpenGL Test] Native context created successfully\n");
+          fprintf(stderr, "[OpenGL Test] Native context created successfully\n");
           fprintf(stderr, "[OpenGL Test] Vendor: %s\n", vendor);
           fprintf(stderr, "[OpenGL Test] Renderer: %s\n", renderer);
           fprintf(stderr, "[OpenGL Test] Version: %s\n", version);
@@ -127,17 +138,14 @@ static bool testNativeOpenGL() {
 
 // Windows crash handler to detect OpenGL failures and suggest fallback
 static bool g_opengl_crashed = false;
-static LONG WINAPI crashHandler(EXCEPTION_POINTERS *exceptionInfo) {
-  if (exceptionInfo->ExceptionRecord->ExceptionCode ==
-      EXCEPTION_ACCESS_VIOLATION) {
+static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
+  if (exceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
     // Log crash
-    FILE *crash_log = fopen("opengl_crash.txt", "w");
+    FILE* crash_log = fopen("opengl_crash.txt", "w");
     if (crash_log) {
-      fprintf(crash_log,
-              "OpenGL/Qt rendering crash detected (Access Violation)\n");
+      fprintf(crash_log, "OpenGL/Qt rendering crash detected (Access Violation)\n");
       fprintf(crash_log, "Try running with: run_debug_softwaregl.cmd\n");
-      fprintf(crash_log,
-              "Or set environment variable: QT_QUICK_BACKEND=software\n");
+      fprintf(crash_log, "Or set environment variable: QT_QUICK_BACKEND=software\n");
       fclose(crash_log);
     }
 
@@ -156,7 +164,7 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS *exceptionInfo) {
 }
 #endif
 
-auto main(int argc, char *argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
 #ifdef Q_OS_WIN
   // Install crash handler to detect OpenGL failures
   SetUnhandledExceptionFilter(crashHandler);
@@ -186,50 +194,65 @@ auto main(int argc, char *argv[]) -> int {
 #endif
 
   // Setup message handler for debugging
-  qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &context,
-                            const QString &msg) {
-    QByteArray const local_msg = msg.toLocal8Bit();
-    const char *file = (context.file != nullptr) ? context.file : "";
-    const char *function =
-        (context.function != nullptr) ? context.function : "";
+  qInstallMessageHandler(
+      [](QtMsgType type, const QMessageLogContext& context, const QString& msg) {
+        QByteArray const local_msg = msg.toLocal8Bit();
+        const char* file = (context.file != nullptr) ? context.file : "";
+        const char* function = (context.function != nullptr) ? context.function : "";
 
-    FILE *out = stderr;
-    switch (type) {
-    case QtDebugMsg:
-      fprintf(out, "[DEBUG] %s (%s:%u, %s)\n", local_msg.constData(), file,
-              context.line, function);
-      break;
-    case QtInfoMsg:
-      fprintf(out, "[INFO] %s\n", local_msg.constData());
-      break;
-    case QtWarningMsg:
-      fprintf(out, "[WARNING] %s (%s:%u, %s)\n", local_msg.constData(), file,
-              context.line, function);
-      // Check for critical OpenGL warnings
-      if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
-          msg.contains("scene graph", Qt::CaseInsensitive) ||
-          msg.contains("RHI", Qt::CaseInsensitive)) {
-        fprintf(out, "[HINT] If you see crashes, try software rendering: set "
-                     "QT_QUICK_BACKEND=software\n");
-      }
-      break;
-    case QtCriticalMsg:
-      fprintf(out, "[CRITICAL] %s (%s:%u, %s)\n", local_msg.constData(), file,
-              context.line, function);
-      fprintf(
-          out,
-          "[CRITICAL] Try running with software rendering if this persists\n");
-      break;
-    case QtFatalMsg:
-      fprintf(out, "[FATAL] %s (%s:%u, %s)\n", local_msg.constData(), file,
-              context.line, function);
-      fprintf(out, "[FATAL] === RECOVERY SUGGESTION ===\n");
-      fprintf(out, "[FATAL] Run: run_debug_softwaregl.cmd\n");
-      fprintf(out, "[FATAL] Or set: QT_QUICK_BACKEND=software\n");
-      abort();
-    }
-    fflush(out);
-  });
+        FILE* out = stderr;
+        switch (type) {
+        case QtDebugMsg:
+          fprintf(out,
+                  "[DEBUG] %s (%s:%u, %s)\n",
+                  local_msg.constData(),
+                  file,
+                  context.line,
+                  function);
+          break;
+        case QtInfoMsg:
+          fprintf(out, "[INFO] %s\n", local_msg.constData());
+          break;
+        case QtWarningMsg:
+          fprintf(out,
+                  "[WARNING] %s (%s:%u, %s)\n",
+                  local_msg.constData(),
+                  file,
+                  context.line,
+                  function);
+          // Check for critical OpenGL warnings
+          if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
+              msg.contains("scene graph", Qt::CaseInsensitive) ||
+              msg.contains("RHI", Qt::CaseInsensitive)) {
+            fprintf(out,
+                    "[HINT] If you see crashes, try software rendering: set "
+                    "QT_QUICK_BACKEND=software\n");
+          }
+          break;
+        case QtCriticalMsg:
+          fprintf(out,
+                  "[CRITICAL] %s (%s:%u, %s)\n",
+                  local_msg.constData(),
+                  file,
+                  context.line,
+                  function);
+          fprintf(out,
+                  "[CRITICAL] Try running with software rendering if this persists\n");
+          break;
+        case QtFatalMsg:
+          fprintf(out,
+                  "[FATAL] %s (%s:%u, %s)\n",
+                  local_msg.constData(),
+                  file,
+                  context.line,
+                  function);
+          fprintf(out, "[FATAL] === RECOVERY SUGGESTION ===\n");
+          fprintf(out, "[FATAL] Run: run_debug_softwaregl.cmd\n");
+          fprintf(out, "[FATAL] Or set: QT_QUICK_BACKEND=software\n");
+          abort();
+        }
+        fflush(out);
+      });
 
   qInfo() << "=== Standard of Iron - Starting ===";
   qInfo() << "Qt version:" << QT_VERSION_STR;
@@ -246,8 +269,7 @@ auto main(int argc, char *argv[]) -> int {
   if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM") &&
       qEnvironmentVariableIsSet("DISPLAY")) {
     qputenv("QT_QPA_PLATFORM", "xcb");
-    qInfo()
-        << "Linux: Using X11 (xcb) platform for better OpenGL compatibility";
+    qInfo() << "Linux: Using X11 (xcb) platform for better OpenGL compatibility";
   }
 #endif
 
@@ -297,7 +319,8 @@ auto main(int argc, char *argv[]) -> int {
         QStringList{"s", "force-software"},
         "Force the CPU software rendering backend (ShaderQuality::None).");
     QCommandLineOption quality_opt(
-        "quality", "Override shader quality: full | reduced | minimal | none.",
+        "quality",
+        "Override shader quality: full | reduced | minimal | none.",
         "level");
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);
@@ -323,7 +346,7 @@ auto main(int argc, char *argv[]) -> int {
       requested = Render::ShaderQuality::None;
     }
     if (requested.has_value()) {
-      auto &gfx = Render::GraphicsSettings::instance();
+      auto& gfx = Render::GraphicsSettings::instance();
       auto features = gfx.features();
       features.shader_quality = *requested;
       // GraphicsSettings does not expose a direct features setter; the
@@ -351,8 +374,7 @@ auto main(int argc, char *argv[]) -> int {
       }
       // Override the per-feature shader_quality after the preset apply so
       // --force-software always wins regardless of the underlying preset.
-      const_cast<Render::GraphicsFeatures &>(gfx.features()).shader_quality =
-          *requested;
+      const_cast<Render::GraphicsFeatures&>(gfx.features()).shader_quality = *requested;
     }
   }
 
@@ -372,8 +394,7 @@ auto main(int argc, char *argv[]) -> int {
   qInfo() << "GameEngine created";
 
   qInfo() << "Creating GraphicsSettingsProxy...";
-  graphics_settings =
-      std::make_unique<App::Models::GraphicsSettingsProxy>(&app);
+  graphics_settings = std::make_unique<App::Models::GraphicsSettingsProxy>(&app);
   qInfo() << "GraphicsSettingsProxy created";
 
   qInfo() << "Setting up QML engine...";
@@ -381,32 +402,31 @@ auto main(int argc, char *argv[]) -> int {
 
   // Register minimap image provider
   qInfo() << "Registering minimap image provider...";
-  auto *minimap_provider = new MinimapImageProvider();
+  auto* minimap_provider = new MinimapImageProvider();
   engine->addImageProvider("minimap", minimap_provider);
 
   // Register map preview image provider
   qInfo() << "Registering map preview image provider...";
-  auto *map_preview_provider = new MapPreviewImageProvider();
+  auto* map_preview_provider = new MapPreviewImageProvider();
   engine->addImageProvider("mappreview", map_preview_provider);
 
   qInfo() << "Adding context properties...";
-  engine->rootContext()->setContextProperty("languageManager",
-                                            language_manager.get());
+  engine->rootContext()->setContextProperty("languageManager", language_manager.get());
   engine->rootContext()->setContextProperty("game", game_engine.get());
-  engine->rootContext()->setContextProperty("mapPreviewProvider",
-                                            map_preview_provider);
+  engine->rootContext()->setContextProperty("mapPreviewProvider", map_preview_provider);
   engine->rootContext()->setContextProperty("graphicsSettings",
                                             graphics_settings.get());
 
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
-  engine->rootContext()->setContextProperty("profilingHud",
-                                            profiling_hud.get());
+  engine->rootContext()->setContextProperty("profilingHud", profiling_hud.get());
 
   // Connect minimap image updates to the provider with DirectConnection
   // This ensures the image is set in the provider BEFORE QML reacts to the
   // signal
   QObject::connect(
-      game_engine.get(), &GameEngine::minimap_image_changed, &app,
+      game_engine.get(),
+      &GameEngine::minimap_image_changed,
+      &app,
       [minimap_provider, game_engine_ptr = game_engine.get()]() {
         minimap_provider->set_minimap_image(game_engine_ptr->minimap_image());
       },
@@ -426,12 +446,14 @@ auto main(int argc, char *argv[]) -> int {
   qmlRegisterType<CampaignMapView>("StandardOfIron", 1, 0, "CampaignMapView");
 
   // Register Theme singleton
-  qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme",
-                                  &Theme::create);
+  qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme", &Theme::create);
 
   // Register StyleGuide singleton from QML file
   qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/StyleGuide.qml"),
-                           "StandardOfIron", 1, 0, "StyleGuide");
+                           "StandardOfIron",
+                           1,
+                           0,
+                           "StyleGuide");
 
   qInfo() << "Loading Main.qml...";
   qInfo() << "Loading Main.qml...";
@@ -447,16 +469,18 @@ auto main(int argc, char *argv[]) -> int {
 
   // Connect language changed signal to retranslate QML
   qInfo() << "Connecting language change handler...";
-  QObject::connect(language_manager.get(), &LanguageManager::languageChanged,
-                   engine.get(), &QQmlApplicationEngine::retranslate);
+  QObject::connect(language_manager.get(),
+                   &LanguageManager::languageChanged,
+                   engine.get(),
+                   &QQmlApplicationEngine::retranslate);
   qInfo() << "Language change handler connected";
 
   qInfo() << "Finding QQuickWindow...";
-  auto *root_obj = engine->rootObjects().first();
-  auto *window = qobject_cast<QQuickWindow *>(root_obj);
+  auto* root_obj = engine->rootObjects().first();
+  auto* window = qobject_cast<QQuickWindow*>(root_obj);
   if (window == nullptr) {
     qInfo() << "Root object is not a window, searching children...";
-    window = root_obj->findChild<QQuickWindow *>();
+    window = root_obj->findChild<QQuickWindow*>();
   }
   if (window == nullptr) {
     qWarning() << "No QQuickWindow found for OpenGL initialization.";
@@ -470,42 +494,42 @@ auto main(int argc, char *argv[]) -> int {
 
   qInfo() << "Connecting scene graph signals...";
   qInfo() << "Connecting scene graph signals...";
-  QObject::connect(
-      window, &QQuickWindow::sceneGraphInitialized, window, [window]() {
-        qInfo() << "Scene graph initialized!";
-        if (auto *renderer_interface = window->rendererInterface()) {
-          const auto api = renderer_interface->graphicsApi();
+  QObject::connect(window, &QQuickWindow::sceneGraphInitialized, window, [window]() {
+    qInfo() << "Scene graph initialized!";
+    if (auto* renderer_interface = window->rendererInterface()) {
+      const auto api = renderer_interface->graphicsApi();
 
-          QString name;
-          switch (api) {
-          case QSGRendererInterface::OpenGLRhi:
-            name = "OpenGLRhi";
-            break;
-          case QSGRendererInterface::VulkanRhi:
-            name = "VulkanRhi";
-            break;
-          case QSGRendererInterface::Direct3D11Rhi:
-            name = "D3D11Rhi";
-            break;
-          case QSGRendererInterface::MetalRhi:
-            name = "MetalRhi";
-            break;
-          case QSGRendererInterface::Software:
-            name = "Software";
-            break;
-          default:
-            name = "Unknown";
-            break;
-          }
+      QString name;
+      switch (api) {
+      case QSGRendererInterface::OpenGLRhi:
+        name = "OpenGLRhi";
+        break;
+      case QSGRendererInterface::VulkanRhi:
+        name = "VulkanRhi";
+        break;
+      case QSGRendererInterface::Direct3D11Rhi:
+        name = "D3D11Rhi";
+        break;
+      case QSGRendererInterface::MetalRhi:
+        name = "MetalRhi";
+        break;
+      case QSGRendererInterface::Software:
+        name = "Software";
+        break;
+      default:
+        name = "Unknown";
+        break;
+      }
 
-          qInfo() << "QSG graphicsApi:" << name;
-        }
-      });
+      qInfo() << "QSG graphicsApi:" << name;
+    }
+  });
 
-  QObject::connect(window, &QQuickWindow::sceneGraphError, &app,
-                   [&](QQuickWindow::SceneGraphError, const QString &msg) {
-                     qCritical()
-                         << "Failed to initialize OpenGL scene graph:" << msg;
+  QObject::connect(window,
+                   &QQuickWindow::sceneGraphError,
+                   &app,
+                   [&](QQuickWindow::SceneGraphError, const QString& msg) {
+                     qCritical() << "Failed to initialize OpenGL scene graph:" << msg;
                      QGuiApplication::exit(3);
                    });
 
@@ -538,8 +562,7 @@ auto main(int argc, char *argv[]) -> int {
     qCritical() << "========================================";
     qCritical() << "";
     qCritical() << "The application crashed during OpenGL initialization.";
-    qCritical()
-        << "This is a known issue with Qt + some Windows graphics drivers.";
+    qCritical() << "This is a known issue with Qt + some Windows graphics drivers.";
     qCritical() << "";
     qCritical() << "SOLUTION: Set environment variable before running:";
     qCritical() << "  set QT_QUICK_BACKEND=software";

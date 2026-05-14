@@ -1,10 +1,11 @@
-#include "game/map/terrain.h"
-#include "render/gl/mesh.h"
-#include "render/ground/linear_feature_geometry.h"
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <limits>
+
+#include "game/map/terrain.h"
+#include "render/gl/mesh.h"
+#include "render/ground/linear_feature_geometry.h"
 
 namespace {
 
@@ -19,7 +20,8 @@ TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshWithConfiguredYOffset) {
   settings.y_offset = Game::Map::k_road_surface_y_offset;
 
   auto mesh = Render::Ground::build_linear_ribbon_mesh(
-      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F}, 1.0F,
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F},
+      1.0F,
       settings);
 
   ASSERT_NE(mesh, nullptr);
@@ -30,12 +32,11 @@ TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshWithConfiguredYOffset) {
 }
 
 TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshAlongTerrainHeightMap) {
-  std::vector<float> heights = {0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 0.0F, 1.0F,
-                                2.0F, 3.0F, 4.0F, 0.0F, 1.0F, 2.0F, 3.0F,
-                                4.0F, 0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 0.0F,
-                                1.0F, 2.0F, 3.0F, 4.0F};
-  std::vector<Game::Map::TerrainType> terrain_types(
-      heights.size(), Game::Map::TerrainType::Flat);
+  std::vector<float> const heights = {
+      0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 0.0F, 1.0F, 2.0F,
+      3.0F, 4.0F, 0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 0.0F, 1.0F, 2.0F, 3.0F, 4.0F};
+  std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
+                                                          Game::Map::TerrainType::Flat);
   Game::Map::TerrainHeightMap height_map(5, 5, 1.0F);
   height_map.restore_from_data(heights, terrain_types, {}, {});
 
@@ -46,7 +47,8 @@ TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshAlongTerrainHeightMap) {
   settings.height_map = &height_map;
 
   auto mesh = Render::Ground::build_linear_ribbon_mesh(
-      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F}, 1.0F,
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F},
+      1.0F,
       settings);
 
   ASSERT_NE(mesh, nullptr);
@@ -60,12 +62,11 @@ TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshAlongTerrainHeightMap) {
 }
 
 TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshAboveCrossSlopeTerrain) {
-  std::vector<float> heights = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F,
-                                1.0F, 1.0F, 1.0F, 2.0F, 2.0F, 2.0F, 2.0F,
-                                2.0F, 3.0F, 3.0F, 3.0F, 3.0F, 3.0F, 4.0F,
-                                4.0F, 4.0F, 4.0F, 4.0F};
-  std::vector<Game::Map::TerrainType> terrain_types(
-      heights.size(), Game::Map::TerrainType::Flat);
+  std::vector<float> const heights = {
+      0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 2.0F, 2.0F, 2.0F,
+      2.0F, 2.0F, 3.0F, 3.0F, 3.0F, 3.0F, 3.0F, 4.0F, 4.0F, 4.0F, 4.0F, 4.0F};
+  std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
+                                                          Game::Map::TerrainType::Flat);
   Game::Map::TerrainHeightMap height_map(5, 5, 1.0F);
   height_map.restore_from_data(heights, terrain_types, {}, {});
 
@@ -76,7 +77,8 @@ TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshAboveCrossSlopeTerrain) {
   settings.height_map = &height_map;
 
   auto mesh = Render::Ground::build_linear_ribbon_mesh(
-      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F}, 1.0F,
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F},
+      1.0F,
       settings);
 
   ASSERT_NE(mesh, nullptr);
@@ -101,7 +103,8 @@ TEST(LinearFeatureGeometryTest, BuildsRiverRibbonMeshWithMeanderSupport) {
   settings.meander_amplitude = 0.3F;
 
   auto mesh = Render::Ground::build_linear_ribbon_mesh(
-      {QVector3D(0.0F, 0.0F, -2.0F), QVector3D(0.0F, 0.0F, 2.0F), 3.0F}, 1.0F,
+      {QVector3D(0.0F, 0.0F, -2.0F), QVector3D(0.0F, 0.0F, 2.0F), 3.0F},
+      1.0F,
       settings);
 
   ASSERT_NE(mesh, nullptr);
@@ -125,7 +128,7 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
 
   float min_x = std::numeric_limits<float>::max();
   float max_x = std::numeric_limits<float>::lowest();
-  for (const auto &vertex : mesh->get_vertices()) {
+  for (const auto& vertex : mesh->get_vertices()) {
     min_x = std::min(min_x, vertex.position[0]);
     max_x = std::max(max_x, vertex.position[0]);
   }
@@ -135,25 +138,25 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
   float start_max_y = std::numeric_limits<float>::lowest();
   float mid_max_y = std::numeric_limits<float>::lowest();
   bool found_mid_band = false;
-  auto update_band_width = [&](float center_x, float half_band,
-                               float &width_out, bool &found) {
-    float min_z = std::numeric_limits<float>::max();
-    float max_z = std::numeric_limits<float>::lowest();
-    for (const auto &vertex : mesh->get_vertices()) {
-      if (std::abs(vertex.position[0] - center_x) > half_band) {
-        continue;
-      }
-      min_z = std::min(min_z, vertex.position[2]);
-      max_z = std::max(max_z, vertex.position[2]);
-      found = true;
-    }
-    if (found) {
-      width_out = max_z - min_z;
-    }
-  };
+  auto update_band_width =
+      [&](float center_x, float half_band, float& width_out, bool& found) {
+        float min_z = std::numeric_limits<float>::max();
+        float max_z = std::numeric_limits<float>::lowest();
+        for (const auto& vertex : mesh->get_vertices()) {
+          if (std::abs(vertex.position[0] - center_x) > half_band) {
+            continue;
+          }
+          min_z = std::min(min_z, vertex.position[2]);
+          max_z = std::max(max_z, vertex.position[2]);
+          found = true;
+        }
+        if (found) {
+          width_out = max_z - min_z;
+        }
+      };
 
   update_band_width(min_x, 0.03F, start_width, found_start_band);
-  for (const auto &vertex : mesh->get_vertices()) {
+  for (const auto& vertex : mesh->get_vertices()) {
     if (std::abs(vertex.position[0] - bridge.start.x()) <= 0.03F) {
       start_max_y = std::max(start_max_y, vertex.position[1]);
       found_start_band = true;
@@ -173,7 +176,7 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
 }
 
 TEST(LinearFeatureGeometryTest, BuildsRiverbankMeshWithVisibilitySamples) {
-  Game::Map::TerrainHeightMap height_map(16, 16, 1.0F);
+  Game::Map::TerrainHeightMap const height_map(16, 16, 1.0F);
   Game::Map::RiverSegment segment;
   segment.start = QVector3D(-3.0F, 0.0F, 0.0F);
   segment.end = QVector3D(3.0F, 0.0F, 0.0F);

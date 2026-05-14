@@ -1,12 +1,13 @@
 
 
+#include <QImage>
+
+#include <gtest/gtest.h>
+
 #include "render/gl/camera.h"
 #include "render/render_backend_factory.h"
 #include "render/scene_renderer.h"
 #include "render/software_backend.h"
-
-#include <QImage>
-#include <gtest/gtest.h>
 
 using Render::RenderBackendFactory;
 using Render::ShaderQuality;
@@ -20,7 +21,7 @@ TEST(RenderBackendFactory, NoneDispatchesToSoftwareBackend) {
   EXPECT_FALSE(backend->supports_shaders());
   EXPECT_EQ(backend->shader_quality(), ShaderQuality::None);
   EXPECT_EQ(backend->frame_tracker(), nullptr);
-  EXPECT_NE(dynamic_cast<SoftwareBackend *>(backend.get()), nullptr);
+  EXPECT_NE(dynamic_cast<SoftwareBackend*>(backend.get()), nullptr);
 }
 
 TEST(RendererSoftwarePreview, ProducesNonEmptyImage) {

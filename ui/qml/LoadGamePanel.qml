@@ -7,40 +7,34 @@ import StandardOfIron 1.0
 Item {
     id: root
 
-    signal cancelled()
+    signal cancelled
     signal load_requested(string slot_name)
 
     anchors.fill: parent
     z: 25
     onVisibleChanged: {
         if (!visible)
-            return ;
-
+            return;
         if (typeof loadListModel !== 'undefined')
             loadListModel.load_from_game();
-
         if (typeof loadListView !== 'undefined')
             loadListView.selected_index = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? 0 : -1;
-
     }
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
             event.accepted = true;
         } else if (event.key === Qt.Key_Down) {
             if (loadListView.selected_index < loadListModel.count - 1)
                 loadListView.selected_index++;
-
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
             if (loadListView.selected_index > 0)
                 loadListView.selected_index--;
-
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             if (loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty)
                 root.load_requested(loadListModel.get(loadListView.selected_index).slot_name);
-
             event.accepted = true;
         }
     }
@@ -48,25 +42,21 @@ Item {
         forceActiveFocus();
         if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty)
             loadListView.selected_index = 0;
-
     }
 
     Connections {
         function onSave_slots_changed() {
             if (typeof loadListModel === 'undefined')
-                return ;
-
+                return;
             var previousSlot = "";
             if (typeof loadListView !== 'undefined' && loadListView.selected_index >= 0 && loadListView.selected_index < loadListModel.count) {
                 var current = loadListModel.get(loadListView.selected_index);
                 if (current && !current.isEmpty)
                     previousSlot = current.slot_name;
-
             }
             loadListModel.load_from_game();
             if (typeof loadListView === 'undefined')
-                return ;
-
+                return;
             var newIndex = -1;
             if (previousSlot !== "") {
                 for (var i = 0; i < loadListModel.count; ++i) {
@@ -80,7 +70,6 @@ Item {
             if (newIndex === -1) {
                 if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty)
                     newIndex = 0;
-
             }
             loadListView.selected_index = newIndex;
         }
@@ -127,7 +116,6 @@ Item {
                     button_style: "secondary"
                     onClicked: root.cancelled()
                 }
-
             }
 
             Rectangle {
@@ -163,39 +151,38 @@ Item {
                                 clear();
                                 if (typeof game === 'undefined' || !game.get_save_slots) {
                                     append({
-                                        "slot_name": qsTr("No saves found"),
-                                        "title": "",
-                                        "timestamp": 0,
-                                        "map_name": "",
-                                        "playTime": "",
-                                        "thumbnail": "",
-                                        "isEmpty": true
-                                    });
-                                    return ;
+                                            "slot_name": qsTr("No saves found"),
+                                            "title": "",
+                                            "timestamp": 0,
+                                            "map_name": "",
+                                            "playTime": "",
+                                            "thumbnail": "",
+                                            "isEmpty": true
+                                        });
+                                    return;
                                 }
                                 var slots = game.get_save_slots();
                                 for (var i = 0; i < slots.length; i++) {
                                     append({
-                                        "slot_name": slots[i].slot_name || slots[i].name,
-                                        "title": slots[i].title || slots[i].name || slots[i].slot_name || "Untitled Save",
-                                        "timestamp": slots[i].timestamp,
-                                        "map_name": slots[i].map_name || "Unknown Map",
-                                        "playTime": slots[i].playTime || "",
-                                        "thumbnail": slots[i].thumbnail || "",
-                                        "isEmpty": false
-                                    });
+                                            "slot_name": slots[i].slot_name || slots[i].name,
+                                            "title": slots[i].title || slots[i].name || slots[i].slot_name || "Untitled Save",
+                                            "timestamp": slots[i].timestamp,
+                                            "map_name": slots[i].map_name || "Unknown Map",
+                                            "playTime": slots[i].playTime || "",
+                                            "thumbnail": slots[i].thumbnail || "",
+                                            "isEmpty": false
+                                        });
                                 }
                                 if (count === 0)
                                     append({
-                                    "slot_name": qsTr("No saves found"),
-                                    "title": "",
-                                    "timestamp": 0,
-                                    "map_name": "",
-                                    "playTime": "",
-                                    "thumbnail": "",
-                                    "isEmpty": true
-                                });
-
+                                            "slot_name": qsTr("No saves found"),
+                                            "title": "",
+                                            "timestamp": 0,
+                                            "map_name": "",
+                                            "playTime": "",
+                                            "thumbnail": "",
+                                            "isEmpty": true
+                                        });
                             }
 
                             Component.onCompleted: {
@@ -246,7 +233,6 @@ Item {
                                         color: Theme.textHint
                                         font.pointSize: Theme.fontSizeTiny
                                     }
-
                                 }
 
                                 ColumnLayout {
@@ -297,9 +283,7 @@ Item {
                                             font.pointSize: Theme.fontSizeSmall
                                             visible: model.playTime !== ""
                                         }
-
                                     }
-
                                 }
 
                                 Label {
@@ -331,7 +315,6 @@ Item {
                                         confirmDeleteDialog.open();
                                     }
                                 }
-
                             }
 
                             MouseArea {
@@ -346,16 +329,11 @@ Item {
                                 onDoubleClicked: {
                                     if (!model.isEmpty)
                                         root.load_requested(model.slot_name);
-
                                 }
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             RowLayout {
@@ -378,14 +356,10 @@ Item {
                     onClicked: {
                         if (loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty)
                             root.load_requested(loadListModel.get(loadListView.selected_index).slot_name);
-
                     }
                 }
-
             }
-
         }
-
     }
 
     Dialog {
@@ -405,18 +379,16 @@ Item {
                     loadListModel.remove(slot_index);
                     if (loadListModel.count === 0)
                         loadListModel.append({
-                        "slot_name": qsTr("No saves found"),
-                        "title": "",
-                        "timestamp": 0,
-                        "map_name": "",
-                        "playTime": "",
-                        "thumbnail": "",
-                        "isEmpty": true
-                    });
-
+                                "slot_name": qsTr("No saves found"),
+                                "title": "",
+                                "timestamp": 0,
+                                "map_name": "",
+                                "playTime": "",
+                                "thumbnail": "",
+                                "isEmpty": true
+                            });
                     if (loadListView.selected_index >= loadListModel.count)
                         loadListView.selected_index = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? loadListModel.count - 1 : -1;
-
                 }
             }
         }
@@ -439,11 +411,7 @@ Item {
                     Layout.fillWidth: true
                     font.pointSize: Theme.fontSizeMedium
                 }
-
             }
-
         }
-
     }
-
 }

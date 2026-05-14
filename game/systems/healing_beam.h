@@ -1,14 +1,17 @@
 #pragma once
 
-#include "projectile.h"
 #include <QVector3D>
+
+#include "projectile.h"
 
 namespace Game::Systems {
 
 class HealingBeam : public Projectile {
 public:
-  HealingBeam(const QVector3D &healer_pos, const QVector3D &target_pos,
-              const QVector3D &color, float duration = 0.8F);
+  HealingBeam(const QVector3D& healer_pos,
+              const QVector3D& target_pos,
+              const QVector3D& color,
+              float duration = 0.8F);
 
   auto get_start() const -> QVector3D override { return m_healer_pos; }
   auto get_end() const -> QVector3D override { return m_target_pos; }
@@ -23,9 +26,7 @@ public:
   auto get_damage() const -> int override { return 0; }
   auto get_target_id() const -> Engine::Core::EntityID override { return 0; }
   auto get_attacker_id() const -> Engine::Core::EntityID override { return 0; }
-  auto get_target_locked_position() const -> QVector3D override {
-    return m_target_pos;
-  }
+  auto get_target_locked_position() const -> QVector3D override { return m_target_pos; }
 
   void update(float delta_time) override;
   void deactivate() override { m_active = false; }

@@ -272,7 +272,7 @@ QStatusBar::item {
 
 }
 
-auto main(int argc, char **argv) -> int {
+auto main(int argc, char** argv) -> int {
   QSurfaceFormat fmt;
   fmt.setVersion(3, 3);
   fmt.setProfile(QSurfaceFormat::CoreProfile);

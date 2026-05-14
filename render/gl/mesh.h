@@ -1,12 +1,14 @@
 #pragma once
 
-#include "buffer.h"
 #include <QOpenGLFunctions_3_3_Core>
+
 #include <array>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <vector>
+
+#include "buffer.h"
 
 namespace Render::GL {
 
@@ -20,8 +22,7 @@ struct Vertex {
 
 class Mesh : protected QOpenGLFunctions_3_3_Core {
 public:
-  Mesh(const std::vector<Vertex> &vertices,
-       const std::vector<unsigned int> &indices);
+  Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
   ~Mesh() override;
 
   void draw();
@@ -33,17 +34,17 @@ public:
 
   void draw_instanced_raw(std::size_t instance_count);
 
-  [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex> & {
+  [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex>& {
     return m_vertices;
   }
-  [[nodiscard]] auto get_indices() const -> const std::vector<unsigned int> & {
+  [[nodiscard]] auto get_indices() const -> const std::vector<unsigned int>& {
     return m_indices;
   }
 
   [[nodiscard]] auto clone_with_filtered_indices(
-      const std::function<bool(unsigned int, unsigned int, unsigned int,
-                               const std::vector<Vertex> &)> &predicate) const
-      -> std::unique_ptr<Mesh> {
+      const std::function<
+          bool(unsigned int, unsigned int, unsigned int, const std::vector<Vertex>&)>&
+          predicate) const -> std::unique_ptr<Mesh> {
     if (!predicate) {
       return nullptr;
     }
@@ -78,12 +79,13 @@ private:
 
   void setup_buffers();
 
-  [[nodiscard]] auto prepare_draw(const char *caller_name) -> bool;
+  [[nodiscard]] auto prepare_draw(const char* caller_name) -> bool;
 };
 
 auto create_quad_mesh() -> std::unique_ptr<Mesh>;
 auto create_cube_mesh() -> std::unique_ptr<Mesh>;
-auto create_plane_mesh(float width, float height,
+auto create_plane_mesh(float width,
+                       float height,
                        int subdivisions = 1) -> std::unique_ptr<Mesh>;
 
 } // namespace Render::GL

@@ -53,9 +53,10 @@ auto toolDescription(ToolType tool) -> QString {
   return "Choose a tool to start editing.";
 }
 
-auto createInfoLabel(const QString &text, const QString &object_name,
-                     QWidget *parent) -> QLabel * {
-  auto *label = new QLabel(text, parent);
+auto createInfoLabel(const QString& text,
+                     const QString& object_name,
+                     QWidget* parent) -> QLabel* {
+  auto* label = new QLabel(text, parent);
   label->setObjectName(object_name);
   label->setWordWrap(true);
   label->setTextFormat(Qt::PlainText);
@@ -64,19 +65,23 @@ auto createInfoLabel(const QString &text, const QString &object_name,
 
 } // namespace
 
-ToolPanel::ToolPanel(QWidget *parent) : QWidget(parent) { setup_ui(); }
+ToolPanel::ToolPanel(QWidget* parent)
+    : QWidget(parent) {
+  setup_ui();
+}
 
 void ToolPanel::setup_ui() {
-  auto *layout = new QVBoxLayout(this);
+  auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
 
-  auto *title = createInfoLabel("Map Tools", "panelTitle", this);
+  auto* title = createInfoLabel("Map Tools", "panelTitle", this);
   layout->addWidget(title);
 
-  auto *intro = createInfoLabel(
+  auto* intro = createInfoLabel(
       "Choose a tool, then place or edit content directly on the canvas.",
-      "panelIntro", this);
+      "panelIntro",
+      this);
   layout->addWidget(intro);
 
   m_active_tool_label = createInfoLabel(QString(), "toolSummary", this);
@@ -85,83 +90,144 @@ void ToolPanel::setup_ui() {
   m_tool_group = new QButtonGroup(this);
   m_tool_group->setExclusive(true);
 
-  auto *selection_group = new QGroupBox("Selection & Cleanup", this);
-  auto *selection_layout = new QGridLayout(selection_group);
+  auto* selection_group = new QGroupBox("Selection & Cleanup", this);
+  auto* selection_layout = new QGridLayout(selection_group);
   selection_layout->setHorizontalSpacing(6);
   selection_layout->setVerticalSpacing(6);
-  m_select_button = add_tool_button(selection_layout, 0, 0, "Select", "⬚",
+  m_select_button = add_tool_button(selection_layout,
+                                    0,
+                                    0,
+                                    "Select",
+                                    "⬚",
                                     "Select, drag, and double-click elements.",
                                     ToolType::Select);
-  add_tool_button(selection_layout, 0, 1, "Eraser", "🗑",
+  add_tool_button(selection_layout,
+                  0,
+                  1,
+                  "Eraser",
+                  "🗑",
                   "Remove elements, roads, rivers, and bridges.",
                   ToolType::Eraser);
   layout->addWidget(selection_group);
 
-  auto *terrain_group = new QGroupBox("Terrain", this);
-  auto *terrain_layout = new QGridLayout(terrain_group);
+  auto* terrain_group = new QGroupBox("Terrain", this);
+  auto* terrain_layout = new QGridLayout(terrain_group);
   terrain_layout->setHorizontalSpacing(6);
   terrain_layout->setVerticalSpacing(6);
-  add_tool_button(terrain_layout, 0, 0, "Hill", "⛰", "Place terrain hills.",
-                  ToolType::Hill);
-  add_tool_button(terrain_layout, 0, 1, "Mountain", "🏔",
-                  "Place mountain peaks.", ToolType::Mountain);
+  add_tool_button(
+      terrain_layout, 0, 0, "Hill", "⛰", "Place terrain hills.", ToolType::Hill);
+  add_tool_button(terrain_layout,
+                  0,
+                  1,
+                  "Mountain",
+                  "🏔",
+                  "Place mountain peaks.",
+                  ToolType::Mountain);
   layout->addWidget(terrain_group);
 
-  auto *props_group = new QGroupBox("World Props", this);
-  auto *props_layout = new QGridLayout(props_group);
+  auto* props_group = new QGroupBox("World Props", this);
+  auto* props_layout = new QGridLayout(props_group);
   props_layout->setHorizontalSpacing(6);
   props_layout->setVerticalSpacing(6);
-  add_tool_button(props_layout, 0, 0, "Fire Camp", "🔥",
-                  "Place authored fire camps.", ToolType::PropFirecamp);
-  add_tool_button(props_layout, 0, 1, "Tent", "⛺", "Place authored tents.",
-                  ToolType::PropTent);
-  add_tool_button(props_layout, 1, 0, "Supply Cart", "🛒",
-                  "Place authored supply carts.", ToolType::PropSupplyCart);
-  add_tool_button(props_layout, 1, 1, "Weapon Rack", "⚔",
-                  "Place authored weapon racks.", ToolType::PropWeaponRack);
-  add_tool_button(props_layout, 2, 0, "Ruins", "🏚", "Place authored ruins.",
-                  ToolType::PropRuins);
-  add_tool_button(props_layout, 2, 1, "Dead Tree", "🌲",
-                  "Place authored dead trees.", ToolType::PropDeadTree);
-  add_tool_button(props_layout, 3, 0, "Boulder", "🪨",
-                  "Place authored boulders.", ToolType::PropBoulder);
+  add_tool_button(props_layout,
+                  0,
+                  0,
+                  "Fire Camp",
+                  "🔥",
+                  "Place authored fire camps.",
+                  ToolType::PropFirecamp);
+  add_tool_button(
+      props_layout, 0, 1, "Tent", "⛺", "Place authored tents.", ToolType::PropTent);
+  add_tool_button(props_layout,
+                  1,
+                  0,
+                  "Supply Cart",
+                  "🛒",
+                  "Place authored supply carts.",
+                  ToolType::PropSupplyCart);
+  add_tool_button(props_layout,
+                  1,
+                  1,
+                  "Weapon Rack",
+                  "⚔",
+                  "Place authored weapon racks.",
+                  ToolType::PropWeaponRack);
+  add_tool_button(
+      props_layout, 2, 0, "Ruins", "🏚", "Place authored ruins.", ToolType::PropRuins);
+  add_tool_button(props_layout,
+                  2,
+                  1,
+                  "Dead Tree",
+                  "🌲",
+                  "Place authored dead trees.",
+                  ToolType::PropDeadTree);
+  add_tool_button(props_layout,
+                  3,
+                  0,
+                  "Boulder",
+                  "🪨",
+                  "Place authored boulders.",
+                  ToolType::PropBoulder);
   layout->addWidget(props_group);
 
-  auto *paths_group = new QGroupBox("Paths & Bridges", this);
-  auto *paths_layout = new QGridLayout(paths_group);
+  auto* paths_group = new QGroupBox("Paths & Bridges", this);
+  auto* paths_layout = new QGridLayout(paths_group);
   paths_layout->setHorizontalSpacing(6);
   paths_layout->setVerticalSpacing(6);
-  add_tool_button(paths_layout, 0, 0, "River", "〰",
-                  "Draw a river between two points.", ToolType::River);
-  add_tool_button(paths_layout, 0, 1, "Road", "═",
-                  "Draw a road between two points.", ToolType::Road);
-  add_tool_button(paths_layout, 1, 0, "Bridge", "🌉",
-                  "Draw a bridge between two points.", ToolType::Bridge);
+  add_tool_button(paths_layout,
+                  0,
+                  0,
+                  "River",
+                  "〰",
+                  "Draw a river between two points.",
+                  ToolType::River);
+  add_tool_button(paths_layout,
+                  0,
+                  1,
+                  "Road",
+                  "═",
+                  "Draw a road between two points.",
+                  ToolType::Road);
+  add_tool_button(paths_layout,
+                  1,
+                  0,
+                  "Bridge",
+                  "🌉",
+                  "Draw a bridge between two points.",
+                  ToolType::Bridge);
   layout->addWidget(paths_group);
 
-  auto *structures_group = new QGroupBox("Structures", this);
-  auto *structures_layout = new QGridLayout(structures_group);
+  auto* structures_group = new QGroupBox("Structures", this);
+  auto* structures_layout = new QGridLayout(structures_group);
   structures_layout->setHorizontalSpacing(6);
   structures_layout->setVerticalSpacing(6);
-  add_tool_button(structures_layout, 0, 0, "Barracks", "🏛",
-                  "Place a barracks and assign a player.", ToolType::Barracks);
-  add_tool_button(structures_layout, 0, 1, "Village", "🏘",
-                  "Place a village and assign a player.", ToolType::Village);
+  add_tool_button(structures_layout,
+                  0,
+                  0,
+                  "Barracks",
+                  "🏛",
+                  "Place a barracks and assign a player.",
+                  ToolType::Barracks);
+  add_tool_button(structures_layout,
+                  0,
+                  1,
+                  "Village",
+                  "🏘",
+                  "Place a village and assign a player.",
+                  ToolType::Village);
 
-  auto *player_bar = new QWidget(structures_group);
-  auto *player_bar_layout = new QHBoxLayout(player_bar);
+  auto* player_bar = new QWidget(structures_group);
+  auto* player_bar_layout = new QHBoxLayout(player_bar);
   player_bar_layout->setContentsMargins(2, 0, 2, 0);
   player_bar_layout->setSpacing(3);
-  player_bar_layout->addWidget(
-      createInfoLabel("Player:", "fieldLabel", player_bar));
+  player_bar_layout->addWidget(createInfoLabel("Player:", "fieldLabel", player_bar));
 
   m_player_group = new QButtonGroup(this);
   m_player_group->setExclusive(true);
   for (int pid = 0; pid <= k_max_player_id; ++pid) {
-    auto *pb = new QToolButton(player_bar);
+    auto* pb = new QToolButton(player_bar);
     pb->setText(pid == 0 ? "N" : QString::number(pid));
-    pb->setToolTip(pid == 0 ? "Neutral (no player)"
-                            : QString("Player %1").arg(pid));
+    pb->setToolTip(pid == 0 ? "Neutral (no player)" : QString("Player %1").arg(pid));
     pb->setCheckable(true);
     pb->setChecked(pid == 0);
     pb->setMinimumWidth(28);
@@ -179,8 +245,8 @@ void ToolPanel::setup_ui() {
 
   layout->addWidget(structures_group);
 
-  auto *tips_group = new QGroupBox("Editing Tips", this);
-  auto *tips_layout = new QVBoxLayout(tips_group);
+  auto* tips_group = new QGroupBox("Editing Tips", this);
+  auto* tips_layout = new QVBoxLayout(tips_group);
   tips_layout->setSpacing(4);
   tips_layout->addWidget(
       createInfoLabel("Left click: place or select\n"
@@ -192,7 +258,8 @@ void ToolPanel::setup_ui() {
                       "Shift + click/drag: free placement (no snap)\n"
                       "Double-click element: edit JSON\n"
                       "Double-click empty grid: resize map",
-                      "panelHint", tips_group));
+                      "panelHint",
+                      tips_group));
   layout->addWidget(tips_group);
 
   layout->addStretch(1);
@@ -202,11 +269,14 @@ void ToolPanel::setup_ui() {
   setMaximumWidth(360);
 }
 
-auto ToolPanel::add_tool_button(QGridLayout *layout, int row, int column,
-                                const QString &name, const QString &icon_char,
-                                const QString &description,
-                                ToolType tool) -> QToolButton * {
-  auto *button = new QToolButton(this);
+auto ToolPanel::add_tool_button(QGridLayout* layout,
+                                int row,
+                                int column,
+                                const QString& name,
+                                const QString& icon_char,
+                                const QString& description,
+                                ToolType tool) -> QToolButton* {
+  auto* button = new QToolButton(this);
   button->setText(icon_char + "\n" + name);
   button->setToolButtonStyle(Qt::ToolButtonTextOnly);
   button->setCheckable(true);
@@ -217,8 +287,8 @@ auto ToolPanel::add_tool_button(QGridLayout *layout, int row, int column,
   button->setToolTip(description);
   layout->addWidget(button, row, column);
   m_tool_group->addButton(button);
-  connect(button, &QToolButton::clicked, this,
-          [this, tool]() { set_current_tool(tool); });
+  connect(
+      button, &QToolButton::clicked, this, [this, tool]() { set_current_tool(tool); });
   return button;
 }
 
@@ -226,7 +296,7 @@ void ToolPanel::set_current_tool(ToolType tool, bool emit_signal) {
   m_current_tool = tool;
 
   if (m_tool_group != nullptr) {
-    for (auto *button : m_tool_group->buttons()) {
+    for (auto* button : m_tool_group->buttons()) {
       if (button->property("toolValue").toInt() == static_cast<int>(tool)) {
         if (!button->isChecked()) {
           button->setChecked(true);
@@ -242,13 +312,15 @@ void ToolPanel::set_current_tool(ToolType tool, bool emit_signal) {
   }
 }
 
-void ToolPanel::update_active_tool_label(const QString &description) {
+void ToolPanel::update_active_tool_label(const QString& description) {
   if (m_active_tool_label == nullptr) {
     return;
   }
   m_active_tool_label->setText("Active tool: " + description);
 }
 
-void ToolPanel::clear_selection() { set_current_tool(ToolType::Select); }
+void ToolPanel::clear_selection() {
+  set_current_tool(ToolType::Select);
+}
 
 } // namespace MapEditor

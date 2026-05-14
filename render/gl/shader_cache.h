@@ -1,52 +1,50 @@
 #pragma once
 
-#include "shader.h"
-#include "utils/resource_utils.h"
 #include <QDebug>
 #include <QFile>
 #include <QFileInfo>
 #include <QString>
 #include <QStringList>
+
 #include <memory>
 #include <unordered_map>
 #include <utility>
+
+#include "shader.h"
+#include "utils/resource_utils.h"
 
 namespace Render::GL {
 
 class ShaderCache {
 public:
-  auto load(const QString &name, const QString &vert_path,
-            const QString &frag_path) -> Shader * {
+  auto load(const QString& name,
+            const QString& vert_path,
+            const QString& frag_path) -> Shader* {
     auto it = m_named.find(name);
     if (it != m_named.end()) {
       return it->second.get();
     }
-    const QString resolved_vert =
-        Utils::Resources::resolve_resource_path(vert_path);
-    const QString resolved_frag =
-        Utils::Resources::resolve_resource_path(frag_path);
+    const QString resolved_vert = Utils::Resources::resolve_resource_path(vert_path);
+    const QString resolved_frag = Utils::Resources::resolve_resource_path(frag_path);
     auto sh = std::make_unique<Shader>();
     sh->set_debug_name(name);
     if (!sh->load_from_files(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader" << name;
       return nullptr;
     }
-    Shader *raw = sh.get();
+    Shader* raw = sh.get();
     m_named.emplace(name, std::move(sh));
     return raw;
   }
 
-  auto get(const QString &name) const -> Shader * {
+  auto get(const QString& name) const -> Shader* {
     auto it = m_named.find(name);
     return (it != m_named.end()) ? it->second.get() : nullptr;
   }
 
-  auto get_or_load(const QString &vert_path,
-                   const QString &frag_path) -> Shader * {
-    const QString resolved_vert =
-        Utils::Resources::resolve_resource_path(vert_path);
-    const QString resolved_frag =
-        Utils::Resources::resolve_resource_path(frag_path);
+  auto get_or_load(const QString& vert_path, const QString& frag_path) -> Shader* {
+    const QString resolved_vert = Utils::Resources::resolve_resource_path(vert_path);
+    const QString resolved_frag = Utils::Resources::resolve_resource_path(frag_path);
     auto key = resolved_vert + "|" + resolved_frag;
     auto it = m_by_path.find(key);
     if (it != m_by_path.end()) {
@@ -55,27 +53,24 @@ public:
     auto sh = std::make_unique<Shader>();
     sh->set_debug_name(resolved_vert + QStringLiteral("|") + resolved_frag);
     if (!sh->load_from_files(resolved_vert, resolved_frag)) {
-      qWarning() << "ShaderCache: Failed to load shader from paths:"
-                 << resolved_vert << "," << resolved_frag;
+      qWarning() << "ShaderCache: Failed to load shader from paths:" << resolved_vert
+                 << "," << resolved_frag;
       return nullptr;
     }
-    Shader *raw = sh.get();
+    Shader* raw = sh.get();
     m_by_path.emplace(std::move(key), std::move(sh));
     return raw;
   }
 
   void initialize_defaults() {
     static const QString shader_base = QStringLiteral(":/assets/shaders/");
-    auto resolve = [](const QString &path) {
+    auto resolve = [](const QString& path) {
       return Utils::Resources::resolve_resource_path(path);
     };
 
-    const QString basic_vert =
-        resolve(shader_base + QStringLiteral("basic.vert"));
-    const QString basic_frag =
-        resolve(shader_base + QStringLiteral("basic.frag"));
-    const QString grid_frag =
-        resolve(shader_base + QStringLiteral("grid.frag"));
+    const QString basic_vert = resolve(shader_base + QStringLiteral("basic.vert"));
+    const QString basic_frag = resolve(shader_base + QStringLiteral("basic.frag"));
+    const QString grid_frag = resolve(shader_base + QStringLiteral("grid.frag"));
     load(QStringLiteral("basic"), basic_vert, basic_frag);
     load(QStringLiteral("grid"), basic_vert, grid_frag);
 
@@ -157,10 +152,8 @@ public:
         resolve(shader_base + QStringLiteral("terrain_chunk.frag"));
     load(QStringLiteral("terrain_chunk"), terrain_vert, terrain_frag);
 
-    const QString river_vert =
-        resolve(shader_base + QStringLiteral("river.vert"));
-    const QString river_frag =
-        resolve(shader_base + QStringLiteral("river.frag"));
+    const QString river_vert = resolve(shader_base + QStringLiteral("river.vert"));
+    const QString river_frag = resolve(shader_base + QStringLiteral("river.frag"));
     load(QStringLiteral("river"), river_vert, river_frag);
 
     const QString riverbank_vert =
@@ -169,16 +162,12 @@ public:
         resolve(shader_base + QStringLiteral("riverbank.frag"));
     load(QStringLiteral("riverbank"), riverbank_vert, riverbank_frag);
 
-    const QString road_vert =
-        resolve(shader_base + QStringLiteral("road.vert"));
-    const QString road_frag =
-        resolve(shader_base + QStringLiteral("road.frag"));
+    const QString road_vert = resolve(shader_base + QStringLiteral("road.vert"));
+    const QString road_frag = resolve(shader_base + QStringLiteral("road.frag"));
     load(QStringLiteral("road"), road_vert, road_frag);
 
-    const QString bridge_vert =
-        resolve(shader_base + QStringLiteral("bridge.vert"));
-    const QString bridge_frag =
-        resolve(shader_base + QStringLiteral("bridge.frag"));
+    const QString bridge_vert = resolve(shader_base + QStringLiteral("bridge.vert"));
+    const QString bridge_frag = resolve(shader_base + QStringLiteral("bridge.frag"));
     load(QStringLiteral("bridge"), bridge_vert, bridge_frag);
 
     const QString troop_shadow_vert =
@@ -187,10 +176,8 @@ public:
         resolve(shader_base + QStringLiteral("troop_shadow.frag"));
     load(QStringLiteral("troop_shadow"), troop_shadow_vert, troop_shadow_frag);
 
-    const QString banner_vert =
-        resolve(shader_base + QStringLiteral("banner.vert"));
-    const QString banner_frag =
-        resolve(shader_base + QStringLiteral("banner.frag"));
+    const QString banner_vert = resolve(shader_base + QStringLiteral("banner.vert"));
+    const QString banner_frag = resolve(shader_base + QStringLiteral("banner.frag"));
     load(QStringLiteral("banner"), banner_vert, banner_frag);
 
     const QString healing_beam_vert =
@@ -212,10 +199,9 @@ public:
     load(QStringLiteral("mode_indicator"),
          resolve(shader_base + QStringLiteral("mode_indicator.vert")),
          resolve(shader_base + QStringLiteral("mode_indicator.frag")));
-    load(
-        QStringLiteral("mode_indicator_instanced"),
-        resolve(shader_base + QStringLiteral("mode_indicator_instanced.vert")),
-        resolve(shader_base + QStringLiteral("mode_indicator_instanced.frag")));
+    load(QStringLiteral("mode_indicator_instanced"),
+         resolve(shader_base + QStringLiteral("mode_indicator_instanced.vert")),
+         resolve(shader_base + QStringLiteral("mode_indicator_instanced.frag")));
 
     load(QStringLiteral("tent_instanced"),
          resolve(shader_base + QStringLiteral("tent_instanced.vert")),

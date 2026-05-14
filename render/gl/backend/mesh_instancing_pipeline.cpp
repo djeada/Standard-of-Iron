@@ -1,10 +1,13 @@
 #include "mesh_instancing_pipeline.h"
+
+#include <QDebug>
+#include <QOpenGLContext>
+
+#include <cstring>
+
 #include "../backend.h"
 #include "../mesh.h"
 #include "../texture.h"
-#include <QDebug>
-#include <QOpenGLContext>
-#include <cstring>
 
 namespace Render::GL::BackendPipelines {
 
@@ -18,13 +21,16 @@ constexpr GLuint k_instance_model_col2_loc = 5;
 constexpr GLuint k_instance_color_alpha_loc = 6;
 } // namespace
 
-MeshInstancingPipeline::MeshInstancingPipeline(GL::Backend *backend,
-                                               GL::ShaderCache *shader_cache)
-    : m_backend(backend), m_shader_cache(shader_cache) {
+MeshInstancingPipeline::MeshInstancingPipeline(GL::Backend* backend,
+                                               GL::ShaderCache* shader_cache)
+    : m_backend(backend)
+    , m_shader_cache(shader_cache) {
   m_instances.reserve(k_initial_capacity);
 }
 
-MeshInstancingPipeline::~MeshInstancingPipeline() { shutdown(); }
+MeshInstancingPipeline::~MeshInstancingPipeline() {
+  shutdown();
+}
 
 auto MeshInstancingPipeline::initialize() -> bool {
   if (m_initialized) {
@@ -47,15 +53,14 @@ auto MeshInstancingPipeline::initialize() -> bool {
 
   m_instance_capacity = k_initial_capacity;
   glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
-  glBufferData(
-      GL_ARRAY_BUFFER,
-      static_cast<GLsizeiptr>(m_instance_capacity * sizeof(MeshInstanceGpu)),
-      nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(m_instance_capacity * sizeof(MeshInstanceGpu)),
+               nullptr,
+               GL_DYNAMIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_initialized = true;
-  qInfo() << "MeshInstancingPipeline initialized with capacity"
-          << m_instance_capacity;
+  qInfo() << "MeshInstancingPipeline initialized with capacity" << m_instance_capacity;
   return true;
 }
 
@@ -78,7 +83,8 @@ void MeshInstancingPipeline::shutdown() {
   m_initialized = false;
 }
 
-void MeshInstancingPipeline::cache_uniforms() {}
+void MeshInstancingPipeline::cache_uniforms() {
+}
 
 auto MeshInstancingPipeline::is_initialized() const -> bool {
   return m_initialized;
@@ -91,8 +97,9 @@ void MeshInstancingPipeline::begin_frame() {
   m_current_texture = nullptr;
 }
 
-auto MeshInstancingPipeline::can_batch(Mesh *mesh, Shader *shader,
-                                       Texture *texture) const -> bool {
+auto MeshInstancingPipeline::can_batch(Mesh* mesh,
+                                       Shader* shader,
+                                       Texture* texture) const -> bool {
   if (m_instances.empty()) {
     return true;
   }
@@ -103,12 +110,13 @@ auto MeshInstancingPipeline::can_batch(Mesh *mesh, Shader *shader,
          texture == m_current_texture;
 }
 
-void MeshInstancingPipeline::accumulate(const QMatrix4x4 &model,
-                                        const QVector3D &color, float alpha,
+void MeshInstancingPipeline::accumulate(const QMatrix4x4& model,
+                                        const QVector3D& color,
+                                        float alpha,
                                         int) {
   MeshInstanceGpu inst{};
 
-  const float *data = model.constData();
+  const float* data = model.constData();
 
   inst.model_col0[0] = data[0];
   inst.model_col0[1] = data[1];
@@ -133,8 +141,7 @@ void MeshInstancingPipeline::accumulate(const QMatrix4x4 &model,
   m_instances.push_back(inst);
 }
 
-void MeshInstancingPipeline::begin_batch(Mesh *mesh, Shader *shader,
-                                         Texture *texture) {
+void MeshInstancingPipeline::begin_batch(Mesh* mesh, Shader* shader, Texture* texture) {
   m_current_mesh = mesh;
   m_current_shader = shader;
   m_current_texture = texture;
@@ -144,12 +151,10 @@ void MeshInstancingPipeline::flush() {
   if (m_instances.empty()) {
     return;
   }
-  if (m_current_mesh == nullptr || m_current_shader == nullptr ||
-      !m_initialized) {
-    qWarning() << "MeshInstancingPipeline::flush called with invalid state:"
-               << "mesh=" << m_current_mesh << "shader=" << m_current_shader
-               << "initialized=" << m_initialized
-               << "instances=" << m_instances.size();
+  if (m_current_mesh == nullptr || m_current_shader == nullptr || !m_initialized) {
+    qWarning() << "MeshInstancingPipeline::flush called with invalid state:" << "mesh="
+               << m_current_mesh << "shader=" << m_current_shader
+               << "initialized=" << m_initialized << "instances=" << m_instances.size();
     m_instances.clear();
     return;
   }
@@ -164,10 +169,10 @@ void MeshInstancingPipeline::flush() {
     new_capacity = std::min(new_capacity, k_max_instances_per_batch);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        static_cast<GLsizeiptr>(new_capacity * sizeof(MeshInstanceGpu)),
-        nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(new_capacity * sizeof(MeshInstanceGpu)),
+                 nullptr,
+                 GL_DYNAMIC_DRAW);
     m_instance_capacity = new_capacity;
   }
 
@@ -175,12 +180,10 @@ void MeshInstancingPipeline::flush() {
   GLsizeiptr const upload_size =
       static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu));
 
-  void *mapped =
-      glMapBufferRange(GL_ARRAY_BUFFER, 0, upload_size,
-                       GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+  void* mapped = glMapBufferRange(
+      GL_ARRAY_BUFFER, 0, upload_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
   if (mapped != nullptr) {
-    std::memcpy(mapped, m_instances.data(),
-                static_cast<std::size_t>(upload_size));
+    std::memcpy(mapped, m_instances.data(), static_cast<std::size_t>(upload_size));
     glUnmapBuffer(GL_ARRAY_BUFFER);
   } else {
     glBufferSubData(GL_ARRAY_BUFFER, 0, upload_size, m_instances.data());
@@ -233,27 +236,40 @@ void MeshInstancingPipeline::setup_instance_attributes() {
   const auto stride = static_cast<GLsizei>(sizeof(MeshInstanceGpu));
 
   glEnableVertexAttribArray(k_instance_model_col0_loc);
-  glVertexAttribPointer(
-      k_instance_model_col0_loc, 4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(MeshInstanceGpu, model_col0)));
+  glVertexAttribPointer(k_instance_model_col0_loc,
+                        4,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(MeshInstanceGpu, model_col0)));
   glVertexAttribDivisor(k_instance_model_col0_loc, 1);
 
   glEnableVertexAttribArray(k_instance_model_col1_loc);
-  glVertexAttribPointer(
-      k_instance_model_col1_loc, 4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(MeshInstanceGpu, model_col1)));
+  glVertexAttribPointer(k_instance_model_col1_loc,
+                        4,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(MeshInstanceGpu, model_col1)));
   glVertexAttribDivisor(k_instance_model_col1_loc, 1);
 
   glEnableVertexAttribArray(k_instance_model_col2_loc);
-  glVertexAttribPointer(
-      k_instance_model_col2_loc, 4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(MeshInstanceGpu, model_col2)));
+  glVertexAttribPointer(k_instance_model_col2_loc,
+                        4,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(MeshInstanceGpu, model_col2)));
   glVertexAttribDivisor(k_instance_model_col2_loc, 1);
 
   glEnableVertexAttribArray(k_instance_color_alpha_loc);
   glVertexAttribPointer(
-      k_instance_color_alpha_loc, 4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(MeshInstanceGpu, color_alpha)));
+      k_instance_color_alpha_loc,
+      4,
+      GL_FLOAT,
+      GL_FALSE,
+      stride,
+      reinterpret_cast<void*>(offsetof(MeshInstanceGpu, color_alpha)));
   glVertexAttribDivisor(k_instance_color_alpha_loc, 1);
 }
 

@@ -1,10 +1,12 @@
 #include "camera_viewport_layer.h"
-#include "minimap_utils.h"
 
 #include <QPainter>
 #include <QPen>
+
 #include <algorithm>
 #include <cmath>
+
+#include "minimap_utils.h"
 
 namespace Game::Map::Minimap {
 
@@ -14,7 +16,9 @@ constexpr float k_min_corner_size = 4.0F;
 constexpr float k_corner_pen_offset = 1.0F;
 } // namespace
 
-void CameraViewportLayer::init(int width, int height, float world_width,
+void CameraViewportLayer::init(int width,
+                               int height,
+                               float world_width,
                                float world_height) {
   m_width = width;
   m_height = height;
@@ -33,11 +37,9 @@ void CameraViewportLayer::init(int width, int height, float world_width,
 auto CameraViewportLayer::world_to_pixel(float world_x, float world_z) const
     -> std::pair<float, float> {
 
-  const auto &orient = MinimapOrientation::instance();
-  const float rotated_x =
-      world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
-  const float rotated_z =
-      world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
+  const auto& orient = MinimapOrientation::instance();
+  const float rotated_x = world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
+  const float rotated_z = world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
   const float px = (rotated_x + m_offset_x) * m_scale_x;
   const float py = (rotated_z + m_offset_y) * m_scale_y;
@@ -45,8 +47,10 @@ auto CameraViewportLayer::world_to_pixel(float world_x, float world_z) const
   return {px, py};
 }
 
-void CameraViewportLayer::update(float camera_x, float camera_z,
-                                 float viewport_width, float viewport_height) {
+void CameraViewportLayer::update(float camera_x,
+                                 float camera_z,
+                                 float viewport_width,
+                                 float viewport_height) {
   if (m_image.isNull()) {
     return;
   }
@@ -68,14 +72,14 @@ void CameraViewportLayer::update(float camera_x, float camera_z,
   draw_viewport_rect(painter, px, py, pixel_width, pixel_height);
 }
 
-void CameraViewportLayer::draw_viewport_rect(QPainter &painter, float px,
-                                             float py, float pixel_width,
-                                             float pixel_height) {
+void CameraViewportLayer::draw_viewport_rect(
+    QPainter& painter, float px, float py, float pixel_width, float pixel_height) {
 
   const float half_w = pixel_width * 0.5F;
   const float half_h = pixel_height * 0.5F;
 
-  QRectF rect(static_cast<qreal>(px - half_w), static_cast<qreal>(py - half_h),
+  QRectF rect(static_cast<qreal>(px - half_w),
+              static_cast<qreal>(py - half_h),
               static_cast<qreal>(pixel_width),
               static_cast<qreal>(pixel_height));
 
@@ -86,14 +90,12 @@ void CameraViewportLayer::draw_viewport_rect(QPainter &painter, float px,
   painter.setBrush(Qt::NoBrush);
   painter.drawRect(rect);
 
-  const float corner_size =
-      std::min(pixel_width, pixel_height) * k_corner_size_ratio;
+  const float corner_size = std::min(pixel_width, pixel_height) * k_corner_size_ratio;
   const float actual_corner = std::max(corner_size, k_min_corner_size);
 
   QColor corner_color(m_border_r, m_border_g, m_border_b, 255);
   QPen corner_pen(corner_color);
-  corner_pen.setWidthF(static_cast<qreal>(m_border_width) +
-                       k_corner_pen_offset);
+  corner_pen.setWidthF(static_cast<qreal>(m_border_width) + k_corner_pen_offset);
   painter.setPen(corner_pen);
 
   painter.drawLine(QPointF(rect.left(), rect.top()),

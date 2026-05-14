@@ -1,35 +1,47 @@
 #pragma once
 
+#include <cstddef>
+
 #include "../game/map/terrain.h"
 #include "ground/scatter_runtime.h"
 #include "i_render_pass.h"
-#include <cstddef>
 
 namespace Render::GL {
 
-enum class TerrainSurfaceKind { GroundPlane, TerrainMesh };
+enum class TerrainSurfaceKind {
+  GroundPlane,
+  TerrainMesh
+};
 
 struct TerrainSurfaceShaderParams {
-  const Game::Map::BiomeSettings *biome_settings = nullptr;
-  const Game::Map::TerrainField *field = nullptr;
+  const Game::Map::BiomeSettings* biome_settings = nullptr;
+  const Game::Map::TerrainField* field = nullptr;
   bool is_ground_plane = false;
 };
 
 struct TerrainSurfaceChunk {
   TerrainSurfaceKind kind = TerrainSurfaceKind::GroundPlane;
-  IRenderPass *pass = nullptr;
+  IRenderPass* pass = nullptr;
   TerrainSurfaceShaderParams params;
 };
 
-enum class LinearFeatureKind { River, Road, Riverbank, Bridge };
+enum class LinearFeatureKind {
+  River,
+  Road,
+  Riverbank,
+  Bridge
+};
 
-enum class LinearFeatureVisibilityMode { None, SegmentSampled, TextureDriven };
+enum class LinearFeatureVisibilityMode {
+  None,
+  SegmentSampled,
+  TextureDriven
+};
 
 struct LinearFeatureChunk {
   LinearFeatureKind kind = LinearFeatureKind::Road;
-  LinearFeatureVisibilityMode visibility_mode =
-      LinearFeatureVisibilityMode::None;
-  IRenderPass *pass = nullptr;
+  LinearFeatureVisibilityMode visibility_mode = LinearFeatureVisibilityMode::None;
+  IRenderPass* pass = nullptr;
   std::size_t geometry_count = 0;
 };
 
@@ -48,12 +60,15 @@ enum class ScatterSpeciesId {
   Boulder
 };
 
-enum class ScatterVisibilityMode { None, InstanceFiltered };
+enum class ScatterVisibilityMode {
+  None,
+  InstanceFiltered
+};
 
 struct ScatterChunk {
   ScatterSpeciesId species = ScatterSpeciesId::Grass;
   ScatterVisibilityMode visibility_mode = ScatterVisibilityMode::None;
-  IRenderPass *pass = nullptr;
+  IRenderPass* pass = nullptr;
   std::size_t instance_count = 0;
   bool gpu_ready = false;
   Render::Ground::Scatter::SyncStats last_sync_stats{};

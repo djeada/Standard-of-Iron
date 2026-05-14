@@ -4,13 +4,12 @@
 
 namespace Render::Geom {
 
-inline auto multiply_affine(const QMatrix4x4 &a,
-                            const QMatrix4x4 &b) -> QMatrix4x4 {
-  const float *A = a.constData();
-  const float *B = b.constData();
+inline auto multiply_affine(const QMatrix4x4& a, const QMatrix4x4& b) -> QMatrix4x4 {
+  const float* A = a.constData();
+  const float* B = b.constData();
 
   QMatrix4x4 out;
-  float *O = out.data();
+  float* O = out.data();
 
   auto mul_col = [&](int b_col_offset, float bw, int o_col_offset) {
     const float bx = B[b_col_offset + 0];

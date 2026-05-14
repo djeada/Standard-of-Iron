@@ -1,16 +1,17 @@
 #include "snapshot_mesh_cache.h"
 
+#include <QVector3D>
+#include <QVector4D>
+
+#include <array>
+#include <limits>
+#include <sstream>
+
 #include "bone_palette_arena.h"
 #include "creature/runtime_bake_guard.h"
 #include "creature/snapshot_mesh_asset.h"
 #include "rigged_mesh_cache.h"
 #include "snapshot_mesh_bake.h"
-
-#include <QVector3D>
-#include <QVector4D>
-#include <array>
-#include <limits>
-#include <sstream>
 
 namespace Render::GL {
 
@@ -19,7 +20,7 @@ namespace {
 auto build_identity_palette() noexcept
     -> std::array<QMatrix4x4, BonePaletteArena::k_palette_width> {
   std::array<QMatrix4x4, BonePaletteArena::k_palette_width> arr{};
-  for (auto &m : arr) {
+  for (auto& m : arr) {
     m.setToIdentity();
   }
   return arr;
@@ -27,7 +28,7 @@ auto build_identity_palette() noexcept
 
 } // namespace
 
-auto SnapshotMeshCache::identity_palette() noexcept -> const QMatrix4x4 * {
+auto SnapshotMeshCache::identity_palette() noexcept -> const QMatrix4x4* {
   static const auto k_palette = build_identity_palette();
   return k_palette.data();
 }
@@ -39,38 +40,36 @@ auto build_entry(std::span<const RiggedVertex> vertices,
   SnapshotMeshEntry entry{};
   std::vector<RiggedVertex> baked(vertices.begin(), vertices.end());
   std::vector<std::uint32_t> indices_copy(indices.begin(), indices.end());
-  entry.mesh =
-      std::make_unique<RiggedMesh>(std::move(baked), std::move(indices_copy));
+  entry.mesh = std::make_unique<RiggedMesh>(std::move(baked), std::move(indices_copy));
   return entry;
 }
 
-auto build_entry(std::vector<RiggedVertex> &&vertices,
+auto build_entry(std::vector<RiggedVertex>&& vertices,
                  std::span<const std::uint32_t> indices) -> SnapshotMeshEntry {
   SnapshotMeshEntry entry{};
   std::vector<std::uint32_t> indices_copy(indices.begin(), indices.end());
-  entry.mesh = std::make_unique<RiggedMesh>(std::move(vertices),
-                                            std::move(indices_copy));
+  entry.mesh =
+      std::make_unique<RiggedMesh>(std::move(vertices), std::move(indices_copy));
   return entry;
 }
 
-auto describe_snapshot_key(const SnapshotMeshCache::Key &key,
+auto describe_snapshot_key(const SnapshotMeshCache::Key& key,
                            std::uint32_t global_frame) -> std::string {
   std::ostringstream out;
   out << "asset=" << key.asset_id << " archetype=" << key.archetype
-      << " attachment_set_id=" << key.attachment_set_id
-      << " variant=" << key.variant << " state=" << static_cast<int>(key.state)
-      << " clip=" << key.clip_id
+      << " attachment_set_id=" << key.attachment_set_id << " variant=" << key.variant
+      << " state=" << static_cast<int>(key.state) << " clip=" << key.clip_id
       << " clip_variant=" << static_cast<int>(key.clip_variant)
-      << " frame_in_clip=" << key.frame_in_clip
-      << " global_frame=" << global_frame;
+      << " frame_in_clip=" << key.frame_in_clip << " global_frame=" << global_frame;
   return out.str();
 }
 
 } // namespace
 
-auto SnapshotMeshCache::get_or_bake(
-    const Key &key, const RiggedMeshEntry &source,
-    std::uint32_t global_frame) -> const SnapshotMeshEntry * {
+auto SnapshotMeshCache::get_or_bake(const Key& key,
+                                    const RiggedMeshEntry& source,
+                                    std::uint32_t global_frame)
+    -> const SnapshotMeshEntry* {
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
     return &it->second;
@@ -84,17 +83,15 @@ auto SnapshotMeshCache::get_or_bake(
   }
 
   if (source.mesh == nullptr || source.skinned_palettes.empty() ||
-      source.skinned_bone_count == 0U ||
-      global_frame >= source.skinned_frame_total ||
-      source.mesh->get_vertices().empty() ||
-      source.mesh->get_indices().empty()) {
+      source.skinned_bone_count == 0U || global_frame >= source.skinned_frame_total ||
+      source.mesh->get_vertices().empty() || source.mesh->get_indices().empty()) {
     ++m_frame_stats.misses;
     return nullptr;
   }
 
-  const auto &src_vertices = source.mesh->get_vertices();
-  const auto &src_indices = source.mesh->get_indices();
-  const QMatrix4x4 *frame_palette =
+  const auto& src_vertices = source.mesh->get_vertices();
+  const auto& src_indices = source.mesh->get_indices();
+  const QMatrix4x4* frame_palette =
       source.skinned_palettes.data() +
       static_cast<std::size_t>(global_frame) *
           static_cast<std::size_t>(source.skinned_bone_count);
@@ -109,8 +106,9 @@ auto SnapshotMeshCache::get_or_bake(
 }
 
 auto SnapshotMeshCache::get_or_load(
-    const Key &key, const Render::Creature::Snapshot::SnapshotMeshBlob &source,
-    std::uint32_t global_frame) -> const SnapshotMeshEntry * {
+    const Key& key,
+    const Render::Creature::Snapshot::SnapshotMeshBlob& source,
+    std::uint32_t global_frame) -> const SnapshotMeshEntry* {
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
     return &it->second;

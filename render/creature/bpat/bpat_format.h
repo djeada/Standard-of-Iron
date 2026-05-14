@@ -49,8 +49,7 @@ struct BpatClipEntry {
   std::uint32_t reserved[2];
 };
 
-static_assert(sizeof(BpatClipEntry) == 32,
-              "BpatClipEntry must be exactly 32 bytes");
+static_assert(sizeof(BpatClipEntry) == 32, "BpatClipEntry must be exactly 32 bytes");
 
 struct BpatSocketEntry {
   std::uint32_t name_offset;
@@ -64,8 +63,7 @@ static_assert(sizeof(BpatSocketEntry) == 32,
               "BpatSocketEntry must be exactly 32 bytes");
 
 [[nodiscard]] constexpr auto
-align_up(std::uint64_t value,
-         std::uint64_t alignment) noexcept -> std::uint64_t {
+align_up(std::uint64_t value, std::uint64_t alignment) noexcept -> std::uint64_t {
   return (value + alignment - 1U) & ~(alignment - 1U);
 }
 

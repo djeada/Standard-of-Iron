@@ -10,8 +10,8 @@ namespace {
 
 auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   MountedKnightRendererConfig config;
-  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/roman/horse_swordsman");
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_swordsman");
   config.sword_equipment_id = loadout.ids.sword;
   config.shield_equipment_id = loadout.ids.shield;
   config.helmet_equipment_id = loadout.ids.helmet;
@@ -39,21 +39,19 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   config.has_shoulder = loadout.shoulder_handle != k_invalid_equipment_handle;
   config.rider_debug_name = "troops/roman/horse_swordsman/rider";
   config.mount_debug_name = "troops/roman/horse_swordsman/mount";
-  config.rider_creature_asset_id =
-      Render::Creature::Pipeline::k_humanoid_sword_asset;
+  config.rider_creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   return config;
 }
 
 } // namespace
 
-void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
-  registry.register_renderer(
-      "troops/roman/horse_swordsman",
-      [](const DrawContext &ctx, ISubmitter &out) {
-        static MountedKnightRendererBase const static_renderer(
-            make_mounted_knight_config());
-        static_renderer.render(ctx, out);
-      });
+void register_mounted_knight_renderer(EntityRendererRegistry& registry) {
+  registry.register_renderer("troops/roman/horse_swordsman",
+                             [](const DrawContext& ctx, ISubmitter& out) {
+                               static MountedKnightRendererBase const static_renderer(
+                                   make_mounted_knight_config());
+                               static_renderer.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Roman

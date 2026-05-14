@@ -11,16 +11,17 @@ namespace Game::Systems {
 
 class CaptureSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World *world, float delta_time) override;
+  void update(Engine::Core::World* world, float delta_time) override;
 
 private:
-  static void process_barrack_capture(Engine::Core::World *world,
-                                      float delta_time);
-  static auto count_nearby_troops(Engine::Core::World *world, float barrack_x,
-                                  float barrack_z, int owner_id,
+  static void process_barrack_capture(Engine::Core::World* world, float delta_time);
+  static auto count_nearby_troops(Engine::Core::World* world,
+                                  float barrack_x,
+                                  float barrack_z,
+                                  int owner_id,
                                   float radius) -> int;
-  static void transfer_barrack_ownership(Engine::Core::World *world,
-                                         Engine::Core::Entity *barrack,
+  static void transfer_barrack_ownership(Engine::Core::World* world,
+                                         Engine::Core::Entity* barrack,
                                          int new_owner_id);
 };
 

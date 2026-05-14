@@ -1,13 +1,14 @@
 
 
+#include <QVector3D>
+
+#include <cmath>
+#include <gtest/gtest.h>
+
 #include "render/animation/channel_evaluator.h"
 #include "render/animation/clip.h"
 #include "render/animation/clips/archer_idle_clip.h"
 #include "render/animation/state_machine.h"
-
-#include <QVector3D>
-#include <cmath>
-#include <gtest/gtest.h>
 
 using namespace Render::Animation;
 
@@ -19,7 +20,7 @@ auto make_float_clip(std::initializer_list<std::pair<float, float>> kvs)
     -> Clip<float> {
   std::vector<Keyframe<float>> keys;
   keys.reserve(kvs.size());
-  for (auto const &[t, v] : kvs) {
+  for (auto const& [t, v] : kvs) {
     keys.push_back({t, v});
   }
   return Clip<float>("test", std::move(keys));
@@ -179,12 +180,10 @@ TEST(AnimationAuthoredClipsTest, ArcherWalkSwayAmplitudeExceedsIdle) {
   float idle_peak = 0.0F;
   float walk_peak = 0.0F;
   for (float t = 0.0F; t < idle.duration(); t += 0.05F) {
-    idle_peak =
-        std::max(idle_peak, std::abs(evaluate(idle, t, WrapMode::Loop)));
+    idle_peak = std::max(idle_peak, std::abs(evaluate(idle, t, WrapMode::Loop)));
   }
   for (float t = 0.0F; t < walk.duration(); t += 0.05F) {
-    walk_peak =
-        std::max(walk_peak, std::abs(evaluate(walk, t, WrapMode::Loop)));
+    walk_peak = std::max(walk_peak, std::abs(evaluate(walk, t, WrapMode::Loop)));
   }
   EXPECT_GT(walk_peak, idle_peak);
 }

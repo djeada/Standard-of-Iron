@@ -4,6 +4,6 @@
 
 namespace Render::GL::Roman {
 
-void register_barracks_renderer(EntityRendererRegistry &registry);
+void register_barracks_renderer(EntityRendererRegistry& registry);
 
 }

@@ -1,5 +1,11 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
@@ -23,11 +29,6 @@
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <gtest/gtest.h>
-#include <vector>
-
 namespace {
 
 using namespace Render::Creature::Pipeline;
@@ -39,53 +40,57 @@ public:
   int mesh_calls{0};
   int total_calls{0};
 
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {
     ++mesh_calls;
     ++total_calls;
   }
-  void rigged(const Render::GL::RiggedCreatureCmd &) override {
+  void rigged(const Render::GL::RiggedCreatureCmd&) override {
     ++rigged_calls;
     ++total_calls;
   }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {
     ++total_calls;
   }
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {
     ++total_calls;
   }
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {
     ++total_calls;
   }
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {
     ++total_calls;
   }
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {
-    ++total_calls;
-  }
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {
-    ++total_calls;
-  }
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {
-    ++total_calls;
-  }
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {
     ++total_calls;
   }
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {
+    ++total_calls;
+  }
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {
+    ++total_calls;
+  }
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {
+    ++total_calls;
+  }
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {
     ++total_calls;
   }
 };
 
-auto make_request(Render::Creature::ArchetypeId archetype, CreatureLOD lod,
+auto make_request(Render::Creature::ArchetypeId archetype,
+                  CreatureLOD lod,
                   RenderPassIntent pass,
                   std::uint32_t seed = 0U) -> CreatureRenderRequest {
   CreatureRenderRequest req{};
@@ -100,20 +105,21 @@ auto make_request(Render::Creature::ArchetypeId archetype, CreatureLOD lod,
 }
 
 auto submit_requests_for_test(std::span<const CreatureRenderRequest> requests,
-                              PrewarmCountingSubmitter &sink) -> SubmitStats {
+                              PrewarmCountingSubmitter& sink) -> SubmitStats {
   CreaturePreparationResult prep;
   prep.bodies.reserve(requests.size());
-  for (const auto &request : requests) {
+  for (const auto& request : requests) {
     prep.bodies.add_request(request);
   }
   return submit_preparation(prep, sink);
 }
 
-void add_test_unit(Engine::Core::Entity &entity,
+void add_test_unit(Engine::Core::Entity& entity,
                    Game::Units::SpawnType spawn_type,
-                   Game::Systems::NationID nation_id, int owner_id,
-                   const char *renderer_id) {
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+                   Game::Systems::NationID nation_id,
+                   int owner_id,
+                   const char* renderer_id) {
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = spawn_type;
   unit->nation_id = nation_id;
@@ -121,14 +127,13 @@ void add_test_unit(Engine::Core::Entity &entity,
   unit->health = 100;
   unit->max_health = 100;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
 
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
   renderable->renderer_id = renderer_id;
   renderable->visible = true;
@@ -148,10 +153,11 @@ TEST(TemplatePrewarmRegression, PassIntentFromCtxDetectsPrewarm) {
 TEST(TemplatePrewarmRegression, ShadowPassFiltersPreparedBatch) {
   std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 5; ++i) {
-    requests.push_back(make_request(
-        ArchetypeRegistry::k_humanoid_base, CreatureLOD::Full,
-        (i < 3) ? RenderPassIntent::Main : RenderPassIntent::Shadow,
-        static_cast<std::uint32_t>(i)));
+    requests.push_back(
+        make_request(ArchetypeRegistry::k_humanoid_base,
+                     CreatureLOD::Full,
+                     (i < 3) ? RenderPassIntent::Main : RenderPassIntent::Shadow,
+                     static_cast<std::uint32_t>(i)));
   }
 
   PrewarmCountingSubmitter sink;
@@ -164,7 +170,8 @@ TEST(TemplatePrewarmRegression, AllShadowPassRowsProduceZeroDraws) {
   std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 10; ++i) {
     requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
-                                    CreatureLOD::Full, RenderPassIntent::Shadow,
+                                    CreatureLOD::Full,
+                                    RenderPassIntent::Shadow,
                                     static_cast<std::uint32_t>(i)));
   }
 
@@ -216,7 +223,7 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   batch.add_humanoid(output, pose, variant, anim);
 
   CreaturePreparationResult prep;
-  for (const auto &request : batch.requests()) {
+  for (const auto& request : batch.requests()) {
     prep.bodies.add_request(request);
   }
 
@@ -267,7 +274,7 @@ TEST(TemplatePrewarmRegression, PreparedAnimationStateHonorsOverride) {
 
 TEST(TemplatePrewarmRegression, ElephantPreparedAnimationPromotesMeleeLock) {
   Engine::Core::Entity entity(1);
-  auto *attack = entity.add_component<Engine::Core::AttackComponent>();
+  auto* attack = entity.add_component<Engine::Core::AttackComponent>();
   ASSERT_NE(attack, nullptr);
   attack->in_melee_lock = true;
 
@@ -283,17 +290,16 @@ TEST(TemplatePrewarmRegression, ElephantPreparedAnimationPromotesMeleeLock) {
 
 TEST(TemplatePrewarmRegression, HumanoidAnimationPromotesIdleMeleeLock) {
   Engine::Core::Entity entity(1);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Spearman;
 
-  auto *attack = entity.add_component<Engine::Core::AttackComponent>();
+  auto* attack = entity.add_component<Engine::Core::AttackComponent>();
   ASSERT_NE(attack, nullptr);
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   attack->in_melee_lock = true;
 
-  auto *combat_state =
-      entity.add_component<Engine::Core::CombatStateComponent>();
+  auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
   ASSERT_NE(combat_state, nullptr);
   combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
 
@@ -305,8 +311,7 @@ TEST(TemplatePrewarmRegression, HumanoidAnimationPromotesIdleMeleeLock) {
   EXPECT_FALSE(state.used_override);
   EXPECT_TRUE(state.inputs.is_attacking);
   EXPECT_TRUE(state.inputs.is_melee);
-  EXPECT_EQ(state.inputs.attack_family,
-            Engine::Core::CombatAttackFamily::Spear);
+  EXPECT_EQ(state.inputs.attack_family, Engine::Core::CombatAttackFamily::Spear);
 }
 
 TEST(TemplatePrewarmRegression, PreparedHumanoidLodCarriesDistanceCull) {
@@ -352,11 +357,11 @@ TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {
 
   std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 10; ++i) {
-    requests.push_back(
-        make_request(ArchetypeRegistry::k_humanoid_base, CreatureLOD::Full,
-                     (i % 2 == 0) ? pass_intent_from_ctx(normal_ctx)
-                                  : pass_intent_from_ctx(prewarm_ctx),
-                     static_cast<std::uint32_t>(i)));
+    requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
+                                    CreatureLOD::Full,
+                                    (i % 2 == 0) ? pass_intent_from_ctx(normal_ctx)
+                                                 : pass_intent_from_ctx(prewarm_ctx),
+                                    static_cast<std::uint32_t>(i)));
   }
 
   PrewarmCountingSubmitter sink;
@@ -370,9 +375,10 @@ TEST(TemplatePrewarmRegression, HorsePrewarmProducesZeroDraws) {
   prewarm_ctx.template_prewarm = true;
 
   PrewarmCountingSubmitter sink;
-  auto const request =
-      make_request(ArchetypeRegistry::k_horse_base, CreatureLOD::Full,
-                   pass_intent_from_ctx(prewarm_ctx), 123U);
+  auto const request = make_request(ArchetypeRegistry::k_horse_base,
+                                    CreatureLOD::Full,
+                                    pass_intent_from_ctx(prewarm_ctx),
+                                    123U);
   const auto stats = submit_requests_for_test(
       std::span<const CreatureRenderRequest>(&request, 1u), sink);
 
@@ -384,9 +390,10 @@ TEST(TemplatePrewarmRegression, ElephantPrewarmProducesZeroDraws) {
   prewarm_ctx.template_prewarm = true;
 
   PrewarmCountingSubmitter sink;
-  auto const request =
-      make_request(ArchetypeRegistry::k_elephant_base, CreatureLOD::Full,
-                   pass_intent_from_ctx(prewarm_ctx), 456U);
+  auto const request = make_request(ArchetypeRegistry::k_elephant_base,
+                                    CreatureLOD::Full,
+                                    pass_intent_from_ctx(prewarm_ctx),
+                                    456U);
   const auto stats = submit_requests_for_test(
       std::span<const CreatureRenderRequest>(&request, 1u), sink);
 
@@ -399,7 +406,8 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
 
   std::vector<CreatureRenderRequest> requests;
   for (auto lod : {CreatureLOD::Full, CreatureLOD::Minimal}) {
-    requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base, lod,
+    requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
+                                    lod,
                                     pass_intent_from_ctx(prewarm_ctx),
                                     static_cast<std::uint32_t>(lod)));
   }
@@ -435,11 +443,10 @@ TEST(TemplatePrewarmRegression, SeedOverrideRespected) {
 
 TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
   std::vector<CreatureRenderRequest> requests;
-  requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
-                                  CreatureLOD::Full, RenderPassIntent::Shadow));
-  requests.push_back(make_request(ArchetypeRegistry::k_horse_base,
-                                  CreatureLOD::Minimal,
-                                  RenderPassIntent::Shadow));
+  requests.push_back(make_request(
+      ArchetypeRegistry::k_humanoid_base, CreatureLOD::Full, RenderPassIntent::Shadow));
+  requests.push_back(make_request(
+      ArchetypeRegistry::k_horse_base, CreatureLOD::Minimal, RenderPassIntent::Shadow));
 
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
@@ -451,11 +458,10 @@ TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
 
 TEST(TemplatePrewarmRegression, MainRowsIncrementLodStats) {
   std::vector<CreatureRenderRequest> requests;
-  requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
-                                  CreatureLOD::Full, RenderPassIntent::Main));
-  requests.push_back(make_request(ArchetypeRegistry::k_horse_base,
-                                  CreatureLOD::Minimal,
-                                  RenderPassIntent::Main));
+  requests.push_back(make_request(
+      ArchetypeRegistry::k_humanoid_base, CreatureLOD::Full, RenderPassIntent::Main));
+  requests.push_back(make_request(
+      ArchetypeRegistry::k_horse_base, CreatureLOD::Minimal, RenderPassIntent::Main));
 
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
@@ -508,7 +514,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   using Game::Units::SpawnType;
   using Render::Creature::CreatureLOD;
 
-  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
   nation_registry.clear();
   Game::Systems::Nation roman{};
   roman.id = NationID::RomanRepublic;
@@ -521,10 +527,10 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   ASSERT_TRUE(renderer.initialize());
 
   Engine::Core::World world;
-  Engine::Core::Entity *archer = world.create_entity();
+  Engine::Core::Entity* archer = world.create_entity();
   ASSERT_NE(archer, nullptr);
-  add_test_unit(*archer, SpawnType::Archer, NationID::RomanRepublic, 1,
-                "troops/roman/archer");
+  add_test_unit(
+      *archer, SpawnType::Archer, NationID::RomanRepublic, 1, "troops/roman/archer");
 
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
@@ -535,13 +541,12 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   ASSERT_TRUE(static_cast<bool>(builder_renderer));
 
   Engine::Core::Entity builder(9001);
-  add_test_unit(builder, SpawnType::Builder, NationID::RomanRepublic, 1,
-                "troops/roman/builder");
+  add_test_unit(
+      builder, SpawnType::Builder, NationID::RomanRepublic, 1, "troops/roman/builder");
 
   renderer.rigged_mesh_cache().reset_frame_stats();
 
-  Render::GL::DrawContext ctx{renderer.resources(), &builder, nullptr,
-                              QMatrix4x4()};
+  Render::GL::DrawContext ctx{renderer.resources(), &builder, nullptr, QMatrix4x4()};
   ctx.renderer_id = "troops/roman/builder";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -552,7 +557,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
 
   builder_renderer(ctx, renderer);
 
-  const auto &stats = renderer.rigged_mesh_cache().frame_stats();
+  const auto& stats = renderer.rigged_mesh_cache().frame_stats();
   EXPECT_EQ(stats.misses, 0U);
   EXPECT_GT(stats.hits, 0U);
 
@@ -567,7 +572,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
   using Game::Units::SpawnType;
   using Render::Creature::CreatureLOD;
 
-  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
   nation_registry.clear();
   Game::Systems::Nation roman{};
   roman.id = NationID::RomanRepublic;
@@ -580,9 +585,12 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
   ASSERT_TRUE(renderer.initialize());
 
   Engine::Core::World world;
-  Engine::Core::Entity *civilian = world.create_entity();
+  Engine::Core::Entity* civilian = world.create_entity();
   ASSERT_NE(civilian, nullptr);
-  add_test_unit(*civilian, SpawnType::Civilian, NationID::RomanRepublic, 1,
+  add_test_unit(*civilian,
+                SpawnType::Civilian,
+                NationID::RomanRepublic,
+                1,
                 "troops/roman/civilian");
 
   renderer.prewarm_unit_templates(&world);
@@ -594,13 +602,16 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
   ASSERT_TRUE(static_cast<bool>(civilian_renderer));
 
   Engine::Core::Entity civilian_entity(9002);
-  add_test_unit(civilian_entity, SpawnType::Civilian, NationID::RomanRepublic,
-                1, "troops/roman/civilian");
+  add_test_unit(civilian_entity,
+                SpawnType::Civilian,
+                NationID::RomanRepublic,
+                1,
+                "troops/roman/civilian");
 
   renderer.rigged_mesh_cache().reset_frame_stats();
 
-  Render::GL::DrawContext ctx{renderer.resources(), &civilian_entity, nullptr,
-                              QMatrix4x4()};
+  Render::GL::DrawContext ctx{
+      renderer.resources(), &civilian_entity, nullptr, QMatrix4x4()};
   ctx.renderer_id = "troops/roman/civilian";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -611,7 +622,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
 
   civilian_renderer(ctx, renderer);
 
-  const auto &stats = renderer.rigged_mesh_cache().frame_stats();
+  const auto& stats = renderer.rigged_mesh_cache().frame_stats();
   EXPECT_EQ(stats.misses, 0U);
   EXPECT_GT(stats.hits, 0U);
 
@@ -626,7 +637,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
   using Game::Units::SpawnType;
   using Render::Creature::CreatureLOD;
 
-  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
   nation_registry.clear();
   Game::Systems::Nation carthage{};
   carthage.id = NationID::Carthage;
@@ -639,9 +650,12 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
   ASSERT_TRUE(renderer.initialize());
 
   Engine::Core::World world;
-  Engine::Core::Entity *civilian = world.create_entity();
+  Engine::Core::Entity* civilian = world.create_entity();
   ASSERT_NE(civilian, nullptr);
-  add_test_unit(*civilian, SpawnType::Civilian, NationID::Carthage, 1,
+  add_test_unit(*civilian,
+                SpawnType::Civilian,
+                NationID::Carthage,
+                1,
                 "troops/carthage/civilian");
 
   renderer.prewarm_unit_templates(&world);
@@ -653,13 +667,16 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
   ASSERT_TRUE(static_cast<bool>(civilian_renderer));
 
   Engine::Core::Entity civilian_entity(9003);
-  add_test_unit(civilian_entity, SpawnType::Civilian, NationID::Carthage, 1,
+  add_test_unit(civilian_entity,
+                SpawnType::Civilian,
+                NationID::Carthage,
+                1,
                 "troops/carthage/civilian");
 
   renderer.rigged_mesh_cache().reset_frame_stats();
 
-  Render::GL::DrawContext ctx{renderer.resources(), &civilian_entity, nullptr,
-                              QMatrix4x4()};
+  Render::GL::DrawContext ctx{
+      renderer.resources(), &civilian_entity, nullptr, QMatrix4x4()};
   ctx.renderer_id = "troops/carthage/civilian";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -670,7 +687,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
 
   civilian_renderer(ctx, renderer);
 
-  const auto &stats = renderer.rigged_mesh_cache().frame_stats();
+  const auto& stats = renderer.rigged_mesh_cache().frame_stats();
   EXPECT_EQ(stats.misses, 0U);
   EXPECT_GT(stats.hits, 0U);
 
@@ -680,13 +697,12 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
   nation_registry.clear();
 }
 
-TEST(TemplatePrewarmRegression,
-     WorldPrewarmsCarthageSpearmanFacialHairVariants) {
+TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants) {
   using Game::Systems::NationID;
   using Game::Units::SpawnType;
   using Render::Creature::CreatureLOD;
 
-  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
   nation_registry.clear();
   Game::Systems::Nation carthage{};
   carthage.id = NationID::Carthage;
@@ -699,9 +715,12 @@ TEST(TemplatePrewarmRegression,
   ASSERT_TRUE(renderer.initialize());
 
   Engine::Core::World world;
-  Engine::Core::Entity *spearman = world.create_entity();
+  Engine::Core::Entity* spearman = world.create_entity();
   ASSERT_NE(spearman, nullptr);
-  add_test_unit(*spearman, SpawnType::Spearman, NationID::Carthage, 1,
+  add_test_unit(*spearman,
+                SpawnType::Spearman,
+                NationID::Carthage,
+                1,
                 "troops/carthage/spearman");
 
   renderer.prewarm_unit_templates(&world);
@@ -713,11 +732,14 @@ TEST(TemplatePrewarmRegression,
   ASSERT_TRUE(static_cast<bool>(spearman_renderer));
 
   Engine::Core::Entity runtime_entity(9003);
-  add_test_unit(runtime_entity, SpawnType::Spearman, NationID::Carthage, 1,
+  add_test_unit(runtime_entity,
+                SpawnType::Spearman,
+                NationID::Carthage,
+                1,
                 "troops/carthage/spearman");
 
-  Render::GL::DrawContext ctx{renderer.resources(), &runtime_entity, nullptr,
-                              QMatrix4x4()};
+  Render::GL::DrawContext ctx{
+      renderer.resources(), &runtime_entity, nullptr, QMatrix4x4()};
   ctx.renderer_id = "troops/carthage/spearman";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -730,7 +752,7 @@ TEST(TemplatePrewarmRegression,
     ctx.seed_override = seed;
     spearman_renderer(ctx, renderer);
 
-    const auto &stats = renderer.rigged_mesh_cache().frame_stats();
+    const auto& stats = renderer.rigged_mesh_cache().frame_stats();
     EXPECT_EQ(stats.misses, 0U) << "seed=" << seed;
     EXPECT_GT(stats.hits, 0U) << "seed=" << seed;
   }
@@ -747,7 +769,7 @@ TEST(TemplatePrewarmRegression,
   using Game::Units::SpawnType;
   using Render::Creature::CreatureLOD;
 
-  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
   nation_registry.clear();
   Game::Systems::Nation carthage{};
   carthage.id = NationID::Carthage;
@@ -761,7 +783,8 @@ TEST(TemplatePrewarmRegression,
 
   Render::GL::Camera camera;
   camera.set_perspective(60.0F, 4.0F / 3.0F, 0.1F, 100.0F);
-  camera.look_at(QVector3D(0.0F, 3.0F, 8.0F), QVector3D(0.0F, 1.0F, 0.0F),
+  camera.look_at(QVector3D(0.0F, 3.0F, 8.0F),
+                 QVector3D(0.0F, 1.0F, 0.0F),
                  QVector3D(0.0F, 1.0F, 0.0F));
   renderer.set_camera(&camera);
 
@@ -771,14 +794,19 @@ TEST(TemplatePrewarmRegression,
   ASSERT_TRUE(static_cast<bool>(spearman_renderer));
 
   Engine::Core::Entity clean_entity(9101);
-  add_test_unit(clean_entity, SpawnType::Spearman, NationID::Carthage, 1,
+  add_test_unit(clean_entity,
+                SpawnType::Spearman,
+                NationID::Carthage,
+                1,
                 "troops/carthage/spearman");
   Engine::Core::Entity bearded_entity(9102);
-  add_test_unit(bearded_entity, SpawnType::Spearman, NationID::Carthage, 1,
+  add_test_unit(bearded_entity,
+                SpawnType::Spearman,
+                NationID::Carthage,
+                1,
                 "troops/carthage/spearman");
 
-  auto render_variant = [&](Engine::Core::Entity &entity, float x,
-                            std::uint32_t seed) {
+  auto render_variant = [&](Engine::Core::Entity& entity, float x, std::uint32_t seed) {
     QMatrix4x4 model;
     model.translate(x, 0.0F, 0.0F);
     Render::GL::DrawContext ctx{renderer.resources(), &entity, nullptr, model};

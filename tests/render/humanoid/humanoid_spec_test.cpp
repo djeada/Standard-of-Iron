@@ -1,16 +1,17 @@
 
 
-#include "render/creature/spec.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
-#include "render/submitter.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <array>
 #include <gtest/gtest.h>
 #include <span>
 #include <string_view>
+
+#include "render/creature/spec.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
+#include "render/submitter.h"
 
 namespace {
 
@@ -27,54 +28,61 @@ public:
   std::size_t mesh_calls{0};
   std::size_t part_calls{0};
 
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {
     ++mesh_calls;
   }
-  void part(Render::GL::Mesh *, Render::GL::Material *, const QMatrix4x4 &,
-            const QVector3D &, Render::GL::Texture *, float, int) override {
+  void part(Render::GL::Mesh*,
+            Render::GL::Material*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {
     ++part_calls;
   }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 } // namespace
 
 TEST(HumanoidSpecTest, SpeciesNameIsPopulated) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   EXPECT_EQ(s.species_name, "humanoid");
 }
 
 TEST(HumanoidSpecTest, TopologyBoneCountMatchesEnum) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   EXPECT_EQ(s.topology.bones.size(), k_bone_count);
-  EXPECT_EQ(s.topology.bones.size(),
-            static_cast<std::size_t>(HumanoidBone::Count));
+  EXPECT_EQ(s.topology.bones.size(), static_cast<std::size_t>(HumanoidBone::Count));
 }
 
 TEST(HumanoidSpecTest, TopologyValidatesAsGenericSkeleton) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   EXPECT_TRUE(Render::Creature::validate_topology(s.topology));
 }
 
 TEST(HumanoidSpecTest, ParentIndexIsAlwaysLessThanChild) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   for (std::size_t i = 0; i < s.topology.bones.size(); ++i) {
     auto const parent = s.topology.bones[i].parent;
     if (parent == Render::Creature::k_invalid_bone) {
@@ -86,19 +94,17 @@ TEST(HumanoidSpecTest, ParentIndexIsAlwaysLessThanChild) {
 }
 
 TEST(HumanoidSpecTest, RootHasNoParent) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   ASSERT_FALSE(s.topology.bones.empty());
   EXPECT_EQ(s.topology.bones[0].parent, Render::Creature::k_invalid_bone);
 }
 
 TEST(HumanoidSpecTest, FindBoneByNameAgreesWithEnumIndex) {
-  CreatureSpec const &s = humanoid_creature_spec();
-  auto check = [&](HumanoidBone expected, const char *name) {
+  CreatureSpec const& s = humanoid_creature_spec();
+  auto check = [&](HumanoidBone expected, const char* name) {
     auto idx = Render::Creature::find_bone(s.topology, name);
-    ASSERT_NE(idx, Render::Creature::k_invalid_bone)
-        << "no bone named " << name;
-    EXPECT_EQ(idx, static_cast<std::uint16_t>(expected))
-        << "mismatch for " << name;
+    ASSERT_NE(idx, Render::Creature::k_invalid_bone) << "no bone named " << name;
+    EXPECT_EQ(idx, static_cast<std::uint16_t>(expected)) << "mismatch for " << name;
   };
   check(HumanoidBone::Root, "Root");
   check(HumanoidBone::Pelvis, "Pelvis");
@@ -110,20 +116,20 @@ TEST(HumanoidSpecTest, FindBoneByNameAgreesWithEnumIndex) {
 }
 
 TEST(HumanoidSpecTest, SocketsResolveToValidBones) {
-  CreatureSpec const &s = humanoid_creature_spec();
-  for (auto const &sock : s.topology.sockets) {
+  CreatureSpec const& s = humanoid_creature_spec();
+  for (auto const& sock : s.topology.sockets) {
     EXPECT_LT(sock.bone, s.topology.bones.size())
         << "socket " << sock.name << " references out-of-range bone";
   }
 }
 
 TEST(HumanoidSpecTest, ValidateSpecAcceptsEmptyLodGraphs) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   EXPECT_TRUE(Render::Creature::validate_creature_spec(s));
 }
 
 TEST(HumanoidSpecTest, BillboardLodProducesNoDraws) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
 
   std::array<QMatrix4x4, k_bone_count> palette;
   std::span<const QMatrix4x4> palette_view(palette);
@@ -141,18 +147,18 @@ TEST(HumanoidSpecTest, BillboardLodProducesNoDraws) {
 
 TEST(HumanoidSpecTest, SpecReferenceIsStable) {
 
-  auto const &a = humanoid_creature_spec();
-  auto const &b = humanoid_creature_spec();
+  auto const& a = humanoid_creature_spec();
+  auto const& b = humanoid_creature_spec();
   EXPECT_EQ(&a, &b);
 }
+
+#include <vector>
 
 #include "render/creature/part_graph.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/humanoid_math.h"
 #include "render/humanoid/humanoid_specs.h"
-
-#include <vector>
 
 namespace {
 
@@ -164,43 +170,50 @@ using HP = Render::GL::HumanProportions;
 class RecordingSubmitter : public Render::GL::ISubmitter {
 public:
   struct PartCall {
-    Render::GL::Mesh *mesh{nullptr};
-    Render::GL::Material *material{nullptr};
+    Render::GL::Mesh* mesh{nullptr};
+    Render::GL::Material* material{nullptr};
     QMatrix4x4 model{};
     QVector3D color{};
-    Render::GL::Texture *texture{nullptr};
+    Render::GL::Texture* texture{nullptr};
     float alpha{1.0F};
     int material_id{0};
   };
   std::vector<PartCall> parts;
   std::size_t mesh_calls{0};
 
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {
     ++mesh_calls;
   }
-  void part(Render::GL::Mesh *m, Render::GL::Material *mat,
-            const QMatrix4x4 &mdl, const QVector3D &c, Render::GL::Texture *t,
-            float a, int mid) override {
+  void part(Render::GL::Mesh* m,
+            Render::GL::Material* mat,
+            const QMatrix4x4& mdl,
+            const QVector3D& c,
+            Render::GL::Texture* t,
+            float a,
+            int mid) override {
     parts.push_back({m, mat, mdl, c, t, a, mid});
   }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 auto make_upright_pose() -> HumanoidPose {
@@ -225,8 +238,8 @@ auto make_upright_pose() -> HumanoidPose {
 }
 
 auto find_primitive(std::span<const PrimitiveInstance> primitives,
-                    std::string_view name) -> const PrimitiveInstance * {
-  for (auto const &primitive : primitives) {
+                    std::string_view name) -> const PrimitiveInstance* {
+  for (auto const& primitive : primitives) {
     if (!primitive.debug_name.empty() && primitive.debug_name == name) {
       return &primitive;
     }
@@ -237,12 +250,11 @@ auto find_primitive(std::span<const PrimitiveInstance> primitives,
 } // namespace
 
 TEST(HumanoidSpecTest, MinimalLodEmitsExactlyOneCapsule) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, k_bone_count> palette;
-  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
-                                      palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
@@ -259,12 +271,11 @@ TEST(HumanoidSpecTest, MinimalLodEmitsExactlyOneCapsule) {
 }
 
 TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, k_bone_count> palette;
-  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
-                                      palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
@@ -277,22 +288,18 @@ TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
 }
 
 TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
-  auto const &spec = humanoid_creature_spec();
+  auto const& spec = humanoid_creature_spec();
 
-  auto const *chest =
-      find_primitive(spec.lod_full.primitives, "humanoid_full_chest");
-  auto const *abdomen =
+  auto const* chest = find_primitive(spec.lod_full.primitives, "humanoid_full_chest");
+  auto const* abdomen =
       find_primitive(spec.lod_full.primitives, "humanoid_full_abdomen");
-  auto const *pelvis =
+  auto const* pelvis =
       find_primitive(spec.lod_full.primitives, "humanoid_full_pelvis_block");
-  auto const *neck =
-      find_primitive(spec.lod_full.primitives, "humanoid_full_neck");
-  auto const *cranium =
+  auto const* neck = find_primitive(spec.lod_full.primitives, "humanoid_full_neck");
+  auto const* cranium =
       find_primitive(spec.lod_full.primitives, "humanoid_full_cranium");
-  auto const *jaw =
-      find_primitive(spec.lod_full.primitives, "humanoid_full_jaw");
-  auto const *nose =
-      find_primitive(spec.lod_full.primitives, "humanoid_full_nose");
+  auto const* jaw = find_primitive(spec.lod_full.primitives, "humanoid_full_jaw");
+  auto const* nose = find_primitive(spec.lod_full.primitives, "humanoid_full_nose");
 
   ASSERT_NE(chest, nullptr);
   ASSERT_NE(abdomen, nullptr);
@@ -312,30 +319,27 @@ TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
 }
 
 TEST(HumanoidSpecTest, FullSpecKeepsArmsAndLegsTaperedTowardExtremities) {
-  auto const &spec = humanoid_creature_spec();
+  auto const& spec = humanoid_creature_spec();
 
-  auto const *upper_arm_top =
+  auto const* upper_arm_top =
       find_primitive(spec.lod_full.primitives, "humanoid_full_upper_arm_l_top");
-  auto const *upper_arm_bot =
+  auto const* upper_arm_bot =
       find_primitive(spec.lod_full.primitives, "humanoid_full_upper_arm_l_bot");
-  auto const *forearm_top =
+  auto const* forearm_top =
       find_primitive(spec.lod_full.primitives, "humanoid_full_forearm_l_top");
-  auto const *forearm_bot =
+  auto const* forearm_bot =
       find_primitive(spec.lod_full.primitives, "humanoid_full_forearm_l_bot");
-  auto const *thigh_top =
+  auto const* thigh_top =
       find_primitive(spec.lod_full.primitives, "humanoid_full_thigh_l_top");
-  auto const *thigh_bot =
+  auto const* thigh_bot =
       find_primitive(spec.lod_full.primitives, "humanoid_full_thigh_l_bot");
-  auto const *calf_top =
+  auto const* calf_top =
       find_primitive(spec.lod_full.primitives, "humanoid_full_calf_l_top");
-  auto const *calf_bot =
+  auto const* calf_bot =
       find_primitive(spec.lod_full.primitives, "humanoid_full_calf_l_bot");
-  auto const *knee =
-      find_primitive(spec.lod_full.primitives, "humanoid_full_knee_l");
-  auto const *ankle =
-      find_primitive(spec.lod_full.primitives, "humanoid_full_ankle_l");
-  auto const *foot =
-      find_primitive(spec.lod_full.primitives, "humanoid_full_foot_l");
+  auto const* knee = find_primitive(spec.lod_full.primitives, "humanoid_full_knee_l");
+  auto const* ankle = find_primitive(spec.lod_full.primitives, "humanoid_full_ankle_l");
+  auto const* foot = find_primitive(spec.lod_full.primitives, "humanoid_full_foot_l");
 
   ASSERT_NE(upper_arm_top, nullptr);
   ASSERT_NE(upper_arm_bot, nullptr);
@@ -361,29 +365,27 @@ TEST(HumanoidSpecTest, FullSpecKeepsArmsAndLegsTaperedTowardExtremities) {
 }
 
 TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, k_bone_count> palette;
-  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
-                                      palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
   RecordingSubmitter sub;
-  Render::Creature::submit_creature(s, palette_view, CreatureLOD::Minimal,
-                                    identity, sub);
+  Render::Creature::submit_creature(
+      s, palette_view, CreatureLOD::Minimal, identity, sub);
   ASSERT_EQ(sub.parts.size(), 1U);
-  QMatrix4x4 const &v2_model = sub.parts[0].model;
+  QMatrix4x4 const& v2_model = sub.parts[0].model;
 
-  QVector3D const expected_top =
-      pose.head_pos + QVector3D(0.0F, HP::HEAD_RADIUS, 0.0F);
+  QVector3D const expected_top = pose.head_pos + QVector3D(0.0F, HP::HEAD_RADIUS, 0.0F);
   QVector3D const expected_bot = pose.foot_l;
   QMatrix4x4 const expected_model = Render::Geom::capsule_between(
       identity, expected_top, expected_bot, HP::TORSO_TOP_R);
 
-  const float *a = v2_model.constData();
-  const float *b = expected_model.constData();
+  const float* a = v2_model.constData();
+  const float* b = expected_model.constData();
   for (int i = 0; i < 16; ++i) {
     EXPECT_NEAR(a[i], b[i], 1.0e-4F) << "model[" << i << "] mismatch";
   }
@@ -391,20 +393,19 @@ TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
 
 TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
 
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, k_bone_count> palette;
-  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
-                                      palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
   RecordingSubmitter sub;
-  Render::Creature::submit_creature(s, palette_view, CreatureLOD::Minimal,
-                                    identity, sub);
+  Render::Creature::submit_creature(
+      s, palette_view, CreatureLOD::Minimal, identity, sub);
   ASSERT_EQ(sub.parts.size(), 1U);
-  QMatrix4x4 const &v2_model = sub.parts[0].model;
+  QMatrix4x4 const& v2_model = sub.parts[0].model;
 
   QVector3D const ep_a = v2_model.map(QVector3D(0.0F, 0.5F, 0.0F));
   QVector3D const ep_b = v2_model.map(QVector3D(0.0F, -0.5F, 0.0F));
@@ -412,50 +413,45 @@ TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
       pose.head_pos + QVector3D(0.0F, HP::HEAD_RADIUS, 0.0F);
   QVector3D const expected_foot = pose.foot_l;
 
-  auto near = [](const QVector3D &a, const QVector3D &b) {
+  auto near = [](const QVector3D& a, const QVector3D& b) {
     return (a - b).lengthSquared() < 1.0e-7F;
   };
-  bool const matched =
-      (near(ep_a, expected_head_crown) && near(ep_b, expected_foot)) ||
-      (near(ep_b, expected_head_crown) && near(ep_a, expected_foot));
+  bool const matched = (near(ep_a, expected_head_crown) && near(ep_b, expected_foot)) ||
+                       (near(ep_b, expected_head_crown) && near(ep_a, expected_foot));
   EXPECT_TRUE(matched) << "Endpoints (" << ep_a.x() << "," << ep_a.y() << ","
-                       << ep_a.z() << ") and (" << ep_b.x() << "," << ep_b.y()
-                       << "," << ep_b.z() << ") don't cover head_crown=("
-                       << expected_head_crown.x() << ","
-                       << expected_head_crown.y() << ","
-                       << expected_head_crown.z() << ") and foot=("
+                       << ep_a.z() << ") and (" << ep_b.x() << "," << ep_b.y() << ","
+                       << ep_b.z() << ") don't cover head_crown=("
+                       << expected_head_crown.x() << "," << expected_head_crown.y()
+                       << "," << expected_head_crown.z() << ") and foot=("
                        << expected_foot.x() << "," << expected_foot.y() << ","
                        << expected_foot.z() << ")";
 }
 
 TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
 
-  CreatureSpec const &s = humanoid_creature_spec();
+  CreatureSpec const& s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, k_bone_count> palette;
-  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
-                                      palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   RecordingSubmitter base_sub;
   QMatrix4x4 identity;
-  Render::Creature::submit_creature(s, palette_view, CreatureLOD::Minimal,
-                                    identity, base_sub);
+  Render::Creature::submit_creature(
+      s, palette_view, CreatureLOD::Minimal, identity, base_sub);
   ASSERT_EQ(base_sub.parts.size(), 1U);
 
   QMatrix4x4 world;
   world.translate(10.0F, 0.0F, 0.0F);
   RecordingSubmitter moved_sub;
-  Render::Creature::submit_creature(s, palette_view, CreatureLOD::Minimal,
-                                    world, moved_sub);
+  Render::Creature::submit_creature(
+      s, palette_view, CreatureLOD::Minimal, world, moved_sub);
   ASSERT_EQ(moved_sub.parts.size(), 1U);
 
   for (float y : {0.5F, -0.5F}) {
-    QVector3D const base =
-        base_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
-    QVector3D const moved =
-        moved_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
+    QVector3D const base = base_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
+    QVector3D const moved = moved_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
     EXPECT_NEAR(moved.x() - base.x(), 10.0F, 1.0e-4F);
     EXPECT_NEAR(moved.y() - base.y(), 0.0F, 1.0e-4F);
     EXPECT_NEAR(moved.z() - base.z(), 0.0F, 1.0e-4F);

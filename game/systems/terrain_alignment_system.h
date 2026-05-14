@@ -10,10 +10,10 @@ namespace Game::Systems {
 
 class TerrainAlignmentSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World *world, float delta_time) override;
+  void update(Engine::Core::World* world, float delta_time) override;
 
 private:
-  static void align_entity_to_terrain(Engine::Core::Entity *entity);
+  static void align_entity_to_terrain(Engine::Core::Entity* entity);
 };
 
 } // namespace Game::Systems

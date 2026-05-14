@@ -12,8 +12,9 @@ namespace BackendPipelines {
 
 class BannerPipeline final : public IPipeline {
 public:
-  explicit BannerPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shader_cache(shader_cache) {}
+  explicit BannerPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
+      : m_backend(backend)
+      , m_shader_cache(shader_cache) {}
   ~BannerPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -21,7 +22,7 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  auto get_banner_mesh(int subdivisions = 16) -> GL::Mesh *;
+  auto get_banner_mesh(int subdivisions = 16) -> GL::Mesh*;
 
   struct BannerUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
@@ -35,12 +36,12 @@ public:
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
   };
 
-  GL::Shader *m_banner_shader = nullptr;
+  GL::Shader* m_banner_shader = nullptr;
   BannerUniforms m_banner_uniforms;
 
 private:
-  GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shader_cache = nullptr;
+  GL::Backend* m_backend = nullptr;
+  GL::ShaderCache* m_shader_cache = nullptr;
 
   std::unique_ptr<GL::Mesh> m_banner_mesh16;
   std::unique_ptr<GL::Mesh> m_banner_mesh8;

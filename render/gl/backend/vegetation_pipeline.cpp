@@ -1,18 +1,21 @@
 #include "vegetation_pipeline.h"
-#include "../render_constants.h"
-#include "gl/shader_cache.h"
-#include <GL/gl.h>
+
 #include <QDebug>
 #include <QOpenGLContext>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
 #include <qglobal.h>
 #include <qopenglcontext.h>
 #include <qopenglext.h>
 #include <qstringliteral.h>
 #include <qvectornd.h>
+
+#include <GL/gl.h>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
+
+#include "../render_constants.h"
+#include "gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -20,10 +23,13 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 using namespace Render::GL::Geometry;
 
-VegetationPipeline::VegetationPipeline(ShaderCache *shader_cache)
-    : m_shader_cache(shader_cache) {}
+VegetationPipeline::VegetationPipeline(ShaderCache* shader_cache)
+    : m_shader_cache(shader_cache) {
+}
 
-VegetationPipeline::~VegetationPipeline() { shutdown(); }
+VegetationPipeline::~VegetationPipeline() {
+  shutdown();
+}
 
 auto VegetationPipeline::initialize() -> bool {
   initializeOpenGLFunctions();
@@ -38,13 +44,10 @@ auto VegetationPipeline::initialize() -> bool {
   m_olive_shader = m_shader_cache->get(QStringLiteral("olive_instanced"));
   m_firecamp_shader = m_shader_cache->get(QStringLiteral("firecamp"));
   m_tent_shader = m_shader_cache->get(QStringLiteral("tent_instanced"));
-  m_supply_cart_shader =
-      m_shader_cache->get(QStringLiteral("supply_cart_instanced"));
-  m_weapon_rack_shader =
-      m_shader_cache->get(QStringLiteral("weapon_rack_instanced"));
+  m_supply_cart_shader = m_shader_cache->get(QStringLiteral("supply_cart_instanced"));
+  m_weapon_rack_shader = m_shader_cache->get(QStringLiteral("weapon_rack_instanced"));
   m_ruins_shader = m_shader_cache->get(QStringLiteral("ruins_instanced"));
-  m_dead_tree_shader =
-      m_shader_cache->get(QStringLiteral("dead_tree_instanced"));
+  m_dead_tree_shader = m_shader_cache->get(QStringLiteral("dead_tree_instanced"));
 
   if (m_stone_shader == nullptr) {
     qWarning() << "VegetationPipeline: stone shader missing";
@@ -109,43 +112,34 @@ void VegetationPipeline::shutdown() {
 
 void VegetationPipeline::cache_uniforms() {
   if (m_stone_shader != nullptr) {
-    m_stone_uniforms.view_proj =
-        m_stone_shader->optional_uniform_handle("u_view_proj");
+    m_stone_uniforms.view_proj = m_stone_shader->optional_uniform_handle("u_view_proj");
     m_stone_uniforms.light_direction =
         m_stone_shader->uniform_handle("u_light_direction");
   }
 
   if (m_plant_shader != nullptr) {
-    m_plant_uniforms.view_proj =
-        m_plant_shader->optional_uniform_handle("u_view_proj");
+    m_plant_uniforms.view_proj = m_plant_shader->optional_uniform_handle("u_view_proj");
     m_plant_uniforms.time = m_plant_shader->uniform_handle("u_time");
-    m_plant_uniforms.wind_strength =
-        m_plant_shader->uniform_handle("u_wind_strength");
-    m_plant_uniforms.wind_speed =
-        m_plant_shader->uniform_handle("u_wind_speed");
+    m_plant_uniforms.wind_strength = m_plant_shader->uniform_handle("u_wind_strength");
+    m_plant_uniforms.wind_speed = m_plant_shader->uniform_handle("u_wind_speed");
     m_plant_uniforms.light_direction =
         m_plant_shader->uniform_handle("u_light_direction");
   }
 
   if (m_pine_shader != nullptr) {
-    m_pine_uniforms.view_proj =
-        m_pine_shader->optional_uniform_handle("u_view_proj");
+    m_pine_uniforms.view_proj = m_pine_shader->optional_uniform_handle("u_view_proj");
     m_pine_uniforms.time = m_pine_shader->uniform_handle("u_time");
-    m_pine_uniforms.wind_strength =
-        m_pine_shader->uniform_handle("u_wind_strength");
+    m_pine_uniforms.wind_strength = m_pine_shader->uniform_handle("u_wind_strength");
     m_pine_uniforms.wind_speed = m_pine_shader->uniform_handle("u_wind_speed");
     m_pine_uniforms.light_direction =
         m_pine_shader->uniform_handle("u_light_direction");
   }
 
   if (m_olive_shader != nullptr) {
-    m_olive_uniforms.view_proj =
-        m_olive_shader->optional_uniform_handle("u_view_proj");
+    m_olive_uniforms.view_proj = m_olive_shader->optional_uniform_handle("u_view_proj");
     m_olive_uniforms.time = m_olive_shader->uniform_handle("u_time");
-    m_olive_uniforms.wind_strength =
-        m_olive_shader->uniform_handle("u_wind_strength");
-    m_olive_uniforms.wind_speed =
-        m_olive_shader->uniform_handle("u_wind_speed");
+    m_olive_uniforms.wind_strength = m_olive_shader->uniform_handle("u_wind_strength");
+    m_olive_uniforms.wind_speed = m_olive_shader->uniform_handle("u_wind_speed");
     m_olive_uniforms.light_direction =
         m_olive_shader->uniform_handle("u_light_direction");
   }
@@ -168,7 +162,7 @@ void VegetationPipeline::cache_uniforms() {
         m_firecamp_shader->uniform_handle("u_camera_forward");
   }
 
-  auto cache_prop_uniforms = [&](PropUniforms &u, GL::Shader *shader) {
+  auto cache_prop_uniforms = [&](PropUniforms& u, GL::Shader* shader) {
     if (shader == nullptr) {
       return;
     }
@@ -228,26 +222,28 @@ void VegetationPipeline::initialize_stone_pipeline() {
 
   QVector3D ring_pts[k_rings][k_n];
   for (int ri = 0; ri < k_rings; ++ri) {
-    const Ring &r = rings[ri];
+    const Ring& r = rings[ri];
     for (int i = 0; i < k_n; ++i) {
-      float t = static_cast<float>(i) / k_n;
-      float angle = t * k_tau + r.phase;
+      float const t = static_cast<float>(i) / k_n;
+      float const angle = t * k_tau + r.phase;
 
-      float perturb =
+      float const perturb =
           1.0F + k_perturb_amount * std::sin(float(i) * k_perturb_freq_vertex +
                                              float(ri) * k_perturb_freq_ring);
-      float rx = r.radius * perturb * r.sx * std::cos(angle);
-      float rz = r.radius * perturb * r.sz * std::sin(angle);
+      float const rx = r.radius * perturb * r.sx * std::cos(angle);
+      float const rz = r.radius * perturb * r.sz * std::sin(angle);
 
-      float ry =
+      float const ry =
           r.y + k_y_jitter_amount * std::cos(float(i) * k_y_jitter_freq_vertex +
                                              float(ri) * k_y_jitter_freq_ring);
       ring_pts[ri][i] = QVector3D(rx, ry, rz);
     }
   }
 
-  auto emit_quad = [&](const QVector3D &a, const QVector3D &b,
-                       const QVector3D &c, const QVector3D &d) {
+  auto emit_quad = [&](const QVector3D& a,
+                       const QVector3D& b,
+                       const QVector3D& c,
+                       const QVector3D& d) {
     QVector3D n = QVector3D::crossProduct(b - a, d - a);
     if (n.lengthSquared() > 1.0e-8F) {
       n.normalize();
@@ -267,8 +263,7 @@ void VegetationPipeline::initialize_stone_pipeline() {
     idx.push_back(uint16_t(base + 3));
   };
 
-  auto emit_tri = [&](const QVector3D &a, const QVector3D &b,
-                      const QVector3D &c) {
+  auto emit_tri = [&](const QVector3D& a, const QVector3D& b, const QVector3D& c) {
     QVector3D n = QVector3D::crossProduct(b - a, c - a);
     if (n.lengthSquared() > 1.0e-8F) {
       n.normalize();
@@ -286,25 +281,25 @@ void VegetationPipeline::initialize_stone_pipeline() {
 
   for (int ri = 0; ri < k_rings - 1; ++ri) {
     for (int i = 0; i < k_n; ++i) {
-      int next = (i + 1) % k_n;
+      int const next = (i + 1) % k_n;
 
-      const QVector3D &a = ring_pts[ri][i];
-      const QVector3D &b = ring_pts[ri][next];
-      const QVector3D &c = ring_pts[ri + 1][next];
-      const QVector3D &d = ring_pts[ri + 1][i];
+      const QVector3D& a = ring_pts[ri][i];
+      const QVector3D& b = ring_pts[ri][next];
+      const QVector3D& c = ring_pts[ri + 1][next];
+      const QVector3D& d = ring_pts[ri + 1][i];
       emit_quad(a, b, c, d);
     }
   }
 
-  QVector3D apex(k_apex_offset_x, k_apex_height, k_apex_offset_z);
+  QVector3D const apex(k_apex_offset_x, k_apex_height, k_apex_offset_z);
   for (int i = 0; i < k_n; ++i) {
-    int next = (i + 1) % k_n;
+    int const next = (i + 1) % k_n;
     emit_tri(ring_pts[k_rings - 1][i], ring_pts[k_rings - 1][next], apex);
   }
 
-  QVector3D bot_center(0.0F, -0.01F, 0.0F);
+  QVector3D const bot_center(0.0F, -0.01F, 0.0F);
   for (int i = 0; i < k_n; ++i) {
-    int next = (i + 1) % k_n;
+    int const next = (i + 1) % k_n;
 
     emit_tri(ring_pts[0][next], ring_pts[0][i], bot_center);
   }
@@ -316,24 +311,32 @@ void VegetationPipeline::initialize_stone_pipeline() {
   glBindBuffer(GL_ARRAY_BUFFER, m_stone_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(verts.size() * sizeof(StoneVertex)),
-               verts.data(), GL_STATIC_DRAW);
+               verts.data(),
+               GL_STATIC_DRAW);
   m_stone_vertex_count = static_cast<GLsizei>(verts.size());
 
   glGenBuffers(1, &m_stone_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_stone_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
-               idx.data(), GL_STATIC_DRAW);
+               idx.data(),
+               GL_STATIC_DRAW);
   m_stone_index_count = static_cast<GLsizei>(idx.size());
 
   glEnableVertexAttribArray(position);
-  glVertexAttribPointer(
-      position, vec3, GL_FLOAT, GL_FALSE, sizeof(StoneVertex),
-      reinterpret_cast<void *>(offsetof(StoneVertex, position)));
+  glVertexAttribPointer(position,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(StoneVertex),
+                        reinterpret_cast<void*>(offsetof(StoneVertex, position)));
   glEnableVertexAttribArray(normal);
-  glVertexAttribPointer(
-      normal, vec3, GL_FLOAT, GL_FALSE, sizeof(StoneVertex),
-      reinterpret_cast<void *>(offsetof(StoneVertex, normal)));
+  glVertexAttribPointer(normal,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(StoneVertex),
+                        reinterpret_cast<void*>(offsetof(StoneVertex, normal)));
 
   glEnableVertexAttribArray(tex_coord);
   glVertexAttribDivisor(tex_coord, 1);
@@ -425,29 +428,37 @@ void VegetationPipeline::initialize_plant_pipeline() {
 
   glGenBuffers(1, &m_plant_vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_plant_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(plant_vertices), plant_vertices,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(plant_vertices), plant_vertices, GL_STATIC_DRAW);
   m_plant_vertex_count = plant_cross_quad_vertex_count;
 
   glEnableVertexAttribArray(position);
-  glVertexAttribPointer(
-      position, vec3, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
-      reinterpret_cast<void *>(offsetof(PlantVertex, position)));
+  glVertexAttribPointer(position,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(PlantVertex),
+                        reinterpret_cast<void*>(offsetof(PlantVertex, position)));
 
   glEnableVertexAttribArray(normal);
-  glVertexAttribPointer(
-      normal, vec2, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
-      reinterpret_cast<void *>(offsetof(PlantVertex, tex_coord)));
+  glVertexAttribPointer(normal,
+                        vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(PlantVertex),
+                        reinterpret_cast<void*>(offsetof(PlantVertex, tex_coord)));
 
   glEnableVertexAttribArray(tex_coord);
-  glVertexAttribPointer(
-      tex_coord, vec3, GL_FLOAT, GL_FALSE, sizeof(PlantVertex),
-      reinterpret_cast<void *>(offsetof(PlantVertex, normal)));
+  glVertexAttribPointer(tex_coord,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(PlantVertex),
+                        reinterpret_cast<void*>(offsetof(PlantVertex, normal)));
 
   glGenBuffers(1, &m_plant_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_plant_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(plant_indices), plant_indices,
-               GL_STATIC_DRAW);
+  glBufferData(
+      GL_ELEMENT_ARRAY_BUFFER, sizeof(plant_indices), plant_indices, GL_STATIC_DRAW);
   m_plant_index_count = plant_cross_quad_index_count;
 
   glEnableVertexAttribArray(instance_position);
@@ -509,9 +520,11 @@ void VegetationPipeline::initialize_pine_pipeline() {
   std::vector<unsigned short> indices;
   indices.reserve(22 * k_segments * 6);
 
-  auto add_ring = [&](float radius, float y, float normal_up, float v_coord,
-                      const QVector2D &center_offset =
-                          QVector2D(0.0F, 0.0F)) -> int {
+  auto add_ring = [&](float radius,
+                      float y,
+                      float normal_up,
+                      float v_coord,
+                      const QVector2D& center_offset = QVector2D(0.0F, 0.0F)) -> int {
     const int start = static_cast<int>(vertices.size());
     for (int i = 0; i < k_segments; ++i) {
       const float t = static_cast<float>(i) / static_cast<float>(k_segments);
@@ -520,8 +533,8 @@ void VegetationPipeline::initialize_pine_pipeline() {
       const float nz = std::sin(angle);
       QVector3D normal(nx, normal_up, nz);
       normal.normalize();
-      QVector3D const position(radius * nx + center_offset.x(), y,
-                               radius * nz + center_offset.y());
+      QVector3D const position(
+          radius * nx + center_offset.x(), y, radius * nz + center_offset.y());
       QVector2D const tex_coord(t, v_coord);
       vertices.push_back({position, tex_coord, normal});
     }
@@ -548,8 +561,7 @@ void VegetationPipeline::initialize_pine_pipeline() {
   const int trunk_bottom = add_ring(0.11F, 0.00F, -0.04F, 0.00F);
   const int trunk_kink =
       add_ring(0.10F, 0.18F, 0.00F, 0.08F, QVector2D(0.010F, 0.006F));
-  const int trunk_mid =
-      add_ring(0.09F, 0.36F, 0.03F, 0.16F, QVector2D(0.018F, 0.010F));
+  const int trunk_mid = add_ring(0.09F, 0.36F, 0.03F, 0.16F, QVector2D(0.018F, 0.010F));
   const int trunk_top =
       add_ring(0.075F, 0.56F, 0.08F, 0.26F, QVector2D(0.020F, 0.014F));
 
@@ -597,7 +609,8 @@ void VegetationPipeline::initialize_pine_pipeline() {
   connect_rings(c3_top, tip_ring);
 
   const auto trunk_cap_index = static_cast<unsigned short>(vertices.size());
-  vertices.push_back({QVector3D(0.0F, 0.0F, 0.0F), QVector2D(0.5F, 0.0F),
+  vertices.push_back({QVector3D(0.0F, 0.0F, 0.0F),
+                      QVector2D(0.5F, 0.0F),
                       QVector3D(0.0F, -1.0F, 0.0F)});
   for (int i = 0; i < k_segments; ++i) {
     const int next = (i + 1) % k_segments;
@@ -607,7 +620,8 @@ void VegetationPipeline::initialize_pine_pipeline() {
   }
 
   const auto apex_index = static_cast<unsigned short>(vertices.size());
-  vertices.push_back({QVector3D(0.0F, 1.36F, 0.0F), QVector2D(0.5F, 1.18F),
+  vertices.push_back({QVector3D(0.0F, 1.36F, 0.0F),
+                      QVector2D(0.5F, 1.18F),
                       QVector3D(0.0F, 1.0F, 0.0F)});
   for (int i = 0; i < k_segments; ++i) {
     const int next = (i + 1) % k_segments;
@@ -623,28 +637,40 @@ void VegetationPipeline::initialize_pine_pipeline() {
   glBindBuffer(GL_ARRAY_BUFFER, m_pine_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(PineVertex)),
-               vertices.data(), GL_STATIC_DRAW);
+               vertices.data(),
+               GL_STATIC_DRAW);
   m_pine_vertex_count = static_cast<GLsizei>(vertices.size());
 
   glEnableVertexAttribArray(position);
-  glVertexAttribPointer(
-      position, vec3, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
-      reinterpret_cast<void *>(offsetof(PineVertex, position)));
+  glVertexAttribPointer(position,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(PineVertex),
+                        reinterpret_cast<void*>(offsetof(PineVertex, position)));
 
   glEnableVertexAttribArray(normal);
-  glVertexAttribPointer(
-      normal, vec2, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
-      reinterpret_cast<void *>(offsetof(PineVertex, tex_coord)));
+  glVertexAttribPointer(normal,
+                        vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(PineVertex),
+                        reinterpret_cast<void*>(offsetof(PineVertex, tex_coord)));
 
   glEnableVertexAttribArray(tex_coord);
-  glVertexAttribPointer(tex_coord, vec3, GL_FLOAT, GL_FALSE, sizeof(PineVertex),
-                        reinterpret_cast<void *>(offsetof(PineVertex, normal)));
+  glVertexAttribPointer(tex_coord,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(PineVertex),
+                        reinterpret_cast<void*>(offsetof(PineVertex, normal)));
 
   glGenBuffers(1, &m_pine_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_pine_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
-               indices.data(), GL_STATIC_DRAW);
+               indices.data(),
+               GL_STATIC_DRAW);
   m_pine_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(instance_position);
@@ -705,8 +731,11 @@ void VegetationPipeline::initialize_olive_pipeline() {
   std::vector<unsigned short> indices;
   indices.reserve(k_segments * 6 * 56);
 
-  auto add_ring = [&](float radius, float y, float normal_up, float v_coord,
-                      const QVector2D &offset = QVector2D(0.0F, 0.0F)) -> int {
+  auto add_ring = [&](float radius,
+                      float y,
+                      float normal_up,
+                      float v_coord,
+                      const QVector2D& offset = QVector2D(0.0F, 0.0F)) -> int {
     const int start = static_cast<int>(vertices.size());
     for (int i = 0; i < k_segments; ++i) {
       const float t = static_cast<float>(i) / static_cast<float>(k_segments);
@@ -715,8 +744,7 @@ void VegetationPipeline::initialize_olive_pipeline() {
       const float nz = std::sin(angle);
       QVector3D normal(nx, normal_up, nz);
       normal.normalize();
-      QVector3D const position(radius * nx + offset.x(), y,
-                               radius * nz + offset.y());
+      QVector3D const position(radius * nx + offset.x(), y, radius * nz + offset.y());
       vertices.push_back({position, QVector2D(t, v_coord), normal});
     }
     return start;
@@ -734,10 +762,11 @@ void VegetationPipeline::initialize_olive_pipeline() {
     }
   };
 
-  auto add_cap = [&](int ring, float cap_y, const QVector2D &offset, float v) {
+  auto add_cap = [&](int ring, float cap_y, const QVector2D& offset, float v) {
     const int top_idx = static_cast<int>(vertices.size());
     vertices.push_back({QVector3D(offset.x(), cap_y, offset.y()),
-                        QVector2D(0.5F, v), QVector3D(0.0F, 1.0F, 0.0F)});
+                        QVector2D(0.5F, v),
+                        QVector3D(0.0F, 1.0F, 0.0F)});
     for (int i = 0; i < k_segments; ++i) {
       const int next = (i + 1) % k_segments;
       indices.push_back(static_cast<unsigned short>(ring + i));
@@ -746,45 +775,50 @@ void VegetationPipeline::initialize_olive_pipeline() {
     }
   };
 
-  int t0 = add_ring(0.14F, 0.00F, -0.2F, 0.00F);
-  int t1 = add_ring(0.12F, 0.08F, 0.0F, 0.06F);
-  int t2 = add_ring(0.09F, 0.15F, 0.1F, 0.12F);
+  int const t0 = add_ring(0.14F, 0.00F, -0.2F, 0.00F);
+  int const t1 = add_ring(0.12F, 0.08F, 0.0F, 0.06F);
+  int const t2 = add_ring(0.09F, 0.15F, 0.1F, 0.12F);
   connect_rings(t0, t1);
   connect_rings(t1, t2);
 
-  auto add_branch = [&](float dir_x, float dir_z, float base_y, float length,
-                        float branch_r, float leaf_r, float v_start) {
-    float len = std::sqrt(dir_x * dir_x + dir_z * dir_z);
+  auto add_branch = [&](float dir_x,
+                        float dir_z,
+                        float base_y,
+                        float length,
+                        float branch_r,
+                        float leaf_r,
+                        float v_start) {
+    float const len = std::sqrt(dir_x * dir_x + dir_z * dir_z);
     dir_x /= len;
     dir_z /= len;
 
-    float rise = 0.5F;
-    float dx = dir_x * std::cos(0.5F);
-    float dz = dir_z * std::cos(0.5F);
-    float dy = std::sin(0.4F);
+    float const rise = 0.5F;
+    float const dx = dir_x * std::cos(0.5F);
+    float const dz = dir_z * std::cos(0.5F);
+    float const dy = std::sin(0.4F);
 
-    int b0 = add_ring(branch_r, base_y, 0.0F, v_start);
+    int const b0 = add_ring(branch_r, base_y, 0.0F, v_start);
 
-    float mid_dist = length * 0.5F;
-    QVector2D mid_offset(dx * mid_dist, dz * mid_dist);
-    int b1 = add_ring(branch_r * 0.6F, base_y + dy * mid_dist, 0.3F,
-                      v_start + 0.1F, mid_offset);
+    float const mid_dist = length * 0.5F;
+    QVector2D const mid_offset(dx * mid_dist, dz * mid_dist);
+    int const b1 = add_ring(
+        branch_r * 0.6F, base_y + dy * mid_dist, 0.3F, v_start + 0.1F, mid_offset);
 
-    float tip_dist = length;
-    QVector2D tip_offset(dx * tip_dist, dz * tip_dist);
-    float tip_y = base_y + dy * tip_dist;
-    int b2 = add_ring(branch_r * 0.3F, tip_y, 0.5F, v_start + 0.2F, tip_offset);
+    float const tip_dist = length;
+    QVector2D const tip_offset(dx * tip_dist, dz * tip_dist);
+    float const tip_y = base_y + dy * tip_dist;
+    int const b2 = add_ring(branch_r * 0.3F, tip_y, 0.5F, v_start + 0.2F, tip_offset);
 
     connect_rings(b0, b1);
     connect_rings(b1, b2);
 
-    float ly = tip_y - leaf_r * 0.28F;
-    int l0 = add_ring(leaf_r * 0.42F, ly, -0.5F, 0.50F, tip_offset);
-    int l1 =
+    float const ly = tip_y - leaf_r * 0.28F;
+    int const l0 = add_ring(leaf_r * 0.42F, ly, -0.5F, 0.50F, tip_offset);
+    int const l1 =
         add_ring(leaf_r * 0.95F, ly + leaf_r * 0.26F, -0.1F, 0.62F, tip_offset);
-    int l2 =
+    int const l2 =
         add_ring(leaf_r * 1.05F, ly + leaf_r * 0.54F, 0.2F, 0.76F, tip_offset);
-    int l3 =
+    int const l3 =
         add_ring(leaf_r * 0.72F, ly + leaf_r * 0.82F, 0.6F, 0.91F, tip_offset);
 
     connect_rings(b2, l0);
@@ -811,28 +845,39 @@ void VegetationPipeline::initialize_olive_pipeline() {
   glBindBuffer(GL_ARRAY_BUFFER, m_olive_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(OliveVertex)),
-               vertices.data(), GL_STATIC_DRAW);
+               vertices.data(),
+               GL_STATIC_DRAW);
 
   glGenBuffers(1, &m_olive_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_olive_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
-               indices.data(), GL_STATIC_DRAW);
+               indices.data(),
+               GL_STATIC_DRAW);
 
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(
-      0, 3, GL_FLOAT, GL_FALSE, sizeof(OliveVertex),
-      reinterpret_cast<void *>(offsetof(OliveVertex, position)));
+  glVertexAttribPointer(0,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(OliveVertex),
+                        reinterpret_cast<void*>(offsetof(OliveVertex, position)));
 
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(
-      1, 2, GL_FLOAT, GL_FALSE, sizeof(OliveVertex),
-      reinterpret_cast<void *>(offsetof(OliveVertex, tex_coord)));
+  glVertexAttribPointer(1,
+                        2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(OliveVertex),
+                        reinterpret_cast<void*>(offsetof(OliveVertex, tex_coord)));
 
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(
-      2, 3, GL_FLOAT, GL_FALSE, sizeof(OliveVertex),
-      reinterpret_cast<void *>(offsetof(OliveVertex, normal)));
+  glVertexAttribPointer(2,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(OliveVertex),
+                        reinterpret_cast<void*>(offsetof(OliveVertex, normal)));
 
   glEnableVertexAttribArray(instance_position);
   glVertexAttribDivisor(instance_position, 1);
@@ -892,14 +937,10 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
 
   auto append_plane = [&](float plane_index) {
     auto const base = static_cast<unsigned short>(vertices.size());
-    vertices.push_back(
-        {QVector3D(-1.0F, 0.0F, plane_index), QVector2D(0.0F, 0.0F)});
-    vertices.push_back(
-        {QVector3D(1.0F, 0.0F, plane_index), QVector2D(1.0F, 0.0F)});
-    vertices.push_back(
-        {QVector3D(1.0F, 2.0F, plane_index), QVector2D(1.0F, 1.0F)});
-    vertices.push_back(
-        {QVector3D(-1.0F, 2.0F, plane_index), QVector2D(0.0F, 1.0F)});
+    vertices.push_back({QVector3D(-1.0F, 0.0F, plane_index), QVector2D(0.0F, 0.0F)});
+    vertices.push_back({QVector3D(1.0F, 0.0F, plane_index), QVector2D(1.0F, 0.0F)});
+    vertices.push_back({QVector3D(1.0F, 2.0F, plane_index), QVector2D(1.0F, 1.0F)});
+    vertices.push_back({QVector3D(-1.0F, 2.0F, plane_index), QVector2D(0.0F, 1.0F)});
 
     indices.push_back(base + 0);
     indices.push_back(base + 1);
@@ -918,26 +959,34 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
 
   glGenBuffers(1, &m_firecamp_vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_firecamp_vertex_buffer);
-  glBufferData(
-      GL_ARRAY_BUFFER,
-      static_cast<GLsizeiptr>(vertices.size() * sizeof(FireCampVertex)),
-      vertices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(vertices.size() * sizeof(FireCampVertex)),
+               vertices.data(),
+               GL_STATIC_DRAW);
   m_firecamp_vertex_count = static_cast<GLsizei>(vertices.size());
 
   glEnableVertexAttribArray(position);
-  glVertexAttribPointer(position, vec3, GL_FLOAT, GL_FALSE,
-                        sizeof(FireCampVertex), reinterpret_cast<void *>(0));
+  glVertexAttribPointer(position,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(FireCampVertex),
+                        reinterpret_cast<void*>(0));
 
   glEnableVertexAttribArray(normal);
-  glVertexAttribPointer(
-      normal, vec2, GL_FLOAT, GL_FALSE, sizeof(FireCampVertex),
-      reinterpret_cast<void *>(offsetof(FireCampVertex, tex_coord)));
+  glVertexAttribPointer(normal,
+                        vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(FireCampVertex),
+                        reinterpret_cast<void*>(offsetof(FireCampVertex, tex_coord)));
 
   glGenBuffers(1, &m_firecamp_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_firecamp_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
-               indices.data(), GL_STATIC_DRAW);
+               indices.data(),
+               GL_STATIC_DRAW);
   m_firecamp_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(instance_position);
@@ -980,9 +1029,13 @@ void VegetationPipeline::shutdown_fire_camp_pipeline() {
 }
 
 void VegetationPipeline::upload_prop_mesh_impl(
-    const std::vector<std::pair<QVector3D, QVector3D>> &verts,
-    const std::vector<uint16_t> &idx, GLuint &vao, GLuint &vbo, GLuint &ibo,
-    GLsizei &vert_count, GLsizei &idx_count) {
+    const std::vector<std::pair<QVector3D, QVector3D>>& verts,
+    const std::vector<uint16_t>& idx,
+    GLuint& vao,
+    GLuint& vbo,
+    GLuint& ibo,
+    GLsizei& vert_count,
+    GLsizei& idx_count) {
 
   using namespace Render::GL::VertexAttrib;
   using namespace Render::GL::ComponentCount;
@@ -993,7 +1046,7 @@ void VegetationPipeline::upload_prop_mesh_impl(
   };
   std::vector<V> flat;
   flat.reserve(verts.size());
-  for (const auto &[p, n] : verts) {
+  for (const auto& [p, n] : verts) {
     flat.push_back({p, n});
   }
 
@@ -1003,22 +1056,32 @@ void VegetationPipeline::upload_prop_mesh_impl(
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(flat.size() * sizeof(V)), flat.data(),
+               static_cast<GLsizeiptr>(flat.size() * sizeof(V)),
+               flat.data(),
                GL_STATIC_DRAW);
   vert_count = static_cast<GLsizei>(flat.size());
 
   glEnableVertexAttribArray(position);
-  glVertexAttribPointer(position, vec3, GL_FLOAT, GL_FALSE, sizeof(V),
-                        reinterpret_cast<void *>(offsetof(V, pos)));
+  glVertexAttribPointer(position,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(V),
+                        reinterpret_cast<void*>(offsetof(V, pos)));
   glEnableVertexAttribArray(normal);
-  glVertexAttribPointer(normal, vec3, GL_FLOAT, GL_FALSE, sizeof(V),
-                        reinterpret_cast<void *>(offsetof(V, nrm)));
+  glVertexAttribPointer(normal,
+                        vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(V),
+                        reinterpret_cast<void*>(offsetof(V, nrm)));
 
   glGenBuffers(1, &ibo);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
-               idx.data(), GL_STATIC_DRAW);
+               idx.data(),
+               GL_STATIC_DRAW);
   idx_count = static_cast<GLsizei>(idx.size());
 
   glEnableVertexAttribArray(tex_coord);
@@ -1031,9 +1094,8 @@ void VegetationPipeline::upload_prop_mesh_impl(
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void VegetationPipeline::delete_prop_pipeline_impl(GLuint &vao, GLuint &vbo,
-                                                   GLuint &ibo, GLsizei &vc,
-                                                   GLsizei &ic) {
+void VegetationPipeline::delete_prop_pipeline_impl(
+    GLuint& vao, GLuint& vbo, GLuint& ibo, GLsizei& vc, GLsizei& ic) {
   if (ibo != 0U) {
     glDeleteBuffers(1, &ibo);
     ibo = 0;
@@ -1050,85 +1112,120 @@ void VegetationPipeline::delete_prop_pipeline_impl(GLuint &vao, GLuint &vbo,
   ic = 0;
 }
 
-static void append_box(std::vector<std::pair<QVector3D, QVector3D>> &verts,
-                       std::vector<uint16_t> &idx, const QVector3D &lo,
-                       const QVector3D &hi) {
+static void append_box(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                       std::vector<uint16_t>& idx,
+                       const QVector3D& lo,
+                       const QVector3D& hi) {
 
   using F = std::pair<QVector3D, QVector3D>;
-  const float x0 = lo.x(), y0 = lo.y(), z0 = lo.z();
-  const float x1 = hi.x(), y1 = hi.y(), z1 = hi.z();
+  const float x0 = lo.x();
+  const float y0 = lo.y();
+  const float z0 = lo.z();
+  const float x1 = hi.x();
+  const float y1 = hi.y();
+  const float z1 = hi.z();
 
   {
     auto b = static_cast<uint16_t>(verts.size());
-    QVector3D n(0, 0, 1);
-    verts.insert(verts.end(), {F{{x0, y0, z1}, n}, F{{x1, y0, z1}, n},
-                               F{{x1, y1, z1}, n}, F{{x0, y1, z1}, n}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    QVector3D const n(0, 0, 1);
+    verts.insert(verts.end(),
+                 {F{{x0, y0, z1}, n},
+                  F{{x1, y0, z1}, n},
+                  F{{x1, y1, z1}, n},
+                  F{{x0, y1, z1}, n}});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
   }
 
   {
     auto b = static_cast<uint16_t>(verts.size());
-    QVector3D n(0, 0, -1);
-    verts.insert(verts.end(), {F{{x1, y0, z0}, n}, F{{x0, y0, z0}, n},
-                               F{{x0, y1, z0}, n}, F{{x1, y1, z0}, n}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    QVector3D const n(0, 0, -1);
+    verts.insert(verts.end(),
+                 {F{{x1, y0, z0}, n},
+                  F{{x0, y0, z0}, n},
+                  F{{x0, y1, z0}, n},
+                  F{{x1, y1, z0}, n}});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
   }
 
   {
     auto b = static_cast<uint16_t>(verts.size());
-    QVector3D n(1, 0, 0);
-    verts.insert(verts.end(), {F{{x1, y0, z0}, n}, F{{x1, y0, z1}, n},
-                               F{{x1, y1, z1}, n}, F{{x1, y1, z0}, n}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    QVector3D const n(1, 0, 0);
+    verts.insert(verts.end(),
+                 {F{{x1, y0, z0}, n},
+                  F{{x1, y0, z1}, n},
+                  F{{x1, y1, z1}, n},
+                  F{{x1, y1, z0}, n}});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
   }
 
   {
     auto b = static_cast<uint16_t>(verts.size());
-    QVector3D n(-1, 0, 0);
-    verts.insert(verts.end(), {F{{x0, y0, z1}, n}, F{{x0, y0, z0}, n},
-                               F{{x0, y1, z0}, n}, F{{x0, y1, z1}, n}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    QVector3D const n(-1, 0, 0);
+    verts.insert(verts.end(),
+                 {F{{x0, y0, z1}, n},
+                  F{{x0, y0, z0}, n},
+                  F{{x0, y1, z0}, n},
+                  F{{x0, y1, z1}, n}});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
   }
 
   {
     auto b = static_cast<uint16_t>(verts.size());
-    QVector3D n(0, 1, 0);
-    verts.insert(verts.end(), {F{{x0, y1, z0}, n}, F{{x0, y1, z1}, n},
-                               F{{x1, y1, z1}, n}, F{{x1, y1, z0}, n}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    QVector3D const n(0, 1, 0);
+    verts.insert(verts.end(),
+                 {F{{x0, y1, z0}, n},
+                  F{{x0, y1, z1}, n},
+                  F{{x1, y1, z1}, n},
+                  F{{x1, y1, z0}, n}});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
   }
 
   {
     auto b = static_cast<uint16_t>(verts.size());
-    QVector3D n(0, -1, 0);
-    verts.insert(verts.end(), {F{{x0, y0, z1}, n}, F{{x0, y0, z0}, n},
-                               F{{x1, y0, z0}, n}, F{{x1, y0, z1}, n}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    QVector3D const n(0, -1, 0);
+    verts.insert(verts.end(),
+                 {F{{x0, y0, z1}, n},
+                  F{{x0, y0, z0}, n},
+                  F{{x1, y0, z0}, n},
+                  F{{x1, y0, z1}, n}});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
   }
 }
 
-static void append_quad(std::vector<std::pair<QVector3D, QVector3D>> &verts,
-                        std::vector<uint16_t> &idx, const QVector3D &p0,
-                        const QVector3D &p1, const QVector3D &p2,
-                        const QVector3D &p3, const QVector3D &n) {
+static void append_quad(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                        std::vector<uint16_t>& idx,
+                        const QVector3D& p0,
+                        const QVector3D& p1,
+                        const QVector3D& p2,
+                        const QVector3D& p3,
+                        const QVector3D& n) {
   using F = std::pair<QVector3D, QVector3D>;
   auto b = static_cast<uint16_t>(verts.size());
   verts.insert(verts.end(), {F{p0, n}, F{p1, n}, F{p2, n}, F{p3, n}});
-  idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                         uint16_t(b + 2), uint16_t(b + 3)});
+  idx.insert(
+      idx.end(),
+      {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
 }
 
-static void
-append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>> &verts,
-                    std::vector<uint16_t> &idx, const QVector3D &a,
-                    const QVector3D &b, float half_width, float half_depth) {
-  QVector3D axis = b - a;
+static void append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                                std::vector<uint16_t>& idx,
+                                const QVector3D& a,
+                                const QVector3D& b,
+                                float half_width,
+                                float half_depth) {
+  QVector3D const axis = b - a;
   QVector3D side(-axis.y(), axis.x(), 0.0F);
   if (side.lengthSquared() < 1.0e-8F) {
     side = {1.0F, 0.0F, 0.0F};
@@ -1147,8 +1244,10 @@ append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>> &verts,
   const QVector3D b2 = b + side + depth;
   const QVector3D b3 = b - side + depth;
 
-  auto face = [&](const QVector3D &p0, const QVector3D &p1, const QVector3D &p2,
-                  const QVector3D &p3) {
+  auto face = [&](const QVector3D& p0,
+                  const QVector3D& p1,
+                  const QVector3D& p2,
+                  const QVector3D& p3) {
     QVector3D n = QVector3D::crossProduct(p1 - p0, p3 - p0);
     if (n.lengthSquared() > 1.0e-8F) {
       n.normalize();
@@ -1166,29 +1265,36 @@ append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>> &verts,
   face(b0, b3, b2, b1);
 }
 
-static void
-append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>> &verts,
-                  std::vector<uint16_t> &idx, float cx, float cy, float cz,
-                  float r, float hthk, int segs) {
+static void append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                              std::vector<uint16_t>& idx,
+                              float cx,
+                              float cy,
+                              float cz,
+                              float r,
+                              float hthk,
+                              int segs) {
   using F = std::pair<QVector3D, QVector3D>;
   constexpr float k_tau = 6.28318530F;
-  const float xa = cx - hthk, xb = cx + hthk;
+  const float xa = cx - hthk;
+  const float xb = cx + hthk;
   for (int i = 0; i < segs; ++i) {
-    float a0 = k_tau * i / segs;
-    float a1 = k_tau * (i + 1) / segs;
-    float y0 = cy + r * std::sin(a0), z0_ = cz + r * std::cos(a0);
-    float y1 = cy + r * std::sin(a1), z1_ = cz + r * std::cos(a1);
-    float amid = (a0 + a1) * 0.5F;
-    QVector3D n(0.0F, std::sin(amid), std::cos(amid));
-    append_quad(verts, idx, {xa, y0, z0_}, {xa, y1, z1_}, {xb, y1, z1_},
-                {xb, y0, z0_}, n);
+    float const a0 = k_tau * i / segs;
+    float const a1 = k_tau * (i + 1) / segs;
+    float const y0 = cy + r * std::sin(a0);
+    float const z0_ = cz + r * std::cos(a0);
+    float const y1 = cy + r * std::sin(a1);
+    float const z1_ = cz + r * std::cos(a1);
+    float const amid = (a0 + a1) * 0.5F;
+    QVector3D const n(0.0F, std::sin(amid), std::cos(amid));
+    append_quad(
+        verts, idx, {xa, y0, z0_}, {xa, y1, z1_}, {xb, y1, z1_}, {xb, y0, z0_}, n);
   }
 
-  QVector3D ncf(1, 0, 0);
-  QVector3D cf{xb, cy, cz};
+  QVector3D const ncf(1, 0, 0);
+  QVector3D const cf{xb, cy, cz};
   for (int i = 0; i < segs; ++i) {
-    float a0 = k_tau * i / segs;
-    float a1 = k_tau * (i + 1) / segs;
+    float const a0 = k_tau * i / segs;
+    float const a1 = k_tau * (i + 1) / segs;
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(),
                  {F{cf, ncf},
@@ -1197,11 +1303,11 @@ append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>> &verts,
     idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2)});
   }
 
-  QVector3D ncb(-1, 0, 0);
-  QVector3D cb{xa, cy, cz};
+  QVector3D const ncb(-1, 0, 0);
+  QVector3D const cb{xa, cy, cz};
   for (int i = 0; i < segs; ++i) {
-    float a0 = k_tau * i / segs;
-    float a1 = k_tau * (i + 1) / segs;
+    float const a0 = k_tau * i / segs;
+    float const a1 = k_tau * (i + 1) / segs;
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(),
                  {F{cb, ncb},
@@ -1211,29 +1317,35 @@ append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>> &verts,
   }
 }
 
-static void
-append_vert_prism(std::vector<std::pair<QVector3D, QVector3D>> &verts,
-                  std::vector<uint16_t> &idx, float cx, float y0, float cz,
-                  float r, float height, int segs) {
+static void append_vert_prism(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                              std::vector<uint16_t>& idx,
+                              float cx,
+                              float y0,
+                              float cz,
+                              float r,
+                              float height,
+                              int segs) {
   using F = std::pair<QVector3D, QVector3D>;
   constexpr float k_tau = 6.28318530F;
   const float y1 = y0 + height;
   for (int i = 0; i < segs; ++i) {
-    float a0 = k_tau * i / segs;
-    float a1 = k_tau * (i + 1) / segs;
-    float x0 = cx + r * std::cos(a0), z0_ = cz + r * std::sin(a0);
-    float x1 = cx + r * std::cos(a1), z1_ = cz + r * std::sin(a1);
-    float amid = (a0 + a1) * 0.5F;
-    QVector3D n(std::cos(amid), 0.0F, std::sin(amid));
-    append_quad(verts, idx, {x0, y0, z0_}, {x1, y0, z1_}, {x1, y1, z1_},
-                {x0, y1, z0_}, n);
+    float const a0 = k_tau * i / segs;
+    float const a1 = k_tau * (i + 1) / segs;
+    float const x0 = cx + r * std::cos(a0);
+    float const z0_ = cz + r * std::sin(a0);
+    float const x1 = cx + r * std::cos(a1);
+    float const z1_ = cz + r * std::sin(a1);
+    float const amid = (a0 + a1) * 0.5F;
+    QVector3D const n(std::cos(amid), 0.0F, std::sin(amid));
+    append_quad(
+        verts, idx, {x0, y0, z0_}, {x1, y0, z1_}, {x1, y1, z1_}, {x0, y1, z0_}, n);
   }
 
-  QVector3D tn(0, 1, 0);
-  QVector3D tc{cx, y1, cz};
+  QVector3D const tn(0, 1, 0);
+  QVector3D const tc{cx, y1, cz};
   for (int i = 0; i < segs; ++i) {
-    float a0 = k_tau * i / segs;
-    float a1 = k_tau * (i + 1) / segs;
+    float const a0 = k_tau * i / segs;
+    float const a1 = k_tau * (i + 1) / segs;
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(),
                  {F{tc, tn},
@@ -1270,15 +1382,17 @@ void VegetationPipeline::initialize_tent_pipeline() {
   {
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(), {P{A, nL}, P{D, nL}, P{F, nL}, P{C, nL}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
   }
 
   {
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(), {P{B, nR}, P{C, nR}, P{F, nR}, P{E, nR}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
   }
 
   {
@@ -1297,15 +1411,11 @@ void VegetationPipeline::initialize_tent_pipeline() {
 
   append_box(verts, idx, {-W, -0.02F, -Dp}, {W, 0.00F, Dp});
 
-  append_box(verts, idx, {-0.030F, 0.00F, -0.035F},
-             {0.030F, H * 0.90F, 0.035F});
+  append_box(verts, idx, {-0.030F, 0.00F, -0.035F}, {0.030F, H * 0.90F, 0.035F});
 
-  append_box(verts, idx, {-0.24F, 0.00F, -Dp - 0.02F},
-             {-0.16F, 0.44F, -Dp + 0.02F});
-  append_box(verts, idx, {0.16F, 0.00F, -Dp - 0.02F},
-             {0.24F, 0.44F, -Dp + 0.02F});
-  append_box(verts, idx, {-0.24F, 0.41F, -Dp - 0.02F},
-             {0.24F, 0.47F, -Dp + 0.02F});
+  append_box(verts, idx, {-0.24F, 0.00F, -Dp - 0.02F}, {-0.16F, 0.44F, -Dp + 0.02F});
+  append_box(verts, idx, {0.16F, 0.00F, -Dp - 0.02F}, {0.24F, 0.44F, -Dp + 0.02F});
+  append_box(verts, idx, {-0.24F, 0.41F, -Dp - 0.02F}, {0.24F, 0.47F, -Dp + 0.02F});
 
   {
     constexpr float aw_ext = 0.30F;
@@ -1320,19 +1430,28 @@ void VegetationPipeline::initialize_tent_pipeline() {
 
     auto b = static_cast<uint16_t>(verts.size());
     verts.insert(verts.end(), {P{al, nAw}, P{ar, nAw}, P{br, nAw}, P{bl, nAw}});
-    idx.insert(idx.end(), {b, uint16_t(b + 1), uint16_t(b + 2), b,
-                           uint16_t(b + 2), uint16_t(b + 3)});
+    idx.insert(
+        idx.end(),
+        {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
 
     const QVector3D nAwU(0.0F, -inv_aw, inv_aw);
     auto bu = static_cast<uint16_t>(verts.size());
-    verts.insert(verts.end(),
-                 {P{bl, nAwU}, P{br, nAwU}, P{ar, nAwU}, P{al, nAwU}});
-    idx.insert(idx.end(), {bu, uint16_t(bu + 1), uint16_t(bu + 2), bu,
-                           uint16_t(bu + 2), uint16_t(bu + 3)});
+    verts.insert(verts.end(), {P{bl, nAwU}, P{br, nAwU}, P{ar, nAwU}, P{al, nAwU}});
+    idx.insert(idx.end(),
+               {bu,
+                uint16_t(bu + 1),
+                uint16_t(bu + 2),
+                bu,
+                uint16_t(bu + 2),
+                uint16_t(bu + 3)});
 
-    append_box(verts, idx, {-W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
+    append_box(verts,
+               idx,
+               {-W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
                {-W * 0.72F + 0.025F, aw_y, -Dp - aw_ext + 0.025F});
-    append_box(verts, idx, {W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
+    append_box(verts,
+               idx,
+               {W * 0.72F - 0.025F, 0.00F, -Dp - aw_ext},
                {W * 0.72F + 0.025F, aw_y, -Dp - aw_ext + 0.025F});
   }
 
@@ -1342,8 +1461,12 @@ void VegetationPipeline::initialize_tent_pipeline() {
   append_box(verts, idx, {-W - sk, 0.00F, Dp}, {-W, 0.07F, Dp + sk});
   append_box(verts, idx, {W, 0.00F, Dp}, {W + sk, 0.07F, Dp + sk});
 
-  upload_prop_mesh_impl(verts, idx, m_tent_vao, m_tent_vertex_buffer,
-                        m_tent_index_buffer, m_tent_vertex_count,
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_tent_vao,
+                        m_tent_vertex_buffer,
+                        m_tent_index_buffer,
+                        m_tent_vertex_count,
                         m_tent_index_count);
 }
 
@@ -1354,8 +1477,10 @@ void VegetationPipeline::shutdown_tent_pipeline() {
     return;
   }
   initializeOpenGLFunctions();
-  delete_prop_pipeline_impl(m_tent_vao, m_tent_vertex_buffer,
-                            m_tent_index_buffer, m_tent_vertex_count,
+  delete_prop_pipeline_impl(m_tent_vao,
+                            m_tent_vertex_buffer,
+                            m_tent_index_buffer,
+                            m_tent_vertex_count,
                             m_tent_index_count);
 }
 
@@ -1377,14 +1502,26 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   append_box(verts, idx, {-0.54F, 0.30F, -0.56F}, {0.54F, 0.38F, -0.42F});
   append_box(verts, idx, {-0.58F, 0.32F, 0.32F}, {0.58F, 0.40F, 0.50F});
 
-  append_disc_xaxis(verts, idx, -0.76F, 0.24F, -0.48F, k_front_wheel_r,
-                    k_front_wheel_t, k_wheel_sides);
-  append_disc_xaxis(verts, idx, 0.76F, 0.24F, -0.48F, k_front_wheel_r,
-                    k_front_wheel_t, k_wheel_sides);
-  append_disc_xaxis(verts, idx, -0.80F, 0.30F, 0.42F, k_rear_wheel_r,
-                    k_rear_wheel_t, k_wheel_sides);
-  append_disc_xaxis(verts, idx, 0.80F, 0.30F, 0.42F, k_rear_wheel_r,
-                    k_rear_wheel_t, k_wheel_sides);
+  append_disc_xaxis(verts,
+                    idx,
+                    -0.76F,
+                    0.24F,
+                    -0.48F,
+                    k_front_wheel_r,
+                    k_front_wheel_t,
+                    k_wheel_sides);
+  append_disc_xaxis(verts,
+                    idx,
+                    0.76F,
+                    0.24F,
+                    -0.48F,
+                    k_front_wheel_r,
+                    k_front_wheel_t,
+                    k_wheel_sides);
+  append_disc_xaxis(
+      verts, idx, -0.80F, 0.30F, 0.42F, k_rear_wheel_r, k_rear_wheel_t, k_wheel_sides);
+  append_disc_xaxis(
+      verts, idx, 0.80F, 0.30F, 0.42F, k_rear_wheel_r, k_rear_wheel_t, k_wheel_sides);
   append_box(verts, idx, {-0.82F, 0.21F, -0.53F}, {-0.72F, 0.29F, -0.43F});
   append_box(verts, idx, {0.72F, 0.21F, -0.53F}, {0.82F, 0.29F, -0.43F});
   append_box(verts, idx, {-0.85F, 0.26F, 0.36F}, {-0.75F, 0.34F, 0.48F});
@@ -1411,20 +1548,24 @@ void VegetationPipeline::initialize_supply_cart_pipeline() {
   append_box(verts, idx, {0.00F, 0.50F, -0.30F}, {0.36F, 0.72F, -0.02F});
   append_box(verts, idx, {-0.16F, 0.86F, -0.10F}, {0.22F, 1.00F, 0.18F});
 
-  upload_prop_mesh_impl(verts, idx, m_supply_cart_vao,
-                        m_supply_cart_vertex_buffer, m_supply_cart_index_buffer,
-                        m_supply_cart_vertex_count, m_supply_cart_index_count);
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_supply_cart_vao,
+                        m_supply_cart_vertex_buffer,
+                        m_supply_cart_index_buffer,
+                        m_supply_cart_vertex_count,
+                        m_supply_cart_index_count);
 }
 
 void VegetationPipeline::shutdown_supply_cart_pipeline() {
   if (QOpenGLContext::currentContext() == nullptr) {
-    m_supply_cart_vao = m_supply_cart_vertex_buffer =
-        m_supply_cart_index_buffer = 0;
+    m_supply_cart_vao = m_supply_cart_vertex_buffer = m_supply_cart_index_buffer = 0;
     m_supply_cart_vertex_count = m_supply_cart_index_count = 0;
     return;
   }
   initializeOpenGLFunctions();
-  delete_prop_pipeline_impl(m_supply_cart_vao, m_supply_cart_vertex_buffer,
+  delete_prop_pipeline_impl(m_supply_cart_vao,
+                            m_supply_cart_vertex_buffer,
                             m_supply_cart_index_buffer,
                             m_supply_cart_vertex_count,
                             m_supply_cart_index_count);
@@ -1437,16 +1578,19 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  auto append_blade_tip = [&](float cx, float y0, float z, float half_width,
-                              float height, float half_depth) {
+  auto append_blade_tip = [&](float cx,
+                              float y0,
+                              float z,
+                              float half_width,
+                              float height,
+                              float half_depth) {
     const QVector3D base_l(cx - half_width, y0, z - half_depth);
     const QVector3D base_r(cx + half_width, y0, z - half_depth);
     const QVector3D base_rf(cx + half_width, y0, z + half_depth);
     const QVector3D base_lf(cx - half_width, y0, z + half_depth);
     const QVector3D tip(cx, y0 + height, z);
 
-    auto tri = [&](const QVector3D &p0, const QVector3D &p1,
-                   const QVector3D &p2) {
+    auto tri = [&](const QVector3D& p0, const QVector3D& p1, const QVector3D& p2) {
       QVector3D n = QVector3D::crossProduct(p1 - p0, p2 - p0);
       if (n.lengthSquared() > 1.0e-8F) {
         n.normalize();
@@ -1464,8 +1608,12 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
     tri(base_lf, base_l, tip);
   };
 
-  auto append_leaf_blade = [&](float cx, float y0, float z, float half_width,
-                               float height, float half_depth) {
+  auto append_leaf_blade = [&](float cx,
+                               float y0,
+                               float z,
+                               float half_width,
+                               float height,
+                               float half_depth) {
     const QVector3D base(cx, y0, z);
     const QVector3D shoulder_l(cx - half_width, y0 + height * 0.34F, z);
     const QVector3D shoulder_r(cx + half_width, y0 + height * 0.34F, z);
@@ -1475,8 +1623,7 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
     const QVector3D ridge_f(cx, y0 + height * 0.48F, z + half_depth);
     const QVector3D ridge_b(cx, y0 + height * 0.48F, z - half_depth);
 
-    auto tri = [&](const QVector3D &p0, const QVector3D &p1,
-                   const QVector3D &p2) {
+    auto tri = [&](const QVector3D& p0, const QVector3D& p1, const QVector3D& p2) {
       QVector3D n = QVector3D::crossProduct(p1 - p0, p2 - p0);
       if (n.lengthSquared() > 1.0e-8F) {
         n.normalize();
@@ -1485,8 +1632,7 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
       }
       auto base_idx = static_cast<uint16_t>(verts.size());
       verts.insert(verts.end(), {{p0, n}, {p1, n}, {p2, n}});
-      idx.insert(idx.end(),
-                 {base_idx, uint16_t(base_idx + 1), uint16_t(base_idx + 2)});
+      idx.insert(idx.end(), {base_idx, uint16_t(base_idx + 1), uint16_t(base_idx + 2)});
     };
 
     tri(base, shoulder_l, ridge_f);
@@ -1504,10 +1650,12 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
     tri(waist_r, tip, ridge_b);
   };
 
-  auto append_sword_blade = [&](const QVector3D &base, const QVector3D &tip,
-                                float base_half_width, float tip_half_width,
+  auto append_sword_blade = [&](const QVector3D& base,
+                                const QVector3D& tip,
+                                float base_half_width,
+                                float tip_half_width,
                                 float half_depth) {
-    QVector3D axis = tip - base;
+    QVector3D const axis = tip - base;
     QVector3D side(-axis.y(), axis.x(), 0.0F);
     if (side.lengthSquared() < 1.0e-8F) {
       side = {1.0F, 0.0F, 0.0F};
@@ -1524,8 +1672,10 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
     const QVector3D ridge_f = mid + QVector3D(0.0F, 0.0F, half_depth);
     const QVector3D ridge_b = mid - QVector3D(0.0F, 0.0F, half_depth);
 
-    auto quad = [&](const QVector3D &p0, const QVector3D &p1,
-                    const QVector3D &p2, const QVector3D &p3) {
+    auto quad = [&](const QVector3D& p0,
+                    const QVector3D& p1,
+                    const QVector3D& p2,
+                    const QVector3D& p3) {
       QVector3D n = QVector3D::crossProduct(p1 - p0, p3 - p0);
       if (n.lengthSquared() > 1.0e-8F) {
         n.normalize();
@@ -1553,43 +1703,41 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
   append_box(verts, idx, {-0.86F, 0.34F, -0.10F}, {0.86F, 0.48F, 0.08F});
   append_box(verts, idx, {-0.84F, 0.96F, -0.12F}, {0.84F, 1.10F, 0.06F});
   append_box(verts, idx, {-0.74F, 1.28F, -0.10F}, {0.74F, 1.40F, 0.04F});
-  append_oriented_box(verts, idx, {-0.70F, 0.16F, -0.08F},
-                      {-0.18F, 0.96F, -0.08F}, 0.045F, 0.055F);
-  append_oriented_box(verts, idx, {0.70F, 0.16F, -0.08F},
-                      {0.18F, 0.96F, -0.08F}, 0.045F, 0.055F);
+  append_oriented_box(
+      verts, idx, {-0.70F, 0.16F, -0.08F}, {-0.18F, 0.96F, -0.08F}, 0.045F, 0.055F);
+  append_oriented_box(
+      verts, idx, {0.70F, 0.16F, -0.08F}, {0.18F, 0.96F, -0.08F}, 0.045F, 0.055F);
 
-  for (float x : {-0.58F, -0.30F, 0.00F, 0.30F, 0.58F}) {
-    append_box(verts, idx, {x - 0.050F, 0.46F, 0.08F},
-               {x + 0.050F, 0.58F, 0.24F});
-    append_box(verts, idx, {x - 0.045F, 1.10F, 0.06F},
-               {x + 0.045F, 1.22F, 0.20F});
+  for (float const x : {-0.58F, -0.30F, 0.00F, 0.30F, 0.58F}) {
+    append_box(verts, idx, {x - 0.050F, 0.46F, 0.08F}, {x + 0.050F, 0.58F, 0.24F});
+    append_box(verts, idx, {x - 0.045F, 1.10F, 0.06F}, {x + 0.045F, 1.22F, 0.20F});
   }
 
-  append_oriented_box(verts, idx, {-0.64F, 0.05F, 0.17F},
-                      {-0.50F, 1.72F, 0.09F}, 0.032F, 0.034F);
+  append_oriented_box(
+      verts, idx, {-0.64F, 0.05F, 0.17F}, {-0.50F, 1.72F, 0.09F}, 0.032F, 0.034F);
   append_leaf_blade(-0.485F, 1.62F, 0.09F, 0.115F, 0.42F, 0.035F);
   append_box(verts, idx, {-0.675F, 0.00F, 0.13F}, {-0.595F, 0.12F, 0.21F});
 
   append_box(verts, idx, {-0.335F, 0.02F, 0.12F}, {-0.210F, 0.15F, 0.24F});
-  append_oriented_box(verts, idx, {-0.280F, 0.12F, 0.17F},
-                      {-0.235F, 0.38F, 0.12F}, 0.044F, 0.034F);
-  append_oriented_box(verts, idx, {-0.525F, 0.34F, 0.13F},
-                      {0.030F, 0.41F, 0.13F}, 0.042F, 0.048F);
-  append_sword_blade({-0.250F, 0.42F, 0.12F}, {-0.335F, 1.82F, 0.07F}, 0.080F,
-                     0.018F, 0.030F);
+  append_oriented_box(
+      verts, idx, {-0.280F, 0.12F, 0.17F}, {-0.235F, 0.38F, 0.12F}, 0.044F, 0.034F);
+  append_oriented_box(
+      verts, idx, {-0.525F, 0.34F, 0.13F}, {0.030F, 0.41F, 0.13F}, 0.042F, 0.048F);
+  append_sword_blade(
+      {-0.250F, 0.42F, 0.12F}, {-0.335F, 1.82F, 0.07F}, 0.080F, 0.018F, 0.030F);
   append_blade_tip(-0.345F, 1.72F, 0.07F, 0.070F, 0.24F, 0.026F);
 
   append_box(verts, idx, {0.030F, 0.03F, 0.14F}, {0.140F, 0.14F, 0.25F});
-  append_oriented_box(verts, idx, {0.085F, 0.12F, 0.18F},
-                      {0.080F, 0.34F, 0.13F}, 0.036F, 0.030F);
-  append_oriented_box(verts, idx, {-0.075F, 0.30F, 0.14F},
-                      {0.285F, 0.37F, 0.14F}, 0.038F, 0.044F);
-  append_sword_blade({0.085F, 0.38F, 0.13F}, {0.180F, 1.56F, 0.08F}, 0.065F,
-                     0.015F, 0.026F);
+  append_oriented_box(
+      verts, idx, {0.085F, 0.12F, 0.18F}, {0.080F, 0.34F, 0.13F}, 0.036F, 0.030F);
+  append_oriented_box(
+      verts, idx, {-0.075F, 0.30F, 0.14F}, {0.285F, 0.37F, 0.14F}, 0.038F, 0.044F);
+  append_sword_blade(
+      {0.085F, 0.38F, 0.13F}, {0.180F, 1.56F, 0.08F}, 0.065F, 0.015F, 0.026F);
   append_blade_tip(0.185F, 1.46F, 0.08F, 0.058F, 0.22F, 0.024F);
 
-  append_oriented_box(verts, idx, {0.54F, 0.05F, 0.16F}, {0.68F, 1.70F, 0.08F},
-                      0.030F, 0.032F);
+  append_oriented_box(
+      verts, idx, {0.54F, 0.05F, 0.16F}, {0.68F, 1.70F, 0.08F}, 0.030F, 0.032F);
   append_leaf_blade(0.690F, 1.60F, 0.08F, 0.105F, 0.40F, 0.033F);
   append_box(verts, idx, {0.505F, 0.00F, 0.12F}, {0.585F, 0.12F, 0.20F});
 
@@ -1601,34 +1749,45 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
       float z;
     };
     static constexpr Pt pts[] = {
-        {0.25F, 0.06F, -0.02F}, {0.43F, 0.38F, -0.05F}, {0.56F, 0.74F, -0.08F},
-        {0.60F, 1.06F, -0.08F}, {0.55F, 1.42F, -0.06F}, {0.40F, 1.72F, -0.03F},
+        {0.25F, 0.06F, -0.02F},
+        {0.43F, 0.38F, -0.05F},
+        {0.56F, 0.74F, -0.08F},
+        {0.60F, 1.06F, -0.08F},
+        {0.55F, 1.42F, -0.06F},
+        {0.40F, 1.72F, -0.03F},
         {0.22F, 1.94F, -0.01F},
     };
     for (int i = 0; i < 6; ++i) {
-      append_oriented_box(verts, idx, {pts[i].x, pts[i].y, pts[i].z},
-                          {pts[i + 1].x, pts[i + 1].y, pts[i + 1].z}, 0.026F,
+      append_oriented_box(verts,
+                          idx,
+                          {pts[i].x, pts[i].y, pts[i].z},
+                          {pts[i + 1].x, pts[i + 1].y, pts[i + 1].z},
+                          0.026F,
                           k_depth);
     }
-    append_oriented_box(verts, idx, {0.225F, 0.10F, -0.02F},
-                        {0.205F, 1.88F, -0.01F}, 0.006F, 0.006F);
+    append_oriented_box(
+        verts, idx, {0.225F, 0.10F, -0.02F}, {0.205F, 1.88F, -0.01F}, 0.006F, 0.006F);
     append_box(verts, idx, {0.520F, 0.86F, -0.12F}, {0.625F, 1.12F, 0.02F});
   }
 
-  upload_prop_mesh_impl(verts, idx, m_weapon_rack_vao,
-                        m_weapon_rack_vertex_buffer, m_weapon_rack_index_buffer,
-                        m_weapon_rack_vertex_count, m_weapon_rack_index_count);
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_weapon_rack_vao,
+                        m_weapon_rack_vertex_buffer,
+                        m_weapon_rack_index_buffer,
+                        m_weapon_rack_vertex_count,
+                        m_weapon_rack_index_count);
 }
 
 void VegetationPipeline::shutdown_weapon_rack_pipeline() {
   if (QOpenGLContext::currentContext() == nullptr) {
-    m_weapon_rack_vao = m_weapon_rack_vertex_buffer =
-        m_weapon_rack_index_buffer = 0;
+    m_weapon_rack_vao = m_weapon_rack_vertex_buffer = m_weapon_rack_index_buffer = 0;
     m_weapon_rack_vertex_count = m_weapon_rack_index_count = 0;
     return;
   }
   initializeOpenGLFunctions();
-  delete_prop_pipeline_impl(m_weapon_rack_vao, m_weapon_rack_vertex_buffer,
+  delete_prop_pipeline_impl(m_weapon_rack_vao,
+                            m_weapon_rack_vertex_buffer,
                             m_weapon_rack_index_buffer,
                             m_weapon_rack_vertex_count,
                             m_weapon_rack_index_count);
@@ -1641,7 +1800,7 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  auto add_rubble = [&](const QVector3D &lo, const QVector3D &hi) {
+  auto add_rubble = [&](const QVector3D& lo, const QVector3D& hi) {
     append_box(verts, idx, lo, hi);
   };
 
@@ -1652,20 +1811,20 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   append_vert_prism(verts, idx, -0.63F, 0.14F, -0.10F, 0.13F, 1.34F, 10);
   append_box(verts, idx, {-0.80F, 1.48F, -0.28F}, {-0.46F, 1.66F, 0.08F});
   append_box(verts, idx, {-0.74F, 1.66F, -0.24F}, {-0.50F, 1.78F, 0.02F});
-  append_oriented_box(verts, idx, {-0.74F, 0.24F, -0.34F},
-                      {-0.52F, 1.10F, -0.28F}, 0.05F, 0.05F);
+  append_oriented_box(
+      verts, idx, {-0.74F, 0.24F, -0.34F}, {-0.52F, 1.10F, -0.28F}, 0.05F, 0.05F);
 
   append_box(verts, idx, {0.46F, 0.00F, -0.20F}, {0.74F, 0.12F, 0.10F});
   append_vert_prism(verts, idx, 0.60F, 0.12F, -0.05F, 0.12F, 0.88F, 10);
   append_box(verts, idx, {0.44F, 1.00F, -0.24F}, {0.76F, 1.16F, 0.12F});
-  append_oriented_box(verts, idx, {0.70F, 0.16F, 0.16F}, {0.48F, 0.86F, 0.20F},
-                      0.04F, 0.05F);
+  append_oriented_box(
+      verts, idx, {0.70F, 0.16F, 0.16F}, {0.48F, 0.86F, 0.20F}, 0.04F, 0.05F);
 
   append_box(verts, idx, {-0.34F, 0.00F, 0.26F}, {-0.06F, 0.14F, 0.56F});
   append_vert_prism(verts, idx, -0.20F, 0.14F, 0.40F, 0.12F, 1.42F, 10);
   append_box(verts, idx, {-0.38F, 1.56F, 0.22F}, {0.00F, 1.74F, 0.60F});
-  append_oriented_box(verts, idx, {-0.06F, 0.22F, 0.52F}, {0.18F, 0.86F, 0.46F},
-                      0.05F, 0.05F);
+  append_oriented_box(
+      verts, idx, {-0.06F, 0.22F, 0.52F}, {0.18F, 0.86F, 0.46F}, 0.05F, 0.05F);
 
   append_box(verts, idx, {-0.62F, 0.12F, -0.52F}, {0.02F, 0.72F, -0.32F});
   append_box(verts, idx, {-0.62F, 0.74F, -0.50F}, {-0.18F, 1.04F, -0.30F});
@@ -1677,12 +1836,12 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   append_box(verts, idx, {0.08F, 0.88F, 0.18F}, {0.46F, 1.08F, 0.52F});
   append_box(verts, idx, {0.30F, 0.18F, -0.56F}, {0.60F, 0.42F, -0.34F});
 
-  append_oriented_box(verts, idx, {-0.42F, 1.46F, -0.10F},
-                      {0.18F, 1.22F, -0.08F}, 0.10F, 0.08F);
-  append_oriented_box(verts, idx, {0.18F, 1.22F, -0.08F},
-                      {0.54F, 1.08F, -0.04F}, 0.08F, 0.07F);
-  append_oriented_box(verts, idx, {-0.26F, 1.60F, 0.30F}, {0.10F, 1.30F, 0.26F},
-                      0.08F, 0.08F);
+  append_oriented_box(
+      verts, idx, {-0.42F, 1.46F, -0.10F}, {0.18F, 1.22F, -0.08F}, 0.10F, 0.08F);
+  append_oriented_box(
+      verts, idx, {0.18F, 1.22F, -0.08F}, {0.54F, 1.08F, -0.04F}, 0.08F, 0.07F);
+  append_oriented_box(
+      verts, idx, {-0.26F, 1.60F, 0.30F}, {0.10F, 1.30F, 0.26F}, 0.08F, 0.08F);
 
   add_rubble({-0.82F, 0.02F, -0.64F}, {-0.54F, 0.16F, -0.44F});
   add_rubble({-0.40F, 0.02F, -0.64F}, {-0.08F, 0.18F, -0.46F});
@@ -1693,15 +1852,19 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   add_rubble({0.28F, 0.02F, 0.36F}, {0.64F, 0.16F, 0.62F});
   add_rubble({-0.18F, 0.02F, -0.08F}, {0.10F, 0.10F, 0.14F});
 
-  append_oriented_box(verts, idx, {-0.28F, 0.14F, -0.24F},
-                      {-0.02F, 0.08F, 0.02F}, 0.07F, 0.08F);
-  append_oriented_box(verts, idx, {0.22F, 0.12F, 0.04F}, {0.52F, 0.06F, 0.28F},
-                      0.06F, 0.08F);
-  append_oriented_box(verts, idx, {-0.52F, 0.12F, 0.18F},
-                      {-0.28F, 0.06F, 0.34F}, 0.06F, 0.06F);
+  append_oriented_box(
+      verts, idx, {-0.28F, 0.14F, -0.24F}, {-0.02F, 0.08F, 0.02F}, 0.07F, 0.08F);
+  append_oriented_box(
+      verts, idx, {0.22F, 0.12F, 0.04F}, {0.52F, 0.06F, 0.28F}, 0.06F, 0.08F);
+  append_oriented_box(
+      verts, idx, {-0.52F, 0.12F, 0.18F}, {-0.28F, 0.06F, 0.34F}, 0.06F, 0.06F);
 
-  upload_prop_mesh_impl(verts, idx, m_ruins_vao, m_ruins_vertex_buffer,
-                        m_ruins_index_buffer, m_ruins_vertex_count,
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_ruins_vao,
+                        m_ruins_vertex_buffer,
+                        m_ruins_index_buffer,
+                        m_ruins_vertex_count,
                         m_ruins_index_count);
 }
 
@@ -1712,8 +1875,10 @@ void VegetationPipeline::shutdown_ruins_pipeline() {
     return;
   }
   initializeOpenGLFunctions();
-  delete_prop_pipeline_impl(m_ruins_vao, m_ruins_vertex_buffer,
-                            m_ruins_index_buffer, m_ruins_vertex_count,
+  delete_prop_pipeline_impl(m_ruins_vao,
+                            m_ruins_vertex_buffer,
+                            m_ruins_index_buffer,
+                            m_ruins_vertex_count,
                             m_ruins_index_count);
 }
 
@@ -1728,8 +1893,13 @@ void VegetationPipeline::initialize_dead_tree_pipeline() {
   using F = std::pair<QVector3D, QVector3D>;
   constexpr float k_tau = 6.28318530F;
 
-  auto add_ring = [&](float x, float center_y, float center_z, float radius_y,
-                      float radius_z, float phase, float bottom_flatten,
+  auto add_ring = [&](float x,
+                      float center_y,
+                      float center_z,
+                      float radius_y,
+                      float radius_z,
+                      float phase,
+                      float bottom_flatten,
                       float wobble) {
     std::vector<V3> ring;
     ring.reserve(8);
@@ -1741,33 +1911,32 @@ void VegetationPipeline::initialize_dead_tree_pipeline() {
       if (s < 0.0F) {
         y_scale = 1.0F - bottom_flatten;
       }
-      float const wobble_y =
-          std::sin(angle * 2.0F + x * 3.4F) * wobble * radius_y;
-      float const wobble_z =
-          std::cos(angle * 3.0F - x * 2.2F) * wobble * radius_z;
-      ring.emplace_back(x, center_y + radius_y * s * y_scale + wobble_y,
+      float const wobble_y = std::sin(angle * 2.0F + x * 3.4F) * wobble * radius_y;
+      float const wobble_z = std::cos(angle * 3.0F - x * 2.2F) * wobble * radius_z;
+      ring.emplace_back(x,
+                        center_y + radius_y * s * y_scale + wobble_y,
                         center_z + radius_z * c + wobble_z);
     }
     return ring;
   };
 
-  auto connect_rings = [&](const std::vector<V3> &r0,
-                           const std::vector<V3> &r1) {
-    int n = static_cast<int>(r0.size());
+  auto connect_rings = [&](const std::vector<V3>& r0, const std::vector<V3>& r1) {
+    int const n = static_cast<int>(r0.size());
     for (int i = 0; i < n; ++i) {
-      int j = (i + 1) % n;
-      const V3 &a = r0[i], &b = r1[i], &c = r1[j], &d = r0[j];
-      append_quad(verts, idx, a, b, c, d,
-                  V3::crossProduct(b - a, d - a).normalized());
+      int const j = (i + 1) % n;
+      const V3& a = r0[i];
+      const V3& b = r1[i];
+      const V3& c = r1[j];
+      const V3& d = r0[j];
+      append_quad(verts, idx, a, b, c, d, V3::crossProduct(b - a, d - a).normalized());
     }
   };
 
-  auto end_cap = [&](const std::vector<V3> &ring, const V3 &centre,
-                     bool minus_x) {
+  auto end_cap = [&](const std::vector<V3>& ring, const V3& centre, bool minus_x) {
     const V3 n(minus_x ? -1.0F : 1.0F, 0.0F, 0.0F);
-    int sz = static_cast<int>(ring.size());
+    int const sz = static_cast<int>(ring.size());
     for (int i = 0; i < sz; ++i) {
-      int j = (i + 1) % sz;
+      int const j = (i + 1) % sz;
       auto b = static_cast<uint16_t>(verts.size());
       if (minus_x) {
         verts.insert(verts.end(), {F{centre, n}, F{ring[i], n}, F{ring[j], n}});
@@ -1805,33 +1974,37 @@ void VegetationPipeline::initialize_dead_tree_pipeline() {
 
   append_disc_xaxis(verts, idx, 1.27F, 0.20F, -0.01F, 0.17F, 0.030F, 7);
 
-  append_oriented_box(verts, idx, {-1.04F, 0.17F, -0.02F},
-                      {-1.42F, 0.03F, -0.24F}, 0.050F, 0.035F);
-  append_oriented_box(verts, idx, {-1.00F, 0.15F, 0.04F},
-                      {-1.34F, 0.02F, 0.22F}, 0.046F, 0.032F);
-  append_oriented_box(verts, idx, {-0.92F, 0.13F, -0.10F},
-                      {-1.16F, 0.01F, 0.04F}, 0.040F, 0.028F);
+  append_oriented_box(
+      verts, idx, {-1.04F, 0.17F, -0.02F}, {-1.42F, 0.03F, -0.24F}, 0.050F, 0.035F);
+  append_oriented_box(
+      verts, idx, {-1.00F, 0.15F, 0.04F}, {-1.34F, 0.02F, 0.22F}, 0.046F, 0.032F);
+  append_oriented_box(
+      verts, idx, {-0.92F, 0.13F, -0.10F}, {-1.16F, 0.01F, 0.04F}, 0.040F, 0.028F);
 
-  append_oriented_box(verts, idx, {-0.12F, 0.28F, 0.21F}, {0.24F, 0.54F, 0.29F},
-                      0.050F, 0.032F);
-  append_oriented_box(verts, idx, {0.34F, 0.25F, -0.24F},
-                      {0.70F, 0.58F, -0.17F}, 0.046F, 0.030F);
-  append_oriented_box(verts, idx, {0.72F, 0.30F, 0.13F}, {0.96F, 0.52F, 0.21F},
-                      0.034F, 0.024F);
+  append_oriented_box(
+      verts, idx, {-0.12F, 0.28F, 0.21F}, {0.24F, 0.54F, 0.29F}, 0.050F, 0.032F);
+  append_oriented_box(
+      verts, idx, {0.34F, 0.25F, -0.24F}, {0.70F, 0.58F, -0.17F}, 0.046F, 0.030F);
+  append_oriented_box(
+      verts, idx, {0.72F, 0.30F, 0.13F}, {0.96F, 0.52F, 0.21F}, 0.034F, 0.024F);
 
-  append_oriented_box(verts, idx, {1.04F, 0.24F, 0.05F}, {1.30F, 0.56F, 0.13F},
-                      0.034F, 0.024F);
-  append_oriented_box(verts, idx, {1.08F, 0.22F, -0.09F},
-                      {1.32F, 0.47F, -0.17F}, 0.030F, 0.022F);
-  append_oriented_box(verts, idx, {1.12F, 0.20F, -0.01F}, {1.38F, 0.38F, 0.04F},
-                      0.026F, 0.020F);
+  append_oriented_box(
+      verts, idx, {1.04F, 0.24F, 0.05F}, {1.30F, 0.56F, 0.13F}, 0.034F, 0.024F);
+  append_oriented_box(
+      verts, idx, {1.08F, 0.22F, -0.09F}, {1.32F, 0.47F, -0.17F}, 0.030F, 0.022F);
+  append_oriented_box(
+      verts, idx, {1.12F, 0.20F, -0.01F}, {1.38F, 0.38F, 0.04F}, 0.026F, 0.020F);
 
   append_box(verts, idx, {-0.62F, 0.02F, -0.30F}, {-0.18F, 0.07F, -0.20F});
   append_box(verts, idx, {0.10F, 0.01F, 0.22F}, {0.52F, 0.06F, 0.32F});
   append_box(verts, idx, {0.58F, 0.00F, -0.33F}, {1.00F, 0.05F, -0.23F});
 
-  upload_prop_mesh_impl(verts, idx, m_dead_tree_vao, m_dead_tree_vertex_buffer,
-                        m_dead_tree_index_buffer, m_dead_tree_vertex_count,
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_dead_tree_vao,
+                        m_dead_tree_vertex_buffer,
+                        m_dead_tree_index_buffer,
+                        m_dead_tree_vertex_count,
                         m_dead_tree_index_count);
 }
 
@@ -1842,8 +2015,10 @@ void VegetationPipeline::shutdown_dead_tree_pipeline() {
     return;
   }
   initializeOpenGLFunctions();
-  delete_prop_pipeline_impl(m_dead_tree_vao, m_dead_tree_vertex_buffer,
-                            m_dead_tree_index_buffer, m_dead_tree_vertex_count,
+  delete_prop_pipeline_impl(m_dead_tree_vao,
+                            m_dead_tree_vertex_buffer,
+                            m_dead_tree_index_buffer,
+                            m_dead_tree_vertex_count,
                             m_dead_tree_index_count);
 }
 

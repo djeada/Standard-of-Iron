@@ -1,10 +1,10 @@
 #include "formation_calculator.h"
 
+#include <algorithm>
+
 #include "../../game/systems/formation_system.h"
 #include "../../game/units/troop_config.h"
 #include "../horse/dimensions.h"
-
-#include <algorithm>
 
 namespace Render::GL {
 
@@ -34,58 +34,95 @@ auto resolve_formation_spacing(Game::Units::SpawnType spawn_type,
   return Game::Units::TroopConfig::instance().get_formation_spacing(spawn_type);
 }
 
-auto RomanInfantryFormation::calculate_offset(
-    int idx, int row, int col, int rows, int cols, float spacing,
-    uint32_t seed) const -> FormationOffset {
-  auto const offset =
-      Game::Systems::FormationSystem::instance().get_local_offset(
-          Game::Systems::FormationType::Roman,
-          Game::Systems::FormationUnitCategory::Infantry, idx, row, col, rows,
-          cols, spacing, seed);
+auto RomanInfantryFormation::calculate_offset(int idx,
+                                              int row,
+                                              int col,
+                                              int rows,
+                                              int cols,
+                                              float spacing,
+                                              uint32_t seed) const -> FormationOffset {
+  auto const offset = Game::Systems::FormationSystem::instance().get_local_offset(
+      Game::Systems::FormationType::Roman,
+      Game::Systems::FormationUnitCategory::Infantry,
+      idx,
+      row,
+      col,
+      rows,
+      cols,
+      spacing,
+      seed);
   return {offset.offset_x, offset.offset_z, offset.yaw_offset};
 }
 
-auto RomanCavalryFormation::calculate_offset(
-    int idx, int row, int col, int rows, int cols, float spacing,
-    uint32_t seed) const -> FormationOffset {
-  auto const offset =
-      Game::Systems::FormationSystem::instance().get_local_offset(
-          Game::Systems::FormationType::Roman,
-          Game::Systems::FormationUnitCategory::Cavalry, idx, row, col, rows,
-          cols, spacing, seed);
+auto RomanCavalryFormation::calculate_offset(int idx,
+                                             int row,
+                                             int col,
+                                             int rows,
+                                             int cols,
+                                             float spacing,
+                                             uint32_t seed) const -> FormationOffset {
+  auto const offset = Game::Systems::FormationSystem::instance().get_local_offset(
+      Game::Systems::FormationType::Roman,
+      Game::Systems::FormationUnitCategory::Cavalry,
+      idx,
+      row,
+      col,
+      rows,
+      cols,
+      spacing,
+      seed);
   return {offset.offset_x, offset.offset_z, offset.yaw_offset};
 }
 
 auto CarthageInfantryFormation::calculate_offset(
-    int idx, int row, int col, int rows, int cols, float spacing,
-    uint32_t seed) const -> FormationOffset {
-  auto const offset =
-      Game::Systems::FormationSystem::instance().get_local_offset(
-          Game::Systems::FormationType::Carthage,
-          Game::Systems::FormationUnitCategory::Infantry, idx, row, col, rows,
-          cols, spacing, seed);
+    int idx, int row, int col, int rows, int cols, float spacing, uint32_t seed) const
+    -> FormationOffset {
+  auto const offset = Game::Systems::FormationSystem::instance().get_local_offset(
+      Game::Systems::FormationType::Carthage,
+      Game::Systems::FormationUnitCategory::Infantry,
+      idx,
+      row,
+      col,
+      rows,
+      cols,
+      spacing,
+      seed);
   return {offset.offset_x, offset.offset_z, offset.yaw_offset};
 }
 
 auto CarthageCavalryFormation::calculate_offset(
-    int idx, int row, int col, int rows, int cols, float spacing,
-    uint32_t seed) const -> FormationOffset {
-  auto const offset =
-      Game::Systems::FormationSystem::instance().get_local_offset(
-          Game::Systems::FormationType::Carthage,
-          Game::Systems::FormationUnitCategory::Cavalry, idx, row, col, rows,
-          cols, spacing, seed);
+    int idx, int row, int col, int rows, int cols, float spacing, uint32_t seed) const
+    -> FormationOffset {
+  auto const offset = Game::Systems::FormationSystem::instance().get_local_offset(
+      Game::Systems::FormationType::Carthage,
+      Game::Systems::FormationUnitCategory::Cavalry,
+      idx,
+      row,
+      col,
+      rows,
+      cols,
+      spacing,
+      seed);
   return {offset.offset_x, offset.offset_z, offset.yaw_offset};
 }
 
-auto BuilderCircleFormation::calculate_offset(
-    int idx, int row, int col, int rows, int cols, float spacing,
-    uint32_t seed) const -> FormationOffset {
-  auto const offset =
-      Game::Systems::FormationSystem::instance().get_local_offset(
-          Game::Systems::FormationType::Roman,
-          Game::Systems::FormationUnitCategory::BuilderConstruction, idx, row,
-          col, rows, cols, spacing, seed);
+auto BuilderCircleFormation::calculate_offset(int idx,
+                                              int row,
+                                              int col,
+                                              int rows,
+                                              int cols,
+                                              float spacing,
+                                              uint32_t seed) const -> FormationOffset {
+  auto const offset = Game::Systems::FormationSystem::instance().get_local_offset(
+      Game::Systems::FormationType::Roman,
+      Game::Systems::FormationUnitCategory::BuilderConstruction,
+      idx,
+      row,
+      col,
+      rows,
+      cols,
+      spacing,
+      seed);
   return {offset.offset_x, offset.offset_z, offset.yaw_offset};
 }
 
@@ -95,8 +132,8 @@ CarthageInfantryFormation FormationCalculatorFactory::s_carthage_infantry;
 CarthageCavalryFormation FormationCalculatorFactory::s_carthage_cavalry;
 BuilderCircleFormation FormationCalculatorFactory::s_builder_circle;
 
-auto FormationCalculatorFactory::get_calculator(
-    Nation nation, UnitCategory category) -> const IFormationCalculator * {
+auto FormationCalculatorFactory::get_calculator(Nation nation, UnitCategory category)
+    -> const IFormationCalculator* {
 
   if (category == UnitCategory::BuilderConstruction) {
     return &s_builder_circle;

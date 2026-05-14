@@ -1,16 +1,16 @@
 #include "prepared_submit.h"
 
-#include "../../submitter.h"
-#include "shadow_batch.h"
-
 #include <string_view>
 #include <vector>
+
+#include "../../submitter.h"
+#include "shadow_batch.h"
 
 namespace Render::Creature::Pipeline {
 namespace {
 
-void submit_post_body_request(const PostBodyDrawRequest &request,
-                              Render::GL::ISubmitter &out) noexcept {
+void submit_post_body_request(const PostBodyDrawRequest& request,
+                              Render::GL::ISubmitter& out) noexcept {
   (void)out;
   switch (request.kind) {
   case PostBodyDrawRequest::Kind::None:
@@ -20,17 +20,16 @@ void submit_post_body_request(const PostBodyDrawRequest &request,
 
 } // namespace
 
-auto submit_preparation(CreaturePreparationResult &prep,
-                        Render::GL::ISubmitter &out) noexcept -> SubmitStats {
+auto submit_preparation(CreaturePreparationResult& prep,
+                        Render::GL::ISubmitter& out) noexcept -> SubmitStats {
   thread_local CreaturePipeline pipeline;
-  thread_local std::vector<Render::Creature::CreatureRenderRequest>
-      visible_requests;
+  thread_local std::vector<Render::Creature::CreatureRenderRequest> visible_requests;
   visible_requests.clear();
 
   auto const requests = prep.bodies.requests();
   visible_requests.reserve(requests.size());
 
-  for (const auto &request : requests) {
+  for (const auto& request : requests) {
     if (request.pass != RenderPassIntent::Shadow) {
       visible_requests.push_back(request);
     }
@@ -41,7 +40,7 @@ auto submit_preparation(CreaturePreparationResult &prep,
     stats = pipeline.submit_requests(visible_requests, out);
   }
 
-  for (const auto &request : prep.post_body_draws) {
+  for (const auto& request : prep.post_body_draws) {
     if (request.pass_intent == RenderPassIntent::Shadow) {
       continue;
     }
@@ -53,7 +52,9 @@ auto submit_preparation(CreaturePreparationResult &prep,
   return stats;
 }
 
-void PreparedCreatureSubmitBatch::clear() noexcept { rows_.clear(); }
+void PreparedCreatureSubmitBatch::clear() noexcept {
+  rows_.clear();
+}
 
 void PreparedCreatureSubmitBatch::reserve(std::size_t count) {
   rows_.reserve(count);

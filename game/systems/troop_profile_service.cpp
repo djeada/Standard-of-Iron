@@ -8,8 +8,7 @@ namespace {
 
 constexpr float k_archer_range_multiplier = 1.5F;
 
-void apply_archer_range_bonus(Game::Units::TroopType type,
-                              TroopProfile &profile) {
+void apply_archer_range_bonus(Game::Units::TroopType type, TroopProfile& profile) {
   switch (type) {
   case Game::Units::TroopType::Archer:
   case Game::Units::TroopType::HorseArcher:
@@ -22,29 +21,31 @@ void apply_archer_range_bonus(Game::Units::TroopType type,
 
 } // namespace
 
-auto TroopProfileService::instance() -> TroopProfileService & {
+auto TroopProfileService::instance() -> TroopProfileService& {
   static TroopProfileService inst;
   return inst;
 }
 
-void TroopProfileService::clear() { m_cache.clear(); }
+void TroopProfileService::clear() {
+  m_cache.clear();
+}
 
-auto TroopProfileService::get_profile(
-    NationID nation_id, Game::Units::TroopType type) -> TroopProfile {
-  auto &nation_cache = m_cache[nation_id];
+auto TroopProfileService::get_profile(NationID nation_id,
+                                      Game::Units::TroopType type) -> TroopProfile {
+  auto& nation_cache = m_cache[nation_id];
   auto cached = nation_cache.find(type);
   if (cached != nation_cache.end()) {
     return cached->second;
   }
 
-  const Nation *nation = NationRegistry::instance().get_nation(nation_id);
+  const Nation* nation = NationRegistry::instance().get_nation(nation_id);
   if (nation == nullptr) {
     const auto fallback_id = NationRegistry::instance().default_nation_id();
     nation = NationRegistry::instance().get_nation(fallback_id);
     if (nation == nullptr) {
-      const auto &all = NationRegistry::instance().get_all_nations();
+      const auto& all = NationRegistry::instance().get_all_nations();
       if (all.empty()) {
-        const auto &catalog_class =
+        const auto& catalog_class =
             Game::Units::TroopCatalog::instance().get_class_or_fallback(type);
         TroopProfile fallback{};
         fallback.display_name = catalog_class.display_name;
@@ -66,9 +67,9 @@ auto TroopProfileService::get_profile(
   return profile;
 }
 
-auto TroopProfileService::build_profile(
-    const Nation &nation, Game::Units::TroopType type) -> TroopProfile {
-  const auto &catalog_class =
+auto TroopProfileService::build_profile(const Nation& nation,
+                                        Game::Units::TroopType type) -> TroopProfile {
+  const auto& catalog_class =
       Game::Units::TroopCatalog::instance().get_class_or_fallback(type);
 
   TroopProfile profile{};
@@ -80,7 +81,7 @@ auto TroopProfileService::build_profile(
   profile.max_units_per_row = catalog_class.max_units_per_row;
   profile.formation_type = nation.formation_type;
 
-  if (const auto *nation_troop = nation.get_troop(type)) {
+  if (const auto* nation_troop = nation.get_troop(type)) {
     profile.display_name = nation_troop->display_name;
     profile.production.cost = nation_troop->cost;
     profile.production.build_time = nation_troop->build_time;
@@ -90,7 +91,7 @@ auto TroopProfileService::build_profile(
 
   auto variant_it = nation.troop_variants.find(type);
   if (variant_it != nation.troop_variants.end()) {
-    const auto &variant = variant_it->second;
+    const auto& variant = variant_it->second;
     if (variant.health) {
       profile.combat.health = *variant.health;
     }

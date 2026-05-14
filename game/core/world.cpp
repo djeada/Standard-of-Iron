@@ -1,14 +1,16 @@
 #include "world.h"
-#include "../systems/owner_registry.h"
-#include "../systems/troop_count_registry.h"
-#include "component.h"
-#include "core/entity.h"
-#include "core/system.h"
+
 #include <algorithm>
 #include <memory>
 #include <mutex>
 #include <utility>
 #include <vector>
+
+#include "../systems/owner_registry.h"
+#include "../systems/troop_count_registry.h"
+#include "component.h"
+#include "core/entity.h"
+#include "core/system.h"
 
 namespace Engine::Core {
 
@@ -16,7 +18,8 @@ World::World() = default;
 World::~World() = default;
 
 void World::on_component_changed(EntityID entity_id,
-                                 std::type_index component_type, bool added) {
+                                 std::type_index component_type,
+                                 bool added) {
 
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
 
@@ -33,36 +36,36 @@ void World::on_component_changed(EntityID entity_id,
   }
 
   const auto observers = m_component_observers;
-  for (const auto &observer : observers) {
+  for (const auto& observer : observers) {
     observer.callback(entity_id, component_type, added);
   }
 }
 
-void World::setup_entity_callback(Entity *entity) {
+void World::setup_entity_callback(Entity* entity) {
   entity->set_component_change_callback(
       [this](EntityID entity_id, std::type_index component_type, bool added) {
         this->on_component_changed(entity_id, component_type, added);
       });
 }
 
-auto World::create_entity() -> Entity * {
+auto World::create_entity() -> Entity* {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   EntityID const id = m_next_entity_id++;
   auto entity = std::make_unique<Entity>(id);
-  auto *ptr = entity.get();
+  auto* ptr = entity.get();
   setup_entity_callback(ptr);
   m_entities[id] = std::move(entity);
   return ptr;
 }
 
-auto World::create_entity_with_id(EntityID entity_id) -> Entity * {
+auto World::create_entity_with_id(EntityID entity_id) -> Entity* {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   if (entity_id == NULL_ENTITY) {
     return nullptr;
   }
 
   auto entity = std::make_unique<Entity>(entity_id);
-  auto *ptr = entity.get();
+  auto* ptr = entity.get();
   setup_entity_callback(ptr);
   m_entities[entity_id] = std::move(entity);
 
@@ -78,7 +81,7 @@ void World::destroy_entity(EntityID entity_id) {
 
   auto it = m_entities.find(entity_id);
 
-  for (auto &[type, entity_set] : m_component_index) {
+  for (auto& [type, entity_set] : m_component_index) {
     entity_set.erase(entity_id);
   }
 
@@ -89,7 +92,7 @@ void World::destroy_entity(EntityID entity_id) {
   }
 
   const auto observers = m_entity_destroyed_observers;
-  for (const auto &observer : observers) {
+  for (const auto& observer : observers) {
     observer.callback(entity_id);
   }
 }
@@ -101,12 +104,12 @@ void World::clear() {
   m_next_entity_id = 1;
 
   const auto observers = m_world_cleared_observers;
-  for (const auto &observer : observers) {
+  for (const auto& observer : observers) {
     observer.callback();
   }
 }
 
-auto World::get_entity(EntityID entity_id) -> Entity * {
+auto World::get_entity(EntityID entity_id) -> Entity* {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   auto it = m_entities.find(entity_id);
   return it != m_entities.end() ? it->second.get() : nullptr;
@@ -117,17 +120,17 @@ void World::add_system(std::unique_ptr<System> system) {
 }
 
 void World::update(float delta_time) {
-  for (auto &system : m_systems) {
+  for (auto& system : m_systems) {
     system->update(this, delta_time);
   }
 }
 
-auto World::get_units_owned_by(int owner_id) const -> std::vector<Entity *> {
+auto World::get_units_owned_by(int owner_id) const -> std::vector<Entity*> {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  std::vector<Entity *> result;
+  std::vector<Entity*> result;
   result.reserve(m_entities.size());
-  for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->get_component<UnitComponent>();
+  for (const auto& [entity_id, entity] : m_entities) {
+    auto* unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -138,13 +141,12 @@ auto World::get_units_owned_by(int owner_id) const -> std::vector<Entity *> {
   return result;
 }
 
-auto World::get_units_not_owned_by(int owner_id) const
-    -> std::vector<Entity *> {
+auto World::get_units_not_owned_by(int owner_id) const -> std::vector<Entity*> {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  std::vector<Entity *> result;
+  std::vector<Entity*> result;
   result.reserve(m_entities.size());
-  for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->get_component<UnitComponent>();
+  for (const auto& [entity_id, entity] : m_entities) {
+    auto* unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -155,14 +157,14 @@ auto World::get_units_not_owned_by(int owner_id) const
   return result;
 }
 
-auto World::get_allied_units(int owner_id) const -> std::vector<Entity *> {
+auto World::get_allied_units(int owner_id) const -> std::vector<Entity*> {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  std::vector<Entity *> result;
+  std::vector<Entity*> result;
   result.reserve(m_entities.size());
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
 
-  for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->get_component<UnitComponent>();
+  for (const auto& [entity_id, entity] : m_entities) {
+    auto* unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -175,14 +177,14 @@ auto World::get_allied_units(int owner_id) const -> std::vector<Entity *> {
   return result;
 }
 
-auto World::get_enemy_units(int owner_id) const -> std::vector<Entity *> {
+auto World::get_enemy_units(int owner_id) const -> std::vector<Entity*> {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
-  std::vector<Entity *> result;
+  std::vector<Entity*> result;
   result.reserve(m_entities.size());
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
 
-  for (const auto &[entity_id, entity] : m_entities) {
-    auto *unit = entity->get_component<UnitComponent>();
+  for (const auto& [entity_id, entity] : m_entities) {
+    auto* unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -195,8 +197,7 @@ auto World::get_enemy_units(int owner_id) const -> std::vector<Entity *> {
 }
 
 auto World::count_troops_for_player(int owner_id) -> int {
-  return Game::Systems::TroopCountRegistry::instance().get_troop_count(
-      owner_id);
+  return Game::Systems::TroopCountRegistry::instance().get_troop_count(owner_id);
 }
 
 auto World::get_next_entity_id() const -> EntityID {
@@ -236,19 +237,19 @@ auto World::add_world_cleared_observer(WorldClearedCallback callback)
 void World::remove_component_observer(ObserverHandle handle) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   std::erase_if(m_component_observers,
-                [handle](const auto &entry) { return entry.handle == handle; });
+                [handle](const auto& entry) { return entry.handle == handle; });
 }
 
 void World::remove_entity_destroyed_observer(ObserverHandle handle) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   std::erase_if(m_entity_destroyed_observers,
-                [handle](const auto &entry) { return entry.handle == handle; });
+                [handle](const auto& entry) { return entry.handle == handle; });
 }
 
 void World::remove_world_cleared_observer(ObserverHandle handle) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   std::erase_if(m_world_cleared_observers,
-                [handle](const auto &entry) { return entry.handle == handle; });
+                [handle](const auto& entry) { return entry.handle == handle; });
 }
 
 } // namespace Engine::Core

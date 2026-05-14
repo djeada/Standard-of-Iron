@@ -2,13 +2,14 @@
 
 #pragma once
 
-#include "gl/buffer.h"
-
 #include <QOpenGLFunctions_3_3_Core>
+
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "gl/buffer.h"
 
 namespace Render::GL {
 
@@ -24,8 +25,7 @@ struct RiggedVertex {
 
 class RiggedMesh : protected QOpenGLFunctions_3_3_Core {
 public:
-  RiggedMesh(std::vector<RiggedVertex> vertices,
-             std::vector<std::uint32_t> indices);
+  RiggedMesh(std::vector<RiggedVertex> vertices, std::vector<std::uint32_t> indices);
   ~RiggedMesh() override;
 
   auto bind_vao() -> bool;
@@ -33,12 +33,10 @@ public:
 
   void draw();
 
-  [[nodiscard]] auto
-  get_vertices() const noexcept -> const std::vector<RiggedVertex> & {
+  [[nodiscard]] auto get_vertices() const noexcept -> const std::vector<RiggedVertex>& {
     return m_vertices;
   }
-  [[nodiscard]] auto
-  get_indices() const noexcept -> const std::vector<std::uint32_t> & {
+  [[nodiscard]] auto get_indices() const noexcept -> const std::vector<std::uint32_t>& {
     return m_indices;
   }
 
@@ -50,10 +48,8 @@ public:
   }
 
   auto ensure_gl_buffers() -> bool;
-  [[nodiscard]] auto vertex_buffer() noexcept -> Buffer * {
-    return m_vbo.get();
-  }
-  [[nodiscard]] auto index_buffer() noexcept -> Buffer * { return m_ebo.get(); }
+  [[nodiscard]] auto vertex_buffer() noexcept -> Buffer* { return m_vbo.get(); }
+  [[nodiscard]] auto index_buffer() noexcept -> Buffer* { return m_ebo.get(); }
 
 private:
   std::vector<RiggedVertex> m_vertices;

@@ -1,4 +1,11 @@
 #include "capture_system.h"
+
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
@@ -10,26 +17,24 @@
 #include "building_collision_registry.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
-#include <algorithm>
-#include <cmath>
-#include <qvectornd.h>
-#include <vector>
 
 namespace Game::Systems {
 
-void CaptureSystem::update(Engine::Core::World *world, float delta_time) {
+void CaptureSystem::update(Engine::Core::World* world, float delta_time) {
   process_barrack_capture(world, delta_time);
 }
 
-auto CaptureSystem::count_nearby_troops(Engine::Core::World *world,
-                                        float barrack_x, float barrack_z,
-                                        int owner_id, float radius) -> int {
+auto CaptureSystem::count_nearby_troops(Engine::Core::World* world,
+                                        float barrack_x,
+                                        float barrack_z,
+                                        int owner_id,
+                                        float radius) -> int {
   int total_troops = 0;
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
 
-  for (auto *e : entities) {
-    auto *unit = e->get_component<Engine::Core::UnitComponent>();
-    auto *transform = e->get_component<Engine::Core::TransformComponent>();
+  for (auto* e : entities) {
+    auto* unit = e->get_component<Engine::Core::UnitComponent>();
+    auto* transform = e->get_component<Engine::Core::TransformComponent>();
 
     if ((unit == nullptr) || (transform == nullptr) || unit->health <= 0) {
       continue;
@@ -49,8 +54,7 @@ auto CaptureSystem::count_nearby_troops(Engine::Core::World *world,
 
     if (dist_sq <= radius * radius) {
       int const production_cost =
-          Game::Units::TroopConfig::instance().get_production_cost(
-              unit->spawn_type);
+          Game::Units::TroopConfig::instance().get_production_cost(unit->spawn_type);
       total_troops += production_cost;
     }
   }
@@ -58,14 +62,13 @@ auto CaptureSystem::count_nearby_troops(Engine::Core::World *world,
   return total_troops;
 }
 
-void CaptureSystem::transfer_barrack_ownership(Engine::Core::World *,
-                                               Engine::Core::Entity *barrack,
+void CaptureSystem::transfer_barrack_ownership(Engine::Core::World*,
+                                               Engine::Core::Entity* barrack,
                                                int new_owner_id) {
-  auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
-  auto *renderable =
-      barrack->get_component<Engine::Core::RenderableComponent>();
-  auto *transform = barrack->get_component<Engine::Core::TransformComponent>();
-  auto *prod = barrack->get_component<Engine::Core::ProductionComponent>();
+  auto* unit = barrack->get_component<Engine::Core::UnitComponent>();
+  auto* renderable = barrack->get_component<Engine::Core::RenderableComponent>();
+  auto* transform = barrack->get_component<Engine::Core::TransformComponent>();
+  auto* prod = barrack->get_component<Engine::Core::ProductionComponent>();
 
   if ((unit == nullptr) || (renderable == nullptr) || (transform == nullptr)) {
     return;
@@ -108,22 +111,20 @@ void CaptureSystem::transfer_barrack_ownership(Engine::Core::World *,
     prod->villager_cost = profile.production.cost;
   }
 
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::BarrackCapturedEvent(barrack->get_id(), previous_owner_id,
-                                         new_owner_id));
+  Engine::Core::EventManager::instance().publish(Engine::Core::BarrackCapturedEvent(
+      barrack->get_id(), previous_owner_id, new_owner_id));
 }
 
-void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
+void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
                                             float delta_time) {
   constexpr float capture_radius = 8.0F;
   constexpr int troop_advantage_multiplier = 3;
 
   auto barracks = world->get_entities_with<Engine::Core::BuildingComponent>();
 
-  for (auto *barrack : barracks) {
-    auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
-    auto *transform =
-        barrack->get_component<Engine::Core::TransformComponent>();
+  for (auto* barrack : barracks) {
+    auto* unit = barrack->get_component<Engine::Core::UnitComponent>();
+    auto* transform = barrack->get_component<Engine::Core::TransformComponent>();
 
     if ((unit == nullptr) || (transform == nullptr)) {
       continue;
@@ -133,7 +134,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
       continue;
     }
 
-    auto *capture = barrack->get_component<Engine::Core::CaptureComponent>();
+    auto* capture = barrack->get_component<Engine::Core::CaptureComponent>();
     if (capture == nullptr) {
       capture = barrack->add_component<Engine::Core::CaptureComponent>();
     }
@@ -147,8 +148,8 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
 
     auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
     std::vector<int> player_ids;
-    for (auto *e : entities) {
-      auto *u = e->get_component<Engine::Core::UnitComponent>();
+    for (auto* e : entities) {
+      auto* u = e->get_component<Engine::Core::UnitComponent>();
       if ((u != nullptr) && u->owner_id != barrack_owner_id &&
           !Game::Core::is_neutral_owner(u->owner_id)) {
         if (std::find(player_ids.begin(), player_ids.end(), u->owner_id) ==
@@ -159,8 +160,8 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
     }
 
     for (int const player_id : player_ids) {
-      int const troop_count = count_nearby_troops(world, barrack_x, barrack_z,
-                                                  player_id, capture_radius);
+      int const troop_count =
+          count_nearby_troops(world, barrack_x, barrack_z, player_id, capture_radius);
       if (troop_count > max_enemy_troops) {
         max_enemy_troops = troop_count;
         capturing_player_id = player_id;
@@ -169,8 +170,8 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
 
     int defender_troops = 0;
     if (!Game::Core::is_neutral_owner(barrack_owner_id)) {
-      defender_troops = count_nearby_troops(world, barrack_x, barrack_z,
-                                            barrack_owner_id, capture_radius);
+      defender_troops = count_nearby_troops(
+          world, barrack_x, barrack_z, barrack_owner_id, capture_radius);
     }
 
     bool const can_capture =

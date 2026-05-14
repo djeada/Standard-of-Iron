@@ -1,13 +1,15 @@
 #pragma once
 
-#include "../draw_queue.h"
-#include "../gl/buffer.h"
-#include "../i_render_pass.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "../draw_queue.h"
+#include "../gl/buffer.h"
+#include "../i_render_pass.h"
 
 namespace Render::GL {
 class Renderer;
@@ -21,10 +23,12 @@ public:
   void set_enabled(bool enabled) { m_enabled = enabled; }
   [[nodiscard]] auto is_enabled() const -> bool { return m_enabled; }
 
-  void update_mask(int width, int height, float tile_size,
-                   const std::vector<std::uint8_t> &cells);
+  void update_mask(int width,
+                   int height,
+                   float tile_size,
+                   const std::vector<std::uint8_t>& cells);
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
 private:
   void build_chunks();

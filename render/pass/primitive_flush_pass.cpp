@@ -6,9 +6,9 @@
 
 namespace Render::Pass {
 
-void PrimitiveFlushPass::execute(FrameContext &ctx) {
-  auto *batcher = ctx.primitive_batcher;
-  auto *queue = ctx.queue;
+void PrimitiveFlushPass::execute(FrameContext& ctx) {
+  auto* batcher = ctx.primitive_batcher;
+  auto* queue = ctx.queue;
   if (batcher == nullptr || queue == nullptr) {
     return;
   }

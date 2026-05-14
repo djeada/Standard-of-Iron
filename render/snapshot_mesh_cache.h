@@ -1,13 +1,14 @@
 #pragma once
 
-#include "creature/pipeline/creature_asset.h"
-#include "creature/render_request.h"
-#include "rigged_mesh.h"
-
 #include <QMatrix4x4>
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+
+#include "creature/pipeline/creature_asset.h"
+#include "creature/render_request.h"
+#include "rigged_mesh.h"
 
 namespace Render::Creature::Bpat {
 class BpatBlob;
@@ -34,18 +35,16 @@ public:
   struct Key {
     Render::Creature::Pipeline::CreatureAssetId asset_id{
         Render::Creature::Pipeline::k_invalid_creature_asset};
-    Render::Creature::ArchetypeId archetype{
-        Render::Creature::k_invalid_archetype};
+    Render::Creature::ArchetypeId archetype{Render::Creature::k_invalid_archetype};
     Render::Creature::Pipeline::AttachmentSetId attachment_set_id{
         Render::Creature::Pipeline::k_invalid_attachment_set_id};
     Render::Creature::VariantId variant{Render::Creature::k_canonical_variant};
-    Render::Creature::AnimationStateId state{
-        Render::Creature::AnimationStateId::Idle};
+    Render::Creature::AnimationStateId state{Render::Creature::AnimationStateId::Idle};
     std::uint16_t clip_id{0xFFFFu};
     std::uint8_t clip_variant{0};
     std::uint32_t frame_in_clip{0};
 
-    auto operator==(const Key &o) const noexcept -> bool {
+    auto operator==(const Key& o) const noexcept -> bool {
       return asset_id == o.asset_id && archetype == o.archetype &&
              attachment_set_id == o.attachment_set_id && variant == o.variant &&
              state == o.state && clip_id == o.clip_id &&
@@ -54,7 +53,7 @@ public:
   };
 
   struct KeyHash {
-    auto operator()(const Key &k) const noexcept -> std::size_t {
+    auto operator()(const Key& k) const noexcept -> std::size_t {
       auto const a = static_cast<std::size_t>(k.archetype);
       auto const asset = static_cast<std::size_t>(k.asset_id);
       auto const set = static_cast<std::size_t>(k.attachment_set_id);
@@ -63,16 +62,16 @@ public:
       auto const c = static_cast<std::size_t>(k.clip_id);
       auto const cv = static_cast<std::size_t>(k.clip_variant);
       auto const f = static_cast<std::size_t>(k.frame_in_clip);
-      return ((asset * 0x165667B1ULL) ^ (a * 0x9E3779B1u) ^
-              (set * 0x27D4EB2FULL) ^ (v << 13U) ^ (s << 21U) ^
-              (c * 0x85EBCA6BULL) ^ (cv << 7U) ^ (f * 0xC2B2AE35ULL));
+      return ((asset * 0x165667B1ULL) ^ (a * 0x9E3779B1u) ^ (set * 0x27D4EB2FULL) ^
+              (v << 13U) ^ (s << 21U) ^ (c * 0x85EBCA6BULL) ^ (cv << 7U) ^
+              (f * 0xC2B2AE35ULL));
     }
   };
 
   SnapshotMeshCache() = default;
   ~SnapshotMeshCache() = default;
-  SnapshotMeshCache(const SnapshotMeshCache &) = delete;
-  auto operator=(const SnapshotMeshCache &) -> SnapshotMeshCache & = delete;
+  SnapshotMeshCache(const SnapshotMeshCache&) = delete;
+  auto operator=(const SnapshotMeshCache&) -> SnapshotMeshCache& = delete;
 
   struct FrameStats {
     std::uint32_t hits{0};
@@ -82,26 +81,25 @@ public:
   };
 
   void reset_frame_stats() noexcept { m_frame_stats = {}; }
-  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats & {
+  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats& {
     return m_frame_stats;
   }
   void reserve_for_frame(std::size_t expected_entries) {
     m_entries.reserve(m_entries.size() + expected_entries);
   }
 
-  auto get_or_bake(const Key &key, const RiggedMeshEntry &source,
-                   std::uint32_t global_frame) -> const SnapshotMeshEntry *;
-  auto get_or_load(const Key &key,
-                   const Render::Creature::Snapshot::SnapshotMeshBlob &source,
-                   std::uint32_t global_frame) -> const SnapshotMeshEntry *;
+  auto get_or_bake(const Key& key,
+                   const RiggedMeshEntry& source,
+                   std::uint32_t global_frame) -> const SnapshotMeshEntry*;
+  auto get_or_load(const Key& key,
+                   const Render::Creature::Snapshot::SnapshotMeshBlob& source,
+                   std::uint32_t global_frame) -> const SnapshotMeshEntry*;
 
   void clear() { m_entries.clear(); }
 
-  [[nodiscard]] auto size() const noexcept -> std::size_t {
-    return m_entries.size();
-  }
+  [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
 
-  [[nodiscard]] static auto identity_palette() noexcept -> const QMatrix4x4 *;
+  [[nodiscard]] static auto identity_palette() noexcept -> const QMatrix4x4*;
 
 private:
   std::unordered_map<Key, SnapshotMeshEntry, KeyHash> m_entries;

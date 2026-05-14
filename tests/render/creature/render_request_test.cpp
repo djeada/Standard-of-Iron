@@ -1,5 +1,14 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
@@ -14,14 +23,6 @@
 #include "render/humanoid/skeleton.h"
 #include "render/submitter.h"
 #include "tests/render/test_asset_paths.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <gtest/gtest.h>
-#include <vector>
 
 namespace {
 
@@ -41,40 +42,37 @@ auto palette_contact_y(CreatureKind kind,
   };
   switch (kind) {
   case CreatureKind::Humanoid:
-    return std::min(bind_adjusted_y(static_cast<std::size_t>(
-                                        Render::Humanoid::HumanoidBone::FootL),
-                                    Render::Humanoid::humanoid_bind_palette()),
-                    bind_adjusted_y(static_cast<std::size_t>(
-                                        Render::Humanoid::HumanoidBone::FootR),
-                                    Render::Humanoid::humanoid_bind_palette()));
+    return std::min(
+        bind_adjusted_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL),
+                        Render::Humanoid::humanoid_bind_palette()),
+        bind_adjusted_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR),
+                        Render::Humanoid::humanoid_bind_palette()));
   case CreatureKind::Horse:
     return std::min(
-        std::min(bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Horse::HorseBone::FootFL),
-                     Render::Horse::horse_bind_palette()),
-                 bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Horse::HorseBone::FootFR),
-                     Render::Horse::horse_bind_palette())),
-        std::min(bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Horse::HorseBone::FootBL),
-                     Render::Horse::horse_bind_palette()),
-                 bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Horse::HorseBone::FootBR),
-                     Render::Horse::horse_bind_palette())));
+        std::min(
+            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFL),
+                            Render::Horse::horse_bind_palette()),
+            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFR),
+                            Render::Horse::horse_bind_palette())),
+        std::min(
+            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBL),
+                            Render::Horse::horse_bind_palette()),
+            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBR),
+                            Render::Horse::horse_bind_palette())));
   case CreatureKind::Elephant:
     return std::min(
-        std::min(bind_adjusted_y(static_cast<std::size_t>(
-                                     Render::Elephant::ElephantBone::FootFL),
-                                 Render::Elephant::elephant_bind_palette()),
-                 bind_adjusted_y(static_cast<std::size_t>(
-                                     Render::Elephant::ElephantBone::FootFR),
-                                 Render::Elephant::elephant_bind_palette())),
-        std::min(bind_adjusted_y(static_cast<std::size_t>(
-                                     Render::Elephant::ElephantBone::FootBL),
-                                 Render::Elephant::elephant_bind_palette()),
-                 bind_adjusted_y(static_cast<std::size_t>(
-                                     Render::Elephant::ElephantBone::FootBR),
-                                 Render::Elephant::elephant_bind_palette())));
+        std::min(bind_adjusted_y(
+                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFL),
+                     Render::Elephant::elephant_bind_palette()),
+                 bind_adjusted_y(
+                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFR),
+                     Render::Elephant::elephant_bind_palette())),
+        std::min(bind_adjusted_y(
+                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBL),
+                     Render::Elephant::elephant_bind_palette()),
+                 bind_adjusted_y(
+                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBR),
+                     Render::Elephant::elephant_bind_palette())));
   case CreatureKind::Mounted:
     return 0.0F;
   }
@@ -89,145 +87,140 @@ public:
   std::vector<float> rigged_world_z;
   std::vector<QMatrix4x4> last_bone_palette;
 
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {
     ++mesh_calls;
   }
-  void rigged(const Render::GL::RiggedCreatureCmd &cmd) override {
+  void rigged(const Render::GL::RiggedCreatureCmd& cmd) override {
     ++rigged_calls;
     rigged_world_y.push_back(cmd.world.column(3).y());
     rigged_world_z.push_back(cmd.world.column(3).z());
-    last_bone_palette.assign(cmd.bone_palette,
-                             cmd.bone_palette + cmd.bone_count);
+    last_bone_palette.assign(cmd.bone_palette, cmd.bone_palette + cmd.bone_count);
   }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 TEST(ArchetypeRegistryBaseline, HasThreeSpeciesArchetypes) {
-  const auto &reg = ArchetypeRegistry::instance();
+  const auto& reg = ArchetypeRegistry::instance();
   ASSERT_GE(reg.size(), 3U);
 
-  EXPECT_EQ(reg.species(ArchetypeRegistry::k_humanoid_base),
-            CreatureKind::Humanoid);
+  EXPECT_EQ(reg.species(ArchetypeRegistry::k_humanoid_base), CreatureKind::Humanoid);
   EXPECT_EQ(reg.species(ArchetypeRegistry::k_horse_base), CreatureKind::Horse);
-  EXPECT_EQ(reg.species(ArchetypeRegistry::k_elephant_base),
-            CreatureKind::Elephant);
+  EXPECT_EQ(reg.species(ArchetypeRegistry::k_elephant_base), CreatureKind::Elephant);
 }
 
 TEST(ArchetypeRegistryBaseline, IdleClipIsZeroForEverySpecies) {
-  const auto &reg = ArchetypeRegistry::instance();
-  EXPECT_EQ(
-      reg.bpat_clip(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle),
-      0U);
-  EXPECT_EQ(
-      reg.bpat_clip(ArchetypeRegistry::k_horse_base, AnimationStateId::Idle),
-      0U);
-  EXPECT_EQ(
-      reg.bpat_clip(ArchetypeRegistry::k_elephant_base, AnimationStateId::Idle),
-      0U);
+  const auto& reg = ArchetypeRegistry::instance();
+  EXPECT_EQ(reg.bpat_clip(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle),
+            0U);
+  EXPECT_EQ(reg.bpat_clip(ArchetypeRegistry::k_horse_base, AnimationStateId::Idle), 0U);
+  EXPECT_EQ(reg.bpat_clip(ArchetypeRegistry::k_elephant_base, AnimationStateId::Idle),
+            0U);
 }
 
 TEST(ArchetypeRegistryBaseline, GameplayStatesUseSnapshotCoverage) {
-  const auto &reg = ArchetypeRegistry::instance();
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
-                              AnimationStateId::Idle));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
-                              AnimationStateId::Walk));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
-                              AnimationStateId::Run));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
-                              AnimationStateId::Hold));
+  const auto& reg = ArchetypeRegistry::instance();
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle));
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Walk));
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Run));
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Hold));
   EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                               AnimationStateId::AttackSword));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
-                              AnimationStateId::AttackBow));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
-                              AnimationStateId::Dead));
-  EXPECT_FALSE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
-                               AnimationStateId::Die));
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::AttackBow));
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Dead));
+  EXPECT_FALSE(
+      reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Die));
   EXPECT_FALSE(reg.is_snapshot(ArchetypeRegistry::k_humanoid_base,
                                AnimationStateId::RidingIdle));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_horse_base, AnimationStateId::Run));
   EXPECT_TRUE(
-      reg.is_snapshot(ArchetypeRegistry::k_horse_base, AnimationStateId::Run));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_elephant_base,
-                              AnimationStateId::Walk));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_rider_base,
-                              AnimationStateId::RidingIdle));
-  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::k_rider_base,
-                              AnimationStateId::RidingCharge));
+      reg.is_snapshot(ArchetypeRegistry::k_elephant_base, AnimationStateId::Walk));
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::k_rider_base, AnimationStateId::RidingIdle));
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::k_rider_base, AnimationStateId::RidingCharge));
 }
 
 TEST(ArchetypeRegistryBaseline, UnknownArchetypeReturnsUnmappedClip) {
-  const auto &reg = ArchetypeRegistry::instance();
+  const auto& reg = ArchetypeRegistry::instance();
   EXPECT_EQ(reg.bpat_clip(9999, AnimationStateId::Idle),
             ArchetypeDescriptor::k_unmapped_clip);
   EXPECT_EQ(reg.get(9999), nullptr);
 }
 
 TEST(ArchetypeRegistryBaseline, VariantCountsReflectBakedClipFamilies) {
-  const auto &reg = ArchetypeRegistry::instance();
+  const auto& reg = ArchetypeRegistry::instance();
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::AttackSword),
             3U);
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::AttackBow),
             1U);
-  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_rider_base,
-                                   AnimationStateId::Die),
-            1U);
+  EXPECT_EQ(
+      reg.clip_variant_count(ArchetypeRegistry::k_rider_base, AnimationStateId::Die),
+      1U);
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::Idle),
             5U);
 }
 
 TEST(ArchetypeRegistryBaseline, IdleVariantsResolveToAmbientIdleClips) {
-  const auto &reg = ArchetypeRegistry::instance();
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
-                                  AnimationStateId::Idle, 0U),
+  const auto& reg = ArchetypeRegistry::instance();
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle, 0U),
             Render::Creature::k_humanoid_idle_clip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
-                                  AnimationStateId::Idle, 1U),
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle, 1U),
             Render::Creature::k_humanoid_idle_squat_clip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
-                                  AnimationStateId::Idle, 2U),
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle, 2U),
             Render::Creature::k_humanoid_idle_jump_clip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
-                                  AnimationStateId::Idle, 3U),
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle, 3U),
             Render::Creature::k_humanoid_idle_weapon_clip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
-                                  AnimationStateId::Idle, 4U),
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle, 4U),
             Render::Creature::k_humanoid_idle_weave_clip);
 }
 
 TEST(ArchetypeRegistryBaseline, ResolveBpatClipClampsInsideClipFamily) {
-  const auto &reg = ArchetypeRegistry::instance();
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
-                                  AnimationStateId::AttackSword, 2U),
+  const auto& reg = ArchetypeRegistry::instance();
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_humanoid_base, AnimationStateId::AttackSword, 2U),
             Render::Creature::k_humanoid_attack_sword_c_clip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_humanoid_base,
-                                  AnimationStateId::AttackSword, 99U),
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_humanoid_base, AnimationStateId::AttackSword, 99U),
             Render::Creature::k_humanoid_attack_sword_c_clip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_rider_base,
-                                  AnimationStateId::Die, 3U),
-            Render::Creature::k_humanoid_die_mounted_clip);
-  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::k_rider_base,
-                                  AnimationStateId::Dead, 3U),
+  EXPECT_EQ(
+      reg.resolve_bpat_clip(ArchetypeRegistry::k_rider_base, AnimationStateId::Die, 3U),
+      Render::Creature::k_humanoid_die_mounted_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_rider_base, AnimationStateId::Dead, 3U),
             Render::Creature::k_humanoid_dead_mounted_clip);
 }
 
@@ -246,7 +239,7 @@ TEST(SubmitPreparation, RequestOnlyPreparationStillDrawsBodies) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
 
-  auto &reg = BpatRegistry::instance();
+  auto& reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
   Render::Creature::Pipeline::CreaturePreparationResult prep;
@@ -269,7 +262,7 @@ TEST(SubmitPreparation, ShadowRequestsAreSkipped) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
 
-  auto &reg = BpatRegistry::instance();
+  auto& reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
   Render::Creature::Pipeline::CreaturePreparationResult prep;
@@ -293,7 +286,7 @@ TEST(SubmitPreparation, ExplicitMainRequestDoesNotDependOnShadowRows) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
 
-  auto &reg = BpatRegistry::instance();
+  auto& reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
   Render::Creature::Pipeline::CreaturePreparationResult prep;
@@ -427,12 +420,12 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
   EXPECT_NEAR(sink.rigged_world_y[1] - sink.rigged_world_y[0], 0.75F, 1.0e-4F);
   EXPECT_NEAR(sink.rigged_world_y[3] - sink.rigged_world_y[2], 0.75F, 1.0e-4F);
   EXPECT_NEAR(sink.rigged_world_y[2] - sink.rigged_world_y[0], 1.0F, 1.0e-4F);
-  EXPECT_TRUE(
-      std::any_of(sink.rigged_world_z.begin(), sink.rigged_world_z.end(),
-                  [](float z) { return std::fabs(z - 0.10F) < 1.0e-4F; }));
-  EXPECT_TRUE(
-      std::any_of(sink.rigged_world_z.begin(), sink.rigged_world_z.end(),
-                  [](float z) { return std::fabs(z - 0.25F) < 1.0e-4F; }));
+  EXPECT_TRUE(std::any_of(sink.rigged_world_z.begin(),
+                          sink.rigged_world_z.end(),
+                          [](float z) { return std::fabs(z - 0.10F) < 1.0e-4F; }));
+  EXPECT_TRUE(std::any_of(sink.rigged_world_z.begin(),
+                          sink.rigged_world_z.end(),
+                          [](float z) { return std::fabs(z - 0.25F) < 1.0e-4F; }));
 }
 
 TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
@@ -441,14 +434,14 @@ TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
 
-  auto &reg = BpatRegistry::instance();
+  auto& reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
   ASSERT_TRUE(reg.load_species(k_species_horse, root + "/horse.bpat"));
   ASSERT_TRUE(reg.load_species(k_species_elephant, root + "/elephant.bpat"));
 
-  auto const *humanoid_blob = reg.blob(k_species_humanoid);
-  auto const *horse_blob = reg.blob(k_species_horse);
-  auto const *elephant_blob = reg.blob(k_species_elephant);
+  auto const* humanoid_blob = reg.blob(k_species_humanoid);
+  auto const* horse_blob = reg.blob(k_species_horse);
+  auto const* elephant_blob = reg.blob(k_species_elephant);
   ASSERT_NE(humanoid_blob, nullptr);
   ASSERT_NE(horse_blob, nullptr);
   ASSERT_NE(elephant_blob, nullptr);
@@ -473,12 +466,12 @@ TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
   ASSERT_EQ(sink.rigged_calls, 3U);
   ASSERT_EQ(sink.rigged_world_y.size(), 3u);
 
-  float const humanoid_contact = palette_contact_y(
-      CreatureKind::Humanoid, humanoid_blob->frame_palette_view(0));
+  float const humanoid_contact =
+      palette_contact_y(CreatureKind::Humanoid, humanoid_blob->frame_palette_view(0));
   float const horse_contact =
       palette_contact_y(CreatureKind::Horse, horse_blob->frame_palette_view(0));
-  float const elephant_contact = palette_contact_y(
-      CreatureKind::Elephant, elephant_blob->frame_palette_view(0));
+  float const elephant_contact =
+      palette_contact_y(CreatureKind::Elephant, elephant_blob->frame_palette_view(0));
 
   EXPECT_NEAR(sink.rigged_world_y[0], -humanoid_contact, 1.0e-4F);
   EXPECT_NEAR(sink.rigged_world_y[1], -horse_contact, 1.0e-4F);
@@ -491,7 +484,7 @@ TEST(SubmitRequests, GroundedRootCreaturesPreserveProvidedWorldHeight) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
 
-  auto &reg = BpatRegistry::instance();
+  auto& reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
   CreaturePipeline pipeline;
@@ -519,10 +512,10 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
 
-  auto &reg = BpatRegistry::instance();
+  auto& reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
-  ASSERT_TRUE(reg.load_species(k_species_humanoid_sword,
-                               root + "/humanoid_sword.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
 
   auto make_request = [](Render::Creature::Pipeline::CreatureAssetId asset_id) {
     CreatureRenderRequest req{};
@@ -549,8 +542,7 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
   ASSERT_EQ(sword_sink.rigged_calls, 1U);
   ASSERT_GT(default_sink.last_bone_palette.size(),
             static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR));
-  ASSERT_EQ(default_sink.last_bone_palette.size(),
-            sword_sink.last_bone_palette.size());
+  ASSERT_EQ(default_sink.last_bone_palette.size(), sword_sink.last_bone_palette.size());
 
   auto const hand_r_index =
       static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
@@ -563,7 +555,7 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
 }
 
 TEST(ArchetypeRegistry, RegisterArchetypeAssignsStableId) {
-  auto &reg = ArchetypeRegistry::instance();
+  auto& reg = ArchetypeRegistry::instance();
   const auto baseline_size = reg.size();
 
   ArchetypeDescriptor desc{};
@@ -577,7 +569,7 @@ TEST(ArchetypeRegistry, RegisterArchetypeAssignsStableId) {
   ASSERT_NE(new_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(reg.size(), baseline_size + 1U);
 
-  const auto *fetched = reg.get(new_id);
+  const auto* fetched = reg.get(new_id);
   ASSERT_NE(fetched, nullptr);
   EXPECT_EQ(fetched->id, new_id);
   EXPECT_EQ(fetched->species, CreatureKind::Humanoid);

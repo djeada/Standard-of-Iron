@@ -1,7 +1,8 @@
 #include "archer_style.h"
-#include "archer_renderer.h"
 
 #include <QVector3D>
+
+#include "archer_renderer.h"
 
 namespace {
 constexpr QVector3D k_roman_cloth{0.72F, 0.16F, 0.18F};

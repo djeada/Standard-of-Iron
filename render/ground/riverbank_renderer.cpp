@@ -1,20 +1,23 @@
 #include "riverbank_renderer.h"
+
+#include <QVector2D>
+#include <QVector3D>
+#include <qglobal.h>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
+
+#include <GL/gl.h>
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "../../game/map/visibility_service.h"
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "linear_feature_geometry.h"
 #include "map/terrain.h"
-#include <GL/gl.h>
-#include <QVector2D>
-#include <QVector3D>
-#include <cstddef>
-#include <memory>
-#include <qglobal.h>
-#include <qmatrix4x4.h>
-#include <qvectornd.h>
-#include <utility>
-#include <vector>
 
 namespace Render::GL {
 
@@ -22,8 +25,8 @@ RiverbankRenderer::RiverbankRenderer() = default;
 RiverbankRenderer::~RiverbankRenderer() = default;
 
 void RiverbankRenderer::configure(
-    const std::vector<Game::Map::RiverSegment> &river_segments,
-    const Game::Map::TerrainHeightMap &height_map) {
+    const std::vector<Game::Map::RiverSegment>& river_segments,
+    const Game::Map::TerrainHeightMap& height_map) {
   m_river_segments = river_segments;
   m_tile_size = height_map.get_tile_size();
   m_visibility_texture.reset();
@@ -33,8 +36,7 @@ void RiverbankRenderer::configure(
   build_meshes(height_map);
 }
 
-void RiverbankRenderer::build_meshes(
-    const Game::Map::TerrainHeightMap &height_map) {
+void RiverbankRenderer::build_meshes(const Game::Map::TerrainHeightMap& height_map) {
   m_meshes.clear();
   m_visibility_samples.clear();
 
@@ -42,31 +44,30 @@ void RiverbankRenderer::build_meshes(
     return;
   }
 
-  for (const auto &segment : m_river_segments) {
+  for (const auto& segment : m_river_segments) {
     auto mesh_result = Ground::build_riverbank_mesh(segment, height_map);
     m_meshes.push_back(std::move(mesh_result.mesh));
     m_visibility_samples.push_back(std::move(mesh_result.visibility_samples));
   }
 }
 
-void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   if (m_meshes.empty() || m_river_segments.empty()) {
     return;
   }
 
   Q_UNUSED(resources);
 
-  auto *backend = renderer.backend();
-  auto &visibility = Game::Map::VisibilityService::instance();
+  auto* backend = renderer.backend();
+  auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
-  const std::uint64_t visibility_version =
-      use_visibility ? visibility.version() : 0;
+  const std::uint64_t visibility_version = use_visibility ? visibility.version() : 0;
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
   if (use_visibility) {
     visibility_snapshot = visibility.snapshot();
   }
 
-  Texture *visibility_tex = nullptr;
+  Texture* visibility_tex = nullptr;
   QVector2D visibility_size(0.0F, 0.0F);
 
   if (use_visibility) {
@@ -88,9 +89,9 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     }
 
     if (visibility_version != m_cached_visibility_version || size_changed) {
-      const auto &cells = visibility_snapshot.cells;
-      std::vector<unsigned char> texels(
-          static_cast<std::size_t>(vis_w * vis_h * 4), 0U);
+      const auto& cells = visibility_snapshot.cells;
+      std::vector<unsigned char> texels(static_cast<std::size_t>(vis_w * vis_h * 4),
+                                        0U);
 
       for (int z = 0; z < vis_h; ++z) {
         for (int x = 0; x < vis_w; ++x) {
@@ -114,16 +115,22 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       }
 
       m_visibility_texture->bind();
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, vis_w, vis_h, GL_RGBA,
-                      GL_UNSIGNED_BYTE, texels.data());
+      glTexSubImage2D(GL_TEXTURE_2D,
+                      0,
+                      0,
+                      0,
+                      vis_w,
+                      vis_h,
+                      GL_RGBA,
+                      GL_UNSIGNED_BYTE,
+                      texels.data());
       visibility_tex = m_visibility_texture.get();
       m_cached_visibility_version = visibility_version;
     } else {
       visibility_tex = m_visibility_texture.get();
     }
 
-    visibility_size =
-        QVector2D(static_cast<float>(vis_w), static_cast<float>(vis_h));
+    visibility_size = QVector2D(static_cast<float>(vis_w), static_cast<float>(vis_h));
   }
 
   QMatrix4x4 model;
@@ -137,12 +144,12 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   visibility_resources.enabled = use_visibility && visibility_tex != nullptr;
 
   size_t mesh_index = 0;
-  for (const auto &segment : m_river_segments) {
+  for (const auto& segment : m_river_segments) {
     if (mesh_index >= m_meshes.size()) {
       break;
     }
 
-    auto *mesh = m_meshes[mesh_index].get();
+    auto* mesh = m_meshes[mesh_index].get();
     ++mesh_index;
 
     if (mesh == nullptr) {
@@ -151,14 +158,18 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
     float segment_visibility = 1.0F;
     if (use_visibility) {
-      enum class SegmentState { Hidden, Explored, Visible };
+      enum class SegmentState {
+        Hidden,
+        Explored,
+        Visible
+      };
       SegmentState state = SegmentState::Hidden;
 
-      const auto &samples = m_visibility_samples[mesh_index - 1];
+      const auto& samples = m_visibility_samples[mesh_index - 1];
       if (samples.empty()) {
         state = SegmentState::Visible;
       }
-      for (const auto &sample : samples) {
+      for (const auto& sample : samples) {
         if (visibility_snapshot.is_visible_world(sample.x(), sample.z())) {
           state = SegmentState::Visible;
           break;

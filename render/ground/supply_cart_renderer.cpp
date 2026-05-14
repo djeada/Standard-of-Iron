@@ -1,11 +1,13 @@
 #include "supply_cart_renderer.h"
+
+#include <QVector4D>
+
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "gl/render_constants.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
-#include <QVector4D>
 
 namespace {
 
@@ -23,28 +25,26 @@ SupplyCartRenderer::SupplyCartRenderer() = default;
 SupplyCartRenderer::~SupplyCartRenderer() = default;
 
 void SupplyCartRenderer::configure(
-    const Game::Map::TerrainHeightMap &height_map,
-    const Game::Map::BiomeSettings &biome_settings,
-    const std::vector<Game::Map::WorldProp> &world_props) {
+    const Game::Map::TerrainHeightMap& height_map,
+    const Game::Map::BiomeSettings& biome_settings,
+    const std::vector<Game::Map::WorldProp>& world_props) {
   m_biome_settings = biome_settings;
   m_state.reset_instances();
   m_state.params.light_direction = m_light_direction;
   generate_instances(world_props, height_map);
 }
 
-void SupplyCartRenderer::set_light_direction(const QVector3D &dir) {
-  m_light_direction = dir.isNull()
-                          ? SupplyCartBatchParams::default_light_direction()
-                          : dir.normalized();
+void SupplyCartRenderer::set_light_direction(const QVector3D& dir) {
+  m_light_direction = dir.isNull() ? SupplyCartBatchParams::default_light_direction()
+                                   : dir.normalized();
   m_state.params.light_direction = m_light_direction;
 }
 
-void SupplyCartRenderer::submit(Renderer &renderer,
-                                ResourceManager *resources) {
+void SupplyCartRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_state, [](const SupplyCartInstanceGpu &inst) -> const QVector4D & {
+      m_state, [](const SupplyCartInstanceGpu& inst) -> const QVector4D& {
         return inst.pos_scale;
       });
   if (visible_count == 0 || !m_state.instance_buffer) {
@@ -61,19 +61,21 @@ void SupplyCartRenderer::submit(Renderer &renderer,
   renderer.terrain_scatter(cmd);
 }
 
-void SupplyCartRenderer::clear() { m_state.reset_instances(); }
+void SupplyCartRenderer::clear() {
+  m_state.reset_instances();
+}
 
 void SupplyCartRenderer::generate_instances(
-    const std::vector<Game::Map::WorldProp> &world_props,
-    const Game::Map::TerrainHeightMap &height_map) {
+    const std::vector<Game::Map::WorldProp>& world_props,
+    const Game::Map::TerrainHeightMap& height_map) {
 
-  auto &terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Map::TerrainService::instance();
   const float tile_size = height_map.get_tile_size();
   const int width = height_map.get_width();
   const int map_height = height_map.get_height();
   const float half_w = static_cast<float>(width) * 0.5F;
   const float half_h = static_cast<float>(map_height) * 0.5F;
-  for (const auto &prop : world_props) {
+  for (const auto& prop : world_props) {
     if (prop.type != Game::Map::WorldProp::Type::SupplyCart) {
       continue;
     }
@@ -84,11 +86,13 @@ void SupplyCartRenderer::generate_instances(
 
     SupplyCartInstanceGpu inst;
     inst.pos_scale =
-        QVector4D(resolved.x(), resolved.y(), resolved.z(),
+        QVector4D(resolved.x(),
+                  resolved.y(),
+                  resolved.z(),
                   prop.scale * Game::Map::world_prop_render_scale(
                                    Game::Map::WorldProp::Type::SupplyCart));
-    inst.color_rot = QVector4D(k_base_color_r, k_base_color_g, k_base_color_b,
-                               prop.rotation);
+    inst.color_rot =
+        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, prop.rotation);
     m_state.instances.push_back(inst);
   }
 

@@ -1,12 +1,14 @@
 #pragma once
 
-#include "../systems/nation_id.h"
-#include "spawn_type.h"
-#include "troop_type.h"
 #include <QVector3D>
+
 #include <memory>
 #include <string>
 #include <utility>
+
+#include "../systems/nation_id.h"
+#include "spawn_type.h"
+#include "troop_type.h"
 
 namespace Engine::Core {
 class World;
@@ -37,9 +39,7 @@ public:
   virtual ~Unit() = default;
 
   [[nodiscard]] auto id() const -> Engine::Core::EntityID { return m_id; }
-  [[nodiscard]] auto type_string() const -> std::string {
-    return m_type_string;
-  }
+  [[nodiscard]] auto type_string() const -> std::string { return m_type_string; }
 
   void move_to(float x, float z);
   [[nodiscard]] auto is_alive() const -> bool;
@@ -59,24 +59,23 @@ public:
   [[nodiscard]] auto can_run() const -> bool;
 
 protected:
-  Unit(Engine::Core::World &world, TroopType type);
-  Unit(Engine::Core::World &world, std::string type);
-  [[nodiscard]] auto entity() const -> Engine::Core::Entity *;
+  Unit(Engine::Core::World& world, TroopType type);
+  Unit(Engine::Core::World& world, std::string type);
+  [[nodiscard]] auto entity() const -> Engine::Core::Entity*;
 
   void ensure_core_components();
 
-  static auto
-  resolve_nation_id(const SpawnParams &params) -> Game::Systems::NationID;
+  static auto resolve_nation_id(const SpawnParams& params) -> Game::Systems::NationID;
 
-  Engine::Core::World *m_world = nullptr;
+  Engine::Core::World* m_world = nullptr;
   Engine::Core::EntityID m_id = 0;
   std::string m_type_string;
 
-  Engine::Core::TransformComponent *m_t = nullptr;
-  Engine::Core::RenderableComponent *m_r = nullptr;
-  Engine::Core::UnitComponent *m_u = nullptr;
-  Engine::Core::MovementComponent *m_mv = nullptr;
-  Engine::Core::AttackComponent *m_atk = nullptr;
+  Engine::Core::TransformComponent* m_t = nullptr;
+  Engine::Core::RenderableComponent* m_r = nullptr;
+  Engine::Core::UnitComponent* m_u = nullptr;
+  Engine::Core::MovementComponent* m_mv = nullptr;
+  Engine::Core::AttackComponent* m_atk = nullptr;
 };
 
 } // namespace Game::Units

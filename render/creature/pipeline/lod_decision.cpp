@@ -2,8 +2,8 @@
 
 namespace Render::Creature::Pipeline {
 
-auto select_distance_lod(
-    float distance, const LodDistanceThresholds &t) noexcept -> CreatureLOD {
+auto select_distance_lod(float distance,
+                         const LodDistanceThresholds& t) noexcept -> CreatureLOD {
   if (distance < t.full) {
     return CreatureLOD::Full;
   }
@@ -13,7 +13,8 @@ auto select_distance_lod(
   return CreatureLOD::Billboard;
 }
 
-auto should_render_temporal(std::uint32_t frame, std::uint32_t seed,
+auto should_render_temporal(std::uint32_t frame,
+                            std::uint32_t seed,
                             std::uint32_t period) noexcept -> bool {
   if (period <= 1) {
     return true;
@@ -21,7 +22,7 @@ auto should_render_temporal(std::uint32_t frame, std::uint32_t seed,
   return ((frame + seed) % period) == 0U;
 }
 
-auto decide_creature_lod(const CreatureLodDecisionInputs &in) noexcept
+auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
     -> CreatureLodDecision {
   CreatureLodDecision out{};
 
@@ -48,10 +49,9 @@ auto decide_creature_lod(const CreatureLodDecisionInputs &in) noexcept
     out.lod = CreatureLOD::Minimal;
   }
 
-  if (out.lod == CreatureLOD::Minimal &&
-      in.distance > in.temporal.distance_minimal) {
-    if (!should_render_temporal(in.frame_index, in.instance_seed,
-                                in.temporal.period_minimal)) {
+  if (out.lod == CreatureLOD::Minimal && in.distance > in.temporal.distance_minimal) {
+    if (!should_render_temporal(
+            in.frame_index, in.instance_seed, in.temporal.period_minimal)) {
       out.culled = true;
       out.reason = CullReason::Temporal;
     }

@@ -1,8 +1,10 @@
+#include <QImage>
+
+#include <gtest/gtest.h>
+
 #include "map/map_definition.h"
 #include "map/minimap/minimap_generator.h"
 #include "map/minimap/minimap_utils.h"
-#include <QImage>
-#include <gtest/gtest.h>
 
 using namespace Game::Map;
 using namespace Game::Map::Minimap;
@@ -23,8 +25,7 @@ protected:
   }
 
   void TearDown() override {
-    MinimapOrientation::instance().set_yaw_degrees(
-        Constants::k_default_camera_yaw_deg);
+    MinimapOrientation::instance().set_yaw_degrees(Constants::k_default_camera_yaw_deg);
   }
 
   MapDefinition test_map;

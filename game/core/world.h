@@ -1,7 +1,5 @@
 #pragma once
 
-#include "entity.h"
-#include "system.h"
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -9,6 +7,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include "entity.h"
+#include "system.h"
 
 namespace Engine::Core {
 
@@ -23,32 +24,34 @@ public:
   World();
   ~World();
 
-  World(const World &) = delete;
-  World(World &&) = delete;
-  auto operator=(const World &) -> World & = delete;
-  auto operator=(World &&) -> World & = delete;
+  World(const World&) = delete;
+  World(World&&) = delete;
+  auto operator=(const World&) -> World& = delete;
+  auto operator=(World&&) -> World& = delete;
 
-  auto create_entity() -> Entity *;
-  auto create_entity_with_id(EntityID entity_id) -> Entity *;
+  auto create_entity() -> Entity*;
+  auto create_entity_with_id(EntityID entity_id) -> Entity*;
   void destroy_entity(EntityID entity_id);
-  auto get_entity(EntityID entity_id) -> Entity *;
+  auto get_entity(EntityID entity_id) -> Entity*;
   void clear();
 
   void add_system(std::unique_ptr<System> system);
   void update(float delta_time);
 
-  auto systems() -> std::vector<std::unique_ptr<System>> & { return m_systems; }
+  auto systems() -> std::vector<std::unique_ptr<System>>& { return m_systems; }
 
-  template <typename T> auto get_system() -> T * {
-    for (auto &system : m_systems) {
-      if (auto *ptr = dynamic_cast<T *>(system.get())) {
+  template <typename T>
+  auto get_system() -> T* {
+    for (auto& system : m_systems) {
+      if (auto* ptr = dynamic_cast<T*>(system.get())) {
         return ptr;
       }
     }
     return nullptr;
   }
 
-  template <typename T> auto get_entities_with() -> std::vector<Entity *> {
+  template <typename T>
+  auto get_entities_with() -> std::vector<Entity*> {
     const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
     std::type_index const type_idx = std::type_index(typeid(T));
 
@@ -57,7 +60,7 @@ public:
       return {};
     }
 
-    std::vector<Entity *> result;
+    std::vector<Entity*> result;
     result.reserve(it->second.size());
 
     for (EntityID entity_id : it->second) {
@@ -70,53 +73,51 @@ public:
     return result;
   }
 
-  auto get_units_owned_by(int owner_id) const -> std::vector<Entity *>;
-  auto get_units_not_owned_by(int owner_id) const -> std::vector<Entity *>;
-  auto get_allied_units(int owner_id) const -> std::vector<Entity *>;
-  auto get_enemy_units(int owner_id) const -> std::vector<Entity *>;
+  auto get_units_owned_by(int owner_id) const -> std::vector<Entity*>;
+  auto get_units_not_owned_by(int owner_id) const -> std::vector<Entity*>;
+  auto get_allied_units(int owner_id) const -> std::vector<Entity*>;
+  auto get_enemy_units(int owner_id) const -> std::vector<Entity*>;
   static auto count_troops_for_player(int owner_id) -> int;
 
-  auto get_entities() const
-      -> const std::unordered_map<EntityID, std::unique_ptr<Entity>> & {
+  auto
+  get_entities() const -> const std::unordered_map<EntityID, std::unique_ptr<Entity>>& {
     return m_entities;
   }
 
   auto get_next_entity_id() const -> EntityID;
   void set_next_entity_id(EntityID next_id);
 
-  auto get_entity_mutex() -> std::recursive_mutex & { return m_entity_mutex; }
+  auto get_entity_mutex() -> std::recursive_mutex& { return m_entity_mutex; }
 
   ObserverHandle add_component_observer(ComponentObserverCallback callback);
-  ObserverHandle
-  add_entity_destroyed_observer(EntityDestroyedCallback callback);
+  ObserverHandle add_entity_destroyed_observer(EntityDestroyedCallback callback);
   ObserverHandle add_world_cleared_observer(WorldClearedCallback callback);
   void remove_component_observer(ObserverHandle handle);
   void remove_entity_destroyed_observer(ObserverHandle handle);
   void remove_world_cleared_observer(ObserverHandle handle);
 
 private:
-  void on_component_changed(EntityID entity_id, std::type_index component_type,
-                            bool added);
+  void
+  on_component_changed(EntityID entity_id, std::type_index component_type, bool added);
 
-  void setup_entity_callback(Entity *entity);
+  void setup_entity_callback(Entity* entity);
 
   EntityID m_next_entity_id = 1;
   std::unordered_map<EntityID, std::unique_ptr<Entity>> m_entities;
   std::vector<std::unique_ptr<System>> m_systems;
   mutable std::recursive_mutex m_entity_mutex;
 
-  std::unordered_map<std::type_index, std::unordered_set<EntityID>>
-      m_component_index;
+  std::unordered_map<std::type_index, std::unordered_set<EntityID>> m_component_index;
 
-  template <typename Callback> struct ObserverEntry {
+  template <typename Callback>
+  struct ObserverEntry {
     ObserverHandle handle{0};
     Callback callback;
   };
 
   ObserverHandle m_next_observer_handle{1};
   std::vector<ObserverEntry<ComponentObserverCallback>> m_component_observers;
-  std::vector<ObserverEntry<EntityDestroyedCallback>>
-      m_entity_destroyed_observers;
+  std::vector<ObserverEntry<EntityDestroyedCallback>> m_entity_destroyed_observers;
   std::vector<ObserverEntry<WorldClearedCallback>> m_world_cleared_observers;
 };
 

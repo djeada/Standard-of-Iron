@@ -1,13 +1,14 @@
 #pragma once
 
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 #include "../../game/map/map_definition.h"
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
 #include "../i_render_pass.h"
 #include "scatter_renderer_state.h"
-#include <cstdint>
-#include <memory>
-#include <vector>
 
 namespace Render::GL {
 class Buffer;
@@ -18,23 +19,20 @@ public:
   FireCampRenderer();
   ~FireCampRenderer() override;
 
-  void configure(const Game::Map::TerrainHeightMap &height_map,
-                 const Game::Map::BiomeSettings &biome_settings,
-                 const std::vector<Game::Map::WorldProp> &world_props = {});
+  void configure(const Game::Map::TerrainHeightMap& height_map,
+                 const Game::Map::BiomeSettings& biome_settings,
+                 const std::vector<Game::Map::WorldProp>& world_props = {});
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
   void clear();
 
-  [[nodiscard]] bool is_gpu_ready() const {
-    return m_firecamp_state.is_gpu_ready();
-  }
+  [[nodiscard]] bool is_gpu_ready() const { return m_firecamp_state.is_gpu_ready(); }
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
     return m_firecamp_state.instances.size();
   }
-  [[nodiscard]] auto
-  last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
+  [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
     return m_firecamp_state.last_sync_stats;
   }
 

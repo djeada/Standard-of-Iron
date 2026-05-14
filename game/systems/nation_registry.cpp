@@ -1,22 +1,25 @@
 #include "nation_registry.h"
-#include "systems/formation_system.h"
-#include "systems/nation_loader.h"
-#include "systems/troop_profile_service.h"
-#include "units/troop_catalog.h"
-#include "units/troop_catalog_loader.h"
-#include "units/troop_type.h"
+
 #include <QDebug>
+
 #include <algorithm>
 #include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "systems/formation_system.h"
+#include "systems/nation_loader.h"
+#include "systems/troop_profile_service.h"
+#include "units/troop_catalog.h"
+#include "units/troop_catalog_loader.h"
+#include "units/troop_type.h"
+
 namespace Game::Systems {
 
-auto Nation::get_melee_troops() const -> std::vector<const TroopType *> {
-  std::vector<const TroopType *> result;
-  for (const auto &troop : available_troops) {
+auto Nation::get_melee_troops() const -> std::vector<const TroopType*> {
+  std::vector<const TroopType*> result;
+  for (const auto& troop : available_troops) {
     if (troop.is_melee) {
       result.push_back(&troop);
     }
@@ -24,9 +27,9 @@ auto Nation::get_melee_troops() const -> std::vector<const TroopType *> {
   return result;
 }
 
-auto Nation::get_ranged_troops() const -> std::vector<const TroopType *> {
-  std::vector<const TroopType *> result;
-  for (const auto &troop : available_troops) {
+auto Nation::get_ranged_troops() const -> std::vector<const TroopType*> {
+  std::vector<const TroopType*> result;
+  for (const auto& troop : available_troops) {
     if (!troop.is_melee) {
       result.push_back(&troop);
     }
@@ -34,9 +37,8 @@ auto Nation::get_ranged_troops() const -> std::vector<const TroopType *> {
   return result;
 }
 
-auto Nation::get_troop(Game::Units::TroopType unit_type) const
-    -> const TroopType * {
-  for (const auto &troop : available_troops) {
+auto Nation::get_troop(Game::Units::TroopType unit_type) const -> const TroopType* {
+  for (const auto& troop : available_troops) {
     if (troop.unit_type == unit_type) {
       return &troop;
     }
@@ -44,45 +46,45 @@ auto Nation::get_troop(Game::Units::TroopType unit_type) const
   return nullptr;
 }
 
-auto Nation::get_best_melee_troop() const -> const TroopType * {
+auto Nation::get_best_melee_troop() const -> const TroopType* {
   auto melee = get_melee_troops();
   if (melee.empty()) {
     return nullptr;
   }
 
-  auto it = std::max_element(melee.begin(), melee.end(),
-                             [](const TroopType *a, const TroopType *b) {
-                               return a->priority < b->priority;
-                             });
+  auto it = std::max_element(
+      melee.begin(), melee.end(), [](const TroopType* a, const TroopType* b) {
+        return a->priority < b->priority;
+      });
 
   return *it;
 }
 
-auto Nation::get_best_ranged_troop() const -> const TroopType * {
+auto Nation::get_best_ranged_troop() const -> const TroopType* {
   auto ranged = get_ranged_troops();
   if (ranged.empty()) {
     return nullptr;
   }
 
-  auto it = std::max_element(ranged.begin(), ranged.end(),
-                             [](const TroopType *a, const TroopType *b) {
-                               return a->priority < b->priority;
-                             });
+  auto it = std::max_element(
+      ranged.begin(), ranged.end(), [](const TroopType* a, const TroopType* b) {
+        return a->priority < b->priority;
+      });
 
   return *it;
 }
 
 auto Nation::is_melee_unit(Game::Units::TroopType unit_type) const -> bool {
-  const auto *troop = get_troop(unit_type);
+  const auto* troop = get_troop(unit_type);
   return troop != nullptr && troop->is_melee;
 }
 
 auto Nation::is_ranged_unit(Game::Units::TroopType unit_type) const -> bool {
-  const auto *troop = get_troop(unit_type);
+  const auto* troop = get_troop(unit_type);
   return troop != nullptr && !troop->is_melee;
 }
 
-auto NationRegistry::instance() -> NationRegistry & {
+auto NationRegistry::instance() -> NationRegistry& {
   static NationRegistry inst;
   return inst;
 }
@@ -101,7 +103,7 @@ void NationRegistry::register_nation(Nation nation) {
   m_nation_index[m_nations.back().id] = index;
 }
 
-auto NationRegistry::get_nation(NationID nation_id) const -> const Nation * {
+auto NationRegistry::get_nation(NationID nation_id) const -> const Nation* {
   auto it = m_nation_index.find(nation_id);
   if (it == m_nation_index.end()) {
     return nullptr;
@@ -109,16 +111,15 @@ auto NationRegistry::get_nation(NationID nation_id) const -> const Nation * {
   return &m_nations[it->second];
 }
 
-auto NationRegistry::get_nation_for_player(int player_id) const
-    -> const Nation * {
+auto NationRegistry::get_nation_for_player(int player_id) const -> const Nation* {
 
   auto it = m_player_nations.find(player_id);
   if (it != m_player_nations.end()) {
-    const auto *nation = get_nation(it->second);
+    const auto* nation = get_nation(it->second);
     return nation;
   }
 
-  const auto *nation = get_nation(m_default_nation);
+  const auto* nation = get_nation(m_default_nation);
   if (nation == nullptr) {
   }
   return nation;
@@ -148,7 +149,7 @@ void NationRegistry::initialize_defaults() {
       TroopType troop_entry;
       troop_entry.unit_type = type;
 
-      const auto &troop_class =
+      const auto& troop_class =
           Game::Units::TroopCatalog::instance().get_class_or_fallback(type);
       troop_entry.display_name = troop_class.display_name;
       troop_entry.is_melee = troop_class.production.is_melee;
@@ -168,7 +169,7 @@ void NationRegistry::initialize_defaults() {
     m_default_nation = NationID::RomanRepublic;
   } else {
     NationID fallback_default = nations.front().id;
-    for (auto &nation : nations) {
+    for (auto& nation : nations) {
       register_nation(std::move(nation));
     }
     m_default_nation = fallback_default;
@@ -185,6 +186,8 @@ void NationRegistry::clear() {
   m_initialized = false;
 }
 
-void NationRegistry::clear_player_assignments() { m_player_nations.clear(); }
+void NationRegistry::clear_player_assignments() {
+  m_player_nations.clear();
+}
 
 } // namespace Game::Systems

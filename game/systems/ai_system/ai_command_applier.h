@@ -1,7 +1,8 @@
 #pragma once
 
-#include "ai_types.h"
 #include <vector>
+
+#include "ai_types.h"
 
 namespace Engine::Core {
 class World;
@@ -14,11 +15,12 @@ public:
   AICommandApplier() = default;
   ~AICommandApplier() = default;
 
-  AICommandApplier(const AICommandApplier &) = delete;
-  auto operator=(const AICommandApplier &) -> AICommandApplier & = delete;
+  AICommandApplier(const AICommandApplier&) = delete;
+  auto operator=(const AICommandApplier&) -> AICommandApplier& = delete;
 
-  static void apply(Engine::Core::World &world, int ai_owner_id,
-                    const std::vector<AICommand> &commands);
+  static void apply(Engine::Core::World& world,
+                    int ai_owner_id,
+                    const std::vector<AICommand>& commands);
 };
 
 } // namespace Game::Systems::AI

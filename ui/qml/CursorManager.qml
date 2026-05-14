@@ -74,7 +74,6 @@ Item {
                 ctx.stroke();
             }
         }
-
     }
 
     Component {
@@ -108,7 +107,6 @@ Item {
                 ctx.stroke();
             }
         }
-
     }
 
     Component {
@@ -144,7 +142,5 @@ Item {
                 ctx.fill();
             }
         }
-
     }
-
 }

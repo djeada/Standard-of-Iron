@@ -6,13 +6,16 @@
 
 namespace Render::GL {
 
-inline auto make_basis_attachment_transform_scaled(
-    const QMatrix4x4 &parent, const QVector3D &origin, const QVector3D &right,
-    const QVector3D &up, const QVector3D &forward,
-    const QVector3D &local_offset, const QVector3D &axis_scale) -> QMatrix4x4 {
+inline auto
+make_basis_attachment_transform_scaled(const QMatrix4x4& parent,
+                                       const QVector3D& origin,
+                                       const QVector3D& right,
+                                       const QVector3D& up,
+                                       const QVector3D& forward,
+                                       const QVector3D& local_offset,
+                                       const QVector3D& axis_scale) -> QMatrix4x4 {
   QMatrix4x4 m = parent;
-  QVector3D const world_pos = origin +
-                              right * (local_offset.x() * axis_scale.x()) +
+  QVector3D const world_pos = origin + right * (local_offset.x() * axis_scale.x()) +
                               up * (local_offset.y() * axis_scale.y()) +
                               forward * (local_offset.z() * axis_scale.z());
   m.translate(world_pos);
@@ -25,12 +28,20 @@ inline auto make_basis_attachment_transform_scaled(
   return m * basis;
 }
 
-inline auto make_basis_attachment_transform(
-    const QMatrix4x4 &parent, const QVector3D &origin, const QVector3D &right,
-    const QVector3D &up, const QVector3D &forward,
-    const QVector3D &local_offset, float uniform_scale) -> QMatrix4x4 {
+inline auto make_basis_attachment_transform(const QMatrix4x4& parent,
+                                            const QVector3D& origin,
+                                            const QVector3D& right,
+                                            const QVector3D& up,
+                                            const QVector3D& forward,
+                                            const QVector3D& local_offset,
+                                            float uniform_scale) -> QMatrix4x4 {
   return make_basis_attachment_transform_scaled(
-      parent, origin, right, up, forward, local_offset,
+      parent,
+      origin,
+      right,
+      up,
+      forward,
+      local_offset,
       QVector3D(uniform_scale, uniform_scale, uniform_scale));
 }
 

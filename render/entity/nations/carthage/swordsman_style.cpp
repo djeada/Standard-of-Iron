@@ -1,7 +1,8 @@
 #include "swordsman_style.h"
-#include "swordsman_renderer.h"
 
 #include <QVector3D>
+
+#include "swordsman_renderer.h"
 
 namespace {
 constexpr QVector3D k_carthage_cloth{0.15F, 0.36F, 0.55F};

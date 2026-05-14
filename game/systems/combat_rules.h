@@ -6,32 +6,31 @@
 namespace Game::Systems::CombatRules {
 
 [[nodiscard]] inline auto
-uses_rpg_combat_rules(const Engine::Core::Entity *entity) -> bool {
+uses_rpg_combat_rules(const Engine::Core::Entity* entity) -> bool {
   if (entity == nullptr) {
     return false;
   }
 
-  auto const *commander =
-      entity->get_component<Engine::Core::CommanderComponent>();
+  auto const* commander = entity->get_component<Engine::Core::CommanderComponent>();
   if (commander != nullptr && commander->fpv_controlled) {
     return true;
   }
 
-  auto const *rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
+  auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
   return (rpg != nullptr) && rpg->active;
 }
 
 [[nodiscard]] inline auto
-participates_in_rts_melee_lock(const Engine::Core::Entity *entity) -> bool {
+participates_in_rts_melee_lock(const Engine::Core::Entity* entity) -> bool {
   return !uses_rpg_combat_rules(entity);
 }
 
-inline void clear_rts_melee_lock(Engine::Core::Entity *entity) {
+inline void clear_rts_melee_lock(Engine::Core::Entity* entity) {
   if (entity == nullptr) {
     return;
   }
 
-  auto *attack = entity->get_component<Engine::Core::AttackComponent>();
+  auto* attack = entity->get_component<Engine::Core::AttackComponent>();
   if (attack == nullptr) {
     return;
   }
@@ -40,7 +39,7 @@ inline void clear_rts_melee_lock(Engine::Core::Entity *entity) {
   attack->melee_lock_target_id = 0;
 }
 
-inline void clear_rts_combat_tracking(Engine::Core::Entity *entity) {
+inline void clear_rts_combat_tracking(Engine::Core::Entity* entity) {
   if (entity == nullptr) {
     return;
   }

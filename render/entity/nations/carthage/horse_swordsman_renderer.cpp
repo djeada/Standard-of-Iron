@@ -1,13 +1,13 @@
 #include "horse_swordsman_renderer.h"
 
+#include <optional>
+
 #include "../../../creature/pipeline/creature_asset.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../submitter.h"
 #include "../../mounted_knight_renderer_base.h"
 #include "../equipment_loadout_catalog.h"
 #include "swordsman_style.h"
-
-#include <optional>
 
 namespace Render::GL::Carthage {
 namespace {
@@ -28,17 +28,17 @@ class CarthageMountedKnightRenderer : public MountedKnightRendererBase {
 public:
   using MountedKnightRendererBase::MountedKnightRendererBase;
 
-  void get_variant(const DrawContext &ctx, uint32_t seed,
-                   HumanoidVariant &v) const override {
+  void get_variant(const DrawContext& ctx,
+                   uint32_t seed,
+                   HumanoidVariant& v) const override {
     MountedKnightRendererBase::get_variant(ctx, seed, v);
     const KnightStyleConfig style = carthage_style();
     QVector3D const team_tint = resolve_team_tint(ctx);
 
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target) {
+    auto apply_color = [&](const std::optional<QVector3D>& override_color,
+                           QVector3D& target) {
       target = Render::GL::Humanoid::mix_palette_color(
-          target, override_color, team_tint, k_team_mix_weight,
-          k_style_mix_weight);
+          target, override_color, team_tint, k_team_mix_weight, k_style_mix_weight);
     };
 
     apply_color(style.cloth_color, v.palette.cloth);
@@ -50,8 +50,8 @@ public:
 
 auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   MountedKnightRendererConfig config;
-  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/carthage/horse_swordsman");
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/carthage/horse_swordsman");
   config.sword_equipment_id = loadout.ids.sword;
   config.shield_equipment_id = loadout.ids.shield;
   config.helmet_equipment_id = loadout.ids.helmet;
@@ -80,17 +80,15 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   config.has_shoulder = loadout.shoulder_handle != k_invalid_equipment_handle;
   config.rider_debug_name = "troops/carthage/horse_swordsman/rider";
   config.mount_debug_name = "troops/carthage/horse_swordsman/mount";
-  config.rider_creature_asset_id =
-      Render::Creature::Pipeline::k_humanoid_sword_asset;
+  config.rider_creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   return config;
 }
 
 } // namespace
 
-void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
+void register_mounted_knight_renderer(EntityRendererRegistry& registry) {
   registry.register_renderer(
-      "troops/carthage/horse_swordsman",
-      [](const DrawContext &ctx, ISubmitter &out) {
+      "troops/carthage/horse_swordsman", [](const DrawContext& ctx, ISubmitter& out) {
         static CarthageMountedKnightRenderer const static_renderer(
             make_mounted_knight_config());
         static_renderer.render(ctx, out);

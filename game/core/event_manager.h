@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../units/spawn_type.h"
-#include "entity.h"
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -11,17 +9,19 @@
 #include <utility>
 #include <vector>
 
+#include "../units/spawn_type.h"
+#include "entity.h"
+
 namespace Engine::Core {
 
 class Event {
 public:
   virtual ~Event() = default;
-  [[nodiscard]] virtual auto get_type_name() const -> const char * {
-    return "Event";
-  }
+  [[nodiscard]] virtual auto get_type_name() const -> const char* { return "Event"; }
 };
 
-template <typename T> using EventHandler = std::function<void(const T &)>;
+template <typename T>
+using EventHandler = std::function<void(const T&)>;
 
 using SubscriptionHandle = std::size_t;
 
@@ -32,7 +32,7 @@ struct EventStats {
 
 class EventManager {
 public:
-  static auto instance() -> EventManager & {
+  static auto instance() -> EventManager& {
     static EventManager inst;
     return inst;
   }
@@ -43,8 +43,8 @@ public:
     std::lock_guard<std::mutex> const lock(m_mutex);
 
     SubscriptionHandle const handle = m_next_handle++;
-    auto wrapper = [handler, handle](const void *event) {
-      handler(*static_cast<const T *>(event));
+    auto wrapper = [handler, handle](const void* event) {
+      handler(*static_cast<const T*>(event));
     };
     HandlerEntry const entry{handle, wrapper};
     m_handlers[std::type_index(typeid(T))].push_back(entry);
@@ -54,16 +54,18 @@ public:
     return handle;
   }
 
-  template <typename T> void unsubscribe(SubscriptionHandle handle) {
+  template <typename T>
+  void unsubscribe(SubscriptionHandle handle) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
     std::lock_guard<std::mutex> const lock(m_mutex);
 
     auto it = m_handlers.find(std::type_index(typeid(T)));
     if (it != m_handlers.end()) {
-      auto &handlers = it->second;
+      auto& handlers = it->second;
       auto size_before = handlers.size();
-      handlers.erase(std::remove_if(handlers.begin(), handlers.end(),
-                                    [handle](const HandlerEntry &e) {
+      handlers.erase(std::remove_if(handlers.begin(),
+                                    handlers.end(),
+                                    [handle](const HandlerEntry& e) {
                                       return e.handle == handle;
                                     }),
                      handlers.end());
@@ -74,7 +76,8 @@ public:
     }
   }
 
-  template <typename T> void publish(const T &event) {
+  template <typename T>
+  void publish(const T& event) {
     static_assert(std::is_base_of_v<Event, T>, "T must inherit from Event");
     std::vector<HandlerEntry> handlers_copy;
 
@@ -87,12 +90,12 @@ public:
       }
     }
 
-    for (const auto &entry : handlers_copy) {
+    for (const auto& entry : handlers_copy) {
       entry.handler(&event);
     }
   }
 
-  auto get_stats(const std::type_index &event_type) const -> EventStats {
+  auto get_stats(const std::type_index& event_type) const -> EventStats {
     std::lock_guard<std::mutex> const lock(m_mutex);
     auto it = m_stats.find(event_type);
     if (it != m_stats.end()) {
@@ -101,7 +104,7 @@ public:
     return EventStats{};
   }
 
-  auto get_subscriber_count(const std::type_index &event_type) const -> size_t {
+  auto get_subscriber_count(const std::type_index& event_type) const -> size_t {
     std::lock_guard<std::mutex> const lock(m_mutex);
     auto it = m_handlers.find(event_type);
     if (it != m_handlers.end()) {
@@ -119,7 +122,7 @@ public:
 private:
   struct HandlerEntry {
     SubscriptionHandle handle;
-    std::function<void(const void *)> handler;
+    std::function<void(const void*)> handler;
   };
 
   mutable std::mutex m_mutex;
@@ -128,26 +131,26 @@ private:
   SubscriptionHandle m_next_handle = 1;
 };
 
-template <typename T> class ScopedEventSubscription {
+template <typename T>
+class ScopedEventSubscription {
 public:
-  ScopedEventSubscription() : m_handle(0) {}
+  ScopedEventSubscription()
+      : m_handle(0) {}
 
   ScopedEventSubscription(EventHandler<T> handler)
       : m_handle(EventManager::instance().subscribe<T>(handler)) {}
 
   ~ScopedEventSubscription() { unsubscribe(); }
 
-  ScopedEventSubscription(const ScopedEventSubscription &) = delete;
-  auto operator=(const ScopedEventSubscription &) -> ScopedEventSubscription & =
-                                                         delete;
+  ScopedEventSubscription(const ScopedEventSubscription&) = delete;
+  auto operator=(const ScopedEventSubscription&) -> ScopedEventSubscription& = delete;
 
-  ScopedEventSubscription(ScopedEventSubscription &&other) noexcept
+  ScopedEventSubscription(ScopedEventSubscription&& other) noexcept
       : m_handle(other.m_handle) {
     other.m_handle = 0;
   }
 
-  auto operator=(ScopedEventSubscription &&other) noexcept
-      -> ScopedEventSubscription & {
+  auto operator=(ScopedEventSubscription&& other) noexcept -> ScopedEventSubscription& {
     if (this != &other) {
       unsubscribe();
       m_handle = other.m_handle;
@@ -169,9 +172,10 @@ private:
 
 class UnitSelectedEvent : public Event {
 public:
-  UnitSelectedEvent(EntityID unit_id) : unit_id(unit_id) {}
+  UnitSelectedEvent(EntityID unit_id)
+      : unit_id(unit_id) {}
   EntityID unit_id;
-  [[nodiscard]] auto get_type_name() const -> const char * override {
+  [[nodiscard]] auto get_type_name() const -> const char* override {
     return "UNIT_SELECTED";
   }
 };
@@ -179,18 +183,25 @@ public:
 class UnitMovedEvent : public Event {
 public:
   UnitMovedEvent(EntityID unit_id, float x, float y)
-      : unit_id(unit_id), x(x), y(y) {}
+      : unit_id(unit_id)
+      , x(x)
+      , y(y) {}
   EntityID unit_id;
   float x, y;
 };
 
 class UnitDiedEvent : public Event {
 public:
-  UnitDiedEvent(EntityID unit_id, int owner_id,
-                Game::Units::SpawnType spawn_type, EntityID killer_id = 0,
+  UnitDiedEvent(EntityID unit_id,
+                int owner_id,
+                Game::Units::SpawnType spawn_type,
+                EntityID killer_id = 0,
                 int killer_owner_id = 0)
-      : unit_id(unit_id), owner_id(owner_id), spawn_type(spawn_type),
-        killer_id(killer_id), killer_owner_id(killer_owner_id) {}
+      : unit_id(unit_id)
+      , owner_id(owner_id)
+      , spawn_type(spawn_type)
+      , killer_id(killer_id)
+      , killer_owner_id(killer_owner_id) {}
   EntityID unit_id;
   int owner_id;
   Game::Units::SpawnType spawn_type;
@@ -200,11 +211,14 @@ public:
 
 class UnitSpawnedEvent : public Event {
 public:
-  UnitSpawnedEvent(EntityID unit_id, int owner_id,
+  UnitSpawnedEvent(EntityID unit_id,
+                   int owner_id,
                    Game::Units::SpawnType spawn_type,
                    bool is_initial_spawn = true)
-      : unit_id(unit_id), owner_id(owner_id), spawn_type(spawn_type),
-        is_initial_spawn(is_initial_spawn) {}
+      : unit_id(unit_id)
+      , owner_id(owner_id)
+      , spawn_type(spawn_type)
+      , is_initial_spawn(is_initial_spawn) {}
   EntityID unit_id;
   int owner_id;
   Game::Units::SpawnType spawn_type;
@@ -213,13 +227,18 @@ public:
 
 class BuildingAttackedEvent : public Event {
 public:
-  BuildingAttackedEvent(EntityID building_id, int owner_id,
+  BuildingAttackedEvent(EntityID building_id,
+                        int owner_id,
                         Game::Units::SpawnType building_type,
-                        EntityID attacker_id = 0, int attacker_owner_id = 0,
+                        EntityID attacker_id = 0,
+                        int attacker_owner_id = 0,
                         int damage = 0)
-      : building_id(building_id), owner_id(owner_id),
-        building_type(building_type), attacker_id(attacker_id),
-        attacker_owner_id(attacker_owner_id), damage(damage) {}
+      : building_id(building_id)
+      , owner_id(owner_id)
+      , building_type(building_type)
+      , attacker_id(attacker_id)
+      , attacker_owner_id(attacker_owner_id)
+      , damage(damage) {}
   EntityID building_id;
   int owner_id;
   Game::Units::SpawnType building_type;
@@ -230,34 +249,45 @@ public:
 
 class BarrackCapturedEvent : public Event {
 public:
-  BarrackCapturedEvent(EntityID barrack_id, int previous_owner_id,
-                       int new_owner_id)
-      : barrack_id(barrack_id), previous_owner_id(previous_owner_id),
-        new_owner_id(new_owner_id) {}
+  BarrackCapturedEvent(EntityID barrack_id, int previous_owner_id, int new_owner_id)
+      : barrack_id(barrack_id)
+      , previous_owner_id(previous_owner_id)
+      , new_owner_id(new_owner_id) {}
   EntityID barrack_id;
   int previous_owner_id;
   int new_owner_id;
 };
 
-enum class AmbientState { PEACEFUL, TENSE, COMBAT, VICTORY, DEFEAT };
+enum class AmbientState {
+  PEACEFUL,
+  TENSE,
+  COMBAT,
+  VICTORY,
+  DEFEAT
+};
 
 class AmbientStateChangedEvent : public Event {
 public:
   AmbientStateChangedEvent(AmbientState new_state, AmbientState previous_state)
-      : new_state(new_state), previous_state(previous_state) {}
+      : new_state(new_state)
+      , previous_state(previous_state) {}
   AmbientState new_state;
   AmbientState previous_state;
-  [[nodiscard]] auto get_type_name() const -> const char * override {
+  [[nodiscard]] auto get_type_name() const -> const char* override {
     return "AMBIENT_STATE_CHANGED";
   }
 };
 
 class AudioTriggerEvent : public Event {
 public:
-  AudioTriggerEvent(std::string sound_id, float volume = 1.0F,
-                    bool loop = false, int priority = 0)
-      : sound_id(std::move(sound_id)), volume(volume), loop(loop),
-        priority(priority) {}
+  AudioTriggerEvent(std::string sound_id,
+                    float volume = 1.0F,
+                    bool loop = false,
+                    int priority = 0)
+      : sound_id(std::move(sound_id))
+      , volume(volume)
+      , loop(loop)
+      , priority(priority) {}
   std::string sound_id;
   float volume;
   bool loop;
@@ -266,9 +296,10 @@ public:
 
 class MusicTriggerEvent : public Event {
 public:
-  MusicTriggerEvent(std::string music_id, float volume = 1.0F,
-                    bool crossfade = true)
-      : music_id(std::move(music_id)), volume(volume), crossfade(crossfade) {}
+  MusicTriggerEvent(std::string music_id, float volume = 1.0F, bool crossfade = true)
+      : music_id(std::move(music_id))
+      , volume(volume)
+      , crossfade(crossfade) {}
   std::string music_id;
   float volume;
   bool crossfade;
@@ -276,16 +307,22 @@ public:
 
 class CombatHitEvent : public Event {
 public:
-  CombatHitEvent(EntityID attacker_id, EntityID target_id, int damage,
-                 Game::Units::SpawnType attacker_type, bool is_killing_blow)
-      : attacker_id(attacker_id), target_id(target_id), damage(damage),
-        attacker_type(attacker_type), is_killing_blow(is_killing_blow) {}
+  CombatHitEvent(EntityID attacker_id,
+                 EntityID target_id,
+                 int damage,
+                 Game::Units::SpawnType attacker_type,
+                 bool is_killing_blow)
+      : attacker_id(attacker_id)
+      , target_id(target_id)
+      , damage(damage)
+      , attacker_type(attacker_type)
+      , is_killing_blow(is_killing_blow) {}
   EntityID attacker_id;
   EntityID target_id;
   int damage;
   Game::Units::SpawnType attacker_type;
   bool is_killing_blow;
-  [[nodiscard]] auto get_type_name() const -> const char * override {
+  [[nodiscard]] auto get_type_name() const -> const char* override {
     return "COMBAT_HIT";
   }
 };

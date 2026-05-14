@@ -1,11 +1,11 @@
 #pragma once
 
-#include "rig_def.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
 
 #include <cstdint>
+
+#include "rig_def.h"
 
 namespace Render::GL {
 class ISubmitter;
@@ -35,18 +35,20 @@ public:
 
 struct InterpretContext {
   QMatrix4x4 model;
-  const AnchorResolver *anchors{nullptr};
-  const PaletteResolver *palette{nullptr};
-  const ScalarResolver *scalars{nullptr};
-  Render::GL::Material *material{nullptr};
+  const AnchorResolver* anchors{nullptr};
+  const PaletteResolver* palette{nullptr};
+  const ScalarResolver* scalars{nullptr};
+  Render::GL::Material* material{nullptr};
   std::uint8_t lod{0};
   float global_alpha{1.0F};
 };
 
-void render_rig(const RigDef &def, const InterpretContext &ctx,
-                Render::GL::ISubmitter &submitter);
+void render_rig(const RigDef& def,
+                const InterpretContext& ctx,
+                Render::GL::ISubmitter& submitter);
 
-void render_part(const PartDef &part, const InterpretContext &ctx,
-                 Render::GL::ISubmitter &submitter);
+void render_part(const PartDef& part,
+                 const InterpretContext& ctx,
+                 Render::GL::ISubmitter& submitter);
 
 } // namespace Render::RigDSL

@@ -1,11 +1,13 @@
 #pragma once
 
-#include "../../game/map/terrain.h"
-#include "../gl/render_constants.h"
 #include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+
+#include "../../game/map/terrain.h"
+#include "../gl/render_constants.h"
 
 namespace Render::Ground {
 
@@ -35,14 +37,12 @@ inline constexpr float k_temporal_variation_frequency = 37.0F;
 } // namespace HashConstants
 
 inline auto hash_coords(int x, int z, uint32_t salt = 0U) -> uint32_t {
-  auto const ux =
-      static_cast<uint32_t>(x * HashConstants::k_spatial_hash_prime_1);
-  auto const uz =
-      static_cast<uint32_t>(z * HashConstants::k_spatial_hash_prime_2);
+  auto const ux = static_cast<uint32_t>(x * HashConstants::k_spatial_hash_prime_1);
+  auto const uz = static_cast<uint32_t>(z * HashConstants::k_spatial_hash_prime_2);
   return ux ^ uz ^ (salt * HashConstants::k_spatial_hash_prime_3);
 }
 
-inline auto rand_01(uint32_t &state) -> float {
+inline auto rand_01(uint32_t& state) -> float {
   state = state * HashConstants::k_linear_congruential_multiplier +
           HashConstants::k_linear_congruential_increment;
   return static_cast<float>((state >> ::Render::GL::BitShift::shift_8) &
@@ -102,17 +102,18 @@ inline auto smoothstep(float edge0, float edge1, float x) -> float {
   return t * t * (3.0F - 2.0F * t);
 }
 
-inline auto color_luminance(QVector3D const &color) -> float {
+inline auto color_luminance(QVector3D const& color) -> float {
   return color.x() * 0.2126F + color.y() * 0.7152F + color.z() * 0.0722F;
 }
 
-inline auto clamp_color(QVector3D const &color) -> QVector3D {
-  return {std::clamp(color.x(), 0.0F, 1.0F), std::clamp(color.y(), 0.0F, 1.0F),
+inline auto clamp_color(QVector3D const& color) -> QVector3D {
+  return {std::clamp(color.x(), 0.0F, 1.0F),
+          std::clamp(color.y(), 0.0F, 1.0F),
           std::clamp(color.z(), 0.0F, 1.0F)};
 }
 
-inline auto contrast_grass_blade_color(QVector3D const &blade_color,
-                                       QVector3D const &soil_color,
+inline auto contrast_grass_blade_color(QVector3D const& blade_color,
+                                       QVector3D const& soil_color,
                                        Game::Map::GroundType ground_type,
                                        float dryness) -> QVector3D {
   QVector3D const blade = clamp_color(blade_color);
@@ -126,9 +127,10 @@ inline auto contrast_grass_blade_color(QVector3D const &blade_color,
   float const close_to_soil = 1.0F - std::clamp(luma_gap / 0.20F, 0.0F, 1.0F);
   float const dry_factor = std::clamp(dryness, 0.0F, 1.0F);
   float const bright_soil = smoothstep(0.38F, 0.58F, soil_luma);
-  float const adjustment = std::clamp(
-      0.12F + dry_factor * 0.36F + close_to_soil * 0.38F + bright_soil * 0.14F,
-      0.0F, 0.78F);
+  float const adjustment = std::clamp(0.12F + dry_factor * 0.36F +
+                                          close_to_soil * 0.38F + bright_soil * 0.14F,
+                                      0.0F,
+                                      0.78F);
 
   QVector3D const olive_shadow{0.18F, 0.26F, 0.09F};
   QVector3D const dry_olive{0.30F, 0.34F, 0.13F};
@@ -139,55 +141,58 @@ inline auto contrast_grass_blade_color(QVector3D const &blade_color,
   float const adjusted_luma = color_luminance(adjusted);
   float const min_gap = 0.12F + bright_soil * 0.04F;
   if (soil_luma > 0.38F && soil_luma - adjusted_luma < min_gap) {
-    float const extra = std::clamp(
-        (min_gap - (soil_luma - adjusted_luma)) / min_gap, 0.0F, 1.0F);
-    adjusted =
-        adjusted * (1.0F - extra * 0.80F) + olive_shadow * (extra * 0.80F);
+    float const extra =
+        std::clamp((min_gap - (soil_luma - adjusted_luma)) / min_gap, 0.0F, 1.0F);
+    adjusted = adjusted * (1.0F - extra * 0.80F) + olive_shadow * (extra * 0.80F);
   }
 
   return clamp_color(adjusted);
 }
 
-inline auto compute_curvature_shading_response(
-    Game::Map::TerrainType type, float avg_curvature, float avg_slope,
-    float edge_factor, float plateau_factor,
-    float entrance_factor) -> CurvatureShadingResponse {
+inline auto
+compute_curvature_shading_response(Game::Map::TerrainType type,
+                                   float avg_curvature,
+                                   float avg_slope,
+                                   float edge_factor,
+                                   float plateau_factor,
+                                   float entrance_factor) -> CurvatureShadingResponse {
   if (type != Game::Map::TerrainType::Hill &&
       type != Game::Map::TerrainType::Mountain) {
     return {};
   }
 
-  float const terrain_scale =
-      (type == Game::Map::TerrainType::Mountain) ? 1.0F : 0.78F;
+  float const terrain_scale = (type == Game::Map::TerrainType::Mountain) ? 1.0F : 0.78F;
   float const curvature_signal = smoothstep(0.01F, 0.12F, avg_curvature);
   float const slope_signal = smoothstep(0.12F, 0.45F, avg_slope);
   float const exposed_signal = std::max(edge_factor, slope_signal);
-  float const sheltered_signal =
-      0.60F * plateau_factor + 0.40F * entrance_factor;
+  float const sheltered_signal = 0.60F * plateau_factor + 0.40F * entrance_factor;
 
   CurvatureShadingResponse response;
-  response.curvature_emphasis = std::clamp(
-      terrain_scale * curvature_signal * (0.55F + 0.45F * exposed_signal) *
-          (1.0F - 0.45F * sheltered_signal),
-      0.0F, 1.0F);
+  response.curvature_emphasis =
+      std::clamp(terrain_scale * curvature_signal * (0.55F + 0.45F * exposed_signal) *
+                     (1.0F - 0.45F * sheltered_signal),
+                 0.0F,
+                 1.0F);
   response.ridge_response =
       std::clamp(response.curvature_emphasis * (0.45F + 0.55F * edge_factor) *
                      (1.0F - 0.35F * entrance_factor),
-                 0.0F, 1.0F);
-  response.gully_response = std::clamp(
-      response.curvature_emphasis * (0.50F + 0.50F * (1.0F - plateau_factor)) *
-          (0.85F + 0.15F * (1.0F - entrance_factor)),
-      0.0F, 1.0F);
+                 0.0F,
+                 1.0F);
+  response.gully_response = std::clamp(response.curvature_emphasis *
+                                           (0.50F + 0.50F * (1.0F - plateau_factor)) *
+                                           (0.85F + 0.15F * (1.0F - entrance_factor)),
+                                       0.0F,
+                                       1.0F);
   return response;
 }
 
 inline auto compute_entry_shading_factor(float avg_entry_weight,
-                                         float avg_slope, float plateau_factor,
+                                         float avg_slope,
+                                         float plateau_factor,
                                          float concavity_hint) -> float {
   float const coverage = smoothstep(0.02F, 0.22F, avg_entry_weight);
   float const sheltered = 1.0F - smoothstep(0.20F, 0.58F, avg_slope);
-  float const plateau_support =
-      0.35F + 0.65F * std::max(plateau_factor, sheltered);
+  float const plateau_support = 0.35F + 0.65F * std::max(plateau_factor, sheltered);
   float const carved_support = concavity_hint * (0.30F + 0.30F * sheltered);
   return std::clamp(coverage * plateau_support + carved_support, 0.0F, 1.0F);
 }

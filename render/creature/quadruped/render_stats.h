@@ -27,10 +27,10 @@ struct QuadrupedRenderStats {
 using HorseRenderStats = QuadrupedRenderStats;
 using ElephantRenderStats = QuadrupedRenderStats;
 
-auto get_horse_render_stats() -> const HorseRenderStats &;
+auto get_horse_render_stats() -> const HorseRenderStats&;
 void reset_horse_render_stats();
 
-auto get_elephant_render_stats() -> const ElephantRenderStats &;
+auto get_elephant_render_stats() -> const ElephantRenderStats&;
 void reset_elephant_render_stats();
 
 } // namespace Render::GL

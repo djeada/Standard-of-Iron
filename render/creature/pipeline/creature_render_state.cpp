@@ -2,13 +2,16 @@
 
 namespace Render::Creature::Pipeline {
 
-auto make_prepared_humanoid_row(
-    UnitVisualSpec spec, const Render::GL::HumanoidPose &pose,
-    const Render::GL::HumanoidVariant &variant,
-    const Render::GL::HumanoidAnimationContext &anim,
-    const QMatrix4x4 &world_from_unit, std::uint32_t seed,
-    Render::Creature::CreatureLOD lod, EntityId entity_id,
-    RenderPassIntent pass) noexcept -> PreparedCreatureRenderRow {
+auto make_prepared_humanoid_row(UnitVisualSpec spec,
+                                const Render::GL::HumanoidPose& pose,
+                                const Render::GL::HumanoidVariant& variant,
+                                const Render::GL::HumanoidAnimationContext& anim,
+                                const QMatrix4x4& world_from_unit,
+                                std::uint32_t seed,
+                                Render::Creature::CreatureLOD lod,
+                                EntityId entity_id,
+                                RenderPassIntent pass) noexcept
+    -> PreparedCreatureRenderRow {
   (void)pose;
   (void)variant;
   (void)anim;
@@ -24,10 +27,14 @@ auto make_prepared_humanoid_row(
   return row;
 }
 
-auto make_prepared_creature_row(
-    UnitVisualSpec spec, CreatureKind kind, const QMatrix4x4 &world_from_unit,
-    std::uint32_t seed, Render::Creature::CreatureLOD lod, EntityId entity_id,
-    RenderPassIntent pass) noexcept -> PreparedCreatureRenderRow {
+auto make_prepared_creature_row(UnitVisualSpec spec,
+                                CreatureKind kind,
+                                const QMatrix4x4& world_from_unit,
+                                std::uint32_t seed,
+                                Render::Creature::CreatureLOD lod,
+                                EntityId entity_id,
+                                RenderPassIntent pass) noexcept
+    -> PreparedCreatureRenderRow {
   (void)world_from_unit;
   (void)entity_id;
   spec.kind = kind;

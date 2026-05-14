@@ -1,12 +1,14 @@
 #include "owner_registry.h"
+
 #include <QDebug>
-#include <array>
-#include <cstddef>
 #include <qjsonarray.h>
 #include <qjsonobject.h>
 #include <qjsonvalue.h>
 #include <qnamespace.h>
 #include <qstringliteral.h>
+
+#include <array>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -25,7 +27,7 @@ auto owner_type_to_string(Game::Systems::OwnerType type) -> QString {
   }
 }
 
-auto owner_type_from_string(const QString &value) -> Game::Systems::OwnerType {
+auto owner_type_from_string(const QString& value) -> Game::Systems::OwnerType {
   using Game::Systems::OwnerType;
   if (value.compare(QStringLiteral("player"), Qt::CaseInsensitive) == 0) {
     return OwnerType::Player;
@@ -36,7 +38,7 @@ auto owner_type_from_string(const QString &value) -> Game::Systems::OwnerType {
   return OwnerType::Neutral;
 }
 
-auto color_to_json(const std::array<float, 3> &color) -> QJsonArray {
+auto color_to_json(const std::array<float, 3>& color) -> QJsonArray {
   QJsonArray array;
   array.append(color[0]);
   array.append(color[1]);
@@ -44,7 +46,7 @@ auto color_to_json(const std::array<float, 3> &color) -> QJsonArray {
   return array;
 }
 
-auto color_from_json(const QJsonArray &array) -> std::array<float, 3> {
+auto color_from_json(const QJsonArray& array) -> std::array<float, 3> {
   std::array<float, 3> color{0.8F, 0.9F, 1.0F};
   if (array.size() >= 3) {
     color[0] = static_cast<float>(array.at(0).toDouble());
@@ -58,7 +60,7 @@ auto color_from_json(const QJsonArray &array) -> std::array<float, 3> {
 
 namespace Game::Systems {
 
-auto OwnerRegistry::instance() -> OwnerRegistry & {
+auto OwnerRegistry::instance() -> OwnerRegistry& {
   static OwnerRegistry inst;
   return inst;
 }
@@ -70,8 +72,7 @@ void OwnerRegistry::clear() {
   m_local_player_id = 1;
 }
 
-auto OwnerRegistry::register_owner(OwnerType type,
-                                   const std::string &name) -> int {
+auto OwnerRegistry::register_owner(OwnerType type, const std::string& name) -> int {
   int const owner_id = m_next_owner_id++;
   OwnerInfo info;
   info.owner_id = owner_id;
@@ -103,8 +104,9 @@ auto OwnerRegistry::register_owner(OwnerType type,
   return owner_id;
 }
 
-void OwnerRegistry::register_owner_with_id(int owner_id, OwnerType type,
-                                           const std::string &name) {
+void OwnerRegistry::register_owner_with_id(int owner_id,
+                                           OwnerType type,
+                                           const std::string& name) {
   if (m_owner_id_to_index.find(owner_id) != m_owner_id_to_index.end()) {
     return;
   }
@@ -181,13 +183,13 @@ auto OwnerRegistry::get_owner_name(int owner_id) const -> std::string {
   return m_owners[it->second].name;
 }
 
-auto OwnerRegistry::get_all_owners() const -> const std::vector<OwnerInfo> & {
+auto OwnerRegistry::get_all_owners() const -> const std::vector<OwnerInfo>& {
   return m_owners;
 }
 
 auto OwnerRegistry::get_player_owner_ids() const -> std::vector<int> {
   std::vector<int> result;
-  for (const auto &owner : m_owners) {
+  for (const auto& owner : m_owners) {
     if (owner.type == OwnerType::Player) {
       result.push_back(owner.owner_id);
     }
@@ -197,7 +199,7 @@ auto OwnerRegistry::get_player_owner_ids() const -> std::vector<int> {
 
 auto OwnerRegistry::get_ai_owner_ids() const -> std::vector<int> {
   std::vector<int> result;
-  for (const auto &owner : m_owners) {
+  for (const auto& owner : m_owners) {
     if (owner.type == OwnerType::AI) {
       result.push_back(owner.owner_id);
     }
@@ -259,7 +261,7 @@ auto OwnerRegistry::get_allies_of(int owner_id) const -> std::vector<int> {
     return result;
   }
 
-  for (const auto &owner : m_owners) {
+  for (const auto& owner : m_owners) {
     if (owner.owner_id != owner_id && owner.team_id == my_team) {
       result.push_back(owner.owner_id);
     }
@@ -270,7 +272,7 @@ auto OwnerRegistry::get_allies_of(int owner_id) const -> std::vector<int> {
 auto OwnerRegistry::get_enemies_of(int owner_id) const -> std::vector<int> {
   std::vector<int> result;
 
-  for (const auto &owner : m_owners) {
+  for (const auto& owner : m_owners) {
     if (are_enemies(owner_id, owner.owner_id)) {
       result.push_back(owner.owner_id);
     }
@@ -285,8 +287,7 @@ void OwnerRegistry::set_owner_color(int owner_id, float r, float g, float b) {
   }
 }
 
-auto OwnerRegistry::get_owner_color(int owner_id) const
-    -> std::array<float, 3> {
+auto OwnerRegistry::get_owner_color(int owner_id) const -> std::array<float, 3> {
   auto it = m_owner_id_to_index.find(owner_id);
   if (it != m_owner_id_to_index.end()) {
     return m_owners[it->second].color;
@@ -301,7 +302,7 @@ auto OwnerRegistry::to_json() const -> QJsonObject {
   root["local_player_id"] = m_local_player_id;
 
   QJsonArray owners_array;
-  for (const auto &owner : m_owners) {
+  for (const auto& owner : m_owners) {
     QJsonObject owner_obj;
     owner_obj["owner_id"] = owner.owner_id;
     owner_obj["type"] = owner_type_to_string(owner.type);
@@ -315,7 +316,7 @@ auto OwnerRegistry::to_json() const -> QJsonObject {
   return root;
 }
 
-void OwnerRegistry::from_json(const QJsonObject &json) {
+void OwnerRegistry::from_json(const QJsonObject& json) {
   clear();
 
   if (json.contains("next_owner_id")) {
@@ -332,7 +333,7 @@ void OwnerRegistry::from_json(const QJsonObject &json) {
 
   const auto owners_array = json["owners"].toArray();
   m_owners.reserve(owners_array.size());
-  for (const auto &value : owners_array) {
+  for (const auto& value : owners_array) {
     const auto owner_obj = value.toObject();
     OwnerInfo info;
     info.owner_id = owner_obj["owner_id"].toInt();
@@ -348,7 +349,7 @@ void OwnerRegistry::from_json(const QJsonObject &json) {
     m_owner_id_to_index[info.owner_id] = index;
   }
 
-  for (const auto &owner : m_owners) {
+  for (const auto& owner : m_owners) {
     if (owner.owner_id >= m_next_owner_id) {
       m_next_owner_id = owner.owner_id + 1;
     }

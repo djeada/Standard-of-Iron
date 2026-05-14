@@ -1,11 +1,13 @@
 #pragma once
 
-#include "game/core/event_manager.h"
 #include <QString>
+
 #include <functional>
 #include <memory>
 #include <utility>
 #include <vector>
+
+#include "game/core/event_manager.h"
 
 namespace Engine::Core {
 class World;
@@ -30,42 +32,42 @@ public:
     Custom
   };
 
-  enum class DefeatCondition { NoUnits, NoKeyStructures, TimeExpired };
+  enum class DefeatCondition {
+    NoUnits,
+    NoKeyStructures,
+    TimeExpired
+  };
 
   VictoryService();
   ~VictoryService();
 
-  void configure(const Game::Map::VictoryConfig &config, int local_owner_id);
+  void configure(const Game::Map::VictoryConfig& config, int local_owner_id);
 
   void reset();
 
-  void update(Engine::Core::World &world, float delta_time);
+  void update(Engine::Core::World& world, float delta_time);
 
-  [[nodiscard]] auto get_victory_state() const -> QString {
-    return m_victory_state;
-  }
+  [[nodiscard]] auto get_victory_state() const -> QString { return m_victory_state; }
 
-  [[nodiscard]] auto is_game_over() const -> bool {
-    return !m_victory_state.isEmpty();
-  }
+  [[nodiscard]] auto is_game_over() const -> bool { return !m_victory_state.isEmpty(); }
 
-  using VictoryCallback = std::function<void(const QString &state)>;
+  using VictoryCallback = std::function<void(const QString& state)>;
   void set_victory_callback(VictoryCallback callback) {
     m_victory_callback = std::move(callback);
   }
 
 private:
-  void on_unit_died(const Engine::Core::UnitDiedEvent &event);
-  void on_barrack_captured(const Engine::Core::BarrackCapturedEvent &event);
-  void check_victory_conditions(Engine::Core::World &world);
-  void check_defeat_conditions(Engine::Core::World &world);
+  void on_unit_died(const Engine::Core::UnitDiedEvent& event);
+  void on_barrack_captured(const Engine::Core::BarrackCapturedEvent& event);
+  void check_victory_conditions(Engine::Core::World& world);
+  void check_defeat_conditions(Engine::Core::World& world);
 
-  auto check_elimination(Engine::Core::World &world) -> bool;
+  auto check_elimination(Engine::Core::World& world) -> bool;
   [[nodiscard]] auto check_survive_time() const -> bool;
-  auto check_control_structures(Engine::Core::World &world,
+  auto check_control_structures(Engine::Core::World& world,
                                 bool require_captured) const -> bool;
-  auto check_no_units(Engine::Core::World &world) const -> bool;
-  auto check_no_key_structures(Engine::Core::World &world) -> bool;
+  auto check_no_units(Engine::Core::World& world) const -> bool;
+  auto check_no_key_structures(Engine::Core::World& world) -> bool;
 
   VictoryType m_victory_type = VictoryType::Elimination;
   std::vector<QString> m_key_structures;
@@ -86,10 +88,10 @@ private:
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
       m_barrack_captured_subscription;
 
-  Engine::Core::World *m_world_ptr = nullptr;
+  Engine::Core::World* m_world_ptr = nullptr;
 
-  Game::Systems::GlobalStatsRegistry &m_stats_registry;
-  Game::Systems::OwnerRegistry &m_owner_registry;
+  Game::Systems::GlobalStatsRegistry& m_stats_registry;
+  Game::Systems::OwnerRegistry& m_owner_registry;
 };
 
 } // namespace Game::Systems

@@ -1,5 +1,13 @@
 #include "rigged_mesh_bake.h"
 
+#include <QMatrix4x4>
+#include <QVector3D>
+#include <QVector4D>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+
 #include "creature/part_graph.h"
 #include "creature/skeleton.h"
 #include "elephant/elephant_spec.h"
@@ -9,13 +17,6 @@
 #include "gl/primitives.h"
 #include "horse/horse_spec.h"
 #include "render_archetype.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <QVector4D>
-#include <algorithm>
-#include <array>
-#include <cmath>
 
 namespace Render::Creature {
 
@@ -39,8 +40,8 @@ struct LegChain {
   QVector3D foot_pos{};
 };
 
-auto bone_world_offset(const QMatrix4x4 &bone,
-                       const QVector3D &local_offset) -> QVector3D {
+auto bone_world_offset(const QMatrix4x4& bone,
+                       const QVector3D& local_offset) -> QVector3D {
   if (local_offset.isNull()) {
     return bone.column(3).toVector3D();
   }
@@ -48,23 +49,24 @@ auto bone_world_offset(const QMatrix4x4 &bone,
   QVector3D const x = bone.column(0).toVector3D();
   QVector3D const y = bone.column(1).toVector3D();
   QVector3D const z = bone.column(2).toVector3D();
-  return origin + x * local_offset.x() + y * local_offset.y() +
-         z * local_offset.z();
+  return origin + x * local_offset.x() + y * local_offset.y() + z * local_offset.z();
 }
 
-auto box_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
-               const QVector3D &half_extents) -> QMatrix4x4 {
+auto box_model(const QMatrix4x4& bone,
+               const QVector3D& local_offset,
+               const QVector3D& half_extents) -> QMatrix4x4 {
   QMatrix4x4 m = bone;
   QVector3D const world_origin = bone_world_offset(bone, local_offset);
   m.setColumn(3, QVector4D(world_origin, 1.0F));
   QMatrix4x4 scale;
-  scale.scale(half_extents.x() * 2.0F, half_extents.y() * 2.0F,
-              half_extents.z() * 2.0F);
+  scale.scale(
+      half_extents.x() * 2.0F, half_extents.y() * 2.0F, half_extents.z() * 2.0F);
   return m * scale;
 }
 
-auto mesh_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
-                const QVector3D &half_extents) -> QMatrix4x4 {
+auto mesh_model(const QMatrix4x4& bone,
+                const QVector3D& local_offset,
+                const QVector3D& half_extents) -> QMatrix4x4 {
   QMatrix4x4 m = bone;
   QVector3D const world_origin = bone_world_offset(bone, local_offset);
   m.setColumn(3, QVector4D(world_origin, 1.0F));
@@ -103,8 +105,7 @@ auto make_single_blend(std::uint8_t bone) -> VertexBoneBlend {
   return blend;
 }
 
-auto make_two_bone_blend(std::uint8_t a, std::uint8_t b,
-                         float t) -> VertexBoneBlend {
+auto make_two_bone_blend(std::uint8_t a, std::uint8_t b, float t) -> VertexBoneBlend {
   t = std::clamp(t, 0.0F, 1.0F);
   VertexBoneBlend blend;
   blend.indices = {a, b, 0, 0};
@@ -112,36 +113,35 @@ auto make_two_bone_blend(std::uint8_t a, std::uint8_t b,
   return blend;
 }
 
-auto projection_factor(const QVector3D &point, const QVector3D &start,
-                       const QVector3D &end) -> float {
+auto projection_factor(const QVector3D& point,
+                       const QVector3D& start,
+                       const QVector3D& end) -> float {
   QVector3D const axis = end - start;
   float const denom = QVector3D::dotProduct(axis, axis);
   if (denom <= 1.0e-6F) {
     return 0.0F;
   }
-  return std::clamp(QVector3D::dotProduct(point - start, axis) / denom, 0.0F,
-                    1.0F);
+  return std::clamp(QVector3D::dotProduct(point - start, axis) / denom, 0.0F, 1.0F);
 }
 
-auto point_to_segment_distance_sq(const QVector3D &point,
-                                  const QVector3D &start,
-                                  const QVector3D &end) -> float {
+auto point_to_segment_distance_sq(const QVector3D& point,
+                                  const QVector3D& start,
+                                  const QVector3D& end) -> float {
   float const t = projection_factor(point, start, end);
   QVector3D const closest = start + (end - start) * t;
   return (point - closest).lengthSquared();
 }
 
-auto select_leg_chain(const QVector3D &pos,
-                      std::span<const LegChain> legs) -> const LegChain * {
-  const LegChain *best = nullptr;
+auto select_leg_chain(const QVector3D& pos,
+                      std::span<const LegChain> legs) -> const LegChain* {
+  const LegChain* best = nullptr;
   float best_score = 1.0e9F;
-  for (auto const &leg : legs) {
+  for (auto const& leg : legs) {
     float const dx = pos.x() - leg.foot_pos.x();
     float const dz = pos.z() - leg.shoulder_pos.z();
     float const dy = pos.y() - leg.shoulder_pos.y();
     float const x_limit =
-        std::max(std::abs(leg.shoulder_pos.x()), std::abs(leg.foot_pos.x())) *
-            0.80F +
+        std::max(std::abs(leg.shoulder_pos.x()), std::abs(leg.foot_pos.x())) * 0.80F +
         0.12F;
     float const z_limit =
         std::abs(leg.shoulder_pos.z() - leg.foot_pos.z()) * 0.90F + 0.26F;
@@ -158,11 +158,11 @@ auto select_leg_chain(const QVector3D &pos,
   return best;
 }
 
-auto select_horse_leg_chain(
-    const QVector3D &pos, std::span<const LegChain> legs) -> const LegChain * {
-  const LegChain *best = nullptr;
+auto select_horse_leg_chain(const QVector3D& pos,
+                            std::span<const LegChain> legs) -> const LegChain* {
+  const LegChain* best = nullptr;
   float best_score = 1.0e9F;
-  for (auto const &leg : legs) {
+  for (auto const& leg : legs) {
     if (pos.y() > leg.shoulder_pos.y() - 0.03F) {
       continue;
     }
@@ -199,8 +199,7 @@ auto select_horse_leg_chain(
   return best;
 }
 
-auto blend_leg_chain(const QVector3D &pos,
-                     const LegChain &leg) -> VertexBoneBlend {
+auto blend_leg_chain(const QVector3D& pos, const LegChain& leg) -> VertexBoneBlend {
   if (pos.y() >= leg.knee_pos.y()) {
     float const t = projection_factor(pos, leg.shoulder_pos, leg.knee_pos);
     return make_two_bone_blend(leg.shoulder, leg.knee, t);
@@ -209,17 +208,15 @@ auto blend_leg_chain(const QVector3D &pos,
   return make_two_bone_blend(leg.knee, leg.foot, t);
 }
 
-auto horse_whole_mesh_blend(const QVector3D &pos,
+auto horse_whole_mesh_blend(const QVector3D& pos,
                             std::span<const BoneWorldMatrix> bind_pose)
     -> VertexBoneBlend {
   using Bone = Render::Horse::HorseBone;
   auto const root = static_cast<std::uint8_t>(Bone::Root);
-  QVector3D const root_pos =
-      bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Root));
+  QVector3D const root_pos = bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Root));
   QVector3D const neck_pos =
       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::NeckTop));
-  QVector3D const head_pos =
-      bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Head));
+  QVector3D const head_pos = bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Head));
 
   std::array<LegChain, 4> const legs{{
       {static_cast<std::uint8_t>(Bone::ShoulderFL),
@@ -247,7 +244,7 @@ auto horse_whole_mesh_blend(const QVector3D &pos,
        bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeBR)),
        bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootBR))},
   }};
-  if (auto const *leg = select_horse_leg_chain(pos, legs); leg != nullptr) {
+  if (auto const* leg = select_horse_leg_chain(pos, legs); leg != nullptr) {
     return blend_leg_chain(pos, *leg);
   }
 
@@ -255,28 +252,26 @@ auto horse_whole_mesh_blend(const QVector3D &pos,
   if (pos.z() > neck_start) {
     if (pos.z() < neck_pos.z()) {
       float const t = projection_factor(pos, root_pos, neck_pos);
-      return make_two_bone_blend(root, static_cast<std::uint8_t>(Bone::NeckTop),
-                                 t);
+      return make_two_bone_blend(root, static_cast<std::uint8_t>(Bone::NeckTop), t);
     }
     float const t = projection_factor(pos, neck_pos, head_pos);
     return make_two_bone_blend(static_cast<std::uint8_t>(Bone::NeckTop),
-                               static_cast<std::uint8_t>(Bone::Head), t);
+                               static_cast<std::uint8_t>(Bone::Head),
+                               t);
   }
 
   return make_single_blend(root);
 }
 
-auto elephant_whole_mesh_blend(const QVector3D &pos,
+auto elephant_whole_mesh_blend(const QVector3D& pos,
                                std::span<const BoneWorldMatrix> bind_pose)
     -> VertexBoneBlend {
   using Bone = Render::Elephant::ElephantBone;
   auto const root = static_cast<std::uint8_t>(Bone::Root);
   auto const head = static_cast<std::uint8_t>(Bone::Head);
   auto const trunk_tip = static_cast<std::uint8_t>(Bone::TrunkTip);
-  QVector3D const root_pos =
-      bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Root));
-  QVector3D const head_pos =
-      bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Head));
+  QVector3D const root_pos = bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Root));
+  QVector3D const head_pos = bone_origin(bind_pose, static_cast<BoneIndex>(Bone::Head));
   QVector3D const trunk_pos =
       bone_origin(bind_pose, static_cast<BoneIndex>(Bone::TrunkTip));
 
@@ -306,7 +301,7 @@ auto elephant_whole_mesh_blend(const QVector3D &pos,
        bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeBR)),
        bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootBR))},
   }};
-  if (auto const *leg = select_leg_chain(pos, legs); leg != nullptr) {
+  if (auto const* leg = select_leg_chain(pos, legs); leg != nullptr) {
     return blend_leg_chain(pos, *leg);
   }
 
@@ -314,8 +309,7 @@ auto elephant_whole_mesh_blend(const QVector3D &pos,
   if (pos.z() > head_start) {
     float const trunk_axis_dist_sq =
         point_to_segment_distance_sq(pos, head_pos, trunk_pos);
-    float const trunk_gate_radius =
-        0.03F + (trunk_pos - head_pos).length() * 0.12F;
+    float const trunk_gate_radius = 0.03F + (trunk_pos - head_pos).length() * 0.12F;
     if (pos.y() < head_pos.y() - 0.08F && pos.z() > head_pos.z() + 0.02F &&
         trunk_axis_dist_sq <= trunk_gate_radius * trunk_gate_radius) {
       float const t = projection_factor(pos, head_pos, trunk_pos);
@@ -329,9 +323,9 @@ auto elephant_whole_mesh_blend(const QVector3D &pos,
   return make_single_blend(root);
 }
 
-auto resolve_mesh_blend(
-    const PrimitiveInstance &prim, const QVector3D &world_pos,
-    std::span<const BoneWorldMatrix> bind_pose) -> VertexBoneBlend {
+auto resolve_mesh_blend(const PrimitiveInstance& prim,
+                        const QVector3D& world_pos,
+                        std::span<const BoneWorldMatrix> bind_pose) -> VertexBoneBlend {
   switch (prim.mesh_skinning) {
   case MeshSkinning::HorseWhole:
     return horse_whole_mesh_blend(world_pos, bind_pose);
@@ -339,12 +333,11 @@ auto resolve_mesh_blend(
     return elephant_whole_mesh_blend(world_pos, bind_pose);
   case MeshSkinning::Rigid:
   default:
-    return make_single_blend(
-        static_cast<std::uint8_t>(prim.params.anchor_bone));
+    return make_single_blend(static_cast<std::uint8_t>(prim.params.anchor_bone));
   }
 }
 
-auto resolve_unit_mesh(const PrimitiveInstance &prim) -> Mesh * {
+auto resolve_unit_mesh(const PrimitiveInstance& prim) -> Mesh* {
   if (prim.custom_mesh != nullptr) {
     return prim.custom_mesh;
   }
@@ -372,25 +365,24 @@ auto resolve_unit_mesh(const PrimitiveInstance &prim) -> Mesh * {
   }
 }
 
-auto compute_unit_model(const PrimitiveInstance &prim,
+auto compute_unit_model(const PrimitiveInstance& prim,
                         std::span<const BoneWorldMatrix> bind_pose,
-                        QMatrix4x4 &out_model) -> bool {
+                        QMatrix4x4& out_model) -> bool {
   BoneIndex const anchor = prim.params.anchor_bone;
   BoneIndex const tail = prim.params.tail_bone;
   if (anchor == k_invalid_bone || anchor >= bind_pose.size()) {
     return false;
   }
-  bool const needs_tail = (prim.shape == PrimitiveShape::Cylinder ||
-                           prim.shape == PrimitiveShape::Capsule ||
-                           prim.shape == PrimitiveShape::Cone ||
-                           prim.shape == PrimitiveShape::OrientedCylinder);
+  bool const needs_tail =
+      (prim.shape == PrimitiveShape::Cylinder ||
+       prim.shape == PrimitiveShape::Capsule || prim.shape == PrimitiveShape::Cone ||
+       prim.shape == PrimitiveShape::OrientedCylinder);
   if (needs_tail && (tail == k_invalid_bone || tail >= bind_pose.size())) {
     return false;
   }
 
-  QMatrix4x4 const &anchor_m = bind_pose[anchor];
-  QVector3D const head_world =
-      bone_world_offset(anchor_m, prim.params.head_offset);
+  QMatrix4x4 const& anchor_m = bind_pose[anchor];
+  QVector3D const head_world = bone_world_offset(anchor_m, prim.params.head_offset);
 
   switch (prim.shape) {
   case PrimitiveShape::Sphere:
@@ -400,30 +392,28 @@ auto compute_unit_model(const PrimitiveInstance &prim,
   case PrimitiveShape::Cylinder: {
     QVector3D const tail_world =
         bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    out_model = Render::Geom::cylinder_between(head_world, tail_world,
-                                               prim.params.radius);
+    out_model =
+        Render::Geom::cylinder_between(head_world, tail_world, prim.params.radius);
     return true;
   }
 
   case PrimitiveShape::Capsule: {
     QVector3D const tail_world =
         bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    out_model = Render::Geom::capsule_between(head_world, tail_world,
-                                              prim.params.radius);
+    out_model =
+        Render::Geom::capsule_between(head_world, tail_world, prim.params.radius);
     return true;
   }
 
   case PrimitiveShape::Cone: {
     QVector3D const tail_world =
         bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    out_model =
-        Render::Geom::cone_from_to(head_world, tail_world, prim.params.radius);
+    out_model = Render::Geom::cone_from_to(head_world, tail_world, prim.params.radius);
     return true;
   }
 
   case PrimitiveShape::Box:
-    out_model =
-        box_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
+    out_model = box_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
     return true;
 
   case PrimitiveShape::OrientedCylinder: {
@@ -431,11 +421,10 @@ auto compute_unit_model(const PrimitiveInstance &prim,
         bone_world_offset(bind_pose[tail], prim.params.tail_offset);
     QVector3D const right_ref = anchor_m.column(0).toVector3D();
     float const r_right = prim.params.radius;
-    float const r_forward = (prim.params.depth_radius > 0.0F)
-                                ? prim.params.depth_radius
-                                : prim.params.radius;
-    out_model = Render::Geom::oriented_cylinder(head_world, tail_world,
-                                                right_ref, r_right, r_forward);
+    float const r_forward = (prim.params.depth_radius > 0.0F) ? prim.params.depth_radius
+                                                              : prim.params.radius;
+    out_model = Render::Geom::oriented_cylinder(
+        head_world, tail_world, right_ref, r_right, r_forward);
     return true;
   }
 
@@ -459,8 +448,7 @@ auto compute_unit_model(const PrimitiveInstance &prim,
     if (prim.custom_mesh == nullptr) {
       return false;
     }
-    out_model =
-        mesh_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
+    out_model = mesh_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
     return true;
 
   case PrimitiveShape::BoneSpanMesh: {
@@ -471,11 +459,10 @@ auto compute_unit_model(const PrimitiveInstance &prim,
         bone_world_offset(bind_pose[tail], prim.params.tail_offset);
     QVector3D const right_ref = anchor_m.column(0).toVector3D();
     float const r_right = prim.params.radius;
-    float const r_forward = (prim.params.depth_radius > 0.0F)
-                                ? prim.params.depth_radius
-                                : prim.params.radius;
-    out_model = Render::Geom::oriented_cylinder(head_world, tail_world,
-                                                right_ref, r_right, r_forward);
+    float const r_forward = (prim.params.depth_radius > 0.0F) ? prim.params.depth_radius
+                                                              : prim.params.radius;
+    out_model = Render::Geom::oriented_cylinder(
+        head_world, tail_world, right_ref, r_right, r_forward);
     return true;
   }
 
@@ -485,25 +472,24 @@ auto compute_unit_model(const PrimitiveInstance &prim,
   }
 }
 
-auto transform_normal(const QMatrix4x4 &m, const QVector3D &n) -> QVector3D {
+auto transform_normal(const QMatrix4x4& m, const QVector3D& n) -> QVector3D {
   QVector3D const mapped = m.mapVector(n);
-  float const len_sq = mapped.x() * mapped.x() + mapped.y() * mapped.y() +
-                       mapped.z() * mapped.z();
+  float const len_sq =
+      mapped.x() * mapped.x() + mapped.y() * mapped.y() + mapped.z() * mapped.z();
   if (len_sq <= 1e-20F) {
     return QVector3D{0.0F, 1.0F, 0.0F};
   }
   float const inv_len = 1.0F / std::sqrt(len_sq);
-  return QVector3D{mapped.x() * inv_len, mapped.y() * inv_len,
-                   mapped.z() * inv_len};
+  return QVector3D{mapped.x() * inv_len, mapped.y() * inv_len, mapped.z() * inv_len};
 }
 
-void append_primitive_vertices(const PrimitiveInstance &prim,
-                               const Mesh &unit_mesh,
-                               const QMatrix4x4 &unit_model,
+void append_primitive_vertices(const PrimitiveInstance& prim,
+                               const Mesh& unit_mesh,
+                               const QMatrix4x4& unit_model,
                                std::span<const BoneWorldMatrix> bind_pose,
-                               BakedRiggedMeshCpu &out) {
-  auto const &src_verts = unit_mesh.get_vertices();
-  auto const &src_idx = unit_mesh.get_indices();
+                               BakedRiggedMeshCpu& out) {
+  auto const& src_verts = unit_mesh.get_vertices();
+  auto const& src_idx = unit_mesh.get_indices();
   if (src_verts.empty() || src_idx.empty()) {
     return;
   }
@@ -515,7 +501,7 @@ void append_primitive_vertices(const PrimitiveInstance &prim,
       two_bone ? static_cast<std::uint8_t>(prim.params.tail_bone) : anchor;
 
   out.vertices.reserve(out.vertices.size() + src_verts.size());
-  for (Vertex const &v : src_verts) {
+  for (Vertex const& v : src_verts) {
     QVector3D const local_pos{v.position[0], v.position[1], v.position[2]};
     QVector3D const local_norm{v.normal[0], v.normal[1], v.normal[2]};
     QVector3D const world_pos = unit_model.map(local_pos);
@@ -537,8 +523,7 @@ void append_primitive_vertices(const PrimitiveInstance &prim,
       rv.bone_weights = {1.0F - t, t, 0.0F, 0.0F};
     } else if (prim.shape == PrimitiveShape::Mesh &&
                prim.mesh_skinning != MeshSkinning::Rigid) {
-      VertexBoneBlend const blend =
-          resolve_mesh_blend(prim, world_pos, bind_pose);
+      VertexBoneBlend const blend = resolve_mesh_blend(prim, world_pos, bind_pose);
       rv.bone_indices = blend.indices;
       rv.bone_weights = blend.weights;
     } else {
@@ -555,24 +540,24 @@ void append_primitive_vertices(const PrimitiveInstance &prim,
   }
 }
 
-void append_static_attachment(const StaticAttachmentSpec &spec,
-                              BakedRiggedMeshCpu &out) {
+void append_static_attachment(const StaticAttachmentSpec& spec,
+                              BakedRiggedMeshCpu& out) {
   if (spec.archetype == nullptr) {
     return;
   }
 
-  const auto &slice = spec.archetype->lods[0];
+  const auto& slice = spec.archetype->lods[0];
   if (slice.draws.empty()) {
     return;
   }
 
-  for (const Render::GL::RenderArchetypeDraw &draw : slice.draws) {
-    Mesh *src = draw.mesh;
+  for (const Render::GL::RenderArchetypeDraw& draw : slice.draws) {
+    Mesh* src = draw.mesh;
     if (src == nullptr) {
       continue;
     }
-    auto const &src_verts = src->get_vertices();
-    auto const &src_idx = src->get_indices();
+    auto const& src_verts = src->get_vertices();
+    auto const& src_idx = src->get_indices();
     if (src_verts.empty() || src_idx.empty()) {
       continue;
     }
@@ -581,8 +566,7 @@ void append_static_attachment(const StaticAttachmentSpec &spec,
     if (spec.uniform_scale != 1.0F) {
       scale_mat.scale(spec.uniform_scale);
     }
-    const QMatrix4x4 attach_model =
-        spec.local_offset * scale_mat * draw.local_model;
+    const QMatrix4x4 attach_model = spec.local_offset * scale_mat * draw.local_model;
 
     std::uint8_t role = 0;
     if (draw.palette_slot != Render::GL::k_render_archetype_fixed_color_slot) {
@@ -598,7 +582,7 @@ void append_static_attachment(const StaticAttachmentSpec &spec,
     auto const bone = static_cast<std::uint8_t>(spec.socket_bone_index & 0xFFu);
 
     out.vertices.reserve(out.vertices.size() + src_verts.size());
-    for (Render::GL::Vertex const &v : src_verts) {
+    for (Render::GL::Vertex const& v : src_verts) {
       QVector3D const local_pos{v.position[0], v.position[1], v.position[2]};
       QVector3D const local_norm{v.normal[0], v.normal[1], v.normal[2]};
       QVector3D const baked_pos = attach_model.map(local_pos);
@@ -623,14 +607,14 @@ void append_static_attachment(const StaticAttachmentSpec &spec,
 
 } // namespace
 
-auto bake_rigged_mesh_cpu(const BakeInput &in) -> BakedRiggedMeshCpu {
+auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
   BakedRiggedMeshCpu out;
   if (in.graph != nullptr) {
-    for (PrimitiveInstance const &prim : in.graph->primitives) {
+    for (PrimitiveInstance const& prim : in.graph->primitives) {
       if (prim.shape == PrimitiveShape::None) {
         continue;
       }
-      Mesh *unit_mesh = resolve_unit_mesh(prim);
+      Mesh* unit_mesh = resolve_unit_mesh(prim);
       if (unit_mesh == nullptr) {
         continue;
       }
@@ -638,14 +622,12 @@ auto bake_rigged_mesh_cpu(const BakeInput &in) -> BakedRiggedMeshCpu {
       if (!compute_unit_model(prim, in.bind_pose, unit_model)) {
         continue;
       }
-      append_primitive_vertices(prim, *unit_mesh, unit_model, in.bind_pose,
-                                out);
+      append_primitive_vertices(prim, *unit_mesh, unit_model, in.bind_pose, out);
     }
   }
 
-  for (StaticAttachmentSpec const &spec : in.attachments) {
-    if (!in.bind_pose.empty() &&
-        spec.socket_bone_index >= in.bind_pose.size()) {
+  for (StaticAttachmentSpec const& spec : in.attachments) {
+    if (!in.bind_pose.empty() && spec.socket_bone_index >= in.bind_pose.size()) {
       continue;
     }
     append_static_attachment(spec, out);
@@ -654,8 +636,7 @@ auto bake_rigged_mesh_cpu(const BakeInput &in) -> BakedRiggedMeshCpu {
   return out;
 }
 
-auto bake_rigged_mesh(const BakeInput &in)
-    -> std::unique_ptr<Render::GL::RiggedMesh> {
+auto bake_rigged_mesh(const BakeInput& in) -> std::unique_ptr<Render::GL::RiggedMesh> {
   BakedRiggedMeshCpu cpu = bake_rigged_mesh_cpu(in);
   return std::make_unique<Render::GL::RiggedMesh>(std::move(cpu.vertices),
                                                   std::move(cpu.indices));

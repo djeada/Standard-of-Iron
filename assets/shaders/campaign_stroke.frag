@@ -49,8 +49,7 @@ float feather_edge(float dist, float width, float feather_amount) {
   return 1.0 - smoothstep(-feather_amount, feather_amount, edge);
 }
 
-float dash_pattern(float distance, float dash_len, float gap_len,
-                   float anim_offset) {
+float dash_pattern(float distance, float dash_len, float gap_len, float anim_offset) {
   float total_len = dash_len + gap_len;
   float t = mod(distance + anim_offset, total_len);
   return step(t, dash_len);
