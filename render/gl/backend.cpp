@@ -2461,9 +2461,28 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         case EffectBatchCmd::Kind::CombatDust:
         case EffectBatchCmd::Kind::BuildingFlame:
+        case EffectBatchCmd::Kind::BloodPool:
         case EffectBatchCmd::Kind::StoneImpact: {
           if (m_combat_dust_pipeline == nullptr ||
               !m_combat_dust_pipeline->is_initialized()) {
+            break;
+          }
+          if (first_eff.kind == EffectBatchCmd::Kind::BloodPool) {
+            std::vector<
+                BackendPipelines::CombatDustPipeline::BloodPoolInstanceData>
+                blood_instances;
+            blood_instances.reserve(prepared.count);
+            for (std::size_t idx = prepared.start;
+                 idx < prepared.start + prepared.count; ++idx) {
+              const auto &eff =
+                  std::get<EffectBatchCmdIndex>(queue.get_sorted(idx));
+              blood_instances.push_back({eff.position, eff.radius,
+                                         eff.alpha_scale, eff.rotation,
+                                         eff.aspect_ratio, eff.seed});
+            }
+            m_combat_dust_pipeline->render_blood_pool_batch(
+                blood_instances.data(), blood_instances.size(), view_proj);
+            m_last_bound_shader = nullptr;
             break;
           }
           std::vector<BackendPipelines::CombatDustPipeline::DustInstanceData>
@@ -2579,6 +2598,24 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_combat_dust_pipeline->render_single_flame(
             flame.position, flame.color, flame.radius, flame.intensity,
             flame.time, view_proj);
+        m_last_bound_shader = nullptr;
+        break;
+      }
+      case EffectBatchCmd::Kind::BloodPool: {
+        struct BloodPoolView {
+          const QVector3D &position;
+          float radius;
+          float alpha_scale;
+        };
+        const BloodPoolView blood{eff_cmd_.position, eff_cmd_.radius,
+                                  eff_cmd_.alpha_scale};
+        if (m_combat_dust_pipeline == nullptr ||
+            !m_combat_dust_pipeline->is_initialized()) {
+          break;
+        }
+        m_combat_dust_pipeline->render_single_blood_pool(
+            blood.position, blood.radius, blood.alpha_scale, eff_cmd_.rotation,
+            eff_cmd_.aspect_ratio, eff_cmd_.seed, view_proj);
         m_last_bound_shader = nullptr;
         break;
       }

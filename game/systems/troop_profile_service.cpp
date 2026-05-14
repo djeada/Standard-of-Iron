@@ -4,6 +4,23 @@
 #include "units/troop_catalog.h"
 
 namespace Game::Systems {
+namespace {
+
+constexpr float k_archer_range_multiplier = 1.5F;
+
+void apply_archer_range_bonus(Game::Units::TroopType type,
+                              TroopProfile &profile) {
+  switch (type) {
+  case Game::Units::TroopType::Archer:
+  case Game::Units::TroopType::HorseArcher:
+    profile.combat.ranged_range *= k_archer_range_multiplier;
+    break;
+  default:
+    break;
+  }
+}
+
+} // namespace
 
 auto TroopProfileService::instance() -> TroopProfileService & {
   static TroopProfileService inst;
@@ -37,6 +54,7 @@ auto TroopProfileService::get_profile(
         fallback.individuals_per_unit = catalog_class.individuals_per_unit;
         fallback.max_units_per_row = catalog_class.max_units_per_row;
         fallback.formation_type = FormationType::Roman;
+        apply_archer_range_bonus(type, fallback);
         return fallback;
       }
       nation = &all.front();
@@ -145,6 +163,7 @@ auto TroopProfileService::build_profile(
     }
   }
 
+  apply_archer_range_bonus(type, profile);
   return profile;
 }
 

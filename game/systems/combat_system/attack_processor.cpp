@@ -546,35 +546,60 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
   arrow_count =
       std::min(arrow_count, Constants::k_max_visual_arrows_per_volley);
 
+  QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+  QVector3D const up_vector(0.0F, 1.0F, 0.0F);
+  int const wave_count = std::max(1, Constants::k_arrow_volley_wave_count);
+  int const rank_count =
+      std::max(1, (arrow_count + wave_count - 1) / wave_count);
+
   for (int i = 0; i < arrow_count; ++i) {
     static thread_local std::mt19937 spread_gen(std::random_device{}());
     std::uniform_real_distribution<float> spread_dist(
         Constants::k_arrow_spread_min, Constants::k_arrow_spread_max);
 
-    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
-    QVector3D const up_vector(0.0F, 1.0F, 0.0F);
+    float const spread_a = spread_dist(spread_gen);
+    float const spread_b = spread_dist(spread_gen);
+    float const spread_c = spread_dist(spread_gen);
+    int const wave_index = i % wave_count;
+    int const rank_index = i / wave_count;
+    float const centered_wave = static_cast<float>(wave_index) -
+                                (static_cast<float>(wave_count - 1) * 0.5F);
+    float const centered_rank = static_cast<float>(rank_index) -
+                                (static_cast<float>(rank_count - 1) * 0.5F);
 
-    float const lateral_offset = spread_dist(spread_gen);
-    float const vertical_offset =
-        spread_dist(spread_gen) * Constants::k_arrow_vertical_spread_factor;
+    float const base_lateral =
+        centered_rank * Constants::k_arrow_volley_rank_spacing;
+    float const launch_lateral = base_lateral + spread_a * 0.60F;
+    float const target_lateral = (base_lateral * 0.95F) + spread_b * 0.45F;
+    float const wave_height = (1.0F - 0.18F * std::abs(centered_wave)) *
+                              Constants::k_arrow_volley_wave_height;
+    float const launch_height =
+        wave_height + std::abs(spread_b) *
+                          (Constants::k_arrow_vertical_spread_factor * 0.48F);
+    float const target_height =
+        (wave_height * 0.5F) +
+        std::abs(spread_c) *
+            (Constants::k_arrow_vertical_spread_factor * 0.22F);
+    float const wave_depth =
+        centered_wave * Constants::k_arrow_volley_wave_depth;
     float const depth_offset =
-        spread_dist(spread_gen) * Constants::k_arrow_depth_spread_factor;
+        wave_depth +
+        spread_c * (Constants::k_arrow_depth_spread_factor * 0.55F);
 
     QVector3D const start_offset =
-        perpendicular * lateral_offset + up_vector * vertical_offset;
-    QVector3D const end_offset = perpendicular * lateral_offset +
-                                 up_vector * vertical_offset +
-                                 dir * depth_offset;
+        perpendicular * launch_lateral + up_vector * launch_height;
+    QVector3D const end_offset = perpendicular * target_lateral +
+                                 up_vector * target_height + dir * depth_offset;
 
     QVector3D const start =
         a_pos + QVector3D(0.0F, Constants::k_arrow_start_height, 0.0F) +
         dir * Constants::k_arrow_start_offset + start_offset;
-    QVector3D const end = t_pos +
-                          QVector3D(Constants::k_arrow_target_offset,
-                                    Constants::k_arrow_target_offset, 0.0F) +
-                          end_offset;
+    QVector3D const end =
+        t_pos + dir * Constants::k_arrow_target_offset +
+        QVector3D(0.0F, Constants::k_arrow_target_offset, 0.0F) + end_offset;
 
-    arrow_sys->spawn_arrow(start, end, color, Constants::k_arrow_speed);
+    arrow_sys->spawn_arrow(start, end, color, Constants::k_arrow_speed,
+                           ArrowVisualStyle::Volley);
   }
 }
 

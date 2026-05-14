@@ -33,9 +33,20 @@ constexpr float k_flame_color_g = 0.4F;
 constexpr float k_flame_color_b = 0.1F;
 constexpr float k_flame_y_offset = 0.5F;
 constexpr float k_building_health_threshold = 0.5F;
-constexpr float k_default_blood_radius = 0.6F;
 constexpr float k_blood_y_offset = 0.02F;
-constexpr float k_blood_alpha_scale = 1.0F;
+
+auto blood_alpha_scale(float elapsed_time, float lifetime) -> float {
+  if (lifetime <= 0.0F) {
+    return 0.0F;
+  }
+
+  float const fade_window = std::max(1.0F, lifetime * 0.25F);
+  float const remaining_time = lifetime - elapsed_time;
+  if (remaining_time >= fade_window) {
+    return 1.0F;
+  }
+  return std::clamp(remaining_time / fade_window, 0.0F, 1.0F);
+}
 
 void clear_gl_errors() {
 #ifndef NDEBUG
@@ -192,6 +203,10 @@ void CombatDustPipeline::cache_uniforms() {
         m_blood_shader->optional_uniform_handle("u_radius");
     m_blood_uniforms.alpha_scale =
         m_blood_shader->uniform_handle("u_alpha_scale");
+    m_blood_uniforms.rotation = m_blood_shader->uniform_handle("u_rotation");
+    m_blood_uniforms.aspect_ratio =
+        m_blood_shader->uniform_handle("u_aspect_ratio");
+    m_blood_uniforms.seed = m_blood_shader->uniform_handle("u_seed");
   }
 }
 
@@ -567,24 +582,32 @@ void CombatDustPipeline::collect_blood_pools(Engine::Core::World *world) {
     return;
   }
 
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
+  auto blood_stains =
+      world->get_entities_with<Engine::Core::BloodStainComponent>();
 
-  for (auto *unit : units) {
-    if (unit->has_component<Engine::Core::PendingRemovalComponent>() ||
-        unit->has_component<Engine::Core::BuildingComponent>()) {
+  for (auto *entity : blood_stains) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *unit_comp = unit->get_component<Engine::Core::UnitComponent>();
-    auto *transform = unit->get_component<Engine::Core::TransformComponent>();
-    if (unit_comp == nullptr || transform == nullptr || unit_comp->health > 0) {
+    auto *blood_stain =
+        entity->get_component<Engine::Core::BloodStainComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (blood_stain == nullptr || transform == nullptr) {
       continue;
     }
 
     BloodPoolData data;
-    data.position = QVector3D(transform->position.x, k_blood_y_offset,
+    data.position = QVector3D(transform->position.x,
+                              transform->position.y + k_blood_y_offset,
                               transform->position.z);
-    data.radius = k_default_blood_radius;
+    data.radius = blood_stain->radius;
+    data.alpha_scale =
+        blood_alpha_scale(blood_stain->elapsed_time, blood_stain->lifetime);
+    data.rotation = blood_stain->rotation;
+    data.aspect_ratio = blood_stain->aspect_ratio;
+    data.seed = blood_stain->seed;
     m_blood_data.push_back(data);
   }
 }
@@ -681,63 +704,17 @@ void CombatDustPipeline::render_blood_pools(const Camera &cam) {
   }
 
   QMatrix4x4 view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
-
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-  GLboolean blend_enabled = glIsEnabled(GL_BLEND);
-  GLboolean polygon_offset_enabled = glIsEnabled(GL_POLYGON_OFFSET_FILL);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  GLfloat polygon_offset_factor = 0.0F;
-  GLfloat polygon_offset_units = 0.0F;
-  glGetFloatv(GL_POLYGON_OFFSET_FACTOR, &polygon_offset_factor);
-  glGetFloatv(GL_POLYGON_OFFSET_UNITS, &polygon_offset_units);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(-1.0F, -1.0F);
-
-  m_blood_shader->use();
-  glBindVertexArray(m_blood_vao);
-
+  std::vector<BloodPoolInstanceData> instances;
+  instances.reserve(m_blood_data.size());
   for (const auto &blood : m_blood_data) {
-    QMatrix4x4 model;
-    model.setToIdentity();
-    model.translate(blood.position);
-    model.scale(blood.radius, 1.0F, blood.radius);
-
-    QMatrix4x4 mvp = view_proj * model;
-    m_blood_shader->set_uniform(m_blood_uniforms.mvp, mvp);
-    m_blood_shader->set_uniform(m_blood_uniforms.radius, blood.radius);
-    m_blood_shader->set_uniform(m_blood_uniforms.alpha_scale,
-                                k_blood_alpha_scale);
-
-    glDrawElements(GL_TRIANGLES, m_blood_index_count, GL_UNSIGNED_INT, nullptr);
+    instances.push_back({.position = blood.position,
+                         .radius = blood.radius,
+                         .alpha_scale = blood.alpha_scale,
+                         .rotation = blood.rotation,
+                         .aspect_ratio = blood.aspect_ratio,
+                         .seed = blood.seed});
   }
-
-  glBindVertexArray(0);
-
-  glPolygonOffset(polygon_offset_factor, polygon_offset_units);
-  if (!polygon_offset_enabled) {
-    glDisable(GL_POLYGON_OFFSET_FILL);
-  }
-  glDepthMask(depth_mask_enabled);
-  if (!blend_enabled) {
-    glDisable(GL_BLEND);
-  }
-  if (depth_test_enabled) {
-    glEnable(GL_DEPTH_TEST);
-  } else {
-    glDisable(GL_DEPTH_TEST);
-  }
-  if (cull_enabled) {
-    glEnable(GL_CULL_FACE);
-  }
+  render_blood_pool_batch(instances.data(), instances.size(), view_proj);
 }
 
 void CombatDustPipeline::render_dust(const CombatDustData &data,
@@ -917,6 +894,18 @@ void CombatDustPipeline::render_single_stone_impact(
   }
 }
 
+void CombatDustPipeline::render_single_blood_pool(
+    const QVector3D &position, float radius, float alpha_scale, float rotation,
+    float aspect_ratio, float seed, const QMatrix4x4 &view_proj) {
+  BloodPoolInstanceData instance{.position = position,
+                                 .radius = radius,
+                                 .alpha_scale = alpha_scale,
+                                 .rotation = rotation,
+                                 .aspect_ratio = aspect_ratio,
+                                 .seed = seed};
+  render_blood_pool_batch(&instance, 1U, view_proj);
+}
+
 void CombatDustPipeline::render_dust_batch(const DustInstanceData *instances,
                                            std::size_t count,
                                            const QMatrix4x4 &view_proj) {
@@ -966,6 +955,82 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData *instances,
   glBindVertexArray(0);
 
   glDepthMask(depth_mask_enabled);
+  if (cull_enabled) {
+    glEnable(GL_CULL_FACE);
+  }
+}
+
+void CombatDustPipeline::render_blood_pool_batch(
+    const BloodPoolInstanceData *instances, std::size_t count,
+    const QMatrix4x4 &view_proj) {
+  if (!is_initialized() || instances == nullptr || count == 0 ||
+      m_blood_shader == nullptr || m_blood_vao == 0 ||
+      m_blood_index_count <= 0) {
+    return;
+  }
+
+  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
+  GLboolean blend_enabled = glIsEnabled(GL_BLEND);
+  GLboolean polygon_offset_enabled = glIsEnabled(GL_POLYGON_OFFSET_FILL);
+  GLboolean depth_mask_enabled = GL_TRUE;
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
+
+  GLfloat polygon_offset_factor = 0.0F;
+  GLfloat polygon_offset_units = 0.0F;
+  glGetFloatv(GL_POLYGON_OFFSET_FACTOR, &polygon_offset_factor);
+  glGetFloatv(GL_POLYGON_OFFSET_UNITS, &polygon_offset_units);
+
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(-1.0F, -1.0F);
+
+  m_blood_shader->use();
+  glBindVertexArray(m_blood_vao);
+
+  for (std::size_t idx = 0; idx < count; ++idx) {
+    BloodPoolInstanceData const &blood = instances[idx];
+    if (blood.alpha_scale <= 0.0F || blood.radius <= 0.0F) {
+      continue;
+    }
+
+    QMatrix4x4 model;
+    model.setToIdentity();
+    model.translate(blood.position);
+    model.scale(blood.radius, 1.0F, blood.radius);
+
+    QMatrix4x4 mvp = view_proj * model;
+    m_blood_shader->set_uniform(m_blood_uniforms.mvp, mvp);
+    m_blood_shader->set_uniform(m_blood_uniforms.radius, blood.radius);
+    m_blood_shader->set_uniform(m_blood_uniforms.alpha_scale,
+                                blood.alpha_scale);
+    m_blood_shader->set_uniform(m_blood_uniforms.rotation, blood.rotation);
+    m_blood_shader->set_uniform(m_blood_uniforms.aspect_ratio,
+                                blood.aspect_ratio);
+    m_blood_shader->set_uniform(m_blood_uniforms.seed, blood.seed);
+
+    glDrawElements(GL_TRIANGLES, m_blood_index_count, GL_UNSIGNED_INT, nullptr);
+  }
+
+  glBindVertexArray(0);
+
+  glPolygonOffset(polygon_offset_factor, polygon_offset_units);
+  if (!polygon_offset_enabled) {
+    glDisable(GL_POLYGON_OFFSET_FILL);
+  }
+  glDepthMask(depth_mask_enabled);
+  if (!blend_enabled) {
+    glDisable(GL_BLEND);
+  }
+  if (depth_test_enabled) {
+    glEnable(GL_DEPTH_TEST);
+  } else {
+    glDisable(GL_DEPTH_TEST);
+  }
   if (cull_enabled) {
     glEnable(GL_CULL_FACE);
   }
