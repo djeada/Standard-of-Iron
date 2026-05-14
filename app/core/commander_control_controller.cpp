@@ -35,6 +35,9 @@ void CommanderControlController::reset() {
   m_dodge_state = DodgeState::None;
   m_dodge_timer = 0.0F;
   m_dodge_fov_kick = 0.0F;
+  m_jump_timer = 0.0F;
+  m_jump_safe_position_valid = false;
+  m_jump_last_walkable_position = QVector3D(0.0F, 0.0F, 0.0F);
   m_locked_target_id = 0;
   m_combo_miss_timer = 0.0F;
   m_primary_held_duration = 0.0F;
@@ -221,6 +224,10 @@ void CommanderControlController::poll_mouse_look(QQuickWindow *window) {
 
 void CommanderControlController::request_dodge() {
   m_input.dodge_requested = true;
+}
+
+void CommanderControlController::request_jump() {
+  m_input.jump_requested = true;
 }
 
 void CommanderControlController::special_action() {
@@ -581,6 +588,9 @@ auto CommanderControlController::update(Engine::Core::World &world,
   auto *transform =
       commander->get_component<Engine::Core::TransformComponent>();
   auto *unit = commander->get_component<Engine::Core::UnitComponent>();
+  auto *combat_state =
+      commander->get_component<Engine::Core::CombatStateComponent>();
+  auto *cmd_comp = commander->get_component<Engine::Core::CommanderComponent>();
   if (transform == nullptr || unit == nullptr) {
     return false;
   }
@@ -600,10 +610,6 @@ auto CommanderControlController::update(Engine::Core::World &world,
     movement->clear_path();
   }
 
-  if (auto *atk = commander->get_component<Engine::Core::AttackComponent>()) {
-    atk->in_melee_lock = false;
-    atk->melee_lock_target_id = 0;
-  }
   commander->remove_component<Engine::Core::AttackTargetComponent>();
 
   update_lock_on_yaw(world, *commander, dt);
@@ -638,9 +644,43 @@ auto CommanderControlController::update(Engine::Core::World &world,
 
   constexpr float k_fov_kick_decay = 30.0F;
   m_dodge_fov_kick = std::max(0.0F, m_dodge_fov_kick - k_fov_kick_decay * dt);
+  constexpr float k_jump_duration = 0.58F;
+  constexpr float k_jump_peak_height = 0.34F;
 
-  const bool should_dodge =
-      m_input.dodge_requested && m_dodge_state == DodgeState::None;
+  const bool jump_blocked_by_action =
+      m_dodge_state != DodgeState::None || m_input.primary_action ||
+      m_input.secondary_action || m_input.special_action ||
+      (combat_state != nullptr && combat_state->animation_state !=
+                                      Engine::Core::CombatAnimationState::Idle);
+  const bool should_jump =
+      m_input.jump_requested && m_jump_timer <= 0.0F && !jump_blocked_by_action;
+  m_input.jump_requested = false;
+  if (should_jump) {
+    m_jump_timer = k_jump_duration;
+    m_jump_safe_position_valid = true;
+    m_jump_last_walkable_position = QVector3D(
+        transform->position.x, transform->position.y, transform->position.z);
+  }
+
+  float jump_phase = 0.0F;
+  float jump_height_offset = 0.0F;
+  if (m_jump_timer > 0.0F) {
+    m_jump_timer = std::max(0.0F, m_jump_timer - dt);
+    jump_phase = 1.0F - (m_jump_timer / k_jump_duration);
+    const float normalized_phase = std::clamp(jump_phase, 0.0F, 1.0F);
+    jump_height_offset = k_jump_peak_height * 4.0F * normalized_phase *
+                         (1.0F - normalized_phase);
+  }
+  bool const jump_active = m_jump_timer > 0.0F;
+  if (cmd_comp != nullptr) {
+    cmd_comp->jump_active = jump_active;
+    cmd_comp->jump_phase = jump_phase;
+    cmd_comp->jump_height_offset = jump_height_offset;
+  }
+
+  const bool should_dodge = m_input.dodge_requested &&
+                            m_dodge_state == DodgeState::None &&
+                            m_jump_timer <= 0.0F;
   m_input.dodge_requested = false;
 
   if (should_dodge) {
@@ -668,6 +708,14 @@ auto CommanderControlController::update(Engine::Core::World &world,
     }
     return true;
   };
+  auto mark_jump_safe_position = [&](float x, float z) {
+    if (!jump_active || !can_move_to(x, z)) {
+      return;
+    }
+    m_jump_safe_position_valid = true;
+    m_jump_last_walkable_position = QVector3D(x, transform->position.y, z);
+  };
+  mark_jump_safe_position(transform->position.x, transform->position.z);
 
   if (m_dodge_state == DodgeState::Rolling) {
     constexpr float k_dodge_speed = 6.5F;
@@ -737,9 +785,10 @@ auto CommanderControlController::update(Engine::Core::World &world,
       }
       const float nx = transform->position.x + move.x() * speed * dt;
       const float nz = transform->position.z + move.z() * speed * dt;
-      if (can_move_to(nx, nz)) {
+      if (jump_active || can_move_to(nx, nz)) {
         transform->position.x = nx;
         transform->position.z = nz;
+        mark_jump_safe_position(nx, nz);
         if (movement != nullptr) {
           movement->vx = move.x() * speed;
           movement->vz = move.z() * speed;
@@ -754,6 +803,19 @@ auto CommanderControlController::update(Engine::Core::World &world,
       movement->vx = 0.0F;
       movement->vz = 0.0F;
     }
+  }
+  if (m_jump_safe_position_valid && !jump_active) {
+    if (!can_move_to(transform->position.x, transform->position.z)) {
+      transform->position.x = m_jump_last_walkable_position.x();
+      transform->position.z = m_jump_last_walkable_position.z();
+      if (movement != nullptr) {
+        movement->vx = 0.0F;
+        movement->vz = 0.0F;
+      }
+      actual_speed_for_bob = 0.0F;
+      run_for_bob = false;
+    }
+    m_jump_safe_position_valid = false;
   }
 
   m_move_speed = actual_speed_for_bob;
@@ -793,8 +855,6 @@ auto CommanderControlController::update(Engine::Core::World &world,
     guard->active = false;
   }
 
-  auto *cmd_comp = commander->get_component<Engine::Core::CommanderComponent>();
-
   if (m_special_cooldown > 0.0F) {
     m_special_cooldown = std::max(0.0F, m_special_cooldown - dt);
     if (cmd_comp != nullptr) {
@@ -806,7 +866,8 @@ auto CommanderControlController::update(Engine::Core::World &world,
   constexpr float k_bash_stagger_duration = 0.5F;
   constexpr float k_bash_cooldown = 3.0F;
   const bool bash_active = m_input.special_action && guard != nullptr &&
-                           guard->active && m_special_cooldown <= 0.0F;
+                           guard->active && m_special_cooldown <= 0.0F &&
+                           m_jump_timer <= 0.0F;
   if (bash_active) {
     auto *transform =
         commander->get_component<Engine::Core::TransformComponent>();
@@ -867,8 +928,8 @@ auto CommanderControlController::update(Engine::Core::World &world,
         std::max(0.0F, m_input.primary_action_scan_cooldown - dt);
   }
 
-  if (m_dodge_state != DodgeState::Rolling && m_input.primary_action &&
-      m_input.primary_action_scan_cooldown <= 0.0F) {
+  if (m_dodge_state != DodgeState::Rolling && m_jump_timer <= 0.0F &&
+      m_input.primary_action && m_input.primary_action_scan_cooldown <= 0.0F) {
     if (!primary_action(world, commander_id, local_owner_id)) {
       return false;
     }
@@ -956,8 +1017,14 @@ void CommanderControlController::update_camera(Engine::Core::Entity &commander,
   const QVector3D flat_forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
   const QVector3D flat_right(-flat_forward.z(), 0.0F, flat_forward.x());
 
+  float jump_height_offset = 0.0F;
+  if (auto const *cmd =
+          commander.get_component<Engine::Core::CommanderComponent>()) {
+    jump_height_offset = cmd->jump_height_offset;
+  }
   const QVector3D pivot(transform->position.x,
-                        transform->position.y + k_focus_height,
+                        transform->position.y + jump_height_offset +
+                            k_focus_height,
                         transform->position.z);
 
   const QVector3D eye_desired =

@@ -42,11 +42,11 @@
       "color": "blue",
       "team_id": 1,
       "difficulty": "medium",
-      "strategy": "harasser",
+      "strategy": "defensive",
       "personality": {
-        "aggression": 0.7,
-        "defense": 0.5,
-        "harassment": 0.6
+        "aggression": 0.35,
+        "defense": 0.85,
+        "harassment": 0.15
       },
       "starting_units": [],
       "starting_buildings": [],

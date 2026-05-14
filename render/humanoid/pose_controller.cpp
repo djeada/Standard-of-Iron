@@ -339,27 +339,35 @@ void HumanoidPoseController::apply_ambient_idle_explicit(
             ? std::sin(((phase - 0.26F) / 0.40F) * std::numbers::pi_v<float>)
             : 0.0F;
 
+    float const airborne_scale = m_anim_ctx.gait.is_airborne ? 1.0F : 0.45F;
     float const crouch_amount = prep_crouch * 0.75F + landing_crouch;
-    float const max_jump = 0.055F;
-    float const max_crouch = 0.055F;
+    float const torso_lift = air * (0.020F + 0.140F * airborne_scale) -
+                             crouch_amount * (0.020F + 0.075F * airborne_scale);
+    float const knee_lift =
+        air * (0.010F + 0.080F * airborne_scale) - crouch_amount * 0.012F;
+    float const foot_lift = air * (0.010F + 0.110F * airborne_scale);
+    float const knee_drive =
+        crouch_amount * 0.080F + air * 0.090F * airborne_scale;
+    float const foot_drive =
+        crouch_amount * 0.020F + air * 0.035F * airborne_scale;
+    float const hand_lift =
+        air * 0.050F * airborne_scale - crouch_amount * 0.030F;
 
-    float const vertical = air * max_jump - crouch_amount * max_crouch;
-    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + vertical);
-    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + vertical);
-    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + vertical);
-    m_pose.neck_base.setY(m_pose.neck_base.y() + vertical);
-    m_pose.head_pos.setY(m_pose.head_pos.y() + vertical);
-    m_pose.knee_l.setY(m_pose.knee_l.y() + vertical * 0.55F);
-    m_pose.knee_r.setY(m_pose.knee_r.y() + vertical * 0.55F);
-
-    if (crouch_amount > 0.0F) {
-      m_pose.knee_l.setZ(m_pose.knee_l.z() + crouch_amount * 0.06F);
-      m_pose.knee_r.setZ(m_pose.knee_r.z() + crouch_amount * 0.06F);
-    }
-    m_pose.hand_l.setY(m_pose.hand_l.y() - crouch_amount * 0.025F +
-                       air * 0.025F);
-    m_pose.hand_r.setY(m_pose.hand_r.y() - crouch_amount * 0.025F +
-                       air * 0.025F);
+    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + torso_lift);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + torso_lift * 0.92F);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + torso_lift * 0.92F);
+    m_pose.neck_base.setY(m_pose.neck_base.y() + torso_lift * 0.96F);
+    m_pose.head_pos.setY(m_pose.head_pos.y() + torso_lift);
+    m_pose.knee_l.setY(m_pose.knee_l.y() + torso_lift * 0.55F + knee_lift);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + torso_lift * 0.55F + knee_lift);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + knee_drive);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + knee_drive);
+    m_pose.foot_l.setY(m_pose.foot_l.y() + foot_lift);
+    m_pose.foot_r.setY(m_pose.foot_r.y() + foot_lift);
+    m_pose.foot_l.setZ(m_pose.foot_l.z() + foot_drive);
+    m_pose.foot_r.setZ(m_pose.foot_r.z() + foot_drive);
+    m_pose.hand_l.setY(m_pose.hand_l.y() + hand_lift);
+    m_pose.hand_r.setY(m_pose.hand_r.y() + hand_lift);
     break;
   }
 
@@ -1347,28 +1355,28 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   constexpr float k_strike_right_to_left = 1.0F;
   constexpr float k_strike_left_to_right = -1.0F;
 
-  QVector3D rest_pos(0.20F, HP::SHOULDER_Y + 0.05F, 0.15F);
-  QVector3D chamber_pos(0.28F, HP::SHOULDER_Y + 0.20F, 0.02F);
-  QVector3D apex_pos(0.30F, HP::SHOULDER_Y + 0.25F, 0.08F);
-  QVector3D strike_pos(0.18F, HP::SHOULDER_Y - 0.15F, 0.62F);
-  QVector3D followthrough_pos(0.05F, HP::WAIST_Y + 0.10F, 0.50F);
+  QVector3D rest_pos(0.20F, HP::SHOULDER_Y + 0.02F, 0.15F);
+  QVector3D chamber_pos(0.30F, HP::SHOULDER_Y + 0.16F, -0.02F);
+  QVector3D apex_pos(0.32F, HP::SHOULDER_Y + 0.20F, 0.04F);
+  QVector3D strike_pos(0.16F, HP::SHOULDER_Y - 0.24F, 0.72F);
+  QVector3D followthrough_pos(0.02F, HP::WAIST_Y - 0.02F, 0.58F);
 
   float strike_direction = k_strike_right_to_left;
   switch (variant % 3) {
   case 1:
 
-    chamber_pos = QVector3D(-0.10F, HP::SHOULDER_Y + 0.22F, 0.04F);
-    apex_pos = QVector3D(-0.08F, HP::SHOULDER_Y + 0.28F, 0.10F);
-    strike_pos = QVector3D(0.32F, HP::SHOULDER_Y - 0.12F, 0.58F);
-    followthrough_pos = QVector3D(0.40F, HP::WAIST_Y + 0.08F, 0.48F);
+    chamber_pos = QVector3D(-0.12F, HP::SHOULDER_Y + 0.18F, 0.00F);
+    apex_pos = QVector3D(-0.10F, HP::SHOULDER_Y + 0.22F, 0.06F);
+    strike_pos = QVector3D(0.36F, HP::SHOULDER_Y - 0.22F, 0.68F);
+    followthrough_pos = QVector3D(0.44F, HP::WAIST_Y - 0.02F, 0.56F);
     strike_direction = k_strike_left_to_right;
     break;
   case 2:
 
-    chamber_pos = QVector3D(0.35F, HP::SHOULDER_Y + 0.10F, 0.0F);
-    apex_pos = QVector3D(0.38F, HP::SHOULDER_Y + 0.08F, 0.06F);
-    strike_pos = QVector3D(0.05F, HP::SHOULDER_Y - 0.05F, 0.65F);
-    followthrough_pos = QVector3D(-0.10F, HP::SHOULDER_Y - 0.10F, 0.55F);
+    chamber_pos = QVector3D(0.36F, HP::SHOULDER_Y + 0.06F, -0.02F);
+    apex_pos = QVector3D(0.40F, HP::SHOULDER_Y + 0.04F, 0.04F);
+    strike_pos = QVector3D(0.04F, HP::SHOULDER_Y - 0.18F, 0.74F);
+    followthrough_pos = QVector3D(-0.14F, HP::SHOULDER_Y - 0.24F, 0.64F);
     break;
   default:
     break;
@@ -1411,9 +1419,9 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
                               0.17F + 0.22F * power_t);
 
     torso_twist = strike_direction * (-0.05F + 0.14F * power_t);
-    forward_lean = 0.10F * power_t;
-    shoulder_rotation = 0.05F - 0.08F * power_t;
-    weight_shift = -0.02F + 0.08F * power_t;
+    forward_lean = 0.15F * power_t;
+    shoulder_rotation = 0.05F - 0.12F * power_t;
+    weight_shift = -0.02F + 0.12F * power_t;
   } else if (attack_phase < 0.62F) {
     float t = (attack_phase - 0.48F) / 0.14F;
     float ease_t = smoothstep(t);
@@ -1421,8 +1429,8 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     hand_l_target = QVector3D(-0.12F, HP::SHOULDER_Y - 0.10F, 0.39F);
 
     torso_twist = strike_direction * (0.09F - 0.03F * t);
-    forward_lean = 0.10F - 0.02F * t;
-    weight_shift = 0.06F;
+    forward_lean = 0.14F - 0.03F * t;
+    weight_shift = 0.10F;
   } else {
     float t = (attack_phase - 0.62F) / 0.38F;
     float ease_t = ease_out(t);
@@ -1432,8 +1440,8 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
                               0.39F * (1.0F - ease_t) + 0.15F * ease_t);
 
     torso_twist = 0.06F * strike_direction * (1.0F - ease_t);
-    forward_lean = 0.08F * (1.0F - ease_t);
-    weight_shift = 0.06F * (1.0F - ease_t);
+    forward_lean = 0.10F * (1.0F - ease_t);
+    weight_shift = 0.08F * (1.0F - ease_t);
   }
 
   if (std::abs(torso_twist) > 0.001F) {
@@ -1472,11 +1480,11 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
   constexpr float k_thrust_middle = 0.0F;
   constexpr float k_thrust_low = -1.0F;
 
-  QVector3D guard_pos(0.26F, HP::SHOULDER_Y + 0.08F, 0.28F);
-  QVector3D chamber_pos(0.32F, HP::SHOULDER_Y + 0.12F, 0.02F);
-  QVector3D thrust_pos(0.28F, HP::SHOULDER_Y + 0.05F, 0.95F);
-  QVector3D extended_pos(0.25F, HP::SHOULDER_Y + 0.02F, 1.05F);
-  QVector3D recover_pos(0.28F, HP::SHOULDER_Y + 0.06F, 0.45F);
+  QVector3D guard_pos(0.26F, HP::SHOULDER_Y + 0.02F, 0.28F);
+  QVector3D chamber_pos(0.34F, HP::SHOULDER_Y + 0.08F, 0.00F);
+  QVector3D thrust_pos(0.28F, HP::SHOULDER_Y - 0.10F, 1.04F);
+  QVector3D extended_pos(0.24F, HP::SHOULDER_Y - 0.16F, 1.18F);
+  QVector3D recover_pos(0.28F, HP::SHOULDER_Y - 0.02F, 0.45F);
 
   float thrust_height = k_thrust_middle;
   float crouch_amount = 0.0F;
@@ -1484,18 +1492,18 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
   switch (variant % 3) {
   case 1:
 
-    chamber_pos = QVector3D(0.30F, HP::SHOULDER_Y + 0.18F, 0.0F);
-    thrust_pos = QVector3D(0.28F, HP::WAIST_Y + 0.15F, 0.98F);
-    extended_pos = QVector3D(0.25F, HP::WAIST_Y + 0.10F, 1.08F);
-    recover_pos = QVector3D(0.28F, HP::SHOULDER_Y - 0.05F, 0.42F);
+    chamber_pos = QVector3D(0.30F, HP::SHOULDER_Y + 0.10F, 0.0F);
+    thrust_pos = QVector3D(0.28F, HP::WAIST_Y + 0.03F, 1.06F);
+    extended_pos = QVector3D(0.24F, HP::WAIST_Y - 0.03F, 1.20F);
+    recover_pos = QVector3D(0.28F, HP::SHOULDER_Y - 0.08F, 0.42F);
     thrust_height = k_thrust_low;
     crouch_amount = 0.08F;
     break;
   case 2:
 
-    chamber_pos = QVector3D(0.35F, HP::SHOULDER_Y + 0.05F, 0.08F);
-    thrust_pos = QVector3D(0.30F, HP::SHOULDER_Y + 0.12F, 0.92F);
-    extended_pos = QVector3D(0.28F, HP::SHOULDER_Y + 0.15F, 1.02F);
+    chamber_pos = QVector3D(0.35F, HP::SHOULDER_Y + 0.02F, 0.08F);
+    thrust_pos = QVector3D(0.30F, HP::SHOULDER_Y - 0.02F, 1.00F);
+    extended_pos = QVector3D(0.28F, HP::SHOULDER_Y - 0.06F, 1.12F);
     thrust_height = k_thrust_high;
     break;
   default:
@@ -1552,9 +1560,9 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
 
     torso_twist = -0.06F + 0.14F * power_t;
     hip_rotation = -0.04F + 0.10F * power_t;
-    forward_lean = -0.05F + 0.20F * power_t;
-    shoulder_drop = 0.05F * power_t;
-    step_forward = 0.12F * power_t;
+    forward_lean = -0.05F + 0.26F * power_t;
+    shoulder_drop = 0.08F * power_t;
+    step_forward = 0.18F * power_t;
     crouch_factor = crouch_amount * (1.0F - power_t * 0.3F);
 
     if (thrust_height < 0) {
@@ -1562,7 +1570,7 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
       crouch_factor += 0.06F * power_t;
     } else if (thrust_height > 0) {
 
-      crouch_factor -= 0.03F * power_t;
+      crouch_factor += 0.02F * power_t;
     }
   } else if (attack_phase < 0.60F) {
 
@@ -1573,9 +1581,9 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
 
     torso_twist = 0.08F;
     hip_rotation = 0.06F;
-    forward_lean = 0.15F + 0.05F * t;
-    shoulder_drop = 0.05F + 0.02F * t;
-    step_forward = 0.12F + 0.04F * t;
+    forward_lean = 0.21F + 0.06F * t;
+    shoulder_drop = 0.08F + 0.03F * t;
+    step_forward = 0.18F + 0.05F * t;
     crouch_factor = crouch_amount * 0.7F;
   } else if (attack_phase < 0.78F) {
 
@@ -1587,9 +1595,9 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
 
     torso_twist = 0.08F * (1.0F - t);
     hip_rotation = 0.06F * (1.0F - t);
-    forward_lean = 0.20F * (1.0F - t) + 0.04F * t;
-    shoulder_drop = 0.07F * (1.0F - t);
-    step_forward = 0.16F * (1.0F - t * 0.5F);
+    forward_lean = 0.25F * (1.0F - t) + 0.04F * t;
+    shoulder_drop = 0.10F * (1.0F - t);
+    step_forward = 0.22F * (1.0F - t * 0.5F);
     crouch_factor = crouch_amount * 0.7F * (1.0F - t);
   } else {
 

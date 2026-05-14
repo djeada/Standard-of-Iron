@@ -169,7 +169,7 @@ world_prop_render_scale(WorldProp::Type type) -> float {
   case WorldProp::Type::WeaponRack:
     return 1.35F;
   case WorldProp::Type::Ruins:
-    return 1.45F;
+    return 2.90F;
   case WorldProp::Type::DeadTree:
     return 1.55F;
   case WorldProp::Type::Boulder:

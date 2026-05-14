@@ -1125,6 +1125,48 @@ static void append_quad(std::vector<std::pair<QVector3D, QVector3D>> &verts,
 }
 
 static void
+append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>> &verts,
+                    std::vector<uint16_t> &idx, const QVector3D &a,
+                    const QVector3D &b, float half_width, float half_depth) {
+  QVector3D axis = b - a;
+  QVector3D side(-axis.y(), axis.x(), 0.0F);
+  if (side.lengthSquared() < 1.0e-8F) {
+    side = {1.0F, 0.0F, 0.0F};
+  } else {
+    side.normalize();
+  }
+  side *= half_width;
+  const QVector3D depth(0.0F, 0.0F, half_depth);
+
+  const QVector3D a0 = a - side - depth;
+  const QVector3D a1 = a + side - depth;
+  const QVector3D a2 = a + side + depth;
+  const QVector3D a3 = a - side + depth;
+  const QVector3D b0 = b - side - depth;
+  const QVector3D b1 = b + side - depth;
+  const QVector3D b2 = b + side + depth;
+  const QVector3D b3 = b - side + depth;
+
+  auto face = [&](const QVector3D &p0, const QVector3D &p1, const QVector3D &p2,
+                  const QVector3D &p3) {
+    QVector3D n = QVector3D::crossProduct(p1 - p0, p3 - p0);
+    if (n.lengthSquared() > 1.0e-8F) {
+      n.normalize();
+    } else {
+      n = {0.0F, 1.0F, 0.0F};
+    }
+    append_quad(verts, idx, p0, p1, p2, p3, n);
+  };
+
+  face(a0, b0, b1, a1);
+  face(a3, a2, b2, b3);
+  face(a1, b1, b2, a2);
+  face(a0, a3, b3, b0);
+  face(a0, a1, a2, a3);
+  face(b0, b3, b2, b1);
+}
+
+static void
 append_disc_xaxis(std::vector<std::pair<QVector3D, QVector3D>> &verts,
                   std::vector<uint16_t> &idx, float cx, float cy, float cz,
                   float r, float hthk, int segs) {
@@ -1395,46 +1437,6 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  auto append_oriented_box = [&](const QVector3D &a, const QVector3D &b,
-                                 float half_width, float half_depth) {
-    QVector3D axis = b - a;
-    QVector3D side(-axis.y(), axis.x(), 0.0F);
-    if (side.lengthSquared() < 1.0e-8F) {
-      side = {1.0F, 0.0F, 0.0F};
-    } else {
-      side.normalize();
-    }
-    side *= half_width;
-    const QVector3D depth(0.0F, 0.0F, half_depth);
-
-    const QVector3D a0 = a - side - depth;
-    const QVector3D a1 = a + side - depth;
-    const QVector3D a2 = a + side + depth;
-    const QVector3D a3 = a - side + depth;
-    const QVector3D b0 = b - side - depth;
-    const QVector3D b1 = b + side - depth;
-    const QVector3D b2 = b + side + depth;
-    const QVector3D b3 = b - side + depth;
-
-    auto face = [&](const QVector3D &p0, const QVector3D &p1,
-                    const QVector3D &p2, const QVector3D &p3) {
-      QVector3D n = QVector3D::crossProduct(p1 - p0, p3 - p0);
-      if (n.lengthSquared() > 1.0e-8F) {
-        n.normalize();
-      } else {
-        n = {0.0F, 1.0F, 0.0F};
-      }
-      append_quad(verts, idx, p0, p1, p2, p3, n);
-    };
-
-    face(a0, b0, b1, a1);
-    face(a3, a2, b2, b3);
-    face(a1, b1, b2, a2);
-    face(a0, a3, b3, b0);
-    face(a0, a1, a2, a3);
-    face(b0, b3, b2, b1);
-  };
-
   auto append_blade_tip = [&](float cx, float y0, float z, float half_width,
                               float height, float half_depth) {
     const QVector3D base_l(cx - half_width, y0, z - half_depth);
@@ -1551,10 +1553,10 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
   append_box(verts, idx, {-0.86F, 0.34F, -0.10F}, {0.86F, 0.48F, 0.08F});
   append_box(verts, idx, {-0.84F, 0.96F, -0.12F}, {0.84F, 1.10F, 0.06F});
   append_box(verts, idx, {-0.74F, 1.28F, -0.10F}, {0.74F, 1.40F, 0.04F});
-  append_oriented_box({-0.70F, 0.16F, -0.08F}, {-0.18F, 0.96F, -0.08F}, 0.045F,
-                      0.055F);
-  append_oriented_box({0.70F, 0.16F, -0.08F}, {0.18F, 0.96F, -0.08F}, 0.045F,
-                      0.055F);
+  append_oriented_box(verts, idx, {-0.70F, 0.16F, -0.08F},
+                      {-0.18F, 0.96F, -0.08F}, 0.045F, 0.055F);
+  append_oriented_box(verts, idx, {0.70F, 0.16F, -0.08F},
+                      {0.18F, 0.96F, -0.08F}, 0.045F, 0.055F);
 
   for (float x : {-0.58F, -0.30F, 0.00F, 0.30F, 0.58F}) {
     append_box(verts, idx, {x - 0.050F, 0.46F, 0.08F},
@@ -1563,31 +1565,31 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
                {x + 0.045F, 1.22F, 0.20F});
   }
 
-  append_oriented_box({-0.64F, 0.05F, 0.17F}, {-0.50F, 1.72F, 0.09F}, 0.032F,
-                      0.034F);
+  append_oriented_box(verts, idx, {-0.64F, 0.05F, 0.17F},
+                      {-0.50F, 1.72F, 0.09F}, 0.032F, 0.034F);
   append_leaf_blade(-0.485F, 1.62F, 0.09F, 0.115F, 0.42F, 0.035F);
   append_box(verts, idx, {-0.675F, 0.00F, 0.13F}, {-0.595F, 0.12F, 0.21F});
 
   append_box(verts, idx, {-0.335F, 0.02F, 0.12F}, {-0.210F, 0.15F, 0.24F});
-  append_oriented_box({-0.280F, 0.12F, 0.17F}, {-0.235F, 0.38F, 0.12F}, 0.044F,
-                      0.034F);
-  append_oriented_box({-0.525F, 0.34F, 0.13F}, {0.030F, 0.41F, 0.13F}, 0.042F,
-                      0.048F);
+  append_oriented_box(verts, idx, {-0.280F, 0.12F, 0.17F},
+                      {-0.235F, 0.38F, 0.12F}, 0.044F, 0.034F);
+  append_oriented_box(verts, idx, {-0.525F, 0.34F, 0.13F},
+                      {0.030F, 0.41F, 0.13F}, 0.042F, 0.048F);
   append_sword_blade({-0.250F, 0.42F, 0.12F}, {-0.335F, 1.82F, 0.07F}, 0.080F,
                      0.018F, 0.030F);
   append_blade_tip(-0.345F, 1.72F, 0.07F, 0.070F, 0.24F, 0.026F);
 
   append_box(verts, idx, {0.030F, 0.03F, 0.14F}, {0.140F, 0.14F, 0.25F});
-  append_oriented_box({0.085F, 0.12F, 0.18F}, {0.080F, 0.34F, 0.13F}, 0.036F,
-                      0.030F);
-  append_oriented_box({-0.075F, 0.30F, 0.14F}, {0.285F, 0.37F, 0.14F}, 0.038F,
-                      0.044F);
+  append_oriented_box(verts, idx, {0.085F, 0.12F, 0.18F},
+                      {0.080F, 0.34F, 0.13F}, 0.036F, 0.030F);
+  append_oriented_box(verts, idx, {-0.075F, 0.30F, 0.14F},
+                      {0.285F, 0.37F, 0.14F}, 0.038F, 0.044F);
   append_sword_blade({0.085F, 0.38F, 0.13F}, {0.180F, 1.56F, 0.08F}, 0.065F,
                      0.015F, 0.026F);
   append_blade_tip(0.185F, 1.46F, 0.08F, 0.058F, 0.22F, 0.024F);
 
-  append_oriented_box({0.54F, 0.05F, 0.16F}, {0.68F, 1.70F, 0.08F}, 0.030F,
-                      0.032F);
+  append_oriented_box(verts, idx, {0.54F, 0.05F, 0.16F}, {0.68F, 1.70F, 0.08F},
+                      0.030F, 0.032F);
   append_leaf_blade(0.690F, 1.60F, 0.08F, 0.105F, 0.40F, 0.033F);
   append_box(verts, idx, {0.505F, 0.00F, 0.12F}, {0.585F, 0.12F, 0.20F});
 
@@ -1604,12 +1606,12 @@ void VegetationPipeline::initialize_weapon_rack_pipeline() {
         {0.22F, 1.94F, -0.01F},
     };
     for (int i = 0; i < 6; ++i) {
-      append_oriented_box({pts[i].x, pts[i].y, pts[i].z},
+      append_oriented_box(verts, idx, {pts[i].x, pts[i].y, pts[i].z},
                           {pts[i + 1].x, pts[i + 1].y, pts[i + 1].z}, 0.026F,
                           k_depth);
     }
-    append_oriented_box({0.225F, 0.10F, -0.02F}, {0.205F, 1.88F, -0.01F},
-                        0.006F, 0.006F);
+    append_oriented_box(verts, idx, {0.225F, 0.10F, -0.02F},
+                        {0.205F, 1.88F, -0.01F}, 0.006F, 0.006F);
     append_box(verts, idx, {0.520F, 0.86F, -0.12F}, {0.625F, 1.12F, 0.02F});
   }
 
@@ -1639,26 +1641,64 @@ void VegetationPipeline::initialize_ruins_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_box(verts, idx, {-0.66F, 0.00F, -0.34F}, {-0.30F, 0.12F, -0.02F});
-  append_vert_prism(verts, idx, -0.48F, 0.12F, -0.18F, 0.13F, 1.16F, 8);
-  append_box(verts, idx, {-0.64F, 1.26F, -0.34F}, {-0.32F, 1.40F, -0.02F});
+  auto add_rubble = [&](const QVector3D &lo, const QVector3D &hi) {
+    append_box(verts, idx, lo, hi);
+  };
 
-  append_box(verts, idx, {0.22F, 0.00F, -0.30F}, {0.56F, 0.10F, 0.00F});
-  append_vert_prism(verts, idx, 0.40F, 0.10F, -0.16F, 0.12F, 0.72F, 8);
-  append_box(verts, idx, {0.22F, 0.82F, -0.28F}, {0.62F, 0.96F, 0.04F});
+  append_box(verts, idx, {-0.92F, -0.02F, -0.70F}, {0.90F, 0.06F, 0.68F});
+  append_box(verts, idx, {-0.76F, 0.06F, -0.56F}, {0.76F, 0.12F, 0.54F});
 
-  append_box(verts, idx, {-0.26F, 0.00F, 0.18F}, {0.10F, 0.12F, 0.54F});
-  append_vert_prism(verts, idx, -0.08F, 0.12F, 0.36F, 0.14F, 1.32F, 8);
-  append_box(verts, idx, {-0.32F, 1.34F, 0.14F}, {0.16F, 1.50F, 0.58F});
-  append_box(verts, idx, {0.46F, 0.00F, 0.08F}, {0.72F, 1.10F, 0.48F});
+  append_box(verts, idx, {-0.78F, 0.00F, -0.26F}, {-0.48F, 0.14F, 0.06F});
+  append_vert_prism(verts, idx, -0.63F, 0.14F, -0.10F, 0.13F, 1.34F, 10);
+  append_box(verts, idx, {-0.80F, 1.48F, -0.28F}, {-0.46F, 1.66F, 0.08F});
+  append_box(verts, idx, {-0.74F, 1.66F, -0.24F}, {-0.50F, 1.78F, 0.02F});
+  append_oriented_box(verts, idx, {-0.74F, 0.24F, -0.34F},
+                      {-0.52F, 1.10F, -0.28F}, 0.05F, 0.05F);
 
-  append_box(verts, idx, {-0.68F, 1.12F, -0.26F}, {0.02F, 1.28F, 0.02F});
-  append_box(verts, idx, {0.18F, 0.88F, -0.22F}, {0.70F, 1.04F, 0.08F});
+  append_box(verts, idx, {0.46F, 0.00F, -0.20F}, {0.74F, 0.12F, 0.10F});
+  append_vert_prism(verts, idx, 0.60F, 0.12F, -0.05F, 0.12F, 0.88F, 10);
+  append_box(verts, idx, {0.44F, 1.00F, -0.24F}, {0.76F, 1.16F, 0.12F});
+  append_oriented_box(verts, idx, {0.70F, 0.16F, 0.16F}, {0.48F, 0.86F, 0.20F},
+                      0.04F, 0.05F);
 
-  append_box(verts, idx, {-0.14F, 0.02F, -0.44F}, {0.34F, 0.18F, -0.08F});
-  append_box(verts, idx, {-0.06F, 0.02F, 0.24F}, {0.48F, 0.20F, 0.56F});
-  append_box(verts, idx, {-0.54F, 0.00F, 0.12F}, {-0.18F, 0.12F, 0.34F});
-  append_box(verts, idx, {0.26F, 0.00F, -0.52F}, {0.62F, 0.10F, -0.22F});
+  append_box(verts, idx, {-0.34F, 0.00F, 0.26F}, {-0.06F, 0.14F, 0.56F});
+  append_vert_prism(verts, idx, -0.20F, 0.14F, 0.40F, 0.12F, 1.42F, 10);
+  append_box(verts, idx, {-0.38F, 1.56F, 0.22F}, {0.00F, 1.74F, 0.60F});
+  append_oriented_box(verts, idx, {-0.06F, 0.22F, 0.52F}, {0.18F, 0.86F, 0.46F},
+                      0.05F, 0.05F);
+
+  append_box(verts, idx, {-0.62F, 0.12F, -0.52F}, {0.02F, 0.72F, -0.32F});
+  append_box(verts, idx, {-0.62F, 0.74F, -0.50F}, {-0.18F, 1.04F, -0.30F});
+  append_box(verts, idx, {-0.06F, 0.12F, -0.48F}, {0.24F, 0.52F, -0.30F});
+  append_box(verts, idx, {-0.58F, 1.08F, -0.46F}, {-0.24F, 1.24F, -0.26F});
+  append_box(verts, idx, {-0.18F, 1.02F, -0.42F}, {0.12F, 1.16F, -0.24F});
+
+  append_box(verts, idx, {0.12F, 0.12F, 0.14F}, {0.52F, 0.86F, 0.48F});
+  append_box(verts, idx, {0.08F, 0.88F, 0.18F}, {0.46F, 1.08F, 0.52F});
+  append_box(verts, idx, {0.30F, 0.18F, -0.56F}, {0.60F, 0.42F, -0.34F});
+
+  append_oriented_box(verts, idx, {-0.42F, 1.46F, -0.10F},
+                      {0.18F, 1.22F, -0.08F}, 0.10F, 0.08F);
+  append_oriented_box(verts, idx, {0.18F, 1.22F, -0.08F},
+                      {0.54F, 1.08F, -0.04F}, 0.08F, 0.07F);
+  append_oriented_box(verts, idx, {-0.26F, 1.60F, 0.30F}, {0.10F, 1.30F, 0.26F},
+                      0.08F, 0.08F);
+
+  add_rubble({-0.82F, 0.02F, -0.64F}, {-0.54F, 0.16F, -0.44F});
+  add_rubble({-0.40F, 0.02F, -0.64F}, {-0.08F, 0.18F, -0.46F});
+  add_rubble({0.06F, 0.02F, -0.66F}, {0.34F, 0.12F, -0.46F});
+  add_rubble({0.42F, 0.02F, -0.62F}, {0.76F, 0.18F, -0.40F});
+  add_rubble({-0.64F, 0.02F, 0.44F}, {-0.28F, 0.16F, 0.64F});
+  add_rubble({-0.14F, 0.02F, 0.50F}, {0.20F, 0.14F, 0.66F});
+  add_rubble({0.28F, 0.02F, 0.36F}, {0.64F, 0.16F, 0.62F});
+  add_rubble({-0.18F, 0.02F, -0.08F}, {0.10F, 0.10F, 0.14F});
+
+  append_oriented_box(verts, idx, {-0.28F, 0.14F, -0.24F},
+                      {-0.02F, 0.08F, 0.02F}, 0.07F, 0.08F);
+  append_oriented_box(verts, idx, {0.22F, 0.12F, 0.04F}, {0.52F, 0.06F, 0.28F},
+                      0.06F, 0.08F);
+  append_oriented_box(verts, idx, {-0.52F, 0.12F, 0.18F},
+                      {-0.28F, 0.06F, 0.34F}, 0.06F, 0.06F);
 
   upload_prop_mesh_impl(verts, idx, m_ruins_vao, m_ruins_vertex_buffer,
                         m_ruins_index_buffer, m_ruins_vertex_count,

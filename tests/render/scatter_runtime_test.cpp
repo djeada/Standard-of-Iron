@@ -1,15 +1,38 @@
+#include "game/map/map_loader.h"
 #include "game/map/terrain.h"
+#include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "render/decoration_gpu.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
 #include "render/ground/dead_tree_renderer.h"
 #include "render/ground/ground_utils.h"
+#include "render/ground/plant_renderer.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_runtime.h"
+#include "render/ground/stone_renderer.h"
+#include <filesystem>
 #include <gtest/gtest.h>
 
 namespace {
+
+auto find_repo_root() -> std::filesystem::path {
+  auto path = std::filesystem::current_path();
+  while (!path.empty()) {
+    if (std::filesystem::exists(path / "assets" / "maps" /
+                                "map_campania_campaign.json") &&
+        std::filesystem::exists(path / "render" / "ground" /
+                                "terrain_scatter_manager.cpp")) {
+      return path;
+    }
+    const auto parent = path.parent_path();
+    if (parent == path) {
+      break;
+    }
+    path = parent;
+  }
+  return std::filesystem::current_path();
+}
 
 auto make_snapshot() -> Game::Map::VisibilityService::Snapshot {
   Game::Map::VisibilityService::Snapshot snapshot;
@@ -214,6 +237,38 @@ TEST(ScatterRuntimeTest, LargeRockyMapsGetProceduralBouldersAndLogs) {
   Render::GL::DeadTreeRenderer dead_trees;
   dead_trees.configure(height_map, biome_settings, no_authored_props);
   EXPECT_GT(dead_trees.instance_count(), 0U);
+}
+
+TEST(ScatterRuntimeTest, CampaniaCampaignMaintainsRichNaturalScatter) {
+  const auto root = find_repo_root();
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromStdString(
+          (root / "assets" / "maps" / "map_campania_campaign.json").string()),
+      map_def, &error))
+      << error.toStdString();
+
+  auto &terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+  auto const *height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  Render::GL::PlantRenderer plants;
+  plants.configure(*height_map, map_def.biome, map_def.world_props);
+  Render::GL::StoneRenderer stones;
+  stones.configure(*height_map, map_def.biome, map_def.world_props);
+  Render::GL::BoulderRenderer boulders;
+  boulders.configure(*height_map, map_def.biome, map_def.world_props);
+
+  EXPECT_GE(plants.instance_count(), 2500U);
+  EXPECT_LE(plants.instance_count(), 7000U);
+  EXPECT_GE(stones.instance_count(), 140U);
+  EXPECT_LE(stones.instance_count(), 900U);
+  EXPECT_GE(boulders.instance_count(), 14U);
+  EXPECT_LE(boulders.instance_count(), 120U);
+
+  terrain.clear();
 }
 
 } // namespace

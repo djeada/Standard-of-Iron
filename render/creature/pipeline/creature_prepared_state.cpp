@@ -3,6 +3,7 @@
 #include "../../../game/core/component.h"
 #include "../../../game/core/entity.h"
 #include "../../../game/map/terrain_service.h"
+#include "../../../game/systems/combat_rules.h"
 #include "../../../game/units/spawn_type.h"
 #include "../../entity/registry.h"
 #include "../../gl/backend.h"
@@ -71,7 +72,8 @@ auto resolve_elephant_animation_state(const Render::GL::DrawContext &ctx)
   }
 
   auto *attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
-  if ((attack != nullptr) && attack->in_melee_lock) {
+  if ((attack != nullptr) && attack->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(ctx.entity)) {
     state.inputs.is_attacking = true;
     state.inputs.is_melee = true;
   }
