@@ -1,16 +1,18 @@
 
 #pragma once
-#include "../gl/mesh.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <algorithm>
+
+#include "../gl/mesh.h"
 
 namespace Render {
 namespace Geom {
 class Arrow {
 public:
-  static auto get_shaft() -> GL::Mesh *;
-  static auto get_tip() -> GL::Mesh *;
+  static auto get_shaft() -> GL::Mesh*;
+  static auto get_tip() -> GL::Mesh*;
 
   static constexpr float k_arrow_z_scale = 0.44F;
   static constexpr float k_arrow_xy_scale = 0.36F;
@@ -19,13 +21,13 @@ public:
   static constexpr float k_fletch_xy_scale = 0.75F;
   static constexpr float k_fletch_z_scale = 0.15F;
 
-  static auto shaft_color(const QVector3D &team_color) -> QVector3D {
+  static auto shaft_color(const QVector3D& team_color) -> QVector3D {
     return {std::clamp(team_color.x() * 0.6F + 0.35F, 0.0F, 1.0F),
             std::clamp(team_color.y() * 0.55F + 0.30F, 0.0F, 1.0F),
             std::clamp(team_color.z() * 0.5F + 0.15F, 0.0F, 1.0F)};
   }
 
-  static auto fletch_color(const QVector3D &team_color) -> QVector3D {
+  static auto fletch_color(const QVector3D& team_color) -> QVector3D {
     return {std::clamp(team_color.x() * 0.9F + 0.1F, 0.0F, 1.0F),
             std::clamp(team_color.y() * 0.9F + 0.1F, 0.0F, 1.0F),
             std::clamp(team_color.z() * 0.9F + 0.1F, 0.0F, 1.0F)};
@@ -44,6 +46,7 @@ class ArrowSystem;
 }
 
 namespace Render::GL {
-void render_arrows(Renderer *renderer, ResourceManager *resources,
-                   const Game::Systems::ArrowSystem &arrow_system);
+void render_arrows(Renderer* renderer,
+                   ResourceManager* resources,
+                   const Game::Systems::ArrowSystem& arrow_system);
 }

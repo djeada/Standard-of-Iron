@@ -1,34 +1,35 @@
 #include "healing_system.h"
+
+#include <QDebug>
+#include <qvectornd.h>
+
+#include <cmath>
+#include <vector>
+
 #include "../core/component.h"
 #include "../core/world.h"
 #include "healing_beam_system.h"
 #include "healing_colors.h"
 #include "nation_id.h"
-#include <QDebug>
-#include <cmath>
-#include <qvectornd.h>
-#include <vector>
 
 namespace Game::Systems {
 
-void HealingSystem::update(Engine::Core::World *world, float delta_time) {
+void HealingSystem::update(Engine::Core::World* world, float delta_time) {
   process_healing(world, delta_time);
 }
 
-void HealingSystem::process_healing(Engine::Core::World *world,
-                                    float delta_time) {
+void HealingSystem::process_healing(Engine::Core::World* world, float delta_time) {
   auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
-  auto *healing_beam_system = world->get_system<HealingBeamSystem>();
+  auto* healing_beam_system = world->get_system<HealingBeamSystem>();
 
-  for (auto *healer : healers) {
+  for (auto* healer : healers) {
     if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *healer_unit = healer->get_component<Engine::Core::UnitComponent>();
-    auto *healer_transform =
-        healer->get_component<Engine::Core::TransformComponent>();
-    auto *healer_comp = healer->get_component<Engine::Core::HealerComponent>();
+    auto* healer_unit = healer->get_component<Engine::Core::UnitComponent>();
+    auto* healer_transform = healer->get_component<Engine::Core::TransformComponent>();
+    auto* healer_comp = healer->get_component<Engine::Core::HealerComponent>();
 
     if ((healer_unit == nullptr) || (healer_transform == nullptr) ||
         (healer_comp == nullptr)) {
@@ -47,21 +48,20 @@ void HealingSystem::process_healing(Engine::Core::World *world,
 
     bool healed_any = false;
     auto units = world->get_entities_with<Engine::Core::UnitComponent>();
-    for (auto *target : units) {
+    for (auto* target : units) {
       if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
         continue;
       }
 
-      auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
-      auto *target_transform =
+      auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
+      auto* target_transform =
           target->get_component<Engine::Core::TransformComponent>();
 
       if ((target_unit == nullptr) || (target_transform == nullptr)) {
         continue;
       }
 
-      if (target_unit->health <= 0 ||
-          target_unit->health >= target_unit->max_health) {
+      if (target_unit->health <= 0 || target_unit->health >= target_unit->max_health) {
         continue;
       }
 
@@ -69,10 +69,8 @@ void HealingSystem::process_healing(Engine::Core::World *world,
         continue;
       }
 
-      float const dx =
-          target_transform->position.x - healer_transform->position.x;
-      float const dz =
-          target_transform->position.z - healer_transform->position.z;
+      float const dx = target_transform->position.x - healer_transform->position.x;
+      float const dz = target_transform->position.z - healer_transform->position.z;
       float const dist = std::sqrt(dx * dx + dz * dz);
 
       if (dist <= healer_comp->healing_range) {
@@ -98,11 +96,9 @@ void HealingSystem::process_healing(Engine::Core::World *world,
                                      target_transform->position.y + 0.8F,
                                      target_transform->position.z);
 
-          QVector3D const heal_color =
-              get_healing_color(healer_unit->nation_id);
+          QVector3D const heal_color = get_healing_color(healer_unit->nation_id);
 
-          healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
-                                          0.7F);
+          healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color, 0.7F);
         }
 
         healed_any = true;

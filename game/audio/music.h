@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPointer>
+
 #include <atomic>
 #include <memory>
 #include <string>
@@ -13,7 +14,7 @@ class Music {
 public:
   static constexpr float DEFAULT_VOLUME = 1.0F;
 
-  Music(const std::string &file_path);
+  Music(const std::string& file_path);
   ~Music();
 
   bool is_loaded() const;
@@ -28,8 +29,8 @@ private:
   void cleanup_player();
 
   QPointer<QMediaPlayer> player;
-  QAudioOutput *audio_output;
-  QThread *main_thread;
+  QAudioOutput* audio_output;
+  QThread* main_thread;
   std::string file_path;
   bool loaded;
   bool playing;

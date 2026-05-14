@@ -1,5 +1,7 @@
 #include "game_state_restorer.h"
 
+#include <QDebug>
+
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
@@ -31,10 +33,9 @@
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/scene_renderer.h"
-#include <QDebug>
 
-void GameStateRestorer::rebuild_entity_cache(Engine::Core::World *world,
-                                             EntityCache &entity_cache,
+void GameStateRestorer::rebuild_entity_cache(Engine::Core::World* world,
+                                             EntityCache& entity_cache,
                                              int local_owner_id) {
   if (!world) {
     entity_cache.reset();
@@ -43,10 +44,10 @@ void GameStateRestorer::rebuild_entity_cache(Engine::Core::World *world,
 
   entity_cache.reset();
 
-  auto &owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Systems::OwnerRegistry::instance();
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *unit = e->get_component<Engine::Core::UnitComponent>();
+  for (auto* e : entities) {
+    auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {
       continue;
     }
@@ -56,8 +57,7 @@ void GameStateRestorer::rebuild_entity_cache(Engine::Core::World *world,
         entity_cache.player_barracks_alive = true;
       } else {
         int const production_cost =
-            Game::Units::TroopConfig::instance().get_production_cost(
-                unit->spawn_type);
+            Game::Units::TroopConfig::instance().get_production_cost(unit->spawn_type);
         entity_cache.player_troop_count += production_cost;
       }
     } else if (owners.is_ai(unit->owner_id)) {
@@ -70,22 +70,24 @@ void GameStateRestorer::rebuild_entity_cache(Engine::Core::World *world,
 }
 
 void GameStateRestorer::rebuild_registries_after_load(
-    Engine::Core::World *world, int &selected_player_id,
-    Game::Systems::LevelSnapshot &level, int local_owner_id) {
+    Engine::Core::World* world,
+    int& selected_player_id,
+    Game::Systems::LevelSnapshot& level,
+    int local_owner_id) {
   if (!world) {
     return;
   }
 
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
 
-  auto &troops = Game::Systems::TroopCountRegistry::instance();
+  auto& troops = Game::Systems::TroopCountRegistry::instance();
   troops.rebuild_from_world(*world);
 
-  auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
+  auto& stats_registry = Game::Systems::GlobalStatsRegistry::instance();
   stats_registry.rebuild_from_world(*world);
 
-  const auto &all_owners = owner_registry.get_all_owners();
-  for (const auto &owner : all_owners) {
+  const auto& all_owners = owner_registry.get_all_owners();
+  for (const auto& owner : all_owners) {
     if (owner.type == Game::Systems::OwnerType::Player ||
         owner.type == Game::Systems::OwnerType::AI) {
       stats_registry.mark_game_start(owner.owner_id);
@@ -96,8 +98,8 @@ void GameStateRestorer::rebuild_registries_after_load(
 
   level.player_unit_id = 0;
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *entity : units) {
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (auto* entity : units) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -112,32 +114,36 @@ void GameStateRestorer::rebuild_registries_after_load(
   }
 }
 
-void GameStateRestorer::rebuild_building_collisions(
-    Engine::Core::World *world) {
-  auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
+void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) {
+  auto& registry = Game::Systems::BuildingCollisionRegistry::instance();
   registry.clear();
   if (!world) {
     return;
   }
 
   auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
-  for (auto *entity : buildings) {
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (auto* entity : buildings) {
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((transform == nullptr) || (unit == nullptr)) {
       continue;
     }
 
-    registry.register_building(
-        entity->get_id(), Game::Units::spawn_typeToString(unit->spawn_type),
-        transform->position.x, transform->position.z, unit->owner_id);
+    registry.register_building(entity->get_id(),
+                               Game::Units::spawn_typeToString(unit->spawn_type),
+                               transform->position.x,
+                               transform->position.z,
+                               unit->owner_id);
   }
 }
 
 void GameStateRestorer::restore_environment_from_metadata(
-    const QJsonObject &metadata, Engine::Core::World *world,
-    const RendererRefs &renderers, Game::Systems::LevelSnapshot &level,
-    int local_owner_id, const ViewportState &viewport) {
+    const QJsonObject& metadata,
+    Engine::Core::World* world,
+    const RendererRefs& renderers,
+    Game::Systems::LevelSnapshot& level,
+    int local_owner_id,
+    const ViewportState& viewport) {
   if (!world) {
     return;
   }
@@ -147,21 +153,21 @@ void GameStateRestorer::restore_environment_from_metadata(
   const float fallback_tile_size =
       static_cast<float>(metadata.value("tile_size").toDouble(1.0));
 
-  auto &terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Map::TerrainService::instance();
 
   bool const terrain_already_restored = terrain_service.is_initialized();
 
   Game::Map::MapDefinition def;
   QString map_error;
   bool loaded_definition = false;
-  const QString &map_path = level.map_path;
+  const QString& map_path = level.map_path;
 
   if (!terrain_already_restored && !map_path.isEmpty()) {
     loaded_definition =
         Game::Map::MapLoader::load_from_json_file(map_path, def, &map_error);
     if (!loaded_definition) {
-      qWarning() << "GameStateRestorer: Failed to load map definition from"
-                 << map_path << "during save load:" << map_error;
+      qWarning() << "GameStateRestorer: Failed to load map definition from" << map_path
+                 << "during save load:" << map_error;
     }
   }
 
@@ -179,23 +185,20 @@ void GameStateRestorer::restore_environment_from_metadata(
 
   if (renderers.renderer && renderers.camera) {
     if (loaded_definition) {
-      Game::Map::Environment::apply(def, *renderers.renderer,
-                                    *renderers.camera);
+      Game::Map::Environment::apply(def, *renderers.renderer, *renderers.camera);
     } else {
-      Game::Map::Environment::apply_default(*renderers.renderer,
-                                            *renderers.camera);
+      Game::Map::Environment::apply_default(*renderers.renderer, *renderers.camera);
     }
   }
 
   if (terrain_service.is_initialized()) {
-    const auto *height_map = terrain_service.get_height_map();
+    const auto* height_map = terrain_service.get_height_map();
     const int grid_width =
         (height_map != nullptr) ? height_map->get_width() : fallback_grid_width;
-    const int grid_height = (height_map != nullptr) ? height_map->get_height()
-                                                    : fallback_grid_height;
-    const float tile_size = (height_map != nullptr)
-                                ? height_map->get_tile_size()
-                                : fallback_tile_size;
+    const int grid_height =
+        (height_map != nullptr) ? height_map->get_height() : fallback_grid_height;
+    const float tile_size =
+        (height_map != nullptr) ? height_map->get_tile_size() : fallback_tile_size;
 
     if (renderers.ground) {
       renderers.ground->configure(tile_size, grid_width, grid_height);
@@ -208,12 +211,10 @@ void GameStateRestorer::restore_environment_from_metadata(
 
     if (height_map != nullptr) {
       if (renderers.terrain) {
-        renderers.terrain->configure(*height_map,
-                                     terrain_service.biome_settings());
+        renderers.terrain->configure(*height_map, terrain_service.biome_settings());
       }
       if (renderers.features) {
-        renderers.features->configure(*height_map,
-                                      terrain_service.road_segments());
+        renderers.features->configure(*height_map, terrain_service.road_segments());
       }
       if (renderers.scatter) {
         renderers.scatter->configure(*height_map,
@@ -224,7 +225,7 @@ void GameStateRestorer::restore_environment_from_metadata(
 
     Game::Systems::CommandService::initialize(grid_width, grid_height);
 
-    auto &visibility_service = Game::Map::VisibilityService::instance();
+    auto& visibility_service = Game::Map::VisibilityService::instance();
     visibility_service.initialize(grid_width, grid_height, tile_size);
     visibility_service.compute_immediate(*world, local_owner_id);
 
@@ -243,9 +244,9 @@ void GameStateRestorer::restore_environment_from_metadata(
     Game::Systems::CommandService::initialize(fallback_grid_width,
                                               fallback_grid_height);
 
-    auto &visibility_service = Game::Map::VisibilityService::instance();
-    visibility_service.initialize(fallback_grid_width, fallback_grid_height,
-                                  fallback_tile_size);
+    auto& visibility_service = Game::Map::VisibilityService::instance();
+    visibility_service.initialize(
+        fallback_grid_width, fallback_grid_height, fallback_tile_size);
     visibility_service.compute_immediate(*world, local_owner_id);
 
     if (renderers.fog && visibility_service.is_initialized()) {

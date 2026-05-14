@@ -1,4 +1,5 @@
 #include "catapult_renderer.h"
+
 #include "../../game/core/component.h"
 #include "../../game/systems/nation_id.h"
 #include "nations/carthage/catapult_renderer.h"
@@ -7,18 +8,18 @@
 
 namespace Render::GL {
 
-void register_catapult_renderer(EntityRendererRegistry &registry) {
+void register_catapult_renderer(EntityRendererRegistry& registry) {
 
   Roman::register_catapult_renderer(registry);
   Carthage::register_catapult_renderer(registry);
 
   registry.register_renderer(
-      "catapult", [&registry](const DrawContext &p, ISubmitter &out) {
+      "catapult", [&registry](const DrawContext& p, ISubmitter& out) {
         if (p.entity == nullptr) {
           return;
         }
 
-        auto *unit = p.entity->get_component<Engine::Core::UnitComponent>();
+        auto* unit = p.entity->get_component<Engine::Core::UnitComponent>();
         if (unit == nullptr) {
           return;
         }

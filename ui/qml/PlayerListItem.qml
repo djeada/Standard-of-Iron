@@ -4,17 +4,15 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: root
 
-    property var colors: ({
-    })
-    property var player_data: ({
-    })
+    property var colors: ({})
+    property var player_data: ({})
     property var team_icons: []
     property bool can_remove: true
 
-    signal remove_clicked()
-    signal color_clicked()
-    signal team_clicked()
-    signal faction_clicked()
+    signal remove_clicked
+    signal color_clicked
+    signal team_clicked
+    signal faction_clicked
 
     width: parent ? parent.width : 400
     height: 48
@@ -39,7 +37,6 @@ Rectangle {
                 font.pixelSize: 14
                 font.bold: player_data.isHuman || false
             }
-
         }
 
         Rectangle {
@@ -71,7 +68,6 @@ Rectangle {
                 text: "Click to change color"
                 delay: 500
             }
-
         }
 
         Rectangle {
@@ -91,7 +87,6 @@ Rectangle {
                     text: {
                         if (!player_data.team_id || !team_icons || team_icons.length === 0)
                             return "●";
-
                         return team_icons[(player_data.team_id - 1) % team_icons.length];
                     }
                     color: colors.textMain
@@ -104,7 +99,6 @@ Rectangle {
                     color: colors.textSubLite
                     font.pixelSize: 9
                 }
-
             }
 
             MouseArea {
@@ -119,7 +113,6 @@ Rectangle {
                 text: "Click to change team"
                 delay: 500
             }
-
         }
 
         Rectangle {
@@ -147,7 +140,6 @@ Rectangle {
                 enabled: false
                 onClicked: root.faction_clicked()
             }
-
         }
 
         Item {
@@ -187,15 +179,11 @@ Rectangle {
                 delay: 300
             }
 
-            Behavior on color {
+            Behavior on color  {
                 ColorAnimation {
                     duration: 150
                 }
-
             }
-
         }
-
     }
-
 }

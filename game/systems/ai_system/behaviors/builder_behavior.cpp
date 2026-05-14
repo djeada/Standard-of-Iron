@@ -1,21 +1,23 @@
 #include "builder_behavior.h"
-#include "../../../map/terrain_service.h"
-#include "../ai_utils.h"
-#include "systems/ai_system/ai_types.h"
-#include "units/spawn_type.h"
+
 #include <algorithm>
 #include <cmath>
 #include <utility>
 #include <vector>
 
+#include "../../../map/terrain_service.h"
+#include "../ai_utils.h"
+#include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
+
 namespace Game::Systems::AI {
 
 namespace {
 
-constexpr const char *BUILDING_TYPE_HOME = "home";
-constexpr const char *BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
-constexpr const char *BUILDING_TYPE_BARRACKS = "barracks";
-constexpr const char *BUILDING_TYPE_CATAPULT = "catapult";
+constexpr const char* BUILDING_TYPE_HOME = "home";
+constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
+constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
+constexpr const char* BUILDING_TYPE_CATAPULT = "catapult";
 
 constexpr int MIN_HOMES = 2;
 constexpr int MAX_HOMES = 20;
@@ -28,13 +30,13 @@ constexpr float MAP_EDGE_PADDING = 5.0F;
 
 constexpr float GRID_CENTER_OFFSET = 0.5F;
 
-void clamp_to_map_bounds(float &x, float &z) {
-  auto &terrain = Game::Map::TerrainService::instance();
+void clamp_to_map_bounds(float& x, float& z) {
+  auto& terrain = Game::Map::TerrainService::instance();
   if (!terrain.is_initialized()) {
     return;
   }
 
-  const Game::Map::TerrainHeightMap *hm = terrain.get_height_map();
+  const Game::Map::TerrainHeightMap* hm = terrain.get_height_map();
   if (hm == nullptr) {
     return;
   }
@@ -59,9 +61,10 @@ void clamp_to_map_bounds(float &x, float &z) {
 
 } // namespace
 
-void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+void BuilderBehavior::execute(const AISnapshot& snapshot,
+                              AIContext& context,
                               float delta_time,
-                              std::vector<AICommand> &out_commands) {
+                              std::vector<AICommand>& out_commands) {
   m_construction_timer += delta_time;
   if (m_construction_timer < 3.0F) {
     return;
@@ -69,7 +72,7 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   m_construction_timer = 0.0F;
 
   std::vector<Engine::Core::EntityID> available_builders;
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.spawn_type != Game::Units::SpawnType::Builder) {
       continue;
     }
@@ -88,10 +91,10 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  const char *building_to_construct = nullptr;
+  const char* building_to_construct = nullptr;
 
   int catapult_count = 0;
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.spawn_type == Game::Units::SpawnType::Catapult) {
       catapult_count++;
     }
@@ -151,8 +154,8 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 }
 
-auto BuilderBehavior::should_execute(const AISnapshot &snapshot,
-                                     const AIContext &context) const -> bool {
+auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
+                                     const AIContext& context) const -> bool {
   (void)snapshot;
 
   if (context.builder_count == 0) {

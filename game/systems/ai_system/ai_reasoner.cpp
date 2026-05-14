@@ -1,14 +1,16 @@
 #include "ai_reasoner.h"
+
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <optional>
+
 #include "../../core/ownership_constants.h"
 #include "../../game_config.h"
 #include "../nation_registry.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
-#include <algorithm>
-#include <cmath>
-#include <limits>
-#include <optional>
 
 namespace {
 
@@ -20,25 +22,24 @@ struct AnchorCandidate {
 constexpr float k_anchor_cluster_radius = 12.0F;
 constexpr float k_attack_initiation_aggression_threshold = 0.70F;
 
-auto densest_anchor_cluster(const std::vector<AnchorCandidate> &candidates)
+auto densest_anchor_cluster(const std::vector<AnchorCandidate>& candidates)
     -> std::optional<AnchorCandidate> {
   if (candidates.empty()) {
     return std::nullopt;
   }
 
-  const float cluster_radius_sq =
-      k_anchor_cluster_radius * k_anchor_cluster_radius;
+  const float cluster_radius_sq = k_anchor_cluster_radius * k_anchor_cluster_radius;
   int best_count = -1;
   float best_distance_sum = std::numeric_limits<float>::infinity();
   AnchorCandidate best_center{};
 
-  for (const auto &candidate : candidates) {
+  for (const auto& candidate : candidates) {
     int cluster_count = 0;
     float sum_x = 0.0F;
     float sum_z = 0.0F;
     float distance_sum = 0.0F;
 
-    for (const auto &other : candidates) {
+    for (const auto& other : candidates) {
       const float dx = other.x - candidate.x;
       const float dz = other.z - candidate.z;
       const float distance_sq = dx * dx + dz * dz;
@@ -71,46 +72,39 @@ auto densest_anchor_cluster(const std::vector<AnchorCandidate> &candidates)
   return best_center;
 }
 
-auto can_initiate_attack(const Game::Systems::AI::AIStrategyConfig &strategy)
-    -> bool {
-  return strategy.aggression_modifier >=
-         k_attack_initiation_aggression_threshold;
+auto can_initiate_attack(const Game::Systems::AI::AIStrategyConfig& strategy) -> bool {
+  return strategy.aggression_modifier >= k_attack_initiation_aggression_threshold;
 }
 
 auto minimum_units_for_reactive_attack(
-    const Game::Systems::AI::AIStrategyConfig &strategy) -> int {
-  return std::max(
-      1, static_cast<int>(std::lround(2.0F * strategy.min_attack_force)));
+    const Game::Systems::AI::AIStrategyConfig& strategy) -> int {
+  return std::max(1, static_cast<int>(std::lround(2.0F * strategy.min_attack_force)));
 }
 
 auto minimum_units_for_proactive_attack(
-    const Game::Systems::AI::AIStrategyConfig &strategy) -> int {
-  return std::max(
-      1, static_cast<int>(std::lround(4.0F * strategy.min_attack_force)));
+    const Game::Systems::AI::AIStrategyConfig& strategy) -> int {
+  return std::max(1, static_cast<int>(std::lround(4.0F * strategy.min_attack_force)));
 }
 
-auto resume_attack_health_threshold(
-    const Game::Systems::AI::AIStrategyConfig &strategy) -> float {
-  return std::clamp(0.65F + 0.10F * (strategy.defense_modifier - 1.0F), 0.60F,
-                    0.90F);
+auto resume_attack_health_threshold(const Game::Systems::AI::AIStrategyConfig& strategy)
+    -> float {
+  return std::clamp(0.65F + 0.10F * (strategy.defense_modifier - 1.0F), 0.60F, 0.90F);
 }
 
 auto return_to_idle_health_threshold(
-    const Game::Systems::AI::AIStrategyConfig &strategy) -> float {
-  return std::clamp(0.80F + 0.05F * (strategy.defense_modifier - 1.0F), 0.75F,
-                    0.95F);
+    const Game::Systems::AI::AIStrategyConfig& strategy) -> float {
+  return std::clamp(0.80F + 0.05F * (strategy.defense_modifier - 1.0F), 0.75F, 0.95F);
 }
 
 } // namespace
 
 namespace Game::Systems::AI {
 
-void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
+void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
 
   if (ctx.nation == nullptr) {
     ctx.nation =
-        Game::Systems::NationRegistry::instance().get_nation_for_player(
-            ctx.player_id);
+        Game::Systems::NationRegistry::instance().get_nation_for_player(ctx.player_id);
   }
 
   const auto alive_ids = cleanup_dead_units(snapshot, ctx);
@@ -145,8 +139,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.home_count = 0;
   ctx.defense_tower_count = 0;
   ctx.barracks_count = 0;
-  ctx.max_troops_per_player =
-      Game::GameConfig::instance().get_max_troops_per_player();
+  ctx.max_troops_per_player = Game::GameConfig::instance().get_max_troops_per_player();
 
   constexpr float attack_record_timeout = 10.0F;
   auto it = ctx.buildings_under_attack.begin();
@@ -161,7 +154,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
 
   float total_health_ratio = 0.0F;
 
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building) {
       ctx.buildings.push_back(entity.id);
 
@@ -194,8 +187,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
     }
 
     if (ctx.nation != nullptr) {
-      auto troop_type_opt =
-          Game::Units::spawn_typeToTroopType(entity.spawn_type);
+      auto troop_type_opt = Game::Units::spawn_typeToTroopType(entity.spawn_type);
       if (troop_type_opt) {
         auto troop_type = *troop_type_opt;
         if (troop_type == Game::Units::TroopType::Builder) {
@@ -215,8 +207,8 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
     }
 
     if (entity.max_health > 0) {
-      float const health_ratio = static_cast<float>(entity.health) /
-                                 static_cast<float>(entity.max_health);
+      float const health_ratio =
+          static_cast<float>(entity.health) / static_cast<float>(entity.max_health);
       total_health_ratio += health_ratio;
 
       if (health_ratio < 0.5F) {
@@ -228,9 +220,8 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
   if (!ctx.has_base_anchor) {
     std::vector<AnchorCandidate> unit_positions;
     unit_positions.reserve(snapshot.friendly_units.size());
-    for (const auto &entity : snapshot.friendly_units) {
-      if (entity.is_building ||
-          entity.spawn_type == Game::Units::SpawnType::Builder) {
+    for (const auto& entity : snapshot.friendly_units) {
+      if (entity.is_building || entity.spawn_type == Game::Units::SpawnType::Builder) {
         continue;
       }
       unit_positions.push_back({entity.pos_x, entity.pos_z});
@@ -247,15 +238,14 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
     }
   }
 
-  ctx.average_health =
-      (ctx.total_units > 0)
-          ? (total_health_ratio / static_cast<float>(ctx.total_units))
-          : 1.0F;
+  ctx.average_health = (ctx.total_units > 0)
+                           ? (total_health_ratio / static_cast<float>(ctx.total_units))
+                           : 1.0F;
 
   ctx.visible_enemy_count = static_cast<int>(snapshot.visible_enemies.size());
   float total_enemy_dist = 0.0F;
 
-  for (const auto &enemy : snapshot.visible_enemies) {
+  for (const auto& enemy : snapshot.visible_enemies) {
     if (enemy.is_building) {
       ctx.enemy_buildings_count++;
 
@@ -266,9 +256,12 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
     }
 
     if (ctx.has_base_anchor) {
-      float const dist =
-          distance(enemy.pos_x, enemy.pos_y, enemy.pos_z, ctx.base_pos_x,
-                   ctx.base_pos_y, ctx.base_pos_z);
+      float const dist = distance(enemy.pos_x,
+                                  enemy.pos_y,
+                                  enemy.pos_z,
+                                  ctx.base_pos_x,
+                                  ctx.base_pos_y,
+                                  ctx.base_pos_z);
       total_enemy_dist += dist;
     }
   }
@@ -286,18 +279,20 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
         10.0F * std::min(2.0F, ctx.strategy_config.defense_modifier);
     const float defend_radius_sq = defend_radius * defend_radius;
 
-    for (const auto &enemy : snapshot.visible_enemies) {
-      float const dist_sq =
-          distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z,
-                           ctx.base_pos_x, ctx.base_pos_y, ctx.base_pos_z);
+    for (const auto& enemy : snapshot.visible_enemies) {
+      float const dist_sq = distance_squared(enemy.pos_x,
+                                             enemy.pos_y,
+                                             enemy.pos_z,
+                                             ctx.base_pos_x,
+                                             ctx.base_pos_y,
+                                             ctx.base_pos_z);
 
       if (dist_sq <= defend_radius_sq) {
         ctx.barracks_under_threat = true;
         ctx.nearby_threat_count++;
 
         float const dist = std::sqrt(std::max(dist_sq, 0.0F));
-        ctx.closest_threat_distance =
-            std::min(ctx.closest_threat_distance, dist);
+        ctx.closest_threat_distance = std::min(ctx.closest_threat_distance, dist);
       }
     }
 
@@ -322,8 +317,9 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.last_total_units = ctx.total_units;
 }
 
-void AIReasoner::update_state_machine(const AISnapshot &snapshot,
-                                      AIContext &ctx, float delta_time) {
+void AIReasoner::update_state_machine(const AISnapshot& snapshot,
+                                      AIContext& ctx,
+                                      float delta_time) {
   ctx.state_timer += delta_time;
   ctx.decision_timer += delta_time;
 
@@ -336,8 +332,7 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     deadlock_detected = true;
   }
 
-  float time_since_progress =
-      snapshot.game_time - ctx.last_meaningful_action_time;
+  float time_since_progress = snapshot.game_time - ctx.last_meaningful_action_time;
   if (time_since_progress >= max_no_progress_duration && ctx.idle_units > 0) {
     deadlock_detected = true;
   }
@@ -360,10 +355,8 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     if (ctx.state == AIState::Idle && ctx.total_units > 0) {
       ctx.state = AIState::Gathering;
     } else if (ctx.state == AIState::Gathering) {
-      if (ctx.visible_enemy_count > 0 &&
-          can_initiate_attack(ctx.strategy_config) &&
-          ctx.total_units >=
-              minimum_units_for_reactive_attack(ctx.strategy_config)) {
+      if (ctx.visible_enemy_count > 0 && can_initiate_attack(ctx.strategy_config) &&
+          ctx.total_units >= minimum_units_for_reactive_attack(ctx.strategy_config)) {
         ctx.state = AIState::Attacking;
       } else if (ctx.visible_enemy_count == 0) {
         ctx.state = AIState::Idle;
@@ -404,23 +397,20 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     if (ctx.idle_units >= 1) {
 
       ctx.state = AIState::Gathering;
-    } else if (ctx.average_health <
-                   (0.40F * ctx.strategy_config.defense_modifier) &&
+    } else if (ctx.average_health < (0.40F * ctx.strategy_config.defense_modifier) &&
                ctx.total_units > 0) {
 
       ctx.state = AIState::Defending;
     } else if (ctx.neutral_barracks_count > 0 &&
                ctx.total_units >=
-                   static_cast<int>(3.0F /
-                                    ctx.strategy_config.expansion_priority) &&
+                   static_cast<int>(3.0F / ctx.strategy_config.expansion_priority) &&
                ctx.strategy_config.expansion_priority > 0.8F) {
 
       ctx.state = AIState::Expanding;
     } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
 
       if (can_initiate_attack(ctx.strategy_config) &&
-          ctx.total_units >=
-              minimum_units_for_reactive_attack(ctx.strategy_config)) {
+          ctx.total_units >= minimum_units_for_reactive_attack(ctx.strategy_config)) {
         ctx.state = AIState::Attacking;
       }
     }
@@ -428,7 +418,7 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
 
   case AIState::Gathering: {
 
-    const auto &strategy = ctx.strategy_config;
+    const auto& strategy = ctx.strategy_config;
 
     const int MIN_UNITS_FOR_REACTIVE_ATTACK =
         minimum_units_for_reactive_attack(strategy);
@@ -468,8 +458,7 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     } else if (ctx.visible_enemy_count == 0 && ctx.state_timer > 15.0F) {
 
       ctx.state = AIState::Idle;
-    } else if (ctx.average_health <
-                   (0.50F * ctx.strategy_config.defense_modifier) &&
+    } else if (ctx.average_health < (0.50F * ctx.strategy_config.defense_modifier) &&
                ctx.damaged_units_count * 2 > ctx.total_units) {
 
       if (!ctx.barracks_under_threat) {
@@ -528,8 +517,7 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     } else if (ctx.total_units < 2) {
 
       ctx.state = AIState::Gathering;
-    } else if (ctx.barracks_under_threat ||
-               !ctx.buildings_under_attack.empty()) {
+    } else if (ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) {
 
       ctx.state = AIState::Defending;
     } else if (ctx.average_health < 0.40F) {
@@ -547,7 +535,7 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
   }
 }
 
-void AIReasoner::validate_state(AIContext &ctx) {
+void AIReasoner::validate_state(AIContext& ctx) {
 
   constexpr size_t MAX_ASSIGNMENT_MULTIPLIER = 2;
   constexpr int MAX_NO_PROGRESS_CYCLES = 50;

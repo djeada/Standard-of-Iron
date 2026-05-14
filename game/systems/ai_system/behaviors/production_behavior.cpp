@@ -1,30 +1,32 @@
 #include "production_behavior.h"
+
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 #include "../../../core/ownership_constants.h"
 #include "../../nation_registry.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/commander_catalog.h"
 #include "units/spawn_type.h"
-#include <algorithm>
-#include <utility>
-#include <vector>
 
 namespace Game::Systems::AI {
 
-void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+void ProductionBehavior::execute(const AISnapshot& snapshot,
+                                 AIContext& context,
                                  float delta_time,
-                                 std::vector<AICommand> &out_commands) {
+                                 std::vector<AICommand>& out_commands) {
   m_production_timer += delta_time;
 
-  float production_interval =
-      1.5F / context.strategy_config.production_rate_modifier;
+  float production_interval = 1.5F / context.strategy_config.production_rate_modifier;
 
   if (m_production_timer < production_interval) {
     return;
   }
   m_production_timer = 0.0F;
 
-  auto &nation_registry = Game::Systems::NationRegistry::instance();
-  const auto *nation = nation_registry.get_nation_for_player(context.player_id);
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  const auto* nation = nation_registry.get_nation_for_player(context.player_id);
 
   if (nation == nullptr) {
     return;
@@ -45,7 +47,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     should_produce_builder = true;
   }
 
-  const Game::Systems::TroopType *troop_type = nullptr;
+  const Game::Systems::TroopType* troop_type = nullptr;
 
   if (should_produce_builder) {
 
@@ -54,27 +56,27 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   if (troop_type == nullptr) {
     const bool has_active_commander = std::any_of(
-        snapshot.friendly_units.begin(), snapshot.friendly_units.end(),
-        [](const EntitySnapshot &entity) {
+        snapshot.friendly_units.begin(),
+        snapshot.friendly_units.end(),
+        [](const EntitySnapshot& entity) {
           if (entity.is_building || entity.health <= 0) {
             return false;
           }
-          const auto troop_type =
-              Game::Units::spawn_typeToTroopType(entity.spawn_type);
-          return troop_type.has_value() &&
-                 Game::Units::is_commander_troop(*troop_type);
+          const auto troop_type = Game::Units::spawn_typeToTroopType(entity.spawn_type);
+          return troop_type.has_value() && Game::Units::is_commander_troop(*troop_type);
         });
-    const bool has_commander_committed = std::any_of(
-        snapshot.friendly_units.begin(), snapshot.friendly_units.end(),
-        [](const EntitySnapshot &entity) {
-          return entity.is_building && entity.production.has_component &&
-                 entity.production.commander_committed;
-        });
+    const bool has_commander_committed =
+        std::any_of(snapshot.friendly_units.begin(),
+                    snapshot.friendly_units.end(),
+                    [](const EntitySnapshot& entity) {
+                      return entity.is_building && entity.production.has_component &&
+                             entity.production.commander_committed;
+                    });
     if (context.allow_commander_recruitment && !has_active_commander &&
         !has_commander_committed && context.nation != nullptr) {
       const auto commander_defs =
           Game::Units::commander_definitions_for_nation(context.nation->id);
-      for (const auto *commander_def : commander_defs) {
+      for (const auto* commander_def : commander_defs) {
         if (commander_def == nullptr) {
           continue;
         }
@@ -102,7 +104,8 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           std::clamp(0.5F + (context.strategy_config.defense_modifier -
                              context.strategy_config.aggression_modifier) *
                                 0.1F,
-                     0.25F, 0.75F);
+                     0.25F,
+                     0.75F);
       produce_ranged = (ranged_ratio < target_ranged_ratio);
     }
 
@@ -121,9 +124,8 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   const bool producing_commander =
       Game::Units::is_commander_troop(troop_type->unit_type);
 
-  for (const auto &entity : snapshot.friendly_units) {
-    if (!entity.is_building ||
-        entity.spawn_type != Game::Units::SpawnType::Barracks) {
+  for (const auto& entity : snapshot.friendly_units) {
+    if (!entity.is_building || entity.spawn_type != Game::Units::SpawnType::Barracks) {
       continue;
     }
 
@@ -139,7 +141,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    const auto &prod = entity.production;
+    const auto& prod = entity.production;
 
     if (prod.produced_count >= prod.max_units) {
       continue;
@@ -164,8 +166,8 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 }
 
-auto ProductionBehavior::should_execute(
-    const AISnapshot &snapshot, const AIContext &context) const -> bool {
+auto ProductionBehavior::should_execute(const AISnapshot& snapshot,
+                                        const AIContext& context) const -> bool {
   (void)snapshot;
 
   return context.total_units < context.max_troops_per_player;

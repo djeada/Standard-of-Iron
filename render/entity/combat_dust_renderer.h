@@ -1,9 +1,11 @@
 #pragma once
-#include "../../game/core/component.h"
-#include "../../game/core/entity.h"
 #include <QVector3D>
+
 #include <unordered_map>
 #include <vector>
+
+#include "../../game/core/component.h"
+#include "../../game/core/entity.h"
 
 namespace Engine::Core {
 class World;
@@ -23,12 +25,14 @@ struct StoneImpactEffect {
 
 class StoneImpactTracker {
 public:
-  static auto instance() -> StoneImpactTracker &;
+  static auto instance() -> StoneImpactTracker&;
 
-  void add_impact(const QVector3D &position, float current_time,
-                  float radius = 6.0F, float intensity = 1.5F);
+  void add_impact(const QVector3D& position,
+                  float current_time,
+                  float radius = 6.0F,
+                  float intensity = 1.5F);
   void update(float current_time);
-  [[nodiscard]] auto impacts() const -> const std::vector<StoneImpactEffect> & {
+  [[nodiscard]] auto impacts() const -> const std::vector<StoneImpactEffect>& {
     return m_impacts;
   }
   void clear() { m_impacts.clear(); }
@@ -38,8 +42,9 @@ private:
   std::vector<StoneImpactEffect> m_impacts;
 };
 
-void render_combat_dust(Renderer *renderer, ResourceManager *resources,
-                        Engine::Core::World *world);
+void render_combat_dust(Renderer* renderer,
+                        ResourceManager* resources,
+                        Engine::Core::World* world);
 
 struct TelegraphEntry {
   float last_pos_x{0.0F};
@@ -57,9 +62,11 @@ struct StrikeFlash {
 
 class RpgTelegraphRenderer {
 public:
-  void render(Renderer *renderer, Engine::Core::World *world,
+  void render(Renderer* renderer,
+              Engine::Core::World* world,
               Engine::Core::EntityID commander_id,
-              Engine::Core::EntityID locked_target_id, float anim_time);
+              Engine::Core::EntityID locked_target_id,
+              float anim_time);
   void clear();
 
 private:

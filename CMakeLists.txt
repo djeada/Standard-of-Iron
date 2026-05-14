@@ -414,7 +414,8 @@ if (CLANG_FORMAT_EXE)
        "${CMAKE_SOURCE_DIR}/*.c"   "${CMAKE_SOURCE_DIR}/*.cpp"
        "${CMAKE_SOURCE_DIR}/*.h"   "${CMAKE_SOURCE_DIR}/*.hpp")
 
-  # Exclude the current build tree (generated sources, moc_*.cpp, etc.)
+  # Exclude generated, vendored, and local build-tree sources.
+  list(FILTER ALL_CXX EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/(build|build-[^/]*|third_party)/.*")
   list(FILTER ALL_CXX EXCLUDE REGEX "${CMAKE_BINARY_DIR}/.*")
 
   if (ALL_CXX)

@@ -32,7 +32,7 @@ class ToolPanel : public QWidget {
   Q_OBJECT
 
 public:
-  explicit ToolPanel(QWidget *parent = nullptr);
+  explicit ToolPanel(QWidget* parent = nullptr);
 
   [[nodiscard]] ToolType current_tool() const { return m_current_tool; }
   [[nodiscard]] int current_player_id() const { return m_current_player_id; }
@@ -44,17 +44,20 @@ signals:
 
 private:
   void setup_ui();
-  auto add_tool_button(QGridLayout *layout, int row, int column,
-                       const QString &name, const QString &icon_char,
-                       const QString &description,
-                       ToolType tool) -> QToolButton *;
+  auto add_tool_button(QGridLayout* layout,
+                       int row,
+                       int column,
+                       const QString& name,
+                       const QString& icon_char,
+                       const QString& description,
+                       ToolType tool) -> QToolButton*;
   void set_current_tool(ToolType tool, bool emit_signal = true);
-  void update_active_tool_label(const QString &description);
+  void update_active_tool_label(const QString& description);
 
-  QButtonGroup *m_tool_group = nullptr;
-  QButtonGroup *m_player_group = nullptr;
-  QLabel *m_active_tool_label = nullptr;
-  QToolButton *m_select_button = nullptr;
+  QButtonGroup* m_tool_group = nullptr;
+  QButtonGroup* m_player_group = nullptr;
+  QLabel* m_active_tool_label = nullptr;
+  QToolButton* m_select_button = nullptr;
   ToolType m_current_tool = ToolType::Select;
   int m_current_player_id = 0;
 };

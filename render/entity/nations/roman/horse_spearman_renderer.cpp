@@ -9,8 +9,8 @@ namespace {
 
 auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
   HorseSpearmanRendererConfig config;
-  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/roman/horse_spearman");
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_spearman");
   config.spear_equipment_id = loadout.ids.spear;
   config.helmet_equipment_id = loadout.ids.helmet;
   config.armor_equipment_id = loadout.ids.armor;
@@ -41,14 +41,13 @@ auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
 
 } // namespace
 
-void register_horse_spearman_renderer(EntityRendererRegistry &registry) {
-  registry.register_renderer(
-      "troops/roman/horse_spearman",
-      [](const DrawContext &ctx, ISubmitter &out) {
-        static HorseSpearmanRendererBase const static_renderer(
-            make_horse_spearman_config());
-        static_renderer.render(ctx, out);
-      });
+void register_horse_spearman_renderer(EntityRendererRegistry& registry) {
+  registry.register_renderer("troops/roman/horse_spearman",
+                             [](const DrawContext& ctx, ISubmitter& out) {
+                               static HorseSpearmanRendererBase const static_renderer(
+                                   make_horse_spearman_config());
+                               static_renderer.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Roman

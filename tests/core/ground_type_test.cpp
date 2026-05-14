@@ -1,10 +1,12 @@
-#include "map/map_loader.h"
-#include "map/terrain.h"
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryFile>
+
 #include <gtest/gtest.h>
+
+#include "map/map_loader.h"
+#include "map/terrain.h"
 
 using namespace Game::Map;
 
@@ -17,8 +19,7 @@ protected:
 TEST_F(GroundTypeTest, GroundTypeEnumToString) {
   EXPECT_EQ(ground_type_to_qstring(GroundType::ForestMud),
             QStringLiteral("forest_mud"));
-  EXPECT_EQ(ground_type_to_qstring(GroundType::GrassDry),
-            QStringLiteral("grass_dry"));
+  EXPECT_EQ(ground_type_to_qstring(GroundType::GrassDry), QStringLiteral("grass_dry"));
   EXPECT_EQ(ground_type_to_qstring(GroundType::SoilRocky),
             QStringLiteral("soil_rocky"));
   EXPECT_EQ(ground_type_to_qstring(GroundType::AlpineMix),
@@ -164,8 +165,7 @@ TEST_F(GroundTypeTest, MapLoaderWithGroundType) {
 
   MapDefinition map_def;
   QString error;
-  bool success =
-      MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
+  bool success = MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_EQ(map_def.biome.ground_type, GroundType::GrassDry);
@@ -195,8 +195,7 @@ TEST_F(GroundTypeTest, MapLoaderWithoutGroundTypeUsesDefault) {
 
   MapDefinition map_def;
   QString error;
-  bool success =
-      MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
+  bool success = MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_EQ(map_def.biome.ground_type, GroundType::ForestMud);
@@ -233,8 +232,7 @@ TEST_F(GroundTypeTest, MapLoaderGroundTypeOverriddenByExplicitValues) {
 
   MapDefinition map_def;
   QString error;
-  bool success =
-      MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
+  bool success = MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_EQ(map_def.biome.ground_type, GroundType::AlpineMix);
@@ -269,8 +267,7 @@ TEST_F(GroundTypeTest, MapLoaderReadsSpawnEdgePadding) {
 
   MapDefinition map_def;
   QString error;
-  bool success =
-      MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
+  bool success = MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_FLOAT_EQ(map_def.biome.spawn_edge_padding, 0.02F);

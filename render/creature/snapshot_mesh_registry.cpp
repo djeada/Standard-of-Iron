@@ -26,7 +26,7 @@ auto lod_slot_index(Render::Creature::CreatureLOD lod) -> std::size_t {
   return 2U;
 }
 
-auto find_existing_asset_root(const std::string &asset_root) -> std::string {
+auto find_existing_asset_root(const std::string& asset_root) -> std::string {
   namespace fs = std::filesystem;
   const fs::path app_dir =
       QCoreApplication::instance() != nullptr
@@ -44,7 +44,7 @@ auto find_existing_asset_root(const std::string &asset_root) -> std::string {
       app_dir / "../../" / asset_root,
   };
 
-  for (const auto &candidate : candidates) {
+  for (const auto& candidate : candidates) {
     if (fs::exists(candidate / k_assets[0].second)) {
       return fs::absolute(candidate).lexically_normal().string();
     }
@@ -54,14 +54,14 @@ auto find_existing_asset_root(const std::string &asset_root) -> std::string {
 
 } // namespace
 
-auto SnapshotMeshRegistry::instance() noexcept -> SnapshotMeshRegistry & {
+auto SnapshotMeshRegistry::instance() noexcept -> SnapshotMeshRegistry& {
   static SnapshotMeshRegistry registry;
   return registry;
 }
 
 auto SnapshotMeshRegistry::slot(std::uint32_t species_id,
                                 Render::Creature::CreatureLOD lod) noexcept
-    -> SnapshotMeshBlob * {
+    -> SnapshotMeshBlob* {
   auto const lod_slot = lod_slot_index(lod);
   if (species_id >= Render::Creature::Bpat::k_species_count || lod_slot >= 2U) {
     return nullptr;
@@ -70,8 +70,8 @@ auto SnapshotMeshRegistry::slot(std::uint32_t species_id,
 }
 
 auto SnapshotMeshRegistry::slot(std::uint32_t species_id,
-                                Render::Creature::CreatureLOD lod)
-    const noexcept -> const SnapshotMeshBlob * {
+                                Render::Creature::CreatureLOD lod) const noexcept
+    -> const SnapshotMeshBlob* {
   auto const lod_slot = lod_slot_index(lod);
   if (species_id >= Render::Creature::Bpat::k_species_count || lod_slot >= 2U) {
     return nullptr;
@@ -81,8 +81,8 @@ auto SnapshotMeshRegistry::slot(std::uint32_t species_id,
 
 auto SnapshotMeshRegistry::load_species(std::uint32_t species_id,
                                         Render::Creature::CreatureLOD lod,
-                                        const std::string &path) -> bool {
-  auto *dst = slot(species_id, lod);
+                                        const std::string& path) -> bool {
+  auto* dst = slot(species_id, lod);
   if (dst == nullptr) {
     m_last_error = "unsupported snapshot mesh slot";
     return false;
@@ -101,18 +101,16 @@ auto SnapshotMeshRegistry::load_species(std::uint32_t species_id,
   return true;
 }
 
-auto SnapshotMeshRegistry::load_all(const std::string &asset_root)
-    -> std::size_t {
+auto SnapshotMeshRegistry::load_all(const std::string& asset_root) -> std::size_t {
   const std::string resolved_root = find_existing_asset_root(asset_root);
   std::size_t loaded = 0U;
-  for (auto const &[species_id, file_name] : k_assets) {
+  for (auto const& [species_id, file_name] : k_assets) {
     std::string path = resolved_root;
     if (!path.empty() && path.back() != '/' && path.back() != '\\') {
       path += '/';
     }
     path.append(file_name);
-    if (load_species(species_id, Render::Creature::CreatureLOD::Minimal,
-                     path)) {
+    if (load_species(species_id, Render::Creature::CreatureLOD::Minimal, path)) {
       ++loaded;
     }
   }
@@ -120,14 +118,14 @@ auto SnapshotMeshRegistry::load_all(const std::string &asset_root)
 }
 
 auto SnapshotMeshRegistry::blob(std::uint32_t species_id,
-                                Render::Creature::CreatureLOD lod)
-    const noexcept -> const SnapshotMeshBlob * {
-  const auto *candidate = slot(species_id, lod);
+                                Render::Creature::CreatureLOD lod) const noexcept
+    -> const SnapshotMeshBlob* {
+  const auto* candidate = slot(species_id, lod);
   return (candidate != nullptr && candidate->loaded()) ? candidate : nullptr;
 }
 
 void SnapshotMeshRegistry::clear() {
-  for (auto &blob : m_blobs) {
+  for (auto& blob : m_blobs) {
     blob = SnapshotMeshBlob{};
   }
   m_last_error.clear();

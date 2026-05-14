@@ -5,6 +5,6 @@
 namespace Render::Elephant {
 
 [[nodiscard]] auto
-elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest &;
+elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest&;
 
 }

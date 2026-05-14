@@ -15,11 +15,10 @@ Rectangle {
         if (!map_path || map_path === "" || !player_configs || player_configs.length === 0) {
             previewImage.source = "";
             preview_id = "";
-            return ;
+            return;
         }
         if (typeof game === "undefined" || !game.generate_map_preview)
-            return ;
-
+            return;
         loading = true;
         try {
             var configStr = JSON.stringify(player_configs);
@@ -64,7 +63,6 @@ Rectangle {
             left: parent.left
             margins: Theme.spacingMedium
         }
-
     }
 
     Rectangle {
@@ -107,7 +105,6 @@ Rectangle {
                     cache: false
                     visible: status === Image.Ready
                 }
-
             }
 
             Text {
@@ -124,7 +121,6 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 visible: map_path !== ""
             }
-
         }
 
         Text {
@@ -157,18 +153,14 @@ Rectangle {
                 font.pixelSize: 36
                 color: Theme.accent
 
-                RotationAnimator on rotation {
+                RotationAnimator on rotation  {
                     from: 0
                     to: 360
                     duration: 1500
                     loops: Animation.Infinite
                     running: loading
                 }
-
             }
-
         }
-
     }
-
 }

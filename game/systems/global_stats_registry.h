@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../core/event_manager.h"
 #include <chrono>
 #include <unordered_map>
+
+#include "../core/event_manager.h"
 
 namespace Engine::Core {
 class World;
@@ -23,29 +24,29 @@ struct PlayerStats {
 
 class GlobalStatsRegistry {
 public:
-  static auto instance() -> GlobalStatsRegistry &;
+  static auto instance() -> GlobalStatsRegistry&;
 
   void initialize();
   void clear();
 
-  auto get_stats(int owner_id) const -> const PlayerStats *;
-  auto get_stats(int owner_id) -> PlayerStats *;
+  auto get_stats(int owner_id) const -> const PlayerStats*;
+  auto get_stats(int owner_id) -> PlayerStats*;
 
   void mark_game_start(int owner_id);
 
   void mark_game_end(int owner_id);
 
-  void on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event);
-  void on_unit_died(const Engine::Core::UnitDiedEvent &event);
-  void on_barrack_captured(const Engine::Core::BarrackCapturedEvent &event);
+  void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
+  void on_unit_died(const Engine::Core::UnitDiedEvent& event);
+  void on_barrack_captured(const Engine::Core::BarrackCapturedEvent& event);
 
-  void rebuild_from_world(Engine::Core::World &world);
+  void rebuild_from_world(Engine::Core::World& world);
 
 private:
   GlobalStatsRegistry() = default;
   ~GlobalStatsRegistry() = default;
-  GlobalStatsRegistry(const GlobalStatsRegistry &) = delete;
-  auto operator=(const GlobalStatsRegistry &) -> GlobalStatsRegistry & = delete;
+  GlobalStatsRegistry(const GlobalStatsRegistry&) = delete;
+  auto operator=(const GlobalStatsRegistry&) -> GlobalStatsRegistry& = delete;
 
   std::unordered_map<int, PlayerStats> m_player_stats;
 

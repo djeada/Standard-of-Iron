@@ -2,6 +2,7 @@
 
 #include <QString>
 #include <QVector3D>
+
 #include <algorithm>
 #include <cstdint>
 #include <memory>
@@ -11,7 +12,13 @@
 
 namespace Game::Map {
 
-enum class TerrainType { Flat, Hill, Mountain, River, Forest };
+enum class TerrainType {
+  Flat,
+  Hill,
+  Mountain,
+  River,
+  Forest
+};
 
 enum class GroundType {
   ForestMud,
@@ -41,8 +48,7 @@ inline auto ground_type_to_string(GroundType type) -> std::string {
   return ground_type_to_qstring(type).toStdString();
 }
 
-inline auto try_parse_ground_type(const QString &value,
-                                  GroundType &out) -> bool {
+inline auto try_parse_ground_type(const QString& value, GroundType& out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("forest_mud")) {
     out = GroundType::ForestMud;
@@ -68,7 +74,7 @@ inline auto try_parse_ground_type(const QString &value,
 }
 
 inline auto
-ground_type_from_string(const std::string &str) -> std::optional<GroundType> {
+ground_type_from_string(const std::string& str) -> std::optional<GroundType> {
   GroundType result;
   if (try_parse_ground_type(QString::fromStdString(str), result)) {
     return result;
@@ -96,8 +102,7 @@ inline auto terrain_type_to_string(TerrainType type) -> std::string {
   return terrainTypeToQString(type).toStdString();
 }
 
-inline auto try_parse_terrain_type(const QString &value,
-                                   TerrainType &out) -> bool {
+inline auto try_parse_terrain_type(const QString& value, TerrainType& out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("flat")) {
     out = TerrainType::Flat;
@@ -123,7 +128,7 @@ inline auto try_parse_terrain_type(const QString &value,
 }
 
 inline auto
-terrainTypeFromString(const std::string &str) -> std::optional<TerrainType> {
+terrainTypeFromString(const std::string& str) -> std::optional<TerrainType> {
   TerrainType result;
   if (try_parse_terrain_type(QString::fromStdString(str), result)) {
     return result;
@@ -256,7 +261,7 @@ struct TerrainScatterRules {
 };
 
 inline auto
-make_surface_profile(const BiomeSettings &settings) -> TerrainSurfaceProfile {
+make_surface_profile(const BiomeSettings& settings) -> TerrainSurfaceProfile {
   TerrainSurfaceProfile profile;
   profile.ground_type = settings.ground_type;
   profile.grass_primary = settings.grass_primary;
@@ -283,7 +288,7 @@ make_surface_profile(const BiomeSettings &settings) -> TerrainSurfaceProfile {
 }
 
 inline auto
-make_scatter_profile(const BiomeSettings &settings) -> TerrainScatterProfile {
+make_scatter_profile(const BiomeSettings& settings) -> TerrainScatterProfile {
   TerrainScatterProfile profile;
   profile.ground_type = settings.ground_type;
   profile.grass_primary = settings.grass_primary;
@@ -306,8 +311,7 @@ make_scatter_profile(const BiomeSettings &settings) -> TerrainScatterProfile {
   return profile;
 }
 
-inline auto
-make_climate_profile(const BiomeSettings &settings) -> ClimateProfile {
+inline auto make_climate_profile(const BiomeSettings& settings) -> ClimateProfile {
   ClimateProfile profile;
   profile.snow_coverage = settings.snow_coverage;
   profile.moisture_level = settings.moisture_level;
@@ -319,7 +323,7 @@ make_climate_profile(const BiomeSettings &settings) -> ClimateProfile {
   return profile;
 }
 
-inline auto make_wind_profile(const BiomeSettings &settings) -> WindProfile {
+inline auto make_wind_profile(const BiomeSettings& settings) -> WindProfile {
   WindProfile profile;
   profile.sway_strength = settings.sway_strength;
   profile.sway_speed = settings.sway_speed;
@@ -327,8 +331,7 @@ inline auto make_wind_profile(const BiomeSettings &settings) -> WindProfile {
   return profile;
 }
 
-inline auto
-make_biome_profiles(const BiomeSettings &settings) -> BiomeProfiles {
+inline auto make_biome_profiles(const BiomeSettings& settings) -> BiomeProfiles {
   BiomeProfiles profiles;
   profiles.surface = make_surface_profile(settings);
   profiles.scatter = make_scatter_profile(settings);
@@ -372,7 +375,7 @@ inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
   return rules;
 }
 
-inline void apply_ground_type_defaults(BiomeSettings &settings,
+inline void apply_ground_type_defaults(BiomeSettings& settings,
                                        GroundType ground_type) {
   settings.ground_type = ground_type;
   switch (ground_type) {
@@ -633,20 +636,18 @@ inline constexpr float k_road_surface_y_offset = 0.02F;
   return 4.0F * clamped_t * (1.0F - clamped_t);
 }
 
-[[nodiscard]] inline auto bridge_deck_world_y(const Bridge &bridge,
-                                              float t) -> float {
+[[nodiscard]] inline auto bridge_deck_world_y(const Bridge& bridge, float t) -> float {
   float const arch_height = bridge.height * bridge_arch_curve(t) * 0.8F;
   return bridge.start.y() + bridge.height + arch_height * 0.3F;
 }
 
-[[nodiscard]] inline auto
-bridge_crossing_entry_margin(float bridge_width, float tile_size) -> float {
+[[nodiscard]] inline auto bridge_crossing_entry_margin(float bridge_width,
+                                                       float tile_size) -> float {
   return std::max(tile_size * 2.0F, bridge_width);
 }
 
 [[nodiscard]] inline auto
-bridge_crossing_alignment_half_width(float bridge_width,
-                                     float tile_size) -> float {
+bridge_crossing_alignment_half_width(float bridge_width, float tile_size) -> float {
   return std::max(bridge_width * 0.5F + tile_size, tile_size * 1.5F);
 }
 
@@ -673,9 +674,9 @@ class TerrainHeightMap {
 public:
   TerrainHeightMap(int width, int height, float tile_size);
 
-  void build_from_features(const std::vector<TerrainFeature> &features);
+  void build_from_features(const std::vector<TerrainFeature>& features);
 
-  void add_river_segments(const std::vector<RiverSegment> &river_segments);
+  void add_river_segments(const std::vector<RiverSegment>& river_segments);
 
   [[nodiscard]] auto get_height_at(float world_x, float world_z) const -> float;
 
@@ -685,33 +686,30 @@ public:
 
   [[nodiscard]] auto isHillEntrance(int grid_x, int grid_z) const -> bool;
 
-  [[nodiscard]] auto getTerrainType(int grid_x,
-                                    int grid_z) const -> TerrainType;
+  [[nodiscard]] auto getTerrainType(int grid_x, int grid_z) const -> TerrainType;
 
-  [[nodiscard]] auto isRiverOrNearby(int grid_x, int grid_z,
-                                     int margin = 1) const -> bool;
+  [[nodiscard]] auto
+  isRiverOrNearby(int grid_x, int grid_z, int margin = 1) const -> bool;
 
   [[nodiscard]] auto get_width() const -> int { return m_width; }
   [[nodiscard]] auto get_height() const -> int { return m_height; }
   [[nodiscard]] auto get_tile_size() const -> float { return m_tile_size; }
 
-  [[nodiscard]] auto get_height_data() const -> const std::vector<float> & {
+  [[nodiscard]] auto get_height_data() const -> const std::vector<float>& {
     return m_heights;
   }
-  [[nodiscard]] auto
-  getTerrainTypes() const -> const std::vector<TerrainType> & {
+  [[nodiscard]] auto getTerrainTypes() const -> const std::vector<TerrainType>& {
     return m_terrain_types;
   }
-  [[nodiscard]] auto getHillEntrances() const -> const std::vector<bool> & {
+  [[nodiscard]] auto getHillEntrances() const -> const std::vector<bool>& {
     return m_hill_entrances;
   }
-  [[nodiscard]] auto
-  get_river_segments() const -> const std::vector<RiverSegment> & {
+  [[nodiscard]] auto get_river_segments() const -> const std::vector<RiverSegment>& {
     return m_river_segments;
   }
 
-  void add_bridges(const std::vector<Bridge> &bridges);
-  [[nodiscard]] auto get_bridges() const -> const std::vector<Bridge> & {
+  void add_bridges(const std::vector<Bridge>& bridges);
+  [[nodiscard]] auto get_bridges() const -> const std::vector<Bridge>& {
     return m_bridges;
   }
 
@@ -724,19 +722,18 @@ public:
   [[nodiscard]] auto getBridgeCenterPosition(float world_x, float world_z) const
       -> std::optional<QVector3D>;
 
-  [[nodiscard]] auto
-  getBridgeTraversalPosition(float world_x,
-                             float world_z) const -> std::optional<QVector3D>;
+  [[nodiscard]] auto getBridgeTraversalPosition(float world_x, float world_z) const
+      -> std::optional<QVector3D>;
 
-  [[nodiscard]] auto getBridgeDeckHeight(float world_x, float world_z) const
-      -> std::optional<float>;
+  [[nodiscard]] auto getBridgeDeckHeight(float world_x,
+                                         float world_z) const -> std::optional<float>;
 
-  void apply_biome_variation(const BiomeSettings &settings);
+  void apply_biome_variation(const BiomeSettings& settings);
 
-  void restore_from_data(const std::vector<float> &heights,
-                         const std::vector<TerrainType> &terrain_types,
-                         const std::vector<RiverSegment> &rivers,
-                         const std::vector<Bridge> &bridges);
+  void restore_from_data(const std::vector<float>& heights,
+                         const std::vector<TerrainType>& terrain_types,
+                         const std::vector<RiverSegment>& rivers,
+                         const std::vector<Bridge>& bridges);
 
 private:
   int m_width;
@@ -759,9 +756,9 @@ private:
 
   void precompute_bridge_data();
 
-  [[nodiscard]] static auto
-  calculateFeatureHeight(const TerrainFeature &feature, float world_x,
-                         float world_z) -> float;
+  [[nodiscard]] static auto calculateFeatureHeight(const TerrainFeature& feature,
+                                                   float world_x,
+                                                   float world_z) -> float;
 };
 
 } // namespace Game::Map

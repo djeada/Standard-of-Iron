@@ -1,8 +1,4 @@
 #include "expand_behavior.h"
-#include "../../../core/ownership_constants.h"
-#include "../ai_utils.h"
-#include "systems/ai_system/ai_types.h"
-#include "units/spawn_type.h"
 
 #include <algorithm>
 #include <cmath>
@@ -11,11 +7,17 @@
 #include <utility>
 #include <vector>
 
+#include "../../../core/ownership_constants.h"
+#include "../ai_utils.h"
+#include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
+
 namespace Game::Systems::AI {
 
-void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+void ExpandBehavior::execute(const AISnapshot& snapshot,
+                             AIContext& context,
                              float delta_time,
-                             std::vector<AICommand> &out_commands) {
+                             std::vector<AICommand>& out_commands) {
   m_expand_timer += delta_time;
 
   if (m_expand_timer < 1.0F) {
@@ -23,10 +25,10 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_expand_timer = 0.0F;
 
-  const ContactSnapshot *closest_neutral_barracks = nullptr;
+  const ContactSnapshot* closest_neutral_barracks = nullptr;
   float closest_distance_sq = std::numeric_limits<float>::max();
 
-  for (const auto &enemy : snapshot.visible_enemies) {
+  for (const auto& enemy : snapshot.visible_enemies) {
     if (!enemy.is_building) {
       continue;
     }
@@ -55,10 +57,10 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  std::vector<const EntitySnapshot *> available_units;
+  std::vector<const EntitySnapshot*> available_units;
   available_units.reserve(snapshot.friendly_units.size());
 
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
@@ -86,7 +88,7 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   target_y.reserve(available_units.size());
   target_z.reserve(available_units.size());
 
-  for (const auto *unit : available_units) {
+  for (const auto* unit : available_units) {
     unit_ids.push_back(unit->id);
 
     float offset_x = 0.0F;
@@ -108,8 +110,8 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     target_z.push_back(closest_neutral_barracks->pos_z + offset_z);
   }
 
-  auto claimed_units = claim_units(unit_ids, get_priority(), "expanding",
-                                   context, snapshot.game_time, 2.0F);
+  auto claimed_units = claim_units(
+      unit_ids, get_priority(), "expanding", context, snapshot.game_time, 2.0F);
 
   if (claimed_units.empty()) {
     return;
@@ -139,15 +141,14 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   out_commands.push_back(std::move(command));
 }
 
-auto ExpandBehavior::should_execute(const AISnapshot &snapshot,
-                                    const AIContext &context) const -> bool {
+auto ExpandBehavior::should_execute(const AISnapshot& snapshot,
+                                    const AIContext& context) const -> bool {
   if (context.state != AIState::Expanding) {
     return false;
   }
 
-  for (const auto &enemy : snapshot.visible_enemies) {
-    if (enemy.is_building &&
-        enemy.spawn_type == Game::Units::SpawnType::Barracks &&
+  for (const auto& enemy : snapshot.visible_enemies) {
+    if (enemy.is_building && enemy.spawn_type == Game::Units::SpawnType::Barracks &&
         Game::Core::is_neutral_owner(enemy.owner_id)) {
       return true;
     }

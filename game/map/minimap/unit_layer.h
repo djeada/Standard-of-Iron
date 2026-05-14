@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+
 #include <cstdint>
 #include <functional>
 #include <vector>
@@ -19,8 +20,8 @@ struct UnitMarker {
 
 using VisibilityCheckFn = std::function<bool(float world_x, float world_z)>;
 
-using PlayerColorFn = std::function<bool(int owner_id, std::uint8_t &r,
-                                         std::uint8_t &g, std::uint8_t &b)>;
+using PlayerColorFn = std::function<bool(
+    int owner_id, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b)>;
 
 struct TeamColors {
   struct ColorSet {
@@ -72,35 +73,39 @@ public:
 
   void init(int width, int height, float world_width, float world_height);
 
-  [[nodiscard]] auto is_initialized() const -> bool {
-    return !m_image.isNull();
-  }
+  [[nodiscard]] auto is_initialized() const -> bool { return !m_image.isNull(); }
 
-  void update(const std::vector<UnitMarker> &markers);
+  void update(const std::vector<UnitMarker>& markers);
 
-  void update(const std::vector<UnitMarker> &markers, int local_owner_id,
-              const VisibilityCheckFn &visibility_check,
-              const PlayerColorFn &player_color_fn = nullptr);
+  void update(const std::vector<UnitMarker>& markers,
+              int local_owner_id,
+              const VisibilityCheckFn& visibility_check,
+              const PlayerColorFn& player_color_fn = nullptr);
 
-  [[nodiscard]] auto get_image() const -> const QImage & { return m_image; }
+  [[nodiscard]] auto get_image() const -> const QImage& { return m_image; }
 
   void set_unit_radius(float radius) { m_unit_radius = radius; }
 
   void set_building_size(float size) { m_building_half_size = size; }
 
 private:
+  [[nodiscard]] auto world_to_pixel(float world_x,
+                                    float world_z) const -> std::pair<float, float>;
+
   [[nodiscard]] auto
-  world_to_pixel(float world_x, float world_z) const -> std::pair<float, float>;
+  get_color_for_owner(int owner_id,
+                      const PlayerColorFn& player_color_fn) -> TeamColors::ColorSet;
 
-  [[nodiscard]] auto get_color_for_owner(int owner_id,
-                                         const PlayerColorFn &player_color_fn)
-      -> TeamColors::ColorSet;
+  void draw_unit_marker(QPainter& painter,
+                        float px,
+                        float py,
+                        const TeamColors::ColorSet& colors,
+                        bool is_selected);
 
-  void draw_unit_marker(QPainter &painter, float px, float py,
-                        const TeamColors::ColorSet &colors, bool is_selected);
-
-  void draw_building_marker(QPainter &painter, float px, float py,
-                            const TeamColors::ColorSet &colors,
+  void draw_building_marker(QPainter& painter,
+                            float px,
+                            float py,
+                            const TeamColors::ColorSet& colors,
                             bool is_selected);
 
   QImage m_image;

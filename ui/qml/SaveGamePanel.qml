@@ -7,23 +7,20 @@ import StandardOfIron 1.0
 Item {
     id: root
 
-    signal cancelled()
+    signal cancelled
     signal save_requested(string slot_name)
 
     anchors.fill: parent
     z: 25
     onVisibleChanged: {
         if (!visible)
-            return ;
-
+            return;
         if (typeof saveListModel !== 'undefined')
             saveListModel.load_from_game();
-
         if (typeof saveNameField !== 'undefined' && saveNameField)
             saveNameField.text = "Save_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm");
-
     }
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
             event.accepted = true;
@@ -37,7 +34,6 @@ Item {
         function onSave_slots_changed() {
             if (typeof saveListModel !== 'undefined')
                 saveListModel.load_from_game();
-
         }
 
         target: typeof game !== 'undefined' ? game : null
@@ -82,7 +78,6 @@ Item {
                     button_style: "secondary"
                     onClicked: root.cancelled()
                 }
-
             }
 
             Rectangle {
@@ -116,7 +111,6 @@ Item {
                         border.width: 1
                         radius: Theme.radiusMedium
                     }
-
                 }
 
                 StyledButton {
@@ -131,7 +125,6 @@ Item {
                         }
                     }
                 }
-
             }
 
             Label {
@@ -165,7 +158,6 @@ Item {
                                 for (var i = 0; i < count; i++) {
                                     if (get(i).slot_name === name)
                                         return true;
-
                                 }
                                 return false;
                             }
@@ -173,17 +165,16 @@ Item {
                             function load_from_game() {
                                 clear();
                                 if (typeof game === 'undefined' || !game.get_save_slots)
-                                    return ;
-
+                                    return;
                                 var slots = game.get_save_slots();
                                 for (var i = 0; i < slots.length; i++) {
                                     append({
-                                        "slot_name": slots[i].slot_name || slots[i].name,
-                                        "title": slots[i].title || slots[i].name || slots[i].slot_name || "Untitled Save",
-                                        "timestamp": slots[i].timestamp,
-                                        "map_name": slots[i].map_name || "Unknown Map",
-                                        "thumbnail": slots[i].thumbnail || ""
-                                    });
+                                            "slot_name": slots[i].slot_name || slots[i].name,
+                                            "title": slots[i].title || slots[i].name || slots[i].slot_name || "Untitled Save",
+                                            "timestamp": slots[i].timestamp,
+                                            "map_name": slots[i].map_name || "Unknown Map",
+                                            "thumbnail": slots[i].thumbnail || ""
+                                        });
                                 }
                             }
 
@@ -233,7 +224,6 @@ Item {
                                         color: Theme.textHint
                                         font.pointSize: Theme.fontSizeTiny
                                     }
-
                                 }
 
                                 ColumnLayout {
@@ -272,7 +262,6 @@ Item {
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
                                     }
-
                                 }
 
                                 StyledButton {
@@ -284,7 +273,6 @@ Item {
                                         confirmOverwriteDialog.open();
                                     }
                                 }
-
                             }
 
                             MouseArea {
@@ -296,17 +284,11 @@ Item {
                                     saveNameField.text = model.slot_name;
                                 }
                             }
-
                         }
-
                     }
-
                 }
-
             }
-
         }
-
     }
 
     Dialog {
@@ -341,11 +323,7 @@ Item {
                     Layout.fillWidth: true
                     font.pointSize: Theme.fontSizeMedium
                 }
-
             }
-
         }
-
     }
-
 }

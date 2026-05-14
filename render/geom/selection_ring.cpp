@@ -1,11 +1,14 @@
 #include "selection_ring.h"
-#include "gl/mesh.h"
+
 #include <QVector3D>
+#include <qvectornd.h>
+
 #include <cmath>
 #include <cstddef>
 #include <memory>
-#include <qvectornd.h>
 #include <vector>
+
+#include "gl/mesh.h"
 
 namespace Render::Geom {
 
@@ -41,7 +44,7 @@ static auto create_ring_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   return std::make_unique<Mesh>(verts, idx);
 }
 
-auto SelectionRing::get() -> Render::GL::Mesh * {
+auto SelectionRing::get() -> Render::GL::Mesh* {
   if (!s_mesh) {
     s_mesh = create_ring_mesh();
   }

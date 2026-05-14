@@ -1,12 +1,15 @@
 #include "civilian.h"
+
+#include <qvectornd.h>
+
+#include <memory>
+
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/troop_profile_service.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
-#include <memory>
-#include <qvectornd.h>
 
 static inline auto team_color(int owner_id) -> QVector3D {
   switch (owner_id) {
@@ -25,18 +28,19 @@ static inline auto team_color(int owner_id) -> QVector3D {
 
 namespace Game::Units {
 
-Civilian::Civilian(Engine::Core::World &world)
-    : Unit(world, TroopType::Civilian) {}
+Civilian::Civilian(Engine::Core::World& world)
+    : Unit(world, TroopType::Civilian) {
+}
 
-auto Civilian::Create(Engine::Core::World &world,
-                      const SpawnParams &params) -> std::unique_ptr<Civilian> {
+auto Civilian::Create(Engine::Core::World& world,
+                      const SpawnParams& params) -> std::unique_ptr<Civilian> {
   auto unit = std::unique_ptr<Civilian>(new Civilian(world));
   unit->init(params);
   return unit;
 }
 
-void Civilian::init(const SpawnParams &params) {
-  auto *e = m_world->create_entity();
+void Civilian::init(const SpawnParams& params) {
+  auto* e = m_world->create_entity();
   m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
@@ -44,8 +48,7 @@ void Civilian::init(const SpawnParams &params) {
       nation_id, TroopType::Civilian);
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
-  m_t->position = {params.position.x(), params.position.y(),
-                   params.position.z()};
+  m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   float const scale = profile.visuals.render_scale;
   m_t->scale = {scale, scale, scale};
 
@@ -89,14 +92,12 @@ void Civilian::init(const SpawnParams &params) {
     m_atk->melee_damage = profile.combat.melee_damage;
     m_atk->melee_cooldown = profile.combat.melee_cooldown;
 
-    m_atk->preferred_mode =
-        profile.combat.can_ranged
-            ? Engine::Core::AttackComponent::CombatMode::Ranged
-            : Engine::Core::AttackComponent::CombatMode::Melee;
-    m_atk->current_mode =
-        profile.combat.can_ranged
-            ? Engine::Core::AttackComponent::CombatMode::Ranged
-            : Engine::Core::AttackComponent::CombatMode::Melee;
+    m_atk->preferred_mode = profile.combat.can_ranged
+                                ? Engine::Core::AttackComponent::CombatMode::Ranged
+                                : Engine::Core::AttackComponent::CombatMode::Melee;
+    m_atk->current_mode = profile.combat.can_ranged
+                              ? Engine::Core::AttackComponent::CombatMode::Ranged
+                              : Engine::Core::AttackComponent::CombatMode::Melee;
     m_atk->can_ranged = profile.combat.can_ranged;
     m_atk->can_melee = profile.combat.can_melee;
   }

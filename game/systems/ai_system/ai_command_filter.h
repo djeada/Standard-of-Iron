@@ -1,8 +1,9 @@
 #pragma once
 
-#include "ai_types.h"
 #include <unordered_map>
 #include <vector>
+
+#include "ai_types.h"
 
 namespace Game::Systems::AI {
 
@@ -11,7 +12,7 @@ public:
   explicit AICommandFilter(float cooldown_period = 5.0F)
       : m_cooldown_period(cooldown_period) {}
 
-  auto filter(const std::vector<AICommand> &commands,
+  auto filter(const std::vector<AICommand>& commands,
               float current_time) -> std::vector<AICommand>;
 
   void update(float current_time);
@@ -31,10 +32,13 @@ private:
 
     float issued_time;
 
-    [[nodiscard]] auto is_similar_to(const AICommandType &cmd_type,
+    [[nodiscard]] auto is_similar_to(const AICommandType& cmd_type,
                                      Engine::Core::EntityID unit,
-                                     Engine::Core::EntityID target, float x,
-                                     float y, float z, float current_time,
+                                     Engine::Core::EntityID target,
+                                     float x,
+                                     float y,
+                                     float z,
+                                     float current_time,
                                      float cooldown) const -> bool;
   };
 
@@ -44,10 +48,12 @@ private:
   [[nodiscard]] auto is_duplicate(Engine::Core::EntityID unit_id,
                                   AICommandType type,
                                   Engine::Core::EntityID target_id,
-                                  float move_x, float move_y, float move_z,
+                                  float move_x,
+                                  float move_y,
+                                  float move_z,
                                   float current_time) const -> bool;
 
-  void record_command(const AICommand &cmd, float current_time);
+  void record_command(const AICommand& cmd, float current_time);
 
   void cleanup_history(float current_time);
 };

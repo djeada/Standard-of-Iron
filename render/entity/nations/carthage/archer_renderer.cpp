@@ -1,4 +1,22 @@
 #include "archer_renderer.h"
+
+#include <QMatrix4x4>
+#include <QString>
+#include <QVector3D>
+#include <qmatrix4x4.h>
+#include <qstringliteral.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <numbers>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
@@ -37,22 +55,6 @@
 #include "../equipment_loadout_catalog.h"
 #include "archer_style.h"
 
-#include <QMatrix4x4>
-#include <QString>
-#include <QVector3D>
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <cstdint>
-#include <numbers>
-#include <optional>
-#include <qmatrix4x4.h>
-#include <qstringliteral.h>
-#include <qvectornd.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-
 namespace Render::GL::Carthage {
 
 namespace {
@@ -63,7 +65,7 @@ constexpr std::string_view k_attachment_headwrap = "carthage_headwrap";
 constexpr float k_kneel_depth_multiplier = 1.125F;
 constexpr float k_lean_amount_multiplier = 0.83F;
 
-auto style_registry() -> std::unordered_map<std::string, ArcherStyleConfig> & {
+auto style_registry() -> std::unordered_map<std::string, ArcherStyleConfig>& {
   static std::unordered_map<std::string, ArcherStyleConfig> styles;
   return styles;
 }
@@ -87,13 +89,13 @@ auto canonical_bow_config() -> BowRenderConfig {
   return cfg;
 }
 
-auto resolve_archer_style_fn(const Render::GL::DrawContext &ctx)
-    -> const ArcherStyleConfig & {
+auto resolve_archer_style_fn(const Render::GL::DrawContext& ctx)
+    -> const ArcherStyleConfig& {
   ensure_archer_styles_registered();
-  auto &styles = style_registry();
+  auto& styles = style_registry();
   std::string nation_id;
   if (ctx.entity != nullptr) {
-    if (auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+    if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
       nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
     }
   }
@@ -113,8 +115,8 @@ auto resolve_archer_style_fn(const Render::GL::DrawContext &ctx)
 
 } // namespace
 
-void register_archer_style(const std::string &nation_id,
-                           const ArcherStyleConfig &style) {
+void register_archer_style(const std::string& nation_id,
+                           const ArcherStyleConfig& style) {
   style_registry()[nation_id] = style;
 }
 
@@ -133,8 +135,9 @@ public:
     return {1.03F, 1.08F, 0.98F};
   }
 
-  void adjust_variation(const DrawContext &, uint32_t,
-                        VariationParams &variation) const override {
+  void adjust_variation(const DrawContext&,
+                        uint32_t,
+                        VariationParams& variation) const override {
     variation.height_scale *= 1.06F;
     variation.bulk_scale *= 0.90F;
     variation.stance_width *= 0.90F;
@@ -145,8 +148,8 @@ public:
     return k_kneel_depth_multiplier;
   }
 
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
     static const UnitVisualSpec spec = []() {
@@ -155,28 +158,29 @@ public:
         using Render::Creature::ArchetypeDescriptor;
         using Render::Creature::ArchetypeRegistry;
 
-        auto &registry = ArchetypeRegistry::instance();
-        auto const *base_desc =
-            registry.get(ArchetypeRegistry::k_humanoid_base);
+        auto& registry = ArchetypeRegistry::instance();
+        auto const* base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
         if (base_desc == nullptr) {
           return Render::Creature::k_invalid_archetype;
         }
 
         ArchetypeDescriptor desc = *base_desc;
         desc.debug_name = "troops/carthage/archer/base";
-        auto const attack_bow_clip = desc.bpat_clip[static_cast<std::size_t>(
-            AnimationStateId::AttackBow)];
+        auto const attack_bow_clip =
+            desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackBow)];
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
             attack_bow_clip;
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
             Render::Creature::k_humanoid_hold_bow_clip;
         return registry.register_archetype(desc);
       }();
-      const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-          "troops/carthage/archer");
-      const std::array<EquipmentHandle, 5> handles{
-          loadout.helmet_handle, loadout.armor_handle, loadout.quiver_handle,
-          loadout.bow_handle, loadout.cloak_handle};
+      const auto loadout =
+          Render::GL::Nation::resolve_equipment_loadout("troops/carthage/archer");
+      const std::array<EquipmentHandle, 5> handles{loadout.helmet_handle,
+                                                   loadout.armor_handle,
+                                                   loadout.quiver_handle,
+                                                   loadout.bow_handle,
+                                                   loadout.cloak_handle};
 
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
@@ -190,14 +194,15 @@ public:
     return spec;
   }
 
-  void get_variant(const DrawContext &ctx, uint32_t seed,
-                   HumanoidVariant &v) const override {
+  void get_variant(const DrawContext& ctx,
+                   uint32_t seed,
+                   HumanoidVariant& v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = make_humanoid_palette(team_tint, seed);
-    auto const &style = resolve_style(ctx);
+    auto const& style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
-    auto next_rand = [](uint32_t &s) -> float {
+    auto next_rand = [](uint32_t& s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
@@ -212,11 +217,13 @@ public:
   }
 
   void append_companion_preparation(
-      const DrawContext &ctx, const HumanoidVariant &variant,
-      const HumanoidPose &, const HumanoidAnimationContext &anim_ctx,
-      std::uint32_t, Render::Creature::CreatureLOD lod,
-      Render::Creature::Pipeline::CreaturePreparationResult &out)
-      const override {
+      const DrawContext& ctx,
+      const HumanoidVariant& variant,
+      const HumanoidPose&,
+      const HumanoidAnimationContext& anim_ctx,
+      std::uint32_t,
+      Render::Creature::CreatureLOD lod,
+      Render::Creature::Pipeline::CreaturePreparationResult& out) const override {
     (void)ctx;
     (void)variant;
     (void)anim_ctx;
@@ -225,14 +232,12 @@ public:
   }
 
 private:
-  auto
-  resolve_style(const DrawContext &ctx) const -> const ArcherStyleConfig & {
+  auto resolve_style(const DrawContext& ctx) const -> const ArcherStyleConfig& {
     ensure_archer_styles_registered();
-    auto &styles = style_registry();
+    auto& styles = style_registry();
     std::string nation_id;
     if (ctx.entity != nullptr) {
-      if (auto *unit =
-              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+      if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
       }
     }
@@ -251,13 +256,13 @@ private:
   }
 
 private:
-  void apply_palette_overrides(const ArcherStyleConfig &style,
-                               const QVector3D &team_tint,
-                               HumanoidVariant &variant) const {
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target) {
-      target = mix_palette_color(target, override_color, team_tint,
-                                 k_team_mix_weight, k_style_mix_weight);
+  void apply_palette_overrides(const ArcherStyleConfig& style,
+                               const QVector3D& team_tint,
+                               HumanoidVariant& variant) const {
+    auto apply_color = [&](const std::optional<QVector3D>& override_color,
+                           QVector3D& target) {
+      target = mix_palette_color(
+          target, override_color, team_tint, k_team_mix_weight, k_style_mix_weight);
     };
 
     apply_color(style.cloth_color, variant.palette.cloth);
@@ -268,11 +273,11 @@ private:
   }
 };
 
-void register_archer_renderer(Render::GL::EntityRendererRegistry &registry) {
+void register_archer_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_archer_styles_registered();
   static ArcherRenderer const renderer;
   registry.register_renderer("troops/carthage/archer",
-                             [](const DrawContext &ctx, ISubmitter &out) {
+                             [](const DrawContext& ctx, ISubmitter& out) {
                                static ArcherRenderer const static_renderer;
                                static_renderer.render(ctx, out);
                              });

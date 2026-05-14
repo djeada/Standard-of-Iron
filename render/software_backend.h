@@ -2,12 +2,13 @@
 
 #pragma once
 
+#include <QImage>
+#include <QString>
+
 #include "draw_queue.h"
 #include "frame_budget.h"
 #include "i_render_backend.h"
 #include "software/software_rasterizer.h"
-#include <QImage>
-#include <QString>
 
 namespace Render::GL {
 
@@ -15,7 +16,7 @@ class SoftwareBackend : public IRenderBackend {
 public:
   [[nodiscard]] auto initialize() -> bool override { return true; }
   void begin_frame() override { m_rasterizer.clear(); }
-  void execute(const DrawQueue &queue, const Camera &cam) override;
+  void execute(const DrawQueue& queue, const Camera& cam) override;
 
   void set_viewport(int w, int h) override {
     auto settings = m_rasterizer.settings();
@@ -29,29 +30,26 @@ public:
     m_rasterizer = Render::Software::SoftwareRasterizer(settings);
   }
   void set_animation_time(float) noexcept override {}
-  void set_frame_budget(const Render::FrameBudgetConfig &) override {}
+  void set_frame_budget(const Render::FrameBudgetConfig&) override {}
 
-  [[nodiscard]] auto resources() const -> ResourceManager * override {
-    return nullptr;
-  }
-  [[nodiscard]] auto shader(const QString &) const -> Shader * override {
+  [[nodiscard]] auto resources() const -> ResourceManager* override { return nullptr; }
+  [[nodiscard]] auto shader(const QString&) const -> Shader* override {
     return nullptr;
   }
   [[nodiscard]] auto supports_shaders() const -> bool override { return false; }
   [[nodiscard]] auto shader_quality() const -> ShaderQuality override {
     return ShaderQuality::None;
   }
-  [[nodiscard]] auto
-  frame_tracker() const -> const Render::FrameTimeTracker * override {
+  [[nodiscard]] auto frame_tracker() const -> const Render::FrameTimeTracker* override {
     return nullptr;
   }
 
-  void set_settings(const Render::Software::RasterSettings &settings) {
+  void set_settings(const Render::Software::RasterSettings& settings) {
     m_rasterizer = Render::Software::SoftwareRasterizer(settings);
   }
 
-  [[nodiscard]] auto last_frame() const -> const QImage & { return m_image; }
-  [[nodiscard]] auto rasterizer() -> Render::Software::SoftwareRasterizer & {
+  [[nodiscard]] auto last_frame() const -> const QImage& { return m_image; }
+  [[nodiscard]] auto rasterizer() -> Render::Software::SoftwareRasterizer& {
     return m_rasterizer;
   }
 

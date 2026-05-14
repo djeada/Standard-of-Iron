@@ -1,11 +1,13 @@
 #pragma once
 
-#include "troop_type.h"
 #include <QString>
+
 #include <cstdint>
 #include <functional>
 #include <optional>
 #include <string>
+
+#include "troop_type.h"
 
 namespace Game::Units {
 
@@ -85,7 +87,7 @@ inline auto spawn_typeToString(SpawnType type) -> std::string {
   return spawn_typeToQString(type).toStdString();
 }
 
-inline auto try_parse_spawn_type(const QString &value, SpawnType &out) -> bool {
+inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("archer")) {
     out = SpawnType::Archer;
@@ -179,8 +181,7 @@ inline auto try_parse_spawn_type(const QString &value, SpawnType &out) -> bool {
   return false;
 }
 
-inline auto
-spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
+inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnType> {
   if (str == "archer") {
     return SpawnType::Archer;
   }
@@ -406,7 +407,8 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
 } // namespace Game::Units
 
 namespace std {
-template <> struct hash<Game::Units::SpawnType> {
+template <>
+struct hash<Game::Units::SpawnType> {
   auto operator()(Game::Units::SpawnType type) const noexcept -> size_t {
     return hash<std::uint8_t>()(static_cast<std::uint8_t>(type));
   }

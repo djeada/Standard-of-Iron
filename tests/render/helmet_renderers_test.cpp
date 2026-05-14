@@ -1,3 +1,6 @@
+#include <gtest/gtest.h>
+#include <memory>
+
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
@@ -6,8 +9,6 @@
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/palette.h"
 #include "render/submitter.h"
-#include <gtest/gtest.h>
-#include <memory>
 
 using namespace Render::GL;
 
@@ -17,41 +18,52 @@ using MockSubmitter = EquipmentBatch;
 
 class CountingSubmitter : public ISubmitter {
 public:
-  void mesh(Mesh *, const QMatrix4x4 &, const QVector3D &, Texture * = nullptr,
-            float = 1.0F, int = 0) override {
+  void mesh(Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Texture* = nullptr,
+            float = 1.0F,
+            int = 0) override {
     ++draw_count;
   }
 
-  void part(Mesh *, Material *, const QMatrix4x4 &, const QVector3D &,
-            Texture * = nullptr, float = 1.0F, int = 0) override {
+  void part(Mesh*,
+            Material*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Texture* = nullptr,
+            float = 1.0F,
+            int = 0) override {
     ++draw_count;
   }
 
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+  void cylinder(const QVector3D&,
+                const QVector3D&,
+                float,
+                const QVector3D&,
                 float = 1.0F) override {
     ++draw_count;
   }
 
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 
   int draw_count{0};
 };
 
-inline int draw_count_of(const EquipmentBatch &b) {
+inline int draw_count_of(const EquipmentBatch& b) {
   CountingSubmitter submitter;
   submit_equipment_batch(b, submitter);
   return submitter.draw_count;
@@ -171,16 +183,14 @@ TEST_F(HelmetRenderersTest, HeadwrapHandlesZeroHeadRadius) {
 }
 
 TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
-  auto &registry = EquipmentRegistry::instance();
+  auto& registry = EquipmentRegistry::instance();
 
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "carthage_heavy"));
-  auto carthage_heavy =
-      registry.get(EquipmentCategory::Helmet, "carthage_heavy");
+  auto carthage_heavy = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
   ASSERT_NE(carthage_heavy, nullptr);
 
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "carthage_light"));
-  auto carthage_light =
-      registry.get(EquipmentCategory::Helmet, "carthage_light");
+  auto carthage_light = registry.get(EquipmentCategory::Helmet, "carthage_light");
   ASSERT_NE(carthage_light, nullptr);
 
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "headwrap"));
@@ -189,7 +199,7 @@ TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
 }
 
 TEST_F(HelmetRenderersTest, CarthageHeavyHelmetFromRegistryRenders) {
-  auto &registry = EquipmentRegistry::instance();
+  auto& registry = EquipmentRegistry::instance();
   auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
   ASSERT_NE(helmet, nullptr);
 
@@ -199,7 +209,7 @@ TEST_F(HelmetRenderersTest, CarthageHeavyHelmetFromRegistryRenders) {
 }
 
 TEST_F(HelmetRenderersTest, CarthageLightHelmetFromRegistryRenders) {
-  auto &registry = EquipmentRegistry::instance();
+  auto& registry = EquipmentRegistry::instance();
   auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_light");
   ASSERT_NE(helmet, nullptr);
 
@@ -209,7 +219,7 @@ TEST_F(HelmetRenderersTest, CarthageLightHelmetFromRegistryRenders) {
 }
 
 TEST_F(HelmetRenderersTest, HeadwrapFromRegistryRenders) {
-  auto &registry = EquipmentRegistry::instance();
+  auto& registry = EquipmentRegistry::instance();
   auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
   ASSERT_NE(headwrap, nullptr);
 

@@ -1,4 +1,21 @@
 #include "swordsman_renderer.h"
+
+#include <QMatrix4x4>
+#include <QString>
+#include <QVector3D>
+#include <qmatrix4x4.h>
+#include <qstringliteral.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <numbers>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
@@ -8,6 +25,7 @@
 #include "../../../equipment/armor/carthage_shoulder_cover.h"
 #include "../../../equipment/armor/shoulder_cover_archetype.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../equipment/helmets/carthage_heavy_helmet.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
 #include "../../../equipment/weapons/shield_carthage.h"
@@ -30,23 +48,6 @@
 #include "../../renderer_constants.h"
 #include "../equipment_loadout_catalog.h"
 #include "swordsman_style.h"
-#include <numbers>
-#include <qmatrix4x4.h>
-#include <qstringliteral.h>
-#include <qvectornd.h>
-#include <unordered_map>
-
-#include <QMatrix4x4>
-#include <QString>
-#include <QVector3D>
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <optional>
-#include <string>
-#include <string_view>
-
-#include "../../../equipment/equipment_submit.h"
 namespace Render::GL::Carthage {
 
 namespace {
@@ -56,8 +57,7 @@ constexpr float k_swordsman_team_mix_weight = 0.6F;
 constexpr float k_swordsman_style_mix_weight = 0.4F;
 constexpr float k_kneel_depth_multiplier = 0.825F;
 
-auto swordsman_style_registry()
-    -> std::unordered_map<std::string, KnightStyleConfig> & {
+auto swordsman_style_registry() -> std::unordered_map<std::string, KnightStyleConfig>& {
   static std::unordered_map<std::string, KnightStyleConfig> styles;
   return styles;
 }
@@ -71,32 +71,26 @@ void ensure_swordsman_styles_registered() {
 }
 
 static auto compute_carthage_swordsman_sword_config(
-    uint32_t seed, const KnightStyleConfig &style) -> SwordRenderConfig {
+    uint32_t seed, const KnightStyleConfig& style) -> SwordRenderConfig {
   SwordRenderConfig cfg;
   cfg.metal_color = QVector3D(0.72F, 0.73F, 0.78F);
-  cfg.sword_length =
-      0.80F + (Render::GL::hash_01(seed ^ 0xABCDU) - 0.5F) * 0.16F;
-  cfg.sword_width =
-      0.060F + (Render::GL::hash_01(seed ^ 0x7777U) - 0.5F) * 0.010F;
-  cfg.guard_half_width =
-      0.120F + (Render::GL::hash_01(seed ^ 0x3456U) - 0.5F) * 0.020F;
-  cfg.handle_radius =
-      0.016F + (Render::GL::hash_01(seed ^ 0x88AAU) - 0.5F) * 0.003F;
-  cfg.pommel_radius =
-      0.045F + (Render::GL::hash_01(seed ^ 0x19C3U) - 0.5F) * 0.006F;
+  cfg.sword_length = 0.80F + (Render::GL::hash_01(seed ^ 0xABCDU) - 0.5F) * 0.16F;
+  cfg.sword_width = 0.060F + (Render::GL::hash_01(seed ^ 0x7777U) - 0.5F) * 0.010F;
+  cfg.guard_half_width = 0.120F + (Render::GL::hash_01(seed ^ 0x3456U) - 0.5F) * 0.020F;
+  cfg.handle_radius = 0.016F + (Render::GL::hash_01(seed ^ 0x88AAU) - 0.5F) * 0.003F;
+  cfg.pommel_radius = 0.045F + (Render::GL::hash_01(seed ^ 0x19C3U) - 0.5F) * 0.006F;
   cfg.blade_ricasso = Render::Geom::clamp_f(
-      0.14F + (Render::GL::hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F, 0.10F,
-      0.20F);
-  cfg.blade_taper_bias = Render::Geom::clamp01(
-      0.6F + (Render::GL::hash_01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
+      0.14F + (Render::GL::hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F, 0.10F, 0.20F);
+  cfg.blade_taper_bias =
+      Render::Geom::clamp01(0.6F + (Render::GL::hash_01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
   cfg.has_scabbard = (Render::GL::hash_01(seed ^ 0x5CABU) > 0.15F);
   return cfg;
 }
 
 } // namespace
 
-void register_swordsman_style(const std::string &nation_id,
-                              const KnightStyleConfig &style) {
+void register_swordsman_style(const std::string& nation_id,
+                              const KnightStyleConfig& style) {
   swordsman_style_registry()[nation_id] = style;
 }
 
@@ -148,16 +142,18 @@ public:
   }
 
 public:
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
     static const UnitVisualSpec spec = []() {
-      const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-          "troops/carthage/swordsman");
-      const std::array<EquipmentHandle, 5> handles{
-          loadout.helmet_handle, loadout.shield_handle, loadout.shoulder_handle,
-          loadout.armor_handle, loadout.sword_handle};
+      const auto loadout =
+          Render::GL::Nation::resolve_equipment_loadout("troops/carthage/swordsman");
+      const std::array<EquipmentHandle, 5> handles{loadout.helmet_handle,
+                                                   loadout.shield_handle,
+                                                   loadout.shoulder_handle,
+                                                   loadout.armor_handle,
+                                                   loadout.sword_handle};
 
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
@@ -166,30 +162,30 @@ public:
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/swordsman",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+          Render::Creature::ArchetypeRegistry::k_humanoid_base,
+          handles);
       s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
       return s;
     }();
     return spec;
   }
 
-  void get_variant(const DrawContext &ctx, uint32_t seed,
-                   HumanoidVariant &v) const override {
+  void get_variant(const DrawContext& ctx,
+                   uint32_t seed,
+                   HumanoidVariant& v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = make_humanoid_palette(team_tint, seed);
-    auto const &style = resolve_style(ctx);
+    auto const& style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
   }
 
 private:
-  auto
-  resolve_style(const DrawContext &ctx) const -> const KnightStyleConfig & {
+  auto resolve_style(const DrawContext& ctx) const -> const KnightStyleConfig& {
     ensure_swordsman_styles_registered();
-    auto &styles = swordsman_style_registry();
+    auto& styles = swordsman_style_registry();
     std::string nation_id;
     if (ctx.entity != nullptr) {
-      if (auto *unit =
-              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+      if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
       }
     }
@@ -208,12 +204,14 @@ private:
   }
 
 private:
-  void apply_palette_overrides(const KnightStyleConfig &style,
-                               const QVector3D &team_tint,
-                               HumanoidVariant &variant) const {
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target) {
-      target = mix_palette_color(target, override_color, team_tint,
+  void apply_palette_overrides(const KnightStyleConfig& style,
+                               const QVector3D& team_tint,
+                               HumanoidVariant& variant) const {
+    auto apply_color = [&](const std::optional<QVector3D>& override_color,
+                           QVector3D& target) {
+      target = mix_palette_color(target,
+                                 override_color,
+                                 team_tint,
                                  k_swordsman_team_mix_weight,
                                  k_swordsman_style_mix_weight);
     };
@@ -225,11 +223,11 @@ private:
   }
 };
 
-void register_knight_renderer(Render::GL::EntityRendererRegistry &registry) {
+void register_knight_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_swordsman_styles_registered();
   static KnightRenderer const renderer;
   registry.register_renderer("troops/carthage/swordsman",
-                             [](const DrawContext &ctx, ISubmitter &out) {
+                             [](const DrawContext& ctx, ISubmitter& out) {
                                static KnightRenderer const static_renderer;
                                static_renderer.render(ctx, out);
                              });

@@ -1,13 +1,15 @@
 #pragma once
 
-#include "scatter_runtime.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
 
+#include "scatter_runtime.h"
+
 namespace Render::Ground::Scatter {
 
-template <typename Instance, typename Params> struct DirectRendererState {
+template <typename Instance, typename Params>
+struct DirectRendererState {
   std::vector<Instance> instances;
   std::unique_ptr<Render::GL::Buffer> instance_buffer;
   std::size_t instance_count = 0;
@@ -27,7 +29,8 @@ template <typename Instance, typename Params> struct DirectRendererState {
   }
 };
 
-template <typename Instance, typename Params> struct FilteredRendererState {
+template <typename Instance, typename Params>
+struct FilteredRendererState {
   std::vector<Instance> instances;
   std::unique_ptr<Render::GL::Buffer> instance_buffer;
   std::size_t instance_count = 0;
@@ -49,27 +52,31 @@ template <typename Instance, typename Params> struct FilteredRendererState {
   }
 
   [[nodiscard]] auto is_gpu_ready() const -> bool {
-    return is_filtered_gpu_ready(instances, visible_instances, instance_buffer,
-                                 visibility_dirty);
+    return is_filtered_gpu_ready(
+        instances, visible_instances, instance_buffer, visibility_dirty);
   }
 };
 
 template <typename Instance, typename Params>
-void sync_direct_state(DirectRendererState<Instance, Params> &state) {
+void sync_direct_state(DirectRendererState<Instance, Params>& state) {
   state.last_sync_stats = {};
-  state.instance_count =
-      sync_direct_instances(state.instances, state.instance_buffer,
-                            state.instances_dirty, &state.last_sync_stats);
+  state.instance_count = sync_direct_instances(state.instances,
+                                               state.instance_buffer,
+                                               state.instances_dirty,
+                                               &state.last_sync_stats);
 }
 
 template <typename Instance, typename Params, typename PositionAccessor>
-auto sync_filtered_state(FilteredRendererState<Instance, Params> &state,
+auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
                          PositionAccessor position_accessor) -> std::uint32_t {
   state.last_sync_stats = {};
-  state.instance_count = sync_filtered_instances(
-      state.instances, state.visible_instances, state.instance_buffer,
-      state.cached_visibility_version, state.visibility_dirty,
-      position_accessor, &state.last_sync_stats);
+  state.instance_count = sync_filtered_instances(state.instances,
+                                                 state.visible_instances,
+                                                 state.instance_buffer,
+                                                 state.cached_visibility_version,
+                                                 state.visibility_dirty,
+                                                 position_accessor,
+                                                 &state.last_sync_stats);
   return static_cast<std::uint32_t>(state.instance_count);
 }
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../skeleton.h"
-
 #include <deque>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "../skeleton.h"
 
 namespace Render::Creature::Quadruped {
 
@@ -41,12 +41,11 @@ struct TopologyStorage {
   BoneIndex appendage_tip{k_invalid_bone};
 
   [[nodiscard]] auto topology() const noexcept -> SkeletonTopology {
-    return {std::span<const BoneDef>(bones),
-            std::span<const SocketDef>(sockets)};
+    return {std::span<const BoneDef>(bones), std::span<const SocketDef>(sockets)};
   }
 };
 
 [[nodiscard]] auto
-make_topology(const TopologyOptions &options = {}) -> TopologyStorage;
+make_topology(const TopologyOptions& options = {}) -> TopologyStorage;
 
 } // namespace Render::Creature::Quadruped

@@ -11,8 +11,8 @@ Rectangle {
     readonly property var hs: StyleGuide.historical
 
     signal recruit_unit(string unit_type)
-    signal rally_mode_toggled()
-    signal build_tower()
+    signal rally_mode_toggled
+    signal build_tower
     signal builder_construction(string item_type)
 
     function default_production_state() {
@@ -36,18 +36,14 @@ Rectangle {
     function unit_icon_source(unit_type, nation_key) {
         if (typeof StyleGuide === "undefined" || !StyleGuide.unit_icon_sources || !unit_type)
             return "";
-
         var sources = StyleGuide.unit_icon_sources[unit_type];
         if (!sources)
             sources = StyleGuide.unit_icon_sources["default"];
-
         if (typeof sources === "object" && sources !== null) {
             if (nation_key && sources[nation_key])
                 return sources[nation_key];
-
             if (sources["default"])
                 return sources["default"];
-
         } else if (typeof sources === "string") {
             return sources;
         }
@@ -57,35 +53,23 @@ Rectangle {
     function unit_icon_emoji(unit_type) {
         if (unit_type && unit_type.indexOf("commander") !== -1 || unit_type === "roman_legion_organizer" || unit_type === "roman_veteran_consul" || unit_type === "carthage_mercenary_broker" || unit_type === "carthage_cavalry_patron" || unit_type === "carthage_elephant_master")
             return "⚜";
-
         if (typeof StyleGuide !== "undefined" && StyleGuide.unit_icons)
             return StyleGuide.unit_icons[unit_type] || StyleGuide.unit_icons["default"] || "👤";
-
         return "👤";
     }
 
     function commander_options(nation_id) {
         if (nation_id && nation_id.indexOf("carthage") !== -1)
             return ["carthage_mercenary_broker", "carthage_cavalry_patron", "carthage_elephant_master"];
-
         return ["roman_legion_organizer", "roman_veteran_consul", "roman_field_commander"];
     }
 
     function commander_tooltip(info, enabled, limit_reached, queue_full) {
         if (!enabled)
             return limit_reached ? qsTr("Commander limit reached: one commander per player per game") : (queue_full ? qsTr("Queue is full (5/5)") : qsTr("Cannot recruit commander"));
-
-        var lines = [
-            qsTr("%1").arg(info.display_name || "Commander"),
-            qsTr("COMMANDER — one per game"),
-            qsTr("Cost: %1 villagers").arg(info.cost || 300),
-            qsTr("Build time: %1s").arg((info.build_time || 30).toFixed(0)),
-            qsTr("Rally: %1").arg(info.rally_ability || ""),
-            qsTr("Risk: %1").arg(info.death_consequence || "")
-        ];
+        var lines = [qsTr("%1").arg(info.display_name || "Commander"), qsTr("COMMANDER — one per game"), qsTr("Cost: %1 villagers").arg(info.cost || 300), qsTr("Build time: %1s").arg((info.build_time || 30).toFixed(0)), qsTr("Rally: %1").arg(info.rally_ability || ""), qsTr("Risk: %1").arg(info.death_consequence || "")];
         if (info.bonus_summary)
             lines.push(qsTr("Bonus: %1").arg(info.bonus_summary));
-
         lines.push(qsTr("Aura: %1").arg(info.passive_aura || ""));
         return lines.join("\n");
     }
@@ -93,7 +77,6 @@ Rectangle {
     function get_unit_production_info(unit_type, nation_id) {
         if (productionPanel.game_instance && productionPanel.game_instance.get_unit_production_info)
             return productionPanel.game_instance.get_unit_production_info(unit_type, nation_id || "");
-
         return {
             "cost": 50,
             "build_time": 5,
@@ -105,24 +88,20 @@ Rectangle {
     function meter_color(ratio) {
         if (ratio > 0.6)
             return Theme.accent;
-
         if (ratio > 0.3)
             return hs.bronze;
-
         return hs.waxHover;
     }
 
     function recruit_card_color(enabled, hovered) {
         if (!enabled)
             return Theme.bgShade;
-
         return hovered ? hs.bannerNeutral : hs.parchmentDark;
     }
 
     function recruit_card_border(enabled, hovered) {
         if (!enabled)
             return hs.parchmentLight;
-
         return hovered ? hs.bronze : hs.bronzeDeep;
     }
 
@@ -186,14 +165,11 @@ Rectangle {
                                 property string queue_unit_type: {
                                     if (!is_occupied)
                                         return "";
-
                                     if (index === 0 && productionContent.prod.in_progress)
                                         return productionContent.prod.product_type || "archer";
-
                                     var queueIndex = productionContent.prod.in_progress ? index - 1 : index;
                                     if (productionContent.prod.production_queue && productionContent.prod.production_queue[queueIndex])
                                         return productionContent.prod.production_queue[queueIndex];
-
                                     return "archer";
                                 }
 
@@ -235,7 +211,7 @@ Rectangle {
                                     font.bold: true
                                 }
 
-                                SequentialAnimation on opacity {
+                                SequentialAnimation on opacity  {
                                     running: is_producing
                                     loops: Animation.Infinite
 
@@ -250,13 +226,9 @@ Rectangle {
                                         to: 0.7
                                         duration: 800
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
 
                     Text {
@@ -287,14 +259,13 @@ Rectangle {
                             width: {
                                 if (!productionContent.prod.in_progress || productionContent.prod.build_time <= 0)
                                     return 0;
-
                                 var progress = 1 - (Math.max(0, productionContent.prod.time_remaining) / productionContent.prod.build_time);
                                 return Math.max(0, (parent.width - 4) * progress);
                             }
                             color: "#7F9A5F"
                             radius: 8
 
-                            SequentialAnimation on opacity {
+                            SequentialAnimation on opacity  {
                                 running: parent.width > 0
                                 loops: Animation.Infinite
 
@@ -309,9 +280,7 @@ Rectangle {
                                     to: 0.8
                                     duration: 600
                                 }
-
                             }
-
                         }
 
                         Text {
@@ -323,7 +292,6 @@ Rectangle {
                             style: Text.Outline
                             styleColor: "#120D09"
                         }
-
                     }
 
                     Text {
@@ -332,9 +300,7 @@ Rectangle {
                         color: (productionContent.prod.produced_count >= productionContent.prod.max_units) ? "#C0403B" : "#D4B57C"
                         font.pointSize: 8
                     }
-
                 }
-
             }
 
             Rectangle {
@@ -445,7 +411,6 @@ Rectangle {
                                         font.pointSize: 13
                                         font.bold: true
                                     }
-
                                 }
 
                                 MouseArea {
@@ -456,7 +421,6 @@ Rectangle {
                                     onClicked: {
                                         if (parent.is_enabled)
                                             productionPanel.recruit_unit(parent.commander_id);
-
                                     }
                                     cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                     ToolTip.visible: containsMouse
@@ -464,17 +428,13 @@ Rectangle {
                                     ToolTip.delay: 300
                                 }
 
-                                Behavior on scale {
+                                Behavior on scale  {
                                     NumberAnimation {
                                         duration: 100
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
 
                     Grid {
@@ -540,7 +500,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -551,7 +510,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("archer");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -566,27 +524,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -646,7 +600,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -657,7 +610,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("swordsman");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -672,27 +624,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -752,7 +700,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -763,7 +710,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("spearman");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -778,27 +724,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -858,7 +800,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -869,7 +810,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("horse_swordsman");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -884,27 +824,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -964,7 +900,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -975,7 +910,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("horse_archer");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -990,27 +924,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -1070,7 +1000,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -1081,7 +1010,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("horse_spearman");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1096,27 +1024,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -1176,7 +1100,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -1187,7 +1110,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("healer");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1202,27 +1124,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -1282,7 +1200,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -1293,7 +1210,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("builder");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1308,27 +1224,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -1389,7 +1301,6 @@ Rectangle {
                                     font.pointSize: 16
                                     font.bold: true
                                 }
-
                             }
 
                             MouseArea {
@@ -1400,7 +1311,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.recruit_unit("elephant");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1415,33 +1325,26 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             Rectangle {
@@ -1547,7 +1450,6 @@ Rectangle {
                                 font.pointSize: 16
                                 font.bold: true
                             }
-
                         }
 
                         MouseArea {
@@ -1558,18 +1460,14 @@ Rectangle {
                             onClicked: {
                                 if (parent.is_enabled)
                                     productionPanel.recruit_unit("civilian");
-
                             }
                             cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                             ToolTip.visible: containsMouse
                             ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 families\nBuild time: %3s\nRight-click on a friendly barracks to send civilians in and transfer manpower.").arg(parent.unit_info.display_name || "Civilian").arg(parent.unit_info.cost || 8).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!parent.has_capacity ? qsTr("This home already committed its 3 civilians") : (!parent.has_families ? qsTr("Not enough families available") : qsTr("Cannot recruit")))
                             ToolTip.delay: 300
                         }
-
                     }
-
                 }
-
             }
 
             Rectangle {
@@ -1629,7 +1527,6 @@ Rectangle {
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
-
                     }
 
                     Text {
@@ -1639,9 +1536,7 @@ Rectangle {
                         font.pointSize: 8
                         font.italic: true
                     }
-
                 }
-
             }
 
             Item {
@@ -1667,11 +1562,11 @@ Rectangle {
                     id: builderProductionContent
 
                     property var builder_prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_builder_production_state) ? productionPanel.game_instance.get_selected_builder_production_state() : {
-                        "in_progress": false,
-                        "build_time": 10,
-                        "time_remaining": 0,
-                        "product_type": ""
-                    })
+                            "in_progress": false,
+                            "build_time": 10,
+                            "time_remaining": 0,
+                            "product_type": ""
+                        })
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -1701,7 +1596,6 @@ Rectangle {
                             font.pointSize: 9
                             font.bold: true
                         }
-
                     }
 
                     Text {
@@ -1729,14 +1623,13 @@ Rectangle {
                             width: {
                                 if (!builderProductionContent.builder_prod.in_progress || builderProductionContent.builder_prod.build_time <= 0)
                                     return 0;
-
                                 var progress = 1 - (Math.max(0, builderProductionContent.builder_prod.time_remaining) / builderProductionContent.builder_prod.build_time);
                                 return Math.max(0, (parent.width - 4) * progress);
                             }
                             color: "#7F9A5F"
                             radius: 8
 
-                            SequentialAnimation on opacity {
+                            SequentialAnimation on opacity  {
                                 running: parent.width > 0
                                 loops: Animation.Infinite
 
@@ -1751,9 +1644,7 @@ Rectangle {
                                     to: 0.8
                                     duration: 600
                                 }
-
                             }
-
                         }
 
                         Text {
@@ -1765,7 +1656,6 @@ Rectangle {
                             style: Text.Outline
                             styleColor: "#120D09"
                         }
-
                     }
 
                     Text {
@@ -1835,7 +1725,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.builder_construction("catapult");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1850,27 +1739,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -1925,7 +1810,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.builder_construction("ballista");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1940,27 +1824,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -2015,7 +1895,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.builder_construction("defense_tower");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2030,27 +1909,23 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
 
                         Rectangle {
@@ -2105,7 +1980,6 @@ Rectangle {
                                 onClicked: {
                                     if (parent.is_enabled)
                                         productionPanel.builder_construction("home");
-
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -2120,33 +1994,26 @@ Rectangle {
                                 radius: parent.radius
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: 150
                                 }
-
                             }
 
-                            Behavior on scale {
+                            Behavior on scale  {
                                 NumberAnimation {
                                     duration: 100
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             Item {
@@ -2183,13 +2050,8 @@ Rectangle {
                         color: Theme.textSubLite
                         font.pointSize: 9
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }

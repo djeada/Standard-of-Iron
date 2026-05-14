@@ -1,5 +1,15 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <gtest/gtest.h>
+#include <limits>
+#include <utility>
+
+#include "render/entity/registry.h"
+#include "render/entity/renderer_constants.h"
+#include "render/equipment/equipment_submit.h"
 #include "render/equipment/weapons/bow_renderer.h"
 #include "render/equipment/weapons/quiver_renderer.h"
 #include "render/equipment/weapons/roman_scutum.h"
@@ -7,19 +17,9 @@
 #include "render/equipment/weapons/shield_renderer.h"
 #include "render/equipment/weapons/spear_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
-
-#include "render/entity/registry.h"
-#include "render/entity/renderer_constants.h"
-#include "render/equipment/equipment_submit.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/skeleton.h"
 #include "render/palette.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <gtest/gtest.h>
-#include <limits>
-#include <utility>
 
 namespace {
 
@@ -84,31 +84,38 @@ auto make_ctx() -> DrawContext {
 
 class CountingSubmitter : public ISubmitter {
 public:
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture * = nullptr, float = 1.0F, int = 0) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture* = nullptr,
+            float = 1.0F,
+            int = 0) override {
     ++draw_count;
   }
 
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+  void cylinder(const QVector3D&,
+                const QVector3D&,
+                float,
+                const QVector3D&,
                 float = 1.0F) override {
     ++draw_count;
   }
 
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float = 1.0F) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float = 1.0F) override {
+  }
 
   int draw_count{0};
 };
@@ -121,7 +128,7 @@ struct AABB {
                -std::numeric_limits<float>::infinity(),
                -std::numeric_limits<float>::infinity()};
 
-  void include(const QVector3D &p) {
+  void include(const QVector3D& p) {
     mn.setX(std::min(mn.x(), p.x()));
     mn.setY(std::min(mn.y(), p.y()));
     mn.setZ(std::min(mn.z(), p.z()));
@@ -131,13 +138,13 @@ struct AABB {
   }
 };
 
-inline int draw_count_of(const EquipmentBatch &batch) {
+inline int draw_count_of(const EquipmentBatch& batch) {
   CountingSubmitter submitter;
   submit_equipment_batch(batch, submitter);
   return submitter.draw_count;
 }
 
-auto hash_batch(const EquipmentBatch &b) -> std::size_t {
+auto hash_batch(const EquipmentBatch& b) -> std::size_t {
   std::size_t h = 0;
   auto mix = [&h](std::size_t v) {
     h ^= v + 0x9E3779B97F4A7C15ULL + (h << 6U) + (h >> 2U);
@@ -147,18 +154,18 @@ auto hash_batch(const EquipmentBatch &b) -> std::size_t {
     std::memcpy(&u, &v, sizeof(u));
     mix(u);
   };
-  auto mix_v = [&mix_f](const QVector3D &v) {
+  auto mix_v = [&mix_f](const QVector3D& v) {
     mix_f(v.x());
     mix_f(v.y());
     mix_f(v.z());
   };
-  auto mix_m = [&mix_f](const QMatrix4x4 &m) {
+  auto mix_m = [&mix_f](const QMatrix4x4& m) {
     for (int i = 0; i < 16; ++i) {
       mix_f(m.constData()[i]);
     }
   };
   mix(b.meshes.size());
-  for (const auto &p : b.meshes) {
+  for (const auto& p : b.meshes) {
     mix(reinterpret_cast<std::uintptr_t>(p.mesh));
     mix_m(p.model);
     mix_v(p.color);
@@ -166,7 +173,7 @@ auto hash_batch(const EquipmentBatch &b) -> std::size_t {
     mix(static_cast<std::size_t>(p.material_id));
   }
   mix(b.cylinders.size());
-  for (const auto &c : b.cylinders) {
+  for (const auto& c : b.cylinders) {
     mix_v(c.start);
     mix_v(c.end);
     mix_f(c.radius);
@@ -174,7 +181,7 @@ auto hash_batch(const EquipmentBatch &b) -> std::size_t {
     mix_f(c.alpha);
   }
   mix(b.archetypes.size());
-  for (const auto &a : b.archetypes) {
+  for (const auto& a : b.archetypes) {
     mix(reinterpret_cast<std::uintptr_t>(a.archetype));
     mix_m(a.world);
     mix(static_cast<std::size_t>(a.palette_count));
@@ -187,15 +194,14 @@ auto hash_batch(const EquipmentBatch &b) -> std::size_t {
   return h;
 }
 
-auto archetype_local_aabb(const Render::GL::RenderArchetype &archetype)
-    -> AABB {
+auto archetype_local_aabb(const Render::GL::RenderArchetype& archetype) -> AABB {
   AABB box;
-  const auto &slice = archetype.lods[0];
-  for (const auto &draw : slice.draws) {
+  const auto& slice = archetype.lods[0];
+  for (const auto& draw : slice.draws) {
     if (draw.mesh == nullptr) {
       continue;
     }
-    for (const auto &v : draw.mesh->get_vertices()) {
+    for (const auto& v : draw.mesh->get_vertices()) {
       QVector3D const p{v.position[0], v.position[1], v.position[2]};
       box.include(draw.local_model.map(p));
     }
@@ -203,20 +209,19 @@ auto archetype_local_aabb(const Render::GL::RenderArchetype &archetype)
   return box;
 }
 
-auto archetype_world_aabb(const Render::GL::EquipmentArchetypePrim &prim)
-    -> AABB {
+auto archetype_world_aabb(const Render::GL::EquipmentArchetypePrim& prim) -> AABB {
   AABB box;
   if (prim.archetype == nullptr) {
     return box;
   }
 
-  const auto &slice = prim.archetype->lods[0];
-  for (const auto &draw : slice.draws) {
+  const auto& slice = prim.archetype->lods[0];
+  for (const auto& draw : slice.draws) {
     if (draw.mesh == nullptr) {
       continue;
     }
     QMatrix4x4 const model = prim.world * draw.local_model;
-    for (const auto &v : draw.mesh->get_vertices()) {
+    for (const auto& v : draw.mesh->get_vertices()) {
       QVector3D const p{v.position[0], v.position[1], v.position[2]};
       box.include(model.map(p));
     }
@@ -224,8 +229,9 @@ auto archetype_world_aabb(const Render::GL::EquipmentArchetypePrim &prim)
   return box;
 }
 
-auto project_aabb_on_axis(const AABB &box, const QVector3D &origin,
-                          const QVector3D &axis) -> std::pair<float, float> {
+auto project_aabb_on_axis(const AABB& box,
+                          const QVector3D& origin,
+                          const QVector3D& axis) -> std::pair<float, float> {
   std::pair<float, float> range{std::numeric_limits<float>::infinity(),
                                 -std::numeric_limits<float>::infinity()};
   for (int xi = 0; xi < 2; ++xi) {
@@ -244,8 +250,7 @@ auto project_aabb_on_axis(const AABB &box, const QVector3D &origin,
 }
 
 template <class Renderer, class Cfg>
-void run_stateless_battery(Renderer &renderer, const Cfg &cfg_a,
-                           const Cfg &cfg_b) {
+void run_stateless_battery(Renderer& renderer, const Cfg& cfg_a, const Cfg& cfg_b) {
   const auto frames = make_frames();
   const auto anim = make_anim();
   const auto palette = make_palette();
@@ -294,8 +299,7 @@ TEST(StatelessWeaponRenderers, SwordUsesArchetypePath) {
 
   EquipmentBatch via_submit;
   EquipmentBatch via_render;
-  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim,
-                        via_submit);
+  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim, via_submit);
   SwordRenderer renderer;
   renderer.render(ctx, frames, palette, anim, via_render);
 
@@ -316,8 +320,7 @@ TEST(StatelessWeaponRenderers, SwordTrailUsesArchetypePath) {
 
   EquipmentBatch via_submit;
   EquipmentBatch via_render;
-  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim,
-                        via_submit);
+  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim, via_submit);
   SwordRenderer renderer;
   renderer.render(ctx, frames, palette, anim, via_render);
 
@@ -352,10 +355,8 @@ TEST(StatelessWeaponRenderers, ShieldUsesArchetypePath) {
   ShieldRenderConfig cross_config;
   cross_config.has_cross_decal = true;
 
-  ShieldRenderer::submit(ShieldRenderConfig{}, ctx, frames, palette, anim,
-                         base_submit);
-  ShieldRenderer::submit(cross_config, ctx, frames, palette, anim,
-                         cross_submit);
+  ShieldRenderer::submit(ShieldRenderConfig{}, ctx, frames, palette, anim, base_submit);
+  ShieldRenderer::submit(cross_config, ctx, frames, palette, anim, cross_submit);
   ShieldRenderer renderer;
   renderer.render(ctx, frames, palette, anim, via_render);
 
@@ -414,8 +415,7 @@ TEST(StatelessWeaponRenderers, SpearUsesArchetypePath) {
 
   EquipmentBatch via_submit;
   EquipmentBatch via_render;
-  SpearRenderer::submit(SpearRenderConfig{}, ctx, frames, palette, anim,
-                        via_submit);
+  SpearRenderer::submit(SpearRenderConfig{}, ctx, frames, palette, anim, via_submit);
   SpearRenderer renderer;
   renderer.render(ctx, frames, palette, anim, via_render);
 
@@ -526,8 +526,7 @@ TEST(StatelessWeaponRenderers, BowHoldTiltsUpperLimbForward) {
   BowRenderer::submit(BowRenderConfig{}, ctx, frames, palette, anim, batch);
 
   ASSERT_FALSE(batch.archetypes.empty());
-  QVector3D const bow_up =
-      batch.archetypes.front().world.column(1).toVector3D();
+  QVector3D const bow_up = batch.archetypes.front().world.column(1).toVector3D();
   EXPECT_GT(bow_up.z(), 0.45F);
   EXPECT_GT(bow_up.y(), 0.45F);
 }
@@ -571,10 +570,10 @@ TEST(StatelessWeaponRenderers, CarthageShieldUsesArchetypePath) {
 
   EquipmentBatch base_submit;
   EquipmentBatch cavalry_submit;
-  CarthageShieldRenderer::submit(CarthageShieldConfig{1.0F}, ctx, frames,
-                                 palette, anim, base_submit);
-  CarthageShieldRenderer::submit(CarthageShieldConfig{0.84F}, ctx, frames,
-                                 palette, anim, cavalry_submit);
+  CarthageShieldRenderer::submit(
+      CarthageShieldConfig{1.0F}, ctx, frames, palette, anim, base_submit);
+  CarthageShieldRenderer::submit(
+      CarthageShieldConfig{0.84F}, ctx, frames, palette, anim, cavalry_submit);
 
   CarthageShieldRenderer renderer;
   EquipmentBatch via_render;
@@ -595,8 +594,8 @@ TEST(StatelessWeaponRenderers, CarthageShieldOffsetsFromHandOrigin) {
   const auto ctx = make_ctx();
 
   EquipmentBatch batch;
-  CarthageShieldRenderer::submit(CarthageShieldConfig{1.0F}, ctx, frames,
-                                 palette, anim, batch);
+  CarthageShieldRenderer::submit(
+      CarthageShieldConfig{1.0F}, ctx, frames, palette, anim, batch);
 
   ASSERT_EQ(batch.archetypes.size(), 1U);
   ASSERT_NE(batch.archetypes.front().archetype, nullptr);
@@ -604,8 +603,8 @@ TEST(StatelessWeaponRenderers, CarthageShieldOffsetsFromHandOrigin) {
       frames.hand_l, Render::Humanoid::HumanoidSocket::GripL);
   const AABB world_box = archetype_world_aabb(batch.archetypes.front());
   QVector3D const world_center = (world_box.mn + world_box.mx) * 0.5F;
-  const float side_offset = QVector3D::dotProduct(world_center - grip.origin,
-                                                  grip.right.normalized());
+  const float side_offset =
+      QVector3D::dotProduct(world_center - grip.origin, grip.right.normalized());
   EXPECT_GT(std::abs(side_offset), 0.08F);
   const auto [min_side, max_side] =
       project_aabb_on_axis(world_box, grip.origin, grip.right.normalized());
@@ -627,8 +626,8 @@ TEST(StatelessWeaponRenderers, RomanScutumUsesArchetypePath) {
 
   EquipmentBatch via_submit;
   EquipmentBatch via_render;
-  RomanScutumRenderer::submit(RomanScutumConfig{}, ctx, frames, palette, anim,
-                              via_submit);
+  RomanScutumRenderer::submit(
+      RomanScutumConfig{}, ctx, frames, palette, anim, via_submit);
   RomanScutumRenderer renderer;
   renderer.render(ctx, frames, palette, anim, via_render);
 
@@ -646,8 +645,7 @@ TEST(StatelessWeaponRenderers, RomanScutumKeepsModerateStandOffFromGrip) {
   const auto ctx = make_ctx();
 
   EquipmentBatch batch;
-  RomanScutumRenderer::submit(RomanScutumConfig{}, ctx, frames, palette, anim,
-                              batch);
+  RomanScutumRenderer::submit(RomanScutumConfig{}, ctx, frames, palette, anim, batch);
 
   ASSERT_EQ(batch.archetypes.size(), 1U);
   ASSERT_NE(batch.archetypes.front().archetype, nullptr);
@@ -681,8 +679,8 @@ TEST(StatelessWeaponRenderers, BaseConfigPreservedAcrossSubmitPaths) {
 
   EquipmentBatch via_submit;
   EquipmentBatch via_render;
-  ShieldRenderer::submit(renderer.base_config(), ctx, frames, palette, anim,
-                         via_submit);
+  ShieldRenderer::submit(
+      renderer.base_config(), ctx, frames, palette, anim, via_submit);
   renderer.render(ctx, frames, palette, anim, via_render);
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
@@ -712,10 +710,8 @@ TEST(StatelessWeaponRenderers, BowDefaultsHonouredViaBaseConfig) {
 
   EquipmentBatch r_submit;
   EquipmentBatch c_submit;
-  BowRenderer::submit(roman.base_config(), ctx, frames, palette, anim,
-                      r_submit);
-  BowRenderer::submit(carthage.base_config(), ctx, frames, palette, anim,
-                      c_submit);
+  BowRenderer::submit(roman.base_config(), ctx, frames, palette, anim, r_submit);
+  BowRenderer::submit(carthage.base_config(), ctx, frames, palette, anim, c_submit);
 
   EXPECT_EQ(hash_batch(r_legacy), hash_batch(r_submit));
   EXPECT_EQ(hash_batch(c_legacy), hash_batch(c_submit));

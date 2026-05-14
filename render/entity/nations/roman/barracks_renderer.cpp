@@ -1,4 +1,10 @@
 #include "barracks_renderer.h"
+
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <algorithm>
+
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
 #include "../../../geom/flag.h"
@@ -19,10 +25,6 @@
 #include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <algorithm>
 
 namespace Render::GL::Roman {
 namespace {
@@ -45,36 +47,56 @@ struct RomanPalette {
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
 
-inline auto make_palette(const QVector3D &team) -> RomanPalette {
+inline auto make_palette(const QVector3D& team) -> RomanPalette {
   RomanPalette p;
   p.team = clamp_vec_01(team);
-  p.team_trim = clamp_vec_01(
-      QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
+  p.team_trim =
+      clamp_vec_01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
   return p;
 }
 
-inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
-                     const QMatrix4x4 &model, const QVector3D &pos,
-                     const QVector3D &size, const QVector3D &color) {
+inline void draw_box(ISubmitter& out,
+                     Mesh* unit,
+                     Texture* white,
+                     const QMatrix4x4& model,
+                     const QVector3D& pos,
+                     const QVector3D& size,
+                     const QVector3D& color) {
   submit_building_box(out, unit, white, model, pos, size, color);
 }
 
-inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
-                     const QVector3D &a, const QVector3D &b, float r,
-                     const QVector3D &color, Texture *white) {
+inline void draw_cyl(ISubmitter& out,
+                     const QMatrix4x4& model,
+                     const QVector3D& a,
+                     const QVector3D& b,
+                     float r,
+                     const QVector3D& color,
+                     Texture* white) {
   submit_building_cylinder(out, model, a, b, r, color, white);
 }
 
-void draw_static_structure(const DrawContext &p, ISubmitter &out);
-void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c);
-void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                    Texture *white, const RomanPalette &c, BuildingState state);
-void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c, BuildingState state);
+void draw_static_structure(const DrawContext& p, ISubmitter& out);
+void draw_platform(const DrawContext& p,
+                   ISubmitter& out,
+                   Mesh* unit,
+                   Texture* white,
+                   const RomanPalette& c);
+void draw_colonnade(const DrawContext& p,
+                    ISubmitter& out,
+                    Mesh* unit,
+                    Texture* white,
+                    const RomanPalette& c,
+                    BuildingState state);
+void draw_terrace(const DrawContext& p,
+                  ISubmitter& out,
+                  Mesh* unit,
+                  Texture* white,
+                  const RomanPalette& c,
+                  BuildingState state);
 
-auto build_barracks_archetype(BuildingState state, Mesh *unit,
-                              Texture *white) -> RenderArchetype {
+auto build_barracks_archetype(BuildingState state,
+                              Mesh* unit,
+                              Texture* white) -> RenderArchetype {
   TemplateRecorder recorder;
   recorder.reset(96);
 
@@ -90,34 +112,41 @@ auto build_barracks_archetype(BuildingState state, Mesh *unit,
                                                 recorder.take_commands());
 }
 
-auto barracks_archetype(BuildingState state, Mesh *unit,
-                        Texture *white) -> const RenderArchetype & {
+auto barracks_archetype(BuildingState state,
+                        Mesh* unit,
+                        Texture* white) -> const RenderArchetype& {
   static const BuildingArchetypeSet k_set =
-      build_stateful_building_archetype_set(
-          [unit, white](BuildingState current_state) {
-            return build_barracks_archetype(current_state, unit, white);
-          });
+      build_stateful_building_archetype_set([unit, white](BuildingState current_state) {
+        return build_barracks_archetype(current_state, unit, white);
+      });
   return k_set.for_state(state);
 }
 
-void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c) {
+void draw_platform(const DrawContext& p,
+                   ISubmitter& out,
+                   Mesh* unit,
+                   Texture* white,
+                   const RomanPalette& c) {
 
   for (float x = -1.5F; x <= 1.5F; x += 0.35F) {
     for (float z = -1.3F; z <= 1.3F; z += 0.35F) {
       if (fabsf(x) > 0.6F || fabsf(z) > 0.5F) {
-        draw_box(out, unit, white, p.model, QVector3D(x, 0.21F, z),
-                 QVector3D(0.15F, 0.01F, 0.15F), c.terracotta);
+        draw_box(out,
+                 unit,
+                 white,
+                 p.model,
+                 QVector3D(x, 0.21F, z),
+                 QVector3D(0.15F, 0.01F, 0.15F),
+                 c.terracotta);
       }
     }
   }
 }
 
-void draw_static_structure(const DrawContext &p, ISubmitter &out) {
+void draw_static_structure(const DrawContext& p, ISubmitter& out) {
   using namespace Render::RigDSL::Barracks;
 
-  constexpr std::size_t k_anchor_count =
-      static_cast<std::size_t>(Goods_Amp3Top) + 1U;
+  constexpr std::size_t k_anchor_count = static_cast<std::size_t>(Goods_Amp3Top) + 1U;
   Render::RigDSL::StaticAnchorResolver<k_anchor_count> anchors;
 
   auto set = [&](Render::RigDSL::AnchorId id, float x, float y, float z) {
@@ -176,8 +205,11 @@ void draw_static_structure(const DrawContext &p, ISubmitter &out) {
   Render::RigDSL::render_rig(k_rig, ictx, out);
 }
 
-void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                    Texture *white, const RomanPalette &c,
+void draw_colonnade(const DrawContext& p,
+                    ISubmitter& out,
+                    Mesh* unit,
+                    Texture* white,
+                    const RomanPalette& c,
                     BuildingState state) {
   float const col_height = 1.6F;
   float const col_radius = 0.10F;
@@ -195,92 +227,167 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 
   for (int i = 0; i < num_columns; ++i) {
-    float const x =
-        -1.25F + float(i) * (num_columns > 1 ? FRONT_COLUMN_SPACING_RANGE /
-                                                   (num_columns - 1)
-                                             : 0.0F);
+    float const x = -1.25F + float(i) * (num_columns > 1 ? FRONT_COLUMN_SPACING_RANGE /
+                                                               (num_columns - 1)
+                                                         : 0.0F);
     float const z = 1.4F;
 
-    draw_box(out, unit, white, p.model, QVector3D(x, 0.25F, z),
-             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(x, 0.25F, z),
+             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F),
+             c.marble);
 
-    draw_cyl(out, p.model, QVector3D(x, 0.2F, z),
-             QVector3D(x, 0.2F + col_height * height_multiplier, z), col_radius,
-             c.limestone, white);
+    draw_cyl(out,
+             p.model,
+             QVector3D(x, 0.2F, z),
+             QVector3D(x, 0.2F + col_height * height_multiplier, z),
+             col_radius,
+             c.limestone,
+             white);
 
-    draw_box(out, unit, white, p.model,
+    draw_box(out,
+             unit,
+             white,
+             p.model,
              QVector3D(x, 0.2F + col_height * height_multiplier + 0.05F, z),
-             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
+             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F),
+             c.marble);
 
     if (state != BuildingState::Destroyed) {
-      draw_box(out, unit, white, p.model,
+      draw_box(out,
+               unit,
+               white,
+               p.model,
                QVector3D(x, 0.2F + col_height * height_multiplier + 0.12F, z),
-               QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F), c.gold);
+               QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F),
+               c.gold);
     }
   }
 
   int side_columns = (state == BuildingState::Destroyed) ? 2 : 3;
   for (int i = 0; i < side_columns; ++i) {
-    float const z =
-        -1.0F + float(i) * (side_columns > 1
-                                ? SIDE_COLUMN_SPACING_RANGE / (side_columns - 1)
-                                : 0.0F);
+    float const z = -1.0F + float(i) * (side_columns > 1 ? SIDE_COLUMN_SPACING_RANGE /
+                                                               (side_columns - 1)
+                                                         : 0.0F);
 
     float const x_left = -1.6F;
-    draw_box(out, unit, white, p.model, QVector3D(x_left, 0.25F, z),
-             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
-    draw_cyl(out, p.model, QVector3D(x_left, 0.2F, z),
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(x_left, 0.25F, z),
+             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F),
+             c.marble);
+    draw_cyl(out,
+             p.model,
+             QVector3D(x_left, 0.2F, z),
              QVector3D(x_left, 0.2F + col_height * height_multiplier, z),
-             col_radius, c.limestone, white);
-    draw_box(
-        out, unit, white, p.model,
-        QVector3D(x_left, 0.2F + col_height * height_multiplier + 0.05F, z),
-        QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
+             col_radius,
+             c.limestone,
+             white);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(x_left, 0.2F + col_height * height_multiplier + 0.05F, z),
+             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F),
+             c.marble);
 
     float const x_right = 1.6F;
-    draw_box(out, unit, white, p.model, QVector3D(x_right, 0.25F, z),
-             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F), c.marble);
-    draw_cyl(out, p.model, QVector3D(x_right, 0.2F, z),
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(x_right, 0.25F, z),
+             QVector3D(col_radius * 1.2F, 0.05F, col_radius * 1.2F),
+             c.marble);
+    draw_cyl(out,
+             p.model,
+             QVector3D(x_right, 0.2F, z),
              QVector3D(x_right, 0.2F + col_height * height_multiplier, z),
-             col_radius, c.limestone, white);
-    draw_box(
-        out, unit, white, p.model,
-        QVector3D(x_right, 0.2F + col_height * height_multiplier + 0.05F, z),
-        QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F), c.marble);
+             col_radius,
+             c.limestone,
+             white);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(x_right, 0.2F + col_height * height_multiplier + 0.05F, z),
+             QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F),
+             c.marble);
   }
 }
 
-void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c, BuildingState state) {
+void draw_terrace(const DrawContext& p,
+                  ISubmitter& out,
+                  Mesh* unit,
+                  Texture* white,
+                  const RomanPalette& c,
+                  BuildingState state) {
 
   if (state == BuildingState::Destroyed) {
     return;
   }
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.05F, 0.0F),
-           QVector3D(1.7F, 0.08F, 1.5F), c.marble);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 2.05F, 0.0F),
+           QVector3D(1.7F, 0.08F, 1.5F),
+           c.marble);
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.12F, 1.45F),
-           QVector3D(1.65F, 0.05F, 0.05F), c.gold);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 2.12F, 1.45F),
+           QVector3D(1.65F, 0.05F, 0.05F),
+           c.gold);
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.18F, -0.2F),
-           QVector3D(1.5F, 0.04F, 1.0F), c.terracotta);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 2.18F, -0.2F),
+           QVector3D(1.5F, 0.04F, 1.0F),
+           c.terracotta);
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.28F, -0.65F),
-           QVector3D(1.45F, 0.06F, 0.05F), c.limestone);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 2.28F, -0.65F),
+           QVector3D(1.45F, 0.06F, 0.05F),
+           c.limestone);
 
   for (float x : {-1.4F, 1.4F}) {
-    draw_box(out, unit, white, p.model, QVector3D(x, 2.35F, -0.65F),
-             QVector3D(0.08F, 0.08F, 0.08F), c.gold);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(x, 2.35F, -0.65F),
+             QVector3D(0.08F, 0.08F, 0.08F),
+             c.gold);
   }
 }
 
-void draw_phoenician_banner(
-    const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
-    const RomanPalette &c,
-    const BarracksFlagRenderer::ClothBannerResources *cloth) {
+void draw_phoenician_banner(const DrawContext& p,
+                            ISubmitter& out,
+                            Mesh* unit,
+                            Texture* white,
+                            const RomanPalette& c,
+                            const BarracksFlagRenderer::ClothBannerResources* cloth) {
   BarracksFlagRenderer::draw_hanging_banner(
-      p, out, unit, white, c.team, c.team_trim,
+      p,
+      out,
+      unit,
+      white,
+      c.team,
+      c.team_trim,
       {.pole_base = QVector3D(0.0F, 0.0F, -2.0F),
        .pole_height = 3.0F,
        .pole_radius = 0.045F,
@@ -301,9 +408,11 @@ void draw_phoenician_banner(
       cloth);
 }
 
-void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
-                     const RomanPalette &c,
-                     const BarracksFlagRenderer::ClothBannerResources *cloth) {
+void draw_rally_flag(const DrawContext& p,
+                     ISubmitter& out,
+                     Texture* white,
+                     const RomanPalette& c,
+                     const BarracksFlagRenderer::ClothBannerResources* cloth) {
   BarracksFlagRenderer::FlagColors colors{.team = c.team,
                                           .team_trim = c.team_trim,
                                           .timber = c.cedar,
@@ -312,19 +421,19 @@ void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors, cloth);
 }
 
-void draw_barracks(const DrawContext &p, ISubmitter &out) {
+void draw_barracks(const DrawContext& p, ISubmitter& out) {
   if (!p.resources || !p.entity) {
     return;
   }
 
-  auto *t = p.entity->get_component<Engine::Core::TransformComponent>();
-  auto *r = p.entity->get_component<Engine::Core::RenderableComponent>();
+  auto* t = p.entity->get_component<Engine::Core::TransformComponent>();
+  auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
   if (!t || !r) {
     return;
   }
 
-  Mesh *unit = p.resources->unit();
-  Texture *white = p.resources->white();
+  Mesh* unit = p.resources->unit();
+  Texture* white = p.resources->white();
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
   RomanPalette const c = make_palette(team);
 
@@ -338,14 +447,13 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
       out, p, barracks_archetype(resolve_building_state(p), unit, white));
   draw_phoenician_banner(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c, &cloth);
-  draw_building_health_bar(out, p,
-                           BuildingHealthBarStyle{1.4F, 0.10F, 2.75F, true});
+  draw_building_health_bar(out, p, BuildingHealthBarStyle{1.4F, 0.10F, 2.75F, true});
   draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.6F, 2.2F});
 }
 
 } // namespace
 
-void register_barracks_renderer(Render::GL::EntityRendererRegistry &registry) {
+void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
   register_building_renderer(registry, "roman", "barracks", draw_barracks);
 }
 

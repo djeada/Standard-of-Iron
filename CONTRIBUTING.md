@@ -53,15 +53,28 @@ make format
 
 This will:
 
-1. Strip comments from C/C++ files
+1. Apply clang-tidy fixes to changed C/C++ files
 2. Format C/C++ files with clang-format
 3. Format QML files with qmlformat (if available)
 4. Format shader files with clang-format
+5. Format Python files with black (if available)
+
+Comment stripping is intentionally separate because it is destructive:
+
+```bash
+make format-strip-comments
+```
 
 Check if code is properly formatted (CI-friendly):
 
 ```bash
 make format-check
+```
+
+CI uses a faster changed-file variant to keep pull request builds responsive:
+
+```bash
+make format-check-ci
 ```
 
 ### File Types Covered

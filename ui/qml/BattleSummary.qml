@@ -19,20 +19,17 @@ Rectangle {
         visible = false;
         if (on_close)
             on_close();
-
     }
 
     function return_to_main_menu() {
         if (on_return_to_main_menu)
             on_return_to_main_menu();
-
     }
 
     function build_player_list() {
         playerBannersModel.clear();
         if (typeof game === 'undefined')
-            return ;
-
+            return;
         var owners = game.owner_info;
         var localOwnerId = -1;
         var localTeamId = -1;
@@ -65,42 +62,39 @@ Rectangle {
                 var bannerColor = get_banner_color(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);
                 if (owner.type === "AI")
                     aiColorIndex++;
-
                 var score = calculate_score(stats);
                 var playTimeFormatted = format_play_time(stats.playTimeSec);
                 playerBanners.push({
-                    "owner_id": owner.id,
-                    "name": owner.name,
-                    "isLocalPlayer": isLocalPlayer,
-                    "isAI": owner.type === "AI",
-                    "isWinner": isWinner,
-                    "bannerColor": bannerColor,
-                    "kills": stats.enemiesKilled,
-                    "losses": stats.losses,
-                    "unitsTrained": stats.troopsRecruited,
-                    "villages": stats.barracksOwned,
-                    "playTime": playTimeFormatted,
-                    "score": score
-                });
+                        "owner_id": owner.id,
+                        "name": owner.name,
+                        "isLocalPlayer": isLocalPlayer,
+                        "isAI": owner.type === "AI",
+                        "isWinner": isWinner,
+                        "bannerColor": bannerColor,
+                        "kills": stats.enemiesKilled,
+                        "losses": stats.losses,
+                        "unitsTrained": stats.troopsRecruited,
+                        "villages": stats.barracksOwned,
+                        "playTime": playTimeFormatted,
+                        "score": score
+                    });
             }
         }
-        playerBanners.sort(function(a, b) {
-            if (a.isLocalPlayer)
-                return -1;
-
-            if (b.isLocalPlayer)
-                return 1;
-
-            return 0;
-        });
-        for (var k = 0; k < playerBanners.length; k++) playerBannersModel.append(playerBanners[k])
+        playerBanners.sort(function (a, b) {
+                if (a.isLocalPlayer)
+                    return -1;
+                if (b.isLocalPlayer)
+                    return 1;
+                return 0;
+            });
+        for (var k = 0; k < playerBanners.length; k++)
+            playerBannersModel.append(playerBanners[k]);
     }
 
     function get_banner_color(owner_id, isLocal, isAI, aiIndex) {
         var colors = ["#8F2F2A", "#496C4A", "#9A7A38", "#536D7A", "#6A5C7D", "#6F7F4B"];
         if (isLocal)
             return colors[0];
-
         if (isAI) {
             var idx = aiIndex % (colors.length - 1);
             return colors[idx + 1];
@@ -189,7 +183,6 @@ Rectangle {
                                 radius: 4
                                 color: Theme.accentBright
                             }
-
                         }
 
                         Rectangle {
@@ -285,7 +278,6 @@ Rectangle {
                                         style: Text.Outline
                                         styleColor: hs.parchmentDark
                                     }
-
                                 }
 
                                 Rectangle {
@@ -354,7 +346,6 @@ Rectangle {
                                         style: Text.Outline
                                         styleColor: hs.parchmentDark
                                     }
-
                                 }
 
                                 Item {
@@ -391,7 +382,6 @@ Rectangle {
                                     style: Text.Outline
                                     styleColor: hs.parchmentDark
                                 }
-
                             }
 
                             Canvas {
@@ -418,7 +408,6 @@ Rectangle {
                                     ctx.fill();
                                 }
                             }
-
                         }
 
                         Rectangle {
@@ -440,7 +429,6 @@ Rectangle {
                                 radius: 4
                                 color: Theme.accentBright
                             }
-
                         }
 
                         Rectangle {
@@ -462,9 +450,7 @@ Rectangle {
                                 radius: 4
                                 color: Theme.accentBright
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -488,13 +474,9 @@ Rectangle {
                             font.pointSize: 12
                             font.bold: true
                         }
-
                     }
-
                 }
-
             }
-
         }
 
         StyledButton {
@@ -505,11 +487,9 @@ Rectangle {
                 summaryOverlay.return_to_main_menu();
             }
         }
-
     }
 
     ListModel {
         id: playerBannersModel
     }
-
 }

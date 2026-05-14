@@ -1,11 +1,12 @@
 #include "commander_behavior.h"
-#include "../ai_utils.h"
-#include "systems/ai_system/ai_types.h"
-#include "units/spawn_type.h"
 
 #include <cmath>
 #include <limits>
 #include <vector>
+
+#include "../ai_utils.h"
+#include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
 
 namespace Game::Systems::AI {
 
@@ -17,9 +18,9 @@ struct ArmyCentre {
   int count = 0;
 };
 
-auto compute_army_centre(const AISnapshot &snapshot) -> ArmyCentre {
+auto compute_army_centre(const AISnapshot& snapshot) -> ArmyCentre {
   ArmyCentre centre;
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building || entity.is_commander) {
       continue;
     }
@@ -38,13 +39,16 @@ auto compute_army_centre(const AISnapshot &snapshot) -> ArmyCentre {
   return centre;
 }
 
-void nearest_enemy_direction(const AISnapshot &snapshot, float army_x,
-                             float army_z, float &out_dx, float &out_dz) {
+void nearest_enemy_direction(const AISnapshot& snapshot,
+                             float army_x,
+                             float army_z,
+                             float& out_dx,
+                             float& out_dz) {
   out_dx = 0.0F;
   out_dz = 1.0F;
 
   float nearest_sq = std::numeric_limits<float>::infinity();
-  for (const auto &enemy : snapshot.visible_enemies) {
+  for (const auto& enemy : snapshot.visible_enemies) {
     if (enemy.is_building) {
       continue;
     }
@@ -67,9 +71,10 @@ void nearest_enemy_direction(const AISnapshot &snapshot, float army_x,
 
 } // namespace
 
-void CommanderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+void CommanderBehavior::execute(const AISnapshot& snapshot,
+                                AIContext& context,
                                 float delta_time,
-                                std::vector<AICommand> &out_commands) {
+                                std::vector<AICommand>& out_commands) {
   m_update_timer += delta_time;
   m_rally_timer += delta_time;
 
@@ -97,8 +102,8 @@ void CommanderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   for (auto commander_id : context.commander_ids) {
-    const EntitySnapshot *snap = nullptr;
-    for (const auto &entity : snapshot.friendly_units) {
+    const EntitySnapshot* snap = nullptr;
+    for (const auto& entity : snapshot.friendly_units) {
       if (entity.id == commander_id) {
         snap = &entity;
         break;
@@ -128,9 +133,12 @@ void CommanderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    auto claimed =
-        claim_units({commander_id}, get_priority(), "commander_positioning",
-                    context, m_update_timer + delta_time, 1.5F);
+    auto claimed = claim_units({commander_id},
+                               get_priority(),
+                               "commander_positioning",
+                               context,
+                               m_update_timer + delta_time,
+                               1.5F);
     if (claimed.empty()) {
       continue;
     }
@@ -145,8 +153,8 @@ void CommanderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 }
 
-auto CommanderBehavior::should_execute(const AISnapshot &snapshot,
-                                       const AIContext &context) const -> bool {
+auto CommanderBehavior::should_execute(const AISnapshot& snapshot,
+                                       const AIContext& context) const -> bool {
   (void)snapshot;
   return !context.commander_ids.empty();
 }

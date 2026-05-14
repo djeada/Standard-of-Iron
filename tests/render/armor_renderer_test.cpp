@@ -1,3 +1,9 @@
+#include <QVector3D>
+
+#include <gtest/gtest.h>
+#include <memory>
+#include <vector>
+
 #include "render/equipment/armor/arm_guards_renderer.h"
 #include "render/equipment/armor/armor_heavy_carthage.h"
 #include "render/equipment/armor/armor_light_carthage.h"
@@ -11,10 +17,6 @@
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/humanoid/humanoid_renderer_base.h"
-#include <QVector3D>
-#include <gtest/gtest.h>
-#include <memory>
-#include <vector>
 
 using namespace Render::GL;
 
@@ -22,65 +24,79 @@ namespace {
 
 class CountingSubmitter : public ISubmitter {
 public:
-  void mesh(Mesh *, const QMatrix4x4 &, const QVector3D &, Texture * = nullptr,
-            float = 1.0F, int = 0) override {
+  void mesh(Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Texture* = nullptr,
+            float = 1.0F,
+            int = 0) override {
     ++draw_count;
   }
 
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+  void cylinder(const QVector3D&,
+                const QVector3D&,
+                float,
+                const QVector3D&,
                 float = 1.0F) override {
     ++draw_count;
   }
 
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float = 1.0F) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float = 1.0F) override {
+  }
 
   int draw_count{0};
 };
 
 class MeshCaptureSubmitter : public ISubmitter {
 public:
-  void mesh(Mesh *, const QMatrix4x4 &model, const QVector3D &,
-            Texture * = nullptr, float = 1.0F, int = 0) override {
+  void mesh(Mesh*,
+            const QMatrix4x4& model,
+            const QVector3D&,
+            Texture* = nullptr,
+            float = 1.0F,
+            int = 0) override {
     models.push_back(model);
   }
 
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+  void cylinder(const QVector3D&,
+                const QVector3D&,
+                float,
+                const QVector3D&,
                 float = 1.0F) override {}
 
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float = 1.0F) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float = 1.0F) override {
+  }
 
   std::vector<QMatrix4x4> models;
 };
 
-inline int draw_count_of(const EquipmentBatch &batch) {
+inline int draw_count_of(const EquipmentBatch& batch) {
   CountingSubmitter submitter;
   submit_equipment_batch(batch, submitter);
   return submitter.draw_count;
@@ -95,7 +111,7 @@ protected:
     registry = &EquipmentRegistry::instance();
   }
 
-  EquipmentRegistry *registry = nullptr;
+  EquipmentRegistry* registry = nullptr;
 };
 
 TEST_F(ArmorRendererTest, RomanHeavyArmorRegistered) {
@@ -120,8 +136,7 @@ TEST_F(ArmorRendererTest, ArmGuardsRegistered) {
 
 TEST_F(ArmorRendererTest, WorkApronRegistered) {
   auto roman = registry->get(EquipmentCategory::Armor, "work_apron_roman");
-  auto carthage =
-      registry->get(EquipmentCategory::Armor, "work_apron_carthage");
+  auto carthage = registry->get(EquipmentCategory::Armor, "work_apron_carthage");
   ASSERT_NE(roman, nullptr);
   ASSERT_NE(carthage, nullptr);
 }
@@ -132,8 +147,7 @@ TEST_F(ArmorRendererTest, RomanShoulderCoverRegistered) {
 }
 
 TEST_F(ArmorRendererTest, CarthageShoulderCoverRegistered) {
-  auto armor =
-      registry->get(EquipmentCategory::Armor, "carthage_shoulder_cover");
+  auto armor = registry->get(EquipmentCategory::Armor, "carthage_shoulder_cover");
   ASSERT_NE(armor, nullptr);
 }
 
@@ -153,12 +167,9 @@ TEST_F(ArmorRendererTest, ArmorHeavyCarthageRegistered) {
 }
 
 TEST_F(ArmorRendererTest, CarthageArcherArmorSharesHelmet) {
-  auto light_armor =
-      registry->get(EquipmentCategory::Armor, "armor_light_carthage");
-  auto heavy_armor =
-      registry->get(EquipmentCategory::Armor, "armor_heavy_carthage");
-  auto shared_helmet =
-      registry->get(EquipmentCategory::Helmet, "carthage_light");
+  auto light_armor = registry->get(EquipmentCategory::Armor, "armor_light_carthage");
+  auto heavy_armor = registry->get(EquipmentCategory::Armor, "armor_heavy_carthage");
+  auto shared_helmet = registry->get(EquipmentCategory::Helmet, "carthage_light");
 
   ASSERT_NE(light_armor, nullptr);
   ASSERT_NE(heavy_armor, nullptr);
@@ -216,9 +227,8 @@ TEST_F(ArmorRendererTest, TorsoArmorMeshFrontFacesBodyForward) {
   MeshCaptureSubmitter submitter;
   submit_equipment_batch(batch, submitter);
   ASSERT_FALSE(submitter.models.empty());
-  QVector3D const mesh_front = submitter.models.front()
-                                   .mapVector(QVector3D(1.0F, 0.0F, 0.0F))
-                                   .normalized();
+  QVector3D const mesh_front =
+      submitter.models.front().mapVector(QVector3D(1.0F, 0.0F, 0.0F)).normalized();
   EXPECT_GT(QVector3D::dotProduct(mesh_front, frames.torso.forward), 0.95F);
 }
 

@@ -4,7 +4,11 @@
 
 namespace Render::GL {
 
-enum class BuildingState { Normal, Damaged, Destroyed };
+enum class BuildingState {
+  Normal,
+  Damaged,
+  Destroyed
+};
 
 inline constexpr float HEALTH_THRESHOLD_NORMAL = 0.70F;
 inline constexpr float HEALTH_THRESHOLD_DAMAGED = 0.30F;
@@ -38,17 +42,14 @@ inline constexpr float CRITICAL_DARK_R = 0.70F;
 inline constexpr float CRITICAL_DARK_G = 0.08F;
 inline constexpr float CRITICAL_DARK_B = 0.08F;
 
-inline const QVector3D NORMAL_BRIGHT{NORMAL_BRIGHT_R, NORMAL_BRIGHT_G,
-                                     NORMAL_BRIGHT_B};
+inline const QVector3D NORMAL_BRIGHT{NORMAL_BRIGHT_R, NORMAL_BRIGHT_G, NORMAL_BRIGHT_B};
 inline const QVector3D NORMAL_DARK{NORMAL_DARK_R, NORMAL_DARK_G, NORMAL_DARK_B};
-inline const QVector3D DAMAGED_BRIGHT{DAMAGED_BRIGHT_R, DAMAGED_BRIGHT_G,
-                                      DAMAGED_BRIGHT_B};
-inline const QVector3D DAMAGED_DARK{DAMAGED_DARK_R, DAMAGED_DARK_G,
-                                    DAMAGED_DARK_B};
-inline const QVector3D CRITICAL_BRIGHT{CRITICAL_BRIGHT_R, CRITICAL_BRIGHT_G,
-                                       CRITICAL_BRIGHT_B};
-inline const QVector3D CRITICAL_DARK{CRITICAL_DARK_R, CRITICAL_DARK_G,
-                                     CRITICAL_DARK_B};
+inline const QVector3D DAMAGED_BRIGHT{
+    DAMAGED_BRIGHT_R, DAMAGED_BRIGHT_G, DAMAGED_BRIGHT_B};
+inline const QVector3D DAMAGED_DARK{DAMAGED_DARK_R, DAMAGED_DARK_G, DAMAGED_DARK_B};
+inline const QVector3D CRITICAL_BRIGHT{
+    CRITICAL_BRIGHT_R, CRITICAL_BRIGHT_G, CRITICAL_BRIGHT_B};
+inline const QVector3D CRITICAL_DARK{CRITICAL_DARK_R, CRITICAL_DARK_G, CRITICAL_DARK_B};
 
 inline const QVector3D BORDER{0.45F, 0.45F, 0.50F};
 inline const QVector3D INNER_BORDER{0.25F, 0.25F, 0.28F};

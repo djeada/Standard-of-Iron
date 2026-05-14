@@ -7,11 +7,11 @@ import StandardOfIron 1.0
 Item {
     id: root
 
-    signal cancelled()
+    signal cancelled
 
     anchors.fill: parent
     z: 25
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
             event.accepted = true;
@@ -60,7 +60,6 @@ Item {
                     button_style: "secondary"
                     onClicked: root.cancelled()
                 }
-
             }
 
             Rectangle {
@@ -125,7 +124,6 @@ Item {
                                     onValueChanged: {
                                         if (typeof game !== 'undefined' && game.audioSystem)
                                             game.audioSystem.set_master_volume(value / 100);
-
                                     }
                                 }
 
@@ -135,7 +133,6 @@ Item {
                                     font.pointSize: Theme.fontSizeMedium
                                     Layout.minimumWidth: 45
                                 }
-
                             }
 
                             Label {
@@ -159,7 +156,6 @@ Item {
                                     onValueChanged: {
                                         if (typeof game !== 'undefined' && game.audioSystem)
                                             game.audioSystem.set_music_volume(value / 100);
-
                                     }
                                 }
 
@@ -169,7 +165,6 @@ Item {
                                     font.pointSize: Theme.fontSizeMedium
                                     Layout.minimumWidth: 45
                                 }
-
                             }
 
                             Label {
@@ -193,7 +188,6 @@ Item {
                                     onValueChanged: {
                                         if (typeof game !== 'undefined' && game.audioSystem)
                                             game.audioSystem.set_sound_volume(value / 100);
-
                                     }
                                 }
 
@@ -203,7 +197,6 @@ Item {
                                     font.pointSize: Theme.fontSizeMedium
                                     Layout.minimumWidth: 45
                                 }
-
                             }
 
                             Label {
@@ -227,7 +220,6 @@ Item {
                                     onValueChanged: {
                                         if (typeof game !== 'undefined' && game.audioSystem)
                                             game.audioSystem.set_voice_volume(value / 100);
-
                                     }
                                 }
 
@@ -237,11 +229,8 @@ Item {
                                     font.pointSize: Theme.fontSizeMedium
                                     Layout.minimumWidth: 45
                                 }
-
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -286,10 +275,9 @@ Item {
                                 Layout.fillWidth: true
                                 model: typeof graphicsSettings !== 'undefined' ? graphicsSettings.quality_options : ["Low", "Medium", "High", "Ultra"]
                                 currentIndex: typeof graphicsSettings !== 'undefined' ? graphicsSettings.quality_level : 1
-                                onActivated: function(index) {
+                                onActivated: function (index) {
                                     if (typeof graphicsSettings !== 'undefined')
                                         graphicsSettings.quality_level = index;
-
                                 }
                             }
 
@@ -302,9 +290,7 @@ Item {
                                 Layout.columnSpan: 2
                                 Layout.fillWidth: true
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -351,22 +337,19 @@ Item {
                                 currentIndex: {
                                     if (typeof languageManager === 'undefined')
                                         return 0;
-
                                     var idx = languageManager.availableLanguages.indexOf(languageManager.currentLanguage);
                                     return idx >= 0 ? idx : 0;
                                 }
                                 displayText: {
                                     if (typeof languageManager === 'undefined' || !currentText)
                                         return "";
-
                                     return languageManager.languageDisplayName(currentText);
                                 }
-                                onActivated: function(index) {
+                                onActivated: function (index) {
                                     if (typeof languageManager !== 'undefined' && currentText)
                                         languageManager.setLanguage(currentText);
-
                                 }
-                                delegate_text: function(data) {
+                                delegate_text: function (data) {
                                     return typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(data) : data;
                                 }
                             }
@@ -378,9 +361,7 @@ Item {
                                 opacity: 0.7
                                 Layout.columnSpan: 2
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -461,7 +442,7 @@ Item {
                                 color: Theme.textSub
                                 font.pointSize: Theme.fontSizeSmall
                                 textFormat: Text.RichText
-                                onLinkActivated: function(link) {
+                                onLinkActivated: function (link) {
                                     Qt.openUrlExternally(link);
                                 }
 
@@ -470,19 +451,11 @@ Item {
                                     acceptedButtons: Qt.NoButton
                                     cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }

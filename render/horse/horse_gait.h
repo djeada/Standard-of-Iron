@@ -4,7 +4,13 @@
 
 namespace Render::GL {
 
-enum class GaitType { IDLE, WALK, TROT, CANTER, GALLOP };
+enum class GaitType {
+  IDLE,
+  WALK,
+  TROT,
+  CANTER,
+  GALLOP
+};
 
 struct HorseGait {
   float cycle_time{};
@@ -21,8 +27,8 @@ struct HorseGait {
   float ear_pin{0.0F};
 };
 
-[[nodiscard]] inline auto
-gait_for_type(GaitType gait, const HorseGait &base) noexcept -> HorseGait {
+[[nodiscard]] inline auto gait_for_type(GaitType gait,
+                                        const HorseGait& base) noexcept -> HorseGait {
   HorseGait resolved = base;
   switch (gait) {
   case GaitType::IDLE:
@@ -79,12 +85,13 @@ gait_for_type(GaitType gait, const HorseGait &base) noexcept -> HorseGait {
   return resolved;
 }
 
-[[nodiscard]] inline auto blend_gaits(const HorseGait &from,
-                                      const HorseGait &to,
-                                      float t) noexcept -> HorseGait {
+[[nodiscard]] inline auto
+blend_gaits(const HorseGait& from, const HorseGait& to, float t) noexcept -> HorseGait {
   t = std::clamp(t, 0.0F, 1.0F);
   HorseGait out = from;
-  auto lerp = [t](float a, float b) { return a + (b - a) * t; };
+  auto lerp = [t](float a, float b) {
+    return a + (b - a) * t;
+  };
   out.cycle_time = lerp(from.cycle_time, to.cycle_time);
   out.front_leg_phase = lerp(from.front_leg_phase, to.front_leg_phase);
   out.rear_leg_phase = lerp(from.rear_leg_phase, to.rear_leg_phase);

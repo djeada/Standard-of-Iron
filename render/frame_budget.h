@@ -32,19 +32,17 @@ public:
 
   [[nodiscard]] auto elapsed_ms() const -> float {
     auto now = std::chrono::steady_clock::now();
-    return std::chrono::duration<float, std::milli>(now - m_frame_start)
-        .count();
+    return std::chrono::duration<float, std::milli>(now - m_frame_start).count();
   }
 
-  [[nodiscard]] auto
-  should_defer(const FrameBudgetConfig &config) const -> bool {
+  [[nodiscard]] auto should_defer(const FrameBudgetConfig& config) const -> bool {
     if (!config.enabled || !config.allow_partial_render)
       return false;
     return elapsed_ms() >= config.hard_deadline_ms;
   }
 
   [[nodiscard]] auto
-  is_approaching_budget(const FrameBudgetConfig &config) const -> bool {
+  is_approaching_budget(const FrameBudgetConfig& config) const -> bool {
     if (!config.enabled)
       return false;
     return elapsed_ms() >= config.target_frame_ms;
@@ -60,9 +58,7 @@ public:
   [[nodiscard]] auto commands_deferred() const -> std::size_t {
     return m_commands_deferred;
   }
-  [[nodiscard]] auto frame_completed() const -> bool {
-    return m_frame_completed;
-  }
+  [[nodiscard]] auto frame_completed() const -> bool { return m_frame_completed; }
   [[nodiscard]] auto total_frame_ms() const -> float { return elapsed_ms(); }
 
   void end_frame() {

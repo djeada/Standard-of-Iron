@@ -2,15 +2,16 @@
 
 #pragma once
 
-#include "../creature/spec.h"
-#include "pipeline/bpat_playback.h"
-#include "pipeline/render_pass_intent.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <array>
 #include <cstdint>
 #include <span>
+
+#include "../creature/spec.h"
+#include "pipeline/bpat_playback.h"
+#include "pipeline/render_pass_intent.h"
 
 namespace Render::Creature {
 
@@ -40,16 +41,14 @@ enum class AnimationStateId : std::uint8_t {
 }
 
 using ArchetypeId = std::uint16_t;
-inline constexpr ArchetypeId k_invalid_archetype =
-    static_cast<ArchetypeId>(0xFFFFu);
+inline constexpr ArchetypeId k_invalid_archetype = static_cast<ArchetypeId>(0xFFFFu);
 
 using VariantId = std::uint16_t;
 inline constexpr VariantId k_canonical_variant = static_cast<VariantId>(0u);
 using WorldKey = std::uint64_t;
 using CreatureRenderAssetHandleId = std::uint16_t;
-inline constexpr CreatureRenderAssetHandleId
-    k_invalid_creature_render_asset_handle =
-        static_cast<CreatureRenderAssetHandleId>(0xFFFFu);
+inline constexpr CreatureRenderAssetHandleId k_invalid_creature_render_asset_handle =
+    static_cast<CreatureRenderAssetHandleId>(0xFFFFu);
 
 struct CreatureRenderRequest {
   ArchetypeId archetype{k_invalid_archetype};
@@ -78,8 +77,7 @@ struct CreatureRenderRequest {
   std::uint8_t role_color_count{0};
   QVector3D base_color{0.5F, 0.5F, 0.5F};
 
-  [[nodiscard]] auto
-  role_colors_view() const noexcept -> std::span<const QVector3D> {
+  [[nodiscard]] auto role_colors_view() const noexcept -> std::span<const QVector3D> {
     return {role_colors.data(), static_cast<std::size_t>(role_color_count)};
   }
 };

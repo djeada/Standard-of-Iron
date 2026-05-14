@@ -1,10 +1,12 @@
 #include "texture.h"
-#include <GL/gl.h>
+
 #include <QDebug>
 #include <QImage>
 #include <qglobal.h>
 #include <qhashfunctions.h>
 #include <qimage.h>
+
+#include <GL/gl.h>
 
 namespace Render::GL {
 
@@ -16,7 +18,7 @@ Texture::~Texture() {
   }
 }
 
-auto Texture::load_from_file(const QString &path) -> bool {
+auto Texture::load_from_file(const QString& path) -> bool {
   initializeOpenGLFunctions();
   QImage image;
   if (!image.load(path)) {
@@ -32,8 +34,15 @@ auto Texture::load_from_file(const QString &path) -> bool {
 
   bind();
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, image.constBits());
+  glTexImage2D(GL_TEXTURE_2D,
+               0,
+               GL_RGBA,
+               m_width,
+               m_height,
+               0,
+               GL_RGBA,
+               GL_UNSIGNED_BYTE,
+               image.constBits());
 
   set_filter(Filter::Linear, Filter::Linear);
   set_wrap(Wrap::Repeat, Wrap::Repeat);
@@ -62,8 +71,8 @@ auto Texture::create_empty(int width, int height, Format format) -> bool {
     type = GL_FLOAT;
   }
 
-  glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, gl_format,
-               type, nullptr);
+  glTexImage2D(
+      GL_TEXTURE_2D, 0, internal_format, width, height, 0, gl_format, type, nullptr);
 
   set_filter(Filter::Linear, Filter::Linear);
   set_wrap(Wrap::ClampToEdge, Wrap::ClampToEdge);
@@ -89,10 +98,8 @@ void Texture::unbind() {
 
 void Texture::set_filter(Filter min_filter, Filter mag_filter) {
   bind();
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  get_gl_filter(min_filter));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                  get_gl_filter(mag_filter));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, get_gl_filter(min_filter));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, get_gl_filter(mag_filter));
 }
 
 void Texture::set_wrap(Wrap s_wrap, Wrap t_wrap) {

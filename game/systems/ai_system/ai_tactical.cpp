@@ -1,20 +1,22 @@
 #include "ai_tactical.h"
-#include "../../units/troop_type.h"
-#include "../nation_registry.h"
-#include "ai_utils.h"
-#include "systems/ai_system/ai_types.h"
-#include "units/spawn_type.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <string>
 #include <vector>
 
+#include "../../units/troop_type.h"
+#include "../nation_registry.h"
+#include "ai_utils.h"
+#include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
+
 namespace Game::Systems::AI {
 
 auto TacticalUtils::assess_engagement(
-    const std::vector<const EntitySnapshot *> &friendlies,
-    const std::vector<const ContactSnapshot *> &enemies,
+    const std::vector<const EntitySnapshot*>& friendlies,
+    const std::vector<const ContactSnapshot*>& enemies,
     float min_force_ratio) -> TacticalUtils::EngagementAssessment {
 
   EngagementAssessment result;
@@ -32,18 +34,18 @@ auto TacticalUtils::assess_engagement(
   int valid_friendlies = 0;
   int valid_enemies = 0;
 
-  for (const auto *unit : friendlies) {
+  for (const auto* unit : friendlies) {
     if (unit->max_health > 0) {
-      total_friendly_health += static_cast<float>(unit->health) /
-                               static_cast<float>(unit->max_health);
+      total_friendly_health +=
+          static_cast<float>(unit->health) / static_cast<float>(unit->max_health);
       ++valid_friendlies;
     }
   }
 
-  for (const auto *enemy : enemies) {
+  for (const auto* enemy : enemies) {
     if (enemy->max_health > 0) {
-      total_enemy_health += static_cast<float>(enemy->health) /
-                            static_cast<float>(enemy->max_health);
+      total_enemy_health +=
+          static_cast<float>(enemy->health) / static_cast<float>(enemy->max_health);
       ++valid_enemies;
     }
   }
@@ -64,8 +66,7 @@ auto TacticalUtils::assess_engagement(
     result.force_ratio = friendly_strength / enemy_strength;
   }
 
-  result.confidence_level =
-      std::clamp((result.force_ratio - 0.5F) / 1.5F, 0.0F, 1.0F);
+  result.confidence_level = std::clamp((result.force_ratio - 0.5F) / 1.5F, 0.0F, 1.0F);
 
   result.should_engage = (result.force_ratio >= min_force_ratio);
 
@@ -73,9 +74,12 @@ auto TacticalUtils::assess_engagement(
 }
 
 auto TacticalUtils::select_focus_fire_target(
-    const std::vector<const EntitySnapshot *> &,
-    const std::vector<const ContactSnapshot *> &enemies, float group_center_x,
-    float group_center_y, float group_center_z, const AIContext &context,
+    const std::vector<const EntitySnapshot*>&,
+    const std::vector<const ContactSnapshot*>& enemies,
+    float group_center_x,
+    float group_center_y,
+    float group_center_z,
+    const AIContext& context,
     Engine::Core::EntityID current_target) -> TacticalUtils::TargetScore {
 
   TargetScore best_target;
@@ -85,16 +89,20 @@ auto TacticalUtils::select_focus_fire_target(
     return best_target;
   }
 
-  for (const auto *enemy : enemies) {
+  for (const auto* enemy : enemies) {
     float score = 0.0F;
 
-    float const dist = distance(enemy->pos_x, enemy->pos_y, enemy->pos_z,
-                                group_center_x, group_center_y, group_center_z);
+    float const dist = distance(enemy->pos_x,
+                                enemy->pos_y,
+                                enemy->pos_z,
+                                group_center_x,
+                                group_center_y,
+                                group_center_z);
     score -= dist * 0.5F;
 
     if (enemy->max_health > 0) {
-      float const health_ratio = static_cast<float>(enemy->health) /
-                                 static_cast<float>(enemy->max_health);
+      float const health_ratio =
+          static_cast<float>(enemy->health) / static_cast<float>(enemy->max_health);
 
       if (health_ratio < 0.5F) {
         score += 8.0F * (1.0F - health_ratio);
@@ -123,9 +131,12 @@ auto TacticalUtils::select_focus_fire_target(
     }
 
     if (context.has_base_anchor) {
-      float const dist_to_base =
-          distance(enemy->pos_x, enemy->pos_y, enemy->pos_z, context.base_pos_x,
-                   context.base_pos_y, context.base_pos_z);
+      float const dist_to_base = distance(enemy->pos_x,
+                                          enemy->pos_y,
+                                          enemy->pos_z,
+                                          context.base_pos_x,
+                                          context.base_pos_y,
+                                          context.base_pos_z);
 
       if (dist_to_base < 16.0F) {
         score += (16.0F - dist_to_base) * 0.8F;
@@ -150,13 +161,13 @@ auto TacticalUtils::select_focus_fire_target(
 }
 
 auto TacticalUtils::calculate_force_strength(
-    const std::vector<const EntitySnapshot *> &units) -> float {
+    const std::vector<const EntitySnapshot*>& units) -> float {
 
   float strength = 0.0F;
-  for (const auto *unit : units) {
+  for (const auto* unit : units) {
     if (unit->max_health > 0) {
-      float const health_ratio = static_cast<float>(unit->health) /
-                                 static_cast<float>(unit->max_health);
+      float const health_ratio =
+          static_cast<float>(unit->health) / static_cast<float>(unit->max_health);
       strength += health_ratio;
     } else {
       strength += 1.0F;
@@ -166,13 +177,13 @@ auto TacticalUtils::calculate_force_strength(
 }
 
 auto TacticalUtils::calculate_force_strength(
-    const std::vector<const ContactSnapshot *> &units) -> float {
+    const std::vector<const ContactSnapshot*>& units) -> float {
 
   float strength = 0.0F;
-  for (const auto *unit : units) {
+  for (const auto* unit : units) {
     if (unit->max_health > 0) {
-      float const health_ratio = static_cast<float>(unit->health) /
-                                 static_cast<float>(unit->max_health);
+      float const health_ratio =
+          static_cast<float>(unit->health) / static_cast<float>(unit->max_health);
       strength += health_ratio;
     } else {
       strength += 1.0F;
@@ -182,22 +193,25 @@ auto TacticalUtils::calculate_force_strength(
 }
 
 auto TacticalUtils::is_target_isolated(
-    const ContactSnapshot &target,
-    const std::vector<const ContactSnapshot *> &all_enemies,
+    const ContactSnapshot& target,
+    const std::vector<const ContactSnapshot*>& all_enemies,
     float isolation_radius) -> bool {
 
   const float isolation_radius_sq = isolation_radius * isolation_radius;
   int nearby_allies = 0;
 
-  for (const auto *enemy : all_enemies) {
+  for (const auto* enemy : all_enemies) {
 
     if (enemy->id == target.id) {
       continue;
     }
 
-    float const dist_sq =
-        distance_squared(target.pos_x, target.pos_y, target.pos_z, enemy->pos_x,
-                         enemy->pos_y, enemy->pos_z);
+    float const dist_sq = distance_squared(target.pos_x,
+                                           target.pos_y,
+                                           target.pos_z,
+                                           enemy->pos_x,
+                                           enemy->pos_y,
+                                           enemy->pos_z);
 
     if (dist_sq <= isolation_radius_sq) {
       ++nearby_allies;
@@ -207,9 +221,8 @@ auto TacticalUtils::is_target_isolated(
   return (nearby_allies <= 1);
 }
 
-auto TacticalUtils::get_unit_type_priority(const std::string &unit_type,
-                                           const Game::Systems::Nation *nation)
-    -> float {
+auto TacticalUtils::get_unit_type_priority(
+    const std::string& unit_type, const Game::Systems::Nation* nation) -> float {
 
   if (nation != nullptr) {
     auto troop_type = Game::Units::troop_typeFromString(unit_type);

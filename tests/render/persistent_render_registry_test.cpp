@@ -1,14 +1,14 @@
+#include <algorithm>
+#include <gtest/gtest.h>
+
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "render/persistent_render_registry.h"
 
-#include <algorithm>
-#include <gtest/gtest.h>
-
 namespace {
 
-auto has_id(const std::vector<std::uint32_t> &vec, std::uint32_t id) -> bool {
+auto has_id(const std::vector<std::uint32_t>& vec, std::uint32_t id) -> bool {
   return std::find(vec.begin(), vec.end(), id) != vec.end();
 }
 
@@ -27,7 +27,7 @@ TEST(PersistentRenderRegistry, UnitEntityClassifiedAsUnit) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
   entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
 
@@ -41,7 +41,7 @@ TEST(PersistentRenderRegistry, BuildingEntityClassifiedAsBuilding) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
   entity->add_component<Engine::Core::BuildingComponent>();
 
@@ -55,7 +55,7 @@ TEST(PersistentRenderRegistry, PlainRenderableClassifiedAsOther) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
 
   EXPECT_FALSE(has_id(reg.unit_ids(), entity->get_id()));
@@ -68,7 +68,7 @@ TEST(PersistentRenderRegistry, NonRenderableEntityNotTracked) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
 
   EXPECT_TRUE(reg.unit_ids().empty());
@@ -81,7 +81,7 @@ TEST(PersistentRenderRegistry, DestroyedEntityRemovedFromRegistry) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
   entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
   const auto id = entity->get_id();
@@ -98,11 +98,11 @@ TEST(PersistentRenderRegistry, WorldClearEmptiesRegistry) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *e1 = world.create_entity();
+  auto* e1 = world.create_entity();
   e1->add_component<Engine::Core::RenderableComponent>("", "");
   e1->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
 
-  auto *e2 = world.create_entity();
+  auto* e2 = world.create_entity();
   e2->add_component<Engine::Core::RenderableComponent>("", "");
   e2->add_component<Engine::Core::BuildingComponent>();
 
@@ -121,7 +121,7 @@ TEST(PersistentRenderRegistry, AddingUnitComponentMovesToUnitList) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
   const auto id = entity->get_id();
 
@@ -138,7 +138,7 @@ TEST(PersistentRenderRegistry, AddingBuildingComponentMovesToBuildingList) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
   const auto id = entity->get_id();
 
@@ -153,15 +153,15 @@ TEST(PersistentRenderRegistry, AddingBuildingComponentMovesToBuildingList) {
 TEST(PersistentRenderRegistry, AttachPicksUpExistingEntities) {
   Engine::Core::World world;
 
-  auto *e1 = world.create_entity();
+  auto* e1 = world.create_entity();
   e1->add_component<Engine::Core::RenderableComponent>("", "");
   e1->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
 
-  auto *e2 = world.create_entity();
+  auto* e2 = world.create_entity();
   e2->add_component<Engine::Core::RenderableComponent>("", "");
   e2->add_component<Engine::Core::BuildingComponent>();
 
-  auto *e3 = world.create_entity();
+  auto* e3 = world.create_entity();
   e3->add_component<Engine::Core::RenderableComponent>("", "");
 
   Render::PersistentRenderRegistry reg;
@@ -169,8 +169,7 @@ TEST(PersistentRenderRegistry, AttachPicksUpExistingEntities) {
 
   EXPECT_EQ(reg.unit_ids().size(), 1U);
   EXPECT_EQ(reg.building_ids().size(), 1U);
-  EXPECT_EQ(reg.unit_ids().size() + reg.building_ids().size() +
-                reg.other_ids().size(),
+  EXPECT_EQ(reg.unit_ids().size() + reg.building_ids().size() + reg.other_ids().size(),
             3U);
 }
 
@@ -179,7 +178,7 @@ TEST(PersistentRenderRegistry, DetachClearsState) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
 
   EXPECT_EQ(reg.other_ids().size(), 1U);
@@ -199,14 +198,13 @@ TEST(PersistentRenderRegistry, DetachedWorldChangesDoNotAffectRegistry) {
   reg.detach();
   reg.attach(&world2);
 
-  auto *world1_entity = world1.create_entity();
+  auto* world1_entity = world1.create_entity();
   world1_entity->add_component<Engine::Core::RenderableComponent>("", "");
-  world1_entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F,
-                                                            10.0F);
+  world1_entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
 
   EXPECT_TRUE(reg.unit_ids().empty());
 
-  auto *world2_entity = world2.create_entity();
+  auto* world2_entity = world2.create_entity();
   world2_entity->add_component<Engine::Core::RenderableComponent>("", "");
   world2_entity->add_component<Engine::Core::BuildingComponent>();
 
@@ -221,7 +219,7 @@ TEST(PersistentRenderRegistry, RegistryDestructionUnregistersObservers) {
     reg.attach(&world);
   }
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   ASSERT_NE(entity, nullptr);
   entity->add_component<Engine::Core::RenderableComponent>("", "");
   entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
@@ -253,7 +251,7 @@ TEST(PersistentRenderRegistry, ReaddingRenderableDoesNotDuplicate) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
   const auto id = entity->get_id();
 
@@ -270,7 +268,7 @@ TEST(PersistentRenderRegistry, EntityWithBothUnitAndBuildingClassifiedAsUnit) {
   Render::PersistentRenderRegistry reg;
   reg.attach(&world);
 
-  auto *entity = world.create_entity();
+  auto* entity = world.create_entity();
   entity->add_component<Engine::Core::RenderableComponent>("", "");
   entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
   entity->add_component<Engine::Core::BuildingComponent>();

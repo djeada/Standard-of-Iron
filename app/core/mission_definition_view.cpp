@@ -1,16 +1,17 @@
 #include "mission_definition_view.h"
-#include "mission_commander_setup.h"
 
-#include "game/units/commander_catalog.h"
-#include "game/units/troop_type.h"
 #include <QStringList>
 #include <QVariantList>
 
+#include "game/units/commander_catalog.h"
+#include "game/units/troop_type.h"
+#include "mission_commander_setup.h"
+
 namespace {
 
-auto titleize(const QString &value) -> QString {
+auto titleize(const QString& value) -> QString {
   QStringList parts = value.split('_', Qt::SkipEmptyParts);
-  for (QString &part : parts) {
+  for (QString& part : parts) {
     if (!part.isEmpty()) {
       part[0] = part[0].toUpper();
     }
@@ -18,10 +19,10 @@ auto titleize(const QString &value) -> QString {
   return parts.join(' ');
 }
 
-auto build_condition_list(
-    const std::vector<Game::Mission::Condition> &conditions) -> QVariantList {
+auto build_condition_list(const std::vector<Game::Mission::Condition>& conditions)
+    -> QVariantList {
   QVariantList list;
-  for (const auto &condition : conditions) {
+  for (const auto& condition : conditions) {
     QVariantMap cond;
     cond["type"] = condition.type;
     cond["description"] = condition.description;
@@ -33,7 +34,7 @@ auto build_condition_list(
     }
     if (!condition.structure_types.empty()) {
       QVariantList types;
-      for (const auto &type : condition.structure_types) {
+      for (const auto& type : condition.structure_types) {
         types.append(type);
       }
       cond["structure_types"] = types;
@@ -49,10 +50,10 @@ auto build_condition_list(
   return list;
 }
 
-auto build_unit_setup_list(const std::vector<Game::Mission::UnitSetup> &units)
+auto build_unit_setup_list(const std::vector<Game::Mission::UnitSetup>& units)
     -> QVariantList {
   QVariantList list;
-  for (const auto &unit : units) {
+  for (const auto& unit : units) {
     QVariantMap entry;
     entry["type"] = unit.type;
     entry["count"] = unit.count;
@@ -63,10 +64,10 @@ auto build_unit_setup_list(const std::vector<Game::Mission::UnitSetup> &units)
   return list;
 }
 
-auto build_building_setup_list(const std::vector<Game::Mission::BuildingSetup>
-                                   &buildings) -> QVariantList {
+auto build_building_setup_list(
+    const std::vector<Game::Mission::BuildingSetup>& buildings) -> QVariantList {
   QVariantList list;
-  for (const auto &building : buildings) {
+  for (const auto& building : buildings) {
     QVariantMap entry;
     entry["type"] = building.type;
     entry["max_population"] = building.max_population;
@@ -77,10 +78,9 @@ auto build_building_setup_list(const std::vector<Game::Mission::BuildingSetup>
   return list;
 }
 
-auto build_wave_list(const std::vector<Game::Mission::Wave> &waves)
-    -> QVariantList {
+auto build_wave_list(const std::vector<Game::Mission::Wave>& waves) -> QVariantList {
   QVariantList list;
-  for (const auto &wave : waves) {
+  for (const auto& wave : waves) {
     QVariantMap entry;
     entry["timing"] = wave.timing;
 
@@ -90,7 +90,7 @@ auto build_wave_list(const std::vector<Game::Mission::Wave> &waves)
     entry["entry_point"] = point;
 
     QVariantList composition;
-    for (const auto &member : wave.composition) {
+    for (const auto& member : wave.composition) {
       QVariantMap component;
       component["type"] = member.type;
       component["count"] = member.count;
@@ -102,7 +102,7 @@ auto build_wave_list(const std::vector<Game::Mission::Wave> &waves)
   return list;
 }
 
-auto build_personality_map(const Game::Mission::AIPersonality &personality)
+auto build_personality_map(const Game::Mission::AIPersonality& personality)
     -> QVariantMap {
   QVariantMap map;
   map["aggression"] = personality.aggression;
@@ -111,7 +111,7 @@ auto build_personality_map(const Game::Mission::AIPersonality &personality)
   return map;
 }
 
-auto build_commander_map(const QString &commander_troop) -> QVariantMap {
+auto build_commander_map(const QString& commander_troop) -> QVariantMap {
   QVariantMap map;
   map["troop"] = commander_troop;
 
@@ -121,23 +121,19 @@ auto build_commander_map(const QString &commander_troop) -> QVariantMap {
     return map;
   }
 
-  if (const auto *definition = Game::Units::commander_definition(troop_type)) {
+  if (const auto* definition = Game::Units::commander_definition(troop_type)) {
     map["id"] = QString::fromStdString(definition->id);
     map["display_name"] = QString::fromStdString(definition->display_name);
-    map["strategic_identity"] =
-        QString::fromStdString(definition->strategic_identity);
-    map["recruitment_effect"] =
-        QString::fromStdString(definition->recruitment_effect);
-    map["battlefield_role"] =
-        QString::fromStdString(definition->battlefield_role);
+    map["strategic_identity"] = QString::fromStdString(definition->strategic_identity);
+    map["recruitment_effect"] = QString::fromStdString(definition->recruitment_effect);
+    map["battlefield_role"] = QString::fromStdString(definition->battlefield_role);
     map["strengths"] = QString::fromStdString(definition->strengths);
     map["weaknesses"] = QString::fromStdString(definition->weaknesses);
     map["passive_aura"] = QString::fromStdString(definition->passive_aura);
     map["bonus_type"] = QString::fromStdString(definition->bonus_type);
     map["bonus_summary"] = QString::fromStdString(definition->bonus_summary);
     map["rally_ability"] = QString::fromStdString(definition->rally_ability);
-    map["death_consequence"] =
-        QString::fromStdString(definition->death_consequence);
+    map["death_consequence"] = QString::fromStdString(definition->death_consequence);
     map["visual_requirements"] =
         QString::fromStdString(definition->visual_requirements);
   } else {
@@ -147,8 +143,7 @@ auto build_commander_map(const QString &commander_troop) -> QVariantMap {
   return map;
 }
 
-auto build_player_setup_map(const Game::Mission::PlayerSetup &setup)
-    -> QVariantMap {
+auto build_player_setup_map(const Game::Mission::PlayerSetup& setup) -> QVariantMap {
   QVariantMap map;
   map["nation"] = setup.nation;
   map["faction"] = setup.faction;
@@ -162,8 +157,7 @@ auto build_player_setup_map(const Game::Mission::PlayerSetup &setup)
   }
 
   map["starting_units"] = build_unit_setup_list(setup.starting_units);
-  map["starting_buildings"] =
-      build_building_setup_list(setup.starting_buildings);
+  map["starting_buildings"] = build_building_setup_list(setup.starting_buildings);
 
   QVariantMap resources;
   resources["gold"] = setup.starting_resources.gold;
@@ -173,7 +167,7 @@ auto build_player_setup_map(const Game::Mission::PlayerSetup &setup)
   return map;
 }
 
-auto build_ai_setup_map(const Game::Mission::AISetup &setup) -> QVariantMap {
+auto build_ai_setup_map(const Game::Mission::AISetup& setup) -> QVariantMap {
   QVariantMap map;
   map["id"] = setup.id;
   map["nation"] = setup.nation;
@@ -196,8 +190,7 @@ auto build_ai_setup_map(const Game::Mission::AISetup &setup) -> QVariantMap {
 
   map["personality"] = build_personality_map(setup.personality);
   map["starting_units"] = build_unit_setup_list(setup.starting_units);
-  map["starting_buildings"] =
-      build_building_setup_list(setup.starting_buildings);
+  map["starting_buildings"] = build_building_setup_list(setup.starting_buildings);
   map["waves"] = build_wave_list(setup.waves);
 
   return map;
@@ -205,8 +198,8 @@ auto build_ai_setup_map(const Game::Mission::AISetup &setup) -> QVariantMap {
 
 } // namespace
 
-auto build_mission_definition_map(
-    const Game::Mission::MissionDefinition &mission) -> QVariantMap {
+auto build_mission_definition_map(const Game::Mission::MissionDefinition& mission)
+    -> QVariantMap {
   QVariantMap result;
   result["id"] = mission.id;
   result["title"] = mission.title;
@@ -228,16 +221,14 @@ auto build_mission_definition_map(
   result["player_setup"] = build_player_setup_map(mission.player_setup);
 
   QVariantList ai_setups;
-  for (const auto &ai_setup : mission.ai_setups) {
+  for (const auto& ai_setup : mission.ai_setups) {
     ai_setups.append(build_ai_setup_map(ai_setup));
   }
   result["ai_setups"] = ai_setups;
 
-  result["victory_conditions"] =
-      build_condition_list(mission.victory_conditions);
+  result["victory_conditions"] = build_condition_list(mission.victory_conditions);
   result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
-  result["optional_objectives"] =
-      build_condition_list(mission.optional_objectives);
+  result["optional_objectives"] = build_condition_list(mission.optional_objectives);
 
   return result;
 }

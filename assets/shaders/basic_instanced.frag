@@ -36,8 +36,7 @@ float wood_grain(vec2 p, float y) {
   return grain * 0.13 + fine - knot;
 }
 
-vec3 procedural_material_variation(vec3 base_color, vec3 world_pos,
-                                   vec3 normal) {
+vec3 procedural_material_variation(vec3 base_color, vec3 world_pos, vec3 normal) {
   vec2 uv = world_pos.xz * 4.0;
 
   float avg_color = (base_color.r + base_color.g + base_color.b) / 3.0;
@@ -51,9 +50,9 @@ vec3 procedural_material_variation(vec3 base_color, vec3 world_pos,
     b_is_cloth = true;
   } else if (u_material_id != 4) {
 
-    b_is_wood = (base_color.r < base_color.g * 2.5 &&
-                 base_color.r > base_color.b * 1.45 && avg_color > 0.18 &&
-                 avg_color < 0.50);
+    b_is_wood =
+        (base_color.r < base_color.g * 2.5 && base_color.r > base_color.b * 1.45 &&
+         avg_color > 0.18 && avg_color < 0.50);
     b_is_metal = (!b_is_wood && avg_color < 0.40);
     b_is_cloth = (!b_is_wood && !b_is_metal && avg_color > 0.65);
   }
@@ -111,8 +110,7 @@ void main() {
 
   float avg_color =
       (v_instance_color.r + v_instance_color.g + v_instance_color.b) / 3.0;
-  float wrap_amount =
-      avg_color > 0.65 ? 0.52 : (avg_color > 0.40 ? 0.20 : 0.05);
+  float wrap_amount = avg_color > 0.65 ? 0.52 : (avg_color > 0.40 ? 0.20 : 0.05);
 
   float n_dot_l = dot(normal, light_dir);
   float diff_raw = n_dot_l * (1.0 - wrap_amount) + wrap_amount;

@@ -1,23 +1,27 @@
 #include "spawn_validator.h"
+
+#include <algorithm>
+#include <cmath>
+
 #include "../../game/map/terrain_service.h"
 #include "../../game/systems/building_collision_registry.h"
 #include "ground_utils.h"
-#include <algorithm>
-#include <cmath>
 
 namespace Render::Ground {
 
 void SpawnTerrainCache::build_from_height_map(
-    const std::vector<float> &height_data,
-    const std::vector<Game::Map::TerrainType> &types, int w, int h, float ts) {
+    const std::vector<float>& height_data,
+    const std::vector<Game::Map::TerrainType>& types,
+    int w,
+    int h,
+    float ts) {
   width = w;
   height = h;
   tile_size = ts;
   heights = height_data;
   terrain_types = types;
 
-  normals.resize(static_cast<size_t>(width * height),
-                 QVector3D(0.0F, 1.0F, 0.0F));
+  normals.resize(static_cast<size_t>(width * height), QVector3D(0.0F, 1.0F, 0.0F));
 
   if (width < 2 || height < 2 || heights.empty()) {
     return;
@@ -26,14 +30,14 @@ void SpawnTerrainCache::build_from_height_map(
   for (int z = 0; z < height; ++z) {
     for (int x = 0; x < width; ++x) {
       int const idx = z * width + x;
-      float const gx0 = std::clamp(static_cast<float>(x) - 1.0F, 0.0F,
-                                   static_cast<float>(width - 1));
-      float const gx1 = std::clamp(static_cast<float>(x) + 1.0F, 0.0F,
-                                   static_cast<float>(width - 1));
-      float const gz0 = std::clamp(static_cast<float>(z) - 1.0F, 0.0F,
-                                   static_cast<float>(height - 1));
-      float const gz1 = std::clamp(static_cast<float>(z) + 1.0F, 0.0F,
-                                   static_cast<float>(height - 1));
+      float const gx0 =
+          std::clamp(static_cast<float>(x) - 1.0F, 0.0F, static_cast<float>(width - 1));
+      float const gx1 =
+          std::clamp(static_cast<float>(x) + 1.0F, 0.0F, static_cast<float>(width - 1));
+      float const gz0 = std::clamp(
+          static_cast<float>(z) - 1.0F, 0.0F, static_cast<float>(height - 1));
+      float const gz1 = std::clamp(
+          static_cast<float>(z) + 1.0F, 0.0F, static_cast<float>(height - 1));
 
       float const h_l = sample_height_at(gx0, static_cast<float>(z));
       float const h_r = sample_height_at(gx1, static_cast<float>(z));
@@ -101,9 +105,10 @@ auto SpawnTerrainCache::get_terrain_type_at(int grid_x, int grid_z) const
   return terrain_types[static_cast<size_t>(idx)];
 }
 
-SpawnValidator::SpawnValidator(const SpawnTerrainCache &cache,
-                               const SpawnValidationConfig &config)
-    : m_cache(cache), m_config(config) {
+SpawnValidator::SpawnValidator(const SpawnTerrainCache& cache,
+                               const SpawnValidationConfig& config)
+    : m_cache(cache)
+    , m_config(config) {
 
   float const edge_padding = std::clamp(m_config.edge_padding, 0.0F, 0.5F);
   m_edge_margin_x = static_cast<float>(m_config.grid_width) * edge_padding;
@@ -119,15 +124,13 @@ auto SpawnValidator::can_spawn_at_grid(float gx, float gz) const -> bool {
     return false;
   }
 
-  float const sgx =
-      std::clamp(gx, 0.0F, static_cast<float>(m_config.grid_width - 1));
-  float const sgz =
-      std::clamp(gz, 0.0F, static_cast<float>(m_config.grid_height - 1));
+  float const sgx = std::clamp(gx, 0.0F, static_cast<float>(m_config.grid_width - 1));
+  float const sgz = std::clamp(gz, 0.0F, static_cast<float>(m_config.grid_height - 1));
 
-  int const grid_x = std::clamp(static_cast<int>(std::floor(sgx + 0.5F)), 0,
-                                m_config.grid_width - 1);
-  int const grid_z = std::clamp(static_cast<int>(std::floor(sgz + 0.5F)), 0,
-                                m_config.grid_height - 1);
+  int const grid_x =
+      std::clamp(static_cast<int>(std::floor(sgx + 0.5F)), 0, m_config.grid_width - 1);
+  int const grid_z =
+      std::clamp(static_cast<int>(std::floor(sgz + 0.5F)), 0, m_config.grid_height - 1);
 
   if (!check_terrain_type(grid_x, grid_z)) {
     return false;
@@ -157,30 +160,32 @@ auto SpawnValidator::can_spawn_at_grid(float gx, float gz) const -> bool {
     return false;
   }
 
-  if (m_config.river_clearance > 0.0F &&
-      !check_river_clearance(world_x, world_z)) {
+  if (m_config.river_clearance > 0.0F && !check_river_clearance(world_x, world_z)) {
     return false;
   }
 
   return true;
 }
 
-auto SpawnValidator::can_spawn_at_world(float world_x,
-                                        float world_z) const -> bool {
+auto SpawnValidator::can_spawn_at_world(float world_x, float world_z) const -> bool {
   float gx = 0.0F;
   float gz = 0.0F;
   world_to_grid(world_x, world_z, gx, gz);
   return can_spawn_at_grid(gx, gz);
 }
 
-void SpawnValidator::grid_to_world(float gx, float gz, float &out_world_x,
-                                   float &out_world_z) const {
+void SpawnValidator::grid_to_world(float gx,
+                                   float gz,
+                                   float& out_world_x,
+                                   float& out_world_z) const {
   out_world_x = (gx - m_half_width) * m_config.tile_size;
   out_world_z = (gz - m_half_height) * m_config.tile_size;
 }
 
-void SpawnValidator::world_to_grid(float world_x, float world_z, float &out_gx,
-                                   float &out_gz) const {
+void SpawnValidator::world_to_grid(float world_x,
+                                   float world_z,
+                                   float& out_gx,
+                                   float& out_gz) const {
   out_gx = world_x / m_config.tile_size + m_half_width;
   out_gz = world_z / m_config.tile_size + m_half_height;
 }
@@ -226,10 +231,8 @@ auto SpawnValidator::check_river_margin(int grid_x, int grid_z) const -> bool {
       }
       int const nx = grid_x + dx;
       int const nz = grid_z + dz;
-      if (nx >= 0 && nx < m_config.grid_width && nz >= 0 &&
-          nz < m_config.grid_height) {
-        if (m_cache.get_terrain_type_at(nx, nz) ==
-            Game::Map::TerrainType::River) {
+      if (nx >= 0 && nx < m_config.grid_width && nz >= 0 && nz < m_config.grid_height) {
+        if (m_cache.get_terrain_type_at(nx, nz) == Game::Map::TerrainType::River) {
           return false;
         }
       }
@@ -245,8 +248,7 @@ auto SpawnValidator::check_slope(int grid_x, int grid_z) const -> bool {
 
 auto SpawnValidator::check_building_collision(float world_x,
                                               float world_z) const -> bool {
-  auto &building_registry =
-      Game::Systems::BuildingCollisionRegistry::instance();
+  auto& building_registry = Game::Systems::BuildingCollisionRegistry::instance();
   if (m_config.building_clearance > 0.0F) {
     return !building_registry.is_circle_overlapping_building(
         world_x, world_z, m_config.building_clearance);
@@ -254,25 +256,22 @@ auto SpawnValidator::check_building_collision(float world_x,
   return !building_registry.is_point_in_building(world_x, world_z);
 }
 
-auto SpawnValidator::check_road_collision(float world_x,
-                                          float world_z) const -> bool {
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  return !terrain_service.is_point_near_road(world_x, world_z,
-                                             m_config.road_clearance);
+auto SpawnValidator::check_road_collision(float world_x, float world_z) const -> bool {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  return !terrain_service.is_point_near_road(world_x, world_z, m_config.road_clearance);
 }
 
 auto SpawnValidator::check_bridge_collision(float world_x,
                                             float world_z) const -> bool {
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  return !terrain_service.is_point_near_bridge(world_x, world_z,
-                                               m_config.bridge_clearance);
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  return !terrain_service.is_point_near_bridge(
+      world_x, world_z, m_config.bridge_clearance);
 }
 
-auto SpawnValidator::check_river_clearance(float world_x,
-                                           float world_z) const -> bool {
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  return !terrain_service.is_point_near_river(world_x, world_z,
-                                              m_config.river_clearance);
+auto SpawnValidator::check_river_clearance(float world_x, float world_z) const -> bool {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  return !terrain_service.is_point_near_river(
+      world_x, world_z, m_config.river_clearance);
 }
 
 auto make_plant_spawn_config() -> SpawnValidationConfig {
@@ -395,10 +394,13 @@ auto make_camp_prop_spawn_config() -> SpawnValidationConfig {
   return config;
 }
 
-auto find_valid_ring_spawn_position(const SpawnValidator &validator,
-                                    float center_world_x, float center_world_z,
-                                    float preferred_distance, uint32_t &state,
-                                    float &out_world_x, float &out_world_z,
+auto find_valid_ring_spawn_position(const SpawnValidator& validator,
+                                    float center_world_x,
+                                    float center_world_z,
+                                    float preferred_distance,
+                                    uint32_t& state,
+                                    float& out_world_x,
+                                    float& out_world_z,
                                     int max_attempts) -> bool {
   constexpr float k_min_distance_scale = 0.82F;
   constexpr float k_max_distance_scale = 1.35F;

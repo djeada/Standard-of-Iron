@@ -1,15 +1,16 @@
 #pragma once
 
-#include "bpat_format.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cstdint>
 #include <iosfwd>
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "bpat_format.h"
 
 namespace Render::Creature::Bpat {
 
@@ -37,7 +38,7 @@ public:
 
   void append_clip_socket_transforms(std::span<const QMatrix4x4> socket_frames);
 
-  [[nodiscard]] auto write(std::ostream &out) const -> bool;
+  [[nodiscard]] auto write(std::ostream& out) const -> bool;
 
   [[nodiscard]] auto species_id() const noexcept -> std::uint32_t {
     return m_species_id;

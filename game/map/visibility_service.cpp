@@ -1,10 +1,5 @@
 #include "visibility_service.h"
 
-#include "../core/component.h"
-#include "../core/ownership_constants.h"
-#include "../core/world.h"
-#include "../systems/owner_registry.h"
-
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -14,6 +9,11 @@
 #include <shared_mutex>
 #include <utility>
 #include <vector>
+
+#include "../core/component.h"
+#include "../core/ownership_constants.h"
+#include "../core/world.h"
+#include "../systems/owner_registry.h"
 
 namespace Game::Map {
 
@@ -33,15 +33,14 @@ auto index_static(int grid_x, int grid_z, int width) -> int {
   return grid_z * width + grid_x;
 }
 
-auto world_to_grid_static(float world_coord, float half,
-                          float tile_size) -> int {
+auto world_to_grid_static(float world_coord, float half, float tile_size) -> int {
   const float grid_coord = world_coord / tile_size + half;
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }
 
 } // namespace
 
-auto VisibilityService::instance() -> VisibilityService & {
+auto VisibilityService::instance() -> VisibilityService& {
   static VisibilityService s_instance;
   return s_instance;
 }
@@ -59,8 +58,7 @@ void VisibilityService::initialize(int width, int height, float tile_size) {
   m_width = std::max(1, width);
   m_height = std::max(1, height);
   m_tile_size = std::max(k_min_tile_size, tile_size);
-  m_half_width =
-      static_cast<float>(m_width) * k_half_cell_offset - k_half_cell_offset;
+  m_half_width = static_cast<float>(m_width) * k_half_cell_offset - k_half_cell_offset;
   m_half_height =
       static_cast<float>(m_height) * k_half_cell_offset - k_half_cell_offset;
 
@@ -77,7 +75,8 @@ void VisibilityService::reset() {
     return;
   }
   std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
-  std::fill(m_cells.begin(), m_cells.end(),
+  std::fill(m_cells.begin(),
+            m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Unseen));
   m_version.fetch_add(1, std::memory_order_release);
   m_last_positions.clear();
@@ -85,8 +84,7 @@ void VisibilityService::reset() {
   reset_throttle();
 }
 
-auto VisibilityService::update(Engine::Core::World &world,
-                               int player_id) -> bool {
+auto VisibilityService::update(Engine::Core::World& world, int player_id) -> bool {
   if (!m_initialized) {
     return false;
   }
@@ -113,8 +111,7 @@ auto VisibilityService::update(Engine::Core::World &world,
   return integrated;
 }
 
-void VisibilityService::compute_immediate(Engine::Core::World &world,
-                                          int player_id) {
+void VisibilityService::compute_immediate(Engine::Core::World& world, int player_id) {
   if (!m_initialized) {
     return;
   }
@@ -131,23 +128,21 @@ void VisibilityService::compute_immediate(Engine::Core::World &world,
   reset_throttle();
 }
 
-auto VisibilityService::gather_vision_sources(Engine::Core::World &world,
-                                              int player_id)
+auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int player_id)
     -> std::vector<VisibilityService::VisionSource> {
   std::vector<VisionSource> sources;
-  const auto entities =
-      world.get_entities_with<Engine::Core::TransformComponent>();
+  const auto entities = world.get_entities_with<Engine::Core::TransformComponent>();
   const float range_padding = m_tile_size * k_half_cell_offset;
 
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   const float inverse_tile_size_sq = 1.0F / (m_tile_size * m_tile_size);
 
   std::unordered_map<std::uint32_t, CachedPosition> current_positions;
   bool any_moved = m_force_full_update;
 
-  for (auto *entity : entities) {
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (auto* entity : entities) {
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (transform == nullptr || unit == nullptr) {
       continue;
     }
@@ -165,8 +160,7 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World &world,
       continue;
     }
 
-    const float vision_range =
-        std::max(unit->vision_range, k_default_vision_range);
+    const float vision_range = std::max(unit->vision_range, k_default_vision_range);
     const int center_x = world_to_grid(transform->position.x, m_half_width);
     const int center_z = world_to_grid(transform->position.z, m_half_height);
     if (!in_bounds(center_x, center_z)) {
@@ -188,15 +182,13 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World &world,
         std::max(1, static_cast<int>(std::ceil(vision_range / m_tile_size)));
     const float expanded_range_sq =
         (vision_range + range_padding) * (vision_range + range_padding);
-    const float expanded_radius_cells_sq =
-        expanded_range_sq * inverse_tile_size_sq;
+    const float expanded_radius_cells_sq = expanded_range_sq * inverse_tile_size_sq;
 
-    sources.push_back(
-        {center_x, center_z, cell_radius, expanded_radius_cells_sq});
+    sources.push_back({center_x, center_z, cell_radius, expanded_radius_cells_sq});
   }
 
   if (!any_moved) {
-    for (const auto &[entity_id, pos] : m_last_positions) {
+    for (const auto& [entity_id, pos] : m_last_positions) {
       if (current_positions.find(entity_id) == current_positions.end()) {
         any_moved = true;
         break;
@@ -215,15 +207,13 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World &world,
 }
 
 auto VisibilityService::compose_job_payload(
-    const std::vector<VisionSource> &sources) const
-    -> VisibilityService::JobPayload {
+    const std::vector<VisionSource>& sources) const -> VisibilityService::JobPayload {
   std::shared_lock<std::shared_mutex> const lock(m_cells_mutex);
-  const auto generation_value =
-      m_generation.fetch_add(1ULL, std::memory_order_relaxed);
+  const auto generation_value = m_generation.fetch_add(1ULL, std::memory_order_relaxed);
   return JobPayload{m_width, m_height, m_cells, sources, generation_value};
 }
 
-void VisibilityService::enqueue_job(JobPayload &&payload) {
+void VisibilityService::enqueue_job(JobPayload&& payload) {
   {
     std::lock_guard<std::mutex> const lock(m_queue_mutex);
     m_pending_payload = std::move(payload);
@@ -233,7 +223,7 @@ void VisibilityService::enqueue_job(JobPayload &&payload) {
   m_queue_cv.notify_one();
 }
 
-void VisibilityService::integrate_result(JobResult &&result) {
+void VisibilityService::integrate_result(JobResult&& result) {
   if (result.changed) {
     std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
     m_cells = std::move(result.cells);
@@ -243,8 +233,8 @@ void VisibilityService::integrate_result(JobResult &&result) {
 
 void VisibilityService::ensure_worker_running() {
   bool expected = false;
-  if (m_worker_running.compare_exchange_strong(expected, true,
-                                               std::memory_order_acq_rel)) {
+  if (m_worker_running.compare_exchange_strong(
+          expected, true, std::memory_order_acq_rel)) {
     if (m_worker_thread.joinable()) {
       m_worker_thread.join();
     }
@@ -287,16 +277,14 @@ auto VisibilityService::execute_job(JobPayload payload)
     -> VisibilityService::JobResult {
   const int cell_count = payload.width * payload.height;
   const auto visible_val = static_cast<std::uint8_t>(VisibilityState::Visible);
-  const auto explored_val =
-      static_cast<std::uint8_t>(VisibilityState::Explored);
+  const auto explored_val = static_cast<std::uint8_t>(VisibilityState::Explored);
 
-  for (const auto &source : payload.sources) {
+  for (const auto& source : payload.sources) {
     const int min_z = std::max(0, source.center_z - source.cell_radius);
     const int max_z =
         std::min(payload.height - 1, source.center_z + source.cell_radius);
     const int min_x = std::max(0, source.center_x - source.cell_radius);
-    const int max_x =
-        std::min(payload.width - 1, source.center_x + source.cell_radius);
+    const int max_x = std::min(payload.width - 1, source.center_x + source.cell_radius);
 
     for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
       const int dz = grid_z - source.center_z;
@@ -308,8 +296,7 @@ auto VisibilityService::execute_job(JobPayload payload)
       for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
         const int dx = grid_x - source.center_x;
         const int dist_cells_sq = dx * dx + dz_sq;
-        if (static_cast<float>(dist_cells_sq) <=
-            source.expanded_radius_cells_sq) {
+        if (static_cast<float>(dist_cells_sq) <= source.expanded_radius_cells_sq) {
           const int idx = index_static(grid_x, grid_z, payload.width);
           payload.cells[idx] |= k_current_visible_marker;
         }
@@ -319,14 +306,11 @@ auto VisibilityService::execute_job(JobPayload payload)
 
   bool changed = false;
   for (int idx = 0; idx < cell_count; ++idx) {
-    const std::uint8_t previous_state =
-        payload.cells[idx] & ~k_current_visible_marker;
-    const bool now_visible =
-        (payload.cells[idx] & k_current_visible_marker) != 0U;
+    const std::uint8_t previous_state = payload.cells[idx] & ~k_current_visible_marker;
+    const bool now_visible = (payload.cells[idx] & k_current_visible_marker) != 0U;
     const std::uint8_t next_state =
-        now_visible
-            ? visible_val
-            : (previous_state == visible_val ? explored_val : previous_state);
+        now_visible ? visible_val
+                    : (previous_state == visible_val ? explored_val : previous_state);
     changed = changed || (next_state != previous_state);
     payload.cells[idx] = next_state;
   }
@@ -334,8 +318,7 @@ auto VisibilityService::execute_job(JobPayload payload)
   return JobResult{std::move(payload.cells), payload.generation, changed};
 }
 
-auto VisibilityService::Snapshot::in_bounds(int grid_x,
-                                            int grid_z) const -> bool {
+auto VisibilityService::Snapshot::in_bounds(int grid_x, int grid_z) const -> bool {
   return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
 }
 
@@ -349,8 +332,8 @@ auto VisibilityService::Snapshot::world_to_grid(float world_coord,
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }
 
-auto VisibilityService::Snapshot::state_at(int grid_x, int grid_z) const
-    -> VisibilityState {
+auto VisibilityService::Snapshot::state_at(int grid_x,
+                                           int grid_z) const -> VisibilityState {
   if (!initialized || !in_bounds(grid_x, grid_z)) {
     return VisibilityState::Visible;
   }
@@ -361,8 +344,8 @@ auto VisibilityService::Snapshot::state_at(int grid_x, int grid_z) const
   return static_cast<VisibilityState>(cells[static_cast<std::size_t>(idx)]);
 }
 
-auto VisibilityService::Snapshot::is_visible_world(
-    float world_x, float world_z) const -> bool {
+auto VisibilityService::Snapshot::is_visible_world(float world_x,
+                                                   float world_z) const -> bool {
   if (!initialized) {
     return true;
   }
@@ -379,8 +362,8 @@ auto VisibilityService::Snapshot::is_visible_world(
          static_cast<std::uint8_t>(VisibilityState::Visible);
 }
 
-auto VisibilityService::Snapshot::is_explored_world(
-    float world_x, float world_z) const -> bool {
+auto VisibilityService::Snapshot::is_explored_world(float world_x,
+                                                    float world_z) const -> bool {
   if (!initialized) {
     return true;
   }
@@ -398,8 +381,7 @@ auto VisibilityService::Snapshot::is_explored_world(
          state == static_cast<std::uint8_t>(VisibilityState::Explored);
 }
 
-auto VisibilityService::state_at(int grid_x,
-                                 int grid_z) const -> VisibilityState {
+auto VisibilityService::state_at(int grid_x, int grid_z) const -> VisibilityState {
   if (!m_initialized || !in_bounds(grid_x, grid_z)) {
     return VisibilityState::Visible;
   }
@@ -407,8 +389,7 @@ auto VisibilityService::state_at(int grid_x,
   return static_cast<VisibilityState>(m_cells[index(grid_x, grid_z)]);
 }
 
-auto VisibilityService::is_visible_world(float world_x,
-                                         float world_z) const -> bool {
+auto VisibilityService::is_visible_world(float world_x, float world_z) const -> bool {
   if (!m_initialized) {
     return true;
   }
@@ -422,8 +403,7 @@ auto VisibilityService::is_visible_world(float world_x,
          static_cast<std::uint8_t>(VisibilityState::Visible);
 }
 
-auto VisibilityService::is_explored_world(float world_x,
-                                          float world_z) const -> bool {
+auto VisibilityService::is_explored_world(float world_x, float world_z) const -> bool {
   if (!m_initialized) {
     return true;
   }
@@ -461,7 +441,8 @@ void VisibilityService::reveal_all() {
     return;
   }
   std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
-  std::fill(m_cells.begin(), m_cells.end(),
+  std::fill(m_cells.begin(),
+            m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Visible));
   m_version.fetch_add(1, std::memory_order_release);
   reset_throttle();
@@ -475,8 +456,7 @@ auto VisibilityService::index(int grid_x, int grid_z) const -> int {
   return grid_z * m_width + grid_x;
 }
 
-auto VisibilityService::world_to_grid(float world_coord,
-                                      float half) const -> int {
+auto VisibilityService::world_to_grid(float world_coord, float half) const -> int {
   const float grid_coord = world_coord / m_tile_size + half;
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }
@@ -486,6 +466,8 @@ auto VisibilityService::should_start_new_job() const -> bool {
   return (now - m_last_job_start_time) >= k_min_job_interval;
 }
 
-void VisibilityService::reset_throttle() { m_last_job_start_time = {}; }
+void VisibilityService::reset_throttle() {
+  m_last_job_start_time = {};
+}
 
 } // namespace Game::Map

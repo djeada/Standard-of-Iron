@@ -1,9 +1,9 @@
 #pragma once
 
-#include "render_request.h"
-
 #include <cstdint>
 #include <string_view>
+
+#include "render_request.h"
 
 namespace Render::Creature {
 
@@ -23,9 +23,8 @@ class RuntimeBakeAllowScope {
 public:
   RuntimeBakeAllowScope() noexcept;
   ~RuntimeBakeAllowScope();
-  RuntimeBakeAllowScope(const RuntimeBakeAllowScope &) = delete;
-  auto
-  operator=(const RuntimeBakeAllowScope &) -> RuntimeBakeAllowScope & = delete;
+  RuntimeBakeAllowScope(const RuntimeBakeAllowScope&) = delete;
+  auto operator=(const RuntimeBakeAllowScope&) -> RuntimeBakeAllowScope& = delete;
 
 private:
   bool m_previous{false};

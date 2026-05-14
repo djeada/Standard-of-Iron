@@ -1,5 +1,14 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+#include <QVector4D>
+
+#include <algorithm>
+#include <array>
+#include <gtest/gtest.h>
+#include <limits>
+
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/champion_renderer.h"
 #include "render/equipment/horse/armor/crupper_renderer.h"
@@ -15,14 +24,6 @@
 #include "render/rigged_mesh_bake.h"
 #include "render/static_attachment_spec.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <QVector4D>
-#include <algorithm>
-#include <array>
-#include <gtest/gtest.h>
-#include <limits>
-
 namespace {
 
 struct AABB {
@@ -33,7 +34,7 @@ struct AABB {
                -std::numeric_limits<float>::infinity(),
                -std::numeric_limits<float>::infinity()};
 
-  void include(const QVector3D &p) {
+  void include(const QVector3D& p) {
     mn.setX(std::min(mn.x(), p.x()));
     mn.setY(std::min(mn.y(), p.y()));
     mn.setZ(std::min(mn.z(), p.z()));
@@ -46,20 +47,20 @@ struct AABB {
   }
 };
 
-auto legacy_archetype_aabb(const Render::GL::EquipmentBatch &batch) -> AABB {
+auto legacy_archetype_aabb(const Render::GL::EquipmentBatch& batch) -> AABB {
   AABB box;
-  for (const auto &prim : batch.archetypes) {
+  for (const auto& prim : batch.archetypes) {
     if (prim.archetype == nullptr) {
       continue;
     }
-    const auto &slice = prim.archetype->lods[0];
-    for (const auto &draw : slice.draws) {
-      const auto *mesh = draw.mesh;
+    const auto& slice = prim.archetype->lods[0];
+    for (const auto& draw : slice.draws) {
+      const auto* mesh = draw.mesh;
       if (mesh == nullptr) {
         continue;
       }
       const QMatrix4x4 world = prim.world * draw.local_model;
-      for (const auto &v : mesh->get_vertices()) {
+      for (const auto& v : mesh->get_vertices()) {
         const QVector3D p{v.position[0], v.position[1], v.position[2]};
         box.include(world.map(p));
       }
@@ -68,7 +69,7 @@ auto legacy_archetype_aabb(const Render::GL::EquipmentBatch &batch) -> AABB {
   return box;
 }
 
-void expect_aabb_close(const AABB &a, const AABB &b, float eps) {
+void expect_aabb_close(const AABB& a, const AABB& b, float eps) {
   ASSERT_TRUE(a.valid()) << "legacy AABB is empty";
   ASSERT_TRUE(b.valid()) << "baked AABB is empty";
   EXPECT_NEAR(a.mn.x(), b.mn.x(), eps);
@@ -79,7 +80,7 @@ void expect_aabb_close(const AABB &a, const AABB &b, float eps) {
   EXPECT_NEAR(a.mx.z(), b.mx.z(), eps);
 }
 
-auto bone_from_frame(const Render::GL::HorseAttachmentFrame &f) -> QMatrix4x4 {
+auto bone_from_frame(const Render::GL::HorseAttachmentFrame& f) -> QMatrix4x4 {
   QMatrix4x4 m;
   m.setColumn(0, QVector4D(f.right, 0.0F));
   m.setColumn(1, QVector4D(f.up, 0.0F));
@@ -88,9 +89,9 @@ auto bone_from_frame(const Render::GL::HorseAttachmentFrame &f) -> QMatrix4x4 {
   return m;
 }
 
-auto bake_and_compare_single(const Render::GL::EquipmentBatch &legacy_batch,
-                             const Render::Creature::StaticAttachmentSpec &spec,
-                             const QMatrix4x4 &bone_world) -> void {
+auto bake_and_compare_single(const Render::GL::EquipmentBatch& legacy_batch,
+                             const Render::Creature::StaticAttachmentSpec& spec,
+                             const QMatrix4x4& bone_world) -> void {
   std::array<Render::Creature::BoneWorldMatrix, 1> bind{bone_world};
   std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{spec};
 
@@ -103,9 +104,9 @@ auto bake_and_compare_single(const Render::GL::EquipmentBatch &legacy_batch,
   const AABB legacy = legacy_archetype_aabb(legacy_batch);
 
   AABB bake;
-  for (const auto &v : baked.vertices) {
-    const QVector3D local{v.position_bone_local[0], v.position_bone_local[1],
-                          v.position_bone_local[2]};
+  for (const auto& v : baked.vertices) {
+    const QVector3D local{
+        v.position_bone_local[0], v.position_bone_local[1], v.position_bone_local[2]};
     bake.include(bone_world.map(local));
   }
 
@@ -164,8 +165,7 @@ TEST(BakedHorseAttachmentWorldPosition, RomanSaddleRootBoneBakeIsValid) {
   const auto spec = Render::GL::roman_saddle_make_static_attachment(
       static_cast<std::uint16_t>(HorseBone::Root), 9U, frame, root_bind);
 
-  std::vector<Render::Creature::BoneWorldMatrix> bind_vec(bind.begin(),
-                                                          bind.end());
+  std::vector<Render::Creature::BoneWorldMatrix> bind_vec(bind.begin(), bind.end());
   std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{spec};
 
   Render::Creature::BakeInput input{};
@@ -173,7 +173,7 @@ TEST(BakedHorseAttachmentWorldPosition, RomanSaddleRootBoneBakeIsValid) {
   input.attachments = attachments;
   const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
   ASSERT_FALSE(baked.vertices.empty());
-  for (const auto &v : baked.vertices) {
+  for (const auto& v : baked.vertices) {
     EXPECT_TRUE(std::isfinite(v.position_bone_local[0]));
     EXPECT_TRUE(std::isfinite(v.position_bone_local[1]));
     EXPECT_TRUE(std::isfinite(v.position_bone_local[2]));
@@ -238,8 +238,7 @@ TEST(BakedHorseAttachmentWorldPosition, ChampionMatchesLegacySubmit) {
 
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
-  Render::GL::ChampionRenderer::submit(ctx, frames, variant, anim,
-                                       legacy_batch);
+  Render::GL::ChampionRenderer::submit(ctx, frames, variant, anim, legacy_batch);
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
   const auto spec =
@@ -262,8 +261,7 @@ TEST(BakedHorseAttachmentWorldPosition, SaddleBagMatchesLegacySubmit) {
 
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
-  Render::GL::SaddleBagRenderer::submit(ctx, frames, variant, anim,
-                                        legacy_batch);
+  Render::GL::SaddleBagRenderer::submit(ctx, frames, variant, anim, legacy_batch);
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
   const auto spec =
@@ -288,14 +286,15 @@ TEST(BakedHorseAttachmentWorldPosition, ScaleBardingChestMatchesLegacySubmit) {
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
   Render::GL::append_horse_attachment_archetype(
-      legacy_batch, ctx, chest_frame,
+      legacy_batch,
+      ctx,
+      chest_frame,
       Render::GL::scale_barding_chest_archetype(),
       std::array<QVector3D, 1>{variant.tack_color * 0.85F});
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
   const auto spec = Render::GL::scale_barding_make_static_attachment(
-      Render::GL::scale_barding_chest_archetype(), 0, 9U, chest_frame,
-      bone_world);
+      Render::GL::scale_barding_chest_archetype(), 0, 9U, chest_frame, bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 
@@ -312,19 +311,19 @@ TEST(BakedHorseAttachmentWorldPosition, ScaleBardingBarrelMatchesLegacySubmit) {
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
   Render::GL::append_horse_attachment_archetype(
-      legacy_batch, ctx, barrel_frame,
+      legacy_batch,
+      ctx,
+      barrel_frame,
       Render::GL::scale_barding_barrel_archetype(),
       std::array<QVector3D, 1>{variant.tack_color * 0.85F});
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
   const auto spec = Render::GL::scale_barding_make_static_attachment(
-      Render::GL::scale_barding_barrel_archetype(), 0, 9U, barrel_frame,
-      bone_world);
+      Render::GL::scale_barding_barrel_archetype(), 0, 9U, barrel_frame, bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 
-TEST(BakedHorseAttachmentWorldPosition,
-     LeatherBardingChestMatchesLegacySubmit) {
+TEST(BakedHorseAttachmentWorldPosition, LeatherBardingChestMatchesLegacySubmit) {
   const auto chest_frame = make_test_chest_frame();
   const QMatrix4x4 bone_world = bone_from_frame(chest_frame);
 
@@ -337,14 +336,15 @@ TEST(BakedHorseAttachmentWorldPosition,
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
   Render::GL::append_horse_attachment_archetype(
-      legacy_batch, ctx, chest_frame,
+      legacy_batch,
+      ctx,
+      chest_frame,
       Render::GL::leather_barding_chest_archetype(),
       std::array<QVector3D, 1>{variant.saddle_color * 0.90F});
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
   const auto spec = Render::GL::leather_barding_make_static_attachment(
-      Render::GL::leather_barding_chest_archetype(), 0, 9U, chest_frame,
-      bone_world);
+      Render::GL::leather_barding_chest_archetype(), 0, 9U, chest_frame, bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 

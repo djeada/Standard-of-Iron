@@ -1,5 +1,12 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <algorithm>
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "render/creature/spec.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
@@ -11,18 +18,12 @@
 #include "render/horse/horse_spec.h"
 #include "render/submitter.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <algorithm>
-#include <gtest/gtest.h>
-#include <vector>
-
 namespace {
 
 using Render::GL::ISubmitter;
 
 struct Call {
-  Render::GL::Mesh *mesh{nullptr};
+  Render::GL::Mesh* mesh{nullptr};
   QMatrix4x4 model{};
   QVector3D color{};
   int material_id{0};
@@ -32,32 +33,39 @@ class CapturingSubmitter : public ISubmitter {
 public:
   std::vector<Call> calls;
 
-  void mesh(Render::GL::Mesh *m, const QMatrix4x4 &model, const QVector3D &col,
-            Render::GL::Texture *, float, int mat) override {
+  void mesh(Render::GL::Mesh* m,
+            const QMatrix4x4& model,
+            const QVector3D& col,
+            Render::GL::Texture*,
+            float,
+            int mat) override {
     calls.push_back({m, model, col, mat});
   }
-  void part(Render::GL::Mesh *m, Render::GL::Material *,
-            const QMatrix4x4 &model, const QVector3D &col,
-            Render::GL::Texture *, float, int mat) override {
+  void part(Render::GL::Mesh* m,
+            Render::GL::Material*,
+            const QMatrix4x4& model,
+            const QVector3D& col,
+            Render::GL::Texture*,
+            float,
+            int mat) override {
     calls.push_back({m, model, col, mat});
   }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 Render::GL::HorseDimensions make_horse_dims() {
@@ -97,65 +105,66 @@ Render::GL::HorseGait make_horse_gait() {
 
 auto find_primitive(std::span<const Render::Creature::PrimitiveInstance> prims,
                     std::string_view name)
-    -> const Render::Creature::PrimitiveInstance * {
-  auto it = std::find_if(prims.begin(), prims.end(), [&](auto const &prim) {
+    -> const Render::Creature::PrimitiveInstance* {
+  auto it = std::find_if(prims.begin(), prims.end(), [&](auto const& prim) {
     return prim.debug_name == name;
   });
   return it == prims.end() ? nullptr : &*it;
 }
 
-auto count_primitives(
-    std::span<const Render::Creature::PrimitiveInstance> prims,
-    std::string_view prefix) -> std::size_t {
+auto count_primitives(std::span<const Render::Creature::PrimitiveInstance> prims,
+                      std::string_view prefix) -> std::size_t {
   return static_cast<std::size_t>(
-      std::count_if(prims.begin(), prims.end(), [&](auto const &prim) {
+      std::count_if(prims.begin(), prims.end(), [&](auto const& prim) {
         return prim.debug_name.rfind(prefix, 0) == 0;
       }));
 }
 
-auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
-  auto const &vertices = mesh.get_vertices();
+auto mesh_axis_span(const Render::GL::Mesh& mesh, std::size_t axis) -> float {
+  auto const& vertices = mesh.get_vertices();
   if (vertices.empty()) {
     return 0.0F;
   }
   float min_v = vertices.front().position[axis];
   float max_v = vertices.front().position[axis];
-  for (auto const &vertex : vertices) {
+  for (auto const& vertex : vertices) {
     min_v = std::min(min_v, vertex.position[axis]);
     max_v = std::max(max_v, vertex.position[axis]);
   }
   return max_v - min_v;
 }
 
-auto mesh_axis_min(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
-  auto const &vertices = mesh.get_vertices();
+auto mesh_axis_min(const Render::GL::Mesh& mesh, std::size_t axis) -> float {
+  auto const& vertices = mesh.get_vertices();
   if (vertices.empty()) {
     return 0.0F;
   }
   float min_v = vertices.front().position[axis];
-  for (auto const &vertex : vertices) {
+  for (auto const& vertex : vertices) {
     min_v = std::min(min_v, vertex.position[axis]);
   }
   return min_v;
 }
 
-auto mesh_axis_max(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
-  auto const &vertices = mesh.get_vertices();
+auto mesh_axis_max(const Render::GL::Mesh& mesh, std::size_t axis) -> float {
+  auto const& vertices = mesh.get_vertices();
   if (vertices.empty()) {
     return 0.0F;
   }
   float max_v = vertices.front().position[axis];
-  for (auto const &vertex : vertices) {
+  for (auto const& vertex : vertices) {
     max_v = std::max(max_v, vertex.position[axis]);
   }
   return max_v;
 }
 
-auto max_axis_in_z_band(const Render::GL::Mesh &mesh, float center_z,
-                        float half_band, std::size_t axis) -> float {
+auto max_axis_in_z_band(const Render::GL::Mesh& mesh,
+                        float center_z,
+                        float half_band,
+                        std::size_t axis) -> float {
   bool found = false;
   float best = 0.0F;
-  for (auto const &vertex : mesh.get_vertices()) {
+  for (auto const& vertex : mesh.get_vertices()) {
     if (std::abs(vertex.position[2] - center_z) > half_band) {
       continue;
     }
@@ -167,11 +176,13 @@ auto max_axis_in_z_band(const Render::GL::Mesh &mesh, float center_z,
   return found ? best : mesh_axis_max(mesh, axis);
 }
 
-auto min_axis_in_z_band(const Render::GL::Mesh &mesh, float center_z,
-                        float half_band, std::size_t axis) -> float {
+auto min_axis_in_z_band(const Render::GL::Mesh& mesh,
+                        float center_z,
+                        float half_band,
+                        std::size_t axis) -> float {
   bool found = false;
   float best = 0.0F;
-  for (auto const &vertex : mesh.get_vertices()) {
+  for (auto const& vertex : mesh.get_vertices()) {
     if (std::abs(vertex.position[2] - center_z) > half_band) {
       continue;
     }
@@ -183,10 +194,12 @@ auto min_axis_in_z_band(const Render::GL::Mesh &mesh, float center_z,
   return found ? best : mesh_axis_min(mesh, axis);
 }
 
-auto max_abs_axis_in_z_band(const Render::GL::Mesh &mesh, float center_z,
-                            float half_band, std::size_t axis) -> float {
+auto max_abs_axis_in_z_band(const Render::GL::Mesh& mesh,
+                            float center_z,
+                            float half_band,
+                            std::size_t axis) -> float {
   float best = 0.0F;
-  for (auto const &vertex : mesh.get_vertices()) {
+  for (auto const& vertex : mesh.get_vertices()) {
     if (std::abs(vertex.position[2] - center_z) > half_band) {
       continue;
     }
@@ -195,11 +208,10 @@ auto max_abs_axis_in_z_band(const Render::GL::Mesh &mesh, float center_z,
   return best;
 }
 
-auto max_ring_radius_at_y(const Render::GL::Mesh &mesh,
-                          bool anchor_end) -> float {
-  auto const &vertices = mesh.get_vertices();
+auto max_ring_radius_at_y(const Render::GL::Mesh& mesh, bool anchor_end) -> float {
+  auto const& vertices = mesh.get_vertices();
   float max_radius = 0.0F;
-  for (auto const &vertex : vertices) {
+  for (auto const& vertex : vertices) {
     float const y = vertex.position[1];
     if (anchor_end ? (y > -0.49F) : (y < 0.49F)) {
       continue;
@@ -211,28 +223,28 @@ auto max_ring_radius_at_y(const Render::GL::Mesh &mesh,
   return max_radius;
 }
 
-auto point_to_segment_distance(const QVector3D &point, const QVector3D &a,
-                               const QVector3D &b) -> float {
+auto point_to_segment_distance(const QVector3D& point,
+                               const QVector3D& a,
+                               const QVector3D& b) -> float {
   QVector3D const ab = b - a;
   float const denom = QVector3D::dotProduct(ab, ab);
   if (denom <= 1.0e-6F) {
     return (point - a).length();
   }
-  float const t =
-      std::clamp(QVector3D::dotProduct(point - a, ab) / denom, 0.0F, 1.0F);
+  float const t = std::clamp(QVector3D::dotProduct(point - a, ab) / denom, 0.0F, 1.0F);
   return (point - (a + ab * t)).length();
 }
 
 } // namespace
 
 TEST(HorseSpecTest, CreatureSpecHasTwoLods) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 1U);
   EXPECT_EQ(spec.lod_full.primitives.size(), 13U);
 }
 
 TEST(HorseSpecTest, TopologyParentsLegsAndNeckFromBody) {
-  auto const &topology = Render::Horse::horse_topology();
+  auto const& topology = Render::Horse::horse_topology();
   using Bone = Render::Horse::HorseBone;
 
   EXPECT_EQ(topology.bones[static_cast<std::size_t>(Bone::ShoulderFL)].parent,
@@ -249,8 +261,7 @@ TEST(HorseSpecTest, TopologyParentsLegsAndNeckFromBody) {
             static_cast<Render::Creature::BoneIndex>(Bone::NeckTop));
 }
 
-TEST(HorseSpecTest,
-     BasePoseKeepsHindquartersBroaderAndHindFeetTuckedUnderCroup) {
+TEST(HorseSpecTest, BasePoseKeepsHindquartersBroaderAndHindFeetTuckedUnderCroup) {
   auto dims = make_horse_dims();
 
   Render::Horse::HorseSpecPose pose;
@@ -276,16 +287,12 @@ TEST(HorseSpecTest, AnimatedPoseKeepsLegsOutsideTorsoSpread) {
   Render::Horse::HorseSpecPose pose;
   Render::Horse::make_horse_spec_pose_animated(
       dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, false}, pose);
-  QVector3D const shoulder_fl =
-      pose.barrel_center + pose.shoulder_offset_pose_fl;
-  QVector3D const shoulder_bl =
-      pose.barrel_center + pose.shoulder_offset_pose_bl;
+  QVector3D const shoulder_fl = pose.barrel_center + pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_bl = pose.barrel_center + pose.shoulder_offset_pose_bl;
 
   EXPECT_GT(pose.body_half.x(), dims.body_width * 0.85F);
-  EXPECT_GT(std::abs(pose.shoulder_offset_pose_fl.x()),
-            dims.body_width * 0.20F);
-  EXPECT_GT(std::abs(pose.shoulder_offset_pose_bl.x()),
-            dims.body_width * 0.16F);
+  EXPECT_GT(std::abs(pose.shoulder_offset_pose_fl.x()), dims.body_width * 0.20F);
+  EXPECT_GT(std::abs(pose.shoulder_offset_pose_bl.x()), dims.body_width * 0.16F);
   EXPECT_GT(std::abs(pose.shoulder_offset_pose_bl.x()),
             std::abs(pose.shoulder_offset_pose_fl.x()));
   EXPECT_GT(pose.shoulder_offset_pose_fl.y(), 0.0F);
@@ -294,8 +301,7 @@ TEST(HorseSpecTest, AnimatedPoseKeepsLegsOutsideTorsoSpread) {
   EXPECT_LT(pose.shoulder_offset_pose_bl.z(), 0.0F);
   EXPECT_LT(pose.foot_fl.y(), shoulder_fl.y() - dims.leg_length * 0.95F);
   EXPECT_LT(pose.foot_bl.y(), shoulder_bl.y() - dims.leg_length * 0.95F);
-  EXPECT_GT(pose.neck_base.y() - pose.barrel_center.y(),
-            dims.body_height * 0.20F);
+  EXPECT_GT(pose.neck_base.y() - pose.barrel_center.y(), dims.body_height * 0.20F);
   EXPECT_GE(pose.neck_base.z(), dims.body_length * 0.37F);
   EXPECT_GT(pose.neck_top.y() - pose.neck_base.y(), dims.neck_rise * 2.0F);
   EXPECT_GT(pose.neck_top.z(), pose.neck_base.z() + dims.neck_length * 0.60F);
@@ -306,8 +312,7 @@ TEST(HorseSpecTest, AnimatedPoseKeepsLegsOutsideTorsoSpread) {
   EXPECT_LT(pose.neck_radius, dims.body_width * 0.80F);
   EXPECT_LT(pose.neck_radius, pose.body_half.x());
   EXPECT_GT(pose.body_half.y(), dims.body_height);
-  EXPECT_LT(pose.body_half.y(),
-            Render::Horse::horse_body_visual_height(dims) * 0.75F);
+  EXPECT_LT(pose.body_half.y(), Render::Horse::horse_body_visual_height(dims) * 0.75F);
   EXPECT_GT(pose.head_half.z(), pose.head_half.y() * 1.8F);
 }
 
@@ -322,14 +327,11 @@ TEST(HorseSpecTest, BasePoseBodyKeepsDepthCloserToWidthThanFlatBlob) {
   EXPECT_LT(depth_ratio, 2.45F);
 }
 
-TEST(HorseSpecTest,
-     GeneratedHorseDimensionsUseWiderTallerTorsoWithLongerLargerHead) {
+TEST(HorseSpecTest, GeneratedHorseDimensionsUseWiderTallerTorsoWithLongerLargerHead) {
   auto const dims = Render::GL::make_horse_dimensions(0U);
 
-  EXPECT_GE(dims.body_width,
-            Render::GL::HorseDimensionRange::k_body_width_min * 1.18F);
-  EXPECT_LE(dims.body_width,
-            Render::GL::HorseDimensionRange::k_body_width_max * 1.18F);
+  EXPECT_GE(dims.body_width, Render::GL::HorseDimensionRange::k_body_width_min * 1.18F);
+  EXPECT_LE(dims.body_width, Render::GL::HorseDimensionRange::k_body_width_max * 1.18F);
   EXPECT_GE(dims.body_height,
             Render::GL::HorseDimensionRange::k_body_height_min * 1.2F);
   EXPECT_LE(dims.body_height,
@@ -346,10 +348,12 @@ TEST(HorseSpecTest,
   EXPECT_LE(dims.head_length,
             Render::GL::HorseDimensionRange::k_head_length_max *
                 Render::GL::HorseDimensionRange::k_head_scale);
-  EXPECT_GE(dims.head_width, Render::GL::HorseDimensionRange::k_head_width_min *
-                                 Render::GL::HorseDimensionRange::k_head_scale);
-  EXPECT_LE(dims.head_width, Render::GL::HorseDimensionRange::k_head_width_max *
-                                 Render::GL::HorseDimensionRange::k_head_scale);
+  EXPECT_GE(dims.head_width,
+            Render::GL::HorseDimensionRange::k_head_width_min *
+                Render::GL::HorseDimensionRange::k_head_scale);
+  EXPECT_LE(dims.head_width,
+            Render::GL::HorseDimensionRange::k_head_width_max *
+                Render::GL::HorseDimensionRange::k_head_scale);
   EXPECT_GE(dims.head_height,
             Render::GL::HorseDimensionRange::k_head_height_min *
                 Render::GL::HorseDimensionRange::k_head_scale);
@@ -371,15 +375,15 @@ TEST(HorseSpecTest, LayoutLowersTorsoChainBySharedTwentyPercentDrop) {
   float const body_height_vis = Render::Horse::horse_body_visual_height(dims);
 
   EXPECT_NEAR(torso_drop, torso_lift * 0.20F, 1.0e-6F);
-  EXPECT_NEAR(Render::Horse::horse_torso_visual_lift(dims),
-              torso_lift - torso_drop, 1.0e-6F);
+  EXPECT_NEAR(
+      Render::Horse::horse_torso_visual_lift(dims), torso_lift - torso_drop, 1.0e-6F);
   EXPECT_NEAR(Render::Horse::horse_neck_base_local(dims).y(),
-              body_height_vis *
-                      Render::Horse::k_horse_neck_base_body_height_scale -
+              body_height_vis * Render::Horse::k_horse_neck_base_body_height_scale -
                   torso_drop,
               1.0e-6F);
   EXPECT_NEAR(Render::Horse::horse_tail_base_local(dims).y(),
-              body_height_vis * 1.82F - torso_drop, 1.0e-6F);
+              body_height_vis * 1.82F - torso_drop,
+              1.0e-6F);
 }
 
 TEST(HorseSpecTest, GeneratedHorseDimensionsUseShorterNeckAndSmallerHead) {
@@ -393,10 +397,8 @@ TEST(HorseSpecTest, GeneratedHorseDimensionsUseShorterNeckAndSmallerHead) {
             Render::GL::HorseDimensionRange::k_head_length_min * 1.35F);
   EXPECT_LE(dims.head_length,
             Render::GL::HorseDimensionRange::k_head_length_max * 1.35F);
-  EXPECT_GE(dims.head_width,
-            Render::GL::HorseDimensionRange::k_head_width_min * 1.35F);
-  EXPECT_LE(dims.head_width,
-            Render::GL::HorseDimensionRange::k_head_width_max * 1.35F);
+  EXPECT_GE(dims.head_width, Render::GL::HorseDimensionRange::k_head_width_min * 1.35F);
+  EXPECT_LE(dims.head_width, Render::GL::HorseDimensionRange::k_head_width_max * 1.35F);
   EXPECT_GE(dims.head_height,
             Render::GL::HorseDimensionRange::k_head_height_min * 1.35F);
   EXPECT_LE(dims.head_height,
@@ -404,17 +406,15 @@ TEST(HorseSpecTest, GeneratedHorseDimensionsUseShorterNeckAndSmallerHead) {
 }
 
 TEST(HorseSpecTest, GeneratedHorseVariantUsesBlackHooves) {
-  auto const variant =
-      Render::GL::make_horse_variant(0U, QVector3D(), QVector3D());
+  auto const variant = Render::GL::make_horse_variant(0U, QVector3D(), QVector3D());
 
   EXPECT_EQ(variant.hoof_color, QVector3D(0.03F, 0.03F, 0.03F));
 }
 
 TEST(HorseSpecTest, FullSpecUsesWarhorseSilhouette) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
 
-  auto const *whole =
-      find_primitive(spec.lod_full.primitives, "horse.full.body");
+  auto const* whole = find_primitive(spec.lod_full.primitives, "horse.full.body");
 
   ASSERT_NE(whole, nullptr);
   EXPECT_EQ(whole->shape, Render::Creature::PrimitiveShape::Mesh);
@@ -425,19 +425,16 @@ TEST(HorseSpecTest, FullSpecUsesWarhorseSilhouette) {
   EXPECT_GT(z_span, y_span * 0.70F);
   EXPECT_GT(z_span, x_span * 1.40F);
   EXPECT_LT(y_span, z_span * 1.45F);
-  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "horse.full.whole"),
-            nullptr);
-  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "horse.full.chest"),
-            nullptr);
+  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "horse.full.whole"), nullptr);
+  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "horse.full.chest"), nullptr);
   EXPECT_EQ(find_primitive(spec.lod_full.primitives, "horse.full.head.cheek.l"),
             nullptr);
 }
 
 TEST(HorseSpecTest, FullSpecForearmStaysHeavierThanRearUpperLeg) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
 
-  auto const *whole =
-      find_primitive(spec.lod_full.primitives, "horse.full.body");
+  auto const* whole = find_primitive(spec.lod_full.primitives, "horse.full.body");
 
   ASSERT_NE(whole, nullptr);
   ASSERT_NE(whole->custom_mesh, nullptr);
@@ -446,19 +443,18 @@ TEST(HorseSpecTest, FullSpecForearmStaysHeavierThanRearUpperLeg) {
 }
 
 TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
   auto const dims = Render::GL::make_horse_dimensions(0U);
 
-  auto const *front_thigh =
+  auto const* front_thigh =
       find_primitive(spec.lod_full.primitives, "horse.leg.fl.thigh");
-  auto const *front_calf =
+  auto const* front_calf =
       find_primitive(spec.lod_full.primitives, "horse.leg.fl.calf");
-  auto const *front_hoof =
+  auto const* front_hoof =
       find_primitive(spec.lod_full.primitives, "horse.leg.fl.hoof");
-  auto const *rear_thigh =
+  auto const* rear_thigh =
       find_primitive(spec.lod_full.primitives, "horse.leg.bl.thigh");
-  auto const *rear_calf =
-      find_primitive(spec.lod_full.primitives, "horse.leg.bl.calf");
+  auto const* rear_calf = find_primitive(spec.lod_full.primitives, "horse.leg.bl.calf");
 
   ASSERT_NE(front_thigh, nullptr);
   ASSERT_NE(front_calf, nullptr);
@@ -471,21 +467,17 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
   ASSERT_NE(front_thigh->custom_mesh, nullptr);
   ASSERT_NE(front_calf->custom_mesh, nullptr);
   ASSERT_NE(front_hoof->custom_mesh, nullptr);
-  EXPECT_EQ(front_thigh->params.anchor_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Horse::HorseBone::ShoulderFL));
+  EXPECT_EQ(
+      front_thigh->params.anchor_bone,
+      static_cast<Render::Creature::BoneIndex>(Render::Horse::HorseBone::ShoulderFL));
   EXPECT_EQ(front_thigh->params.tail_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Horse::HorseBone::KneeFL));
+            static_cast<Render::Creature::BoneIndex>(Render::Horse::HorseBone::KneeFL));
   EXPECT_EQ(front_calf->params.anchor_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Horse::HorseBone::KneeFL));
+            static_cast<Render::Creature::BoneIndex>(Render::Horse::HorseBone::KneeFL));
   EXPECT_EQ(front_calf->params.tail_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Horse::HorseBone::FootFL));
+            static_cast<Render::Creature::BoneIndex>(Render::Horse::HorseBone::FootFL));
   EXPECT_EQ(front_hoof->params.anchor_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Horse::HorseBone::FootFL));
+            static_cast<Render::Creature::BoneIndex>(Render::Horse::HorseBone::FootFL));
   EXPECT_EQ(front_hoof->color_role, 4U);
   EXPECT_GT(front_thigh->params.radius, front_calf->params.radius * 1.9F);
   EXPECT_GT(front_thigh->params.radius,
@@ -505,12 +497,12 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
               1.0e-6F);
   EXPECT_GT(rear_thigh->params.head_offset.z(), -dims.body_length * 0.015F);
   EXPECT_LT(rear_thigh->params.head_offset.z(), 0.0F);
-  EXPECT_NEAR(rear_thigh->params.tail_offset.y(),
-              rear_calf->params.head_offset.y(), 1.0e-6F);
+  EXPECT_NEAR(
+      rear_thigh->params.tail_offset.y(), rear_calf->params.head_offset.y(), 1.0e-6F);
   EXPECT_GT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.05F);
   EXPECT_LT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.08F);
-  EXPECT_NEAR(rear_thigh->params.tail_offset.z(),
-              rear_calf->params.head_offset.z(), 1.0e-6F);
+  EXPECT_NEAR(
+      rear_thigh->params.tail_offset.z(), rear_calf->params.head_offset.z(), 1.0e-6F);
   EXPECT_GT(front_hoof->params.half_extents.x(), dims.body_width * 0.18F);
   EXPECT_GT(front_hoof->params.half_extents.z(), dims.body_width * 0.32F);
   EXPECT_GT(front_hoof->params.half_extents.y(), dims.hoof_height * 0.50F);
@@ -526,41 +518,37 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
 }
 
 TEST(HorseSpecTest, RearThighAndCalfShareKneeSeam) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
   auto const dims = Render::GL::make_horse_dimensions(0U);
 
-  auto const *rear_thigh =
+  auto const* rear_thigh =
       find_primitive(spec.lod_full.primitives, "horse.leg.bl.thigh");
-  auto const *rear_calf =
-      find_primitive(spec.lod_full.primitives, "horse.leg.bl.calf");
+  auto const* rear_calf = find_primitive(spec.lod_full.primitives, "horse.leg.bl.calf");
 
   ASSERT_NE(rear_thigh, nullptr);
   ASSERT_NE(rear_calf, nullptr);
   EXPECT_EQ(rear_thigh->params.tail_bone, rear_calf->params.anchor_bone);
-  EXPECT_NEAR(
-      (rear_thigh->params.tail_offset - rear_calf->params.head_offset).length(),
-      0.0F, 1.0e-6F);
-  EXPECT_NEAR(rear_calf->params.head_offset.y(), dims.leg_length * 0.10F,
+  EXPECT_NEAR((rear_thigh->params.tail_offset - rear_calf->params.head_offset).length(),
+              0.0F,
               1.0e-6F);
-  EXPECT_NEAR(rear_calf->params.head_offset.z(), dims.body_length * 0.070F,
-              1.0e-6F);
+  EXPECT_NEAR(rear_calf->params.head_offset.y(), dims.leg_length * 0.10F, 1.0e-6F);
+  EXPECT_NEAR(rear_calf->params.head_offset.z(), dims.body_length * 0.070F, 1.0e-6F);
 }
 
 TEST(HorseSpecTest, ManifestUsesFacetedHorseHeadAndEars) {
-  auto const &manifest = Render::Horse::horse_manifest();
+  auto const& manifest = Render::Horse::horse_manifest();
 
-  auto const find_node = [&](std::string_view name)
-      -> const Render::Creature::Quadruped::MeshNode * {
-    auto it =
-        std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                     manifest.lod_full.mesh_nodes.end(),
-                     [&](auto const &node) { return node.debug_name == name; });
+  auto const find_node =
+      [&](std::string_view name) -> const Render::Creature::Quadruped::MeshNode* {
+    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                           manifest.lod_full.mesh_nodes.end(),
+                           [&](auto const& node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
-  auto const *neck_node = find_node("horse.neck");
-  auto const *head_upper_node = find_node("horse.head.upper");
-  auto const *ear_l_node = find_node("horse.ear.l");
+  auto const* neck_node = find_node("horse.neck");
+  auto const* head_upper_node = find_node("horse.head.upper");
+  auto const* ear_l_node = find_node("horse.ear.l");
 
   ASSERT_NE(neck_node, nullptr);
   ASSERT_NE(head_upper_node, nullptr);
@@ -574,12 +562,11 @@ TEST(HorseSpecTest, ManifestUsesFacetedHorseHeadAndEars) {
   EXPECT_EQ(find_node("horse.head.cheek.l"), nullptr);
   EXPECT_EQ(find_node("horse.head.cheek.r"), nullptr);
 
-  auto const *neck =
+  auto const* neck =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&neck_node->data);
-  auto const *head_upper =
-      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(
-          &head_upper_node->data);
-  auto const *ear_l =
+  auto const* head_upper =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&head_upper_node->data);
+  auto const* ear_l =
       std::get_if<Render::Creature::Quadruped::FlatFanNode>(&ear_l_node->data);
 
   ASSERT_NE(neck, nullptr);
@@ -598,26 +585,25 @@ TEST(HorseSpecTest, ManifestUsesFacetedHorseHeadAndEars) {
 }
 
 TEST(HorseSpecTest, ManifestFrontTorsoTopRisesIntoNeck) {
-  auto const &manifest = Render::Horse::horse_manifest();
+  auto const& manifest = Render::Horse::horse_manifest();
 
-  auto const find_node = [&](std::string_view name)
-      -> const Render::Creature::Quadruped::MeshNode * {
-    auto it =
-        std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                     manifest.lod_full.mesh_nodes.end(),
-                     [&](auto const &node) { return node.debug_name == name; });
+  auto const find_node =
+      [&](std::string_view name) -> const Render::Creature::Quadruped::MeshNode* {
+    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                           manifest.lod_full.mesh_nodes.end(),
+                           [&](auto const& node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
-  auto const *front_node = find_node("horse.body.front");
-  auto const *neck_node = find_node("horse.neck");
+  auto const* front_node = find_node("horse.body.front");
+  auto const* neck_node = find_node("horse.neck");
 
   ASSERT_NE(front_node, nullptr);
   ASSERT_NE(neck_node, nullptr);
 
-  auto const *front = std::get_if<Render::Creature::Quadruped::CustomMeshNode>(
-      &front_node->data);
-  auto const *neck =
+  auto const* front =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&front_node->data);
+  auto const* neck =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&neck_node->data);
 
   ASSERT_NE(front, nullptr);
@@ -642,31 +628,30 @@ TEST(HorseSpecTest, ManifestFrontTorsoTopRisesIntoNeck) {
 }
 
 TEST(HorseSpecTest, ManifestTorsoSectionsUseFourFifthsOriginalLength) {
-  auto const &manifest = Render::Horse::horse_manifest();
+  auto const& manifest = Render::Horse::horse_manifest();
 
-  auto const find_node = [&](std::string_view name)
-      -> const Render::Creature::Quadruped::MeshNode * {
-    auto it =
-        std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                     manifest.lod_full.mesh_nodes.end(),
-                     [&](auto const &node) { return node.debug_name == name; });
+  auto const find_node =
+      [&](std::string_view name) -> const Render::Creature::Quadruped::MeshNode* {
+    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                           manifest.lod_full.mesh_nodes.end(),
+                           [&](auto const& node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
-  auto const *rear_node = find_node("horse.body.rear");
-  auto const *mid_node = find_node("horse.body.mid");
-  auto const *front_node = find_node("horse.body.front");
+  auto const* rear_node = find_node("horse.body.rear");
+  auto const* mid_node = find_node("horse.body.mid");
+  auto const* front_node = find_node("horse.body.front");
 
   ASSERT_NE(rear_node, nullptr);
   ASSERT_NE(mid_node, nullptr);
   ASSERT_NE(front_node, nullptr);
 
-  auto const *rear = std::get_if<Render::Creature::Quadruped::CustomMeshNode>(
-      &rear_node->data);
-  auto const *mid =
+  auto const* rear =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&rear_node->data);
+  auto const* mid =
       std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&mid_node->data);
-  auto const *front = std::get_if<Render::Creature::Quadruped::CustomMeshNode>(
-      &front_node->data);
+  auto const* front =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&front_node->data);
 
   ASSERT_NE(rear, nullptr);
   ASSERT_NE(mid, nullptr);
@@ -675,8 +660,8 @@ TEST(HorseSpecTest, ManifestTorsoSectionsUseFourFifthsOriginalLength) {
   Render::GL::Mesh rear_mesh(rear->vertices, rear->indices);
   Render::GL::Mesh mid_mesh(mid->vertices, mid->indices);
   Render::GL::Mesh front_mesh(front->vertices, front->indices);
-  float const body_length = Render::Horse::horse_body_visual_length(
-      Render::GL::make_horse_dimensions(0U));
+  float const body_length =
+      Render::Horse::horse_body_visual_length(Render::GL::make_horse_dimensions(0U));
   float const expected_section_span = body_length * 0.48F * 0.80F;
 
   EXPECT_NEAR(mesh_axis_span(rear_mesh, 2), expected_section_span, 1.0e-4F);
@@ -685,19 +670,18 @@ TEST(HorseSpecTest, ManifestTorsoSectionsUseFourFifthsOriginalLength) {
 }
 
 TEST(HorseSpecTest, ManifestRearTorsoRoundsIntoCroupInsteadOfFlatTube) {
-  auto const &manifest = Render::Horse::horse_manifest();
+  auto const& manifest = Render::Horse::horse_manifest();
 
-  auto const find_node = [&](std::string_view name)
-      -> const Render::Creature::Quadruped::MeshNode * {
-    auto it =
-        std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                     manifest.lod_full.mesh_nodes.end(),
-                     [&](auto const &node) { return node.debug_name == name; });
+  auto const find_node =
+      [&](std::string_view name) -> const Render::Creature::Quadruped::MeshNode* {
+    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                           manifest.lod_full.mesh_nodes.end(),
+                           [&](auto const& node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
-  auto const *rear_node = find_node("horse.body.rear");
-  auto const *mid_node = find_node("horse.body.mid");
+  auto const* rear_node = find_node("horse.body.rear");
+  auto const* mid_node = find_node("horse.body.mid");
   ASSERT_NE(rear_node, nullptr);
   ASSERT_NE(mid_node, nullptr);
   EXPECT_EQ(find_node("horse.body.core"), nullptr);
@@ -705,9 +689,9 @@ TEST(HorseSpecTest, ManifestRearTorsoRoundsIntoCroupInsteadOfFlatTube) {
   EXPECT_EQ(find_node("horse.body.haunch.l"), nullptr);
   EXPECT_EQ(find_node("horse.body.haunch.r"), nullptr);
 
-  auto const *rear = std::get_if<Render::Creature::Quadruped::CustomMeshNode>(
-      &rear_node->data);
-  auto const *mid =
+  auto const* rear =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&rear_node->data);
+  auto const* mid =
       std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&mid_node->data);
   ASSERT_NE(rear, nullptr);
   ASSERT_NE(mid, nullptr);
@@ -721,26 +705,18 @@ TEST(HorseSpecTest, ManifestRearTorsoRoundsIntoCroupInsteadOfFlatTube) {
   float const tail_z = rear_z_min + rear_z_span * 0.16F;
   float const croup_z = rear_z_min + rear_z_span * 0.50F;
   float const flank_z = rear_z_min + rear_z_span * 0.82F;
-  float const mid_z =
-      mesh_axis_min(mid_mesh, 2) + mesh_axis_span(mid_mesh, 2) * 0.18F;
+  float const mid_z = mesh_axis_min(mid_mesh, 2) + mesh_axis_span(mid_mesh, 2) * 0.18F;
 
-  float const tail_width =
-      max_abs_axis_in_z_band(rear_mesh, tail_z, rear_band, 0);
-  float const croup_width =
-      max_abs_axis_in_z_band(rear_mesh, croup_z, rear_band, 0);
-  float const flank_width =
-      max_abs_axis_in_z_band(rear_mesh, flank_z, rear_band, 0);
+  float const tail_width = max_abs_axis_in_z_band(rear_mesh, tail_z, rear_band, 0);
+  float const croup_width = max_abs_axis_in_z_band(rear_mesh, croup_z, rear_band, 0);
+  float const flank_width = max_abs_axis_in_z_band(rear_mesh, flank_z, rear_band, 0);
   float const tail_dorsal = max_axis_in_z_band(rear_mesh, tail_z, rear_band, 1);
-  float const croup_dorsal =
-      max_axis_in_z_band(rear_mesh, croup_z, rear_band, 1);
-  float const tail_ventral =
-      min_axis_in_z_band(rear_mesh, tail_z, rear_band, 1);
-  float const croup_ventral =
-      min_axis_in_z_band(rear_mesh, croup_z, rear_band, 1);
-  float const flank_ventral =
-      min_axis_in_z_band(rear_mesh, flank_z, rear_band, 1);
-  float const mid_ventral = min_axis_in_z_band(
-      mid_mesh, mid_z, mesh_axis_span(mid_mesh, 2) * 0.16F, 1);
+  float const croup_dorsal = max_axis_in_z_band(rear_mesh, croup_z, rear_band, 1);
+  float const tail_ventral = min_axis_in_z_band(rear_mesh, tail_z, rear_band, 1);
+  float const croup_ventral = min_axis_in_z_band(rear_mesh, croup_z, rear_band, 1);
+  float const flank_ventral = min_axis_in_z_band(rear_mesh, flank_z, rear_band, 1);
+  float const mid_ventral =
+      min_axis_in_z_band(mid_mesh, mid_z, mesh_axis_span(mid_mesh, 2) * 0.16F, 1);
 
   EXPECT_LT(tail_width, croup_width);
   EXPECT_GT(croup_width, flank_width);
@@ -752,27 +728,26 @@ TEST(HorseSpecTest, ManifestRearTorsoRoundsIntoCroupInsteadOfFlatTube) {
 }
 
 TEST(HorseSpecTest, ManifestUsesTailDockAndHairInsteadOfSingleTube) {
-  auto const &manifest = Render::Horse::horse_manifest();
+  auto const& manifest = Render::Horse::horse_manifest();
 
-  auto const find_node = [&](std::string_view name)
-      -> const Render::Creature::Quadruped::MeshNode * {
-    auto it =
-        std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                     manifest.lod_full.mesh_nodes.end(),
-                     [&](auto const &node) { return node.debug_name == name; });
+  auto const find_node =
+      [&](std::string_view name) -> const Render::Creature::Quadruped::MeshNode* {
+    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                           manifest.lod_full.mesh_nodes.end(),
+                           [&](auto const& node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
   EXPECT_EQ(find_node("horse.tail"), nullptr);
 
-  auto const *dock_node = find_node("horse.tail.dock");
-  auto const *hair_node = find_node("horse.tail.hair");
+  auto const* dock_node = find_node("horse.tail.dock");
+  auto const* hair_node = find_node("horse.tail.hair");
   ASSERT_NE(dock_node, nullptr);
   ASSERT_NE(hair_node, nullptr);
 
-  auto const *dock =
+  auto const* dock =
       std::get_if<Render::Creature::Quadruped::ConeNode>(&dock_node->data);
-  auto const *hair =
+  auto const* hair =
       std::get_if<Render::Creature::Quadruped::FlatFanNode>(&hair_node->data);
   ASSERT_NE(dock, nullptr);
   ASSERT_NE(hair, nullptr);
@@ -788,20 +763,19 @@ TEST(HorseSpecTest, ManifestUsesTailDockAndHairInsteadOfSingleTube) {
 }
 
 TEST(HorseSpecTest, ManifestAddsWithersAndBrisketMassForForequarterRead) {
-  auto const &manifest = Render::Horse::horse_manifest();
+  auto const& manifest = Render::Horse::horse_manifest();
 
-  auto const find_node = [&](std::string_view name)
-      -> const Render::Creature::Quadruped::MeshNode * {
-    auto it =
-        std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                     manifest.lod_full.mesh_nodes.end(),
-                     [&](auto const &node) { return node.debug_name == name; });
+  auto const find_node =
+      [&](std::string_view name) -> const Render::Creature::Quadruped::MeshNode* {
+    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                           manifest.lod_full.mesh_nodes.end(),
+                           [&](auto const& node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
-  auto const *front_node = find_node("horse.body.front");
-  auto const *mid_node = find_node("horse.body.mid");
-  auto const *neck_node = find_node("horse.neck");
+  auto const* front_node = find_node("horse.body.front");
+  auto const* mid_node = find_node("horse.body.mid");
+  auto const* neck_node = find_node("horse.neck");
 
   ASSERT_NE(front_node, nullptr);
   ASSERT_NE(mid_node, nullptr);
@@ -813,11 +787,11 @@ TEST(HorseSpecTest, ManifestAddsWithersAndBrisketMassForForequarterRead) {
   EXPECT_EQ(find_node("horse.body.shoulder.l"), nullptr);
   EXPECT_EQ(find_node("horse.body.shoulder.r"), nullptr);
 
-  auto const *front = std::get_if<Render::Creature::Quadruped::CustomMeshNode>(
-      &front_node->data);
-  auto const *mid =
+  auto const* front =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&front_node->data);
+  auto const* mid =
       std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&mid_node->data);
-  auto const *neck =
+  auto const* neck =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&neck_node->data);
 
   ASSERT_NE(front, nullptr);
@@ -846,30 +820,27 @@ TEST(HorseSpecTest, ManifestAddsWithersAndBrisketMassForForequarterRead) {
 }
 
 TEST(HorseSpecTest, ManifestKeepsShorterMoreTaperedMuzzleProfile) {
-  auto const &manifest = Render::Horse::horse_manifest();
+  auto const& manifest = Render::Horse::horse_manifest();
 
-  auto const find_node = [&](std::string_view name)
-      -> const Render::Creature::Quadruped::MeshNode * {
-    auto it =
-        std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                     manifest.lod_full.mesh_nodes.end(),
-                     [&](auto const &node) { return node.debug_name == name; });
+  auto const find_node =
+      [&](std::string_view name) -> const Render::Creature::Quadruped::MeshNode* {
+    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                           manifest.lod_full.mesh_nodes.end(),
+                           [&](auto const& node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
-  auto const *head_upper_node = find_node("horse.head.upper");
+  auto const* head_upper_node = find_node("horse.head.upper");
   ASSERT_NE(head_upper_node, nullptr);
   EXPECT_EQ(find_node("horse.head.nose"), nullptr);
 
-  auto const *head_upper =
-      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(
-          &head_upper_node->data);
+  auto const* head_upper =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&head_upper_node->data);
 
   ASSERT_NE(head_upper, nullptr);
 
   Render::GL::Mesh head_upper_mesh(head_upper->vertices, head_upper->indices);
-  Render::GL::HorseDimensions const dims =
-      Render::GL::make_horse_dimensions(0U);
+  Render::GL::HorseDimensions const dims = Render::GL::make_horse_dimensions(0U);
   float const head_length_vis = Render::Horse::horse_head_visual_length(dims);
   float const head_z_min = mesh_axis_min(head_upper_mesh, 2);
   float const head_z_span = mesh_axis_span(head_upper_mesh, 2);
@@ -881,12 +852,9 @@ TEST(HorseSpecTest, ManifestKeepsShorterMoreTaperedMuzzleProfile) {
       max_abs_axis_in_z_band(head_upper_mesh, skull_z, head_band, 0);
   float const muzzle_width =
       max_abs_axis_in_z_band(head_upper_mesh, muzzle_z, head_band, 0);
-  float const skull_top =
-      max_axis_in_z_band(head_upper_mesh, skull_z, head_band, 1);
-  float const muzzle_top =
-      max_axis_in_z_band(head_upper_mesh, muzzle_z, head_band, 1);
-  float const skull_bottom =
-      min_axis_in_z_band(head_upper_mesh, skull_z, head_band, 1);
+  float const skull_top = max_axis_in_z_band(head_upper_mesh, skull_z, head_band, 1);
+  float const muzzle_top = max_axis_in_z_band(head_upper_mesh, muzzle_z, head_band, 1);
+  float const skull_bottom = min_axis_in_z_band(head_upper_mesh, skull_z, head_band, 1);
   float const muzzle_bottom =
       min_axis_in_z_band(head_upper_mesh, muzzle_z, head_band, 1);
 
@@ -894,16 +862,14 @@ TEST(HorseSpecTest, ManifestKeepsShorterMoreTaperedMuzzleProfile) {
   EXPECT_LT(head_z_span, head_length_vis * 0.67F);
   EXPECT_LT(muzzle_width, skull_width * 0.75F);
   EXPECT_LT(muzzle_top - muzzle_bottom, (skull_top - skull_bottom) * 0.85F);
-  EXPECT_LT((muzzle_top + muzzle_bottom) * 0.5F,
-            (skull_top + skull_bottom) * 0.5F);
+  EXPECT_LT((muzzle_top + muzzle_bottom) * 0.5F, (skull_top + skull_bottom) * 0.5F);
 }
 
 TEST(HorseSpecTest, FullSpecFrontHoofCentersUnderFrontCannon) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
   auto const dims = Render::GL::make_horse_dimensions(0U);
 
-  auto const *hoof =
-      find_primitive(spec.lod_full.primitives, "horse.leg.fl.hoof");
+  auto const* hoof = find_primitive(spec.lod_full.primitives, "horse.leg.fl.hoof");
 
   ASSERT_NE(hoof, nullptr);
   EXPECT_EQ(hoof->shape, Render::Creature::PrimitiveShape::Mesh);
@@ -920,9 +886,9 @@ TEST(HorseSpecTest, FullSpecFrontHoofCentersUnderFrontCannon) {
 }
 
 TEST(HorseSpecTest, MinimalSpecMatchesWarhorseSilhouette) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
 
-  auto const *whole =
+  auto const* whole =
       find_primitive(spec.lod_minimal.primitives, "horse.minimal.whole");
 
   ASSERT_NE(whole, nullptr);
@@ -949,30 +915,24 @@ TEST(HorseSpecTest, AnimatedWalkKeepsRearHoofLowerDuringStanceThanSwing) {
   Render::Horse::HorseSpecPose stance_pose;
   Render::Horse::HorseSpecPose swing_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, true},
-      stance_pose);
+      dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, true}, stance_pose);
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.75F, 0.0F, true},
-      swing_pose);
+      dims, gait, Render::Horse::HorsePoseMotion{0.75F, 0.0F, true}, swing_pose);
 
   EXPECT_LT(stance_pose.foot_bl.y(), swing_pose.foot_bl.y());
   EXPECT_GT(swing_pose.foot_bl.y() - stance_pose.foot_bl.y(), 0.05F);
 }
 
-TEST(HorseSpecTest,
-     AnimatedPoseBendsFrontKneesForwardAndRearKneesBackDuringMotion) {
+TEST(HorseSpecTest, AnimatedPoseBendsFrontKneesForwardAndRearKneesBackDuringMotion) {
   auto dims = make_horse_dims();
-  auto gait =
-      Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
+  auto gait = Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
 
   Render::Horse::HorseSpecPose pose;
   Render::Horse::make_horse_spec_pose_animated(
       dims, gait, Render::Horse::HorsePoseMotion{0.70F, 0.0F, true}, pose);
 
-  QVector3D const shoulder_fl =
-      pose.barrel_center + pose.shoulder_offset_pose_fl;
-  QVector3D const shoulder_bl =
-      pose.barrel_center + pose.shoulder_offset_pose_bl;
+  QVector3D const shoulder_fl = pose.barrel_center + pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_bl = pose.barrel_center + pose.shoulder_offset_pose_bl;
   float const front_mid_z = (shoulder_fl.z() + pose.foot_fl.z()) * 0.5F;
   float const rear_mid_z = (shoulder_bl.z() + pose.foot_bl.z()) * 0.5F;
 
@@ -997,10 +957,8 @@ TEST(HorseSpecTest,
 
 TEST(HorseSpecTest, WalkAndTrotProduceDifferentKneeFlexProfiles) {
   auto dims = make_horse_dims();
-  auto walk =
-      Render::GL::gait_for_type(Render::GL::GaitType::WALK, make_horse_gait());
-  auto trot =
-      Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
+  auto walk = Render::GL::gait_for_type(Render::GL::GaitType::WALK, make_horse_gait());
+  auto trot = Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
 
   Render::Horse::HorseSpecPose walk_pose;
   Render::Horse::HorseSpecPose trot_pose;
@@ -1013,10 +971,10 @@ TEST(HorseSpecTest, WalkAndTrotProduceDifferentKneeFlexProfiles) {
       walk_pose.barrel_center + walk_pose.shoulder_offset_pose_fl;
   QVector3D const trot_shoulder =
       trot_pose.barrel_center + trot_pose.shoulder_offset_pose_fl;
-  float const walk_bend = point_to_segment_distance(
-      walk_pose.knee_fl, walk_shoulder, walk_pose.foot_fl);
-  float const trot_bend = point_to_segment_distance(
-      trot_pose.knee_fl, trot_shoulder, trot_pose.foot_fl);
+  float const walk_bend =
+      point_to_segment_distance(walk_pose.knee_fl, walk_shoulder, walk_pose.foot_fl);
+  float const trot_bend =
+      point_to_segment_distance(trot_pose.knee_fl, trot_shoulder, trot_pose.foot_fl);
 
   EXPECT_GT(trot_bend, walk_bend * 1.03F);
 }
@@ -1042,21 +1000,16 @@ TEST(HorseSpecTest, FightPoseRaisesFrontFeetHigherThanIdlePose) {
 
   Render::Horse::HorseSpecPose fight_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, true},
-      fight_pose);
+      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, true}, fight_pose);
 
   Render::Horse::HorseSpecPose idle_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, false},
-      idle_pose);
+      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, false}, idle_pose);
 
-  EXPECT_GT(fight_pose.foot_fl.y() - idle_pose.foot_fl.y(),
-            dims.leg_length * 0.25F);
+  EXPECT_GT(fight_pose.foot_fl.y() - idle_pose.foot_fl.y(), dims.leg_length * 0.25F);
 
-  EXPECT_NEAR(fight_pose.foot_bl.y(), idle_pose.foot_bl.y(),
-              dims.leg_length * 0.05F);
-  EXPECT_NEAR(fight_pose.foot_br.y(), idle_pose.foot_br.y(),
-              dims.leg_length * 0.05F);
+  EXPECT_NEAR(fight_pose.foot_bl.y(), idle_pose.foot_bl.y(), dims.leg_length * 0.05F);
+  EXPECT_NEAR(fight_pose.foot_br.y(), idle_pose.foot_br.y(), dims.leg_length * 0.05F);
 }
 
 TEST(HorseSpecTest, FightPoseStrikePhaseLowersFrontFeetBelowPeak) {
@@ -1065,12 +1018,13 @@ TEST(HorseSpecTest, FightPoseStrikePhaseLowersFrontFeetBelowPeak) {
 
   Render::Horse::HorseSpecPose peak_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, true},
-      peak_pose);
+      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, true}, peak_pose);
 
   Render::Horse::HorseSpecPose strike_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.72F, 0.0F, false, true},
+      dims,
+      gait,
+      Render::Horse::HorsePoseMotion{0.72F, 0.0F, false, true},
       strike_pose);
 
   EXPECT_LT(strike_pose.foot_fl.y(), peak_pose.foot_fl.y());
@@ -1079,18 +1033,18 @@ TEST(HorseSpecTest, FightPoseStrikePhaseLowersFrontFeetBelowPeak) {
 TEST(HorseSpecTest, MovementBobVariesAcrossFrames) {
   auto dims = make_horse_dims();
   dims.move_bob_amplitude = 0.030F;
-  auto gait =
-      Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
+  auto gait = Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
 
   Render::Horse::HorseSpecPose pose_zero;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, true, false},
-      pose_zero);
+      dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, true, false}, pose_zero);
 
   float const max_bob = dims.move_bob_amplitude * 0.85F;
   Render::Horse::HorseSpecPose pose_peak;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.25F, max_bob, true, false},
+      dims,
+      gait,
+      Render::Horse::HorsePoseMotion{0.25F, max_bob, true, false},
       pose_peak);
 
   EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
@@ -1102,11 +1056,9 @@ TEST(HorseSpecTest, AnimatedIdleKeepsFrontKneeSlightlyBent) {
 
   Render::Horse::HorseSpecPose pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, false, false},
-      pose);
+      dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, false, false}, pose);
 
-  QVector3D const shoulder_fl =
-      pose.barrel_center + pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_fl = pose.barrel_center + pose.shoulder_offset_pose_fl;
   float const front_bend =
       point_to_segment_distance(pose.knee_fl, shoulder_fl, pose.foot_fl);
 
@@ -1121,21 +1073,16 @@ TEST(HorseSpecTest, FightPoseNeckArchedHigherThanIdlePose) {
 
   Render::Horse::HorseSpecPose fight_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, true},
-      fight_pose);
+      dims, gait, Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, true}, fight_pose);
 
   Render::Horse::HorseSpecPose idle_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait, Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, false},
-      idle_pose);
+      dims, gait, Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, false}, idle_pose);
 
   EXPECT_GT(fight_pose.neck_top.y(), idle_pose.neck_top.y());
-  EXPECT_GT(fight_pose.neck_top.y() - idle_pose.neck_top.y(),
-            dims.neck_rise * 0.10F);
+  EXPECT_GT(fight_pose.neck_top.y() - idle_pose.neck_top.y(), dims.neck_rise * 0.10F);
 
-  float const fight_head_drop =
-      fight_pose.neck_top.y() - fight_pose.head_center.y();
-  float const idle_head_drop =
-      idle_pose.neck_top.y() - idle_pose.head_center.y();
+  float const fight_head_drop = fight_pose.neck_top.y() - fight_pose.head_center.y();
+  float const idle_head_drop = idle_pose.neck_top.y() - idle_pose.head_center.y();
   EXPECT_GT(fight_head_drop, idle_head_drop);
 }

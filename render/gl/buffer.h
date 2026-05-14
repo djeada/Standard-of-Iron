@@ -1,15 +1,24 @@
 #pragma once
 
 #include <QOpenGLFunctions_3_3_Core>
+
 #include <vector>
 
 namespace Render::GL {
 
 class Buffer : protected QOpenGLFunctions_3_3_Core {
 public:
-  enum class Type { Vertex, Index, Uniform };
+  enum class Type {
+    Vertex,
+    Index,
+    Uniform
+  };
 
-  enum class Usage { Static, Dynamic, Stream };
+  enum class Usage {
+    Static,
+    Dynamic,
+    Stream
+  };
 
   Buffer(Type type);
   ~Buffer() override;
@@ -17,10 +26,10 @@ public:
   void bind();
   void unbind();
 
-  void set_data(const void *data, size_t size, Usage usage = Usage::Static);
+  void set_data(const void* data, size_t size, Usage usage = Usage::Static);
 
   template <typename T>
-  void set_data(const std::vector<T> &data, Usage usage = Usage::Static) {
+  void set_data(const std::vector<T>& data, Usage usage = Usage::Static) {
     set_data(data.data(), data.size() * sizeof(T), usage);
   }
 
@@ -39,8 +48,8 @@ public:
   void bind();
   void unbind();
 
-  void add_vertex_buffer(Buffer &buffer, const std::vector<int> &layout);
-  void set_index_buffer(Buffer &buffer);
+  void add_vertex_buffer(Buffer& buffer, const std::vector<int>& layout);
+  void set_index_buffer(Buffer& buffer);
   [[nodiscard]] auto id() const -> GLuint { return m_vao; }
 
 private:

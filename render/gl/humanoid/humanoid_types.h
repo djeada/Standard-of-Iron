@@ -1,10 +1,12 @@
 #pragma once
 
-#include "../../../game/core/component.h"
-#include "../../palette.h"
 #include <QVector3D>
+
 #include <algorithm>
 #include <cstdint>
+
+#include "../../../game/core/component.h"
+#include "../../palette.h"
 
 namespace Render::GL {
 
@@ -77,7 +79,7 @@ struct AnimationInputs {
   float idle_duration{0.0F};
 };
 
-inline auto hold_transition_amount(const AnimationInputs &inputs) -> float {
+inline auto hold_transition_amount(const AnimationInputs& inputs) -> float {
   if (inputs.is_in_hold_mode) {
     return std::clamp(inputs.hold_entry_progress, 0.0F, 1.0F);
   }
@@ -154,7 +156,7 @@ struct VariationParams {
   static auto from_seed(uint32_t seed) -> VariationParams {
     VariationParams v{};
 
-    auto next_rand = [](uint32_t &s) -> float {
+    auto next_rand = [](uint32_t& s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
@@ -224,9 +226,7 @@ struct HumanoidGaitDescriptor {
   auto is_walking() const -> bool { return state == HumanoidMotionState::Walk; }
   auto is_running() const -> bool { return state == HumanoidMotionState::Run; }
   auto is_holding() const -> bool { return state == HumanoidMotionState::Hold; }
-  auto is_attacking() const -> bool {
-    return state == HumanoidMotionState::Attacking;
-  }
+  auto is_attacking() const -> bool { return state == HumanoidMotionState::Attacking; }
 };
 
 struct HumanoidAnimationContext {
@@ -254,9 +254,7 @@ struct HumanoidAnimationContext {
   float ambient_idle_phase{0.0F};
 
   auto locomotion_speed() const -> float { return gait.speed; }
-  auto locomotion_normalized_speed() const -> float {
-    return gait.normalized_speed;
-  }
+  auto locomotion_normalized_speed() const -> float { return gait.normalized_speed; }
   auto locomotion_forward() const -> QVector3D { return locomotion_direction; }
   auto locomotion_velocity_flat() const -> QVector3D { return gait.velocity; }
   auto heading_forward() const -> QVector3D { return entity_forward; }

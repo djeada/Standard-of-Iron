@@ -34,7 +34,7 @@ inline auto toString(CursorMode mode) -> QString {
   return "normal";
 }
 
-inline auto fromString(const QString &str) -> CursorMode {
+inline auto fromString(const QString& str) -> CursorMode {
   if (str == "patrol") {
     return CursorMode::Patrol;
   }
@@ -56,7 +56,9 @@ inline auto fromString(const QString &str) -> CursorMode {
   return CursorMode::Normal;
 }
 
-inline auto toInt(CursorMode mode) -> int { return static_cast<int>(mode); }
+inline auto toInt(CursorMode mode) -> int {
+  return static_cast<int>(mode);
+}
 
 inline auto fromInt(int value) -> CursorMode {
   switch (value) {

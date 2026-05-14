@@ -1,7 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -24,7 +23,7 @@ auto find_repo_root() -> std::filesystem::path {
   return std::filesystem::current_path();
 }
 
-auto read_text(const std::filesystem::path &path) -> std::string {
+auto read_text(const std::filesystem::path& path) -> std::string {
   std::ifstream input(path);
   if (!input.is_open()) {
     return {};
@@ -34,7 +33,7 @@ auto read_text(const std::filesystem::path &path) -> std::string {
   return buffer.str();
 }
 
-auto contains(const std::string &text, const std::string &needle) -> bool {
+auto contains(const std::string& text, const std::string& needle) -> bool {
   return text.find(needle) != std::string::npos;
 }
 
@@ -67,10 +66,10 @@ TEST(RenderThreadBoundaryTest, RenderSubmitDoesNotCallCombatQuerySearches) {
       "process_attacks(",
   };
 
-  for (const auto &path : render_sources) {
+  for (const auto& path : render_sources) {
     const auto source = read_text(path);
     ASSERT_FALSE(source.empty()) << path;
-    for (const auto &token : forbidden_tokens) {
+    for (const auto& token : forbidden_tokens) {
       EXPECT_FALSE(contains(source, token)) << path << " contains " << token;
     }
   }

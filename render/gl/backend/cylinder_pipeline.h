@@ -1,11 +1,13 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <memory>
+#include <vector>
+
 #include "../persistent_buffer.h"
 #include "../shader_cache.h"
 #include "pipeline_interface.h"
-#include <QVector3D>
-#include <memory>
-#include <vector>
 
 namespace Render::GL {
 class Buffer;
@@ -15,15 +17,13 @@ namespace Render::GL::BackendPipelines {
 
 class CylinderPipeline : public IPipeline {
 public:
-  explicit CylinderPipeline(GL::ShaderCache *shader_cache);
+  explicit CylinderPipeline(GL::ShaderCache* shader_cache);
   ~CylinderPipeline() override;
 
   auto initialize() -> bool override;
   void shutdown() override;
   void cache_uniforms() override;
-  [[nodiscard]] auto is_initialized() const -> bool override {
-    return m_initialized;
-  }
+  [[nodiscard]] auto is_initialized() const -> bool override { return m_initialized; }
 
   void begin_frame();
 
@@ -31,13 +31,13 @@ public:
   void draw_cylinders(std::size_t count);
 
   void upload_fog_instances(std::size_t count);
-  void bind_fog_instance_buffer(GL::Buffer *instance_buffer);
+  void bind_fog_instance_buffer(GL::Buffer* instance_buffer);
   void draw_fog(std::size_t count);
 
-  [[nodiscard]] auto cylinder_shader() const -> GL::Shader * {
+  [[nodiscard]] auto cylinder_shader() const -> GL::Shader* {
     return m_cylinder_shader;
   }
-  [[nodiscard]] auto fog_shader() const -> GL::Shader * { return m_fog_shader; }
+  [[nodiscard]] auto fog_shader() const -> GL::Shader* { return m_fog_shader; }
 
   struct CylinderUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -75,11 +75,11 @@ private:
   void initialize_fog_pipeline();
   void shutdown_fog_pipeline();
 
-  GL::ShaderCache *m_shader_cache;
+  GL::ShaderCache* m_shader_cache;
   bool m_initialized{false};
   bool m_use_persistent_buffers{false};
 
-  GL::Shader *m_cylinder_shader{nullptr};
+  GL::Shader* m_cylinder_shader{nullptr};
   GLuint m_cylinder_vao{0};
   GLuint m_cylinder_vertex_buffer{0};
   GLuint m_cylinder_index_buffer{0};
@@ -88,7 +88,7 @@ private:
   std::size_t m_cylinder_instance_capacity{0};
   GL::PersistentRingBuffer<CylinderInstanceGpu> m_cylinder_persistent_buffer;
 
-  GL::Shader *m_fog_shader{nullptr};
+  GL::Shader* m_fog_shader{nullptr};
   GLuint m_fog_vao{0};
   GLuint m_fog_vertex_buffer{0};
   GLuint m_fog_index_buffer{0};

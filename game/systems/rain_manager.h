@@ -1,20 +1,25 @@
 #pragma once
 
-#include "game/map/map_definition.h"
 #include <cstdint>
 #include <functional>
 
+#include "game/map/map_definition.h"
+
 namespace Game::Systems {
 
-enum class RainState { Clear, FadingIn, Active, FadingOut };
+enum class RainState {
+  Clear,
+  FadingIn,
+  Active,
+  FadingOut
+};
 
 class RainManager {
 public:
   RainManager();
   ~RainManager() = default;
 
-  void configure(const Game::Map::RainSettings &settings,
-                 std::uint32_t map_seed);
+  void configure(const Game::Map::RainSettings& settings, std::uint32_t map_seed);
 
   void reset();
 
@@ -24,9 +29,7 @@ public:
 
   [[nodiscard]] auto get_state() const -> RainState { return m_state; }
 
-  [[nodiscard]] auto get_intensity() const -> float {
-    return m_current_intensity;
-  }
+  [[nodiscard]] auto get_intensity() const -> float { return m_current_intensity; }
 
   [[nodiscard]] auto get_cycle_time() const -> float { return m_cycle_time; }
 

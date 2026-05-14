@@ -1,10 +1,5 @@
 #include "nation_loader.h"
 
-#include "../units/building_type.h"
-#include "../units/troop_catalog.h"
-#include "../units/troop_type.h"
-#include "nation_id.h"
-#include "nation_registry.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QDirIterator>
@@ -13,6 +8,12 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLoggingCategory>
+
+#include "../units/building_type.h"
+#include "../units/troop_catalog.h"
+#include "../units/troop_type.h"
+#include "nation_id.h"
+#include "nation_registry.h"
 
 namespace {
 
@@ -24,22 +25,23 @@ using Game::Systems::TroopType;
 using Game::Units::TroopCatalog;
 using Game::Units::TroopClass;
 
-[[nodiscard]] auto ensure_object(const QJsonValue &value) -> QJsonObject {
+[[nodiscard]] auto ensure_object(const QJsonValue& value) -> QJsonObject {
   if (value.isObject()) {
     return value.toObject();
   }
   return {};
 }
 
-[[nodiscard]] auto ensure_array(const QJsonValue &value) -> QJsonArray {
+[[nodiscard]] auto ensure_array(const QJsonValue& value) -> QJsonArray {
   if (value.isArray()) {
     return value.toArray();
   }
   return {};
 }
 
-[[nodiscard]] auto read_string(const QJsonObject &obj, const char *key,
-                               const QString &fallback) -> QString {
+[[nodiscard]] auto read_string(const QJsonObject& obj,
+                               const char* key,
+                               const QString& fallback) -> QString {
   const auto value = obj.value(key);
   if (value.isString()) {
     return value.toString();
@@ -47,8 +49,8 @@ using Game::Units::TroopClass;
   return fallback;
 }
 
-[[nodiscard]] auto read_float_opt(const QJsonObject &obj,
-                                  const char *key) -> std::optional<float> {
+[[nodiscard]] auto read_float_opt(const QJsonObject& obj,
+                                  const char* key) -> std::optional<float> {
   if (!obj.contains(key)) {
     return std::nullopt;
   }
@@ -56,8 +58,8 @@ using Game::Units::TroopClass;
   return static_cast<float>(value.toDouble());
 }
 
-[[nodiscard]] auto read_int_opt(const QJsonObject &obj,
-                                const char *key) -> std::optional<int> {
+[[nodiscard]] auto read_int_opt(const QJsonObject& obj,
+                                const char* key) -> std::optional<int> {
   if (!obj.contains(key)) {
     return std::nullopt;
   }
@@ -76,16 +78,16 @@ using Game::Units::TroopClass;
   return std::nullopt;
 }
 
-[[nodiscard]] auto read_bool(const QJsonObject &obj, const char *key,
-                             bool fallback) -> bool {
+[[nodiscard]] auto
+read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
   if (!obj.contains(key)) {
     return fallback;
   }
   return obj.value(key).toBool(fallback);
 }
 
-[[nodiscard]] auto read_bool_opt(const QJsonObject &obj,
-                                 const char *key) -> std::optional<bool> {
+[[nodiscard]] auto read_bool_opt(const QJsonObject& obj,
+                                 const char* key) -> std::optional<bool> {
   if (!obj.contains(key)) {
     return std::nullopt;
   }
@@ -93,7 +95,7 @@ using Game::Units::TroopClass;
 }
 
 [[nodiscard]] auto
-parse_formation_type(const QString &value) -> std::optional<FormationType> {
+parse_formation_type(const QString& value) -> std::optional<FormationType> {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("roman")) {
     return FormationType::Roman;
@@ -107,17 +109,18 @@ parse_formation_type(const QString &value) -> std::optional<FormationType> {
   return std::nullopt;
 }
 
-[[nodiscard]] auto logger() -> QLoggingCategory & {
+[[nodiscard]] auto logger() -> QLoggingCategory& {
   static QLoggingCategory category("NationLoader");
   return category;
 }
 
-static constexpr const char *k_nation_troops_key = "troops";
+static constexpr const char* k_nation_troops_key = "troops";
 
-static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
+static auto nation_loader_logger() -> QLoggingCategory& {
+  return logger();
+}
 
-[[nodiscard]] auto build_troop_entry(const QJsonObject &obj,
-                                     Nation &nation) -> bool {
+[[nodiscard]] auto build_troop_entry(const QJsonObject& obj, Nation& nation) -> bool {
   const QString troop_id = obj.value("id").toString();
   if (troop_id.isEmpty()) {
     qCWarning(logger()) << "Encountered troop without id in nation"
@@ -125,8 +128,7 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
     return false;
   }
 
-  const auto type_opt =
-      Game::Units::try_parse_troop_type(troop_id.toStdString());
+  const auto type_opt = Game::Units::try_parse_troop_type(troop_id.toStdString());
   if (!type_opt.has_value()) {
     qCWarning(logger()) << "Unknown troop type" << troop_id << "for nation"
                         << nation_id_to_qstring(nation.id);
@@ -134,24 +136,22 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
   }
 
   const Game::Units::TroopType troop_type = *type_opt;
-  const TroopClass &base_class =
+  const TroopClass& base_class =
       TroopCatalog::instance().get_class_or_fallback(troop_type);
 
   TroopType entry{};
   entry.unit_type = troop_type;
   entry.display_name =
-      read_string(obj, "display_name",
-                  QString::fromStdString(base_class.display_name))
+      read_string(obj, "display_name", QString::fromStdString(base_class.display_name))
           .toStdString();
-  entry.is_melee = read_bool(ensure_object(obj.value("production")), "is_melee",
+  entry.is_melee = read_bool(ensure_object(obj.value("production")),
+                             "is_melee",
                              base_class.production.is_melee);
   const QJsonObject production = ensure_object(obj.value("production"));
   entry.cost = production.value("cost").toInt(base_class.production.cost);
-  entry.build_time =
-      static_cast<float>(production.value("build_time")
-                             .toDouble(base_class.production.build_time));
-  entry.priority =
-      production.value("priority").toInt(base_class.production.priority);
+  entry.build_time = static_cast<float>(
+      production.value("build_time").toDouble(base_class.production.build_time));
+  entry.priority = production.value("priority").toInt(base_class.production.priority);
 
   nation.available_troops.push_back(entry);
 
@@ -270,7 +270,7 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
 
 namespace Game::Systems {
 
-auto NationLoader::resolve_data_path(const QString &relative) -> QString {
+auto NationLoader::resolve_data_path(const QString& relative) -> QString {
   const QString direct = QDir::current().filePath(relative);
   if (QFile::exists(direct)) {
     return direct;
@@ -307,19 +307,18 @@ auto NationLoader::load_default_nations() -> std::vector<Nation> {
   return load_from_directory(dir);
 }
 
-auto NationLoader::load_from_directory(const QString &directory)
+auto NationLoader::load_from_directory(const QString& directory)
     -> std::vector<Nation> {
   std::vector<Nation> nations;
 
   QDir dir(directory);
   if (!dir.exists()) {
-    qCWarning(nation_loader_logger())
-        << "Nation directory does not exist" << directory;
+    qCWarning(nation_loader_logger()) << "Nation directory does not exist" << directory;
     return nations;
   }
 
-  QDirIterator it(directory, QStringList{QStringLiteral("*.json")},
-                  QDir::Files | QDir::Readable);
+  QDirIterator it(
+      directory, QStringList{QStringLiteral("*.json")}, QDir::Files | QDir::Readable);
   while (it.hasNext()) {
     const QString file_path = it.next();
     if (auto nation = load_from_file(file_path)) {
@@ -330,12 +329,11 @@ auto NationLoader::load_from_directory(const QString &directory)
   return nations;
 }
 
-auto NationLoader::load_from_file(const QString &path)
-    -> std::optional<Nation> {
+auto NationLoader::load_from_file(const QString& path) -> std::optional<Nation> {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
-    qCWarning(nation_loader_logger()) << "Unable to open nation definition"
-                                      << path << ":" << file.errorString();
+    qCWarning(nation_loader_logger())
+        << "Unable to open nation definition" << path << ":" << file.errorString();
     return std::nullopt;
   }
 
@@ -352,8 +350,7 @@ auto NationLoader::load_from_file(const QString &path)
   Nation nation{};
   const QString id_str = root.value("id").toString();
   if (id_str.isEmpty()) {
-    qCWarning(nation_loader_logger())
-        << "Nation file" << path << "is missing 'id'";
+    qCWarning(nation_loader_logger()) << "Nation file" << path << "is missing 'id'";
     return std::nullopt;
   }
 
@@ -365,8 +362,7 @@ auto NationLoader::load_from_file(const QString &path)
   }
   nation.id = *parsed_id;
 
-  nation.display_name =
-      root.value("display_name").toString(id_str).toStdString();
+  nation.display_name = root.value("display_name").toString(id_str).toStdString();
 
   const QString building_str =
       root.value("primary_building").toString(QStringLiteral("barracks"));
@@ -374,13 +370,12 @@ auto NationLoader::load_from_file(const QString &path)
       Game::Units::building_type_from_string(building_str.toStdString());
   nation.primary_building =
       parsed_building.value_or(Game::Units::BuildingType::Barracks);
-  if (auto formation =
-          parse_formation_type(root.value("formation_type").toString())) {
+  if (auto formation = parse_formation_type(root.value("formation_type").toString())) {
     nation.formation_type = *formation;
   }
 
   const QJsonArray troops = ensure_array(root.value(k_nation_troops_key));
-  for (const auto &value : troops) {
+  for (const auto& value : troops) {
     const QJsonObject troop_obj = ensure_object(value);
     if (!build_troop_entry(troop_obj, nation)) {
       qCWarning(nation_loader_logger())

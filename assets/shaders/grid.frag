@@ -23,11 +23,9 @@ void main() {
   vec2 af = abs(f);
 
   float fw = fwidth(af.x);
-  float line_x =
-      1.0 - smoothstep(0.5 - u_thickness - fw, 0.5 - u_thickness + fw, af.x);
+  float line_x = 1.0 - smoothstep(0.5 - u_thickness - fw, 0.5 - u_thickness + fw, af.x);
   fw = fwidth(af.y);
-  float line_y =
-      1.0 - smoothstep(0.5 - u_thickness - fw, 0.5 - u_thickness + fw, af.y);
+  float line_y = 1.0 - smoothstep(0.5 - u_thickness - fw, 0.5 - u_thickness + fw, af.y);
   float line_mask = max(line_x, line_y);
 
   vec2 cell = floor(coord);

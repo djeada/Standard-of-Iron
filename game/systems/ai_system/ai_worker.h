@@ -1,32 +1,32 @@
 #pragma once
 
-#include "ai_executor.h"
-#include "ai_reasoner.h"
-#include "ai_types.h"
+#include <queue>
 
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
-#include <queue>
 #include <thread>
+
+#include "ai_executor.h"
+#include "ai_reasoner.h"
+#include "ai_types.h"
 
 namespace Game::Systems::AI {
 
 class AIWorker {
 public:
-  AIWorker(AIReasoner &reasoner, AIExecutor &executor,
-           AIBehaviorRegistry &registry);
+  AIWorker(AIReasoner& reasoner, AIExecutor& executor, AIBehaviorRegistry& registry);
 
   ~AIWorker();
 
-  AIWorker(const AIWorker &) = delete;
-  auto operator=(const AIWorker &) -> AIWorker & = delete;
-  AIWorker(AIWorker &&) = delete;
-  auto operator=(AIWorker &&) -> AIWorker & = delete;
+  AIWorker(const AIWorker&) = delete;
+  auto operator=(const AIWorker&) -> AIWorker& = delete;
+  AIWorker(AIWorker&&) = delete;
+  auto operator=(AIWorker&&) -> AIWorker& = delete;
 
-  auto try_submit(AIJob &&job) -> bool;
+  auto try_submit(AIJob&& job) -> bool;
 
-  void drain_results(std::queue<AIResult> &out);
+  void drain_results(std::queue<AIResult>& out);
 
   auto busy() const noexcept -> bool {
     return m_worker_busy.load(std::memory_order_acquire);
@@ -37,9 +37,9 @@ public:
 private:
   void worker_loop();
 
-  AIReasoner &m_reasoner;
-  AIExecutor &m_executor;
-  AIBehaviorRegistry &m_registry;
+  AIReasoner& m_reasoner;
+  AIExecutor& m_executor;
+  AIBehaviorRegistry& m_registry;
 
   std::thread m_thread;
   std::atomic<bool> m_should_stop{false};

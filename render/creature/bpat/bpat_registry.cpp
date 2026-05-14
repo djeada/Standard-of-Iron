@@ -10,8 +10,7 @@ namespace Render::Creature::Bpat {
 
 namespace {
 
-inline auto
-matrix_from_row_major(std::span<const float> row_major) -> QMatrix4x4 {
+inline auto matrix_from_row_major(std::span<const float> row_major) -> QMatrix4x4 {
   return QMatrix4x4(row_major.data());
 }
 
@@ -22,7 +21,7 @@ constexpr std::array<std::string_view, k_species_count> k_species_asset_name{
     "humanoid_sword.bpat",
 };
 
-auto find_existing_asset_root(const std::string &asset_root) -> std::string {
+auto find_existing_asset_root(const std::string& asset_root) -> std::string {
   namespace fs = std::filesystem;
   const fs::path app_dir =
       QCoreApplication::instance() != nullptr
@@ -40,7 +39,7 @@ auto find_existing_asset_root(const std::string &asset_root) -> std::string {
       app_dir / "../../" / asset_root,
   };
 
-  for (const auto &candidate : candidates) {
+  for (const auto& candidate : candidates) {
     if (fs::exists(candidate / k_species_asset_name[0])) {
       return fs::absolute(candidate).lexically_normal().string();
     }
@@ -50,23 +49,22 @@ auto find_existing_asset_root(const std::string &asset_root) -> std::string {
 
 } // namespace
 
-auto BpatRegistry::instance() noexcept -> BpatRegistry & {
+auto BpatRegistry::instance() noexcept -> BpatRegistry& {
   static BpatRegistry registry;
   return registry;
 }
 
-auto BpatRegistry::species_slot(std::uint32_t id) noexcept -> BpatBlob * {
+auto BpatRegistry::species_slot(std::uint32_t id) noexcept -> BpatBlob* {
   return id < m_blobs.size() ? &m_blobs[id] : nullptr;
 }
 
-auto BpatRegistry::species_slot(std::uint32_t id) const noexcept
-    -> const BpatBlob * {
+auto BpatRegistry::species_slot(std::uint32_t id) const noexcept -> const BpatBlob* {
   return id < m_blobs.size() ? &m_blobs[id] : nullptr;
 }
 
 auto BpatRegistry::load_species(std::uint32_t species_id,
-                                const std::string &path) -> bool {
-  auto *slot = species_slot(species_id);
+                                const std::string& path) -> bool {
+  auto* slot = species_slot(species_id);
   if (slot == nullptr) {
     m_last_error = "unknown species id";
     return false;
@@ -85,7 +83,7 @@ auto BpatRegistry::load_species(std::uint32_t species_id,
   return true;
 }
 
-auto BpatRegistry::load_all(const std::string &asset_root) -> std::size_t {
+auto BpatRegistry::load_all(const std::string& asset_root) -> std::size_t {
   const std::string resolved_root = find_existing_asset_root(asset_root);
   std::size_t loaded = 0U;
   for (std::uint32_t i = 0; i < k_species_asset_name.size(); ++i) {
@@ -101,20 +99,18 @@ auto BpatRegistry::load_all(const std::string &asset_root) -> std::size_t {
   return loaded;
 }
 
-auto BpatRegistry::blob(std::uint32_t species_id) const noexcept
-    -> const BpatBlob * {
-  const auto *slot = species_slot(species_id);
+auto BpatRegistry::blob(std::uint32_t species_id) const noexcept -> const BpatBlob* {
+  const auto* slot = species_slot(species_id);
   return (slot != nullptr && slot->loaded()) ? slot : nullptr;
 }
 
-auto BpatRegistry::has_species(std::uint32_t species_id) const noexcept
-    -> bool {
+auto BpatRegistry::has_species(std::uint32_t species_id) const noexcept -> bool {
   return blob(species_id) != nullptr;
 }
 
 auto BpatRegistry::find_clip(std::uint32_t species_id,
                              std::string_view name) const -> std::uint32_t {
-  const auto *b = blob(species_id);
+  const auto* b = blob(species_id);
   if (b == nullptr) {
     return k_invalid_clip;
   }
@@ -126,11 +122,11 @@ auto BpatRegistry::find_clip(std::uint32_t species_id,
   return k_invalid_clip;
 }
 
-auto BpatRegistry::sample_palette(
-    std::uint32_t species_id, std::uint32_t clip_index,
-    std::uint32_t frame_in_clip,
-    std::span<QMatrix4x4> out) const -> std::uint32_t {
-  const auto *b = blob(species_id);
+auto BpatRegistry::sample_palette(std::uint32_t species_id,
+                                  std::uint32_t clip_index,
+                                  std::uint32_t frame_in_clip,
+                                  std::span<QMatrix4x4> out) const -> std::uint32_t {
+  const auto* b = blob(species_id);
   if (b == nullptr || clip_index >= b->clip_count()) {
     return 0U;
   }
@@ -157,8 +153,8 @@ auto BpatRegistry::sample_socket(std::uint32_t species_id,
                                  std::uint32_t clip_index,
                                  std::uint32_t frame_in_clip,
                                  std::uint32_t socket_index,
-                                 QMatrix4x4 &out) const -> bool {
-  const auto *b = blob(species_id);
+                                 QMatrix4x4& out) const -> bool {
+  const auto* b = blob(species_id);
   if (b == nullptr || clip_index >= b->clip_count() ||
       socket_index >= b->socket_count()) {
     return false;

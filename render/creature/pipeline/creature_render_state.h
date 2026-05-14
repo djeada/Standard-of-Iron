@@ -1,11 +1,12 @@
 #pragma once
 
+#include <QMatrix4x4>
+
+#include <cstdint>
+
 #include "../../gl/humanoid/humanoid_types.h"
 #include "render_pass_intent.h"
 #include "unit_visual_spec.h"
-
-#include <QMatrix4x4>
-#include <cstdint>
 
 namespace Render::GL {
 struct DrawContext;
@@ -22,20 +23,26 @@ struct PreparedCreatureRenderRow {
   RenderPassIntent pass{RenderPassIntent::Main};
 };
 
-[[nodiscard]] auto make_prepared_humanoid_row(
-    UnitVisualSpec spec, const Render::GL::HumanoidPose &pose,
-    const Render::GL::HumanoidVariant &variant,
-    const Render::GL::HumanoidAnimationContext &anim,
-    const QMatrix4x4 &world_from_unit, std::uint32_t seed,
-    Render::Creature::CreatureLOD lod, EntityId entity_id = 0,
-    RenderPassIntent pass = RenderPassIntent::Main) noexcept
+[[nodiscard]] auto
+make_prepared_humanoid_row(UnitVisualSpec spec,
+                           const Render::GL::HumanoidPose& pose,
+                           const Render::GL::HumanoidVariant& variant,
+                           const Render::GL::HumanoidAnimationContext& anim,
+                           const QMatrix4x4& world_from_unit,
+                           std::uint32_t seed,
+                           Render::Creature::CreatureLOD lod,
+                           EntityId entity_id = 0,
+                           RenderPassIntent pass = RenderPassIntent::Main) noexcept
     -> PreparedCreatureRenderRow;
 
-[[nodiscard]] auto make_prepared_creature_row(
-    UnitVisualSpec spec, CreatureKind kind, const QMatrix4x4 &world_from_unit,
-    std::uint32_t seed, Render::Creature::CreatureLOD lod,
-    EntityId entity_id = 0,
-    RenderPassIntent pass = RenderPassIntent::Main) noexcept
+[[nodiscard]] auto
+make_prepared_creature_row(UnitVisualSpec spec,
+                           CreatureKind kind,
+                           const QMatrix4x4& world_from_unit,
+                           std::uint32_t seed,
+                           Render::Creature::CreatureLOD lod,
+                           EntityId entity_id = 0,
+                           RenderPassIntent pass = RenderPassIntent::Main) noexcept
     -> PreparedCreatureRenderRow;
 
 } // namespace Render::Creature::Pipeline

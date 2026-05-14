@@ -20,8 +20,7 @@ protected:
 
     height_data.resize(static_cast<size_t>(width * height), 0.0F);
 
-    terrain_types.resize(static_cast<size_t>(width * height),
-                         TerrainType::Flat);
+    terrain_types.resize(static_cast<size_t>(width * height), TerrainType::Flat);
   }
 
   void TearDown() override {
@@ -30,8 +29,8 @@ protected:
   }
 
   void build_cache() {
-    terrain_cache.build_from_height_map(height_data, terrain_types, width,
-                                        height, tile_size);
+    terrain_cache.build_from_height_map(
+        height_data, terrain_types, width, height, tile_size);
   }
 
   int width = 0;
@@ -280,7 +279,7 @@ TEST_F(SpawnValidatorTest, TreeSpawnConfigRespectsRiverMargin) {
 TEST_F(SpawnValidatorTest, SpawnValidatorBlocksBuildingClearance) {
   build_cache();
 
-  auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
+  auto& registry = Game::Systems::BuildingCollisionRegistry::instance();
   registry.register_building(1U, "barracks", 0.0F, 0.0F, 0);
 
   SpawnValidationConfig config = make_tree_spawn_config();

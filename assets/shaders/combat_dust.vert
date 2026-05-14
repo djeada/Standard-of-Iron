@@ -132,7 +132,8 @@ void main() {
 
     v_alpha = clamp(life * radial_fade * height_fade * dust_density * flicker *
                         u_intensity * 1.2,
-                    0.0, 1.0);
+                    0.0,
+                    1.0);
   }
 
   v_world_pos = (u_model * vec4(pos, 1.0)).xyz;

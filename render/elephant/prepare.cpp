@@ -1,5 +1,11 @@
 #include "prepare.h"
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <algorithm>
+#include <cstdint>
+
 #include "../../game/core/component.h"
 #include "../creature/animation_state_components.h"
 #include "../creature/pipeline/creature_prepared_state.h"
@@ -13,20 +19,14 @@
 #include "elephant_motion.h"
 #include "elephant_renderer_base.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-
-#include <algorithm>
-#include <cstdint>
-
 namespace Render::Elephant {
 
 namespace {
 
 auto elephant_state_for_motion(
-    const Render::GL::ElephantMotionSample &motion,
-    const Render::GL::AnimationInputs &anim,
-    const Engine::Core::DeathAnimationComponent *death_anim) noexcept
+    const Render::GL::ElephantMotionSample& motion,
+    const Render::GL::AnimationInputs& anim,
+    const Engine::Core::DeathAnimationComponent* death_anim) noexcept
     -> Render::Creature::AnimationStateId {
   if (death_anim != nullptr) {
     return death_anim->state == Engine::Core::DeathSequenceState::Dying
@@ -53,22 +53,24 @@ namespace Render::GL {
 
 static ElephantRenderStats s_elephantRenderStats;
 
-auto get_elephant_render_stats() -> const ElephantRenderStats & {
+auto get_elephant_render_stats() -> const ElephantRenderStats& {
   return s_elephantRenderStats;
 }
 
-void reset_elephant_render_stats() { s_elephantRenderStats.reset(); }
+void reset_elephant_render_stats() {
+  s_elephantRenderStats.reset();
+}
 
-void ElephantRendererBase::render(const DrawContext &ctx,
-                                  const AnimationInputs &anim,
-                                  ElephantProfile &profile,
-                                  const HowdahAttachmentFrame *shared_howdah,
-                                  const ElephantMotionSample *shared_motion,
-                                  ISubmitter &out, HorseLOD lod) const {
+void ElephantRendererBase::render(const DrawContext& ctx,
+                                  const AnimationInputs& anim,
+                                  ElephantProfile& profile,
+                                  const HowdahAttachmentFrame* shared_howdah,
+                                  const ElephantMotionSample* shared_motion,
+                                  ISubmitter& out,
+                                  HorseLOD lod) const {
   DrawContext render_ctx =
-      ctx.template_prewarm
-          ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx)
-          : ctx;
+      ctx.template_prewarm ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx)
+                           : ctx;
 
   HorseLOD effective_lod = lod;
   if (render_ctx.force_horse_lod) {
@@ -96,18 +98,23 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   }
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_render(*this, render_ctx, anim, profile,
-                                            shared_howdah, shared_motion,
-                                            effective_lod, prep);
+  Render::Elephant::prepare_elephant_render(*this,
+                                            render_ctx,
+                                            anim,
+                                            profile,
+                                            shared_howdah,
+                                            shared_motion,
+                                            effective_lod,
+                                            prep);
   Render::Creature::Pipeline::submit_preparation(prep, out);
 }
 
-void ElephantRendererBase::render(const DrawContext &ctx,
-                                  const AnimationInputs &anim,
-                                  ElephantProfile &profile,
-                                  const HowdahAttachmentFrame *shared_howdah,
-                                  const ElephantMotionSample *shared_motion,
-                                  ISubmitter &out) const {
+void ElephantRendererBase::render(const DrawContext& ctx,
+                                  const AnimationInputs& anim,
+                                  ElephantProfile& profile,
+                                  const HowdahAttachmentFrame* shared_howdah,
+                                  const ElephantMotionSample* shared_motion,
+                                  ISubmitter& out) const {
   render(ctx, anim, profile, shared_howdah, shared_motion, out, HorseLOD::Full);
 }
 
@@ -115,13 +122,14 @@ void ElephantRendererBase::render(const DrawContext &ctx,
 
 namespace Render::Elephant {
 
-void prepare_elephant_render(
-    const Render::GL::ElephantRendererBase &owner,
-    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
-    Render::GL::ElephantProfile &profile,
-    const Render::GL::HowdahAttachmentFrame *shared_howdah,
-    const Render::GL::ElephantMotionSample *shared_motion,
-    Render::Creature::CreatureLOD lod, ElephantPreparation &out) {
+void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
+                             const Render::GL::DrawContext& ctx,
+                             const Render::GL::AnimationInputs& anim,
+                             Render::GL::ElephantProfile& profile,
+                             const Render::GL::HowdahAttachmentFrame* shared_howdah,
+                             const Render::GL::ElephantMotionSample* shared_motion,
+                             Render::Creature::CreatureLOD lod,
+                             ElephantPreparation& out) {
   if (lod == Render::Creature::CreatureLOD::Billboard) {
     return;
   }
@@ -130,19 +138,18 @@ void prepare_elephant_render(
   using Render::GL::ElephantVariant;
   using Render::GL::HowdahAttachmentFrame;
 
-  const ElephantVariant &v = profile.variant;
+  const ElephantVariant& v = profile.variant;
   ElephantMotionSample const motion =
       shared_motion
           ? *shared_motion
           : evaluate_elephant_motion(
-                profile, anim,
+                profile,
+                anim,
                 Engine::Core::get_or_add_component<
-                    Render::Creature::ElephantAnimationStateComponent>(
-                    ctx.entity));
+                    Render::Creature::ElephantAnimationStateComponent>(ctx.entity));
 
-  HowdahAttachmentFrame const howdah =
-      shared_howdah ? *shared_howdah : motion.howdah;
-  auto *death_anim =
+  HowdahAttachmentFrame const howdah = shared_howdah ? *shared_howdah : motion.howdah;
+  auto* death_anim =
       (ctx.entity != nullptr)
           ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()
           : nullptr;
@@ -165,20 +172,18 @@ void prepare_elephant_render(
   RCP::PreparedElephantBodyState body_state;
   body_state.graph = graph_output;
   body_state.variant = v;
-  body_state.animation_state =
-      elephant_state_for_motion(motion, anim, death_anim);
+  body_state.animation_state = elephant_state_for_motion(motion, anim, death_anim);
   if (death_anim != nullptr &&
       death_anim->state == Engine::Core::DeathSequenceState::Dying &&
       death_anim->state_duration > 0.0F) {
-    body_state.phase = std::clamp(
-        death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
+    body_state.phase =
+        std::clamp(death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
   } else {
     body_state.phase = (death_anim == nullptr) ? motion.phase : 0.0F;
   }
   out.bodies.add_quadruped(body_state);
 
-  QVector3D const elephant_world_pos =
-      RCP::model_world_origin(elephant_ctx.model);
+  QVector3D const elephant_world_pos = RCP::model_world_origin(elephant_ctx.model);
   float camera_distance = 0.0F;
   if (elephant_ctx.camera != nullptr) {
     camera_distance =
@@ -194,11 +199,10 @@ void prepare_elephant_render(
   const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);
   if (shadow_state.enabled) {
     if (out.shadow_batch.empty()) {
-      out.shadow_batch.init(shadow_state.shader, shadow_state.mesh,
-                            shadow_state.light_dir);
+      out.shadow_batch.init(
+          shadow_state.shader, shadow_state.mesh, shadow_state.light_dir);
     }
-    out.shadow_batch.add(shadow_state.model, shadow_state.alpha,
-                         shadow_state.pass);
+    out.shadow_batch.add(shadow_state.model, shadow_state.alpha, shadow_state.pass);
   }
 }
 

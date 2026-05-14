@@ -14,8 +14,9 @@ struct RpgDamageResult {
   bool killed{false};
 };
 
-RpgDamageResult resolve_rpg_damage(Engine::Core::World *world,
-                                   Engine::Core::Entity *target, int raw_damage,
+RpgDamageResult resolve_rpg_damage(Engine::Core::World* world,
+                                   Engine::Core::Entity* target,
+                                   int raw_damage,
                                    Engine::Core::EntityID attacker_id);
 
 } // namespace Game::Systems::RpgCombat

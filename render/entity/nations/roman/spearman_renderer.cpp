@@ -1,4 +1,19 @@
 #include "spearman_renderer.h"
+
+#include <QMatrix4x4>
+#include <QString>
+#include <QVector3D>
+#include <qstringliteral.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
@@ -8,6 +23,7 @@
 #include "../../../equipment/armor/roman_shoulder_cover.h"
 #include "../../../equipment/armor/shoulder_cover_archetype.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../equipment/helmets/roman_heavy_helmet.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
 #include "../../../equipment/weapons/spear_renderer.h"
@@ -27,21 +43,6 @@
 #include "../../renderer_constants.h"
 #include "../equipment_loadout_catalog.h"
 #include "spearman_style.h"
-
-#include <QMatrix4x4>
-#include <QString>
-#include <QVector3D>
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <optional>
-#include <qstringliteral.h>
-#include <qvectornd.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-
-#include "../../../equipment/equipment_submit.h"
 namespace Render::GL::Roman {
 
 namespace {
@@ -54,7 +55,7 @@ constexpr float k_kneel_depth_multiplier = 0.875F;
 constexpr float k_lean_amount_multiplier = 0.67F;
 
 auto spearman_style_registry()
-    -> std::unordered_map<std::string, SpearmanStyleConfig> & {
+    -> std::unordered_map<std::string, SpearmanStyleConfig>& {
   static std::unordered_map<std::string, SpearmanStyleConfig> styles;
   return styles;
 }
@@ -69,8 +70,8 @@ void ensure_spearman_styles_registered() {
 
 } // namespace
 
-void register_spearman_style(const std::string &nation_id,
-                             const SpearmanStyleConfig &style) {
+void register_spearman_style(const std::string& nation_id,
+                             const SpearmanStyleConfig& style) {
   spearman_style_registry()[nation_id] = style;
 }
 
@@ -107,16 +108,18 @@ public:
     return k_kneel_depth_multiplier;
   }
 
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
     static const UnitVisualSpec spec = []() {
-      const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-          "troops/roman/spearman");
-      const std::array<EquipmentHandle, 5> handles{
-          loadout.helmet_handle, loadout.greaves_handle,
-          loadout.shoulder_handle, loadout.armor_handle, loadout.spear_handle};
+      const auto loadout =
+          Render::GL::Nation::resolve_equipment_loadout("troops/roman/spearman");
+      const std::array<EquipmentHandle, 5> handles{loadout.helmet_handle,
+                                                   loadout.greaves_handle,
+                                                   loadout.shoulder_handle,
+                                                   loadout.armor_handle,
+                                                   loadout.spear_handle};
 
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
@@ -125,23 +128,25 @@ public:
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/roman/spearman",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+          Render::Creature::ArchetypeRegistry::k_humanoid_base,
+          handles);
       return s;
     }();
     return spec;
   }
 
-  void get_variant(const DrawContext &ctx, uint32_t seed,
-                   HumanoidVariant &v) const override {
+  void get_variant(const DrawContext& ctx,
+                   uint32_t seed,
+                   HumanoidVariant& v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = make_humanoid_palette(team_tint, seed);
-    auto const &style = resolve_style(ctx);
+    auto const& style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
   }
 
 private:
-  static auto compute_spearman_extras(uint32_t seed, const HumanoidVariant &v)
-      -> SpearmanExtras {
+  static auto compute_spearman_extras(uint32_t seed,
+                                      const HumanoidVariant& v) -> SpearmanExtras {
     SpearmanExtras e;
 
     e.spear_shaft_color = v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
@@ -154,14 +159,12 @@ private:
     return e;
   }
 
-  auto
-  resolve_style(const DrawContext &ctx) const -> const SpearmanStyleConfig & {
+  auto resolve_style(const DrawContext& ctx) const -> const SpearmanStyleConfig& {
     ensure_spearman_styles_registered();
-    auto &styles = spearman_style_registry();
+    auto& styles = spearman_style_registry();
     std::string nation_id;
     if (ctx.entity != nullptr) {
-      if (auto *unit =
-              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+      if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
       }
     }
@@ -180,12 +183,14 @@ private:
   }
 
 private:
-  void apply_palette_overrides(const SpearmanStyleConfig &style,
-                               const QVector3D &team_tint,
-                               HumanoidVariant &variant) const {
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target) {
-      target = mix_palette_color(target, override_color, team_tint,
+  void apply_palette_overrides(const SpearmanStyleConfig& style,
+                               const QVector3D& team_tint,
+                               HumanoidVariant& variant) const {
+    auto apply_color = [&](const std::optional<QVector3D>& override_color,
+                           QVector3D& target) {
+      target = mix_palette_color(target,
+                                 override_color,
+                                 team_tint,
                                  k_spearman_team_mix_weight,
                                  k_spearman_style_mix_weight);
     };
@@ -196,16 +201,18 @@ private:
     apply_color(style.metal_color, variant.palette.metal);
   }
 
-  void apply_extras_overrides(const SpearmanStyleConfig &style,
-                              const QVector3D &team_tint,
-                              [[maybe_unused]] const HumanoidVariant &variant,
-                              SpearmanExtras &extras) const {
+  void apply_extras_overrides(const SpearmanStyleConfig& style,
+                              const QVector3D& team_tint,
+                              [[maybe_unused]] const HumanoidVariant& variant,
+                              SpearmanExtras& extras) const {
     extras.spear_shaft_color = saturate_color(extras.spear_shaft_color);
     extras.spearhead_color = saturate_color(extras.spearhead_color);
 
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target) {
-      target = mix_palette_color(target, override_color, team_tint,
+    auto apply_color = [&](const std::optional<QVector3D>& override_color,
+                           QVector3D& target) {
+      target = mix_palette_color(target,
+                                 override_color,
+                                 team_tint,
                                  k_spearman_team_mix_weight,
                                  k_spearman_style_mix_weight);
     };
@@ -220,11 +227,11 @@ private:
   }
 };
 
-void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
+void register_spearman_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_spearman_styles_registered();
   static SpearmanRenderer const renderer;
   registry.register_renderer("troops/roman/spearman",
-                             [](const DrawContext &ctx, ISubmitter &out) {
+                             [](const DrawContext& ctx, ISubmitter& out) {
                                static SpearmanRenderer const static_renderer;
                                static_renderer.render(ctx, out);
                              });

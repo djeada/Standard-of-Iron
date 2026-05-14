@@ -1,28 +1,29 @@
 #include "rig_interpreter.h"
 
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../material.h"
-#include "../submitter.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
 
 #include <algorithm>
 #include <cstdint>
 
+#include "../geom/transforms.h"
+#include "../gl/primitives.h"
+#include "../material.h"
+#include "../submitter.h"
+
 namespace Render::RigDSL {
 
 namespace {
 
-[[nodiscard]] auto unpack(const PackedColor &c) -> QVector3D {
+[[nodiscard]] auto unpack(const PackedColor& c) -> QVector3D {
   constexpr float inv = 1.0F / 255.0F;
-  return {static_cast<float>(c.r) * inv, static_cast<float>(c.g) * inv,
+  return {static_cast<float>(c.r) * inv,
+          static_cast<float>(c.g) * inv,
           static_cast<float>(c.b) * inv};
 }
 
-[[nodiscard]] auto pick_color(const PartDef &part,
-                              const PaletteResolver *palette) -> QVector3D {
+[[nodiscard]] auto pick_color(const PartDef& part,
+                              const PaletteResolver* palette) -> QVector3D {
   QVector3D base;
   if (part.color_slot == PaletteSlot::Literal || palette == nullptr) {
     base = unpack(part.literal_color);
@@ -32,7 +33,7 @@ namespace {
   return base * part.color_scale;
 }
 
-[[nodiscard]] auto mesh_for(PartKind kind) -> Render::GL::Mesh * {
+[[nodiscard]] auto mesh_for(PartKind kind) -> Render::GL::Mesh* {
   switch (kind) {
   case PartKind::Cylinder:
     return Render::GL::get_unit_cylinder();
@@ -48,8 +49,9 @@ namespace {
 
 } // namespace
 
-void render_part(const PartDef &part, const InterpretContext &ctx,
-                 Render::GL::ISubmitter &submitter) {
+void render_part(const PartDef& part,
+                 const InterpretContext& ctx,
+                 Render::GL::ISubmitter& submitter) {
   if (ctx.anchors == nullptr) {
     return;
   }
@@ -57,7 +59,7 @@ void render_part(const PartDef &part, const InterpretContext &ctx,
     return;
   }
 
-  Render::GL::Mesh *mesh = mesh_for(part.kind);
+  Render::GL::Mesh* mesh = mesh_for(part.kind);
   if (mesh == nullptr) {
     return;
   }
@@ -66,10 +68,9 @@ void render_part(const PartDef &part, const InterpretContext &ctx,
   QVector3D const b =
       (part.kind == PartKind::Sphere) ? a : ctx.anchors->resolve(part.anchor_b);
 
-  float const scale =
-      (part.scale_id != k_invalid_scalar && ctx.scalars != nullptr)
-          ? ctx.scalars->resolve(part.scale_id)
-          : 1.0F;
+  float const scale = (part.scale_id != k_invalid_scalar && ctx.scalars != nullptr)
+                          ? ctx.scalars->resolve(part.scale_id)
+                          : 1.0F;
   float const sx = part.size_x * scale;
   float const sy = part.size_y * scale;
   float const sz = part.size_z * scale;
@@ -90,7 +91,8 @@ void render_part(const PartDef &part, const InterpretContext &ctx,
     QVector3D const span = b - a;
     model = ctx.model;
     model.translate(centre);
-    model.scale(std::abs(span.x()) * 0.5F * sx, std::abs(span.y()) * 0.5F * sy,
+    model.scale(std::abs(span.x()) * 0.5F * sx,
+                std::abs(span.y()) * 0.5F * sy,
                 std::abs(span.z()) * 0.5F * sz);
     break;
   }
@@ -100,16 +102,22 @@ void render_part(const PartDef &part, const InterpretContext &ctx,
   float const alpha = std::clamp(ctx.global_alpha * part.alpha, 0.0F, 1.0F);
 
   if (ctx.material != nullptr) {
-    submitter.part(mesh, ctx.material, model, color, nullptr, alpha,
+    submitter.part(mesh,
+                   ctx.material,
+                   model,
+                   color,
+                   nullptr,
+                   alpha,
                    static_cast<int>(part.material_id));
   } else {
-    submitter.mesh(mesh, model, color, nullptr, alpha,
-                   static_cast<int>(part.material_id));
+    submitter.mesh(
+        mesh, model, color, nullptr, alpha, static_cast<int>(part.material_id));
   }
 }
 
-void render_rig(const RigDef &def, const InterpretContext &ctx,
-                Render::GL::ISubmitter &submitter) {
+void render_rig(const RigDef& def,
+                const InterpretContext& ctx,
+                Render::GL::ISubmitter& submitter) {
   for (std::size_t i = 0; i < def.part_count; ++i) {
     render_part(def.parts[i], ctx, submitter);
   }

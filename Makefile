@@ -30,7 +30,8 @@ CLANG_TIDY_GIT_BASE ?=
 # Formatting config
 CLANG_FORMAT ?= clang-format
 # Try to find qmlformat in common Qt installation paths if not in PATH
-QMLFORMAT ?= $(shell command -v qmlformat 2>/dev/null || echo /usr/lib/qt5/bin/qmlformat)
+QMLFORMAT ?= $(shell if command -v qmlformat >/dev/null 2>&1; then command -v qmlformat; elif command -v qmlformat6 >/dev/null 2>&1; then command -v qmlformat6; elif command -v qmlformat-qt6 >/dev/null 2>&1; then command -v qmlformat-qt6; elif [ -x /usr/lib/qt6/bin/qmlformat ]; then echo /usr/lib/qt6/bin/qmlformat; else echo /usr/lib/qt5/bin/qmlformat; fi)
+FORMAT_JOBS ?= $(shell command -v nproc >/dev/null 2>&1 && nproc || echo 4)
 FMT_GLOBS := -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp"
 SHADER_GLOBS := -name "*.frag" -o -name "*.vert"
 QML_GLOBS := -name "*.qml"
@@ -67,6 +68,9 @@ help:
 	@echo "  $(GREEN)test-validator$(RESET) - Run validator integration tests"
 	@echo "  $(GREEN)format$(RESET)        - Format all code (C++, QML, shaders, Python)"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting (CI-friendly, no changes)"
+	@echo "  $(GREEN)format-check-ci$(RESET) - Fast CI formatting check for changed files only"
+	@echo "  $(GREEN)clean-format-trash$(RESET) - Remove editor/QML formatter backup files"
+	@echo "  $(GREEN)format-strip-comments$(RESET) - Explicitly strip comments from source files"
 	@echo "  $(GREEN)tidy$(RESET)          - Run clang-tidy fixes on changed files (git diff vs origin/main)"
 	@echo "  $(GREEN)tidy-all$(RESET)      - Run clang-tidy fixes on the whole project"
 	@echo "  $(GREEN)check-deps$(RESET)    - Check if dependencies are installed"
@@ -307,21 +311,26 @@ test-validator: build
 		exit 1; \
 	fi
 
-# ---- Formatting: strip comments first, then format (strict) ----
-.PHONY: format format-check
+# ---- Formatting and static fixers ----
+.PHONY: format format-check format-check-ci format-strip-comments clean-format-trash
 
 EXCLUDE_DIRS := ./$(BUILD_DIR) ./$(BUILD_TIDY_DIR) ./third_party
 EXCLUDE_PATHS := */venv/* */.venv/*
 EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*") \
 	$(foreach p,$(EXCLUDE_PATHS),-not -path "$(p)")
-COMMENT_STRIP_PATHS := app/ apps/ game/ render/ scripts/ tests/ tools/ ui/ assets/shaders/
-CXX_FORMAT_PATHS := main.cpp app apps game render tests tools
-QML_FORMAT_PATHS := app apps tools ui
+COMMENT_STRIP_PATHS := app/ game/ render/ scripts/ tests/ tools/ ui/ assets/shaders/
+CXX_FORMAT_PATHS := main.cpp app game render tests tools
+QML_FORMAT_PATHS := app tools ui
 SHADER_FORMAT_PATHS := assets/shaders
 PY_FORMAT_PATHS := scripts tests tools
 
-format:
-	@echo "$(BOLD)$(BLUE)Stripping comments in app/... apps/... game/... render/... scripts/... tests/... tools/... tools/arena/... ui/... assets/shaders/...$(RESET)"
+clean-format-trash:
+	@find . \
+		\( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o \
+		-type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -print -exec rm -f {} +
+
+format-strip-comments:
+	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... scripts/... tests/... tools/... ui/... assets/shaders/...$(RESET)"
 	@if [ -x scripts/remove-comments.sh ]; then \
 		./scripts/remove-comments.sh $(COMMENT_STRIP_PATHS); \
 	elif [ -f scripts/remove-comments.sh ]; then \
@@ -330,13 +339,14 @@ format:
 		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
 	fi
 
-	@echo "$(BOLD)$(BLUE)Applying clang-tidy auto fixes (git-only, nice)...$(RESET)"
-	@bash $(CLANG_TIDY_FIXER) --nice --build-dir="$(BUILD_DIR)" --default-lang="$(DEFAULT_LANG)" $(if $(CLANG_TIDY_AUTO_FIX_CHECKS),--checks="$(CLANG_TIDY_AUTO_FIX_CHECKS)")
+format: clean-format-trash
+	@echo "$(BOLD)$(BLUE)Applying clang-tidy auto fixes (changed files, $(or $(CLANG_TIDY_JOBS),auto) jobs)...$(RESET)"
+	@bash $(CLANG_TIDY_FIXER) --nice --build-dir="$(BUILD_DIR)" --default-lang="$(DEFAULT_LANG)" --passes=2 $(if $(CLANG_TIDY_JOBS),--jobs="$(CLANG_TIDY_JOBS)") $(if $(CLANG_TIDY_AUTO_FIX_CHECKS),--checks="$(CLANG_TIDY_AUTO_FIX_CHECKS)")
 
-	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format ($(FORMAT_JOBS) jobs)...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
 		find $(CXX_FORMAT_PATHS) -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
-		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
+		| xargs -0 -r -n 64 -P "$(FORMAT_JOBS)" $(CLANG_FORMAT) -i --style=file; \
 		echo "$(GREEN)✓ C/C++ formatting complete$(RESET)"; \
 	else \
 		echo "$(RED)clang-format not found. Please install it.$(RESET)"; exit 1; \
@@ -345,29 +355,31 @@ format:
 	@echo "$(BOLD)$(BLUE)Formatting QML files...$(RESET)"
 	@if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
 		find $(QML_FORMAT_PATHS) -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND) -print0 \
-		| xargs -0 -r $(QMLFORMAT) -i; \
+		| xargs -0 -r -n 16 -P "$(FORMAT_JOBS)" $(QMLFORMAT) -i -w 4; \
+		find . \( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o -type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -exec rm -f {} +; \
 		echo "$(GREEN)✓ QML formatting complete$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ qmlformat not found. Skipping QML formatting.$(RESET)"; \
 	fi
 
-	@echo "$(BOLD)$(BLUE)Formatting shader files (.frag, .vert)...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Formatting shader files (.frag, .vert) with clang-format ($(FORMAT_JOBS) jobs)...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
 		find $(SHADER_FORMAT_PATHS) -type f \( $(SHADER_GLOBS) \) $(EXCLUDE_FIND) -print0 \
-		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
+		| xargs -0 -r -n 64 -P "$(FORMAT_JOBS)" $(CLANG_FORMAT) -i --style=file; \
 		echo "$(GREEN)✓ Shader formatting complete$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ clang-format not found. Shader files not formatted.$(RESET)"; \
 	fi
 
-	@echo "$(BOLD)$(BLUE)Formatting Python files with black...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Formatting Python files with black ($(FORMAT_JOBS) workers)...$(RESET)"
 	@if command -v black >/dev/null 2>&1; then \
 		find $(PY_FORMAT_PATHS) -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
-		| xargs -0 -r black --quiet || true; \
+		| xargs -0 -r black --quiet --workers "$(FORMAT_JOBS)" || true; \
 		echo "$(GREEN)✓ Python formatting complete$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ black not found. Skipping Python formatting.$(RESET)"; \
 	fi
+	@find . \( -path "./.git" -o -path "./$(BUILD_DIR)" -o -path "./$(BUILD_DIR)/*" -o -path "./$(BUILD_TIDY_DIR)" -o -path "./$(BUILD_TIDY_DIR)/*" -o -path "./third_party" -o -path "./third_party/*" \) -prune -o -type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -exec rm -f {} +
 
 	@echo "$(GREEN)✓ All formatting complete$(RESET)"
 
@@ -377,26 +389,28 @@ format-check:
 	if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
 		echo "$(BLUE)Checking C/C++ files...$(RESET)"; \
 		find $(CXX_FORMAT_PATHS) -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
-		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
+		| xargs -0 -r -n 64 -P "$(FORMAT_JOBS)" $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
 		echo "$(BLUE)Checking shader files...$(RESET)"; \
 		find $(SHADER_FORMAT_PATHS) -type f \( $(SHADER_GLOBS) \) $(EXCLUDE_FIND) -print0 \
-		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
+		| xargs -0 -r -n 64 -P "$(FORMAT_JOBS)" $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
 	fi; \
 	if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
 		echo "$(BLUE)Checking QML files...$(RESET)"; \
+		TMP_DIR=$$(mktemp -d); \
 		for file in $$(find $(QML_FORMAT_PATHS) -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND)); do \
-			$(QMLFORMAT) "$$file" > /tmp/qmlformat_check.tmp 2>/dev/null; \
-			if ! diff -q "$$file" /tmp/qmlformat_check.tmp >/dev/null 2>&1; then \
+			TMP_FILE="$$TMP_DIR/$$(basename "$$file").formatted"; \
+			$(QMLFORMAT) -w 4 "$$file" > "$$TMP_FILE" 2>/dev/null; \
+			if ! diff -q "$$file" "$$TMP_FILE" >/dev/null 2>&1; then \
 				echo "$(RED)QML file needs formatting: $$file$(RESET)"; \
 				FAILED=1; \
 			fi; \
 		done; \
-		rm -f /tmp/qmlformat_check.tmp; \
+		rm -rf "$$TMP_DIR"; \
 	fi; \
 	if command -v black >/dev/null 2>&1; then \
 		echo "$(BLUE)Checking Python files...$(RESET)"; \
 		if ! find $(PY_FORMAT_PATHS) -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
-			| xargs -0 -r black --check --quiet; then \
+			| xargs -0 -r black --check --quiet --workers "$(FORMAT_JOBS)"; then \
 			echo "$(RED)Python files need formatting$(RESET)"; \
 			FAILED=1; \
 		fi; \
@@ -407,6 +421,10 @@ format-check:
 		echo "$(RED)✗ Formatting check failed. Run 'make format' to fix.$(RESET)"; \
 		exit 1; \
 	fi
+
+format-check-ci:
+	@echo "$(BOLD)$(BLUE)Checking formatting on changed files only...$(RESET)"
+	@bash scripts/check-format-changed.sh
 
 # ---- Static analysis: clang-tidy (driven by fixer script) ----
 .PHONY: tidy tidy-all

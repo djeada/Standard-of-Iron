@@ -2,13 +2,18 @@
 
 #include <QImage>
 #include <QVector2D>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
 
 namespace Game::Map::Minimap {
 
-enum class VisibilityState : uint8_t { Unseen = 0, Revealed = 1, Visible = 2 };
+enum class VisibilityState : uint8_t {
+  Unseen = 0,
+  Revealed = 1,
+  Visible = 2
+};
 
 struct FogOfWarConfig {
 
@@ -38,25 +43,25 @@ struct VisionSource {
 
 class FogOfWarMask {
 public:
-  FogOfWarMask(int map_width, int map_height, float tile_size,
-               const FogOfWarConfig &config = FogOfWarConfig());
+  FogOfWarMask(int map_width,
+               int map_height,
+               float tile_size,
+               const FogOfWarConfig& config = FogOfWarConfig());
 
   ~FogOfWarMask();
 
-  FogOfWarMask(const FogOfWarMask &) = delete;
-  auto operator=(const FogOfWarMask &) -> FogOfWarMask & = delete;
-  FogOfWarMask(FogOfWarMask &&) noexcept;
-  auto operator=(FogOfWarMask &&) noexcept -> FogOfWarMask &;
+  FogOfWarMask(const FogOfWarMask&) = delete;
+  auto operator=(const FogOfWarMask&) -> FogOfWarMask& = delete;
+  FogOfWarMask(FogOfWarMask&&) noexcept;
+  auto operator=(FogOfWarMask&&) noexcept -> FogOfWarMask&;
 
-  void update_vision(const std::vector<VisionSource> &sources, int player_id);
+  void update_vision(const std::vector<VisionSource>& sources, int player_id);
 
-  auto tick(const std::vector<VisionSource> &sources, int player_id) -> bool;
+  auto tick(const std::vector<VisionSource>& sources, int player_id) -> bool;
 
-  [[nodiscard]] auto generate_mask(int target_width,
-                                   int target_height) const -> QImage;
+  [[nodiscard]] auto generate_mask(int target_width, int target_height) const -> QImage;
 
-  [[nodiscard]] auto get_visibility(int fog_x,
-                                    int fog_y) const -> VisibilityState;
+  [[nodiscard]] auto get_visibility(int fog_x, int fog_y) const -> VisibilityState;
 
   [[nodiscard]] auto is_revealed(float world_x, float world_z) const -> bool;
 
@@ -85,8 +90,8 @@ private:
   void reveal_circle(int center_x, int center_y, float radius_cells);
   void clear_current_visibility();
 
-  void apply_gaussian_blur(std::vector<uint8_t> &alpha_buffer, int width,
-                           int height) const;
+  void
+  apply_gaussian_blur(std::vector<uint8_t>& alpha_buffer, int width, int height) const;
 
   FogOfWarConfig m_config;
 

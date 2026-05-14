@@ -1,14 +1,16 @@
 #pragma once
 
-#include "../creature/part_graph.h"
-#include "../submitter.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
+
+#include "../creature/part_graph.h"
+#include "../submitter.h"
 
 namespace Engine::Core {
 class Entity;
@@ -30,20 +32,20 @@ using HumanoidLOD = ::Render::Creature::CreatureLOD;
 using HorseLOD = ::Render::Creature::CreatureLOD;
 
 struct DrawContext {
-  ResourceManager *resources = nullptr;
-  Engine::Core::Entity *entity = nullptr;
-  Engine::Core::World *world = nullptr;
+  ResourceManager* resources = nullptr;
+  Engine::Core::Entity* entity = nullptr;
+  Engine::Core::World* world = nullptr;
   QMatrix4x4 model;
   bool selected = false;
   bool hovered = false;
   float animation_time = 0.0F;
   float distance_sq = 0.0F;
   std::string renderer_id;
-  class Backend *backend = nullptr;
-  const Camera *camera = nullptr;
+  class Backend* backend = nullptr;
+  const Camera* camera = nullptr;
   float alpha_multiplier = 1.0F;
   bool animation_throttled = false;
-  const AnimationInputs *animation_override = nullptr;
+  const AnimationInputs* animation_override = nullptr;
   bool allow_template_cache = true;
   bool force_humanoid_lod = false;
   HumanoidLOD forced_humanoid_lod = HumanoidLOD::Full;
@@ -60,17 +62,17 @@ struct DrawContext {
   std::uint8_t attack_variant_override = 0;
 };
 
-using RenderFunc = std::function<void(const DrawContext &, ISubmitter &out)>;
+using RenderFunc = std::function<void(const DrawContext&, ISubmitter& out)>;
 
 class EntityRendererRegistry {
 public:
-  void register_renderer(const std::string &type, RenderFunc func);
-  auto get(const std::string &type) const -> RenderFunc;
+  void register_renderer(const std::string& type, RenderFunc func);
+  auto get(const std::string& type) const -> RenderFunc;
 
 private:
   std::unordered_map<std::string, RenderFunc> m_map;
 };
 
-void register_built_in_entity_renderers(EntityRendererRegistry &registry);
+void register_built_in_entity_renderers(EntityRendererRegistry& registry);
 
 } // namespace Render::GL

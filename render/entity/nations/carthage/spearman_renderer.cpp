@@ -1,4 +1,19 @@
 #include "spearman_renderer.h"
+
+#include <QMatrix4x4>
+#include <QString>
+#include <QVector3D>
+#include <qstringliteral.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
@@ -29,19 +44,6 @@
 #include "../equipment_loadout_catalog.h"
 #include "spearman_style.h"
 
-#include <QMatrix4x4>
-#include <QString>
-#include <QVector3D>
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <optional>
-#include <qstringliteral.h>
-#include <qvectornd.h>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-
 namespace Render::GL::Carthage {
 
 namespace {
@@ -55,7 +57,7 @@ constexpr float k_kneel_depth_multiplier = 0.875F;
 constexpr float k_lean_amount_multiplier = 0.67F;
 
 auto spearman_style_registry()
-    -> std::unordered_map<std::string, SpearmanStyleConfig> & {
+    -> std::unordered_map<std::string, SpearmanStyleConfig>& {
   static std::unordered_map<std::string, SpearmanStyleConfig> styles;
   return styles;
 }
@@ -68,13 +70,13 @@ void ensure_spearman_styles_registered() {
   (void)registered;
 }
 
-auto resolve_spearman_style_fn(const Render::GL::DrawContext &ctx)
-    -> const SpearmanStyleConfig & {
+auto resolve_spearman_style_fn(const Render::GL::DrawContext& ctx)
+    -> const SpearmanStyleConfig& {
   ensure_spearman_styles_registered();
-  auto &styles = spearman_style_registry();
+  auto& styles = spearman_style_registry();
   std::string nation_id;
   if (ctx.entity != nullptr) {
-    if (auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+    if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
       nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
     }
   }
@@ -92,7 +94,7 @@ auto resolve_spearman_style_fn(const Render::GL::DrawContext &ctx)
   return k_empty;
 }
 
-auto beard_variant_bucket(const Render::GL::DrawContext &ctx,
+auto beard_variant_bucket(const Render::GL::DrawContext& ctx,
                           std::uint32_t seed) -> std::uint8_t {
   if (ctx.has_variant_override) {
     return static_cast<std::uint8_t>(ctx.variant_override %
@@ -110,8 +112,8 @@ auto beard_variant_bucket(const Render::GL::DrawContext &ctx,
 
 } // namespace
 
-void register_spearman_style(const std::string &nation_id,
-                             const SpearmanStyleConfig &style) {
+void register_spearman_style(const std::string& nation_id,
+                             const SpearmanStyleConfig& style) {
   spearman_style_registry()[nation_id] = style;
 }
 
@@ -133,11 +135,10 @@ struct SpearmanExtras {
   float spearhead_length = 0.18F;
 };
 
-auto canonical_spear_cfg() -> const SpearRenderConfig & {
+auto canonical_spear_cfg() -> const SpearRenderConfig& {
   static const SpearRenderConfig cfg = []() {
     SpearRenderConfig result;
-    result.shaft_color =
-        QVector3D(0.5F, 0.3F, 0.2F) * QVector3D(0.85F, 0.75F, 0.65F);
+    result.shaft_color = QVector3D(0.5F, 0.3F, 0.2F) * QVector3D(0.85F, 0.75F, 0.65F);
     result.spearhead_color = QVector3D(0.75F, 0.76F, 0.80F);
     result.spear_length = 1.15F;
     result.shaft_radius = 0.018F;
@@ -147,9 +148,11 @@ auto canonical_spear_cfg() -> const SpearRenderConfig & {
   return cfg;
 }
 
-auto append_spearman_role_colors_common(
-    const HumanoidVariant &variant, QVector3D *out, std::uint32_t base_count,
-    std::size_t max_count, bool include_facial_hair) -> std::uint32_t {
+auto append_spearman_role_colors_common(const HumanoidVariant& variant,
+                                        QVector3D* out,
+                                        std::uint32_t base_count,
+                                        std::size_t max_count,
+                                        bool include_facial_hair) -> std::uint32_t {
   auto count = base_count;
   count += Render::GL::carthage_heavy_helmet_fill_role_colors(
       variant.palette, out + count, max_count - count);
@@ -171,43 +174,48 @@ auto append_spearman_role_colors_common(
   if (!include_facial_hair || max_count <= count) {
     return count;
   }
-  return Render::Humanoid::facial_hair_role_colors(variant, out, count,
-                                                   max_count);
+  return Render::Humanoid::facial_hair_role_colors(variant, out, count, max_count);
 }
 
-auto append_spearman_role_colors(const void *variant_void, QVector3D *out,
+auto append_spearman_role_colors(const void* variant_void,
+                                 QVector3D* out,
                                  std::uint32_t base_count,
                                  std::size_t max_count) -> std::uint32_t {
   if (variant_void == nullptr || max_count <= base_count) {
     return base_count;
   }
   return append_spearman_role_colors_common(
-      *static_cast<const HumanoidVariant *>(variant_void), out, base_count,
-      max_count, false);
+      *static_cast<const HumanoidVariant*>(variant_void),
+      out,
+      base_count,
+      max_count,
+      false);
 }
 
-auto append_spearman_role_colors_with_facial_hair(
-    const void *variant_void, QVector3D *out, std::uint32_t base_count,
-    std::size_t max_count) -> std::uint32_t {
+auto append_spearman_role_colors_with_facial_hair(const void* variant_void,
+                                                  QVector3D* out,
+                                                  std::uint32_t base_count,
+                                                  std::size_t max_count)
+    -> std::uint32_t {
   if (variant_void == nullptr || max_count <= base_count) {
     return base_count;
   }
   return append_spearman_role_colors_common(
-      *static_cast<const HumanoidVariant *>(variant_void), out, base_count,
-      max_count, true);
+      *static_cast<const HumanoidVariant*>(variant_void),
+      out,
+      base_count,
+      max_count,
+      true);
 }
 
 struct SpearmanArchetypeSet {
   Render::Creature::ArchetypeId clean{Render::Creature::k_invalid_archetype};
-  Render::Creature::ArchetypeId full_beard{
-      Render::Creature::k_invalid_archetype};
-  Render::Creature::ArchetypeId long_beard{
-      Render::Creature::k_invalid_archetype};
-  Render::Creature::ArchetypeId short_beard{
-      Render::Creature::k_invalid_archetype};
+  Render::Creature::ArchetypeId full_beard{Render::Creature::k_invalid_archetype};
+  Render::Creature::ArchetypeId long_beard{Render::Creature::k_invalid_archetype};
+  Render::Creature::ArchetypeId short_beard{Render::Creature::k_invalid_archetype};
 };
 
-auto spearman_archetypes() -> const SpearmanArchetypeSet & {
+auto spearman_archetypes() -> const SpearmanArchetypeSet& {
   static const SpearmanArchetypeSet ids = []() {
     using namespace Render::Creature::Pipeline;
 
@@ -216,11 +224,9 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet & {
     static const auto k_helmet_base_role_byte =
         static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
     static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(
-        k_helmet_base_role_byte +
-        Render::GL::k_carthage_heavy_helmet_role_count);
+        k_helmet_base_role_byte + Render::GL::k_carthage_heavy_helmet_role_count);
     static const auto k_spear_base_role_byte = static_cast<std::uint8_t>(
-        k_shoulder_base_role_byte +
-        Render::GL::k_carthage_shoulder_cover_role_count);
+        k_shoulder_base_role_byte + Render::GL::k_carthage_shoulder_cover_role_count);
     static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
         k_spear_base_role_byte + Render::GL::k_spear_role_count);
     static const auto k_facial_hair_base_role_byte = static_cast<std::uint8_t>(
@@ -234,49 +240,61 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet & {
     static const auto k_head_bind_matrix =
         Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
             Render::Humanoid::HumanoidBone::Head)];
-    const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+    const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
     static const auto k_shoulder_l_bind_matrix =
-        Render::GL::make_shoulder_cover_transform(
-            QMatrix4x4{}, bind_frames.shoulder_l.origin,
-            -bind_frames.torso.right, bind_frames.torso.up);
+        Render::GL::make_shoulder_cover_transform(QMatrix4x4{},
+                                                  bind_frames.shoulder_l.origin,
+                                                  -bind_frames.torso.right,
+                                                  bind_frames.torso.up);
     static const auto k_shoulder_r_bind_matrix =
-        Render::GL::make_shoulder_cover_transform(
-            QMatrix4x4{}, bind_frames.shoulder_r.origin,
-            bind_frames.torso.right, bind_frames.torso.up);
+        Render::GL::make_shoulder_cover_transform(QMatrix4x4{},
+                                                  bind_frames.shoulder_r.origin,
+                                                  bind_frames.torso.right,
+                                                  bind_frames.torso.up);
     static const Render::Creature::StaticAttachmentSpec k_shoulder_l_spec =
         Render::GL::carthage_shoulder_cover_make_static_attachment(
-            k_shoulder_l_bone, k_shoulder_base_role_byte,
-            k_shoulder_l_bind_matrix);
+            k_shoulder_l_bone, k_shoulder_base_role_byte, k_shoulder_l_bind_matrix);
     static const Render::Creature::StaticAttachmentSpec k_shoulder_r_spec =
         Render::GL::carthage_shoulder_cover_make_static_attachment(
-            k_shoulder_r_bone, k_shoulder_base_role_byte,
-            k_shoulder_r_bind_matrix);
-    static const std::array<Render::Creature::StaticAttachmentSpec, 4>
-        k_spear_specs = Render::GL::spear_make_static_attachments(
-            canonical_spear_cfg(), k_spear_base_role_byte);
+            k_shoulder_r_bone, k_shoulder_base_role_byte, k_shoulder_r_bind_matrix);
+    static const std::array<Render::Creature::StaticAttachmentSpec, 4> k_spear_specs =
+        Render::GL::spear_make_static_attachments(canonical_spear_cfg(),
+                                                  k_spear_base_role_byte);
     static const Render::Creature::StaticAttachmentSpec k_armor_spec =
-        Render::GL::armor_light_carthage_make_static_attachment(
-            k_chest_bone, k_armor_base_role_byte);
+        Render::GL::armor_light_carthage_make_static_attachment(k_chest_bone,
+                                                                k_armor_base_role_byte);
     static const std::array<Render::Creature::StaticAttachmentSpec, 13>
         k_base_attachments{
             Render::GL::carthage_heavy_helmet_make_static_attachment(
                 Render::GL::carthage_heavy_helmet_shell_archetype(),
-                k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
+                k_head_bone,
+                k_helmet_base_role_byte,
+                k_head_bind_matrix),
             Render::GL::carthage_heavy_helmet_make_static_attachment(
                 Render::GL::carthage_heavy_helmet_neck_guard_archetype(),
-                k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
+                k_head_bone,
+                k_helmet_base_role_byte,
+                k_head_bind_matrix),
             Render::GL::carthage_heavy_helmet_make_static_attachment(
                 Render::GL::carthage_heavy_helmet_cheek_guards_archetype(),
-                k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
+                k_head_bone,
+                k_helmet_base_role_byte,
+                k_head_bind_matrix),
             Render::GL::carthage_heavy_helmet_make_static_attachment(
                 Render::GL::carthage_heavy_helmet_face_plate_archetype(),
-                k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
+                k_head_bone,
+                k_helmet_base_role_byte,
+                k_head_bind_matrix),
             Render::GL::carthage_heavy_helmet_make_static_attachment(
                 Render::GL::carthage_heavy_helmet_crest_archetype(),
-                k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
+                k_head_bone,
+                k_helmet_base_role_byte,
+                k_head_bind_matrix),
             Render::GL::carthage_heavy_helmet_make_static_attachment(
                 Render::GL::carthage_heavy_helmet_rivets_archetype(),
-                k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix),
+                k_head_bone,
+                k_helmet_base_role_byte,
+                k_head_bind_matrix),
             k_shoulder_l_spec,
             k_shoulder_r_spec,
             k_spear_specs[0],
@@ -286,16 +304,14 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet & {
             k_armor_spec,
         };
 
-    auto const make_bearded_attachments =
-        [&](Render::GL::FacialHairStyle style) {
-          std::array<Render::Creature::StaticAttachmentSpec, 14> attachments{};
-          std::copy(k_base_attachments.begin(), k_base_attachments.end(),
-                    attachments.begin());
-          attachments.back() =
-              Render::Humanoid::facial_hair_make_static_attachment(
-                  style, k_facial_hair_base_role_byte);
-          return attachments;
-        };
+    auto const make_bearded_attachments = [&](Render::GL::FacialHairStyle style) {
+      std::array<Render::Creature::StaticAttachmentSpec, 14> attachments{};
+      std::copy(
+          k_base_attachments.begin(), k_base_attachments.end(), attachments.begin());
+      attachments.back() = Render::Humanoid::facial_hair_make_static_attachment(
+          style, k_facial_hair_base_role_byte);
+      return attachments;
+    };
 
     static const auto k_full_beard_attachments =
         make_bearded_attachments(Render::GL::FacialHairStyle::FullBeard);
@@ -304,25 +320,29 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet & {
     static const auto k_short_beard_attachments =
         make_bearded_attachments(Render::GL::FacialHairStyle::ShortBeard);
 
-    auto &registry = Render::Creature::ArchetypeRegistry::instance();
+    auto& registry = Render::Creature::ArchetypeRegistry::instance();
     SpearmanArchetypeSet result{};
     result.clean = registry.register_unit_archetype(
-        "troops/carthage/spearman", CreatureKind::Humanoid,
+        "troops/carthage/spearman",
+        CreatureKind::Humanoid,
         std::span<const Render::Creature::StaticAttachmentSpec>(
             k_base_attachments.data(), k_base_attachments.size()),
         &append_spearman_role_colors);
     result.full_beard = registry.register_unit_archetype(
-        "troops/carthage/spearman/full_beard", CreatureKind::Humanoid,
+        "troops/carthage/spearman/full_beard",
+        CreatureKind::Humanoid,
         std::span<const Render::Creature::StaticAttachmentSpec>(
             k_full_beard_attachments.data(), k_full_beard_attachments.size()),
         &append_spearman_role_colors_with_facial_hair);
     result.long_beard = registry.register_unit_archetype(
-        "troops/carthage/spearman/long_beard", CreatureKind::Humanoid,
+        "troops/carthage/spearman/long_beard",
+        CreatureKind::Humanoid,
         std::span<const Render::Creature::StaticAttachmentSpec>(
             k_long_beard_attachments.data(), k_long_beard_attachments.size()),
         &append_spearman_role_colors_with_facial_hair);
     result.short_beard = registry.register_unit_archetype(
-        "troops/carthage/spearman/short_beard", CreatureKind::Humanoid,
+        "troops/carthage/spearman/short_beard",
+        CreatureKind::Humanoid,
         std::span<const Render::Creature::StaticAttachmentSpec>(
             k_short_beard_attachments.data(), k_short_beard_attachments.size()),
         &append_spearman_role_colors_with_facial_hair);
@@ -331,15 +351,14 @@ auto spearman_archetypes() -> const SpearmanArchetypeSet & {
   return ids;
 }
 
-static auto
-spearman_variant_table() -> const Render::Creature::ArchetypeVariantTable & {
+static auto spearman_variant_table() -> const Render::Creature::ArchetypeVariantTable& {
   static const Render::Creature::ArchetypeVariantTable k_table = []() {
     Render::Creature::ArchetypeVariantTable t{};
 
     t.variant_trigger_pose = Render::Creature::PoseIntent::Count;
     t.variant_stride = 8;
     t.variant_is_seed_based = false;
-    auto const &a = spearman_archetypes();
+    auto const& a = spearman_archetypes();
 
     t.archetype_for_variant[static_cast<std::size_t>(
         Render::GL::FacialHairStyle::None)] = a.clean;
@@ -369,8 +388,9 @@ public:
     return {0.72F, 1.02F, 0.74F};
   }
 
-  void adjust_variation(const DrawContext &, uint32_t,
-                        VariationParams &variation) const override {
+  void adjust_variation(const DrawContext&,
+                        uint32_t,
+                        VariationParams& variation) const override {
     variation.bulk_scale *= 0.90F;
     variation.stance_width *= 0.92F;
   }
@@ -380,17 +400,18 @@ public:
   }
 
 public:
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
     ensure_spearman_styles_registered();
     static const UnitVisualSpec spec = []() {
-      const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-          "troops/carthage/spearman");
-      const std::array<EquipmentHandle, 4> handles{
-          loadout.helmet_handle, loadout.shoulder_handle, loadout.spear_handle,
-          loadout.armor_handle};
+      const auto loadout =
+          Render::GL::Nation::resolve_equipment_loadout("troops/carthage/spearman");
+      const std::array<EquipmentHandle, 4> handles{loadout.helmet_handle,
+                                                   loadout.shoulder_handle,
+                                                   loadout.spear_handle,
+                                                   loadout.armor_handle};
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/spearman";
@@ -398,21 +419,23 @@ public:
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/spearman",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+          Render::Creature::ArchetypeRegistry::k_humanoid_base,
+          handles);
       s.variant_table = &spearman_variant_table();
       return s;
     }();
     return spec;
   }
 
-  void get_variant(const DrawContext &ctx, uint32_t seed,
-                   HumanoidVariant &v) const override {
+  void get_variant(const DrawContext& ctx,
+                   uint32_t seed,
+                   HumanoidVariant& v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
     v.palette = make_humanoid_palette(team_tint, seed);
-    auto const &style = resolve_style(ctx);
+    auto const& style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
-    auto next_rand = [](uint32_t &s) -> float {
+    auto next_rand = [](uint32_t& s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
@@ -463,14 +486,12 @@ public:
   }
 
 private:
-  auto
-  resolve_style(const DrawContext &ctx) const -> const SpearmanStyleConfig & {
+  auto resolve_style(const DrawContext& ctx) const -> const SpearmanStyleConfig& {
     ensure_spearman_styles_registered();
-    auto &styles = spearman_style_registry();
+    auto& styles = spearman_style_registry();
     std::string nation_id;
     if (ctx.entity != nullptr) {
-      if (auto *unit =
-              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+      if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
       }
     }
@@ -489,12 +510,14 @@ private:
   }
 
 private:
-  void apply_palette_overrides(const SpearmanStyleConfig &style,
-                               const QVector3D &team_tint,
-                               HumanoidVariant &variant) const {
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target) {
-      target = mix_palette_color(target, override_color, team_tint,
+  void apply_palette_overrides(const SpearmanStyleConfig& style,
+                               const QVector3D& team_tint,
+                               HumanoidVariant& variant) const {
+    auto apply_color = [&](const std::optional<QVector3D>& override_color,
+                           QVector3D& target) {
+      target = mix_palette_color(target,
+                                 override_color,
+                                 team_tint,
                                  k_spearman_team_mix_weight,
                                  k_spearman_style_mix_weight);
     };
@@ -506,11 +529,11 @@ private:
   }
 };
 
-void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
+void register_spearman_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_spearman_styles_registered();
   static SpearmanRenderer const renderer;
   registry.register_renderer("troops/carthage/spearman",
-                             [](const DrawContext &ctx, ISubmitter &out) {
+                             [](const DrawContext& ctx, ISubmitter& out) {
                                static SpearmanRenderer const static_renderer;
                                static_renderer.render(ctx, out);
                              });

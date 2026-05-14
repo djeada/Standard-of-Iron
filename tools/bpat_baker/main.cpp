@@ -1,13 +1,29 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <numbers>
+#include <string>
+#include <string_view>
+#include <vector>
+
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_writer.h"
 #include "render/creature/humanoid_clip_ids.h"
-#include "render/creature/snapshot_mesh_asset.h"
-#include "render/creature/species_manifest.h"
-
 #include "render/creature/part_graph.h"
 #include "render/creature/render_request.h"
+#include "render/creature/snapshot_mesh_asset.h"
+#include "render/creature/species_manifest.h"
 #include "render/elephant/dimensions.h"
 #include "render/elephant/elephant_gait.h"
 #include "render/elephant/elephant_manifest.h"
@@ -26,31 +42,27 @@
 #include "render/rigged_mesh_bake.h"
 #include "render/snapshot_mesh_bake.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <numbers>
-#include <string>
-#include <string_view>
-#include <vector>
-
 namespace {
 
 namespace bpat = Render::Creature::Bpat;
 namespace snapshot = Render::Creature::Snapshot;
 
-enum class BakerAttackType : std::uint8_t { None, Sword, Spear, Bow };
-enum class BakerHoldType : std::uint8_t { None, Spear, Bow };
-enum class BakerDeathType : std::uint8_t { None, Infantry, Mounted };
+enum class BakerAttackType : std::uint8_t {
+  None,
+  Sword,
+  Spear,
+  Bow
+};
+enum class BakerHoldType : std::uint8_t {
+  None,
+  Spear,
+  Bow
+};
+enum class BakerDeathType : std::uint8_t {
+  None,
+  Infantry,
+  Mounted
+};
 enum class BakerRidingType : std::uint8_t {
   None,
   Idle,
@@ -65,10 +77,13 @@ enum class BakerAmbientIdleType : std::uint8_t {
   RaiseWeapon,
   ShiftWeight
 };
-enum class HumanoidBakeProfile : std::uint8_t { Default, SwordReady };
+enum class HumanoidBakeProfile : std::uint8_t {
+  Default,
+  SwordReady
+};
 
 struct HumanoidClipSpec {
-  const char *name;
+  const char* name;
   Render::GL::HumanoidMotionState state;
   BakerAttackType attack_type{BakerAttackType::None};
   std::uint8_t attack_variant{0};
@@ -83,83 +98,298 @@ struct HumanoidClipSpec {
 };
 
 constexpr std::array<HumanoidClipSpec, 24> k_humanoid_clips{{
-    {"idle", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None, 0,
-     BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::None, 24U, 24.0F, 1.6F, true},
-    {"idle_squat", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None,
-     0, BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::SitDown, 72U, 24.0F, 3.0F, false},
-    {"idle_jump", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None,
-     0, BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::Jump, 72U, 24.0F, 3.0F, false},
-    {"idle_weapon", Render::GL::HumanoidMotionState::Idle,
-     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::RaiseWeapon, 72U, 24.0F, 3.0F,
+    {"idle",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.6F,
+     true},
+    {"idle_squat",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::SitDown,
+     72U,
+     24.0F,
+     3.0F,
      false},
-    {"idle_weave", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None,
-     0, BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::ShiftWeight, 72U, 24.0F, 3.0F, false},
-    {"walk", Render::GL::HumanoidMotionState::Walk, BakerAttackType::None, 0,
-     BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::None, 24U, 24.0F, 0.92F, true},
-    {"run", Render::GL::HumanoidMotionState::Run, BakerAttackType::None, 0,
-     BakerDeathType::None, BakerRidingType::None, BakerHoldType::None,
-     BakerAmbientIdleType::None, 24U, 24.0F, 0.56F, true},
-    {"hold", Render::GL::HumanoidMotionState::Hold, BakerAttackType::None, 0,
-     BakerDeathType::None, BakerRidingType::None, BakerHoldType::Spear,
-     BakerAmbientIdleType::None, 16U, 24.0F, 1.8F, true},
-    {"hold_bow", Render::GL::HumanoidMotionState::Hold, BakerAttackType::None,
-     0, BakerDeathType::None, BakerRidingType::None, BakerHoldType::Bow,
-     BakerAmbientIdleType::None, 16U, 24.0F, 1.8F, true},
-    {"attack_sword_a", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 0, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"attack_sword_b", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 1, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"attack_sword_c", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 2, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"attack_spear_a", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 0, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"attack_spear_b", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 1, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"attack_spear_c", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 2, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"attack_bow", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Bow, 0, BakerDeathType::None, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"riding_idle", Render::GL::HumanoidMotionState::Idle,
-     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::Idle,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.6F, true},
-    {"riding_charge", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::Charge,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"riding_reining", Render::GL::HumanoidMotionState::Hold,
-     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::Reining,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"riding_bow_shot", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::BowShot,
-     BakerHoldType::None, BakerAmbientIdleType::None, 24U, 24.0F, 1.0F, false},
-    {"die_infantry", Render::GL::HumanoidMotionState::Idle,
-     BakerAttackType::None, 0, BakerDeathType::Infantry, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 20U, 24.0F, 1.0F, false},
-    {"dead_infantry", Render::GL::HumanoidMotionState::Idle,
-     BakerAttackType::None, 0, BakerDeathType::Infantry, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 1U, 1.0F, 1.0F, true},
-    {"die_mounted", Render::GL::HumanoidMotionState::Idle,
-     BakerAttackType::None, 0, BakerDeathType::Mounted, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 20U, 24.0F, 1.0F, false},
-    {"dead_mounted", Render::GL::HumanoidMotionState::Idle,
-     BakerAttackType::None, 0, BakerDeathType::Mounted, BakerRidingType::None,
-     BakerHoldType::None, BakerAmbientIdleType::None, 1U, 1.0F, 1.0F, true},
+    {"idle_jump",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::Jump,
+     72U,
+     24.0F,
+     3.0F,
+     false},
+    {"idle_weapon",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::RaiseWeapon,
+     72U,
+     24.0F,
+     3.0F,
+     false},
+    {"idle_weave",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::ShiftWeight,
+     72U,
+     24.0F,
+     3.0F,
+     false},
+    {"walk",
+     Render::GL::HumanoidMotionState::Walk,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     0.92F,
+     true},
+    {"run",
+     Render::GL::HumanoidMotionState::Run,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     0.56F,
+     true},
+    {"hold",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::Spear,
+     BakerAmbientIdleType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"hold_bow",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::Bow,
+     BakerAmbientIdleType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"attack_sword_a",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"attack_sword_b",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword,
+     1,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"attack_sword_c",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword,
+     2,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"attack_spear_a",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Spear,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"attack_spear_b",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Spear,
+     1,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"attack_spear_c",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Spear,
+     2,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"attack_bow",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Bow,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"riding_idle",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::Idle,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.6F,
+     true},
+    {"riding_charge",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::Charge,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"riding_reining",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::Reining,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"riding_bow_shot",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::BowShot,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     24U,
+     24.0F,
+     1.0F,
+     false},
+    {"die_infantry",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::Infantry,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     20U,
+     24.0F,
+     1.0F,
+     false},
+    {"dead_infantry",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::Infantry,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     1U,
+     1.0F,
+     1.0F,
+     true},
+    {"die_mounted",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::Mounted,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     20U,
+     24.0F,
+     1.0F,
+     false},
+    {"dead_mounted",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::Mounted,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     1U,
+     1.0F,
+     1.0F,
+     true},
 }};
 
 struct HumanoidSocketSpec {
-  const char *name;
+  const char* name;
   Render::Humanoid::HumanoidSocket socket;
 };
 
@@ -176,13 +406,12 @@ constexpr std::array<HumanoidSocketSpec, 10> k_humanoid_sockets{{
     {"foot_r", Render::Humanoid::HumanoidSocket::FootR},
 }};
 
-auto blend_vec(const QVector3D &from, const QVector3D &to,
-               float t) -> QVector3D {
+auto blend_vec(const QVector3D& from, const QVector3D& to, float t) -> QVector3D {
   return from * (1.0F - t) + to * t;
 }
 
-auto blend_attachment_frame(const Render::GL::AttachmentFrame &from,
-                            const Render::GL::AttachmentFrame &to,
+auto blend_attachment_frame(const Render::GL::AttachmentFrame& from,
+                            const Render::GL::AttachmentFrame& to,
                             float t) -> Render::GL::AttachmentFrame {
   Render::GL::AttachmentFrame blended = from;
   blended.origin = blend_vec(from.origin, to.origin, t);
@@ -194,18 +423,16 @@ auto blend_attachment_frame(const Render::GL::AttachmentFrame &from,
   return blended;
 }
 
-auto blend_body_frames(const Render::GL::BodyFrames &from,
-                       const Render::GL::BodyFrames &to,
+auto blend_body_frames(const Render::GL::BodyFrames& from,
+                       const Render::GL::BodyFrames& to,
                        float t) -> Render::GL::BodyFrames {
   Render::GL::BodyFrames blended = from;
   blended.head = blend_attachment_frame(from.head, to.head, t);
   blended.torso = blend_attachment_frame(from.torso, to.torso, t);
   blended.back = blend_attachment_frame(from.back, to.back, t);
   blended.waist = blend_attachment_frame(from.waist, to.waist, t);
-  blended.shoulder_l =
-      blend_attachment_frame(from.shoulder_l, to.shoulder_l, t);
-  blended.shoulder_r =
-      blend_attachment_frame(from.shoulder_r, to.shoulder_r, t);
+  blended.shoulder_l = blend_attachment_frame(from.shoulder_l, to.shoulder_l, t);
+  blended.shoulder_r = blend_attachment_frame(from.shoulder_r, to.shoulder_r, t);
   blended.hand_l = blend_attachment_frame(from.hand_l, to.hand_l, t);
   blended.hand_r = blend_attachment_frame(from.hand_r, to.hand_r, t);
   blended.grip_l = blend_attachment_frame(from.grip_l, to.grip_l, t);
@@ -217,15 +444,14 @@ auto blend_body_frames(const Render::GL::BodyFrames &from,
   return blended;
 }
 
-auto blend_pose(const Render::GL::HumanoidPose &from,
-                const Render::GL::HumanoidPose &to,
+auto blend_pose(const Render::GL::HumanoidPose& from,
+                const Render::GL::HumanoidPose& to,
                 float t) -> Render::GL::HumanoidPose {
   Render::GL::HumanoidPose blended = from;
   blended.head_pos = blend_vec(from.head_pos, to.head_pos, t);
   blended.head_r = from.head_r * (1.0F - t) + to.head_r * t;
   blended.neck_base = blend_vec(from.neck_base, to.neck_base, t);
-  blended.head_frame =
-      blend_attachment_frame(from.head_frame, to.head_frame, t);
+  blended.head_frame = blend_attachment_frame(from.head_frame, to.head_frame, t);
   blended.body_frames = blend_body_frames(from.body_frames, to.body_frames, t);
   blended.shoulder_l = blend_vec(from.shoulder_l, to.shoulder_l, t);
   blended.shoulder_r = blend_vec(from.shoulder_r, to.shoulder_r, t);
@@ -236,21 +462,20 @@ auto blend_pose(const Render::GL::HumanoidPose &from,
   blended.pelvis_pos = blend_vec(from.pelvis_pos, to.pelvis_pos, t);
   blended.knee_l = blend_vec(from.knee_l, to.knee_l, t);
   blended.knee_r = blend_vec(from.knee_r, to.knee_r, t);
-  blended.foot_y_offset =
-      from.foot_y_offset * (1.0F - t) + to.foot_y_offset * t;
+  blended.foot_y_offset = from.foot_y_offset * (1.0F - t) + to.foot_y_offset * t;
   blended.foot_l = blend_vec(from.foot_l, to.foot_l, t);
   blended.foot_r = blend_vec(from.foot_r, to.foot_r, t);
   return blended;
 }
 
-auto transition_phase(std::uint32_t frame_index,
-                      std::uint32_t frame_count) -> float {
+auto transition_phase(std::uint32_t frame_index, std::uint32_t frame_count) -> float {
   if (frame_count <= 1U) {
     return 1.0F;
   }
   return std::clamp(static_cast<float>(frame_index) /
                         static_cast<float>(frame_count - 1U),
-                    0.0F, 1.0F);
+                    0.0F,
+                    1.0F);
 }
 
 auto hold_gait_descriptor() -> Render::GL::HumanoidGaitDescriptor {
@@ -263,8 +488,10 @@ auto hold_gait_descriptor() -> Render::GL::HumanoidGaitDescriptor {
   return gait;
 }
 
-void bake_hold_pose(HumanoidBakeProfile profile, BakerHoldType hold_type,
-                    float blend, Render::GL::HumanoidPose &pose) {
+void bake_hold_pose(HumanoidBakeProfile profile,
+                    BakerHoldType hold_type,
+                    float blend,
+                    Render::GL::HumanoidPose& pose) {
   float const mix = std::clamp(blend, 0.0F, 1.0F);
   if (mix <= 0.0F) {
     return;
@@ -300,12 +527,12 @@ void bake_hold_pose(HumanoidBakeProfile profile, BakerHoldType hold_type,
   pose = blend_pose(standing_pose, held_pose, eased_mix);
 }
 
-void bake_death_pose(BakerDeathType death_type, float blend,
-                     Render::GL::HumanoidPose &pose) {
+void bake_death_pose(BakerDeathType death_type,
+                     float blend,
+                     Render::GL::HumanoidPose& pose) {
   float const fall = std::clamp(blend, 0.0F, 1.0F);
   float const eased = fall * fall * (3.0F - 2.0F * fall);
-  float const side_sign =
-      (death_type == BakerDeathType::Mounted) ? -1.0F : 1.0F;
+  float const side_sign = (death_type == BakerDeathType::Mounted) ? -1.0F : 1.0F;
 
   pose.pelvis_pos.setY(pose.pelvis_pos.y() - 0.42F * eased);
   pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.36F * eased);
@@ -347,10 +574,10 @@ void bake_death_pose(BakerDeathType death_type, float blend,
 }
 
 void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
-                              const HumanoidClipSpec &clip,
+                              const HumanoidClipSpec& clip,
                               std::uint32_t frame_index,
-                              std::vector<QMatrix4x4> &out_palettes,
-                              std::vector<QMatrix4x4> &out_sockets) {
+                              std::vector<QMatrix4x4>& out_palettes,
+                              std::vector<QMatrix4x4>& out_sockets) {
   Render::GL::VariationParams variation{};
   variation.height_scale = 1.0F;
   variation.bulk_scale = 1.0F;
@@ -362,8 +589,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
 
   float const phase =
       (!clip.loops && clip.frames > 1U)
-          ? static_cast<float>(frame_index) /
-                static_cast<float>(clip.frames - 1U)
+          ? static_cast<float>(frame_index) / static_cast<float>(clip.frames - 1U)
           : static_cast<float>(frame_index) / static_cast<float>(clip.frames);
 
   Render::GL::HumanoidPose pose{};
@@ -375,8 +601,8 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     gait.cycle_phase = 0.0F;
     gait.speed = 0.0F;
     gait.normalized_speed = 0.0F;
-    Render::GL::HumanoidRendererBase::compute_locomotion_pose(0U, 0.0F, gait,
-                                                              variation, pose);
+    Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+        0U, 0.0F, gait, variation, pose);
     float const death_blend = clip.loops ? 1.0F : phase;
     bake_death_pose(clip.death_type, death_blend, pose);
   } else if (clip.attack_type != BakerAttackType::None) {
@@ -439,19 +665,16 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       request.dims = horse_profile.dims;
       request.weapon_pose =
           Render::GL::MountedPoseController::MountedWeaponPose::SwordIdle;
-      request.shield_pose =
-          Render::GL::MountedPoseController::MountedShieldPose::Guard;
+      request.shield_pose = Render::GL::MountedPoseController::MountedShieldPose::Guard;
       request.left_hand_on_reins = false;
       request.right_hand_on_reins = false;
 
       switch (clip.riding_type) {
       case BakerRidingType::Idle:
-        request.seat_pose =
-            Render::GL::MountedPoseController::MountedSeatPose::Neutral;
+        request.seat_pose = Render::GL::MountedPoseController::MountedSeatPose::Neutral;
         break;
       case BakerRidingType::Charge:
-        request.seat_pose =
-            Render::GL::MountedPoseController::MountedSeatPose::Forward;
+        request.seat_pose = Render::GL::MountedPoseController::MountedSeatPose::Forward;
         request.forward_bias = 0.30F;
         request.clearance_forward = 1.15F;
         break;
@@ -518,8 +741,8 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       gait.cycle_phase = 0.0F;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, 0.0F, gait, variation, pose);
-      bake_hold_pose(profile, clip.hold_type,
-                     transition_phase(frame_index, clip.frames), pose);
+      bake_hold_pose(
+          profile, clip.hold_type, transition_phase(frame_index, clip.frames), pose);
     } else if (clip.ambient_idle_type != BakerAmbientIdleType::None) {
       gait.cycle_phase = 0.0F;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
@@ -532,8 +755,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       if (profile == HumanoidBakeProfile::SwordReady) {
         ctrl.hold_sword_and_shield();
       }
-      auto to_ambient_type =
-          [](BakerAmbientIdleType t) -> Render::GL::AmbientIdleType {
+      auto to_ambient_type = [](BakerAmbientIdleType t) -> Render::GL::AmbientIdleType {
         switch (t) {
         case BakerAmbientIdleType::SitDown:
           return Render::GL::AmbientIdleType::SitDown;
@@ -567,27 +789,25 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
   }
 
   Render::Humanoid::BonePalette palette{};
-  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
-                                      palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
 
   for (std::size_t b = 0; b < Render::Humanoid::k_bone_count; ++b) {
     out_palettes.push_back(palette[b]);
   }
 
-  for (auto const &spec : k_humanoid_sockets) {
-    out_sockets.push_back(
-        Render::Humanoid::socket_transform(palette, spec.socket));
+  for (auto const& spec : k_humanoid_sockets) {
+    out_sockets.push_back(Render::Humanoid::socket_transform(palette, spec.socket));
   }
 }
 
-bool bake_humanoid(const std::filesystem::path &out_dir,
-                   std::uint32_t species_id, std::string_view file_name,
+bool bake_humanoid(const std::filesystem::path& out_dir,
+                   std::uint32_t species_id,
+                   std::string_view file_name,
                    HumanoidBakeProfile profile) {
-  bpat::BpatWriter writer(
-      species_id, static_cast<std::uint32_t>(Render::Humanoid::k_bone_count));
-  for (auto const &spec : k_humanoid_sockets) {
-    Render::Humanoid::SocketDef const &def =
-        Render::Humanoid::socket_def(spec.socket);
+  bpat::BpatWriter writer(species_id,
+                          static_cast<std::uint32_t>(Render::Humanoid::k_bone_count));
+  for (auto const& spec : k_humanoid_sockets) {
+    Render::Humanoid::SocketDef const& def = Render::Humanoid::socket_def(spec.socket);
     bpat::SocketDescriptor s{};
     s.name = spec.name;
     s.anchor_bone = static_cast<std::uint32_t>(def.bone);
@@ -595,7 +815,7 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
     writer.add_socket(std::move(s));
   }
 
-  for (auto const &clip : k_humanoid_clips) {
+  for (auto const& clip : k_humanoid_clips) {
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -607,8 +827,7 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
     palettes.reserve(static_cast<std::size_t>(clip.frames) *
                      Render::Humanoid::k_bone_count);
     std::vector<QMatrix4x4> sockets;
-    sockets.reserve(static_cast<std::size_t>(clip.frames) *
-                    k_humanoid_sockets.size());
+    sockets.reserve(static_cast<std::size_t>(clip.frames) * k_humanoid_sockets.size());
     for (std::uint32_t f = 0; f < clip.frames; ++f) {
       bake_humanoid_clip_frame(profile, clip, f, palettes, sockets);
     }
@@ -630,13 +849,13 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
             << " frames, " << k_humanoid_clips.size() << " clips, "
-            << Render::Humanoid::k_bone_count << " bones, "
-            << k_humanoid_sockets.size() << " sockets)\n";
+            << Render::Humanoid::k_bone_count << " bones, " << k_humanoid_sockets.size()
+            << " sockets)\n";
   return true;
 }
 
-bool bake_species_manifest(const std::filesystem::path &out_dir,
-                           const Render::Creature::SpeciesManifest &manifest) {
+bool bake_species_manifest(const std::filesystem::path& out_dir,
+                           const Render::Creature::SpeciesManifest& manifest) {
   if (manifest.bind_palette == nullptr || manifest.creature_spec == nullptr ||
       manifest.bake_clip_palette == nullptr) {
     std::cerr << "[bpat_baker] manifest for " << manifest.species_name
@@ -647,14 +866,14 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
   auto const bind_palette = manifest.bind_palette();
   std::vector<QMatrix4x4> inverse_bind;
   inverse_bind.reserve(bind_palette.size());
-  for (const QMatrix4x4 &m : bind_palette) {
+  for (const QMatrix4x4& m : bind_palette) {
     inverse_bind.push_back(m.inverted());
   }
   bpat::BpatWriter writer(manifest.species_id,
                           static_cast<std::uint32_t>(bind_palette.size()));
 
   for (std::size_t i = 0; i < manifest.clips.size(); ++i) {
-    auto const &clip = manifest.clips[i];
+    auto const& clip = manifest.clips[i];
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frame_count;
@@ -663,8 +882,7 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
     writer.add_clip(std::move(desc));
 
     std::vector<QMatrix4x4> palettes;
-    palettes.reserve(static_cast<std::size_t>(clip.frame_count) *
-                     bind_palette.size());
+    palettes.reserve(static_cast<std::size_t>(clip.frame_count) * bind_palette.size());
     for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
       manifest.bake_clip_palette(i, f, palettes);
     }
@@ -672,8 +890,7 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
   }
 
   std::filesystem::create_directories(out_dir);
-  std::filesystem::path const out_path =
-      out_dir / std::string(manifest.bpat_file_name);
+  std::filesystem::path const out_path = out_dir / std::string(manifest.bpat_file_name);
   std::ofstream out(out_path, std::ios::binary | std::ios::trunc);
   if (!out) {
     std::cerr << "[bpat_baker] cannot open " << out_path << " for writing\n";
@@ -685,8 +902,8 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
   }
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
-            << " frames, " << manifest.clips.size() << " clips, "
-            << bind_palette.size() << " bones)\n";
+            << " frames, " << manifest.clips.size() << " clips, " << bind_palette.size()
+            << " bones)\n";
 
   Render::Creature::BakeInput mesh_input{};
   mesh_input.graph = &Render::Creature::part_graph_for(
@@ -694,10 +911,12 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
   mesh_input.bind_pose = bind_palette;
   auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
   snapshot::SnapshotMeshWriter snapshot_writer(
-      manifest.species_id, Render::Creature::CreatureLOD::Minimal,
-      static_cast<std::uint32_t>(source.vertices.size()), source.indices);
+      manifest.species_id,
+      Render::Creature::CreatureLOD::Minimal,
+      static_cast<std::uint32_t>(source.vertices.size()),
+      source.indices);
   for (std::size_t i = 0; i < manifest.clips.size(); ++i) {
-    auto const &clip = manifest.clips[i];
+    auto const& clip = manifest.clips[i];
     snapshot::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frame_count;
@@ -714,16 +933,14 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
       for (std::size_t b = 0; b < n; ++b) {
         frame_palette[b] = frame_palette[b] * inverse_bind[b];
       }
-      auto baked =
-          Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
+      auto baked = Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
       clip_vertices.insert(clip_vertices.end(), baked.begin(), baked.end());
     }
     snapshot_writer.append_clip_vertices(clip_vertices);
   }
 
   if (source.vertices.empty() || source.indices.empty()) {
-    std::cerr << "[bpat_baker] warning: no geometry baked for "
-              << manifest.species_name
+    std::cerr << "[bpat_baker] warning: no geometry baked for " << manifest.species_name
               << " minimal snapshot; skipping write of "
               << (out_dir / std::string(manifest.minimal_snapshot_file_name))
               << " (pre-baked asset on disk is preserved)\n";
@@ -732,11 +949,9 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
 
   std::filesystem::path const snapshot_out_path =
       out_dir / std::string(manifest.minimal_snapshot_file_name);
-  std::ofstream snapshot_out(snapshot_out_path,
-                             std::ios::binary | std::ios::trunc);
+  std::ofstream snapshot_out(snapshot_out_path, std::ios::binary | std::ios::trunc);
   if (!snapshot_out) {
-    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path
-              << " for writing\n";
+    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path << " for writing\n";
     return false;
   }
   if (!snapshot_writer.write(snapshot_out)) {
@@ -745,15 +960,14 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
   }
   snapshot_out.flush();
   std::cout << "[bpat_baker] wrote " << snapshot_out_path << " ("
-            << source.vertices.size() << " verts/frame, "
-            << source.indices.size() << " indices, "
-            << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
+            << source.vertices.size() << " verts/frame, " << source.indices.size()
+            << " indices, " << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
             << " lod)\n";
   return true;
 }
 
 struct HorseClipSpec {
-  const char *name;
+  const char* name;
   Render::GL::GaitType gait;
   std::uint32_t frames;
   float fps;
@@ -767,18 +981,16 @@ constexpr std::array<HorseClipSpec, 6> k_horse_clips{{
     {"idle", Render::GL::GaitType::IDLE, 24U, 24.0F, true, false, false, 0.0F},
     {"walk", Render::GL::GaitType::WALK, 24U, 24.0F, true, true, false, 0.50F},
     {"trot", Render::GL::GaitType::TROT, 16U, 24.0F, true, true, false, 0.85F},
-    {"canter", Render::GL::GaitType::CANTER, 16U, 24.0F, true, true, false,
-     1.00F},
-    {"gallop", Render::GL::GaitType::GALLOP, 12U, 24.0F, true, true, false,
-     1.12F},
+    {"canter", Render::GL::GaitType::CANTER, 16U, 24.0F, true, true, false, 1.00F},
+    {"gallop", Render::GL::GaitType::GALLOP, 12U, 24.0F, true, true, false, 1.12F},
     {"fight", Render::GL::GaitType::IDLE, 24U, 24.0F, true, false, true, 0.0F},
 }};
 
-void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
-                           const Render::GL::HorseDimensions &dims,
-                           std::vector<QMatrix4x4> &out_palettes) {
-  float const phase =
-      static_cast<float>(frame_index) / static_cast<float>(clip.frames);
+void bake_horse_clip_frame(const HorseClipSpec& clip,
+                           std::uint32_t frame_index,
+                           const Render::GL::HorseDimensions& dims,
+                           std::vector<QMatrix4x4>& out_palettes) {
+  float const phase = static_cast<float>(frame_index) / static_cast<float>(clip.frames);
 
   Render::GL::HorseGait base{};
   Render::GL::HorseGait const gait = Render::GL::gait_for_type(clip.gait, base);
@@ -789,16 +1001,14 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
   motion.is_fighting = clip.is_fighting;
   if (clip.is_fighting) {
 
-    float const fight_bob =
-        std::sin(phase * 2.0F * std::numbers::pi_v<float> + 0.5F) *
-        dims.idle_bob_amplitude * 0.45F;
+    float const fight_bob = std::sin(phase * 2.0F * std::numbers::pi_v<float> + 0.5F) *
+                            dims.idle_bob_amplitude * 0.45F;
     motion.bob = fight_bob;
   } else {
     float const amp =
         clip.is_moving ? dims.move_bob_amplitude : dims.idle_bob_amplitude;
     float const scale = clip.is_moving ? clip.bob_scale : 0.8F;
-    motion.bob =
-        std::sin(phase * 2.0F * std::numbers::pi_v<float>) * amp * scale;
+    motion.bob = std::sin(phase * 2.0F * std::numbers::pi_v<float>) * amp * scale;
   }
 
   Render::Horse::HorseSpecPose pose{};
@@ -812,15 +1022,14 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
   }
 }
 
-bool bake_horse(const std::filesystem::path &out_dir) {
+bool bake_horse(const std::filesystem::path& out_dir) {
   bpat::BpatWriter writer(
       bpat::k_species_horse,
       static_cast<std::uint32_t>(Render::Horse::k_horse_bone_count));
 
-  Render::GL::HorseDimensions const dims =
-      Render::GL::make_horse_dimensions(0U);
+  Render::GL::HorseDimensions const dims = Render::GL::make_horse_dimensions(0U);
 
-  for (auto const &clip : k_horse_clips) {
+  for (auto const& clip : k_horse_clips) {
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -854,15 +1063,16 @@ bool bake_horse(const std::filesystem::path &out_dir) {
             << Render::Horse::k_horse_bone_count << " bones)\n";
 
   Render::Creature::BakeInput mesh_input{};
-  mesh_input.graph =
-      &Render::Creature::part_graph_for(Render::Horse::horse_creature_spec(),
-                                        Render::Creature::CreatureLOD::Minimal);
+  mesh_input.graph = &Render::Creature::part_graph_for(
+      Render::Horse::horse_creature_spec(), Render::Creature::CreatureLOD::Minimal);
   mesh_input.bind_pose = Render::Horse::horse_bind_palette();
   auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
   snapshot::SnapshotMeshWriter snapshot_writer(
-      bpat::k_species_horse, Render::Creature::CreatureLOD::Minimal,
-      static_cast<std::uint32_t>(source.vertices.size()), source.indices);
-  for (auto const &clip : k_horse_clips) {
+      bpat::k_species_horse,
+      Render::Creature::CreatureLOD::Minimal,
+      static_cast<std::uint32_t>(source.vertices.size()),
+      source.indices);
+  for (auto const& clip : k_horse_clips) {
     snapshot::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -875,20 +1085,16 @@ bool bake_horse(const std::filesystem::path &out_dir) {
       std::vector<QMatrix4x4> frame_palette;
       frame_palette.reserve(Render::Horse::k_horse_bone_count);
       bake_horse_clip_frame(clip, f, dims, frame_palette);
-      auto baked =
-          Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
+      auto baked = Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
       clip_vertices.insert(clip_vertices.end(), baked.begin(), baked.end());
     }
     snapshot_writer.append_clip_vertices(clip_vertices);
   }
 
-  std::filesystem::path const snapshot_out_path =
-      out_dir / "horse_minimal.bpsm";
-  std::ofstream snapshot_out(snapshot_out_path,
-                             std::ios::binary | std::ios::trunc);
+  std::filesystem::path const snapshot_out_path = out_dir / "horse_minimal.bpsm";
+  std::ofstream snapshot_out(snapshot_out_path, std::ios::binary | std::ios::trunc);
   if (!snapshot_out) {
-    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path
-              << " for writing\n";
+    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path << " for writing\n";
     return false;
   }
   if (!snapshot_writer.write(snapshot_out)) {
@@ -897,15 +1103,14 @@ bool bake_horse(const std::filesystem::path &out_dir) {
   }
   snapshot_out.flush();
   std::cout << "[bpat_baker] wrote " << snapshot_out_path << " ("
-            << source.vertices.size() << " verts/frame, "
-            << source.indices.size() << " indices, "
-            << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
+            << source.vertices.size() << " verts/frame, " << source.indices.size()
+            << " indices, " << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
             << " lod)\n";
   return true;
 }
 
 struct ElephantClipSpec {
-  const char *name;
+  const char* name;
   std::uint32_t frames;
   float fps;
   bool loops;
@@ -916,22 +1121,45 @@ struct ElephantClipSpec {
 };
 
 const std::array<ElephantClipSpec, 4> k_elephant_clips{{
-    {"idle", 24U, 24.0F, true, false,
-     Render::GL::ElephantGait{2.0F, 0.0F, 0.0F, 0.02F, 0.01F}, false, 0.0F},
-    {"walk", 24U, 24.0F, true, true,
-     Render::GL::ElephantGait{1.2F, 0.25F, 0.0F, 0.30F, 0.10F}, false, 0.62F},
-    {"run", 16U, 24.0F, true, true,
-     Render::GL::ElephantGait{0.6F, 0.5F, 0.5F, 0.70F, 0.25F}, false, 0.75F},
-    {"fight", 24U, 24.0F, true, false,
-     Render::GL::ElephantGait{1.15F, 0.0F, 0.0F, 0.30F, 0.06F}, true, 0.0F},
+    {"idle",
+     24U,
+     24.0F,
+     true,
+     false,
+     Render::GL::ElephantGait{2.0F, 0.0F, 0.0F, 0.02F, 0.01F},
+     false,
+     0.0F},
+    {"walk",
+     24U,
+     24.0F,
+     true,
+     true,
+     Render::GL::ElephantGait{1.2F, 0.25F, 0.0F, 0.30F, 0.10F},
+     false,
+     0.62F},
+    {"run",
+     16U,
+     24.0F,
+     true,
+     true,
+     Render::GL::ElephantGait{0.6F, 0.5F, 0.5F, 0.70F, 0.25F},
+     false,
+     0.75F},
+    {"fight",
+     24U,
+     24.0F,
+     true,
+     false,
+     Render::GL::ElephantGait{1.15F, 0.0F, 0.0F, 0.30F, 0.06F},
+     true,
+     0.0F},
 }};
 
-void bake_elephant_clip_frame(const ElephantClipSpec &clip,
+void bake_elephant_clip_frame(const ElephantClipSpec& clip,
                               std::uint32_t frame_index,
-                              const Render::GL::ElephantDimensions &dims,
-                              std::vector<QMatrix4x4> &out_palettes) {
-  float const phase =
-      static_cast<float>(frame_index) / static_cast<float>(clip.frames);
+                              const Render::GL::ElephantDimensions& dims,
+                              std::vector<QMatrix4x4>& out_palettes) {
+  float const phase = static_cast<float>(frame_index) / static_cast<float>(clip.frames);
 
   Render::Elephant::ElephantPoseMotion motion{};
   motion.phase = phase;
@@ -948,13 +1176,11 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
     float const amp =
         clip.is_moving ? dims.move_bob_amplitude : dims.idle_bob_amplitude;
     float const scale = clip.is_moving ? clip.bob_scale : 0.8F;
-    motion.bob =
-        std::sin(phase * 2.0F * std::numbers::pi_v<float>) * amp * scale;
+    motion.bob = std::sin(phase * 2.0F * std::numbers::pi_v<float>) * amp * scale;
   }
 
   Render::Elephant::ElephantSpecPose pose{};
-  Render::Elephant::make_elephant_spec_pose_animated(dims, clip.gait, motion,
-                                                     pose);
+  Render::Elephant::make_elephant_spec_pose_animated(dims, clip.gait, motion, pose);
 
   Render::Elephant::BonePalette palette{};
   Render::Elephant::evaluate_elephant_skeleton(pose, palette);
@@ -964,15 +1190,14 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
   }
 }
 
-bool bake_elephant(const std::filesystem::path &out_dir) {
+bool bake_elephant(const std::filesystem::path& out_dir) {
   bpat::BpatWriter writer(
       bpat::k_species_elephant,
       static_cast<std::uint32_t>(Render::Elephant::k_elephant_bone_count));
 
-  Render::GL::ElephantDimensions const dims =
-      Render::GL::make_elephant_dimensions(0U);
+  Render::GL::ElephantDimensions const dims = Render::GL::make_elephant_dimensions(0U);
 
-  for (auto const &clip : k_elephant_clips) {
+  for (auto const& clip : k_elephant_clips) {
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -1006,15 +1231,17 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
             << Render::Elephant::k_elephant_bone_count << " bones)\n";
 
   Render::Creature::BakeInput mesh_input{};
-  mesh_input.graph = &Render::Creature::part_graph_for(
-      Render::Elephant::elephant_creature_spec(),
-      Render::Creature::CreatureLOD::Minimal);
+  mesh_input.graph =
+      &Render::Creature::part_graph_for(Render::Elephant::elephant_creature_spec(),
+                                        Render::Creature::CreatureLOD::Minimal);
   mesh_input.bind_pose = Render::Elephant::elephant_bind_palette();
   auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
   snapshot::SnapshotMeshWriter snapshot_writer(
-      bpat::k_species_elephant, Render::Creature::CreatureLOD::Minimal,
-      static_cast<std::uint32_t>(source.vertices.size()), source.indices);
-  for (auto const &clip : k_elephant_clips) {
+      bpat::k_species_elephant,
+      Render::Creature::CreatureLOD::Minimal,
+      static_cast<std::uint32_t>(source.vertices.size()),
+      source.indices);
+  for (auto const& clip : k_elephant_clips) {
     snapshot::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frames;
@@ -1027,20 +1254,16 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
       std::vector<QMatrix4x4> frame_palette;
       frame_palette.reserve(Render::Elephant::k_elephant_bone_count);
       bake_elephant_clip_frame(clip, f, dims, frame_palette);
-      auto baked =
-          Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
+      auto baked = Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
       clip_vertices.insert(clip_vertices.end(), baked.begin(), baked.end());
     }
     snapshot_writer.append_clip_vertices(clip_vertices);
   }
 
-  std::filesystem::path const snapshot_out_path =
-      out_dir / "elephant_minimal.bpsm";
-  std::ofstream snapshot_out(snapshot_out_path,
-                             std::ios::binary | std::ios::trunc);
+  std::filesystem::path const snapshot_out_path = out_dir / "elephant_minimal.bpsm";
+  std::ofstream snapshot_out(snapshot_out_path, std::ios::binary | std::ios::trunc);
   if (!snapshot_out) {
-    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path
-              << " for writing\n";
+    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path << " for writing\n";
     return false;
   }
   if (!snapshot_writer.write(snapshot_out)) {
@@ -1049,16 +1272,15 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
   }
   snapshot_out.flush();
   std::cout << "[bpat_baker] wrote " << snapshot_out_path << " ("
-            << source.vertices.size() << " verts/frame, "
-            << source.indices.size() << " indices, "
-            << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
+            << source.vertices.size() << " verts/frame, " << source.indices.size()
+            << " indices, " << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
             << " lod)\n";
   return true;
 }
 
 } // namespace
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   static_assert(Render::Creature::k_humanoid_idle_clip == 0U);
   static_assert(Render::Creature::k_humanoid_idle_squat_clip == 1U);
   static_assert(Render::Creature::k_humanoid_idle_jump_clip == 2U);
@@ -1078,14 +1300,17 @@ int main(int argc, char **argv) {
     out_dir = argv[1];
   }
   bool ok = true;
-  ok = bake_humanoid(out_dir, bpat::k_species_humanoid, "humanoid.bpat",
+  ok = bake_humanoid(out_dir,
+                     bpat::k_species_humanoid,
+                     "humanoid.bpat",
                      HumanoidBakeProfile::Default) &&
        ok;
-  ok = bake_humanoid(out_dir, bpat::k_species_humanoid_sword,
-                     "humanoid_sword.bpat", HumanoidBakeProfile::SwordReady) &&
+  ok = bake_humanoid(out_dir,
+                     bpat::k_species_humanoid_sword,
+                     "humanoid_sword.bpat",
+                     HumanoidBakeProfile::SwordReady) &&
        ok;
   ok = bake_species_manifest(out_dir, Render::Horse::horse_manifest()) && ok;
-  ok = bake_species_manifest(out_dir, Render::Elephant::elephant_manifest()) &&
-       ok;
+  ok = bake_species_manifest(out_dir, Render::Elephant::elephant_manifest()) && ok;
   return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }

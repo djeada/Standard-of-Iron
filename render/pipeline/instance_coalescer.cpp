@@ -4,8 +4,8 @@
 
 namespace Render::Pipeline {
 
-auto parts_are_compatible(const Render::GL::DrawPartCmd &a,
-                          const Render::GL::DrawPartCmd &b) noexcept -> bool {
+auto parts_are_compatible(const Render::GL::DrawPartCmd& a,
+                          const Render::GL::DrawPartCmd& b) noexcept -> bool {
   if (a.mesh != b.mesh) {
     return false;
   }
@@ -34,8 +34,7 @@ auto parts_are_compatible(const Render::GL::DrawPartCmd &a,
 }
 
 auto coalesce_instances(std::span<const Render::GL::DrawPartCmd> parts,
-                        std::size_t min_run)
-    -> std::vector<InstancedPartBatch> {
+                        std::size_t min_run) -> std::vector<InstancedPartBatch> {
   std::vector<InstancedPartBatch> out;
   if (parts.empty() || min_run < 2) {
     return out;
@@ -73,7 +72,7 @@ auto compute_coalesce_stats(std::span<const InstancedPartBatch> batches,
   CoalesceStats s;
   s.input_parts = input_parts;
   s.batch_count = batches.size();
-  for (const auto &b : batches) {
+  for (const auto& b : batches) {
     s.batched_parts += b.count;
   }
   return s;

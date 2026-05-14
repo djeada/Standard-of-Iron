@@ -1,13 +1,12 @@
+#include <algorithm>
+#include <gtest/gtest.h>
+#include <type_traits>
+#include <utility>
+
 #include "game/systems/nation_loader.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/troop_catalog.h"
-
-#include <gtest/gtest.h>
-
-#include <algorithm>
-#include <type_traits>
-#include <utility>
 
 namespace {
 
@@ -16,30 +15,29 @@ struct HasSelectionRingYOffsetMember : std::false_type {};
 
 template <typename T>
 struct HasSelectionRingYOffsetMember<
-    T, std::void_t<decltype(std::declval<T>().selection_ring_y_offset)>>
-    : std::true_type {};
+    T,
+    std::void_t<decltype(std::declval<T>().selection_ring_y_offset)>> : std::true_type {
+};
 
-static_assert(
-    !HasSelectionRingYOffsetMember<Game::Systems::NationTroopVariant>::value);
-static_assert(
-    !HasSelectionRingYOffsetMember<Game::Units::TroopVisualStats>::value);
+static_assert(!HasSelectionRingYOffsetMember<Game::Systems::NationTroopVariant>::value);
+static_assert(!HasSelectionRingYOffsetMember<Game::Units::TroopVisualStats>::value);
 
 TEST(NationLoader, ArcherProfilesKeepDefaultSelectionRingGroundOffset) {
   auto const nations = Game::Systems::NationLoader::load_default_nations();
   ASSERT_FALSE(nations.empty());
 
-  auto &registry = Game::Systems::NationRegistry::instance();
+  auto& registry = Game::Systems::NationRegistry::instance();
   registry.clear();
   registry.clear_player_assignments();
-  for (const auto &nation : nations) {
+  for (const auto& nation : nations) {
     registry.register_nation(nation);
   }
 
-  auto &profiles = Game::Systems::TroopProfileService::instance();
+  auto& profiles = Game::Systems::TroopProfileService::instance();
   profiles.clear();
 
-  auto const roman = profiles.get_profile(
-      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Archer);
+  auto const roman = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                          Game::Units::TroopType::Archer);
   auto const carthage = profiles.get_profile(Game::Systems::NationID::Carthage,
                                              Game::Units::TroopType::Archer);
 
@@ -51,23 +49,22 @@ TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierAcrossNations) {
   auto const nations = Game::Systems::NationLoader::load_default_nations();
   ASSERT_FALSE(nations.empty());
 
-  auto &registry = Game::Systems::NationRegistry::instance();
+  auto& registry = Game::Systems::NationRegistry::instance();
   registry.clear();
   registry.clear_player_assignments();
-  for (const auto &nation : nations) {
+  for (const auto& nation : nations) {
     registry.register_nation(nation);
   }
 
-  auto &profiles = Game::Systems::TroopProfileService::instance();
+  auto& profiles = Game::Systems::TroopProfileService::instance();
   profiles.clear();
 
-  auto const roman_archer = profiles.get_profile(
-      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Archer);
-  auto const roman_horse_archer =
-      profiles.get_profile(Game::Systems::NationID::RomanRepublic,
-                           Game::Units::TroopType::HorseArcher);
-  auto const carthage_archer = profiles.get_profile(
-      Game::Systems::NationID::Carthage, Game::Units::TroopType::Archer);
+  auto const roman_archer = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                                 Game::Units::TroopType::Archer);
+  auto const roman_horse_archer = profiles.get_profile(
+      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::HorseArcher);
+  auto const carthage_archer = profiles.get_profile(Game::Systems::NationID::Carthage,
+                                                    Game::Units::TroopType::Archer);
   auto const carthage_horse_archer = profiles.get_profile(
       Game::Systems::NationID::Carthage, Game::Units::TroopType::HorseArcher);
 
@@ -81,19 +78,18 @@ TEST(NationLoader, FrontlineProfilesKeepCatalogFormationSpacing) {
   auto const nations = Game::Systems::NationLoader::load_default_nations();
   ASSERT_FALSE(nations.empty());
 
-  auto &registry = Game::Systems::NationRegistry::instance();
+  auto& registry = Game::Systems::NationRegistry::instance();
   registry.clear();
   registry.clear_player_assignments();
-  for (const auto &nation : nations) {
+  for (const auto& nation : nations) {
     registry.register_nation(nation);
   }
 
-  auto &profiles = Game::Systems::TroopProfileService::instance();
+  auto& profiles = Game::Systems::TroopProfileService::instance();
   profiles.clear();
 
-  auto const roman =
-      profiles.get_profile(Game::Systems::NationID::RomanRepublic,
-                           Game::Units::TroopType::Swordsman);
+  auto const roman = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                          Game::Units::TroopType::Swordsman);
   auto const carthage = profiles.get_profile(Game::Systems::NationID::Carthage,
                                              Game::Units::TroopType::Spearman);
 
@@ -105,18 +101,18 @@ TEST(NationLoader, CivilianProfilesUseNationSpecificRenderersWhenAvailable) {
   auto const nations = Game::Systems::NationLoader::load_default_nations();
   ASSERT_FALSE(nations.empty());
 
-  auto &registry = Game::Systems::NationRegistry::instance();
+  auto& registry = Game::Systems::NationRegistry::instance();
   registry.clear();
   registry.clear_player_assignments();
-  for (const auto &nation : nations) {
+  for (const auto& nation : nations) {
     registry.register_nation(nation);
   }
 
-  auto &profiles = Game::Systems::TroopProfileService::instance();
+  auto& profiles = Game::Systems::TroopProfileService::instance();
   profiles.clear();
 
-  auto const roman = profiles.get_profile(
-      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Civilian);
+  auto const roman = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                          Game::Units::TroopType::Civilian);
   auto const carthage = profiles.get_profile(Game::Systems::NationID::Carthage,
                                              Game::Units::TroopType::Civilian);
 
@@ -127,20 +123,19 @@ TEST(NationLoader, CivilianProfilesUseNationSpecificRenderersWhenAvailable) {
 }
 
 TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierWithoutNationData) {
-  auto &registry = Game::Systems::NationRegistry::instance();
+  auto& registry = Game::Systems::NationRegistry::instance();
   registry.clear();
   registry.clear_player_assignments();
 
   Game::Units::TroopCatalog::instance().reset_to_defaults();
 
-  auto &profiles = Game::Systems::TroopProfileService::instance();
+  auto& profiles = Game::Systems::TroopProfileService::instance();
   profiles.clear();
 
-  auto const archer = profiles.get_profile(
-      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Archer);
-  auto const horse_archer =
-      profiles.get_profile(Game::Systems::NationID::RomanRepublic,
-                           Game::Units::TroopType::HorseArcher);
+  auto const archer = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                           Game::Units::TroopType::Archer);
+  auto const horse_archer = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                                 Game::Units::TroopType::HorseArcher);
 
   EXPECT_FLOAT_EQ(archer.combat.ranged_range, 9.0F);
   EXPECT_FLOAT_EQ(horse_archer.combat.ranged_range, 10.5F);

@@ -5,7 +5,9 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_tex_coord;
 
 uniform mat4 u_model;
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 uniform float u_time;
 
 out vec2 v_tex_coord;
@@ -34,17 +36,14 @@ void main() {
   vec3 world_normal = normalize(mat3(u_model) * a_normal);
   vec3 world_pos = (u_model * vec4(a_position, 1.0)).xyz;
 
-  float base_noise =
-      noise(world_pos.xz * 0.06 + vec2(a_tex_coord.y * 1.6, 0.0));
-  float upper_noise = noise(world_pos.xz * 0.11 +
-                            vec2(0.0, a_tex_coord.y * 2.3) - u_time * 0.015);
+  float base_noise = noise(world_pos.xz * 0.06 + vec2(a_tex_coord.y * 1.6, 0.0));
+  float upper_noise =
+      noise(world_pos.xz * 0.11 + vec2(0.0, a_tex_coord.y * 2.3) - u_time * 0.015);
   float drift_phase = u_time * 0.55 + world_pos.y * 0.22 + base_noise * 4.0;
 
-  float lateral_drift =
-      sin(drift_phase) * (0.18 + 0.22 * upper_noise) * a_tex_coord.y;
-  float breathing =
-      sin(u_time * 0.32 + world_pos.x * 0.04 + world_pos.z * 0.05) * 0.12 *
-      (0.35 + 0.65 * a_tex_coord.y);
+  float lateral_drift = sin(drift_phase) * (0.18 + 0.22 * upper_noise) * a_tex_coord.y;
+  float breathing = sin(u_time * 0.32 + world_pos.x * 0.04 + world_pos.z * 0.05) *
+                    0.12 * (0.35 + 0.65 * a_tex_coord.y);
   float vertical_curl =
       sin(u_time * 0.40 + world_pos.x * 0.05 + base_noise * 6.0) * 0.18;
 

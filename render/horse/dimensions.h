@@ -1,9 +1,11 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <cstdint>
+
 #include "attachment_frames.h"
 #include "horse_gait.h"
-#include <QVector3D>
-#include <cstdint>
 
 namespace Render::GL {
 
@@ -73,12 +75,14 @@ struct HorseProfile {
 };
 
 auto make_horse_dimensions(uint32_t seed) -> HorseDimensions;
-auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
-                        const QVector3D &cloth_base) -> HorseVariant;
-auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
-                        const QVector3D &cloth_base) -> HorseProfile;
+auto make_horse_variant(uint32_t seed,
+                        const QVector3D& leather_base,
+                        const QVector3D& cloth_base) -> HorseVariant;
+auto make_horse_profile(uint32_t seed,
+                        const QVector3D& leather_base,
+                        const QVector3D& cloth_base) -> HorseProfile;
 
-inline void scale_horse_dimensions(HorseDimensions &dims, float scale) {
+inline void scale_horse_dimensions(HorseDimensions& dims, float scale) {
   dims.body_length *= scale;
   dims.body_width *= scale;
   dims.body_height *= scale;

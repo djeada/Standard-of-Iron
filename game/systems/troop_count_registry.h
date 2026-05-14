@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../core/event_manager.h"
 #include <unordered_map>
+
+#include "../core/event_manager.h"
 
 namespace Engine::Core {
 class World;
@@ -11,23 +12,23 @@ namespace Game::Systems {
 
 class TroopCountRegistry {
 public:
-  static auto instance() -> TroopCountRegistry &;
+  static auto instance() -> TroopCountRegistry&;
 
   void initialize();
   void clear();
 
   auto get_troop_count(int owner_id) const -> int;
 
-  void on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event);
-  void on_unit_died(const Engine::Core::UnitDiedEvent &event);
+  void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
+  void on_unit_died(const Engine::Core::UnitDiedEvent& event);
 
-  void rebuild_from_world(Engine::Core::World &world);
+  void rebuild_from_world(Engine::Core::World& world);
 
 private:
   TroopCountRegistry() = default;
   ~TroopCountRegistry() = default;
-  TroopCountRegistry(const TroopCountRegistry &) = delete;
-  auto operator=(const TroopCountRegistry &) -> TroopCountRegistry & = delete;
+  TroopCountRegistry(const TroopCountRegistry&) = delete;
+  auto operator=(const TroopCountRegistry&) -> TroopCountRegistry& = delete;
 
   std::unordered_map<int, int> m_troop_counts;
 

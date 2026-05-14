@@ -1,14 +1,17 @@
 #include "palette.h"
+
+#include <qvectornd.h>
+
+#include <cstdint>
+
 #include "geom/math_utils.h"
 #include "humanoid/humanoid_math.h"
-#include <cstdint>
-#include <qvectornd.h>
 
 namespace Render::GL {
 
 using Render::Geom::clamp_vec_01;
 
-auto make_humanoid_palette(const QVector3D &team_tint,
+auto make_humanoid_palette(const QVector3D& team_tint,
                            uint32_t seed) -> HumanoidPalette {
   HumanoidPalette p;
 
@@ -46,8 +49,8 @@ auto make_humanoid_palette(const QVector3D &team_tint,
     }
 
     float const warm_bias = (tint - 0.5F) * 0.04F;
-    QVector3D tinted(base.x() + warm_bias, base.y() + warm_bias * 0.3F,
-                     base.z() - warm_bias * 0.5F);
+    QVector3D tinted(
+        base.x() + warm_bias, base.y() + warm_bias * 0.3F, base.z() - warm_bias * 0.5F);
     tinted *= (1.0F + value_jitter);
     return clamp_vec_01(tinted);
   }();
@@ -60,8 +63,7 @@ auto make_humanoid_palette(const QVector3D &team_tint,
   float const brightness = 0.5F;
   QVector3D const desaturated(r * saturation + (1.0F - saturation) * brightness,
                               g * saturation + (1.0F - saturation) * brightness,
-                              b * saturation +
-                                  (1.0F - saturation) * brightness);
+                              b * saturation + (1.0F - saturation) * brightness);
   p.leather = clamp_vec_01(desaturated * (0.7F + leather_var));
   p.leather_dark = p.leather * 0.85F;
 

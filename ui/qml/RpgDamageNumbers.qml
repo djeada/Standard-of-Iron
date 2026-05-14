@@ -8,22 +8,18 @@ Item {
     readonly property int maxActiveBursts: 48
 
     function clamp01(value) {
-        return Math.max(0.0, Math.min(1.0, value))
+        return Math.max(0.0, Math.min(1.0, value));
     }
 
     function severityForEvent(ev) {
-        var ratio = Number(ev.damageRatio || 0.0)
-        var rawDamage = Number(ev.damage || 0)
-        var base = ratio > 0.0
-                ? clamp01(ratio * 0.95)
-                : (rawDamage >= 60 ? 0.90
-                                   : (rawDamage >= 35 ? 0.66
-                                                      : (rawDamage >= 20 ? 0.48 : 0.30)))
-        return ev.killingBlow ? Math.max(0.85, base) : base
+        var ratio = Number(ev.damageRatio || 0.0);
+        var rawDamage = Number(ev.damage || 0);
+        var base = ratio > 0.0 ? clamp01(ratio * 0.95) : (rawDamage >= 60 ? 0.90 : (rawDamage >= 35 ? 0.66 : (rawDamage >= 20 ? 0.48 : 0.30)));
+        return ev.killingBlow ? Math.max(0.85, base) : base;
     }
 
     function canSpawnBurst() {
-        return effectLayer.children.length < maxActiveBursts
+        return effectLayer.children.length < maxActiveBursts;
     }
 
     Component {
@@ -41,46 +37,38 @@ Item {
 
             property real progress: 0.0
             property real severity: root.severityForEvent({
-                "damage": dmg,
-                "damageRatio": damageRatio,
-                "killingBlow": killingBlow
-            })
+                    "damage": dmg,
+                    "damageRatio": damageRatio,
+                    "killingBlow": killingBlow
+                })
             property real baseX: 0.0
             property real baseY: 0.0
             property bool projected: false
-            property real driftX: (lane * 16)
-                                  + (lane === 0 ? 0 : (lane > 0 ? 10 : -10))
-                                  * (0.45 + severity)
+            property real driftX: (lane * 16) + (lane === 0 ? 0 : (lane > 0 ? 10 : -10)) * (0.45 + severity)
             property real riseDistance: 98 + severity * 34 + Math.abs(lane) * 10
             property real ringSize: 76 + severity * 44
             property real textScale: 0.74
-            property color accentColor: killingBlow ? "#ffd36b"
-                                                    : (severity >= 0.72 ? "#ff784e"
-                                                                        : (severity >= 0.46 ? "#ffae42"
-                                                                                            : "#ffffff"))
-            property color sparkColor: killingBlow ? "#fff6c2"
-                                                   : (severity >= 0.72 ? "#ffd0b0" : "#ffe4ad")
+            property color accentColor: killingBlow ? "#ffd36b" : (severity >= 0.72 ? "#ff784e" : (severity >= 0.46 ? "#ffae42" : "#ffffff"))
+            property color sparkColor: killingBlow ? "#fff6c2" : (severity >= 0.72 ? "#ffd0b0" : "#ffe4ad")
 
             width: 260
             height: 220
             visible: projected
             x: baseX - width / 2 + driftX * Math.pow(progress, 0.8)
             y: baseY - 140 - Math.abs(lane) * 8 - riseDistance * progress
-            opacity: progress < 0.56 ? 1.0
-                                     : Math.max(0.0, 1.0 - ((progress - 0.56) / 0.44))
+            opacity: progress < 0.56 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.56) / 0.44))
 
             function refreshProjection() {
                 if (root.engine === null) {
-                    projected = false
-                    return
+                    projected = false;
+                    return;
                 }
-                var proj = root.engine.rpg_project_world(worldX, worldY, worldZ)
-                projected = !!proj.valid
+                var proj = root.engine.rpg_project_world(worldX, worldY, worldZ);
+                projected = !!proj.valid;
                 if (!projected)
-                    return
-
-                baseX = proj.x
-                baseY = proj.y
+                    return;
+                baseX = proj.x;
+                baseY = proj.y;
             }
 
             Component.onCompleted: refreshProjection()
@@ -215,8 +203,7 @@ Item {
                     radius: height / 2
                     color: "transparent"
                     border.width: 1
-                    border.color: Qt.rgba(1.0, 1.0, 1.0,
-                                          burst.killingBlow ? 0.36 : 0.22)
+                    border.color: Qt.rgba(1.0, 1.0, 1.0, burst.killingBlow ? 0.36 : 0.22)
                 }
 
                 Text {
@@ -225,8 +212,7 @@ Item {
                     text: burst.dmg.toString()
                     color: "#000000"
                     opacity: 0.82
-                    font.pixelSize: burst.killingBlow ? 42
-                                                      : (burst.severity >= 0.72 ? 36 : 30)
+                    font.pixelSize: burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30)
                     font.bold: true
                     style: Text.Outline
                     styleColor: "#66000000"
@@ -236,18 +222,12 @@ Item {
                     id: damageText
                     anchors.centerIn: parent
                     text: burst.dmg.toString()
-                    color: burst.killingBlow ? "#fff3bf"
-                                             : (burst.severity >= 0.72 ? "#ffebe3"
-                                                                       : (burst.severity >= 0.46 ? "#fff0c6"
-                                                                                                : "#ffffff"))
-                    font.pixelSize: burst.killingBlow ? 42
-                                                      : (burst.severity >= 0.72 ? 36 : 30)
+                    color: burst.killingBlow ? "#fff3bf" : (burst.severity >= 0.72 ? "#ffebe3" : (burst.severity >= 0.46 ? "#fff0c6" : "#ffffff"))
+                    font.pixelSize: burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30)
                     font.bold: true
                     font.letterSpacing: burst.severity >= 0.72 ? 0.6 : 0.2
                     style: Text.Outline
-                    styleColor: burst.killingBlow ? "#ff7420"
-                                                  : (burst.severity >= 0.72 ? "#d93d16"
-                                                                            : "#000000")
+                    styleColor: burst.killingBlow ? "#ff7420" : (burst.severity >= 0.72 ? "#d93d16" : "#000000")
                 }
             }
         }
@@ -264,26 +244,23 @@ Item {
         repeat: true
         onTriggered: {
             if (root.engine === null)
-                return
-
-            var events = root.engine.pop_rpg_damage_events()
+                return;
+            var events = root.engine.pop_rpg_damage_events();
             if (!root.visible)
-                return
-
+                return;
             for (var i = 0; i < events.length; ++i) {
                 if (!root.canSpawnBurst())
-                    break
-
-                var ev = events[i]
+                    break;
+                var ev = events[i];
                 damageBurst.createObject(effectLayer, {
-                    dmg: Number(ev.damage || 0),
-                    worldX: Number(ev.x || 0.0),
-                    worldY: Number(ev.y || 0.0),
-                    worldZ: Number(ev.z || 0.0),
-                    damageRatio: Number(ev.damageRatio || 0.0),
-                    lane: Number(ev.lane || 0),
-                    killingBlow: !!ev.killingBlow
-                })
+                        "dmg": Number(ev.damage || 0),
+                        "worldX": Number(ev.x || 0.0),
+                        "worldY": Number(ev.y || 0.0),
+                        "worldZ": Number(ev.z || 0.0),
+                        "damageRatio": Number(ev.damageRatio || 0.0),
+                        "lane": Number(ev.lane || 0),
+                        "killingBlow": !!ev.killingBlow
+                    });
             }
         }
     }

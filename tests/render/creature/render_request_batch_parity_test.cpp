@@ -1,13 +1,14 @@
 
 
+#include <QMatrix4x4>
+
+#include <gtest/gtest.h>
+
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
-
-#include <QMatrix4x4>
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -17,7 +18,8 @@ using Render::Creature::Pipeline::CreatureGraphOutput;
 using Render::Creature::Pipeline::CreatureKind;
 using Render::Creature::Pipeline::CreatureRenderBatch;
 
-[[nodiscard]] auto make_output(CreatureKind kind, std::uint32_t seed,
+[[nodiscard]] auto make_output(CreatureKind kind,
+                               std::uint32_t seed,
                                float ty) noexcept -> CreatureGraphOutput {
   CreatureGraphOutput out;
   out.spec.kind = kind;
@@ -43,7 +45,7 @@ TEST(CreatureRenderBatch, RequestMirrorsHumanoidAdd) {
   EXPECT_TRUE(batch.rows().empty());
   ASSERT_EQ(batch.requests().size(), 1u);
 
-  const auto &req = batch.requests()[0];
+  const auto& req = batch.requests()[0];
   EXPECT_EQ(req.archetype, ArchetypeRegistry::k_humanoid_base);
   EXPECT_EQ(req.state, AnimationStateId::Walk);
   EXPECT_FLOAT_EQ(req.phase, 0.42F);
@@ -72,8 +74,7 @@ TEST(CreatureRenderBatch, RequestMirrorsPassIntent) {
   EXPECT_EQ(batch.requests()[0].pass,
             Render::Creature::Pipeline::RenderPassIntent::Shadow);
   ASSERT_EQ(batch.rows().size(), 1u);
-  EXPECT_EQ(batch.rows()[0].pass,
-            Render::Creature::Pipeline::RenderPassIntent::Shadow);
+  EXPECT_EQ(batch.rows()[0].pass, Render::Creature::Pipeline::RenderPassIntent::Shadow);
 }
 
 TEST(CreatureRenderBatch, RiderArchetypeStillUsesAbsoluteRequestWorld) {
@@ -176,7 +177,7 @@ TEST(CreatureRenderBatch, RequestStateForHumanoidMeleeAttack) {
 
   batch.add_humanoid(output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1u);
-  const auto &req = batch.requests()[0];
+  const auto& req = batch.requests()[0];
   EXPECT_EQ(req.state, AnimationStateId::AttackSword);
   EXPECT_FLOAT_EQ(req.phase, 0.33F);
   EXPECT_EQ(req.clip_variant, 1U);
@@ -197,7 +198,7 @@ TEST(CreatureRenderBatch, RequestStateForHumanoidRangedAttack) {
 
   batch.add_humanoid(output, pose, variant, anim);
   ASSERT_EQ(batch.requests().size(), 1u);
-  const auto &req = batch.requests()[0];
+  const auto& req = batch.requests()[0];
   EXPECT_EQ(req.state, AnimationStateId::AttackBow);
   EXPECT_FLOAT_EQ(req.phase, 0.75F);
   EXPECT_EQ(req.clip_variant, 0U);

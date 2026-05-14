@@ -1,14 +1,15 @@
 #include "unit_layer.h"
-#include "minimap_utils.h"
 
 #include <QPainter>
+
 #include <algorithm>
 #include <cmath>
 
+#include "minimap_utils.h"
+
 namespace Game::Map::Minimap {
 
-void UnitLayer::init(int width, int height, float world_width,
-                     float world_height) {
+void UnitLayer::init(int width, int height, float world_width, float world_height) {
   m_width = width;
   m_height = height;
   m_world_width = world_width;
@@ -26,11 +27,9 @@ void UnitLayer::init(int width, int height, float world_width,
 auto UnitLayer::world_to_pixel(float world_x,
                                float world_z) const -> std::pair<float, float> {
 
-  const auto &orient = MinimapOrientation::instance();
-  const float rotated_x =
-      world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
-  const float rotated_z =
-      world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
+  const auto& orient = MinimapOrientation::instance();
+  const float rotated_x = world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
+  const float rotated_z = world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
   const float px = (rotated_x + m_offset_x) * m_scale_x;
   const float py = (rotated_z + m_offset_y) * m_scale_y;
@@ -38,15 +37,15 @@ auto UnitLayer::world_to_pixel(float world_x,
   return {px, py};
 }
 
-void UnitLayer::update(const std::vector<UnitMarker> &markers) {
+void UnitLayer::update(const std::vector<UnitMarker>& markers) {
 
   update(markers, 0, nullptr, nullptr);
 }
 
-void UnitLayer::update(const std::vector<UnitMarker> &markers,
+void UnitLayer::update(const std::vector<UnitMarker>& markers,
                        int local_owner_id,
-                       const VisibilityCheckFn &visibility_check,
-                       const PlayerColorFn &player_color_fn) {
+                       const VisibilityCheckFn& visibility_check,
+                       const PlayerColorFn& player_color_fn) {
   if (m_image.isNull()) {
     return;
   }
@@ -60,14 +59,13 @@ void UnitLayer::update(const std::vector<UnitMarker> &markers,
   QPainter painter(&m_image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  std::vector<const UnitMarker *> buildings;
-  std::vector<const UnitMarker *> units;
-  std::vector<const UnitMarker *> selected;
+  std::vector<const UnitMarker*> buildings;
+  std::vector<const UnitMarker*> units;
+  std::vector<const UnitMarker*> selected;
 
-  for (const auto &marker : markers) {
+  for (const auto& marker : markers) {
 
-    if (visibility_check && marker.owner_id != local_owner_id &&
-        local_owner_id > 0) {
+    if (visibility_check && marker.owner_id != local_owner_id && local_owner_id > 0) {
       if (!visibility_check(marker.world_x, marker.world_z)) {
         continue;
       }
@@ -82,19 +80,19 @@ void UnitLayer::update(const std::vector<UnitMarker> &markers,
     }
   }
 
-  for (const auto *marker : buildings) {
+  for (const auto* marker : buildings) {
     const auto [px, py] = world_to_pixel(marker->world_x, marker->world_z);
     const auto colors = get_color_for_owner(marker->owner_id, player_color_fn);
     draw_building_marker(painter, px, py, colors, false);
   }
 
-  for (const auto *marker : units) {
+  for (const auto* marker : units) {
     const auto [px, py] = world_to_pixel(marker->world_x, marker->world_z);
     const auto colors = get_color_for_owner(marker->owner_id, player_color_fn);
     draw_unit_marker(painter, px, py, colors, false);
   }
 
-  for (const auto *marker : selected) {
+  for (const auto* marker : selected) {
     const auto [px, py] = world_to_pixel(marker->world_x, marker->world_z);
     const auto colors = get_color_for_owner(marker->owner_id, player_color_fn);
     if (marker->is_building) {
@@ -105,8 +103,7 @@ void UnitLayer::update(const std::vector<UnitMarker> &markers,
   }
 }
 
-auto UnitLayer::get_color_for_owner(int owner_id,
-                                    const PlayerColorFn &player_color_fn)
+auto UnitLayer::get_color_for_owner(int owner_id, const PlayerColorFn& player_color_fn)
     -> TeamColors::ColorSet {
 
   if (player_color_fn) {
@@ -125,15 +122,17 @@ auto UnitLayer::get_color_for_owner(int owner_id,
   return TeamColors::get_color(owner_id);
 }
 
-void UnitLayer::draw_unit_marker(QPainter &painter, float px, float py,
-                                 const TeamColors::ColorSet &colors,
+void UnitLayer::draw_unit_marker(QPainter& painter,
+                                 float px,
+                                 float py,
+                                 const TeamColors::ColorSet& colors,
                                  bool is_selected) {
   const QPointF center(static_cast<qreal>(px), static_cast<qreal>(py));
 
   if (is_selected) {
     painter.setBrush(Qt::NoBrush);
-    QPen glow_pen(QColor(TeamColors::SELECT_R, TeamColors::SELECT_G,
-                         TeamColors::SELECT_B, 200));
+    QPen glow_pen(
+        QColor(TeamColors::SELECT_R, TeamColors::SELECT_G, TeamColors::SELECT_B, 200));
     glow_pen.setWidthF(2.0);
     painter.setPen(glow_pen);
     painter.drawEllipse(center, m_unit_radius + 2.0, m_unit_radius + 2.0);
@@ -147,16 +146,18 @@ void UnitLayer::draw_unit_marker(QPainter &painter, float px, float py,
   painter.drawEllipse(center, m_unit_radius, m_unit_radius);
 }
 
-void UnitLayer::draw_building_marker(QPainter &painter, float px, float py,
-                                     const TeamColors::ColorSet &colors,
+void UnitLayer::draw_building_marker(QPainter& painter,
+                                     float px,
+                                     float py,
+                                     const TeamColors::ColorSet& colors,
                                      bool is_selected) {
   const qreal half = static_cast<qreal>(m_building_half_size);
   const QRectF rect(px - half, py - half, half * 2.0, half * 2.0);
 
   if (is_selected) {
     painter.setBrush(Qt::NoBrush);
-    QPen glow_pen(QColor(TeamColors::SELECT_R, TeamColors::SELECT_G,
-                         TeamColors::SELECT_B, 200));
+    QPen glow_pen(
+        QColor(TeamColors::SELECT_R, TeamColors::SELECT_G, TeamColors::SELECT_B, 200));
     glow_pen.setWidthF(2.5);
     painter.setPen(glow_pen);
     painter.drawRect(rect.adjusted(-2.5, -2.5, 2.5, 2.5));

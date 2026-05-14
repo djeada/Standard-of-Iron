@@ -10,7 +10,9 @@ uniform mat4 u_view_proj;
 uniform mat4 u_model;
 uniform vec3 u_variation_scale;
 
-layout(std140) uniform BonePalette { mat4 bones[64]; }
+layout(std140) uniform BonePalette {
+  mat4 bones[64];
+}
 u_palette;
 
 out vec3 v_normal_ws;

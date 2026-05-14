@@ -9,7 +9,7 @@ Rectangle {
     property bool manually_hidden: false
     readonly property var hs: StyleGuide.historical
 
-    signal return_to_main_menu_requested()
+    signal return_to_main_menu_requested
 
     function reset_state() {
         showing_summary = false;
@@ -28,7 +28,6 @@ Rectangle {
     onVisibleChanged: {
         if (!visible)
             reset_state();
-
     }
 
     Connections {
@@ -119,11 +118,8 @@ Rectangle {
                         battleSummary.show();
                     }
                 }
-
             }
-
         }
-
     }
 
     BattleSummary {
@@ -131,13 +127,12 @@ Rectangle {
 
         anchors.fill: parent
         visible: showing_summary
-        on_close: function() {
+        on_close: function () {
             showing_summary = false;
         }
-        on_return_to_main_menu: function() {
+        on_return_to_main_menu: function () {
             reset_state();
             victoryOverlay.return_to_main_menu_requested();
         }
     }
-
 }

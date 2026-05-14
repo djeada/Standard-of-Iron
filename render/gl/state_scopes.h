@@ -16,7 +16,9 @@ struct PolygonOffsetScope {
   GLboolean prev_enable;
   float factor, units;
   PolygonOffsetScope(float f, float u)
-      : prev_enable(glIsEnabled(GL_POLYGON_OFFSET_FILL)), factor(f), units(u) {
+      : prev_enable(glIsEnabled(GL_POLYGON_OFFSET_FILL))
+      , factor(f)
+      , units(u) {
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(factor, units);
@@ -47,7 +49,8 @@ struct PolygonModeScope {
 
 struct BlendScope {
   GLboolean prev_enable;
-  BlendScope(bool enable = true) : prev_enable(glIsEnabled(GL_BLEND)) {
+  BlendScope(bool enable = true)
+      : prev_enable(glIsEnabled(GL_BLEND)) {
 
     if (enable) {
       glEnable(GL_BLEND);
@@ -66,7 +69,8 @@ struct BlendScope {
 
 struct CullFaceScope {
   GLboolean prev_enable;
-  explicit CullFaceScope(bool enable) : prev_enable(glIsEnabled(GL_CULL_FACE)) {
+  explicit CullFaceScope(bool enable)
+      : prev_enable(glIsEnabled(GL_CULL_FACE)) {
     if (enable) {
       glEnable(GL_CULL_FACE);
     } else {

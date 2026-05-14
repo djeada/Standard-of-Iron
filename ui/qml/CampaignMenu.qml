@@ -9,24 +9,21 @@ Item {
     property var campaigns: []
 
     signal mission_selected(string campaign_id)
-    signal cancelled()
+    signal cancelled
 
     function refresh_campaigns() {
         if (typeof game !== "undefined" && game.available_campaigns)
             campaigns = game.available_campaigns;
-
     }
 
     function titleize(value) {
         if (!value)
             return "";
-
         var parts = value.split("_");
         for (var i = 0; i < parts.length; i++) {
             var part = parts[i];
             if (part.length === 0)
                 continue;
-
             parts[i] = part.charAt(0).toUpperCase() + part.slice(1);
         }
         return parts.join(" ");
@@ -40,7 +37,7 @@ Item {
     }
     anchors.fill: parent
     focus: true
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
             event.accepted = true;
@@ -93,7 +90,6 @@ Item {
                     text: qsTr("← Back")
                     onClicked: root.cancelled()
                 }
-
             }
 
             Rectangle {
@@ -170,7 +166,6 @@ Item {
                                             font.pointSize: Theme.fontSizeSmall
                                             font.bold: true
                                         }
-
                                     }
 
                                     Rectangle {
@@ -188,9 +183,7 @@ Item {
                                             color: Theme.textDim
                                             font.pointSize: Theme.fontSizeSmall
                                         }
-
                                     }
-
                                 }
 
                                 Label {
@@ -202,7 +195,6 @@ Item {
                                     Layout.fillWidth: true
                                     font.pointSize: Theme.fontSizeMedium
                                 }
-
                             }
 
                             Text {
@@ -210,27 +202,21 @@ Item {
                                 font.pointSize: Theme.fontSizeHero
                                 color: Theme.textHint
                             }
-
                         }
 
-                        Behavior on color {
+                        Behavior on color  {
                             ColorAnimation {
                                 duration: Theme.animNormal
                             }
-
                         }
 
-                        Behavior on border.color {
+                        Behavior on border.color  {
                             ColorAnimation {
                                 duration: Theme.animNormal
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             Label {
@@ -242,9 +228,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }
-
         }
-
     }
 
     Rectangle {
@@ -260,15 +244,15 @@ Item {
         property real hover_mouse_x: 0
         property real hover_mouse_y: 0
         property var owner_legend: [{
-            "name": qsTr("Rome"),
-            "color": "#d01f1a"
-        }, {
-            "name": qsTr("Carthage"),
-            "color": "#cc8f47"
-        }, {
-            "name": qsTr("Neutral"),
-            "color": "#3a3a3a"
-        }]
+                "name": qsTr("Rome"),
+                "color": "#d01f1a"
+            }, {
+                "name": qsTr("Carthage"),
+                "color": "#cc8f47"
+            }, {
+                "name": qsTr("Neutral"),
+                "color": "#3a3a3a"
+            }]
         property var province_sources: ["assets/campaign_map/provinces.json", "qrc:/assets/campaign_map/provinces.json", "qrc:/StandardOfIron/assets/campaign_map/provinces.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"]
         property int label_refresh: 0
         property int current_mission_index: 7
@@ -280,10 +264,8 @@ Item {
         function label_uv_for(prov) {
             if (prov && prov.label_uv && prov.label_uv.length === 2)
                 return prov.label_uv;
-
             if (!prov || !prov.triangles || prov.triangles.length === 0)
                 return null;
-
             var sumU = 0;
             var sumV = 0;
             var count = 0;
@@ -292,43 +274,37 @@ Item {
                 var pt = prov.triangles[i];
                 if (!pt || pt.length < 2)
                     continue;
-
                 sumU += pt[0];
                 sumV += pt[1];
                 count += 1;
             }
             if (count === 0)
                 return null;
-
             return [sumU / count, sumV / count];
         }
 
         function province_info_for(id) {
             if (!id)
                 return null;
-
             for (var i = 0; i < province_labels.length; i++) {
                 var prov = province_labels[i];
                 if (prov && prov.id === id)
                     return prov;
-
             }
             return null;
         }
 
         function load_provinces_from(index) {
             if (index >= province_sources.length)
-                return ;
-
+                return;
             var xhr = new XMLHttpRequest();
             xhr.open("GET", province_sources[index]);
-            xhr.onreadystatechange = function() {
+            xhr.onreadystatechange = function () {
                 if (xhr.readyState !== XMLHttpRequest.DONE)
-                    return ;
-
+                    return;
                 if (xhr.status !== 200 && xhr.status !== 0) {
                     load_provinces_from(index + 1);
-                    return ;
+                    return;
                 }
                 try {
                     var data = JSON.parse(xhr.responseText);
@@ -343,7 +319,7 @@ Item {
                         }
                         if (!hasCities) {
                             load_provinces_from(index + 1);
-                            return ;
+                            return;
                         }
                         missionDetailPanel.province_labels = data.provinces;
                         missionDetailPanel.label_refresh += 1;
@@ -454,9 +430,7 @@ Item {
                                 onWidthChanged: missionDetailPanel.label_refresh += 1
                                 onHeightChanged: missionDetailPanel.label_refresh += 1
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -472,7 +446,6 @@ Item {
                             color: Theme.textDim
                             font.pointSize: Theme.fontSizeMedium
                         }
-
                     }
 
                     MouseArea {
@@ -482,14 +455,13 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
-                        onPressed: function(mouse) {
+                        onPressed: function (mouse) {
                             last_x = mouse.x;
                             last_y = mouse.y;
                         }
-                        onPositionChanged: function(mouse) {
+                        onPositionChanged: function (mouse) {
                             if (!(mouse.buttons & Qt.LeftButton))
-                                return ;
-
+                                return;
                             var dx = mouse.x - last_x;
                             var dy = mouse.y - last_y;
                             last_x = mouse.x;
@@ -497,10 +469,9 @@ Item {
                             missionDetailPanel.map_orbit_yaw += dx * 0.4;
                             missionDetailPanel.map_orbit_pitch = Math.max(5, Math.min(90, missionDetailPanel.map_orbit_pitch + dy * 0.4));
                         }
-                        onMouseXChanged: function() {
+                        onMouseXChanged: function () {
                             if (!hoverEnabled || !campaignMapLoader.item)
-                                return ;
-
+                                return;
                             missionDetailPanel.hover_mouse_x = mouseX;
                             missionDetailPanel.hover_mouse_y = mouseY;
                             var info = campaignMapLoader.item.province_info_at_screen(mouseX, mouseY);
@@ -509,10 +480,9 @@ Item {
                             missionDetailPanel.hover_province_name = info && info.name ? info.name : "";
                             missionDetailPanel.hover_province_owner = info && info.owner ? info.owner : "";
                         }
-                        onMouseYChanged: function() {
+                        onMouseYChanged: function () {
                             if (!hoverEnabled || !campaignMapLoader.item)
-                                return ;
-
+                                return;
                             missionDetailPanel.hover_mouse_x = mouseX;
                             missionDetailPanel.hover_mouse_y = mouseY;
                             var info = campaignMapLoader.item.province_info_at_screen(mouseX, mouseY);
@@ -524,16 +494,14 @@ Item {
                         onExited: {
                             if (campaignMapLoader.item)
                                 campaignMapLoader.item.hover_province_id = "";
-
                             missionDetailPanel.hover_province_name = "";
                             missionDetailPanel.hover_province_owner = "";
                         }
-                        onWheel: function(wheel) {
+                        onWheel: function (wheel) {
                             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
                             var nextDistance = missionDetailPanel.map_orbit_distance * step;
                             if (campaignMapLoader.item)
                                 missionDetailPanel.map_orbit_distance = Math.min(campaignMapLoader.item.max_orbit_distance, Math.max(campaignMapLoader.item.min_orbit_distance, nextDistance));
-
                             wheel.accepted = true;
                         }
                     }
@@ -570,7 +538,6 @@ Item {
                                 border.color: "#6b4423"
                                 border.width: 1
                             }
-
                         }
 
                         Image {
@@ -603,7 +570,7 @@ Item {
                             border.width: 2
                             opacity: 0.4
 
-                            SequentialAnimation on opacity {
+                            SequentialAnimation on opacity  {
                                 loops: Animation.Infinite
                                 running: hannibalIcon.visible
 
@@ -617,10 +584,9 @@ Item {
                                 PauseAnimation {
                                     duration: 500
                                 }
-
                             }
 
-                            SequentialAnimation on scale {
+                            SequentialAnimation on scale  {
                                 loops: Animation.Infinite
                                 running: hannibalIcon.visible
 
@@ -640,11 +606,8 @@ Item {
                                 PauseAnimation {
                                     duration: 500
                                 }
-
                             }
-
                         }
-
                     }
 
                     Repeater {
@@ -667,7 +630,6 @@ Item {
                             x: _pos.x - width / 2
                             y: _pos.y - height / 2
                         }
-
                     }
 
                     Repeater {
@@ -710,11 +672,8 @@ Item {
                                     x: 6
                                     y: -height / 2
                                 }
-
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -751,11 +710,8 @@ Item {
                                 styleColor: "#000000"
                                 font.pointSize: Theme.fontSizeTiny
                             }
-
                         }
-
                     }
-
                 }
 
                 RowLayout {
@@ -789,11 +745,8 @@ Item {
                                 color: Theme.textSubLite
                                 font.pointSize: Theme.fontSizeSmall
                             }
-
                         }
-
                     }
-
                 }
 
                 Rectangle {
@@ -838,7 +791,6 @@ Item {
                                 onClicked: {
                                     if (missionDetailPanel.campaign_data && modelData.mission_id)
                                         root.mission_selected(missionDetailPanel.campaign_data.id + "/" + modelData.mission_id);
-
                                 }
                                 onContainsMouseChanged: {
                                     if (containsMouse && modelData.order_index !== undefined)
@@ -882,7 +834,6 @@ Item {
                                         Layout.fillWidth: true
                                         font.pointSize: Theme.fontSizeSmall
                                     }
-
                                 }
 
                                 Text {
@@ -890,27 +841,21 @@ Item {
                                     font.pointSize: Theme.fontSizeTitle
                                     color: Theme.textHint
                                 }
-
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: Theme.animNormal
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: Theme.animNormal
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
 
                 RowLayout {
@@ -925,13 +870,8 @@ Item {
                         text: qsTr("Cancel")
                         onClicked: missionDetailPanel.visible = false
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }

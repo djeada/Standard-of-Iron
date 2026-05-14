@@ -1,14 +1,15 @@
-#include "render/equipment/armor/armor_heavy_carthage.h"
-#include "render/equipment/armor/armor_light_carthage.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/style_palette.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <gtest/gtest.h>
 #include <limits>
 #include <sstream>
 #include <vector>
+
+#include "render/equipment/armor/armor_heavy_carthage.h"
+#include "render/equipment/armor/armor_light_carthage.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/style_palette.h"
 
 using namespace Render::GL;
 
@@ -24,8 +25,12 @@ class BoundsSubmitter : public ISubmitter {
 public:
   std::vector<MeshBounds> meshes;
 
-  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &,
-            Texture * = nullptr, float = 1.0F, int material_id = 0) override {
+  void mesh(Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D&,
+            Texture* = nullptr,
+            float = 1.0F,
+            int material_id = 0) override {
     if (mesh == nullptr) {
       return;
     }
@@ -39,7 +44,7 @@ public:
                       std::numeric_limits<float>::lowest());
     b.material_id = material_id;
 
-    for (const auto &v : mesh->getVertices()) {
+    for (const auto& v : mesh->getVertices()) {
       QVector3D p(v.position[0], v.position[1], v.position[2]);
       QVector3D world = model.map(p);
       b.min.setX(std::min(b.min.x(), world.x()));
@@ -53,13 +58,11 @@ public:
     meshes.push_back(b);
   }
 
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
 };
 
 class TestCarthageSpearmanBase : public HumanoidRendererBase {
@@ -68,8 +71,9 @@ public:
     return {0.94F, 1.04F, 0.92F};
   }
 
-  void adjust_variation(const DrawContext &, uint32_t,
-                        VariationParams &variation) const override {
+  void adjust_variation(const DrawContext&,
+                        uint32_t,
+                        VariationParams& variation) const override {
     variation.bulk_scale *= 0.90F;
     variation.stance_width *= 0.92F;
   }
@@ -88,7 +92,8 @@ struct PoseResult {
   DrawContext ctx;
 };
 
-template <typename Renderer> class PoseBuilder : public Renderer {
+template <typename Renderer>
+class PoseBuilder : public Renderer {
 public:
   auto build(uint32_t seed) -> PoseResult {
     VariationParams variation = VariationParams::from_seed(seed);
@@ -110,8 +115,7 @@ public:
     inputs.hold_exit_progress = 0.0F;
 
     HumanoidPose pose;
-    this->computeLocomotionPose(seed, inputs.time, inputs.is_moving, variation,
-                                pose);
+    this->computeLocomotionPose(seed, inputs.time, inputs.is_moving, variation, pose);
 
     HumanoidVariant variant;
     QVector3D team_tint(0.8F, 0.9F, 1.0F);
@@ -126,9 +130,9 @@ public:
   }
 };
 
-auto extract_min_y(const std::vector<MeshBounds> &meshes) -> float {
+auto extract_min_y(const std::vector<MeshBounds>& meshes) -> float {
   float min_y = std::numeric_limits<float>::max();
-  for (const auto &m : meshes) {
+  for (const auto& m : meshes) {
     min_y = std::min(min_y, m.min.y());
   }
   return min_y;
@@ -143,12 +147,15 @@ TEST(CarthageArmorBoundsTest, LightArmorStaysNearWaist) {
   ArmorLightCarthageRenderer armor;
   HumanoidAnimationContext anim_ctx{};
   BoundsSubmitter submitter;
-  armor.render(pose_result.ctx, pose_result.pose.body_frames,
-               pose_result.variant.palette, anim_ctx, submitter);
+  armor.render(pose_result.ctx,
+               pose_result.pose.body_frames,
+               pose_result.variant.palette,
+               anim_ctx,
+               submitter);
 
   std::ostringstream debug;
   for (size_t i = 0; i < submitter.meshes.size(); ++i) {
-    const auto &m = submitter.meshes[i];
+    const auto& m = submitter.meshes[i];
     debug << "#" << i << ": [" << m.min.y() << ", " << m.max.y() << "] (mat "
           << m.material_id << ") ";
   }
@@ -170,12 +177,15 @@ TEST(CarthageArmorBoundsTest, HeavyArmorStaysNearWaist) {
   ArmorHeavyCarthageRenderer armor;
   HumanoidAnimationContext anim_ctx{};
   BoundsSubmitter submitter;
-  armor.render(pose_result.ctx, pose_result.pose.body_frames,
-               pose_result.variant.palette, anim_ctx, submitter);
+  armor.render(pose_result.ctx,
+               pose_result.pose.body_frames,
+               pose_result.variant.palette,
+               anim_ctx,
+               submitter);
 
   std::ostringstream debug;
   for (size_t i = 0; i < submitter.meshes.size(); ++i) {
-    const auto &m = submitter.meshes[i];
+    const auto& m = submitter.meshes[i];
     debug << "#" << i << ": [" << m.min.y() << ", " << m.max.y() << "] (mat "
           << m.material_id << ") ";
   }

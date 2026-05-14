@@ -1,9 +1,10 @@
 #include "template_cache.h"
 
-#include "creature/pose_intent.h"
-#include "gl/humanoid/animation/animation_inputs.h"
 #include <algorithm>
 #include <cmath>
+
+#include "creature/pose_intent.h"
+#include "gl/humanoid/animation/animation_inputs.h"
 
 namespace Render::GL {
 
@@ -21,13 +22,13 @@ constexpr std::size_t k_construct_base =
     k_attack_ranged_base + (k_combat_phase_slots * k_frame_slots);
 constexpr std::size_t k_heal_base = k_construct_base + k_frame_slots;
 constexpr std::size_t k_hit_base = k_heal_base + k_frame_slots;
-constexpr std::size_t k_anim_dense_state_slot_count =
-    k_hit_base + k_frame_slots;
+constexpr std::size_t k_anim_dense_state_slot_count = k_hit_base + k_frame_slots;
 
-static_assert(k_anim_dense_state_slot_count ==
-              TemplateCache::k_dense_anim_state_slots);
+static_assert(k_anim_dense_state_slot_count == TemplateCache::k_dense_anim_state_slots);
 
-inline auto clamp01(float v) -> float { return std::clamp(v, 0.0F, 1.0F); }
+inline auto clamp01(float v) -> float {
+  return std::clamp(v, 0.0F, 1.0F);
+}
 
 inline auto phase_to_frame(float phase) -> std::uint8_t {
   float clamped = clamp01(phase);
@@ -68,13 +69,14 @@ inline auto clamp_frame_index(std::uint8_t frame) -> std::size_t {
   return std::min<std::size_t>(frame, k_frame_slots - 1);
 }
 
-inline auto clamp_attack_family_index(Engine::Core::CombatAttackFamily family)
-    -> std::size_t {
+inline auto
+clamp_attack_family_index(Engine::Core::CombatAttackFamily family) -> std::size_t {
   return std::min<std::size_t>(static_cast<std::size_t>(family),
                                TemplateCache::k_dense_attack_family_slots - 1);
 }
 
-inline auto dense_anim_state_slot_index(AnimState state, CombatAnimPhase phase,
+inline auto dense_anim_state_slot_index(AnimState state,
+                                        CombatAnimPhase phase,
                                         std::uint8_t frame) -> std::size_t {
   const auto frame_idx = clamp_frame_index(frame);
   const auto phase_idx = clamp_phase_index(phase);
@@ -122,33 +124,26 @@ auto to_anim_state(Render::Creature::PoseIntent intent) noexcept -> AnimState {
 }
 } // namespace
 
-std::size_t TemplateKeyHash::operator()(const TemplateKey &key) const noexcept {
+std::size_t TemplateKeyHash::operator()(const TemplateKey& key) const noexcept {
   std::size_t h = std::hash<std::string>()(key.renderer_id);
-  h ^=
-      static_cast<std::size_t>(key.owner_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
+  h ^= static_cast<std::size_t>(key.owner_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.lod) + 0x9e3779b9 + (h << 6) + (h >> 2);
-  h ^= static_cast<std::size_t>(key.mount_lod) + 0x9e3779b9 + (h << 6) +
-       (h >> 2);
+  h ^= static_cast<std::size_t>(key.mount_lod) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.variant) + 0x9e3779b9 + (h << 6) + (h >> 2);
-  h ^= static_cast<std::size_t>(key.attack_family) + 0x9e3779b9 + (h << 6) +
-       (h >> 2);
-  h ^= static_cast<std::size_t>(key.attack_variant) + 0x9e3779b9 + (h << 6) +
-       (h >> 2);
+  h ^= static_cast<std::size_t>(key.attack_family) + 0x9e3779b9 + (h << 6) + (h >> 2);
+  h ^= static_cast<std::size_t>(key.attack_variant) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.state) + 0x9e3779b9 + (h << 6) + (h >> 2);
-  h ^= static_cast<std::size_t>(key.combat_phase) + 0x9e3779b9 + (h << 6) +
-       (h >> 2);
+  h ^= static_cast<std::size_t>(key.combat_phase) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.frame) + 0x9e3779b9 + (h << 6) + (h >> 2);
   return h;
 }
 
 std::size_t TemplateCache::DenseDomainKeyHash::operator()(
-    const DenseDomainKey &key) const noexcept {
+    const DenseDomainKey& key) const noexcept {
   std::size_t h = std::hash<std::string>()(key.renderer_id);
-  h ^=
-      static_cast<std::size_t>(key.owner_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
+  h ^= static_cast<std::size_t>(key.owner_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.lod) + 0x9e3779b9 + (h << 6) + (h >> 2);
-  h ^= static_cast<std::size_t>(key.mount_lod) + 0x9e3779b9 + (h << 6) +
-       (h >> 2);
+  h ^= static_cast<std::size_t>(key.mount_lod) + 0x9e3779b9 + (h << 6) + (h >> 2);
   return h;
 }
 
@@ -159,14 +154,17 @@ void TemplateRecorder::reset(std::size_t reserve_hint) {
   }
 }
 
-void TemplateRecorder::mesh(Mesh *mesh, const QMatrix4x4 &model,
-                            const QVector3D &color, Texture *texture,
-                            float alpha, int material_id) {
+void TemplateRecorder::mesh(Mesh* mesh,
+                            const QMatrix4x4& model,
+                            const QVector3D& color,
+                            Texture* texture,
+                            float alpha,
+                            int material_id) {
   if (mesh == nullptr) {
     return;
   }
   m_commands.emplace_back();
-  RecordedMeshCmd &cmd = m_commands.back();
+  RecordedMeshCmd& cmd = m_commands.back();
   cmd.mesh = mesh;
   cmd.texture = texture;
   cmd.shader = get_current_shader();
@@ -178,22 +176,29 @@ void TemplateRecorder::mesh(Mesh *mesh, const QMatrix4x4 &model,
   cmd.material_id = material_id;
 }
 
-void TemplateRecorder::banner(Mesh *mesh_obj, const QMatrix4x4 &model,
-                              const QVector3D &color,
-                              const QVector3D &trim_color, Texture *texture,
-                              float alpha, int material_id) {
+void TemplateRecorder::banner(Mesh* mesh_obj,
+                              const QMatrix4x4& model,
+                              const QVector3D& color,
+                              const QVector3D& trim_color,
+                              Texture* texture,
+                              float alpha,
+                              int material_id) {
   (void)trim_color;
   this->mesh(mesh_obj, model, color, texture, alpha, material_id);
 }
 
-void TemplateRecorder::part(Mesh *mesh, Material *material,
-                            const QMatrix4x4 &model, const QVector3D &color,
-                            Texture *texture, float alpha, int material_id) {
+void TemplateRecorder::part(Mesh* mesh,
+                            Material* material,
+                            const QMatrix4x4& model,
+                            const QVector3D& color,
+                            Texture* texture,
+                            float alpha,
+                            int material_id) {
   if (mesh == nullptr) {
     return;
   }
   m_commands.emplace_back();
-  RecordedMeshCmd &cmd = m_commands.back();
+  RecordedMeshCmd& cmd = m_commands.back();
   cmd.mesh = mesh;
   cmd.texture = texture;
   cmd.shader = nullptr;
@@ -204,9 +209,9 @@ void TemplateRecorder::part(Mesh *mesh, Material *material,
   cmd.material_id = material_id;
 }
 
-auto TemplateCache::get_or_build(const TemplateKey &key,
-                                 const std::function<PoseTemplate()> &builder)
-    -> const PoseTemplate * {
+auto TemplateCache::get_or_build(const TemplateKey& key,
+                                 const std::function<PoseTemplate()>& builder)
+    -> const PoseTemplate* {
   {
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_cache.find(key);
@@ -238,13 +243,12 @@ auto TemplateCache::get_or_build(const TemplateKey &key,
 }
 
 auto TemplateCache::dense_slot_index(std::uint8_t variant,
-                                     const AnimKey &anim_key) -> std::size_t {
+                                     const AnimKey& anim_key) -> std::size_t {
   const std::size_t variant_slot =
       std::min<std::size_t>(variant, k_dense_variant_slots - 1);
-  const std::size_t family_slot =
-      clamp_attack_family_index(anim_key.attack_family);
-  const std::size_t attack_slot = std::min<std::size_t>(
-      anim_key.attack_variant, k_dense_attack_variant_slots - 1);
+  const std::size_t family_slot = clamp_attack_family_index(anim_key.attack_family);
+  const std::size_t attack_slot =
+      std::min<std::size_t>(anim_key.attack_variant, k_dense_attack_variant_slots - 1);
   const std::size_t anim_slot = dense_anim_state_slot_index(
       anim_key.state, anim_key.combat_phase, anim_key.frame);
 
@@ -255,9 +259,11 @@ auto TemplateCache::dense_slot_index(std::uint8_t variant,
          anim_slot;
 }
 
-auto TemplateCache::get_dense_domain_handle(
-    const std::string &renderer_id, std::uint32_t owner_id, std::uint8_t lod,
-    std::uint8_t mount_lod) -> DenseDomainHandle {
+auto TemplateCache::get_dense_domain_handle(const std::string& renderer_id,
+                                            std::uint32_t owner_id,
+                                            std::uint8_t lod,
+                                            std::uint8_t mount_lod)
+    -> DenseDomainHandle {
   std::lock_guard<std::mutex> lock(m_mutex);
   DenseDomainKey key{renderer_id, owner_id, lod, mount_lod};
   auto it = m_dense_domain_lookup.find(key);
@@ -276,7 +282,7 @@ auto TemplateCache::get_dense_domain_handle(
 
 auto TemplateCache::set_dense_slot(DenseDomainHandle domain,
                                    std::size_t dense_slot,
-                                   const PoseTemplate *tpl) -> void {
+                                   const PoseTemplate* tpl) -> void {
   if (!domain.is_valid() || domain.value >= m_dense_domains.size() ||
       dense_slot >= k_dense_anim_slot_count) {
     return;
@@ -284,9 +290,8 @@ auto TemplateCache::set_dense_slot(DenseDomainHandle domain,
   m_dense_domains[domain.value].template_slots[dense_slot] = tpl;
 }
 
-void TemplateCache::clear_dense_slot_for_key(const TemplateKey &key) {
-  DenseDomainKey domain_key{key.renderer_id, key.owner_id, key.lod,
-                            key.mount_lod};
+void TemplateCache::clear_dense_slot_for_key(const TemplateKey& key) {
+  DenseDomainKey domain_key{key.renderer_id, key.owner_id, key.lod, key.mount_lod};
   auto domain_it = m_dense_domain_lookup.find(domain_key);
   if (domain_it == m_dense_domain_lookup.end()) {
     return;
@@ -309,16 +314,17 @@ void TemplateCache::clear_dense_slot_for_key(const TemplateKey &key) {
   m_dense_domains[domain_it->second].template_slots[dense_slot] = nullptr;
 }
 
-auto TemplateCache::get_or_build_dense(
-    DenseDomainHandle domain, std::size_t dense_slot, const TemplateKey &key,
-    const std::function<PoseTemplate()> &builder) -> const PoseTemplate * {
-  const bool use_dense =
-      domain.is_valid() && dense_slot < k_dense_anim_slot_count;
+auto TemplateCache::get_or_build_dense(DenseDomainHandle domain,
+                                       std::size_t dense_slot,
+                                       const TemplateKey& key,
+                                       const std::function<PoseTemplate()>& builder)
+    -> const PoseTemplate* {
+  const bool use_dense = domain.is_valid() && dense_slot < k_dense_anim_slot_count;
 
   {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (use_dense && domain.value < m_dense_domains.size()) {
-      const PoseTemplate *dense_hit =
+      const PoseTemplate* dense_hit =
           m_dense_domains[domain.value].template_slots[dense_slot];
       if (dense_hit != nullptr) {
         return dense_hit;
@@ -339,7 +345,7 @@ auto TemplateCache::get_or_build_dense(
 
   std::lock_guard<std::mutex> lock(m_mutex);
   if (use_dense && domain.value < m_dense_domains.size()) {
-    const PoseTemplate *dense_hit =
+    const PoseTemplate* dense_hit =
         m_dense_domains[domain.value].template_slots[dense_slot];
     if (dense_hit != nullptr) {
       return dense_hit;
@@ -368,7 +374,7 @@ auto TemplateCache::get_or_build_dense(
     m_lru.splice(m_lru.begin(), m_lru, ins_it->second.lru_it);
   }
 
-  const PoseTemplate *result = &ins_it->second.tpl;
+  const PoseTemplate* result = &ins_it->second.tpl;
   if (use_dense) {
     set_dense_slot(domain, dense_slot, result);
   }
@@ -390,7 +396,8 @@ void TemplateCache::evict_lru() {
   m_lru.pop_back();
 }
 
-auto make_anim_key(const AnimationInputs &anim, float phase_offset,
+auto make_anim_key(const AnimationInputs& anim,
+                   float phase_offset,
                    std::uint8_t attack_variant) -> AnimKey {
   AnimKey key{};
   auto const intent = Render::Creature::resolve_pose_intent(anim);
@@ -420,8 +427,7 @@ auto make_anim_key(const AnimationInputs &anim, float phase_offset,
   }
 
   case Render::Creature::PoseIntent::Construct:
-    key.frame =
-        phase_to_frame(time_phase(anim.construction_progress + phase_offset));
+    key.frame = phase_to_frame(time_phase(anim.construction_progress + phase_offset));
     key.combat_phase = CombatAnimPhase::Idle;
     key.attack_variant = 0;
     return key;
@@ -453,7 +459,7 @@ auto make_anim_key(const AnimationInputs &anim, float phase_offset,
   }
 }
 
-auto make_animation_inputs(const AnimKey &key) -> AnimationInputs {
+auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
   AnimationInputs anim{};
   anim.time = frame_to_phase(key.frame) * k_anim_cycle_seconds;
   anim.is_moving = false;

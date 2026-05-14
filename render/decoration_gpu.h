@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 #include <QVector4D>
+
 #include <cstdint>
 
 namespace Render::GL {
@@ -23,12 +24,10 @@ struct GrassBatchParams {
   static constexpr float k_default_wind_speed = 1.4F;
 
   static auto default_soil_color() -> QVector3D {
-    return {k_default_soil_color_r, k_default_soil_color_g,
-            k_default_soil_color_b};
+    return {k_default_soil_color_r, k_default_soil_color_g, k_default_soil_color_b};
   }
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D soil_color = default_soil_color();
@@ -52,8 +51,7 @@ struct StoneBatchParams {
   static constexpr float k_default_light_dir_z = 0.45F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();
@@ -74,8 +72,7 @@ struct PlantBatchParams {
   static constexpr float k_default_wind_speed = 1.4F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();
@@ -100,8 +97,7 @@ struct PineBatchParams {
   static constexpr float k_default_wind_speed = 0.5F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();
@@ -124,8 +120,7 @@ struct OliveBatchParams {
   static constexpr float k_default_wind_speed = 0.5F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();
@@ -161,8 +156,7 @@ struct TentBatchParams {
   static constexpr float k_default_light_dir_z = 0.45F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();
@@ -180,8 +174,7 @@ struct SupplyCartBatchParams {
   static constexpr float k_default_light_dir_z = 0.45F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();
@@ -199,8 +192,7 @@ struct WeaponRackBatchParams {
   static constexpr float k_default_light_dir_z = 0.45F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();
@@ -218,8 +210,7 @@ struct RuinsBatchParams {
   static constexpr float k_default_light_dir_z = 0.45F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();
@@ -237,8 +228,7 @@ struct DeadTreeBatchParams {
   static constexpr float k_default_light_dir_z = 0.45F;
 
   static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y,
-            k_default_light_dir_z};
+    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
   }
 
   QVector3D light_direction = default_light_direction();

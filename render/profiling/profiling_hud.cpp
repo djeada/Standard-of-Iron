@@ -2,7 +2,8 @@
 
 namespace Render::Profiling {
 
-ProfilingHud::ProfilingHud(QObject *parent) : QObject(parent) {
+ProfilingHud::ProfilingHud(QObject* parent)
+    : QObject(parent) {
   m_timer.setInterval(250);
   m_timer.setSingleShot(false);
   QObject::connect(&m_timer, &QTimer::timeout, this, &ProfilingHud::refresh);

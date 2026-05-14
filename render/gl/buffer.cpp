@@ -1,13 +1,17 @@
 #include "buffer.h"
-#include <GL/gl.h>
+
 #include <QDebug>
-#include <cstddef>
 #include <qopenglext.h>
+
+#include <GL/gl.h>
+#include <cstddef>
 #include <vector>
 
 namespace Render::GL {
 
-Buffer::Buffer(Type type) : m_type(type) {}
+Buffer::Buffer(Type type)
+    : m_type(type) {
+}
 
 Buffer::~Buffer() {
   if (m_buffer != 0) {
@@ -23,9 +27,11 @@ void Buffer::bind() {
   glBindBuffer(get_gl_type(), m_buffer);
 }
 
-void Buffer::unbind() { glBindBuffer(get_gl_type(), 0); }
+void Buffer::unbind() {
+  glBindBuffer(get_gl_type(), 0);
+}
 
-void Buffer::set_data(const void *data, size_t size, Usage usage) {
+void Buffer::set_data(const void* data, size_t size, Usage usage) {
   bind();
   glBufferData(get_gl_type(), size, data, get_gl_usage(usage));
 }
@@ -87,16 +93,16 @@ void VertexArray::bind() {
 #ifndef NDEBUG
   GLenum bind_err = glGetError();
   if (bind_err != GL_NO_ERROR) {
-    qWarning() << "VertexArray glBindVertexArray error" << bind_err << "vao"
-               << m_vao;
+    qWarning() << "VertexArray glBindVertexArray error" << bind_err << "vao" << m_vao;
   }
 #endif
 }
 
-void VertexArray::unbind() { glBindVertexArray(0); }
+void VertexArray::unbind() {
+  glBindVertexArray(0);
+}
 
-void VertexArray::add_vertex_buffer(Buffer &buffer,
-                                    const std::vector<int> &layout) {
+void VertexArray::add_vertex_buffer(Buffer& buffer, const std::vector<int>& layout) {
   bind();
   buffer.bind();
 
@@ -108,14 +114,18 @@ void VertexArray::add_vertex_buffer(Buffer &buffer,
   int offset = 0;
   for (int const size : layout) {
     glEnableVertexAttribArray(m_current_attrib_index);
-    glVertexAttribPointer(m_current_attrib_index, size, GL_FLOAT, GL_FALSE,
-                          stride, reinterpret_cast<void *>(offset));
+    glVertexAttribPointer(m_current_attrib_index,
+                          size,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          stride,
+                          reinterpret_cast<void*>(offset));
     offset += size * sizeof(float);
     m_current_attrib_index++;
   }
 }
 
-void VertexArray::set_index_buffer(Buffer &buffer) {
+void VertexArray::set_index_buffer(Buffer& buffer) {
   bind();
   buffer.bind();
 }

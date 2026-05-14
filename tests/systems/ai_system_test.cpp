@@ -1,11 +1,11 @@
+#include <gtest/gtest.h>
+
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_reasoner.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/ai_system/behaviors/attack_behavior.h"
 #include "game/systems/ai_system/behaviors/gather_behavior.h"
 #include "game/systems/owner_registry.h"
-
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -15,7 +15,8 @@ protected:
 
   void TearDown() override { Game::Systems::OwnerRegistry::instance().clear(); }
 
-  static auto make_unit(Engine::Core::EntityID id, float x,
+  static auto make_unit(Engine::Core::EntityID id,
+                        float x,
                         float z) -> Game::Systems::AI::EntitySnapshot {
     Game::Systems::AI::EntitySnapshot unit;
     unit.id = id;
@@ -30,7 +31,8 @@ protected:
     return unit;
   }
 
-  static auto make_enemy(Engine::Core::EntityID id, float x,
+  static auto make_enemy(Engine::Core::EntityID id,
+                         float x,
                          float z) -> Game::Systems::AI::ContactSnapshot {
     Game::Systems::AI::ContactSnapshot enemy;
     enemy.id = id;
@@ -49,7 +51,7 @@ TEST_F(AISystemTest, ReinitializePicksUpOwnersRegisteredAfterConstruction) {
 
   EXPECT_EQ(ai_system.ai_player_count(), 0U);
 
-  auto &owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Systems::OwnerRegistry::instance();
   owners.register_owner_with_id(1, Game::Systems::OwnerType::Player, "Player");
   owners.register_owner_with_id(2, Game::Systems::OwnerType::AI, "Opponent");
 
@@ -61,7 +63,7 @@ TEST_F(AISystemTest, ReinitializePicksUpOwnersRegisteredAfterConstruction) {
 }
 
 TEST_F(AISystemTest, ReinitializeStaggersInitialUpdateTimersAcrossAIPlayers) {
-  auto &owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Systems::OwnerRegistry::instance();
   owners.register_owner_with_id(1, Game::Systems::OwnerType::Player, "Player");
   owners.register_owner_with_id(2, Game::Systems::OwnerType::AI, "AI-1");
   owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI-2");
@@ -81,8 +83,10 @@ TEST_F(AISystemTest, AIReasonerBuildsBaseAnchorFromUnitClusterWithoutBarracks) {
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;
   snapshot.friendly_units = {
-      make_unit(1, 28.0F, 25.0F), make_unit(2, 30.0F, 27.0F),
-      make_unit(3, 48.0F, 58.0F), make_unit(4, 50.0F, 56.0F),
+      make_unit(1, 28.0F, 25.0F),
+      make_unit(2, 30.0F, 27.0F),
+      make_unit(3, 48.0F, 58.0F),
+      make_unit(4, 50.0F, 56.0F),
       make_unit(5, 58.0F, 60.0F),
   };
 
@@ -150,8 +154,7 @@ TEST_F(AISystemTest, AttackBehaviorScoutsFromUnitAnchorWithoutBarracks) {
 
   float average_target_x = 0.0F;
   float average_target_z = 0.0F;
-  for (std::size_t index = 0; index < commands.front().move_target_x.size();
-       ++index) {
+  for (std::size_t index = 0; index < commands.front().move_target_x.size(); ++index) {
     average_target_x += commands.front().move_target_x[index];
     average_target_z += commands.front().move_target_z[index];
   }

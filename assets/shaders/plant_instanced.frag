@@ -13,7 +13,9 @@ uniform vec3 u_light_direction;
 
 out vec4 frag_color;
 
-float h11(float n) { return fract(sin(n) * 43758.5453123); }
+float h11(float n) {
+  return fract(sin(n) * 43758.5453123);
+}
 
 float aawidth_uv(vec2 uv) {
   vec2 dx = dFdx(uv), dy = dFdy(uv);
@@ -22,7 +24,9 @@ float aawidth_uv(vec2 uv) {
   return clamp(q, 0.0015, 0.0060);
 }
 
-float quant_step(float w) { return exp2(floor(log2(max(w, 1e-6)) + 0.5)); }
+float quant_step(float w) {
+  return exp2(floor(log2(max(w, 1e-6)) + 0.5));
+}
 
 float bush_sdf(vec2 uv, float seed) {
   vec2 p = (uv - 0.5) * vec2(1.08, 0.96);
@@ -102,8 +106,7 @@ void main() {
 
   float step_uv = aawidth_uv(v_tex_coord);
   vec2 g = sdf_grad(v_tex_coord, type_val, v_seed, step_uv);
-  vec3 Nshape =
-      normalize(v_tangent * (-g.x) + v_bitangent * (-g.y) + v_normal * 3.0);
+  vec3 Nshape = normalize(v_tangent * (-g.x) + v_bitangent * (-g.y) + v_normal * 3.0);
   float edge_mix = smoothstep(0.30, 0.0, sdf);
   vec3 Ntemp = normalize(mix(N, Nshape, 0.6 * edge_mix));
 
@@ -128,8 +131,8 @@ void main() {
   albedo *= mix(1.0, 1.08, tip);
   albedo *= mix(0.95, 1.0, inner);
 
-  vec3 color = albedo * (ambient + diffuse * ao_stem) +
-               albedo * sss * vec3(1.0, 0.95, 0.85);
+  vec3 color =
+      albedo * (ambient + diffuse * ao_stem) + albedo * sss * vec3(1.0, 0.95, 0.85);
 
   frag_color = vec4(color, 1.0);
 }

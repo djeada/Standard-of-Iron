@@ -1,10 +1,12 @@
 #pragma once
 
-#include "../shader.h"
-#include "pipeline_interface.h"
 #include <QVector3D>
 #include <QtOpenGL>
+
 #include <cstddef>
+
+#include "../shader.h"
+#include "pipeline_interface.h"
 
 namespace Render::GL {
 class ShaderCache;
@@ -14,8 +16,9 @@ namespace BackendPipelines {
 
 class TerrainPipeline final : public IPipeline {
 public:
-  explicit TerrainPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shader_cache(shader_cache) {}
+  explicit TerrainPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
+      : m_backend(backend)
+      , m_shader_cache(shader_cache) {}
   ~TerrainPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -50,8 +53,7 @@ public:
     GL::Shader::UniformHandle soil_blend_height{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soil_blend_sharpness{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle height_noise_strength{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle height_noise_frequency{
-        GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_noise_frequency{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle ambient_boost{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
 
@@ -91,8 +93,7 @@ public:
     GL::Shader::UniformHandle soil_blend_height{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soil_blend_sharpness{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle height_noise_strength{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle height_noise_frequency{
-        GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle height_noise_frequency{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle ambient_boost{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle rock_detail_strength{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_dir{GL::Shader::InvalidUniform};
@@ -116,9 +117,9 @@ public:
     GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
   };
 
-  GL::Shader *m_grass_shader = nullptr;
-  GL::Shader *m_ground_shader = nullptr;
-  GL::Shader *m_terrain_shader = nullptr;
+  GL::Shader* m_grass_shader = nullptr;
+  GL::Shader* m_ground_shader = nullptr;
+  GL::Shader* m_terrain_shader = nullptr;
 
   GrassUniforms m_grass_uniforms;
   GroundUniforms m_ground_uniforms;
@@ -129,8 +130,8 @@ public:
   GLsizei m_grass_vertex_count = 0;
 
 private:
-  GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shader_cache = nullptr;
+  GL::Backend* m_backend = nullptr;
+  GL::ShaderCache* m_shader_cache = nullptr;
 
   void cache_grass_uniforms();
   void cache_ground_uniforms();

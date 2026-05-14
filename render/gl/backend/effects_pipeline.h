@@ -11,8 +11,9 @@ namespace BackendPipelines {
 
 class EffectsPipeline final : public IPipeline {
 public:
-  explicit EffectsPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shader_cache(shader_cache) {}
+  explicit EffectsPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
+      : m_backend(backend)
+      , m_shader_cache(shader_cache) {}
   ~EffectsPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -45,17 +46,17 @@ public:
     GL::Shader::UniformHandle use_texture{GL::Shader::InvalidUniform};
   };
 
-  GL::Shader *m_basic_shader = nullptr;
-  GL::Shader *m_basic_instanced_shader = nullptr;
-  GL::Shader *m_grid_shader = nullptr;
+  GL::Shader* m_basic_shader = nullptr;
+  GL::Shader* m_basic_instanced_shader = nullptr;
+  GL::Shader* m_grid_shader = nullptr;
 
   BasicUniforms m_basic_uniforms;
   BasicInstancedUniforms m_basic_instanced_uniforms;
   GridUniforms m_grid_uniforms;
 
 private:
-  GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shader_cache = nullptr;
+  GL::Backend* m_backend = nullptr;
+  GL::ShaderCache* m_shader_cache = nullptr;
 
   void cache_basic_uniforms();
   void cache_basic_instanced_uniforms();

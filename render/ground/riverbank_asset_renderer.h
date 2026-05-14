@@ -1,13 +1,15 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
 #include "riverbank_asset_gpu.h"
 #include "scatter_renderer_state.h"
-#include <QVector3D>
-#include <cstdint>
-#include <memory>
-#include <vector>
 
 namespace Render::GL {
 class Buffer;
@@ -18,13 +20,13 @@ public:
   RiverbankAssetRenderer();
   ~RiverbankAssetRenderer() override;
 
-  void configure(const std::vector<Game::Map::RiverSegment> &river_segments,
-                 const Game::Map::TerrainHeightMap &height_map,
-                 const Game::Map::BiomeSettings &biome_settings);
+  void configure(const std::vector<Game::Map::RiverSegment>& river_segments,
+                 const Game::Map::TerrainHeightMap& height_map,
+                 const Game::Map::BiomeSettings& biome_settings);
 
-  void set_light_direction(const QVector3D &dir);
+  void set_light_direction(const QVector3D& dir);
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
   void clear();
 

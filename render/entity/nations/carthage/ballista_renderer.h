@@ -4,6 +4,6 @@
 
 namespace Render::GL::Carthage {
 
-void register_ballista_renderer(EntityRendererRegistry &registry);
+void register_ballista_renderer(EntityRendererRegistry& registry);
 
 }

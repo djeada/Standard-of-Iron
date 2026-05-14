@@ -37,9 +37,8 @@ RowLayout {
     function refresh_status() {
         if (typeof game !== 'undefined' && game.get_controlled_commander_status) {
             commander_status = game.get_controlled_commander_status();
-            return ;
+            return;
         }
-
         commander_status = default_status();
     }
 
@@ -50,10 +49,8 @@ RowLayout {
     function ratio_color(ratio) {
         if (ratio > 0.6)
             return Theme.accent;
-
         if (ratio > 0.3)
             return hs.bronze;
-
         return hs.waxHover;
     }
 
@@ -62,27 +59,22 @@ RowLayout {
         var remaining = Number(status_value("rally_cooldown_remaining", 0));
         if (cooldown <= 0)
             return 1;
-
         return Math.max(0, Math.min(1, 1 - remaining / cooldown));
     }
 
     function rally_label() {
         if (!status_value("has_commander", false))
             return qsTr("Commander unavailable");
-
         if (status_value("rally_ready", false))
             return qsTr("Rally ready");
-
         return qsTr("Recovering %1s").arg(Number(status_value("rally_cooldown_remaining", 0)).toFixed(1));
     }
 
     function stance_label() {
         if (!status_value("has_commander", false))
             return qsTr("Disconnected");
-
         if (status_value("is_running", false))
             return qsTr("Sprinting");
-
         return qsTr("Steady");
     }
 
@@ -347,7 +339,6 @@ RowLayout {
                         }
                     }
 
-                    
                     RowLayout {
                         spacing: 6
                         visible: bottomRoot.status_value("has_commander", false)
@@ -373,15 +364,16 @@ RowLayout {
                                     width: 14
                                     height: 14
                                     radius: 7
-                                    color: parent.lit
-                                           ? (parent.is_finisher ? "#ff8800" : Theme.accent)
-                                           : hs.parchmentDark
+                                    color: parent.lit ? (parent.is_finisher ? "#ff8800" : Theme.accent) : hs.parchmentDark
                                     border.color: parent.lit ? (parent.is_finisher ? "#ffcc44" : Theme.accent) : hs.bronze
                                     border.width: parent.lit ? 2 : 1
 
-                                    Behavior on color { ColorAnimation { duration: 120 } }
+                                    Behavior on color  {
+                                        ColorAnimation {
+                                            duration: 120
+                                        }
+                                    }
 
-                                    
                                     property real pop_scale: 1.0
                                     transform: Scale {
                                         origin.x: combo_dot.width / 2
@@ -411,7 +403,6 @@ RowLayout {
                         }
                     }
 
-                    
                     ColumnLayout {
                         visible: bottomRoot.status_value("has_commander", false)
                         spacing: 4
@@ -431,9 +422,7 @@ RowLayout {
                             border.width: 1
 
                             Rectangle {
-                                width: parent.width *
-                                       (1.0 - Number(bottomRoot.status_value("special_cooldown_remaining", 0)) /
-                                        Math.max(1.0, Number(bottomRoot.status_value("special_cooldown", 3.0))))
+                                width: parent.width * (1.0 - Number(bottomRoot.status_value("special_cooldown_remaining", 0)) / Math.max(1.0, Number(bottomRoot.status_value("special_cooldown", 3.0))))
                                 height: parent.height
                                 radius: 4
                                 color: bottomRoot.status_value("special_ready", true) ? Theme.accent : hs.bronze

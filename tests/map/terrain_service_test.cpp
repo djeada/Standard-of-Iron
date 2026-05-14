@@ -1,9 +1,10 @@
-#include "game/map/map_definition.h"
-#include "game/map/terrain_service.h"
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <utility>
+
+#include "game/map/map_definition.h"
+#include "game/map/terrain_service.h"
 
 namespace {
 
@@ -18,10 +19,10 @@ TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {
   map_def.grid.height = 5;
   map_def.grid.tile_size = 1.5F;
 
-  auto &terrain = Game::Map::TerrainService::instance();
+  auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
 
-  const auto &field = terrain.terrain_field();
+  const auto& field = terrain.terrain_field();
 
   ASSERT_FALSE(field.empty());
   EXPECT_EQ(field.width, 6);
@@ -30,13 +31,16 @@ TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {
   EXPECT_EQ(field.heights.size(), 30U);
   EXPECT_EQ(field.slopes.size(), 30U);
   EXPECT_EQ(field.curvature.size(), 30U);
-  EXPECT_TRUE(std::any_of(field.heights.begin(), field.heights.end(),
-                          [](float height) { return height > 0.005F; }));
-  EXPECT_TRUE(std::any_of(field.slopes.begin(), field.slopes.end(),
-                          [](float slope) { return slope > 0.0005F; }));
-  EXPECT_TRUE(std::any_of(
-      field.curvature.begin(), field.curvature.end(),
-      [](float curvature) { return std::abs(curvature) > 0.0001F; }));
+  EXPECT_TRUE(std::any_of(field.heights.begin(), field.heights.end(), [](float height) {
+    return height > 0.005F;
+  }));
+  EXPECT_TRUE(std::any_of(field.slopes.begin(), field.slopes.end(), [](float slope) {
+    return slope > 0.0005F;
+  }));
+  EXPECT_TRUE(
+      std::any_of(field.curvature.begin(), field.curvature.end(), [](float curvature) {
+        return std::abs(curvature) > 0.0001F;
+      }));
 }
 
 TEST_F(TerrainServiceTest, DerivedFieldCapturesSlopeAndCurvature) {
@@ -47,17 +51,18 @@ TEST_F(TerrainServiceTest, DerivedFieldCapturesSlopeAndCurvature) {
   map_def.terrain.push_back(
       {Game::Map::TerrainType::Hill, 0.0F, 0.0F, 4.0F, 8.0F, 8.0F, 3.0F});
 
-  auto &terrain = Game::Map::TerrainService::instance();
+  auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
 
-  const auto &field = terrain.terrain_field();
+  const auto& field = terrain.terrain_field();
 
   ASSERT_FALSE(field.empty());
-  EXPECT_TRUE(std::any_of(field.slopes.begin(), field.slopes.end(),
-                          [](float slope) { return slope > 0.05F; }));
-  EXPECT_TRUE(
-      std::any_of(field.curvature.begin(), field.curvature.end(),
-                  [](float curvature) { return std::abs(curvature) > 0.01F; }));
+  EXPECT_TRUE(std::any_of(field.slopes.begin(), field.slopes.end(), [](float slope) {
+    return slope > 0.05F;
+  }));
+  EXPECT_TRUE(std::any_of(field.curvature.begin(),
+                          field.curvature.end(),
+                          [](float curvature) { return std::abs(curvature) > 0.01F; }));
 }
 
 TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
@@ -89,16 +94,14 @@ TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
 }
 
 TEST_F(TerrainServiceTest, RestoringTerrainRebuildsDerivedField) {
-  std::vector<float> heights = {0.0F, 0.0F, 0.0F, 0.0F, 1.0F,
-                                2.0F, 0.0F, 2.0F, 4.0F};
-  std::vector<Game::Map::TerrainType> terrain_types(
-      heights.size(), Game::Map::TerrainType::Hill);
+  std::vector<float> heights = {0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 2.0F, 0.0F, 2.0F, 4.0F};
+  std::vector<Game::Map::TerrainType> terrain_types(heights.size(),
+                                                    Game::Map::TerrainType::Hill);
 
-  auto &terrain = Game::Map::TerrainService::instance();
-  terrain.restore_from_serialized(3, 3, 1.0F, heights, terrain_types, {}, {},
-                                  {}, {});
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.restore_from_serialized(3, 3, 1.0F, heights, terrain_types, {}, {}, {}, {});
 
-  const auto &field = terrain.terrain_field();
+  const auto& field = terrain.terrain_field();
 
   ASSERT_FALSE(field.empty());
   EXPECT_EQ(field.heights, heights);
@@ -120,12 +123,12 @@ TEST_F(TerrainServiceTest, RestoringTerrainUpdatesScatterSources) {
                                  .scale = 1.25F,
                                  .rotation = 0.75F});
 
-  auto &terrain = Game::Map::TerrainService::instance();
+  auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
 
   std::vector<float> heights(9, 0.0F);
-  std::vector<Game::Map::TerrainType> terrain_types(
-      heights.size(), Game::Map::TerrainType::Flat);
+  std::vector<Game::Map::TerrainType> terrain_types(heights.size(),
+                                                    Game::Map::TerrainType::Flat);
   std::vector<Game::Map::WorldProp> restored_world_props{
       {.type = Game::Map::WorldProp::Type::FireCamp,
        .x = 5.0F,
@@ -139,44 +142,40 @@ TEST_F(TerrainServiceTest, RestoringTerrainUpdatesScatterSources) {
        .scale = 1.5F,
        .rotation = 1.2F}};
 
-  terrain.restore_from_serialized(3, 3, 1.0F, heights, terrain_types, {}, {},
-                                  {}, {}, restored_world_props);
+  terrain.restore_from_serialized(
+      3, 3, 1.0F, heights, terrain_types, {}, {}, {}, {}, restored_world_props);
 
   ASSERT_EQ(terrain.world_props().size(), 2U);
-  EXPECT_EQ(terrain.world_props().front().type,
-            Game::Map::WorldProp::Type::FireCamp);
+  EXPECT_EQ(terrain.world_props().front().type, Game::Map::WorldProp::Type::FireCamp);
   EXPECT_FLOAT_EQ(terrain.world_props().front().x, 5.0F);
   EXPECT_FALSE(terrain.world_props().front().persistent);
-  EXPECT_EQ(terrain.world_props().back().type,
-            Game::Map::WorldProp::Type::Tent);
+  EXPECT_EQ(terrain.world_props().back().type, Game::Map::WorldProp::Type::Tent);
   EXPECT_FLOAT_EQ(terrain.world_props().back().rotation, 1.2F);
 }
 
 TEST_F(TerrainServiceTest, SurfaceHeightResolverUsesFallbackWhenUninitialized) {
-  auto &terrain = Game::Map::TerrainService::instance();
+  auto& terrain = Game::Map::TerrainService::instance();
 
   auto const sample = terrain.sample_surface_height(3.0F, -2.0F, 7.5F);
 
   EXPECT_FLOAT_EQ(sample.world_y, 7.5F);
   EXPECT_EQ(sample.kind, Game::Map::SurfaceHeightKind::Fallback);
-  EXPECT_FLOAT_EQ(terrain.resolve_surface_world_y(3.0F, -2.0F, 0.25F, 7.5F),
-                  7.75F);
+  EXPECT_FLOAT_EQ(terrain.resolve_surface_world_y(3.0F, -2.0F, 0.25F, 7.5F), 7.75F);
   EXPECT_EQ(terrain.resolve_surface_world_position(3.0F, -2.0F, 0.25F, 7.5F),
             QVector3D(3.0F, 7.75F, -2.0F));
 }
 
 TEST_F(TerrainServiceTest, SurfaceHeightResolverMarksRoadSurface) {
   std::vector<float> heights(25, 1.0F);
-  std::vector<Game::Map::TerrainType> terrain_types(
-      heights.size(), Game::Map::TerrainType::Flat);
-  std::vector<Game::Map::RoadSegment> roads{
-      {.start = QVector3D(-2.0F, 0.0F, 0.0F),
-       .end = QVector3D(2.0F, 0.0F, 0.0F),
-       .width = 2.0F}};
+  std::vector<Game::Map::TerrainType> terrain_types(heights.size(),
+                                                    Game::Map::TerrainType::Flat);
+  std::vector<Game::Map::RoadSegment> roads{{.start = QVector3D(-2.0F, 0.0F, 0.0F),
+                                             .end = QVector3D(2.0F, 0.0F, 0.0F),
+                                             .width = 2.0F}};
 
-  auto &terrain = Game::Map::TerrainService::instance();
-  terrain.restore_from_serialized(5, 5, 1.0F, heights, terrain_types, {}, roads,
-                                  {}, {});
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.restore_from_serialized(
+      5, 5, 1.0F, heights, terrain_types, {}, roads, {}, {});
 
   auto const sample = terrain.sample_surface_height(0.0F, 0.0F);
   float const road_surface_y = Game::Map::road_surface_world_y(1.0F);
@@ -184,40 +183,39 @@ TEST_F(TerrainServiceTest, SurfaceHeightResolverMarksRoadSurface) {
   EXPECT_NEAR(sample.world_y, road_surface_y, 0.0001F);
   EXPECT_EQ(sample.kind, Game::Map::SurfaceHeightKind::Road);
   EXPECT_NEAR(terrain.resolve_surface_world_y(0.0F, 0.0F, 0.30F, 0.0F),
-              road_surface_y + 0.30F, 0.0001F);
+              road_surface_y + 0.30F,
+              0.0001F);
   EXPECT_EQ(terrain.resolve_surface_world_position(0.5F, -0.5F, 0.30F, 0.0F),
             QVector3D(0.5F, road_surface_y + 0.30F, -0.5F));
 }
 
 TEST_F(TerrainServiceTest, SurfaceHeightResolverPrefersBridgeDeckOverRoad) {
   std::vector<float> heights(81, 1.0F);
-  std::vector<Game::Map::TerrainType> terrain_types(
-      heights.size(), Game::Map::TerrainType::Flat);
-  std::vector<Game::Map::RoadSegment> roads{
-      {.start = QVector3D(-3.0F, 0.0F, 0.0F),
-       .end = QVector3D(3.0F, 0.0F, 0.0F),
-       .width = 2.0F}};
+  std::vector<Game::Map::TerrainType> terrain_types(heights.size(),
+                                                    Game::Map::TerrainType::Flat);
+  std::vector<Game::Map::RoadSegment> roads{{.start = QVector3D(-3.0F, 0.0F, 0.0F),
+                                             .end = QVector3D(3.0F, 0.0F, 0.0F),
+                                             .width = 2.0F}};
   std::vector<Game::Map::Bridge> bridges{{.start = QVector3D(-2.0F, 1.0F, 0.0F),
                                           .end = QVector3D(2.0F, 1.0F, 0.0F),
                                           .width = 2.0F,
                                           .height = 0.6F}};
 
-  auto &terrain = Game::Map::TerrainService::instance();
-  terrain.restore_from_serialized(9, 9, 1.0F, heights, terrain_types, {}, roads,
-                                  bridges, {});
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.restore_from_serialized(
+      9, 9, 1.0F, heights, terrain_types, {}, roads, bridges, {});
 
   auto const sample = terrain.sample_surface_height(0.0F, 0.0F);
-  float const bridge_surface_y =
-      Game::Map::bridge_deck_world_y(bridges.front(), 0.5F);
+  float const bridge_surface_y = Game::Map::bridge_deck_world_y(bridges.front(), 0.5F);
 
   EXPECT_NEAR(sample.world_y, bridge_surface_y, 0.0001F);
   EXPECT_EQ(sample.kind, Game::Map::SurfaceHeightKind::Bridge);
   EXPECT_NEAR(terrain.resolve_surface_world_y(0.0F, 0.0F, 0.25F, 0.0F),
-              bridge_surface_y + 0.25F, 0.0001F);
+              bridge_surface_y + 0.25F,
+              0.0001F);
 }
 
-TEST_F(TerrainServiceTest,
-       BridgeWalkabilityRespectsBridgeWidthWhenTileSizeExceedsOne) {
+TEST_F(TerrainServiceTest, BridgeWalkabilityRespectsBridgeWidthWhenTileSizeExceedsOne) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 9;
   map_def.grid.height = 9;
@@ -227,7 +225,7 @@ TEST_F(TerrainServiceTest,
   map_def.bridges.push_back(
       {QVector3D(-4.0F, 0.0F, 0.0F), QVector3D(4.0F, 0.0F, 0.0F), 2.0F, 0.6F});
 
-  auto &terrain = Game::Map::TerrainService::instance();
+  auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
 
   EXPECT_TRUE(terrain.is_on_bridge(0.0F, 0.0F));
@@ -249,8 +247,8 @@ TEST_F(TerrainServiceTest, HillFootprintStaysInsidePlateauBounds) {
   };
   height_map.build_from_features({hill});
 
-  for (auto const [x, z] : {std::pair{30, 19}, std::pair{41, 30},
-                            std::pair{30, 41}, std::pair{19, 30}}) {
+  for (auto const [x, z] :
+       {std::pair{30, 19}, std::pair{41, 30}, std::pair{30, 41}, std::pair{19, 30}}) {
     EXPECT_FLOAT_EQ(height_map.get_height_at_grid(x, z), 0.0F);
     EXPECT_EQ(height_map.getTerrainType(x, z), Game::Map::TerrainType::Flat);
     EXPECT_TRUE(height_map.is_walkable(x, z));

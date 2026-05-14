@@ -1,9 +1,9 @@
 
 
-#include "render/profiling/frame_profile.h"
-
 #include <gtest/gtest.h>
 #include <thread>
+
+#include "render/profiling/frame_profile.h"
 
 using Render::Profiling::format_overlay;
 using Render::Profiling::FrameProfile;
@@ -87,8 +87,8 @@ TEST(FrameProfileTest, FormatOverlayHandlesZeroTotal) {
 }
 
 TEST(FrameProfileTest, GlobalProfileIsSingleton) {
-  auto &a = Render::Profiling::global_profile();
-  auto &b = Render::Profiling::global_profile();
+  auto& a = Render::Profiling::global_profile();
+  auto& b = Render::Profiling::global_profile();
   EXPECT_EQ(&a, &b);
   a.reset();
   a.add_phase_us(Phase::Sort, 10);

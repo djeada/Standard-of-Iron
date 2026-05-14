@@ -1,21 +1,25 @@
 #include "character_pipeline.h"
-#include "../backend.h"
-#include "../shader_cache.h"
+
 #include <QDebug>
 #include <QStringList>
 #include <qglobal.h>
+
 #include <utility>
+
+#include "../backend.h"
+#include "../shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
 
 namespace {
 
-auto resolve_unit_shader(GL::ShaderCache *shader_cache, GL::Shader *fallback,
-                         const QString &name) -> GL::Shader * {
+auto resolve_unit_shader(GL::ShaderCache* shader_cache,
+                         GL::Shader* fallback,
+                         const QString& name) -> GL::Shader* {
   if (shader_cache == nullptr) {
     return fallback;
   }
-  if (GL::Shader *shader = shader_cache->get(name)) {
+  if (GL::Shader* shader = shader_cache->get(name)) {
     return shader;
   }
   return fallback;
@@ -30,12 +34,12 @@ auto CharacterPipeline::initialize() -> bool {
   }
 
   m_basic_shader = m_shader_cache->get("basic");
-  m_archer_shader = resolve_unit_shader(m_shader_cache, m_basic_shader,
-                                        QStringLiteral("archer"));
-  m_swordsman_shader = resolve_unit_shader(m_shader_cache, m_basic_shader,
-                                           QStringLiteral("swordsman"));
-  m_spearman_shader = resolve_unit_shader(m_shader_cache, m_basic_shader,
-                                          QStringLiteral("spearman"));
+  m_archer_shader =
+      resolve_unit_shader(m_shader_cache, m_basic_shader, QStringLiteral("archer"));
+  m_swordsman_shader =
+      resolve_unit_shader(m_shader_cache, m_basic_shader, QStringLiteral("swordsman"));
+  m_spearman_shader =
+      resolve_unit_shader(m_shader_cache, m_basic_shader, QStringLiteral("spearman"));
 
   if (m_basic_shader == nullptr) {
     qWarning() << "CharacterPipeline: Failed to load basic shader";
@@ -108,8 +112,7 @@ void CharacterPipeline::cache_spearman_uniforms() {
   cache_nation_variants(QStringLiteral("spearman"));
 }
 
-auto CharacterPipeline::build_uniform_set(GL::Shader *shader) const
-    -> BasicUniforms {
+auto CharacterPipeline::build_uniform_set(GL::Shader* shader) const -> BasicUniforms {
   BasicUniforms uniforms;
   if (shader == nullptr) {
     return uniforms;
@@ -124,27 +127,25 @@ auto CharacterPipeline::build_uniform_set(GL::Shader *shader) const
   uniforms.instanced = shader->optional_uniform_handle("u_instanced");
   uniforms.view_proj = shader->optional_uniform_handle("u_view_proj");
   uniforms.light_dir = shader->optional_uniform_handle("u_light_dir");
-  uniforms.ambient_strength =
-      shader->optional_uniform_handle("u_ambient_strength");
+  uniforms.ambient_strength = shader->optional_uniform_handle("u_ambient_strength");
   return uniforms;
 }
 
-void CharacterPipeline::cache_nation_variants(const QString &base_key) {
+void CharacterPipeline::cache_nation_variants(const QString& base_key) {
   if (m_shader_cache == nullptr) {
     return;
   }
   static const QStringList nations{QStringLiteral("roman_republic"),
                                    QStringLiteral("carthage")};
-  for (const QString &nation : nations) {
+  for (const QString& nation : nations) {
     const QString shader_name = base_key + QStringLiteral("_") + nation;
-    if (GL::Shader *variant = m_shader_cache->get(shader_name)) {
+    if (GL::Shader* variant = m_shader_cache->get(shader_name)) {
       m_uniform_cache.emplace(variant, build_uniform_set(variant));
     }
   }
 }
 
-auto CharacterPipeline::resolve_uniforms(GL::Shader *shader)
-    -> BasicUniforms * {
+auto CharacterPipeline::resolve_uniforms(GL::Shader* shader) -> BasicUniforms* {
   if (shader == nullptr) {
     return nullptr;
   }

@@ -7,18 +7,28 @@ namespace Render::GL {
 
 class Texture : protected QOpenGLFunctions_3_3_Core {
 public:
-  enum class Format { RGB, RGBA, Depth };
+  enum class Format {
+    RGB,
+    RGBA,
+    Depth
+  };
 
-  enum class Filter { Nearest, Linear };
+  enum class Filter {
+    Nearest,
+    Linear
+  };
 
-  enum class Wrap { Repeat, ClampToEdge, ClampToBorder };
+  enum class Wrap {
+    Repeat,
+    ClampToEdge,
+    ClampToBorder
+  };
 
   Texture();
   ~Texture() override;
 
-  auto load_from_file(const QString &path) -> bool;
-  auto create_empty(int width, int height,
-                    Format format = Format::RGBA) -> bool;
+  auto load_from_file(const QString& path) -> bool;
+  auto create_empty(int width, int height, Format format = Format::RGBA) -> bool;
 
   void bind(int unit = 0);
   void unbind();

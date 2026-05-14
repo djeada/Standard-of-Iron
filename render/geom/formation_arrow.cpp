@@ -1,18 +1,22 @@
 #include "formation_arrow.h"
+
+#include <QMatrix4x4>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <numbers>
+
 #include "../gl/primitives.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "selection_disc.h"
-#include <QMatrix4x4>
-#include <algorithm>
-#include <cmath>
-#include <numbers>
-#include <qvectornd.h>
 
 namespace Render::GL {
 
-void render_formation_arrow(Renderer *renderer, ResourceManager *resources,
-                            const FormationPlacementInfo &placement) {
+void render_formation_arrow(Renderer* renderer,
+                            ResourceManager* resources,
+                            const FormationPlacementInfo& placement) {
   if ((renderer == nullptr) || (resources == nullptr) || !placement.active) {
     return;
   }
@@ -20,7 +24,7 @@ void render_formation_arrow(Renderer *renderer, ResourceManager *resources,
     return;
   }
 
-  Mesh *const arrow_mesh = get_orientation_arrow();
+  Mesh* const arrow_mesh = get_orientation_arrow();
   if (arrow_mesh == nullptr) {
     return;
   }
@@ -39,7 +43,7 @@ void render_formation_arrow(Renderer *renderer, ResourceManager *resources,
   base_xform.translate(placement.position.x(), base_y, placement.position.z());
   base_xform.rotate(visual_angle_degrees, 0.0F, 1.0F, 0.0F);
 
-  if (Mesh *const glow_mesh = Render::Geom::SelectionDisc::get()) {
+  if (Mesh* const glow_mesh = Render::Geom::SelectionDisc::get()) {
     QMatrix4x4 glow_xform;
     glow_xform.translate(placement.position.x(),
                          placement.position.y() + 0.035F,

@@ -1,14 +1,15 @@
 #pragma once
 
-#include "../units/building_type.h"
-#include "../units/troop_type.h"
-#include "formation_system.h"
-#include "nation_id.h"
 #include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "../units/building_type.h"
+#include "../units/troop_type.h"
+#include "formation_system.h"
+#include "nation_id.h"
 
 namespace Game::Systems {
 
@@ -52,43 +53,37 @@ struct Nation {
   NationID id;
   std::string display_name;
   std::vector<TroopType> available_troops;
-  Game::Units::BuildingType primary_building =
-      Game::Units::BuildingType::Barracks;
+  Game::Units::BuildingType primary_building = Game::Units::BuildingType::Barracks;
   FormationType formation_type = FormationType::Roman;
   std::unordered_map<Game::Units::TroopType, NationTroopVariant> troop_variants;
 
-  [[nodiscard]] auto get_melee_troops() const -> std::vector<const TroopType *>;
+  [[nodiscard]] auto get_melee_troops() const -> std::vector<const TroopType*>;
+
+  [[nodiscard]] auto get_ranged_troops() const -> std::vector<const TroopType*>;
 
   [[nodiscard]] auto
-  get_ranged_troops() const -> std::vector<const TroopType *>;
+  get_troop(Game::Units::TroopType unit_type) const -> const TroopType*;
 
-  [[nodiscard]] auto
-  get_troop(Game::Units::TroopType unit_type) const -> const TroopType *;
+  [[nodiscard]] auto get_best_melee_troop() const -> const TroopType*;
+  [[nodiscard]] auto get_best_ranged_troop() const -> const TroopType*;
 
-  [[nodiscard]] auto get_best_melee_troop() const -> const TroopType *;
-  [[nodiscard]] auto get_best_ranged_troop() const -> const TroopType *;
-
-  [[nodiscard]] auto
-  is_melee_unit(Game::Units::TroopType unit_type) const -> bool;
-  [[nodiscard]] auto
-  is_ranged_unit(Game::Units::TroopType unit_type) const -> bool;
+  [[nodiscard]] auto is_melee_unit(Game::Units::TroopType unit_type) const -> bool;
+  [[nodiscard]] auto is_ranged_unit(Game::Units::TroopType unit_type) const -> bool;
 };
 
 class NationRegistry {
 public:
-  static auto instance() -> NationRegistry &;
+  static auto instance() -> NationRegistry&;
 
   void register_nation(Nation nation);
 
-  auto get_nation(NationID nation_id) const -> const Nation *;
+  auto get_nation(NationID nation_id) const -> const Nation*;
 
-  auto get_nation_for_player(int player_id) const -> const Nation *;
+  auto get_nation_for_player(int player_id) const -> const Nation*;
 
   void set_player_nation(int player_id, NationID nation_id);
 
-  auto get_all_nations() const -> const std::vector<Nation> & {
-    return m_nations;
-  }
+  auto get_all_nations() const -> const std::vector<Nation>& { return m_nations; }
 
   void initialize_defaults();
 

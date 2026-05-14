@@ -2,12 +2,12 @@
 
 #pragma once
 
+#include <cstdint>
+#include <span>
+
 #include "../render_request.h"
 #include "creature_render_state.h"
 #include "unit_visual_spec.h"
-
-#include <cstdint>
-#include <span>
 
 namespace Render::GL {
 class ISubmitter;
@@ -35,7 +35,7 @@ struct SubmitStats {
 
   void reset() noexcept { *this = SubmitStats{}; }
 
-  void operator+=(const SubmitStats &other) noexcept {
+  void operator+=(const SubmitStats& other) noexcept {
     entities_submitted += other.entities_submitted;
     lod_full += other.lod_full;
     lod_minimal += other.lod_minimal;
@@ -57,9 +57,9 @@ class CreaturePipeline {
 public:
   CreaturePipeline() = default;
 
-  auto submit_requests(
-      std::span<const Render::Creature::CreatureRenderRequest> requests,
-      Render::GL::ISubmitter &out) const -> SubmitStats;
+  auto
+  submit_requests(std::span<const Render::Creature::CreatureRenderRequest> requests,
+                  Render::GL::ISubmitter& out) const -> SubmitStats;
 };
 
 } // namespace Render::Creature::Pipeline

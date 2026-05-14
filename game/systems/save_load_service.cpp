@@ -1,9 +1,5 @@
 #include "save_load_service.h"
 
-#include "game/core/serialization.h"
-#include "game/core/world.h"
-#include "save_storage.h"
-
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDebug>
@@ -12,9 +8,6 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QStandardPaths>
-
-#include <exception>
-#include <memory>
 #include <qcoreapplication.h>
 #include <qdir.h>
 #include <qglobal.h>
@@ -24,6 +17,13 @@
 #include <qnamespace.h>
 #include <qstandardpaths.h>
 #include <qstringliteral.h>
+
+#include <exception>
+#include <memory>
+
+#include "game/core/serialization.h"
+#include "game/core/world.h"
+#include "save_storage.h"
 
 namespace Game::Systems {
 
@@ -57,12 +57,12 @@ void SaveLoadService::ensure_saves_directory_exists() {
   }
 }
 
-auto SaveLoadService::save_game_to_slot(Engine::Core::World &world,
-                                        const QString &slot_name,
-                                        const QString &title,
-                                        const QString &map_name,
-                                        const QJsonObject &metadata,
-                                        const QByteArray &screenshot) -> bool {
+auto SaveLoadService::save_game_to_slot(Engine::Core::World& world,
+                                        const QString& slot_name,
+                                        const QString& title,
+                                        const QString& map_name,
+                                        const QJsonObject& metadata,
+                                        const QByteArray& screenshot) -> bool {
   qInfo() << "Saving game to slot:" << slot_name;
 
   try {
@@ -89,8 +89,12 @@ auto SaveLoadService::save_game_to_slot(Engine::Core::World &world,
     combined_metadata["version"] = QStringLiteral("1.0");
 
     QString storage_error;
-    if (!m_storage->save_slot(slot_name, title, combined_metadata, world_bytes,
-                              screenshot, &storage_error)) {
+    if (!m_storage->save_slot(slot_name,
+                              title,
+                              combined_metadata,
+                              world_bytes,
+                              screenshot,
+                              &storage_error)) {
       m_last_error = storage_error;
       qWarning() << "SaveLoadService: failed to persist slot" << storage_error;
       return false;
@@ -101,16 +105,15 @@ auto SaveLoadService::save_game_to_slot(Engine::Core::World &world,
     m_last_screenshot = screenshot;
     m_last_error.clear();
     return true;
-  } catch (const std::exception &e) {
-    m_last_error =
-        QString("Exception while saving game to slot: %1").arg(e.what());
+  } catch (const std::exception& e) {
+    m_last_error = QString("Exception while saving game to slot: %1").arg(e.what());
     qWarning() << m_last_error;
     return false;
   }
 }
 
-auto SaveLoadService::load_game_from_slot(Engine::Core::World &world,
-                                          const QString &slot_name) -> bool {
+auto SaveLoadService::load_game_from_slot(Engine::Core::World& world,
+                                          const QString& slot_name) -> bool {
   qInfo() << "Loading game from slot:" << slot_name;
 
   try {
@@ -126,16 +129,15 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World &world,
     QString title;
 
     QString load_error;
-    if (!m_storage->load_slot(slot_name, world_bytes, metadata, screenshot,
-                              title, &load_error)) {
+    if (!m_storage->load_slot(
+            slot_name, world_bytes, metadata, screenshot, title, &load_error)) {
       m_last_error = load_error;
       qWarning() << "SaveLoadService: failed to load slot" << load_error;
       return false;
     }
 
     QJsonParseError parse_error{};
-    QJsonDocument const doc =
-        QJsonDocument::fromJson(world_bytes, &parse_error);
+    QJsonDocument const doc = QJsonDocument::fromJson(world_bytes, &parse_error);
     if (parse_error.error != QJsonParseError::NoError || doc.isNull()) {
       m_last_error = QStringLiteral("Corrupted save data for slot '%1': %2")
                          .arg(slot_name, parse_error.errorString());
@@ -151,9 +153,8 @@ auto SaveLoadService::load_game_from_slot(Engine::Core::World &world,
     m_last_screenshot = screenshot;
     m_last_error.clear();
     return true;
-  } catch (const std::exception &e) {
-    m_last_error =
-        QString("Exception while loading game from slot: %1").arg(e.what());
+  } catch (const std::exception& e) {
+    m_last_error = QString("Exception while loading game from slot: %1").arg(e.what());
     qWarning() << m_last_error;
     return false;
   }
@@ -175,7 +176,7 @@ auto SaveLoadService::get_save_slots() const -> QVariantList {
   return slot_list;
 }
 
-auto SaveLoadService::delete_save_slot(const QString &slot_name) -> bool {
+auto SaveLoadService::delete_save_slot(const QString& slot_name) -> bool {
   qInfo() << "Deleting save slot:" << slot_name;
 
   if (!m_storage) {
@@ -195,7 +196,7 @@ auto SaveLoadService::delete_save_slot(const QString &slot_name) -> bool {
   return true;
 }
 
-auto SaveLoadService::list_campaigns(QString *out_error) -> QVariantList {
+auto SaveLoadService::list_campaigns(QString* out_error) -> QVariantList {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
@@ -205,8 +206,8 @@ auto SaveLoadService::list_campaigns(QString *out_error) -> QVariantList {
   return m_storage->list_campaigns(out_error);
 }
 
-auto SaveLoadService::get_campaign_progress(
-    const QString &campaign_id, QString *out_error) const -> QVariantMap {
+auto SaveLoadService::get_campaign_progress(const QString& campaign_id,
+                                            QString* out_error) const -> QVariantMap {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
@@ -216,8 +217,8 @@ auto SaveLoadService::get_campaign_progress(
   return m_storage->get_campaign_progress(campaign_id, out_error);
 }
 
-auto SaveLoadService::mark_campaign_completed(const QString &campaign_id,
-                                              QString *out_error) -> bool {
+auto SaveLoadService::mark_campaign_completed(const QString& campaign_id,
+                                              QString* out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
@@ -227,23 +228,32 @@ auto SaveLoadService::mark_campaign_completed(const QString &campaign_id,
   return m_storage->mark_campaign_completed(campaign_id, out_error);
 }
 
-auto SaveLoadService::save_mission_result(
-    const QString &mission_id, const QString &mode, const QString &campaign_id,
-    bool completed, const QString &result, const QString &difficulty,
-    float completion_time, QString *out_error) -> bool {
+auto SaveLoadService::save_mission_result(const QString& mission_id,
+                                          const QString& mode,
+                                          const QString& campaign_id,
+                                          bool completed,
+                                          const QString& result,
+                                          const QString& difficulty,
+                                          float completion_time,
+                                          QString* out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
     }
     return false;
   }
-  return m_storage->save_mission_result(mission_id, mode, campaign_id,
-                                        completed, result, difficulty,
-                                        completion_time, out_error);
+  return m_storage->save_mission_result(mission_id,
+                                        mode,
+                                        campaign_id,
+                                        completed,
+                                        result,
+                                        difficulty,
+                                        completion_time,
+                                        out_error);
 }
 
-auto SaveLoadService::get_mission_progress(
-    const QString &mission_id, QString *out_error) const -> QVariantMap {
+auto SaveLoadService::get_mission_progress(const QString& mission_id,
+                                           QString* out_error) const -> QVariantMap {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
@@ -254,7 +264,7 @@ auto SaveLoadService::get_mission_progress(
 }
 
 auto SaveLoadService::get_campaign_mission_progress(
-    const QString &campaign_id, QString *out_error) const -> QVariantList {
+    const QString& campaign_id, QString* out_error) const -> QVariantList {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
@@ -264,25 +274,26 @@ auto SaveLoadService::get_campaign_mission_progress(
   return m_storage->get_campaign_mission_progress(campaign_id, out_error);
 }
 
-auto SaveLoadService::unlock_next_campaign_mission(
-    const QString &campaign_id, const QString &completed_mission_id,
-    QString *out_error) -> bool {
+auto SaveLoadService::unlock_next_campaign_mission(const QString& campaign_id,
+                                                   const QString& completed_mission_id,
+                                                   QString* out_error) -> bool {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
     }
     return false;
   }
-  return m_storage->unlock_next_mission(campaign_id, completed_mission_id,
-                                        out_error);
+  return m_storage->unlock_next_mission(campaign_id, completed_mission_id, out_error);
 }
 
-SaveLoadService *SaveLoadService::instance() {
+SaveLoadService* SaveLoadService::instance() {
   static SaveLoadService instance;
   return &instance;
 }
 
-void SaveLoadService::open_settings() { qInfo() << "Open settings requested"; }
+void SaveLoadService::open_settings() {
+  qInfo() << "Open settings requested";
+}
 
 void SaveLoadService::exit_game() {
   qInfo() << "Exit game requested";

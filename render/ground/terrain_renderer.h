@@ -1,15 +1,17 @@
 #pragma once
 
-#include "../../game/map/terrain.h"
-#include "../i_render_pass.h"
-#include "../world_chunk.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cmath>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <vector>
+
+#include "../../game/map/terrain.h"
+#include "../i_render_pass.h"
+#include "../world_chunk.h"
 
 namespace Render::GL {
 class Buffer;
@@ -23,12 +25,12 @@ public:
   TerrainRenderer();
   ~TerrainRenderer() override;
 
-  void configure(const Game::Map::TerrainHeightMap &height_map,
-                 const Game::Map::BiomeSettings &biome_settings);
+  void configure(const Game::Map::TerrainHeightMap& height_map,
+                 const Game::Map::BiomeSettings& biome_settings);
 
-  void set_light_direction(const QVector3D &dir);
+  void set_light_direction(const QVector3D& dir);
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
   void set_wireframe(bool enable) { m_wireframe = enable; }
 
@@ -60,8 +62,7 @@ private:
   };
 
   struct ChunkVisibilityCacheEntry {
-    std::uint64_t visibility_version =
-        std::numeric_limits<std::uint64_t>::max();
+    std::uint64_t visibility_version = std::numeric_limits<std::uint64_t>::max();
     bool any_visible = true;
   };
 

@@ -1,13 +1,14 @@
 #include "humanoid_full_builder.h"
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <algorithm>
+#include <cmath>
+
 #include "../gl/humanoid/humanoid_constants.h"
 #include "humanoid_specs.h"
 #include "skeleton.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <algorithm>
-#include <cmath>
 
 namespace Render::Humanoid {
 
@@ -20,13 +21,13 @@ constexpr auto bi(HumanoidBone b) noexcept -> Creature::BoneIndex {
   return static_cast<Creature::BoneIndex>(b);
 }
 
-auto frame_local(const Render::GL::AttachmentFrame &f,
-                 const QVector3D &local) noexcept -> QVector3D {
-  return f.origin + f.right * local.x() * f.radius +
-         f.up * local.y() * f.radius + f.forward * local.z() * f.radius;
+auto frame_local(const Render::GL::AttachmentFrame& f,
+                 const QVector3D& local) noexcept -> QVector3D {
+  return f.origin + f.right * local.x() * f.radius + f.up * local.y() * f.radius +
+         f.forward * local.z() * f.radius;
 }
 
-auto frame_from_matrix(const QMatrix4x4 &m,
+auto frame_from_matrix(const QMatrix4x4& m,
                        float radius) noexcept -> Render::GL::AttachmentFrame {
   Render::GL::AttachmentFrame frame;
   frame.origin = m.column(3).toVector3D();
@@ -39,10 +40,10 @@ auto frame_from_matrix(const QMatrix4x4 &m,
 
 } // namespace
 
-void compute_humanoid_body_metrics(const Render::GL::HumanoidPose &pose,
-                                   const QVector3D &proportion_scaling,
+void compute_humanoid_body_metrics(const Render::GL::HumanoidPose& pose,
+                                   const QVector3D& proportion_scaling,
                                    float torso_scale,
-                                   HumanoidBodyMetrics &out) noexcept {
+                                   HumanoidBodyMetrics& out) noexcept {
   float const width_scale = proportion_scaling.x();
   float const depth_scale = proportion_scaling.z();
 
@@ -71,19 +72,18 @@ void compute_humanoid_body_metrics(const Render::GL::HumanoidPose &pose,
       0.5F * std::abs(pose.shoulder_r.x() - pose.shoulder_l.x());
   out.shoulder_half_span = shoulder_half_span;
 
-  float const torso_r_base =
-      std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
+  float const torso_r_base = std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
   out.torso_r = torso_r_base * torso_scale;
 
   float const torso_depth_factor =
       std::clamp(HP::TORSO_DEPTH_FACTOR_BASE + (depth_scale - 1.0F) * 0.20F,
-                 HP::TORSO_DEPTH_FACTOR_MIN, HP::TORSO_DEPTH_FACTOR_MAX);
+                 HP::TORSO_DEPTH_FACTOR_MIN,
+                 HP::TORSO_DEPTH_FACTOR_MAX);
   out.torso_depth = out.torso_r * torso_depth_factor;
 
   float const y_shoulder = shoulder_mid.y();
   float const y_neck = pose.neck_base.y();
-  out.y_top_cover =
-      std::max(y_shoulder + 0.00F, y_neck + HP::TORSO_TOP_COVER_OFFSET);
+  out.y_top_cover = std::max(y_shoulder + 0.00F, y_neck + HP::TORSO_TOP_COVER_OFFSET);
 
   out.upper_arm_r = HP::UPPER_ARM_R * width_scale;
   out.fore_arm_r = HP::FORE_ARM_R * width_scale;
@@ -96,8 +96,8 @@ void compute_humanoid_body_metrics(const Render::GL::HumanoidPose &pose,
   out.foot_radius = out.shin_r * 1.10F;
 }
 
-void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
-                                  const HumanoidBodyMetrics &m) noexcept {
+void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
+                                  const HumanoidBodyMetrics& m) noexcept {
   using AF = Render::GL::AttachmentFrame;
 
   QVector3D const shoulder_mid = (pose.shoulder_l + pose.shoulder_r) * 0.5F;
@@ -105,8 +105,8 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
 
   pose.body_frames.head = pose.head_frame;
 
-  QVector3D const torso_center = QVector3D(
-      (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F, y_shoulder, 0.0F);
+  QVector3D const torso_center =
+      QVector3D((shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F, y_shoulder, 0.0F);
   pose.body_frames.torso.origin = torso_center;
   pose.body_frames.torso.right = m.right_axis;
   pose.body_frames.torso.up = m.up_axis;
@@ -129,15 +129,14 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
   pose.body_frames.waist.depth = m.torso_depth * 0.72F;
 
   QVector3D shoulder_up = (pose.shoulder_l - pose.pelvis_pos).normalized();
-  QVector3D shoulder_fwd_l =
-      QVector3D::crossProduct(-m.right_axis, shoulder_up);
+  QVector3D shoulder_fwd_l = QVector3D::crossProduct(-m.right_axis, shoulder_up);
   if (shoulder_fwd_l.lengthSquared() < 1e-8F) {
     shoulder_fwd_l = m.forward_axis;
   } else {
     shoulder_fwd_l.normalize();
   }
-  pose.body_frames.shoulder_l = AF{pose.shoulder_l, -m.right_axis, shoulder_up,
-                                   shoulder_fwd_l,  m.upper_arm_r, 0.0F};
+  pose.body_frames.shoulder_l = AF{
+      pose.shoulder_l, -m.right_axis, shoulder_up, shoulder_fwd_l, m.upper_arm_r, 0.0F};
 
   QVector3D shoulder_fwd_r = QVector3D::crossProduct(m.right_axis, shoulder_up);
   if (shoulder_fwd_r.lengthSquared() < 1e-8F) {
@@ -145,11 +144,11 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
   } else {
     shoulder_fwd_r.normalize();
   }
-  pose.body_frames.shoulder_r = AF{pose.shoulder_r, m.right_axis,  shoulder_up,
-                                   shoulder_fwd_r,  m.upper_arm_r, 0.0F};
+  pose.body_frames.shoulder_r = AF{
+      pose.shoulder_r, m.right_axis, shoulder_up, shoulder_fwd_r, m.upper_arm_r, 0.0F};
 
-  auto compute_hand = [&](const QVector3D &elbow, const QVector3D &hand,
-                          float right_sign) -> AF {
+  auto compute_hand =
+      [&](const QVector3D& elbow, const QVector3D& hand, float right_sign) -> AF {
     QVector3D up = hand - elbow;
     if (up.lengthSquared() > 1e-8F) {
       up.normalize();
@@ -167,7 +166,7 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
   pose.body_frames.hand_l = compute_hand(pose.elbow_l, pose.hand_l, -1.0F);
   pose.body_frames.hand_r = compute_hand(pose.elbow_r, pose.hand_r, 1.0F);
 
-  auto compute_hand_bone_frame = [&](const QVector3D &hand) -> AF {
+  auto compute_hand_bone_frame = [&](const QVector3D& hand) -> AF {
     return AF{hand, m.right_axis, m.up_axis, m.forward_axis, m.hand_r, 0.0F};
   };
   AF const hand_bone_l = compute_hand_bone_frame(pose.hand_l);
@@ -186,15 +185,21 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
     }
     return f;
   };
-  pose.body_frames.foot_l =
-      AF{pose.foot_l,   -m.right_axis, m.up_axis, compute_foot_fwd(-1.0F),
-         m.foot_radius, 0.0F};
-  pose.body_frames.foot_r =
-      AF{pose.foot_r,   m.right_axis, m.up_axis, compute_foot_fwd(+1.0F),
-         m.foot_radius, 0.0F};
+  pose.body_frames.foot_l = AF{pose.foot_l,
+                               -m.right_axis,
+                               m.up_axis,
+                               compute_foot_fwd(-1.0F),
+                               m.foot_radius,
+                               0.0F};
+  pose.body_frames.foot_r = AF{pose.foot_r,
+                               m.right_axis,
+                               m.up_axis,
+                               compute_foot_fwd(+1.0F),
+                               m.foot_radius,
+                               0.0F};
 
-  auto compute_shin = [&](const QVector3D &ankle, const QVector3D &knee,
-                          float right_sign) -> AF {
+  auto compute_shin =
+      [&](const QVector3D& ankle, const QVector3D& knee, float right_sign) -> AF {
     AF shin{};
     shin.origin = ankle;
     QVector3D shin_dir = knee - ankle;
@@ -216,8 +221,8 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
   pose.body_frames.shin_r = compute_shin(pose.foot_r, pose.knee_r, 1.0F);
 }
 
-void compute_humanoid_head_frame(Render::GL::HumanoidPose &pose,
-                                 const HumanoidBodyMetrics &m) noexcept {
+void compute_humanoid_head_frame(Render::GL::HumanoidPose& pose,
+                                 const HumanoidBodyMetrics& m) noexcept {
 
   if (pose.head_frame.radius > 0.001F) {
     pose.head_frame.origin = pose.head_pos;
@@ -264,8 +269,8 @@ void compute_humanoid_head_frame(Render::GL::HumanoidPose &pose,
   pose.head_frame.radius = pose.head_r;
 }
 
-void rebuild_humanoid_frames(Render::GL::HumanoidPose &pose,
-                             const QVector3D &proportion_scaling,
+void rebuild_humanoid_frames(Render::GL::HumanoidPose& pose,
+                             const QVector3D& proportion_scaling,
                              float torso_scale) noexcept {
   HumanoidBodyMetrics metrics{};
   compute_humanoid_body_metrics(pose, proportion_scaling, torso_scale, metrics);

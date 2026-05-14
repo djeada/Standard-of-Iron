@@ -10,21 +10,21 @@ Rectangle {
     property string campaign_id: ""
     property var mission_definition: null
     property var terrain_icons: ({
-        "mountain": "⛰️",
-        "plains": "🌾",
-        "forest": "🌲",
-        "river": "🌊",
-        "desert": "🏜️",
-        "hills": "⛰️"
-    })
+            "mountain": "⛰️",
+            "plains": "🌾",
+            "forest": "🌲",
+            "river": "🌊",
+            "desert": "🏜️",
+            "hills": "⛰️"
+        })
     property var terrain_colors: ({
-        "mountain": "#8b7355",
-        "plains": "#9db68f",
-        "forest": "#4a7c59",
-        "river": "#4a90b5",
-        "desert": "#d4a574",
-        "hills": "#a89968"
-    })
+            "mountain": "#8b7355",
+            "plains": "#9db68f",
+            "forest": "#4a7c59",
+            "river": "#4a90b5",
+            "desert": "#d4a574",
+            "hills": "#a89968"
+        })
     property string player_faction: resolve_player_faction()
     property bool is_player_carthaginian: player_faction.indexOf("carth") !== -1
     property string command_glyph: is_player_carthaginian ? StyleGuide.historical.carthageGlyph : StyleGuide.historical.romanGlyph
@@ -41,34 +41,28 @@ Rectangle {
     property var player_commander: mission_definition && mission_definition.player_setup ? mission_definition.player_setup.commander : null
     property var opposing_forces: mission_definition && mission_definition.ai_setups ? mission_definition.ai_setups : []
 
-    signal start_mission_clicked()
+    signal start_mission_clicked
 
     function resolve_player_faction() {
         if (mission_definition && mission_definition.player_setup) {
             var player_setup = mission_definition.player_setup;
             if (player_setup.faction)
                 return player_setup.faction.toLowerCase();
-
             if (player_setup.nation)
                 return player_setup.nation.toLowerCase();
         }
-
         if (campaign_id && campaign_id.toLowerCase().indexOf("carth") !== -1)
             return "carthaginian";
-
         return "roman";
     }
 
     function resolve_setup_faction(setup) {
         if (!setup)
             return "";
-
         if (setup.faction)
             return setup.faction.toLowerCase();
-
         if (setup.nation)
             return setup.nation.toLowerCase();
-
         return "";
     }
 
@@ -83,35 +77,29 @@ Rectangle {
     function setup_summary(setup) {
         if (!setup)
             return "";
-
         var parts = [];
         if (setup.faction)
             parts.push(titleize(setup.faction));
         else if (setup.nation)
             parts.push(titleize(setup.nation));
-
         if (setup.difficulty)
             parts.push(titleize(setup.difficulty));
-
         return parts.join(" • ");
     }
 
     function load_mission_definition() {
         if (mission_data && mission_data.mission_id && typeof game !== "undefined" && game.get_mission_definition)
             mission_definition = game.get_mission_definition(mission_data.mission_id);
-
     }
 
     function titleize(value) {
         if (!value)
             return "";
-
         var parts = value.split("_");
         for (var i = 0; i < parts.length; i++) {
             var part = parts[i];
             if (part.length === 0)
                 continue;
-
             parts[i] = part.charAt(0).toUpperCase() + part.slice(1);
         }
         return parts.join(" ");
@@ -127,37 +115,30 @@ Rectangle {
     function calculate_tactical_rating() {
         if (!mission_data || !mission_data.difficulty_modifier)
             return qsTr("3/") + tactical_rating_max.toString();
-
         return Math.min(tactical_rating_max, Math.max(tactical_rating_min, Math.round(mission_data.difficulty_modifier))).toString() + "/" + tactical_rating_max.toString();
     }
 
     function calculate_casualty_forecast() {
         if (!mission_data || !mission_data.difficulty_modifier)
             return qsTr("610");
-
         return Math.round(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step).toString();
     }
 
     function calculate_success_estimate() {
         if (!mission_data)
             return qsTr("Unknown");
-
         if (mission_data.completed)
             return qsTr("100%");
-
         if (mission_data.unlocked === false)
             return qsTr("Sealed");
-
         return qsTr("In Progress");
     }
 
     function reward_summary_text() {
         if (!mission_data || !mission_data.unlocked)
             return qsTr("Rewards: Sealed until prior victories");
-
         if (mission_data.completed)
             return qsTr("Rewards: Laurels Inscribed • Veteran Honors Claimed");
-
         return qsTr("Rewards: Bronze Standard • Veteran Cohort");
     }
 
@@ -173,7 +154,6 @@ Rectangle {
             position: 1
             color: "#241b14"
         }
-
     }
     border.color: "#a7814a"
     border.width: 2
@@ -210,7 +190,6 @@ Rectangle {
                         text: {
                             if (mission_definition && mission_definition.title)
                                 return mission_definition.title;
-
                             return mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "";
                         }
                         color: Theme.textMain
@@ -243,7 +222,6 @@ Rectangle {
                                 font.pointSize: Theme.fontSizeTiny
                                 font.bold: true
                             }
-
                         }
 
                         Rectangle {
@@ -254,7 +232,6 @@ Rectangle {
                             color: {
                                 if (!mission_definition || !mission_definition.terrain_type)
                                     return Theme.disabledBg;
-
                                 return terrain_colors[mission_definition.terrain_type] || Theme.disabledBg;
                             }
                             border.color: Theme.border
@@ -271,7 +248,6 @@ Rectangle {
                                     text: {
                                         if (!mission_definition || !mission_definition.terrain_type)
                                             return "";
-
                                         return terrain_icons[mission_definition.terrain_type] || "🗺️";
                                     }
                                     font.pointSize: Theme.fontSizeSmall
@@ -281,7 +257,6 @@ Rectangle {
                                     text: {
                                         if (!mission_definition || !mission_definition.terrain_type)
                                             return "";
-
                                         var terrain = mission_definition.terrain_type;
                                         return terrain.charAt(0).toUpperCase() + terrain.slice(1);
                                     }
@@ -289,11 +264,8 @@ Rectangle {
                                     font.pointSize: Theme.fontSizeTiny
                                     font.bold: true
                                 }
-
                             }
-
                         }
-
                     }
 
                     Label {
@@ -339,9 +311,7 @@ Rectangle {
                                 font.italic: true
                                 font.family: "serif"
                             }
-
                         }
-
                     }
 
                     ColumnLayout {
@@ -359,7 +329,6 @@ Rectangle {
                             model: {
                                 if (!mission_definition || !mission_definition.victory_conditions)
                                     return [];
-
                                 return mission_definition.victory_conditions;
                             }
 
@@ -370,7 +339,6 @@ Rectangle {
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
-
                         }
 
                         Label {
@@ -385,7 +353,6 @@ Rectangle {
                             model: {
                                 if (!mission_definition || !mission_definition.optional_objectives)
                                     return [];
-
                                 return mission_definition.optional_objectives;
                             }
 
@@ -396,7 +363,6 @@ Rectangle {
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
-
                         }
 
                         Label {
@@ -411,7 +377,6 @@ Rectangle {
                             model: {
                                 if (!mission_definition || !mission_definition.defeat_conditions)
                                     return [];
-
                                 return mission_definition.defeat_conditions;
                             }
 
@@ -422,7 +387,6 @@ Rectangle {
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
-
                         }
 
                         Label {
@@ -431,7 +395,6 @@ Rectangle {
                             color: Theme.textSubLite
                             font.pointSize: Theme.fontSizeSmall
                         }
-
                     }
 
                     ColumnLayout {
@@ -455,10 +418,8 @@ Rectangle {
                                 model: {
                                     if (!mission_definition || !mission_definition.player_setup || !mission_definition.player_setup.starting_units)
                                         return [];
-
                                     var units = mission_definition.player_setup.starting_units;
-                                    var grouped = {
-                                    };
+                                    var grouped = {};
                                     for (var i = 0; i < units.length; i++) {
                                         var unit = units[i];
                                         var type = unit.type || "unknown";
@@ -467,9 +428,9 @@ Rectangle {
                                     var result = [];
                                     for (var key in grouped) {
                                         result.push({
-                                            "type": key,
-                                            "count": grouped[key]
-                                        });
+                                                "type": key,
+                                                "count": grouped[key]
+                                            });
                                     }
                                     return result;
                                 }
@@ -490,13 +451,9 @@ Rectangle {
                                         color: Theme.infoText
                                         font.pointSize: Theme.fontSizeTiny
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
 
                     ColumnLayout {
@@ -540,19 +497,12 @@ Rectangle {
                                         color: Theme.textSubLite
                                         font.pointSize: Theme.fontSizeTiny
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
-
         }
 
         ColumnLayout {
@@ -743,7 +693,6 @@ Rectangle {
                     font.pointSize: Theme.fontSizeTiny
                     verticalAlignment: Text.AlignVCenter
                 }
-
             }
 
             StyledButton {
@@ -755,10 +704,8 @@ Rectangle {
                 ToolTip.text: {
                     if (!mission_data)
                         return "";
-
                     if (!mission_data.unlocked)
                         return qsTr("Complete previous missions to unlock");
-
                     return "";
                 }
                 ToolTip.delay: 500
@@ -782,9 +729,6 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 Layout.alignment: Qt.AlignHCenter
             }
-
         }
-
     }
-
 }

@@ -1,4 +1,10 @@
 #include "production_system.h"
+
+#include <qvectornd.h>
+
+#include <cmath>
+#include <limits>
+
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
@@ -14,15 +20,12 @@
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
-#include <cmath>
-#include <limits>
-#include <qvectornd.h>
 
 namespace Game::Systems {
 
 namespace {
 
-void apply_production_profile(Engine::Core::ProductionComponent *prod,
+void apply_production_profile(Engine::Core::ProductionComponent* prod,
                               Game::Systems::NationID nation_id,
                               Game::Units::TroopType troop_type) {
   if (prod == nullptr) {
@@ -34,27 +37,28 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
   prod->villager_cost = profile.production.cost;
 }
 
-auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
+auto resolve_nation_id(const Engine::Core::UnitComponent* unit,
                        int owner_id) -> Game::Systems::NationID {
-  auto &registry = NationRegistry::instance();
-  if (const auto *nation = registry.get_nation_for_player(owner_id)) {
+  auto& registry = NationRegistry::instance();
+  if (const auto* nation = registry.get_nation_for_player(owner_id)) {
     return nation->id;
   }
   return registry.default_nation_id();
 }
 
-auto production_count_increment(const Engine::Core::UnitComponent *unit_comp,
+auto production_count_increment(const Engine::Core::UnitComponent* unit_comp,
                                 int production_cost) -> int {
-  if (unit_comp != nullptr &&
-      unit_comp->spawn_type == Game::Units::SpawnType::Home) {
+  if (unit_comp != nullptr && unit_comp->spawn_type == Game::Units::SpawnType::Home) {
     return 1;
   }
   return production_cost;
 }
 
-auto compute_builder_exit_position(
-    float center_x, float center_z, const QVector3D &builder_pos,
-    float unit_radius, const std::string &building_type) -> QVector3D {
+auto compute_builder_exit_position(float center_x,
+                                   float center_z,
+                                   const QVector3D& builder_pos,
+                                   float unit_radius,
+                                   const std::string& building_type) -> QVector3D {
   auto const size = BuildingCollisionRegistry::get_building_size(building_type);
   float const half_width = size.width * 0.5F;
   float const half_depth = size.depth * 0.5F;
@@ -83,22 +87,23 @@ auto compute_builder_exit_position(
   float const final_scale =
       std::isfinite(scale) && scale > 0.0F ? scale : fallback_scale;
 
-  return {center_x + dir_x * final_scale, builder_pos.y(),
-          center_z + dir_z * final_scale};
+  return {
+      center_x + dir_x * final_scale, builder_pos.y(), center_z + dir_z * final_scale};
 }
 
-auto find_guaranteed_valid_exit(float exit_x, float exit_z,
+auto find_guaranteed_valid_exit(float exit_x,
+                                float exit_z,
                                 float unit_radius) -> QVector3D {
-  Pathfinding *pathfinder = CommandService::get_pathfinder();
+  Pathfinding* pathfinder = CommandService::get_pathfinder();
   if (pathfinder == nullptr) {
     return {exit_x, 0.0F, exit_z};
   }
 
-  auto &terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Map::TerrainService::instance();
   Point const exit_grid = CommandService::world_to_grid(exit_x, exit_z);
 
-  bool is_valid = pathfinder->is_walkable_with_radius(exit_grid.x, exit_grid.y,
-                                                      unit_radius);
+  bool is_valid =
+      pathfinder->is_walkable_with_radius(exit_grid.x, exit_grid.y, unit_radius);
   if (is_valid && terrain_service.is_initialized()) {
     is_valid = terrain_service.is_walkable(exit_grid.x, exit_grid.y);
   }
@@ -120,8 +125,7 @@ auto find_guaranteed_valid_exit(float exit_x, float exit_z,
         int const check_x = exit_grid.x + dx;
         int const check_y = exit_grid.y + dy;
 
-        bool valid =
-            pathfinder->is_walkable_with_radius(check_x, check_y, unit_radius);
+        bool valid = pathfinder->is_walkable_with_radius(check_x, check_y, unit_radius);
         if (valid && terrain_service.is_initialized()) {
           valid = terrain_service.is_walkable(check_x, check_y);
         }
@@ -137,8 +141,9 @@ auto find_guaranteed_valid_exit(float exit_x, float exit_z,
   return CommandService::grid_to_world(safe_grid);
 }
 
-void activate_bypass_movement(Engine::Core::BuilderProductionComponent *builder,
-                              float target_x, float target_z) {
+void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
+                              float target_x,
+                              float target_z) {
   if (builder == nullptr) {
     return;
   }
@@ -149,19 +154,18 @@ void activate_bypass_movement(Engine::Core::BuilderProductionComponent *builder,
 
 } // namespace
 
-void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
+void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
   }
   auto entities = world->get_entities_with<Engine::Core::ProductionComponent>();
-  for (auto *e : entities) {
-    auto *prod = e->get_component<Engine::Core::ProductionComponent>();
+  for (auto* e : entities) {
+    auto* prod = e->get_component<Engine::Core::ProductionComponent>();
     if (prod == nullptr) {
       continue;
     }
     bool commander_in_queue =
-        prod->in_progress &&
-        Game::Units::is_commander_troop(prod->product_type);
+        prod->in_progress && Game::Units::is_commander_troop(prod->product_type);
     if (!commander_in_queue) {
       for (const auto queued : prod->production_queue) {
         if (Game::Units::is_commander_troop(queued)) {
@@ -172,9 +176,8 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     }
     prod->commander_committed = commander_in_queue;
 
-    auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
-    if ((unit_comp != nullptr) &&
-        Game::Core::is_neutral_owner(unit_comp->owner_id)) {
+    auto* unit_comp = e->get_component<Engine::Core::UnitComponent>();
+    if ((unit_comp != nullptr) && Game::Core::is_neutral_owner(unit_comp->owner_id)) {
       continue;
     }
 
@@ -184,8 +187,8 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
 
     const int owner_id = (unit_comp != nullptr) ? unit_comp->owner_id : -1;
     const auto nation_id = resolve_nation_id(unit_comp, owner_id);
-    const auto current_profile = TroopProfileService::instance().get_profile(
-        nation_id, prod->product_type);
+    const auto current_profile =
+        TroopProfileService::instance().get_profile(nation_id, prod->product_type);
     int const individuals_per_unit = current_profile.individuals_per_unit;
     int const production_cost = current_profile.production.cost;
     int const capacity_increment =
@@ -198,14 +201,13 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     prod->time_remaining -= delta_time;
     if (prod->time_remaining <= 0.0F) {
 
-      auto *t = e->get_component<Engine::Core::TransformComponent>();
-      auto *u = e->get_component<Engine::Core::UnitComponent>();
+      auto* t = e->get_component<Engine::Core::TransformComponent>();
+      auto* u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
 
         int const current_troops =
             Engine::Core::World::count_troops_for_player(u->owner_id);
-        int const max_troops =
-            Game::GameConfig::instance().get_max_troops_per_player();
+        int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
         if (current_troops + production_cost > max_troops) {
           prod->in_progress = false;
           prod->time_remaining = 0.0F;
@@ -215,17 +217,16 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         float const exit_offset = 2.5F + 0.2F * float(prod->produced_count % 5);
         float const exit_angle = 0.5F * float(prod->produced_count % 8);
         QVector3D const raw_exit_pos =
-            QVector3D(t->position.x + exit_offset * std::cos(exit_angle), 0.0F,
+            QVector3D(t->position.x + exit_offset * std::cos(exit_angle),
+                      0.0F,
                       t->position.z + exit_offset * std::sin(exit_angle));
 
         auto reg = Game::Map::MapTransformer::get_factory_registry();
         if (reg) {
           Game::Units::SpawnParams sp;
           sp.player_id = u->owner_id;
-          sp.spawn_type =
-              Game::Units::spawn_typeFromTroopType(prod->product_type);
-          sp.ai_controlled =
-              e->has_component<Engine::Core::AIControlledComponent>();
+          sp.spawn_type = Game::Units::spawn_typeFromTroopType(prod->product_type);
+          sp.ai_controlled = e->has_component<Engine::Core::AIControlledComponent>();
           sp.nation_id = nation_id;
           sp.is_initial_spawn = false;
 
@@ -264,9 +265,8 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
 
   auto builder_entities =
       world->get_entities_with<Engine::Core::BuilderProductionComponent>();
-  for (auto *e : builder_entities) {
-    auto *builder_prod =
-        e->get_component<Engine::Core::BuilderProductionComponent>();
+  for (auto* e : builder_entities) {
+    auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder_prod == nullptr) {
       continue;
     }
@@ -275,11 +275,10 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    auto *transform = e->get_component<Engine::Core::TransformComponent>();
-    auto *movement = e->get_component<Engine::Core::MovementComponent>();
+    auto* transform = e->get_component<Engine::Core::TransformComponent>();
+    auto* movement = e->get_component<Engine::Core::MovementComponent>();
 
-    if (builder_prod->has_construction_site &&
-        !builder_prod->at_construction_site) {
+    if (builder_prod->has_construction_site && !builder_prod->at_construction_site) {
       if (transform != nullptr) {
         float dx = builder_prod->construction_site_x - transform->position.x;
         float dz = builder_prod->construction_site_z - transform->position.z;
@@ -338,24 +337,22 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     builder_prod->time_remaining -= delta_time;
     if (builder_prod->time_remaining <= 0.0F) {
 
-      auto *t = e->get_component<Engine::Core::TransformComponent>();
-      auto *u = e->get_component<Engine::Core::UnitComponent>();
+      auto* t = e->get_component<Engine::Core::TransformComponent>();
+      auto* u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
         auto reg = Game::Map::MapTransformer::get_factory_registry();
         if (reg) {
           Game::Units::SpawnParams sp;
 
           if (builder_prod->has_construction_site) {
-            sp.position =
-                QVector3D(builder_prod->construction_site_x, t->position.y,
-                          builder_prod->construction_site_z);
+            sp.position = QVector3D(builder_prod->construction_site_x,
+                                    t->position.y,
+                                    builder_prod->construction_site_z);
           } else {
-            sp.position =
-                QVector3D(t->position.x, t->position.y, t->position.z);
+            sp.position = QVector3D(t->position.x, t->position.y, t->position.z);
           }
           sp.player_id = u->owner_id;
-          sp.ai_controlled =
-              e->has_component<Engine::Core::AIControlledComponent>();
+          sp.ai_controlled = e->has_component<Engine::Core::AIControlledComponent>();
           sp.nation_id = u->nation_id;
           sp.is_initial_spawn = false;
 
@@ -386,13 +383,13 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
                 builder_prod->construction_site_x,
                 builder_prod->construction_site_z,
                 QVector3D(t->position.x, t->position.y, t->position.z),
-                unit_radius, builder_prod->product_type);
+                unit_radius,
+                builder_prod->product_type);
 
             QVector3D const safe_exit = find_guaranteed_valid_exit(
                 preferred_exit.x(), preferred_exit.z(), unit_radius);
 
-            activate_bypass_movement(builder_prod, safe_exit.x(),
-                                     safe_exit.z());
+            activate_bypass_movement(builder_prod, safe_exit.x(), safe_exit.z());
 
             movement->goal_x = safe_exit.x();
             movement->goal_y = safe_exit.z();

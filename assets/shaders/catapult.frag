@@ -52,14 +52,11 @@ void main() {
   vec2 uv = v_world_pos.xz * 4.0;
   float avg_color = (color.r + color.g + color.b) / 3.0;
 
-  bool is_wood =
-      (color.r > color.b * 1.2 && avg_color > 0.25 && avg_color < 0.60);
-  bool is_metal =
-      (avg_color > 0.30 && avg_color < 0.55 && abs(color.r - color.g) < 0.1 &&
-       abs(color.g - color.b) < 0.1);
+  bool is_wood = (color.r > color.b * 1.2 && avg_color > 0.25 && avg_color < 0.60);
+  bool is_metal = (avg_color > 0.30 && avg_color < 0.55 &&
+                   abs(color.r - color.g) < 0.1 && abs(color.g - color.b) < 0.1);
   bool is_rope = (avg_color > 0.40 && avg_color < 0.65 && color.r > color.b);
-  bool is_leather =
-      (avg_color > 0.20 && avg_color < 0.45 && color.r > color.b * 1.3);
+  bool is_leather = (avg_color > 0.20 && avg_color < 0.45 && color.r > color.b * 1.3);
 
   if (is_wood) {
     float grain = wood_grain(v_world_pos.xz);

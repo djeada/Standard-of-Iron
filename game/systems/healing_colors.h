@@ -1,8 +1,10 @@
 #pragma once
 
-#include "nation_id.h"
 #include <QVector3D>
+
 #include <cmath>
+
+#include "nation_id.h"
 
 namespace Game::Systems {
 
@@ -25,7 +27,7 @@ inline auto get_healing_color(NationID nation_id) -> QVector3D {
   }
 }
 
-inline auto is_roman_healing_color(const QVector3D &color) -> bool {
+inline auto is_roman_healing_color(const QVector3D& color) -> bool {
   constexpr float tolerance = 0.1F;
   QVector3D roman_color = get_roman_healing_color();
   return (std::abs(color.x() - roman_color.x()) < tolerance &&

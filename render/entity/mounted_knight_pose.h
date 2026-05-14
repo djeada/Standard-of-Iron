@@ -1,9 +1,10 @@
 #pragma once
 
+#include <algorithm>
+
 #include "../horse/horse_renderer_base.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_renderer_base.h"
-#include <algorithm>
 
 namespace Render::GL {
 
@@ -33,9 +34,9 @@ struct MountedKnightPoseTuning {
   float sword_outset_factor = 0.72F;
 };
 
-inline void tune_mounted_knight_frame(const HorseDimensions &dims,
-                                      MountedAttachmentFrame &mount,
-                                      const MountedKnightPoseTuning &cfg = {}) {
+inline void tune_mounted_knight_frame(const HorseDimensions& dims,
+                                      MountedAttachmentFrame& mount,
+                                      const MountedKnightPoseTuning& cfg = {}) {
   auto reposition_stirrup = [&](bool is_left) {
     float const side = is_left ? -1.0F : 1.0F;
     QVector3D attach =
@@ -62,13 +63,14 @@ inline void tune_mounted_knight_frame(const HorseDimensions &dims,
   reposition_stirrup(false);
 }
 
-inline void apply_mounted_knight_lower_body(
-    const HorseDimensions &dims, const MountedAttachmentFrame &mount,
-    const HumanoidAnimationContext &anim_ctx, HumanoidPose &pose,
-    const MountedKnightPoseTuning &cfg = {}) {
+inline void apply_mounted_knight_lower_body(const HorseDimensions& dims,
+                                            const MountedAttachmentFrame& mount,
+                                            const HumanoidAnimationContext& anim_ctx,
+                                            HumanoidPose& pose,
+                                            const MountedKnightPoseTuning& cfg = {}) {
   (void)anim_ctx;
 
-  auto shape_leg = [&](QVector3D &knee, QVector3D &foot, bool is_left) {
+  auto shape_leg = [&](QVector3D& knee, QVector3D& foot, bool is_left) {
     float const side = is_left ? -1.0F : 1.0F;
     QVector3D pelvis = pose.pelvis_pos + mount.seat_up * -0.01F;
     QVector3D stirrup =
@@ -88,13 +90,11 @@ inline void apply_mounted_knight_lower_body(
         is_left ? mount.stirrup_bottom_left : mount.stirrup_bottom_right;
 
     QVector3D calf_surface =
-        knee +
-        mount.seat_right * (side * dims.body_width * cfg.calf_out_offset) +
+        knee + mount.seat_right * (side * dims.body_width * cfg.calf_out_offset) +
         mount.seat_forward * (dims.body_length * cfg.calf_back_offset) -
         mount.seat_up * (dims.stirrup_drop * cfg.calf_down_extra);
     QVector3D calf_from_foot =
-        base_foot +
-        mount.seat_forward * (dims.body_length * cfg.calf_behind_girth) -
+        base_foot + mount.seat_forward * (dims.body_length * cfg.calf_behind_girth) -
         mount.seat_up * (dims.stirrup_drop * cfg.calf_relax);
 
     QVector3D calf_target = calf_from_foot * (1.0F - cfg.calf_surface_blend) +
@@ -105,8 +105,7 @@ inline void apply_mounted_knight_lower_body(
     foot = foot * (1.0F - cfg.calf_blend) + calf_target * cfg.calf_blend;
 
     QVector3D foot_target =
-        calf_target +
-        mount.seat_forward * (dims.body_length * cfg.foot_back_offset) -
+        calf_target + mount.seat_forward * (dims.body_length * cfg.foot_back_offset) -
         mount.seat_up * (dims.stirrup_drop * cfg.foot_down_offset);
     foot = foot * (1.0F - cfg.foot_blend) + foot_target * cfg.foot_blend;
   };

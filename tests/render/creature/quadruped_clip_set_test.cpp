@@ -1,6 +1,6 @@
-#include "render/creature/quadruped/clip_set.h"
-
 #include <gtest/gtest.h>
+
+#include "render/creature/quadruped/clip_set.h"
 
 namespace {
 
@@ -21,13 +21,12 @@ TEST(QuadrupedClipSet, HorseGaitsMapDirectly) {
 }
 
 TEST(QuadrupedClipSet, RunningFallsBackWhenFasterClipsAreMissing) {
-  constexpr ClipSet k_elephant_clips{
-      0U,
-      1U,
-      2U,
-      Render::Creature::Quadruped::k_invalid_clip,
-      Render::Creature::Quadruped::k_invalid_clip,
-      3U};
+  constexpr ClipSet k_elephant_clips{0U,
+                                     1U,
+                                     2U,
+                                     Render::Creature::Quadruped::k_invalid_clip,
+                                     Render::Creature::Quadruped::k_invalid_clip,
+                                     3U};
 
   EXPECT_EQ(clip_for_motion(k_elephant_clips, false, false, false), 0U);
   EXPECT_EQ(clip_for_motion(k_elephant_clips, true, false, false), 1U);

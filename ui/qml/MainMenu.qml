@@ -14,13 +14,13 @@ Item {
     readonly property int command_width: root.compact ? width - side_margin * 2 : Math.min(560, Math.max(480, width * 0.42))
     readonly property var hs: StyleGuide.historical
 
-    signal open_skirmish()
-    signal open_campaign()
-    signal open_objectives()
-    signal open_settings()
-    signal load_save()
-    signal save_game()
-    signal exit_requested()
+    signal open_skirmish
+    signal open_campaign
+    signal open_objectives
+    signal open_settings
+    signal load_save
+    signal save_game
+    signal exit_requested
 
     anchors.fill: parent
     z: 10
@@ -30,7 +30,6 @@ Item {
         var m = menuModel.get(index);
         if (!m || (m.requiresGame && !root.game_started))
             return;
-
         if (m.idStr === "skirmish")
             root.open_skirmish();
         else if (m.idStr === "campaign")
@@ -59,7 +58,7 @@ Item {
         }
     }
 
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Down) {
             move_selection(1);
             event.accepted = true;
@@ -442,13 +441,13 @@ Item {
                             }
                         }
 
-                        Behavior on color {
+                        Behavior on color  {
                             ColorAnimation {
                                 duration: Theme.animNormal
                             }
                         }
 
-                        Behavior on border.color {
+                        Behavior on border.color  {
                             ColorAnimation {
                                 duration: Theme.animNormal
                             }

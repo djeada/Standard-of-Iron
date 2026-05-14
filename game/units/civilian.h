@@ -6,12 +6,12 @@ namespace Game::Units {
 
 class Civilian : public Unit {
 public:
-  static auto Create(Engine::Core::World &world,
-                     const SpawnParams &params) -> std::unique_ptr<Civilian>;
+  static auto Create(Engine::Core::World& world,
+                     const SpawnParams& params) -> std::unique_ptr<Civilian>;
 
 private:
-  Civilian(Engine::Core::World &world);
-  void init(const SpawnParams &params);
+  Civilian(Engine::Core::World& world);
+  void init(const SpawnParams& params);
 };
 
 } // namespace Game::Units

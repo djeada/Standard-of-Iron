@@ -12,7 +12,9 @@ out vec4 frag_color;
 
 const float PI = 3.14159265359;
 
-float saturate(float x) { return clamp(x, 0.0, 1.0); }
+float saturate(float x) {
+  return clamp(x, 0.0, 1.0);
+}
 
 mat2 rot(float a) {
   float c = cos(a), s = sin(a);

@@ -1,9 +1,11 @@
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_specs.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cmath>
 #include <gtest/gtest.h>
+
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_specs.h"
 
 using namespace Render::GL;
 
@@ -30,10 +32,8 @@ protected:
 
   HumanoidPose pose;
 
-  bool approx_equal(const QVector3D &a, const QVector3D &b,
-                    float epsilon = 0.01F) {
-    return std::abs(a.x() - b.x()) < epsilon &&
-           std::abs(a.y() - b.y()) < epsilon &&
+  bool approx_equal(const QVector3D& a, const QVector3D& b, float epsilon = 0.01F) {
+    return std::abs(a.x() - b.x()) < epsilon && std::abs(a.y() - b.y()) < epsilon &&
            std::abs(a.z() - b.z()) < epsilon;
   }
 
@@ -139,8 +139,7 @@ TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
   head_frame.radius = HP::HEAD_RADIUS;
 
   QVector3D local(1.0F, 0.0F, 0.0F);
-  QVector3D world =
-      HumanoidRendererBase::head_local_position(head_frame, local);
+  QVector3D world = HumanoidRendererBase::head_local_position(head_frame, local);
   QVector3D expected = QVector3D(HP::HEAD_RADIUS, head_center_y, 0.0F);
   EXPECT_TRUE(approx_equal(world, expected));
 

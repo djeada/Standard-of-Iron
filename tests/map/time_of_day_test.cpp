@@ -1,6 +1,8 @@
-#include "map/map_definition.h"
 #include <QVector3D>
+
 #include <gtest/gtest.h>
+
+#include "map/map_definition.h"
 
 using namespace Game::Map;
 
@@ -36,21 +38,19 @@ TEST(TimeOfDayTest, LightingForNightHasLowAmbient) {
 }
 
 TEST(TimeOfDayTest, AllTimesProduceNormalizedLightDirections) {
-  for (auto tod : {TimeOfDay::Morning, TimeOfDay::Day, TimeOfDay::Afternoon,
-                   TimeOfDay::Night}) {
+  for (auto tod :
+       {TimeOfDay::Morning, TimeOfDay::Day, TimeOfDay::Afternoon, TimeOfDay::Night}) {
     const auto s = lighting_for_time_of_day(tod);
     EXPECT_NEAR(s.light_direction.length(), 1.0F, 1e-5F);
   }
 }
 
 TEST(TimeOfDayTest, AmbientStrengthOrderingAcrossTimesOfDay) {
-  const float morning =
-      lighting_for_time_of_day(TimeOfDay::Morning).ambient_strength;
+  const float morning = lighting_for_time_of_day(TimeOfDay::Morning).ambient_strength;
   const float day = lighting_for_time_of_day(TimeOfDay::Day).ambient_strength;
   const float afternoon =
       lighting_for_time_of_day(TimeOfDay::Afternoon).ambient_strength;
-  const float night =
-      lighting_for_time_of_day(TimeOfDay::Night).ambient_strength;
+  const float night = lighting_for_time_of_day(TimeOfDay::Night).ambient_strength;
 
   EXPECT_LT(morning, day);
   EXPECT_LT(afternoon, day);

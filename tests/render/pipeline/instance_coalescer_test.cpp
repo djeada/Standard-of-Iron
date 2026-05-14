@@ -1,14 +1,13 @@
 
 
+#include <array>
+#include <cstddef>
+#include <gtest/gtest.h>
+
 #include "render/draw_part.h"
 #include "render/draw_queue.h"
 #include "render/material.h"
 #include "render/pipeline/instance_coalescer.h"
-
-#include <gtest/gtest.h>
-
-#include <array>
-#include <cstddef>
 
 using Render::GL::DrawPartCmd;
 using Render::GL::Material;
@@ -17,18 +16,21 @@ using Render::GL::Texture;
 
 namespace {
 
-auto fake_mesh(std::uintptr_t tag) -> Mesh * {
-  return reinterpret_cast<Mesh *>(tag);
+auto fake_mesh(std::uintptr_t tag) -> Mesh* {
+  return reinterpret_cast<Mesh*>(tag);
 }
-auto fake_material(std::uintptr_t tag) -> const Material * {
-  return reinterpret_cast<const Material *>(tag);
+auto fake_material(std::uintptr_t tag) -> const Material* {
+  return reinterpret_cast<const Material*>(tag);
 }
-auto fake_texture(std::uintptr_t tag) -> Texture * {
-  return reinterpret_cast<Texture *>(tag);
+auto fake_texture(std::uintptr_t tag) -> Texture* {
+  return reinterpret_cast<Texture*>(tag);
 }
 
-auto make_part(Mesh *m, const Material *mat, Texture *tex = nullptr,
-               std::int32_t mid = 0, float alpha = 1.0F) -> DrawPartCmd {
+auto make_part(Mesh* m,
+               const Material* mat,
+               Texture* tex = nullptr,
+               std::int32_t mid = 0,
+               float alpha = 1.0F) -> DrawPartCmd {
   DrawPartCmd p;
   p.mesh = m;
   p.material = mat;
@@ -47,10 +49,10 @@ TEST(InstanceCoalescer, EmptyInputYieldsNoBatches) {
 }
 
 TEST(InstanceCoalescer, FusesFourIdenticalPartsIntoOneBatch) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
-  std::array<DrawPartCmd, 4> parts{make_part(m, mat), make_part(m, mat),
-                                   make_part(m, mat), make_part(m, mat)};
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
+  std::array<DrawPartCmd, 4> parts{
+      make_part(m, mat), make_part(m, mat), make_part(m, mat), make_part(m, mat)};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 4);
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].count, 4U);
@@ -59,31 +61,34 @@ TEST(InstanceCoalescer, FusesFourIdenticalPartsIntoOneBatch) {
 }
 
 TEST(InstanceCoalescer, ThreePartsBelowDefaultThresholdDoNotBatch) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
-  std::array<DrawPartCmd, 3> parts{make_part(m, mat), make_part(m, mat),
-                                   make_part(m, mat)};
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
+  std::array<DrawPartCmd, 3> parts{
+      make_part(m, mat), make_part(m, mat), make_part(m, mat)};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 4);
   EXPECT_TRUE(batches.empty());
 }
 
 TEST(InstanceCoalescer, ThreePartsBatchWhenMinRunIsTwo) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
-  std::array<DrawPartCmd, 3> parts{make_part(m, mat), make_part(m, mat),
-                                   make_part(m, mat)};
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
+  std::array<DrawPartCmd, 3> parts{
+      make_part(m, mat), make_part(m, mat), make_part(m, mat)};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 2);
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].count, 3U);
 }
 
 TEST(InstanceCoalescer, DifferentMaterialBreaksRun) {
-  auto *m = fake_mesh(1);
-  const auto *mat_a = fake_material(2);
-  const auto *mat_b = fake_material(3);
-  std::array<DrawPartCmd, 6> parts{make_part(m, mat_a), make_part(m, mat_a),
-                                   make_part(m, mat_a), make_part(m, mat_b),
-                                   make_part(m, mat_b), make_part(m, mat_b)};
+  auto* m = fake_mesh(1);
+  const auto* mat_a = fake_material(2);
+  const auto* mat_b = fake_material(3);
+  std::array<DrawPartCmd, 6> parts{make_part(m, mat_a),
+                                   make_part(m, mat_a),
+                                   make_part(m, mat_a),
+                                   make_part(m, mat_b),
+                                   make_part(m, mat_b),
+                                   make_part(m, mat_b)};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 2);
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].header->material, mat_a);
@@ -93,13 +98,14 @@ TEST(InstanceCoalescer, DifferentMaterialBreaksRun) {
 }
 
 TEST(InstanceCoalescer, DifferentTextureBreaksRun) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
-  auto *tex_a = fake_texture(10);
-  auto *tex_b = fake_texture(11);
-  std::array<DrawPartCmd, 4> parts{
-      make_part(m, mat, tex_a), make_part(m, mat, tex_a),
-      make_part(m, mat, tex_b), make_part(m, mat, tex_b)};
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
+  auto* tex_a = fake_texture(10);
+  auto* tex_b = fake_texture(11);
+  std::array<DrawPartCmd, 4> parts{make_part(m, mat, tex_a),
+                                   make_part(m, mat, tex_a),
+                                   make_part(m, mat, tex_b),
+                                   make_part(m, mat, tex_b)};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 2);
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].header->texture, tex_a);
@@ -107,31 +113,33 @@ TEST(InstanceCoalescer, DifferentTextureBreaksRun) {
 }
 
 TEST(InstanceCoalescer, MaterialIdBreaksRun) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
-  std::array<DrawPartCmd, 4> parts{
-      make_part(m, mat, nullptr, 0), make_part(m, mat, nullptr, 0),
-      make_part(m, mat, nullptr, 3), make_part(m, mat, nullptr, 3)};
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
+  std::array<DrawPartCmd, 4> parts{make_part(m, mat, nullptr, 0),
+                                   make_part(m, mat, nullptr, 0),
+                                   make_part(m, mat, nullptr, 3),
+                                   make_part(m, mat, nullptr, 3)};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 2);
   ASSERT_EQ(batches.size(), 2U);
 }
 
 TEST(InstanceCoalescer, TransparentPartsAreNeverFused) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
-  std::array<DrawPartCmd, 4> parts{
-      make_part(m, mat, nullptr, 0, 0.5F), make_part(m, mat, nullptr, 0, 0.5F),
-      make_part(m, mat, nullptr, 0, 0.5F), make_part(m, mat, nullptr, 0, 0.5F)};
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
+  std::array<DrawPartCmd, 4> parts{make_part(m, mat, nullptr, 0, 0.5F),
+                                   make_part(m, mat, nullptr, 0, 0.5F),
+                                   make_part(m, mat, nullptr, 0, 0.5F),
+                                   make_part(m, mat, nullptr, 0, 0.5F)};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 2);
   EXPECT_TRUE(batches.empty());
 }
 
 TEST(InstanceCoalescer, SkinnedPartsAreNeverFused) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
   QMatrix4x4 bone[4]{};
-  std::array<DrawPartCmd, 4> parts{make_part(m, mat), make_part(m, mat),
-                                   make_part(m, mat), make_part(m, mat)};
+  std::array<DrawPartCmd, 4> parts{
+      make_part(m, mat), make_part(m, mat), make_part(m, mat), make_part(m, mat)};
   parts[0].palette = Render::GL::BonePaletteRef{bone, 4};
   parts[1].palette = Render::GL::BonePaletteRef{bone, 4};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 2);
@@ -142,10 +150,10 @@ TEST(InstanceCoalescer, SkinnedPartsAreNeverFused) {
 }
 
 TEST(InstanceCoalescer, PreservesPerInstanceColorAndAlpha) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
-  std::array<DrawPartCmd, 4> parts{make_part(m, mat), make_part(m, mat),
-                                   make_part(m, mat), make_part(m, mat)};
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
+  std::array<DrawPartCmd, 4> parts{
+      make_part(m, mat), make_part(m, mat), make_part(m, mat), make_part(m, mat)};
   parts[0].color = QVector3D(1.0F, 0.0F, 0.0F);
   parts[1].color = QVector3D(0.0F, 1.0F, 0.0F);
   parts[2].color = QVector3D(0.0F, 0.0F, 1.0F);
@@ -157,8 +165,8 @@ TEST(InstanceCoalescer, PreservesPerInstanceColorAndAlpha) {
 }
 
 TEST(InstanceCoalescer, StatsCountBatchedParts) {
-  auto *m = fake_mesh(1);
-  const auto *mat = fake_material(2);
+  auto* m = fake_mesh(1);
+  const auto* mat = fake_material(2);
   std::array<DrawPartCmd, 10> parts;
   parts.fill(make_part(m, mat));
   const auto batches = Render::Pipeline::coalesce_instances(parts, 4);

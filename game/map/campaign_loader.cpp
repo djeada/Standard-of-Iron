@@ -1,4 +1,5 @@
 #include "campaign_loader.h"
+
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -6,8 +7,7 @@
 
 namespace Game::Campaign {
 
-auto CampaignLoader::parse_campaign_mission(const QJsonObject &obj)
-    -> CampaignMission {
+auto CampaignLoader::parse_campaign_mission(const QJsonObject& obj) -> CampaignMission {
   CampaignMission mission;
   mission.mission_id = obj["mission_id"].toString();
   mission.order_index = obj["order_index"].toInt(0);
@@ -32,9 +32,9 @@ auto CampaignLoader::parse_campaign_mission(const QJsonObject &obj)
   return mission;
 }
 
-auto CampaignLoader::load_from_json_file(const QString &file_path,
-                                         CampaignDefinition &out_campaign,
-                                         QString *error_msg) -> bool {
+auto CampaignLoader::load_from_json_file(const QString& file_path,
+                                         CampaignDefinition& out_campaign,
+                                         QString* error_msg) -> bool {
   QFile file(file_path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     if (error_msg != nullptr) {
@@ -44,14 +44,12 @@ auto CampaignLoader::load_from_json_file(const QString &file_path,
   }
 
   QJsonParseError parse_error;
-  const QJsonDocument doc =
-      QJsonDocument::fromJson(file.readAll(), &parse_error);
+  const QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &parse_error);
   file.close();
 
   if (parse_error.error != QJsonParseError::NoError) {
     if (error_msg != nullptr) {
-      *error_msg =
-          QString("JSON parse error: %1").arg(parse_error.errorString());
+      *error_msg = QString("JSON parse error: %1").arg(parse_error.errorString());
     }
     return false;
   }
@@ -71,9 +69,8 @@ auto CampaignLoader::load_from_json_file(const QString &file_path,
 
   if (root.contains("missions")) {
     const QJsonArray missions = root["missions"].toArray();
-    for (const auto &mission_val : missions) {
-      out_campaign.missions.push_back(
-          parse_campaign_mission(mission_val.toObject()));
+    for (const auto& mission_val : missions) {
+      out_campaign.missions.push_back(parse_campaign_mission(mission_val.toObject()));
     }
   }
 

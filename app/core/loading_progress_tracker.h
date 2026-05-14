@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+
 #include <functional>
 
 class LoadingProgressTracker : public QObject {
@@ -29,15 +30,15 @@ public:
   };
   Q_ENUM(LoadingStage)
 
-  explicit LoadingProgressTracker(QObject *parent = nullptr);
+  explicit LoadingProgressTracker(QObject* parent = nullptr);
 
   void start_loading();
 
-  void set_stage(LoadingStage stage, const QString &detail = QString());
+  void set_stage(LoadingStage stage, const QString& detail = QString());
 
   void complete_stage(LoadingStage stage);
 
-  void report_error(const QString &error_message);
+  void report_error(const QString& error_message);
 
   [[nodiscard]] bool is_complete() const;
 

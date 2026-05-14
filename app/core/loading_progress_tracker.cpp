@@ -1,8 +1,10 @@
 #include "loading_progress_tracker.h"
 
-LoadingProgressTracker::LoadingProgressTracker(QObject *parent)
-    : QObject(parent), m_current_stage(LoadingStage::NOT_STARTED),
-      m_failed(false) {}
+LoadingProgressTracker::LoadingProgressTracker(QObject* parent)
+    : QObject(parent)
+    , m_current_stage(LoadingStage::NOT_STARTED)
+    , m_failed(false) {
+}
 
 void LoadingProgressTracker::start_loading() {
   m_current_stage = LoadingStage::INITIALIZING;
@@ -12,8 +14,7 @@ void LoadingProgressTracker::start_loading() {
   emit progress_changed(progress());
 }
 
-void LoadingProgressTracker::set_stage(LoadingStage stage,
-                                       const QString &detail) {
+void LoadingProgressTracker::set_stage(LoadingStage stage, const QString& detail) {
   if (m_failed || m_current_stage == LoadingStage::COMPLETED) {
     return;
   }
@@ -36,7 +37,7 @@ void LoadingProgressTracker::complete_stage(LoadingStage stage) {
   }
 }
 
-void LoadingProgressTracker::report_error(const QString &error_message) {
+void LoadingProgressTracker::report_error(const QString& error_message) {
   m_failed = true;
   m_current_stage = LoadingStage::FAILED;
   m_current_detail = error_message;
@@ -48,7 +49,9 @@ bool LoadingProgressTracker::is_complete() const {
   return m_current_stage == LoadingStage::COMPLETED;
 }
 
-bool LoadingProgressTracker::has_failed() const { return m_failed; }
+bool LoadingProgressTracker::has_failed() const {
+  return m_failed;
+}
 
 float LoadingProgressTracker::progress() const {
   return stage_to_progress(m_current_stage);

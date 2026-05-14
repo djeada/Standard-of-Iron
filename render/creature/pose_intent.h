@@ -9,8 +9,8 @@
 
 namespace Render::Creature {
 
-[[nodiscard]] inline auto resolve_pose_intent(
-    const Render::GL::AnimationInputs &inputs) noexcept -> PoseIntent {
+[[nodiscard]] inline auto
+resolve_pose_intent(const Render::GL::AnimationInputs& inputs) noexcept -> PoseIntent {
   if (inputs.is_dying) {
     return PoseIntent::Dying;
   }
@@ -30,8 +30,7 @@ namespace Render::Creature {
       return PoseIntent::AttackMelee;
     case Engine::Core::CombatAttackFamily::None:
     default:
-      return inputs.is_melee ? PoseIntent::AttackMelee
-                             : PoseIntent::AttackRanged;
+      return inputs.is_melee ? PoseIntent::AttackMelee : PoseIntent::AttackRanged;
     }
   }
   if (inputs.is_healing) {
@@ -52,8 +51,8 @@ namespace Render::Creature {
   return PoseIntent::Idle;
 }
 
-[[nodiscard]] inline auto to_humanoid_state(PoseIntent intent) noexcept
-    -> Render::Humanoid::HumanoidState {
+[[nodiscard]] inline auto
+to_humanoid_state(PoseIntent intent) noexcept -> Render::Humanoid::HumanoidState {
   using S = Render::Humanoid::HumanoidState;
   switch (intent) {
   case PoseIntent::Walk:

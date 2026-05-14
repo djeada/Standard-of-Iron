@@ -1,13 +1,17 @@
 #include "healing_beam.h"
+
 #include <cmath>
 
 namespace Game::Systems {
 
-HealingBeam::HealingBeam(const QVector3D &healer_pos,
-                         const QVector3D &target_pos, const QVector3D &color,
+HealingBeam::HealingBeam(const QVector3D& healer_pos,
+                         const QVector3D& target_pos,
+                         const QVector3D& color,
                          float duration)
-    : m_healer_pos(healer_pos), m_target_pos(target_pos), m_color(color),
-      m_duration(duration) {
+    : m_healer_pos(healer_pos)
+    , m_target_pos(target_pos)
+    , m_color(color)
+    , m_duration(duration) {
 
   float dist = (target_pos - healer_pos).length();
   m_beam_width = 0.1F + dist * 0.02F;

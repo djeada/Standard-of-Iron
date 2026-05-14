@@ -1,15 +1,11 @@
 #include "shader.h"
-#include "render_constants.h"
-#include "utils/resource_utils.h"
-#include <GL/gl.h>
+
 #include <QByteArray>
 #include <QDebug>
 #include <QFile>
 #include <QFileInfo>
 #include <QStringList>
 #include <QTextStream>
-#include <algorithm>
-#include <mutex>
 #include <qdebug.h>
 #include <qdir.h>
 #include <qfiledevice.h>
@@ -22,18 +18,25 @@
 #include <qvector3d.h>
 #include <qvector4d.h>
 
+#include <GL/gl.h>
+#include <algorithm>
+#include <mutex>
+
+#include "render_constants.h"
+#include "utils/resource_utils.h"
+
 namespace Render::GL {
 
 using namespace Render::GL::BufferCapacity;
 
 template <typename T>
-auto Shader::is_uniform_dirty(GLint location, const T &value) -> bool {
+auto Shader::is_uniform_dirty(GLint location, const T& value) -> bool {
   auto it = m_uniform_value_cache.find(location);
   if (it == m_uniform_value_cache.end()) {
     m_uniform_value_cache[location] = value;
     return true;
   }
-  auto *cached = std::get_if<T>(&it->second);
+  auto* cached = std::get_if<T>(&it->second);
   if (cached == nullptr || !(*cached == value)) {
     it->second = value;
     return true;
@@ -42,40 +45,39 @@ auto Shader::is_uniform_dirty(GLint location, const T &value) -> bool {
 }
 
 namespace {
-std::mutex &shader_audit_mutex() {
+std::mutex& shader_audit_mutex() {
   static std::mutex mutex;
   return mutex;
 }
 
-auto shader_audit_counts()
-    -> std::unordered_map<QString, ShaderBindAuditEntry> & {
+auto shader_audit_counts() -> std::unordered_map<QString, ShaderBindAuditEntry>& {
   static std::unordered_map<QString, ShaderBindAuditEntry> counts;
   return counts;
 }
 
-auto shader_audit_flag() -> bool & {
+auto shader_audit_flag() -> bool& {
   static bool enabled = qEnvironmentVariableIsSet("SOI_RENDER_SHADER_AUDIT");
   return enabled;
 }
 
-void record_shader_bind(const QString &name) {
+void record_shader_bind(const QString& name) {
   if (!shader_bind_audit_enabled()) {
     return;
   }
   QString key = name.isEmpty() ? QStringLiteral("<unnamed>") : name;
   std::scoped_lock lock(shader_audit_mutex());
-  auto &entry = shader_audit_counts()[key];
+  auto& entry = shader_audit_counts()[key];
   entry.name = std::move(key);
   ++entry.bind_count;
 }
 
-auto resolve_shader_includes(const QString &source,
-                             const QString &base_dir) -> QString {
+auto resolve_shader_includes(const QString& source,
+                             const QString& base_dir) -> QString {
   QString result;
   result.reserve(source.size());
 
   const QStringList lines = source.split('\n');
-  for (const QString &line : lines) {
+  for (const QString& line : lines) {
     const QString trimmed = line.trimmed();
     if (trimmed.startsWith("#include")) {
 
@@ -95,8 +97,7 @@ auto resolve_shader_includes(const QString &source,
 
         const QString include_path =
             QStringLiteral(":/assets/shaders/include/") + include_name;
-        const QString resolved =
-            Utils::Resources::resolve_resource_path(include_path);
+        const QString resolved = Utils::Resources::resolve_resource_path(include_path);
         QFile include_file(resolved);
         if (include_file.open(QIODevice::ReadOnly)) {
           QTextStream stream(&include_file);
@@ -125,12 +126,10 @@ Shader::~Shader() {
   }
 }
 
-auto Shader::load_from_files(const QString &vertex_path,
-                             const QString &fragment_path) -> bool {
-  const QString resolved_vert =
-      Utils::Resources::resolve_resource_path(vertex_path);
-  const QString resolved_frag =
-      Utils::Resources::resolve_resource_path(fragment_path);
+auto Shader::load_from_files(const QString& vertex_path,
+                             const QString& fragment_path) -> bool {
+  const QString resolved_vert = Utils::Resources::resolve_resource_path(vertex_path);
+  const QString resolved_frag = Utils::Resources::resolve_resource_path(fragment_path);
 
   QFile vertex_file(resolved_vert);
   QFile fragment_file(resolved_frag);
@@ -166,14 +165,13 @@ auto Shader::load_from_files(const QString &vertex_path,
   return load_from_source(processed_vert, processed_frag);
 }
 
-auto Shader::load_from_source(const QString &vertex_source,
-                              const QString &fragment_source) -> bool {
+auto Shader::load_from_source(const QString& vertex_source,
+                              const QString& fragment_source) -> bool {
   initializeOpenGLFunctions();
   m_uniform_cache.clear();
   m_uniform_value_cache.clear();
   GLuint const vertex_shader = compile_shader(vertex_source, GL_VERTEX_SHADER);
-  GLuint const fragment_shader =
-      compile_shader(fragment_source, GL_FRAGMENT_SHADER);
+  GLuint const fragment_shader = compile_shader(fragment_source, GL_FRAGMENT_SHADER);
 
   if (vertex_shader == 0 || fragment_shader == 0) {
     return false;
@@ -192,13 +190,16 @@ void Shader::use() {
   glUseProgram(m_program);
 }
 
-void Shader::release() { glUseProgram(0); }
+void Shader::release() {
+  glUseProgram(0);
+}
 
 namespace {
-auto uniform_handle_impl(
-    QOpenGLFunctions_3_3_Core &fn, GLuint program,
-    std::unordered_map<std::string, Shader::UniformHandle> &cache,
-    const char *name, bool warn) -> Shader::UniformHandle {
+auto uniform_handle_impl(QOpenGLFunctions_3_3_Core& fn,
+                         GLuint program,
+                         std::unordered_map<std::string, Shader::UniformHandle>& cache,
+                         const char* name,
+                         bool warn) -> Shader::UniformHandle {
   if ((name == nullptr) || *name == '\0' || program == 0) {
     return Shader::InvalidUniform;
   }
@@ -212,8 +213,7 @@ auto uniform_handle_impl(
   Shader::UniformHandle const location = fn.glGetUniformLocation(program, name);
 
   if (warn && (location == Shader::InvalidUniform)) {
-    qWarning() << "Shader uniform not found:" << name << "(program:" << program
-               << ")";
+    qWarning() << "Shader uniform not found:" << name << "(program:" << program << ")";
   }
 
   cache.emplace(name, location);
@@ -221,12 +221,11 @@ auto uniform_handle_impl(
 }
 } // namespace
 
-auto Shader::uniform_handle(const char *name) -> Shader::UniformHandle {
+auto Shader::uniform_handle(const char* name) -> Shader::UniformHandle {
   return uniform_handle_impl(*this, m_program, m_uniform_cache, name, true);
 }
 
-auto Shader::optional_uniform_handle(const char *name)
-    -> Shader::UniformHandle {
+auto Shader::optional_uniform_handle(const char* name) -> Shader::UniformHandle {
   return uniform_handle_impl(*this, m_program, m_uniform_cache, name, false);
 }
 
@@ -238,7 +237,7 @@ void Shader::set_uniform(UniformHandle handle, float value) {
   glUniform1f(handle, value);
 }
 
-void Shader::set_uniform(UniformHandle handle, const QVector3D &value) {
+void Shader::set_uniform(UniformHandle handle, const QVector3D& value) {
   if (handle == InvalidUniform)
     return;
   if (!is_uniform_dirty(handle, value))
@@ -246,7 +245,7 @@ void Shader::set_uniform(UniformHandle handle, const QVector3D &value) {
   glUniform3f(handle, value.x(), value.y(), value.z());
 }
 
-void Shader::set_uniform(UniformHandle handle, const QVector2D &value) {
+void Shader::set_uniform(UniformHandle handle, const QVector2D& value) {
   if (handle == InvalidUniform)
     return;
   if (!is_uniform_dirty(handle, value))
@@ -254,7 +253,7 @@ void Shader::set_uniform(UniformHandle handle, const QVector2D &value) {
   glUniform2f(handle, value.x(), value.y());
 }
 
-void Shader::set_uniform(UniformHandle handle, const QMatrix4x4 &value) {
+void Shader::set_uniform(UniformHandle handle, const QMatrix4x4& value) {
   if (handle == InvalidUniform)
     return;
   if (!is_uniform_dirty(handle, value))
@@ -274,65 +273,65 @@ void Shader::set_uniform(UniformHandle handle, bool value) {
   set_uniform(handle, static_cast<int>(value));
 }
 
-void Shader::set_uniform(const char *name, float value) {
+void Shader::set_uniform(const char* name, float value) {
   set_uniform(uniform_handle(name), value);
 }
 
-void Shader::set_uniform(const char *name, const QVector3D &value) {
+void Shader::set_uniform(const char* name, const QVector3D& value) {
   set_uniform(uniform_handle(name), value);
 }
 
-void Shader::set_uniform(const char *name, const QVector2D &value) {
+void Shader::set_uniform(const char* name, const QVector2D& value) {
   set_uniform(uniform_handle(name), value);
 }
 
-void Shader::set_uniform(const char *name, const QMatrix4x4 &value) {
+void Shader::set_uniform(const char* name, const QMatrix4x4& value) {
   set_uniform(uniform_handle(name), value);
 }
 
-void Shader::set_uniform(const char *name, int value) {
+void Shader::set_uniform(const char* name, int value) {
   set_uniform(uniform_handle(name), value);
 }
 
-void Shader::set_uniform(const char *name, bool value) {
+void Shader::set_uniform(const char* name, bool value) {
   set_uniform(uniform_handle(name), value);
 }
 
-void Shader::set_uniform(const QString &name, float value) {
+void Shader::set_uniform(const QString& name, float value) {
   const QByteArray utf8 = name.toUtf8();
   set_uniform(utf8.constData(), value);
 }
 
-void Shader::set_uniform(const QString &name, const QVector3D &value) {
+void Shader::set_uniform(const QString& name, const QVector3D& value) {
   const QByteArray utf8 = name.toUtf8();
   set_uniform(utf8.constData(), value);
 }
 
-void Shader::set_uniform(const QString &name, const QVector2D &value) {
+void Shader::set_uniform(const QString& name, const QVector2D& value) {
   const QByteArray utf8 = name.toUtf8();
   set_uniform(utf8.constData(), value);
 }
 
-void Shader::set_uniform(const QString &name, const QMatrix4x4 &value) {
+void Shader::set_uniform(const QString& name, const QMatrix4x4& value) {
   const QByteArray utf8 = name.toUtf8();
   set_uniform(utf8.constData(), value);
 }
 
-void Shader::set_uniform(const QString &name, int value) {
+void Shader::set_uniform(const QString& name, int value) {
   const QByteArray utf8 = name.toUtf8();
   set_uniform(utf8.constData(), value);
 }
 
-void Shader::set_uniform(const QString &name, bool value) {
+void Shader::set_uniform(const QString& name, bool value) {
   set_uniform(name, static_cast<int>(value));
 }
 
-auto Shader::compile_shader(const QString &source, GLenum type) -> GLuint {
+auto Shader::compile_shader(const QString& source, GLenum type) -> GLuint {
   initializeOpenGLFunctions();
   GLuint const shader = glCreateShader(type);
 
   QByteArray const source_bytes = source.toUtf8();
-  const char *source_ptr = source_bytes.constData();
+  const char* source_ptr = source_bytes.constData();
   glShaderSource(shader, 1, &source_ptr, nullptr);
   glCompileShader(shader);
 
@@ -349,8 +348,7 @@ auto Shader::compile_shader(const QString &source, GLenum type) -> GLuint {
   return shader;
 }
 
-auto Shader::link_program(GLuint vertex_shader,
-                          GLuint fragment_shader) -> bool {
+auto Shader::link_program(GLuint vertex_shader, GLuint fragment_shader) -> bool {
   initializeOpenGLFunctions();
   m_program = glCreateProgram();
   glAttachShader(m_program, vertex_shader);
@@ -376,7 +374,7 @@ auto Shader::link_program(GLuint vertex_shader,
   return true;
 }
 
-auto Shader::bind_uniform_block(const char *block_name,
+auto Shader::bind_uniform_block(const char* block_name,
                                 std::uint32_t binding_point) -> bool {
   if (m_program == 0 || block_name == nullptr) {
     return false;
@@ -396,7 +394,9 @@ void set_shader_bind_audit_enabled(bool enabled) {
   shader_audit_flag() = enabled;
 }
 
-auto shader_bind_audit_enabled() -> bool { return shader_audit_flag(); }
+auto shader_bind_audit_enabled() -> bool {
+  return shader_audit_flag();
+}
 
 void reset_shader_bind_audit() {
   std::scoped_lock lock(shader_audit_mutex());
@@ -407,11 +407,12 @@ auto shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry> {
   std::scoped_lock lock(shader_audit_mutex());
   std::vector<ShaderBindAuditEntry> out;
   out.reserve(shader_audit_counts().size());
-  for (const auto &[_, entry] : shader_audit_counts()) {
+  for (const auto& [_, entry] : shader_audit_counts()) {
     out.push_back(entry);
   }
-  std::sort(out.begin(), out.end(),
-            [](const ShaderBindAuditEntry &a, const ShaderBindAuditEntry &b) {
+  std::sort(out.begin(),
+            out.end(),
+            [](const ShaderBindAuditEntry& a, const ShaderBindAuditEntry& b) {
               if (a.bind_count != b.bind_count) {
                 return a.bind_count > b.bind_count;
               }
@@ -420,7 +421,7 @@ auto shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry> {
   return out;
 }
 
-auto classify_shader_for_audit(const QString &name) -> QString {
+auto classify_shader_for_audit(const QString& name) -> QString {
   static const QStringList pipeline_owned = {
       QStringLiteral("basic"),
       QStringLiteral("basic_instanced"),
@@ -468,7 +469,7 @@ auto classify_shader_for_audit(const QString &name) -> QString {
 
 auto format_shader_bind_audit() -> QStringList {
   QStringList lines;
-  for (const ShaderBindAuditEntry &entry : shader_bind_audit_snapshot()) {
+  for (const ShaderBindAuditEntry& entry : shader_bind_audit_snapshot()) {
     lines.push_back(QStringLiteral("%1\t%2\t%3")
                         .arg(entry.name)
                         .arg(entry.bind_count)

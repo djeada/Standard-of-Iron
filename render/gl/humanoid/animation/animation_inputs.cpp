@@ -1,13 +1,14 @@
 #include "animation_inputs.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/core/world.h"
 #include "../../../../game/systems/combat_rules.h"
 #include "../../../creature/animation_state_components.h"
 #include "../../../entity/registry.h"
-#include <algorithm>
-#include <cmath>
 
 namespace Render::GL {
 
@@ -38,7 +39,7 @@ auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
 
 } // namespace
 
-auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
+auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   if (ctx.animation_override != nullptr) {
     return *ctx.animation_override;
   }
@@ -69,29 +70,23 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     return anim;
   }
 
-  auto *death_anim =
-      ctx.entity->get_component<Engine::Core::DeathAnimationComponent>();
+  auto* death_anim = ctx.entity->get_component<Engine::Core::DeathAnimationComponent>();
   bool const has_active_death = (death_anim != nullptr);
   if (ctx.entity->has_component<Engine::Core::PendingRemovalComponent>() &&
       !has_active_death) {
     return anim;
   }
 
-  auto *movement = ctx.entity->get_component<Engine::Core::MovementComponent>();
-  auto *attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
-  auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
-  auto *attack_target =
+  auto* movement = ctx.entity->get_component<Engine::Core::MovementComponent>();
+  auto* attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
+  auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
+  auto* attack_target =
       ctx.entity->get_component<Engine::Core::AttackTargetComponent>();
-  auto *transform =
-      ctx.entity->get_component<Engine::Core::TransformComponent>();
-  auto *hold_mode =
-      ctx.entity->get_component<Engine::Core::HoldModeComponent>();
-  auto *combat_state =
-      ctx.entity->get_component<Engine::Core::CombatStateComponent>();
-  auto *hit_feedback =
-      ctx.entity->get_component<Engine::Core::HitFeedbackComponent>();
-  const auto *stamina =
-      ctx.entity->get_component<Engine::Core::StaminaComponent>();
+  auto* transform = ctx.entity->get_component<Engine::Core::TransformComponent>();
+  auto* hold_mode = ctx.entity->get_component<Engine::Core::HoldModeComponent>();
+  auto* combat_state = ctx.entity->get_component<Engine::Core::CombatStateComponent>();
+  auto* hit_feedback = ctx.entity->get_component<Engine::Core::HitFeedbackComponent>();
+  const auto* stamina = ctx.entity->get_component<Engine::Core::StaminaComponent>();
 
   if (death_anim != nullptr) {
     anim.is_moving = false;
@@ -104,8 +99,8 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     if (death_anim->state == Engine::Core::DeathSequenceState::Dying) {
       anim.is_dying = true;
       if (death_anim->state_duration > 0.0F) {
-        anim.death_progress = std::clamp(
-            death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
+        anim.death_progress =
+            std::clamp(death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
       } else {
         anim.death_progress = 1.0F;
       }
@@ -120,8 +115,7 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   if (anim.is_in_hold_mode && hold_mode != nullptr) {
     anim.hold_entry_progress = hold_mode->kneel_entry_progress;
   }
-  if ((hold_mode != nullptr) && !hold_mode->active &&
-      hold_mode->exit_cooldown > 0.0F) {
+  if ((hold_mode != nullptr) && !hold_mode->active && hold_mode->exit_cooldown > 0.0F) {
     anim.is_exiting_hold = true;
     anim.hold_exit_progress =
         1.0F - (hold_mode->exit_cooldown / hold_mode->stand_up_duration);
@@ -129,14 +123,14 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   anim.is_moving = ((movement != nullptr) && movement->has_target);
   anim.is_running = (stamina != nullptr) && stamina->is_running;
 
-  auto *healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
+  auto* healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
   if (healer != nullptr && healer->is_healing_active && transform != nullptr) {
     anim.is_healing = true;
     anim.healing_target_dx = healer->healing_target_x - transform->position.x;
     anim.healing_target_dz = healer->healing_target_z - transform->position.z;
   }
 
-  auto *builder_prod =
+  auto* builder_prod =
       ctx.entity->get_component<Engine::Core::BuilderProductionComponent>();
   if (builder_prod != nullptr) {
     if (builder_prod->bypass_movement_active) {
@@ -144,10 +138,10 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     }
     if (builder_prod->in_progress) {
       anim.is_constructing = true;
-      float const build_elapsed = std::max(
-          0.0F, builder_prod->build_time - builder_prod->time_remaining);
-      anim.construction_progress = std::fmod(
-          build_elapsed * k_builder_construct_cycles_per_second, 1.0F);
+      float const build_elapsed =
+          std::max(0.0F, builder_prod->build_time - builder_prod->time_remaining);
+      anim.construction_progress =
+          std::fmod(build_elapsed * k_builder_construct_cycles_per_second, 1.0F);
       if (anim.construction_progress < 0.0F) {
         anim.construction_progress += 1.0F;
       }
@@ -155,8 +149,7 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   }
 
   if (combat_state != nullptr) {
-    anim.combat_phase =
-        map_combat_state_to_phase(combat_state->animation_state);
+    anim.combat_phase = map_combat_state_to_phase(combat_state->animation_state);
     if (combat_state->state_duration > 0.0F) {
       anim.combat_phase_progress =
           combat_state->state_time / combat_state->state_duration;
@@ -165,8 +158,7 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.attack_offset = combat_state->attack_offset;
     anim.has_attack_offset = true;
     anim.attack_family = combat_state->attack_family;
-    if (combat_state->animation_state !=
-        Engine::Core::CombatAnimationState::Idle) {
+    if (combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
       anim.is_attacking = true;
       anim.is_melee =
           (anim.attack_family == Engine::Core::CombatAttackFamily::None)
@@ -190,22 +182,20 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
 
   if (hit_feedback != nullptr && hit_feedback->is_reacting) {
     anim.is_hit_reacting = true;
-    float const progress =
-        hit_feedback->reaction_time /
-        Engine::Core::HitFeedbackComponent::k_reaction_duration;
+    float const progress = hit_feedback->reaction_time /
+                           Engine::Core::HitFeedbackComponent::k_reaction_duration;
     anim.hit_reaction_intensity =
         hit_feedback->reaction_intensity * std::max(0.0F, 1.0F - progress);
   }
 
-  if ((combat_state == nullptr) && (attack != nullptr) &&
-      (attack_target != nullptr) && attack_target->target_id > 0 &&
-      (transform != nullptr)) {
+  if ((combat_state == nullptr) && (attack != nullptr) && (attack_target != nullptr) &&
+      attack_target->target_id > 0 && (transform != nullptr)) {
     if (unit != nullptr) {
       anim.attack_family = Engine::Core::resolve_combat_attack_family(
           unit->spawn_type, attack->current_mode);
     }
-    anim.is_melee = (attack->current_mode ==
-                     Engine::Core::AttackComponent::CombatMode::Melee);
+    anim.is_melee =
+        (attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee);
 
     bool const stationary = !anim.is_moving;
     float const current_cooldown =
@@ -215,9 +205,9 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     bool target_in_range = false;
 
     if (ctx.world != nullptr) {
-      auto *target = ctx.world->get_entity(attack_target->target_id);
+      auto* target = ctx.world->get_entity(attack_target->target_id);
       if (target != nullptr) {
-        auto *target_transform =
+        auto* target_transform =
             target->get_component<Engine::Core::TransformComponent>();
         if (target_transform != nullptr) {
           float const dx = target_transform->position.x - transform->position.x;
@@ -226,15 +216,12 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
           float target_radius = 0.0F;
           if (target->has_component<Engine::Core::BuildingComponent>()) {
             target_radius =
-                std::max(target_transform->scale.x, target_transform->scale.z) *
-                0.5F;
+                std::max(target_transform->scale.x, target_transform->scale.z) * 0.5F;
           } else {
             target_radius =
-                std::max(target_transform->scale.x, target_transform->scale.z) *
-                0.5F;
+                std::max(target_transform->scale.x, target_transform->scale.z) * 0.5F;
           }
-          auto *elephant =
-              target->get_component<Engine::Core::ElephantComponent>();
+          auto* elephant = target->get_component<Engine::Core::ElephantComponent>();
           if (elephant != nullptr) {
             target_radius = std::max(target_radius, elephant->trample_radius);
           }
@@ -251,12 +238,11 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.is_constructing = false;
   }
 
-  bool const is_active =
-      anim.is_moving || anim.is_attacking || anim.is_constructing ||
-      anim.is_healing || anim.is_hit_reacting || anim.is_dying ||
-      anim.is_dead || anim.is_in_hold_mode || anim.is_exiting_hold;
+  bool const is_active = anim.is_moving || anim.is_attacking || anim.is_constructing ||
+                         anim.is_healing || anim.is_hit_reacting || anim.is_dying ||
+                         anim.is_dead || anim.is_in_hold_mode || anim.is_exiting_hold;
 
-  auto *humanoid_state = Engine::Core::get_or_add_component<
+  auto* humanoid_state = Engine::Core::get_or_add_component<
       Render::Creature::HumanoidAnimationStateComponent>(ctx.entity);
   if (humanoid_state == nullptr) {
     anim.idle_duration = 0.0F;

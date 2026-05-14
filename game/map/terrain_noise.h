@@ -21,8 +21,7 @@ inline auto smooth_lerp(float a, float b, float t) -> float {
   return a + (b - a) * smooth;
 }
 
-inline auto hash_noise_coords(int x, int z,
-                              std::uint32_t seed) -> std::uint32_t {
+inline auto hash_noise_coords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   const std::uint32_t ux = static_cast<std::uint32_t>(x) * 73856093U;
   const std::uint32_t uz = static_cast<std::uint32_t>(z) * 19349663U;
   return ux ^ uz ^ (seed * 83492791U + 0x9e3779b9U);
@@ -58,16 +57,14 @@ inline auto value_noise(float x, float z, std::uint32_t seed) -> float {
   return smooth_lerp(nx0, nx1, tz);
 }
 
-inline auto fbm_noise(float x, float z, std::uint32_t seed,
-                      int octaves) -> float {
+inline auto fbm_noise(float x, float z, std::uint32_t seed, int octaves) -> float {
   float sum = 0.0F;
   float amplitude = 1.0F;
   float frequency = 1.0F;
   float normalization = 0.0F;
 
   for (int i = 0; i < clamp_noise_octaves(octaves); ++i) {
-    sum +=
-        value_noise(x * frequency, z * frequency, seed + i * 97U) * amplitude;
+    sum += value_noise(x * frequency, z * frequency, seed + i * 97U) * amplitude;
     normalization += amplitude;
     amplitude *= 0.5F;
     frequency *= 2.0F;
@@ -76,19 +73,19 @@ inline auto fbm_noise(float x, float z, std::uint32_t seed,
   return normalization > 0.0F ? (sum / normalization) : 0.0F;
 }
 
-inline auto
-sample_mountain_region(float world_x, float world_z,
-                       const MountainNoiseSettings &settings) -> float {
+inline auto sample_mountain_region(float world_x,
+                                   float world_z,
+                                   const MountainNoiseSettings& settings) -> float {
   const float frequency = std::clamp(settings.frequency, 0.01F, 2.0F);
   const int octaves = clamp_noise_octaves(settings.octaves);
-  const float primary = fbm_noise(world_x * frequency, world_z * frequency,
-                                  settings.seed, octaves);
-  const float detail =
-      fbm_noise(world_x * frequency * 2.4F, world_z * frequency * 2.4F,
-                settings.seed + 31U, std::max(1, octaves - 1));
+  const float primary =
+      fbm_noise(world_x * frequency, world_z * frequency, settings.seed, octaves);
+  const float detail = fbm_noise(world_x * frequency * 2.4F,
+                                 world_z * frequency * 2.4F,
+                                 settings.seed + 31U,
+                                 std::max(1, octaves - 1));
   const float ridge = 1.0F - std::abs(primary * 2.0F - 1.0F);
-  return std::clamp(primary * 0.62F + detail * 0.23F + ridge * 0.15F, 0.0F,
-                    1.0F);
+  return std::clamp(primary * 0.62F + detail * 0.23F + ridge * 0.15F, 0.0F, 1.0F);
 }
 
 } // namespace Game::Map

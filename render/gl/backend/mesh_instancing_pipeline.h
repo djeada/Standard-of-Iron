@@ -1,13 +1,15 @@
 #pragma once
 
-#include "../shader.h"
-#include "../shader_cache.h"
-#include "pipeline_interface.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cstddef>
 #include <memory>
 #include <vector>
+
+#include "../shader.h"
+#include "../shader_cache.h"
+#include "pipeline_interface.h"
 
 namespace Render::GL {
 class Backend;
@@ -26,8 +28,7 @@ struct MeshInstanceGpu {
 
 class MeshInstancingPipeline final : public IPipeline {
 public:
-  explicit MeshInstancingPipeline(GL::Backend *backend,
-                                  GL::ShaderCache *shader_cache);
+  explicit MeshInstancingPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache);
   ~MeshInstancingPipeline() override;
 
   auto initialize() -> bool override;
@@ -37,13 +38,15 @@ public:
 
   void begin_frame();
 
-  [[nodiscard]] auto can_batch(Mesh *mesh, Shader *shader,
-                               Texture *texture) const -> bool;
+  [[nodiscard]] auto
+  can_batch(Mesh* mesh, Shader* shader, Texture* texture) const -> bool;
 
-  void accumulate(const QMatrix4x4 &model, const QVector3D &color, float alpha,
+  void accumulate(const QMatrix4x4& model,
+                  const QVector3D& color,
+                  float alpha,
                   int material_id = 0);
 
-  void begin_batch(Mesh *mesh, Shader *shader, Texture *texture);
+  void begin_batch(Mesh* mesh, Shader* shader, Texture* texture);
 
   void flush();
 
@@ -54,13 +57,13 @@ public:
 private:
   void setup_instance_attributes();
 
-  GL::Backend *m_backend{nullptr};
-  GL::ShaderCache *m_shader_cache{nullptr};
+  GL::Backend* m_backend{nullptr};
+  GL::ShaderCache* m_shader_cache{nullptr};
   bool m_initialized{false};
 
-  Mesh *m_current_mesh{nullptr};
-  Shader *m_current_shader{nullptr};
-  Texture *m_current_texture{nullptr};
+  Mesh* m_current_mesh{nullptr};
+  Shader* m_current_shader{nullptr};
+  Texture* m_current_texture{nullptr};
 
   std::vector<MeshInstanceGpu> m_instances;
   std::size_t m_instance_capacity{0};

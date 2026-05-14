@@ -1,14 +1,15 @@
 
 
+#include <QImage>
+#include <QMatrix4x4>
+
+#include <gtest/gtest.h>
+
 #include "render/draw_queue.h"
 #include "render/gl/camera.h"
 #include "render/gl/mesh.h"
 #include "render/profiling/frame_profile.h"
 #include "render/software_backend.h"
-
-#include <QImage>
-#include <QMatrix4x4>
-#include <gtest/gtest.h>
 
 using Render::GL::Camera;
 using Render::GL::DrawQueue;
@@ -40,7 +41,7 @@ TEST(SoftwareBackendIntegration, EmptyQueueProducesValidImage) {
   DrawQueue queue;
   Camera cam = make_camera();
   backend.execute(queue, cam);
-  QImage const &img = backend.last_frame();
+  QImage const& img = backend.last_frame();
   EXPECT_EQ(img.width(), 64);
   EXPECT_EQ(img.height(), 48);
   EXPECT_EQ(img.pixelColor(0, 0), s.clear_color);
@@ -64,7 +65,7 @@ TEST(SoftwareBackendIntegration, MeshCmdBecomesVisibleTriangles) {
 
   Camera cam = make_camera();
   backend.execute(queue, cam);
-  QImage const &img = backend.last_frame();
+  QImage const& img = backend.last_frame();
   int non_clear = 0;
   for (int y = 0; y < img.height(); ++y) {
     for (int x = 0; x < img.width(); ++x) {
@@ -93,7 +94,7 @@ TEST(SoftwareBackendIntegration, DrawPartCmdAlsoRendered) {
 
   Camera cam = make_camera();
   backend.execute(queue, cam);
-  QImage const &img = backend.last_frame();
+  QImage const& img = backend.last_frame();
   int green_pixels = 0;
   for (int y = 0; y < img.height(); ++y) {
     for (int x = 0; x < img.width(); ++x) {
@@ -107,7 +108,7 @@ TEST(SoftwareBackendIntegration, DrawPartCmdAlsoRendered) {
 }
 
 TEST(FrameProfileIntegration, PhasesRecordElapsedInRenderer) {
-  auto &p = global_profile();
+  auto& p = global_profile();
   p.reset();
   p.enabled = true;
   { PhaseScope s(&p, Phase::Collection); }

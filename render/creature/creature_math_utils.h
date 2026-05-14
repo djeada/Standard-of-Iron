@@ -32,11 +32,11 @@ inline auto saturate(float x) -> float {
   return std::min(1.0F, std::max(0.0F, x));
 }
 
-inline auto lighten(const QVector3D &c, float k) -> QVector3D {
+inline auto lighten(const QVector3D& c, float k) -> QVector3D {
   return {saturate(c.x() * k), saturate(c.y() * k), saturate(c.z() * k)};
 }
 
-inline auto color_hash(const QVector3D &c) -> uint32_t {
+inline auto color_hash(const QVector3D& c) -> uint32_t {
   auto const r = uint32_t(saturate(c.x()) * k_rgb_max);
   auto const g = uint32_t(saturate(c.y()) * k_rgb_max);
   auto const b = uint32_t(saturate(c.z()) * k_rgb_max);
@@ -50,13 +50,13 @@ inline auto color_hash(const QVector3D &c) -> uint32_t {
   return v;
 }
 
-inline auto rotate_around_y(const QVector3D &v, float angle) -> QVector3D {
+inline auto rotate_around_y(const QVector3D& v, float angle) -> QVector3D {
   float const s = std::sin(angle);
   float const c = std::cos(angle);
   return {v.x() * c + v.z() * s, v.y(), -v.x() * s + v.z() * c};
 }
 
-inline auto rotate_around_z(const QVector3D &v, float angle) -> QVector3D {
+inline auto rotate_around_z(const QVector3D& v, float angle) -> QVector3D {
   float const s = std::sin(angle);
   float const c = std::cos(angle);
   return {v.x() * c - v.y() * s, v.x() * s + v.y() * c, v.z()};

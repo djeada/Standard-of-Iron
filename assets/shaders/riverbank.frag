@@ -13,9 +13,15 @@ uniform float u_explored_alpha;
 uniform int u_has_visibility;
 uniform float u_segment_visibility;
 
-float saturate(float x) { return clamp(x, 0.0, 1.0); }
-vec2 saturate(vec2 v) { return clamp(v, vec2(0.0), vec2(1.0)); }
-vec3 saturate(vec3 v) { return clamp(v, vec3(0.0), vec3(1.0)); }
+float saturate(float x) {
+  return clamp(x, 0.0, 1.0);
+}
+vec2 saturate(vec2 v) {
+  return clamp(v, vec2(0.0), vec2(1.0));
+}
+vec3 saturate(vec3 v) {
+  return clamp(v, vec3(0.0), vec3(1.0));
+}
 
 float hash(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -49,8 +55,7 @@ void main() {
   vec2 uv = warp(world_pos.xz * 0.45);
 
   float visibility_factor = 1.0;
-  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 &&
-      u_visibility_size.y > 0.0) {
+  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
     float tile_size = max(u_visibility_tile_size, 0.0001);
     vec2 grid = vec2(world_pos.x / tile_size, world_pos.z / tile_size);
     grid += (u_visibility_size * 0.5) - vec2(0.5);
@@ -71,20 +76,19 @@ void main() {
 
   float base_wet = smoothstep(0.30, 0.04, tex_coord.x);
 
-  float edge_jitter = (fbm(uv * 2.5) - 0.5) * 0.12 +
-                      (fbm(vec2(tex_coord.y * 3.0, 0.0)) - 0.5) * 0.10;
+  float edge_jitter =
+      (fbm(uv * 2.5) - 0.5) * 0.12 + (fbm(vec2(tex_coord.y * 3.0, 0.0)) - 0.5) * 0.10;
   base_wet = saturate(base_wet + edge_jitter);
 
   float slope = 1.0 - saturate(normalize(v_normal).y);
   float wetness = saturate(base_wet - slope * 0.45);
 
-  float contact =
-      smoothstep(0.10, 0.95, wetness) * smoothstep(0.04, 0.00, tex_coord.x);
+  float contact = smoothstep(0.10, 0.95, wetness) * smoothstep(0.04, 0.00, tex_coord.x);
   contact *= 0.6 + 0.4 * fbm(uv * 4.0 + time * 0.2);
 
   float macro = fbm(uv * 0.8);
-  float streaks = fbm(
-      vec2(tex_coord.y * 6.0 + macro * 0.7, tex_coord.x * 0.6 - time * 0.03));
+  float streaks =
+      fbm(vec2(tex_coord.y * 6.0 + macro * 0.7, tex_coord.x * 0.6 - time * 0.03));
   streaks = pow(saturate(streaks), 3.0);
 
   float grit = noise(uv * 18.0);
@@ -101,8 +105,7 @@ void main() {
   base = mix(base, base * vec3(0.92, 0.96, 1.02), contact * 0.35);
 
   base *= (0.92 + 0.16 * grit);
-  base = mix(base, base * 0.82 + vec3(0.05),
-             pebbles * (0.10 + 0.35 * (1.0 - wetness)));
+  base = mix(base, base * 0.82 + vec3(0.05), pebbles * (0.10 + 0.35 * (1.0 - wetness)));
 
   vec3 L = normalize(vec3(0.3, 0.8, 0.4));
   vec3 V = normalize(vec3(0.0, 1.0, 0.5));

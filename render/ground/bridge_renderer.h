@@ -1,10 +1,12 @@
 #pragma once
 
-#include "../../game/map/terrain.h"
-#include "../i_render_pass.h"
 #include <QMatrix4x4>
+
 #include <memory>
 #include <vector>
+
+#include "../../game/map/terrain.h"
+#include "../i_render_pass.h"
 
 namespace Render::GL {
 class Mesh;
@@ -16,10 +18,9 @@ public:
   BridgeRenderer();
   ~BridgeRenderer() override;
 
-  void configure(const std::vector<Game::Map::Bridge> &bridges,
-                 float tile_size);
+  void configure(const std::vector<Game::Map::Bridge>& bridges, float tile_size);
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
 private:
   void build_meshes();

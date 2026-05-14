@@ -1,13 +1,13 @@
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <array>
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "render/entity/building_archetype_desc.h"
 #include "render/render_archetype.h"
 #include "render/submitter.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <gtest/gtest.h>
-
-#include <array>
-#include <vector>
 
 namespace {
 
@@ -19,41 +19,46 @@ class RecordingSubmitter final : public Render::GL::ISubmitter {
 public:
   std::vector<RecordedMesh> meshes;
 
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &color,
-            Render::GL::Texture *, float, int) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D& color,
+            Render::GL::Texture*,
+            float,
+            int) override {
     meshes.push_back({color});
   }
 
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 TEST(BuildingArchetypeDesc, FiltersPartsByBuildingStateMask) {
   using namespace Render::GL;
 
   BuildingArchetypeDesc desc("state_filter_test");
-  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
+  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F),
+               QVector3D(1.0F, 1.0F, 1.0F),
                QVector3D(1.0F, 0.0F, 0.0F));
-  desc.add_box(QVector3D(1.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
-               QVector3D(0.0F, 1.0F, 0.0F), k_building_state_mask_intact);
+  desc.add_box(QVector3D(1.0F, 0.0F, 0.0F),
+               QVector3D(1.0F, 1.0F, 1.0F),
+               QVector3D(0.0F, 1.0F, 0.0F),
+               k_building_state_mask_intact);
 
-  const RenderArchetype normal =
-      build_building_archetype(desc, BuildingState::Normal);
+  const RenderArchetype normal = build_building_archetype(desc, BuildingState::Normal);
   const RenderArchetype destroyed =
       build_building_archetype(desc, BuildingState::Destroyed);
 
@@ -65,11 +70,9 @@ TEST(BuildingArchetypeDesc, PreservesPaletteDrivenParts) {
   using namespace Render::GL;
 
   BuildingArchetypeDesc desc("palette_test");
-  desc.add_palette_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
-                       0);
+  desc.add_palette_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F), 0);
 
-  RenderArchetype archetype =
-      build_building_archetype(desc, BuildingState::Normal);
+  RenderArchetype archetype = build_building_archetype(desc, BuildingState::Normal);
   std::array<QVector3D, 1> palette{QVector3D(0.2F, 0.4F, 0.8F)};
 
   RenderInstance instance;
@@ -89,7 +92,8 @@ TEST(BuildingArchetypeDesc, ArchetypeSetSelectsStateVariant) {
   const BuildingArchetypeSet set =
       build_stateful_building_archetype_set([](BuildingState state) {
         BuildingArchetypeDesc desc("state_set_test");
-        desc.add_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
+        desc.add_box(QVector3D(0.0F, 0.0F, 0.0F),
+                     QVector3D(1.0F, 1.0F, 1.0F),
                      state == BuildingState::Normal
                          ? QVector3D(1.0F, 0.0F, 0.0F)
                          : (state == BuildingState::Damaged
@@ -110,10 +114,13 @@ TEST(BuildingArchetypeDesc, FiltersBuildingLODMask) {
   using namespace Render::GL;
 
   BuildingArchetypeDesc desc("lod_filter_test");
-  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
+  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F),
+               QVector3D(1.0F, 1.0F, 1.0F),
                QVector3D(1.0F, 0.0F, 0.0F));
-  desc.add_box(QVector3D(1.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
-               QVector3D(0.0F, 1.0F, 0.0F), BuildingStateMask::All,
+  desc.add_box(QVector3D(1.0F, 0.0F, 0.0F),
+               QVector3D(1.0F, 1.0F, 1.0F),
+               QVector3D(0.0F, 1.0F, 0.0F),
+               BuildingStateMask::All,
                BuildingLODMask::Full);
 
   const RenderArchetype archetype =
@@ -128,7 +135,8 @@ TEST(BuildingArchetypeDesc, SetFullLodMaxDistanceConfiguresSlice) {
 
   BuildingArchetypeDesc desc("distance_test");
   desc.set_full_lod_max_distance(45.0F);
-  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
+  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F),
+               QVector3D(1.0F, 1.0F, 1.0F),
                QVector3D(1.0F, 1.0F, 1.0F));
 
   const RenderArchetype archetype =
