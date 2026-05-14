@@ -27,10 +27,11 @@ struct ProjectedVertex {
   bool outside_ndc{false};
 };
 
-[[nodiscard]] auto project(const QVector3D &world, const QMatrix4x4 &view_proj,
-                           int width, int height) -> ProjectedVertex {
-  QVector4D const clip =
-      view_proj * QVector4D(world.x(), world.y(), world.z(), 1.0F);
+[[nodiscard]] auto project(const QVector3D& world,
+                           const QMatrix4x4& view_proj,
+                           int width,
+                           int height) -> ProjectedVertex {
+  QVector4D const clip = view_proj * QVector4D(world.x(), world.y(), world.z(), 1.0F);
   ProjectedVertex out;
   if (clip.w() <= 0.0F) {
     out.behind_camera = true;
@@ -42,37 +43,38 @@ struct ProjectedVertex {
   if (ndc_x < -1.2F || ndc_x > 1.2F || ndc_y < -1.2F || ndc_y > 1.2F) {
     out.outside_ndc = true;
   }
-  out.screen =
-      QPointF((ndc_x * 0.5F + 0.5F) * static_cast<float>(width),
-              (1.0F - (ndc_y * 0.5F + 0.5F)) * static_cast<float>(height));
+  out.screen = QPointF((ndc_x * 0.5F + 0.5F) * static_cast<float>(width),
+                       (1.0F - (ndc_y * 0.5F + 0.5F)) * static_cast<float>(height));
   out.ndc_z = ndc_z;
   return out;
 }
 
-[[nodiscard]] auto compute_normal(const QVector3D &a, const QVector3D &b,
-                                  const QVector3D &c) -> QVector3D {
+[[nodiscard]] auto compute_normal(const QVector3D& a,
+                                  const QVector3D& b,
+                                  const QVector3D& c) -> QVector3D {
   QVector3D const n = QVector3D::crossProduct(b - a, c - a);
   float const l = n.length();
   return (l > 1e-6F) ? (n / l) : QVector3D(0.0F, 1.0F, 0.0F);
 }
 
-[[nodiscard]] auto shade(const QVector3D &base_color, const QVector3D &normal,
-                         const QVector3D &light_dir) -> QVector3D {
+[[nodiscard]] auto shade(const QVector3D& base_color,
+                         const QVector3D& normal,
+                         const QVector3D& light_dir) -> QVector3D {
   QVector3D const n = normal;
   QVector3D const l = light_dir.normalized();
   float const lambert = std::clamp(QVector3D::dotProduct(n, -l), 0.0F, 1.0F);
 
   float const factor = 0.3F + 0.7F * lambert;
-  return QVector3D(base_color.x() * factor, base_color.y() * factor,
-                   base_color.z() * factor);
+  return QVector3D(
+      base_color.x() * factor, base_color.y() * factor, base_color.z() * factor);
 }
 
-[[nodiscard]] auto to_qcolor(const QVector3D &rgb, float alpha) -> QColor {
+[[nodiscard]] auto to_qcolor(const QVector3D& rgb, float alpha) -> QColor {
   auto chan = [](float c) {
     return static_cast<int>(std::clamp(c, 0.0F, 1.0F) * 255.0F + 0.5F);
   };
-  return QColor(chan(rgb.x()), chan(rgb.y()), chan(rgb.z()),
-                chan(std::clamp(alpha, 0.0F, 1.0F)));
+  return QColor(
+      chan(rgb.x()), chan(rgb.y()), chan(rgb.z()), chan(std::clamp(alpha, 0.0F, 1.0F)));
 }
 
 struct CubeTri {
@@ -81,9 +83,14 @@ struct CubeTri {
   int c;
 };
 constexpr std::array<QVector3D, 8> k_cube_verts = {
-    QVector3D{-1, -1, -1}, QVector3D{1, -1, -1}, QVector3D{1, 1, -1},
-    QVector3D{-1, 1, -1},  QVector3D{-1, -1, 1}, QVector3D{1, -1, 1},
-    QVector3D{1, 1, 1},    QVector3D{-1, 1, 1},
+    QVector3D{-1, -1, -1},
+    QVector3D{1, -1, -1},
+    QVector3D{1, 1, -1},
+    QVector3D{-1, 1, -1},
+    QVector3D{-1, -1, 1},
+    QVector3D{1, -1, 1},
+    QVector3D{1, 1, 1},
+    QVector3D{-1, 1, 1},
 };
 constexpr std::array<CubeTri, 12> k_cube_tris = {{
     {0, 2, 1},
@@ -102,13 +109,14 @@ constexpr std::array<CubeTri, 12> k_cube_tris = {{
 
 } // namespace
 
-void SoftwareRasterizer::submit_cube(const QMatrix4x4 &model,
-                                     const QVector3D &color, float alpha) {
+void SoftwareRasterizer::submit_cube(const QMatrix4x4& model,
+                                     const QVector3D& color,
+                                     float alpha) {
   std::array<QVector3D, 8> world;
   for (std::size_t i = 0; i < k_cube_verts.size(); ++i) {
     world[i] = model.map(k_cube_verts[i]);
   }
-  for (auto const &t : k_cube_tris) {
+  for (auto const& t : k_cube_tris) {
     m_triangles.push_back({world[t.a], world[t.b], world[t.c], color, alpha});
   }
 }
@@ -120,7 +128,7 @@ auto SoftwareRasterizer::render() -> QImage {
   std::vector<ProjectedTriangle> projected;
   projected.reserve(m_triangles.size());
 
-  for (auto const &tri : m_triangles) {
+  for (auto const& tri : m_triangles) {
     ProjectedVertex const a =
         project(tri.v0, m_view_proj, m_settings.width, m_settings.height);
     ProjectedVertex const b =
@@ -142,15 +150,15 @@ auto SoftwareRasterizer::render() -> QImage {
     p.centroid_z = (a.ndc_z + b.ndc_z + c.ndc_z) / 3.0F;
 
     QVector3D const shaded =
-        shade(tri.color, compute_normal(tri.v0, tri.v1, tri.v2),
-              m_settings.light_dir);
+        shade(tri.color, compute_normal(tri.v0, tri.v1, tri.v2), m_settings.light_dir);
     p.fill = to_qcolor(shaded, tri.alpha);
     projected.push_back(p);
   }
 
   if (m_settings.depth_sort) {
-    std::sort(projected.begin(), projected.end(),
-              [](const ProjectedTriangle &x, const ProjectedTriangle &y) {
+    std::sort(projected.begin(),
+              projected.end(),
+              [](const ProjectedTriangle& x, const ProjectedTriangle& y) {
                 return x.centroid_z > y.centroid_z;
               });
   }
@@ -158,7 +166,7 @@ auto SoftwareRasterizer::render() -> QImage {
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, false);
   painter.setPen(Qt::NoPen);
-  for (auto const &p : projected) {
+  for (auto const& p : projected) {
     painter.setBrush(p.fill);
     QPolygonF poly;
     poly << p.p0 << p.p1 << p.p2;

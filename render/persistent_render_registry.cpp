@@ -1,10 +1,11 @@
 #include "persistent_render_registry.h"
 
+#include <algorithm>
+#include <typeindex>
+
 #include "../game/core/component.h"
 #include "../game/core/entity.h"
 #include "../game/core/world.h"
-#include <algorithm>
-#include <typeindex>
 
 namespace Render {
 
@@ -21,9 +22,11 @@ const std::type_index k_pending_removal_type =
 
 } // namespace
 
-PersistentRenderRegistry::~PersistentRenderRegistry() { detach(); }
+PersistentRenderRegistry::~PersistentRenderRegistry() {
+  detach();
+}
 
-void PersistentRenderRegistry::attach(Engine::Core::World *world) {
+void PersistentRenderRegistry::attach(Engine::Core::World* world) {
   if (m_world == world) {
     return;
   }
@@ -56,7 +59,7 @@ void PersistentRenderRegistry::attach(Engine::Core::World *world) {
     on_world_cleared();
   });
 
-  for (const auto &[id, entity] : world->get_entities()) {
+  for (const auto& [id, entity] : world->get_entities()) {
     if (entity->has_component<Engine::Core::RenderableComponent>()) {
       m_renderable_ids.insert(id);
       reclassify(id);
@@ -70,8 +73,7 @@ void PersistentRenderRegistry::detach() {
       m_world->remove_component_observer(m_component_observer_handle);
     }
     if (m_entity_destroyed_observer_handle != 0U) {
-      m_world->remove_entity_destroyed_observer(
-          m_entity_destroyed_observer_handle);
+      m_world->remove_entity_destroyed_observer(m_entity_destroyed_observer_handle);
     }
     if (m_world_cleared_observer_handle != 0U) {
       m_world->remove_world_cleared_observer(m_world_cleared_observer_handle);
@@ -92,8 +94,8 @@ void PersistentRenderRegistry::on_component_changed(std::uint32_t entity_id,
                                                     std::type_index type,
                                                     bool added) {
 
-  if (type != k_renderable_type && type != k_unit_type &&
-      type != k_building_type && type != k_pending_removal_type) {
+  if (type != k_renderable_type && type != k_unit_type && type != k_building_type &&
+      type != k_pending_removal_type) {
     return;
   }
 
@@ -129,7 +131,7 @@ void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
   if (m_world == nullptr) {
     return;
   }
-  Engine::Core::Entity *entity = m_world->get_entity(entity_id);
+  Engine::Core::Entity* entity = m_world->get_entity(entity_id);
   if (entity == nullptr) {
     remove_from_lists(entity_id);
     return;
@@ -143,10 +145,9 @@ void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
   }
 
   const bool has_unit = entity->has_component<Engine::Core::UnitComponent>();
-  const bool has_building =
-      entity->has_component<Engine::Core::BuildingComponent>();
+  const bool has_building = entity->has_component<Engine::Core::BuildingComponent>();
 
-  std::vector<std::uint32_t> *target_list{nullptr};
+  std::vector<std::uint32_t>* target_list{nullptr};
   if (has_unit) {
     target_list = &m_unit_ids;
   } else if (has_building) {
@@ -165,8 +166,7 @@ void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
     remove_id(m_other_ids, entity_id);
   }
 
-  const auto it =
-      std::find(target_list->begin(), target_list->end(), entity_id);
+  const auto it = std::find(target_list->begin(), target_list->end(), entity_id);
   if (it == target_list->end()) {
     target_list->push_back(entity_id);
   }
@@ -178,7 +178,7 @@ void PersistentRenderRegistry::remove_from_lists(std::uint32_t entity_id) {
   remove_id(m_other_ids, entity_id);
 }
 
-void PersistentRenderRegistry::remove_id(std::vector<std::uint32_t> &vec,
+void PersistentRenderRegistry::remove_id(std::vector<std::uint32_t>& vec,
                                          std::uint32_t id) {
 
   const auto it = std::find(vec.begin(), vec.end(), id);

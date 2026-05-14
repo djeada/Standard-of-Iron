@@ -1,5 +1,14 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <algorithm>
+#include <gtest/gtest.h>
+#include <span>
+#include <string_view>
+#include <vector>
+
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_manifest.h"
 #include "render/elephant/elephant_renderer_base.h"
@@ -9,20 +18,12 @@
 #include "render/rigged_mesh_bake.h"
 #include "render/submitter.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <algorithm>
-#include <gtest/gtest.h>
-#include <span>
-#include <string_view>
-#include <vector>
-
 namespace {
 
 using Render::GL::ISubmitter;
 
 struct Call {
-  Render::GL::Mesh *mesh{nullptr};
+  Render::GL::Mesh* mesh{nullptr};
   QMatrix4x4 model{};
   QVector3D color{};
   int material_id{0};
@@ -32,32 +33,39 @@ class CapturingSubmitter : public ISubmitter {
 public:
   std::vector<Call> calls;
 
-  void mesh(Render::GL::Mesh *m, const QMatrix4x4 &model, const QVector3D &col,
-            Render::GL::Texture *, float, int mat) override {
+  void mesh(Render::GL::Mesh* m,
+            const QMatrix4x4& model,
+            const QVector3D& col,
+            Render::GL::Texture*,
+            float,
+            int mat) override {
     calls.push_back({m, model, col, mat});
   }
-  void part(Render::GL::Mesh *m, Render::GL::Material *,
-            const QMatrix4x4 &model, const QVector3D &col,
-            Render::GL::Texture *, float, int mat) override {
+  void part(Render::GL::Mesh* m,
+            Render::GL::Material*,
+            const QMatrix4x4& model,
+            const QVector3D& col,
+            Render::GL::Texture*,
+            float,
+            int mat) override {
     calls.push_back({m, model, col, mat});
   }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 Render::GL::ElephantDimensions make_dims() {
@@ -104,60 +112,60 @@ Render::GL::ElephantGait make_gait() {
 
 auto find_primitive(std::span<const Render::Creature::PrimitiveInstance> prims,
                     std::string_view name)
-    -> const Render::Creature::PrimitiveInstance * {
-  auto it = std::find_if(prims.begin(), prims.end(), [&](auto const &prim) {
+    -> const Render::Creature::PrimitiveInstance* {
+  auto it = std::find_if(prims.begin(), prims.end(), [&](auto const& prim) {
     return prim.debug_name == name;
   });
   return it == prims.end() ? nullptr : &*it;
 }
 
-auto find_mesh_node(
-    std::span<const Render::Creature::Quadruped::MeshNode> nodes,
-    std::string_view name) -> const Render::Creature::Quadruped::MeshNode * {
-  auto it = std::find_if(nodes.begin(), nodes.end(), [&](auto const &node) {
+auto find_mesh_node(std::span<const Render::Creature::Quadruped::MeshNode> nodes,
+                    std::string_view name)
+    -> const Render::Creature::Quadruped::MeshNode* {
+  auto it = std::find_if(nodes.begin(), nodes.end(), [&](auto const& node) {
     return node.debug_name == name;
   });
   return it == nodes.end() ? nullptr : &*it;
 }
 
-auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
-  auto const &vertices = mesh.get_vertices();
+auto mesh_axis_span(const Render::GL::Mesh& mesh, std::size_t axis) -> float {
+  auto const& vertices = mesh.get_vertices();
   if (vertices.empty()) {
     return 0.0F;
   }
   float min_v = vertices.front().position[axis];
   float max_v = vertices.front().position[axis];
-  for (auto const &vertex : vertices) {
+  for (auto const& vertex : vertices) {
     min_v = std::min(min_v, vertex.position[axis]);
     max_v = std::max(max_v, vertex.position[axis]);
   }
   return max_v - min_v;
 }
 
-auto mesh_vertex_count_for_role(const Render::GL::Mesh &mesh,
+auto mesh_vertex_count_for_role(const Render::GL::Mesh& mesh,
                                 std::uint8_t role) -> std::size_t {
-  auto const &vertices = mesh.get_vertices();
+  auto const& vertices = mesh.get_vertices();
   return static_cast<std::size_t>(
-      std::count_if(vertices.begin(), vertices.end(), [&](auto const &vertex) {
+      std::count_if(vertices.begin(), vertices.end(), [&](auto const& vertex) {
         return vertex.color_role == role;
       }));
 }
 
-auto baked_vertex_count_for_role(
-    const Render::Creature::BakedRiggedMeshCpu &mesh,
-    std::uint8_t role) -> std::size_t {
+auto baked_vertex_count_for_role(const Render::Creature::BakedRiggedMeshCpu& mesh,
+                                 std::uint8_t role) -> std::size_t {
   return static_cast<std::size_t>(std::count_if(
-      mesh.vertices.begin(), mesh.vertices.end(),
-      [&](auto const &vertex) { return vertex.color_role == role; }));
+      mesh.vertices.begin(), mesh.vertices.end(), [&](auto const& vertex) {
+        return vertex.color_role == role;
+      }));
 }
 
-auto rigged_vertex_position(const Render::GL::RiggedVertex &vertex)
-    -> QVector3D {
-  return {vertex.position_bone_local[0], vertex.position_bone_local[1],
+auto rigged_vertex_position(const Render::GL::RiggedVertex& vertex) -> QVector3D {
+  return {vertex.position_bone_local[0],
+          vertex.position_bone_local[1],
           vertex.position_bone_local[2]};
 }
 
-auto bone_weight_for_vertex(const Render::GL::RiggedVertex &vertex,
+auto bone_weight_for_vertex(const Render::GL::RiggedVertex& vertex,
                             std::uint8_t bone) -> float {
   for (std::size_t i = 0; i < vertex.bone_indices.size(); ++i) {
     if (vertex.bone_indices[i] == bone) {
@@ -168,7 +176,7 @@ auto bone_weight_for_vertex(const Render::GL::RiggedVertex &vertex,
 }
 
 auto shader_role_color(
-    const std::array<QVector3D, Render::Elephant::k_elephant_role_count> &roles,
+    const std::array<QVector3D, Render::Elephant::k_elephant_role_count>& roles,
     std::uint8_t role) -> QVector3D {
   if (role == 0U) {
     return QVector3D();
@@ -180,55 +188,53 @@ auto shader_role_color(
   return roles[index];
 }
 
-auto outline_axis_span(std::span<const QVector3D> outline,
-                       std::size_t axis) -> float {
+auto outline_axis_span(std::span<const QVector3D> outline, std::size_t axis) -> float {
   if (outline.empty()) {
     return 0.0F;
   }
   float min_v = outline.front()[axis];
   float max_v = outline.front()[axis];
-  for (auto const &point : outline) {
+  for (auto const& point : outline) {
     min_v = std::min(min_v, point[axis]);
     max_v = std::max(max_v, point[axis]);
   }
   return max_v - min_v;
 }
 
-auto max_body_half_width(const Render::Creature::Quadruped::BarrelNode &body)
-    -> float {
+auto max_body_half_width(const Render::Creature::Quadruped::BarrelNode& body) -> float {
   float max_width = 0.0F;
-  for (auto const &ring : body.rings) {
+  for (auto const& ring : body.rings) {
     max_width = std::max(max_width, ring.half_width);
   }
   return max_width;
 }
 
-auto max_body_vertical_extent(
-    const Render::Creature::Quadruped::BarrelNode &body) -> float {
+auto max_body_vertical_extent(const Render::Creature::Quadruped::BarrelNode& body)
+    -> float {
   float max_extent = 0.0F;
-  for (auto const &ring : body.rings) {
+  for (auto const& ring : body.rings) {
     max_extent = std::max(max_extent, ring.y + ring.top);
     max_extent = std::max(max_extent, ring.bottom - ring.y);
   }
   return max_extent;
 }
 
-auto point_to_segment_distance(const QVector3D &point, const QVector3D &a,
-                               const QVector3D &b) -> float {
+auto point_to_segment_distance(const QVector3D& point,
+                               const QVector3D& a,
+                               const QVector3D& b) -> float {
   QVector3D const ab = b - a;
   float const denom = QVector3D::dotProduct(ab, ab);
   if (denom <= 1.0e-6F) {
     return (point - a).length();
   }
-  float const t =
-      std::clamp(QVector3D::dotProduct(point - a, ab) / denom, 0.0F, 1.0F);
+  float const t = std::clamp(QVector3D::dotProduct(point - a, ab) / denom, 0.0F, 1.0F);
   return (point - (a + ab * t)).length();
 }
 
 } // namespace
 
 TEST(ElephantSpecTest, CreatureSpecHasTwoLods) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const& spec = Render::Elephant::elephant_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 1U);
   EXPECT_EQ(spec.lod_full.primitives.size(), 13U);
 }
@@ -266,10 +272,8 @@ TEST(ElephantSpecTest, AnimatedPoseKeepsForwardTrunkAndLighterHeadRead) {
 
   EXPECT_LT(pose.head_half.x(), dims.head_width * 0.45F);
   EXPECT_LT(pose.head_half.y(), dims.head_height * 0.41F);
-  EXPECT_GT(pose.trunk_end.z(),
-            pose.head_center.z() + dims.trunk_length * 0.35F);
-  EXPECT_LT(pose.trunk_end.y(),
-            pose.head_center.y() - dims.trunk_length * 0.45F);
+  EXPECT_GT(pose.trunk_end.z(), pose.head_center.z() + dims.trunk_length * 0.35F);
+  EXPECT_LT(pose.trunk_end.y(), pose.head_center.y() - dims.trunk_length * 0.45F);
   EXPECT_LT(pose.pose_leg_radius, dims.leg_radius * 0.9F);
 }
 
@@ -284,10 +288,10 @@ TEST(ElephantSpecTest, RoleColorsUseWhiteTusksAndBlackEyes) {
 }
 
 TEST(ElephantSpecTest, WholeMeshCompilationKeepsColoredFaceVertices) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
-  auto const *minimal_whole =
+  auto const& spec = Render::Elephant::elephant_creature_spec();
+  auto const* minimal_whole =
       find_primitive(spec.lod_minimal.primitives, "elephant.minimal.whole");
-  auto const *full_body =
+  auto const* full_body =
       find_primitive(spec.lod_full.primitives, "elephant.full.body");
 
   ASSERT_NE(minimal_whole, nullptr);
@@ -302,7 +306,7 @@ TEST(ElephantSpecTest, WholeMeshCompilationKeepsColoredFaceVertices) {
 }
 
 TEST(ElephantSpecTest, MinimalSnapshotBakeKeepsColoredFaceRoles) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const& spec = Render::Elephant::elephant_creature_spec();
   Render::Creature::BakeInput in{};
   in.graph = &spec.lod_minimal;
   in.bind_pose = Render::Elephant::elephant_bind_palette();
@@ -315,18 +319,16 @@ TEST(ElephantSpecTest, MinimalSnapshotBakeKeepsColoredFaceRoles) {
 }
 
 TEST(ElephantSpecTest, CreatureSpecUsesFacetedLowPolyBodyAndHeadMeshes) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
-  auto const &manifest = Render::Elephant::elephant_manifest();
-  auto const *body =
-      find_primitive(spec.lod_full.primitives, "elephant.full.body");
-  auto const *body_node =
-      find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.body");
+  auto const& spec = Render::Elephant::elephant_creature_spec();
+  auto const& manifest = Render::Elephant::elephant_manifest();
+  auto const* body = find_primitive(spec.lod_full.primitives, "elephant.full.body");
+  auto const* body_node = find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.body");
 
   ASSERT_NE(body, nullptr);
   ASSERT_NE(body_node, nullptr);
   EXPECT_EQ(body->shape, Render::Creature::PrimitiveShape::Mesh);
   ASSERT_NE(body->custom_mesh, nullptr);
-  auto const *barrel =
+  auto const* barrel =
       std::get_if<Render::Creature::Quadruped::BarrelNode>(&body_node->data);
   ASSERT_NE(barrel, nullptr);
   EXPECT_FALSE(body->custom_mesh->get_vertices().empty());
@@ -337,16 +339,15 @@ TEST(ElephantSpecTest, CreatureSpecUsesFacetedLowPolyBodyAndHeadMeshes) {
             mesh_axis_span(*body->custom_mesh, 2) * 0.7F);
   EXPECT_GT(mesh_axis_span(*body->custom_mesh, 2),
             mesh_axis_span(*body->custom_mesh, 0) * 1.0F);
-  EXPECT_EQ(
-      find_primitive(spec.lod_full.primitives, "elephant.full.body.chest"),
-      nullptr);
+  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "elephant.full.body.chest"),
+            nullptr);
   EXPECT_EQ(find_primitive(spec.lod_full.primitives, "elephant.head"), nullptr);
 }
 
 TEST(ElephantSpecTest, MinimalSpecKeepsHeadAndTrunkIdentity) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const& spec = Render::Elephant::elephant_creature_spec();
 
-  auto const *whole =
+  auto const* whole =
       find_primitive(spec.lod_minimal.primitives, "elephant.minimal.whole");
 
   ASSERT_NE(whole, nullptr);
@@ -355,30 +356,29 @@ TEST(ElephantSpecTest, MinimalSpecKeepsHeadAndTrunkIdentity) {
   ASSERT_NE(whole->custom_mesh, nullptr);
   EXPECT_GT(mesh_axis_span(*whole->custom_mesh, 1),
             mesh_axis_span(*whole->custom_mesh, 2) * 0.8F);
-  EXPECT_EQ(
-      find_primitive(spec.lod_minimal.primitives, "elephant.minimal.leg.fl"),
-      nullptr);
+  EXPECT_EQ(find_primitive(spec.lod_minimal.primitives, "elephant.minimal.leg.fl"),
+            nullptr);
 }
 
 TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
-  auto const &manifest = Render::Elephant::elephant_manifest();
+  auto const& spec = Render::Elephant::elephant_creature_spec();
+  auto const& manifest = Render::Elephant::elephant_manifest();
   auto const dims = Render::GL::make_elephant_dimensions(0U);
-  auto const *front_thigh =
+  auto const* front_thigh =
       find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg.fl.thigh");
-  auto const *front_calf =
+  auto const* front_calf =
       find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg.fl.calf");
-  auto const *front_hoof =
+  auto const* front_hoof =
       find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg.fl.hoof");
-  auto const *rear_thigh =
+  auto const* rear_thigh =
       find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg.bl.thigh");
-  auto const *thigh_prim =
+  auto const* thigh_prim =
       find_primitive(spec.lod_full.primitives, "elephant.leg.fl.thigh");
-  auto const *rear_thigh_prim =
+  auto const* rear_thigh_prim =
       find_primitive(spec.lod_full.primitives, "elephant.leg.bl.thigh");
-  auto const *calf_prim =
+  auto const* calf_prim =
       find_primitive(spec.lod_full.primitives, "elephant.leg.fl.calf");
-  auto const *hoof_prim =
+  auto const* hoof_prim =
       find_primitive(spec.lod_full.primitives, "elephant.leg.fl.hoof");
 
   ASSERT_NE(front_thigh, nullptr);
@@ -389,22 +389,20 @@ TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
   ASSERT_NE(rear_thigh_prim, nullptr);
   ASSERT_NE(calf_prim, nullptr);
   ASSERT_NE(hoof_prim, nullptr);
-  auto const *front_thigh_tube =
+  auto const* front_thigh_tube =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&front_thigh->data);
-  auto const *front_calf_tube =
+  auto const* front_calf_tube =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&front_calf->data);
-  auto const *front_hoof_ellipsoid =
-      std::get_if<Render::Creature::Quadruped::EllipsoidNode>(
-          &front_hoof->data);
-  auto const *rear_thigh_tube =
+  auto const* front_hoof_ellipsoid =
+      std::get_if<Render::Creature::Quadruped::EllipsoidNode>(&front_hoof->data);
+  auto const* rear_thigh_tube =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&rear_thigh->data);
   ASSERT_NE(front_thigh_tube, nullptr);
   ASSERT_NE(front_calf_tube, nullptr);
   ASSERT_NE(front_hoof_ellipsoid, nullptr);
   ASSERT_NE(rear_thigh_tube, nullptr);
   EXPECT_EQ(thigh_prim->shape, Render::Creature::PrimitiveShape::BoneSpanMesh);
-  EXPECT_EQ(rear_thigh_prim->shape,
-            Render::Creature::PrimitiveShape::BoneSpanMesh);
+  EXPECT_EQ(rear_thigh_prim->shape, Render::Creature::PrimitiveShape::BoneSpanMesh);
   EXPECT_EQ(calf_prim->shape, Render::Creature::PrimitiveShape::Cylinder);
   EXPECT_EQ(hoof_prim->shape, Render::Creature::PrimitiveShape::Box);
   ASSERT_NE(thigh_prim->custom_mesh, nullptr);
@@ -413,34 +411,31 @@ TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
   EXPECT_EQ(thigh_prim->params.anchor_bone,
             static_cast<Render::Creature::BoneIndex>(
                 Render::Elephant::ElephantBone::ShoulderFL));
-  EXPECT_EQ(thigh_prim->params.tail_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Elephant::ElephantBone::KneeFL));
-  EXPECT_EQ(calf_prim->params.anchor_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Elephant::ElephantBone::KneeFL));
-  EXPECT_EQ(calf_prim->params.tail_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Elephant::ElephantBone::FootFL));
-  EXPECT_EQ(hoof_prim->params.anchor_bone,
-            static_cast<Render::Creature::BoneIndex>(
-                Render::Elephant::ElephantBone::FootFL));
+  EXPECT_EQ(
+      thigh_prim->params.tail_bone,
+      static_cast<Render::Creature::BoneIndex>(Render::Elephant::ElephantBone::KneeFL));
+  EXPECT_EQ(
+      calf_prim->params.anchor_bone,
+      static_cast<Render::Creature::BoneIndex>(Render::Elephant::ElephantBone::KneeFL));
+  EXPECT_EQ(
+      calf_prim->params.tail_bone,
+      static_cast<Render::Creature::BoneIndex>(Render::Elephant::ElephantBone::FootFL));
+  EXPECT_EQ(
+      hoof_prim->params.anchor_bone,
+      static_cast<Render::Creature::BoneIndex>(Render::Elephant::ElephantBone::FootFL));
   float constexpr k_elephant_visual_scale = 1.85F;
   float constexpr k_elephant_body_height_scale = 1.02F;
   float constexpr k_elephant_thigh_thickness_scale = 2.0F;
   float constexpr k_elephant_hoof_thickness_scale = 0.8F;
-  float const untrimmed_shoulder_y = -dims.body_height *
-                                     k_elephant_body_height_scale *
+  float const untrimmed_shoulder_y = -dims.body_height * k_elephant_body_height_scale *
                                      k_elephant_visual_scale * 0.30F;
   float const sole_y = -dims.leg_length * k_elephant_visual_scale * 2.04F;
-  float const knee_y =
-      untrimmed_shoulder_y + (sole_y - untrimmed_shoulder_y) * 0.36F;
+  float const knee_y = untrimmed_shoulder_y + (sole_y - untrimmed_shoulder_y) * 0.36F;
   float const expected_trimmed_start_y =
       untrimmed_shoulder_y + (knee_y - untrimmed_shoulder_y) * 0.22F;
   float const rear_shoulder_z =
       -dims.body_length * 0.56F * k_elephant_visual_scale * 0.44F;
-  float const front_leg_scale =
-      dims.leg_radius * k_elephant_visual_scale * 2.15F;
+  float const front_leg_scale = dims.leg_radius * k_elephant_visual_scale * 2.15F;
   float const front_foot_scale = dims.foot_radius * k_elephant_visual_scale;
   EXPECT_NEAR(front_thigh_tube->start.y(), expected_trimmed_start_y, 0.0001F);
   EXPECT_NEAR(rear_thigh_tube->start.z(), rear_shoulder_z, 0.0001F);
@@ -450,10 +445,9 @@ TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
   EXPECT_NEAR(front_thigh_tube->end_radius,
               front_leg_scale * 0.20F * k_elephant_thigh_thickness_scale,
               0.0001F);
-  EXPECT_NEAR(thigh_prim->params.head_offset.y(), dims.leg_length * 0.10F,
-              0.0001F);
-  EXPECT_NEAR(rear_thigh_prim->params.head_offset.y(), dims.leg_length * 0.06F,
-              0.0001F);
+  EXPECT_NEAR(thigh_prim->params.head_offset.y(), dims.leg_length * 0.10F, 0.0001F);
+  EXPECT_NEAR(
+      rear_thigh_prim->params.head_offset.y(), dims.leg_length * 0.06F, 0.0001F);
   EXPECT_GT(thigh_prim->params.head_offset.z(), 0.0F);
   EXPECT_GT(rear_thigh_prim->params.head_offset.z(),
             thigh_prim->params.head_offset.z());
@@ -471,40 +465,33 @@ TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
               front_foot_scale * 0.86F * 0.5F * k_elephant_hoof_thickness_scale,
               0.0001F);
   EXPECT_NEAR(hoof_prim->params.head_offset.y(),
-              dims.foot_radius * (0.56F / 3.0F) *
-                  k_elephant_hoof_thickness_scale,
+              dims.foot_radius * (0.56F / 3.0F) * k_elephant_hoof_thickness_scale,
               0.0001F);
   EXPECT_NEAR(hoof_prim->params.half_extents.x(),
-              dims.foot_radius * (0.88F / 3.0F) *
-                  k_elephant_hoof_thickness_scale,
+              dims.foot_radius * (0.88F / 3.0F) * k_elephant_hoof_thickness_scale,
               0.0001F);
   EXPECT_NEAR(hoof_prim->params.half_extents.y(),
-              dims.foot_radius * (0.56F / 3.0F) *
-                  k_elephant_hoof_thickness_scale,
+              dims.foot_radius * (0.56F / 3.0F) * k_elephant_hoof_thickness_scale,
               0.0001F);
   EXPECT_GT(thigh_prim->params.radius, calf_prim->params.radius * 1.6F);
   EXPECT_LT(thigh_prim->custom_mesh->get_vertices().size(),
             Render::GL::get_unit_cylinder()->get_vertices().size());
   EXPECT_LT(calf_prim->custom_mesh->get_vertices().size(),
             Render::GL::get_unit_cylinder()->get_vertices().size());
-  EXPECT_NE(find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.trunk"),
-            nullptr);
-  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "elephant.full.whole"),
-            nullptr);
-  EXPECT_EQ(find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg"),
-            nullptr);
+  EXPECT_NE(find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.trunk"), nullptr);
+  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "elephant.full.whole"), nullptr);
+  EXPECT_EQ(find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg"), nullptr);
 }
 
 TEST(ElephantSpecTest, ManifestKeepsTusksProminent) {
-  auto const &manifest = Render::Elephant::elephant_manifest();
+  auto const& manifest = Render::Elephant::elephant_manifest();
 
   std::size_t tusk_count = 0U;
-  for (auto const &node : manifest.lod_full.mesh_nodes) {
+  for (auto const& node : manifest.lod_full.mesh_nodes) {
     if (node.debug_name != std::string_view{"elephant.tusk"}) {
       continue;
     }
-    auto const *tusk =
-        std::get_if<Render::Creature::Quadruped::ConeNode>(&node.data);
+    auto const* tusk = std::get_if<Render::Creature::Quadruped::ConeNode>(&node.data);
     ASSERT_NE(tusk, nullptr);
     EXPECT_GT(tusk->base_radius, 0.06F);
     ++tusk_count;
@@ -514,30 +501,27 @@ TEST(ElephantSpecTest, ManifestKeepsTusksProminent) {
 }
 
 TEST(ElephantSpecTest, ManifestBridgesTrunkAndAddsEyes) {
-  auto const &manifest = Render::Elephant::elephant_manifest();
-  auto const *head =
-      find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.head");
-  auto const *bridge =
+  auto const& manifest = Render::Elephant::elephant_manifest();
+  auto const* head = find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.head");
+  auto const* bridge =
       find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.trunk.bridge");
-  auto const *trunk =
-      find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.trunk");
+  auto const* trunk = find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.trunk");
 
   ASSERT_NE(head, nullptr);
   ASSERT_NE(bridge, nullptr);
   ASSERT_NE(trunk, nullptr);
 
-  auto const *head_shape =
+  auto const* head_shape =
       std::get_if<Render::Creature::Quadruped::EllipsoidNode>(&head->data);
-  auto const *bridge_shape =
+  auto const* bridge_shape =
       std::get_if<Render::Creature::Quadruped::EllipsoidNode>(&bridge->data);
-  auto const *trunk_snout =
+  auto const* trunk_snout =
       std::get_if<Render::Creature::Quadruped::SnoutNode>(&trunk->data);
   ASSERT_NE(head_shape, nullptr);
   ASSERT_NE(bridge_shape, nullptr);
   ASSERT_NE(trunk_snout, nullptr);
   float const head_front_z = head_shape->center.z() + head_shape->radii.z();
-  float const bridge_front_z =
-      bridge_shape->center.z() + bridge_shape->radii.z();
+  float const bridge_front_z = bridge_shape->center.z() + bridge_shape->radii.z();
   EXPECT_LT(bridge_shape->center.z(), head_front_z);
   EXPECT_GT(bridge_front_z, head_front_z);
   EXPECT_LT(bridge_front_z, head_front_z + head_shape->radii.z() * 0.14F);
@@ -549,11 +533,11 @@ TEST(ElephantSpecTest, ManifestBridgesTrunkAndAddsEyes) {
   EXPECT_GT(trunk_snout->base_radius, trunk_snout->tip_radius * 3.5F);
 
   std::size_t eye_count = 0U;
-  for (auto const &node : manifest.lod_full.mesh_nodes) {
+  for (auto const& node : manifest.lod_full.mesh_nodes) {
     if (node.debug_name != std::string_view{"elephant.eye"}) {
       continue;
     }
-    auto const *eye =
+    auto const* eye =
         std::get_if<Render::Creature::Quadruped::EllipsoidNode>(&node.data);
     ASSERT_NE(eye, nullptr);
     EXPECT_EQ(node.color_role, 7U);
@@ -570,7 +554,7 @@ TEST(ElephantSpecTest, ManifestBridgesTrunkAndAddsEyes) {
 }
 
 TEST(ElephantSpecTest, LowerFaceBridgeVerticesStayHeadAnchored) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const& spec = Render::Elephant::elephant_creature_spec();
   auto const bind_pose = Render::Elephant::elephant_bind_palette();
   Render::Creature::BakeInput in{};
   in.graph = &spec.lod_full;
@@ -585,7 +569,7 @@ TEST(ElephantSpecTest, LowerFaceBridgeVerticesStayHeadAnchored) {
   std::uint8_t const trunk_bone = static_cast<std::uint8_t>(Bone::TrunkTip);
 
   std::size_t sampled_vertices = 0U;
-  for (auto const &vertex : baked.vertices) {
+  for (auto const& vertex : baked.vertices) {
     if (vertex.color_role != 1U) {
       continue;
     }
@@ -611,12 +595,11 @@ TEST(ElephantSpecTest, LowerFaceBridgeVerticesStayHeadAnchored) {
 }
 
 TEST(ElephantSpecTest, ManifestTailSitsSlightlyHigherAndFurtherBack) {
-  auto const &manifest = Render::Elephant::elephant_manifest();
-  auto const *tail =
-      find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.tail");
+  auto const& manifest = Render::Elephant::elephant_manifest();
+  auto const* tail = find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.tail");
 
   ASSERT_NE(tail, nullptr);
-  auto const *tail_tube =
+  auto const* tail_tube =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&tail->data);
   ASSERT_NE(tail_tube, nullptr);
 
@@ -629,15 +612,14 @@ TEST(ElephantSpecTest, ManifestTailSitsSlightlyHigherAndFurtherBack) {
 }
 
 TEST(ElephantSpecTest, ManifestKeepsEarsCompact) {
-  auto const &manifest = Render::Elephant::elephant_manifest();
+  auto const& manifest = Render::Elephant::elephant_manifest();
 
   std::size_t ear_count = 0U;
-  for (auto const &node : manifest.lod_full.mesh_nodes) {
+  for (auto const& node : manifest.lod_full.mesh_nodes) {
     if (node.debug_name != std::string_view{"elephant.ear"}) {
       continue;
     }
-    auto const *ear =
-        std::get_if<Render::Creature::Quadruped::FlatFanNode>(&node.data);
+    auto const* ear = std::get_if<Render::Creature::Quadruped::FlatFanNode>(&node.data);
     ASSERT_NE(ear, nullptr);
     EXPECT_LT(outline_axis_span(ear->outline, 0), 0.60F);
     EXPECT_LT(outline_axis_span(ear->outline, 1), 0.90F);
@@ -656,10 +638,8 @@ TEST(ElephantSpecTest, MovingPoseBendsKneesDuringStride) {
   motion.is_moving = true;
   Render::Elephant::make_elephant_spec_pose_animated(dims, gait, motion, pose);
 
-  QVector3D const shoulder_fl =
-      pose.barrel_center + pose.shoulder_offset_pose_fl;
-  QVector3D const shoulder_bl =
-      pose.barrel_center + pose.shoulder_offset_pose_bl;
+  QVector3D const shoulder_fl = pose.barrel_center + pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_bl = pose.barrel_center + pose.shoulder_offset_pose_bl;
   float const front_mid_z = (shoulder_fl.z() + pose.foot_fl.z()) * 0.5F;
   float const rear_mid_z = (shoulder_bl.z() + pose.foot_bl.z()) * 0.5F;
 
@@ -684,8 +664,7 @@ TEST(ElephantSpecTest, WalkFootLandsAheadOfShoulderDuringSwing) {
   motion.is_moving = true;
   Render::Elephant::make_elephant_spec_pose_animated(dims, gait, motion, pose);
 
-  QVector3D const shoulder_fl =
-      pose.barrel_center + pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_fl = pose.barrel_center + pose.shoulder_offset_pose_fl;
 
   EXPECT_GT(pose.foot_fl.z(), shoulder_fl.z());
 
@@ -704,8 +683,8 @@ TEST(ElephantSpecTest, WalkPoseKeepsRearThighAnchorsCloserToBody) {
   Render::Elephant::ElephantPoseMotion walk_motion{};
   walk_motion.phase = 0.25F;
   walk_motion.is_moving = true;
-  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, walk_motion,
-                                                     walk_pose);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, gait, walk_motion, walk_pose);
 
   EXPECT_GT(walk_pose.shoulder_offset_pose_bl.z(),
             idle_pose.shoulder_offset_pose_bl.z() - dims.body_length * 0.05F);
@@ -723,18 +702,17 @@ TEST(ElephantSpecTest, FightPoseRaisesFeetHigherThanIdlePose) {
   fight_motion.anim_time = 0.55F * 0.95F;
   fight_motion.is_fighting = true;
   fight_motion.combat_phase = Render::GL::CombatAnimPhase::Idle;
-  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, fight_motion,
-                                                     fight_pose);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, gait, fight_motion, fight_pose);
 
   Render::Elephant::ElephantSpecPose idle_pose{};
   Render::Elephant::ElephantPoseMotion idle_motion{};
   idle_motion.phase = 0.55F;
   idle_motion.is_fighting = false;
-  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, idle_motion,
-                                                     idle_pose);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, gait, idle_motion, idle_pose);
 
-  EXPECT_GT(fight_pose.foot_fl.y() - idle_pose.foot_fl.y(),
-            dims.leg_length * 0.10F);
+  EXPECT_GT(fight_pose.foot_fl.y() - idle_pose.foot_fl.y(), dims.leg_length * 0.10F);
 }
 
 TEST(ElephantSpecTest, MovementBobVariesAcrossWalkFrames) {
@@ -748,8 +726,8 @@ TEST(ElephantSpecTest, MovementBobVariesAcrossWalkFrames) {
   motion_zero.anim_time = 0.0F;
   motion_zero.is_moving = true;
   motion_zero.bob = 0.0F;
-  Render::Elephant::make_elephant_spec_pose_animated(dims, walk, motion_zero,
-                                                     pose_zero);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, walk, motion_zero, pose_zero);
 
   float const peak_bob = dims.move_bob_amplitude * 0.62F;
   Render::Elephant::ElephantSpecPose pose_peak{};
@@ -758,8 +736,8 @@ TEST(ElephantSpecTest, MovementBobVariesAcrossWalkFrames) {
   motion_peak.anim_time = 0.25F * 1.2F;
   motion_peak.is_moving = true;
   motion_peak.bob = peak_bob;
-  Render::Elephant::make_elephant_spec_pose_animated(dims, walk, motion_peak,
-                                                     pose_peak);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, walk, motion_peak, pose_peak);
 
   EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
 }
@@ -772,13 +750,13 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
   Render::Elephant::ElephantPoseMotion fight_motion{};
   fight_motion.anim_time = 1.15F * 0.25F;
   fight_motion.is_fighting = true;
-  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, fight_motion,
-                                                     fight_pose);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, gait, fight_motion, fight_pose);
 
   Render::Elephant::ElephantSpecPose idle_pose{};
   Render::Elephant::ElephantPoseMotion idle_motion{};
-  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, idle_motion,
-                                                     idle_pose);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, gait, idle_motion, idle_pose);
 
   EXPECT_GT(fight_pose.trunk_end.y(),
             idle_pose.trunk_end.y() + dims.trunk_length * 0.12F);
@@ -812,13 +790,10 @@ TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {
   Render::Elephant::ElephantPoseMotion motion{};
   motion.phase = 0.25F;
   motion.is_moving = true;
-  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, motion,
-                                                     swing_pose);
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, motion, swing_pose);
 
-  float const front_lift =
-      swing_pose.foot_pose_fl.y() - idle_pose.foot_pose_fl.y();
-  float const rear_lift =
-      swing_pose.foot_pose_br.y() - idle_pose.foot_pose_br.y();
+  float const front_lift = swing_pose.foot_pose_fl.y() - idle_pose.foot_pose_fl.y();
+  float const rear_lift = swing_pose.foot_pose_br.y() - idle_pose.foot_pose_br.y();
 
   EXPECT_GT(front_lift, 0.0F);
   EXPECT_GT(rear_lift, 0.0F);

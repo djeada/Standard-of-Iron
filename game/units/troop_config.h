@@ -1,16 +1,17 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 #include "spawn_type.h"
 #include "troop_catalog.h"
 #include "troop_type.h"
-#include <string>
-#include <unordered_map>
 
 namespace Game::Units {
 
 class TroopConfig {
 public:
-  static auto instance() -> TroopConfig & {
+  static auto instance() -> TroopConfig& {
     static TroopConfig inst;
     return inst;
   }
@@ -55,7 +56,7 @@ public:
     return 0.5F;
   }
 
-  auto get_individuals_per_unit(const std::string &unit_type) const -> int {
+  auto get_individuals_per_unit(const std::string& unit_type) const -> int {
     return get_individuals_per_unit(troop_typeFromString(unit_type));
   }
 
@@ -67,7 +68,7 @@ public:
     return 1;
   }
 
-  auto get_production_cost(const std::string &unit_type) const -> int {
+  auto get_production_cost(const std::string& unit_type) const -> int {
     return get_production_cost(troop_typeFromString(unit_type));
   }
 
@@ -79,7 +80,7 @@ public:
     return 50;
   }
 
-  auto get_build_time(const std::string &unit_type) const -> float {
+  auto get_build_time(const std::string& unit_type) const -> float {
     return get_build_time(troop_typeFromString(unit_type));
   }
 
@@ -91,7 +92,7 @@ public:
     return 5.0F;
   }
 
-  auto get_max_units_per_row(const std::string &unit_type) const -> int {
+  auto get_max_units_per_row(const std::string& unit_type) const -> int {
     return get_max_units_per_row(troop_typeFromString(unit_type));
   }
 
@@ -103,7 +104,7 @@ public:
     return 10;
   }
 
-  auto get_selection_ring_size(const std::string &unit_type) const -> float {
+  auto get_selection_ring_size(const std::string& unit_type) const -> float {
     return get_selection_ring_size(troop_typeFromString(unit_type));
   }
 
@@ -121,16 +122,14 @@ public:
       return it->second;
     }
 
-    if (unit_type == TroopType::MountedKnight ||
-        unit_type == TroopType::HorseArcher ||
+    if (unit_type == TroopType::MountedKnight || unit_type == TroopType::HorseArcher ||
         unit_type == TroopType::HorseSpearman) {
       return 1.14F;
     }
     return 0.0F;
   }
 
-  auto get_selection_ring_ground_offset(const std::string &unit_type) const
-      -> float {
+  auto get_selection_ring_ground_offset(const std::string& unit_type) const -> float {
     return get_selection_ring_ground_offset(troop_typeFromString(unit_type));
   }
 
@@ -150,7 +149,7 @@ public:
     return 0.75F;
   }
 
-  auto get_formation_spacing(const std::string &unit_type) const -> float {
+  auto get_formation_spacing(const std::string& unit_type) const -> float {
     return get_formation_spacing(troop_typeFromString(unit_type));
   }
 
@@ -170,13 +169,11 @@ public:
     m_max_units_per_row[unit_type] = max_units_per_row;
   }
 
-  void register_selection_ring_size(TroopType unit_type,
-                                    float selection_ring_size) {
+  void register_selection_ring_size(TroopType unit_type, float selection_ring_size) {
     m_selection_ring_size[unit_type] = selection_ring_size;
   }
 
-  void register_selection_ring_ground_offset(TroopType unit_type,
-                                             float offset) {
+  void register_selection_ring_ground_offset(TroopType unit_type, float offset) {
     m_selection_ring_ground_offset[unit_type] = offset;
   }
 
@@ -198,9 +195,9 @@ private:
     m_selection_ring_ground_offset.clear();
     m_formation_spacing.clear();
 
-    const auto &classes = TroopCatalog::instance().get_all_classes();
-    for (const auto &entry : classes) {
-      const auto &troop_class = entry.second;
+    const auto& classes = TroopCatalog::instance().get_all_classes();
+    for (const auto& entry : classes) {
+      const auto& troop_class = entry.second;
       auto type = troop_class.unit_type;
       m_individuals_per_unit[type] = troop_class.individuals_per_unit;
       m_production_cost[type] = troop_class.production.cost;

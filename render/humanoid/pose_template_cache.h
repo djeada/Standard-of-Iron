@@ -1,13 +1,14 @@
 #pragma once
 
-#include "../draw_part.h"
-#include "pose_key.h"
-
 #include <QMatrix4x4>
+
 #include <cstddef>
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
+
+#include "../draw_part.h"
+#include "pose_key.h"
 
 namespace Render::GL {
 
@@ -30,7 +31,7 @@ public:
     m_current_frame = frame_index;
   }
 
-  [[nodiscard]] auto find(const PoseKey &key) -> PoseDrawTemplate * {
+  [[nodiscard]] auto find(const PoseKey& key) -> PoseDrawTemplate* {
     auto it = m_entries.find(key);
     if (it == m_entries.end()) {
       ++m_stats.misses;
@@ -41,8 +42,7 @@ public:
     return &it->second;
   }
 
-  auto insert(const PoseKey &key,
-              std::vector<DrawPartCmd> parts) -> PoseDrawTemplate & {
+  auto insert(const PoseKey& key, std::vector<DrawPartCmd> parts) -> PoseDrawTemplate& {
     PoseDrawTemplate tpl;
     tpl.parts = std::move(parts);
     tpl.last_touched_frame = m_current_frame;
@@ -68,21 +68,19 @@ public:
     }
   }
 
-  [[nodiscard]] auto size() const noexcept -> std::size_t {
-    return m_entries.size();
-  }
-  [[nodiscard]] auto stats() const noexcept -> const Stats & { return m_stats; }
+  [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
+  [[nodiscard]] auto stats() const noexcept -> const Stats& { return m_stats; }
 
   void clear() noexcept {
     m_entries.clear();
     m_stats = {};
   }
 
-  static void expand_to_world(const PoseDrawTemplate &tpl,
-                              const QMatrix4x4 &world,
-                              std::vector<DrawPartCmd> &out) {
+  static void expand_to_world(const PoseDrawTemplate& tpl,
+                              const QMatrix4x4& world,
+                              std::vector<DrawPartCmd>& out) {
     out.reserve(out.size() + tpl.parts.size());
-    for (const auto &local : tpl.parts) {
+    for (const auto& local : tpl.parts) {
       DrawPartCmd cmd = local;
       cmd.world = world * local.world;
       out.push_back(std::move(cmd));

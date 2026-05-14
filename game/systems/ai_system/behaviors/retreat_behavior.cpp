@@ -1,21 +1,24 @@
 #include "retreat_behavior.h"
-#include "../../formation_planner.h"
-#include "../ai_utils.h"
-#include "systems/ai_system/ai_types.h"
 
 #include <QVector3D>
+#include <qvectornd.h>
+
 #include <algorithm>
 #include <cstddef>
-#include <qvectornd.h>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include "../../formation_planner.h"
+#include "../ai_utils.h"
+#include "systems/ai_system/ai_types.h"
+
 namespace Game::Systems::AI {
 
-void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+void RetreatBehavior::execute(const AISnapshot& snapshot,
+                              AIContext& context,
                               float delta_time,
-                              std::vector<AICommand> &out_commands) {
+                              std::vector<AICommand>& out_commands) {
   m_retreat_timer += delta_time;
   if (m_retreat_timer < 1.0F) {
     return;
@@ -26,14 +29,14 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  std::vector<const EntitySnapshot *> retreating_units;
+  std::vector<const EntitySnapshot*> retreating_units;
   retreating_units.reserve(snapshot.friendly_units.size());
 
   const float critical_health = context.strategy_config.retreat_threshold;
   const float low_health =
       std::min(0.70F, context.strategy_config.retreat_threshold + 0.15F);
 
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
@@ -46,8 +49,8 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    float const health_ratio = static_cast<float>(entity.health) /
-                               static_cast<float>(entity.max_health);
+    float const health_ratio =
+        static_cast<float>(entity.health) / static_cast<float>(entity.max_health);
 
     if (health_ratio < critical_health) {
       retreating_units.push_back(&entity);
@@ -63,8 +66,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  QVector3D retreat_pos(context.base_pos_x, context.base_pos_y,
-                        context.base_pos_z);
+  QVector3D retreat_pos(context.base_pos_x, context.base_pos_y, context.base_pos_z);
 
   retreat_pos.setX(retreat_pos.x() - 8.0F);
 
@@ -87,8 +89,12 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     target_z.push_back(retreat_targets[i].z());
   }
 
-  auto claimed_units = claim_units(unit_ids, get_priority(), "retreating",
-                                   context, m_retreat_timer + delta_time, 1.0F);
+  auto claimed_units = claim_units(unit_ids,
+                                   get_priority(),
+                                   "retreating",
+                                   context,
+                                   m_retreat_timer + delta_time,
+                                   1.0F);
 
   if (claimed_units.empty()) {
     return;
@@ -98,8 +104,8 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<float> filtered_y;
   std::vector<float> filtered_z;
   {
-    const std::unordered_set<Engine::Core::EntityID> claimed_set(
-        claimed_units.begin(), claimed_units.end());
+    const std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(),
+                                                                 claimed_units.end());
     for (size_t i = 0; i < unit_ids.size(); ++i) {
       if (claimed_set.count(unit_ids[i])) {
         filtered_x.push_back(target_x[i]);
@@ -118,8 +124,8 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   out_commands.push_back(std::move(command));
 }
 
-auto RetreatBehavior::should_execute(const AISnapshot &snapshot,
-                                     const AIContext &context) const -> bool {
+auto RetreatBehavior::should_execute(const AISnapshot& snapshot,
+                                     const AIContext& context) const -> bool {
   if (!context.has_base_anchor) {
     return false;
   }
@@ -130,14 +136,14 @@ auto RetreatBehavior::should_execute(const AISnapshot &snapshot,
 
   const float critical_health = context.strategy_config.retreat_threshold;
 
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
 
     if (entity.max_health > 0) {
-      float const health_ratio = static_cast<float>(entity.health) /
-                                 static_cast<float>(entity.max_health);
+      float const health_ratio =
+          static_cast<float>(entity.health) / static_cast<float>(entity.max_health);
       if (health_ratio < critical_health) {
         return true;
       }

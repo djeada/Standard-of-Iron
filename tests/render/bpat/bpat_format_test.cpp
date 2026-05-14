@@ -1,14 +1,14 @@
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstring>
+#include <gtest/gtest.h>
+#include <sstream>
+#include <vector>
+
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_reader.h"
 #include "render/creature/bpat/bpat_writer.h"
-
-#include <gtest/gtest.h>
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cstring>
-#include <sstream>
-#include <vector>
 
 using namespace Render::Creature::Bpat;
 
@@ -17,13 +17,12 @@ namespace {
 QMatrix4x4 fingerprint_matrix(int seed) {
   QMatrix4x4 m;
   m.setToIdentity();
-  m.translate(
-      QVector3D(static_cast<float>(seed), 2.0F * seed, -3.0F * seed + 1.0F));
+  m.translate(QVector3D(static_cast<float>(seed), 2.0F * seed, -3.0F * seed + 1.0F));
   m.rotate(static_cast<float>(seed % 90), 0.0F, 1.0F, 0.0F);
   return m;
 }
 
-std::vector<std::uint8_t> serialize(const BpatWriter &w) {
+std::vector<std::uint8_t> serialize(const BpatWriter& w) {
   std::stringstream ss(std::ios::out | std::ios::binary | std::ios::in);
   EXPECT_TRUE(w.write(ss));
   std::string s = ss.str();
@@ -92,7 +91,7 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
     for (std::uint32_t b = 0; b < bone_count; ++b) {
       auto span = blob.palette_matrix(f, b);
       ASSERT_EQ(span.size(), 16U);
-      auto const &expected = idle_palettes[(f * bone_count) + b];
+      auto const& expected = idle_palettes[(f * bone_count) + b];
       for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
           EXPECT_FLOAT_EQ(span[(row * 4) + col], expected(row, col))
@@ -113,7 +112,7 @@ TEST(BpatWriter, BakedSocketsRoundTrip) {
   w.add_clip(c);
 
   std::vector<QMatrix4x4> palettes(bone_count * c.frame_count);
-  for (auto &m : palettes)
+  for (auto& m : palettes)
     m.setToIdentity();
   w.append_clip_palettes(palettes);
 
@@ -135,7 +134,7 @@ TEST(BpatWriter, BakedSocketsRoundTrip) {
 
   auto sm = blob.socket_matrix(0U, 0U);
   ASSERT_EQ(sm.size(), 12U);
-  auto const &expected = sockets[0];
+  auto const& expected = sockets[0];
   for (int row = 0; row < 3; ++row) {
     for (int col = 0; col < 4; ++col) {
       EXPECT_FLOAT_EQ(sm[(row * 4) + col], expected(row, col));
@@ -155,7 +154,7 @@ TEST(BpatReader, RejectsTruncatedFile) {
   ClipDescriptor c{"idle", 1U, 30.0F, true};
   w.add_clip(c);
   std::vector<QMatrix4x4> palettes(20U);
-  for (auto &m : palettes)
+  for (auto& m : palettes)
     m.setToIdentity();
   w.append_clip_palettes(palettes);
   auto bytes = serialize(w);
@@ -169,7 +168,7 @@ TEST(BpatReader, RejectsBadVersion) {
   ClipDescriptor c{"idle", 1U, 30.0F, true};
   w.add_clip(c);
   std::vector<QMatrix4x4> palettes(20U);
-  for (auto &m : palettes)
+  for (auto& m : palettes)
     m.setToIdentity();
   w.append_clip_palettes(palettes);
   auto bytes = serialize(w);

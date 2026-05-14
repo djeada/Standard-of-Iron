@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../systems/nation_id.h"
 #include <QString>
+
 #include <optional>
 #include <vector>
+
+#include "../systems/nation_id.h"
 
 namespace Game::Mission {
 

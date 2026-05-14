@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../../units/spawn_type.h"
-#include "../../units/troop_type.h"
 #include <unordered_map>
 #include <vector>
+
+#include "../../units/spawn_type.h"
+#include "../../units/troop_type.h"
 
 namespace Engine::Core {
 using EntityID = unsigned int;
@@ -135,7 +136,7 @@ struct AIContext {
   float state_timer = 0.0F;
   float decision_timer = 0.0F;
 
-  const Game::Systems::Nation *nation = nullptr;
+  const Game::Systems::Nation* nation = nullptr;
 
   AIStrategyConfig strategy_config;
 
@@ -164,7 +165,7 @@ struct AIContext {
   struct UnitAssignment {
     BehaviorPriority owner_priority = BehaviorPriority::Normal;
     float assignment_time = 0.0F;
-    const char *assigned_task = "";
+    const char* assigned_task = "";
   };
   std::unordered_map<Engine::Core::EntityID, UnitAssignment> assigned_units;
 
@@ -216,7 +217,7 @@ struct AICommand {
   Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
 
-  const char *construction_type = nullptr;
+  const char* construction_type = nullptr;
   float construction_site_x = 0.0F;
   float construction_site_z = 0.0F;
 };

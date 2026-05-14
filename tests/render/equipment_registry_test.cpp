@@ -1,9 +1,10 @@
+#include <gtest/gtest.h>
+#include <memory>
+
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/tack/bridle_renderer.h"
 #include "render/equipment/i_equipment_renderer.h"
-#include <gtest/gtest.h>
-#include <memory>
 
 using namespace Render::GL;
 
@@ -11,12 +12,16 @@ namespace {
 
 class MockEquipmentRenderer : public IEquipmentRenderer {
 public:
-  explicit MockEquipmentRenderer(std::string name) : m_name(std::move(name)) {}
+  explicit MockEquipmentRenderer(std::string name)
+      : m_name(std::move(name)) {}
 
-  void render(const DrawContext &, const BodyFrames &, const HumanoidPalette &,
-              const HumanoidAnimationContext &, EquipmentBatch &) override {}
+  void render(const DrawContext&,
+              const BodyFrames&,
+              const HumanoidPalette&,
+              const HumanoidAnimationContext&,
+              EquipmentBatch&) override {}
 
-  auto getName() const -> const std::string & { return m_name; }
+  auto getName() const -> const std::string& { return m_name; }
 
 private:
   std::string m_name;
@@ -28,20 +33,19 @@ class EquipmentRegistryTest : public ::testing::Test {
 protected:
   void SetUp() override { registry = &EquipmentRegistry::instance(); }
 
-  EquipmentRegistry *registry = nullptr;
+  EquipmentRegistry* registry = nullptr;
 };
 
 TEST_F(EquipmentRegistryTest, SingletonInstance) {
-  auto &instance1 = EquipmentRegistry::instance();
-  auto &instance2 = EquipmentRegistry::instance();
+  auto& instance1 = EquipmentRegistry::instance();
+  auto& instance2 = EquipmentRegistry::instance();
 
   EXPECT_EQ(&instance1, &instance2);
 }
 
 TEST_F(EquipmentRegistryTest, RegisterAndGetHelmet) {
   auto helmet = std::make_shared<MockEquipmentRenderer>("test_helmet");
-  registry->register_equipment(EquipmentCategory::Helmet, "iron_helmet",
-                               helmet);
+  registry->register_equipment(EquipmentCategory::Helmet, "iron_helmet", helmet);
 
   auto retrieved = registry->get(EquipmentCategory::Helmet, "iron_helmet");
 
@@ -70,16 +74,14 @@ TEST_F(EquipmentRegistryTest, RegisterAndGetWeapon) {
 }
 
 TEST_F(EquipmentRegistryTest, GetNonExistentEquipment) {
-  auto retrieved =
-      registry->get(EquipmentCategory::Helmet, "non_existent_helmet");
+  auto retrieved = registry->get(EquipmentCategory::Helmet, "non_existent_helmet");
 
   EXPECT_EQ(retrieved, nullptr);
 }
 
 TEST_F(EquipmentRegistryTest, HasEquipment) {
   auto helmet = std::make_shared<MockEquipmentRenderer>("test_helmet");
-  registry->register_equipment(EquipmentCategory::Helmet, "steel_helmet",
-                               helmet);
+  registry->register_equipment(EquipmentCategory::Helmet, "steel_helmet", helmet);
 
   EXPECT_TRUE(registry->has(EquipmentCategory::Helmet, "steel_helmet"));
   EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "bronze_helmet"));
@@ -120,8 +122,7 @@ TEST_F(EquipmentRegistryTest, RegisterAcrossDifferentCategories) {
 }
 
 TEST_F(EquipmentRegistryTest, RegisterNullRenderer) {
-  registry->register_equipment(EquipmentCategory::Helmet, "null_helmet",
-                               nullptr);
+  registry->register_equipment(EquipmentCategory::Helmet, "null_helmet", nullptr);
 
   auto retrieved = registry->get(EquipmentCategory::Helmet, "null_helmet");
   EXPECT_EQ(retrieved, nullptr);
@@ -142,22 +143,18 @@ TEST_F(EquipmentRegistryTest, OverwriteExistingEquipment) {
 }
 
 TEST_F(EquipmentRegistryTest, NationSpecificWeapons) {
-  auto sword_carthage =
-      std::make_shared<MockEquipmentRenderer>("sword_carthage");
+  auto sword_carthage = std::make_shared<MockEquipmentRenderer>("sword_carthage");
   auto sword_roman = std::make_shared<MockEquipmentRenderer>("sword_roman");
 
-  registry->register_equipment(EquipmentCategory::Weapon, "sword_carthage",
-                               sword_carthage);
-  registry->register_equipment(EquipmentCategory::Weapon, "sword_roman",
-                               sword_roman);
+  registry->register_equipment(
+      EquipmentCategory::Weapon, "sword_carthage", sword_carthage);
+  registry->register_equipment(EquipmentCategory::Weapon, "sword_roman", sword_roman);
 
   EXPECT_TRUE(registry->has(EquipmentCategory::Weapon, "sword_carthage"));
   EXPECT_TRUE(registry->has(EquipmentCategory::Weapon, "sword_roman"));
 
-  auto retrieved_carthage =
-      registry->get(EquipmentCategory::Weapon, "sword_carthage");
-  auto retrieved_roman =
-      registry->get(EquipmentCategory::Weapon, "sword_roman");
+  auto retrieved_carthage = registry->get(EquipmentCategory::Weapon, "sword_carthage");
+  auto retrieved_roman = registry->get(EquipmentCategory::Weapon, "sword_roman");
 
   ASSERT_NE(retrieved_carthage, nullptr);
   ASSERT_NE(retrieved_roman, nullptr);
@@ -168,8 +165,7 @@ TEST_F(EquipmentRegistryTest, NationSpecificWeapons) {
 
 TEST_F(EquipmentRegistryTest, ResolveHandleForRegisteredEquipment) {
   auto helmet = std::make_shared<MockEquipmentRenderer>("handle_helmet");
-  registry->register_equipment(EquipmentCategory::Helmet, "handle_helmet",
-                               helmet);
+  registry->register_equipment(EquipmentCategory::Helmet, "handle_helmet", helmet);
 
   const auto handle =
       registry->resolve_handle(EquipmentCategory::Helmet, "handle_helmet");
@@ -191,13 +187,11 @@ TEST_F(EquipmentRegistryTest, ResolveHandleForMissingEquipment) {
 TEST_F(EquipmentRegistryTest, OverwriteKeepsStableHandle) {
   auto armor_v1 = std::make_shared<MockEquipmentRenderer>("armor_v1");
   auto armor_v2 = std::make_shared<MockEquipmentRenderer>("armor_v2");
-  registry->register_equipment(EquipmentCategory::Armor, "stable_armor",
-                               armor_v1);
+  registry->register_equipment(EquipmentCategory::Armor, "stable_armor", armor_v1);
   const auto handle_v1 =
       registry->resolve_handle(EquipmentCategory::Armor, "stable_armor");
 
-  registry->register_equipment(EquipmentCategory::Armor, "stable_armor",
-                               armor_v2);
+  registry->register_equipment(EquipmentCategory::Armor, "stable_armor", armor_v2);
   const auto handle_v2 =
       registry->resolve_handle(EquipmentCategory::Armor, "stable_armor");
 
@@ -206,8 +200,7 @@ TEST_F(EquipmentRegistryTest, OverwriteKeepsStableHandle) {
   EXPECT_EQ(registry->get(handle_v2), armor_v2);
 }
 
-TEST_F(EquipmentRegistryTest,
-       PlaceholderEquipmentResolvesStableHandleWithoutRenderer) {
+TEST_F(EquipmentRegistryTest, PlaceholderEquipmentResolvesStableHandleWithoutRenderer) {
   registry->register_placeholder_equipment(EquipmentCategory::Armor,
                                            "placeholder_robe");
 
@@ -222,8 +215,8 @@ TEST_F(EquipmentRegistryTest,
 
 TEST_F(EquipmentRegistryTest, RegisterAndGetHorseEquipment) {
   auto horse_bridle = std::make_shared<BridleRenderer>();
-  registry->register_horse_equipment(EquipmentCategory::HorseTack,
-                                     "horse_bridle_test", horse_bridle);
+  registry->register_horse_equipment(
+      EquipmentCategory::HorseTack, "horse_bridle_test", horse_bridle);
 
   auto retrieved =
       registry->get_horse(EquipmentCategory::HorseTack, "horse_bridle_test");
@@ -233,11 +226,11 @@ TEST_F(EquipmentRegistryTest, RegisterAndGetHorseEquipment) {
 
 TEST_F(EquipmentRegistryTest, HorseEquipmentResolvesHandleFromSameRegistry) {
   auto horse_bridle = std::make_shared<BridleRenderer>();
-  registry->register_horse_equipment(EquipmentCategory::HorseTack,
-                                     "horse_bridle_handle", horse_bridle);
+  registry->register_horse_equipment(
+      EquipmentCategory::HorseTack, "horse_bridle_handle", horse_bridle);
 
-  const auto handle = registry->resolve_handle(EquipmentCategory::HorseTack,
-                                               "horse_bridle_handle");
+  const auto handle =
+      registry->resolve_handle(EquipmentCategory::HorseTack, "horse_bridle_handle");
 
   EXPECT_NE(handle, k_invalid_equipment_handle);
   EXPECT_EQ(registry->get_horse(handle), horse_bridle);

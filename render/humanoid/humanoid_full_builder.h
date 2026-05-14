@@ -2,10 +2,10 @@
 
 #pragma once
 
+#include <QVector3D>
+
 #include "../creature/part_graph.h"
 #include "../gl/humanoid/humanoid_types.h"
-
-#include <QVector3D>
 
 namespace Render::Humanoid {
 
@@ -30,19 +30,19 @@ struct HumanoidBodyMetrics {
   float foot_radius{0.0F};
 };
 
-void compute_humanoid_body_metrics(const Render::GL::HumanoidPose &pose,
-                                   const QVector3D &proportion_scaling,
+void compute_humanoid_body_metrics(const Render::GL::HumanoidPose& pose,
+                                   const QVector3D& proportion_scaling,
                                    float torso_scale,
-                                   HumanoidBodyMetrics &out) noexcept;
+                                   HumanoidBodyMetrics& out) noexcept;
 
-void compute_humanoid_head_frame(Render::GL::HumanoidPose &pose,
-                                 const HumanoidBodyMetrics &metrics) noexcept;
+void compute_humanoid_head_frame(Render::GL::HumanoidPose& pose,
+                                 const HumanoidBodyMetrics& metrics) noexcept;
 
-void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
-                                  const HumanoidBodyMetrics &metrics) noexcept;
+void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
+                                  const HumanoidBodyMetrics& metrics) noexcept;
 
-void rebuild_humanoid_frames(Render::GL::HumanoidPose &pose,
-                             const QVector3D &proportion_scaling,
+void rebuild_humanoid_frames(Render::GL::HumanoidPose& pose,
+                             const QVector3D& proportion_scaling,
                              float torso_scale) noexcept;
 
 } // namespace Render::Humanoid

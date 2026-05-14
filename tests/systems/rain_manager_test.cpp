@@ -1,5 +1,6 @@
-#include "systems/rain_manager.h"
 #include <gtest/gtest.h>
+
+#include "systems/rain_manager.h"
 
 using namespace Game::Systems;
 using namespace Game::Map;

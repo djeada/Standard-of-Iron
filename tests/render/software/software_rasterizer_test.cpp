@@ -1,11 +1,12 @@
 
 
-#include "render/software/software_rasterizer.h"
-
 #include <QImage>
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <gtest/gtest.h>
+
+#include "render/software/software_rasterizer.h"
 
 using Render::Software::ColoredTriangle;
 using Render::Software::RasterSettings;
@@ -21,7 +22,7 @@ auto make_view_proj() -> QMatrix4x4 {
   return proj * view;
 }
 
-auto count_non_clear_pixels(const QImage &img, const QColor &clear) -> int {
+auto count_non_clear_pixels(const QImage& img, const QColor& clear) -> int {
   int count = 0;
   for (int y = 0; y < img.height(); ++y) {
     for (int x = 0; x < img.width(); ++x) {
@@ -84,14 +85,11 @@ TEST(SoftwareRasterizerTest, PainterAlgorithmNearerOverwritesFarther) {
   SoftwareRasterizer r(s);
   r.set_view_projection(make_view_proj());
 
-  r.submit(ColoredTriangle{
-      {-2, -2, -2}, {2, -2, -2}, {0, 2, -2}, {1.0F, 0.0F, 0.0F}, 1.0F});
+  r.submit(
+      ColoredTriangle{{-2, -2, -2}, {2, -2, -2}, {0, 2, -2}, {1.0F, 0.0F, 0.0F}, 1.0F});
 
-  r.submit(ColoredTriangle{{-0.3F, -0.3F, 1},
-                           {0.3F, -0.3F, 1},
-                           {0.0F, 0.3F, 1},
-                           {0.0F, 1.0F, 0.0F},
-                           1.0F});
+  r.submit(ColoredTriangle{
+      {-0.3F, -0.3F, 1}, {0.3F, -0.3F, 1}, {0.0F, 0.3F, 1}, {0.0F, 1.0F, 0.0F}, 1.0F});
   QImage img = r.render();
   QColor center = img.pixelColor(64, 64);
   EXPECT_GT(center.green(), center.red());
@@ -121,8 +119,7 @@ TEST(SoftwareRasterizerTest, OutsideNdcIsCulled) {
   SoftwareRasterizer r(s);
   r.set_view_projection(make_view_proj());
 
-  r.submit(
-      ColoredTriangle{{50, -1, 0}, {52, -1, 0}, {51, 1, 0}, {1, 1, 1}, 1.0F});
+  r.submit(ColoredTriangle{{50, -1, 0}, {52, -1, 0}, {51, 1, 0}, {1, 1, 1}, 1.0F});
   QImage img = r.render();
   EXPECT_EQ(count_non_clear_pixels(img, s.clear_color), 0);
 }

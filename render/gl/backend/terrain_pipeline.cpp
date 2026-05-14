@@ -1,14 +1,17 @@
 #include "terrain_pipeline.h"
-#include "../backend.h"
-#include "../render_constants.h"
-#include "../shader_cache.h"
-#include <GL/gl.h>
+
 #include <QDebug>
 #include <QOpenGLExtraFunctions>
-#include <cstddef>
 #include <qglobal.h>
 #include <qopenglext.h>
 #include <qvectornd.h>
+
+#include <GL/gl.h>
+#include <cstddef>
+
+#include "../backend.h"
+#include "../render_constants.h"
+#include "../shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -22,7 +25,7 @@ auto TerrainPipeline::initialize() -> bool {
     return false;
   }
 
-  auto *gl = QOpenGLContext::currentContext()->extraFunctions();
+  auto* gl = QOpenGLContext::currentContext()->extraFunctions();
 
   m_grass_shader = m_shader_cache->get("grass_instanced");
   m_ground_shader = m_shader_cache->get("ground_plane");
@@ -68,11 +71,9 @@ void TerrainPipeline::cache_grass_uniforms() {
     return;
   }
 
-  m_grass_uniforms.view_proj =
-      m_grass_shader->optional_uniform_handle("u_view_proj");
+  m_grass_uniforms.view_proj = m_grass_shader->optional_uniform_handle("u_view_proj");
   m_grass_uniforms.time = m_grass_shader->uniform_handle("u_time");
-  m_grass_uniforms.wind_strength =
-      m_grass_shader->uniform_handle("u_wind_strength");
+  m_grass_uniforms.wind_strength = m_grass_shader->uniform_handle("u_wind_strength");
   m_grass_uniforms.wind_speed = m_grass_shader->uniform_handle("u_wind_speed");
   m_grass_uniforms.soil_color = m_grass_shader->uniform_handle("u_soil_color");
   m_grass_uniforms.light_dir = m_grass_shader->uniform_handle("u_light_dir");
@@ -85,20 +86,16 @@ void TerrainPipeline::cache_ground_uniforms() {
 
   m_ground_uniforms.mvp = m_ground_shader->uniform_handle("u_mvp");
   m_ground_uniforms.model = m_ground_shader->uniform_handle("u_model");
-  m_ground_uniforms.grass_primary =
-      m_ground_shader->uniform_handle("u_grass_primary");
+  m_ground_uniforms.grass_primary = m_ground_shader->uniform_handle("u_grass_primary");
   m_ground_uniforms.grass_secondary =
       m_ground_shader->uniform_handle("u_grass_secondary");
   m_ground_uniforms.grass_dry = m_ground_shader->uniform_handle("u_grass_dry");
-  m_ground_uniforms.soil_color =
-      m_ground_shader->uniform_handle("u_soil_color");
+  m_ground_uniforms.soil_color = m_ground_shader->uniform_handle("u_soil_color");
   m_ground_uniforms.rock_low = m_ground_shader->uniform_handle("u_rock_low");
   m_ground_uniforms.rock_high = m_ground_shader->uniform_handle("u_rock_high");
   m_ground_uniforms.tint = m_ground_shader->uniform_handle("u_tint");
-  m_ground_uniforms.noise_offset =
-      m_ground_shader->uniform_handle("u_noise_offset");
-  m_ground_uniforms.noise_angle =
-      m_ground_shader->uniform_handle("u_noise_angle");
+  m_ground_uniforms.noise_offset = m_ground_shader->uniform_handle("u_noise_offset");
+  m_ground_uniforms.noise_angle = m_ground_shader->uniform_handle("u_noise_angle");
   m_ground_uniforms.tile_size = m_ground_shader->uniform_handle("u_tile_size");
   m_ground_uniforms.macro_noise_scale =
       m_ground_shader->uniform_handle("u_macro_noise_scale");
@@ -112,18 +109,15 @@ void TerrainPipeline::cache_ground_uniforms() {
       m_ground_shader->uniform_handle("u_height_noise_strength");
   m_ground_uniforms.height_noise_frequency =
       m_ground_shader->uniform_handle("u_height_noise_frequency");
-  m_ground_uniforms.ambient_boost =
-      m_ground_shader->uniform_handle("u_ambient_boost");
+  m_ground_uniforms.ambient_boost = m_ground_shader->uniform_handle("u_ambient_boost");
   m_ground_uniforms.light_dir = m_ground_shader->uniform_handle("u_light_dir");
 
-  m_ground_uniforms.snow_coverage =
-      m_ground_shader->uniform_handle("u_snow_coverage");
+  m_ground_uniforms.snow_coverage = m_ground_shader->uniform_handle("u_snow_coverage");
   m_ground_uniforms.moisture_level =
       m_ground_shader->uniform_handle("u_moisture_level");
   m_ground_uniforms.crack_intensity =
       m_ground_shader->uniform_handle("u_crack_intensity");
-  m_ground_uniforms.rock_exposure =
-      m_ground_shader->uniform_handle("u_rock_exposure");
+  m_ground_uniforms.rock_exposure = m_ground_shader->uniform_handle("u_rock_exposure");
   m_ground_uniforms.grass_saturation =
       m_ground_shader->uniform_handle("u_grass_saturation");
   m_ground_uniforms.soil_roughness =
@@ -134,12 +128,9 @@ void TerrainPipeline::cache_ground_uniforms() {
       m_ground_shader->uniform_handle("u_micro_bump_freq");
   m_ground_uniforms.micro_normal_weight =
       m_ground_shader->uniform_handle("u_micro_normal_weight");
-  m_ground_uniforms.albedo_jitter =
-      m_ground_shader->uniform_handle("u_albedo_jitter");
-  m_ground_uniforms.snow_color =
-      m_ground_shader->uniform_handle("u_snow_color");
-  m_ground_uniforms.camera_position =
-      m_ground_shader->uniform_handle("u_camera_pos");
+  m_ground_uniforms.albedo_jitter = m_ground_shader->uniform_handle("u_albedo_jitter");
+  m_ground_uniforms.snow_color = m_ground_shader->uniform_handle("u_snow_color");
+  m_ground_uniforms.camera_position = m_ground_shader->uniform_handle("u_camera_pos");
   m_ground_uniforms.fog_color = m_ground_shader->uniform_handle("u_fog_color");
   m_ground_uniforms.fog_start = m_ground_shader->uniform_handle("u_fog_start");
   m_ground_uniforms.fog_end = m_ground_shader->uniform_handle("u_fog_end");
@@ -156,18 +147,13 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrain_shader->uniform_handle("u_grass_primary");
   m_terrain_uniforms.grass_secondary =
       m_terrain_shader->uniform_handle("u_grass_secondary");
-  m_terrain_uniforms.grass_dry =
-      m_terrain_shader->uniform_handle("u_grass_dry");
-  m_terrain_uniforms.soil_color =
-      m_terrain_shader->uniform_handle("u_soil_color");
+  m_terrain_uniforms.grass_dry = m_terrain_shader->uniform_handle("u_grass_dry");
+  m_terrain_uniforms.soil_color = m_terrain_shader->uniform_handle("u_soil_color");
   m_terrain_uniforms.rock_low = m_terrain_shader->uniform_handle("u_rock_low");
-  m_terrain_uniforms.rock_high =
-      m_terrain_shader->uniform_handle("u_rock_high");
+  m_terrain_uniforms.rock_high = m_terrain_shader->uniform_handle("u_rock_high");
   m_terrain_uniforms.tint = m_terrain_shader->uniform_handle("u_tint");
-  m_terrain_uniforms.noise_offset =
-      m_terrain_shader->uniform_handle("u_noise_offset");
-  m_terrain_uniforms.tile_size =
-      m_terrain_shader->uniform_handle("u_tile_size");
+  m_terrain_uniforms.noise_offset = m_terrain_shader->uniform_handle("u_noise_offset");
+  m_terrain_uniforms.tile_size = m_terrain_shader->uniform_handle("u_tile_size");
   m_terrain_uniforms.macro_noise_scale =
       m_terrain_shader->uniform_handle("u_macro_noise_scale");
   m_terrain_uniforms.detail_noise_scale =
@@ -188,8 +174,7 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrain_shader->uniform_handle("u_ambient_boost");
   m_terrain_uniforms.rock_detail_strength =
       m_terrain_shader->uniform_handle("u_rock_detail_strength");
-  m_terrain_uniforms.light_dir =
-      m_terrain_shader->uniform_handle("u_light_dir");
+  m_terrain_uniforms.light_dir = m_terrain_shader->uniform_handle("u_light_dir");
 
   m_terrain_uniforms.snow_coverage =
       m_terrain_shader->uniform_handle("u_snow_coverage");
@@ -209,28 +194,23 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrain_shader->uniform_handle("u_ridge_response");
   m_terrain_uniforms.gully_response =
       m_terrain_shader->uniform_handle("u_gully_response");
-  m_terrain_uniforms.snow_color =
-      m_terrain_shader->uniform_handle("u_snow_color");
+  m_terrain_uniforms.snow_color = m_terrain_shader->uniform_handle("u_snow_color");
   m_terrain_uniforms.soil_foot_height =
       m_terrain_shader->uniform_handle("u_soil_foot_height");
   m_terrain_uniforms.screen_toe_mul =
       m_terrain_shader->uniform_handle("u_screen_toe_mul");
   m_terrain_uniforms.screen_toe_clamp =
       m_terrain_shader->uniform_handle("u_screen_toe_clamp");
-  m_terrain_uniforms.camera_position =
-      m_terrain_shader->uniform_handle("u_camera_pos");
-  m_terrain_uniforms.fog_color =
-      m_terrain_shader->uniform_handle("u_fog_color");
-  m_terrain_uniforms.fog_start =
-      m_terrain_shader->uniform_handle("u_fog_start");
+  m_terrain_uniforms.camera_position = m_terrain_shader->uniform_handle("u_camera_pos");
+  m_terrain_uniforms.fog_color = m_terrain_shader->uniform_handle("u_fog_color");
+  m_terrain_uniforms.fog_start = m_terrain_shader->uniform_handle("u_fog_start");
   m_terrain_uniforms.fog_end = m_terrain_shader->uniform_handle("u_fog_end");
 }
 
 void TerrainPipeline::initialize_grass_geometry() {
-  auto *gl = QOpenGLContext::currentContext()->extraFunctions();
+  auto* gl = QOpenGLContext::currentContext()->extraFunctions();
   if (gl == nullptr) {
-    qWarning()
-        << "TerrainPipeline::initialize_grass_geometry: no OpenGL context";
+    qWarning() << "TerrainPipeline::initialize_grass_geometry: no OpenGL context";
     return;
   }
 
@@ -255,19 +235,25 @@ void TerrainPipeline::initialize_grass_geometry() {
 
   gl->glGenBuffers(1, &m_grass_vertex_buffer);
   gl->glBindBuffer(GL_ARRAY_BUFFER, m_grass_vertex_buffer);
-  gl->glBufferData(GL_ARRAY_BUFFER, sizeof(blade_vertices), blade_vertices,
-                   GL_STATIC_DRAW);
+  gl->glBufferData(
+      GL_ARRAY_BUFFER, sizeof(blade_vertices), blade_vertices, GL_STATIC_DRAW);
   m_grass_vertex_count = grass_blade_vertex_count;
 
   gl->glEnableVertexAttribArray(position);
-  gl->glVertexAttribPointer(
-      position, vec3, GL_FLOAT, GL_FALSE, sizeof(GrassVertex),
-      reinterpret_cast<void *>(offsetof(GrassVertex, position)));
+  gl->glVertexAttribPointer(position,
+                            vec3,
+                            GL_FLOAT,
+                            GL_FALSE,
+                            sizeof(GrassVertex),
+                            reinterpret_cast<void*>(offsetof(GrassVertex, position)));
 
   gl->glEnableVertexAttribArray(normal);
-  gl->glVertexAttribPointer(
-      normal, vec2, GL_FLOAT, GL_FALSE, sizeof(GrassVertex),
-      reinterpret_cast<void *>(offsetof(GrassVertex, uv)));
+  gl->glVertexAttribPointer(normal,
+                            vec2,
+                            GL_FLOAT,
+                            GL_FALSE,
+                            sizeof(GrassVertex),
+                            reinterpret_cast<void*>(offsetof(GrassVertex, uv)));
 
   gl->glEnableVertexAttribArray(tex_coord);
   gl->glVertexAttribDivisor(tex_coord, 1);
@@ -281,7 +267,7 @@ void TerrainPipeline::initialize_grass_geometry() {
 }
 
 void TerrainPipeline::shutdown_grass_geometry() {
-  auto *gl = QOpenGLContext::currentContext()->extraFunctions();
+  auto* gl = QOpenGLContext::currentContext()->extraFunctions();
   if (gl == nullptr) {
     return;
   }

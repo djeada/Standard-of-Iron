@@ -1,4 +1,17 @@
 #include "river_renderer.h"
+
+#include <QVector2D>
+#include <QVector3D>
+#include <qglobal.h>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <vector>
+
 #include "../../game/map/visibility_service.h"
 #include "../draw_queue.h"
 #include "../gl/mesh.h"
@@ -8,16 +21,6 @@
 #include "linear_feature_geometry.h"
 #include "linear_feature_visibility.h"
 #include "map/terrain.h"
-#include <QVector2D>
-#include <QVector3D>
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <memory>
-#include <qglobal.h>
-#include <qmatrix4x4.h>
-#include <qvectornd.h>
-#include <vector>
 
 namespace Render::GL {
 
@@ -25,8 +28,7 @@ RiverRenderer::RiverRenderer() = default;
 RiverRenderer::~RiverRenderer() = default;
 
 void RiverRenderer::configure(
-    const std::vector<Game::Map::RiverSegment> &river_segments,
-    float tile_size) {
+    const std::vector<Game::Map::RiverSegment>& river_segments, float tile_size) {
   m_river_segments = river_segments;
   m_tile_size = tile_size;
   m_vis_helper.reset();
@@ -53,22 +55,21 @@ void RiverRenderer::build_meshes() {
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
   segments.reserve(m_river_segments.size());
-  for (const auto &segment : m_river_segments) {
+  for (const auto& segment : m_river_segments) {
     segments.push_back({segment.start, segment.end, segment.width});
   }
 
-  m_meshes =
-      Ground::build_linear_ribbon_meshes(segments, m_tile_size, settings);
+  m_meshes = Ground::build_linear_ribbon_meshes(segments, m_tile_size, settings);
 }
 
-void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+void RiverRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   if (m_river_segments.empty() || m_meshes.empty()) {
     return;
   }
 
-  auto &visibility = Game::Map::VisibilityService::instance();
+  auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
 
   Game::Map::VisibilityService::Snapshot vis_snapshot;
@@ -88,12 +89,12 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   vis_opts.treat_out_of_bounds_as_visible = true;
 
   std::size_t mesh_index = 0;
-  for (const auto &segment : m_river_segments) {
+  for (const auto& segment : m_river_segments) {
     if (mesh_index >= m_meshes.size()) {
       break;
     }
 
-    auto *mesh = m_meshes[mesh_index].get();
+    auto* mesh = m_meshes[mesh_index].get();
     ++mesh_index;
     if (mesh == nullptr) {
       continue;

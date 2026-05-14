@@ -25,8 +25,7 @@ RuntimeBakeAllowScope::~RuntimeBakeAllowScope() {
   set_runtime_bake_forbidden(m_previous);
 }
 
-auto runtime_bake_operation_name(RuntimeBakeOperation operation)
-    -> std::string_view {
+auto runtime_bake_operation_name(RuntimeBakeOperation operation) -> std::string_view {
   switch (operation) {
   case RuntimeBakeOperation::RiggedMeshBake:
     return "rigged_mesh_bake";

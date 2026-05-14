@@ -18,7 +18,7 @@ struct BattleRenderConfig {
 
 class BattleRenderOptimizer {
 public:
-  static auto instance() noexcept -> BattleRenderOptimizer & {
+  static auto instance() noexcept -> BattleRenderOptimizer& {
     static BattleRenderOptimizer inst;
     return inst;
   }
@@ -34,7 +34,7 @@ public:
     m_visible_unit_count.store(count, std::memory_order_relaxed);
   }
 
-  void set_config(const BattleRenderConfig &config) noexcept {
+  void set_config(const BattleRenderConfig& config) noexcept {
     std::lock_guard<std::mutex> lock(m_config_mutex);
     m_config = config;
   }
@@ -46,14 +46,16 @@ public:
 
   [[nodiscard]] auto is_battle_mode() const noexcept -> bool {
     std::lock_guard<std::mutex> lock(m_config_mutex);
-    return m_config.enabled &&
-           m_visible_unit_count.load(std::memory_order_relaxed) >=
-               m_config.temporal_culling_threshold;
+    return m_config.enabled && m_visible_unit_count.load(std::memory_order_relaxed) >=
+                                   m_config.temporal_culling_threshold;
   }
 
   [[nodiscard]] auto
-  should_render_unit(uint32_t entity_id, bool is_moving, bool is_selected,
-                     bool is_hovered, bool is_combat_active = false,
+  should_render_unit(uint32_t entity_id,
+                     bool is_moving,
+                     bool is_selected,
+                     bool is_hovered,
+                     bool is_combat_active = false,
                      float distance_sq = 0.0F) const noexcept -> bool {
     BattleRenderConfig cfg;
     int visible_count = 0;
@@ -87,9 +89,11 @@ public:
     return render;
   }
 
-  [[nodiscard]] auto should_update_animation(
-      uint32_t entity_id, float distance_sq, bool is_selected,
-      bool is_combat_active = false) const noexcept -> bool {
+  [[nodiscard]] auto
+  should_update_animation(uint32_t entity_id,
+                          float distance_sq,
+                          bool is_selected,
+                          bool is_combat_active = false) const noexcept -> bool {
     BattleRenderConfig cfg;
     {
       std::lock_guard<std::mutex> lock(m_config_mutex);

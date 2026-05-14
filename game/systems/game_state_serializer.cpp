@@ -1,20 +1,23 @@
 #include "game_state_serializer.h"
 
+#include <qglobal.h>
+#include <qjsonobject.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+
 #include "app/utils/json_vec_utils.h"
 #include "game/game_config.h"
 #include "game/map/terrain_service.h"
 #include "render/gl/camera.h"
-#include <algorithm>
-#include <qglobal.h>
-#include <qjsonobject.h>
-#include <qvectornd.h>
 
 namespace Game::Systems {
 
 namespace {
 
-auto value_for_key(const QJsonObject &object, const char *key,
-                   const char *legacy_key = nullptr) -> QJsonValue {
+auto value_for_key(const QJsonObject& object,
+                   const char* key,
+                   const char* legacy_key = nullptr) -> QJsonValue {
   if (object.contains(key)) {
     return object.value(key);
   }
@@ -26,9 +29,11 @@ auto value_for_key(const QJsonObject &object, const char *key,
 
 } // namespace
 
-auto GameStateSerializer::build_metadata(
-    const Engine::Core::World &, const Render::GL::Camera *camera,
-    const LevelSnapshot &level, const RuntimeSnapshot &runtime) -> QJsonObject {
+auto GameStateSerializer::build_metadata(const Engine::Core::World&,
+                                         const Render::GL::Camera* camera,
+                                         const LevelSnapshot& level,
+                                         const RuntimeSnapshot& runtime)
+    -> QJsonObject {
 
   QJsonObject metadata;
   metadata["map_path"] = level.map_path;
@@ -40,8 +45,8 @@ auto GameStateSerializer::build_metadata(
   metadata["game_max_troops_per_player"] =
       Game::GameConfig::instance().get_max_troops_per_player();
 
-  const auto &terrain_service = Game::Map::TerrainService::instance();
-  if (const auto *height_map = terrain_service.get_height_map()) {
+  const auto& terrain_service = Game::Map::TerrainService::instance();
+  if (const auto* height_map = terrain_service.get_height_map()) {
     metadata["grid_width"] = height_map->get_width();
     metadata["grid_height"] = height_map->get_height();
     metadata["tile_size"] = height_map->get_tile_size();
@@ -49,10 +54,8 @@ auto GameStateSerializer::build_metadata(
 
   if (camera != nullptr) {
     QJsonObject camera_obj;
-    camera_obj["position"] =
-        App::JsonUtils::vec3_to_json_array(camera->get_position());
-    camera_obj["target"] =
-        App::JsonUtils::vec3_to_json_array(camera->get_target());
+    camera_obj["position"] = App::JsonUtils::vec3_to_json_array(camera->get_position());
+    camera_obj["target"] = App::JsonUtils::vec3_to_json_array(camera->get_target());
     camera_obj["distance"] = camera->get_distance();
     camera_obj["pitch_deg"] = camera->get_pitch_deg();
     camera_obj["fov"] = camera->get_fov();
@@ -73,9 +76,10 @@ auto GameStateSerializer::build_metadata(
   return metadata;
 }
 
-void GameStateSerializer::restore_camera_from_metadata(
-    const QJsonObject &metadata, Render::GL::Camera *camera, int viewport_width,
-    int viewport_height) {
+void GameStateSerializer::restore_camera_from_metadata(const QJsonObject& metadata,
+                                                       Render::GL::Camera* camera,
+                                                       int viewport_width,
+                                                       int viewport_height) {
   if (!metadata.contains("camera") || (camera == nullptr)) {
     return;
   }
@@ -101,8 +105,8 @@ void GameStateSerializer::restore_camera_from_metadata(
   camera->set_perspective(fov, aspect, near_plane, far_plane);
 }
 
-void GameStateSerializer::restore_runtime_from_metadata(
-    const QJsonObject &metadata, RuntimeSnapshot &runtime) {
+void GameStateSerializer::restore_runtime_from_metadata(const QJsonObject& metadata,
+                                                        RuntimeSnapshot& runtime) {
   if (!metadata.contains("runtime")) {
     return;
   }
@@ -124,8 +128,7 @@ void GameStateSerializer::restore_runtime_from_metadata(
     runtime.victory_state = victory_state.toString(runtime.victory_state);
   }
 
-  if (const auto cursor_value =
-          value_for_key(runtime_obj, "cursor_mode", "cursorMode");
+  if (const auto cursor_value = value_for_key(runtime_obj, "cursor_mode", "cursorMode");
       !cursor_value.isUndefined()) {
     if (cursor_value.isDouble()) {
       runtime.cursor_mode = cursor_value.toInt(0);
@@ -140,20 +143,18 @@ void GameStateSerializer::restore_runtime_from_metadata(
   if (const auto selected_player_id =
           value_for_key(runtime_obj, "selected_player_id", "selectedPlayerId");
       !selected_player_id.isUndefined()) {
-    runtime.selected_player_id =
-        selected_player_id.toInt(runtime.selected_player_id);
+    runtime.selected_player_id = selected_player_id.toInt(runtime.selected_player_id);
   }
 
   if (const auto follow_selection =
           value_for_key(runtime_obj, "follow_selection", "followSelection");
       !follow_selection.isUndefined()) {
-    runtime.follow_selection =
-        follow_selection.toBool(runtime.follow_selection);
+    runtime.follow_selection = follow_selection.toBool(runtime.follow_selection);
   }
 }
 
-void GameStateSerializer::restore_level_from_metadata(
-    const QJsonObject &metadata, LevelSnapshot &level) {
+void GameStateSerializer::restore_level_from_metadata(const QJsonObject& metadata,
+                                                      LevelSnapshot& level) {
   const QString map_path = metadata.value("map_path").toString();
   if (!map_path.isEmpty()) {
     level.map_path = map_path;
@@ -170,8 +171,8 @@ void GameStateSerializer::restore_level_from_metadata(
 
   auto max_troops_value = value_for_key(metadata, "max_troops_per_player");
   if (max_troops_value.isUndefined()) {
-    max_troops_value = value_for_key(metadata, "game_max_troops_per_player",
-                                     "gameMaxTroopsPerPlayer");
+    max_troops_value =
+        value_for_key(metadata, "game_max_troops_per_player", "gameMaxTroopsPerPlayer");
   }
   int max_troops = max_troops_value.isUndefined()
                        ? level.max_troops_per_player

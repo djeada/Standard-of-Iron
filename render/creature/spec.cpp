@@ -2,7 +2,7 @@
 
 namespace Render::Creature {
 
-auto validate_creature_spec(const CreatureSpec &spec) noexcept -> bool {
+auto validate_creature_spec(const CreatureSpec& spec) noexcept -> bool {
   if (!validate_topology(spec.topology)) {
     return false;
   }

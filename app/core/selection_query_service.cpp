@@ -20,21 +20,22 @@ auto classify_toggle_state(int eligible_count, int active_count) -> QString {
 
 } // namespace
 
-SelectionQueryService::SelectionQueryService(Engine::Core::World *world,
-                                             QObject *parent)
-    : QObject(parent), m_world(world) {}
+SelectionQueryService::SelectionQueryService(Engine::Core::World* world,
+                                             QObject* parent)
+    : QObject(parent)
+    , m_world(world) {
+}
 
 auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
   if (!m_world) {
     return "normal";
   }
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (!selection_system) {
     return "normal";
   }
 
-  const auto &sel = selection_system->get_selected_units();
+  const auto& sel = selection_system->get_selected_units();
   if (sel.empty()) {
     return "normal";
   }
@@ -45,12 +46,12 @@ auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
   int total_units = 0;
 
   for (auto id : sel) {
-    auto *e = m_world->get_entity(id);
+    auto* e = m_world->get_entity(id);
     if (!e) {
       continue;
     }
 
-    auto *u = e->get_component<Engine::Core::UnitComponent>();
+    auto* u = e->get_component<Engine::Core::UnitComponent>();
     if (!u || u->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
@@ -61,12 +62,12 @@ auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
       attacking_count++;
     }
 
-    auto *patrol = e->get_component<Engine::Core::PatrolComponent>();
+    auto* patrol = e->get_component<Engine::Core::PatrolComponent>();
     if (patrol && patrol->patrolling) {
       patrolling_count++;
     }
 
-    auto *guard = e->get_component<Engine::Core::GuardModeComponent>();
+    auto* guard = e->get_component<Engine::Core::GuardModeComponent>();
     if (guard && guard->active) {
       guarding_count++;
     }
@@ -89,18 +90,17 @@ auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
   return "normal";
 }
 
-auto SelectionQueryService::get_selected_units_toggle_state(
-    const QString &mode) const -> QString {
+auto SelectionQueryService::get_selected_units_toggle_state(const QString& mode) const
+    -> QString {
   if (!m_world) {
     return QStringLiteral("none");
   }
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (!selection_system) {
     return QStringLiteral("none");
   }
 
-  const auto &sel = selection_system->get_selected_units();
+  const auto& sel = selection_system->get_selected_units();
   if (sel.empty()) {
     return QStringLiteral("none");
   }
@@ -109,12 +109,12 @@ auto SelectionQueryService::get_selected_units_toggle_state(
   int active_count = 0;
 
   for (auto id : sel) {
-    auto *entity = m_world->get_entity(id);
+    auto* entity = m_world->get_entity(id);
     if (entity == nullptr) {
       continue;
     }
 
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -124,7 +124,7 @@ auto SelectionQueryService::get_selected_units_toggle_state(
         continue;
       }
       ++eligible_count;
-      auto *hold = entity->get_component<Engine::Core::HoldModeComponent>();
+      auto* hold = entity->get_component<Engine::Core::HoldModeComponent>();
       active_count += ((hold != nullptr) && hold->active) ? 1 : 0;
       continue;
     }
@@ -134,8 +134,7 @@ auto SelectionQueryService::get_selected_units_toggle_state(
         continue;
       }
       ++eligible_count;
-      auto *formation =
-          entity->get_component<Engine::Core::FormationModeComponent>();
+      auto* formation = entity->get_component<Engine::Core::FormationModeComponent>();
       active_count += ((formation != nullptr) && formation->active) ? 1 : 0;
       continue;
     }
@@ -145,7 +144,7 @@ auto SelectionQueryService::get_selected_units_toggle_state(
         continue;
       }
       ++eligible_count;
-      auto *guard = entity->get_component<Engine::Core::GuardModeComponent>();
+      auto* guard = entity->get_component<Engine::Core::GuardModeComponent>();
       active_count += ((guard != nullptr) && guard->active) ? 1 : 0;
       continue;
     }
@@ -155,7 +154,7 @@ auto SelectionQueryService::get_selected_units_toggle_state(
         continue;
       }
       ++eligible_count;
-      auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+      auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
       active_count += ((stamina != nullptr) && stamina->run_requested) ? 1 : 0;
       continue;
     }
@@ -177,13 +176,12 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
   if (!m_world) {
     return result;
   }
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (!selection_system) {
     return result;
   }
 
-  const auto &sel = selection_system->get_selected_units();
+  const auto& sel = selection_system->get_selected_units();
   if (sel.empty()) {
     return result;
   }
@@ -197,17 +195,16 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
 
   for (auto id : sel) {
 
-    if (can_attack && can_guard && can_hold && can_patrol && can_heal &&
-        can_build) {
+    if (can_attack && can_guard && can_hold && can_patrol && can_heal && can_build) {
       break;
     }
 
-    auto *e = m_world->get_entity(id);
+    auto* e = m_world->get_entity(id);
     if (!e) {
       continue;
     }
 
-    auto *u = e->get_component<Engine::Core::UnitComponent>();
+    auto* u = e->get_component<Engine::Core::UnitComponent>();
     if (!u || u->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }

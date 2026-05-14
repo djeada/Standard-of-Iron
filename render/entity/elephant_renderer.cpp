@@ -1,4 +1,5 @@
 #include "elephant_renderer.h"
+
 #include "../../game/core/component.h"
 #include "../../game/systems/nation_id.h"
 #include "nations/carthage/elephant_renderer.h"
@@ -6,17 +7,17 @@
 
 namespace Render::GL {
 
-void register_elephant_renderer(EntityRendererRegistry &registry) {
+void register_elephant_renderer(EntityRendererRegistry& registry) {
 
   Carthage::register_elephant_renderer(registry);
 
   registry.register_renderer(
-      "elephant", [&registry](const DrawContext &p, ISubmitter &out) {
+      "elephant", [&registry](const DrawContext& p, ISubmitter& out) {
         if (p.entity == nullptr) {
           return;
         }
 
-        auto *unit = p.entity->get_component<Engine::Core::UnitComponent>();
+        auto* unit = p.entity->get_component<Engine::Core::UnitComponent>();
         if (unit == nullptr) {
           return;
         }

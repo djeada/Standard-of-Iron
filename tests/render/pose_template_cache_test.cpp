@@ -1,11 +1,12 @@
 
 
+#include <QMatrix4x4>
+
+#include <gtest/gtest.h>
+
 #include "render/draw_part.h"
 #include "render/humanoid/pose_key.h"
 #include "render/humanoid/pose_template_cache.h"
-
-#include <QMatrix4x4>
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -26,8 +27,8 @@ auto make_local_template(std::size_t part_count)
 } // namespace
 
 TEST(PoseKey, EqualityIgnoresNothingInItsFields) {
-  Render::GL::PoseKey a{42, Render::GL::AnimationState::Walk,
-                        Render::GL::PoseStance::Guard, 7};
+  Render::GL::PoseKey a{
+      42, Render::GL::AnimationState::Walk, Render::GL::PoseStance::Guard, 7};
   Render::GL::PoseKey b = a;
   EXPECT_EQ(a, b);
 
@@ -49,12 +50,12 @@ TEST(PoseKey, EqualityIgnoresNothingInItsFields) {
 
 TEST(PoseKey, HashDistinguishesDifferentKeys) {
   std::hash<Render::GL::PoseKey> h;
-  Render::GL::PoseKey k1{1, Render::GL::AnimationState::Idle,
-                         Render::GL::PoseStance::Neutral, 0};
-  Render::GL::PoseKey k2{2, Render::GL::AnimationState::Idle,
-                         Render::GL::PoseStance::Neutral, 0};
-  Render::GL::PoseKey k3{1, Render::GL::AnimationState::Walk,
-                         Render::GL::PoseStance::Neutral, 0};
+  Render::GL::PoseKey k1{
+      1, Render::GL::AnimationState::Idle, Render::GL::PoseStance::Neutral, 0};
+  Render::GL::PoseKey k2{
+      2, Render::GL::AnimationState::Idle, Render::GL::PoseStance::Neutral, 0};
+  Render::GL::PoseKey k3{
+      1, Render::GL::AnimationState::Walk, Render::GL::PoseStance::Neutral, 0};
 
   EXPECT_NE(h(k1), h(k2));
   EXPECT_NE(h(k1), h(k3));
@@ -64,8 +65,8 @@ TEST(PoseTemplateCache, FindReturnsNullptrOnMiss) {
   Render::GL::PoseTemplateCache cache;
   cache.begin_frame(1);
 
-  Render::GL::PoseKey key{0, Render::GL::AnimationState::Idle,
-                          Render::GL::PoseStance::Neutral, 0};
+  Render::GL::PoseKey key{
+      0, Render::GL::AnimationState::Idle, Render::GL::PoseStance::Neutral, 0};
   EXPECT_EQ(cache.find(key), nullptr);
   EXPECT_EQ(cache.stats().misses, 1U);
   EXPECT_EQ(cache.stats().hits, 0U);
@@ -75,11 +76,11 @@ TEST(PoseTemplateCache, InsertThenFindHits) {
   Render::GL::PoseTemplateCache cache;
   cache.begin_frame(1);
 
-  Render::GL::PoseKey key{5, Render::GL::AnimationState::Walk,
-                          Render::GL::PoseStance::Neutral, 3};
+  Render::GL::PoseKey key{
+      5, Render::GL::AnimationState::Walk, Render::GL::PoseStance::Neutral, 3};
   cache.insert(key, make_local_template(4));
 
-  auto *entry = cache.find(key);
+  auto* entry = cache.find(key);
   ASSERT_NE(entry, nullptr);
   EXPECT_EQ(entry->parts.size(), 4U);
   EXPECT_EQ(cache.stats().hits, 1U);
@@ -91,8 +92,8 @@ TEST(PoseTemplateCache, SameKeyDifferentWorldTransformsShareCache) {
   Render::GL::PoseTemplateCache cache;
   cache.begin_frame(1);
 
-  Render::GL::PoseKey key{0, Render::GL::AnimationState::Idle,
-                          Render::GL::PoseStance::Neutral, 0};
+  Render::GL::PoseKey key{
+      0, Render::GL::AnimationState::Idle, Render::GL::PoseStance::Neutral, 0};
   cache.insert(key, make_local_template(3));
 
   auto const initial_size = cache.size();
@@ -102,7 +103,7 @@ TEST(PoseTemplateCache, SameKeyDifferentWorldTransformsShareCache) {
   QMatrix4x4 unit_b;
   unit_b.translate(-5.0F, 0.0F, 12.0F);
 
-  auto *tpl = cache.find(key);
+  auto* tpl = cache.find(key);
   ASSERT_NE(tpl, nullptr);
 
   std::vector<Render::GL::DrawPartCmd> out_a;
@@ -128,10 +129,10 @@ TEST(PoseTemplateCache, SameKeyDifferentWorldTransformsShareCache) {
 TEST(PoseTemplateCache, EvictOlderThanSkipsFreshEntries) {
   Render::GL::PoseTemplateCache cache;
 
-  Render::GL::PoseKey key_old{1, Render::GL::AnimationState::Idle,
-                              Render::GL::PoseStance::Neutral, 0};
-  Render::GL::PoseKey key_fresh{2, Render::GL::AnimationState::Idle,
-                                Render::GL::PoseStance::Neutral, 0};
+  Render::GL::PoseKey key_old{
+      1, Render::GL::AnimationState::Idle, Render::GL::PoseStance::Neutral, 0};
+  Render::GL::PoseKey key_fresh{
+      2, Render::GL::AnimationState::Idle, Render::GL::PoseStance::Neutral, 0};
 
   cache.begin_frame(1);
   cache.insert(key_old, make_local_template(1));
@@ -151,8 +152,8 @@ TEST(PoseTemplateCache, EvictNoopWhenFrameBelowMaxAge) {
   Render::GL::PoseTemplateCache cache;
   cache.begin_frame(3);
 
-  Render::GL::PoseKey key{1, Render::GL::AnimationState::Idle,
-                          Render::GL::PoseStance::Neutral, 0};
+  Render::GL::PoseKey key{
+      1, Render::GL::AnimationState::Idle, Render::GL::PoseStance::Neutral, 0};
   cache.insert(key, make_local_template(1));
 
   cache.evict_older_than(100);

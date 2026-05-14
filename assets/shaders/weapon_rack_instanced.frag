@@ -28,20 +28,22 @@ void main() {
   vec3 half_vec = normalize(light_dir + view_dir);
   float spec_base = max(dot(normal, half_vec), 0.0);
   float metal_mask = 0.0;
-  metal_mask = max(metal_mask, mask_range(v_local_pos.x, -0.50, -0.28, 0.05) *
-                                   mask_range(v_local_pos.y, 0.06, 1.46, 0.08));
-  metal_mask = max(metal_mask, mask_range(v_local_pos.x, -0.10, 0.06, 0.05) *
-                                   mask_range(v_local_pos.y, 0.10, 1.24, 0.08));
-  metal_mask = max(metal_mask, mask_range(v_local_pos.x, 0.28, 0.48, 0.05) *
-                                   mask_range(v_local_pos.y, 0.06, 1.44, 0.08));
-  metal_mask = max(metal_mask, mask_range(v_local_pos.x, 0.04, 0.44, 0.05) *
-                                   mask_range(v_local_pos.y, 0.22, 0.74, 0.06));
+  metal_mask = max(metal_mask,
+                   mask_range(v_local_pos.x, -0.50, -0.28, 0.05) *
+                       mask_range(v_local_pos.y, 0.06, 1.46, 0.08));
+  metal_mask = max(metal_mask,
+                   mask_range(v_local_pos.x, -0.10, 0.06, 0.05) *
+                       mask_range(v_local_pos.y, 0.10, 1.24, 0.08));
+  metal_mask = max(metal_mask,
+                   mask_range(v_local_pos.x, 0.28, 0.48, 0.05) *
+                       mask_range(v_local_pos.y, 0.06, 1.44, 0.08));
+  metal_mask = max(metal_mask,
+                   mask_range(v_local_pos.x, 0.04, 0.44, 0.05) *
+                       mask_range(v_local_pos.y, 0.22, 0.74, 0.06));
   float shield_mask =
       mask_range(v_local_pos.x, -0.72, -0.54, 0.04) *
-      (1.0 - smoothstep(0.20, 0.28,
-                        length(vec2(v_local_pos.y - 0.48, v_local_pos.z))));
-  float wood_grain =
-      0.5 + 0.5 * sin(v_local_pos.y * 13.0 + v_local_pos.x * 7.0);
+      (1.0 - smoothstep(0.20, 0.28, length(vec2(v_local_pos.y - 0.48, v_local_pos.z))));
+  float wood_grain = 0.5 + 0.5 * sin(v_local_pos.y * 13.0 + v_local_pos.x * 7.0);
   vec3 wood_color = v_color * mix(0.84, 1.10, wood_grain);
   vec3 steel_color = vec3(0.42, 0.42, 0.44);
   vec3 leather_color = vec3(0.38, 0.19, 0.10);
@@ -50,16 +52,14 @@ void main() {
   material_color = mix(material_color, leather_color, shield_mask * 0.86);
 
   float rust_streak =
-      smoothstep(0.78, 0.94,
-                 abs(sin(v_local_pos.y * 6.2 + v_local_pos.x * 2.4))) *
+      smoothstep(0.78, 0.94, abs(sin(v_local_pos.y * 6.2 + v_local_pos.x * 2.4))) *
       metal_mask;
   vec3 rust_color = vec3(0.50, 0.22, 0.08);
   material_color = mix(material_color, rust_color, rust_streak * 0.38);
 
-  float wood_nick = smoothstep(
-      0.72, 0.84, abs(sin(v_local_pos.y * 10.0 + v_local_pos.z * 3.2)));
-  material_color *=
-      1.0 - wood_nick * (1.0 - metal_mask) * (1.0 - shield_mask) * 0.16;
+  float wood_nick =
+      smoothstep(0.72, 0.84, abs(sin(v_local_pos.y * 10.0 + v_local_pos.z * 3.2)));
+  material_color *= 1.0 - wood_nick * (1.0 - metal_mask) * (1.0 - shield_mask) * 0.16;
   float specular =
       mix(pow(spec_base, 26.0) * 0.10, pow(spec_base, 14.0) * 0.30, metal_mask);
   float rim = 1.0 - max(dot(normal, view_dir), 0.0);

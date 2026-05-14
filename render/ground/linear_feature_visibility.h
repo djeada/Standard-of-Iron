@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../../game/map/visibility_service.h"
 #include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
+
+#include "../../game/map/visibility_service.h"
 
 namespace Render::Ground {
 
@@ -21,21 +23,20 @@ struct LinearFeatureVisibilityResult {
 };
 
 inline auto evaluate_linear_feature_visibility(
-    const Game::Map::VisibilityService::Snapshot *snapshot,
-    const QVector3D &start, const QVector3D &end,
-    const LinearFeatureVisibilityOptions &options = {})
+    const Game::Map::VisibilityService::Snapshot* snapshot,
+    const QVector3D& start,
+    const QVector3D& end,
+    const LinearFeatureVisibilityOptions& options = {})
     -> LinearFeatureVisibilityResult {
   LinearFeatureVisibilityResult result;
   if (snapshot == nullptr || !snapshot->initialized) {
     return result;
   }
 
-  auto is_in_bounds = [&](const QVector3D &position) -> bool {
+  auto is_in_bounds = [&](const QVector3D& position) -> bool {
     constexpr float k_half_cell_offset = 0.5F;
-    const float grid_x =
-        position.x() / snapshot->tile_size + snapshot->half_width;
-    const float grid_z =
-        position.z() / snapshot->tile_size + snapshot->half_height;
+    const float grid_x = position.x() / snapshot->tile_size + snapshot->half_width;
+    const float grid_z = position.z() / snapshot->tile_size + snapshot->half_height;
     const int ix = static_cast<int>(std::floor(grid_x + k_half_cell_offset));
     const int iz = static_cast<int>(std::floor(grid_z + k_half_cell_offset));
     return ix >= 0 && ix < snapshot->width && iz >= 0 && iz < snapshot->height;
@@ -46,8 +47,7 @@ inline auto evaluate_linear_feature_visibility(
   bool any_sample_in_bounds = false;
 
   for (int i = 0; i < sample_count; ++i) {
-    const float t =
-        static_cast<float>(i) / static_cast<float>(sample_count - 1);
+    const float t = static_cast<float>(i) / static_cast<float>(sample_count - 1);
     const QVector3D sample = start + (end - start) * t;
     any_sample_in_bounds = any_sample_in_bounds || is_in_bounds(sample);
 

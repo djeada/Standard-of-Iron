@@ -1,7 +1,5 @@
 #include "editor_window.h"
-#include "json_edit_dialog.h"
-#include "map_json_keys.h"
-#include "resize_dialog.h"
+
 #include <QAction>
 #include <QCloseEvent>
 #include <QDir>
@@ -21,15 +19,20 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 
+#include "json_edit_dialog.h"
+#include "map_json_keys.h"
+#include "resize_dialog.h"
+
 namespace {
 
-auto createGuideSection(const QString &title, const QString &body,
-                        QWidget *parent) -> QGroupBox * {
-  auto *group = new QGroupBox(title, parent);
-  auto *layout = new QVBoxLayout(group);
+auto createGuideSection(const QString& title,
+                        const QString& body,
+                        QWidget* parent) -> QGroupBox* {
+  auto* group = new QGroupBox(title, parent);
+  auto* layout = new QVBoxLayout(group);
   layout->setSpacing(4);
 
-  auto *label = new QLabel(body, group);
+  auto* label = new QLabel(body, group);
   label->setObjectName("panelHint");
   label->setWordWrap(true);
   label->setTextFormat(Qt::PlainText);
@@ -37,22 +40,22 @@ auto createGuideSection(const QString &title, const QString &body,
   return group;
 }
 
-auto createGuidePanel(QWidget *parent) -> QWidget * {
-  auto *panel = new QWidget(parent);
-  auto *layout = new QVBoxLayout(panel);
+auto createGuidePanel(QWidget* parent) -> QWidget* {
+  auto* panel = new QWidget(parent);
+  auto* layout = new QVBoxLayout(panel);
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
 
-  auto *title = new QLabel("Editor Guide", panel);
+  auto* title = new QLabel("Editor Guide", panel);
   title->setObjectName("panelTitle");
   layout->addWidget(title);
 
-  auto *intro = new QLabel(
-      "The map editor uses the same dark split-view layout as the other "
-      "Standard "
-      "of Iron tools, with the canvas on the left and editing panels on the "
-      "right.",
-      panel);
+  auto* intro =
+      new QLabel("The map editor uses the same dark split-view layout as the other "
+                 "Standard "
+                 "of Iron tools, with the canvas on the left and editing panels on the "
+                 "right.",
+                 panel);
   intro->setObjectName("panelIntro");
   intro->setWordWrap(true);
   intro->setTextFormat(Qt::PlainText);
@@ -67,16 +70,16 @@ auto createGuidePanel(QWidget *parent) -> QWidget * {
                          "5. Save the map when the layout looks right.",
                          panel));
 
-  layout->addWidget(createGuideSection(
-      "Mouse Controls",
-      "Left click places or selects.\n"
-      "Drag empty space in Select mode to pan.\n"
-      "Middle click, Space + drag, or Ctrl + left drag also pans.\n"
-      "Mouse wheel zooms in and out.\n"
-      "Right click or Escape returns to Select.\n"
-      "Double-click element to edit its JSON.\n"
-      "Double-click empty canvas opens Resize Map.",
-      panel));
+  layout->addWidget(
+      createGuideSection("Mouse Controls",
+                         "Left click places or selects.\n"
+                         "Drag empty space in Select mode to pan.\n"
+                         "Middle click, Space + drag, or Ctrl + left drag also pans.\n"
+                         "Mouse wheel zooms in and out.\n"
+                         "Right click or Escape returns to Select.\n"
+                         "Double-click element to edit its JSON.\n"
+                         "Double-click empty canvas opens Resize Map.",
+                         panel));
 
   layout->addWidget(createGuideSection("Keyboard Shortcuts",
                                        "Ctrl+N: New map\n"
@@ -92,15 +95,15 @@ auto createGuidePanel(QWidget *parent) -> QWidget * {
   return panel;
 }
 
-auto normalizedDisplayPath(const QString &file_path) -> QString {
+auto normalizedDisplayPath(const QString& file_path) -> QString {
   return QDir::toNativeSeparators(QFileInfo(file_path).absoluteFilePath());
 }
 
-auto prettifyIdentifier(const QString &value) -> QString {
+auto prettifyIdentifier(const QString& value) -> QString {
   QString label = value;
   label.replace(QLatin1Char('_'), QLatin1Char(' '));
   QStringList parts = label.split(QLatin1Char(' '), Qt::SkipEmptyParts);
-  for (QString &part : parts) {
+  for (QString& part : parts) {
     if (!part.isEmpty()) {
       part[0] = part[0].toUpper();
     }
@@ -112,18 +115,21 @@ auto prettifyIdentifier(const QString &value) -> QString {
 
 namespace MapEditor {
 
-EditorWindow::EditorWindow(QWidget *parent) : QMainWindow(parent) {
+EditorWindow::EditorWindow(QWidget* parent)
+    : QMainWindow(parent) {
   m_map_data = new MapData(this);
 
   setup_ui();
   setup_menus();
 
-  connect(m_map_data, &MapData::modified_changed, this,
-          &EditorWindow::on_modified_changed);
-  connect(m_map_data, &MapData::undo_redo_changed, this,
+  connect(
+      m_map_data, &MapData::modified_changed, this, &EditorWindow::on_modified_changed);
+  connect(m_map_data,
+          &MapData::undo_redo_changed,
+          this,
           &EditorWindow::on_undo_redo_changed);
-  connect(m_map_data, &MapData::data_changed, this,
-          &EditorWindow::update_dimensions_label);
+  connect(
+      m_map_data, &MapData::data_changed, this, &EditorWindow::update_dimensions_label);
 
   setWindowTitle("Standard of Iron - Map Editor");
   resize(1400, 900);
@@ -134,63 +140,69 @@ EditorWindow::EditorWindow(QWidget *parent) : QMainWindow(parent) {
 EditorWindow::~EditorWindow() = default;
 
 void EditorWindow::setup_ui() {
-  auto *central_widget = new QWidget(this);
+  auto* central_widget = new QWidget(this);
   setCentralWidget(central_widget);
 
-  auto *main_layout = new QHBoxLayout(central_widget);
+  auto* main_layout = new QHBoxLayout(central_widget);
   main_layout->setContentsMargins(0, 0, 0, 0);
   main_layout->setSpacing(0);
 
-  auto *splitter = new QSplitter(Qt::Horizontal, central_widget);
+  auto* splitter = new QSplitter(Qt::Horizontal, central_widget);
   splitter->setChildrenCollapsible(false);
 
   m_canvas = new MapCanvas(splitter);
   m_canvas->set_map_data(m_map_data);
-  connect(m_canvas, &MapCanvas::element_double_clicked, this,
+  connect(m_canvas,
+          &MapCanvas::element_double_clicked,
+          this,
           &EditorWindow::on_element_double_clicked);
-  connect(m_canvas, &MapCanvas::grid_double_clicked, this,
+  connect(m_canvas,
+          &MapCanvas::grid_double_clicked,
+          this,
           &EditorWindow::on_grid_double_clicked);
-  connect(m_canvas, &MapCanvas::tool_cleared, this,
-          &EditorWindow::on_tool_cleared);
-  connect(m_canvas, &MapCanvas::status_hint_changed, this,
-          [this](const QString &hint) {
-            m_hint_active = !hint.isEmpty();
-            if (m_hint_active && m_tool_label != nullptr) {
-              m_tool_label->setText(hint);
-            } else {
-              refresh_status_label();
-            }
-          });
+  connect(m_canvas, &MapCanvas::tool_cleared, this, &EditorWindow::on_tool_cleared);
+  connect(m_canvas, &MapCanvas::status_hint_changed, this, [this](const QString& hint) {
+    m_hint_active = !hint.isEmpty();
+    if (m_hint_active && m_tool_label != nullptr) {
+      m_tool_label->setText(hint);
+    } else {
+      refresh_status_label();
+    }
+  });
   connect(m_canvas, &MapCanvas::zoom_changed, this, [this](float zoom) {
     m_zoom_label->setText(QString("%1%").arg(static_cast<int>(zoom * 100)));
   });
-  connect(m_canvas, &MapCanvas::selection_changed, this,
+  connect(m_canvas,
+          &MapCanvas::selection_changed,
+          this,
           &EditorWindow::on_selection_changed);
   connect(m_canvas, &MapCanvas::cursor_moved, this, [this](int gx, int gz) {
     if (m_cursor_label != nullptr) {
       m_cursor_label->setText(QString("X:%1 Z:%2").arg(gx).arg(gz));
     }
   });
-  connect(m_map_data, &MapData::data_changed, this,
-          &EditorWindow::update_selection_info);
+  connect(
+      m_map_data, &MapData::data_changed, this, &EditorWindow::update_selection_info);
 
-  auto *sidebar_tabs = new QTabWidget(splitter);
+  auto* sidebar_tabs = new QTabWidget(splitter);
   sidebar_tabs->setMinimumWidth(300);
   sidebar_tabs->setMaximumWidth(420);
 
   m_tool_panel = new ToolPanel(sidebar_tabs);
-  connect(m_tool_panel, &ToolPanel::tool_selected, this,
-          &EditorWindow::on_tool_selected);
-  connect(m_tool_panel, &ToolPanel::player_id_changed, m_canvas,
+  connect(
+      m_tool_panel, &ToolPanel::tool_selected, this, &EditorWindow::on_tool_selected);
+  connect(m_tool_panel,
+          &ToolPanel::player_id_changed,
+          m_canvas,
           &MapCanvas::set_current_player_id);
 
-  auto *tools_scroll = new QScrollArea(sidebar_tabs);
+  auto* tools_scroll = new QScrollArea(sidebar_tabs);
   tools_scroll->setWidget(m_tool_panel);
   tools_scroll->setWidgetResizable(true);
   tools_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   sidebar_tabs->addTab(tools_scroll, "Tools");
 
-  auto *guide_scroll = new QScrollArea(sidebar_tabs);
+  auto* guide_scroll = new QScrollArea(sidebar_tabs);
   guide_scroll->setWidget(createGuidePanel(guide_scroll));
   guide_scroll->setWidgetResizable(true);
   guide_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -206,8 +218,7 @@ void EditorWindow::setup_ui() {
 
   m_feedback_label = new QLabel("Ready", this);
   m_feedback_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  m_feedback_label->setSizePolicy(QSizePolicy::Expanding,
-                                  QSizePolicy::Preferred);
+  m_feedback_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   m_tool_label = new QLabel(m_tool_status_text, this);
   m_tool_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
   m_dimensions_label = new QLabel("", this);
@@ -229,22 +240,22 @@ void EditorWindow::setup_ui() {
   statusBar()->addPermanentWidget(m_file_label);
   statusBar()->addPermanentWidget(m_zoom_label);
   statusBar()->addPermanentWidget(m_dimensions_label);
-  auto *version_label = new QLabel("Map Editor v1.0", this);
+  auto* version_label = new QLabel("Map Editor v1.0", this);
   version_label->setStyleSheet("color: #4f6a75;");
   statusBar()->addPermanentWidget(version_label);
 }
 
 void EditorWindow::setup_menus() {
 
-  auto *file_menu = menuBar()->addMenu("&File");
+  auto* file_menu = menuBar()->addMenu("&File");
 
-  auto *new_action = new QAction("&New", this);
+  auto* new_action = new QAction("&New", this);
   new_action->setShortcut(QKeySequence::New);
   new_action->setToolTip("Create a new map (Ctrl+N)");
   connect(new_action, &QAction::triggered, this, &EditorWindow::new_map);
   file_menu->addAction(new_action);
 
-  auto *open_action = new QAction("&Open...", this);
+  auto* open_action = new QAction("&Open...", this);
   open_action->setShortcut(QKeySequence::Open);
   open_action->setToolTip("Open an existing map (Ctrl+O)");
   connect(open_action, &QAction::triggered, this, &EditorWindow::open_map);
@@ -252,27 +263,26 @@ void EditorWindow::setup_menus() {
 
   file_menu->addSeparator();
 
-  auto *save_action = new QAction("&Save", this);
+  auto* save_action = new QAction("&Save", this);
   save_action->setShortcut(QKeySequence::Save);
   save_action->setToolTip("Save the current map (Ctrl+S)");
   connect(save_action, &QAction::triggered, this, &EditorWindow::save_map);
   file_menu->addAction(save_action);
 
-  auto *save_as_action = new QAction("Save &As...", this);
+  auto* save_as_action = new QAction("Save &As...", this);
   save_as_action->setShortcut(QKeySequence::SaveAs);
   save_as_action->setToolTip("Save the map to a new file (Ctrl+Shift+S)");
-  connect(save_as_action, &QAction::triggered, this,
-          &EditorWindow::save_map_as);
+  connect(save_as_action, &QAction::triggered, this, &EditorWindow::save_map_as);
   file_menu->addAction(save_as_action);
 
   file_menu->addSeparator();
 
-  auto *exit_action = new QAction("E&xit", this);
+  auto* exit_action = new QAction("E&xit", this);
   exit_action->setShortcut(QKeySequence::Quit);
   connect(exit_action, &QAction::triggered, this, &QWidget::close);
   file_menu->addAction(exit_action);
 
-  auto *edit_menu = menuBar()->addMenu("&Edit");
+  auto* edit_menu = menuBar()->addMenu("&Edit");
 
   m_undo_action = new QAction("&Undo", this);
   m_undo_action->setShortcut(QKeySequence::Undo);
@@ -290,12 +300,12 @@ void EditorWindow::setup_menus() {
 
   edit_menu->addSeparator();
 
-  auto *resize_action = new QAction("&Resize Map...", this);
+  auto* resize_action = new QAction("&Resize Map...", this);
   resize_action->setToolTip("Resize the grid dimensions");
   connect(resize_action, &QAction::triggered, this, &EditorWindow::resize_map);
   edit_menu->addAction(resize_action);
 
-  auto *toolbar = addToolBar("Main");
+  auto* toolbar = addToolBar("Main");
   toolbar->setMovable(false);
   toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
   toolbar->addAction(new_action);
@@ -325,9 +335,11 @@ void EditorWindow::open_map() {
     return;
   }
 
-  const QString file_path = QFileDialog::getOpenFileName(
-      this, "Open Map", default_map_dialog_path(QString()),
-      "JSON Files (*.json);;All Files (*)");
+  const QString file_path =
+      QFileDialog::getOpenFileName(this,
+                                   "Open Map",
+                                   default_map_dialog_path(QString()),
+                                   "JSON Files (*.json);;All Files (*)");
 
   if (file_path.isEmpty()) {
     return;
@@ -346,7 +358,7 @@ void EditorWindow::open_map() {
   }
 }
 
-bool EditorWindow::load_file(const QString &file_path) {
+bool EditorWindow::load_file(const QString& file_path) {
   QString error_message;
   if (m_map_data->load_from_json(file_path, &error_message)) {
     m_current_file_path = QFileInfo(file_path).absoluteFilePath();
@@ -377,9 +389,11 @@ void EditorWindow::save_map_as() {
   suggested_name.replace(' ', '_');
   suggested_name = suggested_name.toLower();
 
-  QString file_path = QFileDialog::getSaveFileName(
-      this, "Save Map As", default_map_dialog_path(suggested_name + ".json"),
-      "JSON Files (*.json);;All Files (*)");
+  QString file_path =
+      QFileDialog::getSaveFileName(this,
+                                   "Save Map As",
+                                   default_map_dialog_path(suggested_name + ".json"),
+                                   "JSON Files (*.json);;All Files (*)");
 
   if (file_path.isEmpty()) {
     show_action_feedback("Save As cancelled.", false);
@@ -394,7 +408,7 @@ void EditorWindow::save_map_as() {
 }
 
 void EditorWindow::resize_map() {
-  const GridSettings &grid = m_map_data->grid();
+  const GridSettings& grid = m_map_data->grid();
   ResizeDialog dialog(grid.width, grid.height, this);
 
   if (dialog.exec() == QDialog::Accepted) {
@@ -404,9 +418,8 @@ void EditorWindow::resize_map() {
     m_map_data->execute_command(
         std::make_unique<ResizeMapCmd>(m_map_data, grid, new_grid));
     m_canvas->update();
-    show_action_feedback(QString("Resized map to %1 x %2")
-                             .arg(new_grid.width)
-                             .arg(new_grid.height));
+    show_action_feedback(
+        QString("Resized map to %1 x %2").arg(new_grid.width).arg(new_grid.height));
   }
 }
 
@@ -491,7 +504,9 @@ void EditorWindow::on_tool_cleared() {
   refresh_status_label();
 }
 
-void EditorWindow::on_grid_double_clicked() { resize_map(); }
+void EditorWindow::on_grid_double_clicked() {
+  resize_map();
+}
 
 void EditorWindow::on_undo_redo_changed() {
   const bool can_undo = m_map_data->can_undo();
@@ -508,9 +523,8 @@ void EditorWindow::on_undo_redo_changed() {
 }
 
 void EditorWindow::update_dimensions_label() {
-  const GridSettings &grid = m_map_data->grid();
-  m_dimensions_label->setText(
-      QString("Map: %1 x %2").arg(grid.width).arg(grid.height));
+  const GridSettings& grid = m_map_data->grid();
+  m_dimensions_label->setText(QString("Map: %1 x %2").arg(grid.width).arg(grid.height));
 }
 
 void EditorWindow::on_element_double_clicked(int element_type, int index) {
@@ -519,11 +533,11 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
 
   if (element_type == 0) {
 
-    const auto &terrain = m_map_data->terrain_elements();
+    const auto& terrain = m_map_data->terrain_elements();
     if (index < 0 || index >= terrain.size()) {
       return;
     }
-    const auto &elem = terrain[index];
+    const auto& elem = terrain[index];
 
     json[MapJsonKeys::type] = elem.type;
     json[MapJsonKeys::x] = static_cast<double>(elem.x);
@@ -536,17 +550,17 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     if (!elem.entrances.isEmpty()) {
       json[MapJsonKeys::entrances] = elem.entrances;
     }
-    for (const QString &key : elem.extra_fields.keys()) {
+    for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];
     }
 
     title = "Edit Terrain: " + elem.type;
   } else if (element_type == 1) {
-    const auto &world_props = m_map_data->world_props();
+    const auto& world_props = m_map_data->world_props();
     if (index < 0 || index >= world_props.size()) {
       return;
     }
-    const auto &elem = world_props[index];
+    const auto& elem = world_props[index];
 
     json[MapJsonKeys::type] = elem.type;
     json[MapJsonKeys::x] = static_cast<double>(elem.x);
@@ -559,18 +573,18 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       json[MapJsonKeys::scale] = static_cast<double>(elem.scale);
       json[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
     }
-    for (const QString &key : elem.extra_fields.keys()) {
+    for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];
     }
 
     title = "Edit Prop: " + prettifyIdentifier(elem.type);
   } else if (element_type == 2) {
 
-    const auto &linear = m_map_data->linear_elements();
+    const auto& linear = m_map_data->linear_elements();
     if (index < 0 || index >= linear.size()) {
       return;
     }
-    const auto &elem = linear[index];
+    const auto& elem = linear[index];
 
     json[MapJsonKeys::type] = elem.type;
     json[MapJsonKeys::start] = QJsonArray{static_cast<double>(elem.start.x()),
@@ -584,18 +598,18 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     if (elem.type == "road" && !elem.style.isEmpty()) {
       json[MapJsonKeys::style] = elem.style;
     }
-    for (const QString &key : elem.extra_fields.keys()) {
+    for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];
     }
 
     title = "Edit " + elem.type;
   } else if (element_type == 3) {
 
-    const auto &structures = m_map_data->structures();
+    const auto& structures = m_map_data->structures();
     if (index < 0 || index >= structures.size()) {
       return;
     }
-    const auto &elem = structures[index];
+    const auto& elem = structures[index];
 
     json[MapJsonKeys::type] = elem.type;
     json[MapJsonKeys::x] = static_cast<double>(elem.x);
@@ -605,7 +619,7 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     if (!elem.nation.isEmpty()) {
       json[MapJsonKeys::nation] = elem.nation;
     }
-    for (const QString &key : elem.extra_fields.keys()) {
+    for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];
     }
 
@@ -623,60 +637,66 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       elem.type = new_json[MapJsonKeys::type].toString();
       elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
       elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.radius =
-          static_cast<float>(new_json[MapJsonKeys::radius].toDouble(10.0));
-      elem.width =
-          static_cast<float>(new_json[MapJsonKeys::width].toDouble(0.0));
-      elem.depth =
-          static_cast<float>(new_json[MapJsonKeys::depth].toDouble(0.0));
-      elem.height =
-          static_cast<float>(new_json[MapJsonKeys::height].toDouble(3.0));
-      elem.rotation =
-          static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
+      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(10.0));
+      elem.width = static_cast<float>(new_json[MapJsonKeys::width].toDouble(0.0));
+      elem.depth = static_cast<float>(new_json[MapJsonKeys::depth].toDouble(0.0));
+      elem.height = static_cast<float>(new_json[MapJsonKeys::height].toDouble(3.0));
+      elem.rotation = static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
       elem.entrances = new_json[MapJsonKeys::entrances].toArray();
 
-      const QStringList known_keys = {
-          MapJsonKeys::type,   MapJsonKeys::x,        MapJsonKeys::z,
-          MapJsonKeys::radius, MapJsonKeys::width,    MapJsonKeys::depth,
-          MapJsonKeys::height, MapJsonKeys::rotation, MapJsonKeys::entrances};
-      for (const QString &key : new_json.keys()) {
+      const QStringList known_keys = {MapJsonKeys::type,
+                                      MapJsonKeys::x,
+                                      MapJsonKeys::z,
+                                      MapJsonKeys::radius,
+                                      MapJsonKeys::width,
+                                      MapJsonKeys::depth,
+                                      MapJsonKeys::height,
+                                      MapJsonKeys::rotation,
+                                      MapJsonKeys::entrances};
+      for (const QString& key : new_json.keys()) {
         if (!known_keys.contains(key)) {
           elem.extra_fields[key] = new_json[key];
         }
       }
 
-      m_map_data->execute_command(std::make_unique<UpdateTerrainCmd>(
-          m_map_data, index, m_map_data->terrain_elements()[index], elem,
-          "Edit terrain"));
+      m_map_data->execute_command(
+          std::make_unique<UpdateTerrainCmd>(m_map_data,
+                                             index,
+                                             m_map_data->terrain_elements()[index],
+                                             elem,
+                                             "Edit terrain"));
     } else if (element_type == 1) {
       WorldPropElement elem;
-      elem.type =
-          new_json[MapJsonKeys::type].toString(QStringLiteral("firecamp"));
+      elem.type = new_json[MapJsonKeys::type].toString(QStringLiteral("firecamp"));
       elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
       elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
-      elem.scale =
-          static_cast<float>(new_json[MapJsonKeys::scale].toDouble(1.0));
-      elem.rotation =
-          static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
+      elem.scale = static_cast<float>(new_json[MapJsonKeys::scale].toDouble(1.0));
+      elem.rotation = static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
       elem.intensity =
           static_cast<float>(new_json[MapJsonKeys::intensity].toDouble(1.0));
-      elem.radius =
-          static_cast<float>(new_json[MapJsonKeys::radius].toDouble(3.0));
+      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(3.0));
       elem.persistent = new_json[MapJsonKeys::persistent].toBool(true);
 
-      const QStringList known_keys = {
-          MapJsonKeys::type,   MapJsonKeys::x,         MapJsonKeys::z,
-          MapJsonKeys::scale,  MapJsonKeys::rotation,  MapJsonKeys::intensity,
-          MapJsonKeys::radius, MapJsonKeys::persistent};
-      for (const QString &key : new_json.keys()) {
+      const QStringList known_keys = {MapJsonKeys::type,
+                                      MapJsonKeys::x,
+                                      MapJsonKeys::z,
+                                      MapJsonKeys::scale,
+                                      MapJsonKeys::rotation,
+                                      MapJsonKeys::intensity,
+                                      MapJsonKeys::radius,
+                                      MapJsonKeys::persistent};
+      for (const QString& key : new_json.keys()) {
         if (!known_keys.contains(key)) {
           elem.extra_fields[key] = new_json[key];
         }
       }
 
-      m_map_data->execute_command(std::make_unique<UpdateWorldPropCmd>(
-          m_map_data, index, m_map_data->world_props()[index], elem,
-          "Edit " + elem.type));
+      m_map_data->execute_command(
+          std::make_unique<UpdateWorldPropCmd>(m_map_data,
+                                               index,
+                                               m_map_data->world_props()[index],
+                                               elem,
+                                               "Edit " + elem.type));
     } else if (element_type == 2) {
       LinearElement elem;
       elem.type = new_json[MapJsonKeys::type].toString();
@@ -689,24 +709,28 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
         elem.end = QVector2D(static_cast<float>(end_arr[0].toDouble()),
                              static_cast<float>(end_arr[1].toDouble()));
       }
-      elem.width =
-          static_cast<float>(new_json[MapJsonKeys::width].toDouble(3.0));
-      elem.height =
-          static_cast<float>(new_json[MapJsonKeys::height].toDouble(0.5));
+      elem.width = static_cast<float>(new_json[MapJsonKeys::width].toDouble(3.0));
+      elem.height = static_cast<float>(new_json[MapJsonKeys::height].toDouble(0.5));
       elem.style = new_json[MapJsonKeys::style].toString("default");
 
-      const QStringList known_keys = {MapJsonKeys::type,   MapJsonKeys::start,
-                                      MapJsonKeys::end,    MapJsonKeys::width,
-                                      MapJsonKeys::height, MapJsonKeys::style};
-      for (const QString &key : new_json.keys()) {
+      const QStringList known_keys = {MapJsonKeys::type,
+                                      MapJsonKeys::start,
+                                      MapJsonKeys::end,
+                                      MapJsonKeys::width,
+                                      MapJsonKeys::height,
+                                      MapJsonKeys::style};
+      for (const QString& key : new_json.keys()) {
         if (!known_keys.contains(key)) {
           elem.extra_fields[key] = new_json[key];
         }
       }
 
-      m_map_data->execute_command(std::make_unique<UpdateLinearCmd>(
-          m_map_data, index, m_map_data->linear_elements()[index], elem,
-          "Edit " + elem.type));
+      m_map_data->execute_command(
+          std::make_unique<UpdateLinearCmd>(m_map_data,
+                                            index,
+                                            m_map_data->linear_elements()[index],
+                                            elem,
+                                            "Edit " + elem.type));
     } else if (element_type == 3) {
       StructureElement elem;
       elem.type = new_json[MapJsonKeys::type].toString();
@@ -722,15 +746,18 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
                                       MapJsonKeys::player_id,
                                       MapJsonKeys::max_population,
                                       MapJsonKeys::nation};
-      for (const QString &key : new_json.keys()) {
+      for (const QString& key : new_json.keys()) {
         if (!known_keys.contains(key)) {
           elem.extra_fields[key] = new_json[key];
         }
       }
 
-      m_map_data->execute_command(std::make_unique<UpdateStructureCmd>(
-          m_map_data, index, m_map_data->structures()[index], elem,
-          "Edit " + elem.type));
+      m_map_data->execute_command(
+          std::make_unique<UpdateStructureCmd>(m_map_data,
+                                               index,
+                                               m_map_data->structures()[index],
+                                               elem,
+                                               "Edit " + elem.type));
     }
   }
 }
@@ -756,44 +783,43 @@ void EditorWindow::update_current_file_label() {
   m_file_label->setToolTip(display_path);
 }
 
-void EditorWindow::show_action_feedback(const QString &message, bool success) {
+void EditorWindow::show_action_feedback(const QString& message, bool success) {
   if (m_feedback_label == nullptr) {
     return;
   }
 
   m_feedback_label->setText(message);
-  m_feedback_label->setStyleSheet(success ? "color: #9fd9ff;"
-                                          : "color: #ff9b9b;");
+  m_feedback_label->setStyleSheet(success ? "color: #9fd9ff;" : "color: #ff9b9b;");
   m_feedback_label->setToolTip(message);
 }
 
-void EditorWindow::show_load_failure(const QString &file_path,
-                                     const QString &error_message) {
+void EditorWindow::show_load_failure(const QString& file_path,
+                                     const QString& error_message) {
   const QString display_path = normalizedDisplayPath(file_path);
   const QString detail = error_message.trimmed().isEmpty()
                              ? QString("Unable to load the map file.")
                              : error_message;
   show_action_feedback("Load failed: " + display_path, false);
-  QMessageBox::critical(this, "Load Failed",
-                        QString("Could not load map file:\n%1\n\nReason: %2")
-                            .arg(display_path, detail));
+  QMessageBox::critical(
+      this,
+      "Load Failed",
+      QString("Could not load map file:\n%1\n\nReason: %2").arg(display_path, detail));
 }
 
-void EditorWindow::show_save_failure(const QString &file_path,
-                                     const QString &error_message) {
+void EditorWindow::show_save_failure(const QString& file_path,
+                                     const QString& error_message) {
   const QString display_path = normalizedDisplayPath(file_path);
   const QString detail = error_message.trimmed().isEmpty()
                              ? QString("Unable to write the map file.")
                              : error_message;
   show_action_feedback("Save failed: " + display_path, false);
-  QMessageBox::critical(
-      this, "Save Failed",
-      QString("Could not save map \"%1\" to:\n%2\n\nReason: %3")
-          .arg(m_map_data->name(), display_path, detail));
+  QMessageBox::critical(this,
+                        "Save Failed",
+                        QString("Could not save map \"%1\" to:\n%2\n\nReason: %3")
+                            .arg(m_map_data->name(), display_path, detail));
 }
 
-QString
-EditorWindow::default_map_dialog_path(const QString &fallback_name) const {
+QString EditorWindow::default_map_dialog_path(const QString& fallback_name) const {
   if (!m_current_file_path.isEmpty()) {
     return m_current_file_path;
   }
@@ -811,7 +837,7 @@ EditorWindow::default_map_dialog_path(const QString &fallback_name) const {
   return QDir::currentPath();
 }
 
-bool EditorWindow::save_map_to_path(const QString &file_path,
+bool EditorWindow::save_map_to_path(const QString& file_path,
                                     bool update_current_path) {
   const QString absolute_path = QFileInfo(file_path).absoluteFilePath();
   QString error_message;
@@ -852,7 +878,8 @@ bool EditorWindow::maybe_save() {
   }
 
   QMessageBox::StandardButton ret = QMessageBox::warning(
-      this, "Unsaved Changes",
+      this,
+      "Unsaved Changes",
       "The map has been modified.\nDo you want to save your changes?",
       QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
@@ -866,7 +893,7 @@ bool EditorWindow::maybe_save() {
   return true;
 }
 
-void EditorWindow::closeEvent(QCloseEvent *event) {
+void EditorWindow::closeEvent(QCloseEvent* event) {
   if (maybe_save()) {
     event->accept();
   } else {
@@ -884,27 +911,25 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
   QString type_name;
   QString coords;
   if (element_type == 0) {
-    const auto &terrain = m_map_data->terrain_elements();
+    const auto& terrain = m_map_data->terrain_elements();
     if (index < terrain.size()) {
-      const auto &e = terrain[index];
+      const auto& e = terrain[index];
       type_name = e.type;
-      coords = QString("(%1, %2)")
-                   .arg(static_cast<int>(e.x))
-                   .arg(static_cast<int>(e.z));
+      coords =
+          QString("(%1, %2)").arg(static_cast<int>(e.x)).arg(static_cast<int>(e.z));
     }
   } else if (element_type == 1) {
-    const auto &world_props = m_map_data->world_props();
+    const auto& world_props = m_map_data->world_props();
     if (index < world_props.size()) {
-      const auto &e = world_props[index];
+      const auto& e = world_props[index];
       type_name = e.type;
-      coords = QString("(%1, %2)")
-                   .arg(static_cast<int>(e.x))
-                   .arg(static_cast<int>(e.z));
+      coords =
+          QString("(%1, %2)").arg(static_cast<int>(e.x)).arg(static_cast<int>(e.z));
     }
   } else if (element_type == 2) {
-    const auto &linear = m_map_data->linear_elements();
+    const auto& linear = m_map_data->linear_elements();
     if (index < linear.size()) {
-      const auto &e = linear[index];
+      const auto& e = linear[index];
       type_name = e.type;
       coords = QString("(%1,%2)→(%3,%4)")
                    .arg(static_cast<int>(e.start.x()))
@@ -913,9 +938,9 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
                    .arg(static_cast<int>(e.end.y()));
     }
   } else if (element_type == 3) {
-    const auto &structures = m_map_data->structures();
+    const auto& structures = m_map_data->structures();
     if (index < structures.size()) {
-      const auto &e = structures[index];
+      const auto& e = structures[index];
       type_name = e.type;
       coords = QString("(%1, %2) P%3")
                    .arg(static_cast<int>(e.x))
@@ -925,8 +950,8 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
   }
 
   if (!type_name.isEmpty()) {
-    m_selection_status_text = QString("Selected: %1 at %2")
-                                  .arg(prettifyIdentifier(type_name), coords);
+    m_selection_status_text =
+        QString("Selected: %1 at %2").arg(prettifyIdentifier(type_name), coords);
   } else {
     m_selection_status_text.clear();
   }

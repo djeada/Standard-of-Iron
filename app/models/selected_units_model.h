@@ -1,8 +1,10 @@
 #pragma once
 
-#include "../../game/core/entity.h"
 #include <QAbstractListModel>
+
 #include <vector>
+
+#include "../../game/core/entity.h"
 
 class GameEngine;
 
@@ -22,19 +24,18 @@ public:
     CanRunRole
   };
 
-  explicit SelectedUnitsModel(GameEngine *engine, QObject *parent = nullptr);
+  explicit SelectedUnitsModel(GameEngine* engine, QObject* parent = nullptr);
 
   [[nodiscard]] auto
-  rowCount(const QModelIndex &parent = QModelIndex()) const -> int override;
-  [[nodiscard]] auto
-  data(const QModelIndex &index,
-       int role = Qt::DisplayRole) const -> QVariant override;
+  rowCount(const QModelIndex& parent = QModelIndex()) const -> int override;
+  [[nodiscard]] auto data(const QModelIndex& index,
+                          int role = Qt::DisplayRole) const -> QVariant override;
   [[nodiscard]] auto roleNames() const -> QHash<int, QByteArray> override;
 
 public slots:
   void refresh();
 
 private:
-  GameEngine *m_engine = nullptr;
+  GameEngine* m_engine = nullptr;
   std::vector<Engine::Core::EntityID> m_ids;
 };

@@ -1,13 +1,13 @@
 #pragma once
 
+#include <cstddef>
+#include <span>
+#include <vector>
+
 #include "../../entity/registry.h"
 #include "creature_pipeline.h"
 #include "creature_render_graph.h"
 #include "creature_render_state.h"
-
-#include <cstddef>
-#include <span>
-#include <vector>
 
 namespace Render::GL {
 class ISubmitter;
@@ -15,8 +15,8 @@ class ISubmitter;
 
 namespace Render::Creature::Pipeline {
 
-auto submit_preparation(CreaturePreparationResult &prep,
-                        Render::GL::ISubmitter &out) noexcept -> SubmitStats;
+auto submit_preparation(CreaturePreparationResult& prep,
+                        Render::GL::ISubmitter& out) noexcept -> SubmitStats;
 
 class PreparedCreatureSubmitBatch {
 public:

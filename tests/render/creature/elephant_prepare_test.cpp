@@ -1,5 +1,14 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <array>
+#include <cmath>
+#include <fstream>
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
@@ -21,51 +30,43 @@
 #include "render/template_cache.h"
 #include "tests/render/test_asset_paths.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <array>
-#include <cmath>
-#include <fstream>
-#include <gtest/gtest.h>
-#include <vector>
-
 namespace {
 
 class NullSubmitter : public Render::GL::ISubmitter {
 public:
   int rigged_calls{0};
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {}
-  void rigged(const Render::GL::RiggedCreatureCmd &) override {
-    ++rigged_calls;
-  }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {}
+  void rigged(const Render::GL::RiggedCreatureCmd&) override { ++rigged_calls; }
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 struct ScopedFlatTerrain {
   explicit ScopedFlatTerrain(float height) {
-    auto &terrain = Game::Map::TerrainService::instance();
+    auto& terrain = Game::Map::TerrainService::instance();
     std::vector<float> heights(9, height);
-    std::vector<Game::Map::TerrainType> terrain_types(
-        9, Game::Map::TerrainType::Flat);
-    terrain.restore_from_serialized(3, 3, 1.0F, heights, terrain_types, {}, {},
-                                    {}, Game::Map::BiomeSettings{});
+    std::vector<Game::Map::TerrainType> terrain_types(9, Game::Map::TerrainType::Flat);
+    terrain.restore_from_serialized(
+        3, 3, 1.0F, heights, terrain_types, {}, {}, {}, Game::Map::BiomeSettings{});
   }
 
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
@@ -104,8 +105,12 @@ TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {
 
   QMatrix4x4 world;
   const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
-      spec, Render::Creature::Pipeline::CreatureKind::Elephant, world, 23,
-      Render::Creature::CreatureLOD::Minimal, 0,
+      spec,
+      Render::Creature::Pipeline::CreatureKind::Elephant,
+      world,
+      23,
+      Render::Creature::CreatureLOD::Minimal,
+      0,
       Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
@@ -149,12 +154,11 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
-  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  auto& bpat = Render::Creature::Bpat::BpatRegistry::instance();
   ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_elephant,
                                 root + "/elephant.bpat"));
 
-  auto &snapshot_reg =
-      Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  auto& snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
   snapshot_reg.clear();
 
   auto const temp_dir =
@@ -164,14 +168,15 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
 
   Render::Creature::Snapshot::SnapshotMeshWriter writer(
       Render::Creature::Bpat::k_species_elephant,
-      Render::Creature::CreatureLOD::Minimal, 3U,
+      Render::Creature::CreatureLOD::Minimal,
+      3U,
       std::array<std::uint32_t, 3>{0U, 1U, 2U});
   writer.add_clip({"idle", 1U});
   std::array<Render::GL::RiggedVertex, 3> vertices{};
   vertices[0].position_bone_local = {-1.0F, 0.0F, 0.0F};
   vertices[1].position_bone_local = {1.0F, 0.0F, 0.0F};
   vertices[2].position_bone_local = {0.0F, 1.0F, 0.0F};
-  for (auto &v : vertices) {
+  for (auto& v : vertices) {
     v.normal_bone_local = {0.0F, 1.0F, 0.0F};
     v.bone_indices = {0, 0, 0, 0};
     v.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
@@ -182,24 +187,23 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   ASSERT_TRUE(out.good());
   ASSERT_TRUE(writer.write(out));
   out.close();
-  ASSERT_TRUE(snapshot_reg.load_species(
-      Render::Creature::Bpat::k_species_elephant,
-      Render::Creature::CreatureLOD::Minimal, asset_path.string()))
+  ASSERT_TRUE(snapshot_reg.load_species(Render::Creature::Bpat::k_species_elephant,
+                                        Render::Creature::CreatureLOD::Minimal,
+                                        asset_path.string()))
       << snapshot_reg.last_error();
 
   Render::GL::ElephantRendererBase renderer;
   Engine::Core::Entity entity(1);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
@@ -211,40 +215,37 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   recorder.snapshot_mesh_cache().clear();
   recorder.rigged_mesh_cache().clear();
 
-  renderer.render(ctx, anim, profile, nullptr, nullptr, recorder,
-                  Render::GL::HorseLOD::Minimal);
+  renderer.render(
+      ctx, anim, profile, nullptr, nullptr, recorder, Render::GL::HorseLOD::Minimal);
 
   EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
 }
 
-TEST(ElephantPrepare,
-     MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
+TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
   auto const root = TestAssets::find_creature_assets_dir("elephant.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
-  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  auto& bpat = Render::Creature::Bpat::BpatRegistry::instance();
   ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_elephant,
                                 root + "/elephant.bpat"));
 
-  auto &snapshot_reg =
-      Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  auto& snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
   snapshot_reg.clear();
 
   Render::GL::ElephantRendererBase renderer;
   Engine::Core::Entity entity(1);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
@@ -256,8 +257,8 @@ TEST(ElephantPrepare,
   recorder.snapshot_mesh_cache().clear();
   recorder.rigged_mesh_cache().clear();
 
-  renderer.render(ctx, anim, profile, nullptr, nullptr, recorder,
-                  Render::GL::HorseLOD::Minimal);
+  renderer.render(
+      ctx, anim, profile, nullptr, nullptr, recorder, Render::GL::HorseLOD::Minimal);
 
   EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0u);
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
@@ -296,11 +297,13 @@ TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
   EXPECT_FLOAT_EQ(motion.gait.cycle_time, baseline_cycle);
   EXPECT_FLOAT_EQ(profile.gait.cycle_time, baseline_cycle);
   EXPECT_NEAR(motion.howdah.howdah_center.y(),
-              base_howdah.howdah_center.y() + motion.bob, 0.0001F);
+              base_howdah.howdah_center.y() + motion.bob,
+              0.0001F);
   EXPECT_NEAR(motion.howdah.seat_position.y(),
-              base_howdah.seat_position.y() + motion.bob, 0.0001F);
-  EXPECT_NEAR(motion.barrel_center.y(),
-              profile.dims.barrel_center_y + motion.bob, 0.0001F);
+              base_howdah.seat_position.y() + motion.bob,
+              0.0001F);
+  EXPECT_NEAR(
+      motion.barrel_center.y(), profile.dims.barrel_center_y + motion.bob, 0.0001F);
   EXPECT_NEAR(motion.barrel_center.x(), motion.body_sway, 0.0001F);
   EXPECT_GT(motion.chest_center.z(), motion.barrel_center.z());
   EXPECT_LT(motion.rump_center.z(), motion.barrel_center.z());
@@ -381,8 +384,7 @@ TEST(ElephantPrepare, MovingMotionAddsForeAftWeightTransfer) {
   EXPECT_GT(motion.chest_center.z(), motion.barrel_center.z());
   EXPECT_LT(motion.rump_center.z(), motion.barrel_center.z());
   EXPECT_NEAR(motion.chest_center.y(), motion.rump_center.y(), 0.3F);
-  EXPECT_GT(std::abs(motion.chest_center.y() - motion.rump_center.y()),
-            0.0001F);
+  EXPECT_GT(std::abs(motion.chest_center.y() - motion.rump_center.y()), 0.0001F);
 }
 
 TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
@@ -397,14 +399,18 @@ TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
 
   Render::GL::AnimationInputs anim{};
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_render(
-      owner, ctx, anim, profile, nullptr, nullptr,
-      Render::Creature::CreatureLOD::Minimal, prep);
+  Render::Elephant::prepare_elephant_render(owner,
+                                            ctx,
+                                            anim,
+                                            profile,
+                                            nullptr,
+                                            nullptr,
+                                            Render::Creature::CreatureLOD::Minimal,
+                                            prep);
 
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
-  EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 3.1F,
-              0.0001F);
+  EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 3.1F, 0.0001F);
 }
 
 TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
@@ -421,14 +427,18 @@ TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_render(
-      owner, ctx, anim, profile, nullptr, nullptr,
-      Render::Creature::CreatureLOD::Full, prep);
+  Render::Elephant::prepare_elephant_render(owner,
+                                            ctx,
+                                            anim,
+                                            profile,
+                                            nullptr,
+                                            nullptr,
+                                            Render::Creature::CreatureLOD::Full,
+                                            prep);
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
-  EXPECT_EQ(rows[0].spec.kind,
-            Render::Creature::Pipeline::CreatureKind::Elephant);
+  EXPECT_EQ(rows[0].spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
   EXPECT_EQ(requests[0].state, Render::Creature::AnimationStateId::Walk);
@@ -449,14 +459,18 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_render(
-      owner, ctx, anim, profile, nullptr, nullptr,
-      Render::Creature::CreatureLOD::Full, prep);
+  Render::Elephant::prepare_elephant_render(owner,
+                                            ctx,
+                                            anim,
+                                            profile,
+                                            nullptr,
+                                            nullptr,
+                                            Render::Creature::CreatureLOD::Full,
+                                            prep);
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
-  EXPECT_EQ(rows[0].spec.kind,
-            Render::Creature::Pipeline::CreatureKind::Elephant);
+  EXPECT_EQ(rows[0].spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
   EXPECT_EQ(requests[0].state, Render::Creature::AnimationStateId::Idle);
@@ -466,17 +480,16 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
 TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   Render::GL::ElephantRendererBase renderer;
   Engine::Core::Entity entity(1);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
@@ -506,9 +519,14 @@ TEST(ElephantPrepare, ShadowBatchEmptyWithoutResources) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_render(
-      owner, ctx, anim, profile, nullptr, nullptr,
-      Render::Creature::CreatureLOD::Full, prep);
+  Render::Elephant::prepare_elephant_render(owner,
+                                            ctx,
+                                            anim,
+                                            profile,
+                                            nullptr,
+                                            nullptr,
+                                            Render::Creature::CreatureLOD::Full,
+                                            prep);
 
   EXPECT_TRUE(prep.shadow_batch.empty());
 }

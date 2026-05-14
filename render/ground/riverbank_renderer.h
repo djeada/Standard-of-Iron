@@ -1,12 +1,14 @@
 #pragma once
 
-#include "../../game/map/terrain.h"
-#include "../gl/texture.h"
-#include "../i_render_pass.h"
 #include <QMatrix4x4>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "../../game/map/terrain.h"
+#include "../gl/texture.h"
+#include "../i_render_pass.h"
 
 namespace Render::GL {
 class Mesh;
@@ -18,13 +20,13 @@ public:
   RiverbankRenderer();
   ~RiverbankRenderer() override;
 
-  void configure(const std::vector<Game::Map::RiverSegment> &river_segments,
-                 const Game::Map::TerrainHeightMap &height_map);
+  void configure(const std::vector<Game::Map::RiverSegment>& river_segments,
+                 const Game::Map::TerrainHeightMap& height_map);
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
 private:
-  void build_meshes(const Game::Map::TerrainHeightMap &height_map);
+  void build_meshes(const Game::Map::TerrainHeightMap& height_map);
 
   std::vector<Game::Map::RiverSegment> m_river_segments;
   float m_tile_size = 1.0F;

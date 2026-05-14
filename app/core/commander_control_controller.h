@@ -16,7 +16,11 @@ namespace Render::GL {
 class Camera;
 }
 
-enum class DodgeState { None, Rolling, Recovering };
+enum class DodgeState {
+  None,
+  Rolling,
+  Recovering
+};
 
 class CommanderControlController {
 public:
@@ -41,8 +45,8 @@ public:
   void set_view_pitch(float pitch);
   [[nodiscard]] float view_yaw() const;
   [[nodiscard]] float view_pitch() const;
-  [[nodiscard]] InputState &input();
-  [[nodiscard]] const InputState &input() const;
+  [[nodiscard]] InputState& input();
+  [[nodiscard]] const InputState& input() const;
 
   void key_down(int key);
   void key_up(int key);
@@ -51,39 +55,43 @@ public:
   void secondary_action_down();
   void secondary_action_up();
   void mouse_move(qreal dx, qreal dy);
-  void mouse_look_at(qreal sx, qreal sy, qreal center_sx, qreal center_sy,
-                     QQuickWindow *window);
-  void center_mouse(qreal center_sx, qreal center_sy, QQuickWindow *window);
-  void poll_mouse_look(QQuickWindow *window);
+  void mouse_look_at(
+      qreal sx, qreal sy, qreal center_sx, qreal center_sy, QQuickWindow* window);
+  void center_mouse(qreal center_sx, qreal center_sy, QQuickWindow* window);
+  void poll_mouse_look(QQuickWindow* window);
   void request_dodge();
   void request_jump();
   void special_action();
-  void cycle_lock_on_target(Engine::Core::World &world,
+  void cycle_lock_on_target(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,
                             int local_owner_id);
   [[nodiscard]] Engine::Core::EntityID locked_target_id() const;
-  [[nodiscard]] Engine::Core::Entity *
-  controlled_commander(Engine::Core::World &world,
+  [[nodiscard]] Engine::Core::Entity*
+  controlled_commander(Engine::Core::World& world,
                        Engine::Core::EntityID commander_id,
                        int local_owner_id) const;
   [[nodiscard]] Engine::Core::EntityID
-  find_primary_target(Engine::Core::World &world,
-                      Engine::Core::EntityID commander_id, int local_owner_id);
-  [[nodiscard]] bool primary_action(Engine::Core::World &world,
+  find_primary_target(Engine::Core::World& world,
+                      Engine::Core::EntityID commander_id,
+                      int local_owner_id);
+  [[nodiscard]] bool primary_action(Engine::Core::World& world,
                                     Engine::Core::EntityID commander_id,
                                     int local_owner_id);
-  void release_guard(Engine::Core::World &world,
-                     Engine::Core::EntityID commander_id, int local_owner_id);
-  [[nodiscard]] bool update(Engine::Core::World &world,
+  void release_guard(Engine::Core::World& world,
+                     Engine::Core::EntityID commander_id,
+                     int local_owner_id);
+  [[nodiscard]] bool update(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,
-                            int local_owner_id, Render::GL::Camera &camera,
+                            int local_owner_id,
+                            Render::GL::Camera& camera,
                             float dt);
 
 private:
-  void update_camera(Engine::Core::Entity &commander,
-                     Render::GL::Camera &camera, float dt);
-  void update_lock_on_yaw(Engine::Core::World &world,
-                          Engine::Core::Entity &commander, float dt);
+  void
+  update_camera(Engine::Core::Entity& commander, Render::GL::Camera& camera, float dt);
+  void update_lock_on_yaw(Engine::Core::World& world,
+                          Engine::Core::Entity& commander,
+                          float dt);
   InputState m_input;
   float m_view_yaw = 0.0F;
   float m_view_pitch = 0.0F;

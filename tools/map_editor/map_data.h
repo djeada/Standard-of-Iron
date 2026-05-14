@@ -6,6 +6,7 @@
 #include <QString>
 #include <QVector2D>
 #include <QVector>
+
 #include <memory>
 #include <variant>
 #include <vector>
@@ -77,48 +78,47 @@ class MapData : public QObject {
   Q_OBJECT
 
 public:
-  explicit MapData(QObject *parent = nullptr);
+  explicit MapData(QObject* parent = nullptr);
 
-  bool load_from_json(const QString &file_path, QString *out_error = nullptr);
-  bool save_to_json(const QString &file_path,
-                    QString *out_error = nullptr) const;
+  bool load_from_json(const QString& file_path, QString* out_error = nullptr);
+  bool save_to_json(const QString& file_path, QString* out_error = nullptr) const;
 
   [[nodiscard]] QString name() const { return m_name; }
-  void set_name(const QString &name);
+  void set_name(const QString& name);
 
-  [[nodiscard]] const GridSettings &grid() const { return m_grid; }
-  void set_grid(const GridSettings &grid);
+  [[nodiscard]] const GridSettings& grid() const { return m_grid; }
+  void set_grid(const GridSettings& grid);
 
-  [[nodiscard]] const QVector<TerrainElement> &terrain_elements() const {
+  [[nodiscard]] const QVector<TerrainElement>& terrain_elements() const {
     return m_terrain;
   }
-  void add_terrain_element(const TerrainElement &element);
-  void insert_terrain_element(int index, const TerrainElement &element);
-  void update_terrain_element(int index, const TerrainElement &element);
+  void add_terrain_element(const TerrainElement& element);
+  void insert_terrain_element(int index, const TerrainElement& element);
+  void update_terrain_element(int index, const TerrainElement& element);
   void remove_terrain_element(int index);
 
-  [[nodiscard]] const QVector<WorldPropElement> &world_props() const {
+  [[nodiscard]] const QVector<WorldPropElement>& world_props() const {
     return m_world_props;
   }
-  void add_world_prop(const WorldPropElement &element);
-  void insert_world_prop(int index, const WorldPropElement &element);
-  void update_world_prop(int index, const WorldPropElement &element);
+  void add_world_prop(const WorldPropElement& element);
+  void insert_world_prop(int index, const WorldPropElement& element);
+  void update_world_prop(int index, const WorldPropElement& element);
   void remove_world_prop(int index);
 
-  [[nodiscard]] const QVector<LinearElement> &linear_elements() const {
+  [[nodiscard]] const QVector<LinearElement>& linear_elements() const {
     return m_linear_elements;
   }
-  void add_linear_element(const LinearElement &element);
-  void insert_linear_element(int index, const LinearElement &element);
-  void update_linear_element(int index, const LinearElement &element);
+  void add_linear_element(const LinearElement& element);
+  void insert_linear_element(int index, const LinearElement& element);
+  void update_linear_element(int index, const LinearElement& element);
   void remove_linear_element(int index);
 
-  [[nodiscard]] const QVector<StructureElement> &structures() const {
+  [[nodiscard]] const QVector<StructureElement>& structures() const {
     return m_structures;
   }
-  void add_structure(const StructureElement &element);
-  void insert_structure(int index, const StructureElement &element);
-  void update_structure(int index, const StructureElement &element);
+  void add_structure(const StructureElement& element);
+  void insert_structure(int index, const StructureElement& element);
+  void update_structure(int index, const StructureElement& element);
   void remove_structure(int index);
 
   void execute_command(std::unique_ptr<Command> cmd);
@@ -163,13 +163,13 @@ private:
   std::vector<std::unique_ptr<Command>> m_undo_stack;
   std::vector<std::unique_ptr<Command>> m_redo_stack;
 
-  void parse_terrain_array(const QJsonArray &arr);
-  void parse_world_props_array(const QJsonArray &arr);
-  void parse_legacy_firecamps_array(const QJsonArray &arr);
-  void parse_rivers_array(const QJsonArray &arr);
-  void parse_roads_array(const QJsonArray &arr);
-  void parse_bridges_array(const QJsonArray &arr);
-  void parse_structures_from_spawns(const QJsonArray &arr);
+  void parse_terrain_array(const QJsonArray& arr);
+  void parse_world_props_array(const QJsonArray& arr);
+  void parse_legacy_firecamps_array(const QJsonArray& arr);
+  void parse_rivers_array(const QJsonArray& arr);
+  void parse_roads_array(const QJsonArray& arr);
+  void parse_bridges_array(const QJsonArray& arr);
+  void parse_structures_from_spawns(const QJsonArray& arr);
 
   [[nodiscard]] QJsonArray terrain_to_json() const;
   [[nodiscard]] QJsonArray world_props_to_json() const;
@@ -185,51 +185,56 @@ namespace MapEditor {
 
 class AddTerrainCmd : public Command {
 public:
-  AddTerrainCmd(MapData *data, TerrainElement elem)
-      : m_data(data), m_elem(std::move(elem)) {}
+  AddTerrainCmd(MapData* data, TerrainElement elem)
+      : m_data(data)
+      , m_elem(std::move(elem)) {}
   void execute() override {
     m_index = m_data->terrain_elements().size();
     m_data->add_terrain_element(m_elem);
   }
   void undo() override { m_data->remove_terrain_element(m_index); }
-  [[nodiscard]] QString description() const override {
-    return "Place " + m_elem.type;
-  }
+  [[nodiscard]] QString description() const override { return "Place " + m_elem.type; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   TerrainElement m_elem;
   int m_index = -1;
 };
 
 class RemoveTerrainCmd : public Command {
 public:
-  RemoveTerrainCmd(MapData *data, int index, TerrainElement elem)
-      : m_data(data), m_index(index), m_elem(std::move(elem)) {}
+  RemoveTerrainCmd(MapData* data, int index, TerrainElement elem)
+      : m_data(data)
+      , m_index(index)
+      , m_elem(std::move(elem)) {}
   void execute() override { m_data->remove_terrain_element(m_index); }
   void undo() override { m_data->insert_terrain_element(m_index, m_elem); }
-  [[nodiscard]] QString description() const override {
-    return "Erase " + m_elem.type;
-  }
+  [[nodiscard]] QString description() const override { return "Erase " + m_elem.type; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   int m_index;
   TerrainElement m_elem;
 };
 
 class UpdateTerrainCmd : public Command {
 public:
-  UpdateTerrainCmd(MapData *data, int index, TerrainElement before,
-                   TerrainElement after, QString desc = "Edit terrain")
-      : m_data(data), m_index(index), m_before(std::move(before)),
-        m_after(std::move(after)), m_desc(std::move(desc)) {}
+  UpdateTerrainCmd(MapData* data,
+                   int index,
+                   TerrainElement before,
+                   TerrainElement after,
+                   QString desc = "Edit terrain")
+      : m_data(data)
+      , m_index(index)
+      , m_before(std::move(before))
+      , m_after(std::move(after))
+      , m_desc(std::move(desc)) {}
   void execute() override { m_data->update_terrain_element(m_index, m_after); }
   void undo() override { m_data->update_terrain_element(m_index, m_before); }
   [[nodiscard]] QString description() const override { return m_desc; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   int m_index;
   TerrainElement m_before;
   TerrainElement m_after;
@@ -238,51 +243,56 @@ private:
 
 class AddWorldPropCmd : public Command {
 public:
-  AddWorldPropCmd(MapData *data, WorldPropElement elem)
-      : m_data(data), m_elem(std::move(elem)) {}
+  AddWorldPropCmd(MapData* data, WorldPropElement elem)
+      : m_data(data)
+      , m_elem(std::move(elem)) {}
   void execute() override {
     m_index = m_data->world_props().size();
     m_data->add_world_prop(m_elem);
   }
   void undo() override { m_data->remove_world_prop(m_index); }
-  [[nodiscard]] QString description() const override {
-    return "Place " + m_elem.type;
-  }
+  [[nodiscard]] QString description() const override { return "Place " + m_elem.type; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   WorldPropElement m_elem;
   int m_index = -1;
 };
 
 class RemoveWorldPropCmd : public Command {
 public:
-  RemoveWorldPropCmd(MapData *data, int index, WorldPropElement elem)
-      : m_data(data), m_index(index), m_elem(std::move(elem)) {}
+  RemoveWorldPropCmd(MapData* data, int index, WorldPropElement elem)
+      : m_data(data)
+      , m_index(index)
+      , m_elem(std::move(elem)) {}
   void execute() override { m_data->remove_world_prop(m_index); }
   void undo() override { m_data->insert_world_prop(m_index, m_elem); }
-  [[nodiscard]] QString description() const override {
-    return "Erase " + m_elem.type;
-  }
+  [[nodiscard]] QString description() const override { return "Erase " + m_elem.type; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   int m_index;
   WorldPropElement m_elem;
 };
 
 class UpdateWorldPropCmd : public Command {
 public:
-  UpdateWorldPropCmd(MapData *data, int index, WorldPropElement before,
-                     WorldPropElement after, QString desc = "Edit prop")
-      : m_data(data), m_index(index), m_before(std::move(before)),
-        m_after(std::move(after)), m_desc(std::move(desc)) {}
+  UpdateWorldPropCmd(MapData* data,
+                     int index,
+                     WorldPropElement before,
+                     WorldPropElement after,
+                     QString desc = "Edit prop")
+      : m_data(data)
+      , m_index(index)
+      , m_before(std::move(before))
+      , m_after(std::move(after))
+      , m_desc(std::move(desc)) {}
   void execute() override { m_data->update_world_prop(m_index, m_after); }
   void undo() override { m_data->update_world_prop(m_index, m_before); }
   [[nodiscard]] QString description() const override { return m_desc; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   int m_index;
   WorldPropElement m_before;
   WorldPropElement m_after;
@@ -291,51 +301,56 @@ private:
 
 class AddLinearCmd : public Command {
 public:
-  AddLinearCmd(MapData *data, LinearElement elem)
-      : m_data(data), m_elem(std::move(elem)) {}
+  AddLinearCmd(MapData* data, LinearElement elem)
+      : m_data(data)
+      , m_elem(std::move(elem)) {}
   void execute() override {
     m_index = m_data->linear_elements().size();
     m_data->add_linear_element(m_elem);
   }
   void undo() override { m_data->remove_linear_element(m_index); }
-  [[nodiscard]] QString description() const override {
-    return "Place " + m_elem.type;
-  }
+  [[nodiscard]] QString description() const override { return "Place " + m_elem.type; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   LinearElement m_elem;
   int m_index = -1;
 };
 
 class RemoveLinearCmd : public Command {
 public:
-  RemoveLinearCmd(MapData *data, int index, LinearElement elem)
-      : m_data(data), m_index(index), m_elem(std::move(elem)) {}
+  RemoveLinearCmd(MapData* data, int index, LinearElement elem)
+      : m_data(data)
+      , m_index(index)
+      , m_elem(std::move(elem)) {}
   void execute() override { m_data->remove_linear_element(m_index); }
   void undo() override { m_data->insert_linear_element(m_index, m_elem); }
-  [[nodiscard]] QString description() const override {
-    return "Erase " + m_elem.type;
-  }
+  [[nodiscard]] QString description() const override { return "Erase " + m_elem.type; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   int m_index;
   LinearElement m_elem;
 };
 
 class UpdateLinearCmd : public Command {
 public:
-  UpdateLinearCmd(MapData *data, int index, LinearElement before,
-                  LinearElement after, QString desc = "Edit element")
-      : m_data(data), m_index(index), m_before(std::move(before)),
-        m_after(std::move(after)), m_desc(std::move(desc)) {}
+  UpdateLinearCmd(MapData* data,
+                  int index,
+                  LinearElement before,
+                  LinearElement after,
+                  QString desc = "Edit element")
+      : m_data(data)
+      , m_index(index)
+      , m_before(std::move(before))
+      , m_after(std::move(after))
+      , m_desc(std::move(desc)) {}
   void execute() override { m_data->update_linear_element(m_index, m_after); }
   void undo() override { m_data->update_linear_element(m_index, m_before); }
   [[nodiscard]] QString description() const override { return m_desc; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   int m_index;
   LinearElement m_before;
   LinearElement m_after;
@@ -344,51 +359,56 @@ private:
 
 class AddStructureCmd : public Command {
 public:
-  AddStructureCmd(MapData *data, StructureElement elem)
-      : m_data(data), m_elem(std::move(elem)) {}
+  AddStructureCmd(MapData* data, StructureElement elem)
+      : m_data(data)
+      , m_elem(std::move(elem)) {}
   void execute() override {
     m_index = m_data->structures().size();
     m_data->add_structure(m_elem);
   }
   void undo() override { m_data->remove_structure(m_index); }
-  [[nodiscard]] QString description() const override {
-    return "Place " + m_elem.type;
-  }
+  [[nodiscard]] QString description() const override { return "Place " + m_elem.type; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   StructureElement m_elem;
   int m_index = -1;
 };
 
 class RemoveStructureCmd : public Command {
 public:
-  RemoveStructureCmd(MapData *data, int index, StructureElement elem)
-      : m_data(data), m_index(index), m_elem(std::move(elem)) {}
+  RemoveStructureCmd(MapData* data, int index, StructureElement elem)
+      : m_data(data)
+      , m_index(index)
+      , m_elem(std::move(elem)) {}
   void execute() override { m_data->remove_structure(m_index); }
   void undo() override { m_data->insert_structure(m_index, m_elem); }
-  [[nodiscard]] QString description() const override {
-    return "Erase " + m_elem.type;
-  }
+  [[nodiscard]] QString description() const override { return "Erase " + m_elem.type; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   int m_index;
   StructureElement m_elem;
 };
 
 class UpdateStructureCmd : public Command {
 public:
-  UpdateStructureCmd(MapData *data, int index, StructureElement before,
-                     StructureElement after, QString desc = "Edit structure")
-      : m_data(data), m_index(index), m_before(std::move(before)),
-        m_after(std::move(after)), m_desc(std::move(desc)) {}
+  UpdateStructureCmd(MapData* data,
+                     int index,
+                     StructureElement before,
+                     StructureElement after,
+                     QString desc = "Edit structure")
+      : m_data(data)
+      , m_index(index)
+      , m_before(std::move(before))
+      , m_after(std::move(after))
+      , m_desc(std::move(desc)) {}
   void execute() override { m_data->update_structure(m_index, m_after); }
   void undo() override { m_data->update_structure(m_index, m_before); }
   [[nodiscard]] QString description() const override { return m_desc; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   int m_index;
   StructureElement m_before;
   StructureElement m_after;
@@ -397,14 +417,16 @@ private:
 
 class ResizeMapCmd : public Command {
 public:
-  ResizeMapCmd(MapData *data, GridSettings before, GridSettings after)
-      : m_data(data), m_before(before), m_after(after) {}
+  ResizeMapCmd(MapData* data, GridSettings before, GridSettings after)
+      : m_data(data)
+      , m_before(before)
+      , m_after(after) {}
   void execute() override { m_data->set_grid(m_after); }
   void undo() override { m_data->set_grid(m_before); }
   [[nodiscard]] QString description() const override { return "Resize map"; }
 
 private:
-  MapData *m_data;
+  MapData* m_data;
   GridSettings m_before;
   GridSettings m_after;
 };

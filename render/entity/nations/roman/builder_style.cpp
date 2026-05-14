@@ -1,7 +1,8 @@
 #include "builder_style.h"
-#include "builder_renderer.h"
 
 #include <QVector3D>
+
+#include "builder_renderer.h"
 
 namespace {
 

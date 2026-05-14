@@ -1,31 +1,32 @@
 #include "action_vfx.h"
+
+#include <qvectornd.h>
+
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
 #include "../../game/game_config.h"
 #include "../../game/systems/arrow_system.h"
-#include <qvectornd.h>
 
 namespace App::Controllers {
 
-void ActionVFX::spawn_attack_arrow(Engine::Core::World *world,
+void ActionVFX::spawn_attack_arrow(Engine::Core::World* world,
                                    Engine::Core::EntityID target_id) {
   if (world == nullptr) {
     return;
   }
 
-  auto *arrow_system = world->get_system<Game::Systems::ArrowSystem>();
+  auto* arrow_system = world->get_system<Game::Systems::ArrowSystem>();
   if (arrow_system == nullptr) {
     return;
   }
 
-  auto *target_entity = world->get_entity(target_id);
+  auto* target_entity = world->get_entity(target_id);
   if (target_entity == nullptr) {
     return;
   }
 
-  auto *target_trans =
-      target_entity->get_component<Engine::Core::TransformComponent>();
+  auto* target_trans = target_entity->get_component<Engine::Core::TransformComponent>();
   if (target_trans == nullptr) {
     return;
   }
@@ -35,7 +36,8 @@ void ActionVFX::spawn_attack_arrow(Engine::Core::World *world,
                              target_trans->position.z);
   QVector3D const above_target = target_pos + QVector3D(0, 2.0F, 0);
 
-  arrow_system->spawn_arrow(above_target, target_pos,
+  arrow_system->spawn_arrow(above_target,
+                            target_pos,
                             QVector3D(1.0F, 0.2F, 0.2F),
                             Game::GameConfig::instance().arrow().speed_attack,
                             Game::Systems::ArrowVisualStyle::Marker);

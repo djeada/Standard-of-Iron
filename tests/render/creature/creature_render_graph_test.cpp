@@ -1,5 +1,11 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <atomic>
+#include <gtest/gtest.h>
+
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
@@ -14,11 +20,6 @@
 #include "render/humanoid/humanoid_spec.h"
 #include "render/submitter.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <atomic>
-#include <gtest/gtest.h>
-
 namespace {
 
 using namespace Render::Creature::Pipeline;
@@ -26,7 +27,8 @@ using namespace Render::Creature;
 
 std::atomic<int> g_extra_role_color_calls{0};
 
-auto counted_extra_role_color(const void *, QVector3D *out,
+auto counted_extra_role_color(const void*,
+                              QVector3D* out,
                               std::uint32_t base_count,
                               std::size_t max_count) -> std::uint32_t {
   g_extra_role_color_calls.fetch_add(1, std::memory_order_relaxed);
@@ -41,30 +43,31 @@ class CountingSubmitter : public Render::GL::ISubmitter {
 public:
   int rigged_calls{0};
   int meshes{0};
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {
     ++meshes;
   }
-  void rigged(const Render::GL::RiggedCreatureCmd &) override {
-    ++rigged_calls;
-  }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void rigged(const Render::GL::RiggedCreatureCmd&) override { ++rigged_calls; }
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 TEST(CreatureRenderGraph, HumanoidLodConfigHasReasonableDefaults) {
@@ -109,41 +112,38 @@ TEST(CreatureRenderGraph, HorseConfigFromSettingsReturnsValidConfig) {
 }
 
 TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
-  auto &settings = Render::GraphicsSettings::instance();
+  auto& settings = Render::GraphicsSettings::instance();
   settings.set_quality(Render::GraphicsQuality::High);
 
   auto config = elephant_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
   EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
-  EXPECT_FLOAT_EQ(config.thresholds.full,
-                  settings.elephant_full_detail_distance());
+  EXPECT_FLOAT_EQ(config.thresholds.full, settings.elephant_full_detail_distance());
   EXPECT_FLOAT_EQ(config.thresholds.minimal,
                   settings.elephant_minimal_detail_distance());
   EXPECT_GT(config.thresholds.full, settings.horse_full_detail_distance());
-  EXPECT_GT(config.thresholds.minimal,
-            settings.horse_minimal_detail_distance());
+  EXPECT_GT(config.thresholds.minimal, settings.horse_minimal_detail_distance());
 
   settings.set_quality(Render::GraphicsQuality::Ultra);
 }
 
 TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
-  auto &settings = Render::GraphicsSettings::instance();
+  auto& settings = Render::GraphicsSettings::instance();
   settings.set_quality(Render::GraphicsQuality::High);
 
+  EXPECT_EQ(quadruped_lod_from_settings(CreatureKind::Elephant,
+                                        settings.horse_full_detail_distance() + 1.0F),
+            CreatureLOD::Full);
   EXPECT_EQ(
       quadruped_lod_from_settings(CreatureKind::Elephant,
-                                  settings.horse_full_detail_distance() + 1.0F),
-      CreatureLOD::Full);
-  EXPECT_EQ(quadruped_lod_from_settings(
-                CreatureKind::Elephant,
-                settings.elephant_full_detail_distance() + 1.0F),
-            CreatureLOD::Minimal);
+                                  settings.elephant_full_detail_distance() + 1.0F),
+      CreatureLOD::Minimal);
 
   settings.set_quality(Render::GraphicsQuality::Ultra);
 }
 
 TEST(CreatureRenderGraph, UltraSettingsKeepTroopLodFullAtLongDistance) {
-  auto &settings = Render::GraphicsSettings::instance();
+  auto& settings = Render::GraphicsSettings::instance();
   settings.set_quality(Render::GraphicsQuality::Ultra);
 
   CreatureGraphInputs inputs;
@@ -151,11 +151,9 @@ TEST(CreatureRenderGraph, UltraSettingsKeepTroopLodFullAtLongDistance) {
   inputs.has_camera = true;
   inputs.budget_grant_full = false;
 
-  auto humanoid =
-      evaluate_creature_lod(inputs, humanoid_lod_config_from_settings());
+  auto humanoid = evaluate_creature_lod(inputs, humanoid_lod_config_from_settings());
   auto horse = evaluate_creature_lod(inputs, horse_lod_config_from_settings());
-  auto elephant =
-      evaluate_creature_lod(inputs, elephant_lod_config_from_settings());
+  auto elephant = evaluate_creature_lod(inputs, elephant_lod_config_from_settings());
 
   EXPECT_EQ(humanoid.lod, CreatureLOD::Full);
   EXPECT_FALSE(humanoid.culled);
@@ -322,8 +320,7 @@ TEST(CreatureRenderBatch, AddHumanoidIncreasesSize) {
 TEST(CreatureRenderBatch, StableRoleColorsAreCachedByVariant) {
   g_extra_role_color_calls.store(0, std::memory_order_relaxed);
   const auto archetype = ArchetypeRegistry::instance().register_unit_archetype(
-      "test.role_color_cache", CreatureKind::Humanoid, {},
-      &counted_extra_role_color);
+      "test.role_color_cache", CreatureKind::Humanoid, {}, &counted_extra_role_color);
 
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
@@ -337,21 +334,18 @@ TEST(CreatureRenderBatch, StableRoleColorsAreCachedByVariant) {
   batch.add_humanoid(output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 2u);
-  EXPECT_EQ(batch.requests()[0].role_color_count,
-            batch.requests()[1].role_color_count);
+  EXPECT_EQ(batch.requests()[0].role_color_count, batch.requests()[1].role_color_count);
   EXPECT_EQ(g_extra_role_color_calls.load(std::memory_order_relaxed), 1)
       << "same asset/archetype/variant should reuse cached role colors";
 }
 
 TEST(CreatureRenderBatch, VariantTableCanOverrideRequestSelection) {
-  auto const override_archetype =
-      ArchetypeRegistry::instance().register_unit_archetype(
-          "test.variant_table_override", CreatureKind::Humanoid, {});
+  auto const override_archetype = ArchetypeRegistry::instance().register_unit_archetype(
+      "test.variant_table_override", CreatureKind::Humanoid, {});
   ASSERT_NE(override_archetype, k_invalid_archetype);
 
   ArchetypeVariantTable table{};
-  auto const idle_idx =
-      static_cast<std::size_t>(Render::Creature::PoseIntent::Idle);
+  auto const idle_idx = static_cast<std::size_t>(Render::Creature::PoseIntent::Idle);
   table.archetype_for_pose[idle_idx] = override_archetype;
   table.state_for_pose[idle_idx] = AnimationStateId::AttackSpear;
 
@@ -392,8 +386,7 @@ TEST(CreatureRenderBatch, AddHorseIncreasesSize) {
   output.culled = false;
   Render::GL::HorseVariant variant{};
 
-  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
-                      0.0F);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
 }
@@ -404,8 +397,7 @@ TEST(CreatureRenderBatch, AddElephantIncreasesSize) {
   output.culled = false;
   Render::GL::ElephantVariant variant{};
 
-  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
-                      0.0F);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
 }
@@ -474,8 +466,7 @@ TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
   CreatureRenderBatch batch;
   Render::GL::HorseVariant variant{};
 
-  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
-                      0.0F);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);
@@ -499,8 +490,7 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
   CreatureRenderBatch batch;
   Render::GL::ElephantVariant variant{};
 
-  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
-                      0.0F);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);
@@ -567,8 +557,7 @@ TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
   Render::GL::HumanoidAnimationContext anim{};
 
   result.bodies.add_humanoid(output, pose, variant, anim);
-  result.add_post_body_draw(RenderPassIntent::Main,
-                            PostBodyDrawRequest::Kind::None);
+  result.add_post_body_draw(RenderPassIntent::Main, PostBodyDrawRequest::Kind::None);
 
   EXPECT_EQ(result.bodies.size(), 1u);
   EXPECT_EQ(result.post_body_draws.size(), 1u);

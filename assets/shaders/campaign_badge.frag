@@ -18,7 +18,9 @@ uniform bool u_animate;
 
 out vec4 frag_color;
 
-float sd_circle(vec2 p, float r) { return length(p) - r; }
+float sd_circle(vec2 p, float r) {
+  return length(p) - r;
+}
 
 float sd_box(vec2 p, vec2 b) {
   vec2 d = abs(p) - b;

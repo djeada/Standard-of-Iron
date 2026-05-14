@@ -9,8 +9,8 @@ namespace {
 
 auto make_horse_archer_config() -> HorseArcherRendererConfig {
   HorseArcherRendererConfig config;
-  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
-      "troops/carthage/horse_archer");
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/carthage/horse_archer");
   config.bow_equipment_id = loadout.ids.bow;
   config.quiver_equipment_id = loadout.ids.quiver;
   config.helmet_equipment_id = loadout.ids.helmet;
@@ -43,14 +43,13 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
 
 } // namespace
 
-void register_horse_archer_renderer(EntityRendererRegistry &registry) {
-  registry.register_renderer(
-      "troops/carthage/horse_archer",
-      [](const DrawContext &ctx, ISubmitter &out) {
-        static HorseArcherRendererBase const static_renderer(
-            make_horse_archer_config());
-        static_renderer.render(ctx, out);
-      });
+void register_horse_archer_renderer(EntityRendererRegistry& registry) {
+  registry.register_renderer("troops/carthage/horse_archer",
+                             [](const DrawContext& ctx, ISubmitter& out) {
+                               static HorseArcherRendererBase const static_renderer(
+                                   make_horse_archer_config());
+                               static_renderer.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Carthage

@@ -1,17 +1,57 @@
 Checks: >
+  -*,
   bugprone-*,
-  performance-*,
-  readability-*,
-  modernize-*,
-  cppcoreguidelines-*,
   clang-analyzer-*,
+  cppcoreguidelines-*,
   misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -bugprone-reserved-identifier,
+  -bugprone-switch-missing-default-case,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-const-cast,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-special-member-functions,
+  -cppcoreguidelines-virtual-class-destructor,
+  -misc-include-cleaner,
+  -misc-no-recursion,
   -modernize-use-trailing-return-type,
-  -cppcoreguidelines-pro-type-reinterpret-cast
+  -readability-convert-member-functions-to-static,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-identifier-naming,
+  -readability-magic-numbers,
+  -readability-named-parameter
 
 WarningsAsErrors: ''
-HeaderFilterRegex: '^(?!.*third_party/).*/Standard-of-Iron/.*'
+HeaderFilterRegex: '^(?!.*(/third_party/|/build(-[^/]*)?/|/\.qt/|/CMakeFiles/)).*/Standard-of-Iron/.*'
 FormatStyle: file
 CheckOptions:
-  - key: readability-identifier-naming.VariableCase
-    value: lower_case
+  - key: bugprone-argument-comment.StrictMode
+    value: '0'
+  - key: bugprone-assert-side-effect.AssertMacros
+    value: 'Q_ASSERT;Q_ASSERT_X;assert'
+  - key: modernize-use-nullptr.NullMacros
+    value: 'NULL'
+  - key: modernize-use-override.AllowOverrideAndFinal
+    value: '1'
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: '1'
+  - key: readability-function-size.LineThreshold
+    value: '120'
+  - key: readability-function-size.StatementThreshold
+    value: '80'

@@ -5,10 +5,15 @@ namespace Game::Systems {
 
 class StoneProjectile : public Projectile {
 public:
-  StoneProjectile(const QVector3D &start, const QVector3D &end,
-                  const QVector3D &color, float speed, float arc_height,
-                  float inv_dist, float scale = 1.0F,
-                  bool should_apply_damage = false, int damage = 0,
+  StoneProjectile(const QVector3D& start,
+                  const QVector3D& end,
+                  const QVector3D& color,
+                  float speed,
+                  float arc_height,
+                  float inv_dist,
+                  float scale = 1.0F,
+                  bool should_apply_damage = false,
+                  int damage = 0,
                   Engine::Core::EntityID attacker_id = 0,
                   Engine::Core::EntityID target_id = 0);
 
@@ -21,13 +26,9 @@ public:
   auto get_scale() const -> float override { return m_scale; }
   auto is_active() const -> bool override { return m_active; }
 
-  auto should_apply_damage() const -> bool override {
-    return m_should_apply_damage;
-  }
+  auto should_apply_damage() const -> bool override { return m_should_apply_damage; }
   auto get_damage() const -> int override { return m_damage; }
-  auto get_target_id() const -> Engine::Core::EntityID override {
-    return m_target_id;
-  }
+  auto get_target_id() const -> Engine::Core::EntityID override { return m_target_id; }
   auto get_attacker_id() const -> Engine::Core::EntityID override {
     return m_attacker_id;
   }

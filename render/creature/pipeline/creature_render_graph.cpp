@@ -1,5 +1,12 @@
 #include "creature_render_graph.h"
 
+#include <algorithm>
+#include <cstring>
+#include <limits>
+#include <unordered_map>
+
+#include "../../../game/core/component.h"
+#include "../../../game/core/entity.h"
 #include "../../entity/registry.h"
 #include "../../gl/humanoid/humanoid_types.h"
 #include "../../graphics_settings.h"
@@ -10,14 +17,6 @@
 #include "creature_asset.h"
 #include "creature_prepared_state.h"
 #include "preparation_common.h"
-
-#include "../../../game/core/component.h"
-#include "../../../game/core/entity.h"
-
-#include <algorithm>
-#include <cstring>
-#include <limits>
-#include <unordered_map>
 
 namespace Render::Creature::Pipeline {
 
@@ -35,8 +34,7 @@ constexpr float k_elephant_minimal_distance = 60.0F;
 constexpr float k_temporal_minimal_distance = 45.0F;
 constexpr std::uint32_t k_temporal_minimal_period = 3;
 
-constexpr float k_ultra_troop_full_distance =
-    std::numeric_limits<float>::max() / 4.0F;
+constexpr float k_ultra_troop_full_distance = std::numeric_limits<float>::max() / 4.0F;
 constexpr float k_ultra_troop_minimal_distance =
     std::numeric_limits<float>::max() / 2.0F;
 
@@ -83,7 +81,7 @@ auto elephant_lod_config() noexcept -> CreatureLodConfig {
 }
 
 auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
-  const auto &gs = Render::GraphicsSettings::instance();
+  const auto& gs = Render::GraphicsSettings::instance();
   if (gs.quality() == Render::GraphicsQuality::Ultra) {
     return ultra_troop_lod_config();
   }
@@ -98,7 +96,7 @@ auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
 }
 
 auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
-  const auto &gs = Render::GraphicsSettings::instance();
+  const auto& gs = Render::GraphicsSettings::instance();
   if (gs.quality() == Render::GraphicsQuality::Ultra) {
     return ultra_troop_lod_config();
   }
@@ -113,7 +111,7 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
 }
 
 auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
-  const auto &gs = Render::GraphicsSettings::instance();
+  const auto& gs = Render::GraphicsSettings::instance();
   if (gs.quality() == Render::GraphicsQuality::Ultra) {
     return ultra_troop_lod_config();
   }
@@ -131,8 +129,7 @@ auto quadruped_lod_from_settings(CreatureKind kind, float distance) noexcept
     -> Render::Creature::CreatureLOD {
   switch (kind) {
   case CreatureKind::Horse:
-    return select_distance_lod(distance,
-                               horse_lod_config_from_settings().thresholds);
+    return select_distance_lod(distance, horse_lod_config_from_settings().thresholds);
   case CreatureKind::Elephant:
     return select_distance_lod(distance,
                                elephant_lod_config_from_settings().thresholds);
@@ -140,12 +137,11 @@ auto quadruped_lod_from_settings(CreatureKind kind, float distance) noexcept
   case CreatureKind::Mounted:
     break;
   }
-  return select_distance_lod(distance,
-                             humanoid_lod_config_from_settings().thresholds);
+  return select_distance_lod(distance, humanoid_lod_config_from_settings().thresholds);
 }
 
-auto evaluate_creature_lod(const CreatureGraphInputs &inputs,
-                           const CreatureLodConfig &config) noexcept
+auto evaluate_creature_lod(const CreatureGraphInputs& inputs,
+                           const CreatureLodConfig& config) noexcept
     -> CreatureLodDecision {
   CreatureLodDecisionInputs lod_inputs;
   lod_inputs.forced_lod = inputs.forced_lod;
@@ -166,8 +162,8 @@ auto evaluate_creature_lod(const CreatureGraphInputs &inputs,
   return decide_creature_lod(lod_inputs);
 }
 
-auto build_base_graph_output(const CreatureGraphInputs &inputs,
-                             const CreatureLodDecision &lod_decision) noexcept
+auto build_base_graph_output(const CreatureGraphInputs& inputs,
+                             const CreatureLodDecision& lod_decision) noexcept
     -> CreatureGraphOutput {
   CreatureGraphOutput output;
   output.lod = lod_decision.lod;
@@ -214,7 +210,7 @@ compose_world_key(std::uint32_t entity_id,
 }
 
 [[nodiscard]] auto
-build_request(const CreatureGraphOutput &output,
+build_request(const CreatureGraphOutput& output,
               Render::Creature::ArchetypeId archetype,
               Render::Creature::AnimationStateId state,
               float phase) noexcept -> Render::Creature::CreatureRenderRequest {
@@ -233,8 +229,8 @@ build_request(const CreatureGraphOutput &output,
   return req;
 }
 
-[[nodiscard]] auto default_archetype_for(CreatureKind kind) noexcept
-    -> Render::Creature::ArchetypeId {
+[[nodiscard]] auto
+default_archetype_for(CreatureKind kind) noexcept -> Render::Creature::ArchetypeId {
   switch (kind) {
   case CreatureKind::Horse:
     return Render::Creature::ArchetypeRegistry::k_horse_base;
@@ -249,7 +245,7 @@ build_request(const CreatureGraphOutput &output,
 }
 
 template <typename Variant>
-auto variant_hash(const Variant &variant) noexcept -> std::uint64_t;
+auto variant_hash(const Variant& variant) noexcept -> std::uint64_t;
 
 [[nodiscard]] auto hash_combine(std::uint64_t seed,
                                 std::uint64_t value) noexcept -> std::uint64_t {
@@ -262,7 +258,7 @@ auto variant_hash(const Variant &variant) noexcept -> std::uint64_t;
   return bits;
 }
 
-[[nodiscard]] auto hash_vec3(const QVector3D &v) noexcept -> std::uint64_t {
+[[nodiscard]] auto hash_vec3(const QVector3D& v) noexcept -> std::uint64_t {
   std::uint64_t h = 0xCBF29CE484222325ULL;
   h = hash_combine(h, hash_float(v.x()));
   h = hash_combine(h, hash_float(v.y()));
@@ -271,7 +267,7 @@ auto variant_hash(const Variant &variant) noexcept -> std::uint64_t;
 }
 
 [[nodiscard]] auto
-hash_palette(const Render::GL::HumanoidPalette &p) noexcept -> std::uint64_t {
+hash_palette(const Render::GL::HumanoidPalette& p) noexcept -> std::uint64_t {
   std::uint64_t h = 0x84222325CBF29CE4ULL;
   h = hash_combine(h, hash_vec3(p.cloth));
   h = hash_combine(h, hash_vec3(p.skin));
@@ -283,7 +279,7 @@ hash_palette(const Render::GL::HumanoidPalette &p) noexcept -> std::uint64_t {
 }
 
 template <>
-auto variant_hash(const Render::GL::HumanoidVariant &variant) noexcept
+auto variant_hash(const Render::GL::HumanoidVariant& variant) noexcept
     -> std::uint64_t {
   std::uint64_t h = hash_palette(variant.palette);
   h = hash_combine(h, static_cast<std::uint64_t>(variant.facial_hair.style));
@@ -299,8 +295,7 @@ auto variant_hash(const Render::GL::HumanoidVariant &variant) noexcept
 }
 
 template <>
-auto variant_hash(const Render::GL::HorseVariant &variant) noexcept
-    -> std::uint64_t {
+auto variant_hash(const Render::GL::HorseVariant& variant) noexcept -> std::uint64_t {
   std::uint64_t h = 0xB492B66FBE98F273ULL;
   h = hash_combine(h, hash_vec3(variant.coat_color));
   h = hash_combine(h, hash_vec3(variant.mane_color));
@@ -319,7 +314,7 @@ auto variant_hash(const Render::GL::HorseVariant &variant) noexcept
 }
 
 template <>
-auto variant_hash(const Render::GL::ElephantVariant &variant) noexcept
+auto variant_hash(const Render::GL::ElephantVariant& variant) noexcept
     -> std::uint64_t {
   std::uint64_t h = 0x9AE16A3B2F90404FULL;
   h = hash_combine(h, hash_vec3(variant.skin_color));
@@ -337,18 +332,17 @@ auto variant_hash(const Render::GL::ElephantVariant &variant) noexcept
 struct RoleColorCacheKey {
   Render::Creature::Pipeline::CreatureAssetId asset{
       Render::Creature::Pipeline::k_invalid_creature_asset};
-  Render::Creature::ArchetypeId archetype{
-      Render::Creature::k_invalid_archetype};
+  Render::Creature::ArchetypeId archetype{Render::Creature::k_invalid_archetype};
   std::uint64_t variant_hash{0U};
 
-  auto operator==(const RoleColorCacheKey &other) const noexcept -> bool {
+  auto operator==(const RoleColorCacheKey& other) const noexcept -> bool {
     return asset == other.asset && archetype == other.archetype &&
            variant_hash == other.variant_hash;
   }
 };
 
 struct RoleColorCacheKeyHash {
-  auto operator()(const RoleColorCacheKey &key) const noexcept -> std::size_t {
+  auto operator()(const RoleColorCacheKey& key) const noexcept -> std::size_t {
     std::uint64_t h = static_cast<std::uint64_t>(key.asset);
     h = hash_combine(h, key.archetype);
     h = hash_combine(h, key.variant_hash);
@@ -357,36 +351,36 @@ struct RoleColorCacheKeyHash {
 };
 
 struct RoleColorCacheValue {
-  std::array<QVector3D,
-             Render::Creature::CreatureRenderRequest::k_role_color_capacity>
+  std::array<QVector3D, Render::Creature::CreatureRenderRequest::k_role_color_capacity>
       colors{};
   std::uint8_t count{0U};
 };
 
 template <typename Variant>
-void populate_role_colors_uncached(Render::Creature::CreatureRenderRequest &req,
-                                   const Variant &variant) {
-  const auto *asset =
-      Render::Creature::Pipeline::CreatureAssetRegistry::instance().get(
-          req.creature_asset_id);
+void populate_role_colors_uncached(Render::Creature::CreatureRenderRequest& req,
+                                   const Variant& variant) {
+  const auto* asset = Render::Creature::Pipeline::CreatureAssetRegistry::instance().get(
+      req.creature_asset_id);
   std::uint32_t count = 0;
   if (asset != nullptr && asset->fill_role_colors != nullptr) {
-    count =
-        asset->fill_role_colors(static_cast<const void *>(&variant),
-                                req.role_colors.data(), req.role_colors.size());
+    count = asset->fill_role_colors(static_cast<const void*>(&variant),
+                                    req.role_colors.data(),
+                                    req.role_colors.size());
   }
 
-  const auto *desc =
-      Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
+  const auto* desc = Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
   if (desc != nullptr) {
     for (std::size_t i = 0;
-         i < static_cast<std::size_t>(desc->extra_role_color_fn_count); ++i) {
+         i < static_cast<std::size_t>(desc->extra_role_color_fn_count);
+         ++i) {
       auto const fn = desc->extra_role_color_fns[i];
       if (fn == nullptr) {
         continue;
       }
-      count = fn(static_cast<const void *>(&variant), req.role_colors.data(),
-                 count, req.role_colors.size());
+      count = fn(static_cast<const void*>(&variant),
+                 req.role_colors.data(),
+                 count,
+                 req.role_colors.size());
     }
   }
   req.role_color_count = static_cast<std::uint8_t>(std::min<std::uint32_t>(
@@ -394,10 +388,10 @@ void populate_role_colors_uncached(Render::Creature::CreatureRenderRequest &req,
 }
 
 template <typename Variant>
-void populate_role_colors(Render::Creature::CreatureRenderRequest &req,
-                          const Variant &variant) {
-  using Cache = std::unordered_map<RoleColorCacheKey, RoleColorCacheValue,
-                                   RoleColorCacheKeyHash>;
+void populate_role_colors(Render::Creature::CreatureRenderRequest& req,
+                          const Variant& variant) {
+  using Cache =
+      std::unordered_map<RoleColorCacheKey, RoleColorCacheValue, RoleColorCacheKeyHash>;
   thread_local Cache cache;
 
   RoleColorCacheKey key{};
@@ -426,9 +420,10 @@ void populate_role_colors(Render::Creature::CreatureRenderRequest &req,
 } // namespace
 
 void CreatureRenderBatch::add_humanoid(
-    const CreatureGraphOutput &output, const Render::GL::HumanoidPose &pose,
-    const Render::GL::HumanoidVariant &variant,
-    const Render::GL::HumanoidAnimationContext &anim) {
+    const CreatureGraphOutput& output,
+    const Render::GL::HumanoidPose& pose,
+    const Render::GL::HumanoidVariant& variant,
+    const Render::GL::HumanoidAnimationContext& anim) {
   if (output.culled) {
     return;
   }
@@ -444,7 +439,7 @@ void CreatureRenderBatch::add_humanoid(
   float const phase = humanoid_phase_for_anim(anim);
   auto clip_var = humanoid_clip_variant_for_anim(resolved_archetype_id, anim);
   if (output.spec.variant_table != nullptr) {
-    auto const *t = output.spec.variant_table;
+    auto const* t = output.spec.variant_table;
     auto const pose_idx = static_cast<std::size_t>(intent);
 
     bool changed = false;
@@ -469,9 +464,9 @@ void CreatureRenderBatch::add_humanoid(
         if (t->variant_is_seed_based) {
           var_idx = output.seed % t->variant_stride;
         } else {
-          var_idx = std::min<std::size_t>(
-              static_cast<std::size_t>(variant.facial_hair.style),
-              static_cast<std::size_t>(t->variant_stride) - 1U);
+          var_idx =
+              std::min<std::size_t>(static_cast<std::size_t>(variant.facial_hair.style),
+                                    static_cast<std::size_t>(t->variant_stride) - 1U);
         }
         auto const var_arch = t->archetype_for_variant[var_idx];
         if (var_arch != Render::Creature::k_invalid_archetype) {
@@ -491,53 +486,63 @@ void CreatureRenderBatch::add_humanoid(
           Render::Creature::ArchetypeRegistry::instance().clip_variant_count(
               resolved_archetype_id, state);
       clip_var = (new_variant_count > 0U)
-                     ? static_cast<std::uint8_t>(std::min<std::uint32_t>(
-                           clip_var, new_variant_count - 1U))
+                     ? static_cast<std::uint8_t>(
+                           std::min<std::uint32_t>(clip_var, new_variant_count - 1U))
                      : 0U;
     }
   }
-  const auto *asset = CreatureAssetRegistry::instance().resolve(output.spec);
+  const auto* asset = CreatureAssetRegistry::instance().resolve(output.spec);
   if (asset == nullptr) {
     return;
   }
 
   if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto row = make_prepared_humanoid_row(
-        output.spec, pose, variant, anim, output.world_matrix, output.seed,
-        output.lod, output.entity_id, output.pass_intent);
+    auto row = make_prepared_humanoid_row(output.spec,
+                                          pose,
+                                          variant,
+                                          anim,
+                                          output.world_matrix,
+                                          output.seed,
+                                          output.lod,
+                                          output.entity_id,
+                                          output.pass_intent);
     rows_.push_back(std::move(row));
   }
 
   auto req = build_request(output, resolved_archetype_id, state, phase);
   req.creature_asset_id = asset->id;
-  req.render_asset_handle =
-      CreatureRenderAssetHandleRegistry::instance().get_or_create(
-          asset->id, resolved_archetype_id);
+  req.render_asset_handle = CreatureRenderAssetHandleRegistry::instance().get_or_create(
+      asset->id, resolved_archetype_id);
   req.clip_variant = clip_var;
   populate_role_colors(req, variant);
   requests_.push_back(req);
 }
 
-void CreatureRenderBatch::add_humanoid(const PreparedHumanoidBodyState &state) {
+void CreatureRenderBatch::add_humanoid(const PreparedHumanoidBodyState& state) {
   add_humanoid(state.graph, state.pose, state.variant, state.animation);
 }
 
-void CreatureRenderBatch::add_quadruped(
-    const CreatureGraphOutput &output, const Render::GL::HorseVariant &variant,
-    Render::Creature::AnimationStateId state, float phase,
-    std::uint32_t clip_variant) {
+void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
+                                        const Render::GL::HorseVariant& variant,
+                                        Render::Creature::AnimationStateId state,
+                                        float phase,
+                                        std::uint32_t clip_variant) {
   if (output.culled) {
     return;
   }
-  const auto *asset =
+  const auto* asset =
       CreatureAssetRegistry::instance().for_species(CreatureKind::Horse);
   if (asset == nullptr) {
     return;
   }
   if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto row = make_prepared_creature_row(
-        output.spec, CreatureKind::Horse, output.world_matrix, output.seed,
-        output.lod, output.entity_id, output.pass_intent);
+    auto row = make_prepared_creature_row(output.spec,
+                                          CreatureKind::Horse,
+                                          output.world_matrix,
+                                          output.seed,
+                                          output.lod,
+                                          output.entity_id,
+                                          output.pass_intent);
     rows_.push_back(std::move(row));
   }
   auto const archetype_id =
@@ -546,36 +551,42 @@ void CreatureRenderBatch::add_quadruped(
           : default_archetype_for(CreatureKind::Horse);
   auto req = build_request(output, archetype_id, state, phase);
   req.creature_asset_id = asset->id;
-  req.render_asset_handle =
-      CreatureRenderAssetHandleRegistry::instance().get_or_create(asset->id,
-                                                                  archetype_id);
+  req.render_asset_handle = CreatureRenderAssetHandleRegistry::instance().get_or_create(
+      asset->id, archetype_id);
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
   requests_.push_back(req);
 }
 
-void CreatureRenderBatch::add_quadruped(const PreparedHorseBodyState &state) {
-  add_quadruped(state.graph, state.variant, state.animation_state, state.phase,
+void CreatureRenderBatch::add_quadruped(const PreparedHorseBodyState& state) {
+  add_quadruped(state.graph,
+                state.variant,
+                state.animation_state,
+                state.phase,
                 state.clip_variant);
 }
 
-void CreatureRenderBatch::add_quadruped(
-    const CreatureGraphOutput &output,
-    const Render::GL::ElephantVariant &variant,
-    Render::Creature::AnimationStateId state, float phase,
-    std::uint32_t clip_variant) {
+void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
+                                        const Render::GL::ElephantVariant& variant,
+                                        Render::Creature::AnimationStateId state,
+                                        float phase,
+                                        std::uint32_t clip_variant) {
   if (output.culled) {
     return;
   }
-  const auto *asset =
+  const auto* asset =
       CreatureAssetRegistry::instance().for_species(CreatureKind::Elephant);
   if (asset == nullptr) {
     return;
   }
   if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto row = make_prepared_creature_row(
-        output.spec, CreatureKind::Elephant, output.world_matrix, output.seed,
-        output.lod, output.entity_id, output.pass_intent);
+    auto row = make_prepared_creature_row(output.spec,
+                                          CreatureKind::Elephant,
+                                          output.world_matrix,
+                                          output.seed,
+                                          output.lod,
+                                          output.entity_id,
+                                          output.pass_intent);
     rows_.push_back(std::move(row));
   }
   auto const archetype_id =
@@ -584,22 +595,23 @@ void CreatureRenderBatch::add_quadruped(
           : default_archetype_for(CreatureKind::Elephant);
   auto req = build_request(output, archetype_id, state, phase);
   req.creature_asset_id = asset->id;
-  req.render_asset_handle =
-      CreatureRenderAssetHandleRegistry::instance().get_or_create(asset->id,
-                                                                  archetype_id);
+  req.render_asset_handle = CreatureRenderAssetHandleRegistry::instance().get_or_create(
+      asset->id, archetype_id);
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
   requests_.push_back(req);
 }
 
-void CreatureRenderBatch::add_quadruped(
-    const PreparedElephantBodyState &state) {
-  add_quadruped(state.graph, state.variant, state.animation_state, state.phase,
+void CreatureRenderBatch::add_quadruped(const PreparedElephantBodyState& state) {
+  add_quadruped(state.graph,
+                state.variant,
+                state.animation_state,
+                state.phase,
                 state.clip_variant);
 }
 
 void CreatureRenderBatch::add_request(
-    const Render::Creature::CreatureRenderRequest &request) {
+    const Render::Creature::CreatureRenderRequest& request) {
   requests_.push_back(request);
 }
 

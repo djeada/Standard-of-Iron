@@ -1,19 +1,20 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstdint>
+#include <optional>
+#include <span>
+#include <utility>
+#include <vector>
+
 #include "../render_request.h"
 #include "bpat_playback.h"
 #include "creature_render_state.h"
 #include "lod_decision.h"
 #include "shadow_batch.h"
 #include "unit_visual_spec.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cstdint>
-#include <optional>
-#include <span>
-#include <utility>
-#include <vector>
 
 namespace Engine::Core {
 class Entity;
@@ -45,11 +46,11 @@ struct PreparedHorseBodyState;
 struct PreparedElephantBodyState;
 
 struct CreatureGraphInputs {
-  const Render::GL::DrawContext *ctx{nullptr};
-  const Render::GL::AnimationInputs *anim{nullptr};
-  Engine::Core::Entity *entity{nullptr};
-  Engine::Core::UnitComponent *unit{nullptr};
-  Engine::Core::TransformComponent *transform{nullptr};
+  const Render::GL::DrawContext* ctx{nullptr};
+  const Render::GL::AnimationInputs* anim{nullptr};
+  Engine::Core::Entity* entity{nullptr};
+  Engine::Core::UnitComponent* unit{nullptr};
+  Engine::Core::TransformComponent* transform{nullptr};
 
   std::uint32_t frame_index{0};
 
@@ -94,26 +95,23 @@ struct CreatureLodConfig {
 
 [[nodiscard]] auto elephant_lod_config() noexcept -> CreatureLodConfig;
 
-[[nodiscard]] auto
-humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig;
+[[nodiscard]] auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig;
+
+[[nodiscard]] auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig;
+
+[[nodiscard]] auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig;
 
 [[nodiscard]] auto
-horse_lod_config_from_settings() noexcept -> CreatureLodConfig;
+quadruped_lod_from_settings(CreatureKind kind,
+                            float distance) noexcept -> Render::Creature::CreatureLOD;
 
 [[nodiscard]] auto
-elephant_lod_config_from_settings() noexcept -> CreatureLodConfig;
-
-[[nodiscard]] auto quadruped_lod_from_settings(CreatureKind kind,
-                                               float distance) noexcept
-    -> Render::Creature::CreatureLOD;
-
-[[nodiscard]] auto evaluate_creature_lod(
-    const CreatureGraphInputs &inputs,
-    const CreatureLodConfig &config) noexcept -> CreatureLodDecision;
+evaluate_creature_lod(const CreatureGraphInputs& inputs,
+                      const CreatureLodConfig& config) noexcept -> CreatureLodDecision;
 
 [[nodiscard]] auto build_base_graph_output(
-    const CreatureGraphInputs &inputs,
-    const CreatureLodDecision &lod_decision) noexcept -> CreatureGraphOutput;
+    const CreatureGraphInputs& inputs,
+    const CreatureLodDecision& lod_decision) noexcept -> CreatureGraphOutput;
 
 class CreatureRenderBatch {
 public:
@@ -121,34 +119,36 @@ public:
 
   void reserve(std::size_t n);
 
-  void add_humanoid(const CreatureGraphOutput &output,
-                    const Render::GL::HumanoidPose &pose,
-                    const Render::GL::HumanoidVariant &variant,
-                    const Render::GL::HumanoidAnimationContext &anim);
+  void add_humanoid(const CreatureGraphOutput& output,
+                    const Render::GL::HumanoidPose& pose,
+                    const Render::GL::HumanoidVariant& variant,
+                    const Render::GL::HumanoidAnimationContext& anim);
 
-  void add_humanoid(const PreparedHumanoidBodyState &state);
+  void add_humanoid(const PreparedHumanoidBodyState& state);
 
-  void add_quadruped(const CreatureGraphOutput &output,
-                     const Render::GL::HorseVariant &variant,
-                     Render::Creature::AnimationStateId state, float phase,
+  void add_quadruped(const CreatureGraphOutput& output,
+                     const Render::GL::HorseVariant& variant,
+                     Render::Creature::AnimationStateId state,
+                     float phase,
                      std::uint32_t clip_variant = 0U);
 
-  void add_quadruped(const PreparedHorseBodyState &state);
+  void add_quadruped(const PreparedHorseBodyState& state);
 
-  void add_quadruped(const CreatureGraphOutput &output,
-                     const Render::GL::ElephantVariant &variant,
-                     Render::Creature::AnimationStateId state, float phase,
+  void add_quadruped(const CreatureGraphOutput& output,
+                     const Render::GL::ElephantVariant& variant,
+                     Render::Creature::AnimationStateId state,
+                     float phase,
                      std::uint32_t clip_variant = 0U);
 
-  void add_quadruped(const PreparedElephantBodyState &state);
+  void add_quadruped(const PreparedElephantBodyState& state);
 
-  void add_request(const Render::Creature::CreatureRenderRequest &request);
+  void add_request(const Render::Creature::CreatureRenderRequest& request);
 
   [[nodiscard]] auto
   rows() const noexcept -> std::span<const PreparedCreatureRenderRow>;
 
-  [[nodiscard]] auto requests() const noexcept
-      -> std::span<const Render::Creature::CreatureRenderRequest>;
+  [[nodiscard]] auto
+  requests() const noexcept -> std::span<const Render::Creature::CreatureRenderRequest>;
 
   [[nodiscard]] auto size() const noexcept -> std::size_t;
 

@@ -1,22 +1,23 @@
 #include "attack_behavior.h"
+
+#include <QVector3D>
+
+#include <cmath>
+#include <limits>
+#include <utility>
+#include <vector>
+
 #include "../../formation_system.h"
 #include "../../nation_registry.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
-#include <QVector3D>
-#include <cmath>
-#include <limits>
-#include <utility>
-#include <vector>
-
 namespace Game::Systems::AI {
 
 namespace {
 auto get_formation_type_for_player(int player_id) -> FormationType {
-  const Nation *nation =
-      NationRegistry::instance().get_nation_for_player(player_id);
+  const Nation* nation = NationRegistry::instance().get_nation_for_player(player_id);
   if (nation != nullptr) {
     return nation->formation_type;
   }
@@ -25,7 +26,7 @@ auto get_formation_type_for_player(int player_id) -> FormationType {
 
 constexpr float k_gathering_advance_aggression_threshold = 0.70F;
 
-auto can_advance_from_gathering(const AIContext &context) -> bool {
+auto can_advance_from_gathering(const AIContext& context) -> bool {
   return context.state == AIState::Attacking ||
          (context.state == AIState::Gathering && context.total_units >= 3 &&
           context.strategy_config.aggression_modifier >=
@@ -33,9 +34,10 @@ auto can_advance_from_gathering(const AIContext &context) -> bool {
 }
 } // namespace
 
-void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+void AttackBehavior::execute(const AISnapshot& snapshot,
+                             AIContext& context,
                              float delta_time,
-                             std::vector<AICommand> &out_commands) {
+                             std::vector<AICommand>& out_commands) {
   m_attack_timer += delta_time;
   m_target_lock_duration += delta_time;
 
@@ -44,8 +46,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   m_attack_timer = 0.0F;
 
-  std::vector<const EntitySnapshot *> engaged_units;
-  std::vector<const EntitySnapshot *> ready_units;
+  std::vector<const EntitySnapshot*> engaged_units;
+  std::vector<const EntitySnapshot*> ready_units;
   engaged_units.reserve(snapshot.friendly_units.size());
   ready_units.reserve(snapshot.friendly_units.size());
 
@@ -53,7 +55,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   float group_center_y = 0.0F;
   float group_center_z = 0.0F;
 
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
@@ -131,18 +133,15 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
       std::vector<Engine::Core::EntityID> unit_ids;
       unit_ids.reserve(ready_units.size());
-      for (const auto *unit : ready_units) {
+      for (const auto* unit : ready_units) {
         unit_ids.push_back(unit->id);
       }
 
-      FormationType formation_type =
-          get_formation_type_for_player(context.player_id);
+      FormationType formation_type = get_formation_type_for_player(context.player_id);
 
       QVector3D const scout_center(scout_x, 0.0F, scout_z);
-      auto formation_positions =
-          FormationSystem::instance().get_formation_positions(
-              formation_type, static_cast<int>(ready_units.size()),
-              scout_center, 2.5F);
+      auto formation_positions = FormationSystem::instance().get_formation_positions(
+          formation_type, static_cast<int>(ready_units.size()), scout_center, 2.5F);
 
       std::vector<float> target_x;
       std::vector<float> target_y;
@@ -168,20 +167,22 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  std::vector<const ContactSnapshot *> nearby_enemies;
+  std::vector<const ContactSnapshot*> nearby_enemies;
   nearby_enemies.reserve(snapshot.visible_enemies.size());
 
   const float harassment_r = context.strategy_config.harassment_range;
   const float engagement_range =
-      (harassment_r > 0.0F)
-          ? harassment_r
-          : ((context.damaged_units_count > 0) ? 35.0F : 20.0F);
+      (harassment_r > 0.0F) ? harassment_r
+                            : ((context.damaged_units_count > 0) ? 35.0F : 20.0F);
   const float engage_range_sq = engagement_range * engagement_range;
 
-  for (const auto &enemy : snapshot.visible_enemies) {
-    float const dist_sq =
-        distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, group_center_x,
-                         group_center_y, group_center_z);
+  for (const auto& enemy : snapshot.visible_enemies) {
+    float const dist_sq = distance_squared(enemy.pos_x,
+                                           enemy.pos_y,
+                                           enemy.pos_z,
+                                           group_center_x,
+                                           group_center_y,
+                                           group_center_z);
     if (dist_sq <= engage_range_sq) {
       nearby_enemies.push_back(&enemy);
     }
@@ -193,23 +194,26 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     if (should_advance && !snapshot.visible_enemies.empty()) {
 
-      const ContactSnapshot *closest_enemy = nullptr;
+      const ContactSnapshot* closest_enemy = nullptr;
       float closest_dist_sq = std::numeric_limits<float>::max();
 
-      for (const auto &enemy : snapshot.visible_enemies) {
+      for (const auto& enemy : snapshot.visible_enemies) {
         if (enemy.is_building) {
           continue;
         }
-        float const dist_sq =
-            distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z,
-                             group_center_x, group_center_y, group_center_z);
+        float const dist_sq = distance_squared(enemy.pos_x,
+                                               enemy.pos_y,
+                                               enemy.pos_z,
+                                               group_center_x,
+                                               group_center_y,
+                                               group_center_z);
         if (dist_sq < closest_dist_sq) {
           closest_dist_sq = dist_sq;
           closest_enemy = &enemy;
         }
       }
 
-      const ContactSnapshot *target = closest_enemy;
+      const ContactSnapshot* target = closest_enemy;
 
       if ((target != nullptr) && !ready_units.empty()) {
 
@@ -223,7 +227,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           m_target_lock_duration = 0.0F;
         } else {
 
-          for (const auto *unit : ready_units) {
+          for (const auto* unit : ready_units) {
             float const dx = unit->pos_x - attack_pos_x;
             float const dz = unit->pos_z - attack_pos_z;
             float const dist_sq = dx * dx + dz * dz;
@@ -237,7 +241,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         if (needs_new_command) {
           std::vector<Engine::Core::EntityID> unit_ids;
           unit_ids.reserve(ready_units.size());
-          for (const auto *unit : ready_units) {
+          for (const auto* unit : ready_units) {
             unit_ids.push_back(unit->id);
           }
 
@@ -247,8 +251,10 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           QVector3D const attack_center(attack_pos_x, 0.0F, attack_pos_z);
           auto formation_positions =
               FormationSystem::instance().get_formation_positions(
-                  formation_type, static_cast<int>(ready_units.size()),
-                  attack_center, 2.5F);
+                  formation_type,
+                  static_cast<int>(ready_units.size()),
+                  attack_center,
+                  2.5F);
 
           std::vector<float> target_x;
           std::vector<float> target_y;
@@ -280,13 +286,11 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto assessment = TacticalUtils::assess_engagement(
-      ready_units, nearby_enemies,
-      context.state == AIState::Attacking ? 0.7F : 0.9F);
+      ready_units, nearby_enemies, context.state == AIState::Attacking ? 0.7F : 0.9F);
 
   bool const being_attacked = context.damaged_units_count > 0;
 
-  if (!assessment.should_engage && !context.barracks_under_threat &&
-      !being_attacked) {
+  if (!assessment.should_engage && !context.barracks_under_threat && !being_attacked) {
 
     m_last_target = 0;
     m_target_lock_duration = 0.0F;
@@ -295,7 +299,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   bool last_target_still_valid = false;
   if (m_last_target != 0) {
-    for (const auto *enemy : nearby_enemies) {
+    for (const auto* enemy : nearby_enemies) {
       if (enemy->id == m_last_target) {
         last_target_still_valid = true;
         break;
@@ -308,9 +312,13 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     m_target_lock_duration = 0.0F;
   }
 
-  auto target_info = TacticalUtils::select_focus_fire_target(
-      ready_units, nearby_enemies, group_center_x, group_center_y,
-      group_center_z, context, m_last_target);
+  auto target_info = TacticalUtils::select_focus_fire_target(ready_units,
+                                                             nearby_enemies,
+                                                             group_center_x,
+                                                             group_center_y,
+                                                             group_center_z,
+                                                             context,
+                                                             m_last_target);
 
   if (target_info.target_id == 0) {
     return;
@@ -321,8 +329,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     m_target_lock_duration = 0.0F;
   }
 
-  const ContactSnapshot *target_snapshot = nullptr;
-  for (const auto *enemy : nearby_enemies) {
+  const ContactSnapshot* target_snapshot = nullptr;
+  for (const auto* enemy : nearby_enemies) {
     if (enemy->id == target_info.target_id) {
       target_snapshot = enemy;
       break;
@@ -335,26 +343,26 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   std::vector<Engine::Core::EntityID> unit_ids;
   unit_ids.reserve(ready_units.size());
-  for (const auto *unit : ready_units) {
+  for (const auto* unit : ready_units) {
     unit_ids.push_back(unit->id);
   }
 
-  auto claimed_units = claim_units(unit_ids, get_priority(), "attacking",
-                                   context, m_attack_timer + delta_time, 2.5F);
+  auto claimed_units = claim_units(unit_ids,
+                                   get_priority(),
+                                   "attacking",
+                                   context,
+                                   m_attack_timer + delta_time,
+                                   2.5F);
 
   if (claimed_units.empty()) {
     return;
   }
 
-  FormationType formation_type =
-      get_formation_type_for_player(context.player_id);
+  FormationType formation_type = get_formation_type_for_player(context.player_id);
 
-  QVector3D const attack_center(target_snapshot->pos_x, 0.0F,
-                                target_snapshot->pos_z);
-  auto formation_positions =
-      FormationSystem::instance().get_formation_positions(
-          formation_type, static_cast<int>(claimed_units.size()), attack_center,
-          2.5F);
+  QVector3D const attack_center(target_snapshot->pos_x, 0.0F, target_snapshot->pos_z);
+  auto formation_positions = FormationSystem::instance().get_formation_positions(
+      formation_type, static_cast<int>(claimed_units.size()), attack_center, 2.5F);
 
   std::vector<float> target_x;
   std::vector<float> target_y;
@@ -386,15 +394,15 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   out_commands.push_back(std::move(attack_command));
 }
-auto AttackBehavior::should_execute(const AISnapshot &snapshot,
-                                    const AIContext &context) const -> bool {
+auto AttackBehavior::should_execute(const AISnapshot& snapshot,
+                                    const AIContext& context) const -> bool {
 
   if (context.state == AIState::Retreating) {
     return false;
   }
 
   int ready_units = 0;
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }

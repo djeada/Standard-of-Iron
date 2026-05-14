@@ -1,19 +1,19 @@
 #include "combat_state_processor.h"
+
 #include "../../core/component.h"
 #include "../../core/world.h"
 
 namespace Game::Systems::Combat {
 
-void process_combat_state(Engine::Core::World *world, float delta_time) {
+void process_combat_state(Engine::Core::World* world, float delta_time) {
   auto units = world->get_entities_with<Engine::Core::CombatStateComponent>();
 
-  for (auto *unit : units) {
+  for (auto* unit : units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *combat_state =
-        unit->get_component<Engine::Core::CombatStateComponent>();
+    auto* combat_state = unit->get_component<Engine::Core::CombatStateComponent>();
     if (combat_state == nullptr) {
       continue;
     }

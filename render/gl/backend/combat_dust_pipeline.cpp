@@ -1,16 +1,20 @@
 #include "combat_dust_pipeline.h"
+
+#include <QDebug>
+#include <QMatrix4x4>
+#include <QOpenGLContext>
+
+#include <cmath>
+#include <numbers>
+
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
 #include "../../../game/systems/combat_rules.h"
+#include "../../combat_dust_defaults.h"
 #include "../backend.h"
 #include "../camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
-#include <QDebug>
-#include <QMatrix4x4>
-#include <QOpenGLContext>
-#include <cmath>
-#include <numbers>
 
 namespace Render::GL::BackendPipelines {
 
@@ -19,8 +23,6 @@ using namespace Render::GL::ComponentCount;
 
 namespace {
 constexpr float k_min_dust_intensity = 0.01F;
-constexpr float k_default_dust_radius = 2.0F;
-constexpr float k_default_dust_intensity = 0.6F;
 constexpr float k_dust_color_r = 0.6F;
 constexpr float k_dust_color_g = 0.55F;
 constexpr float k_dust_color_b = 0.45F;
@@ -55,9 +57,9 @@ void clear_gl_errors() {
 #endif
 }
 
-auto check_gl_error(const char *operation) -> bool {
+auto check_gl_error(const char* operation) -> bool {
 #ifndef NDEBUG
-  GLenum err = glGetError();
+  GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "CombatDustPipeline GL error in" << operation << ":" << err;
     return false;
@@ -80,9 +82,10 @@ auto CombatDustPipeline::initialize() -> bool {
 
   m_dust_shader = m_shader_cache->get("combat_dust");
   if (m_dust_shader == nullptr) {
-    m_dust_shader = m_shader_cache->load(
-        "combat_dust", QStringLiteral(":/assets/shaders/combat_dust.vert"),
-        QStringLiteral(":/assets/shaders/combat_dust.frag"));
+    m_dust_shader =
+        m_shader_cache->load("combat_dust",
+                             QStringLiteral(":/assets/shaders/combat_dust.vert"),
+                             QStringLiteral(":/assets/shaders/combat_dust.frag"));
   }
   if (m_dust_shader == nullptr) {
     qWarning() << "CombatDustPipeline: Failed to get combat_dust shader";
@@ -91,9 +94,10 @@ auto CombatDustPipeline::initialize() -> bool {
 
   m_blood_shader = m_shader_cache->get("blood_pool");
   if (m_blood_shader == nullptr) {
-    m_blood_shader = m_shader_cache->load(
-        "blood_pool", QStringLiteral(":/assets/shaders/blood_pool.vert"),
-        QStringLiteral(":/assets/shaders/blood_pool.frag"));
+    m_blood_shader =
+        m_shader_cache->load("blood_pool",
+                             QStringLiteral(":/assets/shaders/blood_pool.vert"),
+                             QStringLiteral(":/assets/shaders/blood_pool.frag"));
     if (m_blood_shader == nullptr) {
       qWarning() << "CombatDustPipeline: Blood pools disabled; failed to load "
                     "blood_pool shader";
@@ -199,13 +203,10 @@ void CombatDustPipeline::cache_uniforms() {
 
   if (m_blood_shader != nullptr) {
     m_blood_uniforms.mvp = m_blood_shader->uniform_handle("u_mvp");
-    m_blood_uniforms.radius =
-        m_blood_shader->optional_uniform_handle("u_radius");
-    m_blood_uniforms.alpha_scale =
-        m_blood_shader->uniform_handle("u_alpha_scale");
+    m_blood_uniforms.radius = m_blood_shader->optional_uniform_handle("u_radius");
+    m_blood_uniforms.alpha_scale = m_blood_shader->uniform_handle("u_alpha_scale");
     m_blood_uniforms.rotation = m_blood_shader->uniform_handle("u_rotation");
-    m_blood_uniforms.aspect_ratio =
-        m_blood_shader->uniform_handle("u_aspect_ratio");
+    m_blood_uniforms.aspect_ratio = m_blood_shader->uniform_handle("u_aspect_ratio");
     m_blood_uniforms.seed = m_blood_shader->uniform_handle("u_seed");
   }
 }
@@ -236,23 +237,21 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   constexpr int angle_segments = 12;
   constexpr float max_height = 1.0F;
 
-  vertices.reserve(
-      static_cast<size_t>((height_levels + 1) * (angle_segments + 1)));
+  vertices.reserve(static_cast<size_t>((height_levels + 1) * (angle_segments + 1)));
 
   for (int h = 0; h <= height_levels; ++h) {
-    float height_t = static_cast<float>(h) / static_cast<float>(height_levels);
-    float y = height_t * max_height;
+    float const height_t = static_cast<float>(h) / static_cast<float>(height_levels);
+    float const y = height_t * max_height;
 
-    float radius_at_height = 1.0F - height_t * 0.3F;
+    float const radius_at_height = 1.0F - height_t * 0.3F;
 
     for (int a = 0; a <= angle_segments; ++a) {
-      float angle_t =
-          static_cast<float>(a) / static_cast<float>(angle_segments);
-      float theta = angle_t * pi * 2.0F;
-      float x = radius_at_height * std::cos(theta);
-      float z = radius_at_height * std::sin(theta);
+      float const angle_t = static_cast<float>(a) / static_cast<float>(angle_segments);
+      float const theta = angle_t * pi * 2.0F;
+      float const x = radius_at_height * std::cos(theta);
+      float const z = radius_at_height * std::sin(theta);
 
-      DustVertex v;
+      DustVertex v{};
       v.position[0] = x;
       v.position[1] = y;
       v.position[2] = z;
@@ -270,9 +269,8 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   indices.reserve(static_cast<size_t>(height_levels * angle_segments * 6));
   for (int h = 0; h < height_levels; ++h) {
     for (int a = 0; a < angle_segments; ++a) {
-      unsigned int curr =
-          static_cast<unsigned int>(h * (angle_segments + 1) + a);
-      unsigned int next = curr + static_cast<unsigned int>(angle_segments + 1);
+      auto const curr = static_cast<unsigned int>(h * (angle_segments + 1) + a);
+      unsigned int const next = curr + static_cast<unsigned int>(angle_segments + 1);
 
       indices.push_back(curr);
       indices.push_back(next);
@@ -300,7 +298,8 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
-               vertices.data(), GL_STATIC_DRAW);
+               vertices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("vertex buffer")) {
     shutdown_geometry();
     return false;
@@ -310,7 +309,8 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(), GL_STATIC_DRAW);
+               indices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("index buffer")) {
     shutdown_geometry();
     return false;
@@ -319,21 +319,28 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   m_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(
-      VertexAttrib::position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      sizeof(DustVertex),
-      reinterpret_cast<void *>(offsetof(DustVertex, position)));
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, position)));
 
   glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(DustVertex),
-                        reinterpret_cast<void *>(offsetof(DustVertex, normal)));
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, normal)));
 
   glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(
-      VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT, GL_FALSE,
-      sizeof(DustVertex),
-      reinterpret_cast<void *>(offsetof(DustVertex, tex_coord)));
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        ComponentCount::vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
 
   glBindVertexArray(0);
 
@@ -371,10 +378,10 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   vertices.push_back(center);
 
   for (int i = 0; i < segments; ++i) {
-    float angle =
+    float const angle =
         static_cast<float>(i) / static_cast<float>(segments) * pi * 2.0F;
-    float x = std::cos(angle);
-    float z = std::sin(angle);
+    float const x = std::cos(angle);
+    float const z = std::sin(angle);
 
     DustVertex vertex{};
     vertex.position[0] = x;
@@ -389,7 +396,7 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   }
 
   for (int i = 1; i <= segments; ++i) {
-    unsigned int next = static_cast<unsigned int>((i % segments) + 1);
+    auto const next = static_cast<unsigned int>((i % segments) + 1);
     indices.push_back(0);
     indices.push_back(static_cast<unsigned int>(i));
     indices.push_back(next);
@@ -411,7 +418,8 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   glBindBuffer(GL_ARRAY_BUFFER, m_blood_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
-               vertices.data(), GL_STATIC_DRAW);
+               vertices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("blood vertex buffer")) {
     shutdown_blood_geometry();
     return false;
@@ -421,7 +429,8 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_blood_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(), GL_STATIC_DRAW);
+               indices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("blood index buffer")) {
     shutdown_blood_geometry();
     return false;
@@ -430,21 +439,28 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   m_blood_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(
-      VertexAttrib::position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      sizeof(DustVertex),
-      reinterpret_cast<void *>(offsetof(DustVertex, position)));
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, position)));
 
   glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(DustVertex),
-                        reinterpret_cast<void *>(offsetof(DustVertex, normal)));
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, normal)));
 
   glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(
-      VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT, GL_FALSE,
-      sizeof(DustVertex),
-      reinterpret_cast<void *>(offsetof(DustVertex, tex_coord)));
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        ComponentCount::vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
 
   glBindVertexArray(0);
 
@@ -456,7 +472,7 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   return true;
 }
 
-void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
+void CombatDustPipeline::collect_combat_zones(Engine::Core::World* world,
                                               float animation_time) {
   if (world == nullptr) {
     return;
@@ -464,14 +480,14 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
 
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
-  for (auto *unit : units) {
+  for (auto* unit : units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *unit_comp = unit->get_component<Engine::Core::UnitComponent>();
-    auto *transform = unit->get_component<Engine::Core::TransformComponent>();
-    auto *attack = unit->get_component<Engine::Core::AttackComponent>();
+    auto* unit_comp = unit->get_component<Engine::Core::UnitComponent>();
+    auto* transform = unit->get_component<Engine::Core::TransformComponent>();
+    auto* attack = unit->get_component<Engine::Core::AttackComponent>();
 
     if (transform == nullptr || unit_comp == nullptr) {
       continue;
@@ -487,10 +503,10 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
     }
 
     CombatDustData data;
-    data.position = QVector3D(transform->position.x, k_dust_y_offset,
-                              transform->position.z);
-    data.radius = k_default_dust_radius;
-    data.intensity = k_default_dust_intensity;
+    data.position =
+        QVector3D(transform->position.x, k_dust_y_offset, transform->position.z);
+    data.radius = CombatDustDefaults::k_radius;
+    data.intensity = CombatDustDefaults::k_intensity;
     data.color = QVector3D(k_dust_color_r, k_dust_color_g, k_dust_color_b);
     data.time = animation_time;
     data.effect_type = EffectType::Dust;
@@ -499,7 +515,7 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
   }
 }
 
-void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
+void CombatDustPipeline::collect_building_flames(Engine::Core::World* world,
                                                  float animation_time) {
   if (world == nullptr) {
     return;
@@ -507,14 +523,13 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
 
   auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
 
-  for (auto *building : buildings) {
+  for (auto* building : buildings) {
     if (building->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *unit_comp = building->get_component<Engine::Core::UnitComponent>();
-    auto *transform =
-        building->get_component<Engine::Core::TransformComponent>();
+    auto* unit_comp = building->get_component<Engine::Core::UnitComponent>();
+    auto* transform = building->get_component<Engine::Core::TransformComponent>();
 
     if (transform == nullptr || unit_comp == nullptr) {
       continue;
@@ -524,17 +539,17 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
       continue;
     }
 
-    float health_ratio = static_cast<float>(unit_comp->health) /
-                         static_cast<float>(unit_comp->max_health);
+    float const health_ratio = static_cast<float>(unit_comp->health) /
+                               static_cast<float>(unit_comp->max_health);
 
     if (health_ratio > k_building_health_threshold) {
       continue;
     }
 
-    float base_intensity = k_default_flame_intensity * (1.0F - health_ratio);
+    float const base_intensity = k_default_flame_intensity * (1.0F - health_ratio);
 
-    float cx = transform->position.x;
-    float cz = transform->position.z;
+    float const cx = transform->position.x;
+    float const cz = transform->position.z;
 
     constexpr float k_building_half_width = 1.5F;
     constexpr float k_building_half_depth = 1.2F;
@@ -544,16 +559,20 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
       float dx, dz, height_offset, intensity_mult, radius_mult;
     };
 
-    FlamePoint flame_points[] = {
+    FlamePoint const flame_points[] = {
 
-        {-k_building_half_width * 0.7F, -k_building_half_depth * 0.7F, 0.8F,
-         1.0F, 0.9F},
-        {k_building_half_width * 0.7F, -k_building_half_depth * 0.7F, 0.7F,
-         0.95F, 0.85F},
-        {-k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.6F,
-         0.9F, 0.8F},
-        {k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.75F,
-         1.0F, 0.9F},
+        {-k_building_half_width * 0.7F,
+         -k_building_half_depth * 0.7F,
+         0.8F,
+         1.0F,
+         0.9F},
+        {k_building_half_width * 0.7F,
+         -k_building_half_depth * 0.7F,
+         0.7F,
+         0.95F,
+         0.85F},
+        {-k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.6F, 0.9F, 0.8F},
+        {k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.75F, 1.0F, 0.9F},
 
         {0.0F, -k_building_half_depth * 0.8F, 0.9F, 0.85F, 0.7F},
         {0.0F, k_building_half_depth * 0.8F, 0.7F, 0.8F, 0.65F},
@@ -563,10 +582,10 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
         {0.0F, 0.0F, 1.0F, 1.1F, 1.0F},
     };
 
-    for (const auto &fp : flame_points) {
+    for (const auto& fp : flame_points) {
       CombatDustData data;
-      data.position = QVector3D(cx + fp.dx, k_flame_y_offset + fp.height_offset,
-                                cz + fp.dz);
+      data.position =
+          QVector3D(cx + fp.dx, k_flame_y_offset + fp.height_offset, cz + fp.dz);
       data.radius = k_default_flame_radius * fp.radius_mult;
       data.intensity = base_intensity * fp.intensity_mult;
       data.color = QVector3D(k_flame_color_r, k_flame_color_g, k_flame_color_b);
@@ -577,23 +596,21 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
   }
 }
 
-void CombatDustPipeline::collect_blood_pools(Engine::Core::World *world) {
+void CombatDustPipeline::collect_blood_pools(Engine::Core::World* world) {
   if (world == nullptr) {
     return;
   }
 
-  auto blood_stains =
-      world->get_entities_with<Engine::Core::BloodStainComponent>();
+  auto blood_stains = world->get_entities_with<Engine::Core::BloodStainComponent>();
 
-  for (auto *entity : blood_stains) {
+  for (auto* entity : blood_stains) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *blood_stain =
-        entity->get_component<Engine::Core::BloodStainComponent>();
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* blood_stain = entity->get_component<Engine::Core::BloodStainComponent>();
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     if (blood_stain == nullptr || transform == nullptr) {
       continue;
     }
@@ -612,7 +629,7 @@ void CombatDustPipeline::collect_blood_pools(Engine::Core::World *world) {
   }
 }
 
-void CombatDustPipeline::collect_all_effects(Engine::Core::World *world,
+void CombatDustPipeline::collect_all_effects(Engine::Core::World* world,
                                              float animation_time) {
   m_dust_data.clear();
   m_blood_data.clear();
@@ -621,8 +638,10 @@ void CombatDustPipeline::collect_all_effects(Engine::Core::World *world,
   collect_blood_pools(world);
 }
 
-void CombatDustPipeline::add_dust_zone(const QVector3D &position, float radius,
-                                       float intensity, const QVector3D &color,
+void CombatDustPipeline::add_dust_zone(const QVector3D& position,
+                                       float radius,
+                                       float intensity,
+                                       const QVector3D& color,
                                        float time) {
   CombatDustData data;
   data.position = position;
@@ -634,8 +653,10 @@ void CombatDustPipeline::add_dust_zone(const QVector3D &position, float radius,
   m_dust_data.push_back(data);
 }
 
-void CombatDustPipeline::add_flame_zone(const QVector3D &position, float radius,
-                                        float intensity, const QVector3D &color,
+void CombatDustPipeline::add_flame_zone(const QVector3D& position,
+                                        float radius,
+                                        float intensity,
+                                        const QVector3D& color,
                                         float time) {
   CombatDustData data;
   data.position = position;
@@ -647,7 +668,7 @@ void CombatDustPipeline::add_flame_zone(const QVector3D &position, float radius,
   m_dust_data.push_back(data);
 }
 
-void CombatDustPipeline::render(const Camera &cam, float animation_time) {
+void CombatDustPipeline::render(const Camera& cam, float animation_time) {
   if (!is_initialized() || (m_dust_data.empty() && m_blood_data.empty())) {
     return;
   }
@@ -655,9 +676,9 @@ void CombatDustPipeline::render(const Camera &cam, float animation_time) {
   clear_gl_errors();
 
   if (!m_dust_data.empty()) {
-    GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
-    GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-    GLboolean blend_enabled = glIsEnabled(GL_BLEND);
+    GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
+    GLboolean const depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
+    GLboolean const blend_enabled = glIsEnabled(GL_BLEND);
     GLboolean depth_mask_enabled = GL_TRUE;
     glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -670,7 +691,7 @@ void CombatDustPipeline::render(const Camera &cam, float animation_time) {
     m_dust_shader->use();
     glBindVertexArray(m_vao);
 
-    for (const auto &data : m_dust_data) {
+    for (const auto& data : m_dust_data) {
       CombatDustData render_data = data;
       render_data.time = animation_time;
       render_dust(render_data, cam);
@@ -679,15 +700,15 @@ void CombatDustPipeline::render(const Camera &cam, float animation_time) {
     glBindVertexArray(0);
 
     glDepthMask(depth_mask_enabled);
-    if (!blend_enabled) {
+    if (blend_enabled == 0U) {
       glDisable(GL_BLEND);
     }
-    if (depth_test_enabled) {
+    if (depth_test_enabled != 0U) {
       glEnable(GL_DEPTH_TEST);
     } else {
       glDisable(GL_DEPTH_TEST);
     }
-    if (cull_enabled) {
+    if (cull_enabled != 0U) {
       glEnable(GL_CULL_FACE);
     }
   }
@@ -697,16 +718,16 @@ void CombatDustPipeline::render(const Camera &cam, float animation_time) {
   }
 }
 
-void CombatDustPipeline::render_blood_pools(const Camera &cam) {
-  if (m_blood_shader == nullptr || m_blood_vao == 0 ||
-      m_blood_index_count <= 0 || m_blood_data.empty()) {
+void CombatDustPipeline::render_blood_pools(const Camera& cam) {
+  if (m_blood_shader == nullptr || m_blood_vao == 0 || m_blood_index_count <= 0 ||
+      m_blood_data.empty()) {
     return;
   }
 
-  QMatrix4x4 view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 const view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
   std::vector<BloodPoolInstanceData> instances;
   instances.reserve(m_blood_data.size());
-  for (const auto &blood : m_blood_data) {
+  for (const auto& blood : m_blood_data) {
     instances.push_back({.position = blood.position,
                          .radius = blood.radius,
                          .alpha_scale = blood.alpha_scale,
@@ -717,15 +738,14 @@ void CombatDustPipeline::render_blood_pools(const Camera &cam) {
   render_blood_pool_batch(instances.data(), instances.size(), view_proj);
 }
 
-void CombatDustPipeline::render_dust(const CombatDustData &data,
-                                     const Camera &cam) {
+void CombatDustPipeline::render_dust(const CombatDustData& data, const Camera& cam) {
   QMatrix4x4 model;
   model.setToIdentity();
   model.translate(data.position);
   model.scale(data.radius);
 
-  QMatrix4x4 vp = cam.get_projection_matrix() * cam.get_view_matrix();
-  QMatrix4x4 mvp = vp * model;
+  QMatrix4x4 const vp = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 const mvp = vp * model;
 
   m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
   m_dust_shader->set_uniform(m_uniforms.model, model);
@@ -740,11 +760,12 @@ void CombatDustPipeline::render_dust(const CombatDustData &data,
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 }
 
-void CombatDustPipeline::render_single_dust(const QVector3D &position,
-                                            const QVector3D &color,
-                                            float radius, float intensity,
+void CombatDustPipeline::render_single_dust(const QVector3D& position,
+                                            const QVector3D& color,
+                                            float radius,
+                                            float intensity,
                                             float time,
-                                            const QMatrix4x4 &view_proj) {
+                                            const QMatrix4x4& view_proj) {
   if (!is_initialized()) {
     return;
   }
@@ -752,7 +773,7 @@ void CombatDustPipeline::render_single_dust(const QVector3D &position,
     return;
   }
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -770,7 +791,7 @@ void CombatDustPipeline::render_single_dust(const QVector3D &position,
   model.translate(position);
   model.scale(radius);
 
-  QMatrix4x4 mvp = view_proj * model;
+  QMatrix4x4 const mvp = view_proj * model;
 
   m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
   m_dust_shader->set_uniform(m_uniforms.model, model);
@@ -787,16 +808,17 @@ void CombatDustPipeline::render_single_dust(const QVector3D &position,
   glBindVertexArray(0);
 
   glDepthMask(depth_mask_enabled);
-  if (cull_enabled) {
+  if (cull_enabled != 0U) {
     glEnable(GL_CULL_FACE);
   }
 }
 
-void CombatDustPipeline::render_single_flame(const QVector3D &position,
-                                             const QVector3D &color,
-                                             float radius, float intensity,
+void CombatDustPipeline::render_single_flame(const QVector3D& position,
+                                             const QVector3D& color,
+                                             float radius,
+                                             float intensity,
                                              float time,
-                                             const QMatrix4x4 &view_proj) {
+                                             const QMatrix4x4& view_proj) {
   if (!is_initialized()) {
     return;
   }
@@ -804,7 +826,7 @@ void CombatDustPipeline::render_single_flame(const QVector3D &position,
     return;
   }
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -822,7 +844,7 @@ void CombatDustPipeline::render_single_flame(const QVector3D &position,
   model.translate(position);
   model.scale(radius);
 
-  QMatrix4x4 mvp = view_proj * model;
+  QMatrix4x4 const mvp = view_proj * model;
 
   m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
   m_dust_shader->set_uniform(m_uniforms.model, model);
@@ -839,14 +861,17 @@ void CombatDustPipeline::render_single_flame(const QVector3D &position,
   glBindVertexArray(0);
 
   glDepthMask(depth_mask_enabled);
-  if (cull_enabled) {
+  if (cull_enabled != 0U) {
     glEnable(GL_CULL_FACE);
   }
 }
 
-void CombatDustPipeline::render_single_stone_impact(
-    const QVector3D &position, const QVector3D &color, float radius,
-    float intensity, float time, const QMatrix4x4 &view_proj) {
+void CombatDustPipeline::render_single_stone_impact(const QVector3D& position,
+                                                    const QVector3D& color,
+                                                    float radius,
+                                                    float intensity,
+                                                    float time,
+                                                    const QMatrix4x4& view_proj) {
   if (!is_initialized()) {
     return;
   }
@@ -854,7 +879,7 @@ void CombatDustPipeline::render_single_stone_impact(
     return;
   }
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -872,7 +897,7 @@ void CombatDustPipeline::render_single_stone_impact(
   model.translate(position);
   model.scale(radius);
 
-  QMatrix4x4 mvp = view_proj * model;
+  QMatrix4x4 const mvp = view_proj * model;
 
   m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
   m_dust_shader->set_uniform(m_uniforms.model, model);
@@ -889,31 +914,35 @@ void CombatDustPipeline::render_single_stone_impact(
   glBindVertexArray(0);
 
   glDepthMask(depth_mask_enabled);
-  if (cull_enabled) {
+  if (cull_enabled != 0U) {
     glEnable(GL_CULL_FACE);
   }
 }
 
-void CombatDustPipeline::render_single_blood_pool(
-    const QVector3D &position, float radius, float alpha_scale, float rotation,
-    float aspect_ratio, float seed, const QMatrix4x4 &view_proj) {
-  BloodPoolInstanceData instance{.position = position,
-                                 .radius = radius,
-                                 .alpha_scale = alpha_scale,
-                                 .rotation = rotation,
-                                 .aspect_ratio = aspect_ratio,
-                                 .seed = seed};
+void CombatDustPipeline::render_single_blood_pool(const QVector3D& position,
+                                                  float radius,
+                                                  float alpha_scale,
+                                                  float rotation,
+                                                  float aspect_ratio,
+                                                  float seed,
+                                                  const QMatrix4x4& view_proj) {
+  BloodPoolInstanceData const instance{.position = position,
+                                       .radius = radius,
+                                       .alpha_scale = alpha_scale,
+                                       .rotation = rotation,
+                                       .aspect_ratio = aspect_ratio,
+                                       .seed = seed};
   render_blood_pool_batch(&instance, 1U, view_proj);
 }
 
-void CombatDustPipeline::render_dust_batch(const DustInstanceData *instances,
+void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
                                            std::size_t count,
-                                           const QMatrix4x4 &view_proj) {
+                                           const QMatrix4x4& view_proj) {
   if (!is_initialized() || instances == nullptr || count == 0) {
     return;
   }
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -927,7 +956,7 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData *instances,
   glBindVertexArray(m_vao);
 
   for (std::size_t idx = 0; idx < count; ++idx) {
-    const DustInstanceData &inst = instances[idx];
+    const DustInstanceData& inst = instances[idx];
     if (inst.intensity < k_min_dust_intensity) {
       continue;
     }
@@ -937,7 +966,7 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData *instances,
     model.translate(inst.position);
     model.scale(inst.radius);
 
-    QMatrix4x4 mvp = view_proj * model;
+    QMatrix4x4 const mvp = view_proj * model;
 
     m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
     m_dust_shader->set_uniform(m_uniforms.model, model);
@@ -955,24 +984,23 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData *instances,
   glBindVertexArray(0);
 
   glDepthMask(depth_mask_enabled);
-  if (cull_enabled) {
+  if (cull_enabled != 0U) {
     glEnable(GL_CULL_FACE);
   }
 }
 
-void CombatDustPipeline::render_blood_pool_batch(
-    const BloodPoolInstanceData *instances, std::size_t count,
-    const QMatrix4x4 &view_proj) {
+void CombatDustPipeline::render_blood_pool_batch(const BloodPoolInstanceData* instances,
+                                                 std::size_t count,
+                                                 const QMatrix4x4& view_proj) {
   if (!is_initialized() || instances == nullptr || count == 0 ||
-      m_blood_shader == nullptr || m_blood_vao == 0 ||
-      m_blood_index_count <= 0) {
+      m_blood_shader == nullptr || m_blood_vao == 0 || m_blood_index_count <= 0) {
     return;
   }
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-  GLboolean blend_enabled = glIsEnabled(GL_BLEND);
-  GLboolean polygon_offset_enabled = glIsEnabled(GL_POLYGON_OFFSET_FILL);
+  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean const depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
+  GLboolean const blend_enabled = glIsEnabled(GL_BLEND);
+  GLboolean const polygon_offset_enabled = glIsEnabled(GL_POLYGON_OFFSET_FILL);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -993,7 +1021,7 @@ void CombatDustPipeline::render_blood_pool_batch(
   glBindVertexArray(m_blood_vao);
 
   for (std::size_t idx = 0; idx < count; ++idx) {
-    BloodPoolInstanceData const &blood = instances[idx];
+    BloodPoolInstanceData const& blood = instances[idx];
     if (blood.alpha_scale <= 0.0F || blood.radius <= 0.0F) {
       continue;
     }
@@ -1003,14 +1031,12 @@ void CombatDustPipeline::render_blood_pool_batch(
     model.translate(blood.position);
     model.scale(blood.radius, 1.0F, blood.radius);
 
-    QMatrix4x4 mvp = view_proj * model;
+    QMatrix4x4 const mvp = view_proj * model;
     m_blood_shader->set_uniform(m_blood_uniforms.mvp, mvp);
     m_blood_shader->set_uniform(m_blood_uniforms.radius, blood.radius);
-    m_blood_shader->set_uniform(m_blood_uniforms.alpha_scale,
-                                blood.alpha_scale);
+    m_blood_shader->set_uniform(m_blood_uniforms.alpha_scale, blood.alpha_scale);
     m_blood_shader->set_uniform(m_blood_uniforms.rotation, blood.rotation);
-    m_blood_shader->set_uniform(m_blood_uniforms.aspect_ratio,
-                                blood.aspect_ratio);
+    m_blood_shader->set_uniform(m_blood_uniforms.aspect_ratio, blood.aspect_ratio);
     m_blood_shader->set_uniform(m_blood_uniforms.seed, blood.seed);
 
     glDrawElements(GL_TRIANGLES, m_blood_index_count, GL_UNSIGNED_INT, nullptr);
@@ -1019,19 +1045,19 @@ void CombatDustPipeline::render_blood_pool_batch(
   glBindVertexArray(0);
 
   glPolygonOffset(polygon_offset_factor, polygon_offset_units);
-  if (!polygon_offset_enabled) {
+  if (polygon_offset_enabled == 0U) {
     glDisable(GL_POLYGON_OFFSET_FILL);
   }
   glDepthMask(depth_mask_enabled);
-  if (!blend_enabled) {
+  if (blend_enabled == 0U) {
     glDisable(GL_BLEND);
   }
-  if (depth_test_enabled) {
+  if (depth_test_enabled != 0U) {
     glEnable(GL_DEPTH_TEST);
   } else {
     glDisable(GL_DEPTH_TEST);
   }
-  if (cull_enabled) {
+  if (cull_enabled != 0U) {
     glEnable(GL_CULL_FACE);
   }
 }

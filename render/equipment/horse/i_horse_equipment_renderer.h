@@ -20,14 +20,18 @@ class IHorseEquipmentRenderer : public IEquipmentRenderer {
 public:
   virtual ~IHorseEquipmentRenderer() = default;
 
-  virtual void render(const DrawContext &ctx, const HorseBodyFrames &frames,
-                      const HorseVariant &variant,
-                      const HorseAnimationContext &anim,
-                      EquipmentBatch &batch) const = 0;
+  virtual void render(const DrawContext& ctx,
+                      const HorseBodyFrames& frames,
+                      const HorseVariant& variant,
+                      const HorseAnimationContext& anim,
+                      EquipmentBatch& batch) const = 0;
 
 private:
-  void render(const DrawContext &, const BodyFrames &, const HumanoidPalette &,
-              const HumanoidAnimationContext &, EquipmentBatch &) final {}
+  void render(const DrawContext&,
+              const BodyFrames&,
+              const HumanoidPalette&,
+              const HumanoidAnimationContext&,
+              EquipmentBatch&) final {}
 };
 
 } // namespace Render::GL

@@ -1,8 +1,10 @@
 #pragma once
 
-#include "attachment_frames.h"
 #include <QVector3D>
+
 #include <cstdint>
+
+#include "attachment_frames.h"
 
 namespace Render::Creature {
 struct HorseAnimationStateComponent;
@@ -64,17 +66,19 @@ constexpr float k_slack_length_scale = 0.12F;
 
 } // namespace ReinConstants
 
-auto compute_mount_frame(const HorseProfile &profile) -> MountedAttachmentFrame;
+auto compute_mount_frame(const HorseProfile& profile) -> MountedAttachmentFrame;
 auto compute_rein_state(uint32_t horse_seed,
-                        const HumanoidAnimationContext &rider_ctx) -> ReinState;
-auto compute_rein_handle(const MountedAttachmentFrame &mount, bool is_left,
-                         float slack, float tension) -> QVector3D;
+                        const HumanoidAnimationContext& rider_ctx) -> ReinState;
+auto compute_rein_handle(const MountedAttachmentFrame& mount,
+                         bool is_left,
+                         float slack,
+                         float tension) -> QVector3D;
 
-auto evaluate_horse_motion(const HorseProfile &profile,
-                           const AnimationInputs &anim,
-                           const HumanoidAnimationContext &rider_ctx,
-                           Render::Creature::HorseAnimationStateComponent
-                               *io_state = nullptr) -> HorseMotionSample;
-void apply_mount_vertical_offset(MountedAttachmentFrame &frame, float bob);
+auto evaluate_horse_motion(const HorseProfile& profile,
+                           const AnimationInputs& anim,
+                           const HumanoidAnimationContext& rider_ctx,
+                           Render::Creature::HorseAnimationStateComponent* io_state =
+                               nullptr) -> HorseMotionSample;
+void apply_mount_vertical_offset(MountedAttachmentFrame& frame, float bob);
 
 } // namespace Render::GL

@@ -11,12 +11,16 @@ auto bake_snapshot_vertices(std::span<const RiggedVertex> source_vertices,
   std::vector<RiggedVertex> baked(source_vertices.size());
 
   for (std::size_t vi = 0; vi < source_vertices.size(); ++vi) {
-    const auto &sv = source_vertices[vi];
+    const auto& sv = source_vertices[vi];
 
-    QVector4D pos(sv.position_bone_local[0], sv.position_bone_local[1],
-                  sv.position_bone_local[2], 1.0F);
-    QVector4D nrm(sv.normal_bone_local[0], sv.normal_bone_local[1],
-                  sv.normal_bone_local[2], 0.0F);
+    QVector4D pos(sv.position_bone_local[0],
+                  sv.position_bone_local[1],
+                  sv.position_bone_local[2],
+                  1.0F);
+    QVector4D nrm(sv.normal_bone_local[0],
+                  sv.normal_bone_local[1],
+                  sv.normal_bone_local[2],
+                  0.0F);
 
     QVector4D out_pos(0.0F, 0.0F, 0.0F, 0.0F);
     QVector4D out_nrm(0.0F, 0.0F, 0.0F, 0.0F);
@@ -30,7 +34,7 @@ auto bake_snapshot_vertices(std::span<const RiggedVertex> source_vertices,
       if (bi >= frame_palette.size()) {
         continue;
       }
-      const auto &m = frame_palette[bi];
+      const auto& m = frame_palette[bi];
       out_pos += (m * pos) * w;
       out_nrm += (m * nrm) * w;
     }

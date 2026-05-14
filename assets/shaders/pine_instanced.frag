@@ -37,9 +37,8 @@ void main() {
   float needle_noise = hash(vec2(v_tex_coord.x * 28.0 + v_needle_seed * 7.1,
                                  v_tex_coord.y * 24.0 + v_needle_seed * 5.3));
 
-  float needle_streak =
-      hash(vec2(v_tex_coord.x * 12.0 + v_needle_seed * 3.7,
-                floor(v_tex_coord.y * 6.0 + v_needle_seed * 2.0)));
+  float needle_streak = hash(vec2(v_tex_coord.x * 12.0 + v_needle_seed * 3.7,
+                                  floor(v_tex_coord.y * 6.0 + v_needle_seed * 2.0)));
 
   vec3 needle_deep = vec3(0.16, 0.27, 0.15);
   vec3 needle_mid = vec3(0.25, 0.39, 0.21);
@@ -49,11 +48,9 @@ void main() {
   needle_color = mix(needle_color, v_color, 0.30);
 
   float tip_blend = smoothstep(0.82, 1.02, v_tex_coord.y);
-  needle_color =
-      mix(needle_color, needle_color * vec3(1.10, 1.05, 1.08), tip_blend);
+  needle_color = mix(needle_color, needle_color * vec3(1.10, 1.05, 1.08), tip_blend);
 
-  float bark_stripe =
-      sin(v_tex_coord.y * 45.0 + v_bark_seed * TWO_PI) * 0.1 + 0.9;
+  float bark_stripe = sin(v_tex_coord.y * 45.0 + v_bark_seed * TWO_PI) * 0.1 + 0.9;
   float bark_noise = hash(vec2(v_tex_coord.x * 18.0 + v_bark_seed * 4.3,
                                v_tex_coord.y * 10.0 + v_bark_seed * 7.7));
 

@@ -2,6 +2,7 @@
 
 #include <QMatrix4x4>
 #include <QString>
+
 #include <cstdint>
 #include <mutex>
 #include <unordered_map>
@@ -13,12 +14,12 @@ struct MeshHandle {
   std::uint32_t id{0};
   [[nodiscard]] auto valid() const -> bool { return id != 0; }
 
-  bool operator==(const MeshHandle &o) const { return id == o.id; }
-  bool operator!=(const MeshHandle &o) const { return id != o.id; }
+  bool operator==(const MeshHandle& o) const { return id == o.id; }
+  bool operator!=(const MeshHandle& o) const { return id != o.id; }
 };
 
 struct MeshHandleHash {
-  auto operator()(const MeshHandle &h) const -> std::size_t {
+  auto operator()(const MeshHandle& h) const -> std::size_t {
     return std::hash<std::uint32_t>{}(h.id);
   }
 };
@@ -46,12 +47,13 @@ public:
   MeshGeometryPool() = default;
   ~MeshGeometryPool() = default;
 
-  MeshGeometryPool(const MeshGeometryPool &) = delete;
-  auto operator=(const MeshGeometryPool &) -> MeshGeometryPool & = delete;
-  MeshGeometryPool(MeshGeometryPool &&) = delete;
-  auto operator=(MeshGeometryPool &&) -> MeshGeometryPool & = delete;
+  MeshGeometryPool(const MeshGeometryPool&) = delete;
+  auto operator=(const MeshGeometryPool&) -> MeshGeometryPool& = delete;
+  MeshGeometryPool(MeshGeometryPool&&) = delete;
+  auto operator=(MeshGeometryPool&&) -> MeshGeometryPool& = delete;
 
-  auto register_mesh(const QString &name, std::vector<PooledVertex> vertices,
+  auto register_mesh(const QString& name,
+                     std::vector<PooledVertex> vertices,
                      std::vector<std::uint32_t> indices) -> MeshHandle {
     std::lock_guard lock(m_mutex);
     auto it = m_name_to_handle.find(name);
@@ -74,20 +76,20 @@ public:
 
   void upload_pending() {
     std::lock_guard lock(m_mutex);
-    for (auto &[id, entry] : m_entries) {
+    for (auto& [id, entry] : m_entries) {
       if (!entry.info.uploaded && !entry.vertices.empty()) {
         upload_entry(entry);
       }
     }
   }
 
-  [[nodiscard]] auto get(MeshHandle handle) const -> const PooledMeshInfo * {
+  [[nodiscard]] auto get(MeshHandle handle) const -> const PooledMeshInfo* {
     std::lock_guard lock(m_mutex);
     auto it = m_entries.find(handle.id);
     return (it != m_entries.end()) ? &it->second.info : nullptr;
   }
 
-  [[nodiscard]] auto find(const QString &name) const -> MeshHandle {
+  [[nodiscard]] auto find(const QString& name) const -> MeshHandle {
     std::lock_guard lock(m_mutex);
     auto it = m_name_to_handle.find(name);
     return (it != m_name_to_handle.end()) ? it->second : MeshHandle{};
@@ -101,7 +103,7 @@ public:
   [[nodiscard]] auto uploaded_count() const -> std::size_t {
     std::lock_guard lock(m_mutex);
     std::size_t count = 0;
-    for (const auto &[id, entry] : m_entries) {
+    for (const auto& [id, entry] : m_entries) {
       if (entry.info.uploaded)
         ++count;
     }
@@ -122,7 +124,7 @@ public:
     std::lock_guard lock(m_mutex);
     PoolStats s;
     s.total_meshes = m_entries.size();
-    for (const auto &[id, entry] : m_entries) {
+    for (const auto& [id, entry] : m_entries) {
       s.total_vertices += entry.vertices.size();
       s.total_indices += entry.indices.size();
       if (entry.info.uploaded) {
@@ -142,7 +144,7 @@ private:
     PooledMeshInfo info;
   };
 
-  void upload_entry(PooledMeshEntry &entry);
+  void upload_entry(PooledMeshEntry& entry);
 
   mutable std::mutex m_mutex;
   std::uint32_t m_next_id{0};

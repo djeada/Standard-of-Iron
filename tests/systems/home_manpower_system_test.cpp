@@ -1,3 +1,6 @@
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/home_system.h"
@@ -7,31 +10,24 @@
 #include "game/units/home.h"
 #include "game/units/spawn_type.h"
 
-#include <gtest/gtest.h>
-#include <vector>
-
 namespace {
 
 class HomeManpowerSystemTest : public ::testing::Test {
 protected:
-  void SetUp() override {
-    Game::Systems::TroopCountRegistry::instance().clear();
-  }
+  void SetUp() override { Game::Systems::TroopCountRegistry::instance().clear(); }
 
-  void TearDown() override {
-    Game::Systems::TroopCountRegistry::instance().clear();
-  }
+  void TearDown() override { Game::Systems::TroopCountRegistry::instance().clear(); }
 };
 
 TEST_F(HomeManpowerSystemTest,
        HomesIncreaseBarracksCapacityAndGenerateManpowerOverTime) {
   Engine::Core::World world;
 
-  auto *barracks = world.create_entity();
-  auto *barracks_transform =
+  auto* barracks = world.create_entity();
+  auto* barracks_transform =
       barracks->add_component<Engine::Core::TransformComponent>();
-  auto *barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
-  auto *barracks_production =
+  auto* barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
+  auto* barracks_production =
       barracks->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(barracks_transform, nullptr);
   ASSERT_NE(barracks_unit, nullptr);
@@ -43,13 +39,11 @@ TEST_F(HomeManpowerSystemTest,
   barracks_production->max_units = 100;
   barracks_production->manpower_available = 0;
 
-  auto *home = world.create_entity();
-  auto *home_transform =
-      home->add_component<Engine::Core::TransformComponent>();
-  auto *home_unit = home->add_component<Engine::Core::UnitComponent>();
-  auto *home_component = home->add_component<Engine::Core::HomeComponent>();
-  auto *home_production =
-      home->add_component<Engine::Core::ProductionComponent>();
+  auto* home = world.create_entity();
+  auto* home_transform = home->add_component<Engine::Core::TransformComponent>();
+  auto* home_unit = home->add_component<Engine::Core::UnitComponent>();
+  auto* home_component = home->add_component<Engine::Core::HomeComponent>();
+  auto* home_production = home->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(home_transform, nullptr);
   ASSERT_NE(home_unit, nullptr);
   ASSERT_NE(home_component, nullptr);
@@ -81,14 +75,12 @@ TEST_F(HomeManpowerSystemTest,
   EXPECT_FLOAT_EQ(home_component->family_generation_cooldown, 8.0F);
 }
 
-TEST_F(HomeManpowerSystemTest,
-       BarracksProductionConsumesAvailableManpowerWhenQueued) {
+TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQueued) {
   Engine::Core::World world;
 
-  auto *barracks = world.create_entity();
-  auto *unit = barracks->add_component<Engine::Core::UnitComponent>();
-  auto *production =
-      barracks->add_component<Engine::Core::ProductionComponent>();
+  auto* barracks = world.create_entity();
+  auto* unit = barracks->add_component<Engine::Core::UnitComponent>();
+  auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(production, nullptr);
 
@@ -99,15 +91,15 @@ TEST_F(HomeManpowerSystemTest,
 
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
 
-  auto result = Game::Systems::ProductionService::
-      start_production_for_first_selected_barracks(
+  auto result =
+      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
           world, selected, 1, Game::Units::TroopType::Archer);
   EXPECT_EQ(result, Game::Systems::ProductionResult::InsufficientManpower);
   EXPECT_FALSE(production->in_progress);
 
   production->manpower_available = 60;
-  result = Game::Systems::ProductionService::
-      start_production_for_first_selected_barracks(
+  result =
+      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
           world, selected, 1, Game::Units::TroopType::Archer);
 
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
@@ -115,8 +107,7 @@ TEST_F(HomeManpowerSystemTest,
   EXPECT_EQ(production->manpower_available, 10);
 }
 
-TEST_F(HomeManpowerSystemTest,
-       InitialBarracksSpawnStartsWithAuthoredManpowerReserve) {
+TEST_F(HomeManpowerSystemTest, InitialBarracksSpawnStartsWithAuthoredManpowerReserve) {
   Engine::Core::World world;
 
   Game::Units::SpawnParams initial_params;
@@ -126,9 +117,9 @@ TEST_F(HomeManpowerSystemTest,
   initial_params.is_initial_spawn = true;
 
   auto initial_barracks = Game::Units::Barracks::Create(world, initial_params);
-  auto *initial_entity = world.get_entity(initial_barracks->id());
+  auto* initial_entity = world.get_entity(initial_barracks->id());
   ASSERT_NE(initial_entity, nullptr);
-  auto *initial_production =
+  auto* initial_production =
       initial_entity->get_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(initial_production, nullptr);
   EXPECT_EQ(initial_production->max_units, 180);
@@ -141,17 +132,16 @@ TEST_F(HomeManpowerSystemTest,
   built_params.is_initial_spawn = false;
 
   auto built_barracks = Game::Units::Barracks::Create(world, built_params);
-  auto *built_entity = world.get_entity(built_barracks->id());
+  auto* built_entity = world.get_entity(built_barracks->id());
   ASSERT_NE(built_entity, nullptr);
-  auto *built_production =
+  auto* built_production =
       built_entity->get_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(built_production, nullptr);
   EXPECT_EQ(built_production->max_units, 180);
   EXPECT_EQ(built_production->manpower_available, 0);
 }
 
-TEST_F(HomeManpowerSystemTest,
-       InitialHomeSpawnStartsWithThreeCivilianRecruitsReady) {
+TEST_F(HomeManpowerSystemTest, InitialHomeSpawnStartsWithThreeCivilianRecruitsReady) {
   Engine::Core::World world;
 
   Game::Units::SpawnParams params;
@@ -160,9 +150,9 @@ TEST_F(HomeManpowerSystemTest,
   params.is_initial_spawn = true;
 
   auto home = Game::Units::Home::Create(world, params);
-  auto *entity = world.get_entity(home->id());
+  auto* entity = world.get_entity(home->id());
   ASSERT_NE(entity, nullptr);
-  auto *production = entity->get_component<Engine::Core::ProductionComponent>();
+  auto* production = entity->get_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(production, nullptr);
 
   EXPECT_EQ(production->product_type, Game::Units::TroopType::Civilian);

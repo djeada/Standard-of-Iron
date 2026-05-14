@@ -1,9 +1,11 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <cstdint>
+
 #include "attachment_frames.h"
 #include "elephant_gait.h"
-#include <QVector3D>
-#include <cstdint>
 
 namespace Render::GL {
 
@@ -66,12 +68,14 @@ struct ElephantProfile {
 };
 
 auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions;
-auto make_elephant_variant(uint32_t seed, const QVector3D &fabric_base,
-                           const QVector3D &metal_base) -> ElephantVariant;
-auto make_elephant_profile(uint32_t seed, const QVector3D &fabric_base,
-                           const QVector3D &metal_base) -> ElephantProfile;
+auto make_elephant_variant(uint32_t seed,
+                           const QVector3D& fabric_base,
+                           const QVector3D& metal_base) -> ElephantVariant;
+auto make_elephant_profile(uint32_t seed,
+                           const QVector3D& fabric_base,
+                           const QVector3D& metal_base) -> ElephantProfile;
 
-inline void scale_elephant_dimensions(ElephantDimensions &dims, float scale) {
+inline void scale_elephant_dimensions(ElephantDimensions& dims, float scale) {
   dims.body_length *= scale;
   dims.body_width *= scale;
   dims.body_height *= scale;

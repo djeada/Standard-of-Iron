@@ -7,7 +7,9 @@
 namespace Render::GL {
 
 inline auto oriented_segment_transform(
-    const QMatrix4x4 &parent, const QVector3D &origin, const QVector3D &axis_y,
+    const QMatrix4x4& parent,
+    const QVector3D& origin,
+    const QVector3D& axis_y,
     QVector3D right_hint = QVector3D(0.0F, 0.0F, 1.0F)) -> QMatrix4x4 {
   QVector3D y_axis = axis_y;
   float const length = y_axis.length();

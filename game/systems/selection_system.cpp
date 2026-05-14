@@ -1,4 +1,14 @@
 #include "selection_system.h"
+
+#include <QPointF>
+#include <QVector3D>
+#include <qglobal.h>
+#include <qobject.h>
+#include <qtmetamacros.h>
+
+#include <algorithm>
+#include <vector>
+
 #include "../../app/utils/selection_utils.h"
 #include "../../render/gl/camera.h"
 #include "../core/component.h"
@@ -7,21 +17,14 @@
 #include "command_service.h"
 #include "picking_service.h"
 #include "units/spawn_type.h"
-#include <QPointF>
-#include <QVector3D>
-#include <algorithm>
-#include <qglobal.h>
-#include <qobject.h>
-#include <qtmetamacros.h>
-#include <vector>
 
 namespace Game::Systems {
 
-void SelectionSystem::update(Engine::Core::World *world, float delta_time) {}
+void SelectionSystem::update(Engine::Core::World* world, float delta_time) {
+}
 
 void SelectionSystem::select_unit(Engine::Core::EntityID unit_id) {
-  auto it =
-      std::find(m_selected_units.begin(), m_selected_units.end(), unit_id);
+  auto it = std::find(m_selected_units.begin(), m_selected_units.end(), unit_id);
   if (it == m_selected_units.end()) {
     m_selected_units.push_back(unit_id);
     Engine::Core::EventManager::instance().publish(
@@ -30,21 +33,22 @@ void SelectionSystem::select_unit(Engine::Core::EntityID unit_id) {
 }
 
 void SelectionSystem::deselect_unit(Engine::Core::EntityID unit_id) {
-  auto it =
-      std::find(m_selected_units.begin(), m_selected_units.end(), unit_id);
+  auto it = std::find(m_selected_units.begin(), m_selected_units.end(), unit_id);
   if (it != m_selected_units.end()) {
     m_selected_units.erase(it);
   }
 }
 
-void SelectionSystem::clear_selection() { m_selected_units.clear(); }
+void SelectionSystem::clear_selection() {
+  m_selected_units.clear();
+}
 
-void SelectionSystem::select_units_in_area(float x1, float y1, float x2,
-                                           float y2) {}
+void SelectionSystem::select_units_in_area(float x1, float y1, float x2, float y2) {
+}
 
-auto SelectionSystem::is_unit_in_area(Engine::Core::Entity *entity, float x1,
-                                      float y1, float x2, float y2) -> bool {
-  auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+auto SelectionSystem::is_unit_in_area(
+    Engine::Core::Entity* entity, float x1, float y1, float x2, float y2) -> bool {
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
   if (transform == nullptr) {
     return false;
   }
@@ -52,31 +56,42 @@ auto SelectionSystem::is_unit_in_area(Engine::Core::Entity *entity, float x1,
   float const x = transform->position.x;
   float const z = transform->position.z;
 
-  return x >= std::min(x1, x2) && x <= std::max(x1, x2) &&
-         z >= std::min(y1, y2) && z <= std::max(y1, y2);
+  return x >= std::min(x1, x2) && x <= std::max(x1, x2) && z >= std::min(y1, y2) &&
+         z <= std::max(y1, y2);
 }
 
-SelectionController::SelectionController(Engine::Core::World *world,
-                                         SelectionSystem *selection_system,
-                                         PickingService *picking_service,
-                                         QObject *parent)
-    : QObject(parent), m_world(world), m_selection_system(selection_system),
-      m_picking_service(picking_service) {}
+SelectionController::SelectionController(Engine::Core::World* world,
+                                         SelectionSystem* selection_system,
+                                         PickingService* picking_service,
+                                         QObject* parent)
+    : QObject(parent)
+    , m_world(world)
+    , m_selection_system(selection_system)
+    , m_picking_service(picking_service) {
+}
 
-void SelectionController::on_click_select(qreal sx, qreal sy, bool additive,
+void SelectionController::on_click_select(qreal sx,
+                                          qreal sy,
+                                          bool additive,
                                           int viewport_width,
-                                          int viewport_height, void *camera,
+                                          int viewport_height,
+                                          void* camera,
                                           int local_owner_id) {
   if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
       (camera == nullptr) || (m_world == nullptr)) {
     return;
   }
 
-  auto *cam = static_cast<Render::GL::Camera *>(camera);
+  auto* cam = static_cast<Render::GL::Camera*>(camera);
   Engine::Core::EntityID const picked =
-      Game::Systems::PickingService::pick_single(
-          float(sx), float(sy), *m_world, *cam, viewport_width, viewport_height,
-          local_owner_id, true);
+      Game::Systems::PickingService::pick_single(float(sx),
+                                                 float(sy),
+                                                 *m_world,
+                                                 *cam,
+                                                 viewport_width,
+                                                 viewport_height,
+                                                 local_owner_id,
+                                                 true);
 
   if (picked != 0U) {
 
@@ -96,10 +111,14 @@ void SelectionController::on_click_select(qreal sx, qreal sy, bool additive,
   }
 }
 
-void SelectionController::on_area_selected(qreal x1, qreal y1, qreal x2,
-                                           qreal y2, bool additive,
+void SelectionController::on_area_selected(qreal x1,
+                                           qreal y1,
+                                           qreal x2,
+                                           qreal y2,
+                                           bool additive,
                                            int viewport_width,
-                                           int viewport_height, void *camera,
+                                           int viewport_height,
+                                           void* camera,
                                            int local_owner_id) {
   if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
       (camera == nullptr) || (m_world == nullptr)) {
@@ -110,10 +129,16 @@ void SelectionController::on_area_selected(qreal x1, qreal y1, qreal x2,
     m_selection_system->clear_selection();
   }
 
-  auto *cam = static_cast<Render::GL::Camera *>(camera);
-  auto picked = Game::Systems::PickingService::pick_in_rect(
-      float(x1), float(y1), float(x2), float(y2), *m_world, *cam,
-      viewport_width, viewport_height, local_owner_id);
+  auto* cam = static_cast<Render::GL::Camera*>(camera);
+  auto picked = Game::Systems::PickingService::pick_in_rect(float(x1),
+                                                            float(y1),
+                                                            float(x2),
+                                                            float(y2),
+                                                            *m_world,
+                                                            *cam,
+                                                            viewport_width,
+                                                            viewport_height,
+                                                            local_owner_id);
   for (auto id : picked) {
     m_selection_system->select_unit(id);
   }
@@ -138,8 +163,8 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
   m_selection_system->clear_selection();
 
   auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *e : entities) {
-    auto *unit = e->get_component<Engine::Core::UnitComponent>();
+  for (auto* e : entities) {
+    auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->owner_id != local_owner_id) {
       continue;
     }
@@ -165,14 +190,13 @@ void SelectionController::select_single_unit(Engine::Core::EntityID id,
     return;
   }
 
-  auto *entity = m_world->get_entity(id);
+  auto* entity = m_world->get_entity(id);
   if (entity == nullptr) {
     return;
   }
 
-  auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-  if ((unit == nullptr) || (unit->health <= 0) ||
-      (unit->owner_id != local_owner_id)) {
+  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  if ((unit == nullptr) || (unit->health <= 0) || (unit->owner_id != local_owner_id)) {
     return;
   }
 
@@ -186,30 +210,30 @@ auto SelectionController::has_units_selected() const -> bool {
   if (m_selection_system == nullptr) {
     return false;
   }
-  const auto &sel = m_selection_system->get_selected_units();
+  const auto& sel = m_selection_system->get_selected_units();
   return !sel.empty();
 }
 
 void SelectionController::get_selected_unit_ids(
-    std::vector<Engine::Core::EntityID> &out) const {
+    std::vector<Engine::Core::EntityID>& out) const {
   out.clear();
   if (m_selection_system == nullptr) {
     return;
   }
-  const auto &ids = m_selection_system->get_selected_units();
+  const auto& ids = m_selection_system->get_selected_units();
   out.assign(ids.begin(), ids.end());
 }
 
-auto SelectionController::has_selected_type(const QString &type) const -> bool {
+auto SelectionController::has_selected_type(const QString& type) const -> bool {
   if ((m_world == nullptr) || (m_selection_system == nullptr)) {
     return false;
   }
-  const auto &sel = m_selection_system->get_selected_units();
+  const auto& sel = m_selection_system->get_selected_units();
   for (auto id : sel) {
-    if (auto *e = m_world->get_entity(id)) {
-      if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
-        if (QString::fromStdString(
-                Game::Units::spawn_typeToString(u->spawn_type)) == type) {
+    if (auto* e = m_world->get_entity(id)) {
+      if (auto* u = e->get_component<Engine::Core::UnitComponent>()) {
+        if (QString::fromStdString(Game::Units::spawn_typeToString(u->spawn_type)) ==
+            type) {
           return true;
         }
       }

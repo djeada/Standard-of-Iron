@@ -1,6 +1,11 @@
 #include "preparation_common.h"
 
-#include "../pose_intent.h"
+#include <QVector4D>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <string_view>
 
 #include "../../../game/core/component.h"
 #include "../../../game/core/entity.h"
@@ -13,12 +18,7 @@
 #include "../../humanoid/skeleton.h"
 #include "../archetype_registry.h"
 #include "../bpat/bpat_registry.h"
-
-#include <QVector4D>
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <string_view>
+#include "../pose_intent.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -34,8 +34,8 @@ auto looping_phase(float phase) noexcept -> float {
   return wrapped;
 }
 
-auto hold_phase_for_anim(
-    const Render::GL::HumanoidAnimationContext &anim) noexcept -> float {
+auto hold_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> float {
   float const hold_phase = Render::GL::hold_transition_amount(anim.inputs);
   if (hold_phase > 0.0F) {
     return std::clamp(hold_phase, 0.0F, k_terminal_non_looping_phase);
@@ -46,14 +46,13 @@ auto hold_phase_for_anim(
 
 } // namespace
 
-auto pass_intent_from_ctx(const Render::GL::DrawContext &ctx) noexcept
+auto pass_intent_from_ctx(const Render::GL::DrawContext& ctx) noexcept
     -> RenderPassIntent {
-  return ctx.template_prewarm ? RenderPassIntent::Shadow
-                              : RenderPassIntent::Main;
+  return ctx.template_prewarm ? RenderPassIntent::Shadow : RenderPassIntent::Main;
 }
 
-auto derive_unit_seed(const Render::GL::DrawContext &ctx,
-                      const Engine::Core::UnitComponent *unit) noexcept
+auto derive_unit_seed(const Render::GL::DrawContext& ctx,
+                      const Engine::Core::UnitComponent* unit) noexcept
     -> std::uint32_t {
   if (ctx.has_seed_override) {
     return ctx.seed_override;
@@ -68,14 +67,13 @@ auto derive_unit_seed(const Render::GL::DrawContext &ctx,
   return seed;
 }
 
-auto humanoid_state_for_anim(
-    const Render::GL::HumanoidAnimationContext &anim) noexcept
+auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
     -> Render::Creature::AnimationStateId {
-  return humanoid_state_for_anim(
-      anim, Render::Creature::resolve_pose_intent(anim.inputs));
+  return humanoid_state_for_anim(anim,
+                                 Render::Creature::resolve_pose_intent(anim.inputs));
 }
 
-auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext &anim,
+auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim,
                              Render::Creature::PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId {
 
@@ -97,8 +95,8 @@ auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext &anim,
   }
 }
 
-auto humanoid_phase_for_anim(
-    const Render::GL::HumanoidAnimationContext &anim) noexcept -> float {
+auto humanoid_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> float {
   auto const state = humanoid_state_for_anim(anim);
   if (state == Render::Creature::AnimationStateId::Die) {
     return std::clamp(anim.inputs.death_progress, 0.0F, 1.0F);
@@ -128,8 +126,7 @@ auto humanoid_phase_for_anim(
 
 namespace {
 
-auto default_humanoid_archetype(
-    Render::Creature::ArchetypeId archetype_id) noexcept
+auto default_humanoid_archetype(Render::Creature::ArchetypeId archetype_id) noexcept
     -> Render::Creature::ArchetypeId {
   return (archetype_id != Render::Creature::k_invalid_archetype)
              ? archetype_id
@@ -137,7 +134,7 @@ auto default_humanoid_archetype(
 }
 
 auto humanoid_requested_clip_variant_for_anim(
-    const Render::GL::HumanoidAnimationContext &anim) noexcept -> std::uint8_t {
+    const Render::GL::HumanoidAnimationContext& anim) noexcept -> std::uint8_t {
   auto const state = humanoid_state_for_anim(anim);
   if (state == Render::Creature::AnimationStateId::Die ||
       state == Render::Creature::AnimationStateId::Dead) {
@@ -180,7 +177,8 @@ auto expected_humanoid_idle_variant_name(std::uint8_t clip_variant) noexcept
 }
 
 auto humanoid_clip_matches_requested_idle_variant(
-    const Render::Creature::Bpat::BpatBlob &blob, std::uint16_t clip_id,
+    const Render::Creature::Bpat::BpatBlob& blob,
+    std::uint16_t clip_id,
     Render::Creature::AnimationStateId state,
     std::uint8_t clip_variant) noexcept -> bool {
   if (state != Render::Creature::AnimationStateId::Idle || clip_variant == 0U) {
@@ -189,15 +187,14 @@ auto humanoid_clip_matches_requested_idle_variant(
   if (clip_id >= blob.clip_count()) {
     return false;
   }
-  return blob.clip(clip_id).name ==
-         expected_humanoid_idle_variant_name(clip_variant);
+  return blob.clip(clip_id).name == expected_humanoid_idle_variant_name(clip_variant);
 }
 
 } // namespace
 
 auto humanoid_clip_variant_for_anim(
     Render::Creature::ArchetypeId archetype_id,
-    const Render::GL::HumanoidAnimationContext &anim) noexcept -> std::uint8_t {
+    const Render::GL::HumanoidAnimationContext& anim) noexcept -> std::uint8_t {
   auto const resolved_archetype = default_humanoid_archetype(archetype_id);
   auto const state = humanoid_state_for_anim(anim);
   auto const variant_count =
@@ -210,31 +207,28 @@ auto humanoid_clip_variant_for_anim(
                                 variant_count - 1U);
 }
 
-auto humanoid_bpat_playback_for_anim(
-    Render::Creature::ArchetypeId archetype_id, std::uint32_t species_id,
-    const Render::GL::HumanoidAnimationContext &anim) noexcept
-    -> std::optional<BpatPlayback> {
+auto humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeId archetype_id,
+                                     std::uint32_t species_id,
+                                     const Render::GL::HumanoidAnimationContext&
+                                         anim) noexcept -> std::optional<BpatPlayback> {
   using Render::Creature::ArchetypeDescriptor;
 
   archetype_id = default_humanoid_archetype(archetype_id);
 
   auto const state = humanoid_state_for_anim(anim);
   auto clip_variant = humanoid_clip_variant_for_anim(archetype_id, anim);
-  auto clip_id =
-      Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
-          archetype_id, state, clip_variant);
+  auto clip_id = Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+      archetype_id, state, clip_variant);
   if (clip_id == ArchetypeDescriptor::k_unmapped_clip) {
     return std::nullopt;
   }
-  auto const *blob =
-      Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
+  auto const* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
   if (blob == nullptr) {
     return std::nullopt;
   }
 
-  if (clip_id >= blob->clip_count() ||
-      !humanoid_clip_matches_requested_idle_variant(*blob, clip_id, state,
-                                                    clip_variant)) {
+  if (clip_id >= blob->clip_count() || !humanoid_clip_matches_requested_idle_variant(
+                                           *blob, clip_id, state, clip_variant)) {
     clip_variant = 0U;
     clip_id = Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
         archetype_id, state, clip_variant);
@@ -270,16 +264,14 @@ auto humanoid_bpat_playback_for_anim(
 
 auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
                              std::uint32_t species_id,
-                             const Render::GL::HumanoidAnimationContext
-                                 &anim) noexcept -> std::optional<float> {
-  auto const playback =
-      humanoid_bpat_playback_for_anim(archetype_id, species_id, anim);
+                             const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> std::optional<float> {
+  auto const playback = humanoid_bpat_playback_for_anim(archetype_id, species_id, anim);
   if (!playback.has_value()) {
     return std::nullopt;
   }
 
-  auto const *blob =
-      Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
+  auto const* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
   if (blob == nullptr || playback->clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
@@ -298,16 +290,15 @@ auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
       static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL);
   auto const foot_r_idx =
       static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR);
-  return std::min(palette[foot_l_idx].column(3).y(),
-                  palette[foot_r_idx].column(3).y());
+  return std::min(palette[foot_l_idx].column(3).y(), palette[foot_r_idx].column(3).y());
 }
 
 auto grounded_humanoid_contact_y(
-    Render::Creature::ArchetypeId archetype_id, std::uint32_t species_id,
-    const Render::GL::HumanoidPose &pose,
-    const Render::GL::HumanoidAnimationContext &anim) noexcept -> float {
-  if (auto const clip_contact =
-          humanoid_clip_contact_y(archetype_id, species_id, anim);
+    Render::Creature::ArchetypeId archetype_id,
+    std::uint32_t species_id,
+    const Render::GL::HumanoidPose& pose,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept -> float {
+  if (auto const clip_contact = humanoid_clip_contact_y(archetype_id, species_id, anim);
       clip_contact.has_value()) {
     return *clip_contact;
   }
@@ -316,7 +307,7 @@ auto grounded_humanoid_contact_y(
 
 auto horse_clip_contact_y(std::uint16_t clip_id,
                           float phase) noexcept -> std::optional<float> {
-  auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
+  auto const* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
       Render::Creature::Bpat::k_species_horse);
   if (blob == nullptr || clip_id >= blob->clip_count()) {
     return std::nullopt;
@@ -342,31 +333,25 @@ auto horse_clip_contact_y(std::uint16_t clip_id,
                       : static_cast<int>(phase * frame_count);
   frame_idx = std::clamp(frame_idx, 0, static_cast<int>(clip.frame_count) - 1);
 
-  auto const palette = blob->frame_palette_view(
-      clip.frame_offset + static_cast<std::uint32_t>(frame_idx));
+  auto const palette = blob->frame_palette_view(clip.frame_offset +
+                                                static_cast<std::uint32_t>(frame_idx));
   if (palette.size() < Render::Horse::k_horse_bone_count) {
     return std::nullopt;
   }
 
-  auto const foot_fl_idx =
-      static_cast<std::size_t>(Render::Horse::HorseBone::FootFL);
-  auto const foot_fr_idx =
-      static_cast<std::size_t>(Render::Horse::HorseBone::FootFR);
-  auto const foot_bl_idx =
-      static_cast<std::size_t>(Render::Horse::HorseBone::FootBL);
-  auto const foot_br_idx =
-      static_cast<std::size_t>(Render::Horse::HorseBone::FootBR);
-  return std::min(std::min(palette[foot_fl_idx].column(3).y(),
-                           palette[foot_fr_idx].column(3).y()),
-                  std::min(palette[foot_bl_idx].column(3).y(),
-                           palette[foot_br_idx].column(3).y()));
+  auto const foot_fl_idx = static_cast<std::size_t>(Render::Horse::HorseBone::FootFL);
+  auto const foot_fr_idx = static_cast<std::size_t>(Render::Horse::HorseBone::FootFR);
+  auto const foot_bl_idx = static_cast<std::size_t>(Render::Horse::HorseBone::FootBL);
+  auto const foot_br_idx = static_cast<std::size_t>(Render::Horse::HorseBone::FootBR);
+  return std::min(
+      std::min(palette[foot_fl_idx].column(3).y(), palette[foot_fr_idx].column(3).y()),
+      std::min(palette[foot_bl_idx].column(3).y(), palette[foot_br_idx].column(3).y()));
 }
 
 auto palette_contact_y(CreatureKind kind,
                        std::span<const QMatrix4x4> palette) noexcept -> float {
-  auto const bind_adjusted_y =
-      [&](std::size_t index,
-          std::span<const QMatrix4x4> bind_palette) -> float {
+  auto const bind_adjusted_y = [&](std::size_t index,
+                                   std::span<const QMatrix4x4> bind_palette) -> float {
     if (index >= palette.size() || index >= bind_palette.size()) {
       return 0.0F;
     }
@@ -376,44 +361,41 @@ auto palette_contact_y(CreatureKind kind,
   switch (kind) {
   case CreatureKind::Humanoid: {
     auto const bind_palette = Render::Humanoid::humanoid_bind_palette();
-    return std::min(bind_adjusted_y(static_cast<std::size_t>(
-                                        Render::Humanoid::HumanoidBone::FootL),
-                                    bind_palette),
-                    bind_adjusted_y(static_cast<std::size_t>(
-                                        Render::Humanoid::HumanoidBone::FootR),
-                                    bind_palette));
+    return std::min(
+        bind_adjusted_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL),
+                        bind_palette),
+        bind_adjusted_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR),
+                        bind_palette));
   }
   case CreatureKind::Horse: {
     auto const bind_palette = Render::Horse::horse_bind_palette();
     return std::min(
-        std::min(bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Horse::HorseBone::FootFL),
-                     bind_palette),
-                 bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Horse::HorseBone::FootFR),
-                     bind_palette)),
-        std::min(bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Horse::HorseBone::FootBL),
-                     bind_palette),
-                 bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Horse::HorseBone::FootBR),
-                     bind_palette)));
+        std::min(
+            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFL),
+                            bind_palette),
+            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFR),
+                            bind_palette)),
+        std::min(
+            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBL),
+                            bind_palette),
+            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBR),
+                            bind_palette)));
   }
   case CreatureKind::Elephant: {
     auto const bind_palette = Render::Elephant::elephant_bind_palette();
     return std::min(
-        std::min(bind_adjusted_y(static_cast<std::size_t>(
-                                     Render::Elephant::ElephantBone::FootFL),
-                                 bind_palette),
-                 bind_adjusted_y(static_cast<std::size_t>(
-                                     Render::Elephant::ElephantBone::FootFR),
-                                 bind_palette)),
-        std::min(bind_adjusted_y(static_cast<std::size_t>(
-                                     Render::Elephant::ElephantBone::FootBL),
-                                 bind_palette),
-                 bind_adjusted_y(static_cast<std::size_t>(
-                                     Render::Elephant::ElephantBone::FootBR),
-                                 bind_palette)));
+        std::min(bind_adjusted_y(
+                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFL),
+                     bind_palette),
+                 bind_adjusted_y(
+                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFR),
+                     bind_palette)),
+        std::min(bind_adjusted_y(
+                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBL),
+                     bind_palette),
+                 bind_adjusted_y(
+                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBR),
+                     bind_palette)));
   }
   case CreatureKind::Mounted:
     return 0.0F;
@@ -421,19 +403,20 @@ auto palette_contact_y(CreatureKind kind,
   return 0.0F;
 }
 
-auto sample_terrain_height_or_fallback(float world_x, float world_z,
+auto sample_terrain_height_or_fallback(float world_x,
+                                       float world_z,
                                        float fallback_y) noexcept -> float {
-  auto &terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Map::TerrainService::instance();
   return terrain_service
       .resolve_surface_world_position(world_x, world_z, 0.0F, fallback_y)
       .y();
 }
 
-auto model_world_origin(const QMatrix4x4 &model) noexcept -> QVector3D {
+auto model_world_origin(const QMatrix4x4& model) noexcept -> QVector3D {
   return model.column(3).toVector3D();
 }
 
-auto make_runtime_prewarm_ctx(const Render::GL::DrawContext &ctx) noexcept
+auto make_runtime_prewarm_ctx(const Render::GL::DrawContext& ctx) noexcept
     -> Render::GL::DrawContext {
   Render::GL::DrawContext runtime_ctx = ctx;
   runtime_ctx.template_prewarm = false;
@@ -441,24 +424,23 @@ auto make_runtime_prewarm_ctx(const Render::GL::DrawContext &ctx) noexcept
   return runtime_ctx;
 }
 
-void ground_model_contact_to_surface(QMatrix4x4 &model, float local_contact_y,
+void ground_model_contact_to_surface(QMatrix4x4& model,
+                                     float local_contact_y,
                                      float y_scale,
                                      float entity_ground_offset) noexcept {
-  float const world_y_offset =
-      (entity_ground_offset + local_contact_y) * y_scale;
+  float const world_y_offset = (entity_ground_offset + local_contact_y) * y_scale;
   ground_model_to_terrain(model, world_y_offset);
 }
 
-void ground_model_to_terrain(QMatrix4x4 &model, float world_y_offset) noexcept {
+void ground_model_to_terrain(QMatrix4x4& model, float world_y_offset) noexcept {
   QVector3D const origin = model_world_origin(model);
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  QVector3D const grounded_origin =
-      terrain_service.resolve_surface_world_position(
-          origin.x(), origin.z(), -world_y_offset, origin.y());
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  QVector3D const grounded_origin = terrain_service.resolve_surface_world_position(
+      origin.x(), origin.z(), -world_y_offset, origin.y());
   set_model_world_y(model, grounded_origin.y());
 }
 
-void set_model_world_y(QMatrix4x4 &model, float world_y) noexcept {
+void set_model_world_y(QMatrix4x4& model, float world_y) noexcept {
   QVector3D origin = model_world_origin(model);
   origin.setY(world_y);
   model.setColumn(3, QVector4D(origin, 1.0F));

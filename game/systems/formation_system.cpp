@@ -1,13 +1,16 @@
 #include "formation_system.h"
-#include "../units/troop_config.h"
+
 #include <QDebug>
+#include <qglobal.h>
+#include <qvectornd.h>
+
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <qglobal.h>
-#include <qvectornd.h>
 #include <utility>
 #include <vector>
+
+#include "../units/troop_config.h"
 
 namespace Game::Systems {
 
@@ -22,8 +25,7 @@ constexpr float k_cavalry_lateral_spacing_scale = 0.72F;
 constexpr float k_cavalry_rank_stagger_scale = 0.50F;
 constexpr float k_cavalry_rear_depth_bias_scale = 0.18F;
 
-auto get_unit_spacing(Game::Units::TroopType type,
-                      float base_spacing) -> float {
+auto get_unit_spacing(Game::Units::TroopType type, float base_spacing) -> float {
   float const selection_size =
       Game::Units::TroopConfig::instance().get_selection_ring_size(type);
   return (selection_size * 2.0F + 0.5F) * base_spacing;
@@ -54,7 +56,8 @@ auto is_support(Game::Units::TroopType type) -> bool {
          type == Game::Units::TroopType::Builder;
 }
 
-auto calculate_balanced_rows(int total_units, int max_per_row,
+auto calculate_balanced_rows(int total_units,
+                             int max_per_row,
                              int min_per_row) -> std::vector<int> {
   std::vector<int> row_sizes;
 
@@ -101,31 +104,33 @@ auto cavalry_row_yaw(int row, int rows) -> float {
   }
 }
 
-auto roman_infantry_local_offset(int row, int col, int rows, int cols,
-                                 float spacing) -> FormationOffset {
-  return {(col - (cols - 1) * 0.5F) * spacing *
-              k_roman_infantry_lateral_spacing_scale,
-          (row - (rows - 1) * 0.5F) * spacing *
-              k_roman_infantry_depth_spacing_scale,
+auto roman_infantry_local_offset(int row, int col, int rows, int cols, float spacing)
+    -> FormationOffset {
+  return {(col - (cols - 1) * 0.5F) * spacing * k_roman_infantry_lateral_spacing_scale,
+          (row - (rows - 1) * 0.5F) * spacing * k_roman_infantry_depth_spacing_scale,
           0.0F};
 }
 
-auto cavalry_local_offset(int row, int col, int rows, int cols,
-                          float spacing) -> FormationOffset {
+auto cavalry_local_offset(int row, int col, int rows, int cols, float spacing)
+    -> FormationOffset {
   float const side_spacing = cavalry_lateral_spacing(spacing);
   float const centered_col = float(col) - float(cols - 1) * 0.5F;
   float const centered_row = float(row) - float(rows - 1) * 0.5F;
   float const stagger =
       (row % 2 == 1) ? side_spacing * k_cavalry_rank_stagger_scale : 0.0F;
-  float const rear_depth_bias = float(cavalry_front_rank_index(row, rows)) *
-                                spacing * k_cavalry_rear_depth_bias_scale;
+  float const rear_depth_bias = float(cavalry_front_rank_index(row, rows)) * spacing *
+                                k_cavalry_rear_depth_bias_scale;
   return {(centered_col * side_spacing) + stagger,
           (centered_row * spacing) - rear_depth_bias,
           cavalry_row_yaw(row, rows)};
 }
 
-auto carthage_infantry_local_offset(int idx, int row, int col, int rows,
-                                    int cols, float spacing,
+auto carthage_infantry_local_offset(int idx,
+                                    int row,
+                                    int col,
+                                    int rows,
+                                    int cols,
+                                    float spacing,
                                     std::uint32_t seed) -> FormationOffset {
   float const row_normalized = float(row) / float(rows > 1 ? rows - 1 : 1);
   float const col_normalized =
@@ -141,15 +146,14 @@ auto carthage_infantry_local_offset(int idx, int row, int col, int rows,
     offset_x += spacing * 0.35F;
   }
 
-  float const rank_wave = std::sin(col_normalized * 3.14159F) * spacing *
-                          0.12F * (1.0F + row_normalized);
+  float const rank_wave =
+      std::sin(col_normalized * 3.14159F) * spacing * 0.12F * (1.0F + row_normalized);
   offset_z += rank_wave;
 
   float const center_push = (1.0F - std::abs(col_normalized)) * spacing * 0.2F;
   offset_z -= center_push;
 
-  std::uint32_t const variation_seed =
-      seed ^ (std::uint32_t(idx) * 2654435761U);
+  std::uint32_t const variation_seed = seed ^ (std::uint32_t(idx) * 2654435761U);
   float const phase = float(variation_seed & 0xFFU) / 255.0F * 6.28318F;
 
   float const jitter_scale = spacing * 0.08F * (1.0F + row_normalized * 0.5F);
@@ -165,19 +169,23 @@ auto carthage_infantry_local_offset(int idx, int row, int col, int rows,
   return {offset_x, offset_z, 0.0F};
 }
 
-auto carthage_cavalry_local_offset(int idx, int row, int col, int rows,
-                                   int cols, float spacing,
+auto carthage_cavalry_local_offset(int idx,
+                                   int row,
+                                   int col,
+                                   int rows,
+                                   int cols,
+                                   float spacing,
                                    std::uint32_t seed) -> FormationOffset {
   FormationOffset offset = cavalry_local_offset(row, col, rows, cols, spacing);
   std::uint32_t rng_state = seed ^ (std::uint32_t(idx) * 7919U);
 
-  auto fast_random = [](std::uint32_t &state) -> float {
+  auto fast_random = [](std::uint32_t& state) -> float {
     state = state * 1664525U + 1013904223U;
     return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
   };
 
-  offset.offset_x += (fast_random(rng_state) - 0.5F) *
-                     cavalry_lateral_spacing(spacing) * 0.18F;
+  offset.offset_x +=
+      (fast_random(rng_state) - 0.5F) * cavalry_lateral_spacing(spacing) * 0.18F;
   offset.offset_z += (fast_random(rng_state) - 0.5F) * spacing * 0.12F;
 
   offset.offset_x +=
@@ -186,22 +194,21 @@ auto carthage_cavalry_local_offset(int idx, int row, int col, int rows,
   return offset;
 }
 
-auto builder_circle_local_offset(int idx, int rows, int cols, float spacing,
-                                 std::uint32_t seed) -> FormationOffset {
+auto builder_circle_local_offset(
+    int idx, int rows, int cols, float spacing, std::uint32_t seed) -> FormationOffset {
   int const total_units = rows * cols;
 
   if (total_units <= 1) {
     return {0.0F, 0.0F, 0.0F};
   }
 
-  float const angle =
-      (float(idx) / float(total_units)) * 2.0F * 3.14159265358979F;
+  float const angle = (float(idx) / float(total_units)) * 2.0F * 3.14159265358979F;
   float const radius = spacing * 2.8F;
 
   float world_x = std::cos(angle) * radius;
   float world_z = std::sin(angle) * radius;
 
-  auto fast_random = [](std::uint32_t &state) -> float {
+  auto fast_random = [](std::uint32_t& state) -> float {
     state = state * 1664525U + 1013904223U;
     return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
   };
@@ -218,9 +225,10 @@ auto builder_circle_local_offset(int idx, int rows, int cols, float spacing,
 }
 } // namespace
 
-auto RomanFormation::calculate_positions(
-    int unit_count, const QVector3D &center,
-    float base_spacing) const -> std::vector<QVector3D> {
+auto RomanFormation::calculate_positions(int unit_count,
+                                         const QVector3D& center,
+                                         float base_spacing) const
+    -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
   positions.reserve(unit_count);
 
@@ -246,15 +254,15 @@ auto RomanFormation::calculate_positions(
     float const offset_x = (col - (cols - 1) * 0.5F) * spacing;
     float const offset_z = (row - (rows - 1) * 0.5F) * spacing * 0.9F;
 
-    positions.emplace_back(center.x() + offset_x, center.y(),
-                           center.z() + offset_z);
+    positions.emplace_back(center.x() + offset_x, center.y(), center.z() + offset_z);
   }
 
   return positions;
 }
 
 auto RomanFormation::calculate_formation_positions(
-    const std::vector<UnitFormationInfo> &units, const QVector3D &center,
+    const std::vector<UnitFormationInfo>& units,
+    const QVector3D& center,
     float base_spacing) const -> std::vector<FormationPosition> {
   std::vector<FormationPosition> positions;
   positions.reserve(units.size());
@@ -265,7 +273,7 @@ auto RomanFormation::calculate_formation_positions(
 
   std::vector<UnitFormationInfo> infantry, archers, cavalry, siege, support;
 
-  for (const auto &unit : units) {
+  for (const auto& unit : units) {
     if (is_infantry(unit.troop_type)) {
       infantry.push_back(unit);
     } else if (is_ranged(unit.troop_type)) {
@@ -287,11 +295,10 @@ auto RomanFormation::calculate_formation_positions(
   if (!infantry.empty()) {
     int const max_per_row = std::min(8, static_cast<int>(infantry.size()));
     int const min_per_row = std::max(3, max_per_row / 2);
-    auto row_sizes = calculate_balanced_rows(static_cast<int>(infantry.size()),
-                                             max_per_row, min_per_row);
+    auto row_sizes = calculate_balanced_rows(
+        static_cast<int>(infantry.size()), max_per_row, min_per_row);
 
-    float const unit_spacing =
-        get_unit_spacing(infantry[0].troop_type, base_spacing);
+    float const unit_spacing = get_unit_spacing(infantry[0].troop_type, base_spacing);
 
     float const row_spacing = unit_spacing;
 
@@ -303,17 +310,14 @@ auto RomanFormation::calculate_formation_positions(
     max_row_width = std::max(max_row_width, type_max_width);
 
     size_t unit_idx = 0;
-    for (size_t row = 0; row < row_sizes.size() && unit_idx < infantry.size();
-         ++row) {
+    for (size_t row = 0; row < row_sizes.size() && unit_idx < infantry.size(); ++row) {
       int const units_in_row = row_sizes[row];
 
-      for (int col = 0; col < units_in_row && unit_idx < infantry.size();
-           ++col) {
+      for (int col = 0; col < units_in_row && unit_idx < infantry.size(); ++col) {
 
         float const x_offset = (col - (units_in_row - 1) * 0.5F) * unit_spacing;
 
-        float const z_offset =
-            row_offset - static_cast<float>(row) * row_spacing;
+        float const z_offset = row_offset - static_cast<float>(row) * row_spacing;
 
         FormationPosition pos;
         pos.position =
@@ -331,11 +335,10 @@ auto RomanFormation::calculate_formation_positions(
   if (!archers.empty()) {
     int const max_per_row = std::min(10, static_cast<int>(archers.size()));
     int const min_per_row = std::max(4, max_per_row / 2);
-    auto row_sizes = calculate_balanced_rows(static_cast<int>(archers.size()),
-                                             max_per_row, min_per_row);
+    auto row_sizes = calculate_balanced_rows(
+        static_cast<int>(archers.size()), max_per_row, min_per_row);
 
-    float const unit_spacing =
-        get_unit_spacing(archers[0].troop_type, base_spacing);
+    float const unit_spacing = get_unit_spacing(archers[0].troop_type, base_spacing);
 
     float const row_spacing = unit_spacing;
 
@@ -347,17 +350,14 @@ auto RomanFormation::calculate_formation_positions(
     max_row_width = std::max(max_row_width, type_max_width);
 
     size_t unit_idx = 0;
-    for (size_t row = 0; row < row_sizes.size() && unit_idx < archers.size();
-         ++row) {
+    for (size_t row = 0; row < row_sizes.size() && unit_idx < archers.size(); ++row) {
       int const units_in_row = row_sizes[row];
 
-      for (int col = 0; col < units_in_row && unit_idx < archers.size();
-           ++col) {
+      for (int col = 0; col < units_in_row && unit_idx < archers.size(); ++col) {
 
         float const x_offset = (col - (units_in_row - 1) * 0.5F) * unit_spacing;
 
-        float const z_offset =
-            row_offset - static_cast<float>(row) * row_spacing;
+        float const z_offset = row_offset - static_cast<float>(row) * row_spacing;
 
         FormationPosition pos;
         pos.position =
@@ -386,8 +386,7 @@ auto RomanFormation::calculate_formation_positions(
       }
 
       FormationPosition pos;
-      pos.position =
-          QVector3D(center.x() + x_offset, center.y(), cavalry_z_offset);
+      pos.position = QVector3D(center.x() + x_offset, center.y(), cavalry_z_offset);
       pos.facing_angle = forward_facing;
       pos.entity_id = cavalry[i].entity_id;
       positions.push_back(pos);
@@ -395,13 +394,11 @@ auto RomanFormation::calculate_formation_positions(
   }
 
   if (!siege.empty()) {
-    float const spacing =
-        get_unit_spacing(siege[0].troop_type, base_spacing) * 1.5F;
+    float const spacing = get_unit_spacing(siege[0].troop_type, base_spacing) * 1.5F;
 
     for (size_t i = 0; i < siege.size(); ++i) {
       float const x_offset =
-          (static_cast<int>(i) - (static_cast<int>(siege.size()) - 1) * 0.5F) *
-          spacing;
+          (static_cast<int>(i) - (static_cast<int>(siege.size()) - 1) * 0.5F) * spacing;
       float const z_offset = row_offset - ROMAN_LINE_SPACING * base_spacing;
 
       FormationPosition pos;
@@ -419,9 +416,9 @@ auto RomanFormation::calculate_formation_positions(
     float const spacing = get_unit_spacing(support[0].troop_type, base_spacing);
 
     for (size_t i = 0; i < support.size(); ++i) {
-      float const x_offset = (static_cast<int>(i) -
-                              (static_cast<int>(support.size()) - 1) * 0.5F) *
-                             spacing;
+      float const x_offset =
+          (static_cast<int>(i) - (static_cast<int>(support.size()) - 1) * 0.5F) *
+          spacing;
       float const z_offset = row_offset - ROMAN_LINE_SPACING * base_spacing;
 
       FormationPosition pos;
@@ -437,7 +434,8 @@ auto RomanFormation::calculate_formation_positions(
 }
 
 auto BarbarianFormation::calculate_formation_positions(
-    const std::vector<UnitFormationInfo> &units, const QVector3D &center,
+    const std::vector<UnitFormationInfo>& units,
+    const QVector3D& center,
     float base_spacing) const -> std::vector<FormationPosition> {
 
   std::vector<FormationPosition> positions;
@@ -455,9 +453,10 @@ auto BarbarianFormation::calculate_formation_positions(
   return positions;
 }
 
-auto BarbarianFormation::calculate_positions(
-    int unit_count, const QVector3D &center,
-    float base_spacing) const -> std::vector<QVector3D> {
+auto BarbarianFormation::calculate_positions(int unit_count,
+                                             const QVector3D& center,
+                                             float base_spacing) const
+    -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
   positions.reserve(unit_count);
 
@@ -482,15 +481,15 @@ auto BarbarianFormation::calculate_positions(
     float const base_x = (gx - (side - 1) * 0.5F) * spacing;
     float const base_z = (gy - (side - 1) * 0.5F) * spacing;
 
-    positions.emplace_back(center.x() + base_x, center.y(),
-                           center.z() + base_z);
+    positions.emplace_back(center.x() + base_x, center.y(), center.z() + base_z);
   }
 
   return positions;
 }
 
 auto CarthageFormation::calculate_formation_positions(
-    const std::vector<UnitFormationInfo> &units, const QVector3D &center,
+    const std::vector<UnitFormationInfo>& units,
+    const QVector3D& center,
     float base_spacing) const -> std::vector<FormationPosition> {
   std::vector<FormationPosition> positions;
   positions.reserve(units.size());
@@ -501,7 +500,7 @@ auto CarthageFormation::calculate_formation_positions(
 
   std::vector<UnitFormationInfo> infantry, archers, cavalry, siege, support;
 
-  for (const auto &unit : units) {
+  for (const auto& unit : units) {
     if (is_infantry(unit.troop_type)) {
       infantry.push_back(unit);
     } else if (is_ranged(unit.troop_type)) {
@@ -521,25 +520,21 @@ auto CarthageFormation::calculate_formation_positions(
   if (!infantry.empty()) {
     int const max_per_row = std::min(7, static_cast<int>(infantry.size()));
     int const min_per_row = std::max(4, max_per_row / 2);
-    auto row_sizes = calculate_balanced_rows(static_cast<int>(infantry.size()),
-                                             max_per_row, min_per_row);
+    auto row_sizes = calculate_balanced_rows(
+        static_cast<int>(infantry.size()), max_per_row, min_per_row);
 
-    float const spacing =
-        get_unit_spacing(infantry[0].troop_type, base_spacing);
+    float const spacing = get_unit_spacing(infantry[0].troop_type, base_spacing);
 
     size_t unit_idx = 0;
-    for (size_t row = 0; row < row_sizes.size() && unit_idx < infantry.size();
-         ++row) {
+    for (size_t row = 0; row < row_sizes.size() && unit_idx < infantry.size(); ++row) {
       int const units_in_row = row_sizes[row];
       float const row_echelon = static_cast<float>(row) * 0.8F * spacing;
 
-      for (int col = 0; col < units_in_row && unit_idx < infantry.size();
-           ++col) {
+      for (int col = 0; col < units_in_row && unit_idx < infantry.size(); ++col) {
         float const x_offset =
             (col - (units_in_row - 1) * 0.5F) * spacing + row_echelon;
-        float const z_offset = row_offset - static_cast<float>(row) *
-                                                CARTHAGE_LINE_SPACING *
-                                                base_spacing;
+        float const z_offset =
+            row_offset - static_cast<float>(row) * CARTHAGE_LINE_SPACING * base_spacing;
 
         FormationPosition pos;
         pos.position =
@@ -551,31 +546,28 @@ auto CarthageFormation::calculate_formation_positions(
       }
     }
 
-    row_offset -= static_cast<float>(row_sizes.size()) * CARTHAGE_LINE_SPACING *
-                  base_spacing;
+    row_offset -=
+        static_cast<float>(row_sizes.size()) * CARTHAGE_LINE_SPACING * base_spacing;
   }
 
   if (!archers.empty()) {
     int const max_per_row = std::min(9, static_cast<int>(archers.size()));
     int const min_per_row = std::max(5, max_per_row / 2);
-    auto row_sizes = calculate_balanced_rows(static_cast<int>(archers.size()),
-                                             max_per_row, min_per_row);
+    auto row_sizes = calculate_balanced_rows(
+        static_cast<int>(archers.size()), max_per_row, min_per_row);
 
     float const spacing = get_unit_spacing(archers[0].troop_type, base_spacing);
 
     size_t unit_idx = 0;
-    for (size_t row = 0; row < row_sizes.size() && unit_idx < archers.size();
-         ++row) {
+    for (size_t row = 0; row < row_sizes.size() && unit_idx < archers.size(); ++row) {
       int const units_in_row = row_sizes[row];
       float const row_echelon = -static_cast<float>(row) * 0.8F * spacing;
 
-      for (int col = 0; col < units_in_row && unit_idx < archers.size();
-           ++col) {
+      for (int col = 0; col < units_in_row && unit_idx < archers.size(); ++col) {
         float const x_offset =
             (col - (units_in_row - 1) * 0.5F) * spacing + row_echelon;
-        float const z_offset = row_offset - static_cast<float>(row) *
-                                                CARTHAGE_LINE_SPACING *
-                                                base_spacing;
+        float const z_offset =
+            row_offset - static_cast<float>(row) * CARTHAGE_LINE_SPACING * base_spacing;
 
         FormationPosition pos;
         pos.position =
@@ -587,22 +579,21 @@ auto CarthageFormation::calculate_formation_positions(
       }
     }
 
-    row_offset -= static_cast<float>(row_sizes.size()) * CARTHAGE_LINE_SPACING *
-                  base_spacing;
+    row_offset -=
+        static_cast<float>(row_sizes.size()) * CARTHAGE_LINE_SPACING * base_spacing;
   }
 
   if (!siege.empty()) {
     for (size_t i = 0; i < siege.size(); ++i) {
-      float const spacing =
-          get_unit_spacing(siege[i].troop_type, base_spacing) * 2.0F;
+      float const spacing = get_unit_spacing(siege[i].troop_type, base_spacing) * 2.0F;
       float const x_offset =
-          (static_cast<int>(i) - (static_cast<int>(siege.size()) - 1) * 0.5F) *
-          spacing;
+          (static_cast<int>(i) - (static_cast<int>(siege.size()) - 1) * 0.5F) * spacing;
 
       FormationPosition pos;
-      pos.position = QVector3D(center.x() + x_offset, center.y(),
-                               center.z() + row_offset -
-                                   CARTHAGE_LINE_SPACING * base_spacing);
+      pos.position =
+          QVector3D(center.x() + x_offset,
+                    center.y(),
+                    center.z() + row_offset - CARTHAGE_LINE_SPACING * base_spacing);
       pos.facing_angle = forward_facing;
       pos.entity_id = siege[i].entity_id;
       positions.push_back(pos);
@@ -615,20 +606,18 @@ auto CarthageFormation::calculate_formation_positions(
     float const cavalry_z_offset = center.z();
 
     int const right_flank_count = (static_cast<int>(cavalry.size()) + 1) / 2;
-    int const left_flank_count =
-        static_cast<int>(cavalry.size()) - right_flank_count;
+    int const left_flank_count = static_cast<int>(cavalry.size()) - right_flank_count;
 
     for (int i = 0; i < right_flank_count; ++i) {
       float const spacing =
-          get_unit_spacing(cavalry[static_cast<size_t>(i)].troop_type,
-                           base_spacing) *
+          get_unit_spacing(cavalry[static_cast<size_t>(i)].troop_type, base_spacing) *
           1.3F;
       float const x_offset = (i + 1) * spacing + 6.0F * base_spacing;
       float const z_forward = i * 0.7F * base_spacing;
 
       FormationPosition pos;
-      pos.position = QVector3D(center.x() + x_offset, center.y(),
-                               cavalry_z_offset + z_forward);
+      pos.position =
+          QVector3D(center.x() + x_offset, center.y(), cavalry_z_offset + z_forward);
       pos.facing_angle = forward_facing;
       pos.entity_id = cavalry[static_cast<size_t>(i)].entity_id;
       positions.push_back(pos);
@@ -644,22 +633,20 @@ auto CarthageFormation::calculate_formation_positions(
       float const z_forward = i * 0.7F * base_spacing;
 
       FormationPosition pos;
-      pos.position = QVector3D(center.x() + x_offset, center.y(),
-                               cavalry_z_offset + z_forward);
+      pos.position =
+          QVector3D(center.x() + x_offset, center.y(), cavalry_z_offset + z_forward);
       pos.facing_angle = forward_facing;
-      pos.entity_id =
-          cavalry[static_cast<size_t>(right_flank_count + i)].entity_id;
+      pos.entity_id = cavalry[static_cast<size_t>(right_flank_count + i)].entity_id;
       positions.push_back(pos);
     }
   }
 
   if (!support.empty()) {
     for (size_t i = 0; i < support.size(); ++i) {
-      float const spacing =
-          get_unit_spacing(support[i].troop_type, base_spacing);
-      float const x_offset = (static_cast<int>(i) -
-                              (static_cast<int>(support.size()) - 1) * 0.5F) *
-                             spacing;
+      float const spacing = get_unit_spacing(support[i].troop_type, base_spacing);
+      float const x_offset =
+          (static_cast<int>(i) - (static_cast<int>(support.size()) - 1) * 0.5F) *
+          spacing;
       float const z_offset = row_offset - CARTHAGE_LINE_SPACING * base_spacing;
 
       FormationPosition pos;
@@ -674,9 +661,10 @@ auto CarthageFormation::calculate_formation_positions(
   return positions;
 }
 
-auto CarthageFormation::calculate_positions(
-    int unit_count, const QVector3D &center,
-    float base_spacing) const -> std::vector<QVector3D> {
+auto CarthageFormation::calculate_positions(int unit_count,
+                                            const QVector3D& center,
+                                            float base_spacing) const
+    -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
   positions.reserve(unit_count);
 
@@ -702,62 +690,61 @@ auto CarthageFormation::calculate_positions(
     float const base_x = (col - (cols - 1) * 0.5F) * spacing;
     float const base_z = (row - (rows - 1) * 0.5F) * spacing * 0.85F;
 
-    positions.emplace_back(center.x() + base_x, center.y(),
-                           center.z() + base_z);
+    positions.emplace_back(center.x() + base_x, center.y(), center.z() + base_z);
   }
 
   return positions;
 }
 
-auto FormationSystem::instance() -> FormationSystem & {
+auto FormationSystem::instance() -> FormationSystem& {
   static FormationSystem inst;
   return inst;
 }
 
-FormationSystem::FormationSystem() { initialize_defaults(); }
+FormationSystem::FormationSystem() {
+  initialize_defaults();
+}
 
 void FormationSystem::initialize_defaults() {
   register_formation(FormationType::Roman, std::make_unique<RomanFormation>());
-  register_formation(FormationType::Barbarian,
-                     std::make_unique<BarbarianFormation>());
-  register_formation(FormationType::Carthage,
-                     std::make_unique<CarthageFormation>());
+  register_formation(FormationType::Barbarian, std::make_unique<BarbarianFormation>());
+  register_formation(FormationType::Carthage, std::make_unique<CarthageFormation>());
 }
 
-auto FormationSystem::get_formation_positions(
-    FormationType type, int unit_count, const QVector3D &center,
-    float base_spacing) -> std::vector<QVector3D> {
+auto FormationSystem::get_formation_positions(FormationType type,
+                                              int unit_count,
+                                              const QVector3D& center,
+                                              float base_spacing)
+    -> std::vector<QVector3D> {
   auto it = m_formations.find(type);
   if (it == m_formations.end()) {
     qWarning() << "Formation type not found, using default spread";
-    return RomanFormation().calculate_positions(unit_count, center,
-                                                base_spacing);
+    return RomanFormation().calculate_positions(unit_count, center, base_spacing);
   }
 
   return it->second->calculate_positions(unit_count, center, base_spacing);
 }
 
 auto FormationSystem::get_formation_positions_with_facing(
-    FormationType type, const std::vector<UnitFormationInfo> &units,
-    const QVector3D &center,
+    FormationType type,
+    const std::vector<UnitFormationInfo>& units,
+    const QVector3D& center,
     float base_spacing) -> std::vector<FormationPosition> {
   auto it = m_formations.find(type);
   if (it == m_formations.end()) {
     qWarning() << "Formation type not found, using default";
-    return RomanFormation().calculate_formation_positions(units, center,
-                                                          base_spacing);
+    return RomanFormation().calculate_formation_positions(units, center, base_spacing);
   }
 
   return it->second->calculate_formation_positions(units, center, base_spacing);
 }
 
-void FormationSystem::register_formation(
-    FormationType type, std::unique_ptr<IFormation> formation) {
+void FormationSystem::register_formation(FormationType type,
+                                         std::unique_ptr<IFormation> formation) {
   m_formations[type] = std::move(formation);
 }
 
-auto FormationSystem::get_formation(FormationType type) const
-    -> const IFormation * {
+auto FormationSystem::get_formation(FormationType type) const -> const IFormation* {
   auto it = m_formations.find(type);
   if (it == m_formations.end()) {
     return nullptr;
@@ -765,10 +752,15 @@ auto FormationSystem::get_formation(FormationType type) const
   return it->second.get();
 }
 
-auto FormationSystem::get_local_offset(
-    FormationType type, FormationUnitCategory category, int idx, int row,
-    int col, int rows, int cols, float spacing,
-    std::uint32_t seed) const -> FormationOffset {
+auto FormationSystem::get_local_offset(FormationType type,
+                                       FormationUnitCategory category,
+                                       int idx,
+                                       int row,
+                                       int col,
+                                       int rows,
+                                       int cols,
+                                       float spacing,
+                                       std::uint32_t seed) const -> FormationOffset {
   if (category == FormationUnitCategory::BuilderConstruction) {
     return builder_circle_local_offset(idx, rows, cols, spacing, seed);
   }
@@ -781,11 +773,9 @@ auto FormationSystem::get_local_offset(
     return roman_infantry_local_offset(row, col, rows, cols, spacing);
   case FormationType::Carthage:
     if (category == FormationUnitCategory::Cavalry) {
-      return carthage_cavalry_local_offset(idx, row, col, rows, cols, spacing,
-                                           seed);
+      return carthage_cavalry_local_offset(idx, row, col, rows, cols, spacing, seed);
     }
-    return carthage_infantry_local_offset(idx, row, col, rows, cols, spacing,
-                                          seed);
+    return carthage_infantry_local_offset(idx, row, col, rows, cols, spacing, seed);
   case FormationType::Barbarian:
     return roman_infantry_local_offset(row, col, rows, cols, spacing);
   }

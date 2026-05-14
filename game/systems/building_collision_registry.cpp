@@ -1,6 +1,5 @@
 #include "building_collision_registry.h"
-#include "command_service.h"
-#include "pathfinding.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -8,6 +7,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "command_service.h"
+#include "pathfinding.h"
 
 namespace Game::Systems {
 
@@ -20,13 +22,12 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
 float BuildingCollisionRegistry::s_grid_padding =
     BuildingCollisionRegistry::k_default_grid_padding;
 
-auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry & {
+auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry& {
   static BuildingCollisionRegistry instance;
   return instance;
 }
 
-auto BuildingCollisionRegistry::get_building_size(
-    const std::string &building_type)
+auto BuildingCollisionRegistry::get_building_size(const std::string& building_type)
     -> BuildingCollisionRegistry::BuildingSize {
   auto it = s_building_sizes.find(building_type);
   if (it != s_building_sizes.end()) {
@@ -36,9 +37,11 @@ auto BuildingCollisionRegistry::get_building_size(
   return {2.0F, 2.0F};
 }
 
-void BuildingCollisionRegistry::register_building(
-    unsigned int entity_id, const std::string &building_type, float center_x,
-    float center_z, int owner_id) {
+void BuildingCollisionRegistry::register_building(unsigned int entity_id,
+                                                  const std::string& building_type,
+                                                  float center_x,
+                                                  float center_z,
+                                                  int owner_id) {
 
   if (m_entity_to_index.find(entity_id) != m_entity_to_index.end()) {
 
@@ -47,13 +50,13 @@ void BuildingCollisionRegistry::register_building(
   }
 
   BuildingSize const size = get_building_size(building_type);
-  BuildingFootprint const footprint(center_x, center_z, size.width, size.depth,
-                                    owner_id, entity_id);
+  BuildingFootprint const footprint(
+      center_x, center_z, size.width, size.depth, owner_id, entity_id);
 
   m_buildings.push_back(footprint);
   m_entity_to_index[entity_id] = m_buildings.size() - 1;
 
-  if (auto *pf = CommandService::get_pathfinder()) {
+  if (auto* pf = CommandService::get_pathfinder()) {
 
     pf->mark_building_region_dirty(center_x, center_z, size.width, size.depth);
   }
@@ -81,7 +84,7 @@ void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
   m_buildings.pop_back();
   m_entity_to_index.erase(entity_id);
 
-  if (auto *pf = CommandService::get_pathfinder()) {
+  if (auto* pf = CommandService::get_pathfinder()) {
 
     pf->mark_building_region_dirty(center_x, center_z, width, depth);
   }
@@ -105,7 +108,7 @@ void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
   m_buildings[index].center_x = center_x;
   m_buildings[index].center_z = center_z;
 
-  if (auto *pf = CommandService::get_pathfinder()) {
+  if (auto* pf = CommandService::get_pathfinder()) {
 
     pf->mark_building_region_dirty(old_x, old_z, width, depth);
     pf->mark_building_region_dirty(center_x, center_z, width, depth);
@@ -125,7 +128,7 @@ void BuildingCollisionRegistry::update_building_owner(unsigned int entity_id,
 
 auto BuildingCollisionRegistry::is_point_in_building(
     float x, float z, unsigned int ignore_entity_id) const -> bool {
-  for (const auto &building : m_buildings) {
+  for (const auto& building : m_buildings) {
     if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
       continue;
     }
@@ -146,9 +149,8 @@ auto BuildingCollisionRegistry::is_point_in_building(
 }
 
 auto BuildingCollisionRegistry::is_circle_overlapping_building(
-    float x, float z, float radius,
-    unsigned int ignore_entity_id) const -> bool {
-  for (const auto &building : m_buildings) {
+    float x, float z, float radius, unsigned int ignore_entity_id) const -> bool {
+  for (const auto& building : m_buildings) {
     if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
       continue;
     }
@@ -176,7 +178,7 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
 }
 
 auto BuildingCollisionRegistry::get_occupied_grid_cells(
-    const BuildingFootprint &footprint,
+    const BuildingFootprint& footprint,
     float grid_cell_size) -> std::vector<std::pair<int, int>> {
   std::vector<std::pair<int, int>> cells;
 
@@ -210,7 +212,7 @@ void BuildingCollisionRegistry::clear() {
 void BuildingCollisionRegistry::set_grid_padding(float padding) {
   s_grid_padding = padding;
 
-  if (auto *pf = CommandService::get_pathfinder()) {
+  if (auto* pf = CommandService::get_pathfinder()) {
     pf->mark_obstacles_dirty();
   }
 }

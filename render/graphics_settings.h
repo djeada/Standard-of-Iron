@@ -1,7 +1,8 @@
 #pragma once
 
-#include "i_render_backend.h"
 #include <cstdint>
+
+#include "i_render_backend.h"
 
 namespace Render {
 
@@ -54,36 +55,31 @@ struct VisibilityBudget {
 
 class GraphicsSettings {
 public:
-  static auto instance() noexcept -> GraphicsSettings & {
+  static auto instance() noexcept -> GraphicsSettings& {
     static GraphicsSettings inst;
     return inst;
   }
 
-  [[nodiscard]] auto quality() const noexcept -> GraphicsQuality {
-    return m_quality;
-  }
+  [[nodiscard]] auto quality() const noexcept -> GraphicsQuality { return m_quality; }
 
   void set_quality(GraphicsQuality q) noexcept {
     m_quality = q;
     apply_preset(q);
   }
 
-  [[nodiscard]] auto
-  lod_multipliers() const noexcept -> const LODMultipliers & {
+  [[nodiscard]] auto lod_multipliers() const noexcept -> const LODMultipliers& {
     return m_lod_multipliers;
   }
 
-  [[nodiscard]] auto features() const noexcept -> const GraphicsFeatures & {
+  [[nodiscard]] auto features() const noexcept -> const GraphicsFeatures& {
     return m_features;
   }
 
-  [[nodiscard]] auto
-  batching_config() const noexcept -> const BatchingConfig & {
+  [[nodiscard]] auto batching_config() const noexcept -> const BatchingConfig& {
     return m_batching_config;
   }
 
-  [[nodiscard]] auto
-  visibility_budget() const noexcept -> const VisibilityBudget & {
+  [[nodiscard]] auto visibility_budget() const noexcept -> const VisibilityBudget& {
     return m_visibility_budget;
   }
 
@@ -109,14 +105,12 @@ public:
 
     float zoom_factor = 0.0F;
     if (camera_height > m_batching_config.batching_zoom_start) {
-      float range = m_batching_config.batching_zoom_full -
-                    m_batching_config.batching_zoom_start;
+      float range =
+          m_batching_config.batching_zoom_full - m_batching_config.batching_zoom_start;
       if (range > 0.0F) {
+        zoom_factor = (camera_height - m_batching_config.batching_zoom_start) / range;
         zoom_factor =
-            (camera_height - m_batching_config.batching_zoom_start) / range;
-        zoom_factor = zoom_factor < 0.0F
-                          ? 0.0F
-                          : (zoom_factor > 1.0F ? 1.0F : zoom_factor);
+            zoom_factor < 0.0F ? 0.0F : (zoom_factor > 1.0F ? 1.0F : zoom_factor);
       }
     }
 
@@ -126,8 +120,7 @@ public:
   [[nodiscard]] auto humanoid_full_detail_distance() const noexcept -> float {
     return k_base_humanoid_full * m_lod_multipliers.humanoid_full;
   }
-  [[nodiscard]] auto
-  humanoid_minimal_detail_distance() const noexcept -> float {
+  [[nodiscard]] auto humanoid_minimal_detail_distance() const noexcept -> float {
     return k_base_humanoid_minimal * m_lod_multipliers.humanoid_minimal;
   }
   [[nodiscard]] auto humanoid_billboard_distance() const noexcept -> float {
@@ -147,8 +140,7 @@ public:
   [[nodiscard]] auto elephant_full_detail_distance() const noexcept -> float {
     return k_base_elephant_full * m_lod_multipliers.elephant_full;
   }
-  [[nodiscard]] auto
-  elephant_minimal_detail_distance() const noexcept -> float {
+  [[nodiscard]] auto elephant_minimal_detail_distance() const noexcept -> float {
     return k_base_elephant_minimal * m_lod_multipliers.elephant_minimal;
   }
   [[nodiscard]] auto elephant_billboard_distance() const noexcept -> float {

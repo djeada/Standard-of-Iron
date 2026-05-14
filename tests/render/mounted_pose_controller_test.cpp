@@ -1,10 +1,12 @@
+#include <QVector3D>
+
+#include <cmath>
+#include <gtest/gtest.h>
+
 #include "render/horse/horse_renderer_base.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_specs.h"
 #include "render/humanoid/mounted_pose_controller.h"
-#include <QVector3D>
-#include <cmath>
-#include <gtest/gtest.h>
 
 using namespace Render::GL;
 
@@ -61,10 +63,8 @@ protected:
   HumanoidAnimationContext anim_ctx;
   MountedAttachmentFrame mount;
 
-  bool approx_equal(const QVector3D &a, const QVector3D &b,
-                    float epsilon = 0.01F) {
-    return std::abs(a.x() - b.x()) < epsilon &&
-           std::abs(a.y() - b.y()) < epsilon &&
+  bool approx_equal(const QVector3D& a, const QVector3D& b, float epsilon = 0.01F) {
+    return std::abs(a.x() - b.x()) < epsilon && std::abs(a.y() - b.y()) < epsilon &&
            std::abs(a.z() - b.z()) < epsilon;
   }
 };

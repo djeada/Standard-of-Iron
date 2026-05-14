@@ -1,8 +1,5 @@
 #pragma once
 
-#include "../../gl/mesh.h"
-#include "../part_graph.h"
-
 #include <QVector3D>
 
 #include <cstdint>
@@ -13,6 +10,9 @@
 #include <string_view>
 #include <variant>
 #include <vector>
+
+#include "../../gl/mesh.h"
+#include "../part_graph.h"
 
 namespace Render::Creature::Quadruped {
 
@@ -88,9 +88,14 @@ struct CustomMeshNode {
   std::vector<unsigned int> indices{};
 };
 
-using MeshNodeData =
-    std::variant<BarrelNode, EllipsoidNode, ColumnLegNode, SnoutNode,
-                 FlatFanNode, ConeNode, TubeNode, CustomMeshNode>;
+using MeshNodeData = std::variant<BarrelNode,
+                                  EllipsoidNode,
+                                  ColumnLegNode,
+                                  SnoutNode,
+                                  FlatFanNode,
+                                  ConeNode,
+                                  TubeNode,
+                                  CustomMeshNode>;
 
 struct MeshNode {
   std::string_view debug_name{};

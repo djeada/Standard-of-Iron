@@ -1,17 +1,23 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstddef>
+#include <cstdint>
+
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cstddef>
-#include <cstdint>
 
 namespace Render::GL {
 
-enum class ArrowVisibility { Hidden, AttackCycleOnly, IdleAndAttackCycle };
+enum class ArrowVisibility {
+  Hidden,
+  AttackCycleOnly,
+  IdleAndAttackCycle
+};
 
 struct BowRenderConfig {
   QVector3D string_color{0.30F, 0.30F, 0.32F};
@@ -35,19 +41,22 @@ class BowRenderer : public IEquipmentRenderer {
 public:
   explicit BowRenderer(BowRenderConfig config = {});
 
-  static void submit(const BowRenderConfig &config, const DrawContext &ctx,
-                     const BodyFrames &frames, const HumanoidPalette &palette,
-                     const HumanoidAnimationContext &anim,
-                     EquipmentBatch &batch);
+  static void submit(const BowRenderConfig& config,
+                     const DrawContext& ctx,
+                     const BodyFrames& frames,
+                     const HumanoidPalette& palette,
+                     const HumanoidAnimationContext& anim,
+                     EquipmentBatch& batch);
 
-  [[nodiscard]] auto base_config() const noexcept -> const BowRenderConfig & {
+  [[nodiscard]] auto base_config() const noexcept -> const BowRenderConfig& {
     return m_base;
   }
 
-  void render(const DrawContext &ctx, const BodyFrames &frames,
-              const HumanoidPalette &palette,
-              const HumanoidAnimationContext &anim,
-              EquipmentBatch &batch) override;
+  void render(const DrawContext& ctx,
+              const BodyFrames& frames,
+              const HumanoidPalette& palette,
+              const HumanoidAnimationContext& anim,
+              EquipmentBatch& batch) override;
 
 private:
   BowRenderConfig m_base;
@@ -55,10 +64,11 @@ private:
 
 inline constexpr std::size_t k_bow_role_count = 2;
 
-auto bow_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+auto bow_fill_role_colors(const HumanoidPalette& palette,
+                          QVector3D* out,
                           std::size_t max) -> std::uint32_t;
 
-auto bow_make_static_attachments(const BowRenderConfig &config,
+auto bow_make_static_attachments(const BowRenderConfig& config,
                                  std::uint8_t base_role_byte)
     -> std::array<Render::Creature::StaticAttachmentSpec, 2>;
 

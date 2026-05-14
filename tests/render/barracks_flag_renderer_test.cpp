@@ -1,20 +1,19 @@
-#include "render/entity/barracks_flag_renderer.h"
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstdint>
+#include <gtest/gtest.h>
+#include <vector>
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "render/entity/barracks_flag_renderer.h"
 #include "render/submitter.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <gtest/gtest.h>
-
-#include <cstdint>
-#include <vector>
 
 namespace {
 
 struct RecordedMesh {
-  Render::GL::Mesh *mesh{nullptr};
+  Render::GL::Mesh* mesh{nullptr};
   QMatrix4x4 model;
   QVector3D color{1.0F, 1.0F, 1.0F};
   int material_id{0};
@@ -24,37 +23,39 @@ class RecordingSubmitter final : public Render::GL::ISubmitter {
 public:
   std::vector<RecordedMesh> meshes;
 
-  void mesh(Render::GL::Mesh *mesh, const QMatrix4x4 &model,
-            const QVector3D &color, Render::GL::Texture *, float,
+  void mesh(Render::GL::Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Render::GL::Texture*,
+            float,
             int material_id) override {
     meshes.push_back({mesh, model, color, material_id});
   }
 
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
-auto fake_mesh(int id) -> Render::GL::Mesh * {
-  return reinterpret_cast<Render::GL::Mesh *>(static_cast<intptr_t>(id));
+auto fake_mesh(int id) -> Render::GL::Mesh* {
+  return reinterpret_cast<Render::GL::Mesh*>(static_cast<intptr_t>(id));
 }
 
-auto fake_texture(int id) -> Render::GL::Texture * {
-  return reinterpret_cast<Render::GL::Texture *>(static_cast<intptr_t>(id));
+auto fake_texture(int id) -> Render::GL::Texture* {
+  return reinterpret_cast<Render::GL::Texture*>(static_cast<intptr_t>(id));
 }
 
 TEST(BarracksFlagRenderer, DrawsHangingBannerPieces) {
@@ -66,8 +67,12 @@ TEST(BarracksFlagRenderer, DrawsHangingBannerPieces) {
 
   RecordingSubmitter submitter;
   BarracksFlagRenderer::draw_hanging_banner(
-      ctx, submitter, fake_mesh(1), fake_texture(2),
-      QVector3D(0.8F, 0.2F, 0.1F), QVector3D(0.5F, 0.2F, 0.1F),
+      ctx,
+      submitter,
+      fake_mesh(1),
+      fake_texture(2),
+      QVector3D(0.8F, 0.2F, 0.1F),
+      QVector3D(0.5F, 0.2F, 0.1F),
       {.pole_base = QVector3D(0.0F, 0.0F, -2.0F),
        .pole_color = QVector3D(0.3F, 0.2F, 0.1F),
        .beam_color = QVector3D(0.3F, 0.2F, 0.1F),
@@ -101,10 +106,14 @@ TEST(BarracksFlagRenderer, UsesClothMeshWhenAvailable) {
   RecordingSubmitter submitter;
   BarracksFlagRenderer::ClothBannerResources cloth{
       .cloth_mesh = fake_mesh(99),
-      .banner_shader = reinterpret_cast<Shader *>(static_cast<intptr_t>(123))};
+      .banner_shader = reinterpret_cast<Shader*>(static_cast<intptr_t>(123))};
   BarracksFlagRenderer::draw_hanging_banner(
-      ctx, submitter, fake_mesh(1), fake_texture(2),
-      QVector3D(0.8F, 0.2F, 0.1F), QVector3D(0.5F, 0.2F, 0.1F),
+      ctx,
+      submitter,
+      fake_mesh(1),
+      fake_texture(2),
+      QVector3D(0.8F, 0.2F, 0.1F),
+      QVector3D(0.5F, 0.2F, 0.1F),
       {.pole_base = QVector3D(2.0F, 0.0F, -1.5F),
        .pole_color = QVector3D(0.3F, 0.2F, 0.1F),
        .beam_color = QVector3D(0.3F, 0.2F, 0.1F),

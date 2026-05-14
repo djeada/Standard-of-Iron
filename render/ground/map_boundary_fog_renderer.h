@@ -1,12 +1,14 @@
 #pragma once
 
-#include "../gl/mesh.h"
-#include "../i_render_pass.h"
 #include <QVector2D>
 #include <QVector3D>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "../gl/mesh.h"
+#include "../i_render_pass.h"
 
 namespace Render::GL {
 class Renderer;
@@ -19,9 +21,7 @@ public:
 
   void configure(int width, int height, float tile_size);
 
-  [[nodiscard]] auto instance_count() const -> std::size_t {
-    return m_cards.size();
-  }
+  [[nodiscard]] auto instance_count() const -> std::size_t { return m_cards.size(); }
 
   [[nodiscard]] auto mountain_triangle_count() const -> std::size_t {
     return m_mountain_indices.size() / 3U;
@@ -35,7 +35,7 @@ public:
     return m_mountain_max_height - m_mountain_min_height;
   }
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
 private:
   struct BoundaryCard {

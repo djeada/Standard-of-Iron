@@ -1,8 +1,5 @@
 #pragma once
 
-#include "../spec.h"
-#include "unit_visual_spec.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
 
@@ -10,6 +7,9 @@
 #include <cstdint>
 #include <span>
 #include <string_view>
+
+#include "../spec.h"
+#include "unit_visual_spec.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -36,10 +36,9 @@ enum class CreatureLocomotionMode : std::uint8_t {
 inline constexpr std::size_t k_large_creature_leg_count = 4;
 
 using CreatureBindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
-using CreatureSpecResolveFn =
-    const Render::Creature::CreatureSpec &(*)() noexcept;
-using CreaturePartGraphResolveFn = const Render::Creature::PartGraph
-    &(*)(Render::Creature::CreatureLOD) noexcept;
+using CreatureSpecResolveFn = const Render::Creature::CreatureSpec& (*)() noexcept;
+using CreaturePartGraphResolveFn =
+    const Render::Creature::PartGraph& (*)(Render::Creature::CreatureLOD) noexcept;
 
 struct CreatureMeshRecipe {
   std::string_view debug_name{};
@@ -53,7 +52,7 @@ struct CreatureRigDefinition {
   std::string_view debug_name{};
   std::uint8_t bone_count{0};
   CreatureBindPaletteFn bind_palette{nullptr};
-  const Render::Creature::SkeletonTopology *topology{nullptr};
+  const Render::Creature::SkeletonTopology* topology{nullptr};
   std::array<std::uint8_t, k_large_creature_leg_count> contact_bones{};
   std::uint8_t seat_anchor_bone{0};
 };
@@ -135,21 +134,21 @@ struct CreatureLodStrategy {
 struct CreatureVisualDefinition {
   std::string_view debug_name{};
   CreatureKind species{CreatureKind::Humanoid};
-  const CreatureMeshRecipe *mesh_recipe{nullptr};
-  const CreatureRigDefinition *rig_definition{nullptr};
-  const CreatureMotionController *motion_controller{nullptr};
-  const CreatureGroundingModel *grounding_model{nullptr};
-  const CreatureAttachmentFrameExtractor *attachment_frame_extractor{nullptr};
-  const CreatureLodStrategy *lod_strategy{nullptr};
+  const CreatureMeshRecipe* mesh_recipe{nullptr};
+  const CreatureRigDefinition* rig_definition{nullptr};
+  const CreatureMotionController* motion_controller{nullptr};
+  const CreatureGroundingModel* grounding_model{nullptr};
+  const CreatureAttachmentFrameExtractor* attachment_frame_extractor{nullptr};
+  const CreatureLodStrategy* lod_strategy{nullptr};
   std::uint8_t role_color_count{0};
   LegacySlotMask material_slots{LegacySlotMask::None};
 };
 
 [[nodiscard]] auto
-horse_creature_visual_definition() noexcept -> const CreatureVisualDefinition &;
-[[nodiscard]] auto elephant_creature_visual_definition() noexcept
-    -> const CreatureVisualDefinition &;
+horse_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
+[[nodiscard]] auto
+elephant_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
 [[nodiscard]] auto resolve_creature_visual_definition(
-    const UnitVisualSpec &spec) noexcept -> const CreatureVisualDefinition *;
+    const UnitVisualSpec& spec) noexcept -> const CreatureVisualDefinition*;
 
 } // namespace Render::Creature::Pipeline

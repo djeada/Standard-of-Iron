@@ -1,15 +1,16 @@
 #pragma once
 
-#include "../shader.h"
-#include "pipeline_interface.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <vector>
+
+#include "../shader.h"
+#include "pipeline_interface.h"
 
 namespace Render::GL {
 class ShaderCache;
@@ -31,8 +32,9 @@ public:
 
   static constexpr std::size_t k_instanced_batch_floor = 4;
 
-  RiggedCharacterPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shader_cache(shader_cache) {}
+  RiggedCharacterPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
+      : m_backend(backend)
+      , m_shader_cache(shader_cache) {}
   ~RiggedCharacterPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -40,15 +42,17 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  auto draw(const RiggedCreatureCmd &cmd, const QMatrix4x4 &view_proj) -> bool;
+  auto draw(const RiggedCreatureCmd& cmd, const QMatrix4x4& view_proj) -> bool;
 
-  auto draw_instanced(const RiggedCreatureCmd *cmds, std::size_t count,
-                      const QMatrix4x4 &view_proj) -> bool;
-  auto draw_instanced(const RiggedCreatureCmd *const *cmds, std::size_t count,
-                      const QMatrix4x4 &view_proj) -> bool;
+  auto draw_instanced(const RiggedCreatureCmd* cmds,
+                      std::size_t count,
+                      const QMatrix4x4& view_proj) -> bool;
+  auto draw_instanced(const RiggedCreatureCmd* const* cmds,
+                      std::size_t count,
+                      const QMatrix4x4& view_proj) -> bool;
 
-  [[nodiscard]] auto shader() const -> GL::Shader * { return m_shader; }
-  [[nodiscard]] auto instanced_shader() const -> GL::Shader * {
+  [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
+  [[nodiscard]] auto instanced_shader() const -> GL::Shader* {
     return m_instanced_shader;
   }
   [[nodiscard]] auto max_instances_per_batch() const noexcept -> std::size_t {
@@ -65,17 +69,17 @@ public:
     m_last_instance_count = 0;
   }
   [[nodiscard]] auto
-  batch_sizes_for_test() const noexcept -> const std::vector<std::size_t> & {
+  batch_sizes_for_test() const noexcept -> const std::vector<std::size_t>& {
     return m_batch_sizes;
   }
-  [[nodiscard]] auto
-  last_instance_count_for_test() const noexcept -> std::size_t {
+  [[nodiscard]] auto last_instance_count_for_test() const noexcept -> std::size_t {
     return m_last_instance_count;
   }
 
-  static void compute_groups(const RiggedCreatureCmd *cmds, std::size_t count,
+  static void compute_groups(const RiggedCreatureCmd* cmds,
+                             std::size_t count,
                              std::size_t cap,
-                             std::vector<std::size_t> &out_groups);
+                             std::vector<std::size_t>& out_groups);
 
   struct Uniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -90,20 +94,19 @@ public:
     GL::Shader::UniformHandle role_color_count{GL::Shader::InvalidUniform};
   };
 
-  [[nodiscard]] auto uniforms() const -> const Uniforms & { return m_uniforms; }
+  [[nodiscard]] auto uniforms() const -> const Uniforms& { return m_uniforms; }
 
 private:
-  GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shader_cache = nullptr;
-  GL::Shader *m_shader = nullptr;
-  GL::Shader *m_instanced_shader = nullptr;
+  GL::Backend* m_backend = nullptr;
+  GL::ShaderCache* m_shader_cache = nullptr;
+  GL::Shader* m_shader = nullptr;
+  GL::Shader* m_instanced_shader = nullptr;
 
   std::unique_ptr<Shader> m_instanced_shader_storage;
   Uniforms m_uniforms{};
 
   GL::Shader::UniformHandle m_instanced_view_proj{GL::Shader::InvalidUniform};
-  GL::Shader::UniformHandle m_instanced_role_color_tbo{
-      GL::Shader::InvalidUniform};
+  GL::Shader::UniformHandle m_instanced_role_color_tbo{GL::Shader::InvalidUniform};
 
   std::size_t m_max_instances_per_batch = 0;
 
@@ -121,7 +124,7 @@ private:
   struct InstancedVaoEntry {
     unsigned int vao = 0;
   };
-  std::unordered_map<void *, InstancedVaoEntry> m_instanced_vaos;
+  std::unordered_map<void*, InstancedVaoEntry> m_instanced_vaos;
 
   std::vector<std::size_t> m_batch_sizes;
   std::size_t m_last_instance_count = 0;
@@ -136,7 +139,7 @@ private:
 
   auto build_instanced_shader_source() -> bool;
   auto ensure_instance_vbo(std::size_t bytes_needed) -> bool;
-  auto ensure_instanced_vao(RiggedMesh &mesh) -> unsigned int;
+  auto ensure_instanced_vao(RiggedMesh& mesh) -> unsigned int;
 };
 
 } // namespace Render::GL::BackendPipelines

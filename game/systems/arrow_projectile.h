@@ -5,9 +5,13 @@ namespace Game::Systems {
 
 class ArrowProjectile : public Projectile {
 public:
-  ArrowProjectile(const QVector3D &start, const QVector3D &end,
-                  const QVector3D &color, float speed, float arc_height,
-                  float inv_dist, bool is_ballista_bolt = false);
+  ArrowProjectile(const QVector3D& start,
+                  const QVector3D& end,
+                  const QVector3D& color,
+                  float speed,
+                  float arc_height,
+                  float inv_dist,
+                  bool is_ballista_bolt = false);
 
   auto get_start() const -> QVector3D override { return m_start; }
   auto get_end() const -> QVector3D override { return m_end; }
@@ -23,9 +27,7 @@ public:
   auto get_damage() const -> int override { return 0; }
   auto get_target_id() const -> Engine::Core::EntityID override { return 0; }
   auto get_attacker_id() const -> Engine::Core::EntityID override { return 0; }
-  auto get_target_locked_position() const -> QVector3D override {
-    return m_end;
-  }
+  auto get_target_locked_position() const -> QVector3D override { return m_end; }
 
   void update(float delta_time) override;
   void deactivate() override { m_active = false; }

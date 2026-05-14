@@ -18,18 +18,20 @@ class StoneProjectile;
 
 namespace Render::GL {
 
-void render_projectiles(
-    Renderer *renderer, ResourceManager *resources,
-    const Game::Systems::ProjectileSystem &projectile_system);
+void render_projectiles(Renderer* renderer,
+                        ResourceManager* resources,
+                        const Game::Systems::ProjectileSystem& projectile_system);
 
-void render_arrow_projectile(Renderer *renderer, ResourceManager *resources,
-                             const Game::Systems::ArrowProjectile &arrow,
-                             const QVector3D &pos,
-                             const QMatrix4x4 &base_model);
+void render_arrow_projectile(Renderer* renderer,
+                             ResourceManager* resources,
+                             const Game::Systems::ArrowProjectile& arrow,
+                             const QVector3D& pos,
+                             const QMatrix4x4& base_model);
 
-void render_stone_projectile(Renderer *renderer, ResourceManager *resources,
-                             const Game::Systems::StoneProjectile &stone,
-                             const QVector3D &pos,
-                             const QMatrix4x4 &base_model);
+void render_stone_projectile(Renderer* renderer,
+                             ResourceManager* resources,
+                             const Game::Systems::StoneProjectile& stone,
+                             const QVector3D& pos,
+                             const QMatrix4x4& base_model);
 
 } // namespace Render::GL

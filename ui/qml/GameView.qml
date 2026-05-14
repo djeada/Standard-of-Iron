@@ -21,14 +21,12 @@ Item {
         is_paused = paused;
         if (typeof game !== 'undefined' && game.set_paused)
             game.set_paused(paused);
-
     }
 
     function set_game_speed(speed) {
         game_speed = speed;
         if (typeof game !== 'undefined' && game.set_game_speed)
             game.set_game_speed(speed);
-
     }
 
     function issue_command(command) {
@@ -45,7 +43,6 @@ Item {
     function ensure_pan_timer_running() {
         if (!keyPanTimer.running)
             keyPanTimer.start();
-
     }
 
     function is_commander_mode() {
@@ -56,13 +53,10 @@ Item {
         pressed_keys = ({});
         if (keyPanTimer.running)
             keyPanTimer.stop();
-
         if (typeof renderArea !== 'undefined')
             renderArea.key_pan_count = 0;
-
         if (typeof mainWindow !== 'undefined' && typeof renderArea !== 'undefined' && !renderArea.mouse_pan_active)
             mainWindow.edge_scroll_disabled = false;
-
     }
 
     function handle_commander_key_pressed(event) {
@@ -70,25 +64,24 @@ Item {
         case Qt.Key_Escape:
             if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible)
                 mainWindow.menu_visible = true;
-
             event.accepted = true;
-            return ;
+            return;
         case Qt.Key_Space:
             if (game.commander_dodge)
                 game.commander_dodge();
             event.accepted = true;
-            return ;
+            return;
         case Qt.Key_Alt:
         case Qt.Key_AltGr:
             if (!event.isAutoRepeat && game.commander_jump)
                 game.commander_jump();
             event.accepted = true;
-            return ;
+            return;
         case Qt.Key_Tab:
             if (game.commander_cycle_lock_on)
                 game.commander_cycle_lock_on();
             event.accepted = true;
-            return ;
+            return;
         case Qt.Key_W:
         case Qt.Key_A:
         case Qt.Key_S:
@@ -98,9 +91,8 @@ Item {
         case Qt.Key_Shift:
             if (game.commander_key_down)
                 game.commander_key_down(event.key, event.modifiers);
-
             event.accepted = true;
-            return ;
+            return;
         }
     }
 
@@ -109,7 +101,7 @@ Item {
         case Qt.Key_Alt:
         case Qt.Key_AltGr:
             event.accepted = true;
-            return ;
+            return;
         case Qt.Key_W:
         case Qt.Key_A:
         case Qt.Key_S:
@@ -119,29 +111,26 @@ Item {
         case Qt.Key_Shift:
             if (game.commander_key_up)
                 game.commander_key_up(event.key, event.modifiers);
-
             event.accepted = true;
-            return ;
+            return;
         }
     }
 
     objectName: "GameView"
     focus: true
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (typeof game === 'undefined')
-            return ;
-
+            return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             reset_rts_pan_keys();
             if (game.toggle_commander_control_mode)
                 game.toggle_commander_control_mode();
-
             event.accepted = true;
-            return ;
+            return;
         }
         if (is_commander_mode()) {
             handle_commander_key_pressed(event);
-            return ;
+            return;
         }
         var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
         var inputStep = (event.modifiers & Qt.ShiftModifier) ? 2 : 1;
@@ -164,7 +153,6 @@ Item {
             if (game.has_units_selected) {
                 if (game.on_stop_command)
                     game.on_stop_command();
-
                 event.accepted = true;
             }
             break;
@@ -223,7 +211,6 @@ Item {
         case Qt.Key_X:
             if (game.select_all_troops)
                 game.select_all_troops();
-
             event.accepted = true;
             break;
         case Qt.Key_P:
@@ -246,13 +233,12 @@ Item {
             break;
         }
     }
-    Keys.onReleased: function(event) {
+    Keys.onReleased: function (event) {
         if (typeof game === 'undefined')
-            return ;
-
+            return;
         if (is_commander_mode()) {
             handle_commander_key_released(event);
-            return ;
+            return;
         }
         var movementKeys = [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
         if (movementKeys.indexOf(event.key) !== -1) {
@@ -270,16 +256,13 @@ Item {
             if (!anyHeld) {
                 if (keyPanTimer.running)
                     keyPanTimer.stop();
-
                 if (renderArea.key_pan_count === 0 && !renderArea.mouse_pan_active)
                     mainWindow.edge_scroll_disabled = false;
-
             }
         }
         if (event.key === Qt.Key_Shift) {
             if (renderArea.key_pan_count === 0 && !renderArea.mouse_pan_active)
                 mainWindow.edge_scroll_disabled = false;
-
         }
     }
 
@@ -295,17 +278,14 @@ Item {
         Component.onCompleted: {
             if (typeof game !== 'undefined' && game.cursor_mode)
                 game_view.cursor_mode = game.cursor_mode;
-
             if (typeof game !== 'undefined')
                 game_view.forceActiveFocus();
-
         }
 
         Connections {
             function onCursor_mode_changed() {
                 if (typeof game !== 'undefined' && game.cursor_mode)
                     game_view.cursor_mode = game.cursor_mode;
-
             }
 
             function onPlacing_formation_changed() {
@@ -319,13 +299,11 @@ Item {
             function onPlacing_construction_changed() {
                 if (typeof game !== 'undefined')
                     game_view.is_placing_construction = game.is_placing_construction;
-
             }
 
             function onControl_mode_changed() {
                 if (typeof game === 'undefined')
-                    return ;
-
+                    return;
                 if (game.control_mode === "commander") {
                     mouseArea.is_selecting = false;
                     mouseArea.is_right_drag_orient = false;
@@ -361,14 +339,12 @@ Item {
             onEntered: {
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
                     game.set_hover_at_screen(0, 0);
-
             }
             onExited: {
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
                     game.set_hover_at_screen(-1, -1);
-
             }
-            onPositionChanged: function(mouse) {
+            onPositionChanged: function (mouse) {
                 if (is_selecting) {
                     var endX = mouse.x;
                     var endY = mouse.y;
@@ -379,82 +355,69 @@ Item {
                 } else {
                     if (typeof game !== 'undefined' && game.set_hover_at_screen)
                         game.set_hover_at_screen(mouse.x, mouse.y);
-
                     if (mouseArea.is_right_drag_orient && (mouse.buttons & Qt.RightButton)) {
                         if (typeof game !== 'undefined' && game.on_right_drag_orient)
                             game.on_right_drag_orient(mouse.x, mouse.y);
-
                     } else if (game_view.is_placing_formation) {
                         if (typeof game !== 'undefined' && game.on_formation_mouse_move)
                             game.on_formation_mouse_move(mouse.x, mouse.y);
-
                     }
                     if (game_view.is_placing_construction) {
                         if (typeof game !== 'undefined' && game.on_construction_mouse_move)
                             game.on_construction_mouse_move(mouse.x, mouse.y);
-
                     }
                 }
             }
-            onWheel: function(w) {
+            onWheel: function (w) {
                 var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
                 if (typeof game !== 'undefined' && game.is_placing_formation) {
                     if (game.on_formation_scroll)
                         game.on_formation_scroll(dy);
-
                     w.accepted = true;
-                    return ;
+                    return;
                 }
                 if (dy !== 0 && typeof game !== 'undefined' && game.camera_zoom)
                     game.camera_zoom(dy * 0.8);
-
                 w.accepted = true;
             }
-            onPressed: function(mouse) {
+            onPressed: function (mouse) {
                 game_view.forceActiveFocus();
                 if (mouse.button === Qt.LeftButton) {
                     if (game_view.set_rally_mode) {
                         if (typeof game !== 'undefined' && game.set_rally_at_screen)
                             game.set_rally_at_screen(mouse.x, mouse.y);
-
                         game_view.set_rally_mode = false;
-                        return ;
+                        return;
                     }
                     if (game_view.cursor_mode === "attack") {
                         if (typeof game !== 'undefined' && game.on_attack_click)
                             game.on_attack_click(mouse.x, mouse.y);
-
-                        return ;
+                        return;
                     }
                     if (game_view.cursor_mode === "guard") {
                         if (typeof game !== 'undefined' && game.on_guard_click)
                             game.on_guard_click(mouse.x, mouse.y);
-
-                        return ;
+                        return;
                     }
                     if (game_view.cursor_mode === "patrol") {
                         if (typeof game !== 'undefined' && game.on_patrol_click)
                             game.on_patrol_click(mouse.x, mouse.y);
-
-                        return ;
+                        return;
                     }
                     if (game_view.cursor_mode === "place_building") {
                         if (typeof game !== 'undefined' && game.place_building_at_screen)
                             game.place_building_at_screen(mouse.x, mouse.y);
-
-                        return ;
+                        return;
                     }
                     if (typeof game !== 'undefined' && game.is_placing_formation) {
                         if (game.on_formation_confirm)
                             game.on_formation_confirm();
-
-                        return ;
+                        return;
                     }
                     if (typeof game !== 'undefined' && game.is_placing_construction) {
                         if (game.on_construction_confirm)
                             game.on_construction_confirm();
-
-                        return ;
+                        return;
                     }
                     is_selecting = true;
                     start_x = mouse.x;
@@ -468,35 +431,30 @@ Item {
                     if (typeof game !== 'undefined' && game.is_placing_formation) {
                         if (game.on_formation_cancel)
                             game.on_formation_cancel();
-
                         mouseArea.is_right_drag_orient = false;
-                        return ;
+                        return;
                     }
                     if (typeof game !== 'undefined' && game.is_placing_construction) {
                         if (game.on_construction_cancel)
                             game.on_construction_cancel();
-
-                        return ;
+                        return;
                     }
                     renderArea.mouse_pan_active = true;
                     mainWindow.edge_scroll_disabled = true;
                     if (game_view.set_rally_mode)
                         game_view.set_rally_mode = false;
-
                     mouseArea.is_right_drag_orient = true;
                     if (typeof game !== 'undefined' && game.on_right_press)
                         game.on_right_press(mouse.x, mouse.y);
-
                 }
             }
-            onDoubleClicked: function(mouse) {
+            onDoubleClicked: function (mouse) {
                 if (mouse.button === Qt.RightButton) {
                     if (typeof game !== 'undefined' && game.on_right_double_click)
                         game.on_right_double_click(mouse.x, mouse.y);
-
                 }
             }
-            onReleased: function(mouse) {
+            onReleased: function (mouse) {
                 if (mouse.button === Qt.LeftButton && is_selecting) {
                     is_selecting = false;
                     selectionBox.visible = false;
@@ -504,12 +462,10 @@ Item {
                         area_selected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height);
                         if (typeof game !== 'undefined' && game.on_area_selected)
                             game.on_area_selected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height, false);
-
                     } else {
                         map_clicked(mouse.x, mouse.y);
                         if (typeof game !== 'undefined' && game.on_click_select)
                             game.on_click_select(mouse.x, mouse.y, false);
-
                     }
                 }
                 if (mouse.button === Qt.RightButton) {
@@ -518,7 +474,6 @@ Item {
                         if (typeof game !== 'undefined' && game.is_placing_formation) {
                             if (game.on_formation_confirm)
                                 game.on_formation_confirm();
-
                         }
                     }
                     renderArea.mouse_pan_active = false;
@@ -526,7 +481,6 @@ Item {
                 }
             }
         }
-
     }
 
     CommanderInputLayer {
@@ -671,7 +625,7 @@ Item {
                 Component.onCompleted: requestPaint()
             }
 
-            SequentialAnimation on pulse_scale {
+            SequentialAnimation on pulse_scale  {
                 running: attackCursorContainer.visible
                 loops: Animation.Infinite
 
@@ -688,9 +642,7 @@ Item {
                     duration: 400
                     easing.type: Easing.InOutQuad
                 }
-
             }
-
         }
 
         Canvas {
@@ -757,7 +709,6 @@ Item {
             }
             Component.onCompleted: requestPaint()
         }
-
     }
 
     Timer {
@@ -768,27 +719,20 @@ Item {
         running: false
         onTriggered: {
             if (typeof game === 'undefined')
-                return ;
-
+                return;
             var step = (Qt.inputModifiers & Qt.ShiftModifier) ? 2 : 1;
             var dx = 0;
             var dz = 0;
             if (pressed_keys[Qt.Key_Up])
                 dz += step;
-
             if (pressed_keys[Qt.Key_Down])
                 dz -= step;
-
             if (pressed_keys[Qt.Key_Left])
                 dx -= step;
-
             if (pressed_keys[Qt.Key_Right])
                 dx += step;
-
             if (dx !== 0 || dz !== 0)
                 game.camera_move(dx, dz);
-
         }
     }
-
 }

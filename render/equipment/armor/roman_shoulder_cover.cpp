@@ -1,13 +1,13 @@
 #include "roman_shoulder_cover.h"
-#include "shoulder_cover_archetype.h"
-
-#include "../../humanoid/humanoid_specs.h"
-#include "../attachment_builder.h"
 
 #include <array>
 #include <cmath>
 #include <deque>
 #include <string>
+
+#include "../../humanoid/humanoid_specs.h"
+#include "../attachment_builder.h"
+#include "shoulder_cover_archetype.h"
 
 namespace Render::GL {
 
@@ -19,8 +19,7 @@ enum RomanShoulderPaletteSlot : std::uint8_t {
   k_edge_highlight_slot = 2U,
 };
 
-auto roman_shoulder_cover_archetype(float outward_scale)
-    -> const RenderArchetype & {
+auto roman_shoulder_cover_archetype(float outward_scale) -> const RenderArchetype& {
   struct CachedArchetype {
     int key{0};
     RenderArchetype archetype;
@@ -28,7 +27,7 @@ auto roman_shoulder_cover_archetype(float outward_scale)
 
   static std::deque<CachedArchetype> cache;
   int const key = std::lround(outward_scale * 1000.0F);
-  for (const auto &entry : cache) {
+  for (const auto& entry : cache) {
     if (entry.key == key) {
       return entry.archetype;
     }
@@ -44,16 +43,16 @@ auto roman_shoulder_cover_archetype(float outward_scale)
 
   std::array<ShoulderCoverLobe, 3> const lobes{{
       {anchor,
-       QVector3D(HP::UPPER_ARM_R * 1.38F, HP::UPPER_ARM_R * 1.10F,
-                 HP::UPPER_ARM_R * 1.22F),
+       QVector3D(
+           HP::UPPER_ARM_R * 1.38F, HP::UPPER_ARM_R * 1.10F, HP::UPPER_ARM_R * 1.22F),
        k_metal_base_slot},
       {anchor + QVector3D(0.006F * outward_scale, -0.030F, 0.0F),
-       QVector3D(HP::UPPER_ARM_R * 1.22F, HP::UPPER_ARM_R * 0.94F,
-                 HP::UPPER_ARM_R * 1.05F),
+       QVector3D(
+           HP::UPPER_ARM_R * 1.22F, HP::UPPER_ARM_R * 0.94F, HP::UPPER_ARM_R * 1.05F),
        k_metal_dark_slot},
       {anchor + QVector3D(0.012F * outward_scale, -0.058F, 0.0F),
-       QVector3D(HP::UPPER_ARM_R * 1.10F, HP::UPPER_ARM_R * 0.40F,
-                 HP::UPPER_ARM_R * 0.98F),
+       QVector3D(
+           HP::UPPER_ARM_R * 1.10F, HP::UPPER_ARM_R * 0.40F, HP::UPPER_ARM_R * 0.98F),
        k_edge_highlight_slot},
   }};
 
@@ -69,40 +68,40 @@ auto roman_shoulder_cover_palette() -> std::array<QVector3D, 3> {
 
 } // namespace
 
-void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
-                                        const BodyFrames &frames,
-                                        const HumanoidPalette &palette,
-                                        const HumanoidAnimationContext &anim,
-                                        EquipmentBatch &batch) {
+void RomanShoulderCoverRenderer::render(const DrawContext& ctx,
+                                        const BodyFrames& frames,
+                                        const HumanoidPalette& palette,
+                                        const HumanoidAnimationContext& anim,
+                                        EquipmentBatch& batch) {
   submit(m_config, ctx, frames, palette, anim, batch);
 }
 
-void RomanShoulderCoverRenderer::submit(const RomanShoulderCoverConfig &config,
-                                        const DrawContext &ctx,
-                                        const BodyFrames &frames,
-                                        const HumanoidPalette &palette,
-                                        const HumanoidAnimationContext &anim,
-                                        EquipmentBatch &batch) {
+void RomanShoulderCoverRenderer::submit(const RomanShoulderCoverConfig& config,
+                                        const DrawContext& ctx,
+                                        const BodyFrames& frames,
+                                        const HumanoidPalette& palette,
+                                        const HumanoidAnimationContext& anim,
+                                        EquipmentBatch& batch) {
   (void)anim;
   (void)palette;
 
   auto const palette_colors = roman_shoulder_cover_palette();
-  auto const &archetype = roman_shoulder_cover_archetype(config.outward_scale);
+  auto const& archetype = roman_shoulder_cover_archetype(config.outward_scale);
   QVector3D const up = frames.torso.up;
   QVector3D const right = frames.torso.right;
 
-  append_shoulder_cover_archetype(batch, ctx, frames.shoulder_l.origin, -right,
-                                  up, archetype, palette_colors);
-  append_shoulder_cover_archetype(batch, ctx, frames.shoulder_r.origin, right,
-                                  up, archetype, palette_colors);
+  append_shoulder_cover_archetype(
+      batch, ctx, frames.shoulder_l.origin, -right, up, archetype, palette_colors);
+  append_shoulder_cover_archetype(
+      batch, ctx, frames.shoulder_r.origin, right, up, archetype, palette_colors);
 }
 
-auto roman_shoulder_cover_archetype() -> const RenderArchetype & {
+auto roman_shoulder_cover_archetype() -> const RenderArchetype& {
   return roman_shoulder_cover_archetype(1.0F);
 }
 
-auto roman_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
-                                           QVector3D *out,
+auto roman_shoulder_cover_fill_role_colors(const HumanoidPalette& palette,
+                                           QVector3D* out,
                                            std::size_t max) -> std::uint32_t {
   (void)palette;
   if (max < k_roman_shoulder_cover_role_count) {
@@ -115,9 +114,9 @@ auto roman_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
   return k_roman_shoulder_cover_role_count;
 }
 
-auto roman_shoulder_cover_make_static_attachment(
-    std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
-    const QMatrix4x4 &bind_shoulder_frame)
+auto roman_shoulder_cover_make_static_attachment(std::uint16_t socket_bone_index,
+                                                 std::uint8_t base_role_byte,
+                                                 const QMatrix4x4& bind_shoulder_frame)
     -> Render::Creature::StaticAttachmentSpec {
   auto spec = Render::Equipment::build_static_attachment({
       .archetype = &roman_shoulder_cover_archetype(),

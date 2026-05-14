@@ -2,12 +2,13 @@
 
 #include "attachment_builder.h"
 
-#include "../render_archetype.h"
-#include "../static_attachment_spec.h"
-
 #include <QVector4D>
+
 #include <algorithm>
 #include <cmath>
+
+#include "../render_archetype.h"
+#include "../static_attachment_spec.h"
 
 namespace Render::Equipment {
 
@@ -15,8 +16,7 @@ namespace {
 
 constexpr float k_axis_epsilon_sq = 1.0e-6F;
 
-auto safe_normalize(const QVector3D &v,
-                    const QVector3D &fallback) -> QVector3D {
+auto safe_normalize(const QVector3D& v, const QVector3D& fallback) -> QVector3D {
   if (v.lengthSquared() <= k_axis_epsilon_sq) {
     return fallback;
   }
@@ -27,7 +27,7 @@ auto safe_normalize(const QVector3D &v,
 
 } // namespace
 
-auto build_static_attachment(const AttachmentBuildInput &in)
+auto build_static_attachment(const AttachmentBuildInput& in)
     -> Render::Creature::StaticAttachmentSpec {
   Render::Creature::StaticAttachmentSpec spec;
   spec.archetype = in.archetype;
@@ -56,7 +56,7 @@ auto build_static_attachment(const AttachmentBuildInput &in)
   return spec;
 }
 
-auto build_socket_static_attachment(const SocketAttachmentBuildInput &in)
+auto build_socket_static_attachment(const SocketAttachmentBuildInput& in)
     -> Render::Creature::StaticAttachmentSpec {
   Render::Creature::StaticAttachmentSpec spec;
   spec.archetype = in.archetype;
@@ -75,9 +75,10 @@ auto build_socket_static_attachment(const SocketAttachmentBuildInput &in)
   return spec;
 }
 
-auto compose_basis_unit_local(const QVector3D &origin, const QVector3D &right,
-                              const QVector3D &up,
-                              const QVector3D &forward) -> QMatrix4x4 {
+auto compose_basis_unit_local(const QVector3D& origin,
+                              const QVector3D& right,
+                              const QVector3D& up,
+                              const QVector3D& forward) -> QMatrix4x4 {
   const QVector3D r = safe_normalize(right, QVector3D(1.0F, 0.0F, 0.0F));
   const QVector3D u = safe_normalize(up, QVector3D(0.0F, 1.0F, 0.0F));
   const QVector3D f = safe_normalize(forward, QVector3D(0.0F, 0.0F, 1.0F));
@@ -90,8 +91,8 @@ auto compose_basis_unit_local(const QVector3D &origin, const QVector3D &right,
   return m;
 }
 
-auto compose_axis_aligned_unit_local(const QVector3D &origin,
-                                     const QVector3D &y_axis) -> QMatrix4x4 {
+auto compose_axis_aligned_unit_local(const QVector3D& origin,
+                                     const QVector3D& y_axis) -> QMatrix4x4 {
   const QVector3D y = safe_normalize(y_axis, QVector3D(0.0F, 1.0F, 0.0F));
 
   QVector3D x = QVector3D::crossProduct(QVector3D(0.0F, 1.0F, 0.0F), y);

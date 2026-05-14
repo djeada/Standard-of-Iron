@@ -1,25 +1,31 @@
 #include "ground_renderer.h"
+
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cmath>
+
 #include "../draw_queue.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "world_chunk.h"
-#include <algorithm>
-#include <cmath>
-#include <qmatrix4x4.h>
-#include <qvectornd.h>
 
 namespace Render::GL {
 
 namespace {
 const QMatrix4x4 k_identity_matrix;
 constexpr float k_non_playable_margin_tiles = 48.0F;
-inline auto saturate(const QVector3D &c) -> QVector3D {
-  return {std::clamp(c.x(), 0.0F, 1.0F), std::clamp(c.y(), 0.0F, 1.0F),
+inline auto saturate(const QVector3D& c) -> QVector3D {
+  return {std::clamp(c.x(), 0.0F, 1.0F),
+          std::clamp(c.y(), 0.0F, 1.0F),
           std::clamp(c.z(), 0.0F, 1.0F)};
 }
 } // namespace
 
-static auto clamp01(const QVector3D &c) -> QVector3D { return saturate(c); }
+static auto clamp01(const QVector3D& c) -> QVector3D {
+  return saturate(c);
+}
 
 void GroundRenderer::recompute_model() {
   QMatrix4x4 new_model = k_identity_matrix;
@@ -66,8 +72,8 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
 
   TerrainChunkParams params;
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
-  const auto &surface_profile = profiles.surface;
-  const auto &climate_profile = profiles.climate;
+  const auto& surface_profile = profiles.surface;
+  const auto& climate_profile = profiles.climate;
 
   const QVector3D primary = surface_profile.grass_primary * 0.97F;
   const QVector3D secondary = surface_profile.grass_secondary * 0.93F;
@@ -105,60 +111,54 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   float target_amp;
   float target_freq;
   if (surface_profile.ground_irregularity_enabled) {
-    target_amp = std::clamp(surface_profile.irregularity_amplitude * 0.85F,
-                            0.15F, 0.70F);
+    target_amp =
+        std::clamp(surface_profile.irregularity_amplitude * 0.85F, 0.15F, 0.70F);
     target_freq = std::max(0.45F, surface_profile.irregularity_scale * 2.5F);
   } else {
-    target_amp = std::clamp(surface_profile.height_noise_amplitude * 0.22F,
-                            0.10F, 0.20F);
-    target_freq =
-        std::max(0.6F, surface_profile.height_noise_frequency * 1.05F);
+    target_amp =
+        std::clamp(surface_profile.height_noise_amplitude * 0.22F, 0.10F, 0.20F);
+    target_freq = std::max(0.6F, surface_profile.height_noise_frequency * 1.05F);
   }
   params.height_noise_strength = target_amp;
   params.height_noise_frequency = target_freq;
 
-  params.rock_exposure =
-      std::clamp(climate_profile.rock_exposure * 0.72F +
-                     climate_profile.crack_intensity * 0.18F +
-                     (1.0F - climate_profile.moisture_level) * 0.08F,
-                 0.04F, 0.82F);
+  params.rock_exposure = std::clamp(climate_profile.rock_exposure * 0.72F +
+                                        climate_profile.crack_intensity * 0.18F +
+                                        (1.0F - climate_profile.moisture_level) * 0.08F,
+                                    0.04F,
+                                    0.82F);
 
-  params.micro_bump_amp =
-      std::clamp(0.070F + climate_profile.soil_roughness * 0.085F +
-                     params.rock_exposure * 0.055F,
-                 0.07F, 0.22F);
-  params.micro_bump_freq =
-      std::clamp(2.4F + climate_profile.soil_roughness * 2.3F +
-                     climate_profile.crack_intensity * 1.1F,
-                 2.2F, 6.2F);
-  params.micro_normal_weight =
-      std::clamp(0.68F + params.rock_exposure * 0.20F +
-                     climate_profile.moisture_level * 0.08F,
-                 0.68F, 0.94F);
+  params.micro_bump_amp = std::clamp(0.070F + climate_profile.soil_roughness * 0.085F +
+                                         params.rock_exposure * 0.055F,
+                                     0.07F,
+                                     0.22F);
+  params.micro_bump_freq = std::clamp(2.4F + climate_profile.soil_roughness * 2.3F +
+                                          climate_profile.crack_intensity * 1.1F,
+                                      2.2F,
+                                      6.2F);
+  params.micro_normal_weight = std::clamp(0.68F + params.rock_exposure * 0.20F +
+                                              climate_profile.moisture_level * 0.08F,
+                                          0.68F,
+                                          0.94F);
 
-  params.albedo_jitter =
-      std::clamp(0.070F + climate_profile.soil_roughness * 0.060F +
-                     climate_profile.crack_intensity * 0.035F,
-                 0.06F, 0.18F);
+  params.albedo_jitter = std::clamp(0.070F + climate_profile.soil_roughness * 0.060F +
+                                        climate_profile.crack_intensity * 0.035F,
+                                    0.06F,
+                                    0.18F);
 
   params.ambient_boost = surface_profile.terrain_ambient_boost * 0.95F;
 
-  params.rock_detail_strength =
-      surface_profile.terrain_rock_detail_strength * 0.42F;
+  params.rock_detail_strength = surface_profile.terrain_rock_detail_strength * 0.42F;
 
   params.light_direction = m_light_direction;
 
   params.is_ground_plane = true;
 
   params.snow_coverage = std::clamp(climate_profile.snow_coverage, 0.0F, 1.0F);
-  params.moisture_level =
-      std::clamp(climate_profile.moisture_level, 0.0F, 1.0F);
-  params.crack_intensity =
-      std::clamp(climate_profile.crack_intensity, 0.0F, 1.0F);
-  params.grass_saturation =
-      std::clamp(climate_profile.grass_saturation, 0.0F, 1.5F);
-  params.soil_roughness =
-      std::clamp(climate_profile.soil_roughness, 0.0F, 1.0F);
+  params.moisture_level = std::clamp(climate_profile.moisture_level, 0.0F, 1.0F);
+  params.crack_intensity = std::clamp(climate_profile.crack_intensity, 0.0F, 1.0F);
+  params.grass_saturation = std::clamp(climate_profile.grass_saturation, 0.0F, 1.5F);
+  params.soil_roughness = std::clamp(climate_profile.soil_roughness, 0.0F, 1.0F);
   params.snow_color = saturate(climate_profile.snow_color);
 
   m_cached_params = params;
@@ -166,7 +166,7 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   return params;
 }
 
-void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+void GroundRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   sync_biome_from_service();
 
   if (resources == nullptr) {
@@ -174,14 +174,12 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   if (m_has_biome) {
-    Mesh *plane = resources->ground();
+    Mesh* plane = resources->ground();
     if (plane != nullptr) {
       const TerrainChunkParams params = build_params();
 
-      const bool model_changed =
-          m_model_dirty || (m_last_submitted_model != m_model);
-      const bool state_changed =
-          (m_last_submitted_state_version != m_state_version);
+      const bool model_changed = m_model_dirty || (m_last_submitted_model != m_model);
+      const bool state_changed = (m_last_submitted_state_version != m_state_version);
       (void)model_changed;
       (void)state_changed;
 
@@ -209,11 +207,11 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 }
 
 void GroundRenderer::sync_biome_from_service() {
-  auto &service = Game::Map::TerrainService::instance();
+  auto& service = Game::Map::TerrainService::instance();
   if (!service.is_initialized()) {
     return;
   }
-  const auto &current = service.biome_settings();
+  const auto& current = service.biome_settings();
   if (!m_has_biome || !biome_equals(current, m_biome_settings)) {
     m_biome_settings = current;
     m_has_biome = true;
@@ -222,8 +220,8 @@ void GroundRenderer::sync_biome_from_service() {
   }
 }
 
-auto GroundRenderer::biome_equals(const Game::Map::BiomeSettings &a,
-                                  const Game::Map::BiomeSettings &b) -> bool {
+auto GroundRenderer::biome_equals(const Game::Map::BiomeSettings& a,
+                                  const Game::Map::BiomeSettings& b) -> bool {
   return a.ground_type == b.ground_type && a.grass_primary == b.grass_primary &&
          a.grass_secondary == b.grass_secondary && a.grass_dry == b.grass_dry &&
          a.soil_color == b.soil_color && a.rock_low == b.rock_low &&
@@ -240,11 +238,9 @@ auto GroundRenderer::biome_equals(const Game::Map::BiomeSettings &a,
          a.height_noise_frequency == b.height_noise_frequency &&
          a.ground_irregularity_enabled == b.ground_irregularity_enabled &&
          a.irregularity_scale == b.irregularity_scale &&
-         a.irregularity_amplitude == b.irregularity_amplitude &&
-         a.seed == b.seed && a.snow_coverage == b.snow_coverage &&
-         a.moisture_level == b.moisture_level &&
-         a.crack_intensity == b.crack_intensity &&
-         a.rock_exposure == b.rock_exposure &&
+         a.irregularity_amplitude == b.irregularity_amplitude && a.seed == b.seed &&
+         a.snow_coverage == b.snow_coverage && a.moisture_level == b.moisture_level &&
+         a.crack_intensity == b.crack_intensity && a.rock_exposure == b.rock_exposure &&
          a.grass_saturation == b.grass_saturation &&
          a.soil_roughness == b.soil_roughness && a.snow_color == b.snow_color;
 }

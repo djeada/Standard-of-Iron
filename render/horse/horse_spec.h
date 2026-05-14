@@ -2,14 +2,15 @@
 
 #pragma once
 
-#include "../creature/spec.h"
-#include "horse_renderer_base.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <array>
 #include <cstdint>
 #include <span>
+
+#include "../creature/spec.h"
+#include "horse_renderer_base.h"
 
 namespace Render::GL {
 class ISubmitter;
@@ -86,13 +87,14 @@ struct HorseSpecPose {
 };
 
 [[nodiscard]] auto
-horse_topology() noexcept -> const Render::Creature::SkeletonTopology &;
+horse_topology() noexcept -> const Render::Creature::SkeletonTopology&;
 
-void evaluate_horse_skeleton(const HorseSpecPose &pose,
-                             BonePalette &out_palette) noexcept;
+void evaluate_horse_skeleton(const HorseSpecPose& pose,
+                             BonePalette& out_palette) noexcept;
 
-void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
-                          HorseSpecPose &out_pose) noexcept;
+void make_horse_spec_pose(const Render::GL::HorseDimensions& dims,
+                          float bob,
+                          HorseSpecPose& out_pose) noexcept;
 
 struct HorsePoseMotion {
   float phase{0.0F};
@@ -100,18 +102,18 @@ struct HorsePoseMotion {
   bool is_moving{false};
   bool is_fighting{false};
 };
-void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
-                                   const Render::GL::HorseGait &gait,
+void make_horse_spec_pose_animated(const Render::GL::HorseDimensions& dims,
+                                   const Render::GL::HorseGait& gait,
                                    HorsePoseMotion motion,
-                                   HorseSpecPose &out_pose) noexcept;
+                                   HorseSpecPose& out_pose) noexcept;
 
-void fill_horse_role_colors(const Render::GL::HorseVariant &variant,
-                            std::array<QVector3D, 8> &out_roles) noexcept;
+void fill_horse_role_colors(const Render::GL::HorseVariant& variant,
+                            std::array<QVector3D, 8>& out_roles) noexcept;
 
 [[nodiscard]] auto
-horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec &;
+horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
 
-auto compute_horse_bone_palette(const HorseSpecPose &pose,
+auto compute_horse_bone_palette(const HorseSpecPose& pose,
                                 std::span<QMatrix4x4> out_bones) noexcept
     -> std::uint32_t;
 

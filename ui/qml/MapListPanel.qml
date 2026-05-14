@@ -6,11 +6,10 @@ Item {
 
     property var maps_model: []
     property int selected_index: 0
-    property var colors: ({
-    })
+    property var colors: ({})
 
     signal map_selected(int index)
-    signal map_double_clicked()
+    signal map_double_clicked
 
     function field(obj, key) {
         return (obj && obj[key] !== undefined) ? String(obj[key]) : "";
@@ -31,7 +30,6 @@ Item {
             left: parent.left
             right: parent.right
         }
-
     }
 
     Text {
@@ -46,7 +44,6 @@ Item {
             leftMargin: 8
             verticalCenter: title.verticalCenter
         }
-
     }
 
     Rectangle {
@@ -81,7 +78,6 @@ Item {
                 root.selected_index = currentIndex;
                 if (currentIndex >= 0)
                     root.map_selected(currentIndex);
-
             }
             highlightMoveDuration: 120
             highlightFollowsCurrentItem: true
@@ -96,7 +92,6 @@ Item {
                     font.pixelSize: 14
                     anchors.centerIn: parent
                 }
-
             }
 
             ScrollBar.vertical: ScrollBar {
@@ -157,7 +152,6 @@ Item {
                             fillMode: Image.PreserveAspectCrop
                             visible: status === Image.Ready
                         }
-
                     }
 
                     Column {
@@ -187,29 +181,21 @@ Item {
                             elide: Text.ElideRight
                             width: parent.width
                         }
-
                     }
 
-                    Behavior on color {
+                    Behavior on color  {
                         ColorAnimation {
                             duration: 160
                         }
-
                     }
 
-                    Behavior on border.color {
+                    Behavior on border.color  {
                         ColorAnimation {
                             duration: 160
                         }
-
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }

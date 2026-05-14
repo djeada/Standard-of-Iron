@@ -1,3 +1,6 @@
+#include <filesystem>
+#include <gtest/gtest.h>
+
 #include "game/map/map_loader.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
@@ -11,8 +14,6 @@
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_renderer.h"
-#include <filesystem>
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -42,12 +43,10 @@ auto make_snapshot() -> Game::Map::VisibilityService::Snapshot {
   snapshot.tile_size = 1.0F;
   snapshot.half_width = 1.5F;
   snapshot.half_height = 1.5F;
-  snapshot.cells.assign(
-      16, static_cast<std::uint8_t>(Game::Map::VisibilityState::Unseen));
-  snapshot.cells[10] =
-      static_cast<std::uint8_t>(Game::Map::VisibilityState::Visible);
-  snapshot.cells[5] =
-      static_cast<std::uint8_t>(Game::Map::VisibilityState::Explored);
+  snapshot.cells.assign(16,
+                        static_cast<std::uint8_t>(Game::Map::VisibilityState::Unseen));
+  snapshot.cells[10] = static_cast<std::uint8_t>(Game::Map::VisibilityState::Visible);
+  snapshot.cells[5] = static_cast<std::uint8_t>(Game::Map::VisibilityState::Explored);
   return snapshot;
 }
 
@@ -58,8 +57,9 @@ TEST(ScatterRuntimeTest, CollectVisibleInstancesFiltersBySnapshot) {
   instances[2].pos_scale = QVector4D(5.0F, 0.0F, 5.0F, 1.0F);
 
   const auto visible = Render::Ground::Scatter::collect_visible_instances(
-      instances, make_snapshot(),
-      [](const Render::GL::PlantInstanceGpu &instance) -> const QVector4D & {
+      instances,
+      make_snapshot(),
+      [](const Render::GL::PlantInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_scale;
       });
 
@@ -100,14 +100,11 @@ TEST(ScatterRuntimeTest,
       << "Empty scatter chunks should not rebuild visibility.";
   EXPECT_TRUE(filtered_needs_visibility_rebuild(false, true, false, true, 1, 1))
       << "Dirty filtered chunks need a visibility pass.";
-  EXPECT_TRUE(
-      filtered_needs_visibility_rebuild(false, false, true, false, 2, 1))
+  EXPECT_TRUE(filtered_needs_visibility_rebuild(false, false, true, false, 2, 1))
       << "Visibility version changes need a new filtered instance list.";
-  EXPECT_TRUE(
-      filtered_needs_visibility_rebuild(false, false, false, false, 1, 1))
+  EXPECT_TRUE(filtered_needs_visibility_rebuild(false, false, false, false, 1, 1))
       << "A visible cached list without a buffer needs re-upload.";
-  EXPECT_FALSE(
-      filtered_needs_visibility_rebuild(false, false, true, false, 1, 1))
+  EXPECT_FALSE(filtered_needs_visibility_rebuild(false, false, true, false, 1, 1))
       << "Stable filtered chunks with cached visibility and buffer do no work.";
 }
 
@@ -204,8 +201,7 @@ TEST(ScatterRuntimeTest, SyncStatsAggregateUploadAndRebuildCounters) {
   EXPECT_EQ(stats.buffer_resets, 3U);
 }
 
-TEST(ScatterRuntimeTest,
-     BiomeRendererConfiguresLargeTerrainWithoutReallocationCrash) {
+TEST(ScatterRuntimeTest, BiomeRendererConfiguresLargeTerrainWithoutReallocationCrash) {
   Game::Map::TerrainHeightMap height_map(160, 160, 1.0F);
   Game::Map::BiomeSettings biome_settings;
 
@@ -246,12 +242,13 @@ TEST(ScatterRuntimeTest, CampaniaCampaignMaintainsRichNaturalScatter) {
   ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
       QString::fromStdString(
           (root / "assets" / "maps" / "map_campania_campaign.json").string()),
-      map_def, &error))
+      map_def,
+      &error))
       << error.toStdString();
 
-  auto &terrain = Game::Map::TerrainService::instance();
+  auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
-  auto const *height_map = terrain.get_height_map();
+  auto const* height_map = terrain.get_height_map();
   ASSERT_NE(height_map, nullptr);
 
   Render::GL::PlantRenderer plants;

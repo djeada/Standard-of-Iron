@@ -1,13 +1,15 @@
 #include "miniaudio_backend.h"
+
 #include <QDebug>
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <cstring>
 #include <qglobal.h>
 #include <qhashfunctions.h>
 #include <qmutex.h>
 #include <qobject.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstring>
 #include <utility>
 
 #define MINIAUDIO_IMPLEMENTATION
@@ -25,28 +27,33 @@
 #include <miniaudio.h>
 
 struct DeviceWrapper {
-  MiniaudioBackend *self;
+  MiniaudioBackend* self;
 };
 
-static void audioCallback(ma_device *device, void *output_buffer, const void *,
+static void audioCallback(ma_device* device,
+                          void* output_buffer,
+                          const void*,
                           ma_uint32 frame_count) {
-  auto *wrapper = reinterpret_cast<DeviceWrapper *>(device->pUserData);
+  auto* wrapper = reinterpret_cast<DeviceWrapper*>(device->pUserData);
   if ((wrapper == nullptr) || (wrapper->self == nullptr)) {
-    std::memset(output_buffer, 0,
-                static_cast<unsigned long>(
-                    frame_count * MiniaudioBackend::DEFAULT_OUTPUT_CHANNELS) *
+    std::memset(output_buffer,
+                0,
+                static_cast<unsigned long>(frame_count *
+                                           MiniaudioBackend::DEFAULT_OUTPUT_CHANNELS) *
                     sizeof(float));
     return;
   }
-  wrapper->self->on_audio(reinterpret_cast<float *>(output_buffer),
-                          frame_count);
+  wrapper->self->on_audio(reinterpret_cast<float*>(output_buffer), frame_count);
 }
 
-MiniaudioBackend::MiniaudioBackend(QObject *parent) : QObject(parent) {}
-MiniaudioBackend::~MiniaudioBackend() { shutdown(); }
+MiniaudioBackend::MiniaudioBackend(QObject* parent)
+    : QObject(parent) {
+}
+MiniaudioBackend::~MiniaudioBackend() {
+  shutdown();
+}
 
-auto MiniaudioBackend::initialize(int device_rate, int,
-                                  int music_channels) -> bool {
+auto MiniaudioBackend::initialize(int device_rate, int, int music_channels) -> bool {
   m_sample_rate = std::max(MIN_SAMPLE_RATE, device_rate);
   m_output_channels = DEFAULT_OUTPUT_CHANNELS;
 
@@ -71,12 +78,12 @@ auto MiniaudioBackend::initialize(int device_rate, int,
   m_device_wrapper = std::move(wrapper);
 
   m_channels.resize(std::max(1, music_channels));
-  for (auto &channel : m_channels) {
+  for (auto& channel : m_channels) {
     channel = Channel{};
   }
 
   m_sound_effects.resize(DEFAULT_SOUND_EFFECT_SLOTS);
-  for (auto &sfx : m_sound_effects) {
+  for (auto& sfx : m_sound_effects) {
     sfx = SoundEffect{};
   }
 
@@ -112,14 +119,13 @@ void MiniaudioBackend::stop_device() {
   m_device_wrapper.reset();
 }
 
-auto MiniaudioBackend::predecode(const QString &id,
-                                 const QString &path) -> bool {
+auto MiniaudioBackend::predecode(const QString& id, const QString& path) -> bool {
 
   ma_decoder_config const decoder_config =
       ma_decoder_config_init(ma_format_f32, m_output_channels, m_sample_rate);
   ma_decoder decoder;
-  if (ma_decoder_init_file(path.toUtf8().constData(), &decoder_config,
-                           &decoder) != MA_SUCCESS) {
+  if (ma_decoder_init_file(path.toUtf8().constData(), &decoder_config, &decoder) !=
+      MA_SUCCESS) {
     qWarning() << "miniaudio: cannot open" << path;
     return false;
   }
@@ -154,8 +160,8 @@ auto MiniaudioBackend::predecode(const QString &id,
   return true;
 }
 
-void MiniaudioBackend::play(int channel, const QString &id, float volume,
-                            bool loop, int fade_ms) {
+void MiniaudioBackend::play(
+    int channel, const QString& id, float volume, bool loop, int fade_ms) {
   static constexpr int MIN_FADE_MS = 1;
   static constexpr int MS_PER_SECOND = 1000;
 
@@ -176,7 +182,7 @@ void MiniaudioBackend::play(int channel, const QString &id, float volume,
     }
   }
 
-  auto &ch = m_channels[channel];
+  auto& ch = m_channels[channel];
   ch.track = &it.value();
   ch.frame_pos = 0;
   ch.looping = loop;
@@ -185,9 +191,8 @@ void MiniaudioBackend::play(int channel, const QString &id, float volume,
   ch.target_volume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
   ch.current_volume = MIN_VOLUME;
 
-  const unsigned fade_samples =
-      std::max(unsigned(MIN_FADE_MS),
-               unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
+  const unsigned fade_samples = std::max(
+      unsigned(MIN_FADE_MS), unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
   ch.fade_samples = fade_samples;
   ch.volume_step = (ch.target_volume - ch.current_volume) / float(fade_samples);
 }
@@ -200,13 +205,12 @@ void MiniaudioBackend::stop(int channel, int fade_ms) {
   if (channel < 0 || channel >= m_channels.size()) {
     return;
   }
-  auto &ch = m_channels[channel];
+  auto& ch = m_channels[channel];
   if (!ch.active) {
     return;
   }
-  const unsigned fade_samples =
-      std::max(unsigned(MIN_FADE_MS),
-               unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
+  const unsigned fade_samples = std::max(
+      unsigned(MIN_FADE_MS), unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
   ch.target_volume = MIN_VOLUME;
   ch.fade_samples = fade_samples;
   ch.volume_step = (ch.target_volume - ch.current_volume) / float(fade_samples);
@@ -234,14 +238,13 @@ void MiniaudioBackend::set_volume(int channel, float volume, int fade_ms) {
   if (channel < 0 || channel >= m_channels.size()) {
     return;
   }
-  auto &ch = m_channels[channel];
+  auto& ch = m_channels[channel];
   if (!ch.active) {
     return;
   }
   ch.target_volume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
-  const unsigned fade_samples =
-      std::max(unsigned(MIN_FADE_MS),
-               unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
+  const unsigned fade_samples = std::max(
+      unsigned(MIN_FADE_MS), unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
   ch.fade_samples = fade_samples;
   ch.volume_step = (ch.target_volume - ch.current_volume) / float(fade_samples);
 }
@@ -251,17 +254,15 @@ void MiniaudioBackend::stop_all(int fade_ms) {
   static constexpr int MS_PER_SECOND = 1000;
 
   QMutexLocker const locker(&m_mutex);
-  const unsigned fade_samples =
-      std::max(unsigned(MIN_FADE_MS),
-               unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
-  for (auto &ch : m_channels) {
+  const unsigned fade_samples = std::max(
+      unsigned(MIN_FADE_MS), unsigned((fade_ms * m_sample_rate) / MS_PER_SECOND));
+  for (auto& ch : m_channels) {
     if (!ch.active) {
       continue;
     }
     ch.target_volume = MIN_VOLUME;
     ch.fade_samples = fade_samples;
-    ch.volume_step =
-        (ch.target_volume - ch.current_volume) / float(fade_samples);
+    ch.volume_step = (ch.target_volume - ch.current_volume) / float(fade_samples);
     ch.looping = false;
   }
 }
@@ -273,7 +274,7 @@ void MiniaudioBackend::set_master_volume(float volume, int) {
 
 auto MiniaudioBackend::any_channel_playing() const -> bool {
   QMutexLocker const locker(&m_mutex);
-  for (const auto &ch : m_channels) {
+  for (const auto& ch : m_channels) {
     if (ch.active && !ch.paused) {
       return true;
     }
@@ -285,11 +286,11 @@ auto MiniaudioBackend::channel_playing(int channel) const -> bool {
   if (channel < 0 || channel >= m_channels.size()) {
     return false;
   }
-  const auto &ch = m_channels[channel];
+  const auto& ch = m_channels[channel];
   return ch.active && !ch.paused;
 }
 
-void MiniaudioBackend::play_sound(const QString &id, float volume, bool loop) {
+void MiniaudioBackend::play_sound(const QString& id, float volume, bool loop) {
   QMutexLocker const locker(&m_mutex);
 
   auto it = m_tracks.find(id);
@@ -304,7 +305,7 @@ void MiniaudioBackend::play_sound(const QString &id, float volume, bool loop) {
     return;
   }
 
-  auto &sfx = m_sound_effects[slot];
+  auto& sfx = m_sound_effects[slot];
   sfx.track = &it.value();
   sfx.frame_pos = 0;
   sfx.volume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
@@ -321,7 +322,7 @@ auto MiniaudioBackend::find_free_sound_slot() const -> int {
   return -1;
 }
 
-void MiniaudioBackend::on_audio(float *output, unsigned frames) {
+void MiniaudioBackend::on_audio(float* output, unsigned frames) {
   static constexpr int STEREO_CHANNELS = 2;
 
   const unsigned samples = frames * STEREO_CHANNELS;
@@ -329,16 +330,16 @@ void MiniaudioBackend::on_audio(float *output, unsigned frames) {
 
   QMutexLocker const locker(&m_mutex);
 
-  for (auto &ch : m_channels) {
+  for (auto& ch : m_channels) {
     if (!ch.active || ch.paused || ch.track == nullptr) {
       continue;
     }
 
-    const auto *pcm = ch.track->pcm.constData();
+    const auto* pcm = ch.track->pcm.constData();
     unsigned frames_left = frames;
     unsigned pos = ch.frame_pos;
 
-    float *dst = output;
+    float* dst = output;
 
     while (frames_left > 0) {
       if (pos >= ch.track->frames) {
@@ -349,7 +350,7 @@ void MiniaudioBackend::on_audio(float *output, unsigned frames) {
         }
       }
       const unsigned can_copy = std::min(frames_left, ch.track->frames - pos);
-      const float *src = pcm + static_cast<size_t>(pos * STEREO_CHANNELS);
+      const float* src = pcm + static_cast<size_t>(pos * STEREO_CHANNELS);
 
       for (unsigned i = 0; i < can_copy; ++i) {
         const float vol = ch.current_volume * m_master_volume;
@@ -383,15 +384,15 @@ void MiniaudioBackend::on_audio(float *output, unsigned frames) {
     }
   }
 
-  for (auto &sfx : m_sound_effects) {
+  for (auto& sfx : m_sound_effects) {
     if (!sfx.active || sfx.track == nullptr) {
       continue;
     }
 
-    const auto *pcm = sfx.track->pcm.constData();
+    const auto* pcm = sfx.track->pcm.constData();
     unsigned frames_left = frames;
     unsigned pos = sfx.frame_pos;
-    float *dst = output;
+    float* dst = output;
 
     while (frames_left > 0) {
       if (pos >= sfx.track->frames) {
@@ -404,7 +405,7 @@ void MiniaudioBackend::on_audio(float *output, unsigned frames) {
       }
 
       const unsigned can_copy = std::min(frames_left, sfx.track->frames - pos);
-      const float *src = pcm + static_cast<size_t>(pos * STEREO_CHANNELS);
+      const float* src = pcm + static_cast<size_t>(pos * STEREO_CHANNELS);
 
       for (unsigned i = 0; i < can_copy; ++i) {
         const float vol = sfx.volume * m_master_volume;

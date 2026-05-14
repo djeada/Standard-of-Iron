@@ -4,8 +4,9 @@
 
 namespace App::Models {
 
-GraphicsSettingsProxy::GraphicsSettingsProxy(QObject *parent)
-    : QObject(parent) {}
+GraphicsSettingsProxy::GraphicsSettingsProxy(QObject* parent)
+    : QObject(parent) {
+}
 
 int GraphicsSettingsProxy::quality_level() const {
   return static_cast<int>(Render::GraphicsSettings::instance().quality());
@@ -41,7 +42,7 @@ QStringList GraphicsSettingsProxy::quality_options() const {
   return {tr("Low"), tr("Medium"), tr("High"), tr("Ultra")};
 }
 
-void GraphicsSettingsProxy::set_quality_by_name(const QString &name) {
+void GraphicsSettingsProxy::set_quality_by_name(const QString& name) {
   if (name == tr("Low")) {
     set_quality_level(0);
   } else if (name == tr("Medium")) {
@@ -56,17 +57,14 @@ void GraphicsSettingsProxy::set_quality_by_name(const QString &name) {
 QString GraphicsSettingsProxy::get_quality_description() const {
   switch (Render::GraphicsSettings::instance().quality()) {
   case Render::GraphicsQuality::Low:
-    return tr(
-        "Maximum performance. Aggressive LOD, reduced detail at distance.");
+    return tr("Maximum performance. Aggressive LOD, reduced detail at distance.");
   case Render::GraphicsQuality::Medium:
-    return tr(
-        "Balanced performance and quality. Recommended for most systems.");
+    return tr("Balanced performance and quality. Recommended for most systems.");
   case Render::GraphicsQuality::High:
     return tr("Higher quality. More detail visible at distance. Requires "
               "better hardware.");
   case Render::GraphicsQuality::Ultra:
-    return tr(
-        "Maximum quality. Full detail always. Best hardware recommended.");
+    return tr("Maximum quality. Full detail always. Best hardware recommended.");
   }
   return QString();
 }

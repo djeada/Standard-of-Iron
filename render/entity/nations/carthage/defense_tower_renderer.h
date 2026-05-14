@@ -4,6 +4,6 @@
 
 namespace Render::GL::Carthage {
 
-void register_defense_tower_renderer(EntityRendererRegistry &registry);
+void register_defense_tower_renderer(EntityRendererRegistry& registry);
 
 }

@@ -1,12 +1,14 @@
 #pragma once
 
-#include "../units/troop_type.h"
 #include <QVector3D>
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "../units/troop_type.h"
 
 namespace Engine::Core {
 using EntityID = unsigned int;
@@ -15,7 +17,11 @@ class World;
 
 namespace Game::Systems {
 
-enum class FormationType { Roman, Barbarian, Carthage };
+enum class FormationType {
+  Roman,
+  Barbarian,
+  Carthage
+};
 
 struct UnitFormationInfo {
   Engine::Core::EntityID entity_id;
@@ -29,7 +35,11 @@ struct FormationPosition {
   Engine::Core::EntityID entity_id{0};
 };
 
-enum class FormationUnitCategory { Infantry, Cavalry, BuilderConstruction };
+enum class FormationUnitCategory {
+  Infantry,
+  Cavalry,
+  BuilderConstruction
+};
 
 struct FormationOffset {
   float offset_x{0.0F};
@@ -40,8 +50,9 @@ struct FormationOffset {
 } // namespace Game::Systems
 
 namespace std {
-template <> struct hash<Game::Systems::FormationType> {
-  auto operator()(const Game::Systems::FormationType &ft) const -> std::size_t {
+template <>
+struct hash<Game::Systems::FormationType> {
+  auto operator()(const Game::Systems::FormationType& ft) const -> std::size_t {
     return std::hash<int>()(static_cast<int>(ft));
   }
 };
@@ -53,12 +64,14 @@ class IFormation {
 public:
   virtual ~IFormation() = default;
 
-  [[nodiscard]] virtual auto calculate_positions(
-      int unit_count, const QVector3D &center,
-      float base_spacing = 1.0F) const -> std::vector<QVector3D> = 0;
+  [[nodiscard]] virtual auto
+  calculate_positions(int unit_count,
+                      const QVector3D& center,
+                      float base_spacing = 1.0F) const -> std::vector<QVector3D> = 0;
 
   [[nodiscard]] virtual auto calculate_formation_positions(
-      const std::vector<UnitFormationInfo> &units, const QVector3D &center,
+      const std::vector<UnitFormationInfo>& units,
+      const QVector3D& center,
       float base_spacing = 1.0F) const -> std::vector<FormationPosition> = 0;
 
   [[nodiscard]] virtual auto get_type() const -> FormationType = 0;
@@ -66,15 +79,15 @@ public:
 
 class RomanFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculate_positions(
-      int unit_count, const QVector3D &center,
-      float base_spacing = 1.0F) const -> std::vector<QVector3D> override;
+  [[nodiscard]] auto calculate_positions(int unit_count,
+                                         const QVector3D& center,
+                                         float base_spacing = 1.0F) const
+      -> std::vector<QVector3D> override;
 
-  [[nodiscard]] auto
-  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
-                                const QVector3D &center,
-                                float base_spacing = 1.0F) const
-      -> std::vector<FormationPosition> override;
+  [[nodiscard]] auto calculate_formation_positions(
+      const std::vector<UnitFormationInfo>& units,
+      const QVector3D& center,
+      float base_spacing = 1.0F) const -> std::vector<FormationPosition> override;
 
   [[nodiscard]] auto get_type() const -> FormationType override {
     return FormationType::Roman;
@@ -83,15 +96,15 @@ public:
 
 class BarbarianFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculate_positions(
-      int unit_count, const QVector3D &center,
-      float base_spacing = 1.0F) const -> std::vector<QVector3D> override;
+  [[nodiscard]] auto calculate_positions(int unit_count,
+                                         const QVector3D& center,
+                                         float base_spacing = 1.0F) const
+      -> std::vector<QVector3D> override;
 
-  [[nodiscard]] auto
-  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
-                                const QVector3D &center,
-                                float base_spacing = 1.0F) const
-      -> std::vector<FormationPosition> override;
+  [[nodiscard]] auto calculate_formation_positions(
+      const std::vector<UnitFormationInfo>& units,
+      const QVector3D& center,
+      float base_spacing = 1.0F) const -> std::vector<FormationPosition> override;
 
   [[nodiscard]] auto get_type() const -> FormationType override {
     return FormationType::Barbarian;
@@ -100,15 +113,15 @@ public:
 
 class CarthageFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculate_positions(
-      int unit_count, const QVector3D &center,
-      float base_spacing = 1.0F) const -> std::vector<QVector3D> override;
+  [[nodiscard]] auto calculate_positions(int unit_count,
+                                         const QVector3D& center,
+                                         float base_spacing = 1.0F) const
+      -> std::vector<QVector3D> override;
 
-  [[nodiscard]] auto
-  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
-                                const QVector3D &center,
-                                float base_spacing = 1.0F) const
-      -> std::vector<FormationPosition> override;
+  [[nodiscard]] auto calculate_formation_positions(
+      const std::vector<UnitFormationInfo>& units,
+      const QVector3D& center,
+      float base_spacing = 1.0F) const -> std::vector<FormationPosition> override;
 
   [[nodiscard]] auto get_type() const -> FormationType override {
     return FormationType::Carthage;
@@ -117,27 +130,32 @@ public:
 
 class FormationSystem {
 public:
-  static auto instance() -> FormationSystem &;
+  static auto instance() -> FormationSystem&;
 
-  auto
-  get_formation_positions(FormationType type, int unit_count,
-                          const QVector3D &center,
-                          float base_spacing = 1.0F) -> std::vector<QVector3D>;
+  auto get_formation_positions(FormationType type,
+                               int unit_count,
+                               const QVector3D& center,
+                               float base_spacing = 1.0F) -> std::vector<QVector3D>;
 
-  auto get_formation_positions_with_facing(
-      FormationType type, const std::vector<UnitFormationInfo> &units,
-      const QVector3D &center,
-      float base_spacing = 1.0F) -> std::vector<FormationPosition>;
+  auto get_formation_positions_with_facing(FormationType type,
+                                           const std::vector<UnitFormationInfo>& units,
+                                           const QVector3D& center,
+                                           float base_spacing = 1.0F)
+      -> std::vector<FormationPosition>;
 
-  void register_formation(FormationType type,
-                          std::unique_ptr<IFormation> formation);
+  void register_formation(FormationType type, std::unique_ptr<IFormation> formation);
 
-  auto get_formation(FormationType type) const -> const IFormation *;
+  auto get_formation(FormationType type) const -> const IFormation*;
 
-  [[nodiscard]] auto
-  get_local_offset(FormationType type, FormationUnitCategory category, int idx,
-                   int row, int col, int rows, int cols, float spacing,
-                   std::uint32_t seed) const -> FormationOffset;
+  [[nodiscard]] auto get_local_offset(FormationType type,
+                                      FormationUnitCategory category,
+                                      int idx,
+                                      int row,
+                                      int col,
+                                      int rows,
+                                      int cols,
+                                      float spacing,
+                                      std::uint32_t seed) const -> FormationOffset;
 
 private:
   FormationSystem();

@@ -16,7 +16,7 @@ ComboBox {
     property color highlight_border: Theme.selectedBr
     property color item_background: Theme.cardBase
     property color item_border: Theme.cardBorder
-    property var delegate_text: function(data) {
+    property var delegate_text: function (data) {
         return data;
     }
 
@@ -48,7 +48,6 @@ ComboBox {
         }
         border.width: (root.popup.visible || root.activeFocus) ? 2 : 1
 
-        
         Rectangle {
             anchors.fill: parent
             anchors.margins: 1
@@ -72,7 +71,6 @@ ComboBox {
             }
         }
 
-        
         Rectangle {
             anchors.top: parent.top
             anchors.topMargin: 1
@@ -85,13 +83,13 @@ ComboBox {
             opacity: root.enabled ? 0.30 : 0.0
         }
 
-        Behavior on border.color {
+        Behavior on border.color  {
             ColorAnimation {
                 duration: 140
             }
         }
 
-        Behavior on border.width {
+        Behavior on border.width  {
             NumberAnimation {
                 duration: 100
             }
@@ -106,7 +104,7 @@ ComboBox {
         anchors.rightMargin: Theme.spacingSmall + 1
         anchors.verticalCenter: parent.verticalCenter
 
-        Behavior on color {
+        Behavior on color  {
             ColorAnimation {
                 duration: 140
             }
@@ -132,7 +130,6 @@ ComboBox {
             border.color: StyleGuide.historical.bronzeDeep
             border.width: 1
 
-            
             Rectangle {
                 anchors.top: parent.top
                 anchors.topMargin: 1
@@ -156,7 +153,6 @@ ComboBox {
             border.color: highlighted ? root.highlight_border : root.item_border
             border.width: 1
 
-            
             Rectangle {
                 anchors.fill: parent
                 opacity: highlighted ? 0.08 : 0.0
@@ -172,7 +168,7 @@ ComboBox {
                     }
                 }
 
-                Behavior on opacity {
+                Behavior on opacity  {
                     NumberAnimation {
                         duration: 100
                     }
@@ -189,7 +185,7 @@ ComboBox {
             verticalAlignment: Text.AlignVCenter
             leftPadding: Theme.spacingSmall
 
-            Behavior on color {
+            Behavior on color  {
                 ColorAnimation {
                     duration: 100
                 }

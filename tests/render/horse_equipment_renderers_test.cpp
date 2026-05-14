@@ -1,3 +1,8 @@
+#include <algorithm>
+#include <gtest/gtest.h>
+#include <memory>
+#include <vector>
+
 #include "render/entity/registry.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/champion_renderer.h"
@@ -10,10 +15,6 @@
 #include "render/equipment/horse/tack/bridle_renderer.h"
 #include "render/equipment/horse/tack/reins_renderer.h"
 #include "render/gl/primitives.h"
-#include <algorithm>
-#include <gtest/gtest.h>
-#include <memory>
-#include <vector>
 
 using namespace Render::GL;
 
@@ -22,16 +23,16 @@ namespace {
 using MockSubmitter = EquipmentBatch;
 using CapturingSubmitter = EquipmentBatch;
 
-inline int mesh_count_of(const EquipmentBatch &b) {
+inline int mesh_count_of(const EquipmentBatch& b) {
   return static_cast<int>(b.meshes.size());
 }
-inline int cylinder_count_of(const EquipmentBatch &b) {
+inline int cylinder_count_of(const EquipmentBatch& b) {
   return static_cast<int>(b.cylinders.size());
 }
-inline int archetype_count_of(const EquipmentBatch &b) {
+inline int archetype_count_of(const EquipmentBatch& b) {
   return static_cast<int>(b.archetypes.size());
 }
-inline float axis_scale_of(const QMatrix4x4 &m, int column) {
+inline float axis_scale_of(const QMatrix4x4& m, int column) {
   return m.column(column).toVector3D().length();
 }
 
@@ -162,8 +163,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
 
   QVector3D const expected_world = ctx.model.map(frames.back_center.origin);
 
-  QVector3D const actual =
-      batch.archetypes.front().world.column(3).toVector3D();
+  QVector3D const actual = batch.archetypes.front().world.column(3).toVector3D();
   EXPECT_NEAR(actual.x(), expected_world.x(), 1e-4F);
   EXPECT_NEAR(actual.y(), expected_world.y(), 1e-4F);
   EXPECT_NEAR(actual.z(), expected_world.z(), 1e-4F);
@@ -176,7 +176,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererKeepsGeometryNearMuzzle) {
   renderer.render(ctx, frames, variant, anim, batch);
   ASSERT_EQ(archetype_count_of(batch), 1);
 
-  const auto &draws =
+  const auto& draws =
       batch.archetypes.front()
           .archetype->lods[static_cast<std::size_t>(RenderArchetypeLod::Full)]
           .draws;

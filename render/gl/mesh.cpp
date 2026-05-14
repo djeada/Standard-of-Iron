@@ -1,21 +1,26 @@
 #include "mesh.h"
-#include "gl/buffer.h"
-#include "render_constants.h"
-#include <GL/gl.h>
+
 #include <QDebug>
 #include <QOpenGLFunctions_3_3_Core>
+#include <qopenglext.h>
+
+#include <GL/gl.h>
 #include <cstddef>
 #include <memory>
-#include <qopenglext.h>
 #include <vector>
+
+#include "gl/buffer.h"
+#include "render_constants.h"
 
 namespace Render::GL {
 
 using namespace Render::GL::ComponentCount;
 
-Mesh::Mesh(const std::vector<Vertex> &vertices,
-           const std::vector<unsigned int> &indices)
-    : m_vertices(vertices), m_indices(indices) {}
+Mesh::Mesh(const std::vector<Vertex>& vertices,
+           const std::vector<unsigned int>& indices)
+    : m_vertices(vertices)
+    , m_indices(indices) {
+}
 
 Mesh::~Mesh() = default;
 
@@ -39,21 +44,21 @@ void Mesh::setup_buffers() {
   constexpr GLsizei k_stride = sizeof(Vertex);
   constexpr auto offset_of = [](auto member_ptr) -> std::size_t {
     return reinterpret_cast<std::size_t>(
-        &(reinterpret_cast<Vertex const *>(0)->*member_ptr));
+        &(reinterpret_cast<Vertex const*>(0)->*member_ptr));
   };
   auto const pos_off = offset_of(&Vertex::position);
   auto const norm_off = offset_of(&Vertex::normal);
   auto const tex_off = offset_of(&Vertex::tex_coord);
 
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, k_stride,
-                        reinterpret_cast<void *>(pos_off));
+  glVertexAttribPointer(
+      0, 3, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(pos_off));
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, k_stride,
-                        reinterpret_cast<void *>(norm_off));
+  glVertexAttribPointer(
+      1, 3, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(norm_off));
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, k_stride,
-                        reinterpret_cast<void *>(tex_off));
+  glVertexAttribPointer(
+      2, 2, GL_FLOAT, GL_FALSE, k_stride, reinterpret_cast<void*>(tex_off));
   m_vao->set_index_buffer(*m_ebo);
 
   m_vao->unbind();
@@ -64,14 +69,13 @@ void Mesh::setup_buffers() {
   }
 }
 
-auto Mesh::prepare_draw(const char *caller_name) -> bool {
+auto Mesh::prepare_draw(const char* caller_name) -> bool {
   if (!m_vao) {
     setup_buffers();
   }
 #ifndef NDEBUG
   if (QOpenGLContext::currentContext() == nullptr) {
-    qWarning() << caller_name
-               << "called without current GL context; skipping draw"
+    qWarning() << caller_name << "called without current GL context; skipping draw"
                << "indices" << m_indices.size();
     return false;
   }
@@ -93,8 +97,8 @@ void Mesh::draw() {
   if (!prepare_draw("Mesh::draw")) {
     return;
   }
-  glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
-                 GL_UNSIGNED_INT, nullptr);
+  glDrawElements(
+      GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()), GL_UNSIGNED_INT, nullptr);
 
   m_vao->unbind();
 
@@ -113,8 +117,10 @@ void Mesh::draw_instanced(std::size_t instance_count) {
   if (!prepare_draw("Mesh::draw_instanced")) {
     return;
   }
-  glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
-                          GL_UNSIGNED_INT, nullptr,
+  glDrawElementsInstanced(GL_TRIANGLES,
+                          static_cast<GLsizei>(m_indices.size()),
+                          GL_UNSIGNED_INT,
+                          nullptr,
                           static_cast<GLsizei>(instance_count));
 
   m_vao->unbind();
@@ -136,8 +142,10 @@ void Mesh::unbind_vao() {
 
 void Mesh::draw_instanced_raw(std::size_t instance_count) {
   initializeOpenGLFunctions();
-  glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
-                          GL_UNSIGNED_INT, nullptr,
+  glDrawElementsInstanced(GL_TRIANGLES,
+                          static_cast<GLsizei>(m_indices.size()),
+                          GL_UNSIGNED_INT,
+                          nullptr,
                           static_cast<GLsizei>(instance_count));
 #ifndef NDEBUG
   GLenum err = glGetError();
@@ -190,7 +198,8 @@ auto create_cube_mesh() -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(vertices, indices);
 }
 
-auto create_plane_mesh(float width, float height,
+auto create_plane_mesh(float width,
+                       float height,
                        int subdivisions) -> std::unique_ptr<Mesh> {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
@@ -201,8 +210,7 @@ auto create_plane_mesh(float width, float height,
   for (int z = 0; z <= subdivisions; ++z) {
     for (int x = 0; x <= subdivisions; ++x) {
       float x_pos = (x / static_cast<float>(subdivisions)) * width - half_width;
-      float z_pos =
-          (z / static_cast<float>(subdivisions)) * height - half_height;
+      float z_pos = (z / static_cast<float>(subdivisions)) * height - half_height;
 
       vertices.push_back({{x_pos, 0.0F, z_pos},
                           {0.0F, 1.0F, 0.0F},

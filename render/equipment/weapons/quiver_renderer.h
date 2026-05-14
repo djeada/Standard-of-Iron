@@ -1,13 +1,15 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
-#include <QVector3D>
-#include <array>
-#include <cstddef>
-#include <cstdint>
 
 namespace Render::GL {
 
@@ -25,19 +27,22 @@ class QuiverRenderer : public IEquipmentRenderer {
 public:
   explicit QuiverRenderer(QuiverRenderConfig config = {});
 
-  static void submit(const QuiverRenderConfig &config, const DrawContext &ctx,
-                     const BodyFrames &frames, const HumanoidPalette &palette,
-                     const HumanoidAnimationContext &anim,
-                     EquipmentBatch &batch);
+  static void submit(const QuiverRenderConfig& config,
+                     const DrawContext& ctx,
+                     const BodyFrames& frames,
+                     const HumanoidPalette& palette,
+                     const HumanoidAnimationContext& anim,
+                     EquipmentBatch& batch);
 
-  void render(const DrawContext &ctx, const BodyFrames &frames,
-              const HumanoidPalette &palette,
-              const HumanoidAnimationContext &anim,
-              EquipmentBatch &batch) override;
+  void render(const DrawContext& ctx,
+              const BodyFrames& frames,
+              const HumanoidPalette& palette,
+              const HumanoidAnimationContext& anim,
+              EquipmentBatch& batch) override;
 
-  void set_config(const QuiverRenderConfig &config) { m_config = config; }
+  void set_config(const QuiverRenderConfig& config) { m_config = config; }
 
-  [[nodiscard]] auto base_config() const -> const QuiverRenderConfig & {
+  [[nodiscard]] auto base_config() const -> const QuiverRenderConfig& {
     return m_config;
   }
 
@@ -47,11 +52,12 @@ private:
 
 inline constexpr std::uint32_t k_quiver_role_count = 3;
 
-auto quiver_fill_role_colors(const HumanoidPalette &palette,
-                             const QuiverRenderConfig &config, QVector3D *out,
+auto quiver_fill_role_colors(const HumanoidPalette& palette,
+                             const QuiverRenderConfig& config,
+                             QVector3D* out,
                              std::size_t max) -> std::uint32_t;
 
-auto quiver_make_static_attachments(const QuiverRenderConfig &config,
+auto quiver_make_static_attachments(const QuiverRenderConfig& config,
                                     std::uint16_t socket_bone_index,
                                     std::uint8_t base_role_byte)
     -> std::array<Render::Creature::StaticAttachmentSpec, 5>;

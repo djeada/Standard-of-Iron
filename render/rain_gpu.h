@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../game/map/map_definition.h"
 #include <QVector3D>
 #include <QVector4D>
+
 #include <cstdint>
+
+#include "../game/map/map_definition.h"
 
 namespace Render::GL {
 

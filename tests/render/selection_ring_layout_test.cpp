@@ -1,28 +1,25 @@
+#include <QMatrix4x4>
+
+#include <cmath>
+#include <gtest/gtest.h>
+
 #include "game/units/troop_config.h"
 #include "render/humanoid/prepare.h"
 #include "render/selection_ring_layout.h"
 
-#include <gtest/gtest.h>
-
-#include <QMatrix4x4>
-#include <cmath>
-
 namespace {
 
-auto build_expected_soldier_positions(
-    const Render::GL::SelectionRingLayoutInput &input)
+auto build_expected_soldier_positions(const Render::GL::SelectionRingLayoutInput& input)
     -> std::vector<Render::GL::SelectionRingPlacement> {
   int const total_units = std::max(1, input.individuals_per_unit);
   int const cols = std::max(1, std::min(input.max_units_per_row, total_units));
   int const rows = std::max(1, (total_units + cols - 1) / cols);
   auto const category =
       input.is_builder_constructing
-          ? Render::GL::FormationCalculatorFactory::UnitCategory::
-                BuilderConstruction
+          ? Render::GL::FormationCalculatorFactory::UnitCategory::BuilderConstruction
           : Render::GL::Detail::selection_ring_category(input.spawn_type);
-  auto const *calculator =
-      Render::GL::FormationCalculatorFactory::get_calculator(
-          Render::GL::Detail::selection_ring_nation(input.nation_id), category);
+  auto const* calculator = Render::GL::FormationCalculatorFactory::get_calculator(
+      Render::GL::Detail::selection_ring_nation(input.nation_id), category);
   EXPECT_NE(calculator, nullptr);
 
   std::vector<Render::GL::SelectionRingPlacement> placements;
@@ -90,20 +87,15 @@ TEST(SelectionRingLayout, UnitYawRotatesFormationOffsets) {
   facing_sideways.rotation = QVector3D(0.0F, 90.0F, 0.0F);
 
   auto const forward = Render::GL::build_selection_ring_layout(facing_forward);
-  auto const sideways =
-      Render::GL::build_selection_ring_layout(facing_sideways);
+  auto const sideways = Render::GL::build_selection_ring_layout(facing_sideways);
 
   ASSERT_EQ(forward.size(), 2u);
   ASSERT_EQ(sideways.size(), 2u);
 
-  float const forward_x_extent =
-      std::abs(forward[0].world_x - forward[1].world_x);
-  float const forward_z_extent =
-      std::abs(forward[0].world_z - forward[1].world_z);
-  float const sideways_x_extent =
-      std::abs(sideways[0].world_x - sideways[1].world_x);
-  float const sideways_z_extent =
-      std::abs(sideways[0].world_z - sideways[1].world_z);
+  float const forward_x_extent = std::abs(forward[0].world_x - forward[1].world_x);
+  float const forward_z_extent = std::abs(forward[0].world_z - forward[1].world_z);
+  float const sideways_x_extent = std::abs(sideways[0].world_x - sideways[1].world_x);
+  float const sideways_z_extent = std::abs(sideways[0].world_z - sideways[1].world_z);
 
   EXPECT_GT(forward_x_extent, forward_z_extent);
   EXPECT_GT(sideways_z_extent, sideways_x_extent);
@@ -158,8 +150,7 @@ TEST(SelectionRingLayout, SwordsmanRingsFollowSameLayoutAsHumanoidFormation) {
   input.individuals_per_unit = 6;
   input.max_units_per_row = 3;
   input.formation_spacing =
-      Game::Units::TroopConfig::instance().get_formation_spacing(
-          input.spawn_type);
+      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
   input.seed = 0x12345678U;
   input.position = QVector3D(3.0F, 0.0F, -4.0F);
 
@@ -179,8 +170,7 @@ TEST(SelectionRingLayout, SpearmanRingsFollowSameLayoutAsHumanoidFormation) {
   input.individuals_per_unit = 6;
   input.max_units_per_row = 3;
   input.formation_spacing =
-      Game::Units::TroopConfig::instance().get_formation_spacing(
-          input.spawn_type);
+      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
   input.seed = 0x5A17B00BU;
   input.position = QVector3D(-2.0F, 0.0F, 6.0F);
 
@@ -194,15 +184,13 @@ TEST(SelectionRingLayout, SpearmanRingsFollowSameLayoutAsHumanoidFormation) {
   }
 }
 
-TEST(SelectionRingLayout,
-     BuilderConstructionRingsFollowSameLayoutAsHumanoidFormation) {
+TEST(SelectionRingLayout, BuilderConstructionRingsFollowSameLayoutAsHumanoidFormation) {
   Render::GL::SelectionRingLayoutInput input;
   input.spawn_type = Game::Units::SpawnType::Builder;
   input.individuals_per_unit = 8;
   input.max_units_per_row = 8;
   input.formation_spacing =
-      Game::Units::TroopConfig::instance().get_formation_spacing(
-          input.spawn_type);
+      Game::Units::TroopConfig::instance().get_formation_spacing(input.spawn_type);
   input.seed = 0x00C0FFEEU;
   input.position = QVector3D(1.0F, 0.0F, 2.0F);
   input.is_builder_constructing = true;

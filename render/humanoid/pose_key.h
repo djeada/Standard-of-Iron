@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../creature/pose_intent.h"
-
 #include <cstdint>
 #include <functional>
+
+#include "../creature/pose_intent.h"
 
 namespace Render::GL {
 
@@ -29,7 +29,7 @@ struct PoseKey {
   PoseStance stance = PoseStance::Neutral;
   std::uint16_t frame = 0;
 
-  [[nodiscard]] auto operator==(const PoseKey &o) const noexcept -> bool {
+  [[nodiscard]] auto operator==(const PoseKey& o) const noexcept -> bool {
     return variant_id == o.variant_id && anim == o.anim && stance == o.stance &&
            frame == o.frame;
   }
@@ -39,9 +39,9 @@ struct PoseKey {
 
 namespace std {
 
-template <> struct hash<::Render::GL::PoseKey> {
-  auto
-  operator()(const ::Render::GL::PoseKey &k) const noexcept -> std::size_t {
+template <>
+struct hash<::Render::GL::PoseKey> {
+  auto operator()(const ::Render::GL::PoseKey& k) const noexcept -> std::size_t {
     std::uint64_t packed = k.variant_id;
     packed = (packed << 8) | static_cast<std::uint64_t>(k.anim);
     packed = (packed << 8) | static_cast<std::uint64_t>(k.stance);
@@ -60,8 +60,8 @@ template <> struct hash<::Render::GL::PoseKey> {
 
 namespace Render::GL {
 
-[[nodiscard]] inline auto to_pose_key_anim_state(
-    Render::Creature::PoseIntent intent) noexcept -> AnimationState {
+[[nodiscard]] inline auto
+to_pose_key_anim_state(Render::Creature::PoseIntent intent) noexcept -> AnimationState {
   switch (intent) {
   case Render::Creature::PoseIntent::Walk:
     return AnimationState::Walk;

@@ -1,6 +1,7 @@
 #include "primitives.h"
-#include "gl/mesh.h"
+
 #include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -8,6 +9,8 @@
 #include <numbers>
 #include <unordered_map>
 #include <vector>
+
+#include "gl/mesh.h"
 
 namespace Render::GL {
 
@@ -58,8 +61,7 @@ auto create_unit_cylinder_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
   }
 
   int base_top = (int)v.size();
-  v.push_back(
-      {{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
+  v.push_back({{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
@@ -77,8 +79,7 @@ auto create_unit_cylinder_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
   }
 
   int base_bot = (int)v.size();
-  v.push_back(
-      {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
+  v.push_back({{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
@@ -98,9 +99,9 @@ auto create_unit_cylinder_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(v, idx);
 }
 
-auto create_unit_tapered_cylinder_mesh(
-    float anchor_radius_scale, float tail_radius_scale,
-    int radial_segments) -> std::unique_ptr<Mesh> {
+auto create_unit_tapered_cylinder_mesh(float anchor_radius_scale,
+                                       float tail_radius_scale,
+                                       int radial_segments) -> std::unique_ptr<Mesh> {
   const float half_h = k_half_scalar;
   const float anchor_radius = std::max(anchor_radius_scale, 0.001F);
   const float tail_radius = std::max(tail_radius_scale, 0.001F);
@@ -139,8 +140,7 @@ auto create_unit_tapered_cylinder_mesh(
   }
 
   int const base_anchor = static_cast<int>(v.size());
-  v.push_back(
-      {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
+  v.push_back({{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
@@ -158,8 +158,7 @@ auto create_unit_tapered_cylinder_mesh(
   }
 
   int const base_tail = static_cast<int>(v.size());
-  v.push_back(
-      {{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
+  v.push_back({{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
@@ -249,8 +248,7 @@ auto create_unit_cone_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
   }
 
   int base_center = (int)v.size();
-  v.push_back(
-      {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
+  v.push_back({{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   int const base_start = (int)v.size();
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
@@ -352,8 +350,7 @@ auto create_capsule_mesh(int radial_segments,
 }
 
 auto simple_hash(float seed) -> float {
-  float const x =
-      std::sin(seed * k_micro_noise_frequency) * k_micro_noise_scale;
+  float const x = std::sin(seed * k_micro_noise_frequency) * k_micro_noise_scale;
   return x - std::floor(x);
 }
 
@@ -442,9 +439,15 @@ auto create_unit_torso_mesh(int radial_segments,
   };
 
   const Key keys[] = {
-      {0.00F, {0.72F, 0.65F}}, {0.08F, {0.88F, 0.82F}}, {0.15F, {1.02F, 0.95F}},
-      {0.22F, {0.98F, 0.92F}}, {0.45F, {0.76F, 0.70F}}, {0.65F, {1.12F, 1.06F}},
-      {0.85F, {1.30F, 1.25F}}, {1.02F, {1.48F, 1.20F}}, {1.10F, {1.12F, 0.92F}},
+      {0.00F, {0.72F, 0.65F}},
+      {0.08F, {0.88F, 0.82F}},
+      {0.15F, {1.02F, 0.95F}},
+      {0.22F, {0.98F, 0.92F}},
+      {0.45F, {0.76F, 0.70F}},
+      {0.65F, {1.12F, 1.06F}},
+      {0.85F, {1.30F, 1.25F}},
+      {1.02F, {1.48F, 1.20F}},
+      {1.10F, {1.12F, 0.92F}},
   };
   constexpr int key_count = sizeof(keys) / sizeof(keys[0]);
 
@@ -493,28 +496,23 @@ auto create_unit_torso_mesh(int radial_segments,
 
   auto x_offset_at = [&](float profile_t) {
     float const forward =
-        k_xforward_amp *
-        smooth_band(profile_t, k_xforward_start, k_xforward_end);
+        k_xforward_amp * smooth_band(profile_t, k_xforward_start, k_xforward_end);
     float const backward =
-        k_xbackward_amp *
-        smooth_band(profile_t, k_xbackward_start, k_xbackward_end);
+        k_xbackward_amp * smooth_band(profile_t, k_xbackward_start, k_xbackward_end);
     return forward + backward;
   };
   auto z_offset_at = [&](float profile_t) {
     float const lordosis =
-        k_lordosis_amp *
-        smooth_band(profile_t, k_lordosis_start, k_lordosis_end);
+        k_lordosis_amp * smooth_band(profile_t, k_lordosis_start, k_lordosis_end);
     float const chest_fwd =
         k_chest_forward_amp *
         smooth_band(profile_t, k_chest_forward_start, k_chest_forward_end);
     float const neck_back =
-        k_neck_back_amp *
-        smooth_band(profile_t, k_neck_back_start, k_neck_back_end);
+        k_neck_back_amp * smooth_band(profile_t, k_neck_back_start, k_neck_back_end);
     return lordosis + chest_fwd + neck_back;
   };
   auto twist_at = [&](float profile_t) {
-    return k_twist_amplitude *
-           smooth_band(profile_t, k_twist_start, k_twist_end);
+    return k_twist_amplitude * smooth_band(profile_t, k_twist_start, k_twist_end);
   };
 
   auto theta_scale = [&](float profile_t, float ang) {
@@ -529,14 +527,12 @@ auto create_unit_torso_mesh(int radial_segments,
          smooth_band(profile_t, k_theta_sin_neg_start, k_theta_sin_neg_end) *
          std::max(0.0F, -sin_a);
     s += k_theta_cos_sq_amp *
-         smooth_band(profile_t, k_theta_cos_sq_start, k_theta_cos_sq_end) *
-         cos2;
+         smooth_band(profile_t, k_theta_cos_sq_start, k_theta_cos_sq_end) * cos2;
     s += k_theta_cos_sq_neg_amp *
-         smooth_band(profile_t, k_theta_cos_sq_neg_start,
-                     k_theta_cos_sq_neg_end) *
+         smooth_band(profile_t, k_theta_cos_sq_neg_start, k_theta_cos_sq_neg_end) *
          cos2;
-    s += k_theta_cos_amp *
-         smooth_band(profile_t, k_theta_cos_start, k_theta_cos_end) * cos_a;
+    s += k_theta_cos_amp * smooth_band(profile_t, k_theta_cos_start, k_theta_cos_end) *
+         cos_a;
 
     float const shoulder_band =
         smooth_band(profile_t, k_shoulder_bulge_start, k_shoulder_bulge_end);
@@ -592,16 +588,15 @@ auto create_unit_torso_mesh(int radial_segments,
     float const s_value =
         (t * k_micro_temporal_frequency) + (ang * k_micro_angular_frequency);
     px += (micro(s_value) - k_micro_center) * k_micro_jitter;
-    pz += (micro(s_value + k_micro_phase_offset) - k_micro_center) *
-          k_micro_jitter;
+    pz += (micro(s_value + k_micro_phase_offset) - k_micro_center) * k_micro_jitter;
 
     return {px, py, pz};
   };
 
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
-  v.reserve((radial_segments + 1) * (height_segments + 1) +
-            (radial_segments + 1) * 2 + 2);
+  v.reserve((radial_segments + 1) * (height_segments + 1) + (radial_segments + 1) * 2 +
+            2);
   idx.reserve(radial_segments * height_segments * k_indices_per_quad +
               radial_segments * k_indices_per_quad);
 
@@ -655,9 +650,8 @@ auto create_unit_torso_mesh(int radial_segments,
     float const t_top_s = invert_profile ? (1.0F - t_top) : t_top;
     QVector3D const c_top(x_offset_at(t_top_s), y_max, z_offset_at(t_top_s));
 
-    v.push_back({{c_top.x(), c_top.y(), c_top.z()},
-                 {0, 1, 0},
-                 {k_uv_center, k_uv_center}});
+    v.push_back(
+        {{c_top.x(), c_top.y(), c_top.z()}, {0, 1, 0}, {k_uv_center, k_uv_center}});
     for (int i = 0; i <= radial_segments; ++i) {
       float const u = float(i) / float(radial_segments);
       float const ang = u * k_two_pi;
@@ -681,9 +675,8 @@ auto create_unit_torso_mesh(int radial_segments,
 
     int const apex_idx = (int)v.size();
     QVector3D const apex(x_offset_at(ts_apex), apex_y, z_offset_at(ts_apex));
-    v.push_back({{apex.x(), apex.y(), apex.z()},
-                 {0, -1, 0},
-                 {k_uv_center, k_uv_center}});
+    v.push_back(
+        {{apex.x(), apex.y(), apex.z()}, {0, -1, 0}, {k_uv_center, k_uv_center}});
 
     for (int i = 0; i < radial_segments; ++i) {
       idx.push_back(apex_idx);
@@ -699,14 +692,14 @@ auto create_unit_torso_mesh(int radial_segments,
 
 namespace {
 const std::unique_ptr<Mesh> k_unit_cube_mesh = create_cube_mesh();
-const std::unique_ptr<Mesh> k_unit_sphere_mesh = create_unit_sphere_mesh(
-    k_default_latitude_segments, k_default_radial_segments);
+const std::unique_ptr<Mesh> k_unit_sphere_mesh =
+    create_unit_sphere_mesh(k_default_latitude_segments, k_default_radial_segments);
 const std::unique_ptr<Mesh> k_unit_cone_mesh =
     create_unit_cone_mesh(k_default_radial_segments);
-const std::unique_ptr<Mesh> k_unit_capsule_mesh = create_capsule_mesh(
-    k_default_radial_segments, k_default_capsule_height_segments);
-const std::unique_ptr<Mesh> k_unit_torso_mesh = create_unit_torso_mesh(
-    k_default_radial_segments, k_default_torso_height_segments);
+const std::unique_ptr<Mesh> k_unit_capsule_mesh =
+    create_capsule_mesh(k_default_radial_segments, k_default_capsule_height_segments);
+const std::unique_ptr<Mesh> k_unit_torso_mesh =
+    create_unit_torso_mesh(k_default_radial_segments, k_default_torso_height_segments);
 } // namespace
 
 namespace {
@@ -725,18 +718,24 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
     float z;
   };
   const P2D outline[8] = {
-      {sw, 0.0F}, {sw, -sl},  {hw, -sl},   {0.0F, -tl},
-      {-hw, -sl}, {-sw, -sl}, {-sw, 0.0F}, {0.0F, -nd},
+      {sw, 0.0F},
+      {sw, -sl},
+      {hw, -sl},
+      {0.0F, -tl},
+      {-hw, -sl},
+      {-sw, -sl},
+      {-sw, 0.0F},
+      {0.0F, -nd},
   };
   constexpr int N = 8;
 
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
 
-  auto push_top = [&](const P2D &p) {
+  auto push_top = [&](const P2D& p) {
     v.push_back({{p.x, hh, p.z}, {0.0F, 1.0F, 0.0F}, {0.5F + p.x, -p.z}});
   };
-  auto push_bot = [&](const P2D &p) {
+  auto push_bot = [&](const P2D& p) {
     v.push_back({{p.x, -hh, p.z}, {0.0F, -1.0F, 0.0F}, {0.5F + p.x, -p.z}});
   };
 
@@ -790,8 +789,8 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
 
   for (int i = 0; i < N; ++i) {
     int const next = (i + 1) % N;
-    const P2D &a = outline[i];
-    const P2D &b = outline[next];
+    const P2D& a = outline[i];
+    const P2D& b = outline[next];
 
     float const ex = b.x - a.x;
     float const ez = b.z - a.z;
@@ -818,11 +817,10 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
 } // namespace
 
 namespace {
-const std::unique_ptr<Mesh> k_orientation_arrow_mesh =
-    create_orientation_arrow_mesh();
+const std::unique_ptr<Mesh> k_orientation_arrow_mesh = create_orientation_arrow_mesh();
 }
 
-auto get_unit_cylinder(int radial_segments) -> Mesh * {
+auto get_unit_cylinder(int radial_segments) -> Mesh* {
   radial_segments = std::max(radial_segments, 3);
 
   static std::mutex cache_mutex;
@@ -837,8 +835,7 @@ auto get_unit_cylinder(int radial_segments) -> Mesh * {
   auto it = cylinder_meshes.find(radial_segments);
   if (it == cylinder_meshes.end()) {
     it = cylinder_meshes
-             .emplace(radial_segments,
-                      create_unit_cylinder_mesh(radial_segments))
+             .emplace(radial_segments, create_unit_cylinder_mesh(radial_segments))
              .first;
   }
   return it->second.get();
@@ -846,7 +843,7 @@ auto get_unit_cylinder(int radial_segments) -> Mesh * {
 
 auto get_unit_tapered_cylinder(float anchor_radius_scale,
                                float tail_radius_scale,
-                               int radial_segments) -> Mesh * {
+                               int radial_segments) -> Mesh* {
   radial_segments = std::max(radial_segments, 3);
   anchor_radius_scale = std::max(anchor_radius_scale, 0.001F);
   tail_radius_scale = std::max(tail_radius_scale, 0.001F);
@@ -859,47 +856,48 @@ auto get_unit_tapered_cylinder(float anchor_radius_scale,
                             static_cast<std::uint64_t>(radial_segments);
 
   static std::mutex cache_mutex;
-  static std::unordered_map<std::uint64_t, std::unique_ptr<Mesh>>
-      tapered_meshes;
+  static std::unordered_map<std::uint64_t, std::unique_ptr<Mesh>> tapered_meshes;
 
   std::lock_guard<std::mutex> lock(cache_mutex);
   auto it = tapered_meshes.find(key);
   if (it == tapered_meshes.end()) {
     it = tapered_meshes
-             .emplace(key, create_unit_tapered_cylinder_mesh(
-                               anchor_radius_scale, tail_radius_scale,
-                               radial_segments))
+             .emplace(key,
+                      create_unit_tapered_cylinder_mesh(
+                          anchor_radius_scale, tail_radius_scale, radial_segments))
              .first;
   }
   return it->second.get();
 }
 
-auto get_unit_cube() -> Mesh * { return k_unit_cube_mesh.get(); }
+auto get_unit_cube() -> Mesh* {
+  return k_unit_cube_mesh.get();
+}
 
-auto get_unit_sphere(int lat_segments, int lon_segments) -> Mesh * {
+auto get_unit_sphere(int lat_segments, int lon_segments) -> Mesh* {
   (void)lat_segments;
   (void)lon_segments;
   return k_unit_sphere_mesh.get();
 }
 
-auto get_unit_cone(int radial_segments) -> Mesh * {
+auto get_unit_cone(int radial_segments) -> Mesh* {
   (void)radial_segments;
   return k_unit_cone_mesh.get();
 }
 
-auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh * {
+auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh* {
   (void)radial_segments;
   (void)height_segments;
   return k_unit_capsule_mesh.get();
 }
 
-auto get_unit_torso(int radial_segments, int height_segments) -> Mesh * {
+auto get_unit_torso(int radial_segments, int height_segments) -> Mesh* {
   (void)radial_segments;
   (void)height_segments;
   return k_unit_torso_mesh.get();
 }
 
-auto get_orientation_arrow() -> Mesh * {
+auto get_orientation_arrow() -> Mesh* {
   return k_orientation_arrow_mesh.get();
 }
 

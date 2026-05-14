@@ -1,10 +1,12 @@
 #include "mode_indicator_pipeline.h"
+
+#include <QDebug>
+#include <QOpenGLContext>
+
 #include "../backend.h"
 #include "../mesh.h"
 #include "../shader_cache.h"
 #include "../state_scopes.h"
-#include <QDebug>
-#include <QOpenGLContext>
 
 namespace Render::GL::BackendPipelines {
 
@@ -16,12 +18,11 @@ void clear_gl_errors() {
 #endif
 }
 
-auto check_gl_error(const char *operation) -> bool {
+auto check_gl_error(const char* operation) -> bool {
 #ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
-    qWarning() << "ModeIndicatorPipeline GL error in" << operation << ":"
-               << err;
+    qWarning() << "ModeIndicatorPipeline GL error in" << operation << ":" << err;
     return false;
   }
 #else
@@ -84,11 +85,12 @@ auto ModeIndicatorPipeline::is_initialized() const -> bool {
   return m_indicator_shader != nullptr;
 }
 
-void ModeIndicatorPipeline::render_indicator(Mesh *mesh,
-                                             const QMatrix4x4 &model,
-                                             const QMatrix4x4 &view_proj,
-                                             const QVector3D &color,
-                                             float alpha, float time) {
+void ModeIndicatorPipeline::render_indicator(Mesh* mesh,
+                                             const QMatrix4x4& model,
+                                             const QMatrix4x4& view_proj,
+                                             const QVector3D& color,
+                                             float alpha,
+                                             float time) {
   if (!is_initialized() || mesh == nullptr) {
     return;
   }

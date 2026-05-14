@@ -1,4 +1,9 @@
 #include "swordsman.h"
+
+#include <qvectornd.h>
+
+#include <memory>
+
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
@@ -7,8 +12,6 @@
 #include "spawn_type.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
-#include <memory>
-#include <qvectornd.h>
 
 static inline auto team_color(int owner_id) -> QVector3D {
   switch (owner_id) {
@@ -27,30 +30,30 @@ static inline auto team_color(int owner_id) -> QVector3D {
 
 namespace Game::Units {
 
-Swordsman::Swordsman(Engine::Core::World &world)
-    : Unit(world, TroopType::Swordsman) {}
+Swordsman::Swordsman(Engine::Core::World& world)
+    : Unit(world, TroopType::Swordsman) {
+}
 
-auto Swordsman::Create(Engine::Core::World &world, const SpawnParams &params)
-    -> std::unique_ptr<Swordsman> {
+auto Swordsman::Create(Engine::Core::World& world,
+                       const SpawnParams& params) -> std::unique_ptr<Swordsman> {
   auto unit = std::unique_ptr<Swordsman>(new Swordsman(world));
   unit->init(params);
   return unit;
 }
 
-void Swordsman::init(const SpawnParams &params) {
+void Swordsman::init(const SpawnParams& params) {
 
-  auto *e = m_world->create_entity();
+  auto* e = m_world->create_entity();
   m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
   const auto troop_type =
       spawn_typeToTroopType(params.spawn_type).value_or(TroopType::Swordsman);
-  auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-      nation_id, troop_type);
+  auto profile =
+      Game::Systems::TroopProfileService::instance().get_profile(nation_id, troop_type);
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
-  m_t->position = {params.position.x(), params.position.y(),
-                   params.position.z()};
+  m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   float const scale = profile.visuals.render_scale;
   m_t->scale = {scale, scale, scale};
 
@@ -66,8 +69,8 @@ void Swordsman::init(const SpawnParams &params) {
   m_u->owner_id = params.player_id;
   m_u->vision_range = profile.combat.vision_range;
   m_u->nation_id = nation_id;
-  if (auto const *definition = commander_definition(troop_type)) {
-    auto *commander = e->add_component<Engine::Core::CommanderComponent>();
+  if (auto const* definition = commander_definition(troop_type)) {
+    auto* commander = e->add_component<Engine::Core::CommanderComponent>();
     if (commander != nullptr) {
       commander->commander_id = definition->id;
       commander->display_name = definition->display_name;
@@ -117,10 +120,9 @@ void Swordsman::init(const SpawnParams &params) {
   m_atk->melee_damage = profile.combat.melee_damage;
   m_atk->melee_cooldown = profile.combat.melee_cooldown;
 
-  m_atk->preferred_mode =
-      profile.combat.can_ranged
-          ? Engine::Core::AttackComponent::CombatMode::Auto
-          : Engine::Core::AttackComponent::CombatMode::Melee;
+  m_atk->preferred_mode = profile.combat.can_ranged
+                              ? Engine::Core::AttackComponent::CombatMode::Auto
+                              : Engine::Core::AttackComponent::CombatMode::Melee;
   m_atk->current_mode = profile.combat.can_ranged
                             ? Engine::Core::AttackComponent::CombatMode::Ranged
                             : Engine::Core::AttackComponent::CombatMode::Melee;

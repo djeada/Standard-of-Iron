@@ -1,13 +1,13 @@
 #include "carthage_shoulder_cover.h"
-#include "shoulder_cover_archetype.h"
-
-#include "../../humanoid/humanoid_specs.h"
-#include "../attachment_builder.h"
 
 #include <array>
 #include <cmath>
 #include <deque>
 #include <string>
+
+#include "../../humanoid/humanoid_specs.h"
+#include "../attachment_builder.h"
+#include "shoulder_cover_archetype.h"
 
 namespace Render::GL {
 
@@ -18,8 +18,7 @@ enum CarthageShoulderPaletteSlot : std::uint8_t {
   k_leather_dark_slot = 1U,
 };
 
-auto carthage_shoulder_cover_archetype(float outward_scale)
-    -> const RenderArchetype & {
+auto carthage_shoulder_cover_archetype(float outward_scale) -> const RenderArchetype& {
   struct CachedArchetype {
     int key{0};
     RenderArchetype archetype;
@@ -27,7 +26,7 @@ auto carthage_shoulder_cover_archetype(float outward_scale)
 
   static std::deque<CachedArchetype> cache;
   int const key = std::lround(outward_scale * 1000.0F);
-  for (const auto &entry : cache) {
+  for (const auto& entry : cache) {
     if (entry.key == key) {
       return entry.archetype;
     }
@@ -36,8 +35,7 @@ auto carthage_shoulder_cover_archetype(float outward_scale)
   using HP = HumanProportions;
 
   bool const is_infantry = outward_scale <= 1.1F;
-  float const outward_offset =
-      (is_infantry ? 0.0035F : 0.0065F) * outward_scale;
+  float const outward_offset = (is_infantry ? 0.0035F : 0.0065F) * outward_scale;
   float const inward_offset = (is_infantry ? 0.012F : 0.018F) * outward_scale;
   float const upper_y_offset = is_infantry ? 0.062F : 0.074F;
   QVector3D const anchor{-inward_offset, 0.0F, 0.0F};
@@ -50,21 +48,20 @@ auto carthage_shoulder_cover_archetype(float outward_scale)
 
   std::array<ShoulderCoverLobe, 3> const lobes{{
       {upper_center,
-       QVector3D(HP::UPPER_ARM_R * 1.75F, HP::UPPER_ARM_R * 0.38F,
-                 HP::UPPER_ARM_R * 1.55F),
+       QVector3D(
+           HP::UPPER_ARM_R * 1.75F, HP::UPPER_ARM_R * 0.38F, HP::UPPER_ARM_R * 1.55F),
        k_leather_base_slot},
       {lower_center,
-       QVector3D(HP::UPPER_ARM_R * 1.58F, HP::UPPER_ARM_R * 0.34F,
-                 HP::UPPER_ARM_R * 1.40F),
+       QVector3D(
+           HP::UPPER_ARM_R * 1.58F, HP::UPPER_ARM_R * 0.34F, HP::UPPER_ARM_R * 1.40F),
        k_leather_base_slot},
       {trim_center,
-       QVector3D(HP::UPPER_ARM_R * 1.42F, HP::UPPER_ARM_R * 0.18F,
-                 HP::UPPER_ARM_R * 1.25F),
+       QVector3D(
+           HP::UPPER_ARM_R * 1.42F, HP::UPPER_ARM_R * 0.18F, HP::UPPER_ARM_R * 1.25F),
        k_leather_dark_slot},
   }};
 
-  std::string const debug_name =
-      "carthage_shoulder_cover_" + std::to_string(key);
+  std::string const debug_name = "carthage_shoulder_cover_" + std::to_string(key);
   cache.push_back({key, build_shoulder_cover_archetype(debug_name, lobes)});
   return cache.back().archetype;
 }
@@ -76,40 +73,41 @@ auto carthage_shoulder_cover_palette() -> std::array<QVector3D, 2> {
 
 } // namespace
 
-void CarthageShoulderCoverRenderer::render(const DrawContext &ctx,
-                                           const BodyFrames &frames,
-                                           const HumanoidPalette &palette,
-                                           const HumanoidAnimationContext &anim,
-                                           EquipmentBatch &batch) {
+void CarthageShoulderCoverRenderer::render(const DrawContext& ctx,
+                                           const BodyFrames& frames,
+                                           const HumanoidPalette& palette,
+                                           const HumanoidAnimationContext& anim,
+                                           EquipmentBatch& batch) {
   submit(m_config, ctx, frames, palette, anim, batch);
 }
 
-void CarthageShoulderCoverRenderer::submit(
-    const CarthageShoulderCoverConfig &config, const DrawContext &ctx,
-    const BodyFrames &frames, const HumanoidPalette &palette,
-    const HumanoidAnimationContext &anim, EquipmentBatch &batch) {
+void CarthageShoulderCoverRenderer::submit(const CarthageShoulderCoverConfig& config,
+                                           const DrawContext& ctx,
+                                           const BodyFrames& frames,
+                                           const HumanoidPalette& palette,
+                                           const HumanoidAnimationContext& anim,
+                                           EquipmentBatch& batch) {
   (void)anim;
   (void)palette;
 
   auto const palette_colors = carthage_shoulder_cover_palette();
-  auto const &archetype =
-      carthage_shoulder_cover_archetype(config.outward_scale);
+  auto const& archetype = carthage_shoulder_cover_archetype(config.outward_scale);
   QVector3D const up = frames.torso.up;
   QVector3D const right = frames.torso.right;
 
-  append_shoulder_cover_archetype(batch, ctx, frames.shoulder_l.origin, -right,
-                                  up, archetype, palette_colors);
-  append_shoulder_cover_archetype(batch, ctx, frames.shoulder_r.origin, right,
-                                  up, archetype, palette_colors);
+  append_shoulder_cover_archetype(
+      batch, ctx, frames.shoulder_l.origin, -right, up, archetype, palette_colors);
+  append_shoulder_cover_archetype(
+      batch, ctx, frames.shoulder_r.origin, right, up, archetype, palette_colors);
 }
 
-auto carthage_shoulder_cover_archetype() -> const RenderArchetype & {
+auto carthage_shoulder_cover_archetype() -> const RenderArchetype& {
   return carthage_shoulder_cover_archetype(1.0F);
 }
 
-auto carthage_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
-                                              QVector3D *out, std::size_t max)
-    -> std::uint32_t {
+auto carthage_shoulder_cover_fill_role_colors(const HumanoidPalette& palette,
+                                              QVector3D* out,
+                                              std::size_t max) -> std::uint32_t {
   (void)palette;
   if (max < k_carthage_shoulder_cover_role_count) {
     return 0;
@@ -121,9 +119,9 @@ auto carthage_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
 }
 
 auto carthage_shoulder_cover_make_static_attachment(
-    std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
-    const QMatrix4x4 &bind_shoulder_frame)
-    -> Render::Creature::StaticAttachmentSpec {
+    std::uint16_t socket_bone_index,
+    std::uint8_t base_role_byte,
+    const QMatrix4x4& bind_shoulder_frame) -> Render::Creature::StaticAttachmentSpec {
   auto spec = Render::Equipment::build_static_attachment({
       .archetype = &carthage_shoulder_cover_archetype(),
       .socket_bone_index = socket_bone_index,

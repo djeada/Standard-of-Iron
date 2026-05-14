@@ -12,8 +12,12 @@ uniform int u_has_visibility;
 uniform float u_segment_visibility;
 
 const float PI = 3.14159265359;
-float saturate(float x) { return clamp(x, 0.0, 1.0); }
-vec3 saturate(vec3 v) { return clamp(v, vec3(0.0), vec3(1.0)); }
+float saturate(float x) {
+  return clamp(x, 0.0, 1.0);
+}
+vec3 saturate(vec3 v) {
+  return clamp(v, vec3(0.0), vec3(1.0));
+}
 mat2 rot(float a) {
   float c = cos(a), s = sin(a);
   return mat2(c, -s, s, c);
@@ -61,8 +65,7 @@ float ggx_spec(vec3 N, vec3 V, vec3 L, float rough, float F0) {
   float D = a2 / (PI * denom * denom);
   float k = (a + 1.0);
   k = (k * k) / 8.0;
-  float Gv = NdotV / (NdotV * (1.0 - k) + k),
-        Gl = NdotL / (NdotL * (1.0 - k) + k);
+  float Gv = NdotV / (NdotV * (1.0 - k) + k), Gl = NdotL / (NdotL * (1.0 - k) + k);
   float F = fresnel_schlick(VdotH, F0);
   return (D * Gv * Gl * F) / max(4.0 * NdotV * NdotL, 0.001);
 }
@@ -132,8 +135,7 @@ void main() {
   float shallow = saturate(0.35 + 0.35 * (fbm(uv * 0.6) * (1.0 - calm)));
 
   vec3 absorb = vec3(0.90, 0.45, 0.12);
-  float thickness =
-      mix(0.6, 3.5, 1.0 - shallow) * (0.35 + pow(1.0 - NdotV, 0.7));
+  float thickness = mix(0.6, 3.5, 1.0 - shallow) * (0.35 + pow(1.0 - NdotV, 0.7));
   vec3 trans_base = mix(deep_water, shallow_water, shallow);
   vec3 transmission = trans_base * exp(-absorb * thickness);
 
@@ -162,8 +164,7 @@ void main() {
   color += vec3(0.03, 0.06, 0.12) * pow(1.0 - NdotV, 3.0);
 
   float visibility_factor = 1.0;
-  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 &&
-      u_visibility_size.y > 0.0) {
+  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
     float tile_size = max(u_visibility_tile_size, 0.0001);
     vec2 grid = vec2(world_pos.x / tile_size, world_pos.z / tile_size);
     grid += (u_visibility_size * 0.5) - vec2(0.5);

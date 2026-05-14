@@ -8,8 +8,7 @@ Item {
     property var gameView
     property var mainWindowRef
     property var renderAreaRef
-    property var pressed_keys: ({
-    })
+    property var pressed_keys: ({})
 
     function begin_pan_key(e) {
         if (!e.isAutoRepeat && !pressed_keys[e.key]) {
@@ -23,10 +22,8 @@ Item {
         pressed_keys = ({});
         if (keyPanTimer.running)
             keyPanTimer.stop();
-
         if (typeof renderAreaRef !== 'undefined')
             renderAreaRef.key_pan_count = 0;
-
         if (typeof mainWindowRef !== 'undefined' && typeof renderAreaRef !== 'undefined' && !renderAreaRef.mouse_pan_active)
             mainWindowRef.edge_scroll_disabled = false;
     }
@@ -34,25 +31,20 @@ Item {
     function ensure_pan_timer_running() {
         if (!keyPanTimer.running)
             keyPanTimer.start();
-
     }
 
     function handle_key_pressed(event) {
         if (!root.active)
-            return ;
-
+            return;
         if (typeof root.game === 'undefined')
-            return ;
-
+            return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             reset_pan_keys();
             if (root.game.toggle_commander_control_mode)
                 root.game.toggle_commander_control_mode();
-
             event.accepted = true;
-            return ;
+            return;
         }
-
         var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
         var inputStep = (event.modifiers & Qt.ShiftModifier) ? 2 : 1;
         var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
@@ -74,7 +66,6 @@ Item {
             if (root.game.has_units_selected) {
                 if (root.game.on_stop_command)
                     root.game.on_stop_command();
-
                 event.accepted = true;
             }
             break;
@@ -133,7 +124,6 @@ Item {
         case Qt.Key_X:
             if (root.game.select_all_troops)
                 root.game.select_all_troops();
-
             event.accepted = true;
             break;
         case Qt.Key_P:
@@ -159,8 +149,7 @@ Item {
 
     function handle_key_released(event) {
         if (!root.active)
-            return ;
-
+            return;
         var movementKeys = [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right];
         if (movementKeys.indexOf(event.key) !== -1) {
             if (pressed_keys[event.key]) {
@@ -177,16 +166,13 @@ Item {
             if (!anyHeld) {
                 if (keyPanTimer.running)
                     keyPanTimer.stop();
-
                 if (renderAreaRef.key_pan_count === 0 && !renderAreaRef.mouse_pan_active)
                     mainWindowRef.edge_scroll_disabled = false;
-
             }
         }
         if (event.key === Qt.Key_Shift) {
             if (renderAreaRef.key_pan_count === 0 && !renderAreaRef.mouse_pan_active)
                 mainWindowRef.edge_scroll_disabled = false;
-
         }
     }
 
@@ -197,7 +183,6 @@ Item {
     Component.onCompleted: {
         if (active && typeof root.gameView !== 'undefined')
             root.gameView.forceActiveFocus();
-
     }
     onActiveChanged: {
         if (active) {
@@ -206,14 +191,13 @@ Item {
         } else {
             reset_pan_keys();
         }
-
     }
 
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         root.handle_key_pressed(event);
     }
 
-    Keys.onReleased: function(event) {
+    Keys.onReleased: function (event) {
         root.handle_key_released(event);
     }
 
@@ -225,26 +209,20 @@ Item {
         running: false
         onTriggered: {
             if (typeof root.game === 'undefined')
-                return ;
-
+                return;
             var step = (Qt.inputModifiers & Qt.ShiftModifier) ? 2 : 1;
             var dx = 0;
             var dz = 0;
             if (pressed_keys[Qt.Key_Up])
                 dz += step;
-
             if (pressed_keys[Qt.Key_Down])
                 dz -= step;
-
             if (pressed_keys[Qt.Key_Left])
                 dx -= step;
-
             if (pressed_keys[Qt.Key_Right])
                 dx += step;
-
             if (dx !== 0 || dz !== 0)
                 root.game.camera_move(dx, dz);
-
         }
     }
 }

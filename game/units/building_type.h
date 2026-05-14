@@ -1,12 +1,17 @@
 #pragma once
 
 #include <QString>
+
 #include <optional>
 #include <string>
 
 namespace Game::Units {
 
-enum class BuildingType : std::uint8_t { Barracks, DefenseTower, Home };
+enum class BuildingType : std::uint8_t {
+  Barracks,
+  DefenseTower,
+  Home
+};
 
 inline auto building_type_to_q_string(BuildingType type) -> QString {
   switch (type) {
@@ -25,8 +30,7 @@ inline auto building_type_to_string(BuildingType type) -> std::string {
   return building_type_to_q_string(type).toStdString();
 }
 
-inline auto try_parse_building_type(const QString &value,
-                                    BuildingType &out) -> bool {
+inline auto try_parse_building_type(const QString& value, BuildingType& out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("barracks")) {
     out = BuildingType::Barracks;
@@ -43,8 +47,8 @@ inline auto try_parse_building_type(const QString &value,
   return false;
 }
 
-inline auto building_type_from_string(const std::string &str)
-    -> std::optional<BuildingType> {
+inline auto
+building_type_from_string(const std::string& str) -> std::optional<BuildingType> {
   BuildingType result;
   if (try_parse_building_type(QString::fromStdString(str), result)) {
     return result;

@@ -9,8 +9,8 @@ class AttackComponent;
 
 namespace Game::Systems::Combat {
 
-void update_combat_mode(Engine::Core::Entity *attacker,
-                        Engine::Core::World *world,
-                        Engine::Core::AttackComponent *attack_comp);
+void update_combat_mode(Engine::Core::Entity* attacker,
+                        Engine::Core::World* world,
+                        Engine::Core::AttackComponent* attack_comp);
 
 }

@@ -7,7 +7,7 @@
 namespace Render::GL::Platform {
 
 inline auto supports_persistent_mapping() -> bool {
-  auto *ctx = QOpenGLContext::currentContext();
+  auto* ctx = QOpenGLContext::currentContext();
   if (ctx == nullptr) {
     return false;
   }
@@ -20,21 +20,21 @@ inline auto supports_persistent_mapping() -> bool {
     return true;
   }
 
-  const auto extensions = QString::fromLatin1(reinterpret_cast<const char *>(
-      ctx->extraFunctions()->glGetString(GL_EXTENSIONS)));
+  const auto extensions = QString::fromLatin1(
+      reinterpret_cast<const char*>(ctx->extraFunctions()->glGetString(GL_EXTENSIONS)));
   return extensions.contains("GL_ARB_buffer_storage");
 }
 
-inline auto get_buffer_storage_function() -> void * {
-  auto *ctx = QOpenGLContext::currentContext();
+inline auto get_buffer_storage_function() -> void* {
+  auto* ctx = QOpenGLContext::currentContext();
   if (ctx == nullptr) {
     return nullptr;
   }
 
-  void *func = reinterpret_cast<void *>(ctx->getProcAddress("glBufferStorage"));
+  void* func = reinterpret_cast<void*>(ctx->getProcAddress("glBufferStorage"));
 
   if (func == nullptr) {
-    func = reinterpret_cast<void *>(ctx->getProcAddress("glBufferStorageARB"));
+    func = reinterpret_cast<void*>(ctx->getProcAddress("glBufferStorageARB"));
   }
 
 #ifdef Q_OS_WIN
@@ -66,13 +66,15 @@ inline auto get_buffer_storage_function() -> void * {
 
 class BufferStorageHelper {
 public:
-  enum class Mode { Persistent, Fallback };
+  enum class Mode {
+    Persistent,
+    Fallback
+  };
 
-  static auto create_buffer(GLuint buffer, GLsizeiptr size,
-                            Mode *out_mode) -> bool {
+  static auto create_buffer(GLuint buffer, GLsizeiptr size, Mode* out_mode) -> bool {
     if (supports_persistent_mapping()) {
       typedef void(QOPENGLF_APIENTRYP type_glBufferStorage)(
-          GLenum target, GLsizeiptr size, const void *data, GLbitfield flags);
+          GLenum target, GLsizeiptr size, const void* data, GLbitfield flags);
 
       auto gl_buffer_storage =
           reinterpret_cast<type_glBufferStorage>(get_buffer_storage_function());
@@ -82,8 +84,7 @@ public:
         const GLbitfield map_flags =
             GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 
-        gl_buffer_storage(GL_ARRAY_BUFFER, size, nullptr,
-                          storage_flags | map_flags);
+        gl_buffer_storage(GL_ARRAY_BUFFER, size, nullptr, storage_flags | map_flags);
 
         GLenum const err =
             QOpenGLContext::currentContext()->extraFunctions()->glGetError();
@@ -93,8 +94,7 @@ public:
           }
           return true;
         }
-        qWarning() << "BufferStorageHelper: glBufferStorage failed with error:"
-                   << err;
+        qWarning() << "BufferStorageHelper: glBufferStorage failed with error:" << err;
       }
     }
 
@@ -108,18 +108,17 @@ public:
     return true;
   }
 
-  static auto map_buffer(GLsizeiptr size, Mode mode) -> void * {
-    auto *gl = QOpenGLContext::currentContext()->extraFunctions();
+  static auto map_buffer(GLsizeiptr size, Mode mode) -> void* {
+    auto* gl = QOpenGLContext::currentContext()->extraFunctions();
 
     if (mode == Mode::Persistent) {
       const GLbitfield map_flags =
           GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-      void *ptr = gl->glMapBufferRange(GL_ARRAY_BUFFER, 0, size, map_flags);
+      void* ptr = gl->glMapBufferRange(GL_ARRAY_BUFFER, 0, size, map_flags);
       if (ptr != nullptr) {
         return ptr;
       }
-      qWarning()
-          << "BufferStorageHelper: Persistent mapping failed, falling back";
+      qWarning() << "BufferStorageHelper: Persistent mapping failed, falling back";
     }
 
     return gl->glMapBufferRange(GL_ARRAY_BUFFER, 0, size, GL_MAP_WRITE_BIT);

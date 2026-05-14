@@ -10,10 +10,10 @@ class Camera;
 namespace Game::Map {
 
 struct Environment {
-  static void apply(const MapDefinition &def, Render::GL::Renderer &renderer,
-                    Render::GL::Camera &camera);
-  static void apply_default(Render::GL::Renderer &renderer,
-                            Render::GL::Camera &camera);
+  static void apply(const MapDefinition& def,
+                    Render::GL::Renderer& renderer,
+                    Render::GL::Camera& camera);
+  static void apply_default(Render::GL::Renderer& renderer, Render::GL::Camera& camera);
 };
 
 } // namespace Game::Map

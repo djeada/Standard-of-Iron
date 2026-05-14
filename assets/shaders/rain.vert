@@ -48,21 +48,18 @@ void main() {
     pos.y += AREA_HEIGHT;
   }
 
-  float wind_factor =
-      (u_weather_type == 1) ? SNOW_WIND_FACTOR : RAIN_WIND_FACTOR;
+  float wind_factor = (u_weather_type == 1) ? SNOW_WIND_FACTOR : RAIN_WIND_FACTOR;
   float height_factor = (AREA_HEIGHT - pos.y) / AREA_HEIGHT;
 
   pos.x += u_wind.x * height_factor * wind_factor * (1.0 + u_wind_strength);
   pos.z += u_wind.z * height_factor * wind_factor * (1.0 + u_wind_strength);
 
   if (u_weather_type == 1) {
-    float drift =
-        sin(u_time * SNOW_DRIFT_FREQ_X + a_position.x * SNOW_DRIFT_SCALE_X) *
-        SNOW_DRIFT_AMPLITUDE_X;
+    float drift = sin(u_time * SNOW_DRIFT_FREQ_X + a_position.x * SNOW_DRIFT_SCALE_X) *
+                  SNOW_DRIFT_AMPLITUDE_X;
     pos.x += drift;
-    pos.z +=
-        cos(u_time * SNOW_DRIFT_FREQ_Z + a_position.z * SNOW_DRIFT_SCALE_X) *
-        SNOW_DRIFT_AMPLITUDE_Z;
+    pos.z += cos(u_time * SNOW_DRIFT_FREQ_Z + a_position.z * SNOW_DRIFT_SCALE_X) *
+             SNOW_DRIFT_AMPLITUDE_Z;
 
     gl_PointSize = SNOW_POINT_SIZE;
 

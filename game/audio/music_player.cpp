@@ -1,12 +1,10 @@
 #include "music_player.h"
-#include "audio_constants.h"
-#include "miniaudio_backend.h"
+
 #include <QCoreApplication>
 #include <QFileInfo>
 #include <QMetaObject>
 #include <QTimer>
 #include <QtGlobal>
-#include <algorithm>
 #include <qcoreapplication.h>
 #include <qfileinfo.h>
 #include <qglobal.h>
@@ -15,24 +13,33 @@
 #include <qobject.h>
 #include <qobjectdefs.h>
 #include <qthread.h>
+
+#include <algorithm>
 #include <string>
+
+#include "audio_constants.h"
+#include "miniaudio_backend.h"
 
 using namespace Game::Audio;
 
-static inline void require_gui_thread(const char *where) {
+static inline void require_gui_thread(const char* where) {
   if ((QCoreApplication::instance() == nullptr) ||
       QThread::currentThread() != QCoreApplication::instance()->thread()) {
     qFatal("%s must be called on the GUI thread", where);
   }
 }
 
-auto MusicPlayer::get_instance() -> MusicPlayer & {
+auto MusicPlayer::get_instance() -> MusicPlayer& {
   static MusicPlayer instance;
   return instance;
 }
 
-MusicPlayer::MusicPlayer() : QObject(nullptr) {}
-MusicPlayer::~MusicPlayer() { shutdown(); }
+MusicPlayer::MusicPlayer()
+    : QObject(nullptr) {
+}
+MusicPlayer::~MusicPlayer() {
+  shutdown();
+}
 
 auto MusicPlayer::initialize(int music_channels) -> bool {
   static constexpr int min_channels = 1;
@@ -58,8 +65,7 @@ auto MusicPlayer::initialize(int music_channels) -> bool {
   }
 
   m_initialized = true;
-  qInfo() << "MusicPlayer initialized (miniaudio backend) channels:"
-          << m_channel_count;
+  qInfo() << "MusicPlayer initialized (miniaudio backend) channels:" << m_channel_count;
   return true;
 }
 
@@ -86,8 +92,8 @@ void MusicPlayer::shutdown() {
   m_initialized = false;
 }
 
-void MusicPlayer::register_track(const std::string &track_id,
-                                 const std::string &file_path) {
+void MusicPlayer::register_track(const std::string& track_id,
+                                 const std::string& file_path) {
 
   if ((QCoreApplication::instance() != nullptr) &&
       QThread::currentThread() != QCoreApplication::instance()->thread()) {
@@ -101,9 +107,8 @@ void MusicPlayer::register_track(const std::string &track_id,
 
   QFileInfo const fi(QString::fromStdString(file_path));
   if (!fi.exists()) {
-    qWarning() << "MusicPlayer: Missing asset"
-               << QString::fromStdString(track_id) << "->"
-               << fi.absoluteFilePath();
+    qWarning() << "MusicPlayer: Missing asset" << QString::fromStdString(track_id)
+               << "->" << fi.absoluteFilePath();
     return;
   }
   m_tracks[track_id] = fi.absoluteFilePath();
@@ -111,28 +116,31 @@ void MusicPlayer::register_track(const std::string &track_id,
   if (m_backend != nullptr) {
     if (!m_backend->predecode(QString::fromStdString(track_id),
                               fi.absoluteFilePath())) {
-      qWarning() << "MusicPlayer: predecode failed for"
-                 << fi.absoluteFilePath();
+      qWarning() << "MusicPlayer: predecode failed for" << fi.absoluteFilePath();
     } else {
       qDebug() << "MusicPlayer: predecoded" << fi.absoluteFilePath();
     }
   }
 }
 
-void MusicPlayer::play(const std::string &id, float v, bool loop) {
+void MusicPlayer::play(const std::string& id, float v, bool loop) {
   play(id, v, loop, m_default_channel, AudioConstants::DEFAULT_FADE_IN_MS);
 }
 void MusicPlayer::stop() {
   stop(m_default_channel, AudioConstants::DEFAULT_FADE_OUT_MS);
 }
-void MusicPlayer::pause() { pause(m_default_channel); }
-void MusicPlayer::resume() { resume(m_default_channel); }
+void MusicPlayer::pause() {
+  pause(m_default_channel);
+}
+void MusicPlayer::resume() {
+  resume(m_default_channel);
+}
 void MusicPlayer::set_volume(float v) {
   set_volume(m_default_channel, v, AudioConstants::NO_FADE_MS);
 }
 
-auto MusicPlayer::play(const std::string &id, float vol, bool loop, int channel,
-                       int fade_ms) -> int {
+auto MusicPlayer::play(
+    const std::string& id, float vol, bool loop, int channel, int fade_ms) -> int {
   if (!m_initialized || (m_backend == nullptr)) {
     qWarning() << "MusicPlayer not initialized";
     return -1;
@@ -150,8 +158,8 @@ auto MusicPlayer::play(const std::string &id, float vol, bool loop, int channel,
         Qt::BlockingQueuedConnection);
     return result;
   }
-  int const ch = channel < 0 ? find_free_channel()
-                             : std::min(channel, m_channel_count - 1);
+  int const ch =
+      channel < 0 ? find_free_channel() : std::min(channel, m_channel_count - 1);
   play_gui(id, vol, loop, ch, fade_ms);
   return ch;
 }
@@ -162,8 +170,7 @@ void MusicPlayer::stop(int ch, int fade_ms) {
   }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
-        this, [this, ch, fade_ms]() { stop_gui(ch, fade_ms); },
-        Qt::QueuedConnection);
+        this, [this, ch, fade_ms]() { stop_gui(ch, fade_ms); }, Qt::QueuedConnection);
     return;
   }
   stop_gui(ch, fade_ms);
@@ -196,7 +203,8 @@ void MusicPlayer::set_volume(int ch, float v, int fade_ms) {
   }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
-        this, [this, ch, v, fade_ms]() { setVolume_gui(ch, v, fade_ms); },
+        this,
+        [this, ch, v, fade_ms]() { setVolume_gui(ch, v, fade_ms); },
         Qt::QueuedConnection);
     return;
   }
@@ -208,8 +216,7 @@ void MusicPlayer::stop_all(int fade_ms) {
   }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
-        this, [this, fade_ms]() { stopAll_gui(fade_ms); },
-        Qt::QueuedConnection);
+        this, [this, fade_ms]() { stopAll_gui(fade_ms); }, Qt::QueuedConnection);
     return;
   }
   stopAll_gui(fade_ms);
@@ -220,7 +227,8 @@ void MusicPlayer::set_master_volume(float v, int fade_ms) {
   }
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
-        this, [this, v, fade_ms]() { setMasterVolume_gui(v, fade_ms); },
+        this,
+        [this, v, fade_ms]() { setMasterVolume_gui(v, fade_ms); },
         Qt::QueuedConnection);
     return;
   }
@@ -234,7 +242,7 @@ auto MusicPlayer::is_playing(int ch) const -> bool {
   return (m_backend != nullptr) && m_backend->channel_playing(ch);
 }
 
-void MusicPlayer::ensure_on_gui_thread(const char *where) {
+void MusicPlayer::ensure_on_gui_thread(const char* where) {
   require_gui_thread(where);
 }
 auto MusicPlayer::find_free_channel() const -> int {
@@ -249,8 +257,8 @@ auto MusicPlayer::find_free_channel() const -> int {
   return 0;
 }
 
-void MusicPlayer::play_gui(const std::string &id, float vol, bool loop, int ch,
-                           int fade_ms) {
+void MusicPlayer::play_gui(
+    const std::string& id, float vol, bool loop, int ch, int fade_ms) {
   if (m_backend == nullptr) {
     return;
   }
@@ -264,12 +272,18 @@ void MusicPlayer::play_gui(const std::string &id, float vol, bool loop, int ch,
 void MusicPlayer::stop_gui(int ch, int fade_ms) {
   m_backend->stop(ch, fade_ms);
 }
-void MusicPlayer::pause_gui(int ch) { m_backend->pause(ch); }
-void MusicPlayer::resume_gui(int ch) { m_backend->resume(ch); }
+void MusicPlayer::pause_gui(int ch) {
+  m_backend->pause(ch);
+}
+void MusicPlayer::resume_gui(int ch) {
+  m_backend->resume(ch);
+}
 void MusicPlayer::setVolume_gui(int ch, float v, int fade_ms) {
   m_backend->set_volume(ch, v, fade_ms);
 }
 void MusicPlayer::setMasterVolume_gui(float v, int fade_ms) {
   m_backend->set_master_volume(v, fade_ms);
 }
-void MusicPlayer::stopAll_gui(int fade_ms) { m_backend->stop_all(fade_ms); }
+void MusicPlayer::stopAll_gui(int fade_ms) {
+  m_backend->stop_all(fade_ms);
+}

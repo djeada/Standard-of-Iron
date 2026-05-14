@@ -1,7 +1,8 @@
 #include "spearman_style.h"
-#include "spearman_renderer.h"
 
 #include <QVector3D>
+
+#include "spearman_renderer.h"
 
 namespace {
 constexpr QVector3D k_legionary_spear_shaft{0.46F, 0.28F, 0.14F};

@@ -1,11 +1,3 @@
-#include "render/creature/spec.h"
-#include "render/elephant/dimensions.h"
-#include "render/elephant/elephant_spec.h"
-#include "render/horse/dimensions.h"
-#include "render/horse/horse_spec.h"
-#include "render/rigged_mesh_bake.h"
-#include "render/software/software_rasterizer.h"
-
 #include <QFont>
 #include <QGuiApplication>
 #include <QImage>
@@ -29,6 +21,14 @@
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "render/creature/spec.h"
+#include "render/elephant/dimensions.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/horse/dimensions.h"
+#include "render/horse/horse_spec.h"
+#include "render/rigged_mesh_bake.h"
+#include "render/software/software_rasterizer.h"
 
 namespace fs = std::filesystem;
 
@@ -85,7 +85,7 @@ struct Bounds {
                 std::numeric_limits<float>::lowest(),
                 std::numeric_limits<float>::lowest()};
 
-  void include(const QVector3D &p) {
+  void include(const QVector3D& p) {
     min.setX(std::min(min.x(), p.x()));
     min.setY(std::min(min.y(), p.y()));
     min.setZ(std::min(min.z(), p.z()));
@@ -105,12 +105,11 @@ struct ViewSpec {
 };
 
 void print_usage() {
-  std::cerr
-      << "usage:\n"
-      << "  mesh_preview <horse|elephant> [output_dir] "
-         "[full|torso|legs|neck_head]\n"
-      << "  mesh_preview stl <path> [output_dir] [full|torso|legs|neck_head]\n"
-      << "  mesh_preview obj <path> [output_dir] [full|torso|legs|neck_head]\n";
+  std::cerr << "usage:\n"
+            << "  mesh_preview <horse|elephant> [output_dir] "
+               "[full|torso|legs|neck_head]\n"
+            << "  mesh_preview stl <path> [output_dir] [full|torso|legs|neck_head]\n"
+            << "  mesh_preview obj <path> [output_dir] [full|torso|legs|neck_head]\n";
 }
 
 [[nodiscard]] auto species_name(Species species) -> std::string_view;
@@ -168,7 +167,7 @@ auto parse_part_focus(std::string_view value) -> std::optional<PartFocus> {
   return prefix;
 }
 
-auto parse_cli(int argc, char **argv) -> CliOptions {
+auto parse_cli(int argc, char** argv) -> CliOptions {
   if (argc < 2 || argc > 5) {
     throw std::runtime_error("invalid argument count");
   }
@@ -184,8 +183,7 @@ auto parse_cli(int argc, char **argv) -> CliOptions {
     int index = 3;
     if (index < argc) {
       if (index + 1 == argc) {
-        if (auto const focus = parse_part_focus(argv[index]);
-            focus.has_value()) {
+        if (auto const focus = parse_part_focus(argv[index]); focus.has_value()) {
           options.focus = *focus;
         } else {
           options.out_dir = fs::path(argv[index]);
@@ -238,7 +236,7 @@ auto parse_cli(int argc, char **argv) -> CliOptions {
   return "unknown";
 }
 
-[[nodiscard]] auto species_spec(Species species) -> const CreatureSpec & {
+[[nodiscard]] auto species_spec(Species species) -> const CreatureSpec& {
   switch (species) {
   case Species::Horse:
     return Render::Horse::horse_creature_spec();
@@ -259,8 +257,7 @@ species_bind_palette(Species species) -> std::span<const QMatrix4x4> {
   return {};
 }
 
-[[nodiscard]] auto
-species_role_colors(Species species) -> std::vector<QVector3D> {
+[[nodiscard]] auto species_role_colors(Species species) -> std::vector<QVector3D> {
   switch (species) {
   case Species::Horse: {
     Render::GL::HorseVariant const variant = Render::GL::make_horse_variant(
@@ -276,9 +273,8 @@ species_role_colors(Species species) -> std::vector<QVector3D> {
     return {roles.begin(), roles.end()};
   }
   case Species::Elephant: {
-    Render::GL::ElephantVariant const variant =
-        Render::GL::make_elephant_variant(0U, QVector3D(0.68F, 0.28F, 0.20F),
-                                          QVector3D(0.78F, 0.70F, 0.42F));
+    Render::GL::ElephantVariant const variant = Render::GL::make_elephant_variant(
+        0U, QVector3D(0.68F, 0.28F, 0.20F), QVector3D(0.78F, 0.70F, 0.42F));
     std::array<QVector3D, Render::Elephant::k_elephant_role_count> roles{};
     Render::Elephant::fill_elephant_role_colors(variant, roles);
     roles[0] = QVector3D(0.74F, 0.74F, 0.70F);
@@ -290,23 +286,23 @@ species_role_colors(Species species) -> std::vector<QVector3D> {
   return {};
 }
 
-auto rest_position(const RiggedVertex &vertex) -> QVector3D {
-  return QVector3D(vertex.position_bone_local[0], vertex.position_bone_local[1],
+auto rest_position(const RiggedVertex& vertex) -> QVector3D {
+  return QVector3D(vertex.position_bone_local[0],
+                   vertex.position_bone_local[1],
                    vertex.position_bone_local[2]);
 }
 
-auto collect_world_positions(const BakedRiggedMeshCpu &baked)
+auto collect_world_positions(const BakedRiggedMeshCpu& baked)
     -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
   positions.reserve(baked.vertices.size());
-  for (auto const &vertex : baked.vertices) {
+  for (auto const& vertex : baked.vertices) {
     positions.push_back(rest_position(vertex));
   }
   return positions;
 }
 
-auto normalized_component(float value, float min_value,
-                          float max_value) -> float {
+auto normalized_component(float value, float min_value, float max_value) -> float {
   float const span = max_value - min_value;
   if (span <= 1.0e-6F) {
     return 0.5F;
@@ -314,17 +310,17 @@ auto normalized_component(float value, float min_value,
   return (value - min_value) / span;
 }
 
-auto triangle_matches_focus(const QVector3D &a, const QVector3D &b,
-                            const QVector3D &c, const Bounds &bounds,
+auto triangle_matches_focus(const QVector3D& a,
+                            const QVector3D& b,
+                            const QVector3D& c,
+                            const Bounds& bounds,
                             PartFocus focus) -> bool {
   if (focus == PartFocus::Full) {
     return true;
   }
   QVector3D const centroid = (a + b + c) / 3.0F;
-  float const ny =
-      normalized_component(centroid.y(), bounds.min.y(), bounds.max.y());
-  float const nz =
-      normalized_component(centroid.z(), bounds.min.z(), bounds.max.z());
+  float const ny = normalized_component(centroid.y(), bounds.min.y(), bounds.max.y());
+  float const nz = normalized_component(centroid.z(), bounds.min.z(), bounds.max.z());
   switch (focus) {
   case PartFocus::Legs:
     return ny <= 0.42F;
@@ -338,9 +334,9 @@ auto triangle_matches_focus(const QVector3D &a, const QVector3D &b,
   }
 }
 
-auto collect_bounds(const std::vector<QVector3D> &positions) -> Bounds {
+auto collect_bounds(const std::vector<QVector3D>& positions) -> Bounds {
   Bounds bounds;
-  for (auto const &position : positions) {
+  for (auto const& position : positions) {
     bounds.include(position);
   }
   return bounds;
@@ -352,20 +348,19 @@ auto filter_indices_for_focus(std::span<const QVector3D> positions,
   if (focus == PartFocus::Full) {
     return {indices.begin(), indices.end()};
   }
-  Bounds const full_bounds = collect_bounds(
-      std::vector<QVector3D>(positions.begin(), positions.end()));
+  Bounds const full_bounds =
+      collect_bounds(std::vector<QVector3D>(positions.begin(), positions.end()));
   std::vector<std::uint32_t> filtered;
   filtered.reserve(indices.size());
   for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
     std::uint32_t const ia = indices[i];
     std::uint32_t const ib = indices[i + 1];
     std::uint32_t const ic = indices[i + 2];
-    if (ia >= positions.size() || ib >= positions.size() ||
-        ic >= positions.size()) {
+    if (ia >= positions.size() || ib >= positions.size() || ic >= positions.size()) {
       continue;
     }
-    if (!triangle_matches_focus(positions[ia], positions[ib], positions[ic],
-                                full_bounds, focus)) {
+    if (!triangle_matches_focus(
+            positions[ia], positions[ib], positions[ic], full_bounds, focus)) {
       continue;
     }
     filtered.insert(filtered.end(), {ia, ib, ic});
@@ -374,8 +369,7 @@ auto filter_indices_for_focus(std::span<const QVector3D> positions,
 }
 
 auto collect_bounds_from_indices(std::span<const QVector3D> positions,
-                                 std::span<const std::uint32_t> indices)
-    -> Bounds {
+                                 std::span<const std::uint32_t> indices) -> Bounds {
   Bounds bounds;
   for (std::uint32_t const index : indices) {
     if (index >= positions.size()) {
@@ -400,48 +394,46 @@ auto collect_positions_from_indices(std::span<const QVector3D> positions,
   return referenced;
 }
 
-void submit_baked_mesh(const BakedRiggedMeshCpu &baked,
-                       const std::vector<QVector3D> &positions,
+void submit_baked_mesh(const BakedRiggedMeshCpu& baked,
+                       const std::vector<QVector3D>& positions,
                        std::span<const QVector3D> role_colors,
                        std::span<const std::uint32_t> indices,
-                       SoftwareRasterizer &rasterizer) {
+                       SoftwareRasterizer& rasterizer) {
   for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
     std::uint32_t const ia = indices[i];
     std::uint32_t const ib = indices[i + 1];
     std::uint32_t const ic = indices[i + 2];
-    if (ia >= positions.size() || ib >= positions.size() ||
-        ic >= positions.size()) {
+    if (ia >= positions.size() || ib >= positions.size() || ic >= positions.size()) {
       continue;
     }
     std::uint8_t const role = baked.vertices[ia].color_role;
-    QVector3D const color = role < role_colors.size()
-                                ? role_colors[role]
-                                : QVector3D(0.8F, 0.8F, 0.8F);
-    rasterizer.submit(ColoredTriangle{positions[ia], positions[ib],
-                                      positions[ic], color, 1.0F});
+    QVector3D const color =
+        role < role_colors.size() ? role_colors[role] : QVector3D(0.8F, 0.8F, 0.8F);
+    rasterizer.submit(
+        ColoredTriangle{positions[ia], positions[ib], positions[ic], color, 1.0F});
   }
 }
 
 void submit_triangle_mesh(std::span<const QVector3D> positions,
                           std::span<const std::uint32_t> indices,
-                          const QVector3D &color,
-                          SoftwareRasterizer &rasterizer) {
+                          const QVector3D& color,
+                          SoftwareRasterizer& rasterizer) {
   for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
     std::uint32_t const ia = indices[i];
     std::uint32_t const ib = indices[i + 1];
     std::uint32_t const ic = indices[i + 2];
-    if (ia >= positions.size() || ib >= positions.size() ||
-        ic >= positions.size()) {
+    if (ia >= positions.size() || ib >= positions.size() || ic >= positions.size()) {
       continue;
     }
-    rasterizer.submit(ColoredTriangle{positions[ia], positions[ib],
-                                      positions[ic], color, 1.0F});
+    rasterizer.submit(
+        ColoredTriangle{positions[ia], positions[ib], positions[ic], color, 1.0F});
   }
 }
 
-auto make_view_projection(const Bounds &bounds,
+auto make_view_projection(const Bounds& bounds,
                           std::span<const QVector3D> positions,
-                          const ViewSpec &view, int image_width,
+                          const ViewSpec& view,
+                          int image_width,
                           int image_height) -> QMatrix4x4 {
   QVector3D const center = bounds.center();
   QVector3D const span = bounds.span();
@@ -456,7 +448,7 @@ auto make_view_projection(const Bounds &bounds,
   view_mat.lookAt(center + dir * (radius * 5.0F), center, view.up);
 
   Bounds camera_bounds;
-  for (QVector3D const &position : positions) {
+  for (QVector3D const& position : positions) {
     camera_bounds.include((view_mat * QVector4D(position, 1.0F)).toVector3D());
   }
 
@@ -484,12 +476,14 @@ auto make_view_projection(const Bounds &bounds,
   proj.ortho(camera_center.x() - ortho_w * 0.5F,
              camera_center.x() + ortho_w * 0.5F,
              camera_center.y() - ortho_h * 0.5F,
-             camera_center.y() + ortho_h * 0.5F, near_plane, far_plane);
+             camera_center.y() + ortho_h * 0.5F,
+             near_plane,
+             far_plane);
   return proj * view_mat;
 }
 
-auto compose_contact_sheet(
-    const std::vector<std::pair<std::string, QImage>> &images) -> QImage {
+auto compose_contact_sheet(const std::vector<std::pair<std::string, QImage>>& images)
+    -> QImage {
   if (images.empty()) {
     return {};
   }
@@ -518,13 +512,14 @@ auto compose_contact_sheet(
   return sheet;
 }
 
-template <typename T> auto read_little(const char *data) -> T {
+template <typename T>
+auto read_little(const char* data) -> T {
   T value{};
   std::memcpy(&value, data, sizeof(T));
   return value;
 }
 
-auto load_binary_stl(const fs::path &path) -> TriangleMesh {
+auto load_binary_stl(const fs::path& path) -> TriangleMesh {
   std::ifstream in(path, std::ios::binary);
   if (!in) {
     throw std::runtime_error("failed to open STL file");
@@ -534,8 +529,7 @@ auto load_binary_stl(const fs::path &path) -> TriangleMesh {
   if (bytes.size() < 84U) {
     throw std::runtime_error("binary STL too small");
   }
-  std::uint32_t const triangle_count =
-      read_little<std::uint32_t>(bytes.data() + 80);
+  std::uint32_t const triangle_count = read_little<std::uint32_t>(bytes.data() + 80);
   std::size_t const expected_size =
       84U + static_cast<std::size_t>(triangle_count) * 50U;
   if (expected_size != bytes.size()) {
@@ -553,8 +547,7 @@ auto load_binary_stl(const fs::path &path) -> TriangleMesh {
       float const y = read_little<float>(bytes.data() + offset + 4U);
       float const z = read_little<float>(bytes.data() + offset + 8U);
       mesh.positions.emplace_back(x, y, z);
-      mesh.indices.push_back(
-          static_cast<std::uint32_t>(mesh.positions.size() - 1U));
+      mesh.indices.push_back(static_cast<std::uint32_t>(mesh.positions.size() - 1U));
       offset += 12U;
     }
     offset += 2U;
@@ -562,7 +555,7 @@ auto load_binary_stl(const fs::path &path) -> TriangleMesh {
   return mesh;
 }
 
-auto load_ascii_stl(const fs::path &path) -> TriangleMesh {
+auto load_ascii_stl(const fs::path& path) -> TriangleMesh {
   std::ifstream in(path);
   if (!in) {
     throw std::runtime_error("failed to open STL file");
@@ -586,10 +579,9 @@ auto load_ascii_stl(const fs::path &path) -> TriangleMesh {
     }
     facet_vertices.emplace_back(x, y, z);
     if (facet_vertices.size() == 3U) {
-      for (QVector3D const &vertex : facet_vertices) {
+      for (QVector3D const& vertex : facet_vertices) {
         mesh.positions.push_back(vertex);
-        mesh.indices.push_back(
-            static_cast<std::uint32_t>(mesh.positions.size() - 1U));
+        mesh.indices.push_back(static_cast<std::uint32_t>(mesh.positions.size() - 1U));
       }
       facet_vertices.clear();
     }
@@ -600,10 +592,10 @@ auto load_ascii_stl(const fs::path &path) -> TriangleMesh {
   return mesh;
 }
 
-auto load_stl_mesh(const fs::path &path) -> TriangleMesh {
+auto load_stl_mesh(const fs::path& path) -> TriangleMesh {
   try {
     return load_binary_stl(path);
-  } catch (std::runtime_error const &) {
+  } catch (std::runtime_error const&) {
     return load_ascii_stl(path);
   }
 }
@@ -636,7 +628,7 @@ auto parse_obj_index(std::string_view token,
   return static_cast<std::uint32_t>(resolved);
 }
 
-auto load_obj_mesh(const fs::path &path) -> TriangleMesh {
+auto load_obj_mesh(const fs::path& path) -> TriangleMesh {
   std::ifstream in(path);
   if (!in) {
     throw std::runtime_error("failed to open OBJ file");
@@ -669,8 +661,7 @@ auto load_obj_mesh(const fs::path &path) -> TriangleMesh {
     std::vector<std::uint32_t> face_indices;
     std::string index_token;
     while (iss >> index_token) {
-      face_indices.push_back(
-          parse_obj_index(index_token, mesh.positions.size()));
+      face_indices.push_back(parse_obj_index(index_token, mesh.positions.size()));
     }
     if (face_indices.size() < 3U) {
       throw std::runtime_error("OBJ face had fewer than three vertices");
@@ -690,13 +681,13 @@ auto load_obj_mesh(const fs::path &path) -> TriangleMesh {
 
 } // namespace
 
-auto main(int argc, char **argv) -> int {
+auto main(int argc, char** argv) -> int {
   QGuiApplication app(argc, argv);
 
   CliOptions options;
   try {
     options = parse_cli(argc, argv);
-  } catch (std::runtime_error const &error) {
+  } catch (std::runtime_error const& error) {
     std::cerr << error.what() << '\n';
     print_usage();
     return 1;
@@ -714,22 +705,19 @@ auto main(int argc, char **argv) -> int {
   std::vector<ViewSpec> const views{
       {"left", QVector3D(1.0F, 0.08F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F)},
       {"rear", QVector3D(0.0F, 0.05F, -1.0F), QVector3D(0.0F, 1.0F, 0.0F)},
-      {"front_quarter", QVector3D(0.85F, 0.15F, 0.75F),
-       QVector3D(0.0F, 1.0F, 0.0F)},
+      {"front_quarter", QVector3D(0.85F, 0.15F, 0.75F), QVector3D(0.0F, 1.0F, 0.0F)},
       {"top", QVector3D(0.05F, 1.0F, -0.05F), QVector3D(0.0F, 0.0F, -1.0F)},
   };
 
   std::vector<std::pair<std::string, QImage>> rendered;
   rendered.reserve(views.size());
   if (options.source_kind == SourceKind::Species) {
-    auto const &spec = species_spec(options.species);
+    auto const& spec = species_spec(options.species);
     auto const bind = species_bind_palette(options.species);
     BakeInput input{&spec.lod_full, bind};
-    BakedRiggedMeshCpu const baked =
-        Render::Creature::bake_rigged_mesh_cpu(input);
+    BakedRiggedMeshCpu const baked = Render::Creature::bake_rigged_mesh_cpu(input);
     if (baked.vertices.empty() || baked.indices.empty()) {
-      std::cerr << species_name(options.species)
-                << " bake produced no geometry\n";
+      std::cerr << species_name(options.species) << " bake produced no geometry\n";
       return 1;
     }
 
@@ -741,17 +729,15 @@ auto main(int argc, char **argv) -> int {
                 << "' produced no geometry\n";
       return 1;
     }
-    Bounds const bounds =
-        collect_bounds_from_indices(positions, filtered_indices);
+    Bounds const bounds = collect_bounds_from_indices(positions, filtered_indices);
     auto const framed_positions =
         collect_positions_from_indices(positions, filtered_indices);
     auto const role_colors = species_role_colors(options.species);
-    for (auto const &view : views) {
+    for (auto const& view : views) {
       SoftwareRasterizer rasterizer(settings);
       rasterizer.set_view_projection(make_view_projection(
           bounds, framed_positions, view, settings.width, settings.height));
-      submit_baked_mesh(baked, positions, role_colors, filtered_indices,
-                        rasterizer);
+      submit_baked_mesh(baked, positions, role_colors, filtered_indices, rasterizer);
       QImage const image = rasterizer.render();
       fs::path const out_file =
           options.out_dir / (options.output_prefix + "_" + view.name + ".png");
@@ -773,17 +759,15 @@ auto main(int argc, char **argv) -> int {
                 << "' produced no geometry\n";
       return 1;
     }
-    Bounds const bounds =
-        collect_bounds_from_indices(mesh.positions, filtered_indices);
+    Bounds const bounds = collect_bounds_from_indices(mesh.positions, filtered_indices);
     auto const framed_positions =
         collect_positions_from_indices(mesh.positions, filtered_indices);
     QVector3D const mesh_color(0.76F, 0.78F, 0.82F);
-    for (auto const &view : views) {
+    for (auto const& view : views) {
       SoftwareRasterizer rasterizer(settings);
       rasterizer.set_view_projection(make_view_projection(
           bounds, framed_positions, view, settings.width, settings.height));
-      submit_triangle_mesh(mesh.positions, filtered_indices, mesh_color,
-                           rasterizer);
+      submit_triangle_mesh(mesh.positions, filtered_indices, mesh_color, rasterizer);
       QImage const image = rasterizer.render();
       fs::path const out_file =
           options.out_dir / (options.output_prefix + "_" + view.name + ".png");
@@ -793,15 +777,13 @@ auto main(int argc, char **argv) -> int {
   }
 
   QImage const sheet = compose_contact_sheet(rendered);
-  fs::path const sheet_path =
-      options.out_dir / (options.output_prefix + "_views.png");
+  fs::path const sheet_path = options.out_dir / (options.output_prefix + "_views.png");
   sheet.save(QString::fromStdString(sheet_path.string()));
 
   std::cout << "wrote " << sheet_path << "\n";
-  for (auto const &view : views) {
+  for (auto const& view : views) {
     std::cout << "wrote "
-              << (options.out_dir /
-                  (options.output_prefix + "_" + view.name + ".png"))
+              << (options.out_dir / (options.output_prefix + "_" + view.name + ".png"))
               << "\n";
   }
   return 0;

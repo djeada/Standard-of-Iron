@@ -1,6 +1,6 @@
-#include "render/creature/quadruped/skeleton_factory.h"
-
 #include <gtest/gtest.h>
+
+#include "render/creature/quadruped/skeleton_factory.h"
 
 namespace {
 
@@ -22,8 +22,7 @@ TEST(QuadrupedTopologyTest, DefaultTopologyValidatesAndExposesNamedBones) {
   EXPECT_EQ(find_bone(topology, "NeckTop"), storage.neck_top);
   EXPECT_EQ(find_bone(topology, "Head"), storage.head);
   EXPECT_EQ(find_bone(topology, "TrunkTip"), storage.appendage_tip);
-  ASSERT_LT(static_cast<std::size_t>(storage.appendage_tip),
-            storage.bones.size());
+  ASSERT_LT(static_cast<std::size_t>(storage.appendage_tip), storage.bones.size());
   EXPECT_EQ(storage.bones[storage.appendage_tip].parent, storage.head);
 }
 

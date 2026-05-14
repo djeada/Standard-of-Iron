@@ -1,10 +1,12 @@
 #pragma once
 
-#include "fog_of_war_mask.h"
-#include "minimap_generator.h"
 #include <QImage>
+
 #include <memory>
 #include <vector>
+
+#include "fog_of_war_mask.h"
+#include "minimap_generator.h"
 
 namespace Game::Map::Minimap {
 
@@ -21,22 +23,21 @@ struct MinimapManagerConfig {
 
 class MinimapManager {
 public:
-  MinimapManager(const MapDefinition &map_def,
-                 const MinimapManagerConfig &config = MinimapManagerConfig());
+  MinimapManager(const MapDefinition& map_def,
+                 const MinimapManagerConfig& config = MinimapManagerConfig());
 
   ~MinimapManager();
 
-  MinimapManager(const MinimapManager &) = delete;
-  auto operator=(const MinimapManager &) -> MinimapManager & = delete;
-  MinimapManager(MinimapManager &&) noexcept;
-  auto operator=(MinimapManager &&) noexcept -> MinimapManager &;
+  MinimapManager(const MinimapManager&) = delete;
+  auto operator=(const MinimapManager&) -> MinimapManager& = delete;
+  MinimapManager(MinimapManager&&) noexcept;
+  auto operator=(MinimapManager&&) noexcept -> MinimapManager&;
 
-  void tick(const std::vector<VisionSource> &vision_sources, int player_id);
+  void tick(const std::vector<VisionSource>& vision_sources, int player_id);
 
-  void force_fog_update(const std::vector<VisionSource> &vision_sources,
-                        int player_id);
+  void force_fog_update(const std::vector<VisionSource>& vision_sources, int player_id);
 
-  [[nodiscard]] auto get_base_image() const -> const QImage &;
+  [[nodiscard]] auto get_base_image() const -> const QImage&;
 
   [[nodiscard]] auto get_fog_mask() const -> QImage;
 
@@ -44,11 +45,9 @@ public:
 
   [[nodiscard]] auto get_composite_image(int width, int height) const -> QImage;
 
-  [[nodiscard]] auto is_position_visible(float world_x,
-                                         float world_z) const -> bool;
+  [[nodiscard]] auto is_position_visible(float world_x, float world_z) const -> bool;
 
-  [[nodiscard]] auto is_position_revealed(float world_x,
-                                          float world_z) const -> bool;
+  [[nodiscard]] auto is_position_revealed(float world_x, float world_z) const -> bool;
 
   void reset_fog();
 
@@ -60,9 +59,9 @@ public:
 
   [[nodiscard]] auto memory_usage() const -> size_t;
 
-  void regenerate_base(const MapDefinition &map_def);
+  void regenerate_base(const MapDefinition& map_def);
 
-  [[nodiscard]] auto grid() const -> const GridDefinition & { return m_grid; }
+  [[nodiscard]] auto grid() const -> const GridDefinition& { return m_grid; }
 
 private:
   void regenerate_composite() const;

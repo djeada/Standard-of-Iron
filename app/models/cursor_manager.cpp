@@ -1,5 +1,5 @@
 #include "cursor_manager.h"
-#include "app/models/cursor_mode.h"
+
 #include <QCursor>
 #include <QMetaObject>
 #include <QPoint>
@@ -13,8 +13,10 @@
 #include <qtmetamacros.h>
 #include <qvectornd.h>
 
+#include "app/models/cursor_mode.h"
+
 namespace {
-auto window_local_cursor_pos(QQuickWindow *window) -> QPoint {
+auto window_local_cursor_pos(QQuickWindow* window) -> QPoint {
   if (window == nullptr) {
     return {};
   }
@@ -26,9 +28,7 @@ auto window_local_cursor_pos(QQuickWindow *window) -> QPoint {
   QPoint local_pos;
   const bool invoked = QMetaObject::invokeMethod(
       window,
-      [window, &local_pos]() {
-        local_pos = window->mapFromGlobal(QCursor::pos());
-      },
+      [window, &local_pos]() { local_pos = window->mapFromGlobal(QCursor::pos()); },
       Qt::BlockingQueuedConnection);
   if (!invoked) {
     return {};
@@ -37,7 +37,9 @@ auto window_local_cursor_pos(QQuickWindow *window) -> QPoint {
 }
 } // namespace
 
-CursorManager::CursorManager(QObject *parent) : QObject(parent) {}
+CursorManager::CursorManager(QObject* parent)
+    : QObject(parent) {
+}
 
 void CursorManager::set_mode(CursorMode mode) {
   if (m_cursor_mode == mode) {
@@ -54,11 +56,11 @@ void CursorManager::set_mode(CursorMode mode) {
   emit global_cursor_changed();
 }
 
-void CursorManager::set_mode(const QString &mode) {
+void CursorManager::set_mode(const QString& mode) {
   set_mode(CursorModeUtils::fromString(mode));
 }
 
-void CursorManager::update_cursor_shape(QQuickWindow *window) {
+void CursorManager::update_cursor_shape(QQuickWindow* window) {
   if (window == nullptr) {
     return;
   }
@@ -80,17 +82,17 @@ void CursorManager::update_cursor_shape(QQuickWindow *window) {
   }
 }
 
-auto CursorManager::global_cursor_x(QQuickWindow *window) -> qreal {
+auto CursorManager::global_cursor_x(QQuickWindow* window) -> qreal {
   QPoint const local_pos = window_local_cursor_pos(window);
   return local_pos.x();
 }
 
-auto CursorManager::global_cursor_y(QQuickWindow *window) -> qreal {
+auto CursorManager::global_cursor_y(QQuickWindow* window) -> qreal {
   QPoint const local_pos = window_local_cursor_pos(window);
   return local_pos.y();
 }
 
-void CursorManager::set_patrol_first_waypoint(const QVector3D &waypoint) {
+void CursorManager::set_patrol_first_waypoint(const QVector3D& waypoint) {
   m_first_waypoint = waypoint;
   m_has_first_waypoint = true;
 }

@@ -1,15 +1,16 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstdint>
+#include <functional>
+#include <vector>
+
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/creature_render_state.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../gl/humanoid/humanoid_types.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cstdint>
-#include <functional>
-#include <vector>
 
 namespace Render::GL {
 struct DrawContext;
@@ -22,8 +23,7 @@ enum class AmbientIdleType : std::uint8_t;
 
 namespace Render::Humanoid {
 
-using HumanoidPreparation =
-    Render::Creature::Pipeline::CreaturePreparationResult;
+using HumanoidPreparation = Render::Creature::Pipeline::CreaturePreparationResult;
 
 struct SoldierLayout {
   float offset_x{0.0F};
@@ -47,9 +47,9 @@ struct SoldierLayoutInputs {
   float animation_time{0.0F};
 };
 
-[[nodiscard]] auto build_soldier_layout(
-    const Render::GL::IFormationCalculator &formation_calculator,
-    const SoldierLayoutInputs &inputs) -> SoldierLayout;
+[[nodiscard]] auto
+build_soldier_layout(const Render::GL::IFormationCalculator& formation_calculator,
+                     const SoldierLayoutInputs& inputs) -> SoldierLayout;
 
 struct HumanoidLocomotionInputs {
   Render::GL::AnimationInputs anim{};
@@ -63,8 +63,7 @@ struct HumanoidLocomotionInputs {
 };
 
 struct HumanoidLocomotionState {
-  Render::GL::HumanoidMotionState motion_state{
-      Render::GL::HumanoidMotionState::Idle};
+  Render::GL::HumanoidMotionState motion_state{Render::GL::HumanoidMotionState::Idle};
   Render::GL::HumanoidGaitDescriptor gait{};
   QVector3D locomotion_direction{0.0F, 0.0F, 1.0F};
   QVector3D locomotion_velocity{0.0F, 0.0F, 0.0F};
@@ -74,12 +73,12 @@ struct HumanoidLocomotionState {
 };
 
 [[nodiscard]] auto build_humanoid_locomotion_state(
-    const HumanoidLocomotionInputs &inputs) -> HumanoidLocomotionState;
+    const HumanoidLocomotionInputs& inputs) -> HumanoidLocomotionState;
 
-void prepare_humanoid_instances(const Render::GL::HumanoidRendererBase &owner,
-                                const Render::GL::DrawContext &ctx,
-                                const Render::GL::AnimationInputs &anim,
+void prepare_humanoid_instances(const Render::GL::HumanoidRendererBase& owner,
+                                const Render::GL::DrawContext& ctx,
+                                const Render::GL::AnimationInputs& anim,
                                 std::uint32_t frame_index,
-                                HumanoidPreparation &out);
+                                HumanoidPreparation& out);
 
 } // namespace Render::Humanoid

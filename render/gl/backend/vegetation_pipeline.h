@@ -1,38 +1,30 @@
 #pragma once
 
-#include "../shader_cache.h"
-#include "pipeline_interface.h"
 #include <QVector2D>
 #include <QVector3D>
+
 #include <vector>
+
+#include "../shader_cache.h"
+#include "pipeline_interface.h"
 
 namespace Render::GL::BackendPipelines {
 
 class VegetationPipeline : public IPipeline {
 public:
-  explicit VegetationPipeline(GL::ShaderCache *shader_cache);
+  explicit VegetationPipeline(GL::ShaderCache* shader_cache);
   ~VegetationPipeline() override;
 
   auto initialize() -> bool override;
   void shutdown() override;
   void cache_uniforms() override;
-  [[nodiscard]] auto is_initialized() const -> bool override {
-    return m_initialized;
-  }
+  [[nodiscard]] auto is_initialized() const -> bool override { return m_initialized; }
 
-  [[nodiscard]] auto stone_shader() const -> GL::Shader * {
-    return m_stone_shader;
-  }
-  [[nodiscard]] auto plant_shader() const -> GL::Shader * {
-    return m_plant_shader;
-  }
-  [[nodiscard]] auto pine_shader() const -> GL::Shader * {
-    return m_pine_shader;
-  }
-  [[nodiscard]] auto olive_shader() const -> GL::Shader * {
-    return m_olive_shader;
-  }
-  [[nodiscard]] auto firecamp_shader() const -> GL::Shader * {
+  [[nodiscard]] auto stone_shader() const -> GL::Shader* { return m_stone_shader; }
+  [[nodiscard]] auto plant_shader() const -> GL::Shader* { return m_plant_shader; }
+  [[nodiscard]] auto pine_shader() const -> GL::Shader* { return m_pine_shader; }
+  [[nodiscard]] auto olive_shader() const -> GL::Shader* { return m_olive_shader; }
+  [[nodiscard]] auto firecamp_shader() const -> GL::Shader* {
     return m_firecamp_shader;
   }
 
@@ -106,19 +98,15 @@ public:
   GLsizei m_firecamp_index_count{0};
   GLsizei m_firecamp_vertex_count{0};
 
-  [[nodiscard]] auto tent_shader() const -> GL::Shader * {
-    return m_tent_shader;
-  }
-  [[nodiscard]] auto supply_cart_shader() const -> GL::Shader * {
+  [[nodiscard]] auto tent_shader() const -> GL::Shader* { return m_tent_shader; }
+  [[nodiscard]] auto supply_cart_shader() const -> GL::Shader* {
     return m_supply_cart_shader;
   }
-  [[nodiscard]] auto weapon_rack_shader() const -> GL::Shader * {
+  [[nodiscard]] auto weapon_rack_shader() const -> GL::Shader* {
     return m_weapon_rack_shader;
   }
-  [[nodiscard]] auto ruins_shader() const -> GL::Shader * {
-    return m_ruins_shader;
-  }
-  [[nodiscard]] auto dead_tree_shader() const -> GL::Shader * {
+  [[nodiscard]] auto ruins_shader() const -> GL::Shader* { return m_ruins_shader; }
+  [[nodiscard]] auto dead_tree_shader() const -> GL::Shader* {
     return m_dead_tree_shader;
   }
 
@@ -184,26 +172,29 @@ private:
   void shutdown_ruins_pipeline();
   void initialize_dead_tree_pipeline();
   void shutdown_dead_tree_pipeline();
-  void upload_prop_mesh_impl(
-      const std::vector<std::pair<QVector3D, QVector3D>> &verts,
-      const std::vector<uint16_t> &idx, GLuint &vao, GLuint &vbo, GLuint &ibo,
-      GLsizei &vert_count, GLsizei &idx_count);
-  void delete_prop_pipeline_impl(GLuint &vao, GLuint &vbo, GLuint &ibo,
-                                 GLsizei &vc, GLsizei &ic);
+  void upload_prop_mesh_impl(const std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                             const std::vector<uint16_t>& idx,
+                             GLuint& vao,
+                             GLuint& vbo,
+                             GLuint& ibo,
+                             GLsizei& vert_count,
+                             GLsizei& idx_count);
+  void delete_prop_pipeline_impl(
+      GLuint& vao, GLuint& vbo, GLuint& ibo, GLsizei& vc, GLsizei& ic);
 
-  GL::ShaderCache *m_shader_cache;
+  GL::ShaderCache* m_shader_cache;
   bool m_initialized{false};
 
-  GL::Shader *m_stone_shader{nullptr};
-  GL::Shader *m_plant_shader{nullptr};
-  GL::Shader *m_pine_shader{nullptr};
-  GL::Shader *m_olive_shader{nullptr};
-  GL::Shader *m_firecamp_shader{nullptr};
-  GL::Shader *m_tent_shader{nullptr};
-  GL::Shader *m_supply_cart_shader{nullptr};
-  GL::Shader *m_weapon_rack_shader{nullptr};
-  GL::Shader *m_ruins_shader{nullptr};
-  GL::Shader *m_dead_tree_shader{nullptr};
+  GL::Shader* m_stone_shader{nullptr};
+  GL::Shader* m_plant_shader{nullptr};
+  GL::Shader* m_pine_shader{nullptr};
+  GL::Shader* m_olive_shader{nullptr};
+  GL::Shader* m_firecamp_shader{nullptr};
+  GL::Shader* m_tent_shader{nullptr};
+  GL::Shader* m_supply_cart_shader{nullptr};
+  GL::Shader* m_weapon_rack_shader{nullptr};
+  GL::Shader* m_ruins_shader{nullptr};
+  GL::Shader* m_dead_tree_shader{nullptr};
 };
 
 } // namespace Render::GL::BackendPipelines

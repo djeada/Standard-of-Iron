@@ -1,4 +1,12 @@
 #include "healer_aura_pipeline.h"
+
+#include <QDebug>
+#include <QMatrix4x4>
+#include <QOpenGLContext>
+
+#include <cmath>
+#include <numbers>
+
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
 #include "../../../game/systems/nation_id.h"
@@ -6,11 +14,6 @@
 #include "../camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
-#include <QDebug>
-#include <QMatrix4x4>
-#include <QOpenGLContext>
-#include <cmath>
-#include <numbers>
 
 namespace Render::GL::BackendPipelines {
 
@@ -25,7 +28,7 @@ void clear_gl_errors() {
 #endif
 }
 
-auto check_gl_error(const char *operation) -> bool {
+auto check_gl_error(const char* operation) -> bool {
 #ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
@@ -134,14 +137,12 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   vertices.reserve(static_cast<size_t>((stacks + 1) * (slices + 1)));
 
   for (int i = 0; i <= stacks; ++i) {
-    float phi =
-        (static_cast<float>(i) / static_cast<float>(stacks)) * pi * 0.5F;
+    float phi = (static_cast<float>(i) / static_cast<float>(stacks)) * pi * 0.5F;
     float y = std::sin(phi);
     float r = std::cos(phi);
 
     for (int j = 0; j <= slices; ++j) {
-      float theta =
-          (static_cast<float>(j) / static_cast<float>(slices)) * pi * 2.0F;
+      float theta = (static_cast<float>(j) / static_cast<float>(slices)) * pi * 2.0F;
       float x = r * std::cos(theta);
       float z = r * std::sin(theta);
 
@@ -190,7 +191,8 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(AuraVertex)),
-               vertices.data(), GL_STATIC_DRAW);
+               vertices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("vertex buffer")) {
     shutdown_geometry();
     return false;
@@ -200,7 +202,8 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(), GL_STATIC_DRAW);
+               indices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("index buffer")) {
     shutdown_geometry();
     return false;
@@ -209,21 +212,28 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   m_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(
-      VertexAttrib::position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      sizeof(AuraVertex),
-      reinterpret_cast<void *>(offsetof(AuraVertex, position)));
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(AuraVertex),
+                        reinterpret_cast<void*>(offsetof(AuraVertex, position)));
 
   glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(AuraVertex),
-                        reinterpret_cast<void *>(offsetof(AuraVertex, normal)));
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(AuraVertex),
+                        reinterpret_cast<void*>(offsetof(AuraVertex, normal)));
 
   glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(
-      VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT, GL_FALSE,
-      sizeof(AuraVertex),
-      reinterpret_cast<void *>(offsetof(AuraVertex, tex_coord)));
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        ComponentCount::vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(AuraVertex),
+                        reinterpret_cast<void*>(offsetof(AuraVertex, tex_coord)));
 
   glBindVertexArray(0);
 
@@ -235,7 +245,7 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   return true;
 }
 
-void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
+void HealerAuraPipeline::collect_healers(Engine::Core::World* world) {
   m_healer_data.clear();
 
   if (world == nullptr) {
@@ -244,14 +254,14 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
 
   auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
 
-  for (auto *healer : healers) {
+  for (auto* healer : healers) {
     if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *transform = healer->get_component<Engine::Core::TransformComponent>();
-    auto *healer_comp = healer->get_component<Engine::Core::HealerComponent>();
-    auto *unit_comp = healer->get_component<Engine::Core::UnitComponent>();
+    auto* transform = healer->get_component<Engine::Core::TransformComponent>();
+    auto* healer_comp = healer->get_component<Engine::Core::HealerComponent>();
+    auto* unit_comp = healer->get_component<Engine::Core::UnitComponent>();
 
     if (transform == nullptr || healer_comp == nullptr) {
       continue;
@@ -267,8 +277,8 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
     }
 
     HealerAuraData data;
-    data.position = QVector3D(transform->position.x, transform->position.y,
-                              transform->position.z);
+    data.position =
+        QVector3D(transform->position.x, transform->position.y, transform->position.z);
     data.radius = healer_comp->healing_range;
     data.is_active = healer_comp->is_healing_active;
 
@@ -280,7 +290,7 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
   }
 }
 
-void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
+void HealerAuraPipeline::render(const Camera& cam, float animation_time) {
   if (!is_initialized() || m_healer_data.empty()) {
     return;
   }
@@ -302,7 +312,7 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
   m_aura_shader->use();
   glBindVertexArray(m_vao);
 
-  for (const auto &data : m_healer_data) {
+  for (const auto& data : m_healer_data) {
     render_aura(data, cam, animation_time);
   }
 
@@ -323,8 +333,9 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
   }
 }
 
-void HealerAuraPipeline::render_aura(const HealerAuraData &data,
-                                     const Camera &cam, float animation_time) {
+void HealerAuraPipeline::render_aura(const HealerAuraData& data,
+                                     const Camera& cam,
+                                     float animation_time) {
 
   QMatrix4x4 model;
   model.setToIdentity();
@@ -346,11 +357,12 @@ void HealerAuraPipeline::render_aura(const HealerAuraData &data,
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 }
 
-void HealerAuraPipeline::render_single_aura(const QVector3D &position,
-                                            const QVector3D &color,
-                                            float radius, float intensity,
+void HealerAuraPipeline::render_single_aura(const QVector3D& position,
+                                            const QVector3D& color,
+                                            float radius,
+                                            float intensity,
                                             float time,
-                                            const QMatrix4x4 &view_proj) {
+                                            const QMatrix4x4& view_proj) {
   if (!is_initialized()) {
     return;
   }
@@ -396,9 +408,9 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
   }
 }
 
-void HealerAuraPipeline::render_aura_batch(const AuraInstanceData *instances,
+void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
                                            std::size_t count,
-                                           const QMatrix4x4 &view_proj) {
+                                           const QMatrix4x4& view_proj) {
   if (!is_initialized() || instances == nullptr || count == 0) {
     return;
   }
@@ -417,7 +429,7 @@ void HealerAuraPipeline::render_aura_batch(const AuraInstanceData *instances,
   glBindVertexArray(m_vao);
 
   for (std::size_t idx = 0; idx < count; ++idx) {
-    const AuraInstanceData &inst = instances[idx];
+    const AuraInstanceData& inst = instances[idx];
     if (inst.intensity < 0.01F) {
       continue;
     }

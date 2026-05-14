@@ -16,37 +16,35 @@ struct LoadoutCacheKey {
       Render::Creature::k_invalid_archetype};
   std::vector<EquipmentHandle> handles{};
 
-  auto operator==(const LoadoutCacheKey &other) const -> bool {
-    return base_archetype_id == other.base_archetype_id &&
-           handles == other.handles;
+  auto operator==(const LoadoutCacheKey& other) const -> bool {
+    return base_archetype_id == other.base_archetype_id && handles == other.handles;
   }
 };
 
 struct LoadoutCacheKeyHash {
-  auto operator()(const LoadoutCacheKey &key) const noexcept -> std::size_t {
-    std::size_t hash = std::hash<std::uint32_t>{}(
-        static_cast<std::uint32_t>(key.base_archetype_id));
+  auto operator()(const LoadoutCacheKey& key) const noexcept -> std::size_t {
+    std::size_t hash =
+        std::hash<std::uint32_t>{}(static_cast<std::uint32_t>(key.base_archetype_id));
     for (const EquipmentHandle handle : key.handles) {
-      hash ^= std::hash<EquipmentHandle>{}(handle) + 0x9E3779B9U +
-              (hash << 6U) + (hash >> 2U);
+      hash ^= std::hash<EquipmentHandle>{}(handle) + 0x9E3779B9U + (hash << 6U) +
+              (hash >> 2U);
     }
     return hash;
   }
 };
 
 auto contribution_registry()
-    -> std::unordered_map<EquipmentHandle, HumanoidEquipmentContribution> & {
-  static std::unordered_map<EquipmentHandle, HumanoidEquipmentContribution>
-      registry;
+    -> std::unordered_map<EquipmentHandle, HumanoidEquipmentContribution>& {
+  static std::unordered_map<EquipmentHandle, HumanoidEquipmentContribution> registry;
   return registry;
 }
 
-auto archetype_cache()
-    -> std::unordered_map<LoadoutCacheKey, Render::Creature::ArchetypeId,
-                          LoadoutCacheKeyHash> & {
-  static std::unordered_map<LoadoutCacheKey, Render::Creature::ArchetypeId,
-                            LoadoutCacheKeyHash>
-      cache;
+auto archetype_cache() -> std::unordered_map<LoadoutCacheKey,
+                                             Render::Creature::ArchetypeId,
+                                             LoadoutCacheKeyHash>& {
+  static std::
+      unordered_map<LoadoutCacheKey, Render::Creature::ArchetypeId, LoadoutCacheKeyHash>
+          cache;
   return cache;
 }
 
@@ -79,13 +77,12 @@ auto resolve_humanoid_equipment_archetype(
   LoadoutCacheKey key{};
   key.base_archetype_id = base_archetype_id;
   key.handles.assign(handles.begin(), handles.end());
-  if (const auto it = archetype_cache().find(key);
-      it != archetype_cache().end()) {
+  if (const auto it = archetype_cache().find(key); it != archetype_cache().end()) {
     return it->second;
   }
 
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
-  const auto *base_desc = registry.get(base_archetype_id);
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  const auto* base_desc = registry.get(base_archetype_id);
   if (base_desc == nullptr) {
     qWarning() << "resolve_humanoid_equipment_archetype: missing base archetype"
                << static_cast<unsigned>(base_archetype_id);
@@ -103,30 +100,27 @@ auto resolve_humanoid_equipment_archetype(
 
     const auto contribution_it = contribution_registry().find(handle);
     if (contribution_it == contribution_registry().end()) {
-      qWarning()
-          << "resolve_humanoid_equipment_archetype: missing contribution for"
-          << debug_name.data() << "handle" << handle;
+      qWarning() << "resolve_humanoid_equipment_archetype: missing contribution for"
+                 << debug_name.data() << "handle" << handle;
       return base_archetype_id;
     }
 
-    const auto &contribution = contribution_it->second;
+    const auto& contribution = contribution_it->second;
     if (contribution.build_attachments == nullptr) {
-      qWarning()
-          << "resolve_humanoid_equipment_archetype: null attachment builder for"
-          << debug_name.data() << "handle" << handle;
+      qWarning() << "resolve_humanoid_equipment_archetype: null attachment builder for"
+                 << debug_name.data() << "handle" << handle;
       return base_archetype_id;
     }
 
     const auto attachments = contribution.build_attachments(next_role);
     if (desc.bake_attachment_count + attachments.size() >
         Render::Creature::ArchetypeDescriptor::k_max_bake_attachments) {
-      qWarning()
-          << "resolve_humanoid_equipment_archetype: too many attachments for"
-          << debug_name.data();
+      qWarning() << "resolve_humanoid_equipment_archetype: too many attachments for"
+                 << debug_name.data();
       return base_archetype_id;
     }
 
-    for (const auto &attachment : attachments) {
+    for (const auto& attachment : attachments) {
       desc.bake_attachments[desc.bake_attachment_count++] = attachment;
     }
 

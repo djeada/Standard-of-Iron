@@ -1,8 +1,10 @@
 #include "water_pipeline.h"
-#include "../backend.h"
-#include "../shader_cache.h"
+
 #include <QDebug>
 #include <qglobal.h>
+
+#include "../backend.h"
+#include "../shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -84,8 +86,7 @@ void WaterPipeline::cache_riverbank_uniforms() {
 
   m_riverbank_uniforms.model = m_riverbank_shader->uniform_handle("model");
   m_riverbank_uniforms.view = m_riverbank_shader->uniform_handle("view");
-  m_riverbank_uniforms.projection =
-      m_riverbank_shader->uniform_handle("projection");
+  m_riverbank_uniforms.projection = m_riverbank_shader->uniform_handle("projection");
   m_riverbank_uniforms.time = m_riverbank_shader->uniform_handle("time");
   m_riverbank_uniforms.visibility_texture =
       m_riverbank_shader->uniform_handle("u_visibility_tex");
@@ -121,8 +122,7 @@ void WaterPipeline::cache_road_uniforms() {
   m_road_uniforms.mvp = m_road_shader->uniform_handle("u_mvp");
   m_road_uniforms.model = m_road_shader->uniform_handle("u_model");
   m_road_uniforms.color = m_road_shader->uniform_handle("u_color");
-  m_road_uniforms.light_direction =
-      m_road_shader->uniform_handle("u_light_direction");
+  m_road_uniforms.light_direction = m_road_shader->uniform_handle("u_light_direction");
   m_road_uniforms.alpha = m_road_shader->uniform_handle("u_alpha");
   m_road_uniforms.visibility_texture =
       m_road_shader->optional_uniform_handle("u_visibility_tex");

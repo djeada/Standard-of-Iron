@@ -1,6 +1,8 @@
-#include "systems/formation_system.h"
 #include <QVector3D>
+
 #include <gtest/gtest.h>
+
+#include "systems/formation_system.h"
 
 using namespace Game::Systems;
 
@@ -19,7 +21,7 @@ TEST_F(FormationSystemTest, RomanFormationCreatesRectangularGrid) {
 
   EXPECT_EQ(positions.size(), 9);
 
-  for (const auto &pos : positions) {
+  for (const auto& pos : positions) {
     EXPECT_FLOAT_EQ(pos.y(), center.y());
   }
 }
@@ -34,7 +36,7 @@ TEST_F(FormationSystemTest, CarthageFormationHasJitter) {
 
   EXPECT_EQ(positions1.size(), 9);
 
-  for (const auto &pos : positions1) {
+  for (const auto& pos : positions1) {
     EXPECT_LT(std::abs(pos.x() - center.x()), spacing * 5.0F);
     EXPECT_LT(std::abs(pos.z() - center.z()), spacing * 5.0F);
     EXPECT_FLOAT_EQ(pos.y(), center.y());
@@ -46,9 +48,8 @@ TEST_F(FormationSystemTest, BarbarianFormationIsLooser) {
   float spacing = 2.0F;
   int unit_count = 9;
 
-  auto barbarian_positions =
-      FormationSystem::instance().get_formation_positions(
-          FormationType::Barbarian, unit_count, center, spacing);
+  auto barbarian_positions = FormationSystem::instance().get_formation_positions(
+      FormationType::Barbarian, unit_count, center, spacing);
   auto roman_positions = FormationSystem::instance().get_formation_positions(
       FormationType::Roman, unit_count, center, spacing);
 
@@ -107,12 +108,12 @@ TEST_F(FormationSystemTest, FormationsScaleWithUnitCount) {
   float small_max_dist = 0.0F;
   float large_max_dist = 0.0F;
 
-  for (const auto &pos : small_formation) {
+  for (const auto& pos : small_formation) {
     QVector3D vec = pos - center;
     small_max_dist = std::max(small_max_dist, vec.length());
   }
 
-  for (const auto &pos : large_formation) {
+  for (const auto& pos : large_formation) {
     QVector3D vec = pos - center;
     large_max_dist = std::max(large_max_dist, vec.length());
   }
@@ -123,15 +124,36 @@ TEST_F(FormationSystemTest, FormationsScaleWithUnitCount) {
 TEST_F(FormationSystemTest, CentralCavalryOffsetsUseStaggerAndRankYaw) {
   float const spacing = 1.5F;
 
-  auto const rear = FormationSystem::instance().get_local_offset(
-      FormationType::Roman, FormationUnitCategory::Cavalry, 0, 0, 0, 3, 3,
-      spacing, 0x12345678U);
-  auto const middle = FormationSystem::instance().get_local_offset(
-      FormationType::Roman, FormationUnitCategory::Cavalry, 3, 1, 0, 3, 3,
-      spacing, 0x12345678U);
-  auto const front = FormationSystem::instance().get_local_offset(
-      FormationType::Roman, FormationUnitCategory::Cavalry, 6, 2, 0, 3, 3,
-      spacing, 0x12345678U);
+  auto const rear =
+      FormationSystem::instance().get_local_offset(FormationType::Roman,
+                                                   FormationUnitCategory::Cavalry,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   3,
+                                                   3,
+                                                   spacing,
+                                                   0x12345678U);
+  auto const middle =
+      FormationSystem::instance().get_local_offset(FormationType::Roman,
+                                                   FormationUnitCategory::Cavalry,
+                                                   3,
+                                                   1,
+                                                   0,
+                                                   3,
+                                                   3,
+                                                   spacing,
+                                                   0x12345678U);
+  auto const front =
+      FormationSystem::instance().get_local_offset(FormationType::Roman,
+                                                   FormationUnitCategory::Cavalry,
+                                                   6,
+                                                   2,
+                                                   0,
+                                                   3,
+                                                   3,
+                                                   spacing,
+                                                   0x12345678U);
 
   EXPECT_GT(middle.offset_x, rear.offset_x);
   EXPECT_GT(front.offset_z, middle.offset_z);
@@ -144,15 +166,36 @@ TEST_F(FormationSystemTest, CentralCavalryOffsetsUseStaggerAndRankYaw) {
 TEST_F(FormationSystemTest, RomanInfantryLocalOffsetsUseWiderSpacing) {
   float const spacing = 1.0F;
 
-  auto const left = FormationSystem::instance().get_local_offset(
-      FormationType::Roman, FormationUnitCategory::Infantry, 0, 0, 0, 2, 2,
-      spacing, 0x12345678U);
-  auto const right = FormationSystem::instance().get_local_offset(
-      FormationType::Roman, FormationUnitCategory::Infantry, 1, 0, 1, 2, 2,
-      spacing, 0x12345678U);
-  auto const rear_left = FormationSystem::instance().get_local_offset(
-      FormationType::Roman, FormationUnitCategory::Infantry, 2, 1, 0, 2, 2,
-      spacing, 0x12345678U);
+  auto const left =
+      FormationSystem::instance().get_local_offset(FormationType::Roman,
+                                                   FormationUnitCategory::Infantry,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   2,
+                                                   2,
+                                                   spacing,
+                                                   0x12345678U);
+  auto const right =
+      FormationSystem::instance().get_local_offset(FormationType::Roman,
+                                                   FormationUnitCategory::Infantry,
+                                                   1,
+                                                   0,
+                                                   1,
+                                                   2,
+                                                   2,
+                                                   spacing,
+                                                   0x12345678U);
+  auto const rear_left =
+      FormationSystem::instance().get_local_offset(FormationType::Roman,
+                                                   FormationUnitCategory::Infantry,
+                                                   2,
+                                                   1,
+                                                   0,
+                                                   2,
+                                                   2,
+                                                   spacing,
+                                                   0x12345678U);
 
   EXPECT_GT(right.offset_x - left.offset_x, 1.05F);
   EXPECT_GT(rear_left.offset_z - left.offset_z, 1.05F);

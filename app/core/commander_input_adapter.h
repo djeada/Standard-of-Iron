@@ -8,7 +8,7 @@ class CommanderInputAdapter final : public QObject {
   Q_OBJECT
 
 public:
-  explicit CommanderInputAdapter(GameEngine *engine, QObject *parent = nullptr);
+  explicit CommanderInputAdapter(GameEngine* engine, QObject* parent = nullptr);
 
   Q_INVOKABLE void key_down(int key, int modifiers = 0);
   Q_INVOKABLE void key_up(int key, int modifiers = 0);
@@ -25,5 +25,5 @@ public:
   Q_INVOKABLE void toggle_mode();
 
 private:
-  GameEngine *m_engine = nullptr;
+  GameEngine* m_engine = nullptr;
 };

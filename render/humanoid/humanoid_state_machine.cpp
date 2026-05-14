@@ -1,16 +1,24 @@
 #include "humanoid_state_machine.h"
 
-#include "../creature/pose_intent.h"
-
 #include <array>
+
+#include "../creature/pose_intent.h"
 
 namespace Render::Humanoid {
 
 namespace {
 
 constexpr std::array<std::string_view, k_state_count> k_state_names = {
-    "Idle",         "Walk",        "Run",     "Hold",      "AttackMelee",
-    "AttackRanged", "HitReaction", "Healing", "Construct", "Death",
+    "Idle",
+    "Walk",
+    "Run",
+    "Hold",
+    "AttackMelee",
+    "AttackRanged",
+    "HitReaction",
+    "Healing",
+    "Construct",
+    "Death",
 };
 
 }
@@ -20,7 +28,7 @@ auto state_name(HumanoidState s) noexcept -> std::string_view {
   return i < k_state_count ? k_state_names[i] : std::string_view{"<invalid>"};
 }
 
-auto select_state(const Render::GL::AnimationInputs &inputs,
+auto select_state(const Render::GL::AnimationInputs& inputs,
                   bool dead_flag) noexcept -> HumanoidState {
   if (dead_flag) {
     return HumanoidState::Death;
@@ -30,10 +38,11 @@ auto select_state(const Render::GL::AnimationInputs &inputs,
 }
 
 HumanoidStateMachine::HumanoidStateMachine()
-    : m_machine(static_cast<Render::Animation::StateId>(HumanoidState::Idle)) {}
+    : m_machine(static_cast<Render::Animation::StateId>(HumanoidState::Idle)) {
+}
 
-auto HumanoidStateMachine::blend_seconds_for(
-    HumanoidState from, HumanoidState to) noexcept -> float {
+auto HumanoidStateMachine::blend_seconds_for(HumanoidState from,
+                                             HumanoidState to) noexcept -> float {
   if (from == to) {
     return 0.0F;
   }
@@ -57,7 +66,7 @@ auto HumanoidStateMachine::blend_seconds_for(
 }
 
 void HumanoidStateMachine::tick(float dt,
-                                const Render::GL::AnimationInputs &inputs,
+                                const Render::GL::AnimationInputs& inputs,
                                 bool dead_flag) {
   m_machine.tick(dt);
   HumanoidState const desired = select_state(inputs, dead_flag);
@@ -69,8 +78,8 @@ void HumanoidStateMachine::tick(float dt,
 }
 
 void HumanoidStateMachine::snap_to(HumanoidState state) {
-  m_machine = Render::Animation::StateMachine(
-      static_cast<Render::Animation::StateId>(state));
+  m_machine =
+      Render::Animation::StateMachine(static_cast<Render::Animation::StateId>(state));
 }
 
 } // namespace Render::Humanoid

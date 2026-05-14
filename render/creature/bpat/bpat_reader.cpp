@@ -14,7 +14,7 @@ auto BpatBlob::from_bytes(std::vector<std::uint8_t> bytes) -> BpatBlob {
   return blob;
 }
 
-auto BpatBlob::from_file(const std::string &path) -> BpatBlob {
+auto BpatBlob::from_file(const std::string& path) -> BpatBlob {
   std::ifstream in(path, std::ios::binary);
   if (!in) {
     BpatBlob blob{};
@@ -39,7 +39,7 @@ bool BpatBlob::validate() {
     m_last_error = "file shorter than header";
     return false;
   }
-  auto const *header = reinterpret_cast<const BpatHeader *>(m_bytes.data());
+  auto const* header = reinterpret_cast<const BpatHeader*>(m_bytes.data());
   if (std::memcmp(header->magic, k_magic.data(), k_magic.size()) != 0) {
     m_last_error = "magic mismatch";
     return false;
@@ -73,8 +73,7 @@ bool BpatBlob::validate() {
   }
   if (header->socket_count > 0U &&
       !in_bounds(header->socket_table_offset,
-                 std::uint64_t{header->socket_count} *
-                     sizeof(BpatSocketEntry))) {
+                 std::uint64_t{header->socket_count} * sizeof(BpatSocketEntry))) {
     m_last_error = "socket table out of bounds";
     return false;
   }
@@ -91,38 +90,36 @@ bool BpatBlob::validate() {
     return false;
   }
 
-  std::uint64_t const socket_bytes =
-      header->socket_count > 0U
-          ? std::uint64_t{header->frame_total} * header->socket_count *
-                k_socket_matrix_floats * sizeof(float)
-          : 0U;
+  std::uint64_t const socket_bytes = header->socket_count > 0U
+                                         ? std::uint64_t{header->frame_total} *
+                                               header->socket_count *
+                                               k_socket_matrix_floats * sizeof(float)
+                                         : 0U;
   std::uint64_t const socket_data_offset =
-      header->socket_count > 0U ? header->palette_data_offset + palette_bytes
-                                : 0U;
-  if (header->socket_count > 0U &&
-      !in_bounds(socket_data_offset, socket_bytes)) {
+      header->socket_count > 0U ? header->palette_data_offset + palette_bytes : 0U;
+  if (header->socket_count > 0U && !in_bounds(socket_data_offset, socket_bytes)) {
     m_last_error = "socket data out of bounds";
     return false;
   }
 
-  m_clip_table = reinterpret_cast<const BpatClipEntry *>(
-      m_bytes.data() + header->clip_table_offset);
+  m_clip_table = reinterpret_cast<const BpatClipEntry*>(m_bytes.data() +
+                                                        header->clip_table_offset);
   m_socket_table = header->socket_count > 0U
-                       ? reinterpret_cast<const BpatSocketEntry *>(
+                       ? reinterpret_cast<const BpatSocketEntry*>(
                              m_bytes.data() + header->socket_table_offset)
                        : nullptr;
-  m_string_table = reinterpret_cast<const char *>(m_bytes.data() +
-                                                  header->string_table_offset);
-  m_palette_data = reinterpret_cast<const float *>(m_bytes.data() +
-                                                   header->palette_data_offset);
+  m_string_table =
+      reinterpret_cast<const char*>(m_bytes.data() + header->string_table_offset);
+  m_palette_data =
+      reinterpret_cast<const float*>(m_bytes.data() + header->palette_data_offset);
   m_socket_data =
       header->socket_count > 0U
-          ? reinterpret_cast<const float *>(m_bytes.data() + socket_data_offset)
+          ? reinterpret_cast<const float*>(m_bytes.data() + socket_data_offset)
           : nullptr;
 
   std::uint32_t computed_total = 0U;
   for (std::uint32_t i = 0; i < header->clip_count; ++i) {
-    auto const &c = m_clip_table[i];
+    auto const& c = m_clip_table[i];
     if (c.frame_count == 0U) {
       m_last_error = "clip frame_count == 0";
       return false;
@@ -132,8 +129,7 @@ bool BpatBlob::validate() {
       return false;
     }
     computed_total += c.frame_count;
-    if (std::uint64_t{c.name_offset} + c.name_length + 1U >
-        header->string_table_size) {
+    if (std::uint64_t{c.name_offset} + c.name_length + 1U > header->string_table_size) {
       m_last_error = "clip name out of string table";
       return false;
     }
@@ -148,13 +144,12 @@ bool BpatBlob::validate() {
   }
 
   for (std::uint32_t i = 0; i < header->socket_count; ++i) {
-    auto const &s = m_socket_table[i];
+    auto const& s = m_socket_table[i];
     if (s.anchor_bone >= header->bone_count) {
       m_last_error = "socket anchor_bone out of range";
       return false;
     }
-    if (std::uint64_t{s.name_offset} + s.name_length + 1U >
-        header->string_table_size) {
+    if (std::uint64_t{s.name_offset} + s.name_length + 1U > header->string_table_size) {
       m_last_error = "socket name out of string table";
       return false;
     }
@@ -190,7 +185,7 @@ auto BpatBlob::clip(std::uint32_t index) const -> ClipView {
   if (m_header == nullptr || index >= m_header->clip_count) {
     return v;
   }
-  auto const &e = m_clip_table[index];
+  auto const& e = m_clip_table[index];
   v.name = std::string_view(m_string_table + e.name_offset, e.name_length);
   v.frame_count = e.frame_count;
   v.frame_offset = e.frame_offset;
@@ -204,7 +199,7 @@ auto BpatBlob::socket(std::uint32_t index) const -> SocketView {
   if (m_header == nullptr || index >= m_header->socket_count) {
     return v;
   }
-  auto const &e = m_socket_table[index];
+  auto const& e = m_socket_table[index];
   v.name = std::string_view(m_string_table + e.name_offset, e.name_length);
   v.anchor_bone = e.anchor_bone;
   v.local_offset[0] = e.local_offset[0];
@@ -221,8 +216,7 @@ auto BpatBlob::palette_matrix(std::uint32_t global_frame_index,
     return {};
   }
   std::uint64_t const offset =
-      ((std::uint64_t{global_frame_index} * m_header->bone_count) +
-       bone_index) *
+      ((std::uint64_t{global_frame_index} * m_header->bone_count) + bone_index) *
       k_matrix_floats;
   return std::span<const float>(m_palette_data + offset, k_matrix_floats);
 }
@@ -248,8 +242,7 @@ auto BpatBlob::socket_matrix(std::uint32_t global_frame_index,
     return {};
   }
   std::uint64_t const offset =
-      ((std::uint64_t{global_frame_index} * m_header->socket_count) +
-       socket_index) *
+      ((std::uint64_t{global_frame_index} * m_header->socket_count) + socket_index) *
       k_socket_matrix_floats;
   return std::span<const float>(m_socket_data + offset, k_socket_matrix_floats);
 }

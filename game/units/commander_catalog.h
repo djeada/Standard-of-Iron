@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../systems/nation_id.h"
-#include "troop_type.h"
 #include <string>
 #include <vector>
+
+#include "../systems/nation_id.h"
+#include "troop_type.h"
 
 namespace Game::Units {
 
@@ -35,11 +36,10 @@ struct CommanderDefinition {
 };
 
 [[nodiscard]] auto
-all_commander_definitions() -> const std::vector<CommanderDefinition> &;
+all_commander_definitions() -> const std::vector<CommanderDefinition>&;
 [[nodiscard]] auto
-commander_definition(TroopType troop_type) -> const CommanderDefinition *;
-[[nodiscard]] auto
-commander_definitions_for_nation(Game::Systems::NationID nation_id)
-    -> std::vector<const CommanderDefinition *>;
+commander_definition(TroopType troop_type) -> const CommanderDefinition*;
+[[nodiscard]] auto commander_definitions_for_nation(Game::Systems::NationID nation_id)
+    -> std::vector<const CommanderDefinition*>;
 
 } // namespace Game::Units

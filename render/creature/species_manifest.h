@@ -1,9 +1,5 @@
 #pragma once
 
-#include "part_graph.h"
-#include "quadruped/mesh_graph.h"
-#include "spec.h"
-
 #include <QMatrix4x4>
 
 #include <array>
@@ -12,6 +8,10 @@
 #include <span>
 #include <string_view>
 #include <vector>
+
+#include "part_graph.h"
+#include "quadruped/mesh_graph.h"
+#include "spec.h"
 
 namespace Render::Creature {
 
@@ -23,10 +23,10 @@ struct BakeClipDescriptor {
 };
 
 using BindPaletteProviderFn = std::span<const QMatrix4x4> (*)() noexcept;
-using CreatureSpecProviderFn = const CreatureSpec &(*)() noexcept;
+using CreatureSpecProviderFn = const CreatureSpec& (*)() noexcept;
 using BakeClipPaletteFn = void (*)(std::size_t clip_index,
                                    std::uint32_t frame_index,
-                                   std::vector<QMatrix4x4> &out_palettes);
+                                   std::vector<QMatrix4x4>& out_palettes);
 
 struct WholeMeshLodManifest {
   std::string_view primitive_name{};
@@ -46,7 +46,7 @@ struct SpeciesManifest {
   std::string_view bpat_file_name{};
   std::string_view minimal_snapshot_file_name{};
 
-  const SkeletonTopology *topology{nullptr};
+  const SkeletonTopology* topology{nullptr};
   WholeMeshLodManifest lod_full{};
   WholeMeshLodManifest lod_minimal{};
 
@@ -65,7 +65,7 @@ struct CompiledWholeMeshLod {
   }
 };
 
-[[nodiscard]] auto compile_whole_mesh_lod(const WholeMeshLodManifest &manifest)
-    -> CompiledWholeMeshLod;
+[[nodiscard]] auto
+compile_whole_mesh_lod(const WholeMeshLodManifest& manifest) -> CompiledWholeMeshLod;
 
 } // namespace Render::Creature

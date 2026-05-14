@@ -1,33 +1,34 @@
 #include "rigged_mesh_cache.h"
 
+#include <QOpenGLContext>
+#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLVersionFunctionsFactory>
+
+#include <GL/gl.h>
+#include <cstring>
+#include <limits>
+#include <sstream>
+#include <vector>
+
 #include "bone_palette_arena.h"
 #include "creature/bpat/bpat_format.h"
 #include "creature/bpat/bpat_reader.h"
 #include "creature/runtime_bake_guard.h"
 #include "creature/spec.h"
 
-#include <GL/gl.h>
-#include <QOpenGLContext>
-#include <QOpenGLFunctions_3_3_Core>
-#include <QOpenGLVersionFunctionsFactory>
-#include <cstring>
-#include <limits>
-#include <sstream>
-#include <vector>
-
 namespace Render::GL {
 
 namespace {
 
-auto rigged_cache_gl_funcs() -> QOpenGLFunctions_3_3_Core * {
-  auto *ctx = QOpenGLContext::currentContext();
+auto rigged_cache_gl_funcs() -> QOpenGLFunctions_3_3_Core* {
+  auto* ctx = QOpenGLContext::currentContext();
   if (ctx == nullptr) {
     return nullptr;
   }
   return QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(ctx);
 }
 
-auto describe_rigged_key(const Render::Creature::CreatureSpec &spec,
+auto describe_rigged_key(const Render::Creature::CreatureSpec& spec,
                          Render::Creature::CreatureLOD lod,
                          std::uint16_t variant_bucket,
                          std::uint32_t attachment_set_id,
@@ -35,8 +36,7 @@ auto describe_rigged_key(const Render::Creature::CreatureSpec &spec,
                          std::uint32_t skin_species_id) -> std::string {
   std::ostringstream out;
   out << "spec=" << &spec << " lod=" << static_cast<int>(lod)
-      << " variant_bucket=" << variant_bucket
-      << " skin_species_id=" << skin_species_id
+      << " variant_bucket=" << variant_bucket << " skin_species_id=" << skin_species_id
       << " attachment_set_id=" << attachment_set_id << " attachments_hash=0x"
       << std::hex << attachments_hash;
   return out.str();
@@ -44,13 +44,12 @@ auto describe_rigged_key(const Render::Creature::CreatureSpec &spec,
 
 } // namespace
 
-void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry &entry,
-                                    const QMatrix4x4 *bpat_palettes,
+void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry& entry,
+                                    const QMatrix4x4* bpat_palettes,
                                     std::uint32_t frame_total,
                                     std::uint32_t bone_count) {
   if (entry.skinned_frame_total == frame_total &&
-      entry.skinned_bone_count == bone_count &&
-      !entry.skinned_palettes.empty()) {
+      entry.skinned_bone_count == bone_count && !entry.skinned_palettes.empty()) {
     return;
   }
   if (frame_total == 0 || bone_count == 0 || bpat_palettes == nullptr) {
@@ -65,13 +64,12 @@ void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry &entry,
   if (bone_count > entry.inverse_bind.size()) {
     bone_count = static_cast<std::uint32_t>(entry.inverse_bind.size());
   }
-  entry.skinned_palettes.assign(
-      static_cast<std::size_t>(frame_total) * bone_count, QMatrix4x4{});
+  entry.skinned_palettes.assign(static_cast<std::size_t>(frame_total) * bone_count,
+                                QMatrix4x4{});
   for (std::uint32_t f = 0; f < frame_total; ++f) {
-    const QMatrix4x4 *src =
-        bpat_palettes + static_cast<std::size_t>(f) * bone_count;
-    QMatrix4x4 *dst = entry.skinned_palettes.data() +
-                      static_cast<std::size_t>(f) * bone_count;
+    const QMatrix4x4* src = bpat_palettes + static_cast<std::size_t>(f) * bone_count;
+    QMatrix4x4* dst =
+        entry.skinned_palettes.data() + static_cast<std::size_t>(f) * bone_count;
     for (std::uint32_t b = 0; b < bone_count; ++b) {
       dst[b] = src[b] * entry.inverse_bind[b];
     }
@@ -80,7 +78,7 @@ void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry &entry,
   entry.skinned_bone_count = bone_count;
 }
 
-void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry &entry) {
+void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
   if (entry.skin_palette_ubo != 0) {
     return;
   }
@@ -94,23 +92,22 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry &entry) {
         "skin palette UBO missing for rigged mesh entry");
     return;
   }
-  auto *fn = rigged_cache_gl_funcs();
+  auto* fn = rigged_cache_gl_funcs();
   if (fn == nullptr) {
     return;
   }
 
   const std::size_t stride = BonePaletteArena::k_palette_bytes;
-  std::vector<float> staging(
-      static_cast<std::size_t>(entry.skinned_frame_total) *
-          BonePaletteArena::k_palette_floats,
-      0.0F);
+  std::vector<float> staging(static_cast<std::size_t>(entry.skinned_frame_total) *
+                                 BonePaletteArena::k_palette_floats,
+                             0.0F);
   for (std::uint32_t f = 0; f < entry.skinned_frame_total; ++f) {
-    const QMatrix4x4 *frame_src =
+    const QMatrix4x4* frame_src =
         entry.skinned_palettes.data() +
         static_cast<std::size_t>(f) * entry.skinned_bone_count;
 
-    float *frame_dst = staging.data() + static_cast<std::size_t>(f) *
-                                            BonePaletteArena::k_palette_floats;
+    float* frame_dst = staging.data() +
+                       static_cast<std::size_t>(f) * BonePaletteArena::k_palette_floats;
     for (std::uint32_t b = 0; b < entry.skinned_bone_count; ++b) {
       std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
                   frame_src[b].constData(),
@@ -118,7 +115,8 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry &entry) {
     }
 
     for (std::uint32_t b = entry.skinned_bone_count;
-         b < BonePaletteArena::k_palette_width; ++b) {
+         b < BonePaletteArena::k_palette_width;
+         ++b) {
       QMatrix4x4 ident;
       std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
                   ident.constData(),
@@ -133,44 +131,52 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry &entry) {
   fn->glBindBuffer(GL_UNIFORM_BUFFER, ubo);
   fn->glBufferData(GL_UNIFORM_BUFFER,
                    static_cast<GLsizeiptr>(staging.size() * sizeof(float)),
-                   staging.data(), GL_STATIC_DRAW);
+                   staging.data(),
+                   GL_STATIC_DRAW);
   fn->glBindBuffer(GL_UNIFORM_BUFFER, 0);
   entry.skin_palette_ubo = ubo;
   entry.skin_palette_frame_stride_bytes = stride;
 }
 
 auto RiggedMeshCache::get_or_bake(
-    const Render::Creature::CreatureSpec &spec,
-    Render::Creature::CreatureLOD lod, std::span<const QMatrix4x4> rest_palette,
+    const Render::Creature::CreatureSpec& spec,
+    Render::Creature::CreatureLOD lod,
+    std::span<const QMatrix4x4> rest_palette,
     std::uint16_t variant_bucket,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments)
-    -> const RiggedMeshEntry * {
+    -> const RiggedMeshEntry* {
   return get_or_bake(spec, lod, rest_palette, variant_bucket, attachments, 0);
 }
 
 auto RiggedMeshCache::get_or_bake(
-    const Render::Creature::CreatureSpec &spec,
-    Render::Creature::CreatureLOD lod, std::span<const QMatrix4x4> rest_palette,
+    const Render::Creature::CreatureSpec& spec,
+    Render::Creature::CreatureLOD lod,
+    std::span<const QMatrix4x4> rest_palette,
     std::uint16_t variant_bucket,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-    std::uint32_t skin_species_id) -> const RiggedMeshEntry * {
-  return get_or_bake_prehashed(spec, lod, rest_palette, variant_bucket,
-                               attachments,
-                               Render::Creature::static_attachments_hash(
-                                   attachments.data(), attachments.size()),
-                               0U, skin_species_id);
+    std::uint32_t skin_species_id) -> const RiggedMeshEntry* {
+  return get_or_bake_prehashed(
+      spec,
+      lod,
+      rest_palette,
+      variant_bucket,
+      attachments,
+      Render::Creature::static_attachments_hash(attachments.data(), attachments.size()),
+      0U,
+      skin_species_id);
 }
 
 auto RiggedMeshCache::get_or_bake_prehashed(
-    const Render::Creature::CreatureSpec &spec,
-    Render::Creature::CreatureLOD lod, std::span<const QMatrix4x4> rest_palette,
+    const Render::Creature::CreatureSpec& spec,
+    Render::Creature::CreatureLOD lod,
+    std::span<const QMatrix4x4> rest_palette,
     std::uint16_t variant_bucket,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-    std::uint64_t attachments_hash, std::uint32_t attachment_set_id,
-    std::uint32_t skin_species_id) -> const RiggedMeshEntry * {
+    std::uint64_t attachments_hash,
+    std::uint32_t attachment_set_id,
+    std::uint32_t skin_species_id) -> const RiggedMeshEntry* {
   Key const key{
-      &spec,           lod, variant_bucket, skin_species_id, attachment_set_id,
-      attachments_hash};
+      &spec, lod, variant_bucket, skin_species_id, attachment_set_id, attachments_hash};
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
     return &it->second;
@@ -180,8 +186,12 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::RiggedMeshBake,
-        describe_rigged_key(spec, lod, variant_bucket, attachment_set_id,
-                            attachments_hash, skin_species_id));
+        describe_rigged_key(spec,
+                            lod,
+                            variant_bucket,
+                            attachment_set_id,
+                            attachments_hash,
+                            skin_species_id));
     return nullptr;
   }
 
@@ -195,7 +205,7 @@ auto RiggedMeshCache::get_or_bake_prehashed(
   entry.mesh = Render::Creature::bake_rigged_mesh(input);
 
   entry.inverse_bind.reserve(rest_palette.size());
-  for (const auto &m : rest_palette) {
+  for (const auto& m : rest_palette) {
     entry.inverse_bind.push_back(m.inverted());
   }
 
@@ -205,11 +215,11 @@ auto RiggedMeshCache::get_or_bake_prehashed(
 }
 
 RiggedMeshCache::~RiggedMeshCache() {
-  auto *fn = rigged_cache_gl_funcs();
+  auto* fn = rigged_cache_gl_funcs();
   if (fn == nullptr) {
     return;
   }
-  for (auto &kv : m_entries) {
+  for (auto& kv : m_entries) {
     if (kv.second.skin_palette_ubo != 0) {
       fn->glDeleteBuffers(1, &kv.second.skin_palette_ubo);
       kv.second.skin_palette_ubo = 0;
@@ -227,16 +237,14 @@ auto matrix_from_row_major(std::span<const float> row) -> QMatrix4x4 {
 } // namespace
 
 void rigged_entry_ensure_skin_atlas_from_blob(
-    const RiggedMeshEntry &entry,
-    const Render::Creature::Bpat::BpatBlob &blob) {
+    const RiggedMeshEntry& entry, const Render::Creature::Bpat::BpatBlob& blob) {
   if (!blob.loaded()) {
     return;
   }
   const std::uint32_t frame_total = blob.frame_total();
   std::uint32_t bone_count = blob.bone_count();
   if (entry.skinned_frame_total == frame_total &&
-      entry.skinned_bone_count == bone_count &&
-      !entry.skinned_palettes.empty()) {
+      entry.skinned_bone_count == bone_count && !entry.skinned_palettes.empty()) {
     return;
   }
   if (frame_total == 0 || bone_count == 0) {
@@ -251,11 +259,11 @@ void rigged_entry_ensure_skin_atlas_from_blob(
   if (bone_count > entry.inverse_bind.size()) {
     bone_count = static_cast<std::uint32_t>(entry.inverse_bind.size());
   }
-  entry.skinned_palettes.assign(
-      static_cast<std::size_t>(frame_total) * bone_count, QMatrix4x4{});
+  entry.skinned_palettes.assign(static_cast<std::size_t>(frame_total) * bone_count,
+                                QMatrix4x4{});
   for (std::uint32_t f = 0; f < frame_total; ++f) {
-    QMatrix4x4 *dst = entry.skinned_palettes.data() +
-                      static_cast<std::size_t>(f) * bone_count;
+    QMatrix4x4* dst =
+        entry.skinned_palettes.data() + static_cast<std::size_t>(f) * bone_count;
     for (std::uint32_t b = 0; b < bone_count; ++b) {
       auto row = blob.palette_matrix(f, b);
       const QMatrix4x4 raw = matrix_from_row_major(row);

@@ -1,4 +1,5 @@
 #include "stamina_system.h"
+
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
@@ -8,30 +9,28 @@ namespace Game::Systems {
 namespace {
 constexpr float k_min_movement_speed_sq = 0.01F;
 
-[[nodiscard]] inline auto is_unit_moving(
-    const Engine::Core::MovementComponent *movement) noexcept -> bool {
+[[nodiscard]] inline auto
+is_unit_moving(const Engine::Core::MovementComponent* movement) noexcept -> bool {
   if (movement == nullptr) {
     return false;
   }
-  const float speed_sq =
-      movement->vx * movement->vx + movement->vz * movement->vz;
+  const float speed_sq = movement->vx * movement->vx + movement->vz * movement->vz;
   return speed_sq > k_min_movement_speed_sq;
 }
 } // namespace
 
-void StaminaSystem::update(Engine::Core::World *world, float delta_time) {
+void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
   }
 
-  for (auto *entity :
-       world->get_entities_with<Engine::Core::StaminaComponent>()) {
-    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+  for (auto* entity : world->get_entities_with<Engine::Core::StaminaComponent>()) {
+    auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
     if (stamina == nullptr) {
       continue;
     }
 
-    const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr || unit->health <= 0) {
       stamina->is_running = false;
       continue;
@@ -43,8 +42,7 @@ void StaminaSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    const auto *movement =
-        entity->get_component<Engine::Core::MovementComponent>();
+    const auto* movement = entity->get_component<Engine::Core::MovementComponent>();
     const bool is_moving = is_unit_moving(movement);
 
     if (stamina->run_requested && is_moving) {

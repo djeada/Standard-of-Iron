@@ -1,4 +1,16 @@
 #include "riverbank_asset_renderer.h"
+
+#include <QDebug>
+#include <QVector2D>
+#include <qglobal.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 #include "../../game/map/visibility_service.h"
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
@@ -7,15 +19,6 @@
 #include "map/terrain.h"
 #include "riverbank_asset_gpu.h"
 #include "scatter_runtime.h"
-#include <QDebug>
-#include <QVector2D>
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <qglobal.h>
-#include <vector>
 
 namespace {
 
@@ -46,9 +49,9 @@ RiverbankAssetRenderer::RiverbankAssetRenderer() = default;
 RiverbankAssetRenderer::~RiverbankAssetRenderer() = default;
 
 void RiverbankAssetRenderer::configure(
-    const std::vector<Game::Map::RiverSegment> &river_segments,
-    const Game::Map::TerrainHeightMap &height_map,
-    const Game::Map::BiomeSettings &biome_settings) {
+    const std::vector<Game::Map::RiverSegment>& river_segments,
+    const Game::Map::TerrainHeightMap& height_map,
+    const Game::Map::BiomeSettings& biome_settings) {
   m_river_segments = river_segments;
   m_width = height_map.get_width();
   m_height = height_map.get_height();
@@ -66,13 +69,13 @@ void RiverbankAssetRenderer::configure(
   generate_asset_instances();
 }
 
-void RiverbankAssetRenderer::set_light_direction(const QVector3D &dir) {
+void RiverbankAssetRenderer::set_light_direction(const QVector3D& dir) {
   const QVector3D normalized =
       dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
   m_asset_state.params.light_direction = normalized;
 }
 
-void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
+void RiverbankAssetRenderer::submit(Renderer&, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   if (m_asset_state.instance_count == 0) {
@@ -80,24 +83,25 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
   }
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_asset_state, [](const RiverbankAssetInstanceGpu &instance) {
-        return QVector3D(instance.position[0], instance.position[1],
-                         instance.position[2]);
+      m_asset_state, [](const RiverbankAssetInstanceGpu& instance) {
+        return QVector3D(
+            instance.position[0], instance.position[1], instance.position[2]);
       });
 
   if (visible_count > 0) {
     qDebug() << "RiverbankAssetRenderer: Would render" << visible_count << "of"
-             << m_asset_state.instance_count
-             << "riverbank assets (fog of war applied)";
+             << m_asset_state.instance_count << "riverbank assets (fog of war applied)";
   }
 }
 
-void RiverbankAssetRenderer::clear() { m_asset_state.reset_instances(); }
+void RiverbankAssetRenderer::clear() {
+  m_asset_state.reset_instances();
+}
 
 void RiverbankAssetRenderer::generate_asset_instances() {
-  auto &asset_instances = m_asset_state.instances;
-  auto &asset_instance_count = m_asset_state.instance_count;
-  auto &asset_instances_dirty = m_asset_state.instances_dirty;
+  auto& asset_instances = m_asset_state.instances;
+  auto& asset_instance_count = m_asset_state.instance_count;
+  auto& asset_instances_dirty = m_asset_state.instances_dirty;
 
   asset_instances.clear();
 
@@ -129,7 +133,7 @@ void RiverbankAssetRenderer::generate_asset_instances() {
   };
 
   for (size_t seg_idx = 0; seg_idx < m_river_segments.size(); ++seg_idx) {
-    const auto &segment = m_river_segments[seg_idx];
+    const auto& segment = m_river_segments[seg_idx];
 
     QVector3D dir = segment.end - segment.start;
     float const length = dir.length();
@@ -145,12 +149,12 @@ void RiverbankAssetRenderer::generate_asset_instances() {
     int const num_steps = static_cast<int>(length / 0.8F) + 1;
 
     constexpr uint32_t k_rng_segment_multiplier = 1000;
-    uint32_t rng = m_noise_seed +
-                   static_cast<uint32_t>(seg_idx * k_rng_segment_multiplier);
+    uint32_t rng =
+        m_noise_seed + static_cast<uint32_t>(seg_idx * k_rng_segment_multiplier);
 
     for (int i = 0; i < num_steps; ++i) {
-      float const t = static_cast<float>(i) /
-                      static_cast<float>(std::max(num_steps - 1, 1));
+      float const t =
+          static_cast<float>(i) / static_cast<float>(std::max(num_steps - 1, 1));
       QVector3D const center_pos = segment.start + dir * (length * t);
 
       for (int side = 0; side < 2; ++side) {
@@ -160,13 +164,12 @@ void RiverbankAssetRenderer::generate_asset_instances() {
           continue;
         }
 
-        float const dist_from_water =
-            half_river_width + rand_01(rng) * bank_zone_width;
+        float const dist_from_water = half_river_width + rand_01(rng) * bank_zone_width;
         float const along_river = (rand_01(rng) - 0.5F) * 0.6F;
 
-        QVector3D const asset_pos =
-            center_pos + perpendicular * (side_sign * dist_from_water) +
-            dir * along_river;
+        QVector3D const asset_pos = center_pos +
+                                    perpendicular * (side_sign * dist_from_water) +
+                                    dir * along_river;
 
         float const gx = (asset_pos.x() / m_tile_size) + half_width;
         float const gz = (asset_pos.z() / m_tile_size) + half_height;

@@ -1,16 +1,16 @@
+#include <gtest/gtest.h>
+
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/units/building_spawn_setup.h"
 #include "game/visuals/team_colors.h"
-
-#include <gtest/gtest.h>
 
 namespace {
 
 TEST(BuildingSpawnSetup, AssignsCanonicalRendererKeyAndTeamColor) {
   Engine::Core::Entity entity(1);
 
-  auto *renderable = Game::Units::add_building_renderable(
+  auto* renderable = Game::Units::add_building_renderable(
       entity, 3, Game::Systems::NationID::Carthage, "barracks");
   ASSERT_NE(renderable, nullptr);
 
@@ -25,14 +25,13 @@ TEST(BuildingSpawnSetup, AssignsCanonicalRendererKeyAndTeamColor) {
 TEST(BuildingSpawnSetup, EnsuresBuildingComponentTracksOriginalNation) {
   Engine::Core::Entity entity(2);
 
-  auto *renderable = Game::Units::add_building_renderable(
+  auto* renderable = Game::Units::add_building_renderable(
       entity, 1, Game::Systems::NationID::RomanRepublic, "home");
   ASSERT_NE(renderable, nullptr);
 
-  auto *building = entity.get_component<Engine::Core::BuildingComponent>();
+  auto* building = entity.get_component<Engine::Core::BuildingComponent>();
   ASSERT_NE(building, nullptr);
-  EXPECT_EQ(building->original_nation_id,
-            Game::Systems::NationID::RomanRepublic);
+  EXPECT_EQ(building->original_nation_id, Game::Systems::NationID::RomanRepublic);
 }
 
 } // namespace

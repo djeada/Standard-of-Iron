@@ -1,4 +1,8 @@
 #include "defense_tower_system.h"
+
+#include <cmath>
+#include <random>
+
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
@@ -8,33 +12,30 @@
 #include "combat_system/damage_processor.h"
 #include "owner_registry.h"
 
-#include <cmath>
-#include <random>
-
 namespace Game::Systems {
 
 namespace {
 
 thread_local std::mt19937 gen(std::random_device{}());
 
-auto find_nearest_enemy_in_range(
-    Engine::Core::Entity *tower, Engine::Core::World *world, float range,
-    float max_height_diff) -> Engine::Core::Entity * {
-  auto *tower_unit = tower->get_component<Engine::Core::UnitComponent>();
-  auto *tower_transform =
-      tower->get_component<Engine::Core::TransformComponent>();
+auto find_nearest_enemy_in_range(Engine::Core::Entity* tower,
+                                 Engine::Core::World* world,
+                                 float range,
+                                 float max_height_diff) -> Engine::Core::Entity* {
+  auto* tower_unit = tower->get_component<Engine::Core::UnitComponent>();
+  auto* tower_transform = tower->get_component<Engine::Core::TransformComponent>();
 
   if (tower_unit == nullptr || tower_transform == nullptr) {
     return nullptr;
   }
 
   float best_dist_sq = range * range;
-  Engine::Core::Entity *best_target = nullptr;
+  Engine::Core::Entity* best_target = nullptr;
 
-  auto &owner_registry = OwnerRegistry::instance();
+  auto& owner_registry = OwnerRegistry::instance();
 
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *entity : entities) {
+  for (auto* entity : entities) {
     if (entity == tower) {
       continue;
     }
@@ -43,7 +44,7 @@ auto find_nearest_enemy_in_range(
       continue;
     }
 
-    auto *target_unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto* target_unit = entity->get_component<Engine::Core::UnitComponent>();
     if (target_unit == nullptr || target_unit->health <= 0) {
       continue;
     }
@@ -52,8 +53,7 @@ auto find_nearest_enemy_in_range(
       continue;
     }
 
-    if (owner_registry.are_allies(tower_unit->owner_id,
-                                  target_unit->owner_id)) {
+    if (owner_registry.are_allies(tower_unit->owner_id, target_unit->owner_id)) {
       continue;
     }
 
@@ -61,8 +61,7 @@ auto find_nearest_enemy_in_range(
       continue;
     }
 
-    auto *target_transform =
-        entity->get_component<Engine::Core::TransformComponent>();
+    auto* target_transform = entity->get_component<Engine::Core::TransformComponent>();
     if (target_transform == nullptr) {
       continue;
     }
@@ -86,29 +85,28 @@ auto find_nearest_enemy_in_range(
   return best_target;
 }
 
-void spawn_tower_arrows(Engine::Core::Entity *tower,
-                        Engine::Core::Entity *target, ArrowSystem *arrow_sys) {
+void spawn_tower_arrows(Engine::Core::Entity* tower,
+                        Engine::Core::Entity* target,
+                        ArrowSystem* arrow_sys) {
   if (arrow_sys == nullptr) {
     return;
   }
 
-  auto *tower_t = tower->get_component<Engine::Core::TransformComponent>();
-  auto *tgt_t = target->get_component<Engine::Core::TransformComponent>();
-  auto *tower_u = tower->get_component<Engine::Core::UnitComponent>();
+  auto* tower_t = tower->get_component<Engine::Core::TransformComponent>();
+  auto* tgt_t = target->get_component<Engine::Core::TransformComponent>();
+  auto* tower_u = tower->get_component<Engine::Core::UnitComponent>();
 
   if (tower_t == nullptr || tgt_t == nullptr) {
     return;
   }
 
-  QVector3D const tower_pos(tower_t->position.x, tower_t->position.y + 2.0F,
-                            tower_t->position.z);
-  QVector3D const target_pos(tgt_t->position.x, tgt_t->position.y,
-                             tgt_t->position.z);
+  QVector3D const tower_pos(
+      tower_t->position.x, tower_t->position.y + 2.0F, tower_t->position.z);
+  QVector3D const target_pos(tgt_t->position.x, tgt_t->position.y, tgt_t->position.z);
   QVector3D const dir = (target_pos - tower_pos).normalized();
-  QVector3D const color =
-      (tower_u != nullptr)
-          ? Game::Visuals::team_colorForOwner(tower_u->owner_id)
-          : QVector3D(0.8F, 0.9F, 1.0F);
+  QVector3D const color = (tower_u != nullptr)
+                              ? Game::Visuals::team_colorForOwner(tower_u->owner_id)
+                              : QVector3D(0.8F, 0.9F, 1.0F);
 
   constexpr int k_arrows_per_volley = 2;
   constexpr float k_arrow_speed = 12.0F;
@@ -118,29 +116,27 @@ void spawn_tower_arrows(Engine::Core::Entity *tower,
   for (int i = 0; i < k_arrows_per_volley; ++i) {
     float const lateral_offset = spread_dist(gen);
 
-    QVector3D const start =
-        tower_pos + dir * 0.5F + perpendicular * lateral_offset;
-    QVector3D const end = target_pos + QVector3D(0.0F, 0.8F, 0.0F) +
-                          perpendicular * lateral_offset;
+    QVector3D const start = tower_pos + dir * 0.5F + perpendicular * lateral_offset;
+    QVector3D const end =
+        target_pos + QVector3D(0.0F, 0.8F, 0.0F) + perpendicular * lateral_offset;
 
-    arrow_sys->spawn_arrow(start, end, color, k_arrow_speed,
-                           ArrowVisualStyle::Focused);
+    arrow_sys->spawn_arrow(start, end, color, k_arrow_speed, ArrowVisualStyle::Focused);
   }
 }
 
 } // namespace
 
-void DefenseTowerSystem::update(Engine::Core::World *world, float delta_time) {
-  auto *arrow_sys = world->get_system<ArrowSystem>();
+void DefenseTowerSystem::update(Engine::Core::World* world, float delta_time) {
+  auto* arrow_sys = world->get_system<ArrowSystem>();
 
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
 
-  for (auto *tower : entities) {
+  for (auto* tower : entities) {
     if (tower->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *tower_unit = tower->get_component<Engine::Core::UnitComponent>();
+    auto* tower_unit = tower->get_component<Engine::Core::UnitComponent>();
     if (tower_unit == nullptr || tower_unit->health <= 0) {
       continue;
     }
@@ -153,7 +149,7 @@ void DefenseTowerSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    auto *attack_comp = tower->get_component<Engine::Core::AttackComponent>();
+    auto* attack_comp = tower->get_component<Engine::Core::AttackComponent>();
     if (attack_comp == nullptr) {
       continue;
     }
@@ -163,7 +159,7 @@ void DefenseTowerSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    auto *target = find_nearest_enemy_in_range(
+    auto* target = find_nearest_enemy_in_range(
         tower, world, attack_comp->range, attack_comp->max_height_difference);
     if (target == nullptr) {
       continue;

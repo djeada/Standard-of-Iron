@@ -1,12 +1,14 @@
 
 
 #include "skeleton.h"
-#include "../creature/skeleton.h"
-#include "humanoid_spec.h"
 
 #include <QVector3D>
+
 #include <array>
 #include <cmath>
+
+#include "../creature/skeleton.h"
+#include "humanoid_spec.h"
 
 namespace Render::Humanoid {
 
@@ -15,44 +17,59 @@ namespace {
 namespace Creature = Render::Creature;
 
 constexpr std::array<std::string_view, k_bone_count> k_bone_names = {
-    "Root",      "Pelvis",    "Spine",     "Chest",    "Neck",
-    "Head",      "ShoulderL", "UpperArmL", "ForearmL", "HandL",
-    "ShoulderR", "UpperArmR", "ForearmR",  "HandR",    "HipL",
-    "KneeL",     "FootL",     "HipR",      "KneeR",    "FootR",
+    "Root",      "Pelvis",   "Spine", "Chest",     "Neck",      "Head",     "ShoulderL",
+    "UpperArmL", "ForearmL", "HandL", "ShoulderR", "UpperArmR", "ForearmR", "HandR",
+    "HipL",      "KneeL",    "FootL", "HipR",      "KneeR",     "FootR",
 };
 
 const std::array<SocketDef, k_socket_count> k_socket_defs = {{
-    {"Head", static_cast<Creature::BoneIndex>(HumanoidBone::Head),
+    {"Head",
+     static_cast<Creature::BoneIndex>(HumanoidBone::Head),
      QVector3D(0.0F, 0.00F, 0.0F)},
-    {"HandR", static_cast<Creature::BoneIndex>(HumanoidBone::HandR),
+    {"HandR",
+     static_cast<Creature::BoneIndex>(HumanoidBone::HandR),
      QVector3D(0.0F, 0.00F, 0.0F)},
-    {"HandL", static_cast<Creature::BoneIndex>(HumanoidBone::HandL),
+    {"HandL",
+     static_cast<Creature::BoneIndex>(HumanoidBone::HandL),
      QVector3D(0.0F, 0.00F, 0.0F)},
-    {"GripR", static_cast<Creature::BoneIndex>(HumanoidBone::HandR),
-     QVector3D(0.0F, 0.00F, 0.0F), QVector3D(1.0F, 0.0F, 0.0F),
-     QVector3D(0.0F, 1.0F, 0.0F), QVector3D(0.0F, 0.0F, 1.0F)},
-    {"GripL", static_cast<Creature::BoneIndex>(HumanoidBone::HandL),
-     QVector3D(0.0F, 0.00F, 0.0F), QVector3D(-1.0F, 0.0F, 0.0F),
-     QVector3D(0.0F, 1.0F, 0.0F), QVector3D(0.0F, 0.0F, -1.0F)},
-    {"Back", static_cast<Creature::BoneIndex>(HumanoidBone::Chest),
+    {"GripR",
+     static_cast<Creature::BoneIndex>(HumanoidBone::HandR),
+     QVector3D(0.0F, 0.00F, 0.0F),
+     QVector3D(1.0F, 0.0F, 0.0F),
+     QVector3D(0.0F, 1.0F, 0.0F),
+     QVector3D(0.0F, 0.0F, 1.0F)},
+    {"GripL",
+     static_cast<Creature::BoneIndex>(HumanoidBone::HandL),
+     QVector3D(0.0F, 0.00F, 0.0F),
+     QVector3D(-1.0F, 0.0F, 0.0F),
+     QVector3D(0.0F, 1.0F, 0.0F),
+     QVector3D(0.0F, 0.0F, -1.0F)},
+    {"Back",
+     static_cast<Creature::BoneIndex>(HumanoidBone::Chest),
      QVector3D(0.0F, 0.10F, -0.12F)},
-    {"HipL", static_cast<Creature::BoneIndex>(HumanoidBone::HipL),
+    {"HipL",
+     static_cast<Creature::BoneIndex>(HumanoidBone::HipL),
      QVector3D(0.0F, -0.02F, 0.0F)},
-    {"HipR", static_cast<Creature::BoneIndex>(HumanoidBone::HipR),
+    {"HipR",
+     static_cast<Creature::BoneIndex>(HumanoidBone::HipR),
      QVector3D(0.0F, -0.02F, 0.0F)},
-    {"ChestFront", static_cast<Creature::BoneIndex>(HumanoidBone::Chest),
+    {"ChestFront",
+     static_cast<Creature::BoneIndex>(HumanoidBone::Chest),
      QVector3D(0.0F, 0.05F, 0.15F)},
-    {"ChestBack", static_cast<Creature::BoneIndex>(HumanoidBone::Chest),
+    {"ChestBack",
+     static_cast<Creature::BoneIndex>(HumanoidBone::Chest),
      QVector3D(0.0F, 0.05F, -0.15F)},
-    {"FootL", static_cast<Creature::BoneIndex>(HumanoidBone::FootL),
+    {"FootL",
+     static_cast<Creature::BoneIndex>(HumanoidBone::FootL),
      QVector3D(0.0F, 0.0F, 0.0F)},
-    {"FootR", static_cast<Creature::BoneIndex>(HumanoidBone::FootR),
+    {"FootR",
+     static_cast<Creature::BoneIndex>(HumanoidBone::FootR),
      QVector3D(0.0F, 0.0F, 0.0F)},
 }};
 
 } // namespace
 
-auto humanoid_topology() noexcept -> const Creature::SkeletonTopology & {
+auto humanoid_topology() noexcept -> const Creature::SkeletonTopology& {
   static const std::array<Creature::BoneDef, k_bone_count> bones = [] {
     std::array<Creature::BoneDef, k_bone_count> out{};
     for (std::size_t i = 0; i < k_bone_count; ++i) {
@@ -66,8 +83,7 @@ auto humanoid_topology() noexcept -> const Creature::SkeletonTopology & {
 
   static const Creature::SkeletonTopology topo{
       std::span<const Creature::BoneDef>(bones.data(), bones.size()),
-      std::span<const Creature::SocketDef>(k_socket_defs.data(),
-                                           k_socket_defs.size()),
+      std::span<const Creature::SocketDef>(k_socket_defs.data(), k_socket_defs.size()),
   };
   return topo;
 }
@@ -77,7 +93,7 @@ namespace {
 namespace Creature = Render::Creature;
 
 struct HumanoidProviderContext {
-  const Render::GL::HumanoidPose *pose;
+  const Render::GL::HumanoidPose* pose;
   QVector3D pelvis;
   QVector3D neck_base;
   QVector3D head;
@@ -87,10 +103,10 @@ struct HumanoidProviderContext {
   QVector3D body_up;
 };
 
-auto humanoid_provider(void *user, Creature::BoneIndex bone) noexcept
-    -> Creature::BoneResolution {
-  auto const *ctx = static_cast<const HumanoidProviderContext *>(user);
-  auto const *p = ctx->pose;
+auto humanoid_provider(void* user,
+                       Creature::BoneIndex bone) noexcept -> Creature::BoneResolution {
+  auto const* ctx = static_cast<const HumanoidProviderContext*>(user);
+  auto const* p = ctx->pose;
   auto const b = static_cast<HumanoidBone>(bone);
 
   Creature::BoneResolution r;
@@ -206,11 +222,10 @@ auto parent_of(HumanoidBone bone) noexcept -> std::uint8_t {
   return i < k_bone_count ? k_bone_parents[i] : k_invalid_bone;
 }
 
-auto socket_def(HumanoidSocket socket) noexcept -> const SocketDef & {
+auto socket_def(HumanoidSocket socket) noexcept -> const SocketDef& {
   auto const i = static_cast<std::size_t>(socket);
   static const SocketDef k_default{
-      "<invalid>", static_cast<Creature::BoneIndex>(HumanoidBone::Root),
-      QVector3D()};
+      "<invalid>", static_cast<Creature::BoneIndex>(HumanoidBone::Root), QVector3D()};
   if (i >= k_socket_count) {
     return k_default;
   }
@@ -221,9 +236,9 @@ auto socket_bone(HumanoidSocket socket) noexcept -> HumanoidBone {
   return static_cast<HumanoidBone>(socket_def(socket).bone);
 }
 
-void evaluate_skeleton(const Render::GL::HumanoidPose &pose,
-                       const QVector3D &right_axis,
-                       BonePalette &out_palette) noexcept {
+void evaluate_skeleton(const Render::GL::HumanoidPose& pose,
+                       const QVector3D& right_axis,
+                       BonePalette& out_palette) noexcept {
   HumanoidProviderContext ctx;
   ctx.pose = &pose;
   ctx.pelvis = pose.pelvis_pos;
@@ -243,11 +258,14 @@ void evaluate_skeleton(const Render::GL::HumanoidPose &pose,
   ctx.hip_r = ctx.pelvis + QVector3D(to_knee_r.x(), 0.0F, to_knee_r.z()) * 0.3F;
 
   Creature::evaluate_skeleton(
-      humanoid_topology(), &humanoid_provider, &ctx, right_axis,
+      humanoid_topology(),
+      &humanoid_provider,
+      &ctx,
+      right_axis,
       std::span<QMatrix4x4>(out_palette.data(), out_palette.size()));
 }
 
-auto socket_transform(const BonePalette &palette,
+auto socket_transform(const BonePalette& palette,
                       HumanoidSocket socket) noexcept -> QMatrix4x4 {
   return Creature::socket_transform(
       humanoid_topology(),
@@ -255,7 +273,7 @@ auto socket_transform(const BonePalette &palette,
       static_cast<Creature::SocketIndex>(socket));
 }
 
-auto socket_transform(const Render::GL::AttachmentFrame &bone_frame,
+auto socket_transform(const Render::GL::AttachmentFrame& bone_frame,
                       HumanoidSocket socket) noexcept -> QMatrix4x4 {
   Render::GL::AttachmentFrame const socket_frame =
       Creature::socket_attachment_frame(bone_frame, socket_def(socket));
@@ -267,13 +285,12 @@ auto socket_transform(const Render::GL::AttachmentFrame &bone_frame,
   return m;
 }
 
-auto socket_position(const BonePalette &palette,
+auto socket_position(const BonePalette& palette,
                      HumanoidSocket socket) noexcept -> QVector3D {
   return socket_transform(palette, socket).column(3).toVector3D();
 }
 
-auto socket_attachment_frame(const BonePalette &palette,
-                             HumanoidSocket socket) noexcept
+auto socket_attachment_frame(const BonePalette& palette, HumanoidSocket socket) noexcept
     -> Render::GL::AttachmentFrame {
   return Creature::socket_attachment_frame(
       humanoid_topology(),
@@ -281,7 +298,7 @@ auto socket_attachment_frame(const BonePalette &palette,
       static_cast<Creature::SocketIndex>(socket));
 }
 
-auto socket_attachment_frame(const Render::GL::AttachmentFrame &bone_frame,
+auto socket_attachment_frame(const Render::GL::AttachmentFrame& bone_frame,
                              HumanoidSocket socket) noexcept
     -> Render::GL::AttachmentFrame {
   return Creature::socket_attachment_frame(bone_frame, socket_def(socket));
@@ -295,10 +312,11 @@ auto bind_socket_transform(HumanoidSocket socket) noexcept -> QMatrix4x4 {
 
 auto bind_socket_attachment_frame(HumanoidSocket socket) noexcept
     -> Render::GL::AttachmentFrame {
-  Render::GL::AttachmentFrame frame = Creature::socket_attachment_frame(
-      humanoid_topology(), humanoid_bind_palette(),
-      static_cast<Creature::SocketIndex>(socket));
-  const auto &bind_frames = humanoid_bind_body_frames();
+  Render::GL::AttachmentFrame frame =
+      Creature::socket_attachment_frame(humanoid_topology(),
+                                        humanoid_bind_palette(),
+                                        static_cast<Creature::SocketIndex>(socket));
+  const auto& bind_frames = humanoid_bind_body_frames();
   switch (socket) {
   case HumanoidSocket::Head:
     frame.radius = bind_frames.head.radius;

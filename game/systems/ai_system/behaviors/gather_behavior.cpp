@@ -1,22 +1,25 @@
 #include "gather_behavior.h"
+
+#include <QVector3D>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <cstddef>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
 #include "../../formation_system.h"
 #include "../../nation_registry.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
-#include <QVector3D>
-#include <algorithm>
-#include <cstddef>
-#include <qvectornd.h>
-#include <unordered_set>
-#include <utility>
-#include <vector>
-
 namespace Game::Systems::AI {
 
-void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
+void GatherBehavior::execute(const AISnapshot& snapshot,
+                             AIContext& context,
                              float delta_time,
-                             std::vector<AICommand> &out_commands) {
+                             std::vector<AICommand>& out_commands) {
   m_gather_timer += delta_time;
 
   if (m_gather_timer < 1.0F) {
@@ -30,10 +33,10 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
 
-  std::vector<const EntitySnapshot *> units_to_gather;
+  std::vector<const EntitySnapshot*> units_to_gather;
   units_to_gather.reserve(snapshot.friendly_units.size());
 
-  for (const auto &entity : snapshot.friendly_units) {
+  for (const auto& entity : snapshot.friendly_units) {
     if (entity.is_building) {
       continue;
     }
@@ -59,7 +62,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  const Nation *nation =
+  const Nation* nation =
       NationRegistry::instance().get_nation_for_player(context.player_id);
   FormationType formation_type = FormationType::Roman;
   if (nation != nullptr) {
@@ -67,8 +70,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto formation_targets = FormationSystem::instance().get_formation_positions(
-      formation_type, static_cast<int>(units_to_gather.size()), rally_point,
-      1.4F);
+      formation_type, static_cast<int>(units_to_gather.size()), rally_point, 1.4F);
 
   std::vector<Engine::Core::EntityID> units_to_move;
   std::vector<float> target_x;
@@ -80,8 +82,8 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   target_z.reserve(units_to_gather.size());
 
   for (size_t i = 0; i < units_to_gather.size(); ++i) {
-    const auto *entity = units_to_gather[i];
-    const auto &target = formation_targets[i];
+    const auto* entity = units_to_gather[i];
+    const auto& target = formation_targets[i];
 
     units_to_move.push_back(entity->id);
     target_x.push_back(target.x());
@@ -93,8 +95,12 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  auto claimed_units = claim_units(units_to_move, get_priority(), "gathering",
-                                   context, m_gather_timer + delta_time, 2.0F);
+  auto claimed_units = claim_units(units_to_move,
+                                   get_priority(),
+                                   "gathering",
+                                   context,
+                                   m_gather_timer + delta_time,
+                                   2.0F);
 
   if (claimed_units.empty()) {
     return;
@@ -104,8 +110,8 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   std::vector<float> filtered_y;
   std::vector<float> filtered_z;
   {
-    const std::unordered_set<Engine::Core::EntityID> claimed_set(
-        claimed_units.begin(), claimed_units.end());
+    const std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(),
+                                                                 claimed_units.end());
     for (size_t i = 0; i < units_to_move.size(); ++i) {
       if (claimed_set.count(units_to_move[i])) {
         filtered_x.push_back(target_x[i]);
@@ -125,8 +131,8 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   out_commands.push_back(std::move(command));
 }
 
-auto GatherBehavior::should_execute(const AISnapshot &snapshot,
-                                    const AIContext &context) const -> bool {
+auto GatherBehavior::should_execute(const AISnapshot& snapshot,
+                                    const AIContext& context) const -> bool {
   if (!context.has_base_anchor) {
     return false;
   }
@@ -142,7 +148,7 @@ auto GatherBehavior::should_execute(const AISnapshot &snapshot,
   if (context.state == AIState::Defending) {
 
     QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
-    for (const auto &entity : snapshot.friendly_units) {
+    for (const auto& entity : snapshot.friendly_units) {
       if (entity.is_building) {
         continue;
       }

@@ -1,7 +1,9 @@
-#include "cache_control.h"
-#include "humanoid_renderer_base.h"
-#include "mesh_helpers.h"
-#include "prepare.h"
+#include <QMatrix4x4>
+#include <QVector3D>
+#include <QVector4D>
+
+#include <algorithm>
+#include <memory>
 
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
@@ -14,32 +16,32 @@
 #include "../geom/parts.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../palette.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <QVector4D>
-#include <algorithm>
-#include <memory>
+#include "cache_control.h"
+#include "humanoid_renderer_base.h"
+#include "mesh_helpers.h"
+#include "prepare.h"
 
 namespace Render::GL {
 
-auto torso_mesh_without_bottom_cap() -> Mesh * {
+auto torso_mesh_without_bottom_cap() -> Mesh* {
   static std::unique_ptr<Mesh> s_mesh;
   if (s_mesh != nullptr) {
     return s_mesh.get();
   }
 
-  Mesh *base = get_unit_torso();
+  Mesh* base = get_unit_torso();
   if (base == nullptr) {
     return nullptr;
   }
 
-  auto filtered = base->clone_with_filtered_indices(
-      [](unsigned int a, unsigned int b, unsigned int c,
-         const std::vector<Vertex> &verts) -> bool {
+  auto filtered =
+      base->clone_with_filtered_indices([](unsigned int a,
+                                           unsigned int b,
+                                           unsigned int c,
+                                           const std::vector<Vertex>& verts) -> bool {
         auto sample = [&](unsigned int idx) -> QVector3D {
-          return {verts[idx].position[0], verts[idx].position[1],
-                  verts[idx].position[2]};
+          return {
+              verts[idx].position[0], verts[idx].position[1], verts[idx].position[2]};
         };
         QVector3D pa = sample(a);
         QVector3D pb = sample(b);
@@ -47,10 +49,9 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
         float min_y = std::min({pa.y(), pb.y(), pc.y()});
         float max_y = std::max({pa.y(), pb.y(), pc.y()});
 
-        QVector3D n(
-            verts[a].normal[0] + verts[b].normal[0] + verts[c].normal[0],
-            verts[a].normal[1] + verts[b].normal[1] + verts[c].normal[1],
-            verts[a].normal[2] + verts[b].normal[2] + verts[c].normal[2]);
+        QVector3D n(verts[a].normal[0] + verts[b].normal[0] + verts[c].normal[0],
+                    verts[a].normal[1] + verts[b].normal[1] + verts[c].normal[1],
+                    verts[a].normal[2] + verts[b].normal[2] + verts[c].normal[2]);
         if (n.lengthSquared() > 0.0F) {
           n.normalize();
         }
@@ -63,26 +64,27 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
         return is_flat && is_at_bottom && facing_down;
       });
 
-  s_mesh =
-      (filtered != nullptr) ? std::move(filtered) : std::unique_ptr<Mesh>(base);
+  s_mesh = (filtered != nullptr) ? std::move(filtered) : std::unique_ptr<Mesh>(base);
   return s_mesh.get();
 }
 
-void align_torso_mesh_forward(QMatrix4x4 &model) noexcept {
+void align_torso_mesh_forward(QMatrix4x4& model) noexcept {
   model.rotate(90.0F, 0.0F, 1.0F, 0.0F);
 }
 
-auto HumanoidRendererBase::frame_local_position(
-    const AttachmentFrame &frame, const QVector3D &local) -> QVector3D {
+auto HumanoidRendererBase::frame_local_position(const AttachmentFrame& frame,
+                                                const QVector3D& local) -> QVector3D {
   float const lx = local.x() * frame.radius;
   float const ly = local.y() * frame.radius;
   float const lz = local.z() * frame.radius;
   return frame.origin + frame.right * lx + frame.up * ly + frame.forward * lz;
 }
 
-auto HumanoidRendererBase::make_frame_local_transform(
-    const QMatrix4x4 &parent, const AttachmentFrame &frame,
-    const QVector3D &local_offset, float uniform_scale) -> QMatrix4x4 {
+auto HumanoidRendererBase::make_frame_local_transform(const QMatrix4x4& parent,
+                                                      const AttachmentFrame& frame,
+                                                      const QVector3D& local_offset,
+                                                      float uniform_scale)
+    -> QMatrix4x4 {
   float scale = frame.radius * uniform_scale;
   if (scale == 0.0F) {
     scale = uniform_scale;
@@ -98,34 +100,41 @@ auto HumanoidRendererBase::make_frame_local_transform(
   return parent * local;
 }
 
-auto HumanoidRendererBase::head_local_position(
-    const HeadFrame &frame, const QVector3D &local) -> QVector3D {
+auto HumanoidRendererBase::head_local_position(const HeadFrame& frame,
+                                               const QVector3D& local) -> QVector3D {
   return frame_local_position(frame, local);
 }
 
-auto HumanoidRendererBase::make_head_local_transform(
-    const QMatrix4x4 &parent, const HeadFrame &frame,
-    const QVector3D &local_offset, float uniform_scale) -> QMatrix4x4 {
+auto HumanoidRendererBase::make_head_local_transform(const QMatrix4x4& parent,
+                                                     const HeadFrame& frame,
+                                                     const QVector3D& local_offset,
+                                                     float uniform_scale)
+    -> QMatrix4x4 {
   return make_frame_local_transform(parent, frame, local_offset, uniform_scale);
 }
 
-void HumanoidRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
-                                       HumanoidVariant &v) const {
+void HumanoidRendererBase::get_variant(const DrawContext& ctx,
+                                       uint32_t seed,
+                                       HumanoidVariant& v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
   v.palette = make_humanoid_palette(team_tint, seed);
 }
 
 void HumanoidRendererBase::append_companion_preparation(
-    const DrawContext &, const HumanoidVariant &, const HumanoidPose &,
-    const HumanoidAnimationContext &, uint32_t, Render::Creature::CreatureLOD,
-    Render::Creature::Pipeline::CreaturePreparationResult &) const {}
+    const DrawContext&,
+    const HumanoidVariant&,
+    const HumanoidPose&,
+    const HumanoidAnimationContext&,
+    uint32_t,
+    Render::Creature::CreatureLOD,
+    Render::Creature::Pipeline::CreaturePreparationResult&) const {
+}
 
 auto HumanoidRendererBase::visual_spec() const
-    -> const Render::Creature::Pipeline::UnitVisualSpec & {
+    -> const Render::Creature::Pipeline::UnitVisualSpec& {
   if (!m_visual_spec_baked) {
     m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
-    m_visual_spec_cache.kind =
-        Render::Creature::Pipeline::CreatureKind::Humanoid;
+    m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
     m_visual_spec_cache.debug_name = "humanoid/default";
     m_visual_spec_cache.pose_hook = nullptr;
     m_visual_spec_cache.variant_hook = nullptr;
@@ -138,8 +147,9 @@ auto HumanoidRendererBase::visual_spec() const
 }
 
 auto HumanoidRendererBase::resolve_entity_ground_offset(
-    const DrawContext &, Engine::Core::UnitComponent *unit_comp,
-    Engine::Core::TransformComponent *transform_comp) const -> float {
+    const DrawContext&,
+    Engine::Core::UnitComponent* unit_comp,
+    Engine::Core::TransformComponent* transform_comp) const -> float {
   (void)unit_comp;
   (void)transform_comp;
 

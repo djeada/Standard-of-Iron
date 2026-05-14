@@ -1,16 +1,17 @@
 #pragma once
 
-#include "../../registry.h"
 #include <string>
+
+#include "../../registry.h"
 
 namespace Render::GL::Carthage {
 
 struct BuilderStyleConfig;
 
-void register_builder_style(const std::string &nation_id,
-                            const BuilderStyleConfig &style);
+void register_builder_style(const std::string& nation_id,
+                            const BuilderStyleConfig& style);
 
-void register_builder_renderer(EntityRendererRegistry &registry);
-void register_civilian_renderer(EntityRendererRegistry &registry);
+void register_builder_renderer(EntityRendererRegistry& registry);
+void register_civilian_renderer(EntityRendererRegistry& registry);
 
 } // namespace Render::GL::Carthage

@@ -1,5 +1,3 @@
-#include "../../game/map/campaign_loader.h"
-#include "../../game/map/mission_loader.h"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
@@ -7,8 +5,12 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+
 #include <iostream>
 #include <set>
+
+#include "../../game/map/campaign_loader.h"
+#include "../../game/map/mission_loader.h"
 
 namespace {
 
@@ -17,15 +19,15 @@ struct ValidationResult {
   std::vector<QString> errors;
   std::vector<QString> warnings;
 
-  void addError(const QString &error) {
+  void addError(const QString& error) {
     success = false;
     errors.push_back(error);
   }
 
-  void addWarning(const QString &warning) { warnings.push_back(warning); }
+  void addWarning(const QString& warning) { warnings.push_back(warning); }
 };
 
-auto validateMissionFile(const QString &file_path) -> ValidationResult {
+auto validateMissionFile(const QString& file_path) -> ValidationResult {
   ValidationResult result;
 
   QFileInfo file_info(file_path);
@@ -37,11 +39,10 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
   Game::Mission::MissionDefinition mission;
   QString error_msg;
 
-  if (!Game::Mission::MissionLoader::load_from_json_file(file_path, mission,
-                                                         &error_msg)) {
-    result.addError(QString("Failed to parse mission %1: %2")
-                        .arg(file_path)
-                        .arg(error_msg));
+  if (!Game::Mission::MissionLoader::load_from_json_file(
+          file_path, mission, &error_msg)) {
+    result.addError(
+        QString("Failed to parse mission %1: %2").arg(file_path).arg(error_msg));
     return result;
   }
 
@@ -50,13 +51,11 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
   }
 
   if (mission.title.isEmpty()) {
-    result.addError(
-        QString("Mission %1: missing 'title' field").arg(file_path));
+    result.addError(QString("Mission %1: missing 'title' field").arg(file_path));
   }
 
   if (mission.map_path.isEmpty()) {
-    result.addError(
-        QString("Mission %1: missing 'map_path' field").arg(file_path));
+    result.addError(QString("Mission %1: missing 'map_path' field").arg(file_path));
   } else {
 
     QString map_path = mission.map_path;
@@ -65,8 +64,7 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
       map_path = map_path.mid(2);
     }
 
-    QString abs_map_path =
-        QDir::currentPath() + "/" + map_path.replace("assets/", "");
+    QString abs_map_path = QDir::currentPath() + "/" + map_path.replace("assets/", "");
 
     bool map_found = false;
     QStringList search_paths = {abs_map_path,
@@ -74,7 +72,7 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
                                     QFileInfo(map_path).fileName(),
                                 mission.map_path};
 
-    for (const auto &search_path : search_paths) {
+    for (const auto& search_path : search_paths) {
       if (QFile::exists(search_path)) {
         map_found = true;
         break;
@@ -107,8 +105,8 @@ auto validateMissionFile(const QString &file_path) -> ValidationResult {
   return result;
 }
 
-auto validateCampaignFile(const QString &file_path,
-                          const std::set<QString> &available_missions)
+auto validateCampaignFile(const QString& file_path,
+                          const std::set<QString>& available_missions)
     -> ValidationResult {
   ValidationResult result;
 
@@ -121,11 +119,10 @@ auto validateCampaignFile(const QString &file_path,
   Game::Campaign::CampaignDefinition campaign;
   QString error_msg;
 
-  if (!Game::Campaign::CampaignLoader::load_from_json_file(file_path, campaign,
-                                                           &error_msg)) {
-    result.addError(QString("Failed to parse campaign %1: %2")
-                        .arg(file_path)
-                        .arg(error_msg));
+  if (!Game::Campaign::CampaignLoader::load_from_json_file(
+          file_path, campaign, &error_msg)) {
+    result.addError(
+        QString("Failed to parse campaign %1: %2").arg(file_path).arg(error_msg));
     return result;
   }
 
@@ -134,8 +131,7 @@ auto validateCampaignFile(const QString &file_path,
   }
 
   if (campaign.title.isEmpty()) {
-    result.addError(
-        QString("Campaign %1: missing 'title' field").arg(file_path));
+    result.addError(QString("Campaign %1: missing 'title' field").arg(file_path));
   }
 
   if (campaign.missions.empty()) {
@@ -144,7 +140,7 @@ auto validateCampaignFile(const QString &file_path,
   }
 
   std::set<int> order_indices;
-  for (const auto &mission : campaign.missions) {
+  for (const auto& mission : campaign.missions) {
     if (order_indices.count(mission.order_index) > 0) {
       result.addError(QString("Campaign %1: duplicate order_index %2")
                           .arg(file_path)
@@ -166,8 +162,7 @@ auto validateCampaignFile(const QString &file_path,
 
     if (static_cast<int>(order_indices.size()) != expected_count) {
       result.addError(
-          QString("Campaign %1: order_index values are not contiguous")
-              .arg(file_path));
+          QString("Campaign %1: order_index values are not contiguous").arg(file_path));
     }
 
     if (min_index != 0 && min_index != 1) {
@@ -181,15 +176,15 @@ auto validateCampaignFile(const QString &file_path,
   return result;
 }
 
-void printResults(const ValidationResult &result, const QString &file_name) {
+void printResults(const ValidationResult& result, const QString& file_name) {
   if (!result.warnings.empty()) {
-    for (const auto &warning : result.warnings) {
+    for (const auto& warning : result.warnings) {
       std::cout << "[WARNING] " << warning.toStdString() << std::endl;
     }
   }
 
   if (!result.errors.empty()) {
-    for (const auto &error : result.errors) {
+    for (const auto& error : result.errors) {
       std::cerr << "[ERROR] " << error.toStdString() << std::endl;
     }
   }
@@ -201,7 +196,7 @@ void printResults(const ValidationResult &result, const QString &file_name) {
 
 } // namespace
 
-auto main(int argc, char *argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
   QCoreApplication app(argc, argv);
 
   if (argc < 2) {
@@ -216,13 +211,12 @@ auto main(int argc, char *argv[]) -> int {
   const QDir base_dir(assets_dir);
 
   if (!base_dir.exists()) {
-    std::cerr << "Error: Assets directory not found: "
-              << assets_dir.toStdString() << std::endl;
+    std::cerr << "Error: Assets directory not found: " << assets_dir.toStdString()
+              << std::endl;
     return 1;
   }
 
-  std::cout << "Validating content in: " << assets_dir.toStdString()
-            << std::endl;
+  std::cout << "Validating content in: " << assets_dir.toStdString() << std::endl;
   std::cout << "========================================" << std::endl;
 
   bool all_valid = true;
@@ -236,7 +230,7 @@ auto main(int argc, char *argv[]) -> int {
     std::cout << "\nValidating " << mission_files.size() << " mission(s)..."
               << std::endl;
 
-    for (const auto &mission_file : mission_files) {
+    for (const auto& mission_file : mission_files) {
       const QString mission_path = missions_dir.filePath(mission_file);
       const ValidationResult result = validateMissionFile(mission_path);
 
@@ -245,8 +239,7 @@ auto main(int argc, char *argv[]) -> int {
       if (result.success) {
 
         Game::Mission::MissionDefinition mission;
-        if (Game::Mission::MissionLoader::load_from_json_file(mission_path,
-                                                              mission)) {
+        if (Game::Mission::MissionLoader::load_from_json_file(mission_path, mission)) {
           mission_ids.insert(mission.id);
         }
       } else {
@@ -265,10 +258,9 @@ auto main(int argc, char *argv[]) -> int {
     std::cout << "\nValidating " << campaign_files.size() << " campaign(s)..."
               << std::endl;
 
-    for (const auto &campaign_file : campaign_files) {
+    for (const auto& campaign_file : campaign_files) {
       const QString campaign_path = campaigns_dir.filePath(campaign_file);
-      const ValidationResult result =
-          validateCampaignFile(campaign_path, mission_ids);
+      const ValidationResult result = validateCampaignFile(campaign_path, mission_ids);
 
       printResults(result, QString("campaigns/") + campaign_file);
 

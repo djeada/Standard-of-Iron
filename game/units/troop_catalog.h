@@ -1,8 +1,9 @@
 #pragma once
 
-#include "troop_type.h"
 #include <string>
 #include <unordered_map>
+
+#include "troop_type.h"
 
 namespace Game::Units {
 
@@ -57,19 +58,18 @@ struct TroopClass {
 
 class TroopCatalog {
 public:
-  static auto instance() -> TroopCatalog &;
+  static auto instance() -> TroopCatalog&;
 
   void register_class(TroopClass troop_class);
   void reset_to_defaults();
 
-  [[nodiscard]] auto
-  get_class(Game::Units::TroopType type) const -> const TroopClass *;
+  [[nodiscard]] auto get_class(Game::Units::TroopType type) const -> const TroopClass*;
 
-  [[nodiscard]] auto get_class_or_fallback(Game::Units::TroopType type) const
-      -> const TroopClass &;
+  [[nodiscard]] auto
+  get_class_or_fallback(Game::Units::TroopType type) const -> const TroopClass&;
 
   [[nodiscard]] auto get_all_classes() const
-      -> const std::unordered_map<Game::Units::TroopType, TroopClass> & {
+      -> const std::unordered_map<Game::Units::TroopType, TroopClass>& {
     return m_classes;
   }
 

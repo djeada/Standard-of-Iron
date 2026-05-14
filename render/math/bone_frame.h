@@ -2,6 +2,7 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cmath>
 
 namespace Render::Math {
@@ -19,8 +20,9 @@ struct BoneFrame {
 };
 
 [[nodiscard]] inline auto
-make_bone_frame(const QVector3D &origin, const QVector3D &up_axis,
-                const QVector3D &right_reference) noexcept -> BoneFrame {
+make_bone_frame(const QVector3D& origin,
+                const QVector3D& up_axis,
+                const QVector3D& right_reference) noexcept -> BoneFrame {
   BoneFrame f;
   f.origin = origin;
 
@@ -31,12 +33,10 @@ make_bone_frame(const QVector3D &origin, const QVector3D &up_axis,
     up.normalize();
   }
 
-  QVector3D right =
-      right_reference - up * QVector3D::dotProduct(right_reference, up);
+  QVector3D right = right_reference - up * QVector3D::dotProduct(right_reference, up);
   if (right.lengthSquared() < 1e-8F) {
-    const QVector3D fallback = std::abs(up.y()) < 0.9F
-                                   ? QVector3D{1.0F, 0.0F, 0.0F}
-                                   : QVector3D{0.0F, 0.0F, 1.0F};
+    const QVector3D fallback = std::abs(up.y()) < 0.9F ? QVector3D{1.0F, 0.0F, 0.0F}
+                                                       : QVector3D{0.0F, 0.0F, 1.0F};
     right = fallback - up * QVector3D::dotProduct(fallback, up);
   }
   right.normalize();

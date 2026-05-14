@@ -1,11 +1,13 @@
 #pragma once
 
-#include "../i_render_pass.h"
-#include "../rain_gpu.h"
 #include <QVector3D>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "../i_render_pass.h"
+#include "../rain_gpu.h"
 
 namespace Game::Systems {
 class RainManager;
@@ -23,16 +25,17 @@ public:
   void set_enabled(bool enabled) { m_enabled = enabled; }
   [[nodiscard]] auto is_enabled() const -> bool { return m_enabled; }
 
-  void configure(float world_width, float world_height,
+  void configure(float world_width,
+                 float world_height,
                  std::uint32_t seed = 12345U,
                  Game::Map::WeatherType type = Game::Map::WeatherType::Rain);
 
   void set_intensity(float intensity);
   void set_weather_type(Game::Map::WeatherType type);
   void set_wind_strength(float strength);
-  void set_camera_position(const QVector3D &position);
+  void set_camera_position(const QVector3D& position);
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
   void clear();
 

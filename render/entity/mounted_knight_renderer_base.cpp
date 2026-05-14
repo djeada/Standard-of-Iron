@@ -1,5 +1,12 @@
 #include "mounted_knight_renderer_base.h"
 
+#include <QVector3D>
+
+#include <array>
+#include <utility>
+
+#include "../../game/core/component.h"
+#include "../../game/core/entity.h"
 #include "../creature/archetype_registry.h"
 #include "../equipment/equipment_registry.h"
 #include "../equipment/horse_equipment_archetype.h"
@@ -7,17 +14,8 @@
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
-
-#include "../../game/core/component.h"
-#include "../../game/core/entity.h"
-
 #include "mounted_knight_pose.h"
 #include "renderer_constants.h"
-
-#include <QVector3D>
-
-#include <array>
-#include <utility>
 
 namespace Render::GL {
 
@@ -27,15 +25,14 @@ constexpr QVector3D k_default_proportion_scale{0.82F, 0.90F, 0.90F};
 
 }
 
-MountedKnightRendererBase::MountedKnightRendererBase(
-    MountedKnightRendererConfig config)
+MountedKnightRendererBase::MountedKnightRendererBase(MountedKnightRendererConfig config)
     : m_config(std::move(config)) {
-  auto &equipment_registry = EquipmentRegistry::instance();
+  auto& equipment_registry = EquipmentRegistry::instance();
 
   m_sword_handle = m_config.sword_handle;
   if (m_sword_handle == k_invalid_equipment_handle) {
-    m_sword_handle = equipment_registry.resolve_handle(
-        EquipmentCategory::Weapon, m_config.sword_equipment_id);
+    m_sword_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
+                                                       m_config.sword_equipment_id);
   }
   m_config.has_sword =
       m_config.has_sword && m_sword_handle != k_invalid_equipment_handle;
@@ -45,25 +42,25 @@ MountedKnightRendererBase::MountedKnightRendererBase(
 
   m_shield_handle = m_config.shield_handle;
   if (m_shield_handle == k_invalid_equipment_handle) {
-    m_shield_handle = equipment_registry.resolve_handle(
-        EquipmentCategory::Weapon, m_config.shield_equipment_id);
+    m_shield_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
+                                                        m_config.shield_equipment_id);
   }
-  m_config.has_cavalry_shield = m_config.has_cavalry_shield &&
-                                m_shield_handle != k_invalid_equipment_handle;
+  m_config.has_cavalry_shield =
+      m_config.has_cavalry_shield && m_shield_handle != k_invalid_equipment_handle;
   if (!m_config.has_cavalry_shield) {
     m_config.shield_equipment_id.clear();
   }
 
   m_helmet_handle = m_config.helmet_handle;
   if (m_helmet_handle == k_invalid_equipment_handle) {
-    m_helmet_handle = equipment_registry.resolve_handle(
-        EquipmentCategory::Helmet, m_config.helmet_equipment_id);
+    m_helmet_handle = equipment_registry.resolve_handle(EquipmentCategory::Helmet,
+                                                        m_config.helmet_equipment_id);
   }
 
   m_armor_handle = m_config.armor_handle;
   if (m_armor_handle == k_invalid_equipment_handle) {
-    m_armor_handle = equipment_registry.resolve_handle(
-        EquipmentCategory::Armor, m_config.armor_equipment_id);
+    m_armor_handle = equipment_registry.resolve_handle(EquipmentCategory::Armor,
+                                                       m_config.armor_equipment_id);
   }
 
   m_shoulder_handle = m_config.shoulder_handle;
@@ -77,31 +74,37 @@ MountedKnightRendererBase::MountedKnightRendererBase(
     m_config.shoulder_equipment_id.clear();
   }
 
-  auto resolve_mount_handle = [&](EquipmentHandle &handle,
+  auto resolve_mount_handle = [&](EquipmentHandle& handle,
                                   EquipmentCategory category,
-                                  std::string &equipment_id) {
+                                  std::string& equipment_id) {
     if (handle == k_invalid_equipment_handle && !equipment_id.empty()) {
       handle = equipment_registry.resolve_handle(category, equipment_id);
     }
   };
 
   m_horse_saddle_handle = m_config.horse_saddle_handle;
-  resolve_mount_handle(m_horse_saddle_handle, EquipmentCategory::HorseTack,
+  resolve_mount_handle(m_horse_saddle_handle,
+                       EquipmentCategory::HorseTack,
                        m_config.horse_saddle_equipment_id);
   m_horse_bridle_handle = m_config.horse_bridle_handle;
-  resolve_mount_handle(m_horse_bridle_handle, EquipmentCategory::HorseTack,
+  resolve_mount_handle(m_horse_bridle_handle,
+                       EquipmentCategory::HorseTack,
                        m_config.horse_bridle_equipment_id);
   m_horse_reins_handle = m_config.horse_reins_handle;
-  resolve_mount_handle(m_horse_reins_handle, EquipmentCategory::HorseTack,
+  resolve_mount_handle(m_horse_reins_handle,
+                       EquipmentCategory::HorseTack,
                        m_config.horse_reins_equipment_id);
   m_horse_blanket_handle = m_config.horse_blanket_handle;
-  resolve_mount_handle(m_horse_blanket_handle, EquipmentCategory::HorseTack,
+  resolve_mount_handle(m_horse_blanket_handle,
+                       EquipmentCategory::HorseTack,
                        m_config.horse_blanket_equipment_id);
   m_horse_barding_handle = m_config.horse_barding_handle;
-  resolve_mount_handle(m_horse_barding_handle, EquipmentCategory::HorseArmor,
+  resolve_mount_handle(m_horse_barding_handle,
+                       EquipmentCategory::HorseArmor,
                        m_config.horse_barding_equipment_id);
   m_horse_crupper_handle = m_config.horse_crupper_handle;
-  resolve_mount_handle(m_horse_crupper_handle, EquipmentCategory::HorseArmor,
+  resolve_mount_handle(m_horse_crupper_handle,
+                       EquipmentCategory::HorseArmor,
                        m_config.horse_crupper_equipment_id);
   m_horse_decoration_handle = m_config.horse_decoration_handle;
   resolve_mount_handle(m_horse_decoration_handle,
@@ -116,10 +119,9 @@ auto MountedKnightRendererBase::get_proportion_scaling() const -> QVector3D {
 }
 
 auto MountedKnightRendererBase::mounted_visual_spec() const
-    -> const Render::Creature::Pipeline::MountedSpec & {
+    -> const Render::Creature::Pipeline::MountedSpec& {
   if (!m_mounted_visual_spec_baked) {
-    m_mounted_visual_spec_cache =
-        MountedHumanoidRendererBase::mounted_visual_spec();
+    m_mounted_visual_spec_cache = MountedHumanoidRendererBase::mounted_visual_spec();
     m_mounted_visual_spec_cache.rider = visual_spec();
     m_mounted_visual_spec_cache.rider.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
@@ -131,7 +133,7 @@ auto MountedKnightRendererBase::mounted_visual_spec() const
 }
 
 auto MountedKnightRendererBase::visual_spec() const
-    -> const Render::Creature::Pipeline::UnitVisualSpec & {
+    -> const Render::Creature::Pipeline::UnitVisualSpec& {
   return m_spec;
 }
 
@@ -139,8 +141,9 @@ auto MountedKnightRendererBase::get_mount_scale() const -> float {
   return m_config.mount_scale;
 }
 
-void MountedKnightRendererBase::adjust_variation(
-    const DrawContext &, uint32_t, VariationParams &variation) const {
+void MountedKnightRendererBase::adjust_variation(const DrawContext&,
+                                                 uint32_t,
+                                                 VariationParams& variation) const {
   variation.height_scale = 0.88F;
   variation.bulk_scale = 0.76F;
   variation.stance_width = 0.60F;
@@ -150,9 +153,9 @@ void MountedKnightRendererBase::adjust_variation(
   variation.shoulder_tilt = 0.0F;
 }
 
-void MountedKnightRendererBase::get_variant(const DrawContext &ctx,
+void MountedKnightRendererBase::get_variant(const DrawContext& ctx,
                                             uint32_t seed,
-                                            HumanoidVariant &v) const {
+                                            HumanoidVariant& v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
   v.palette = make_humanoid_palette(team_tint, seed);
 }
@@ -167,8 +170,7 @@ void MountedKnightRendererBase::build_visual_spec() {
   const std::array<EquipmentHandle, 5> handles{
       m_helmet_handle,
       m_config.has_shoulder ? m_shoulder_handle : k_invalid_equipment_handle,
-      m_config.has_cavalry_shield ? m_shield_handle
-                                  : k_invalid_equipment_handle,
+      m_config.has_cavalry_shield ? m_shield_handle : k_invalid_equipment_handle,
       m_armor_handle,
       m_config.has_sword ? m_sword_handle : k_invalid_equipment_handle,
   };
@@ -188,8 +190,12 @@ void MountedKnightRendererBase::build_visual_spec() {
           ? m_config.mount_archetype_id
           : Render::Creature::ArchetypeRegistry::k_horse_base;
   const std::array<EquipmentHandle, 7> mount_handles{
-      m_horse_saddle_handle,     m_horse_bridle_handle,  m_horse_reins_handle,
-      m_horse_blanket_handle,    m_horse_barding_handle, m_horse_crupper_handle,
+      m_horse_saddle_handle,
+      m_horse_bridle_handle,
+      m_horse_reins_handle,
+      m_horse_blanket_handle,
+      m_horse_barding_handle,
+      m_horse_crupper_handle,
       m_horse_decoration_handle,
   };
   set_mount_archetype_id(resolve_horse_equipment_archetype(

@@ -1,16 +1,18 @@
 #include "ambient_state_manager.h"
 
+#include <QDebug>
+
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game_engine.h"
-#include <QDebug>
 
 AmbientStateManager::AmbientStateManager() = default;
 
-void AmbientStateManager::update(float dt, Engine::Core::World *world,
+void AmbientStateManager::update(float dt,
+                                 Engine::Core::World* world,
                                  int local_owner_id,
-                                 const EntityCache &entity_cache,
-                                 const QString &victory_state) {
+                                 const EntityCache& entity_cache,
+                                 const QString& victory_state) {
   m_ambient_check_timer += dt;
   const float check_interval = 2.0F;
 
@@ -29,8 +31,7 @@ void AmbientStateManager::update(float dt, Engine::Core::World *world,
     }
   } else if (is_player_in_combat(world, local_owner_id)) {
     new_state = Engine::Core::AmbientState::COMBAT;
-  } else if (entity_cache.enemy_barracks_alive &&
-             entity_cache.player_barracks_alive) {
+  } else if (entity_cache.enemy_barracks_alive && entity_cache.player_barracks_alive) {
     new_state = Engine::Core::AmbientState::TENSE;
   }
 
@@ -41,13 +42,13 @@ void AmbientStateManager::update(float dt, Engine::Core::World *world,
     Engine::Core::EventManager::instance().publish(
         Engine::Core::AmbientStateChangedEvent(new_state, previous_state));
 
-    qInfo() << "Ambient state changed from" << static_cast<int>(previous_state)
-            << "to" << static_cast<int>(new_state);
+    qInfo() << "Ambient state changed from" << static_cast<int>(previous_state) << "to"
+            << static_cast<int>(new_state);
   }
 }
 
-auto AmbientStateManager::is_player_in_combat(
-    Engine::Core::World *world, int local_owner_id) const -> bool {
+auto AmbientStateManager::is_player_in_combat(Engine::Core::World* world,
+                                              int local_owner_id) const -> bool {
   if (!world) {
     return false;
   }
@@ -55,10 +56,9 @@ auto AmbientStateManager::is_player_in_combat(
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
   const float combat_check_radius = 15.0F;
 
-  for (auto *entity : units) {
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->owner_id != local_owner_id ||
-        unit->health <= 0) {
+  for (auto* entity : units) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if ((unit == nullptr) || unit->owner_id != local_owner_id || unit->health <= 0) {
       continue;
     }
 
@@ -66,20 +66,19 @@ auto AmbientStateManager::is_player_in_combat(
       return true;
     }
 
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
       continue;
     }
 
-    for (auto *other_entity : units) {
-      auto *other_unit =
-          other_entity->get_component<Engine::Core::UnitComponent>();
+    for (auto* other_entity : units) {
+      auto* other_unit = other_entity->get_component<Engine::Core::UnitComponent>();
       if ((other_unit == nullptr) || other_unit->owner_id == local_owner_id ||
           other_unit->health <= 0) {
         continue;
       }
 
-      auto *other_transform =
+      auto* other_transform =
           other_entity->get_component<Engine::Core::TransformComponent>();
       if (other_transform == nullptr) {
         continue;

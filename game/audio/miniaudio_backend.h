@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QVector>
+
 #include <atomic>
 #include <memory>
 
@@ -23,17 +24,15 @@ public:
   static constexpr float MAX_VOLUME = 1.0F;
   static constexpr float DEFAULT_VOLUME = 1.0F;
 
-  explicit MiniaudioBackend(QObject *parent = nullptr);
+  explicit MiniaudioBackend(QObject* parent = nullptr);
   ~MiniaudioBackend() override;
 
-  auto initialize(int device_rate, int output_channels,
-                  int music_channels) -> bool;
+  auto initialize(int device_rate, int output_channels, int music_channels) -> bool;
   void shutdown();
 
-  auto predecode(const QString &id, const QString &path) -> bool;
+  auto predecode(const QString& id, const QString& path) -> bool;
 
-  void play(int channel, const QString &id, float volume, bool loop,
-            int fade_ms);
+  void play(int channel, const QString& id, float volume, bool loop, int fade_ms);
   void stop(int channel, int fade_ms);
   void pause(int channel);
   void resume(int channel);
@@ -44,9 +43,9 @@ public:
   auto any_channel_playing() const -> bool;
   auto channel_playing(int channel) const -> bool;
 
-  void play_sound(const QString &id, float volume, bool loop = false);
+  void play_sound(const QString& id, float volume, bool loop = false);
 
-  void on_audio(float *output, unsigned frames);
+  void on_audio(float* output, unsigned frames);
 
 private:
   struct DecodedTrack {
@@ -55,7 +54,7 @@ private:
   };
 
   struct Channel {
-    const DecodedTrack *track = nullptr;
+    const DecodedTrack* track = nullptr;
     unsigned frame_pos = 0;
     float current_volume = 0.0F;
     float target_volume = DEFAULT_VOLUME;
@@ -67,7 +66,7 @@ private:
   };
 
   struct SoundEffect {
-    const DecodedTrack *track = nullptr;
+    const DecodedTrack* track = nullptr;
     unsigned frame_pos = 0;
     float volume = DEFAULT_VOLUME;
     bool looping = false;

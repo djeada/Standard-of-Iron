@@ -1,24 +1,26 @@
 #include "camera_follow_system.h"
+
+#include <qvectornd.h>
+
 #include "../../render/gl/camera.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "selection_system.h"
-#include <qvectornd.h>
 
 namespace Game::Systems {
 
-void CameraFollowSystem::update(Engine::Core::World &world,
-                                SelectionSystem &selection,
-                                Render::GL::Camera &camera) {
-  const auto &sel = selection.get_selected_units();
+void CameraFollowSystem::update(Engine::Core::World& world,
+                                SelectionSystem& selection,
+                                Render::GL::Camera& camera) {
+  const auto& sel = selection.get_selected_units();
   if (sel.empty()) {
     return;
   }
   QVector3D sum(0, 0, 0);
   int count = 0;
   for (auto id : sel) {
-    if (auto *e = world.get_entity(id)) {
-      if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
+    if (auto* e = world.get_entity(id)) {
+      if (auto* t = e->get_component<Engine::Core::TransformComponent>()) {
         sum += QVector3D(t->position.x, t->position.y, t->position.z);
         ++count;
       }
@@ -31,18 +33,18 @@ void CameraFollowSystem::update(Engine::Core::World &world,
   }
 }
 
-void CameraFollowSystem::snap_to_selection(Engine::Core::World &world,
-                                           SelectionSystem &selection,
-                                           Render::GL::Camera &camera) {
-  const auto &sel = selection.get_selected_units();
+void CameraFollowSystem::snap_to_selection(Engine::Core::World& world,
+                                           SelectionSystem& selection,
+                                           Render::GL::Camera& camera) {
+  const auto& sel = selection.get_selected_units();
   if (sel.empty()) {
     return;
   }
   QVector3D sum(0, 0, 0);
   int count = 0;
   for (auto id : sel) {
-    if (auto *e = world.get_entity(id)) {
-      if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
+    if (auto* e = world.get_entity(id)) {
+      if (auto* t = e->get_component<Engine::Core::TransformComponent>()) {
         sum += QVector3D(t->position.x, t->position.y, t->position.z);
         ++count;
       }

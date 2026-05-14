@@ -1,5 +1,14 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <algorithm>
+#include <gtest/gtest.h>
+#include <limits>
+#include <unordered_set>
+#include <vector>
+
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
@@ -44,14 +53,6 @@
 #include "render/submitter.h"
 #include "render/template_cache.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <algorithm>
-#include <gtest/gtest.h>
-#include <limits>
-#include <unordered_set>
-#include <vector>
-
 namespace {
 
 constexpr std::uint32_t k_roman_healer_tunic_role_count = 6;
@@ -68,61 +69,64 @@ public:
   std::vector<std::uint32_t> role_color_counts;
   std::vector<float> rigged_world_y;
   std::vector<float> rigged_mesh_min_world_y;
-  const QMatrix4x4 *last_bone_palette{nullptr};
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {
+  const QMatrix4x4* last_bone_palette{nullptr};
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {
     ++meshes;
   }
-  void rigged(const Render::GL::RiggedCreatureCmd &cmd) override {
+  void rigged(const Render::GL::RiggedCreatureCmd& cmd) override {
     ++rigged_calls;
     role_color_counts.push_back(cmd.role_color_count);
     rigged_world_y.push_back(cmd.world.column(3).y());
     float min_world_y = std::numeric_limits<float>::infinity();
     if (cmd.mesh != nullptr && cmd.bone_palette != nullptr) {
-      for (const auto &vertex : cmd.mesh->get_vertices()) {
+      for (const auto& vertex : cmd.mesh->get_vertices()) {
         QVector4D bone_local(vertex.position_bone_local[0],
                              vertex.position_bone_local[1],
-                             vertex.position_bone_local[2], 1.0F);
+                             vertex.position_bone_local[2],
+                             1.0F);
         QVector4D skinned_local(0.0F, 0.0F, 0.0F, 0.0F);
         for (int i = 0; i < 4; ++i) {
           float const weight = vertex.bone_weights[i];
           if (weight <= 0.0F) {
             continue;
           }
-          auto const bone_index =
-              static_cast<std::uint32_t>(vertex.bone_indices[i]);
+          auto const bone_index = static_cast<std::uint32_t>(vertex.bone_indices[i]);
           if (bone_index >= cmd.bone_count) {
             continue;
           }
           skinned_local += (cmd.bone_palette[bone_index] * bone_local) * weight;
         }
-        min_world_y = std::min(min_world_y,
-                               cmd.world.map(skinned_local.toVector3D()).y());
+        min_world_y =
+            std::min(min_world_y, cmd.world.map(skinned_local.toVector3D()).y());
       }
     }
     rigged_mesh_min_world_y.push_back(min_world_y);
     last_bone_palette = cmd.bone_palette;
   }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
-auto render_archer_role_color_count(const char *renderer_id) -> std::uint32_t {
+auto render_archer_role_color_count(const char* renderer_id) -> std::uint32_t {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get(renderer_id);
@@ -146,7 +150,7 @@ auto render_archer_role_color_count(const char *renderer_id) -> std::uint32_t {
                            sink.role_color_counts.end());
 }
 
-auto render_bow_mesh_count(const char *renderer_id,
+auto render_bow_mesh_count(const char* renderer_id,
                            Game::Units::SpawnType spawn_type,
                            Game::Systems::NationID nation_id,
                            bool moving) -> int {
@@ -156,7 +160,8 @@ auto render_bow_mesh_count(const char *renderer_id,
     std::vector<std::uint32_t> role_color_counts;
   };
 
-  auto render_counts = [&](const char *id, Game::Units::SpawnType type,
+  auto render_counts = [&](const char* id,
+                           Game::Units::SpawnType type,
                            Game::Systems::NationID nation,
                            bool is_moving) -> RenderCounts {
     Render::GL::EntityRendererRegistry registry;
@@ -172,8 +177,8 @@ auto render_bow_mesh_count(const char *renderer_id,
     ctx.allow_template_cache = false;
 
     Engine::Core::Entity entity(1);
-    auto *unit = entity.add_component<Engine::Core::UnitComponent>(100, 100,
-                                                                   1.0F, 12.0F);
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     EXPECT_NE(unit, nullptr);
     if (unit == nullptr) {
       return {};
@@ -181,7 +186,7 @@ auto render_bow_mesh_count(const char *renderer_id,
     unit->spawn_type = type;
     unit->nation_id = nation;
     if (is_moving) {
-      auto *movement = entity.add_component<Engine::Core::MovementComponent>();
+      auto* movement = entity.add_component<Engine::Core::MovementComponent>();
       EXPECT_NE(movement, nullptr);
       if (movement == nullptr) {
         return {};
@@ -216,7 +221,7 @@ auto render_bow_mesh_count(const char *renderer_id,
   return visible_bow_count;
 }
 
-auto render_direct_bow_mesh_count(const char *renderer_id,
+auto render_direct_bow_mesh_count(const char* renderer_id,
                                   Game::Units::SpawnType spawn_type,
                                   Game::Systems::NationID nation_id,
                                   bool hold_active) -> int {
@@ -233,8 +238,7 @@ auto render_direct_bow_mesh_count(const char *renderer_id,
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
     return 0;
@@ -242,7 +246,7 @@ auto render_direct_bow_mesh_count(const char *renderer_id,
   unit->spawn_type = spawn_type;
   unit->nation_id = nation_id;
   if (hold_active) {
-    auto *hold = entity.add_component<Engine::Core::HoldModeComponent>();
+    auto* hold = entity.add_component<Engine::Core::HoldModeComponent>();
     EXPECT_NE(hold, nullptr);
     if (hold == nullptr) {
       return 0;
@@ -258,7 +262,7 @@ auto render_direct_bow_mesh_count(const char *renderer_id,
   return sink.meshes;
 }
 
-auto render_runtime_mesh_count(const char *renderer_id,
+auto render_runtime_mesh_count(const char* renderer_id,
                                Game::Units::SpawnType spawn_type,
                                Game::Systems::NationID nation_id,
                                bool moving) -> int {
@@ -275,8 +279,7 @@ auto render_runtime_mesh_count(const char *renderer_id,
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
     return 0;
@@ -284,7 +287,7 @@ auto render_runtime_mesh_count(const char *renderer_id,
   unit->spawn_type = spawn_type;
   unit->nation_id = nation_id;
   if (moving) {
-    auto *movement = entity.add_component<Engine::Core::MovementComponent>();
+    auto* movement = entity.add_component<Engine::Core::MovementComponent>();
     EXPECT_NE(movement, nullptr);
     if (movement == nullptr) {
       return 0;
@@ -304,12 +307,11 @@ auto render_runtime_mesh_count(const char *renderer_id,
   return sink.meshes;
 }
 
-auto find_archetype_id(std::string_view debug_name)
-    -> Render::Creature::ArchetypeId {
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+auto find_archetype_id(std::string_view debug_name) -> Render::Creature::ArchetypeId {
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
   for (std::size_t i = 0; i < registry.size(); ++i) {
     auto const id = static_cast<Render::Creature::ArchetypeId>(i);
-    auto const *desc = registry.get(id);
+    auto const* desc = registry.get(id);
     if (desc != nullptr && desc->debug_name == debug_name) {
       return id;
     }
@@ -319,8 +321,8 @@ auto find_archetype_id(std::string_view debug_name)
 
 auto extra_role_color_count(Render::Creature::ArchetypeId archetype_id)
     -> std::uint32_t {
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
-  auto const *desc = registry.get(archetype_id);
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const* desc = registry.get(archetype_id);
   EXPECT_NE(desc, nullptr);
   if (desc == nullptr) {
     return 0U;
@@ -336,8 +338,8 @@ auto extra_role_color_count(Render::Creature::ArchetypeId archetype_id)
   variant.palette.metal = QVector3D(0.7F, 0.7F, 0.72F);
   std::array<QVector3D, 64> roles{};
   std::uint32_t count = 0U;
-  for (std::size_t i = 0;
-       i < static_cast<std::size_t>(desc->extra_role_color_fn_count); ++i) {
+  for (std::size_t i = 0; i < static_cast<std::size_t>(desc->extra_role_color_fn_count);
+       ++i) {
     const auto fn = desc->extra_role_color_fns[i];
     if (fn == nullptr) {
       continue;
@@ -347,8 +349,7 @@ auto extra_role_color_count(Render::Creature::ArchetypeId archetype_id)
   return count;
 }
 
-auto render_archer_idle_bone_palette(const char *renderer_id)
-    -> const QMatrix4x4 * {
+auto render_archer_idle_bone_palette(const char* renderer_id) -> const QMatrix4x4* {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get(renderer_id);
@@ -361,8 +362,7 @@ auto render_archer_idle_bone_palette(const char *renderer_id)
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
     return nullptr;
@@ -381,7 +381,7 @@ auto render_archer_idle_bone_palette(const char *renderer_id)
   return sink.last_bone_palette;
 }
 
-auto render_builder_submission_count(const char *renderer_id,
+auto render_builder_submission_count(const char* renderer_id,
                                      Game::Systems::NationID nation_id,
                                      bool constructing) -> int {
   Render::GL::EntityRendererRegistry registry;
@@ -397,8 +397,7 @@ auto render_builder_submission_count(const char *renderer_id,
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
     return 0;
@@ -407,8 +406,7 @@ auto render_builder_submission_count(const char *renderer_id,
   unit->nation_id = nation_id;
 
   if (constructing) {
-    auto *builder =
-        entity.add_component<Engine::Core::BuilderProductionComponent>();
+    auto* builder = entity.add_component<Engine::Core::BuilderProductionComponent>();
     EXPECT_NE(builder, nullptr);
     if (builder == nullptr) {
       return 0;
@@ -430,7 +428,7 @@ auto render_builder_submission_count(const char *renderer_id,
 }
 
 auto render_builder_unique_role_color_count(
-    const char *renderer_id, Game::Systems::NationID nation_id) -> std::size_t {
+    const char* renderer_id, Game::Systems::NationID nation_id) -> std::size_t {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get(renderer_id);
@@ -443,8 +441,7 @@ auto render_builder_unique_role_color_count(
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
     return 0U;
@@ -453,8 +450,7 @@ auto render_builder_unique_role_color_count(
   unit->nation_id = nation_id;
   unit->render_individuals_per_unit_override = 12;
 
-  auto *builder =
-      entity.add_component<Engine::Core::BuilderProductionComponent>();
+  auto* builder = entity.add_component<Engine::Core::BuilderProductionComponent>();
   EXPECT_NE(builder, nullptr);
   if (builder == nullptr) {
     return 0U;
@@ -480,8 +476,8 @@ auto render_builder_unique_role_color_count(
   return unique_counts.size();
 }
 
-auto render_civilian_submission_count(
-    const char *renderer_id, Game::Systems::NationID nation_id) -> int {
+auto render_civilian_submission_count(const char* renderer_id,
+                                      Game::Systems::NationID nation_id) -> int {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get(renderer_id);
@@ -495,8 +491,7 @@ auto render_civilian_submission_count(
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(2);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
     return 0;
@@ -511,10 +506,10 @@ auto render_civilian_submission_count(
   return sink.rigged_calls;
 }
 
-auto render_builder_bone_palette(const char *renderer_id,
+auto render_builder_bone_palette(const char* renderer_id,
                                  Game::Systems::NationID nation_id,
                                  bool constructing,
-                                 float time_remaining) -> const QMatrix4x4 * {
+                                 float time_remaining) -> const QMatrix4x4* {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get(renderer_id);
@@ -528,8 +523,7 @@ auto render_builder_bone_palette(const char *renderer_id,
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
     return nullptr;
@@ -538,8 +532,7 @@ auto render_builder_bone_palette(const char *renderer_id,
   unit->nation_id = nation_id;
 
   if (constructing) {
-    auto *builder =
-        entity.add_component<Engine::Core::BuilderProductionComponent>();
+    auto* builder = entity.add_component<Engine::Core::BuilderProductionComponent>();
     EXPECT_NE(builder, nullptr);
     if (builder == nullptr) {
       return nullptr;
@@ -562,7 +555,7 @@ auto render_builder_bone_palette(const char *renderer_id,
 }
 
 auto request_idle_bone_palette(Render::Creature::ArchetypeId archetype_id,
-                               float phase) -> const QMatrix4x4 * {
+                               float phase) -> const QMatrix4x4* {
   using Render::Creature::AnimationStateId;
   using Render::Creature::CreatureLOD;
   using Render::Creature::CreatureRenderRequest;
@@ -585,18 +578,17 @@ auto request_idle_bone_palette(Render::Creature::ArchetypeId archetype_id,
 
 struct ScopedFlatTerrain {
   explicit ScopedFlatTerrain(float height) {
-    auto &terrain = Game::Map::TerrainService::instance();
+    auto& terrain = Game::Map::TerrainService::instance();
     std::vector<float> heights(9, height);
-    std::vector<Game::Map::TerrainType> terrain_types(
-        9, Game::Map::TerrainType::Flat);
-    terrain.restore_from_serialized(3, 3, 1.0F, heights, terrain_types, {}, {},
-                                    {}, Game::Map::BiomeSettings{});
+    std::vector<Game::Map::TerrainType> terrain_types(9, Game::Map::TerrainType::Flat);
+    terrain.restore_from_serialized(
+        3, 3, 1.0F, heights, terrain_types, {}, {}, {}, Game::Map::BiomeSettings{});
   }
 
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
 };
 
-auto render_builder_min_world_y(const char *renderer_id,
+auto render_builder_min_world_y(const char* renderer_id,
                                 Game::Systems::NationID nation_id,
                                 float terrain_height) -> float {
   Render::GL::EntityRendererRegistry registry;
@@ -613,8 +605,7 @@ auto render_builder_min_world_y(const char *renderer_id,
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
     return std::numeric_limits<float>::infinity();
@@ -623,7 +614,7 @@ auto render_builder_min_world_y(const char *renderer_id,
   unit->nation_id = nation_id;
   unit->render_individuals_per_unit_override = 1;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   EXPECT_NE(transform, nullptr);
   if (transform == nullptr) {
     return std::numeric_limits<float>::infinity();
@@ -647,8 +638,8 @@ auto render_builder_min_world_y(const char *renderer_id,
 
 class BeardRenderer : public Render::GL::HumanoidRendererBase {
 public:
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     static const auto spec = [] {
       Render::Creature::Pipeline::UnitVisualSpec s{};
       s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
@@ -662,8 +653,9 @@ public:
     return spec;
   }
 
-  void get_variant(const Render::GL::DrawContext &, std::uint32_t,
-                   Render::GL::HumanoidVariant &v) const override {
+  void get_variant(const Render::GL::DrawContext&,
+                   std::uint32_t,
+                   Render::GL::HumanoidVariant& v) const override {
     v.facial_hair.style = Render::GL::FacialHairStyle::FullBeard;
     v.facial_hair.color = QVector3D(0.20F, 0.14F, 0.10F);
     v.facial_hair.greyness = 0.10F;
@@ -672,22 +664,21 @@ public:
 
 class BowReadyRegressionRenderer : public Render::GL::HumanoidRendererBase {
 public:
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     static const auto spec = [] {
       using Render::Creature::AnimationStateId;
       using Render::Creature::ArchetypeDescriptor;
       using Render::Creature::ArchetypeRegistry;
 
-      auto &registry = ArchetypeRegistry::instance();
-      auto const *base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
+      auto& registry = ArchetypeRegistry::instance();
+      auto const* base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
       EXPECT_NE(base_desc, nullptr);
 
       Render::Creature::Pipeline::UnitVisualSpec s{};
       s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
       s.debug_name = "tests/bow_ready_regression_renderer";
-      s.owned_legacy_slots =
-          Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
+      s.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
       if (base_desc == nullptr) {
         return s;
       }
@@ -709,8 +700,8 @@ public:
 
 class SnapshotPrewarmRenderer : public Render::GL::HumanoidRendererBase {
 public:
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     static const auto spec = [] {
       Render::Creature::Pipeline::UnitVisualSpec s{};
       s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
@@ -773,17 +764,16 @@ TEST(HumanoidPrepare, MainRowStillSubmitsOneRiggedCall) {
 TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   SnapshotPrewarmRenderer renderer;
   Engine::Core::Entity entity(1);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Knight;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->renderer_id = "tests/snapshot_prewarm_renderer";
   renderable->visible = true;
 
@@ -813,12 +803,10 @@ TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
   ASSERT_EQ(prep.bodies.requests().size(), 1u);
   EXPECT_TRUE(prep.post_body_draws.empty());
 
-  auto const &req = prep.bodies.requests().front();
-  EXPECT_NE(req.archetype,
-            Render::Creature::ArchetypeRegistry::k_humanoid_base);
+  auto const& req = prep.bodies.requests().front();
+  EXPECT_NE(req.archetype, Render::Creature::ArchetypeRegistry::k_humanoid_base);
 
-  auto const *desc =
-      Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
+  auto const* desc = Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
   ASSERT_NE(desc, nullptr);
   EXPECT_EQ(desc->bake_attachment_count, 1U);
   EXPECT_GT(req.role_color_count, 7U);
@@ -831,9 +819,9 @@ TEST(HumanoidPrepare, BuiltInArchersPreserveBowRoleColorsBeyondLegacyLimit) {
 
 TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   using Render::Creature::AnimationStateId;
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
 
-  auto const *roman_idle_palette =
+  auto const* roman_idle_palette =
       render_archer_idle_bone_palette("troops/roman/archer");
   auto const roman_id = find_archetype_id("troops/roman/archer");
   ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
@@ -842,64 +830,57 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   EXPECT_EQ(roman_idle_palette, request_idle_bone_palette(roman_id, 0.5F));
   EXPECT_NE(roman_idle_palette, request_idle_bone_palette(roman_id, 0.0F));
 
-  auto const *carthage_idle_palette =
+  auto const* carthage_idle_palette =
       render_archer_idle_bone_palette("troops/carthage/archer");
   auto const carthage_id = find_archetype_id("troops/carthage/archer");
   ASSERT_NE(carthage_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(registry.bpat_clip(carthage_id, AnimationStateId::Idle),
             registry.bpat_clip(carthage_id, AnimationStateId::AttackBow));
-  EXPECT_EQ(carthage_idle_palette,
-            request_idle_bone_palette(carthage_id, 0.5F));
-  EXPECT_NE(carthage_idle_palette,
-            request_idle_bone_palette(carthage_id, 0.0F));
+  EXPECT_EQ(carthage_idle_palette, request_idle_bone_palette(carthage_id, 0.5F));
+  EXPECT_NE(carthage_idle_palette, request_idle_bone_palette(carthage_id, 0.0F));
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersSubmitRiggedGeometry) {
   EXPECT_GT(render_builder_submission_count(
-                "troops/roman/builder", Game::Systems::NationID::RomanRepublic,
-                false),
+                "troops/roman/builder", Game::Systems::NationID::RomanRepublic, false),
             0);
-  EXPECT_GT(render_builder_submission_count("troops/carthage/builder",
-                                            Game::Systems::NationID::Carthage,
-                                            false),
+  EXPECT_GT(render_builder_submission_count(
+                "troops/carthage/builder", Game::Systems::NationID::Carthage, false),
             0);
 }
 
 TEST(HumanoidPrepare, BuiltInCiviliansSubmitRiggedGeometry) {
-  EXPECT_GT(
-      render_civilian_submission_count("troops/roman/civilian",
-                                       Game::Systems::NationID::RomanRepublic),
-      0);
+  EXPECT_GT(render_civilian_submission_count("troops/roman/civilian",
+                                             Game::Systems::NationID::RomanRepublic),
+            0);
   EXPECT_GT(render_civilian_submission_count("troops/carthage/civilian",
                                              Game::Systems::NationID::Carthage),
             0);
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersSubmitRiggedGeometryWhileConstructing) {
-  EXPECT_GT(
-      render_builder_submission_count(
-          "troops/roman/builder", Game::Systems::NationID::RomanRepublic, true),
-      0);
-  EXPECT_GT(render_builder_submission_count("troops/carthage/builder",
-                                            Game::Systems::NationID::Carthage,
-                                            true),
+  EXPECT_GT(render_builder_submission_count(
+                "troops/roman/builder", Game::Systems::NationID::RomanRepublic, true),
+            0);
+  EXPECT_GT(render_builder_submission_count(
+                "troops/carthage/builder", Game::Systems::NationID::Carthage, true),
             0);
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersVisibleIdleGeometryTouchesTerrain) {
-  EXPECT_NEAR(render_builder_min_world_y("troops/roman/builder",
-                                         Game::Systems::NationID::RomanRepublic,
-                                         2.4F),
-              2.4F, 0.25F);
-  EXPECT_NEAR(render_builder_min_world_y("troops/carthage/builder",
-                                         Game::Systems::NationID::Carthage,
-                                         2.4F),
-              2.4F, 0.25F);
+  EXPECT_NEAR(render_builder_min_world_y(
+                  "troops/roman/builder", Game::Systems::NationID::RomanRepublic, 2.4F),
+              2.4F,
+              0.25F);
+  EXPECT_NEAR(render_builder_min_world_y(
+                  "troops/carthage/builder", Game::Systems::NationID::Carthage, 2.4F),
+              2.4F,
+              0.25F);
 }
 
 TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
   using Render::GL::FormationCalculatorFactory;
-  auto const *calculator = FormationCalculatorFactory::get_calculator(
+  auto const* calculator = FormationCalculatorFactory::get_calculator(
       FormationCalculatorFactory::Nation::Roman,
       FormationCalculatorFactory::UnitCategory::BuilderConstruction);
   ASSERT_NE(calculator, nullptr);
@@ -907,15 +888,14 @@ TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
   float const spacing = 2.0F;
   constexpr int total = 8;
   for (int idx = 0; idx < total; ++idx) {
-    auto const offset = calculator->calculate_offset(idx, 0, idx, 1, total,
-                                                     spacing, 0x12345678U);
+    auto const offset =
+        calculator->calculate_offset(idx, 0, idx, 1, total, spacing, 0x12345678U);
     float const yaw_rad = offset.yaw_offset * (3.14159265358979F / 180.0F);
     float const cos_yaw = std::cos(yaw_rad);
     float const sin_yaw = std::sin(yaw_rad);
 
     float const world_x = cos_yaw * offset.offset_x + sin_yaw * offset.offset_z;
-    float const world_z =
-        -sin_yaw * offset.offset_x + cos_yaw * offset.offset_z;
+    float const world_z = -sin_yaw * offset.offset_x + cos_yaw * offset.offset_z;
 
     float const face_x = sin_yaw;
     float const face_z = cos_yaw;
@@ -934,7 +914,7 @@ TEST(HumanoidPrepare, BuilderConstructionPlaybackUsesWorkClip) {
   using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
   using Render::Creature::Pipeline::humanoid_clip_variant_for_anim;
 
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
   auto const builder_id = find_archetype_id("troops/roman/builder");
   ASSERT_NE(builder_id, Render::Creature::k_invalid_archetype);
 
@@ -948,23 +928,20 @@ TEST(HumanoidPrepare, BuilderConstructionPlaybackUsesWorkClip) {
   ASSERT_TRUE(playback.has_value());
   EXPECT_EQ(playback->clip_id,
             registry.resolve_bpat_clip(
-                builder_id, AnimationStateId::AttackSword,
+                builder_id,
+                AnimationStateId::AttackSword,
                 humanoid_clip_variant_for_anim(builder_id, construct_anim)));
-  EXPECT_NE(playback->clip_id,
-            registry.bpat_clip(builder_id, AnimationStateId::Idle));
+  EXPECT_NE(playback->clip_id, registry.bpat_clip(builder_id, AnimationStateId::Idle));
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersUseDifferentPoseWhileConstructing) {
-  auto const *roman_idle = render_builder_bone_palette(
-      "troops/roman/builder", Game::Systems::NationID::RomanRepublic, false,
-      10.0F);
-  auto const *roman_constructing = render_builder_bone_palette(
-      "troops/roman/builder", Game::Systems::NationID::RomanRepublic, true,
-      9.0F);
-  auto const *carthage_idle = render_builder_bone_palette(
-      "troops/carthage/builder", Game::Systems::NationID::Carthage, false,
-      10.0F);
-  auto const *carthage_constructing = render_builder_bone_palette(
+  auto const* roman_idle = render_builder_bone_palette(
+      "troops/roman/builder", Game::Systems::NationID::RomanRepublic, false, 10.0F);
+  auto const* roman_constructing = render_builder_bone_palette(
+      "troops/roman/builder", Game::Systems::NationID::RomanRepublic, true, 9.0F);
+  auto const* carthage_idle = render_builder_bone_palette(
+      "troops/carthage/builder", Game::Systems::NationID::Carthage, false, 10.0F);
+  auto const* carthage_constructing = render_builder_bone_palette(
       "troops/carthage/builder", Game::Systems::NationID::Carthage, true, 9.0F);
 
   EXPECT_NE(roman_idle, roman_constructing);
@@ -975,14 +952,14 @@ TEST(HumanoidPrepare, BuiltInBuildersUseMixedConstructionToolSets) {
   EXPECT_GT(render_builder_unique_role_color_count(
                 "troops/roman/builder", Game::Systems::NationID::RomanRepublic),
             1u);
-  EXPECT_GT(render_builder_unique_role_color_count(
-                "troops/carthage/builder", Game::Systems::NationID::Carthage),
+  EXPECT_GT(render_builder_unique_role_color_count("troops/carthage/builder",
+                                                   Game::Systems::NationID::Carthage),
             1u);
 }
 
 TEST(HumanoidPrepare, BuiltInArchersUseDedicatedBowHoldClip) {
   using Render::Creature::AnimationStateId;
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
 
   auto const roman_id = find_archetype_id("troops/roman/archer");
   ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
@@ -1000,37 +977,45 @@ TEST(HumanoidPrepare, BuiltInArchersUseDedicatedBowHoldClip) {
 }
 
 TEST(HumanoidPrepare, BuiltInArchersKeepBowVisibleWhileMoving) {
-  EXPECT_GT(render_bow_mesh_count(
-                "troops/roman/archer", Game::Units::SpawnType::Archer,
-                Game::Systems::NationID::RomanRepublic, false),
+  EXPECT_GT(render_bow_mesh_count("troops/roman/archer",
+                                  Game::Units::SpawnType::Archer,
+                                  Game::Systems::NationID::RomanRepublic,
+                                  false),
             0);
-  EXPECT_EQ(render_runtime_mesh_count(
-                "troops/roman/archer", Game::Units::SpawnType::Archer,
-                Game::Systems::NationID::RomanRepublic, false),
+  EXPECT_EQ(render_runtime_mesh_count("troops/roman/archer",
+                                      Game::Units::SpawnType::Archer,
+                                      Game::Systems::NationID::RomanRepublic,
+                                      false),
             0);
   EXPECT_GT(render_bow_mesh_count("troops/roman/archer",
                                   Game::Units::SpawnType::Archer,
-                                  Game::Systems::NationID::RomanRepublic, true),
+                                  Game::Systems::NationID::RomanRepublic,
+                                  true),
             0);
-  EXPECT_EQ(render_runtime_mesh_count(
-                "troops/roman/archer", Game::Units::SpawnType::Archer,
-                Game::Systems::NationID::RomanRepublic, true),
+  EXPECT_EQ(render_runtime_mesh_count("troops/roman/archer",
+                                      Game::Units::SpawnType::Archer,
+                                      Game::Systems::NationID::RomanRepublic,
+                                      true),
             0);
   EXPECT_GT(render_bow_mesh_count("troops/carthage/archer",
                                   Game::Units::SpawnType::Archer,
-                                  Game::Systems::NationID::Carthage, false),
+                                  Game::Systems::NationID::Carthage,
+                                  false),
             0);
   EXPECT_EQ(render_runtime_mesh_count("troops/carthage/archer",
                                       Game::Units::SpawnType::Archer,
-                                      Game::Systems::NationID::Carthage, false),
+                                      Game::Systems::NationID::Carthage,
+                                      false),
             0);
   EXPECT_GT(render_bow_mesh_count("troops/carthage/archer",
                                   Game::Units::SpawnType::Archer,
-                                  Game::Systems::NationID::Carthage, true),
+                                  Game::Systems::NationID::Carthage,
+                                  true),
             0);
   EXPECT_EQ(render_runtime_mesh_count("troops/carthage/archer",
                                       Game::Units::SpawnType::Archer,
-                                      Game::Systems::NationID::Carthage, true),
+                                      Game::Systems::NationID::Carthage,
+                                      true),
             0);
   EXPECT_GT(render_bow_mesh_count("troops/roman/horse_archer",
                                   Game::Units::SpawnType::HorseArcher,
@@ -1044,7 +1029,8 @@ TEST(HumanoidPrepare, BuiltInArchersKeepBowVisibleWhileMoving) {
             0);
   EXPECT_GT(render_bow_mesh_count("troops/roman/horse_archer",
                                   Game::Units::SpawnType::HorseArcher,
-                                  Game::Systems::NationID::RomanRepublic, true),
+                                  Game::Systems::NationID::RomanRepublic,
+                                  true),
             0);
   EXPECT_EQ(render_runtime_mesh_count("troops/roman/horse_archer",
                                       Game::Units::SpawnType::HorseArcher,
@@ -1053,30 +1039,36 @@ TEST(HumanoidPrepare, BuiltInArchersKeepBowVisibleWhileMoving) {
             0);
   EXPECT_GT(render_bow_mesh_count("troops/carthage/horse_archer",
                                   Game::Units::SpawnType::HorseArcher,
-                                  Game::Systems::NationID::Carthage, false),
+                                  Game::Systems::NationID::Carthage,
+                                  false),
             0);
   EXPECT_EQ(render_runtime_mesh_count("troops/carthage/horse_archer",
                                       Game::Units::SpawnType::HorseArcher,
-                                      Game::Systems::NationID::Carthage, false),
+                                      Game::Systems::NationID::Carthage,
+                                      false),
             0);
   EXPECT_GT(render_bow_mesh_count("troops/carthage/horse_archer",
                                   Game::Units::SpawnType::HorseArcher,
-                                  Game::Systems::NationID::Carthage, true),
+                                  Game::Systems::NationID::Carthage,
+                                  true),
             0);
   EXPECT_EQ(render_runtime_mesh_count("troops/carthage/horse_archer",
                                       Game::Units::SpawnType::HorseArcher,
-                                      Game::Systems::NationID::Carthage, true),
+                                      Game::Systems::NationID::Carthage,
+                                      true),
             0);
 }
 
 TEST(HumanoidPrepare, BuiltInFootArchersKeepBowBakedInHold) {
-  EXPECT_EQ(render_direct_bow_mesh_count(
-                "troops/roman/archer", Game::Units::SpawnType::Archer,
-                Game::Systems::NationID::RomanRepublic, true),
+  EXPECT_EQ(render_direct_bow_mesh_count("troops/roman/archer",
+                                         Game::Units::SpawnType::Archer,
+                                         Game::Systems::NationID::RomanRepublic,
+                                         true),
             0);
-  EXPECT_EQ(render_direct_bow_mesh_count(
-                "troops/carthage/archer", Game::Units::SpawnType::Archer,
-                Game::Systems::NationID::Carthage, true),
+  EXPECT_EQ(render_direct_bow_mesh_count("troops/carthage/archer",
+                                         Game::Units::SpawnType::Archer,
+                                         Game::Systems::NationID::Carthage,
+                                         true),
             0);
 }
 
@@ -1084,7 +1076,7 @@ TEST(HumanoidPrepare, HumanoidBpatPlaybackFollowsArcherVisibleClipState) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
 
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
   auto const roman_id = find_archetype_id("troops/roman/archer");
   ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
 
@@ -1096,8 +1088,7 @@ TEST(HumanoidPrepare, HumanoidBpatPlaybackFollowsArcherVisibleClipState) {
   auto const moving = humanoid_bpat_playback_for_anim(
       roman_id, Render::Creature::Bpat::k_species_humanoid, moving_anim);
   ASSERT_TRUE(moving.has_value());
-  EXPECT_EQ(moving->clip_id,
-            registry.bpat_clip(roman_id, AnimationStateId::Walk));
+  EXPECT_EQ(moving->clip_id, registry.bpat_clip(roman_id, AnimationStateId::Walk));
 
   Render::GL::HumanoidAnimationContext hold_anim{};
   hold_anim.inputs.is_in_hold_mode = true;
@@ -1108,8 +1099,7 @@ TEST(HumanoidPrepare, HumanoidBpatPlaybackFollowsArcherVisibleClipState) {
   auto const hold = humanoid_bpat_playback_for_anim(
       roman_id, Render::Creature::Bpat::k_species_humanoid, hold_anim);
   ASSERT_TRUE(hold.has_value());
-  EXPECT_EQ(hold->clip_id,
-            registry.bpat_clip(roman_id, AnimationStateId::Hold));
+  EXPECT_EQ(hold->clip_id, registry.bpat_clip(roman_id, AnimationStateId::Hold));
 }
 
 TEST(HumanoidPrepare, RiderDeathPlaybackUsesMountedDeathClips) {
@@ -1118,18 +1108,20 @@ TEST(HumanoidPrepare, RiderDeathPlaybackUsesMountedDeathClips) {
   Render::GL::HumanoidAnimationContext dying_anim{};
   dying_anim.inputs.is_dying = true;
   dying_anim.inputs.death_progress = 0.5F;
-  auto const dying = humanoid_bpat_playback_for_anim(
-      Render::Creature::ArchetypeRegistry::k_rider_base,
-      Render::Creature::Bpat::k_species_humanoid, dying_anim);
+  auto const dying =
+      humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeRegistry::k_rider_base,
+                                      Render::Creature::Bpat::k_species_humanoid,
+                                      dying_anim);
   ASSERT_TRUE(dying.has_value());
   EXPECT_EQ(dying->clip_id, Render::Creature::k_humanoid_die_mounted_clip);
 
   Render::GL::HumanoidAnimationContext dead_anim{};
   dead_anim.inputs.is_dead = true;
   dead_anim.inputs.death_progress = 1.0F;
-  auto const dead = humanoid_bpat_playback_for_anim(
-      Render::Creature::ArchetypeRegistry::k_rider_base,
-      Render::Creature::Bpat::k_species_humanoid, dead_anim);
+  auto const dead =
+      humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeRegistry::k_rider_base,
+                                      Render::Creature::Bpat::k_species_humanoid,
+                                      dead_anim);
   ASSERT_TRUE(dead.has_value());
   EXPECT_EQ(dead->clip_id, Render::Creature::k_humanoid_dead_mounted_clip);
 }
@@ -1138,9 +1130,8 @@ TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
 
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
-  auto const archetype_id =
-      Render::Creature::ArchetypeRegistry::k_humanoid_base;
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
 
   Render::GL::HumanoidAnimationContext attack_anim{};
   attack_anim.inputs.is_attacking = true;
@@ -1154,9 +1145,9 @@ TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
   auto const attack = humanoid_bpat_playback_for_anim(
       archetype_id, Render::Creature::Bpat::k_species_humanoid, attack_anim);
   ASSERT_TRUE(attack.has_value());
-  EXPECT_EQ(attack->clip_id,
-            registry.resolve_bpat_clip(archetype_id,
-                                       AnimationStateId::AttackSpear, 1U));
+  EXPECT_EQ(
+      attack->clip_id,
+      registry.resolve_bpat_clip(archetype_id, AnimationStateId::AttackSpear, 1U));
 }
 
 TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
@@ -1166,8 +1157,7 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
   ctx.seed_override = 0x1234ABCDU;
 
   Engine::Core::Entity entity(42);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -1186,12 +1176,12 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
 
-  auto const &requests = prep.bodies.requests();
+  auto const& requests = prep.bodies.requests();
   ASSERT_GE(requests.size(), 4u);
 
   float min_phase = requests.front().phase;
   float max_phase = requests.front().phase;
-  for (auto const &request : requests) {
+  for (auto const& request : requests) {
     EXPECT_EQ(request.state, Render::Creature::AnimationStateId::AttackSword);
     min_phase = std::min(min_phase, request.phase);
     max_phase = std::max(max_phase, request.phase);
@@ -1206,15 +1196,13 @@ TEST(HumanoidPrepare, AmbientIdleContextSelectsCorrectIdleClipVariant) {
   using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
   using Render::GL::AmbientIdleType;
 
-  auto const archetype_id =
-      Render::Creature::ArchetypeRegistry::k_humanoid_base;
-  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
 
   Render::GL::HumanoidAnimationContext idle_no_ambient{};
   idle_no_ambient.ambient_idle_type = AmbientIdleType::None;
   auto const no_ambient = humanoid_bpat_playback_for_anim(
-      archetype_id, Render::Creature::Bpat::k_species_humanoid,
-      idle_no_ambient);
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, idle_no_ambient);
   ASSERT_TRUE(no_ambient.has_value());
   EXPECT_EQ(no_ambient->clip_id, Render::Creature::k_humanoid_idle_clip);
 
@@ -1262,8 +1250,7 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
@@ -1281,8 +1268,7 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
                 Render::GL::k_roman_shoulder_cover_role_count +
                 Render::GL::k_roman_scutum_role_count +
                 Render::GL::k_roman_heavy_armor_role_count +
-                Render::GL::k_sword_role_count +
-                Render::GL::k_scabbard_role_count);
+                Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
 TEST(HumanoidPrepare, RomanArcherUsesRomanCloakRoleLayout) {
@@ -1296,8 +1282,7 @@ TEST(HumanoidPrepare, RomanArcherUsesRomanCloakRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
@@ -1328,8 +1313,7 @@ TEST(HumanoidPrepare, RomanSpearmanUsesGreavesAndShoulderRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Spearman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
@@ -1360,8 +1344,7 @@ TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
   unit->nation_id = Game::Systems::NationID::Carthage;
@@ -1378,8 +1361,7 @@ TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
                 Render::GL::k_carthage_shield_role_count +
                 Render::GL::k_carthage_shoulder_cover_role_count +
                 Render::GL::k_armor_heavy_carthage_role_count +
-                Render::GL::k_sword_role_count +
-                Render::GL::k_scabbard_role_count);
+                Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
 TEST(HumanoidPrepare, RomanHealerUsesSupportLoadoutRoleLayout) {
@@ -1393,8 +1375,7 @@ TEST(HumanoidPrepare, RomanHealerUsesSupportLoadoutRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Healer;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
@@ -1422,8 +1403,7 @@ TEST(HumanoidPrepare, CarthageHealerUsesSupportLoadoutRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Healer;
   unit->nation_id = Game::Systems::NationID::Carthage;
@@ -1450,8 +1430,7 @@ TEST(HumanoidPrepare, RomanBuilderUsesSupportLoadoutRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Builder;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
@@ -1463,12 +1442,11 @@ TEST(HumanoidPrepare, RomanBuilderUsesSupportLoadoutRoleLayout) {
 
   auto const archetype_id = find_archetype_id("troops/roman/builder");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
-  EXPECT_EQ(extra_role_color_count(archetype_id),
-            k_roman_builder_tunic_role_count +
-                Render::GL::k_roman_light_helmet_role_count +
-                Render::GL::k_tool_belt_role_count +
-                Render::GL::k_work_apron_role_count +
-                Render::GL::k_arm_guards_role_count);
+  EXPECT_EQ(
+      extra_role_color_count(archetype_id),
+      k_roman_builder_tunic_role_count + Render::GL::k_roman_light_helmet_role_count +
+          Render::GL::k_tool_belt_role_count + Render::GL::k_work_apron_role_count +
+          Render::GL::k_arm_guards_role_count);
 }
 
 TEST(HumanoidPrepare, CarthageBuilderUsesSupportLoadoutRoleLayout) {
@@ -1482,8 +1460,7 @@ TEST(HumanoidPrepare, CarthageBuilderUsesSupportLoadoutRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Builder;
   unit->nation_id = Game::Systems::NationID::Carthage;
@@ -1495,12 +1472,11 @@ TEST(HumanoidPrepare, CarthageBuilderUsesSupportLoadoutRoleLayout) {
 
   auto const archetype_id = find_archetype_id("troops/carthage/builder");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
-  EXPECT_EQ(extra_role_color_count(archetype_id),
-            k_carthage_builder_headwrap_role_count +
-                k_carthage_builder_robes_role_count +
-                Render::GL::k_tool_belt_role_count +
-                Render::GL::k_work_apron_role_count +
-                Render::GL::k_arm_guards_role_count);
+  EXPECT_EQ(
+      extra_role_color_count(archetype_id),
+      k_carthage_builder_headwrap_role_count + k_carthage_builder_robes_role_count +
+          Render::GL::k_tool_belt_role_count + Render::GL::k_work_apron_role_count +
+          Render::GL::k_arm_guards_role_count);
 }
 
 TEST(HumanoidPrepare, RomanCivilianUsesDataLoadoutRoleLayout) {
@@ -1514,8 +1490,7 @@ TEST(HumanoidPrepare, RomanCivilianUsesDataLoadoutRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Civilian;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
@@ -1528,8 +1503,7 @@ TEST(HumanoidPrepare, RomanCivilianUsesDataLoadoutRoleLayout) {
   auto const archetype_id = find_archetype_id("troops/roman/civilian");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
-            k_roman_builder_tunic_role_count +
-                k_roman_civilian_mantle_role_count);
+            k_roman_builder_tunic_role_count + k_roman_civilian_mantle_role_count);
 }
 
 TEST(HumanoidPrepare, CarthageCivilianUsesDataLoadoutRoleLayout) {
@@ -1543,8 +1517,7 @@ TEST(HumanoidPrepare, CarthageCivilianUsesDataLoadoutRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Civilian;
   unit->nation_id = Game::Systems::NationID::Carthage;
@@ -1563,16 +1536,18 @@ TEST(HumanoidPrepare, CarthageCivilianUsesDataLoadoutRoleLayout) {
 }
 
 TEST(HumanoidPrepare, RomanCivilianGarmentsUseCompactAttachmentCount) {
-  EXPECT_LE(render_runtime_mesh_count(
-                "troops/roman/civilian", Game::Units::SpawnType::Civilian,
-                Game::Systems::NationID::RomanRepublic, false),
+  EXPECT_LE(render_runtime_mesh_count("troops/roman/civilian",
+                                      Game::Units::SpawnType::Civilian,
+                                      Game::Systems::NationID::RomanRepublic,
+                                      false),
             16);
 }
 
 TEST(HumanoidPrepare, CarthageCivilianGarmentsUseCompactAttachmentCount) {
   EXPECT_LE(render_runtime_mesh_count("troops/carthage/civilian",
                                       Game::Units::SpawnType::Civilian,
-                                      Game::Systems::NationID::Carthage, false),
+                                      Game::Systems::NationID::Carthage,
+                                      false),
             16);
 }
 
@@ -1587,8 +1562,7 @@ TEST(HumanoidPrepare, RomanMountedSwordsmanUsesRomanScutumRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
@@ -1598,16 +1572,14 @@ TEST(HumanoidPrepare, RomanMountedSwordsmanUsesRomanScutumRoleLayout) {
   renderer(ctx, sink);
   ASSERT_GT(sink.rigged_calls, 0);
 
-  auto const archetype_id =
-      find_archetype_id("troops/roman/horse_swordsman/rider");
+  auto const archetype_id = find_archetype_id("troops/roman/horse_swordsman/rider");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
             Render::GL::k_roman_heavy_helmet_role_count +
                 Render::GL::k_roman_shoulder_cover_role_count +
                 Render::GL::k_roman_scutum_role_count +
                 Render::GL::k_roman_heavy_armor_role_count +
-                Render::GL::k_sword_role_count +
-                Render::GL::k_scabbard_role_count);
+                Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
 TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
@@ -1621,8 +1593,7 @@ TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->nation_id = Game::Systems::NationID::Carthage;
@@ -1632,16 +1603,14 @@ TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
   renderer(ctx, sink);
   ASSERT_GT(sink.rigged_calls, 0);
 
-  auto const archetype_id =
-      find_archetype_id("troops/carthage/horse_swordsman/rider");
+  auto const archetype_id = find_archetype_id("troops/carthage/horse_swordsman/rider");
   ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
             Render::GL::k_carthage_heavy_helmet_role_count +
                 Render::GL::k_carthage_shield_role_count +
                 Render::GL::k_carthage_shoulder_cover_role_count +
                 Render::GL::k_armor_heavy_carthage_role_count +
-                Render::GL::k_sword_role_count +
-                Render::GL::k_scabbard_role_count);
+                Render::GL::k_sword_role_count + Render::GL::k_scabbard_role_count);
 }
 
 TEST(HumanoidPrepare, BowReadyRootRequestUsesSurfaceGroundingContract) {
@@ -1653,13 +1622,12 @@ TEST(HumanoidPrepare, BowReadyRootRequestUsesSurfaceGroundingContract) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
   transform->position.x = 0.35F;
   transform->position.y = 6.0F;
@@ -1687,13 +1655,12 @@ TEST(HumanoidPrepare, BowReadySubmittedSurfaceGroundingTouchesTerrain) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
   transform->position.x = 0.35F;
   transform->position.y = 6.0F;
@@ -1721,19 +1688,18 @@ TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
   transform->position.x = 0.1F;
   transform->position.y = 6.0F;
   transform->position.z = -0.2F;
 
-  auto *commander = entity.add_component<Engine::Core::CommanderComponent>();
+  auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander, nullptr);
   commander->jump_active = true;
   commander->jump_phase = 0.5F;
@@ -1763,14 +1729,13 @@ TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   unit->render_individuals_per_unit_override = 3;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
   transform->position.x = 0.0F;
   transform->position.y = 0.0F;
@@ -1796,14 +1761,13 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(60, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(60, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
   unit->render_individuals_per_unit_override = 3;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
   transform->position.x = 0.0F;
   transform->position.y = 0.0F;
@@ -1812,7 +1776,7 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
   transform->scale.y = 1.0F;
   transform->scale.z = 1.0F;
 
-  auto *casualties =
+  auto* casualties =
       entity.add_component<Engine::Core::SoldierCasualtyAnimationComponent>();
   ASSERT_NE(casualties, nullptr);
   casualties->entries.push_back({
@@ -1832,11 +1796,11 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
 
   ASSERT_EQ(prep.bodies.requests().size(), 3u);
-  EXPECT_EQ(std::count_if(
-                prep.bodies.requests().begin(), prep.bodies.requests().end(),
-                [](const auto &req) {
-                  return req.state == Render::Creature::AnimationStateId::Die;
-                }),
+  EXPECT_EQ(std::count_if(prep.bodies.requests().begin(),
+                          prep.bodies.requests().end(),
+                          [](const auto& req) {
+                            return req.state == Render::Creature::AnimationStateId::Die;
+                          }),
             1);
 }
 
@@ -1849,13 +1813,12 @@ TEST(HumanoidPrepare, BowReadySubmittedVisibleGeometryTouchesTerrain) {
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
-  auto *unit =
-      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
   transform->position.x = 0.35F;
   transform->position.y = 6.0F;
@@ -1879,8 +1842,7 @@ TEST(HumanoidPrepare, BuiltInArchersUseSurfaceGroundingInIdlePose) {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
 
-  auto verify_archer = [&](const char *renderer_id,
-                           Game::Systems::NationID nation_id) {
+  auto verify_archer = [&](const char* renderer_id, Game::Systems::NationID nation_id) {
     const auto renderer = registry.get(renderer_id);
     ASSERT_TRUE(static_cast<bool>(renderer));
 
@@ -1889,13 +1851,13 @@ TEST(HumanoidPrepare, BuiltInArchersUseSurfaceGroundingInIdlePose) {
     ctx.allow_template_cache = false;
 
     Engine::Core::Entity entity(1);
-    auto *unit =
+    auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
     ASSERT_NE(unit, nullptr);
     unit->spawn_type = Game::Units::SpawnType::Archer;
     unit->nation_id = nation_id;
 
-    auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+    auto* transform = entity.add_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
     transform->position.x = 0.35F;
     transform->position.y = 6.0F;
@@ -1923,8 +1885,7 @@ TEST(HumanoidPrepare, BuiltInArchersVisibleIdleGeometryTouchesTerrain) {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
 
-  auto verify_archer = [&](const char *renderer_id,
-                           Game::Systems::NationID nation_id) {
+  auto verify_archer = [&](const char* renderer_id, Game::Systems::NationID nation_id) {
     const auto renderer = registry.get(renderer_id);
     ASSERT_TRUE(static_cast<bool>(renderer));
 
@@ -1933,13 +1894,13 @@ TEST(HumanoidPrepare, BuiltInArchersVisibleIdleGeometryTouchesTerrain) {
     ctx.allow_template_cache = false;
 
     Engine::Core::Entity entity(1);
-    auto *unit =
+    auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
     ASSERT_NE(unit, nullptr);
     unit->spawn_type = Game::Units::SpawnType::Archer;
     unit->nation_id = nation_id;
 
-    auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+    auto* transform = entity.add_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
     transform->position.x = 0.35F;
     transform->position.y = 6.0F;
@@ -1986,8 +1947,7 @@ TEST(HumanoidPrepare, DeriveUnitSeedHonorsOverride) {
   Render::GL::DrawContext ctx{};
   ctx.has_seed_override = true;
   ctx.seed_override = 0xDEADBEEFu;
-  EXPECT_EQ(Render::Creature::Pipeline::derive_unit_seed(ctx, nullptr),
-            0xDEADBEEFu);
+  EXPECT_EQ(Render::Creature::Pipeline::derive_unit_seed(ctx, nullptr), 0xDEADBEEFu);
 }
 
 TEST(HumanoidPrepare, DeriveUnitSeedDeterministicWithoutOverride) {
@@ -1998,7 +1958,7 @@ TEST(HumanoidPrepare, DeriveUnitSeedDeterministicWithoutOverride) {
 
 TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
   using Render::GL::FormationCalculatorFactory;
-  auto const *calculator = FormationCalculatorFactory::get_calculator(
+  auto const* calculator = FormationCalculatorFactory::get_calculator(
       FormationCalculatorFactory::Nation::Roman,
       FormationCalculatorFactory::UnitCategory::Infantry);
   ASSERT_NE(calculator, nullptr);
@@ -2015,10 +1975,8 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
   inputs.melee_attack = true;
   inputs.animation_time = 2.5F;
 
-  auto const first =
-      Render::Humanoid::build_soldier_layout(*calculator, inputs);
-  auto const second =
-      Render::Humanoid::build_soldier_layout(*calculator, inputs);
+  auto const first = Render::Humanoid::build_soldier_layout(*calculator, inputs);
+  auto const second = Render::Humanoid::build_soldier_layout(*calculator, inputs);
 
   EXPECT_FLOAT_EQ(first.offset_x, second.offset_x);
   EXPECT_FLOAT_EQ(first.offset_z, second.offset_z);
@@ -2030,7 +1988,7 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
 
 TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
   using Render::GL::FormationCalculatorFactory;
-  auto const *calculator = FormationCalculatorFactory::get_calculator(
+  auto const* calculator = FormationCalculatorFactory::get_calculator(
       FormationCalculatorFactory::Nation::Roman,
       FormationCalculatorFactory::UnitCategory::Infantry);
   ASSERT_NE(calculator, nullptr);
@@ -2047,8 +2005,7 @@ TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
   inputs.melee_attack = false;
   inputs.animation_time = 0.0F;
 
-  auto const layout =
-      Render::Humanoid::build_soldier_layout(*calculator, inputs);
+  auto const layout = Render::Humanoid::build_soldier_layout(*calculator, inputs);
 
   EXPECT_FLOAT_EQ(layout.offset_x, 0.0F);
   EXPECT_FLOAT_EQ(layout.offset_z, 0.0F);
@@ -2060,7 +2017,7 @@ TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
 
 TEST(HumanoidPrepare, CavalryFormationStaggersRowsAndAlternatesRankYaw) {
   using Render::GL::FormationCalculatorFactory;
-  auto const *calculator = FormationCalculatorFactory::get_calculator(
+  auto const* calculator = FormationCalculatorFactory::get_calculator(
       FormationCalculatorFactory::Nation::Roman,
       FormationCalculatorFactory::UnitCategory::Cavalry);
   ASSERT_NE(calculator, nullptr);
@@ -2109,9 +2066,8 @@ TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {
   EXPECT_GT(first.gait.stride_distance, 0.0F);
 }
 
-TEST(
-    HumanoidPrepare,
-    PreparedSingleSoldierRequestProjectsToTerrainBeforeSubmitContactGrounding) {
+TEST(HumanoidPrepare,
+     PreparedSingleSoldierRequestProjectsToTerrainBeforeSubmitContactGrounding) {
   ScopedFlatTerrain terrain(2.75F);
 
   Render::GL::HumanoidRendererBase owner;
@@ -2145,8 +2101,7 @@ TEST(
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
   EXPECT_FALSE(requests[0].world_already_grounded);
-  EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 2.75F,
-              0.0001F);
+  EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 2.75F, 0.0001F);
 }
 
 TEST(HumanoidPrepare,

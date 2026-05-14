@@ -8,20 +8,20 @@
 namespace Render::GL {
 
 TerrainFeatureManager::TerrainFeatureManager()
-    : m_river(std::make_unique<RiverRenderer>()),
-      m_road(std::make_unique<RoadRenderer>()),
-      m_riverbank(std::make_unique<RiverbankRenderer>()),
-      m_bridge(std::make_unique<BridgeRenderer>()),
-      m_passes{m_river.get(), m_road.get(), m_riverbank.get(), m_bridge.get()} {
+    : m_river(std::make_unique<RiverRenderer>())
+    , m_road(std::make_unique<RoadRenderer>())
+    , m_riverbank(std::make_unique<RiverbankRenderer>())
+    , m_bridge(std::make_unique<BridgeRenderer>())
+    , m_passes{m_river.get(), m_road.get(), m_riverbank.get(), m_bridge.get()} {
 }
 
 TerrainFeatureManager::~TerrainFeatureManager() = default;
 
 void TerrainFeatureManager::configure(
-    const Game::Map::TerrainHeightMap &height_map,
-    const std::vector<Game::Map::RoadSegment> &road_segments) {
-  const auto &river_segments = height_map.get_river_segments();
-  const auto &bridges = height_map.get_bridges();
+    const Game::Map::TerrainHeightMap& height_map,
+    const std::vector<Game::Map::RoadSegment>& road_segments) {
+  const auto& river_segments = height_map.get_river_segments();
+  const auto& bridges = height_map.get_bridges();
   const float tile_size = height_map.get_tile_size();
 
   m_river->configure(river_segments, tile_size);
@@ -30,47 +30,53 @@ void TerrainFeatureManager::configure(
   m_bridge->configure(bridges, tile_size);
 }
 
-void TerrainFeatureManager::submit(Renderer &renderer,
-                                   ResourceManager *resources) {
-  for (auto *pass : m_passes) {
+void TerrainFeatureManager::submit(Renderer& renderer, ResourceManager* resources) {
+  for (auto* pass : m_passes) {
     if (pass != nullptr) {
       pass->submit(renderer, resources);
     }
   }
 }
 
-auto TerrainFeatureManager::river() const -> RiverRenderer * {
+auto TerrainFeatureManager::river() const -> RiverRenderer* {
   return m_river.get();
 }
 
-auto TerrainFeatureManager::road() const -> RoadRenderer * {
+auto TerrainFeatureManager::road() const -> RoadRenderer* {
   return m_road.get();
 }
 
-auto TerrainFeatureManager::riverbank() const -> RiverbankRenderer * {
+auto TerrainFeatureManager::riverbank() const -> RiverbankRenderer* {
   return m_riverbank.get();
 }
 
-auto TerrainFeatureManager::bridge() const -> BridgeRenderer * {
+auto TerrainFeatureManager::bridge() const -> BridgeRenderer* {
   return m_bridge.get();
 }
 
-auto TerrainFeatureManager::chunks(
-    std::size_t river_count, std::size_t road_count,
-    std::size_t bridge_count) const -> std::vector<LinearFeatureChunk> {
-  return {
-      {LinearFeatureKind::River, LinearFeatureVisibilityMode::SegmentSampled,
-       m_river.get(), river_count},
-      {LinearFeatureKind::Road, LinearFeatureVisibilityMode::SegmentSampled,
-       m_road.get(), road_count},
-      {LinearFeatureKind::Riverbank, LinearFeatureVisibilityMode::TextureDriven,
-       m_riverbank.get(), river_count},
-      {LinearFeatureKind::Bridge, LinearFeatureVisibilityMode::SegmentSampled,
-       m_bridge.get(), bridge_count}};
+auto TerrainFeatureManager::chunks(std::size_t river_count,
+                                   std::size_t road_count,
+                                   std::size_t bridge_count) const
+    -> std::vector<LinearFeatureChunk> {
+  return {{LinearFeatureKind::River,
+           LinearFeatureVisibilityMode::SegmentSampled,
+           m_river.get(),
+           river_count},
+          {LinearFeatureKind::Road,
+           LinearFeatureVisibilityMode::SegmentSampled,
+           m_road.get(),
+           road_count},
+          {LinearFeatureKind::Riverbank,
+           LinearFeatureVisibilityMode::TextureDriven,
+           m_riverbank.get(),
+           river_count},
+          {LinearFeatureKind::Bridge,
+           LinearFeatureVisibilityMode::SegmentSampled,
+           m_bridge.get(),
+           bridge_count}};
 }
 
-auto TerrainFeatureManager::passes() const
-    -> const std::vector<IRenderPass *> & {
+auto TerrainFeatureManager::passes() const -> const std::vector<IRenderPass*>& {
   return m_passes;
 }
 

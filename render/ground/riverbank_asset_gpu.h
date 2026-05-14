@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QVector3D>
+
 #include <array>
 
 namespace Render::GL {

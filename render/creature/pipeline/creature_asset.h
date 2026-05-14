@@ -1,12 +1,8 @@
 #pragma once
 
-#include "../../creature/spec.h"
-#include "../../static_attachment_spec.h"
-#include "../render_request.h"
-#include "unit_visual_spec.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -16,6 +12,11 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+
+#include "../../creature/spec.h"
+#include "../../static_attachment_spec.h"
+#include "../render_request.h"
+#include "unit_visual_spec.h"
 
 namespace Render::Creature {
 struct ArchetypeDescriptor;
@@ -35,7 +36,8 @@ using AttachmentSetId = std::uint32_t;
 inline constexpr AttachmentSetId k_invalid_attachment_set_id = 0U;
 
 using BindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
-using FillRoleColorsFn = std::uint32_t (*)(const void *variant, QVector3D *out,
+using FillRoleColorsFn = std::uint32_t (*)(const void* variant,
+                                           QVector3D* out,
                                            std::size_t max_roles);
 
 inline constexpr CreatureAssetId k_humanoid_asset = 0;
@@ -48,21 +50,21 @@ struct CreatureAsset {
   std::string_view debug_name{};
   CreatureKind kind{CreatureKind::Humanoid};
   std::uint32_t bpat_species_id{0};
-  const Render::Creature::CreatureSpec *spec{nullptr};
-  const Render::Creature::SkeletonTopology *topology{nullptr};
+  const Render::Creature::CreatureSpec* spec{nullptr};
+  const Render::Creature::SkeletonTopology* topology{nullptr};
   std::uint8_t role_count{0};
   std::uint8_t max_bones{0};
   BindPaletteFn bind_palette{nullptr};
   FillRoleColorsFn fill_role_colors{nullptr};
   std::uint32_t snapshot_mesh_species_id{0xFFFFFFFFu};
   std::uint8_t snapshot_mesh_lod_mask{0};
-  const CreatureVisualDefinition *visual_definition{nullptr};
+  const CreatureVisualDefinition* visual_definition{nullptr};
 };
 
 struct CreatureClipPlaybackDesc {
   std::uint16_t clip_id{0xFFFFu};
   bool snapshot{false};
-  const Render::Creature::Bpat::BpatBlob *blob{nullptr};
+  const Render::Creature::Bpat::BpatBlob* blob{nullptr};
   std::uint32_t frame_count{0U};
   std::uint32_t frame_offset{0U};
 };
@@ -70,16 +72,15 @@ struct CreatureClipPlaybackDesc {
 struct CreatureRenderAssetHandle {
   Render::Creature::CreatureRenderAssetHandleId id{
       Render::Creature::k_invalid_creature_render_asset_handle};
-  const CreatureAsset *asset{nullptr};
-  const Render::Creature::ArchetypeDescriptor *archetype{nullptr};
+  const CreatureAsset* asset{nullptr};
+  const Render::Creature::ArchetypeDescriptor* archetype{nullptr};
   std::span<const QMatrix4x4> bind_palette{};
   std::span<const Render::Creature::StaticAttachmentSpec> attachments{};
   std::uint64_t attachments_hash{0U};
   AttachmentSetId attachment_set_id{k_invalid_attachment_set_id};
   bool has_static_attachments{false};
   bool requires_prebaked_minimal_snapshot{false};
-  std::array<CreatureClipPlaybackDesc,
-             Render::Creature::animation_state_count()>
+  std::array<CreatureClipPlaybackDesc, Render::Creature::animation_state_count()>
       playback{};
 
   [[nodiscard]] auto valid() const noexcept -> bool {
@@ -90,30 +91,29 @@ struct CreatureRenderAssetHandle {
 
 class CreatureRenderAssetHandleRegistry {
 public:
-  [[nodiscard]] static auto instance() -> CreatureRenderAssetHandleRegistry &;
+  [[nodiscard]] static auto instance() -> CreatureRenderAssetHandleRegistry&;
 
   [[nodiscard]] auto get_or_create(CreatureAssetId asset_id,
                                    Render::Creature::ArchetypeId archetype_id)
       -> Render::Creature::CreatureRenderAssetHandleId;
 
   [[nodiscard]] auto get(Render::Creature::CreatureRenderAssetHandleId id) const
-      -> const CreatureRenderAssetHandle *;
+      -> const CreatureRenderAssetHandle*;
 
   void clear();
 
 private:
   struct Key {
     CreatureAssetId asset_id{k_invalid_creature_asset};
-    Render::Creature::ArchetypeId archetype_id{
-        Render::Creature::k_invalid_archetype};
+    Render::Creature::ArchetypeId archetype_id{Render::Creature::k_invalid_archetype};
 
-    auto operator==(const Key &other) const noexcept -> bool {
+    auto operator==(const Key& other) const noexcept -> bool {
       return asset_id == other.asset_id && archetype_id == other.archetype_id;
     }
   };
 
   struct KeyHash {
-    auto operator()(const Key &key) const noexcept -> std::size_t {
+    auto operator()(const Key& key) const noexcept -> std::size_t {
       return (static_cast<std::size_t>(key.asset_id) << 16U) ^
              static_cast<std::size_t>(key.archetype_id);
     }
@@ -123,8 +123,7 @@ private:
 
   struct AttachmentSetRecord {
     std::uint64_t hash{0U};
-    std::array<Render::Creature::StaticAttachmentSpec,
-               k_max_attachment_set_specs>
+    std::array<Render::Creature::StaticAttachmentSpec, k_max_attachment_set_specs>
         attachments{};
     std::uint8_t attachment_count{0U};
     AttachmentSetId id{k_invalid_attachment_set_id};
@@ -134,8 +133,7 @@ private:
       std::span<const Render::Creature::StaticAttachmentSpec> attachments,
       std::uint64_t attachments_hash) -> AttachmentSetId;
 
-  std::unordered_map<Key, Render::Creature::CreatureRenderAssetHandleId,
-                     KeyHash>
+  std::unordered_map<Key, Render::Creature::CreatureRenderAssetHandleId, KeyHash>
       lookup_{};
   std::deque<CreatureRenderAssetHandle> handles_{};
   std::vector<AttachmentSetRecord> attachment_sets_{};
@@ -144,16 +142,14 @@ private:
 
 class CreatureAssetRegistry {
 public:
-  [[nodiscard]] static auto
-  instance() noexcept -> const CreatureAssetRegistry &;
+  [[nodiscard]] static auto instance() noexcept -> const CreatureAssetRegistry&;
+
+  [[nodiscard]] auto get(CreatureAssetId id) const noexcept -> const CreatureAsset*;
+  [[nodiscard]] auto
+  resolve(const UnitVisualSpec& spec) const noexcept -> const CreatureAsset*;
 
   [[nodiscard]] auto
-  get(CreatureAssetId id) const noexcept -> const CreatureAsset *;
-  [[nodiscard]] auto
-  resolve(const UnitVisualSpec &spec) const noexcept -> const CreatureAsset *;
-
-  [[nodiscard]] auto
-  for_species(CreatureKind kind) const noexcept -> const CreatureAsset *;
+  for_species(CreatureKind kind) const noexcept -> const CreatureAsset*;
 
 private:
   CreatureAssetRegistry();

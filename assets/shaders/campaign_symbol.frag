@@ -39,16 +39,16 @@ float sd_box(vec2 p, vec2 b) {
   return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0);
 }
 
-float sd_circle(vec2 p, float r) { return length(p) - r; }
+float sd_circle(vec2 p, float r) {
+  return length(p) - r;
+}
 
 float sd_mountain(vec2 p) {
 
-  float peak1 =
-      sd_triangle(p, vec2(-0.35, 0.35), vec2(0.0, -0.4), vec2(0.35, 0.35));
+  float peak1 = sd_triangle(p, vec2(-0.35, 0.35), vec2(0.0, -0.4), vec2(0.35, 0.35));
 
   vec2 p2 = p - vec2(0.25, 0.1);
-  float peak2 =
-      sd_triangle(p2, vec2(-0.2, 0.25), vec2(0.0, -0.2), vec2(0.2, 0.25));
+  float peak2 = sd_triangle(p2, vec2(-0.2, 0.25), vec2(0.0, -0.2), vec2(0.2, 0.25));
 
   float snow_line = p.y + 0.15;
 
@@ -100,8 +100,7 @@ float sd_fort(vec2 p) {
 
 float sd_temple(vec2 p) {
 
-  float roof =
-      sd_triangle(p, vec2(-0.35, -0.1), vec2(0.0, -0.4), vec2(0.35, -0.1));
+  float roof = sd_triangle(p, vec2(-0.35, -0.1), vec2(0.0, -0.4), vec2(0.35, -0.1));
 
   float base = sd_box(p - vec2(0.0, 0.3), vec2(0.38, 0.08));
 

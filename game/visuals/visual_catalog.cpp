@@ -1,5 +1,5 @@
 #include "visual_catalog.h"
-#include "../core/component.h"
+
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -10,11 +10,14 @@
 #include <qjsondocument.h>
 #include <qjsonobject.h>
 #include <qstringview.h>
+
 #include <string>
+
+#include "../core/component.h"
 
 namespace Game::Visuals {
 
-auto mesh_kind_from_string(const QString &s) -> VisualDef::MeshKind {
+auto mesh_kind_from_string(const QString& s) -> VisualDef::MeshKind {
   const QString t = s.trimmed().toLower();
   if (t == "quad") {
     return VisualDef::MeshKind::Quad;
@@ -53,8 +56,8 @@ static auto to_renderable_mesh(VisualDef::MeshKind k)
   }
 }
 
-auto VisualCatalog::load_from_json_file(const QString &path,
-                                        QString *out_error) -> bool {
+auto VisualCatalog::load_from_json_file(const QString& path,
+                                        QString* out_error) -> bool {
   QFile f(path);
   if (!f.open(QIODevice::ReadOnly)) {
     if (out_error != nullptr) {
@@ -82,9 +85,9 @@ auto VisualCatalog::load_from_json_file(const QString &path,
     def.mesh = mesh_kind_from_string(o.value("mesh").toString("cube"));
     QJsonArray col = o.value("color").toArray();
     if (col.size() == 3) {
-      def.color =
-          QVector3D(float(col[0].toDouble(1.0)), float(col[1].toDouble(1.0)),
-                    float(col[2].toDouble(1.0)));
+      def.color = QVector3D(float(col[0].toDouble(1.0)),
+                            float(col[1].toDouble(1.0)),
+                            float(col[2].toDouble(1.0)));
     }
     def.texture = o.value("texture").toString("");
     m_units.emplace(it.key().toStdString(), def);
@@ -92,8 +95,7 @@ auto VisualCatalog::load_from_json_file(const QString &path,
   return true;
 }
 
-auto VisualCatalog::lookup(const std::string &unit_type,
-                           VisualDef &out) const -> bool {
+auto VisualCatalog::lookup(const std::string& unit_type, VisualDef& out) const -> bool {
   auto it = m_units.find(unit_type);
   if (it == m_units.end()) {
     return false;
@@ -102,8 +104,7 @@ auto VisualCatalog::lookup(const std::string &unit_type,
   return true;
 }
 
-void apply_to_renderable(const VisualDef &def,
-                         Engine::Core::RenderableComponent &r) {
+void apply_to_renderable(const VisualDef& def, Engine::Core::RenderableComponent& r) {
   r.mesh = to_renderable_mesh(def.mesh);
   r.color[0] = def.color.x();
   r.color[1] = def.color.y();

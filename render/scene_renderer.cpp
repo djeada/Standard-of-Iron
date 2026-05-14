@@ -1,4 +1,24 @@
 #include "scene_renderer.h"
+
+#include <QDebug>
+#include <qglobal.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <initializer_list>
+#include <memory>
+#include <mutex>
+#include <numbers>
+#include <string>
+#include <thread>
+#include <unordered_set>
+#include <utility>
+
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
 #include "../game/systems/combat_rules.h"
@@ -53,22 +73,6 @@
 #include "template_cache.h"
 #include "visibility_budget.h"
 #include "world_chunk.h"
-#include <QDebug>
-#include <algorithm>
-#include <atomic>
-#include <chrono>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <initializer_list>
-#include <memory>
-#include <mutex>
-#include <qglobal.h>
-#include <qvectornd.h>
-#include <string>
-#include <thread>
-#include <unordered_set>
-#include <utility>
 
 namespace Render::GL {
 
@@ -106,21 +110,21 @@ auto prewarm_seed_for_variant(int owner_id,
   return seed;
 }
 
-auto prewarm_entity_id_for_variant(
-    std::size_t profile_index, int owner_id, std::uint8_t lod,
-    std::uint8_t variant) noexcept -> std::uint32_t {
-  return 1U + static_cast<std::uint32_t>((((profile_index * 16U) +
-                                           static_cast<std::size_t>(owner_id)) *
-                                              4U +
-                                          static_cast<std::size_t>(lod)) *
-                                             k_template_variant_count +
-                                         static_cast<std::size_t>(variant));
+auto prewarm_entity_id_for_variant(std::size_t profile_index,
+                                   int owner_id,
+                                   std::uint8_t lod,
+                                   std::uint8_t variant) noexcept -> std::uint32_t {
+  return 1U + static_cast<std::uint32_t>(
+                  (((profile_index * 16U) + static_cast<std::size_t>(owner_id)) * 4U +
+                   static_cast<std::size_t>(lod)) *
+                      k_template_variant_count +
+                  static_cast<std::size_t>(variant));
 }
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
 
-void log_render_first_use_once(const char *stage, const QString &detail) {
+void log_render_first_use_once(const char* stage, const QString& detail) {
   if (!render_stage_logging_enabled()) {
     return;
   }
@@ -150,7 +154,7 @@ float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
   }
 }
 
-auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit_comp)
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit_comp)
     -> int {
   if (unit_comp.render_individuals_per_unit_override > 0) {
     return unit_comp.render_individuals_per_unit_override;
@@ -159,7 +163,7 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit_comp)
       unit_comp.spawn_type);
 }
 
-auto is_unit_moving(const Engine::Core::MovementComponent *move_comp) -> bool {
+auto is_unit_moving(const Engine::Core::MovementComponent* move_comp) -> bool {
   if (move_comp == nullptr) {
     return false;
   }
@@ -167,18 +171,18 @@ auto is_unit_moving(const Engine::Core::MovementComponent *move_comp) -> bool {
          (std::abs(move_comp->vz) > 0.01F);
 }
 
-auto is_unit_combat_active(
-    const Engine::Core::Entity *entity,
-    const Engine::Core::AttackComponent *attack_comp,
-    const Engine::Core::AttackTargetComponent *attack_target,
-    const Engine::Core::CombatStateComponent *combat_state,
-    const Engine::Core::HitFeedbackComponent *hit_feedback) -> bool {
+auto is_unit_combat_active(const Engine::Core::Entity* entity,
+                           const Engine::Core::AttackComponent* attack_comp,
+                           const Engine::Core::AttackTargetComponent* attack_target,
+                           const Engine::Core::CombatStateComponent* combat_state,
+                           const Engine::Core::HitFeedbackComponent* hit_feedback)
+    -> bool {
   if ((hit_feedback != nullptr) && hit_feedback->is_reacting) {
     return true;
   }
 
-  if ((combat_state != nullptr) && (combat_state->animation_state !=
-                                    Engine::Core::CombatAnimationState::Idle)) {
+  if ((combat_state != nullptr) &&
+      (combat_state->animation_state != Engine::Core::CombatAnimationState::Idle)) {
     return true;
   }
 
@@ -198,9 +202,9 @@ auto is_unit_combat_active(
   return attack_comp->time_since_last < attack_comp->get_current_cooldown();
 }
 
-auto stable_combat_creature_lod(const Engine::Core::UnitComponent *unit,
+auto stable_combat_creature_lod(const Engine::Core::UnitComponent* unit,
                                 float distance_sq) noexcept -> HumanoidLOD {
-  const auto &settings = Render::GraphicsSettings::instance();
+  const auto& settings = Render::GraphicsSettings::instance();
   float full_distance = settings.humanoid_full_detail_distance();
 
   if (unit != nullptr) {
@@ -224,11 +228,11 @@ auto stable_combat_creature_lod(const Engine::Core::UnitComponent *unit,
 }
 
 struct UnitRenderEntry {
-  Engine::Core::Entity *entity{nullptr};
-  Engine::Core::RenderableComponent *renderable{nullptr};
-  Engine::Core::TransformComponent *transform{nullptr};
-  Engine::Core::UnitComponent *unit{nullptr};
-  Engine::Core::MovementComponent *movement{nullptr};
+  Engine::Core::Entity* entity{nullptr};
+  Engine::Core::RenderableComponent* renderable{nullptr};
+  Engine::Core::TransformComponent* transform{nullptr};
+  Engine::Core::UnitComponent* unit{nullptr};
+  Engine::Core::MovementComponent* movement{nullptr};
   std::string renderer_key;
   QMatrix4x4 model_matrix;
   uint32_t entity_id{0};
@@ -246,10 +250,10 @@ struct UnitRenderEntry {
 };
 
 struct RenderEntry {
-  Engine::Core::Entity *entity{nullptr};
-  Engine::Core::RenderableComponent *renderable{nullptr};
-  Engine::Core::TransformComponent *transform{nullptr};
-  Engine::Core::UnitComponent *unit{nullptr};
+  Engine::Core::Entity* entity{nullptr};
+  Engine::Core::RenderableComponent* renderable{nullptr};
+  Engine::Core::TransformComponent* transform{nullptr};
+  Engine::Core::UnitComponent* unit{nullptr};
   std::string renderer_key;
   uint32_t entity_id{0};
   bool selected{false};
@@ -258,46 +262,60 @@ struct RenderEntry {
 
 class CreatureCacheWarmupSubmitter final : public BatchingSubmitter {
 public:
-  explicit CreatureCacheWarmupSubmitter(Renderer *renderer)
+  explicit CreatureCacheWarmupSubmitter(Renderer* renderer)
       : BatchingSubmitter(renderer, nullptr) {}
 
-  void mesh(Mesh *, const QMatrix4x4 &, const QVector3D &, Texture * = nullptr,
-            float = 1.0F, int = 0) override {}
-  void banner(Mesh *, const QMatrix4x4 &, const QVector3D &, const QVector3D &,
-              Texture * = nullptr, float = 1.0F, int = 0) override {}
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+  void mesh(Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Texture* = nullptr,
+            float = 1.0F,
+            int = 0) override {}
+  void banner(Mesh*,
+              const QMatrix4x4&,
+              const QVector3D&,
+              const QVector3D&,
+              Texture* = nullptr,
+              float = 1.0F,
+              int = 0) override {}
+  void cylinder(const QVector3D&,
+                const QVector3D&,
+                float,
+                const QVector3D&,
                 float = 1.0F) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &,
-                       float = 0.15F) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float = 0.15F) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float = 1.0F) override {}
-  void rigged(const RiggedCreatureCmd &) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float = 1.0F) override {
+  }
+  void rigged(const RiggedCreatureCmd&) override {}
 };
 } // namespace
 
-Renderer::Renderer(ShaderQuality quality) : m_shader_quality(quality) {
+Renderer::Renderer(ShaderQuality quality)
+    : m_shader_quality(quality) {
   m_active_queue = &m_queues[m_fill_queue_index];
 }
 
-Renderer::~Renderer() { shutdown(); }
+Renderer::~Renderer() {
+  shutdown();
+}
 
 auto Renderer::initialize() -> bool {
   Render::Creature::set_runtime_bake_forbidden(false);
   if (!m_backend) {
     m_backend = RenderBackendFactory::create(m_shader_quality);
-    m_gl_backend = dynamic_cast<Backend *>(m_backend.get());
+    m_gl_backend = dynamic_cast<Backend*>(m_backend.get());
     log_render_first_use_once(
         "backend-create",
         QStringLiteral("created render backend for QSG/FBO render thread"));
@@ -318,13 +336,11 @@ auto Renderer::initialize() -> bool {
           .arg(static_cast<qulonglong>(warmed_archetypes)));
 
   const std::size_t loaded_bpat =
-      Render::Creature::Bpat::BpatRegistry::instance().load_all(
-          "assets/creatures");
+      Render::Creature::Bpat::BpatRegistry::instance().load_all("assets/creatures");
   if (loaded_bpat != 4U) {
-    qWarning()
-        << "Renderer: loaded" << loaded_bpat << "of 4 BPAT creature assets:"
-        << QString::fromStdString(std::string(
-               Render::Creature::Bpat::BpatRegistry::instance().last_error()));
+    qWarning() << "Renderer: loaded" << loaded_bpat << "of 4 BPAT creature assets:"
+               << QString::fromStdString(std::string(
+                      Render::Creature::Bpat::BpatRegistry::instance().last_error()));
   }
   (void)Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
       "assets/creatures");
@@ -343,7 +359,7 @@ void Renderer::shutdown() {
 
 void Renderer::begin_frame() {
 
-  auto &profile = Render::Profiling::global_profile();
+  auto& profile = Render::Profiling::global_profile();
   profile.reset();
   profile.frame_index += 1;
   Render::Profiling::PhaseScope const collect_scope(
@@ -356,7 +372,7 @@ void Renderer::begin_frame() {
   reset_elephant_render_stats();
 
   Render::VisibilityBudgetTracker::instance().reset_frame();
-  auto &battle_optimizer = Render::BattleRenderOptimizer::instance();
+  auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   battle_optimizer.begin_frame();
   prune_animation_time_cache(battle_optimizer.frame_counter());
 
@@ -365,8 +381,7 @@ void Renderer::begin_frame() {
   m_active_queue->reserve_for_frame();
 
   if (m_camera != nullptr) {
-    m_view_proj =
-        m_camera->get_projection_matrix() * m_camera->get_view_matrix();
+    m_view_proj = m_camera->get_projection_matrix() * m_camera->get_view_matrix();
   }
 
   if (m_backend) {
@@ -381,12 +396,12 @@ void Renderer::end_frame() {
     return;
   }
   if (m_backend && (m_camera != nullptr)) {
-    auto &profile = Render::Profiling::global_profile();
+    auto& profile = Render::Profiling::global_profile();
     std::swap(m_fill_queue_index, m_render_queue_index);
-    DrawQueue &render_queue = m_queues[m_render_queue_index];
+    DrawQueue& render_queue = m_queues[m_render_queue_index];
     {
-      Render::Profiling::PhaseScope const sort_scope(
-          &profile, Render::Profiling::Phase::Sort);
+      Render::Profiling::PhaseScope const sort_scope(&profile,
+                                                     Render::Profiling::Phase::Sort);
       render_queue.sort_for_batching();
     }
     profile.draw_calls = static_cast<std::uint64_t>(render_queue.size());
@@ -403,13 +418,15 @@ void Renderer::end_frame() {
   }
 }
 
-void Renderer::set_camera(Camera *camera) { m_camera = camera; }
+void Renderer::set_camera(Camera* camera) {
+  m_camera = camera;
+}
 
 auto Renderer::render_software_preview(int width, int height) -> QImage {
   if (m_camera == nullptr || width <= 0 || height <= 0) {
-    return QImage();
+    return {};
   }
-  DrawQueue const &queue = m_queues[m_render_queue_index];
+  DrawQueue const& queue = m_queues[m_render_queue_index];
   SoftwareBackend backend;
   Render::Software::RasterSettings settings;
   settings.width = width;
@@ -434,19 +451,20 @@ void Renderer::set_viewport(int width, int height) {
   }
   if ((m_camera != nullptr) && height > 0) {
     float const aspect = float(width) / float(height);
-    m_camera->set_perspective(m_camera->get_fov(), aspect, m_camera->get_near(),
-                              m_camera->get_far());
+    m_camera->set_perspective(
+        m_camera->get_fov(), aspect, m_camera->get_near(), m_camera->get_far());
   }
 }
 
-auto Renderer::resolve_animation_time(uint32_t entity_id, bool update,
+auto Renderer::resolve_animation_time(uint32_t entity_id,
+                                      bool update,
                                       float current_time,
                                       uint32_t frame) -> float {
   if (entity_id == 0U) {
     return current_time;
   }
 
-  auto &entry = m_animation_time_cache[entity_id];
+  auto& entry = m_animation_time_cache[entity_id];
   if (update || entry.last_frame == 0U) {
     entry.time = current_time;
   }
@@ -459,8 +477,7 @@ void Renderer::prune_animation_time_cache(uint32_t frame) {
     return;
   }
 
-  for (auto it = m_animation_time_cache.begin();
-       it != m_animation_time_cache.end();) {
+  for (auto it = m_animation_time_cache.begin(); it != m_animation_time_cache.end();) {
     if (frame - it->second.last_frame > k_animation_cache_max_age) {
       it = m_animation_time_cache.erase(it);
     } else {
@@ -469,15 +486,19 @@ void Renderer::prune_animation_time_cache(uint32_t frame) {
   }
 }
 
-void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-                    Texture *texture, float alpha, int material_id) {
+void Renderer::mesh(Mesh* mesh,
+                    const QMatrix4x4& model,
+                    const QVector3D& color,
+                    Texture* texture,
+                    float alpha,
+                    int material_id) {
   if (mesh == nullptr) {
     return;
   }
 
   float const effective_alpha = alpha * m_alpha_override;
 
-  static Mesh *const unit_cylinder_mesh = get_unit_cylinder();
+  static Mesh* const unit_cylinder_mesh = get_unit_cylinder();
   if (mesh == unit_cylinder_mesh && (texture == nullptr) &&
       (m_current_shader == nullptr)) {
     QVector3D start;
@@ -501,9 +522,13 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
-void Renderer::banner(Mesh *mesh, const QMatrix4x4 &model,
-                      const QVector3D &color, const QVector3D &trim_color,
-                      Texture *texture, float alpha, int material_id) {
+void Renderer::banner(Mesh* mesh,
+                      const QMatrix4x4& model,
+                      const QVector3D& color,
+                      const QVector3D& trim_color,
+                      Texture* texture,
+                      float alpha,
+                      int material_id) {
   if (mesh == nullptr) {
     return;
   }
@@ -523,8 +548,12 @@ void Renderer::banner(Mesh *mesh, const QMatrix4x4 &model,
   }
 }
 
-void Renderer::part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
-                    const QVector3D &color, Texture *texture, float alpha,
+void Renderer::part(Mesh* mesh,
+                    Material* material,
+                    const QMatrix4x4& model,
+                    const QVector3D& color,
+                    Texture* texture,
+                    float alpha,
                     int material_id) {
   if (mesh == nullptr) {
     return;
@@ -548,8 +577,11 @@ void Renderer::part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
   }
 }
 
-void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
-                        float radius, const QVector3D &color, float alpha) {
+void Renderer::cylinder(const QVector3D& start,
+                        const QVector3D& end,
+                        float radius,
+                        const QVector3D& color,
+                        float alpha) {
 
   float const effective_alpha = alpha * m_alpha_override;
   CylinderCmd cmd;
@@ -563,7 +595,7 @@ void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
   }
 }
 
-void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
+void Renderer::fog_batch(const FogInstanceData* instances, std::size_t count) {
   if ((instances == nullptr) || count == 0 || (m_active_queue == nullptr)) {
     return;
   }
@@ -573,9 +605,8 @@ void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::fog_batch(Buffer *instance_buffer, std::size_t count) {
-  if ((instance_buffer == nullptr) || count == 0 ||
-      (m_active_queue == nullptr)) {
+void Renderer::fog_batch(Buffer* instance_buffer, std::size_t count) {
+  if ((instance_buffer == nullptr) || count == 0 || (m_active_queue == nullptr)) {
     return;
   }
   FogBatchCmd cmd;
@@ -584,8 +615,9 @@ void Renderer::fog_batch(Buffer *instance_buffer, std::size_t count) {
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
-                          const RainBatchParams &params) {
+void Renderer::rain_batch(Buffer* instance_buffer,
+                          std::size_t instance_count,
+                          const RainBatchParams& params) {
   if ((instance_buffer == nullptr) || instance_count == 0 ||
       (m_active_queue == nullptr)) {
     return;
@@ -598,14 +630,14 @@ void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::terrain_surface(const TerrainSurfaceCmd &cmd) {
+void Renderer::terrain_surface(const TerrainSurfaceCmd& cmd) {
   if ((cmd.mesh == nullptr) || (m_active_queue == nullptr)) {
     return;
   }
   m_active_queue->submit(cmd);
 }
 
-void Renderer::terrain_feature(const TerrainFeatureCmd &cmd) {
+void Renderer::terrain_feature(const TerrainFeatureCmd& cmd) {
   if ((cmd.mesh == nullptr) || (m_active_queue == nullptr)) {
     return;
   }
@@ -614,7 +646,7 @@ void Renderer::terrain_feature(const TerrainFeatureCmd &cmd) {
   m_active_queue->submit(std::move(submitted));
 }
 
-void Renderer::terrain_scatter(const TerrainScatterCmd &cmd) {
+void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {
   if ((cmd.instance_buffer == nullptr) || cmd.instance_count == 0 ||
       (m_active_queue == nullptr)) {
     return;
@@ -645,7 +677,7 @@ void Renderer::terrain_scatter(const TerrainScatterCmd &cmd) {
 void Renderer::cancel_async_template_prewarm() {
   std::shared_ptr<AsyncTemplatePrewarmState> state;
   {
-    std::lock_guard<std::mutex> lock(m_async_prewarm_mutex);
+    std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
     state = std::move(m_async_prewarm_state);
   }
   if (state) {
@@ -653,29 +685,30 @@ void Renderer::cancel_async_template_prewarm() {
   }
 }
 
-void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
-                                         const AsyncPrewarmWorkItem &item) {
+void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile& profile,
+                                         const AsyncPrewarmWorkItem& item) {
   if (!m_backend || !profile.fn) {
     return;
   }
 
-  Engine::Core::Entity entity(prewarm_entity_id_for_variant(
-      static_cast<std::size_t>(item.profile_index), item.owner_id, item.lod,
-      item.variant));
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  Engine::Core::Entity entity(
+      prewarm_entity_id_for_variant(static_cast<std::size_t>(item.profile_index),
+                                    item.owner_id,
+                                    item.lod,
+                                    item.variant));
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = static_cast<Game::Units::SpawnType>(profile.spawn_type);
   unit->owner_id = item.owner_id;
   unit->nation_id = static_cast<Game::Systems::NationID>(profile.nation_id);
   unit->max_health = std::max(1, profile.max_health);
   unit->health = unit->max_health;
 
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
 
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->renderer_id = profile.renderer_id;
   renderable->visible = true;
   const QVector3D team_color = Game::Visuals::team_colorForOwner(item.owner_id);
@@ -707,7 +740,7 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
   anim_key.attack_family =
       static_cast<Engine::Core::CombatAttackFamily>(item.attack_family);
   anim_key.attack_variant = item.attack_variant;
-  AnimationInputs anim = make_animation_inputs(anim_key);
+  AnimationInputs const anim = make_animation_inputs(anim_key);
   ctx.animation_override = &anim;
   const bool attack_state = (anim_key.state == AnimState::AttackMelee) ||
                             (anim_key.state == AnimState::AttackRanged);
@@ -721,7 +754,7 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
 void Renderer::process_async_template_prewarm() {
   std::shared_ptr<AsyncTemplatePrewarmState> state;
   {
-    std::lock_guard<std::mutex> lock(m_async_prewarm_mutex);
+    std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
     state = m_async_prewarm_state;
   }
   if (!state || state->cancel_requested.load(std::memory_order_relaxed)) {
@@ -751,7 +784,7 @@ void Renderer::process_async_template_prewarm() {
     break;
   }
 
-  const auto &battle_optimizer = Render::BattleRenderOptimizer::instance();
+  const auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   const int visible_units = battle_optimizer.visible_unit_count();
   if (visible_units >= 300) {
     if ((battle_optimizer.frame_counter() & 1U) != 0U) {
@@ -771,13 +804,12 @@ void Renderer::process_async_template_prewarm() {
   const auto start_time = std::chrono::steady_clock::now();
   while (!state->cancel_requested.load(std::memory_order_relaxed) &&
          processed < max_items) {
-    const std::size_t idx =
-        state->next_index.fetch_add(1, std::memory_order_relaxed);
+    const std::size_t idx = state->next_index.fetch_add(1, std::memory_order_relaxed);
     if (idx >= state->work_items.size()) {
       break;
     }
 
-    const auto &item = state->work_items[idx];
+    const auto& item = state->work_items[idx];
     if (item.profile_index < state->profiles.size()) {
       run_template_prewarm_item(state->profiles[item.profile_index], item);
     }
@@ -790,9 +822,8 @@ void Renderer::process_async_template_prewarm() {
   }
 
   if (state->cancel_requested.load(std::memory_order_relaxed) ||
-      (state->next_index.load(std::memory_order_relaxed) >=
-       state->work_items.size())) {
-    std::lock_guard<std::mutex> lock(m_async_prewarm_mutex);
+      (state->next_index.load(std::memory_order_relaxed) >= state->work_items.size())) {
+    std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
     if (m_async_prewarm_state == state) {
       m_async_prewarm_state.reset();
       if (m_forbid_runtime_bake_when_async_prewarm_done) {
@@ -803,8 +834,10 @@ void Renderer::process_async_template_prewarm() {
   }
 }
 
-void Renderer::selection_ring(const QMatrix4x4 &model, float alpha_inner,
-                              float alpha_outer, const QVector3D &color) {
+void Renderer::selection_ring(const QMatrix4x4& model,
+                              float alpha_inner,
+                              float alpha_outer,
+                              const QVector3D& color) {
   SelectionRingCmd cmd;
   cmd.model = model;
   cmd.alpha_inner = alpha_inner;
@@ -815,8 +848,11 @@ void Renderer::selection_ring(const QMatrix4x4 &model, float alpha_inner,
   }
 }
 
-void Renderer::grid(const QMatrix4x4 &model, const QVector3D &color,
-                    float cell_size, float thickness, float extent) {
+void Renderer::grid(const QMatrix4x4& model,
+                    const QVector3D& color,
+                    float cell_size,
+                    float thickness,
+                    float extent) {
   GridCmd cmd;
   cmd.model = model;
   cmd.mvp = m_view_proj * model;
@@ -829,7 +865,8 @@ void Renderer::grid(const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
-void Renderer::selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+void Renderer::selection_smoke(const QMatrix4x4& model,
+                               const QVector3D& color,
                                float base_alpha) {
   SelectionSmokeCmd cmd;
   cmd.model = model;
@@ -840,9 +877,13 @@ void Renderer::selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
-void Renderer::healing_beam(const QVector3D &start, const QVector3D &end,
-                            const QVector3D &color, float progress,
-                            float beam_width, float intensity, float time) {
+void Renderer::healing_beam(const QVector3D& start,
+                            const QVector3D& end,
+                            const QVector3D& color,
+                            float progress,
+                            float beam_width,
+                            float intensity,
+                            float time) {
   EffectBatchCmd cmd;
   cmd.kind = EffectBatchCmd::Kind::HealingBeam;
   cmd.position = start;
@@ -858,8 +899,11 @@ void Renderer::healing_beam(const QVector3D &start, const QVector3D &end,
   }
 }
 
-void Renderer::healer_aura(const QVector3D &position, const QVector3D &color,
-                           float radius, float intensity, float time) {
+void Renderer::healer_aura(const QVector3D& position,
+                           const QVector3D& color,
+                           float radius,
+                           float intensity,
+                           float time) {
   EffectBatchCmd cmd;
   cmd.kind = EffectBatchCmd::Kind::HealerAura;
   cmd.position = position;
@@ -873,8 +917,11 @@ void Renderer::healer_aura(const QVector3D &position, const QVector3D &color,
   }
 }
 
-void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
-                           float radius, float intensity, float time) {
+void Renderer::combat_dust(const QVector3D& position,
+                           const QVector3D& color,
+                           float radius,
+                           float intensity,
+                           float time) {
   EffectBatchCmd cmd;
   cmd.kind = EffectBatchCmd::Kind::CombatDust;
   cmd.position = position;
@@ -888,8 +935,11 @@ void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
   }
 }
 
-void Renderer::building_flame(const QVector3D &position, const QVector3D &color,
-                              float radius, float intensity, float time) {
+void Renderer::building_flame(const QVector3D& position,
+                              const QVector3D& color,
+                              float radius,
+                              float intensity,
+                              float time) {
   EffectBatchCmd cmd;
   cmd.kind = EffectBatchCmd::Kind::BuildingFlame;
   cmd.position = position;
@@ -903,8 +953,11 @@ void Renderer::building_flame(const QVector3D &position, const QVector3D &color,
   }
 }
 
-void Renderer::blood_pool(const QVector3D &position, float radius,
-                          float alpha_scale, float rotation, float aspect_ratio,
+void Renderer::blood_pool(const QVector3D& position,
+                          float radius,
+                          float alpha_scale,
+                          float rotation,
+                          float aspect_ratio,
                           float seed) {
   EffectBatchCmd cmd;
   cmd.kind = EffectBatchCmd::Kind::BloodPool;
@@ -920,8 +973,11 @@ void Renderer::blood_pool(const QVector3D &position, float radius,
   }
 }
 
-void Renderer::stone_impact(const QVector3D &position, const QVector3D &color,
-                            float radius, float intensity, float time) {
+void Renderer::stone_impact(const QVector3D& position,
+                            const QVector3D& color,
+                            float radius,
+                            float intensity,
+                            float time) {
   EffectBatchCmd cmd;
   cmd.kind = EffectBatchCmd::Kind::StoneImpact;
   cmd.position = position;
@@ -935,8 +991,10 @@ void Renderer::stone_impact(const QVector3D &position, const QVector3D &color,
   }
 }
 
-void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
-                              const QVector3D &color, float alpha) {
+void Renderer::mode_indicator(const QMatrix4x4& model,
+                              int mode_type,
+                              const QVector3D& color,
+                              float alpha) {
   ModeIndicatorCmd cmd;
   cmd.model = model;
   cmd.mode_type = mode_type;
@@ -947,45 +1005,43 @@ void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
   }
 }
 
-void Renderer::rigged(const RiggedCreatureCmd &cmd) {
+void Renderer::rigged(const RiggedCreatureCmd& cmd) {
   if (m_active_queue == nullptr || cmd.mesh == nullptr) {
     return;
   }
   m_active_queue->submit(cmd);
 }
 
-void Renderer::enqueue_selection_ring(
-    Engine::Core::Entity *entity, Engine::Core::TransformComponent *transform,
-    Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {
+void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
+                                      Engine::Core::TransformComponent* transform,
+                                      Engine::Core::UnitComponent* unit_comp,
+                                      bool selected,
+                                      bool hovered) {
   if ((!selected && !hovered) || (transform == nullptr)) {
     return;
   }
 
   float ring_size = 0.5F;
-  float ring_offset = 0.05F;
+  float const ring_offset = 0.05F;
   float ground_offset = 0.0F;
   float scale_y = 1.0F;
   std::vector<SelectionRingPlacement> placements;
 
   if (unit_comp != nullptr) {
-    auto troop_type_opt =
-        Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
-    auto &config = Game::Units::TroopConfig::instance();
+    auto troop_type_opt = Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+    auto& config = Game::Units::TroopConfig::instance();
 
     if (troop_type_opt) {
-      const auto &nation_reg = Game::Systems::NationRegistry::instance();
-      const Game::Systems::Nation *nation =
+      const auto& nation_reg = Game::Systems::NationRegistry::instance();
+      const Game::Systems::Nation* nation =
           nation_reg.get_nation_for_player(unit_comp->owner_id);
-      Game::Systems::NationID nation_id =
+      Game::Systems::NationID const nation_id =
           nation != nullptr ? nation->id : nation_reg.default_nation_id();
 
-      const auto profile =
-          Game::Systems::TroopProfileService::instance().get_profile(
-              nation_id, *troop_type_opt);
-      int const individuals_per_unit =
-          resolved_individuals_per_unit(*unit_comp);
-      int const max_units_per_row =
-          config.get_max_units_per_row(unit_comp->spawn_type);
+      const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+          nation_id, *troop_type_opt);
+      int const individuals_per_unit = resolved_individuals_per_unit(*unit_comp);
+      int const max_units_per_row = config.get_max_units_per_row(unit_comp->spawn_type);
       std::uint32_t layout_seed =
           static_cast<std::uint32_t>(unit_comp->owner_id) * 2654435761U;
       if (entity != nullptr) {
@@ -995,15 +1051,17 @@ void Renderer::enqueue_selection_ring(
       float const formation_spacing = resolve_formation_spacing(
           unit_comp->spawn_type, profile.visuals.formation_spacing);
 
-      ring_size = Detail::selection_ring_visual_size(
-          unit_comp->spawn_type, individuals_per_unit,
-          profile.visuals.selection_ring_size, formation_spacing);
+      ring_size =
+          Detail::selection_ring_visual_size(unit_comp->spawn_type,
+                                             individuals_per_unit,
+                                             profile.visuals.selection_ring_size,
+                                             formation_spacing);
       ground_offset = profile.visuals.selection_ring_ground_offset;
 
       bool is_builder_constructing = false;
       if (entity != nullptr &&
           unit_comp->spawn_type == Game::Units::SpawnType::Builder) {
-        auto *builder_prod =
+        auto* builder_prod =
             entity->get_component<Engine::Core::BuilderProductionComponent>();
         if (builder_prod != nullptr && builder_prod->in_progress &&
             builder_prod->at_construction_site) {
@@ -1016,26 +1074,25 @@ void Renderer::enqueue_selection_ring(
            .nation_id = unit_comp->nation_id,
            .individuals_per_unit = individuals_per_unit,
            .max_units_per_row = max_units_per_row,
-           .health_ratio = unit_comp->max_health > 0
-                               ? std::clamp(unit_comp->health /
-                                                float(unit_comp->max_health),
-                                            0.0F, 1.0F)
-                               : 1.0F,
+           .health_ratio =
+               unit_comp->max_health > 0
+                   ? std::clamp(
+                         unit_comp->health / float(unit_comp->max_health), 0.0F, 1.0F)
+                   : 1.0F,
            .ring_size = ring_size,
            .formation_spacing = formation_spacing,
            .seed = layout_seed,
-           .position = QVector3D(transform->position.x, transform->position.y,
-                                 transform->position.z),
-           .rotation = QVector3D(transform->rotation.x, transform->rotation.y,
-                                 transform->rotation.z),
-           .scale = QVector3D(transform->scale.x, transform->scale.y,
-                              transform->scale.z),
+           .position = QVector3D(
+               transform->position.x, transform->position.y, transform->position.z),
+           .rotation = QVector3D(
+               transform->rotation.x, transform->rotation.y, transform->rotation.z),
+           .scale =
+               QVector3D(transform->scale.x, transform->scale.y, transform->scale.z),
            .is_builder_constructing = is_builder_constructing});
     } else {
 
       ring_size = config.get_selection_ring_size(unit_comp->spawn_type);
-      ground_offset =
-          config.get_selection_ring_ground_offset(unit_comp->spawn_type);
+      ground_offset = config.get_selection_ring_ground_offset(unit_comp->spawn_type);
     }
   }
   if (transform != nullptr) {
@@ -1043,20 +1100,20 @@ void Renderer::enqueue_selection_ring(
   }
 
   if (placements.empty()) {
-    placements.push_back(
-        {transform->position.x, transform->position.z, ring_size});
+    placements.push_back({transform->position.x, transform->position.z, ring_size});
   }
 
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  for (const SelectionRingPlacement &placement : placements) {
-    QVector3D const grounded_center =
-        terrain_service.resolve_surface_world_position(
-            placement.world_x, placement.world_z, 0.0F,
-            transform->position.y - ground_offset * scale_y);
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  for (const SelectionRingPlacement& placement : placements) {
+    QVector3D const grounded_center = terrain_service.resolve_surface_world_position(
+        placement.world_x,
+        placement.world_z,
+        0.0F,
+        transform->position.y - ground_offset * scale_y);
 
     QMatrix4x4 ring_model;
-    ring_model.translate(grounded_center.x(), grounded_center.y() + ring_offset,
-                         grounded_center.z());
+    ring_model.translate(
+        grounded_center.x(), grounded_center.y() + ring_offset, grounded_center.z());
     ring_model.scale(placement.ring_size, 1.0F, placement.ring_size);
 
     if (selected) {
@@ -1067,10 +1124,12 @@ void Renderer::enqueue_selection_ring(
   }
 }
 
-void Renderer::enqueue_mode_indicator(
-    Engine::Core::TransformComponent *transform,
-    Engine::Core::UnitComponent *unit_comp, bool has_attack,
-    bool has_guard_mode, bool has_hold_mode, bool has_patrol) {
+void Renderer::enqueue_mode_indicator(Engine::Core::TransformComponent* transform,
+                                      Engine::Core::UnitComponent* unit_comp,
+                                      bool has_attack,
+                                      bool has_guard_mode,
+                                      bool has_hold_mode,
+                                      bool has_patrol) {
   if (transform == nullptr) {
     return;
   }
@@ -1080,22 +1139,20 @@ void Renderer::enqueue_mode_indicator(
   }
 
   float indicator_height = Render::Geom::k_indicator_height_base;
-  float indicator_size = Render::Geom::k_indicator_size;
+  float const indicator_size = Render::Geom::k_indicator_size;
 
   if (unit_comp != nullptr) {
-    auto troop_type_opt =
-        Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+    auto troop_type_opt = Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
 
     if (troop_type_opt) {
-      const auto &nation_reg = Game::Systems::NationRegistry::instance();
-      const Game::Systems::Nation *nation =
+      const auto& nation_reg = Game::Systems::NationRegistry::instance();
+      const Game::Systems::Nation* nation =
           nation_reg.get_nation_for_player(unit_comp->owner_id);
-      Game::Systems::NationID nation_id =
+      Game::Systems::NationID const nation_id =
           nation != nullptr ? nation->id : nation_reg.default_nation_id();
 
-      const auto profile =
-          Game::Systems::TroopProfileService::instance().get_profile(
-              nation_id, *troop_type_opt);
+      const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+          nation_id, *troop_type_opt);
       indicator_height = Render::Geom::indicator_height_for_unit(
           profile.visuals.selection_ring_size, profile.visuals.render_scale);
     } else {
@@ -1118,8 +1175,8 @@ void Renderer::enqueue_mode_indicator(
       float const ndc_z = clip_pos.z() / clip_pos.w();
 
       constexpr float margin = Render::Geom::k_frustum_cull_margin;
-      if (ndc_x < -margin || ndc_x > margin || ndc_y < -margin ||
-          ndc_y > margin || ndc_z < -1.0F || ndc_z > 1.0F) {
+      if (ndc_x < -margin || ndc_x > margin || ndc_y < -margin || ndc_y > margin ||
+          ndc_z < -1.0F || ndc_z > 1.0F) {
         return;
       }
     }
@@ -1133,7 +1190,7 @@ void Renderer::enqueue_mode_indicator(
     QVector3D const cam_pos = m_camera->get_position();
     QVector3D const to_camera = (cam_pos - pos).normalized();
 
-    constexpr float k_pi = 3.14159265358979323846F;
+    constexpr float k_pi = std::numbers::pi_v<float>;
     float const yaw = std::atan2(to_camera.x(), to_camera.z());
     indicator_model.rotate(yaw * 180.0F / k_pi, 0, 1, 0);
   }
@@ -1156,11 +1213,10 @@ void Renderer::enqueue_mode_indicator(
     color = Render::Geom::k_attack_mode_color;
   }
 
-  mode_indicator(indicator_model, mode_type, color,
-                 Render::Geom::k_indicator_alpha);
+  mode_indicator(indicator_model, mode_type, color, Render::Geom::k_indicator_alpha);
 }
 
-void Renderer::render_world(Engine::Core::World *world) {
+void Renderer::render_world(Engine::Core::World* world) {
   if (m_paused.load()) {
     return;
   }
@@ -1178,19 +1234,19 @@ void Renderer::render_world(Engine::Core::World *world) {
         QStringLiteral("attached persistent render registry to world"));
   }
 
-  auto &vis = Game::Map::VisibilityService::instance();
+  auto& vis = Game::Map::VisibilityService::instance();
   const bool visibility_enabled = vis.is_initialized();
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
   if (visibility_enabled) {
     visibility_snapshot = vis.snapshot();
   }
 
-  const auto &unit_ids = m_render_registry.unit_ids();
-  const auto &building_ids = m_render_registry.building_ids();
-  const auto &other_ids = m_render_registry.other_ids();
+  const auto& unit_ids = m_render_registry.unit_ids();
+  const auto& building_ids = m_render_registry.building_ids();
+  const auto& other_ids = m_render_registry.other_ids();
 
-  const auto &gfx_settings = Render::GraphicsSettings::instance();
-  const auto &batch_config = gfx_settings.batching_config();
+  const auto& gfx_settings = Render::GraphicsSettings::instance();
+  const auto& batch_config = gfx_settings.batching_config();
 
   float camera_height = 0.0F;
   if (m_camera != nullptr) {
@@ -1210,28 +1266,27 @@ void Renderer::render_world(Engine::Core::World *world) {
   building_entries.reserve(building_ids.size());
   other_entries.reserve(other_ids.size());
 
-  for (std::uint32_t entity_id : unit_ids) {
+  for (std::uint32_t const entity_id : unit_ids) {
 
-    Engine::Core::Entity *entity = world->get_entity(entity_id);
+    Engine::Core::Entity* entity = world->get_entity(entity_id);
     if (entity == nullptr) {
       continue;
     }
     bool const has_death_motion =
-        entity->get_component<Engine::Core::DeathAnimationComponent>() !=
-        nullptr;
+        entity->get_component<Engine::Core::DeathAnimationComponent>() != nullptr;
     if (entity->has_component<Engine::Core::PendingRemovalComponent>() &&
         !has_death_motion) {
       continue;
     }
 
-    auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
+    auto* unit_comp = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) && unit_comp->health <= 0 && !has_death_motion) {
       continue;
     }
 
     if (unit_comp != nullptr) {
 
-      auto &cached =
+      auto& cached =
           m_unit_render_cache.get_or_create(entity_id, entity, m_frame_counter);
 
       if (cached.renderable == nullptr || !cached.renderable->visible) {
@@ -1248,8 +1303,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       entry.unit = cached.unit;
       entry.entity_id = entity_id;
 
-      bool const is_selected =
-          (m_selected_ids.find(entity_id) != m_selected_ids.end());
+      bool const is_selected = (m_selected_ids.find(entity_id) != m_selected_ids.end());
       bool const is_hovered = (entity_id == m_hovered_entity_id);
       entry.selected = is_selected;
       entry.hovered = is_hovered;
@@ -1282,30 +1336,24 @@ void Renderer::render_world(Engine::Core::World *world) {
             cached.transform->position.x, cached.transform->position.z);
       }
 
-      auto *attack_comp =
-          entity->get_component<Engine::Core::AttackComponent>();
-      auto *attack_target =
+      auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
+      auto* attack_target =
           entity->get_component<Engine::Core::AttackTargetComponent>();
-      auto *combat_state =
-          entity->get_component<Engine::Core::CombatStateComponent>();
-      auto *hit_feedback =
-          entity->get_component<Engine::Core::HitFeedbackComponent>();
+      auto* combat_state = entity->get_component<Engine::Core::CombatStateComponent>();
+      auto* hit_feedback = entity->get_component<Engine::Core::HitFeedbackComponent>();
       entry.combat_active = is_unit_combat_active(
           entity, attack_comp, attack_target, combat_state, hit_feedback);
       entry.has_attack =
           (attack_comp != nullptr) && attack_comp->in_melee_lock &&
           Game::Systems::CombatRules::participates_in_rts_melee_lock(entity);
 
-      auto *guard_mode =
-          entity->get_component<Engine::Core::GuardModeComponent>();
+      auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
       entry.has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
 
-      auto *hold_mode =
-          entity->get_component<Engine::Core::HoldModeComponent>();
+      auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
       entry.has_hold_mode = (hold_mode != nullptr) && hold_mode->active;
 
-      auto *patrol_comp =
-          entity->get_component<Engine::Core::PatrolComponent>();
+      auto* patrol_comp = entity->get_component<Engine::Core::PatrolComponent>();
       entry.has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
 
       unit_entries.push_back(std::move(entry));
@@ -1313,8 +1361,8 @@ void Renderer::render_world(Engine::Core::World *world) {
   }
 
   auto collect_non_unit_entry = [&](std::uint32_t entity_id,
-                                    std::vector<RenderEntry> &dest) {
-    Engine::Core::Entity *entity = world->get_entity(entity_id);
+                                    std::vector<RenderEntry>& dest) {
+    Engine::Core::Entity* entity = world->get_entity(entity_id);
     if (entity == nullptr) {
       return;
     }
@@ -1322,13 +1370,12 @@ void Renderer::render_world(Engine::Core::World *world) {
       return;
     }
 
-    auto *renderable =
-        entity->get_component<Engine::Core::RenderableComponent>();
+    auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
     if ((renderable == nullptr) || !renderable->visible) {
       return;
     }
 
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
       return;
     }
@@ -1342,31 +1389,31 @@ void Renderer::render_world(Engine::Core::World *world) {
     entry.selected = (m_selected_ids.find(entity_id) != m_selected_ids.end());
     entry.hovered = (entity_id == m_hovered_entity_id);
     if (!renderable->renderer_id.empty()) {
-      entry.renderer_key = std::string(
-          canonicalize_building_renderer_key(renderable->renderer_id));
+      entry.renderer_key =
+          std::string(canonicalize_building_renderer_key(renderable->renderer_id));
     }
     dest.push_back(std::move(entry));
   };
 
-  for (std::uint32_t entity_id : building_ids) {
+  for (std::uint32_t const entity_id : building_ids) {
     collect_non_unit_entry(entity_id, building_entries);
   }
 
-  for (std::uint32_t entity_id : other_ids) {
+  for (std::uint32_t const entity_id : other_ids) {
     collect_non_unit_entry(entity_id, other_entries);
   }
 
   m_unit_render_cache.prune(m_frame_counter);
   m_model_matrix_cache.prune(m_frame_counter);
 
-  auto &battle_optimizer = Render::BattleRenderOptimizer::instance();
+  auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   battle_optimizer.set_visible_unit_count(visible_unit_count);
-  uint32_t optimizer_frame = battle_optimizer.frame_counter();
+  uint32_t const optimizer_frame = battle_optimizer.frame_counter();
 
   float batching_ratio =
       gfx_settings.calculate_batching_ratio(visible_unit_count, camera_height);
 
-  float batching_boost = battle_optimizer.get_batching_boost();
+  float const batching_boost = battle_optimizer.get_batching_boost();
   batching_ratio = std::min(1.0F, batching_ratio * batching_boost);
 
   static thread_local PrimitiveBatcher batcher;
@@ -1375,17 +1422,17 @@ void Renderer::render_world(Engine::Core::World *world) {
     batcher.reserve(2000, 4000, 500);
   }
 
-  float full_shader_max_distance_sq =
+  float const full_shader_max_distance_sq =
       Render::Pipeline::compute_full_detail_max_distance_sq(
           batching_ratio, batch_config.force_batching);
 
   BatchingSubmitter batch_submitter(this, &batcher);
 
-  ResourceManager *res = resources();
+  ResourceManager* res = resources();
 
   auto resolve_fallback_mesh =
-      [&](Engine::Core::RenderableComponent *renderable) -> Mesh * {
-    Mesh *mesh_to_draw = nullptr;
+      [&](Engine::Core::RenderableComponent* renderable) -> Mesh* {
+    Mesh* mesh_to_draw = nullptr;
     switch (renderable->mesh) {
     case Engine::Core::RenderableComponent::MeshKind::Quad:
       mesh_to_draw = (res != nullptr) ? res->quad() : nullptr;
@@ -1415,24 +1462,23 @@ void Renderer::render_world(Engine::Core::World *world) {
     return mesh_to_draw;
   };
 
-  auto draw_contact_shadow = [&](Engine::Core::TransformComponent *transform,
-                                 Engine::Core::UnitComponent *unit_comp,
+  auto draw_contact_shadow = [&](Engine::Core::TransformComponent* transform,
+                                 Engine::Core::UnitComponent* unit_comp,
                                  float distance_sq) {
     if (res == nullptr) {
       return;
     }
-    Mesh *contact_quad = res->quad();
-    Texture *white = res->white();
+    Mesh* contact_quad = res->quad();
+    Texture* white = res->white();
     if ((contact_quad == nullptr) || (white == nullptr)) {
       return;
     }
     QMatrix4x4 contact_base;
-    contact_base.translate(transform->position.x, transform->position.y + 0.03F,
-                           transform->position.z);
+    contact_base.translate(
+        transform->position.x, transform->position.y + 0.03F, transform->position.z);
     constexpr float k_contact_shadow_rotation = -90.0F;
     contact_base.rotate(k_contact_shadow_rotation, 1.0F, 0.0F, 0.0F);
-    float const footprint =
-        std::max({transform->scale.x, transform->scale.z, 0.6F});
+    float const footprint = std::max({transform->scale.x, transform->scale.z, 0.6F});
 
     float size_ratio = 1.0F;
     if (unit_comp != nullptr) {
@@ -1473,16 +1519,20 @@ void Renderer::render_world(Engine::Core::World *world) {
     }
   };
 
-  for (auto &entry : unit_entries) {
+  for (auto& entry : unit_entries) {
     if (!entry.in_frustum || !entry.fog_visible) {
       continue;
     }
 
-    bool should_update_temporal = battle_optimizer.should_render_unit(
-        entry.entity_id, entry.moving, entry.selected, entry.hovered,
-        entry.combat_active, entry.distance_sq);
+    bool const should_update_temporal =
+        battle_optimizer.should_render_unit(entry.entity_id,
+                                            entry.moving,
+                                            entry.selected,
+                                            entry.hovered,
+                                            entry.combat_active,
+                                            entry.distance_sq);
 
-    const QMatrix4x4 &model_matrix = entry.model_matrix;
+    const QMatrix4x4& model_matrix = entry.model_matrix;
 
     bool drawn_by_registry = false;
     bool tier_is_minimal = false;
@@ -1496,15 +1546,15 @@ void Renderer::render_world(Engine::Core::World *world) {
         bool should_update_animation = true;
         if (should_update_temporal) {
           should_update_animation = battle_optimizer.should_update_animation(
-              entry.entity_id, entry.distance_sq, entry.selected,
-              entry.combat_active);
+              entry.entity_id, entry.distance_sq, entry.selected, entry.combat_active);
         } else {
           should_update_animation = false;
         }
 
-        float animation_time =
-            resolve_animation_time(entry.entity_id, should_update_animation,
-                                   m_accumulated_time, optimizer_frame);
+        float const animation_time = resolve_animation_time(entry.entity_id,
+                                                            should_update_animation,
+                                                            m_accumulated_time,
+                                                            optimizer_frame);
 
         ctx.animation_time = animation_time;
         ctx.distance_sq = entry.distance_sq;
@@ -1538,17 +1588,15 @@ void Renderer::render_world(Engine::Core::World *world) {
           ctx.forced_horse_lod = stable_lod;
         }
 
-        const bool batching_available = !m_force_full_creature_lod &&
-                                        !entry.combat_active &&
-                                        batching_ratio > 0.0F;
+        const bool batching_available =
+            !m_force_full_creature_lod && !entry.combat_active && batching_ratio > 0.0F;
         const auto tier = m_force_full_creature_lod
                               ? Render::Pipeline::LodTier::Full
                               : Render::Pipeline::select_lod(lod_in);
 
         const bool use_batching =
-            batching_available &&
-            (tier == Render::Pipeline::LodTier::Simplified ||
-             tier == Render::Pipeline::LodTier::Minimal);
+            batching_available && (tier == Render::Pipeline::LodTier::Simplified ||
+                                   tier == Render::Pipeline::LodTier::Minimal);
         tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
 
         if (use_batching) {
@@ -1563,36 +1611,45 @@ void Renderer::render_world(Engine::Core::World *world) {
     if (drawn_by_registry) {
 
       if (entry.selected || entry.hovered) {
-        enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
-                               entry.selected, entry.hovered);
+        enqueue_selection_ring(
+            entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
       }
       if (!tier_is_minimal) {
-        enqueue_mode_indicator(entry.transform, entry.unit, entry.has_attack,
-                               entry.has_guard_mode, entry.has_hold_mode,
+        enqueue_mode_indicator(entry.transform,
+                               entry.unit,
+                               entry.has_attack,
+                               entry.has_guard_mode,
+                               entry.has_hold_mode,
                                entry.has_patrol);
       }
       continue;
     }
 
-    Mesh *mesh_to_draw = resolve_fallback_mesh(entry.renderable);
-    QVector3D const color =
-        QVector3D(entry.renderable->color[0], entry.renderable->color[1],
-                  entry.renderable->color[2]);
+    Mesh* mesh_to_draw = resolve_fallback_mesh(entry.renderable);
+    QVector3D const color = QVector3D(entry.renderable->color[0],
+                                      entry.renderable->color[1],
+                                      entry.renderable->color[2]);
 
     draw_contact_shadow(entry.transform, entry.unit, entry.distance_sq);
     if (entry.selected || entry.hovered) {
-      enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
-                             entry.selected, entry.hovered);
+      enqueue_selection_ring(
+          entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
     }
-    enqueue_mode_indicator(entry.transform, entry.unit, entry.has_attack,
-                           entry.has_guard_mode, entry.has_hold_mode,
+    enqueue_mode_indicator(entry.transform,
+                           entry.unit,
+                           entry.has_attack,
+                           entry.has_guard_mode,
+                           entry.has_hold_mode,
                            entry.has_patrol);
-    mesh(mesh_to_draw, model_matrix, color,
-         (res != nullptr) ? res->white() : nullptr, 1.0F);
+    mesh(mesh_to_draw,
+         model_matrix,
+         color,
+         (res != nullptr) ? res->white() : nullptr,
+         1.0F);
   }
 
-  auto render_non_unit_entry = [&](const RenderEntry &entry) {
-    const QMatrix4x4 &model_matrix = m_model_matrix_cache.get_or_create(
+  auto render_non_unit_entry = [&](const RenderEntry& entry) {
+    const QMatrix4x4& model_matrix = m_model_matrix_cache.get_or_create(
         entry.entity_id, entry.transform, m_frame_counter);
 
     bool drawn_by_registry = false;
@@ -1613,31 +1670,34 @@ void Renderer::render_world(Engine::Core::World *world) {
     }
     if (drawn_by_registry) {
       if (entry.selected || entry.hovered) {
-        enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
-                               entry.selected, entry.hovered);
+        enqueue_selection_ring(
+            entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
       }
       return;
     }
 
-    Mesh *mesh_to_draw = resolve_fallback_mesh(entry.renderable);
-    QVector3D const color =
-        QVector3D(entry.renderable->color[0], entry.renderable->color[1],
-                  entry.renderable->color[2]);
+    Mesh* mesh_to_draw = resolve_fallback_mesh(entry.renderable);
+    QVector3D const color = QVector3D(entry.renderable->color[0],
+                                      entry.renderable->color[1],
+                                      entry.renderable->color[2]);
 
     draw_contact_shadow(entry.transform, entry.unit, 0.0F);
     if (entry.selected || entry.hovered) {
-      enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
-                             entry.selected, entry.hovered);
+      enqueue_selection_ring(
+          entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
     }
-    mesh(mesh_to_draw, model_matrix, color,
-         (res != nullptr) ? res->white() : nullptr, 1.0F);
+    mesh(mesh_to_draw,
+         model_matrix,
+         color,
+         (res != nullptr) ? res->white() : nullptr,
+         1.0F);
   };
 
-  for (const auto &entry : building_entries) {
+  for (const auto& entry : building_entries) {
     render_non_unit_entry(entry);
   }
 
-  for (const auto &entry : other_entries) {
+  for (const auto& entry : other_entries) {
     render_non_unit_entry(entry);
   }
 
@@ -1649,7 +1709,7 @@ void Renderer::render_world(Engine::Core::World *world) {
     pass_ctx.frame_counter = m_frame_counter;
     pass_ctx.view_proj = m_view_proj;
     pass_ctx.primitive_batcher = &batcher;
-    pass_ctx.visibility = const_cast<Game::Map::VisibilityService *>(&vis);
+    pass_ctx.visibility = const_cast<Game::Map::VisibilityService*>(&vis);
     pass_ctx.visibility_enabled = visibility_enabled;
     pass_ctx.light_direction = m_light_dir;
     pass_ctx.ambient_strength = m_ambient_strength;
@@ -1662,8 +1722,7 @@ void Renderer::render_world(Engine::Core::World *world) {
 }
 
 void Renderer::prewarm_unit_templates(
-    Engine::Core::World *world,
-    TemplatePrewarmProgressCallback progress_callback) {
+    Engine::Core::World* world, TemplatePrewarmProgressCallback progress_callback) {
   cancel_async_template_prewarm();
   Render::Creature::set_runtime_bake_forbidden(false);
   m_forbid_runtime_bake_when_async_prewarm_done = false;
@@ -1672,7 +1731,8 @@ void Renderer::prewarm_unit_templates(
   }
 
   auto report_progress = [&](TemplatePrewarmProgress::Phase phase,
-                             std::size_t completed, std::size_t total) -> bool {
+                             std::size_t completed,
+                             std::size_t total) -> bool {
     if (!progress_callback) {
       return true;
     }
@@ -1683,8 +1743,7 @@ void Renderer::prewarm_unit_templates(
     return progress_callback(progress);
   };
 
-  if (!report_progress(TemplatePrewarmProgress::Phase::CollectingProfiles, 0,
-                       0)) {
+  if (!report_progress(TemplatePrewarmProgress::Phase::CollectingProfiles, 0, 0)) {
     report_progress(TemplatePrewarmProgress::Phase::Cancelled, 0, 0);
     return;
   }
@@ -1703,17 +1762,16 @@ void Renderer::prewarm_unit_templates(
     std::string renderer_id;
     Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
     Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
-    bool operator==(const PrewarmProfileKey &other) const {
-      return renderer_id == other.renderer_id &&
-             spawn_type == other.spawn_type && nation_id == other.nation_id;
+    bool operator==(const PrewarmProfileKey& other) const {
+      return renderer_id == other.renderer_id && spawn_type == other.spawn_type &&
+             nation_id == other.nation_id;
     }
   };
 
   struct PrewarmProfileKeyHash {
-    std::size_t operator()(const PrewarmProfileKey &key) const noexcept {
+    std::size_t operator()(const PrewarmProfileKey& key) const noexcept {
       std::size_t h = std::hash<std::string>()(key.renderer_id);
-      h ^= static_cast<std::size_t>(key.spawn_type) + 0x9e3779b9 + (h << 6) +
-           (h >> 2);
+      h ^= static_cast<std::size_t>(key.spawn_type) + 0x9e3779b9 + (h << 6) + (h >> 2);
       h ^= static_cast<std::size_t>(static_cast<std::uint8_t>(key.nation_id)) +
            0x9e3779b9 + (h << 6) + (h >> 2);
       return h;
@@ -1799,14 +1857,15 @@ void Renderer::prewarm_unit_templates(
     }
   };
 
-  auto add_profile = [&](const std::string &renderer_id,
+  auto add_profile = [&](const std::string& renderer_id,
                          Game::Units::SpawnType spawn_type,
-                         Game::Systems::NationID nation_id, int max_health,
+                         Game::Systems::NationID nation_id,
+                         int max_health,
                          bool is_building = false) {
     std::string canonical_renderer_id(renderer_id);
     if (renderer_id.empty() && is_building) {
-      canonical_renderer_id = building_renderer_key(
-          nation_id, Game::Units::spawn_typeToString(spawn_type));
+      canonical_renderer_id =
+          building_renderer_key(nation_id, Game::Units::spawn_typeToString(spawn_type));
     } else if (is_building) {
       canonical_renderer_id = resolve_building_renderer_key(
           renderer_id, Game::Units::spawn_typeToString(spawn_type), nation_id);
@@ -1817,7 +1876,7 @@ void Renderer::prewarm_unit_templates(
     if (!is_prewarmable_spawn(spawn_type) || canonical_renderer_id.empty()) {
       return;
     }
-    PrewarmProfileKey key{canonical_renderer_id, spawn_type, nation_id};
+    PrewarmProfileKey const key{canonical_renderer_id, spawn_type, nation_id};
     if (!profile_seen.insert(key).second) {
       return;
     }
@@ -1841,15 +1900,14 @@ void Renderer::prewarm_unit_templates(
 
   if (world != nullptr) {
     auto world_units = world->get_entities_with<Engine::Core::UnitComponent>();
-    for (auto *entity : world_units) {
+    for (auto* entity : world_units) {
       if (entity == nullptr ||
           entity->has_component<Engine::Core::PendingRemovalComponent>()) {
         continue;
       }
 
-      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-      auto *renderable =
-          entity->get_component<Engine::Core::RenderableComponent>();
+      auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
       if (unit == nullptr || renderable == nullptr || unit->health <= 0) {
         continue;
       }
@@ -1860,17 +1918,17 @@ void Renderer::prewarm_unit_templates(
 
       add_owner(unit->owner_id);
       active_nation_ids.insert(unit->nation_id);
-      add_profile(renderable->renderer_id, unit->spawn_type, unit->nation_id,
+      add_profile(renderable->renderer_id,
+                  unit->spawn_type,
+                  unit->nation_id,
                   unit->max_health,
-                  entity->get_component<Engine::Core::BuildingComponent>() !=
-                      nullptr);
+                  entity->get_component<Engine::Core::BuildingComponent>() != nullptr);
     }
   }
 
   if (owner_ids.empty()) {
-    const auto &owners =
-        Game::Systems::OwnerRegistry::instance().get_all_owners();
-    for (const auto &owner : owners) {
+    const auto& owners = Game::Systems::OwnerRegistry::instance().get_all_owners();
+    for (const auto& owner : owners) {
       add_owner(owner.owner_id);
     }
   }
@@ -1879,32 +1937,30 @@ void Renderer::prewarm_unit_templates(
   }
 
   {
-    const auto &troops =
-        Game::Units::TroopCatalog::instance().get_all_classes();
-    const auto &nations =
-        Game::Systems::NationRegistry::instance().get_all_nations();
+    const auto& troops = Game::Units::TroopCatalog::instance().get_all_classes();
+    const auto& nations = Game::Systems::NationRegistry::instance().get_all_nations();
     const bool restrict_to_active_nations = !active_nation_ids.empty();
 
-    for (const auto &nation : nations) {
+    for (const auto& nation : nations) {
       if (restrict_to_active_nations &&
           (active_nation_ids.find(nation.id) == active_nation_ids.end())) {
         continue;
       }
-      for (const auto &entry : troops) {
+      for (const auto& entry : troops) {
         auto type = entry.first;
         if (!is_prewarmable_troop(type)) {
           continue;
         }
 
         auto profile =
-            Game::Systems::TroopProfileService::instance().get_profile(
-                nation.id, type);
+            Game::Systems::TroopProfileService::instance().get_profile(nation.id, type);
         if (profile.visuals.renderer_id.empty()) {
           continue;
         }
 
         add_profile(profile.visuals.renderer_id,
-                    Game::Units::spawn_typeFromTroopType(type), nation.id,
+                    Game::Units::spawn_typeFromTroopType(type),
+                    nation.id,
                     profile.combat.max_health);
       }
     }
@@ -1916,7 +1972,7 @@ void Renderer::prewarm_unit_templates(
     return;
   }
 
-  auto profile_priority = [](const PrewarmProfile &profile) -> int {
+  auto profile_priority = [](const PrewarmProfile& profile) -> int {
     if (profile.is_elephant) {
       return 0;
     }
@@ -1925,8 +1981,9 @@ void Renderer::prewarm_unit_templates(
     }
     return 2;
   };
-  std::stable_sort(profiles.begin(), profiles.end(),
-                   [&](const PrewarmProfile &lhs, const PrewarmProfile &rhs) {
+  std::stable_sort(profiles.begin(),
+                   profiles.end(),
+                   [&](const PrewarmProfile& lhs, const PrewarmProfile& rhs) {
                      const int lp = profile_priority(lhs);
                      const int rp = profile_priority(rhs);
                      if (lp != rp) {
@@ -1940,8 +1997,10 @@ void Renderer::prewarm_unit_templates(
   core_anim_keys.reserve(192);
   full_anim_keys.reserve(1024);
 
-  auto push_anim_key = [](std::vector<AnimKey> &keys, AnimState state,
-                          CombatAnimPhase phase, std::uint8_t frame,
+  auto push_anim_key = [](std::vector<AnimKey>& keys,
+                          AnimState state,
+                          CombatAnimPhase phase,
+                          std::uint8_t frame,
                           std::uint8_t attack_variant) {
     AnimKey key{};
     key.state = state;
@@ -1951,44 +2010,50 @@ void Renderer::prewarm_unit_templates(
     keys.push_back(key);
   };
 
-  auto add_state_frames = [&](std::vector<AnimKey> &keys, AnimState state,
+  auto add_state_frames = [&](std::vector<AnimKey>& keys,
+                              AnimState state,
                               int frame_step) {
     const int step = std::max(1, frame_step);
-    for (int frame = 0; frame < static_cast<int>(k_anim_frame_count);
-         frame += step) {
-      push_anim_key(keys, state, CombatAnimPhase::Idle,
-                    static_cast<std::uint8_t>(frame), 0);
+    for (int frame = 0; frame < static_cast<int>(k_anim_frame_count); frame += step) {
+      push_anim_key(
+          keys, state, CombatAnimPhase::Idle, static_cast<std::uint8_t>(frame), 0);
     }
   };
 
-  auto add_attack_frames = [&](std::vector<AnimKey> &keys, AnimState state,
-                               int frame_step, std::uint8_t variant_count) {
-    constexpr CombatAnimPhase phases[] = {
-        CombatAnimPhase::Idle,      CombatAnimPhase::Advance,
-        CombatAnimPhase::WindUp,    CombatAnimPhase::Strike,
-        CombatAnimPhase::Impact,    CombatAnimPhase::Recover,
-        CombatAnimPhase::Reposition};
+  auto add_attack_frames = [&](std::vector<AnimKey>& keys,
+                               AnimState state,
+                               int frame_step,
+                               std::uint8_t variant_count) {
+    constexpr CombatAnimPhase phases[] = {CombatAnimPhase::Idle,
+                                          CombatAnimPhase::Advance,
+                                          CombatAnimPhase::WindUp,
+                                          CombatAnimPhase::Strike,
+                                          CombatAnimPhase::Impact,
+                                          CombatAnimPhase::Recover,
+                                          CombatAnimPhase::Reposition};
     const int step = std::max(1, frame_step);
     variant_count = std::max<std::uint8_t>(variant_count, 1U);
     for (std::uint8_t attack_variant = 0; attack_variant < variant_count;
          ++attack_variant) {
-      for (CombatAnimPhase phase : phases) {
+      for (CombatAnimPhase const phase : phases) {
         for (int frame = 0; frame < static_cast<int>(k_anim_frame_count);
              frame += step) {
-          push_anim_key(keys, state, phase, static_cast<std::uint8_t>(frame),
-                        attack_variant);
+          push_anim_key(
+              keys, state, phase, static_cast<std::uint8_t>(frame), attack_variant);
         }
       }
     }
   };
 
   auto add_core_attack_frames = [&](AnimState state) {
-    constexpr CombatAnimPhase phases[] = {
-        CombatAnimPhase::Idle,      CombatAnimPhase::Advance,
-        CombatAnimPhase::WindUp,    CombatAnimPhase::Strike,
-        CombatAnimPhase::Impact,    CombatAnimPhase::Recover,
-        CombatAnimPhase::Reposition};
-    for (CombatAnimPhase phase : phases) {
+    constexpr CombatAnimPhase phases[] = {CombatAnimPhase::Idle,
+                                          CombatAnimPhase::Advance,
+                                          CombatAnimPhase::WindUp,
+                                          CombatAnimPhase::Strike,
+                                          CombatAnimPhase::Impact,
+                                          CombatAnimPhase::Recover,
+                                          CombatAnimPhase::Reposition};
+    for (CombatAnimPhase const phase : phases) {
       push_anim_key(core_anim_keys, state, phase, 0, 0);
     }
   };
@@ -1996,8 +2061,7 @@ void Renderer::prewarm_unit_templates(
   push_anim_key(core_anim_keys, AnimState::Idle, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(core_anim_keys, AnimState::Move, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(core_anim_keys, AnimState::Run, CombatAnimPhase::Idle, 0, 0);
-  push_anim_key(core_anim_keys, AnimState::Construct, CombatAnimPhase::Idle, 0,
-                0);
+  push_anim_key(core_anim_keys, AnimState::Construct, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(core_anim_keys, AnimState::Heal, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(core_anim_keys, AnimState::Hit, CombatAnimPhase::Idle, 0, 0);
   add_core_attack_frames(AnimState::AttackMelee);
@@ -2009,29 +2073,27 @@ void Renderer::prewarm_unit_templates(
   add_state_frames(full_anim_keys, AnimState::Construct, 1);
   add_state_frames(full_anim_keys, AnimState::Heal, 1);
   add_state_frames(full_anim_keys, AnimState::Hit, 1);
-  auto const &archetypes = Render::Creature::ArchetypeRegistry::instance();
-  auto const melee_variant_count = std::max(
-      std::max(archetypes.clip_variant_count(
-                   Render::Creature::ArchetypeRegistry::k_humanoid_base,
-                   Render::Creature::AnimationStateId::AttackSword),
-               archetypes.clip_variant_count(
-                   Render::Creature::ArchetypeRegistry::k_humanoid_base,
-                   Render::Creature::AnimationStateId::AttackSpear)),
-      std::max(archetypes.clip_variant_count(
-                   Render::Creature::ArchetypeRegistry::k_rider_base,
-                   Render::Creature::AnimationStateId::AttackSword),
-               archetypes.clip_variant_count(
-                   Render::Creature::ArchetypeRegistry::k_rider_base,
-                   Render::Creature::AnimationStateId::AttackSpear)));
+  auto const& archetypes = Render::Creature::ArchetypeRegistry::instance();
+  auto const melee_variant_count =
+      std::max(std::max(archetypes.clip_variant_count(
+                            Render::Creature::ArchetypeRegistry::k_humanoid_base,
+                            Render::Creature::AnimationStateId::AttackSword),
+                        archetypes.clip_variant_count(
+                            Render::Creature::ArchetypeRegistry::k_humanoid_base,
+                            Render::Creature::AnimationStateId::AttackSpear)),
+               std::max(archetypes.clip_variant_count(
+                            Render::Creature::ArchetypeRegistry::k_rider_base,
+                            Render::Creature::AnimationStateId::AttackSword),
+                        archetypes.clip_variant_count(
+                            Render::Creature::ArchetypeRegistry::k_rider_base,
+                            Render::Creature::AnimationStateId::AttackSpear)));
   auto const ranged_variant_count = archetypes.clip_variant_count(
       Render::Creature::ArchetypeRegistry::k_humanoid_base,
       Render::Creature::AnimationStateId::AttackBow);
-  add_attack_frames(full_anim_keys, AnimState::AttackMelee, 1,
-                    melee_variant_count);
-  add_attack_frames(full_anim_keys, AnimState::AttackRanged, 1,
-                    ranged_variant_count);
+  add_attack_frames(full_anim_keys, AnimState::AttackMelee, 1, melee_variant_count);
+  add_attack_frames(full_anim_keys, AnimState::AttackRanged, 1, ranged_variant_count);
 
-  auto encode_anim_key = [](const AnimKey &key) -> std::uint64_t {
+  auto encode_anim_key = [](const AnimKey& key) -> std::uint64_t {
     return static_cast<std::uint64_t>(key.state) |
            (static_cast<std::uint64_t>(key.combat_phase) << 8U) |
            (static_cast<std::uint64_t>(key.frame) << 16U) |
@@ -2041,13 +2103,13 @@ void Renderer::prewarm_unit_templates(
 
   std::unordered_set<std::uint64_t> core_key_set;
   core_key_set.reserve(core_anim_keys.size() * 2);
-  for (const auto &key : core_anim_keys) {
+  for (const auto& key : core_anim_keys) {
     core_key_set.insert(encode_anim_key(key));
   }
 
   std::vector<AnimKey> extra_anim_keys;
   extra_anim_keys.reserve(full_anim_keys.size());
-  for (const auto &key : full_anim_keys) {
+  for (const auto& key : full_anim_keys) {
     if (core_key_set.find(encode_anim_key(key)) == core_key_set.end()) {
       extra_anim_keys.push_back(key);
     }
@@ -2062,26 +2124,23 @@ void Renderer::prewarm_unit_templates(
 
   const std::size_t target_template_count = choose_template_budget_by_quality();
   const std::size_t core_anim_count = core_anim_keys.size();
-  const std::size_t full_anim_count =
-      core_anim_keys.size() + extra_anim_keys.size();
+  const std::size_t full_anim_count = core_anim_keys.size() + extra_anim_keys.size();
 
   std::size_t variant_count = k_template_variant_count;
   const std::size_t core_per_variant = domain_count * core_anim_count;
   if (core_per_variant > 0) {
-    const std::size_t max_variants_for_core =
-        target_template_count / core_per_variant;
-    variant_count = std::clamp<std::size_t>(max_variants_for_core, 1,
-                                            k_template_variant_count);
+    const std::size_t max_variants_for_core = target_template_count / core_per_variant;
+    variant_count =
+        std::clamp<std::size_t>(max_variants_for_core, 1, k_template_variant_count);
   }
 
   variant_count = std::max<std::size_t>(variant_count, 4U);
 
   std::size_t anim_count_budget =
-      target_template_count /
-      std::max<std::size_t>(1, domain_count * variant_count);
+      target_template_count / std::max<std::size_t>(1, domain_count * variant_count);
   anim_count_budget = std::max<std::size_t>(anim_count_budget, 1);
 
-  std::size_t anim_count =
+  std::size_t const anim_count =
       std::max(core_anim_count, std::min(full_anim_count, anim_count_budget));
 
   std::vector<std::uint8_t> variant_values;
@@ -2097,17 +2156,19 @@ void Renderer::prewarm_unit_templates(
   std::vector<AnimKey> selected_core_anim_keys;
   selected_core_anim_keys.reserve(core_anim_count);
   const std::size_t core_take = std::min(core_anim_count, anim_count);
-  selected_core_anim_keys.insert(
-      selected_core_anim_keys.end(), core_anim_keys.begin(),
-      core_anim_keys.begin() + static_cast<std::ptrdiff_t>(core_take));
+  selected_core_anim_keys.insert(selected_core_anim_keys.end(),
+                                 core_anim_keys.begin(),
+                                 core_anim_keys.begin() +
+                                     static_cast<std::ptrdiff_t>(core_take));
 
   std::vector<AnimKey> selected_extra_anim_keys;
   if (anim_count > core_take) {
     const std::size_t extra_take =
         std::min<std::size_t>(anim_count - core_take, extra_anim_keys.size());
-    selected_extra_anim_keys.insert(
-        selected_extra_anim_keys.end(), extra_anim_keys.begin(),
-        extra_anim_keys.begin() + static_cast<std::ptrdiff_t>(extra_take));
+    selected_extra_anim_keys.insert(selected_extra_anim_keys.end(),
+                                    extra_anim_keys.begin(),
+                                    extra_anim_keys.begin() +
+                                        static_cast<std::ptrdiff_t>(extra_take));
   }
 
   if (selected_core_anim_keys.empty() || variant_values.empty()) {
@@ -2125,26 +2186,25 @@ void Renderer::prewarm_unit_templates(
   const std::size_t cache_entry_cap = std::clamp<std::size_t>(
       expected_template_count +
           std::max<std::size_t>(4096, expected_template_count / 8),
-      k_cache_min_cap, k_cache_hard_cap);
+      k_cache_min_cap,
+      k_cache_hard_cap);
 
   TemplateCache::instance().set_max_entries(cache_entry_cap);
   TemplateCache::instance().clear();
   clear_humanoid_caches();
   PosePaletteCache::instance().generate();
 
-  auto build_work_items = [&](const std::vector<AnimKey> &anim_keys)
-      -> std::vector<PrewarmWorkItem> {
+  auto build_work_items =
+      [&](const std::vector<AnimKey>& anim_keys) -> std::vector<PrewarmWorkItem> {
     std::vector<PrewarmWorkItem> items;
     items.reserve(domain_count * variant_values.size() * anim_keys.size());
     constexpr HumanoidLOD lods[] = {HumanoidLOD::Full, HumanoidLOD::Minimal};
-    for (std::size_t profile_idx = 0; profile_idx < profiles.size();
-         ++profile_idx) {
-      auto const spawn_type =
-          static_cast<Game::Units::SpawnType>(profiles[profile_idx].spawn_type);
-      for (int owner_id : owner_ids) {
-        for (HumanoidLOD lod : lods) {
-          for (std::uint8_t variant : variant_values) {
-            for (const auto &anim_key : anim_keys) {
+    for (std::size_t profile_idx = 0; profile_idx < profiles.size(); ++profile_idx) {
+      auto const spawn_type = profiles[profile_idx].spawn_type;
+      for (int const owner_id : owner_ids) {
+        for (HumanoidLOD const lod : lods) {
+          for (std::uint8_t const variant : variant_values) {
+            for (const auto& anim_key : anim_keys) {
               PrewarmWorkItem item;
               item.profile_index = profile_idx;
               item.owner_id = owner_id;
@@ -2164,22 +2224,21 @@ void Renderer::prewarm_unit_templates(
 
   std::vector<PrewarmWorkItem> core_work_items =
       build_work_items(selected_core_anim_keys);
-  std::vector<PrewarmWorkItem> extended_work_items =
+  std::vector<PrewarmWorkItem> const extended_work_items =
       build_work_items(selected_extra_anim_keys);
 
   const std::size_t total_work_count =
       core_work_items.size() + extended_work_items.size();
   if (core_work_items.empty()) {
     Render::Creature::set_runtime_bake_forbidden(true);
-    report_progress(TemplatePrewarmProgress::Phase::Completed, 0,
-                    total_work_count);
+    report_progress(TemplatePrewarmProgress::Phase::Completed, 0, total_work_count);
     return;
   }
 
-  if (!report_progress(TemplatePrewarmProgress::Phase::BuildingCoreTemplates, 0,
+  if (!report_progress(TemplatePrewarmProgress::Phase::BuildingCoreTemplates,
+                       0,
                        core_work_items.size())) {
-    report_progress(TemplatePrewarmProgress::Phase::Cancelled, 0,
-                    total_work_count);
+    report_progress(TemplatePrewarmProgress::Phase::Cancelled, 0, total_work_count);
     return;
   }
 
@@ -2197,37 +2256,36 @@ void Renderer::prewarm_unit_templates(
       if (cancel_requested.load(std::memory_order_relaxed)) {
         break;
       }
-      const std::size_t idx =
-          next_index.fetch_add(1, std::memory_order_relaxed);
+      const std::size_t idx = next_index.fetch_add(1, std::memory_order_relaxed);
       if (idx >= core_work_items.size()) {
         break;
       }
 
-      const PrewarmWorkItem &item = core_work_items[idx];
-      const PrewarmProfile &profile = profiles[item.profile_index];
+      const PrewarmWorkItem& item = core_work_items[idx];
+      const PrewarmProfile& profile = profiles[item.profile_index];
 
-      Engine::Core::Entity entity(prewarm_entity_id_for_variant(
-          item.profile_index, item.owner_id,
-          static_cast<std::uint8_t>(item.lod), item.variant));
-      auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+      Engine::Core::Entity entity(
+          prewarm_entity_id_for_variant(item.profile_index,
+                                        item.owner_id,
+                                        static_cast<std::uint8_t>(item.lod),
+                                        item.variant));
+      auto* unit = entity.add_component<Engine::Core::UnitComponent>();
       unit->spawn_type = profile.spawn_type;
       unit->owner_id = item.owner_id;
       unit->nation_id = profile.nation_id;
       unit->max_health = profile.max_health;
       unit->health = profile.max_health;
 
-      auto *transform =
-          entity.add_component<Engine::Core::TransformComponent>();
+      auto* transform = entity.add_component<Engine::Core::TransformComponent>();
       transform->position = {0.0F, 0.0F, 0.0F};
       transform->rotation = {0.0F, 0.0F, 0.0F};
       transform->scale = {1.0F, 1.0F, 1.0F};
 
-      auto *renderable =
+      auto* renderable =
           entity.add_component<Engine::Core::RenderableComponent>("", "");
       renderable->renderer_id = profile.renderer_id;
       renderable->visible = true;
-      const QVector3D team_color =
-          Game::Visuals::team_colorForOwner(item.owner_id);
+      const QVector3D team_color = Game::Visuals::team_colorForOwner(item.owner_id);
       renderable->color[0] = team_color.x();
       renderable->color[1] = team_color.y();
       renderable->color[2] = team_color.z();
@@ -2249,15 +2307,14 @@ void Renderer::prewarm_unit_templates(
         ctx.forced_horse_lod = static_cast<HorseLOD>(item.lod);
       }
 
-      AnimationInputs anim = make_animation_inputs(item.anim_key);
+      AnimationInputs const anim = make_animation_inputs(item.anim_key);
       ctx.animation_override = &anim;
-      const bool attack_state =
-          (item.anim_key.state == AnimState::AttackMelee) ||
-          (item.anim_key.state == AnimState::AttackRanged);
+      const bool attack_state = (item.anim_key.state == AnimState::AttackMelee) ||
+                                (item.anim_key.state == AnimState::AttackRanged);
       ctx.has_attack_variant_override = attack_state;
       ctx.attack_variant_override = item.anim_key.attack_variant;
 
-      std::lock_guard<std::mutex> profile_lock(
+      std::lock_guard<std::mutex> const profile_lock(
           profile_mutexes[item.profile_index]);
       profile.fn(ctx, warmup_submitter);
       completed_count.fetch_add(1, std::memory_order_relaxed);
@@ -2277,18 +2334,17 @@ void Renderer::prewarm_unit_templates(
   constexpr std::size_t k_progress_report_step = 2048;
   std::size_t last_reported = 0;
   while (!cancel_requested.load(std::memory_order_relaxed)) {
-    const std::size_t done =
-        std::min(completed_count.load(std::memory_order_relaxed),
-                 core_work_items.size());
+    const std::size_t done = std::min(completed_count.load(std::memory_order_relaxed),
+                                      core_work_items.size());
     if (done >= core_work_items.size()) {
       break;
     }
 
     if ((done - last_reported) >= k_progress_report_step) {
       last_reported = done;
-      if (!report_progress(
-              TemplatePrewarmProgress::Phase::BuildingCoreTemplates, done,
-              core_work_items.size())) {
+      if (!report_progress(TemplatePrewarmProgress::Phase::BuildingCoreTemplates,
+                           done,
+                           core_work_items.size())) {
         cancel_requested.store(true, std::memory_order_relaxed);
         break;
       }
@@ -2297,37 +2353,38 @@ void Renderer::prewarm_unit_templates(
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
   }
 
-  for (auto &t : workers) {
+  for (auto& t : workers) {
     t.join();
   }
 
-  const std::size_t core_done = std::min(
-      completed_count.load(std::memory_order_relaxed), core_work_items.size());
+  const std::size_t core_done =
+      std::min(completed_count.load(std::memory_order_relaxed), core_work_items.size());
   if (cancel_requested.load(std::memory_order_relaxed) ||
       core_done < core_work_items.size()) {
-    report_progress(TemplatePrewarmProgress::Phase::Cancelled, core_done,
-                    total_work_count);
+    report_progress(
+        TemplatePrewarmProgress::Phase::Cancelled, core_done, total_work_count);
     return;
   }
   if (!report_progress(TemplatePrewarmProgress::Phase::BuildingCoreTemplates,
-                       core_done, core_work_items.size())) {
-    report_progress(TemplatePrewarmProgress::Phase::Cancelled, core_done,
-                    total_work_count);
+                       core_done,
+                       core_work_items.size())) {
+    report_progress(
+        TemplatePrewarmProgress::Phase::Cancelled, core_done, total_work_count);
     return;
   }
 
   if (!extended_work_items.empty()) {
-    if (!report_progress(
-            TemplatePrewarmProgress::Phase::QueueingExtendedTemplates,
-            extended_work_items.size(), extended_work_items.size())) {
-      report_progress(TemplatePrewarmProgress::Phase::Cancelled, core_done,
-                      total_work_count);
+    if (!report_progress(TemplatePrewarmProgress::Phase::QueueingExtendedTemplates,
+                         extended_work_items.size(),
+                         extended_work_items.size())) {
+      report_progress(
+          TemplatePrewarmProgress::Phase::Cancelled, core_done, total_work_count);
       return;
     }
 
     auto async_state = std::make_shared<AsyncTemplatePrewarmState>();
     async_state->profiles.reserve(profiles.size());
-    for (const auto &profile : profiles) {
+    for (const auto& profile : profiles) {
       AsyncPrewarmProfile async_profile;
       async_profile.renderer_id = profile.renderer_id;
       async_profile.spawn_type = static_cast<int>(profile.spawn_type);
@@ -2340,24 +2397,22 @@ void Renderer::prewarm_unit_templates(
     }
 
     async_state->work_items.reserve(extended_work_items.size());
-    for (const auto &item : extended_work_items) {
+    for (const auto& item : extended_work_items) {
       AsyncPrewarmWorkItem async_item;
       async_item.profile_index = item.profile_index;
       async_item.owner_id = item.owner_id;
       async_item.lod = static_cast<std::uint8_t>(item.lod);
       async_item.variant = item.variant;
       async_item.anim_state = static_cast<std::uint8_t>(item.anim_key.state);
-      async_item.combat_phase =
-          static_cast<std::uint8_t>(item.anim_key.combat_phase);
+      async_item.combat_phase = static_cast<std::uint8_t>(item.anim_key.combat_phase);
       async_item.frame = item.anim_key.frame;
-      async_item.attack_family =
-          static_cast<std::uint8_t>(item.anim_key.attack_family);
+      async_item.attack_family = static_cast<std::uint8_t>(item.anim_key.attack_family);
       async_item.attack_variant = item.anim_key.attack_variant;
       async_state->work_items.push_back(async_item);
     }
 
     {
-      std::lock_guard<std::mutex> lock(m_async_prewarm_mutex);
+      std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
       m_async_prewarm_state = std::move(async_state);
       m_forbid_runtime_bake_when_async_prewarm_done = true;
     }
@@ -2365,13 +2420,13 @@ void Renderer::prewarm_unit_templates(
     Render::Creature::set_runtime_bake_forbidden(true);
   }
 
-  report_progress(TemplatePrewarmProgress::Phase::Completed, core_done,
-                  total_work_count);
+  report_progress(
+      TemplatePrewarmProgress::Phase::Completed, core_done, total_work_count);
 }
 
-void Renderer::render_construction_previews(
-    Engine::Core::World *world, const Game::Map::VisibilityService *vis,
-    bool visibility_enabled) {
+void Renderer::render_construction_previews(Engine::Core::World* world,
+                                            const Game::Map::VisibilityService* vis,
+                                            bool visibility_enabled) {
   if (world == nullptr || m_entity_registry == nullptr) {
     return;
   }
@@ -2381,19 +2436,17 @@ void Renderer::render_construction_previews(
     visibility_snapshot = vis->snapshot();
   }
 
-  auto builders =
-      world->get_entities_with<Engine::Core::BuilderProductionComponent>();
+  auto builders = world->get_entities_with<Engine::Core::BuilderProductionComponent>();
 
-  for (auto *builder : builders) {
+  for (auto* builder : builders) {
     if (builder->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *builder_prod =
+    auto* builder_prod =
         builder->get_component<Engine::Core::BuilderProductionComponent>();
-    auto *transform =
-        builder->get_component<Engine::Core::TransformComponent>();
-    auto *unit_comp = builder->get_component<Engine::Core::UnitComponent>();
+    auto* transform = builder->get_component<Engine::Core::TransformComponent>();
+    auto* unit_comp = builder->get_component<Engine::Core::UnitComponent>();
 
     if (builder_prod == nullptr || transform == nullptr) {
       continue;
@@ -2403,13 +2456,11 @@ void Renderer::render_construction_previews(
     float preview_x = transform->position.x;
     float preview_z = transform->position.z;
 
-    if (builder_prod->is_placement_preview &&
-        builder_prod->has_construction_site) {
+    if (builder_prod->is_placement_preview && builder_prod->has_construction_site) {
       show_preview = true;
       preview_x = builder_prod->construction_site_x;
       preview_z = builder_prod->construction_site_z;
-    } else if (builder_prod->is_placement_preview &&
-               builder_prod->in_progress) {
+    } else if (builder_prod->is_placement_preview && builder_prod->in_progress) {
       show_preview = true;
     }
 
@@ -2435,13 +2486,12 @@ void Renderer::render_construction_previews(
       }
     }
 
-    Game::Systems::NationID preview_nation =
-        Game::Systems::NationID::RomanRepublic;
+    Game::Systems::NationID preview_nation = Game::Systems::NationID::RomanRepublic;
     if (unit_comp != nullptr) {
       preview_nation = unit_comp->nation_id;
     }
 
-    std::string renderer_key =
+    std::string const renderer_key =
         building_renderer_key(preview_nation, builder_prod->product_type);
 
     auto fn = m_entity_registry->get(renderer_key);
@@ -2449,10 +2499,9 @@ void Renderer::render_construction_previews(
       continue;
     }
 
-    auto &terrain_service = Game::Map::TerrainService::instance();
-    QVector3D const preview_pos =
-        terrain_service.resolve_surface_world_position(preview_x, preview_z,
-                                                       0.0F, 0.0F);
+    auto& terrain_service = Game::Map::TerrainService::instance();
+    QVector3D const preview_pos = terrain_service.resolve_surface_world_position(
+        preview_x, preview_z, 0.0F, 0.0F);
 
     QMatrix4x4 model_matrix;
     model_matrix.translate(preview_pos);

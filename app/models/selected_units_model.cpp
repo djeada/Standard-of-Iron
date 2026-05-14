@@ -1,6 +1,5 @@
 #include "selected_units_model.h"
-#include "../core/game_engine.h"
-#include <algorithm>
+
 #include <qabstractitemmodel.h>
 #include <qhash.h>
 #include <qhashfunctions.h>
@@ -8,20 +7,25 @@
 #include <qstringview.h>
 #include <qtmetamacros.h>
 #include <qvariant.h>
+
+#include <algorithm>
 #include <vector>
 
-SelectedUnitsModel::SelectedUnitsModel(GameEngine *engine, QObject *parent)
-    : QAbstractListModel(parent), m_engine(engine) {}
+#include "../core/game_engine.h"
 
-auto SelectedUnitsModel::rowCount(const QModelIndex &parent) const -> int {
+SelectedUnitsModel::SelectedUnitsModel(GameEngine* engine, QObject* parent)
+    : QAbstractListModel(parent)
+    , m_engine(engine) {
+}
+
+auto SelectedUnitsModel::rowCount(const QModelIndex& parent) const -> int {
   if (parent.isValid()) {
     return 0;
   }
   return static_cast<int>(m_ids.size());
 }
 
-auto SelectedUnitsModel::data(const QModelIndex &index,
-                              int role) const -> QVariant {
+auto SelectedUnitsModel::data(const QModelIndex& index, int role) const -> QVariant {
   if (!index.isValid() || index.row() < 0 ||
       index.row() >= static_cast<int>(m_ids.size())) {
     return {};
@@ -104,14 +108,17 @@ void SelectedUnitsModel::refresh() {
   std::vector<Engine::Core::EntityID> ids;
   m_engine->get_selected_unit_ids(ids);
 
-  if (ids.size() == m_ids.size() &&
-      std::equal(ids.begin(), ids.end(), m_ids.begin())) {
+  if (ids.size() == m_ids.size() && std::equal(ids.begin(), ids.end(), m_ids.begin())) {
     if (!m_ids.empty()) {
       QModelIndex const first = index(0, 0);
       QModelIndex const last = index(static_cast<int>(m_ids.size()) - 1, 0);
-      emit dataChanged(first, last,
-                       {HealthRole, max_healthRole, HealthRatioRole,
-                        StaminaRatioRole, IsRunningRole});
+      emit dataChanged(first,
+                       last,
+                       {HealthRole,
+                        max_healthRole,
+                        HealthRatioRole,
+                        StaminaRatioRole,
+                        IsRunningRole});
     }
     return;
   }
