@@ -329,43 +329,46 @@ TEST(HorseSpecTest, BasePoseBodyKeepsDepthCloserToWidthThanFlatBlob) {
 
 TEST(HorseSpecTest, GeneratedHorseDimensionsUseWiderTallerTorsoWithLongerLargerHead) {
   auto const dims = Render::GL::make_horse_dimensions(0U);
+  float const overall_scale = Render::GL::HorseDimensionRange::k_overall_scale;
 
-  EXPECT_GE(dims.body_width, Render::GL::HorseDimensionRange::k_body_width_min * 1.18F);
-  EXPECT_LE(dims.body_width, Render::GL::HorseDimensionRange::k_body_width_max * 1.18F);
+  EXPECT_GE(dims.body_width,
+            Render::GL::HorseDimensionRange::k_body_width_min * 1.18F * overall_scale);
+  EXPECT_LE(dims.body_width,
+            Render::GL::HorseDimensionRange::k_body_width_max * 1.18F * overall_scale);
   EXPECT_GE(dims.body_height,
-            Render::GL::HorseDimensionRange::k_body_height_min * 1.2F);
+            Render::GL::HorseDimensionRange::k_body_height_min * 1.2F * overall_scale);
   EXPECT_LE(dims.body_height,
-            Render::GL::HorseDimensionRange::k_body_height_max * 1.2F);
+            Render::GL::HorseDimensionRange::k_body_height_max * 1.2F * overall_scale);
   EXPECT_GE(dims.neck_length,
             Render::GL::HorseDimensionRange::k_neck_length_min *
-                Render::GL::HorseDimensionRange::k_neck_length_scale);
+                Render::GL::HorseDimensionRange::k_neck_length_scale * overall_scale);
   EXPECT_LE(dims.neck_length,
             Render::GL::HorseDimensionRange::k_neck_length_max *
-                Render::GL::HorseDimensionRange::k_neck_length_scale);
+                Render::GL::HorseDimensionRange::k_neck_length_scale * overall_scale);
   EXPECT_GE(dims.head_length,
             Render::GL::HorseDimensionRange::k_head_length_min *
-                Render::GL::HorseDimensionRange::k_head_scale);
+                Render::GL::HorseDimensionRange::k_head_scale * overall_scale);
   EXPECT_LE(dims.head_length,
             Render::GL::HorseDimensionRange::k_head_length_max *
-                Render::GL::HorseDimensionRange::k_head_scale);
+                Render::GL::HorseDimensionRange::k_head_scale * overall_scale);
   EXPECT_GE(dims.head_width,
             Render::GL::HorseDimensionRange::k_head_width_min *
-                Render::GL::HorseDimensionRange::k_head_scale);
+                Render::GL::HorseDimensionRange::k_head_scale * overall_scale);
   EXPECT_LE(dims.head_width,
             Render::GL::HorseDimensionRange::k_head_width_max *
-                Render::GL::HorseDimensionRange::k_head_scale);
+                Render::GL::HorseDimensionRange::k_head_scale * overall_scale);
   EXPECT_GE(dims.head_height,
             Render::GL::HorseDimensionRange::k_head_height_min *
-                Render::GL::HorseDimensionRange::k_head_scale);
+                Render::GL::HorseDimensionRange::k_head_scale * overall_scale);
   EXPECT_LE(dims.head_height,
             Render::GL::HorseDimensionRange::k_head_height_max *
-                Render::GL::HorseDimensionRange::k_head_scale);
+                Render::GL::HorseDimensionRange::k_head_scale * overall_scale);
   EXPECT_GE(dims.muzzle_length,
             Render::GL::HorseDimensionRange::k_muzzle_length_min *
-                Render::GL::HorseDimensionRange::k_head_scale);
+                Render::GL::HorseDimensionRange::k_head_scale * overall_scale);
   EXPECT_LE(dims.muzzle_length,
             Render::GL::HorseDimensionRange::k_muzzle_length_max *
-                Render::GL::HorseDimensionRange::k_head_scale);
+                Render::GL::HorseDimensionRange::k_head_scale * overall_scale);
 }
 
 TEST(HorseSpecTest, LayoutLowersTorsoChainBySharedTwentyPercentDrop) {
@@ -388,21 +391,24 @@ TEST(HorseSpecTest, LayoutLowersTorsoChainBySharedTwentyPercentDrop) {
 
 TEST(HorseSpecTest, GeneratedHorseDimensionsUseShorterNeckAndSmallerHead) {
   auto const dims = Render::GL::make_horse_dimensions(0U);
+  float const overall_scale = Render::GL::HorseDimensionRange::k_overall_scale;
 
   EXPECT_GE(dims.neck_length,
-            Render::GL::HorseDimensionRange::k_neck_length_min * 1.20F);
+            Render::GL::HorseDimensionRange::k_neck_length_min * 1.20F * overall_scale);
   EXPECT_LE(dims.neck_length,
-            Render::GL::HorseDimensionRange::k_neck_length_max * 1.20F);
+            Render::GL::HorseDimensionRange::k_neck_length_max * 1.20F * overall_scale);
   EXPECT_GE(dims.head_length,
-            Render::GL::HorseDimensionRange::k_head_length_min * 1.35F);
+            Render::GL::HorseDimensionRange::k_head_length_min * 1.35F * overall_scale);
   EXPECT_LE(dims.head_length,
-            Render::GL::HorseDimensionRange::k_head_length_max * 1.35F);
-  EXPECT_GE(dims.head_width, Render::GL::HorseDimensionRange::k_head_width_min * 1.35F);
-  EXPECT_LE(dims.head_width, Render::GL::HorseDimensionRange::k_head_width_max * 1.35F);
+            Render::GL::HorseDimensionRange::k_head_length_max * 1.35F * overall_scale);
+  EXPECT_GE(dims.head_width,
+            Render::GL::HorseDimensionRange::k_head_width_min * 1.35F * overall_scale);
+  EXPECT_LE(dims.head_width,
+            Render::GL::HorseDimensionRange::k_head_width_max * 1.35F * overall_scale);
   EXPECT_GE(dims.head_height,
-            Render::GL::HorseDimensionRange::k_head_height_min * 1.35F);
+            Render::GL::HorseDimensionRange::k_head_height_min * 1.35F * overall_scale);
   EXPECT_LE(dims.head_height,
-            Render::GL::HorseDimensionRange::k_head_height_max * 1.35F);
+            Render::GL::HorseDimensionRange::k_head_height_max * 1.35F * overall_scale);
 }
 
 TEST(HorseSpecTest, GeneratedHorseVariantUsesBlackHooves) {
@@ -491,18 +497,30 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
   EXPECT_GT(front_calf->params.head_offset.y(), dims.leg_length * 0.02F);
   EXPECT_GT(front_calf->params.tail_offset.y(), dims.hoof_height * 0.10F);
   EXPECT_LT(front_calf->params.tail_offset.y(), dims.hoof_height * 0.18F);
+  EXPECT_NEAR(front_thigh->params.radius / front_thigh->params.depth_radius,
+              (0.690F * 1.10F) / 1.050F,
+              1.0e-6F);
+  EXPECT_NEAR(front_calf->params.radius / front_calf->params.depth_radius,
+              (0.290F * 1.10F) / 0.410F,
+              1.0e-6F);
   EXPECT_NEAR(rear_thigh->params.head_offset.y(),
               dims.leg_length * 0.10F +
                   (dims.body_height * 1.02F - dims.leg_length * 0.10F) * 0.68F,
               1.0e-6F);
   EXPECT_GT(rear_thigh->params.head_offset.z(), -dims.body_length * 0.015F);
   EXPECT_LT(rear_thigh->params.head_offset.z(), 0.0F);
+  EXPECT_NEAR(rear_thigh->params.radius / rear_thigh->params.depth_radius,
+              (0.780F * 1.10F) / 1.200F,
+              1.0e-6F);
   EXPECT_NEAR(
       rear_thigh->params.tail_offset.y(), rear_calf->params.head_offset.y(), 1.0e-6F);
   EXPECT_GT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.05F);
   EXPECT_LT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.08F);
   EXPECT_NEAR(
       rear_thigh->params.tail_offset.z(), rear_calf->params.head_offset.z(), 1.0e-6F);
+  EXPECT_NEAR(rear_calf->params.radius / rear_calf->params.depth_radius,
+              (0.310F * 1.10F) / 0.450F,
+              1.0e-6F);
   EXPECT_GT(front_hoof->params.half_extents.x(), dims.body_width * 0.18F);
   EXPECT_GT(front_hoof->params.half_extents.z(), dims.body_width * 0.32F);
   EXPECT_GT(front_hoof->params.half_extents.y(), dims.hoof_height * 0.50F);

@@ -12,6 +12,7 @@ add_library(render_gl STATIC
     gl/bootstrap.cpp
     gl/backend.cpp
     gl/backend/cylinder_pipeline.cpp
+    gl/backend/dead_tree_mesh.cpp
     gl/backend/vegetation_pipeline.cpp
     gl/backend/terrain_pipeline.cpp
     gl/backend/character_pipeline.cpp
