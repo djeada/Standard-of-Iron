@@ -307,7 +307,7 @@ auto main(int argc, char* argv[]) -> int {
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
 
-  // Stage 17.3 — parse rendering CLI flags. We do this after QGuiApplication
+  // Parse rendering CLI flags. We do this after QGuiApplication
   // construction so that Qt's own platform args (-platform, -style, …) are
   // already consumed, but before any rendering setup so that the chosen
   // shader_quality is honoured by the GameEngine on first ensure_initialized().
