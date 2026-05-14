@@ -5,6 +5,7 @@
 add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/commander_control_controller.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_commander_setup.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_definition_view.cpp
     ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
@@ -13,6 +14,7 @@ add_executable(standard_of_iron_tests
     core/building_spawn_setup_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
+    core/commander_control_controller_test.cpp
     core/mission_commander_setup_test.cpp
     core/mission_definition_view_test.cpp
     core/selection_query_service_test.cpp
@@ -134,6 +136,7 @@ target_link_libraries(standard_of_iron_tests
         GTest::gmock
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::Sql
         engine_core
         render_gl
@@ -185,6 +188,7 @@ target_link_libraries(standard_of_iron_tests_subset
         GTest::gmock
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::Sql
         engine_core
         render_gl

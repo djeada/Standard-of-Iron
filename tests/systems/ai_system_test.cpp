@@ -1,5 +1,6 @@
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_reasoner.h"
+#include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/ai_system/behaviors/attack_behavior.h"
 #include "game/systems/ai_system/behaviors/gather_behavior.h"
 #include "game/systems/owner_registry.h"
@@ -27,6 +28,19 @@ protected:
     unit.movement.has_component = true;
     unit.movement.has_target = false;
     return unit;
+  }
+
+  static auto make_enemy(Engine::Core::EntityID id, float x,
+                         float z) -> Game::Systems::AI::ContactSnapshot {
+    Game::Systems::AI::ContactSnapshot enemy;
+    enemy.id = id;
+    enemy.owner_id = 7;
+    enemy.health = 100;
+    enemy.max_health = 100;
+    enemy.pos_x = x;
+    enemy.pos_z = z;
+    enemy.spawn_type = Game::Units::SpawnType::Spearman;
+    return enemy;
   }
 };
 
@@ -146,6 +160,58 @@ TEST_F(AISystemTest, AttackBehaviorScoutsFromUnitAnchorWithoutBarracks) {
 
   EXPECT_FLOAT_EQ(average_target_x, 40.0F);
   EXPECT_FLOAT_EQ(average_target_z, 90.0F);
+}
+
+TEST_F(AISystemTest, AIReasonerKeepsDefensiveAIInGatheringWhenEnemyIsDistant) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_unit(1, 30.0F, 20.0F),
+      make_unit(2, 32.0F, 22.0F),
+      make_unit(3, 34.0F, 24.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(101, 140.0F, 140.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.state_timer = 3.1F;
+  context.decision_timer = 2.1F;
+
+  Game::Systems::AI::AIReasoner::update_state_machine(snapshot, context, 0.0F);
+
+  EXPECT_EQ(context.state, Game::Systems::AI::AIState::Gathering);
+}
+
+TEST_F(AISystemTest,
+       AttackBehaviorDoesNotAdvanceDefensiveGatheringForceTowardDistantEnemy) {
+  Game::Systems::AI::AttackBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.friendly_units = {
+      make_unit(1, 30.0F, 20.0F),
+      make_unit(2, 32.0F, 22.0F),
+      make_unit(3, 34.0F, 24.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(101, 90.0F, 90.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.total_units = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.6F, commands);
+
+  EXPECT_TRUE(commands.empty());
 }
 
 } // namespace

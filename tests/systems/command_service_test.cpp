@@ -108,6 +108,34 @@ TEST_F(CommandServiceTest,
   EXPECT_NE(movement->pending_request_id, 0U);
 }
 
+TEST_F(CommandServiceTest, FpvCommanderMoveIgnoresStaleRtsMeleeLockState) {
+  Engine::Core::World world;
+  auto *commander = create_unit(world, 0.0F, 0.0F,
+                                Game::Units::SpawnType::RomanFieldCommander);
+  ASSERT_NE(commander, nullptr);
+  auto *attack = commander->add_component<Engine::Core::AttackComponent>();
+  auto *commander_data =
+      commander->add_component<Engine::Core::CommanderComponent>();
+  auto *rpg = commander->add_component<Engine::Core::RpgHealthComponent>();
+  auto *movement = commander->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(attack, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  ASSERT_NE(rpg, nullptr);
+  ASSERT_NE(movement, nullptr);
+
+  commander_data->fpv_controlled = true;
+  rpg->active = true;
+  attack->in_melee_lock = true;
+  attack->melee_lock_target_id = 77;
+
+  Game::Systems::CommandService::move_unit(world, commander->get_id(),
+                                           QVector3D(0.4F, 0.0F, 0.4F));
+
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_FLOAT_EQ(movement->target_x, 0.4F);
+  EXPECT_FLOAT_EQ(movement->target_y, 0.4F);
+}
+
 TEST_F(CommandServiceTest,
        GroupMoveRejectsLeaderPathWhenFormationCannotFitThroughGap) {
   Engine::Core::World world;

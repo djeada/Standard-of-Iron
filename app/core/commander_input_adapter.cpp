@@ -54,6 +54,12 @@ void CommanderInputAdapter::dodge() {
   }
 }
 
+void CommanderInputAdapter::jump() {
+  if (m_engine != nullptr) {
+    m_engine->commander_jump();
+  }
+}
+
 void CommanderInputAdapter::cycle_lock_on() {
   if (m_engine != nullptr) {
     m_engine->commander_cycle_lock_on();

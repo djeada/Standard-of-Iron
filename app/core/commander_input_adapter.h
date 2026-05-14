@@ -18,6 +18,7 @@ public:
   Q_INVOKABLE void secondary_action_up();
   Q_INVOKABLE void trigger_rally();
   Q_INVOKABLE void dodge();
+  Q_INVOKABLE void jump();
   Q_INVOKABLE void cycle_lock_on();
   Q_INVOKABLE void special_action();
   Q_INVOKABLE void center_mouse(qreal center_sx, qreal center_sy);

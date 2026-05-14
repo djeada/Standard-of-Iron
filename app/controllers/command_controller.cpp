@@ -2,6 +2,7 @@
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
+#include "../../game/systems/combat_rules.h"
 #include "../../game/systems/command_service.h"
 #include "../../game/systems/formation_planner.h"
 #include "../../game/systems/picking_service.h"
@@ -189,8 +190,7 @@ auto CommandController::on_hold_command() -> CommandResult {
       auto *attack_comp =
           entity->get_component<Engine::Core::AttackComponent>();
       if (attack_comp != nullptr) {
-        attack_comp->in_melee_lock = false;
-        attack_comp->melee_lock_target_id = 0;
+        Game::Systems::CombatRules::clear_rts_melee_lock(entity);
       }
 
       if (auto *patrol =

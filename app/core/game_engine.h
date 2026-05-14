@@ -216,6 +216,7 @@ public:
   Q_INVOKABLE void commander_secondary_action_up();
   Q_INVOKABLE void commander_trigger_rally();
   Q_INVOKABLE void commander_dodge();
+  Q_INVOKABLE void commander_jump();
   Q_INVOKABLE void commander_cycle_lock_on();
   Q_INVOKABLE void commander_special_action();
   Q_INVOKABLE void commander_mouse_move(qreal dx, qreal dy);
@@ -537,8 +538,13 @@ private:
     float wy{0.0F};
     float wz{0.0F};
     int damage{0};
+    float damage_ratio{0.0F};
+    int lane{0};
+    bool killing_blow{false};
   };
+  static constexpr int k_max_rpg_damage_events = 96;
   std::vector<RpgDamageEvent> m_rpg_damage_events;
+  std::uint32_t m_rpg_damage_event_sequence{0};
   float m_rpg_hit_stop_timer{0.0F};
   EntityCache m_entity_cache;
 

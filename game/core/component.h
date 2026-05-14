@@ -397,6 +397,9 @@ public:
   bool power_strike_active{false};
   float special_cooldown_remaining{0.0F};
   bool just_struck_enemy{false};
+  bool jump_active{false};
+  float jump_phase{0.0F};
+  float jump_height_offset{0.0F};
 };
 
 class CommanderGuardComponent : public Component {

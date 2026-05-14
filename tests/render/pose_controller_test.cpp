@@ -135,6 +135,25 @@ TEST_F(HumanoidPoseControllerTest,
   EXPECT_LT(peak_active, soldier_count / 3);
 }
 
+TEST_F(HumanoidPoseControllerTest, AirborneJumpAmbientIdleLiftsFeetAndPelvis) {
+  HumanoidPoseController controller(pose, anim_ctx);
+  anim_ctx.gait.is_airborne = true;
+
+  QVector3D const original_pelvis = pose.pelvis_pos;
+  QVector3D const original_knee_l = pose.knee_l;
+  QVector3D const original_knee_r = pose.knee_r;
+  QVector3D const original_foot_l = pose.foot_l;
+  QVector3D const original_foot_r = pose.foot_r;
+
+  controller.apply_ambient_idle_explicit(AmbientIdleType::Jump, 0.5F);
+
+  EXPECT_GT(pose.pelvis_pos.y(), original_pelvis.y() + 0.08F);
+  EXPECT_GT(pose.foot_l.y(), original_foot_l.y() + 0.05F);
+  EXPECT_GT(pose.foot_r.y(), original_foot_r.y() + 0.05F);
+  EXPECT_GT(pose.knee_l.z(), original_knee_l.z() + 0.04F);
+  EXPECT_GT(pose.knee_r.z(), original_knee_r.z() + 0.04F);
+}
+
 TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
   Engine::Core::Entity entity(1);
   auto *movement = entity.add_component<Engine::Core::MovementComponent>();

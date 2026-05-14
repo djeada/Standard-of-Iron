@@ -18,6 +18,7 @@ struct AnchorCandidate {
 };
 
 constexpr float k_anchor_cluster_radius = 12.0F;
+constexpr float k_attack_initiation_aggression_threshold = 0.70F;
 
 auto densest_anchor_cluster(const std::vector<AnchorCandidate> &candidates)
     -> std::optional<AnchorCandidate> {
@@ -68,6 +69,36 @@ auto densest_anchor_cluster(const std::vector<AnchorCandidate> &candidates)
     return std::nullopt;
   }
   return best_center;
+}
+
+auto can_initiate_attack(const Game::Systems::AI::AIStrategyConfig &strategy)
+    -> bool {
+  return strategy.aggression_modifier >=
+         k_attack_initiation_aggression_threshold;
+}
+
+auto minimum_units_for_reactive_attack(
+    const Game::Systems::AI::AIStrategyConfig &strategy) -> int {
+  return std::max(
+      1, static_cast<int>(std::lround(2.0F * strategy.min_attack_force)));
+}
+
+auto minimum_units_for_proactive_attack(
+    const Game::Systems::AI::AIStrategyConfig &strategy) -> int {
+  return std::max(
+      1, static_cast<int>(std::lround(4.0F * strategy.min_attack_force)));
+}
+
+auto resume_attack_health_threshold(
+    const Game::Systems::AI::AIStrategyConfig &strategy) -> float {
+  return std::clamp(0.65F + 0.10F * (strategy.defense_modifier - 1.0F), 0.60F,
+                    0.90F);
+}
+
+auto return_to_idle_health_threshold(
+    const Game::Systems::AI::AIStrategyConfig &strategy) -> float {
+  return std::clamp(0.80F + 0.05F * (strategy.defense_modifier - 1.0F), 0.75F,
+                    0.95F);
 }
 
 } // namespace
@@ -329,9 +360,12 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     if (ctx.state == AIState::Idle && ctx.total_units > 0) {
       ctx.state = AIState::Gathering;
     } else if (ctx.state == AIState::Gathering) {
-      if (ctx.visible_enemy_count > 0) {
+      if (ctx.visible_enemy_count > 0 &&
+          can_initiate_attack(ctx.strategy_config) &&
+          ctx.total_units >=
+              minimum_units_for_reactive_attack(ctx.strategy_config)) {
         ctx.state = AIState::Attacking;
-      } else {
+      } else if (ctx.visible_enemy_count == 0) {
         ctx.state = AIState::Idle;
       }
     } else if (ctx.state == AIState::Attacking) {
@@ -384,9 +418,9 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
       ctx.state = AIState::Expanding;
     } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
 
-      if (ctx.total_units >=
-              static_cast<int>(2.0F / ctx.strategy_config.min_attack_force) ||
-          ctx.barracks_under_threat) {
+      if (can_initiate_attack(ctx.strategy_config) &&
+          ctx.total_units >=
+              minimum_units_for_reactive_attack(ctx.strategy_config)) {
         ctx.state = AIState::Attacking;
       }
     }
@@ -397,9 +431,9 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     const auto &strategy = ctx.strategy_config;
 
     const int MIN_UNITS_FOR_REACTIVE_ATTACK =
-        static_cast<int>(2.0F / strategy.min_attack_force);
+        minimum_units_for_reactive_attack(strategy);
     const int MIN_UNITS_FOR_PROACTIVE_ATTACK =
-        static_cast<int>(4.0F * strategy.min_attack_force);
+        minimum_units_for_proactive_attack(strategy);
     const int MIN_UNITS_FOR_EXPANSION =
         static_cast<int>(3.0F / strategy.expansion_priority);
 
@@ -413,12 +447,12 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
                strategy.expansion_priority > 0.8F) {
 
       ctx.state = AIState::Expanding;
-    } else if (ctx.visible_enemy_count > 0 &&
+    } else if (ctx.visible_enemy_count > 0 && can_initiate_attack(strategy) &&
                ctx.total_units >= MIN_UNITS_FOR_REACTIVE_ATTACK) {
 
       ctx.state = AIState::Attacking;
     } else if (ctx.total_units >= MIN_UNITS_FOR_PROACTIVE_ATTACK &&
-               strategy.aggression_modifier > 0.8F) {
+               can_initiate_attack(strategy)) {
 
       ctx.state = AIState::Attacking;
     }
@@ -449,15 +483,15 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
 
     if (ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) {
 
-    } else if (ctx.total_units >=
-                   static_cast<int>(4.0F *
-                                    ctx.strategy_config.min_attack_force) &&
+    } else if (can_initiate_attack(ctx.strategy_config) &&
+               ctx.total_units >=
+                   minimum_units_for_proactive_attack(ctx.strategy_config) &&
                ctx.average_health >
-                   (0.65F / ctx.strategy_config.defense_modifier)) {
+                   resume_attack_health_threshold(ctx.strategy_config)) {
 
       ctx.state = AIState::Attacking;
     } else if (ctx.average_health >
-                   (0.80F / ctx.strategy_config.defense_modifier) &&
+                   return_to_idle_health_threshold(ctx.strategy_config) &&
                ctx.visible_enemy_count == 0) {
 
       ctx.state = AIState::Idle;

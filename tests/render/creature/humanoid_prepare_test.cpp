@@ -1712,6 +1712,49 @@ TEST(HumanoidPrepare, BowReadySubmittedSurfaceGroundingTouchesTerrain) {
   EXPECT_NEAR(sink.rigged_world_y.front(), 2.4F, 0.1F);
 }
 
+TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
+  ScopedFlatTerrain terrain(1.5F);
+
+  Render::GL::HumanoidRendererBase owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position.x = 0.1F;
+  transform->position.y = 6.0F;
+  transform->position.z = -0.2F;
+
+  auto *commander = entity.add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander, nullptr);
+  commander->jump_active = true;
+  commander->jump_phase = 0.5F;
+  commander->jump_height_offset = 0.35F;
+
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, prep);
+
+  CountingSubmitter sink;
+  Render::Creature::Pipeline::submit_preparation(prep, sink);
+
+  ASSERT_EQ(sink.rigged_calls, 1);
+  ASSERT_EQ(sink.rigged_world_y.size(), 1u);
+  ASSERT_EQ(sink.rigged_mesh_min_world_y.size(), 1u);
+  EXPECT_NEAR(sink.rigged_world_y.front(), 1.85F, 0.1F);
+  EXPECT_GT(sink.rigged_mesh_min_world_y.front(), 1.55F);
+}
+
 TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
   ScopedFlatTerrain terrain(0.0F);
 

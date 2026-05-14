@@ -2,6 +2,7 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
+#include "../combat_rules.h"
 #include "../owner_registry.h"
 #include <algorithm>
 #include <cmath>
@@ -207,7 +208,8 @@ auto is_unit_idle(Engine::Core::Entity *unit) -> bool {
   }
 
   auto *attack_comp = unit->get_component<Engine::Core::AttackComponent>();
-  if ((attack_comp != nullptr) && attack_comp->in_melee_lock) {
+  if ((attack_comp != nullptr) && attack_comp->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
     return false;
   }
 
@@ -269,6 +271,10 @@ auto find_nearest_enemy(
 
 auto should_auto_engage_melee(Engine::Core::Entity *unit) -> bool {
   if (unit == nullptr) {
+    return false;
+  }
+
+  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
     return false;
   }
 

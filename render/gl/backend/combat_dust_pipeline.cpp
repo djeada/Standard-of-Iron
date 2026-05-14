@@ -1,6 +1,7 @@
 #include "combat_dust_pipeline.h"
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
+#include "../../../game/systems/combat_rules.h"
 #include "../backend.h"
 #include "../camera.h"
 #include "../render_constants.h"
@@ -465,7 +466,8 @@ void CombatDustPipeline::collect_combat_zones(Engine::Core::World *world,
       continue;
     }
 
-    if (attack == nullptr || !attack->in_melee_lock) {
+    if (attack == nullptr || !attack->in_melee_lock ||
+        !Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
       continue;
     }
 

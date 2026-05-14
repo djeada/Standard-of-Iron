@@ -1,6 +1,7 @@
 #include "combat_mode_processor.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../combat_rules.h"
 #include "../owner_registry.h"
 #include "combat_utils.h"
 
@@ -23,7 +24,9 @@ void update_combat_mode(Engine::Core::Entity *attacker,
     return;
   }
 
-  bool const in_melee_combat = attack_comp->in_melee_lock;
+  bool const in_melee_combat =
+      attack_comp->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
   bool const has_attack_target =
       attacker->has_component<Engine::Core::AttackTargetComponent>();
 

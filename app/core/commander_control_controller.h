@@ -32,6 +32,7 @@ public:
     bool secondary_action = false;
     float primary_action_scan_cooldown = 0.0F;
     bool dodge_requested = false;
+    bool jump_requested = false;
     bool special_action = false;
   };
 
@@ -55,6 +56,7 @@ public:
   void center_mouse(qreal center_sx, qreal center_sy, QQuickWindow *window);
   void poll_mouse_look(QQuickWindow *window);
   void request_dodge();
+  void request_jump();
   void special_action();
   void cycle_lock_on_target(Engine::Core::World &world,
                             Engine::Core::EntityID commander_id,
@@ -113,6 +115,9 @@ private:
   float m_dodge_timer = 0.0F;
   QVector3D m_dodge_direction{0.0F, 0.0F, 1.0F};
   float m_dodge_fov_kick = 0.0F;
+  float m_jump_timer = 0.0F;
+  bool m_jump_safe_position_valid = false;
+  QVector3D m_jump_last_walkable_position{0.0F, 0.0F, 0.0F};
 
   float m_combo_miss_timer = 0.0F;
   float m_primary_held_duration = 0.0F;

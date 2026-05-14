@@ -105,16 +105,16 @@ void BoulderRenderer::generate_instances(
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0xE148D9A7U);
-    if (scene.rockiness < 0.36F &&
-        scene.archetype != ScatterSceneArchetype::RockyPatch) {
+    float const support =
+        std::max(scene.rockiness,
+                 std::max(scene.prop_influence * 0.90F, scene.dryness * 0.42F));
+    if (support < 0.16F &&
+        scene.archetype != ScatterSceneArchetype::RockyPatch &&
+        scene.archetype != ScatterSceneArchetype::DryClearing &&
+        scene.prop_influence < 0.28F) {
       return false;
     }
-    float const chance =
-        scatter_spawn_chance(ScatterRuleSpecies::Stone, scene) *
-        (0.25F + scene.rockiness * 0.55F + scene.cluster_bias * 0.20F);
-    if (rand_01(state) > chance) {
-      return false;
-    }
+    (void)rand_01(state);
 
     float world_x = 0.0F;
     float world_z = 0.0F;
@@ -170,13 +170,13 @@ void BoulderRenderer::generate_instances(
 
   if (width >= 2 && map_height >= 2 && !height_map.get_height_data().empty()) {
     float const base_density =
-        std::clamp(0.055F + m_biome_settings.rock_exposure * 0.090F -
-                       m_biome_settings.moisture_level * 0.025F,
-                   0.030F, 0.140F);
-    for (int z = 0; z < map_height; z += 8) {
-      for (int x = 0; x < width; x += 8) {
-        int const sample_x = std::min(x + 4, width - 1);
-        int const sample_z = std::min(z + 4, map_height - 1);
+        std::clamp(0.090F + m_biome_settings.rock_exposure * 0.120F -
+                       m_biome_settings.moisture_level * 0.020F,
+                   0.055F, 0.200F);
+    for (int z = 0; z < map_height; z += 6) {
+      for (int x = 0; x < width; x += 6) {
+        int const sample_x = std::min(x + 3, width - 1);
+        int const sample_z = std::min(z + 3, map_height - 1);
         uint32_t state = hash_coords(x, z, m_biome_settings.seed ^ 0x6D1A75B3U);
         auto const scene = composition.sample_grid(static_cast<float>(sample_x),
                                                    static_cast<float>(sample_z),
@@ -184,12 +184,12 @@ void BoulderRenderer::generate_instances(
         float const density =
             base_density *
             scatter_density_multiplier(ScatterRuleSpecies::Stone, scene) *
-            (0.55F + scene.cluster_bias * 1.35F);
+            (0.72F + scene.cluster_bias * 1.40F);
         if (rand_01(state) > density) {
           continue;
         }
-        float const gx = static_cast<float>(x) + rand_01(state) * 8.0F;
-        float const gz = static_cast<float>(z) + rand_01(state) * 8.0F;
+        float const gx = static_cast<float>(x) + rand_01(state) * 6.0F;
+        float const gz = static_cast<float>(z) + rand_01(state) * 6.0F;
         add_boulder(gx, gz, 1.15F, 2.45F, state);
       }
     }
