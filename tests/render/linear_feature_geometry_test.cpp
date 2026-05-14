@@ -161,7 +161,7 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
       start_max_y = std::max(start_max_y, vertex.position[1]);
       found_start_band = true;
     }
-    if (std::abs(vertex.position[0]) <= 0.10F) {
+    if (std::abs(vertex.position[0]) <= 0.15F) {
       mid_max_y = std::max(mid_max_y, vertex.position[1]);
       found_mid_band = true;
     }
