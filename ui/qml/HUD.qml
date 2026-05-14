@@ -185,7 +185,9 @@ Item {
         id: rpgDamageNumbers
         anchors.fill: parent
         engine: typeof game !== 'undefined' ? game : null
-        visible: typeof game !== 'undefined' && game.game_mode === "rpg"
+        visible: typeof game !== 'undefined' &&
+                 game.game_mode === "rpg" &&
+                 game.control_mode === "commander"
     }
 
     HUDVictory {

@@ -217,6 +217,44 @@ TEST(CommanderControlRegressionTest,
 }
 
 TEST(CommanderControlRegressionTest,
+     FpvCommanderHitOverlayUsesRichDamageBurstData) {
+  const auto root = find_repo_root();
+  const auto engine_source =
+      read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto hud_source = read_text(root / "ui" / "qml" / "HUD.qml");
+  const auto damage_numbers_source =
+      read_text(root / "ui" / "qml" / "RpgDamageNumbers.qml");
+  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(hud_source.empty());
+  ASSERT_FALSE(damage_numbers_source.empty());
+
+  EXPECT_TRUE(
+      contains(engine_source, "m[\"damageRatio\"] = static_cast<double>("));
+  EXPECT_TRUE(contains(engine_source, "m[\"lane\"] = ev.lane;"));
+  EXPECT_TRUE(contains(engine_source, "m[\"killingBlow\"] = ev.killing_blow;"));
+
+  EXPECT_TRUE(contains(hud_source, "game.control_mode === \"commander\""));
+
+  EXPECT_TRUE(contains(damage_numbers_source, "property real ringSize"));
+  EXPECT_TRUE(contains(damage_numbers_source, "damageRatio"));
+  EXPECT_TRUE(contains(damage_numbers_source, "killingBlow"));
+}
+
+TEST(CommanderControlRegressionTest,
+     MainWindowHidesCursorDuringFpvCommanderGameplay) {
+  const auto root = find_repo_root();
+  const auto main_qml = read_text(root / "ui" / "qml" / "Main.qml");
+  ASSERT_FALSE(main_qml.empty());
+
+  EXPECT_TRUE(contains(main_qml, "id: commanderCursorOverlay"));
+  EXPECT_TRUE(contains(main_qml, "acceptedButtons: Qt.NoButton"));
+  EXPECT_TRUE(contains(main_qml, "cursorShape: Qt.BlankCursor"));
+  EXPECT_TRUE(contains(main_qml, "game.control_mode === \"commander\" &&"));
+  EXPECT_TRUE(contains(main_qml, "game.game_mode === \"rpg\" &&"));
+  EXPECT_TRUE(contains(main_qml, "!save_game_panel.visible &&"));
+}
+
+TEST(CommanderControlRegressionTest,
      FpvMovementSetsHasTargetForAnimationSystem) {
   const auto root = find_repo_root();
   const auto source =
@@ -238,29 +276,77 @@ TEST(CommanderControlRegressionTest,
 
   EXPECT_TRUE(contains(source, "combat_state->animation_state = "
                                "Engine::Core::CombatAnimationState::Advance;"));
-
-  EXPECT_TRUE(contains(source, "// Air swing"));
-
-  EXPECT_TRUE(contains(source, "CombatAnimationState::Idle"));
+  EXPECT_TRUE(contains(
+      source, "find_primary_target(world, commander_id, local_owner_id);"));
+  EXPECT_TRUE(contains(source, "if (target_id == 0) {"));
 }
 
-TEST(CommanderControlRegressionTest, FpvAutoAttackBlockedByFpvControlledFlag) {
+TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   const auto root = find_repo_root();
-  const auto component_header =
-      read_text(root / "game" / "core" / "component.h");
+  const auto combat_rules =
+      read_text(root / "game" / "systems" / "combat_rules.h");
   const auto attack_processor = read_text(
       root / "game" / "systems" / "combat_system" / "attack_processor.cpp");
+  const auto movement_system =
+      read_text(root / "game" / "systems" / "movement_system.cpp");
+  const auto command_service =
+      read_text(root / "game" / "systems" / "command_service.cpp");
+  const auto scene_renderer = read_text(root / "render" / "scene_renderer.cpp");
+  const auto animation_inputs = read_text(root / "render" / "gl" / "humanoid" /
+                                          "animation" / "animation_inputs.cpp");
+  const auto prepared_state =
+      read_text(root / "render" / "creature" / "pipeline" /
+                "creature_prepared_state.cpp");
+  const auto combat_dust_renderer =
+      read_text(root / "render" / "entity" / "combat_dust_renderer.cpp");
+  const auto combat_dust_pipeline = read_text(
+      root / "render" / "gl" / "backend" / "combat_dust_pipeline.cpp");
+  const auto command_controller =
+      read_text(root / "app" / "controllers" / "command_controller.cpp");
   const auto game_engine = read_text(root / "app" / "core" / "game_engine.cpp");
-  ASSERT_FALSE(component_header.empty());
+  const auto controller =
+      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  ASSERT_FALSE(combat_rules.empty());
   ASSERT_FALSE(attack_processor.empty());
+  ASSERT_FALSE(movement_system.empty());
+  ASSERT_FALSE(command_service.empty());
+  ASSERT_FALSE(scene_renderer.empty());
+  ASSERT_FALSE(animation_inputs.empty());
+  ASSERT_FALSE(prepared_state.empty());
+  ASSERT_FALSE(combat_dust_renderer.empty());
+  ASSERT_FALSE(combat_dust_pipeline.empty());
+  ASSERT_FALSE(command_controller.empty());
   ASSERT_FALSE(game_engine.empty());
+  ASSERT_FALSE(controller.empty());
 
-  EXPECT_TRUE(contains(component_header, "bool fpv_controlled{false};"));
+  EXPECT_TRUE(contains(combat_rules, "uses_rpg_combat_rules"));
+  EXPECT_TRUE(contains(combat_rules, "participates_in_rts_melee_lock"));
+  EXPECT_TRUE(contains(combat_rules, "clear_rts_combat_tracking"));
 
-  EXPECT_TRUE(contains(attack_processor, "fpv_controlled"));
+  EXPECT_TRUE(contains(attack_processor,
+                       "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(
+      contains(movement_system, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(
+      contains(command_service, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(
+      contains(scene_renderer, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(contains(animation_inputs,
+                       "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(
+      contains(prepared_state, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(contains(combat_dust_renderer,
+                       "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(contains(combat_dust_pipeline,
+                       "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(contains(command_controller,
+                       "CombatRules::clear_rts_melee_lock(entity);"));
 
   EXPECT_TRUE(contains(game_engine, "commander_data->fpv_controlled = true;"));
   EXPECT_TRUE(contains(game_engine, "commander_data->fpv_controlled = false;"));
+  EXPECT_TRUE(contains(game_engine,
+                       "CombatRules::clear_rts_combat_tracking(commander);"));
+  EXPECT_FALSE(contains(controller, "atk->in_melee_lock = false;"));
 }
 
 TEST(CommanderControlRegressionTest,
@@ -281,4 +367,97 @@ TEST(CommanderControlRegressionTest,
 
   EXPECT_TRUE(contains(controller_src, "shake_offset"));
   EXPECT_TRUE(contains(controller_src, "m_cam_eye_smooth + shake_offset"));
+}
+
+TEST(CommanderControlRegressionTest, CommanderJumpKeyIsWiredThroughAdapter) {
+  const auto root = find_repo_root();
+  const auto layer_source =
+      read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
+  const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
+  const auto adapter_header =
+      read_text(root / "app" / "core" / "commander_input_adapter.h");
+  const auto adapter_source =
+      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
+  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+  const auto engine_source =
+      read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto controller_header =
+      read_text(root / "app" / "core" / "commander_control_controller.h");
+  const auto controller_source =
+      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  ASSERT_FALSE(layer_source.empty());
+  ASSERT_FALSE(game_view_source.empty());
+  ASSERT_FALSE(adapter_header.empty());
+  ASSERT_FALSE(adapter_source.empty());
+  ASSERT_FALSE(engine_header.empty());
+  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(controller_header.empty());
+  ASSERT_FALSE(controller_source.empty());
+
+  EXPECT_TRUE(contains(layer_source, "case Qt.Key_Alt:"));
+  EXPECT_TRUE(contains(layer_source, "root.commanderInput.jump()"));
+  EXPECT_TRUE(contains(game_view_source, "case Qt.Key_Alt:"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander_jump()"));
+  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void jump();"));
+  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_jump();"));
+  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_jump();"));
+  EXPECT_TRUE(contains(engine_source, "void GameEngine::commander_jump()"));
+  EXPECT_TRUE(contains(controller_header, "void request_jump();"));
+  EXPECT_TRUE(contains(controller_source,
+                       "void CommanderControlController::request_jump()"));
+}
+
+TEST(CommanderControlRegressionTest,
+     CommanderJumpAddsVisualLiftToRenderAndCamera) {
+  const auto root = find_repo_root();
+  const auto component_source =
+      read_text(root / "game" / "core" / "component.h");
+  const auto controller_source =
+      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto engine_source =
+      read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto prepare_source =
+      read_text(root / "render" / "humanoid" / "prepare.cpp");
+  ASSERT_FALSE(component_source.empty());
+  ASSERT_FALSE(controller_source.empty());
+  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(prepare_source.empty());
+
+  EXPECT_TRUE(contains(component_source, "bool jump_active{false};"));
+  EXPECT_TRUE(contains(component_source, "float jump_phase{0.0F};"));
+  EXPECT_TRUE(contains(component_source, "float jump_height_offset{0.0F};"));
+
+  EXPECT_TRUE(
+      contains(controller_source, "constexpr float k_jump_duration = 0.58F;"));
+  EXPECT_TRUE(contains(controller_source,
+                       "cmd_comp->jump_height_offset = jump_height_offset;"));
+  EXPECT_TRUE(contains(controller_source, "m_jump_last_walkable_position"));
+  EXPECT_TRUE(contains(controller_source, "m_jump_timer <= 0.0F"));
+
+  EXPECT_TRUE(contains(engine_source, "commander_data->jump_active = false;"));
+
+  EXPECT_TRUE(contains(prepare_source, "RCP::set_model_world_y("));
+  EXPECT_TRUE(contains(prepare_source,
+                       "RCP::model_world_origin(inst_ctx.model).y() +"));
+  EXPECT_TRUE(
+      contains(prepare_source, "locomotion_state.motion_state = "
+                               "Render::GL::HumanoidMotionState::Idle;"));
+  EXPECT_TRUE(contains(prepare_source,
+                       "anim_ctx.ambient_idle_type = AmbientIdleType::Jump;"));
+}
+
+TEST(CommanderControlRegressionTest,
+     CommanderJumpAllowsAirborneTraversalAcrossGroundObstacles) {
+  const auto root = find_repo_root();
+  const auto controller_source =
+      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto movement_source =
+      read_text(root / "game" / "systems" / "movement_system.cpp");
+  ASSERT_FALSE(controller_source.empty());
+  ASSERT_FALSE(movement_source.empty());
+
+  EXPECT_TRUE(
+      contains(controller_source, "jump_active || can_move_to(nx, nz)"));
+  EXPECT_TRUE(contains(controller_source, "m_jump_safe_position_valid"));
+  EXPECT_TRUE(contains(movement_source, "commander->jump_active"));
 }

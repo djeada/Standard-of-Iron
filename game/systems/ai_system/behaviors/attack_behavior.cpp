@@ -22,6 +22,15 @@ auto get_formation_type_for_player(int player_id) -> FormationType {
   }
   return FormationType::Roman;
 }
+
+constexpr float k_gathering_advance_aggression_threshold = 0.70F;
+
+auto can_advance_from_gathering(const AIContext &context) -> bool {
+  return context.state == AIState::Attacking ||
+         (context.state == AIState::Gathering && context.total_units >= 3 &&
+          context.strategy_config.aggression_modifier >=
+              k_gathering_advance_aggression_threshold);
+}
 } // namespace
 
 void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
@@ -180,9 +189,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   if (nearby_enemies.empty()) {
 
-    bool const should_advance =
-        (context.state == AIState::Attacking) ||
-        (context.state == AIState::Gathering && context.total_units >= 3);
+    bool const should_advance = can_advance_from_gathering(context);
 
     if (should_advance && !snapshot.visible_enemies.empty()) {
 

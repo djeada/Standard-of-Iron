@@ -1,6 +1,9 @@
 #include "game/map/mission_definition.h"
 #include "game/map/mission_loader.h"
+#include <QCoreApplication>
+#include <QDir>
 #include <QTemporaryFile>
+#include <algorithm>
 #include <gtest/gtest.h>
 
 using namespace Game::Mission;
@@ -8,6 +11,12 @@ using namespace Game::Mission;
 class MissionLoaderTest : public ::testing::Test {
 protected:
   void SetUp() override {}
+
+  auto assetMissionPath(const QString &file_name) -> QString {
+    return QDir(QCoreApplication::applicationDirPath())
+        .absoluteFilePath(
+            QStringLiteral("../../assets/missions/%1").arg(file_name));
+  }
 
   auto createTestMission() -> QString {
     return R"({
@@ -208,4 +217,22 @@ TEST_F(MissionLoaderTest, FailsOnNonexistentFile) {
 
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
+}
+
+TEST_F(MissionLoaderTest, CrossingTheRhonePatrolForcesStayDefensive) {
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(MissionLoader::load_from_json_file(
+      assetMissionPath(QStringLiteral("crossing_the_rhone.json")), mission,
+      &error))
+      << error.toStdString();
+
+  const auto patrol_it = std::find_if(
+      mission.ai_setups.begin(), mission.ai_setups.end(),
+      [](const AISetup &setup) { return setup.id == "roman_patrol_forces"; });
+  ASSERT_NE(patrol_it, mission.ai_setups.end());
+  ASSERT_TRUE(patrol_it->strategy.has_value());
+  EXPECT_EQ(*patrol_it->strategy, "defensive");
+  EXPECT_LT(patrol_it->personality.aggression, 0.5F);
+  EXPECT_GT(patrol_it->personality.defense, 0.7F);
 }

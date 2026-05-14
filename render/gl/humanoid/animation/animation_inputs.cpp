@@ -3,6 +3,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/core/world.h"
+#include "../../../../game/systems/combat_rules.h"
 #include "../../../creature/animation_state_components.h"
 #include "../../../entity/registry.h"
 #include <algorithm>
@@ -173,6 +174,17 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
                  (attack->current_mode ==
                   Engine::Core::AttackComponent::CombatMode::Melee))
               : (anim.attack_family != Engine::Core::CombatAttackFamily::Bow);
+    }
+  }
+
+  if (!anim.is_attacking && (attack != nullptr) && attack->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(ctx.entity)) {
+    anim.is_attacking = true;
+    anim.is_melee = true;
+    if (anim.attack_family == Engine::Core::CombatAttackFamily::None &&
+        unit != nullptr) {
+      anim.attack_family = Engine::Core::resolve_combat_attack_family(
+          unit->spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
     }
   }
 

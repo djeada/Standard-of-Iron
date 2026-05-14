@@ -361,7 +361,10 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
   variation.shoulder_tilt = 0.0F;
 
   float const phase =
-      static_cast<float>(frame_index) / static_cast<float>(clip.frames);
+      (!clip.loops && clip.frames > 1U)
+          ? static_cast<float>(frame_index) /
+                static_cast<float>(clip.frames - 1U)
+          : static_cast<float>(frame_index) / static_cast<float>(clip.frames);
 
   Render::GL::HumanoidPose pose{};
 

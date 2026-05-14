@@ -3,6 +3,7 @@
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
+#include "combat_rules.h"
 #include "pathfinding.h"
 #include "units/spawn_type.h"
 #include <QDebug>
@@ -328,7 +329,8 @@ void CommandService::move_unit(Engine::Core::World &world,
   }
 
   auto *atk = e->get_component<Engine::Core::AttackComponent>();
-  if ((atk != nullptr) && atk->in_melee_lock) {
+  if ((atk != nullptr) && atk->in_melee_lock &&
+      CombatRules::participates_in_rts_melee_lock(e)) {
     return;
   }
 

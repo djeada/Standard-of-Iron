@@ -276,6 +276,52 @@ TEST_F(CombatModeTest, InitialMeleeLockClampsRepositionInsteadOfSnapping) {
                 0.0001F);
 }
 
+TEST_F(CombatModeTest, FpvCommanderUsesRpgMeleeRulesInsteadOfRtsLock) {
+  auto *commander = world->create_entity();
+  commander->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *commander_unit =
+      commander->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  commander_unit->owner_id = 1;
+  auto *commander_attack = commander->add_component<AttackComponent>();
+  commander_attack->can_melee = true;
+  commander_attack->can_ranged = false;
+  commander_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  commander_attack->current_mode = AttackComponent::CombatMode::Melee;
+  auto *commander_data = commander->add_component<CommanderComponent>();
+  commander_data->fpv_controlled = true;
+  auto *commander_rpg = commander->add_component<RpgHealthComponent>();
+  commander_rpg->active = true;
+  commander_rpg->rpg_hp = 120;
+  commander_rpg->rpg_max_hp = 120;
+
+  auto *enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(0.6F, 0.0F, 0.0F);
+  auto *enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+  auto *enemy_attack = enemy->add_component<AttackComponent>();
+  enemy_attack->can_melee = true;
+  enemy_attack->can_ranged = false;
+  enemy_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  enemy_attack->current_mode = AttackComponent::CombatMode::Melee;
+  enemy_attack->cooldown = 0.0F;
+  enemy_attack->melee_cooldown = 0.0F;
+  enemy_attack->time_since_last = 1.0F;
+
+  auto *enemy_target = enemy->add_component<AttackTargetComponent>();
+  enemy_target->target_id = commander->get_id();
+  enemy_target->should_chase = true;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_FALSE(commander_attack->in_melee_lock);
+  EXPECT_EQ(commander_attack->melee_lock_target_id, 0U);
+  EXPECT_FALSE(enemy_attack->in_melee_lock);
+  EXPECT_EQ(enemy_attack->melee_lock_target_id, 0U);
+  EXPECT_LT(commander_rpg->rpg_hp, commander_rpg->rpg_max_hp);
+}
+
 TEST_F(CombatModeTest, MeleeAttackUsesElephantCombatRadius) {
   auto *attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);

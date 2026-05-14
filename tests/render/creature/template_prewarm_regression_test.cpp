@@ -281,6 +281,34 @@ TEST(TemplatePrewarmRegression, ElephantPreparedAnimationPromotesMeleeLock) {
   EXPECT_TRUE(state.inputs.is_melee);
 }
 
+TEST(TemplatePrewarmRegression, HumanoidAnimationPromotesIdleMeleeLock) {
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+
+  auto *attack = entity.add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->in_melee_lock = true;
+
+  auto *combat_state =
+      entity.add_component<Engine::Core::CombatStateComponent>();
+  ASSERT_NE(combat_state, nullptr);
+  combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+
+  auto const state = resolve_humanoid_animation_state(ctx);
+
+  EXPECT_FALSE(state.used_override);
+  EXPECT_TRUE(state.inputs.is_attacking);
+  EXPECT_TRUE(state.inputs.is_melee);
+  EXPECT_EQ(state.inputs.attack_family,
+            Engine::Core::CombatAttackFamily::Spear);
+}
+
 TEST(TemplatePrewarmRegression, PreparedHumanoidLodCarriesDistanceCull) {
   Render::GL::Camera camera;
   camera.set_position(QVector3D(0.0F, 0.0F, 0.0F));

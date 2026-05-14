@@ -269,10 +269,7 @@ void PlantRenderer::generate_plant_instances() {
       if (effective_density < 0.05F) {
         continue;
       }
-      if (rand_01(state) >
-          scatter_spawn_chance(ScatterRuleSpecies::Plant, cell_scene)) {
-        continue;
-      }
+      (void)rand_01(state);
       int plant_count = static_cast<int>(std::floor(effective_density));
       float const frac = effective_density - float(plant_count);
       if (rand_01(state) < frac) {

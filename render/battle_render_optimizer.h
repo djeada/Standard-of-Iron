@@ -72,11 +72,7 @@ public:
     }
 
     if (is_combat_active) {
-      float const priority_distance_sq = cfg.combat_render_priority_distance *
-                                         cfg.combat_render_priority_distance;
-      if (distance_sq < priority_distance_sq) {
-        return true;
-      }
+      return true;
     }
 
     uint32_t frame = m_frame_counter.load(std::memory_order_relaxed);
@@ -113,10 +109,11 @@ public:
       return true;
     }
 
-    float priority_distance = cfg.animation_throttle_distance;
     if (is_combat_active) {
-      priority_distance = cfg.combat_animation_priority_distance;
+      return true;
     }
+
+    float priority_distance = cfg.animation_throttle_distance;
 
     float const priority_distance_sq = priority_distance * priority_distance;
     if (distance_sq < priority_distance_sq) {

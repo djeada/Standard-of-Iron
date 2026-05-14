@@ -123,6 +123,10 @@ auto combat_phase_to_attack_phase(const AnimationInputs &anim,
     break;
   }
 
+  if (anim.has_attack_offset) {
+    return 0.0F;
+  }
+
   float const attack_offset =
       anim.has_attack_offset ? anim.attack_offset : 0.0F;
   float phase = std::fmod(anim.time + attack_offset, 1.0F);
@@ -560,6 +564,18 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     uint32_t const inst_seed = layout.inst_seed;
     float const phase_offset = layout.phase_offset;
     float const applied_yaw_offset = layout.yaw_offset;
+    bool commander_jump_active = false;
+    float commander_jump_phase = 0.0F;
+    float commander_jump_height_offset = 0.0F;
+    if (auto const *commander_comp =
+            ctx.entity != nullptr
+                ? ctx.entity->get_component<Engine::Core::CommanderComponent>()
+                : nullptr) {
+      commander_jump_active = commander_comp->jump_active;
+      commander_jump_phase = std::clamp(commander_comp->jump_phase, 0.0F, 1.0F);
+      commander_jump_height_offset =
+          std::max(0.0F, commander_comp->jump_height_offset);
+    }
 
     QMatrix4x4 inst_model;
     float applied_yaw = applied_yaw_offset;
@@ -643,6 +659,18 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     locomotion_inputs.phase_offset = phase_offset;
     HumanoidLocomotionState locomotion_state =
         build_humanoid_locomotion_state(locomotion_inputs);
+    if (commander_jump_active) {
+      locomotion_state.motion_state = Render::GL::HumanoidMotionState::Idle;
+      locomotion_state.move_speed = 0.0F;
+      locomotion_state.has_movement_target = false;
+      locomotion_state.locomotion_velocity = QVector3D(0.0F, 0.0F, 0.0F);
+      locomotion_state.gait.state = Render::GL::HumanoidMotionState::Idle;
+      locomotion_state.gait.speed = 0.0F;
+      locomotion_state.gait.normalized_speed = 0.0F;
+      locomotion_state.gait.velocity = QVector3D(0.0F, 0.0F, 0.0F);
+      locomotion_state.gait.has_target = false;
+      locomotion_state.gait.is_airborne = true;
+    }
     if (unit_comp != nullptr &&
         unit_comp->spawn_type == Game::Units::SpawnType::Archer &&
         !soldier_anim.is_moving && !soldier_anim.is_attacking) {
@@ -683,7 +711,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       }
     }
 
-    if (!is_mounted_spawn) {
+    if (commander_jump_active) {
+      anim_ctx.ambient_idle_type = AmbientIdleType::Jump;
+      anim_ctx.ambient_idle_phase = commander_jump_phase;
+    } else if (!is_mounted_spawn) {
       bool const is_ambient_idle_eligible =
           !soldier_anim.is_moving && !soldier_anim.is_attacking &&
           !soldier_anim.is_in_hold_mode && !soldier_anim.is_constructing &&
@@ -747,6 +778,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     } else if (!world_already_grounded) {
       RCP::ground_model_contact_to_surface(
           inst_ctx.model, 0.0F, combined_height_scale, entity_ground_offset);
+    }
+    if (commander_jump_height_offset > 0.0F) {
+      RCP::set_model_world_y(inst_ctx.model,
+                             RCP::model_world_origin(inst_ctx.model).y() +
+                                 commander_jump_height_offset);
     }
     anim_ctx.instance_position =
         inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
