@@ -1,13 +1,15 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
 #include "../i_render_pass.h"
 #include "scatter_renderer_state.h"
-#include <QVector3D>
-#include <cstdint>
-#include <memory>
-#include <vector>
 
 namespace Render::GL {
 class Buffer;
@@ -18,26 +20,23 @@ public:
   BiomeRenderer();
   ~BiomeRenderer() override;
 
-  void configure(const Game::Map::TerrainHeightMap &height_map,
-                 const Game::Map::BiomeSettings &biome_settings);
+  void configure(const Game::Map::TerrainHeightMap& height_map,
+                 const Game::Map::BiomeSettings& biome_settings);
 
-  void set_light_direction(const QVector3D &dir);
+  void set_light_direction(const QVector3D& dir);
 
-  void submit(Renderer &renderer, ResourceManager *resources) override;
+  void submit(Renderer& renderer, ResourceManager* resources) override;
 
   void refresh_grass();
 
   void clear();
 
-  [[nodiscard]] bool is_gpu_ready() const {
-    return m_grass_state.is_gpu_ready();
-  }
+  [[nodiscard]] bool is_gpu_ready() const { return m_grass_state.is_gpu_ready(); }
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
     return m_grass_state.instances.size();
   }
-  [[nodiscard]] auto
-  last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
+  [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
     return m_grass_state.last_sync_stats;
   }
 
@@ -54,8 +53,7 @@ private:
   std::uint32_t m_noise_seed = 0U;
   QVector3D m_light_direction{0.35F, 0.8F, 0.45F};
 
-  Render::Ground::Scatter::FilteredRendererState<GrassInstanceGpu,
-                                                 GrassBatchParams>
+  Render::Ground::Scatter::FilteredRendererState<GrassInstanceGpu, GrassBatchParams>
       m_grass_state;
 };
 

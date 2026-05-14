@@ -1,21 +1,23 @@
 #include "fog_renderer.h"
 
-#include "../scene_renderer.h"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
+#include "../scene_renderer.h"
+
 namespace Render::GL {
 
-void FogRenderer::update_mask(int width, int height, float tile_size,
-                              const std::vector<std::uint8_t> &cells) {
+void FogRenderer::update_mask(int width,
+                              int height,
+                              float tile_size,
+                              const std::vector<std::uint8_t>& cells) {
   const int new_width = std::max(0, width);
   const int new_height = std::max(0, height);
   const float new_tile_size = std::max(0.0001F, tile_size);
-  const bool geometry_changed = (new_width != m_width) ||
-                                (new_height != m_height) ||
+  const bool geometry_changed = (new_width != m_width) || (new_height != m_height) ||
                                 (new_tile_size != m_tile_size);
 
   m_width = new_width;
@@ -38,7 +40,7 @@ void FogRenderer::update_mask(int width, int height, float tile_size,
   m_instances_dirty = true;
 }
 
-void FogRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+void FogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   if (!m_enabled) {
     return;
   }
@@ -108,12 +110,12 @@ void FogRenderer::build_chunks() {
   const QVector3D unexplored_color(0.08F, 0.10F, 0.15F);
   const QVector3D explored_color(0.24F, 0.24F, 0.22F);
 
-  auto reset_agg = [](StateAgg &agg) {
+  auto reset_agg = [](StateAgg& agg) {
     agg.count = 0;
     agg.min_x = agg.max_x = agg.min_z = agg.max_z = 0;
   };
 
-  auto accumulate = [](StateAgg &agg, int x, int z) {
+  auto accumulate = [](StateAgg& agg, int x, int z) {
     if (agg.count == 0) {
       agg.min_x = agg.max_x = x;
       agg.min_z = agg.max_z = z;
@@ -126,8 +128,7 @@ void FogRenderer::build_chunks() {
     ++agg.count;
   };
 
-  auto emit_patch = [&](const StateAgg &agg, int chunk_area,
-                        std::uint8_t state) {
+  auto emit_patch = [&](const StateAgg& agg, int chunk_area, std::uint8_t state) {
     if (agg.count == 0 || chunk_area <= 0) {
       return;
     }
@@ -135,8 +136,7 @@ void FogRenderer::build_chunks() {
     const float coverage =
         static_cast<float>(agg.count) / static_cast<float>(chunk_area);
     const float center_x =
-        (static_cast<float>(agg.min_x + agg.max_x) * 0.5F - m_half_width) *
-        m_tile_size;
+        (static_cast<float>(agg.min_x + agg.max_x) * 0.5F - m_half_width) * m_tile_size;
     const float center_z =
         (static_cast<float>(agg.min_z + agg.max_z) * 0.5F - m_half_height) *
         m_tile_size;

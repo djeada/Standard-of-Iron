@@ -1,12 +1,14 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <utility>
+
 #include "draw_queue.h"
 #include "gl/primitives.h"
 #include "material.h"
 #include "primitive_batch.h"
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <utility>
 
 namespace Render::GL {
 class Mesh;
@@ -19,50 +21,85 @@ namespace Render::GL {
 class ISubmitter {
 public:
   virtual ~ISubmitter() = default;
-  virtual void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-                    Texture *tex = nullptr, float alpha = 1.0F,
+  virtual void mesh(Mesh* mesh,
+                    const QMatrix4x4& model,
+                    const QVector3D& color,
+                    Texture* tex = nullptr,
+                    float alpha = 1.0F,
                     int material_id = 0) = 0;
-  virtual void banner(Mesh *mesh, const QMatrix4x4 &model,
-                      const QVector3D &color, const QVector3D &trim_color,
-                      Texture *tex = nullptr, float alpha = 1.0F,
+  virtual void banner(Mesh* mesh,
+                      const QMatrix4x4& model,
+                      const QVector3D& color,
+                      const QVector3D& trim_color,
+                      Texture* tex = nullptr,
+                      float alpha = 1.0F,
                       int material_id = 0) {
     (void)trim_color;
     this->mesh(mesh, model, color, tex, alpha, material_id);
   }
 
-  virtual void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
-                    const QVector3D &color, Texture *tex = nullptr,
-                    float alpha = 1.0F, int material_id = 0) {
+  virtual void part(Mesh* mesh,
+                    Material* material,
+                    const QMatrix4x4& model,
+                    const QVector3D& color,
+                    Texture* tex = nullptr,
+                    float alpha = 1.0F,
+                    int material_id = 0) {
     (void)material;
     this->mesh(mesh, model, color, tex, alpha, material_id);
   }
 
-  virtual void rigged(const RiggedCreatureCmd &cmd) { (void)cmd; }
-  virtual void cylinder(const QVector3D &start, const QVector3D &end,
-                        float radius, const QVector3D &color,
+  virtual void rigged(const RiggedCreatureCmd& cmd) { (void)cmd; }
+  virtual void cylinder(const QVector3D& start,
+                        const QVector3D& end,
+                        float radius,
+                        const QVector3D& color,
                         float alpha = 1.0F) = 0;
-  virtual void selection_ring(const QMatrix4x4 &model, float alpha_inner,
-                              float alpha_outer, const QVector3D &color) = 0;
-  virtual void grid(const QMatrix4x4 &model, const QVector3D &color,
-                    float cell_size, float thickness, float extent) = 0;
-  virtual void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+  virtual void selection_ring(const QMatrix4x4& model,
+                              float alpha_inner,
+                              float alpha_outer,
+                              const QVector3D& color) = 0;
+  virtual void grid(const QMatrix4x4& model,
+                    const QVector3D& color,
+                    float cell_size,
+                    float thickness,
+                    float extent) = 0;
+  virtual void selection_smoke(const QMatrix4x4& model,
+                               const QVector3D& color,
                                float base_alpha = 0.15F) = 0;
-  virtual void healing_beam(const QVector3D &start, const QVector3D &end,
-                            const QVector3D &color, float progress,
-                            float beam_width, float intensity, float time) = 0;
-  virtual void healer_aura(const QVector3D &position, const QVector3D &color,
-                           float radius, float intensity, float time) = 0;
-  virtual void combat_dust(const QVector3D &position, const QVector3D &color,
-                           float radius, float intensity, float time) = 0;
-  virtual void stone_impact(const QVector3D &position, const QVector3D &color,
-                            float radius, float intensity, float time) = 0;
-  virtual void mode_indicator(const QMatrix4x4 &model, int mode_type,
-                              const QVector3D &color, float alpha = 1.0F) = 0;
+  virtual void healing_beam(const QVector3D& start,
+                            const QVector3D& end,
+                            const QVector3D& color,
+                            float progress,
+                            float beam_width,
+                            float intensity,
+                            float time) = 0;
+  virtual void healer_aura(const QVector3D& position,
+                           const QVector3D& color,
+                           float radius,
+                           float intensity,
+                           float time) = 0;
+  virtual void combat_dust(const QVector3D& position,
+                           const QVector3D& color,
+                           float radius,
+                           float intensity,
+                           float time) = 0;
+  virtual void stone_impact(const QVector3D& position,
+                            const QVector3D& color,
+                            float radius,
+                            float intensity,
+                            float time) = 0;
+  virtual void mode_indicator(const QMatrix4x4& model,
+                              int mode_type,
+                              const QVector3D& color,
+                              float alpha = 1.0F) = 0;
 };
 
 namespace detail {
-inline auto decompose_unit_cylinder(const QMatrix4x4 &model, QVector3D &start,
-                                    QVector3D &end, float &radius) -> bool {
+inline auto decompose_unit_cylinder(const QMatrix4x4& model,
+                                    QVector3D& start,
+                                    QVector3D& end,
+                                    float& radius) -> bool {
   start = model.map(QVector3D(0.0F, -0.5F, 0.0F));
   end = model.map(QVector3D(0.0F, 0.5F, 0.0F));
   QVector3D const sx = model.mapVector(QVector3D(1.0F, 0.0F, 0.0F));
@@ -74,21 +111,24 @@ inline auto decompose_unit_cylinder(const QMatrix4x4 &model, QVector3D &start,
 
 class QueueSubmitter : public ISubmitter {
 public:
-  explicit QueueSubmitter(DrawQueue *queue) : m_queue(queue) {}
+  explicit QueueSubmitter(DrawQueue* queue)
+      : m_queue(queue) {}
 
-  [[nodiscard]] Shader *shader() const { return m_shader; }
-  void set_shader(Shader *shader) { m_shader = shader; }
+  [[nodiscard]] Shader* shader() const { return m_shader; }
+  void set_shader(Shader* shader) { m_shader = shader; }
 
-  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *tex = nullptr, float alpha = 1.0F,
+  void mesh(Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
             int material_id = 0) override {
     if ((m_queue == nullptr) || (mesh == nullptr)) {
       return;
     }
 
-    static Mesh *const unit_cylinder_mesh = get_unit_cylinder();
-    if (mesh == unit_cylinder_mesh && (tex == nullptr) &&
-        (m_shader == nullptr)) {
+    static Mesh* const unit_cylinder_mesh = get_unit_cylinder();
+    if (mesh == unit_cylinder_mesh && (tex == nullptr) && (m_shader == nullptr)) {
       QVector3D start;
       QVector3D end;
       float radius = 0.0F;
@@ -114,9 +154,13 @@ public:
     m_queue->submit(std::move(cmd));
   }
 
-  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-              const QVector3D &trim_color, Texture *tex = nullptr,
-              float alpha = 1.0F, int material_id = 0) override {
+  void banner(Mesh* mesh,
+              const QMatrix4x4& model,
+              const QVector3D& color,
+              const QVector3D& trim_color,
+              Texture* tex = nullptr,
+              float alpha = 1.0F,
+              int material_id = 0) override {
     if ((m_queue == nullptr) || (mesh == nullptr)) {
       return;
     }
@@ -134,8 +178,12 @@ public:
     m_queue->submit(std::move(cmd));
   }
 
-  void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
-            const QVector3D &color, Texture *tex = nullptr, float alpha = 1.0F,
+  void part(Mesh* mesh,
+            Material* material,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
             int material_id = 0) override {
     if ((m_queue == nullptr) || (mesh == nullptr)) {
       return;
@@ -156,14 +204,17 @@ public:
     m_queue->submit(std::move(cmd));
   }
 
-  void rigged(const RiggedCreatureCmd &cmd) override {
+  void rigged(const RiggedCreatureCmd& cmd) override {
     if (m_queue == nullptr || cmd.mesh == nullptr) {
       return;
     }
     m_queue->submit(cmd);
   }
-  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                const QVector3D &color, float alpha = 1.0F) override {
+  void cylinder(const QVector3D& start,
+                const QVector3D& end,
+                float radius,
+                const QVector3D& color,
+                float alpha = 1.0F) override {
     if (m_queue == nullptr) {
       return;
     }
@@ -175,8 +226,10 @@ public:
     cmd.alpha = alpha;
     m_queue->submit(std::move(cmd));
   }
-  void selection_ring(const QMatrix4x4 &model, float alpha_inner,
-                      float alpha_outer, const QVector3D &color) override {
+  void selection_ring(const QMatrix4x4& model,
+                      float alpha_inner,
+                      float alpha_outer,
+                      const QVector3D& color) override {
     if (m_queue == nullptr) {
       return;
     }
@@ -187,8 +240,11 @@ public:
     cmd.color = color;
     m_queue->submit(std::move(cmd));
   }
-  void grid(const QMatrix4x4 &model, const QVector3D &color, float cell_size,
-            float thickness, float extent) override {
+  void grid(const QMatrix4x4& model,
+            const QVector3D& color,
+            float cell_size,
+            float thickness,
+            float extent) override {
     if (m_queue == nullptr) {
       return;
     }
@@ -200,7 +256,8 @@ public:
     cmd.extent = extent;
     m_queue->submit(std::move(cmd));
   }
-  void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+  void selection_smoke(const QMatrix4x4& model,
+                       const QVector3D& color,
                        float base_alpha = 0.15F) override {
     if (m_queue == nullptr) {
       return;
@@ -211,9 +268,13 @@ public:
     cmd.base_alpha = base_alpha;
     m_queue->submit(std::move(cmd));
   }
-  void healing_beam(const QVector3D &start, const QVector3D &end,
-                    const QVector3D &color, float progress, float beam_width,
-                    float intensity, float time) override {
+  void healing_beam(const QVector3D& start,
+                    const QVector3D& end,
+                    const QVector3D& color,
+                    float progress,
+                    float beam_width,
+                    float intensity,
+                    float time) override {
     if (m_queue == nullptr) {
       return;
     }
@@ -229,8 +290,11 @@ public:
     cmd.priority = CommandPriority::High;
     m_queue->submit(std::move(cmd));
   }
-  void healer_aura(const QVector3D &position, const QVector3D &color,
-                   float radius, float intensity, float time) override {
+  void healer_aura(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
     if (m_queue == nullptr) {
       return;
     }
@@ -243,8 +307,11 @@ public:
     cmd.time = time;
     m_queue->submit(std::move(cmd));
   }
-  void combat_dust(const QVector3D &position, const QVector3D &color,
-                   float radius, float intensity, float time) override {
+  void combat_dust(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
     if (m_queue == nullptr) {
       return;
     }
@@ -258,8 +325,11 @@ public:
     cmd.priority = CommandPriority::Low;
     m_queue->submit(std::move(cmd));
   }
-  void stone_impact(const QVector3D &position, const QVector3D &color,
-                    float radius, float intensity, float time) override {
+  void stone_impact(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override {
     if (m_queue == nullptr) {
       return;
     }
@@ -273,8 +343,10 @@ public:
     cmd.priority = CommandPriority::High;
     m_queue->submit(std::move(cmd));
   }
-  void mode_indicator(const QMatrix4x4 &model, int mode_type,
-                      const QVector3D &color, float alpha = 1.0F) override {
+  void mode_indicator(const QMatrix4x4& model,
+                      int mode_type,
+                      const QVector3D& color,
+                      float alpha = 1.0F) override {
     if (m_queue == nullptr) {
       return;
     }
@@ -287,29 +359,32 @@ public:
   }
 
 private:
-  DrawQueue *m_queue = nullptr;
-  Shader *m_shader = nullptr;
+  DrawQueue* m_queue = nullptr;
+  Shader* m_shader = nullptr;
 };
 
 class BatchingSubmitter : public ISubmitter {
 public:
-  explicit BatchingSubmitter(ISubmitter *fallback,
-                             PrimitiveBatcher *batcher = nullptr)
-      : m_fallback(fallback), m_batcher(batcher) {}
+  explicit BatchingSubmitter(ISubmitter* fallback, PrimitiveBatcher* batcher = nullptr)
+      : m_fallback(fallback)
+      , m_batcher(batcher) {}
 
-  [[nodiscard]] ISubmitter *fallback_submitter() const { return m_fallback; }
+  [[nodiscard]] ISubmitter* fallback_submitter() const { return m_fallback; }
 
-  void set_batcher(PrimitiveBatcher *batcher) { m_batcher = batcher; }
+  void set_batcher(PrimitiveBatcher* batcher) { m_batcher = batcher; }
   void set_enabled(bool enabled) { m_enabled = enabled; }
 
-  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *tex = nullptr, float alpha = 1.0F,
+  void mesh(Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
             int material_id = 0) override {
 
     if (m_enabled && m_batcher != nullptr && tex == nullptr) {
-      static Mesh *const unit_sphere_mesh = get_unit_sphere();
-      static Mesh *const unit_cylinder_mesh = get_unit_cylinder();
-      static Mesh *const unit_cone_mesh = get_unit_cone();
+      static Mesh* const unit_sphere_mesh = get_unit_sphere();
+      static Mesh* const unit_cylinder_mesh = get_unit_cylinder();
+      static Mesh* const unit_cone_mesh = get_unit_cone();
 
       if (mesh == unit_sphere_mesh) {
         m_batcher->add_sphere(model, color, alpha);
@@ -330,152 +405,213 @@ public:
     }
   }
 
-  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-              const QVector3D &trim_color, Texture *tex = nullptr,
-              float alpha = 1.0F, int material_id = 0) override {
+  void banner(Mesh* mesh,
+              const QMatrix4x4& model,
+              const QVector3D& color,
+              const QVector3D& trim_color,
+              Texture* tex = nullptr,
+              float alpha = 1.0F,
+              int material_id = 0) override {
     if (m_fallback != nullptr) {
-      m_fallback->banner(mesh, model, color, trim_color, tex, alpha,
-                         material_id);
+      m_fallback->banner(mesh, model, color, trim_color, tex, alpha, material_id);
     }
   }
 
-  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                const QVector3D &color, float alpha = 1.0F) override {
+  void cylinder(const QVector3D& start,
+                const QVector3D& end,
+                float radius,
+                const QVector3D& color,
+                float alpha = 1.0F) override {
 
     if (m_fallback != nullptr) {
       m_fallback->cylinder(start, end, radius, color, alpha);
     }
   }
 
-  void selection_ring(const QMatrix4x4 &model, float alpha_inner,
-                      float alpha_outer, const QVector3D &color) override {
+  void selection_ring(const QMatrix4x4& model,
+                      float alpha_inner,
+                      float alpha_outer,
+                      const QVector3D& color) override {
     if (m_fallback != nullptr) {
       m_fallback->selection_ring(model, alpha_inner, alpha_outer, color);
     }
   }
 
-  void grid(const QMatrix4x4 &model, const QVector3D &color, float cell_size,
-            float thickness, float extent) override {
+  void grid(const QMatrix4x4& model,
+            const QVector3D& color,
+            float cell_size,
+            float thickness,
+            float extent) override {
     if (m_fallback != nullptr) {
       m_fallback->grid(model, color, cell_size, thickness, extent);
     }
   }
 
-  void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+  void selection_smoke(const QMatrix4x4& model,
+                       const QVector3D& color,
                        float base_alpha = 0.15F) override {
     if (m_fallback != nullptr) {
       m_fallback->selection_smoke(model, color, base_alpha);
     }
   }
 
-  void healing_beam(const QVector3D &start, const QVector3D &end,
-                    const QVector3D &color, float progress, float beam_width,
-                    float intensity, float time) override {
+  void healing_beam(const QVector3D& start,
+                    const QVector3D& end,
+                    const QVector3D& color,
+                    float progress,
+                    float beam_width,
+                    float intensity,
+                    float time) override {
     if (m_fallback != nullptr) {
-      m_fallback->healing_beam(start, end, color, progress, beam_width,
-                               intensity, time);
+      m_fallback->healing_beam(
+          start, end, color, progress, beam_width, intensity, time);
     }
   }
 
-  void healer_aura(const QVector3D &position, const QVector3D &color,
-                   float radius, float intensity, float time) override {
+  void healer_aura(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
     if (m_fallback != nullptr) {
       m_fallback->healer_aura(position, color, radius, intensity, time);
     }
   }
 
-  void combat_dust(const QVector3D &position, const QVector3D &color,
-                   float radius, float intensity, float time) override {
+  void combat_dust(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
     if (m_fallback != nullptr) {
       m_fallback->combat_dust(position, color, radius, intensity, time);
     }
   }
 
-  void stone_impact(const QVector3D &position, const QVector3D &color,
-                    float radius, float intensity, float time) override {
+  void stone_impact(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override {
     if (m_fallback != nullptr) {
       m_fallback->stone_impact(position, color, radius, intensity, time);
     }
   }
 
-  void mode_indicator(const QMatrix4x4 &model, int mode_type,
-                      const QVector3D &color, float alpha = 1.0F) override {
+  void mode_indicator(const QMatrix4x4& model,
+                      int mode_type,
+                      const QVector3D& color,
+                      float alpha = 1.0F) override {
     if (m_fallback != nullptr) {
       m_fallback->mode_indicator(model, mode_type, color, alpha);
     }
   }
 
-  void rigged(const RiggedCreatureCmd &cmd) override {
+  void rigged(const RiggedCreatureCmd& cmd) override {
     if (m_fallback != nullptr) {
       m_fallback->rigged(cmd);
     }
   }
 
 private:
-  ISubmitter *m_fallback = nullptr;
-  PrimitiveBatcher *m_batcher = nullptr;
+  ISubmitter* m_fallback = nullptr;
+  PrimitiveBatcher* m_batcher = nullptr;
   bool m_enabled = true;
 };
 
 class DamageStateSubmitter : public ISubmitter {
 public:
-  explicit DamageStateSubmitter(ISubmitter &inner, int damage_material_id)
-      : m_inner(inner), m_damage_id(damage_material_id) {}
+  explicit DamageStateSubmitter(ISubmitter& inner, int damage_material_id)
+      : m_inner(inner)
+      , m_damage_id(damage_material_id) {}
 
-  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *tex = nullptr, float alpha = 1.0F,
+  void mesh(Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
             int material_id = 0) override {
     m_inner.mesh(mesh, model, color, tex, alpha, pick(material_id));
   }
-  void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
-            const QVector3D &color, Texture *tex = nullptr, float alpha = 1.0F,
+  void part(Mesh* mesh,
+            Material* material,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
             int material_id = 0) override {
     m_inner.part(mesh, material, model, color, tex, alpha, pick(material_id));
   }
-  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-              const QVector3D &trim_color, Texture *tex = nullptr,
-              float alpha = 1.0F, int material_id = 0) override {
-    m_inner.banner(mesh, model, color, trim_color, tex, alpha,
-                   pick(material_id));
+  void banner(Mesh* mesh,
+              const QMatrix4x4& model,
+              const QVector3D& color,
+              const QVector3D& trim_color,
+              Texture* tex = nullptr,
+              float alpha = 1.0F,
+              int material_id = 0) override {
+    m_inner.banner(mesh, model, color, trim_color, tex, alpha, pick(material_id));
   }
 
-  void rigged(const RiggedCreatureCmd &cmd) override { m_inner.rigged(cmd); }
-  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                const QVector3D &color, float alpha = 1.0F) override {
+  void rigged(const RiggedCreatureCmd& cmd) override { m_inner.rigged(cmd); }
+  void cylinder(const QVector3D& start,
+                const QVector3D& end,
+                float radius,
+                const QVector3D& color,
+                float alpha = 1.0F) override {
     m_inner.cylinder(start, end, radius, color, alpha);
   }
-  void selection_ring(const QMatrix4x4 &model, float alpha_inner,
-                      float alpha_outer, const QVector3D &color) override {
+  void selection_ring(const QMatrix4x4& model,
+                      float alpha_inner,
+                      float alpha_outer,
+                      const QVector3D& color) override {
     m_inner.selection_ring(model, alpha_inner, alpha_outer, color);
   }
-  void grid(const QMatrix4x4 &model, const QVector3D &color, float cell_size,
-            float thickness, float extent) override {
+  void grid(const QMatrix4x4& model,
+            const QVector3D& color,
+            float cell_size,
+            float thickness,
+            float extent) override {
     m_inner.grid(model, color, cell_size, thickness, extent);
   }
-  void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+  void selection_smoke(const QMatrix4x4& model,
+                       const QVector3D& color,
                        float base_alpha = 0.15F) override {
     m_inner.selection_smoke(model, color, base_alpha);
   }
-  void healing_beam(const QVector3D &start, const QVector3D &end,
-                    const QVector3D &color, float progress, float beam_width,
-                    float intensity, float time) override {
-    m_inner.healing_beam(start, end, color, progress, beam_width, intensity,
-                         time);
+  void healing_beam(const QVector3D& start,
+                    const QVector3D& end,
+                    const QVector3D& color,
+                    float progress,
+                    float beam_width,
+                    float intensity,
+                    float time) override {
+    m_inner.healing_beam(start, end, color, progress, beam_width, intensity, time);
   }
-  void healer_aura(const QVector3D &position, const QVector3D &color,
-                   float radius, float intensity, float time) override {
+  void healer_aura(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
     m_inner.healer_aura(position, color, radius, intensity, time);
   }
-  void combat_dust(const QVector3D &position, const QVector3D &color,
-                   float radius, float intensity, float time) override {
+  void combat_dust(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
     m_inner.combat_dust(position, color, radius, intensity, time);
   }
-  void stone_impact(const QVector3D &position, const QVector3D &color,
-                    float radius, float intensity, float time) override {
+  void stone_impact(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override {
     m_inner.stone_impact(position, color, radius, intensity, time);
   }
-  void mode_indicator(const QMatrix4x4 &model, int mode_type,
-                      const QVector3D &color, float alpha = 1.0F) override {
+  void mode_indicator(const QMatrix4x4& model,
+                      int mode_type,
+                      const QVector3D& color,
+                      float alpha = 1.0F) override {
     m_inner.mode_indicator(model, mode_type, color, alpha);
   }
 
@@ -484,7 +620,7 @@ private:
     return (m_damage_id != 0 && incoming_id == 0) ? m_damage_id : incoming_id;
   }
 
-  ISubmitter &m_inner;
+  ISubmitter& m_inner;
   int m_damage_id;
 };
 

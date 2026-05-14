@@ -1,8 +1,10 @@
 #include "effects_pipeline.h"
-#include "../backend.h"
-#include "../shader_cache.h"
+
 #include <QDebug>
 #include <qglobal.h>
+
+#include "../backend.h"
+#include "../shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -51,15 +53,12 @@ void EffectsPipeline::cache_basic_uniforms() {
 
   m_basic_uniforms.mvp = m_basic_shader->optional_uniform_handle("u_mvp");
   m_basic_uniforms.model = m_basic_shader->uniform_handle("u_model");
-  m_basic_uniforms.view_proj =
-      m_basic_shader->optional_uniform_handle("u_view_proj");
+  m_basic_uniforms.view_proj = m_basic_shader->optional_uniform_handle("u_view_proj");
   m_basic_uniforms.texture = m_basic_shader->uniform_handle("u_texture");
-  m_basic_uniforms.use_texture =
-      m_basic_shader->uniform_handle("u_use_texture");
+  m_basic_uniforms.use_texture = m_basic_shader->uniform_handle("u_use_texture");
   m_basic_uniforms.color = m_basic_shader->uniform_handle("u_color");
   m_basic_uniforms.alpha = m_basic_shader->uniform_handle("u_alpha");
-  m_basic_uniforms.instanced =
-      m_basic_shader->optional_uniform_handle("u_instanced");
+  m_basic_uniforms.instanced = m_basic_shader->optional_uniform_handle("u_instanced");
 }
 
 void EffectsPipeline::cache_basic_instanced_uniforms() {

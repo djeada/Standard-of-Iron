@@ -1,10 +1,10 @@
 #pragma once
 
-#include "pose_intent.h"
-#include "render_request.h"
-
 #include <array>
 #include <cstdint>
+
+#include "pose_intent.h"
+#include "render_request.h"
 
 namespace Render::Creature {
 

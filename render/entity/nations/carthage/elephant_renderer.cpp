@@ -1,4 +1,10 @@
 #include "elephant_renderer.h"
+
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cmath>
+
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/visuals/team_colors.h"
@@ -14,10 +20,6 @@
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../registry.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cmath>
 
 namespace Render::GL::Carthage {
 namespace {
@@ -37,7 +39,7 @@ struct CarthageElephantPalette {
   QVector3D team{0.8F, 0.9F, 1.0F};
 };
 
-inline auto make_palette(const QVector3D &team) -> CarthageElephantPalette {
+inline auto make_palette(const QVector3D& team) -> CarthageElephantPalette {
   CarthageElephantPalette p;
   p.team = clamp_vec_01(team);
   return p;
@@ -47,12 +49,11 @@ class CarthageElephantRenderer : public ElephantRendererBase {
 public:
   CarthageElephantRenderer() = default;
 
-  auto visual_spec() const
-      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+  auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     if (!m_visual_spec_baked) {
       m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
-      m_visual_spec_cache.kind =
-          Render::Creature::Pipeline::CreatureKind::Elephant;
+      m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
       m_visual_spec_cache.debug_name = "troops/carthage/elephant";
       m_visual_spec_baked = true;
     }
@@ -64,9 +65,9 @@ protected:
 
 } // namespace
 
-void register_elephant_renderer(EntityRendererRegistry &registry) {
+void register_elephant_renderer(EntityRendererRegistry& registry) {
   registry.register_renderer(
-      "troops/carthage/elephant", [](const DrawContext &p, ISubmitter &out) {
+      "troops/carthage/elephant", [](const DrawContext& p, ISubmitter& out) {
         static CarthageElephantRenderer const static_renderer;
 
         if (p.entity == nullptr) {
@@ -74,26 +75,23 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
         }
 
         QVector3D team_color{0.4F, 0.2F, 0.6F};
-        if (auto *r =
-                p.entity->get_component<Engine::Core::RenderableComponent>()) {
+        if (auto* r = p.entity->get_component<Engine::Core::RenderableComponent>()) {
           team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
         }
 
         uint32_t seed = 0U;
-        seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(p.entity) &
-                                     0xFFFFFFFFU);
+        seed =
+            static_cast<uint32_t>(reinterpret_cast<uintptr_t>(p.entity) & 0xFFFFFFFFU);
 
         QVector3D const fabric_base(0.45F, 0.18F, 0.55F);
         QVector3D const metal_base(0.70F, 0.50F, 0.28F);
 
-        ElephantProfile &profile =
-            Render::Creature::get_or_bake_elephant_anatomy(
-                p.entity, seed, fabric_base, metal_base)
-                .profile;
+        ElephantProfile& profile = Render::Creature::get_or_bake_elephant_anatomy(
+                                       p.entity, seed, fabric_base, metal_base)
+                                       .profile;
 
         AnimationInputs anim =
-            Render::Creature::Pipeline::resolve_elephant_animation_state(p)
-                .inputs;
+            Render::Creature::Pipeline::resolve_elephant_animation_state(p).inputs;
 
         static_renderer.render(p, anim, profile, nullptr, nullptr, out);
       });

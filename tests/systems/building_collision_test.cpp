@@ -1,5 +1,6 @@
-#include "systems/building_collision_registry.h"
 #include <gtest/gtest.h>
+
+#include "systems/building_collision_registry.h"
 
 using namespace Game::Systems;
 
@@ -15,7 +16,7 @@ protected:
 };
 
 TEST_F(BuildingCollisionRegistryTest, PointInsideBuilding) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
@@ -25,7 +26,7 @@ TEST_F(BuildingCollisionRegistryTest, PointInsideBuilding) {
 }
 
 TEST_F(BuildingCollisionRegistryTest, PointOutsideBuilding) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
@@ -36,7 +37,7 @@ TEST_F(BuildingCollisionRegistryTest, PointOutsideBuilding) {
 }
 
 TEST_F(BuildingCollisionRegistryTest, CircleOverlappingBuilding) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
@@ -48,7 +49,7 @@ TEST_F(BuildingCollisionRegistryTest, CircleOverlappingBuilding) {
 }
 
 TEST_F(BuildingCollisionRegistryTest, CircleNotOverlappingBuilding) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
@@ -59,7 +60,7 @@ TEST_F(BuildingCollisionRegistryTest, CircleNotOverlappingBuilding) {
 }
 
 TEST_F(BuildingCollisionRegistryTest, CircleTouchingBuildingEdge) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
@@ -69,24 +70,21 @@ TEST_F(BuildingCollisionRegistryTest, CircleTouchingBuildingEdge) {
 }
 
 TEST_F(BuildingCollisionRegistryTest, LargeUnitRadiusPreventedFromClipping) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
   float const large_radius = 2.0F;
 
-  EXPECT_TRUE(
-      registry.is_circle_overlapping_building(3.5F, 0.0F, large_radius));
+  EXPECT_TRUE(registry.is_circle_overlapping_building(3.5F, 0.0F, large_radius));
 
-  EXPECT_TRUE(
-      registry.is_circle_overlapping_building(0.0F, 3.5F, large_radius));
+  EXPECT_TRUE(registry.is_circle_overlapping_building(0.0F, 3.5F, large_radius));
 
-  EXPECT_FALSE(
-      registry.is_circle_overlapping_building(5.0F, 0.0F, large_radius));
+  EXPECT_FALSE(registry.is_circle_overlapping_building(5.0F, 0.0F, large_radius));
 }
 
 TEST_F(BuildingCollisionRegistryTest, IgnoreEntityId) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
   registry.register_building(2, "barracks", 10.0F, 10.0F, 0);
@@ -99,7 +97,7 @@ TEST_F(BuildingCollisionRegistryTest, IgnoreEntityId) {
 }
 
 TEST_F(BuildingCollisionRegistryTest, MultipleBuildings) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
   registry.register_building(2, "barracks", 10.0F, 0.0F, 0);
@@ -111,13 +109,13 @@ TEST_F(BuildingCollisionRegistryTest, MultipleBuildings) {
 }
 
 TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
   EXPECT_GE(BuildingCollisionRegistry::get_grid_padding(), 1.0F);
 
-  const auto &buildings = registry.get_all_buildings();
+  const auto& buildings = registry.get_all_buildings();
   ASSERT_EQ(buildings.size(), 1);
 
   auto cells = BuildingCollisionRegistry::get_occupied_grid_cells(
@@ -125,7 +123,7 @@ TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
 
   bool has_min_x = false;
   bool has_max_x = false;
-  for (const auto &cell : cells) {
+  for (const auto& cell : cells) {
     if (cell.first <= -2)
       has_min_x = true;
     if (cell.first >= 2)
@@ -136,7 +134,7 @@ TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
 }
 
 TEST_F(BuildingCollisionRegistryTest, UnitWithLargeRadiusCloseToBuilding) {
-  auto &registry = BuildingCollisionRegistry::instance();
+  auto& registry = BuildingCollisionRegistry::instance();
 
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
@@ -146,6 +144,5 @@ TEST_F(BuildingCollisionRegistryTest, UnitWithLargeRadiusCloseToBuilding) {
 
   EXPECT_TRUE(registry.is_circle_overlapping_building(3.0F, 0.0F, unit_radius));
 
-  EXPECT_FALSE(
-      registry.is_circle_overlapping_building(3.1F, 0.0F, unit_radius));
+  EXPECT_FALSE(registry.is_circle_overlapping_building(3.1F, 0.0F, unit_radius));
 }

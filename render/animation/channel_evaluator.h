@@ -2,29 +2,29 @@
 
 #pragma once
 
-#include "clip.h"
-#include "state_machine.h"
-
 #include <cstddef>
 #include <vector>
 
+#include "clip.h"
+#include "state_machine.h"
+
 namespace Render::Animation {
 
-template <typename T> class ChannelEvaluator {
+template <typename T>
+class ChannelEvaluator {
 public:
-  ChannelEvaluator(std::vector<Clip<T>> clips, const StateMachine *machine)
-      : m_clips(std::move(clips)), m_machine(machine) {}
+  ChannelEvaluator(std::vector<Clip<T>> clips, const StateMachine* machine)
+      : m_clips(std::move(clips))
+      , m_machine(machine) {}
 
-  [[nodiscard]] auto sample(float time,
-                            WrapMode wrap = WrapMode::Loop) const -> T {
+  [[nodiscard]] auto sample(float time, WrapMode wrap = WrapMode::Loop) const -> T {
     if (m_machine == nullptr) {
       return T{};
     }
     StateId const cur = m_machine->current();
     T cur_val = sample_clip(cur, time, wrap);
 
-    if (!m_machine->is_blending() ||
-        m_machine->previous() == m_machine->current()) {
+    if (!m_machine->is_blending() || m_machine->previous() == m_machine->current()) {
       return cur_val;
     }
 
@@ -38,8 +38,7 @@ public:
   }
 
 private:
-  [[nodiscard]] auto sample_clip(StateId id, float time,
-                                 WrapMode wrap) const -> T {
+  [[nodiscard]] auto sample_clip(StateId id, float time, WrapMode wrap) const -> T {
     if (id >= m_clips.size()) {
       return T{};
     }
@@ -47,7 +46,7 @@ private:
   }
 
   std::vector<Clip<T>> m_clips;
-  const StateMachine *m_machine{nullptr};
+  const StateMachine* m_machine{nullptr};
 };
 
 } // namespace Render::Animation

@@ -12,7 +12,8 @@ class StateMachine {
 public:
   StateMachine() = default;
   explicit StateMachine(StateId initial)
-      : m_current(initial), m_prev(initial) {}
+      : m_current(initial)
+      , m_prev(initial) {}
 
   void request(StateId next, float blend_seconds = 0.0F) {
     if (next == m_current && m_blend_remaining <= 0.0F) {

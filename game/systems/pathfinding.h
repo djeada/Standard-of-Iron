@@ -1,12 +1,13 @@
 #pragma once
 
+#include <queue>
+
 #include <array>
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
 #include <future>
 #include <mutex>
-#include <queue>
 #include <thread>
 #include <vector>
 
@@ -19,9 +20,11 @@ struct Point {
   int y = 0;
 
   constexpr Point() = default;
-  constexpr Point(int x_, int y_) : x(x_), y(y_) {}
+  constexpr Point(int x_, int y_)
+      : x(x_)
+      , y(y_) {}
 
-  constexpr auto operator==(const Point &other) const -> bool {
+  constexpr auto operator==(const Point& other) const -> bool {
     return x == other.x && y == other.y;
   }
 };
@@ -33,7 +36,10 @@ struct DirtyRegion {
   int max_z;
 
   DirtyRegion(int x1, int x2, int z1, int z2)
-      : min_x(x1), max_x(x2), min_z(z1), max_z(z2) {}
+      : min_x(x1)
+      , max_x(x2)
+      , min_z(z1)
+      , max_z(z2) {}
 };
 
 class Pathfinding {
@@ -56,20 +62,23 @@ public:
 
   void mark_region_dirty(int min_x, int max_x, int min_z, int max_z);
 
-  void mark_building_region_dirty(float center_x, float center_z, float width,
-                                  float depth);
+  void
+  mark_building_region_dirty(float center_x, float center_z, float width, float depth);
 
-  auto find_path(const Point &start, const Point &end) -> std::vector<Point>;
-  auto find_path(const Point &start, const Point &end,
+  auto find_path(const Point& start, const Point& end) -> std::vector<Point>;
+  auto find_path(const Point& start,
+                 const Point& end,
                  float unit_radius) -> std::vector<Point>;
 
-  auto find_path_async(const Point &start,
-                       const Point &end) -> std::future<std::vector<Point>>;
+  auto find_path_async(const Point& start,
+                       const Point& end) -> std::future<std::vector<Point>>;
 
-  void submit_path_request(std::uint64_t request_id, const Point &start,
-                           const Point &end);
-  void submit_path_request(std::uint64_t request_id, const Point &start,
-                           const Point &end, float unit_radius);
+  void
+  submit_path_request(std::uint64_t request_id, const Point& start, const Point& end);
+  void submit_path_request(std::uint64_t request_id,
+                           const Point& start,
+                           const Point& end,
+                           float unit_radius);
 
   struct PathResult {
     std::uint64_t request_id;
@@ -77,28 +86,26 @@ public:
   };
   auto fetch_completed_paths() -> std::vector<PathResult>;
 
-  static auto find_nearest_walkable_point(const Point &point,
+  static auto find_nearest_walkable_point(const Point& point,
                                           int max_search_radius,
-                                          const Pathfinding &pathfinder,
+                                          const Pathfinding& pathfinder,
                                           float unit_radius = 0.0F) -> Point;
 
 private:
-  auto find_path_internal(const Point &start,
-                          const Point &end) -> std::vector<Point>;
-  auto find_path_internal(const Point &start, const Point &end,
+  auto find_path_internal(const Point& start, const Point& end) -> std::vector<Point>;
+  auto find_path_internal(const Point& start,
+                          const Point& end,
                           float unit_radius) -> std::vector<Point>;
 
-  static auto calculate_heuristic(const Point &a, const Point &b) -> int;
+  static auto calculate_heuristic(const Point& a, const Point& b) -> int;
 
   void ensure_working_buffers();
   auto next_generation() -> std::uint32_t;
   void reset_generations();
 
   auto to_index(int x, int y) const -> int { return y * m_width + x; }
-  auto to_index(const Point &p) const -> int { return to_index(p.x, p.y); }
-  auto to_point(int index) const -> Point {
-    return {index % m_width, index / m_width};
-  }
+  auto to_index(const Point& p) const -> int { return to_index(p.x, p.y); }
+  auto to_point(int index) const -> Point { return {index % m_width, index / m_width}; }
 
   auto is_closed(int index, std::uint32_t generation) const -> bool;
   void set_closed(int index, std::uint32_t generation);
@@ -110,10 +117,13 @@ private:
   auto get_parent(int index, std::uint32_t generation) const -> int;
   void set_parent(int index, std::uint32_t generation, int parent_index);
 
-  auto collect_neighbors(const Point &point,
-                         std::array<Point, 8> &buffer) const -> std::size_t;
-  void build_path(int start_index, int end_index, std::uint32_t generation,
-                  int expected_length, std::vector<Point> &out_path) const;
+  auto collect_neighbors(const Point& point,
+                         std::array<Point, 8>& buffer) const -> std::size_t;
+  void build_path(int start_index,
+                  int end_index,
+                  std::uint32_t generation,
+                  int expected_length,
+                  std::vector<Point>& out_path) const;
 
   struct QueueNode {
     int index;
@@ -121,8 +131,8 @@ private:
     int g_cost;
   };
 
-  static auto heap_less(const QueueNode &lhs, const QueueNode &rhs) -> bool;
-  void push_open_node(const QueueNode &node);
+  static auto heap_less(const QueueNode& lhs, const QueueNode& rhs) -> bool;
+  void push_open_node(const QueueNode& node);
   auto pop_open_node() -> QueueNode;
 
   void worker_loop();

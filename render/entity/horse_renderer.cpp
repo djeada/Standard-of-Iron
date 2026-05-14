@@ -6,7 +6,7 @@ namespace Render::GL {
 HorseRenderer::HorseRenderer() = default;
 
 auto HorseRenderer::visual_spec() const
-    -> const Render::Creature::Pipeline::UnitVisualSpec & {
+    -> const Render::Creature::Pipeline::UnitVisualSpec& {
   if (!m_visual_spec_baked) {
     m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
     m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Horse;

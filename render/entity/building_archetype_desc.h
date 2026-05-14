@@ -1,14 +1,15 @@
 #pragma once
 
-#include "../render_archetype.h"
-#include "../template_cache.h"
-#include "building_state.h"
-
 #include <QVector3D>
+
 #include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
+
+#include "../render_archetype.h"
+#include "../template_cache.h"
+#include "building_state.h"
 
 namespace Render::GL {
 
@@ -27,10 +28,8 @@ enum class BuildingStateMask : std::uint8_t {
   All = (1U << 0U) | (1U << 1U) | (1U << 2U)
 };
 
-auto operator|(BuildingStateMask lhs,
-               BuildingStateMask rhs) -> BuildingStateMask;
-auto operator&(BuildingStateMask lhs,
-               BuildingStateMask rhs) -> BuildingStateMask;
+auto operator|(BuildingStateMask lhs, BuildingStateMask rhs) -> BuildingStateMask;
+auto operator&(BuildingStateMask lhs, BuildingStateMask rhs) -> BuildingStateMask;
 
 inline constexpr auto k_building_state_mask_intact =
     static_cast<BuildingStateMask>((1U << 0U) | (1U << 1U));
@@ -52,10 +51,10 @@ struct BuildingPartDesc {
   QVector3D color{1.0F, 1.0F, 1.0F};
   float radius{0.0F};
   std::uint8_t palette_slot{k_render_archetype_fixed_color_slot};
-  Texture *texture{nullptr};
+  Texture* texture{nullptr};
   float alpha{1.0F};
   int material_id{0};
-  Material *material{nullptr};
+  Material* material{nullptr};
   BuildingStateMask states{BuildingStateMask::All};
   BuildingLODMask lod{BuildingLODMask::All};
 };
@@ -64,27 +63,33 @@ class BuildingArchetypeDesc {
 public:
   explicit BuildingArchetypeDesc(std::string name);
 
-  void add_box(const QVector3D &center, const QVector3D &scale,
-               const QVector3D &color,
+  void add_box(const QVector3D& center,
+               const QVector3D& scale,
+               const QVector3D& color,
                BuildingStateMask states = BuildingStateMask::All,
                BuildingLODMask lod = BuildingLODMask::All);
-  void add_palette_box(const QVector3D &center, const QVector3D &scale,
+  void add_palette_box(const QVector3D& center,
+                       const QVector3D& scale,
                        std::uint8_t palette_slot,
                        BuildingStateMask states = BuildingStateMask::All,
                        BuildingLODMask lod = BuildingLODMask::All);
-  void add_cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                    const QVector3D &color,
+  void add_cylinder(const QVector3D& start,
+                    const QVector3D& end,
+                    float radius,
+                    const QVector3D& color,
                     BuildingStateMask states = BuildingStateMask::All,
                     BuildingLODMask lod = BuildingLODMask::All);
-  void add_palette_cylinder(const QVector3D &start, const QVector3D &end,
-                            float radius, std::uint8_t palette_slot,
+  void add_palette_cylinder(const QVector3D& start,
+                            const QVector3D& end,
+                            float radius,
+                            std::uint8_t palette_slot,
                             BuildingStateMask states = BuildingStateMask::All,
                             BuildingLODMask lod = BuildingLODMask::All);
 
   void set_full_lod_max_distance(float max_distance);
 
-  [[nodiscard]] auto name() const -> const std::string & { return m_name; }
-  [[nodiscard]] auto parts() const -> const std::vector<BuildingPartDesc> & {
+  [[nodiscard]] auto name() const -> const std::string& { return m_name; }
+  [[nodiscard]] auto parts() const -> const std::vector<BuildingPartDesc>& {
     return m_parts;
   }
   [[nodiscard]] auto full_lod_max_distance() const -> float {
@@ -97,22 +102,19 @@ private:
   float m_full_lod_max_distance{60.0F};
 };
 
-auto build_building_archetype(const BuildingArchetypeDesc &desc,
+auto build_building_archetype(const BuildingArchetypeDesc& desc,
                               BuildingState state) -> RenderArchetype;
 auto build_building_archetype_from_recorded(
-    std::string name,
-    const std::vector<RecordedMeshCmd> &commands) -> RenderArchetype;
+    std::string name, const std::vector<RecordedMeshCmd>& commands) -> RenderArchetype;
 
 struct BuildingArchetypeSet {
   std::array<RenderArchetype, 3> states;
 
-  [[nodiscard]] auto
-  for_state(BuildingState state) const -> const RenderArchetype &;
+  [[nodiscard]] auto for_state(BuildingState state) const -> const RenderArchetype&;
 };
 
 template <typename Builder>
-auto build_stateful_building_archetype_set(Builder &&builder)
-    -> BuildingArchetypeSet {
+auto build_stateful_building_archetype_set(Builder&& builder) -> BuildingArchetypeSet {
   return {{
       builder(BuildingState::Normal),
       builder(BuildingState::Damaged),

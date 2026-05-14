@@ -1,10 +1,11 @@
-#include "render/creature/pipeline/shadow_batch.h"
-#include "render/submitter.h"
-
 #include <QMatrix4x4>
 #include <QVector2D>
 #include <QVector3D>
+
 #include <gtest/gtest.h>
+
+#include "render/creature/pipeline/shadow_batch.h"
+#include "render/submitter.h"
 
 namespace {
 
@@ -13,28 +14,31 @@ using namespace Render::Creature::Pipeline;
 class StubSubmitter : public Render::GL::ISubmitter {
 public:
   int mesh_calls{0};
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {
     ++mesh_calls;
   }
-  void rigged(const Render::GL::RiggedCreatureCmd &) override {}
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void rigged(const Render::GL::RiggedCreatureCmd&) override {}
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 TEST(HumanoidShadowBatch, StartsEmpty) {
@@ -60,7 +64,7 @@ TEST(HumanoidShadowBatch, AddStoresInstanceData) {
   batch.add(model, alpha, RenderPassIntent::Main);
 
   ASSERT_EQ(batch.instances().size(), 1u);
-  const auto &inst = batch.instances().front();
+  const auto& inst = batch.instances().front();
   EXPECT_EQ(inst.model, model);
   EXPECT_FLOAT_EQ(inst.alpha, alpha);
   EXPECT_EQ(inst.pass, RenderPassIntent::Main);

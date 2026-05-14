@@ -1,11 +1,5 @@
 #pragma once
 
-#include "game/map/map_definition.h"
-#include "game/map/terrain.h"
-#include "game/systems/nation_id.h"
-#include "game/units/spawn_type.h"
-#include "game/units/troop_type.h"
-
 #include <QElapsedTimer>
 #include <QOpenGLWidget>
 #include <QPoint>
@@ -13,8 +7,15 @@
 #include <QString>
 #include <QStringList>
 #include <QTimer>
+
 #include <memory>
 #include <vector>
+
+#include "game/map/map_definition.h"
+#include "game/map/terrain.h"
+#include "game/systems/nation_id.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_type.h"
 
 namespace Engine::Core {
 class World;
@@ -55,7 +56,7 @@ class ArenaViewport : public QOpenGLWidget {
   Q_OBJECT
 
 public:
-  explicit ArenaViewport(QWidget *parent = nullptr);
+  explicit ArenaViewport(QWidget* parent = nullptr);
   ~ArenaViewport() override;
 
 public slots:
@@ -66,13 +67,13 @@ public slots:
   void set_terrain_frequency(float value);
   void set_wireframe_enabled(bool enabled);
   void set_normals_overlay_enabled(bool enabled);
-  void set_ground_type(const QString &ground_type);
+  void set_ground_type(const QString& ground_type);
   void set_rain_enabled(bool enabled);
   void set_rain_intensity(float intensity);
 
   void set_spawn_owner(int owner_id);
-  void set_spawn_nation(const QString &nation_id);
-  void set_spawn_unit_type(const QString &unit_type);
+  void set_spawn_nation(const QString& nation_id);
+  void set_spawn_unit_type(const QString& unit_type);
   void set_spawn_individuals_per_unit(int count);
   void set_spawn_rider_visible(bool visible);
   void spawn_unit();
@@ -82,11 +83,11 @@ public slots:
   void clear_units();
 
   void set_spawn_building_owner(int owner_id);
-  void set_spawn_building_nation(const QString &nation_id);
-  void set_spawn_building_type(const QString &building_type);
+  void set_spawn_building_nation(const QString& nation_id);
+  void set_spawn_building_type(const QString& building_type);
   void spawn_buildings(int count);
   void clear_buildings();
-  void set_spawn_world_prop_type(const QString &prop_type);
+  void set_spawn_world_prop_type(const QString& prop_type);
   void set_spawn_world_prop_scale(float value);
   void set_spawn_world_prop_rotation_degrees(float value);
   void set_spawn_fire_camp_intensity(float value);
@@ -96,7 +97,7 @@ public slots:
   void clear_world_props_of_type();
   void reset_arena();
   void apply_visual_overrides_to_selection();
-  void set_animation_name(const QString &animation_name);
+  void set_animation_name(const QString& animation_name);
   void play_selected_animation();
   void play_idle_animation();
   void play_walk_animation();
@@ -111,21 +112,21 @@ public slots:
 
 signals:
   void paused_changed(bool paused);
-  void selection_summary_changed(const QString &summary);
+  void selection_summary_changed(const QString& summary);
 
 protected:
   void initializeGL() override;
   void resizeGL(int width, int height) override;
   void paintGL() override;
 
-  void keyPressEvent(QKeyEvent *event) override;
-  void keyReleaseEvent(QKeyEvent *event) override;
-  void focusOutEvent(QFocusEvent *event) override;
-  void mousePressEvent(QMouseEvent *event) override;
-  void mouseMoveEvent(QMouseEvent *event) override;
-  void mouseReleaseEvent(QMouseEvent *event) override;
-  void wheelEvent(QWheelEvent *event) override;
-  void leaveEvent(QEvent *event) override;
+  void keyPressEvent(QKeyEvent* event) override;
+  void keyReleaseEvent(QKeyEvent* event) override;
+  void focusOutEvent(QFocusEvent* event) override;
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseMoveEvent(QMouseEvent* event) override;
+  void mouseReleaseEvent(QMouseEvent* event) override;
+  void wheelEvent(QWheelEvent* event) override;
+  void leaveEvent(QEvent* event) override;
 
 private:
   struct TerrainSettings {
@@ -143,48 +144,47 @@ private:
   void update_selected_entities();
   void sync_selection_summary();
   auto build_selection_summary() const -> QString;
-  void update_hover(const QPoint &pos);
+  void update_hover(const QPoint& pos);
   void select_entity(Engine::Core::EntityID entity_id, bool additive = false);
-  void select_entities_in_rect(const QRect &selection_rect, bool additive);
+  void select_entities_in_rect(const QRect& selection_rect, bool additive);
   void select_all_local_units();
-  void issue_move_order(const QPointF &screen_pos);
-  void update_spawn_anchor_from_click(const QPointF &screen_pos);
+  void issue_move_order(const QPointF& screen_pos);
+  void update_spawn_anchor_from_click(const QPointF& screen_pos);
   [[nodiscard]] auto resolve_spawn_anchor_world() const -> QVector3D;
-  [[nodiscard]] auto
-  find_available_spawn_position(const QVector3D &anchor,
-                                float clearance) const -> QVector3D;
-  [[nodiscard]] auto is_spawn_position_available(const QVector3D &position,
+  [[nodiscard]] auto find_available_spawn_position(const QVector3D& anchor,
+                                                   float clearance) const -> QVector3D;
+  [[nodiscard]] auto is_spawn_position_available(const QVector3D& position,
                                                  float clearance) const -> bool;
   void apply_keyboard_camera_controls(float real_dt);
   void clear_camera_key_state();
-  void select_spawned_entities(const std::vector<Engine::Core::EntityID> &ids);
+  void select_spawned_entities(const std::vector<Engine::Core::EntityID>& ids);
   auto spawn_single_unit() -> Engine::Core::EntityID;
-  auto
-  spawn_single_unit(int owner_id, Game::Systems::NationID nation_id,
-                    Game::Units::TroopType unit_type) -> Engine::Core::EntityID;
+  auto spawn_single_unit(int owner_id,
+                         Game::Systems::NationID nation_id,
+                         Game::Units::TroopType unit_type) -> Engine::Core::EntityID;
   auto resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
   void reconfigure_terrain_from_state();
-  auto spawn_single_building(int owner_id, Game::Systems::NationID nation_id,
-                             Game::Units::SpawnType building_type)
-      -> Engine::Core::EntityID;
+  auto
+  spawn_single_building(int owner_id,
+                        Game::Systems::NationID nation_id,
+                        Game::Units::SpawnType building_type) -> Engine::Core::EntityID;
   auto owner_display_name(int owner_id) const -> QString;
   auto nation_display_name(Game::Systems::NationID nation_id) const -> QString;
   auto troop_display_name(Game::Systems::NationID nation_id,
                           Game::Units::SpawnType spawn_type) const -> QString;
-  auto selection_system() const -> Game::Systems::SelectionSystem *;
+  auto selection_system() const -> Game::Systems::SelectionSystem*;
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();
-  void
-  clear_forced_animation_state(const std::vector<Engine::Core::EntityID> &ids);
-  void draw_debug_overlay(QPainter &painter);
-  void draw_spawn_anchor_marker(QPainter &painter);
-  void draw_selection_marquee(QPainter &painter);
-  void draw_terrain_normals(QPainter &painter);
-  void draw_pose_overlay(QPainter &painter);
-  void draw_stats_overlay(QPainter &painter);
-  void draw_controls_overlay(QPainter &painter);
+  void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);
+  void draw_debug_overlay(QPainter& painter);
+  void draw_spawn_anchor_marker(QPainter& painter);
+  void draw_selection_marquee(QPainter& painter);
+  void draw_terrain_normals(QPainter& painter);
+  void draw_pose_overlay(QPainter& painter);
+  void draw_stats_overlay(QPainter& painter);
+  void draw_controls_overlay(QPainter& painter);
 
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
@@ -214,8 +214,7 @@ private:
 
   int m_spawn_building_owner_id = 1;
   Game::Systems::NationID m_spawn_building_nation_id;
-  Game::Units::SpawnType m_spawn_building_type =
-      Game::Units::SpawnType::Barracks;
+  Game::Units::SpawnType m_spawn_building_type = Game::Units::SpawnType::Barracks;
   std::vector<Game::Map::WorldProp> m_world_props;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =
       Game::Map::WorldProp::Type::FireCamp;

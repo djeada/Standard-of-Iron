@@ -1,18 +1,20 @@
 #pragma once
 
-#include "audio_constants.h"
+#include <queue>
+
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
-#include <queue>
 #include <string>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include "audio_constants.h"
 
 class Sound;
 
@@ -33,7 +35,11 @@ enum class AudioEventType {
   CLEANUP_INACTIVE
 };
 
-enum class AudioCategory { SFX, VOICE, MUSIC };
+enum class AudioCategory {
+  SFX,
+  VOICE,
+  MUSIC
+};
 
 struct AudioEvent {
   AudioEventType type;
@@ -43,30 +49,36 @@ struct AudioEvent {
   int priority = AudioConstants::DEFAULT_PRIORITY;
   AudioCategory category = AudioCategory::SFX;
 
-  AudioEvent(AudioEventType t, std::string id = "",
-             float vol = AudioConstants::DEFAULT_VOLUME, bool l = false,
+  AudioEvent(AudioEventType t,
+             std::string id = "",
+             float vol = AudioConstants::DEFAULT_VOLUME,
+             bool l = false,
              int p = AudioConstants::DEFAULT_PRIORITY,
              AudioCategory cat = AudioCategory::SFX)
-      : type(t), resource_id(std::move(id)), volume(vol), loop(l), priority(p),
-        category(cat) {}
+      : type(t)
+      , resource_id(std::move(id))
+      , volume(vol)
+      , loop(l)
+      , priority(p)
+      , category(cat) {}
 };
 
 class AudioSystem {
 public:
-  static auto get_instance() -> AudioSystem &;
+  static auto get_instance() -> AudioSystem&;
 
   auto initialize() -> bool;
   void shutdown();
 
-  void play_sound(const std::string &sound_id,
+  void play_sound(const std::string& sound_id,
                   float volume = AudioConstants::DEFAULT_VOLUME,
                   bool loop = false,
                   int priority = AudioConstants::DEFAULT_PRIORITY,
                   AudioCategory category = AudioCategory::SFX);
-  void play_music(const std::string &music_id,
+  void play_music(const std::string& music_id,
                   float volume = AudioConstants::DEFAULT_VOLUME,
                   bool crossfade = true);
-  void stop_sound(const std::string &sound_id);
+  void stop_sound(const std::string& sound_id);
   void stop_music();
   void set_master_volume(float volume);
   void set_sound_volume(float volume);
@@ -75,12 +87,12 @@ public:
   void pause_all();
   void resume_all();
 
-  auto load_sound(const std::string &sound_id, const std::string &file_path,
+  auto load_sound(const std::string& sound_id,
+                  const std::string& file_path,
                   AudioCategory category = AudioCategory::SFX) -> bool;
-  auto load_music(const std::string &music_id,
-                  const std::string &file_path) -> bool;
-  void unload_sound(const std::string &sound_id);
-  void unload_music(const std::string &music_id);
+  auto load_music(const std::string& music_id, const std::string& file_path) -> bool;
+  void unload_sound(const std::string& sound_id);
+  void unload_music(const std::string& music_id);
   void unload_all_sounds();
   void unload_all_music();
 
@@ -96,24 +108,23 @@ private:
   AudioSystem();
   ~AudioSystem();
 
-  AudioSystem(const AudioSystem &) = delete;
-  auto operator=(const AudioSystem &) -> AudioSystem & = delete;
+  AudioSystem(const AudioSystem&) = delete;
+  auto operator=(const AudioSystem&) -> AudioSystem& = delete;
 
   void audio_thread_func();
-  void process_event(const AudioEvent &event);
+  void process_event(const AudioEvent& event);
   void cleanup_inactive_sounds();
   auto can_play_sound(int priority) -> bool;
   void evict_lowest_priority_sound();
   void evict_lowest_priority_sound_locked();
-  auto get_effective_volume(AudioCategory category,
-                            float event_volume) const -> float;
+  auto get_effective_volume(AudioCategory category, float event_volume) const -> float;
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
   std::unordered_map<std::string, AudioCategory> sound_categories;
   std::unordered_set<std::string> active_resources;
   mutable std::mutex resource_mutex;
 
-  Game::Audio::MusicPlayer *m_music_player{nullptr};
+  Game::Audio::MusicPlayer* m_music_player{nullptr};
 
   std::thread audio_thread;
   std::queue<AudioEvent> event_queue;

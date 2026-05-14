@@ -1,17 +1,24 @@
 #pragma once
 
-#include "../systems/nation_id.h"
-#include "../units/spawn_type.h"
-#include "terrain.h"
 #include <QString>
 #include <QVector3D>
+
 #include <cstdint>
 #include <optional>
 #include <vector>
 
+#include "../systems/nation_id.h"
+#include "../units/spawn_type.h"
+#include "terrain.h"
+
 namespace Game::Map {
 
-enum class TimeOfDay { Morning, Day, Afternoon, Night };
+enum class TimeOfDay {
+  Morning,
+  Day,
+  Afternoon,
+  Night
+};
 
 struct LightingSettings {
   QVector3D light_direction{0.35F, 0.85F, 0.42F};
@@ -111,9 +118,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
   Q_UNREACHABLE();
 }
 
-[[nodiscard]] inline auto
-world_prop_type_from_string(const QString &value,
-                            WorldProp::Type &out) -> bool {
+[[nodiscard]] inline auto world_prop_type_from_string(const QString& value,
+                                                      WorldProp::Type& out) -> bool {
   if (value == QLatin1String("firecamp")) {
     out = WorldProp::Type::FireCamp;
     return true;
@@ -157,8 +163,7 @@ world_prop_type_from_string(const QString &value,
   return false;
 }
 
-[[nodiscard]] constexpr auto
-world_prop_render_scale(WorldProp::Type type) -> float {
+[[nodiscard]] constexpr auto world_prop_render_scale(WorldProp::Type type) -> float {
   switch (type) {
   case WorldProp::Type::FireCamp:
     return 1.0F;
@@ -184,7 +189,10 @@ world_prop_render_scale(WorldProp::Type type) -> float {
   return 1.0F;
 }
 
-enum class CoordSystem { Grid, World };
+enum class CoordSystem {
+  Grid,
+  World
+};
 
 struct VictoryConfig {
   QString victory_type = "elimination";
@@ -194,7 +202,10 @@ struct VictoryConfig {
   int required_key_structures = 0;
 };
 
-enum class WeatherType { Rain, Snow };
+enum class WeatherType {
+  Rain,
+  Snow
+};
 
 struct RainSettings {
   bool enabled = false;

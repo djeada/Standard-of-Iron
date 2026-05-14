@@ -16,11 +16,9 @@ uniform int u_effect_type;
 
 void main() {
 
-  float noise1 =
-      fract(sin(dot(v_texcoord * 10.0, vec2(12.9898, 78.233))) * 43758.5453);
-  float noise2 =
-      fract(sin(dot(v_texcoord * 15.0 + u_time * 0.1, vec2(93.9898, 67.345))) *
-            23421.631);
+  float noise1 = fract(sin(dot(v_texcoord * 10.0, vec2(12.9898, 78.233))) * 43758.5453);
+  float noise2 = fract(
+      sin(dot(v_texcoord * 15.0 + u_time * 0.1, vec2(93.9898, 67.345))) * 23421.631);
   float combined_noise = (noise1 + noise2) * 0.5;
 
   vec2 centered_uv = v_texcoord * 2.0 - 1.0;
@@ -51,12 +49,10 @@ void main() {
     float tongue_phase = tongue_id * 1.618;
 
     float noise_hi = fract(
-        sin(dot(v_texcoord * 20.0 + u_time * 0.5, vec2(12.9898, 78.233))) *
-        43758.5453);
-    float noise_lo =
-        fract(sin(dot(v_texcoord * 8.0 + u_time * 0.2 + tongue_phase,
-                      vec2(93.9898, 67.345))) *
-              23421.631);
+        sin(dot(v_texcoord * 20.0 + u_time * 0.5, vec2(12.9898, 78.233))) * 43758.5453);
+    float noise_lo = fract(sin(dot(v_texcoord * 8.0 + u_time * 0.2 + tongue_phase,
+                                   vec2(93.9898, 67.345))) *
+                           23421.631);
     float flame_noise = mix(noise_lo, noise_hi, 0.5);
 
     vec3 core_color = vec3(1.5, 1.4, 1.0);
@@ -79,8 +75,8 @@ void main() {
     color.r += hue_shift;
     color.g -= hue_shift * 0.5;
 
-    float flicker = 0.8 + 0.2 * sin(u_time * 10.0 + tongue_phase * 4.0 +
-                                    flame_height * 8.0);
+    float flicker =
+        0.8 + 0.2 * sin(u_time * 10.0 + tongue_phase * 4.0 + flame_height * 8.0);
     color *= flicker;
 
     color *= (0.85 + 0.3 * flame_noise);
@@ -90,8 +86,8 @@ void main() {
     float glow = pow(1.0 - flame_height, 2.5) * 0.8;
     color += vec3(1.2, 0.8, 0.4) * glow * v_intensity;
 
-    float tongue_fade = smoothstep(0.0, 0.15, tongue_local) *
-                        smoothstep(1.0, 0.85, tongue_local);
+    float tongue_fade =
+        smoothstep(0.0, 0.15, tongue_local) * smoothstep(1.0, 0.85, tongue_local);
 
     float flame_alpha = v_alpha * tongue_fade * (0.7 + 0.3 * flame_noise);
 
@@ -108,11 +104,10 @@ void main() {
     float chunk_local = fract(angle_t * chunk_count);
     float chunk_hash = fract(sin(chunk_id * 127.1 + 311.7) * 43758.5453);
 
-    float noise1 =
-        fract(sin(dot(v_texcoord * 20.0 + t * 0.3, vec2(12.9898, 78.233))) *
-              43758.5453);
-    float noise2 = fract(
-        sin(dot(v_texcoord * 45.0 + chunk_id, vec2(93.989, 67.345))) * 23421.6);
+    float noise1 = fract(sin(dot(v_texcoord * 20.0 + t * 0.3, vec2(12.9898, 78.233))) *
+                         43758.5453);
+    float noise2 =
+        fract(sin(dot(v_texcoord * 45.0 + chunk_id, vec2(93.989, 67.345))) * 23421.6);
     float combined_noise = mix(noise1, noise2, 0.5);
 
     vec3 dust_dark = vec3(0.35, 0.30, 0.22);
@@ -156,8 +151,8 @@ void main() {
     float radial = length(v_world_pos.xz - u_center.xz) / max(u_radius, 0.01);
     float radial_fade = 1.0 - smoothstep(0.8, 2.0, radial);
 
-    float impact_alpha = v_alpha * chunk_fade * density * radial_fade *
-                         (0.8 + 0.2 * combined_noise);
+    float impact_alpha =
+        v_alpha * chunk_fade * density * radial_fade * (0.8 + 0.2 * combined_noise);
 
     impact_alpha = clamp(impact_alpha * 1.3, 0.0, 0.95);
 

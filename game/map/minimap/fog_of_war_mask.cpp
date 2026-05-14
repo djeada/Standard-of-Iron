@@ -1,14 +1,19 @@
 #include "fog_of_war_mask.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 
 namespace Game::Map::Minimap {
 
-FogOfWarMask::FogOfWarMask(int map_width, int map_height, float tile_size,
-                           const FogOfWarConfig &config)
-    : m_config(config), m_map_width(map_width), m_map_height(map_height),
-      m_tile_size(tile_size) {
+FogOfWarMask::FogOfWarMask(int map_width,
+                           int map_height,
+                           float tile_size,
+                           const FogOfWarConfig& config)
+    : m_config(config)
+    , m_map_width(map_width)
+    , m_map_height(map_height)
+    , m_tile_size(tile_size) {
 
   m_fog_width = std::max(1, map_width / m_config.resolution_divisor);
   m_fog_height = std::max(1, map_height / m_config.resolution_divisor);
@@ -24,9 +29,8 @@ FogOfWarMask::FogOfWarMask(int map_width, int map_height, float tile_size,
 
 FogOfWarMask::~FogOfWarMask() = default;
 
-FogOfWarMask::FogOfWarMask(FogOfWarMask &&) noexcept = default;
-auto FogOfWarMask::operator=(FogOfWarMask &&) noexcept -> FogOfWarMask & =
-                                                              default;
+FogOfWarMask::FogOfWarMask(FogOfWarMask&&) noexcept = default;
+auto FogOfWarMask::operator=(FogOfWarMask&&) noexcept -> FogOfWarMask& = default;
 
 void FogOfWarMask::set_cell(int fog_x, int fog_y, VisibilityState state) {
   if (fog_x < 0 || fog_x >= m_fog_width || fog_y < 0 || fog_y >= m_fog_height) {
@@ -40,8 +44,7 @@ void FogOfWarMask::set_cell(int fog_x, int fog_y, VisibilityState state) {
   const int bit_offset = static_cast<int>((cell_index % 4) * 2);
 
   const uint8_t mask = static_cast<uint8_t>(~(0x03 << bit_offset));
-  const uint8_t value =
-      static_cast<uint8_t>(static_cast<uint8_t>(state) << bit_offset);
+  const uint8_t value = static_cast<uint8_t>(static_cast<uint8_t>(state) << bit_offset);
 
   m_visibility_data[byte_index] =
       static_cast<uint8_t>((m_visibility_data[byte_index] & mask) | value);
@@ -58,8 +61,8 @@ auto FogOfWarMask::get_cell(int fog_x, int fog_y) const -> VisibilityState {
   const size_t byte_index = cell_index / 4;
   const int bit_offset = static_cast<int>((cell_index % 4) * 2);
 
-  const uint8_t value = static_cast<uint8_t>(
-      (m_visibility_data[byte_index] >> bit_offset) & 0x03);
+  const uint8_t value =
+      static_cast<uint8_t>((m_visibility_data[byte_index] >> bit_offset) & 0x03);
   return static_cast<VisibilityState>(value);
 }
 
@@ -72,12 +75,10 @@ auto FogOfWarMask::world_to_fog(float world_x,
   const float norm_x = (world_x + world_width * 0.5F) / world_width;
   const float norm_z = (world_z + world_height * 0.5F) / world_height;
 
-  const int fog_x =
-      std::clamp(static_cast<int>(norm_x * static_cast<float>(m_fog_width)), 0,
-                 m_fog_width - 1);
-  const int fog_y =
-      std::clamp(static_cast<int>(norm_z * static_cast<float>(m_fog_height)), 0,
-                 m_fog_height - 1);
+  const int fog_x = std::clamp(
+      static_cast<int>(norm_x * static_cast<float>(m_fog_width)), 0, m_fog_width - 1);
+  const int fog_y = std::clamp(
+      static_cast<int>(norm_z * static_cast<float>(m_fog_height)), 0, m_fog_height - 1);
 
   return {fog_x, fog_y};
 }
@@ -95,8 +96,8 @@ void FogOfWarMask::clear_current_visibility() {
       const uint8_t cell_val = (byte_val >> bit_offset) & 0x03;
 
       if (cell_val == static_cast<uint8_t>(VisibilityState::Visible)) {
-        new_val |= static_cast<uint8_t>(
-            static_cast<uint8_t>(VisibilityState::Revealed) << bit_offset);
+        new_val |= static_cast<uint8_t>(static_cast<uint8_t>(VisibilityState::Revealed)
+                                        << bit_offset);
       } else {
         new_val |= static_cast<uint8_t>(cell_val << bit_offset);
       }
@@ -105,8 +106,7 @@ void FogOfWarMask::clear_current_visibility() {
   }
 }
 
-void FogOfWarMask::reveal_circle(int center_x, int center_y,
-                                 float radius_cells) {
+void FogOfWarMask::reveal_circle(int center_x, int center_y, float radius_cells) {
 
   const int radius_int = static_cast<int>(std::ceil(radius_cells));
   const float radius_sq = radius_cells * radius_cells;
@@ -131,12 +131,12 @@ void FogOfWarMask::reveal_circle(int center_x, int center_y,
   }
 }
 
-void FogOfWarMask::update_vision(const std::vector<VisionSource> &sources,
+void FogOfWarMask::update_vision(const std::vector<VisionSource>& sources,
                                  int player_id) {
 
   clear_current_visibility();
 
-  for (const auto &source : sources) {
+  for (const auto& source : sources) {
     if (source.player_id != player_id) {
       continue;
     }
@@ -151,7 +151,7 @@ void FogOfWarMask::update_vision(const std::vector<VisionSource> &sources,
   m_dirty = true;
 }
 
-auto FogOfWarMask::tick(const std::vector<VisionSource> &sources,
+auto FogOfWarMask::tick(const std::vector<VisionSource>& sources,
                         int player_id) -> bool {
   ++m_frame_counter;
 
@@ -164,8 +164,7 @@ auto FogOfWarMask::tick(const std::vector<VisionSource> &sources,
   return false;
 }
 
-auto FogOfWarMask::get_visibility(int fog_x,
-                                  int fog_y) const -> VisibilityState {
+auto FogOfWarMask::get_visibility(int fog_x, int fog_y) const -> VisibilityState {
   return get_cell(fog_x, fog_y);
 }
 
@@ -198,8 +197,9 @@ auto FogOfWarMask::memory_usage() const -> size_t {
   return total;
 }
 
-void FogOfWarMask::apply_gaussian_blur(std::vector<uint8_t> &alpha_buffer,
-                                       int width, int height) const {
+void FogOfWarMask::apply_gaussian_blur(std::vector<uint8_t>& alpha_buffer,
+                                       int width,
+                                       int height) const {
   if (m_config.blur_radius <= 0) {
     return;
   }
@@ -219,7 +219,7 @@ void FogOfWarMask::apply_gaussian_blur(std::vector<uint8_t> &alpha_buffer,
     kernel_sum += kernel[static_cast<size_t>(i)];
   }
 
-  for (auto &k : kernel) {
+  for (auto& k : kernel) {
     k /= kernel_sum;
   }
 
@@ -256,11 +256,10 @@ void FogOfWarMask::apply_gaussian_blur(std::vector<uint8_t> &alpha_buffer,
   }
 }
 
-auto FogOfWarMask::generate_mask(int target_width,
-                                 int target_height) const -> QImage {
+auto FogOfWarMask::generate_mask(int target_width, int target_height) const -> QImage {
 
-  if (!m_dirty && m_cached_width == target_width &&
-      m_cached_height == target_height && !m_cached_mask.isNull()) {
+  if (!m_dirty && m_cached_width == target_width && m_cached_height == target_height &&
+      !m_cached_mask.isNull()) {
     return m_cached_mask;
   }
 
@@ -298,7 +297,7 @@ auto FogOfWarMask::generate_mask(int target_width,
       static_cast<float>(m_fog_height) / static_cast<float>(target_height);
 
   for (int y = 0; y < target_height; ++y) {
-    auto *scanline = reinterpret_cast<uint32_t *>(mask.scanLine(y));
+    auto* scanline = reinterpret_cast<uint32_t*>(mask.scanLine(y));
 
     for (int x = 0; x < target_width; ++x) {
 
@@ -313,24 +312,25 @@ auto FogOfWarMask::generate_mask(int target_width,
       const float fx = fog_x - static_cast<float>(x0);
       const float fy = fog_y - static_cast<float>(y0);
 
-      const float a00 = static_cast<float>(
-          fog_alpha[static_cast<size_t>(y0 * m_fog_width + x0)]);
-      const float a10 = static_cast<float>(
-          fog_alpha[static_cast<size_t>(y0 * m_fog_width + x1)]);
-      const float a01 = static_cast<float>(
-          fog_alpha[static_cast<size_t>(y1 * m_fog_width + x0)]);
-      const float a11 = static_cast<float>(
-          fog_alpha[static_cast<size_t>(y1 * m_fog_width + x1)]);
+      const float a00 =
+          static_cast<float>(fog_alpha[static_cast<size_t>(y0 * m_fog_width + x0)]);
+      const float a10 =
+          static_cast<float>(fog_alpha[static_cast<size_t>(y0 * m_fog_width + x1)]);
+      const float a01 =
+          static_cast<float>(fog_alpha[static_cast<size_t>(y1 * m_fog_width + x0)]);
+      const float a11 =
+          static_cast<float>(fog_alpha[static_cast<size_t>(y1 * m_fog_width + x1)]);
 
       const float alpha_top = a00 + (a10 - a00) * fx;
       const float alpha_bot = a01 + (a11 - a01) * fx;
       const float alpha = alpha_top + (alpha_bot - alpha_top) * fy;
 
-      const uint8_t final_alpha =
-          static_cast<uint8_t>(std::clamp(alpha, 0.0F, 255.0F));
+      const uint8_t final_alpha = static_cast<uint8_t>(std::clamp(alpha, 0.0F, 255.0F));
 
-      scanline[x] = qRgba(m_config.fog_color_r, m_config.fog_color_g,
-                          m_config.fog_color_b, final_alpha);
+      scanline[x] = qRgba(m_config.fog_color_r,
+                          m_config.fog_color_g,
+                          m_config.fog_color_b,
+                          final_alpha);
     }
   }
 

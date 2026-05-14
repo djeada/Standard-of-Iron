@@ -1,12 +1,13 @@
 #include "audio_resource_loader.h"
 
-#include "game/audio/audio_system.h"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
 
+#include "game/audio/audio_system.h"
+
 void AudioResourceLoader::load_audio_resources() {
-  auto &audio_sys = AudioSystem::get_instance();
+  auto& audio_sys = AudioSystem::get_instance();
 
   const QString app_dir = QCoreApplication::applicationDirPath();
   const QStringList candidates = {
@@ -16,7 +17,7 @@ void AudioResourceLoader::load_audio_resources() {
   };
 
   QString base_path;
-  for (const QString &candidate : candidates) {
+  for (const QString& candidate : candidates) {
     if (QDir(candidate).exists()) {
       base_path = candidate;
       break;
@@ -25,7 +26,7 @@ void AudioResourceLoader::load_audio_resources() {
 
   if (base_path.isEmpty()) {
     qWarning() << "Audio assets directory not found. Searched:";
-    for (const QString &c : candidates) {
+    for (const QString& c : candidates) {
       qWarning() << " " << c;
     }
     qWarning() << "Application directory:" << app_dir;
@@ -34,29 +35,27 @@ void AudioResourceLoader::load_audio_resources() {
 
   qInfo() << "Loading audio resources from:" << base_path;
 
-  if (audio_sys.load_sound(
-          "archer_voice", (base_path + "voices/archer_voice.wav").toStdString(),
-          AudioCategory::VOICE)) {
+  if (audio_sys.load_sound("archer_voice",
+                           (base_path + "voices/archer_voice.wav").toStdString(),
+                           AudioCategory::VOICE)) {
     qInfo() << "Loaded archer voice";
   } else {
     qWarning() << "Failed to load archer voice from:"
                << (base_path + "voices/archer_voice.wav");
   }
 
-  if (audio_sys.load_sound(
-          "swordsman_voice",
-          (base_path + "voices/swordsman_voice.wav").toStdString(),
-          AudioCategory::VOICE)) {
+  if (audio_sys.load_sound("swordsman_voice",
+                           (base_path + "voices/swordsman_voice.wav").toStdString(),
+                           AudioCategory::VOICE)) {
     qInfo() << "Loaded swordsman voice";
   } else {
     qWarning() << "Failed to load swordsman voice from:"
                << (base_path + "voices/swordsman_voice.wav");
   }
 
-  if (audio_sys.load_sound(
-          "spearman_voice",
-          (base_path + "voices/spearman_voice.wav").toStdString(),
-          AudioCategory::VOICE)) {
+  if (audio_sys.load_sound("spearman_voice",
+                           (base_path + "voices/spearman_voice.wav").toStdString(),
+                           AudioCategory::VOICE)) {
     qInfo() << "Loaded spearman voice";
   } else {
     qWarning() << "Failed to load spearman voice from:"
@@ -75,8 +74,7 @@ void AudioResourceLoader::load_audio_resources() {
                            (base_path + "music/tense.wav").toStdString())) {
     qInfo() << "Loaded tense music";
   } else {
-    qWarning() << "Failed to load tense music from:"
-               << (base_path + "music/tense.wav");
+    qWarning() << "Failed to load tense music from:" << (base_path + "music/tense.wav");
   }
 
   if (audio_sys.load_music("music_combat",

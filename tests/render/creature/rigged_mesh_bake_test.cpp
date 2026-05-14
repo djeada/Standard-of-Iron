@@ -1,5 +1,15 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <gtest/gtest.h>
+#include <limits>
+#include <span>
+
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
 #include "render/elephant/elephant_spec.h"
@@ -7,15 +17,6 @@
 #include "render/horse/horse_spec.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_bake.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <array>
-#include <cmath>
-#include <cstdint>
-#include <gtest/gtest.h>
-#include <limits>
-#include <span>
 
 namespace {
 
@@ -59,9 +60,8 @@ struct ToyGraph {
   }
 };
 
-auto has_bone_influence(const BakedRiggedMeshCpu &baked,
-                        std::uint8_t bone) -> bool {
-  for (auto const &v : baked.vertices) {
+auto has_bone_influence(const BakedRiggedMeshCpu& baked, std::uint8_t bone) -> bool {
+  for (auto const& v : baked.vertices) {
     for (std::size_t i = 0; i < v.bone_indices.size(); ++i) {
       if (v.bone_indices[i] == bone && v.bone_weights[i] > 0.05F) {
         return true;
@@ -71,13 +71,13 @@ auto has_bone_influence(const BakedRiggedMeshCpu &baked,
   return false;
 }
 
-auto skinned_position_at_bind(const RiggedVertex &vertex,
-                              std::span<const BoneWorldMatrix> bind_pose)
-    -> QVector3D {
+auto skinned_position_at_bind(const RiggedVertex& vertex,
+                              std::span<const BoneWorldMatrix> bind_pose) -> QVector3D {
   QVector3D out(0.0F, 0.0F, 0.0F);
   QVector4D const local(vertex.position_bone_local[0],
                         vertex.position_bone_local[1],
-                        vertex.position_bone_local[2], 1.0F);
+                        vertex.position_bone_local[2],
+                        1.0F);
   for (std::size_t i = 0; i < vertex.bone_indices.size(); ++i) {
     float const weight = vertex.bone_weights[i];
     std::size_t const bone = vertex.bone_indices[i];
@@ -89,7 +89,7 @@ auto skinned_position_at_bind(const RiggedVertex &vertex,
   return out;
 }
 
-auto baked_axis_spans(const BakedRiggedMeshCpu &baked,
+auto baked_axis_spans(const BakedRiggedMeshCpu& baked,
                       std::span<const BoneWorldMatrix> bind_pose) -> QVector3D {
   QVector3D min_v(std::numeric_limits<float>::max(),
                   std::numeric_limits<float>::max(),
@@ -97,7 +97,7 @@ auto baked_axis_spans(const BakedRiggedMeshCpu &baked,
   QVector3D max_v(std::numeric_limits<float>::lowest(),
                   std::numeric_limits<float>::lowest(),
                   std::numeric_limits<float>::lowest());
-  for (auto const &vertex : baked.vertices) {
+  for (auto const& vertex : baked.vertices) {
     QVector3D const p = skinned_position_at_bind(vertex, bind_pose);
     min_v.setX(std::min(min_v.x(), p.x()));
     min_v.setY(std::min(min_v.y(), p.y()));
@@ -109,10 +109,10 @@ auto baked_axis_spans(const BakedRiggedMeshCpu &baked,
   return max_v - min_v;
 }
 
-auto baked_min_y(const BakedRiggedMeshCpu &baked,
+auto baked_min_y(const BakedRiggedMeshCpu& baked,
                  std::span<const BoneWorldMatrix> bind_pose) -> float {
   float min_y = std::numeric_limits<float>::max();
-  for (auto const &vertex : baked.vertices) {
+  for (auto const& vertex : baked.vertices) {
     min_y = std::min(min_y, skinned_position_at_bind(vertex, bind_pose).y());
   }
   return min_y;
@@ -130,8 +130,8 @@ TEST(RiggedMeshBake, TwoPrimitiveGraphAccumulatesVertexAndIndexCounts) {
   BakeInput input{&t.graph, std::span<const BoneWorldMatrix>{t.bind_pose}};
   auto baked = bake_rigged_mesh_cpu(input);
 
-  auto *sphere = Render::GL::get_unit_sphere();
-  auto *cylinder = Render::GL::get_unit_cylinder();
+  auto* sphere = Render::GL::get_unit_sphere();
+  auto* cylinder = Render::GL::get_unit_cylinder();
   ASSERT_NE(sphere, nullptr);
   ASSERT_NE(cylinder, nullptr);
 
@@ -147,8 +147,8 @@ TEST(RiggedMeshBake, CylinderUsesCustomMeshOverrideWhenProvided) {
   BakeInput input{&t.graph, std::span<const BoneWorldMatrix>{t.bind_pose}};
   auto baked = bake_rigged_mesh_cpu(input);
 
-  auto *sphere = Render::GL::get_unit_sphere();
-  auto *cube = Render::GL::get_unit_cube();
+  auto* sphere = Render::GL::get_unit_sphere();
+  auto* cube = Render::GL::get_unit_cube();
   ASSERT_NE(sphere, nullptr);
   ASSERT_NE(cube, nullptr);
 
@@ -159,8 +159,8 @@ TEST(RiggedMeshBake, CylinderUsesCustomMeshOverrideWhenProvided) {
 }
 
 TEST(RiggedMeshBake, LowPolyCylinderMeshHasFewerVerticesThanDefault) {
-  auto *default_cylinder = Render::GL::get_unit_cylinder();
-  auto *low_poly_cylinder = Render::GL::get_unit_cylinder(6);
+  auto* default_cylinder = Render::GL::get_unit_cylinder();
+  auto* low_poly_cylinder = Render::GL::get_unit_cylinder(6);
 
   ASSERT_NE(default_cylinder, nullptr);
   ASSERT_NE(low_poly_cylinder, nullptr);
@@ -171,12 +171,12 @@ TEST(RiggedMeshBake, LowPolyCylinderMeshHasFewerVerticesThanDefault) {
 }
 
 TEST(RiggedMeshBake, TaperedCylinderNarrowsTowardTail) {
-  auto *tapered = Render::GL::get_unit_tapered_cylinder(1.0F, 0.55F, 6);
+  auto* tapered = Render::GL::get_unit_tapered_cylinder(1.0F, 0.55F, 6);
 
   ASSERT_NE(tapered, nullptr);
   float anchor_radius = 0.0F;
   float tail_radius = 0.0F;
-  for (auto const &vertex : tapered->get_vertices()) {
+  for (auto const& vertex : tapered->get_vertices()) {
     float const radius = std::sqrt(vertex.position[0] * vertex.position[0] +
                                    vertex.position[2] * vertex.position[2]);
     if (vertex.position[1] <= -0.49F) {
@@ -194,13 +194,13 @@ TEST(RiggedMeshBake, SphereVerticesAreSingleBoneAnchor) {
   BakeInput input{&t.graph, std::span<const BoneWorldMatrix>{t.bind_pose}};
   auto baked = bake_rigged_mesh_cpu(input);
 
-  auto *sphere = Render::GL::get_unit_sphere();
+  auto* sphere = Render::GL::get_unit_sphere();
   ASSERT_NE(sphere, nullptr);
   std::size_t const sphere_n = sphere->get_vertices().size();
   ASSERT_LE(sphere_n, baked.vertices.size());
 
   for (std::size_t i = 0; i < sphere_n; ++i) {
-    RiggedVertex const &v = baked.vertices[i];
+    RiggedVertex const& v = baked.vertices[i];
     EXPECT_EQ(v.bone_indices[0], ToyGraph::k_bone_a) << "vertex " << i;
     EXPECT_FLOAT_EQ(v.bone_weights[0], 1.0F) << "vertex " << i;
     EXPECT_FLOAT_EQ(v.bone_weights[1], 0.0F) << "vertex " << i;
@@ -215,23 +215,23 @@ TEST(RiggedMeshBake, CylinderVerticesBlendAlongAxis) {
   BakeInput input{&t.graph, std::span<const BoneWorldMatrix>{t.bind_pose}};
   auto baked = bake_rigged_mesh_cpu(input);
 
-  auto *sphere = Render::GL::get_unit_sphere();
-  auto *cylinder = Render::GL::get_unit_cylinder();
+  auto* sphere = Render::GL::get_unit_sphere();
+  auto* cylinder = Render::GL::get_unit_cylinder();
   ASSERT_NE(sphere, nullptr);
   ASSERT_NE(cylinder, nullptr);
 
   std::size_t const sphere_n = sphere->get_vertices().size();
-  auto const &cyl_verts = cylinder->get_vertices();
+  auto const& cyl_verts = cylinder->get_vertices();
   ASSERT_EQ(baked.vertices.size(), sphere_n + cyl_verts.size());
 
   bool saw_anchor_end = false;
   bool saw_tail_end = false;
   for (std::size_t i = 0; i < cyl_verts.size(); ++i) {
-    RiggedVertex const &v = baked.vertices[sphere_n + i];
+    RiggedVertex const& v = baked.vertices[sphere_n + i];
     float const src_y = cyl_verts[i].position[1];
 
-    float const sum = v.bone_weights[0] + v.bone_weights[1] +
-                      v.bone_weights[2] + v.bone_weights[3];
+    float const sum =
+        v.bone_weights[0] + v.bone_weights[1] + v.bone_weights[2] + v.bone_weights[3];
     EXPECT_NEAR(sum, 1.0F, k_eps) << "cyl vertex " << i;
 
     EXPECT_FLOAT_EQ(v.bone_weights[2], 0.0F);
@@ -263,7 +263,7 @@ TEST(RiggedMeshBake, AllVertexPositionsAreFinite) {
   auto baked = bake_rigged_mesh_cpu(input);
 
   ASSERT_FALSE(baked.vertices.empty());
-  for (RiggedVertex const &v : baked.vertices) {
+  for (RiggedVertex const& v : baked.vertices) {
     for (float p : v.position_bone_local) {
       EXPECT_TRUE(std::isfinite(p));
     }
@@ -296,8 +296,8 @@ TEST(RiggedMeshBake, GlWrapperExposesCpuSizes) {
   auto mesh = bake_rigged_mesh(input);
   ASSERT_NE(mesh, nullptr);
 
-  auto *sphere = Render::GL::get_unit_sphere();
-  auto *cylinder = Render::GL::get_unit_cylinder();
+  auto* sphere = Render::GL::get_unit_sphere();
+  auto* cylinder = Render::GL::get_unit_cylinder();
   EXPECT_EQ(mesh->vertex_count(),
             sphere->get_vertices().size() + cylinder->get_vertices().size());
   EXPECT_EQ(mesh->index_count(),
@@ -305,7 +305,7 @@ TEST(RiggedMeshBake, GlWrapperExposesCpuSizes) {
 }
 
 TEST(RiggedMeshBake, HorseWholeMeshUsesArticulatedLegAndHeadBones) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
   BakeInput input{&spec.lod_minimal, Render::Horse::horse_bind_palette()};
   auto baked = bake_rigged_mesh_cpu(input);
 
@@ -319,7 +319,7 @@ TEST(RiggedMeshBake, HorseWholeMeshUsesArticulatedLegAndHeadBones) {
 }
 
 TEST(RiggedMeshBake, HorseFullRiggedMeshPreservesOverallScale) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
   auto const bind = Render::Horse::horse_bind_palette();
   auto const full = bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
   auto const minimal = bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
@@ -339,7 +339,7 @@ TEST(RiggedMeshBake, HorseFullRiggedMeshPreservesOverallScale) {
 }
 
 TEST(RiggedMeshBake, HorseFullRiggedMeshStaysNearMinimalGroundContact) {
-  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const& spec = Render::Horse::horse_creature_spec();
   auto const bind = Render::Horse::horse_bind_palette();
   auto const full = bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
   auto const minimal = bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
@@ -354,24 +354,21 @@ TEST(RiggedMeshBake, HorseFullRiggedMeshStaysNearMinimalGroundContact) {
 }
 
 TEST(RiggedMeshBake, ElephantWholeMeshUsesKneeAndTrunkBones) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const& spec = Render::Elephant::elephant_creature_spec();
   BakeInput input{&spec.lod_minimal, Render::Elephant::elephant_bind_palette()};
   auto baked = bake_rigged_mesh_cpu(input);
 
   ASSERT_FALSE(baked.vertices.empty());
   EXPECT_TRUE(has_bone_influence(
-      baked,
-      static_cast<std::uint8_t>(Render::Elephant::ElephantBone::KneeFL)));
+      baked, static_cast<std::uint8_t>(Render::Elephant::ElephantBone::KneeFL)));
   EXPECT_TRUE(has_bone_influence(
-      baked,
-      static_cast<std::uint8_t>(Render::Elephant::ElephantBone::FootBR)));
+      baked, static_cast<std::uint8_t>(Render::Elephant::ElephantBone::FootBR)));
   EXPECT_TRUE(has_bone_influence(
-      baked,
-      static_cast<std::uint8_t>(Render::Elephant::ElephantBone::TrunkTip)));
+      baked, static_cast<std::uint8_t>(Render::Elephant::ElephantBone::TrunkTip)));
 }
 
 TEST(RiggedMeshBake, ElephantFullRiggedMeshPreservesOverallScale) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const& spec = Render::Elephant::elephant_creature_spec();
   auto const bind = Render::Elephant::elephant_bind_palette();
   auto const full = bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
   auto const minimal = bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
@@ -391,7 +388,7 @@ TEST(RiggedMeshBake, ElephantFullRiggedMeshPreservesOverallScale) {
 }
 
 TEST(RiggedMeshBake, ElephantFullRiggedMeshStaysNearMinimalGroundContact) {
-  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const& spec = Render::Elephant::elephant_creature_spec();
   auto const bind = Render::Elephant::elephant_bind_palette();
   auto const full = bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
   auto const minimal = bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});

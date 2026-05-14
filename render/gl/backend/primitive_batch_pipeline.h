@@ -1,45 +1,49 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <memory>
+#include <vector>
+
 #include "../../primitive_batch.h"
 #include "../persistent_buffer.h"
 #include "../shader_cache.h"
 #include "pipeline_interface.h"
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <memory>
-#include <vector>
 
 namespace Render::GL::BackendPipelines {
 
 class PrimitiveBatchPipeline : public IPipeline {
 public:
-  explicit PrimitiveBatchPipeline(GL::ShaderCache *shader_cache);
+  explicit PrimitiveBatchPipeline(GL::ShaderCache* shader_cache);
   ~PrimitiveBatchPipeline() override;
 
   auto initialize() -> bool override;
   void shutdown() override;
   void cache_uniforms() override;
-  [[nodiscard]] auto is_initialized() const -> bool override {
-    return m_initialized;
-  }
+  [[nodiscard]] auto is_initialized() const -> bool override { return m_initialized; }
 
   void begin_frame();
 
-  void upload_sphere_instances(const GL::PrimitiveInstanceGpu *data,
-                               std::size_t count);
-  void upload_cylinder_instances(const GL::PrimitiveInstanceGpu *data,
+  void upload_sphere_instances(const GL::PrimitiveInstanceGpu* data, std::size_t count);
+  void upload_cylinder_instances(const GL::PrimitiveInstanceGpu* data,
                                  std::size_t count);
-  void upload_cone_instances(const GL::PrimitiveInstanceGpu *data,
-                             std::size_t count);
+  void upload_cone_instances(const GL::PrimitiveInstanceGpu* data, std::size_t count);
 
-  void draw_spheres(std::size_t count, const QMatrix4x4 &view_proj,
-                    const QVector3D &light_dir, float ambient_strength);
-  void draw_cylinders(std::size_t count, const QMatrix4x4 &view_proj,
-                      const QVector3D &light_dir, float ambient_strength);
-  void draw_cones(std::size_t count, const QMatrix4x4 &view_proj,
-                  const QVector3D &light_dir, float ambient_strength);
+  void draw_spheres(std::size_t count,
+                    const QMatrix4x4& view_proj,
+                    const QVector3D& light_dir,
+                    float ambient_strength);
+  void draw_cylinders(std::size_t count,
+                      const QMatrix4x4& view_proj,
+                      const QVector3D& light_dir,
+                      float ambient_strength);
+  void draw_cones(std::size_t count,
+                  const QMatrix4x4& view_proj,
+                  const QVector3D& light_dir,
+                  float ambient_strength);
 
-  [[nodiscard]] auto shader() const -> GL::Shader * { return m_shader; }
+  [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
 
   struct Uniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -57,10 +61,10 @@ private:
 
   void setup_instance_attributes(GLuint vao, GLuint instance_buffer);
 
-  GL::ShaderCache *m_shader_cache;
+  GL::ShaderCache* m_shader_cache;
   bool m_initialized{false};
 
-  GL::Shader *m_shader{nullptr};
+  GL::Shader* m_shader{nullptr};
 
   GLuint m_sphere_vao{0};
   GLuint m_sphere_vertex_buffer{0};

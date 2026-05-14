@@ -1,9 +1,5 @@
 #pragma once
 
-#include "../rigged_mesh.h"
-#include "bpat/bpat_format.h"
-#include "render_request.h"
-
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -12,6 +8,10 @@
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "../rigged_mesh.h"
+#include "bpat/bpat_format.h"
+#include "render_request.h"
 
 namespace Render::Creature::Snapshot {
 
@@ -63,7 +63,7 @@ struct ClipView {
 class SnapshotMeshBlob {
 public:
   static auto from_bytes(std::vector<std::uint8_t> bytes) -> SnapshotMeshBlob;
-  static auto from_file(const std::string &path) -> SnapshotMeshBlob;
+  static auto from_file(const std::string& path) -> SnapshotMeshBlob;
 
   [[nodiscard]] auto loaded() const noexcept -> bool { return m_loaded; }
   [[nodiscard]] auto last_error() const noexcept -> std::string_view {
@@ -83,7 +83,7 @@ public:
       -> std::span<const Render::GL::RiggedVertex>;
   [[nodiscard]] auto resolve_global_frame(std::uint32_t clip_index,
                                           std::uint32_t frame_in_clip,
-                                          std::uint32_t &out) const -> bool;
+                                          std::uint32_t& out) const -> bool;
 
 private:
   bool validate();
@@ -91,11 +91,11 @@ private:
   std::vector<std::uint8_t> m_bytes{};
   bool m_loaded{false};
   std::string m_last_error{};
-  const SnapshotMeshHeader *m_header{nullptr};
-  const SnapshotMeshClipEntry *m_clip_table{nullptr};
-  const char *m_string_table{nullptr};
-  const std::uint32_t *m_indices{nullptr};
-  const Render::GL::RiggedVertex *m_vertices{nullptr};
+  const SnapshotMeshHeader* m_header{nullptr};
+  const SnapshotMeshClipEntry* m_clip_table{nullptr};
+  const char* m_string_table{nullptr};
+  const std::uint32_t* m_indices{nullptr};
+  const Render::GL::RiggedVertex* m_vertices{nullptr};
 };
 
 class SnapshotMeshWriter {
@@ -106,10 +106,9 @@ public:
                      std::span<const std::uint32_t> indices) noexcept;
 
   void add_clip(ClipDescriptor desc);
-  void append_clip_vertices(
-      std::span<const Render::GL::RiggedVertex> frame_vertices);
+  void append_clip_vertices(std::span<const Render::GL::RiggedVertex> frame_vertices);
 
-  [[nodiscard]] auto write(std::ostream &out) const -> bool;
+  [[nodiscard]] auto write(std::ostream& out) const -> bool;
 
 private:
   struct PendingClip {

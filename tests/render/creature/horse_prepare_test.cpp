@@ -1,5 +1,14 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <array>
+#include <cmath>
+#include <fstream>
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
@@ -23,52 +32,43 @@
 #include "render/template_cache.h"
 #include "tests/render/test_asset_paths.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <gtest/gtest.h>
-
-#include <array>
-#include <cmath>
-#include <fstream>
-#include <vector>
-
 namespace {
 
 class NullSubmitter : public Render::GL::ISubmitter {
 public:
   int rigged_calls{0};
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {}
-  void rigged(const Render::GL::RiggedCreatureCmd &) override {
-    ++rigged_calls;
-  }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4&,
+            const QVector3D&,
+            Render::GL::Texture*,
+            float,
+            int) override {}
+  void rigged(const Render::GL::RiggedCreatureCmd&) override { ++rigged_calls; }
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 struct ScopedFlatTerrain {
   explicit ScopedFlatTerrain(float height) {
-    auto &terrain = Game::Map::TerrainService::instance();
+    auto& terrain = Game::Map::TerrainService::instance();
     std::vector<float> heights(9, height);
-    std::vector<Game::Map::TerrainType> terrain_types(
-        9, Game::Map::TerrainType::Flat);
-    terrain.restore_from_serialized(3, 3, 1.0F, heights, terrain_types, {}, {},
-                                    {}, Game::Map::BiomeSettings{});
+    std::vector<Game::Map::TerrainType> terrain_types(9, Game::Map::TerrainType::Flat);
+    terrain.restore_from_serialized(
+        3, 3, 1.0F, heights, terrain_types, {}, {}, {}, Game::Map::BiomeSettings{});
   }
 
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
@@ -93,8 +93,12 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
 
   QMatrix4x4 world;
   const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
-      spec, Render::Creature::Pipeline::CreatureKind::Horse, world, 11,
-      Render::Creature::CreatureLOD::Minimal, 0,
+      spec,
+      Render::Creature::Pipeline::CreatureKind::Horse,
+      world,
+      11,
+      Render::Creature::CreatureLOD::Minimal,
+      0,
       Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Horse);
@@ -138,31 +142,29 @@ TEST(HorsePrepare, MountFrameSeatsRiderOverMiddleTorso) {
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
   auto const mount = Render::GL::compute_mount_frame(profile);
-  auto const &d = profile.dims;
+  auto const& d = profile.dims;
 
   EXPECT_GT(mount.saddle_center.z(), -d.body_length * 0.05F);
   EXPECT_LT(mount.saddle_center.z(), d.body_length * 0.10F);
   EXPECT_GT(mount.seat_position.z(), mount.saddle_center.z() - 0.001F);
   EXPECT_GT(mount.saddle_center.y(), d.saddle_height + d.body_height * 0.14F);
   EXPECT_GT(mount.seat_position.y(), d.saddle_height + d.body_height * 0.34F);
-  EXPECT_GT(mount.seat_position.y(),
-            mount.saddle_center.y() + d.body_height * 0.16F);
+  EXPECT_GT(mount.seat_position.y(), mount.saddle_center.y() + d.body_height * 0.16F);
 }
 
 TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   Render::GL::HorseRendererBase renderer;
   Engine::Core::Entity entity(1);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
@@ -187,12 +189,11 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
-  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_horse,
-                                root + "/horse.bpat"));
+  auto& bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(
+      bpat.load_species(Render::Creature::Bpat::k_species_horse, root + "/horse.bpat"));
 
-  auto &snapshot_reg =
-      Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  auto& snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
   snapshot_reg.clear();
 
   auto const temp_dir =
@@ -202,14 +203,15 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
 
   Render::Creature::Snapshot::SnapshotMeshWriter writer(
       Render::Creature::Bpat::k_species_horse,
-      Render::Creature::CreatureLOD::Minimal, 3U,
+      Render::Creature::CreatureLOD::Minimal,
+      3U,
       std::array<std::uint32_t, 3>{0U, 1U, 2U});
   writer.add_clip({"idle", 1U});
   std::array<Render::GL::RiggedVertex, 3> vertices{};
   vertices[0].position_bone_local = {-1.0F, 0.0F, 0.0F};
   vertices[1].position_bone_local = {1.0F, 0.0F, 0.0F};
   vertices[2].position_bone_local = {0.0F, 1.0F, 0.0F};
-  for (auto &v : vertices) {
+  for (auto& v : vertices) {
     v.normal_bone_local = {0.0F, 1.0F, 0.0F};
     v.bone_indices = {0, 0, 0, 0};
     v.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
@@ -227,17 +229,16 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
 
   Render::GL::HorseRendererBase renderer;
   Engine::Core::Entity entity(1);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
@@ -251,40 +252,43 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   recorder.snapshot_mesh_cache().clear();
   recorder.rigged_mesh_cache().clear();
 
-  renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, recorder,
+  renderer.render(ctx,
+                  anim,
+                  rider_ctx,
+                  profile,
+                  nullptr,
+                  nullptr,
+                  recorder,
                   Render::GL::HorseLOD::Minimal);
 
   EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
 }
 
-TEST(HorsePrepare,
-     MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
+TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
   auto const root = TestAssets::find_creature_assets_dir("horse.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
-  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::k_species_horse,
-                                root + "/horse.bpat"));
+  auto& bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(
+      bpat.load_species(Render::Creature::Bpat::k_species_horse, root + "/horse.bpat"));
 
-  auto &snapshot_reg =
-      Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  auto& snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
   snapshot_reg.clear();
 
   Render::GL::HorseRendererBase renderer;
   Engine::Core::Entity entity(1);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->owner_id = 1;
   unit->max_health = 100;
   unit->health = 100;
-  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto *renderable =
-      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
@@ -298,7 +302,13 @@ TEST(HorsePrepare,
   recorder.snapshot_mesh_cache().clear();
   recorder.rigged_mesh_cache().clear();
 
-  renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, recorder,
+  renderer.render(ctx,
+                  anim,
+                  rider_ctx,
+                  profile,
+                  nullptr,
+                  nullptr,
+                  recorder,
                   Render::GL::HorseLOD::Minimal);
 
   EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0u);
@@ -318,9 +328,15 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
   Render::GL::AnimationInputs anim{};
   Render::GL::HumanoidAnimationContext rider_ctx{};
   Render::Horse::HorsePreparation prep;
-  Render::Horse::prepare_horse_render(
-      owner, ctx, anim, rider_ctx, profile, nullptr, nullptr,
-      Render::Creature::CreatureLOD::Minimal, prep);
+  Render::Horse::prepare_horse_render(owner,
+                                      ctx,
+                                      anim,
+                                      rider_ctx,
+                                      profile,
+                                      nullptr,
+                                      nullptr,
+                                      Render::Creature::CreatureLOD::Minimal,
+                                      prep);
 
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
@@ -329,13 +345,13 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
       Render::Creature::Pipeline::horse_clip_contact_y(0U, 0.0F).value_or(0.0F);
 
   EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(),
-              1.9F - hoof_contact_y, 0.01F);
-  EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, hoof_contact_y, 0.0F)).y(),
-              1.9F, 0.01F);
+              1.9F - hoof_contact_y,
+              0.01F);
+  EXPECT_NEAR(
+      requests[0].world.map(QVector3D(0.0F, hoof_contact_y, 0.0F)).y(), 1.9F, 0.01F);
 }
 
-TEST(HorsePrepare,
-     MoveToIdleTransitionKeepsLocomotionPoseActiveUntilBlendEnds) {
+TEST(HorsePrepare, MoveToIdleTransitionKeepsLocomotionPoseActiveUntilBlendEnds) {
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
@@ -350,11 +366,10 @@ TEST(HorsePrepare,
   Render::GL::AnimationInputs moving_anim{};
   moving_anim.time = 0.0F;
   moving_anim.is_moving = true;
-  (void)Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx,
-                                          &state);
+  (void)Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
   moving_anim.time = 0.4F;
-  auto const moving_sample = Render::GL::evaluate_horse_motion(
-      profile, moving_anim, rider_ctx, &state);
+  auto const moving_sample =
+      Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
   EXPECT_EQ(moving_sample.gait_type, Render::GL::GaitType::WALK);
 
   rider_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
@@ -387,11 +402,10 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsBpatPhaseContinuous) {
   Render::GL::AnimationInputs moving_anim{};
   moving_anim.time = 0.0F;
   moving_anim.is_moving = true;
-  (void)Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx,
-                                          &state);
+  (void)Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
   moving_anim.time = 0.4F;
-  auto const moving_sample = Render::GL::evaluate_horse_motion(
-      profile, moving_anim, rider_ctx, &state);
+  auto const moving_sample =
+      Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
 
   rider_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
   rider_ctx.gait.speed = 0.0F;
@@ -404,8 +418,8 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsBpatPhaseContinuous) {
   auto const stop_sample =
       Render::GL::evaluate_horse_motion(profile, idle_anim, rider_ctx, &state);
 
-  float const expected_continuation = wrap_phase(
-      moving_sample.phase + (idle_anim.time - moving_anim.time) / 1.1F);
+  float const expected_continuation =
+      wrap_phase(moving_sample.phase + (idle_anim.time - moving_anim.time) / 1.1F);
   float const old_global_clock_phase =
       wrap_phase(idle_anim.time / 1.1F + profile.gait.phase_offset);
 
@@ -426,9 +440,15 @@ TEST(HorsePrepare, ShadowBatchEmptyWithoutResources) {
       42U, QVector3D(0.5F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
   Render::Horse::HorsePreparation prep;
-  Render::Horse::prepare_horse_render(
-      owner, ctx, anim, rider_ctx, profile, nullptr, nullptr,
-      Render::Creature::CreatureLOD::Full, prep);
+  Render::Horse::prepare_horse_render(owner,
+                                      ctx,
+                                      anim,
+                                      rider_ctx,
+                                      profile,
+                                      nullptr,
+                                      nullptr,
+                                      Render::Creature::CreatureLOD::Full,
+                                      prep);
 
   EXPECT_TRUE(prep.shadow_batch.empty());
 }

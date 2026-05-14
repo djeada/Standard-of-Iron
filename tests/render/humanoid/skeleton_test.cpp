@@ -1,14 +1,14 @@
 
 
+#include <QVector3D>
+
+#include <cmath>
+#include <gtest/gtest.h>
+
+#include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/humanoid_clip_registry.h"
 #include "render/humanoid/humanoid_state_machine.h"
 #include "render/humanoid/skeleton.h"
-
-#include "render/gl/humanoid/humanoid_types.h"
-
-#include <QVector3D>
-#include <cmath>
-#include <gtest/gtest.h>
 
 using namespace Render::Humanoid;
 using Render::GL::AnimationInputs;
@@ -39,7 +39,7 @@ auto make_upright_pose() -> HumanoidPose {
   return p;
 }
 
-auto basis_is_orthonormal(const QMatrix4x4 &m) -> bool {
+auto basis_is_orthonormal(const QMatrix4x4& m) -> bool {
   QVector3D const x = m.column(0).toVector3D();
   QVector3D const y = m.column(1).toVector3D();
   QVector3D const z = m.column(2).toVector3D();
@@ -65,8 +65,7 @@ TEST(HumanoidSkeletonTest, ParentIndicesAreTopologicallySorted) {
   for (std::size_t i = 1; i < k_bone_count; ++i) {
     std::uint8_t const parent = k_bone_parents[i];
     ASSERT_NE(parent, k_invalid_bone)
-        << "bone " << bone_name(static_cast<HumanoidBone>(i))
-        << " has no parent";
+        << "bone " << bone_name(static_cast<HumanoidBone>(i)) << " has no parent";
     EXPECT_LT(parent, i) << "bone " << bone_name(static_cast<HumanoidBone>(i))
                          << " has out-of-order parent";
   }
@@ -99,8 +98,7 @@ TEST(HumanoidSkeletonTest, TorsoChainOriginsMatchPose) {
     return palette[static_cast<std::size_t>(b)].column(3).toVector3D();
   };
 
-  EXPECT_LT((origin_of(HumanoidBone::Pelvis) - pose.pelvis_pos).length(),
-            k_eps);
+  EXPECT_LT((origin_of(HumanoidBone::Pelvis) - pose.pelvis_pos).length(), k_eps);
   EXPECT_LT((origin_of(HumanoidBone::Head) - pose.head_pos).length(), k_eps);
   EXPECT_LT((origin_of(HumanoidBone::HandL) - pose.hand_l).length(), k_eps);
   EXPECT_LT((origin_of(HumanoidBone::HandR) - pose.hand_r).length(), k_eps);
@@ -114,9 +112,7 @@ TEST(HumanoidSkeletonTest, SpineLongAxisPointsUpForUprightPose) {
   evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
 
   QVector3D const spine_y =
-      palette[static_cast<std::size_t>(HumanoidBone::Spine)]
-          .column(1)
-          .toVector3D();
+      palette[static_cast<std::size_t>(HumanoidBone::Spine)].column(1).toVector3D();
   EXPECT_GT(spine_y.y(), 0.9F);
 }
 
@@ -126,9 +122,7 @@ TEST(HumanoidSkeletonTest, ForearmLongAxisPointsFromElbowToHand) {
   evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
   QVector3D const expected = (pose.hand_r - pose.elbow_r).normalized();
   QVector3D const got =
-      palette[static_cast<std::size_t>(HumanoidBone::ForearmR)]
-          .column(1)
-          .toVector3D();
+      palette[static_cast<std::size_t>(HumanoidBone::ForearmR)].column(1).toVector3D();
   EXPECT_LT((got - expected).length(), k_eps);
 }
 
@@ -176,12 +170,10 @@ TEST(HumanoidSocketTest, HandSocketsMatchHandPositions) {
   BonePalette palette;
   evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
 
-  EXPECT_LT(
-      (socket_position(palette, HumanoidSocket::HandR) - pose.hand_r).length(),
-      k_eps);
-  EXPECT_LT(
-      (socket_position(palette, HumanoidSocket::HandL) - pose.hand_l).length(),
-      k_eps);
+  EXPECT_LT((socket_position(palette, HumanoidSocket::HandR) - pose.hand_r).length(),
+            k_eps);
+  EXPECT_LT((socket_position(palette, HumanoidSocket::HandL) - pose.hand_l).length(),
+            k_eps);
 }
 
 TEST(HumanoidSocketTest, BackSocketIsBehindChest) {
@@ -190,9 +182,7 @@ TEST(HumanoidSocketTest, BackSocketIsBehindChest) {
   evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
   QVector3D const back = socket_position(palette, HumanoidSocket::Back);
   QVector3D const chest_origin =
-      palette[static_cast<std::size_t>(HumanoidBone::Chest)]
-          .column(3)
-          .toVector3D();
+      palette[static_cast<std::size_t>(HumanoidBone::Chest)].column(3).toVector3D();
 
   EXPECT_LT(back.z(), chest_origin.z());
 }

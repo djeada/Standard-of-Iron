@@ -1,8 +1,9 @@
+#include <gtest/gtest.h>
+
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "render/ground/scatter_composition.h"
 #include "render/ground/spawn_validator.h"
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -10,18 +11,19 @@ class ScatterCompositionTest : public ::testing::Test {
 protected:
   void TearDown() override { Game::Map::TerrainService::instance().clear(); }
 
-  auto build_context(const Game::Map::MapDefinition &map_def,
-                     const std::vector<Game::Map::WorldProp> &world_props = {})
+  auto build_context(const Game::Map::MapDefinition& map_def,
+                     const std::vector<Game::Map::WorldProp>& world_props = {})
       -> Render::Ground::ScatterCompositionContext {
-    auto &terrain = Game::Map::TerrainService::instance();
+    auto& terrain = Game::Map::TerrainService::instance();
     terrain.initialize(map_def);
-    auto const *height_map = terrain.get_height_map();
+    auto const* height_map = terrain.get_height_map();
     EXPECT_NE(height_map, nullptr);
 
-    cache.build_from_height_map(
-        height_map->get_height_data(), height_map->getTerrainTypes(),
-        height_map->get_width(), height_map->get_height(),
-        height_map->get_tile_size());
+    cache.build_from_height_map(height_map->get_height_data(),
+                                height_map->getTerrainTypes(),
+                                height_map->get_width(),
+                                height_map->get_height(),
+                                height_map->get_tile_size());
     return {cache,
             height_map->get_width(),
             height_map->get_height(),
@@ -60,10 +62,8 @@ TEST_F(ScatterCompositionTest, ContextClassifiesCampRiverAndRockyScenes) {
   auto const river = context.sample_world(-6.0F, 0.0F);
   auto const rocky = context.sample_world(8.0F, 0.0F);
 
-  EXPECT_EQ(camp.archetype,
-            Render::Ground::ScatterSceneArchetype::CampOutskirts);
-  EXPECT_EQ(river.archetype,
-            Render::Ground::ScatterSceneArchetype::RiverFringe);
+  EXPECT_EQ(camp.archetype, Render::Ground::ScatterSceneArchetype::CampOutskirts);
+  EXPECT_EQ(river.archetype, Render::Ground::ScatterSceneArchetype::RiverFringe);
   EXPECT_EQ(rocky.archetype, Render::Ground::ScatterSceneArchetype::RockyPatch);
   EXPECT_GT(camp.camp_influence, 0.8F);
   EXPECT_GT(river.river_influence, 0.8F);
@@ -102,8 +102,7 @@ TEST(ScatterCompositionRulesTest, DensityMultipliersFavorMatchingScenes) {
                 Render::Ground::ScatterRuleSpecies::Pine, dry));
 }
 
-TEST(ScatterCompositionRulesTest,
-     PreferredScenesProduceMoreSatelliteFollowers) {
+TEST(ScatterCompositionRulesTest, PreferredScenesProduceMoreSatelliteFollowers) {
   Render::Ground::ScatterCompositionSample rocky;
   rocky.archetype = Render::Ground::ScatterSceneArchetype::RockyPatch;
   rocky.rockiness = 0.9F;
@@ -126,11 +125,9 @@ TEST(ScatterCompositionRulesTest,
     rocky_stones += Render::Ground::scatter_cluster_satellite_count(
         Render::Ground::ScatterRuleSpecies::Stone, rocky, stone_state_rocky);
     fertile_stones += Render::Ground::scatter_cluster_satellite_count(
-        Render::Ground::ScatterRuleSpecies::Stone, fertile,
-        stone_state_fertile);
+        Render::Ground::ScatterRuleSpecies::Stone, fertile, stone_state_fertile);
     fertile_plants += Render::Ground::scatter_cluster_satellite_count(
-        Render::Ground::ScatterRuleSpecies::Plant, fertile,
-        plant_state_fertile);
+        Render::Ground::ScatterRuleSpecies::Plant, fertile, plant_state_fertile);
     rocky_plants += Render::Ground::scatter_cluster_satellite_count(
         Render::Ground::ScatterRuleSpecies::Plant, rocky, plant_state_rocky);
   }

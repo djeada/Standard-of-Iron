@@ -1,9 +1,11 @@
 #pragma once
 
+#include <QImage>
+
+#include <memory>
+
 #include "../map_definition.h"
 #include "render/gl/texture.h"
-#include <QImage>
-#include <memory>
 
 namespace Game::Map::Minimap {
 
@@ -14,11 +16,11 @@ public:
   MinimapTextureManager();
   ~MinimapTextureManager();
 
-  auto generate_for_map(const MapDefinition &map_def) -> bool;
+  auto generate_for_map(const MapDefinition& map_def) -> bool;
 
-  [[nodiscard]] auto get_texture() const -> Render::GL::Texture *;
+  [[nodiscard]] auto get_texture() const -> Render::GL::Texture*;
 
-  [[nodiscard]] auto get_image() const -> const QImage &;
+  [[nodiscard]] auto get_image() const -> const QImage&;
 
   void clear();
 

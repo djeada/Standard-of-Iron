@@ -1,10 +1,13 @@
 #include "linear_feature_geometry.h"
-#include "../gl/render_constants.h"
-#include "ground_utils.h"
+
 #include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <vector>
+
+#include "../gl/render_constants.h"
+#include "ground_utils.h"
 
 namespace {
 
@@ -22,13 +25,14 @@ auto value_noise(float x, float y) -> float {
   float const c = Render::Ground::noise_hash(ix, iy + 1.0F);
   float const d = Render::Ground::noise_hash(ix + 1.0F, iy + 1.0F);
 
-  return a * (1.0F - fx) * (1.0F - fy) + b * fx * (1.0F - fy) +
-         c * (1.0F - fx) * fy + d * fx * fy;
+  return a * (1.0F - fx) * (1.0F - fy) + b * fx * (1.0F - fy) + c * (1.0F - fx) * fy +
+         d * fx * fy;
 }
 
-auto sample_height_clamped(const Game::Map::TerrainHeightMap &height_map,
-                           float world_x, float world_z) -> float {
-  const auto &heights = height_map.get_height_data();
+auto sample_height_clamped(const Game::Map::TerrainHeightMap& height_map,
+                           float world_x,
+                           float world_z) -> float {
+  const auto& heights = height_map.get_height_data();
   const int grid_width = height_map.get_width();
   const int grid_height = height_map.get_height();
   const float tile_size = height_map.get_tile_size();
@@ -68,15 +72,17 @@ auto smoothstep01(float value) -> float {
   return t * t * (3.0F - 2.0F * t);
 }
 
-auto mixf(float a, float b, float t) -> float { return a + (b - a) * t; }
+auto mixf(float a, float b, float t) -> float {
+  return a + (b - a) * t;
+}
 
 } // namespace
 
 namespace Render::Ground {
 
-auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
+auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
                               float tile_size,
-                              const LinearFeatureRibbonSettings &settings)
+                              const LinearFeatureRibbonSettings& settings)
     -> std::unique_ptr<Render::GL::Mesh> {
   QVector3D dir = segment.end - segment.start;
   float const length = dir.length();
@@ -99,14 +105,13 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
   indices.reserve(static_cast<size_t>((length_steps - 1) * 6));
 
   for (int i = 0; i < length_steps; ++i) {
-    float const t =
-        static_cast<float>(i) / static_cast<float>(length_steps - 1);
+    float const t = static_cast<float>(i) / static_cast<float>(length_steps - 1);
     QVector3D center_pos = segment.start + dir * (length * t);
 
     float combined_noise = 0.0F;
     float weight_sum = 0.0F;
-    for (size_t noise_index = 0;
-         noise_index < settings.edge_noise_frequencies.size(); ++noise_index) {
+    for (size_t noise_index = 0; noise_index < settings.edge_noise_frequencies.size();
+         ++noise_index) {
       float const frequency = settings.edge_noise_frequencies[noise_index];
       float const weight = settings.edge_noise_weights[noise_index];
       if (frequency <= 0.0F || weight <= 0.0F) {
@@ -114,8 +119,7 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
       }
 
       combined_noise +=
-          value_noise(center_pos.x() * frequency, center_pos.z() * frequency) *
-          weight;
+          value_noise(center_pos.x() * frequency, center_pos.z() * frequency) * weight;
       weight_sum += weight;
     }
     if (weight_sum > 0.0F) {
@@ -126,25 +130,20 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
     float const width_variation =
         combined_noise * half_width * settings.width_variation_scale;
 
-    if (settings.meander_amplitude > 0.0F &&
-        settings.meander_frequency > 0.0F) {
-      float const meander =
-          value_noise(t * settings.meander_frequency,
-                      length * settings.meander_length_scale) *
-          settings.meander_amplitude;
+    if (settings.meander_amplitude > 0.0F && settings.meander_frequency > 0.0F) {
+      float const meander = value_noise(t * settings.meander_frequency,
+                                        length * settings.meander_length_scale) *
+                            settings.meander_amplitude;
       center_pos += perpendicular * meander;
     }
 
-    QVector3D const left =
-        center_pos - perpendicular * (half_width + width_variation);
-    QVector3D const right =
-        center_pos + perpendicular * (half_width + width_variation);
+    QVector3D const left = center_pos - perpendicular * (half_width + width_variation);
+    QVector3D const right = center_pos + perpendicular * (half_width + width_variation);
     float left_y = left.y();
     float right_y = right.y();
     if (settings.height_map != nullptr) {
       left_y = sample_height_clamped(*settings.height_map, left.x(), left.z());
-      right_y =
-          sample_height_clamped(*settings.height_map, right.x(), right.z());
+      right_y = sample_height_clamped(*settings.height_map, right.x(), right.z());
     }
 
     float const normal[3] = {0.0F, 1.0F, 0.0F};
@@ -172,7 +171,7 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
     vertices.push_back(right_vertex);
 
     if (i < length_steps - 1) {
-      unsigned int const idx0 = static_cast<unsigned int>(i * 2);
+      auto const idx0 = static_cast<unsigned int>(i * 2);
       unsigned int const idx1 = idx0 + 1;
       unsigned int const idx2 = idx0 + 2;
       unsigned int const idx3 = idx0 + 3;
@@ -194,19 +193,19 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment &segment,
   return std::make_unique<Render::GL::Mesh>(vertices, indices);
 }
 
-auto build_linear_ribbon_meshes(
-    const std::vector<LinearFeatureRibbonSegment> &segments, float tile_size,
-    const LinearFeatureRibbonSettings &settings)
+auto build_linear_ribbon_meshes(const std::vector<LinearFeatureRibbonSegment>& segments,
+                                float tile_size,
+                                const LinearFeatureRibbonSettings& settings)
     -> std::vector<std::unique_ptr<Render::GL::Mesh>> {
   std::vector<std::unique_ptr<Render::GL::Mesh>> meshes;
   meshes.reserve(segments.size());
-  for (const auto &segment : segments) {
+  for (const auto& segment : segments) {
     meshes.push_back(build_linear_ribbon_mesh(segment, tile_size, settings));
   }
   return meshes;
 }
 
-auto build_bridge_mesh(const Game::Map::Bridge &bridge,
+auto build_bridge_mesh(const Game::Map::Bridge& bridge,
                        float tile_size) -> std::unique_ptr<Render::GL::Mesh> {
   QVector3D dir = bridge.end - bridge.start;
   float const length = dir.length();
@@ -218,9 +217,9 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
   float const half_width = bridge.width * 0.5F;
   float const segment_step = std::max(tile_size * 0.28F, 0.16F);
-  float const end_fade_length = std::min(
-      std::clamp(bridge.width * 0.70F, tile_size * 0.45F, tile_size * 1.20F),
-      length * 0.45F);
+  float const end_fade_length =
+      std::min(std::clamp(bridge.width * 0.70F, tile_size * 0.45F, tile_size * 1.20F),
+               length * 0.45F);
 
   int length_segments = static_cast<int>(std::ceil(length / segment_step));
   length_segments =
@@ -234,23 +233,22 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
   float const parapet_height = std::clamp(bridge.width * 0.18F, 0.18F, 0.42F);
   float const side_bevel = std::clamp(bridge.width * 0.12F, 0.10F, 0.30F);
 
-  auto add_vertex = [&](const QVector3D &position, const QVector3D &normal,
-                        float u, float v) {
-    Render::GL::Vertex vtx{};
-    vtx.position[0] = position.x();
-    vtx.position[1] = position.y();
-    vtx.position[2] = position.z();
-    QVector3D const n = normal.normalized();
-    vtx.normal[0] = n.x();
-    vtx.normal[1] = n.y();
-    vtx.normal[2] = n.z();
-    vtx.tex_coord[0] = u;
-    vtx.tex_coord[1] = v;
-    vertices.push_back(vtx);
-  };
+  auto add_vertex =
+      [&](const QVector3D& position, const QVector3D& normal, float u, float v) {
+        Render::GL::Vertex vtx{};
+        vtx.position[0] = position.x();
+        vtx.position[1] = position.y();
+        vtx.position[2] = position.z();
+        QVector3D const n = normal.normalized();
+        vtx.normal[0] = n.x();
+        vtx.normal[1] = n.y();
+        vtx.normal[2] = n.z();
+        vtx.tex_coord[0] = u;
+        vtx.tex_coord[1] = v;
+        vertices.push_back(vtx);
+      };
 
-  auto push_quad = [&](unsigned int a, unsigned int b, unsigned int c,
-                       unsigned int d) {
+  auto push_quad = [&](unsigned int a, unsigned int b, unsigned int c, unsigned int d) {
     indices.push_back(a);
     indices.push_back(b);
     indices.push_back(c);
@@ -260,36 +258,32 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
   };
 
   for (int i = 0; i <= length_segments; ++i) {
-    float const mesh_t =
-        static_cast<float>(i) / static_cast<float>(length_segments);
+    float const mesh_t = static_cast<float>(i) / static_cast<float>(length_segments);
     float const span_distance = length * mesh_t;
     QVector3D const center_pos = bridge.start + dir * span_distance;
 
     float const start_blend =
         smoothstep01(span_distance / std::max(end_fade_length, 0.001F));
-    float const end_blend = smoothstep01((length - span_distance) /
-                                         std::max(end_fade_length, 0.001F));
+    float const end_blend =
+        smoothstep01((length - span_distance) / std::max(end_fade_length, 0.001F));
     float const profile_blend = start_blend * end_blend;
 
     float const arch_curve =
         Game::Map::bridge_arch_curve(mesh_t) * (0.85F + 0.15F * profile_blend);
     float const deck_height = Game::Map::bridge_deck_world_y(bridge, mesh_t);
 
-    float const stone_noise = std::sin(center_pos.x() * 3.0F) *
-                              std::cos(center_pos.z() * 2.5F) * 0.02F;
+    float const stone_noise =
+        std::sin(center_pos.x() * 3.0F) * std::cos(center_pos.z() * 2.5F) * 0.02F;
 
-    float const bottom_half_width =
-        std::max(half_width - side_bevel * (0.55F + 0.45F * profile_blend),
-                 half_width * 0.68F);
+    float const bottom_half_width = std::max(
+        half_width - side_bevel * (0.55F + 0.45F * profile_blend), half_width * 0.68F);
     float const ring_thickness =
         mixf(deck_thickness * 0.72F, deck_thickness, profile_blend);
-    float const ring_parapet_height =
-        parapet_height * (0.35F + 0.65F * profile_blend);
+    float const ring_parapet_height = parapet_height * (0.35F + 0.65F * profile_blend);
     float const ring_parapet_offset =
         half_width + side_bevel * (0.20F + 0.35F * profile_blend);
 
-    float const deck_y =
-        deck_height + stone_noise * (0.55F + 0.45F * profile_blend);
+    float const deck_y = deck_height + stone_noise * (0.55F + 0.45F * profile_blend);
     float const underside_y =
         deck_y - ring_thickness - arch_curve * bridge.height * 0.60F;
     float const rail_top_y = deck_y + ring_parapet_height;
@@ -310,11 +304,9 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
     QVector3D const side_right_bottom = bottom_right;
 
     QVector3D left_normal =
-        QVector3D::crossProduct(dir, side_left_bottom - side_left_top)
-            .normalized();
+        QVector3D::crossProduct(dir, side_left_bottom - side_left_top).normalized();
     QVector3D right_normal =
-        QVector3D::crossProduct(side_right_bottom - side_right_top, dir)
-            .normalized();
+        QVector3D::crossProduct(side_right_bottom - side_right_top, dir).normalized();
     if (left_normal.lengthSquared() < 0.0001F) {
       left_normal = (-perpendicular).normalized();
     }
@@ -322,14 +314,12 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
       right_normal = perpendicular.normalized();
     }
 
-    QVector3D parapet_left_bottom =
-        center_pos + perpendicular * (-ring_parapet_offset);
+    QVector3D parapet_left_bottom = center_pos + perpendicular * (-ring_parapet_offset);
     parapet_left_bottom.setY(deck_y);
     QVector3D parapet_left_top = parapet_left_bottom;
     parapet_left_top.setY(rail_top_y);
 
-    QVector3D parapet_right_bottom =
-        center_pos + perpendicular * ring_parapet_offset;
+    QVector3D parapet_right_bottom = center_pos + perpendicular * ring_parapet_offset;
     parapet_right_bottom.setY(deck_y);
     QVector3D parapet_right_top = parapet_right_bottom;
     parapet_right_top.setY(rail_top_y);
@@ -367,16 +357,18 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
 
   if (!vertices.empty()) {
     unsigned int const start_idx = 0;
-    auto const end_idx = static_cast<unsigned int>(
-        length_segments * k_vertices_per_bridge_segment);
+    auto const end_idx =
+        static_cast<unsigned int>(length_segments * k_vertices_per_bridge_segment);
     QVector3D const forward_normal = dir;
 
-    auto add_cap = [&](unsigned int top_l, unsigned int top_r,
-                       unsigned int bottom_r, unsigned int bottom_l,
-                       const QVector3D &normal) {
+    auto add_cap = [&](unsigned int top_l,
+                       unsigned int top_r,
+                       unsigned int bottom_r,
+                       unsigned int bottom_l,
+                       const QVector3D& normal) {
       auto const cap_start = static_cast<unsigned int>(vertices.size());
-      auto copy_vertex = [&](unsigned int source, const QVector3D &norm) {
-        const Render::GL::Vertex &src = vertices[source];
+      auto copy_vertex = [&](unsigned int source, const QVector3D& norm) {
+        const Render::GL::Vertex& src = vertices[source];
         Render::GL::Vertex vtx = src;
         QVector3D const n = norm.normalized();
         vtx.normal[0] = n.x();
@@ -391,8 +383,8 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
       push_quad(cap_start + 0, cap_start + 1, cap_start + 2, cap_start + 3);
     };
 
-    add_cap(start_idx + 0, start_idx + 1, start_idx + 3, start_idx + 2,
-            -forward_normal);
+    add_cap(
+        start_idx + 0, start_idx + 1, start_idx + 3, start_idx + 2, -forward_normal);
     add_cap(end_idx + 0, end_idx + 1, end_idx + 3, end_idx + 2, forward_normal);
   }
 
@@ -403,8 +395,8 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
   return std::make_unique<Render::GL::Mesh>(vertices, indices);
 }
 
-auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
-                          const Game::Map::TerrainHeightMap &height_map)
+auto build_riverbank_mesh(const Game::Map::RiverSegment& segment,
+                          const Game::Map::TerrainHeightMap& height_map)
     -> RiverbankMeshBuildResult {
   RiverbankMeshBuildResult result;
 
@@ -422,16 +414,14 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
   constexpr int k_rings_per_side = 5;
   constexpr int k_total_rings = k_rings_per_side * 2;
 
-  int length_steps =
-      static_cast<int>(std::ceil(length / (tile_size * 0.5F))) + 1;
+  int length_steps = static_cast<int>(std::ceil(length / (tile_size * 0.5F))) + 1;
   length_steps = std::max(length_steps, 8);
 
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;
 
   for (int i = 0; i < length_steps; ++i) {
-    float const t =
-        static_cast<float>(i) / static_cast<float>(length_steps - 1);
+    float const t = static_cast<float>(i) / static_cast<float>(length_steps - 1);
     QVector3D center_pos = segment.start + dir * (length * t);
     float const center_height =
         sample_height_clamped(height_map, center_pos.x(), center_pos.z());
@@ -447,8 +437,7 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
     float const edge_noise3 = value_noise(center_pos.x() * k_edge_noise_freq_3,
                                           center_pos.z() * k_edge_noise_freq_3);
 
-    float combined_noise =
-        edge_noise1 * 0.5F + edge_noise2 * 0.3F + edge_noise3 * 0.2F;
+    float combined_noise = edge_noise1 * 0.5F + edge_noise2 * 0.3F + edge_noise3 * 0.2F;
     combined_noise = (combined_noise - 0.5F) * 2.0F;
 
     float const width_variation = combined_noise * half_width * 0.35F;
@@ -462,29 +451,28 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
     };
 
     constexpr RingProfile k_bank_rings[k_rings_per_side] = {
-        {0.0F, 0.02F},    {0.125F, 0.175F}, {0.25F, 0.3F},
-        {0.375F, 0.125F}, {0.5F, -0.15F},
+        {0.0F, 0.02F},
+        {0.125F, 0.175F},
+        {0.25F, 0.3F},
+        {0.375F, 0.125F},
+        {0.5F, -0.15F},
     };
 
     float const ring_noise =
         value_noise(center_pos.x() * 3.0F, center_pos.z() * 3.0F) * 0.075F;
     float const base_bank_width = 0.5F + ring_noise;
 
-    unsigned int const ring_start_idx =
-        static_cast<unsigned int>(vertices.size());
+    auto const ring_start_idx = static_cast<unsigned int>(vertices.size());
 
     for (int ring = 0; ring < k_rings_per_side; ++ring) {
-      float const ring_dist =
-          k_bank_rings[ring].distance_from_water * base_bank_width;
+      float const ring_dist = k_bank_rings[ring].distance_from_water * base_bank_width;
       float const ring_height = k_bank_rings[ring].height_offset;
 
       QVector3D const ring_pos =
-          center_pos -
-          perpendicular * (half_width + width_variation + ring_dist);
+          center_pos - perpendicular * (half_width + width_variation + ring_dist);
       float const terrain_height =
           sample_height_clamped(height_map, ring_pos.x(), ring_pos.z());
-      float const clamped_height =
-          std::min(terrain_height, center_height + 0.05F);
+      float const clamped_height = std::min(terrain_height, center_height + 0.05F);
 
       if (ring == 0) {
         result.visibility_samples.push_back(ring_pos);
@@ -498,55 +486,50 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
       QVector3D normal;
       if (ring == 0) {
         QVector3D const next_ring_pos =
-            center_pos - perpendicular * (half_width + width_variation +
-                                          k_bank_rings[1].distance_from_water *
-                                              base_bank_width);
-        float const next_terrain = sample_height_clamped(
-            height_map, next_ring_pos.x(), next_ring_pos.z());
-        float const next_clamped =
-            std::min(next_terrain, center_height + 0.05F);
-        QVector3D slope_vec(next_ring_pos.x() - ring_pos.x(),
-                            (next_clamped + k_bank_rings[1].height_offset) -
-                                (clamped_height + ring_height),
-                            next_ring_pos.z() - ring_pos.z());
+            center_pos -
+            perpendicular * (half_width + width_variation +
+                             k_bank_rings[1].distance_from_water * base_bank_width);
+        float const next_terrain =
+            sample_height_clamped(height_map, next_ring_pos.x(), next_ring_pos.z());
+        float const next_clamped = std::min(next_terrain, center_height + 0.05F);
+        QVector3D const slope_vec(next_ring_pos.x() - ring_pos.x(),
+                                  (next_clamped + k_bank_rings[1].height_offset) -
+                                      (clamped_height + ring_height),
+                                  next_ring_pos.z() - ring_pos.z());
         normal = QVector3D::crossProduct(slope_vec, dir).normalized();
       } else if (ring == k_rings_per_side - 1) {
         unsigned int const prev_idx = ring_start_idx + ring - 1;
-        QVector3D prev_pos(vertices[prev_idx].position[0],
-                           vertices[prev_idx].position[1],
-                           vertices[prev_idx].position[2]);
-        QVector3D slope_vec(ring_pos.x() - prev_pos.x(),
-                            (clamped_height + ring_height) - prev_pos.y(),
-                            ring_pos.z() - prev_pos.z());
+        QVector3D const prev_pos(vertices[prev_idx].position[0],
+                                 vertices[prev_idx].position[1],
+                                 vertices[prev_idx].position[2]);
+        QVector3D const slope_vec(ring_pos.x() - prev_pos.x(),
+                                  (clamped_height + ring_height) - prev_pos.y(),
+                                  ring_pos.z() - prev_pos.z());
         normal = QVector3D::crossProduct(slope_vec, dir).normalized();
       } else {
         unsigned int const prev_idx = ring_start_idx + ring - 1;
-        QVector3D prev_pos(vertices[prev_idx].position[0],
-                           vertices[prev_idx].position[1],
-                           vertices[prev_idx].position[2]);
+        QVector3D const prev_pos(vertices[prev_idx].position[0],
+                                 vertices[prev_idx].position[1],
+                                 vertices[prev_idx].position[2]);
         QVector3D const next_ring_pos =
-            center_pos -
-            perpendicular *
-                (half_width + width_variation +
-                 k_bank_rings[ring + 1].distance_from_water * base_bank_width);
-        float const next_terrain = sample_height_clamped(
-            height_map, next_ring_pos.x(), next_ring_pos.z());
-        float const next_clamped =
-            std::min(next_terrain, center_height + 0.05F);
+            center_pos - perpendicular * (half_width + width_variation +
+                                          k_bank_rings[ring + 1].distance_from_water *
+                                              base_bank_width);
+        float const next_terrain =
+            sample_height_clamped(height_map, next_ring_pos.x(), next_ring_pos.z());
+        float const next_clamped = std::min(next_terrain, center_height + 0.05F);
 
-        QVector3D slope_from_prev(ring_pos.x() - prev_pos.x(),
-                                  (terrain_height + ring_height) - prev_pos.y(),
-                                  ring_pos.z() - prev_pos.z());
-        QVector3D slope_to_next(
+        QVector3D const slope_from_prev(ring_pos.x() - prev_pos.x(),
+                                        (terrain_height + ring_height) - prev_pos.y(),
+                                        ring_pos.z() - prev_pos.z());
+        QVector3D const slope_to_next(
             next_ring_pos.x() - ring_pos.x(),
             (next_clamped + k_bank_rings[ring + 1].height_offset) -
                 (clamped_height + ring_height),
             next_ring_pos.z() - ring_pos.z());
 
-        QVector3D const n1 =
-            QVector3D::crossProduct(slope_from_prev, dir).normalized();
-        QVector3D const n2 =
-            QVector3D::crossProduct(slope_to_next, dir).normalized();
+        QVector3D const n1 = QVector3D::crossProduct(slope_from_prev, dir).normalized();
+        QVector3D const n2 = QVector3D::crossProduct(slope_to_next, dir).normalized();
         normal = ((n1 + n2) * 0.5F).normalized();
       }
 
@@ -559,17 +542,14 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
     }
 
     for (int ring = 0; ring < k_rings_per_side; ++ring) {
-      float const ring_dist =
-          k_bank_rings[ring].distance_from_water * base_bank_width;
+      float const ring_dist = k_bank_rings[ring].distance_from_water * base_bank_width;
       float const ring_height = k_bank_rings[ring].height_offset;
 
       QVector3D const ring_pos =
-          center_pos +
-          perpendicular * (half_width + width_variation + ring_dist);
+          center_pos + perpendicular * (half_width + width_variation + ring_dist);
       float const terrain_height =
           sample_height_clamped(height_map, ring_pos.x(), ring_pos.z());
-      float const clamped_height =
-          std::min(terrain_height, center_height + 0.05F);
+      float const clamped_height = std::min(terrain_height, center_height + 0.05F);
 
       if (ring == 0) {
         result.visibility_samples.push_back(ring_pos);
@@ -583,57 +563,50 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
       QVector3D normal;
       if (ring == 0) {
         QVector3D const next_ring_pos =
-            center_pos + perpendicular * (half_width + width_variation +
-                                          k_bank_rings[1].distance_from_water *
-                                              base_bank_width);
-        float const next_terrain = sample_height_clamped(
-            height_map, next_ring_pos.x(), next_ring_pos.z());
-        float const next_clamped =
-            std::min(next_terrain, center_height + 0.05F);
-        QVector3D slope_vec(next_ring_pos.x() - ring_pos.x(),
-                            (next_clamped + k_bank_rings[1].height_offset) -
-                                (clamped_height + ring_height),
-                            next_ring_pos.z() - ring_pos.z());
+            center_pos +
+            perpendicular * (half_width + width_variation +
+                             k_bank_rings[1].distance_from_water * base_bank_width);
+        float const next_terrain =
+            sample_height_clamped(height_map, next_ring_pos.x(), next_ring_pos.z());
+        float const next_clamped = std::min(next_terrain, center_height + 0.05F);
+        QVector3D const slope_vec(next_ring_pos.x() - ring_pos.x(),
+                                  (next_clamped + k_bank_rings[1].height_offset) -
+                                      (clamped_height + ring_height),
+                                  next_ring_pos.z() - ring_pos.z());
         normal = QVector3D::crossProduct(dir, slope_vec).normalized();
       } else if (ring == k_rings_per_side - 1) {
-        unsigned int const prev_idx =
-            ring_start_idx + k_rings_per_side + ring - 1;
-        QVector3D prev_pos(vertices[prev_idx].position[0],
-                           vertices[prev_idx].position[1],
-                           vertices[prev_idx].position[2]);
-        QVector3D slope_vec(ring_pos.x() - prev_pos.x(),
-                            (clamped_height + ring_height) - prev_pos.y(),
-                            ring_pos.z() - prev_pos.z());
-        normal = QVector3D::crossProduct(dir, slope_vec).normalized();
-      } else {
-        unsigned int const prev_idx =
-            ring_start_idx + k_rings_per_side + ring - 1;
-        QVector3D prev_pos(vertices[prev_idx].position[0],
-                           vertices[prev_idx].position[1],
-                           vertices[prev_idx].position[2]);
-        QVector3D const next_ring_pos =
-            center_pos +
-            perpendicular *
-                (half_width + width_variation +
-                 k_bank_rings[ring + 1].distance_from_water * base_bank_width);
-        float const next_terrain = sample_height_clamped(
-            height_map, next_ring_pos.x(), next_ring_pos.z());
-        float const next_clamped =
-            std::min(next_terrain, center_height + 0.05F);
-
-        QVector3D slope_from_prev(ring_pos.x() - prev_pos.x(),
+        unsigned int const prev_idx = ring_start_idx + k_rings_per_side + ring - 1;
+        QVector3D const prev_pos(vertices[prev_idx].position[0],
+                                 vertices[prev_idx].position[1],
+                                 vertices[prev_idx].position[2]);
+        QVector3D const slope_vec(ring_pos.x() - prev_pos.x(),
                                   (clamped_height + ring_height) - prev_pos.y(),
                                   ring_pos.z() - prev_pos.z());
-        QVector3D slope_to_next(
+        normal = QVector3D::crossProduct(dir, slope_vec).normalized();
+      } else {
+        unsigned int const prev_idx = ring_start_idx + k_rings_per_side + ring - 1;
+        QVector3D const prev_pos(vertices[prev_idx].position[0],
+                                 vertices[prev_idx].position[1],
+                                 vertices[prev_idx].position[2]);
+        QVector3D const next_ring_pos =
+            center_pos + perpendicular * (half_width + width_variation +
+                                          k_bank_rings[ring + 1].distance_from_water *
+                                              base_bank_width);
+        float const next_terrain =
+            sample_height_clamped(height_map, next_ring_pos.x(), next_ring_pos.z());
+        float const next_clamped = std::min(next_terrain, center_height + 0.05F);
+
+        QVector3D const slope_from_prev(ring_pos.x() - prev_pos.x(),
+                                        (clamped_height + ring_height) - prev_pos.y(),
+                                        ring_pos.z() - prev_pos.z());
+        QVector3D const slope_to_next(
             next_ring_pos.x() - ring_pos.x(),
             (next_clamped + k_bank_rings[ring + 1].height_offset) -
                 (clamped_height + ring_height),
             next_ring_pos.z() - ring_pos.z());
 
-        QVector3D const n1 =
-            QVector3D::crossProduct(dir, slope_from_prev).normalized();
-        QVector3D const n2 =
-            QVector3D::crossProduct(dir, slope_to_next).normalized();
+        QVector3D const n1 = QVector3D::crossProduct(dir, slope_from_prev).normalized();
+        QVector3D const n2 = QVector3D::crossProduct(dir, slope_to_next).normalized();
         normal = ((n1 + n2) * 0.5F).normalized();
       }
 
@@ -646,7 +619,7 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
     }
 
     {
-      Render::GL::Vertex const &water_edge_left = vertices[ring_start_idx];
+      Render::GL::Vertex const& water_edge_left = vertices[ring_start_idx];
       Render::GL::Vertex skirt_vtx = water_edge_left;
       skirt_vtx.position[1] = -0.05F;
       skirt_vtx.normal[0] = -perpendicular.x();
@@ -656,7 +629,7 @@ auto build_riverbank_mesh(const Game::Map::RiverSegment &segment,
     }
 
     {
-      Render::GL::Vertex const &water_edge_right =
+      Render::GL::Vertex const& water_edge_right =
           vertices[ring_start_idx + k_rings_per_side];
       Render::GL::Vertex skirt_vtx = water_edge_right;
       skirt_vtx.position[1] = -0.05F;

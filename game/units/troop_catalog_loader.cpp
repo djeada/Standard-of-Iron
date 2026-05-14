@@ -1,7 +1,5 @@
 #include "troop_catalog_loader.h"
 
-#include "troop_catalog.h"
-#include "troop_config.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -12,23 +10,26 @@
 #include <QLoggingCategory>
 #include <QVariant>
 
+#include "troop_catalog.h"
+#include "troop_config.h"
+
 namespace {
-[[nodiscard]] auto ensure_array(const QJsonValue &value) -> QJsonArray {
+[[nodiscard]] auto ensure_array(const QJsonValue& value) -> QJsonArray {
   if (value.isArray()) {
     return value.toArray();
   }
   return {};
 }
 
-[[nodiscard]] auto ensure_object(const QJsonValue &value) -> QJsonObject {
+[[nodiscard]] auto ensure_object(const QJsonValue& value) -> QJsonObject {
   if (value.isObject()) {
     return value.toObject();
   }
   return {};
 }
 
-[[nodiscard]] auto read_float(const QJsonObject &obj, const char *key,
-                              float fallback) -> float {
+[[nodiscard]] auto
+read_float(const QJsonObject& obj, const char* key, float fallback) -> float {
   if (!obj.contains(key)) {
     return fallback;
   }
@@ -36,8 +37,8 @@ namespace {
   return static_cast<float>(value.toDouble(fallback));
 }
 
-[[nodiscard]] auto read_int(const QJsonObject &obj, const char *key,
-                            int fallback) -> int {
+[[nodiscard]] auto
+read_int(const QJsonObject& obj, const char* key, int fallback) -> int {
   if (!obj.contains(key)) {
     return fallback;
   }
@@ -54,8 +55,8 @@ namespace {
   return fallback;
 }
 
-[[nodiscard]] auto read_bool(const QJsonObject &obj, const char *key,
-                             bool fallback) -> bool {
+[[nodiscard]] auto
+read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
   if (!obj.contains(key)) {
     return fallback;
   }
@@ -66,15 +67,15 @@ namespace {
 
 namespace Game::Units {
 
-static constexpr const char *k_troop_list_key = "troops";
+static constexpr const char* k_troop_list_key = "troops";
 static bool g_catalog_loaded = false;
 
-static auto logger() -> QLoggingCategory & {
+static auto logger() -> QLoggingCategory& {
   static QLoggingCategory category("TroopCatalogLoader");
   return category;
 }
 
-auto TroopCatalogLoader::resolve_data_path(const QString &relative) -> QString {
+auto TroopCatalogLoader::resolve_data_path(const QString& relative) -> QString {
   const QString direct = QDir::current().filePath(relative);
   if (QFile::exists(direct)) {
     return direct;
@@ -119,7 +120,7 @@ auto TroopCatalogLoader::load_default_catalog() -> bool {
   return true;
 }
 
-auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
+auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
     qCWarning(logger()) << "Unable to open troop catalog" << path << ":"
@@ -144,10 +145,10 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
     return false;
   }
 
-  auto &catalog = TroopCatalog::instance();
+  auto& catalog = TroopCatalog::instance();
   catalog.reset_to_defaults();
 
-  for (const QJsonValue &value : troops) {
+  for (const QJsonValue& value : troops) {
     const QJsonObject troop_obj = ensure_object(value);
     const QString troop_id = troop_obj.value("id").toString();
     if (troop_id.isEmpty()) {
@@ -176,20 +177,18 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
         read_bool(production, "is_melee", troop_class.production.is_melee);
 
     const QJsonObject combat = ensure_object(troop_obj.value("combat"));
-    troop_class.combat.health =
-        read_int(combat, "health", troop_class.combat.health);
+    troop_class.combat.health = read_int(combat, "health", troop_class.combat.health);
     troop_class.combat.max_health =
         read_int(combat, "max_health", troop_class.combat.max_health);
-    troop_class.combat.speed =
-        read_float(combat, "speed", troop_class.combat.speed);
+    troop_class.combat.speed = read_float(combat, "speed", troop_class.combat.speed);
     troop_class.combat.vision_range =
         read_float(combat, "vision_range", troop_class.combat.vision_range);
     troop_class.combat.ranged_range =
         read_float(combat, "ranged_range", troop_class.combat.ranged_range);
     troop_class.combat.ranged_damage =
         read_int(combat, "ranged_damage", troop_class.combat.ranged_damage);
-    troop_class.combat.ranged_cooldown = read_float(
-        combat, "ranged_cooldown", troop_class.combat.ranged_cooldown);
+    troop_class.combat.ranged_cooldown =
+        read_float(combat, "ranged_cooldown", troop_class.combat.ranged_cooldown);
     troop_class.combat.melee_range =
         read_float(combat, "melee_range", troop_class.combat.melee_range);
     troop_class.combat.melee_damage =
@@ -202,30 +201,29 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
         read_bool(combat, "can_melee", troop_class.combat.can_melee);
     troop_class.combat.max_stamina =
         read_float(combat, "max_stamina", troop_class.combat.max_stamina);
-    troop_class.combat.stamina_regen_rate = read_float(
-        combat, "stamina_regen_rate", troop_class.combat.stamina_regen_rate);
-    troop_class.combat.stamina_depletion_rate =
-        read_float(combat, "stamina_depletion_rate",
-                   troop_class.combat.stamina_depletion_rate);
+    troop_class.combat.stamina_regen_rate =
+        read_float(combat, "stamina_regen_rate", troop_class.combat.stamina_regen_rate);
+    troop_class.combat.stamina_depletion_rate = read_float(
+        combat, "stamina_depletion_rate", troop_class.combat.stamina_depletion_rate);
 
     const QJsonObject visuals = ensure_object(troop_obj.value("visuals"));
     troop_class.visuals.render_scale =
         read_float(visuals, "render_scale", troop_class.visuals.render_scale);
-    troop_class.visuals.selection_ring_size =
-        read_float(visuals, "selection_ring_size",
-                   troop_class.visuals.selection_ring_size);
+    troop_class.visuals.selection_ring_size = read_float(
+        visuals, "selection_ring_size", troop_class.visuals.selection_ring_size);
     troop_class.visuals.selection_ring_ground_offset =
-        read_float(visuals, "selection_ring_ground_offset",
+        read_float(visuals,
+                   "selection_ring_ground_offset",
                    troop_class.visuals.selection_ring_ground_offset);
-    troop_class.visuals.formation_spacing = read_float(
-        visuals, "formation_spacing", troop_class.visuals.formation_spacing);
+    troop_class.visuals.formation_spacing =
+        read_float(visuals, "formation_spacing", troop_class.visuals.formation_spacing);
     const QString default_renderer = QStringLiteral("troops/") + troop_id;
     troop_class.visuals.renderer_id =
         visuals.value("renderer_id").toString(default_renderer).toStdString();
 
     const QJsonObject formation = ensure_object(troop_obj.value("formation"));
-    troop_class.individuals_per_unit = read_int(
-        formation, "individuals_per_unit", troop_class.individuals_per_unit);
+    troop_class.individuals_per_unit =
+        read_int(formation, "individuals_per_unit", troop_class.individuals_per_unit);
     troop_class.max_units_per_row =
         read_int(formation, "max_units_per_row", troop_class.max_units_per_row);
 

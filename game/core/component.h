@@ -1,9 +1,5 @@
 #pragma once
 
-#include "../systems/nation_id.h"
-#include "../units/spawn_type.h"
-#include "../units/troop_type.h"
-#include "entity.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -12,6 +8,11 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "../systems/nation_id.h"
+#include "../units/spawn_type.h"
+#include "../units/troop_type.h"
+#include "entity.h"
 
 namespace Engine::Core {
 
@@ -42,12 +43,18 @@ inline constexpr int k_blood_stain_max_active = 10;
 
 class TransformComponent : public Component {
 public:
-  TransformComponent(float x = 0.0F, float y = 0.0F, float z = 0.0F,
-                     float rot_x = 0.0F, float rot_y = 0.0F, float rot_z = 0.0F,
-                     float scale_x = 1.0F, float scale_y = 1.0F,
+  TransformComponent(float x = 0.0F,
+                     float y = 0.0F,
+                     float z = 0.0F,
+                     float rot_x = 0.0F,
+                     float rot_y = 0.0F,
+                     float rot_z = 0.0F,
+                     float scale_x = 1.0F,
+                     float scale_y = 1.0F,
                      float scale_z = 1.0F)
-      : position{x, y, z}, rotation{rot_x, rot_y, rot_z},
-        scale{scale_x, scale_y, scale_z} {}
+      : position{x, y, z}
+      , rotation{rot_x, rot_y, rot_z}
+      , scale{scale_x, scale_y, scale_z} {}
 
   struct Vec3 {
     float x, y, z;
@@ -62,10 +69,18 @@ public:
 
 class RenderableComponent : public Component {
 public:
-  enum class MeshKind { None, Quad, Plane, Cube, Capsule, Ring };
+  enum class MeshKind {
+    None,
+    Quad,
+    Plane,
+    Cube,
+    Capsule,
+    Ring
+  };
 
   RenderableComponent(std::string mesh_path, std::string texture_path)
-      : mesh_path(std::move(mesh_path)), texture_path(std::move(texture_path)) {
+      : mesh_path(std::move(mesh_path))
+      , texture_path(std::move(texture_path)) {
     color.fill(1.0F);
   }
 
@@ -83,8 +98,10 @@ public:
                 int max_health = Defaults::k_unit_default_health,
                 float speed = 1.0F,
                 float vision = Defaults::k_unit_default_vision_range)
-      : health(health), max_health(max_health), speed(speed),
-        vision_range(vision) {}
+      : health(health)
+      , max_health(max_health)
+      , speed(speed)
+      , vision_range(vision) {}
 
   int health;
   int max_health;
@@ -98,19 +115,18 @@ public:
   std::uint8_t death_sequence_override{0xFF};
 };
 
-[[nodiscard]] inline auto
-resolve_surviving_individual_count(int health, int max_health,
-                                   int individuals_per_unit) noexcept -> int {
+[[nodiscard]] inline auto resolve_surviving_individual_count(
+    int health, int max_health, int individuals_per_unit) noexcept -> int {
   if (individuals_per_unit <= 0 || health <= 0) {
     return 0;
   }
   int const safe_max_health = std::max(1, max_health);
   float const ratio =
       std::clamp(health / static_cast<float>(safe_max_health), 0.0F, 1.0F);
-  return std::max(
-      1, std::min(individuals_per_unit,
-                  static_cast<int>(std::ceil(
-                      ratio * static_cast<float>(individuals_per_unit)))));
+  return std::max(1,
+                  std::min(individuals_per_unit,
+                           static_cast<int>(std::ceil(
+                               ratio * static_cast<float>(individuals_per_unit)))));
 }
 
 class MovementComponent : public Component {
@@ -139,12 +155,9 @@ public:
     path_index = 0;
   }
 
-  [[nodiscard]] auto has_waypoints() const -> bool {
-    return path_index < path.size();
-  }
+  [[nodiscard]] auto has_waypoints() const -> bool { return path_index < path.size(); }
 
-  [[nodiscard]] auto
-  current_waypoint() const -> const std::pair<float, float> & {
+  [[nodiscard]] auto current_waypoint() const -> const std::pair<float, float>& {
 
     return path[path_index];
   }
@@ -168,15 +181,22 @@ public:
 
 class AttackComponent : public Component {
 public:
-  enum class CombatMode { Ranged, Melee, Auto };
+  enum class CombatMode {
+    Ranged,
+    Melee,
+    Auto
+  };
 
   AttackComponent(float range = Defaults::k_attack_default_range,
                   int damage = Defaults::k_attack_default_damage,
                   float cooldown = 1.0F)
-      : range(range), damage(damage), cooldown(cooldown),
-        melee_range(Defaults::k_attack_melee_range), melee_damage(damage),
-        melee_cooldown(cooldown),
-        max_height_difference(Defaults::k_attack_height_tolerance) {}
+      : range(range)
+      , damage(damage)
+      , cooldown(cooldown)
+      , melee_range(Defaults::k_attack_melee_range)
+      , melee_damage(damage)
+      , melee_cooldown(cooldown)
+      , max_height_difference(Defaults::k_attack_height_tolerance) {}
 
   float range;
   int damage;
@@ -333,16 +353,16 @@ class BuildingComponent : public Component {
 public:
   BuildingComponent() = default;
 
-  Game::Systems::NationID original_nation_id{
-      Game::Systems::NationID::RomanRepublic};
+  Game::Systems::NationID original_nation_id{Game::Systems::NationID::RomanRepublic};
 };
 
 class ProductionComponent : public Component {
 public:
   ProductionComponent()
-      : build_time(Defaults::k_production_default_build_time),
+      : build_time(Defaults::k_production_default_build_time)
+      ,
 
-        max_units(Defaults::k_production_max_units) {}
+      max_units(Defaults::k_production_max_units) {}
 
   bool in_progress{false};
   float build_time;
@@ -430,7 +450,8 @@ public:
 
 class StaggerComponent : public Component {
 public:
-  explicit StaggerComponent(float duration = 0.5F) : remaining(duration) {}
+  explicit StaggerComponent(float duration = 0.5F)
+      : remaining(duration) {}
   float remaining;
 };
 
@@ -441,7 +462,8 @@ public:
 
 class CaptureComponent : public Component {
 public:
-  CaptureComponent() : required_time(Defaults::k_capture_required_time) {}
+  CaptureComponent()
+      : required_time(Defaults::k_capture_required_time) {}
 
   int capturing_player_id{-1};
   float capture_progress{0.0F};
@@ -476,14 +498,16 @@ public:
 
 class BloodStainComponent : public Component {
 public:
-  BloodStainComponent(
-      float radius = Defaults::k_blood_stain_default_radius,
-      float lifetime = Defaults::k_blood_stain_default_lifetime,
-      float rotation = 0.0F,
-      float aspect_ratio = Defaults::k_blood_stain_default_aspect_ratio,
-      float seed = 0.0F)
-      : radius(radius), lifetime(lifetime), rotation(rotation),
-        aspect_ratio(aspect_ratio), seed(seed) {}
+  BloodStainComponent(float radius = Defaults::k_blood_stain_default_radius,
+                      float lifetime = Defaults::k_blood_stain_default_lifetime,
+                      float rotation = 0.0F,
+                      float aspect_ratio = Defaults::k_blood_stain_default_aspect_ratio,
+                      float seed = 0.0F)
+      : radius(radius)
+      , lifetime(lifetime)
+      , rotation(rotation)
+      , aspect_ratio(aspect_ratio)
+      , seed(seed) {}
 
   float radius;
   float elapsed_time{0.0F};
@@ -500,7 +524,10 @@ enum class DeathSequenceProfile : std::uint8_t {
   Elephant = 3
 };
 
-enum class DeathSequenceState : std::uint8_t { Dying = 0, DeadHold = 1 };
+enum class DeathSequenceState : std::uint8_t {
+  Dying = 0,
+  DeadHold = 1
+};
 
 class DeathAnimationComponent : public Component {
 public:
@@ -532,13 +559,12 @@ public:
 class HoldModeComponent : public Component {
 public:
   HoldModeComponent()
-      : stand_up_duration(Defaults::k_hold_stand_up_duration),
-        kneel_duration(Defaults::k_hold_kneel_duration) {}
+      : stand_up_duration(Defaults::k_hold_stand_up_duration)
+      , kneel_duration(Defaults::k_hold_kneel_duration) {}
 
   void begin_exit() {
     active = false;
-    exit_cooldown =
-        stand_up_duration * std::clamp(kneel_entry_progress, 0.0F, 1.0F);
+    exit_cooldown = stand_up_duration * std::clamp(kneel_entry_progress, 0.0F, 1.0F);
   }
 
   bool active{true};
@@ -550,7 +576,8 @@ public:
 
 class GuardModeComponent : public Component {
 public:
-  GuardModeComponent() : guard_radius(Defaults::k_guard_default_radius) {}
+  GuardModeComponent()
+      : guard_radius(Defaults::k_guard_default_radius) {}
 
   bool active{true};
   EntityID guarded_entity_id{0};
@@ -576,7 +603,12 @@ public:
 
 class CatapultLoadingComponent : public Component {
 public:
-  enum class LoadingState { Idle, Loading, ReadyToFire, Firing };
+  enum class LoadingState {
+    Idle,
+    Loading,
+    ReadyToFire,
+    Firing
+  };
 
   CatapultLoadingComponent() = default;
 
@@ -614,9 +646,7 @@ public:
     return state == LoadingState::ReadyToFire;
   }
 
-  [[nodiscard]] auto is_firing() const -> bool {
-    return state == LoadingState::Firing;
-  }
+  [[nodiscard]] auto is_firing() const -> bool { return state == LoadingState::Firing; }
 };
 
 class FormationModeComponent : public Component {
@@ -653,9 +683,7 @@ public:
     return stamina >= k_min_stamina_to_start_run;
   }
 
-  [[nodiscard]] auto has_stamina() const noexcept -> bool {
-    return stamina > 0.0F;
-  }
+  [[nodiscard]] auto has_stamina() const noexcept -> bool { return stamina > 0.0F; }
 
   void deplete(float delta_time) noexcept {
     stamina = std::max(0.0F, stamina - depletion_rate * delta_time);
@@ -665,7 +693,8 @@ public:
     stamina = std::min(max_stamina, stamina + regen_rate * delta_time);
   }
 
-  void initialize_from_stats(float new_max_stamina, float new_regen_rate,
+  void initialize_from_stats(float new_max_stamina,
+                             float new_regen_rate,
                              float new_depletion_rate) noexcept {
     max_stamina = new_max_stamina;
     stamina = new_max_stamina;
@@ -687,7 +716,12 @@ public:
 
 class ElephantComponent : public Component {
 public:
-  enum class ChargeState { Idle, Charging, Trampling, Recovering };
+  enum class ChargeState {
+    Idle,
+    Charging,
+    Trampling,
+    Recovering
+  };
 
   ElephantComponent() = default;
 

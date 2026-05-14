@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include "../draw_part.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
 
 #include <cstdint>
 #include <span>
 #include <vector>
+
+#include "../draw_part.h"
 
 namespace Render::GL {
 struct DrawPartCmd;
@@ -24,7 +24,7 @@ struct InstanceEntry {
 };
 
 struct InstancedPartBatch {
-  const Render::GL::DrawPartCmd *header{nullptr};
+  const Render::GL::DrawPartCmd* header{nullptr};
   std::size_t start{0};
   std::size_t count{0};
   std::vector<InstanceEntry> instances;
@@ -40,12 +40,11 @@ struct CoalesceStats {
 coalesce_instances(std::span<const Render::GL::DrawPartCmd> parts,
                    std::size_t min_run = 4) -> std::vector<InstancedPartBatch>;
 
-[[nodiscard]] auto
-compute_coalesce_stats(std::span<const InstancedPartBatch> batches,
-                       std::size_t input_parts) -> CoalesceStats;
+[[nodiscard]] auto compute_coalesce_stats(std::span<const InstancedPartBatch> batches,
+                                          std::size_t input_parts) -> CoalesceStats;
 
 [[nodiscard]] auto
-parts_are_compatible(const Render::GL::DrawPartCmd &a,
-                     const Render::GL::DrawPartCmd &b) noexcept -> bool;
+parts_are_compatible(const Render::GL::DrawPartCmd& a,
+                     const Render::GL::DrawPartCmd& b) noexcept -> bool;
 
 } // namespace Render::Pipeline

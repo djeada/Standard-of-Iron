@@ -2,14 +2,15 @@
 
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <array>
+#include <cstdint>
+
 #include "../creature/spec.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "elephant_renderer_base.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <array>
-#include <cstdint>
 
 namespace Render::GL {
 class ISubmitter;
@@ -93,13 +94,14 @@ struct ElephantSpecPose {
 };
 
 [[nodiscard]] auto
-elephant_topology() noexcept -> const Render::Creature::SkeletonTopology &;
+elephant_topology() noexcept -> const Render::Creature::SkeletonTopology&;
 
-void evaluate_elephant_skeleton(const ElephantSpecPose &pose,
-                                BonePalette &out_palette) noexcept;
+void evaluate_elephant_skeleton(const ElephantSpecPose& pose,
+                                BonePalette& out_palette) noexcept;
 
-void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
-                             float bob, ElephantSpecPose &out_pose) noexcept;
+void make_elephant_spec_pose(const Render::GL::ElephantDimensions& dims,
+                             float bob,
+                             ElephantSpecPose& out_pose) noexcept;
 
 struct ElephantPoseMotion {
   float phase{0.0F};
@@ -111,21 +113,21 @@ struct ElephantPoseMotion {
   Render::GL::CombatAnimPhase combat_phase{Render::GL::CombatAnimPhase::Idle};
 };
 
-void make_elephant_spec_pose_animated(
-    const Render::GL::ElephantDimensions &dims,
-    const Render::GL::ElephantGait &gait, const ElephantPoseMotion &motion,
-    ElephantSpecPose &out_pose) noexcept;
+void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions& dims,
+                                      const Render::GL::ElephantGait& gait,
+                                      const ElephantPoseMotion& motion,
+                                      ElephantSpecPose& out_pose) noexcept;
 
 inline constexpr std::size_t k_elephant_role_count = 10;
 
 void fill_elephant_role_colors(
-    const Render::GL::ElephantVariant &variant,
-    std::array<QVector3D, k_elephant_role_count> &out_roles) noexcept;
+    const Render::GL::ElephantVariant& variant,
+    std::array<QVector3D, k_elephant_role_count>& out_roles) noexcept;
 
 [[nodiscard]] auto
-elephant_creature_spec() noexcept -> const Render::Creature::CreatureSpec &;
+elephant_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
 
-auto compute_elephant_bone_palette(const ElephantSpecPose &pose,
+auto compute_elephant_bone_palette(const ElephantSpecPose& pose,
                                    std::span<QMatrix4x4> out_bones) noexcept
     -> std::uint32_t;
 

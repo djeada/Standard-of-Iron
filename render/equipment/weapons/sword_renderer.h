@@ -2,14 +2,16 @@
 
 #pragma once
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstddef>
+#include <cstdint>
+
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cstddef>
-#include <cstdint>
 
 namespace Render::GL {
 
@@ -30,19 +32,22 @@ class SwordRenderer : public IEquipmentRenderer {
 public:
   explicit SwordRenderer(SwordRenderConfig config = {});
 
-  static void submit(const SwordRenderConfig &config, const DrawContext &ctx,
-                     const BodyFrames &frames, const HumanoidPalette &palette,
-                     const HumanoidAnimationContext &anim,
-                     EquipmentBatch &batch);
+  static void submit(const SwordRenderConfig& config,
+                     const DrawContext& ctx,
+                     const BodyFrames& frames,
+                     const HumanoidPalette& palette,
+                     const HumanoidAnimationContext& anim,
+                     EquipmentBatch& batch);
 
-  [[nodiscard]] auto base_config() const noexcept -> const SwordRenderConfig & {
+  [[nodiscard]] auto base_config() const noexcept -> const SwordRenderConfig& {
     return m_base;
   }
 
-  void render(const DrawContext &ctx, const BodyFrames &frames,
-              const HumanoidPalette &palette,
-              const HumanoidAnimationContext &anim,
-              EquipmentBatch &batch) override;
+  void render(const DrawContext& ctx,
+              const BodyFrames& frames,
+              const HumanoidPalette& palette,
+              const HumanoidAnimationContext& anim,
+              EquipmentBatch& batch) override;
 
 private:
   SwordRenderConfig m_base;
@@ -51,19 +56,22 @@ private:
 inline constexpr std::uint32_t k_sword_role_count = 4U;
 inline constexpr std::uint32_t k_scabbard_role_count = 2U;
 
-auto sword_fill_role_colors(const HumanoidPalette &palette,
-                            const SwordRenderConfig &config, QVector3D *out,
+auto sword_fill_role_colors(const HumanoidPalette& palette,
+                            const SwordRenderConfig& config,
+                            QVector3D* out,
                             std::size_t max) -> std::uint32_t;
 
-auto sword_make_static_attachment(const SwordRenderConfig &config,
+auto sword_make_static_attachment(const SwordRenderConfig& config,
                                   std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec;
 
-auto scabbard_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+auto scabbard_fill_role_colors(const HumanoidPalette& palette,
+                               QVector3D* out,
                                std::size_t max) -> std::uint32_t;
 
-auto scabbard_make_static_attachment(
-    float sheath_r, std::uint16_t socket_bone_index,
-    std::uint8_t base_role_byte) -> Render::Creature::StaticAttachmentSpec;
+auto scabbard_make_static_attachment(float sheath_r,
+                                     std::uint16_t socket_bone_index,
+                                     std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec;
 
 } // namespace Render::GL

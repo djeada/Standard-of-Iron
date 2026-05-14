@@ -11,24 +11,27 @@ namespace {
 
 constexpr float k_color_eq_tol = 1e-4F;
 
-inline auto color_close(const QVector3D &a, const QVector3D &b) -> bool {
+inline auto color_close(const QVector3D& a, const QVector3D& b) -> bool {
   return (a - b).lengthSquared() < k_color_eq_tol;
 }
 
-inline auto horse_inputs_match(const HorseAnatomyComponent &c,
-                               std::uint32_t seed, const QVector3D &leather,
-                               const QVector3D &cloth) -> bool {
+inline auto horse_inputs_match(const HorseAnatomyComponent& c,
+                               std::uint32_t seed,
+                               const QVector3D& leather,
+                               const QVector3D& cloth) -> bool {
   return c.seed == seed && color_close(c.leather_base, leather) &&
          color_close(c.cloth_base, cloth);
 }
 
-inline auto elephant_inputs_match(const ElephantAnatomyComponent &c,
+inline auto elephant_inputs_match(const ElephantAnatomyComponent& c,
                                   std::uint32_t seed) -> bool {
   return c.seed == seed;
 }
 
-void bake_horse(HorseAnatomyComponent &c, std::uint32_t seed,
-                const QVector3D &leather, const QVector3D &cloth,
+void bake_horse(HorseAnatomyComponent& c,
+                std::uint32_t seed,
+                const QVector3D& leather,
+                const QVector3D& cloth,
                 float mount_scale) {
   c.seed = seed;
   c.leather_base = leather;
@@ -41,8 +44,10 @@ void bake_horse(HorseAnatomyComponent &c, std::uint32_t seed,
   c.baked = true;
 }
 
-void bake_elephant(ElephantAnatomyComponent &c, std::uint32_t seed,
-                   const QVector3D &fabric, const QVector3D &metal) {
+void bake_elephant(ElephantAnatomyComponent& c,
+                   std::uint32_t seed,
+                   const QVector3D& fabric,
+                   const QVector3D& metal) {
   c.seed = seed;
   c.profile = Render::GL::make_elephant_profile(seed, fabric, metal);
   c.howdah_frame = Render::GL::compute_howdah_frame(c.profile);
@@ -51,10 +56,11 @@ void bake_elephant(ElephantAnatomyComponent &c, std::uint32_t seed,
 
 } // namespace
 
-auto get_or_bake_horse_anatomy(Engine::Core::Entity *entity, std::uint32_t seed,
-                               const QVector3D &leather_base,
-                               const QVector3D &cloth_base,
-                               float mount_scale) -> HorseAnatomyComponent & {
+auto get_or_bake_horse_anatomy(Engine::Core::Entity* entity,
+                               std::uint32_t seed,
+                               const QVector3D& leather_base,
+                               const QVector3D& cloth_base,
+                               float mount_scale) -> HorseAnatomyComponent& {
   if (entity == nullptr) {
     thread_local HorseAnatomyComponent scratch;
     if (!scratch.baked ||
@@ -63,7 +69,7 @@ auto get_or_bake_horse_anatomy(Engine::Core::Entity *entity, std::uint32_t seed,
     }
     return scratch;
   }
-  HorseAnatomyComponent &c =
+  HorseAnatomyComponent& c =
       *Engine::Core::get_or_add_component<HorseAnatomyComponent>(entity);
   if (!c.baked || !horse_inputs_match(c, seed, leather_base, cloth_base)) {
     bake_horse(c, seed, leather_base, cloth_base, mount_scale);
@@ -71,10 +77,11 @@ auto get_or_bake_horse_anatomy(Engine::Core::Entity *entity, std::uint32_t seed,
   return c;
 }
 
-auto get_or_bake_elephant_anatomy(
-    Engine::Core::Entity *entity, std::uint32_t seed,
-    const QVector3D &fabric_base,
-    const QVector3D &metal_base) -> ElephantAnatomyComponent & {
+auto get_or_bake_elephant_anatomy(Engine::Core::Entity* entity,
+                                  std::uint32_t seed,
+                                  const QVector3D& fabric_base,
+                                  const QVector3D& metal_base)
+    -> ElephantAnatomyComponent& {
   if (entity == nullptr) {
     thread_local ElephantAnatomyComponent scratch;
     if (!scratch.baked || !elephant_inputs_match(scratch, seed)) {
@@ -82,7 +89,7 @@ auto get_or_bake_elephant_anatomy(
     }
     return scratch;
   }
-  ElephantAnatomyComponent &c =
+  ElephantAnatomyComponent& c =
       *Engine::Core::get_or_add_component<ElephantAnatomyComponent>(entity);
   if (!c.baked || !elephant_inputs_match(c, seed)) {
     bake_elephant(c, seed, fabric_base, metal_base);

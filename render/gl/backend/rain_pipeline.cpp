@@ -1,14 +1,17 @@
 #include "rain_pipeline.h"
+
+#include <QDebug>
+#include <QOpenGLContext>
+
+#include <cmath>
+#include <numbers>
+#include <random>
+
 #include "../../rain_gpu.h"
 #include "../backend.h"
 #include "../camera.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
-#include <QDebug>
-#include <QOpenGLContext>
-#include <cmath>
-#include <numbers>
-#include <random>
 
 namespace Render::GL::BackendPipelines {
 
@@ -31,7 +34,7 @@ void clear_gl_errors() {
 #endif
 }
 
-auto check_gl_error(const char *operation) -> bool {
+auto check_gl_error(const char* operation) -> bool {
 #ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
@@ -56,9 +59,9 @@ auto RainPipeline::initialize() -> bool {
 
   m_rain_shader = m_shader_cache->get("rain");
   if (m_rain_shader == nullptr) {
-    m_rain_shader = m_shader_cache->load(
-        "rain", QStringLiteral(":/assets/shaders/rain.vert"),
-        QStringLiteral(":/assets/shaders/rain.frag"));
+    m_rain_shader = m_shader_cache->load("rain",
+                                         QStringLiteral(":/assets/shaders/rain.vert"),
+                                         QStringLiteral(":/assets/shaders/rain.frag"));
   }
   if (m_rain_shader == nullptr) {
     qWarning() << "RainPipeline: Failed to get rain shader";
@@ -167,7 +170,7 @@ auto RainPipeline::create_rain_geometry() -> bool {
   indices.reserve(m_rain_drops.size() * 2);
 
   for (std::size_t i = 0; i < m_rain_drops.size(); ++i) {
-    const auto &drop = m_rain_drops[i];
+    const auto& drop = m_rain_drops[i];
 
     RainVertex top;
     top.position[0] = drop.position.x();
@@ -210,7 +213,8 @@ auto RainPipeline::create_rain_geometry() -> bool {
   glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(RainVertex)),
-               vertices.data(), GL_STATIC_DRAW);
+               vertices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("vertex buffer")) {
     shutdown_geometry();
     return false;
@@ -220,7 +224,8 @@ auto RainPipeline::create_rain_geometry() -> bool {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(), GL_STATIC_DRAW);
+               indices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("index buffer")) {
     shutdown_geometry();
     return false;
@@ -229,20 +234,28 @@ auto RainPipeline::create_rain_geometry() -> bool {
   m_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(
-      VertexAttrib::position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      sizeof(RainVertex),
-      reinterpret_cast<void *>(offsetof(RainVertex, position)));
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(RainVertex),
+                        reinterpret_cast<void*>(offsetof(RainVertex, position)));
 
   glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(RainVertex),
-                        reinterpret_cast<void *>(offsetof(RainVertex, offset)));
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(RainVertex),
+                        reinterpret_cast<void*>(offsetof(RainVertex, offset)));
 
   glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord, 1, GL_FLOAT, GL_FALSE,
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
                         sizeof(RainVertex),
-                        reinterpret_cast<void *>(offsetof(RainVertex, alpha)));
+                        reinterpret_cast<void*>(offsetof(RainVertex, alpha)));
 
   glBindVertexArray(0);
 
@@ -254,7 +267,7 @@ auto RainPipeline::create_rain_geometry() -> bool {
   return true;
 }
 
-void RainPipeline::render(const Camera &cam, const RainBatchParams &params) {
+void RainPipeline::render(const Camera& cam, const RainBatchParams& params) {
   if (!is_initialized() || params.intensity < 0.01F) {
     return;
   }

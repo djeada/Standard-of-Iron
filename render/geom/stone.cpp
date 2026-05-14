@@ -1,15 +1,17 @@
 #include "stone.h"
-#include "../entity/registry.h"
-#include "../gl/mesh.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <vector>
+
+#include "../entity/registry.h"
+#include "../gl/mesh.h"
+#include "../gl/resources.h"
+#include "../scene_renderer.h"
 
 namespace Render {
 namespace Geom {
@@ -24,8 +26,8 @@ static auto create_stone_mesh() -> std::unique_ptr<GL::Mesh> {
   constexpr float k_base_radius = 0.15F;
 
   for (int lat = 0; lat <= k_latitude_segments; ++lat) {
-    float const theta = static_cast<float>(lat) / k_latitude_segments *
-                        std::numbers::pi_v<float>;
+    float const theta =
+        static_cast<float>(lat) / k_latitude_segments * std::numbers::pi_v<float>;
     float const sin_theta = std::sin(theta);
     float const cos_theta = std::cos(theta);
 
@@ -44,14 +46,12 @@ static auto create_stone_mesh() -> std::unique_ptr<GL::Mesh> {
       float const z = radius * sin_theta * sin_phi;
 
       QVector3D const normal =
-          QVector3D(sin_theta * cos_phi, cos_theta, sin_theta * sin_phi)
-              .normalized();
+          QVector3D(sin_theta * cos_phi, cos_theta, sin_theta * sin_phi).normalized();
 
       float const u = static_cast<float>(lon) / k_longitude_segments;
       float const v = static_cast<float>(lat) / k_latitude_segments;
 
-      verts.push_back(
-          {{x, y, z}, {normal.x(), normal.y(), normal.z()}, {u, v}});
+      verts.push_back({{x, y, z}, {normal.x(), normal.y(), normal.z()}, {u, v}});
     }
   }
 
@@ -73,7 +73,7 @@ static auto create_stone_mesh() -> std::unique_ptr<GL::Mesh> {
   return std::make_unique<GL::Mesh>(verts, idx);
 }
 
-auto Stone::get() -> GL::Mesh * {
+auto Stone::get() -> GL::Mesh* {
   static std::unique_ptr<GL::Mesh> const mesh = create_stone_mesh();
   return mesh.get();
 }

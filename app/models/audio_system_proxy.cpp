@@ -1,10 +1,14 @@
 #include "audio_system_proxy.h"
-#include "game/audio/audio_system.h"
+
 #include <qobject.h>
+
+#include "game/audio/audio_system.h"
 
 namespace App::Models {
 
-AudioSystemProxy::AudioSystemProxy(QObject *parent) : QObject(parent) {}
+AudioSystemProxy::AudioSystemProxy(QObject* parent)
+    : QObject(parent) {
+}
 
 void AudioSystemProxy::setMasterVolume(float volume) {
   AudioSystem::get_instance().set_master_volume(volume);

@@ -1,5 +1,9 @@
 
 
+#include <array>
+#include <gtest/gtest.h>
+#include <unordered_map>
+
 #include "render/draw_queue.h"
 #include "render/material.h"
 #include "render/rig_dsl/defs/watchtower_rig.h"
@@ -7,20 +11,12 @@
 #include "render/rig_dsl/rig_interpreter.h"
 #include "render/submitter.h"
 
-#include <gtest/gtest.h>
-
-#include <array>
-#include <unordered_map>
-
 namespace {
 
 class FlatAnchors : public Render::RigDSL::AnchorResolver {
 public:
-  void set(Render::RigDSL::AnchorId id, const QVector3D &pos) {
-    m_map[id] = pos;
-  }
-  [[nodiscard]] auto
-  resolve(Render::RigDSL::AnchorId id) const -> QVector3D override {
+  void set(Render::RigDSL::AnchorId id, const QVector3D& pos) { m_map[id] = pos; }
+  [[nodiscard]] auto resolve(Render::RigDSL::AnchorId id) const -> QVector3D override {
     ++m_resolve_count;
     auto it = m_map.find(id);
     return it == m_map.end() ? QVector3D{} : it->second;
@@ -34,8 +30,7 @@ private:
 
 class ConstantPalette : public Render::RigDSL::PaletteResolver {
 public:
-  [[nodiscard]] auto
-  resolve(Render::RigDSL::PaletteSlot) const -> QVector3D override {
+  [[nodiscard]] auto resolve(Render::RigDSL::PaletteSlot) const -> QVector3D override {
     return {0.1F, 0.2F, 0.3F};
   }
 };
@@ -43,8 +38,7 @@ public:
 class FlatScalars : public Render::RigDSL::ScalarResolver {
 public:
   void set(Render::RigDSL::ScalarId id, float v) { m_map[id] = v; }
-  [[nodiscard]] auto
-  resolve(Render::RigDSL::ScalarId id) const -> float override {
+  [[nodiscard]] auto resolve(Render::RigDSL::ScalarId id) const -> float override {
     auto it = m_map.find(id);
     return it == m_map.end() ? 1.0F : it->second;
   }
@@ -60,8 +54,8 @@ TEST(RigDSL, WatchtowerEmitsOnePartPerDef) {
   Render::GL::QueueSubmitter submitter(&queue);
 
   FlatAnchors anchors;
-  for (Render::RigDSL::AnchorId id = 0;
-       id <= Render::RigDSL::Watchtower::Roof_Apex; ++id) {
+  for (Render::RigDSL::AnchorId id = 0; id <= Render::RigDSL::Watchtower::Roof_Apex;
+       ++id) {
     anchors.set(id, QVector3D(static_cast<float>(id) * 0.1F, 1.0F, 0.0F));
   }
   ConstantPalette palette;
@@ -83,20 +77,19 @@ TEST(RigDSL, SphereOnlyConsultsAnchorAOnce) {
   anchors.set(0, QVector3D(1.0F, 2.0F, 3.0F));
   ConstantPalette palette;
 
-  constexpr Render::RigDSL::PartDef sphere_part{
-      Render::RigDSL::PartKind::Sphere,
-      0,
-      0xFFU,
-      Render::RigDSL::PaletteSlot::Literal,
-      {255, 0, 0, 255},
-      0,
-      Render::RigDSL::k_invalid_anchor,
-      Render::RigDSL::k_invalid_scalar,
-      0.5F,
-      1.0F,
-      1.0F,
-      1.0F,
-      1.0F};
+  constexpr Render::RigDSL::PartDef sphere_part{Render::RigDSL::PartKind::Sphere,
+                                                0,
+                                                0xFFU,
+                                                Render::RigDSL::PaletteSlot::Literal,
+                                                {255, 0, 0, 255},
+                                                0,
+                                                Render::RigDSL::k_invalid_anchor,
+                                                Render::RigDSL::k_invalid_scalar,
+                                                0.5F,
+                                                1.0F,
+                                                1.0F,
+                                                1.0F,
+                                                1.0F};
   constexpr Render::RigDSL::PartDef arr[] = {sphere_part};
   auto const rig = Render::RigDSL::make_rig("s", arr);
 
@@ -215,8 +208,7 @@ TEST(RigDSL, NoMaterialContextFallsBackToMeshCmd) {
   ASSERT_EQ(queue.size(), 1U);
   auto const idx = queue.items().front().index();
 
-  EXPECT_TRUE(idx == Render::GL::MeshCmdIndex ||
-              idx == Render::GL::CylinderCmdIndex);
+  EXPECT_TRUE(idx == Render::GL::MeshCmdIndex || idx == Render::GL::CylinderCmdIndex);
 }
 
 TEST(RigDSL, LiteralPaletteBypassesResolver) {
@@ -249,7 +241,7 @@ TEST(RigDSL, LiteralPaletteBypassesResolver) {
   Render::RigDSL::render_rig(rig, ctx, submitter);
 
   ASSERT_EQ(queue.size(), 1U);
-  auto const &cmd = std::get<Render::GL::MeshCmdIndex>(queue.items().front());
+  auto const& cmd = std::get<Render::GL::MeshCmdIndex>(queue.items().front());
 
   EXPECT_NEAR(cmd.color.x(), 200.0F / 255.0F, 1e-4F);
   EXPECT_NEAR(cmd.color.y(), 100.0F / 255.0F, 1e-4F);
@@ -286,7 +278,7 @@ TEST(RigDSL, ScalarResolverScalesSphereRadius) {
   Render::RigDSL::render_rig(rig, ctx, submitter);
 
   ASSERT_EQ(queue.size(), 1U);
-  auto const &cmd = std::get<Render::GL::MeshCmdIndex>(queue.items().front());
+  auto const& cmd = std::get<Render::GL::MeshCmdIndex>(queue.items().front());
 
   const QVector3D col0(cmd.model(0, 0), cmd.model(1, 0), cmd.model(2, 0));
   EXPECT_NEAR(col0.length(), 0.5F, 1e-4F);

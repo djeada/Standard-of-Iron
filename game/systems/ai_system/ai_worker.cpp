@@ -1,18 +1,24 @@
 #include "ai_worker.h"
+
+#include <queue>
+
+#include <atomic>
+#include <mutex>
+#include <utility>
+
 #include "systems/ai_system/ai_behavior_registry.h"
 #include "systems/ai_system/ai_executor.h"
 #include "systems/ai_system/ai_reasoner.h"
 #include "systems/ai_system/ai_types.h"
-#include <atomic>
-#include <mutex>
-#include <queue>
-#include <utility>
 
 namespace Game::Systems::AI {
 
-AIWorker::AIWorker(AIReasoner &reasoner, AIExecutor &executor,
-                   AIBehaviorRegistry &registry)
-    : m_reasoner(reasoner), m_executor(executor), m_registry(registry) {
+AIWorker::AIWorker(AIReasoner& reasoner,
+                   AIExecutor& executor,
+                   AIBehaviorRegistry& registry)
+    : m_reasoner(reasoner)
+    , m_executor(executor)
+    , m_registry(registry) {
 
   m_thread = std::thread(&AIWorker::worker_loop, this);
 }
@@ -28,7 +34,7 @@ AIWorker::~AIWorker() {
   }
 }
 
-auto AIWorker::try_submit(AIJob &&job) -> bool {
+auto AIWorker::try_submit(AIJob&& job) -> bool {
 
   if (m_worker_busy.load(std::memory_order_acquire)) {
     return false;
@@ -46,7 +52,7 @@ auto AIWorker::try_submit(AIJob &&job) -> bool {
   return true;
 }
 
-void AIWorker::drain_results(std::queue<AIResult> &out) {
+void AIWorker::drain_results(std::queue<AIResult>& out) {
   std::lock_guard<std::mutex> const lock(m_result_mutex);
 
   while (!m_results.empty()) {
@@ -55,7 +61,9 @@ void AIWorker::drain_results(std::queue<AIResult> &out) {
   }
 }
 
-void AIWorker::stop() { m_should_stop.store(true, std::memory_order_release); }
+void AIWorker::stop() {
+  m_should_stop.store(true, std::memory_order_release);
+}
 
 void AIWorker::worker_loop() {
   while (true) {
@@ -64,8 +72,7 @@ void AIWorker::worker_loop() {
     {
       std::unique_lock<std::mutex> lock(m_job_mutex);
       m_job_condition.wait(lock, [this]() {
-        return m_should_stop.load(std::memory_order_acquire) ||
-               m_has_pending_job;
+        return m_should_stop.load(std::memory_order_acquire) || m_has_pending_job;
       });
 
       if (m_should_stop.load(std::memory_order_acquire) && !m_has_pending_job) {
@@ -80,14 +87,12 @@ void AIWorker::worker_loop() {
       AIResult result;
       result.context = job.context;
 
-      Game::Systems::AI::AIReasoner::update_context(job.snapshot,
-                                                    result.context);
+      Game::Systems::AI::AIReasoner::update_context(job.snapshot, result.context);
       Game::Systems::AI::AIReasoner::update_state_machine(
           job.snapshot, result.context, job.delta_time);
       Game::Systems::AI::AIReasoner::validate_state(result.context);
-      Game::Systems::AI::AIExecutor::run(job.snapshot, result.context,
-                                         job.delta_time, m_registry,
-                                         result.commands);
+      Game::Systems::AI::AIExecutor::run(
+          job.snapshot, result.context, job.delta_time, m_registry, result.commands);
 
       {
         std::lock_guard<std::mutex> const lock(m_result_mutex);

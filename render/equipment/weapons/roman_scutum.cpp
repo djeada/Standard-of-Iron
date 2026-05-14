@@ -1,4 +1,11 @@
 #include "roman_scutum.h"
+
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cmath>
+#include <numbers>
+
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
@@ -10,10 +17,6 @@
 #include "../../render_archetype.h"
 #include "../attachment_builder.h"
 #include "../equipment_submit.h"
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cmath>
-#include <numbers>
 
 namespace Render::GL {
 
@@ -34,7 +37,7 @@ constexpr QVector3D k_shield_center{0.0F, 0.0F, 0.15F};
 
 } // namespace
 
-auto roman_scutum_archetype() -> const RenderArchetype & {
+auto roman_scutum_archetype() -> const RenderArchetype& {
   static const RenderArchetype k_archetype = []() {
     constexpr float shield_height = 1.2F;
     constexpr float shield_width = 0.65F;
@@ -53,12 +56,14 @@ auto roman_scutum_archetype() -> const RenderArchetype & {
 
     RenderArchetypeBuilder builder{"roman_scutum"};
 
-    auto curved_box = [&](const QVector3D &offset, float half_width,
-                          float half_height, float half_depth,
-                          std::uint8_t slot, float yaw_scale_degrees = 0.0F) {
+    auto curved_box = [&](const QVector3D& offset,
+                          float half_width,
+                          float half_height,
+                          float half_depth,
+                          std::uint8_t slot,
+                          float yaw_scale_degrees = 0.0F) {
       float const half_span = shield_width * 0.5F;
-      float const normalized_x =
-          (half_span > 1e-4F) ? (offset.x() / half_span) : 0.0F;
+      float const normalized_x = (half_span > 1e-4F) ? (offset.x() / half_span) : 0.0F;
 
       QMatrix4x4 m;
       m.translate(k_shield_center + offset + shield_forward * shield_curve);
@@ -67,26 +72,48 @@ auto roman_scutum_archetype() -> const RenderArchetype & {
       builder.add_palette_mesh(get_unit_cube(), m, slot);
     };
 
-    curved_box(QVector3D(0.0F, 0.0F, 0.0F), shield_width * 0.48F,
-               shield_height * 0.49F, body_half_depth, k_red_even);
-    curved_box(QVector3D(0.0F, 0.0F, 0.028F), shield_width * 0.36F,
-               shield_height * 0.43F, face_half_depth, k_red_odd);
+    curved_box(QVector3D(0.0F, 0.0F, 0.0F),
+               shield_width * 0.48F,
+               shield_height * 0.49F,
+               body_half_depth,
+               k_red_even);
+    curved_box(QVector3D(0.0F, 0.0F, 0.028F),
+               shield_width * 0.36F,
+               shield_height * 0.43F,
+               face_half_depth,
+               k_red_odd);
 
     curved_box(QVector3D(0.0F, shield_height * 0.48F, 0.010F),
-               shield_width * 0.45F, frame_half_width, frame_half_depth,
+               shield_width * 0.45F,
+               frame_half_width,
+               frame_half_depth,
                k_bronze_rim);
     curved_box(QVector3D(0.0F, -shield_height * 0.48F, 0.010F),
-               shield_width * 0.45F, frame_half_width, frame_half_depth,
+               shield_width * 0.45F,
+               frame_half_width,
+               frame_half_depth,
                k_bronze_rim);
-    curved_box(QVector3D(shield_width * 0.45F, 0.0F, 0.010F), frame_half_width,
-               shield_height * 0.44F, frame_half_depth, k_bronze_rim);
-    curved_box(QVector3D(-shield_width * 0.45F, 0.0F, 0.010F), frame_half_width,
-               shield_height * 0.44F, frame_half_depth, k_bronze_rim);
+    curved_box(QVector3D(shield_width * 0.45F, 0.0F, 0.010F),
+               frame_half_width,
+               shield_height * 0.44F,
+               frame_half_depth,
+               k_bronze_rim);
+    curved_box(QVector3D(-shield_width * 0.45F, 0.0F, 0.010F),
+               frame_half_width,
+               shield_height * 0.44F,
+               frame_half_depth,
+               k_bronze_rim);
 
-    curved_box(QVector3D(0.0F, 0.0F, 0.040F), ridge_half_width,
-               shield_height * 0.40F, frame_half_depth, k_bronze_ridge);
-    curved_box(QVector3D(0.0F, 0.0F, 0.070F), boss_radius * 0.95F,
-               boss_radius * 0.85F, frame_half_depth, k_bronze_ring);
+    curved_box(QVector3D(0.0F, 0.0F, 0.040F),
+               ridge_half_width,
+               shield_height * 0.40F,
+               frame_half_depth,
+               k_bronze_ridge);
+    curved_box(QVector3D(0.0F, 0.0F, 0.070F),
+               boss_radius * 0.95F,
+               boss_radius * 0.85F,
+               frame_half_depth,
+               k_bronze_ring);
 
     QVector3D const boss_center =
         k_shield_center + shield_forward * (shield_curve + boss_depth * 0.75F);
@@ -102,7 +129,7 @@ auto roman_scutum_archetype() -> const RenderArchetype & {
         QVector3D(-shield_width * 0.28F, -shield_height * 0.30F, 0.060F),
         QVector3D(shield_width * 0.28F, -shield_height * 0.30F, 0.060F),
     };
-    for (const QVector3D &offset : rivet_offsets) {
+    for (const QVector3D& offset : rivet_offsets) {
       curved_box(offset, 0.018F, 0.018F, 0.020F, k_bronze_rivet, 0.0F);
     }
 
@@ -113,8 +140,8 @@ auto roman_scutum_archetype() -> const RenderArchetype & {
 
 namespace {
 
-auto hand_l_basis_transform(const QMatrix4x4 &parent,
-                            const AttachmentFrame &hand_l) -> QMatrix4x4 {
+auto hand_l_basis_transform(const QMatrix4x4& parent,
+                            const AttachmentFrame& hand_l) -> QMatrix4x4 {
   QMatrix4x4 local;
   local.setColumn(0, QVector4D(hand_l.right, 0.0F));
   local.setColumn(1, QVector4D(hand_l.up, 0.0F));
@@ -134,23 +161,23 @@ auto scutum_local_pose() -> QMatrix4x4 {
 
 } // namespace
 
-void RomanScutumRenderer::render(const DrawContext &ctx,
-                                 const BodyFrames &frames,
-                                 const HumanoidPalette &palette,
-                                 const HumanoidAnimationContext &anim,
-                                 EquipmentBatch &batch) {
+void RomanScutumRenderer::render(const DrawContext& ctx,
+                                 const BodyFrames& frames,
+                                 const HumanoidPalette& palette,
+                                 const HumanoidAnimationContext& anim,
+                                 EquipmentBatch& batch) {
   submit({}, ctx, frames, palette, anim, batch);
 }
 
-void RomanScutumRenderer::submit(const RomanScutumConfig &,
-                                 const DrawContext &ctx,
-                                 const BodyFrames &frames,
-                                 const HumanoidPalette &palette,
-                                 const HumanoidAnimationContext &anim,
-                                 EquipmentBatch &batch) {
+void RomanScutumRenderer::submit(const RomanScutumConfig&,
+                                 const DrawContext& ctx,
+                                 const BodyFrames& frames,
+                                 const HumanoidPalette& palette,
+                                 const HumanoidAnimationContext& anim,
+                                 EquipmentBatch& batch) {
   (void)anim;
 
-  const AttachmentFrame &hand_l = frames.hand_l;
+  const AttachmentFrame& hand_l = frames.hand_l;
   if (hand_l.radius <= 0.0F) {
     return;
   }
@@ -166,19 +193,24 @@ void RomanScutumRenderer::submit(const RomanScutumConfig &,
       saturate_color(palette.metal * QVector3D(1.3F, 1.0F, 0.5F));
 
   std::array<QVector3D, k_roman_scutum_role_count> const palette_slots{
-      shield_red * 0.975F,  shield_red * 1.025F, bronze_color * 0.9F,
-      bronze_color,         bronze_color * 1.1F, bronze_color * 0.95F,
+      shield_red * 0.975F,
+      shield_red * 1.025F,
+      bronze_color * 0.9F,
+      bronze_color,
+      bronze_color * 1.1F,
+      bronze_color * 0.95F,
       bronze_color * 1.15F,
   };
 
-  append_equipment_archetype(batch, roman_scutum_archetype(),
+  append_equipment_archetype(batch,
+                             roman_scutum_archetype(),
                              hand_l_basis_transform(ctx.model, grip) *
                                  scutum_local_pose(),
                              palette_slots);
 }
 
-auto roman_scutum_fill_role_colors(const HumanoidPalette &palette,
-                                   QVector3D *out,
+auto roman_scutum_fill_role_colors(const HumanoidPalette& palette,
+                                   QVector3D* out,
                                    std::size_t max) -> std::uint32_t {
   if (max < k_roman_scutum_role_count) {
     return 0;
@@ -201,9 +233,8 @@ auto roman_scutum_make_static_attachment(std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec {
   constexpr auto k_bone = Render::Humanoid::HumanoidBone::HandL;
   QMatrix4x4 const bind_bone =
-      Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
-          k_bone)];
-  auto const &bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_l;
+      Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
+  auto const& bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_l;
   QMatrix4x4 bind_socket;
   bind_socket.setColumn(0, QVector4D(bind_grip.right, 0.0F));
   bind_socket.setColumn(1, QVector4D(bind_grip.up, 0.0F));
@@ -217,8 +248,7 @@ auto roman_scutum_make_static_attachment(std::uint8_t base_role_byte)
       .mesh_from_socket = scutum_local_pose(),
   });
   spec.palette_role_remap[k_red_even] = base_role_byte;
-  spec.palette_role_remap[k_red_odd] =
-      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_red_odd] = static_cast<std::uint8_t>(base_role_byte + 1U);
   spec.palette_role_remap[k_bronze_ridge] =
       static_cast<std::uint8_t>(base_role_byte + 2U);
   spec.palette_role_remap[k_bronze_ring] =

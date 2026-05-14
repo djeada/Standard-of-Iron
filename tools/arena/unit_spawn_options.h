@@ -1,13 +1,17 @@
 #pragma once
 
-#include "game/units/troop_type.h"
-
 #include <QString>
+
 #include <optional>
+
+#include "game/units/troop_type.h"
 
 namespace Arena::UnitSpawnOptions {
 
-enum class Kind { SingleHorse, SingleElephant };
+enum class Kind {
+  SingleHorse,
+  SingleElephant
+};
 
 struct SpecialUnitOption {
   Kind kind;
@@ -18,16 +22,16 @@ struct SpecialUnitOption {
   bool render_rider = true;
 };
 
-inline auto
-build_special_unit_id(Kind kind, Game::Units::TroopType troop_type) -> QString {
+inline auto build_special_unit_id(Kind kind,
+                                  Game::Units::TroopType troop_type) -> QString {
   QString const prefix = kind == Kind::SingleHorse
                              ? QStringLiteral("arena_single_horse:")
                              : QStringLiteral("arena_single_elephant:");
   return prefix + Game::Units::troop_typeToQString(troop_type);
 }
 
-inline auto make_special_unit_option(
-    Kind kind, Game::Units::TroopType troop_type) -> SpecialUnitOption {
+inline auto make_special_unit_option(Kind kind, Game::Units::TroopType troop_type)
+    -> SpecialUnitOption {
   SpecialUnitOption option;
   option.kind = kind;
   option.id = build_special_unit_id(kind, troop_type);
@@ -39,8 +43,8 @@ inline auto make_special_unit_option(
   return option;
 }
 
-inline auto parse_special_unit_option(const QString &value)
-    -> std::optional<SpecialUnitOption> {
+inline auto
+parse_special_unit_option(const QString& value) -> std::optional<SpecialUnitOption> {
   struct PrefixEntry {
     QString prefix;
     Kind kind;
@@ -50,7 +54,7 @@ inline auto parse_special_unit_option(const QString &value)
       {QStringLiteral("arena_single_elephant:"), Kind::SingleElephant},
   };
 
-  for (const PrefixEntry &entry : k_prefixes) {
+  for (const PrefixEntry& entry : k_prefixes) {
     if (!value.startsWith(entry.prefix)) {
       continue;
     }

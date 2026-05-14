@@ -1,13 +1,17 @@
 #include "hover_tracker.h"
+
 #include "game/core/world.h"
 #include "render/gl/camera.h"
 #include "systems/picking_service.h"
 
-HoverTracker::HoverTracker(Game::Systems::PickingService *picking_service)
-    : m_picking_service(picking_service) {}
+HoverTracker::HoverTracker(Game::Systems::PickingService* picking_service)
+    : m_picking_service(picking_service) {
+}
 
-auto HoverTracker::update_hover(float sx, float sy, Engine::Core::World &world,
-                                const Render::GL::Camera &camera,
+auto HoverTracker::update_hover(float sx,
+                                float sy,
+                                Engine::Core::World& world,
+                                const Render::GL::Camera& camera,
                                 int viewport_width,
                                 int viewport_height) -> Engine::Core::EntityID {
   if (m_picking_service == nullptr) {

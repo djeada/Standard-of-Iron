@@ -1,17 +1,17 @@
 #pragma once
 
+#include <QVector3D>
+
+#include <algorithm>
+#include <cmath>
+
 #include "../entity/renderer_constants.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../gl/humanoid/humanoid_types.h"
 
-#include <QVector3D>
-#include <algorithm>
-#include <cmath>
-
 namespace Render::GL {
 
-inline auto
-compute_spear_direction(const AnimationInputs &anim_inputs) -> QVector3D {
+inline auto compute_spear_direction(const AnimationInputs& anim_inputs) -> QVector3D {
 
   auto normalize = [](QVector3D dir) {
     if (dir.lengthSquared() > 1e-6F) {
@@ -25,8 +25,7 @@ compute_spear_direction(const AnimationInputs &anim_inputs) -> QVector3D {
   float const hold_blend = hold_transition_amount(anim_inputs);
   if (hold_blend > 0.0F) {
     QVector3D const braced_dir = normalize(QVector3D(0.05F, 0.40F, 0.91F));
-    spear_dir =
-        normalize(spear_dir * (1.0F - hold_blend) + braced_dir * hold_blend);
+    spear_dir = normalize(spear_dir * (1.0F - hold_blend) + braced_dir * hold_blend);
   } else if (anim_inputs.is_attacking && anim_inputs.is_melee) {
     float const attack_phase =
         std::fmod(anim_inputs.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
@@ -41,10 +40,13 @@ compute_spear_direction(const AnimationInputs &anim_inputs) -> QVector3D {
   return spear_dir;
 }
 
-inline auto compute_offhand_spear_grip(
-    const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
-    const QVector3D &main_hand_pos, bool main_is_left, float along_offset,
-    float y_drop = 0.05F, float lateral_offset = 0.05F) -> QVector3D {
+inline auto compute_offhand_spear_grip(const HumanoidPose& pose,
+                                       const HumanoidAnimationContext& anim_ctx,
+                                       const QVector3D& main_hand_pos,
+                                       bool main_is_left,
+                                       float along_offset,
+                                       float y_drop = 0.05F,
+                                       float lateral_offset = 0.05F) -> QVector3D {
   QVector3D const spear_dir = compute_spear_direction(anim_ctx.inputs);
 
   QVector3D offhand = main_hand_pos + spear_dir * along_offset;

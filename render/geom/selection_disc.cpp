@@ -1,9 +1,12 @@
 #include "selection_disc.h"
-#include "gl/mesh.h"
+
 #include <QVector3D>
+
 #include <cmath>
 #include <memory>
 #include <vector>
+
+#include "gl/mesh.h"
 
 namespace Render::Geom {
 
@@ -31,7 +34,7 @@ static auto create_disc_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   return std::make_unique<Mesh>(verts, idx);
 }
 
-auto SelectionDisc::get() -> Render::GL::Mesh * {
+auto SelectionDisc::get() -> Render::GL::Mesh* {
   if (!s_mesh) {
     s_mesh = create_disc_mesh();
   }

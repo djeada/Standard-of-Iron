@@ -1,5 +1,12 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <gtest/gtest.h>
+#include <memory>
+#include <vector>
+
 #include "render/bone_palette_arena.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/render_request.h"
@@ -7,12 +14,6 @@
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_cache.h"
 #include "render/snapshot_mesh_cache.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <gtest/gtest.h>
-#include <memory>
-#include <vector>
 
 namespace {
 
@@ -23,19 +24,15 @@ using Render::GL::SnapshotMeshCache;
 
 class RuntimeBakeGuardReset {
 public:
-  RuntimeBakeGuardReset() {
-    Render::Creature::set_runtime_bake_forbidden(false);
-  }
-  ~RuntimeBakeGuardReset() {
-    Render::Creature::set_runtime_bake_forbidden(false);
-  }
+  RuntimeBakeGuardReset() { Render::Creature::set_runtime_bake_forbidden(false); }
+  ~RuntimeBakeGuardReset() { Render::Creature::set_runtime_bake_forbidden(false); }
 };
 
 auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
   auto entry = std::make_unique<RiggedMeshEntry>();
 
   std::vector<RiggedVertex> vertices(4);
-  for (auto &v : vertices) {
+  for (auto& v : vertices) {
     v.position_bone_local = {0.0F, 0.0F, 0.0F};
     v.normal_bone_local = {0.0F, 1.0F, 0.0F};
     v.tex_coord = {0.0F, 0.0F};
@@ -54,15 +51,14 @@ auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
 
   std::vector<std::uint32_t> indices = {0, 1, 2, 0, 2, 3};
 
-  entry->mesh = std::make_unique<Render::GL::RiggedMesh>(std::move(vertices),
-                                                         std::move(indices));
+  entry->mesh =
+      std::make_unique<Render::GL::RiggedMesh>(std::move(vertices), std::move(indices));
 
   entry->skinned_bone_count = 2U;
   entry->skinned_frame_total = 2U;
-  entry->skinned_palettes.assign(
-      static_cast<std::size_t>(entry->skinned_frame_total) *
-          entry->skinned_bone_count,
-      QMatrix4x4{});
+  entry->skinned_palettes.assign(static_cast<std::size_t>(entry->skinned_frame_total) *
+                                     entry->skinned_bone_count,
+                                 QMatrix4x4{});
 
   QMatrix4x4 f0_b0;
   f0_b0.translate(0.0F, 2.0F, 0.0F);
@@ -78,10 +74,9 @@ auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
 }
 
 TEST(SnapshotMeshCache, IdentityPaletteIsAllIdentity) {
-  const QMatrix4x4 *p = SnapshotMeshCache::identity_palette();
+  const QMatrix4x4* p = SnapshotMeshCache::identity_palette();
   ASSERT_NE(p, nullptr);
-  for (std::size_t i = 0; i < Render::GL::BonePaletteArena::k_palette_width;
-       ++i) {
+  for (std::size_t i = 0; i < Render::GL::BonePaletteArena::k_palette_width; ++i) {
     EXPECT_TRUE(p[i].isIdentity()) << "slot " << i;
   }
 }
@@ -96,14 +91,14 @@ TEST(SnapshotMeshCache, BakesAndCachesEntry) {
   key.state = AnimationStateId::Idle;
   key.frame_in_clip = 0U;
 
-  const auto *snap = cache.get_or_bake(key, *source, 0U);
+  const auto* snap = cache.get_or_bake(key, *source, 0U);
   ASSERT_NE(snap, nullptr);
   ASSERT_NE(snap->mesh, nullptr);
   EXPECT_EQ(snap->mesh->vertex_count(), 4U);
   EXPECT_EQ(snap->mesh->index_count(), 6U);
   EXPECT_EQ(cache.size(), 1U);
 
-  const auto *snap2 = cache.get_or_bake(key, *source, 0U);
+  const auto* snap2 = cache.get_or_bake(key, *source, 0U);
   EXPECT_EQ(snap, snap2);
   EXPECT_EQ(cache.size(), 1U);
 }
@@ -114,10 +109,10 @@ TEST(SnapshotMeshCache, AppliesSkinningAtFrameZero) {
 
   SnapshotMeshCache::Key key{};
   key.frame_in_clip = 0U;
-  const auto *snap = cache.get_or_bake(key, *source, 0U);
+  const auto* snap = cache.get_or_bake(key, *source, 0U);
   ASSERT_NE(snap, nullptr);
 
-  const auto &v = snap->mesh->get_vertices();
+  const auto& v = snap->mesh->get_vertices();
   ASSERT_EQ(v.size(), 4U);
 
   EXPECT_FLOAT_EQ(v[0].position_bone_local[0], -1.0F);
@@ -129,7 +124,7 @@ TEST(SnapshotMeshCache, AppliesSkinningAtFrameZero) {
   EXPECT_FLOAT_EQ(v[3].position_bone_local[0], 0.0F);
   EXPECT_FLOAT_EQ(v[3].position_bone_local[1], 0.0F);
 
-  for (const auto &bv : v) {
+  for (const auto& bv : v) {
     EXPECT_EQ(bv.bone_indices[0], 0);
     EXPECT_FLOAT_EQ(bv.bone_weights[0], 1.0F);
     EXPECT_FLOAT_EQ(bv.bone_weights[1], 0.0F);
@@ -148,8 +143,8 @@ TEST(SnapshotMeshCache, DifferentFramesProduceDifferentMeshes) {
   SnapshotMeshCache::Key key1{};
   key1.frame_in_clip = 1U;
 
-  const auto *s0 = cache.get_or_bake(key0, *source, 0U);
-  const auto *s1 = cache.get_or_bake(key1, *source, 1U);
+  const auto* s0 = cache.get_or_bake(key0, *source, 0U);
+  const auto* s1 = cache.get_or_bake(key1, *source, 1U);
   ASSERT_NE(s0, nullptr);
   ASSERT_NE(s1, nullptr);
   EXPECT_NE(s0, s1);
@@ -270,7 +265,7 @@ TEST(SnapshotMeshCache, RuntimeBakeGuardAllowsHitsButRejectsMisses) {
 
   SnapshotMeshCache::Key warmed{};
   warmed.frame_in_clip = 0U;
-  const auto *snap = cache.get_or_bake(warmed, *source, 0U);
+  const auto* snap = cache.get_or_bake(warmed, *source, 0U);
   ASSERT_NE(snap, nullptr);
   EXPECT_EQ(cache.size(), 1U);
 

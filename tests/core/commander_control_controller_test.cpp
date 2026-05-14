@@ -1,5 +1,6 @@
-#include "app/core/commander_control_controller.h"
+#include <gtest/gtest.h>
 
+#include "app/core/commander_control_controller.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -8,8 +9,6 @@
 #include "game/systems/movement_system.h"
 #include "game/systems/pathfinding.h"
 #include "render/gl/camera.h"
-
-#include <gtest/gtest.h>
 
 namespace {
 
@@ -26,18 +25,19 @@ protected:
     Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
-  static auto create_commander(Engine::Core::World &world, float x,
-                               float z) -> Engine::Core::Entity * {
-    auto *entity = world.create_entity();
+  static auto create_commander(Engine::Core::World& world,
+                               float x,
+                               float z) -> Engine::Core::Entity* {
+    auto* entity = world.create_entity();
     if (entity == nullptr) {
       return nullptr;
     }
 
-    auto *transform =
+    auto* transform =
         entity->add_component<Engine::Core::TransformComponent>(x, 0.0F, z);
-    auto *unit = entity->add_component<Engine::Core::UnitComponent>();
-    auto *movement = entity->add_component<Engine::Core::MovementComponent>();
-    auto *commander = entity->add_component<Engine::Core::CommanderComponent>();
+    auto* unit = entity->add_component<Engine::Core::UnitComponent>();
+    auto* movement = entity->add_component<Engine::Core::MovementComponent>();
+    auto* commander = entity->add_component<Engine::Core::CommanderComponent>();
     if (transform == nullptr || unit == nullptr || movement == nullptr ||
         commander == nullptr) {
       return nullptr;
@@ -54,14 +54,13 @@ protected:
 
 TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
   Engine::Core::World world;
-  auto *commander = create_commander(world, 0.0F, 0.0F);
+  auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
 
-  auto *transform =
-      commander->get_component<Engine::Core::TransformComponent>();
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
 
-  auto *pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   auto const blocked = Game::Systems::CommandService::world_to_grid(0.0F, 1.0F);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
@@ -74,8 +73,7 @@ TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.4F));
 
   EXPECT_GT(transform->position.z, 0.9F);
-  auto *commander_data =
-      commander->get_component<Engine::Core::CommanderComponent>();
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander_data, nullptr);
   EXPECT_TRUE(commander_data->jump_active);
 }
@@ -83,14 +81,13 @@ TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
 TEST_F(CommanderControlControllerTest,
        JumpLandingSnapsBackWhenNoWalkableLandingExists) {
   Engine::Core::World world;
-  auto *commander = create_commander(world, 0.0F, 0.0F);
+  auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
 
-  auto *transform =
-      commander->get_component<Engine::Core::TransformComponent>();
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
 
-  auto *pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   for (float z : {1.0F, 2.0F, 3.0F}) {
     auto const blocked = Game::Systems::CommandService::world_to_grid(0.0F, z);
@@ -113,19 +110,17 @@ TEST_F(CommanderControlControllerTest,
 TEST_F(CommanderControlControllerTest,
        AirborneCommanderSkipsMovementRollbackAndRecovery) {
   Engine::Core::World world;
-  auto *commander = create_commander(world, 0.0F, 0.0F);
+  auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
 
-  auto *transform =
-      commander->get_component<Engine::Core::TransformComponent>();
-  auto *movement = commander->get_component<Engine::Core::MovementComponent>();
-  auto *commander_data =
-      commander->get_component<Engine::Core::CommanderComponent>();
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  auto* movement = commander->get_component<Engine::Core::MovementComponent>();
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(transform, nullptr);
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(commander_data, nullptr);
 
-  auto *pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   auto const blocked = Game::Systems::CommandService::world_to_grid(
       transform->position.x, transform->position.z);

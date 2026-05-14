@@ -26,18 +26,14 @@ struct GameplayConfig {
 
 class GameConfig {
 public:
-  static auto instance() noexcept -> GameConfig & {
+  static auto instance() noexcept -> GameConfig& {
     static GameConfig inst;
     return inst;
   }
 
-  [[nodiscard]] auto camera() const noexcept -> const CameraConfig & {
-    return m_camera;
-  }
-  [[nodiscard]] auto arrow() const noexcept -> const ArrowConfig & {
-    return m_arrow;
-  }
-  [[nodiscard]] auto gameplay() const noexcept -> const GameplayConfig & {
+  [[nodiscard]] auto camera() const noexcept -> const CameraConfig& { return m_camera; }
+  [[nodiscard]] auto arrow() const noexcept -> const ArrowConfig& { return m_arrow; }
+  [[nodiscard]] auto gameplay() const noexcept -> const GameplayConfig& {
     return m_gameplay;
   }
 
@@ -89,9 +85,7 @@ public:
   void set_camera_default_pitch(float value) noexcept {
     m_camera.default_pitch = value;
   }
-  void set_camera_default_yaw(float value) noexcept {
-    m_camera.default_yaw = value;
-  }
+  void set_camera_default_yaw(float value) noexcept { m_camera.default_yaw = value; }
 
   void set_arrow_arc_height_multiplier(float value) noexcept {
     m_arrow.arc_height_multiplier = value;
@@ -103,12 +97,8 @@ public:
     m_arrow.arc_height_max = value;
   }
 
-  void set_arrow_speed_default(float value) noexcept {
-    m_arrow.speed_default = value;
-  }
-  void set_arrow_speed_attack(float value) noexcept {
-    m_arrow.speed_attack = value;
-  }
+  void set_arrow_speed_default(float value) noexcept { m_arrow.speed_default = value; }
+  void set_arrow_speed_attack(float value) noexcept { m_arrow.speed_attack = value; }
 
   void set_visibility_update_interval(float value) noexcept {
     m_gameplay.visibility_update_interval = value;

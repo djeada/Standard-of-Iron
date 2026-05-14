@@ -1,8 +1,5 @@
 #include "building_panel.h"
 
-#include "game/systems/nation_id.h"
-#include "game/systems/nation_registry.h"
-
 #include <QComboBox>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -14,16 +11,19 @@
 #include <QStringList>
 #include <QVBoxLayout>
 
+#include "game/systems/nation_id.h"
+#include "game/systems/nation_registry.h"
+
 namespace {
 
 constexpr int k_arena_building_local_owner_id = 1;
 constexpr int k_arena_building_opponent_owner_id = 2;
 
-auto prettify_building_identifier(const QString &value) -> QString {
+auto prettify_building_identifier(const QString& value) -> QString {
   QString label = value;
   label.replace(QLatin1Char('_'), QLatin1Char(' '));
   QStringList parts = label.split(QLatin1Char(' '), Qt::SkipEmptyParts);
-  for (QString &part : parts) {
+  for (QString& part : parts) {
     if (!part.isEmpty()) {
       part[0] = part[0].toUpper();
     }
@@ -33,31 +33,30 @@ auto prettify_building_identifier(const QString &value) -> QString {
 
 } // namespace
 
-BuildingPanel::BuildingPanel(QWidget *parent) : QWidget(parent) {
-  auto *layout = new QVBoxLayout(this);
+BuildingPanel::BuildingPanel(QWidget* parent)
+    : QWidget(parent) {
+  auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
 
-  auto *spawn_group = new QGroupBox("Spawn Building", this);
-  auto *spawn_group_layout = new QVBoxLayout(spawn_group);
+  auto* spawn_group = new QGroupBox("Spawn Building", this);
+  auto* spawn_group_layout = new QVBoxLayout(spawn_group);
   spawn_group_layout->setSpacing(6);
 
-  auto *spawn_form = new QFormLayout();
+  auto* spawn_form = new QFormLayout();
   spawn_form->setSpacing(4);
   m_owner_box = new QComboBox(spawn_group);
   m_nation_box = new QComboBox(spawn_group);
   m_building_box = new QComboBox(spawn_group);
   m_spawn_count_box = new QSpinBox(spawn_group);
 
-  m_owner_box->addItem(QStringLiteral("Local Player"),
-                       k_arena_building_local_owner_id);
+  m_owner_box->addItem(QStringLiteral("Local Player"), k_arena_building_local_owner_id);
   m_owner_box->addItem(QStringLiteral("Arena Opponent"),
                        k_arena_building_opponent_owner_id);
   m_spawn_count_box->setRange(1, 16);
   m_spawn_count_box->setValue(1);
 
-  m_building_box->addItem(QStringLiteral("Barracks"),
-                          QStringLiteral("barracks"));
+  m_building_box->addItem(QStringLiteral("Barracks"), QStringLiteral("barracks"));
   m_building_box->addItem(QStringLiteral("Defense Tower"),
                           QStringLiteral("defense_tower"));
   m_building_box->addItem(QStringLiteral("Home"), QStringLiteral("home"));
@@ -68,13 +67,13 @@ BuildingPanel::BuildingPanel(QWidget *parent) : QWidget(parent) {
   spawn_form->addRow("Spawn Count", m_spawn_count_box);
   spawn_group_layout->addLayout(spawn_form);
 
-  auto *spawn_buttons = new QWidget(spawn_group);
-  auto *spawn_buttons_layout = new QHBoxLayout(spawn_buttons);
+  auto* spawn_buttons = new QWidget(spawn_group);
+  auto* spawn_buttons_layout = new QHBoxLayout(spawn_buttons);
   spawn_buttons_layout->setContentsMargins(0, 0, 0, 0);
   spawn_buttons_layout->setSpacing(6);
-  auto *spawn_button = new QPushButton("Spawn", spawn_group);
+  auto* spawn_button = new QPushButton("Spawn", spawn_group);
   spawn_button->setProperty("primary", true);
-  auto *clear_button = new QPushButton("Clear", spawn_group);
+  auto* clear_button = new QPushButton("Clear", spawn_group);
   spawn_button->setToolTip("Spawn buildings with selected settings");
   clear_button->setToolTip("Remove all buildings from the arena");
   spawn_buttons_layout->addWidget(spawn_button, 1);
@@ -83,8 +82,8 @@ BuildingPanel::BuildingPanel(QWidget *parent) : QWidget(parent) {
 
   layout->addWidget(spawn_group);
 
-  auto *selection_group = new QGroupBox("Selection", this);
-  auto *selection_layout = new QVBoxLayout(selection_group);
+  auto* selection_group = new QGroupBox("Selection", this);
+  auto* selection_layout = new QVBoxLayout(selection_group);
   m_selection_summary_label =
       new QLabel(QStringLiteral("No buildings selected."), selection_group);
   m_selection_summary_label->setTextFormat(Qt::PlainText);
@@ -99,27 +98,32 @@ BuildingPanel::BuildingPanel(QWidget *parent) : QWidget(parent) {
     emit spawn_buildings_requested(
         m_spawn_count_box != nullptr ? m_spawn_count_box->value() : 1);
   });
-  connect(clear_button, &QPushButton::clicked, this,
+  connect(clear_button,
+          &QPushButton::clicked,
+          this,
           &BuildingPanel::clear_buildings_requested);
-  connect(m_owner_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
+  connect(m_owner_box,
+          qOverload<int>(&QComboBox::currentIndexChanged),
+          this,
           [this](int) { emit building_owner_selected(selected_owner_id()); });
-  connect(m_nation_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
+  connect(m_nation_box,
+          qOverload<int>(&QComboBox::currentIndexChanged),
+          this,
           [this](int) { emit building_nation_selected(selected_nation_id()); });
-  connect(m_building_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) {
-            emit building_type_selected(selected_building_type_id());
-          });
+  connect(m_building_box,
+          qOverload<int>(&QComboBox::currentIndexChanged),
+          this,
+          [this](int) { emit building_type_selected(selected_building_type_id()); });
 
   populate_nation_options();
 }
 
-void BuildingPanel::set_selection_summary(const QString &summary) {
+void BuildingPanel::set_selection_summary(const QString& summary) {
   if (m_selection_summary_label == nullptr) {
     return;
   }
   m_selection_summary_label->setText(
-      summary.trimmed().isEmpty() ? QStringLiteral("No buildings selected.")
-                                  : summary);
+      summary.trimmed().isEmpty() ? QStringLiteral("No buildings selected.") : summary);
 }
 
 auto BuildingPanel::selected_owner_id() const -> int {
@@ -128,8 +132,7 @@ auto BuildingPanel::selected_owner_id() const -> int {
 }
 
 auto BuildingPanel::selected_nation_id() const -> QString {
-  return m_nation_box != nullptr ? m_nation_box->currentData().toString()
-                                 : QString();
+  return m_nation_box != nullptr ? m_nation_box->currentData().toString() : QString();
 }
 
 auto BuildingPanel::selected_building_type_id() const -> QString {
@@ -142,11 +145,11 @@ void BuildingPanel::populate_nation_options() {
     return;
   }
 
-  const auto &registry = Game::Systems::NationRegistry::instance();
-  const auto &nations = registry.get_all_nations();
+  const auto& registry = Game::Systems::NationRegistry::instance();
+  const auto& nations = registry.get_all_nations();
 
   m_nation_box->clear();
-  for (const auto &nation : nations) {
+  for (const auto& nation : nations) {
     QString const nation_id = Game::Systems::nation_id_to_qstring(nation.id);
     QString label = QString::fromStdString(nation.display_name);
     if (label.trimmed().isEmpty()) {

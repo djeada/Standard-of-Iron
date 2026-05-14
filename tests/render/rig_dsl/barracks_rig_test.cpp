@@ -1,15 +1,15 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "render/rig_dsl/defs/barracks_rig.h"
 #include "render/rig_dsl/rig_interpreter.h"
 #include "render/rig_dsl/static_resolver.h"
 #include "render/submitter.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <gtest/gtest.h>
-
-#include <vector>
 
 namespace {
 
@@ -21,35 +21,42 @@ struct RecordedPart {
 
 class RecordingSubmitter final : public Render::GL::ISubmitter {
 public:
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &model, const QVector3D &color,
-            Render::GL::Texture *, float alpha, int = 0) override {
+  void mesh(Render::GL::Mesh*,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Render::GL::Texture*,
+            float alpha,
+            int = 0) override {
     m_records.push_back({model, color, alpha});
   }
-  void part(Render::GL::Mesh *, Render::GL::Material *, const QMatrix4x4 &model,
-            const QVector3D &color, Render::GL::Texture *, float alpha,
+  void part(Render::GL::Mesh*,
+            Render::GL::Material*,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Render::GL::Texture*,
+            float alpha,
             int = 0) override {
     m_records.push_back({model, color, alpha});
   }
 
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 
-  [[nodiscard]] auto records() const -> const std::vector<RecordedPart> & {
+  [[nodiscard]] auto records() const -> const std::vector<RecordedPart>& {
     return m_records;
   }
 
@@ -100,7 +107,7 @@ TEST(BarracksRigTest, PlatformBaseBoxHasExpectedCenterAndScale) {
   Render::RigDSL::render_part(k_parts[0], ctx, sub);
 
   ASSERT_EQ(sub.records().size(), 1U);
-  auto const &m = sub.records()[0].model;
+  auto const& m = sub.records()[0].model;
   QVector3D const centre = m.map(QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_NEAR(centre.x(), 0.0F, 1e-4F);
   EXPECT_NEAR(centre.y(), 0.08F, 1e-4F);
@@ -123,18 +130,9 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
   };
 
   const LegacyBox k_legacy_boxes[] = {
-      {Platform_BaseLow,
-       Platform_BaseHigh,
-       {0.0F, 0.08F, 0.0F},
-       {2.0F, 0.08F, 1.8F}},
-      {Platform_TopLow,
-       Platform_TopHigh,
-       {0.0F, 0.18F, 0.0F},
-       {1.8F, 0.02F, 1.6F}},
-      {Court_StoneLow,
-       Court_StoneHigh,
-       {0.0F, 0.22F, 0.0F},
-       {1.3F, 0.01F, 1.1F}},
+      {Platform_BaseLow, Platform_BaseHigh, {0.0F, 0.08F, 0.0F}, {2.0F, 0.08F, 1.8F}},
+      {Platform_TopLow, Platform_TopHigh, {0.0F, 0.18F, 0.0F}, {1.8F, 0.02F, 1.6F}},
+      {Court_StoneLow, Court_StoneHigh, {0.0F, 0.22F, 0.0F}, {1.3F, 0.01F, 1.1F}},
       {Court_PoolLow, Court_PoolHigh, {0.0F, 0.24F, 0.0F}, {0.7F, 0.02F, 0.5F}},
       {Court_PoolTrimSLow,
        Court_PoolTrimSHigh,
@@ -149,44 +147,31 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
        {0.0F, 0.58F, 0.0F},
        {0.08F, 0.03F, 0.08F}},
       {Wall_BackLow, Wall_BackHigh, {0.0F, 0.90F, -1.2F}, {1.4F, 0.70F, 0.10F}},
-      {Wall_LeftLow,
-       Wall_LeftHigh,
-       {-1.5F, 0.90F, -0.5F},
-       {0.10F, 0.70F, 0.60F}},
-      {Wall_RightLow,
-       Wall_RightHigh,
-       {1.5F, 0.90F, -0.5F},
-       {0.10F, 0.70F, 0.60F}},
-      {Door_LDoorLow,
-       Door_LDoorHigh,
-       {-0.6F, 0.65F, -1.15F},
-       {0.25F, 0.35F, 0.03F}},
+      {Wall_LeftLow, Wall_LeftHigh, {-1.5F, 0.90F, -0.5F}, {0.10F, 0.70F, 0.60F}},
+      {Wall_RightLow, Wall_RightHigh, {1.5F, 0.90F, -0.5F}, {0.10F, 0.70F, 0.60F}},
+      {Door_LDoorLow, Door_LDoorHigh, {-0.6F, 0.65F, -1.15F}, {0.25F, 0.35F, 0.03F}},
       {Door_LLintelLow,
        Door_LLintelHigh,
        {-0.6F, 0.98F, -1.15F},
        {0.25F, 0.05F, 0.03F}},
-      {Door_RDoorLow,
-       Door_RDoorHigh,
-       {0.6F, 0.65F, -1.15F},
-       {0.25F, 0.35F, 0.03F}},
-      {Door_RLintelLow,
-       Door_RLintelHigh,
-       {0.6F, 0.98F, -1.15F},
-       {0.25F, 0.05F, 0.03F}},
+      {Door_RDoorLow, Door_RDoorHigh, {0.6F, 0.65F, -1.15F}, {0.25F, 0.35F, 0.03F}},
+      {Door_RLintelLow, Door_RLintelHigh, {0.6F, 0.98F, -1.15F}, {0.25F, 0.05F, 0.03F}},
   };
 
   Render::RigDSL::StaticAnchorResolver<Goods_Amp3Top + 1U> anchors;
 
-  auto set_pair = [&](Render::RigDSL::AnchorId lo, Render::RigDSL::AnchorId hi,
-                      const QVector3D &c, const QVector3D &h) {
+  auto set_pair = [&](Render::RigDSL::AnchorId lo,
+                      Render::RigDSL::AnchorId hi,
+                      const QVector3D& c,
+                      const QVector3D& h) {
     anchors.set(lo, c - h);
     anchors.set(hi, c + h);
   };
-  for (auto const &b : k_legacy_boxes) {
+  for (auto const& b : k_legacy_boxes) {
     set_pair(b.low, b.high, b.legacy_center, b.legacy_half_extent);
   }
 
-  for (auto const &b : k_legacy_boxes) {
+  for (auto const& b : k_legacy_boxes) {
     Render::RigDSL::PartDef part{Render::RigDSL::PartKind::Box,
                                  0,
                                  0xFFU,
@@ -211,7 +196,7 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
     Render::RigDSL::render_part(part, ctx, sub);
     ASSERT_EQ(sub.records().size(), 1U);
 
-    QMatrix4x4 const &m = sub.records()[0].model;
+    QMatrix4x4 const& m = sub.records()[0].model;
 
     QVector3D const mapped_min = m.map(QVector3D(-1.0F, -1.0F, -1.0F));
     QVector3D const mapped_max = m.map(QVector3D(1.0F, 1.0F, 1.0F));
@@ -239,7 +224,8 @@ TEST(BarracksRigTest, RigIteratesAllParts) {
 
   for (std::size_t i = 0; i <= static_cast<std::size_t>(Goods_Amp3Top); ++i) {
     anchors.set(static_cast<Render::RigDSL::AnchorId>(i),
-                QVector3D(static_cast<float>(i), static_cast<float>(i) + 0.5F,
+                QVector3D(static_cast<float>(i),
+                          static_cast<float>(i) + 0.5F,
                           -static_cast<float>(i)));
   }
 

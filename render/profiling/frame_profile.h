@@ -20,7 +20,7 @@ enum class Phase : std::uint8_t {
   _Count
 };
 
-[[nodiscard]] inline auto phase_name(Phase p) noexcept -> const char * {
+[[nodiscard]] inline auto phase_name(Phase p) noexcept -> const char* {
   switch (p) {
   case Phase::Collection:
     return "collect";
@@ -54,7 +54,7 @@ struct FrameProfile {
   bool enabled{true};
 
   void reset() {
-    for (auto &v : phase_us) {
+    for (auto& v : phase_us) {
       v = 0;
     }
     draw_calls = 0;
@@ -81,16 +81,17 @@ struct FrameProfile {
 
 class PhaseScope {
 public:
-  PhaseScope(FrameProfile *profile, Phase phase)
-      : m_profile(profile), m_phase(phase),
-        m_start(profile != nullptr && profile->enabled
+  PhaseScope(FrameProfile* profile, Phase phase)
+      : m_profile(profile)
+      , m_phase(phase)
+      , m_start(profile != nullptr && profile->enabled
                     ? std::chrono::steady_clock::now()
                     : std::chrono::steady_clock::time_point{}) {}
 
-  PhaseScope(const PhaseScope &) = delete;
-  auto operator=(const PhaseScope &) -> PhaseScope & = delete;
-  PhaseScope(PhaseScope &&) = delete;
-  auto operator=(PhaseScope &&) -> PhaseScope & = delete;
+  PhaseScope(const PhaseScope&) = delete;
+  auto operator=(const PhaseScope&) -> PhaseScope& = delete;
+  PhaseScope(PhaseScope&&) = delete;
+  auto operator=(PhaseScope&&) -> PhaseScope& = delete;
 
   ~PhaseScope() {
     if (m_profile == nullptr || !m_profile->enabled) {
@@ -98,19 +99,18 @@ public:
     }
     auto const now = std::chrono::steady_clock::now();
     auto const us =
-        std::chrono::duration_cast<std::chrono::microseconds>(now - m_start)
-            .count();
+        std::chrono::duration_cast<std::chrono::microseconds>(now - m_start).count();
     m_profile->add_phase_us(m_phase, static_cast<std::uint64_t>(us));
   }
 
 private:
-  FrameProfile *m_profile;
+  FrameProfile* m_profile;
   Phase m_phase;
   std::chrono::steady_clock::time_point m_start;
 };
 
-[[nodiscard]] auto format_overlay(const FrameProfile &profile) -> std::string;
+[[nodiscard]] auto format_overlay(const FrameProfile& profile) -> std::string;
 
-[[nodiscard]] auto global_profile() -> FrameProfile &;
+[[nodiscard]] auto global_profile() -> FrameProfile&;
 
 } // namespace Render::Profiling

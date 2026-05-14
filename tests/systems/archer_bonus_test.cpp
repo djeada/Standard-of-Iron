@@ -1,10 +1,11 @@
+#include <gtest/gtest.h>
+
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/combat_system/combat_types.h"
 #include "systems/owner_registry.h"
 #include "units/spawn_type.h"
-#include <gtest/gtest.h>
 
 using namespace Engine::Core;
 using namespace Game::Systems;
@@ -47,10 +48,9 @@ TEST_F(ArcherBonusTest, ArcherVsElephantMultiplierIsCorrect) {
 
 TEST_F(ArcherBonusTest, ElephantComponentExistsOnElephantUnit) {
 
-  auto *elephant = world->create_entity();
+  auto* elephant = world->create_entity();
   elephant->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto *elephant_unit =
-      elephant->add_component<UnitComponent>(8000, 8000, 2.2F, 16.0F);
+  auto* elephant_unit = elephant->add_component<UnitComponent>(8000, 8000, 2.2F, 16.0F);
   elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
   elephant->add_component<ElephantComponent>();
 
@@ -59,10 +59,9 @@ TEST_F(ArcherBonusTest, ElephantComponentExistsOnElephantUnit) {
 
 TEST_F(ArcherBonusTest, NonElephantUnitsDoNotHaveElephantComponent) {
 
-  auto *spearman = world->create_entity();
+  auto* spearman = world->create_entity();
   spearman->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto *spearman_unit =
-      spearman->add_component<UnitComponent>(1260, 1260, 2.1F, 14.0F);
+  auto* spearman_unit = spearman->add_component<UnitComponent>(1260, 1260, 2.1F, 14.0F);
   spearman_unit->spawn_type = Game::Units::SpawnType::Spearman;
 
   EXPECT_FALSE(spearman->has_component<ElephantComponent>());
@@ -72,8 +71,7 @@ TEST_F(ArcherBonusTest, ExpectedDamageCalculation) {
 
   int const archer_base_damage = 24;
   int const horse_archer_base_damage = 27;
-  float const elephant_multiplier =
-      Combat::Constants::k_archer_vs_elephant_multiplier;
+  float const elephant_multiplier = Combat::Constants::k_archer_vs_elephant_multiplier;
 
   int const archer_vs_elephant =
       static_cast<int>(archer_base_damage * elephant_multiplier);

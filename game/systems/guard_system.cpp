@@ -1,28 +1,30 @@
 #include "guard_system.h"
+
+#include <QVector3D>
+
+#include <cmath>
+
 #include "../core/component.h"
 #include "../core/world.h"
 #include "command_service.h"
-#include <QVector3D>
-#include <cmath>
 
 namespace Game::Systems {
 
-void GuardSystem::update(Engine::Core::World *world, float) {
+void GuardSystem::update(Engine::Core::World* world, float) {
   if (world == nullptr) {
     return;
   }
 
   auto entities = world->get_entities_with<Engine::Core::GuardModeComponent>();
 
-  for (auto *entity : entities) {
-    auto *guard_mode =
-        entity->get_component<Engine::Core::GuardModeComponent>();
-    auto *movement = entity->get_component<Engine::Core::MovementComponent>();
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (auto* entity : entities) {
+    auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
+    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
 
-    if ((guard_mode == nullptr) || (movement == nullptr) ||
-        (transform == nullptr) || (unit == nullptr)) {
+    if ((guard_mode == nullptr) || (movement == nullptr) || (transform == nullptr) ||
+        (unit == nullptr)) {
       continue;
     }
 
@@ -34,16 +36,15 @@ void GuardSystem::update(Engine::Core::World *world, float) {
       continue;
     }
 
-    auto *attack_target =
-        entity->get_component<Engine::Core::AttackTargetComponent>();
+    auto* attack_target = entity->get_component<Engine::Core::AttackTargetComponent>();
     if ((attack_target != nullptr) && attack_target->target_id != 0) {
       continue;
     }
 
     if (guard_mode->guarded_entity_id != 0) {
-      auto *guarded_entity = world->get_entity(guard_mode->guarded_entity_id);
+      auto* guarded_entity = world->get_entity(guard_mode->guarded_entity_id);
       if (guarded_entity != nullptr) {
-        auto *guarded_transform =
+        auto* guarded_transform =
             guarded_entity->get_component<Engine::Core::TransformComponent>();
         if (guarded_transform != nullptr) {
 
@@ -72,8 +73,7 @@ void GuardSystem::update(Engine::Core::World *world, float) {
               CommandService::MoveOptions opts;
               opts.clear_attack_intent = false;
               opts.allow_direct_fallback = true;
-              std::vector<Engine::Core::EntityID> const ids = {
-                  entity->get_id()};
+              std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
               std::vector<QVector3D> const targets = {
                   QVector3D(new_guard_x, 0.0F, new_guard_z)};
               CommandService::move_units(*world, ids, targets, opts);
@@ -99,9 +99,8 @@ void GuardSystem::update(Engine::Core::World *world, float) {
           opts.clear_attack_intent = false;
           opts.allow_direct_fallback = true;
           std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
-          std::vector<QVector3D> const targets = {
-              QVector3D(guard_mode->guard_position_x, 0.0F,
-                        guard_mode->guard_position_z)};
+          std::vector<QVector3D> const targets = {QVector3D(
+              guard_mode->guard_position_x, 0.0F, guard_mode->guard_position_z)};
           CommandService::move_units(*world, ids, targets, opts);
         }
       }

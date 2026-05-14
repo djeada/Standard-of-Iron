@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../../equipment/equipment_registry.h"
-
 #include <string>
 #include <string_view>
+
+#include "../../equipment/equipment_registry.h"
 
 namespace Render::GL::Nation {
 
@@ -57,7 +57,7 @@ struct ResolvedEquipmentLoadout {
   bool found{false};
 };
 
-[[nodiscard]] auto resolve_equipment_loadout(std::string_view renderer_key)
-    -> ResolvedEquipmentLoadout;
+[[nodiscard]] auto
+resolve_equipment_loadout(std::string_view renderer_key) -> ResolvedEquipmentLoadout;
 
 } // namespace Render::GL::Nation

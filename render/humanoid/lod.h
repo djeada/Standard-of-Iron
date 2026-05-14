@@ -6,7 +6,7 @@
 namespace Render::GL {
 
 inline auto calculate_humanoid_lod(float distance) -> HumanoidLOD {
-  const auto &settings = Render::GraphicsSettings::instance();
+  const auto& settings = Render::GraphicsSettings::instance();
   if (distance < settings.humanoid_full_detail_distance()) {
     return HumanoidLOD::Full;
   }

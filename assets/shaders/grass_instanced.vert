@@ -6,7 +6,9 @@ layout(location = 2) in vec4 a_pos_height;
 layout(location = 3) in vec4 a_color_width;
 layout(location = 4) in vec4 a_sway_params;
 
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 uniform float u_time;
 uniform float u_wind_strength;
 uniform float u_wind_speed;
@@ -33,12 +35,13 @@ void main() {
   float bend = smoothstep(0.0, 1.0, tip);
   float sway_offset = sway * bend;
 
-  vec3 local_pos = vec3(a_position.x * blade_width + sway_offset,
-                        a_position.y * blade_height, 0.0);
+  vec3 local_pos =
+      vec3(a_position.x * blade_width + sway_offset, a_position.y * blade_height, 0.0);
 
   float sin_o = sin(orientation);
   float cos_o = cos(orientation);
-  vec3 rotated = vec3(local_pos.x * cos_o - local_pos.z * sin_o, local_pos.y,
+  vec3 rotated = vec3(local_pos.x * cos_o - local_pos.z * sin_o,
+                      local_pos.y,
                       local_pos.x * sin_o + local_pos.z * cos_o);
 
   vec3 world_pos = base_pos + rotated;

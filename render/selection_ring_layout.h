@@ -1,16 +1,17 @@
 #pragma once
 
-#include "../game/systems/formation_system.h"
-#include "../game/systems/nation_id.h"
-#include "../game/units/spawn_type.h"
-#include "humanoid/formation_calculator.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <vector>
+
+#include "../game/systems/formation_system.h"
+#include "../game/systems/nation_id.h"
+#include "../game/units/spawn_type.h"
+#include "humanoid/formation_calculator.h"
 
 namespace Render::GL {
 
@@ -38,8 +39,8 @@ struct SelectionRingPlacement {
 
 namespace Detail {
 
-[[nodiscard]] inline auto selection_ring_nation(
-    Game::Systems::NationID nation_id) -> FormationCalculatorFactory::Nation {
+[[nodiscard]] inline auto selection_ring_nation(Game::Systems::NationID nation_id)
+    -> FormationCalculatorFactory::Nation {
   switch (nation_id) {
   case Game::Systems::NationID::Carthage:
     return FormationCalculatorFactory::Nation::Carthage;
@@ -49,8 +50,7 @@ namespace Detail {
   return FormationCalculatorFactory::Nation::Roman;
 }
 
-[[nodiscard]] inline auto
-selection_ring_category(Game::Units::SpawnType spawn_type)
+[[nodiscard]] inline auto selection_ring_category(Game::Units::SpawnType spawn_type)
     -> FormationCalculatorFactory::UnitCategory {
   switch (spawn_type) {
   case Game::Units::SpawnType::MountedKnight:
@@ -62,15 +62,15 @@ selection_ring_category(Game::Units::SpawnType spawn_type)
   }
 }
 
-[[nodiscard]] inline auto
-selection_ring_spacing(Game::Units::SpawnType spawn_type,
-                       float configured_spacing) -> float {
+[[nodiscard]] inline auto selection_ring_spacing(Game::Units::SpawnType spawn_type,
+                                                 float configured_spacing) -> float {
   return resolve_formation_spacing(spawn_type, configured_spacing);
 }
 
 [[nodiscard]] inline auto
 selection_ring_visual_size(Game::Units::SpawnType spawn_type,
-                           int individuals_per_unit, float unit_ring_size,
+                           int individuals_per_unit,
+                           float unit_ring_size,
                            float formation_spacing = 0.0F) -> float {
   if (individuals_per_unit <= 1) {
     return unit_ring_size;
@@ -81,22 +81,20 @@ selection_ring_visual_size(Game::Units::SpawnType spawn_type,
   return std::min(unit_ring_size * 0.25F, max_visual_size);
 }
 
-[[nodiscard]] inline auto fast_random(std::uint32_t &state) -> float {
+[[nodiscard]] inline auto fast_random(std::uint32_t& state) -> float {
   state = state * 1664525U + 1013904223U;
   return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
 }
 
 } // namespace Detail
 
-[[nodiscard]] inline auto
-build_selection_ring_layout(const SelectionRingLayoutInput &input)
-    -> std::vector<SelectionRingPlacement> {
+[[nodiscard]] inline auto build_selection_ring_layout(
+    const SelectionRingLayoutInput& input) -> std::vector<SelectionRingPlacement> {
   int const total_units = std::max(1, input.individuals_per_unit);
   float const health_ratio = std::clamp(input.health_ratio, 0.0F, 1.0F);
   int const visible_count = std::min(
       total_units,
-      std::max(1,
-               static_cast<int>(std::ceil(health_ratio * float(total_units)))));
+      std::max(1, static_cast<int>(std::ceil(health_ratio * float(total_units)))));
 
   std::vector<SelectionRingPlacement> placements;
   placements.reserve(static_cast<std::size_t>(visible_count));
@@ -105,11 +103,10 @@ build_selection_ring_layout(const SelectionRingLayoutInput &input)
       input.is_builder_constructing
           ? FormationCalculatorFactory::UnitCategory::BuilderConstruction
           : Detail::selection_ring_category(input.spawn_type);
-  auto const *calculator = FormationCalculatorFactory::get_calculator(
+  auto const* calculator = FormationCalculatorFactory::get_calculator(
       Detail::selection_ring_nation(input.nation_id), category);
   if (calculator == nullptr) {
-    placements.push_back(
-        {input.position.x(), input.position.z(), input.ring_size});
+    placements.push_back({input.position.x(), input.position.z(), input.ring_size});
     return placements;
   }
 
@@ -121,13 +118,12 @@ build_selection_ring_layout(const SelectionRingLayoutInput &input)
   for (int idx = 0; idx < visible_count; ++idx) {
     int const row = idx / cols;
     int const col = idx % cols;
-    auto const offset = calculator->calculate_offset(idx, row, col, rows, cols,
-                                                     spacing, input.seed);
+    auto const offset =
+        calculator->calculate_offset(idx, row, col, rows, cols, spacing, input.seed);
 
     float yaw = input.rotation.y() + offset.yaw_offset;
     if (total_units > 1) {
-      std::uint32_t rng_state =
-          input.seed ^ static_cast<std::uint32_t>(idx * 9176U);
+      std::uint32_t rng_state = input.seed ^ static_cast<std::uint32_t>(idx * 9176U);
       (void)Detail::fast_random(rng_state);
       yaw += (Detail::fast_random(rng_state) - 0.5F) * 5.0F;
     }

@@ -48,8 +48,7 @@ float olive_leaf_mask(vec2 p, float seed) {
   vec2 q = rotate2_d(local, angle);
 
   float half_length = mix(0.34, 0.46, hash(cell + vec2(3.1, 5.7) + vec2(seed)));
-  float half_width =
-      mix(0.08, 0.13, hash(cell + vec2(8.2, 1.4) + vec2(seed * 0.7)));
+  float half_width = mix(0.08, 0.13, hash(cell + vec2(8.2, 1.4) + vec2(seed * 0.7)));
 
   q.x /= half_length;
   q.y /= half_width;
@@ -68,8 +67,7 @@ void main() {
   float wrap = clamp((dot(n, l) + 0.28) / 1.28, 0.0, 1.0);
   float backlight = max(dot(-n, l), 0.0);
   float ambient = mix(0.26, 0.33, v_foliage_mask);
-  float sky_fill =
-      smoothstep(-0.15, 0.85, n.y) * mix(0.05, 0.12, v_foliage_mask);
+  float sky_fill = smoothstep(-0.15, 0.85, n.y) * mix(0.05, 0.12, v_foliage_mask);
   float lighting = ambient + wrap * mix(0.30, 0.48, v_foliage_mask) + sky_fill;
 
   vec3 sun_color = vec3(1.08, 0.92, 0.74);
@@ -77,9 +75,8 @@ void main() {
   float lit_t = clamp(wrap * 1.2, 0.0, 1.0);
   vec3 light_tint = mix(sky_color * 0.55, sun_color, lit_t);
 
-  vec2 leaf_pos =
-      vec2(dot(v_local_pos_xz, vec2(0.82, 0.57)), v_tex_coord.y) * 16.0 +
-      vec2(v_leaf_seed * 13.7, v_branch_id * 2.3);
+  vec2 leaf_pos = vec2(dot(v_local_pos_xz, vec2(0.82, 0.57)), v_tex_coord.y) * 16.0 +
+                  vec2(v_leaf_seed * 13.7, v_branch_id * 2.3);
   float leaf_mottle_a = noise2_d(leaf_pos);
   float leaf_mottle_b = noise2_d(leaf_pos * 2.1 + vec2(v_bark_seed * 5.0));
   float leaf_fine = hash(floor(leaf_pos * 3.0 + vec2(v_branch_id * 7.0)));

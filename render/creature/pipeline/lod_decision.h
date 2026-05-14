@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../part_graph.h"
-
 #include <cstdint>
 #include <optional>
+
+#include "../part_graph.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -43,20 +43,18 @@ struct CreatureLodDecision {
   bool culled{false};
   CullReason reason{CullReason::None};
 
-  [[nodiscard]] constexpr auto rendered() const noexcept -> bool {
-    return !culled;
-  }
+  [[nodiscard]] constexpr auto rendered() const noexcept -> bool { return !culled; }
 };
 
 [[nodiscard]] auto
 select_distance_lod(float distance,
-                    const LodDistanceThresholds &t) noexcept -> CreatureLOD;
+                    const LodDistanceThresholds& t) noexcept -> CreatureLOD;
 
-[[nodiscard]] auto
-should_render_temporal(std::uint32_t frame, std::uint32_t seed,
-                       std::uint32_t period) noexcept -> bool;
+[[nodiscard]] auto should_render_temporal(std::uint32_t frame,
+                                          std::uint32_t seed,
+                                          std::uint32_t period) noexcept -> bool;
 
-[[nodiscard]] auto decide_creature_lod(
-    const CreatureLodDecisionInputs &in) noexcept -> CreatureLodDecision;
+[[nodiscard]] auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
+    -> CreatureLodDecision;
 
 } // namespace Render::Creature::Pipeline

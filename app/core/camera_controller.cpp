@@ -1,16 +1,21 @@
 #include "camera_controller.h"
 
+#include <QDebug>
+
+#include <cmath>
+
 #include "game/core/world.h"
 #include "game/systems/camera_service.h"
 #include "game/systems/game_state_serializer.h"
 #include "render/gl/camera.h"
-#include <QDebug>
-#include <cmath>
 
-CameraController::CameraController(Render::GL::Camera *camera,
-                                   Game::Systems::CameraService *camera_service,
-                                   Engine::Core::World *world)
-    : m_camera(camera), m_camera_service(camera_service), m_world(world) {}
+CameraController::CameraController(Render::GL::Camera* camera,
+                                   Game::Systems::CameraService* camera_service,
+                                   Engine::Core::World* world)
+    : m_camera(camera)
+    , m_camera_service(camera_service)
+    , m_world(world) {
+}
 
 void CameraController::move(float dx, float dz) {
   if (!m_camera || !m_camera_service) {
@@ -27,12 +32,12 @@ void CameraController::elevate(float dy) {
 }
 
 void CameraController::reset(int local_owner_id,
-                             const Game::Systems::LevelSnapshot &level) {
+                             const Game::Systems::LevelSnapshot& level) {
   if (!m_camera || !m_world || !m_camera_service) {
     return;
   }
-  m_camera_service->reset_camera(*m_camera, *m_world, local_owner_id,
-                                 level.player_unit_id);
+  m_camera_service->reset_camera(
+      *m_camera, *m_world, local_owner_id, level.player_unit_id);
 }
 
 void CameraController::zoom(float delta) {
@@ -62,8 +67,8 @@ void CameraController::orbit(float yaw_deg, float pitch_deg) {
   }
 
   if (!std::isfinite(yaw_deg) || !std::isfinite(pitch_deg)) {
-    qWarning() << "CameraController::orbit received invalid input, ignoring:"
-               << yaw_deg << pitch_deg;
+    qWarning() << "CameraController::orbit received invalid input, ignoring:" << yaw_deg
+               << pitch_deg;
     return;
   }
 

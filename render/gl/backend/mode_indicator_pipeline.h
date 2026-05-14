@@ -1,10 +1,12 @@
 #pragma once
 
-#include "../shader.h"
-#include "pipeline_interface.h"
-#include <GL/gl.h>
 #include <QMatrix4x4>
 #include <QVector3D>
+
+#include <GL/gl.h>
+
+#include "../shader.h"
+#include "pipeline_interface.h"
 
 namespace Render::GL {
 class ShaderCache;
@@ -15,9 +17,9 @@ namespace BackendPipelines {
 
 class ModeIndicatorPipeline final : public IPipeline {
 public:
-  explicit ModeIndicatorPipeline(GL::Backend *backend,
-                                 GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shader_cache(shader_cache) {}
+  explicit ModeIndicatorPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
+      : m_backend(backend)
+      , m_shader_cache(shader_cache) {}
   ~ModeIndicatorPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -25,9 +27,12 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  void render_indicator(Mesh *mesh, const QMatrix4x4 &model,
-                        const QMatrix4x4 &view_proj, const QVector3D &color,
-                        float alpha, float time);
+  void render_indicator(Mesh* mesh,
+                        const QMatrix4x4& model,
+                        const QMatrix4x4& view_proj,
+                        const QVector3D& color,
+                        float alpha,
+                        float time);
 
   struct IndicatorInstancedUniforms {
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
@@ -35,13 +40,13 @@ public:
 
   void cache_instanced_uniforms();
 
-  GL::Shader *m_instanced_shader{nullptr};
+  GL::Shader* m_instanced_shader{nullptr};
   IndicatorInstancedUniforms m_instanced_uniforms;
 
 private:
-  GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shader_cache = nullptr;
-  GL::Shader *m_indicator_shader = nullptr;
+  GL::Backend* m_backend = nullptr;
+  GL::ShaderCache* m_shader_cache = nullptr;
+  GL::Shader* m_indicator_shader = nullptr;
 
   struct IndicatorUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};

@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../palette.h"
-#include "../../static_attachment_spec.h"
-#include "../i_equipment_renderer.h"
-
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <span>
+
+#include "../../humanoid/humanoid_renderer_base.h"
+#include "../../palette.h"
+#include "../../static_attachment_spec.h"
+#include "../i_equipment_renderer.h"
 
 namespace Render::GL {
 
@@ -21,7 +21,8 @@ struct ArmGuardsConfig {
 
 inline constexpr std::uint32_t k_arm_guards_role_count = 2;
 
-auto arm_guards_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+auto arm_guards_fill_role_colors(const HumanoidPalette& palette,
+                                 QVector3D* out,
                                  std::size_t max) -> std::uint32_t;
 
 auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,
@@ -31,30 +32,34 @@ auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,
 
 class ArmGuardsRenderer : public IEquipmentRenderer {
 public:
-  explicit ArmGuardsRenderer(const ArmGuardsConfig &config = ArmGuardsConfig{});
+  explicit ArmGuardsRenderer(const ArmGuardsConfig& config = ArmGuardsConfig{});
 
-  static void submit(const ArmGuardsConfig &config, const DrawContext &ctx,
-                     const BodyFrames &frames, const HumanoidPalette &palette,
-                     const HumanoidAnimationContext &anim,
-                     EquipmentBatch &batch);
+  static void submit(const ArmGuardsConfig& config,
+                     const DrawContext& ctx,
+                     const BodyFrames& frames,
+                     const HumanoidPalette& palette,
+                     const HumanoidAnimationContext& anim,
+                     EquipmentBatch& batch);
 
-  [[nodiscard]] auto base_config() const noexcept -> const ArmGuardsConfig & {
+  [[nodiscard]] auto base_config() const noexcept -> const ArmGuardsConfig& {
     return m_config;
   }
 
-  void render(const DrawContext &ctx, const BodyFrames &frames,
-              const HumanoidPalette &palette,
-              const HumanoidAnimationContext &anim,
-              EquipmentBatch &batch) override;
+  void render(const DrawContext& ctx,
+              const BodyFrames& frames,
+              const HumanoidPalette& palette,
+              const HumanoidAnimationContext& anim,
+              EquipmentBatch& batch) override;
 
 private:
   ArmGuardsConfig m_config;
 
-  static void render_arm_guard(const ArmGuardsConfig &config,
-                               const DrawContext &ctx, const QVector3D &elbow,
-                               const QVector3D &wrist,
+  static void render_arm_guard(const ArmGuardsConfig& config,
+                               const DrawContext& ctx,
+                               const QVector3D& elbow,
+                               const QVector3D& wrist,
                                std::span<const QVector3D> palette,
-                               EquipmentBatch &batch);
+                               EquipmentBatch& batch);
 };
 
 } // namespace Render::GL

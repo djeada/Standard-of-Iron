@@ -9,7 +9,9 @@ layout(location = 4) in vec4 a_instance_model_col1;
 layout(location = 5) in vec4 a_instance_model_col2;
 layout(location = 6) in vec4 a_instance_color_alpha;
 
-layout(std140) uniform FrameData { mat4 u_view_proj; };
+layout(std140) uniform FrameData {
+  mat4 u_view_proj;
+};
 
 out vec3 v_normal;
 out vec2 v_tex_coord;
@@ -22,8 +24,10 @@ void main() {
   mat4 model = mat4(vec4(a_instance_model_col0.xyz, 0.0),
                     vec4(a_instance_model_col1.xyz, 0.0),
                     vec4(a_instance_model_col2.xyz, 0.0),
-                    vec4(a_instance_model_col0.w, a_instance_model_col1.w,
-                         a_instance_model_col2.w, 1.0));
+                    vec4(a_instance_model_col0.w,
+                         a_instance_model_col1.w,
+                         a_instance_model_col2.w,
+                         1.0));
 
   vec4 world_pos4 = model * vec4(a_position, 1.0);
   v_world_pos = world_pos4.xyz;

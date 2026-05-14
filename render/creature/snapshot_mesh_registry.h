@@ -1,24 +1,25 @@
 #pragma once
 
-#include "snapshot_mesh_asset.h"
-
 #include <array>
 #include <string>
 #include <string_view>
+
+#include "snapshot_mesh_asset.h"
 
 namespace Render::Creature::Snapshot {
 
 class SnapshotMeshRegistry {
 public:
-  [[nodiscard]] static auto instance() noexcept -> SnapshotMeshRegistry &;
+  [[nodiscard]] static auto instance() noexcept -> SnapshotMeshRegistry&;
 
-  auto load_species(std::uint32_t species_id, Render::Creature::CreatureLOD lod,
-                    const std::string &path) -> bool;
-  auto load_all(const std::string &asset_root) -> std::size_t;
+  auto load_species(std::uint32_t species_id,
+                    Render::Creature::CreatureLOD lod,
+                    const std::string& path) -> bool;
+  auto load_all(const std::string& asset_root) -> std::size_t;
 
-  [[nodiscard]] auto blob(std::uint32_t species_id,
-                          Render::Creature::CreatureLOD lod) const noexcept
-      -> const SnapshotMeshBlob *;
+  [[nodiscard]] auto
+  blob(std::uint32_t species_id,
+       Render::Creature::CreatureLOD lod) const noexcept -> const SnapshotMeshBlob*;
 
   void clear();
 
@@ -31,13 +32,12 @@ private:
 
   [[nodiscard]] auto
   slot(std::uint32_t species_id,
-       Render::Creature::CreatureLOD lod) noexcept -> SnapshotMeshBlob *;
-  [[nodiscard]] auto slot(std::uint32_t species_id,
-                          Render::Creature::CreatureLOD lod) const noexcept
-      -> const SnapshotMeshBlob *;
+       Render::Creature::CreatureLOD lod) noexcept -> SnapshotMeshBlob*;
+  [[nodiscard]] auto
+  slot(std::uint32_t species_id,
+       Render::Creature::CreatureLOD lod) const noexcept -> const SnapshotMeshBlob*;
 
-  std::array<SnapshotMeshBlob, Render::Creature::Bpat::k_species_count * 2U>
-      m_blobs{};
+  std::array<SnapshotMeshBlob, Render::Creature::Bpat::k_species_count * 2U> m_blobs{};
   std::string m_last_error{};
 };
 

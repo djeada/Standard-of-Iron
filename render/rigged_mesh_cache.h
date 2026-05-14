@@ -2,17 +2,18 @@
 
 #pragma once
 
-#include "creature/part_graph.h"
-#include "rigged_mesh.h"
-#include "rigged_mesh_bake.h"
-
 #include <QMatrix4x4>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <span>
 #include <unordered_map>
 #include <vector>
+
+#include "creature/part_graph.h"
+#include "rigged_mesh.h"
+#include "rigged_mesh_bake.h"
 
 namespace Render::Creature {
 struct CreatureSpec;
@@ -36,16 +37,15 @@ struct RiggedMeshEntry {
 class RiggedMeshCache {
 public:
   struct Key {
-    const Render::Creature::CreatureSpec *spec{nullptr};
+    const Render::Creature::CreatureSpec* spec{nullptr};
     Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
     std::uint16_t variant_bucket{0};
     std::uint32_t skin_species_id{0};
     std::uint32_t attachment_set_id{0};
     std::uint64_t attachments_hash{0};
 
-    auto operator==(const Key &o) const noexcept -> bool {
-      return spec == o.spec && lod == o.lod &&
-             variant_bucket == o.variant_bucket &&
+    auto operator==(const Key& o) const noexcept -> bool {
+      return spec == o.spec && lod == o.lod && variant_bucket == o.variant_bucket &&
              skin_species_id == o.skin_species_id &&
              attachment_set_id == o.attachment_set_id &&
              attachments_hash == o.attachments_hash;
@@ -53,14 +53,13 @@ public:
   };
 
   struct KeyHash {
-    auto operator()(const Key &k) const noexcept -> std::size_t {
+    auto operator()(const Key& k) const noexcept -> std::size_t {
       const auto spec_bits = reinterpret_cast<std::uintptr_t>(k.spec);
       return (spec_bits * 0x9E3779B97F4A7C15ULL) ^
              (static_cast<std::size_t>(k.lod) << 1U) ^
              (static_cast<std::size_t>(k.variant_bucket) << 16U) ^
              (static_cast<std::size_t>(k.skin_species_id) << 24U) ^
-             (static_cast<std::size_t>(k.attachment_set_id) *
-              0x9E3779B185EBCA87ULL) ^
+             (static_cast<std::size_t>(k.attachment_set_id) * 0x9E3779B185EBCA87ULL) ^
              static_cast<std::size_t>(k.attachments_hash);
     }
   };
@@ -76,11 +75,11 @@ public:
 
   RiggedMeshCache() = default;
   ~RiggedMeshCache();
-  RiggedMeshCache(const RiggedMeshCache &) = delete;
-  auto operator=(const RiggedMeshCache &) -> RiggedMeshCache & = delete;
+  RiggedMeshCache(const RiggedMeshCache&) = delete;
+  auto operator=(const RiggedMeshCache&) -> RiggedMeshCache& = delete;
 
   void reset_frame_stats() noexcept { m_frame_stats = {}; }
-  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats & {
+  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats& {
     return m_frame_stats;
   }
   void reserve_for_frame(std::size_t expected_entries) {
@@ -93,45 +92,45 @@ public:
     m_frame_stats.skin_ubo_bytes_uploaded += bytes;
   }
 
-  auto get_or_bake(const Render::Creature::CreatureSpec &spec,
+  auto get_or_bake(const Render::Creature::CreatureSpec& spec,
                    Render::Creature::CreatureLOD lod,
                    std::span<const QMatrix4x4> rest_palette,
                    std::uint16_t variant_bucket = 0,
-                   std::span<const Render::Creature::StaticAttachmentSpec>
-                       attachments = {}) -> const RiggedMeshEntry *;
+                   std::span<const Render::Creature::StaticAttachmentSpec> attachments =
+                       {}) -> const RiggedMeshEntry*;
 
-  auto get_or_bake(
-      const Render::Creature::CreatureSpec &spec,
-      Render::Creature::CreatureLOD lod,
-      std::span<const QMatrix4x4> rest_palette, std::uint16_t variant_bucket,
-      std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-      std::uint32_t skin_species_id) -> const RiggedMeshEntry *;
+  auto get_or_bake(const Render::Creature::CreatureSpec& spec,
+                   Render::Creature::CreatureLOD lod,
+                   std::span<const QMatrix4x4> rest_palette,
+                   std::uint16_t variant_bucket,
+                   std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+                   std::uint32_t skin_species_id) -> const RiggedMeshEntry*;
 
   auto get_or_bake_prehashed(
-      const Render::Creature::CreatureSpec &spec,
+      const Render::Creature::CreatureSpec& spec,
       Render::Creature::CreatureLOD lod,
-      std::span<const QMatrix4x4> rest_palette, std::uint16_t variant_bucket,
+      std::span<const QMatrix4x4> rest_palette,
+      std::uint16_t variant_bucket,
       std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-      std::uint64_t attachments_hash, std::uint32_t attachment_set_id,
-      std::uint32_t skin_species_id) -> const RiggedMeshEntry *;
+      std::uint64_t attachments_hash,
+      std::uint32_t attachment_set_id,
+      std::uint32_t skin_species_id) -> const RiggedMeshEntry*;
 
   void clear() { m_entries.clear(); }
 
-  [[nodiscard]] auto size() const noexcept -> std::size_t {
-    return m_entries.size();
-  }
+  [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
 
 private:
   std::unordered_map<Key, RiggedMeshEntry, KeyHash> m_entries;
   FrameStats m_frame_stats;
 };
 
-void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry &entry,
-                                    const QMatrix4x4 *bpat_palettes,
+void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry& entry,
+                                    const QMatrix4x4* bpat_palettes,
                                     std::uint32_t frame_total,
                                     std::uint32_t bone_count);
 
-void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry &entry);
+void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry);
 
 } // namespace Render::GL
 
@@ -142,6 +141,6 @@ class BpatBlob;
 namespace Render::GL {
 
 void rigged_entry_ensure_skin_atlas_from_blob(
-    const RiggedMeshEntry &entry, const Render::Creature::Bpat::BpatBlob &blob);
+    const RiggedMeshEntry& entry, const Render::Creature::Bpat::BpatBlob& blob);
 
 }

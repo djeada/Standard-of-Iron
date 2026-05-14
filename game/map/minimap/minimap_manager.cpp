@@ -1,19 +1,22 @@
 #include "minimap_manager.h"
+
 #include <QPainter>
 
 namespace Game::Map::Minimap {
 
-MinimapManager::MinimapManager(const MapDefinition &map_def,
-                               const MinimapManagerConfig &config)
-    : m_config(config), m_grid(map_def.grid) {
+MinimapManager::MinimapManager(const MapDefinition& map_def,
+                               const MinimapManagerConfig& config)
+    : m_config(config)
+    , m_grid(map_def.grid) {
 
   m_generator = std::make_unique<MinimapGenerator>(config.generator_config);
   m_base_image = m_generator->generate(map_def);
 
   if (config.fog_enabled) {
-    m_fog_mask = std::make_unique<FogOfWarMask>(
-        map_def.grid.width, map_def.grid.height, map_def.grid.tile_size,
-        config.fog_config);
+    m_fog_mask = std::make_unique<FogOfWarMask>(map_def.grid.width,
+                                                map_def.grid.height,
+                                                map_def.grid.tile_size,
+                                                config.fog_config);
   }
 
   m_composite_dirty = true;
@@ -21,11 +24,10 @@ MinimapManager::MinimapManager(const MapDefinition &map_def,
 
 MinimapManager::~MinimapManager() = default;
 
-MinimapManager::MinimapManager(MinimapManager &&) noexcept = default;
-auto MinimapManager::operator=(MinimapManager &&) noexcept -> MinimapManager & =
-                                                                  default;
+MinimapManager::MinimapManager(MinimapManager&&) noexcept = default;
+auto MinimapManager::operator=(MinimapManager&&) noexcept -> MinimapManager& = default;
 
-void MinimapManager::tick(const std::vector<VisionSource> &vision_sources,
+void MinimapManager::tick(const std::vector<VisionSource>& vision_sources,
                           int player_id) {
   if (m_fog_mask && m_config.fog_enabled) {
     if (m_fog_mask->tick(vision_sources, player_id)) {
@@ -34,15 +36,15 @@ void MinimapManager::tick(const std::vector<VisionSource> &vision_sources,
   }
 }
 
-void MinimapManager::force_fog_update(
-    const std::vector<VisionSource> &vision_sources, int player_id) {
+void MinimapManager::force_fog_update(const std::vector<VisionSource>& vision_sources,
+                                      int player_id) {
   if (m_fog_mask && m_config.fog_enabled) {
     m_fog_mask->update_vision(vision_sources, player_id);
     m_composite_dirty = true;
   }
 }
 
-auto MinimapManager::get_base_image() const -> const QImage & {
+auto MinimapManager::get_base_image() const -> const QImage& {
   return m_base_image;
 }
 
@@ -64,13 +66,12 @@ auto MinimapManager::get_composite_image() const -> QImage {
   return m_composite_image;
 }
 
-auto MinimapManager::get_composite_image(int width,
-                                         int height) const -> QImage {
+auto MinimapManager::get_composite_image(int width, int height) const -> QImage {
   QImage composite = get_composite_image();
 
   if (composite.width() != width || composite.height() != height) {
-    return composite.scaled(width, height, Qt::KeepAspectRatio,
-                            Qt::SmoothTransformation);
+    return composite.scaled(
+        width, height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
   }
 
   return composite;
@@ -105,16 +106,14 @@ void MinimapManager::regenerate_composite() const {
   }
 }
 
-auto MinimapManager::is_position_visible(float world_x,
-                                         float world_z) const -> bool {
+auto MinimapManager::is_position_visible(float world_x, float world_z) const -> bool {
   if (!m_fog_mask || !m_config.fog_enabled) {
     return true;
   }
   return m_fog_mask->is_visible(world_x, world_z);
 }
 
-auto MinimapManager::is_position_revealed(float world_x,
-                                          float world_z) const -> bool {
+auto MinimapManager::is_position_revealed(float world_x, float world_z) const -> bool {
   if (!m_fog_mask || !m_config.fog_enabled) {
     return true;
   }
@@ -163,14 +162,15 @@ auto MinimapManager::memory_usage() const -> size_t {
   return total;
 }
 
-void MinimapManager::regenerate_base(const MapDefinition &map_def) {
+void MinimapManager::regenerate_base(const MapDefinition& map_def) {
   m_grid = map_def.grid;
   m_base_image = m_generator->generate(map_def);
 
   if (m_fog_mask) {
-    m_fog_mask = std::make_unique<FogOfWarMask>(
-        map_def.grid.width, map_def.grid.height, map_def.grid.tile_size,
-        m_config.fog_config);
+    m_fog_mask = std::make_unique<FogOfWarMask>(map_def.grid.width,
+                                                map_def.grid.height,
+                                                map_def.grid.tile_size,
+                                                m_config.fog_config);
   }
 
   m_composite_dirty = true;

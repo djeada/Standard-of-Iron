@@ -85,13 +85,11 @@ void main() {
 
   float border_width = 0.08;
   float edge_dist = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
-  float border_mask =
-      1.0 - smoothstep(border_width * 0.65, border_width, edge_dist);
+  float border_mask = 1.0 - smoothstep(border_width * 0.65, border_width, edge_dist);
   float mast_band = 1.0 - smoothstep(0.08, 0.14, abs(uv.x - 0.14));
   float roundel = ring_mask(uv, vec2(0.52, 0.54), vec2(0.16, 0.20), 0.16);
   float diamond = diamond_mask(uv, vec2(0.52, 0.54), vec2(0.055, 0.09));
-  float motif =
-      max(border_mask, max(mast_band * 0.65, max(roundel, diamond * 0.85)));
+  float motif = max(border_mask, max(mast_band * 0.65, max(roundel, diamond * 0.85)));
   color = mix(color, u_trim_color, motif * 0.92);
 
   vec3 light_dir = normalize(vec3(0.55, 0.80, 0.40));

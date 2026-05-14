@@ -1,11 +1,12 @@
 #pragma once
 
-#include "../../game/units/spawn_type.h"
-
 #include <QVector2D>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "../../game/units/spawn_type.h"
 
 namespace Render::GL {
 
@@ -24,76 +25,103 @@ class IFormationCalculator {
 public:
   virtual ~IFormationCalculator() = default;
 
-  [[nodiscard]] virtual auto
-  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
-                   uint32_t seed) const -> FormationOffset = 0;
+  [[nodiscard]] virtual auto calculate_offset(
+      int idx, int row, int col, int rows, int cols, float spacing, uint32_t seed) const
+      -> FormationOffset = 0;
 
-  [[nodiscard]] virtual auto get_description() const -> const char * = 0;
+  [[nodiscard]] virtual auto get_description() const -> const char* = 0;
 };
 
 class RomanInfantryFormation : public IFormationCalculator {
 public:
-  [[nodiscard]] auto
-  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
-                   uint32_t seed) const -> FormationOffset override;
+  [[nodiscard]] auto calculate_offset(int idx,
+                                      int row,
+                                      int col,
+                                      int rows,
+                                      int cols,
+                                      float spacing,
+                                      uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto get_description() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char* override {
     return "Roman Infantry (FormationSystem)";
   }
 };
 
 class RomanCavalryFormation : public IFormationCalculator {
 public:
-  [[nodiscard]] auto
-  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
-                   uint32_t seed) const -> FormationOffset override;
+  [[nodiscard]] auto calculate_offset(int idx,
+                                      int row,
+                                      int col,
+                                      int rows,
+                                      int cols,
+                                      float spacing,
+                                      uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto get_description() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char* override {
     return "Roman Cavalry (FormationSystem)";
   }
 };
 
 class CarthageInfantryFormation : public IFormationCalculator {
 public:
-  [[nodiscard]] auto
-  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
-                   uint32_t seed) const -> FormationOffset override;
+  [[nodiscard]] auto calculate_offset(int idx,
+                                      int row,
+                                      int col,
+                                      int rows,
+                                      int cols,
+                                      float spacing,
+                                      uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto get_description() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char* override {
     return "Carthage Infantry (FormationSystem)";
   }
 };
 
 class CarthageCavalryFormation : public IFormationCalculator {
 public:
-  [[nodiscard]] auto
-  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
-                   uint32_t seed) const -> FormationOffset override;
+  [[nodiscard]] auto calculate_offset(int idx,
+                                      int row,
+                                      int col,
+                                      int rows,
+                                      int cols,
+                                      float spacing,
+                                      uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto get_description() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char* override {
     return "Carthage Cavalry (FormationSystem)";
   }
 };
 
 class BuilderCircleFormation : public IFormationCalculator {
 public:
-  [[nodiscard]] auto
-  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
-                   uint32_t seed) const -> FormationOffset override;
+  [[nodiscard]] auto calculate_offset(int idx,
+                                      int row,
+                                      int col,
+                                      int rows,
+                                      int cols,
+                                      float spacing,
+                                      uint32_t seed) const -> FormationOffset override;
 
-  [[nodiscard]] auto get_description() const -> const char * override {
+  [[nodiscard]] auto get_description() const -> const char* override {
     return "Builder Circle (FormationSystem)";
   }
 };
 
 class FormationCalculatorFactory {
 public:
-  enum class Nation { Roman, Carthage };
+  enum class Nation {
+    Roman,
+    Carthage
+  };
 
-  enum class UnitCategory { Infantry, Cavalry, BuilderConstruction };
+  enum class UnitCategory {
+    Infantry,
+    Cavalry,
+    BuilderConstruction
+  };
 
-  static auto get_calculator(Nation nation, UnitCategory category)
-      -> const IFormationCalculator *;
+  static auto get_calculator(Nation nation,
+                             UnitCategory category) -> const IFormationCalculator*;
 
 private:
   static RomanInfantryFormation s_roman_infantry;

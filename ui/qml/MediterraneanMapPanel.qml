@@ -24,53 +24,52 @@ Rectangle {
     property var campaign_state: null
     property var campaign_state_sources: ["assets/campaign_map/campaign_state.json", "qrc:/assets/campaign_map/campaign_state.json", "qrc:/StandardOfIron/assets/campaign_map/campaign_state.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/campaign_state.json"]
     property var owner_color_map: ({
-        "rome": [0.82, 0.12, 0.1, 0.45],
-        "carthage": [0.8, 0.56, 0.28, 0.45],
-        "neutral": [0.25, 0.25, 0.25, 0.25]
-    })
+            "rome": [0.82, 0.12, 0.1, 0.45],
+            "carthage": [0.8, 0.56, 0.28, 0.45],
+            "neutral": [0.25, 0.25, 0.25, 0.25]
+        })
     readonly property var campaign_route_start: [0.36, 0.72]
     readonly property int ember_spacing: 97
     readonly property int route_segment_count: 8
     readonly property int ember_vertical_spacing: 12
     property var campaign_route_targets: ({
-        "southern_italy": [0.5, 0.53],
-        "etruria": [0.44, 0.48],
-        "default": [0.42, 0.38]
-    })
+            "southern_italy": [0.5, 0.53],
+            "etruria": [0.44, 0.48],
+            "default": [0.42, 0.38]
+        })
     property var region_camera_positions: ({
-        "transalpine_gaul": {
-            "yaw": 200,
-            "pitch": 50,
-            "distance": 2
-        },
-        "cisalpine_gaul": {
-            "yaw": 185,
-            "pitch": 48,
-            "distance": 1.9
-        },
-        "etruria": {
-            "yaw": 180,
-            "pitch": 52,
-            "distance": 1.8
-        },
-        "southern_italy": {
-            "yaw": 175,
-            "pitch": 50,
-            "distance": 1.9
-        },
-        "carthage_core": {
-            "yaw": 170,
-            "pitch": 55,
-            "distance": 2.2
-        }
-    })
+            "transalpine_gaul": {
+                "yaw": 200,
+                "pitch": 50,
+                "distance": 2
+            },
+            "cisalpine_gaul": {
+                "yaw": 185,
+                "pitch": 48,
+                "distance": 1.9
+            },
+            "etruria": {
+                "yaw": 180,
+                "pitch": 52,
+                "distance": 1.8
+            },
+            "southern_italy": {
+                "yaw": 175,
+                "pitch": 50,
+                "distance": 1.9
+            },
+            "carthage_core": {
+                "yaw": 170,
+                "pitch": 55,
+                "distance": 2.2
+            }
+        })
 
     signal region_selected(string region_id)
 
     function focus_on_region(region_id) {
         if (!region_id || region_id === "")
-            return ;
-
+            return;
         var camera_pos = region_camera_positions[region_id];
         if (camera_pos) {
             map_orbit_yaw = camera_pos.yaw;
@@ -94,24 +93,21 @@ Rectangle {
 
     function load_campaign_state() {
         if (campaign_state)
-            return ;
-
+            return;
         load_campaign_state_from(0);
     }
 
     function load_campaign_state_from(index) {
         if (index >= campaign_state_sources.length)
-            return ;
-
+            return;
         var xhr = new XMLHttpRequest();
         xhr.open("GET", campaign_state_sources[index]);
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             if (xhr.readyState !== XMLHttpRequest.DONE)
-                return ;
-
+                return;
             if (xhr.status !== 200 && xhr.status !== 0) {
                 load_campaign_state_from(index + 1);
-                return ;
+                return;
             }
             try {
                 var data = JSON.parse(xhr.responseText);
@@ -132,31 +128,25 @@ Rectangle {
         var key = owner ? owner.toLowerCase() : "neutral";
         if (owner_color_map[key])
             return owner_color_map[key];
-
         return owner_color_map.neutral;
     }
 
     function route_target_uv_for(region_id) {
         if (campaign_route_targets[region_id])
             return campaign_route_targets[region_id];
-
         return campaign_route_targets.default;
     }
 
     function apply_campaign_state() {
         if (!campaign_map_loader.item)
-            return ;
-
+            return;
         if (!campaign_state || !campaign_state.provinces)
-            return ;
-
-        var owner_by_id = {
-        };
+            return;
+        var owner_by_id = {};
         for (var i = 0; i < campaign_state.provinces.length; i++) {
             var entry = campaign_state.provinces[i];
             if (entry && entry.id)
                 owner_by_id[entry.id] = entry.owner || "neutral";
-
         }
         var entries = [];
         if (province_labels && province_labels.length > 0) {
@@ -164,39 +154,36 @@ Rectangle {
                 var prov = province_labels[j];
                 if (!prov || !prov.id)
                     continue;
-
                 var owner = owner_by_id[prov.id] || prov.owner || "neutral";
                 var color = owner_color_for(owner);
                 entries.push({
-                    "id": prov.id,
-                    "owner": owner,
-                    "color": color
-                });
+                        "id": prov.id,
+                        "owner": owner,
+                        "color": color
+                    });
             }
         } else {
             for (var k = 0; k < campaign_state.provinces.length; k++) {
                 var state_prov = campaign_state.provinces[k];
                 if (!state_prov || !state_prov.id)
                     continue;
-
                 var fallback_owner = state_prov.owner || "neutral";
                 var fallback_color = owner_color_for(fallback_owner);
                 entries.push({
-                    "id": state_prov.id,
-                    "owner": fallback_owner,
-                    "color": fallback_color
-                });
+                        "id": state_prov.id,
+                        "owner": fallback_owner,
+                        "color": fallback_color
+                    });
             }
         }
         if (entries.length > 0)
             campaign_map_loader.item.apply_province_state(entries);
-
     }
 
     function reset_view() {
         if (selected_mission && selected_mission.world_region_id) {
             focus_on_region(selected_mission.world_region_id);
-            return ;
+            return;
         }
         map_orbit_yaw = 180;
         map_orbit_pitch = 90;
@@ -208,10 +195,8 @@ Rectangle {
     function label_uv_for(prov) {
         if (prov && prov.label_uv && prov.label_uv.length === 2)
             return prov.label_uv;
-
         if (!prov || !prov.triangles || prov.triangles.length === 0)
             return null;
-
         var sum_u = 0;
         var sum_v = 0;
         var count = 0;
@@ -220,14 +205,12 @@ Rectangle {
             var pt = prov.triangles[i];
             if (!pt || pt.length < 2)
                 continue;
-
             sum_u += pt[0];
             sum_v += pt[1];
             count += 1;
         }
         if (count === 0)
             return null;
-
         return [sum_u / count, sum_v / count];
     }
 
@@ -292,7 +275,6 @@ Rectangle {
                     hover_province_id: {
                         if (root.active_region_id !== "")
                             return root.active_region_id;
-
                         var info = province_info_at_screen(root.hover_mouse_x, root.hover_mouse_y);
                         return info && info.id ? info.id : "";
                     }
@@ -305,34 +287,28 @@ Rectangle {
                     onWidthChanged: root.label_refresh += 1
                     onHeightChanged: root.label_refresh += 1
 
-                    Behavior on orbit_yaw {
+                    Behavior on orbit_yaw  {
                         NumberAnimation {
                             duration: 600
                             easing.type: Easing.InOutQuad
                         }
-
                     }
 
-                    Behavior on orbit_pitch {
+                    Behavior on orbit_pitch  {
                         NumberAnimation {
                             duration: 600
                             easing.type: Easing.InOutQuad
                         }
-
                     }
 
-                    Behavior on orbit_distance {
+                    Behavior on orbit_distance  {
                         NumberAnimation {
                             duration: 600
                             easing.type: Easing.InOutQuad
                         }
-
                     }
-
                 }
-
             }
-
         }
 
         Rectangle {
@@ -347,7 +323,6 @@ Rectangle {
                 color: "#c8b89a"
                 font.pointSize: Theme.fontSizeMedium
             }
-
         }
 
         Rectangle {
@@ -376,7 +351,6 @@ Rectangle {
                     position: 1
                     color: "#190f08bb"
                 }
-
             }
         }
 
@@ -408,9 +382,9 @@ Rectangle {
                 y: dot_y - height / 2
                 z: 5
 
-                SequentialAnimation on opacity {
+                SequentialAnimation on opacity  {
                     loops: Animation.Infinite
-                        running: root.visible && campaign_map_loader.item
+                    running: root.visible && campaign_map_loader.item
 
                     NumberAnimation {
                         from: 0.2
@@ -423,11 +397,8 @@ Rectangle {
                         to: 0.2
                         duration: 900
                     }
-
                 }
-
             }
-
         }
 
         Repeater {
@@ -443,7 +414,7 @@ Rectangle {
                 y: map_viewport.height + index * root.ember_vertical_spacing
                 z: 3
 
-                SequentialAnimation on y {
+                SequentialAnimation on y  {
                     loops: Animation.Infinite
                     running: root.visible
 
@@ -459,11 +430,8 @@ Rectangle {
                         to: map_viewport.height + index * root.ember_vertical_spacing
                         duration: 0
                     }
-
                 }
-
             }
-
         }
 
         Row {
@@ -505,7 +473,6 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.map_orbit_pitch = Math.max(5, root.map_orbit_pitch - 5)
                 }
-
             }
 
             Rectangle {
@@ -537,7 +504,6 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.map_orbit_pitch = Math.min(90, root.map_orbit_pitch + 5)
                 }
-
             }
 
             Rectangle {
@@ -569,9 +535,7 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.reset_view()
                 }
-
             }
-
         }
 
         MouseArea {
@@ -582,12 +546,12 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onPressed: function(mouse) {
+            onPressed: function (mouse) {
                 last_x = mouse.x;
                 last_y = mouse.y;
                 drag_distance = 0;
             }
-            onPositionChanged: function(mouse) {
+            onPositionChanged: function (mouse) {
                 var dx = mouse.x - last_x;
                 var dy = mouse.y - last_y;
                 if ((mouse.buttons & Qt.RightButton) || (mouse.buttons & Qt.LeftButton && (mouse.modifiers & Qt.ShiftModifier))) {
@@ -616,28 +580,23 @@ Rectangle {
                     root.hover_province_owner = "";
                 }
             }
-            onReleased: function(mouse) {
+            onReleased: function (mouse) {
                 if (mouse.button !== Qt.LeftButton)
-                    return ;
-
+                    return;
                 if (drag_distance > 6)
-                    return ;
-
+                    return;
                 if (!campaign_map_loader.item)
-                    return ;
-
+                    return;
                 var info = campaign_map_loader.item.province_info_at_screen(mouse.x, mouse.y);
                 var id = info && info.id ? info.id : "";
                 if (id !== "")
                     root.region_selected(id);
-
             }
-            onWheel: function(wheel) {
+            onWheel: function (wheel) {
                 var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
                 var next_distance = root.map_orbit_distance * step;
                 if (campaign_map_loader.item)
                     root.map_orbit_distance = Math.min(campaign_map_loader.item.max_orbit_distance, Math.max(campaign_map_loader.item.min_orbit_distance, next_distance));
-
                 wheel.accepted = true;
             }
         }
@@ -682,38 +641,35 @@ Rectangle {
                         x: 6
                         y: -height / 2
                     }
-
                 }
-
             }
-
         }
 
         Repeater {
             id: mission_marker_repeater
 
             property var mission_region_map: ({
-                "transalpine_gaul": {
-                    "uv": [0.28, 0.35],
-                    "name": "Rhône"
-                },
-                "cisalpine_gaul": {
-                    "uv": [0.42, 0.38],
-                    "name": "N. Italy"
-                },
-                "etruria": {
-                    "uv": [0.44, 0.48],
-                    "name": "Trasimene"
-                },
-                "southern_italy": {
-                    "uv": [0.5, 0.53],
-                    "name": "Cannae"
-                },
-                "carthage_core": {
-                    "uv": [0.4, 0.78],
-                    "name": "Zama"
-                }
-            })
+                    "transalpine_gaul": {
+                        "uv": [0.28, 0.35],
+                        "name": "Rhône"
+                    },
+                    "cisalpine_gaul": {
+                        "uv": [0.42, 0.38],
+                        "name": "N. Italy"
+                    },
+                    "etruria": {
+                        "uv": [0.44, 0.48],
+                        "name": "Trasimene"
+                    },
+                    "southern_italy": {
+                        "uv": [0.5, 0.53],
+                        "name": "Cannae"
+                    },
+                    "carthage_core": {
+                        "uv": [0.4, 0.78],
+                        "name": "Zama"
+                    }
+                })
 
             model: root.selected_mission ? 1 : 0
 
@@ -747,7 +703,7 @@ Rectangle {
                         font.bold: true
                     }
 
-                    SequentialAnimation on scale {
+                    SequentialAnimation on scale  {
                         loops: Animation.Infinite
                         running: visible
 
@@ -764,9 +720,7 @@ Rectangle {
                             duration: 800
                             easing.type: Easing.InOutQuad
                         }
-
                     }
-
                 }
 
                 Text {
@@ -780,9 +734,7 @@ Rectangle {
                     style: Text.Outline
                     styleColor: "#000000"
                 }
-
             }
-
         }
 
         Item {
@@ -817,7 +769,6 @@ Rectangle {
                     border.color: "#6b4423"
                     border.width: 1
                 }
-
             }
 
             Image {
@@ -850,7 +801,7 @@ Rectangle {
                 border.width: 2
                 opacity: 0.4
 
-                SequentialAnimation on opacity {
+                SequentialAnimation on opacity  {
                     loops: Animation.Infinite
                     running: hannibal_icon.visible
 
@@ -864,10 +815,9 @@ Rectangle {
                     PauseAnimation {
                         duration: 500
                     }
-
                 }
 
-                SequentialAnimation on scale {
+                SequentialAnimation on scale  {
                     loops: Animation.Infinite
                     running: hannibal_icon.visible
 
@@ -887,11 +837,8 @@ Rectangle {
                     PauseAnimation {
                         duration: 500
                     }
-
                 }
-
             }
-
         }
 
         Rectangle {
@@ -927,9 +874,7 @@ Rectangle {
                     color: "#4a3f32"
                     font.pointSize: Theme.fontSizeTiny
                 }
-
             }
-
         }
 
         Rectangle {
@@ -959,15 +904,15 @@ Rectangle {
 
                 Repeater {
                     model: [{
-                        "name": qsTr("Rome"),
-                        "color": "#d01f1a"
-                    }, {
-                        "name": qsTr("Carthage"),
-                        "color": "#cc8f47"
-                    }, {
-                        "name": qsTr("Neutral"),
-                        "color": "#3a3a3a"
-                    }]
+                            "name": qsTr("Rome"),
+                            "color": "#d01f1a"
+                        }, {
+                            "name": qsTr("Carthage"),
+                            "color": "#cc8f47"
+                        }, {
+                            "name": qsTr("Neutral"),
+                            "color": "#3a3a3a"
+                        }]
 
                     delegate: RowLayout {
                         spacing: Theme.spacingTiny
@@ -986,13 +931,9 @@ Rectangle {
                             color: "#4a3f32"
                             font.pointSize: Theme.fontSizeTiny
                         }
-
                     }
-
                 }
-
             }
-
         }
 
         Label {
@@ -1029,9 +970,6 @@ Rectangle {
                 font.pointSize: Theme.fontSizeSmall
                 font.bold: true
             }
-
         }
-
     }
-
 }

@@ -1,4 +1,31 @@
 #include "skirmish_loader.h"
+
+#include <QCoreApplication>
+#include <QDebug>
+#include <QEventLoop>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
+#include <QSet>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qglobal.h>
+#include <qjsonarray.h>
+#include <qjsondocument.h>
+#include <qjsonobject.h>
+#include <qlist.h>
+#include <qset.h>
+#include <qstringview.h>
+#include <qvariant.h>
+#include <qvectornd.h>
+
+#include <algorithm>
+#include <set>
+#include <unordered_map>
+#include <vector>
+
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/json_keys.h"
@@ -32,43 +59,21 @@
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
 #include "utils/resource_utils.h"
-#include <QCoreApplication>
-#include <QDebug>
-#include <QEventLoop>
-#include <QFile>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonParseError>
-#include <QSet>
-#include <algorithm>
-#include <qdir.h>
-#include <qfiledevice.h>
-#include <qglobal.h>
-#include <qjsonarray.h>
-#include <qjsondocument.h>
-#include <qjsonobject.h>
-#include <qlist.h>
-#include <qset.h>
-#include <qstringview.h>
-#include <qvariant.h>
-#include <qvectornd.h>
-#include <set>
-#include <unordered_map>
-#include <vector>
 
 namespace Game::Map {
 
 using namespace JsonKeys;
 
-SkirmishLoader::SkirmishLoader(Engine::Core::World &world,
-                               Render::GL::Renderer &renderer,
-                               Render::GL::Camera &camera)
-    : m_world(world), m_renderer(renderer), m_camera(camera) {}
+SkirmishLoader::SkirmishLoader(Engine::Core::World& world,
+                               Render::GL::Renderer& renderer,
+                               Render::GL::Camera& camera)
+    : m_world(world)
+    , m_renderer(renderer)
+    , m_camera(camera) {
+}
 
 void SkirmishLoader::reset_game_state() {
-  if (auto *selection_system =
-          m_world.get_system<Game::Systems::SelectionSystem>()) {
+  if (auto* selection_system = m_world.get_system<Game::Systems::SelectionSystem>()) {
     selection_system->clear_selection();
   }
 
@@ -81,21 +86,21 @@ void SkirmishLoader::reset_game_state() {
 
   Game::Systems::BuildingCollisionRegistry::instance().clear();
 
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   owner_registry.clear();
 
   Game::Map::MapTransformer::clear_player_team_overrides();
 
-  auto &visibility_service = Game::Map::VisibilityService::instance();
+  auto& visibility_service = Game::Map::VisibilityService::instance();
   visibility_service.reset();
 
-  auto &terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Map::TerrainService::instance();
   terrain_service.clear();
 
-  auto &stats_registry = Game::Systems::GlobalStatsRegistry::instance();
+  auto& stats_registry = Game::Systems::GlobalStatsRegistry::instance();
   stats_registry.clear();
 
-  auto &troop_registry = Game::Systems::TroopCountRegistry::instance();
+  auto& troop_registry = Game::Systems::TroopCountRegistry::instance();
   troop_registry.clear();
 
   Game::Systems::NationRegistry::instance().clear_player_assignments();
@@ -106,11 +111,11 @@ void SkirmishLoader::reset_game_state() {
   }
 }
 
-auto SkirmishLoader::start(const QString &map_path,
-                           const QVariantList &player_configs,
+auto SkirmishLoader::start(const QString& map_path,
+                           const QVariantList& player_configs,
                            int selected_player_id,
                            bool allow_default_player_barracks,
-                           int &out_selected_player_id) -> SkirmishLoadResult {
+                           int& out_selected_player_id) -> SkirmishLoadResult {
   SkirmishLoadResult result;
 
   auto pump_events = []() {
@@ -121,8 +126,7 @@ auto SkirmishLoader::start(const QString &map_path,
   pump_events();
 
   QSet<int> map_player_ids;
-  const QString resolved_map_path =
-      Utils::Resources::resolve_resource_path(map_path);
+  const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
   QFile map_file(resolved_map_path);
   if (map_file.open(QIODevice::ReadOnly)) {
     const QByteArray data = map_file.readAll();
@@ -133,7 +137,7 @@ auto SkirmishLoader::start(const QString &map_path,
       QJsonObject obj = doc.object();
       if (obj.contains(SPAWNS) && obj[SPAWNS].isArray()) {
         const QJsonArray spawns = obj[SPAWNS].toArray();
-        for (const auto &spawn_val : spawns) {
+        for (const auto& spawn_val : spawns) {
           if (spawn_val.isObject()) {
             QJsonObject spawn = spawn_val.toObject();
             if (spawn.contains(PLAYER_ID)) {
@@ -151,7 +155,7 @@ auto SkirmishLoader::start(const QString &map_path,
                << resolved_map_path;
   }
 
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
 
   int player_owner_id = selected_player_id;
 
@@ -161,8 +165,7 @@ auto SkirmishLoader::start(const QString &map_path,
       std::sort(sorted_ids.begin(), sorted_ids.end());
       player_owner_id = sorted_ids.first();
       qWarning() << "Selected player ID" << selected_player_id
-                 << "not found in map spawns. Using" << player_owner_id
-                 << "instead.";
+                 << "not found in map spawns. Using" << player_owner_id << "instead.";
       out_selected_player_id = player_owner_id;
     } else {
       qWarning() << "No valid player spawns found in map. Using default "
@@ -182,7 +185,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   if (!player_configs.isEmpty()) {
 
-    for (const QVariant &config_var : player_configs) {
+    for (const QVariant& config_var : player_configs) {
       const QVariantMap config = config_var.toMap();
       int player_id = config.value("player_id", -1).toInt();
       const int team_id = config.value("team_id", 0).toInt();
@@ -212,8 +215,7 @@ auto SkirmishLoader::start(const QString &map_path,
           chosen_nation = parsed.value_or(
               Game::Systems::NationRegistry::instance().default_nation_id());
         } else {
-          chosen_nation =
-              Game::Systems::NationRegistry::instance().default_nation_id();
+          chosen_nation = Game::Systems::NationRegistry::instance().default_nation_id();
         }
         nation_overrides[player_id] = chosen_nation;
 
@@ -227,14 +229,13 @@ auto SkirmishLoader::start(const QString &map_path,
   }
 
   std::set<int> unique_teams;
-  for (const auto &[player_id, team_id] : team_overrides) {
+  for (const auto& [player_id, team_id] : team_overrides) {
     unique_teams.insert(team_id);
   }
 
   if (team_overrides.size() >= 2 && unique_teams.size() < 2) {
-    result.error_message =
-        "Invalid team configuration: At least two teams must "
-        "be selected to start a match.";
+    result.error_message = "Invalid team configuration: At least two teams must "
+                           "be selected to start a match.";
     m_renderer.unlock_world_for_modification();
     m_renderer.resume();
     qWarning() << "SkirmishLoader: " << result.error_message;
@@ -244,7 +245,7 @@ auto SkirmishLoader::start(const QString &map_path,
   Game::Map::MapTransformer::set_local_owner_id(player_owner_id);
   Game::Map::MapTransformer::setPlayerTeamOverrides(team_overrides);
 
-  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
 
   for (auto it = map_player_ids.begin(); it != map_player_ids.end(); ++it) {
     int player_id = *it;
@@ -252,8 +253,7 @@ auto SkirmishLoader::start(const QString &map_path,
     if (nat_it != nation_overrides.end()) {
       nation_registry.set_player_nation(player_id, nat_it->second);
     } else {
-      nation_registry.set_player_nation(player_id,
-                                        nation_registry.default_nation_id());
+      nation_registry.set_player_nation(player_id, nation_registry.default_nation_id());
     }
   }
 
@@ -283,7 +283,7 @@ auto SkirmishLoader::start(const QString &map_path,
   constexpr int hex_base = 16;
 
   if (!saved_player_configs.isEmpty()) {
-    for (const QVariant &config_var : saved_player_configs) {
+    for (const QVariant& config_var : saved_player_configs) {
       const QVariantMap config = config_var.toMap();
       const int player_id = config.value("player_id", -1).toInt();
       const QString color_hex = config.value("colorHex", "#FFFFFF").toString();
@@ -294,21 +294,19 @@ auto SkirmishLoader::start(const QString &map_path,
         const int red = color_hex.mid(1, 2).toInt(&conversion_ok, hex_base);
         const int green = color_hex.mid(3, 2).toInt(&conversion_ok, hex_base);
         const int blue = color_hex.mid(5, 2).toInt(&conversion_ok, hex_base);
-        owner_registry.set_owner_color(player_id, red / color_scale,
-                                       green / color_scale, blue / color_scale);
+        owner_registry.set_owner_color(
+            player_id, red / color_scale, green / color_scale, blue / color_scale);
       }
     }
 
     auto entities = m_world.get_entities_with<Engine::Core::UnitComponent>();
     pump_events();
     std::unordered_map<int, int> owner_entity_count;
-    for (auto *entity : entities) {
-      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-      auto *renderable =
-          entity->get_component<Engine::Core::RenderableComponent>();
+    for (auto* entity : entities) {
+      auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
       if ((unit != nullptr) && (renderable != nullptr)) {
-        const QVector3D team_color =
-            Game::Visuals::team_colorForOwner(unit->owner_id);
+        const QVector3D team_color = Game::Visuals::team_colorForOwner(unit->owner_id);
         renderable->color[0] = team_color.x();
         renderable->color[1] = team_color.y();
         renderable->color[2] = team_color.z();
@@ -322,7 +320,7 @@ auto SkirmishLoader::start(const QString &map_path,
     m_on_owners_updated();
   }
 
-  auto &terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Map::TerrainService::instance();
 
   if (terrain_service.is_initialized()) {
     terrain_service.remove_non_persistent_props();
@@ -330,8 +328,8 @@ auto SkirmishLoader::start(const QString &map_path,
 
   if (m_ground != nullptr) {
     if (level_result.ok) {
-      m_ground->configure(level_result.tile_size, level_result.grid_width,
-                          level_result.grid_height);
+      m_ground->configure(
+          level_result.tile_size, level_result.grid_width, level_result.grid_height);
     } else {
       m_ground->configure_extent(50.0F);
     }
@@ -384,8 +382,7 @@ auto SkirmishLoader::start(const QString &map_path,
 
   if (m_rain != nullptr) {
     const float world_width = level_result.grid_width * level_result.tile_size;
-    const float world_height =
-        level_result.grid_height * level_result.tile_size;
+    const float world_height = level_result.grid_height * level_result.tile_size;
     m_rain->configure(world_width, world_height, level_result.biome_seed);
     m_rain->set_enabled(level_result.rain_settings.enabled);
     m_rain->set_intensity(level_result.rain_settings.enabled
@@ -394,18 +391,16 @@ auto SkirmishLoader::start(const QString &map_path,
   }
 
   if (m_boundary_fog != nullptr) {
-    m_boundary_fog->configure(level_result.grid_width, level_result.grid_height,
-                              level_result.tile_size);
+    m_boundary_fog->configure(
+        level_result.grid_width, level_result.grid_height, level_result.tile_size);
   }
 
   constexpr int default_map_size = 100;
-  const int map_width =
-      level_result.ok ? level_result.grid_width : default_map_size;
-  const int map_height =
-      level_result.ok ? level_result.grid_height : default_map_size;
+  const int map_width = level_result.ok ? level_result.grid_width : default_map_size;
+  const int map_height = level_result.ok ? level_result.grid_height : default_map_size;
   Game::Systems::CommandService::initialize(map_width, map_height);
 
-  auto &visibility_service = Game::Map::VisibilityService::instance();
+  auto& visibility_service = Game::Map::VisibilityService::instance();
   visibility_service.initialize(map_width, map_height, level_result.tile_size);
   pump_events();
 
@@ -440,14 +435,14 @@ auto SkirmishLoader::start(const QString &map_path,
   m_renderer.unlock_world_for_modification();
   m_renderer.resume();
 
-  Engine::Core::Entity *focus_entity = nullptr;
+  Engine::Core::Entity* focus_entity = nullptr;
 
   auto candidates = m_world.get_entities_with<Engine::Core::UnitComponent>();
-  for (auto *entity : candidates) {
+  for (auto* entity : candidates) {
     if (entity == nullptr) {
       continue;
     }
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
       continue;
     }
@@ -463,7 +458,7 @@ auto SkirmishLoader::start(const QString &map_path,
   }
 
   if (focus_entity != nullptr) {
-    if (auto *transform =
+    if (auto* transform =
             focus_entity->get_component<Engine::Core::TransformComponent>()) {
       result.focus_position = QVector3D(
           transform->position.x, transform->position.y, transform->position.z);

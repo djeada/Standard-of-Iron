@@ -11,7 +11,7 @@ public:
   [[nodiscard]] auto name() const noexcept -> std::string_view override {
     return "primitive_flush";
   }
-  void execute(FrameContext &ctx) override;
+  void execute(FrameContext& ctx) override;
 };
 
 } // namespace Render::Pass

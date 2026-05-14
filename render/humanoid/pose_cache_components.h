@@ -1,12 +1,12 @@
 #pragma once
 
+#include <cstdint>
+#include <vector>
+
 #include "../../game/core/entity.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "formation_calculator.h"
 #include "prepare.h"
-
-#include <cstdint>
-#include <vector>
 
 namespace Render::Humanoid {
 

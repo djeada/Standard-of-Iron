@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QVector3D>
+
 #include <optional>
 
 namespace Render::GL {
@@ -20,7 +21,8 @@ struct FormationPlacementInfo {
   std::optional<QVector3D> accent_color;
 };
 
-void render_formation_arrow(Renderer *renderer, ResourceManager *resources,
-                            const FormationPlacementInfo &placement);
+void render_formation_arrow(Renderer* renderer,
+                            ResourceManager* resources,
+                            const FormationPlacementInfo& placement);
 
 } // namespace Render::GL

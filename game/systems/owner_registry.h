@@ -2,6 +2,7 @@
 
 #include <QJsonArray>
 #include <QJsonObject>
+
 #include <array>
 #include <string>
 #include <unordered_map>
@@ -9,7 +10,11 @@
 
 namespace Game::Systems {
 
-enum class OwnerType { Player, AI, Neutral };
+enum class OwnerType {
+  Player,
+  AI,
+  Neutral
+};
 
 namespace Defaults {
 inline constexpr std::array<float, 3> k_default_owner_color{0.8F, 0.9F, 1.0F};
@@ -25,14 +30,14 @@ struct OwnerInfo {
 
 class OwnerRegistry {
 public:
-  static auto instance() -> OwnerRegistry &;
+  static auto instance() -> OwnerRegistry&;
 
   void clear();
 
-  auto register_owner(OwnerType type, const std::string &name = "") -> int;
+  auto register_owner(OwnerType type, const std::string& name = "") -> int;
 
-  void register_owner_with_id(int owner_id, OwnerType type,
-                              const std::string &name = "");
+  void
+  register_owner_with_id(int owner_id, OwnerType type, const std::string& name = "");
 
   void set_local_player_id(int player_id);
 
@@ -46,7 +51,7 @@ public:
 
   auto get_owner_name(int owner_id) const -> std::string;
 
-  auto get_all_owners() const -> const std::vector<OwnerInfo> &;
+  auto get_all_owners() const -> const std::vector<OwnerInfo>&;
 
   auto get_player_owner_ids() const -> std::vector<int>;
 
@@ -63,13 +68,13 @@ public:
   auto get_owner_color(int owner_id) const -> std::array<float, 3>;
 
   auto to_json() const -> QJsonObject;
-  void from_json(const QJsonObject &json);
+  void from_json(const QJsonObject& json);
 
 private:
   OwnerRegistry() = default;
   ~OwnerRegistry() = default;
-  OwnerRegistry(const OwnerRegistry &) = delete;
-  auto operator=(const OwnerRegistry &) -> OwnerRegistry & = delete;
+  OwnerRegistry(const OwnerRegistry&) = delete;
+  auto operator=(const OwnerRegistry&) -> OwnerRegistry& = delete;
 
   int m_next_owner_id = 1;
   int m_local_player_id = 1;

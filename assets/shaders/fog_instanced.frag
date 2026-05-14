@@ -10,7 +10,9 @@ out vec4 frag_color;
 
 uniform float u_time;
 
-float hash11(float x) { return fract(sin(x * 91.345) * 43758.5453); }
+float hash11(float x) {
+  return fract(sin(x * 91.345) * 43758.5453);
+}
 
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));

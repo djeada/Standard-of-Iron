@@ -1,16 +1,19 @@
 #include "cylinder_pipeline.h"
+
+#include <QOpenGLContext>
+#include <qopenglcontext.h>
+#include <qopenglext.h>
+#include <qstringliteral.h>
+
+#include <GL/gl.h>
+#include <algorithm>
+#include <cstddef>
+
 #include "../backend.h"
 #include "../mesh.h"
 #include "../primitives.h"
 #include "../render_constants.h"
 #include "gl/shader_cache.h"
-#include <GL/gl.h>
-#include <QOpenGLContext>
-#include <algorithm>
-#include <cstddef>
-#include <qopenglcontext.h>
-#include <qopenglext.h>
-#include <qstringliteral.h>
 
 namespace Render::GL::BackendPipelines {
 
@@ -20,10 +23,13 @@ using namespace Render::GL::BufferCapacity;
 using namespace Render::GL::Geometry;
 using namespace Render::GL::Growth;
 
-CylinderPipeline::CylinderPipeline(ShaderCache *shader_cache)
-    : m_shader_cache(shader_cache) {}
+CylinderPipeline::CylinderPipeline(ShaderCache* shader_cache)
+    : m_shader_cache(shader_cache) {
+}
 
-CylinderPipeline::~CylinderPipeline() { shutdown(); }
+CylinderPipeline::~CylinderPipeline() {
+  shutdown();
+}
 
 auto CylinderPipeline::initialize() -> bool {
   initializeOpenGLFunctions();
@@ -60,8 +66,7 @@ void CylinderPipeline::cache_uniforms() {
   }
 
   if (m_fog_shader != nullptr) {
-    m_fog_uniforms.view_proj =
-        m_fog_shader->optional_uniform_handle("u_view_proj");
+    m_fog_uniforms.view_proj = m_fog_shader->optional_uniform_handle("u_view_proj");
     m_fog_uniforms.time = m_fog_shader->optional_uniform_handle("u_time");
   }
 }
@@ -80,13 +85,13 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
   initializeOpenGLFunctions();
   shutdown_cylinder_pipeline();
 
-  Mesh *unit = get_unit_cylinder();
+  Mesh* unit = get_unit_cylinder();
   if (unit == nullptr) {
     return;
   }
 
-  const auto &vertices = unit->get_vertices();
-  const auto &indices = unit->get_indices();
+  const auto& vertices = unit->get_vertices();
+  const auto& indices = unit->get_indices();
   if (vertices.empty() || indices.empty()) {
     return;
   }
@@ -96,31 +101,44 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
 
   glGenBuffers(1, &m_cylinder_vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
-               vertices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER,
+               vertices.size() * sizeof(Vertex),
+               vertices.data(),
+               GL_STATIC_DRAW);
 
   glGenBuffers(1, &m_cylinder_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cylinder_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
-               indices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               indices.size() * sizeof(unsigned int),
+               indices.data(),
+               GL_STATIC_DRAW);
   m_cylinder_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, position)));
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, position)));
   glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, normal)));
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, normal)));
   glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        ComponentCount::vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
 
   constexpr std::size_t k_cylinder_persistent_capacity = 10000;
-  if (m_cylinder_persistent_buffer.initialize(
-          k_cylinder_persistent_capacity, BufferCapacity::buffers_in_flight)) {
+  if (m_cylinder_persistent_buffer.initialize(k_cylinder_persistent_capacity,
+                                              BufferCapacity::buffers_in_flight)) {
     m_use_persistent_buffers = true;
     glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_persistent_buffer.buffer());
   } else {
@@ -130,47 +148,62 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
     m_cylinder_instance_capacity = BufferCapacity::default_cylinder_instances;
     glBufferData(GL_ARRAY_BUFFER,
                  m_cylinder_instance_capacity * sizeof(CylinderInstanceGpu),
-                 nullptr, GL_DYNAMIC_DRAW);
+                 nullptr,
+                 GL_DYNAMIC_DRAW);
   }
 
   const auto stride = static_cast<GLsizei>(sizeof(CylinderInstanceGpu));
   glEnableVertexAttribArray(VertexAttrib::instance_position);
-  glVertexAttribPointer(
-      VertexAttrib::instance_position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      stride, reinterpret_cast<void *>(offsetof(CylinderInstanceGpu, start)));
+  glVertexAttribPointer(VertexAttrib::instance_position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(CylinderInstanceGpu, start)));
   glVertexAttribDivisor(VertexAttrib::instance_position, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_scale);
-  glVertexAttribPointer(
-      VertexAttrib::instance_scale, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      stride, reinterpret_cast<void *>(offsetof(CylinderInstanceGpu, end)));
+  glVertexAttribPointer(VertexAttrib::instance_scale,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(CylinderInstanceGpu, end)));
   glVertexAttribDivisor(VertexAttrib::instance_scale, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_color);
-  glVertexAttribPointer(
-      VertexAttrib::instance_color, 1, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(CylinderInstanceGpu, radius)));
+  glVertexAttribPointer(VertexAttrib::instance_color,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(CylinderInstanceGpu, radius)));
   glVertexAttribDivisor(VertexAttrib::instance_color, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_alpha);
-  glVertexAttribPointer(
-      VertexAttrib::instance_alpha, 1, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(CylinderInstanceGpu, alpha)));
+  glVertexAttribPointer(VertexAttrib::instance_alpha,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(CylinderInstanceGpu, alpha)));
   glVertexAttribDivisor(VertexAttrib::instance_alpha, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_tint);
-  glVertexAttribPointer(
-      VertexAttrib::instance_tint, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      stride, reinterpret_cast<void *>(offsetof(CylinderInstanceGpu, color)));
+  glVertexAttribPointer(VertexAttrib::instance_tint,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(CylinderInstanceGpu, color)));
   glVertexAttribDivisor(VertexAttrib::instance_tint, 1);
 
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-  m_cylinder_scratch.reserve(m_use_persistent_buffers
-                                 ? k_cylinder_persistent_capacity
-                                 : m_cylinder_instance_capacity);
+  m_cylinder_scratch.reserve(m_use_persistent_buffers ? k_cylinder_persistent_capacity
+                                                      : m_cylinder_instance_capacity);
 }
 
 void CylinderPipeline::shutdown_cylinder_pipeline() {
@@ -237,15 +270,19 @@ void CylinderPipeline::upload_cylinder_instances(std::size_t count) {
   glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_instance_buffer);
   if (count > m_cylinder_instance_capacity) {
     m_cylinder_instance_capacity = std::max<std::size_t>(
-        count, (m_cylinder_instance_capacity != 0U)
-                   ? m_cylinder_instance_capacity * Growth::capacity_multiplier
-                   : count);
+        count,
+        (m_cylinder_instance_capacity != 0U)
+            ? m_cylinder_instance_capacity * Growth::capacity_multiplier
+            : count);
     glBufferData(GL_ARRAY_BUFFER,
                  m_cylinder_instance_capacity * sizeof(CylinderInstanceGpu),
-                 nullptr, GL_DYNAMIC_DRAW);
+                 nullptr,
+                 GL_DYNAMIC_DRAW);
     m_cylinder_scratch.reserve(m_cylinder_instance_capacity);
   }
-  glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(CylinderInstanceGpu),
+  glBufferSubData(GL_ARRAY_BUFFER,
+                  0,
+                  count * sizeof(CylinderInstanceGpu),
                   m_cylinder_scratch.data());
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -257,8 +294,11 @@ void CylinderPipeline::draw_cylinders(std::size_t count) {
 
   initializeOpenGLFunctions();
   glBindVertexArray(m_cylinder_vao);
-  glDrawElementsInstanced(GL_TRIANGLES, m_cylinder_index_count, GL_UNSIGNED_INT,
-                          nullptr, static_cast<GLsizei>(count));
+  glDrawElementsInstanced(GL_TRIANGLES,
+                          m_cylinder_index_count,
+                          GL_UNSIGNED_INT,
+                          nullptr,
+                          static_cast<GLsizei>(count));
   glBindVertexArray(0);
 }
 
@@ -269,8 +309,8 @@ void CylinderPipeline::initialize_fog_pipeline() {
   constexpr int k_fog_grid_segments = 4;
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
-  vertices.reserve(static_cast<std::size_t>((k_fog_grid_segments + 1) *
-                                            (k_fog_grid_segments + 1)));
+  vertices.reserve(
+      static_cast<std::size_t>((k_fog_grid_segments + 1) * (k_fog_grid_segments + 1)));
   indices.reserve(
       static_cast<std::size_t>(k_fog_grid_segments * k_fog_grid_segments * 6));
 
@@ -278,15 +318,13 @@ void CylinderPipeline::initialize_fog_pipeline() {
     const float v = static_cast<float>(z) / k_fog_grid_segments;
     for (int x = 0; x <= k_fog_grid_segments; ++x) {
       const float u = static_cast<float>(x) / k_fog_grid_segments;
-      vertices.push_back(
-          {{u - 0.5F, 0.0F, v - 0.5F}, {0.0F, 1.0F, 0.0F}, {u, v}});
+      vertices.push_back({{u - 0.5F, 0.0F, v - 0.5F}, {0.0F, 1.0F, 0.0F}, {u, v}});
     }
   }
 
   for (int z = 0; z < k_fog_grid_segments; ++z) {
     for (int x = 0; x < k_fog_grid_segments; ++x) {
-      const auto i0 =
-          static_cast<unsigned int>(z * (k_fog_grid_segments + 1) + x);
+      const auto i0 = static_cast<unsigned int>(z * (k_fog_grid_segments + 1) + x);
       const auto i1 = i0 + 1U;
       const auto i2 =
           static_cast<unsigned int>((z + 1) * (k_fog_grid_segments + 1) + x);
@@ -300,58 +338,84 @@ void CylinderPipeline::initialize_fog_pipeline() {
 
   glGenBuffers(1, &m_fog_vertex_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_fog_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
-               vertices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER,
+               vertices.size() * sizeof(Vertex),
+               vertices.data(),
+               GL_STATIC_DRAW);
 
   glGenBuffers(1, &m_fog_index_buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_fog_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
-               indices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               indices.size() * sizeof(unsigned int),
+               indices.data(),
+               GL_STATIC_DRAW);
   m_fog_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, position)));
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, position)));
   glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, normal)));
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, normal)));
   glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        ComponentCount::vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
 
   glGenBuffers(1, &m_fog_instance_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_fog_instance_buffer);
   m_fog_instance_capacity = BufferCapacity::default_fog_instances;
   glBufferData(GL_ARRAY_BUFFER,
-               m_fog_instance_capacity * sizeof(FogInstanceGpu), nullptr,
+               m_fog_instance_capacity * sizeof(FogInstanceGpu),
+               nullptr,
                GL_DYNAMIC_DRAW);
 
   const auto stride = static_cast<GLsizei>(sizeof(FogInstanceGpu));
   glEnableVertexAttribArray(VertexAttrib::instance_position);
-  glVertexAttribPointer(
-      VertexAttrib::instance_position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      stride, reinterpret_cast<void *>(offsetof(FogInstanceGpu, center)));
+  glVertexAttribPointer(VertexAttrib::instance_position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(FogInstanceGpu, center)));
   glVertexAttribDivisor(VertexAttrib::instance_position, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_scale);
-  glVertexAttribPointer(
-      VertexAttrib::instance_scale, 1, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(FogInstanceGpu, size)));
+  glVertexAttribPointer(VertexAttrib::instance_scale,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(FogInstanceGpu, size)));
   glVertexAttribDivisor(VertexAttrib::instance_scale, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_color);
-  glVertexAttribPointer(
-      VertexAttrib::instance_color, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      stride, reinterpret_cast<void *>(offsetof(FogInstanceGpu, color)));
+  glVertexAttribPointer(VertexAttrib::instance_color,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(FogInstanceGpu, color)));
   glVertexAttribDivisor(VertexAttrib::instance_color, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_alpha);
-  glVertexAttribPointer(
-      VertexAttrib::instance_alpha, 1, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(FogInstanceGpu, alpha)));
+  glVertexAttribPointer(VertexAttrib::instance_alpha,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(FogInstanceGpu, alpha)));
   glVertexAttribDivisor(VertexAttrib::instance_alpha, 1);
 
   glBindVertexArray(0);
@@ -407,20 +471,22 @@ void CylinderPipeline::upload_fog_instances(std::size_t count) {
   glBindBuffer(GL_ARRAY_BUFFER, m_fog_instance_buffer);
   if (count > m_fog_instance_capacity) {
     m_fog_instance_capacity = std::max<std::size_t>(
-        count, (m_fog_instance_capacity != 0U)
-                   ? m_fog_instance_capacity * Growth::capacity_multiplier
-                   : count);
+        count,
+        (m_fog_instance_capacity != 0U)
+            ? m_fog_instance_capacity * Growth::capacity_multiplier
+            : count);
     glBufferData(GL_ARRAY_BUFFER,
-                 m_fog_instance_capacity * sizeof(FogInstanceGpu), nullptr,
+                 m_fog_instance_capacity * sizeof(FogInstanceGpu),
+                 nullptr,
                  GL_DYNAMIC_DRAW);
     m_fog_scratch.reserve(m_fog_instance_capacity);
   }
-  glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(FogInstanceGpu),
-                  m_fog_scratch.data());
+  glBufferSubData(
+      GL_ARRAY_BUFFER, 0, count * sizeof(FogInstanceGpu), m_fog_scratch.data());
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CylinderPipeline::bind_fog_instance_buffer(GL::Buffer *instance_buffer) {
+void CylinderPipeline::bind_fog_instance_buffer(GL::Buffer* instance_buffer) {
   if (instance_buffer == nullptr || m_fog_vao == 0U) {
     return;
   }
@@ -431,27 +497,39 @@ void CylinderPipeline::bind_fog_instance_buffer(GL::Buffer *instance_buffer) {
 
   const auto stride = static_cast<GLsizei>(sizeof(FogInstanceGpu));
   glEnableVertexAttribArray(VertexAttrib::instance_position);
-  glVertexAttribPointer(
-      VertexAttrib::instance_position, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      stride, reinterpret_cast<void *>(offsetof(FogInstanceGpu, center)));
+  glVertexAttribPointer(VertexAttrib::instance_position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(FogInstanceGpu, center)));
   glVertexAttribDivisor(VertexAttrib::instance_position, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_scale);
-  glVertexAttribPointer(
-      VertexAttrib::instance_scale, 1, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(FogInstanceGpu, size)));
+  glVertexAttribPointer(VertexAttrib::instance_scale,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(FogInstanceGpu, size)));
   glVertexAttribDivisor(VertexAttrib::instance_scale, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_color);
-  glVertexAttribPointer(
-      VertexAttrib::instance_color, ComponentCount::vec3, GL_FLOAT, GL_FALSE,
-      stride, reinterpret_cast<void *>(offsetof(FogInstanceGpu, color)));
+  glVertexAttribPointer(VertexAttrib::instance_color,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(FogInstanceGpu, color)));
   glVertexAttribDivisor(VertexAttrib::instance_color, 1);
 
   glEnableVertexAttribArray(VertexAttrib::instance_alpha);
-  glVertexAttribPointer(
-      VertexAttrib::instance_alpha, 1, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(FogInstanceGpu, alpha)));
+  glVertexAttribPointer(VertexAttrib::instance_alpha,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(offsetof(FogInstanceGpu, alpha)));
   glVertexAttribDivisor(VertexAttrib::instance_alpha, 1);
 
   glBindVertexArray(0);
@@ -465,8 +543,11 @@ void CylinderPipeline::draw_fog(std::size_t count) {
 
   initializeOpenGLFunctions();
   glBindVertexArray(m_fog_vao);
-  glDrawElementsInstanced(GL_TRIANGLES, m_fog_index_count, GL_UNSIGNED_INT,
-                          nullptr, static_cast<GLsizei>(count));
+  glDrawElementsInstanced(GL_TRIANGLES,
+                          m_fog_index_count,
+                          GL_UNSIGNED_INT,
+                          nullptr,
+                          static_cast<GLsizei>(count));
   glBindVertexArray(0);
 }
 

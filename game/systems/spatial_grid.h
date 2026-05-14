@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../core/entity.h"
 #include <cmath>
 #include <unordered_map>
 #include <vector>
+
+#include "../core/entity.h"
 
 namespace Game::Systems {
 
@@ -22,24 +23,26 @@ public:
   [[nodiscard]] auto get_entities_in_range(float x, float z, float range) const
       -> std::vector<Engine::Core::EntityID>;
 
-  void get_entities_in_range(float x, float z, float range,
-                             std::vector<Engine::Core::EntityID> &result) const;
+  void get_entities_in_range(float x,
+                             float z,
+                             float range,
+                             std::vector<Engine::Core::EntityID>& result) const;
 
-  [[nodiscard]] auto get_nearby_entities(float x, float z) const
-      -> std::vector<Engine::Core::EntityID>;
+  [[nodiscard]] auto
+  get_nearby_entities(float x, float z) const -> std::vector<Engine::Core::EntityID>;
 
 private:
   struct CellKey {
     int x;
     int z;
 
-    auto operator==(const CellKey &other) const -> bool {
+    auto operator==(const CellKey& other) const -> bool {
       return x == other.x && z == other.z;
     }
   };
 
   struct CellKeyHash {
-    auto operator()(const CellKey &key) const -> std::size_t {
+    auto operator()(const CellKey& key) const -> std::size_t {
 
       return std::hash<int>()(key.x) ^ (std::hash<int>()(key.z) << 16);
     }
@@ -50,8 +53,7 @@ private:
   float m_cell_size;
   float m_inv_cell_size;
 
-  std::unordered_map<CellKey, std::vector<Engine::Core::EntityID>, CellKeyHash>
-      m_cells;
+  std::unordered_map<CellKey, std::vector<Engine::Core::EntityID>, CellKeyHash> m_cells;
 
   std::unordered_map<Engine::Core::EntityID, CellKey> m_entity_cells;
 };

@@ -1,20 +1,21 @@
 #include "cloak_renderer.h"
-#include "torso_local_archetype_utils.h"
+
+#include <QMatrix4x4>
+#include <QVector3D>
+#include <QVector4D>
+
+#include <array>
+#include <cstdint>
+#include <deque>
+#include <memory>
+#include <string>
 
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_spec.h"
 #include "../../static_attachment_spec.h"
 #include "../attachment_builder.h"
 #include "../equipment_submit.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <QVector4D>
-#include <array>
-#include <cstdint>
-#include <deque>
-#include <memory>
-#include <string>
+#include "torso_local_archetype_utils.h"
 
 namespace Render::GL {
 
@@ -27,15 +28,15 @@ enum CloakPaletteSlot : std::uint8_t {
 
 auto shared_cloak_meshes() -> CloakMeshes {
   static std::unique_ptr<Mesh> back_mesh = create_plane_mesh(1.0F, 1.0F, 16);
-  static std::unique_ptr<Mesh> shoulder_mesh =
-      create_plane_mesh(1.0F, 1.0F, 12);
+  static std::unique_ptr<Mesh> shoulder_mesh = create_plane_mesh(1.0F, 1.0F, 12);
   return {back_mesh.get(), shoulder_mesh.get()};
 }
 
-auto cloak_archetype(const CloakConfig &config, const CloakMeshes &meshes,
-                     const QMatrix4x4 &shoulder_model,
-                     const QMatrix4x4 &drape_model,
-                     const QMatrix4x4 *clasp_model) -> const RenderArchetype & {
+auto cloak_archetype(const CloakConfig& config,
+                     const CloakMeshes& meshes,
+                     const QMatrix4x4& shoulder_model,
+                     const QMatrix4x4& drape_model,
+                     const QMatrix4x4* clasp_model) -> const RenderArchetype& {
   struct CachedArchetype {
     std::string key;
     RenderArchetype archetype;
@@ -56,20 +57,28 @@ auto cloak_archetype(const CloakConfig &config, const CloakMeshes &meshes,
     append_quantized_key(key, *clasp_model);
   }
 
-  for (const auto &entry : cache) {
+  for (const auto& entry : cache) {
     if (entry.key == key) {
       return entry.archetype;
     }
   }
 
   RenderArchetypeBuilder builder{key};
-  builder.add_palette_mesh(meshes.shoulder, shoulder_model, k_cloak_cloth_slot,
-                           nullptr, 1.0F, config.shoulder_material_id);
-  builder.add_palette_mesh(meshes.back, drape_model, k_cloak_cloth_slot,
-                           nullptr, 1.0F, config.back_material_id);
+  builder.add_palette_mesh(meshes.shoulder,
+                           shoulder_model,
+                           k_cloak_cloth_slot,
+                           nullptr,
+                           1.0F,
+                           config.shoulder_material_id);
+  builder.add_palette_mesh(meshes.back,
+                           drape_model,
+                           k_cloak_cloth_slot,
+                           nullptr,
+                           1.0F,
+                           config.back_material_id);
   if (clasp_model != nullptr) {
-    builder.add_palette_mesh(get_unit_sphere(), *clasp_model, k_cloak_trim_slot,
-                             nullptr, 1.0F, 1);
+    builder.add_palette_mesh(
+        get_unit_sphere(), *clasp_model, k_cloak_trim_slot, nullptr, 1.0F, 1);
   }
 
   cache.push_back({key, std::move(builder).build()});
@@ -78,42 +87,47 @@ auto cloak_archetype(const CloakConfig &config, const CloakMeshes &meshes,
 
 } // namespace
 
-CloakRenderer::CloakRenderer(const CloakConfig &config) : m_config(config) {}
+CloakRenderer::CloakRenderer(const CloakConfig& config)
+    : m_config(config) {
+}
 
 auto CloakRenderer::meshes() const noexcept -> CloakMeshes {
   return shared_cloak_meshes();
 }
 
-void CloakRenderer::set_config(const CloakConfig &config) { m_config = config; }
+void CloakRenderer::set_config(const CloakConfig& config) {
+  m_config = config;
+}
 
-void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
-                           const HumanoidPalette &palette,
-                           const HumanoidAnimationContext &anim,
-                           EquipmentBatch &batch) {
+void CloakRenderer::render(const DrawContext& ctx,
+                           const BodyFrames& frames,
+                           const HumanoidPalette& palette,
+                           const HumanoidAnimationContext& anim,
+                           EquipmentBatch& batch) {
   submit(m_config, shared_cloak_meshes(), ctx, frames, palette, anim, batch);
 }
 
-void CloakRenderer::submit(const CloakConfig &config, const CloakMeshes &meshes,
-                           const DrawContext &ctx, const BodyFrames &frames,
-                           const HumanoidPalette &palette,
-                           const HumanoidAnimationContext &anim,
-                           EquipmentBatch &batch) {
+void CloakRenderer::submit(const CloakConfig& config,
+                           const CloakMeshes& meshes,
+                           const DrawContext& ctx,
+                           const BodyFrames& frames,
+                           const HumanoidPalette& palette,
+                           const HumanoidAnimationContext& anim,
+                           EquipmentBatch& batch) {
   (void)anim;
 
-  const AttachmentFrame &torso = frames.torso;
-  const AttachmentFrame &shoulder_l = frames.shoulder_l;
-  const AttachmentFrame &shoulder_r = frames.shoulder_r;
+  const AttachmentFrame& torso = frames.torso;
+  const AttachmentFrame& shoulder_l = frames.shoulder_l;
+  const AttachmentFrame& shoulder_r = frames.shoulder_r;
 
-  if (torso.radius <= 0.0F || meshes.back == nullptr ||
-      meshes.shoulder == nullptr) {
+  if (torso.radius <= 0.0F || meshes.back == nullptr || meshes.shoulder == nullptr) {
     return;
   }
 
   QVector3D const cloak_color = palette.cloth;
   QVector3D const trim_color = palette.metal;
 
-  QVector3D const up =
-      safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
+  QVector3D const up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
   QVector3D const forward =
       safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
   QVector3D const back = -forward;
@@ -162,25 +176,27 @@ void CloakRenderer::submit(const CloakConfig &config, const CloakMeshes &meshes,
   if (config.show_clasp) {
     QVector3D const clasp_pos =
         shoulder_mid + up * (torso_r * 0.5F) + forward * (torso_r * 0.2F);
-    QMatrix4x4 clasp_model = local_scale_model(
-        torso_local.point(clasp_pos),
-        QVector3D(torso_r * 0.12F, torso_r * 0.12F, torso_r * 0.12F));
-    append_equipment_archetype(batch,
-                               cloak_archetype(config, meshes, shoulder_model,
-                                               drape_model, &clasp_model),
-                               torso_local.world, palette_slots);
+    QMatrix4x4 clasp_model =
+        local_scale_model(torso_local.point(clasp_pos),
+                          QVector3D(torso_r * 0.12F, torso_r * 0.12F, torso_r * 0.12F));
+    append_equipment_archetype(
+        batch,
+        cloak_archetype(config, meshes, shoulder_model, drape_model, &clasp_model),
+        torso_local.world,
+        palette_slots);
     return;
   }
 
   append_equipment_archetype(
       batch,
       cloak_archetype(config, meshes, shoulder_model, drape_model, nullptr),
-      torso_local.world, palette_slots);
+      torso_local.world,
+      palette_slots);
 }
 
-auto cloak_fill_role_colors_with_primary(const QVector3D &primary_color,
-                                         const HumanoidPalette &palette,
-                                         QVector3D *out,
+auto cloak_fill_role_colors_with_primary(const QVector3D& primary_color,
+                                         const HumanoidPalette& palette,
+                                         QVector3D* out,
                                          std::size_t max) -> std::uint32_t {
   if (max < k_cloak_role_count) {
     return 0U;
@@ -190,20 +206,19 @@ auto cloak_fill_role_colors_with_primary(const QVector3D &primary_color,
   return k_cloak_role_count;
 }
 
-auto cloak_make_static_attachment(
-    const CloakConfig &config, const CloakMeshes &meshes,
-    std::uint16_t torso_socket_bone_index,
-    std::uint8_t base_role_byte) -> Render::Creature::StaticAttachmentSpec {
-  const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
-  const AttachmentFrame &torso = bind_frames.torso;
-  const AttachmentFrame &shoulder_l = bind_frames.shoulder_l;
-  const AttachmentFrame &shoulder_r = bind_frames.shoulder_r;
+auto cloak_make_static_attachment(const CloakConfig& config,
+                                  const CloakMeshes& meshes,
+                                  std::uint16_t torso_socket_bone_index,
+                                  std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec {
+  const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const AttachmentFrame& torso = bind_frames.torso;
+  const AttachmentFrame& shoulder_l = bind_frames.shoulder_l;
+  const AttachmentFrame& shoulder_r = bind_frames.shoulder_r;
 
-  TorsoLocalFrame const torso_local =
-      make_torso_local_frame(QMatrix4x4{}, torso);
+  TorsoLocalFrame const torso_local = make_torso_local_frame(QMatrix4x4{}, torso);
 
-  QVector3D const up =
-      safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
+  QVector3D const up = safe_attachment_axis(torso.up, QVector3D(0.0F, 1.0F, 0.0F));
   QVector3D const forward =
       safe_attachment_axis(torso.forward, QVector3D(0.0F, 0.0F, 1.0F));
   QVector3D const back = -forward;
@@ -245,20 +260,20 @@ auto cloak_make_static_attachment(
   drape_model = drape_model * flare;
   drape_model.scale(drape_width, 1.0F, drape_length);
 
-  const QMatrix4x4 *clasp_ptr = nullptr;
+  const QMatrix4x4* clasp_ptr = nullptr;
   QMatrix4x4 clasp_model;
   if (config.show_clasp) {
     QVector3D const clasp_pos =
         shoulder_mid + up * (torso_r * 0.5F) + forward * (torso_r * 0.2F);
-    clasp_model = local_scale_model(
-        torso_local.point(clasp_pos),
-        QVector3D(torso_r * 0.12F, torso_r * 0.12F, torso_r * 0.12F));
+    clasp_model =
+        local_scale_model(torso_local.point(clasp_pos),
+                          QVector3D(torso_r * 0.12F, torso_r * 0.12F, torso_r * 0.12F));
     clasp_ptr = &clasp_model;
   }
 
   auto spec = Render::Equipment::build_static_attachment({
-      .archetype = &cloak_archetype(config, meshes, shoulder_model, drape_model,
-                                    clasp_ptr),
+      .archetype =
+          &cloak_archetype(config, meshes, shoulder_model, drape_model, clasp_ptr),
       .socket_bone_index = torso_socket_bone_index,
       .unit_local_pose_at_bind = torso_local.world,
   });

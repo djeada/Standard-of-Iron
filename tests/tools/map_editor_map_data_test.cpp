@@ -1,11 +1,13 @@
-#include "tools/map_editor/map_data.h"
-#include "tools/map_editor/map_json_keys.h"
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryDir>
+
 #include <gtest/gtest.h>
+
+#include "tools/map_editor/map_data.h"
+#include "tools/map_editor/map_json_keys.h"
 
 namespace {
 
@@ -14,13 +16,13 @@ namespace MapJsonKeys = MapEditor::MapJsonKeys;
 constexpr auto legacy_coord_system_key = "coordSystem";
 constexpr auto legacy_max_troops_key = "maxTroopsPerPlayer";
 
-auto write_json(const QString &path, const QJsonObject &json) -> void {
+auto write_json(const QString& path, const QJsonObject& json) -> void {
   QFile file(path);
   ASSERT_TRUE(file.open(QIODevice::WriteOnly));
   file.write(QJsonDocument(json).toJson(QJsonDocument::Indented));
 }
 
-auto read_json(const QString &path) -> QJsonObject {
+auto read_json(const QString& path) -> QJsonObject {
   QFile file(path);
   EXPECT_TRUE(file.open(QIODevice::ReadOnly));
   auto document = QJsonDocument::fromJson(file.readAll());
@@ -30,8 +32,7 @@ auto read_json(const QString &path) -> QJsonObject {
 
 } // namespace
 
-TEST(MapEditorMapDataTest,
-     LoadSaveKeepsSnakeCaseSchemaAndPreservesExtraRootFields) {
+TEST(MapEditorMapDataTest, LoadSaveKeepsSnakeCaseSchemaAndPreservesExtraRootFields) {
   QTemporaryDir temp_dir;
   ASSERT_TRUE(temp_dir.isValid());
 
@@ -46,9 +47,10 @@ TEST(MapEditorMapDataTest,
       {MapJsonKeys::time_of_day, "afternoon"},
       {MapJsonKeys::world_props,
        QJsonArray{QJsonObject{{"type", "dead_tree"}, {"x", 10}, {"z", 12}}}},
-      {MapJsonKeys::grid, QJsonObject{{MapJsonKeys::width, 64},
-                                      {MapJsonKeys::height, 48},
-                                      {MapJsonKeys::tile_size, 1.0}}},
+      {MapJsonKeys::grid,
+       QJsonObject{{MapJsonKeys::width, 64},
+                   {MapJsonKeys::height, 48},
+                   {MapJsonKeys::tile_size, 1.0}}},
       {MapJsonKeys::terrain,
        QJsonArray{QJsonObject{{MapJsonKeys::type, "hill"},
                               {MapJsonKeys::x, 8},
@@ -80,13 +82,13 @@ TEST(MapEditorMapDataTest, LegacyCamelCaseRootsSaveBackAsSnakeCase) {
   const QString input_path = temp_dir.filePath("input.json");
   const QString output_path = temp_dir.filePath("output.json");
 
-  QJsonObject input{
-      {"name", "Legacy Keys"},
-      {legacy_coord_system_key, "grid"},
-      {legacy_max_troops_key, 900},
-      {MapJsonKeys::grid, QJsonObject{{MapJsonKeys::width, 32},
-                                      {MapJsonKeys::height, 24},
-                                      {MapJsonKeys::tile_size, 1.0}}}};
+  QJsonObject input{{"name", "Legacy Keys"},
+                    {legacy_coord_system_key, "grid"},
+                    {legacy_max_troops_key, 900},
+                    {MapJsonKeys::grid,
+                     QJsonObject{{MapJsonKeys::width, 32},
+                                 {MapJsonKeys::height, 24},
+                                 {MapJsonKeys::tile_size, 1.0}}}};
   write_json(input_path, input);
 
   MapEditor::MapData data;
@@ -107,16 +109,16 @@ TEST(MapEditorMapDataTest, LegacyFirecampsImportAsWorldPropsOnSave) {
   const QString input_path = temp_dir.filePath("input.json");
   const QString output_path = temp_dir.filePath("output.json");
 
-  QJsonObject input{
-      {"name", "Legacy Firecamps"},
-      {MapJsonKeys::grid, QJsonObject{{MapJsonKeys::width, 32},
-                                      {MapJsonKeys::height, 24},
-                                      {MapJsonKeys::tile_size, 1.0}}},
-      {MapJsonKeys::firecamps,
-       QJsonArray{QJsonObject{{MapJsonKeys::x, 10},
-                              {MapJsonKeys::z, 12},
-                              {MapJsonKeys::intensity, 1.5},
-                              {MapJsonKeys::radius, 4.0}}}}};
+  QJsonObject input{{"name", "Legacy Firecamps"},
+                    {MapJsonKeys::grid,
+                     QJsonObject{{MapJsonKeys::width, 32},
+                                 {MapJsonKeys::height, 24},
+                                 {MapJsonKeys::tile_size, 1.0}}},
+                    {MapJsonKeys::firecamps,
+                     QJsonArray{QJsonObject{{MapJsonKeys::x, 10},
+                                            {MapJsonKeys::z, 12},
+                                            {MapJsonKeys::intensity, 1.5},
+                                            {MapJsonKeys::radius, 4.0}}}}};
   write_json(input_path, input);
 
   MapEditor::MapData data;
@@ -136,8 +138,7 @@ TEST(MapEditorMapDataTest, LegacyFirecampsImportAsWorldPropsOnSave) {
   EXPECT_DOUBLE_EQ(saved_prop.value(MapJsonKeys::radius).toDouble(), 4.0);
 }
 
-TEST(MapEditorMapDataTest,
-     RoadWaypointsDefineEditableEndpointsAndStaySyncedOnSave) {
+TEST(MapEditorMapDataTest, RoadWaypointsDefineEditableEndpointsAndStaySyncedOnSave) {
   QTemporaryDir temp_dir;
   ASSERT_TRUE(temp_dir.isValid());
 
@@ -148,17 +149,18 @@ TEST(MapEditorMapDataTest,
       {"name", "Waypoint Road"},
       {MapJsonKeys::coord_system, "grid"},
       {MapJsonKeys::max_troops_per_player, 1000},
-      {MapJsonKeys::grid, QJsonObject{{MapJsonKeys::width, 100},
-                                      {MapJsonKeys::height, 100},
-                                      {MapJsonKeys::tile_size, 1.0}}},
+      {MapJsonKeys::grid,
+       QJsonObject{{MapJsonKeys::width, 100},
+                   {MapJsonKeys::height, 100},
+                   {MapJsonKeys::tile_size, 1.0}}},
       {MapJsonKeys::roads,
-       QJsonArray{QJsonObject{{MapJsonKeys::start, QJsonArray{0, 0}},
-                              {MapJsonKeys::end, QJsonArray{0, 0}},
-                              {MapJsonKeys::width, 3.0},
-                              {MapJsonKeys::style, "default"},
-                              {MapJsonKeys::waypoints,
-                               QJsonArray{QJsonArray{8, 10}, QJsonArray{20, 25},
-                                          QJsonArray{30, 35}}}}}}};
+       QJsonArray{QJsonObject{
+           {MapJsonKeys::start, QJsonArray{0, 0}},
+           {MapJsonKeys::end, QJsonArray{0, 0}},
+           {MapJsonKeys::width, 3.0},
+           {MapJsonKeys::style, "default"},
+           {MapJsonKeys::waypoints,
+            QJsonArray{QJsonArray{8, 10}, QJsonArray{20, 25}, QJsonArray{30, 35}}}}}}};
   write_json(input_path, input);
 
   MapEditor::MapData data;
@@ -190,8 +192,7 @@ TEST(MapEditorMapDataTest,
   EXPECT_DOUBLE_EQ(saved_end[0].toDouble(), 40.0);
   EXPECT_DOUBLE_EQ(saved_end[1].toDouble(), 45.0);
 
-  const QJsonArray waypoints =
-      saved_road.value(MapJsonKeys::waypoints).toArray();
+  const QJsonArray waypoints = saved_road.value(MapJsonKeys::waypoints).toArray();
   ASSERT_EQ(waypoints.size(), 3);
   const QJsonArray first_waypoint = waypoints.first().toArray();
   const QJsonArray last_waypoint = waypoints.last().toArray();
@@ -208,18 +209,18 @@ TEST(MapEditorMapDataTest, FirecampPersistentFalseRoundTrips) {
   const QString input_path = temp_dir.filePath("input.json");
   const QString output_path = temp_dir.filePath("output.json");
 
-  QJsonObject input{
-      {"name", "Persistent Test"},
-      {MapJsonKeys::grid, QJsonObject{{MapJsonKeys::width, 32},
-                                      {MapJsonKeys::height, 24},
-                                      {MapJsonKeys::tile_size, 1.0}}},
-      {MapJsonKeys::world_props,
-       QJsonArray{QJsonObject{{MapJsonKeys::type, "firecamp"},
-                              {MapJsonKeys::x, 5},
-                              {MapJsonKeys::z, 5},
-                              {MapJsonKeys::intensity, 1.0},
-                              {MapJsonKeys::radius, 3.0},
-                              {MapJsonKeys::persistent, false}}}}};
+  QJsonObject input{{"name", "Persistent Test"},
+                    {MapJsonKeys::grid,
+                     QJsonObject{{MapJsonKeys::width, 32},
+                                 {MapJsonKeys::height, 24},
+                                 {MapJsonKeys::tile_size, 1.0}}},
+                    {MapJsonKeys::world_props,
+                     QJsonArray{QJsonObject{{MapJsonKeys::type, "firecamp"},
+                                            {MapJsonKeys::x, 5},
+                                            {MapJsonKeys::z, 5},
+                                            {MapJsonKeys::intensity, 1.0},
+                                            {MapJsonKeys::radius, 3.0},
+                                            {MapJsonKeys::persistent, false}}}}};
   write_json(input_path, input);
 
   MapEditor::MapData data;
@@ -242,22 +243,22 @@ TEST(MapEditorMapDataTest, WorldPropsAlwaysWriteScaleRegardlessOfType) {
   const QString input_path = temp_dir.filePath("input.json");
   const QString output_path = temp_dir.filePath("output.json");
 
-  QJsonObject input{
-      {"name", "Scale Test"},
-      {MapJsonKeys::grid, QJsonObject{{MapJsonKeys::width, 32},
-                                      {MapJsonKeys::height, 24},
-                                      {MapJsonKeys::tile_size, 1.0}}},
-      {MapJsonKeys::world_props,
-       QJsonArray{QJsonObject{{MapJsonKeys::type, "firecamp"},
-                              {MapJsonKeys::x, 5},
-                              {MapJsonKeys::z, 5},
-                              {MapJsonKeys::scale, 2.0},
-                              {MapJsonKeys::intensity, 1.0},
-                              {MapJsonKeys::radius, 3.0}},
-                  QJsonObject{{MapJsonKeys::type, "tent"},
-                              {MapJsonKeys::x, 10},
-                              {MapJsonKeys::z, 10},
-                              {MapJsonKeys::scale, 1.5}}}}};
+  QJsonObject input{{"name", "Scale Test"},
+                    {MapJsonKeys::grid,
+                     QJsonObject{{MapJsonKeys::width, 32},
+                                 {MapJsonKeys::height, 24},
+                                 {MapJsonKeys::tile_size, 1.0}}},
+                    {MapJsonKeys::world_props,
+                     QJsonArray{QJsonObject{{MapJsonKeys::type, "firecamp"},
+                                            {MapJsonKeys::x, 5},
+                                            {MapJsonKeys::z, 5},
+                                            {MapJsonKeys::scale, 2.0},
+                                            {MapJsonKeys::intensity, 1.0},
+                                            {MapJsonKeys::radius, 3.0}},
+                                QJsonObject{{MapJsonKeys::type, "tent"},
+                                            {MapJsonKeys::x, 10},
+                                            {MapJsonKeys::z, 10},
+                                            {MapJsonKeys::scale, 1.5}}}}};
   write_json(input_path, input);
 
   MapEditor::MapData data;
@@ -285,8 +286,7 @@ TEST(MapEditorMapDataTest, SaveReportsWriteErrors) {
   MapEditor::MapData data;
   QString error_message;
 
-  const QString missing_dir_path =
-      temp_dir.filePath("missing/subdir/output.json");
+  const QString missing_dir_path = temp_dir.filePath("missing/subdir/output.json");
   EXPECT_FALSE(data.save_to_json(missing_dir_path, &error_message));
   EXPECT_FALSE(error_message.trimmed().isEmpty());
 }

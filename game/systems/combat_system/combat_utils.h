@@ -1,10 +1,11 @@
 #pragma once
 
-#include "../../core/entity.h"
-#include "../spatial_grid.h"
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
+
+#include "../../core/entity.h"
+#include "../spatial_grid.h"
 
 namespace Engine::Core {
 class World;
@@ -19,41 +20,41 @@ struct CombatQueryContext {
 
   void clear();
 
-  std::vector<Engine::Core::Entity *> units;
-  std::unordered_map<Engine::Core::EntityID, Engine::Core::Entity *>
-      entities_by_id;
+  std::vector<Engine::Core::Entity*> units;
+  std::unordered_map<Engine::Core::EntityID, Engine::Core::Entity*> entities_by_id;
   Game::Systems::SpatialGrid unit_grid;
   mutable std::vector<Engine::Core::EntityID> nearby_unit_ids;
 };
 
-auto build_combat_query_context(Engine::Core::World *world)
-    -> CombatQueryContext;
+auto build_combat_query_context(Engine::Core::World* world) -> CombatQueryContext;
 
-void rebuild_combat_query_context(Engine::Core::World *world,
-                                  CombatQueryContext &query_context);
+void rebuild_combat_query_context(Engine::Core::World* world,
+                                  CombatQueryContext& query_context);
 
-auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool;
+auto is_unit_in_hold_mode(Engine::Core::Entity* entity) -> bool;
 
-auto is_unit_in_guard_mode(Engine::Core::Entity *entity) -> bool;
+auto is_unit_in_guard_mode(Engine::Core::Entity* entity) -> bool;
 
-auto is_building(Engine::Core::Entity *entity) -> bool;
+auto is_building(Engine::Core::Entity* entity) -> bool;
 
-auto is_valid_enemy_unit(const Engine::Core::UnitComponent *attacker_unit,
-                         Engine::Core::Entity *target,
+auto is_valid_enemy_unit(const Engine::Core::UnitComponent* attacker_unit,
+                         Engine::Core::Entity* target,
                          bool allow_buildings) -> bool;
 
-auto combat_radius(Engine::Core::Entity *entity) -> float;
+auto combat_radius(Engine::Core::Entity* entity) -> float;
 
-auto is_in_range(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
+auto is_in_range(Engine::Core::Entity* attacker,
+                 Engine::Core::Entity* target,
                  float range) -> bool;
 
-auto is_unit_idle(Engine::Core::Entity *unit) -> bool;
+auto is_unit_idle(Engine::Core::Entity* unit) -> bool;
 
-auto find_nearest_enemy(
-    Engine::Core::Entity *unit, const CombatQueryContext &query_context,
-    float max_range,
-    std::uint64_t *scan_iterations = nullptr) -> Engine::Core::Entity *;
+auto find_nearest_enemy(Engine::Core::Entity* unit,
+                        const CombatQueryContext& query_context,
+                        float max_range,
+                        std::uint64_t* scan_iterations = nullptr)
+    -> Engine::Core::Entity*;
 
-auto should_auto_engage_melee(Engine::Core::Entity *unit) -> bool;
+auto should_auto_engage_melee(Engine::Core::Entity* unit) -> bool;
 
 } // namespace Game::Systems::Combat

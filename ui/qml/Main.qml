@@ -38,18 +38,17 @@ ApplicationWindow {
         onActiveFocusChanged: {
             if (activeFocus)
                 gameViewItem.forceActiveFocus();
-
         }
         onPause_toggled: {
             mainWindow.game_paused = !mainWindow.game_paused;
             gameViewItem.set_paused(mainWindow.game_paused);
             gameViewItem.forceActiveFocus();
         }
-        onSpeed_changed: function(speed) {
+        onSpeed_changed: function (speed) {
             gameViewItem.set_game_speed(speed);
             gameViewItem.forceActiveFocus();
         }
-        onCommand_mode_changed: function(mode) {
+        onCommand_mode_changed: function (mode) {
             console.log("Main: Command mode changed to:", mode);
             if (typeof game !== 'undefined') {
                 console.log("Main: Setting game.cursor_mode property to", mode);
@@ -59,10 +58,9 @@ ApplicationWindow {
             }
             gameViewItem.forceActiveFocus();
         }
-        onRecruit_unit: function(unit_type) {
+        onRecruit_unit: function (unit_type) {
             if (typeof game !== 'undefined' && game.recruit_near_selected)
                 game.recruit_near_selected(unit_type);
-
             gameViewItem.forceActiveFocus();
         }
         onReturn_to_main_menu_requested: {
@@ -75,18 +73,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 11
-        visible: game_started &&
-                 !mainWindow.menu_visible &&
-                 typeof game !== 'undefined' &&
-                 game.control_mode === "commander" &&
-                 game.game_mode === "rpg" &&
-                 !mapSelect.visible &&
-                 !campaign_screen.visible &&
-                 !save_game_panel.visible &&
-                 !load_game_panel.visible &&
-                 !settingsPanel.visible &&
-                 !objectivesPanel.visible &&
-                 !error_dialog.visible
+        visible: game_started && !mainWindow.menu_visible && typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode === "rpg" && !mapSelect.visible && !campaign_screen.visible && !save_game_panel.visible && !load_game_panel.visible && !settingsPanel.visible && !objectivesPanel.visible && !error_dialog.visible
         enabled: visible
         acceptedButtons: Qt.NoButton
         hoverEnabled: true
@@ -124,13 +111,11 @@ ApplicationWindow {
             wrapMode: Text.WordWrap
         }
 
-        Behavior on opacity {
+        Behavior on opacity  {
             NumberAnimation {
                 duration: 220
             }
-
         }
-
     }
 
     Timer {
@@ -176,11 +161,8 @@ ApplicationWindow {
                     font.pixelSize: 14
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
-
             }
-
         }
-
     }
 
     LoadScreen {
@@ -196,12 +178,10 @@ ApplicationWindow {
             function onIs_loading_changed() {
                 if (!game.is_loading)
                     load_screen.complete_loading();
-
             }
 
             target: game
         }
-
     }
 
     MainMenu {
@@ -214,7 +194,6 @@ ApplicationWindow {
         Component.onCompleted: {
             if (mainWindow.menu_visible)
                 mainMenu.forceActiveFocus();
-
         }
         onVisibleChanged: {
             if (visible) {
@@ -224,36 +203,35 @@ ApplicationWindow {
                 gameViewItem.forceActiveFocus();
             }
         }
-        onOpen_skirmish: function() {
+        onOpen_skirmish: function () {
             mapSelect.visible = true;
             mainWindow.menu_visible = false;
         }
-        onOpen_campaign: function() {
+        onOpen_campaign: function () {
             campaign_screen.visible = true;
             mainWindow.menu_visible = false;
         }
-        onSave_game: function() {
+        onSave_game: function () {
             if (mainWindow.game_started) {
                 save_game_panel.visible = true;
                 mainWindow.menu_visible = false;
             }
         }
-        onLoad_save: function() {
+        onLoad_save: function () {
             load_game_panel.visible = true;
             mainWindow.menu_visible = false;
         }
-        onOpen_settings: function() {
+        onOpen_settings: function () {
             settingsPanel.visible = true;
             mainWindow.menu_visible = false;
         }
-        onOpen_objectives: function() {
+        onOpen_objectives: function () {
             objectivesPanel.visible = true;
             mainWindow.menu_visible = false;
         }
-        onExit_requested: function() {
+        onExit_requested: function () {
             if (typeof game !== 'undefined' && game.exit_game)
                 game.exit_game();
-
         }
     }
 
@@ -269,18 +247,17 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onMap_chosen: function(map_path, player_configs) {
+        onMap_chosen: function (map_path, player_configs) {
             console.log("Main: onMap_chosen received", map_path, "with", player_configs.length, "player configs");
             if (typeof game !== 'undefined' && game.start_skirmish)
                 game.start_skirmish(map_path, player_configs);
-
             mapSelect.visible = false;
             mainWindow.menu_visible = false;
             mainWindow.game_started = true;
             mainWindow.game_paused = false;
             gameViewItem.forceActiveFocus();
         }
-        onCancelled: function() {
+        onCancelled: function () {
             mapSelect.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -298,7 +275,7 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onMission_selected: function(campaign_id, mission_id) {
+        onMission_selected: function (campaign_id, mission_id) {
             console.log("Main: Campaign mission selected:", campaign_id + "/" + mission_id);
             if (typeof game !== 'undefined' && game.start_campaign_mission) {
                 game.start_campaign_mission(campaign_id + "/" + mission_id);
@@ -309,7 +286,7 @@ ApplicationWindow {
                 gameViewItem.forceActiveFocus();
             }
         }
-        onCancelled: function() {
+        onCancelled: function () {
             campaign_screen.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -327,15 +304,14 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onSave_requested: function(slot_name) {
+        onSave_requested: function (slot_name) {
             console.log("Main: Save requested for slot:", slot_name);
             if (typeof game !== 'undefined' && game.save_gameToSlot)
                 game.save_gameToSlot(slot_name);
-
             save_game_panel.visible = false;
             mainWindow.menu_visible = true;
         }
-        onCancelled: function() {
+        onCancelled: function () {
             save_game_panel.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -353,7 +329,7 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onLoad_requested: function(slot_name) {
+        onLoad_requested: function (slot_name) {
             console.log("Main: Load requested for slot:", slot_name);
             if (typeof game !== 'undefined' && game.load_game_from_slot) {
                 game.load_game_from_slot(slot_name);
@@ -364,7 +340,7 @@ ApplicationWindow {
                 gameViewItem.forceActiveFocus();
             }
         }
-        onCancelled: function() {
+        onCancelled: function () {
             load_game_panel.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -382,7 +358,7 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onCancelled: function() {
+        onCancelled: function () {
             settingsPanel.visible = false;
             mainWindow.menu_visible = true;
         }
@@ -400,7 +376,7 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onClose_requested: function() {
+        onClose_requested: function () {
             objectivesPanel.visible = false;
             if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && mainWindow.game_started) {
                 mainWindow.game_paused = false;
@@ -428,10 +404,8 @@ ApplicationWindow {
             var bottomH = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0;
             if (y < topH)
                 return true;
-
             if (y > (height - bottomH))
                 return true;
-
             return false;
         }
 
@@ -446,7 +420,7 @@ ApplicationWindow {
             acceptedButtons: Qt.NoButton
             propagateComposedEvents: true
             preventStealing: false
-            onPositionChanged: function(mouse) {
+            onPositionChanged: function (mouse) {
                 edge_scroll_overlay.x_pos = mouse.x;
                 edge_scroll_overlay.y_pos = mouse.y;
                 if (typeof game !== 'undefined' && game.set_hover_at_screen) {
@@ -458,26 +432,23 @@ ApplicationWindow {
                 if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_mouse_move) {
                     if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
                         game.on_formation_mouse_move(mouse.x, mouse.y);
-
                 }
                 if (typeof game !== 'undefined' && game.is_placing_construction && game.on_construction_mouse_move) {
                     if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
                         game.on_construction_mouse_move(mouse.x, mouse.y);
-
                 }
             }
-            onWheel: function(w) {
+            onWheel: function (w) {
                 if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_scroll) {
                     var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
                     if (dy !== 0)
                         game.on_formation_scroll(dy);
-
                     w.accepted = true;
-                    return ;
+                    return;
                 }
                 w.accepted = false;
             }
-            onEntered: function() {
+            onEntered: function () {
                 edge_scroll_timer.start();
                 if (typeof game !== 'undefined' && game.set_hover_at_screen) {
                     if (!edge_scroll_overlay.in_hud_zone(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos))
@@ -486,13 +457,12 @@ ApplicationWindow {
                         game.set_hover_at_screen(-1, -1);
                 }
             }
-            onExited: function() {
+            onExited: function () {
                 edge_scroll_timer.stop();
                 edge_scroll_overlay.x_pos = -1;
                 edge_scroll_overlay.y_pos = -1;
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
                     game.set_hover_at_screen(-1, -1);
-
             }
         }
 
@@ -503,24 +473,20 @@ ApplicationWindow {
             repeat: true
             onTriggered: {
                 if (typeof game === 'undefined')
-                    return ;
-
+                    return;
                 const w = edge_scroll_overlay.width;
                 const h = edge_scroll_overlay.height;
                 const x = edge_scroll_overlay.x_pos;
                 const y = edge_scroll_overlay.y_pos;
                 if (x < 0 || y < 0)
-                    return ;
-
+                    return;
                 if (mainWindow.edge_scroll_disabled) {
                     if (game.set_hover_at_screen)
                         game.set_hover_at_screen(-1, -1);
-
-                    return ;
+                    return;
                 }
                 if (game.set_hover_at_screen)
                     game.set_hover_at_screen(x, y);
-
                 const th = edge_scroll_overlay.horz_threshold;
                 const tv = edge_scroll_overlay.vert_threshold;
                 const clamp = function clamp(v, lo, hi) {
@@ -535,8 +501,7 @@ ApplicationWindow {
                 const iu = clamp(1 - dt / tv, 0, 1);
                 const id = clamp(1 - db / tv, 0, 1);
                 if (il === 0 && ir === 0 && iu === 0 && id === 0)
-                    return ;
-
+                    return;
                 const curveH = function curveH(a) {
                     return a * a;
                 };
@@ -549,10 +514,8 @@ ApplicationWindow {
                 const dz = rawDz / edge_scroll_overlay.vert_max_speed;
                 if (dx !== 0 || dz !== 0)
                     game.camera_move(dx, dz);
-
             }
         }
-
     }
 
     Dialog {
@@ -566,7 +529,6 @@ ApplicationWindow {
         onAccepted: {
             if (game)
                 game.clear_error();
-
         }
 
         contentItem: Rectangle {
@@ -583,16 +545,13 @@ ApplicationWindow {
                 wrapMode: Text.WordWrap
                 font.pixelSize: 14
             }
-
         }
-
     }
 
     Connections {
         function onLast_error_changed() {
             if (game.last_error !== "")
                 error_dialog.open();
-
         }
 
         target: game
@@ -613,8 +572,7 @@ ApplicationWindow {
     Connections {
         function onMission_announcement(text) {
             if (!text || !mainWindow.game_started)
-                return ;
-
+                return;
             mainWindow.mission_announcement_text = text;
             mission_announcement_toast.opacity = 1;
             mission_announcement_timer.restart();
@@ -622,5 +580,4 @@ ApplicationWindow {
 
         target: game
     }
-
 }

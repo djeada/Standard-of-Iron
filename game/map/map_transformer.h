@@ -1,8 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include "../visuals/visual_catalog.h"
 #include "map_definition.h"
-#include <memory>
 
 namespace Engine::Core {
 class World;
@@ -21,20 +22,19 @@ struct MapRuntime {
 
 class MapTransformer {
 public:
-  static auto apply_to_world(
-      const MapDefinition &def, Engine::Core::World &world,
-      const Game::Visuals::VisualCatalog *visuals = nullptr) -> MapRuntime;
+  static auto
+  apply_to_world(const MapDefinition& def,
+                 Engine::Core::World& world,
+                 const Game::Visuals::VisualCatalog* visuals = nullptr) -> MapRuntime;
 
-  static void
-  setFactoryRegistry(std::shared_ptr<Game::Units::UnitFactoryRegistry> reg);
+  static void setFactoryRegistry(std::shared_ptr<Game::Units::UnitFactoryRegistry> reg);
   static auto
   get_factory_registry() -> std::shared_ptr<Game::Units::UnitFactoryRegistry>;
 
   static void set_local_owner_id(int owner_id);
   static auto local_owner_id() -> int;
 
-  static void
-  setPlayerTeamOverrides(const std::unordered_map<int, int> &overrides);
+  static void setPlayerTeamOverrides(const std::unordered_map<int, int>& overrides);
   static void clear_player_team_overrides();
 };
 

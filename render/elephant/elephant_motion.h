@@ -1,8 +1,8 @@
 #pragma once
 
-#include "attachment_frames.h"
-
 #include <QVector3D>
+
+#include "attachment_frames.h"
 
 namespace Render::Creature {
 struct ElephantAnimationStateComponent;
@@ -50,31 +50,32 @@ constexpr float k_foot_settle_duration = 0.10F;
 
 } // namespace GaitSystemConstants
 
-auto compute_howdah_frame(const ElephantProfile &profile)
-    -> HowdahAttachmentFrame;
+auto compute_howdah_frame(const ElephantProfile& profile) -> HowdahAttachmentFrame;
 
-auto evaluate_elephant_motion(const ElephantProfile &profile,
-                              const AnimationInputs &anim,
-                              Render::Creature::ElephantAnimationStateComponent
-                                  *io_state = nullptr) -> ElephantMotionSample;
+auto evaluate_elephant_motion(const ElephantProfile& profile,
+                              const AnimationInputs& anim,
+                              Render::Creature::ElephantAnimationStateComponent*
+                                  io_state = nullptr) -> ElephantMotionSample;
 
-auto build_elephant_pose_motion(const ElephantMotionSample &motion,
-                                const AnimationInputs &anim)
+auto build_elephant_pose_motion(const ElephantMotionSample& motion,
+                                const AnimationInputs& anim)
     -> Render::Elephant::ElephantPoseMotion;
 
-void apply_howdah_vertical_offset(HowdahAttachmentFrame &frame, float bob);
+void apply_howdah_vertical_offset(HowdahAttachmentFrame& frame, float bob);
 
-void update_elephant_gait(ElephantGaitState &state,
-                          const ElephantProfile &profile,
-                          const AnimationInputs &anim,
-                          const QVector3D &body_world_pos,
+void update_elephant_gait(ElephantGaitState& state,
+                          const ElephantProfile& profile,
+                          const AnimationInputs& anim,
+                          const QVector3D& body_world_pos,
                           float body_forward_z);
 
-auto solve_elephant_leg_ik(const QVector3D &hip, const QVector3D &foot_target,
-                           float upper_len, float lower_len,
+auto solve_elephant_leg_ik(const QVector3D& hip,
+                           const QVector3D& foot_target,
+                           float upper_len,
+                           float lower_len,
                            float lateral_sign) -> ElephantLegPose;
 
-auto evaluate_swing_position(const ElephantLegState &leg,
+auto evaluate_swing_position(const ElephantLegState& leg,
                              float lift_height) -> QVector3D;
 
 auto get_leg_phase_offset(int leg_index) -> float;

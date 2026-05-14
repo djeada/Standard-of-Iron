@@ -23,14 +23,12 @@ void main() {
   vec3 half_vec = normalize(light_dir + view_dir);
   float spec_base = max(dot(normal, half_vec), 0.0);
   float stone_noise =
-      0.5 + 0.5 * sin(v_local_pos.y * 18.0 + v_local_pos.x * 7.0 -
-                      v_local_pos.z * 5.0);
-  float fracture =
-      smoothstep(0.82, 0.96,
-                 abs(sin(v_local_pos.x * 16.0 + v_local_pos.z * 11.0 +
-                         v_local_pos.y * 8.0)));
-  float dust =
-      smoothstep(0.10, 0.58, v_local_pos.y) * smoothstep(0.25, 0.85, normal.y);
+      0.5 + 0.5 * sin(v_local_pos.y * 18.0 + v_local_pos.x * 7.0 - v_local_pos.z * 5.0);
+  float fracture = smoothstep(
+      0.82,
+      0.96,
+      abs(sin(v_local_pos.x * 16.0 + v_local_pos.z * 11.0 + v_local_pos.y * 8.0)));
+  float dust = smoothstep(0.10, 0.58, v_local_pos.y) * smoothstep(0.25, 0.85, normal.y);
   vec3 stone_color = v_color * mix(0.82, 1.12, stone_noise);
   stone_color += vec3(0.08, 0.06, 0.04) * dust * 0.35;
   stone_color -= vec3(0.10, 0.09, 0.08) * fracture * 0.20;

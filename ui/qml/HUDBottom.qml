@@ -11,13 +11,13 @@ RowLayout {
     property bool has_movable_units
     readonly property var hs: StyleGuide.historical
     property var mode_availability: ({
-        "canAttack": true,
-        "canGuard": true,
-        "canHold": true,
-        "canPatrol": true,
-        "canHeal": true,
-        "canBuild": true
-    })
+            "canAttack": true,
+            "canGuard": true,
+            "canHold": true,
+            "canPatrol": true,
+            "canHeal": true,
+            "canBuild": true
+        })
 
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
@@ -25,17 +25,14 @@ RowLayout {
     function update_mode_availability() {
         if (typeof game !== 'undefined' && game.get_selected_units_mode_availability)
             mode_availability = game.get_selected_units_mode_availability();
-
     }
 
     function unit_icon_source(unitType, nation_key) {
         if (typeof StyleGuide === "undefined" || !StyleGuide.unit_icon_sources || !unitType)
             return "";
-
         var sources = StyleGuide.unit_icon_sources[unitType];
         if (!sources)
             sources = StyleGuide.unit_icon_sources["default"];
-
         var key = (nation_key && sources[nation_key]) ? nation_key : "default";
         return sources[key] || "";
     }
@@ -43,14 +40,12 @@ RowLayout {
     function unit_icon_emoji(unitType) {
         if (typeof StyleGuide !== "undefined" && StyleGuide.unit_icons)
             return StyleGuide.unit_icons[unitType] || StyleGuide.unit_icons["default"] || "👤";
-
         return "👤";
     }
 
     function unit_type_key_from_display_name(display_name) {
         if (!display_name)
             return "";
-
         var s = display_name.toString().trim().toLowerCase();
         s = s.replace(/[^a-z0-9]+/g, "_");
         s = s.replace(/^_+|_+$/g, "");
@@ -60,24 +55,20 @@ RowLayout {
     function command_icon(filename) {
         if (typeof StyleGuide === "undefined" || !filename)
             return "";
-
         return StyleGuide.icon_path(filename);
     }
 
     function has_selected_unit(type) {
         if (typeof game !== 'undefined' && game.has_selected_type)
             return game.has_selected_type(type);
-
         return false;
     }
 
     function command_banner_text() {
         if (!has_movable_units)
             return qsTr("No troops selected");
-
         if (current_command_mode === "normal")
             return qsTr("Orders ready");
-
         var orderText = qsTr("Stop command");
         if (current_command_mode === "attack")
             orderText = qsTr("Attack order");
@@ -89,17 +80,14 @@ RowLayout {
             orderText = qsTr("Medic order");
         else if (current_command_mode === "build")
             orderText = qsTr("Engineer order");
-
         return orderText;
     }
 
     function health_color(ratio) {
         if (ratio > 0.6)
             return Theme.accent;
-
         if (ratio > 0.3)
             return hs.bronze;
-
         return hs.waxHover;
     }
 
@@ -145,7 +133,6 @@ RowLayout {
                     font.pointSize: 10
                     font.bold: true
                 }
-
             }
 
             ScrollView {
@@ -186,10 +173,9 @@ RowLayout {
                             cursorShape: Qt.PointingHandCursor
                             onEntered: selectedUnitItem.is_hovered = true
                             onExited: selectedUnitItem.is_hovered = false
-                            onClicked: function(mouse) {
+                            onClicked: function (mouse) {
                                 if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.select_unit_by_id && typeof unit_id !== 'undefined')
                                     game.select_unit_by_id(unit_id);
-
                             }
                         }
 
@@ -224,7 +210,6 @@ RowLayout {
                                     font.pixelSize: 16
                                     visible: selectedUnitIcon.source === "" || selectedUnitIcon.status === Image.Error
                                 }
-
                             }
 
                             Column {
@@ -248,7 +233,6 @@ RowLayout {
                                         }
                                         radius: 5
                                     }
-
                                 }
 
                                 Rectangle {
@@ -269,9 +253,7 @@ RowLayout {
                                         }
                                         radius: 3
                                     }
-
                                 }
-
                             }
 
                             Text {
@@ -283,17 +265,11 @@ RowLayout {
                                 elide: Text.ElideRight
                                 width: parent.width - 108
                             }
-
                         }
-
                     }
-
                 }
-
             }
-
         }
-
     }
 
     Column {
@@ -331,7 +307,7 @@ RowLayout {
                 font.bold: bottomRoot.current_command_mode !== "normal" && bottomRoot.has_movable_units
             }
 
-            SequentialAnimation on opacity {
+            SequentialAnimation on opacity  {
                 running: bottomRoot.should_pulse_command_banner()
                 loops: Animation.Infinite
 
@@ -346,9 +322,7 @@ RowLayout {
                     to: 0.8
                     duration: 600
                 }
-
             }
-
         }
 
         GridLayout {
@@ -359,13 +333,10 @@ RowLayout {
             function get_button_color(btn, baseColor) {
                 if (btn.pressed)
                     return Qt.darker(baseColor, 1.3);
-
                 if (btn.checked)
                     return baseColor;
-
                 if (btn.hovered)
                     return Qt.lighter(baseColor, 1.2);
-
                 return hs.parchmentLight;
             }
 
@@ -423,9 +394,7 @@ RowLayout {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
-
             }
 
             Button {
@@ -477,9 +446,7 @@ RowLayout {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
-
             }
 
             Button {
@@ -531,9 +498,7 @@ RowLayout {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
-
             }
 
             Button {
@@ -555,7 +520,6 @@ RowLayout {
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_heal_command)
                         game.on_heal_command();
-
                     bottomRoot.command_mode_changed(checked ? "heal" : "normal");
                 }
                 ToolTip.visible: hovered
@@ -592,9 +556,7 @@ RowLayout {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
-
             }
 
             Button {
@@ -608,7 +570,6 @@ RowLayout {
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_stop_command)
                         game.on_stop_command();
-
                 }
                 ToolTip.visible: hovered
                 ToolTip.text: bottomRoot.has_movable_units ? qsTr("Stop all actions immediately") : qsTr("Select troops first")
@@ -643,9 +604,7 @@ RowLayout {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
-
             }
 
             Button {
@@ -667,7 +626,6 @@ RowLayout {
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_build_command)
                         game.on_build_command();
-
                     bottomRoot.command_mode_changed(checked ? "build" : "normal");
                 }
                 ToolTip.visible: hovered
@@ -704,9 +662,7 @@ RowLayout {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
-
             }
 
             Button {
@@ -730,7 +686,6 @@ RowLayout {
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_hold_command)
                         game.on_hold_command();
-
                 }
                 ToolTip.visible: hovered
                 ToolTip.text: !mode_available ? qsTr("Hold not available for selected units") : (bottomRoot.has_movable_units ? (is_hold_active ? qsTr("Exit hold mode (toggle)") : (is_hold_mixed ? qsTr("Some selected troops are already holding. Click to apply hold to all eligible selected troops.") : qsTr("Hold position and defend"))) : qsTr("Select troops first"))
@@ -748,19 +703,14 @@ RowLayout {
                     color: {
                         if (!parent.enabled)
                             return hs.parchmentDark;
-
                         if (parent.is_hold_active)
                             return hs.wax;
-
                         if (parent.is_hold_mixed)
                             return hs.waxHover;
-
                         if (parent.pressed)
                             return hs.waxDark;
-
                         if (parent.hovered)
                             return hs.bannerNeutral;
-
                         return hs.parchmentLight;
                     }
                     radius: 6
@@ -791,9 +741,7 @@ RowLayout {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
-
             }
 
             Button {
@@ -820,22 +768,17 @@ RowLayout {
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_formation_command)
                         game.on_formation_command();
-
                 }
                 ToolTip.visible: hovered
                 ToolTip.text: {
                     if (!bottomRoot.has_movable_units)
                         return qsTr("Select troops first");
-
                     if (selected_count <= 1)
                         return qsTr("Select multiple units to use formation");
-
                     if (is_formation_active)
                         return qsTr("Exit formation mode (toggle)");
-
                     if (is_formation_mixed)
                         return qsTr("Some selected troops are already in formation mode. Click to apply formation mode to the full eligible selection.");
-
                     return qsTr("Arrange units in tactical formation");
                 }
                 ToolTip.delay: 500
@@ -852,19 +795,14 @@ RowLayout {
                     color: {
                         if (!parent.enabled)
                             return hs.parchmentDark;
-
                         if (parent.is_formation_active)
                             return hs.bannerNeutral;
-
                         if (parent.is_formation_mixed)
                             return hs.parchmentLight;
-
                         if (parent.pressed)
                             return hs.bronzeDeep;
-
                         if (parent.hovered)
                             return hs.parchmentLight;
-
                         return hs.parchmentLight;
                     }
                     radius: 6
@@ -895,13 +833,9 @@ RowLayout {
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
-
             }
-
         }
-
     }
 
     ProductionPanel {
@@ -911,24 +845,20 @@ RowLayout {
         Layout.alignment: Qt.AlignTop
         selection_tick: bottomRoot.selection_tick
         game_instance: (typeof game !== 'undefined') ? game : null
-        onRecruit_unit: function(unit_type) {
+        onRecruit_unit: function (unit_type) {
             bottomRoot.recruit_unit(unit_type);
         }
         onRally_mode_toggled: {
             if (typeof gameView !== 'undefined')
                 gameView.set_rally_mode = !gameView.set_rally_mode;
-
         }
         onBuild_tower: {
             if (typeof game !== 'undefined' && game.start_building_placement)
                 game.start_building_placement("defense_tower");
-
         }
-        onBuilder_construction: function(item_type) {
+        onBuilder_construction: function (item_type) {
             if (typeof game !== 'undefined' && game.start_builder_construction)
                 game.start_builder_construction(item_type);
-
         }
     }
-
 }

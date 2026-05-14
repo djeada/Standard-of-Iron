@@ -1,10 +1,8 @@
 #pragma once
 
-#include "gl/humanoid/humanoid_types.h"
-#include "material.h"
-#include "scene_renderer.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -13,6 +11,10 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "gl/humanoid/humanoid_types.h"
+#include "material.h"
+#include "scene_renderer.h"
 
 namespace Render::GL {
 
@@ -57,7 +59,7 @@ struct TemplateKey {
   CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
   std::uint8_t frame{0};
 
-  bool operator==(const TemplateKey &other) const {
+  bool operator==(const TemplateKey& other) const {
     return renderer_id == other.renderer_id && owner_id == other.owner_id &&
            lod == other.lod && mount_lod == other.mount_lod &&
            variant == other.variant && attack_family == other.attack_family &&
@@ -67,15 +69,15 @@ struct TemplateKey {
 };
 
 struct TemplateKeyHash {
-  std::size_t operator()(const TemplateKey &key) const noexcept;
+  std::size_t operator()(const TemplateKey& key) const noexcept;
 };
 
 struct RecordedMeshCmd {
-  Mesh *mesh{nullptr};
-  Texture *texture{nullptr};
-  Shader *shader{nullptr};
+  Mesh* mesh{nullptr};
+  Texture* texture{nullptr};
+  Shader* shader{nullptr};
 
-  const Material *material{nullptr};
+  const Material* material{nullptr};
 
   QMatrix4x4 local_model;
   QVector3D color{1.0F, 1.0F, 1.0F};
@@ -93,52 +95,58 @@ public:
 
   void reset(std::size_t reserve_hint = 0);
 
-  auto take_commands() -> std::vector<RecordedMeshCmd> {
-    return std::move(m_commands);
-  }
+  auto take_commands() -> std::vector<RecordedMeshCmd> { return std::move(m_commands); }
 
-  [[nodiscard]] auto commands() const -> const std::vector<RecordedMeshCmd> & {
+  [[nodiscard]] auto commands() const -> const std::vector<RecordedMeshCmd>& {
     return m_commands;
   }
 
-  void set_current_material(const Material *material) {
-    m_current_material = material;
-  }
-  [[nodiscard]] auto get_current_material() const -> const Material * {
+  void set_current_material(const Material* material) { m_current_material = material; }
+  [[nodiscard]] auto get_current_material() const -> const Material* {
     return m_current_material;
   }
 
-  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *texture = nullptr, float alpha = 1.0F,
+  void mesh(Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* texture = nullptr,
+            float alpha = 1.0F,
             int material_id = 0) override;
-  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-              const QVector3D &trim_color, Texture *texture = nullptr,
-              float alpha = 1.0F, int material_id = 0) override;
-  void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
-            const QVector3D &color, Texture *texture = nullptr,
-            float alpha = 1.0F, int material_id = 0) override;
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void banner(Mesh* mesh,
+              const QMatrix4x4& model,
+              const QVector3D& color,
+              const QVector3D& trim_color,
+              Texture* texture = nullptr,
+              float alpha = 1.0F,
+              int material_id = 0) override;
+  void part(Mesh* mesh,
+            Material* material,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* texture = nullptr,
+            float alpha = 1.0F,
+            int material_id = 0) override;
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
-  void rigged(const RiggedCreatureCmd &) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
+  void rigged(const RiggedCreatureCmd&) override {}
 
 private:
   std::vector<RecordedMeshCmd> m_commands;
-  const Material *m_current_material = nullptr;
+  const Material* m_current_material = nullptr;
 };
 
 class TemplateCache {
@@ -153,31 +161,33 @@ public:
       k_dense_attack_variant_slots * k_dense_anim_state_slots;
 
   struct DenseDomainHandle {
-    static constexpr std::size_t k_invalid =
-        std::numeric_limits<std::size_t>::max();
+    static constexpr std::size_t k_invalid = std::numeric_limits<std::size_t>::max();
     std::size_t value{k_invalid};
     [[nodiscard]] auto is_valid() const -> bool { return value != k_invalid; }
   };
 
-  static auto instance() noexcept -> TemplateCache & {
+  static auto instance() noexcept -> TemplateCache& {
     static TemplateCache inst;
     return inst;
   }
 
-  auto get_or_build(const TemplateKey &key,
-                    const std::function<PoseTemplate()> &builder)
-      -> const PoseTemplate *;
+  auto
+  get_or_build(const TemplateKey& key,
+               const std::function<PoseTemplate()>& builder) -> const PoseTemplate*;
 
-  auto get_dense_domain_handle(const std::string &renderer_id,
-                               std::uint32_t owner_id, std::uint8_t lod,
+  auto get_dense_domain_handle(const std::string& renderer_id,
+                               std::uint32_t owner_id,
+                               std::uint8_t lod,
                                std::uint8_t mount_lod) -> DenseDomainHandle;
 
-  auto get_or_build_dense(
-      DenseDomainHandle domain, std::size_t dense_slot, const TemplateKey &key,
-      const std::function<PoseTemplate()> &builder) -> const PoseTemplate *;
+  auto get_or_build_dense(DenseDomainHandle domain,
+                          std::size_t dense_slot,
+                          const TemplateKey& key,
+                          const std::function<PoseTemplate()>& builder)
+      -> const PoseTemplate*;
 
   static auto dense_slot_index(std::uint8_t variant,
-                               const AnimKey &anim_key) -> std::size_t;
+                               const AnimKey& anim_key) -> std::size_t;
 
   void clear();
 
@@ -195,9 +205,10 @@ private:
   TemplateCache() = default;
 
   void evict_lru();
-  void clear_dense_slot_for_key(const TemplateKey &key);
-  auto set_dense_slot(DenseDomainHandle domain, std::size_t dense_slot,
-                      const PoseTemplate *tpl) -> void;
+  void clear_dense_slot_for_key(const TemplateKey& key);
+  auto set_dense_slot(DenseDomainHandle domain,
+                      std::size_t dense_slot,
+                      const PoseTemplate* tpl) -> void;
 
   using LruList = std::list<TemplateKey>;
   struct CacheEntry {
@@ -211,19 +222,19 @@ private:
     std::uint8_t lod{0};
     std::uint8_t mount_lod{0};
 
-    bool operator==(const DenseDomainKey &other) const {
+    bool operator==(const DenseDomainKey& other) const {
       return renderer_id == other.renderer_id && owner_id == other.owner_id &&
              lod == other.lod && mount_lod == other.mount_lod;
     }
   };
 
   struct DenseDomainKeyHash {
-    std::size_t operator()(const DenseDomainKey &key) const noexcept;
+    std::size_t operator()(const DenseDomainKey& key) const noexcept;
   };
 
   struct DenseDomainEntry {
     DenseDomainKey key;
-    std::vector<const PoseTemplate *> template_slots;
+    std::vector<const PoseTemplate*> template_slots;
   };
 
   std::unordered_map<TemplateKey, CacheEntry, TemplateKeyHash> m_cache;
@@ -235,8 +246,9 @@ private:
   mutable std::mutex m_mutex;
 };
 
-auto make_anim_key(const AnimationInputs &anim, float phase_offset,
+auto make_anim_key(const AnimationInputs& anim,
+                   float phase_offset,
                    std::uint8_t attack_variant) -> AnimKey;
-auto make_animation_inputs(const AnimKey &key) -> AnimationInputs;
+auto make_animation_inputs(const AnimKey& key) -> AnimationInputs;
 
 } // namespace Render::GL

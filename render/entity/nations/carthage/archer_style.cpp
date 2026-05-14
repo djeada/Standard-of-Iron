@@ -1,9 +1,11 @@
 #include "archer_style.h"
-#include "archer_renderer.h"
 
 #include <QVector3D>
+
 #include <string>
 #include <string_view>
+
+#include "archer_renderer.h"
 
 namespace {
 constexpr QVector3D k_carthage_cloth{0.12F, 0.36F, 0.52F};

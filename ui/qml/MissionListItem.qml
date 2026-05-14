@@ -10,18 +10,16 @@ Rectangle {
     property bool is_selected: false
     readonly property string mission_glyph_prefix: "✦ "
 
-    signal clicked()
+    signal clicked
 
     function titleize(value) {
         if (!value)
             return "";
-
         var parts = value.split("_");
         for (var i = 0; i < parts.length; i++) {
             var part = parts[i];
             if (part.length === 0)
                 continue;
-
             parts[i] = part.charAt(0).toUpperCase() + part.slice(1);
         }
         return parts.join(" ");
@@ -40,7 +38,6 @@ Rectangle {
             position: 1
             color: is_selected ? "#39251e" : "#241c15"
         }
-
     }
     color: "transparent"
     border.color: is_selected ? "#c29555" : "#8f6d43"
@@ -80,7 +77,6 @@ Rectangle {
                 font.pointSize: Theme.fontSizeMedium
                 font.bold: true
             }
-
         }
 
         ColumnLayout {
@@ -123,7 +119,6 @@ Rectangle {
                         font.pointSize: Theme.fontSizeTiny
                         font.bold: true
                     }
-
                 }
 
                 Rectangle {
@@ -143,7 +138,6 @@ Rectangle {
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeTiny
                     }
-
                 }
 
                 Rectangle {
@@ -164,9 +158,7 @@ Rectangle {
                         font.pointSize: Theme.fontSizeTiny
                         font.bold: true
                     }
-
                 }
-
             }
 
             Label {
@@ -196,7 +188,6 @@ Rectangle {
                     model: {
                         if (!mission_data || !mission_data.difficulty_modifier)
                             return 1;
-
                         return Math.round(mission_data.difficulty_modifier);
                     }
 
@@ -205,11 +196,8 @@ Rectangle {
                         color: Theme.warningText
                         font.pointSize: Theme.fontSizeTiny
                     }
-
                 }
-
             }
-
         }
 
         Text {
@@ -218,21 +206,17 @@ Rectangle {
             color: "#c29555"
             Layout.alignment: Qt.AlignVCenter
         }
-
     }
 
-    Behavior on color {
+    Behavior on color  {
         ColorAnimation {
             duration: Theme.animNormal
         }
-
     }
 
-    Behavior on border.color {
+    Behavior on border.color  {
         ColorAnimation {
             duration: Theme.animNormal
         }
-
     }
-
 }

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "../units/troop_catalog.h"
-#include "nation_registry.h"
 #include <optional>
 #include <string>
 #include <unordered_map>
+
+#include "../units/troop_catalog.h"
+#include "nation_registry.h"
 
 namespace Game::Systems {
 
@@ -20,21 +21,18 @@ struct TroopProfile {
 
 class TroopProfileService {
 public:
-  static auto instance() -> TroopProfileService &;
+  static auto instance() -> TroopProfileService&;
 
-  auto get_profile(NationID nation_id,
-                   Game::Units::TroopType type) -> TroopProfile;
+  auto get_profile(NationID nation_id, Game::Units::TroopType type) -> TroopProfile;
 
   void clear();
 
 private:
   TroopProfileService() = default;
 
-  auto build_profile(const Nation &nation,
-                     Game::Units::TroopType type) -> TroopProfile;
+  auto build_profile(const Nation& nation, Game::Units::TroopType type) -> TroopProfile;
 
-  std::unordered_map<NationID,
-                     std::unordered_map<Game::Units::TroopType, TroopProfile>>
+  std::unordered_map<NationID, std::unordered_map<Game::Units::TroopType, TroopProfile>>
       m_cache;
 };
 

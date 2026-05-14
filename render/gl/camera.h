@@ -18,22 +18,23 @@ inline constexpr float k_default_pitch_min = -85.0F;
 } // namespace CameraDefaults
 
 class Camera {
-  friend void solve_constraints(Render::GL::Camera *self,
-                                bool allow_target_shift);
+  friend void solve_constraints(Render::GL::Camera* self, bool allow_target_shift);
 
 public:
   Camera();
 
-  void set_position(const QVector3D &position);
-  void set_target(const QVector3D &target);
-  void set_up(const QVector3D &up);
-  void look_at(const QVector3D &position, const QVector3D &target,
-               const QVector3D &up);
+  void set_position(const QVector3D& position);
+  void set_target(const QVector3D& target);
+  void set_up(const QVector3D& up);
+  void look_at(const QVector3D& position, const QVector3D& target, const QVector3D& up);
 
-  void set_perspective(float fov, float aspect, float near_plane,
-                       float far_plane);
-  void set_orthographic(float left, float right, float bottom, float top,
-                        float near_plane, float far_plane);
+  void set_perspective(float fov, float aspect, float near_plane, float far_plane);
+  void set_orthographic(float left,
+                        float right,
+                        float bottom,
+                        float top,
+                        float near_plane,
+                        float far_plane);
 
   void move_forward(float distance);
   void move_right(float distance);
@@ -50,46 +51,40 @@ public:
   void orbit(float yaw_deg, float pitch_deg);
 
   void update(float dt);
-  auto screen_to_ground(qreal sx, qreal sy, qreal screen_w, qreal screen_h,
-                        QVector3D &out_world) const -> bool;
-  auto world_to_screen(const QVector3D &world, qreal screen_w, qreal screen_h,
-                       QPointF &out_screen) const -> bool;
+  auto screen_to_ground(qreal sx,
+                        qreal sy,
+                        qreal screen_w,
+                        qreal screen_h,
+                        QVector3D& out_world) const -> bool;
+  auto world_to_screen(const QVector3D& world,
+                       qreal screen_w,
+                       qreal screen_h,
+                       QPointF& out_screen) const -> bool;
 
   void set_follow_enabled(bool enable) { m_follow_enabled = enable; }
-  [[nodiscard]] auto is_follow_enabled() const -> bool {
-    return m_follow_enabled;
-  }
+  [[nodiscard]] auto is_follow_enabled() const -> bool { return m_follow_enabled; }
   void set_follow_lerp(float alpha) { m_follow_lerp = alpha; }
-  void set_follow_offset(const QVector3D &off) { m_follow_offset = off; }
+  void set_follow_offset(const QVector3D& off) { m_follow_offset = off; }
   void capture_follow_offset() { m_follow_offset = m_position - m_target; }
-  void update_follow(const QVector3D &target_center);
+  void update_follow(const QVector3D& target_center);
 
-  void set_rts_view(const QVector3D &center,
+  void set_rts_view(const QVector3D& center,
                     float distance = CameraDefaults::k_default_rts_distance,
                     float angle = CameraDefaults::k_default_rts_angle,
                     float yaw_deg = CameraDefaults::k_default_rts_yaw);
-  void
-  set_top_down_view(const QVector3D &center,
-                    float distance = CameraDefaults::k_default_rts_distance);
+  void set_top_down_view(const QVector3D& center,
+                         float distance = CameraDefaults::k_default_rts_distance);
   void apply_soft_boundaries(bool is_panning = false);
 
   [[nodiscard]] auto get_view_matrix() const -> QMatrix4x4;
   [[nodiscard]] auto get_projection_matrix() const -> QMatrix4x4;
   [[nodiscard]] auto get_view_projection_matrix() const -> QMatrix4x4;
 
-  [[nodiscard]] auto get_target() const -> const QVector3D & {
-    return m_target;
-  }
-  [[nodiscard]] auto get_up_vector() const -> const QVector3D & { return m_up; }
-  [[nodiscard]] auto get_right_vector() const -> const QVector3D & {
-    return m_right;
-  }
-  [[nodiscard]] auto get_forward_vector() const -> const QVector3D & {
-    return m_front;
-  }
-  [[nodiscard]] auto get_position() const -> const QVector3D & {
-    return m_position;
-  }
+  [[nodiscard]] auto get_target() const -> const QVector3D& { return m_target; }
+  [[nodiscard]] auto get_up_vector() const -> const QVector3D& { return m_up; }
+  [[nodiscard]] auto get_right_vector() const -> const QVector3D& { return m_right; }
+  [[nodiscard]] auto get_forward_vector() const -> const QVector3D& { return m_front; }
+  [[nodiscard]] auto get_position() const -> const QVector3D& { return m_position; }
   [[nodiscard]] auto get_distance() const -> float;
   [[nodiscard]] auto get_pitch_deg() const -> float;
   [[nodiscard]] auto get_fov() const -> float { return m_fov; }
@@ -97,8 +92,7 @@ public:
   [[nodiscard]] auto get_near() const -> float { return m_near_plane; }
   [[nodiscard]] auto get_far() const -> float { return m_far_plane; }
 
-  [[nodiscard]] auto is_in_frustum(const QVector3D &center,
-                                   float radius) const -> bool;
+  [[nodiscard]] auto is_in_frustum(const QVector3D& center, float radius) const -> bool;
 
 private:
   QVector3D m_position{0.0F, 0.0F, 0.0F};
@@ -141,8 +135,8 @@ private:
   void update_vectors();
 
   void clamp_above_ground();
-  static void compute_yaw_pitch_from_offset(const QVector3D &off,
-                                            float &yaw_deg, float &pitch_deg);
+  static void
+  compute_yaw_pitch_from_offset(const QVector3D& off, float& yaw_deg, float& pitch_deg);
 };
 
 } // namespace Render::GL

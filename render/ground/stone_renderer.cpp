@@ -1,4 +1,18 @@
 #include "stone_renderer.h"
+
+#include <QDebug>
+#include <QElapsedTimer>
+#include <QVector2D>
+#include <qelapsedtimer.h>
+#include <qglobal.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
@@ -10,17 +24,6 @@
 #include "scatter_composition.h"
 #include "scatter_runtime.h"
 #include "spawn_validator.h"
-#include <QDebug>
-#include <QElapsedTimer>
-#include <QVector2D>
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <qelapsedtimer.h>
-#include <qglobal.h>
-#include <vector>
 
 namespace {
 
@@ -34,10 +37,9 @@ namespace Render::GL {
 StoneRenderer::StoneRenderer() = default;
 StoneRenderer::~StoneRenderer() = default;
 
-void StoneRenderer::configure(
-    const Game::Map::TerrainHeightMap &height_map,
-    const Game::Map::BiomeSettings &biome_settings,
-    const std::vector<Game::Map::WorldProp> &world_props) {
+void StoneRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
+                              const Game::Map::BiomeSettings& biome_settings,
+                              const std::vector<Game::Map::WorldProp>& world_props) {
   m_width = height_map.get_width();
   m_height = height_map.get_height();
   m_tile_size = height_map.get_tile_size();
@@ -48,7 +50,7 @@ void StoneRenderer::configure(
   m_world_props = world_props;
 
   m_stone_state.reset_instances();
-  auto &stone_params = m_stone_state.params;
+  auto& stone_params = m_stone_state.params;
 
   stone_params.light_direction = m_light_direction;
   stone_params.time = 0.0F;
@@ -56,17 +58,16 @@ void StoneRenderer::configure(
   generate_stone_instances();
 }
 
-void StoneRenderer::set_light_direction(const QVector3D &dir) {
-  m_light_direction =
-      dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
+void StoneRenderer::set_light_direction(const QVector3D& dir) {
+  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
   m_stone_state.params.light_direction = m_light_direction;
 }
 
-void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+void StoneRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_stone_state, [](const StoneInstanceGpu &instance) -> const QVector4D & {
+      m_stone_state, [](const StoneInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_scale;
       });
   if (visible_count == 0 || !m_stone_state.instance_buffer) {
@@ -81,15 +82,17 @@ void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   renderer.terrain_scatter(cmd);
 }
 
-void StoneRenderer::clear() { m_stone_state.reset_instances(); }
+void StoneRenderer::clear() {
+  m_stone_state.reset_instances();
+}
 
 void StoneRenderer::generate_stone_instances() {
   QElapsedTimer timer;
   timer.start();
 
-  auto &stone_instances = m_stone_state.instances;
-  auto &stone_instance_count = m_stone_state.instance_count;
-  auto &stone_instances_dirty = m_stone_state.instances_dirty;
+  auto& stone_instances = m_stone_state.instances;
+  auto& stone_instance_count = m_stone_state.instance_count;
+  auto& stone_instances_dirty = m_stone_state.instances_dirty;
 
   stone_instances.clear();
 
@@ -100,14 +103,12 @@ void StoneRenderer::generate_stone_instances() {
   }
 
   const float tile_safe = std::max(0.001F, m_tile_size);
-  const auto surface_profile =
-      Game::Map::make_surface_profile(m_biome_settings);
-  const auto scatter_profile =
-      Game::Map::make_scatter_profile(m_biome_settings);
+  const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
+  const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
 
   SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(m_height_data, m_terrain_types, m_width,
-                                      m_height, m_tile_size);
+  terrain_cache.build_from_height_map(
+      m_height_data, m_terrain_types, m_width, m_height, m_tile_size);
 
   SpawnValidationConfig config = make_stone_spawn_config();
   config.grid_width = m_width;
@@ -118,11 +119,10 @@ void StoneRenderer::generate_stone_instances() {
   config.allow_hill = true;
 
   SpawnValidator validator(terrain_cache, config);
-  ScatterCompositionContext composition(terrain_cache, m_width, m_height,
-                                        m_tile_size, m_biome_settings,
-                                        m_world_props);
+  ScatterCompositionContext composition(
+      terrain_cache, m_width, m_height, m_tile_size, m_biome_settings, m_world_props);
 
-  auto add_stone = [&](float gx, float gz, uint32_t &state) -> bool {
+  auto add_stone = [&](float gx, float gz, uint32_t& state) -> bool {
     if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }
@@ -146,8 +146,8 @@ void StoneRenderer::generate_stone_instances() {
     QVector3D const high_rock = surface_profile.rock_high;
     QVector3D color = base_rock * (1.0F - color_var) + high_rock * color_var;
 
-    float const brown_mix = remap(rand_01(state), 0.05F + scene.dryness * 0.10F,
-                                  0.35F + scene.rockiness * 0.15F);
+    float const brown_mix = remap(
+        rand_01(state), 0.05F + scene.dryness * 0.10F, 0.35F + scene.rockiness * 0.15F);
     QVector3D const brown_tint(0.45F, 0.38F, 0.30F);
     color = color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
@@ -178,13 +178,13 @@ void StoneRenderer::generate_stone_instances() {
         continue;
       }
 
-      uint32_t state = hash_coords(
-          x, z, m_noise_seed ^ 0xABCDEF12U ^ static_cast<uint32_t>(idx));
+      uint32_t state =
+          hash_coords(x, z, m_noise_seed ^ 0xABCDEF12U ^ static_cast<uint32_t>(idx));
       int const sample_x = std::min(x + 2, m_width - 1);
       int const sample_z = std::min(z + 2, m_height - 1);
-      auto const cell_scene = composition.sample_grid(
-          static_cast<float>(sample_x), static_cast<float>(sample_z),
-          state ^ 0x3AA5B08BU);
+      auto const cell_scene = composition.sample_grid(static_cast<float>(sample_x),
+                                                      static_cast<float>(sample_z),
+                                                      state ^ 0x3AA5B08BU);
       float density_mult =
           scatter_density_multiplier(ScatterRuleSpecies::Stone, cell_scene);
       if (terrain_type == Game::Map::TerrainType::Hill) {
@@ -211,8 +211,7 @@ void StoneRenderer::generate_stone_instances() {
           continue;
         }
 
-        auto const leader_scene =
-            composition.sample_grid(gx, gz, state ^ 0x01A53C2FU);
+        auto const leader_scene = composition.sample_grid(gx, gz, state ^ 0x01A53C2FU);
         int const satellite_count = scatter_cluster_satellite_count(
             ScatterRuleSpecies::Stone, leader_scene, state);
         for (int satellite = 0; satellite < satellite_count; ++satellite) {

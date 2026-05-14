@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMatrix4x4>
+
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -18,12 +19,12 @@ namespace Render {
 
 struct CachedUnitData {
   std::uint32_t entity_id{0};
-  Engine::Core::Entity *entity{nullptr};
+  Engine::Core::Entity* entity{nullptr};
 
-  Engine::Core::TransformComponent *transform{nullptr};
-  Engine::Core::UnitComponent *unit{nullptr};
-  Engine::Core::RenderableComponent *renderable{nullptr};
-  Engine::Core::MovementComponent *movement{nullptr};
+  Engine::Core::TransformComponent* transform{nullptr};
+  Engine::Core::UnitComponent* unit{nullptr};
+  Engine::Core::RenderableComponent* renderable{nullptr};
+  Engine::Core::MovementComponent* movement{nullptr};
 
   std::string renderer_key;
   QMatrix4x4 model_matrix;
@@ -52,8 +53,9 @@ struct CachedUnitData {
 
 class UnitRenderCache {
 public:
-  auto get_or_create(std::uint32_t entity_id, Engine::Core::Entity *entity,
-                     std::uint32_t frame) -> CachedUnitData &;
+  auto get_or_create(std::uint32_t entity_id,
+                     Engine::Core::Entity* entity,
+                     std::uint32_t frame) -> CachedUnitData&;
 
   void prune(std::uint32_t current_frame, std::uint32_t max_age = 120);
 
@@ -61,7 +63,7 @@ public:
 
   [[nodiscard]] auto size() const -> std::size_t { return m_cache.size(); }
 
-  static auto update_model_matrix(CachedUnitData &data) -> bool;
+  static auto update_model_matrix(CachedUnitData& data) -> bool;
 
 private:
   std::unordered_map<std::uint32_t, CachedUnitData> m_cache;
@@ -85,8 +87,8 @@ struct CachedModelMatrix {
 class ModelMatrixCache {
 public:
   auto get_or_create(std::uint32_t entity_id,
-                     Engine::Core::TransformComponent *transform,
-                     std::uint32_t frame) -> const QMatrix4x4 &;
+                     Engine::Core::TransformComponent* transform,
+                     std::uint32_t frame) -> const QMatrix4x4&;
 
   void prune(std::uint32_t current_frame, std::uint32_t max_age = 120);
   void clear() { m_cache.clear(); }

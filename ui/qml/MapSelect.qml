@@ -15,18 +15,17 @@ Item {
     property var available_nations: []
 
     signal map_chosen(string map_path, var player_configs)
-    signal cancelled()
+    signal cancelled
 
-    onMaps_modelChanged: Qt.callLater(function() {
-        if (selected_map_data !== null || !maps_model || (maps_model.length || 0) <= 0)
-            return ;
-
-        list.currentIndex = 0;
-        selected_map_index = 0;
-        selected_map_data = get_map_data(0);
-        selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
-        initialize_players(selected_map_data);
-    })
+    onMaps_modelChanged: Qt.callLater(function () {
+            if (selected_map_data !== null || !maps_model || (maps_model.length || 0) <= 0)
+                return;
+            list.currentIndex = 0;
+            selected_map_index = 0;
+            selected_map_data = get_map_data(0);
+            selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
+            initialize_players(selected_map_data);
+        })
 
     function refresh_available_nations() {
         if (typeof game !== "undefined" && game.available_nations)
@@ -38,7 +37,6 @@ Item {
     function default_nation_entry() {
         if (available_nations && available_nations.length > 0)
             return available_nations[0];
-
         return {
             "id": "roman_republic",
             "name": qsTr("Roman Republic")
@@ -51,11 +49,9 @@ Item {
             let p = players_model.get(i);
             if (p.isEnabled)
                 enabledPlayers.push(p);
-
         }
         if (enabledPlayers.length < 2)
             return false;
-
         let teams = new Set();
         for (let i = 0; i < enabledPlayers.length; i++) {
             teams.add(enabledPlayers[i].team_id);
@@ -68,7 +64,6 @@ Item {
         for (let i = 0; i < players_model.count; i++) {
             if (players_model.get(i).isEnabled)
                 enabledCount++;
-
         }
         if (enabledCount < 2)
             validation_error = "Need at least 2 enabled players to start";
@@ -85,32 +80,26 @@ Item {
     function nation_emblem_for(nationId) {
         if (!nationId || !Theme.nationEmblems)
             return "";
-
         let emblem = Theme.nationEmblems[nationId];
         if (emblem === undefined || emblem === null)
             return "";
-
         return String(emblem);
     }
 
     function get_map_data(index) {
         if (!maps_model || index < 0 || index >= (maps_model.length || list.count))
             return null;
-
         let m = (maps_model.length !== undefined) ? maps_model[index] : null;
         if (m && m.get)
             return m.get(index);
-
         return m;
     }
 
     function value_for(obj, key) {
         if (!obj)
             return undefined;
-
         if (obj[key] !== undefined)
             return obj[key];
-
         if (obj.get !== undefined) {
             try {
                 return obj.get(key);
@@ -123,15 +112,12 @@ Item {
     function variant_list_to_array(value) {
         if (!value)
             return [];
-
         if (Array.isArray(value))
             return value;
-
         let result = [];
         if (typeof value.length === "number") {
             for (let i = 0; i < value.length; i++)
                 result.push(value[i]);
-
             return result;
         }
         if (typeof value.count === "number") {
@@ -149,24 +135,22 @@ Item {
     function player_ids_for_map(mapData) {
         let ids = variant_list_to_array(value_for(mapData, "player_ids"));
         if (ids.length > 0)
-            return ids.map(function(id) {
-                return Number(id);
-            });
-
+            return ids.map(function (id) {
+                    return Number(id);
+                });
         let count = Number(value_for(mapData, "playerCount") || 0);
         for (let i = 1; i <= count; i++)
             ids.push(i);
-
         return ids;
     }
 
     function refresh_map_preview() {
-        Qt.callLater(function() {
-            if (mapPreviewLeft && mapPreviewLeft.refresh_preview) {
-                mapPreviewLeft.player_configs = get_player_configs();
-                mapPreviewLeft.refresh_preview();
-            }
-        });
+        Qt.callLater(function () {
+                if (mapPreviewLeft && mapPreviewLeft.refresh_preview) {
+                    mapPreviewLeft.player_configs = get_player_configs();
+                    mapPreviewLeft.refresh_preview();
+                }
+            });
     }
 
     function initialize_players(mapData) {
@@ -174,31 +158,29 @@ Item {
         let playerIds = player_ids_for_map(mapData);
         if (!mapData || playerIds.length === 0) {
             refresh_map_preview();
-            return ;
+            return;
         }
-
         let requestedPlayerId = (typeof game !== "undefined") ? Number(game.selected_player_id) : Number(playerIds[0]);
         let humanPlayerId = playerIds.indexOf(requestedPlayerId) !== -1 ? requestedPlayerId : Number(playerIds[0]);
         let defaultNation = default_nation_entry();
         players_model.append({
-            "player_id": humanPlayerId,
-            "playerName": "Player " + (humanPlayerId + 1),
-            "colorIndex": 0,
-            "colorHex": Theme.playerColors[0].hex,
-            "colorName": Theme.playerColors[0].name,
-            "team_id": 0,
-            "teamIcon": Theme.teamIcons[0],
-            "nationId": defaultNation.id,
-            "nationName": defaultNation.name,
-            "isHuman": true,
-            "isEnabled": true
-        });
-        let cpuId = playerIds.find(function(id) {
-            return id !== humanPlayerId;
-        });
+                "player_id": humanPlayerId,
+                "playerName": "Player " + (humanPlayerId + 1),
+                "colorIndex": 0,
+                "colorHex": Theme.playerColors[0].hex,
+                "colorName": Theme.playerColors[0].name,
+                "team_id": 0,
+                "teamIcon": Theme.teamIcons[0],
+                "nationId": defaultNation.id,
+                "nationName": defaultNation.name,
+                "isHuman": true,
+                "isEnabled": true
+            });
+        let cpuId = playerIds.find(function (id) {
+                return id !== humanPlayerId;
+            });
         if (cpuId !== undefined)
             add_cpu();
-
         update_validation_error();
         refresh_map_preview();
     }
@@ -206,13 +188,12 @@ Item {
     function add_cpu() {
         let playerIds = player_ids_for_map(selected_map_data);
         if (!selected_map_data || playerIds.length === 0)
-            return ;
-
+            return;
         if (players_model.count >= playerIds.length)
-            return ;
-
+            return;
         let usedIds = [];
-        for (let i = 0; i < players_model.count; i++) usedIds.push(players_model.get(i).player_id)
+        for (let i = 0; i < players_model.count; i++)
+            usedIds.push(players_model.get(i).player_id);
         let nextId = -1;
         for (let j = 0; j < playerIds.length; j++) {
             if (usedIds.indexOf(Number(playerIds[j])) === -1) {
@@ -221,10 +202,10 @@ Item {
             }
         }
         if (nextId === -1)
-            return ;
-
+            return;
         let usedColors = [];
-        for (let k = 0; k < players_model.count; k++) usedColors.push(players_model.get(k).colorIndex)
+        for (let k = 0; k < players_model.count; k++)
+            usedColors.push(players_model.get(k).colorIndex);
         let colorIdx = 0;
         for (let c = 0; c < Theme.playerColors.length; c++) {
             if (usedColors.indexOf(c) === -1) {
@@ -235,30 +216,28 @@ Item {
         let defaultTeamId = players_model.count > 0 ? 1 : 0;
         let defaultNation = default_nation_entry();
         players_model.append({
-            "player_id": nextId,
-            "playerName": "CPU " + nextId,
-            "colorIndex": colorIdx,
-            "colorHex": Theme.playerColors[colorIdx].hex,
-            "colorName": Theme.playerColors[colorIdx].name,
-            "team_id": defaultTeamId,
-            "teamIcon": Theme.teamIcons[defaultTeamId],
-            "nationId": defaultNation.id,
-            "nationName": defaultNation.name,
-            "isHuman": false,
-            "isEnabled": true
-        });
+                "player_id": nextId,
+                "playerName": "CPU " + nextId,
+                "colorIndex": colorIdx,
+                "colorHex": Theme.playerColors[colorIdx].hex,
+                "colorName": Theme.playerColors[colorIdx].name,
+                "team_id": defaultTeamId,
+                "teamIcon": Theme.teamIcons[defaultTeamId],
+                "nationId": defaultNation.id,
+                "nationName": defaultNation.name,
+                "isHuman": false,
+                "isEnabled": true
+            });
         update_validation_error();
         refresh_map_preview();
     }
 
     function remove_player(index) {
         if (index < 0 || index >= players_model.count)
-            return ;
-
+            return;
         let p = players_model.get(index);
         if (p.isHuman)
-            return ;
-
+            return;
         players_model.remove(index);
         update_validation_error();
         refresh_map_preview();
@@ -266,14 +245,12 @@ Item {
 
     function cycle_player_color(index) {
         if (index < 0 || index >= players_model.count)
-            return ;
-
+            return;
         let p = players_model.get(index);
         let usedColors = [];
         for (let i = 0; i < players_model.count; i++) {
             if (i !== index)
                 usedColors.push(players_model.get(i).colorIndex);
-
         }
         let startIdx = p.colorIndex;
         let newIdx = (startIdx + 1) % Theme.playerColors.length;
@@ -284,7 +261,6 @@ Item {
         }
         if (attempts >= Theme.playerColors.length)
             newIdx = (startIdx + 1) % Theme.playerColors.length;
-
         players_model.setProperty(index, "colorIndex", newIdx);
         players_model.setProperty(index, "colorHex", Theme.playerColors[newIdx].hex);
         players_model.setProperty(index, "colorName", Theme.playerColors[newIdx].name);
@@ -293,8 +269,7 @@ Item {
 
     function cycle_player_team(index) {
         if (index < 0 || index >= players_model.count)
-            return ;
-
+            return;
         let p = players_model.get(index);
         let maxTeam = Math.min(8, players_model.count);
         let newTeamId = (p.team_id + 1) % (maxTeam + 1);
@@ -306,11 +281,9 @@ Item {
 
     function cycle_player_nation(index) {
         if (index < 0 || index >= players_model.count)
-            return ;
-
+            return;
         if (!available_nations || available_nations.length === 0)
-            return ;
-
+            return;
         let p = players_model.get(index);
         let currentId = p.nationId || available_nations[0].id;
         let nextIndex = 0;
@@ -328,8 +301,7 @@ Item {
 
     function toggle_player_enabled(index) {
         if (index < 0 || index >= players_model.count)
-            return ;
-
+            return;
         let p = players_model.get(index);
         let newEnabled = !p.isEnabled;
         players_model.setProperty(index, "isEnabled", newEnabled);
@@ -343,7 +315,6 @@ Item {
             let p = players_model.get(i);
             if (!p.isEnabled)
                 continue;
-
             let config = {
                 "player_id": p.player_id,
                 "colorHex": p.colorHex,
@@ -359,23 +330,21 @@ Item {
 
     function accept_selection() {
         if (selected_map_index < 0 || !selected_map_path)
-            return ;
-
+            return;
         let enabledCount = 0;
         for (let i = 0; i < players_model.count; i++) {
             if (players_model.get(i).isEnabled)
                 enabledCount++;
-
         }
         if (enabledCount < 2) {
             console.log("MapSelect: Need at least 2 enabled players to start");
             update_validation_error();
-            return ;
+            return;
         }
         if (!has_minimum_distinct_teams()) {
             console.log("MapSelect: Need at least 2 different teams to start");
             update_validation_error();
-            return ;
+            return;
         }
         validation_error = "";
         let configs = get_player_configs();
@@ -412,13 +381,11 @@ Item {
             refresh_available_nations();
             if (typeof game !== "undefined" && game.start_loading_maps)
                 game.start_loading_maps();
-
         }
     }
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (!visible)
-            return ;
-
+            return;
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
             event.accepted = true;
@@ -428,12 +395,10 @@ Item {
         } else if (event.key === Qt.Key_Down) {
             if (list.count > 0)
                 list.currentIndex = Math.min(list.currentIndex + 1, list.count - 1);
-
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
             if (list.count > 0)
                 list.currentIndex = Math.max(list.currentIndex - 1, 0);
-
             event.accepted = true;
         }
     }
@@ -526,7 +491,7 @@ Item {
                                 selected_map_data = null;
                                 selected_map_path = "";
                                 players_model.clear();
-                                return ;
+                                return;
                             }
                             selected_map_index = currentIndex;
                             selected_map_data = get_map_data(currentIndex);
@@ -599,9 +564,7 @@ Item {
                                             font.pixelSize: 24
                                             color: Theme.textDim
                                         }
-
                                     }
-
                                 }
 
                                 Item {
@@ -630,13 +593,11 @@ Item {
                                             right: parent.right
                                         }
 
-                                        Behavior on font.pixelSize {
+                                        Behavior on font.pixelSize  {
                                             NumberAnimation {
                                                 duration: Theme.animNormal
                                             }
-
                                         }
-
                                     }
 
                                     Text {
@@ -650,7 +611,6 @@ Item {
                                             right: parent.right
                                             bottom: parent.bottom
                                         }
-
                                     }
 
                                     Text {
@@ -663,31 +623,23 @@ Item {
                                             rightMargin: 0
                                             verticalCenter: parent.verticalCenter
                                         }
-
                                     }
-
                                 }
 
-                                Behavior on color {
+                                Behavior on color  {
                                     ColorAnimation {
                                         duration: Theme.animNormal
                                     }
-
                                 }
 
-                                Behavior on border.color {
+                                Behavior on border.color  {
                                     ColorAnimation {
                                         duration: Theme.animNormal
                                     }
-
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
 
                 Item {
@@ -701,7 +653,6 @@ Item {
                         font.pixelSize: 14
                         anchors.centerIn: parent
                     }
-
                 }
 
                 Item {
@@ -719,14 +670,13 @@ Item {
                             color: Theme.accent
                             anchors.horizontalCenter: parent.horizontalCenter
 
-                            RotationAnimator on rotation {
+                            RotationAnimator on rotation  {
                                 from: 0
                                 to: 360
                                 duration: 1500
                                 loops: Animation.Infinite
                                 running: maps_loading
                             }
-
                         }
 
                         Text {
@@ -735,13 +685,9 @@ Item {
                             font.pixelSize: 12
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
-
                     }
-
                 }
-
             }
-
         }
 
         Item {
@@ -772,7 +718,6 @@ Item {
                     left: parent.left
                     right: parent.right
                 }
-
             }
 
             Item {
@@ -798,14 +743,13 @@ Item {
                         color: Theme.accent
                         anchors.horizontalCenter: parent.horizontalCenter
 
-                        RotationAnimator on rotation {
+                        RotationAnimator on rotation  {
                             from: 0
                             to: 360
                             duration: 1500
                             loops: Animation.Infinite
                             running: loadingIndicator.visible
                         }
-
                     }
 
                     Text {
@@ -814,9 +758,7 @@ Item {
                         font.pixelSize: 14
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-
                 }
-
             }
 
             Item {
@@ -843,7 +785,7 @@ Item {
                         color: Theme.cardBase
                         opacity: 0.3
 
-                        SequentialAnimation on opacity {
+                        SequentialAnimation on opacity  {
                             loops: Animation.Infinite
                             running: loadingSkeleton.visible
 
@@ -856,9 +798,7 @@ Item {
                                 to: 0.3
                                 duration: 800
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -868,7 +808,7 @@ Item {
                         color: Theme.cardBase
                         opacity: 0.3
 
-                        SequentialAnimation on opacity {
+                        SequentialAnimation on opacity  {
                             loops: Animation.Infinite
                             running: loadingSkeleton.visible
 
@@ -883,9 +823,7 @@ Item {
                                 duration: 800
                                 easing.type: Easing.InOutQuad
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -895,7 +833,7 @@ Item {
                         color: Theme.cardBase
                         opacity: 0.3
 
-                        SequentialAnimation on opacity {
+                        SequentialAnimation on opacity  {
                             loops: Animation.Infinite
                             running: loadingSkeleton.visible
 
@@ -910,9 +848,7 @@ Item {
                                 duration: 800
                                 easing.type: Easing.InOutQuad
                             }
-
                         }
-
                     }
 
                     Text {
@@ -922,9 +858,7 @@ Item {
                         font.italic: true
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-
                 }
-
             }
 
             Text {
@@ -947,7 +881,6 @@ Item {
                     right: parent.right
                     topMargin: Theme.spacingSmall
                 }
-
             }
 
             Text {
@@ -967,7 +900,6 @@ Item {
                     right: parent.right
                     topMargin: Theme.spacingSmall
                 }
-
             }
 
             Rectangle {
@@ -1019,7 +951,6 @@ Item {
                                 font.pixelSize: 13
                                 font.bold: true
                             }
-
                         }
 
                         Text {
@@ -1037,7 +968,6 @@ Item {
                             font.italic: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
-
                     }
 
                     ListView {
@@ -1076,7 +1006,6 @@ Item {
                                     right: parent.right
                                     top: parent.top
                                 }
-
                             }
 
                             Item {
@@ -1115,27 +1044,23 @@ Item {
                                         onClicked: toggle_player_enabled(index)
                                     }
 
-                                    Behavior on color {
+                                    Behavior on color  {
                                         ColorAnimation {
                                             duration: Theme.animFast
                                         }
-
                                     }
 
-                                    Behavior on border.color {
+                                    Behavior on border.color  {
                                         ColorAnimation {
                                             duration: Theme.animFast
                                         }
-
                                     }
 
-                                    Behavior on border.width {
+                                    Behavior on border.width  {
                                         NumberAnimation {
                                             duration: Theme.animFast
                                         }
-
                                     }
-
                                 }
 
                                 Text {
@@ -1201,22 +1126,18 @@ Item {
                                             color: model.colorHex || Theme.textDim
                                             opacity: colorMA.containsMouse ? 0.15 : 0
 
-                                            Behavior on opacity {
+                                            Behavior on opacity  {
                                                 NumberAnimation {
                                                     duration: Theme.animFast
                                                 }
-
                                             }
-
                                         }
 
-                                        Behavior on border.width {
+                                        Behavior on border.width  {
                                             NumberAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
-
                                     }
 
                                     Rectangle {
@@ -1262,27 +1183,23 @@ Item {
                                             onClicked: cycle_player_nation(index)
                                         }
 
-                                        Behavior on color {
+                                        Behavior on color  {
                                             ColorAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
 
-                                        Behavior on border.color {
+                                        Behavior on border.color  {
                                             ColorAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
 
-                                        Behavior on border.width {
+                                        Behavior on border.width  {
                                             NumberAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
-
                                     }
 
                                     Rectangle {
@@ -1315,7 +1232,6 @@ Item {
                                                 font.pixelSize: 10
                                                 font.bold: true
                                             }
-
                                         }
 
                                         MouseArea {
@@ -1327,27 +1243,23 @@ Item {
                                             onClicked: cycle_player_team(index)
                                         }
 
-                                        Behavior on color {
+                                        Behavior on color  {
                                             ColorAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
 
-                                        Behavior on border.color {
+                                        Behavior on border.color  {
                                             ColorAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
 
-                                        Behavior on border.width {
+                                        Behavior on border.width  {
                                             NumberAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
-
                                     }
 
                                     Rectangle {
@@ -1379,49 +1291,39 @@ Item {
                                             onClicked: remove_player(index)
                                         }
 
-                                        Behavior on color {
+                                        Behavior on color  {
                                             ColorAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
 
-                                        Behavior on border.width {
+                                        Behavior on border.width  {
                                             NumberAnimation {
                                                 duration: Theme.animFast
                                             }
-
                                         }
-
                                     }
-
                                 }
-
                             }
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: Theme.animNormal
                                 }
-
                             }
 
-                            Behavior on border.color {
+                            Behavior on border.color  {
                                 ColorAnimation {
                                     duration: Theme.animNormal
                                 }
-
                             }
 
-                            Behavior on border.width {
+                            Behavior on border.width  {
                                 NumberAnimation {
                                     duration: Theme.animNormal
                                 }
-
                             }
-
                         }
-
                     }
 
                     Rectangle {
@@ -1463,38 +1365,29 @@ Item {
                             color: {
                                 if (!parent.enabled)
                                     return Theme.cardBase;
-
                                 if (parent.down)
                                     return Qt.darker(Theme.addColor, 1.2);
-
                                 if (addCpuHover.containsMouse)
                                     return Qt.lighter(Theme.addColor, 1.2);
-
                                 return Theme.addColor;
                             }
                             border.width: parent.enabled && addCpuHover.containsMouse ? 2 : 1
                             border.color: parent.enabled ? Qt.lighter(Theme.addColor, 1.3) : Theme.thumbBr
 
-                            Behavior on color {
+                            Behavior on color  {
                                 ColorAnimation {
                                     duration: Theme.animFast
                                 }
-
                             }
 
-                            Behavior on border.width {
+                            Behavior on border.width  {
                                 NumberAnimation {
                                     duration: Theme.animFast
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
 
             Rectangle {
@@ -1527,9 +1420,9 @@ Item {
                     }
 
                     Text {
-                        text: "Available Player Slots: " + (function() {
-                            return player_ids_for_map(selected_map_data).length;
-                        })()
+                        text: "Available Player Slots: " + (function () {
+                                return player_ids_for_map(selected_map_data).length;
+                            })()
                         color: Theme.textMain
                         font.pixelSize: 14
                         font.bold: true
@@ -1558,14 +1451,12 @@ Item {
                                     var pid = modelData;
                                     if (typeof game === 'undefined')
                                         return Theme.cardBaseB;
-
                                     return (game.selected_player_id === pid) ? Theme.selectedBg : Theme.cardBaseB;
                                 }
                                 border.color: {
                                     var pid = modelData;
                                     if (typeof game === 'undefined')
                                         return Theme.thumbBr;
-
                                     return (game.selected_player_id === pid) ? Theme.selectedBr : Theme.thumbBr;
                                 }
                                 border.width: 1
@@ -1577,7 +1468,6 @@ Item {
                                         var pid = modelData;
                                         if (typeof game === 'undefined')
                                             return Theme.textSub;
-
                                         return (game.selected_player_id === pid) ? Theme.textMain : Theme.textSub;
                                     }
                                     font.pixelSize: 12
@@ -1585,7 +1475,6 @@ Item {
                                         var pid = modelData;
                                         if (typeof game === 'undefined')
                                             return false;
-
                                         return game.selected_player_id === pid;
                                     }
                                 }
@@ -1596,36 +1485,27 @@ Item {
                                     onClicked: {
                                         if (typeof game !== 'undefined')
                                             game.selected_player_id = Number(modelData);
-
                                         initialize_players(selected_map_data);
-
                                     }
                                 }
-
                             }
-
                         }
-
                     }
 
                     Text {
                         text: {
                             if (typeof game === 'undefined')
                                 return "";
-
                             var ids = player_ids_for_map(selected_map_data);
                             if (ids.length === 0)
                                 return "";
-
                             var others = [];
                             for (var i = 0; i < ids.length; i++) {
                                 if (Number(ids[i]) !== game.selected_player_id)
                                     others.push(Number(ids[i]));
-
                             }
                             if (others.length === 0)
                                 return "All other slots will be CPU-controlled";
-
                             return "CPU will control: ID " + others.join(", ID ");
                         }
                         color: Theme.textSubLite
@@ -1633,11 +1513,8 @@ Item {
                         wrapMode: Text.WordWrap
                         width: parent.width
                     }
-
                 }
-
             }
-
         }
 
         Rectangle {
@@ -1664,7 +1541,6 @@ Item {
                     right: parent.right
                     top: parent.top
                 }
-
             }
 
             Text {
@@ -1685,7 +1561,6 @@ Item {
                     leftMargin: 140
                     rightMargin: 140
                 }
-
             }
 
             Button {
@@ -1720,13 +1595,11 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
 
-                    Behavior on font.pixelSize {
+                    Behavior on font.pixelSize  {
                         NumberAnimation {
                             duration: Theme.animFast
                         }
-
                     }
-
                 }
 
                 background: Rectangle {
@@ -1734,38 +1607,31 @@ Item {
                     color: {
                         if (parent.down)
                             return Theme.hover;
-
                         if (backHover.containsMouse)
                             return Theme.cardBase;
-
                         return Qt.rgba(0, 0, 0, 0);
                     }
                     border.width: backHover.containsMouse ? 2 : 1
                     border.color: backHover.containsMouse ? Theme.thumbBr : Theme.panelBr
 
-                    Behavior on color {
+                    Behavior on color  {
                         ColorAnimation {
                             duration: Theme.animFast
                         }
-
                     }
 
-                    Behavior on border.color {
+                    Behavior on border.color  {
                         ColorAnimation {
                             duration: Theme.animFast
                         }
-
                     }
 
-                    Behavior on border.width {
+                    Behavior on border.width  {
                         NumberAnimation {
                             duration: Theme.animFast
                         }
-
                     }
-
                 }
-
             }
 
             Button {
@@ -1779,7 +1645,6 @@ Item {
                 ToolTip.text: {
                     if (validation_error !== "")
                         return validation_error;
-
                     return qsTr("Start game (Enter)");
                 }
 
@@ -1806,13 +1671,11 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
 
-                    Behavior on font.pixelSize {
+                    Behavior on font.pixelSize  {
                         NumberAnimation {
                             duration: Theme.animFast
                         }
-
                     }
-
                 }
 
                 background: Rectangle {
@@ -1820,45 +1683,34 @@ Item {
                     color: {
                         if (!parent.enabled)
                             return Theme.cardBaseB;
-
                         if (parent.down)
                             return Theme.selectedBr;
-
                         if (playHover.containsMouse)
                             return Qt.lighter(Theme.selectedBg, 1.2);
-
                         return Theme.selectedBg;
                     }
                     border.width: parent.enabled && playHover.containsMouse ? 2 : 1
                     border.color: parent.enabled ? Theme.selectedBr : Theme.panelBr
 
-                    Behavior on color {
+                    Behavior on color  {
                         ColorAnimation {
                             duration: Theme.animFast
                         }
-
                     }
 
-                    Behavior on border.color {
+                    Behavior on border.color  {
                         ColorAnimation {
                             duration: Theme.animFast
                         }
-
                     }
 
-                    Behavior on border.width {
+                    Behavior on border.width  {
                         NumberAnimation {
                             duration: Theme.animFast
                         }
-
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }

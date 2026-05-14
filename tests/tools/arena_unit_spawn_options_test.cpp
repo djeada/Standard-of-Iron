@@ -1,6 +1,6 @@
-#include "tools/arena/unit_spawn_options.h"
-
 #include <gtest/gtest.h>
+
+#include "tools/arena/unit_spawn_options.h"
 
 TEST(ArenaUnitSpawnOptionsTest, ParsesSingleHorsePreset) {
   auto const option = Arena::UnitSpawnOptions::parse_special_unit_option(

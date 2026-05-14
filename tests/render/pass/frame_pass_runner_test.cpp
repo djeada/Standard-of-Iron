@@ -1,32 +1,32 @@
 
 
-#include "render/pass/frame_context.h"
-#include "render/pass/frame_pass_runner.h"
-#include "render/pass/i_pass.h"
-
 #include <gtest/gtest.h>
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "render/pass/frame_context.h"
+#include "render/pass/frame_pass_runner.h"
+#include "render/pass/i_pass.h"
 
 namespace {
 
 class RecordingPass final : public Render::Pass::IFramePass {
 public:
-  RecordingPass(const char *name, std::vector<std::string> *log)
-      : m_name(name), m_log(log) {}
+  RecordingPass(const char* name, std::vector<std::string>* log)
+      : m_name(name)
+      , m_log(log) {}
   [[nodiscard]] auto name() const noexcept -> std::string_view override {
     return m_name;
   }
-  void execute(Render::Pass::FrameContext &ctx) override {
+  void execute(Render::Pass::FrameContext& ctx) override {
     m_log->push_back(m_name);
     ctx.frame_counter++;
   }
 
 private:
-  const char *m_name;
-  std::vector<std::string> *m_log;
+  const char* m_name;
+  std::vector<std::string>* m_log;
 };
 
 } // namespace

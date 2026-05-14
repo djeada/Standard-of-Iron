@@ -2,9 +2,10 @@
 
 #include "game_engine.h"
 
-CommanderInputAdapter::CommanderInputAdapter(GameEngine *engine,
-                                             QObject *parent)
-    : QObject(parent), m_engine(engine) {}
+CommanderInputAdapter::CommanderInputAdapter(GameEngine* engine, QObject* parent)
+    : QObject(parent)
+    , m_engine(engine) {
+}
 
 void CommanderInputAdapter::key_down(int key, int modifiers) {
   if (m_engine != nullptr) {

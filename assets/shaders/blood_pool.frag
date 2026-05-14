@@ -16,7 +16,8 @@ float noise(vec2 p) {
   vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
   return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
-             mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+             mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x),
+             f.y);
 }
 
 void main() {
@@ -28,10 +29,8 @@ void main() {
       (noise(seeded * 4.4) - 0.5) * 0.34 + (noise(seeded * 9.5) - 0.5) * 0.16;
   float alpha = smoothstep(1.0 + edge_noise, 0.46 + edge_noise * 0.35, dist);
 
-  float droplet_1 =
-      1.0 - smoothstep(0.045, 0.12, length(c - vec2(0.47, -0.28)));
-  float droplet_2 =
-      1.0 - smoothstep(0.035, 0.09, length(c - vec2(-0.56, 0.18)));
+  float droplet_1 = 1.0 - smoothstep(0.045, 0.12, length(c - vec2(0.47, -0.28)));
+  float droplet_2 = 1.0 - smoothstep(0.035, 0.09, length(c - vec2(-0.56, 0.18)));
   float droplet_3 = 1.0 - smoothstep(0.025, 0.07, length(c - vec2(0.18, 0.61)));
   float droplets = max(max(droplet_1, droplet_2), droplet_3);
   droplets *= smoothstep(0.45, 1.25, u_radius);

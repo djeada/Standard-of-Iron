@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../shader.h"
 #include <QOpenGLFunctions_3_3_Core>
+
+#include "../shader.h"
 
 namespace Render::GL::BackendPipelines {
 

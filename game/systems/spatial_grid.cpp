@@ -1,11 +1,14 @@
 #include "spatial_grid.h"
+
 #include <algorithm>
 #include <cmath>
 
 namespace Game::Systems {
 
 SpatialGrid::SpatialGrid(float cell_size)
-    : m_cell_size(cell_size), m_inv_cell_size(1.0F / cell_size) {}
+    : m_cell_size(cell_size)
+    , m_inv_cell_size(1.0F / cell_size) {
+}
 
 void SpatialGrid::clear() {
   m_cells.clear();
@@ -29,7 +32,7 @@ void SpatialGrid::remove(Engine::Core::EntityID entity_id) {
 
   auto cell_it = m_cells.find(key);
   if (cell_it != m_cells.end()) {
-    auto &entities = cell_it->second;
+    auto& entities = cell_it->second;
     entities.erase(std::remove(entities.begin(), entities.end(), entity_id),
                    entities.end());
     if (entities.empty()) {
@@ -56,7 +59,7 @@ void SpatialGrid::update(Engine::Core::EntityID entity_id, float x, float z) {
   CellKey const old_key = it->second;
   auto cell_it = m_cells.find(old_key);
   if (cell_it != m_cells.end()) {
-    auto &entities = cell_it->second;
+    auto& entities = cell_it->second;
     entities.erase(std::remove(entities.begin(), entities.end(), entity_id),
                    entities.end());
     if (entities.empty()) {
@@ -76,11 +79,9 @@ auto SpatialGrid::get_entities_in_range(float x, float z, float range) const
 }
 
 void SpatialGrid::get_entities_in_range(
-    float x, float z, float range,
-    std::vector<Engine::Core::EntityID> &result) const {
+    float x, float z, float range, std::vector<Engine::Core::EntityID>& result) const {
   result.clear();
-  int const cells_to_check =
-      static_cast<int>(std::ceil(range * m_inv_cell_size));
+  int const cells_to_check = static_cast<int>(std::ceil(range * m_inv_cell_size));
   CellKey const center = to_cell_key(x, z);
 
   float const range_sq = range * range;
@@ -97,10 +98,8 @@ void SpatialGrid::get_entities_in_range(
         result.insert(result.end(), it->second.begin(), it->second.end());
       } else {
 
-        float const cell_center_x =
-            (static_cast<float>(key.x) + 0.5F) * m_cell_size;
-        float const cell_center_z =
-            (static_cast<float>(key.z) + 0.5F) * m_cell_size;
+        float const cell_center_x = (static_cast<float>(key.x) + 0.5F) * m_cell_size;
+        float const cell_center_z = (static_cast<float>(key.z) + 0.5F) * m_cell_size;
         float const cell_dx = cell_center_x - x;
         float const cell_dz = cell_center_z - z;
         float const cell_dist_sq = cell_dx * cell_dx + cell_dz * cell_dz;

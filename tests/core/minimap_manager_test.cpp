@@ -1,11 +1,11 @@
+#include <gtest/gtest.h>
+
 #include "app/core/minimap_manager.h"
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
 #include "map/map_definition.h"
 #include "map/visibility_service.h"
-
-#include <gtest/gtest.h>
 
 using namespace Game::Map;
 
@@ -67,10 +67,9 @@ TEST(MinimapManagerTest, ClearFogRestoresBaseImage) {
 
 TEST(MinimapManagerTest, UpdateUnitsMarksDirtyOnFirstCallAfterFogChange) {
   auto world = std::make_unique<Engine::Core::World>();
-  auto *entity = world->create_entity();
-  (void)entity->add_component<Engine::Core::TransformComponent>(1.0F, 0.0F,
-                                                                1.0F);
-  auto *unit_comp =
+  auto* entity = world->create_entity();
+  (void)entity->add_component<Engine::Core::TransformComponent>(1.0F, 0.0F, 1.0F);
+  auto* unit_comp =
       entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
   unit_comp->owner_id = 1;
 
@@ -104,10 +103,9 @@ TEST(MinimapManagerTest, UpdateUnitsMarksDirtyOnFirstCallAfterFogChange) {
 
 TEST(MinimapManagerTest, UpdateUnitsMarksDirtyWhenRenderedMarkerStateChanges) {
   auto world = std::make_unique<Engine::Core::World>();
-  auto *entity = world->create_entity();
-  (void)entity->add_component<Engine::Core::TransformComponent>(1.0F, 0.0F,
-                                                                1.0F);
-  auto *unit_comp =
+  auto* entity = world->create_entity();
+  (void)entity->add_component<Engine::Core::TransformComponent>(1.0F, 0.0F, 1.0F);
+  auto* unit_comp =
       entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
   unit_comp->owner_id = 1;
 

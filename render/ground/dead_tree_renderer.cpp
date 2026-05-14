@@ -1,4 +1,10 @@
 #include "dead_tree_renderer.h"
+
+#include <QVector4D>
+
+#include <algorithm>
+#include <cmath>
+
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "gl/render_constants.h"
@@ -7,9 +13,6 @@
 #include "scatter_composition.h"
 #include "scatter_runtime.h"
 #include "spawn_validator.h"
-#include <QVector4D>
-#include <algorithm>
-#include <cmath>
 
 namespace {
 
@@ -26,28 +29,26 @@ namespace Render::GL {
 DeadTreeRenderer::DeadTreeRenderer() = default;
 DeadTreeRenderer::~DeadTreeRenderer() = default;
 
-void DeadTreeRenderer::configure(
-    const Game::Map::TerrainHeightMap &height_map,
-    const Game::Map::BiomeSettings &biome_settings,
-    const std::vector<Game::Map::WorldProp> &world_props) {
+void DeadTreeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
+                                 const Game::Map::BiomeSettings& biome_settings,
+                                 const std::vector<Game::Map::WorldProp>& world_props) {
   m_biome_settings = biome_settings;
   m_state.reset_instances();
   m_state.params.light_direction = m_light_direction;
   generate_instances(world_props, height_map);
 }
 
-void DeadTreeRenderer::set_light_direction(const QVector3D &dir) {
-  m_light_direction = dir.isNull()
-                          ? DeadTreeBatchParams::default_light_direction()
-                          : dir.normalized();
+void DeadTreeRenderer::set_light_direction(const QVector3D& dir) {
+  m_light_direction =
+      dir.isNull() ? DeadTreeBatchParams::default_light_direction() : dir.normalized();
   m_state.params.light_direction = m_light_direction;
 }
 
-void DeadTreeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
+void DeadTreeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_state, [](const DeadTreeInstanceGpu &inst) -> const QVector4D & {
+      m_state, [](const DeadTreeInstanceGpu& inst) -> const QVector4D& {
         return inst.pos_scale;
       });
   if (visible_count == 0 || !m_state.instance_buffer) {
@@ -64,13 +65,15 @@ void DeadTreeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   renderer.terrain_scatter(cmd);
 }
 
-void DeadTreeRenderer::clear() { m_state.reset_instances(); }
+void DeadTreeRenderer::clear() {
+  m_state.reset_instances();
+}
 
 void DeadTreeRenderer::generate_instances(
-    const std::vector<Game::Map::WorldProp> &world_props,
-    const Game::Map::TerrainHeightMap &height_map) {
+    const std::vector<Game::Map::WorldProp>& world_props,
+    const Game::Map::TerrainHeightMap& height_map) {
 
-  auto &terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Map::TerrainService::instance();
   const float tile_size = height_map.get_tile_size();
   const int width = height_map.get_width();
   const int map_height = height_map.get_height();
@@ -79,11 +82,12 @@ void DeadTreeRenderer::generate_instances(
 
   SpawnTerrainCache terrain_cache;
   terrain_cache.build_from_height_map(height_map.get_height_data(),
-                                      height_map.getTerrainTypes(), width,
-                                      map_height, tile_size);
+                                      height_map.getTerrainTypes(),
+                                      width,
+                                      map_height,
+                                      tile_size);
 
-  const auto scatter_profile =
-      Game::Map::make_scatter_profile(m_biome_settings);
+  const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
   SpawnValidationConfig config = make_camp_prop_spawn_config();
   config.grid_width = width;
   config.grid_height = map_height;
@@ -95,12 +99,14 @@ void DeadTreeRenderer::generate_instances(
   config.river_clearance = 1.4F;
 
   SpawnValidator validator(terrain_cache, config);
-  ScatterCompositionContext composition(terrain_cache, width, map_height,
-                                        tile_size, m_biome_settings,
-                                        world_props);
+  ScatterCompositionContext composition(
+      terrain_cache, width, map_height, tile_size, m_biome_settings, world_props);
 
-  auto add_dead_tree = [&](float gx, float gz, float scale_min, float scale_max,
-                           uint32_t &state) -> bool {
+  auto add_dead_tree = [&](float gx,
+                           float gz,
+                           float scale_min,
+                           float scale_max,
+                           uint32_t& state) -> bool {
     if (!validator.can_spawn_at_grid(gx, gz)) {
       return false;
     }
@@ -109,10 +115,9 @@ void DeadTreeRenderer::generate_instances(
     if (scene.fertility > 0.74F && scene.dryness < 0.38F) {
       return false;
     }
-    float const chance =
-        scatter_spawn_chance(ScatterRuleSpecies::DeadTree, scene) *
-        (0.18F + scene.dryness * 0.44F + scene.rockiness * 0.22F +
-         scene.cluster_bias * 0.16F);
+    float const chance = scatter_spawn_chance(ScatterRuleSpecies::DeadTree, scene) *
+                         (0.18F + scene.dryness * 0.44F + scene.rockiness * 0.22F +
+                          scene.cluster_bias * 0.16F);
     if (rand_01(state) > chance) {
       return false;
     }
@@ -132,13 +137,13 @@ void DeadTreeRenderer::generate_instances(
     float const scale = remap(rand_01(state), scale_min, scale_max) *
                         scatter_scale_bias(ScatterRuleSpecies::DeadTree, scene);
     inst.pos_scale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
-    inst.color_rot = QVector4D(color.x(), color.y(), color.z(),
-                               rand_01(state) * MathConstants::k_two_pi);
+    inst.color_rot = QVector4D(
+        color.x(), color.y(), color.z(), rand_01(state) * MathConstants::k_two_pi);
     m_state.instances.push_back(inst);
     return true;
   };
 
-  for (const auto &prop : world_props) {
+  for (const auto& prop : world_props) {
     if (prop.type != Game::Map::WorldProp::Type::DeadTree) {
       continue;
     }
@@ -148,12 +153,13 @@ void DeadTreeRenderer::generate_instances(
         terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
 
     DeadTreeInstanceGpu inst;
-    inst.pos_scale =
-        QVector4D(resolved.x(), resolved.y(), resolved.z(),
-                  prop.scale * Game::Map::world_prop_render_scale(
-                                   Game::Map::WorldProp::Type::DeadTree));
-    inst.color_rot = QVector4D(k_base_color_r, k_base_color_g, k_base_color_b,
-                               prop.rotation);
+    inst.pos_scale = QVector4D(resolved.x(),
+                               resolved.y(),
+                               resolved.z(),
+                               prop.scale * Game::Map::world_prop_render_scale(
+                                                Game::Map::WorldProp::Type::DeadTree));
+    inst.color_rot =
+        QVector4D(k_base_color_r, k_base_color_g, k_base_color_b, prop.rotation);
     m_state.instances.push_back(inst);
   }
 
@@ -161,7 +167,8 @@ void DeadTreeRenderer::generate_instances(
     float const base_density =
         std::clamp(0.030F + (1.0F - m_biome_settings.moisture_level) * 0.038F +
                        m_biome_settings.rock_exposure * 0.030F,
-                   0.018F, 0.090F);
+                   0.018F,
+                   0.090F);
     for (int z = 0; z < map_height; z += 10) {
       for (int x = 0; x < width; x += 10) {
         int const sample_x = std::min(x + 5, width - 1);

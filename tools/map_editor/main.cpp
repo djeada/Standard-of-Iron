@@ -1,7 +1,8 @@
-#include "editor_window.h"
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QTimer>
+
+#include "editor_window.h"
 
 namespace {
 
@@ -280,7 +281,7 @@ QLabel#panelHint {
 
 }
 
-auto main(int argc, char *argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
 
   QApplication app(argc, argv);
   QApplication::setApplicationName("Standard of Iron Map Editor");
@@ -300,9 +301,8 @@ auto main(int argc, char *argv[]) -> int {
 
   const QStringList args = parser.positionalArguments();
   if (!args.isEmpty()) {
-    const QString &file_path = args.first();
-    QTimer::singleShot(0,
-                       [&window, file_path]() { window.load_file(file_path); });
+    const QString& file_path = args.first();
+    QTimer::singleShot(0, [&window, file_path]() { window.load_file(file_path); });
   }
 
   return QApplication::exec();

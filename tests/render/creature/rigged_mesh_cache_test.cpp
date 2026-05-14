@@ -1,5 +1,8 @@
 
 
+#include <gtest/gtest.h>
+#include <type_traits>
+
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_spec.h"
@@ -7,9 +10,6 @@
 #include "render/humanoid/humanoid_spec.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_cache.h"
-
-#include <gtest/gtest.h>
-#include <type_traits>
 
 namespace {
 
@@ -19,31 +19,26 @@ using Render::GL::RiggedVertex;
 
 class RuntimeBakeGuardReset {
 public:
-  RuntimeBakeGuardReset() {
-    Render::Creature::set_runtime_bake_forbidden(false);
-  }
-  ~RuntimeBakeGuardReset() {
-    Render::Creature::set_runtime_bake_forbidden(false);
-  }
+  RuntimeBakeGuardReset() { Render::Creature::set_runtime_bake_forbidden(false); }
+  ~RuntimeBakeGuardReset() { Render::Creature::set_runtime_bake_forbidden(false); }
 };
 
 TEST(RiggedMeshCache, RepeatedCallsForSameKeyReturnSameEntry) {
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
   EXPECT_EQ(cache.size(), 0U);
 
-  const auto *first = cache.get_or_bake(spec, CreatureLOD::Full, bind);
+  const auto* first = cache.get_or_bake(spec, CreatureLOD::Full, bind);
   ASSERT_NE(first, nullptr);
   EXPECT_EQ(cache.size(), 1U);
 
-  const auto *second = cache.get_or_bake(spec, CreatureLOD::Full, bind);
+  const auto* second = cache.get_or_bake(spec, CreatureLOD::Full, bind);
   EXPECT_EQ(first, second) << "second get_or_bake must hit the cache";
   EXPECT_EQ(first->mesh.get(), second->mesh.get())
       << "the underlying mesh must not be re-baked";
-  EXPECT_EQ(cache.size(), 1U)
-      << "cache must not grow when re-asked for the same key";
+  EXPECT_EQ(cache.size(), 1U) << "cache must not grow when re-asked for the same key";
 
   for (int i = 0; i < 64; ++i) {
     EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Full, bind), first);
@@ -54,23 +49,22 @@ TEST(RiggedMeshCache, RepeatedCallsForSameKeyReturnSameEntry) {
 TEST(RiggedMeshCache, PerUnitVariantBucketDefaultsToZeroAndDeduplicates) {
 
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
-  const auto *via_default = cache.get_or_bake(spec, CreatureLOD::Full, bind);
-  const auto *via_explicit_zero =
-      cache.get_or_bake(spec, CreatureLOD::Full, bind, 0);
+  const auto* via_default = cache.get_or_bake(spec, CreatureLOD::Full, bind);
+  const auto* via_explicit_zero = cache.get_or_bake(spec, CreatureLOD::Full, bind, 0);
   EXPECT_EQ(via_default, via_explicit_zero);
   EXPECT_EQ(cache.size(), 1U);
 }
 
 TEST(RiggedMeshCache, FullAndMinimalBakeIndependentlyButOnlyOnceEach) {
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
-  const auto *full = cache.get_or_bake(spec, CreatureLOD::Full, bind);
-  const auto *minimal = cache.get_or_bake(spec, CreatureLOD::Minimal, bind);
+  const auto* full = cache.get_or_bake(spec, CreatureLOD::Full, bind);
+  const auto* minimal = cache.get_or_bake(spec, CreatureLOD::Minimal, bind);
 
   ASSERT_NE(full, nullptr);
   ASSERT_NE(minimal, nullptr);
@@ -85,16 +79,16 @@ TEST(RiggedMeshCache, FullAndMinimalBakeIndependentlyButOnlyOnceEach) {
 TEST(RiggedMeshCache, DifferentSpeciesProduceDistinctEntries) {
   RiggedMeshCache cache;
 
-  auto const &humanoid = Render::Humanoid::humanoid_creature_spec();
-  auto const &horse = Render::Horse::horse_creature_spec();
-  auto const &elephant = Render::Elephant::elephant_creature_spec();
+  auto const& humanoid = Render::Humanoid::humanoid_creature_spec();
+  auto const& horse = Render::Horse::horse_creature_spec();
+  auto const& elephant = Render::Elephant::elephant_creature_spec();
 
-  const auto *h = cache.get_or_bake(humanoid, CreatureLOD::Full,
-                                    Render::Humanoid::humanoid_bind_palette());
-  const auto *r = cache.get_or_bake(horse, CreatureLOD::Full,
-                                    Render::Horse::horse_bind_palette());
-  const auto *e = cache.get_or_bake(elephant, CreatureLOD::Full,
-                                    Render::Elephant::elephant_bind_palette());
+  const auto* h = cache.get_or_bake(
+      humanoid, CreatureLOD::Full, Render::Humanoid::humanoid_bind_palette());
+  const auto* r =
+      cache.get_or_bake(horse, CreatureLOD::Full, Render::Horse::horse_bind_palette());
+  const auto* e = cache.get_or_bake(
+      elephant, CreatureLOD::Full, Render::Elephant::elephant_bind_palette());
 
   ASSERT_NE(h, nullptr);
   ASSERT_NE(r, nullptr);
@@ -105,12 +99,11 @@ TEST(RiggedMeshCache, DifferentSpeciesProduceDistinctEntries) {
   EXPECT_EQ(cache.size(), 3U);
 
   for (int i = 0; i < 32; ++i) {
-    cache.get_or_bake(humanoid, CreatureLOD::Full,
-                      Render::Humanoid::humanoid_bind_palette());
-    cache.get_or_bake(horse, CreatureLOD::Full,
-                      Render::Horse::horse_bind_palette());
-    cache.get_or_bake(elephant, CreatureLOD::Full,
-                      Render::Elephant::elephant_bind_palette());
+    cache.get_or_bake(
+        humanoid, CreatureLOD::Full, Render::Humanoid::humanoid_bind_palette());
+    cache.get_or_bake(horse, CreatureLOD::Full, Render::Horse::horse_bind_palette());
+    cache.get_or_bake(
+        elephant, CreatureLOD::Full, Render::Elephant::elephant_bind_palette());
   }
   EXPECT_EQ(cache.size(), 3U)
       << "spawning many units of each species must not re-bake meshes";
@@ -125,14 +118,11 @@ TEST(RiggedMeshCache, BakedVertexFormatCarriesRoleIndexButNoPerUnitColour) {
                 "uniforms, never in baked vertices.");
 
   RiggedVertex v{};
-  static_assert(
-      std::is_same_v<decltype(v.position_bone_local), std::array<float, 3>>);
-  static_assert(
-      std::is_same_v<decltype(v.normal_bone_local), std::array<float, 3>>);
+  static_assert(std::is_same_v<decltype(v.position_bone_local), std::array<float, 3>>);
+  static_assert(std::is_same_v<decltype(v.normal_bone_local), std::array<float, 3>>);
   static_assert(std::is_same_v<decltype(v.tex_coord), std::array<float, 2>>);
   static_assert(std::is_same_v<decltype(v.bone_weights), std::array<float, 4>>);
-  static_assert(
-      std::is_same_v<decltype(v.bone_indices), std::array<std::uint8_t, 4>>);
+  static_assert(std::is_same_v<decltype(v.bone_indices), std::array<std::uint8_t, 4>>);
   static_assert(std::is_same_v<decltype(v.color_role), std::uint8_t>);
   SUCCEED();
 }
@@ -140,10 +130,10 @@ TEST(RiggedMeshCache, BakedVertexFormatCarriesRoleIndexButNoPerUnitColour) {
 TEST(RiggedMeshCache, RuntimeBakeGuardAllowsHitsButRejectsMisses) {
   RuntimeBakeGuardReset guard_reset;
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
-  const auto *full = cache.get_or_bake(spec, CreatureLOD::Full, bind);
+  const auto* full = cache.get_or_bake(spec, CreatureLOD::Full, bind);
   ASSERT_NE(full, nullptr);
   EXPECT_EQ(cache.size(), 1U);
 
@@ -159,7 +149,7 @@ TEST(RiggedMeshCache, RuntimeBakeGuardAllowsHitsButRejectsMisses) {
 TEST(RiggedMeshCache, FrameStatsCountBakesAndHits) {
   RuntimeBakeGuardReset guard_reset;
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
   ASSERT_NE(cache.get_or_bake(spec, CreatureLOD::Full, bind), nullptr);
@@ -176,7 +166,7 @@ TEST(RiggedMeshCache, FrameStatsCountBakesAndHits) {
 TEST(RiggedMeshCache, FrameStatsResetClearsCounters) {
   RuntimeBakeGuardReset guard_reset;
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
   cache.get_or_bake(spec, CreatureLOD::Full, bind);
@@ -210,7 +200,7 @@ TEST(RiggedMeshCache, FrameStatsTrackSkinUploadCounters) {
 TEST(RiggedMeshCache, FrameStatsMissOnRuntimeBakeRejection) {
   RuntimeBakeGuardReset guard_reset;
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
   Render::Creature::set_runtime_bake_forbidden(true);
@@ -222,19 +212,19 @@ TEST(RiggedMeshCache, FrameStatsMissOnRuntimeBakeRejection) {
 
 TEST(RiggedMeshCache, PrehashedLookupHonorsAttachmentSetId) {
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
-  const auto *first = cache.get_or_bake_prehashed(spec, CreatureLOD::Full, bind,
-                                                  0U, {}, 0x12U, 1U, 0U);
+  const auto* first =
+      cache.get_or_bake_prehashed(spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 1U, 0U);
   ASSERT_NE(first, nullptr);
 
-  const auto *hit = cache.get_or_bake_prehashed(spec, CreatureLOD::Full, bind,
-                                                0U, {}, 0x12U, 1U, 0U);
+  const auto* hit =
+      cache.get_or_bake_prehashed(spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 1U, 0U);
   EXPECT_EQ(hit, first);
 
-  const auto *different_set = cache.get_or_bake_prehashed(
-      spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 2U, 0U);
+  const auto* different_set =
+      cache.get_or_bake_prehashed(spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 2U, 0U);
   ASSERT_NE(different_set, nullptr);
   EXPECT_NE(different_set, first);
   EXPECT_EQ(cache.size(), 2U);
@@ -242,13 +232,13 @@ TEST(RiggedMeshCache, PrehashedLookupHonorsAttachmentSetId) {
 
 TEST(RiggedMeshCache, PrehashedLookupFallsBackToHashWhenSetIdIsInvalid) {
   RiggedMeshCache cache;
-  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
-  const auto *first = cache.get_or_bake_prehashed(spec, CreatureLOD::Full, bind,
-                                                  0U, {}, 0xAAU, 0U, 0U);
-  const auto *second = cache.get_or_bake_prehashed(spec, CreatureLOD::Full,
-                                                   bind, 0U, {}, 0xBBU, 0U, 0U);
+  const auto* first =
+      cache.get_or_bake_prehashed(spec, CreatureLOD::Full, bind, 0U, {}, 0xAAU, 0U, 0U);
+  const auto* second =
+      cache.get_or_bake_prehashed(spec, CreatureLOD::Full, bind, 0U, {}, 0xBBU, 0U, 0U);
 
   ASSERT_NE(first, nullptr);
   ASSERT_NE(second, nullptr);

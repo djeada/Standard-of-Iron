@@ -1,11 +1,13 @@
 #pragma once
 
-#include "../shader.h"
-#include "pipeline_interface.h"
-#include <GL/gl.h>
 #include <QMatrix4x4>
 #include <QVector3D>
+
+#include <GL/gl.h>
 #include <vector>
+
+#include "../shader.h"
+#include "pipeline_interface.h"
 
 namespace Render::GL {
 class ShaderCache;
@@ -24,8 +26,9 @@ struct RainDropData {
 
 class RainPipeline final : public IPipeline {
 public:
-  explicit RainPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
-      : m_backend(backend), m_shader_cache(shader_cache) {}
+  explicit RainPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
+      : m_backend(backend)
+      , m_shader_cache(shader_cache) {}
   ~RainPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -33,19 +36,19 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  void render(const Camera &cam, const RainBatchParams &params);
+  void render(const Camera& cam, const RainBatchParams& params);
 
   void set_intensity(float intensity) { m_intensity = intensity; }
-  void set_wind(const QVector3D &wind) { m_wind_direction = wind; }
+  void set_wind(const QVector3D& wind) { m_wind_direction = wind; }
 
 private:
   auto create_rain_geometry() -> bool;
   void shutdown_geometry();
   void generate_rain_drops();
 
-  GL::Backend *m_backend = nullptr;
-  GL::ShaderCache *m_shader_cache = nullptr;
-  GL::Shader *m_rain_shader = nullptr;
+  GL::Backend* m_backend = nullptr;
+  GL::ShaderCache* m_shader_cache = nullptr;
+  GL::Shader* m_rain_shader = nullptr;
 
   GLuint m_vao = 0;
   GLuint m_vertex_buffer = 0;

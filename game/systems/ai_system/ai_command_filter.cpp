@@ -1,19 +1,21 @@
 #include "ai_command_filter.h"
-#include "systems/ai_system/ai_types.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <utility>
 #include <vector>
 
+#include "systems/ai_system/ai_types.h"
+
 namespace Game::Systems::AI {
 
-auto AICommandFilter::filter(const std::vector<AICommand> &commands,
+auto AICommandFilter::filter(const std::vector<AICommand>& commands,
                              float current_time) -> std::vector<AICommand> {
   std::vector<AICommand> filtered;
   filtered.reserve(commands.size());
 
-  for (const auto &cmd : commands) {
+  for (const auto& cmd : commands) {
 
     if (cmd.type == AICommandType::StartProduction) {
       filtered.push_back(cmd);
@@ -43,8 +45,8 @@ auto AICommandFilter::filter(const std::vector<AICommand> &commands,
         }
       }
 
-      if (!is_duplicate(unit_id, cmd.type, target_id, move_x, move_y, move_z,
-                        current_time)) {
+      if (!is_duplicate(
+              unit_id, cmd.type, target_id, move_x, move_y, move_z, current_time)) {
         valid_units.push_back(unit_id);
       } else {
         blocked_count++;
@@ -97,23 +99,33 @@ void AICommandFilter::update(float current_time) {
   cleanup_history(current_time);
 }
 
-void AICommandFilter::reset() { m_history.clear(); }
+void AICommandFilter::reset() {
+  m_history.clear();
+}
 
 auto AICommandFilter::is_duplicate(Engine::Core::EntityID unit_id,
                                    AICommandType type,
                                    Engine::Core::EntityID target_id,
-                                   float move_x, float move_y, float move_z,
+                                   float move_x,
+                                   float move_y,
+                                   float move_z,
                                    float current_time) const -> bool {
-  for (const auto &entry : m_history) {
-    if (entry.is_similar_to(type, unit_id, target_id, move_x, move_y, move_z,
-                            current_time, m_cooldown_period)) {
+  for (const auto& entry : m_history) {
+    if (entry.is_similar_to(type,
+                            unit_id,
+                            target_id,
+                            move_x,
+                            move_y,
+                            move_z,
+                            current_time,
+                            m_cooldown_period)) {
       return true;
     }
   }
   return false;
 }
 
-void AICommandFilter::record_command(const AICommand &cmd, float current_time) {
+void AICommandFilter::record_command(const AICommand& cmd, float current_time) {
   for (size_t i = 0; i < cmd.units.size(); ++i) {
     CommandHistory entry{};
     entry.unit_id = cmd.units[i];
@@ -146,18 +158,23 @@ void AICommandFilter::record_command(const AICommand &cmd, float current_time) {
 
 void AICommandFilter::cleanup_history(float current_time) {
 
-  m_history.erase(std::remove_if(m_history.begin(), m_history.end(),
-                                 [&](const CommandHistory &entry) {
+  m_history.erase(std::remove_if(m_history.begin(),
+                                 m_history.end(),
+                                 [&](const CommandHistory& entry) {
                                    return (current_time - entry.issued_time) >
                                           m_cooldown_period;
                                  }),
                   m_history.end());
 }
 
-auto AICommandFilter::CommandHistory::is_similar_to(
-    const AICommandType &cmd_type, Engine::Core::EntityID unit,
-    Engine::Core::EntityID target, float x, float y, float z,
-    float current_time, float cooldown) const -> bool {
+auto AICommandFilter::CommandHistory::is_similar_to(const AICommandType& cmd_type,
+                                                    Engine::Core::EntityID unit,
+                                                    Engine::Core::EntityID target,
+                                                    float x,
+                                                    float y,
+                                                    float z,
+                                                    float current_time,
+                                                    float cooldown) const -> bool {
 
   if (unit_id != unit) {
     return false;

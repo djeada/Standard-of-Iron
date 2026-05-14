@@ -1,5 +1,10 @@
 #pragma once
 
+#include <queue>
+
+#include <cstddef>
+#include <memory>
+
 #include "../core/event_manager.h"
 #include "../core/system.h"
 #include "ai_system/ai_behavior_registry.h"
@@ -12,10 +17,6 @@
 #include "ai_system/ai_types.h"
 #include "ai_system/ai_worker.h"
 
-#include <cstddef>
-#include <memory>
-#include <queue>
-
 namespace Engine::Core {
 class World;
 }
@@ -27,7 +28,7 @@ public:
   AISystem();
   ~AISystem() override;
 
-  void update(Engine::Core::World *world, float delta_time) override;
+  void update(Engine::Core::World* world, float delta_time) override;
 
   void reinitialize();
 
@@ -37,13 +38,15 @@ public:
     return m_ai_instances.size();
   }
   [[nodiscard]] auto ai_update_timer(std::size_t index) const -> float {
-    return (index < m_ai_instances.size()) ? m_ai_instances[index].update_timer
-                                           : 0.0F;
+    return (index < m_ai_instances.size()) ? m_ai_instances[index].update_timer : 0.0F;
   }
 
-  void set_ai_strategy(int player_id, AI::AIStrategy strategy,
-                       float aggression = 0.5F, float defense = 0.5F,
-                       float harassment = 0.5F, const QString &difficulty = {});
+  void set_ai_strategy(int player_id,
+                       AI::AIStrategy strategy,
+                       float aggression = 0.5F,
+                       float defense = 0.5F,
+                       float harassment = 0.5F,
+                       const QString& difficulty = {});
   void set_commander_recruitment_enabled(bool enabled);
 
 private:
@@ -72,11 +75,11 @@ private:
 
   void initialize_ai_players();
 
-  static void populate_behavior_registry(AI::AIBehaviorRegistry &registry);
+  static void populate_behavior_registry(AI::AIBehaviorRegistry& registry);
 
-  void process_results(Engine::Core::World &world);
+  void process_results(Engine::Core::World& world);
 
-  void on_building_attacked(const Engine::Core::BuildingAttackedEvent &event);
+  void on_building_attacked(const Engine::Core::BuildingAttackedEvent& event);
 };
 
 } // namespace Game::Systems

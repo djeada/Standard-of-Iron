@@ -1,4 +1,5 @@
 #include "banner_cloth.h"
+
 #include <cmath>
 
 namespace Render::Geom {
@@ -7,8 +8,9 @@ namespace {
 constexpr float k_pi = 3.14159265358979F;
 }
 
-auto BannerCloth::generate_banner_transform(const QVector3D &center,
-                                            float half_width, float half_height,
+auto BannerCloth::generate_banner_transform(const QVector3D& center,
+                                            float half_width,
+                                            float half_height,
                                             float depth) -> QMatrix4x4 {
   QMatrix4x4 transform;
   transform.translate(center);
@@ -16,10 +18,14 @@ auto BannerCloth::generate_banner_transform(const QVector3D &center,
   return transform;
 }
 
-auto BannerTassels::generate_bottom_tassels(
-    const QVector3D &banner_center, float banner_width, float banner_height,
-    float tassel_length, int tassel_count, float animation_time,
-    const QVector3D &thread_color, const QVector3D &tip_color) -> TasselSet {
+auto BannerTassels::generate_bottom_tassels(const QVector3D& banner_center,
+                                            float banner_width,
+                                            float banner_height,
+                                            float tassel_length,
+                                            int tassel_count,
+                                            float animation_time,
+                                            const QVector3D& thread_color,
+                                            const QVector3D& tip_color) -> TasselSet {
   TasselSet result;
   result.thread_color = thread_color;
   result.tip_color = tip_color;
@@ -46,8 +52,7 @@ auto BannerTassels::generate_bottom_tassels(
     float const sway = std::sin(phase) * 0.04F;
 
     QVector3D thread_top(x, bottom_y, banner_center.z());
-    QVector3D thread_bottom(x + sway, bottom_y - tassel_length,
-                            banner_center.z());
+    QVector3D thread_bottom(x + sway, bottom_y - tassel_length, banner_center.z());
 
     QMatrix4x4 thread_transform;
     QVector3D const thread_center = (thread_top + thread_bottom) * 0.5F;
@@ -64,10 +69,12 @@ auto BannerTassels::generate_bottom_tassels(
   return result;
 }
 
-auto BannerEmbroidery::generate_border_trim(
-    const QVector3D &banner_center, float half_width, float half_height,
-    float border_thickness,
-    const QVector3D &trim_color) -> std::vector<EmbroideryLayer> {
+auto BannerEmbroidery::generate_border_trim(const QVector3D& banner_center,
+                                            float half_width,
+                                            float half_height,
+                                            float border_thickness,
+                                            const QVector3D& trim_color)
+    -> std::vector<EmbroideryLayer> {
   std::vector<EmbroideryLayer> layers;
   layers.reserve(4);
 
@@ -76,11 +83,10 @@ auto BannerEmbroidery::generate_border_trim(
   {
     EmbroideryLayer layer;
     layer.transform.translate(banner_center.x(),
-                              banner_center.y() + half_height -
-                                  border_thickness * 0.5F,
+                              banner_center.y() + half_height - border_thickness * 0.5F,
                               banner_center.z() + z_offset);
-    layer.transform.scale(half_width + border_thickness,
-                          border_thickness * 0.5F, 0.002F);
+    layer.transform.scale(
+        half_width + border_thickness, border_thickness * 0.5F, 0.002F);
     layer.color = trim_color;
     layer.alpha = 1.0F;
     layers.push_back(layer);
@@ -89,11 +95,10 @@ auto BannerEmbroidery::generate_border_trim(
   {
     EmbroideryLayer layer;
     layer.transform.translate(banner_center.x(),
-                              banner_center.y() - half_height +
-                                  border_thickness * 0.5F,
+                              banner_center.y() - half_height + border_thickness * 0.5F,
                               banner_center.z() + z_offset);
-    layer.transform.scale(half_width + border_thickness,
-                          border_thickness * 0.5F, 0.002F);
+    layer.transform.scale(
+        half_width + border_thickness, border_thickness * 0.5F, 0.002F);
     layer.color = trim_color;
     layer.alpha = 1.0F;
     layers.push_back(layer);
@@ -101,11 +106,11 @@ auto BannerEmbroidery::generate_border_trim(
 
   {
     EmbroideryLayer layer;
-    layer.transform.translate(banner_center.x() - half_width +
-                                  border_thickness * 0.5F,
-                              banner_center.y(), banner_center.z() + z_offset);
-    layer.transform.scale(border_thickness * 0.5F,
-                          half_height - border_thickness, 0.002F);
+    layer.transform.translate(banner_center.x() - half_width + border_thickness * 0.5F,
+                              banner_center.y(),
+                              banner_center.z() + z_offset);
+    layer.transform.scale(
+        border_thickness * 0.5F, half_height - border_thickness, 0.002F);
     layer.color = trim_color;
     layer.alpha = 1.0F;
     layers.push_back(layer);
@@ -113,11 +118,11 @@ auto BannerEmbroidery::generate_border_trim(
 
   {
     EmbroideryLayer layer;
-    layer.transform.translate(banner_center.x() + half_width -
-                                  border_thickness * 0.5F,
-                              banner_center.y(), banner_center.z() + z_offset);
-    layer.transform.scale(border_thickness * 0.5F,
-                          half_height - border_thickness, 0.002F);
+    layer.transform.translate(banner_center.x() + half_width - border_thickness * 0.5F,
+                              banner_center.y(),
+                              banner_center.z() + z_offset);
+    layer.transform.scale(
+        border_thickness * 0.5F, half_height - border_thickness, 0.002F);
     layer.color = trim_color;
     layer.alpha = 1.0F;
     layers.push_back(layer);

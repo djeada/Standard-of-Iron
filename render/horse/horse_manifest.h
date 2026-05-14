@@ -5,6 +5,6 @@
 namespace Render::Horse {
 
 [[nodiscard]] auto
-horse_manifest() noexcept -> const Render::Creature::SpeciesManifest &;
+horse_manifest() noexcept -> const Render::Creature::SpeciesManifest&;
 
 }

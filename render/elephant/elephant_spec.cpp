@@ -1,17 +1,18 @@
 #include "elephant_spec.h"
 
-#include "../creature/part_graph.h"
-#include "../creature/skeleton.h"
-#include "../submitter.h"
-#include "elephant_manifest.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <QVector4D>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <span>
+
+#include "../creature/part_graph.h"
+#include "../creature/skeleton.h"
+#include "../submitter.h"
+#include "elephant_manifest.h"
 
 namespace Render::Elephant {
 
@@ -61,8 +62,7 @@ constexpr float k_fight_trunk_lift_wave = 0.06F;
 constexpr float k_fight_trunk_forward_base = 0.03F;
 constexpr float k_fight_trunk_forward_wave = 0.05F;
 
-[[nodiscard]] auto
-translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
+[[nodiscard]] auto translation_matrix(const QVector3D& origin) noexcept -> QMatrix4x4 {
   QMatrix4x4 m;
   m.setToIdentity();
   m.setColumn(3, QVector4D(origin, 1.0F));
@@ -70,12 +70,13 @@ translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
 }
 
 [[nodiscard]] auto
-solve_bent_leg_joint(const QVector3D &shoulder, const QVector3D &foot,
-                     float upper_len, float lower_len,
-                     const QVector3D &bend_hint) noexcept -> QVector3D {
+solve_bent_leg_joint(const QVector3D& shoulder,
+                     const QVector3D& foot,
+                     float upper_len,
+                     float lower_len,
+                     const QVector3D& bend_hint) noexcept -> QVector3D {
   QVector3D shoulder_to_foot = foot - shoulder;
-  float const dist_sq =
-      QVector3D::dotProduct(shoulder_to_foot, shoulder_to_foot);
+  float const dist_sq = QVector3D::dotProduct(shoulder_to_foot, shoulder_to_foot);
   if (dist_sq <= 1.0e-6F) {
     return shoulder + QVector3D(0.0F, -upper_len, 0.0F);
   }
@@ -83,8 +84,7 @@ solve_bent_leg_joint(const QVector3D &shoulder, const QVector3D &foot,
   float const total_len = std::max(upper_len + lower_len, 1.0e-4F);
   float const min_len =
       std::max(std::abs(upper_len - lower_len) + 1.0e-4F, total_len * 0.10F);
-  float const dist =
-      std::clamp(std::sqrt(dist_sq), min_len, total_len - 1.0e-4F);
+  float const dist = std::clamp(std::sqrt(dist_sq), min_len, total_len - 1.0e-4F);
   QVector3D const dir = shoulder_to_foot / std::sqrt(dist_sq);
 
   QVector3D bend_axis = bend_hint - dir * QVector3D::dotProduct(bend_hint, dir);
@@ -98,14 +98,12 @@ solve_bent_leg_joint(const QVector3D &shoulder, const QVector3D &foot,
   bend_axis.normalize();
 
   float const along =
-      (upper_len * upper_len - lower_len * lower_len + dist * dist) /
-      (2.0F * dist);
-  float const height =
-      std::sqrt(std::max(upper_len * upper_len - along * along, 0.0F));
+      (upper_len * upper_len - lower_len * lower_len + dist * dist) / (2.0F * dist);
+  float const height = std::sqrt(std::max(upper_len * upper_len - along * along, 0.0F));
   return shoulder + dir * along + bend_axis * height;
 }
 
-[[nodiscard]] auto darken(const QVector3D &c, float s) noexcept -> QVector3D {
+[[nodiscard]] auto darken(const QVector3D& c, float s) noexcept -> QVector3D {
   return c * s;
 }
 
@@ -114,15 +112,15 @@ struct LegResult {
   QVector3D foot;
 };
 
-[[nodiscard]] auto compute_pose_leg(const Render::GL::ElephantDimensions &d,
-                                    const Render::GL::ElephantGait &g,
-                                    const ElephantPoseMotion &motion,
-                                    float lateral_sign, float forward_bias,
+[[nodiscard]] auto compute_pose_leg(const Render::GL::ElephantDimensions& d,
+                                    const Render::GL::ElephantGait& g,
+                                    const ElephantPoseMotion& motion,
+                                    float lateral_sign,
+                                    float forward_bias,
                                     float phase_offset) noexcept -> LegResult {
   float const leg_phase =
       motion.is_fighting
-          ? std::fmod(motion.anim_time / k_fight_leg_cycle_time + phase_offset,
-                      1.0F)
+          ? std::fmod(motion.anim_time / k_fight_leg_cycle_time + phase_offset, 1.0F)
           : std::fmod(motion.phase + phase_offset, 1.0F);
   bool const is_front = (forward_bias > 0.0F);
 
@@ -189,7 +187,8 @@ struct LegResult {
   }
 
   QVector3D const shoulder(lateral_sign * d.body_width * 0.46F,
-                           -d.body_height * 0.30F, forward_bias + stride);
+                           -d.body_height * 0.30F,
+                           forward_bias + stride);
   QVector3D const foot =
       shoulder + QVector3D(0.0F, -d.leg_length * 0.85F + lift, stride * 0.45F);
 
@@ -198,12 +197,12 @@ struct LegResult {
 
 } // namespace
 
-auto elephant_topology() noexcept -> const SkeletonTopology & {
+auto elephant_topology() noexcept -> const SkeletonTopology& {
   return k_elephant_topology;
 }
 
-void evaluate_elephant_skeleton(const ElephantSpecPose &pose,
-                                BonePalette &out_palette) noexcept {
+void evaluate_elephant_skeleton(const ElephantSpecPose& pose,
+                                BonePalette& out_palette) noexcept {
   out_palette[static_cast<std::size_t>(ElephantBone::Root)] =
       translation_matrix(pose.barrel_center);
 
@@ -248,8 +247,8 @@ void evaluate_elephant_skeleton(const ElephantSpecPose &pose,
 }
 
 void fill_elephant_role_colors(
-    const Render::GL::ElephantVariant &variant,
-    std::array<QVector3D, k_elephant_role_count> &out_roles) noexcept {
+    const Render::GL::ElephantVariant& variant,
+    std::array<QVector3D, k_elephant_role_count>& out_roles) noexcept {
   out_roles.fill(QVector3D(0.0F, 0.0F, 0.0F));
   out_roles[0] = variant.skin_color;
   out_roles[1] = variant.skin_color;
@@ -262,8 +261,9 @@ void fill_elephant_role_colors(
   out_roles[8] = QVector3D(0.05F, 0.04F, 0.04F);
 }
 
-void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
-                             float bob, ElephantSpecPose &out_pose) noexcept {
+void make_elephant_spec_pose(const Render::GL::ElephantDimensions& dims,
+                             float bob,
+                             ElephantSpecPose& out_pose) noexcept {
   QVector3D const center(0.0F, dims.barrel_center_y + bob, 0.0F);
   out_pose.barrel_center = center;
 
@@ -282,14 +282,10 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   out_pose.shoulder_offset_br = QVector3D(-shoulder_dx, shoulder_dy, rear_dz);
 
   float const drop = -dims.leg_length * 0.70F;
-  out_pose.foot_fl =
-      center + out_pose.shoulder_offset_fl + QVector3D(0, drop, 0);
-  out_pose.foot_fr =
-      center + out_pose.shoulder_offset_fr + QVector3D(0, drop, 0);
-  out_pose.foot_bl =
-      center + out_pose.shoulder_offset_bl + QVector3D(0, drop, 0);
-  out_pose.foot_br =
-      center + out_pose.shoulder_offset_br + QVector3D(0, drop, 0);
+  out_pose.foot_fl = center + out_pose.shoulder_offset_fl + QVector3D(0, drop, 0);
+  out_pose.foot_fr = center + out_pose.shoulder_offset_fr + QVector3D(0, drop, 0);
+  out_pose.foot_bl = center + out_pose.shoulder_offset_bl + QVector3D(0, drop, 0);
+  out_pose.foot_br = center + out_pose.shoulder_offset_br + QVector3D(0, drop, 0);
 
   out_pose.shoulder_offset_pose_fl = out_pose.shoulder_offset_fl;
   out_pose.shoulder_offset_pose_fr = out_pose.shoulder_offset_fr;
@@ -308,30 +304,28 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
       shoulder_fl, out_pose.foot_fl, upper_len, lower_len, front_bend_hint);
   out_pose.knee_fr = solve_bent_leg_joint(
       shoulder_fr, out_pose.foot_fr, upper_len, lower_len, front_bend_hint);
-  out_pose.knee_bl = solve_bent_leg_joint(shoulder_bl, out_pose.foot_bl,
-                                          upper_len, lower_len, rear_bend_hint);
-  out_pose.knee_br = solve_bent_leg_joint(shoulder_br, out_pose.foot_br,
-                                          upper_len, lower_len, rear_bend_hint);
+  out_pose.knee_bl = solve_bent_leg_joint(
+      shoulder_bl, out_pose.foot_bl, upper_len, lower_len, rear_bend_hint);
+  out_pose.knee_br = solve_bent_leg_joint(
+      shoulder_br, out_pose.foot_br, upper_len, lower_len, rear_bend_hint);
 
   out_pose.leg_radius = dims.leg_radius * 0.70F;
 }
 
-void make_elephant_spec_pose_animated(
-    const Render::GL::ElephantDimensions &dims,
-    const Render::GL::ElephantGait &gait, const ElephantPoseMotion &motion,
-    ElephantSpecPose &out_pose) noexcept {
+void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions& dims,
+                                      const Render::GL::ElephantGait& gait,
+                                      const ElephantPoseMotion& motion,
+                                      ElephantSpecPose& out_pose) noexcept {
 
   make_elephant_spec_pose(dims, motion.bob, out_pose);
 
   QVector3D const center = out_pose.barrel_center;
 
-  out_pose.body_half =
-      QVector3D(dims.body_width * 0.50F, dims.body_height * 0.45F,
-                dims.body_length * 0.375F);
+  out_pose.body_half = QVector3D(
+      dims.body_width * 0.50F, dims.body_height * 0.45F, dims.body_length * 0.375F);
 
   QVector3D const neck_base_world =
-      center +
-      QVector3D(0.0F, dims.body_height * 0.20F, dims.body_length * 0.45F);
+      center + QVector3D(0.0F, dims.body_height * 0.20F, dims.body_length * 0.45F);
   out_pose.neck_base_offset = neck_base_world - center;
   out_pose.neck_radius = dims.neck_width * 0.85F;
 
@@ -339,9 +333,8 @@ void make_elephant_spec_pose_animated(
       neck_base_world +
       QVector3D(0.0F, dims.neck_length * 0.50F, dims.head_length * 0.60F);
 
-  out_pose.head_half =
-      QVector3D(dims.head_width * 0.425F, dims.head_height * 0.40F,
-                dims.head_length * 0.35F);
+  out_pose.head_half = QVector3D(
+      dims.head_width * 0.425F, dims.head_height * 0.40F, dims.head_length * 0.35F);
 
   out_pose.trunk_end =
       out_pose.head_center +
@@ -370,37 +363,49 @@ void make_elephant_spec_pose_animated(
     default:
       break;
     }
-    float const trunk_swing_x =
-        dims.head_width * k_fight_trunk_side_swing * phase_wave;
+    float const trunk_swing_x = dims.head_width * k_fight_trunk_side_swing * phase_wave;
     float const trunk_raise =
         dims.trunk_length *
-        (k_fight_trunk_lift_base + k_fight_trunk_lift_wave * phase_push +
-         combat_lift);
+        (k_fight_trunk_lift_base + k_fight_trunk_lift_wave * phase_push + combat_lift);
     float const trunk_reach_z =
-        dims.trunk_length *
-        (k_fight_trunk_forward_base + k_fight_trunk_forward_wave * phase_push +
-         combat_reach);
+        dims.trunk_length * (k_fight_trunk_forward_base +
+                             k_fight_trunk_forward_wave * phase_push + combat_reach);
     out_pose.trunk_end += QVector3D(trunk_swing_x, trunk_raise, trunk_reach_z);
   }
 
   float const front_forward = dims.body_length * 0.35F;
   float const rear_forward = -dims.body_length * 0.35F;
 
-  auto apply_leg = [&](float lat, float fwd, float phase_offset,
-                       QVector3D &shoulder_out, QVector3D &foot_out) noexcept {
+  auto apply_leg = [&](float lat,
+                       float fwd,
+                       float phase_offset,
+                       QVector3D& shoulder_out,
+                       QVector3D& foot_out) noexcept {
     auto r = compute_pose_leg(dims, gait, motion, lat, fwd, phase_offset);
     shoulder_out = r.shoulder;
     foot_out = center + r.foot;
   };
 
-  apply_leg(1.0F, front_forward, gait.front_leg_phase,
-            out_pose.shoulder_offset_pose_fl, out_pose.foot_pose_fl);
-  apply_leg(-1.0F, front_forward, gait.front_leg_phase + 0.50F,
-            out_pose.shoulder_offset_pose_fr, out_pose.foot_pose_fr);
-  apply_leg(1.0F, rear_forward, gait.rear_leg_phase,
-            out_pose.shoulder_offset_pose_bl, out_pose.foot_pose_bl);
-  apply_leg(-1.0F, rear_forward, gait.rear_leg_phase + 0.50F,
-            out_pose.shoulder_offset_pose_br, out_pose.foot_pose_br);
+  apply_leg(1.0F,
+            front_forward,
+            gait.front_leg_phase,
+            out_pose.shoulder_offset_pose_fl,
+            out_pose.foot_pose_fl);
+  apply_leg(-1.0F,
+            front_forward,
+            gait.front_leg_phase + 0.50F,
+            out_pose.shoulder_offset_pose_fr,
+            out_pose.foot_pose_fr);
+  apply_leg(1.0F,
+            rear_forward,
+            gait.rear_leg_phase,
+            out_pose.shoulder_offset_pose_bl,
+            out_pose.foot_pose_bl);
+  apply_leg(-1.0F,
+            rear_forward,
+            gait.rear_leg_phase + 0.50F,
+            out_pose.shoulder_offset_pose_br,
+            out_pose.foot_pose_br);
 
   out_pose.foot_fl = out_pose.foot_pose_fl;
   out_pose.foot_fr = out_pose.foot_pose_fr;
@@ -416,24 +421,22 @@ void make_elephant_spec_pose_animated(
   float const bend_scale = motion.is_moving || motion.is_fighting
                                ? 1.0F + std::min(gait.stride_lift * 5.0F, 0.45F)
                                : 1.15F;
-  QVector3D const front_bend_hint(0.0F, 0.0F,
-                                  dims.body_length * 0.11F * bend_scale);
-  QVector3D const rear_bend_hint(0.0F, 0.0F,
-                                 -dims.body_length * 0.09F * bend_scale);
+  QVector3D const front_bend_hint(0.0F, 0.0F, dims.body_length * 0.11F * bend_scale);
+  QVector3D const rear_bend_hint(0.0F, 0.0F, -dims.body_length * 0.09F * bend_scale);
   out_pose.knee_fl = solve_bent_leg_joint(
       shoulder_fl, out_pose.foot_fl, upper_len, lower_len, front_bend_hint);
   out_pose.knee_fr = solve_bent_leg_joint(
       shoulder_fr, out_pose.foot_fr, upper_len, lower_len, front_bend_hint);
-  out_pose.knee_bl = solve_bent_leg_joint(shoulder_bl, out_pose.foot_bl,
-                                          upper_len, lower_len, rear_bend_hint);
-  out_pose.knee_br = solve_bent_leg_joint(shoulder_br, out_pose.foot_br,
-                                          upper_len, lower_len, rear_bend_hint);
+  out_pose.knee_bl = solve_bent_leg_joint(
+      shoulder_bl, out_pose.foot_bl, upper_len, lower_len, rear_bend_hint);
+  out_pose.knee_br = solve_bent_leg_joint(
+      shoulder_br, out_pose.foot_br, upper_len, lower_len, rear_bend_hint);
 
   out_pose.pose_leg_radius = dims.leg_radius * 0.85F;
 
   out_pose.foot_pad_offset_y = -dims.foot_radius * 0.18F;
-  out_pose.foot_pad_half = QVector3D(dims.foot_radius, dims.foot_radius * 0.65F,
-                                     dims.foot_radius * 1.10F);
+  out_pose.foot_pad_half =
+      QVector3D(dims.foot_radius, dims.foot_radius * 0.65F, dims.foot_radius * 1.10F);
 }
 
 } // namespace Render::Elephant
@@ -447,15 +450,14 @@ namespace Render::Elephant {
 namespace {
 
 auto build_baseline_pose() noexcept -> ElephantSpecPose {
-  Render::GL::ElephantDimensions const dims =
-      Render::GL::make_elephant_dimensions(0U);
+  Render::GL::ElephantDimensions const dims = Render::GL::make_elephant_dimensions(0U);
   Render::GL::ElephantGait gait{};
   ElephantSpecPose pose{};
   make_elephant_spec_pose_animated(dims, gait, ElephantPoseMotion{}, pose);
   return pose;
 }
 
-auto baseline_pose() noexcept -> const ElephantSpecPose & {
+auto baseline_pose() noexcept -> const ElephantSpecPose& {
   static const ElephantSpecPose pose = build_baseline_pose();
   return pose;
 }
@@ -471,15 +473,13 @@ auto build_elephant_bind_palette() noexcept
   return out;
 }
 
-auto static_minimal_parts() noexcept
-    -> const Render::Creature::CompiledWholeMeshLod & {
+auto static_minimal_parts() noexcept -> const Render::Creature::CompiledWholeMeshLod& {
   static const auto compiled =
       Render::Creature::compile_whole_mesh_lod(elephant_manifest().lod_minimal);
   return compiled;
 }
 
-auto static_full_parts() noexcept
-    -> const Render::Creature::CompiledWholeMeshLod & {
+auto static_full_parts() noexcept -> const Render::Creature::CompiledWholeMeshLod& {
   static const auto compiled =
       Render::Creature::compile_whole_mesh_lod(elephant_manifest().lod_full);
   return compiled;
@@ -487,8 +487,7 @@ auto static_full_parts() noexcept
 
 } // namespace
 
-auto elephant_creature_spec() noexcept
-    -> const Render::Creature::CreatureSpec & {
+auto elephant_creature_spec() noexcept -> const Render::Creature::CreatureSpec& {
   static const Render::Creature::CreatureSpec spec = [] {
     Render::Creature::CreatureSpec s;
     s.species_name = "elephant";
@@ -500,7 +499,7 @@ auto elephant_creature_spec() noexcept
   return spec;
 }
 
-auto compute_elephant_bone_palette(const ElephantSpecPose &pose,
+auto compute_elephant_bone_palette(const ElephantSpecPose& pose,
                                    std::span<QMatrix4x4> out_bones) noexcept
     -> std::uint32_t {
   if (out_bones.size() < k_elephant_bone_count) {

@@ -29,19 +29,16 @@ void main() {
   float spec_base = max(dot(normal, half_vec), 0.0);
   float wheel_mask = mask_range(abs(v_local_pos.x), 0.66, 0.90, 0.05) *
                      mask_range(abs(v_local_pos.z), 0.24, 0.58, 0.07);
-  float cargo_mask =
-      mask_range(v_local_pos.y, 0.48, 1.02, 0.08) * (1.0 - wheel_mask);
-  float wood_grain =
-      0.5 + 0.5 * sin(v_local_pos.z * 20.0 + v_local_pos.y * 11.0 +
-                      v_local_pos.x * 4.0);
-  float rail_wear =
-      smoothstep(0.40, 0.62, max(abs(v_local_pos.x), abs(v_local_pos.z)));
+  float cargo_mask = mask_range(v_local_pos.y, 0.48, 1.02, 0.08) * (1.0 - wheel_mask);
+  float wood_grain = 0.5 + 0.5 * sin(v_local_pos.z * 20.0 + v_local_pos.y * 11.0 +
+                                     v_local_pos.x * 4.0);
+  float rail_wear = smoothstep(0.40, 0.62, max(abs(v_local_pos.x), abs(v_local_pos.z)));
   vec3 wood_color = v_color * mix(0.86, 1.14, wood_grain);
   vec3 canvas_color = vec3(0.60, 0.54, 0.44);
   vec3 iron_color = vec3(0.36, 0.33, 0.29);
   vec3 material_color = wood_color;
-  material_color = mix(material_color, mix(wood_color, canvas_color, 0.65),
-                       cargo_mask * 0.80);
+  material_color =
+      mix(material_color, mix(wood_color, canvas_color, 0.65), cargo_mask * 0.80);
   material_color = mix(material_color, iron_color, wheel_mask * 0.82);
   material_color = mix(material_color, material_color * 1.08, rail_wear * 0.12);
 

@@ -1,7 +1,9 @@
 #pragma once
-#include "../core/entity.h"
 #include <QVector3D>
+
 #include <memory>
+
+#include "../core/entity.h"
 
 namespace Game::Systems {
 

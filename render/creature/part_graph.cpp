@@ -1,21 +1,21 @@
 #include "part_graph.h"
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cassert>
+
 #include "../geom/parts.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../submitter.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cassert>
 
 namespace Render::Creature {
 
 namespace {
 
 auto resolved_mesh(Render::Creature::PrimitiveShape shape,
-                   Render::GL::Mesh *custom_mesh) noexcept
-    -> Render::GL::Mesh * {
+                   Render::GL::Mesh* custom_mesh) noexcept -> Render::GL::Mesh* {
   if (custom_mesh != nullptr) {
     return custom_mesh;
   }
@@ -41,8 +41,8 @@ auto resolved_mesh(Render::Creature::PrimitiveShape shape,
   }
 }
 
-auto bone_world_offset(const QMatrix4x4 &bone,
-                       const QVector3D &local_offset) noexcept -> QVector3D {
+auto bone_world_offset(const QMatrix4x4& bone,
+                       const QVector3D& local_offset) noexcept -> QVector3D {
   if (local_offset.isNull()) {
     return bone.column(3).toVector3D();
   }
@@ -50,24 +50,25 @@ auto bone_world_offset(const QMatrix4x4 &bone,
   QVector3D const x = bone.column(0).toVector3D();
   QVector3D const y = bone.column(1).toVector3D();
   QVector3D const z = bone.column(2).toVector3D();
-  return origin + x * local_offset.x() + y * local_offset.y() +
-         z * local_offset.z();
+  return origin + x * local_offset.x() + y * local_offset.y() + z * local_offset.z();
 }
 
-auto box_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
-               const QVector3D &half_extents) noexcept -> QMatrix4x4 {
+auto box_model(const QMatrix4x4& bone,
+               const QVector3D& local_offset,
+               const QVector3D& half_extents) noexcept -> QMatrix4x4 {
   QMatrix4x4 m = bone;
   QVector3D const world_origin = bone_world_offset(bone, local_offset);
   m.setColumn(3, QVector4D(world_origin, 1.0F));
 
   QMatrix4x4 scale;
-  scale.scale(half_extents.x() * 2.0F, half_extents.y() * 2.0F,
-              half_extents.z() * 2.0F);
+  scale.scale(
+      half_extents.x() * 2.0F, half_extents.y() * 2.0F, half_extents.z() * 2.0F);
   return m * scale;
 }
 
-auto mesh_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
-                const QVector3D &half_extents) noexcept -> QMatrix4x4 {
+auto mesh_model(const QMatrix4x4& bone,
+                const QVector3D& local_offset,
+                const QVector3D& half_extents) noexcept -> QMatrix4x4 {
   QMatrix4x4 m = bone;
   QVector3D const world_origin = bone_world_offset(bone, local_offset);
   m.setColumn(3, QVector4D(world_origin, 1.0F));
@@ -81,16 +82,18 @@ auto mesh_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
 
 } // namespace
 
-auto submit_part_graph(
-    const SkeletonTopology &topology, const PartGraph &graph,
-    std::span<const QMatrix4x4> palette, CreatureLOD lod,
-    const QMatrix4x4 &world_from_unit, Render::GL::ISubmitter &out,
-    std::span<const QVector3D> role_colors) -> PartSubmissionStats {
+auto submit_part_graph(const SkeletonTopology& topology,
+                       const PartGraph& graph,
+                       std::span<const QMatrix4x4> palette,
+                       CreatureLOD lod,
+                       const QMatrix4x4& world_from_unit,
+                       Render::GL::ISubmitter& out,
+                       std::span<const QVector3D> role_colors) -> PartSubmissionStats {
   PartSubmissionStats stats;
   std::uint8_t const lod_filter = lod_bit(lod);
   std::size_t const bone_count = topology.bones.size();
 
-  for (PrimitiveInstance const &prim : graph.primitives) {
+  for (PrimitiveInstance const& prim : graph.primitives) {
     if ((prim.lod_mask & lod_filter) == 0U) {
       ++stats.skipped_lod;
       continue;
@@ -102,27 +105,25 @@ auto submit_part_graph(
 
     BoneIndex const anchor = prim.params.anchor_bone;
     BoneIndex const tail = prim.params.tail_bone;
-    if (anchor == k_invalid_bone || anchor >= bone_count ||
-        anchor >= palette.size()) {
+    if (anchor == k_invalid_bone || anchor >= bone_count || anchor >= palette.size()) {
       ++stats.skipped_invalid;
       continue;
     }
-    bool const needs_tail = (prim.shape == PrimitiveShape::Cylinder ||
-                             prim.shape == PrimitiveShape::Capsule ||
-                             prim.shape == PrimitiveShape::Cone ||
-                             prim.shape == PrimitiveShape::OrientedCylinder);
-    if (needs_tail && (tail == k_invalid_bone || tail >= bone_count ||
-                       tail >= palette.size())) {
+    bool const needs_tail =
+        (prim.shape == PrimitiveShape::Cylinder ||
+         prim.shape == PrimitiveShape::Capsule || prim.shape == PrimitiveShape::Cone ||
+         prim.shape == PrimitiveShape::OrientedCylinder);
+    if (needs_tail &&
+        (tail == k_invalid_bone || tail >= bone_count || tail >= palette.size())) {
       ++stats.skipped_invalid;
       continue;
     }
 
-    QMatrix4x4 const &anchor_m = palette[anchor];
-    QVector3D const head_world =
-        bone_world_offset(anchor_m, prim.params.head_offset);
+    QMatrix4x4 const& anchor_m = palette[anchor];
+    QVector3D const head_world = bone_world_offset(anchor_m, prim.params.head_offset);
 
     QMatrix4x4 unit_model;
-    Render::GL::Mesh *mesh_ptr = nullptr;
+    Render::GL::Mesh* mesh_ptr = nullptr;
 
     switch (prim.shape) {
     case PrimitiveShape::Sphere:
@@ -132,45 +133,41 @@ auto submit_part_graph(
 
     case PrimitiveShape::Cylinder: {
       mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
-      QMatrix4x4 const &tail_m = palette[tail];
-      QVector3D const tail_world =
-          bone_world_offset(tail_m, prim.params.tail_offset);
-      unit_model = Render::Geom::cylinder_between(head_world, tail_world,
-                                                  prim.params.radius);
+      QMatrix4x4 const& tail_m = palette[tail];
+      QVector3D const tail_world = bone_world_offset(tail_m, prim.params.tail_offset);
+      unit_model =
+          Render::Geom::cylinder_between(head_world, tail_world, prim.params.radius);
       break;
     }
 
     case PrimitiveShape::Capsule: {
       mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
-      QMatrix4x4 const &tail_m = palette[tail];
-      QVector3D const tail_world =
-          bone_world_offset(tail_m, prim.params.tail_offset);
-      unit_model = Render::Geom::capsule_between(head_world, tail_world,
-                                                 prim.params.radius);
+      QMatrix4x4 const& tail_m = palette[tail];
+      QVector3D const tail_world = bone_world_offset(tail_m, prim.params.tail_offset);
+      unit_model =
+          Render::Geom::capsule_between(head_world, tail_world, prim.params.radius);
       break;
     }
 
     case PrimitiveShape::Cone: {
       mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
-      QMatrix4x4 const &tail_m = palette[tail];
-      QVector3D const tail_world =
-          bone_world_offset(tail_m, prim.params.tail_offset);
-      unit_model = Render::Geom::cone_from_to(head_world, tail_world,
-                                              prim.params.radius);
+      QMatrix4x4 const& tail_m = palette[tail];
+      QVector3D const tail_world = bone_world_offset(tail_m, prim.params.tail_offset);
+      unit_model =
+          Render::Geom::cone_from_to(head_world, tail_world, prim.params.radius);
       break;
     }
 
     case PrimitiveShape::Box:
       mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
-      unit_model = box_model(anchor_m, prim.params.head_offset,
-                             prim.params.half_extents);
+      unit_model =
+          box_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
       break;
 
     case PrimitiveShape::OrientedCylinder: {
       mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
-      QMatrix4x4 const &tail_m = palette[tail];
-      QVector3D const tail_world =
-          bone_world_offset(tail_m, prim.params.tail_offset);
+      QMatrix4x4 const& tail_m = palette[tail];
+      QVector3D const tail_world = bone_world_offset(tail_m, prim.params.tail_offset);
       QVector3D const right_ref = anchor_m.column(0).toVector3D();
       float const r_right = prim.params.radius;
       float const r_forward = (prim.params.depth_radius > 0.0F)
@@ -202,8 +199,8 @@ auto submit_part_graph(
         ++stats.skipped_invalid;
         continue;
       }
-      unit_model = mesh_model(anchor_m, prim.params.head_offset,
-                              prim.params.half_extents);
+      unit_model =
+          mesh_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
       break;
 
     case PrimitiveShape::BoneSpanMesh: {
@@ -212,9 +209,8 @@ auto submit_part_graph(
         ++stats.skipped_invalid;
         continue;
       }
-      QMatrix4x4 const &tail_m = palette[tail];
-      QVector3D const tail_world =
-          bone_world_offset(tail_m, prim.params.tail_offset);
+      QMatrix4x4 const& tail_m = palette[tail];
+      QVector3D const tail_world = bone_world_offset(tail_m, prim.params.tail_offset);
       QVector3D const right_ref = anchor_m.column(0).toVector3D();
       float const r_right = prim.params.radius;
       float const r_forward = (prim.params.depth_radius > 0.0F)
@@ -241,27 +237,27 @@ auto submit_part_graph(
         (prim.color_role > 0 && prim.color_role <= role_colors.size())
             ? role_colors[prim.color_role - 1]
             : prim.color;
-    out.part(mesh_ptr, prim.material, model, color, nullptr, prim.alpha,
-             prim.material_id);
+    out.part(
+        mesh_ptr, prim.material, model, color, nullptr, prim.alpha, prim.material_id);
     ++stats.submitted;
   }
   return stats;
 }
 
-auto validate_part_graph(const SkeletonTopology &topology,
-                         const PartGraph &graph) noexcept -> bool {
+auto validate_part_graph(const SkeletonTopology& topology,
+                         const PartGraph& graph) noexcept -> bool {
   std::size_t const n = topology.bones.size();
-  for (PrimitiveInstance const &p : graph.primitives) {
+  for (PrimitiveInstance const& p : graph.primitives) {
     if (p.shape == PrimitiveShape::None) {
       return false;
     }
     if (p.params.anchor_bone == k_invalid_bone || p.params.anchor_bone >= n) {
       return false;
     }
-    bool const needs_tail = (p.shape == PrimitiveShape::Cylinder ||
-                             p.shape == PrimitiveShape::Capsule ||
-                             p.shape == PrimitiveShape::Cone ||
-                             p.shape == PrimitiveShape::OrientedCylinder);
+    bool const needs_tail =
+        (p.shape == PrimitiveShape::Cylinder || p.shape == PrimitiveShape::Capsule ||
+         p.shape == PrimitiveShape::Cone ||
+         p.shape == PrimitiveShape::OrientedCylinder);
     if (needs_tail) {
       if (p.params.tail_bone == k_invalid_bone || p.params.tail_bone >= n) {
         return false;

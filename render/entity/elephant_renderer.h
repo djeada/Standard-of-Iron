@@ -4,6 +4,6 @@
 
 namespace Render::GL {
 
-void register_elephant_renderer(EntityRendererRegistry &registry);
+void register_elephant_renderer(EntityRendererRegistry& registry);
 
 }

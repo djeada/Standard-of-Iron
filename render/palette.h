@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QVector3D>
+
 #include <cstdint>
 
 namespace Render::GL {
@@ -14,7 +15,7 @@ struct HumanoidPalette {
   QVector3D metal;
 };
 
-auto make_humanoid_palette(const QVector3D &team_tint,
+auto make_humanoid_palette(const QVector3D& team_tint,
                            uint32_t seed) -> HumanoidPalette;
 
 } // namespace Render::GL

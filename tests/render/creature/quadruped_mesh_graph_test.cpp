@@ -1,10 +1,9 @@
-#include "render/creature/quadruped/mesh_graph.h"
-#include "render/creature/quadruped/skeleton_factory.h"
-
 #include <gtest/gtest.h>
-
 #include <limits>
 #include <vector>
+
+#include "render/creature/quadruped/mesh_graph.h"
+#include "render/creature/quadruped/skeleton_factory.h"
 
 namespace {
 
@@ -20,9 +19,9 @@ struct Bounds {
                 std::numeric_limits<float>::lowest()};
 };
 
-auto mesh_bounds(const Render::GL::Mesh &mesh) -> Bounds {
+auto mesh_bounds(const Render::GL::Mesh& mesh) -> Bounds {
   Bounds b;
-  for (const auto &v : mesh.get_vertices()) {
+  for (const auto& v : mesh.get_vertices()) {
     QVector3D const p(v.position[0], v.position[1], v.position[2]);
     b.min.setX(std::min(b.min.x(), p.x()));
     b.min.setY(std::min(b.min.y(), p.y()));
@@ -88,8 +87,7 @@ TEST(QuadrupedMeshGraphTest, CompilesAllSupportedNodeKindsToValidPartGraph) {
   nodes.push_back({"body", topology_storage.body, 1U, k_lod_all, 0, barrel});
   nodes.push_back({"head", topology_storage.head, 1U, k_lod_all, 0, head});
   nodes.push_back({"leg", topology_storage.foot_fl, 2U, k_lod_all, 0, leg});
-  nodes.push_back(
-      {"snout", topology_storage.appendage_tip, 3U, k_lod_all, 0, snout});
+  nodes.push_back({"snout", topology_storage.appendage_tip, 3U, k_lod_all, 0, snout});
   nodes.push_back({"ear", topology_storage.head, 4U, k_lod_full, 0, ear});
   nodes.push_back({"tusk", topology_storage.head, 5U, k_lod_full, 0, tusk});
   nodes.push_back({"tail", topology_storage.body, 6U, k_lod_all, 0, tail});
@@ -98,9 +96,8 @@ TEST(QuadrupedMeshGraphTest, CompilesAllSupportedNodeKindsToValidPartGraph) {
 
   ASSERT_EQ(compiled.meshes.size(), nodes.size());
   ASSERT_EQ(compiled.primitives.size(), nodes.size());
-  EXPECT_TRUE(
-      validate_part_graph(topology_storage.topology(), compiled.part_graph()));
-  for (const auto &mesh : compiled.meshes) {
+  EXPECT_TRUE(validate_part_graph(topology_storage.topology(), compiled.part_graph()));
+  for (const auto& mesh : compiled.meshes) {
     ASSERT_NE(mesh, nullptr);
     EXPECT_FALSE(mesh->get_vertices().empty());
     EXPECT_FALSE(mesh->get_indices().empty());

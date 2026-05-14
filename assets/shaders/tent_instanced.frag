@@ -31,8 +31,7 @@ void main() {
   float weft = 0.5 + 0.5 * sin(v_local_pos.z * 26.0 + v_local_pos.x * 3.0);
   float weave = mix(warp, weft, 0.5);
 
-  float seam =
-      smoothstep(0.38, 0.48, abs(fract(v_local_pos.z * 1.8) - 0.5)) * 0.12;
+  float seam = smoothstep(0.38, 0.48, abs(fract(v_local_pos.z * 1.8) - 0.5)) * 0.12;
 
   float top_bleach = smoothstep(0.52, 1.10, v_local_pos.y) * 0.18;
   float base_dirt = (1.0 - smoothstep(0.00, 0.24, v_local_pos.y)) * 0.28;

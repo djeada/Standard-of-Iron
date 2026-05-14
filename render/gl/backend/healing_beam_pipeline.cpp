@@ -1,4 +1,11 @@
 #include "healing_beam_pipeline.h"
+
+#include <QDebug>
+#include <QMatrix4x4>
+
+#include <cmath>
+#include <numbers>
+
 #include "../../../game/systems/healing_beam.h"
 #include "../../../game/systems/healing_beam_system.h"
 #include "../backend.h"
@@ -6,10 +13,6 @@
 #include "../mesh.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
-#include <QDebug>
-#include <QMatrix4x4>
-#include <cmath>
-#include <numbers>
 
 namespace Render::GL::BackendPipelines {
 
@@ -25,7 +28,7 @@ void clear_gl_errors() {
 #endif
 }
 
-auto check_gl_error(const char *operation) -> bool {
+auto check_gl_error(const char* operation) -> bool {
 #ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
@@ -127,16 +130,15 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
   constexpr int segments_around = 8;
   constexpr float pi = std::numbers::pi_v<float>;
 
-  vertices.reserve(
-      static_cast<size_t>((segments_along + 1) * (segments_around + 1)));
+  vertices.reserve(static_cast<size_t>((segments_along + 1) * (segments_around + 1)));
   indices.reserve(static_cast<size_t>(segments_along * segments_around * 6));
 
   for (int i = 0; i <= segments_along; ++i) {
     float t = static_cast<float>(i) / static_cast<float>(segments_along);
 
     for (int j = 0; j <= segments_around; ++j) {
-      float angle = static_cast<float>(j) /
-                    static_cast<float>(segments_around) * 2.0F * pi;
+      float angle =
+          static_cast<float>(j) / static_cast<float>(segments_around) * 2.0F * pi;
 
       float x = std::cos(angle);
       float y = std::sin(angle);
@@ -144,16 +146,14 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
       Vertex v;
       v.position = {x, y, t};
       v.normal = {x, y, 0.0F};
-      v.tex_coord = {
-          static_cast<float>(j) / static_cast<float>(segments_around), t};
+      v.tex_coord = {static_cast<float>(j) / static_cast<float>(segments_around), t};
       vertices.push_back(v);
     }
   }
 
   for (int i = 0; i < segments_along; ++i) {
     for (int j = 0; j < segments_around; ++j) {
-      unsigned int curr =
-          static_cast<unsigned int>(i * (segments_around + 1) + j);
+      unsigned int curr = static_cast<unsigned int>(i * (segments_around + 1) + j);
       unsigned int next = curr + static_cast<unsigned int>(segments_around + 1);
 
       indices.push_back(curr);
@@ -182,7 +182,8 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
   glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
   glBufferData(GL_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
-               vertices.data(), GL_STATIC_DRAW);
+               vertices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("vertex buffer")) {
     shutdown_geometry();
     return false;
@@ -192,7 +193,8 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(), GL_STATIC_DRAW);
+               indices.data(),
+               GL_STATIC_DRAW);
   if (!check_gl_error("index buffer")) {
     shutdown_geometry();
     return false;
@@ -201,19 +203,28 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
   m_index_count = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, position)));
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, position)));
 
   glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal, ComponentCount::vec3, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, normal)));
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, normal)));
 
   glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord, ComponentCount::vec2, GL_FLOAT,
-                        GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void *>(offsetof(Vertex, tex_coord)));
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        ComponentCount::vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
 
   glBindVertexArray(0);
 
@@ -225,9 +236,9 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
   return true;
 }
 
-void HealingBeamPipeline::render(
-    const Game::Systems::HealingBeamSystem *beam_system, const Camera &cam,
-    float animation_time) {
+void HealingBeamPipeline::render(const Game::Systems::HealingBeamSystem* beam_system,
+                                 const Camera& cam,
+                                 float animation_time) {
   if (!is_initialized()) {
     return;
   }
@@ -257,7 +268,7 @@ void HealingBeamPipeline::render(
   m_beam_shader->use();
   glBindVertexArray(m_vao);
 
-  for (const auto &beam : beam_system->get_beams()) {
+  for (const auto& beam : beam_system->get_beams()) {
     if (beam && beam->is_active()) {
       render_beam(*beam, cam, animation_time);
     }
@@ -266,8 +277,7 @@ void HealingBeamPipeline::render(
   glBindVertexArray(0);
 
   glDepthMask(depth_mask_enabled);
-  glBlendFunc(static_cast<GLenum>(prev_blend_src),
-              static_cast<GLenum>(prev_blend_dst));
+  glBlendFunc(static_cast<GLenum>(prev_blend_src), static_cast<GLenum>(prev_blend_dst));
   if (!blend_enabled) {
     glDisable(GL_BLEND);
   }
@@ -281,8 +291,9 @@ void HealingBeamPipeline::render(
   }
 }
 
-void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
-                                      const Camera &cam, float animation_time) {
+void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam& beam,
+                                      const Camera& cam,
+                                      float animation_time) {
   QMatrix4x4 mvp = cam.get_projection_matrix() * cam.get_view_matrix();
 
   float progress = std::clamp(beam.get_progress(), 0.0F, 1.0F);
@@ -304,12 +315,14 @@ void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 }
 
-void HealingBeamPipeline::render_single_beam(const QVector3D &start,
-                                             const QVector3D &end,
-                                             const QVector3D &color,
-                                             float progress, float beam_width,
-                                             float intensity, float time,
-                                             const QMatrix4x4 &view_proj) {
+void HealingBeamPipeline::render_single_beam(const QVector3D& start,
+                                             const QVector3D& end,
+                                             const QVector3D& color,
+                                             float progress,
+                                             float beam_width,
+                                             float intensity,
+                                             float time,
+                                             const QMatrix4x4& view_proj) {
   if (!is_initialized()) {
     return;
   }
@@ -332,14 +345,12 @@ void HealingBeamPipeline::render_single_beam(const QVector3D &start,
 
   m_beam_shader->set_uniform(m_uniforms.mvp, view_proj);
   m_beam_shader->set_uniform(m_uniforms.time, time);
-  m_beam_shader->set_uniform(m_uniforms.progress,
-                             std::clamp(progress, 0.0F, 1.0F));
+  m_beam_shader->set_uniform(m_uniforms.progress, std::clamp(progress, 0.0F, 1.0F));
   m_beam_shader->set_uniform(m_uniforms.start_pos, start);
   m_beam_shader->set_uniform(m_uniforms.end_pos, end);
   m_beam_shader->set_uniform(m_uniforms.beam_width, beam_width);
   m_beam_shader->set_uniform(m_uniforms.heal_color, color);
-  m_beam_shader->set_uniform(m_uniforms.alpha,
-                             std::clamp(intensity, 0.0F, 1.0F));
+  m_beam_shader->set_uniform(m_uniforms.alpha, std::clamp(intensity, 0.0F, 1.0F));
 
   glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
 

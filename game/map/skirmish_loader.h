@@ -1,13 +1,15 @@
 #pragma once
 
-#include "map_definition.h"
 #include <QString>
 #include <QVariantList>
 #include <QVector3D>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <utility>
+
+#include "map_definition.h"
 
 namespace Engine::Core {
 class World;
@@ -54,27 +56,25 @@ public:
   using OwnersUpdatedCallback = std::function<void()>;
   using VisibilityMaskReadyCallback = std::function<void()>;
 
-  SkirmishLoader(Engine::Core::World &world, Render::GL::Renderer &renderer,
-                 Render::GL::Camera &camera);
+  SkirmishLoader(Engine::Core::World& world,
+                 Render::GL::Renderer& renderer,
+                 Render::GL::Camera& camera);
 
-  void set_ground_renderer(Render::GL::GroundRenderer *ground) {
-    m_ground = ground;
-  }
-  void set_terrain_renderer(Render::GL::TerrainRenderer *terrain) {
+  void set_ground_renderer(Render::GL::GroundRenderer* ground) { m_ground = ground; }
+  void set_terrain_renderer(Render::GL::TerrainRenderer* terrain) {
     m_terrain = terrain;
   }
-  void set_scatter_manager(Render::GL::TerrainScatterManager *scatter) {
+  void set_scatter_manager(Render::GL::TerrainScatterManager* scatter) {
     m_scatter = scatter;
   }
-  void set_feature_manager(Render::GL::TerrainFeatureManager *features) {
+  void set_feature_manager(Render::GL::TerrainFeatureManager* features) {
     m_features = features;
   }
-  void set_fog_renderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
-  void
-  set_boundary_fog_renderer(Render::GL::MapBoundaryFogRenderer *boundary_fog) {
+  void set_fog_renderer(Render::GL::FogRenderer* fog) { m_fog = fog; }
+  void set_boundary_fog_renderer(Render::GL::MapBoundaryFogRenderer* boundary_fog) {
     m_boundary_fog = boundary_fog;
   }
-  void set_rain_renderer(Render::GL::RainRenderer *rain) { m_rain = rain; }
+  void set_rain_renderer(Render::GL::RainRenderer* rain) { m_rain = rain; }
 
   void set_on_owners_updated(OwnersUpdatedCallback callback) {
     m_on_owners_updated = std::move(callback);
@@ -84,22 +84,24 @@ public:
     m_on_visibility_mask_ready = std::move(callback);
   }
 
-  auto start(const QString &map_path, const QVariantList &player_configs,
-             int selected_player_id, bool allow_default_player_barracks,
-             int &out_selected_player_id) -> SkirmishLoadResult;
+  auto start(const QString& map_path,
+             const QVariantList& player_configs,
+             int selected_player_id,
+             bool allow_default_player_barracks,
+             int& out_selected_player_id) -> SkirmishLoadResult;
 
 private:
   void reset_game_state();
-  Engine::Core::World &m_world;
-  Render::GL::Renderer &m_renderer;
-  Render::GL::Camera &m_camera;
-  Render::GL::GroundRenderer *m_ground = nullptr;
-  Render::GL::TerrainRenderer *m_terrain = nullptr;
-  Render::GL::TerrainFeatureManager *m_features = nullptr;
-  Render::GL::TerrainScatterManager *m_scatter = nullptr;
-  Render::GL::FogRenderer *m_fog = nullptr;
-  Render::GL::MapBoundaryFogRenderer *m_boundary_fog = nullptr;
-  Render::GL::RainRenderer *m_rain = nullptr;
+  Engine::Core::World& m_world;
+  Render::GL::Renderer& m_renderer;
+  Render::GL::Camera& m_camera;
+  Render::GL::GroundRenderer* m_ground = nullptr;
+  Render::GL::TerrainRenderer* m_terrain = nullptr;
+  Render::GL::TerrainFeatureManager* m_features = nullptr;
+  Render::GL::TerrainScatterManager* m_scatter = nullptr;
+  Render::GL::FogRenderer* m_fog = nullptr;
+  Render::GL::MapBoundaryFogRenderer* m_boundary_fog = nullptr;
+  Render::GL::RainRenderer* m_rain = nullptr;
   OwnersUpdatedCallback m_on_owners_updated;
   VisibilityMaskReadyCallback m_on_visibility_mask_ready;
 };

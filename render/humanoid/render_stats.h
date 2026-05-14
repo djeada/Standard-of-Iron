@@ -26,7 +26,7 @@ struct HumanoidRenderStats {
   }
 };
 
-auto get_humanoid_render_stats() -> const HumanoidRenderStats &;
+auto get_humanoid_render_stats() -> const HumanoidRenderStats&;
 
 void reset_humanoid_render_stats();
 

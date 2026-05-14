@@ -1,31 +1,31 @@
 #include "hit_feedback_processor.h"
+
+#include <cmath>
+
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../camera_visibility_service.h"
 #include "combat_types.h"
 
-#include <cmath>
-
 namespace Game::Systems::Combat {
 
-void process_hit_feedback(Engine::Core::World *world, float delta_time) {
+void process_hit_feedback(Engine::Core::World* world, float delta_time) {
   auto units = world->get_entities_with<Engine::Core::HitFeedbackComponent>();
-  auto &visibility = CameraVisibilityService::instance();
+  auto& visibility = CameraVisibilityService::instance();
 
-  for (auto *unit : units) {
+  for (auto* unit : units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto *feedback = unit->get_component<Engine::Core::HitFeedbackComponent>();
+    auto* feedback = unit->get_component<Engine::Core::HitFeedbackComponent>();
     if (feedback == nullptr || !feedback->is_reacting) {
       continue;
     }
 
     feedback->reaction_time += delta_time;
-    float const progress =
-        feedback->reaction_time /
-        Engine::Core::HitFeedbackComponent::k_reaction_duration;
+    float const progress = feedback->reaction_time /
+                           Engine::Core::HitFeedbackComponent::k_reaction_duration;
 
     if (progress >= 1.0F) {
       feedback->is_reacting = false;
@@ -34,11 +34,10 @@ void process_hit_feedback(Engine::Core::World *world, float delta_time) {
       feedback->knockback_x = 0.0F;
       feedback->knockback_z = 0.0F;
     } else {
-      auto *transform = unit->get_component<Engine::Core::TransformComponent>();
+      auto* transform = unit->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr) {
         if (!visibility.should_process_detailed_effects(
-                transform->position.x, transform->position.y,
-                transform->position.z)) {
+                transform->position.x, transform->position.y, transform->position.z)) {
           continue;
         }
 
@@ -46,11 +45,10 @@ void process_hit_feedback(Engine::Core::World *world, float delta_time) {
         float const dx = feedback->knockback_x * fade * delta_time;
         float const dz = feedback->knockback_z * fade * delta_time;
         float const displacement = std::sqrt(dx * dx + dz * dz);
-        float const scale =
-            (displacement > Constants::k_max_displacement_per_frame &&
-             displacement > 0.0001F)
-                ? Constants::k_max_displacement_per_frame / displacement
-                : 1.0F;
+        float const scale = (displacement > Constants::k_max_displacement_per_frame &&
+                             displacement > 0.0001F)
+                                ? Constants::k_max_displacement_per_frame / displacement
+                                : 1.0F;
         transform->position.x += dx * scale;
         transform->position.z += dz * scale;
       }

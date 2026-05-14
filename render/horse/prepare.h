@@ -1,13 +1,14 @@
 #pragma once
 
-#include "../creature/pipeline/creature_render_graph.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "horse_spec.h"
-
 #include <QMatrix4x4>
+
 #include <functional>
 #include <optional>
 #include <vector>
+
+#include "../creature/pipeline/creature_render_graph.h"
+#include "../creature/pipeline/unit_visual_spec.h"
+#include "horse_spec.h"
 
 namespace Render::GL {
 struct DrawContext;
@@ -27,18 +28,19 @@ namespace Render::Horse {
 using HorsePreparation = Render::Creature::Pipeline::CreaturePreparationResult;
 
 [[nodiscard]] auto grounded_horse_world(
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::HorseMotionSample &motion) noexcept -> QMatrix4x4;
+    const Render::GL::DrawContext& ctx,
+    const Render::GL::HorseMotionSample& motion) noexcept -> QMatrix4x4;
 
-void prepare_horse_render(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
-    const Render::GL::HumanoidAnimationContext &rider_ctx,
-    Render::GL::HorseProfile &profile,
-    const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::HorseMotionSample *shared_motion,
-    Render::Creature::CreatureLOD lod, HorsePreparation &out,
-    std::optional<std::uint32_t> request_seed = std::nullopt,
-    const QMatrix4x4 *shared_grounded_world = nullptr);
+void prepare_horse_render(const Render::GL::HorseRendererBase& owner,
+                          const Render::GL::DrawContext& ctx,
+                          const Render::GL::AnimationInputs& anim,
+                          const Render::GL::HumanoidAnimationContext& rider_ctx,
+                          Render::GL::HorseProfile& profile,
+                          const Render::GL::MountedAttachmentFrame* shared_mount,
+                          const Render::GL::HorseMotionSample* shared_motion,
+                          Render::Creature::CreatureLOD lod,
+                          HorsePreparation& out,
+                          std::optional<std::uint32_t> request_seed = std::nullopt,
+                          const QMatrix4x4* shared_grounded_world = nullptr);
 
 } // namespace Render::Horse

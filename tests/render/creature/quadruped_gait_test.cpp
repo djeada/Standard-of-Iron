@@ -1,8 +1,7 @@
-#include "render/creature/quadruped/gait.h"
-
+#include <cmath>
 #include <gtest/gtest.h>
 
-#include <cmath>
+#include "render/creature/quadruped/gait.h"
 
 namespace {
 
@@ -20,19 +19,13 @@ TEST(QuadrupedGaitTest, DefaultFootPositionsAreMirroredAcrossBodyCenterline) {
   dims.body_length = 3.0F;
   QVector3D const barrel_center(0.1F, 0.8F, -0.2F);
 
-  QVector3D const fl =
-      default_foot_position(dims, LegId::FrontLeft, barrel_center);
-  QVector3D const fr =
-      default_foot_position(dims, LegId::FrontRight, barrel_center);
-  QVector3D const bl =
-      default_foot_position(dims, LegId::BackLeft, barrel_center);
-  QVector3D const br =
-      default_foot_position(dims, LegId::BackRight, barrel_center);
+  QVector3D const fl = default_foot_position(dims, LegId::FrontLeft, barrel_center);
+  QVector3D const fr = default_foot_position(dims, LegId::FrontRight, barrel_center);
+  QVector3D const bl = default_foot_position(dims, LegId::BackLeft, barrel_center);
+  QVector3D const br = default_foot_position(dims, LegId::BackRight, barrel_center);
 
-  EXPECT_NEAR(fl.x() - barrel_center.x(), -(fr.x() - barrel_center.x()),
-              1.0e-6F);
-  EXPECT_NEAR(bl.x() - barrel_center.x(), -(br.x() - barrel_center.x()),
-              1.0e-6F);
+  EXPECT_NEAR(fl.x() - barrel_center.x(), -(fr.x() - barrel_center.x()), 1.0e-6F);
+  EXPECT_NEAR(bl.x() - barrel_center.x(), -(br.x() - barrel_center.x()), 1.0e-6F);
   EXPECT_GT(fl.z(), bl.z());
   EXPECT_GT(fr.z(), br.z());
 }
@@ -58,8 +51,7 @@ TEST(QuadrupedGaitTest, EvaluateCycleMotionRaisesLocomotionAndSwayWhenMoving) {
   EXPECT_GT(moving.locomotion_intensity, idle.locomotion_intensity);
   EXPECT_GT(std::abs(moving.body_sway), std::abs(idle.body_sway));
   EXPECT_NEAR(idle.barrel_center.y(), dims.barrel_center_y + idle.bob, 1.0e-6F);
-  EXPECT_NEAR(moving.barrel_center.y(), dims.barrel_center_y + moving.bob,
-              1.0e-6F);
+  EXPECT_NEAR(moving.barrel_center.y(), dims.barrel_center_y + moving.bob, 1.0e-6F);
 }
 
 TEST(QuadrupedGaitTest, SwingTargetMovesFeetForwardAlongLegSide) {
@@ -69,15 +61,12 @@ TEST(QuadrupedGaitTest, SwingTargetMovesFeetForwardAlongLegSide) {
   dims.body_length = 4.0F;
   QVector3D const barrel_center(0.0F, 1.0F, 0.0F);
 
-  QVector3D const front =
-      swing_target(dims, LegId::FrontLeft, barrel_center, 0.5F);
-  QVector3D const back =
-      swing_target(dims, LegId::BackRight, barrel_center, 0.5F);
+  QVector3D const front = swing_target(dims, LegId::FrontLeft, barrel_center, 0.5F);
+  QVector3D const back = swing_target(dims, LegId::BackRight, barrel_center, 0.5F);
 
   EXPECT_GT(front.z(),
             default_foot_position(dims, LegId::FrontLeft, barrel_center).z());
-  EXPECT_LT(back.z(),
-            default_foot_position(dims, LegId::BackRight, barrel_center).z());
+  EXPECT_LT(back.z(), default_foot_position(dims, LegId::BackRight, barrel_center).z());
 }
 
 } // namespace

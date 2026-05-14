@@ -1,20 +1,25 @@
 
 
-#include "render/creature/skeleton.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <array>
 #include <gtest/gtest.h>
 #include <span>
+
+#include "render/creature/skeleton.h"
 
 namespace {
 
 using namespace Render::Creature;
 
 constexpr std::array<BoneDef, 6> k_toy_bones = {
-    BoneDef{"root", k_invalid_bone}, BoneDef{"torso", 0}, BoneDef{"head", 1},
-    BoneDef{"shoulder", 1},          BoneDef{"arm", 3},   BoneDef{"hand", 4},
+    BoneDef{"root", k_invalid_bone},
+    BoneDef{"torso", 0},
+    BoneDef{"head", 1},
+    BoneDef{"shoulder", 1},
+    BoneDef{"arm", 3},
+    BoneDef{"hand", 4},
 };
 
 constexpr std::array<SocketDef, 3> k_toy_sockets = {
@@ -38,8 +43,8 @@ struct ToySample {
   QVector3D hand{0.7F, 1.45F, 0.0F};
 };
 
-BoneResolution toy_provider(void *user, BoneIndex bone) noexcept {
-  auto const *s = static_cast<const ToySample *>(user);
+BoneResolution toy_provider(void* user, BoneIndex bone) noexcept {
+  auto const* s = static_cast<const ToySample*>(user);
   BoneResolution r;
   switch (bone) {
   case 0:
@@ -74,7 +79,7 @@ BoneResolution toy_provider(void *user, BoneIndex bone) noexcept {
   return r;
 }
 
-bool is_orthonormal(const QMatrix4x4 &m, float eps = 1e-4F) {
+bool is_orthonormal(const QMatrix4x4& m, float eps = 1e-4F) {
   QVector3D const x = m.column(0).toVector3D();
   QVector3D const y = m.column(1).toVector3D();
   QVector3D const z = m.column(2).toVector3D();
@@ -153,7 +158,9 @@ TEST(CreatureTopologyTest, FindSocketByName) {
 TEST(CreatureEvaluatorTest, EveryBoneBasisIsOrthonormal) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
   for (std::size_t i = 0; i < palette.size(); ++i) {
@@ -164,13 +171,13 @@ TEST(CreatureEvaluatorTest, EveryBoneBasisIsOrthonormal) {
 TEST(CreatureEvaluatorTest, BoneOriginsMatchProvidedHeads) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
-  EXPECT_LT((palette[0].column(3).toVector3D() - sample.pelvis).length(),
-            1e-5F);
-  EXPECT_LT((palette[1].column(3).toVector3D() - sample.pelvis).length(),
-            1e-5F);
+  EXPECT_LT((palette[0].column(3).toVector3D() - sample.pelvis).length(), 1e-5F);
+  EXPECT_LT((palette[1].column(3).toVector3D() - sample.pelvis).length(), 1e-5F);
   EXPECT_LT((palette[2].column(3).toVector3D() - sample.head).length(), 1e-5F);
   EXPECT_LT((palette[5].column(3).toVector3D() - sample.hand).length(), 1e-5F);
 }
@@ -178,7 +185,9 @@ TEST(CreatureEvaluatorTest, BoneOriginsMatchProvidedHeads) {
 TEST(CreatureEvaluatorTest, TorsoLongAxisPointsUpForUprightSample) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
   QVector3D const y = palette[1].column(1).toVector3D();
@@ -188,7 +197,9 @@ TEST(CreatureEvaluatorTest, TorsoLongAxisPointsUpForUprightSample) {
 TEST(CreatureEvaluatorTest, ArmLongAxisPointsAlongShoulderToHand) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
   QVector3D const expected = (sample.hand - sample.shoulder).normalized();
@@ -201,7 +212,9 @@ TEST(CreatureEvaluatorTest, DegenerateBoneInheritsParentBasis) {
   ToySample sample;
   sample.chest = sample.pelvis;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
 
@@ -213,7 +226,9 @@ TEST(CreatureEvaluatorTest, DegenerateBoneInheritsParentBasis) {
 TEST(CreatureEvaluatorTest, ZeroRightAxisFallsBackToWorldX) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(0.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
 
@@ -224,7 +239,9 @@ TEST(CreatureEvaluatorTest, ZeroRightAxisFallsBackToWorldX) {
 TEST(CreatureEvaluatorTest, ParentTransformPropagatesThroughChain) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
 
@@ -238,21 +255,24 @@ TEST(CreatureEvaluatorTest, ParentTransformPropagatesThroughChain) {
 TEST(CreatureSocketTest, HeadSocketAppliesLocalOffsetInBoneAxes) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
   auto const t = toy_topology();
   std::span<const QMatrix4x4> p(palette.data(), palette.size());
   QVector3D const crown = socket_position(t, p, 0);
 
-  EXPECT_LT((crown - (sample.head + QVector3D(0.0F, 0.1F, 0.0F))).length(),
-            1e-5F);
+  EXPECT_LT((crown - (sample.head + QVector3D(0.0F, 0.1F, 0.0F))).length(), 1e-5F);
 }
 
 TEST(CreatureSocketTest, HandGripMatchesHandPosition) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
   auto const t = toy_topology();
@@ -264,7 +284,9 @@ TEST(CreatureSocketTest, HandGripMatchesHandPosition) {
 TEST(CreatureSocketTest, AttachmentFrameIsOrthonormal) {
   ToySample sample;
   std::array<QMatrix4x4, 6> palette;
-  evaluate_skeleton(toy_topology(), toy_provider, &sample,
+  evaluate_skeleton(toy_topology(),
+                    toy_provider,
+                    &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
   auto const t = toy_topology();
@@ -287,17 +309,17 @@ TEST(CreatureSocketTest, OutOfRangeSocketReturnsIdentity) {
 }
 
 TEST(CreaturePrimitiveTest, MakeBoneBasisIsOrthonormal) {
-  QMatrix4x4 const m =
-      make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F),
-                      QVector3D(1.0F, 0.0F, 0.0F));
+  QMatrix4x4 const m = make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F),
+                                       QVector3D(0.0F, 1.0F, 0.0F),
+                                       QVector3D(1.0F, 0.0F, 0.0F));
   EXPECT_TRUE(is_orthonormal(m));
 }
 
 TEST(CreaturePrimitiveTest, MakeBoneBasisHandlesColinearRightHint) {
 
-  QMatrix4x4 const m =
-      make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F),
-                      QVector3D(0.0F, 1.0F, 0.0F));
+  QMatrix4x4 const m = make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F),
+                                       QVector3D(0.0F, 1.0F, 0.0F),
+                                       QVector3D(0.0F, 1.0F, 0.0F));
   EXPECT_TRUE(is_orthonormal(m));
 }
 

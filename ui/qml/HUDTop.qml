@@ -13,7 +13,7 @@ Item {
     readonly property bool ultra_compact: width < 560
     readonly property var hs: StyleGuide.historical
 
-    signal pause_toggled()
+    signal pause_toggled
     signal speed_changed(real speed)
 
     Rectangle {
@@ -41,9 +41,7 @@ Item {
                     position: 1
                     color: hs.parchmentDark
                 }
-
             }
-
         }
 
         Rectangle {
@@ -67,9 +65,7 @@ Item {
                     position: 1
                     color: "transparent"
                 }
-
             }
-
         }
 
         RowLayout {
@@ -98,8 +94,10 @@ Item {
 
                     background: Item {
                         Rectangle {
-                            x: 1; y: 2
-                            width: parent.width; height: parent.height
+                            x: 1
+                            y: 2
+                            width: parent.width
+                            height: parent.height
                             radius: 7
                             color: "#000000"
                             opacity: pauseBtn.pressed ? 0.0 : 0.22
@@ -114,20 +112,33 @@ Item {
                             border.width: 1
 
                             Rectangle {
-                                anchors.fill: parent; anchors.margins: 1
+                                anchors.fill: parent
+                                anchors.margins: 1
                                 radius: Math.max(1, parent.radius - 1)
                                 opacity: pauseBtn.pressed ? 0.0 : 0.12
                                 gradient: Gradient {
-                                    GradientStop { position: 0.0; color: "#FFFFFF" }
-                                    GradientStop { position: 0.45; color: "#FFFFFF" }
-                                    GradientStop { position: 1.0; color: "#000000" }
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#FFFFFF"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#FFFFFF"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#000000"
+                                    }
                                 }
                             }
 
                             Rectangle {
-                                anchors.top: parent.top; anchors.topMargin: 1
-                                anchors.left: parent.left; anchors.leftMargin: 6
-                                anchors.right: parent.right; anchors.rightMargin: 6
+                                anchors.top: parent.top
+                                anchors.topMargin: 1
+                                anchors.left: parent.left
+                                anchors.leftMargin: 6
+                                anchors.right: parent.right
+                                anchors.rightMargin: 6
                                 height: 1
                                 color: StyleGuide.palette.accentBright
                                 opacity: pauseBtn.pressed ? 0.0 : 0.50
@@ -143,7 +154,6 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                         topPadding: pauseBtn.pressed ? 1 : 0
                     }
-
                 }
 
                 Rectangle {
@@ -167,9 +177,7 @@ Item {
                             position: 1
                             color: "transparent"
                         }
-
                     }
-
                 }
 
                 RowLayout {
@@ -214,8 +222,10 @@ Item {
 
                                 background: Item {
                                     Rectangle {
-                                        x: 1; y: 2
-                                        width: parent.width; height: parent.height
+                                        x: 1
+                                        y: 2
+                                        width: parent.width
+                                        height: parent.height
                                         radius: 7
                                         color: "#000000"
                                         opacity: parent.parent.pressed ? 0.0 : 0.20
@@ -229,20 +239,33 @@ Item {
                                         border.width: 1
 
                                         Rectangle {
-                                            anchors.fill: parent; anchors.margins: 1
+                                            anchors.fill: parent
+                                            anchors.margins: 1
                                             radius: Math.max(1, parent.radius - 1)
                                             opacity: parent.parent.parent.pressed ? 0.0 : 0.11
                                             gradient: Gradient {
-                                                GradientStop { position: 0.0; color: "#FFFFFF" }
-                                                GradientStop { position: 0.45; color: "#FFFFFF" }
-                                                GradientStop { position: 1.0; color: "#000000" }
+                                                GradientStop {
+                                                    position: 0.0
+                                                    color: "#FFFFFF"
+                                                }
+                                                GradientStop {
+                                                    position: 0.45
+                                                    color: "#FFFFFF"
+                                                }
+                                                GradientStop {
+                                                    position: 1.0
+                                                    color: "#000000"
+                                                }
                                             }
                                         }
 
                                         Rectangle {
-                                            anchors.top: parent.top; anchors.topMargin: 1
-                                            anchors.left: parent.left; anchors.leftMargin: 5
-                                            anchors.right: parent.right; anchors.rightMargin: 5
+                                            anchors.top: parent.top
+                                            anchors.topMargin: 1
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: 5
+                                            anchors.right: parent.right
+                                            anchors.rightMargin: 5
                                             height: 1
                                             color: StyleGuide.palette.accentBright
                                             opacity: parent.parent.parent.pressed ? 0.0 : 0.45
@@ -259,11 +282,8 @@ Item {
                                     verticalAlignment: Text.AlignVCenter
                                     topPadding: parent.pressed ? 1 : 0
                                 }
-
                             }
-
                         }
-
                     }
 
                     StyledComboBox {
@@ -275,12 +295,11 @@ Item {
                         currentIndex: topRoot.current_speed === 0.5 ? 0 : topRoot.current_speed === 1 ? 1 : 2
                         enabled: !topRoot.game_is_paused
                         text_pixel_size: 13
-                        onActivated: function(i) {
+                        onActivated: function (i) {
                             var v = i === 0 ? 0.5 : (i === 1 ? 1 : 2);
                             topRoot.speed_changed(v);
                         }
                     }
-
                 }
 
                 Rectangle {
@@ -304,9 +323,7 @@ Item {
                             position: 1
                             color: "transparent"
                         }
-
                     }
-
                 }
 
                 RowLayout {
@@ -334,13 +351,14 @@ Item {
                         onToggled: {
                             if (typeof game !== 'undefined' && game.camera_follow_selection)
                                 game.camera_follow_selection(checked);
-
                         }
 
                         background: Item {
                             Rectangle {
-                                x: 1; y: 2
-                                width: parent.width; height: parent.height
+                                x: 1
+                                y: 2
+                                width: parent.width
+                                height: parent.height
                                 radius: 7
                                 color: "#000000"
                                 opacity: followBtn.pressed ? 0.0 : 0.20
@@ -354,20 +372,33 @@ Item {
                                 border.width: 1
 
                                 Rectangle {
-                                    anchors.fill: parent; anchors.margins: 1
+                                    anchors.fill: parent
+                                    anchors.margins: 1
                                     radius: Math.max(1, parent.radius - 1)
                                     opacity: followBtn.pressed ? 0.0 : 0.11
                                     gradient: Gradient {
-                                        GradientStop { position: 0.0; color: "#FFFFFF" }
-                                        GradientStop { position: 0.45; color: "#FFFFFF" }
-                                        GradientStop { position: 1.0; color: "#000000" }
+                                        GradientStop {
+                                            position: 0.0
+                                            color: "#FFFFFF"
+                                        }
+                                        GradientStop {
+                                            position: 0.45
+                                            color: "#FFFFFF"
+                                        }
+                                        GradientStop {
+                                            position: 1.0
+                                            color: "#000000"
+                                        }
                                     }
                                 }
 
                                 Rectangle {
-                                    anchors.top: parent.top; anchors.topMargin: 1
-                                    anchors.left: parent.left; anchors.leftMargin: 5
-                                    anchors.right: parent.right; anchors.rightMargin: 5
+                                    anchors.top: parent.top
+                                    anchors.topMargin: 1
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 5
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 5
                                     height: 1
                                     color: StyleGuide.palette.accentBright
                                     opacity: followBtn.pressed ? 0.0 : 0.45
@@ -383,7 +414,6 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                             topPadding: followBtn.pressed ? 1 : 0
                         }
-
                     }
 
                     Button {
@@ -397,13 +427,14 @@ Item {
                         onClicked: {
                             if (typeof game !== 'undefined' && game.reset_camera)
                                 game.reset_camera();
-
                         }
 
                         background: Item {
                             Rectangle {
-                                x: 1; y: 2
-                                width: parent.width; height: parent.height
+                                x: 1
+                                y: 2
+                                width: parent.width
+                                height: parent.height
                                 radius: 7
                                 color: "#000000"
                                 opacity: resetBtn.pressed ? 0.0 : 0.20
@@ -417,20 +448,33 @@ Item {
                                 border.width: 1
 
                                 Rectangle {
-                                    anchors.fill: parent; anchors.margins: 1
+                                    anchors.fill: parent
+                                    anchors.margins: 1
                                     radius: Math.max(1, parent.radius - 1)
                                     opacity: resetBtn.pressed ? 0.0 : 0.11
                                     gradient: Gradient {
-                                        GradientStop { position: 0.0; color: "#FFFFFF" }
-                                        GradientStop { position: 0.45; color: "#FFFFFF" }
-                                        GradientStop { position: 1.0; color: "#000000" }
+                                        GradientStop {
+                                            position: 0.0
+                                            color: "#FFFFFF"
+                                        }
+                                        GradientStop {
+                                            position: 0.45
+                                            color: "#FFFFFF"
+                                        }
+                                        GradientStop {
+                                            position: 1.0
+                                            color: "#000000"
+                                        }
                                     }
                                 }
 
                                 Rectangle {
-                                    anchors.top: parent.top; anchors.topMargin: 1
-                                    anchors.left: parent.left; anchors.leftMargin: 5
-                                    anchors.right: parent.right; anchors.rightMargin: 5
+                                    anchors.top: parent.top
+                                    anchors.topMargin: 1
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 5
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 5
                                     height: 1
                                     color: StyleGuide.palette.accentBright
                                     opacity: resetBtn.pressed ? 0.0 : 0.45
@@ -446,11 +490,8 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                             topPadding: resetBtn.pressed ? 1 : 0
                         }
-
                     }
-
                 }
-
             }
 
             Item {
@@ -492,7 +533,6 @@ Item {
                     hoverEnabled: true
                     acceptedButtons: Qt.NoButton
                 }
-
             }
 
             RowLayout {
@@ -529,15 +569,12 @@ Item {
                             color: {
                                 if (typeof game === 'undefined')
                                     return Theme.textDim;
-
                                 var count = game.player_troop_count;
                                 var max = game.max_troops_per_player;
                                 if (count >= max)
                                     return hs.waxHover;
-
                                 if (count >= max * 0.8)
                                     return hs.bronze;
-
                                 return Theme.accent;
                             }
                             font.pixelSize: 14
@@ -545,7 +582,6 @@ Item {
                             elide: Text.ElideRight
                             verticalAlignment: Text.AlignVCenter
                         }
-
                     }
 
                     Rectangle {
@@ -567,7 +603,6 @@ Item {
                             for (var i = 0; i < ownersList.length; i++) {
                                 if (ownersList[i].type === "Player")
                                     count++;
-
                             }
                             return count;
                         }
@@ -578,7 +613,6 @@ Item {
                             for (var i = 0; i < ownersList.length; i++) {
                                 if (ownersList[i].type === "AI")
                                     count++;
-
                             }
                             return count;
                         }
@@ -586,14 +620,12 @@ Item {
                         function owners_tooltip() {
                             if (typeof game === 'undefined')
                                 return "";
-
                             var ownersList = ownersContainer.owners || [];
                             var tip = "Owner IDs:\n";
                             for (var i = 0; i < ownersList.length; i++) {
                                 tip += ownersList[i].id + ": " + ownersList[i].name + " (" + ownersList[i].type + ")";
                                 if (ownersList[i].isLocal)
                                     tip += " [You]";
-
                                 tip += "\n";
                             }
                             return tip;
@@ -645,7 +677,6 @@ Item {
                                 font.pixelSize: 13
                                 verticalAlignment: Text.AlignVCenter
                             }
-
                         }
 
                         ToolTip {
@@ -661,7 +692,6 @@ Item {
                             hoverEnabled: true
                             acceptedButtons: Qt.NoButton
                         }
-
                     }
 
                     Row {
@@ -687,9 +717,7 @@ Item {
                             elide: Text.ElideRight
                             verticalAlignment: Text.AlignVCenter
                         }
-
                     }
-
                 }
 
                 Item {
@@ -700,11 +728,8 @@ Item {
                     Layout.minimumWidth: Math.round(topPanel.height * 1.6)
                     Layout.preferredHeight: topPanel.height - 8
                 }
-
             }
-
         }
-
     }
 
     Rectangle {
@@ -744,9 +769,9 @@ Item {
 
                 Connections {
                     function onMinimap_image_changed() {
-                        Qt.callLater(function() {
-                            minimapImage.image_version++;
-                        });
+                        Qt.callLater(function () {
+                                minimapImage.image_version++;
+                            });
                     }
 
                     target: game
@@ -764,33 +789,26 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    onClicked: function(mouse) {
+                    onClicked: function (mouse) {
                         if (typeof game === 'undefined')
-                            return ;
-
+                            return;
                         var paintedW = parent.paintedWidth;
                         var paintedH = parent.paintedHeight;
                         if (paintedW === 0 || paintedH === 0)
-                            return ;
-
+                            return;
                         var offsetX = (parent.width - paintedW) / 2;
                         var offsetY = (parent.height - paintedH) / 2;
                         var imgX = mouse.x - offsetX;
                         var imgY = mouse.y - offsetY;
                         if (imgX < 0 || imgX >= paintedW || imgY < 0 || imgY >= paintedH)
-                            return ;
-
+                            return;
                         if (mouse.button === Qt.LeftButton)
                             game.on_minimap_left_click(imgX, imgY, paintedW, paintedH);
                         else if (mouse.button === Qt.RightButton)
                             game.on_minimap_right_click(imgX, imgY, paintedW, paintedH);
                     }
                 }
-
             }
-
         }
-
     }
-
 }

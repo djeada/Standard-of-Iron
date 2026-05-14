@@ -3,10 +3,12 @@
 #include <QMutexLocker>
 
 MapPreviewImageProvider::MapPreviewImageProvider()
-    : QQuickImageProvider(QQuickImageProvider::Image) {}
+    : QQuickImageProvider(QQuickImageProvider::Image) {
+}
 
-QImage MapPreviewImageProvider::requestImage(const QString &id, QSize *size,
-                                             const QSize &requested_size) {
+QImage MapPreviewImageProvider::requestImage(const QString& id,
+                                             QSize* size,
+                                             const QSize& requested_size) {
   QImage image_copy;
   {
     QMutexLocker locker(&m_mutex);
@@ -29,20 +31,20 @@ QImage MapPreviewImageProvider::requestImage(const QString &id, QSize *size,
   }
 
   if (requested_size.isValid() && !requested_size.isEmpty()) {
-    return image_copy.scaled(requested_size, Qt::KeepAspectRatio,
-                             Qt::SmoothTransformation);
+    return image_copy.scaled(
+        requested_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
   }
 
   return image_copy;
 }
 
-void MapPreviewImageProvider::set_preview_image(const QString &map_id,
-                                                const QImage &image) {
+void MapPreviewImageProvider::set_preview_image(const QString& map_id,
+                                                const QImage& image) {
   QMutexLocker locker(&m_mutex);
   m_preview_images[map_id] = image;
 }
 
-void MapPreviewImageProvider::clear_preview(const QString &map_id) {
+void MapPreviewImageProvider::clear_preview(const QString& map_id) {
   QMutexLocker locker(&m_mutex);
   m_preview_images.remove(map_id);
 }

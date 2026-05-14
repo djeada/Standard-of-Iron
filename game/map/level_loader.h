@@ -1,9 +1,11 @@
 #pragma once
 
-#include "map_definition.h"
 #include <QString>
+
 #include <cstdint>
 #include <memory>
+
+#include "map_definition.h"
 
 namespace Engine::Core {
 class World;
@@ -38,8 +40,10 @@ struct LevelLoadResult {
 class LevelLoader {
 public:
   static auto
-  loadFromAssets(const QString &map_path, Engine::Core::World &world,
-                 Render::GL::Renderer &renderer, Render::GL::Camera &camera,
+  loadFromAssets(const QString& map_path,
+                 Engine::Core::World& world,
+                 Render::GL::Renderer& renderer,
+                 Render::GL::Camera& camera,
                  bool allow_default_player_barracks = true) -> LevelLoadResult;
 };
 

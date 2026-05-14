@@ -2,6 +2,7 @@
 
 #include <QString>
 #include <QVariantList>
+
 #include <functional>
 #include <memory>
 
@@ -40,26 +41,31 @@ struct LevelLoadResult {
 class LevelOrchestrator {
 public:
   struct RendererRefs {
-    Render::GL::Renderer *renderer;
-    Render::GL::Camera *camera;
-    Render::GL::GroundRenderer *ground;
-    Render::GL::TerrainRenderer *terrain;
-    Render::GL::TerrainFeatureManager *features;
-    Render::GL::TerrainScatterManager *scatter;
-    Render::GL::FogRenderer *fog;
-    Render::GL::MapBoundaryFogRenderer *boundary_fog;
-    Render::GL::RainRenderer *rain;
+    Render::GL::Renderer* renderer;
+    Render::GL::Camera* camera;
+    Render::GL::GroundRenderer* ground;
+    Render::GL::TerrainRenderer* terrain;
+    Render::GL::TerrainFeatureManager* features;
+    Render::GL::TerrainScatterManager* scatter;
+    Render::GL::FogRenderer* fog;
+    Render::GL::MapBoundaryFogRenderer* boundary_fog;
+    Render::GL::RainRenderer* rain;
   };
 
   using VisibilityReadyCallback = std::function<void()>;
   using OwnerUpdateCallback = std::function<void()>;
 
-  LevelLoadResult load_skirmish(
-      const QString &map_path, const QVariantList &player_configs,
-      int selected_player_id, Engine::Core::World &world,
-      const RendererRefs &renderers, Game::Systems::LevelSnapshot &level,
-      EntityCache &entity_cache, Game::Systems::VictoryService *victory_service,
-      MinimapManager *minimap_manager, VisibilityReadyCallback visibility_ready,
-      OwnerUpdateCallback owner_update, bool allow_default_player_barracks,
-      LoadingProgressTracker *progress_tracker = nullptr);
+  LevelLoadResult load_skirmish(const QString& map_path,
+                                const QVariantList& player_configs,
+                                int selected_player_id,
+                                Engine::Core::World& world,
+                                const RendererRefs& renderers,
+                                Game::Systems::LevelSnapshot& level,
+                                EntityCache& entity_cache,
+                                Game::Systems::VictoryService* victory_service,
+                                MinimapManager* minimap_manager,
+                                VisibilityReadyCallback visibility_ready,
+                                OwnerUpdateCallback owner_update,
+                                bool allow_default_player_barracks,
+                                LoadingProgressTracker* progress_tracker = nullptr);
 };

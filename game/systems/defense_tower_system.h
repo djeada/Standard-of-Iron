@@ -10,7 +10,7 @@ namespace Game::Systems {
 
 class DefenseTowerSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World *world, float delta_time) override;
+  void update(Engine::Core::World* world, float delta_time) override;
 };
 
 } // namespace Game::Systems

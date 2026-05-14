@@ -1,5 +1,18 @@
 #pragma once
 
+#include <QImage>
+
+#include <atomic>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
 #include "bone_palette_arena.h"
 #include "draw_queue.h"
 #include "entity/registry.h"
@@ -15,17 +28,6 @@
 #include "snapshot_mesh_cache.h"
 #include "submitter.h"
 #include "unit_render_cache.h"
-#include <QImage>
-#include <atomic>
-#include <cstdint>
-#include <functional>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
 namespace Engine::Core {
 class World;
@@ -62,17 +64,15 @@ public:
   void end_frame();
   void set_viewport(int width, int height);
 
-  void set_camera(Camera *camera);
+  void set_camera(Camera* camera);
   void set_clear_color(float r, float g, float b, float a = 1.0F);
-  auto camera() const -> Camera * { return m_camera; }
-  auto backend() -> Backend * { return m_gl_backend; }
+  auto camera() const -> Camera* { return m_camera; }
+  auto backend() -> Backend* { return m_gl_backend; }
 
-  void update_animation_time(float delta_time) {
-    m_accumulated_time += delta_time;
-  }
+  void update_animation_time(float delta_time) { m_accumulated_time += delta_time; }
   auto get_animation_time() const -> float { return m_accumulated_time; }
 
-  auto resources() const -> ResourceManager * {
+  auto resources() const -> ResourceManager* {
     return m_backend ? m_backend->resources() : nullptr;
   }
   void set_hovered_entity_id(unsigned int id) { m_hovered_entity_id = id; }
@@ -81,54 +81,54 @@ public:
     m_force_full_creature_lod = enabled;
   }
 
-  void set_frame_budget(const FrameBudgetConfig &config) {
+  void set_frame_budget(const FrameBudgetConfig& config) {
     if (m_backend) {
       m_backend->set_frame_budget(config);
     }
   }
-  [[nodiscard]] auto frame_tracker() const -> const FrameTimeTracker * {
+  [[nodiscard]] auto frame_tracker() const -> const FrameTimeTracker* {
     return m_backend ? m_backend->frame_tracker() : nullptr;
   }
 
-  void set_selected_entities(const std::vector<unsigned int> &ids) {
+  void set_selected_entities(const std::vector<unsigned int>& ids) {
     m_selected_ids.clear();
     m_selected_ids.insert(ids.begin(), ids.end());
   }
 
-  auto get_mesh_quad() const -> Mesh * {
+  auto get_mesh_quad() const -> Mesh* {
     return m_backend && (m_backend->resources() != nullptr)
                ? m_backend->resources()->quad()
                : nullptr;
   }
-  auto get_mesh_plane() const -> Mesh * {
+  auto get_mesh_plane() const -> Mesh* {
     return m_backend && (m_backend->resources() != nullptr)
                ? m_backend->resources()->ground()
                : nullptr;
   }
-  auto get_mesh_cube() const -> Mesh * {
+  auto get_mesh_cube() const -> Mesh* {
     return m_backend && (m_backend->resources() != nullptr)
                ? m_backend->resources()->unit()
                : nullptr;
   }
 
-  auto get_white_texture() const -> Texture * {
+  auto get_white_texture() const -> Texture* {
     return m_backend && (m_backend->resources() != nullptr)
                ? m_backend->resources()->white()
                : nullptr;
   }
 
-  auto get_shader(const QString &name) const -> Shader * {
+  auto get_shader(const QString& name) const -> Shader* {
     return m_backend ? m_backend->shader(name) : nullptr;
   }
-  auto load_shader(const QString &name, const QString &vert_path,
-                   const QString &frag_path) -> Shader * {
-    return m_gl_backend
-               ? m_gl_backend->get_or_load_shader(name, vert_path, frag_path)
-               : nullptr;
+  auto load_shader(const QString& name,
+                   const QString& vert_path,
+                   const QString& frag_path) -> Shader* {
+    return m_gl_backend ? m_gl_backend->get_or_load_shader(name, vert_path, frag_path)
+                        : nullptr;
   }
 
-  void set_current_shader(Shader *shader) { m_current_shader = shader; }
-  auto get_current_shader() const -> Shader * { return m_current_shader; }
+  void set_current_shader(Shader* shader) { m_current_shader = shader; }
+  auto get_current_shader() const -> Shader* { return m_current_shader; }
 
   struct GridParams {
     float cell_size = 1.0F;
@@ -136,12 +136,12 @@ public:
     QVector3D grid_color{0.15F, 0.18F, 0.15F};
     float extent = 50.0F;
   };
-  void set_grid_params(const GridParams &gp) { m_grid_params = gp; }
-  auto grid_params() const -> const GridParams & { return m_grid_params; }
+  void set_grid_params(const GridParams& gp) { m_grid_params = gp; }
+  auto grid_params() const -> const GridParams& { return m_grid_params; }
 
-  void set_lighting(const QVector3D &light_dir, float ambient_strength) {
-    m_light_dir = light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F)
-                                     : light_dir.normalized();
+  void set_lighting(const QVector3D& light_dir, float ambient_strength) {
+    m_light_dir =
+        light_dir.isNull() ? QVector3D(0.65F, 0.50F, 0.40F) : light_dir.normalized();
     m_ambient_strength = ambient_strength;
     if (m_gl_backend) {
       m_gl_backend->set_lighting(m_light_dir, m_ambient_strength);
@@ -154,45 +154,86 @@ public:
 
   [[nodiscard]] auto render_software_preview(int width, int height) -> QImage;
 
-  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-            Texture *texture = nullptr, float alpha = 1.0F,
+  void mesh(Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* texture = nullptr,
+            float alpha = 1.0F,
             int material_id = 0) override;
-  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
-              const QVector3D &trim_color, Texture *texture = nullptr,
-              float alpha = 1.0F, int material_id = 0) override;
-  void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
-            const QVector3D &color, Texture *texture = nullptr,
-            float alpha = 1.0F, int material_id = 0) override;
-  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                const QVector3D &color, float alpha = 1.0F) override;
-  void selection_ring(const QMatrix4x4 &model, float alpha_inner,
-                      float alpha_outer, const QVector3D &color) override;
+  void banner(Mesh* mesh,
+              const QMatrix4x4& model,
+              const QVector3D& color,
+              const QVector3D& trim_color,
+              Texture* texture = nullptr,
+              float alpha = 1.0F,
+              int material_id = 0) override;
+  void part(Mesh* mesh,
+            Material* material,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* texture = nullptr,
+            float alpha = 1.0F,
+            int material_id = 0) override;
+  void cylinder(const QVector3D& start,
+                const QVector3D& end,
+                float radius,
+                const QVector3D& color,
+                float alpha = 1.0F) override;
+  void selection_ring(const QMatrix4x4& model,
+                      float alpha_inner,
+                      float alpha_outer,
+                      const QVector3D& color) override;
 
-  void grid(const QMatrix4x4 &model, const QVector3D &color, float cell_size,
-            float thickness, float extent) override;
+  void grid(const QMatrix4x4& model,
+            const QVector3D& color,
+            float cell_size,
+            float thickness,
+            float extent) override;
 
-  void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
+  void selection_smoke(const QMatrix4x4& model,
+                       const QVector3D& color,
                        float base_alpha = 0.15F) override;
-  void healing_beam(const QVector3D &start, const QVector3D &end,
-                    const QVector3D &color, float progress, float beam_width,
-                    float intensity, float time) override;
-  void healer_aura(const QVector3D &position, const QVector3D &color,
-                   float radius, float intensity, float time) override;
-  void combat_dust(const QVector3D &position, const QVector3D &color,
-                   float radius, float intensity, float time) override;
-  void building_flame(const QVector3D &position, const QVector3D &color,
-                      float radius, float intensity, float time);
-  void blood_pool(const QVector3D &position, float radius, float alpha_scale,
-                  float rotation = 0.0F, float aspect_ratio = 1.0F,
+  void healing_beam(const QVector3D& start,
+                    const QVector3D& end,
+                    const QVector3D& color,
+                    float progress,
+                    float beam_width,
+                    float intensity,
+                    float time) override;
+  void healer_aura(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override;
+  void combat_dust(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override;
+  void building_flame(const QVector3D& position,
+                      const QVector3D& color,
+                      float radius,
+                      float intensity,
+                      float time);
+  void blood_pool(const QVector3D& position,
+                  float radius,
+                  float alpha_scale,
+                  float rotation = 0.0F,
+                  float aspect_ratio = 1.0F,
                   float seed = 0.0F);
-  void stone_impact(const QVector3D &position, const QVector3D &color,
-                    float radius, float intensity, float time) override;
-  void mode_indicator(const QMatrix4x4 &model, int mode_type,
-                      const QVector3D &color, float alpha = 1.0F) override;
-  void rigged(const RiggedCreatureCmd &cmd) override;
-  void terrain_surface(const TerrainSurfaceCmd &cmd);
-  void terrain_feature(const TerrainFeatureCmd &cmd);
-  void terrain_scatter(const TerrainScatterCmd &cmd);
+  void stone_impact(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override;
+  void mode_indicator(const QMatrix4x4& model,
+                      int mode_type,
+                      const QVector3D& color,
+                      float alpha = 1.0F) override;
+  void rigged(const RiggedCreatureCmd& cmd) override;
+  void terrain_surface(const TerrainSurfaceCmd& cmd);
+  void terrain_feature(const TerrainFeatureCmd& cmd);
+  void terrain_scatter(const TerrainScatterCmd& cmd);
 
   struct TemplatePrewarmProgress {
     enum class Phase {
@@ -209,58 +250,59 @@ public:
   };
 
   using TemplatePrewarmProgressCallback =
-      std::function<bool(const TemplatePrewarmProgress &)>;
+      std::function<bool(const TemplatePrewarmProgress&)>;
 
-  void render_world(Engine::Core::World *world);
-  void prewarm_unit_templates(
-      Engine::Core::World *world = nullptr,
-      TemplatePrewarmProgressCallback progress_callback = {});
+  void render_world(Engine::Core::World* world);
+  void prewarm_unit_templates(Engine::Core::World* world = nullptr,
+                              TemplatePrewarmProgressCallback progress_callback = {});
 
   void lock_world_for_modification() { m_world_mutex.lock(); }
   void unlock_world_for_modification() { m_world_mutex.unlock(); }
 
-  void fog_batch(const FogInstanceData *instances, std::size_t count);
-  void fog_batch(Buffer *instance_buffer, std::size_t count);
-  void rain_batch(Buffer *instance_buffer, std::size_t instance_count,
-                  const RainBatchParams &params);
+  void fog_batch(const FogInstanceData* instances, std::size_t count);
+  void fog_batch(Buffer* instance_buffer, std::size_t count);
+  void rain_batch(Buffer* instance_buffer,
+                  std::size_t instance_count,
+                  const RainBatchParams& params);
 
-  void
-  render_construction_previews_public(Engine::Core::World *world,
-                                      const Game::Map::VisibilityService *vis,
-                                      bool visibility_enabled) {
-    render_construction_previews(world, vis,
-                                 visibility_enabled && vis != nullptr);
+  void render_construction_previews_public(Engine::Core::World* world,
+                                           const Game::Map::VisibilityService* vis,
+                                           bool visibility_enabled) {
+    render_construction_previews(world, vis, visibility_enabled && vis != nullptr);
   }
 
-  auto rigged_mesh_cache() noexcept -> RiggedMeshCache & {
-    return m_rigged_mesh_cache;
-  }
+  auto rigged_mesh_cache() noexcept -> RiggedMeshCache& { return m_rigged_mesh_cache; }
 
-  auto snapshot_mesh_cache() noexcept -> SnapshotMeshCache & {
+  auto snapshot_mesh_cache() noexcept -> SnapshotMeshCache& {
     return m_snapshot_mesh_cache;
   }
 
 private:
-  void render_construction_previews(Engine::Core::World *world,
-                                    const Game::Map::VisibilityService *vis,
+  void render_construction_previews(Engine::Core::World* world,
+                                    const Game::Map::VisibilityService* vis,
                                     bool visibility_enabled);
 
-  void enqueue_selection_ring(Engine::Core::Entity *entity,
-                              Engine::Core::TransformComponent *transform,
-                              Engine::Core::UnitComponent *unit_comp,
-                              bool selected, bool hovered);
-  void enqueue_mode_indicator(Engine::Core::TransformComponent *transform,
-                              Engine::Core::UnitComponent *unit_comp,
-                              bool has_attack, bool has_guard_mode,
-                              bool has_hold_mode, bool has_patrol);
+  void enqueue_selection_ring(Engine::Core::Entity* entity,
+                              Engine::Core::TransformComponent* transform,
+                              Engine::Core::UnitComponent* unit_comp,
+                              bool selected,
+                              bool hovered);
+  void enqueue_mode_indicator(Engine::Core::TransformComponent* transform,
+                              Engine::Core::UnitComponent* unit_comp,
+                              bool has_attack,
+                              bool has_guard_mode,
+                              bool has_hold_mode,
+                              bool has_patrol);
 
   struct AnimationTimeCacheEntry {
     float time = 0.0F;
     uint32_t last_frame = 0;
   };
 
-  auto resolve_animation_time(uint32_t entity_id, bool update,
-                              float current_time, uint32_t frame) -> float;
+  auto resolve_animation_time(uint32_t entity_id,
+                              bool update,
+                              float current_time,
+                              uint32_t frame) -> float;
   void prune_animation_time_cache(uint32_t frame);
   void process_async_template_prewarm();
   void cancel_async_template_prewarm();
@@ -294,15 +336,15 @@ private:
     std::atomic<bool> cancel_requested{false};
   };
 
-  void run_template_prewarm_item(const AsyncPrewarmProfile &profile,
-                                 const AsyncPrewarmWorkItem &item);
+  void run_template_prewarm_item(const AsyncPrewarmProfile& profile,
+                                 const AsyncPrewarmWorkItem& item);
 
-  Camera *m_camera = nullptr;
+  Camera* m_camera = nullptr;
   std::unique_ptr<IRenderBackend> m_backend;
-  Backend *m_gl_backend = nullptr;
+  Backend* m_gl_backend = nullptr;
   ShaderQuality m_shader_quality{ShaderQuality::Full};
   DrawQueue m_queues[2];
-  DrawQueue *m_active_queue = nullptr;
+  DrawQueue* m_active_queue = nullptr;
   int m_fill_queue_index = 0;
   int m_render_queue_index = 1;
 
@@ -322,7 +364,7 @@ private:
   bool m_force_full_creature_lod = false;
 
   QMatrix4x4 m_view_proj;
-  Shader *m_current_shader = nullptr;
+  Shader* m_current_shader = nullptr;
   QVector3D m_light_dir{0.65F, 0.50F, 0.40F};
   float m_ambient_strength{0.30F};
 
@@ -334,7 +376,7 @@ private:
   std::uint32_t m_frame_counter{0};
 
   Render::PersistentRenderRegistry m_render_registry;
-  Engine::Core::World *m_cached_world{nullptr};
+  Engine::Core::World* m_cached_world{nullptr};
 
   std::mutex m_async_prewarm_mutex;
   std::shared_ptr<AsyncTemplatePrewarmState> m_async_prewarm_state;
@@ -342,8 +384,11 @@ private:
 };
 
 struct FrameScope {
-  Renderer &r;
-  FrameScope(Renderer &renderer) : r(renderer) { r.begin_frame(); }
+  Renderer& r;
+  FrameScope(Renderer& renderer)
+      : r(renderer) {
+    r.begin_frame();
+  }
   ~FrameScope() { r.end_frame(); }
 };
 

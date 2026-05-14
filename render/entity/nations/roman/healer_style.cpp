@@ -1,7 +1,8 @@
 #include "healer_style.h"
-#include "healer_renderer.h"
 
 #include <QVector3D>
+
+#include "healer_renderer.h"
 
 namespace {
 

@@ -1,8 +1,4 @@
 #include "map_loader.h"
-#include "json_keys.h"
-#include "map/map_definition.h"
-#include "map/terrain.h"
-#include "units/spawn_type.h"
 
 #include <QDebug>
 #include <QFile>
@@ -12,13 +8,19 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QString>
-#include <algorithm>
-#include <cstdint>
 #include <qfiledevice.h>
 #include <qglobal.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
+
+#include <algorithm>
+#include <cstdint>
 #include <vector>
+
+#include "json_keys.h"
+#include "map/map_definition.h"
+#include "map/terrain.h"
+#include "units/spawn_type.h"
 
 namespace Game::Map {
 
@@ -26,7 +28,7 @@ using namespace JsonKeys;
 
 namespace {
 
-auto read_grid(const QJsonObject &obj, GridDefinition &grid) -> bool {
+auto read_grid(const QJsonObject& obj, GridDefinition& grid) -> bool {
   if (obj.contains(WIDTH)) {
     grid.width = obj.value(WIDTH).toInt(grid.width);
   }
@@ -39,11 +41,12 @@ auto read_grid(const QJsonObject &obj, GridDefinition &grid) -> bool {
   return grid.width > 0 && grid.height > 0 && grid.tile_size > 0.0F;
 }
 
-auto read_camera(const QJsonObject &obj, CameraDefinition &cam) -> bool {
+auto read_camera(const QJsonObject& obj, CameraDefinition& cam) -> bool {
   if (obj.contains(CENTER)) {
     auto arr = obj.value(CENTER).toArray();
     if (arr.size() == 3) {
-      cam.center = {float(arr[0].toDouble(0.0)), float(arr[1].toDouble(0.0)),
+      cam.center = {float(arr[0].toDouble(0.0)),
+                    float(arr[1].toDouble(0.0)),
                     float(arr[2].toDouble(0.0))};
     }
   }
@@ -70,8 +73,7 @@ auto read_camera(const QJsonObject &obj, CameraDefinition &cam) -> bool {
   return true;
 }
 
-auto read_vector3(const QJsonValue &value,
-                  const QVector3D &fallback) -> QVector3D {
+auto read_vector3(const QJsonValue& value, const QVector3D& fallback) -> QVector3D {
   if (!value.isArray()) {
     return fallback;
   }
@@ -84,7 +86,7 @@ auto read_vector3(const QJsonValue &value,
           float(arr[2].toDouble(fallback.z()))};
 }
 
-void read_biome(const QJsonObject &obj, BiomeSettings &out) {
+void read_biome(const QJsonObject& obj, BiomeSettings& out) {
 
   if (obj.contains(GROUND_TYPE)) {
     const QString ground_type_str = obj.value(GROUND_TYPE).toString();
@@ -99,16 +101,14 @@ void read_biome(const QJsonObject &obj, BiomeSettings &out) {
   }
 
   if (obj.contains(SEED)) {
-    out.seed = static_cast<std::uint32_t>(
-        std::max(0.0, obj.value(SEED).toDouble(out.seed)));
+    out.seed =
+        static_cast<std::uint32_t>(std::max(0.0, obj.value(SEED).toDouble(out.seed)));
   }
   if (obj.contains(PATCH_DENSITY)) {
-    out.patch_density =
-        float(obj.value(PATCH_DENSITY).toDouble(out.patch_density));
+    out.patch_density = float(obj.value(PATCH_DENSITY).toDouble(out.patch_density));
   }
   if (obj.contains(PATCH_JITTER)) {
-    out.patch_jitter =
-        float(obj.value(PATCH_JITTER).toDouble(out.patch_jitter));
+    out.patch_jitter = float(obj.value(PATCH_JITTER).toDouble(out.patch_jitter));
   }
   if (obj.contains(BLADE_HEIGHT)) {
     auto arr = obj.value(BLADE_HEIGHT).toArray();
@@ -125,13 +125,11 @@ void read_biome(const QJsonObject &obj, BiomeSettings &out) {
     }
   }
   if (obj.contains(BACKGROUND_BLADE_DENSITY)) {
-    out.background_blade_density =
-        float(obj.value(BACKGROUND_BLADE_DENSITY)
-                  .toDouble(out.background_blade_density));
+    out.background_blade_density = float(
+        obj.value(BACKGROUND_BLADE_DENSITY).toDouble(out.background_blade_density));
   }
   if (obj.contains(SWAY_STRENGTH)) {
-    out.sway_strength =
-        float(obj.value(SWAY_STRENGTH).toDouble(out.sway_strength));
+    out.sway_strength = float(obj.value(SWAY_STRENGTH).toDouble(out.sway_strength));
   }
   if (obj.contains(SWAY_SPEED)) {
     out.sway_speed = float(obj.value(SWAY_SPEED).toDouble(out.sway_speed));
@@ -139,20 +137,16 @@ void read_biome(const QJsonObject &obj, BiomeSettings &out) {
   if (obj.contains(HEIGHT_NOISE)) {
     auto arr = obj.value(HEIGHT_NOISE).toArray();
     if (arr.size() == 2) {
-      out.height_noise_amplitude =
-          float(arr[0].toDouble(out.height_noise_amplitude));
-      out.height_noise_frequency =
-          float(arr[1].toDouble(out.height_noise_frequency));
+      out.height_noise_amplitude = float(arr[0].toDouble(out.height_noise_amplitude));
+      out.height_noise_frequency = float(arr[1].toDouble(out.height_noise_frequency));
     }
   }
 
   if (obj.contains(GRASS_PRIMARY)) {
-    out.grass_primary =
-        read_vector3(obj.value(GRASS_PRIMARY), out.grass_primary);
+    out.grass_primary = read_vector3(obj.value(GRASS_PRIMARY), out.grass_primary);
   }
   if (obj.contains(GRASS_SECONDARY)) {
-    out.grass_secondary =
-        read_vector3(obj.value(GRASS_SECONDARY), out.grass_secondary);
+    out.grass_secondary = read_vector3(obj.value(GRASS_SECONDARY), out.grass_secondary);
   }
   if (obj.contains(GRASS_DRY)) {
     out.grass_dry = read_vector3(obj.value(GRASS_DRY), out.grass_dry);
@@ -167,34 +161,32 @@ void read_biome(const QJsonObject &obj, BiomeSettings &out) {
     out.rock_high = read_vector3(obj.value(ROCK_HIGH), out.rock_high);
   }
   if (obj.contains(TERRAIN_MACRO_NOISE_SCALE)) {
-    out.terrain_macro_noise_scale =
-        float(obj.value(TERRAIN_MACRO_NOISE_SCALE)
-                  .toDouble(out.terrain_macro_noise_scale));
+    out.terrain_macro_noise_scale = float(
+        obj.value(TERRAIN_MACRO_NOISE_SCALE).toDouble(out.terrain_macro_noise_scale));
   }
   if (obj.contains(TERRAIN_DETAIL_NOISE_SCALE)) {
-    out.terrain_detail_noise_scale =
-        float(obj.value(TERRAIN_DETAIL_NOISE_SCALE)
-                  .toDouble(out.terrain_detail_noise_scale));
+    out.terrain_detail_noise_scale = float(
+        obj.value(TERRAIN_DETAIL_NOISE_SCALE).toDouble(out.terrain_detail_noise_scale));
   }
   if (obj.contains(TERRAIN_SOIL_HEIGHT)) {
     out.terrain_soil_height =
         float(obj.value(TERRAIN_SOIL_HEIGHT).toDouble(out.terrain_soil_height));
   }
   if (obj.contains(TERRAIN_SOIL_SHARPNESS)) {
-    out.terrain_soil_sharpness = float(
-        obj.value(TERRAIN_SOIL_SHARPNESS).toDouble(out.terrain_soil_sharpness));
+    out.terrain_soil_sharpness =
+        float(obj.value(TERRAIN_SOIL_SHARPNESS).toDouble(out.terrain_soil_sharpness));
   }
   if (obj.contains(TERRAIN_ROCK_THRESHOLD)) {
-    out.terrain_rock_threshold = float(
-        obj.value(TERRAIN_ROCK_THRESHOLD).toDouble(out.terrain_rock_threshold));
+    out.terrain_rock_threshold =
+        float(obj.value(TERRAIN_ROCK_THRESHOLD).toDouble(out.terrain_rock_threshold));
   }
   if (obj.contains(TERRAIN_ROCK_SHARPNESS)) {
-    out.terrain_rock_sharpness = float(
-        obj.value(TERRAIN_ROCK_SHARPNESS).toDouble(out.terrain_rock_sharpness));
+    out.terrain_rock_sharpness =
+        float(obj.value(TERRAIN_ROCK_SHARPNESS).toDouble(out.terrain_rock_sharpness));
   }
   if (obj.contains(TERRAIN_AMBIENT_BOOST)) {
-    out.terrain_ambient_boost = float(
-        obj.value(TERRAIN_AMBIENT_BOOST).toDouble(out.terrain_ambient_boost));
+    out.terrain_ambient_boost =
+        float(obj.value(TERRAIN_AMBIENT_BOOST).toDouble(out.terrain_ambient_boost));
   }
   if (obj.contains(TERRAIN_ROCK_DETAIL_STRENGTH)) {
     out.terrain_rock_detail_strength =
@@ -202,18 +194,15 @@ void read_biome(const QJsonObject &obj, BiomeSettings &out) {
                   .toDouble(out.terrain_rock_detail_strength));
   }
   if (obj.contains(BACKGROUND_SWAY_VARIANCE)) {
-    out.background_sway_variance =
-        float(obj.value(BACKGROUND_SWAY_VARIANCE)
-                  .toDouble(out.background_sway_variance));
+    out.background_sway_variance = float(
+        obj.value(BACKGROUND_SWAY_VARIANCE).toDouble(out.background_sway_variance));
   }
   if (obj.contains(BACKGROUND_SCATTER_RADIUS)) {
-    out.background_scatter_radius =
-        float(obj.value(BACKGROUND_SCATTER_RADIUS)
-                  .toDouble(out.background_scatter_radius));
+    out.background_scatter_radius = float(
+        obj.value(BACKGROUND_SCATTER_RADIUS).toDouble(out.background_scatter_radius));
   }
   if (obj.contains(PLANT_DENSITY)) {
-    out.plant_density =
-        float(obj.value(PLANT_DENSITY).toDouble(out.plant_density));
+    out.plant_density = float(obj.value(PLANT_DENSITY).toDouble(out.plant_density));
   }
   if (obj.contains(SPAWN_EDGE_PADDING)) {
     out.spawn_edge_padding =
@@ -221,47 +210,42 @@ void read_biome(const QJsonObject &obj, BiomeSettings &out) {
   }
   if (obj.contains(GROUND_IRREGULARITY_ENABLED)) {
     out.ground_irregularity_enabled =
-        obj.value(GROUND_IRREGULARITY_ENABLED)
-            .toBool(out.ground_irregularity_enabled);
+        obj.value(GROUND_IRREGULARITY_ENABLED).toBool(out.ground_irregularity_enabled);
   }
   if (obj.contains(IRREGULARITY_SCALE)) {
     out.irregularity_scale =
         float(obj.value(IRREGULARITY_SCALE).toDouble(out.irregularity_scale));
   }
   if (obj.contains(IRREGULARITY_AMPLITUDE)) {
-    out.irregularity_amplitude = float(
-        obj.value(IRREGULARITY_AMPLITUDE).toDouble(out.irregularity_amplitude));
+    out.irregularity_amplitude =
+        float(obj.value(IRREGULARITY_AMPLITUDE).toDouble(out.irregularity_amplitude));
   }
   if (obj.contains(SNOW_COVERAGE)) {
-    out.snow_coverage =
-        float(obj.value(SNOW_COVERAGE).toDouble(out.snow_coverage));
+    out.snow_coverage = float(obj.value(SNOW_COVERAGE).toDouble(out.snow_coverage));
   }
   if (obj.contains(MOISTURE_LEVEL)) {
-    out.moisture_level =
-        float(obj.value(MOISTURE_LEVEL).toDouble(out.moisture_level));
+    out.moisture_level = float(obj.value(MOISTURE_LEVEL).toDouble(out.moisture_level));
   }
   if (obj.contains(CRACK_INTENSITY)) {
     out.crack_intensity =
         float(obj.value(CRACK_INTENSITY).toDouble(out.crack_intensity));
   }
   if (obj.contains(ROCK_EXPOSURE)) {
-    out.rock_exposure =
-        float(obj.value(ROCK_EXPOSURE).toDouble(out.rock_exposure));
+    out.rock_exposure = float(obj.value(ROCK_EXPOSURE).toDouble(out.rock_exposure));
   }
   if (obj.contains(GRASS_SATURATION)) {
     out.grass_saturation =
         float(obj.value(GRASS_SATURATION).toDouble(out.grass_saturation));
   }
   if (obj.contains(SOIL_ROUGHNESS)) {
-    out.soil_roughness =
-        float(obj.value(SOIL_ROUGHNESS).toDouble(out.soil_roughness));
+    out.soil_roughness = float(obj.value(SOIL_ROUGHNESS).toDouble(out.soil_roughness));
   }
   if (obj.contains(SNOW_COLOR)) {
     out.snow_color = read_vector3(obj.value(SNOW_COLOR), out.snow_color);
   }
 }
 
-void read_victory_config(const QJsonObject &obj, VictoryConfig &out) {
+void read_victory_config(const QJsonObject& obj, VictoryConfig& out) {
 
   if (obj.contains("type")) {
     out.victory_type = obj.value("type").toString("elimination");
@@ -270,7 +254,7 @@ void read_victory_config(const QJsonObject &obj, VictoryConfig &out) {
   if (obj.contains("key_structures") && obj.value("key_structures").isArray()) {
     out.key_structures.clear();
     auto arr = obj.value("key_structures").toArray();
-    for (const auto &val : arr) {
+    for (const auto& val : arr) {
       out.key_structures.push_back(val.toString());
     }
   }
@@ -279,11 +263,10 @@ void read_victory_config(const QJsonObject &obj, VictoryConfig &out) {
     out.survive_time_duration = float(obj.value("duration").toDouble(0.0));
   }
 
-  if (obj.contains("defeat_conditions") &&
-      obj.value("defeat_conditions").isArray()) {
+  if (obj.contains("defeat_conditions") && obj.value("defeat_conditions").isArray()) {
     out.defeat_conditions.clear();
     auto arr = obj.value("defeat_conditions").toArray();
-    for (const auto &val : arr) {
+    for (const auto& val : arr) {
       out.defeat_conditions.push_back(val.toString());
     }
   }
@@ -293,7 +276,7 @@ void read_victory_config(const QJsonObject &obj, VictoryConfig &out) {
   }
 }
 
-void read_rain_config(const QJsonObject &obj, RainSettings &out) {
+void read_rain_config(const QJsonObject& obj, RainSettings& out) {
   if (obj.contains(RAIN_ENABLED)) {
     out.enabled = obj.value(RAIN_ENABLED).toBool(out.enabled);
   }
@@ -326,10 +309,10 @@ void read_rain_config(const QJsonObject &obj, RainSettings &out) {
   }
 }
 
-void read_spawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
+void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
   out.clear();
   out.reserve(arr.size());
-  for (const auto &spawn_val : arr) {
+  for (const auto& spawn_val : arr) {
     auto spawn_obj = spawn_val.toObject();
     UnitSpawn spawn;
     const QString type_str = spawn_obj.value(TYPE).toString();
@@ -357,8 +340,7 @@ void read_spawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
           Game::Systems::try_parse_nation_id(nation_str, parsed_nation_id)) {
         spawn.nation = parsed_nation_id;
       } else {
-        qWarning() << "MapLoader: unknown nation" << nation_str
-                   << "- will use default";
+        qWarning() << "MapLoader: unknown nation" << nation_str << "- will use default";
       }
     }
 
@@ -366,10 +348,10 @@ void read_spawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   }
 }
 
-void append_fire_camps_as_world_props(const QJsonArray &arr,
-                                      std::vector<WorldProp> &out) {
+void append_fire_camps_as_world_props(const QJsonArray& arr,
+                                      std::vector<WorldProp>& out) {
   out.reserve(out.size() + arr.size());
-  for (const auto &camp_val : arr) {
+  for (const auto& camp_val : arr) {
     auto camp_obj = camp_val.toObject();
     WorldProp fire_camp;
     fire_camp.type = WorldProp::Type::FireCamp;
@@ -384,15 +366,14 @@ void append_fire_camps_as_world_props(const QJsonArray &arr,
   }
 }
 
-void append_world_props(const QJsonArray &arr, std::vector<WorldProp> &out) {
+void append_world_props(const QJsonArray& arr, std::vector<WorldProp>& out) {
   out.reserve(out.size() + arr.size());
-  for (const auto &val : arr) {
+  for (const auto& val : arr) {
     auto obj = val.toObject();
     const QString type_str = obj.value(JsonKeys::TYPE).toString();
     WorldProp prop;
     if (!world_prop_type_from_string(type_str, prop.type)) {
-      qWarning() << "MapLoader: unknown world_prop type" << type_str
-                 << "- skipping";
+      qWarning() << "MapLoader: unknown world_prop type" << type_str << "- skipping";
       continue;
     }
     prop.x = float(obj.value(JsonKeys::X).toDouble(0.0));
@@ -406,8 +387,10 @@ void append_world_props(const QJsonArray &arr, std::vector<WorldProp> &out) {
   }
 }
 
-void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
-                  const GridDefinition &grid, CoordSystem coord_sys) {
+void read_terrain(const QJsonArray& arr,
+                  std::vector<TerrainFeature>& out,
+                  const GridDefinition& grid,
+                  CoordSystem coord_sys) {
   out.clear();
   out.reserve(arr.size());
 
@@ -416,7 +399,7 @@ void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
   constexpr double default_terrain_radius = 5.0;
   constexpr double default_terrain_height = 2.0;
 
-  for (const auto &terrain_val : arr) {
+  for (const auto& terrain_val : arr) {
     auto terrain_obj = terrain_val.toObject();
     TerrainFeature feature;
 
@@ -433,11 +416,9 @@ void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
     if (coord_sys == CoordSystem::Grid) {
       const float tile = std::max(min_tile_size, grid.tile_size);
       feature.center_x =
-          (coord_x - (grid.width * grid_center_offset - grid_center_offset)) *
-          tile;
+          (coord_x - (grid.width * grid_center_offset - grid_center_offset)) * tile;
       feature.center_z =
-          (coord_z - (grid.height * grid_center_offset - grid_center_offset)) *
-          tile;
+          (coord_z - (grid.height * grid_center_offset - grid_center_offset)) * tile;
     } else {
       feature.center_x = coord_x;
       feature.center_z = coord_z;
@@ -457,10 +438,9 @@ void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
         float(terrain_obj.value("height").toDouble(default_terrain_height));
     feature.rotation_deg = float(terrain_obj.value("rotation").toDouble(0.0));
 
-    if (terrain_obj.contains("entrances") &&
-        terrain_obj.value("entrances").isArray()) {
+    if (terrain_obj.contains("entrances") && terrain_obj.value("entrances").isArray()) {
       auto entrance_arr = terrain_obj.value("entrances").toArray();
-      for (const auto &entrance_val : entrance_arr) {
+      for (const auto& entrance_val : entrance_arr) {
         auto entrance_obj = entrance_val.toObject();
         const float entrance_x = float(entrance_obj.value("x").toDouble(0.0));
         const float entrance_z = float(entrance_obj.value("z").toDouble(0.0));
@@ -468,12 +448,12 @@ void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
         float world_z = entrance_z;
         if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
-          world_x = (entrance_x -
-                     (grid.width * grid_center_offset - grid_center_offset)) *
-                    tile;
-          world_z = (entrance_z -
-                     (grid.height * grid_center_offset - grid_center_offset)) *
-                    tile;
+          world_x =
+              (entrance_x - (grid.width * grid_center_offset - grid_center_offset)) *
+              tile;
+          world_z =
+              (entrance_z - (grid.height * grid_center_offset - grid_center_offset)) *
+              tile;
         }
 
         feature.entrances.emplace_back(world_x, 0.0F, world_z);
@@ -484,8 +464,10 @@ void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
   }
 }
 
-void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
-                 const GridDefinition &grid, CoordSystem coord_sys) {
+void read_rivers(const QJsonArray& arr,
+                 std::vector<RiverSegment>& out,
+                 const GridDefinition& grid,
+                 CoordSystem coord_sys) {
   out.clear();
   out.reserve(arr.size());
 
@@ -493,7 +475,7 @@ void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
   constexpr float min_tile_size = 0.0001F;
   constexpr double default_river_width = 2.0;
 
-  for (const auto &river_val : arr) {
+  for (const auto& river_val : arr) {
     auto river_obj = river_val.toObject();
     RiverSegment segment;
 
@@ -505,13 +487,13 @@ void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
 
         if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
-          segment.start.setX((start_x - (grid.width * grid_center_offset -
-                                         grid_center_offset)) *
-                             tile);
+          segment.start.setX(
+              (start_x - (grid.width * grid_center_offset - grid_center_offset)) *
+              tile);
           segment.start.setY(0.0F);
-          segment.start.setZ((start_z - (grid.height * grid_center_offset -
-                                         grid_center_offset)) *
-                             tile);
+          segment.start.setZ(
+              (start_z - (grid.height * grid_center_offset - grid_center_offset)) *
+              tile);
         } else {
           segment.start = QVector3D(start_x, 0.0F, start_z);
         }
@@ -527,12 +509,10 @@ void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
         if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           segment.end.setX(
-              (end_x - (grid.width * grid_center_offset - grid_center_offset)) *
-              tile);
+              (end_x - (grid.width * grid_center_offset - grid_center_offset)) * tile);
           segment.end.setY(0.0F);
-          segment.end.setZ((end_z - (grid.height * grid_center_offset -
-                                     grid_center_offset)) *
-                           tile);
+          segment.end.setZ(
+              (end_z - (grid.height * grid_center_offset - grid_center_offset)) * tile);
         } else {
           segment.end = QVector3D(end_x, 0.0F, end_z);
         }
@@ -540,16 +520,17 @@ void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
     }
 
     if (river_obj.contains("width")) {
-      segment.width =
-          float(river_obj.value("width").toDouble(default_river_width));
+      segment.width = float(river_obj.value("width").toDouble(default_river_width));
     }
 
     out.push_back(segment);
   }
 }
 
-void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
-                const GridDefinition &grid, CoordSystem coord_sys) {
+void read_roads(const QJsonArray& arr,
+                std::vector<RoadSegment>& out,
+                const GridDefinition& grid,
+                CoordSystem coord_sys) {
   out.clear();
   out.reserve(arr.size());
 
@@ -557,7 +538,7 @@ void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
   constexpr float min_tile_size = 0.0001F;
   constexpr float default_road_width = 3.0F;
 
-  for (const auto &road_val : arr) {
+  for (const auto& road_val : arr) {
     auto road_obj = road_val.toObject();
     RoadSegment segment;
 
@@ -569,13 +550,13 @@ void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
 
         if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
-          segment.start.setX((start_x - (grid.width * grid_center_offset -
-                                         grid_center_offset)) *
-                             tile);
+          segment.start.setX(
+              (start_x - (grid.width * grid_center_offset - grid_center_offset)) *
+              tile);
           segment.start.setY(0.0F);
-          segment.start.setZ((start_z - (grid.height * grid_center_offset -
-                                         grid_center_offset)) *
-                             tile);
+          segment.start.setZ(
+              (start_z - (grid.height * grid_center_offset - grid_center_offset)) *
+              tile);
         } else {
           segment.start = QVector3D(start_x, 0.0F, start_z);
         }
@@ -591,12 +572,10 @@ void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
         if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           segment.end.setX(
-              (end_x - (grid.width * grid_center_offset - grid_center_offset)) *
-              tile);
+              (end_x - (grid.width * grid_center_offset - grid_center_offset)) * tile);
           segment.end.setY(0.0F);
-          segment.end.setZ((end_z - (grid.height * grid_center_offset -
-                                     grid_center_offset)) *
-                           tile);
+          segment.end.setZ(
+              (end_z - (grid.height * grid_center_offset - grid_center_offset)) * tile);
         } else {
           segment.end = QVector3D(end_x, 0.0F, end_z);
         }
@@ -604,8 +583,7 @@ void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
     }
 
     if (road_obj.contains("width")) {
-      segment.width =
-          float(road_obj.value("width").toDouble(default_road_width));
+      segment.width = float(road_obj.value("width").toDouble(default_road_width));
     }
 
     if (road_obj.contains("style")) {
@@ -616,8 +594,10 @@ void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
   }
 }
 
-void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
-                  const GridDefinition &grid, CoordSystem coord_sys) {
+void read_bridges(const QJsonArray& arr,
+                  std::vector<Bridge>& out,
+                  const GridDefinition& grid,
+                  CoordSystem coord_sys) {
   out.clear();
   out.reserve(arr.size());
 
@@ -627,7 +607,7 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
   constexpr double default_bridge_width = 3.0;
   constexpr double default_bridge_height = 0.5;
 
-  for (const auto &bridge_val : arr) {
+  for (const auto& bridge_val : arr) {
     auto bridge_obj = bridge_val.toObject();
     Bridge bridge;
 
@@ -639,13 +619,13 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
 
         if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
-          bridge.start.setX((start_x - (grid.width * grid_center_offset -
-                                        grid_center_offset)) *
-                            tile);
+          bridge.start.setX(
+              (start_x - (grid.width * grid_center_offset - grid_center_offset)) *
+              tile);
           bridge.start.setY(bridge_y_offset);
-          bridge.start.setZ((start_z - (grid.height * grid_center_offset -
-                                        grid_center_offset)) *
-                            tile);
+          bridge.start.setZ(
+              (start_z - (grid.height * grid_center_offset - grid_center_offset)) *
+              tile);
         } else {
           bridge.start = QVector3D(start_x, bridge_y_offset, start_z);
         }
@@ -661,12 +641,10 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
         if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
           bridge.end.setX(
-              (end_x - (grid.width * grid_center_offset - grid_center_offset)) *
-              tile);
+              (end_x - (grid.width * grid_center_offset - grid_center_offset)) * tile);
           bridge.end.setY(bridge_y_offset);
-          bridge.end.setZ((end_z - (grid.height * grid_center_offset -
-                                    grid_center_offset)) *
-                          tile);
+          bridge.end.setZ(
+              (end_z - (grid.height * grid_center_offset - grid_center_offset)) * tile);
         } else {
           bridge.end = QVector3D(end_x, bridge_y_offset, end_z);
         }
@@ -674,13 +652,11 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
     }
 
     if (bridge_obj.contains("width")) {
-      bridge.width =
-          float(bridge_obj.value("width").toDouble(default_bridge_width));
+      bridge.width = float(bridge_obj.value("width").toDouble(default_bridge_width));
     }
 
     if (bridge_obj.contains("height")) {
-      bridge.height =
-          float(bridge_obj.value("height").toDouble(default_bridge_height));
+      bridge.height = float(bridge_obj.value("height").toDouble(default_bridge_height));
     }
 
     out.push_back(bridge);
@@ -689,8 +665,9 @@ void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
 
 } // namespace
 
-auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
-                                    QString *out_error) -> bool {
+auto MapLoader::load_from_json_file(const QString& path,
+                                    MapDefinition& out_map,
+                                    QString* out_error) -> bool {
   QFile map_file(path);
   if (!map_file.open(QIODevice::ReadOnly)) {
     if (out_error != nullptr) {
@@ -765,22 +742,28 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
   }
 
   if (root.contains(TERRAIN) && root.value(TERRAIN).isArray()) {
-    read_terrain(root.value(TERRAIN).toArray(), out_map.terrain, out_map.grid,
+    read_terrain(root.value(TERRAIN).toArray(),
+                 out_map.terrain,
+                 out_map.grid,
                  out_map.coordSystem);
   }
 
   if (root.contains(RIVERS) && root.value(RIVERS).isArray()) {
-    read_rivers(root.value(RIVERS).toArray(), out_map.rivers, out_map.grid,
+    read_rivers(root.value(RIVERS).toArray(),
+                out_map.rivers,
+                out_map.grid,
                 out_map.coordSystem);
   }
 
   if (root.contains(ROADS) && root.value(ROADS).isArray()) {
-    read_roads(root.value(ROADS).toArray(), out_map.roads, out_map.grid,
-               out_map.coordSystem);
+    read_roads(
+        root.value(ROADS).toArray(), out_map.roads, out_map.grid, out_map.coordSystem);
   }
 
   if (root.contains(BRIDGES) && root.value(BRIDGES).isArray()) {
-    read_bridges(root.value(BRIDGES).toArray(), out_map.bridges, out_map.grid,
+    read_bridges(root.value(BRIDGES).toArray(),
+                 out_map.bridges,
+                 out_map.grid,
                  out_map.coordSystem);
   }
 
@@ -797,8 +780,7 @@ auto MapLoader::load_from_json_file(const QString &path, MapDefinition &out_map,
   }
 
   if (root.contains(TIME_OF_DAY)) {
-    const QString tod_str =
-        root.value(TIME_OF_DAY).toString().trimmed().toLower();
+    const QString tod_str = root.value(TIME_OF_DAY).toString().trimmed().toLower();
     if (tod_str == "morning") {
       out_map.time_of_day = TimeOfDay::Morning;
     } else if (tod_str == "day") {

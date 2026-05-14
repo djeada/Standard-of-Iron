@@ -11,8 +11,8 @@ public:
   MountedHumanoidRendererBase();
   ~MountedHumanoidRendererBase() override = default;
 
-  virtual auto mounted_visual_spec() const
-      -> const Render::Creature::Pipeline::MountedSpec &;
+  virtual auto
+  mounted_visual_spec() const -> const Render::Creature::Pipeline::MountedSpec&;
 
   auto uses_mounted_pipeline() const noexcept -> bool override { return true; }
 
@@ -34,31 +34,35 @@ protected:
       Render::Creature::k_invalid_archetype};
 
   auto resolve_entity_ground_offset(
-      const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
-      Engine::Core::TransformComponent *transform_comp) const -> float override;
+      const DrawContext& ctx,
+      Engine::Core::UnitComponent* unit_comp,
+      Engine::Core::TransformComponent* transform_comp) const -> float override;
 
   auto get_scaled_horse_dimensions(uint32_t seed) const -> HorseDimensions;
 
   HorseRenderer m_horse_renderer;
 
   void append_companion_preparation(
-      const DrawContext &ctx, const HumanoidVariant &variant,
-      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
-      std::uint32_t seed, Render::Creature::CreatureLOD lod,
-      Render::Creature::Pipeline::CreaturePreparationResult &out)
-      const override;
+      const DrawContext& ctx,
+      const HumanoidVariant& variant,
+      const HumanoidPose& pose,
+      const HumanoidAnimationContext& anim_ctx,
+      std::uint32_t seed,
+      Render::Creature::CreatureLOD lod,
+      Render::Creature::Pipeline::CreaturePreparationResult& out) const override;
 
-  void resolve_mount_render_state(const DrawContext &ctx, std::uint32_t seed,
-                                  const HumanoidVariant &variant,
-                                  const HumanoidAnimationContext &anim_ctx,
+  void resolve_mount_render_state(const DrawContext& ctx,
+                                  std::uint32_t seed,
+                                  const HumanoidVariant& variant,
+                                  const HumanoidAnimationContext& anim_ctx,
                                   bool use_cached_profile,
-                                  HorseProfile &profile, HorseDimensions &dims,
-                                  MountedAttachmentFrame &mount,
-                                  HorseMotionSample &motion) const;
+                                  HorseProfile& profile,
+                                  HorseDimensions& dims,
+                                  MountedAttachmentFrame& mount,
+                                  HorseMotionSample& motion) const;
 
 private:
-  [[nodiscard]] auto
-  resolve_mount_lod(const DrawContext &ctx) const -> HorseLOD;
+  [[nodiscard]] auto resolve_mount_lod(const DrawContext& ctx) const -> HorseLOD;
 };
 
 } // namespace Render::GL

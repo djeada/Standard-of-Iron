@@ -1,19 +1,20 @@
 #include "horse_spec.h"
 
-#include "../creature/part_graph.h"
-#include "../creature/skeleton.h"
-#include "../submitter.h"
-#include "horse_layout.h"
-#include "horse_manifest.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <QVector4D>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <numbers>
 #include <span>
+
+#include "../creature/part_graph.h"
+#include "../creature/skeleton.h"
+#include "../submitter.h"
+#include "horse_layout.h"
+#include "horse_manifest.h"
 
 namespace Render::Horse {
 
@@ -54,8 +55,7 @@ constexpr SkeletonTopology k_horse_topology{
     std::span<const Render::Creature::SocketDef>(k_horse_sockets),
 };
 
-[[nodiscard]] auto
-translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
+[[nodiscard]] auto translation_matrix(const QVector3D& origin) noexcept -> QMatrix4x4 {
   QMatrix4x4 m;
   m.setToIdentity();
   m.setColumn(3, QVector4D(origin, 1.0F));
@@ -63,9 +63,11 @@ translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
 }
 
 [[nodiscard]] auto
-solve_bent_leg_joint(const QVector3D &shoulder, const QVector3D &foot,
-                     float upper_len, float lower_len,
-                     const QVector3D &bend_hint) noexcept -> QVector3D {
+solve_bent_leg_joint(const QVector3D& shoulder,
+                     const QVector3D& foot,
+                     float upper_len,
+                     float lower_len,
+                     const QVector3D& bend_hint) noexcept -> QVector3D {
   QVector3D hip_to_foot = foot - shoulder;
   float const dist_sq = QVector3D::dotProduct(hip_to_foot, hip_to_foot);
   if (dist_sq <= 1.0e-6F) {
@@ -75,8 +77,7 @@ solve_bent_leg_joint(const QVector3D &shoulder, const QVector3D &foot,
   float const total_len = std::max(upper_len + lower_len, 1.0e-4F);
   float const min_len =
       std::max(std::abs(upper_len - lower_len) + 1.0e-4F, total_len * 0.10F);
-  float const dist =
-      std::clamp(std::sqrt(dist_sq), min_len, total_len - 1.0e-4F);
+  float const dist = std::clamp(std::sqrt(dist_sq), min_len, total_len - 1.0e-4F);
   QVector3D const dir = hip_to_foot / std::sqrt(dist_sq);
 
   QVector3D bend_axis = bend_hint - dir * QVector3D::dotProduct(bend_hint, dir);
@@ -90,10 +91,8 @@ solve_bent_leg_joint(const QVector3D &shoulder, const QVector3D &foot,
   bend_axis.normalize();
 
   float const along =
-      (upper_len * upper_len - lower_len * lower_len + dist * dist) /
-      (2.0F * dist);
-  float const height =
-      std::sqrt(std::max(upper_len * upper_len - along * along, 0.0F));
+      (upper_len * upper_len - lower_len * lower_len + dist * dist) / (2.0F * dist);
+  float const height = std::sqrt(std::max(upper_len * upper_len - along * along, 0.0F));
   return shoulder + dir * along + bend_axis * height;
 }
 
@@ -161,12 +160,12 @@ struct horse_pose_profile {
 
 } // namespace
 
-auto horse_topology() noexcept -> const SkeletonTopology & {
+auto horse_topology() noexcept -> const SkeletonTopology& {
   return k_horse_topology;
 }
 
-void evaluate_horse_skeleton(const HorseSpecPose &pose,
-                             BonePalette &out_palette) noexcept {
+void evaluate_horse_skeleton(const HorseSpecPose& pose,
+                             BonePalette& out_palette) noexcept {
   out_palette[static_cast<std::size_t>(HorseBone::Root)] =
       translation_matrix(pose.barrel_center);
 
@@ -210,8 +209,8 @@ void evaluate_horse_skeleton(const HorseSpecPose &pose,
       translation_matrix(pose.head_center);
 }
 
-void fill_horse_role_colors(const Render::GL::HorseVariant &variant,
-                            std::array<QVector3D, 8> &out_roles) noexcept {
+void fill_horse_role_colors(const Render::GL::HorseVariant& variant,
+                            std::array<QVector3D, 8>& out_roles) noexcept {
   QVector3D const coat = variant.coat_color;
   out_roles[0] = coat;
   out_roles[1] = coat * 0.62F + QVector3D(0.080F, 0.068F, 0.050F);
@@ -223,8 +222,9 @@ void fill_horse_role_colors(const Render::GL::HorseVariant &variant,
   out_roles[7] = QVector3D(0.04F, 0.03F, 0.03F);
 }
 
-void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
-                          HorseSpecPose &out_pose) noexcept {
+void make_horse_spec_pose(const Render::GL::HorseDimensions& dims,
+                          float bob,
+                          HorseSpecPose& out_pose) noexcept {
   QVector3D const center(0.0F, dims.barrel_center_y + bob, 0.0F);
   float const body_width_vis = horse_body_visual_width(dims);
   float const body_height_vis = horse_body_visual_height(dims);
@@ -277,22 +277,18 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
   float const front_lower_len = dims.leg_length * 0.66F;
   float const rear_upper_len = dims.leg_length * 0.38F;
   float const rear_lower_len = dims.leg_length * 0.70F;
-  QVector3D const front_bend_hint(0.0F, -dims.leg_length * 0.22F,
-                                  dims.body_length * 0.10F);
-  QVector3D const rear_bend_hint(0.0F, -dims.leg_length * 0.20F,
-                                 dims.body_length * 0.06F);
-  out_pose.knee_fl =
-      solve_bent_leg_joint(shoulder_fl, out_pose.foot_fl, front_upper_len,
-                           front_lower_len, front_bend_hint);
-  out_pose.knee_fr =
-      solve_bent_leg_joint(shoulder_fr, out_pose.foot_fr, front_upper_len,
-                           front_lower_len, front_bend_hint);
-  out_pose.knee_bl =
-      solve_bent_leg_joint(shoulder_bl, out_pose.foot_bl, rear_upper_len,
-                           rear_lower_len, rear_bend_hint);
-  out_pose.knee_br =
-      solve_bent_leg_joint(shoulder_br, out_pose.foot_br, rear_upper_len,
-                           rear_lower_len, rear_bend_hint);
+  QVector3D const front_bend_hint(
+      0.0F, -dims.leg_length * 0.22F, dims.body_length * 0.10F);
+  QVector3D const rear_bend_hint(
+      0.0F, -dims.leg_length * 0.20F, dims.body_length * 0.06F);
+  out_pose.knee_fl = solve_bent_leg_joint(
+      shoulder_fl, out_pose.foot_fl, front_upper_len, front_lower_len, front_bend_hint);
+  out_pose.knee_fr = solve_bent_leg_joint(
+      shoulder_fr, out_pose.foot_fr, front_upper_len, front_lower_len, front_bend_hint);
+  out_pose.knee_bl = solve_bent_leg_joint(
+      shoulder_bl, out_pose.foot_bl, rear_upper_len, rear_lower_len, rear_bend_hint);
+  out_pose.knee_br = solve_bent_leg_joint(
+      shoulder_br, out_pose.foot_br, rear_upper_len, rear_lower_len, rear_bend_hint);
   out_pose.leg_radius = body_width_vis * 0.125F;
 
   QVector3D const neck_top = horse_neck_top_local(dims);
@@ -316,12 +312,17 @@ struct pose_leg_sample {
   QVector3D foot;
 };
 
-auto compute_pose_leg(
-    const Render::GL::HorseDimensions &dims, const Render::GL::HorseGait &gait,
-    const horse_pose_profile &profile, float phase_base, float phase_offset,
-    float lateral_sign, bool is_rear, float forward_bias, bool is_moving,
-    bool is_fighting,
-    const QVector3D &anchor_offset) noexcept -> pose_leg_sample {
+auto compute_pose_leg(const Render::GL::HorseDimensions& dims,
+                      const Render::GL::HorseGait& gait,
+                      const horse_pose_profile& profile,
+                      float phase_base,
+                      float phase_offset,
+                      float lateral_sign,
+                      bool is_rear,
+                      float forward_bias,
+                      bool is_moving,
+                      bool is_fighting,
+                      const QVector3D& anchor_offset) noexcept -> pose_leg_sample {
   auto ease_in_out = [](float t) {
     t = std::clamp(t, 0.0F, 1.0F);
     return t * t * (3.0F - 2.0F * t);
@@ -355,16 +356,14 @@ auto compute_pose_leg(
       }
     } else {
 
-      float const brace_sway =
-          std::sin(leg_phase * 2.0F * std::numbers::pi_v<float>) *
-          dims.body_length * 0.015F;
+      float const brace_sway = std::sin(leg_phase * 2.0F * std::numbers::pi_v<float>) *
+                               dims.body_length * 0.015F;
       stride = forward_bias - dims.body_length * 0.04F + brace_sway;
       lift = 0.0F;
     }
   } else if (is_moving) {
     float const stance_fraction =
-        gait.cycle_time > 0.9F ? 0.60F
-                               : (gait.cycle_time > 0.5F ? 0.44F : 0.34F);
+        gait.cycle_time > 0.9F ? 0.60F : (gait.cycle_time > 0.5F ? 0.44F : 0.34F);
     float const stride_extent = gait.stride_swing * 0.56F;
     if (leg_phase < stance_fraction) {
       float const t = ease_in_out(leg_phase / stance_fraction);
@@ -375,8 +374,7 @@ auto compute_pose_leg(
       float const t =
           ease_in_out((leg_phase - stance_fraction) / (1.0F - stance_fraction));
       float const swing_sin = std::sin(t * std::numbers::pi_v<float>);
-      float const swing_tuck =
-          swing_sin * gait.stride_lift * (is_rear ? 0.14F : 0.06F);
+      float const swing_tuck = swing_sin * gait.stride_lift * (is_rear ? 0.14F : 0.06F);
       stride = forward_bias - stride_extent * (is_rear ? 0.56F : 0.60F) +
                stride_extent * (is_rear ? 0.94F : 0.98F) * t - swing_tuck;
       lift = swing_sin * gait.stride_lift * (is_rear ? 1.65F : 1.35F);
@@ -384,37 +382,35 @@ auto compute_pose_leg(
   }
 
   float const shoulder_out =
-      dims.body_width * (is_rear ? profile.rear_shoulder_out_scale
-                                 : profile.front_shoulder_out_scale);
+      dims.body_width *
+      (is_rear ? profile.rear_shoulder_out_scale : profile.front_shoulder_out_scale);
 
   float const vertical_bias =
-      dims.body_height * (is_rear ? profile.rear_vertical_bias_scale
-                                  : profile.front_vertical_bias_scale);
+      dims.body_height *
+      (is_rear ? profile.rear_vertical_bias_scale : profile.front_vertical_bias_scale);
   float const longitudinal_bias =
       dims.body_length * (is_rear ? profile.rear_longitudinal_bias_scale
                                   : profile.front_longitudinal_bias_scale);
   QVector3D const shoulder =
-      anchor_offset +
-      QVector3D(lateral_sign * shoulder_out,
-                vertical_bias + lift * 0.05F - shoulder_compress,
-                stride + longitudinal_bias);
+      anchor_offset + QVector3D(lateral_sign * shoulder_out,
+                                vertical_bias + lift * 0.05F - shoulder_compress,
+                                stride + longitudinal_bias);
 
-  float const leg_length =
-      dims.leg_length * (is_rear ? profile.rear_leg_length_scale
-                                 : profile.front_leg_length_scale);
+  float const leg_length = dims.leg_length * (is_rear ? profile.rear_leg_length_scale
+                                                      : profile.front_leg_length_scale);
   QVector3D const foot =
-      shoulder + QVector3D(0.0F, -leg_length + lift,
-                           dims.body_length * (is_rear ? 0.24F : 0.12F));
+      shoulder +
+      QVector3D(0.0F, -leg_length + lift, dims.body_length * (is_rear ? 0.24F : 0.12F));
 
   return {shoulder, foot};
 }
 
 } // namespace
 
-void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
-                                   const Render::GL::HorseGait &gait,
+void make_horse_spec_pose_animated(const Render::GL::HorseDimensions& dims,
+                                   const Render::GL::HorseGait& gait,
                                    HorsePoseMotion motion,
-                                   HorseSpecPose &out_pose) noexcept {
+                                   HorseSpecPose& out_pose) noexcept {
 
   make_horse_spec_pose(dims, motion.bob, out_pose);
   horse_pose_profile const profile = make_horse_pose_profile();
@@ -434,10 +430,9 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
   float const head_height_scale = 1.0F + gait.head_height_jitter;
   QVector3D const neck_base_local = horse_neck_base_local(dims);
   QVector3D const neck_top_local = horse_neck_top_local(dims);
-  out_pose.neck_base =
-      center + QVector3D(neck_base_local.x(),
-                         neck_base_local.y() * head_height_scale,
-                         neck_base_local.z());
+  out_pose.neck_base = center + QVector3D(neck_base_local.x(),
+                                          neck_base_local.y() * head_height_scale,
+                                          neck_base_local.z());
   out_pose.neck_top = center + QVector3D(neck_top_local.x(),
                                          neck_top_local.y() * head_height_scale,
                                          neck_top_local.z());
@@ -447,10 +442,9 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
   out_pose.neck_radius = neck_width_radius * 0.65F + neck_height_radius * 0.35F;
 
   out_pose.head_center =
-      out_pose.neck_top +
-      QVector3D(head_width_vis * profile.head_center_scale.x(),
-                head_height_vis * profile.head_center_scale.y(),
-                head_length_vis * profile.head_center_scale.z());
+      out_pose.neck_top + QVector3D(head_width_vis * profile.head_center_scale.x(),
+                                    head_height_vis * profile.head_center_scale.y(),
+                                    head_length_vis * profile.head_center_scale.z());
   out_pose.head_half = QVector3D(head_width_vis * profile.head_half_scale.x(),
                                  head_height_vis * profile.head_half_scale.y(),
                                  head_length_vis * profile.head_half_scale.z());
@@ -480,22 +474,54 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
   float const rear_lat =
       gait.lateral_lead_rear == 0.0F ? 0.50F : gait.lateral_lead_rear;
 
-  auto fl = compute_pose_leg(
-      dims, jittered, profile, motion.phase, gait.front_leg_phase, 1.0F, false,
-      front_bias, motion.is_moving, motion.is_fighting,
-      front_anchor + QVector3D(dims.body_width * 0.12F, 0.0F, 0.0F));
-  auto fr = compute_pose_leg(
-      dims, jittered, profile, motion.phase, gait.front_leg_phase + front_lat,
-      -1.0F, false, front_bias, motion.is_moving, motion.is_fighting,
-      front_anchor + QVector3D(-dims.body_width * 0.12F, 0.0F, 0.0F));
-  auto bl_leg = compute_pose_leg(
-      dims, jittered, profile, motion.phase, gait.rear_leg_phase, 1.0F, true,
-      rear_bias, motion.is_moving, motion.is_fighting,
-      rear_anchor + QVector3D(-dims.body_width * 0.30F, 0.0F, 0.0F));
-  auto br = compute_pose_leg(
-      dims, jittered, profile, motion.phase, gait.rear_leg_phase + rear_lat,
-      -1.0F, true, rear_bias, motion.is_moving, motion.is_fighting,
-      rear_anchor + QVector3D(dims.body_width * 0.30F, 0.0F, 0.0F));
+  auto fl =
+      compute_pose_leg(dims,
+                       jittered,
+                       profile,
+                       motion.phase,
+                       gait.front_leg_phase,
+                       1.0F,
+                       false,
+                       front_bias,
+                       motion.is_moving,
+                       motion.is_fighting,
+                       front_anchor + QVector3D(dims.body_width * 0.12F, 0.0F, 0.0F));
+  auto fr =
+      compute_pose_leg(dims,
+                       jittered,
+                       profile,
+                       motion.phase,
+                       gait.front_leg_phase + front_lat,
+                       -1.0F,
+                       false,
+                       front_bias,
+                       motion.is_moving,
+                       motion.is_fighting,
+                       front_anchor + QVector3D(-dims.body_width * 0.12F, 0.0F, 0.0F));
+  auto bl_leg =
+      compute_pose_leg(dims,
+                       jittered,
+                       profile,
+                       motion.phase,
+                       gait.rear_leg_phase,
+                       1.0F,
+                       true,
+                       rear_bias,
+                       motion.is_moving,
+                       motion.is_fighting,
+                       rear_anchor + QVector3D(-dims.body_width * 0.30F, 0.0F, 0.0F));
+  auto br =
+      compute_pose_leg(dims,
+                       jittered,
+                       profile,
+                       motion.phase,
+                       gait.rear_leg_phase + rear_lat,
+                       -1.0F,
+                       true,
+                       rear_bias,
+                       motion.is_moving,
+                       motion.is_fighting,
+                       rear_anchor + QVector3D(dims.body_width * 0.30F, 0.0F, 0.0F));
 
   out_pose.shoulder_offset_pose_fl = fl.shoulder;
   out_pose.shoulder_offset_pose_fr = fr.shoulder;
@@ -517,22 +543,18 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
   float const rear_lower_len = dims.leg_length * 0.76F;
   float const gait_bend =
       motion.is_moving ? 1.0F + std::min(gait.stride_lift * 3.0F, 0.40F) : 1.0F;
-  QVector3D const front_bend_hint(0.0F, -dims.leg_length * 0.28F,
-                                  dims.body_length * 0.14F * gait_bend);
-  QVector3D const rear_bend_hint(0.0F, -dims.leg_length * 0.24F,
-                                 dims.body_length * 0.08F * gait_bend);
-  out_pose.knee_fl =
-      solve_bent_leg_joint(shoulder_fl, out_pose.foot_fl, front_upper_len,
-                           front_lower_len, front_bend_hint);
-  out_pose.knee_fr =
-      solve_bent_leg_joint(shoulder_fr, out_pose.foot_fr, front_upper_len,
-                           front_lower_len, front_bend_hint);
-  out_pose.knee_bl =
-      solve_bent_leg_joint(shoulder_bl, out_pose.foot_bl, rear_upper_len,
-                           rear_lower_len, rear_bend_hint);
-  out_pose.knee_br =
-      solve_bent_leg_joint(shoulder_br, out_pose.foot_br, rear_upper_len,
-                           rear_lower_len, rear_bend_hint);
+  QVector3D const front_bend_hint(
+      0.0F, -dims.leg_length * 0.28F, dims.body_length * 0.14F * gait_bend);
+  QVector3D const rear_bend_hint(
+      0.0F, -dims.leg_length * 0.24F, dims.body_length * 0.08F * gait_bend);
+  out_pose.knee_fl = solve_bent_leg_joint(
+      shoulder_fl, out_pose.foot_fl, front_upper_len, front_lower_len, front_bend_hint);
+  out_pose.knee_fr = solve_bent_leg_joint(
+      shoulder_fr, out_pose.foot_fr, front_upper_len, front_lower_len, front_bend_hint);
+  out_pose.knee_bl = solve_bent_leg_joint(
+      shoulder_bl, out_pose.foot_bl, rear_upper_len, rear_lower_len, rear_bend_hint);
+  out_pose.knee_br = solve_bent_leg_joint(
+      shoulder_br, out_pose.foot_br, rear_upper_len, rear_lower_len, rear_bend_hint);
   out_pose.pose_leg_radius = dims.body_width * profile.leg_radius_scale;
 
   out_pose.hoof_scale = QVector3D(dims.body_width * profile.hoof_scale.x(),
@@ -551,35 +573,31 @@ namespace Render::Horse {
 namespace {
 
 auto build_baseline_pose() noexcept -> HorseSpecPose {
-  Render::GL::HorseDimensions const dims =
-      Render::GL::make_horse_dimensions(0U);
+  Render::GL::HorseDimensions const dims = Render::GL::make_horse_dimensions(0U);
   Render::GL::HorseGait gait{};
   HorseSpecPose pose{};
   make_horse_spec_pose_animated(dims, gait, HorsePoseMotion{}, pose);
   return pose;
 }
 
-auto baseline_pose() noexcept -> const HorseSpecPose & {
+auto baseline_pose() noexcept -> const HorseSpecPose& {
   static const HorseSpecPose pose = build_baseline_pose();
   return pose;
 }
 
-auto static_minimal_parts() noexcept
-    -> const Render::Creature::CompiledWholeMeshLod & {
+auto static_minimal_parts() noexcept -> const Render::Creature::CompiledWholeMeshLod& {
   static const auto compiled =
       Render::Creature::compile_whole_mesh_lod(horse_manifest().lod_minimal);
   return compiled;
 }
 
-auto static_full_parts() noexcept
-    -> const Render::Creature::CompiledWholeMeshLod & {
+auto static_full_parts() noexcept -> const Render::Creature::CompiledWholeMeshLod& {
   static const auto compiled =
       Render::Creature::compile_whole_mesh_lod(horse_manifest().lod_full);
   return compiled;
 }
 
-auto build_horse_bind_palette() noexcept
-    -> std::array<QMatrix4x4, k_horse_bone_count> {
+auto build_horse_bind_palette() noexcept -> std::array<QMatrix4x4, k_horse_bone_count> {
   std::array<QMatrix4x4, k_horse_bone_count> out{};
   BonePalette tmp{};
   evaluate_horse_skeleton(baseline_pose(), tmp);
@@ -591,7 +609,7 @@ auto build_horse_bind_palette() noexcept
 
 } // namespace
 
-auto horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec & {
+auto horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec& {
   static const Render::Creature::CreatureSpec spec = [] {
     Render::Creature::CreatureSpec s;
     s.species_name = "horse";
@@ -603,7 +621,7 @@ auto horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec & {
   return spec;
 }
 
-auto compute_horse_bone_palette(const HorseSpecPose &pose,
+auto compute_horse_bone_palette(const HorseSpecPose& pose,
                                 std::span<QMatrix4x4> out_bones) noexcept
     -> std::uint32_t {
   if (out_bones.size() < k_horse_bone_count) {

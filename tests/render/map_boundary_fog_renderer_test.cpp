@@ -1,9 +1,10 @@
-#include "game/map/terrain_service.h"
-#include "render/ground/map_boundary_fog_renderer.h"
 #include <algorithm>
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <vector>
+
+#include "game/map/terrain_service.h"
+#include "render/ground/map_boundary_fog_renderer.h"
 
 using Render::GL::MapBoundaryFogRenderer;
 
@@ -22,11 +23,11 @@ auto expected_fog_count(int width, int height) -> std::size_t {
   return (4U * k_cards_per_side + 4U) * k_curtain_rings;
 }
 
-void restore_flat_terrain(int width, int height, float tile_size,
-                          std::uint32_t seed, float frequency) {
+void restore_flat_terrain(
+    int width, int height, float tile_size, std::uint32_t seed, float frequency) {
   std::vector<float> heights(static_cast<std::size_t>(width * height), 0.0F);
-  std::vector<Game::Map::TerrainType> terrain_types(
-      heights.size(), Game::Map::TerrainType::Flat);
+  std::vector<Game::Map::TerrainType> terrain_types(heights.size(),
+                                                    Game::Map::TerrainType::Flat);
   Game::Map::BiomeSettings biome;
   biome.seed = seed;
   biome.height_noise_frequency = frequency;
@@ -181,8 +182,7 @@ TEST(MapBoundaryFogRendererTest, Tiny1x1MapDoesNotCrash) {
 
 TEST(MapBoundaryFogRendererTest, SatisfiesIRenderPassInterface) {
   MapBoundaryFogRenderer concrete;
-  Render::GL::IRenderPass *pass =
-      static_cast<Render::GL::IRenderPass *>(&concrete);
+  Render::GL::IRenderPass* pass = static_cast<Render::GL::IRenderPass*>(&concrete);
   EXPECT_NE(pass, nullptr);
 }
 

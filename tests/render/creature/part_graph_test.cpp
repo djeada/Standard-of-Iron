@@ -1,17 +1,18 @@
 
 
-#include "render/creature/part_graph.h"
-#include "render/creature/skeleton.h"
-#include "render/gl/primitives.h"
-#include "render/submitter.h"
-
 #include <QMatrix4x4>
 #include <QVector3D>
+
 #include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <span>
 #include <vector>
+
+#include "render/creature/part_graph.h"
+#include "render/creature/skeleton.h"
+#include "render/gl/primitives.h"
+#include "render/submitter.h"
 
 namespace {
 
@@ -22,10 +23,13 @@ using Render::GL::Mesh;
 using Render::GL::Texture;
 
 struct RecordedCall {
-  enum class Kind { Mesh, Part };
+  enum class Kind {
+    Mesh,
+    Part
+  };
   Kind kind{Kind::Mesh};
-  Mesh *mesh{nullptr};
-  Material *material{nullptr};
+  Mesh* mesh{nullptr};
+  Material* material{nullptr};
   QMatrix4x4 model;
   QVector3D color;
   float alpha{1.0F};
@@ -36,38 +40,44 @@ class RecordingSubmitter : public ISubmitter {
 public:
   std::vector<RecordedCall> calls;
 
-  void mesh(Mesh *m, const QMatrix4x4 &model, const QVector3D &color, Texture *,
-            float alpha, int mat_id) override {
+  void mesh(Mesh* m,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture*,
+            float alpha,
+            int mat_id) override {
     calls.push_back(
         {RecordedCall::Kind::Mesh, m, nullptr, model, color, alpha, mat_id});
   }
-  void part(Mesh *m, Material *mat, const QMatrix4x4 &model,
-            const QVector3D &color, Texture *tex, float alpha,
+  void part(Mesh* m,
+            Material* mat,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex,
+            float alpha,
             int mat_id) override {
     if (mat == nullptr) {
       this->mesh(m, model, color, tex, alpha, mat_id);
       return;
     }
-    calls.push_back(
-        {RecordedCall::Kind::Part, m, mat, model, color, alpha, mat_id});
+    calls.push_back({RecordedCall::Kind::Part, m, mat, model, color, alpha, mat_id});
   }
-  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
-                float) override {}
-  void selection_ring(const QMatrix4x4 &, float, float,
-                      const QVector3D &) override {}
-  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-            float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
-  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                    float, float, float, float) override {}
-  void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                   float) override {}
-  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+  void cylinder(
+      const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
+  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
+  void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
+  void healing_beam(const QVector3D&,
+                    const QVector3D&,
+                    const QVector3D&,
+                    float,
+                    float,
+                    float,
                     float) override {}
-  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                      float) override {}
+  void healer_aura(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void combat_dust(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
+  void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
 constexpr std::array<BoneDef, 5> k_beast_bones = {
@@ -87,7 +97,7 @@ auto beast_topology() noexcept -> SkeletonTopology {
 
 struct BeastSample {};
 
-BoneResolution beast_provider(void *, BoneIndex bone) noexcept {
+BoneResolution beast_provider(void*, BoneIndex bone) noexcept {
   BoneResolution r;
   switch (bone) {
   case 0:
@@ -119,7 +129,9 @@ BoneResolution beast_provider(void *, BoneIndex bone) noexcept {
 std::array<QMatrix4x4, 5> evaluate_beast() {
   BeastSample s;
   std::array<QMatrix4x4, 5> palette;
-  evaluate_skeleton(beast_topology(), &beast_provider, &s,
+  evaluate_skeleton(beast_topology(),
+                    &beast_provider,
+                    &s,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
   return palette;
@@ -207,8 +219,7 @@ TEST(PartGraphWalkerTest, ValidateAcceptsWellFormedGraph) {
       make_leg_capsule(),
       make_chest_box(),
   };
-  PartGraph g{
-      std::span<const PrimitiveInstance>(primitives.data(), primitives.size())};
+  PartGraph g{std::span<const PrimitiveInstance>(primitives.data(), primitives.size())};
   EXPECT_TRUE(validate_part_graph(beast_topology(), g));
 }
 
@@ -221,8 +232,12 @@ TEST(PartGraphWalkerTest, CylinderUsesCustomMeshOverrideWhenProvided) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_cube());
 }
@@ -235,14 +250,16 @@ TEST(PartGraphWalkerTest, SubmitsOneDrawPerPrimitiveAtLodFull) {
       make_leg_capsule(),
       make_chest_box(),
   };
-  PartGraph g{
-      std::span<const PrimitiveInstance>(primitives.data(), primitives.size())};
+  PartGraph g{std::span<const PrimitiveInstance>(primitives.data(), primitives.size())};
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  auto stats = submit_part_graph(beast_topology(), g,
+  auto stats = submit_part_graph(beast_topology(),
+                                 g,
                                  std::span<const QMatrix4x4>(palette),
-                                 CreatureLOD::Full, identity, sub);
+                                 CreatureLOD::Full,
+                                 identity,
+                                 sub);
 
   EXPECT_EQ(stats.submitted, 4U);
   EXPECT_EQ(stats.skipped_lod, 0U);
@@ -268,9 +285,12 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
   {
     RecordingSubmitter sub;
     QMatrix4x4 identity;
-    auto stats = submit_part_graph(beast_topology(), g,
+    auto stats = submit_part_graph(beast_topology(),
+                                   g,
                                    std::span<const QMatrix4x4>(palette),
-                                   CreatureLOD::Full, identity, sub);
+                                   CreatureLOD::Full,
+                                   identity,
+                                   sub);
     EXPECT_EQ(stats.submitted, 2U);
     EXPECT_EQ(stats.skipped_lod, 1U);
   }
@@ -278,9 +298,12 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
   {
     RecordingSubmitter sub;
     QMatrix4x4 identity;
-    auto stats = submit_part_graph(beast_topology(), g,
+    auto stats = submit_part_graph(beast_topology(),
+                                   g,
                                    std::span<const QMatrix4x4>(palette),
-                                   CreatureLOD::Minimal, identity, sub);
+                                   CreatureLOD::Minimal,
+                                   identity,
+                                   sub);
     EXPECT_EQ(stats.submitted, 2U);
     EXPECT_EQ(stats.skipped_lod, 1U);
   }
@@ -288,9 +311,12 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
   {
     RecordingSubmitter sub;
     QMatrix4x4 identity;
-    auto stats = submit_part_graph(beast_topology(), g,
+    auto stats = submit_part_graph(beast_topology(),
+                                   g,
                                    std::span<const QMatrix4x4>(palette),
-                                   CreatureLOD::Billboard, identity, sub);
+                                   CreatureLOD::Billboard,
+                                   identity,
+                                   sub);
     EXPECT_EQ(stats.submitted, 1U);
     EXPECT_EQ(stats.skipped_lod, 2U);
   }
@@ -305,8 +331,12 @@ TEST(PartGraphWalkerTest, SphereModelOriginMatchesBoneWithOffset) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QVector3D const origin = sub.calls[0].model.column(3).toVector3D();
@@ -322,8 +352,12 @@ TEST(PartGraphWalkerTest, CylinderSpansBetweenBoneOrigins) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QMatrix4x4 const m = sub.calls[0].model;
@@ -343,8 +377,12 @@ TEST(PartGraphWalkerTest, WorldFromUnitMatrixIsAppliedOnTheLeft) {
   world_from_unit.translate(10.0F, 20.0F, 30.0F);
 
   RecordingSubmitter sub;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, world_from_unit, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    world_from_unit,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QVector3D const origin = sub.calls[0].model.column(3).toVector3D();
@@ -361,9 +399,12 @@ TEST(PartGraphWalkerTest, InvalidAnchorIsSkippedAndCounted) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  auto stats = submit_part_graph(beast_topology(), g,
+  auto stats = submit_part_graph(beast_topology(),
+                                 g,
                                  std::span<const QMatrix4x4>(palette),
-                                 CreatureLOD::Full, identity, sub);
+                                 CreatureLOD::Full,
+                                 identity,
+                                 sub);
   EXPECT_EQ(stats.submitted, 0U);
   EXPECT_EQ(stats.skipped_invalid, 1U);
   EXPECT_TRUE(sub.calls.empty());
@@ -380,9 +421,12 @@ TEST(PartGraphWalkerTest, MeshShapeWithoutCustomMeshIsSkipped) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  auto stats = submit_part_graph(beast_topology(), g,
+  auto stats = submit_part_graph(beast_topology(),
+                                 g,
                                  std::span<const QMatrix4x4>(palette),
-                                 CreatureLOD::Full, identity, sub);
+                                 CreatureLOD::Full,
+                                 identity,
+                                 sub);
   EXPECT_EQ(stats.submitted, 0U);
   EXPECT_EQ(stats.skipped_invalid, 1U);
 }
@@ -399,9 +443,12 @@ TEST(PartGraphWalkerTest, MeshShapeWithCustomMeshIsSubmitted) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  auto stats = submit_part_graph(beast_topology(), g,
+  auto stats = submit_part_graph(beast_topology(),
+                                 g,
                                  std::span<const QMatrix4x4>(palette),
-                                 CreatureLOD::Full, identity, sub);
+                                 CreatureLOD::Full,
+                                 identity,
+                                 sub);
   EXPECT_EQ(stats.submitted, 1U);
   ASSERT_EQ(sub.calls.size(), 1U);
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_cube());
@@ -418,8 +465,12 @@ TEST(PartGraphWalkerTest, ColorAndAlphaAreForwarded) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
   EXPECT_LT((sub.calls[0].color - QVector3D(0.1F, 0.2F, 0.3F)).length(), 1e-6F);
   EXPECT_NEAR(sub.calls[0].alpha, 0.75F, 1e-6F);
@@ -431,9 +482,12 @@ TEST(PartGraphWalkerTest, EmptyGraphReturnsZeroStats) {
   PartGraph g{};
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  auto stats = submit_part_graph(beast_topology(), g,
+  auto stats = submit_part_graph(beast_topology(),
+                                 g,
                                  std::span<const QMatrix4x4>(palette),
-                                 CreatureLOD::Full, identity, sub);
+                                 CreatureLOD::Full,
+                                 identity,
+                                 sub);
   EXPECT_EQ(stats.submitted, 0U);
   EXPECT_EQ(stats.skipped_lod, 0U);
   EXPECT_EQ(stats.skipped_invalid, 0U);
@@ -447,8 +501,12 @@ TEST(PartGraphWalkerTest, BoxModelRespectsBoneLocalOffsetAndScale) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QMatrix4x4 const m = sub.calls[0].model;
@@ -473,8 +531,12 @@ TEST(PartGraphWalkerTest, ConeUsesUnitConeMesh) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_cone());
 }
@@ -487,8 +549,12 @@ TEST(PartGraphWalkerTest, CapsuleUsesUnitCapsuleMesh) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_capsule());
 }
@@ -505,8 +571,7 @@ TEST(PartGraphWalkerTest, OrientedCylinderRequiresTailAndRejectsWhenMissing) {
   EXPECT_FALSE(validate_part_graph(beast_topology(), g));
 }
 
-TEST(PartGraphWalkerTest,
-     OrientedCylinderSpansEndpointsAndUsesEllipticalRadii) {
+TEST(PartGraphWalkerTest, OrientedCylinderSpansEndpointsAndUsesEllipticalRadii) {
   auto palette = evaluate_beast();
   PrimitiveInstance p;
   p.shape = PrimitiveShape::OrientedCylinder;
@@ -519,9 +584,12 @@ TEST(PartGraphWalkerTest,
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  auto stats = submit_part_graph(beast_topology(), g,
+  auto stats = submit_part_graph(beast_topology(),
+                                 g,
                                  std::span<const QMatrix4x4>(palette),
-                                 CreatureLOD::Full, identity, sub);
+                                 CreatureLOD::Full,
+                                 identity,
+                                 sub);
   EXPECT_EQ(stats.submitted, 1U);
   ASSERT_EQ(sub.calls.size(), 1U);
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_cylinder());
@@ -529,7 +597,7 @@ TEST(PartGraphWalkerTest,
   QMatrix4x4 const m = sub.calls[0].model;
   QVector3D const bottom = m.map(QVector3D(0.0F, -0.5F, 0.0F));
   QVector3D const top = m.map(QVector3D(0.0F, 0.5F, 0.0F));
-  auto near = [](const QVector3D &a, const QVector3D &b) {
+  auto near = [](const QVector3D& a, const QVector3D& b) {
     return (a - b).length() < 1e-3F;
   };
   EXPECT_TRUE((near(bottom, QVector3D(0.0F, 0.0F, 0.0F)) &&
@@ -543,8 +611,7 @@ TEST(PartGraphWalkerTest,
   EXPECT_NEAR(rz, 0.1F, 1e-4F);
 }
 
-TEST(PartGraphWalkerTest,
-     OrientedCylinderZeroDepthFallsBackToCircularCrossSection) {
+TEST(PartGraphWalkerTest, OrientedCylinderZeroDepthFallsBackToCircularCrossSection) {
   auto palette = evaluate_beast();
   PrimitiveInstance p;
   p.shape = PrimitiveShape::OrientedCylinder;
@@ -557,8 +624,12 @@ TEST(PartGraphWalkerTest,
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
   QMatrix4x4 const m = sub.calls[0].model;
   float const rx = m.column(0).toVector3D().length();
@@ -578,8 +649,12 @@ TEST(PartGraphWalkerTest, OrientedSphereBuildsEllipsoidInBoneBasis) {
 
   RecordingSubmitter sub;
   QMatrix4x4 identity;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, identity, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    identity,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_sphere());
 
@@ -589,12 +664,10 @@ TEST(PartGraphWalkerTest, OrientedSphereBuildsEllipsoidInBoneBasis) {
   EXPECT_NEAR(m.column(1).toVector3D().length(), 0.6F, 1e-4F);
   EXPECT_NEAR(m.column(2).toVector3D().length(), 0.3F, 1e-4F);
 
-  EXPECT_LT((m.column(3).toVector3D() - QVector3D(0.0F, 1.7F, 0.0F)).length(),
-            1e-4F);
+  EXPECT_LT((m.column(3).toVector3D() - QVector3D(0.0F, 1.7F, 0.0F)).length(), 1e-4F);
 }
 
-TEST(PartGraphWalkerTest,
-     OrientedSphereRespectsHeadOffsetAndWorldFromUnitMatrix) {
+TEST(PartGraphWalkerTest, OrientedSphereRespectsHeadOffsetAndWorldFromUnitMatrix) {
   auto palette = evaluate_beast();
   PrimitiveInstance p;
   p.shape = PrimitiveShape::OrientedSphere;
@@ -607,8 +680,12 @@ TEST(PartGraphWalkerTest,
   QMatrix4x4 world_from_unit;
   world_from_unit.translate(100.0F, 0.0F, 0.0F);
   RecordingSubmitter sub;
-  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
-                    CreatureLOD::Full, world_from_unit, sub);
+  submit_part_graph(beast_topology(),
+                    g,
+                    std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full,
+                    world_from_unit,
+                    sub);
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QVector3D const origin = sub.calls[0].model.column(3).toVector3D();

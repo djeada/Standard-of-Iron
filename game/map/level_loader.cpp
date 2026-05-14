@@ -1,4 +1,12 @@
 #include "level_loader.h"
+
+#include <QDebug>
+#include <QFile>
+#include <qglobal.h>
+#include <qstringliteral.h>
+
+#include <memory>
+
 #include "../../render/gl/camera.h"
 #include "../../render/scene_renderer.h"
 #include "../core/component.h"
@@ -16,21 +24,18 @@
 #include "units/troop_type.h"
 #include "units/unit.h"
 #include "utils/resource_utils.h"
-#include <QDebug>
-#include <QFile>
-#include <memory>
-#include <qglobal.h>
-#include <qstringliteral.h>
 
 namespace Game::Map {
 
-auto LevelLoader::loadFromAssets(
-    const QString &map_path, Engine::Core::World &world,
-    Render::GL::Renderer &renderer, Render::GL::Camera &camera,
-    bool allow_default_player_barracks) -> LevelLoadResult {
+auto LevelLoader::loadFromAssets(const QString& map_path,
+                                 Engine::Core::World& world,
+                                 Render::GL::Renderer& renderer,
+                                 Render::GL::Camera& camera,
+                                 bool allow_default_player_barracks)
+    -> LevelLoadResult {
   LevelLoadResult res;
 
-  auto &owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Systems::OwnerRegistry::instance();
 
   Game::Visuals::VisualCatalog visual_catalog;
   const QString visuals_path = Utils::Resources::resolve_resource_path(
@@ -38,8 +43,7 @@ auto LevelLoader::loadFromAssets(
   bool visuals_loaded = false;
   if (QFile::exists(visuals_path)) {
     QString visuals_err;
-    visuals_loaded =
-        visual_catalog.load_from_json_file(visuals_path, &visuals_err);
+    visuals_loaded = visual_catalog.load_from_json_file(visuals_path, &visuals_err);
     if (!visuals_loaded && !visuals_err.isEmpty()) {
       qWarning() << "LevelLoader: Visual catalog parse failed:" << visuals_err;
     }
@@ -52,8 +56,7 @@ auto LevelLoader::loadFromAssets(
   Game::Units::register_built_in_units(*unit_reg);
   Game::Map::MapTransformer::setFactoryRegistry(unit_reg);
 
-  const QString resolved_map_path =
-      Utils::Resources::resolve_resource_path(map_path);
+  const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
 
   Game::Map::MapDefinition def;
   QString err;
@@ -76,15 +79,14 @@ auto LevelLoader::loadFromAssets(
     res.max_troops_per_player = def.max_troops_per_player;
     res.victory_config = def.victory;
 
-    const Game::Visuals::VisualCatalog *catalog_ptr =
+    const Game::Visuals::VisualCatalog* catalog_ptr =
         visuals_loaded ? &visual_catalog : nullptr;
-    auto rt =
-        Game::Map::MapTransformer::apply_to_world(def, world, catalog_ptr);
+    auto rt = Game::Map::MapTransformer::apply_to_world(def, world, catalog_ptr);
     if (!rt.unit_ids.empty()) {
       res.player_unit_id = rt.unit_ids.front();
     } else {
 
-      auto &nationRegistry = Game::Systems::NationRegistry::instance();
+      auto& nationRegistry = Game::Systems::NationRegistry::instance();
       auto reg = Game::Map::MapTransformer::get_factory_registry();
       if (reg) {
         Game::Units::SpawnParams sp;
@@ -92,14 +94,12 @@ auto LevelLoader::loadFromAssets(
         sp.player_id = 0;
         sp.spawn_type = Game::Units::SpawnType::Archer;
         sp.ai_controlled = !owners.is_player(sp.player_id);
-        if (const auto *nation =
-                nationRegistry.get_nation_for_player(sp.player_id)) {
+        if (const auto* nation = nationRegistry.get_nation_for_player(sp.player_id)) {
           sp.nation_id = nation->id;
         } else {
           sp.nation_id = nationRegistry.default_nation_id();
         }
-        if (auto unit =
-                reg->create(Game::Units::SpawnType::Archer, world, sp)) {
+        if (auto unit = reg->create(Game::Units::SpawnType::Archer, world, sp)) {
           res.player_unit_id = unit->id();
         } else {
           qWarning() << "LevelLoader: Fallback archer spawn failed";
@@ -109,8 +109,8 @@ auto LevelLoader::loadFromAssets(
 
     if (allow_default_player_barracks) {
       bool has_barracks = false;
-      for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
-        if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
+      for (auto* e : world.get_entities_with<Engine::Core::UnitComponent>()) {
+        if (auto* u = e->get_component<Engine::Core::UnitComponent>()) {
           if (u->spawn_type == Game::Units::SpawnType::Barracks &&
               owners.is_player(u->owner_id)) {
             has_barracks = true;
@@ -119,7 +119,7 @@ auto LevelLoader::loadFromAssets(
         }
       }
       if (!has_barracks) {
-        auto &nationRegistry = Game::Systems::NationRegistry::instance();
+        auto& nationRegistry = Game::Systems::NationRegistry::instance();
         auto reg2 = Game::Map::MapTransformer::get_factory_registry();
         if (reg2) {
           Game::Units::SpawnParams sp;
@@ -127,8 +127,7 @@ auto LevelLoader::loadFromAssets(
           sp.player_id = owners.get_local_player_id();
           sp.spawn_type = Game::Units::SpawnType::Barracks;
           sp.ai_controlled = !owners.is_player(sp.player_id);
-          if (const auto *nation =
-                  nationRegistry.get_nation_for_player(sp.player_id)) {
+          if (const auto* nation = nationRegistry.get_nation_for_player(sp.player_id)) {
             sp.nation_id = nation->id;
           } else {
             sp.nation_id = nationRegistry.default_nation_id();
@@ -152,7 +151,7 @@ auto LevelLoader::loadFromAssets(
     res.grid_height = 50;
     res.tile_size = 1.0F;
 
-    auto &nationRegistry = Game::Systems::NationRegistry::instance();
+    auto& nationRegistry = Game::Systems::NationRegistry::instance();
     auto reg = Game::Map::MapTransformer::get_factory_registry();
     if (reg) {
       Game::Units::SpawnParams sp;
@@ -160,8 +159,7 @@ auto LevelLoader::loadFromAssets(
       sp.player_id = 0;
       sp.spawn_type = Game::Units::SpawnType::Archer;
       sp.ai_controlled = !owners.is_player(sp.player_id);
-      if (const auto *nation =
-              nationRegistry.get_nation_for_player(sp.player_id)) {
+      if (const auto* nation = nationRegistry.get_nation_for_player(sp.player_id)) {
         sp.nation_id = nation->id;
       } else {
         sp.nation_id = nationRegistry.default_nation_id();

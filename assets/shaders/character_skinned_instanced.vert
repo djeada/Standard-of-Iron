@@ -20,7 +20,9 @@ layout(location = 11) in vec4 i_variation_material;
 
 uniform mat4 u_view_proj;
 
-layout(std140) uniform BonePalette { mat4 bones[INSTANCED_BATCH_SIZE * 64]; }
+layout(std140) uniform BonePalette {
+  mat4 bones[INSTANCED_BATCH_SIZE * 64];
+}
 u_palette;
 
 out vec3 v_normal_ws;

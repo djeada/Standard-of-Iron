@@ -21,18 +21,21 @@ void PosePaletteCache::generate() {
   constexpr std::uint32_t k_base_seed = 0;
   constexpr float k_cycle = 1.0F;
 
-  constexpr AnimState k_states[] = {AnimState::Idle, AnimState::Move,
-                                    AnimState::Run,  AnimState::Construct,
-                                    AnimState::Heal, AnimState::Hit};
+  constexpr AnimState k_states[] = {AnimState::Idle,
+                                    AnimState::Move,
+                                    AnimState::Run,
+                                    AnimState::Construct,
+                                    AnimState::Heal,
+                                    AnimState::Hit};
 
   for (AnimState state : k_states) {
     bool is_moving = (state == AnimState::Move || state == AnimState::Run);
 
     for (std::uint8_t frame = 0; frame < k_anim_frame_count; ++frame) {
-      float phase = (k_anim_frame_count > 1)
-                        ? static_cast<float>(frame) /
-                              static_cast<float>(k_anim_frame_count - 1)
-                        : 0.0F;
+      float phase =
+          (k_anim_frame_count > 1)
+              ? static_cast<float>(frame) / static_cast<float>(k_anim_frame_count - 1)
+              : 0.0F;
       float time = phase * k_cycle;
 
       HumanoidPose pose;
@@ -55,15 +58,15 @@ void PosePaletteCache::generate() {
                                            AnimState::AttackRanged};
   for (AnimState state : k_combat_states) {
     for (std::uint8_t frame = 0; frame < k_anim_frame_count; ++frame) {
-      float phase = (k_anim_frame_count > 1)
-                        ? static_cast<float>(frame) /
-                              static_cast<float>(k_anim_frame_count - 1)
-                        : 0.0F;
+      float phase =
+          (k_anim_frame_count > 1)
+              ? static_cast<float>(frame) / static_cast<float>(k_anim_frame_count - 1)
+              : 0.0F;
       float time = phase * k_cycle;
 
       HumanoidPose pose;
-      HumanoidRendererBase::compute_locomotion_pose(k_base_seed, time, false,
-                                                    default_variation, pose);
+      HumanoidRendererBase::compute_locomotion_pose(
+          k_base_seed, time, false, default_variation, pose);
 
       PosePaletteKey key;
       key.state = state;
@@ -80,8 +83,7 @@ void PosePaletteCache::generate() {
   m_generated = true;
 }
 
-auto PosePaletteCache::get(const PosePaletteKey &key) const
-    -> const PosePaletteEntry * {
+auto PosePaletteCache::get(const PosePaletteKey& key) const -> const PosePaletteEntry* {
   std::lock_guard<std::mutex> lock(m_mutex);
   auto it = m_palette.find(key);
   if (it == m_palette.end()) {

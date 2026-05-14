@@ -1,29 +1,34 @@
 #include "unit.h"
 
+#include <qvectornd.h>
+
+#include <string>
+#include <utility>
+
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../systems/nation_id.h"
 #include "../systems/nation_registry.h"
 #include "../systems/troop_profile_service.h"
 #include "units/troop_type.h"
-#include <qvectornd.h>
-#include <string>
-#include <utility>
 
 namespace Game::Units {
 
-Unit::Unit(Engine::Core::World &world, TroopType type)
-    : m_world(&world), m_type_string(troop_typeToString(type)) {}
+Unit::Unit(Engine::Core::World& world, TroopType type)
+    : m_world(&world)
+    , m_type_string(troop_typeToString(type)) {
+}
 
-Unit::Unit(Engine::Core::World &world, std::string type)
-    : m_world(&world), m_type_string(std::move(type)) {}
+Unit::Unit(Engine::Core::World& world, std::string type)
+    : m_world(&world)
+    , m_type_string(std::move(type)) {
+}
 
-auto Unit::entity() const -> Engine::Core::Entity * {
+auto Unit::entity() const -> Engine::Core::Entity* {
   return (m_world != nullptr) ? m_world->get_entity(m_id) : nullptr;
 }
 
-auto Unit::resolve_nation_id(const SpawnParams &params)
-    -> Game::Systems::NationID {
+auto Unit::resolve_nation_id(const SpawnParams& params) -> Game::Systems::NationID {
 
   return params.nation_id;
 }
@@ -32,7 +37,7 @@ void Unit::ensure_core_components() {
   if (m_world == nullptr) {
     return;
   }
-  if (auto *e = entity()) {
+  if (auto* e = entity()) {
     if (m_t == nullptr) {
       m_t = e->get_component<Engine::Core::TransformComponent>();
     }
@@ -54,7 +59,7 @@ void Unit::ensure_core_components() {
 void Unit::move_to(float x, float z) {
   ensure_core_components();
   if (m_mv == nullptr) {
-    if (auto *e = entity()) {
+    if (auto* e = entity()) {
       m_mv = e->add_component<Engine::Core::MovementComponent>();
     }
   }
@@ -69,12 +74,12 @@ void Unit::move_to(float x, float z) {
     m_mv->pending_request_id = 0;
   }
 
-  if (auto *e = entity()) {
-    auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+  if (auto* e = entity()) {
+    auto* hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_comp != nullptr) && hold_comp->active) {
       hold_comp->begin_exit();
     }
-    auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+    auto* guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
     if (guard_comp != nullptr) {
       guard_comp->active = false;
     }
@@ -82,8 +87,8 @@ void Unit::move_to(float x, float z) {
 }
 
 auto Unit::is_alive() const -> bool {
-  if (auto *e = entity()) {
-    if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
+  if (auto* e = entity()) {
+    if (auto* u = e->get_component<Engine::Core::UnitComponent>()) {
       return u->health > 0;
     }
   }
@@ -91,8 +96,8 @@ auto Unit::is_alive() const -> bool {
 }
 
 auto Unit::position() const -> QVector3D {
-  if (auto *e = entity()) {
-    if (auto *t = e->get_component<Engine::Core::TransformComponent>()) {
+  if (auto* e = entity()) {
+    if (auto* t = e->get_component<Engine::Core::TransformComponent>()) {
       return {t->position.x, t->position.y, t->position.z};
     }
   }
@@ -100,12 +105,12 @@ auto Unit::position() const -> QVector3D {
 }
 
 void Unit::set_hold_mode(bool enabled) {
-  auto *e = entity();
+  auto* e = entity();
   if (e == nullptr) {
     return;
   }
 
-  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+  auto* hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
 
   if (enabled) {
     if (hold_comp == nullptr) {
@@ -117,12 +122,12 @@ void Unit::set_hold_mode(bool enabled) {
     hold_comp->active = true;
     hold_comp->exit_cooldown = 0.0F;
 
-    auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+    auto* guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
     if (guard_comp != nullptr) {
       guard_comp->active = false;
     }
 
-    auto *mv = e->get_component<Engine::Core::MovementComponent>();
+    auto* mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
       mv->has_target = false;
       mv->clear_path();
@@ -136,22 +141,22 @@ void Unit::set_hold_mode(bool enabled) {
 }
 
 auto Unit::is_in_hold_mode() const -> bool {
-  auto *e = entity();
+  auto* e = entity();
   if (e == nullptr) {
     return false;
   }
 
-  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+  auto* hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
   return (hold_comp != nullptr) && hold_comp->active;
 }
 
 void Unit::set_guard_mode(bool enabled) {
-  auto *e = entity();
+  auto* e = entity();
   if (e == nullptr) {
     return;
   }
 
-  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  auto* guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
 
   if (enabled) {
     if (guard_comp == nullptr) {
@@ -160,13 +165,13 @@ void Unit::set_guard_mode(bool enabled) {
     guard_comp->active = true;
     guard_comp->returning_to_guard_position = false;
 
-    auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+    auto* hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_comp != nullptr) && hold_comp->active) {
       hold_comp->begin_exit();
     }
 
     if (!guard_comp->has_guard_target) {
-      auto *transform = e->get_component<Engine::Core::TransformComponent>();
+      auto* transform = e->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr) {
         guard_comp->guard_position_x = transform->position.x;
         guard_comp->guard_position_z = transform->position.z;
@@ -181,12 +186,12 @@ void Unit::set_guard_mode(bool enabled) {
 }
 
 void Unit::set_guard_target(Engine::Core::EntityID target_id) {
-  auto *e = entity();
+  auto* e = entity();
   if (e == nullptr) {
     return;
   }
 
-  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  auto* guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
   if (guard_comp == nullptr) {
     guard_comp = e->add_component<Engine::Core::GuardModeComponent>();
   }
@@ -198,19 +203,19 @@ void Unit::set_guard_target(Engine::Core::EntityID target_id) {
   guard_comp->returning_to_guard_position = false;
   guard_comp->has_guard_target = true;
 
-  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+  auto* hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
   if ((hold_comp != nullptr) && hold_comp->active) {
     hold_comp->begin_exit();
   }
 }
 
 void Unit::set_guard_position(float x, float z) {
-  auto *e = entity();
+  auto* e = entity();
   if (e == nullptr) {
     return;
   }
 
-  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  auto* guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
   if (guard_comp == nullptr) {
     guard_comp = e->add_component<Engine::Core::GuardModeComponent>();
   }
@@ -222,29 +227,29 @@ void Unit::set_guard_position(float x, float z) {
   guard_comp->returning_to_guard_position = false;
   guard_comp->has_guard_target = true;
 
-  auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
+  auto* hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
   if ((hold_comp != nullptr) && hold_comp->active) {
     hold_comp->begin_exit();
   }
 }
 
 auto Unit::is_in_guard_mode() const -> bool {
-  auto *e = entity();
+  auto* e = entity();
   if (e == nullptr) {
     return false;
   }
 
-  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  auto* guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
   return (guard_comp != nullptr) && guard_comp->active;
 }
 
 void Unit::clear_guard_mode() {
-  auto *e = entity();
+  auto* e = entity();
   if (e == nullptr) {
     return;
   }
 
-  auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
+  auto* guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
   if (guard_comp != nullptr) {
     guard_comp->active = false;
     guard_comp->guarded_entity_id = 0;
@@ -256,33 +261,30 @@ void Unit::clear_guard_mode() {
 }
 
 void Unit::set_run_mode(bool enabled) {
-  auto *e = entity();
+  auto* e = entity();
   if (e == nullptr) {
     return;
   }
 
-  const auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
-  if (unit_comp == nullptr ||
-      !Game::Units::can_use_run_mode(unit_comp->spawn_type)) {
+  const auto* unit_comp = e->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr || !Game::Units::can_use_run_mode(unit_comp->spawn_type)) {
     return;
   }
 
-  auto *stamina_comp = e->get_component<Engine::Core::StaminaComponent>();
+  auto* stamina_comp = e->get_component<Engine::Core::StaminaComponent>();
   if (stamina_comp == nullptr) {
     if (!enabled) {
       return;
     }
     stamina_comp = e->add_component<Engine::Core::StaminaComponent>();
 
-    const auto troop_type =
-        Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+    const auto troop_type = Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
     if (troop_type.has_value()) {
-      const auto profile =
-          Game::Systems::TroopProfileService::instance().get_profile(
-              unit_comp->nation_id, *troop_type);
-      stamina_comp->initialize_from_stats(
-          profile.combat.max_stamina, profile.combat.stamina_regen_rate,
-          profile.combat.stamina_depletion_rate);
+      const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+          unit_comp->nation_id, *troop_type);
+      stamina_comp->initialize_from_stats(profile.combat.max_stamina,
+                                          profile.combat.stamina_regen_rate,
+                                          profile.combat.stamina_depletion_rate);
     }
   }
 
@@ -290,24 +292,23 @@ void Unit::set_run_mode(bool enabled) {
 }
 
 auto Unit::is_running() const -> bool {
-  const auto *e = entity();
+  const auto* e = entity();
   if (e == nullptr) {
     return false;
   }
 
-  const auto *stamina_comp = e->get_component<Engine::Core::StaminaComponent>();
+  const auto* stamina_comp = e->get_component<Engine::Core::StaminaComponent>();
   return stamina_comp != nullptr && stamina_comp->is_running;
 }
 
 auto Unit::can_run() const -> bool {
-  const auto *e = entity();
+  const auto* e = entity();
   if (e == nullptr) {
     return false;
   }
 
-  const auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
-  return unit_comp != nullptr &&
-         Game::Units::can_use_run_mode(unit_comp->spawn_type);
+  const auto* unit_comp = e->get_component<Engine::Core::UnitComponent>();
+  return unit_comp != nullptr && Game::Units::can_use_run_mode(unit_comp->spawn_type);
 }
 
 } // namespace Game::Units

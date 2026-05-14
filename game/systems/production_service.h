@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../units/troop_type.h"
-#include "nation_id.h"
 #include <string>
 #include <vector>
+
+#include "../units/troop_type.h"
+#include "nation_id.h"
 
 namespace Engine::Core {
 class World;
@@ -43,47 +44,53 @@ struct ProductionState {
 class ProductionService {
 public:
   static auto start_production_for_first_selected_barracks(
-      Engine::Core::World &world,
-      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
+      Engine::Core::World& world,
+      const std::vector<Engine::Core::EntityID>& selected,
+      int owner_id,
       Game::Units::TroopType unit_type) -> ProductionResult;
 
   static auto start_production_for_first_selected_barracks(
-      Engine::Core::World &world,
-      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
-      const std::string &unit_type) -> ProductionResult {
+      Engine::Core::World& world,
+      const std::vector<Engine::Core::EntityID>& selected,
+      int owner_id,
+      const std::string& unit_type) -> ProductionResult {
     return start_production_for_first_selected_barracks(
-        world, selected, owner_id,
-        Game::Units::troop_typeFromString(unit_type));
+        world, selected, owner_id, Game::Units::troop_typeFromString(unit_type));
   }
 
   static auto set_rally_for_first_selected_barracks(
-      Engine::Core::World &world,
-      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
-      float x, float z) -> bool;
+      Engine::Core::World& world,
+      const std::vector<Engine::Core::EntityID>& selected,
+      int owner_id,
+      float x,
+      float z) -> bool;
 
   static auto start_production_for_first_selected_home(
-      Engine::Core::World &world,
-      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
+      Engine::Core::World& world,
+      const std::vector<Engine::Core::EntityID>& selected,
+      int owner_id,
       Game::Units::TroopType unit_type) -> ProductionResult;
 
   static auto start_production_for_first_selected_home(
-      Engine::Core::World &world,
-      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
-      const std::string &unit_type) -> ProductionResult {
+      Engine::Core::World& world,
+      const std::vector<Engine::Core::EntityID>& selected,
+      int owner_id,
+      const std::string& unit_type) -> ProductionResult {
     return start_production_for_first_selected_home(
-        world, selected, owner_id,
-        Game::Units::troop_typeFromString(unit_type));
+        world, selected, owner_id, Game::Units::troop_typeFromString(unit_type));
   }
 
-  static auto get_selected_barracks_state(
-      Engine::Core::World &world,
-      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
-      ProductionState &out_state) -> bool;
+  static auto
+  get_selected_barracks_state(Engine::Core::World& world,
+                              const std::vector<Engine::Core::EntityID>& selected,
+                              int owner_id,
+                              ProductionState& out_state) -> bool;
 
   static auto
-  get_selected_home_state(Engine::Core::World &world,
-                          const std::vector<Engine::Core::EntityID> &selected,
-                          int owner_id, ProductionState &out_state) -> bool;
+  get_selected_home_state(Engine::Core::World& world,
+                          const std::vector<Engine::Core::EntityID>& selected,
+                          int owner_id,
+                          ProductionState& out_state) -> bool;
 };
 
 } // namespace Game::Systems

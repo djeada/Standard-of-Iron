@@ -9,8 +9,7 @@
 
 namespace TestAssets {
 
-inline auto
-find_creature_assets_dir(std::string_view marker_file) -> std::string {
+inline auto find_creature_assets_dir(std::string_view marker_file) -> std::string {
   namespace fs = std::filesystem;
 
   fs::path const app_dir =
@@ -29,7 +28,7 @@ find_creature_assets_dir(std::string_view marker_file) -> std::string {
       fs::path{"assets"} / "creatures",
   };
 
-  for (auto const &candidate : candidates) {
+  for (auto const& candidate : candidates) {
     if (fs::exists(candidate / marker_file)) {
       return fs::absolute(candidate).lexically_normal().string();
     }

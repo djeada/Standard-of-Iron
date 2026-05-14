@@ -8,7 +8,7 @@ class AudioSystemProxy : public QObject {
   Q_OBJECT
 
 public:
-  explicit AudioSystemProxy(QObject *parent = nullptr);
+  explicit AudioSystemProxy(QObject* parent = nullptr);
   ~AudioSystemProxy() override = default;
 
   Q_INVOKABLE static void setMasterVolume(float volume);

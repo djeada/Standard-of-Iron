@@ -1,4 +1,7 @@
 #include "defense_tower.h"
+
+#include <memory>
+
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
@@ -6,29 +9,28 @@
 #include "../systems/building_collision_registry.h"
 #include "building_spawn_setup.h"
 #include "units/unit.h"
-#include <memory>
 
 namespace Game::Units {
 
-DefenseTower::DefenseTower(Engine::Core::World &world)
-    : Unit(world, "defense_tower") {}
+DefenseTower::DefenseTower(Engine::Core::World& world)
+    : Unit(world, "defense_tower") {
+}
 
-auto DefenseTower::create(Engine::Core::World &world, const SpawnParams &params)
-    -> std::unique_ptr<DefenseTower> {
+auto DefenseTower::create(Engine::Core::World& world,
+                          const SpawnParams& params) -> std::unique_ptr<DefenseTower> {
   auto unit = std::unique_ptr<DefenseTower>(new DefenseTower(world));
   unit->init(params);
   return unit;
 }
 
-void DefenseTower::init(const SpawnParams &params) {
-  auto *e = m_world->create_entity();
+void DefenseTower::init(const SpawnParams& params) {
+  auto* e = m_world->create_entity();
   m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
-  m_t->position = {params.position.x(), params.position.y(),
-                   params.position.z()};
+  m_t->position = {params.position.x(), params.position.y(), params.position.z()};
   m_t->scale = {1.0F, 2.0F, 1.0F};
 
   m_u = e->add_component<Engine::Core::UnitComponent>();

@@ -25,8 +25,7 @@ struct LodInputs {
   bool never_batch{false};
 };
 
-[[nodiscard]] constexpr auto
-select_lod(const LodInputs &in) noexcept -> LodTier {
+[[nodiscard]] constexpr auto select_lod(const LodInputs& in) noexcept -> LodTier {
   if (!in.in_frustum || !in.fog_visible) {
     return LodTier::Culled;
   }

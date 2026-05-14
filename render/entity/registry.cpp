@@ -1,4 +1,8 @@
 #include "registry.h"
+
+#include <string>
+#include <utility>
+
 #include "../scene_renderer.h"
 #include "ballista_renderer.h"
 #include "barracks_renderer.h"
@@ -27,17 +31,15 @@
 #include "nations/roman/horse_swordsman_renderer.h"
 #include "nations/roman/spearman_renderer.h"
 #include "nations/roman/swordsman_renderer.h"
-#include <string>
-#include <utility>
 
 namespace Render::GL {
 
-void EntityRendererRegistry::register_renderer(const std::string &type,
+void EntityRendererRegistry::register_renderer(const std::string& type,
                                                RenderFunc func) {
   m_map[type] = std::move(func);
 }
 
-auto EntityRendererRegistry::get(const std::string &type) const -> RenderFunc {
+auto EntityRendererRegistry::get(const std::string& type) const -> RenderFunc {
   auto it = m_map.find(type);
   if (it != m_map.end()) {
     return it->second;
@@ -45,7 +47,7 @@ auto EntityRendererRegistry::get(const std::string &type) const -> RenderFunc {
   return {};
 }
 
-void register_built_in_entity_renderers(EntityRendererRegistry &registry) {
+void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   Roman::register_archer_renderer(registry);
   Carthage::register_archer_renderer(registry);
 

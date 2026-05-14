@@ -15,13 +15,13 @@ struct LevelSnapshot;
 
 class CameraController {
 public:
-  CameraController(Render::GL::Camera *camera,
-                   Game::Systems::CameraService *camera_service,
-                   Engine::Core::World *world);
+  CameraController(Render::GL::Camera* camera,
+                   Game::Systems::CameraService* camera_service,
+                   Engine::Core::World* world);
 
   void move(float dx, float dz);
   void elevate(float dy);
-  void reset(int local_owner_id, const Game::Systems::LevelSnapshot &level);
+  void reset(int local_owner_id, const Game::Systems::LevelSnapshot& level);
   void zoom(float delta);
   [[nodiscard]] float distance() const;
   void yaw(float degrees);
@@ -32,7 +32,7 @@ public:
   void update_follow(bool follow_enabled);
 
 private:
-  Render::GL::Camera *m_camera;
-  Game::Systems::CameraService *m_camera_service;
-  Engine::Core::World *m_world;
+  Render::GL::Camera* m_camera;
+  Game::Systems::CameraService* m_camera_service;
+  Engine::Core::World* m_world;
 };

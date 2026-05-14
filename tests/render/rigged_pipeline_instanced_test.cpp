@@ -1,34 +1,36 @@
 
 
+#include <QMatrix4x4>
+#include <QVector3D>
+
+#include <cstdint>
+#include <gtest/gtest.h>
+#include <vector>
+
 #include "render/bone_palette_arena.h"
 #include "render/draw_queue.h"
 #include "render/gl/backend/rigged_character_pipeline.h"
 #include "render/material.h"
-
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <cstdint>
-#include <gtest/gtest.h>
-#include <vector>
 
 namespace {
 
 using Render::GL::RiggedCreatureCmd;
 using Render::GL::BackendPipelines::RiggedCharacterPipeline;
 
-auto k_mesh_a = reinterpret_cast<Render::GL::RiggedMesh *>(
-    static_cast<std::uintptr_t>(0x1000));
-auto k_mesh_b = reinterpret_cast<Render::GL::RiggedMesh *>(
-    static_cast<std::uintptr_t>(0x2000));
-auto k_mat_a = reinterpret_cast<const Render::GL::Material *>(
-    static_cast<std::uintptr_t>(0x3000));
-auto k_mat_b = reinterpret_cast<const Render::GL::Material *>(
-    static_cast<std::uintptr_t>(0x4000));
-auto k_tex = reinterpret_cast<Render::GL::Texture *>(
-    static_cast<std::uintptr_t>(0x5000));
+auto k_mesh_a =
+    reinterpret_cast<Render::GL::RiggedMesh*>(static_cast<std::uintptr_t>(0x1000));
+auto k_mesh_b =
+    reinterpret_cast<Render::GL::RiggedMesh*>(static_cast<std::uintptr_t>(0x2000));
+auto k_mat_a =
+    reinterpret_cast<const Render::GL::Material*>(static_cast<std::uintptr_t>(0x3000));
+auto k_mat_b =
+    reinterpret_cast<const Render::GL::Material*>(static_cast<std::uintptr_t>(0x4000));
+auto k_tex =
+    reinterpret_cast<Render::GL::Texture*>(static_cast<std::uintptr_t>(0x5000));
 
-auto make_cmd(Render::GL::RiggedMesh *mesh, const Render::GL::Material *mat,
-              Render::GL::Texture *tex = nullptr) -> RiggedCreatureCmd {
+auto make_cmd(Render::GL::RiggedMesh* mesh,
+              const Render::GL::Material* mat,
+              Render::GL::Texture* tex = nullptr) -> RiggedCreatureCmd {
   RiggedCreatureCmd c;
   c.mesh = mesh;
   c.material = mat;
@@ -99,8 +101,7 @@ TEST(RiggedPipelineInstanced, CapBoundsLargeCompatibleRun) {
   }
   constexpr std::size_t k_cap = 16;
   std::vector<std::size_t> groups;
-  RiggedCharacterPipeline::compute_groups(cmds.data(), cmds.size(), k_cap,
-                                          groups);
+  RiggedCharacterPipeline::compute_groups(cmds.data(), cmds.size(), k_cap, groups);
 
   ASSERT_EQ(groups.size(), 13U);
   for (std::size_t k = 0; k < 12; ++k) {
@@ -113,8 +114,7 @@ TEST(RiggedPipelineInstanced, PaletteRangeCoversDeclaredShaderBatch) {
   constexpr std::size_t k_shader_batch_size = 16;
   EXPECT_EQ(RiggedCharacterPipeline::palette_range_bytes_for_instanced_shader(
                 k_shader_batch_size),
-            k_shader_batch_size *
-                Render::GL::BonePaletteArena::k_palette_bytes);
+            k_shader_batch_size * Render::GL::BonePaletteArena::k_palette_bytes);
 }
 
 TEST(RiggedPipelineInstanced, HeadlessDrawInstancedRecordsBatchSize) {
@@ -131,9 +131,9 @@ TEST(RiggedPipelineInstanced, HeadlessDrawInstancedPointerBatchReturnsFalse) {
   RiggedCharacterPipeline pipe(nullptr, nullptr);
 
   std::vector<RiggedCreatureCmd> cmds(5, make_cmd(k_mesh_a, k_mat_a));
-  std::vector<const RiggedCreatureCmd *> refs;
+  std::vector<const RiggedCreatureCmd*> refs;
   refs.reserve(cmds.size());
-  for (const auto &cmd : cmds) {
+  for (const auto& cmd : cmds) {
     refs.push_back(&cmd);
   }
 

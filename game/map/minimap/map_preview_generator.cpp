@@ -1,8 +1,5 @@
 #include "map_preview_generator.h"
-#include "../../units/spawn_type.h"
-#include "../map_loader.h"
-#include "minimap_generator.h"
-#include "minimap_utils.h"
+
 #include <QColor>
 #include <QFile>
 #include <QJsonDocument>
@@ -10,7 +7,13 @@
 #include <QPainter>
 #include <QPen>
 #include <QVariantMap>
+
 #include <cmath>
+
+#include "../../units/spawn_type.h"
+#include "../map_loader.h"
+#include "minimap_generator.h"
+#include "minimap_utils.h"
 
 namespace Game::Map::Minimap {
 
@@ -23,12 +26,13 @@ constexpr float INNER_OFFSET_RATIO = 0.3F;
 } // namespace
 
 MapPreviewGenerator::MapPreviewGenerator()
-    : m_minimap_generator(std::make_unique<MinimapGenerator>()) {}
+    : m_minimap_generator(std::make_unique<MinimapGenerator>()) {
+}
 
 MapPreviewGenerator::~MapPreviewGenerator() = default;
 
 auto MapPreviewGenerator::generate_preview(
-    const QString &map_path, const QVariantList &player_configs) -> QImage {
+    const QString& map_path, const QVariantList& player_configs) -> QImage {
 
   MapDefinition map_def;
   QString error;
@@ -40,18 +44,17 @@ auto MapPreviewGenerator::generate_preview(
 
   QImage preview = m_minimap_generator->generate(map_def);
 
-  std::vector<PlayerConfig> parsed_configs =
-      parse_player_configs(player_configs);
+  std::vector<PlayerConfig> parsed_configs = parse_player_configs(player_configs);
   draw_player_bases(preview, map_def, parsed_configs);
 
   return preview;
 }
 
-auto MapPreviewGenerator::parse_player_configs(
-    const QVariantList &configs) const -> std::vector<PlayerConfig> {
+auto MapPreviewGenerator::parse_player_configs(const QVariantList& configs) const
+    -> std::vector<PlayerConfig> {
   std::vector<PlayerConfig> result;
 
-  for (const QVariant &var : configs) {
+  for (const QVariant& var : configs) {
     if (!var.canConvert<QVariantMap>()) {
       continue;
     }
@@ -77,8 +80,9 @@ auto MapPreviewGenerator::parse_player_configs(
 }
 
 void MapPreviewGenerator::draw_player_bases(
-    QImage &image, const MapDefinition &map_def,
-    const std::vector<PlayerConfig> &player_configs) {
+    QImage& image,
+    const MapDefinition& map_def,
+    const std::vector<PlayerConfig>& player_configs) {
 
   if (player_configs.empty()) {
     return;
@@ -89,7 +93,7 @@ void MapPreviewGenerator::draw_player_bases(
 
   constexpr float pixels_per_tile = 2.0F;
 
-  for (const auto &spawn : map_def.spawns) {
+  for (const auto& spawn : map_def.spawns) {
     if (!Game::Units::is_building_spawn(spawn.type)) {
       continue;
     }
@@ -99,7 +103,7 @@ void MapPreviewGenerator::draw_player_bases(
     }
 
     QColor player_color;
-    for (const auto &config : player_configs) {
+    for (const auto& config : player_configs) {
       if (config.player_id == spawn.player_id) {
         player_color = config.color;
         break;
@@ -110,8 +114,7 @@ void MapPreviewGenerator::draw_player_bases(
       continue;
     }
 
-    const auto [world_x, world_z] =
-        grid_to_world_coords(spawn.x, spawn.z, map_def);
+    const auto [world_x, world_z] = grid_to_world_coords(spawn.x, spawn.z, map_def);
     const auto [px, py] =
         world_to_pixel(world_x, world_z, map_def.grid, pixels_per_tile);
 
@@ -128,19 +131,20 @@ void MapPreviewGenerator::draw_player_bases(
     constexpr float INNER_SIZE = BASE_SIZE * INNER_SIZE_RATIO;
     painter.drawEllipse(
         QPointF(px - HALF * INNER_OFFSET_RATIO, py - HALF * INNER_OFFSET_RATIO),
-        INNER_SIZE * 0.5F, INNER_SIZE * 0.5F);
+        INNER_SIZE * 0.5F,
+        INNER_SIZE * 0.5F);
   }
 }
 
-auto MapPreviewGenerator::world_to_pixel(
-    float world_x, float world_z, const GridDefinition &grid,
-    float pixels_per_tile) const -> std::pair<float, float> {
+auto MapPreviewGenerator::world_to_pixel(float world_x,
+                                         float world_z,
+                                         const GridDefinition& grid,
+                                         float pixels_per_tile) const
+    -> std::pair<float, float> {
 
-  const auto &orient = MinimapOrientation::instance();
-  const float rotated_x =
-      world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
-  const float rotated_z =
-      world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
+  const auto& orient = MinimapOrientation::instance();
+  const float rotated_x = world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
+  const float rotated_z = world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
   const float world_width = grid.width * grid.tile_size;
   const float world_height = grid.height * grid.tile_size;
@@ -148,8 +152,7 @@ auto MapPreviewGenerator::world_to_pixel(
   const float img_height = grid.height * pixels_per_tile;
 
   const float px = (rotated_x + world_width * 0.5F) * (img_width / world_width);
-  const float py =
-      (rotated_z + world_height * 0.5F) * (img_height / world_height);
+  const float py = (rotated_z + world_height * 0.5F) * (img_height / world_height);
 
   return {px, py};
 }
