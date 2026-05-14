@@ -1,7 +1,10 @@
 #include "game/map/terrain.h"
 #include "render/gl/mesh.h"
 #include "render/ground/linear_feature_geometry.h"
+#include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 
 namespace {
 
@@ -119,6 +122,54 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
   ASSERT_NE(mesh, nullptr);
   EXPECT_FALSE(mesh->get_vertices().empty());
   EXPECT_FALSE(mesh->get_indices().empty());
+
+  float min_x = std::numeric_limits<float>::max();
+  float max_x = std::numeric_limits<float>::lowest();
+  for (const auto &vertex : mesh->get_vertices()) {
+    min_x = std::min(min_x, vertex.position[0]);
+    max_x = std::max(max_x, vertex.position[0]);
+  }
+
+  float start_width = 0.0F;
+  bool found_start_band = false;
+  float start_max_y = std::numeric_limits<float>::lowest();
+  float mid_max_y = std::numeric_limits<float>::lowest();
+  bool found_mid_band = false;
+  auto update_band_width = [&](float center_x, float half_band,
+                               float &width_out, bool &found) {
+    float min_z = std::numeric_limits<float>::max();
+    float max_z = std::numeric_limits<float>::lowest();
+    for (const auto &vertex : mesh->get_vertices()) {
+      if (std::abs(vertex.position[0] - center_x) > half_band) {
+        continue;
+      }
+      min_z = std::min(min_z, vertex.position[2]);
+      max_z = std::max(max_z, vertex.position[2]);
+      found = true;
+    }
+    if (found) {
+      width_out = max_z - min_z;
+    }
+  };
+
+  update_band_width(min_x, 0.03F, start_width, found_start_band);
+  for (const auto &vertex : mesh->get_vertices()) {
+    if (std::abs(vertex.position[0] - bridge.start.x()) <= 0.03F) {
+      start_max_y = std::max(start_max_y, vertex.position[1]);
+      found_start_band = true;
+    }
+    if (std::abs(vertex.position[0]) <= 0.10F) {
+      mid_max_y = std::max(mid_max_y, vertex.position[1]);
+      found_mid_band = true;
+    }
+  }
+
+  EXPECT_NEAR(min_x, bridge.start.x(), 0.0001F);
+  EXPECT_NEAR(max_x, bridge.end.x(), 0.0001F);
+  ASSERT_TRUE(found_start_band);
+  ASSERT_TRUE(found_mid_band);
+  EXPECT_GT(start_width, bridge.width * 0.95F);
+  EXPECT_GT(mid_max_y, start_max_y + 0.05F);
 }
 
 TEST(LinearFeatureGeometryTest, BuildsRiverbankMeshWithVisibilitySamples) {

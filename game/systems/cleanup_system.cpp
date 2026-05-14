@@ -11,6 +11,27 @@ void CleanupSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
     return;
   }
+  auto blood_stain_entities =
+      world->get_entities_with<Engine::Core::BloodStainComponent>();
+  for (auto *entity : blood_stain_entities) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *blood_stain =
+        entity->get_component<Engine::Core::BloodStainComponent>();
+    if (blood_stain == nullptr) {
+      entity->add_component<Engine::Core::PendingRemovalComponent>();
+      continue;
+    }
+
+    blood_stain->elapsed_time += delta_time;
+    if (blood_stain->elapsed_time >= blood_stain->lifetime) {
+      entity->add_component<Engine::Core::PendingRemovalComponent>();
+    }
+  }
+
   auto casualty_entities = world->get_entities_with<
       Engine::Core::SoldierCasualtyAnimationComponent>();
   for (auto *entity : casualty_entities) {

@@ -31,6 +31,8 @@ constexpr float k_flame_color_g = 0.4F;
 constexpr float k_flame_color_b = 0.1F;
 constexpr float k_building_health_threshold = 0.5F;
 
+constexpr float k_blood_y_offset = 0.02F;
+
 constexpr float k_stone_impact_radius = 0.6F;
 constexpr float k_elephant_stomp_impact_radius = 0.52F;
 constexpr float k_stone_impact_intensity = 1.5F;
@@ -40,6 +42,19 @@ constexpr float k_stone_impact_color_b = 0.45F;
 constexpr float k_stone_impact_y_offset = 0.1F;
 constexpr float k_stone_impact_duration = 10.0F;
 constexpr float k_stone_impact_trigger_progress = 0.99F;
+
+auto blood_alpha_scale(float elapsed_time, float lifetime) -> float {
+  if (lifetime <= 0.0F) {
+    return 0.0F;
+  }
+
+  float const fade_window = std::max(1.0F, lifetime * 0.25F);
+  float const remaining_time = lifetime - elapsed_time;
+  if (remaining_time >= fade_window) {
+    return 1.0F;
+  }
+  return std::clamp(remaining_time / fade_window, 0.0F, 1.0F);
+}
 
 std::unordered_set<const void *> g_tracked_projectiles;
 } // namespace
@@ -218,6 +233,47 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
     renderer->building_flame(position, color, k_flame_radius, flame_intensity,
                              animation_time);
+  }
+
+  auto blood_stains =
+      world->get_entities_with<Engine::Core::BloodStainComponent>();
+  for (auto *blood_entity : blood_stains) {
+    if (blood_entity == nullptr ||
+        blood_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *transform =
+        blood_entity->get_component<Engine::Core::TransformComponent>();
+    auto *blood_stain =
+        blood_entity->get_component<Engine::Core::BloodStainComponent>();
+    if (transform == nullptr || blood_stain == nullptr) {
+      continue;
+    }
+
+    float const alpha_scale =
+        blood_alpha_scale(blood_stain->elapsed_time, blood_stain->lifetime);
+    if (alpha_scale <= 0.0F) {
+      continue;
+    }
+
+    if (!is_fog_visible(transform->position.x, transform->position.z)) {
+      continue;
+    }
+
+    float const visibility_radius =
+        std::max(k_visibility_check_radius, blood_stain->radius);
+    if (!visibility.is_entity_visible(
+            transform->position.x, transform->position.z, visibility_radius)) {
+      continue;
+    }
+
+    QVector3D const position(transform->position.x,
+                             transform->position.y + k_blood_y_offset,
+                             transform->position.z);
+    renderer->blood_pool(position, blood_stain->radius, alpha_scale,
+                         blood_stain->rotation, blood_stain->aspect_ratio,
+                         blood_stain->seed);
   }
 
   auto *projectile_sys = world->get_system<Game::Systems::ProjectileSystem>();

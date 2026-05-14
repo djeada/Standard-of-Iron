@@ -16,6 +16,7 @@
 #include "units/troop_config.h"
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <numbers>
 
 using namespace Engine::Core;
 using namespace Game::Systems;
@@ -1274,6 +1275,27 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   EXPECT_EQ(death->sequence_variant, 0U);
   EXPECT_FALSE(target->has_component<PendingRemovalComponent>());
   EXPECT_FALSE(movement->has_target);
+
+  auto blood_stains = world->get_entities_with<BloodStainComponent>();
+  ASSERT_EQ(blood_stains.size(), 1u);
+  auto *blood_transform =
+      blood_stains.front()->get_component<TransformComponent>();
+  auto *blood_stain =
+      blood_stains.front()->get_component<BloodStainComponent>();
+  ASSERT_NE(blood_transform, nullptr);
+  ASSERT_NE(blood_stain, nullptr);
+  EXPECT_FLOAT_EQ(blood_transform->position.x, 1.0F);
+  EXPECT_FLOAT_EQ(blood_transform->position.z, 0.0F);
+  EXPECT_GT(blood_stain->radius,
+            Engine::Core::Defaults::k_blood_stain_default_radius * 0.8F);
+  EXPECT_LT(blood_stain->radius,
+            Engine::Core::Defaults::k_blood_stain_default_radius * 1.4F);
+  EXPECT_GE(blood_stain->rotation, 0.0F);
+  EXPECT_LT(blood_stain->rotation, std::numbers::pi_v<float> * 2.0F);
+  EXPECT_GE(blood_stain->aspect_ratio, 0.72F);
+  EXPECT_LE(blood_stain->aspect_ratio, 1.34F);
+  EXPECT_GE(blood_stain->seed, 0.0F);
+  EXPECT_LT(blood_stain->seed, 1.0F);
 }
 
 TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {
@@ -1301,6 +1323,14 @@ TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {
   EXPECT_EQ(casualties->entries.front().slot_index, 2U);
   EXPECT_EQ(casualties->entries.front().state, DeathSequenceState::Dying);
   EXPECT_FALSE(target->has_component<DeathAnimationComponent>());
+
+  auto blood_stains = world->get_entities_with<BloodStainComponent>();
+  ASSERT_EQ(blood_stains.size(), 1u);
+  auto *blood_transform =
+      blood_stains.front()->get_component<TransformComponent>();
+  ASSERT_NE(blood_transform, nullptr);
+  EXPECT_FLOAT_EQ(blood_transform->position.x, 1.0F);
+  EXPECT_FLOAT_EQ(blood_transform->position.z, 0.0F);
 }
 
 TEST_F(CombatModeTest, MountedAndElephantVictimsSelectDeathProfiles) {
@@ -1381,4 +1411,71 @@ TEST_F(CombatModeTest, CleanupSystemRunsDeathThenDeadHoldBeforeRemoval) {
     cleanup.update(world.get(), 0.02F);
   }
   EXPECT_EQ(world->get_entity(target_id), nullptr);
+}
+
+TEST_F(CombatModeTest, CleanupSystemExpiresBloodStainsAfterLifetime) {
+  auto *blood_stain_entity = world->create_entity();
+  auto blood_stain_id = blood_stain_entity->get_id();
+  blood_stain_entity->add_component<TransformComponent>(2.0F, 0.0F, 3.0F);
+  auto *blood_stain = blood_stain_entity->add_component<BloodStainComponent>();
+  blood_stain->lifetime = 0.1F;
+
+  CleanupSystem cleanup;
+  cleanup.update(world.get(), 0.05F);
+  EXPECT_NE(world->get_entity(blood_stain_id), nullptr);
+
+  cleanup.update(world.get(), 0.05F);
+  EXPECT_EQ(world->get_entity(blood_stain_id), nullptr);
+}
+
+TEST_F(CombatModeTest, BuildingDeathsDoNotCreateBloodStains) {
+  auto *attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+
+  auto *building = world->create_entity();
+  building->add_component<TransformComponent>(4.0F, 0.0F, 1.0F);
+  building->add_component<RenderableComponent>("mesh", "tex");
+  auto *building_unit =
+      building->add_component<UnitComponent>(40, 40, 0.0F, 12.0F);
+  building_unit->owner_id = 2;
+  building->add_component<BuildingComponent>();
+
+  Game::Systems::Combat::deal_damage(world.get(), building, 40,
+                                     attacker->get_id());
+
+  EXPECT_TRUE(world->get_entities_with<BloodStainComponent>().empty());
+}
+
+TEST_F(CombatModeTest, BloodStainsAreCappedAtTenActiveEntries) {
+  auto *attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+
+  EntityID first_stain_id = 0;
+  for (int index = 0; index < 11; ++index) {
+    auto *target = world->create_entity();
+    target->add_component<TransformComponent>(static_cast<float>(index), 0.0F,
+                                              static_cast<float>(index));
+    auto *target_unit =
+        target->add_component<UnitComponent>(10, 10, 1.0F, 12.0F);
+    target_unit->owner_id = 2;
+
+    Game::Systems::Combat::deal_damage(world.get(), target, 10,
+                                       attacker->get_id());
+
+    if (index == 0) {
+      auto blood_stains = world->get_entities_with<BloodStainComponent>();
+      ASSERT_EQ(blood_stains.size(), 1u);
+      first_stain_id = blood_stains.front()->get_id();
+    }
+  }
+
+  auto blood_stains = world->get_entities_with<BloodStainComponent>();
+  ASSERT_EQ(blood_stains.size(), 10u);
+  EXPECT_EQ(world->get_entity(first_stain_id), nullptr);
 }

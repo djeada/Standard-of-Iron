@@ -41,6 +41,7 @@ add_executable(standard_of_iron_tests
     systems/command_service_test.cpp
     systems/commander_system_test.cpp
     systems/archer_bonus_test.cpp
+    systems/arrow_system_test.cpp
     systems/ai_system_test.cpp
     systems/defense_tower_system_test.cpp
     render/pose_controller_test.cpp

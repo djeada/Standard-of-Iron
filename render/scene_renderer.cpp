@@ -903,6 +903,23 @@ void Renderer::building_flame(const QVector3D &position, const QVector3D &color,
   }
 }
 
+void Renderer::blood_pool(const QVector3D &position, float radius,
+                          float alpha_scale, float rotation, float aspect_ratio,
+                          float seed) {
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::BloodPool;
+  cmd.position = position;
+  cmd.radius = radius;
+  cmd.alpha_scale = alpha_scale;
+  cmd.rotation = rotation;
+  cmd.aspect_ratio = aspect_ratio;
+  cmd.seed = seed;
+  cmd.priority = CommandPriority::Low;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(std::move(cmd));
+  }
+}
+
 void Renderer::stone_impact(const QVector3D &position, const QVector3D &color,
                             float radius, float intensity, float time) {
   EffectBatchCmd cmd;

@@ -158,21 +158,21 @@ auto apply_commander_guard_reduction(
                          std::clamp(guard->damage_multiplier, 0.0F, 1.0F))));
 }
 
-void begin_soldier_casualties(Engine::Core::Entity *target,
+auto begin_soldier_casualties(Engine::Core::Entity *target,
                               Engine::Core::Entity *attacker, int prev_health,
-                              int new_health) {
+                              int new_health) -> int {
   if (target == nullptr) {
-    return;
+    return 0;
   }
 
   auto *unit = target->get_component<Engine::Core::UnitComponent>();
   if (unit == nullptr) {
-    return;
+    return 0;
   }
 
   int const individuals_per_unit = resolved_individuals_per_unit(*unit);
   if (individuals_per_unit <= 1) {
-    return;
+    return 0;
   }
 
   int const prev_survivors = Engine::Core::resolve_surviving_individual_count(
@@ -181,18 +181,19 @@ void begin_soldier_casualties(Engine::Core::Entity *target,
       new_health, unit->max_health, individuals_per_unit);
   int const casualty_start = (new_health <= 0) ? 1 : new_survivors;
   if (prev_survivors <= casualty_start) {
-    return;
+    return 0;
   }
 
   auto const profile = resolve_death_profile(unit);
   auto *casualties = Engine::Core::get_or_add_component<
       Engine::Core::SoldierCasualtyAnimationComponent>(target);
   if (casualties == nullptr) {
-    return;
+    return 0;
   }
 
   auto const variant = resolve_death_variant(target, attacker, profile);
   auto const timing = resolve_death_timing(profile, variant);
+  int queued_casualties = 0;
   for (int slot = casualty_start; slot < prev_survivors; ++slot) {
     Engine::Core::SoldierCasualtyAnimationComponent::Entry entry{};
     entry.slot_index = static_cast<std::uint16_t>(slot);
@@ -211,7 +212,9 @@ void begin_soldier_casualties(Engine::Core::Entity *target,
     } else {
       casualties->entries.push_back(entry);
     }
+    ++queued_casualties;
   }
+  return queued_casualties;
 }
 
 void begin_death_sequence(Engine::Core::Entity *target,
@@ -232,6 +235,100 @@ void begin_death_sequence(Engine::Core::Entity *target,
   auto const profile = resolve_death_profile(unit);
   auto const variant = resolve_death_variant(target, attacker, profile);
   apply_death_sequence(*death, profile, variant);
+}
+
+void prune_oldest_blood_stain(Engine::Core::World *world) {
+  if (world == nullptr) {
+    return;
+  }
+
+  while (true) {
+    auto blood_stains =
+        world->get_entities_with<Engine::Core::BloodStainComponent>();
+    if (blood_stains.size() <
+        static_cast<std::size_t>(
+            Engine::Core::Defaults::k_blood_stain_max_active)) {
+      return;
+    }
+
+    auto const oldest = std::min_element(
+        blood_stains.begin(), blood_stains.end(),
+        [](const Engine::Core::Entity *lhs, const Engine::Core::Entity *rhs) {
+          if (lhs == nullptr || rhs == nullptr) {
+            return rhs != nullptr;
+          }
+          return lhs->get_id() < rhs->get_id();
+        });
+    if (oldest == blood_stains.end() || *oldest == nullptr) {
+      return;
+    }
+
+    world->destroy_entity((*oldest)->get_id());
+  }
+}
+
+auto hash01(std::uint32_t value) -> float {
+  value ^= value >> 16U;
+  value *= 0x7feb352dU;
+  value ^= value >> 15U;
+  value *= 0x846ca68bU;
+  value ^= value >> 16U;
+  return static_cast<float>(value & 0x00ffffffU) /
+         static_cast<float>(0x01000000U);
+}
+
+auto blood_stain_scale(const Engine::Core::UnitComponent *unit) -> float {
+  if (unit == nullptr) {
+    return 1.0F;
+  }
+  if (unit->spawn_type == Game::Units::SpawnType::Elephant) {
+    return 1.65F;
+  }
+  if (is_mounted_spawn(unit->spawn_type)) {
+    return 1.25F;
+  }
+  return 1.0F;
+}
+
+void spawn_blood_stain(Engine::Core::World *world,
+                       const Engine::Core::Entity *target) {
+  if (world == nullptr || target == nullptr) {
+    return;
+  }
+
+  auto const *transform =
+      target->get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return;
+  }
+
+  prune_oldest_blood_stain(world);
+
+  auto *blood_stain = world->create_entity();
+  if (blood_stain == nullptr) {
+    return;
+  }
+
+  auto const *unit = target->get_component<Engine::Core::UnitComponent>();
+  auto const id_seed = static_cast<std::uint32_t>(target->get_id());
+  auto const position_seed =
+      static_cast<std::uint32_t>(std::abs(transform->position.x) * 31.0F +
+                                 std::abs(transform->position.z) * 131.0F);
+  float const scale = blood_stain_scale(unit);
+  float const radius = Engine::Core::Defaults::k_blood_stain_default_radius *
+                       scale *
+                       (0.85F + hash01(id_seed * 17U + position_seed) * 0.45F);
+  float const rotation = hash01(id_seed * 97U + position_seed * 3U) *
+                         std::numbers::pi_v<float> * 2.0F;
+  float const aspect_ratio =
+      0.72F + hash01(id_seed * 53U + position_seed * 11U) * 0.62F;
+  float const seed = hash01(id_seed * 193U + position_seed * 29U);
+
+  blood_stain->add_component<Engine::Core::TransformComponent>(
+      transform->position.x, transform->position.y, transform->position.z);
+  blood_stain->add_component<Engine::Core::BloodStainComponent>(
+      radius, Engine::Core::Defaults::k_blood_stain_default_lifetime, rotation,
+      aspect_ratio, seed);
 }
 
 } // namespace
@@ -302,11 +399,15 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
 
   unit->health = new_health;
 
-  begin_soldier_casualties(target,
-                           (attacker_id != 0 && world != nullptr)
-                               ? world->get_entity(attacker_id)
-                               : nullptr,
-                           prev_health, new_health);
+  int const queued_soldier_casualties = begin_soldier_casualties(
+      target,
+      (attacker_id != 0 && world != nullptr) ? world->get_entity(attacker_id)
+                                             : nullptr,
+      prev_health, new_health);
+  if (queued_soldier_casualties > 0 && !is_killing_blow &&
+      !target->has_component<Engine::Core::BuildingComponent>()) {
+    spawn_blood_stain(world, target);
+  }
 
   int attacker_owner_id = 0;
   std::optional<Game::Units::SpawnType> attacker_type_opt;
@@ -403,6 +504,9 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
       }
       target->add_component<Engine::Core::PendingRemovalComponent>();
     } else {
+      if (is_killing_blow) {
+        spawn_blood_stain(world, target);
+      }
       begin_death_sequence(target, attacker);
     }
   }

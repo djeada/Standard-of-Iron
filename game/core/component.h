@@ -34,6 +34,10 @@ inline constexpr float k_hold_kneel_duration = 1.5F;
 
 inline constexpr float k_guard_default_radius = 10.0F;
 inline constexpr float k_guard_return_threshold = 1.0F;
+inline constexpr float k_blood_stain_default_radius = 0.6F;
+inline constexpr float k_blood_stain_default_aspect_ratio = 1.0F;
+inline constexpr float k_blood_stain_default_lifetime = 8.0F;
+inline constexpr int k_blood_stain_max_active = 10;
 } // namespace Defaults
 
 class TransformComponent : public Component {
@@ -468,6 +472,25 @@ public:
 class PendingRemovalComponent : public Component {
 public:
   PendingRemovalComponent() = default;
+};
+
+class BloodStainComponent : public Component {
+public:
+  BloodStainComponent(
+      float radius = Defaults::k_blood_stain_default_radius,
+      float lifetime = Defaults::k_blood_stain_default_lifetime,
+      float rotation = 0.0F,
+      float aspect_ratio = Defaults::k_blood_stain_default_aspect_ratio,
+      float seed = 0.0F)
+      : radius(radius), lifetime(lifetime), rotation(rotation),
+        aspect_ratio(aspect_ratio), seed(seed) {}
+
+  float radius;
+  float elapsed_time{0.0F};
+  float lifetime;
+  float rotation{0.0F};
+  float aspect_ratio{Defaults::k_blood_stain_default_aspect_ratio};
+  float seed{0.0F};
 };
 
 enum class DeathSequenceProfile : std::uint8_t {
