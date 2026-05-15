@@ -51,6 +51,7 @@ private:
   void draw_terrain_elements(QPainter& painter);
   void draw_world_props(QPainter& painter);
   void draw_structures(QPainter& painter);
+  void draw_troop_spawns(QPainter& painter);
   void draw_linear_elements(QPainter& painter);
   void draw_current_placement(QPainter& painter);
   void draw_element(QPainter& painter,
@@ -100,6 +101,7 @@ private:
   WorldPropElement m_drag_pre_world_prop;
   LinearElement m_drag_pre_linear;
   StructureElement m_drag_pre_structure;
+  TroopSpawnElement m_drag_pre_troop;
 
   int m_current_player_id = 0;
 
@@ -111,6 +113,7 @@ private:
   static constexpr int min_player_id = 0;
   static constexpr int max_player_id = 4;
   static constexpr int default_max_population = 150;
+  static constexpr int default_troop_max_population = -1;
   static inline const QString default_nation = "roman_republic";
 };
 

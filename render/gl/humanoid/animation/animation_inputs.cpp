@@ -15,6 +15,27 @@ namespace Render::GL {
 namespace {
 
 constexpr float k_builder_construct_cycles_per_second = 1.75F;
+constexpr float k_direct_control_move_speed_sq = 0.01F;
+
+[[nodiscard]] auto
+has_direct_control_motion(const Engine::Core::CommanderComponent* commander,
+                          const Engine::Core::MovementComponent* movement) -> bool {
+  if (commander == nullptr || !commander->fpv_controlled) {
+    return false;
+  }
+
+  if (movement != nullptr) {
+    float const movement_speed_sq =
+        movement->vx * movement->vx + movement->vz * movement->vz;
+    if (movement_speed_sq > k_direct_control_move_speed_sq) {
+      return true;
+    }
+  }
+
+  float const fpv_speed_sq = commander->fpv_motion_vx * commander->fpv_motion_vx +
+                             commander->fpv_motion_vz * commander->fpv_motion_vz;
+  return fpv_speed_sq > k_direct_control_move_speed_sq;
+}
 
 auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
     -> CombatAnimPhase {
@@ -86,6 +107,9 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   auto* hold_mode = ctx.entity->get_component<Engine::Core::HoldModeComponent>();
   auto* combat_state = ctx.entity->get_component<Engine::Core::CombatStateComponent>();
   auto* hit_feedback = ctx.entity->get_component<Engine::Core::HitFeedbackComponent>();
+  auto* commander = ctx.entity->get_component<Engine::Core::CommanderComponent>();
+  auto* commander_guard =
+      ctx.entity->get_component<Engine::Core::CommanderGuardComponent>();
   const auto* stamina = ctx.entity->get_component<Engine::Core::StaminaComponent>();
 
   if (death_anim != nullptr) {
@@ -120,7 +144,11 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.hold_exit_progress =
         1.0F - (hold_mode->exit_cooldown / hold_mode->stand_up_duration);
   }
-  anim.is_moving = ((movement != nullptr) && movement->has_target);
+  anim.is_guarding = (commander != nullptr) && commander->fpv_controlled &&
+                     (commander_guard != nullptr) && commander_guard->active;
+  anim.guard_pose_progress = anim.is_guarding ? 1.0F : 0.0F;
+  anim.is_moving = ((movement != nullptr) && movement->has_target) ||
+                   has_direct_control_motion(commander, movement);
   anim.is_running = (stamina != nullptr) && stamina->is_running;
 
   auto* healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
@@ -240,7 +268,8 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
 
   bool const is_active = anim.is_moving || anim.is_attacking || anim.is_constructing ||
                          anim.is_healing || anim.is_hit_reacting || anim.is_dying ||
-                         anim.is_dead || anim.is_in_hold_mode || anim.is_exiting_hold;
+                         anim.is_dead || anim.is_in_hold_mode || anim.is_exiting_hold ||
+                         anim.is_guarding;
 
   auto* humanoid_state = Engine::Core::get_or_add_component<
       Render::Creature::HumanoidAnimationStateComponent>(ctx.entity);

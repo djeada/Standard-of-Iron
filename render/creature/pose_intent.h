@@ -21,6 +21,9 @@ resolve_pose_intent(const Render::GL::AnimationInputs& inputs) noexcept -> PoseI
     return PoseIntent::HitReaction;
   }
   if (inputs.is_attacking) {
+    if (inputs.is_in_hold_mode) {
+      return inputs.is_melee ? PoseIntent::AttackMelee : PoseIntent::AttackRanged;
+    }
     switch (inputs.attack_family) {
     case Engine::Core::CombatAttackFamily::Spear:
       return PoseIntent::AttackSpear;
@@ -39,7 +42,8 @@ resolve_pose_intent(const Render::GL::AnimationInputs& inputs) noexcept -> PoseI
   if (inputs.is_constructing) {
     return PoseIntent::Construct;
   }
-  if (inputs.is_in_hold_mode || inputs.is_exiting_hold) {
+  if (inputs.is_in_hold_mode || inputs.is_exiting_hold ||
+      (inputs.is_guarding && !inputs.is_moving && !inputs.is_running)) {
     return PoseIntent::Hold;
   }
   if (inputs.is_running) {

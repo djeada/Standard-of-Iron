@@ -1,6 +1,6 @@
 {
   "name": "Mountain Strongholds",
-  "description": "A mountainous battlefield with strategic high ground and capture points",
+  "description": "A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.",
   "coord_system": "grid",
   "max_troops_per_player": 2000,
   "grid": {
@@ -10,670 +10,830 @@
   },
   "biome": {
     "ground_type": "alpine_mix",
-    "seed": 24567,
-    "patch_density": 3.0,
-    "patch_jitter": 0.8,
-    "blade_height": [
-      0.5,
-      1.3
-    ],
-    "blade_width": [
-      0.025,
-      0.055
-    ],
-    "sway_strength": 0.25,
-    "sway_speed": 1.3,
-    "height_noise": [
-      0.22,
-      0.08
-    ],
-    "grass_primary": [
-      0.28,
-      0.6,
-      0.32
-    ],
-    "grass_secondary": [
-      0.42,
-      0.72,
-      0.34
-    ],
-    "grass_dry": [
-      0.58,
-      0.5,
-      0.36
-    ],
-    "soil_color": [
-      0.28,
-      0.24,
-      0.18
-    ],
-    "rock_low": [
-      0.5,
-      0.48,
-      0.46
-    ],
-    "rock_high": [
-      0.68,
-      0.69,
-      0.73
-    ],
-    "plant_density": 0.5,
+    "seed": 24611,
+    "patch_density": 3.1,
+    "patch_jitter": 0.82,
+    "blade_height": [0.5, 1.3],
+    "blade_width": [0.025, 0.055],
+    "sway_strength": 0.22,
+    "sway_speed": 1.15,
+    "height_noise": [0.22, 0.08],
+    "grass_primary": [0.28, 0.55, 0.3],
+    "grass_secondary": [0.42, 0.66, 0.33],
+    "grass_dry": [0.58, 0.52, 0.38],
+    "soil_color": [0.27, 0.24, 0.2],
+    "rock_low": [0.46, 0.45, 0.43],
+    "rock_high": [0.7, 0.7, 0.72],
+    "plant_density": 0.52,
     "ground_irregularity_enabled": true,
-    "irregularity_scale": 0.1,
-    "irregularity_amplitude": 0.05
+    "irregularity_scale": 0.11,
+    "irregularity_amplitude": 0.055
   },
   "camera": {
-    "center": [
-      150,
-      0,
-      150
-    ],
-    "distance": 40.0,
-    "tilt_deg": 45.0,
+    "center": [150, 0, 150],
+    "distance": 92.0,
+    "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 500.0
+    "far": 700.0
   },
-  "spawns": [
-    {
-      "type": "barracks",
-      "x": 75,
-      "z": 75,
-      "player_id": 1,
-      "max_population": 200,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "archer",
-      "x": 73,
-      "z": 77,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 77,
-      "z": 73,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 75,
-      "z": 79,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 71,
-      "z": 75,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 79,
-      "z": 75,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 73,
-      "z": 73,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 77,
-      "z": 77,
-      "player_id": 1
-    },
-    {
-      "type": "barracks",
-      "x": 225,
-      "z": 225,
-      "player_id": 2,
-      "max_population": 200,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "archer",
-      "x": 223,
-      "z": 227,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 227,
-      "z": 223,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 221,
-      "z": 225,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 225,
-      "z": 221,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 223,
-      "z": 223,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 227,
-      "z": 227,
-      "player_id": 2
-    },
-    {
-      "type": "barracks",
-      "x": 150,
-      "z": 150,
-      "max_population": 180,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "barracks",
-      "x": 75,
-      "z": 225,
-      "player_id": 3,
-      "max_population": 150,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "swordsman",
-      "x": 73,
-      "z": 227,
-      "player_id": 3
-    },
-    {
-      "type": "swordsman",
-      "x": 77,
-      "z": 223,
-      "player_id": 3
-    },
-    {
-      "type": "archer",
-      "x": 71,
-      "z": 225,
-      "player_id": 3
-    },
-    {
-      "type": "spearman",
-      "x": 75,
-      "z": 221,
-      "player_id": 3
-    },
-    {
-      "type": "barracks",
-      "x": 225,
-      "z": 75,
-      "max_population": 150,
-      "nation": "roman_republic"
-    }
-  ],
-  "firecamps": [
-    {
-      "x": 68,
-      "z": 80,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 82,
-      "z": 68,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 218,
-      "z": 232,
-      "intensity": 0.9,
-      "radius": 2.8
-    },
-    {
-      "x": 232,
-      "z": 218,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 145,
-      "z": 155,
-      "intensity": 1.2,
-      "radius": 3.5
-    },
-    {
-      "x": 68,
-      "z": 232,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 232,
-      "z": 68,
-      "intensity": 1.05,
-      "radius": 3.2
-    },
-    {
-      "x": 100,
-      "z": 100,
-      "intensity": 0.85,
-      "radius": 2.5
-    },
-    {
-      "x": 200,
-      "z": 200,
-      "intensity": 0.9,
-      "radius": 2.7
-    }
-  ],
+  "time_of_day": "morning",
+  "rain": {
+    "enabled": true,
+    "type": "snow",
+    "cycle_duration": 420.0,
+    "active_duration": 115.0,
+    "intensity": 0.62,
+    "fade_duration": 8.0,
+    "wind_strength": 0.32
+  },
   "terrain": [
     {
+      "type": "plain",
+      "x": 62,
+      "z": 62,
+      "width": 48,
+      "depth": 42,
+      "description": "Southwestern base clearing."
+    },
+    {
+      "type": "plain",
+      "x": 238,
+      "z": 238,
+      "width": 48,
+      "depth": 42,
+      "description": "Northeastern base clearing."
+    },
+    {
+      "type": "hill",
+      "x": 62,
+      "z": 62,
+      "radius": 16,
+      "height": 2.8,
+      "description": "Player 1 mountain stronghold mound.",
+      "entrances": [
+        { "x": 78, "z": 62 },
+        { "x": 62, "z": 78 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 238,
+      "z": 238,
+      "radius": 16,
+      "height": 2.8,
+      "description": "Player 2 mountain stronghold mound.",
+      "entrances": [
+        { "x": 222, "z": 238 },
+        { "x": 238, "z": 222 }
+      ]
+    },
+    {
       "type": "hill",
       "x": 150,
       "z": 150,
-      "width": 20,
-      "depth": 15,
-      "height": 4.0,
+      "width": 36,
+      "depth": 28,
+      "height": 4.2,
       "rotation": 25,
+      "description": "Central fortress ridge. Strong for archers, but attackable from four passes.",
       "entrances": [
-        {
-          "x": 150,
-          "z": 135
-        },
-        {
-          "x": 140,
-          "z": 150
-        },
-        {
-          "x": 160,
-          "z": 150
-        },
-        {
-          "x": 150,
-          "z": 165
-        }
+        { "x": 150, "z": 124 },
+        { "x": 124, "z": 150 },
+        { "x": 176, "z": 150 },
+        { "x": 150, "z": 176 }
       ]
     },
     {
-      "type": "hill",
-      "x": 75,
-      "z": 150,
-      "radius": 10,
-      "height": 3.2,
-      "entrances": [
-        {
-          "x": 65,
-          "z": 150
-        },
-        {
-          "x": 75,
-          "z": 140
-        },
-        {
-          "x": 75,
-          "z": 160
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 225,
-      "z": 150,
-      "radius": 10,
-      "height": 3.2,
-      "entrances": [
-        {
-          "x": 235,
-          "z": 150
-        },
-        {
-          "x": 225,
-          "z": 140
-        },
-        {
-          "x": 225,
-          "z": 160
-        }
-      ]
-    },
-    {
-      "type": "hill",
+      "type": "plain",
       "x": 150,
-      "z": 75,
-      "radius": 9,
+      "z": 150,
+      "width": 70,
+      "depth": 58,
+      "description": "Central saddle clearing around the fortress ridge."
+    },
+    {
+      "type": "hill",
+      "x": 96,
+      "z": 122,
+      "width": 26,
+      "depth": 14,
       "height": 3.0,
+      "rotation": -20,
+      "description": "Western approach ridge controlling the main valley road.",
       "entrances": [
-        {
-          "x": 150,
-          "z": 65
-        },
-        {
-          "x": 140,
-          "z": 75
-        },
-        {
-          "x": 160,
-          "z": 75
-        }
+        { "x": 82, "z": 119 },
+        { "x": 110, "z": 125 }
       ]
     },
     {
       "type": "hill",
-      "x": 150,
-      "z": 225,
-      "radius": 9,
+      "x": 204,
+      "z": 178,
+      "width": 26,
+      "depth": 14,
       "height": 3.0,
+      "rotation": 160,
+      "description": "Eastern approach ridge controlling the main valley road.",
       "entrances": [
-        {
-          "x": 150,
-          "z": 235
-        },
-        {
-          "x": 140,
-          "z": 225
-        },
-        {
-          "x": 160,
-          "z": 225
-        }
+        { "x": 190, "z": 175 },
+        { "x": 218, "z": 181 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 142,
+      "z": 62,
+      "width": 42,
+      "depth": 14,
+      "height": 3.2,
+      "rotation": 8,
+      "description": "Northern high-pass overlook. Excellent archer ground, but far from both bases.",
+      "entrances": [
+        { "x": 121, "z": 62 },
+        { "x": 163, "z": 62 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 158,
+      "z": 238,
+      "width": 42,
+      "depth": 14,
+      "height": 3.2,
+      "rotation": 188,
+      "description": "Southern high-pass overlook. Mirrors the northern overlook.",
+      "entrances": [
+        { "x": 137, "z": 238 },
+        { "x": 179, "z": 238 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 72,
+      "z": 202,
+      "width": 32,
+      "depth": 16,
+      "height": 2.7,
+      "rotation": 20,
+      "description": "Southwestern flank ridge above the goat trail.",
+      "entrances": [
+        { "x": 56, "z": 198 },
+        { "x": 88, "z": 206 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 228,
+      "z": 98,
+      "width": 32,
+      "depth": 16,
+      "height": 2.7,
+      "rotation": 200,
+      "description": "Northeastern flank ridge above the upper trail.",
+      "entrances": [
+        { "x": 212, "z": 94 },
+        { "x": 244, "z": 102 }
       ]
     },
     {
       "type": "mountain",
-      "x": 50,
-      "z": 50,
-      "radius": 12,
-      "height": 10.0,
-      "rotation": 10
-    },
-    {
-      "type": "mountain",
-      "x": 250,
-      "z": 250,
-      "radius": 12,
-      "height": 10.0,
-      "rotation": 30
-    },
-    {
-      "type": "mountain",
-      "x": 50,
-      "z": 250,
-      "radius": 11,
+      "x": 42,
+      "z": 36,
+      "radius": 18,
       "height": 9.5,
-      "rotation": 50
+      "description": "Southwestern outer peak framing Player 1 base."
     },
     {
       "type": "mountain",
-      "x": 250,
-      "z": 50,
-      "radius": 11,
+      "x": 258,
+      "z": 264,
+      "radius": 18,
       "height": 9.5,
-      "rotation": 70
+      "description": "Northeastern outer peak framing Player 2 base."
     },
     {
       "type": "mountain",
-      "x": 100,
-      "z": 100,
+      "x": 96,
+      "z": 42,
+      "radius": 19,
+      "height": 10.5,
+      "description": "Northern lower massif shaping the high pass."
+    },
+    {
+      "type": "mountain",
+      "x": 204,
+      "z": 258,
+      "radius": 19,
+      "height": 10.5,
+      "description": "Southern lower massif shaping the mirrored high pass."
+    },
+    {
+      "type": "mountain",
+      "x": 118,
+      "z": 112,
+      "radius": 20,
+      "height": 11.5,
+      "description": "Western central mountain wall. It prevents direct blob movement into the center."
+    },
+    {
+      "type": "mountain",
+      "x": 182,
+      "z": 188,
+      "radius": 20,
+      "height": 11.5,
+      "description": "Eastern central mountain wall. It mirrors the western wall."
+    },
+    {
+      "type": "mountain",
+      "x": 176,
+      "z": 112,
+      "radius": 18,
+      "height": 10.5,
+      "description": "Northern central peak separating the main road from the high pass."
+    },
+    {
+      "type": "mountain",
+      "x": 124,
+      "z": 188,
+      "radius": 18,
+      "height": 10.5,
+      "description": "Southern central peak separating the main road from the goat trail."
+    },
+    {
+      "type": "mountain",
+      "x": 38,
+      "z": 254,
+      "radius": 16,
+      "height": 8.5,
+      "description": "Southwestern map-edge mountain."
+    },
+    {
+      "type": "mountain",
+      "x": 262,
+      "z": 46,
+      "radius": 16,
+      "height": 8.5,
+      "description": "Northeastern map-edge mountain."
+    },
+    {
+      "type": "forest",
+      "x": 86,
+      "z": 92,
+      "radius": 13,
+      "density": 0.42,
+      "description": "Lower pine cover near Player 1 approach."
+    },
+    {
+      "type": "forest",
+      "x": 214,
+      "z": 208,
+      "radius": 13,
+      "density": 0.42,
+      "description": "Lower pine cover near Player 2 approach."
+    },
+    {
+      "type": "forest",
+      "x": 102,
+      "z": 198,
+      "radius": 15,
+      "density": 0.46,
+      "description": "Southern pine belt along the flank trail."
+    },
+    {
+      "type": "forest",
+      "x": 198,
+      "z": 102,
+      "radius": 15,
+      "density": 0.46,
+      "description": "Northern pine belt along the upper flank trail."
+    },
+    {
+      "type": "forest",
+      "x": 136,
+      "z": 132,
       "radius": 10,
-      "height": 9.0,
-      "rotation": 15
+      "density": 0.38,
+      "description": "Small central pine patch masking infantry movement."
     },
     {
-      "type": "mountain",
-      "x": 200,
-      "z": 100,
+      "type": "forest",
+      "x": 164,
+      "z": 168,
       "radius": 10,
-      "height": 9.0,
-      "rotation": 35
+      "density": 0.38,
+      "description": "Mirrored central pine patch."
     },
     {
-      "type": "mountain",
-      "x": 100,
-      "z": 200,
-      "radius": 10,
-      "height": 9.0,
-      "rotation": 55
-    },
-    {
-      "type": "mountain",
-      "x": 200,
-      "z": 200,
-      "radius": 10,
-      "height": 9.0,
-      "rotation": 75
-    },
-    {
-      "type": "mountain",
+      "type": "village",
       "x": 150,
-      "z": 50,
-      "radius": 9,
-      "height": 8.5,
-      "rotation": 20
-    },
-    {
-      "type": "mountain",
-      "x": 150,
-      "z": 250,
-      "radius": 9,
-      "height": 8.5,
-      "rotation": 40
-    },
-    {
-      "type": "mountain",
-      "x": 50,
       "z": 150,
-      "radius": 9,
-      "height": 8.5,
-      "rotation": 60
+      "description": "Abandoned mountain fortress ruins."
     },
     {
-      "type": "mountain",
-      "x": 250,
-      "z": 150,
-      "radius": 9,
-      "height": 8.5,
-      "rotation": 80
+      "type": "village",
+      "x": 72,
+      "z": 202,
+      "description": "Ruined goat-herder hamlet on the lower trail."
     },
     {
-      "type": "mountain",
-      "x": 125,
-      "z": 125,
-      "radius": 8,
-      "height": 8.0,
-      "rotation": 25
+      "type": "village",
+      "x": 228,
+      "z": 98,
+      "description": "Ruined watch hamlet on the upper trail."
+    }
+  ],
+  "rivers": [
+    {
+      "start": [34, 134],
+      "end": [124, 142],
+      "width": 4.2,
+      "description": "Western meltwater stream slowing the approach to the central ridge."
     },
     {
-      "type": "mountain",
-      "x": 175,
-      "z": 125,
-      "radius": 8,
-      "height": 8.0,
-      "rotation": 45
+      "start": [176, 158],
+      "end": [266, 166],
+      "width": 4.2,
+      "description": "Eastern meltwater stream mirroring the western approach."
     },
     {
-      "type": "mountain",
-      "x": 125,
-      "z": 175,
-      "radius": 8,
-      "height": 8.0,
-      "rotation": 65
+      "start": [96, 58],
+      "end": [204, 82],
+      "width": 3.8,
+      "description": "Northern high-pass stream."
     },
     {
-      "type": "mountain",
-      "x": 175,
-      "z": 175,
-      "radius": 8,
-      "height": 8.0,
-      "rotation": 85
+      "start": [96, 242],
+      "end": [204, 218],
+      "width": 3.8,
+      "description": "Southern high-pass stream."
+    }
+  ],
+  "bridges": [
+    {
+      "start": [94, 136],
+      "end": [106, 140],
+      "width": 4.5,
+      "height": 0.65,
+      "description": "Western valley bridge."
     },
     {
-      "type": "mountain",
-      "x": 75,
-      "z": 100,
-      "radius": 7,
-      "height": 7.5,
-      "rotation": 30
+      "start": [194, 160],
+      "end": [206, 164],
+      "width": 4.5,
+      "height": 0.65,
+      "description": "Eastern valley bridge."
     },
     {
-      "type": "mountain",
-      "x": 225,
-      "z": 100,
-      "radius": 7,
-      "height": 7.5,
-      "rotation": 50
+      "start": [136, 66],
+      "end": [148, 69],
+      "width": 4.0,
+      "height": 0.6,
+      "description": "Northern high-pass bridge."
     },
     {
-      "type": "mountain",
-      "x": 75,
-      "z": 200,
-      "radius": 7,
-      "height": 7.5,
-      "rotation": 70
+      "start": [152, 231],
+      "end": [164, 234],
+      "width": 4.0,
+      "height": 0.6,
+      "description": "Southern high-pass bridge."
     },
     {
-      "type": "mountain",
-      "x": 225,
-      "z": 200,
-      "radius": 7,
-      "height": 7.5,
-      "rotation": 90
-    },
-    {
-      "type": "mountain",
-      "x": 100,
-      "z": 75,
-      "radius": 7,
-      "height": 7.5,
-      "rotation": 35
-    },
-    {
-      "type": "mountain",
-      "x": 200,
-      "z": 75,
-      "radius": 7,
-      "height": 7.5,
-      "rotation": 55
-    },
-    {
-      "type": "mountain",
-      "x": 100,
-      "z": 225,
-      "radius": 7,
-      "height": 7.5,
-      "rotation": 75
-    },
-    {
-      "type": "mountain",
-      "x": 200,
-      "z": 225,
-      "radius": 7,
-      "height": 7.5,
-      "rotation": 95
+      "start": [144, 144],
+      "end": [156, 156],
+      "width": 5.0,
+      "height": 0.7,
+      "description": "Old stone causeway below the central fortress ridge."
     }
   ],
   "roads": [
     {
-      "start": [
-        75,
-        75
+      "start": [62, 62],
+      "end": [238, 238],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [62, 62],
+        [82, 82],
+        [104, 106],
+        [126, 132],
+        [150, 150],
+        [174, 168],
+        [196, 194],
+        [218, 218],
+        [238, 238]
       ],
-      "end": [
-        150,
-        150
-      ],
-      "width": 3.5,
-      "style": "default"
+      "description": "Main valley road. Fastest route, but it crosses the central fortress ridge."
     },
     {
-      "start": [
-        150,
-        150
-      ],
-      "end": [
-        225,
-        225
-      ],
-      "width": 3.5,
-      "style": "default"
-    },
-    {
-      "start": [
-        75,
-        225
-      ],
-      "end": [
-        150,
-        150
-      ],
+      "start": [62, 62],
+      "end": [238, 238],
       "width": 3.0,
-      "style": "default"
+      "style": "default",
+      "waypoints": [
+        [62, 62],
+        [84, 48],
+        [112, 52],
+        [142, 62],
+        [174, 72],
+        [206, 92],
+        [226, 128],
+        [232, 176],
+        [238, 238]
+      ],
+      "description": "Northern high pass. Strong archer route, narrow and slower for cavalry."
     },
     {
-      "start": [
-        225,
-        75
-      ],
-      "end": [
-        150,
-        150
-      ],
+      "start": [62, 62],
+      "end": [238, 238],
       "width": 3.0,
-      "style": "default"
+      "style": "default",
+      "waypoints": [
+        [62, 62],
+        [48, 90],
+        [52, 124],
+        [68, 162],
+        [96, 204],
+        [136, 232],
+        [180, 248],
+        [218, 246],
+        [238, 238]
+      ],
+      "description": "Southern goat trail. Longest route, best for surprise flanks and avoiding the central fight."
     },
     {
-      "start": [
-        75,
-        75
+      "start": [72, 202],
+      "end": [150, 150],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [72, 202],
+        [92, 190],
+        [112, 174],
+        [132, 160],
+        [150, 150]
       ],
-      "end": [
-        75,
-        225
-      ],
-      "width": 2.5,
-      "style": "default"
+      "description": "Lower side path from the goat trail to the central ridge."
     },
     {
-      "start": [
-        225,
-        75
+      "start": [228, 98],
+      "end": [150, 150],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [228, 98],
+        [208, 110],
+        [188, 126],
+        [168, 140],
+        [150, 150]
       ],
-      "end": [
-        225,
-        225
-      ],
-      "width": 2.5,
-      "style": "default"
+      "description": "Upper side path from the high pass to the central ridge."
     },
     {
-      "start": [
-        75,
-        75
+      "start": [62, 62],
+      "end": [72, 202],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [62, 62],
+        [54, 96],
+        [58, 132],
+        [64, 168],
+        [72, 202]
       ],
-      "end": [
-        225,
-        75
-      ],
-      "width": 2.5,
-      "style": "default"
+      "description": "Western vertical flank road."
     },
     {
-      "start": [
-        75,
-        225
+      "start": [238, 238],
+      "end": [228, 98],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [238, 238],
+        [246, 204],
+        [242, 168],
+        [236, 132],
+        [228, 98]
       ],
-      "end": [
-        225,
-        225
-      ],
-      "width": 2.5,
-      "style": "default"
+      "description": "Eastern vertical flank road."
+    }
+  ],
+  "spawns": [
+    {
+      "type": "barracks",
+      "x": 62,
+      "z": 62,
+      "player_id": 1,
+      "max_population": 220,
+      "nation": "roman_republic",
+      "description": "Player 1 mountain barracks"
+    },
+    {
+      "type": "archer",
+      "x": 58,
+      "z": 68,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 66,
+      "z": 56,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 70,
+      "z": 66,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 54,
+      "z": 62,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 62,
+      "z": 54,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 58,
+      "z": 58,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 68,
+      "z": 72,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 50,
+      "z": 74,
+      "player_id": 1
+    },
+    {
+      "type": "healer",
+      "x": 52,
+      "z": 56,
+      "player_id": 1
+    },
+    {
+      "type": "catapult",
+      "x": 46,
+      "z": 64,
+      "player_id": 1
+    },
+    {
+      "type": "barracks",
+      "x": 238,
+      "z": 238,
+      "player_id": 2,
+      "max_population": 220,
+      "nation": "roman_republic",
+      "description": "Player 2 mountain barracks"
+    },
+    {
+      "type": "archer",
+      "x": 242,
+      "z": 232,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 234,
+      "z": 244,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 230,
+      "z": 234,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 246,
+      "z": 238,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 238,
+      "z": 246,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 242,
+      "z": 242,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 232,
+      "z": 228,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 250,
+      "z": 226,
+      "player_id": 2
+    },
+    {
+      "type": "healer",
+      "x": 248,
+      "z": 244,
+      "player_id": 2
+    },
+    {
+      "type": "catapult",
+      "x": 254,
+      "z": 236,
+      "player_id": 2
+    }
+  ],
+  "firecamps": [
+    {
+      "x": 56,
+      "z": 70,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 72,
+      "z": 56,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 244,
+      "z": 230,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 228,
+      "z": 244,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 150,
+      "z": 150,
+      "intensity": 1.15,
+      "radius": 3.5
+    },
+    {
+      "x": 72,
+      "z": 202,
+      "intensity": 0.8,
+      "radius": 2.6
+    },
+    {
+      "x": 228,
+      "z": 98,
+      "intensity": 0.8,
+      "radius": 2.6
+    },
+    {
+      "x": 142,
+      "z": 62,
+      "intensity": 0.75,
+      "radius": 2.4
+    },
+    {
+      "x": 158,
+      "z": 238,
+      "intensity": 0.75,
+      "radius": 2.4
+    }
+  ],
+  "world_props": [
+    {
+      "type": "tent",
+      "x": 55,
+      "z": 56,
+      "scale": 1.0,
+      "rotation": 0.4
+    },
+    {
+      "type": "tent",
+      "x": 70,
+      "z": 68,
+      "scale": 1.0,
+      "rotation": 2.6
+    },
+    {
+      "type": "supply_cart",
+      "x": 58,
+      "z": 75,
+      "scale": 1.0,
+      "rotation": 1.1
+    },
+    {
+      "type": "weapon_rack",
+      "x": 75,
+      "z": 58,
+      "scale": 1.0,
+      "rotation": 4.2
+    },
+    {
+      "type": "tent",
+      "x": 245,
+      "z": 244,
+      "scale": 1.0,
+      "rotation": 3.4
+    },
+    {
+      "type": "tent",
+      "x": 230,
+      "z": 232,
+      "scale": 1.0,
+      "rotation": 5.6
+    },
+    {
+      "type": "supply_cart",
+      "x": 242,
+      "z": 225,
+      "scale": 1.0,
+      "rotation": 2.1
+    },
+    {
+      "type": "weapon_rack",
+      "x": 225,
+      "z": 242,
+      "scale": 1.0,
+      "rotation": 0.8
+    },
+    {
+      "type": "ruins",
+      "x": 144,
+      "z": 146,
+      "scale": 1.2,
+      "rotation": 0.5
+    },
+    {
+      "type": "ruins",
+      "x": 156,
+      "z": 154,
+      "scale": 1.1,
+      "rotation": 2.3
+    },
+    {
+      "type": "ruins",
+      "x": 150,
+      "z": 160,
+      "scale": 0.9,
+      "rotation": 4.6
+    },
+    {
+      "type": "dead_tree",
+      "x": 88,
+      "z": 92,
+      "scale": 1.0,
+      "rotation": 1.1
+    },
+    {
+      "type": "dead_tree",
+      "x": 99,
+      "z": 198,
+      "scale": 1.0,
+      "rotation": 2.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 202,
+      "z": 102,
+      "scale": 1.0,
+      "rotation": 4.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 213,
+      "z": 208,
+      "scale": 1.0,
+      "rotation": 5.7
+    },
+    {
+      "type": "ruins",
+      "x": 70,
+      "z": 202,
+      "scale": 0.9,
+      "rotation": 1.8
+    },
+    {
+      "type": "ruins",
+      "x": 230,
+      "z": 98,
+      "scale": 0.9,
+      "rotation": 4.8
     }
   ],
   "victory": {
@@ -684,15 +844,5 @@
     "defeat_conditions": [
       "no_key_structures"
     ]
-  },
-  "rain": {
-    "enabled": true,
-    "type": "snow",
-    "cycle_duration": 400.0,
-    "active_duration": 120.0,
-    "intensity": 0.65,
-    "fade_duration": 8.0,
-    "wind_strength": 0.3
-  },
-  "time_of_day": "morning"
+  }
 }

@@ -103,6 +103,47 @@ TEST_F(CombatModeTest, MoveCommandScalesHoldExitToCurrentKneelDepth) {
   EXPECT_FLOAT_EQ(hold_mode->exit_cooldown, 1.0F);
 }
 
+TEST_F(CombatModeTest, HoldModeSpearmanStillLocksEnemyInMelee) {
+  auto* spearman = world->create_entity();
+  auto* spearman_transform =
+      spearman->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* spearman_unit = spearman->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  spearman_unit->owner_id = 1;
+  spearman_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto* spearman_attack = spearman->add_component<AttackComponent>();
+  spearman_attack->can_melee = true;
+  spearman_attack->can_ranged = false;
+  spearman_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  spearman_attack->current_mode = AttackComponent::CombatMode::Melee;
+  spearman_attack->melee_range = 1.0F;
+  spearman_attack->time_since_last = 1.0F;
+  auto* hold_mode = spearman->add_component<HoldModeComponent>();
+  hold_mode->active = true;
+
+  auto* enemy = world->create_entity();
+  auto* enemy_transform = enemy->add_component<TransformComponent>(1.5F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+  enemy_unit->spawn_type = Game::Units::SpawnType::Knight;
+  auto* enemy_attack = enemy->add_component<AttackComponent>();
+  enemy_attack->can_melee = true;
+  enemy_attack->can_ranged = false;
+  enemy_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  enemy_attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_TRUE(hold_mode->active);
+  EXPECT_TRUE(spearman_attack->in_melee_lock);
+  EXPECT_EQ(spearman_attack->melee_lock_target_id, enemy->get_id());
+  EXPECT_TRUE(enemy_attack->in_melee_lock);
+  EXPECT_EQ(enemy_attack->melee_lock_target_id, spearman->get_id());
+  EXPECT_FLOAT_EQ(spearman_transform->position.x, 0.0F);
+  EXPECT_LT(enemy_transform->position.x, 1.5F);
+}
+
 TEST_F(CombatModeTest, BuildingsExcludedFromCombatMode) {
 
   auto* attacker = world->create_entity();
@@ -306,6 +347,39 @@ TEST_F(CombatModeTest, FpvCommanderUsesRpgMeleeRulesInsteadOfRtsLock) {
   EXPECT_FALSE(enemy_attack->in_melee_lock);
   EXPECT_EQ(enemy_attack->melee_lock_target_id, 0U);
   EXPECT_LT(commander_rpg->rpg_hp, commander_rpg->rpg_max_hp);
+}
+
+TEST_F(CombatModeTest, RpgAttackerIgnoresStaleRtsAttackTargetComponent) {
+  auto* commander = world->create_entity();
+  commander->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* commander_unit = commander->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  commander_unit->owner_id = 1;
+  auto* commander_attack = commander->add_component<AttackComponent>();
+  commander_attack->can_melee = true;
+  commander_attack->can_ranged = false;
+  commander_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  commander_attack->current_mode = AttackComponent::CombatMode::Melee;
+  commander_attack->cooldown = 0.0F;
+  commander_attack->melee_cooldown = 0.0F;
+  commander_attack->time_since_last = 1.0F;
+  auto* commander_data = commander->add_component<CommanderComponent>();
+  commander_data->fpv_controlled = true;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto* stale_target = commander->add_component<AttackTargetComponent>();
+  stale_target->target_id = enemy->get_id();
+  stale_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_EQ(enemy_unit->health, 100);
+  EXPECT_TRUE(commander->has_component<AttackTargetComponent>());
 }
 
 TEST_F(CombatModeTest, MeleeAttackUsesElephantCombatRadius) {
@@ -862,6 +936,48 @@ TEST_F(CombatModeTest, RepeatedMeleeLockRestartsAttackCycleWithoutResettingSeed)
   EXPECT_EQ(combat_state->attack_variant, 2);
 }
 
+TEST_F(CombatModeTest, RtsAttackProcessorDoesNotDriveCommanderFpvAttacks) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_melee = true;
+  attacker_attack->can_ranged = false;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Melee;
+  attacker_attack->cooldown = 0.0F;
+  attacker_attack->melee_cooldown = 0.0F;
+  attacker_attack->time_since_last = 1.0F;
+  attacker_attack->in_melee_lock = true;
+  auto* commander = attacker->add_component<CommanderComponent>();
+  commander->fpv_controlled = true;
+  commander->combo_step = 3;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(0.8F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+  auto* enemy_attack = enemy->add_component<AttackComponent>();
+  enemy_attack->in_melee_lock = true;
+  enemy_attack->melee_lock_target_id = attacker->get_id();
+
+  attacker_attack->melee_lock_target_id = enemy->get_id();
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_EQ(attacker->get_component<CombatStateComponent>(), nullptr);
+  EXPECT_TRUE(attacker->has_component<AttackTargetComponent>());
+  EXPECT_EQ(enemy_unit->health, 100);
+}
+
 TEST_F(CombatModeTest, MeleeLockKeepsCurrentTargetEvenWhenCloserEnemyExists) {
   auto* attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -1297,6 +1413,59 @@ TEST_F(CombatModeTest, MountedAndElephantVictimsSelectDeathProfiles) {
   EXPECT_EQ(death->profile, DeathSequenceProfile::Elephant);
   EXPECT_EQ(death->sequence_variant, 0U);
   EXPECT_GE(death->state_duration, 1.2F);
+}
+
+TEST_F(CombatModeTest, PerfectGuardNegatesDamageAndDoesNotConsumeCommanderComboState) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto* attacker_cmd = attacker->add_component<CommanderComponent>();
+  attacker_cmd->combo_step = 2;
+  attacker_cmd->power_strike_active = true;
+
+  auto* target = world->create_entity();
+  target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  auto* guard = target->add_component<CommanderGuardComponent>();
+  guard->active = true;
+  guard->perfect_guard_remaining = 0.1F;
+
+  Game::Systems::Combat::deal_damage(world.get(), target, 40, attacker->get_id());
+
+  EXPECT_EQ(target_unit->health, 100);
+  EXPECT_TRUE(attacker->has_component<StaggerComponent>());
+  EXPECT_EQ(attacker_cmd->combo_step, 2);
+  EXPECT_TRUE(attacker_cmd->power_strike_active);
+  EXPECT_FALSE(attacker_cmd->just_struck_enemy);
+  EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
+}
+
+TEST_F(CombatModeTest, GuardBreakDropsGuardAndLetsTheBreakingHitThrough) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+
+  auto* target = world->create_entity();
+  target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  target_cmd->posture = 95.0F;
+  target_cmd->posture_max = 100.0F;
+  auto* guard = target->add_component<CommanderGuardComponent>();
+  guard->active = true;
+
+  Game::Systems::Combat::deal_damage(world.get(), target, 20, attacker->get_id());
+
+  EXPECT_EQ(target_unit->health, 80);
+  EXPECT_FALSE(guard->active);
+  EXPECT_TRUE(guard->rearm_requires_release);
+  EXPECT_GT(guard->guard_break_remaining, 0.0F);
+  EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
 }
 
 TEST_F(CombatModeTest, CleanupSystemRunsDeathThenDeadHoldBeforeRemoval) {

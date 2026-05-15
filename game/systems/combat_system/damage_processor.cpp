@@ -113,26 +113,24 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit) -> i
   return Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
 }
 
-auto apply_commander_guard_reduction(Engine::Core::World* world,
-                                     Engine::Core::Entity* target,
-                                     int damage,
-                                     Engine::Core::EntityID attacker_id) -> int {
-  if (world == nullptr || target == nullptr || attacker_id == 0 || damage <= 0) {
-    return damage;
-  }
+struct GuardResolution {
+  int damage = 0;
+  bool blocked = false;
+  bool perfect_guarded = false;
+  bool guard_broken = false;
+};
 
-  auto* guard = target->get_component<Engine::Core::CommanderGuardComponent>();
-  if (guard == nullptr || !guard->active) {
-    return damage;
-  }
-
-  auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-  auto* attacker = world->get_entity(attacker_id);
+auto is_guardable_attack(Engine::Core::Entity* target,
+                         Engine::Core::Entity* attacker,
+                         float frontal_arc_dot) -> bool {
+  auto* target_transform =
+      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
   auto* attacker_transform =
       attacker != nullptr ? attacker->get_component<Engine::Core::TransformComponent>()
                           : nullptr;
   if (target_transform == nullptr || attacker_transform == nullptr) {
-    return damage;
+    return false;
   }
 
   constexpr float k_degrees_to_radians = 0.017453292519943295F;
@@ -142,18 +140,126 @@ auto apply_commander_guard_reduction(Engine::Core::World* world,
                         0.0F,
                         attacker_transform->position.z - target_transform->position.z);
   if (to_attacker.lengthSquared() <= 0.0001F) {
-    return damage;
+    return false;
   }
   to_attacker.normalize();
+  return QVector3D::dotProduct(forward, to_attacker) >= frontal_arc_dot;
+}
 
-  if (QVector3D::dotProduct(forward, to_attacker) < guard->frontal_arc_dot) {
-    return damage;
+void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
+  if (entity == nullptr || duration <= 0.0F) {
+    return;
+  }
+  if (auto* stagger = entity->get_component<Engine::Core::StaggerComponent>()) {
+    stagger->remaining = std::max(stagger->remaining, duration);
+  } else {
+    entity->add_component<Engine::Core::StaggerComponent>(duration);
+  }
+}
+
+void apply_posture_pressure(Engine::Core::Entity* target, float pressure) {
+  if (target == nullptr || pressure <= 0.0F) {
+    return;
+  }
+  auto* commander = target->get_component<Engine::Core::CommanderComponent>();
+  if (commander == nullptr) {
+    return;
+  }
+  commander->posture =
+      std::clamp(commander->posture + pressure, 0.0F, commander->posture_max);
+}
+
+auto has_punish_opening(Engine::Core::Entity* target) -> bool {
+  if (target == nullptr) {
+    return false;
+  }
+  if (target->has_component<Engine::Core::StaggerComponent>()) {
+    return true;
+  }
+  if (auto* combat_state =
+          target->get_component<Engine::Core::CombatStateComponent>()) {
+    if (combat_state->animation_state == Engine::Core::CombatAnimationState::WindUp) {
+      return true;
+    }
+  }
+  if (auto* commander = target->get_component<Engine::Core::CommanderComponent>()) {
+    if (commander->punish_window_remaining > 0.0F) {
+      return true;
+    }
+  }
+  if (auto* guard = target->get_component<Engine::Core::CommanderGuardComponent>()) {
+    if (guard->guard_break_remaining > 0.0F) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto resolve_perfect_guard(Engine::Core::World* world,
+                           Engine::Core::Entity* target,
+                           Engine::Core::EntityID attacker_id) -> bool {
+  if (world == nullptr || target == nullptr || attacker_id == 0) {
+    return false;
   }
 
-  return std::max(
+  auto* guard = target->get_component<Engine::Core::CommanderGuardComponent>();
+  auto* attacker = world->get_entity(attacker_id);
+  if (guard == nullptr || attacker == nullptr || !guard->active ||
+      guard->guard_break_remaining > 0.0F || guard->perfect_guard_remaining <= 0.0F ||
+      !is_guardable_attack(target, attacker, guard->frontal_arc_dot)) {
+    return false;
+  }
+
+  guard->perfect_guard_remaining = 0.0F;
+  if (auto* commander = target->get_component<Engine::Core::CommanderComponent>()) {
+    commander->punish_window_remaining =
+        std::max(commander->punish_window_remaining, 1.0F);
+    commander->posture = std::max(0.0F, commander->posture - 18.0F);
+  }
+  add_or_extend_stagger(attacker, 0.75F);
+  return true;
+}
+
+auto resolve_commander_guard(Engine::Core::World* world,
+                             Engine::Core::Entity* target,
+                             int damage,
+                             Engine::Core::EntityID attacker_id) -> GuardResolution {
+  GuardResolution result{damage, false, false, false};
+  if (world == nullptr || target == nullptr || attacker_id == 0 || damage <= 0) {
+    return result;
+  }
+
+  auto* guard = target->get_component<Engine::Core::CommanderGuardComponent>();
+  auto* attacker = world->get_entity(attacker_id);
+  if (guard == nullptr || attacker == nullptr ||
+      !is_guardable_attack(target, attacker, guard->frontal_arc_dot)) {
+    return result;
+  }
+
+  auto* commander = target->get_component<Engine::Core::CommanderComponent>();
+  if (!guard->active || guard->guard_break_remaining > 0.0F) {
+    return result;
+  }
+
+  result.blocked = true;
+  result.damage = std::max(
       1,
       static_cast<int>(std::round(static_cast<float>(damage) *
                                   std::clamp(guard->damage_multiplier, 0.0F, 1.0F))));
+  apply_posture_pressure(target, std::max(10.0F, static_cast<float>(damage) * 0.85F));
+  if (commander != nullptr && commander->posture >= commander->posture_max) {
+    guard->guard_break_remaining = std::max(guard->guard_break_remaining, 1.0F);
+    guard->rearm_requires_release = true;
+    guard->active = false;
+    guard->perfect_guard_remaining = 0.0F;
+    commander->punish_window_remaining =
+        std::max(commander->punish_window_remaining, 1.0F);
+    commander->posture = commander->posture_max;
+    result.damage = damage;
+    result.blocked = false;
+    result.guard_broken = true;
+  }
+  return result;
 }
 
 auto begin_soldier_casualties(Engine::Core::Entity* target,
@@ -340,26 +446,41 @@ void deal_damage(Engine::Core::World* world,
     return;
   }
 
-  damage = apply_commander_guard_reduction(world, target, damage, attacker_id);
+  auto* attacker_ent =
+      (attacker_id != 0 && world != nullptr) ? world->get_entity(attacker_id) : nullptr;
+  auto* attacker_cmd =
+      attacker_ent != nullptr
+          ? attacker_ent->get_component<Engine::Core::CommanderComponent>()
+          : nullptr;
+  if (resolve_perfect_guard(world, target, attacker_id)) {
+    return;
+  }
 
-  if (attacker_id != 0 && world != nullptr) {
-    auto* attacker_ent = world->get_entity(attacker_id);
-    if (attacker_ent != nullptr) {
-      auto* cmd = attacker_ent->get_component<Engine::Core::CommanderComponent>();
-      if (cmd != nullptr) {
-        constexpr std::array<float, 4> k_combo_mult = {1.0F, 1.1F, 1.2F, 1.5F};
-        const int step = std::min(cmd->combo_step, 3);
-        damage = static_cast<int>(
-            std::roundf(static_cast<float>(damage) * k_combo_mult[step]));
-        if (cmd->power_strike_active) {
-          damage = static_cast<int>(std::roundf(static_cast<float>(damage) * 1.8F));
-          cmd->power_strike_active = false;
-        }
-        cmd->combo_step = (cmd->combo_step + 1) % 4;
-        cmd->just_struck_enemy = true;
-      }
+  int combo_step = 0;
+  bool finisher_hit = false;
+  bool power_strike_hit = false;
+  if (attacker_cmd != nullptr) {
+    constexpr std::array<float, 4> k_combo_mult = {1.0F, 1.1F, 1.2F, 1.5F};
+    combo_step = std::min(attacker_cmd->combo_step, 3);
+    finisher_hit = combo_step >= 3;
+    damage = static_cast<int>(
+        std::roundf(static_cast<float>(damage) * k_combo_mult[combo_step]));
+    if (attacker_cmd->power_strike_active) {
+      damage = static_cast<int>(std::roundf(static_cast<float>(damage) * 1.8F));
+      power_strike_hit = true;
     }
   }
+
+  const bool punish_opening = has_punish_opening(target);
+  if (punish_opening) {
+    const float punish_multiplier = finisher_hit ? 1.35F : 1.22F;
+    damage =
+        static_cast<int>(std::roundf(static_cast<float>(damage) * punish_multiplier));
+  }
+
+  const GuardResolution guard_resolution =
+      resolve_commander_guard(world, target, damage, attacker_id);
+  damage = guard_resolution.damage;
 
   if (auto* rpg = target->get_component<Engine::Core::RpgHealthComponent>();
       rpg != nullptr && rpg->active) {
@@ -367,6 +488,24 @@ void deal_damage(Engine::Core::World* world,
         world, target, damage, attacker_id);
     if (!rpg_result.killed) {
       if (rpg_result.effective_damage > 0) {
+        if (attacker_cmd != nullptr) {
+          attacker_cmd->combo_step = (attacker_cmd->combo_step + 1) % 4;
+          attacker_cmd->just_struck_enemy = true;
+          attacker_cmd->last_strike_combo_step = static_cast<std::uint8_t>(combo_step);
+          if (power_strike_hit) {
+            attacker_cmd->power_strike_active = false;
+          }
+        }
+        if (punish_opening || guard_resolution.guard_broken || finisher_hit) {
+          add_or_extend_stagger(
+              target,
+              finisher_hit ? 0.75F : (guard_resolution.guard_broken ? 0.65F : 0.45F));
+        }
+        if (!guard_resolution.blocked) {
+          apply_posture_pressure(
+              target,
+              std::max(6.0F, static_cast<float>(rpg_result.effective_damage) * 0.25F));
+        }
         apply_hit_feedback(target, attacker_id, world);
         Game::Units::SpawnType attacker_type_hit = Game::Units::SpawnType::Knight;
         if (attacker_id != 0 && world != nullptr) {
@@ -396,6 +535,26 @@ void deal_damage(Engine::Core::World* world,
   bool const is_killing_blow = (prev_health > 0 && prev_health <= damage);
 
   unit->health = new_health;
+
+  if (damage > 0) {
+    if (attacker_cmd != nullptr) {
+      attacker_cmd->combo_step = (attacker_cmd->combo_step + 1) % 4;
+      attacker_cmd->just_struck_enemy = true;
+      attacker_cmd->last_strike_combo_step = static_cast<std::uint8_t>(combo_step);
+      if (power_strike_hit) {
+        attacker_cmd->power_strike_active = false;
+      }
+    }
+    if (punish_opening || guard_resolution.guard_broken || finisher_hit) {
+      add_or_extend_stagger(
+          target,
+          finisher_hit ? 0.75F : (guard_resolution.guard_broken ? 0.65F : 0.45F));
+    }
+    if (!guard_resolution.blocked) {
+      apply_posture_pressure(target,
+                             std::max(6.0F, static_cast<float>(damage) * 0.25F));
+    }
+  }
 
   int const queued_soldier_casualties = begin_soldier_casualties(
       target,

@@ -82,6 +82,31 @@ Item {
                 game.commander_cycle_lock_on();
             event.accepted = true;
             return;
+        case Qt.Key_1:
+            if (!event.isAutoRepeat && game.commander_vanguard_rush)
+                game.commander_vanguard_rush();
+            event.accepted = true;
+            return;
+        case Qt.Key_2:
+            if (!event.isAutoRepeat && game.commander_second_wind)
+                game.commander_second_wind();
+            event.accepted = true;
+            return;
+        case Qt.Key_F:
+            if (!event.isAutoRepeat && game.commander_special_action)
+                game.commander_special_action();
+            event.accepted = true;
+            return;
+        case Qt.Key_R:
+            if (!event.isAutoRepeat && game.commander_trigger_rally)
+                game.commander_trigger_rally();
+            event.accepted = true;
+            return;
+        case Qt.Key_C:
+            if (!event.isAutoRepeat && game.commander_toggle_camera_mode)
+                game.commander_toggle_camera_mode();
+            event.accepted = true;
+            return;
         case Qt.Key_W:
         case Qt.Key_A:
         case Qt.Key_S:
@@ -118,7 +143,7 @@ Item {
 
     objectName: "GameView"
     focus: true
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (typeof game === 'undefined')
             return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {

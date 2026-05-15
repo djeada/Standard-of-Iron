@@ -127,6 +127,7 @@ add_executable(standard_of_iron_tests
     render/software/render_backend_factory_test.cpp
     render/profiling/frame_profile_test.cpp
     tools/map_editor_map_data_test.cpp
+    tools/map_editor_canvas_transform_test.cpp
     tools/arena_unit_spawn_options_test.cpp
     test_main.cpp
 )

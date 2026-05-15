@@ -4,6 +4,36 @@ Item {
     id: root
     anchors.fill: parent
 
+    property var status: ({})
+
+    function status_value(key, fallback) {
+        if (!status || status[key] === undefined || status[key] === null) {
+            return fallback;
+        }
+        return status[key];
+    }
+
+    function cooldown_ratio(remainingKey, totalKey) {
+        var total = Number(status_value(totalKey, 0.0));
+        if (total <= 0.0) {
+            return 0.0;
+        }
+        return Math.max(0.0, Math.min(1.0, Number(status_value(remainingKey, 0.0)) / total));
+    }
+
+    Timer {
+        interval: 80
+        repeat: true
+        running: root.visible && typeof game !== 'undefined' && game.get_controlled_commander_status
+        onTriggered: root.status = game.get_controlled_commander_status()
+    }
+
+    Component.onCompleted: {
+        if (typeof game !== 'undefined' && game.get_controlled_commander_status) {
+            status = game.get_controlled_commander_status();
+        }
+    }
+
     Item {
         id: crosshair
         width: 32
@@ -70,25 +100,57 @@ Item {
         Repeater {
             model: [{
                     "key": "LMB",
-                    "label": "Strike"
+                    "label": "Strike",
+                    "ready": "has_commander"
                 }, {
                     "key": "RMB",
-                    "label": "Guard"
+                    "label": "Guard",
+                    "ready": "has_commander"
+                }, {
+                    "key": "1",
+                    "label": "Rush",
+                    "ready": "vanguard_rush_ready",
+                    "remaining": "vanguard_rush_cooldown_remaining",
+                    "total": "vanguard_rush_cooldown"
+                }, {
+                    "key": "2",
+                    "label": "Wind",
+                    "ready": "second_wind_ready",
+                    "remaining": "second_wind_cooldown_remaining",
+                    "total": "second_wind_cooldown"
                 }, {
                     "key": "F",
-                    "label": "Special"
+                    "label": "Bash",
+                    "ready": "shield_bash_ready",
+                    "remaining": "shield_bash_cooldown_remaining",
+                    "total": "shield_bash_cooldown"
                 }, {
                     "key": "R",
-                    "label": "Rally"
+                    "label": "Rally",
+                    "ready": "rally_ready",
+                    "remaining": "rally_cooldown_remaining",
+                    "total": "rally_cooldown"
                 }]
             delegate: Rectangle {
                 width: 52
                 height: 52
                 radius: 6
-                color: "#1a1a1a"
-                opacity: 0.78
-                border.color: "#555555"
-                border.width: 1
+                property bool ready: root.status_value(modelData["ready"], true)
+                property real cooldownRatio: root.cooldown_ratio(modelData["remaining"] || "", modelData["total"] || "")
+                color: ready ? "#1a1a1a" : "#101010"
+                opacity: ready ? 0.82 : 0.58
+                border.color: ready ? "#777777" : "#444444"
+                border.width: ready ? 1 : 2
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: parent.height * parent.cooldownRatio
+                    radius: parent.radius
+                    color: "#aa000000"
+                    visible: parent.cooldownRatio > 0.01
+                }
 
                 Column {
                     anchors.centerIn: parent
@@ -96,17 +158,28 @@ Item {
 
                     Text {
                         text: modelData["key"]
-                        color: "#ffffff"
+                        color: parent.parent.ready ? "#ffffff" : "#888888"
                         font.pixelSize: 11
                         font.bold: true
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                     Text {
                         text: modelData["label"]
-                        color: "#aaaaaa"
+                        color: parent.parent.ready ? "#aaaaaa" : "#777777"
                         font.pixelSize: 9
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: Math.ceil(Number(root.status_value(modelData["remaining"] || "", 0.0))).toString()
+                    visible: parent.cooldownRatio > 0.01
+                    color: "#ffffff"
+                    font.pixelSize: 13
+                    font.bold: true
+                    style: Text.Outline
+                    styleColor: "#aa000000"
                 }
             }
         }

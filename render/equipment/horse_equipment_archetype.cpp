@@ -1,8 +1,10 @@
 #include "horse_equipment_archetype.h"
 
 #include <QDebug>
+#include <QString>
 
 #include <cstddef>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -14,7 +16,7 @@ namespace {
 struct LoadoutCacheKey {
   Render::Creature::ArchetypeId base_archetype_id{
       Render::Creature::k_invalid_archetype};
-  std::vector<EquipmentHandle> handles{};
+  std::vector<EquipmentHandle> handles;
 
   auto operator==(const LoadoutCacheKey& other) const -> bool {
     return base_archetype_id == other.base_archetype_id && handles == other.handles;
@@ -48,21 +50,34 @@ auto archetype_cache() -> std::unordered_map<LoadoutCacheKey,
   return cache;
 }
 
+auto resolver_mutex() -> std::mutex& {
+  static std::mutex mutex;
+  return mutex;
+}
+
+auto debug_name_for_log(std::string_view debug_name) -> QString {
+  return QString::fromUtf8(debug_name.data(),
+                           static_cast<qsizetype>(debug_name.size()));
+}
+
 } // namespace
 
 void register_horse_equipment_contribution(EquipmentHandle handle,
                                            HorseEquipmentContribution contribution) {
+  std::lock_guard<std::mutex> const lock(resolver_mutex());
   if (handle == k_invalid_equipment_handle) {
     qWarning() << "register_horse_equipment_contribution: invalid handle";
     return;
   }
-  contribution_registry()[handle] = std::move(contribution);
+  contribution_registry()[handle] = contribution;
 }
 
 auto resolve_horse_equipment_archetype(std::string_view debug_name,
                                        Render::Creature::ArchetypeId base_archetype_id,
                                        std::span<const EquipmentHandle> handles)
     -> Render::Creature::ArchetypeId {
+  std::lock_guard<std::mutex> const lock(resolver_mutex());
+
   bool has_equipment = false;
   for (const EquipmentHandle handle : handles) {
     if (handle != k_invalid_equipment_handle) {
@@ -101,14 +116,14 @@ auto resolve_horse_equipment_archetype(std::string_view debug_name,
     const auto contribution_it = contribution_registry().find(handle);
     if (contribution_it == contribution_registry().end()) {
       qWarning() << "resolve_horse_equipment_archetype: missing contribution for"
-                 << debug_name.data() << "handle" << handle;
+                 << debug_name_for_log(debug_name) << "handle" << handle;
       return base_archetype_id;
     }
 
     const auto& contribution = contribution_it->second;
     if (contribution.build_attachments == nullptr) {
       qWarning() << "resolve_horse_equipment_archetype: null attachment builder for"
-                 << debug_name.data() << "handle" << handle;
+                 << debug_name_for_log(debug_name) << "handle" << handle;
       return base_archetype_id;
     }
 
@@ -116,7 +131,7 @@ auto resolve_horse_equipment_archetype(std::string_view debug_name,
     if (desc.bake_attachment_count + attachments.size() >
         Render::Creature::ArchetypeDescriptor::k_max_bake_attachments) {
       qWarning() << "resolve_horse_equipment_archetype: too many attachments for"
-                 << debug_name.data();
+                 << debug_name_for_log(debug_name);
       return base_archetype_id;
     }
 
@@ -129,7 +144,7 @@ auto resolve_horse_equipment_archetype(std::string_view debug_name,
             static_cast<std::uint8_t>(desc.extra_role_color_fns.size())) {
       qWarning() << "resolve_horse_equipment_archetype: too many role color "
                     "callbacks for"
-                 << debug_name.data();
+                 << debug_name_for_log(debug_name);
       return base_archetype_id;
     }
 

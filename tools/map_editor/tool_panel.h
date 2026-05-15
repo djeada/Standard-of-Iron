@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QIcon>
 #include <QWidget>
 
 class QButtonGroup;
@@ -23,6 +24,24 @@ enum class ToolType {
   PropRuins,
   PropDeadTree,
   PropBoulder,
+  TroopArcher,
+  TroopSwordsman,
+  TroopSpearman,
+  TroopHorseSwordsman,
+  TroopHorseArcher,
+  TroopHorseSpearman,
+  TroopHealer,
+  TroopCatapult,
+  TroopBallista,
+  TroopElephant,
+  TroopRomanLegionOrganizer,
+  TroopRomanVeteranConsul,
+  TroopRomanFieldCommander,
+  TroopCarthageMercenaryBroker,
+  TroopCarthageCavalryPatron,
+  TroopCarthageElephantMaster,
+  TroopCivilian,
+  TroopBuilder,
   Barracks,
   Village,
   Eraser
@@ -50,7 +69,8 @@ private:
                        const QString& name,
                        const QString& icon_char,
                        const QString& description,
-                       ToolType tool) -> QToolButton*;
+                       ToolType tool,
+                       const QIcon& icon = QIcon()) -> QToolButton*;
   void set_current_tool(ToolType tool, bool emit_signal = true);
   void update_active_tool_label(const QString& description);
 

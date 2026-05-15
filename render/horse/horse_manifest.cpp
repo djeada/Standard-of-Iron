@@ -42,7 +42,7 @@ constexpr float k_horse_segmented_leg_width_scale = 1.10F;
 struct HorseClipSpec {
   Render::Creature::BakeClipDescriptor desc;
   Render::GL::GaitType gait;
-  bool is_moving;
+  bool is_moving{};
   bool is_fighting{false};
   bool is_death{false};
   bool is_dead_hold{false};
@@ -147,6 +147,15 @@ void scale_torso_section_length(std::array<TorsoSectionRing, N>& rings) {
 }
 
 template <std::size_t N>
+void scale_torso_section_length_about(std::array<TorsoSectionRing, N>& rings,
+                                      float anchor_z,
+                                      float scale) {
+  for (TorsoSectionRing& ring : rings) {
+    ring.z = anchor_z + (ring.z - anchor_z) * scale;
+  }
+}
+
+template <std::size_t N>
 void scale_torso_section_height(std::array<TorsoSectionRing, N>& rings) {
   for (TorsoSectionRing& ring : rings) {
     ring.top *= Render::Horse::k_horse_torso_part_height_scale;
@@ -219,7 +228,7 @@ auto build_horse_torso_section_mesh(std::span<const TorsoSectionRing> rings,
 
   auto add_cap = [&](unsigned int ring_index, bool front) {
     TorsoSectionRing const& profile = rings[ring_index];
-    unsigned int const center = static_cast<unsigned int>(node.vertices.size());
+    auto const center = static_cast<unsigned int>(node.vertices.size());
     append_vertex(
         node.vertices,
         QVector3D(0.0F, profile.y + (profile.top - profile.bottom) * 0.16F, profile.z),
@@ -298,12 +307,10 @@ auto build_horse_muzzle_mesh(std::span<const MuzzleRingProfile> rings)
                   center,
                   front_facing ? QVector3D(0.0F, 0.0F, 1.0F)
                                : QVector3D(0.0F, 0.0F, -1.0F));
-    unsigned int const center_index =
-        static_cast<unsigned int>(node.vertices.size() - 1U);
+    auto const center_index = static_cast<unsigned int>(node.vertices.size() - 1U);
     for (std::size_t i = 0; i < k_ring_vertices; ++i) {
-      unsigned int const a = static_cast<unsigned int>(base + i);
-      unsigned int const b =
-          static_cast<unsigned int>(base + ((i + 1U) % k_ring_vertices));
+      auto const a = static_cast<unsigned int>(base + i);
+      auto const b = static_cast<unsigned int>(base + ((i + 1U) % k_ring_vertices));
       if (front_facing) {
         node.indices.insert(node.indices.end(), {center_index, a, b});
       } else {
@@ -316,12 +323,10 @@ auto build_horse_muzzle_mesh(std::span<const MuzzleRingProfile> rings)
     std::size_t const base = ring_index * k_ring_vertices;
     std::size_t const next = base + k_ring_vertices;
     for (std::size_t i = 0; i < k_ring_vertices; ++i) {
-      unsigned int const a = static_cast<unsigned int>(base + i);
-      unsigned int const b =
-          static_cast<unsigned int>(base + ((i + 1U) % k_ring_vertices));
-      unsigned int const c =
-          static_cast<unsigned int>(next + ((i + 1U) % k_ring_vertices));
-      unsigned int const d = static_cast<unsigned int>(next + i);
+      auto const a = static_cast<unsigned int>(base + i);
+      auto const b = static_cast<unsigned int>(base + ((i + 1U) % k_ring_vertices));
+      auto const c = static_cast<unsigned int>(next + ((i + 1U) % k_ring_vertices));
+      auto const d = static_cast<unsigned int>(next + i);
       node.indices.insert(node.indices.end(), {a, b, c, c, d, a});
     }
   }
@@ -387,6 +392,10 @@ auto build_horse_whole_nodes() -> std::vector<Render::Creature::Quadruped::MeshN
   }};
   scale_torso_section_height(rear_rings);
   scale_torso_section_length(rear_rings);
+  scale_torso_section_length_about(
+      rear_rings,
+      rear_rings.back().z,
+      Render::Horse::k_horse_rear_torso_extra_length_scale);
   nodes.push_back({"horse.body.rear",
                    static_cast<BoneIndex>(HorseBone::Body),
                    k_role_coat,
@@ -712,8 +721,8 @@ auto build_horse_leg_span_mesh(std::span<const LegRingProfile> rings)
   }
 
   for (std::size_t ring = 0; ring + 1U < rings.size(); ++ring) {
-    unsigned int const base = static_cast<unsigned int>(ring * k_ring_vertices);
-    unsigned int const next = static_cast<unsigned int>((ring + 1U) * k_ring_vertices);
+    auto const base = static_cast<unsigned int>(ring * k_ring_vertices);
+    auto const next = static_cast<unsigned int>((ring + 1U) * k_ring_vertices);
     for (int i = 0; i < k_ring_vertices; ++i) {
       unsigned int const a = base + static_cast<unsigned int>(i);
       unsigned int const b =
@@ -727,11 +736,11 @@ auto build_horse_leg_span_mesh(std::span<const LegRingProfile> rings)
 
   auto add_cap = [&](std::size_t ring, bool top) {
     LegRingProfile const& profile = rings[ring];
-    unsigned int const center = static_cast<unsigned int>(vertices.size());
+    auto const center = static_cast<unsigned int>(vertices.size());
     vertices.push_back({{profile.x_shift, profile.y, profile.z_shift},
                         {0.0F, top ? -1.0F : 1.0F, 0.0F},
                         {0.5F, 0.5F}});
-    unsigned int const base = static_cast<unsigned int>(ring * k_ring_vertices);
+    auto const base = static_cast<unsigned int>(ring * k_ring_vertices);
     for (int i = 0; i < k_ring_vertices; ++i) {
       unsigned int const a = base + static_cast<unsigned int>(i);
       unsigned int const b =
@@ -750,7 +759,7 @@ auto build_horse_leg_span_mesh(std::span<const LegRingProfile> rings)
 }
 
 auto horse_front_thigh_mesh() noexcept -> Render::GL::Mesh* {
-  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
+  static std::unique_ptr<Render::GL::Mesh> const mesh = [] {
     auto rings = std::array<LegRingProfile, 4>{{
         {-0.50F, 0.00F, 0.02F, 0.60F, 0.54F, 0.32F, 0.22F},
         {-0.18F, 0.00F, 0.01F, 0.46F, 0.40F, 0.28F, 0.18F},
@@ -765,12 +774,12 @@ auto horse_front_thigh_mesh() noexcept -> Render::GL::Mesh* {
 }
 
 auto horse_rear_thigh_mesh() noexcept -> Render::GL::Mesh* {
-  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
+  static std::unique_ptr<Render::GL::Mesh> const mesh = [] {
     auto rings = std::array<LegRingProfile, 4>{{
-        {-0.50F, 0.00F, 0.05F, 0.68F, 0.60F, 0.40F, 0.22F},
-        {-0.18F, 0.00F, 0.03F, 0.50F, 0.44F, 0.30F, 0.18F},
-        {0.16F, 0.00F, 0.01F, 0.30F, 0.26F, 0.22F, 0.12F},
-        {0.50F, 0.00F, 0.00F, 0.12F, 0.11F, 0.12F, 0.08F},
+        {-0.50F, 0.00F, 0.02F, 0.52F, 0.46F, 0.26F, 0.17F},
+        {-0.18F, 0.00F, 0.01F, 0.38F, 0.33F, 0.20F, 0.13F},
+        {0.16F, 0.00F, 0.00F, 0.23F, 0.19F, 0.15F, 0.10F},
+        {0.50F, 0.00F, 0.00F, 0.10F, 0.09F, 0.10F, 0.07F},
     }};
     scale_leg_span_thickness(rings, k_horse_thigh_thickness_scale);
     scale_leg_span_width(rings, k_horse_segmented_leg_width_scale);
@@ -780,7 +789,7 @@ auto horse_rear_thigh_mesh() noexcept -> Render::GL::Mesh* {
 }
 
 auto horse_front_calf_mesh() noexcept -> Render::GL::Mesh* {
-  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
+  static std::unique_ptr<Render::GL::Mesh> const mesh = [] {
     auto rings = std::array<LegRingProfile, 4>{{
         {-0.50F, 0.00F, 0.02F, 0.24F, 0.22F, 0.28F, 0.24F},
         {-0.16F, 0.00F, 0.01F, 0.21F, 0.20F, 0.25F, 0.22F},
@@ -795,7 +804,7 @@ auto horse_front_calf_mesh() noexcept -> Render::GL::Mesh* {
 }
 
 auto horse_rear_calf_mesh() noexcept -> Render::GL::Mesh* {
-  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
+  static std::unique_ptr<Render::GL::Mesh> const mesh = [] {
     auto rings = std::array<LegRingProfile, 4>{{
         {-0.50F, 0.00F, -0.02F, 0.25F, 0.23F, 0.25F, 0.31F},
         {-0.16F, 0.00F, -0.01F, 0.22F, 0.20F, 0.23F, 0.27F},
@@ -810,8 +819,8 @@ auto horse_rear_calf_mesh() noexcept -> Render::GL::Mesh* {
 }
 
 auto horse_hoof_mesh() noexcept -> Render::GL::Mesh* {
-  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
-    std::vector<Render::GL::Vertex> vertices{
+  static std::unique_ptr<Render::GL::Mesh> const mesh = [] {
+    std::vector<Render::GL::Vertex> const vertices{
         {{-0.90F, -0.58F, -0.72F}, {0.0F, -1.0F, 0.0F}, {0.0F, 0.0F}},
         {{0.90F, -0.58F, -0.72F}, {0.0F, -1.0F, 0.0F}, {1.0F, 0.0F}},
         {{1.06F, -0.58F, 0.86F}, {0.0F, -1.0F, 0.0F}, {1.0F, 1.0F}},
@@ -821,9 +830,9 @@ auto horse_hoof_mesh() noexcept -> Render::GL::Mesh* {
         {{0.86F, 0.52F, 0.54F}, {0.5F, 0.5F, 0.2F}, {1.0F, 1.0F}},
         {{-0.86F, 0.52F, 0.54F}, {-0.5F, 0.5F, 0.2F}, {0.0F, 1.0F}},
     };
-    std::vector<unsigned int> indices{0, 1, 2, 2, 3, 0, 4, 7, 6, 6, 5, 4,
-                                      0, 4, 5, 5, 1, 0, 1, 5, 6, 6, 2, 1,
-                                      2, 6, 7, 7, 3, 2, 3, 7, 4, 4, 0, 3};
+    std::vector<unsigned int> const indices{0, 1, 2, 2, 3, 0, 4, 7, 6, 6, 5, 4,
+                                            0, 4, 5, 5, 1, 0, 1, 5, 6, 6, 2, 1,
+                                            2, 6, 7, 7, 3, 2, 3, 7, 4, 4, 0, 3};
     return std::make_unique<Render::GL::Mesh>(vertices, indices);
   }();
   return mesh.get();
@@ -835,9 +844,9 @@ auto horse_hoof_center_y(bool front, Render::GL::HorseDimensions const& dims) ->
 
 auto horse_hoof_half_extents(bool front,
                              Render::GL::HorseDimensions const& dims) -> QVector3D {
-  return QVector3D(dims.body_width * (front ? 0.100F : 0.094F) * 2.0F,
-                   dims.hoof_height * 0.58F,
-                   dims.body_width * (front ? 0.180F : 0.168F) * 2.0F);
+  return {dims.body_width * (front ? 0.100F : 0.094F) * 2.0F,
+          dims.hoof_height * 0.58F,
+          dims.body_width * (front ? 0.180F : 0.168F) * 2.0F};
 }
 
 auto build_horse_full_leg_overlays()
@@ -856,12 +865,12 @@ auto build_horse_full_leg_overlays()
                      bool front) {
     float const thigh_head_y = dims.body_height * (front ? 0.86F : 1.02F);
     float const thigh_tail_y = dims.leg_length * (front ? 0.08F : 0.10F);
-    float const rear_thigh_length_scale = 0.68F;
+    float const rear_thigh_length_scale = 0.60F;
     float const adjusted_thigh_head_y =
         front ? thigh_head_y
               : thigh_tail_y + (thigh_head_y - thigh_tail_y) * rear_thigh_length_scale;
-    float const thigh_head_z = dims.body_length * (front ? 0.070F : -0.008F);
-    float const thigh_tail_z = dims.body_length * (front ? 0.040F : 0.070F);
+    float const thigh_head_z = dims.body_length * (front ? 0.070F : 0.010F);
+    float const thigh_tail_z = dims.body_length * (front ? 0.040F : 0.055F);
     float const calf_head_y = front ? dims.leg_length * 0.04F : thigh_tail_y;
     float const calf_head_z = front ? dims.body_length * 0.018F : thigh_tail_z;
 
@@ -872,10 +881,10 @@ auto build_horse_full_leg_overlays()
     thigh.params.tail_bone = knee_bone;
     thigh.params.head_offset = QVector3D(0.0F, adjusted_thigh_head_y, thigh_head_z);
     thigh.params.tail_offset = QVector3D(0.0F, thigh_tail_y, thigh_tail_z);
-    thigh.params.radius = dims.body_width * (front ? 0.690F : 0.780F) * 2.0F *
+    thigh.params.radius = dims.body_width * (front ? 0.690F : 0.620F) * 2.0F *
                           k_horse_thigh_thickness_scale *
                           k_horse_segmented_leg_width_scale;
-    thigh.params.depth_radius = dims.body_width * (front ? 1.050F : 1.200F) * 2.0F *
+    thigh.params.depth_radius = dims.body_width * (front ? 1.050F : 0.980F) * 2.0F *
                                 k_horse_thigh_thickness_scale;
     thigh.custom_mesh = front ? horse_front_thigh_mesh() : horse_rear_thigh_mesh();
     thigh.color_role = k_role_coat;
@@ -958,7 +967,7 @@ void bake_horse_manifest_clip_palettes(std::size_t clip_index,
       static_cast<float>(frame_index) /
       static_cast<float>(std::max<std::uint32_t>(clip.desc.frame_count, 1U));
 
-  Render::GL::HorseGait base{};
+  Render::GL::HorseGait const base{};
   Render::GL::HorseGait const gait = Render::GL::gait_for_type(clip.gait, base);
 
   Render::Horse::HorsePoseMotion motion{};
@@ -978,7 +987,7 @@ void bake_horse_manifest_clip_palettes(std::size_t clip_index,
   Render::Horse::BonePalette palette{};
   Render::Horse::evaluate_horse_skeleton(pose, palette);
   if (clip.is_death) {
-    float death_phase = clip.is_dead_hold ? 1.0F : std::clamp(phase, 0.0F, 1.0F);
+    float const death_phase = clip.is_dead_hold ? 1.0F : std::clamp(phase, 0.0F, 1.0F);
     QMatrix4x4 death_transform;
     death_transform.translate(0.0F, -0.28F * death_phase, 0.0F);
     death_transform.rotate(82.0F * death_phase, 1.0F, 0.0F, 0.0F);

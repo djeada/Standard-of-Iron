@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 
+#include "render/equipment/armor/cloak_renderer.h"
 #include "render/equipment/armor/roman_greaves.h"
 #include "render/equipment/armor/roman_shoulder_cover.h"
 #include "render/equipment/armor/shoulder_cover_archetype.h"
@@ -147,8 +148,8 @@ TEST(BakedAttachmentWorldPosition, CarthageLightHelmetMatchesLegacySubmit) {
   ctx.model = QMatrix4x4{};
   Render::GL::BodyFrames frames{};
   frames.head = frame;
-  Render::GL::HumanoidPalette palette{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
@@ -224,8 +225,8 @@ TEST(BakedAttachmentWorldPosition, RomanGreavesMatchesLegacySubmit) {
   Render::GL::AttachmentFrame empty_shin{};
   empty_shin.radius = 0.0F;
   frames.shin_r = empty_shin;
-  Render::GL::HumanoidPalette palette{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 4);
@@ -266,8 +267,8 @@ TEST(BakedAttachmentWorldPosition, RomanShoulderCoverMatchesLegacySubmit) {
   frames.torso = bind_frames.torso;
   frames.shoulder_l = bind_frames.shoulder_l;
   frames.shoulder_r = bind_frames.shoulder_r;
-  Render::GL::HumanoidPalette palette{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   Render::GL::EquipmentBatch full_batch;
   full_batch.reserve(0, 0, 4);
@@ -284,6 +285,53 @@ TEST(BakedAttachmentWorldPosition, RomanShoulderCoverMatchesLegacySubmit) {
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
       Render::GL::roman_shoulder_cover_make_static_attachment(
           k_bone, k_base_role, bone_world),
+  };
+  std::array<Render::Creature::BoneWorldMatrix, 1> bind{bone_world};
+
+  Render::Creature::BakeInput input{};
+  input.bind_pose = bind;
+  input.attachments = k_attachments;
+  const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
+  ASSERT_FALSE(baked.vertices.empty());
+
+  const AABB bake = baked_aabb(baked);
+  expect_aabb_close(legacy, bake, 1e-3F);
+}
+
+TEST(BakedAttachmentWorldPosition, RomanCloakMatchesLegacySubmit) {
+  const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const auto torso_frame = bind_frames.torso;
+  const QMatrix4x4 bone_world = bone_matrix_from_frame(torso_frame);
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames frames{};
+  frames.torso = torso_frame;
+  frames.shoulder_l = bind_frames.shoulder_l;
+  frames.shoulder_r = bind_frames.shoulder_r;
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 4);
+  Render::GL::CloakRenderer::submit(Render::GL::CloakConfig{},
+                                    Render::GL::CloakRenderer{}.meshes(),
+                                    ctx,
+                                    frames,
+                                    palette,
+                                    anim,
+                                    legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty())
+      << "renderer must emit at least one archetype prim";
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
+
+  constexpr std::uint16_t k_bone = 0;
+  constexpr std::uint8_t k_base_role = 0;
+  const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
+      Render::GL::cloak_make_static_attachment(Render::GL::CloakConfig{},
+                                               Render::GL::CloakRenderer{}.meshes(),
+                                               k_bone,
+                                               k_base_role),
   };
   std::array<Render::Creature::BoneWorldMatrix, 1> bind{bone_world};
 

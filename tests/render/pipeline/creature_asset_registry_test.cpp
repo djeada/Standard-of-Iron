@@ -49,6 +49,18 @@ TEST(CreatureAssetRegistry, SwordHumanoidAssetUsesDedicatedBpatSpecies) {
   EXPECT_EQ(asset->bpat_species_id, Render::Creature::Bpat::k_species_humanoid_sword);
 }
 
+TEST(CreatureAssetRegistry, SpearHumanoidAssetUsesDedicatedBpatSpecies) {
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Humanoid;
+  spec.creature_asset_id = k_humanoid_spear_asset;
+
+  const auto* asset = CreatureAssetRegistry::instance().resolve(spec);
+  ASSERT_NE(asset, nullptr);
+  EXPECT_EQ(asset->id, k_humanoid_spear_asset);
+  EXPECT_EQ(asset->kind, CreatureKind::Humanoid);
+  EXPECT_EQ(asset->bpat_species_id, Render::Creature::Bpat::k_species_humanoid_spear);
+}
+
 TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
   UnitVisualSpec horse{};
   horse.kind = CreatureKind::Horse;
@@ -56,7 +68,7 @@ TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
   ASSERT_NE(horse_asset, nullptr);
   EXPECT_EQ(horse_asset->kind, CreatureKind::Horse);
   EXPECT_EQ(horse_asset->spec, &Render::Horse::horse_creature_spec());
-  EXPECT_EQ(horse_asset->role_count, 8u);
+  EXPECT_EQ(horse_asset->role_count, 8U);
   EXPECT_EQ(horse_asset->snapshot_mesh_species_id,
             Render::Creature::Bpat::k_species_horse);
   EXPECT_NE(horse_asset->snapshot_mesh_lod_mask, 0U);

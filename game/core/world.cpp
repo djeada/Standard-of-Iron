@@ -64,6 +64,17 @@ auto World::create_entity_with_id(EntityID entity_id) -> Entity* {
     return nullptr;
   }
 
+  if (m_entities.contains(entity_id)) {
+    for (auto it = m_component_index.begin(); it != m_component_index.end();) {
+      it->second.erase(entity_id);
+      if (it->second.empty()) {
+        it = m_component_index.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+
   auto entity = std::make_unique<Entity>(entity_id);
   auto* ptr = entity.get();
   setup_entity_callback(ptr);

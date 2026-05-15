@@ -1,6 +1,9 @@
 #include <QVector3D>
 
+#include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -21,6 +24,24 @@
 using namespace Render::GL;
 
 namespace {
+
+struct AABB {
+  QVector3D mn{std::numeric_limits<float>::infinity(),
+               std::numeric_limits<float>::infinity(),
+               std::numeric_limits<float>::infinity()};
+  QVector3D mx{-std::numeric_limits<float>::infinity(),
+               -std::numeric_limits<float>::infinity(),
+               -std::numeric_limits<float>::infinity()};
+
+  void include(const QVector3D& p) {
+    mn.setX(std::min(mn.x(), p.x()));
+    mn.setY(std::min(mn.y(), p.y()));
+    mn.setZ(std::min(mn.z(), p.z()));
+    mx.setX(std::max(mx.x(), p.x()));
+    mx.setY(std::max(mx.y(), p.y()));
+    mx.setZ(std::max(mx.z(), p.z()));
+  }
+};
 
 class CountingSubmitter : public ISubmitter {
 public:
@@ -100,6 +121,26 @@ inline int draw_count_of(const EquipmentBatch& batch) {
   CountingSubmitter submitter;
   submit_equipment_batch(batch, submitter);
   return submitter.draw_count;
+}
+
+auto archetype_aabb(const EquipmentBatch& batch) -> AABB {
+  AABB box;
+  for (const auto& prim : batch.archetypes) {
+    if (prim.archetype == nullptr) {
+      continue;
+    }
+    const auto& slice = prim.archetype->lods[0];
+    for (const auto& draw : slice.draws) {
+      if (draw.mesh == nullptr) {
+        continue;
+      }
+      const QMatrix4x4 world = prim.world * draw.local_model;
+      for (const auto& v : draw.mesh->get_vertices()) {
+        box.include(world.map(QVector3D(v.position[0], v.position[1], v.position[2])));
+      }
+    }
+  }
+  return box;
 }
 
 } // namespace
@@ -185,6 +226,82 @@ TEST_F(ArmorRendererTest, CloakRendererCreation) {
   ASSERT_NE(cloak, nullptr);
 }
 
+TEST_F(ArmorRendererTest, CloakBackMeshHasDepthAndTaper) {
+  auto cloak = registry->get(EquipmentCategory::Armor, "cloak_roman");
+  ASSERT_NE(cloak, nullptr);
+  auto* renderer = dynamic_cast<CloakRenderer*>(cloak.get());
+  ASSERT_NE(renderer, nullptr);
+
+  CloakMeshes const meshes = renderer->meshes();
+  ASSERT_NE(meshes.back, nullptr);
+
+  float min_y = std::numeric_limits<float>::infinity();
+  float max_y = -std::numeric_limits<float>::infinity();
+  float top_half_width = 0.0F;
+  float bottom_half_width = 0.0F;
+  for (const auto& v : meshes.back->get_vertices()) {
+    QVector3D const pos(v.position[0], v.position[1], v.position[2]);
+    min_y = std::min(min_y, pos.y());
+    max_y = std::max(max_y, pos.y());
+    if (pos.z() <= -0.45F) {
+      top_half_width = std::max(top_half_width, std::abs(pos.x()));
+    }
+    if (pos.z() >= 0.45F) {
+      bottom_half_width = std::max(bottom_half_width, std::abs(pos.x()));
+    }
+  }
+
+  EXPECT_GT(max_y - min_y, 0.08F);
+  EXPECT_LT(bottom_half_width, top_half_width - 0.05F);
+}
+
+TEST_F(ArmorRendererTest, CloakMeshesStaySymmetricLeftToRight) {
+  auto cloak = registry->get(EquipmentCategory::Armor, "cloak_roman");
+  ASSERT_NE(cloak, nullptr);
+  auto* renderer = dynamic_cast<CloakRenderer*>(cloak.get());
+  ASSERT_NE(renderer, nullptr);
+
+  auto assert_mirror_symmetry = [](Mesh* mesh, int row_stride, int row_count) {
+    ASSERT_NE(mesh, nullptr);
+    const auto& vertices = mesh->get_vertices();
+    ASSERT_GE(vertices.size(), static_cast<std::size_t>(row_stride * row_count * 2));
+    for (int row = 0; row < row_count; ++row) {
+      for (int col = 0; col < row_stride; ++col) {
+        int const mirror_col = row_stride - 1 - col;
+        const auto& lhs = vertices[static_cast<std::size_t>(row * row_stride + col)];
+        const auto& rhs =
+            vertices[static_cast<std::size_t>(row * row_stride + mirror_col)];
+        EXPECT_NEAR(lhs.position[0], -rhs.position[0], 1e-4F);
+        EXPECT_NEAR(lhs.position[1], rhs.position[1], 1e-4F);
+        EXPECT_NEAR(lhs.position[2], rhs.position[2], 1e-4F);
+      }
+    }
+  };
+
+  CloakMeshes const meshes = renderer->meshes();
+  assert_mirror_symmetry(meshes.back, 13, 19);
+  assert_mirror_symmetry(meshes.shoulder, 11, 7);
+}
+
+TEST_F(ArmorRendererTest, MountedCloaksRegisterLowerShoulderAnchors) {
+  auto cloak = registry->get(EquipmentCategory::Armor, "cloak_roman");
+  auto mounted = registry->get(EquipmentCategory::Armor, "cloak_roman_mounted");
+  ASSERT_NE(cloak, nullptr);
+  ASSERT_NE(mounted, nullptr);
+
+  auto* cloak_renderer = dynamic_cast<CloakRenderer*>(cloak.get());
+  auto* mounted_renderer = dynamic_cast<CloakRenderer*>(mounted.get());
+  ASSERT_NE(cloak_renderer, nullptr);
+  ASSERT_NE(mounted_renderer, nullptr);
+
+  EXPECT_LT(mounted_renderer->base_config().shoulder_anchor_up,
+            cloak_renderer->base_config().shoulder_anchor_up);
+  EXPECT_LT(mounted_renderer->base_config().drape_anchor_up,
+            cloak_renderer->base_config().drape_anchor_up);
+  EXPECT_LT(mounted_renderer->base_config().length_scale,
+            cloak_renderer->base_config().length_scale);
+}
+
 TEST_F(ArmorRendererTest, ArmorCategoryIsDistinct) {
   auto helmet = registry->get(EquipmentCategory::Helmet, "carthage_heavy");
   auto armor = registry->get(EquipmentCategory::Armor, "roman_heavy_armor");
@@ -215,9 +332,9 @@ TEST_F(ArmorRendererTest, TorsoArmorMeshFrontFacesBodyForward) {
   frames.head.up = frames.torso.up;
   frames.head.radius = 0.16F;
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   RomanLightArmorRenderer armor;
@@ -249,9 +366,9 @@ TEST_F(ArmorRendererTest, RomanHeavyArmorRendersThroughArchetypePath) {
   frames.shoulder_l.origin = QVector3D(-0.22F, 1.32F, 0.0F);
   frames.shoulder_r.origin = QVector3D(0.22F, 1.32F, 0.0F);
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   RomanHeavyArmorRenderer armor;
@@ -277,9 +394,9 @@ TEST_F(ArmorRendererTest, RomanLightArmorRendersThroughArchetypePath) {
   frames.head.up = frames.torso.up;
   frames.head.radius = 0.16F;
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   RomanLightArmorRenderer armor;
@@ -305,9 +422,9 @@ TEST_F(ArmorRendererTest, ArmorLightCarthageRendersThroughArchetypePath) {
   frames.head.up = frames.torso.up;
   frames.head.radius = 0.16F;
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   ArmorLightCarthageRenderer armor;
@@ -333,9 +450,9 @@ TEST_F(ArmorRendererTest, ArmorHeavyCarthageRendersThroughArchetypePath) {
   frames.head.up = frames.torso.up;
   frames.head.radius = 0.16F;
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   ArmorHeavyCarthageRenderer armor;
@@ -356,9 +473,9 @@ TEST_F(ArmorRendererTest, CloakRendersThroughArchetypePath) {
   frames.shoulder_l.origin = QVector3D(-0.22F, 1.32F, 0.0F);
   frames.shoulder_r.origin = QVector3D(0.22F, 1.32F, 0.0F);
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   CloakRenderer cloak;
@@ -367,6 +484,32 @@ TEST_F(ArmorRendererTest, CloakRendersThroughArchetypePath) {
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_EQ(batch.archetypes.size(), 1U);
   EXPECT_EQ(draw_count_of(batch), 3);
+}
+
+TEST_F(ArmorRendererTest, CloakTopEdgeStaysNearShoulders) {
+  BodyFrames frames{};
+  frames.torso.origin = QVector3D(0.0F, 1.10F, 0.0F);
+  frames.torso.right = QVector3D(1.0F, 0.0F, 0.0F);
+  frames.torso.up = QVector3D(0.0F, 1.0F, 0.0F);
+  frames.torso.forward = QVector3D(0.0F, 0.0F, 1.0F);
+  frames.torso.radius = 0.34F;
+  frames.head.origin = QVector3D(0.0F, 1.78F, 0.0F);
+  frames.shoulder_l.origin = QVector3D(-0.22F, 1.32F, 0.0F);
+  frames.shoulder_r.origin = QVector3D(0.22F, 1.32F, 0.0F);
+
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
+  EquipmentBatch batch;
+
+  CloakRenderer cloak;
+  cloak.render(ctx, frames, palette, anim, batch);
+
+  AABB const box = archetype_aabb(batch);
+  float const shoulder_mid_y =
+      (frames.shoulder_l.origin.y() + frames.shoulder_r.origin.y()) * 0.5F;
+  EXPECT_LT(box.mx.y(), shoulder_mid_y + frames.torso.radius * 0.40F);
+  EXPECT_LT(box.mn.y(), shoulder_mid_y - frames.torso.radius * 2.5F);
 }
 
 TEST_F(ArmorRendererTest, ToolBeltRendersThroughArchetypePath) {
@@ -378,9 +521,9 @@ TEST_F(ArmorRendererTest, ToolBeltRendersThroughArchetypePath) {
   frames.waist.radius = 0.28F;
   frames.waist.depth = 0.22F;
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   ToolBeltRenderer tool_belt;
@@ -397,9 +540,9 @@ TEST_F(ArmorRendererTest, RomanShoulderCoverRendersThroughArchetypePath) {
   frames.shoulder_l.origin = QVector3D(-0.22F, 1.32F, 0.0F);
   frames.shoulder_r.origin = QVector3D(0.22F, 1.32F, 0.0F);
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   RomanShoulderCoverRenderer shoulder_cover;
@@ -417,9 +560,9 @@ TEST_F(ArmorRendererTest, CarthageShoulderCoverRendersThroughArchetypePath) {
   frames.shoulder_l.origin = QVector3D(-0.22F, 1.32F, 0.0F);
   frames.shoulder_r.origin = QVector3D(0.22F, 1.32F, 0.0F);
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   CarthageShoulderCoverRenderer shoulder_cover;
@@ -443,9 +586,9 @@ TEST_F(ArmorRendererTest, RomanGreavesRenderThroughArchetypePath) {
   frames.shin_r.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frames.shin_r.radius = 0.045F;
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   RomanGreavesRenderer greaves;
@@ -463,9 +606,9 @@ TEST_F(ArmorRendererTest, ArmGuardsRenderThroughArchetypePath) {
   frames.shoulder_r.origin = QVector3D(0.22F, 1.30F, 0.00F);
   frames.hand_r.origin = QVector3D(0.42F, 0.98F, 0.12F);
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   ArmGuardsRenderer arm_guards;
@@ -490,9 +633,9 @@ TEST_F(ArmorRendererTest, WorkApronRendersThroughArchetypePath) {
   frames.waist.radius = 0.28F;
   frames.waist.depth = 0.22F;
 
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
+  DrawContext const ctx{};
+  HumanoidPalette const palette{};
+  HumanoidAnimationContext const anim{};
   EquipmentBatch batch;
 
   WorkApronRenderer apron;

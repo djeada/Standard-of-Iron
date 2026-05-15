@@ -41,6 +41,11 @@ auto hold_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexc
     return std::clamp(hold_phase, 0.0F, k_terminal_non_looping_phase);
   }
 
+  float const guard_phase = Render::GL::guard_pose_amount(anim.inputs);
+  if (guard_phase > 0.0F) {
+    return std::clamp(guard_phase, 0.0F, k_terminal_non_looping_phase);
+  }
+
   return 0.0F;
 }
 
@@ -76,6 +81,10 @@ auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) n
 auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim,
                              Render::Creature::PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId {
+  if (anim.inputs.is_in_hold_mode && anim.inputs.is_attacking) {
+    return anim.inputs.is_melee ? Render::Creature::AnimationStateId::AttackMelee
+                                : Render::Creature::AnimationStateId::AttackRanged;
+  }
 
   if (intent != Render::Creature::PoseIntent::Idle &&
       intent != Render::Creature::PoseIntent::Walk &&

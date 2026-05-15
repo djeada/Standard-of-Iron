@@ -1,717 +1,1103 @@
 {
   "name": "Battle of Trebia",
-  "description": "Winter ambush at the frozen Trebia River - trap the Romans in icy waters and strike from concealment",
+  "description": "A winter campaign ambush. Draw the Romans across the freezing Trebia River, hold them on the muddy south bank, then spring Mago's hidden force from the reed gullies to cut off their retreat.",
   "coord_system": "grid",
-  "max_troops_per_player": 2200,
+  "max_troops_per_player": 2400,
   "grid": {
-    "width": 140,
-    "height": 120,
+    "width": 220,
+    "height": 170,
     "tile_size": 1.0
   },
   "biome": {
     "ground_type": "forest_mud",
-    "seed": 10003,
-    "patch_density": 3.2,
-    "patch_jitter": 0.88,
-    "plant_density": 0.65,
+    "seed": 10061,
+    "patch_density": 3.35,
+    "patch_jitter": 0.9,
+    "plant_density": 0.68,
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.15,
-    "irregularity_amplitude": 0.07
+    "irregularity_amplitude": 0.075,
+    "grass_primary": [0.28, 0.38, 0.25],
+    "grass_secondary": [0.4, 0.46, 0.3],
+    "grass_dry": [0.58, 0.55, 0.42],
+    "soil_color": [0.24, 0.22, 0.18],
+    "rock_low": [0.38, 0.38, 0.36],
+    "rock_high": [0.68, 0.68, 0.65],
+    "height_noise": [0.2, 0.065],
+    "sway_speed": 0.65,
+    "sway_strength": 0.1
   },
   "camera": {
-    "center": [
-      70,
-      0,
-      60
-    ],
-    "distance": 32.0,
-    "tilt_deg": 45.0,
+    "center": [110, 0, 85],
+    "distance": 78.0,
+    "tilt_deg": 50.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 400.0
+    "far": 650.0
   },
-  "spawns": [
-    {
-      "type": "spearman",
-      "x": 60,
-      "z": 85,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 63,
-      "z": 88,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 57,
-      "z": 82,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 65,
-      "z": 80,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 55,
-      "z": 80,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 50,
-      "z": 90,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 70,
-      "z": 90,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 60,
-      "z": 78,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 58,
-      "z": 76,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 25,
-      "z": 50,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "swordsman",
-      "x": 28,
-      "z": 52,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "spearman",
-      "x": 30,
-      "z": 48,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "archer",
-      "x": 27,
-      "z": 47,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 95,
-      "z": 50,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 98,
-      "z": 48,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "swordsman",
-      "x": 92,
-      "z": 52,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 100,
-      "z": 50,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "barracks",
-      "x": 60,
-      "z": 100,
-      "player_id": 1,
-      "max_population": 150,
-      "nation": "carthage"
-    },
-    {
-      "type": "spearman",
-      "x": 60,
-      "z": 25,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 63,
-      "z": 22,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 57,
-      "z": 28,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 66,
-      "z": 25,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 54,
-      "z": 25,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 65,
-      "z": 30,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 55,
-      "z": 30,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 60,
-      "z": 32,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 58,
-      "z": 35,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 62,
-      "z": 35,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 50,
-      "z": 20,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 70,
-      "z": 20,
-      "player_id": 2
-    },
-    {
-      "type": "barracks",
-      "x": 60,
-      "z": 10,
-      "player_id": 2,
-      "max_population": 200,
-      "nation": "roman_republic"
-    }
-  ],
-  "firecamps": [
-    {
-      "x": 55,
-      "z": 95,
-      "intensity": 1.2,
-      "radius": 3.5
-    },
-    {
-      "x": 65,
-      "z": 95,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 55,
-      "z": 15,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 65,
-      "z": 15,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 25,
-      "z": 55,
-      "intensity": 0.8,
-      "radius": 2.5
-    },
-    {
-      "x": 95,
-      "z": 55,
-      "intensity": 0.8,
-      "radius": 2.5
-    }
-  ],
-  "terrain": [
-    {
-      "type": "forest",
-      "x": 25,
-      "z": 50,
-      "radius": 18,
-      "density": 0.7,
-      "description": "Western ambush forest - hidden Carthaginian infantry"
-    },
-    {
-      "type": "forest",
-      "x": 95,
-      "z": 50,
-      "radius": 18,
-      "density": 0.7,
-      "description": "Eastern ambush forest - hidden Carthaginian cavalry"
-    },
-    {
-      "type": "forest",
-      "x": 45,
-      "z": 80,
-      "radius": 10,
-      "density": 0.5,
-      "description": "Reserve forest"
-    },
-    {
-      "type": "forest",
-      "x": 75,
-      "z": 80,
-      "radius": 10,
-      "density": 0.5,
-      "description": "Reserve forest"
-    },
-    {
-      "type": "hill",
-      "x": 60,
-      "z": 90,
-      "width": 30,
-      "depth": 15,
-      "height": 2.5,
-      "description": "Carthaginian command position overlooking river",
-      "entrances": [
-        {
-          "x": 45,
-          "z": 90
-        },
-        {
-          "x": 75,
-          "z": 90
-        },
-        {
-          "x": 60,
-          "z": 82
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 15,
-      "z": 60,
-      "radius": 8,
-      "height": 3.0,
-      "description": "Western high ground"
-    },
-    {
-      "type": "hill",
-      "x": 105,
-      "z": 60,
-      "radius": 8,
-      "height": 3.0,
-      "description": "Eastern high ground"
-    },
-    {
-      "type": "crossing",
-      "x": 60,
-      "z": 55,
-      "width": 15,
-      "description": "Main river ford - treacherous in winter"
-    },
-    {
-      "type": "crossing",
-      "x": 30,
-      "z": 55,
-      "width": 8,
-      "description": "Secondary ford"
-    },
-    {
-      "type": "crossing",
-      "x": 90,
-      "z": 55,
-      "width": 8,
-      "description": "Secondary ford"
-    },
-    {
-      "type": "hill",
-      "x": 40,
-      "z": 34,
-      "radius": 8,
-      "height": 2.0,
-      "description": "Roman rally knoll overlooking the western ford"
-    },
-    {
-      "type": "hill",
-      "x": 82,
-      "z": 34,
-      "radius": 8,
-      "height": 2.0,
-      "description": "Eastern rally knoll guarding the reserve approach"
-    },
-    {
-      "type": "forest",
-      "x": 60,
-      "z": 62,
-      "radius": 9,
-      "density": 0.55,
-      "description": "Frozen reed beds in the center crossing"
-    },
-    {
-      "type": "village",
-      "x": 60,
-      "z": 60,
-      "description": "Abandoned riverside settlement caught between both armies"
-    }
-  ],
+  "time_of_day": "morning",
+  "weather": {
+    "type": "snow",
+    "intensity": 0.72,
+    "temperature": "freezing",
+    "description": "Bitter winter snow. Units crossing the Trebia should feel exposed, slowed, and vulnerable."
+  },
   "rivers": [
     {
-      "start": [
-        0,
-        55
-      ],
-      "end": [
-        140,
-        55
-      ],
-      "width": 12,
-      "description": "The freezing Trebia River"
+      "start": [0, 78],
+      "end": [220, 78],
+      "width": 14.0,
+      "description": "The freezing Trebia River. The Roman army must cross this before reaching Hannibal's line."
     },
     {
-      "start": [
-        18,
-        46
-      ],
-      "end": [
-        44,
-        55
-      ],
+      "start": [0, 62],
+      "end": [88, 72],
       "width": 4.0,
-      "description": "Braided western channel"
+      "description": "Braided western channel feeding into the main river."
     },
     {
-      "start": [
-        78,
-        56
-      ],
-      "end": [
-        112,
-        46
-      ],
-      "width": 4.0,
-      "description": "Braided eastern channel"
+      "start": [135, 72],
+      "end": [220, 61],
+      "width": 4.2,
+      "description": "Braided eastern channel, making the flank crossing treacherous."
+    },
+    {
+      "start": [34, 120],
+      "end": [92, 84],
+      "width": 3.0,
+      "description": "Reed-filled drainage gully hiding Mago's ambush force."
+    },
+    {
+      "start": [142, 116],
+      "end": [188, 84],
+      "width": 2.8,
+      "description": "Eastern runoff ditch cutting the cavalry approach."
     }
   ],
   "bridges": [
     {
-      "start": [
-        44,
-        53
-      ],
-      "end": [
-        50,
-        57
-      ],
-      "width": 4.0,
-      "height": 0.7,
-      "description": "Western timber crossing"
+      "start": [104, 69],
+      "end": [116, 87],
+      "width": 5.8,
+      "height": 0.65,
+      "description": "Main frozen ford. This is where the Roman center becomes committed."
     },
     {
-      "start": [
-        72,
-        57
-      ],
-      "end": [
-        78,
-        53
-      ],
-      "width": 4.0,
-      "height": 0.7,
-      "description": "Eastern timber crossing"
+      "start": [55, 66],
+      "end": [66, 82],
+      "width": 4.4,
+      "height": 0.6,
+      "description": "Western timber crossing over the braided channel."
+    },
+    {
+      "start": [154, 82],
+      "end": [166, 66],
+      "width": 4.4,
+      "height": 0.6,
+      "description": "Eastern timber crossing used by cavalry and flankers."
+    },
+    {
+      "start": [73, 96],
+      "end": [82, 89],
+      "width": 3.8,
+      "height": 0.55,
+      "description": "Hidden reed crossing used by Mago's ambush troops."
+    },
+    {
+      "start": [164, 103],
+      "end": [173, 96],
+      "width": 3.6,
+      "height": 0.55,
+      "description": "Small ditch crossing on the eastern cavalry sweep."
     }
   ],
   "roads": [
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 3.5,
+      "start": [110, 8],
+      "end": [110, 158],
+      "width": 4.0,
       "style": "default",
       "waypoints": [
-        [
-          60,
-          5
-        ],
-        [
-          60,
-          20
-        ],
-        [
-          60,
-          35
-        ],
-        [
-          60,
-          55
-        ],
-        [
-          60,
-          70
-        ],
-        [
-          60,
-          85
-        ],
-        [
-          60,
-          110
-        ]
+        [110, 8],
+        [110, 24],
+        [109, 40],
+        [108, 58],
+        [110, 78],
+        [111, 96],
+        [112, 116],
+        [112, 137],
+        [110, 158]
       ],
-      "description": "Main north-south road through river ford"
+      "description": "Main north-south road through the Trebia ford."
     },
     {
-      "start": [
-        0,
-        0
+      "start": [22, 40],
+      "end": [66, 82],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [22, 40],
+        [34, 50],
+        [47, 61],
+        [58, 72],
+        [66, 82]
       ],
-      "end": [
-        0,
-        0
+      "description": "Western Roman advance lane toward the secondary ford."
+    },
+    {
+      "start": [196, 42],
+      "end": [154, 82],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [196, 42],
+        [184, 52],
+        [172, 62],
+        [162, 73],
+        [154, 82]
       ],
+      "description": "Eastern Roman advance lane toward the cavalry crossing."
+    },
+    {
+      "start": [112, 138],
+      "end": [110, 78],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [112, 138],
+        [111, 124],
+        [111, 110],
+        [111, 94],
+        [110, 78]
+      ],
+      "description": "Carthaginian center approach. The warmed main line waits behind this route."
+    },
+    {
+      "start": [50, 138],
+      "end": [68, 84],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [50, 138],
+        [48, 122],
+        [53, 107],
+        [61, 94],
+        [68, 84]
+      ],
+      "description": "Western cavalry sweep route into the Roman flank."
+    },
+    {
+      "start": [170, 138],
+      "end": [158, 82],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [170, 138],
+        [174, 123],
+        [174, 108],
+        [168, 94],
+        [158, 82]
+      ],
+      "description": "Eastern cavalry sweep route into the Roman flank."
+    },
+    {
+      "start": [43, 120],
+      "end": [82, 89],
+      "width": 2.2,
+      "style": "default",
+      "waypoints": [
+        [43, 120],
+        [54, 111],
+        [65, 101],
+        [75, 94],
+        [82, 89]
+      ],
+      "description": "Hidden reed-gully path for Mago's ambush force."
+    },
+    {
+      "start": [92, 128],
+      "end": [98, 60],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [
-          10,
-          55
-        ],
-        [
-          25,
-          50
-        ],
-        [
-          35,
-          55
-        ]
+        [92, 128],
+        [88, 112],
+        [88, 96],
+        [92, 80],
+        [98, 60]
       ],
-      "description": "Western flanking path"
+      "description": "Numidian bait route. Skirmishers lure the Romans toward the frozen river."
     },
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
+      "start": [137, 128],
+      "end": [122, 60],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [
-          130,
-          55
-        ],
-        [
-          95,
-          50
-        ],
-        [
-          85,
-          55
-        ]
+        [137, 128],
+        [140, 111],
+        [138, 94],
+        [132, 77],
+        [122, 60]
       ],
-      "description": "Eastern flanking path"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
-      "style": "default",
-      "waypoints": [
-        [
-          30,
-          22
-        ],
-        [
-          40,
-          32
-        ],
-        [
-          52,
-          42
-        ],
-        [
-          60,
-          55
-        ]
-      ],
-      "description": "Roman advance lane into the central ford"
+      "description": "Second bait route used to draw Roman cavalry into the eastern ford."
     }
   ],
-  "victory": {
-    "type": "elimination",
-    "description": "Destroy the Roman army as they cross the freezing river"
-  },
-  "weather": {
-    "type": "snow",
-    "intensity": 0.7,
-    "temperature": "freezing",
-    "description": "Heavy winter conditions - Romans suffer attrition crossing the icy river"
-  },
-  "time_of_day": "morning",
+  "terrain": [
+    {
+      "type": "plain",
+      "x": 110,
+      "z": 93,
+      "width": 92,
+      "depth": 34,
+      "description": "Muddy south-bank killing ground. Roman units arrive here cold, wet, and disordered."
+    },
+    {
+      "type": "crossing",
+      "x": 110,
+      "z": 78,
+      "width": 20,
+      "description": "Main frozen Trebia ford. This should be the most dangerous and dramatic point of the mission."
+    },
+    {
+      "type": "crossing",
+      "x": 62,
+      "z": 76,
+      "width": 10,
+      "description": "Western secondary ford. Useful for flanking but easy to ambush."
+    },
+    {
+      "type": "crossing",
+      "x": 158,
+      "z": 76,
+      "width": 10,
+      "description": "Eastern secondary ford. Roman cavalry may try to use it to avoid the center."
+    },
+    {
+      "type": "hill",
+      "x": 110,
+      "z": 140,
+      "width": 42,
+      "depth": 18,
+      "height": 2.6,
+      "rotation": 0,
+      "description": "Carthaginian command ridge. Hannibal's army waits fed, dry, and prepared.",
+      "entrances": [
+        { "x": 90, "z": 137 },
+        { "x": 130, "z": 137 },
+        { "x": 110, "z": 122 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 110,
+      "z": 30,
+      "width": 44,
+      "depth": 16,
+      "height": 2.2,
+      "rotation": 0,
+      "description": "Roman camp ridge on the north bank.",
+      "entrances": [
+        { "x": 91, "z": 33 },
+        { "x": 129, "z": 33 },
+        { "x": 110, "z": 46 }
+      ]
+    },
+    {
+      "type": "forest",
+      "x": 47,
+      "z": 103,
+      "radius": 20,
+      "density": 0.72,
+      "description": "Western winter forest concealing Mago's picked troops."
+    },
+    {
+      "type": "forest",
+      "x": 174,
+      "z": 104,
+      "radius": 18,
+      "density": 0.66,
+      "description": "Eastern winter woods hiding cavalry reserves."
+    },
+    {
+      "type": "forest",
+      "x": 62,
+      "z": 67,
+      "radius": 12,
+      "density": 0.58,
+      "description": "Frozen reeds and scrub around the western ford."
+    },
+    {
+      "type": "forest",
+      "x": 158,
+      "z": 67,
+      "radius": 12,
+      "density": 0.56,
+      "description": "Frozen reeds around the eastern ford."
+    },
+    {
+      "type": "forest",
+      "x": 110,
+      "z": 84,
+      "radius": 11,
+      "density": 0.45,
+      "description": "Central reed beds that break Roman formations as they leave the water."
+    },
+    {
+      "type": "hill",
+      "x": 45,
+      "z": 83,
+      "radius": 10,
+      "height": 2.6,
+      "description": "Western high ground overlooking the secondary crossing."
+    },
+    {
+      "type": "hill",
+      "x": 174,
+      "z": 84,
+      "radius": 10,
+      "height": 2.5,
+      "description": "Eastern high ground overlooking the cavalry ford."
+    },
+    {
+      "type": "hill",
+      "x": 82,
+      "z": 113,
+      "width": 22,
+      "depth": 12,
+      "height": 2.0,
+      "rotation": -8,
+      "description": "Left infantry shoulder of the Carthaginian line.",
+      "entrances": [
+        { "x": 70, "z": 111 },
+        { "x": 94, "z": 113 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 138,
+      "z": 113,
+      "width": 22,
+      "depth": 12,
+      "height": 2.0,
+      "rotation": 8,
+      "description": "Right infantry shoulder of the Carthaginian line.",
+      "entrances": [
+        { "x": 126, "z": 113 },
+        { "x": 150, "z": 111 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 54,
+      "z": 42,
+      "radius": 9,
+      "height": 1.9,
+      "description": "Roman western rally knoll before the river crossing."
+    },
+    {
+      "type": "hill",
+      "x": 166,
+      "z": 42,
+      "radius": 9,
+      "height": 1.9,
+      "description": "Roman eastern rally knoll guarding the cavalry approach."
+    },
+    {
+      "type": "village",
+      "x": 110,
+      "z": 88,
+      "description": "Abandoned riverside hamlet caught between the frozen ford and Hannibal's line."
+    },
+    {
+      "type": "village",
+      "x": 112,
+      "z": 18,
+      "description": "Roman winter camp and baggage fires on the north bank."
+    },
+    {
+      "type": "plain",
+      "x": 110,
+      "z": 61,
+      "width": 82,
+      "depth": 20,
+      "description": "North-bank mustering ground. The Roman army forms here before entering the freezing water."
+    }
+  ],
+  "spawns": [
+    {
+      "type": "barracks",
+      "x": 110,
+      "z": 148,
+      "player_id": 1,
+      "max_population": 170,
+      "nation": "carthage",
+      "description": "Carthaginian winter camp"
+    },
+    {
+      "type": "barracks",
+      "x": 110,
+      "z": 16,
+      "player_id": 2,
+      "max_population": 220,
+      "nation": "roman_republic",
+      "description": "Roman winter camp"
+    },
+
+    {
+      "type": "horse_archer",
+      "x": 96,
+      "z": 126,
+      "player_id": 1,
+      "description": "Numidian bait riders"
+    },
+    {
+      "type": "horse_archer",
+      "x": 102,
+      "z": 122,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 118,
+      "z": 122,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 124,
+      "z": 126,
+      "player_id": 1
+    },
+
+    {
+      "type": "spearman",
+      "x": 95,
+      "z": 116,
+      "player_id": 1,
+      "description": "Carthaginian center line"
+    },
+    {
+      "type": "spearman",
+      "x": 103,
+      "z": 114,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 111,
+      "z": 114,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 119,
+      "z": 114,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 127,
+      "z": 116,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 101,
+      "z": 123,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 111,
+      "z": 124,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 121,
+      "z": 123,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 96,
+      "z": 131,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 110,
+      "z": 132,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 124,
+      "z": 131,
+      "player_id": 1
+    },
+    {
+      "type": "healer",
+      "x": 110,
+      "z": 142,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 55,
+      "z": 124,
+      "player_id": 1,
+      "description": "Carthaginian left cavalry wing"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 62,
+      "z": 119,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 69,
+      "z": 123,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 50,
+      "z": 116,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 165,
+      "z": 124,
+      "player_id": 1,
+      "description": "Carthaginian right cavalry wing"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 158,
+      "z": 119,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 151,
+      "z": 123,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 170,
+      "z": 116,
+      "player_id": 1
+    },
+
+    {
+      "type": "elephant",
+      "x": 91,
+      "z": 135,
+      "player_id": 1,
+      "description": "Carthaginian shock reserve"
+    },
+    {
+      "type": "elephant",
+      "x": 130,
+      "z": 135,
+      "player_id": 1
+    },
+
+    {
+      "type": "swordsman",
+      "x": 45,
+      "z": 106,
+      "player_id": 1,
+      "hidden": true,
+      "description": "Mago's hidden force in the reed gully"
+    },
+    {
+      "type": "swordsman",
+      "x": 51,
+      "z": 110,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "spearman",
+      "x": 56,
+      "z": 105,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "spearman",
+      "x": 61,
+      "z": 111,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 48,
+      "z": 116,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 58,
+      "z": 118,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 67,
+      "z": 108,
+      "player_id": 1,
+      "hidden": true
+    },
+
+    {
+      "type": "spearman",
+      "x": 95,
+      "z": 28,
+      "player_id": 2,
+      "description": "Roman advance guard"
+    },
+    {
+      "type": "spearman",
+      "x": 103,
+      "z": 26,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 111,
+      "z": 26,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 119,
+      "z": 26,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 127,
+      "z": 28,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 99,
+      "z": 36,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 111,
+      "z": 38,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 123,
+      "z": 36,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 101,
+      "z": 45,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 119,
+      "z": 45,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 87,
+      "z": 52,
+      "player_id": 2,
+      "description": "Roman center entering the river"
+    },
+    {
+      "type": "spearman",
+      "x": 98,
+      "z": 55,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 110,
+      "z": 56,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 122,
+      "z": 55,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 133,
+      "z": 52,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 96,
+      "z": 63,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 110,
+      "z": 65,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 124,
+      "z": 63,
+      "player_id": 2
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 54,
+      "z": 43,
+      "player_id": 2,
+      "description": "Roman western cavalry"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 62,
+      "z": 40,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 50,
+      "z": 50,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 67,
+      "z": 51,
+      "player_id": 2
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 166,
+      "z": 43,
+      "player_id": 2,
+      "description": "Roman eastern cavalry"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 158,
+      "z": 40,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 170,
+      "z": 50,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 153,
+      "z": 51,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 91,
+      "z": 15,
+      "player_id": 2,
+      "description": "Roman camp guard"
+    },
+    {
+      "type": "spearman",
+      "x": 129,
+      "z": 15,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 110,
+      "z": 12,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 101,
+      "z": 18,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 119,
+      "z": 18,
+      "player_id": 2
+    },
+    {
+      "type": "healer",
+      "x": 114,
+      "z": 20,
+      "player_id": 2
+    }
+  ],
+  "firecamps": [
+    {
+      "x": 103,
+      "z": 147,
+      "intensity": 1.25,
+      "radius": 3.8
+    },
+    {
+      "x": 118,
+      "z": 147,
+      "intensity": 1.15,
+      "radius": 3.5
+    },
+    {
+      "x": 110,
+      "z": 18,
+      "intensity": 0.85,
+      "radius": 2.8
+    },
+    {
+      "x": 96,
+      "z": 18,
+      "intensity": 0.8,
+      "radius": 2.5
+    },
+    {
+      "x": 126,
+      "z": 18,
+      "intensity": 0.8,
+      "radius": 2.5
+    },
+    {
+      "x": 48,
+      "z": 112,
+      "intensity": 0.35,
+      "radius": 1.8
+    }
+  ],
   "world_props": [
     {
+      "type": "tent",
+      "x": 101,
+      "z": 151,
+      "scale": 1.0,
+      "rotation": 0.5
+    },
+    {
+      "type": "tent",
+      "x": 121,
+      "z": 151,
+      "scale": 1.0,
+      "rotation": 2.8
+    },
+    {
+      "type": "supply_cart",
+      "x": 112,
+      "z": 143,
+      "scale": 1.0,
+      "rotation": 1.2
+    },
+    {
+      "type": "weapon_rack",
+      "x": 128,
+      "z": 140,
+      "scale": 1.0,
+      "rotation": 3.4
+    },
+    {
+      "type": "tent",
+      "x": 104,
+      "z": 14,
+      "scale": 1.0,
+      "rotation": 1.1
+    },
+    {
+      "type": "tent",
+      "x": 120,
+      "z": 14,
+      "scale": 1.0,
+      "rotation": 4.0
+    },
+    {
+      "type": "supply_cart",
+      "x": 114,
+      "z": 23,
+      "scale": 1.0,
+      "rotation": 2.2
+    },
+    {
       "type": "ruins",
-      "x": 57.0,
-      "z": 57.0,
+      "x": 106,
+      "z": 88,
       "scale": 1.2,
       "rotation": 0.8
     },
     {
       "type": "ruins",
-      "x": 63.0,
-      "z": 63.0,
+      "x": 114,
+      "z": 91,
       "scale": 1.0,
       "rotation": 2.5
     },
     {
       "type": "ruins",
-      "x": 58.0,
-      "z": 64.0,
+      "x": 110,
+      "z": 84,
       "scale": 0.9,
       "rotation": 4.3
     },
     {
-      "type": "ruins",
-      "x": 64.0,
-      "z": 57.0,
-      "scale": 1.1,
-      "rotation": 5.9
-    },
-    {
       "type": "dead_tree",
-      "x": 17.0,
-      "z": 47.0,
+      "x": 53,
+      "z": 68,
       "scale": 1.2,
       "rotation": 0.5
     },
     {
       "type": "dead_tree",
-      "x": 22.0,
-      "z": 42.0,
+      "x": 64,
+      "z": 72,
       "scale": 1.1,
       "rotation": 2.2
     },
     {
       "type": "dead_tree",
-      "x": 19.0,
-      "z": 54.0,
-      "scale": 1.0,
-      "rotation": 4.0
-    },
-    {
-      "type": "dead_tree",
-      "x": 25.0,
-      "z": 39.0,
-      "scale": 0.9,
-      "rotation": 5.8
-    },
-    {
-      "type": "dead_tree",
-      "x": 99.0,
-      "z": 47.0,
+      "x": 155,
+      "z": 68,
       "scale": 1.2,
       "rotation": 1.2
     },
     {
       "type": "dead_tree",
-      "x": 104.0,
-      "z": 43.0,
+      "x": 166,
+      "z": 72,
       "scale": 1.0,
       "rotation": 3.0
     },
     {
       "type": "dead_tree",
-      "x": 101.0,
-      "z": 54.0,
-      "scale": 1.1,
+      "x": 91,
+      "z": 82,
+      "scale": 1.0,
       "rotation": 4.7
     },
     {
       "type": "dead_tree",
-      "x": 107.0,
-      "z": 50.0,
-      "scale": 0.9,
+      "x": 127,
+      "z": 82,
+      "scale": 1.1,
       "rotation": 6.2
     },
     {
       "type": "dead_tree",
-      "x": 41.0,
-      "z": 76.0,
+      "x": 42,
+      "z": 106,
       "scale": 1.0,
       "rotation": 1.7
     },
     {
       "type": "dead_tree",
-      "x": 48.0,
-      "z": 74.0,
+      "x": 52,
+      "z": 118,
       "scale": 0.9,
       "rotation": 3.9
     },
     {
       "type": "dead_tree",
-      "x": 71.0,
-      "z": 76.0,
+      "x": 174,
+      "z": 107,
       "scale": 1.0,
       "rotation": 2.4
     },
     {
       "type": "dead_tree",
-      "x": 78.0,
-      "z": 74.0,
+      "x": 182,
+      "z": 98,
       "scale": 1.1,
       "rotation": 5.0
     }
-  ]
+  ],
+  "victory": {
+    "type": "custom",
+    "description": "Bait the Roman army across the freezing Trebia, hold them on the muddy south bank, then spring Mago's hidden force to destroy their rear and prevent a retreat.",
+    "primary_objectives": [
+      "Use Numidian horse archers to draw the Romans across the Trebia",
+      "Hold the Carthaginian main line south of the river",
+      "Attack both Roman flanks with cavalry once their center crosses",
+      "Reveal Mago's hidden force from the reed gully and cut off the Roman retreat",
+      "Destroy the Roman army before it can reform north of the river"
+    ],
+    "secondary_objectives": [
+      "Keep both elephants alive",
+      "Destroy Roman cavalry on both side fords",
+      "Prevent more than a small group of Romans from escaping to the northern camp",
+      "Hold the abandoned riverside hamlet after the main crossing"
+    ],
+    "trap_zone": {
+      "x": 110,
+      "z": 91,
+      "width": 92,
+      "depth": 40
+    },
+    "river_crossing_zone": {
+      "x": 110,
+      "z": 78,
+      "width": 120,
+      "depth": 24
+    },
+    "ambush_zone": {
+      "x": 58,
+      "z": 106,
+      "width": 44,
+      "depth": 34
+    },
+    "escape_zones": [
+      {
+        "name": "roman_northern_camp",
+        "x": 110,
+        "z": 16,
+        "radius": 16
+      },
+      {
+        "name": "western_ford_escape",
+        "x": 55,
+        "z": 52,
+        "radius": 10
+      },
+      {
+        "name": "eastern_ford_escape",
+        "x": 166,
+        "z": 52,
+        "radius": 10
+      }
+    ],
+    "failure_hint": "If the Romans cross back north of the Trebia with too many units, Hannibal's ambush becomes only a limited victory."
+  }
 }
