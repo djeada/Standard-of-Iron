@@ -1,677 +1,943 @@
 {
   "name": "Battle of Lake Trasimene",
-  "description": "The perfect ambush - trap the Roman legion along the narrow lakeside road between water and hills in the morning mist",
+  "description": "A large campaign ambush map. The Roman column marches along a narrow lakeside road in dense morning mist while Hannibal's hidden army waits in the wooded ridges above. Block the exits, strike the column, and prevent survivors from escaping.",
   "coord_system": "grid",
   "max_troops_per_player": 2500,
   "grid": {
-    "width": 150,
-    "height": 100,
+    "width": 220,
+    "height": 140,
     "tile_size": 1.0
   },
   "biome": {
     "ground_type": "grass_dry",
-    "seed": 10004,
-    "patch_density": 2.8,
-    "patch_jitter": 0.82,
-    "plant_density": 0.4,
+    "seed": 10044,
+    "patch_density": 3.0,
+    "patch_jitter": 0.86,
+    "plant_density": 0.42,
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.13,
-    "irregularity_amplitude": 0.06
+    "irregularity_amplitude": 0.055,
+    "grass_primary": [0.38, 0.48, 0.25],
+    "grass_secondary": [0.5, 0.57, 0.3],
+    "grass_dry": [0.66, 0.58, 0.34],
+    "soil_color": [0.31, 0.25, 0.18],
+    "rock_low": [0.42, 0.4, 0.36],
+    "rock_high": [0.66, 0.64, 0.58],
+    "height_noise": [0.16, 0.05],
+    "sway_speed": 0.8,
+    "sway_strength": 0.12
   },
   "camera": {
-    "center": [
-      75,
-      0,
-      50
-    ],
-    "distance": 35.0,
-    "tilt_deg": 45.0,
+    "center": [110, 0, 70],
+    "distance": 76.0,
+    "tilt_deg": 50.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 450.0
+    "far": 600.0
   },
+  "time_of_day": "morning",
+  "weather": {
+    "type": "fog",
+    "intensity": 0.9,
+    "duration": 240.0,
+    "temperature": "cool",
+    "description": "Dense morning mist hides the hills and reduces visibility along the lakeside road."
+  },
+  "terrain": [
+    {
+      "type": "lake",
+      "x": 108,
+      "z": 15,
+      "width": 210,
+      "depth": 34,
+      "description": "Lake Trasimene. The water seals the northern side of the battlefield and prevents Roman maneuver."
+    },
+    {
+      "type": "plain",
+      "x": 105,
+      "z": 50,
+      "width": 190,
+      "depth": 20,
+      "description": "The narrow lakeside killing corridor. The Roman column is trapped here between water and hills."
+    },
+    {
+      "type": "hill",
+      "x": 32,
+      "z": 66,
+      "width": 34,
+      "depth": 18,
+      "height": 3.2,
+      "rotation": -10,
+      "description": "Western blocking hill. This force cuts off the Roman rear once the ambush begins.",
+      "entrances": [
+        { "x": 22, "z": 55 },
+        { "x": 42, "z": 58 },
+        { "x": 34, "z": 78 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 74,
+      "z": 78,
+      "width": 46,
+      "depth": 22,
+      "height": 3.8,
+      "rotation": 6,
+      "description": "Western ambush ridge. Infantry and archers descend from here onto the Roman middle column.",
+      "entrances": [
+        { "x": 56, "z": 67 },
+        { "x": 84, "z": 64 },
+        { "x": 72, "z": 91 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 118,
+      "z": 82,
+      "width": 52,
+      "depth": 24,
+      "height": 4.2,
+      "rotation": -4,
+      "description": "Central ridge. This is the heart of the ambush and overlooks the densest part of the Roman column.",
+      "entrances": [
+        { "x": 96, "z": 67 },
+        { "x": 125, "z": 66 },
+        { "x": 118, "z": 98 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 164,
+      "z": 84,
+      "width": 40,
+      "depth": 24,
+      "height": 4.0,
+      "rotation": 10,
+      "description": "Eastern cavalry ridge. Hannibal's mounted troops wait here to seal the Roman front.",
+      "entrances": [
+        { "x": 148, "z": 69 },
+        { "x": 175, "z": 69 },
+        { "x": 164, "z": 101 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 196,
+      "z": 62,
+      "width": 28,
+      "depth": 18,
+      "height": 3.1,
+      "rotation": -8,
+      "description": "Eastern escape gate. If not blocked, Roman survivors can flee this way.",
+      "entrances": [
+        { "x": 184, "z": 55 },
+        { "x": 204, "z": 54 },
+        { "x": 196, "z": 76 }
+      ]
+    },
+    {
+      "type": "mountain",
+      "x": 30,
+      "z": 118,
+      "radius": 17,
+      "height": 8.0,
+      "description": "Western mountain wall preventing a southern breakout."
+    },
+    {
+      "type": "mountain",
+      "x": 82,
+      "z": 124,
+      "radius": 20,
+      "height": 8.8,
+      "description": "Rear cliff line behind the western ambush ridge."
+    },
+    {
+      "type": "mountain",
+      "x": 130,
+      "z": 125,
+      "radius": 22,
+      "height": 9.0,
+      "description": "High central cliff preventing the Roman column from escaping into the hills."
+    },
+    {
+      "type": "mountain",
+      "x": 186,
+      "z": 120,
+      "radius": 18,
+      "height": 8.2,
+      "description": "Eastern mountain wall behind the cavalry staging area."
+    },
+    {
+      "type": "forest",
+      "x": 58,
+      "z": 60,
+      "radius": 15,
+      "density": 0.62,
+      "description": "Wet woodland masking the first infantry ambush."
+    },
+    {
+      "type": "forest",
+      "x": 92,
+      "z": 66,
+      "radius": 14,
+      "density": 0.58,
+      "description": "Dense ridge forest concealing archers above the Roman road."
+    },
+    {
+      "type": "forest",
+      "x": 126,
+      "z": 70,
+      "radius": 16,
+      "density": 0.6,
+      "description": "Central ambush forest. This should feel threatening when the fog lifts."
+    },
+    {
+      "type": "forest",
+      "x": 166,
+      "z": 74,
+      "radius": 13,
+      "density": 0.52,
+      "description": "Cavalry concealment woods near the eastern trap."
+    },
+    {
+      "type": "forest",
+      "x": 49,
+      "z": 35,
+      "radius": 11,
+      "density": 0.55,
+      "description": "Wet lakeside trees that narrow the Roman march route."
+    },
+    {
+      "type": "forest",
+      "x": 145,
+      "z": 41,
+      "radius": 10,
+      "density": 0.5,
+      "description": "Reeds and trees near the lake edge, reducing visibility on the Roman front."
+    },
+    {
+      "type": "hill",
+      "x": 22,
+      "z": 42,
+      "radius": 8,
+      "height": 2.2,
+      "description": "Lakeside chokepoint rise where the Roman rear first enters the trap."
+    },
+    {
+      "type": "hill",
+      "x": 104,
+      "z": 44,
+      "width": 24,
+      "depth": 8,
+      "height": 1.5,
+      "rotation": 4,
+      "description": "Low road embankment that makes the marching column bunch up."
+    },
+    {
+      "type": "village",
+      "x": 24,
+      "z": 30,
+      "description": "Abandoned lakeside hamlet and Roman baggage clutter near the rear of the column."
+    },
+    {
+      "type": "village",
+      "x": 188,
+      "z": 48,
+      "description": "Small eastern roadside settlement near the Roman escape route."
+    }
+  ],
+  "rivers": [
+    {
+      "start": [0, 36],
+      "end": [68, 27],
+      "width": 3.2,
+      "description": "Western runoff stream feeding into the lake and slowing the Roman rear."
+    },
+    {
+      "start": [218, 40],
+      "end": [136, 27],
+      "width": 3.0,
+      "description": "Eastern runoff stream narrowing the Roman front corridor."
+    },
+    {
+      "start": [84, 106],
+      "end": [132, 73],
+      "width": 2.6,
+      "description": "Rocky hillside stream cutting through the central ambush ridge."
+    }
+  ],
+  "bridges": [
+    {
+      "start": [56, 31],
+      "end": [64, 29],
+      "width": 3.6,
+      "height": 0.6,
+      "description": "Western plank bridge. Roman rear units bunch up here."
+    },
+    {
+      "start": [136, 30],
+      "end": [144, 32],
+      "width": 3.6,
+      "height": 0.6,
+      "description": "Eastern plank bridge. The Roman vanguard must cross before the trap closes."
+    },
+    {
+      "start": [112, 85],
+      "end": [120, 79],
+      "width": 3.2,
+      "height": 0.55,
+      "description": "Hidden hillside crossing for Carthaginian infantry."
+    }
+  ],
+  "roads": [
+    {
+      "start": [5, 49],
+      "end": [214, 51],
+      "width": 5.0,
+      "style": "default",
+      "waypoints": [
+        [5, 49],
+        [24, 48],
+        [44, 46],
+        [64, 44],
+        [84, 43],
+        [106, 45],
+        [128, 47],
+        [150, 49],
+        [174, 50],
+        [196, 51],
+        [214, 51]
+      ],
+      "description": "Narrow lakeside road. The Roman legion marches into the ambush along this route."
+    },
+    {
+      "start": [28, 68],
+      "end": [190, 76],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [28, 68],
+        [52, 70],
+        [78, 74],
+        [104, 78],
+        [132, 80],
+        [162, 78],
+        [190, 76]
+      ],
+      "description": "Hidden ridge track used by Carthaginian forces to coordinate the ambush."
+    },
+    {
+      "start": [72, 76],
+      "end": [72, 45],
+      "width": 2.3,
+      "style": "default",
+      "waypoints": [
+        [72, 76],
+        [69, 66],
+        [68, 56],
+        [72, 45]
+      ],
+      "description": "Western descent path from the ridge to the Roman column."
+    },
+    {
+      "start": [118, 82],
+      "end": [110, 46],
+      "width": 2.3,
+      "style": "default",
+      "waypoints": [
+        [118, 82],
+        [116, 72],
+        [113, 60],
+        [110, 46]
+      ],
+      "description": "Central descent path for the main infantry strike."
+    },
+    {
+      "start": [166, 83],
+      "end": [176, 51],
+      "width": 2.7,
+      "style": "default",
+      "waypoints": [
+        [166, 83],
+        [169, 73],
+        [173, 62],
+        [176, 51]
+      ],
+      "description": "Eastern cavalry descent path to block the Roman vanguard."
+    },
+    {
+      "start": [130, 116],
+      "end": [166, 83],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [130, 116],
+        [142, 107],
+        [153, 96],
+        [166, 83]
+      ],
+      "description": "Carthaginian reserve road from the hidden rear camp."
+    },
+    {
+      "start": [188, 48],
+      "end": [218, 50],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [188, 48],
+        [198, 49],
+        [208, 50],
+        [218, 50]
+      ],
+      "description": "Roman eastern escape road. The player must block this quickly."
+    }
+  ],
   "spawns": [
     {
-      "type": "spearman",
-      "x": 65,
-      "z": 38,
+      "type": "barracks",
+      "x": 132,
+      "z": 116,
       "player_id": 1,
-      "hidden": true
+      "max_population": 140,
+      "nation": "carthage",
+      "description": "Hidden Carthaginian command camp behind the ridge"
     },
+
     {
       "type": "spearman",
-      "x": 70,
-      "z": 40,
+      "x": 34,
+      "z": 61,
+      "player_id": 1,
+      "hidden": true,
+      "description": "Western blocking force"
+    },
+    {
+      "type": "spearman",
+      "x": 39,
+      "z": 64,
       "player_id": 1,
       "hidden": true
     },
     {
       "type": "swordsman",
-      "x": 90,
-      "z": 55,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "swordsman",
-      "x": 95,
-      "z": 58,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "swordsman",
-      "x": 88,
-      "z": 52,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 115,
-      "z": 75,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 120,
-      "z": 78,
-      "player_id": 1,
-      "hidden": true
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 110,
-      "z": 78,
+      "x": 43,
+      "z": 60,
       "player_id": 1,
       "hidden": true
     },
     {
       "type": "archer",
+      "x": 37,
+      "z": 70,
+      "player_id": 1,
+      "hidden": true
+    },
+
+    {
+      "type": "spearman",
+      "x": 68,
+      "z": 70,
+      "player_id": 1,
+      "hidden": true,
+      "description": "Western ridge ambush"
+    },
+    {
+      "type": "spearman",
+      "x": 74,
+      "z": 74,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
       "x": 80,
-      "z": 35,
+      "z": 70,
       "player_id": 1,
       "hidden": true
     },
     {
       "type": "archer",
-      "x": 85,
-      "z": 38,
+      "x": 70,
+      "z": 64,
       "player_id": 1,
       "hidden": true
     },
     {
+      "type": "archer",
+      "x": 84,
+      "z": 66,
+      "player_id": 1,
+      "hidden": true
+    },
+
+    {
       "type": "spearman",
-      "x": 100,
+      "x": 106,
+      "z": 76,
+      "player_id": 1,
+      "hidden": true,
+      "description": "Central ridge strike force"
+    },
+    {
+      "type": "spearman",
+      "x": 114,
       "z": 80,
       "player_id": 1,
       "hidden": true
     },
     {
-      "type": "spearman",
-      "x": 105,
+      "type": "swordsman",
+      "x": 120,
+      "z": 74,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 128,
+      "z": 78,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 108,
+      "z": 66,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 124,
+      "z": 68,
+      "player_id": 1,
+      "hidden": true
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 158,
+      "z": 82,
+      "player_id": 1,
+      "hidden": true,
+      "description": "Eastern cavalry trap"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 164,
+      "z": 86,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 170,
       "z": 82,
       "player_id": 1,
       "hidden": true
     },
     {
-      "type": "archer",
-      "x": 92,
-      "z": 48,
+      "type": "horse_archer",
+      "x": 154,
+      "z": 76,
       "player_id": 1,
       "hidden": true
     },
     {
-      "type": "barracks",
-      "x": 130,
-      "z": 85,
+      "type": "horse_archer",
+      "x": 174,
+      "z": 76,
       "player_id": 1,
-      "max_population": 120,
-      "nation": "carthage"
+      "hidden": true
     },
+
     {
       "type": "spearman",
+      "x": 130,
+      "z": 108,
+      "player_id": 1,
+      "hidden": true,
+      "description": "Carthaginian reserve"
+    },
+    {
+      "type": "swordsman",
+      "x": 136,
+      "z": 112,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 126,
+      "z": 114,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "healer",
+      "x": 134,
+      "z": 120,
+      "player_id": 1,
+      "hidden": true
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 16,
+      "z": 47,
+      "player_id": 2,
+      "description": "Roman rear cavalry screen"
+    },
+    {
+      "type": "archer",
       "x": 20,
-      "z": 50,
+      "z": 51,
       "player_id": 2
     },
     {
       "type": "spearman",
       "x": 25,
-      "z": 52,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 22,
       "z": 48,
-      "player_id": 2
+      "player_id": 2,
+      "description": "Roman rear column"
     },
     {
       "type": "spearman",
-      "x": 28,
-      "z": 50,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 18,
-      "z": 50,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 30,
-      "z": 52,
+      "x": 31,
+      "z": 49,
       "player_id": 2
     },
     {
       "type": "swordsman",
-      "x": 32,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 35,
-      "z": 48,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 38,
-      "z": 52,
+      "x": 37,
+      "z": 47,
       "player_id": 2
     },
     {
       "type": "archer",
-      "x": 15,
-      "z": 55,
+      "x": 43,
+      "z": 50,
       "player_id": 2
     },
+
     {
-      "type": "archer",
-      "x": 18,
-      "z": 58,
-      "player_id": 2
+      "type": "spearman",
+      "x": 55,
+      "z": 44,
+      "player_id": 2,
+      "description": "Roman marching column middle-rear"
     },
     {
-      "type": "horse_swordsman",
-      "x": 12,
+      "type": "spearman",
+      "x": 62,
       "z": 45,
       "player_id": 2
     },
     {
+      "type": "swordsman",
+      "x": 69,
+      "z": 43,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 76,
+      "z": 44,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 83,
+      "z": 46,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 94,
+      "z": 45,
+      "player_id": 2,
+      "description": "Roman marching column center"
+    },
+    {
+      "type": "spearman",
+      "x": 101,
+      "z": 46,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 108,
+      "z": 45,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 115,
+      "z": 47,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 122,
+      "z": 48,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 134,
+      "z": 48,
+      "player_id": 2,
+      "description": "Roman marching column vanguard"
+    },
+    {
+      "type": "spearman",
+      "x": 141,
+      "z": 49,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 148,
+      "z": 48,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 155,
+      "z": 50,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 162,
+      "z": 51,
+      "player_id": 2
+    },
+    {
       "type": "horse_swordsman",
-      "x": 10,
-      "z": 55,
+      "x": 171,
+      "z": 49,
+      "player_id": 2,
+      "description": "Roman forward cavalry"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 179,
+      "z": 51,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 190,
+      "z": 50,
+      "player_id": 2,
+      "description": "Roman escape guard"
+    },
+    {
+      "type": "swordsman",
+      "x": 197,
+      "z": 52,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 202,
+      "z": 48,
       "player_id": 2
     }
   ],
   "firecamps": [
     {
-      "x": 125,
-      "z": 80,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 135,
-      "z": 88,
-      "intensity": 1.0,
+      "x": 132,
+      "z": 116,
+      "intensity": 0.95,
       "radius": 3.0
     },
     {
-      "x": 75,
-      "z": 40,
-      "intensity": 0.8,
-      "radius": 2.5
+      "x": 138,
+      "z": 110,
+      "intensity": 0.75,
+      "radius": 2.4
     },
     {
-      "x": 100,
-      "z": 60,
-      "intensity": 0.8,
-      "radius": 2.5
-    }
-  ],
-  "terrain": [
-    {
-      "type": "lake",
-      "x": 75,
-      "z": 15,
-      "width": 100,
-      "depth": 28,
-      "description": "Lake Trasimene - traps Romans against the water"
-    },
-    {
-      "type": "hill",
-      "x": 45,
-      "z": 60,
-      "radius": 14,
-      "height": 4.0,
-      "description": "Western blocking hill - cuts off Roman retreat",
-      "entrances": [
-        {
-          "x": 45,
-          "z": 46
-        },
-        {
-          "x": 35,
-          "z": 60
-        },
-        {
-          "x": 55,
-          "z": 60
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 75,
-      "z": 65,
-      "width": 40,
-      "depth": 18,
-      "height": 3.5,
-      "description": "Central ridge for Carthaginian ambush positions",
-      "entrances": [
-        {
-          "x": 55,
-          "z": 65
-        },
-        {
-          "x": 95,
-          "z": 65
-        },
-        {
-          "x": 75,
-          "z": 56
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 110,
-      "z": 70,
-      "radius": 15,
-      "height": 4.5,
-      "description": "Eastern hill - cavalry staging area",
-      "entrances": [
-        {
-          "x": 110,
-          "z": 55
-        },
-        {
-          "x": 95,
-          "z": 70
-        },
-        {
-          "x": 125,
-          "z": 70
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 130,
-      "z": 50,
-      "radius": 10,
-      "height": 3.0,
-      "description": "Far eastern position - blocks Roman escape east"
-    },
-    {
-      "type": "forest",
-      "x": 70,
-      "z": 42,
-      "radius": 12,
-      "density": 0.6,
-      "description": "Concealment for infantry ambush"
-    },
-    {
-      "type": "forest",
-      "x": 95,
-      "z": 55,
-      "radius": 10,
-      "density": 0.5,
-      "description": "Concealment for flanking force"
-    },
-    {
-      "type": "forest",
-      "x": 118,
-      "z": 70,
-      "radius": 8,
-      "density": 0.5,
-      "description": "Cavalry concealment"
-    },
-    {
-      "type": "forest",
-      "x": 52,
+      "x": 24,
       "z": 30,
-      "radius": 10,
-      "density": 0.55,
-      "description": "Wet woodland pinching the lakeside march route"
+      "intensity": 0.7,
+      "radius": 2.5
     },
     {
-      "type": "hill",
-      "x": 22,
-      "z": 34,
-      "radius": 7,
-      "height": 2.2,
-      "description": "Lakeside chokepoint rise"
-    },
-    {
-      "type": "mountain",
-      "x": 76,
-      "z": 92,
-      "radius": 9,
-      "height": 6.8,
-      "description": "High rear cliff preventing Roman breakout north"
-    },
-    {
-      "type": "village",
-      "x": 28,
-      "z": 24,
-      "description": "Roman lakeside camp followers and supply wagons"
-    },
-    {
-      "type": "mountain",
-      "x": 20,
-      "z": 85,
-      "radius": 12,
-      "height": 8.0,
-      "description": "Northwestern mountain barrier"
-    },
-    {
-      "type": "mountain",
-      "x": 140,
-      "z": 90,
-      "radius": 10,
-      "height": 7.0,
-      "description": "Northeastern mountain barrier"
+      "x": 188,
+      "z": 48,
+      "intensity": 0.65,
+      "radius": 2.2
     }
   ],
-  "rivers": [
-    {
-      "start": [
-        0,
-        34
-      ],
-      "end": [
-        62,
-        24
-      ],
-      "width": 3.0,
-      "description": "Western runoff stream feeding into the lake"
-    },
-    {
-      "start": [
-        148,
-        36
-      ],
-      "end": [
-        92,
-        24
-      ],
-      "width": 3.0,
-      "description": "Eastern runoff stream narrowing the retreat corridor"
-    }
-  ],
-  "bridges": [
-    {
-      "start": [
-        58,
-        31
-      ],
-      "end": [
-        64,
-        29
-      ],
-      "width": 3.5,
-      "height": 0.6,
-      "description": "Roman plank bridge over western runoff"
-    },
-    {
-      "start": [
-        90,
-        28
-      ],
-      "end": [
-        96,
-        30
-      ],
-      "width": 3.5,
-      "height": 0.6,
-      "description": "Roman plank bridge over eastern runoff"
-    }
-  ],
-  "roads": [
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 5.0,
-      "style": "default",
-      "waypoints": [
-        [
-          5,
-          50
-        ],
-        [
-          25,
-          48
-        ],
-        [
-          50,
-          45
-        ],
-        [
-          75,
-          42
-        ],
-        [
-          100,
-          45
-        ],
-        [
-          125,
-          48
-        ],
-        [
-          145,
-          50
-        ]
-      ],
-      "description": "Narrow lakeside road - Roman march route into the trap"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
-      "style": "default",
-      "waypoints": [
-        [
-          100,
-          45
-        ],
-        [
-          110,
-          55
-        ],
-        [
-          118,
-          70
-        ],
-        [
-          130,
-          85
-        ]
-      ],
-      "description": "Path to Carthaginian staging area"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.0,
-      "style": "default",
-      "waypoints": [
-        [
-          20,
-          34
-        ],
-        [
-          40,
-          38
-        ],
-        [
-          62,
-          42
-        ],
-        [
-          88,
-          46
-        ],
-        [
-          112,
-          50
-        ]
-      ],
-      "description": "Ridge track used by Roman scouts above the corridor"
-    }
-  ],
-  "victory": {
-    "type": "elimination",
-    "description": "Annihilate the Roman legion - leave no survivors"
-  },
-  "weather": {
-    "type": "fog",
-    "intensity": 0.85,
-    "duration": 180.0,
-    "description": "Dense morning mist - essential for concealing the ambush"
-  },
-  "time_of_day": "morning",
   "world_props": [
     {
       "type": "ruins",
-      "x": 25.0,
-      "z": 21.0,
+      "x": 21,
+      "z": 27,
       "scale": 1.1,
       "rotation": 0.5
     },
     {
       "type": "ruins",
-      "x": 31.0,
-      "z": 26.0,
+      "x": 28,
+      "z": 32,
       "scale": 1.0,
       "rotation": 2.4
     },
     {
-      "type": "ruins",
-      "x": 27.0,
-      "z": 29.0,
+      "type": "supply_cart",
+      "x": 34,
+      "z": 47,
+      "scale": 1.0,
+      "rotation": 1.2
+    },
+    {
+      "type": "supply_cart",
+      "x": 78,
+      "z": 44,
       "scale": 0.9,
-      "rotation": 4.6
+      "rotation": 3.0
+    },
+    {
+      "type": "supply_cart",
+      "x": 124,
+      "z": 47,
+      "scale": 0.9,
+      "rotation": 5.2
+    },
+    {
+      "type": "weapon_rack",
+      "x": 132,
+      "z": 113,
+      "scale": 1.0,
+      "rotation": 3.1
+    },
+    {
+      "type": "tent",
+      "x": 126,
+      "z": 119,
+      "scale": 1.0,
+      "rotation": 1.7
+    },
+    {
+      "type": "tent",
+      "x": 139,
+      "z": 118,
+      "scale": 1.0,
+      "rotation": 4.4
     },
     {
       "type": "dead_tree",
-      "x": 64.0,
-      "z": 38.0,
+      "x": 54,
+      "z": 36,
       "scale": 1.2,
       "rotation": 1.1
     },
     {
       "type": "dead_tree",
-      "x": 73.0,
-      "z": 34.0,
+      "x": 64,
+      "z": 39,
       "scale": 1.0,
       "rotation": 2.9
     },
     {
       "type": "dead_tree",
-      "x": 67.0,
-      "z": 46.0,
+      "x": 74,
+      "z": 34,
       "scale": 1.1,
       "rotation": 4.8
     },
     {
       "type": "dead_tree",
-      "x": 77.0,
-      "z": 43.0,
-      "scale": 0.9,
-      "rotation": 6.0
-    },
-    {
-      "type": "dead_tree",
-      "x": 91.0,
-      "z": 51.0,
+      "x": 91,
+      "z": 52,
       "scale": 1.0,
       "rotation": 0.7
     },
     {
       "type": "dead_tree",
-      "x": 99.0,
-      "z": 49.0,
-      "scale": 1.1,
-      "rotation": 3.4
-    },
-    {
-      "type": "dead_tree",
-      "x": 101.0,
-      "z": 57.0,
+      "x": 102,
+      "z": 57,
       "scale": 0.9,
       "rotation": 5.1
     },
     {
       "type": "dead_tree",
-      "x": 113.0,
-      "z": 67.0,
+      "x": 122,
+      "z": 62,
       "scale": 1.0,
       "rotation": 1.8
     },
     {
       "type": "dead_tree",
-      "x": 121.0,
-      "z": 65.0,
-      "scale": 0.9,
-      "rotation": 4.2
-    },
-    {
-      "type": "dead_tree",
-      "x": 48.0,
-      "z": 26.0,
-      "scale": 1.1,
+      "x": 151,
+      "z": 42,
+      "scale": 1.0,
       "rotation": 2.5
     },
     {
       "type": "dead_tree",
-      "x": 55.0,
-      "z": 24.0,
-      "scale": 1.0,
-      "rotation": 5.6
+      "x": 166,
+      "z": 65,
+      "scale": 0.9,
+      "rotation": 4.2
     },
     {
-      "type": "dead_tree",
-      "x": 57.0,
-      "z": 33.0,
+      "type": "ruins",
+      "x": 187,
+      "z": 45,
       "scale": 0.9,
-      "rotation": 0.3
+      "rotation": 0.8
+    },
+    {
+      "type": "supply_cart",
+      "x": 194,
+      "z": 51,
+      "scale": 1.0,
+      "rotation": 2.6
     }
-  ]
+  ],
+  "victory": {
+    "type": "custom",
+    "description": "Spring the ambush, destroy the Roman marching column, and prevent the vanguard or rear guard from escaping the lakeside corridor.",
+    "primary_objectives": [
+      "Block the western rear of the Roman column",
+      "Seal the eastern escape road with cavalry",
+      "Attack from the central ridge once the Roman column is stretched out",
+      "Eliminate the Roman legion before fog fully clears"
+    ],
+    "secondary_objectives": [
+      "Destroy Roman supply carts on the road",
+      "Keep the Carthaginian cavalry wing alive",
+      "Prevent more than a small group of Romans from reaching the eastern escape road"
+    ],
+    "ambush_zone": {
+      "x": 110,
+      "z": 48,
+      "width": 170,
+      "depth": 28
+    },
+    "escape_zones": [
+      {
+        "name": "western_road_exit",
+        "x": 5,
+        "z": 49,
+        "radius": 8
+      },
+      {
+        "name": "eastern_road_exit",
+        "x": 214,
+        "z": 51,
+        "radius": 10
+      }
+    ],
+    "failure_hint": "If the Romans escape either end of the lakeside road in large numbers, the ambush becomes a partial victory instead of an annihilation."
+  }
 }

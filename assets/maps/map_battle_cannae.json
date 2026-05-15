@@ -1,759 +1,1179 @@
 {
   "name": "Battle of Cannae",
-  "description": "The legendary battlefield where the greatest double envelopment in history took place - encircle and destroy Rome's greatest army",
+  "description": "A large campaign set-piece recreating Hannibal's double envelopment. Hold a fragile center, win the cavalry wings, close the Roman rear, and destroy the trapped army on the killing plain.",
   "coord_system": "grid",
   "max_troops_per_player": 3000,
   "grid": {
-    "width": 180,
-    "height": 120,
+    "width": 240,
+    "height": 160,
     "tile_size": 1.0
   },
   "biome": {
     "ground_type": "grass_dry",
-    "seed": 10005,
-    "patch_density": 2.5,
-    "patch_jitter": 0.8,
-    "plant_density": 0.35,
+    "seed": 10037,
+    "patch_density": 2.8,
+    "patch_jitter": 0.85,
+    "plant_density": 0.34,
     "ground_irregularity_enabled": true,
-    "irregularity_scale": 0.11,
-    "irregularity_amplitude": 0.05
+    "irregularity_scale": 0.12,
+    "irregularity_amplitude": 0.045,
+    "grass_primary": [0.47, 0.48, 0.24],
+    "grass_secondary": [0.58, 0.54, 0.29],
+    "grass_dry": [0.7, 0.6, 0.34],
+    "soil_color": [0.35, 0.28, 0.17],
+    "rock_low": [0.45, 0.41, 0.35],
+    "rock_high": [0.69, 0.65, 0.56],
+    "height_noise": [0.11, 0.035],
+    "sway_speed": 0.9,
+    "sway_strength": 0.13
   },
   "camera": {
-    "center": [
-      90,
-      0,
-      60
-    ],
-    "distance": 40.0,
-    "tilt_deg": 45.0,
+    "center": [120, 0, 80],
+    "distance": 74.0,
+    "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 500.0
+    "far": 650.0
   },
-  "spawns": [
+  "time_of_day": "afternoon",
+  "weather": {
+    "type": "clear",
+    "intensity": 0.15,
+    "temperature": "hot",
+    "description": "Dry heat and dust. Cavalry movement should feel visible across the open plain."
+  },
+  "rivers": [
     {
-      "type": "spearman",
-      "x": 55,
-      "z": 55,
-      "player_id": 1
+      "start": [42, 5],
+      "end": [112, 10],
+      "width": 8.5,
+      "description": "Aufidus River, forming the northern battlefield boundary."
     },
     {
-      "type": "spearman",
-      "x": 58,
-      "z": 58,
-      "player_id": 1
+      "start": [112, 10],
+      "end": [178, 21],
+      "width": 7.0,
+      "description": "Aufidus bend behind the Roman northern wing."
     },
     {
-      "type": "spearman",
-      "x": 52,
-      "z": 52,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 55,
-      "z": 65,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 58,
-      "z": 68,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 60,
-      "z": 60,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 63,
-      "z": 57,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 57,
-      "z": 63,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 35,
-      "z": 60,
-      "player_id": 1,
-      "description": "Left flank cavalry"
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 38,
-      "z": 58,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 32,
-      "z": 62,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 28,
-      "z": 60,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 85,
-      "z": 60,
-      "player_id": 1,
-      "description": "Right flank cavalry"
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 88,
-      "z": 58,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 82,
-      "z": 62,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 92,
-      "z": 60,
-      "player_id": 1
-    },
-    {
-      "type": "horse_archer",
-      "x": 30,
-      "z": 55,
-      "player_id": 1
-    },
-    {
-      "type": "horse_archer",
-      "x": 90,
-      "z": 65,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 50,
-      "z": 70,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 70,
-      "z": 70,
-      "player_id": 1
-    },
-    {
-      "type": "elephant",
-      "x": 60,
-      "z": 75,
-      "player_id": 1
-    },
-    {
-      "type": "barracks",
-      "x": 50,
-      "z": 90,
-      "player_id": 1,
-      "max_population": 200,
-      "nation": "carthage"
-    },
-    {
-      "type": "spearman",
-      "x": 120,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 123,
-      "z": 58,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 117,
-      "z": 52,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 126,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 114,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 120,
-      "z": 65,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 123,
-      "z": 68,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 117,
-      "z": 62,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 130,
-      "z": 60,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 133,
-      "z": 57,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 127,
-      "z": 63,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 130,
-      "z": 52,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 130,
-      "z": 68,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 105,
-      "z": 60,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 108,
-      "z": 58,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 145,
-      "z": 60,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 148,
-      "z": 58,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 125,
-      "z": 70,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 128,
-      "z": 72,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 122,
-      "z": 74,
-      "player_id": 2
-    },
-    {
-      "type": "barracks",
-      "x": 155,
-      "z": 60,
-      "player_id": 2,
-      "max_population": 250,
-      "nation": "roman_republic"
+      "start": [178, 21],
+      "end": [238, 31],
+      "width": 5.5,
+      "description": "Eastern river bend near the Roman logistics route."
     }
   ],
-  "firecamps": [
+  "bridges": [
     {
-      "x": 45,
-      "z": 85,
-      "intensity": 1.2,
-      "radius": 3.5
+      "start": [140, 15],
+      "end": [149, 18],
+      "width": 4.5,
+      "height": 0.7,
+      "description": "Northern ford used by scouts and Roman baggage traffic."
     },
     {
-      "x": 55,
-      "z": 88,
-      "intensity": 1.1,
-      "radius": 3.2
+      "start": [199, 26],
+      "end": [208, 28],
+      "width": 4.0,
+      "height": 0.7,
+      "description": "Roman logistics bridge near the rear camp."
+    }
+  ],
+  "roads": [
+    {
+      "start": [4, 81],
+      "end": [238, 80],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [4, 81],
+        [32, 80],
+        [62, 80],
+        [92, 80],
+        [122, 80],
+        [152, 80],
+        [184, 80],
+        [214, 81],
+        [238, 80]
+      ],
+      "description": "Main battlefield road. The Roman infantry mass advances along this axis."
     },
     {
-      "x": 160,
-      "z": 55,
-      "intensity": 1.1,
-      "radius": 3.2
+      "start": [54, 136],
+      "end": [86, 82],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [54, 136],
+        [60, 124],
+        [67, 112],
+        [74, 100],
+        [80, 90],
+        [86, 82]
+      ],
+      "description": "Carthaginian center road. This visually shows the center's planned withdrawal line."
     },
     {
-      "x": 165,
-      "z": 65,
-      "intensity": 1.0,
-      "radius": 3.0
+      "start": [52, 135],
+      "end": [78, 43],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [52, 135],
+        [47, 118],
+        [45, 100],
+        [48, 82],
+        [57, 64],
+        [78, 43]
+      ],
+      "description": "Northern cavalry redeployment path toward the Aufidus wing."
     },
     {
-      "x": 30,
-      "z": 50,
-      "intensity": 0.9,
-      "radius": 2.8
+      "start": [78, 43],
+      "end": [168, 55],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [78, 43],
+        [98, 37],
+        [120, 39],
+        [144, 47],
+        [168, 55]
+      ],
+      "description": "Northern hook route. Fast cavalry can use this to reach the Roman rear."
     },
     {
-      "x": 95,
-      "z": 50,
-      "intensity": 0.9,
-      "radius": 2.8
+      "start": [55, 136],
+      "end": [85, 122],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [55, 136],
+        [65, 138],
+        [75, 133],
+        [85, 122]
+      ],
+      "description": "Southern cavalry staging path."
+    },
+    {
+      "start": [85, 122],
+      "end": [166, 105],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [85, 122],
+        [105, 126],
+        [126, 123],
+        [146, 116],
+        [166, 105]
+      ],
+      "description": "Southern hook route. This is the second half of the envelopment."
+    },
+    {
+      "start": [202, 80],
+      "end": [211, 34],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [202, 80],
+        [205, 65],
+        [208, 49],
+        [211, 34]
+      ],
+      "description": "Roman supply road toward the Aufidus ford."
+    },
+    {
+      "start": [202, 80],
+      "end": [226, 119],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [202, 80],
+        [210, 92],
+        [219, 106],
+        [226, 119]
+      ],
+      "description": "Roman baggage and retreat road. If the trap is late, Roman units can try to escape this way."
+    },
+    {
+      "start": [28, 126],
+      "end": [58, 136],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [28, 126],
+        [38, 132],
+        [48, 135],
+        [58, 136]
+      ],
+      "description": "Cannae village track behind the Carthaginian camp."
     }
   ],
   "terrain": [
     {
       "type": "plain",
-      "x": 90,
-      "z": 60,
-      "width": 140,
-      "depth": 80,
-      "description": "Open plain - perfect for the double envelopment"
+      "x": 124,
+      "z": 80,
+      "width": 160,
+      "depth": 96,
+      "description": "The open killing plain. This area must stay readable and uncluttered for the main encirclement."
+    },
+    {
+      "type": "plain",
+      "x": 121,
+      "z": 80,
+      "width": 66,
+      "depth": 46,
+      "description": "Encirclement pocket. The Roman center should be drawn into this basin before the cavalry closes behind it."
     },
     {
       "type": "hill",
-      "x": 50,
-      "z": 100,
-      "width": 25,
+      "x": 57,
+      "z": 136,
+      "width": 36,
+      "depth": 16,
+      "height": 2.4,
+      "rotation": -8,
+      "description": "Carthaginian command camp overlooking the plain.",
+      "entrances": [
+        { "x": 54, "z": 124 },
+        { "x": 73, "z": 132 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 87,
+      "z": 55,
+      "width": 30,
+      "depth": 13,
+      "height": 1.8,
+      "rotation": 6,
+      "description": "Northern infantry shoulder. One hinge of the trap.",
+      "entrances": [
+        { "x": 76, "z": 56 },
+        { "x": 99, "z": 58 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 87,
+      "z": 105,
+      "width": 30,
+      "depth": 13,
+      "height": 1.8,
+      "rotation": -6,
+      "description": "Southern infantry shoulder. The second hinge of the trap.",
+      "entrances": [
+        { "x": 76, "z": 104 },
+        { "x": 99, "z": 102 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 73,
+      "z": 41,
+      "width": 32,
       "depth": 12,
-      "height": 2.5,
-      "description": "Carthaginian command position",
+      "height": 1.7,
+      "rotation": -10,
+      "description": "Northern cavalry rise near the river. Carthage begins with a strong cavalry launch point.",
       "entrances": [
-        {
-          "x": 38,
-          "z": 100
-        },
-        {
-          "x": 62,
-          "z": 100
-        },
-        {
-          "x": 50,
-          "z": 88
-        }
+        { "x": 60, "z": 43 },
+        { "x": 86, "z": 39 }
       ]
     },
     {
       "type": "hill",
-      "x": 160,
-      "z": 60,
-      "radius": 10,
-      "height": 2.0,
-      "description": "Roman camp elevation",
+      "x": 74,
+      "z": 122,
+      "width": 32,
+      "depth": 12,
+      "height": 1.7,
+      "rotation": 10,
+      "description": "Southern cavalry rise used to launch the second hook.",
       "entrances": [
-        {
-          "x": 150,
-          "z": 60
-        },
-        {
-          "x": 160,
-          "z": 50
-        },
-        {
-          "x": 160,
-          "z": 70
-        }
+        { "x": 61, "z": 121 },
+        { "x": 88, "z": 119 }
       ]
     },
     {
       "type": "hill",
-      "x": 15,
-      "z": 60,
-      "radius": 8,
-      "height": 2.0,
-      "description": "Western flank anchor"
+      "x": 166,
+      "z": 55,
+      "width": 28,
+      "depth": 13,
+      "height": 1.6,
+      "rotation": 8,
+      "description": "Roman northern cavalry position by the Aufidus bend.",
+      "entrances": [
+        { "x": 154, "z": 56 },
+        { "x": 178, "z": 53 }
+      ]
     },
     {
       "type": "hill",
-      "x": 90,
-      "z": 10,
-      "width": 40,
-      "depth": 10,
-      "height": 3.0,
-      "description": "Northern ridge - prevents flanking from north"
+      "x": 168,
+      "z": 105,
+      "width": 28,
+      "depth": 14,
+      "height": 1.5,
+      "rotation": -8,
+      "description": "Roman allied cavalry position on the southern wing.",
+      "entrances": [
+        { "x": 156, "z": 103 },
+        { "x": 180, "z": 106 }
+      ]
     },
     {
       "type": "hill",
-      "x": 112,
-      "z": 96,
+      "x": 207,
+      "z": 80,
+      "radius": 14,
+      "height": 2.1,
+      "description": "Roman main camp elevation anchoring the rear.",
+      "entrances": [
+        { "x": 192, "z": 80 },
+        { "x": 208, "z": 65 },
+        { "x": 210, "z": 95 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 213,
+      "z": 35,
+      "width": 30,
+      "depth": 13,
+      "height": 1.9,
+      "rotation": 5,
+      "description": "Roman logistics ridge near the Aufidus ford.",
+      "entrances": [
+        { "x": 201, "z": 37 },
+        { "x": 226, "z": 33 }
+      ]
+    },
+    {
+      "type": "forest",
+      "x": 48,
+      "z": 48,
+      "radius": 13,
+      "density": 0.42,
+      "description": "Dusty scrub masking Carthaginian northern cavalry movement."
+    },
+    {
+      "type": "forest",
+      "x": 48,
+      "z": 115,
+      "radius": 12,
+      "density": 0.4,
+      "description": "Southern scrub used by Numidian cavalry and reserve infantry."
+    },
+    {
+      "type": "forest",
+      "x": 181,
+      "z": 119,
       "radius": 11,
-      "height": 2.6,
-      "description": "Rear maneuver rise for Carthaginian reserves"
+      "density": 0.38,
+      "description": "Thin scrub around the Roman baggage road."
     },
     {
-      "type": "forest",
-      "x": 34,
-      "z": 44,
-      "radius": 10,
-      "density": 0.45,
-      "description": "Left-wing dust cover near the Roman cavalry approach"
+      "type": "village",
+      "x": 27,
+      "z": 126,
+      "description": "Cannae village ruins behind the Carthaginian position."
     },
     {
-      "type": "forest",
-      "x": 146,
+      "type": "village",
+      "x": 224,
+      "z": 117,
+      "description": "Roman baggage market and supply camp."
+    }
+  ],
+  "spawns": [
+    {
+      "type": "barracks",
+      "x": 56,
+      "z": 136,
+      "player_id": 1,
+      "max_population": 220,
+      "nation": "carthage",
+      "description": "Carthaginian command camp"
+    },
+    {
+      "type": "barracks",
+      "x": 207,
+      "z": 80,
+      "player_id": 2,
+      "max_population": 260,
+      "nation": "roman_republic",
+      "description": "Roman main camp"
+    },
+    {
+      "type": "barracks",
+      "x": 224,
+      "z": 117,
+      "player_id": 2,
+      "max_population": 160,
+      "nation": "roman_republic",
+      "description": "Roman baggage camp"
+    },
+
+    {
+      "type": "spearman",
+      "x": 86,
+      "z": 73,
+      "player_id": 1,
+      "description": "Weak Carthaginian center bait line"
+    },
+    {
+      "type": "spearman",
+      "x": 88,
       "z": 78,
-      "radius": 9,
-      "density": 0.45,
-      "description": "Right-wing scrubland masking reserve movement"
+      "player_id": 1
     },
     {
-      "type": "village",
-      "x": 20,
-      "z": 100,
-      "description": "Cannae village ruins"
+      "type": "spearman",
+      "x": 88,
+      "z": 83,
+      "player_id": 1
     },
     {
-      "type": "village",
+      "type": "spearman",
+      "x": 86,
+      "z": 88,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 94,
+      "z": 76,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 96,
+      "z": 84,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 78,
+      "z": 75,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 78,
+      "z": 85,
+      "player_id": 1
+    },
+    {
+      "type": "healer",
+      "x": 72,
+      "z": 80,
+      "player_id": 1
+    },
+
+    {
+      "type": "spearman",
+      "x": 82,
+      "z": 55,
+      "player_id": 1,
+      "description": "Northern infantry shoulder"
+    },
+    {
+      "type": "spearman",
+      "x": 88,
+      "z": 52,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 94,
+      "z": 55,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 100,
+      "z": 58,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 86,
+      "z": 47,
+      "player_id": 1
+    },
+
+    {
+      "type": "spearman",
+      "x": 82,
+      "z": 105,
+      "player_id": 1,
+      "description": "Southern infantry shoulder"
+    },
+    {
+      "type": "spearman",
+      "x": 88,
+      "z": 108,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 94,
+      "z": 105,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 100,
+      "z": 102,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 86,
+      "z": 113,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 62,
+      "z": 42,
+      "player_id": 1,
+      "description": "Heavy cavalry, northern wing"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 67,
+      "z": 39,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 72,
+      "z": 42,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 77,
+      "z": 45,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 57,
+      "z": 47,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 70,
+      "z": 49,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 63,
+      "z": 120,
+      "player_id": 1,
+      "description": "Southern cavalry wing"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 69,
+      "z": 124,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 76,
+      "z": 120,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 56,
+      "z": 115,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 82,
+      "z": 116,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 72,
+      "z": 128,
+      "player_id": 1
+    },
+
+    {
+      "type": "spearman",
+      "x": 60,
+      "z": 132,
+      "player_id": 1,
+      "description": "Carthaginian reserve near command camp"
+    },
+    {
+      "type": "swordsman",
+      "x": 65,
+      "z": 135,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 51,
+      "z": 131,
+      "player_id": 1
+    },
+    {
+      "type": "healer",
+      "x": 49,
+      "z": 137,
+      "player_id": 1
+    },
+
+    {
+      "type": "spearman",
+      "x": 132,
+      "z": 63,
+      "player_id": 2,
+      "description": "Roman dense center front rank"
+    },
+    {
+      "type": "spearman",
+      "x": 136,
+      "z": 68,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 138,
+      "z": 74,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 138,
+      "z": 80,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 138,
+      "z": 86,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 136,
+      "z": 92,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 132,
+      "z": 97,
+      "player_id": 2
+    },
+
+    {
+      "type": "swordsman",
+      "x": 148,
+      "z": 64,
+      "player_id": 2,
+      "description": "Roman heavy infantry second rank"
+    },
+    {
+      "type": "swordsman",
+      "x": 151,
+      "z": 70,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 153,
+      "z": 76,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 153,
+      "z": 84,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 151,
+      "z": 90,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 148,
+      "z": 96,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 163,
+      "z": 66,
+      "player_id": 2,
+      "description": "Roman deep infantry reserve"
+    },
+    {
+      "type": "spearman",
+      "x": 166,
+      "z": 72,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 168,
+      "z": 80,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 166,
+      "z": 88,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 163,
+      "z": 94,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 176,
+      "z": 72,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 178,
+      "z": 80,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 176,
+      "z": 88,
+      "player_id": 2
+    },
+
+    {
+      "type": "archer",
+      "x": 181,
+      "z": 67,
+      "player_id": 2,
+      "description": "Roman rear missile support"
+    },
+    {
+      "type": "archer",
+      "x": 185,
+      "z": 74,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 186,
+      "z": 86,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 181,
+      "z": 93,
+      "player_id": 2
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 151,
+      "z": 49,
+      "player_id": 2,
+      "description": "Roman northern cavalry"
+    },
+    {
+      "type": "horse_swordsman",
       "x": 158,
-      "z": 28,
-      "description": "Roman reserve camp market and baggage train"
+      "z": 46,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 166,
+      "z": 47,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 173,
+      "z": 51,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 166,
+      "z": 39,
+      "player_id": 2
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 152,
+      "z": 111,
+      "player_id": 2,
+      "description": "Roman allied southern cavalry"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 160,
+      "z": 114,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 168,
+      "z": 113,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 176,
+      "z": 109,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 166,
+      "z": 121,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 199,
+      "z": 75,
+      "player_id": 2,
+      "description": "Roman camp guard"
+    },
+    {
+      "type": "spearman",
+      "x": 199,
+      "z": 85,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 207,
+      "z": 72,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 207,
+      "z": 88,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 215,
+      "z": 80,
+      "player_id": 2
+    },
+    {
+      "type": "healer",
+      "x": 211,
+      "z": 84,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 219,
+      "z": 112,
+      "player_id": 2,
+      "description": "Roman baggage guard"
+    },
+    {
+      "type": "swordsman",
+      "x": 226,
+      "z": 121,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 230,
+      "z": 116,
+      "player_id": 2
     }
   ],
-  "rivers": [
+  "firecamps": [
     {
-      "start": [
-        80,
-        0
-      ],
-      "end": [
-        100,
-        25
-      ],
-      "width": 10,
-      "description": "Aufidus River - northern boundary"
+      "x": 54,
+      "z": 136,
+      "intensity": 1.25,
+      "radius": 3.8
     },
     {
-      "start": [
-        100,
-        25
-      ],
-      "end": [
-        138,
-        38
-      ],
-      "width": 7,
-      "description": "Aufidus bend toward the Roman rear"
+      "x": 65,
+      "z": 132,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "x": 206,
+      "z": 80,
+      "intensity": 1.15,
+      "radius": 3.4
+    },
+    {
+      "x": 214,
+      "z": 73,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "x": 224,
+      "z": 117,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 29,
+      "z": 126,
+      "intensity": 0.85,
+      "radius": 2.6
+    },
+    {
+      "x": 169,
+      "z": 55,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "x": 170,
+      "z": 105,
+      "intensity": 0.8,
+      "radius": 2.4
     }
   ],
-  "bridges": [
-    {
-      "start": [
-        96,
-        25
-      ],
-      "end": [
-        104,
-        27
-      ],
-      "width": 5.0,
-      "height": 0.8,
-      "description": "Main ford bridge near the center"
-    },
-    {
-      "start": [
-        124,
-        34
-      ],
-      "end": [
-        132,
-        36
-      ],
-      "width": 4.0,
-      "height": 0.7,
-      "description": "Roman logistics bridge on the river bend"
-    }
-  ],
-  "roads": [
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 4.0,
-      "style": "default",
-      "waypoints": [
-        [
-          5,
-          60
-        ],
-        [
-          30,
-          58
-        ],
-        [
-          60,
-          60
-        ],
-        [
-          90,
-          60
-        ],
-        [
-          120,
-          60
-        ],
-        [
-          150,
-          58
-        ],
-        [
-          175,
-          60
-        ]
-      ],
-      "description": "Main east-west Roman road - Appian Way"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 3.0,
-      "style": "default",
-      "waypoints": [
-        [
-          50,
-          90
-        ],
-        [
-          50,
-          75
-        ],
-        [
-          55,
-          60
-        ]
-      ],
-      "description": "Path from Carthaginian camp to battle line"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 3.0,
-      "style": "default",
-      "waypoints": [
-        [
-          155,
-          60
-        ],
-        [
-          155,
-          45
-        ],
-        [
-          160,
-          30
-        ]
-      ],
-      "description": "Roman supply route"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
-      "style": "default",
-      "waypoints": [
-        [
-          20,
-          96
-        ],
-        [
-          40,
-          82
-        ],
-        [
-          65,
-          70
-        ],
-        [
-          90,
-          60
-        ]
-      ],
-      "description": "Carthaginian left-hook route toward the encirclement pocket"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
-      "style": "default",
-      "waypoints": [
-        [
-          158,
-          28
-        ],
-        [
-          145,
-          40
-        ],
-        [
-          130,
-          52
-        ],
-        [
-          110,
-          60
-        ]
-      ],
-      "description": "Roman reserve lane vulnerable to interception"
-    }
-  ],
-  "victory": {
-    "type": "encirclement",
-    "description": "Execute the legendary double envelopment - surround and destroy Rome's greatest army"
-  },
-  "time_of_day": "afternoon",
   "world_props": [
     {
-      "type": "ruins",
-      "x": 17.0,
-      "z": 97.0,
-      "scale": 1.2,
+      "type": "tent",
+      "x": 49,
+      "z": 139,
+      "scale": 1.0,
       "rotation": 0.4
     },
     {
-      "type": "ruins",
-      "x": 22.0,
-      "z": 101.0,
+      "type": "tent",
+      "x": 62,
+      "z": 140,
       "scale": 1.0,
-      "rotation": 2.1
+      "rotation": 2.0
+    },
+    {
+      "type": "supply_cart",
+      "x": 58,
+      "z": 130,
+      "scale": 1.0,
+      "rotation": 1.2
+    },
+    {
+      "type": "weapon_rack",
+      "x": 68,
+      "z": 134,
+      "scale": 1.0,
+      "rotation": 3.0
     },
     {
       "type": "ruins",
-      "x": 19.0,
-      "z": 104.0,
+      "x": 24,
+      "z": 124,
+      "scale": 1.2,
+      "rotation": 0.3
+    },
+    {
+      "type": "ruins",
+      "x": 29,
+      "z": 128,
+      "scale": 1.0,
+      "rotation": 2.2
+    },
+    {
+      "type": "ruins",
+      "x": 33,
+      "z": 122,
       "scale": 0.9,
-      "rotation": 3.8
-    },
-    {
-      "type": "ruins",
-      "x": 15.0,
-      "z": 100.0,
-      "scale": 1.1,
-      "rotation": 5.2
-    },
-    {
-      "type": "ruins",
-      "x": 154.0,
-      "z": 25.0,
-      "scale": 1.0,
-      "rotation": 1.0
-    },
-    {
-      "type": "ruins",
-      "x": 161.0,
-      "z": 30.0,
-      "scale": 0.8,
-      "rotation": 2.7
+      "rotation": 4.1
     },
     {
       "type": "dead_tree",
-      "x": 27.0,
-      "z": 41.0,
-      "scale": 1.2,
+      "x": 43,
+      "z": 47,
+      "scale": 1.1,
       "rotation": 0.8
     },
     {
       "type": "dead_tree",
-      "x": 33.0,
-      "z": 37.0,
+      "x": 51,
+      "z": 43,
       "scale": 1.0,
       "rotation": 2.5
     },
     {
       "type": "dead_tree",
-      "x": 25.0,
-      "z": 47.0,
-      "scale": 1.1,
-      "rotation": 4.3
-    },
-    {
-      "type": "dead_tree",
-      "x": 38.0,
-      "z": 40.0,
+      "x": 46,
+      "z": 55,
       "scale": 0.9,
-      "rotation": 5.9
+      "rotation": 4.7
     },
     {
       "type": "dead_tree",
-      "x": 150.0,
-      "z": 72.0,
+      "x": 43,
+      "z": 117,
       "scale": 1.1,
-      "rotation": 1.4
+      "rotation": 1.1
     },
     {
       "type": "dead_tree",
-      "x": 154.0,
-      "z": 79.0,
+      "x": 52,
+      "z": 112,
+      "scale": 1.0,
+      "rotation": 3.5
+    },
+    {
+      "type": "weapon_rack",
+      "x": 83,
+      "z": 54,
+      "scale": 1.0,
+      "rotation": 2.1
+    },
+    {
+      "type": "weapon_rack",
+      "x": 84,
+      "z": 106,
+      "scale": 1.0,
+      "rotation": 5.0
+    },
+    {
+      "type": "dead_tree",
+      "x": 116,
+      "z": 66,
+      "scale": 0.8,
+      "rotation": 1.3
+    },
+    {
+      "type": "dead_tree",
+      "x": 119,
+      "z": 94,
+      "scale": 0.9,
+      "rotation": 4.2
+    },
+    {
+      "type": "ruins",
+      "x": 122,
+      "z": 80,
+      "scale": 0.8,
+      "rotation": 0.6
+    },
+    {
+      "type": "tent",
+      "x": 201,
+      "z": 73,
+      "scale": 1.0,
+      "rotation": 0.9
+    },
+    {
+      "type": "tent",
+      "x": 215,
+      "z": 88,
+      "scale": 1.0,
+      "rotation": 2.8
+    },
+    {
+      "type": "supply_cart",
+      "x": 213,
+      "z": 78,
+      "scale": 1.0,
+      "rotation": 1.6
+    },
+    {
+      "type": "weapon_rack",
+      "x": 200,
+      "z": 88,
       "scale": 1.0,
       "rotation": 3.9
     },
     {
+      "type": "supply_cart",
+      "x": 222,
+      "z": 113,
+      "scale": 1.0,
+      "rotation": 0.5
+    },
+    {
+      "type": "supply_cart",
+      "x": 230,
+      "z": 121,
+      "scale": 1.0,
+      "rotation": 2.3
+    },
+    {
+      "type": "tent",
+      "x": 226,
+      "z": 124,
+      "scale": 1.0,
+      "rotation": 4.7
+    },
+    {
+      "type": "ruins",
+      "x": 211,
+      "z": 35,
+      "scale": 0.9,
+      "rotation": 1.2
+    },
+    {
       "type": "dead_tree",
-      "x": 146.0,
-      "z": 83.0,
+      "x": 184,
+      "z": 119,
+      "scale": 1.0,
+      "rotation": 3.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 176,
+      "z": 124,
       "scale": 0.9,
       "rotation": 5.5
     }
-  ]
+  ],
+  "victory": {
+    "type": "encirclement",
+    "description": "Execute the double envelopment. Draw the Roman center into the killing plain, close both cavalry wings behind it, and destroy the Roman army before it escapes to the camp roads.",
+    "encirclement_zone": {
+      "x": 122,
+      "z": 80,
+      "width": 72,
+      "depth": 50
+    },
+    "primary_targets": [
+      "roman_center",
+      "roman_cavalry_wings",
+      "roman_main_camp"
+    ],
+    "failure_hint": "If the Carthaginian center collapses before both wings close, the Roman army can break through."
+  }
 }

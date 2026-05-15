@@ -4,6 +4,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         editor_window.cpp
         map_data.cpp
         map_canvas.cpp
+        spawn_icon_library.cpp
         tool_panel.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
@@ -14,6 +15,7 @@ else()
         editor_window.cpp
         map_data.cpp
         map_canvas.cpp
+        spawn_icon_library.cpp
         tool_panel.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp

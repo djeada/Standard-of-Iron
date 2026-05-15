@@ -173,10 +173,8 @@ void RomanScutumRenderer::submit(const RomanScutumConfig&,
                                  const DrawContext& ctx,
                                  const BodyFrames& frames,
                                  const HumanoidPalette& palette,
-                                 const HumanoidAnimationContext& anim,
+                                 const HumanoidAnimationContext&,
                                  EquipmentBatch& batch) {
-  (void)anim;
-
   const AttachmentFrame& hand_l = frames.hand_l;
   if (hand_l.radius <= 0.0F) {
     return;

@@ -51,6 +51,18 @@ auto deterministic_attack_delay(Engine::Core::EntityID attacker_id,
   return hash_to_unit(seed) * max_delay;
 }
 
+auto commander_attack_advance_scale(const Engine::Core::Entity* attacker) noexcept
+    -> float {
+  if (attacker == nullptr) {
+    return 1.0F;
+  }
+  auto const* commander = attacker->get_component<Engine::Core::CommanderComponent>();
+  if (commander == nullptr || !commander->fpv_controlled) {
+    return 1.0F;
+  }
+  return commander->combo_step >= 3 ? 1.55F : 1.22F;
+}
+
 void begin_attack_animation(Engine::Core::Entity* attacker,
                             bool preserve_seed = false) {
   if (attacker == nullptr) {
@@ -69,7 +81,8 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
     combat_state->state_duration =
-        Engine::Core::CombatStateComponent::k_advance_duration;
+        Engine::Core::CombatStateComponent::k_advance_duration *
+        commander_attack_advance_scale(attacker);
     if (unit != nullptr && attack != nullptr) {
       combat_state->attack_family = Engine::Core::resolve_combat_attack_family(
           unit->spawn_type, attack->current_mode);
@@ -246,7 +259,6 @@ void process_melee_lock(Engine::Core::Entity* attacker,
   }
 
   if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
-    Game::Systems::CombatRules::clear_rts_melee_lock(attacker);
     return;
   }
 
@@ -259,7 +271,6 @@ void process_melee_lock(Engine::Core::Entity* attacker,
   }
 
   if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(lock_target)) {
-    Game::Systems::CombatRules::clear_rts_melee_lock(attacker);
     return;
   }
 
@@ -593,12 +604,6 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
   auto* tgt_t = target->get_component<Engine::Core::TransformComponent>();
 
   if (!attacker_uses_rts_lock || !target_uses_rts_lock) {
-    if (!attacker_uses_rts_lock) {
-      Game::Systems::CombatRules::clear_rts_melee_lock(attacker);
-    }
-    if (!target_uses_rts_lock) {
-      Game::Systems::CombatRules::clear_rts_melee_lock(target);
-    }
     if ((att_t != nullptr) && (tgt_t != nullptr)) {
       face_target(att_t, tgt_t);
     }
@@ -742,7 +747,9 @@ void process_attacks(Engine::Core::World* world,
         Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
 
     auto* attack_target =
-        attacker->get_component<Engine::Core::AttackTargetComponent>();
+        Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)
+            ? attacker->get_component<Engine::Core::AttackTargetComponent>()
+            : nullptr;
     Engine::Core::Entity* best_target = nullptr;
     Engine::Core::UnitComponent* best_target_unit = nullptr;
     Engine::Core::TransformComponent* best_target_transform = nullptr;
@@ -953,12 +960,6 @@ void process_attacks(Engine::Core::World* world,
           attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Melee) {
 
-        if (is_unit_in_hold_mode(attacker)) {
-          attacker->remove_component<Engine::Core::AttackTargetComponent>();
-          attacker_atk->in_melee_lock = false;
-          attacker_atk->melee_lock_target_id = 0;
-          continue;
-        }
         initiate_melee_combat(attacker, best_target, attacker_atk, world);
       }
 
@@ -977,7 +978,8 @@ void process_attacks(Engine::Core::World* world,
         guard_mode->returning_to_guard_position = false;
       }
     } else {
-      if ((attack_target == nullptr) &&
+      if (Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker) &&
+          (attack_target == nullptr) &&
           attacker->has_component<Engine::Core::AttackTargetComponent>()) {
         attacker->remove_component<Engine::Core::AttackTargetComponent>();
       }

@@ -73,6 +73,24 @@ void CommanderInputAdapter::special_action() {
   }
 }
 
+void CommanderInputAdapter::vanguard_rush() {
+  if (m_engine != nullptr) {
+    m_engine->commander_vanguard_rush();
+  }
+}
+
+void CommanderInputAdapter::second_wind() {
+  if (m_engine != nullptr) {
+    m_engine->commander_second_wind();
+  }
+}
+
+void CommanderInputAdapter::toggle_camera_mode() {
+  if (m_engine != nullptr) {
+    m_engine->commander_toggle_camera_mode();
+  }
+}
+
 void CommanderInputAdapter::center_mouse(qreal center_sx, qreal center_sy) {
   if (m_engine != nullptr) {
     m_engine->commander_center_mouse(center_sx, center_sy);

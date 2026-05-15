@@ -277,6 +277,19 @@ auto carthage_cloak_config() -> const CloakConfig& {
   return config;
 }
 
+auto carthage_mounted_cloak_config() -> const CloakConfig& {
+  static const CloakConfig config = []() {
+    CloakConfig cfg = carthage_cloak_config();
+    cfg.length_scale = 0.94F;
+    cfg.shoulder_anchor_up = 0.06F;
+    cfg.drape_anchor_up = 0.00F;
+    cfg.drape_anchor_back = 0.62F;
+    cfg.clasp_anchor_up = 0.06F;
+    return cfg;
+  }();
+  return config;
+}
+
 auto roman_cloak_config() -> const CloakConfig& {
   static const CloakConfig config = []() {
     CloakConfig cfg;
@@ -284,6 +297,19 @@ auto roman_cloak_config() -> const CloakConfig& {
     cfg.trim_color = QVector3D(0.78F, 0.72F, 0.58F);
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
+    return cfg;
+  }();
+  return config;
+}
+
+auto roman_mounted_cloak_config() -> const CloakConfig& {
+  static const CloakConfig config = []() {
+    CloakConfig cfg = roman_cloak_config();
+    cfg.length_scale = 0.94F;
+    cfg.shoulder_anchor_up = 0.06F;
+    cfg.drape_anchor_up = 0.00F;
+    cfg.drape_anchor_back = 0.62F;
+    cfg.clasp_anchor_up = 0.06F;
     return cfg;
   }();
   return config;
@@ -538,12 +564,30 @@ auto build_carthage_cloak_attachment(std::uint8_t base_role_byte)
                                                    base_role_byte)};
 }
 
+auto build_carthage_mounted_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::cloak_make_static_attachment(
+      carthage_mounted_cloak_config(),
+      cloak_meshes_for("cloak_carthage_mounted"),
+      humanoid_chest_bone(),
+      base_role_byte)};
+}
+
 auto build_roman_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::cloak_make_static_attachment(roman_cloak_config(),
                                                    cloak_meshes_for("cloak_roman"),
                                                    humanoid_chest_bone(),
                                                    base_role_byte)};
+}
+
+auto build_roman_mounted_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {
+      Render::GL::cloak_make_static_attachment(roman_mounted_cloak_config(),
+                                               cloak_meshes_for("cloak_roman_mounted"),
+                                               humanoid_chest_bone(),
+                                               base_role_byte)};
 }
 
 auto build_roman_horse_saddle_attachment(std::uint8_t base_role_byte)
@@ -1447,14 +1491,14 @@ void register_humanoid_descriptor(EquipmentCategory category,
                                   const char* id,
                                   HumanoidEquipmentContribution contribution) {
   const auto handle = EquipmentRegistry::instance().resolve_handle(category, id);
-  register_humanoid_equipment_contribution(handle, std::move(contribution));
+  register_humanoid_equipment_contribution(handle, contribution);
 }
 
 void register_horse_descriptor(EquipmentCategory category,
                                const char* id,
                                HorseEquipmentContribution contribution) {
   const auto handle = EquipmentRegistry::instance().resolve_handle(category, id);
-  register_horse_equipment_contribution(handle, std::move(contribution));
+  register_horse_equipment_contribution(handle, contribution);
 }
 
 } // namespace
@@ -1549,6 +1593,10 @@ void register_built_in_equipment() {
   auto cloak_carthage = std::make_shared<CloakRenderer>(carthage_cloak_config);
   registry.register_equipment(
       EquipmentCategory::Armor, "cloak_carthage", cloak_carthage);
+  auto cloak_carthage_mounted =
+      std::make_shared<CloakRenderer>(carthage_mounted_cloak_config());
+  registry.register_equipment(
+      EquipmentCategory::Armor, "cloak_carthage_mounted", cloak_carthage_mounted);
   CloakConfig roman_cloak_config;
   roman_cloak_config.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
   roman_cloak_config.trim_color = QVector3D(0.78F, 0.72F, 0.58F);
@@ -1556,6 +1604,10 @@ void register_built_in_equipment() {
   roman_cloak_config.shoulder_material_id = 13;
   auto cloak_roman = std::make_shared<CloakRenderer>(roman_cloak_config);
   registry.register_equipment(EquipmentCategory::Armor, "cloak_roman", cloak_roman);
+  auto cloak_roman_mounted =
+      std::make_shared<CloakRenderer>(roman_mounted_cloak_config());
+  registry.register_equipment(
+      EquipmentCategory::Armor, "cloak_roman_mounted", cloak_roman_mounted);
 
   auto sword = std::make_shared<SwordRenderer>();
   registry.register_equipment(EquipmentCategory::Weapon, "sword", sword);
@@ -1881,8 +1933,20 @@ void register_built_in_equipment() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
+      "cloak_carthage_mounted",
+      {.build_attachments = &build_carthage_mounted_cloak_attachment,
+       .append_role_colors = &carthage_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
       "cloak_roman",
       {.build_attachments = &build_roman_cloak_attachment,
+       .append_role_colors = &roman_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_roman_mounted",
+      {.build_attachments = &build_roman_mounted_cloak_attachment,
        .append_role_colors = &roman_cloak_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
   register_humanoid_descriptor(

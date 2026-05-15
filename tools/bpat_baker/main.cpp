@@ -79,11 +79,12 @@ enum class BakerAmbientIdleType : std::uint8_t {
 };
 enum class HumanoidBakeProfile : std::uint8_t {
   Default,
-  SwordReady
+  SwordReady,
+  SpearReady
 };
 
 struct HumanoidClipSpec {
-  const char* name;
+  const char* name{};
   Render::GL::HumanoidMotionState state;
   BakerAttackType attack_type{BakerAttackType::None};
   std::uint8_t attack_variant{0};
@@ -91,10 +92,10 @@ struct HumanoidClipSpec {
   BakerRidingType riding_type{BakerRidingType::None};
   BakerHoldType hold_type{BakerHoldType::None};
   BakerAmbientIdleType ambient_idle_type{BakerAmbientIdleType::None};
-  std::uint32_t frames;
-  float fps;
-  float cycle_time;
-  bool loops;
+  std::uint32_t frames{};
+  float fps{};
+  float cycle_time{};
+  bool loops{};
 };
 
 constexpr std::array<HumanoidClipSpec, 24> k_humanoid_clips{{
@@ -716,6 +717,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     Render::GL::HumanoidGaitDescriptor gait{};
     gait.state = clip.state;
     gait.cycle_time = clip.cycle_time;
+    float idle_time = phase * clip.cycle_time;
 
     switch (clip.state) {
     case Render::GL::HumanoidMotionState::Idle:
@@ -748,13 +750,17 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, 0.0F, gait, variation, pose);
       float const ambient_phase = transition_phase(frame_index, clip.frames);
+      idle_time = ambient_phase * clip.cycle_time;
       Render::GL::HumanoidAnimationContext anim_ctx{};
       anim_ctx.gait = gait;
       anim_ctx.motion_state = Render::GL::HumanoidMotionState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
       if (profile == HumanoidBakeProfile::SwordReady) {
         ctrl.hold_sword_and_shield();
+      } else if (profile == HumanoidBakeProfile::SpearReady) {
+        ctrl.hold_spear_idle();
       }
+      ctrl.apply_micro_idle(idle_time, 0U);
       auto to_ambient_type = [](BakerAmbientIdleType t) -> Render::GL::AmbientIdleType {
         switch (t) {
         case BakerAmbientIdleType::SitDown:
@@ -785,6 +791,25 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       anim_ctx.inputs.is_moving = gait.speed > 0.1F;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
       ctrl.hold_sword_and_shield();
+    }
+    if (profile == HumanoidBakeProfile::SpearReady &&
+        clip.state == Render::GL::HumanoidMotionState::Idle &&
+        clip.hold_type == BakerHoldType::None &&
+        clip.ambient_idle_type == BakerAmbientIdleType::None) {
+      Render::GL::HumanoidAnimationContext anim_ctx{};
+      anim_ctx.gait = gait;
+      anim_ctx.motion_state = Render::GL::HumanoidMotionState::Idle;
+      Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+      ctrl.hold_spear_idle();
+    }
+    if (clip.state == Render::GL::HumanoidMotionState::Idle &&
+        clip.hold_type == BakerHoldType::None &&
+        clip.ambient_idle_type == BakerAmbientIdleType::None) {
+      Render::GL::HumanoidAnimationContext anim_ctx{};
+      anim_ctx.gait = gait;
+      anim_ctx.motion_state = Render::GL::HumanoidMotionState::Idle;
+      Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+      ctrl.apply_micro_idle(idle_time, 0U);
     }
   }
 
@@ -967,12 +992,12 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
 }
 
 struct HorseClipSpec {
-  const char* name;
+  const char* name{};
   Render::GL::GaitType gait;
-  std::uint32_t frames;
-  float fps;
-  bool loops;
-  bool is_moving;
+  std::uint32_t frames{};
+  float fps{};
+  bool loops{};
+  bool is_moving{};
   bool is_fighting{false};
   float bob_scale{0.0F};
 };
@@ -992,7 +1017,7 @@ void bake_horse_clip_frame(const HorseClipSpec& clip,
                            std::vector<QMatrix4x4>& out_palettes) {
   float const phase = static_cast<float>(frame_index) / static_cast<float>(clip.frames);
 
-  Render::GL::HorseGait base{};
+  Render::GL::HorseGait const base{};
   Render::GL::HorseGait const gait = Render::GL::gait_for_type(clip.gait, base);
 
   Render::Horse::HorsePoseMotion motion{};
@@ -1110,11 +1135,11 @@ bool bake_horse(const std::filesystem::path& out_dir) {
 }
 
 struct ElephantClipSpec {
-  const char* name;
-  std::uint32_t frames;
-  float fps;
-  bool loops;
-  bool is_moving;
+  const char* name{};
+  std::uint32_t frames{};
+  float fps{};
+  bool loops{};
+  bool is_moving{};
   Render::GL::ElephantGait gait;
   bool is_fighting{false};
   float bob_scale{0.0F};
@@ -1309,6 +1334,11 @@ int main(int argc, char** argv) {
                      bpat::k_species_humanoid_sword,
                      "humanoid_sword.bpat",
                      HumanoidBakeProfile::SwordReady) &&
+       ok;
+  ok = bake_humanoid(out_dir,
+                     bpat::k_species_humanoid_spear,
+                     "humanoid_spear.bpat",
+                     HumanoidBakeProfile::SpearReady) &&
        ok;
   ok = bake_species_manifest(out_dir, Render::Horse::horse_manifest()) && ok;
   ok = bake_species_manifest(out_dir, Render::Elephant::elephant_manifest()) && ok;

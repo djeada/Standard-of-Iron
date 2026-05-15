@@ -17,6 +17,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
+#include "../../../creature/pipeline/creature_asset.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/armor/armor_light_carthage.h"
 #include "../../../equipment/armor/carthage_shoulder_cover.h"
@@ -399,7 +400,6 @@ public:
     return k_kneel_depth_multiplier;
   }
 
-public:
   auto
   visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
@@ -415,6 +415,7 @@ public:
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/spearman";
+      s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
       s.scaling = ProportionScaling{0.72F, 1.02F, 0.74F};
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
@@ -509,7 +510,6 @@ private:
     return k_empty;
   }
 
-private:
   void apply_palette_overrides(const SpearmanStyleConfig& style,
                                const QVector3D& team_tint,
                                HumanoidVariant& variant) const {

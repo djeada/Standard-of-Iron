@@ -137,6 +137,8 @@ public:
             attack_bow_clip;
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
             Render::Creature::k_humanoid_hold_bow_clip;
+        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
+            Render::Creature::k_humanoid_hold_bow_clip;
         return registry.register_archetype(desc);
       }();
       const auto loadout =
@@ -208,7 +210,6 @@ private:
     return default_style;
   }
 
-private:
   void apply_palette_overrides(const ArcherStyleConfig& style,
                                const QVector3D& team_tint,
                                HumanoidVariant& variant) const {

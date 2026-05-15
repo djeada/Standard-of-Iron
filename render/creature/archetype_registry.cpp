@@ -1,6 +1,7 @@
 #include "archetype_registry.h"
 
 #include <algorithm>
+#include <mutex>
 
 #include "bpat/bpat_format.h"
 #include "humanoid_clip_ids.h"
@@ -204,6 +205,7 @@ void ArchetypeRegistry::seed_baseline() {
 }
 
 auto ArchetypeRegistry::register_archetype(ArchetypeDescriptor desc) -> ArchetypeId {
+  std::lock_guard<std::mutex> const lock(m_mutex);
   if (m_count >= k_max_archetypes) {
     return k_invalid_archetype;
   }
@@ -254,8 +256,8 @@ auto ArchetypeRegistry::register_unit_archetype(
   return register_archetype(desc);
 }
 
-auto ArchetypeRegistry::get(ArchetypeId id) const noexcept
-    -> const ArchetypeDescriptor* {
+auto ArchetypeRegistry::get(ArchetypeId id) const -> const ArchetypeDescriptor* {
+  std::lock_guard<std::mutex> const lock(m_mutex);
   if (static_cast<std::size_t>(id) >= m_count) {
     return nullptr;
   }

@@ -55,9 +55,24 @@ Item {
                 root.commanderInput.cycle_lock_on();
             event.accepted = true;
             return;
+        case Qt.Key_1:
+            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.vanguard_rush)
+                root.commanderInput.vanguard_rush();
+            event.accepted = true;
+            return;
+        case Qt.Key_2:
+            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.second_wind)
+                root.commanderInput.second_wind();
+            event.accepted = true;
+            return;
         case Qt.Key_F:
             if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.special_action)
                 root.commanderInput.special_action();
+            event.accepted = true;
+            return;
+        case Qt.Key_C:
+            if (!event.isAutoRepeat && root.commanderInput !== null && root.commanderInput.toggle_camera_mode)
+                root.commanderInput.toggle_camera_mode();
             event.accepted = true;
             return;
         case Qt.Key_Return:

@@ -1,826 +1,1201 @@
 {
   "name": "Battle of Zama",
-  "description": "The final confrontation in Africa - Hannibal faces Scipio Africanus on the open plains of Zama. Rome's greatest general has learned your tactics.",
+  "description": "The final confrontation in Africa. Hannibal brings elephants, veterans, and battlefield genius, but Scipio has prepared counters: open manipular lanes, disciplined reserves, and cavalry that can return to strike the rear.",
   "coord_system": "grid",
-  "max_troops_per_player": 2800,
+  "max_troops_per_player": 3000,
   "grid": {
-    "width": 220,
-    "height": 120,
+    "width": 260,
+    "height": 170,
     "tile_size": 1.0
   },
   "biome": {
     "ground_type": "grass_dry",
-    "seed": 10008,
-    "patch_density": 2.3,
-    "patch_jitter": 0.75,
-    "plant_density": 0.28,
+    "seed": 10088,
+    "patch_density": 2.45,
+    "patch_jitter": 0.78,
+    "plant_density": 0.3,
     "ground_irregularity_enabled": true,
-    "irregularity_scale": 0.1,
-    "irregularity_amplitude": 0.04
+    "irregularity_scale": 0.11,
+    "irregularity_amplitude": 0.04,
+    "grass_primary": [0.48, 0.46, 0.24],
+    "grass_secondary": [0.58, 0.53, 0.29],
+    "grass_dry": [0.72, 0.61, 0.35],
+    "soil_color": [0.36, 0.28, 0.18],
+    "rock_low": [0.45, 0.41, 0.35],
+    "rock_high": [0.7, 0.66, 0.56],
+    "height_noise": [0.11, 0.035],
+    "sway_speed": 0.85,
+    "sway_strength": 0.12
   },
   "camera": {
-    "center": [
-      110,
-      0,
-      60
-    ],
-    "distance": 42.0,
-    "tilt_deg": 45.0,
+    "center": [130, 0, 85],
+    "distance": 82.0,
+    "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 600.0
+    "far": 700.0
   },
+  "time_of_day": "day",
+  "weather": {
+    "type": "clear",
+    "intensity": 0.1,
+    "temperature": "hot",
+    "description": "A hot, dry African battlefield. Dust makes cavalry movement readable across the plain."
+  },
+  "terrain": [
+    {
+      "type": "plain",
+      "x": 130,
+      "z": 85,
+      "width": 190,
+      "depth": 105,
+      "description": "Open Zama plain. The center must remain clear so elephant lanes, infantry lines, and cavalry returns are readable."
+    },
+    {
+      "type": "plain",
+      "x": 125,
+      "z": 85,
+      "width": 92,
+      "depth": 66,
+      "description": "Main clash zone between Hannibal's infantry lines and Scipio's manipular formation."
+    },
+    {
+      "type": "plain",
+      "x": 132,
+      "z": 60,
+      "width": 120,
+      "depth": 10,
+      "description": "Northern elephant corridor. Roman maniples are spaced to let elephants pass through instead of stopping them."
+    },
+    {
+      "type": "plain",
+      "x": 132,
+      "z": 85,
+      "width": 120,
+      "depth": 10,
+      "description": "Central elephant corridor."
+    },
+    {
+      "type": "plain",
+      "x": 132,
+      "z": 110,
+      "width": 120,
+      "depth": 10,
+      "description": "Southern elephant corridor."
+    },
+    {
+      "type": "hill",
+      "x": 34,
+      "z": 85,
+      "radius": 14,
+      "height": 2.3,
+      "description": "Carthaginian command mound. Hannibal's camp and veteran reserve begin behind this position.",
+      "entrances": [
+        { "x": 48, "z": 85 },
+        { "x": 34, "z": 70 },
+        { "x": 34, "z": 100 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 226,
+      "z": 85,
+      "radius": 14,
+      "height": 2.4,
+      "description": "Roman command mound. Scipio's reserves and camp guard hold this position.",
+      "entrances": [
+        { "x": 211, "z": 85 },
+        { "x": 226, "z": 70 },
+        { "x": 226, "z": 100 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 80,
+      "z": 34,
+      "width": 32,
+      "depth": 12,
+      "height": 1.8,
+      "rotation": -8,
+      "description": "Carthaginian northern cavalry rise. Useful for delaying Roman allied cavalry.",
+      "entrances": [
+        { "x": 66, "z": 35 },
+        { "x": 94, "z": 34 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 80,
+      "z": 136,
+      "width": 32,
+      "depth": 12,
+      "height": 1.8,
+      "rotation": 8,
+      "description": "Carthaginian southern cavalry rise.",
+      "entrances": [
+        { "x": 66, "z": 135 },
+        { "x": 94, "z": 136 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 184,
+      "z": 34,
+      "width": 36,
+      "depth": 12,
+      "height": 1.9,
+      "rotation": 8,
+      "description": "Roman northern cavalry launch ridge. Numidian allies can sweep wide from here.",
+      "entrances": [
+        { "x": 168, "z": 34 },
+        { "x": 200, "z": 36 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 184,
+      "z": 136,
+      "width": 36,
+      "depth": 12,
+      "height": 1.9,
+      "rotation": -8,
+      "description": "Roman southern cavalry launch ridge.",
+      "entrances": [
+        { "x": 168, "z": 136 },
+        { "x": 200, "z": 134 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 130,
+      "z": 20,
+      "width": 44,
+      "depth": 10,
+      "height": 2.6,
+      "description": "Northern observation ridge. It frames the battlefield without blocking cavalry.",
+      "entrances": [
+        { "x": 108, "z": 20 },
+        { "x": 152, "z": 20 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 130,
+      "z": 150,
+      "width": 44,
+      "depth": 10,
+      "height": 2.6,
+      "description": "Southern observation ridge.",
+      "entrances": [
+        { "x": 108, "z": 150 },
+        { "x": 152, "z": 150 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 102,
+      "z": 52,
+      "radius": 9,
+      "height": 1.6,
+      "description": "Low dust ridge where elephants begin to lose formation."
+    },
+    {
+      "type": "hill",
+      "x": 102,
+      "z": 118,
+      "radius": 9,
+      "height": 1.6,
+      "description": "Low southern dust ridge shielding Carthaginian redeployment."
+    },
+    {
+      "type": "forest",
+      "x": 71,
+      "z": 111,
+      "radius": 9,
+      "density": 0.34,
+      "description": "Sparse acacia belt where Carthaginian infantry can mask a small reserve shift."
+    },
+    {
+      "type": "forest",
+      "x": 155,
+      "z": 48,
+      "radius": 9,
+      "density": 0.32,
+      "description": "Dry scrub beside the northern Roman cavalry lane."
+    },
+    {
+      "type": "forest",
+      "x": 154,
+      "z": 123,
+      "radius": 9,
+      "density": 0.32,
+      "description": "Dry scrub beside the southern Roman cavalry lane."
+    },
+    {
+      "type": "village",
+      "x": 20,
+      "z": 128,
+      "description": "Carthaginian supply village. It visually marks Hannibal's rear."
+    },
+    {
+      "type": "village",
+      "x": 238,
+      "z": 42,
+      "description": "Roman allied supply village near Scipio's camp."
+    }
+  ],
+  "rivers": [
+    {
+      "start": [0, 46],
+      "end": [260, 38],
+      "width": 3.0,
+      "description": "Dry northern wadi. It slightly shapes cavalry movement but does not dominate the battle."
+    },
+    {
+      "start": [0, 124],
+      "end": [260, 132],
+      "width": 3.0,
+      "description": "Dry southern wadi line."
+    }
+  ],
+  "bridges": [
+    {
+      "start": [121, 43],
+      "end": [130, 43],
+      "width": 4.5,
+      "height": 0.55,
+      "description": "Northern wadi crossing."
+    },
+    {
+      "start": [121, 127],
+      "end": [130, 127],
+      "width": 4.5,
+      "height": 0.55,
+      "description": "Southern wadi crossing."
+    },
+    {
+      "start": [180, 41],
+      "end": [189, 41],
+      "width": 4.0,
+      "height": 0.55,
+      "description": "Roman northern cavalry crossing."
+    },
+    {
+      "start": [180, 129],
+      "end": [189, 129],
+      "width": 4.0,
+      "height": 0.55,
+      "description": "Roman southern cavalry crossing."
+    }
+  ],
+  "roads": [
+    {
+      "start": [5, 85],
+      "end": [255, 85],
+      "width": 4.6,
+      "style": "default",
+      "waypoints": [
+        [5, 85],
+        [34, 85],
+        [62, 85],
+        [90, 85],
+        [118, 85],
+        [145, 85],
+        [173, 85],
+        [202, 85],
+        [226, 85],
+        [255, 85]
+      ],
+      "description": "Main battle road across the Zama plain."
+    },
+    {
+      "start": [65, 60],
+      "end": [180, 60],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [65, 60],
+        [88, 60],
+        [111, 60],
+        [135, 60],
+        [158, 60],
+        [180, 60]
+      ],
+      "description": "Northern elephant lane leading into Scipio's prepared gap."
+    },
+    {
+      "start": [65, 85],
+      "end": [180, 85],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [65, 85],
+        [88, 85],
+        [111, 85],
+        [135, 85],
+        [158, 85],
+        [180, 85]
+      ],
+      "description": "Central elephant lane."
+    },
+    {
+      "start": [65, 110],
+      "end": [180, 110],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [65, 110],
+        [88, 110],
+        [111, 110],
+        [135, 110],
+        [158, 110],
+        [180, 110]
+      ],
+      "description": "Southern elephant lane."
+    },
+    {
+      "start": [38, 85],
+      "end": [76, 52],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [38, 85],
+        [48, 73],
+        [60, 62],
+        [76, 52]
+      ],
+      "description": "Carthaginian northern wing route."
+    },
+    {
+      "start": [38, 85],
+      "end": [76, 118],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [38, 85],
+        [48, 97],
+        [60, 108],
+        [76, 118]
+      ],
+      "description": "Carthaginian southern wing route."
+    },
+    {
+      "start": [184, 34],
+      "end": [65, 25],
+      "width": 2.7,
+      "style": "default",
+      "waypoints": [
+        [184, 34],
+        [163, 27],
+        [140, 24],
+        [112, 23],
+        [88, 24],
+        [65, 25]
+      ],
+      "description": "Roman and Numidian northern cavalry sweep. This threatens the Carthaginian rear later."
+    },
+    {
+      "start": [184, 136],
+      "end": [65, 145],
+      "width": 2.7,
+      "style": "default",
+      "waypoints": [
+        [184, 136],
+        [163, 143],
+        [140, 146],
+        [112, 147],
+        [88, 146],
+        [65, 145]
+      ],
+      "description": "Roman southern cavalry sweep."
+    },
+    {
+      "start": [20, 128],
+      "end": [34, 85],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [20, 128],
+        [24, 116],
+        [28, 104],
+        [32, 94],
+        [34, 85]
+      ],
+      "description": "Carthaginian supply village road."
+    },
+    {
+      "start": [238, 42],
+      "end": [226, 85],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [238, 42],
+        [235, 54],
+        [231, 68],
+        [226, 85]
+      ],
+      "description": "Roman allied supply road."
+    }
+  ],
   "spawns": [
     {
-      "type": "spearman",
-      "x": 50,
+      "type": "barracks",
+      "x": 34,
+      "z": 85,
+      "player_id": 1,
+      "max_population": 190,
+      "nation": "carthage",
+      "description": "Carthaginian command camp"
+    },
+    {
+      "type": "barracks",
+      "x": 226,
+      "z": 85,
+      "player_id": 2,
+      "max_population": 240,
+      "nation": "roman_republic",
+      "description": "Roman command camp"
+    },
+    {
+      "type": "barracks",
+      "x": 238,
+      "z": 42,
+      "player_id": 2,
+      "max_population": 120,
+      "nation": "roman_republic",
+      "description": "Roman allied supply post"
+    },
+
+    {
+      "type": "elephant",
+      "x": 72,
       "z": 55,
+      "player_id": 1,
+      "description": "Elephant screen, northern lane"
+    },
+    {
+      "type": "elephant",
+      "x": 75,
+      "z": 68,
       "player_id": 1
     },
     {
+      "type": "elephant",
+      "x": 78,
+      "z": 85,
+      "player_id": 1,
+      "description": "Elephant screen, central lane"
+    },
+    {
+      "type": "elephant",
+      "x": 75,
+      "z": 102,
+      "player_id": 1
+    },
+    {
+      "type": "elephant",
+      "x": 72,
+      "z": 115,
+      "player_id": 1,
+      "description": "Elephant screen, southern lane"
+    },
+
+    {
       "type": "spearman",
-      "x": 53,
+      "x": 52,
       "z": 58,
-      "player_id": 1
+      "player_id": 1,
+      "description": "First Carthaginian line: mercenaries and levies"
     },
     {
       "type": "spearman",
-      "x": 47,
-      "z": 52,
+      "x": 55,
+      "z": 66,
       "player_id": 1
     },
     {
       "type": "spearman",
       "x": 56,
-      "z": 55,
+      "z": 76,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 44,
-      "z": 55,
+      "x": 56,
+      "z": 94,
       "player_id": 1
     },
     {
       "type": "spearman",
-      "x": 50,
-      "z": 65,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 53,
-      "z": 68,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
       "x": 55,
-      "z": 60,
+      "z": 104,
       "player_id": 1
     },
     {
-      "type": "swordsman",
-      "x": 58,
-      "z": 57,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
+      "type": "spearman",
       "x": 52,
-      "z": 63,
+      "z": 112,
       "player_id": 1
     },
     {
-      "type": "horse_swordsman",
-      "x": 35,
-      "z": 60,
+      "type": "swordsman",
+      "x": 62,
+      "z": 62,
       "player_id": 1
     },
     {
-      "type": "horse_swordsman",
-      "x": 38,
-      "z": 58,
+      "type": "swordsman",
+      "x": 65,
+      "z": 82,
       "player_id": 1
     },
     {
-      "type": "horse_swordsman",
-      "x": 32,
-      "z": 56,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 70,
-      "z": 60,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 73,
-      "z": 58,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 76,
-      "z": 56,
+      "type": "swordsman",
+      "x": 62,
+      "z": 108,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 45,
-      "z": 72,
+      "x": 46,
+      "z": 64,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 55,
-      "z": 72,
+      "x": 46,
+      "z": 85,
       "player_id": 1
     },
     {
       "type": "archer",
-      "x": 50,
+      "x": 46,
+      "z": 106,
+      "player_id": 1
+    },
+
+    {
+      "type": "swordsman",
+      "x": 39,
+      "z": 68,
+      "player_id": 1,
+      "description": "Second Carthaginian line: citizens and loyal infantry"
+    },
+    {
+      "type": "swordsman",
+      "x": 41,
+      "z": 78,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 41,
+      "z": 92,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 39,
+      "z": 102,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 31,
       "z": 75,
       "player_id": 1
     },
     {
-      "type": "archer",
-      "x": 60,
-      "z": 74,
+      "type": "spearman",
+      "x": 31,
+      "z": 95,
       "player_id": 1
     },
     {
-      "type": "elephant",
-      "x": 40,
-      "z": 50,
+      "type": "healer",
+      "x": 27,
+      "z": 85,
       "player_id": 1
     },
+
     {
-      "type": "elephant",
-      "x": 45,
-      "z": 48,
-      "player_id": 1
-    },
-    {
-      "type": "elephant",
-      "x": 55,
-      "z": 48,
-      "player_id": 1
-    },
-    {
-      "type": "elephant",
-      "x": 60,
-      "z": 50,
-      "player_id": 1
-    },
-    {
-      "type": "barracks",
-      "x": 30,
-      "z": 60,
+      "type": "swordsman",
+      "x": 20,
+      "z": 72,
       "player_id": 1,
-      "max_population": 180,
-      "nation": "carthage"
-    },
-    {
-      "type": "spearman",
-      "x": 165,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 168,
-      "z": 58,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 162,
-      "z": 52,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 171,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 159,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 165,
-      "z": 65,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 168,
-      "z": 68,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 162,
-      "z": 62,
-      "player_id": 2
+      "description": "Hannibal's veteran reserve"
     },
     {
       "type": "swordsman",
-      "x": 170,
-      "z": 60,
-      "player_id": 2
+      "x": 22,
+      "z": 80,
+      "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 173,
-      "z": 57,
-      "player_id": 2
+      "x": 22,
+      "z": 90,
+      "player_id": 1
     },
     {
       "type": "swordsman",
-      "x": 167,
-      "z": 63,
-      "player_id": 2
+      "x": 20,
+      "z": 98,
+      "player_id": 1
     },
     {
-      "type": "swordsman",
-      "x": 176,
-      "z": 60,
-      "player_id": 2
+      "type": "spearman",
+      "x": 15,
+      "z": 78,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 15,
+      "z": 92,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 16,
+      "z": 85,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 62,
+      "z": 36,
+      "player_id": 1,
+      "description": "Carthaginian northern cavalry wing"
     },
     {
       "type": "horse_swordsman",
-      "x": 145,
-      "z": 55,
-      "player_id": 2,
-      "description": "Roman cavalry - former Numidian allies"
+      "x": 70,
+      "z": 33,
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
-      "x": 148,
-      "z": 58,
-      "player_id": 2
+      "x": 78,
+      "z": 36,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 55,
+      "z": 42,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 62,
+      "z": 134,
+      "player_id": 1,
+      "description": "Carthaginian southern cavalry wing"
     },
     {
       "type": "horse_swordsman",
+      "x": 70,
+      "z": 137,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 78,
+      "z": 134,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 55,
+      "z": 128,
+      "player_id": 1
+    },
+
+    {
+      "type": "archer",
       "x": 142,
       "z": 52,
+      "player_id": 2,
+      "description": "Roman skirmishers opening elephant corridors"
+    },
+    {
+      "type": "archer",
+      "x": 146,
+      "z": 66,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 148,
+      "z": 80,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 146,
+      "z": 99,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 142,
+      "z": 116,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 158,
+      "z": 48,
+      "player_id": 2,
+      "description": "Roman first manipular line, deliberately leaving elephant gaps"
+    },
+    {
+      "type": "spearman",
+      "x": 160,
+      "z": 72,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 160,
+      "z": 98,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 158,
+      "z": 122,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 166,
+      "z": 50,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 168,
+      "z": 74,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 168,
+      "z": 96,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 166,
+      "z": 120,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 181,
+      "z": 54,
+      "player_id": 2,
+      "description": "Roman second line"
+    },
+    {
+      "type": "spearman",
+      "x": 183,
+      "z": 66,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 184,
+      "z": 85,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 183,
+      "z": 104,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 181,
+      "z": 116,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 192,
+      "z": 58,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 194,
+      "z": 75,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 194,
+      "z": 95,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 192,
+      "z": 112,
+      "player_id": 2
+    },
+
+    {
+      "type": "swordsman",
+      "x": 210,
+      "z": 70,
+      "player_id": 2,
+      "description": "Roman veteran reserve"
+    },
+    {
+      "type": "swordsman",
+      "x": 212,
+      "z": 80,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 212,
+      "z": 90,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 210,
+      "z": 100,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 218,
+      "z": 76,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 218,
+      "z": 94,
+      "player_id": 2
+    },
+    {
+      "type": "healer",
+      "x": 222,
+      "z": 85,
+      "player_id": 2
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 172,
+      "z": 34,
+      "player_id": 2,
+      "description": "Roman allied Numidian cavalry, northern wing"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 181,
+      "z": 29,
       "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 190,
-      "z": 55,
+      "z": 33,
+      "player_id": 2
+    },
+    {
+      "type": "horse_archer",
+      "x": 198,
+      "z": 39,
+      "player_id": 2
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 172,
+      "z": 136,
       "player_id": 2,
-      "description": "Roman cavalry flanking force"
+      "description": "Roman cavalry, southern wing"
     },
     {
       "type": "horse_swordsman",
-      "x": 193,
-      "z": 58,
+      "x": 181,
+      "z": 141,
       "player_id": 2
     },
     {
       "type": "horse_swordsman",
-      "x": 187,
-      "z": 52,
+      "x": 190,
+      "z": 137,
       "player_id": 2
     },
     {
-      "type": "archer",
-      "x": 160,
-      "z": 70,
+      "type": "horse_archer",
+      "x": 198,
+      "z": 131,
       "player_id": 2
     },
+
     {
-      "type": "archer",
-      "x": 165,
-      "z": 72,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 170,
-      "z": 70,
-      "player_id": 2
-    },
-    {
-      "type": "barracks",
-      "x": 200,
-      "z": 60,
+      "type": "spearman",
+      "x": 226,
+      "z": 76,
       "player_id": 2,
-      "max_population": 220,
-      "nation": "roman_republic"
+      "description": "Roman camp guard"
+    },
+    {
+      "type": "spearman",
+      "x": 226,
+      "z": 94,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 233,
+      "z": 84,
+      "player_id": 2
     }
   ],
   "firecamps": [
     {
-      "x": 25,
-      "z": 55,
-      "intensity": 1.2,
-      "radius": 3.5
+      "x": 27,
+      "z": 84,
+      "intensity": 1.15,
+      "radius": 3.4
     },
     {
-      "x": 35,
-      "z": 70,
-      "intensity": 1.1,
-      "radius": 3.2
+      "x": 20,
+      "z": 128,
+      "intensity": 0.95,
+      "radius": 2.8
     },
     {
-      "x": 195,
-      "z": 55,
-      "intensity": 1.2,
-      "radius": 3.5
+      "x": 226,
+      "z": 85,
+      "intensity": 1.15,
+      "radius": 3.4
     },
     {
-      "x": 185,
-      "z": 70,
-      "intensity": 1.1,
-      "radius": 3.2
+      "x": 238,
+      "z": 42,
+      "intensity": 0.95,
+      "radius": 2.8
     },
     {
-      "x": 110,
-      "z": 60,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 110,
-      "z": 15,
-      "intensity": 0.8,
-      "radius": 2.5
-    },
-    {
-      "x": 110,
-      "z": 105,
-      "intensity": 0.8,
-      "radius": 2.5
+      "x": 130,
+      "z": 85,
+      "intensity": 0.65,
+      "radius": 2.4
     }
   ],
-  "terrain": [
-    {
-      "type": "plain",
-      "x": 110,
-      "z": 60,
-      "width": 180,
-      "depth": 90,
-      "description": "Open African plain - no terrain advantage for either side"
-    },
-    {
-      "type": "hill",
-      "x": 30,
-      "z": 60,
-      "radius": 12,
-      "height": 2.5,
-      "description": "Carthaginian camp elevation",
-      "entrances": [
-        {
-          "x": 42,
-          "z": 60
-        },
-        {
-          "x": 30,
-          "z": 48
-        },
-        {
-          "x": 30,
-          "z": 72
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 200,
-      "z": 60,
-      "radius": 12,
-      "height": 2.5,
-      "description": "Roman camp elevation",
-      "entrances": [
-        {
-          "x": 188,
-          "z": 60
-        },
-        {
-          "x": 200,
-          "z": 48
-        },
-        {
-          "x": 200,
-          "z": 72
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 110,
-      "z": 110,
-      "width": 40,
-      "depth": 10,
-      "height": 3.0,
-      "description": "Southern ridge - observation position"
-    },
-    {
-      "type": "hill",
-      "x": 110,
-      "z": 10,
-      "width": 40,
-      "depth": 10,
-      "height": 3.0,
-      "description": "Northern ridge"
-    },
-    {
-      "type": "hill",
-      "x": 60,
-      "z": 20,
-      "radius": 8,
-      "height": 2.0,
-      "description": "Minor southern elevation"
-    },
-    {
-      "type": "hill",
-      "x": 160,
-      "z": 100,
-      "radius": 8,
-      "height": 2.0,
-      "description": "Minor northern elevation"
-    },
-    {
-      "type": "hill",
-      "x": 82,
-      "z": 86,
-      "radius": 9,
-      "height": 2.3,
-      "description": "Dust ridge shielding Carthaginian reserve redeployment"
-    },
-    {
-      "type": "hill",
-      "x": 142,
-      "z": 34,
-      "radius": 9,
-      "height": 2.3,
-      "description": "Numidian launch ridge on the Roman flank"
-    },
-    {
-      "type": "forest",
-      "x": 108,
-      "z": 44,
-      "radius": 8,
-      "density": 0.38,
-      "description": "Sparse oasis palms and scrub"
-    },
-    {
-      "type": "forest",
-      "x": 96,
-      "z": 88,
-      "radius": 8,
-      "density": 0.35,
-      "description": "Dry acacia belt breaking line of sight"
-    },
-    {
-      "type": "village",
-      "x": 15,
-      "z": 90,
-      "description": "African village - Carthaginian supply"
-    },
-    {
-      "type": "village",
-      "x": 210,
-      "z": 30,
-      "description": "African village - Roman supply"
-    }
-  ],
-  "rivers": [
-    {
-      "start": [
-        0,
-        42
-      ],
-      "end": [
-        220,
-        34
-      ],
-      "width": 3.0,
-      "description": "Seasonal wadi in the southern half of the battlefield"
-    },
-    {
-      "start": [
-        0,
-        78
-      ],
-      "end": [
-        220,
-        86
-      ],
-      "width": 3.0,
-      "description": "Shallow northern wadi line"
-    }
-  ],
-  "bridges": [
-    {
-      "start": [
-        106,
-        40
-      ],
-      "end": [
-        114,
-        40
-      ],
-      "width": 4.5,
-      "height": 0.6,
-      "description": "Central crossing over the southern wadi"
-    },
-    {
-      "start": [
-        106,
-        82
-      ],
-      "end": [
-        114,
-        82
-      ],
-      "width": 4.5,
-      "height": 0.6,
-      "description": "Northern crossing over the upper wadi"
-    }
-  ],
-  "roads": [
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 4.5,
-      "style": "default",
-      "waypoints": [
-        [
-          5,
-          60
-        ],
-        [
-          30,
-          58
-        ],
-        [
-          60,
-          60
-        ],
-        [
-          90,
-          60
-        ],
-        [
-          110,
-          60
-        ],
-        [
-          130,
-          60
-        ],
-        [
-          160,
-          60
-        ],
-        [
-          190,
-          58
-        ],
-        [
-          215,
-          60
-        ]
-      ],
-      "description": "Main battlefield road - ancient African trade route"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 3.0,
-      "style": "default",
-      "waypoints": [
-        [
-          15,
-          90
-        ],
-        [
-          20,
-          75
-        ],
-        [
-          25,
-          60
-        ]
-      ],
-      "description": "Path to Carthaginian supply village"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 3.0,
-      "style": "default",
-      "waypoints": [
-        [
-          210,
-          30
-        ],
-        [
-          205,
-          45
-        ],
-        [
-          200,
-          60
-        ]
-      ],
-      "description": "Path to Roman supply village"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
-      "style": "default",
-      "waypoints": [
-        [
-          110,
-          15
-        ],
-        [
-          110,
-          40
-        ],
-        [
-          110,
-          60
-        ],
-        [
-          110,
-          80
-        ],
-        [
-          110,
-          105
-        ]
-      ],
-      "description": "North-south crossing route"
-    },
-    {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.4,
-      "style": "default",
-      "waypoints": [
-        [
-          20,
-          95
-        ],
-        [
-          45,
-          82
-        ],
-        [
-          72,
-          72
-        ],
-        [
-          108,
-          60
-        ],
-        [
-          145,
-          48
-        ],
-        [
-          180,
-          35
-        ]
-      ],
-      "description": "Oblique maneuver line from Carthaginian left to Roman right"
-    }
-  ],
-  "victory": {
-    "type": "elimination",
-    "description": "Defeat Scipio's Roman army and secure Carthage's future"
-  },
-  "time_of_day": "day",
   "world_props": [
     {
+      "type": "tent",
+      "x": 27,
+      "z": 76,
+      "scale": 1.0,
+      "rotation": 0.5
+    },
+    {
+      "type": "tent",
+      "x": 27,
+      "z": 96,
+      "scale": 1.0,
+      "rotation": 2.8
+    },
+    {
+      "type": "supply_cart",
+      "x": 36,
+      "z": 77,
+      "scale": 1.0,
+      "rotation": 1.2
+    },
+    {
+      "type": "weapon_rack",
+      "x": 36,
+      "z": 94,
+      "scale": 1.0,
+      "rotation": 3.4
+    },
+    {
       "type": "ruins",
-      "x": 12.0,
-      "z": 86.0,
+      "x": 16,
+      "z": 124,
       "scale": 1.2,
       "rotation": 1.0
     },
     {
       "type": "ruins",
-      "x": 17.0,
-      "z": 93.0,
+      "x": 24,
+      "z": 131,
       "scale": 1.0,
       "rotation": 2.8
     },
     {
-      "type": "ruins",
-      "x": 11.0,
-      "z": 92.0,
+      "type": "dead_tree",
+      "x": 96,
+      "z": 51,
+      "scale": 1.0,
+      "rotation": 1.1
+    },
+    {
+      "type": "dead_tree",
+      "x": 105,
+      "z": 55,
       "scale": 0.9,
-      "rotation": 4.6
+      "rotation": 3.6
     },
     {
-      "type": "ruins",
-      "x": 206.0,
-      "z": 27.0,
-      "scale": 1.2,
-      "rotation": 0.4
+      "type": "dead_tree",
+      "x": 95,
+      "z": 118,
+      "scale": 1.0,
+      "rotation": 5.2
     },
     {
-      "type": "ruins",
-      "x": 213.0,
-      "z": 33.0,
+      "type": "dead_tree",
+      "x": 108,
+      "z": 116,
+      "scale": 0.9,
+      "rotation": 2.4
+    },
+    {
+      "type": "dead_tree",
+      "x": 151,
+      "z": 47,
+      "scale": 0.9,
+      "rotation": 0.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 159,
+      "z": 43,
+      "scale": 1.0,
+      "rotation": 4.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 151,
+      "z": 124,
+      "scale": 0.9,
+      "rotation": 1.8
+    },
+    {
+      "type": "dead_tree",
+      "x": 161,
+      "z": 128,
+      "scale": 1.0,
+      "rotation": 5.0
+    },
+    {
+      "type": "tent",
+      "x": 219,
+      "z": 74,
+      "scale": 1.0,
+      "rotation": 1.0
+    },
+    {
+      "type": "tent",
+      "x": 219,
+      "z": 96,
+      "scale": 1.0,
+      "rotation": 3.2
+    },
+    {
+      "type": "supply_cart",
+      "x": 232,
+      "z": 78,
       "scale": 1.0,
       "rotation": 2.1
     },
     {
+      "type": "weapon_rack",
+      "x": 232,
+      "z": 92,
+      "scale": 1.0,
+      "rotation": 4.4
+    },
+    {
       "type": "ruins",
-      "x": 208.0,
-      "z": 35.0,
-      "scale": 0.9,
-      "rotation": 3.9
-    },
-    {
-      "type": "dead_tree",
-      "x": 104.0,
-      "z": 40.0,
+      "x": 235,
+      "z": 38,
       "scale": 1.1,
-      "rotation": 0.9
+      "rotation": 0.4
     },
     {
-      "type": "dead_tree",
-      "x": 112.0,
-      "z": 38.0,
+      "type": "ruins",
+      "x": 242,
+      "z": 45,
       "scale": 1.0,
-      "rotation": 2.7
-    },
-    {
-      "type": "dead_tree",
-      "x": 114.0,
-      "z": 47.0,
-      "scale": 0.9,
-      "rotation": 5.3
-    },
-    {
-      "type": "dead_tree",
-      "x": 91.0,
-      "z": 84.0,
-      "scale": 1.0,
-      "rotation": 1.5
-    },
-    {
-      "type": "dead_tree",
-      "x": 99.0,
-      "z": 80.0,
-      "scale": 1.1,
-      "rotation": 3.8
-    },
-    {
-      "type": "dead_tree",
-      "x": 101.0,
-      "z": 90.0,
-      "scale": 0.9,
-      "rotation": 5.7
+      "rotation": 2.1
     }
-  ]
+  ],
+  "victory": {
+    "type": "custom",
+    "description": "Defeat Scipio's army despite his prepared counters. Use elephants to disrupt, preserve Hannibal's veteran reserve, survive the Roman cavalry return, and break the Roman camp.",
+    "primary_objectives": [
+      "Send the elephants forward and disrupt Scipio's first line",
+      "Do not allow the first Carthaginian line to collapse before the veterans are committed",
+      "Hold both cavalry wings long enough to prevent an early rear attack",
+      "Commit Hannibal's veteran reserve only after the Roman second line is engaged",
+      "Capture or destroy the Roman command camp"
+    ],
+    "secondary_objectives": [
+      "Keep at least two elephants alive after the first clash",
+      "Destroy the Roman skirmishers opening the elephant corridors",
+      "Seize the Roman allied supply post",
+      "Prevent Roman cavalry from reaching the Carthaginian camp road"
+    ],
+    "elephant_corridors": [
+      {
+        "name": "northern_corridor",
+        "x": 132,
+        "z": 60,
+        "width": 120,
+        "depth": 12
+      },
+      {
+        "name": "central_corridor",
+        "x": 132,
+        "z": 85,
+        "width": 120,
+        "depth": 12
+      },
+      {
+        "name": "southern_corridor",
+        "x": 132,
+        "z": 110,
+        "width": 120,
+        "depth": 12
+      }
+    ],
+    "roman_cavalry_return_zones": [
+      {
+        "name": "northern_return",
+        "x": 65,
+        "z": 25,
+        "radius": 14
+      },
+      {
+        "name": "southern_return",
+        "x": 65,
+        "z": 145,
+        "radius": 14
+      }
+    ],
+    "failure_hint": "If the elephants are wasted, the cavalry wings collapse early, or the veterans are committed too soon, Scipio's reserves will grind down Hannibal's army."
+  }
 }

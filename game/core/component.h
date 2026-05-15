@@ -248,6 +248,36 @@ public:
   bool should_chase{false};
 };
 
+class RpgCommanderTargetComponent : public Component {
+public:
+  RpgCommanderTargetComponent() = default;
+
+  EntityID explicit_lock_target_id{0};
+  EntityID aim_candidate_id{0};
+  EntityID recent_hit_target_id{0};
+  float recent_hit_timer{0.0F};
+};
+
+enum class RpgCommanderActionPhase : std::uint8_t {
+  None,
+  Strike,
+  Guard,
+  Dodge,
+  Jump,
+  Ability
+};
+
+class RpgCommanderActionComponent : public Component {
+public:
+  RpgCommanderActionComponent() = default;
+
+  RpgCommanderActionPhase phase{RpgCommanderActionPhase::None};
+  EntityID active_target_id{0};
+  EntityID last_hit_target_id{0};
+  int last_damage{0};
+  float phase_time{0.0F};
+};
+
 enum class CombatAttackFamily : std::uint8_t {
   None = 0,
   Sword = 1,
@@ -419,11 +449,20 @@ public:
   bool fpv_controlled{false};
   int combo_step{0};
   bool power_strike_active{false};
-  float special_cooldown_remaining{0.0F};
+  float shield_bash_cooldown_remaining{0.0F};
+  float vanguard_rush_cooldown_remaining{0.0F};
+  float second_wind_cooldown_remaining{0.0F};
   bool just_struck_enemy{false};
+  std::uint8_t last_strike_combo_step{0U};
   bool jump_active{false};
   float jump_phase{0.0F};
   float jump_height_offset{0.0F};
+  float fpv_motion_vx{0.0F};
+  float fpv_motion_vz{0.0F};
+  float posture{0.0F};
+  float posture_max{100.0F};
+  float punish_window_remaining{0.0F};
+  bool close_camera_mode{false};
 };
 
 class CommanderGuardComponent : public Component {
@@ -433,6 +472,9 @@ public:
   bool active{false};
   float frontal_arc_dot{0.15F};
   float damage_multiplier{0.45F};
+  float perfect_guard_remaining{0.0F};
+  float guard_break_remaining{0.0F};
+  bool rearm_requires_release{false};
 };
 
 class RpgHealthComponent : public Component {

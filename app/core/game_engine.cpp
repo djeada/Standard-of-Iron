@@ -308,7 +308,7 @@ GameEngine::GameEngine(QObject* parent)
           &LoadingProgressTracker::stage_changed,
           this,
           [this](LoadingProgressTracker::LoadingStage, QString detail) {
-            emit loading_stage_changed(detail);
+            emit loading_stage_changed(std::move(detail));
           });
 
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
@@ -405,7 +405,7 @@ GameEngine::GameEngine(QObject* parent)
   }
 
   connect(m_cursor_manager.get(), &CursorManager::mode_changed, this, [this]() {
-    if (m_cursor_manager && m_window) {
+    if (m_cursor_manager && (m_window != nullptr)) {
       m_cursor_manager->update_cursor_shape(m_window);
     }
     emit cursor_mode_changed();
@@ -723,7 +723,7 @@ void GameEngine::on_build_command() {
 }
 
 void GameEngine::on_guard_click(qreal sx, qreal sy) {
-  if (!m_input_handler || !m_camera) {
+  if (!m_input_handler || (m_camera == nullptr)) {
     return;
   }
   ensure_initialized();
@@ -829,7 +829,7 @@ void GameEngine::on_construction_cancel() {
 }
 
 void GameEngine::on_patrol_click(qreal sx, qreal sy) {
-  if (!m_input_handler || !m_camera) {
+  if (!m_input_handler || (m_camera == nullptr)) {
     return;
   }
   ensure_initialized();
@@ -972,9 +972,18 @@ bool GameEngine::enter_commander_control_mode() {
     commander_data->rally_requested = false;
     commander_data->rally_requires_manual_trigger = true;
     commander_data->fpv_controlled = true;
+    commander_data->combo_step = 0;
+    commander_data->power_strike_active = false;
+    commander_data->just_struck_enemy = false;
+    commander_data->last_strike_combo_step = 0U;
     commander_data->jump_active = false;
     commander_data->jump_phase = 0.0F;
     commander_data->jump_height_offset = 0.0F;
+    commander_data->posture = 0.0F;
+    commander_data->punish_window_remaining = 0.0F;
+    commander_data->shield_bash_cooldown_remaining = 0.0F;
+    commander_data->vanguard_rush_cooldown_remaining = 0.0F;
+    commander_data->second_wind_cooldown_remaining = 0.0F;
   }
   if (auto* transform = commander->get_component<Engine::Core::TransformComponent>()) {
     m_commander_control.set_view_yaw(transform->rotation.y);
@@ -997,21 +1006,10 @@ bool GameEngine::enter_commander_control_mode() {
     }
     rpg->active = true;
   }
-
-  Game::Systems::CombatRules::clear_rts_combat_tracking(commander);
-
-  if (m_world != nullptr) {
-    for (auto* entity :
-         m_world->get_entities_with<Engine::Core::AttackTargetComponent>()) {
-      if (entity == nullptr) {
-        continue;
-      }
-      auto* atk = entity->get_component<Engine::Core::AttackTargetComponent>();
-      if (atk != nullptr && atk->target_id == m_controlled_commander_id) {
-        entity->remove_component<Engine::Core::AttackTargetComponent>();
-      }
-    }
-  }
+  (void)Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
+      commander);
+  (void)Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
+      commander);
 
   emit game_mode_changed();
   if (m_world != nullptr && m_commander_camera != nullptr) {
@@ -1159,6 +1157,28 @@ void GameEngine::commander_special_action() {
   m_commander_control.special_action();
 }
 
+void GameEngine::commander_vanguard_rush() {
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return;
+  }
+  m_commander_control.request_vanguard_rush();
+}
+
+void GameEngine::commander_second_wind() {
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return;
+  }
+  m_commander_control.request_second_wind();
+}
+
+void GameEngine::commander_toggle_camera_mode() {
+  if (m_control_mode != PlayerControlMode::Commander || m_world == nullptr) {
+    return;
+  }
+  m_commander_control.toggle_close_camera_mode(
+      *m_world, m_controlled_commander_id, m_runtime.local_owner_id);
+}
+
 void GameEngine::commander_mouse_move(qreal dx, qreal dy) {
   m_commander_control.mouse_move(dx, dy);
 }
@@ -1184,11 +1204,11 @@ void GameEngine::update_cursor(Qt::CursorShape new_cursor) {
   }
   if (m_runtime.current_cursor != new_cursor) {
     m_runtime.current_cursor = new_cursor;
-    QPointer<QQuickWindow> safe_window(m_window);
+    QPointer<QQuickWindow> const safe_window(m_window);
     QMetaObject::invokeMethod(
         m_window,
         [safe_window, new_cursor]() {
-          if (safe_window) {
+          if (safe_window != nullptr) {
             safe_window->setCursor(new_cursor);
           }
         },
@@ -1345,18 +1365,43 @@ void GameEngine::clear_controlled_commander_state() {
     commander_data->rally_requested = false;
     commander_data->rally_requires_manual_trigger = false;
     commander_data->fpv_controlled = false;
+    commander_data->power_strike_active = false;
+    commander_data->just_struck_enemy = false;
+    commander_data->last_strike_combo_step = 0U;
     commander_data->jump_active = false;
     commander_data->jump_phase = 0.0F;
     commander_data->jump_height_offset = 0.0F;
+    commander_data->posture = 0.0F;
+    commander_data->punish_window_remaining = 0.0F;
+    commander_data->shield_bash_cooldown_remaining = 0.0F;
+    commander_data->vanguard_rush_cooldown_remaining = 0.0F;
+    commander_data->second_wind_cooldown_remaining = 0.0F;
   }
   if (auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>()) {
     guard->active = false;
+    guard->perfect_guard_remaining = 0.0F;
+    guard->guard_break_remaining = 0.0F;
+    guard->rearm_requires_release = false;
   }
   if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
     rpg->active = false;
     rpg->dodge_invincible = false;
   }
-  Game::Systems::CombatRules::clear_rts_combat_tracking(commander);
+  if (auto* rpg_targets =
+          commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
+    rpg_targets->explicit_lock_target_id = 0;
+    rpg_targets->aim_candidate_id = 0;
+    rpg_targets->recent_hit_target_id = 0;
+    rpg_targets->recent_hit_timer = 0.0F;
+  }
+  if (auto* rpg_action =
+          commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
+    rpg_action->phase = Engine::Core::RpgCommanderActionPhase::None;
+    rpg_action->active_target_id = 0;
+    rpg_action->last_hit_target_id = 0;
+    rpg_action->last_damage = 0;
+    rpg_action->phase_time = 0.0F;
+  }
   reset_movement(commander);
 }
 
@@ -1426,7 +1471,7 @@ void GameEngine::update(float dt) {
     m_renderer->update_animation_time(dt);
   }
 
-  if (m_camera) {
+  if (m_camera != nullptr) {
     m_camera->update(dt);
   }
 
@@ -1435,8 +1480,13 @@ void GameEngine::update(float dt) {
     log_render_stage_once(
         "simulation-update",
         QStringLiteral("world systems run before render; combat queries rebuild here"));
-    m_world->update(dt);
-    (this->*m_control_mode_update)(dt);
+    if (m_control_mode == PlayerControlMode::Commander) {
+      (this->*m_control_mode_update)(dt);
+      m_world->update(dt);
+    } else {
+      m_world->update(dt);
+      (this->*m_control_mode_update)(dt);
+    }
 
     auto& visibility_service = Game::Map::VisibilityService::instance();
     if (visibility_service.is_initialized() && !m_level.is_spectator_mode) {
@@ -1496,7 +1546,7 @@ void GameEngine::update(float dt) {
       m_rain->set_intensity(m_rain_manager->get_intensity());
       m_rain->set_weather_type(m_rain_manager->get_weather_type());
       m_rain->set_wind_strength(m_rain_manager->get_wind_strength());
-      if (m_camera) {
+      if (m_camera != nullptr) {
         m_rain->set_camera_position(m_camera->get_position());
       }
     }
@@ -1538,7 +1588,15 @@ void GameEngine::render(int pixel_width, int pixel_height) {
 
   if (auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>()) {
     const auto& sel = selection_system->get_selected_units();
-    std::vector<unsigned int> const ids(sel.begin(), sel.end());
+    std::vector<unsigned int> ids;
+    ids.reserve(sel.size());
+    for (const auto id : sel) {
+      if (m_control_mode == PlayerControlMode::Commander &&
+          id == m_controlled_commander_id) {
+        continue;
+      }
+      ids.push_back(id);
+    }
     m_renderer->set_selected_entities(ids);
   }
 
@@ -1565,7 +1623,7 @@ void GameEngine::render(int pixel_width, int pixel_height) {
 
 void GameEngine::render_game_effects() {
   auto* res = m_renderer->resources();
-  if (!res) {
+  if (res == nullptr) {
     return;
   }
 
@@ -1591,10 +1649,17 @@ void GameEngine::render_game_effects() {
 
   if (m_game_mode == GameMode::Rpg && m_control_mode == PlayerControlMode::Commander &&
       m_controlled_commander_id != 0) {
+    Engine::Core::EntityID locked_target_id = m_commander_control.locked_target_id();
+    if (auto* commander = m_world->get_entity(m_controlled_commander_id)) {
+      if (auto* rpg_targets =
+              commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
+        locked_target_id = rpg_targets->explicit_lock_target_id;
+      }
+    }
     m_rpg_telegraphs.render(m_renderer.get(),
                             m_world.get(),
                             m_controlled_commander_id,
-                            m_commander_control.locked_target_id(),
+                            locked_target_id,
                             m_renderer->get_animation_time());
   }
 
@@ -1646,7 +1711,7 @@ void GameEngine::update_loading_overlay() {
     return;
   }
 
-  if (!m_renderer || !m_renderer->resources()) {
+  if (!m_renderer || (m_renderer->resources() == nullptr)) {
     m_loading_overlay_frames_remaining = 5;
     m_loading_overlay_timer.restart();
     return;
@@ -1715,10 +1780,12 @@ void GameEngine::update_civilian_delivery_availability() {
   if (m_world && m_hover_tracker) {
     const auto hovered_id = m_hover_tracker->get_last_hovered_entity();
     auto* hovered = hovered_id != 0 ? m_world->get_entity(hovered_id) : nullptr;
-    auto* hovered_unit =
-        hovered ? hovered->get_component<Engine::Core::UnitComponent>() : nullptr;
+    auto* hovered_unit = (hovered != nullptr)
+                             ? hovered->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
     const bool hovered_friendly_barracks =
-        hovered_unit && hovered_unit->owner_id == m_runtime.local_owner_id &&
+        (hovered_unit != nullptr) &&
+        hovered_unit->owner_id == m_runtime.local_owner_id &&
         hovered_unit->spawn_type == Game::Units::SpawnType::Barracks;
 
     if (hovered_friendly_barracks) {
@@ -1727,7 +1794,7 @@ void GameEngine::update_civilian_delivery_availability() {
         for (const auto id : selection_system->get_selected_units()) {
           auto* selected_entity = m_world->get_entity(id);
           auto* selected_unit =
-              selected_entity
+              (selected_entity != nullptr)
                   ? selected_entity->get_component<Engine::Core::UnitComponent>()
                   : nullptr;
           if ((selected_unit != nullptr) &&
@@ -1865,7 +1932,8 @@ void GameEngine::on_minimap_left_click(qreal mx,
                                        qreal minimap_width,
                                        qreal minimap_height) {
   ensure_initialized();
-  if (!m_camera || !m_minimap_manager || !m_minimap_manager->has_minimap()) {
+  if ((m_camera == nullptr) || !m_minimap_manager ||
+      !m_minimap_manager->has_minimap()) {
     return;
   }
 
@@ -1874,8 +1942,8 @@ void GameEngine::on_minimap_left_click(qreal mx,
     return;
   }
 
-  const float img_width = static_cast<float>(minimap_img.width());
-  const float img_height = static_cast<float>(minimap_img.height());
+  const auto img_width = static_cast<float>(minimap_img.width());
+  const auto img_height = static_cast<float>(minimap_img.height());
 
   const float px =
       (static_cast<float>(mx) / static_cast<float>(minimap_width)) * img_width;
@@ -1891,7 +1959,7 @@ void GameEngine::on_minimap_left_click(qreal mx,
                                          img_height,
                                          m_minimap_manager->get_tile_size());
 
-  if (m_camera) {
+  if (m_camera != nullptr) {
     const QVector3D new_target(world_x, 0.0F, world_z);
     const QVector3D current_target = m_camera->get_target();
     const QVector3D current_position = m_camera->get_position();
@@ -1922,8 +1990,8 @@ void GameEngine::on_minimap_right_click(qreal mx,
     return;
   }
 
-  const float img_width = static_cast<float>(minimap_img.width());
-  const float img_height = static_cast<float>(minimap_img.height());
+  const auto img_width = static_cast<float>(minimap_img.width());
+  const auto img_height = static_cast<float>(minimap_img.height());
 
   const float px =
       (static_cast<float>(mx) / static_cast<float>(minimap_width)) * img_width;
@@ -1940,7 +2008,7 @@ void GameEngine::on_minimap_right_click(qreal mx,
                                          m_minimap_manager->get_tile_size());
 
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-  if (!selection_system) {
+  if (selection_system == nullptr) {
     return;
   }
 
@@ -2069,6 +2137,26 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["rally_feedback_time"] = 0.0;
   result["rally_ready"] = false;
   result["aura_active"] = false;
+  result["posture"] = 0.0;
+  result["posture_max"] = 100.0;
+  result["posture_ratio"] = 0.0;
+  result["punish_window_remaining"] = 0.0;
+  result["punish_active"] = false;
+  result["perfect_guard_remaining"] = 0.0;
+  result["perfect_guard_active"] = false;
+  result["guard_break_remaining"] = 0.0;
+  result["guard_broken"] = false;
+  result["finisher_ready"] = false;
+  result["camera_mode"] = QStringLiteral("Chase");
+  result["shield_bash_cooldown"] = 3.0;
+  result["shield_bash_cooldown_remaining"] = 0.0;
+  result["shield_bash_ready"] = true;
+  result["vanguard_rush_cooldown"] = 4.5;
+  result["vanguard_rush_cooldown_remaining"] = 0.0;
+  result["vanguard_rush_ready"] = true;
+  result["second_wind_cooldown"] = 8.0;
+  result["second_wind_cooldown_remaining"] = 0.0;
+  result["second_wind_ready"] = true;
 
   if (m_world == nullptr || m_controlled_commander_id == 0) {
     return result;
@@ -2142,19 +2230,57 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["rally_feedback_time"] = commander->rally_feedback_time;
   result["rally_ready"] = commander->rally_cooldown_remaining <= 0.0F;
   result["aura_active"] = commander->aura_active && !commander->wounded;
+  result["posture"] = static_cast<double>(commander->posture);
+  result["posture_max"] = static_cast<double>(commander->posture_max);
+  result["posture_ratio"] =
+      commander->posture_max > 0.0F
+          ? static_cast<double>(commander->posture / commander->posture_max)
+          : 0.0;
+  result["punish_window_remaining"] =
+      static_cast<double>(commander->punish_window_remaining);
+  result["punish_active"] = commander->punish_window_remaining > 0.0F;
+  result["finisher_ready"] = commander->combo_step >= 3;
+  result["camera_mode"] =
+      commander->close_camera_mode ? QStringLiteral("Close") : QStringLiteral("Chase");
 
   result["combo_step"] = commander->combo_step;
-  result["special_cooldown"] = 3.0;
-  result["special_cooldown_remaining"] =
-      static_cast<double>(commander->special_cooldown_remaining);
-  result["special_ready"] = commander->special_cooldown_remaining <= 0.0F;
+  result["shield_bash_cooldown"] = 3.0;
+  result["shield_bash_cooldown_remaining"] =
+      static_cast<double>(commander->shield_bash_cooldown_remaining);
+  result["shield_bash_ready"] = commander->shield_bash_cooldown_remaining <= 0.0F;
+  result["vanguard_rush_cooldown"] = 4.5;
+  result["vanguard_rush_cooldown_remaining"] =
+      static_cast<double>(commander->vanguard_rush_cooldown_remaining);
+  result["vanguard_rush_ready"] = commander->vanguard_rush_cooldown_remaining <= 0.0F;
+  result["second_wind_cooldown"] = 8.0;
+  result["second_wind_cooldown_remaining"] =
+      static_cast<double>(commander->second_wind_cooldown_remaining);
+  result["second_wind_ready"] = commander->second_wind_cooldown_remaining <= 0.0F;
+
+  if (auto* guard =
+          commander_entity != nullptr
+              ? commander_entity->get_component<Engine::Core::CommanderGuardComponent>()
+              : nullptr) {
+    result["perfect_guard_remaining"] =
+        static_cast<double>(guard->perfect_guard_remaining);
+    result["perfect_guard_active"] = guard->perfect_guard_remaining > 0.0F;
+    result["guard_break_remaining"] = static_cast<double>(guard->guard_break_remaining);
+    result["guard_broken"] = guard->guard_break_remaining > 0.0F;
+  }
 
   result["locked_target_name"] = QString();
   result["locked_target_hp"] = 0;
   result["locked_target_max_hp"] = 0;
   result["locked_target_hp_ratio"] = 0.0;
 
-  const auto locked_id = m_commander_control.locked_target_id();
+  Engine::Core::EntityID locked_id = m_commander_control.locked_target_id();
+  if (auto* rpg_targets =
+          commander_entity != nullptr
+              ? commander_entity
+                    ->get_component<Engine::Core::RpgCommanderTargetComponent>()
+              : nullptr) {
+    locked_id = rpg_targets->explicit_lock_target_id;
+  }
   if (locked_id != 0 && m_world != nullptr) {
     auto* locked_ent = m_world->get_entity(locked_id);
     if (locked_ent != nullptr) {
@@ -2345,7 +2471,7 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
     ai_player.insert("playerName", ai_setup.nation);
     ai_player.insert("colorIndex", player_id - 1);
 
-    int team_id;
+    int team_id = 0;
     if (ai_setup.team_id.has_value()) {
       team_id = ai_setup.team_id.value();
     } else {
@@ -2379,7 +2505,8 @@ void GameEngine::mark_current_mission_completed() {
   }
 
   QString error;
-  bool success = m_save_load_service->mark_campaign_completed(campaign_id, &error);
+  bool const success =
+      m_save_load_service->mark_campaign_completed(campaign_id, &error);
   if (!success) {
     qWarning() << "Failed to mark campaign as completed:" << error;
   } else {
@@ -2468,7 +2595,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     ensure_initialized();
   }
 
-  if (!m_world || !m_renderer || !m_camera) {
+  if (!m_world || !m_renderer || (m_camera == nullptr)) {
     set_error("Cannot start skirmish: renderer not initialized");
     return;
   }
@@ -2491,7 +2618,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
 void GameEngine::perform_skirmish_load(const QString& map_path,
                                        const QVariantList& player_configs) {
 
-  if (!(m_world && m_renderer && m_camera)) {
+  if (!m_world || !m_renderer || (m_camera == nullptr)) {
     set_error("Cannot start skirmish: renderer not initialized");
     m_runtime.loading = false;
     emit is_loading_changed();
@@ -2503,15 +2630,16 @@ void GameEngine::perform_skirmish_load(const QString& map_path,
   }
 
   LevelOrchestrator orchestrator;
-  LevelOrchestrator::RendererRefs renderers{m_renderer.get(),
-                                            m_camera,
-                                            m_surface ? m_surface->ground() : nullptr,
-                                            m_surface ? m_surface->terrain() : nullptr,
-                                            m_features.get(),
-                                            m_scatter.get(),
-                                            m_fog.get(),
-                                            m_boundary_fog.get(),
-                                            m_rain.get()};
+  LevelOrchestrator::RendererRefs const renderers{
+      m_renderer.get(),
+      m_camera,
+      m_surface ? m_surface->ground() : nullptr,
+      m_surface ? m_surface->terrain() : nullptr,
+      m_features.get(),
+      m_scatter.get(),
+      m_fog.get(),
+      m_boundary_fog.get(),
+      m_rain.get()};
 
   auto visibility_ready = [this]() {
     m_runtime.visibility_version = Game::Map::VisibilityService::instance().version();
@@ -2680,15 +2808,15 @@ void GameEngine::apply_mission_setup() {
     const QString trimmed = color_name.trimmed();
     if (trimmed.startsWith('#') && trimmed.length() == 7) {
       bool ok = false;
-      int r = trimmed.mid(1, 2).toInt(&ok, 16);
+      int const r = trimmed.mid(1, 2).toInt(&ok, 16);
       if (!ok) {
         return false;
       }
-      int g = trimmed.mid(3, 2).toInt(&ok, 16);
+      int const g = trimmed.mid(3, 2).toInt(&ok, 16);
       if (!ok) {
         return false;
       }
-      int b = trimmed.mid(5, 2).toInt(&ok, 16);
+      int const b = trimmed.mid(5, 2).toInt(&ok, 16);
       if (!ok) {
         return false;
       }
@@ -2735,7 +2863,7 @@ void GameEngine::apply_mission_setup() {
   };
 
   auto apply_owner_color = [&](int owner_id, const QString& color_name) {
-    std::array<float, 3> color;
+    std::array<float, 3> color{};
     if (!parse_color(color_name, color)) {
       return;
     }
@@ -2940,7 +3068,7 @@ void GameEngine::apply_mission_setup() {
                                             "AI Player " + std::to_string(ai_owner_id));
     }
 
-    int team_id;
+    int team_id = 0;
     if (ai_setup.team_id.has_value()) {
       team_id = ai_setup.team_id.value();
     } else {
@@ -3013,7 +3141,7 @@ void GameEngine::apply_mission_setup() {
     }
   }
 
-  int prev_selected_player = m_selected_player_id;
+  int const prev_selected_player = m_selected_player_id;
   GameStateRestorer::rebuild_registries_after_load(
       m_world.get(), m_selected_player_id, m_level, m_runtime.local_owner_id);
   GameStateRestorer::rebuild_entity_cache(
@@ -3092,7 +3220,7 @@ void GameEngine::reset_preload_interaction_state() {
     m_renderer->set_hovered_entity_id(0);
   }
 
-  if (m_hover_tracker && m_world && m_camera) {
+  if (m_hover_tracker && m_world && (m_camera != nullptr)) {
     m_hover_tracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
   }
 
@@ -3240,7 +3368,7 @@ void GameEngine::spawn_mission_wave(const PendingMissionWave& wave) {
 }
 
 void GameEngine::center_camera_on_local_forces() {
-  if (!m_world || !m_camera) {
+  if (!m_world || (m_camera == nullptr)) {
     return;
   }
 
@@ -3397,15 +3525,16 @@ auto GameEngine::load_from_slot(const QString& slot) -> bool {
   Game::Systems::GameStateSerializer::restore_runtime_from_metadata(meta, runtime_snap);
   apply_runtime_snapshot(runtime_snap);
 
-  GameStateRestorer::RendererRefs renderers{m_renderer.get(),
-                                            m_camera,
-                                            m_surface ? m_surface->ground() : nullptr,
-                                            m_surface ? m_surface->terrain() : nullptr,
-                                            m_features.get(),
-                                            m_scatter.get(),
-                                            m_fog.get(),
-                                            m_boundary_fog.get(),
-                                            m_rain.get()};
+  GameStateRestorer::RendererRefs const renderers{
+      m_renderer.get(),
+      m_camera,
+      m_surface ? m_surface->ground() : nullptr,
+      m_surface ? m_surface->terrain() : nullptr,
+      m_features.get(),
+      m_scatter.get(),
+      m_fog.get(),
+      m_boundary_fog.get(),
+      m_rain.get()};
   GameStateRestorer::restore_environment_from_metadata(
       meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id, m_viewport);
 
@@ -3746,7 +3875,7 @@ auto GameEngine::minimap_image() const -> QImage {
   if (m_minimap_manager) {
     return m_minimap_manager->get_image();
   }
-  return QImage();
+  return {};
 }
 
 auto GameEngine::generate_map_preview(
@@ -3772,5 +3901,5 @@ QString GameEngine::loading_stage_text() const {
     }
     return stage_name;
   }
-  return QString();
+  return {};
 }
