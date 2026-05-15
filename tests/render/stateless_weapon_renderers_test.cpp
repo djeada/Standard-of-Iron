@@ -249,8 +249,16 @@ auto project_aabb_on_axis(const AABB& box,
   return range;
 }
 
+auto axis_span(const AABB& box,
+               const QVector3D& origin,
+               const QVector3D& axis) -> float {
+  const auto [min_projection, max_projection] =
+      project_aabb_on_axis(box, origin, axis.normalized());
+  return max_projection - min_projection;
+}
+
 template <class Renderer, class Cfg>
-void run_stateless_battery(Renderer& renderer, const Cfg& cfg_a, const Cfg& cfg_b) {
+void run_stateless_battery(const Cfg& cfg_a, const Cfg& cfg_b) {
   const auto frames = make_frames();
   const auto anim = make_anim();
   const auto palette = make_palette();
@@ -661,6 +669,27 @@ TEST(StatelessWeaponRenderers, RomanScutumKeepsModerateStandOffFromGrip) {
           : std::min(std::abs(min_side), std::abs(max_side));
   EXPECT_GT(nearest_edge_offset, 0.24F);
   EXPECT_LT(nearest_edge_offset, 0.34F);
+}
+
+TEST(StatelessWeaponRenderers, RomanScutumDefaultKeepsSideCarriedOrientation) {
+  auto frames = make_frames();
+  frames.hand_l.radius = 0.05F;
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch batch;
+  RomanScutumRenderer::submit(RomanScutumConfig{}, ctx, frames, palette, anim, batch);
+
+  ASSERT_EQ(batch.archetypes.size(), 1U);
+  const auto grip = Render::Humanoid::socket_attachment_frame(
+      frames.hand_l, Render::Humanoid::HumanoidSocket::GripL);
+  const AABB world_box = archetype_world_aabb(batch.archetypes.front());
+  const float side_span = axis_span(world_box, grip.origin, grip.right.normalized());
+  const float forward_span =
+      axis_span(world_box, grip.origin, grip.forward.normalized());
+
+  EXPECT_GT(forward_span, side_span + 0.20F);
 }
 
 TEST(StatelessWeaponRenderers, BaseConfigPreservedAcrossSubmitPaths) {

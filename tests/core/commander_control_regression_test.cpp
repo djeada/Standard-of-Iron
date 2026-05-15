@@ -121,8 +121,10 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   ASSERT_FALSE(source.empty());
 
   EXPECT_TRUE(contains(source, "constexpr float k_camera_back_offset = 2.15F;"));
+  EXPECT_TRUE(contains(source, "constexpr float k_close_camera_back_offset = 1.25F;"));
+  EXPECT_TRUE(contains(source, "constexpr float k_commander_near_plane = 0.05F;"));
   EXPECT_TRUE(contains(source, "const QVector3D flat_forward("));
-  EXPECT_TRUE(contains(source, "pivot - flat_forward * k_camera_back_offset"));
+  EXPECT_TRUE(contains(source, "pivot - flat_forward * back_offset"));
 
   EXPECT_TRUE(contains(source, "camera.look_at(m_cam_eye_smooth + shake_offset"));
   EXPECT_TRUE(contains(source, "m_cam_target_smooth + shake_offset"));
@@ -258,6 +260,10 @@ TEST(CommanderControlRegressionTest, FpvAttackAlwaysTriggersAnimationEvenWithNoT
   EXPECT_TRUE(
       contains(source, "find_primary_target(world, commander_id, local_owner_id);"));
   EXPECT_TRUE(contains(source, "if (target_id == 0) {"));
+  EXPECT_TRUE(contains(
+      source,
+      "Game::Systems::Combat::deal_damage(&world, target, damage, commander_id);"));
+  EXPECT_FALSE(contains(source, "target_comp->target_id = target_id;"));
 }
 
 TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
@@ -302,6 +308,10 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
 
   EXPECT_TRUE(
       contains(attack_processor, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_FALSE(
+      contains(attack_processor, "CombatRules::clear_rts_melee_lock(attacker);"));
+  EXPECT_FALSE(
+      contains(attack_processor, "CombatRules::clear_rts_melee_lock(target);"));
   EXPECT_TRUE(contains(movement_system, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(contains(command_service, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(contains(scene_renderer, "CombatRules::participates_in_rts_melee_lock"));
@@ -317,7 +327,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
 
   EXPECT_TRUE(contains(game_engine, "commander_data->fpv_controlled = true;"));
   EXPECT_TRUE(contains(game_engine, "commander_data->fpv_controlled = false;"));
-  EXPECT_TRUE(
+  EXPECT_FALSE(
       contains(game_engine, "CombatRules::clear_rts_combat_tracking(commander);"));
   EXPECT_FALSE(contains(controller, "atk->in_melee_lock = false;"));
 }
@@ -376,6 +386,98 @@ TEST(CommanderControlRegressionTest, CommanderJumpKeyIsWiredThroughAdapter) {
       contains(controller_source, "void CommanderControlController::request_jump()"));
 }
 
+TEST(CommanderControlRegressionTest, CommanderCameraToggleIsWiredThroughAdapter) {
+  const auto root = find_repo_root();
+  const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
+  const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
+  const auto adapter_header =
+      read_text(root / "app" / "core" / "commander_input_adapter.h");
+  const auto adapter_source =
+      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
+  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto controller_header =
+      read_text(root / "app" / "core" / "commander_control_controller.h");
+  const auto controller_source =
+      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  ASSERT_FALSE(layer_source.empty());
+  ASSERT_FALSE(game_view_source.empty());
+  ASSERT_FALSE(adapter_header.empty());
+  ASSERT_FALSE(adapter_source.empty());
+  ASSERT_FALSE(engine_header.empty());
+  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(controller_header.empty());
+  ASSERT_FALSE(controller_source.empty());
+
+  EXPECT_TRUE(contains(layer_source, "case Qt.Key_C:"));
+  EXPECT_TRUE(contains(layer_source, "root.commanderInput.toggle_camera_mode()"));
+  EXPECT_TRUE(contains(game_view_source, "case Qt.Key_C:"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander_toggle_camera_mode()"));
+  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void toggle_camera_mode();"));
+  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_toggle_camera_mode();"));
+  EXPECT_TRUE(
+      contains(engine_header, "Q_INVOKABLE void commander_toggle_camera_mode();"));
+  EXPECT_TRUE(
+      contains(engine_source, "void GameEngine::commander_toggle_camera_mode()"));
+  EXPECT_TRUE(contains(controller_header, "void toggle_close_camera_mode("));
+  EXPECT_TRUE(contains(controller_source,
+                       "void CommanderControlController::toggle_close_camera_mode("));
+}
+
+TEST(CommanderControlRegressionTest, CommanderAbilityKitIsWiredThroughAdapter) {
+  const auto root = find_repo_root();
+  const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
+  const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
+  const auto overlay_source = read_text(root / "ui" / "qml" / "RpgFpvOverlay.qml");
+  const auto commander_hud_source =
+      read_text(root / "ui" / "qml" / "HUDBottomCommander.qml");
+  const auto adapter_header =
+      read_text(root / "app" / "core" / "commander_input_adapter.h");
+  const auto adapter_source =
+      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
+  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto controller_header =
+      read_text(root / "app" / "core" / "commander_control_controller.h");
+  ASSERT_FALSE(layer_source.empty());
+  ASSERT_FALSE(game_view_source.empty());
+  ASSERT_FALSE(overlay_source.empty());
+  ASSERT_FALSE(commander_hud_source.empty());
+  ASSERT_FALSE(adapter_header.empty());
+  ASSERT_FALSE(adapter_source.empty());
+  ASSERT_FALSE(engine_header.empty());
+  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(controller_header.empty());
+
+  EXPECT_TRUE(contains(layer_source, "case Qt.Key_1:"));
+  EXPECT_TRUE(contains(layer_source, "root.commanderInput.vanguard_rush()"));
+  EXPECT_TRUE(contains(layer_source, "case Qt.Key_2:"));
+  EXPECT_TRUE(contains(layer_source, "root.commanderInput.second_wind()"));
+  EXPECT_TRUE(contains(game_view_source, "case Qt.Key_1:"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander_vanguard_rush()"));
+  EXPECT_TRUE(contains(game_view_source, "case Qt.Key_2:"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander_second_wind()"));
+  EXPECT_TRUE(contains(overlay_source, "\"key\": \"1\""));
+  EXPECT_TRUE(contains(overlay_source, "\"key\": \"2\""));
+  EXPECT_TRUE(contains(overlay_source, "get_controlled_commander_status"));
+  EXPECT_TRUE(contains(overlay_source, "cooldown_ratio"));
+  EXPECT_TRUE(contains(overlay_source, "vanguard_rush_cooldown_remaining"));
+  EXPECT_TRUE(contains(overlay_source, "second_wind_cooldown_remaining"));
+  EXPECT_TRUE(contains(overlay_source, "shield_bash_cooldown_remaining"));
+  EXPECT_TRUE(contains(commander_hud_source, "Vanguard Rush"));
+  EXPECT_TRUE(contains(commander_hud_source, "Second Wind"));
+  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void vanguard_rush();"));
+  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void second_wind();"));
+  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_vanguard_rush();"));
+  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_second_wind();"));
+  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_vanguard_rush();"));
+  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_second_wind();"));
+  EXPECT_TRUE(contains(engine_source, "void GameEngine::commander_vanguard_rush()"));
+  EXPECT_TRUE(contains(engine_source, "void GameEngine::commander_second_wind()"));
+  EXPECT_TRUE(contains(controller_header, "void request_vanguard_rush();"));
+  EXPECT_TRUE(contains(controller_header, "void request_second_wind();"));
+}
+
 TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamera) {
   const auto root = find_repo_root();
   const auto component_source = read_text(root / "game" / "core" / "component.h");
@@ -420,7 +522,7 @@ TEST(CommanderControlRegressionTest,
   ASSERT_FALSE(controller_source.empty());
   ASSERT_FALSE(movement_source.empty());
 
-  EXPECT_TRUE(contains(controller_source, "jump_active || can_move_to(nx, nz)"));
+  EXPECT_TRUE(contains(controller_source, "jump_active || is_walkable_at(nx, nz)"));
   EXPECT_TRUE(contains(controller_source, "m_jump_safe_position_valid"));
   EXPECT_TRUE(contains(movement_source, "commander->jump_active"));
 }

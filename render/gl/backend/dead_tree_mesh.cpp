@@ -44,12 +44,18 @@ void append_box(std::vector<PropMeshVertex>& verts,
   const float y1 = hi.y();
   const float z1 = hi.z();
 
-  append_quad(verts, idx, {x0, y0, z1}, {x1, y0, z1}, {x1, y1, z1}, {x0, y1, z1}, {0, 0, 1});
-  append_quad(verts, idx, {x1, y0, z0}, {x0, y0, z0}, {x0, y1, z0}, {x1, y1, z0}, {0, 0, -1});
-  append_quad(verts, idx, {x0, y0, z0}, {x0, y0, z1}, {x0, y1, z1}, {x0, y1, z0}, {-1, 0, 0});
-  append_quad(verts, idx, {x1, y0, z1}, {x1, y0, z0}, {x1, y1, z0}, {x1, y1, z1}, {1, 0, 0});
-  append_quad(verts, idx, {x0, y1, z0}, {x0, y1, z1}, {x1, y1, z1}, {x1, y1, z0}, {0, 1, 0});
-  append_quad(verts, idx, {x0, y0, z1}, {x0, y0, z0}, {x1, y0, z0}, {x1, y0, z1}, {0, -1, 0});
+  append_quad(
+      verts, idx, {x0, y0, z1}, {x1, y0, z1}, {x1, y1, z1}, {x0, y1, z1}, {0, 0, 1});
+  append_quad(
+      verts, idx, {x1, y0, z0}, {x0, y0, z0}, {x0, y1, z0}, {x1, y1, z0}, {0, 0, -1});
+  append_quad(
+      verts, idx, {x0, y0, z0}, {x0, y0, z1}, {x0, y1, z1}, {x0, y1, z0}, {-1, 0, 0});
+  append_quad(
+      verts, idx, {x1, y0, z1}, {x1, y0, z0}, {x1, y1, z0}, {x1, y1, z1}, {1, 0, 0});
+  append_quad(
+      verts, idx, {x0, y1, z0}, {x0, y1, z1}, {x1, y1, z1}, {x1, y1, z0}, {0, 1, 0});
+  append_quad(
+      verts, idx, {x0, y0, z1}, {x0, y0, z0}, {x1, y0, z0}, {x1, y0, z1}, {0, -1, 0});
 }
 
 void append_oriented_box(std::vector<PropMeshVertex>& verts,
@@ -104,7 +110,8 @@ auto make_ring(float x,
   std::vector<V3> ring;
   ring.reserve(k_trunk_sides);
   for (int i = 0; i < k_trunk_sides; ++i) {
-    float const angle = phase + k_tau * static_cast<float>(i) / static_cast<float>(k_trunk_sides);
+    float const angle =
+        phase + k_tau * static_cast<float>(i) / static_cast<float>(k_trunk_sides);
     ring.emplace_back(x,
                       center_y + radius_y * std::sin(angle),
                       center_z + radius_z * std::cos(angle));

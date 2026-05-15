@@ -35,8 +35,9 @@ auto humanoid_fill_roles(const void* variant,
   std::array<QVector3D, Render::Humanoid::k_humanoid_role_count> filled{};
   Render::Humanoid::fill_humanoid_role_colors(v, filled);
   const auto n = std::min(filled.size(), max_roles);
-  for (std::size_t i = 0; i < n; ++i)
+  for (std::size_t i = 0; i < n; ++i) {
     out[i] = filled[i];
+  }
   return static_cast<std::uint32_t>(n);
 }
 
@@ -47,8 +48,9 @@ auto horse_fill_roles(const void* variant,
   std::array<QVector3D, 8> filled{};
   Render::Horse::fill_horse_role_colors(v, filled);
   const auto n = std::min<std::size_t>(filled.size(), max_roles);
-  for (std::size_t i = 0; i < n; ++i)
+  for (std::size_t i = 0; i < n; ++i) {
     out[i] = filled[i];
+  }
   return static_cast<std::uint32_t>(n);
 }
 
@@ -59,8 +61,9 @@ auto elephant_fill_roles(const void* variant,
   std::array<QVector3D, Render::Elephant::k_elephant_role_count> filled{};
   Render::Elephant::fill_elephant_role_colors(v, filled);
   const auto n = std::min(filled.size(), max_roles);
-  for (std::size_t i = 0; i < n; ++i)
+  for (std::size_t i = 0; i < n; ++i) {
     out[i] = filled[i];
+  }
   return static_cast<std::uint32_t>(n);
 }
 
@@ -128,6 +131,19 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
       static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
   m_humanoid_sword.bind_palette = &humanoid_bind;
   m_humanoid_sword.fill_role_colors = &humanoid_fill_roles;
+
+  m_humanoid_spear.id = k_humanoid_spear_asset;
+  m_humanoid_spear.debug_name = "humanoid.spear_ready.v1";
+  m_humanoid_spear.kind = CreatureKind::Humanoid;
+  m_humanoid_spear.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_spear;
+  m_humanoid_spear.spec = &Render::Humanoid::humanoid_creature_spec();
+  m_humanoid_spear.topology = &m_humanoid_spear.spec->topology;
+  m_humanoid_spear.role_count =
+      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
+  m_humanoid_spear.max_bones =
+      static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
+  m_humanoid_spear.bind_palette = &humanoid_bind;
+  m_humanoid_spear.fill_role_colors = &humanoid_fill_roles;
 }
 
 auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
@@ -141,6 +157,8 @@ auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
     return &m_elephant;
   case k_humanoid_sword_asset:
     return &m_humanoid_sword;
+  case k_humanoid_spear_asset:
+    return &m_humanoid_spear;
   default:
     return nullptr;
   }

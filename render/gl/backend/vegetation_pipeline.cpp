@@ -1,7 +1,5 @@
 #include "vegetation_pipeline.h"
 
-#include "dead_tree_mesh.h"
-
 #include <QDebug>
 #include <QOpenGLContext>
 #include <qglobal.h>
@@ -17,6 +15,7 @@
 #include <vector>
 
 #include "../render_constants.h"
+#include "dead_tree_mesh.h"
 #include "gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {

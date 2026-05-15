@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <limits>
+#include <numbers>
 #include <unordered_set>
 #include <vector>
 
@@ -85,10 +86,10 @@ public:
     float min_world_y = std::numeric_limits<float>::infinity();
     if (cmd.mesh != nullptr && cmd.bone_palette != nullptr) {
       for (const auto& vertex : cmd.mesh->get_vertices()) {
-        QVector4D bone_local(vertex.position_bone_local[0],
-                             vertex.position_bone_local[1],
-                             vertex.position_bone_local[2],
-                             1.0F);
+        QVector4D const bone_local(vertex.position_bone_local[0],
+                                   vertex.position_bone_local[1],
+                                   vertex.position_bone_local[2],
+                                   1.0F);
         QVector4D skinned_local(0.0F, 0.0F, 0.0F, 0.0F);
         for (int i = 0; i < 4; ++i) {
           float const weight = vertex.bone_weights[i];
@@ -568,7 +569,7 @@ auto request_idle_bone_palette(Render::Creature::ArchetypeId archetype_id,
   req.lod = CreatureLOD::Full;
 
   CountingSubmitter sink;
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   std::array<CreatureRenderRequest, 1> requests{req};
   pipeline.submit_requests(requests, sink);
 
@@ -579,8 +580,9 @@ auto request_idle_bone_palette(Render::Creature::ArchetypeId archetype_id,
 struct ScopedFlatTerrain {
   explicit ScopedFlatTerrain(float height) {
     auto& terrain = Game::Map::TerrainService::instance();
-    std::vector<float> heights(9, height);
-    std::vector<Game::Map::TerrainType> terrain_types(9, Game::Map::TerrainType::Flat);
+    std::vector<float> const heights(9, height);
+    std::vector<Game::Map::TerrainType> const terrain_types(
+        9, Game::Map::TerrainType::Flat);
     terrain.restore_from_serialized(
         3, 3, 1.0F, heights, terrain_types, {}, {}, {}, Game::Map::BiomeSettings{});
   }
@@ -599,7 +601,7 @@ auto render_builder_min_world_y(const char* renderer_id,
     return std::numeric_limits<float>::infinity();
   }
 
-  ScopedFlatTerrain terrain(terrain_height);
+  ScopedFlatTerrain const terrain(terrain_height);
 
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
@@ -737,7 +739,7 @@ TEST(HumanoidPrepare, ShadowRowSubmitsZeroDrawCalls) {
   prep.bodies.add_request(req);
   const auto stats = submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
   EXPECT_EQ(sink.rigged_calls, 0);
   EXPECT_EQ(sink.meshes, 0);
 }
@@ -757,12 +759,12 @@ TEST(HumanoidPrepare, MainRowStillSubmitsOneRiggedCall) {
   prep.bodies.add_request(req);
   const auto stats = submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 1u);
+  EXPECT_EQ(stats.entities_submitted, 1U);
   EXPECT_GT(sink.rigged_calls + sink.meshes, 0);
 }
 
 TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
-  SnapshotPrewarmRenderer renderer;
+  SnapshotPrewarmRenderer const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -786,21 +788,21 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   recorder.snapshot_mesh_cache().clear();
   renderer.render(ctx, recorder);
 
-  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_TRUE(recorder.commands().empty());
 }
 
 TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
-  BeardRenderer renderer;
+  BeardRenderer const renderer;
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
 
-  ASSERT_EQ(prep.bodies.requests().size(), 1u);
+  ASSERT_EQ(prep.bodies.requests().size(), 1U);
   EXPECT_TRUE(prep.post_body_draws.empty());
 
   auto const& req = prep.bodies.requests().front();
@@ -890,7 +892,7 @@ TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
   for (int idx = 0; idx < total; ++idx) {
     auto const offset =
         calculator->calculate_offset(idx, 0, idx, 1, total, spacing, 0x12345678U);
-    float const yaw_rad = offset.yaw_offset * (3.14159265358979F / 180.0F);
+    float const yaw_rad = offset.yaw_offset * (std::numbers::pi_v<float> / 180.0F);
     float const cos_yaw = std::cos(yaw_rad);
     float const sin_yaw = std::sin(yaw_rad);
 
@@ -951,10 +953,10 @@ TEST(HumanoidPrepare, BuiltInBuildersUseDifferentPoseWhileConstructing) {
 TEST(HumanoidPrepare, BuiltInBuildersUseMixedConstructionToolSets) {
   EXPECT_GT(render_builder_unique_role_color_count(
                 "troops/roman/builder", Game::Systems::NationID::RomanRepublic),
-            1u);
+            1U);
   EXPECT_GT(render_builder_unique_role_color_count("troops/carthage/builder",
                                                    Game::Systems::NationID::Carthage),
-            1u);
+            1U);
 }
 
 TEST(HumanoidPrepare, BuiltInArchersUseDedicatedBowHoldClip) {
@@ -1150,8 +1152,103 @@ TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
       registry.resolve_bpat_clip(archetype_id, AnimationStateId::AttackSpear, 1U));
 }
 
+TEST(HumanoidPrepare, HoldModeSpearAttackPlaybackUsesHoldClip) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+
+  Render::GL::EntityRendererRegistry renderer_registry;
+  Render::GL::register_built_in_entity_renderers(renderer_registry);
+  auto const renderer = renderer_registry.get("troops/roman/spearman");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  ctx.entity = &entity;
+
+  CountingSubmitter sink;
+  renderer(ctx, sink);
+  ASSERT_GT(sink.rigged_calls, 0);
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const archetype_id = find_archetype_id("troops/roman/spearman");
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
+
+  Render::GL::HumanoidAnimationContext attack_anim{};
+  attack_anim.inputs.is_in_hold_mode = true;
+  attack_anim.inputs.hold_entry_progress = 1.0F;
+  attack_anim.inputs.is_attacking = true;
+  attack_anim.inputs.is_melee = true;
+  attack_anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  attack_anim.inputs.attack_variant = 1U;
+  attack_anim.motion_state = Render::GL::HumanoidMotionState::Hold;
+  attack_anim.gait.state = Render::GL::HumanoidMotionState::Hold;
+  attack_anim.attack_phase = 0.35F;
+
+  auto const attack = humanoid_bpat_playback_for_anim(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, attack_anim);
+  ASSERT_TRUE(attack.has_value());
+  EXPECT_EQ(
+      attack->clip_id,
+      registry.resolve_bpat_clip(archetype_id, AnimationStateId::AttackMelee, 0U));
+}
+
+TEST(HumanoidPrepare, HoldModeArcherAttackPlaybackUsesBowHoldClip) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+
+  Render::GL::EntityRendererRegistry renderer_registry;
+  Render::GL::register_built_in_entity_renderers(renderer_registry);
+  auto const renderer = renderer_registry.get("troops/roman/archer");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Archer;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  ctx.entity = &entity;
+
+  CountingSubmitter sink;
+  renderer(ctx, sink);
+  ASSERT_GT(sink.rigged_calls, 0);
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const archetype_id = find_archetype_id("troops/roman/archer");
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
+
+  Render::GL::HumanoidAnimationContext attack_anim{};
+  attack_anim.inputs.is_in_hold_mode = true;
+  attack_anim.inputs.hold_entry_progress = 1.0F;
+  attack_anim.inputs.is_attacking = true;
+  attack_anim.inputs.is_melee = false;
+  attack_anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Bow;
+  attack_anim.motion_state = Render::GL::HumanoidMotionState::Hold;
+  attack_anim.gait.state = Render::GL::HumanoidMotionState::Hold;
+  attack_anim.attack_phase = 0.35F;
+
+  auto const attack = humanoid_bpat_playback_for_anim(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, attack_anim);
+  ASSERT_TRUE(attack.has_value());
+  EXPECT_EQ(
+      attack->clip_id,
+      registry.resolve_bpat_clip(archetype_id, AnimationStateId::AttackRanged, 0U));
+  EXPECT_EQ(attack->clip_id,
+            registry.resolve_bpat_clip(archetype_id, AnimationStateId::Hold, 0U));
+}
+
 TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
-  Render::GL::HumanoidRendererBase owner;
+  Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.has_seed_override = true;
   ctx.seed_override = 0x1234ABCDU;
@@ -1177,7 +1274,7 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
 
   auto const& requests = prep.bodies.requests();
-  ASSERT_GE(requests.size(), 4u);
+  ASSERT_GE(requests.size(), 4U);
 
   float min_phase = requests.front().phase;
   float max_phase = requests.front().phase;
@@ -1189,6 +1286,170 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
 
   EXPECT_GT(max_phase - min_phase, 0.001F);
   EXPECT_LT(max_phase - min_phase, 0.08F);
+}
+
+TEST(HumanoidPrepare, CommanderFpvAttacksUseExpandedAttackPhaseMapping) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+
+  Engine::Core::Entity entity(42);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 10.0F;
+  anim.is_attacking = true;
+  anim.is_melee = true;
+  anim.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.attack_variant = 0U;
+  anim.combat_phase = Render::GL::CombatAnimPhase::WindUp;
+  anim.combat_phase_progress = 0.5F;
+
+  Render::Humanoid::HumanoidPreparation base_prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, base_prep);
+  auto const& base_requests = base_prep.bodies.requests();
+  ASSERT_FALSE(base_requests.empty());
+
+  auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander, nullptr);
+  commander->fpv_controlled = true;
+  commander->combo_step = 3;
+  anim.attack_variant =
+      Engine::Core::CombatStateComponent::k_attack_variant_seed_slots - 1U;
+
+  Render::Humanoid::HumanoidPreparation commander_prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, commander_prep);
+  auto const& commander_requests = commander_prep.bodies.requests();
+  ASSERT_FALSE(commander_requests.empty());
+
+  EXPECT_GT(commander_requests.front().phase, base_requests.front().phase);
+}
+
+TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWalkClip) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+
+  Render::GL::EntityRendererRegistry renderer_registry;
+  Render::GL::register_built_in_entity_renderers(renderer_registry);
+  auto const renderer = renderer_registry.get("troops/roman/swordsman");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+  if (renderer) {
+    Render::GL::DrawContext ctx{};
+    ctx.force_single_soldier = true;
+    ctx.allow_template_cache = false;
+
+    Engine::Core::Entity entity(1);
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+    ASSERT_NE(unit, nullptr);
+    unit->spawn_type = Game::Units::SpawnType::Knight;
+    unit->nation_id = Game::Systems::NationID::RomanRepublic;
+    ctx.entity = &entity;
+
+    CountingSubmitter sink;
+    renderer(ctx, sink);
+    ASSERT_GT(sink.rigged_calls, 0);
+  }
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const roman_id = find_archetype_id("troops/roman/swordsman");
+  ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
+
+  Render::GL::HumanoidAnimationContext guard_idle{};
+  guard_idle.inputs.is_guarding = true;
+  guard_idle.inputs.guard_pose_progress = 1.0F;
+  guard_idle.motion_state = Render::GL::HumanoidMotionState::Idle;
+  guard_idle.gait.state = Render::GL::HumanoidMotionState::Idle;
+  auto const idle_playback = humanoid_bpat_playback_for_anim(
+      roman_id, Render::Creature::Bpat::k_species_humanoid, guard_idle);
+  ASSERT_TRUE(idle_playback.has_value());
+  EXPECT_EQ(idle_playback->clip_id,
+            registry.bpat_clip(roman_id, AnimationStateId::Hold));
+
+  Render::GL::HumanoidAnimationContext guard_walk{};
+  guard_walk.inputs.is_guarding = true;
+  guard_walk.inputs.guard_pose_progress = 1.0F;
+  guard_walk.inputs.is_moving = true;
+  guard_walk.motion_state = Render::GL::HumanoidMotionState::Walk;
+  guard_walk.gait.state = Render::GL::HumanoidMotionState::Walk;
+  guard_walk.gait.cycle_phase = 0.35F;
+  auto const walk_playback = humanoid_bpat_playback_for_anim(
+      roman_id, Render::Creature::Bpat::k_species_humanoid, guard_walk);
+  ASSERT_TRUE(walk_playback.has_value());
+  EXPECT_EQ(walk_playback->clip_id,
+            registry.bpat_clip(roman_id, AnimationStateId::Walk));
+}
+
+TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuarding) {
+  constexpr std::uint8_t k_base_role = 6;
+  std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{
+      Render::GL::roman_scutum_make_static_attachment(k_base_role),
+  };
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const base_archetype = registry.register_unit_archetype(
+      "tests/guard_shield_base",
+      Render::Creature::Pipeline::CreatureKind::Humanoid,
+      attachments);
+  ASSERT_NE(base_archetype, Render::Creature::k_invalid_archetype);
+
+  class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
+      spec_.debug_name = "tests/guard_shield_renderer";
+      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec_.archetype_id = archetype;
+      spec_.skip_default_facial_hair_archetype = true;
+    }
+
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
+
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
+
+  FixedSpecRenderer const owner(base_archetype);
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Render::GL::AnimationInputs const base_anim{};
+  Render::Humanoid::HumanoidPreparation base_prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, base_anim, 0U, base_prep);
+  ASSERT_EQ(base_prep.bodies.requests().size(), 1U);
+  EXPECT_EQ(base_prep.bodies.requests().front().archetype, base_archetype);
+
+  Render::GL::AnimationInputs guard_anim{};
+  guard_anim.is_guarding = true;
+  guard_anim.guard_pose_progress = 1.0F;
+  Render::Humanoid::HumanoidPreparation guard_prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, guard_anim, 0U, guard_prep);
+  ASSERT_EQ(guard_prep.bodies.requests().size(), 1U);
+  auto const guard_archetype = guard_prep.bodies.requests().front().archetype;
+  EXPECT_NE(guard_archetype, base_archetype);
+
+  auto const* base_desc = registry.get(base_archetype);
+  auto const* guard_desc = registry.get(guard_archetype);
+  ASSERT_NE(base_desc, nullptr);
+  ASSERT_NE(guard_desc, nullptr);
+  ASSERT_EQ(base_desc->bake_attachment_count, 1U);
+  ASSERT_EQ(guard_desc->bake_attachment_count, 1U);
+  EXPECT_FALSE(Render::Creature::static_attachment_equal(
+      base_desc->bake_attachments.front(), guard_desc->bake_attachments.front()));
+
+  Render::GL::AnimationInputs moving_guard_anim = guard_anim;
+  moving_guard_anim.is_moving = true;
+  Render::Humanoid::HumanoidPreparation moving_guard_prep;
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, moving_guard_anim, 0U, moving_guard_prep);
+  ASSERT_EQ(moving_guard_prep.bodies.requests().size(), 1U);
+  EXPECT_EQ(moving_guard_prep.bodies.requests().front().archetype, base_archetype);
 }
 
 TEST(HumanoidPrepare, AmbientIdleContextSelectsCorrectIdleClipVariant) {
@@ -1614,8 +1875,8 @@ TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
 }
 
 TEST(HumanoidPrepare, BowReadyRootRequestUsesSurfaceGroundingContract) {
-  BowReadyRegressionRenderer renderer;
-  ScopedFlatTerrain terrain(2.4F);
+  BowReadyRegressionRenderer const renderer;
+  ScopedFlatTerrain const terrain(2.4F);
 
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
@@ -1638,17 +1899,17 @@ TEST(HumanoidPrepare, BowReadyRootRequestUsesSurfaceGroundingContract) {
 
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0U, prep);
 
-  ASSERT_EQ(prep.bodies.requests().size(), 1u);
+  ASSERT_EQ(prep.bodies.requests().size(), 1U);
   EXPECT_FALSE(prep.bodies.requests().front().world_already_grounded);
 }
 
 TEST(HumanoidPrepare, BowReadySubmittedSurfaceGroundingTouchesTerrain) {
-  BowReadyRegressionRenderer renderer;
-  ScopedFlatTerrain terrain(2.4F);
+  BowReadyRegressionRenderer const renderer;
+  ScopedFlatTerrain const terrain(2.4F);
 
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
@@ -1675,14 +1936,14 @@ TEST(HumanoidPrepare, BowReadySubmittedSurfaceGroundingTouchesTerrain) {
   renderer.render(ctx, sink);
 
   ASSERT_EQ(sink.rigged_calls, 1);
-  ASSERT_EQ(sink.rigged_world_y.size(), 1u);
+  ASSERT_EQ(sink.rigged_world_y.size(), 1U);
   EXPECT_NEAR(sink.rigged_world_y.front(), 2.4F, 0.1F);
 }
 
 TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
-  ScopedFlatTerrain terrain(1.5F);
+  ScopedFlatTerrain const terrain(1.5F);
 
-  Render::GL::HumanoidRendererBase owner;
+  Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
@@ -1707,7 +1968,7 @@ TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
 
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, prep);
 
@@ -1715,16 +1976,16 @@ TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
   Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   ASSERT_EQ(sink.rigged_calls, 1);
-  ASSERT_EQ(sink.rigged_world_y.size(), 1u);
-  ASSERT_EQ(sink.rigged_mesh_min_world_y.size(), 1u);
+  ASSERT_EQ(sink.rigged_world_y.size(), 1U);
+  ASSERT_EQ(sink.rigged_mesh_min_world_y.size(), 1U);
   EXPECT_NEAR(sink.rigged_world_y.front(), 1.85F, 0.1F);
   EXPECT_GT(sink.rigged_mesh_min_world_y.front(), 1.55F);
 }
 
 TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
-  ScopedFlatTerrain terrain(0.0F);
+  ScopedFlatTerrain const terrain(0.0F);
 
-  Render::GL::HumanoidRendererBase owner;
+  Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
 
@@ -1746,17 +2007,17 @@ TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
 
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
 
-  EXPECT_EQ(prep.bodies.requests().size(), 3u);
+  EXPECT_EQ(prep.bodies.requests().size(), 3U);
 }
 
 TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
-  ScopedFlatTerrain terrain(0.0F);
+  ScopedFlatTerrain const terrain(0.0F);
 
-  Render::GL::HumanoidRendererBase owner;
+  Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
 
@@ -1791,11 +2052,11 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
 
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
 
-  ASSERT_EQ(prep.bodies.requests().size(), 3u);
+  ASSERT_EQ(prep.bodies.requests().size(), 3U);
   EXPECT_EQ(std::count_if(prep.bodies.requests().begin(),
                           prep.bodies.requests().end(),
                           [](const auto& req) {
@@ -1805,8 +2066,8 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
 }
 
 TEST(HumanoidPrepare, BowReadySubmittedVisibleGeometryTouchesTerrain) {
-  BowReadyRegressionRenderer renderer;
-  ScopedFlatTerrain terrain(2.4F);
+  BowReadyRegressionRenderer const renderer;
+  ScopedFlatTerrain const terrain(2.4F);
 
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
@@ -1833,12 +2094,12 @@ TEST(HumanoidPrepare, BowReadySubmittedVisibleGeometryTouchesTerrain) {
   renderer.render(ctx, sink);
 
   ASSERT_EQ(sink.rigged_calls, 1);
-  ASSERT_EQ(sink.rigged_world_y.size(), 1u);
+  ASSERT_EQ(sink.rigged_world_y.size(), 1U);
   EXPECT_NEAR(sink.rigged_world_y.front(), 2.4F, 0.1F);
 }
 
 TEST(HumanoidPrepare, BuiltInArchersUseSurfaceGroundingInIdlePose) {
-  ScopedFlatTerrain terrain(2.4F);
+  ScopedFlatTerrain const terrain(2.4F);
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
 
@@ -1872,7 +2133,7 @@ TEST(HumanoidPrepare, BuiltInArchersUseSurfaceGroundingInIdlePose) {
     renderer(ctx, sink);
 
     ASSERT_EQ(sink.rigged_calls, 1);
-    ASSERT_EQ(sink.rigged_world_y.size(), 1u);
+    ASSERT_EQ(sink.rigged_world_y.size(), 1U);
     EXPECT_NEAR(sink.rigged_world_y.front(), 2.4F, 0.1F);
   };
 
@@ -1881,7 +2142,7 @@ TEST(HumanoidPrepare, BuiltInArchersUseSurfaceGroundingInIdlePose) {
 }
 
 TEST(HumanoidPrepare, BuiltInArchersVisibleIdleGeometryTouchesTerrain) {
-  ScopedFlatTerrain terrain(2.4F);
+  ScopedFlatTerrain const terrain(2.4F);
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
 
@@ -1915,7 +2176,7 @@ TEST(HumanoidPrepare, BuiltInArchersVisibleIdleGeometryTouchesTerrain) {
     renderer(ctx, sink);
 
     ASSERT_EQ(sink.rigged_calls, 1);
-    ASSERT_EQ(sink.rigged_world_y.size(), 1u);
+    ASSERT_EQ(sink.rigged_world_y.size(), 1U);
     EXPECT_NEAR(sink.rigged_world_y.front(), 2.4F, 0.1F);
   };
 
@@ -1940,20 +2201,20 @@ TEST(HumanoidPrepare, MixedBatchOnlySubmitsMainRows) {
   }
   const auto stats = submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 3u);
+  EXPECT_EQ(stats.entities_submitted, 3U);
 }
 
 TEST(HumanoidPrepare, DeriveUnitSeedHonorsOverride) {
   Render::GL::DrawContext ctx{};
   ctx.has_seed_override = true;
-  ctx.seed_override = 0xDEADBEEFu;
-  EXPECT_EQ(Render::Creature::Pipeline::derive_unit_seed(ctx, nullptr), 0xDEADBEEFu);
+  ctx.seed_override = 0xDEADBEEFU;
+  EXPECT_EQ(Render::Creature::Pipeline::derive_unit_seed(ctx, nullptr), 0xDEADBEEFU);
 }
 
 TEST(HumanoidPrepare, DeriveUnitSeedDeterministicWithoutOverride) {
-  Render::GL::DrawContext ctx{};
+  Render::GL::DrawContext const ctx{};
 
-  EXPECT_EQ(Render::Creature::Pipeline::derive_unit_seed(ctx, nullptr), 0u);
+  EXPECT_EQ(Render::Creature::Pipeline::derive_unit_seed(ctx, nullptr), 0U);
 }
 
 TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
@@ -2066,11 +2327,56 @@ TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {
   EXPECT_GT(first.gait.stride_distance, 0.0F);
 }
 
+TEST(HumanoidPrepare, BuildLocomotionStateAnimatesIdlePhaseOverTime) {
+  Render::Humanoid::HumanoidLocomotionInputs inputs{};
+  inputs.anim.is_moving = false;
+  inputs.variation.walk_speed_mult = 1.0F;
+  inputs.animation_time = 0.10F;
+  inputs.phase_offset = 0.125F;
+
+  auto const first = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+
+  inputs.animation_time = 0.90F;
+  auto const second = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+
+  EXPECT_FLOAT_EQ(first.gait.cycle_time, 1.6F);
+  EXPECT_LT(first.gait.cycle_phase, second.gait.cycle_phase);
+  EXPECT_NEAR(first.gait.cycle_phase, 0.140625F, 1.0e-6F);
+  EXPECT_NEAR(second.gait.cycle_phase, 0.640625F, 1.0e-6F);
+  EXPECT_FLOAT_EQ(first.gait.stride_distance, 0.0F);
+  EXPECT_FLOAT_EQ(second.gait.stride_distance, 0.0F);
+}
+
+TEST(HumanoidPrepare, IdleArchersKeepNeutralBowReadyPhase) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(42);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Archer;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 3.0F;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  auto const& requests = prep.bodies.requests();
+  ASSERT_EQ(requests.size(), 1U);
+  EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::Idle);
+  EXPECT_FLOAT_EQ(requests.front().phase, 0.5F);
+}
+
 TEST(HumanoidPrepare,
      PreparedSingleSoldierRequestProjectsToTerrainBeforeSubmitContactGrounding) {
-  ScopedFlatTerrain terrain(2.75F);
+  ScopedFlatTerrain const terrain(2.75F);
 
-  Render::GL::HumanoidRendererBase owner;
+  Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.model.translate(0.4F, 8.0F, -0.2F);
   ctx.force_single_soldier = true;
@@ -2099,16 +2405,16 @@ TEST(HumanoidPrepare,
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, prep);
 
   auto const requests = prep.bodies.requests();
-  ASSERT_EQ(requests.size(), 1u);
+  ASSERT_EQ(requests.size(), 1U);
   EXPECT_FALSE(requests[0].world_already_grounded);
   EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 2.75F, 0.0001F);
 }
 
 TEST(HumanoidPrepare,
      PreparedMovingSingleSoldierVisibleGeometryTouchesTerrainAfterSubmit) {
-  ScopedFlatTerrain terrain(1.5F);
+  ScopedFlatTerrain const terrain(1.5F);
 
-  Render::GL::HumanoidRendererBase owner;
+  Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.model.translate(-0.1F, 6.0F, 0.3F);
   ctx.force_single_soldier = true;
@@ -2125,7 +2431,7 @@ TEST(HumanoidPrepare,
   Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   ASSERT_EQ(sink.rigged_calls, 1);
-  ASSERT_EQ(sink.rigged_world_y.size(), 1u);
+  ASSERT_EQ(sink.rigged_world_y.size(), 1U);
   EXPECT_NEAR(sink.rigged_world_y.front(), 1.5F, 0.1F);
 }
 

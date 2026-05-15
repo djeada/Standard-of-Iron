@@ -16,6 +16,23 @@
 
 using namespace Render::GL;
 
+namespace {
+
+auto find_seed_with_ambient_idle(float max_idle_duration) -> std::uint32_t {
+  for (std::uint32_t seed = 1U; seed < 20000U; ++seed) {
+    for (float idle_duration = 5.0F; idle_duration <= max_idle_duration;
+         idle_duration += 0.25F) {
+      if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) !=
+          AmbientIdleType::None) {
+        return seed;
+      }
+    }
+  }
+  return 0U;
+}
+
+} // namespace
+
 class HumanoidPoseControllerTest : public ::testing::Test {
 protected:
   void SetUp() override {
@@ -58,7 +75,7 @@ protected:
 };
 
 TEST_F(HumanoidPoseControllerTest, ConstructorInitializesCorrectly) {
-  HumanoidPoseController controller(pose, anim_ctx);
+  HumanoidPoseController const controller(pose, anim_ctx);
 
   EXPECT_FLOAT_EQ(pose.head_pos.y(), HumanProportions::HEAD_CENTER_Y);
   EXPECT_FLOAT_EQ(pose.pelvis_pos.y(), HumanProportions::WAIST_Y);
@@ -78,7 +95,8 @@ TEST_F(HumanoidPoseControllerTest, StandIdleDoesNotModifyPose) {
 
 TEST_F(HumanoidPoseControllerTest,
        AmbientIdleSelectionDependsOnContinuousIdleTimeNotWorldTime) {
-  std::uint32_t const seed = 1337U;
+  std::uint32_t const seed = find_seed_with_ambient_idle(80.0F);
+  ASSERT_NE(seed, 0U);
   float activation_time = -1.0F;
   for (float idle_duration = 5.0F; idle_duration <= 80.0F; idle_duration += 0.01F) {
     if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) !=
@@ -104,6 +122,48 @@ TEST_F(HumanoidPoseControllerTest,
   EXPECT_GT(progressed_phase, start_phase);
 }
 
+TEST_F(HumanoidPoseControllerTest,
+       AmbientIdleLongStandstillRotatesThroughMultipleVariants) {
+  std::uint32_t const seed = find_seed_with_ambient_idle(140.0F);
+  ASSERT_NE(seed, 0U);
+  std::unordered_set<int> selected_types;
+  for (float idle_duration = 5.0F; idle_duration <= 140.0F; idle_duration += 0.25F) {
+    auto const type =
+        HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration);
+    if (type == AmbientIdleType::None) {
+      continue;
+    }
+    selected_types.insert(static_cast<int>(type));
+  }
+
+  EXPECT_GE(selected_types.size(), 2U);
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       AmbientIdleLongStandstillOnlySelectsSparseFormationSubset) {
+  constexpr std::uint32_t base_seed = 1234U;
+  constexpr int soldier_count = 64;
+
+  int participating = 0;
+  for (int idx = 0; idx < soldier_count; ++idx) {
+    std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
+    bool saw_ambient = false;
+    for (float idle_duration = 5.0F; idle_duration <= 140.0F; idle_duration += 0.25F) {
+      if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) !=
+          AmbientIdleType::None) {
+        saw_ambient = true;
+        break;
+      }
+    }
+    if (saw_ambient) {
+      ++participating;
+    }
+  }
+
+  EXPECT_GE(participating, soldier_count / 5);
+  EXPECT_LE(participating, soldier_count / 3);
+}
+
 TEST_F(HumanoidPoseControllerTest, AmbientIdleSelectionVariesAcrossFormationSeeds) {
   constexpr std::uint32_t base_seed = 1234U;
   constexpr int soldier_count = 64;
@@ -111,7 +171,7 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleSelectionVariesAcrossFormationSeed
 
   std::unordered_set<int> selected_types;
   int peak_active = 0;
-  for (float idle_duration : sample_idle_durations) {
+  for (float const idle_duration : sample_idle_durations) {
     int active = 0;
     for (int idx = 0; idx < soldier_count; ++idx) {
       std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
@@ -178,6 +238,46 @@ TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
   ctx.animation_time = 7.0F;
   anim = Render::GL::sample_anim_state(ctx);
   EXPECT_FLOAT_EQ(anim.idle_duration, 3.0F);
+}
+
+TEST(HumanoidAnimationInputs, FpvCommanderGuardSetsGuardingWithoutHoldMode) {
+  Engine::Core::Entity entity(1);
+  auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
+  auto* guard = entity.add_component<Engine::Core::CommanderGuardComponent>();
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(guard, nullptr);
+  commander->fpv_controlled = true;
+  guard->active = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.animation_time = 1.0F;
+
+  auto anim = Render::GL::sample_anim_state(ctx);
+
+  EXPECT_TRUE(anim.is_guarding);
+  EXPECT_FLOAT_EQ(anim.guard_pose_progress, 1.0F);
+  EXPECT_FALSE(anim.is_in_hold_mode);
+}
+
+TEST(HumanoidAnimationInputs, FpvCommanderVelocityTriggersMovementAnimation) {
+  Engine::Core::Entity entity(1);
+  auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(movement, nullptr);
+  commander->fpv_controlled = true;
+  movement->has_target = false;
+  movement->vx = 1.4F;
+  movement->vz = 0.0F;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.animation_time = 1.0F;
+
+  auto anim = Render::GL::sample_anim_state(ctx);
+
+  EXPECT_TRUE(anim.is_moving);
 }
 
 TEST_F(HumanoidPoseControllerTest, KneelLowersPelvis) {
@@ -264,7 +364,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
 }
 
 TEST_F(HumanoidPoseControllerTest, SolveElbowIKReturnsValidPosition) {
-  HumanoidPoseController controller(pose, anim_ctx);
+  HumanoidPoseController const controller(pose, anim_ctx);
 
   QVector3D const shoulder = pose.shoulder_r;
   QVector3D const hand(0.35F, 1.15F, 0.75F);
@@ -281,7 +381,7 @@ TEST_F(HumanoidPoseControllerTest, SolveElbowIKReturnsValidPosition) {
 }
 
 TEST_F(HumanoidPoseControllerTest, SolveKneeIKReturnsValidPosition) {
-  HumanoidPoseController controller(pose, anim_ctx);
+  HumanoidPoseController const controller(pose, anim_ctx);
 
   QVector3D const hip(0.10F, 0.93F, 0.0F);
   QVector3D const foot(0.10F, 0.0F, 0.05F);
@@ -296,7 +396,7 @@ TEST_F(HumanoidPoseControllerTest, SolveKneeIKReturnsValidPosition) {
 }
 
 TEST_F(HumanoidPoseControllerTest, SolveKneeIKPreventsGroundPenetration) {
-  HumanoidPoseController controller(pose, anim_ctx);
+  HumanoidPoseController const controller(pose, anim_ctx);
 
   QVector3D const hip(0.0F, 0.30F, 0.0F);
   QVector3D const foot(0.50F, 0.0F, 0.50F);
@@ -369,7 +469,7 @@ TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldPositionsHandsCorrectly) {
 
 TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldCarriesFartherForwardWhileMoving) {
   HumanoidPose idle_pose = pose;
-  HumanoidAnimationContext idle_anim = anim_ctx;
+  HumanoidAnimationContext const idle_anim = anim_ctx;
   HumanoidPoseController idle_controller(idle_pose, idle_anim);
   idle_controller.hold_sword_and_shield();
 
@@ -394,10 +494,28 @@ TEST_F(HumanoidPoseControllerTest, BraceSpearForHoldPositionsHandsForwardAndLow)
   controller.brace_spear_for_hold();
 
   EXPECT_GT(pose.hand_r.z(), 0.48F);
+  EXPECT_GT(pose.hand_r.x(), 0.5F * HumanProportions::SHOULDER_WIDTH);
   EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y);
   EXPECT_GT(pose.hand_l.z(), 0.20F);
+  EXPECT_GT(pose.hand_l.x(), 0.14F);
+  EXPECT_LT(pose.hand_l.x(), pose.hand_r.x());
   EXPECT_LT(pose.hand_l.y(), HumanProportions::SHOULDER_Y);
+  EXPECT_GT(pose.hand_l.y(), HumanProportions::SHOULDER_Y - 0.30F);
   EXPECT_GT((pose.hand_r - pose.hand_l).length(), 0.18F);
+}
+
+TEST_F(HumanoidPoseControllerTest, HoldSpearIdleMovesSpearOutsideBodyWithTwoHands) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  controller.hold_spear_idle();
+
+  EXPECT_GT(pose.hand_r.x(), 0.30F);
+  EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y + 0.02F);
+  EXPECT_GT(pose.hand_r.z(), 0.25F);
+  EXPECT_GT(pose.hand_l.x(), 0.08F);
+  EXPECT_GT(pose.hand_l.y(), pose.hand_r.y());
+  EXPECT_GT(pose.hand_l.z(), pose.hand_r.z());
+  EXPECT_GT((pose.hand_l - pose.hand_r).length(), 0.20F);
 }
 
 TEST_F(HumanoidPoseControllerTest, HoldBowReadyKeepsHandsInLowerReadyPose) {
@@ -426,6 +544,9 @@ TEST_F(HumanoidPoseControllerTest,
 
   EXPECT_GT(brace_pose.hand_l.y(), march_pose.hand_l.y());
   EXPECT_GT(brace_pose.hand_l.z(), march_pose.hand_l.z());
+  EXPECT_GT(brace_pose.hand_l.x(), march_pose.hand_l.x());
+  EXPECT_GT(brace_pose.hand_l.z(), 0.44F);
+  EXPECT_GT(brace_pose.hand_l.x(), -0.22F);
   EXPECT_LT(brace_pose.hand_r.y(), march_pose.hand_r.y());
 }
 
@@ -452,7 +573,7 @@ TEST_F(HumanoidPoseControllerTest, LookAtWithSamePositionDoesNothing) {
 }
 
 TEST_F(HumanoidPoseControllerTest, GetShoulderYReturnsCorrectValues) {
-  HumanoidPoseController controller(pose, anim_ctx);
+  HumanoidPoseController const controller(pose, anim_ctx);
 
   float const left_y = controller.get_shoulder_y(true);
   float const right_y = controller.get_shoulder_y(false);
@@ -462,7 +583,7 @@ TEST_F(HumanoidPoseControllerTest, GetShoulderYReturnsCorrectValues) {
 }
 
 TEST_F(HumanoidPoseControllerTest, GetPelvisYReturnsCorrectValue) {
-  HumanoidPoseController controller(pose, anim_ctx);
+  HumanoidPoseController const controller(pose, anim_ctx);
 
   float const pelvis_y = controller.get_pelvis_y();
 
@@ -514,6 +635,18 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustAppliesTorsoTwistAtChamber) {
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
 
   EXPECT_GT(pose.shoulder_l.z(), pose.shoulder_r.z());
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearThrustReadyGripKeepsHandsClearAndAligned) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  controller.spear_thrust(0.0F);
+
+  EXPECT_GT(pose.hand_r.x(), 0.5F * HumanProportions::SHOULDER_WIDTH);
+  EXPECT_GT(pose.hand_r.z(), 0.28F);
+  EXPECT_GT(pose.hand_l.x(), 0.18F);
+  EXPECT_LT(pose.hand_l.x(), pose.hand_r.x());
+  EXPECT_GT(pose.hand_l.y(), HumanProportions::SHOULDER_Y - 0.04F);
 }
 
 TEST_F(HumanoidPoseControllerTest, SpearThrustAppliesTorsoTwistAtExtension) {
@@ -569,6 +702,25 @@ TEST_F(HumanoidPoseControllerTest, SwordSlashVariant1ReversesInitialTorsoTwist) 
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
 }
 
+TEST_F(HumanoidPoseControllerTest, CommanderAttackEmphasisAmplifiesSwordSlashVariant) {
+  HumanoidPose base_pose = pose;
+  HumanoidAnimationContext const base_ctx = anim_ctx;
+  HumanoidPoseController base_controller(base_pose, base_ctx);
+  base_controller.sword_slash_variant(0.56F, 0);
+
+  HumanoidPose emphasized_pose = pose;
+  HumanoidAnimationContext emphasized_ctx = anim_ctx;
+  emphasized_ctx.amplified_attack = true;
+  emphasized_ctx.attack_emphasis = 1.35F;
+  emphasized_ctx.finisher_attack = true;
+  HumanoidPoseController emphasized_controller(emphasized_pose, emphasized_ctx);
+  emphasized_controller.sword_slash_variant(0.56F, 0);
+
+  EXPECT_GT(emphasized_pose.hand_r.z(), base_pose.hand_r.z());
+  EXPECT_GT(emphasized_pose.pelvis_pos.z(), base_pose.pelvis_pos.z());
+  EXPECT_LT(emphasized_pose.pelvis_pos.y(), base_pose.pelvis_pos.y());
+}
+
 TEST_F(HumanoidPoseControllerTest, SpearThrustVariantAppliesTorsoTwist) {
   HumanoidPoseController controller(pose, anim_ctx);
 
@@ -579,6 +731,18 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustVariantAppliesTorsoTwist) {
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
 
   EXPECT_GT(pose.shoulder_l.z(), pose.shoulder_r.z());
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearThrustVariantReadyGripMatchesNormalStance) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  controller.spear_thrust_variant(0.0F, 0);
+
+  EXPECT_GT(pose.hand_r.x(), 0.5F * HumanProportions::SHOULDER_WIDTH);
+  EXPECT_GT(pose.hand_r.z(), 0.28F);
+  EXPECT_GT(pose.hand_l.x(), 0.18F);
+  EXPECT_LT(pose.hand_l.x(), pose.hand_r.x());
+  EXPECT_GT(pose.hand_l.y(), HumanProportions::SHOULDER_Y - 0.04F);
 }
 
 TEST_F(HumanoidPoseControllerTest, SpearThrustFromHoldAppliesTorsoTwist) {
@@ -626,7 +790,7 @@ TEST_F(HumanoidPoseControllerTest, KneelEntryProgressPartialKneel) {
   HumanoidPoseController half_ctrl(half_pose, anim_ctx);
   half_ctrl.kneel(0.5F * full_kneel_depth);
 
-  HumanoidPose standing_pose = pose;
+  HumanoidPose const standing_pose = pose;
   float const standing_pelvis_y = standing_pose.pelvis_pos.y();
 
   EXPECT_LT(full_pose.pelvis_pos.y(), half_pose.pelvis_pos.y())
@@ -661,7 +825,7 @@ TEST_F(HumanoidPoseControllerTest, KneelExitProgressReturnsTowardsStanding) {
 }
 
 TEST_F(HumanoidPoseControllerTest, SpearDirectionBlendsDuringHoldEntry) {
-  AnimationInputs standing_inputs{};
+  AnimationInputs const standing_inputs{};
   QVector3D const standing_dir = compute_spear_direction(standing_inputs);
 
   AnimationInputs partial_hold_inputs{};

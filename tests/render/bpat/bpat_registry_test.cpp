@@ -29,12 +29,15 @@ TEST(BpatRegistry, LoadsAllSpecies) {
       static_cast<std::size_t>(
           reg.load_species(k_species_elephant, root + "/elephant.bpat")) +
       static_cast<std::size_t>(
-          reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
-  EXPECT_EQ(loaded, 4U);
+          reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat")) +
+      static_cast<std::size_t>(
+          reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat"));
+  EXPECT_EQ(loaded, k_species_count);
   EXPECT_TRUE(reg.has_species(k_species_humanoid));
   EXPECT_TRUE(reg.has_species(k_species_horse));
   EXPECT_TRUE(reg.has_species(k_species_elephant));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_sword));
+  EXPECT_TRUE(reg.has_species(k_species_humanoid_spear));
 }
 
 TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
@@ -60,11 +63,12 @@ TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
   const std::size_t loaded = reg.load_all("assets/creatures");
   restore_cwd();
 
-  EXPECT_EQ(loaded, 4U);
+  EXPECT_EQ(loaded, k_species_count);
   EXPECT_TRUE(reg.has_species(k_species_humanoid));
   EXPECT_TRUE(reg.has_species(k_species_horse));
   EXPECT_TRUE(reg.has_species(k_species_elephant));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_sword));
+  EXPECT_TRUE(reg.has_species(k_species_humanoid_spear));
 }
 
 TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
@@ -293,6 +297,50 @@ TEST(BpatRegistry, SwordHumanoidAmbientIdleStartsFromShieldReadyIdle) {
           << "clip " << clip << " bone " << bone;
     }
   }
+}
+
+TEST(BpatRegistry, HumanoidIdleClipContainsAnimatedMicroMotion) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+
+  auto verify_idle_clip_changes = [&](std::uint32_t species_id) {
+    auto const* blob = reg.blob(species_id);
+    ASSERT_NE(blob, nullptr);
+    auto const idle_clip = blob->clip(Render::Creature::k_humanoid_idle_clip);
+    ASSERT_GT(idle_clip.frame_count, 2U);
+
+    std::array<QMatrix4x4, 64> start_palette{};
+    std::array<QMatrix4x4, 64> mid_palette{};
+    auto const bone_count = reg.sample_palette(species_id,
+                                               Render::Creature::k_humanoid_idle_clip,
+                                               0U,
+                                               std::span<QMatrix4x4>(start_palette));
+    ASSERT_GT(bone_count, 0U);
+    ASSERT_EQ(reg.sample_palette(species_id,
+                                 Render::Creature::k_humanoid_idle_clip,
+                                 idle_clip.frame_count / 2U,
+                                 std::span<QMatrix4x4>(mid_palette)),
+              bone_count);
+
+    bool any_different = false;
+    for (std::uint32_t bone = 0U; bone < bone_count; ++bone) {
+      if (start_palette[bone] != mid_palette[bone]) {
+        any_different = true;
+        break;
+      }
+    }
+    EXPECT_TRUE(any_different)
+        << "species " << species_id << " idle clip should change across the loop";
+  };
+
+  verify_idle_clip_changes(k_species_humanoid);
+  verify_idle_clip_changes(k_species_humanoid_sword);
 }
 
 TEST(BpatRegistry, SwordHumanoidRidingChargeKeepsShieldHandMountedRelative) {

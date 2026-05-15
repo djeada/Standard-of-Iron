@@ -44,6 +44,7 @@ inline constexpr CreatureAssetId k_humanoid_asset = 0;
 inline constexpr CreatureAssetId k_horse_asset = 1;
 inline constexpr CreatureAssetId k_elephant_asset = 2;
 inline constexpr CreatureAssetId k_humanoid_sword_asset = 3;
+inline constexpr CreatureAssetId k_humanoid_spear_asset = 4;
 
 struct CreatureAsset {
   CreatureAssetId id{k_invalid_creature_asset};
@@ -158,6 +159,7 @@ private:
   CreatureAsset m_horse{};
   CreatureAsset m_elephant{};
   CreatureAsset m_humanoid_sword{};
+  CreatureAsset m_humanoid_spear{};
 };
 
 [[nodiscard]] auto resolve_creature_render_asset_handle(

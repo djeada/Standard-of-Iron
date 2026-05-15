@@ -4,6 +4,9 @@
 #include <QJsonDocument>
 #include <QSaveFile>
 
+#include <algorithm>
+
+#include "game/units/spawn_type.h"
 #include "map_json_keys.h"
 
 namespace MapEditor {
@@ -105,6 +108,29 @@ auto copyExtraFields(const QJsonObject& source,
   return extra_fields;
 }
 
+auto normalizedSpawnType(const QJsonObject& obj) -> QString {
+  return obj.value(MapJsonKeys::type).toString().trimmed().toLower();
+}
+
+auto isStructureSpawnType(const QString& type) -> bool {
+  return type == QStringLiteral("barracks") || type == QStringLiteral("village");
+}
+
+auto isEditableTroopSpawnType(const QString& type) -> bool {
+  if (isStructureSpawnType(type)) {
+    return false;
+  }
+
+  Game::Units::SpawnType parsed_type;
+  return Game::Units::try_parse_spawn_type(type, parsed_type) &&
+         Game::Units::is_troop_spawn(parsed_type);
+}
+
+struct OrderedSpawnEntry {
+  int order = -1;
+  QJsonObject object;
+};
+
 } // namespace
 
 MapData::MapData(QObject* parent)
@@ -124,13 +150,15 @@ void MapData::clear() {
   m_world_props.clear();
   m_linear_elements.clear();
   m_structures.clear();
+  m_troop_spawns.clear();
 
   m_biome = QJsonObject();
   m_camera = QJsonObject();
-  m_spawns = QJsonArray();
   m_victory = QJsonObject();
   m_rain = QJsonObject();
   m_extra_root_fields = QJsonObject();
+  m_next_spawn_order = 0;
+  m_raw_spawns.clear();
 
   m_undo_stack.clear();
   m_redo_stack.clear();
@@ -208,11 +236,11 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
     return false;
   }
 
-  QByteArray data = file.readAll();
+  QByteArray const data = file.readAll();
   file.close();
 
   QJsonParseError error;
-  QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+  QJsonDocument const doc = QJsonDocument::fromJson(data, &error);
   if (error.error != QJsonParseError::NoError || !doc.isObject()) {
     if (out_error != nullptr) {
       if (error.error != QJsonParseError::NoError) {
@@ -267,7 +295,6 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
 
   m_biome = root[MapJsonKeys::biome].toObject();
   m_camera = root[MapJsonKeys::camera].toObject();
-  m_spawns = root[MapJsonKeys::spawns].toArray();
   m_victory = root[MapJsonKeys::victory].toObject();
   m_rain = root[MapJsonKeys::rain].toObject();
 
@@ -275,6 +302,9 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
   m_world_props.clear();
   m_linear_elements.clear();
   m_structures.clear();
+  m_troop_spawns.clear();
+  m_raw_spawns.clear();
+  m_next_spawn_order = 0;
 
   if (root.contains(MapJsonKeys::terrain)) {
     parse_terrain_array(root[MapJsonKeys::terrain].toArray());
@@ -296,7 +326,7 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
   }
 
   if (root.contains(MapJsonKeys::spawns)) {
-    parse_structures_from_spawns(root[MapJsonKeys::spawns].toArray());
+    parse_spawns_array(root[MapJsonKeys::spawns].toArray());
   }
 
   m_undo_stack.clear();
@@ -344,41 +374,55 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
     root[MapJsonKeys::rain] = m_rain;
   }
 
-  QJsonArray terrain_arr = terrain_to_json();
+  QJsonArray const terrain_arr = terrain_to_json();
   if (!terrain_arr.isEmpty()) {
     root[MapJsonKeys::terrain] = terrain_arr;
   }
 
-  QJsonArray world_props_arr = world_props_to_json();
+  QJsonArray const world_props_arr = world_props_to_json();
   if (!world_props_arr.isEmpty()) {
     root[MapJsonKeys::world_props] = world_props_arr;
   }
 
-  QJsonArray rivers_arr = rivers_to_json();
+  QJsonArray const rivers_arr = rivers_to_json();
   if (!rivers_arr.isEmpty()) {
     root[MapJsonKeys::rivers] = rivers_arr;
   }
 
-  QJsonArray roads_arr = roads_to_json();
+  QJsonArray const roads_arr = roads_to_json();
   if (!roads_arr.isEmpty()) {
     root[MapJsonKeys::roads] = roads_arr;
   }
 
-  QJsonArray bridges_arr = bridges_to_json();
+  QJsonArray const bridges_arr = bridges_to_json();
   if (!bridges_arr.isEmpty()) {
     root[MapJsonKeys::bridges] = bridges_arr;
   }
 
-  QJsonArray spawns_arr = structures_to_spawns_json();
-
-  for (const auto& spawn : m_spawns) {
-    QJsonObject spawn_obj = spawn.toObject();
-    const QString type = spawn_obj[MapJsonKeys::type].toString();
-    if (type != "barracks" && type != "village") {
-      spawns_arr.append(spawn);
-    }
+  QVector<OrderedSpawnEntry> ordered_spawns;
+  ordered_spawns.reserve(m_structures.size() + m_troop_spawns.size() +
+                         m_raw_spawns.size());
+  for (const auto& elem : m_structures) {
+    ordered_spawns.append({elem.spawn_order, structure_to_spawn_json(elem)});
   }
-  if (!spawns_arr.isEmpty()) {
+  for (const auto& elem : m_troop_spawns) {
+    ordered_spawns.append({elem.spawn_order, troop_to_spawn_json(elem)});
+  }
+  for (const auto& raw_entry : m_raw_spawns) {
+    ordered_spawns.append({raw_entry.spawn_order, raw_entry.object});
+  }
+
+  std::stable_sort(ordered_spawns.begin(),
+                   ordered_spawns.end(),
+                   [](const OrderedSpawnEntry& lhs, const OrderedSpawnEntry& rhs) {
+                     return lhs.order < rhs.order;
+                   });
+
+  if (!ordered_spawns.isEmpty()) {
+    QJsonArray spawns_arr;
+    for (const auto& entry : ordered_spawns) {
+      spawns_arr.append(entry.object);
+    }
     root[MapJsonKeys::spawns] = spawns_arr;
   }
 
@@ -551,8 +595,8 @@ QJsonArray MapData::terrain_to_json() const {
 
     if (elem.type == "hill") {
 
-      bool has_custom_dimensions = (elem.width != 10.0F && elem.width > 0.0F) ||
-                                   (elem.depth != 10.0F && elem.depth > 0.0F);
+      bool const has_custom_dimensions = (elem.width != 10.0F && elem.width > 0.0F) ||
+                                         (elem.depth != 10.0F && elem.depth > 0.0F);
 
       if (has_custom_dimensions) {
         if (elem.width > 0.0F) {
@@ -777,14 +821,22 @@ void MapData::remove_linear_element(int index) {
 }
 
 void MapData::add_structure(const StructureElement& element) {
-  m_structures.append(element);
+  StructureElement normalized = element;
+  if (normalized.spawn_order < 0) {
+    normalized.spawn_order = m_next_spawn_order++;
+  }
+  m_structures.append(normalized);
   set_modified(true);
   emit data_changed();
 }
 
 void MapData::insert_structure(int index, const StructureElement& element) {
   if (index >= 0 && index <= m_structures.size()) {
-    m_structures.insert(index, element);
+    StructureElement normalized = element;
+    if (normalized.spawn_order < 0) {
+      normalized.spawn_order = m_next_spawn_order++;
+    }
+    m_structures.insert(index, normalized);
     set_modified(true);
     emit data_changed();
   }
@@ -792,7 +844,11 @@ void MapData::insert_structure(int index, const StructureElement& element) {
 
 void MapData::update_structure(int index, const StructureElement& element) {
   if (index >= 0 && index < m_structures.size()) {
-    m_structures[index] = element;
+    StructureElement normalized = element;
+    if (normalized.spawn_order < 0) {
+      normalized.spawn_order = m_structures[index].spawn_order;
+    }
+    m_structures[index] = normalized;
     set_modified(true);
     emit data_changed();
   }
@@ -806,12 +862,55 @@ void MapData::remove_structure(int index) {
   }
 }
 
-void MapData::parse_structures_from_spawns(const QJsonArray& arr) {
-  for (const auto& val : arr) {
-    QJsonObject obj = val.toObject();
-    const QString type = obj[MapJsonKeys::type].toString();
+void MapData::add_troop_spawn(const TroopSpawnElement& element) {
+  TroopSpawnElement normalized = element;
+  if (normalized.spawn_order < 0) {
+    normalized.spawn_order = m_next_spawn_order++;
+  }
+  m_troop_spawns.append(normalized);
+  set_modified(true);
+  emit data_changed();
+}
 
-    if (type == "barracks" || type == "village") {
+void MapData::insert_troop_spawn(int index, const TroopSpawnElement& element) {
+  if (index >= 0 && index <= m_troop_spawns.size()) {
+    TroopSpawnElement normalized = element;
+    if (normalized.spawn_order < 0) {
+      normalized.spawn_order = m_next_spawn_order++;
+    }
+    m_troop_spawns.insert(index, normalized);
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::update_troop_spawn(int index, const TroopSpawnElement& element) {
+  if (index >= 0 && index < m_troop_spawns.size()) {
+    TroopSpawnElement normalized = element;
+    if (normalized.spawn_order < 0) {
+      normalized.spawn_order = m_troop_spawns[index].spawn_order;
+    }
+    m_troop_spawns[index] = normalized;
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::remove_troop_spawn(int index) {
+  if (index >= 0 && index < m_troop_spawns.size()) {
+    m_troop_spawns.removeAt(index);
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::parse_spawns_array(const QJsonArray& arr) {
+  for (qsizetype order = 0; order < arr.size(); ++order) {
+    const auto& val = arr[order];
+    QJsonObject obj = val.toObject();
+    const QString type = normalizedSpawnType(obj);
+
+    if (isStructureSpawnType(type)) {
       StructureElement elem;
       elem.type = type;
       elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
@@ -819,6 +918,7 @@ void MapData::parse_structures_from_spawns(const QJsonArray& arr) {
       elem.player_id = obj[MapJsonKeys::player_id].toInt(0);
       elem.max_population = obj[MapJsonKeys::max_population].toInt(150);
       elem.nation = obj[MapJsonKeys::nation].toString();
+      elem.spawn_order = static_cast<int>(order);
 
       const QStringList known_keys = {MapJsonKeys::type,
                                       MapJsonKeys::x,
@@ -829,32 +929,77 @@ void MapData::parse_structures_from_spawns(const QJsonArray& arr) {
       elem.extra_fields = copyExtraFields(obj, known_keys);
 
       m_structures.append(elem);
+    } else if (isEditableTroopSpawnType(type)) {
+      TroopSpawnElement elem;
+      elem.type = type;
+      elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
+      elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
+      elem.player_id = obj.contains(MapJsonKeys::player_id) &&
+                               !obj.value(MapJsonKeys::player_id).isNull()
+                           ? obj[MapJsonKeys::player_id].toInt(-1)
+                           : -1;
+      elem.max_population = obj.contains(MapJsonKeys::max_population)
+                                ? obj[MapJsonKeys::max_population].toInt(100)
+                                : -1;
+      elem.nation = obj[MapJsonKeys::nation].toString();
+      elem.spawn_order = static_cast<int>(order);
+
+      const QStringList known_keys = {MapJsonKeys::type,
+                                      MapJsonKeys::x,
+                                      MapJsonKeys::z,
+                                      MapJsonKeys::player_id,
+                                      MapJsonKeys::max_population,
+                                      MapJsonKeys::nation};
+      elem.extra_fields = copyExtraFields(obj, known_keys);
+
+      m_troop_spawns.append(elem);
+    } else {
+      m_raw_spawns.append({static_cast<int>(order), obj});
     }
   }
+  m_next_spawn_order = arr.size();
 }
 
-QJsonArray MapData::structures_to_spawns_json() const {
-  QJsonArray arr;
-  for (const auto& elem : m_structures) {
-    QJsonObject obj;
-    obj[MapJsonKeys::type] = elem.type;
-    obj[MapJsonKeys::x] = static_cast<double>(elem.x);
-    obj[MapJsonKeys::z] = static_cast<double>(elem.z);
-    if (elem.player_id > 0) {
-      obj[MapJsonKeys::player_id] = elem.player_id;
-    }
-    obj[MapJsonKeys::max_population] = elem.max_population;
-    if (!elem.nation.isEmpty()) {
-      obj[MapJsonKeys::nation] = elem.nation;
-    }
-
-    for (const QString& key : elem.extra_fields.keys()) {
-      obj[key] = elem.extra_fields[key];
-    }
-
-    arr.append(obj);
+QJsonObject MapData::structure_to_spawn_json(const StructureElement& elem) const {
+  QJsonObject obj;
+  obj[MapJsonKeys::type] = elem.type;
+  obj[MapJsonKeys::x] = static_cast<double>(elem.x);
+  obj[MapJsonKeys::z] = static_cast<double>(elem.z);
+  if (elem.player_id > 0) {
+    obj[MapJsonKeys::player_id] = elem.player_id;
   }
-  return arr;
+  if (elem.max_population >= 0) {
+    obj[MapJsonKeys::max_population] = elem.max_population;
+  }
+  if (!elem.nation.isEmpty()) {
+    obj[MapJsonKeys::nation] = elem.nation;
+  }
+
+  for (const QString& key : elem.extra_fields.keys()) {
+    obj[key] = elem.extra_fields[key];
+  }
+
+  return obj;
+}
+
+QJsonObject MapData::troop_to_spawn_json(const TroopSpawnElement& elem) const {
+  QJsonObject obj;
+  obj[MapJsonKeys::type] = elem.type;
+  obj[MapJsonKeys::x] = static_cast<double>(elem.x);
+  obj[MapJsonKeys::z] = static_cast<double>(elem.z);
+  if (elem.player_id >= 0) {
+    obj[MapJsonKeys::player_id] = elem.player_id;
+  }
+  obj[MapJsonKeys::max_population] = elem.max_population;
+  if (!elem.nation.isEmpty()) {
+    obj[MapJsonKeys::nation] = elem.nation;
+  }
+
+  for (const QString& key : elem.extra_fields.keys()) {
+    obj[key] = elem.extra_fields[key];
+  }
+
+  return obj;
 }
 
 void MapData::record_command(std::unique_ptr<Command> cmd) {

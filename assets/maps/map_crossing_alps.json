@@ -1,786 +1,1024 @@
 {
   "name": "Crossing the Alps",
-  "description": "The legendary Alpine crossing - survive treacherous mountain passes, avalanche zones, and hostile mountain tribes on the journey to Italy",
+  "description": "A large survival campaign map. Lead Hannibal's army through the Alpine passes, choose between dangerous shortcuts and safer mule trails, survive avalanches and tribal ambushes, and reach the Italian foothills with enough troops alive.",
   "coord_system": "grid",
-  "max_troops_per_player": 2000,
+  "max_troops_per_player": 2200,
   "grid": {
-    "width": 180,
-    "height": 180,
+    "width": 260,
+    "height": 260,
     "tile_size": 1.0
   },
   "biome": {
     "ground_type": "alpine_mix",
-    "seed": 10007,
-    "patch_density": 2.2,
-    "patch_jitter": 0.75,
-    "plant_density": 0.3,
+    "seed": 10117,
+    "patch_density": 2.55,
+    "patch_jitter": 0.82,
+    "plant_density": 0.34,
     "ground_irregularity_enabled": true,
-    "irregularity_scale": 0.18,
-    "irregularity_amplitude": 0.12
+    "irregularity_scale": 0.17,
+    "irregularity_amplitude": 0.105,
+    "rock_low": [0.38, 0.38, 0.37],
+    "rock_high": [0.72, 0.72, 0.69],
+    "grass_primary": [0.34, 0.43, 0.27],
+    "grass_secondary": [0.48, 0.52, 0.32],
+    "grass_dry": [0.68, 0.64, 0.48],
+    "soil_color": [0.27, 0.25, 0.21],
+    "height_noise": [0.25, 0.08],
+    "sway_speed": 0.7,
+    "sway_strength": 0.1
   },
   "camera": {
-    "center": [
-      90,
-      0,
-      90
-    ],
-    "distance": 42.0,
-    "tilt_deg": 45.0,
+    "center": [130, 0, 130],
+    "distance": 92.0,
+    "tilt_deg": 50.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 550.0
+    "far": 750.0
   },
-  "spawns": [
-    {
-      "type": "spearman",
-      "x": 25,
-      "z": 25,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 28,
-      "z": 28,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 22,
-      "z": 22,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 30,
-      "z": 25,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 25,
-      "z": 30,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 32,
-      "z": 28,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 28,
-      "z": 32,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 35,
-      "z": 30,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 20,
-      "z": 30,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 30,
-      "z": 20,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 25,
-      "z": 35,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 35,
-      "z": 25,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 18,
-      "z": 24,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 32,
-      "z": 36,
-      "player_id": 1
-    },
-    {
-      "type": "elephant",
-      "x": 28,
-      "z": 22,
-      "player_id": 1
-    },
-    {
-      "type": "elephant",
-      "x": 22,
-      "z": 28,
-      "player_id": 1
-    },
-    {
-      "type": "barracks",
-      "x": 15,
-      "z": 15,
-      "player_id": 1,
-      "max_population": 150,
-      "nation": "carthage",
-      "description": "Starting camp"
-    },
-    {
-      "type": "spearman",
-      "x": 75,
-      "z": 55,
-      "player_id": 2,
-      "description": "First mountain tribe ambush"
-    },
-    {
-      "type": "spearman",
-      "x": 78,
-      "z": 58,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 72,
-      "z": 52,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 80,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 105,
-      "z": 85,
-      "player_id": 2,
-      "description": "Second mountain tribe ambush"
-    },
-    {
-      "type": "spearman",
-      "x": 108,
-      "z": 88,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 102,
-      "z": 82,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 110,
-      "z": 85,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 100,
-      "z": 88,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 105,
-      "z": 90,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 125,
-      "z": 115,
-      "player_id": 2,
-      "description": "Third mountain tribe - final pass defense"
-    },
-    {
-      "type": "spearman",
-      "x": 128,
-      "z": 118,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 122,
-      "z": 112,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 130,
-      "z": 115,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 120,
-      "z": 115,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 125,
-      "z": 120,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 125,
-      "z": 110,
-      "player_id": 2
-    }
-  ],
-  "firecamps": [
-    {
-      "x": 20,
-      "z": 20,
-      "intensity": 1.3,
-      "radius": 4.0
-    },
-    {
-      "x": 50,
-      "z": 45,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 75,
-      "z": 65,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 100,
-      "z": 95,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 130,
-      "z": 125,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 160,
-      "z": 155,
-      "intensity": 1.3,
-      "radius": 4.0
-    }
-  ],
+  "time_of_day": "morning",
+  "weather": {
+    "type": "snow",
+    "intensity": 0.82,
+    "temperature": "extreme_cold",
+    "description": "Severe Alpine cold. The safest places are sheltered forests, fire camps, and valley villages."
+  },
   "terrain": [
     {
-      "type": "mountain",
-      "x": 50,
-      "z": 35,
-      "radius": 22,
-      "height": 12.0,
-      "description": "First major peak - blocks direct route"
-    },
-    {
-      "type": "mountain",
-      "x": 90,
-      "z": 70,
-      "radius": 28,
-      "height": 15.0,
-      "description": "Highest peak - most dangerous avalanche zone"
-    },
-    {
-      "type": "mountain",
-      "x": 120,
-      "z": 100,
-      "radius": 25,
-      "height": 13.0,
-      "description": "Second major peak - final obstacle"
-    },
-    {
-      "type": "mountain",
-      "x": 30,
-      "z": 60,
-      "radius": 15,
-      "height": 9.0,
-      "description": "Western barrier"
-    },
-    {
-      "type": "mountain",
-      "x": 60,
-      "z": 90,
-      "radius": 18,
-      "height": 10.0,
-      "description": "Central barrier"
-    },
-    {
-      "type": "mountain",
-      "x": 145,
-      "z": 80,
-      "radius": 20,
-      "height": 11.0,
-      "description": "Eastern barrier"
-    },
-    {
-      "type": "mountain",
-      "x": 100,
-      "z": 40,
-      "radius": 16,
-      "height": 10.0,
-      "description": "Northern peak"
-    },
-    {
-      "type": "mountain",
-      "x": 40,
-      "z": 120,
-      "radius": 14,
-      "height": 9.0,
-      "description": "Southern barrier"
-    },
-    {
-      "type": "mountain",
-      "x": 150,
-      "z": 130,
-      "radius": 18,
-      "height": 10.0,
-      "description": "Final descent peak"
-    },
-    {
       "type": "hill",
-      "x": 25,
-      "z": 25,
-      "radius": 15,
+      "x": 24,
+      "z": 28,
+      "radius": 17,
       "height": 3.0,
-      "description": "Starting camp elevation",
+      "description": "Carthaginian starting camp in the lower western valley.",
       "entrances": [
-        {
-          "x": 40,
-          "z": 25
-        },
-        {
-          "x": 25,
-          "z": 40
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 160,
-      "z": 160,
-      "radius": 15,
-      "height": 3.0,
-      "description": "Italian side - destination",
-      "entrances": [
-        {
-          "x": 145,
-          "z": 160
-        },
-        {
-          "x": 160,
-          "z": 145
-        }
+        { "x": 39, "z": 32 },
+        { "x": 28, "z": 45 }
       ]
     },
     {
       "type": "pass",
       "path": [
-        {
-          "x": 35,
-          "z": 35
-        },
-        {
-          "x": 55,
-          "z": 50
-        },
-        {
-          "x": 70,
-          "z": 60
-        },
-        {
-          "x": 85,
-          "z": 80
-        },
-        {
-          "x": 100,
-          "z": 95
-        },
-        {
-          "x": 115,
-          "z": 110
-        },
-        {
-          "x": 135,
-          "z": 130
-        },
-        {
-          "x": 155,
-          "z": 155
-        }
+        { "x": 24, "z": 28 },
+        { "x": 44, "z": 48 },
+        { "x": 66, "z": 62 },
+        { "x": 88, "z": 78 },
+        { "x": 110, "z": 96 },
+        { "x": 128, "z": 118 },
+        { "x": 145, "z": 145 },
+        { "x": 168, "z": 170 },
+        { "x": 198, "z": 196 },
+        { "x": 232, "z": 228 }
       ],
-      "width": 10.0,
-      "description": "Treacherous mountain pass through the Alps"
+      "width": 11.0,
+      "description": "Main Alpine pass. This is the intended campaign spine: dangerous, readable, and suitable for elephants."
     },
     {
-      "type": "avalanche_zone",
-      "x": 75,
-      "z": 55,
-      "radius": 18,
-      "description": "First avalanche danger zone - tribes ambush here"
+      "type": "pass",
+      "path": [
+        { "x": 44, "z": 48 },
+        { "x": 34, "z": 76 },
+        { "x": 45, "z": 105 },
+        { "x": 66, "z": 133 },
+        { "x": 92, "z": 154 },
+        { "x": 122, "z": 164 },
+        { "x": 145, "z": 145 }
+      ],
+      "width": 7.5,
+      "description": "Western mule trail. Longer and slower, but it avoids the worst avalanche basin."
     },
     {
-      "type": "avalanche_zone",
-      "x": 105,
-      "z": 85,
-      "radius": 22,
-      "description": "Major avalanche zone - highest danger"
+      "type": "pass",
+      "path": [
+        { "x": 88, "z": 78 },
+        { "x": 112, "z": 70 },
+        { "x": 140, "z": 76 },
+        { "x": 162, "z": 98 },
+        { "x": 180, "z": 126 },
+        { "x": 190, "z": 158 },
+        { "x": 198, "z": 196 }
+      ],
+      "width": 6.0,
+      "description": "Eastern cliff traverse. Fastest route, but narrow, exposed, and heavily defended by mountain tribes."
     },
     {
-      "type": "avalanche_zone",
-      "x": 125,
-      "z": 115,
-      "radius": 15,
-      "description": "Final pass avalanche risk"
-    },
-    {
-      "type": "forest",
-      "x": 45,
-      "z": 55,
-      "radius": 10,
-      "density": 0.4,
-      "description": "Alpine forest - shelter"
-    },
-    {
-      "type": "forest",
-      "x": 135,
-      "z": 140,
-      "radius": 12,
-      "density": 0.5,
-      "description": "Italian side forest - journey's end"
-    },
-    {
-      "type": "forest",
-      "x": 92,
-      "z": 122,
-      "radius": 10,
-      "density": 0.45,
-      "description": "High-altitude pine belt around the final switchbacks"
+      "type": "pass",
+      "path": [
+        { "x": 145, "z": 145 },
+        { "x": 158, "z": 160 },
+        { "x": 176, "z": 176 },
+        { "x": 198, "z": 196 },
+        { "x": 216, "z": 214 },
+        { "x": 232, "z": 228 }
+      ],
+      "width": 12.0,
+      "description": "Final descent into Italy. Wider and visually calmer after the high pass."
     },
     {
       "type": "mountain",
-      "x": 112,
-      "z": 56,
-      "radius": 14,
-      "height": 9.5,
-      "description": "Sheer cliff splitting the central pass"
+      "x": 55,
+      "z": 24,
+      "radius": 25,
+      "height": 13.0,
+      "description": "First western peak blocking a direct march."
+    },
+    {
+      "type": "mountain",
+      "x": 88,
+      "z": 42,
+      "radius": 26,
+      "height": 14.0,
+      "description": "Northern lower peak above the first torrent."
+    },
+    {
+      "type": "mountain",
+      "x": 118,
+      "z": 78,
+      "radius": 31,
+      "height": 16.0,
+      "description": "High central Alpine wall. This creates the main route split."
+    },
+    {
+      "type": "mountain",
+      "x": 72,
+      "z": 100,
+      "radius": 24,
+      "height": 12.5,
+      "description": "Western barrier separating the mule trail from the main pass."
+    },
+    {
+      "type": "mountain",
+      "x": 34,
+      "z": 145,
+      "radius": 25,
+      "height": 12.0,
+      "description": "Far western ridge enclosing the mule trail."
+    },
+    {
+      "type": "mountain",
+      "x": 118,
+      "z": 198,
+      "radius": 28,
+      "height": 13.5,
+      "description": "Southern snow wall above the rejoin point."
+    },
+    {
+      "type": "mountain",
+      "x": 156,
+      "z": 124,
+      "radius": 32,
+      "height": 17.0,
+      "description": "Highest pass massif. This creates the main avalanche crisis."
+    },
+    {
+      "type": "mountain",
+      "x": 196,
+      "z": 102,
+      "radius": 25,
+      "height": 13.0,
+      "description": "Eastern cliff wall overlooking the dangerous traverse."
+    },
+    {
+      "type": "mountain",
+      "x": 212,
+      "z": 154,
+      "radius": 26,
+      "height": 13.5,
+      "description": "Eastern descent peak."
+    },
+    {
+      "type": "mountain",
+      "x": 178,
+      "z": 224,
+      "radius": 22,
+      "height": 10.5,
+      "description": "Italian-side mountain shoulder framing the final valley."
     },
     {
       "type": "hill",
-      "x": 142,
-      "z": 146,
-      "radius": 9,
+      "x": 66,
+      "z": 63,
+      "width": 18,
+      "depth": 12,
+      "height": 2.4,
+      "rotation": -8,
+      "description": "First toll ridge. Mountain tribes can harass the first crossing here.",
+      "entrances": [
+        { "x": 58, "z": 58 },
+        { "x": 75, "z": 66 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 98,
+      "z": 86,
+      "width": 20,
+      "depth": 12,
+      "height": 2.6,
+      "rotation": 12,
+      "description": "Fork overlook. The player sees the main pass, mule trail, and cliff traverse from here.",
+      "entrances": [
+        { "x": 88, "z": 80 },
+        { "x": 108, "z": 91 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 68,
+      "z": 139,
+      "width": 26,
+      "depth": 14,
+      "height": 2.3,
+      "rotation": 5,
+      "description": "Mule trail shelter ridge near a temporary rest camp.",
+      "entrances": [
+        { "x": 58, "z": 135 },
+        { "x": 80, "z": 142 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 158,
+      "z": 91,
+      "width": 24,
+      "depth": 12,
+      "height": 2.8,
+      "rotation": -15,
+      "description": "Cliff traverse ambush shelf. Dangerous for slow infantry and elephants.",
+      "entrances": [
+        { "x": 145, "z": 88 },
+        { "x": 169, "z": 96 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 140,
+      "z": 143,
+      "width": 26,
+      "depth": 16,
+      "height": 3.1,
+      "rotation": 8,
+      "description": "High-pass saddle. This is the emotional midpoint of the mission.",
+      "entrances": [
+        { "x": 128, "z": 135 },
+        { "x": 151, "z": 151 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 184,
+      "z": 184,
+      "width": 30,
+      "depth": 14,
       "height": 2.5,
-      "description": "Italian lookout mound above the descent"
+      "rotation": -6,
+      "description": "Final descent lookout. The Italian valley becomes visible from here.",
+      "entrances": [
+        { "x": 172, "z": 178 },
+        { "x": 196, "z": 191 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 232,
+      "z": 228,
+      "radius": 18,
+      "height": 2.4,
+      "description": "Italian foothill destination.",
+      "entrances": [
+        { "x": 216, "z": 214 },
+        { "x": 225, "z": 235 }
+      ]
+    },
+    {
+      "type": "avalanche_zone",
+      "x": 74,
+      "z": 66,
+      "radius": 16,
+      "description": "First avalanche zone. Small enough to teach the hazard without destroying the army."
+    },
+    {
+      "type": "avalanche_zone",
+      "x": 128,
+      "z": 118,
+      "radius": 22,
+      "description": "Central avalanche basin. The main pass is shortest, but this is its main punishment."
+    },
+    {
+      "type": "avalanche_zone",
+      "x": 150,
+      "z": 148,
+      "radius": 20,
+      "description": "High-pass avalanche field. This should create the largest survival pressure."
+    },
+    {
+      "type": "avalanche_zone",
+      "x": 188,
+      "z": 188,
+      "radius": 14,
+      "description": "Final descent rockslide area. Dangerous but avoidable if the player keeps formation."
+    },
+    {
+      "type": "forest",
+      "x": 46,
+      "z": 58,
+      "radius": 12,
+      "density": 0.45,
+      "description": "Lower pine shelter before the first climb."
+    },
+    {
+      "type": "forest",
+      "x": 76,
+      "z": 142,
+      "radius": 14,
+      "density": 0.55,
+      "description": "Mule trail shelter forest. This is the safest rest zone."
+    },
+    {
+      "type": "forest",
+      "x": 112,
+      "z": 166,
+      "radius": 12,
+      "density": 0.48,
+      "description": "High-altitude pine belt near the route rejoin."
+    },
+    {
+      "type": "forest",
+      "x": 210,
+      "z": 214,
+      "radius": 15,
+      "density": 0.55,
+      "description": "Italian-side forest signaling the end of the crossing."
     },
     {
       "type": "village",
-      "x": 152,
-      "z": 150,
-      "description": "Italian frontier hamlet signaling the end of the crossing"
+      "x": 80,
+      "z": 144,
+      "description": "Abandoned mountain hamlet on the safer mule trail."
+    },
+    {
+      "type": "village",
+      "x": 232,
+      "z": 228,
+      "description": "Italian frontier village and mission endpoint."
     }
   ],
   "rivers": [
     {
-      "start": [
-        42,
-        18
-      ],
-      "end": [
-        72,
-        46
-      ],
-      "width": 3.0,
-      "description": "Meltwater torrent cutting across the lower pass"
+      "start": [42, 15],
+      "end": [86, 67],
+      "width": 3.4,
+      "description": "Lower meltwater torrent cutting across the first climb."
     },
     {
-      "start": [
-        112,
-        122
-      ],
-      "end": [
-        168,
-        172
-      ],
-      "width": 3.5,
-      "description": "Alpine runoff stream near the final descent"
+      "start": [112, 100],
+      "end": [158, 139],
+      "width": 3.2,
+      "description": "Glacial stream through the high pass."
+    },
+    {
+      "start": [188, 188],
+      "end": [248, 246],
+      "width": 3.6,
+      "description": "Italian runoff stream near the final descent."
     }
   ],
   "bridges": [
     {
-      "start": [
-        58,
-        34
-      ],
-      "end": [
-        64,
-        40
-      ],
-      "width": 4.0,
-      "height": 0.8,
-      "description": "Rope bridge over the lower meltwater torrent"
+      "start": [61, 41],
+      "end": [70, 50],
+      "width": 4.2,
+      "height": 0.85,
+      "description": "Rope bridge over the lower meltwater torrent."
     },
     {
-      "start": [
-        142,
-        148
-      ],
-      "end": [
-        148,
-        154
-      ],
-      "width": 4.0,
+      "start": [128, 116],
+      "end": [137, 125],
+      "width": 3.8,
       "height": 0.7,
-      "description": "Stone bridge on the Italian approach stream"
+      "description": "Ice-crusted plank bridge in the high pass."
+    },
+    {
+      "start": [213, 209],
+      "end": [222, 218],
+      "width": 4.2,
+      "height": 0.7,
+      "description": "Stone bridge on the Italian approach."
     }
   ],
   "roads": [
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 4.0,
+      "start": [20, 24],
+      "end": [232, 228],
+      "width": 4.2,
       "style": "default",
       "waypoints": [
-        [
-          20,
-          20
-        ],
-        [
-          35,
-          35
-        ],
-        [
-          50,
-          48
-        ],
-        [
-          65,
-          58
-        ],
-        [
-          80,
-          75
-        ],
-        [
-          95,
-          90
-        ],
-        [
-          110,
-          105
-        ],
-        [
-          130,
-          125
-        ],
-        [
-          150,
-          150
-        ],
-        [
-          165,
-          165
-        ]
+        [20, 24],
+        [36, 39],
+        [52, 53],
+        [68, 64],
+        [88, 78],
+        [110, 96],
+        [128, 118],
+        [145, 145],
+        [168, 170],
+        [198, 196],
+        [232, 228]
       ],
-      "description": "Main mountain pass route through the Alps"
+      "description": "Main Alpine pass route. Suitable for the whole army, including elephants, but exposed to the worst hazards."
     },
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
+      "start": [44, 48],
+      "end": [145, 145],
+      "width": 2.7,
       "style": "default",
       "waypoints": [
-        [
-          20,
-          20
-        ],
-        [
-          15,
-          35
-        ],
-        [
-          20,
-          50
-        ],
-        [
-          35,
-          65
-        ],
-        [
-          50,
-          80
-        ]
+        [44, 48],
+        [35, 72],
+        [45, 104],
+        [66, 133],
+        [92, 154],
+        [122, 164],
+        [145, 145]
       ],
-      "description": "Alternative western route - longer but safer"
+      "description": "Western mule trail. Longer, safer, and better for preserving weak units."
     },
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
+      "start": [88, 78],
+      "end": [198, 196],
       "width": 2.4,
       "style": "default",
       "waypoints": [
-        [
-          70,
-          60
-        ],
-        [
-          85,
-          68
-        ],
-        [
-          102,
-          84
-        ],
-        [
-          118,
-          98
-        ],
-        [
-          132,
-          116
-        ],
-        [
-          150,
-          138
-        ]
+        [88, 78],
+        [112, 70],
+        [140, 76],
+        [162, 98],
+        [180, 126],
+        [190, 158],
+        [198, 196]
       ],
-      "description": "Exposed eastern traverse that shortens the final climb"
+      "description": "Eastern cliff traverse. Fast but narrow and full of ambush positions."
+    },
+    {
+      "start": [80, 144],
+      "end": [122, 164],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [80, 144],
+        [92, 151],
+        [106, 158],
+        [122, 164]
+      ],
+      "description": "Hamlet connector path from the mule trail back to the main pass."
+    },
+    {
+      "start": [145, 145],
+      "end": [232, 228],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [145, 145],
+        [158, 160],
+        [176, 176],
+        [198, 196],
+        [216, 214],
+        [232, 228]
+      ],
+      "description": "Final descent road into Italy."
+    },
+    {
+      "start": [24, 28],
+      "end": [46, 58],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [24, 28],
+        [30, 38],
+        [38, 49],
+        [46, 58]
+      ],
+      "description": "Lower camp road to the first pine shelter."
     }
   ],
-  "victory": {
-    "type": "reach_destination",
-    "destination": {
-      "x": 160,
-      "z": 160
+  "spawns": [
+    {
+      "type": "barracks",
+      "x": 20,
+      "z": 24,
+      "player_id": 1,
+      "max_population": 160,
+      "nation": "carthage",
+      "description": "Starting Alpine camp"
     },
-    "description": "Lead your army through the Alps to the Italian side while preserving at least 20 units"
-  },
-  "weather": {
-    "type": "snow",
-    "intensity": 0.85,
-    "temperature": "extreme_cold",
-    "description": "Harsh Alpine winter - the cold claims lives every moment"
-  },
-  "time_of_day": "morning",
+    {
+      "type": "spearman",
+      "x": 25,
+      "z": 28,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 29,
+      "z": 31,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 22,
+      "z": 34,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 33,
+      "z": 29,
+      "player_id": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 30,
+      "z": 37,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 22,
+      "z": 40,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 37,
+      "z": 34,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 17,
+      "z": 34,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 35,
+      "z": 21,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 39,
+      "z": 41,
+      "player_id": 1
+    },
+    {
+      "type": "healer",
+      "x": 18,
+      "z": 22,
+      "player_id": 1
+    },
+    {
+      "type": "elephant",
+      "x": 28,
+      "z": 23,
+      "player_id": 1,
+      "description": "War elephant column"
+    },
+    {
+      "type": "elephant",
+      "x": 23,
+      "z": 30,
+      "player_id": 1
+    },
+    {
+      "type": "catapult",
+      "x": 16,
+      "z": 31,
+      "player_id": 1,
+      "description": "Heavy baggage train escort"
+    },
+
+    {
+      "type": "barracks",
+      "x": 72,
+      "z": 74,
+      "player_id": 2,
+      "max_population": 70,
+      "nation": "gaul",
+      "description": "First mountain tribe toll camp"
+    },
+    {
+      "type": "spearman",
+      "x": 66,
+      "z": 70,
+      "player_id": 2,
+      "hidden": true,
+      "description": "First pass ambush"
+    },
+    {
+      "type": "spearman",
+      "x": 72,
+      "z": 74,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 76,
+      "z": 67,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 82,
+      "z": 77,
+      "player_id": 2,
+      "hidden": true
+    },
+
+    {
+      "type": "barracks",
+      "x": 80,
+      "z": 144,
+      "player_id": 2,
+      "max_population": 70,
+      "nation": "gaul",
+      "description": "Mule trail hamlet defenders"
+    },
+    {
+      "type": "spearman",
+      "x": 72,
+      "z": 139,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 78,
+      "z": 148,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 86,
+      "z": 144,
+      "player_id": 2,
+      "hidden": true
+    },
+
+    {
+      "type": "barracks",
+      "x": 158,
+      "z": 92,
+      "player_id": 2,
+      "max_population": 85,
+      "nation": "gaul",
+      "description": "Eastern cliff tribe camp"
+    },
+    {
+      "type": "archer",
+      "x": 148,
+      "z": 84,
+      "player_id": 2,
+      "hidden": true,
+      "description": "Cliff traverse archers"
+    },
+    {
+      "type": "archer",
+      "x": 158,
+      "z": 88,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "spearman",
+      "x": 166,
+      "z": 100,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 174,
+      "z": 110,
+      "player_id": 2,
+      "hidden": true
+    },
+
+    {
+      "type": "spearman",
+      "x": 132,
+      "z": 136,
+      "player_id": 2,
+      "hidden": true,
+      "description": "High-pass defense"
+    },
+    {
+      "type": "spearman",
+      "x": 140,
+      "z": 142,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 148,
+      "z": 148,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 136,
+      "z": 151,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 154,
+      "z": 140,
+      "player_id": 2,
+      "hidden": true
+    },
+
+    {
+      "type": "spearman",
+      "x": 184,
+      "z": 181,
+      "player_id": 2,
+      "hidden": true,
+      "description": "Final descent raiders"
+    },
+    {
+      "type": "swordsman",
+      "x": 190,
+      "z": 186,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 198,
+      "z": 192,
+      "player_id": 2,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 178,
+      "z": 176,
+      "player_id": 2,
+      "hidden": true
+    }
+  ],
+  "firecamps": [
+    {
+      "x": 20,
+      "z": 24,
+      "intensity": 1.35,
+      "radius": 4.2
+    },
+    {
+      "x": 46,
+      "z": 58,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 80,
+      "z": 144,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 122,
+      "z": 164,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "x": 184,
+      "z": 184,
+      "intensity": 0.9,
+      "radius": 2.8
+    },
+    {
+      "x": 232,
+      "z": 228,
+      "intensity": 1.35,
+      "radius": 4.2
+    }
+  ],
   "world_props": [
     {
-      "type": "ruins",
-      "x": 149.0,
-      "z": 147.0,
-      "scale": 1.1,
-      "rotation": 1.5
-    },
-    {
-      "type": "ruins",
-      "x": 155.0,
-      "z": 153.0,
+      "type": "tent",
+      "x": 18,
+      "z": 29,
       "scale": 1.0,
-      "rotation": 3.4
+      "rotation": 0.5
     },
     {
-      "type": "ruins",
-      "x": 148.0,
-      "z": 154.0,
-      "scale": 0.9,
-      "rotation": 5.8
+      "type": "tent",
+      "x": 28,
+      "z": 18,
+      "scale": 1.0,
+      "rotation": 2.5
+    },
+    {
+      "type": "supply_cart",
+      "x": 33,
+      "z": 35,
+      "scale": 1.0,
+      "rotation": 1.2
+    },
+    {
+      "type": "weapon_rack",
+      "x": 15,
+      "z": 36,
+      "scale": 1.0,
+      "rotation": 4.0
     },
     {
       "type": "dead_tree",
-      "x": 40.0,
-      "z": 51.0,
-      "scale": 1.1,
+      "x": 44,
+      "z": 54,
+      "scale": 1.2,
       "rotation": 0.7
     },
     {
       "type": "dead_tree",
-      "x": 48.0,
-      "z": 49.0,
+      "x": 52,
+      "z": 61,
       "scale": 1.0,
       "rotation": 2.6
     },
     {
       "type": "dead_tree",
-      "x": 39.0,
-      "z": 58.0,
-      "scale": 0.9,
+      "x": 69,
+      "z": 67,
+      "scale": 1.1,
       "rotation": 4.8
     },
     {
-      "type": "dead_tree",
-      "x": 129.0,
-      "z": 135.0,
-      "scale": 1.2,
-      "rotation": 1.3
-    },
-    {
-      "type": "dead_tree",
-      "x": 138.0,
-      "z": 131.0,
+      "type": "ruins",
+      "x": 78,
+      "z": 141,
       "scale": 1.0,
-      "rotation": 3.2
+      "rotation": 1.0
+    },
+    {
+      "type": "ruins",
+      "x": 84,
+      "z": 147,
+      "scale": 0.9,
+      "rotation": 3.4
+    },
+    {
+      "type": "supply_cart",
+      "x": 88,
+      "z": 152,
+      "scale": 0.9,
+      "rotation": 5.2
     },
     {
       "type": "dead_tree",
-      "x": 131.0,
-      "z": 145.0,
-      "scale": 1.1,
-      "rotation": 5.4
-    },
-    {
-      "type": "dead_tree",
-      "x": 87.0,
-      "z": 118.0,
+      "x": 114,
+      "z": 158,
       "scale": 1.0,
       "rotation": 2.0
     },
     {
       "type": "dead_tree",
-      "x": 95.0,
-      "z": 115.0,
-      "scale": 0.9,
-      "rotation": 4.4
+      "x": 127,
+      "z": 166,
+      "scale": 1.1,
+      "rotation": 5.4
     },
     {
       "type": "dead_tree",
-      "x": 89.0,
-      "z": 126.0,
+      "x": 150,
+      "z": 137,
+      "scale": 1.2,
+      "rotation": 1.3
+    },
+    {
+      "type": "dead_tree",
+      "x": 160,
+      "z": 151,
+      "scale": 1.0,
+      "rotation": 3.2
+    },
+    {
+      "type": "dead_tree",
+      "x": 184,
+      "z": 188,
       "scale": 1.1,
-      "rotation": 6.0
+      "rotation": 5.4
+    },
+    {
+      "type": "ruins",
+      "x": 226,
+      "z": 224,
+      "scale": 1.1,
+      "rotation": 1.5
+    },
+    {
+      "type": "ruins",
+      "x": 234,
+      "z": 231,
+      "scale": 1.0,
+      "rotation": 3.4
+    },
+    {
+      "type": "tent",
+      "x": 239,
+      "z": 224,
+      "scale": 1.0,
+      "rotation": 5.8
+    },
+    {
+      "type": "supply_cart",
+      "x": 229,
+      "z": 236,
+      "scale": 1.0,
+      "rotation": 2.6
     }
-  ]
+  ],
+  "campaign_events": [
+    {
+      "name": "First Snow Shelf",
+      "trigger_zone": {
+        "x": 74,
+        "z": 66,
+        "radius": 18
+      },
+      "description": "A small avalanche teaches the player that marching in a dense blob is dangerous."
+    },
+    {
+      "name": "Route Choice",
+      "trigger_zone": {
+        "x": 98,
+        "z": 86,
+        "radius": 16
+      },
+      "description": "The player must choose between the safer mule trail, the direct main pass, or the dangerous eastern cliff traverse."
+    },
+    {
+      "name": "High-Pass Crisis",
+      "trigger_zone": {
+        "x": 145,
+        "z": 145,
+        "radius": 22
+      },
+      "description": "The worst weather and strongest tribal resistance occur at the high pass."
+    },
+    {
+      "name": "Italian Descent",
+      "trigger_zone": {
+        "x": 198,
+        "z": 196,
+        "radius": 18
+      },
+      "description": "The mission shifts from survival pressure to relief and pursuit prevention."
+    }
+  ],
+  "victory": {
+    "type": "reach_destination",
+    "destination": {
+      "x": 232,
+      "z": 228
+    },
+    "minimum_survivors": 25,
+    "description": "Lead Hannibal's army through the Alps to the Italian foothills while preserving at least 25 units.",
+    "primary_objectives": [
+      "Reach the Italian frontier village",
+      "Preserve at least 25 soldiers",
+      "Keep at least one elephant alive",
+      "Survive the high-pass avalanche basin"
+    ],
+    "secondary_objectives": [
+      "Use the mule trail shelter camp",
+      "Defeat the cliff tribe without losing an elephant",
+      "Recover the abandoned supply cart in the mule trail hamlet",
+      "Reach Italy with both healers alive"
+    ],
+    "route_choices": [
+      {
+        "name": "Main Pass",
+        "description": "Best for the whole army. Moderate length, heavy avalanche risk."
+      },
+      {
+        "name": "Western Mule Trail",
+        "description": "Longest but safest. Good for preserving wounded units."
+      },
+      {
+        "name": "Eastern Cliff Traverse",
+        "description": "Fastest and most dangerous. Strong ambushes and narrow paths make it risky for elephants."
+      }
+    ],
+    "failure_hint": "Do not rush the whole army through avalanche zones. Split the column, use shelter camps, and keep elephants away from the narrow cliff traverse."
+  }
 }

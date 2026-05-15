@@ -28,9 +28,26 @@ RowLayout {
             "rally_ready": false,
             "aura_active": false,
             "combo_step": 0,
-            "special_cooldown": 3.0,
-            "special_cooldown_remaining": 0.0,
-            "special_ready": true
+            "posture": 0.0,
+            "posture_max": 100.0,
+            "posture_ratio": 0.0,
+            "punish_window_remaining": 0.0,
+            "punish_active": false,
+            "perfect_guard_remaining": 0.0,
+            "perfect_guard_active": false,
+            "guard_break_remaining": 0.0,
+            "guard_broken": false,
+            "finisher_ready": false,
+            "camera_mode": "Chase",
+            "shield_bash_cooldown": 3.0,
+            "shield_bash_cooldown_remaining": 0.0,
+            "shield_bash_ready": true,
+            "vanguard_rush_cooldown": 4.5,
+            "vanguard_rush_cooldown_remaining": 0.0,
+            "vanguard_rush_ready": true,
+            "second_wind_cooldown": 8.0,
+            "second_wind_cooldown_remaining": 0.0,
+            "second_wind_ready": true
         };
     }
 
@@ -70,9 +87,44 @@ RowLayout {
         return qsTr("Recovering %1s").arg(Number(status_value("rally_cooldown_remaining", 0)).toFixed(1));
     }
 
+    function cooldown_progress(cooldownKey, remainingKey) {
+        var cooldown = Math.max(0.001, Number(status_value(cooldownKey, 0)));
+        var remaining = Number(status_value(remainingKey, 0));
+        return Math.max(0, Math.min(1, 1 - remaining / cooldown));
+    }
+
+    function combat_abilities() {
+        return [{
+                "title": qsTr("Vanguard Rush"),
+                "key": "1",
+                "description": qsTr("Explode forward into the focused enemy and open a punish."),
+                "readyKey": "vanguard_rush_ready",
+                "cooldownKey": "vanguard_rush_cooldown",
+                "remainingKey": "vanguard_rush_cooldown_remaining"
+            }, {
+                "title": qsTr("Second Wind"),
+                "key": "2",
+                "description": qsTr("Recover posture and stamina, then steady yourself for the next exchange."),
+                "readyKey": "second_wind_ready",
+                "cooldownKey": "second_wind_cooldown",
+                "remainingKey": "second_wind_cooldown_remaining"
+            }, {
+                "title": qsTr("Shield Bash"),
+                "key": "F",
+                "description": qsTr("Guard-gated stagger burst that punishes enemies crowding your front."),
+                "readyKey": "shield_bash_ready",
+                "cooldownKey": "shield_bash_cooldown",
+                "remainingKey": "shield_bash_cooldown_remaining"
+            }];
+    }
+
     function stance_label() {
         if (!status_value("has_commander", false))
             return qsTr("Disconnected");
+        if (status_value("guard_broken", false))
+            return qsTr("Guard broken");
+        if (status_value("punish_active", false))
+            return qsTr("Punish window");
         if (status_value("is_running", false))
             return qsTr("Sprinting");
         return qsTr("Steady");
@@ -211,12 +263,41 @@ RowLayout {
                         color: bottomRoot.status_value("is_running", false) ? hs.bronze : Theme.textSubLite
                     }
                 }
+
+                Text {
+                    text: qsTr("Posture")
+                    color: Theme.textMain
+                    font.pointSize: 9
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 10
+                    color: Theme.bgShade
+                    radius: 5
+                    border.color: hs.bronzeDeep
+                    border.width: 1
+
+                    Rectangle {
+                        width: parent.width * Number(bottomRoot.status_value("posture_ratio", 0))
+                        height: parent.height
+                        radius: 5
+                        color: bottomRoot.status_value("guard_broken", false) ? hs.waxHover : (bottomRoot.status_value("perfect_guard_active", false) ? Theme.accent : hs.bronze)
+                    }
+                }
             }
 
             Text {
                 text: qsTr("State: %1").arg(bottomRoot.stance_label())
                 color: Theme.textSubLite
                 font.pointSize: 9
+            }
+
+            Text {
+                text: bottomRoot.status_value("perfect_guard_active", false) ? qsTr("Perfect guard live") : (bottomRoot.status_value("finisher_ready", false) ? qsTr("Finisher primed") : qsTr("Camera: %1").arg(bottomRoot.status_value("camera_mode", qsTr("Chase"))))
+                color: Theme.textSubLite
+                font.pointSize: 9
+                wrapMode: Text.WordWrap
             }
         }
     }
@@ -403,29 +484,43 @@ RowLayout {
                         }
                     }
 
-                    ColumnLayout {
-                        visible: bottomRoot.status_value("has_commander", false)
-                        spacing: 4
+                    Repeater {
+                        model: bottomRoot.combat_abilities()
 
-                        Text {
-                            text: qsTr("Shield Bash [F]")
-                            color: bottomRoot.status_value("special_ready", true) ? hs.bronze : hs.bronzeDeep
-                            font.pointSize: 9
-                        }
+                        delegate: ColumnLayout {
+                            Layout.fillWidth: true
+                            visible: bottomRoot.status_value("has_commander", false)
+                            spacing: 4
 
-                        Rectangle {
-                            width: 120
-                            height: 8
-                            radius: 4
-                            color: hs.parchmentDark
-                            border.color: hs.bronze
-                            border.width: 1
+                            Text {
+                                text: qsTr("%1 [%2]").arg(modelData["title"]).arg(modelData["key"])
+                                color: bottomRoot.status_value(modelData["readyKey"], true) ? hs.bronze : hs.bronzeDeep
+                                font.pointSize: 9
+                                font.bold: true
+                            }
 
                             Rectangle {
-                                width: parent.width * (1.0 - Number(bottomRoot.status_value("special_cooldown_remaining", 0)) / Math.max(1.0, Number(bottomRoot.status_value("special_cooldown", 3.0))))
-                                height: parent.height
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 8
                                 radius: 4
-                                color: bottomRoot.status_value("special_ready", true) ? Theme.accent : hs.bronze
+                                color: hs.parchmentDark
+                                border.color: hs.bronze
+                                border.width: 1
+
+                                Rectangle {
+                                    width: parent.width * bottomRoot.cooldown_progress(modelData["cooldownKey"], modelData["remainingKey"])
+                                    height: parent.height
+                                    radius: 4
+                                    color: bottomRoot.status_value(modelData["readyKey"], true) ? Theme.accent : hs.bronze
+                                }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData["description"]
+                                color: Theme.textSubLite
+                                wrapMode: Text.WordWrap
+                                font.pointSize: 8
                             }
                         }
                     }
@@ -474,7 +569,14 @@ RowLayout {
             }
 
             Text {
-                text: qsTr("[R] Rally  [Enter] Return to RTS")
+                text: qsTr("[1] Rush  [2] Second Wind  [F] Bash")
+                color: Theme.textMain
+                font.pointSize: 10
+                wrapMode: Text.WordWrap
+            }
+
+            Text {
+                text: qsTr("[R] Rally  [C] Camera  [Enter] Return to RTS")
                 color: Theme.textMain
                 font.pointSize: 10
                 wrapMode: Text.WordWrap

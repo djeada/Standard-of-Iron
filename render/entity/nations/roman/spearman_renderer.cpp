@@ -17,6 +17,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
+#include "../../../creature/pipeline/creature_asset.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/armor/roman_armor.h"
 #include "../../../equipment/armor/roman_greaves.h"
@@ -124,6 +125,7 @@ public:
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/spearman";
+      s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
       s.scaling = ProportionScaling{0.90F, 0.80F, 0.76F};
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
@@ -182,7 +184,6 @@ private:
     return k_empty;
   }
 
-private:
   void apply_palette_overrides(const SpearmanStyleConfig& style,
                                const QVector3D& team_tint,
                                HumanoidVariant& variant) const {

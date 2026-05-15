@@ -215,6 +215,9 @@ public:
   Q_INVOKABLE void commander_jump();
   Q_INVOKABLE void commander_cycle_lock_on();
   Q_INVOKABLE void commander_special_action();
+  Q_INVOKABLE void commander_vanguard_rush();
+  Q_INVOKABLE void commander_second_wind();
+  Q_INVOKABLE void commander_toggle_camera_mode();
   Q_INVOKABLE void commander_mouse_move(qreal dx, qreal dy);
   Q_INVOKABLE void
   commander_mouse_look_at(qreal sx, qreal sy, qreal center_sx, qreal center_sy);

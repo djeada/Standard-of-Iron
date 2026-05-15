@@ -56,6 +56,18 @@ struct StructureElement {
   int max_population = 150;
   QString nation;
   QJsonObject extra_fields;
+  int spawn_order = -1;
+};
+
+struct TroopSpawnElement {
+  QString type;
+  float x = 0.0F;
+  float z = 0.0F;
+  int player_id = -1;
+  int max_population = -1;
+  QString nation;
+  QJsonObject extra_fields;
+  int spawn_order = -1;
 };
 
 struct GridSettings {
@@ -121,6 +133,14 @@ public:
   void update_structure(int index, const StructureElement& element);
   void remove_structure(int index);
 
+  [[nodiscard]] const QVector<TroopSpawnElement>& troop_spawns() const {
+    return m_troop_spawns;
+  }
+  void add_troop_spawn(const TroopSpawnElement& element);
+  void insert_troop_spawn(int index, const TroopSpawnElement& element);
+  void update_troop_spawn(int index, const TroopSpawnElement& element);
+  void remove_troop_spawn(int index);
+
   void execute_command(std::unique_ptr<Command> cmd);
   void record_command(std::unique_ptr<Command> cmd);
   void undo();
@@ -147,16 +167,23 @@ private:
   QVector<WorldPropElement> m_world_props;
   QVector<LinearElement> m_linear_elements;
   QVector<StructureElement> m_structures;
+  QVector<TroopSpawnElement> m_troop_spawns;
 
   QJsonObject m_biome;
   QJsonObject m_camera;
-  QJsonArray m_spawns;
   QJsonObject m_victory;
   QJsonObject m_rain;
   QJsonObject m_extra_root_fields;
   QString m_description;
   QString m_coord_system;
   int m_max_troops_per_player = 2000;
+  int m_next_spawn_order = 0;
+
+  struct RawSpawnEntry {
+    int spawn_order = -1;
+    QJsonObject object;
+  };
+  QVector<RawSpawnEntry> m_raw_spawns;
 
   bool m_modified = false;
 
@@ -169,14 +196,15 @@ private:
   void parse_rivers_array(const QJsonArray& arr);
   void parse_roads_array(const QJsonArray& arr);
   void parse_bridges_array(const QJsonArray& arr);
-  void parse_structures_from_spawns(const QJsonArray& arr);
+  void parse_spawns_array(const QJsonArray& arr);
 
   [[nodiscard]] QJsonArray terrain_to_json() const;
   [[nodiscard]] QJsonArray world_props_to_json() const;
   [[nodiscard]] QJsonArray rivers_to_json() const;
   [[nodiscard]] QJsonArray roads_to_json() const;
   [[nodiscard]] QJsonArray bridges_to_json() const;
-  [[nodiscard]] QJsonArray structures_to_spawns_json() const;
+  [[nodiscard]] QJsonObject structure_to_spawn_json(const StructureElement& elem) const;
+  [[nodiscard]] QJsonObject troop_to_spawn_json(const TroopSpawnElement& elem) const;
 };
 
 } // namespace MapEditor
@@ -412,6 +440,64 @@ private:
   int m_index;
   StructureElement m_before;
   StructureElement m_after;
+  QString m_desc;
+};
+
+class AddTroopSpawnCmd : public Command {
+public:
+  AddTroopSpawnCmd(MapData* data, TroopSpawnElement elem)
+      : m_data(data)
+      , m_elem(std::move(elem)) {}
+  void execute() override {
+    m_index = m_data->troop_spawns().size();
+    m_data->add_troop_spawn(m_elem);
+  }
+  void undo() override { m_data->remove_troop_spawn(m_index); }
+  [[nodiscard]] QString description() const override { return "Place " + m_elem.type; }
+
+private:
+  MapData* m_data;
+  TroopSpawnElement m_elem;
+  int m_index = -1;
+};
+
+class RemoveTroopSpawnCmd : public Command {
+public:
+  RemoveTroopSpawnCmd(MapData* data, int index, TroopSpawnElement elem)
+      : m_data(data)
+      , m_index(index)
+      , m_elem(std::move(elem)) {}
+  void execute() override { m_data->remove_troop_spawn(m_index); }
+  void undo() override { m_data->insert_troop_spawn(m_index, m_elem); }
+  [[nodiscard]] QString description() const override { return "Erase " + m_elem.type; }
+
+private:
+  MapData* m_data;
+  int m_index;
+  TroopSpawnElement m_elem;
+};
+
+class UpdateTroopSpawnCmd : public Command {
+public:
+  UpdateTroopSpawnCmd(MapData* data,
+                      int index,
+                      TroopSpawnElement before,
+                      TroopSpawnElement after,
+                      QString desc = "Edit troop")
+      : m_data(data)
+      , m_index(index)
+      , m_before(std::move(before))
+      , m_after(std::move(after))
+      , m_desc(std::move(desc)) {}
+  void execute() override { m_data->update_troop_spawn(m_index, m_after); }
+  void undo() override { m_data->update_troop_spawn(m_index, m_before); }
+  [[nodiscard]] QString description() const override { return m_desc; }
+
+private:
+  MapData* m_data;
+  int m_index;
+  TroopSpawnElement m_before;
+  TroopSpawnElement m_after;
   QString m_desc;
 };
 

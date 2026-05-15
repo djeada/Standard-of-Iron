@@ -19,6 +19,7 @@ constexpr std::array<std::string_view, k_species_count> k_species_asset_name{
     "horse.bpat",
     "elephant.bpat",
     "humanoid_sword.bpat",
+    "humanoid_spear.bpat",
 };
 
 auto find_existing_asset_root(const std::string& asset_root) -> std::string {
@@ -28,7 +29,7 @@ auto find_existing_asset_root(const std::string& asset_root) -> std::string {
           ? fs::path{QCoreApplication::applicationDirPath().toStdString()}
           : fs::path{};
 
-  std::array<fs::path, 8> candidates{
+  std::array<fs::path, 8> const candidates{
       fs::path{asset_root},
       fs::path{"../"} / asset_root,
       fs::path{"../../"} / asset_root,
