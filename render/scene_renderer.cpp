@@ -1992,6 +1992,73 @@ void Renderer::prewarm_unit_templates(
                      return lhs.renderer_id < rhs.renderer_id;
                    });
 
+  auto preload_profile_archetypes = [&]() {
+    if (owner_ids.empty()) {
+      return;
+    }
+
+    CreatureCacheWarmupSubmitter warmup_submitter(this);
+    AnimKey idle_key{};
+    idle_key.state = AnimState::Idle;
+    idle_key.combat_phase = CombatAnimPhase::Idle;
+    AnimationInputs const idle_anim = make_animation_inputs(idle_key);
+    const int owner_id = owner_ids.front();
+
+    for (std::size_t profile_idx = 0; profile_idx < profiles.size(); ++profile_idx) {
+      const PrewarmProfile& profile = profiles[profile_idx];
+      for (std::uint8_t variant = 0; variant < k_template_variant_count; ++variant) {
+        Engine::Core::Entity entity(
+            prewarm_entity_id_for_variant(profile_idx,
+                                          owner_id,
+                                          static_cast<std::uint8_t>(HumanoidLOD::Full),
+                                          variant));
+
+        auto* unit = entity.add_component<Engine::Core::UnitComponent>();
+        unit->spawn_type = profile.spawn_type;
+        unit->owner_id = owner_id;
+        unit->nation_id = profile.nation_id;
+        unit->max_health = profile.max_health;
+        unit->health = unit->max_health;
+
+        auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+        transform->position = {0.0F, 0.0F, 0.0F};
+        transform->rotation = {0.0F, 0.0F, 0.0F};
+        transform->scale = {1.0F, 1.0F, 1.0F};
+
+        auto* renderable =
+            entity.add_component<Engine::Core::RenderableComponent>("", "");
+        renderable->renderer_id = profile.renderer_id;
+        renderable->visible = true;
+        const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
+        renderable->color[0] = team_color.x();
+        renderable->color[1] = team_color.y();
+        renderable->color[2] = team_color.z();
+
+        DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
+        ctx.renderer_id = profile.renderer_id;
+        ctx.backend = m_gl_backend;
+        ctx.camera = nullptr;
+        ctx.allow_template_cache = false;
+        ctx.template_prewarm = true;
+        ctx.has_seed_override = true;
+        ctx.seed_override = prewarm_seed_for_variant(owner_id, variant);
+        ctx.has_variant_override = true;
+        ctx.variant_override = variant;
+        ctx.force_humanoid_lod = true;
+        ctx.forced_humanoid_lod = HumanoidLOD::Full;
+        ctx.force_horse_lod = profile.is_mounted || profile.is_elephant;
+        if (ctx.force_horse_lod) {
+          ctx.forced_horse_lod = HorseLOD::Full;
+        }
+        ctx.animation_override = &idle_anim;
+
+        profile.fn(ctx, warmup_submitter);
+      }
+    }
+  };
+
+  preload_profile_archetypes();
+
   std::vector<AnimKey> core_anim_keys;
   std::vector<AnimKey> full_anim_keys;
   core_anim_keys.reserve(192);

@@ -15,7 +15,7 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
   config.quiver_equipment_id = loadout.ids.quiver;
   config.helmet_equipment_id = loadout.ids.helmet;
   config.armor_equipment_id = loadout.ids.armor;
-  config.cloak_equipment_id = loadout.ids.cloak;
+  config.cloak_equipment_id = "cloak_carthage_mounted";
   config.horse_saddle_equipment_id = loadout.ids.horse_saddle;
   config.horse_bridle_equipment_id = loadout.ids.horse_bridle;
   config.horse_reins_equipment_id = loadout.ids.horse_reins;
@@ -27,7 +27,6 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
   config.quiver_handle = loadout.quiver_handle;
   config.helmet_handle = loadout.helmet_handle;
   config.armor_handle = loadout.armor_handle;
-  config.cloak_handle = loadout.cloak_handle;
   config.horse_saddle_handle = loadout.horse_saddle_handle;
   config.horse_bridle_handle = loadout.horse_bridle_handle;
   config.horse_reins_handle = loadout.horse_reins_handle;
@@ -35,7 +34,7 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
   config.horse_barding_handle = loadout.horse_barding_handle;
   config.horse_crupper_handle = loadout.horse_crupper_handle;
   config.horse_decoration_handle = loadout.horse_decoration_handle;
-  config.has_cloak = loadout.cloak_handle != k_invalid_equipment_handle;
+  config.has_cloak = !loadout.ids.cloak.empty();
   config.rider_debug_name = "troops/carthage/horse_archer/rider";
   config.mount_debug_name = "troops/carthage/horse_archer/mount";
   return config;

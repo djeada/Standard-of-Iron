@@ -18,6 +18,11 @@ struct CloakConfig {
   QVector3D trim_color{0.75F, 0.66F, 0.42F};
   float length_scale = 1.0F;
   float width_scale = 1.0F;
+  float shoulder_anchor_up = 0.18F;
+  float drape_anchor_up = 0.12F;
+  float drape_anchor_back = 0.54F;
+  float clasp_anchor_up = 0.14F;
+  float clasp_anchor_forward = 0.14F;
   bool show_clasp = true;
   int back_material_id = 5;
   int shoulder_material_id = 6;

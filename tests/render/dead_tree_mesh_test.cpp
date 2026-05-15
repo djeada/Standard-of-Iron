@@ -1,7 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <algorithm>
 #include <cmath>
+#include <gtest/gtest.h>
 #include <limits>
 
 #include "render/gl/backend/dead_tree_mesh.h"

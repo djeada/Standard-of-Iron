@@ -17,6 +17,7 @@ inline constexpr float k_horse_head_visual_length_scale = 1.5F;
 inline constexpr float k_horse_muzzle_length_scale = 0.80F;
 inline constexpr float k_horse_torso_part_height_scale = 1.30F;
 inline constexpr float k_horse_torso_chain_drop_fraction = 0.20F;
+inline constexpr float k_horse_rear_torso_extra_length_scale = 0.80F;
 inline constexpr float k_horse_neck_width_boost = 3.08F;
 inline constexpr float k_horse_neck_base_body_height_scale = 1.86F;
 inline constexpr float k_horse_neck_top_body_height_scale = 2.46F;
@@ -114,7 +115,7 @@ horse_tail_base_local(const Render::GL::HorseDimensions& dims) noexcept -> QVect
   float const bh = horse_body_visual_height(dims);
   float const bl = horse_body_visual_length(dims);
   float const torso_drop = horse_torso_chain_drop(dims);
-  return {0.0F, bh * 1.82F - torso_drop, -bl * 0.56F};
+  return {0.0F, bh * 1.82F - torso_drop, -bl * 0.48F};
 }
 
 [[nodiscard]] inline auto
@@ -122,7 +123,7 @@ horse_tail_tip_local(const Render::GL::HorseDimensions& dims) noexcept -> QVecto
   float const bh = horse_body_visual_height(dims);
   float const bl = horse_body_visual_length(dims);
   float const torso_drop = horse_torso_chain_drop(dims);
-  return {0.0F, bh * 1.36F - torso_drop, -bl * 0.70F};
+  return {0.0F, bh * 1.36F - torso_drop, -bl * 0.62F};
 }
 
 } // namespace Render::Horse

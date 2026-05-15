@@ -4,7 +4,9 @@
 
 #include <array>
 #include <cstdint>
+#include <mutex>
 #include <span>
+#include <string>
 #include <string_view>
 
 #include "../static_attachment_spec.h"
@@ -16,7 +18,7 @@ namespace Render::Creature {
 
 struct ArchetypeDescriptor {
   ArchetypeId id{k_invalid_archetype};
-  std::string_view debug_name{};
+  std::string debug_name{};
 
   Render::Creature::Pipeline::CreatureKind species{
       Render::Creature::Pipeline::CreatureKind::Humanoid};
@@ -59,7 +61,7 @@ class ArchetypeRegistry {
 public:
   [[nodiscard]] static auto instance() noexcept -> ArchetypeRegistry&;
 
-  [[nodiscard]] auto get(ArchetypeId id) const noexcept -> const ArchetypeDescriptor*;
+  [[nodiscard]] auto get(ArchetypeId id) const -> const ArchetypeDescriptor*;
 
   [[nodiscard]] auto
   species(ArchetypeId id) const noexcept -> Render::Creature::Pipeline::CreatureKind;
@@ -92,7 +94,10 @@ public:
                                ArchetypeDescriptor::ExtraRoleColorsFn
                                    extra_role_colors_fn = nullptr) -> ArchetypeId;
 
-  [[nodiscard]] auto size() const noexcept -> std::size_t { return m_count; }
+  [[nodiscard]] auto size() const -> std::size_t {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_count;
+  }
 
 private:
   ArchetypeRegistry();
@@ -101,6 +106,7 @@ private:
   static constexpr std::size_t k_max_archetypes = 256;
   std::array<ArchetypeDescriptor, k_max_archetypes> m_table{};
   std::size_t m_count{0};
+  mutable std::mutex m_mutex;
 };
 
 } // namespace Render::Creature

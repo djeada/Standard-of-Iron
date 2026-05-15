@@ -1,599 +1,880 @@
 {
-    "biome": {
-        "blade_height": [
-            0.6,
-            1.4
-        ],
-        "blade_width": [
-            0.03,
-            0.06
-        ],
-        "grass_dry": [
-            0.6,
-            0.52,
-            0.38
-        ],
-        "grass_primary": [
-            0.3,
-            0.6,
-            0.28
-        ],
-        "grass_secondary": [
-            0.44,
-            0.7,
-            0.32
-        ],
-        "ground_irregularity_enabled": true,
-        "ground_type": "soil_fertile",
-        "height_noise": [
-            0.2,
-            0.06
-        ],
-        "irregularity_amplitude": 0.07,
-        "irregularity_scale": 0.15,
-        "patch_density": 3.5,
-        "patch_jitter": 0.9,
-        "plant_density": 0.5,
-        "rock_high": [
-            0.68,
-            0.69,
-            0.73
-        ],
-        "rock_low": [
-            0.5,
-            0.48,
-            0.46
-        ],
-        "seed": 42,
-        "soil_color": [
-            0.28,
-            0.24,
-            0.18
-        ],
-        "sway_speed": 1.4,
-        "sway_strength": 0.3
+  "biome": {
+    "blade_height": [0.55, 1.35],
+    "blade_width": [0.025, 0.055],
+    "grass_dry": [0.62, 0.54, 0.39],
+    "grass_primary": [0.28, 0.58, 0.26],
+    "grass_secondary": [0.42, 0.68, 0.31],
+    "ground_irregularity_enabled": true,
+    "ground_type": "soil_fertile",
+    "height_noise": [0.18, 0.055],
+    "irregularity_amplitude": 0.055,
+    "irregularity_scale": 0.17,
+    "patch_density": 3.4,
+    "patch_jitter": 0.82,
+    "plant_density": 0.48,
+    "rock_high": [0.69, 0.7, 0.74],
+    "rock_low": [0.48, 0.46, 0.43],
+    "seed": 1337,
+    "soil_color": [0.27, 0.23, 0.17],
+    "sway_speed": 1.25,
+    "sway_strength": 0.24
+  },
+  "bridges": [
+    {
+      "start": [55, 24],
+      "end": [65, 24],
+      "width": 4.2,
+      "height": 0.55
     },
-    "bridges": [
-        {
-            "end": [
-                30,
-                62
-            ],
-            "height": 0.5,
-            "start": [
-                30,
-                58
-            ],
-            "width": 4
-        },
-        {
-            "end": [
-                90,
-                62
-            ],
-            "height": 0.5,
-            "start": [
-                90,
-                58
-            ],
-            "width": 4
-        },
-        {
-            "end": [
-                60.704933166503906,
-                60.57472610473633
-            ],
-            "height": 0.5,
-            "start": [
-                59.50912857055664,
-                59.42321014404297
-            ],
-            "width": 4
-        },
-        {
-            "end": [
-                61.147823333740234,
-                59.02460861206055
-            ],
-            "height": 0.5,
-            "start": [
-                58.844791412353516,
-                61.19477462768555
-            ],
-            "width": 4
-        },
-        {
-            "end": [
-                62.243648529052734,
-                109.85460662841797
-            ],
-            "height": 0.5,
-            "start": [
-                58.32643127441406,
-                109.7282485961914
-            ],
-            "width": 4
-        },
-        {
-            "end": [
-                61.5728759765625,
-                14.898211479187012
-            ],
-            "height": 0.5,
-            "start": [
-                59.43589782714844,
-                15.095304489135742
-            ],
-            "width": 4
-        }
-    ],
-    "camera": {
-        "center": [
-            60,
-            0,
-            60
-        ],
-        "distance": 25,
-        "far": 300,
-        "fov_y": 45,
-        "near": 1,
-        "tilt_deg": 45,
-        "yaw": 225
+    {
+      "start": [55, 96],
+      "end": [65, 96],
+      "width": 4.2,
+      "height": 0.55
     },
-    "coord_system": "grid",
-    "description": "Strategic river crossings with bridges and neutral barracks to capture",
-    "grid": {
-        "height": 120,
-        "tile_size": 1,
-        "width": 120
+    {
+      "start": [24, 55],
+      "end": [24, 65],
+      "width": 4.2,
+      "height": 0.55
     },
-    "max_troops_per_player": 2000,
-    "name": "River Crossroads",
-    "rivers": [
-        {
-            "end": [
-                9.845349311828613,
-                119.69747161865234
-            ],
-            "start": [
-                10.40134048461914,
-                0.2981759011745453
-            ],
-            "width": 3.5
-        },
-        {
-            "end": [
-                110.61891174316406,
-                119.69747161865234
-            ],
-            "start": [
-                110.06291961669922,
-                0.2981759011745453
-            ],
-            "width": 3.5
-        },
-        {
-            "end": [
-                60.162628173828125,
-                119.9754638671875
-            ],
-            "start": [
-                60.44062423706055,
-                -0.11881813406944275
-            ],
-            "width": 3
-        }
-    ],
-    "roads": [
-        {
-            "end": [
-                119.79277801513672,
-                30.043750762939453
-            ],
-            "start": [
-                -0.16250815987586975,
-                30.182748794555664
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                119.93177795410156,
-                90.09089660644531
-            ],
-            "start": [
-                0.3934839069843292,
-                89.81289672851562
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                90.2414321899414,
-                110.12139129638672
-            ],
-            "start": [
-                90,
-                15
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                90,
-                90
-            ],
-            "start": [
-                10.892562866210938,
-                10.852775573730469
-            ],
-            "style": "default",
-            "width": 2.5
-        },
-        {
-            "end": [
-                90,
-                30
-            ],
-            "start": [
-                30,
-                90
-            ],
-            "style": "default",
-            "width": 2.5
-        },
-        {
-            "end": [
-                30.0509090423584,
-                15.156034469604492
-            ],
-            "start": [
-                29.48250961303711,
-                87.60343170166016
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                29.895015716552734,
-                109.60188293457031
-            ],
-            "start": [
-                29.895015716552734,
-                91.65850067138672
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                90.16961669921875,
-                110.10733032226562
-            ],
-            "start": [
-                30.27410125732422,
-                109.60188293457031
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                89.8779296875,
-                15.02457332611084
-            ],
-            "start": [
-                30.10877227783203,
-                15.150935173034668
-            ],
-            "style": "default",
-            "width": 3
-        }
-    ],
-    "spawns": [
-        {
-            "max_population": 150,
-            "nation": "carthage",
-            "player_id": 1,
-            "type": "barracks",
-            "x": 29.874061584472656,
-            "z": 30.129018783569336
-        },
-        {
-            "max_population": 150,
-            "nation": "carthage",
-            "player_id": 2,
-            "type": "barracks",
-            "x": 90,
-            "z": 90
-        },
-        {
-            "max_population": 150,
-            "nation": "carthage",
-            "type": "barracks",
-            "x": 30,
-            "z": 90
-        },
-        {
-            "max_population": 150,
-            "nation": "carthage",
-            "type": "barracks",
-            "x": 90,
-            "z": 30
-        },
-        {
-            "player_id": 1,
-            "type": "archer",
-            "x": 28,
-            "z": 32
-        },
-        {
-            "player_id": 1,
-            "type": "swordsman",
-            "x": 32,
-            "z": 28
-        },
-        {
-            "player_id": 1,
-            "type": "horse_swordsman",
-            "x": 30,
-            "z": 35
-        },
-        {
-            "player_id": 1,
-            "type": "horse_archer",
-            "x": 30,
-            "z": 35
-        },
-        {
-            "player_id": 1,
-            "type": "horse_spearman",
-            "x": 30,
-            "z": 35
-        },
-        {
-            "player_id": 1,
-            "type": "spearman",
-            "x": 35,
-            "z": 30
-        },
-        {
-            "player_id": 1,
-            "type": "healer",
-            "x": 33,
-            "z": 27
-        },
-        {
-            "player_id": 1,
-            "type": "catapult",
-            "x": 30,
-            "z": 42
-        },
-        {
-            "player_id": 2,
-            "type": "archer",
-            "x": 44,
-            "z": 29
-        },
-        {
-            "player_id": 2,
-            "type": "spearman",
-            "x": 44,
-            "z": 31
-        },
-        {
-            "player_id": 2,
-            "type": "spearman",
-            "x": 44,
-            "z": 32
-        },
-        {
-            "player_id": 2,
-            "type": "swordsman",
-            "x": 46,
-            "z": 30
-        },
-        {
-            "player_id": 2,
-            "type": "swordsman",
-            "x": 46,
-            "z": 31
-        },
-        {
-            "player_id": 2,
-            "type": "archer",
-            "x": 88,
-            "z": 92
-        },
-        {
-            "player_id": 2,
-            "type": "archer",
-            "x": 92,
-            "z": 88
-        },
-        {
-            "player_id": 2,
-            "type": "horse_swordsman",
-            "x": 90,
-            "z": 85
-        },
-        {
-            "player_id": 2,
-            "type": "spearman",
-            "x": 85,
-            "z": 90
-        },
-        {
-            "player_id": 2,
-            "type": "healer",
-            "x": 87,
-            "z": 93
-        },
-        {
-            "player_id": 2,
-            "type": "catapult",
-            "x": 93,
-            "z": 86
-        }
-    ],
-    "terrain": [
-        {
-            "depth": 8,
-            "entrances": [
-                {
-                    "x": 30,
-                    "z": 52
-                },
-                {
-                    "x": 30,
-                    "z": 68
-                }
-            ],
-            "height": 3,
-            "type": "hill",
-            "width": 12,
-            "x": 30,
-            "z": 60
-        },
-        {
-            "depth": 8,
-            "entrances": [
-                {
-                    "x": 90,
-                    "z": 52
-                },
-                {
-                    "x": 90,
-                    "z": 68
-                }
-            ],
-            "height": 3,
-            "rotation": 180,
-            "type": "hill",
-            "width": 12,
-            "x": 90,
-            "z": 60
-        },
-        {
-            "depth": 12,
-            "entrances": [
-                {
-                    "x": 52,
-                    "z": 90
-                },
-                {
-                    "x": 68,
-                    "z": 90
-                }
-            ],
-            "height": 2.799999952316284,
-            "rotation": 270,
-            "type": "hill",
-            "width": 8,
-            "x": 60.06524658203125,
-            "z": 89.79682922363281
-        }
-    ],
-    "time_of_day": "day",
-    "victory": {
-        "defeat_conditions": [
-            "no_key_structures"
-        ],
-        "key_structures": [
-            "barracks"
-        ],
-        "type": "elimination"
+    {
+      "start": [96, 55],
+      "end": [96, 65],
+      "width": 4.2,
+      "height": 0.55
     },
-    "world_props": [
+    {
+      "start": [55, 52],
+      "end": [65, 52],
+      "width": 4.5,
+      "height": 0.6
+    },
+    {
+      "start": [55, 68],
+      "end": [65, 68],
+      "width": 4.5,
+      "height": 0.6
+    },
+    {
+      "start": [52, 55],
+      "end": [52, 65],
+      "width": 4.5,
+      "height": 0.6
+    },
+    {
+      "start": [68, 55],
+      "end": [68, 65],
+      "width": 4.5,
+      "height": 0.6
+    }
+  ],
+  "camera": {
+    "center": [60, 0, 60],
+    "distance": 28,
+    "far": 300,
+    "fov_y": 45,
+    "near": 1,
+    "tilt_deg": 45,
+    "yaw": 225
+  },
+  "coord_system": "grid",
+  "description": "A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.",
+  "grid": {
+    "height": 120,
+    "tile_size": 1,
+    "width": 120
+  },
+  "max_troops_per_player": 1800,
+  "name": "River Crossroads",
+  "rivers": [
+    {
+      "start": [60, -1],
+      "end": [60, 121],
+      "width": 5.4
+    },
+    {
+      "start": [-1, 60],
+      "end": [121, 60],
+      "width": 4.8
+    }
+  ],
+  "roads": [
+    {
+      "start": [16, 20],
+      "end": [52, 55],
+      "style": "default",
+      "width": 3.2
+    },
+    {
+      "start": [104, 100],
+      "end": [68, 65],
+      "style": "default",
+      "width": 3.2
+    },
+    {
+      "start": [20, 104],
+      "end": [52, 65],
+      "style": "default",
+      "width": 2.8
+    },
+    {
+      "start": [100, 16],
+      "end": [68, 55],
+      "style": "default",
+      "width": 2.8
+    },
+    {
+      "start": [0, 24],
+      "end": [120, 24],
+      "style": "default",
+      "width": 2.6
+    },
+    {
+      "start": [0, 96],
+      "end": [120, 96],
+      "style": "default",
+      "width": 2.6
+    },
+    {
+      "start": [24, 0],
+      "end": [24, 120],
+      "style": "default",
+      "width": 2.6
+    },
+    {
+      "start": [96, 0],
+      "end": [96, 120],
+      "style": "default",
+      "width": 2.6
+    },
+    {
+      "start": [42, 52],
+      "end": [78, 52],
+      "style": "default",
+      "width": 2.4
+    },
+    {
+      "start": [42, 68],
+      "end": [78, 68],
+      "style": "default",
+      "width": 2.4
+    },
+    {
+      "start": [52, 42],
+      "end": [52, 78],
+      "style": "default",
+      "width": 2.4
+    },
+    {
+      "start": [68, 42],
+      "end": [68, 78],
+      "style": "default",
+      "width": 2.4
+    },
+    {
+      "start": [20, 20],
+      "end": [24, 60],
+      "style": "default",
+      "width": 2.5
+    },
+    {
+      "start": [100, 100],
+      "end": [96, 60],
+      "style": "default",
+      "width": 2.5
+    }
+  ],
+  "spawns": [
+    {
+      "max_population": 180,
+      "nation": "carthage",
+      "player_id": 1,
+      "type": "barracks",
+      "x": 20,
+      "z": 20
+    },
+    {
+      "max_population": 180,
+      "nation": "carthage",
+      "player_id": 2,
+      "type": "barracks",
+      "x": 100,
+      "z": 100
+    },
+    {
+      "max_population": 130,
+      "nation": "carthage",
+      "type": "barracks",
+      "x": 20,
+      "z": 100
+    },
+    {
+      "max_population": 130,
+      "nation": "carthage",
+      "type": "barracks",
+      "x": 100,
+      "z": 20
+    },
+
+    {
+      "player_id": 1,
+      "type": "archer",
+      "x": 18,
+      "z": 24
+    },
+    {
+      "player_id": 1,
+      "type": "archer",
+      "x": 22,
+      "z": 26
+    },
+    {
+      "player_id": 1,
+      "type": "swordsman",
+      "x": 25,
+      "z": 22
+    },
+    {
+      "player_id": 1,
+      "type": "swordsman",
+      "x": 27,
+      "z": 25
+    },
+    {
+      "player_id": 1,
+      "type": "spearman",
+      "x": 23,
+      "z": 29
+    },
+    {
+      "player_id": 1,
+      "type": "spearman",
+      "x": 29,
+      "z": 21
+    },
+    {
+      "player_id": 1,
+      "type": "horse_swordsman",
+      "x": 31,
+      "z": 24
+    },
+    {
+      "player_id": 1,
+      "type": "horse_archer",
+      "x": 24,
+      "z": 31
+    },
+    {
+      "player_id": 1,
+      "type": "horse_spearman",
+      "x": 29,
+      "z": 29
+    },
+    {
+      "player_id": 1,
+      "type": "healer",
+      "x": 17,
+      "z": 18
+    },
+    {
+      "player_id": 1,
+      "type": "catapult",
+      "x": 16,
+      "z": 29
+    },
+
+    {
+      "player_id": 2,
+      "type": "archer",
+      "x": 102,
+      "z": 96
+    },
+    {
+      "player_id": 2,
+      "type": "archer",
+      "x": 98,
+      "z": 94
+    },
+    {
+      "player_id": 2,
+      "type": "swordsman",
+      "x": 95,
+      "z": 98
+    },
+    {
+      "player_id": 2,
+      "type": "swordsman",
+      "x": 93,
+      "z": 95
+    },
+    {
+      "player_id": 2,
+      "type": "spearman",
+      "x": 97,
+      "z": 91
+    },
+    {
+      "player_id": 2,
+      "type": "spearman",
+      "x": 91,
+      "z": 99
+    },
+    {
+      "player_id": 2,
+      "type": "horse_swordsman",
+      "x": 89,
+      "z": 96
+    },
+    {
+      "player_id": 2,
+      "type": "horse_archer",
+      "x": 96,
+      "z": 89
+    },
+    {
+      "player_id": 2,
+      "type": "horse_spearman",
+      "x": 91,
+      "z": 91
+    },
+    {
+      "player_id": 2,
+      "type": "healer",
+      "x": 103,
+      "z": 102
+    },
+    {
+      "player_id": 2,
+      "type": "catapult",
+      "x": 104,
+      "z": 91
+    },
+
+    {
+      "type": "archer",
+      "x": 18,
+      "z": 96
+    },
+    {
+      "type": "archer",
+      "x": 22,
+      "z": 104
+    },
+    {
+      "type": "swordsman",
+      "x": 25,
+      "z": 100
+    },
+    {
+      "type": "spearman",
+      "x": 20,
+      "z": 93
+    },
+    {
+      "type": "healer",
+      "x": 16,
+      "z": 102
+    },
+
+    {
+      "type": "archer",
+      "x": 102,
+      "z": 24
+    },
+    {
+      "type": "archer",
+      "x": 98,
+      "z": 16
+    },
+    {
+      "type": "swordsman",
+      "x": 95,
+      "z": 20
+    },
+    {
+      "type": "spearman",
+      "x": 100,
+      "z": 27
+    },
+    {
+      "type": "healer",
+      "x": 104,
+      "z": 18
+    },
+
+    {
+      "type": "spearman",
+      "x": 56,
+      "z": 56
+    },
+    {
+      "type": "spearman",
+      "x": 64,
+      "z": 64
+    },
+    {
+      "type": "archer",
+      "x": 56,
+      "z": 64
+    },
+    {
+      "type": "archer",
+      "x": 64,
+      "z": 56
+    },
+    {
+      "type": "swordsman",
+      "x": 60,
+      "z": 54
+    },
+    {
+      "type": "swordsman",
+      "x": 60,
+      "z": 66
+    }
+  ],
+  "terrain": [
+    {
+      "depth": 11,
+      "entrances": [
         {
-            "intensity": 1,
-            "radius": 3,
-            "type": "firecamp",
-            "x": 19.43621253967285,
-            "z": 21.98186683654785
+          "x": 39,
+          "z": 44
         },
         {
-            "intensity": 1.100000023841858,
-            "radius": 3.200000047683716,
-            "type": "firecamp",
-            "x": 21.8078556060791,
-            "z": 42.63010025024414
-        },
-        {
-            "intensity": 0.8999999761581421,
-            "radius": 2.799999952316284,
-            "type": "firecamp",
-            "x": 81.98532104492188,
-            "z": 98.70877075195312
-        },
-        {
-            "intensity": 1,
-            "radius": 3,
-            "type": "firecamp",
-            "x": 97,
-            "z": 83
-        },
-        {
-            "intensity": 1,
-            "radius": 3,
-            "type": "firecamp",
-            "x": 21.243186950683594,
-            "z": 99.54275512695312
-        },
-        {
-            "intensity": 1.0499999523162842,
-            "radius": 3.200000047683716,
-            "type": "firecamp",
-            "x": 97,
-            "z": 23
-        },
-        {
-            "intensity": 0.8500000238418579,
-            "radius": 2.5,
-            "type": "firecamp",
-            "x": 49.59878158569336,
-            "z": 42.692569732666016
-        },
-        {
-            "intensity": 0.8999999761581421,
-            "radius": 2.700000047683716,
-            "type": "firecamp",
-            "x": 74.89642333984375,
-            "z": 66.60022735595703
-        },
-        {
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 81,
-            "z": 57
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 97,
-            "z": 96
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 101,
-            "z": 94
-        },
-        {
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 79,
-            "z": 87
-        },
-        {
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 86,
-            "z": 78
+          "x": 47,
+          "z": 38
         }
-    ]
+      ],
+      "height": 2.4,
+      "rotation": 45,
+      "type": "hill",
+      "width": 13,
+      "x": 43,
+      "z": 42
+    },
+    {
+      "depth": 11,
+      "entrances": [
+        {
+          "x": 81,
+          "z": 76
+        },
+        {
+          "x": 73,
+          "z": 82
+        }
+      ],
+      "height": 2.4,
+      "rotation": 225,
+      "type": "hill",
+      "width": 13,
+      "x": 77,
+      "z": 78
+    },
+    {
+      "depth": 10,
+      "entrances": [
+        {
+          "x": 39,
+          "z": 75
+        },
+        {
+          "x": 47,
+          "z": 82
+        }
+      ],
+      "height": 2.1,
+      "rotation": 135,
+      "type": "hill",
+      "width": 11,
+      "x": 43,
+      "z": 78
+    },
+    {
+      "depth": 10,
+      "entrances": [
+        {
+          "x": 81,
+          "z": 45
+        },
+        {
+          "x": 73,
+          "z": 38
+        }
+      ],
+      "height": 2.1,
+      "rotation": 315,
+      "type": "hill",
+      "width": 11,
+      "x": 77,
+      "z": 42
+    },
+    {
+      "depth": 8,
+      "entrances": [
+        {
+          "x": 54,
+          "z": 18
+        },
+        {
+          "x": 66,
+          "z": 18
+        }
+      ],
+      "height": 1.8,
+      "rotation": 0,
+      "type": "hill",
+      "width": 16,
+      "x": 60,
+      "z": 17
+    },
+    {
+      "depth": 8,
+      "entrances": [
+        {
+          "x": 54,
+          "z": 102
+        },
+        {
+          "x": 66,
+          "z": 102
+        }
+      ],
+      "height": 1.8,
+      "rotation": 180,
+      "type": "hill",
+      "width": 16,
+      "x": 60,
+      "z": 103
+    },
+    {
+      "depth": 14,
+      "entrances": [
+        {
+          "x": 15,
+          "z": 54
+        },
+        {
+          "x": 15,
+          "z": 66
+        }
+      ],
+      "height": 1.7,
+      "rotation": 90,
+      "type": "hill",
+      "width": 8,
+      "x": 15,
+      "z": 60
+    },
+    {
+      "depth": 14,
+      "entrances": [
+        {
+          "x": 105,
+          "z": 54
+        },
+        {
+          "x": 105,
+          "z": 66
+        }
+      ],
+      "height": 1.7,
+      "rotation": 270,
+      "type": "hill",
+      "width": 8,
+      "x": 105,
+      "z": 60
+    },
+    {
+      "depth": 12,
+      "entrances": [
+        {
+          "x": 50,
+          "z": 50
+        },
+        {
+          "x": 54,
+          "z": 58
+        }
+      ],
+      "height": 1.25,
+      "rotation": 45,
+      "type": "hill",
+      "width": 8,
+      "x": 51,
+      "z": 51
+    },
+    {
+      "depth": 12,
+      "entrances": [
+        {
+          "x": 70,
+          "z": 70
+        },
+        {
+          "x": 66,
+          "z": 62
+        }
+      ],
+      "height": 1.25,
+      "rotation": 225,
+      "type": "hill",
+      "width": 8,
+      "x": 69,
+      "z": 69
+    }
+  ],
+  "time_of_day": "day",
+  "victory": {
+    "defeat_conditions": [
+      "no_key_structures"
+    ],
+    "key_structures": [
+      "barracks"
+    ],
+    "type": "elimination"
+  },
+  "world_props": [
+    {
+      "intensity": 1.05,
+      "persistent": true,
+      "radius": 3.2,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 15,
+      "z": 16
+    },
+    {
+      "intensity": 0.95,
+      "persistent": true,
+      "radius": 2.8,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 27,
+      "z": 19
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 14,
+      "z": 23
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 22,
+      "z": 13
+    },
+    {
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 28,
+      "z": 27
+    },
+    {
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 17,
+      "z": 31
+    },
+
+    {
+      "intensity": 1.05,
+      "persistent": true,
+      "radius": 3.2,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 105,
+      "z": 104
+    },
+    {
+      "intensity": 0.95,
+      "persistent": true,
+      "radius": 2.8,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 93,
+      "z": 101
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 106,
+      "z": 97
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 98,
+      "z": 107
+    },
+    {
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 92,
+      "z": 93
+    },
+    {
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 103,
+      "z": 89
+    },
+
+    {
+      "intensity": 0.9,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 17,
+      "z": 103
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 25,
+      "z": 106
+    },
+    {
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 28,
+      "z": 96
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 13,
+      "z": 94
+    },
+
+    {
+      "intensity": 0.9,
+      "persistent": true,
+      "radius": 3,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 103,
+      "z": 17
+    },
+    {
+      "scale": 1,
+      "type": "tent",
+      "x": 95,
+      "z": 14
+    },
+    {
+      "scale": 1,
+      "type": "weapon_rack",
+      "x": 92,
+      "z": 24
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 107,
+      "z": 26
+    },
+
+    {
+      "intensity": 0.85,
+      "persistent": true,
+      "radius": 2.6,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 50,
+      "z": 50
+    },
+    {
+      "intensity": 0.85,
+      "persistent": true,
+      "radius": 2.6,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 70,
+      "z": 70
+    },
+    {
+      "intensity": 0.8,
+      "persistent": true,
+      "radius": 2.4,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 70,
+      "z": 50
+    },
+    {
+      "intensity": 0.8,
+      "persistent": true,
+      "radius": 2.4,
+      "scale": 1,
+      "type": "firecamp",
+      "x": 50,
+      "z": 70
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 57,
+      "z": 54
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 63,
+      "z": 66
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 66,
+      "z": 55
+    },
+    {
+      "scale": 1,
+      "type": "ruins",
+      "x": 54,
+      "z": 65
+    },
+    {
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 45,
+      "z": 58
+    },
+    {
+      "scale": 1,
+      "type": "supply_cart",
+      "x": 75,
+      "z": 62
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 43,
+      "z": 72
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 77,
+      "z": 48
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 34,
+      "z": 54
+    },
+    {
+      "scale": 1,
+      "type": "dead_tree",
+      "x": 86,
+      "z": 66
+    }
+  ]
 }

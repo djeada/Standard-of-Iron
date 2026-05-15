@@ -77,6 +77,8 @@ struct AnimationInputs {
   float death_progress{0.0F};
   std::uint8_t death_variant{0};
   float idle_duration{0.0F};
+  bool is_guarding{false};
+  float guard_pose_progress{0.0F};
 };
 
 inline auto hold_transition_amount(const AnimationInputs& inputs) -> float {
@@ -87,6 +89,13 @@ inline auto hold_transition_amount(const AnimationInputs& inputs) -> float {
     return std::clamp(1.0F - inputs.hold_exit_progress, 0.0F, 1.0F);
   }
   return 0.0F;
+}
+
+inline auto guard_pose_amount(const AnimationInputs& inputs) -> float {
+  if (!inputs.is_guarding) {
+    return 0.0F;
+  }
+  return std::clamp(inputs.guard_pose_progress, 0.0F, 1.0F);
 }
 
 struct FormationParams {
@@ -238,6 +247,9 @@ struct HumanoidAnimationContext {
   float locomotion_cycle_time{0.0F};
   float locomotion_phase{0.0F};
   float attack_phase{0.0F};
+  float attack_emphasis{1.0F};
+  bool amplified_attack{false};
+  bool finisher_attack{false};
   float jitter_seed{0.0F};
   QVector3D entity_forward{0.0F, 0.0F, 1.0F};
   QVector3D entity_right{1.0F, 0.0F, 0.0F};

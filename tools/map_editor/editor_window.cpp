@@ -22,6 +22,7 @@
 #include "json_edit_dialog.h"
 #include "map_json_keys.h"
 #include "resize_dialog.h"
+#include "troop_tool_specs.h"
 
 namespace {
 
@@ -54,7 +55,7 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
       new QLabel("The map editor uses the same dark split-view layout as the other "
                  "Standard "
                  "of Iron tools, with the canvas on the left and editing panels on the "
-                 "right.",
+                 "right. The canvas orientation matches the in-game battlefield view.",
                  panel);
   intro->setObjectName("panelIntro");
   intro->setWordWrap(true);
@@ -116,8 +117,8 @@ auto prettifyIdentifier(const QString& value) -> QString {
 namespace MapEditor {
 
 EditorWindow::EditorWindow(QWidget* parent)
-    : QMainWindow(parent) {
-  m_map_data = new MapData(this);
+    : QMainWindow(parent)
+    , m_map_data(new MapData(this)) {
 
   setup_ui();
   setup_menus();
@@ -441,6 +442,9 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   m_canvas->set_current_tool(tool);
 
   QString tool_name;
+  if (const auto* spec = troop_tool_spec(tool)) {
+    tool_name = QString::fromLatin1(spec->name);
+  }
   switch (tool) {
   case ToolType::Select:
     tool_name = "Select";
@@ -489,6 +493,25 @@ void EditorWindow::on_tool_selected(ToolType tool) {
     break;
   case ToolType::Eraser:
     tool_name = "Eraser";
+    break;
+  case ToolType::TroopArcher:
+  case ToolType::TroopSwordsman:
+  case ToolType::TroopSpearman:
+  case ToolType::TroopHorseSwordsman:
+  case ToolType::TroopHorseArcher:
+  case ToolType::TroopHorseSpearman:
+  case ToolType::TroopHealer:
+  case ToolType::TroopCatapult:
+  case ToolType::TroopBallista:
+  case ToolType::TroopElephant:
+  case ToolType::TroopRomanLegionOrganizer:
+  case ToolType::TroopRomanVeteranConsul:
+  case ToolType::TroopRomanFieldCommander:
+  case ToolType::TroopCarthageMercenaryBroker:
+  case ToolType::TroopCarthageCavalryPatron:
+  case ToolType::TroopCarthageElephantMaster:
+  case ToolType::TroopCivilian:
+  case ToolType::TroopBuilder:
     break;
   }
 
@@ -624,6 +647,30 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     }
 
     title = "Edit " + elem.type;
+  } else if (element_type == 4) {
+    const auto& troop_spawns = m_map_data->troop_spawns();
+    if (index < 0 || index >= troop_spawns.size()) {
+      return;
+    }
+    const auto& elem = troop_spawns[index];
+
+    json[MapJsonKeys::type] = elem.type;
+    json[MapJsonKeys::x] = static_cast<double>(elem.x);
+    json[MapJsonKeys::z] = static_cast<double>(elem.z);
+    if (elem.player_id >= 0) {
+      json[MapJsonKeys::player_id] = elem.player_id;
+    }
+    if (elem.max_population >= 0) {
+      json[MapJsonKeys::max_population] = elem.max_population;
+    }
+    if (!elem.nation.isEmpty()) {
+      json[MapJsonKeys::nation] = elem.nation;
+    }
+    for (const QString& key : elem.extra_fields.keys()) {
+      json[key] = elem.extra_fields[key];
+    }
+
+    title = "Edit Troop: " + prettifyIdentifier(elem.type);
   } else {
     return;
   }
@@ -758,6 +805,38 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
                                                m_map_data->structures()[index],
                                                elem,
                                                "Edit " + elem.type));
+    } else if (element_type == 4) {
+      TroopSpawnElement elem;
+      elem.type = new_json[MapJsonKeys::type].toString();
+      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
+      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
+      elem.player_id = new_json.contains(MapJsonKeys::player_id) &&
+                               !new_json.value(MapJsonKeys::player_id).isNull()
+                           ? new_json[MapJsonKeys::player_id].toInt(-1)
+                           : -1;
+      elem.max_population = new_json.contains(MapJsonKeys::max_population)
+                                ? new_json[MapJsonKeys::max_population].toInt(100)
+                                : -1;
+      elem.nation = new_json[MapJsonKeys::nation].toString();
+
+      const QStringList known_keys = {MapJsonKeys::type,
+                                      MapJsonKeys::x,
+                                      MapJsonKeys::z,
+                                      MapJsonKeys::player_id,
+                                      MapJsonKeys::max_population,
+                                      MapJsonKeys::nation};
+      for (const QString& key : new_json.keys()) {
+        if (!known_keys.contains(key)) {
+          elem.extra_fields[key] = new_json[key];
+        }
+      }
+
+      m_map_data->execute_command(
+          std::make_unique<UpdateTroopSpawnCmd>(m_map_data,
+                                                index,
+                                                m_map_data->troop_spawns()[index],
+                                                elem,
+                                                "Edit " + elem.type));
     }
   }
 }
@@ -877,7 +956,7 @@ bool EditorWindow::maybe_save() {
     return true;
   }
 
-  QMessageBox::StandardButton ret = QMessageBox::warning(
+  QMessageBox::StandardButton const ret = QMessageBox::warning(
       this,
       "Unsaved Changes",
       "The map has been modified.\nDo you want to save your changes?",
@@ -902,7 +981,7 @@ void EditorWindow::closeEvent(QCloseEvent* event) {
 }
 
 void EditorWindow::on_selection_changed(int element_type, int index) {
-  if (element_type < 0 || index < 0 || !m_map_data) {
+  if (element_type < 0 || index < 0 || (m_map_data == nullptr)) {
     m_selection_status_text.clear();
     refresh_status_label();
     return;
@@ -946,6 +1025,19 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
                    .arg(static_cast<int>(e.x))
                    .arg(static_cast<int>(e.z))
                    .arg(e.player_id);
+    }
+  } else if (element_type == 4) {
+    const auto& troop_spawns = m_map_data->troop_spawns();
+    if (index < troop_spawns.size()) {
+      const auto& e = troop_spawns[index];
+      type_name = e.type;
+      coords = e.player_id >= 0 ? QString("(%1, %2) P%3")
+                                      .arg(static_cast<int>(e.x))
+                                      .arg(static_cast<int>(e.z))
+                                      .arg(e.player_id)
+                                : QString("(%1, %2)")
+                                      .arg(static_cast<int>(e.x))
+                                      .arg(static_cast<int>(e.z));
     }
   }
 

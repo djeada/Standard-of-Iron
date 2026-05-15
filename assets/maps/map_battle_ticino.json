@@ -1,679 +1,919 @@
 {
   "name": "Battle of Ticino",
-  "description": "First clash on Italian soil - cavalry battle on fertile Po Valley farmland near the Ticino River",
+  "description": "A campaign cavalry battle on the fertile Po Valley plain. Hannibal's mounted scouts must defeat the Roman reconnaissance force, disrupt its retreat, and seize the Ticino bridgehead before the Romans escape across the river.",
   "coord_system": "grid",
-  "max_troops_per_player": 1800,
+  "max_troops_per_player": 2000,
   "grid": {
-    "width": 200,
-    "height": 120,
+    "width": 240,
+    "height": 150,
     "tile_size": 1.0
   },
   "biome": {
     "ground_type": "soil_fertile",
-    "seed": 10002,
-    "patch_density": 3.5,
+    "seed": 10042,
+    "patch_density": 3.7,
     "patch_jitter": 0.9,
-    "plant_density": 0.6,
+    "plant_density": 0.62,
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.12,
-    "irregularity_amplitude": 0.06
+    "irregularity_amplitude": 0.055,
+    "grass_primary": [0.32, 0.58, 0.28],
+    "grass_secondary": [0.45, 0.66, 0.32],
+    "grass_dry": [0.66, 0.58, 0.36],
+    "soil_color": [0.3, 0.24, 0.16],
+    "rock_low": [0.45, 0.42, 0.36],
+    "rock_high": [0.67, 0.65, 0.58],
+    "height_noise": [0.14, 0.045],
+    "sway_speed": 1.0,
+    "sway_strength": 0.18
   },
   "camera": {
-    "center": [
-      100,
-      0,
-      60
-    ],
-    "distance": 35.0,
-    "tilt_deg": 45.0,
+    "center": [120, 0, 75],
+    "distance": 72.0,
+    "tilt_deg": 47.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 500.0
+    "far": 650.0
   },
-  "spawns": [
-    {
-      "type": "horse_swordsman",
-      "x": 45,
-      "z": 55,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 48,
-      "z": 58,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 42,
-      "z": 52,
-      "player_id": 1
-    },
-    {
-      "type": "horse_archer",
-      "x": 40,
-      "z": 60,
-      "player_id": 1
-    },
-    {
-      "type": "horse_archer",
-      "x": 38,
-      "z": 55,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 44,
-      "z": 61,
-      "player_id": 1
-    },
-    {
-      "type": "horse_archer",
-      "x": 36,
-      "z": 60,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 50,
-      "z": 65,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 52,
-      "z": 68,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 46,
-      "z": 70,
-      "player_id": 1
-    },
-    {
-      "type": "barracks",
-      "x": 30,
-      "z": 60,
-      "player_id": 1,
-      "max_population": 150,
-      "nation": "carthage"
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 155,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 158,
-      "z": 58,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 152,
-      "z": 52,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 160,
-      "z": 60,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 162,
-      "z": 63,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 165,
-      "z": 55,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 150,
-      "z": 65,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 153,
-      "z": 68,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 158,
-      "z": 70,
-      "player_id": 2
-    },
-    {
-      "type": "barracks",
-      "x": 175,
-      "z": 60,
-      "player_id": 2,
-      "max_population": 180,
-      "nation": "roman_republic"
-    }
-  ],
-  "firecamps": [
-    {
-      "x": 35,
-      "z": 55,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 40,
-      "z": 68,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 165,
-      "z": 50,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 170,
-      "z": 68,
-      "intensity": 1.0,
-      "radius": 3.0
-    },
-    {
-      "x": 100,
-      "z": 20,
-      "intensity": 0.9,
-      "radius": 2.8
-    },
-    {
-      "x": 100,
-      "z": 100,
-      "intensity": 0.9,
-      "radius": 2.8
-    }
-  ],
-  "terrain": [
-    {
-      "type": "hill",
-      "x": 50,
-      "z": 60,
-      "radius": 10,
-      "height": 2.5,
-      "description": "Carthaginian observation point",
-      "entrances": [
-        {
-          "x": 50,
-          "z": 50
-        },
-        {
-          "x": 60,
-          "z": 60
-        },
-        {
-          "x": 50,
-          "z": 70
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 150,
-      "z": 60,
-      "radius": 8,
-      "height": 2.0,
-      "description": "Roman defensive position",
-      "entrances": [
-        {
-          "x": 150,
-          "z": 52
-        },
-        {
-          "x": 142,
-          "z": 60
-        },
-        {
-          "x": 150,
-          "z": 68
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 100,
-      "z": 110,
-      "width": 30,
-      "depth": 12,
-      "height": 3.0,
-      "description": "Southern ridge overlooking valley",
-      "entrances": [
-        {
-          "x": 85,
-          "z": 110
-        },
-        {
-          "x": 115,
-          "z": 110
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 100,
-      "z": 10,
-      "width": 35,
-      "depth": 10,
-      "height": 3.5,
-      "description": "Northern foothills",
-      "entrances": [
-        {
-          "x": 82,
-          "z": 10
-        },
-        {
-          "x": 118,
-          "z": 10
-        }
-      ]
-    },
-    {
-      "type": "forest",
-      "x": 25,
-      "z": 30,
-      "radius": 12,
-      "density": 0.5,
-      "description": "Dense grove for flanking maneuvers"
-    },
-    {
-      "type": "forest",
-      "x": 175,
-      "z": 90,
-      "radius": 10,
-      "density": 0.5,
-      "description": "Roman retreat cover"
-    },
-    {
-      "type": "forest",
-      "x": 80,
-      "z": 80,
-      "radius": 8,
-      "density": 0.4,
-      "description": "Central copse"
-    },
-    {
-      "type": "forest",
-      "x": 120,
-      "z": 35,
-      "radius": 9,
-      "density": 0.45,
-      "description": "Riparian woodland screening the Roman flank"
-    },
-    {
-      "type": "hill",
-      "x": 135,
-      "z": 95,
-      "radius": 11,
-      "height": 2.8,
-      "description": "Southern spur controlling the retreat track",
-      "entrances": [
-        {
-          "x": 126,
-          "z": 95
-        },
-        {
-          "x": 144,
-          "z": 95
-        },
-        {
-          "x": 135,
-          "z": 86
-        }
-      ]
-    },
-    {
-      "type": "plain",
-      "x": 100,
-      "z": 60,
-      "width": 80,
-      "depth": 50,
-      "description": "Open cavalry battlefield"
-    },
-    {
-      "type": "village",
-      "x": 105,
-      "z": 60,
-      "description": "Po Valley farmstead near the Roman withdrawal route"
-    }
-  ],
+  "time_of_day": "afternoon",
+  "weather": {
+    "type": "clear",
+    "intensity": 0.15,
+    "temperature": "mild",
+    "description": "Clear autumn light over the Po Valley. Dust trails from cavalry movement should be easy to read."
+  },
   "rivers": [
     {
-      "start": [
-        188,
-        0
-      ],
-      "end": [
-        192,
-        120
-      ],
-      "width": 8,
-      "description": "Ticino River - eastern boundary"
+      "start": [222, -2],
+      "end": [224, 152],
+      "width": 10.0,
+      "description": "Ticino River forming the eastern boundary and Roman escape route."
     },
     {
-      "start": [
-        0,
-        25
-      ],
-      "end": [
-        60,
-        20
-      ],
-      "width": 4,
-      "description": "Small tributary stream"
+      "start": [0, 26],
+      "end": [78, 20],
+      "width": 3.6,
+      "description": "Northern farm tributary limiting wide cavalry movement."
     },
     {
-      "start": [
-        60,
-        102
-      ],
-      "end": [
-        140,
-        108
-      ],
-      "width": 3.5,
-      "description": "Southern irrigation channel that complicates cavalry pursuit"
+      "start": [78, 20],
+      "end": [160, 28],
+      "width": 3.2,
+      "description": "Shallow riparian channel near the northern flank."
+    },
+    {
+      "start": [66, 104],
+      "end": [178, 108],
+      "width": 4.0,
+      "description": "Southern irrigation channel that complicates Roman retreat and Carthaginian pursuit."
     }
   ],
   "bridges": [
     {
-      "start": [
-        186,
-        40
-      ],
-      "end": [
-        194,
-        40
-      ],
-      "width": 5,
+      "start": [216, 62],
+      "end": [230, 62],
+      "width": 6.5,
       "height": 0.8,
-      "description": "Roman supply bridge"
+      "description": "Main Ticino bridge. Capturing this cuts off the Roman retreat."
     },
     {
-      "start": [
-        186,
-        80
-      ],
-      "end": [
-        194,
-        80
-      ],
-      "width": 5,
-      "height": 0.8,
-      "description": "Southern crossing"
+      "start": [216, 42],
+      "end": [230, 42],
+      "width": 4.6,
+      "height": 0.75,
+      "description": "Northern supply bridge used by Roman scouts."
     },
     {
-      "start": [
-        96,
-        104
-      ],
-      "end": [
-        102,
-        106
-      ],
-      "width": 4,
-      "height": 0.6,
-      "description": "Field bridge over the southern channel"
+      "start": [216, 104],
+      "end": [230, 104],
+      "width": 5.2,
+      "height": 0.75,
+      "description": "Southern fallback bridge near the Roman baggage route."
+    },
+    {
+      "start": [108, 102],
+      "end": [116, 105],
+      "width": 4.0,
+      "height": 0.55,
+      "description": "Small field bridge over the southern irrigation channel."
+    },
+    {
+      "start": [151, 105],
+      "end": [160, 108],
+      "width": 4.0,
+      "height": 0.55,
+      "description": "Eastern field bridge on the Roman withdrawal route."
+    },
+    {
+      "start": [104, 24],
+      "end": [112, 27],
+      "width": 3.8,
+      "height": 0.55,
+      "description": "Narrow farm crossing on the northern tributary."
     }
   ],
   "roads": [
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 3.5,
+      "start": [6, 70],
+      "end": [230, 62],
+      "width": 4.0,
       "style": "default",
       "waypoints": [
-        [
-          10,
-          60
-        ],
-        [
-          30,
-          58
-        ],
-        [
-          50,
-          55
-        ],
-        [
-          80,
-          58
-        ],
-        [
-          100,
-          60
-        ],
-        [
-          120,
-          58
-        ],
-        [
-          150,
-          55
-        ],
-        [
-          170,
-          58
-        ],
-        [
-          190,
-          60
-        ]
+        [6, 70],
+        [28, 69],
+        [52, 68],
+        [78, 68],
+        [104, 69],
+        [130, 70],
+        [156, 68],
+        [184, 65],
+        [207, 63],
+        [230, 62]
       ],
-      "description": "Main east-west road through valley"
+      "description": "Main Po Valley road. Roman cavalry tries to withdraw along this line."
     },
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
+      "start": [32, 82],
+      "end": [80, 72],
+      "width": 3.0,
       "style": "default",
       "waypoints": [
-        [
-          175,
-          60
-        ],
-        [
-          180,
-          50
-        ],
-        [
-          185,
-          40
-        ],
-        [
-          190,
-          40
-        ]
+        [32, 82],
+        [43, 78],
+        [57, 74],
+        [70, 72],
+        [80, 72]
       ],
-      "description": "Road to Roman camp"
+      "description": "Carthaginian approach from the western camp to the open meadow."
     },
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
+      "start": [36, 48],
+      "end": [136, 42],
+      "width": 2.6,
       "style": "default",
       "waypoints": [
-        [
-          30,
-          60
-        ],
-        [
-          28,
-          45
-        ],
-        [
-          25,
-          30
-        ]
+        [36, 48],
+        [52, 38],
+        [72, 32],
+        [96, 31],
+        [116, 36],
+        [136, 42]
       ],
-      "description": "Path to Carthaginian flanking position"
+      "description": "Northern Numidian flank route through groves and tributary crossings."
     },
     {
-      "start": [
-        0,
-        0
-      ],
-      "end": [
-        0,
-        0
-      ],
-      "width": 2.5,
+      "start": [42, 96],
+      "end": [160, 108],
+      "width": 2.8,
       "style": "default",
       "waypoints": [
-        [
-          175,
-          60
-        ],
-        [
-          165,
-          72
-        ],
-        [
-          148,
-          86
-        ],
-        [
-          132,
-          96
-        ],
-        [
-          105,
-          105
-        ]
+        [42, 96],
+        [62, 101],
+        [86, 103],
+        [108, 104],
+        [132, 105],
+        [160, 108]
       ],
-      "description": "Roman fallback track along the southern spur"
+      "description": "Southern pursuit route. Fast cavalry can use this to cut off the Roman fallback."
+    },
+    {
+      "start": [178, 66],
+      "end": [230, 42],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [178, 66],
+        [190, 56],
+        [205, 48],
+        [216, 43],
+        [230, 42]
+      ],
+      "description": "Roman northern supply route to the Ticino."
+    },
+    {
+      "start": [176, 72],
+      "end": [230, 104],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [176, 72],
+        [188, 82],
+        [200, 92],
+        [215, 101],
+        [230, 104]
+      ],
+      "description": "Roman southern retreat road. This becomes important if the Romans begin to rout."
+    },
+    {
+      "start": [112, 74],
+      "end": [152, 96],
+      "width": 2.4,
+      "style": "default",
+      "waypoints": [
+        [112, 74],
+        [123, 79],
+        [134, 86],
+        [144, 92],
+        [152, 96]
+      ],
+      "description": "Farm track around the central settlement."
     }
   ],
-  "victory": {
-    "type": "elimination",
-    "description": "Defeat Roman cavalry forces and capture their camp"
-  },
-  "time_of_day": "afternoon",
+  "terrain": [
+    {
+      "type": "plain",
+      "x": 116,
+      "z": 70,
+      "width": 108,
+      "depth": 56,
+      "description": "Open cavalry meadow. This is the main clash space and should stay readable."
+    },
+    {
+      "type": "plain",
+      "x": 158,
+      "z": 68,
+      "width": 54,
+      "depth": 42,
+      "description": "Roman withdrawal basin. Once Roman cavalry breaks, this becomes the chase zone."
+    },
+    {
+      "type": "hill",
+      "x": 38,
+      "z": 76,
+      "width": 26,
+      "depth": 16,
+      "height": 2.2,
+      "rotation": -8,
+      "description": "Carthaginian observation mound above the western approach.",
+      "entrances": [
+        { "x": 30, "z": 72 },
+        { "x": 48, "z": 76 },
+        { "x": 38, "z": 88 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 166,
+      "z": 66,
+      "width": 28,
+      "depth": 14,
+      "height": 1.9,
+      "rotation": 7,
+      "description": "Roman cavalry ridge. Strong position at first contact, but vulnerable to being outflanked.",
+      "entrances": [
+        { "x": 154, "z": 66 },
+        { "x": 178, "z": 65 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 146,
+      "z": 103,
+      "width": 30,
+      "depth": 13,
+      "height": 2.4,
+      "rotation": -6,
+      "description": "Southern spur controlling the Roman retreat track.",
+      "entrances": [
+        { "x": 134, "z": 101 },
+        { "x": 158, "z": 106 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 118,
+      "z": 36,
+      "width": 34,
+      "depth": 12,
+      "height": 2.0,
+      "rotation": 5,
+      "description": "Northern levee overlooking the tributary crossing.",
+      "entrances": [
+        { "x": 104, "z": 35 },
+        { "x": 132, "z": 38 }
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 220,
+      "z": 66,
+      "radius": 12,
+      "height": 2.1,
+      "description": "Roman bridgehead camp elevation.",
+      "entrances": [
+        { "x": 207, "z": 63 },
+        { "x": 221, "z": 53 },
+        { "x": 221, "z": 79 }
+      ]
+    },
+    {
+      "type": "forest",
+      "x": 30,
+      "z": 34,
+      "radius": 13,
+      "density": 0.52,
+      "description": "Western grove hiding the Numidian opening move."
+    },
+    {
+      "type": "forest",
+      "x": 88,
+      "z": 34,
+      "radius": 11,
+      "density": 0.45,
+      "description": "Riparian trees screening the northern flank route."
+    },
+    {
+      "type": "forest",
+      "x": 86,
+      "z": 90,
+      "radius": 10,
+      "density": 0.38,
+      "description": "Small central copse. Useful for breaking line of sight but not large enough to stall cavalry."
+    },
+    {
+      "type": "forest",
+      "x": 184,
+      "z": 95,
+      "radius": 12,
+      "density": 0.46,
+      "description": "Roman retreat cover near the southern road."
+    },
+    {
+      "type": "forest",
+      "x": 207,
+      "z": 35,
+      "radius": 10,
+      "density": 0.42,
+      "description": "Willow trees around the northern Ticino supply crossing."
+    },
+    {
+      "type": "village",
+      "x": 112,
+      "z": 74,
+      "description": "Po Valley farmstead in the center of the battlefield."
+    },
+    {
+      "type": "village",
+      "x": 226,
+      "z": 98,
+      "description": "Roman baggage hamlet beside the southern fallback bridge."
+    },
+    {
+      "type": "plain",
+      "x": 58,
+      "z": 106,
+      "width": 48,
+      "depth": 24,
+      "description": "Southern farmland used by Carthaginian cavalry to swing wide."
+    },
+    {
+      "type": "plain",
+      "x": 74,
+      "z": 36,
+      "width": 48,
+      "depth": 24,
+      "description": "Northern farmland and grazing ground for Numidian maneuver."
+    }
+  ],
+  "spawns": [
+    {
+      "type": "barracks",
+      "x": 30,
+      "z": 78,
+      "player_id": 1,
+      "max_population": 150,
+      "nation": "carthage",
+      "description": "Carthaginian forward cavalry camp"
+    },
+    {
+      "type": "barracks",
+      "x": 220,
+      "z": 66,
+      "player_id": 2,
+      "max_population": 190,
+      "nation": "roman_republic",
+      "description": "Roman Ticino bridgehead"
+    },
+    {
+      "type": "barracks",
+      "x": 226,
+      "z": 98,
+      "player_id": 2,
+      "max_population": 120,
+      "nation": "roman_republic",
+      "description": "Roman baggage post"
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 48,
+      "z": 70,
+      "player_id": 1,
+      "description": "Carthaginian heavy cavalry vanguard"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 52,
+      "z": 66,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 56,
+      "z": 72,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 60,
+      "z": 68,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 64,
+      "z": 74,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_archer",
+      "x": 38,
+      "z": 48,
+      "player_id": 1,
+      "description": "Numidian northern screen"
+    },
+    {
+      "type": "horse_archer",
+      "x": 44,
+      "z": 43,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 51,
+      "z": 39,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 58,
+      "z": 42,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_archer",
+      "x": 42,
+      "z": 96,
+      "player_id": 1,
+      "description": "Numidian southern pursuit wing"
+    },
+    {
+      "type": "horse_archer",
+      "x": 50,
+      "z": 101,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 58,
+      "z": 100,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 66,
+      "z": 96,
+      "player_id": 1
+    },
+
+    {
+      "type": "spearman",
+      "x": 35,
+      "z": 82,
+      "player_id": 1,
+      "description": "Small infantry camp guard"
+    },
+    {
+      "type": "spearman",
+      "x": 39,
+      "z": 86,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 32,
+      "z": 88,
+      "player_id": 1
+    },
+    {
+      "type": "healer",
+      "x": 28,
+      "z": 74,
+      "player_id": 1
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 150,
+      "z": 62,
+      "player_id": 2,
+      "description": "Roman cavalry reconnaissance line"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 156,
+      "z": 58,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 162,
+      "z": 62,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 168,
+      "z": 66,
+      "player_id": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 174,
+      "z": 70,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 160,
+      "z": 75,
+      "player_id": 2,
+      "description": "Roman infantry support screen"
+    },
+    {
+      "type": "spearman",
+      "x": 166,
+      "z": 78,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 172,
+      "z": 76,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 166,
+      "z": 84,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 174,
+      "z": 84,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 158,
+      "z": 84,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 178,
+      "z": 80,
+      "player_id": 2
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 184,
+      "z": 54,
+      "player_id": 2,
+      "description": "Roman northern reserve"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 190,
+      "z": 50,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 194,
+      "z": 44,
+      "player_id": 2
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 184,
+      "z": 88,
+      "player_id": 2,
+      "description": "Roman southern reserve near retreat road"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 192,
+      "z": 92,
+      "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 198,
+      "z": 98,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 214,
+      "z": 60,
+      "player_id": 2,
+      "description": "Bridgehead guard"
+    },
+    {
+      "type": "spearman",
+      "x": 214,
+      "z": 68,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 220,
+      "z": 58,
+      "player_id": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 220,
+      "z": 72,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 228,
+      "z": 62,
+      "player_id": 2
+    },
+    {
+      "type": "healer",
+      "x": 224,
+      "z": 68,
+      "player_id": 2
+    },
+
+    {
+      "type": "spearman",
+      "x": 220,
+      "z": 96,
+      "player_id": 2,
+      "description": "Baggage post guard"
+    },
+    {
+      "type": "swordsman",
+      "x": 226,
+      "z": 104,
+      "player_id": 2
+    },
+    {
+      "type": "archer",
+      "x": 231,
+      "z": 99,
+      "player_id": 2
+    }
+  ],
+  "firecamps": [
+    {
+      "x": 30,
+      "z": 78,
+      "intensity": 1.15,
+      "radius": 3.4
+    },
+    {
+      "x": 39,
+      "z": 85,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "x": 112,
+      "z": 74,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "x": 166,
+      "z": 66,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "x": 220,
+      "z": 66,
+      "intensity": 1.15,
+      "radius": 3.4
+    },
+    {
+      "x": 226,
+      "z": 98,
+      "intensity": 1.0,
+      "radius": 3.0
+    }
+  ],
   "world_props": [
     {
+      "type": "tent",
+      "x": 26,
+      "z": 74,
+      "scale": 1.0,
+      "rotation": 0.4
+    },
+    {
+      "type": "tent",
+      "x": 35,
+      "z": 82,
+      "scale": 1.0,
+      "rotation": 2.2
+    },
+    {
+      "type": "supply_cart",
+      "x": 34,
+      "z": 72,
+      "scale": 1.0,
+      "rotation": 1.1
+    },
+    {
+      "type": "weapon_rack",
+      "x": 42,
+      "z": 80,
+      "scale": 1.0,
+      "rotation": 3.0
+    },
+
+    {
       "type": "ruins",
-      "x": 102.0,
-      "z": 57.0,
+      "x": 108,
+      "z": 70,
       "scale": 1.1,
       "rotation": 1.2
     },
     {
       "type": "ruins",
-      "x": 107.0,
-      "z": 63.0,
+      "x": 114,
+      "z": 76,
       "scale": 1.0,
       "rotation": 3.0
     },
     {
       "type": "ruins",
-      "x": 100.0,
-      "z": 61.0,
+      "x": 110,
+      "z": 79,
       "scale": 0.9,
       "rotation": 4.8
     },
     {
+      "type": "supply_cart",
+      "x": 118,
+      "z": 72,
+      "scale": 0.9,
+      "rotation": 2.4
+    },
+
+    {
       "type": "dead_tree",
-      "x": 19.0,
-      "z": 27.0,
+      "x": 23,
+      "z": 31,
       "scale": 1.2,
       "rotation": 0.6
     },
     {
       "type": "dead_tree",
-      "x": 28.0,
-      "z": 23.0,
+      "x": 32,
+      "z": 27,
       "scale": 1.0,
       "rotation": 2.3
     },
     {
       "type": "dead_tree",
-      "x": 17.0,
-      "z": 33.0,
+      "x": 19,
+      "z": 38,
       "scale": 1.1,
       "rotation": 4.1
     },
     {
       "type": "dead_tree",
-      "x": 172.0,
-      "z": 85.0,
-      "scale": 1.0,
-      "rotation": 1.5
-    },
-    {
-      "type": "dead_tree",
-      "x": 180.0,
-      "z": 83.0,
-      "scale": 1.2,
-      "rotation": 3.8
-    },
-    {
-      "type": "dead_tree",
-      "x": 179.0,
-      "z": 93.0,
-      "scale": 0.9,
-      "rotation": 5.7
-    },
-    {
-      "type": "dead_tree",
-      "x": 75.0,
-      "z": 76.0,
+      "x": 84,
+      "z": 31,
       "scale": 1.0,
       "rotation": 2.1
     },
     {
       "type": "dead_tree",
-      "x": 84.0,
-      "z": 74.0,
+      "x": 94,
+      "z": 37,
       "scale": 0.9,
       "rotation": 4.5
     },
+
     {
       "type": "dead_tree",
-      "x": 115.0,
-      "z": 30.0,
-      "scale": 1.1,
-      "rotation": 0.9
+      "x": 82,
+      "z": 88,
+      "scale": 1.0,
+      "rotation": 1.8
     },
     {
       "type": "dead_tree",
-      "x": 124.0,
-      "z": 31.0,
+      "x": 91,
+      "z": 94,
+      "scale": 0.9,
+      "rotation": 3.6
+    },
+    {
+      "type": "dead_tree",
+      "x": 178,
+      "z": 93,
       "scale": 1.0,
-      "rotation": 3.2
+      "rotation": 1.5
+    },
+    {
+      "type": "dead_tree",
+      "x": 188,
+      "z": 99,
+      "scale": 1.2,
+      "rotation": 3.8
+    },
+
+    {
+      "type": "tent",
+      "x": 214,
+      "z": 58,
+      "scale": 1.0,
+      "rotation": 0.7
+    },
+    {
+      "type": "tent",
+      "x": 217,
+      "z": 74,
+      "scale": 1.0,
+      "rotation": 2.6
+    },
+    {
+      "type": "supply_cart",
+      "x": 225,
+      "z": 66,
+      "scale": 1.0,
+      "rotation": 1.5
+    },
+    {
+      "type": "weapon_rack",
+      "x": 211,
+      "z": 70,
+      "scale": 1.0,
+      "rotation": 4.4
+    },
+    {
+      "type": "supply_cart",
+      "x": 224,
+      "z": 94,
+      "scale": 1.0,
+      "rotation": 0.8
+    },
+    {
+      "type": "supply_cart",
+      "x": 231,
+      "z": 103,
+      "scale": 1.0,
+      "rotation": 2.7
+    },
+    {
+      "type": "tent",
+      "x": 228,
+      "z": 108,
+      "scale": 1.0,
+      "rotation": 5.2
     }
-  ]
+  ],
+  "victory": {
+    "type": "custom",
+    "description": "Defeat the Roman reconnaissance cavalry, prevent the main Roman force from escaping across the Ticino, and capture the bridgehead.",
+    "primary_objectives": [
+      "Rout the Roman cavalry in the central meadow",
+      "Cut off the Roman retreat road before they reach the Ticino bridge",
+      "Capture the Roman bridgehead barracks"
+    ],
+    "secondary_objectives": [
+      "Seize the southern baggage post",
+      "Keep at least half of the Carthaginian cavalry alive",
+      "Use the northern Numidian route to strike the Roman flank"
+    ],
+    "failure_hint": "If the Roman cavalry escapes across the main Ticino bridge, the mission becomes a partial victory instead of a decisive one."
+  }
 }

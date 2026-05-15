@@ -90,7 +90,7 @@ TEST_F(SerializationTest, TransformComponentRoundTrip) {
   transform->has_desired_yaw = true;
   transform->desired_yaw = 90.0F;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -147,7 +147,7 @@ TEST_F(SerializationTest, UnitComponentRoundTrip) {
   unit->owner_id = 2;
   unit->nation_id = Game::Systems::NationID::Carthage;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -263,7 +263,7 @@ TEST_F(SerializationTest, EntityDeserializationRoundTrip) {
   unit->max_health = 100;
   unit->speed = 6.0F;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -324,10 +324,10 @@ TEST_F(SerializationTest, WorldSerializationRoundTrip) {
   auto* transform2 = entity2->add_component<TransformComponent>();
   transform2->position.x = 20.0F;
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
 
   ASSERT_TRUE(doc.isObject());
-  QJsonObject world_obj = doc.object();
+  QJsonObject const world_obj = doc.object();
   EXPECT_TRUE(world_obj.contains("entities"));
   EXPECT_TRUE(world_obj.contains("nextEntityId"));
   EXPECT_TRUE(world_obj.contains("schemaVersion"));
@@ -339,6 +339,25 @@ TEST_F(SerializationTest, WorldSerializationRoundTrip) {
   EXPECT_EQ(entities.size(), 2UL);
 }
 
+TEST_F(SerializationTest, ReplacingEntityIdClearsOldComponentIndex) {
+  auto* original = world->create_entity_with_id(42);
+  ASSERT_NE(original, nullptr);
+  original->add_component<UnitComponent>();
+
+  ASSERT_EQ(world->get_entities_with<UnitComponent>().size(), 1U);
+
+  auto* replacement = world->create_entity_with_id(42);
+  ASSERT_NE(replacement, nullptr);
+  replacement->add_component<TransformComponent>();
+
+  EXPECT_TRUE(world->get_entities_with<UnitComponent>().empty());
+
+  auto transforms = world->get_entities_with<TransformComponent>();
+  ASSERT_EQ(transforms.size(), 1U);
+  EXPECT_EQ(transforms.front()->get_id(), 42U);
+  EXPECT_NE(transforms.front()->get_component<TransformComponent>(), nullptr);
+}
+
 TEST_F(SerializationTest, SaveAndLoadFromFile) {
   auto* entity = world->create_entity();
   auto* transform = entity->add_component<TransformComponent>();
@@ -346,16 +365,16 @@ TEST_F(SerializationTest, SaveAndLoadFromFile) {
   transform->position.y = 43.0F;
   transform->position.z = 44.0F;
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
 
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  QString filename = temp_file.fileName();
+  QString const filename = temp_file.fileName();
   temp_file.close();
 
   EXPECT_TRUE(Serialization::save_to_file(filename, doc));
 
-  QJsonDocument loaded_doc = Serialization::load_from_file(filename);
+  QJsonDocument const loaded_doc = Serialization::load_from_file(filename);
   EXPECT_FALSE(loaded_doc.isNull());
 
   auto new_world = std::make_unique<World>();
@@ -392,7 +411,7 @@ TEST_F(SerializationTest, WorldSerializationPreservesScatterSources) {
                                  .rotation = 0.6F});
   Game::Map::TerrainService::instance().initialize(map_def);
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
   auto new_world = std::make_unique<World>();
   Serialization::deserialize_world(new_world.get(), doc);
 
@@ -484,7 +503,7 @@ TEST_F(SerializationTest, PatrolComponentRoundTrip) {
   patrol->waypoints.emplace_back(15.0F, 25.0F);
   patrol->waypoints.emplace_back(35.0F, 45.0F);
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -511,7 +530,7 @@ TEST_F(SerializationTest, MovementComponentRoundTrip) {
   movement->path.emplace_back(10.0F, 20.0F);
   movement->path.emplace_back(30.0F, 40.0F);
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -543,7 +562,7 @@ TEST_F(SerializationTest, AttackComponentRoundTrip) {
   attack->in_melee_lock = true;
   attack->melee_lock_target_id = 42;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -588,7 +607,7 @@ TEST_F(SerializationTest, CommanderComponentRoundTrip) {
   commander->aura_active = false;
   commander->wounded = true;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -628,7 +647,7 @@ TEST_F(SerializationTest, MoraleComponentRoundTrip) {
   morale->wavering = false;
   morale->routing = true;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -659,7 +678,7 @@ TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   production->commander_committed = true;
   production->production_queue.push_back(Game::Units::TroopType::Archer);
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -692,7 +711,7 @@ TEST_F(SerializationTest, HomeComponentRoundTrip) {
   home->family_generation_interval = 9.0F;
   home->family_manpower_value = 12;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -750,7 +769,7 @@ TEST_F(SerializationTest, RenderableComponentRoundTrip) {
   renderable->mesh = RenderableComponent::MeshKind::Quad;
   renderable->color = {1.0F, 0.5F, 0.25F};
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -788,7 +807,7 @@ TEST_F(SerializationTest, AttackTargetComponentRoundTrip) {
   attack_target->target_id = 123;
   attack_target->should_chase = false;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -815,7 +834,7 @@ TEST_F(SerializationTest, BuildingComponentRoundTrip) {
   auto* building = original_entity->add_component<BuildingComponent>();
   building->original_nation_id = Game::Systems::NationID::Carthage;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -839,7 +858,7 @@ TEST_F(SerializationTest, AIControlledComponentRoundTrip) {
   auto* original_entity = world->create_entity();
   original_entity->add_component<AIControlledComponent>();
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -876,7 +895,7 @@ TEST_F(SerializationTest, CaptureComponentRoundTrip) {
   capture->required_time = 20.0F;
   capture->is_being_captured = false;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -938,7 +957,7 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   auto* catapult = entity->add_component<CatapultLoadingComponent>();
   catapult->state = CatapultLoadingComponent::LoadingState::Idle;
 
-  QJsonObject json = Serialization::serialize_entity(entity);
+  QJsonObject const json = Serialization::serialize_entity(entity);
 
   EXPECT_TRUE(json.contains("transform"));
   EXPECT_TRUE(json.contains("renderable"));
@@ -975,13 +994,13 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
 }
 
 TEST_F(SerializationTest, EmptyWorldSerialization) {
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
 
   ASSERT_TRUE(doc.isObject());
   QJsonObject world_obj = doc.object();
 
   EXPECT_TRUE(world_obj.contains("entities"));
-  QJsonArray entities = world_obj["entities"].toArray();
+  QJsonArray const entities = world_obj["entities"].toArray();
   EXPECT_EQ(entities.size(), 0);
 }
 
@@ -1010,7 +1029,7 @@ TEST_F(SerializationTest, HoldModeComponentRoundTrip) {
   hold_mode->exit_cooldown = 2.5F;
   hold_mode->stand_up_duration = 4.0F;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -1103,7 +1122,7 @@ TEST_F(SerializationTest, GuardModeComponentRoundTrip) {
   guard_mode->returning_to_guard_position = false;
   guard_mode->has_guard_target = true;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -1147,7 +1166,7 @@ TEST_F(SerializationTest, HealerComponentRoundTrip) {
   healer->healing_cooldown = 4.0F;
   healer->time_since_last_heal = 2.0F;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -1207,7 +1226,7 @@ TEST_F(SerializationTest, CatapultLoadingComponentRoundTrip) {
   catapult->target_locked_z = 250.0F;
   catapult->target_position_locked = false;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -1261,7 +1280,7 @@ TEST_F(SerializationTest, MultipleUnitsPositionsAndHealthPreserved) {
     unit->spawn_type = unit_data.spawn_type;
   }
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
@@ -1299,10 +1318,11 @@ TEST_F(SerializationTest, OwnerRegistryTeamsAndColorsPreserved) {
   auto& registry = Game::Systems::OwnerRegistry::instance();
   registry.clear();
 
-  int player1 =
+  int const player1 =
       registry.register_owner(Game::Systems::OwnerType::Player, "Blue Kingdom");
-  int player2 = registry.register_owner(Game::Systems::OwnerType::AI, "Red Empire");
-  int player3 =
+  int const player2 =
+      registry.register_owner(Game::Systems::OwnerType::AI, "Red Empire");
+  int const player3 =
       registry.register_owner(Game::Systems::OwnerType::Player, "Green Alliance");
 
   registry.set_owner_team(player1, 1);
@@ -1326,7 +1346,7 @@ TEST_F(SerializationTest, OwnerRegistryTeamsAndColorsPreserved) {
     unit->owner_id = player2;
   }
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
 
   registry.clear();
   auto restored_world = std::make_unique<World>();
@@ -1405,7 +1425,7 @@ TEST_F(SerializationTest, BuildingOwnershipAndCaptureStatePreserved) {
     capture->is_being_captured = bldg.is_being_captured;
   }
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
@@ -1466,7 +1486,7 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   movement->path.emplace_back(50.0F, 60.0F);
   const size_t expected_path_size = movement->path.size();
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
@@ -1532,7 +1552,7 @@ TEST_F(SerializationTest, CombatStatePreserved) {
   defender_attack->in_melee_lock = true;
   defender_attack->melee_lock_target_id = attacker_id;
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
@@ -1579,7 +1599,7 @@ TEST_F(SerializationTest, NationIdentityPreserved) {
   carthage_unit_comp->nation_id = Game::Systems::NationID::Carthage;
   carthage_unit_comp->spawn_type = Game::Units::SpawnType::Archer;
 
-  QJsonDocument doc = Serialization::serialize_world(world.get());
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
@@ -1639,7 +1659,7 @@ TEST_F(SerializationTest, ElephantComponentRoundTrip) {
   elephant->is_panicked = false;
   elephant->panic_duration = 0.0F;
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
@@ -1690,7 +1710,7 @@ TEST_F(SerializationTest, ElephantStompImpactComponentRoundTrip) {
   stomp_impact->impacts.push_back({15.0F, 25.0F, 1.0F});
   stomp_impact->impacts.push_back({35.0F, 45.0F, 2.0F});
 
-  QJsonObject json = Serialization::serialize_entity(original_entity);
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
 
   auto* new_entity = world->create_entity();
   Serialization::deserialize_entity(new_entity, json);
