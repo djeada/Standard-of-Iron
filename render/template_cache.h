@@ -44,6 +44,7 @@ struct AnimKey {
   Engine::Core::CombatAttackFamily attack_family{
       Engine::Core::CombatAttackFamily::None};
   std::uint8_t attack_variant{0};
+  bool finisher_attack{false};
 };
 
 struct TemplateKey {
@@ -55,6 +56,7 @@ struct TemplateKey {
   Engine::Core::CombatAttackFamily attack_family{
       Engine::Core::CombatAttackFamily::None};
   std::uint8_t attack_variant{0};
+  bool finisher_attack{false};
   AnimState state{AnimState::Idle};
   CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
   std::uint8_t frame{0};
@@ -63,7 +65,8 @@ struct TemplateKey {
     return renderer_id == other.renderer_id && owner_id == other.owner_id &&
            lod == other.lod && mount_lod == other.mount_lod &&
            variant == other.variant && attack_family == other.attack_family &&
-           attack_variant == other.attack_variant && state == other.state &&
+           attack_variant == other.attack_variant &&
+           finisher_attack == other.finisher_attack && state == other.state &&
            combat_phase == other.combat_phase && frame == other.frame;
   }
 };
@@ -154,11 +157,12 @@ public:
   static constexpr std::size_t k_default_max_entries = 500'000;
   static constexpr std::size_t k_dense_attack_family_slots = 4;
   static constexpr std::size_t k_dense_attack_variant_slots = 8;
+  static constexpr std::size_t k_dense_finisher_slots = 2;
   static constexpr std::size_t k_dense_variant_slots = k_template_variant_count;
   static constexpr std::size_t k_dense_anim_state_slots = 305;
   static constexpr std::size_t k_dense_anim_slot_count =
       k_dense_variant_slots * k_dense_attack_family_slots *
-      k_dense_attack_variant_slots * k_dense_anim_state_slots;
+      k_dense_attack_variant_slots * k_dense_finisher_slots * k_dense_anim_state_slots;
 
   struct DenseDomainHandle {
     static constexpr std::size_t k_invalid = std::numeric_limits<std::size_t>::max();

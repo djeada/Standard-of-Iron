@@ -103,7 +103,9 @@ private:
   ArchetypeRegistry();
   void seed_baseline();
 
-  static constexpr std::size_t k_max_archetypes = 256;
+  // Dynamic builder/facial-hair/equipment variants and test-only warmups can
+  // legitimately register far more than the original 256 entries.
+  static constexpr std::size_t k_max_archetypes = 1024;
   std::array<ArchetypeDescriptor, k_max_archetypes> m_table{};
   std::size_t m_count{0};
   mutable std::mutex m_mutex;

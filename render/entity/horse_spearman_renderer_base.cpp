@@ -26,10 +26,10 @@ constexpr QVector3D k_default_proportion_scale{0.80F, 0.88F, 0.88F};
 }
 
 HorseSpearmanRendererBase::HorseSpearmanRendererBase(HorseSpearmanRendererConfig config)
-    : m_config(std::move(config)) {
+    : m_config(std::move(config))
+    , m_spear_handle(m_config.spear_handle) {
   auto& equipment_registry = EquipmentRegistry::instance();
 
-  m_spear_handle = m_config.spear_handle;
   if (m_spear_handle == k_invalid_equipment_handle) {
     m_spear_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
                                                        m_config.spear_equipment_id);
@@ -156,8 +156,7 @@ void HorseSpearmanRendererBase::adjust_variation(const DrawContext&,
 void HorseSpearmanRendererBase::get_variant(const DrawContext& ctx,
                                             uint32_t seed,
                                             HumanoidVariant& v) const {
-  QVector3D const team_tint = resolve_team_tint(ctx);
-  v.palette = make_humanoid_palette(team_tint, seed);
+  HumanoidRendererBase::get_variant(ctx, seed, v);
 }
 
 void HorseSpearmanRendererBase::build_visual_spec() {

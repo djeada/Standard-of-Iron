@@ -111,7 +111,7 @@ void pack_role_colors_to_scratch(std::vector<float>& scratch,
                                  std::size_t count,
                                  GetCmd get_cmd) {
   constexpr std::size_t k = RiggedCreatureCmd::k_max_role_colors;
-  scratch.assign(count * k * 4, 0.0f);
+  scratch.assign(count * k * 4, 0.0F);
   for (std::size_t inst = 0; inst < count; ++inst) {
     const auto& c = get_cmd(inst);
     const std::size_t n =
@@ -168,7 +168,7 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
 
   QString vert_src = load_shader_source(
       QStringLiteral(":/assets/shaders/character_skinned_instanced.vert"));
-  QString frag_src = load_shader_source(
+  QString const frag_src = load_shader_source(
       QStringLiteral(":/assets/shaders/character_skinned_instanced.frag"));
   if (vert_src.isEmpty() || frag_src.isEmpty()) {
     return false;
@@ -248,6 +248,7 @@ void RiggedCharacterPipeline::cache_uniforms() {
   m_uniforms.model = m_shader->uniform_handle("u_model");
   m_uniforms.variation_scale = m_shader->optional_uniform_handle("u_variation_scale");
   m_uniforms.color = m_shader->uniform_handle("u_color");
+  m_uniforms.wear_params = m_shader->optional_uniform_handle("u_wear_params");
   m_uniforms.alpha = m_shader->uniform_handle("u_alpha");
   m_uniforms.use_texture = m_shader->optional_uniform_handle("u_use_texture");
   m_uniforms.texture = m_shader->optional_uniform_handle("u_texture");
@@ -274,6 +275,9 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
     m_shader->set_uniform(m_uniforms.variation_scale, cmd.variation_scale);
   }
   m_shader->set_uniform(m_uniforms.color, cmd.color);
+  if (m_uniforms.wear_params != GL::Shader::InvalidUniform) {
+    m_shader->set_uniform(m_uniforms.wear_params, cmd.wear_params);
+  }
   m_shader->set_uniform(m_uniforms.alpha, cmd.alpha);
   if (m_uniforms.material_id != GL::Shader::InvalidUniform) {
     m_shader->set_uniform(m_uniforms.material_id, static_cast<int>(cmd.material_id));
@@ -375,7 +379,7 @@ auto RiggedCharacterPipeline::ensure_instance_vbo(std::size_t bytes_needed) -> b
   }
   if (bytes_needed > m_instance_vbo_capacity_bytes) {
 
-    std::size_t cap = ((bytes_needed + 4095) / 4096) * 4096;
+    std::size_t const cap = ((bytes_needed + 4095) / 4096) * 4096;
     fn->glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
     fn->glBufferData(
         GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(cap), nullptr, GL_DYNAMIC_DRAW);
@@ -443,7 +447,7 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh& mesh) -> unsigned
   constexpr GLsizei k_inst_stride = sizeof(InstanceAttrib);
   std::size_t off = 0;
   for (int col = 0; col < 4; ++col) {
-    GLuint loc = static_cast<GLuint>(6 + col);
+    auto const loc = static_cast<GLuint>(6 + col);
     fn->glEnableVertexAttribArray(loc);
     fn->glVertexAttribPointer(
         loc, 4, GL_FLOAT, GL_FALSE, k_inst_stride, reinterpret_cast<void*>(off));
@@ -459,6 +463,11 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh& mesh) -> unsigned
   fn->glVertexAttribPointer(
       11, 4, GL_FLOAT, GL_FALSE, k_inst_stride, reinterpret_cast<void*>(off));
   fn->glVertexAttribDivisor(11, 1);
+  off += sizeof(float) * 4;
+  fn->glEnableVertexAttribArray(12);
+  fn->glVertexAttribPointer(
+      12, 4, GL_FLOAT, GL_FALSE, k_inst_stride, reinterpret_cast<void*>(off));
+  fn->glVertexAttribDivisor(12, 1);
 
   ebo->bind();
 
@@ -508,6 +517,10 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
     ia.variation_material[1] = c.variation_scale.y();
     ia.variation_material[2] = c.variation_scale.z();
     ia.variation_material[3] = static_cast<float>(c.material_id);
+    ia.wear[0] = c.wear_params.x();
+    ia.wear[1] = c.wear_params.y();
+    ia.wear[2] = c.wear_params.z();
+    ia.wear[3] = c.wear_params.w();
   }
 
   std::size_t const bytes = count * sizeof(InstanceAttrib);
@@ -604,12 +617,12 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
                         static_cast<GLsizeiptr>(bound_palette_bytes));
 
   fn->glBindVertexArray(vao);
-  GLsizei const idx_count = static_cast<GLsizei>(cmds[0].mesh->index_count());
+  auto const idx_count = static_cast<GLsizei>(cmds[0].mesh->index_count());
   fn->glDrawElementsInstanced(
       GL_TRIANGLES, idx_count, GL_UNSIGNED_INT, nullptr, static_cast<GLsizei>(count));
   fn->glBindVertexArray(0);
 
-  GLenum err = fn->glGetError();
+  GLenum const err = fn->glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "RiggedCharacterPipeline::draw_instanced GL error" << err << "count"
                << count;
@@ -660,6 +673,10 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
     ia.variation_material[1] = c.variation_scale.y();
     ia.variation_material[2] = c.variation_scale.z();
     ia.variation_material[3] = static_cast<float>(c.material_id);
+    ia.wear[0] = c.wear_params.x();
+    ia.wear[1] = c.wear_params.y();
+    ia.wear[2] = c.wear_params.z();
+    ia.wear[3] = c.wear_params.w();
   }
 
   std::size_t const bytes = count * sizeof(InstanceAttrib);
@@ -756,12 +773,12 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
                         static_cast<GLsizeiptr>(bound_palette_bytes));
 
   fn->glBindVertexArray(vao);
-  GLsizei const idx_count = static_cast<GLsizei>(cmds[0]->mesh->index_count());
+  auto const idx_count = static_cast<GLsizei>(cmds[0]->mesh->index_count());
   fn->glDrawElementsInstanced(
       GL_TRIANGLES, idx_count, GL_UNSIGNED_INT, nullptr, static_cast<GLsizei>(count));
   fn->glBindVertexArray(0);
 
-  GLenum err = fn->glGetError();
+  GLenum const err = fn->glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "RiggedCharacterPipeline::draw_instanced GL error" << err << "count"
                << count;

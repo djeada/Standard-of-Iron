@@ -150,8 +150,24 @@ TEST(TemplatePrewarmRegression, PassIntentFromCtxDetectsPrewarm) {
   EXPECT_EQ(pass_intent_from_ctx(prewarm_ctx), RenderPassIntent::Shadow);
 }
 
+TEST(TemplatePrewarmRegression, RuntimePrewarmCtxSuppressesAnimationStatePersistence) {
+  Render::GL::DrawContext const normal_ctx{};
+  Render::GL::DrawContext prewarm_ctx{};
+  prewarm_ctx.template_prewarm = true;
+
+  EXPECT_TRUE(Render::GL::should_persist_animation_state(normal_ctx));
+  EXPECT_FALSE(Render::GL::should_persist_animation_state(prewarm_ctx));
+
+  auto const runtime_ctx = make_runtime_prewarm_ctx(prewarm_ctx);
+  EXPECT_FALSE(runtime_ctx.template_prewarm);
+  EXPECT_FALSE(runtime_ctx.allow_template_cache);
+  EXPECT_TRUE(runtime_ctx.suppress_animation_state_persistence);
+  EXPECT_FALSE(Render::GL::should_persist_animation_state(runtime_ctx));
+}
+
 TEST(TemplatePrewarmRegression, ShadowPassFiltersPreparedBatch) {
   std::vector<CreatureRenderRequest> requests;
+  requests.reserve(5);
   for (int i = 0; i < 5; ++i) {
     requests.push_back(
         make_request(ArchetypeRegistry::k_humanoid_base,
@@ -163,11 +179,12 @@ TEST(TemplatePrewarmRegression, ShadowPassFiltersPreparedBatch) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 3u);
+  EXPECT_EQ(stats.entities_submitted, 3U);
 }
 
 TEST(TemplatePrewarmRegression, AllShadowPassRowsProduceZeroDraws) {
   std::vector<CreatureRenderRequest> requests;
+  requests.reserve(10);
   for (int i = 0; i < 10; ++i) {
     requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
                                     CreatureLOD::Full,
@@ -178,7 +195,7 @@ TEST(TemplatePrewarmRegression, AllShadowPassRowsProduceZeroDraws) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
   EXPECT_EQ(sink.rigged_calls, 0);
   EXPECT_EQ(sink.mesh_calls, 0);
 }
@@ -216,9 +233,9 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   output.spec.kind = CreatureKind::Humanoid;
 
   CreatureRenderBatch batch;
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   batch.add_humanoid(output, pose, variant, anim);
 
@@ -230,7 +247,7 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
 }
 
 TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {
@@ -251,7 +268,7 @@ TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {
 
   CreatureRenderBatch batch;
   batch.add_humanoid(state);
-  ASSERT_EQ(batch.requests().size(), 1u);
+  ASSERT_EQ(batch.requests().size(), 1U);
 
   EXPECT_EQ(batch.requests().front().pass, RenderPassIntent::Shadow);
   EXPECT_FALSE(pass_intent_for(state.graph).emits_post_body_draws);
@@ -334,8 +351,8 @@ TEST(TemplatePrewarmRegression, PreparedHumanoidLodCarriesDistanceCull) {
 }
 
 TEST(TemplatePrewarmRegression, PreparedHumanoidShadowRequiresResources) {
-  Render::GL::DrawContext ctx{};
-  CreatureGraphOutput graph{};
+  Render::GL::DrawContext const ctx{};
+  CreatureGraphOutput const graph{};
 
   HumanoidShadowStateInputs inputs{};
   inputs.ctx = &ctx;
@@ -356,6 +373,7 @@ TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {
   prewarm_ctx.template_prewarm = true;
 
   std::vector<CreatureRenderRequest> requests;
+  requests.reserve(10);
   for (int i = 0; i < 10; ++i) {
     requests.push_back(make_request(ArchetypeRegistry::k_humanoid_base,
                                     CreatureLOD::Full,
@@ -367,7 +385,7 @@ TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 5u);
+  EXPECT_EQ(stats.entities_submitted, 5U);
 }
 
 TEST(TemplatePrewarmRegression, HorsePrewarmProducesZeroDraws) {
@@ -380,9 +398,9 @@ TEST(TemplatePrewarmRegression, HorsePrewarmProducesZeroDraws) {
                                     pass_intent_from_ctx(prewarm_ctx),
                                     123U);
   const auto stats = submit_requests_for_test(
-      std::span<const CreatureRenderRequest>(&request, 1u), sink);
+      std::span<const CreatureRenderRequest>(&request, 1U), sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
 }
 
 TEST(TemplatePrewarmRegression, ElephantPrewarmProducesZeroDraws) {
@@ -395,9 +413,9 @@ TEST(TemplatePrewarmRegression, ElephantPrewarmProducesZeroDraws) {
                                     pass_intent_from_ctx(prewarm_ctx),
                                     456U);
   const auto stats = submit_requests_for_test(
-      std::span<const CreatureRenderRequest>(&request, 1u), sink);
+      std::span<const CreatureRenderRequest>(&request, 1U), sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
 }
 
 TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
@@ -415,9 +433,9 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
-  EXPECT_EQ(stats.lod_full, 0u);
-  EXPECT_EQ(stats.lod_minimal, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
+  EXPECT_EQ(stats.lod_full, 0U);
+  EXPECT_EQ(stats.lod_minimal, 0U);
 }
 
 TEST(TemplatePrewarmRegression, SeedDerivationIsDeterministic) {
@@ -451,9 +469,9 @@ TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
-  EXPECT_EQ(stats.lod_full, 0u);
-  EXPECT_EQ(stats.lod_minimal, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
+  EXPECT_EQ(stats.lod_full, 0U);
+  EXPECT_EQ(stats.lod_minimal, 0U);
 }
 
 TEST(TemplatePrewarmRegression, MainRowsIncrementLodStats) {
@@ -466,14 +484,14 @@ TEST(TemplatePrewarmRegression, MainRowsIncrementLodStats) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 2u);
-  EXPECT_EQ(stats.lod_full, 1u);
-  EXPECT_EQ(stats.lod_minimal, 1u);
+  EXPECT_EQ(stats.entities_submitted, 2U);
+  EXPECT_EQ(stats.lod_full, 1U);
+  EXPECT_EQ(stats.lod_minimal, 1U);
 }
 
 TEST(TemplatePrewarmRegression, QuadrupedHorseShadowRequiresResources) {
-  Render::GL::DrawContext ctx{};
-  CreatureGraphOutput graph{};
+  Render::GL::DrawContext const ctx{};
+  CreatureGraphOutput const graph{};
   QuadrupedShadowStateInputs inputs{};
   inputs.ctx = &ctx;
   inputs.graph = &graph;
@@ -486,8 +504,8 @@ TEST(TemplatePrewarmRegression, QuadrupedHorseShadowRequiresResources) {
 }
 
 TEST(TemplatePrewarmRegression, QuadrupedElephantShadowRequiresResources) {
-  Render::GL::DrawContext ctx{};
-  CreatureGraphOutput graph{};
+  Render::GL::DrawContext const ctx{};
+  CreatureGraphOutput const graph{};
   QuadrupedShadowStateInputs inputs{};
   inputs.ctx = &ctx;
   inputs.graph = &graph;
@@ -747,7 +765,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants)
   ctx.forced_humanoid_lod = CreatureLOD::Full;
   ctx.has_seed_override = true;
 
-  for (std::uint32_t seed : {0U, 4U, 11U, 12U}) {
+  for (std::uint32_t const seed : {0U, 4U, 11U, 12U}) {
     renderer.rigged_mesh_cache().reset_frame_stats();
     ctx.seed_override = seed;
     spearman_renderer(ctx, renderer);

@@ -95,8 +95,8 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
 
   float const post_hy = wall_height * 0.5F * height_multiplier;
   float const post_cy = post_hy + 0.24F;
-  for (float px : {-0.92F, 0.92F}) {
-    for (float pz : {-0.92F, 0.92F}) {
+  for (float const px : {-0.92F, 0.92F}) {
+    for (float const pz : {-0.92F, 0.92F}) {
       desc.add_box(QVector3D(px, post_cy, pz),
                    QVector3D(0.06F, post_hy, 0.06F),
                    c.stone_light,
@@ -141,7 +141,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                  BuildingLODMask::Full);
   }
 
-  for (float zp : {-0.55F, 0.0F, 0.55F}) {
+  for (float const zp : {-0.55F, 0.0F, 0.55F}) {
     desc.add_box(QVector3D(-0.92F, parapet_y, zp),
                  QVector3D(0.10F, merlon_h, 0.14F),
                  c.brick,
@@ -166,7 +166,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(
       QVector3D(0.0F, 0.13F, 1.04F), QVector3D(0.36F, 0.04F, 0.14F), c.stone_light);
 
-  for (float xw : {-0.93F, 0.93F}) {
+  for (float const xw : {-0.93F, 0.93F}) {
     desc.add_box(QVector3D(xw, 0.60F, -0.30F),
                  QVector3D(0.015F, 0.20F, 0.07F),
                  c.wood_dark,
@@ -228,7 +228,7 @@ void draw_home(const DrawContext& p, ISubmitter& out) {
   submit_building_instance(
       out, p, home_archetype(resolve_building_state(p)), palette_slots);
   draw_building_health_bar(out, p, BuildingHealthBarStyle{1.0F, 0.08F, 1.5F});
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{1.4F, 1.4F});
+  draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.1F, 2.1F});
 }
 
 } // namespace

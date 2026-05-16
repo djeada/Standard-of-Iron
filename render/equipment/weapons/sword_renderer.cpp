@@ -348,7 +348,7 @@ auto scabbard_archetype(float sheath_r) -> const RenderArchetype& {
 } // namespace
 
 SwordRenderer::SwordRenderer(SwordRenderConfig config)
-    : m_base(std::move(config)) {
+    : m_base(config) {
 }
 
 void SwordRenderer::render(const DrawContext& ctx,
@@ -368,12 +368,35 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
   bool const is_attacking = anim.inputs.is_attacking && anim.inputs.is_melee;
   float attack_phase = 0.0F;
   if (is_attacking) {
-    attack_phase = std::fmod(anim.inputs.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
+    bool const use_authored_phase = anim.inputs.has_attack_offset ||
+                                    anim.inputs.combat_phase != CombatAnimPhase::Idle ||
+                                    anim.amplified_attack ||
+                                    anim.inputs.finisher_attack;
+    attack_phase =
+        use_authored_phase
+            ? clamp01(anim.attack_phase)
+            : std::fmod(anim.inputs.time * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
   }
 
   QVector3D upish(0.02F, 0.97F, 0.24F);
   QVector3D midish(0.02F, 0.70F, 0.71F);
   QVector3D downish(0.02F, 0.20F, 0.98F);
+  if (anim.amplified_attack) {
+    switch (anim.inputs.attack_variant % 3U) {
+    case 1:
+      upish = QVector3D(-0.26F, 0.92F, 0.28F);
+      midish = QVector3D(-0.30F, 0.68F, 0.67F);
+      downish = QVector3D(-0.12F, 0.20F, 0.97F);
+      break;
+    case 2:
+      upish = QVector3D(0.24F, 0.95F, -0.18F);
+      midish = QVector3D(0.08F, 0.84F, 0.54F);
+      downish = QVector3D(-0.18F, 0.12F, 0.98F);
+      break;
+    default:
+      break;
+    }
+  }
   if (upish.lengthSquared() > 1e-6F) {
     upish.normalize();
   }
@@ -438,7 +461,7 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     } else {
       swing_dir = QVector3D(0.0F, 1.0F, 0.0F);
     }
-    QVector3D guard_right = sword_world.column(0).toVector3D();
+    QVector3D const guard_right = sword_world.column(0).toVector3D();
     QVector3D const trail_start = blade_base + swing_dir * 0.10F;
     QVector3D const trail_end = blade_base + swing_dir * (0.35F + 0.20F * t);
     std::array<QVector3D, 1> const trail_palette{m_config.metal_color * 0.9F};
@@ -475,7 +498,7 @@ auto sword_make_static_attachment(const SwordRenderConfig& config,
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
   auto const& bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_r;
   QMatrix4x4 const bind_socket = hand_basis_transform(QMatrix4x4{}, bind_grip);
-  QVector3D blade_dir_local(0.02F, 0.97F, 0.0F);
+  QVector3D const blade_dir_local(0.02F, 0.97F, 0.0F);
   auto spec = Render::Equipment::build_socket_static_attachment({
       .archetype = &sword_archetype(config),
       .socket_bone_index = static_cast<std::uint16_t>(k_bone),

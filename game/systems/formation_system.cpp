@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -31,29 +32,160 @@ auto get_unit_spacing(Game::Units::TroopType type, float base_spacing) -> float 
   return (selection_size * 2.0F + 0.5F) * base_spacing;
 }
 
-auto is_infantry(Game::Units::TroopType type) -> bool {
-  return type == Game::Units::TroopType::Swordsman ||
-         type == Game::Units::TroopType::Spearman;
+enum class TacticalPlacement {
+  CenterBlock,
+  SplitFlanks
+};
+
+struct TacticalLineRule {
+  std::vector<Game::Units::TroopType> troop_types;
+  TacticalPlacement placement{TacticalPlacement::CenterBlock};
+  int max_per_row{1};
+  int min_per_row{1};
+  float lateral_spacing_scale{1.0F};
+  float depth_spacing_scale{1.0F};
+  float line_gap_scale{1.0F};
+  float row_echelon_scale{0.0F};
+  float row_stagger_scale{0.0F};
+  float lateral_jitter_scale{0.0F};
+  float depth_jitter_scale{0.0F};
+  float front_offset_scale{0.0F};
+  float flank_gap_scale{1.8F};
+  float right_side_weight{0.5F};
+  float flank_forward_step_scale{0.0F};
+  bool consumes_depth{true};
+};
+
+struct TacticalRuleSet {
+  std::vector<TacticalLineRule> lines;
+};
+
+struct AssignedLine {
+  const TacticalLineRule* rule{nullptr};
+  std::vector<UnitFormationInfo> units;
+};
+
+struct FormationBounds {
+  bool valid{false};
+  float min_x{0.0F};
+  float max_x{0.0F};
+  float min_z{0.0F};
+  float max_z{0.0F};
+};
+
+auto signed_noise(std::uint32_t seed) -> float {
+  seed ^= seed >> 16;
+  seed *= 0x7feb352dU;
+  seed ^= seed >> 15;
+  seed *= 0x846ca68bU;
+  seed ^= seed >> 16;
+  return (float(seed & 0xFFFFU) / 32767.5F) - 1.0F;
 }
 
-auto is_ranged(Game::Units::TroopType type) -> bool {
-  return type == Game::Units::TroopType::Archer;
+void expand_bounds(FormationBounds& bounds, const QVector3D& pos) {
+  if (!bounds.valid) {
+    bounds.valid = true;
+    bounds.min_x = bounds.max_x = pos.x();
+    bounds.min_z = bounds.max_z = pos.z();
+    return;
+  }
+  bounds.min_x = std::min(bounds.min_x, pos.x());
+  bounds.max_x = std::max(bounds.max_x, pos.x());
+  bounds.min_z = std::min(bounds.min_z, pos.z());
+  bounds.max_z = std::max(bounds.max_z, pos.z());
 }
 
-auto is_cavalry(Game::Units::TroopType type) -> bool {
-  return type == Game::Units::TroopType::MountedKnight ||
-         type == Game::Units::TroopType::HorseArcher ||
-         type == Game::Units::TroopType::HorseSpearman;
+auto contains_troop_type(const TacticalLineRule& rule,
+                         Game::Units::TroopType troop_type) -> bool {
+  return std::find(rule.troop_types.begin(), rule.troop_types.end(), troop_type) !=
+         rule.troop_types.end();
 }
 
-auto is_siege(Game::Units::TroopType type) -> bool {
-  return type == Game::Units::TroopType::Catapult ||
-         type == Game::Units::TroopType::Ballista;
+auto troop_type_order(const TacticalLineRule& rule,
+                      Game::Units::TroopType troop_type) -> int {
+  auto it = std::find(rule.troop_types.begin(), rule.troop_types.end(), troop_type);
+  if (it == rule.troop_types.end()) {
+    return static_cast<int>(rule.troop_types.size());
+  }
+  return static_cast<int>(std::distance(rule.troop_types.begin(), it));
 }
 
-auto is_support(Game::Units::TroopType type) -> bool {
-  return type == Game::Units::TroopType::Healer ||
-         type == Game::Units::TroopType::Builder;
+void sort_line_units(const TacticalLineRule& rule,
+                     std::vector<UnitFormationInfo>& units) {
+  std::stable_sort(units.begin(),
+                   units.end(),
+                   [&rule](const UnitFormationInfo& a, const UnitFormationInfo& b) {
+                     int const a_order = troop_type_order(rule, a.troop_type);
+                     int const b_order = troop_type_order(rule, b.troop_type);
+                     if (a_order != b_order) {
+                       return a_order < b_order;
+                     }
+                     if (a.current_position.x() != b.current_position.x()) {
+                       return a.current_position.x() < b.current_position.x();
+                     }
+                     return a.entity_id < b.entity_id;
+                   });
+}
+
+auto max_line_spacing(const std::vector<UnitFormationInfo>& units,
+                      float base_spacing) -> float {
+  float spacing = base_spacing;
+  for (const auto& unit : units) {
+    spacing = std::max(spacing, get_unit_spacing(unit.troop_type, base_spacing));
+  }
+  return spacing;
+}
+
+auto build_assigned_lines(const TacticalRuleSet& rules,
+                          const std::vector<UnitFormationInfo>& units)
+    -> std::vector<AssignedLine> {
+  std::vector<AssignedLine> assigned;
+  assigned.reserve(rules.lines.size());
+  for (const auto& rule : rules.lines) {
+    assigned.push_back({&rule, {}});
+  }
+
+  for (const auto& unit : units) {
+    bool matched = false;
+    for (auto& line : assigned) {
+      if (line.rule != nullptr && contains_troop_type(*line.rule, unit.troop_type)) {
+        line.units.push_back(unit);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      qWarning() << "Unassigned troop type in tactical formation"
+                 << static_cast<int>(unit.troop_type) << "- sending to rear support";
+      if (!assigned.empty()) {
+        assigned.back().units.push_back(unit);
+      }
+    }
+  }
+
+  for (auto& line : assigned) {
+    if (line.rule != nullptr) {
+      sort_line_units(*line.rule, line.units);
+    }
+  }
+  return assigned;
+}
+
+auto validate_ruleset(const TacticalRuleSet& rules,
+                      FormationType formation_type) -> bool {
+  std::vector<Game::Units::TroopType> seen;
+  for (const auto& rule : rules.lines) {
+    for (auto troop_type : rule.troop_types) {
+      if (std::find(seen.begin(), seen.end(), troop_type) != seen.end()) {
+        qWarning() << "Duplicate troop mapping in formation ruleset"
+                   << static_cast<int>(formation_type) << static_cast<int>(troop_type);
+        Q_ASSERT(false);
+        return false;
+      }
+      seen.push_back(troop_type);
+    }
+  }
+  return true;
 }
 
 auto calculate_balanced_rows(int total_units,
@@ -70,10 +202,10 @@ auto calculate_balanced_rows(int total_units,
     return row_sizes;
   }
 
-  int num_rows = (total_units + max_per_row - 1) / max_per_row;
+  int const num_rows = (total_units + max_per_row - 1) / max_per_row;
 
-  int base_per_row = total_units / num_rows;
-  int extra_units = total_units % num_rows;
+  int const base_per_row = total_units / num_rows;
+  int const extra_units = total_units % num_rows;
 
   for (int r = 0; r < num_rows; ++r) {
 
@@ -134,7 +266,7 @@ auto carthage_infantry_local_offset(int idx,
                                     std::uint32_t seed) -> FormationOffset {
   float const row_normalized = float(row) / float(rows > 1 ? rows - 1 : 1);
   float const col_normalized =
-      float(col - (cols - 1) * 0.5F) / float(cols > 1 ? (cols - 1) * 0.5F : 1);
+      float(col - (cols - 1) * 0.5F) / (cols > 1 ? (cols - 1) * 0.5F : 1);
 
   float const spread_factor = 1.0F + row_normalized * 0.3F;
   float const row_spacing = spacing * (1.0F + row_normalized * 0.15F);
@@ -146,8 +278,8 @@ auto carthage_infantry_local_offset(int idx,
     offset_x += spacing * 0.35F;
   }
 
-  float const rank_wave =
-      std::sin(col_normalized * 3.14159F) * spacing * 0.12F * (1.0F + row_normalized);
+  float const rank_wave = std::sin(col_normalized * std::numbers::pi_v<float>) *
+                          spacing * 0.12F * (1.0F + row_normalized);
   offset_z += rank_wave;
 
   float const center_push = (1.0F - std::abs(col_normalized)) * spacing * 0.2F;
@@ -202,7 +334,8 @@ auto builder_circle_local_offset(
     return {0.0F, 0.0F, 0.0F};
   }
 
-  float const angle = (float(idx) / float(total_units)) * 2.0F * 3.14159265358979F;
+  float const angle =
+      (float(idx) / float(total_units)) * 2.0F * std::numbers::pi_v<float>;
   float const radius = spacing * 2.8F;
 
   float world_x = std::cos(angle) * radius;
@@ -218,10 +351,438 @@ auto builder_circle_local_offset(
   world_z += (fast_random(rng_state) - 0.5F) * jitter;
 
   float const yaw_offset =
-      std::atan2(-world_x, -world_z) * (180.0F / 3.14159265358979F);
+      std::atan2(-world_x, -world_z) * (180.0F / std::numbers::pi_v<float>);
 
   float const local_r = std::sqrt(world_x * world_x + world_z * world_z);
   return {0.0F, -local_r, yaw_offset};
+}
+
+void center_positions_on_target(std::vector<FormationPosition>& positions,
+                                const QVector3D& center) {
+  if (positions.empty()) {
+    return;
+  }
+
+  FormationBounds bounds;
+  for (const auto& pos : positions) {
+    expand_bounds(bounds, pos.position);
+  }
+  if (!bounds.valid) {
+    return;
+  }
+
+  float const anchor_x = (bounds.min_x + bounds.max_x) * 0.5F;
+  float const anchor_z = (bounds.min_z + bounds.max_z) * 0.5F;
+  for (auto& pos : positions) {
+    pos.position.setX(center.x() + (pos.position.x() - anchor_x));
+    pos.position.setY(center.y());
+    pos.position.setZ(center.z() + (pos.position.z() - anchor_z));
+  }
+}
+
+void append_center_block_positions(const TacticalLineRule& rule,
+                                   const std::vector<UnitFormationInfo>& units,
+                                   float base_spacing,
+                                   float& cursor_z,
+                                   std::vector<FormationPosition>& positions,
+                                   FormationBounds& all_bounds,
+                                   FormationBounds& body_bounds) {
+  if (units.empty()) {
+    return;
+  }
+
+  float const spacing = max_line_spacing(units, base_spacing);
+  float const lateral_spacing = spacing * rule.lateral_spacing_scale;
+  float const row_spacing = spacing * rule.depth_spacing_scale;
+  int const max_per_row =
+      std::max(1, std::min(rule.max_per_row, static_cast<int>(units.size())));
+  int const min_per_row = std::max(1, std::min(rule.min_per_row, max_per_row));
+  auto const row_sizes =
+      calculate_balanced_rows(static_cast<int>(units.size()), max_per_row, min_per_row);
+  float const line_front_z = cursor_z + rule.front_offset_scale * row_spacing;
+
+  size_t unit_idx = 0;
+  float line_rear_z = line_front_z;
+  for (size_t row = 0; row < row_sizes.size() && unit_idx < units.size(); ++row) {
+    int const units_in_row = row_sizes[row];
+    float const row_z = line_front_z - static_cast<float>(row) * row_spacing;
+    line_rear_z = std::min(line_rear_z, row_z);
+    float const echelon =
+        static_cast<float>(row) * lateral_spacing * rule.row_echelon_scale;
+    float const stagger =
+        (row % 2 == 1U) ? lateral_spacing * rule.row_stagger_scale : 0.0F;
+
+    for (int col = 0; col < units_in_row && unit_idx < units.size(); ++col) {
+      float const centered_col =
+          static_cast<float>(col) - (static_cast<float>(units_in_row) - 1.0F) * 0.5F;
+      float const lateral_noise =
+          signed_noise(units[unit_idx].entity_id * 2654435761U +
+                       static_cast<std::uint32_t>(row * 97U + col * 17U)) *
+          lateral_spacing * rule.lateral_jitter_scale;
+      float const depth_noise =
+          signed_noise(units[unit_idx].entity_id * 2246822519U +
+                       static_cast<std::uint32_t>(row * 53U + col * 29U)) *
+          row_spacing * rule.depth_jitter_scale;
+
+      FormationPosition pos;
+      pos.position =
+          QVector3D(centered_col * lateral_spacing + echelon + stagger + lateral_noise,
+                    0.0F,
+                    row_z + depth_noise);
+      pos.facing_angle = 0.0F;
+      pos.entity_id = units[unit_idx].entity_id;
+      positions.push_back(pos);
+      expand_bounds(all_bounds, pos.position);
+      expand_bounds(body_bounds, pos.position);
+      ++unit_idx;
+    }
+  }
+
+  if (rule.consumes_depth) {
+    cursor_z = line_rear_z - row_spacing * rule.line_gap_scale;
+  }
+}
+
+void append_split_flank_positions(const TacticalLineRule& rule,
+                                  const std::vector<UnitFormationInfo>& units,
+                                  float base_spacing,
+                                  float front_anchor_z,
+                                  float body_half_width,
+                                  std::vector<FormationPosition>& positions,
+                                  FormationBounds& all_bounds) {
+  if (units.empty()) {
+    return;
+  }
+
+  std::vector<UnitFormationInfo> sorted_units = units;
+  std::stable_sort(sorted_units.begin(),
+                   sorted_units.end(),
+                   [](const UnitFormationInfo& a, const UnitFormationInfo& b) {
+                     if (a.current_position.x() != b.current_position.x()) {
+                       return a.current_position.x() < b.current_position.x();
+                     }
+                     return a.entity_id < b.entity_id;
+                   });
+
+  int right_count = static_cast<int>(
+      std::round(static_cast<float>(sorted_units.size()) * rule.right_side_weight));
+  int left_count = static_cast<int>(sorted_units.size()) - right_count;
+  if (sorted_units.size() > 1U) {
+    left_count = std::max(1, left_count);
+    right_count = std::max(1, right_count);
+    if (left_count + right_count > static_cast<int>(sorted_units.size())) {
+      if (right_count > left_count) {
+        --right_count;
+      } else {
+        --left_count;
+      }
+    }
+  }
+
+  std::vector<UnitFormationInfo> const left_units(sorted_units.begin(),
+                                                  sorted_units.begin() + left_count);
+  std::vector<UnitFormationInfo> const right_units(sorted_units.begin() + left_count,
+                                                   sorted_units.end());
+
+  auto append_side = [&](const std::vector<UnitFormationInfo>& side_units,
+                         float side_sign) {
+    if (side_units.empty()) {
+      return;
+    }
+
+    float const spacing = max_line_spacing(side_units, base_spacing);
+    float const lateral_spacing = spacing * rule.lateral_spacing_scale;
+    float const row_spacing = spacing * rule.depth_spacing_scale;
+    int const max_per_row =
+        std::max(1, std::min(rule.max_per_row, static_cast<int>(side_units.size())));
+    int const min_per_row = std::max(1, std::min(rule.min_per_row, max_per_row));
+    auto const row_sizes = calculate_balanced_rows(
+        static_cast<int>(side_units.size()), max_per_row, min_per_row);
+    float const flank_center =
+        side_sign * (body_half_width + spacing * rule.flank_gap_scale);
+
+    size_t unit_idx = 0;
+    for (size_t row = 0; row < row_sizes.size() && unit_idx < side_units.size();
+         ++row) {
+      int const units_in_row = row_sizes[row];
+      float const row_z = front_anchor_z + rule.front_offset_scale * row_spacing -
+                          static_cast<float>(row) * row_spacing;
+      float const echelon = side_sign * static_cast<float>(row) * lateral_spacing *
+                            rule.row_echelon_scale;
+
+      for (int col = 0; col < units_in_row && unit_idx < side_units.size(); ++col) {
+        float const centered_col =
+            static_cast<float>(col) - (static_cast<float>(units_in_row) - 1.0F) * 0.5F;
+        float const lateral_noise =
+            signed_noise(side_units[unit_idx].entity_id * 1597334677U +
+                         static_cast<std::uint32_t>(row * 41U + col * 11U)) *
+            lateral_spacing * rule.lateral_jitter_scale;
+        float const depth_noise =
+            signed_noise(side_units[unit_idx].entity_id * 3812015801U +
+                         static_cast<std::uint32_t>(row * 73U + col * 31U)) *
+            row_spacing * rule.depth_jitter_scale;
+
+        FormationPosition pos;
+        pos.position = QVector3D(
+            flank_center + centered_col * lateral_spacing + echelon + lateral_noise,
+            0.0F,
+            row_z + centered_col * row_spacing * rule.flank_forward_step_scale +
+                depth_noise);
+        pos.facing_angle = 0.0F;
+        pos.entity_id = side_units[unit_idx].entity_id;
+        positions.push_back(pos);
+        expand_bounds(all_bounds, pos.position);
+        ++unit_idx;
+      }
+    }
+  };
+
+  append_side(left_units, -1.0F);
+  append_side(right_units, 1.0F);
+}
+
+auto build_rule_driven_positions(const TacticalRuleSet& rules,
+                                 const std::vector<UnitFormationInfo>& units,
+                                 const QVector3D& center,
+                                 float base_spacing) -> std::vector<FormationPosition> {
+  std::vector<FormationPosition> positions;
+  positions.reserve(units.size());
+  if (units.empty()) {
+    return positions;
+  }
+
+  auto assigned_lines = build_assigned_lines(rules, units);
+  FormationBounds all_bounds;
+  FormationBounds body_bounds;
+  float cursor_z = 0.0F;
+
+  for (const auto& line : assigned_lines) {
+    if (line.rule == nullptr ||
+        line.rule->placement != TacticalPlacement::CenterBlock) {
+      continue;
+    }
+    append_center_block_positions(*line.rule,
+                                  line.units,
+                                  base_spacing,
+                                  cursor_z,
+                                  positions,
+                                  all_bounds,
+                                  body_bounds);
+  }
+
+  float body_half_width = 0.0F;
+  if (body_bounds.valid) {
+    body_half_width =
+        std::max(std::abs(body_bounds.min_x), std::abs(body_bounds.max_x));
+  }
+
+  for (const auto& line : assigned_lines) {
+    if (line.rule == nullptr ||
+        line.rule->placement != TacticalPlacement::SplitFlanks) {
+      continue;
+    }
+    if (!body_bounds.valid) {
+      TacticalLineRule collapsed_rule = *line.rule;
+      collapsed_rule.placement = TacticalPlacement::CenterBlock;
+      collapsed_rule.consumes_depth = true;
+      collapsed_rule.front_offset_scale = 0.0F;
+      append_center_block_positions(collapsed_rule,
+                                    line.units,
+                                    base_spacing,
+                                    cursor_z,
+                                    positions,
+                                    all_bounds,
+                                    body_bounds);
+      body_half_width =
+          std::max(std::abs(body_bounds.min_x), std::abs(body_bounds.max_x));
+      continue;
+    }
+    float const front_anchor_z = body_bounds.max_z;
+    append_split_flank_positions(*line.rule,
+                                 line.units,
+                                 base_spacing,
+                                 front_anchor_z,
+                                 body_half_width,
+                                 positions,
+                                 all_bounds);
+  }
+
+  center_positions_on_target(positions, center);
+  return positions;
+}
+
+auto roman_tactical_rules() -> const TacticalRuleSet& {
+  static TacticalRuleSet const rules = {{
+      {{Game::Units::TroopType::Elephant},
+       TacticalPlacement::CenterBlock,
+       3,
+       1,
+       1.60F,
+       1.20F,
+       0.80F},
+      {{Game::Units::TroopType::Spearman},
+       TacticalPlacement::CenterBlock,
+       8,
+       2,
+       1.18F,
+       1.02F,
+       0.85F},
+      {{Game::Units::TroopType::Swordsman},
+       TacticalPlacement::CenterBlock,
+       8,
+       2,
+       1.08F,
+       1.00F,
+       0.95F},
+      {{Game::Units::TroopType::Archer},
+       TacticalPlacement::CenterBlock,
+       10,
+       2,
+       1.02F,
+       1.05F,
+       1.05F,
+       0.0F,
+       0.20F},
+      {{Game::Units::TroopType::Catapult, Game::Units::TroopType::Ballista},
+       TacticalPlacement::CenterBlock,
+       4,
+       1,
+       1.45F,
+       1.15F,
+       1.15F},
+      {{Game::Units::TroopType::RomanLegionOrganizer,
+        Game::Units::TroopType::RomanVeteranConsul,
+        Game::Units::TroopType::RomanFieldCommander,
+        Game::Units::TroopType::CarthageMercenaryBroker,
+        Game::Units::TroopType::CarthageCavalryPatron,
+        Game::Units::TroopType::CarthageElephantMaster,
+        Game::Units::TroopType::Healer,
+        Game::Units::TroopType::Builder,
+        Game::Units::TroopType::Civilian},
+       TacticalPlacement::CenterBlock,
+       6,
+       1,
+       1.00F,
+       1.00F,
+       0.75F},
+      {{Game::Units::TroopType::MountedKnight,
+        Game::Units::TroopType::HorseSpearman,
+        Game::Units::TroopType::HorseArcher},
+       TacticalPlacement::SplitFlanks,
+       3,
+       1,
+       1.08F,
+       1.00F,
+       1.00F,
+       0.0F,
+       0.0F,
+       0.0F,
+       0.0F,
+       0.0F,
+       1.90F,
+       0.50F,
+       0.00F,
+       false},
+  }};
+  static bool const validated = validate_ruleset(rules, FormationType::Roman);
+  Q_UNUSED(validated);
+  return rules;
+}
+
+auto carthage_tactical_rules() -> const TacticalRuleSet& {
+  static TacticalRuleSet const rules = {{
+      {{Game::Units::TroopType::Elephant},
+       TacticalPlacement::CenterBlock,
+       3,
+       1,
+       1.70F,
+       1.15F,
+       0.60F},
+      {{Game::Units::TroopType::Spearman},
+       TacticalPlacement::CenterBlock,
+       7,
+       2,
+       1.16F,
+       1.00F,
+       0.80F,
+       0.30F,
+       0.18F,
+       0.05F,
+       0.04F},
+      {{Game::Units::TroopType::Swordsman},
+       TacticalPlacement::CenterBlock,
+       7,
+       2,
+       1.08F,
+       1.00F,
+       0.90F,
+       -0.18F,
+       0.12F,
+       0.04F,
+       0.03F},
+      {{Game::Units::TroopType::Archer},
+       TacticalPlacement::CenterBlock,
+       9,
+       2,
+       1.05F,
+       1.00F,
+       1.00F,
+       -0.25F,
+       0.32F,
+       0.08F,
+       0.06F},
+      {{Game::Units::TroopType::Catapult, Game::Units::TroopType::Ballista},
+       TacticalPlacement::CenterBlock,
+       4,
+       1,
+       1.55F,
+       1.20F,
+       1.15F,
+       0.10F,
+       0.0F,
+       0.05F,
+       0.04F},
+      {{Game::Units::TroopType::RomanLegionOrganizer,
+        Game::Units::TroopType::RomanVeteranConsul,
+        Game::Units::TroopType::RomanFieldCommander,
+        Game::Units::TroopType::CarthageMercenaryBroker,
+        Game::Units::TroopType::CarthageCavalryPatron,
+        Game::Units::TroopType::CarthageElephantMaster,
+        Game::Units::TroopType::Healer,
+        Game::Units::TroopType::Builder,
+        Game::Units::TroopType::Civilian},
+       TacticalPlacement::CenterBlock,
+       6,
+       1,
+       1.00F,
+       1.00F,
+       0.75F,
+       0.10F,
+       0.20F,
+       0.04F,
+       0.03F},
+      {{Game::Units::TroopType::MountedKnight,
+        Game::Units::TroopType::HorseSpearman,
+        Game::Units::TroopType::HorseArcher},
+       TacticalPlacement::SplitFlanks,
+       3,
+       1,
+       1.12F,
+       1.00F,
+       1.00F,
+       0.25F,
+       0.0F,
+       0.08F,
+       0.05F,
+       0.35F,
+       2.10F,
+       0.60F,
+       0.35F,
+       false},
+  }};
+  static bool const validated = validate_ruleset(rules, FormationType::Carthage);
+  Q_UNUSED(validated);
+  return rules;
 }
 } // namespace
 
@@ -264,173 +825,8 @@ auto RomanFormation::calculate_formation_positions(
     const std::vector<UnitFormationInfo>& units,
     const QVector3D& center,
     float base_spacing) const -> std::vector<FormationPosition> {
-  std::vector<FormationPosition> positions;
-  positions.reserve(units.size());
-
-  if (units.empty()) {
-    return positions;
-  }
-
-  std::vector<UnitFormationInfo> infantry, archers, cavalry, siege, support;
-
-  for (const auto& unit : units) {
-    if (is_infantry(unit.troop_type)) {
-      infantry.push_back(unit);
-    } else if (is_ranged(unit.troop_type)) {
-      archers.push_back(unit);
-    } else if (is_cavalry(unit.troop_type)) {
-      cavalry.push_back(unit);
-    } else if (is_siege(unit.troop_type)) {
-      siege.push_back(unit);
-    } else if (is_support(unit.troop_type)) {
-      support.push_back(unit);
-    }
-  }
-
-  float const forward_facing = 0.0F;
-  float row_offset = 0.0F;
-
-  float max_row_width = 0.0F;
-
-  if (!infantry.empty()) {
-    int const max_per_row = std::min(8, static_cast<int>(infantry.size()));
-    int const min_per_row = std::max(3, max_per_row / 2);
-    auto row_sizes = calculate_balanced_rows(
-        static_cast<int>(infantry.size()), max_per_row, min_per_row);
-
-    float const unit_spacing = get_unit_spacing(infantry[0].troop_type, base_spacing);
-
-    float const row_spacing = unit_spacing;
-
-    int max_units_in_row = 0;
-    for (int size : row_sizes) {
-      max_units_in_row = std::max(max_units_in_row, size);
-    }
-    float const type_max_width = (max_units_in_row - 1) * unit_spacing;
-    max_row_width = std::max(max_row_width, type_max_width);
-
-    size_t unit_idx = 0;
-    for (size_t row = 0; row < row_sizes.size() && unit_idx < infantry.size(); ++row) {
-      int const units_in_row = row_sizes[row];
-
-      for (int col = 0; col < units_in_row && unit_idx < infantry.size(); ++col) {
-
-        float const x_offset = (col - (units_in_row - 1) * 0.5F) * unit_spacing;
-
-        float const z_offset = row_offset - static_cast<float>(row) * row_spacing;
-
-        FormationPosition pos;
-        pos.position =
-            QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
-        pos.facing_angle = forward_facing;
-        pos.entity_id = infantry[unit_idx].entity_id;
-        positions.push_back(pos);
-        ++unit_idx;
-      }
-    }
-
-    row_offset -= static_cast<float>(row_sizes.size()) * row_spacing;
-  }
-
-  if (!archers.empty()) {
-    int const max_per_row = std::min(10, static_cast<int>(archers.size()));
-    int const min_per_row = std::max(4, max_per_row / 2);
-    auto row_sizes = calculate_balanced_rows(
-        static_cast<int>(archers.size()), max_per_row, min_per_row);
-
-    float const unit_spacing = get_unit_spacing(archers[0].troop_type, base_spacing);
-
-    float const row_spacing = unit_spacing;
-
-    int max_units_in_row = 0;
-    for (int size : row_sizes) {
-      max_units_in_row = std::max(max_units_in_row, size);
-    }
-    float const type_max_width = (max_units_in_row - 1) * unit_spacing;
-    max_row_width = std::max(max_row_width, type_max_width);
-
-    size_t unit_idx = 0;
-    for (size_t row = 0; row < row_sizes.size() && unit_idx < archers.size(); ++row) {
-      int const units_in_row = row_sizes[row];
-
-      for (int col = 0; col < units_in_row && unit_idx < archers.size(); ++col) {
-
-        float const x_offset = (col - (units_in_row - 1) * 0.5F) * unit_spacing;
-
-        float const z_offset = row_offset - static_cast<float>(row) * row_spacing;
-
-        FormationPosition pos;
-        pos.position =
-            QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
-        pos.facing_angle = forward_facing;
-        pos.entity_id = archers[unit_idx].entity_id;
-        positions.push_back(pos);
-        ++unit_idx;
-      }
-    }
-
-    row_offset -= static_cast<float>(row_sizes.size()) * row_spacing;
-  }
-
-  if (!cavalry.empty()) {
-    float const cavalry_z_offset = center.z();
-
-    for (size_t i = 0; i < cavalry.size(); ++i) {
-      float const spacing =
-          get_unit_spacing(cavalry[i].troop_type, base_spacing) * 1.2F;
-      float x_offset;
-      if (i % 2 == 0) {
-        x_offset = (i / 2 + 1) * spacing + 5.0F * base_spacing;
-      } else {
-        x_offset = -((i / 2 + 1) * spacing + 5.0F * base_spacing);
-      }
-
-      FormationPosition pos;
-      pos.position = QVector3D(center.x() + x_offset, center.y(), cavalry_z_offset);
-      pos.facing_angle = forward_facing;
-      pos.entity_id = cavalry[i].entity_id;
-      positions.push_back(pos);
-    }
-  }
-
-  if (!siege.empty()) {
-    float const spacing = get_unit_spacing(siege[0].troop_type, base_spacing) * 1.5F;
-
-    for (size_t i = 0; i < siege.size(); ++i) {
-      float const x_offset =
-          (static_cast<int>(i) - (static_cast<int>(siege.size()) - 1) * 0.5F) * spacing;
-      float const z_offset = row_offset - ROMAN_LINE_SPACING * base_spacing;
-
-      FormationPosition pos;
-      pos.position =
-          QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
-      pos.facing_angle = forward_facing;
-      pos.entity_id = siege[i].entity_id;
-      positions.push_back(pos);
-    }
-
-    row_offset -= ROMAN_LINE_SPACING * base_spacing * 1.5F;
-  }
-
-  if (!support.empty()) {
-    float const spacing = get_unit_spacing(support[0].troop_type, base_spacing);
-
-    for (size_t i = 0; i < support.size(); ++i) {
-      float const x_offset =
-          (static_cast<int>(i) - (static_cast<int>(support.size()) - 1) * 0.5F) *
-          spacing;
-      float const z_offset = row_offset - ROMAN_LINE_SPACING * base_spacing;
-
-      FormationPosition pos;
-      pos.position =
-          QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
-      pos.facing_angle = forward_facing;
-      pos.entity_id = support[i].entity_id;
-      positions.push_back(pos);
-    }
-  }
-
-  return positions;
+  return build_rule_driven_positions(
+      roman_tactical_rules(), units, center, base_spacing);
 }
 
 auto BarbarianFormation::calculate_formation_positions(
@@ -491,174 +887,8 @@ auto CarthageFormation::calculate_formation_positions(
     const std::vector<UnitFormationInfo>& units,
     const QVector3D& center,
     float base_spacing) const -> std::vector<FormationPosition> {
-  std::vector<FormationPosition> positions;
-  positions.reserve(units.size());
-
-  if (units.empty()) {
-    return positions;
-  }
-
-  std::vector<UnitFormationInfo> infantry, archers, cavalry, siege, support;
-
-  for (const auto& unit : units) {
-    if (is_infantry(unit.troop_type)) {
-      infantry.push_back(unit);
-    } else if (is_ranged(unit.troop_type)) {
-      archers.push_back(unit);
-    } else if (is_cavalry(unit.troop_type)) {
-      cavalry.push_back(unit);
-    } else if (is_siege(unit.troop_type)) {
-      siege.push_back(unit);
-    } else if (is_support(unit.troop_type)) {
-      support.push_back(unit);
-    }
-  }
-
-  float const forward_facing = 0.0F;
-  float row_offset = 0.0F;
-
-  if (!infantry.empty()) {
-    int const max_per_row = std::min(7, static_cast<int>(infantry.size()));
-    int const min_per_row = std::max(4, max_per_row / 2);
-    auto row_sizes = calculate_balanced_rows(
-        static_cast<int>(infantry.size()), max_per_row, min_per_row);
-
-    float const spacing = get_unit_spacing(infantry[0].troop_type, base_spacing);
-
-    size_t unit_idx = 0;
-    for (size_t row = 0; row < row_sizes.size() && unit_idx < infantry.size(); ++row) {
-      int const units_in_row = row_sizes[row];
-      float const row_echelon = static_cast<float>(row) * 0.8F * spacing;
-
-      for (int col = 0; col < units_in_row && unit_idx < infantry.size(); ++col) {
-        float const x_offset =
-            (col - (units_in_row - 1) * 0.5F) * spacing + row_echelon;
-        float const z_offset =
-            row_offset - static_cast<float>(row) * CARTHAGE_LINE_SPACING * base_spacing;
-
-        FormationPosition pos;
-        pos.position =
-            QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
-        pos.facing_angle = forward_facing;
-        pos.entity_id = infantry[unit_idx].entity_id;
-        positions.push_back(pos);
-        ++unit_idx;
-      }
-    }
-
-    row_offset -=
-        static_cast<float>(row_sizes.size()) * CARTHAGE_LINE_SPACING * base_spacing;
-  }
-
-  if (!archers.empty()) {
-    int const max_per_row = std::min(9, static_cast<int>(archers.size()));
-    int const min_per_row = std::max(5, max_per_row / 2);
-    auto row_sizes = calculate_balanced_rows(
-        static_cast<int>(archers.size()), max_per_row, min_per_row);
-
-    float const spacing = get_unit_spacing(archers[0].troop_type, base_spacing);
-
-    size_t unit_idx = 0;
-    for (size_t row = 0; row < row_sizes.size() && unit_idx < archers.size(); ++row) {
-      int const units_in_row = row_sizes[row];
-      float const row_echelon = -static_cast<float>(row) * 0.8F * spacing;
-
-      for (int col = 0; col < units_in_row && unit_idx < archers.size(); ++col) {
-        float const x_offset =
-            (col - (units_in_row - 1) * 0.5F) * spacing + row_echelon;
-        float const z_offset =
-            row_offset - static_cast<float>(row) * CARTHAGE_LINE_SPACING * base_spacing;
-
-        FormationPosition pos;
-        pos.position =
-            QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
-        pos.facing_angle = forward_facing;
-        pos.entity_id = archers[unit_idx].entity_id;
-        positions.push_back(pos);
-        ++unit_idx;
-      }
-    }
-
-    row_offset -=
-        static_cast<float>(row_sizes.size()) * CARTHAGE_LINE_SPACING * base_spacing;
-  }
-
-  if (!siege.empty()) {
-    for (size_t i = 0; i < siege.size(); ++i) {
-      float const spacing = get_unit_spacing(siege[i].troop_type, base_spacing) * 2.0F;
-      float const x_offset =
-          (static_cast<int>(i) - (static_cast<int>(siege.size()) - 1) * 0.5F) * spacing;
-
-      FormationPosition pos;
-      pos.position =
-          QVector3D(center.x() + x_offset,
-                    center.y(),
-                    center.z() + row_offset - CARTHAGE_LINE_SPACING * base_spacing);
-      pos.facing_angle = forward_facing;
-      pos.entity_id = siege[i].entity_id;
-      positions.push_back(pos);
-    }
-
-    row_offset -= CARTHAGE_LINE_SPACING * base_spacing * 1.5F;
-  }
-
-  if (!cavalry.empty()) {
-    float const cavalry_z_offset = center.z();
-
-    int const right_flank_count = (static_cast<int>(cavalry.size()) + 1) / 2;
-    int const left_flank_count = static_cast<int>(cavalry.size()) - right_flank_count;
-
-    for (int i = 0; i < right_flank_count; ++i) {
-      float const spacing =
-          get_unit_spacing(cavalry[static_cast<size_t>(i)].troop_type, base_spacing) *
-          1.3F;
-      float const x_offset = (i + 1) * spacing + 6.0F * base_spacing;
-      float const z_forward = i * 0.7F * base_spacing;
-
-      FormationPosition pos;
-      pos.position =
-          QVector3D(center.x() + x_offset, center.y(), cavalry_z_offset + z_forward);
-      pos.facing_angle = forward_facing;
-      pos.entity_id = cavalry[static_cast<size_t>(i)].entity_id;
-      positions.push_back(pos);
-    }
-
-    for (int i = 0; i < left_flank_count; ++i) {
-      float const spacing =
-          get_unit_spacing(
-              cavalry[static_cast<size_t>(right_flank_count + i)].troop_type,
-              base_spacing) *
-          1.3F;
-      float const x_offset = -((i + 1) * spacing + 6.0F * base_spacing);
-      float const z_forward = i * 0.7F * base_spacing;
-
-      FormationPosition pos;
-      pos.position =
-          QVector3D(center.x() + x_offset, center.y(), cavalry_z_offset + z_forward);
-      pos.facing_angle = forward_facing;
-      pos.entity_id = cavalry[static_cast<size_t>(right_flank_count + i)].entity_id;
-      positions.push_back(pos);
-    }
-  }
-
-  if (!support.empty()) {
-    for (size_t i = 0; i < support.size(); ++i) {
-      float const spacing = get_unit_spacing(support[i].troop_type, base_spacing);
-      float const x_offset =
-          (static_cast<int>(i) - (static_cast<int>(support.size()) - 1) * 0.5F) *
-          spacing;
-      float const z_offset = row_offset - CARTHAGE_LINE_SPACING * base_spacing;
-
-      FormationPosition pos;
-      pos.position =
-          QVector3D(center.x() + x_offset, center.y(), center.z() + z_offset);
-      pos.facing_angle = forward_facing;
-      pos.entity_id = support[i].entity_id;
-      positions.push_back(pos);
-    }
-  }
-
-  return positions;
+  return build_rule_driven_positions(
+      carthage_tactical_rules(), units, center, base_spacing);
 }
 
 auto CarthageFormation::calculate_positions(int unit_count,

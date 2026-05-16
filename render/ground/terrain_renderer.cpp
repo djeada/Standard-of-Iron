@@ -94,7 +94,8 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
+  const bool use_visibility =
+      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
   std::uint64_t visibility_version = 0;
   if (use_visibility) {
@@ -182,7 +183,7 @@ void TerrainRenderer::build_meshes() {
         if (m_terrain_types[idx] != Game::Map::TerrainType::Hill) {
           continue;
         }
-        float min_dist = float(k_entry_radius + 1);
+        auto min_dist = float(k_entry_radius + 1);
         for (int dz = -k_entry_radius; dz <= k_entry_radius; ++dz) {
           int const nz = z + dz;
           if (nz < 0 || nz >= m_height) {
@@ -615,8 +616,8 @@ void TerrainRenderer::build_meshes() {
           bool const subdivide = section_index > 0 && entry_factor > 0.25F;
 
           if (subdivide) {
-            float const gx = float(x);
-            float const gz = float(z);
+            auto const gx = float(x);
+            auto const gz = float(z);
             unsigned int const v00 = v0;
             unsigned int const v20 = v1;
             unsigned int const v02 = v2;
@@ -1090,7 +1091,7 @@ auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,
     QVector3D const with_dry =
         base * (1.0F - dry_blend) + surface_profile.grass_dry * dry_blend;
 
-    return QVector3D(with_dry.x() * 0.7F, with_dry.y() * 0.9F, with_dry.z() * 0.6F);
+    return {with_dry.x() * 0.7F, with_dry.y() * 0.9F, with_dry.z() * 0.6F};
   }
   case Game::Map::TerrainType::Flat:
   default: {

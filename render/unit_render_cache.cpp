@@ -4,10 +4,36 @@
 
 #include "../game/core/component.h"
 #include "../game/core/entity.h"
+#include "../game/systems/troop_profile_service.h"
 #include "../game/units/spawn_type.h"
 #include "entity/building_render_common.h"
 
 namespace Render {
+
+auto resolve_profile_unit_renderer_key(const Engine::Core::UnitComponent& unit)
+    -> std::string {
+  auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
+  if (troop_type.has_value()) {
+    const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+        unit.nation_id, *troop_type);
+    if (!profile.visuals.renderer_id.empty()) {
+      return profile.visuals.renderer_id;
+    }
+  }
+  return Game::Units::spawn_typeToString(unit.spawn_type);
+}
+
+auto resolve_unit_renderer_key(const Engine::Core::UnitComponent& unit,
+                               const Engine::Core::RenderableComponent* renderable)
+    -> std::string {
+  const std::string spawn_key = Game::Units::spawn_typeToString(unit.spawn_type);
+  if (renderable != nullptr && !renderable->renderer_id.empty() &&
+      renderable->renderer_id != spawn_key) {
+    return std::string(
+        Render::GL::canonicalize_building_renderer_key(renderable->renderer_id));
+  }
+  return resolve_profile_unit_renderer_key(unit);
+}
 
 auto UnitRenderCache::get_or_create(std::uint32_t entity_id,
                                     Engine::Core::Entity* entity,
@@ -46,24 +72,20 @@ auto UnitRenderCache::get_or_create(std::uint32_t entity_id,
   data.renderable = new_renderable;
   data.movement = new_movement;
 
-  if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {
-    if (entity->get_component<Engine::Core::BuildingComponent>() != nullptr &&
-        data.unit != nullptr) {
+  const bool is_building =
+      entity->get_component<Engine::Core::BuildingComponent>() != nullptr;
+  if (data.unit != nullptr) {
+    if (is_building) {
       data.renderer_key = Render::GL::resolve_building_renderer_key(
-          data.renderable->renderer_id,
+          data.renderable != nullptr ? data.renderable->renderer_id : std::string{},
           Game::Units::spawn_typeToString(data.unit->spawn_type),
           data.unit->nation_id);
     } else {
-      data.renderer_key = std::string(
-          Render::GL::canonicalize_building_renderer_key(data.renderable->renderer_id));
+      data.renderer_key = resolve_unit_renderer_key(*data.unit, data.renderable);
     }
-  } else if (data.unit != nullptr) {
-    if (entity->get_component<Engine::Core::BuildingComponent>() != nullptr) {
-      data.renderer_key = Render::GL::building_renderer_key(
-          data.unit->nation_id, Game::Units::spawn_typeToString(data.unit->spawn_type));
-    } else {
-      data.renderer_key = Game::Units::spawn_typeToString(data.unit->spawn_type);
-    }
+  } else if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {
+    data.renderer_key = std::string(
+        Render::GL::canonicalize_building_renderer_key(data.renderable->renderer_id));
   } else {
     data.renderer_key.clear();
   }

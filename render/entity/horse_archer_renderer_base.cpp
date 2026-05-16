@@ -26,10 +26,10 @@ constexpr QVector3D k_default_proportion_scale{0.82F, 0.90F, 0.90F};
 }
 
 HorseArcherRendererBase::HorseArcherRendererBase(HorseArcherRendererConfig config)
-    : m_config(std::move(config)) {
+    : m_config(std::move(config))
+    , m_bow_handle(m_config.bow_handle) {
   auto& equipment_registry = EquipmentRegistry::instance();
 
-  m_bow_handle = m_config.bow_handle;
   if (m_bow_handle == k_invalid_equipment_handle) {
     m_bow_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
                                                      m_config.bow_equipment_id);
@@ -155,8 +155,7 @@ void HorseArcherRendererBase::adjust_variation(const DrawContext&,
 void HorseArcherRendererBase::get_variant(const DrawContext& ctx,
                                           uint32_t seed,
                                           HumanoidVariant& v) const {
-  QVector3D const team_tint = resolve_team_tint(ctx);
-  v.palette = make_humanoid_palette(team_tint, seed);
+  HumanoidRendererBase::get_variant(ctx, seed, v);
 }
 
 void HorseArcherRendererBase::build_visual_spec() {

@@ -86,6 +86,7 @@ public:
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle variation_scale{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wear_params{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle use_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle texture{GL::Shader::InvalidUniform};
@@ -133,6 +134,7 @@ private:
     float world[16];
     float color_alpha[4];
     float variation_material[4];
+    float wear[4];
   };
   std::vector<InstanceAttrib> m_instance_scratch;
   std::vector<float> m_role_color_scratch;

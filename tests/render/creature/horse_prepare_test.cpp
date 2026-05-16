@@ -65,8 +65,9 @@ public:
 struct ScopedFlatTerrain {
   explicit ScopedFlatTerrain(float height) {
     auto& terrain = Game::Map::TerrainService::instance();
-    std::vector<float> heights(9, height);
-    std::vector<Game::Map::TerrainType> terrain_types(9, Game::Map::TerrainType::Flat);
+    std::vector<float> const heights(9, height);
+    std::vector<Game::Map::TerrainType> const terrain_types(
+        9, Game::Map::TerrainType::Flat);
     terrain.restore_from_serialized(
         3, 3, 1.0F, heights, terrain_types, {}, {}, {}, Game::Map::BiomeSettings{});
   }
@@ -91,7 +92,7 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
 
-  QMatrix4x4 world;
+  QMatrix4x4 const world;
   const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
       spec,
       Render::Creature::Pipeline::CreatureKind::Horse,
@@ -104,7 +105,7 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Horse);
   EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Minimal);
   EXPECT_EQ(row.pass, Render::Creature::Pipeline::RenderPassIntent::Shadow);
-  EXPECT_EQ(row.seed, 11u);
+  EXPECT_EQ(row.seed, 11U);
 }
 
 TEST(HorsePrepare, ShadowHorseRowProducesNoDraw) {
@@ -134,11 +135,11 @@ TEST(HorsePrepare, MainHorseRowProducesEntitySubmission) {
   prep.bodies.add_request(req);
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 1u);
+  EXPECT_EQ(stats.entities_submitted, 1U);
 }
 
 TEST(HorsePrepare, MountFrameSeatsRiderOverMiddleTorso) {
-  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+  Render::GL::HorseProfile const profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
   auto const mount = Render::GL::compute_mount_frame(profile);
@@ -153,7 +154,7 @@ TEST(HorsePrepare, MountFrameSeatsRiderOverMiddleTorso) {
 }
 
 TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
-  Render::GL::HorseRendererBase renderer;
+  Render::GL::HorseRendererBase const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -171,8 +172,8 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   ctx.entity = &entity;
   ctx.template_prewarm = true;
 
-  Render::GL::AnimationInputs anim{};
-  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::AnimationInputs const anim{};
+  Render::GL::HumanoidAnimationContext const rider_ctx{};
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
   Render::GL::TemplateRecorder recorder;
@@ -180,7 +181,7 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
 
   renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, recorder);
 
-  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_TRUE(recorder.commands().empty());
 }
 
@@ -227,7 +228,7 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
                                         asset_path.string()))
       << snapshot_reg.last_error();
 
-  Render::GL::HorseRendererBase renderer;
+  Render::GL::HorseRendererBase const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -244,8 +245,8 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   Render::GL::DrawContext ctx{};
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
-  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::AnimationInputs const anim{};
+  Render::GL::HumanoidAnimationContext const rider_ctx{};
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
   Render::GL::TemplateRecorder recorder;
@@ -261,8 +262,8 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
                   recorder,
                   Render::GL::HorseLOD::Minimal);
 
-  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
-  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
+  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0U);
 }
 
 TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
@@ -277,7 +278,7 @@ TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) 
   auto& snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
   snapshot_reg.clear();
 
-  Render::GL::HorseRendererBase renderer;
+  Render::GL::HorseRendererBase const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -294,8 +295,8 @@ TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) 
   Render::GL::DrawContext ctx{};
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
-  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::AnimationInputs const anim{};
+  Render::GL::HumanoidAnimationContext const rider_ctx{};
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
   Render::GL::TemplateRecorder recorder;
@@ -311,22 +312,22 @@ TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) 
                   recorder,
                   Render::GL::HorseLOD::Minimal);
 
-  EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0u);
-  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
+  EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0U);
+  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0U);
 }
 
 TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
-  ScopedFlatTerrain terrain(1.9F);
+  ScopedFlatTerrain const terrain(1.9F);
 
-  Render::GL::HorseRendererBase owner;
+  Render::GL::HorseRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.model.translate(-0.3F, 6.0F, 0.45F);
 
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
-  Render::GL::AnimationInputs anim{};
-  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::AnimationInputs const anim{};
+  Render::GL::HumanoidAnimationContext const rider_ctx{};
   Render::Horse::HorsePreparation prep;
   Render::Horse::prepare_horse_render(owner,
                                       ctx,
@@ -339,7 +340,7 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
                                       prep);
 
   auto const requests = prep.bodies.requests();
-  ASSERT_EQ(requests.size(), 1u);
+  ASSERT_EQ(requests.size(), 1U);
 
   float const hoof_contact_y =
       Render::Creature::Pipeline::horse_clip_contact_y(0U, 0.0F).value_or(0.0F);
@@ -352,7 +353,7 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
 }
 
 TEST(HorsePrepare, MoveToIdleTransitionKeepsLocomotionPoseActiveUntilBlendEnds) {
-  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+  Render::GL::HorseProfile const profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
   Render::Creature::HorseAnimationStateComponent state{};
@@ -371,6 +372,7 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsLocomotionPoseActiveUntilBlendEnds) 
   auto const moving_sample =
       Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
   EXPECT_EQ(moving_sample.gait_type, Render::GL::GaitType::WALK);
+  EXPECT_EQ(moving_sample.playback_gait_type, Render::GL::GaitType::WALK);
 
   rider_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
   rider_ctx.gait.speed = 0.0F;
@@ -384,11 +386,12 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsLocomotionPoseActiveUntilBlendEnds) 
       Render::GL::evaluate_horse_motion(profile, idle_anim, rider_ctx, &state);
 
   EXPECT_EQ(stop_sample.gait_type, Render::GL::GaitType::WALK);
+  EXPECT_EQ(stop_sample.playback_gait_type, Render::GL::GaitType::WALK);
   EXPECT_TRUE(stop_sample.is_moving);
 }
 
 TEST(HorsePrepare, MoveToIdleTransitionKeepsBpatPhaseContinuous) {
-  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+  Render::GL::HorseProfile const profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
   Render::Creature::HorseAnimationStateComponent state{};
@@ -427,15 +430,81 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsBpatPhaseContinuous) {
   EXPECT_GT(phase_distance(stop_sample.phase, old_global_clock_phase), 0.05F);
 }
 
+TEST(HorsePrepare, HorseGaitsMapToSharedWalkRunAnimationStates) {
+  using Render::Creature::MovementAnimationState;
+
+  EXPECT_EQ(Render::GL::movement_animation_for_horse_gait(Render::GL::GaitType::IDLE),
+            MovementAnimationState::Idle);
+  EXPECT_EQ(Render::GL::movement_animation_for_horse_gait(Render::GL::GaitType::WALK),
+            MovementAnimationState::Walk);
+  EXPECT_EQ(Render::GL::movement_animation_for_horse_gait(Render::GL::GaitType::TROT),
+            MovementAnimationState::Run);
+  EXPECT_EQ(Render::GL::movement_animation_for_horse_gait(Render::GL::GaitType::CANTER),
+            MovementAnimationState::Run);
+  EXPECT_EQ(Render::GL::movement_animation_for_horse_gait(Render::GL::GaitType::GALLOP),
+            MovementAnimationState::Run);
+}
+
+TEST(HorsePrepare, MoveFromIdleTriggersPlaybackWalkImmediately) {
+  Render::GL::HorseProfile const profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+
+  Render::Creature::HorseAnimationStateComponent state{};
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  rider_ctx.gait.state = Render::GL::HumanoidMotionState::Walk;
+  rider_ctx.gait.speed = 1.8F;
+  rider_ctx.gait.normalized_speed = 0.45F;
+  rider_ctx.gait.cycle_time = 1.0F;
+  rider_ctx.gait.cycle_phase = 0.10F;
+
+  Render::GL::AnimationInputs moving_anim{};
+  moving_anim.time = 0.0F;
+  moving_anim.is_moving = true;
+
+  auto const moving_sample =
+      Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
+
+  EXPECT_EQ(moving_sample.gait_type, Render::GL::GaitType::IDLE);
+  EXPECT_EQ(moving_sample.playback_gait_type, Render::GL::GaitType::WALK);
+  EXPECT_TRUE(moving_sample.is_moving);
+}
+
+TEST(HorsePrepare, FastMoveFromIdleTriggersPlaybackRunImmediately) {
+  Render::GL::HorseProfile const profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+
+  Render::Creature::HorseAnimationStateComponent state{};
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  rider_ctx.gait.state = Render::GL::HumanoidMotionState::Run;
+  rider_ctx.gait.speed = 6.2F;
+  rider_ctx.gait.normalized_speed = 1.0F;
+  rider_ctx.gait.cycle_time = 0.8F;
+  rider_ctx.gait.cycle_phase = 0.15F;
+
+  Render::GL::AnimationInputs moving_anim{};
+  moving_anim.time = 0.0F;
+  moving_anim.is_moving = true;
+  moving_anim.is_running = true;
+
+  auto const moving_sample =
+      Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
+
+  EXPECT_EQ(moving_sample.gait_type, Render::GL::GaitType::IDLE);
+  EXPECT_NE(moving_sample.playback_gait_type, Render::GL::GaitType::IDLE);
+  EXPECT_EQ(
+      Render::GL::movement_animation_for_horse_gait(moving_sample.playback_gait_type),
+      Render::Creature::MovementAnimationState::Run);
+}
+
 TEST(HorsePrepare, ShadowBatchEmptyWithoutResources) {
 
-  ScopedFlatTerrain terrain(0.0F);
+  ScopedFlatTerrain const terrain(0.0F);
 
-  Render::GL::HorseRendererBase owner;
+  Render::GL::HorseRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = true;
-  Render::GL::AnimationInputs anim{};
-  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::AnimationInputs const anim{};
+  Render::GL::HumanoidAnimationContext const rider_ctx{};
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       42U, QVector3D(0.5F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 

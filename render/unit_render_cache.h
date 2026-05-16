@@ -17,6 +17,13 @@ class MovementComponent;
 
 namespace Render {
 
+[[nodiscard]] auto resolve_profile_unit_renderer_key(
+    const Engine::Core::UnitComponent& unit) -> std::string;
+
+[[nodiscard]] auto resolve_unit_renderer_key(
+    const Engine::Core::UnitComponent& unit,
+    const Engine::Core::RenderableComponent* renderable) -> std::string;
+
 struct CachedUnitData {
   std::uint32_t entity_id{0};
   Engine::Core::Entity* entity{nullptr};

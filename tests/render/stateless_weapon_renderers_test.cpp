@@ -337,6 +337,30 @@ TEST(StatelessWeaponRenderers, SwordTrailUsesArchetypePath) {
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
+TEST(StatelessWeaponRenderers, CommanderSwordAttackVariantChangesVisibleSway) {
+  const auto frames = make_frames();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  auto anim_a = make_anim();
+  anim_a.inputs.is_attacking = true;
+  anim_a.inputs.is_melee = true;
+  anim_a.inputs.has_attack_offset = true;
+  anim_a.inputs.attack_variant = 0U;
+  anim_a.amplified_attack = true;
+  anim_a.attack_phase = 0.42F;
+
+  auto anim_b = anim_a;
+  anim_b.inputs.attack_variant = 1U;
+
+  EquipmentBatch batch_a;
+  EquipmentBatch batch_b;
+  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim_a, batch_a);
+  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim_b, batch_b);
+
+  EXPECT_NE(hash_batch(batch_a), hash_batch(batch_b));
+}
+
 TEST(StatelessWeaponRenderers, ShieldSubmitIsStateless) {
   ShieldRenderConfig a;
   a.shield_color = {0.7F, 0.3F, 0.2F};

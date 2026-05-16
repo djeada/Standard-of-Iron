@@ -26,10 +26,10 @@ constexpr QVector3D k_default_proportion_scale{0.82F, 0.90F, 0.90F};
 }
 
 MountedKnightRendererBase::MountedKnightRendererBase(MountedKnightRendererConfig config)
-    : m_config(std::move(config)) {
+    : m_config(std::move(config))
+    , m_sword_handle(m_config.sword_handle) {
   auto& equipment_registry = EquipmentRegistry::instance();
 
-  m_sword_handle = m_config.sword_handle;
   if (m_sword_handle == k_invalid_equipment_handle) {
     m_sword_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
                                                        m_config.sword_equipment_id);
@@ -156,8 +156,7 @@ void MountedKnightRendererBase::adjust_variation(const DrawContext&,
 void MountedKnightRendererBase::get_variant(const DrawContext& ctx,
                                             uint32_t seed,
                                             HumanoidVariant& v) const {
-  QVector3D const team_tint = resolve_team_tint(ctx);
-  v.palette = make_humanoid_palette(team_tint, seed);
+  HumanoidRendererBase::get_variant(ctx, seed, v);
 }
 
 void MountedKnightRendererBase::build_visual_spec() {

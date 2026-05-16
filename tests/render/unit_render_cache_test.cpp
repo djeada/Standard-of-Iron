@@ -41,4 +41,37 @@ TEST(UnitRenderCache, CanonicalizesPublicBuildingRendererKeyUsingBuildingNation)
   EXPECT_EQ(cached.renderer_key, "troops/roman/barracks");
 }
 
+TEST(UnitRenderCache, UsesTroopProfileRendererForBlankInfantryRendererId) {
+  Render::UnitRenderCache cache;
+
+  Engine::Core::Entity entity(3);
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(unit, nullptr);
+
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+
+  const auto& cached = cache.get_or_create(3, &entity, 1);
+  EXPECT_EQ(cached.renderer_key, "troops/roman/swordsman");
+}
+
+TEST(UnitRenderCache, ReplacesLegacySpawnTypeRendererIdWithProfileRenderer) {
+  Render::UnitRenderCache cache;
+
+  Engine::Core::Entity entity(4);
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  renderable->renderer_id = "spearman";
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(unit, nullptr);
+
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+
+  const auto& cached = cache.get_or_create(4, &entity, 1);
+  EXPECT_EQ(cached.renderer_key, "troops/roman/spearman");
+}
+
 } // namespace

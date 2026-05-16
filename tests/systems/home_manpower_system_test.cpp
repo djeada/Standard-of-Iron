@@ -160,4 +160,28 @@ TEST_F(HomeManpowerSystemTest, InitialHomeSpawnStartsWithThreeCivilianRecruitsRe
   EXPECT_EQ(production->manpower_available, production->villager_cost * 3);
 }
 
+TEST_F(HomeManpowerSystemTest, HomeSpawnScalesTransformAndDefaultRallyPoint) {
+  Engine::Core::World world;
+
+  Game::Units::SpawnParams params;
+  params.player_id = 1;
+  params.spawn_type = Game::Units::SpawnType::Home;
+  params.position = QVector3D(10.0F, 0.0F, 20.0F);
+
+  auto home = Game::Units::Home::Create(world, params);
+  auto* entity = world.get_entity(home->id());
+  ASSERT_NE(entity, nullptr);
+
+  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  auto* production = entity->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(production, nullptr);
+
+  EXPECT_FLOAT_EQ(transform->scale.x, 1.8F);
+  EXPECT_FLOAT_EQ(transform->scale.y, 1.5F);
+  EXPECT_FLOAT_EQ(transform->scale.z, 1.8F);
+  EXPECT_FLOAT_EQ(production->rally_x, 13.0F);
+  EXPECT_FLOAT_EQ(production->rally_z, 21.5F);
+}
+
 } // namespace
