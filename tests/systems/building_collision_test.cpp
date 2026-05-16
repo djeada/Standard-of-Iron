@@ -124,10 +124,12 @@ TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
   bool has_min_x = false;
   bool has_max_x = false;
   for (const auto& cell : cells) {
-    if (cell.first <= -2)
+    if (cell.first <= -2) {
       has_min_x = true;
-    if (cell.first >= 2)
+    }
+    if (cell.first >= 2) {
       has_max_x = true;
+    }
   }
   EXPECT_TRUE(has_min_x);
   EXPECT_TRUE(has_max_x);
@@ -145,4 +147,11 @@ TEST_F(BuildingCollisionRegistryTest, UnitWithLargeRadiusCloseToBuilding) {
   EXPECT_TRUE(registry.is_circle_overlapping_building(3.0F, 0.0F, unit_radius));
 
   EXPECT_FALSE(registry.is_circle_overlapping_building(3.1F, 0.0F, unit_radius));
+}
+
+TEST_F(BuildingCollisionRegistryTest, HomeUsesScaledFootprint) {
+  const auto size = BuildingCollisionRegistry::get_building_size("home");
+
+  EXPECT_FLOAT_EQ(size.width, 3.0F);
+  EXPECT_FLOAT_EQ(size.depth, 3.0F);
 }

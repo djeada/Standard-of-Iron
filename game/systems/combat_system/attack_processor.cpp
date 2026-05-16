@@ -89,6 +89,7 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
     } else {
       combat_state->attack_family = Engine::Core::CombatAttackFamily::None;
     }
+    combat_state->finisher_attack = false;
     if (!preserve_seed || !had_combat_state) {
       std::uniform_real_distribution<float> offset_dist(0.0F, 0.15F);
       combat_state->attack_offset = offset_dist(gen);

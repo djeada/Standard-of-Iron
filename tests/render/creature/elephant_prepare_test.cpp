@@ -63,8 +63,9 @@ public:
 struct ScopedFlatTerrain {
   explicit ScopedFlatTerrain(float height) {
     auto& terrain = Game::Map::TerrainService::instance();
-    std::vector<float> heights(9, height);
-    std::vector<Game::Map::TerrainType> terrain_types(9, Game::Map::TerrainType::Flat);
+    std::vector<float> const heights(9, height);
+    std::vector<Game::Map::TerrainType> const terrain_types(
+        9, Game::Map::TerrainType::Flat);
     terrain.restore_from_serialized(
         3, 3, 1.0F, heights, terrain_types, {}, {}, {}, Game::Map::BiomeSettings{});
   }
@@ -103,7 +104,7 @@ TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
 
-  QMatrix4x4 world;
+  QMatrix4x4 const world;
   const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
       spec,
       Render::Creature::Pipeline::CreatureKind::Elephant,
@@ -116,7 +117,7 @@ TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
   EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Minimal);
   EXPECT_EQ(row.pass, Render::Creature::Pipeline::RenderPassIntent::Shadow);
-  EXPECT_EQ(row.seed, 23u);
+  EXPECT_EQ(row.seed, 23U);
 }
 
 TEST(ElephantPrepare, ShadowElephantRowProducesNoDraw) {
@@ -146,7 +147,7 @@ TEST(ElephantPrepare, MainElephantRowProducesEntitySubmission) {
   prep.bodies.add_request(req);
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 1u);
+  EXPECT_EQ(stats.entities_submitted, 1U);
 }
 
 TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
@@ -192,7 +193,7 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
                                         asset_path.string()))
       << snapshot_reg.last_error();
 
-  Render::GL::ElephantRendererBase renderer;
+  Render::GL::ElephantRendererBase const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
@@ -209,7 +210,7 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   Render::GL::DrawContext ctx{};
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
   Render::GL::TemplateRecorder recorder;
   recorder.snapshot_mesh_cache().clear();
@@ -218,8 +219,8 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   renderer.render(
       ctx, anim, profile, nullptr, nullptr, recorder, Render::GL::HorseLOD::Minimal);
 
-  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
-  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
+  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0U);
 }
 
 TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
@@ -234,7 +235,7 @@ TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissin
   auto& snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
   snapshot_reg.clear();
 
-  Render::GL::ElephantRendererBase renderer;
+  Render::GL::ElephantRendererBase const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
@@ -251,7 +252,7 @@ TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissin
   Render::GL::DrawContext ctx{};
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
   Render::GL::TemplateRecorder recorder;
   recorder.snapshot_mesh_cache().clear();
@@ -260,13 +261,13 @@ TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissin
   renderer.render(
       ctx, anim, profile, nullptr, nullptr, recorder, Render::GL::HorseLOD::Minimal);
 
-  EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0u);
-  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
+  EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0U);
+  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0U);
 }
 
 TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
-  Render::GL::ElephantProfile profile = make_test_elephant_profile();
-  Render::GL::AnimationInputs anim{
+  Render::GL::ElephantProfile const profile = make_test_elephant_profile();
+  Render::GL::AnimationInputs const anim{
       .time = 1.25F,
       .is_moving = true,
       .is_running = false,
@@ -311,9 +312,57 @@ TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
   EXPECT_TRUE(motion.is_fighting);
 }
 
-TEST(ElephantPrepare, PoseMotionBuildsFromPreparedSample) {
+TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {
+  Render::GL::ElephantRendererBase const renderer;
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
-  Render::GL::AnimationInputs anim{
+  Render::Elephant::ElephantPreparation prep;
+  Render::GL::DrawContext ctx{};
+  ctx.force_horse_lod = true;
+  ctx.forced_horse_lod = Render::GL::HorseLOD::Full;
+
+  Engine::Core::Entity entity(77);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Elephant;
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs walk_anim{};
+  walk_anim.time = 0.25F;
+  walk_anim.is_moving = true;
+  walk_anim.is_running = false;
+  Render::Elephant::prepare_elephant_render(renderer,
+                                            ctx,
+                                            walk_anim,
+                                            profile,
+                                            nullptr,
+                                            nullptr,
+                                            Render::Creature::CreatureLOD::Full,
+                                            prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+
+  prep = Render::Elephant::ElephantPreparation{};
+  Render::GL::AnimationInputs run_anim = walk_anim;
+  run_anim.is_running = true;
+  Render::Elephant::prepare_elephant_render(renderer,
+                                            ctx,
+                                            run_anim,
+                                            profile,
+                                            nullptr,
+                                            nullptr,
+                                            Render::Creature::CreatureLOD::Full,
+                                            prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Run);
+}
+
+TEST(ElephantPrepare, PoseMotionBuildsFromPreparedSample) {
+  Render::GL::ElephantProfile const profile = make_test_elephant_profile();
+  Render::GL::AnimationInputs const anim{
       .time = 0.75F,
       .is_moving = true,
       .is_running = false,
@@ -354,7 +403,7 @@ TEST(ElephantPrepare, MotionScalesSwayWithGaitIntensity) {
   low.gait.stride_lift = 0.08F;
   high.gait.stride_lift = 0.24F;
 
-  Render::GL::AnimationInputs anim{
+  Render::GL::AnimationInputs const anim{
       .time = high.gait.cycle_time * 0.25F,
       .is_moving = true,
       .is_running = true,
@@ -371,8 +420,8 @@ TEST(ElephantPrepare, MotionScalesSwayWithGaitIntensity) {
 }
 
 TEST(ElephantPrepare, MovingMotionAddsForeAftWeightTransfer) {
-  Render::GL::ElephantProfile profile = make_test_elephant_profile();
-  Render::GL::AnimationInputs anim{
+  Render::GL::ElephantProfile const profile = make_test_elephant_profile();
+  Render::GL::AnimationInputs const anim{
       .time = profile.gait.cycle_time * 0.25F,
       .is_moving = true,
       .is_running = false,
@@ -388,16 +437,16 @@ TEST(ElephantPrepare, MovingMotionAddsForeAftWeightTransfer) {
 }
 
 TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
-  ScopedFlatTerrain terrain(3.1F);
+  ScopedFlatTerrain const terrain(3.1F);
 
-  Render::GL::ElephantRendererBase owner;
+  Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.model.translate(0.2F, 11.0F, -0.35F);
 
   Render::GL::ElephantProfile profile = Render::GL::make_elephant_profile(
       29U, QVector3D(0.5F, 0.2F, 0.1F), QVector3D(0.7F, 0.7F, 0.2F));
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Elephant::ElephantPreparation prep;
   Render::Elephant::prepare_elephant_render(owner,
                                             ctx,
@@ -409,17 +458,17 @@ TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
                                             prep);
 
   auto const requests = prep.bodies.requests();
-  ASSERT_EQ(requests.size(), 1u);
+  ASSERT_EQ(requests.size(), 1U);
   EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 3.1F, 0.0001F);
 }
 
 TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
-  ScopedFlatTerrain terrain(0.0F);
+  ScopedFlatTerrain const terrain(0.0F);
 
-  Render::GL::ElephantRendererBase owner;
+  Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.template_prewarm = true;
-  Render::GL::AnimationInputs anim{
+  Render::GL::AnimationInputs const anim{
       .time = 0.4F,
       .is_moving = true,
       .is_running = false,
@@ -437,21 +486,21 @@ TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
                                             prep);
 
   auto const rows = prep.bodies.rows();
-  ASSERT_EQ(rows.size(), 1u);
+  ASSERT_EQ(rows.size(), 1U);
   EXPECT_EQ(rows[0].spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
   auto const requests = prep.bodies.requests();
-  ASSERT_EQ(requests.size(), 1u);
+  ASSERT_EQ(requests.size(), 1U);
   EXPECT_EQ(requests[0].state, Render::Creature::AnimationStateId::Walk);
   EXPECT_GT(requests[0].phase, 0.0F);
 }
 
 TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
-  ScopedFlatTerrain terrain(0.0F);
+  ScopedFlatTerrain const terrain(0.0F);
 
-  Render::GL::ElephantRendererBase owner;
+  Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.template_prewarm = true;
-  Render::GL::AnimationInputs anim{
+  Render::GL::AnimationInputs const anim{
       .time = 0.2F,
       .is_moving = false,
       .is_running = false,
@@ -469,16 +518,16 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
                                             prep);
 
   auto const rows = prep.bodies.rows();
-  ASSERT_EQ(rows.size(), 1u);
+  ASSERT_EQ(rows.size(), 1U);
   EXPECT_EQ(rows[0].spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
   auto const requests = prep.bodies.requests();
-  ASSERT_EQ(requests.size(), 1u);
+  ASSERT_EQ(requests.size(), 1U);
   EXPECT_EQ(requests[0].state, Render::Creature::AnimationStateId::Idle);
   EXPECT_GE(requests[0].phase, 0.0F);
 }
 
 TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
-  Render::GL::ElephantRendererBase renderer;
+  Render::GL::ElephantRendererBase const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
@@ -496,26 +545,26 @@ TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   ctx.entity = &entity;
   ctx.template_prewarm = true;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   auto profile = make_test_elephant_profile();
   Render::GL::TemplateRecorder recorder;
   recorder.snapshot_mesh_cache().clear();
 
   renderer.render(ctx, anim, profile, nullptr, nullptr, recorder);
 
-  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_TRUE(recorder.commands().empty());
 }
 
 TEST(ElephantPrepare, ShadowBatchEmptyWithoutResources) {
 
-  ScopedFlatTerrain terrain(0.0F);
+  ScopedFlatTerrain const terrain(0.0F);
 
-  Render::GL::ElephantRendererBase owner;
+  Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = true;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
   Render::Elephant::ElephantPreparation prep;

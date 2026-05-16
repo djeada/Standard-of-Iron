@@ -31,7 +31,7 @@ inline auto clamp01(float v) -> float {
 }
 
 inline auto phase_to_frame(float phase) -> std::uint8_t {
-  float clamped = clamp01(phase);
+  float const clamped = clamp01(phase);
   int idx = static_cast<int>(clamped * k_anim_frame_count);
   if (idx >= static_cast<int>(k_anim_frame_count)) {
     idx = static_cast<int>(k_anim_frame_count - 1);
@@ -132,6 +132,7 @@ std::size_t TemplateKeyHash::operator()(const TemplateKey& key) const noexcept {
   h ^= static_cast<std::size_t>(key.variant) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.attack_family) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.attack_variant) + 0x9e3779b9 + (h << 6) + (h >> 2);
+  h ^= static_cast<std::size_t>(key.finisher_attack) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.state) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.combat_phase) + 0x9e3779b9 + (h << 6) + (h >> 2);
   h ^= static_cast<std::size_t>(key.frame) + 0x9e3779b9 + (h << 6) + (h >> 2);
@@ -213,7 +214,7 @@ auto TemplateCache::get_or_build(const TemplateKey& key,
                                  const std::function<PoseTemplate()>& builder)
     -> const PoseTemplate* {
   {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> const lock(m_mutex);
     auto it = m_cache.find(key);
     if (it != m_cache.end()) {
 
@@ -224,7 +225,7 @@ auto TemplateCache::get_or_build(const TemplateKey& key,
 
   PoseTemplate built = builder();
 
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
 
   auto it = m_cache.find(key);
   if (it != m_cache.end()) {
@@ -249,12 +250,15 @@ auto TemplateCache::dense_slot_index(std::uint8_t variant,
   const std::size_t family_slot = clamp_attack_family_index(anim_key.attack_family);
   const std::size_t attack_slot =
       std::min<std::size_t>(anim_key.attack_variant, k_dense_attack_variant_slots - 1);
+  const std::size_t finisher_slot = anim_key.finisher_attack ? 1U : 0U;
   const std::size_t anim_slot = dense_anim_state_slot_index(
       anim_key.state, anim_key.combat_phase, anim_key.frame);
 
-  return (((variant_slot * k_dense_attack_family_slots) + family_slot) *
-              k_dense_attack_variant_slots +
-          attack_slot) *
+  return ((((variant_slot * k_dense_attack_family_slots) + family_slot) *
+               k_dense_attack_variant_slots +
+           attack_slot) *
+              k_dense_finisher_slots +
+          finisher_slot) *
              k_dense_anim_state_slots +
          anim_slot;
 }
@@ -264,7 +268,7 @@ auto TemplateCache::get_dense_domain_handle(const std::string& renderer_id,
                                             std::uint8_t lod,
                                             std::uint8_t mount_lod)
     -> DenseDomainHandle {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
   DenseDomainKey key{renderer_id, owner_id, lod, mount_lod};
   auto it = m_dense_domain_lookup.find(key);
   if (it != m_dense_domain_lookup.end()) {
@@ -291,7 +295,8 @@ auto TemplateCache::set_dense_slot(DenseDomainHandle domain,
 }
 
 void TemplateCache::clear_dense_slot_for_key(const TemplateKey& key) {
-  DenseDomainKey domain_key{key.renderer_id, key.owner_id, key.lod, key.mount_lod};
+  DenseDomainKey const domain_key{
+      key.renderer_id, key.owner_id, key.lod, key.mount_lod};
   auto domain_it = m_dense_domain_lookup.find(domain_key);
   if (domain_it == m_dense_domain_lookup.end()) {
     return;
@@ -306,6 +311,7 @@ void TemplateCache::clear_dense_slot_for_key(const TemplateKey& key) {
   anim_key.frame = key.frame;
   anim_key.attack_family = key.attack_family;
   anim_key.attack_variant = key.attack_variant;
+  anim_key.finisher_attack = key.finisher_attack;
   const std::size_t dense_slot = dense_slot_index(key.variant, anim_key);
   if (dense_slot >= k_dense_anim_slot_count) {
     return;
@@ -322,7 +328,7 @@ auto TemplateCache::get_or_build_dense(DenseDomainHandle domain,
   const bool use_dense = domain.is_valid() && dense_slot < k_dense_anim_slot_count;
 
   {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> const lock(m_mutex);
     if (use_dense && domain.value < m_dense_domains.size()) {
       const PoseTemplate* dense_hit =
           m_dense_domains[domain.value].template_slots[dense_slot];
@@ -343,7 +349,7 @@ auto TemplateCache::get_or_build_dense(DenseDomainHandle domain,
 
   PoseTemplate built = builder();
 
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
   if (use_dense && domain.value < m_dense_domains.size()) {
     const PoseTemplate* dense_hit =
         m_dense_domains[domain.value].template_slots[dense_slot];
@@ -382,7 +388,7 @@ auto TemplateCache::get_or_build_dense(DenseDomainHandle domain,
 }
 
 void TemplateCache::clear() {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
   m_cache.clear();
   m_lru.clear();
   m_dense_domain_lookup.clear();
@@ -416,6 +422,7 @@ auto make_anim_key(const AnimationInputs& anim,
     key.combat_phase = anim.combat_phase;
     key.attack_family = anim.attack_family;
     key.attack_variant = attack_variant;
+    key.finisher_attack = anim.finisher_attack;
     float phase = anim.combat_phase_progress;
     if (phase <= 0.0F) {
       phase = time_phase(anim.time + phase_offset);
@@ -473,6 +480,7 @@ auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
   anim.combat_phase_progress = 0.0F;
   anim.attack_family = key.attack_family;
   anim.attack_variant = key.attack_variant;
+  anim.finisher_attack = key.finisher_attack;
   anim.is_hit_reacting = false;
   anim.hit_reaction_intensity = 0.0F;
   anim.is_healing = false;
@@ -481,7 +489,7 @@ auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
   anim.is_constructing = false;
   anim.construction_progress = 0.0F;
 
-  float phase = frame_to_phase(key.frame);
+  float const phase = frame_to_phase(key.frame);
 
   switch (key.state) {
   case AnimState::Move:

@@ -7,6 +7,7 @@
 #include "../../game/core/entity.h"
 #include "../elephant/attachment_frames.h"
 #include "../elephant/dimensions.h"
+#include "../gl/humanoid/humanoid_types.h"
 #include "../horse/attachment_frames.h"
 #include "../horse/dimensions.h"
 #include "../horse/horse_gait.h"
@@ -17,6 +18,19 @@ struct HumanoidAnimationStateComponent : public Engine::Core::Component {
   float idle_duration{0.0F};
   float last_sample_time{0.0F};
   bool initialized{false};
+  float locomotion_last_sample_time{0.0F};
+  float locomotion_phase_bias{0.0F};
+  float locomotion_cycle_time{0.0F};
+  float locomotion_phase{0.0F};
+  float filtered_speed{0.0F};
+  float filtered_acceleration{0.0F};
+  float filtered_turn{0.0F};
+  float locomotion_blend{0.0F};
+  float run_blend{0.0F};
+  Render::GL::HumanoidMotionState locomotion_state{
+      Render::GL::HumanoidMotionState::Idle};
+  bool locomotion_initialized{false};
+  bool locomotion_was_moving{false};
 };
 
 struct HorseAnimationStateComponent : public Engine::Core::Component {

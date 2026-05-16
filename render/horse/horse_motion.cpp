@@ -183,6 +183,21 @@ auto compute_rein_handle(const MountedAttachmentFrame& mount,
   return bit + dir * rein_length;
 }
 
+auto movement_animation_for_horse_gait(GaitType gait) noexcept
+    -> Render::Creature::MovementAnimationState {
+  switch (gait) {
+  case GaitType::IDLE:
+    return Render::Creature::MovementAnimationState::Idle;
+  case GaitType::WALK:
+    return Render::Creature::MovementAnimationState::Walk;
+  case GaitType::TROT:
+  case GaitType::CANTER:
+  case GaitType::GALLOP:
+    return Render::Creature::MovementAnimationState::Run;
+  }
+  return Render::Creature::MovementAnimationState::Idle;
+}
+
 namespace {
 
 constexpr float k_idle_breathing_primary_freq = 0.4F;
@@ -191,6 +206,21 @@ constexpr float k_idle_breathing_primary_weight = 0.6F;
 constexpr float k_idle_breathing_secondary_weight = 0.4F;
 constexpr float k_idle_phase_speed = 0.15F;
 constexpr float k_gait_transition_duration = 0.3F;
+
+auto playback_gait_for_transition(GaitType current_gait,
+                                  GaitType target_gait,
+                                  bool is_moving) noexcept -> GaitType {
+  if (!is_moving) {
+    return GaitType::IDLE;
+  }
+  if (current_gait == GaitType::IDLE && target_gait != GaitType::IDLE) {
+    return target_gait;
+  }
+  if (target_gait == GaitType::IDLE && current_gait != GaitType::IDLE) {
+    return current_gait;
+  }
+  return current_gait;
+}
 
 auto bob_scale_for_gait(GaitType gait) noexcept -> float {
   switch (gait) {
@@ -410,7 +440,7 @@ auto evaluate_horse_motion(const HorseProfile& profile,
   GaitType const desired_gait = select_gait();
   update_target_gait(state, desired_gait, anim.time, 1.0F);
 
-  HorseGait resolved = resolve_persistent_gait(state, profile, anim.time);
+  HorseGait const resolved = resolve_persistent_gait(state, profile, anim.time);
   sample.is_moving =
       state.current_gait != GaitType::IDLE || state.target_gait != GaitType::IDLE;
   evaluate_phase_and_bob(state,
@@ -425,6 +455,8 @@ auto evaluate_horse_motion(const HorseProfile& profile,
       anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
   sample.gait = resolved;
   sample.gait_type = state.current_gait;
+  sample.playback_gait_type = playback_gait_for_transition(
+      state.current_gait, state.target_gait, sample.is_moving);
   sample.turn_amount = resolve_turn_amount(rider_ctx, sample.rider_intensity);
   sample.stop_intent = resolve_stop_intent(speed, has_locomotion_input, rider_ctx);
 

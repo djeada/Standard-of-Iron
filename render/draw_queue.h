@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector2D>
 #include <QVector3D>
+#include <QVector4D>
 
 #include <algorithm>
 #include <array>
@@ -232,6 +233,7 @@ struct RiggedCreatureCmd {
   std::array<QVector3D, k_max_role_colors> role_colors{};
   std::uint32_t role_color_count = 0;
   QVector3D color{1.0F, 1.0F, 1.0F};
+  QVector4D wear_params{0.0F, 0.0F, 0.0F, 0.0F};
   float alpha = 1.0F;
   Texture* texture = nullptr;
   std::int32_t material_id = 0;

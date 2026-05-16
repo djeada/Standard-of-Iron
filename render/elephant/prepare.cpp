@@ -8,6 +8,7 @@
 
 #include "../../game/core/component.h"
 #include "../creature/animation_state_components.h"
+#include "../creature/movement_animation.h"
 #include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
@@ -37,10 +38,12 @@ auto elephant_state_for_motion(
     return Render::Creature::AnimationStateId::AttackMelee;
   }
   if (!motion.is_moving) {
-    return Render::Creature::AnimationStateId::Idle;
+    return Render::Creature::animation_state_for_movement(
+        Render::Creature::MovementAnimationState::Idle);
   }
-  return anim.is_running ? Render::Creature::AnimationStateId::Run
-                         : Render::Creature::AnimationStateId::Walk;
+  return Render::Creature::animation_state_for_movement(
+      Render::Creature::movement_animation_from_flags(motion.is_moving,
+                                                      anim.is_running));
 }
 
 } // namespace
@@ -68,7 +71,7 @@ void ElephantRendererBase::render(const DrawContext& ctx,
                                   const ElephantMotionSample* shared_motion,
                                   ISubmitter& out,
                                   HorseLOD lod) const {
-  DrawContext render_ctx =
+  DrawContext const render_ctx =
       ctx.template_prewarm ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx)
                            : ctx;
 
@@ -140,7 +143,7 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
 
   const ElephantVariant& v = profile.variant;
   ElephantMotionSample const motion =
-      shared_motion
+      (shared_motion != nullptr)
           ? *shared_motion
           : evaluate_elephant_motion(
                 profile,
@@ -148,7 +151,8 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
                 Engine::Core::get_or_add_component<
                     Render::Creature::ElephantAnimationStateComponent>(ctx.entity));
 
-  HowdahAttachmentFrame const howdah = shared_howdah ? *shared_howdah : motion.howdah;
+  HowdahAttachmentFrame const howdah =
+      (shared_howdah != nullptr) ? *shared_howdah : motion.howdah;
   auto* death_anim =
       (ctx.entity != nullptr)
           ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()

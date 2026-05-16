@@ -42,8 +42,12 @@ void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
+    const auto* motion =
+        entity->get_component<Engine::Core::MotionPresentationComponent>();
     const auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-    const bool is_moving = is_unit_moving(movement);
+    const bool is_moving = (motion != nullptr && motion->snapshot_valid)
+                               ? motion->is_moving
+                               : is_unit_moving(movement);
 
     if (stamina->run_requested && is_moving) {
       if (!stamina->is_running && stamina->can_start_running()) {

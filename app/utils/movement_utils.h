@@ -359,6 +359,7 @@ issue_move_or_attack_command(Engine::Core::World* world,
   Game::Systems::CommandService::MoveOptions opts;
   opts.group_move = selected.size() > 1;
   opts.retry_individual_on_group_failure = selected.size() > 1;
+  opts.preserve_formation_mode = formation_result.used_tactical_formation;
   Game::Systems::CommandService::move_units(
       *world, selected, formation_result.positions, opts);
 }

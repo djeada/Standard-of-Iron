@@ -23,6 +23,7 @@
 #include "../../game/units/spawn_type.h"
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
+#include "../creature/animation_state_components.h"
 #include "../creature/archetype_registry.h"
 #include "../creature/bpat/bpat_format.h"
 #include "../creature/pipeline/creature_asset.h"
@@ -272,23 +273,13 @@ auto HumanoidRendererBase::resolve_formation(
   return params;
 }
 
-namespace {
-
-[[nodiscard]] auto make_runtime_prewarm_ctx(const DrawContext& ctx) -> DrawContext {
-  DrawContext runtime_ctx = ctx;
-  runtime_ctx.template_prewarm = false;
-  runtime_ctx.allow_template_cache = false;
-  return runtime_ctx;
-}
-
-} // namespace
-
 void HumanoidRendererBase::render(const DrawContext& ctx, ISubmitter& out) const {
   AnimationInputs const anim =
       Render::Creature::Pipeline::resolve_humanoid_animation_state(ctx).inputs;
 
   if (ctx.template_prewarm) {
-    render_procedural(make_runtime_prewarm_ctx(ctx), anim, out);
+    render_procedural(
+        Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx), anim, out);
     return;
   }
 
@@ -376,6 +367,217 @@ using Render::GL::VariationParams;
 namespace {
 constexpr std::uint32_t k_humanoid_layout_cache_version = 3U;
 constexpr float k_humanoid_idle_cycle_time = 1.6F;
+constexpr float k_locomotion_blend_tau = 0.12F;
+constexpr float k_run_blend_tau = 0.16F;
+constexpr float k_turn_blend_tau = 0.10F;
+constexpr float k_acceleration_blend_tau = 0.14F;
+constexpr float k_visual_locomotion_speed_epsilon = 1.0e-4F;
+
+auto wrap_phase(float phase) noexcept -> float {
+  float wrapped = std::fmod(phase, 1.0F);
+  if (wrapped < 0.0F) {
+    wrapped += 1.0F;
+  }
+  return wrapped;
+}
+
+auto smoothing_alpha(float dt, float tau) noexcept -> float {
+  if (dt <= 1.0e-4F) {
+    return 1.0F;
+  }
+  return 1.0F - std::exp(-dt / std::max(tau, 1.0e-4F));
+}
+
+auto smooth_towards(float current,
+                    float target,
+                    float dt,
+                    float tau) noexcept -> float {
+  return current + (target - current) * smoothing_alpha(dt, tau);
+}
+
+void reset_humanoid_locomotion_state(
+    Render::Creature::HumanoidAnimationStateComponent& state) {
+  state.locomotion_last_sample_time = 0.0F;
+  state.locomotion_phase_bias = 0.0F;
+  state.locomotion_cycle_time = 0.0F;
+  state.locomotion_phase = 0.0F;
+  state.filtered_speed = 0.0F;
+  state.filtered_acceleration = 0.0F;
+  state.filtered_turn = 0.0F;
+  state.locomotion_blend = 0.0F;
+  state.run_blend = 0.0F;
+  state.locomotion_state = HumanoidMotionState::Idle;
+  state.locomotion_initialized = false;
+  state.locomotion_was_moving = false;
+}
+
+auto cycle_time_for_motion_state(HumanoidMotionState state,
+                                 const VariationParams& variation) noexcept -> float {
+  if (state == HumanoidMotionState::Run) {
+    return 0.56F / std::max(0.1F, variation.walk_speed_mult);
+  }
+  if (state == HumanoidMotionState::Walk) {
+    return 0.92F / std::max(0.1F, variation.walk_speed_mult);
+  }
+  return k_humanoid_idle_cycle_time;
+}
+
+auto flattened_or(const QVector3D& v, const QVector3D& fallback) noexcept -> QVector3D {
+  QVector3D flat(v.x(), 0.0F, v.z());
+  if (flat.lengthSquared() <= 1.0e-6F) {
+    flat = fallback;
+  }
+  if (flat.lengthSquared() <= 1.0e-6F) {
+    flat = QVector3D(0.0F, 0.0F, 1.0F);
+  }
+  flat.normalize();
+  return flat;
+}
+
+struct VisualLocomotionSample {
+  QVector3D direction{0.0F, 0.0F, 1.0F};
+  float speed{0.0F};
+  bool has_movement_target{false};
+  QVector3D movement_target{0.0F, 0.0F, 0.0F};
+};
+
+auto resolve_visual_locomotion_sample(
+    const Render::GL::VisualMovementState& movement_state,
+    const QVector3D& entity_forward) noexcept -> VisualLocomotionSample {
+  VisualLocomotionSample sample{};
+  sample.direction = entity_forward;
+  if (movement_state.is_moving) {
+    sample.speed = movement_state.speed_hint;
+    sample.direction = movement_state.locomotion_direction;
+    sample.has_movement_target = movement_state.has_movement_target;
+    sample.movement_target = movement_state.movement_target;
+  }
+
+  return sample;
+}
+
+auto signed_turn_amount(const QVector3D& entity_forward,
+                        const QVector3D& locomotion_direction) noexcept -> float {
+  QVector3D const forward = flattened_or(entity_forward, QVector3D(0.0F, 0.0F, 1.0F));
+  QVector3D const motion = flattened_or(locomotion_direction, forward);
+  return std::clamp(QVector3D::crossProduct(forward, motion).y(), -1.0F, 1.0F);
+}
+
+struct LocomotionTargets {
+  float normalized_speed{0.0F};
+  float locomotion_blend{0.0F};
+  float run_blend{0.0F};
+  float turn_amount{0.0F};
+  float cycle_time{k_humanoid_idle_cycle_time};
+  float base_phase{0.0F};
+};
+
+auto build_locomotion_targets(const HumanoidLocomotionState& state,
+                              const HumanoidLocomotionInputs& inputs) noexcept
+    -> LocomotionTargets {
+  LocomotionTargets targets{};
+  float const reference_speed = (state.motion_state == HumanoidMotionState::Run)
+                                    ? k_reference_run_speed
+                                    : k_reference_walk_speed;
+  targets.normalized_speed =
+      (inputs.anim.is_moving && reference_speed > 0.0001F)
+          ? std::clamp(state.gait.speed / reference_speed, 0.0F, 1.0F)
+          : 0.0F;
+  targets.locomotion_blend =
+      inputs.anim.is_moving ? std::clamp(targets.normalized_speed * 1.10F, 0.0F, 1.0F)
+                            : 0.0F;
+  targets.run_blend = inputs.anim.is_moving
+                          ? std::clamp((state.motion_state == HumanoidMotionState::Run)
+                                           ? 0.70F + targets.normalized_speed * 0.30F
+                                           : 0.0F,
+                                       0.0F,
+                                       1.0F)
+                          : 0.0F;
+  targets.turn_amount =
+      inputs.anim.is_moving
+          ? signed_turn_amount(inputs.entity_forward, inputs.locomotion_direction)
+          : 0.0F;
+  targets.cycle_time =
+      cycle_time_for_motion_state(state.motion_state, inputs.variation);
+  targets.base_phase = wrap_phase((inputs.animation_time + inputs.phase_offset) /
+                                  std::max(0.001F, targets.cycle_time));
+  return targets;
+}
+
+void apply_persistent_locomotion_state(HumanoidLocomotionState& state,
+                                       const HumanoidLocomotionInputs& inputs,
+                                       const LocomotionTargets& targets) {
+  auto* persistent = inputs.persistent_state;
+  if (persistent == nullptr) {
+    return;
+  }
+
+  if (persistent->locomotion_initialized &&
+      inputs.animation_time < persistent->locomotion_last_sample_time &&
+      inputs.allow_persistent_update) {
+    reset_humanoid_locomotion_state(*persistent);
+  }
+
+  float delta_time = 0.0F;
+  if (persistent->locomotion_initialized) {
+    delta_time =
+        std::max(0.0F, inputs.animation_time - persistent->locomotion_last_sample_time);
+  }
+
+  float phase_bias = persistent->locomotion_phase_bias;
+  if (persistent->locomotion_initialized &&
+      (std::abs(targets.cycle_time - persistent->locomotion_cycle_time) > 1.0e-4F ||
+       state.motion_state != persistent->locomotion_state)) {
+    phase_bias = persistent->locomotion_phase - targets.base_phase;
+    state.gait.cycle_phase = wrap_phase(targets.base_phase + phase_bias);
+  } else if (persistent->locomotion_initialized) {
+    state.gait.cycle_phase = wrap_phase(targets.base_phase + phase_bias);
+  }
+
+  if (persistent->locomotion_initialized) {
+    float const previous_filtered_speed = persistent->filtered_speed;
+    state.gait.normalized_speed = smooth_towards(previous_filtered_speed,
+                                                 targets.normalized_speed,
+                                                 delta_time,
+                                                 k_locomotion_blend_tau);
+    state.gait.locomotion_blend = smooth_towards(persistent->locomotion_blend,
+                                                 targets.locomotion_blend,
+                                                 delta_time,
+                                                 k_locomotion_blend_tau);
+    state.gait.run_blend = smooth_towards(
+        persistent->run_blend, targets.run_blend, delta_time, k_run_blend_tau);
+    state.gait.turn_amount = smooth_towards(
+        persistent->filtered_turn, targets.turn_amount, delta_time, k_turn_blend_tau);
+
+    float instant_acceleration = 0.0F;
+    if (delta_time > 1.0e-4F) {
+      instant_acceleration =
+          (state.gait.normalized_speed - previous_filtered_speed) / delta_time;
+    }
+    state.gait.acceleration =
+        smooth_towards(persistent->filtered_acceleration,
+                       std::clamp(instant_acceleration, -4.0F, 4.0F),
+                       delta_time,
+                       k_acceleration_blend_tau);
+  }
+
+  if (!inputs.allow_persistent_update) {
+    return;
+  }
+
+  persistent->locomotion_initialized = true;
+  persistent->locomotion_last_sample_time = inputs.animation_time;
+  persistent->locomotion_phase = state.gait.cycle_phase;
+  persistent->locomotion_phase_bias = state.gait.cycle_phase - targets.base_phase;
+  persistent->locomotion_cycle_time = targets.cycle_time;
+  persistent->filtered_speed = state.gait.normalized_speed;
+  persistent->filtered_acceleration = state.gait.acceleration;
+  persistent->filtered_turn = state.gait.turn_amount;
+  persistent->locomotion_blend = state.gait.locomotion_blend;
+  persistent->run_blend = state.gait.run_blend;
+  persistent->locomotion_state = state.motion_state;
+  persistent->locomotion_was_moving = inputs.anim.is_moving;
+}
 } // namespace
 
 auto build_soldier_layout(const IFormationCalculator& formation_calculator,
@@ -434,35 +636,19 @@ auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
   state.gait.has_target = state.has_movement_target;
   state.gait.is_airborne = false;
 
-  float const reference_speed = (state.motion_state == HumanoidMotionState::Run)
-                                    ? k_reference_run_speed
-                                    : k_reference_walk_speed;
-  if (inputs.anim.is_moving && reference_speed > 0.0001F) {
-    state.gait.normalized_speed =
-        std::clamp(state.gait.speed / reference_speed, 0.0F, 1.0F);
-  } else {
-    state.gait.normalized_speed = 0.0F;
-  }
+  LocomotionTargets const targets = build_locomotion_targets(state, inputs);
+  state.gait.cycle_time = targets.cycle_time;
+  state.gait.cycle_phase = targets.base_phase;
+  state.gait.normalized_speed = targets.normalized_speed;
+  state.gait.locomotion_blend = targets.locomotion_blend;
+  state.gait.run_blend = targets.run_blend;
+  state.gait.turn_amount = targets.turn_amount;
+  state.gait.acceleration = 0.0F;
 
-  if (inputs.anim.is_moving) {
-    float const base_cycle =
-        (state.motion_state == HumanoidMotionState::Run ? 0.56F : 0.92F) /
-        std::max(0.1F, inputs.variation.walk_speed_mult);
-    state.gait.cycle_time = base_cycle;
-    state.gait.cycle_phase = std::fmod((inputs.animation_time + inputs.phase_offset) /
-                                           std::max(0.001F, base_cycle),
-                                       1.0F);
-    state.gait.stride_distance = state.gait.speed * state.gait.cycle_time;
-  } else {
-    state.gait.cycle_time = k_humanoid_idle_cycle_time;
-    state.gait.cycle_phase = std::fmod((inputs.animation_time + inputs.phase_offset) /
-                                           std::max(0.001F, state.gait.cycle_time),
-                                       1.0F);
-    if (state.gait.cycle_phase < 0.0F) {
-      state.gait.cycle_phase += 1.0F;
-    }
-    state.gait.stride_distance = 0.0F;
-  }
+  apply_persistent_locomotion_state(state, inputs, targets);
+
+  state.gait.stride_distance = state.gait.speed * state.gait.cycle_time *
+                               std::max(0.0F, state.gait.locomotion_blend);
 
   return state;
 }
@@ -546,6 +732,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
   HumanoidVariant variant;
   owner.get_variant(ctx, seed, variant);
+  seed_missing_humanoid_wear(variant, seed);
 
   if (!owner.m_proportion_scale_cached) {
     owner.m_cached_proportion_scale = owner.get_proportion_scaling();
@@ -643,6 +830,14 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
   }
 
+  auto* humanoid_anim_state =
+      ctx.entity != nullptr
+          ? ctx.entity
+                ->get_component<Render::Creature::HumanoidAnimationStateComponent>()
+          : nullptr;
+  Render::GL::VisualMovementState const visual_movement =
+      Render::GL::visual_movement_for_animation_inputs(ctx, anim);
+
   auto append_prepared_soldier = [&](int idx, const AnimationInputs& soldier_anim) {
     SoldierLayout const& layout = soldier_layouts[static_cast<std::size_t>(idx)];
     float const offset_x = layout.offset_x;
@@ -718,46 +913,21 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       right = QVector3D(1.0F, 0.0F, 0.0F);
     }
 
-    QVector3D locomotion_direction = forward;
-    bool has_movement_target = false;
-    float move_speed = 0.0F;
-    QVector3D movement_target(0.0F, 0.0F, 0.0F);
-    if (movement_comp != nullptr) {
-      QVector3D const velocity(movement_comp->vx, 0.0F, movement_comp->vz);
-      move_speed = velocity.length();
-      if (move_speed > 1e-4F) {
-        locomotion_direction = velocity.normalized();
-      }
-      has_movement_target = movement_comp->has_target;
-      movement_target =
-          QVector3D(movement_comp->target_x, 0.0F, movement_comp->target_y);
-    }
-    if (commander_comp != nullptr && commander_comp->fpv_controlled &&
-        move_speed <= 1e-4F) {
-      QVector3D const velocity(
-          commander_comp->fpv_motion_vx, 0.0F, commander_comp->fpv_motion_vz);
-      move_speed = velocity.length();
-      if (move_speed > 1e-4F) {
-        locomotion_direction = velocity.normalized();
-        has_movement_target = true;
-        movement_target = QVector3D(
-            transform_comp != nullptr ? transform_comp->position.x + velocity.x()
-                                      : velocity.x(),
-            0.0F,
-            transform_comp != nullptr ? transform_comp->position.z + velocity.z()
-                                      : velocity.z());
-      }
-    }
+    VisualLocomotionSample const visual_locomotion =
+        resolve_visual_locomotion_sample(visual_movement, forward);
 
     HumanoidLocomotionInputs locomotion_inputs{};
     locomotion_inputs.anim = soldier_anim;
     locomotion_inputs.variation = variation;
-    locomotion_inputs.move_speed = move_speed;
-    locomotion_inputs.locomotion_direction = locomotion_direction;
-    locomotion_inputs.movement_target = movement_target;
-    locomotion_inputs.has_movement_target = has_movement_target;
+    locomotion_inputs.move_speed = visual_locomotion.speed;
+    locomotion_inputs.entity_forward = forward;
+    locomotion_inputs.locomotion_direction = visual_locomotion.direction;
+    locomotion_inputs.movement_target = visual_locomotion.movement_target;
+    locomotion_inputs.has_movement_target = visual_locomotion.has_movement_target;
     locomotion_inputs.animation_time = anim.time;
     locomotion_inputs.phase_offset = phase_offset;
+    locomotion_inputs.persistent_state = humanoid_anim_state;
+    locomotion_inputs.allow_persistent_update = should_persist_animation_state(ctx);
     HumanoidLocomotionState locomotion_state =
         build_humanoid_locomotion_state(locomotion_inputs);
     if (commander_jump_active) {
@@ -800,18 +970,22 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     anim_ctx.locomotion_phase = locomotion_state.gait.cycle_phase;
     if (soldier_anim.is_attacking) {
       bool amplified_attack = false;
-      bool finisher_attack = false;
+      bool const finisher_attack = soldier_anim.finisher_attack;
+      bool has_commander_attack_style = false;
+      std::uint8_t commander_attack_style = 0U;
       if (ctx.entity != nullptr) {
         if (auto* commander =
                 ctx.entity->get_component<Engine::Core::CommanderComponent>();
             commander != nullptr && commander->fpv_controlled &&
             soldier_anim.is_melee) {
           amplified_attack = true;
-          finisher_attack =
-              soldier_anim.attack_variant >=
-                  Engine::Core::CombatStateComponent::k_attack_variant_seed_slots -
-                      1U ||
-              commander->combo_step >= 3;
+          if (auto* action =
+                  ctx.entity
+                      ->get_component<Engine::Core::RpgCommanderActionComponent>();
+              action != nullptr) {
+            has_commander_attack_style = true;
+            commander_attack_style = action->melee_attack_style;
+          }
         }
       }
       float const attack_visual_offset =
@@ -824,6 +998,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
           soldier_anim, attack_visual_offset, amplified_attack, finisher_attack);
       if (ctx.has_attack_variant_override) {
         anim_ctx.inputs.attack_variant = ctx.attack_variant_override;
+      } else if (has_commander_attack_style) {
+        anim_ctx.inputs.attack_variant = commander_attack_style;
       } else if (!ctx.force_single_soldier) {
         anim_ctx.inputs.attack_variant =
             visual_attack_variant(soldier_anim.attack_variant, inst_seed);

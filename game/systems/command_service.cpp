@@ -141,7 +141,7 @@ auto find_recovery_cell(const Point& origin,
             continue;
           }
 
-          float const distance_sq = static_cast<float>(dx * dx + dy * dy);
+          auto const distance_sq = static_cast<float>(dx * dx + dy * dy);
           if (distance_sq < best_distance_sq) {
             best_distance_sq = distance_sq;
             best_candidate = {check_x, check_y};
@@ -329,7 +329,8 @@ void CommandService::move_unit(Engine::Core::World& world,
   }
 
   auto* formation_mode = e->get_component<Engine::Core::FormationModeComponent>();
-  if ((formation_mode != nullptr) && formation_mode->active) {
+  if (!options.preserve_formation_mode && (formation_mode != nullptr) &&
+      formation_mode->active) {
     formation_mode->active = false;
   }
 
@@ -622,7 +623,8 @@ void CommandService::move_group(Engine::Core::World& world,
 
     auto* formation_mode =
         entity->get_component<Engine::Core::FormationModeComponent>();
-    if ((formation_mode != nullptr) && formation_mode->active) {
+    if (!options.preserve_formation_mode && (formation_mode != nullptr) &&
+        formation_mode->active) {
       formation_mode->active = false;
     }
 

@@ -54,6 +54,7 @@ struct DrawContext {
   bool has_seed_override = false;
   uint32_t seed_override = 0;
   bool template_prewarm = false;
+  bool suppress_animation_state_persistence = false;
   bool force_single_soldier = false;
   bool skip_ground_offset = false;
   bool has_variant_override = false;
@@ -61,6 +62,11 @@ struct DrawContext {
   bool has_attack_variant_override = false;
   std::uint8_t attack_variant_override = 0;
 };
+
+[[nodiscard]] inline auto
+should_persist_animation_state(const DrawContext& ctx) noexcept -> bool {
+  return !ctx.template_prewarm && !ctx.suppress_animation_state_persistence;
+}
 
 using RenderFunc = std::function<void(const DrawContext&, ISubmitter& out)>;
 

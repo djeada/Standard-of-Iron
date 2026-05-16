@@ -52,9 +52,9 @@ auto species_to_bpat_id(CreatureKind kind) noexcept -> std::uint32_t {
   case CreatureKind::Elephant:
     return Render::Creature::Bpat::k_species_elephant;
   case CreatureKind::Mounted:
-    return 0xFFFFFFFFu;
+    return 0xFFFFFFFFU;
   }
-  return 0xFFFFFFFFu;
+  return 0xFFFFFFFFU;
 }
 
 auto adjust_world_to_palette_contact(const QMatrix4x4& world_from_unit,
@@ -160,7 +160,8 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
                      const QMatrix4x4* bone_palette,
                      std::uint32_t bone_count,
                      std::span<const QVector3D> role_colors,
-                     const QVector3D& base_color) -> Render::GL::RiggedCreatureCmd {
+                     const QVector3D& base_color,
+                     const QVector4D& wear_params) -> Render::GL::RiggedCreatureCmd {
   Render::GL::RiggedCreatureCmd cmd{};
   cmd.mesh = mesh;
   cmd.world = world_from_unit;
@@ -168,6 +169,7 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
   cmd.bone_palette = bone_palette;
   copy_role_colors(cmd, role_colors);
   cmd.color = base_color;
+  cmd.wear_params = wear_params;
   return cmd;
 }
 
@@ -182,6 +184,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             std::span<const QVector3D> role_colors,
                             std::uint16_t variant_bucket,
                             const QVector3D& base_color,
+                            const QVector4D& wear_params,
                             const QMatrix4x4& world_from_unit,
                             const Render::Creature::Bpat::BpatBlob& blob,
                             std::uint32_t global_frame,
@@ -197,14 +200,14 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                                           thread_local Render::GL::RiggedMeshCache c;
                                           return c;
                                         })();
-  auto* entry = cache.get_or_bake_prehashed(*asset->spec,
-                                            lod,
-                                            handle.bind_palette,
-                                            variant_bucket,
-                                            handle.attachments,
-                                            handle.attachments_hash,
-                                            handle.attachment_set_id,
-                                            blob.species_id());
+  const auto* entry = cache.get_or_bake_prehashed(*asset->spec,
+                                                  lod,
+                                                  handle.bind_palette,
+                                                  variant_bucket,
+                                                  handle.attachments,
+                                                  handle.attachments_hash,
+                                                  handle.attachment_set_id,
+                                                  blob.species_id());
   if (entry == nullptr || entry->mesh == nullptr || entry->mesh->index_count() == 0U) {
     report_submit_cache_miss("rigged",
                              handle,
@@ -240,7 +243,8 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              frame_palette,
                              entry->skinned_bone_count,
                              role_colors,
-                             base_color);
+                             base_color,
+                             wear_params);
   cmd.palette_ubo = entry->skin_palette_ubo;
   cmd.palette_offset = static_cast<std::uint32_t>(
       static_cast<std::size_t>(global_frame) * entry->skin_palette_frame_stride_bytes);
@@ -257,6 +261,7 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
                               std::span<const QVector3D> role_colors,
                               std::uint16_t variant_bucket,
                               const QVector3D& base_color,
+                              const QVector4D& wear_params,
                               const QMatrix4x4& world_from_unit,
                               const Render::Creature::Bpat::BpatBlob& blob,
                               std::uint32_t global_frame,
@@ -278,7 +283,7 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
       handle, archetype, variant, state, clip_id, clip_variant, frame_in_clip);
 
   if (!handle.has_static_attachments &&
-      asset->snapshot_mesh_species_id != 0xFFFFFFFFu &&
+      asset->snapshot_mesh_species_id != 0xFFFFFFFFU &&
       (asset->snapshot_mesh_lod_mask & creature_lod_bit(lod)) != 0U) {
     const auto* mesh_blob =
         Render::Creature::Snapshot::SnapshotMeshRegistry::instance().blob(
@@ -295,7 +300,8 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
                                      Render::GL::SnapshotMeshCache::identity_palette(),
                                      1U,
                                      role_colors,
-                                     base_color);
+                                     base_color,
+                                     wear_params);
           cmd.palette_ubo = 0U;
           cmd.palette_offset = 0U;
 
@@ -322,14 +328,14 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
   }
 
   auto& rigged_cache = renderer->rigged_mesh_cache();
-  auto* source = rigged_cache.get_or_bake_prehashed(*asset->spec,
-                                                    lod,
-                                                    handle.bind_palette,
-                                                    variant_bucket,
-                                                    handle.attachments,
-                                                    handle.attachments_hash,
-                                                    handle.attachment_set_id,
-                                                    blob.species_id());
+  const auto* source = rigged_cache.get_or_bake_prehashed(*asset->spec,
+                                                          lod,
+                                                          handle.bind_palette,
+                                                          variant_bucket,
+                                                          handle.attachments,
+                                                          handle.attachments_hash,
+                                                          handle.attachment_set_id,
+                                                          blob.species_id());
   if (source == nullptr || source->mesh == nullptr ||
       source->mesh->index_count() == 0U) {
     report_submit_cache_miss("snapshot_source_rigged",
@@ -374,7 +380,8 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
                              Render::GL::SnapshotMeshCache::identity_palette(),
                              1U,
                              role_colors,
-                             base_color);
+                             base_color,
+                             wear_params);
   cmd.palette_ubo = 0U;
   cmd.palette_offset = 0U;
 
@@ -471,7 +478,7 @@ auto resolve_blob_palette(std::uint32_t species_id,
   if (playback.clip_id == k_invalid_bpat_clip) {
     return {};
   }
-  if (species_id == 0xFFFFFFFFu) {
+  if (species_id == 0xFFFFFFFFU) {
     return {};
   }
   const auto* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
@@ -605,6 +612,7 @@ auto CreaturePipeline::submit_requests(
                                    req.role_colors_view(),
                                    static_cast<std::uint16_t>(req.variant),
                                    req.base_color,
+                                   req.wear_params,
                                    draw_world,
                                    *playback.blob,
                                    playback.global_frame,
@@ -642,6 +650,7 @@ auto CreaturePipeline::submit_requests(
                            req.role_colors_view(),
                            static_cast<std::uint16_t>(req.variant),
                            req.base_color,
+                           req.wear_params,
                            draw_world,
                            *playback.blob,
                            playback.global_frame,

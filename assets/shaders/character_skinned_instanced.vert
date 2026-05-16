@@ -17,6 +17,7 @@ layout(location = 8) in vec4 i_world_c2;
 layout(location = 9) in vec4 i_world_c3;
 layout(location = 10) in vec4 i_color_alpha;
 layout(location = 11) in vec4 i_variation_material;
+layout(location = 12) in vec4 i_wear_params;
 
 uniform mat4 u_view_proj;
 
@@ -28,11 +29,13 @@ u_palette;
 out vec3 v_normal_ws;
 out vec2 v_tex;
 out vec3 v_pos_ws;
+out vec3 v_pos_local;
 flat out vec3 v_color;
 flat out float v_alpha;
 flat out int v_material_id;
 flat out int v_color_role;
 flat out int v_instance_id;
+flat out vec4 v_wear_params;
 
 void main() {
   int base = gl_InstanceID * 64;
@@ -51,17 +54,20 @@ void main() {
 
   vec3 variation_scale = i_variation_material.xyz;
   vec4 pos_local = vec4(a_position * variation_scale, 1.0);
-  vec4 pos_world = i_world * skin * pos_local;
+  vec4 skinned_local = skin * pos_local;
+  vec4 pos_world = i_world * skinned_local;
   gl_Position = u_view_proj * pos_world;
 
   mat3 skin_rot = mat3(skin);
   mat3 model_rot = mat3(i_world);
   v_normal_ws = normalize(model_rot * skin_rot * a_normal);
   v_pos_ws = pos_world.xyz;
+  v_pos_local = skinned_local.xyz;
   v_tex = a_tex;
   v_color = i_color_alpha.rgb;
   v_alpha = i_color_alpha.a;
   v_material_id = int(i_variation_material.w);
   v_color_role = int(a_color_role);
   v_instance_id = gl_InstanceID;
+  v_wear_params = i_wear_params;
 }

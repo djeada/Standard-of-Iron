@@ -108,6 +108,28 @@ auto has_clear_building_los(const QVector3D& start,
   return first_building_intersection_fraction(start, end, ignore_entity_id) >= 1.0F;
 }
 
+constexpr std::uint8_t k_commander_sword_sway_default = 0U;
+constexpr std::uint8_t k_commander_sword_sway_reverse = 1U;
+constexpr std::uint8_t k_commander_sword_sway_finisher = 2U;
+
+auto select_commander_sword_sway(const Engine::Core::CommanderComponent* commander,
+                                 std::uint8_t attack_sequence,
+                                 int move_right_axis,
+                                 bool finisher_attack) -> std::uint8_t {
+  if (finisher_attack) {
+    return k_commander_sword_sway_finisher;
+  }
+  std::uint8_t style = attack_sequence % 2U;
+  if (move_right_axis > 0) {
+    style = (style == k_commander_sword_sway_default) ? k_commander_sword_sway_reverse
+                                                      : k_commander_sword_sway_default;
+  } else if (move_right_axis == 0 && commander != nullptr &&
+             commander->power_strike_active) {
+    style = k_commander_sword_sway_reverse;
+  }
+  return style;
+}
+
 auto is_walkable_at(float x, float z) -> bool {
   if (auto* pathfinder = Game::Systems::CommandService::get_pathfinder()) {
     const auto grid = Game::Systems::CommandService::world_to_grid(x, z);
@@ -742,6 +764,8 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
   }
   auto* cmd_comp = commander->get_component<Engine::Core::CommanderComponent>();
   bool const finisher_attack = cmd_comp != nullptr && cmd_comp->combo_step >= 3;
+  Engine::Core::CombatAttackFamily attack_family =
+      Engine::Core::CombatAttackFamily::None;
   if (combat_state != nullptr) {
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
@@ -749,11 +773,11 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
         Engine::Core::CombatStateComponent::k_advance_duration *
         (finisher_attack ? 1.55F : 1.22F);
     if (unit != nullptr && attack != nullptr) {
-      combat_state->attack_family = Engine::Core::resolve_combat_attack_family(
-          unit->spawn_type, attack->current_mode);
-    } else {
-      combat_state->attack_family = Engine::Core::CombatAttackFamily::None;
+      attack_family = Engine::Core::resolve_combat_attack_family(unit->spawn_type,
+                                                                 attack->current_mode);
     }
+    combat_state->attack_family = attack_family;
+    combat_state->finisher_attack = finisher_attack;
 
     static std::uint8_t s_fpv_attack_seed = 0;
     combat_state->attack_offset = static_cast<float>(s_fpv_attack_seed % 7) * 0.022F;
@@ -767,14 +791,22 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     if (auto* action = Engine::Core::get_or_add_component<
             Engine::Core::RpgCommanderActionComponent>(commander)) {
       action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
+      action->melee_attack_style = 0;
       action->active_target_id = 0;
       action->phase_time = 0.0F;
+      if (combat_state != nullptr &&
+          attack_family == Engine::Core::CombatAttackFamily::Sword) {
+        action->melee_attack_style =
+            select_commander_sword_sway(cmd_comp,
+                                        action->melee_attack_sequence,
+                                        m_move_right_axis,
+                                        finisher_attack);
+        combat_state->attack_variant = action->melee_attack_style;
+        action->melee_attack_sequence =
+            static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 2U);
+      }
     }
     if (finisher_attack) {
-      if (combat_state != nullptr) {
-        combat_state->attack_variant =
-            Engine::Core::CombatStateComponent::k_attack_variant_seed_slots - 1;
-      }
       m_dodge_fov_kick = std::max(m_dodge_fov_kick, 12.0F);
     }
     if (m_primary_held_duration >= 0.4F) {
@@ -1411,15 +1443,24 @@ auto CommanderControlController::update(Engine::Core::World& world,
   try_activate_vanguard_rush(world, *commander, commander_id, local_owner_id);
   try_activate_second_wind(*commander);
 
+  bool const attack_animation_active =
+      combat_state != nullptr &&
+      combat_state->animation_state != Engine::Core::CombatAnimationState::Idle;
   if (m_input.primary_action) {
     m_combo_miss_timer = 0.0F;
     m_primary_held_duration += dt;
+  } else if (attack_animation_active) {
+    m_primary_held_duration = 0.0F;
   } else {
     m_primary_held_duration = 0.0F;
     m_combo_miss_timer += dt;
     constexpr float k_combo_reset_window = 1.0F;
     if (m_combo_miss_timer >= k_combo_reset_window && cmd_comp != nullptr) {
       cmd_comp->combo_step = 0;
+      if (auto* action =
+              commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
+        action->melee_attack_sequence = 0;
+      }
       m_combo_miss_timer = 0.0F;
     }
   }

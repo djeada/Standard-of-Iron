@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <mutex>
 
+#include "../game/core/component.h"
+
 namespace Render {
 
 struct BattleRenderConfig {
@@ -52,7 +54,7 @@ public:
 
   [[nodiscard]] auto
   should_render_unit(uint32_t entity_id,
-                     bool is_moving,
+                     const Engine::Core::MotionPresentationComponent* motion,
                      bool is_selected,
                      bool is_hovered,
                      bool is_combat_active = false,
@@ -69,6 +71,11 @@ public:
       return true;
     }
 
+    // Use is_moving directly — snapshot_valid is false during the gap between
+    // begin_motion_presentation_frame and finalize_motion_presentation_frame.
+    // is_moving retains its last finalized value throughout that window and is
+    // safe to read here because render_world holds entity_mutex.
+    bool const is_moving = motion != nullptr && motion->is_moving;
     if (is_selected || is_hovered || is_moving) {
       return true;
     }
@@ -89,11 +96,12 @@ public:
     return render;
   }
 
-  [[nodiscard]] auto
-  should_update_animation(uint32_t entity_id,
-                          float distance_sq,
-                          bool is_selected,
-                          bool is_combat_active = false) const noexcept -> bool {
+  [[nodiscard]] auto should_update_animation(
+      uint32_t entity_id,
+      float distance_sq,
+      bool is_selected,
+      bool is_combat_active,
+      const Engine::Core::MotionPresentationComponent* motion) const noexcept {
     BattleRenderConfig cfg;
     {
       std::lock_guard<std::mutex> lock(m_config_mutex);
@@ -105,6 +113,13 @@ public:
     }
 
     if (is_selected) {
+      return true;
+    }
+
+    // Use is_moving directly — same reasoning as should_render_unit: snapshot_valid
+    // may be false during the render window but is_moving retains its last valid state.
+    bool const is_moving = motion != nullptr && motion->is_moving;
+    if (is_moving) {
       return true;
     }
 
