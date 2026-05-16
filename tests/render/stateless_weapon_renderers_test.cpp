@@ -288,7 +288,6 @@ void run_stateless_battery(const Cfg& cfg_a, const Cfg& cfg_b) {
 } // namespace
 
 TEST(StatelessWeaponRenderers, SwordSubmitIsStateless) {
-  SwordRenderer renderer{};
   SwordRenderConfig a;
   a.metal_color = {0.7F, 0.7F, 0.8F};
   a.sword_length = 0.80F;
@@ -296,7 +295,7 @@ TEST(StatelessWeaponRenderers, SwordSubmitIsStateless) {
   b.metal_color = {0.3F, 0.6F, 0.4F};
   b.sword_length = 1.10F;
   b.guard_half_width = 0.18F;
-  run_stateless_battery<SwordRenderer>(renderer, a, b);
+  run_stateless_battery<SwordRenderer>(a, b);
 }
 
 TEST(StatelessWeaponRenderers, SwordUsesArchetypePath) {
@@ -339,7 +338,6 @@ TEST(StatelessWeaponRenderers, SwordTrailUsesArchetypePath) {
 }
 
 TEST(StatelessWeaponRenderers, ShieldSubmitIsStateless) {
-  ShieldRenderer renderer{};
   ShieldRenderConfig a;
   a.shield_color = {0.7F, 0.3F, 0.2F};
   a.shield_radius = 0.18F;
@@ -348,7 +346,7 @@ TEST(StatelessWeaponRenderers, ShieldSubmitIsStateless) {
   b.shield_radius = 0.24F;
   b.shield_aspect = 1.4F;
   b.has_cross_decal = true;
-  run_stateless_battery<ShieldRenderer>(renderer, a, b);
+  run_stateless_battery<ShieldRenderer>(a, b);
 }
 
 TEST(StatelessWeaponRenderers, ShieldUsesArchetypePath) {
@@ -404,7 +402,6 @@ TEST(StatelessWeaponRenderers, ShieldArchetypeSitsHigherAndCoversMoreLine) {
 }
 
 TEST(StatelessWeaponRenderers, SpearSubmitIsStateless) {
-  SpearRenderer renderer{};
   SpearRenderConfig a;
   a.spear_length = 1.10F;
   a.shaft_radius = 0.020F;
@@ -412,7 +409,7 @@ TEST(StatelessWeaponRenderers, SpearSubmitIsStateless) {
   b.spear_length = 1.45F;
   b.shaft_radius = 0.024F;
   b.spearhead_color = {0.9F, 0.85F, 0.7F};
-  run_stateless_battery<SpearRenderer>(renderer, a, b);
+  run_stateless_battery<SpearRenderer>(a, b);
 }
 
 TEST(StatelessWeaponRenderers, SpearUsesArchetypePath) {
@@ -434,7 +431,6 @@ TEST(StatelessWeaponRenderers, SpearUsesArchetypePath) {
 }
 
 TEST(StatelessWeaponRenderers, BowSubmitIsStateless) {
-  BowRenderer renderer{};
   BowRenderConfig a;
   a.bow_top_y = 1.4F;
   a.bow_bot_y = 0.6F;
@@ -445,7 +441,7 @@ TEST(StatelessWeaponRenderers, BowSubmitIsStateless) {
   b.bow_depth = 0.30F;
   b.bow_curve_factor = 1.3F;
   b.fletching_color = {0.9F, 0.2F, 0.1F};
-  run_stateless_battery<BowRenderer>(renderer, a, b);
+  run_stateless_battery<BowRenderer>(a, b);
 }
 
 TEST(StatelessWeaponRenderers, BowBodyUsesArchetypePath) {
@@ -559,7 +555,6 @@ TEST(StatelessWeaponRenderers, BowHoldStringDoesNotFollowOffhandDrawPosition) {
 }
 
 TEST(StatelessWeaponRenderers, QuiverSubmitIsStateless) {
-  QuiverRenderer renderer{};
   QuiverRenderConfig a;
   a.quiver_radius = 0.08F;
   a.num_arrows = 1;
@@ -567,7 +562,7 @@ TEST(StatelessWeaponRenderers, QuiverSubmitIsStateless) {
   b.quiver_radius = 0.10F;
   b.num_arrows = 2;
   b.fletching_color = {0.2F, 0.7F, 0.3F};
-  run_stateless_battery<QuiverRenderer>(renderer, a, b);
+  run_stateless_battery<QuiverRenderer>(a, b);
 }
 
 TEST(StatelessWeaponRenderers, CarthageShieldUsesArchetypePath) {
