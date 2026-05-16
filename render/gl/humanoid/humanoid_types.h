@@ -48,10 +48,24 @@ enum class CombatAnimPhase : std::uint8_t {
   Reposition
 };
 
+struct VisualMovementState {
+  bool is_authoritative{false};
+  bool has_velocity{false};
+  bool has_navigation_intent{false};
+  bool has_chase_intent{false};
+  bool attack_target_in_range{false};
+  bool is_moving{false};
+  bool has_movement_target{false};
+  QVector3D locomotion_direction{0.0F, 0.0F, 1.0F};
+  QVector3D movement_target{0.0F, 0.0F, 0.0F};
+  float speed_hint{0.0F};
+};
+
 struct AnimationInputs {
   float time;
   bool is_moving;
   bool is_running;
+  VisualMovementState visual_movement{};
   bool is_attacking;
   bool is_melee;
   bool is_in_hold_mode;
@@ -63,6 +77,7 @@ struct AnimationInputs {
   Engine::Core::CombatAttackFamily attack_family{
       Engine::Core::CombatAttackFamily::None};
   std::uint8_t attack_variant{0};
+  bool finisher_attack{false};
   float attack_offset{0.0F};
   bool has_attack_offset{false};
   bool is_hit_reacting{false};
@@ -209,7 +224,44 @@ struct HumanoidVariant {
   float muscularity = 1.0F;
   float scarring = 0.0F;
   float weathering = 0.0F;
+  float grime = 0.0F;
+  float bloodiness = 0.0F;
+  float pattern_seed = 0.0F;
 };
+
+[[nodiscard]] inline auto next_seeded_unit_float(std::uint32_t& s) noexcept -> float {
+  s = s * 1664525U + 1013904223U;
+  return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
+}
+
+inline void seed_missing_humanoid_wear(HumanoidVariant& variant,
+                                       std::uint32_t seed) noexcept {
+  std::uint32_t rng = seed ^ 0xA341316CU;
+  float const generated_scarring =
+      next_seeded_unit_float(rng) * next_seeded_unit_float(rng) * 0.42F;
+  float const generated_weathering = 0.30F + next_seeded_unit_float(rng) * 0.55F;
+  float const generated_grime = 0.18F + next_seeded_unit_float(rng) * 0.52F;
+  float const generated_blood = next_seeded_unit_float(rng) *
+                                next_seeded_unit_float(rng) *
+                                next_seeded_unit_float(rng) * 0.34F;
+  float const generated_pattern = next_seeded_unit_float(rng);
+
+  if (variant.scarring <= 0.0F) {
+    variant.scarring = generated_scarring;
+  }
+  if (variant.weathering <= 0.0F) {
+    variant.weathering = generated_weathering;
+  }
+  if (variant.grime <= 0.0F) {
+    variant.grime = generated_grime;
+  }
+  if (variant.bloodiness <= 0.0F) {
+    variant.bloodiness = generated_blood;
+  }
+  if (variant.pattern_seed <= 0.0F) {
+    variant.pattern_seed = generated_pattern;
+  }
+}
 
 enum class HumanoidMotionState {
   Idle,
@@ -230,6 +282,10 @@ struct HumanoidGaitDescriptor {
   QVector3D velocity{0.0F, 0.0F, 0.0F};
   bool has_target{false};
   bool is_airborne{false};
+  float locomotion_blend{0.0F};
+  float run_blend{0.0F};
+  float turn_amount{0.0F};
+  float acceleration{0.0F};
 
   auto is_stationary() const -> bool { return speed <= 0.01F; }
   auto is_walking() const -> bool { return state == HumanoidMotionState::Walk; }

@@ -340,6 +340,112 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_EQ(targets->recent_hit_target_id, enemy->get_id());
 }
 
+TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossClicks) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+
+  auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
+  ASSERT_NE(combat_state, nullptr);
+  EXPECT_EQ(combat_state->attack_variant, 0U);
+  EXPECT_FALSE(combat_state->finisher_attack);
+
+  auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  EXPECT_EQ(action->melee_attack_style, 0U);
+  EXPECT_EQ(action->melee_attack_sequence, 1U);
+
+  combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
+  combat_state->state_time = 0.0F;
+  combat_state->state_duration = 0.0F;
+
+  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+
+  EXPECT_EQ(combat_state->attack_variant, 1U);
+  EXPECT_EQ(action->melee_attack_style, 1U);
+  EXPECT_EQ(action->melee_attack_sequence, 0U);
+}
+
+TEST_F(CommanderControlControllerTest, PrimaryActionUsesDedicatedFinisherSwordSway) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+  commander_data->combo_step = 3;
+
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+
+  auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
+  ASSERT_NE(combat_state, nullptr);
+  EXPECT_EQ(combat_state->attack_variant, 2U);
+  EXPECT_TRUE(combat_state->finisher_attack);
+
+  auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  EXPECT_EQ(action->melee_attack_style, 2U);
+}
+
+TEST_F(CommanderControlControllerTest,
+       ComboStepDoesNotResetWhileAttackAnimationIsActive) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+  commander_data->combo_step = 1;
+
+  auto* action = commander->add_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  action->melee_attack_sequence = 1U;
+
+  auto* combat_state = commander->add_component<Engine::Core::CombatStateComponent>();
+  ASSERT_NE(combat_state, nullptr);
+  combat_state->animation_state = Engine::Core::CombatAnimationState::Recover;
+  combat_state->state_duration = 0.5F;
+  combat_state->state_time = 0.2F;
+
+  CommanderControlController controller;
+  Render::GL::Camera camera;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 1.2F));
+
+  EXPECT_EQ(commander_data->combo_step, 1);
+  EXPECT_EQ(action->melee_attack_sequence, 1U);
+
+  combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
+  combat_state->state_duration = 0.0F;
+  combat_state->state_time = 0.0F;
+
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 1.2F));
+
+  EXPECT_EQ(commander_data->combo_step, 0);
+  EXPECT_EQ(action->melee_attack_sequence, 0U);
+}
+
 TEST_F(CommanderControlControllerTest, CloseCameraModeShortensCommanderViewDistance) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);

@@ -54,6 +54,11 @@ class Backend;
 
 class Renderer : public ISubmitter {
 public:
+  enum class WorldRenderMode {
+    Rts,
+    Rpg,
+  };
+
   explicit Renderer(ShaderQuality quality = ShaderQuality::Full);
   ~Renderer() override;
 
@@ -79,6 +84,13 @@ public:
   void set_local_owner_id(int owner_id) { m_local_owner_id = owner_id; }
   void set_force_full_creature_lod(bool enabled) {
     m_force_full_creature_lod = enabled;
+  }
+  void set_world_render_mode(WorldRenderMode mode);
+  [[nodiscard]] auto world_render_mode() const -> WorldRenderMode {
+    return m_world_render_mode;
+  }
+  [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool {
+    return m_world_render_mode == WorldRenderMode::Rts;
   }
 
   void set_frame_budget(const FrameBudgetConfig& config) {
@@ -327,6 +339,7 @@ private:
     std::uint8_t frame{0};
     std::uint8_t attack_family{0};
     std::uint8_t attack_variant{0};
+    bool finisher_attack{false};
   };
 
   struct AsyncTemplatePrewarmState {
@@ -358,6 +371,10 @@ private:
   float m_accumulated_time = 0.0F;
   std::atomic<bool> m_paused{false};
   float m_alpha_override = 1.0F;
+  WorldRenderMode m_world_render_mode = WorldRenderMode::Rts;
+  bool m_soft_visibility_reveal_primed = false;
+  float m_last_visibility_reveal_time = 0.0F;
+  std::unordered_map<uint32_t, float> m_visibility_reveal_alpha;
 
   std::mutex m_world_mutex;
   int m_local_owner_id = 1;

@@ -16,6 +16,7 @@
 #include "../ground/supply_cart_renderer.h"
 #include "../ground/tent_renderer.h"
 #include "../ground/weapon_rack_renderer.h"
+#include "../scene_renderer.h"
 
 namespace Render::GL {
 
@@ -52,7 +53,7 @@ void TerrainScatterManager::configure(
     const Game::Map::TerrainHeightMap& height_map,
     const Game::Map::BiomeSettings& biome_settings,
     const std::vector<Game::Map::WorldProp>& world_props) {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
 
   m_biome->configure(height_map, biome_settings);
   m_stone->configure(height_map, biome_settings, world_props);
@@ -69,7 +70,7 @@ void TerrainScatterManager::configure(
 }
 
 void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
   m_biome->set_light_direction(dir);
   m_stone->set_light_direction(dir);
   m_plant->set_light_direction(dir);
@@ -84,17 +85,23 @@ void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
 }
 
 void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resources) {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
 
+  const bool previous_filter =
+      Render::Ground::Scatter::visibility_filter_enabled_for_current_thread();
+  Render::Ground::Scatter::set_visibility_filter_enabled_for_current_thread(
+      renderer.static_world_visibility_filter_enabled());
   for (auto* pass : m_passes) {
     if (pass != nullptr) {
       pass->submit(renderer, resources);
     }
   }
+  Render::Ground::Scatter::set_visibility_filter_enabled_for_current_thread(
+      previous_filter);
 }
 
 void TerrainScatterManager::clear() {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
 
   m_biome->clear();
   m_stone->clear();
@@ -111,12 +118,12 @@ void TerrainScatterManager::clear() {
 }
 
 void TerrainScatterManager::refresh_grass() {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
   m_biome->refresh_grass();
 }
 
 auto TerrainScatterManager::is_gpu_ready() const -> bool {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
   return m_biome->is_gpu_ready() && m_stone->is_gpu_ready() &&
          m_plant->is_gpu_ready() && m_pine->is_gpu_ready() && m_olive->is_gpu_ready() &&
          m_firecamp->is_gpu_ready() && m_tent->is_gpu_ready() &&
@@ -174,7 +181,7 @@ auto TerrainScatterManager::boulder() const -> BoulderRenderer* {
 }
 
 auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
 
   return {{ScatterSpeciesId::Grass,
            ScatterVisibilityMode::InstanceFiltered,
@@ -264,7 +271,7 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
 
 auto TerrainScatterManager::last_sync_stats() const
     -> Render::Ground::Scatter::SyncStats {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::lock_guard<std::mutex> const lock(m_mutex);
 
   Render::Ground::Scatter::SyncStats stats{};
   if (m_biome != nullptr) {

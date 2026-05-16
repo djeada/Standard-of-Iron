@@ -41,6 +41,7 @@ public:
 
   void set_uniform(UniformHandle handle, float value);
   void set_uniform(UniformHandle handle, const QVector3D& value);
+  void set_uniform(UniformHandle handle, const QVector4D& value);
   void set_uniform(UniformHandle handle, const QVector2D& value);
   void set_uniform(UniformHandle handle, const QMatrix4x4& value);
   void set_uniform(UniformHandle handle, int value);
@@ -48,6 +49,7 @@ public:
 
   void set_uniform(const char* name, float value);
   void set_uniform(const char* name, const QVector3D& value);
+  void set_uniform(const char* name, const QVector4D& value);
   void set_uniform(const char* name, const QVector2D& value);
   void set_uniform(const char* name, const QMatrix4x4& value);
   void set_uniform(const char* name, int value);
@@ -55,6 +57,7 @@ public:
 
   void set_uniform(const QString& name, float value);
   void set_uniform(const QString& name, const QVector3D& value);
+  void set_uniform(const QString& name, const QVector4D& value);
   void set_uniform(const QString& name, const QVector2D& value);
   void set_uniform(const QString& name, const QMatrix4x4& value);
   void set_uniform(const QString& name, int value);

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "core/component.h"
+#include "core/system.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -16,6 +17,25 @@
 #include "game/units/troop_config.h"
 
 namespace {
+
+class DirectTransformDisplacementSystem : public Engine::Core::System {
+public:
+  explicit DirectTransformDisplacementSystem(Engine::Core::EntityID entity_id)
+      : m_entity_id(entity_id) {}
+
+  void update(Engine::Core::World* world, float) override {
+    auto* entity = (world != nullptr) ? world->get_entity(m_entity_id) : nullptr;
+    auto* transform = (entity != nullptr)
+                          ? entity->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+    if (transform != nullptr) {
+      transform->position.x += 0.5F;
+    }
+  }
+
+private:
+  Engine::Core::EntityID m_entity_id;
+};
 
 class CommandServiceTest : public ::testing::Test {
 protected:
@@ -84,6 +104,42 @@ TEST_F(CommandServiceTest, UnitRadiusMatchesSelectionRingRadius) {
 
   EXPECT_FLOAT_EQ(Game::Systems::CommandService::get_unit_radius(world, unit->get_id()),
                   expected_radius);
+}
+
+TEST_F(CommandServiceTest, MotionSnapshotCapturesDirectTransformDisplacement) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+
+  world.add_system(std::make_unique<DirectTransformDisplacementSystem>(unit->get_id()));
+  world.update(0.1F);
+
+  auto* motion = unit->get_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(motion, nullptr);
+  EXPECT_TRUE(motion->snapshot_valid);
+  EXPECT_TRUE(motion->is_moving);
+  EXPECT_EQ(motion->source, Engine::Core::MotionPresentationSource::ForcedDisplacement);
+  EXPECT_GT(motion->speed, 0.0F);
+}
+
+TEST_F(CommandServiceTest, MoveOptionsControlFormationModePersistence) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+
+  auto* formation = unit->add_component<Engine::Core::FormationModeComponent>();
+  ASSERT_NE(formation, nullptr);
+  formation->active = true;
+
+  Game::Systems::CommandService::MoveOptions preserve_options;
+  preserve_options.preserve_formation_mode = true;
+  Game::Systems::CommandService::move_unit(
+      world, unit->get_id(), QVector3D(4.0F, 0.0F, 4.0F), preserve_options);
+  EXPECT_TRUE(formation->active);
+
+  Game::Systems::CommandService::move_unit(
+      world, unit->get_id(), QVector3D(6.0F, 0.0F, 6.0F));
+  EXPECT_FALSE(formation->active);
 }
 
 TEST_F(CommandServiceTest,

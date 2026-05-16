@@ -27,11 +27,11 @@ SelectionQueryService::SelectionQueryService(Engine::Core::World* world,
 }
 
 auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
-  if (!m_world) {
+  if (m_world == nullptr) {
     return "normal";
   }
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-  if (!selection_system) {
+  if (selection_system == nullptr) {
     return "normal";
   }
 
@@ -47,28 +47,28 @@ auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
 
   for (auto id : sel) {
     auto* e = m_world->get_entity(id);
-    if (!e) {
+    if (e == nullptr) {
       continue;
     }
 
     auto* u = e->get_component<Engine::Core::UnitComponent>();
-    if (!u || u->spawn_type == Game::Units::SpawnType::Barracks) {
+    if ((u == nullptr) || u->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
 
     total_units++;
 
-    if (e->get_component<Engine::Core::AttackTargetComponent>()) {
+    if (e->get_component<Engine::Core::AttackTargetComponent>() != nullptr) {
       attacking_count++;
     }
 
     auto* patrol = e->get_component<Engine::Core::PatrolComponent>();
-    if (patrol && patrol->patrolling) {
+    if ((patrol != nullptr) && patrol->patrolling) {
       patrolling_count++;
     }
 
     auto* guard = e->get_component<Engine::Core::GuardModeComponent>();
-    if (guard && guard->active) {
+    if ((guard != nullptr) && guard->active) {
       guarding_count++;
     }
   }
@@ -92,11 +92,11 @@ auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
 
 auto SelectionQueryService::get_selected_units_toggle_state(const QString& mode) const
     -> QString {
-  if (!m_world) {
+  if (m_world == nullptr) {
     return QStringLiteral("none");
   }
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-  if (!selection_system) {
+  if (selection_system == nullptr) {
     return QStringLiteral("none");
   }
 
@@ -130,7 +130,7 @@ auto SelectionQueryService::get_selected_units_toggle_state(const QString& mode)
     }
 
     if (mode == QStringLiteral("formation")) {
-      if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      if (!Game::Units::is_troop_spawn(unit->spawn_type)) {
         continue;
       }
       ++eligible_count;
@@ -173,11 +173,11 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
   result["canHeal"] = false;
   result["canBuild"] = false;
 
-  if (!m_world) {
+  if (m_world == nullptr) {
     return result;
   }
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-  if (!selection_system) {
+  if (selection_system == nullptr) {
     return result;
   }
 
@@ -200,12 +200,12 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
     }
 
     auto* e = m_world->get_entity(id);
-    if (!e) {
+    if (e == nullptr) {
       continue;
     }
 
     auto* u = e->get_component<Engine::Core::UnitComponent>();
-    if (!u || u->spawn_type == Game::Units::SpawnType::Barracks) {
+    if ((u == nullptr) || u->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
 

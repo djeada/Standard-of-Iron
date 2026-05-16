@@ -14,6 +14,7 @@
 #include <memory>
 #include <mutex>
 #include <numbers>
+#include <optional>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -163,14 +164,6 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit_comp)
       unit_comp.spawn_type);
 }
 
-auto is_unit_moving(const Engine::Core::MovementComponent* move_comp) -> bool {
-  if (move_comp == nullptr) {
-    return false;
-  }
-  return move_comp->has_target || (std::abs(move_comp->vx) > 0.01F) ||
-         (std::abs(move_comp->vz) > 0.01F);
-}
-
 auto is_unit_combat_active(const Engine::Core::Entity* entity,
                            const Engine::Core::AttackComponent* attack_comp,
                            const Engine::Core::AttackTargetComponent* attack_target,
@@ -233,21 +226,170 @@ struct UnitRenderEntry {
   Engine::Core::TransformComponent* transform{nullptr};
   Engine::Core::UnitComponent* unit{nullptr};
   Engine::Core::MovementComponent* movement{nullptr};
+  Engine::Core::MotionPresentationComponent* motion{nullptr};
   std::string renderer_key;
   QMatrix4x4 model_matrix;
   uint32_t entity_id{0};
   bool selected{false};
   bool hovered{false};
-  bool moving{false};
   bool combat_active{false};
   bool in_frustum{true};
   bool fog_visible{true};
+  float fog_reveal_alpha{1.0F};
   bool has_attack{false};
   bool has_guard_mode{false};
   bool has_hold_mode{false};
   bool has_patrol{false};
   float distance_sq{0.0F};
 };
+
+struct EnemyVisibilityResult {
+  bool render_visible = false;
+  float target_alpha = 0.0F;
+};
+
+auto visibility_cell_for_world(const Game::Map::VisibilityService::Snapshot& snapshot,
+                               float world_x,
+                               float world_z) -> std::optional<std::pair<int, int>> {
+  if (snapshot.tile_size <= 0.0F || snapshot.width <= 0 || snapshot.height <= 0) {
+    return std::nullopt;
+  }
+
+  constexpr float k_half_cell_offset = 0.5F;
+  const int grid_x = static_cast<int>(std::floor(
+      world_x / snapshot.tile_size + snapshot.half_width + k_half_cell_offset));
+  const int grid_z = static_cast<int>(std::floor(
+      world_z / snapshot.tile_size + snapshot.half_height + k_half_cell_offset));
+  if (grid_x < 0 || grid_x >= snapshot.width || grid_z < 0 ||
+      grid_z >= snapshot.height) {
+    return std::nullopt;
+  }
+  return std::pair<int, int>{grid_x, grid_z};
+}
+
+auto hard_visibility_for_enemy(const Game::Map::VisibilityService::Snapshot& snapshot,
+                               float world_x,
+                               float world_z) -> EnemyVisibilityResult {
+  if (!snapshot.initialized) {
+    return {true, 1.0F};
+  }
+  const auto cell = visibility_cell_for_world(snapshot, world_x, world_z);
+  if (!cell.has_value()) {
+    return {false, 0.0F};
+  }
+  const auto [grid_x, grid_z] = *cell;
+  const bool visible =
+      snapshot.state_at(grid_x, grid_z) == Game::Map::VisibilityState::Visible;
+  return {visible, visible ? 1.0F : 0.0F};
+}
+
+auto soft_visibility_for_enemy(const Game::Map::VisibilityService::Snapshot& snapshot,
+                               float world_x,
+                               float world_z) -> EnemyVisibilityResult {
+  const auto cell = visibility_cell_for_world(snapshot, world_x, world_z);
+  if (!cell.has_value()) {
+    return {false, 0.0F};
+  }
+  const auto [grid_x, grid_z] = *cell;
+  const auto state = snapshot.state_at(grid_x, grid_z);
+  if (state == Game::Map::VisibilityState::Visible) {
+    return {true, 1.0F};
+  }
+
+  constexpr int k_pre_reveal_radius_cells = 10;
+  constexpr float k_outer_alpha = 0.16F;
+  constexpr float k_inner_alpha = 0.72F;
+  int best_dist_sq = k_pre_reveal_radius_cells * k_pre_reveal_radius_cells + 1;
+  for (int dz = -k_pre_reveal_radius_cells; dz <= k_pre_reveal_radius_cells; ++dz) {
+    const int z = grid_z + dz;
+    if (z < 0 || z >= snapshot.height) {
+      continue;
+    }
+    const int dz_sq = dz * dz;
+    if (dz_sq >= best_dist_sq) {
+      continue;
+    }
+    for (int dx = -k_pre_reveal_radius_cells; dx <= k_pre_reveal_radius_cells; ++dx) {
+      const int x = grid_x + dx;
+      if (x < 0 || x >= snapshot.width) {
+        continue;
+      }
+      const int dist_sq = dx * dx + dz_sq;
+      if (dist_sq >= best_dist_sq ||
+          dist_sq > k_pre_reveal_radius_cells * k_pre_reveal_radius_cells) {
+        continue;
+      }
+      if (snapshot.state_at(x, z) == Game::Map::VisibilityState::Visible) {
+        best_dist_sq = dist_sq;
+      }
+    }
+  }
+
+  if (best_dist_sq > k_pre_reveal_radius_cells * k_pre_reveal_radius_cells) {
+    return {false, 0.0F};
+  }
+
+  const float dist = std::sqrt(static_cast<float>(best_dist_sq));
+  const float t =
+      1.0F -
+      std::clamp(dist / static_cast<float>(k_pre_reveal_radius_cells), 0.0F, 1.0F);
+  const float eased = t * t * (3.0F - 2.0F * t);
+  return {true, k_outer_alpha + (k_inner_alpha - k_outer_alpha) * eased};
+}
+
+struct EnemyVisibilityRevealState {
+  std::unordered_map<uint32_t, float>* alpha_by_entity = nullptr;
+  float reveal_dt = 0.0F;
+  bool seed = false;
+};
+
+using EnemyVisibilityApplier =
+    void (*)(UnitRenderEntry& entry,
+             uint32_t entity_id,
+             const Engine::Core::TransformComponent& transform,
+             const Game::Map::VisibilityService::Snapshot& snapshot,
+             EnemyVisibilityRevealState* reveal_state);
+
+void apply_rts_enemy_visibility(UnitRenderEntry& entry,
+                                uint32_t,
+                                const Engine::Core::TransformComponent& transform,
+                                const Game::Map::VisibilityService::Snapshot& snapshot,
+                                EnemyVisibilityRevealState*) {
+  const auto visibility =
+      hard_visibility_for_enemy(snapshot, transform.position.x, transform.position.z);
+  entry.fog_visible = visibility.render_visible;
+}
+
+void apply_rpg_enemy_visibility(UnitRenderEntry& entry,
+                                uint32_t entity_id,
+                                const Engine::Core::TransformComponent& transform,
+                                const Game::Map::VisibilityService::Snapshot& snapshot,
+                                EnemyVisibilityRevealState* reveal_state) {
+  const auto visibility =
+      soft_visibility_for_enemy(snapshot, transform.position.x, transform.position.z);
+  entry.fog_visible = visibility.render_visible;
+
+  if (reveal_state == nullptr || reveal_state->alpha_by_entity == nullptr) {
+    entry.fog_reveal_alpha = visibility.target_alpha;
+    return;
+  }
+  if (!entry.fog_visible) {
+    reveal_state->alpha_by_entity->erase(entity_id);
+    return;
+  }
+
+  auto& alpha = (*reveal_state->alpha_by_entity)[entity_id];
+  if (reveal_state->seed) {
+    alpha = visibility.target_alpha;
+  } else if (alpha <= 0.0F) {
+    alpha = 0.0F;
+  }
+  const float target_alpha = std::clamp(visibility.target_alpha, 0.0F, 1.0F);
+  const float duration = target_alpha > alpha ? 0.24F : 0.12F;
+  const float step = duration > 0.0F ? reveal_state->reveal_dt / duration : 1.0F;
+  alpha += (target_alpha - alpha) * std::clamp(step, 0.0F, 1.0F);
+  entry.fog_reveal_alpha = alpha;
+}
 
 struct RenderEntry {
   Engine::Core::Entity* entity{nullptr};
@@ -309,6 +451,16 @@ Renderer::Renderer(ShaderQuality quality)
 
 Renderer::~Renderer() {
   shutdown();
+}
+
+void Renderer::set_world_render_mode(WorldRenderMode mode) {
+  if (m_world_render_mode == mode) {
+    return;
+  }
+  m_world_render_mode = mode;
+  m_soft_visibility_reveal_primed = false;
+  m_last_visibility_reveal_time = m_accumulated_time;
+  m_visibility_reveal_alpha.clear();
 }
 
 auto Renderer::initialize() -> bool {
@@ -740,6 +892,7 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile& profile,
   anim_key.attack_family =
       static_cast<Engine::Core::CombatAttackFamily>(item.attack_family);
   anim_key.attack_variant = item.attack_variant;
+  anim_key.finisher_attack = item.finisher_attack;
   AnimationInputs const anim = make_animation_inputs(anim_key);
   ctx.animation_override = &anim;
   const bool attack_state = (anim_key.state == AnimState::AttackMelee) ||
@@ -1009,7 +1162,9 @@ void Renderer::rigged(const RiggedCreatureCmd& cmd) {
   if (m_active_queue == nullptr || cmd.mesh == nullptr) {
     return;
   }
-  m_active_queue->submit(cmd);
+  RiggedCreatureCmd submitted = cmd;
+  submitted.alpha *= m_alpha_override;
+  m_active_queue->submit(std::move(submitted));
 }
 
 void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
@@ -1254,6 +1409,23 @@ void Renderer::render_world(Engine::Core::World* world) {
   }
 
   ++m_frame_counter;
+  const bool rpg_render_mode = m_world_render_mode == WorldRenderMode::Rpg;
+  const bool rpg_visibility_reveal = rpg_render_mode && visibility_enabled;
+  const bool seed_rpg_visibility_reveal =
+      rpg_visibility_reveal && !m_soft_visibility_reveal_primed;
+  const float reveal_dt =
+      std::clamp(m_accumulated_time - m_last_visibility_reveal_time, 0.0F, 0.10F);
+  m_last_visibility_reveal_time = m_accumulated_time;
+  if (!rpg_visibility_reveal) {
+    m_soft_visibility_reveal_primed = false;
+    m_visibility_reveal_alpha.clear();
+  }
+  EnemyVisibilityRevealState rpg_reveal_state{
+      &m_visibility_reveal_alpha, reveal_dt, seed_rpg_visibility_reveal};
+  EnemyVisibilityApplier const apply_enemy_visibility =
+      rpg_render_mode ? apply_rpg_enemy_visibility : apply_rts_enemy_visibility;
+  EnemyVisibilityRevealState* const enemy_reveal_state =
+      rpg_render_mode ? &rpg_reveal_state : nullptr;
 
   int visible_unit_count = 0;
   static thread_local std::vector<UnitRenderEntry> unit_entries;
@@ -1309,7 +1481,7 @@ void Renderer::render_world(Engine::Core::World* world) {
       entry.hovered = is_hovered;
       entry.renderer_key = cached.renderer_key;
       entry.movement = cached.movement;
-      entry.moving = is_unit_moving(entry.movement);
+      entry.motion = entity->get_component<Engine::Core::MotionPresentationComponent>();
 
       UnitRenderCache::update_model_matrix(cached);
       entry.model_matrix = cached.model_matrix;
@@ -1332,8 +1504,11 @@ void Renderer::render_world(Engine::Core::World* world) {
       }
 
       if (unit_comp->owner_id != m_local_owner_id && visibility_enabled) {
-        entry.fog_visible = visibility_snapshot.is_visible_world(
-            cached.transform->position.x, cached.transform->position.z);
+        apply_enemy_visibility(entry,
+                               entity_id,
+                               *cached.transform,
+                               visibility_snapshot,
+                               enemy_reveal_state);
       }
 
       auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
@@ -1405,6 +1580,9 @@ void Renderer::render_world(Engine::Core::World* world) {
 
   m_unit_render_cache.prune(m_frame_counter);
   m_model_matrix_cache.prune(m_frame_counter);
+  if (rpg_visibility_reveal) {
+    m_soft_visibility_reveal_primed = true;
+  }
 
   auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   battle_optimizer.set_visible_unit_count(visible_unit_count);
@@ -1526,7 +1704,7 @@ void Renderer::render_world(Engine::Core::World* world) {
 
     bool const should_update_temporal =
         battle_optimizer.should_render_unit(entry.entity_id,
-                                            entry.moving,
+                                            entry.motion,
                                             entry.selected,
                                             entry.hovered,
                                             entry.combat_active,
@@ -1538,6 +1716,17 @@ void Renderer::render_world(Engine::Core::World* world) {
     bool tier_is_minimal = false;
     if (m_entity_registry) {
       auto fn = m_entity_registry->get(entry.renderer_key);
+      if (!fn && entry.unit != nullptr) {
+        const std::string profile_renderer_key =
+            Render::resolve_profile_unit_renderer_key(*entry.unit);
+        if (!profile_renderer_key.empty() &&
+            profile_renderer_key != entry.renderer_key) {
+          fn = m_entity_registry->get(profile_renderer_key);
+          if (fn) {
+            entry.renderer_key = profile_renderer_key;
+          }
+        }
+      }
       if (fn) {
         DrawContext ctx{resources(), entry.entity, world, model_matrix};
 
@@ -1545,8 +1734,12 @@ void Renderer::render_world(Engine::Core::World* world) {
         ctx.hovered = entry.hovered;
         bool should_update_animation = true;
         if (should_update_temporal) {
-          should_update_animation = battle_optimizer.should_update_animation(
-              entry.entity_id, entry.distance_sq, entry.selected, entry.combat_active);
+          should_update_animation =
+              battle_optimizer.should_update_animation(entry.entity_id,
+                                                       entry.distance_sq,
+                                                       entry.selected,
+                                                       entry.combat_active,
+                                                       entry.motion);
         } else {
           should_update_animation = false;
         }
@@ -1594,16 +1787,20 @@ void Renderer::render_world(Engine::Core::World* world) {
                               ? Render::Pipeline::LodTier::Full
                               : Render::Pipeline::select_lod(lod_in);
 
-        const bool use_batching =
-            batching_available && (tier == Render::Pipeline::LodTier::Simplified ||
-                                   tier == Render::Pipeline::LodTier::Minimal);
+        const bool use_batching = batching_available &&
+                                  (tier == Render::Pipeline::LodTier::Simplified ||
+                                   tier == Render::Pipeline::LodTier::Minimal) &&
+                                  entry.fog_reveal_alpha >= k_opaque_threshold;
         tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
 
+        const float prev_alpha = m_alpha_override;
+        m_alpha_override *= entry.fog_reveal_alpha;
         if (use_batching) {
           fn(ctx, batch_submitter);
         } else {
           fn(ctx, *this);
         }
+        m_alpha_override = prev_alpha;
 
         drawn_by_registry = true;
       }
@@ -1641,11 +1838,14 @@ void Renderer::render_world(Engine::Core::World* world) {
                            entry.has_guard_mode,
                            entry.has_hold_mode,
                            entry.has_patrol);
+    const float prev_alpha = m_alpha_override;
+    m_alpha_override *= entry.fog_reveal_alpha;
     mesh(mesh_to_draw,
          model_matrix,
          color,
          (res != nullptr) ? res->white() : nullptr,
          1.0F);
+    m_alpha_override = prev_alpha;
   }
 
   auto render_non_unit_entry = [&](const RenderEntry& entry) {
@@ -2475,6 +2675,7 @@ void Renderer::prewarm_unit_templates(
       async_item.frame = item.anim_key.frame;
       async_item.attack_family = static_cast<std::uint8_t>(item.anim_key.attack_family);
       async_item.attack_variant = item.anim_key.attack_variant;
+      async_item.finisher_attack = item.anim_key.finisher_attack;
       async_state->work_items.push_back(async_item);
     }
 

@@ -60,7 +60,8 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   auto* backend = renderer.backend();
   auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
+  const bool use_visibility =
+      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
   const std::uint64_t visibility_version = use_visibility ? visibility.version() : 0;
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
   if (use_visibility) {

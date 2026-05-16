@@ -16,6 +16,7 @@ namespace Game::Systems {
 const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
     BuildingCollisionRegistry::s_building_sizes = {
         {"barracks", {4.F, 4.F}},
+        {"home", {3.F, 3.F}},
 
 };
 

@@ -43,11 +43,11 @@ auto torso_mesh_without_bottom_cap() -> Mesh* {
           return {
               verts[idx].position[0], verts[idx].position[1], verts[idx].position[2]};
         };
-        QVector3D pa = sample(a);
-        QVector3D pb = sample(b);
-        QVector3D pc = sample(c);
-        float min_y = std::min({pa.y(), pb.y(), pc.y()});
-        float max_y = std::max({pa.y(), pb.y(), pc.y()});
+        QVector3D const pa = sample(a);
+        QVector3D const pb = sample(b);
+        QVector3D const pc = sample(c);
+        float const min_y = std::min({pa.y(), pb.y(), pc.y()});
+        float const max_y = std::max({pa.y(), pb.y(), pc.y()});
 
         QVector3D n(verts[a].normal[0] + verts[b].normal[0] + verts[c].normal[0],
                     verts[a].normal[1] + verts[b].normal[1] + verts[c].normal[1],
@@ -58,9 +58,9 @@ auto torso_mesh_without_bottom_cap() -> Mesh* {
 
         constexpr float k_band_height = 0.02F;
         constexpr float k_bottom_threshold = 0.45F;
-        bool is_flat = (max_y - min_y) < k_band_height;
-        bool is_at_bottom = min_y > k_bottom_threshold;
-        bool facing_down = (n.y() > 0.35F);
+        bool const is_flat = (max_y - min_y) < k_band_height;
+        bool const is_at_bottom = min_y > k_bottom_threshold;
+        bool const facing_down = (n.y() > 0.35F);
         return is_flat && is_at_bottom && facing_down;
       });
 
@@ -118,6 +118,7 @@ void HumanoidRendererBase::get_variant(const DrawContext& ctx,
                                        HumanoidVariant& v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
   v.palette = make_humanoid_palette(team_tint, seed);
+  seed_missing_humanoid_wear(v, seed);
 }
 
 void HumanoidRendererBase::append_companion_preparation(

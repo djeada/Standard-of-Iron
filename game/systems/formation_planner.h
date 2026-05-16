@@ -2,7 +2,10 @@
 
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <iterator>
 #include <unordered_map>
 #include <vector>
 
@@ -21,6 +24,7 @@ struct FormationResult {
   std::vector<QVector3D> positions;
   std::vector<float> facing_angles;
   float formation_facing = 0.0F;
+  bool used_tactical_formation = false;
 };
 
 class FormationPlanner {
@@ -45,9 +49,73 @@ public:
   }
 
 private:
+  static constexpr float k_walkable_radius_threshold = 0.5F;
+
+  struct PlannedSlot {
+    size_t original_idx{0};
+    Engine::Core::EntityID entity_id{0};
+    QVector3D local_offset;
+    float facing_angle{0.0F};
+    float unit_radius{0.0F};
+  };
+
+  struct OccupiedSlot {
+    QVector3D position;
+    float unit_radius{0.0F};
+  };
+
+  static auto is_walkable_for_radius(Pathfinding* pathfinder,
+                                     int grid_x,
+                                     int grid_z,
+                                     float unit_radius) -> bool {
+    if (pathfinder == nullptr) {
+      return true;
+    }
+    return unit_radius > k_walkable_radius_threshold
+               ? pathfinder->is_walkable_with_radius(grid_x, grid_z, unit_radius)
+               : pathfinder->is_walkable(grid_x, grid_z);
+  }
+
+  static auto is_position_walkable_for_radius(const QVector3D& position,
+                                              Pathfinding* pathfinder,
+                                              float unit_radius) -> bool {
+    if (pathfinder == nullptr) {
+      return true;
+    }
+
+    Point const grid = CommandService::world_to_grid(position.x(), position.z());
+    if (grid.x < 0 || grid.y < 0) {
+      return false;
+    }
+
+    return is_walkable_for_radius(pathfinder, grid.x, grid.y, unit_radius);
+  }
+
+  static auto respects_spacing(const QVector3D& candidate,
+                               float unit_radius,
+                               const std::vector<OccupiedSlot>& occupied) -> bool {
+    for (const auto& slot : occupied) {
+      float const dx = candidate.x() - slot.position.x();
+      float const dz = candidate.z() - slot.position.z();
+      float const min_distance = unit_radius + slot.unit_radius;
+      if (dx * dx + dz * dz < min_distance * min_distance) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   static auto find_nearest_walkable(const QVector3D& position,
                                     Pathfinding* pathfinder,
                                     int max_search_radius = 5) -> QVector3D {
+    return find_nearest_walkable_for_radius(
+        position, pathfinder, 0.0F, max_search_radius);
+  }
+
+  static auto find_nearest_walkable_for_radius(const QVector3D& position,
+                                               Pathfinding* pathfinder,
+                                               float unit_radius,
+                                               int max_search_radius = 5) -> QVector3D {
     if (pathfinder == nullptr) {
       return position;
     }
@@ -58,7 +126,13 @@ private:
     int const center_grid_x = static_cast<int>(std::round(position.x() - offset_x));
     int const center_grid_z = static_cast<int>(std::round(position.z() - offset_z));
 
-    if (pathfinder->is_walkable(center_grid_x, center_grid_z)) {
+    auto const is_walkable = [pathfinder, unit_radius](int grid_x, int grid_z) {
+      return unit_radius > 0.0F
+                 ? pathfinder->is_walkable_with_radius(grid_x, grid_z, unit_radius)
+                 : pathfinder->is_walkable(grid_x, grid_z);
+    };
+
+    if (is_walkable(center_grid_x, center_grid_z)) {
       return position;
     }
 
@@ -72,7 +146,7 @@ private:
           int const test_x = center_grid_x + dx;
           int const test_z = center_grid_z + dz;
 
-          if (pathfinder->is_walkable(test_x, test_z)) {
+          if (is_walkable(test_x, test_z)) {
             return QVector3D(static_cast<float>(test_x) + offset_x,
                              position.y(),
                              static_cast<float>(test_z) + offset_z);
@@ -82,6 +156,56 @@ private:
     }
 
     return position;
+  }
+
+  static auto
+  find_nearest_walkable_non_overlapping(const QVector3D& position,
+                                        Pathfinding* pathfinder,
+                                        float unit_radius,
+                                        const std::vector<OccupiedSlot>& occupied,
+                                        int max_search_radius = 5) -> QVector3D {
+    if (pathfinder == nullptr) {
+      return position;
+    }
+
+    if (is_position_walkable_for_radius(position, pathfinder, unit_radius) &&
+        respects_spacing(position, unit_radius, occupied)) {
+      return position;
+    }
+
+    QVector3D const walkable_fallback = find_nearest_walkable_for_radius(
+        position, pathfinder, unit_radius, max_search_radius);
+
+    float const offset_x = pathfinder->get_grid_offset_x();
+    float const offset_z = pathfinder->get_grid_offset_z();
+
+    int const center_grid_x = static_cast<int>(std::round(position.x() - offset_x));
+    int const center_grid_z = static_cast<int>(std::round(position.z() - offset_z));
+
+    for (int radius = 1; radius <= max_search_radius; ++radius) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        for (int dz = -radius; dz <= radius; ++dz) {
+          if (std::abs(dx) != radius && std::abs(dz) != radius) {
+            continue;
+          }
+
+          int const test_x = center_grid_x + dx;
+          int const test_z = center_grid_z + dz;
+          if (!is_walkable_for_radius(pathfinder, test_x, test_z, unit_radius)) {
+            continue;
+          }
+
+          QVector3D const candidate(static_cast<float>(test_x) + offset_x,
+                                    position.y(),
+                                    static_cast<float>(test_z) + offset_z);
+          if (respects_spacing(candidate, unit_radius, occupied)) {
+            return candidate;
+          }
+        }
+      }
+    }
+
+    return walkable_fallback;
   }
 
   static auto is_area_mostly_walkable(const QVector3D& center,
@@ -116,6 +240,102 @@ private:
     return walkable_count >= (total_count * 2 / 3);
   }
 
+  static auto rotate_local_offset(const QVector3D& local,
+                                  float yaw_degrees) -> QVector3D {
+    constexpr float k_pi = 3.14159265358979323846F;
+    float const yaw_radians = yaw_degrees * (k_pi / 180.0F);
+    float const sin_yaw = std::sin(yaw_radians);
+    float const cos_yaw = std::cos(yaw_radians);
+    return {local.x() * cos_yaw + local.z() * sin_yaw,
+            local.y(),
+            -local.x() * sin_yaw + local.z() * cos_yaw};
+  }
+
+  static auto
+  are_slots_walkable_at_center(const QVector3D& center,
+                               const std::vector<PlannedSlot>& planned_slots,
+                               Pathfinding* pathfinder) -> bool {
+    for (const auto& slot : planned_slots) {
+      if (!is_position_walkable_for_radius(
+              center + slot.local_offset, pathfinder, slot.unit_radius)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static auto
+  find_coherent_walkable_center(const QVector3D& preferred_center,
+                                const std::vector<PlannedSlot>& planned_slots,
+                                Pathfinding* pathfinder,
+                                int max_search_radius = 15) -> QVector3D {
+    if (pathfinder == nullptr || planned_slots.empty()) {
+      return preferred_center;
+    }
+
+    if (are_slots_walkable_at_center(preferred_center, planned_slots, pathfinder)) {
+      return preferred_center;
+    }
+
+    float const offset_x = pathfinder->get_grid_offset_x();
+    float const offset_z = pathfinder->get_grid_offset_z();
+    Point const center_grid =
+        CommandService::world_to_grid(preferred_center.x(), preferred_center.z());
+
+    QVector3D best_center = preferred_center;
+    int best_valid_count = -1;
+    float best_distance_sq = 0.0F;
+    bool found_partial_candidate = false;
+
+    auto consider_candidate = [&](int grid_x, int grid_z) -> bool {
+      QVector3D const candidate_center(static_cast<float>(grid_x) + offset_x,
+                                       preferred_center.y(),
+                                       static_cast<float>(grid_z) + offset_z);
+      int valid_count = 0;
+      for (const auto& slot : planned_slots) {
+        if (is_position_walkable_for_radius(
+                candidate_center + slot.local_offset, pathfinder, slot.unit_radius)) {
+          ++valid_count;
+        }
+      }
+
+      float const distance_sq = (candidate_center - preferred_center).lengthSquared();
+      if (valid_count == static_cast<int>(planned_slots.size())) {
+        best_center = candidate_center;
+        best_valid_count = valid_count;
+        best_distance_sq = distance_sq;
+        return true;
+      }
+
+      if (!found_partial_candidate || valid_count > best_valid_count ||
+          (valid_count == best_valid_count && distance_sq < best_distance_sq)) {
+        best_center = candidate_center;
+        best_valid_count = valid_count;
+        best_distance_sq = distance_sq;
+        found_partial_candidate = true;
+      }
+      return false;
+    };
+
+    consider_candidate(center_grid.x, center_grid.y);
+
+    for (int radius = 1; radius <= max_search_radius; ++radius) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        for (int dz = -radius; dz <= radius; ++dz) {
+          if (std::abs(dx) != radius && std::abs(dz) != radius) {
+            continue;
+          }
+
+          if (consider_candidate(center_grid.x + dx, center_grid.y + dz)) {
+            return best_center;
+          }
+        }
+      }
+    }
+
+    return best_center;
+  }
+
 public:
   static auto
   spread_formation_by_nation(Engine::Core::World& world,
@@ -136,7 +356,7 @@ public:
       return result;
     }
 
-    result.positions.resize(units.size(), center);
+    result.positions = spread_formation(int(units.size()), center, spacing);
     result.facing_angles.resize(units.size(), 0.0F);
 
     auto* pathfinder = CommandService::get_pathfinder();
@@ -151,102 +371,218 @@ public:
       }
     }
 
-    bool all_in_formation_mode = true;
-    FormationType formation_type = FormationType::Roman;
-    bool formation_type_determined = false;
+    struct FormationGroup {
+      FormationType formation_type{FormationType::Roman};
+      std::vector<UnitFormationInfo> units;
+      std::vector<FormationPosition> planned_positions;
+      float average_current_x{0.0F};
+      float min_x{0.0F};
+      float max_x{0.0F};
+    };
 
-    for (auto unit_id : units) {
+    std::vector<FormationGroup> groups;
+    bool has_active_formation_unit = false;
+    std::unordered_map<Engine::Core::EntityID, size_t> unit_to_original_idx;
+    unit_to_original_idx.reserve(units.size());
+    QVector3D active_position_sum(0.0F, 0.0F, 0.0F);
+    int active_position_count = 0;
+
+    for (size_t i = 0; i < units.size(); ++i) {
+      auto unit_id = units[i];
+      unit_to_original_idx[unit_id] = i;
+
       auto* entity = world.get_entity(unit_id);
       if (entity == nullptr) {
-        all_in_formation_mode = false;
         continue;
       }
 
       auto* formation_mode =
           entity->get_component<Engine::Core::FormationModeComponent>();
       if ((formation_mode == nullptr) || !formation_mode->active) {
-        all_in_formation_mode = false;
-        continue;
-      }
-
-      if (!formation_type_determined) {
-        auto* unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-        if (unit_comp != nullptr) {
-          auto* nation = NationRegistry::instance().get_nation(unit_comp->nation_id);
-          if (nation != nullptr) {
-            formation_type = nation->formation_type;
-            formation_type_determined = true;
-          }
-        }
-      }
-    }
-
-    if (!all_in_formation_mode || !formation_type_determined) {
-      result.positions = spread_formation(int(units.size()), adjusted_center, spacing);
-      result.facing_angles.assign(units.size(), 0.0F);
-      return result;
-    }
-
-    std::vector<UnitFormationInfo> unit_infos;
-    unit_infos.reserve(units.size());
-
-    std::unordered_map<Engine::Core::EntityID, size_t> unit_to_original_idx;
-    for (size_t i = 0; i < units.size(); ++i) {
-      unit_to_original_idx[units[i]] = i;
-    }
-
-    for (auto unit_id : units) {
-      auto* entity = world.get_entity(unit_id);
-      if (entity == nullptr) {
         continue;
       }
 
       auto* unit_comp = entity->get_component<Engine::Core::UnitComponent>();
       auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+      if (unit_comp == nullptr || transform == nullptr) {
+        continue;
+      }
 
-      if (unit_comp != nullptr && transform != nullptr) {
-        auto troop_type_opt = Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
-        if (troop_type_opt.has_value()) {
-          UnitFormationInfo info;
-          info.entity_id = unit_id;
-          info.troop_type = troop_type_opt.value();
-          info.current_position = QVector3D(
-              transform->position.x, transform->position.y, transform->position.z);
-          unit_infos.push_back(info);
+      auto troop_type_opt = Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+      if (!troop_type_opt.has_value()) {
+        continue;
+      }
+
+      const QVector3D current_position(
+          transform->position.x, transform->position.y, transform->position.z);
+      has_active_formation_unit = true;
+      active_position_sum += current_position;
+      ++active_position_count;
+
+      FormationType formation_type = FormationType::Roman;
+      auto* nation = NationRegistry::instance().get_nation(unit_comp->nation_id);
+      if (nation != nullptr) {
+        formation_type = nation->formation_type;
+      }
+
+      auto group_it = std::find_if(
+          groups.begin(), groups.end(), [formation_type](const auto& group) {
+            return group.formation_type == formation_type;
+          });
+      if (group_it == groups.end()) {
+        groups.push_back({formation_type, {}});
+        group_it = std::prev(groups.end());
+      }
+
+      UnitFormationInfo info;
+      info.entity_id = unit_id;
+      info.troop_type = troop_type_opt.value();
+      info.current_position = current_position;
+      group_it->units.push_back(info);
+    }
+
+    if (!has_active_formation_unit || groups.empty()) {
+      result.positions = spread_formation(int(units.size()), adjusted_center, spacing);
+      return result;
+    }
+
+    result.positions = spread_formation(int(units.size()), adjusted_center, spacing);
+
+    QVector3D formation_centroid =
+        active_position_count > 0
+            ? active_position_sum / static_cast<float>(active_position_count)
+            : adjusted_center;
+    QVector3D formation_forward = adjusted_center - formation_centroid;
+    formation_forward.setY(0.0F);
+    if (formation_forward.lengthSquared() <= 1.0e-4F) {
+      formation_forward = QVector3D(0.0F, 0.0F, 1.0F);
+    } else {
+      formation_forward.normalize();
+    }
+    QVector3D formation_right(formation_forward.z(), 0.0F, -formation_forward.x());
+    if (formation_right.lengthSquared() <= 1.0e-4F) {
+      formation_right = QVector3D(1.0F, 0.0F, 0.0F);
+    } else {
+      formation_right.normalize();
+    }
+    result.formation_facing = std::atan2(formation_forward.x(), formation_forward.z()) *
+                              180.0F / 3.14159265358979323846F;
+
+    for (auto& group : groups) {
+      std::sort(group.units.begin(),
+                group.units.end(),
+                [](const UnitFormationInfo& a, const UnitFormationInfo& b) {
+                  if (a.troop_type != b.troop_type) {
+                    return static_cast<int>(a.troop_type) <
+                           static_cast<int>(b.troop_type);
+                  }
+                  return a.entity_id < b.entity_id;
+                });
+
+      float current_x_sum = 0.0F;
+      for (const auto& unit : group.units) {
+        current_x_sum += QVector3D::dotProduct(
+            unit.current_position - formation_centroid, formation_right);
+      }
+      group.average_current_x =
+          group.units.empty() ? 0.0F
+                              : current_x_sum / static_cast<float>(group.units.size());
+
+      group.planned_positions =
+          FormationSystem::instance().get_formation_positions_with_facing(
+              group.formation_type,
+              group.units,
+              QVector3D(0.0F, adjusted_center.y(), 0.0F),
+              spacing);
+      if (!group.planned_positions.empty()) {
+        group.min_x = group.planned_positions.front().position.x();
+        group.max_x = group.min_x;
+        for (const auto& fpos : group.planned_positions) {
+          group.min_x = std::min(group.min_x, fpos.position.x());
+          group.max_x = std::max(group.max_x, fpos.position.x());
         }
       }
     }
 
-    if (unit_infos.empty()) {
-      result.positions = spread_formation(int(units.size()), adjusted_center, spacing);
-      result.facing_angles.assign(units.size(), 0.0F);
-      return result;
+    std::stable_sort(groups.begin(),
+                     groups.end(),
+                     [](const FormationGroup& a, const FormationGroup& b) {
+                       if (a.average_current_x != b.average_current_x) {
+                         return a.average_current_x < b.average_current_x;
+                       }
+                       return static_cast<int>(a.formation_type) <
+                              static_cast<int>(b.formation_type);
+                     });
+
+    float const group_gap = spacing * 5.0F;
+    float total_width = 0.0F;
+    for (const auto& group : groups) {
+      total_width += group.max_x - group.min_x;
+    }
+    if (groups.size() > 1) {
+      total_width += group_gap * static_cast<float>(groups.size() - 1);
     }
 
-    std::sort(unit_infos.begin(),
-              unit_infos.end(),
-              [](const UnitFormationInfo& a, const UnitFormationInfo& b) {
-                if (a.troop_type != b.troop_type) {
-                  return static_cast<int>(a.troop_type) <
-                         static_cast<int>(b.troop_type);
-                }
-                return a.entity_id < b.entity_id;
-              });
+    std::vector<PlannedSlot> planned_slots;
+    planned_slots.reserve(units.size());
 
-    auto formation_positions =
-        FormationSystem::instance().get_formation_positions_with_facing(
-            formation_type, unit_infos, adjusted_center, spacing);
+    float left_edge = adjusted_center.x() - total_width * 0.5F;
+    for (size_t group_idx = 0; group_idx < groups.size(); ++group_idx) {
+      auto& group = groups[group_idx];
+      float const group_width = group.max_x - group.min_x;
+      float const x_shift =
+          (groups.size() == 1) ? adjusted_center.x() : left_edge - group.min_x;
 
-    for (const auto& fpos : formation_positions) {
-      auto it = unit_to_original_idx.find(fpos.entity_id);
-      if (it != unit_to_original_idx.end()) {
-        size_t const original_idx = it->second;
-        result.positions[original_idx] = fpos.position;
-        result.facing_angles[original_idx] = fpos.facing_angle;
+      for (auto fpos : group.planned_positions) {
+        QVector3D const local_position(
+            fpos.position.x() + x_shift - adjusted_center.x(), 0.0F, fpos.position.z());
+        QVector3D const rotated =
+            rotate_local_offset(local_position, result.formation_facing);
+        auto it = unit_to_original_idx.find(fpos.entity_id);
+        if (it != unit_to_original_idx.end()) {
+          size_t const original_idx = it->second;
+          planned_slots.push_back(
+              {original_idx,
+               fpos.entity_id,
+               rotated,
+               result.formation_facing + fpos.facing_angle,
+               CommandService::get_unit_radius(world, fpos.entity_id)});
+        }
       }
+
+      left_edge += group_width + group_gap;
     }
 
-    result.formation_facing = 0.0F;
+    QVector3D const coherent_center =
+        find_coherent_walkable_center(adjusted_center, planned_slots, pathfinder, 18);
+
+    std::stable_sort(
+        planned_slots.begin(),
+        planned_slots.end(),
+        [](const PlannedSlot& a, const PlannedSlot& b) {
+          if (a.local_offset.z() != b.local_offset.z()) {
+            return a.local_offset.z() > b.local_offset.z();
+          }
+          if (std::abs(a.local_offset.x()) != std::abs(b.local_offset.x())) {
+            return std::abs(a.local_offset.x()) < std::abs(b.local_offset.x());
+          }
+          return a.entity_id < b.entity_id;
+        });
+
+    std::vector<OccupiedSlot> occupied_slots;
+    occupied_slots.reserve(planned_slots.size());
+    for (const auto& slot : planned_slots) {
+      QVector3D final_position = coherent_center + slot.local_offset;
+      if (pathfinder != nullptr) {
+        final_position = find_nearest_walkable_non_overlapping(
+            final_position, pathfinder, slot.unit_radius, occupied_slots, 10);
+      }
+      result.positions[slot.original_idx] = final_position;
+      result.facing_angles[slot.original_idx] = slot.facing_angle;
+      occupied_slots.push_back({final_position, slot.unit_radius});
+    }
+
+    result.used_tactical_formation = true;
 
     return result;
   }

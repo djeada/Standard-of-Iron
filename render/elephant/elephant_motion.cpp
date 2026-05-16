@@ -8,6 +8,7 @@
 #include <numbers>
 
 #include "../creature/animation_state_components.h"
+#include "../creature/movement_animation.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "dimensions.h"
 #include "elephant_spec.h"
@@ -33,15 +34,16 @@ inline auto swing_arc(float t) -> float {
   return 4.0F * t * (1.0F - t);
 }
 
-inline auto normalized_locomotion_intensity(bool is_moving,
-                                            bool is_running,
-                                            const ElephantGait& g) -> float {
-  if (!is_moving) {
+inline auto normalized_locomotion_intensity(
+    Render::Creature::MovementAnimationState movement_animation,
+    const ElephantGait& g) -> float {
+  if (!Render::Creature::is_moving_animation(movement_animation)) {
     return 0.0F;
   }
   float const stride_swing = std::clamp(g.stride_swing, 0.0F, 1.0F);
   float const stride_lift = std::clamp(g.stride_lift * 2.2F, 0.0F, 1.0F);
-  float const locomotion_boost = is_running ? 0.22F : 0.0F;
+  float const locomotion_boost =
+      Render::Creature::is_running_animation(movement_animation) ? 0.22F : 0.0F;
   return std::clamp(0.62F + stride_swing * 0.24F + stride_lift * 0.14F +
                         locomotion_boost,
                     0.0F,
@@ -62,7 +64,7 @@ inline auto get_default_foot_position(const ElephantDimensions& d,
                                                   -d.body_height * 0.42F,
                                                   forward_offset);
 
-  return QVector3D(hip.x(), 0.0F, hip.z());
+  return {hip.x(), 0.0F, hip.z()};
 }
 
 inline auto calculate_swing_target(const ElephantDimensions& d,
@@ -123,11 +125,13 @@ auto evaluate_elephant_motion(const ElephantProfile& profile,
   const ElephantDimensions& d = profile.dims;
   sample.gait = g;
 
-  sample.is_moving = anim.is_moving;
+  Render::Creature::MovementAnimationState const movement_animation =
+      Render::Creature::movement_animation_from_flags(anim.is_moving, anim.is_running);
+  sample.is_moving = Render::Creature::is_moving_animation(movement_animation);
   sample.is_fighting =
       anim.is_attacking || (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
   float const locomotion_intensity =
-      normalized_locomotion_intensity(sample.is_moving, anim.is_running, g);
+      normalized_locomotion_intensity(movement_animation, g);
   float const cycle_time = std::max(g.cycle_time, 0.001F);
 
   if (sample.is_moving) {
@@ -231,7 +235,7 @@ auto evaluate_swing_position(const ElephantLegState& leg,
 
   float const lift = swing_arc(t) * lift_height;
 
-  return QVector3D(horizontal.x(), horizontal.y() + lift, horizontal.z());
+  return {horizontal.x(), horizontal.y() + lift, horizontal.z()};
 }
 
 auto solve_elephant_leg_ik(const QVector3D& hip,
@@ -273,7 +277,7 @@ auto solve_elephant_leg_ik(const QVector3D& hip,
 
   QMatrix4x4 rot;
   rot.setToIdentity();
-  rot.rotate(hip_angle * 180.0F / 3.14159265F, bend_axis);
+  rot.rotate(hip_angle * 180.0F / std::numbers::pi_v<float>, bend_axis);
 
   QVector3D const knee_dir = rot.map(reach_dir);
   pose.knee = hip + knee_dir * upper_len;
@@ -323,7 +327,11 @@ void update_elephant_gait(ElephantGaitState& state,
   const ElephantDimensions& d = profile.dims;
   const ElephantGait& g = profile.gait;
   float const cycle_time = std::max(g.cycle_time, 0.001F);
-  float const locomotion_scale = anim.is_running ? 1.18F : 1.0F;
+  Render::Creature::MovementAnimationState const movement_animation =
+      Render::Creature::movement_animation_from_flags(anim.is_moving, anim.is_running);
+  bool const is_moving = Render::Creature::is_moving_animation(movement_animation);
+  float const locomotion_scale =
+      Render::Creature::is_running_animation(movement_animation) ? 1.18F : 1.0F;
   float const position_phase_offset =
       std::fmod(body_world_pos.x() * k_position_phase_desync_x +
                     body_world_pos.z() * k_position_phase_desync_z,
@@ -342,14 +350,14 @@ void update_elephant_gait(ElephantGaitState& state,
     state.initialized = true;
   }
 
-  if (anim.is_moving) {
+  if (is_moving) {
     state.cycle_phase =
         std::fmod(anim.time / cycle_time + position_phase_offset + 1.0F, 1.0F);
   } else {
 
     state.cycle_phase = 0.0F;
-    for (int i = 0; i < 4; ++i) {
-      state.legs[i].in_swing = false;
+    for (auto& leg : state.legs) {
+      leg.in_swing = false;
     }
   }
 
@@ -363,7 +371,7 @@ void update_elephant_gait(ElephantGaitState& state,
     ElephantLegState& leg = state.legs[i];
     float const swing_progress = get_swing_progress(state.cycle_phase, i);
 
-    if (swing_progress >= 0.0F && anim.is_moving) {
+    if (swing_progress >= 0.0F && is_moving) {
 
       if (!leg.in_swing) {
 
@@ -387,10 +395,10 @@ void update_elephant_gait(ElephantGaitState& state,
   float total_z = 0.0F;
   int planted_count = 0;
 
-  for (int i = 0; i < 4; ++i) {
-    if (!state.legs[i].in_swing) {
-      total_x += state.legs[i].planted_foot.x();
-      total_z += state.legs[i].planted_foot.z();
+  for (auto& leg : state.legs) {
+    if (!leg.in_swing) {
+      total_x += leg.planted_foot.x();
+      total_z += leg.planted_foot.z();
       ++planted_count;
     }
   }
@@ -408,7 +416,7 @@ void update_elephant_gait(ElephantGaitState& state,
         (target_shift_z - state.weight_shift_z) * k_weight_shift_smoothing_z;
   }
 
-  if (anim.is_moving) {
+  if (is_moving) {
     float const cycle_sin = std::sin(state.cycle_phase * 2.0F * k_pi);
     float const shoulder_target =
         cycle_sin * k_shoulder_lag_factor * (0.90F + 0.15F * locomotion_scale);

@@ -4,6 +4,7 @@
 
 #include <cstdint>
 
+#include "../creature/movement_animation.h"
 #include "attachment_frames.h"
 
 namespace Render::Creature {
@@ -73,6 +74,8 @@ auto compute_rein_handle(const MountedAttachmentFrame& mount,
                          bool is_left,
                          float slack,
                          float tension) -> QVector3D;
+auto movement_animation_for_horse_gait(GaitType gait) noexcept
+    -> Render::Creature::MovementAnimationState;
 
 auto evaluate_horse_motion(const HorseProfile& profile,
                            const AnimationInputs& anim,

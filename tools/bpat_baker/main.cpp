@@ -760,7 +760,6 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       } else if (profile == HumanoidBakeProfile::SpearReady) {
         ctrl.hold_spear_idle();
       }
-      ctrl.apply_micro_idle(idle_time, 0U);
       auto to_ambient_type = [](BakerAmbientIdleType t) -> Render::GL::AmbientIdleType {
         switch (t) {
         case BakerAmbientIdleType::SitDown:
@@ -803,6 +802,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       ctrl.hold_spear_idle();
     }
     if (clip.state == Render::GL::HumanoidMotionState::Idle &&
+        clip.riding_type == BakerRidingType::Idle &&
         clip.hold_type == BakerHoldType::None &&
         clip.ambient_idle_type == BakerAmbientIdleType::None) {
       Render::GL::HumanoidAnimationContext anim_ctx{};

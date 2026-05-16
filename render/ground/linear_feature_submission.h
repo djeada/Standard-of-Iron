@@ -28,7 +28,8 @@ void submit_linear_feature_segments(
   }
 
   auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
+  const bool use_visibility =
+      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
   if (use_visibility) {
     visibility_snapshot = visibility.snapshot();

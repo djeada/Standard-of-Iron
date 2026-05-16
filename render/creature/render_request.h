@@ -4,6 +4,7 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QVector4D>
 
 #include <array>
 #include <cstdint>
@@ -76,6 +77,7 @@ struct CreatureRenderRequest {
   std::uint8_t clip_variant{0};
   std::uint8_t role_color_count{0};
   QVector3D base_color{0.5F, 0.5F, 0.5F};
+  QVector4D wear_params{0.0F, 0.0F, 0.0F, 0.0F};
 
   [[nodiscard]] auto role_colors_view() const noexcept -> std::span<const QVector3D> {
     return {role_colors.data(), static_cast<std::size_t>(role_color_count)};

@@ -643,7 +643,7 @@ auto CommandController::on_formation_command() -> CommandResult {
       continue;
     }
 
-    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+    if (!Game::Units::is_troop_spawn(unit->spawn_type)) {
       continue;
     }
 
@@ -673,7 +673,7 @@ auto CommandController::on_formation_command() -> CommandResult {
       continue;
     }
 
-    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+    if (!Game::Units::is_troop_spawn(unit->spawn_type)) {
       continue;
     }
 
@@ -722,7 +722,7 @@ auto CommandController::on_formation_command() -> CommandResult {
       }
 
       auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (unit == nullptr || unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      if (unit == nullptr || !Game::Units::is_troop_spawn(unit->spawn_type)) {
         continue;
       }
 
@@ -816,7 +816,7 @@ void CommandController::begin_move_placement_at_position(const QVector3D& positi
       continue;
     }
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || unit->spawn_type == Game::Units::SpawnType::Barracks) {
+    if (unit == nullptr || !Game::Units::is_troop_spawn(unit->spawn_type)) {
       continue;
     }
     m_formation_units.push_back(id);
@@ -874,9 +874,9 @@ void CommandController::confirm_formation_placement() {
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform != nullptr) {
 
-      float unit_facing = (i < formation_result.facing_angles.size())
-                              ? formation_result.facing_angles[i]
-                              : 0.0F;
+      float const unit_facing = (i < formation_result.facing_angles.size())
+                                    ? formation_result.facing_angles[i]
+                                    : 0.0F;
       transform->desired_yaw = unit_facing + m_formation_placement_angle;
       transform->has_desired_yaw = true;
     }
@@ -886,6 +886,7 @@ void CommandController::confirm_formation_placement() {
   opts.group_move = m_formation_units.size() > 1;
   opts.clear_attack_intent = true;
   opts.retry_individual_on_group_failure = m_formation_units.size() > 1;
+  opts.preserve_formation_mode = formation_result.used_tactical_formation;
   Game::Systems::CommandService::move_units(
       *m_world, m_formation_units, formation_result.positions, opts);
 

@@ -92,7 +92,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.limestone_shade,
                k_building_state_mask_intact);
 
-  for (float xw : {-0.90F, 0.90F}) {
+  for (float const xw : {-0.90F, 0.90F}) {
     desc.add_box(QVector3D(xw, 0.56F, -0.28F),
                  QVector3D(0.015F, 0.18F, 0.14F),
                  c.cedar_dark,
@@ -237,7 +237,7 @@ void draw_home(const DrawContext& p, ISubmitter& out) {
   submit_building_instance(
       out, p, home_archetype(resolve_building_state(p)), palette_slots);
   draw_building_health_bar(out, p, BuildingHealthBarStyle{1.0F, 0.08F, 1.6F});
-  draw_building_selection_overlay(out, p, BuildingSelectionStyle{1.5F, 1.5F});
+  draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.25F, 2.25F});
 }
 
 } // namespace

@@ -63,6 +63,7 @@ struct ReinState {
 struct HorseMotionSample {
   HorseGait gait{};
   GaitType gait_type{GaitType::IDLE};
+  GaitType playback_gait_type{GaitType::IDLE};
   float phase = 0.0F;
   float bob = 0.0F;
   bool is_moving = false;

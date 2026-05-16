@@ -179,6 +179,39 @@ public:
   }
 };
 
+enum class MotionPresentationSource : std::uint8_t {
+  None,
+  Navigation,
+  Chase,
+  DirectControl,
+  BuilderBypass,
+  ForcedDisplacement
+};
+
+class MotionPresentationComponent : public Component {
+public:
+  MotionPresentationComponent() = default;
+
+  bool snapshot_valid{false};
+  bool initialized{false};
+  float previous_x{0.0F}, previous_y{0.0F}, previous_z{0.0F};
+  float displacement_x{0.0F}, displacement_z{0.0F};
+  float velocity_x{0.0F}, velocity_z{0.0F};
+  float speed{0.0F};
+  float direction_x{0.0F}, direction_z{1.0F};
+  bool is_moving{false};
+  bool is_running{false};
+  bool has_velocity{false};
+  bool has_navigation_intent{false};
+  bool has_chase_intent{false};
+  bool attack_target_in_range{false};
+  bool has_movement_target{false};
+  float movement_target_x{0.0F}, movement_target_z{0.0F};
+  MotionPresentationSource source{MotionPresentationSource::None};
+  float seconds_since_motion{0.0F};
+  float tick_delta_time{0.0F};
+};
+
 class AttackComponent : public Component {
 public:
   enum class CombatMode {
@@ -272,6 +305,8 @@ public:
   RpgCommanderActionComponent() = default;
 
   RpgCommanderActionPhase phase{RpgCommanderActionPhase::None};
+  std::uint8_t melee_attack_style{0};
+  std::uint8_t melee_attack_sequence{0};
   EntityID active_target_id{0};
   EntityID last_hit_target_id{0};
   int last_damage{0};
@@ -339,6 +374,7 @@ public:
   float state_duration{0.0F};
   float attack_offset{0.0F};
   std::uint8_t attack_variant{0};
+  bool finisher_attack{false};
   bool is_hit_paused{false};
   float hit_pause_remaining{0.0F};
 

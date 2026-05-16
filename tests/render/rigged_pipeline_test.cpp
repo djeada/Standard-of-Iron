@@ -15,7 +15,7 @@ namespace {
 
 TEST(RiggedPipeline, VariantIndexMatchesEnum) {
   Render::GL::RiggedCreatureCmd cmd;
-  Render::GL::DrawCmd v = cmd;
+  Render::GL::DrawCmd const v = cmd;
   EXPECT_EQ(v.index(), Render::GL::RiggedCreatureCmdIndex);
   EXPECT_EQ(static_cast<std::size_t>(Render::GL::DrawCmdType::RiggedCreature),
             Render::GL::RiggedCreatureCmdIndex);
@@ -23,7 +23,7 @@ TEST(RiggedPipeline, VariantIndexMatchesEnum) {
 }
 
 TEST(RiggedPipeline, DefaultsAreSane) {
-  Render::GL::RiggedCreatureCmd cmd;
+  Render::GL::RiggedCreatureCmd const cmd;
   EXPECT_EQ(cmd.mesh, nullptr);
   EXPECT_EQ(cmd.material, nullptr);
   EXPECT_EQ(cmd.bone_palette, nullptr);
@@ -33,6 +33,7 @@ TEST(RiggedPipeline, DefaultsAreSane) {
   EXPECT_EQ(cmd.material_id, 0);
   EXPECT_FLOAT_EQ(cmd.alpha, 1.0F);
   EXPECT_EQ(cmd.color, QVector3D(1.0F, 1.0F, 1.0F));
+  EXPECT_EQ(cmd.wear_params, QVector4D(0.0F, 0.0F, 0.0F, 0.0F));
   EXPECT_EQ(cmd.variation_scale, QVector3D(1.0F, 1.0F, 1.0F));
   EXPECT_EQ(cmd.priority, Render::CommandPriority::Normal);
 }
@@ -130,7 +131,7 @@ TEST(RiggedPipeline, QueueSubmitterShaderStateDoesNotAffectRiggedBatching) {
   first.mesh = mesh;
   first.bone_count = 12;
 
-  RiggedCreatureCmd second = first;
+  RiggedCreatureCmd const second = first;
 
   submitter.set_shader(shader_a);
   submitter.rigged(first);
@@ -152,7 +153,7 @@ TEST(RiggedPipeline, DifferentRolePalettesShareRiggedPreparedBatch) {
   DrawQueue queue;
 
   auto* mesh = reinterpret_cast<RiggedMesh*>(0x1000);
-  auto* material = reinterpret_cast<const Material*>(0x2000);
+  const auto* material = reinterpret_cast<const Material*>(0x2000);
 
   RiggedCreatureCmd first;
   first.mesh = mesh;
