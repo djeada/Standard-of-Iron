@@ -17,8 +17,13 @@ namespace Game::Units {
 namespace {
 
 constexpr int k_max_home_civilians = 3;
+constexpr float k_home_scale_factor = 1.5F;
+constexpr float k_home_scale_xz = 1.2F * k_home_scale_factor;
+constexpr float k_home_scale_y = 1.0F * k_home_scale_factor;
+constexpr float k_home_rally_offset_x = 2.0F * k_home_scale_factor;
+constexpr float k_home_rally_offset_z = 1.0F * k_home_scale_factor;
 
-}
+} // namespace
 
 Home::Home(Engine::Core::World& world)
     : Unit(world, "home") {
@@ -39,7 +44,7 @@ void Home::init(const SpawnParams& params) {
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(), params.position.z()};
-  m_t->scale = {1.2F, 1.0F, 1.2F};
+  m_t->scale = {k_home_scale_xz, k_home_scale_y, k_home_scale_xz};
 
   m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;
@@ -71,8 +76,8 @@ void Home::init(const SpawnParams& params) {
       prod->in_progress = false;
       prod->time_remaining = 0.0F;
       prod->produced_count = 0;
-      prod->rally_x = m_t->position.x + 2.0F;
-      prod->rally_z = m_t->position.z + 1.0F;
+      prod->rally_x = m_t->position.x + k_home_rally_offset_x;
+      prod->rally_z = m_t->position.z + k_home_rally_offset_z;
       prod->rally_set = true;
 
       const auto profile = Game::Systems::TroopProfileService::instance().get_profile(

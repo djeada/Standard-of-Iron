@@ -978,6 +978,54 @@ TEST_F(CombatModeTest, RtsAttackProcessorDoesNotDriveCommanderFpvAttacks) {
   EXPECT_EQ(enemy_unit->health, 100);
 }
 
+TEST_F(CombatModeTest, CommanderFinisherFlagControlsFollowupPhaseDurations) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(attacker_unit, nullptr);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+  auto* commander = attacker->add_component<CommanderComponent>();
+  ASSERT_NE(commander, nullptr);
+  commander->fpv_controlled = true;
+
+  auto* normal_state = attacker->add_component<CombatStateComponent>();
+  ASSERT_NE(normal_state, nullptr);
+  normal_state->animation_state = CombatAnimationState::Advance;
+  normal_state->state_duration = CombatStateComponent::k_advance_duration;
+  normal_state->state_time = normal_state->state_duration;
+  normal_state->finisher_attack = false;
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.0F);
+
+  EXPECT_EQ(normal_state->animation_state, CombatAnimationState::WindUp);
+  EXPECT_FLOAT_EQ(normal_state->state_duration,
+                  CombatStateComponent::k_wind_up_duration * 1.18F);
+
+  auto* finisher = world->create_entity();
+  finisher->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
+  auto* finisher_unit = finisher->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(finisher_unit, nullptr);
+  finisher_unit->owner_id = 1;
+  finisher_unit->spawn_type = Game::Units::SpawnType::Knight;
+  auto* finisher_commander = finisher->add_component<CommanderComponent>();
+  ASSERT_NE(finisher_commander, nullptr);
+  finisher_commander->fpv_controlled = true;
+
+  auto* finisher_state = finisher->add_component<CombatStateComponent>();
+  ASSERT_NE(finisher_state, nullptr);
+  finisher_state->animation_state = CombatAnimationState::Advance;
+  finisher_state->state_duration = CombatStateComponent::k_advance_duration;
+  finisher_state->state_time = finisher_state->state_duration;
+  finisher_state->finisher_attack = true;
+
+  Game::Systems::Combat::process_combat_state(world.get(), 0.0F);
+
+  EXPECT_EQ(finisher_state->animation_state, CombatAnimationState::WindUp);
+  EXPECT_FLOAT_EQ(finisher_state->state_duration,
+                  CombatStateComponent::k_wind_up_duration * 1.42F);
+}
+
 TEST_F(CombatModeTest, MeleeLockKeepsCurrentTargetEvenWhenCloserEnemyExists) {
   auto* attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);

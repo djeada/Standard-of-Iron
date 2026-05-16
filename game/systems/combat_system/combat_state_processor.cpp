@@ -38,21 +38,19 @@ auto commander_phase_scale(const Engine::Core::Entity& unit,
     return 1.0F;
   }
 
-  bool const finisher_attack =
-      combat_state.attack_variant >= CSC::k_attack_variant_seed_slots - 1U;
   switch (state) {
   case CS::Advance:
-    return finisher_attack ? 1.55F : 1.22F;
+    return combat_state.finisher_attack ? 1.55F : 1.22F;
   case CS::WindUp:
-    return finisher_attack ? 1.42F : 1.18F;
+    return combat_state.finisher_attack ? 1.42F : 1.18F;
   case CS::Strike:
-    return finisher_attack ? 1.26F : 1.10F;
+    return combat_state.finisher_attack ? 1.26F : 1.10F;
   case CS::Impact:
-    return finisher_attack ? 1.22F : 1.08F;
+    return combat_state.finisher_attack ? 1.22F : 1.08F;
   case CS::Recover:
-    return finisher_attack ? 1.38F : 1.18F;
+    return combat_state.finisher_attack ? 1.38F : 1.18F;
   case CS::Reposition:
-    return finisher_attack ? 1.18F : 1.06F;
+    return combat_state.finisher_attack ? 1.18F : 1.06F;
   case CS::Idle:
   default:
     return 1.0F;

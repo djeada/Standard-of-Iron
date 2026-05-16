@@ -410,6 +410,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     combat_state_obj["attack_offset"] =
         static_cast<double>(combat_state->attack_offset);
     combat_state_obj["attack_variant"] = static_cast<int>(combat_state->attack_variant);
+    combat_state_obj["finisher_attack"] = combat_state->finisher_attack;
     combat_state_obj["is_hit_paused"] = combat_state->is_hit_paused;
     combat_state_obj["hit_pause_remaining"] =
         static_cast<double>(combat_state->hit_pause_remaining);
@@ -913,7 +914,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     stomp_impact->impacts.reserve(impacts_array.size());
     for (const auto& value : impacts_array) {
       const auto impact_obj = value.toObject();
-      ElephantStompImpactComponent::ImpactRecord impact;
+      ElephantStompImpactComponent::ImpactRecord impact{};
       impact.x = static_cast<float>(impact_obj["x"].toDouble(0.0));
       impact.z = static_cast<float>(impact_obj["z"].toDouble(0.0));
       impact.time = static_cast<float>(impact_obj["time"].toDouble(0.0));
@@ -938,6 +939,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(combat_state_obj["attack_offset"].toDouble(0.0));
     combat_state->attack_variant =
         static_cast<std::uint8_t>(combat_state_obj["attack_variant"].toInt(0));
+    combat_state->finisher_attack = combat_state_obj["finisher_attack"].toBool(false);
     combat_state->is_hit_paused = combat_state_obj["is_hit_paused"].toBool(false);
     combat_state->hit_pause_remaining =
         static_cast<float>(combat_state_obj["hit_pause_remaining"].toDouble(0.0));

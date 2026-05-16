@@ -65,7 +65,7 @@ void record_shader_bind(const QString& name) {
     return;
   }
   QString key = name.isEmpty() ? QStringLiteral("<unnamed>") : name;
-  std::scoped_lock lock(shader_audit_mutex());
+  std::scoped_lock const lock(shader_audit_mutex());
   auto& entry = shader_audit_counts()[key];
   entry.name = std::move(key);
   ++entry.bind_count;
@@ -106,9 +106,8 @@ auto resolve_shader_includes(const QString& source,
           result += resolve_shader_includes(included_source, base_dir);
           result += '\n';
           continue;
-        } else {
-          qWarning() << "Shader #include not found:" << include_path;
         }
+        qWarning() << "Shader #include not found:" << include_path;
       }
     }
     result += line;
@@ -230,42 +229,62 @@ auto Shader::optional_uniform_handle(const char* name) -> Shader::UniformHandle 
 }
 
 void Shader::set_uniform(UniformHandle handle, float value) {
-  if (handle == InvalidUniform)
+  if (handle == InvalidUniform) {
     return;
-  if (!is_uniform_dirty(handle, value))
+  }
+  if (!is_uniform_dirty(handle, value)) {
     return;
+  }
   glUniform1f(handle, value);
 }
 
 void Shader::set_uniform(UniformHandle handle, const QVector3D& value) {
-  if (handle == InvalidUniform)
+  if (handle == InvalidUniform) {
     return;
-  if (!is_uniform_dirty(handle, value))
+  }
+  if (!is_uniform_dirty(handle, value)) {
     return;
+  }
   glUniform3f(handle, value.x(), value.y(), value.z());
 }
 
+void Shader::set_uniform(UniformHandle handle, const QVector4D& value) {
+  if (handle == InvalidUniform) {
+    return;
+  }
+  if (!is_uniform_dirty(handle, value)) {
+    return;
+  }
+  glUniform4f(handle, value.x(), value.y(), value.z(), value.w());
+}
+
 void Shader::set_uniform(UniformHandle handle, const QVector2D& value) {
-  if (handle == InvalidUniform)
+  if (handle == InvalidUniform) {
     return;
-  if (!is_uniform_dirty(handle, value))
+  }
+  if (!is_uniform_dirty(handle, value)) {
     return;
+  }
   glUniform2f(handle, value.x(), value.y());
 }
 
 void Shader::set_uniform(UniformHandle handle, const QMatrix4x4& value) {
-  if (handle == InvalidUniform)
+  if (handle == InvalidUniform) {
     return;
-  if (!is_uniform_dirty(handle, value))
+  }
+  if (!is_uniform_dirty(handle, value)) {
     return;
+  }
   glUniformMatrix4fv(handle, 1, GL_FALSE, value.constData());
 }
 
 void Shader::set_uniform(UniformHandle handle, int value) {
-  if (handle == InvalidUniform)
+  if (handle == InvalidUniform) {
     return;
-  if (!is_uniform_dirty(handle, value))
+  }
+  if (!is_uniform_dirty(handle, value)) {
     return;
+  }
   glUniform1i(handle, value);
 }
 
@@ -278,6 +297,10 @@ void Shader::set_uniform(const char* name, float value) {
 }
 
 void Shader::set_uniform(const char* name, const QVector3D& value) {
+  set_uniform(uniform_handle(name), value);
+}
+
+void Shader::set_uniform(const char* name, const QVector4D& value) {
   set_uniform(uniform_handle(name), value);
 }
 
@@ -303,6 +326,11 @@ void Shader::set_uniform(const QString& name, float value) {
 }
 
 void Shader::set_uniform(const QString& name, const QVector3D& value) {
+  const QByteArray utf8 = name.toUtf8();
+  set_uniform(utf8.constData(), value);
+}
+
+void Shader::set_uniform(const QString& name, const QVector4D& value) {
   const QByteArray utf8 = name.toUtf8();
   set_uniform(utf8.constData(), value);
 }
@@ -399,12 +427,12 @@ auto shader_bind_audit_enabled() -> bool {
 }
 
 void reset_shader_bind_audit() {
-  std::scoped_lock lock(shader_audit_mutex());
+  std::scoped_lock const lock(shader_audit_mutex());
   shader_audit_counts().clear();
 }
 
 auto shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry> {
-  std::scoped_lock lock(shader_audit_mutex());
+  std::scoped_lock const lock(shader_audit_mutex());
   std::vector<ShaderBindAuditEntry> out;
   out.reserve(shader_audit_counts().size());
   for (const auto& [_, entry] : shader_audit_counts()) {

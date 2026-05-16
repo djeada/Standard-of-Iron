@@ -18,12 +18,35 @@ using namespace Render::GL;
 
 namespace {
 
+constexpr float k_sample_cycle_period = 18.0F;
+constexpr float k_sample_cycle_midpoint = 7.75F;
+
 auto find_seed_with_ambient_idle(float max_idle_duration) -> std::uint32_t {
   for (std::uint32_t seed = 1U; seed < 20000U; ++seed) {
     for (float idle_duration = 5.0F; idle_duration <= max_idle_duration;
          idle_duration += 0.25F) {
       if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) !=
           AmbientIdleType::None) {
+        return seed;
+      }
+    }
+  }
+  return 0U;
+}
+
+auto find_seed_with_multiple_ambient_types(float max_idle_duration,
+                                           std::size_t min_types) -> std::uint32_t {
+  for (std::uint32_t seed = 1U; seed < 20000U; ++seed) {
+    std::unordered_set<int> selected_types;
+    for (float idle_duration = 5.0F; idle_duration <= max_idle_duration;
+         idle_duration += 0.25F) {
+      auto const type =
+          HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration);
+      if (type == AmbientIdleType::None) {
+        continue;
+      }
+      selected_types.insert(static_cast<int>(type));
+      if (selected_types.size() >= min_types) {
         return seed;
       }
     }
@@ -118,13 +141,13 @@ TEST_F(HumanoidPoseControllerTest,
       HumanoidPoseController::compute_ambient_idle_phase(activation_time, seed);
   float const progressed_phase =
       HumanoidPoseController::compute_ambient_idle_phase(activation_time + 1.0F, seed);
-  EXPECT_LT(start_phase, 0.05F);
+  EXPECT_LT(start_phase, 0.10F);
   EXPECT_GT(progressed_phase, start_phase);
 }
 
 TEST_F(HumanoidPoseControllerTest,
        AmbientIdleLongStandstillRotatesThroughMultipleVariants) {
-  std::uint32_t const seed = find_seed_with_ambient_idle(140.0F);
+  std::uint32_t const seed = find_seed_with_multiple_ambient_types(140.0F, 2U);
   ASSERT_NE(seed, 0U);
   std::unordered_set<int> selected_types;
   for (float idle_duration = 5.0F; idle_duration <= 140.0F; idle_duration += 0.25F) {
@@ -140,34 +163,35 @@ TEST_F(HumanoidPoseControllerTest,
 }
 
 TEST_F(HumanoidPoseControllerTest,
-       AmbientIdleLongStandstillOnlySelectsSparseFormationSubset) {
+       AmbientIdleEachWaveKeepsFormationParticipationSparse) {
   constexpr std::uint32_t base_seed = 1234U;
   constexpr int soldier_count = 64;
 
-  int participating = 0;
-  for (int idx = 0; idx < soldier_count; ++idx) {
-    std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
-    bool saw_ambient = false;
-    for (float idle_duration = 5.0F; idle_duration <= 140.0F; idle_duration += 0.25F) {
+  for (int cycle = 0; cycle < 4; ++cycle) {
+    int active = 0;
+    float const idle_duration =
+        k_sample_cycle_midpoint + static_cast<float>(cycle) * k_sample_cycle_period;
+    for (int idx = 0; idx < soldier_count; ++idx) {
+      std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
       if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) !=
           AmbientIdleType::None) {
-        saw_ambient = true;
-        break;
+        ++active;
       }
     }
-    if (saw_ambient) {
-      ++participating;
-    }
-  }
 
-  EXPECT_GE(participating, soldier_count / 5);
-  EXPECT_LE(participating, soldier_count / 3);
+    EXPECT_GE(active, soldier_count / 6);
+    EXPECT_LE(active, soldier_count / 3 + 3);
+  }
 }
 
 TEST_F(HumanoidPoseControllerTest, AmbientIdleSelectionVariesAcrossFormationSeeds) {
   constexpr std::uint32_t base_seed = 1234U;
   constexpr int soldier_count = 64;
-  constexpr std::array<float, 4> sample_idle_durations{12.0F, 14.0F, 16.0F, 40.0F};
+  constexpr std::array<float, 4> sample_idle_durations{
+      k_sample_cycle_midpoint,
+      k_sample_cycle_midpoint + k_sample_cycle_period,
+      k_sample_cycle_midpoint + k_sample_cycle_period * 2.0F,
+      k_sample_cycle_midpoint + k_sample_cycle_period * 3.0F};
 
   std::unordered_set<int> selected_types;
   int peak_active = 0;
@@ -187,7 +211,42 @@ TEST_F(HumanoidPoseControllerTest, AmbientIdleSelectionVariesAcrossFormationSeed
   }
 
   EXPECT_GE(selected_types.size(), 4U);
-  EXPECT_LT(peak_active, soldier_count / 3);
+  EXPECT_LT(peak_active, soldier_count / 3 + 4);
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       AmbientIdleLongStandstillRotatesParticipationAcrossFormation) {
+  constexpr std::uint32_t base_seed = 1234U;
+  constexpr int soldier_count = 64;
+
+  std::unordered_set<int> ever_active;
+  std::array<int, soldier_count> previous_active{};
+  bool previous_initialized = false;
+  bool saw_rotation = false;
+
+  for (int cycle = 0; cycle < 6; ++cycle) {
+    std::array<int, soldier_count> active{};
+    float const idle_duration =
+        k_sample_cycle_midpoint + static_cast<float>(cycle) * k_sample_cycle_period;
+    for (int idx = 0; idx < soldier_count; ++idx) {
+      std::uint32_t const seed = base_seed ^ static_cast<std::uint32_t>(idx * 9176);
+      if (HumanoidPoseController::get_ambient_idle_type(10.0F, seed, idle_duration) ==
+          AmbientIdleType::None) {
+        continue;
+      }
+      active[static_cast<std::size_t>(idx)] = 1;
+      ever_active.insert(idx);
+    }
+
+    if (previous_initialized && active != previous_active) {
+      saw_rotation = true;
+    }
+    previous_active = active;
+    previous_initialized = true;
+  }
+
+  EXPECT_TRUE(saw_rotation);
+  EXPECT_GT(ever_active.size(), static_cast<std::size_t>(soldier_count / 2));
 }
 
 TEST_F(HumanoidPoseControllerTest, AirborneJumpAmbientIdleLiftsFeetAndPelvis) {
@@ -700,6 +759,19 @@ TEST_F(HumanoidPoseControllerTest, SwordSlashVariant1ReversesInitialTorsoTwist) 
   controller_v0.sword_slash_variant(0.20F, 1);
 
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
+}
+
+TEST_F(HumanoidPoseControllerTest, SwordSlashVariantAppliesBaselineBodyDrive) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  QVector3D const original_pelvis = pose.pelvis_pos;
+  QVector3D const original_head = pose.head_pos;
+
+  controller.sword_slash_variant(0.62F, 0);
+
+  EXPECT_LT(pose.pelvis_pos.y(), original_pelvis.y());
+  EXPECT_GT(pose.pelvis_pos.z(), original_pelvis.z());
+  EXPECT_GT(pose.head_pos.z(), original_head.z());
 }
 
 TEST_F(HumanoidPoseControllerTest, CommanderAttackEmphasisAmplifiesSwordSlashVariant) {

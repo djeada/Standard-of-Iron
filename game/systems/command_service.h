@@ -27,6 +27,7 @@ public:
     bool clear_attack_intent = true;
     bool group_move = false;
     bool retry_individual_on_group_failure = false;
+    bool preserve_formation_mode = false;
   };
 
   struct MoveIntent {

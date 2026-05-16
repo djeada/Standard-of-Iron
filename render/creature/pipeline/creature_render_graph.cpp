@@ -291,6 +291,9 @@ auto variant_hash(const Render::GL::HumanoidVariant& variant) noexcept
   h = hash_combine(h, hash_float(variant.muscularity));
   h = hash_combine(h, hash_float(variant.scarring));
   h = hash_combine(h, hash_float(variant.weathering));
+  h = hash_combine(h, hash_float(variant.grime));
+  h = hash_combine(h, hash_float(variant.bloodiness));
+  h = hash_combine(h, hash_float(variant.pattern_seed));
   return h;
 }
 
@@ -343,7 +346,7 @@ struct RoleColorCacheKey {
 
 struct RoleColorCacheKeyHash {
   auto operator()(const RoleColorCacheKey& key) const noexcept -> std::size_t {
-    std::uint64_t h = static_cast<std::uint64_t>(key.asset);
+    auto h = static_cast<std::uint64_t>(key.asset);
     h = hash_combine(h, key.archetype);
     h = hash_combine(h, key.variant_hash);
     return static_cast<std::size_t>(h);
@@ -515,6 +518,8 @@ void CreatureRenderBatch::add_humanoid(
       asset->id, resolved_archetype_id);
   req.clip_variant = clip_var;
   populate_role_colors(req, variant);
+  req.wear_params = QVector4D(
+      variant.weathering, variant.grime, variant.bloodiness, variant.pattern_seed);
   requests_.push_back(req);
 }
 

@@ -34,30 +34,33 @@ struct LocomotionProfile {
   float arm_counter_shift{0.0F};
 };
 
-auto profile_for_gait(const HumanoidGaitDescriptor& gait,
-                      const VariationParams& variation) -> LocomotionProfile {
+auto blend_profile(const LocomotionProfile& a,
+                   const LocomotionProfile& b,
+                   float blend) -> LocomotionProfile {
+  auto const mix = [blend](float from, float to) {
+    return from + (to - from) * blend;
+  };
+
+  LocomotionProfile out{};
+  out.planted_fraction = mix(a.planted_fraction, b.planted_fraction);
+  out.stride_length = mix(a.stride_length, b.stride_length);
+  out.step_height = mix(a.step_height, b.step_height);
+  out.vertical_bob = mix(a.vertical_bob, b.vertical_bob);
+  out.hip_sway = mix(a.hip_sway, b.hip_sway);
+  out.shoulder_counter_sway = mix(a.shoulder_counter_sway, b.shoulder_counter_sway);
+  out.shoulder_twist = mix(a.shoulder_twist, b.shoulder_twist);
+  out.forward_lean = mix(a.forward_lean, b.forward_lean);
+  out.lateral_foot_shift = mix(a.lateral_foot_shift, b.lateral_foot_shift);
+  out.arm_swing = mix(a.arm_swing, b.arm_swing);
+  out.max_arm_displacement = mix(a.max_arm_displacement, b.max_arm_displacement);
+  out.arm_lift_scale = mix(a.arm_lift_scale, b.arm_lift_scale);
+  out.arm_counter_shift = mix(a.arm_counter_shift, b.arm_counter_shift);
+  return out;
+}
+
+auto walk_profile(float speed_factor,
+                  const VariationParams& variation) -> LocomotionProfile {
   LocomotionProfile profile{};
-  float const speed_factor = std::clamp(
-      gait.normalized_speed > 0.0F ? gait.normalized_speed : 1.0F, 0.75F, 1.20F);
-
-  if (gait.state == HumanoidMotionState::Run) {
-    profile.planted_fraction = 0.44F;
-    profile.stride_length =
-        0.28F * variation.walk_speed_mult * (0.92F + 0.12F * speed_factor);
-    profile.step_height = 0.072F * (0.85F + 0.20F * speed_factor);
-    profile.vertical_bob = 0.012F * speed_factor;
-    profile.hip_sway = 0.017F * variation.stance_width;
-    profile.shoulder_counter_sway = 0.020F;
-    profile.shoulder_twist = 0.018F;
-    profile.forward_lean = 0.060F + (speed_factor - 1.0F) * 0.015F;
-    profile.lateral_foot_shift = 0.010F;
-    profile.arm_swing = 0.155F * variation.arm_swing_amp;
-    profile.max_arm_displacement = 0.155F;
-    profile.arm_lift_scale = 0.15F;
-    profile.arm_counter_shift = 0.12F;
-    return profile;
-  }
-
   profile.planted_fraction = 0.58F;
   profile.stride_length =
       0.20F * variation.walk_speed_mult * (0.92F + 0.10F * speed_factor);
@@ -73,6 +76,40 @@ auto profile_for_gait(const HumanoidGaitDescriptor& gait,
   profile.arm_lift_scale = 0.12F;
   profile.arm_counter_shift = 0.11F;
   return profile;
+}
+
+auto run_profile(float speed_factor,
+                 const VariationParams& variation) -> LocomotionProfile {
+  LocomotionProfile profile{};
+  profile.planted_fraction = 0.44F;
+  profile.stride_length =
+      0.28F * variation.walk_speed_mult * (0.92F + 0.12F * speed_factor);
+  profile.step_height = 0.072F * (0.85F + 0.20F * speed_factor);
+  profile.vertical_bob = 0.012F * speed_factor;
+  profile.hip_sway = 0.017F * variation.stance_width;
+  profile.shoulder_counter_sway = 0.020F;
+  profile.shoulder_twist = 0.018F;
+  profile.forward_lean = 0.060F + (speed_factor - 1.0F) * 0.015F;
+  profile.lateral_foot_shift = 0.010F;
+  profile.arm_swing = 0.155F * variation.arm_swing_amp;
+  profile.max_arm_displacement = 0.155F;
+  profile.arm_lift_scale = 0.15F;
+  profile.arm_counter_shift = 0.12F;
+  return profile;
+}
+
+auto profile_for_gait(const HumanoidGaitDescriptor& gait,
+                      const VariationParams& variation) -> LocomotionProfile {
+  float const speed_factor = std::clamp(
+      gait.normalized_speed > 0.0F ? gait.normalized_speed : 1.0F, 0.75F, 1.20F);
+  float const run_blend = std::clamp(
+      (gait.run_blend > 0.0F) ? gait.run_blend
+                              : (gait.state == HumanoidMotionState::Run ? 1.0F : 0.0F),
+      0.0F,
+      1.0F);
+  return blend_profile(walk_profile(speed_factor, variation),
+                       run_profile(speed_factor, variation),
+                       run_blend);
 }
 
 } // namespace
@@ -161,73 +198,127 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
 
   if (is_moving) {
     LocomotionProfile const profile = profile_for_gait(resolved_gait, variation);
+    float const locomotion_blend = std::clamp((resolved_gait.locomotion_blend > 0.0F)
+                                                  ? resolved_gait.locomotion_blend
+                                                  : resolved_gait.normalized_speed,
+                                              0.0F,
+                                              1.0F);
     float const walk_phase = resolved_gait.cycle_phase;
     float const left_phase = walk_phase;
     float const right_phase = std::fmod(walk_phase + 0.5F, 1.0F);
 
     const float ground_y = HP::GROUND_Y;
     float const cycle_radians = walk_phase * 2.0F * std::numbers::pi_v<float>;
+    float const acceleration = std::clamp(resolved_gait.acceleration, -2.0F, 2.0F);
+    float const acceleration_push = std::max(0.0F, acceleration);
+    float const braking = std::max(0.0F, -acceleration);
+    float const turn_amount = std::clamp(resolved_gait.turn_amount, -1.0F, 1.0F);
+    float const turn_abs = std::abs(turn_amount);
+    float const stride_scale = std::max(
+        0.10F, locomotion_blend * (1.0F + acceleration_push * 0.12F - braking * 0.16F));
+    float const step_scale =
+        std::max(0.15F, locomotion_blend * (1.0F + acceleration_push * 0.08F));
+    float const planted_fraction =
+        std::clamp(profile.planted_fraction + braking * 0.06F -
+                       acceleration_push * 0.04F + turn_abs * 0.04F,
+                   0.38F,
+                   0.74F);
     float const vertical_bob =
-        -std::abs(std::sin(cycle_radians)) * profile.vertical_bob;
+        -std::abs(std::sin(cycle_radians)) * profile.vertical_bob * stride_scale;
     float const sway_raw = std::sin(cycle_radians);
-    float const hip_sway = sway_raw * profile.hip_sway;
-    float const shoulder_counter_sway = -sway_raw * profile.shoulder_counter_sway;
-    float const shoulder_twist = sway_raw * profile.shoulder_twist;
-    float const forward_lean = profile.forward_lean;
+    float const hip_sway = sway_raw * profile.hip_sway * stride_scale;
+    float const shoulder_counter_sway =
+        -sway_raw * profile.shoulder_counter_sway * stride_scale;
+    float const shoulder_twist = sway_raw * profile.shoulder_twist * stride_scale;
+    float const acceleration_lean = acceleration * 0.006F;
+    float const braking_sink = braking * 0.010F * locomotion_blend;
+    float const forward_lean = profile.forward_lean * stride_scale + acceleration_lean;
+    float const turn_lean = turn_amount * (0.010F + 0.012F * locomotion_blend);
+    float const turn_twist = turn_amount * (0.008F + 0.010F * locomotion_blend);
+    float const turn_step_bias = turn_amount * 0.018F * stride_scale;
 
     auto animate_foot = [&](QVector3D& foot,
                             float base_x,
+                            float base_z,
                             float phase,
                             float lateral_sign) {
       float z_pos = 0.0F;
-      if (phase < profile.planted_fraction) {
-        float const t = ease_in_out(phase / profile.planted_fraction);
-        z_pos = profile.stride_length * 0.50F + (-profile.stride_length * 1.00F) * t;
-        foot.setY(ground_y + pose.foot_y_offset -
-                  std::sin(t * std::numbers::pi_v<float>) * 0.002F);
+      float foot_y = ground_y + pose.foot_y_offset;
+      float const foot_turn_scale = 1.0F - turn_amount * lateral_sign * 0.45F;
+      float const foot_stride_length =
+          profile.stride_length * stride_scale * std::max(0.60F, foot_turn_scale);
+      float const foot_step_height =
+          profile.step_height * step_scale * std::max(0.70F, 1.0F - turn_abs * 0.12F);
+      if (phase < planted_fraction) {
+        float const t = ease_in_out(phase / planted_fraction);
+        z_pos = foot_stride_length * 0.50F + (-foot_stride_length * 1.00F) * t;
+        foot_y -= std::sin(t * std::numbers::pi_v<float>) * 0.002F * stride_scale;
       } else {
-        float const t = ease_in_out((phase - profile.planted_fraction) /
-                                    (1.0F - profile.planted_fraction));
-        z_pos = -profile.stride_length * 0.50F + (profile.stride_length * 1.00F) * t;
-        foot.setY(ground_y + pose.foot_y_offset +
-                  std::sin(t * std::numbers::pi_v<float>) * profile.step_height);
+        float const t =
+            ease_in_out((phase - planted_fraction) / (1.0F - planted_fraction));
+        z_pos = -foot_stride_length * 0.50F + (foot_stride_length * 1.00F) * t;
+        foot_y += std::sin(t * std::numbers::pi_v<float>) * foot_step_height;
       }
 
-      foot.setZ(z_pos);
-      foot.setX(base_x -
-                lateral_sign *
-                    std::abs(std::sin(phase * 2.0F * std::numbers::pi_v<float>)) *
-                    profile.lateral_foot_shift);
+      float const stance_turn_bias =
+          turn_amount * lateral_sign * (0.014F + 0.006F * locomotion_blend);
+      float const target_x =
+          base_x -
+          lateral_sign * std::abs(std::sin(phase * 2.0F * std::numbers::pi_v<float>)) *
+              profile.lateral_foot_shift * stride_scale +
+          turn_step_bias * lateral_sign + stance_turn_bias;
+      float const target_z =
+          z_pos * locomotion_blend + base_z * (1.0F - locomotion_blend);
+
+      foot.setX(base_x + (target_x - base_x) * locomotion_blend);
+      foot.setY(ground_y + pose.foot_y_offset +
+                (foot_y - (ground_y + pose.foot_y_offset)) * locomotion_blend);
+      foot.setZ(target_z);
     };
 
     float const base_foot_l_x = pose.foot_l.x();
     float const base_foot_r_x = pose.foot_r.x();
-    animate_foot(pose.foot_l, base_foot_l_x, left_phase, -1.0F);
-    animate_foot(pose.foot_r, base_foot_r_x, right_phase, 1.0F);
+    float const base_foot_l_z = pose.foot_l.z();
+    float const base_foot_r_z = pose.foot_r.z();
+    animate_foot(pose.foot_l, base_foot_l_x, base_foot_l_z, left_phase, -1.0F);
+    animate_foot(pose.foot_r, base_foot_r_x, base_foot_r_z, right_phase, 1.0F);
 
     pose.pelvis_pos.setY(pose.pelvis_pos.y() + vertical_bob);
     pose.shoulder_l.setY(pose.shoulder_l.y() + vertical_bob * 0.45F);
     pose.shoulder_r.setY(pose.shoulder_r.y() + vertical_bob * 0.45F);
     pose.neck_base.setY(pose.neck_base.y() + vertical_bob * 0.28F);
     pose.head_pos.setY(pose.head_pos.y() + vertical_bob * 0.18F);
+    pose.pelvis_pos.setY(pose.pelvis_pos.y() - braking_sink);
+    pose.shoulder_l.setY(pose.shoulder_l.y() - braking_sink * 0.20F);
+    pose.shoulder_r.setY(pose.shoulder_r.y() - braking_sink * 0.20F);
+    pose.head_pos.setY(pose.head_pos.y() +
+                       acceleration_push * 0.003F * locomotion_blend);
 
     pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
     pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_sway);
     pose.shoulder_r.setX(pose.shoulder_r.x() + shoulder_counter_sway);
     pose.neck_base.setX(pose.neck_base.x() + shoulder_counter_sway * 0.75F);
     pose.head_pos.setX(pose.head_pos.x() + shoulder_counter_sway * 0.55F);
+    pose.pelvis_pos.setX(pose.pelvis_pos.x() + turn_lean * 0.55F);
+    pose.shoulder_l.setX(pose.shoulder_l.x() + turn_lean);
+    pose.shoulder_r.setX(pose.shoulder_r.x() + turn_lean);
+    pose.head_pos.setX(pose.head_pos.x() + turn_lean * 0.40F);
 
     pose.pelvis_pos.setZ(pose.pelvis_pos.z() + forward_lean * 0.20F);
-    pose.shoulder_l.setZ(pose.shoulder_l.z() + forward_lean + shoulder_twist);
-    pose.shoulder_r.setZ(pose.shoulder_r.z() + forward_lean - shoulder_twist);
+    pose.shoulder_l.setZ(pose.shoulder_l.z() + forward_lean + shoulder_twist +
+                         turn_twist);
+    pose.shoulder_r.setZ(pose.shoulder_r.z() + forward_lean - shoulder_twist -
+                         turn_twist);
     pose.neck_base.setZ(pose.neck_base.z() + forward_lean * 0.78F);
     pose.head_pos.setZ(pose.head_pos.z() + forward_lean * 0.68F);
+    pose.head_pos.setZ(pose.head_pos.z() - braking * 0.004F * locomotion_blend);
 
     float const left_swing_raw =
         std::sin(left_phase * 2.0F * std::numbers::pi_v<float>);
     float const left_arm_swing = std::clamp(left_swing_raw * profile.arm_swing,
                                             -profile.max_arm_displacement,
-                                            profile.max_arm_displacement);
+                                            profile.max_arm_displacement) *
+                                 stride_scale;
     pose.hand_l.setZ(pose.hand_l.z() - left_arm_swing);
     pose.hand_l.setY(pose.hand_l.y() +
                      std::abs(left_arm_swing) * profile.arm_lift_scale);
@@ -237,15 +328,18 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
         std::sin(right_phase * 2.0F * std::numbers::pi_v<float>);
     float const right_arm_swing = std::clamp(right_swing_raw * profile.arm_swing,
                                              -profile.max_arm_displacement,
-                                             profile.max_arm_displacement);
+                                             profile.max_arm_displacement) *
+                                  stride_scale;
     pose.hand_r.setZ(pose.hand_r.z() - right_arm_swing);
     pose.hand_r.setY(pose.hand_r.y() +
                      std::abs(right_arm_swing) * profile.arm_lift_scale);
     pose.hand_r.setX(pose.hand_r.x() - right_arm_swing * profile.arm_counter_shift);
+    pose.hand_l.setX(pose.hand_l.x() + turn_amount * 0.010F * locomotion_blend);
+    pose.hand_r.setX(pose.hand_r.x() + turn_amount * 0.010F * locomotion_blend);
 
     auto clamp_hand_reach = [&](const QVector3D& shoulder, QVector3D& hand) {
       float const max_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * h_scale * 0.98F;
-      QVector3D diff = hand - shoulder;
+      QVector3D const diff = hand - shoulder;
       float const len = diff.length();
       if (len > max_reach && len > 1e-6F) {
         hand = shoulder + diff * (max_reach / len);
@@ -264,7 +358,7 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
 
   auto solve_leg =
       [&](const QVector3D& hip, const QVector3D& foot, bool is_left) -> QVector3D {
-    QVector3D hip_to_foot = foot - hip;
+    QVector3D const hip_to_foot = foot - hip;
     float const distance = hip_to_foot.length();
     if (distance < HP::EPSILON_SMALL) {
       return hip;

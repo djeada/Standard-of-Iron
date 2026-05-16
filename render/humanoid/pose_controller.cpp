@@ -34,13 +34,14 @@ auto hash_u32(std::uint32_t x) -> std::uint32_t {
 }
 
 constexpr float k_min_idle_duration = 5.0F;
-constexpr float k_ambient_duration = 6.0F;
-constexpr float k_initial_delay_base = 0.60F;
-constexpr float k_initial_delay_range = 26.0F;
-constexpr float k_base_cycle_period = 30.0F;
-constexpr float k_cycle_period_range = 16.0F;
+constexpr float k_wave_period = 18.0F;
+constexpr float k_activation_stagger_max = 1.75F;
+constexpr float k_activation_duration_base = 3.4F;
+constexpr float k_activation_duration_range = 1.3F;
 constexpr float k_tap_frequency_multiplier = 6.0F;
-constexpr std::uint32_t k_ambient_participation_divisor = 4U;
+constexpr std::uint32_t k_participation_bucket_count = 15U;
+constexpr std::uint32_t k_participation_bucket_min = 3U;
+constexpr std::uint32_t k_participation_bucket_range = 3U;
 
 struct AmbientIdleSchedule {
   AmbientIdleType type{AmbientIdleType::None};
@@ -53,35 +54,52 @@ auto compute_ambient_idle_schedule(std::uint32_t seed, float idle_duration)
     return std::nullopt;
   }
 
-  float const initial_delay =
-      k_initial_delay_base + hash_to_unit(seed ^ 0x41D64E6DU) * k_initial_delay_range;
-  float const ambient_elapsed = idle_duration - k_min_idle_duration - initial_delay;
-  if (ambient_elapsed < 0.0F) {
+  float const ambient_elapsed = idle_duration - k_min_idle_duration;
+  auto const cycle_number = static_cast<std::uint32_t>(ambient_elapsed / k_wave_period);
+  float const cycle_time =
+      ambient_elapsed - static_cast<float>(cycle_number) * k_wave_period;
+  std::uint32_t const cycle_mix = hash_u32(cycle_number ^ 0x9E3779B9U);
+  float const participation_ratio =
+      static_cast<float>(k_participation_bucket_min +
+                         (cycle_mix % k_participation_bucket_range)) /
+      static_cast<float>(k_participation_bucket_count);
+  if (hash_to_unit(seed ^ cycle_mix ^ 0x6C8E9CF5U) >= participation_ratio) {
     return std::nullopt;
   }
 
-  float const cycle_period =
-      k_base_cycle_period + hash_to_unit(seed ^ 0x9E3779B9U) * k_cycle_period_range;
-  float const cycle_time = std::fmod(ambient_elapsed, cycle_period);
-  if (cycle_time < 0.0F || cycle_time >= k_ambient_duration) {
+  float const activation_start =
+      hash_to_unit(seed ^ cycle_mix ^ 0x41D64E6DU) * k_activation_stagger_max;
+  float const activation_duration =
+      k_activation_duration_base +
+      hash_to_unit(seed ^ cycle_mix ^ 0xA511E9B3U) * k_activation_duration_range;
+  float const activation_time = cycle_time - activation_start;
+  if (activation_time < 0.0F || activation_time >= activation_duration) {
     return std::nullopt;
   }
 
-  if ((hash_u32(seed ^ 0x6C8E9CF5U) % k_ambient_participation_divisor) != 0U) {
-    return std::nullopt;
-  }
-
-  auto const cycle_number = static_cast<std::uint32_t>(ambient_elapsed / cycle_period);
-  std::uint32_t const anim_selector =
-      hash_u32(seed ^ (cycle_number * 1664525U) ^ 0xB5297A4DU);
+  std::uint32_t const anim_selector = hash_u32(seed ^ cycle_mix ^ 0xB5297A4DU);
   constexpr std::array<AmbientIdleType, 4> k_baked_types{AmbientIdleType::SitDown,
                                                          AmbientIdleType::Jump,
                                                          AmbientIdleType::RaiseWeapon,
                                                          AmbientIdleType::ShiftWeight};
+  auto type_index = static_cast<std::size_t>(anim_selector % k_baked_types.size());
+  if (cycle_number > 0U) {
+    std::uint32_t const previous_cycle_mix =
+        hash_u32((cycle_number - 1U) ^ 0x9E3779B9U);
+    std::uint32_t const previous_selector =
+        hash_u32(seed ^ previous_cycle_mix ^ 0xB5297A4DU);
+    auto const previous_index =
+        static_cast<std::size_t>(previous_selector % k_baked_types.size());
+    if (type_index == previous_index) {
+      type_index =
+          (type_index + 1U + ((anim_selector >> 4U) % (k_baked_types.size() - 1U))) %
+          k_baked_types.size();
+    }
+  }
 
   AmbientIdleSchedule schedule;
-  schedule.type = k_baked_types[anim_selector % k_baked_types.size()];
-  schedule.phase = std::clamp(cycle_time / k_ambient_duration, 0.0F, 1.0F);
+  schedule.type = k_baked_types[type_index];
+  schedule.phase = std::clamp(activation_time / activation_duration, 0.0F, 1.0F);
   return schedule;
 }
 
@@ -1377,11 +1395,11 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   constexpr float k_strike_right_to_left = 1.0F;
   constexpr float k_strike_left_to_right = -1.0F;
 
-  QVector3D rest_pos(0.20F, HP::SHOULDER_Y + 0.02F, 0.15F);
-  QVector3D chamber_pos(0.30F, HP::SHOULDER_Y + 0.16F, -0.02F);
-  QVector3D apex_pos(0.32F, HP::SHOULDER_Y + 0.20F, 0.04F);
-  QVector3D strike_pos(0.16F, HP::SHOULDER_Y - 0.24F, 0.72F);
-  QVector3D followthrough_pos(0.02F, HP::WAIST_Y - 0.02F, 0.58F);
+  QVector3D rest_pos(0.21F, HP::SHOULDER_Y + 0.03F, 0.16F);
+  QVector3D chamber_pos(0.35F, HP::SHOULDER_Y + 0.18F, -0.10F);
+  QVector3D apex_pos(0.39F, HP::SHOULDER_Y + 0.27F, 0.00F);
+  QVector3D strike_pos(0.08F, HP::SHOULDER_Y - 0.30F, 0.90F);
+  QVector3D followthrough_pos(-0.12F, HP::WAIST_Y - 0.08F, 0.74F);
 
   float strike_direction = k_strike_right_to_left;
   float const emphasis = std::max(1.0F, m_anim_ctx.attack_emphasis);
@@ -1390,18 +1408,18 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   switch (variant % 3) {
   case 1:
 
-    chamber_pos = QVector3D(-0.12F, HP::SHOULDER_Y + 0.18F, 0.00F);
-    apex_pos = QVector3D(-0.10F, HP::SHOULDER_Y + 0.22F, 0.06F);
-    strike_pos = QVector3D(0.36F, HP::SHOULDER_Y - 0.22F, 0.68F);
-    followthrough_pos = QVector3D(0.44F, HP::WAIST_Y - 0.02F, 0.56F);
+    chamber_pos = QVector3D(-0.18F, HP::SHOULDER_Y + 0.20F, -0.10F);
+    apex_pos = QVector3D(-0.16F, HP::SHOULDER_Y + 0.29F, 0.00F);
+    strike_pos = QVector3D(0.44F, HP::SHOULDER_Y - 0.28F, 0.86F);
+    followthrough_pos = QVector3D(0.54F, HP::WAIST_Y - 0.06F, 0.72F);
     strike_direction = k_strike_left_to_right;
     break;
   case 2:
 
-    chamber_pos = QVector3D(0.36F, HP::SHOULDER_Y + 0.06F, -0.02F);
-    apex_pos = QVector3D(0.40F, HP::SHOULDER_Y + 0.04F, 0.04F);
-    strike_pos = QVector3D(0.04F, HP::SHOULDER_Y - 0.18F, 0.74F);
-    followthrough_pos = QVector3D(-0.14F, HP::SHOULDER_Y - 0.24F, 0.64F);
+    chamber_pos = QVector3D(0.42F, HP::SHOULDER_Y + 0.10F, -0.12F);
+    apex_pos = QVector3D(0.46F, HP::SHOULDER_Y + 0.12F, -0.02F);
+    strike_pos = QVector3D(-0.02F, HP::SHOULDER_Y - 0.24F, 0.94F);
+    followthrough_pos = QVector3D(-0.22F, HP::SHOULDER_Y - 0.30F, 0.80F);
     break;
   default:
     break;
@@ -1409,12 +1427,12 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
 
   if (amplified_weight > 0.001F || finisher_bonus > 0.0F) {
     float const chamber_pull =
-        0.06F + 0.05F * amplified_weight + 0.03F * finisher_bonus;
-    float const apex_lift = 0.05F + 0.06F * amplified_weight + 0.04F * finisher_bonus;
+        0.06F + 0.06F * amplified_weight + 0.04F * finisher_bonus;
+    float const apex_lift = 0.06F + 0.08F * amplified_weight + 0.05F * finisher_bonus;
     float const strike_drive =
-        0.08F + 0.10F * amplified_weight + 0.08F * finisher_bonus;
+        0.10F + 0.12F * amplified_weight + 0.10F * finisher_bonus;
     float const followthrough_drive =
-        0.06F + 0.10F * amplified_weight + 0.08F * finisher_bonus;
+        0.08F + 0.12F * amplified_weight + 0.10F * finisher_bonus;
 
     rest_pos += QVector3D(0.00F, 0.00F, 0.02F * amplified_weight);
     chamber_pos += QVector3D(0.10F * strike_direction * chamber_pull,
@@ -1446,66 +1464,66 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     return 1.0F - (1.0F - t) * (1.0F - t);
   };
 
-  if (attack_phase < 0.15F) {
-    float const t = attack_phase / 0.15F;
+  if (attack_phase < 0.18F) {
+    float const t = attack_phase / 0.18F;
     float const ease_t = t * t;
     hand_r_target = rest_pos * (1.0F - ease_t) + chamber_pos * ease_t;
     hand_l_target = QVector3D(-0.20F - 0.04F * strike_direction * amplified_weight,
                               HP::SHOULDER_Y - 0.02F - 0.01F * amplified_weight,
                               0.15F + 0.05F * amplified_weight);
 
-    torso_twist = strike_direction * (-0.05F * ease_t);
-    shoulder_rotation = 0.03F * ease_t;
-  } else if (attack_phase < 0.28F) {
-    float const t = (attack_phase - 0.15F) / 0.13F;
+    torso_twist = strike_direction * (-0.08F * ease_t);
+    shoulder_rotation = 0.05F * ease_t;
+  } else if (attack_phase < 0.34F) {
+    float const t = (attack_phase - 0.18F) / 0.16F;
     float const ease_t = smoothstep(t);
     hand_r_target = chamber_pos * (1.0F - ease_t) + apex_pos * ease_t;
     hand_l_target = QVector3D(-0.20F - 0.05F * strike_direction * amplified_weight,
                               HP::SHOULDER_Y - 0.04F - 0.02F * amplified_weight,
                               0.17F + 0.08F * amplified_weight);
 
-    torso_twist = strike_direction * (-0.05F);
-    shoulder_rotation = 0.03F + 0.02F * ease_t;
-    weight_shift = -0.02F * ease_t;
-  } else if (attack_phase < 0.48F) {
-    float const t = (attack_phase - 0.28F) / 0.20F;
+    torso_twist = strike_direction * (-0.08F);
+    shoulder_rotation = 0.05F + 0.03F * ease_t;
+    weight_shift = -0.03F * ease_t;
+  } else if (attack_phase < 0.58F) {
+    float const t = (attack_phase - 0.34F) / 0.24F;
     float const power_t = t * t * t;
     hand_r_target = apex_pos * (1.0F - power_t) + strike_pos * power_t;
     hand_l_target = QVector3D(
-        -0.20F + (0.08F + 0.05F * amplified_weight) * power_t,
-        HP::SHOULDER_Y - 0.04F - (0.06F + 0.03F * amplified_weight) * power_t,
-        0.17F + (0.22F + 0.12F * amplified_weight + 0.08F * finisher_bonus) * power_t);
+        -0.20F + (0.12F + 0.06F * amplified_weight) * power_t,
+        HP::SHOULDER_Y - 0.04F - (0.08F + 0.04F * amplified_weight) * power_t,
+        0.17F + (0.30F + 0.14F * amplified_weight + 0.10F * finisher_bonus) * power_t);
 
-    torso_twist = strike_direction * (-0.05F + 0.14F * power_t);
-    forward_lean = 0.15F * power_t;
-    shoulder_rotation = 0.05F - 0.12F * power_t;
-    weight_shift = -0.02F + 0.12F * power_t;
-  } else if (attack_phase < 0.62F) {
-    float const t = (attack_phase - 0.48F) / 0.14F;
+    torso_twist = strike_direction * (-0.08F + 0.22F * power_t);
+    forward_lean = 0.20F * power_t;
+    shoulder_rotation = 0.08F - 0.16F * power_t;
+    weight_shift = -0.03F + 0.16F * power_t;
+  } else if (attack_phase < 0.76F) {
+    float const t = (attack_phase - 0.58F) / 0.18F;
     float const ease_t = smoothstep(t);
     hand_r_target = strike_pos * (1.0F - ease_t) + followthrough_pos * ease_t;
     hand_l_target =
         QVector3D(-0.12F + 0.04F * strike_direction * amplified_weight,
                   HP::SHOULDER_Y - 0.10F - 0.03F * amplified_weight,
-                  0.39F + 0.10F * amplified_weight + 0.08F * finisher_bonus);
+                  0.47F + 0.12F * amplified_weight + 0.10F * finisher_bonus);
 
-    torso_twist = strike_direction * (0.09F - 0.03F * t);
-    forward_lean = 0.14F - 0.03F * t;
-    weight_shift = 0.10F;
+    torso_twist = strike_direction * (0.14F - 0.05F * t);
+    forward_lean = 0.18F - 0.04F * t;
+    weight_shift = 0.14F;
   } else {
-    float const t = (attack_phase - 0.62F) / 0.38F;
+    float const t = (attack_phase - 0.76F) / 0.24F;
     float const ease_t = ease_out(t);
     hand_r_target = followthrough_pos * (1.0F - ease_t) + rest_pos * ease_t;
     hand_l_target = QVector3D(
         -0.12F - (0.08F + 0.03F * amplified_weight) * ease_t,
         HP::SHOULDER_Y - 0.10F * (1.0F - ease_t) -
             0.02F * amplified_weight * (1.0F - ease_t),
-        (0.39F + 0.10F * amplified_weight + 0.08F * finisher_bonus) * (1.0F - ease_t) +
+        (0.47F + 0.12F * amplified_weight + 0.10F * finisher_bonus) * (1.0F - ease_t) +
             0.15F * ease_t);
 
-    torso_twist = 0.06F * strike_direction * (1.0F - ease_t);
-    forward_lean = 0.10F * (1.0F - ease_t);
-    weight_shift = 0.08F * (1.0F - ease_t);
+    torso_twist = 0.10F * strike_direction * (1.0F - ease_t);
+    forward_lean = 0.12F * (1.0F - ease_t);
+    weight_shift = 0.10F * (1.0F - ease_t);
   }
 
   float const twist_scale = 1.0F + amplified_weight * 1.35F + finisher_bonus * 0.28F;
@@ -1534,22 +1552,23 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     m_pose.head_pos.setZ(m_pose.head_pos.z() + forward_lean * 0.5F);
   }
 
-  if (amplified_weight > 0.001F || finisher_bonus > 0.0F) {
-    float const swing_drive =
-        std::sin(std::clamp(attack_phase, 0.0F, 1.0F) * std::numbers::pi_v<float>);
-    float const pelvis_drop =
-        swing_drive * (0.010F + 0.024F * amplified_weight + 0.012F * finisher_bonus);
-    float const pelvis_drive =
-        swing_drive * (0.012F + 0.040F * amplified_weight + 0.018F * finisher_bonus);
-    float const head_drive =
-        swing_drive * (0.010F + 0.028F * amplified_weight + 0.015F * finisher_bonus);
+  float const swing_drive =
+      std::sin(std::clamp(attack_phase, 0.0F, 1.0F) * std::numbers::pi_v<float>);
+  float const pelvis_drop =
+      swing_drive * (0.012F + 0.024F * amplified_weight + 0.012F * finisher_bonus);
+  float const pelvis_drive =
+      swing_drive * (0.018F + 0.040F * amplified_weight + 0.018F * finisher_bonus);
+  float const head_drive =
+      swing_drive * (0.014F + 0.028F * amplified_weight + 0.015F * finisher_bonus);
 
-    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - pelvis_drop);
-    m_pose.pelvis_pos.setZ(m_pose.pelvis_pos.z() + pelvis_drive);
-    m_pose.neck_base.setY(m_pose.neck_base.y() - pelvis_drop * 0.18F);
-    m_pose.neck_base.setZ(m_pose.neck_base.z() + head_drive * 0.40F);
-    m_pose.head_pos.setY(m_pose.head_pos.y() - pelvis_drop * 0.35F);
-    m_pose.head_pos.setZ(m_pose.head_pos.z() + head_drive);
+  m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - pelvis_drop);
+  m_pose.pelvis_pos.setZ(m_pose.pelvis_pos.z() + pelvis_drive);
+  m_pose.neck_base.setY(m_pose.neck_base.y() - pelvis_drop * 0.18F);
+  m_pose.neck_base.setZ(m_pose.neck_base.z() + head_drive * 0.40F);
+  m_pose.head_pos.setY(m_pose.head_pos.y() - pelvis_drop * 0.35F);
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + head_drive);
+
+  if (amplified_weight > 0.001F || finisher_bonus > 0.0F) {
     m_pose.foot_l.setZ(m_pose.foot_l.z() - strike_direction * amplified_weight * 0.03F);
     m_pose.knee_l.setZ(m_pose.knee_l.z() - strike_direction * amplified_weight * 0.02F);
   }

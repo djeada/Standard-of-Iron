@@ -12,8 +12,10 @@
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "game/core/world.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/humanoid_clip_ids.h"
@@ -43,6 +45,7 @@
 #include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/spear_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/formation_calculator.h"
 #include "render/humanoid/humanoid_renderer_base.h"
@@ -126,6 +129,25 @@ public:
   void stone_impact(const QVector3D&, const QVector3D&, float, float, float) override {}
   void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
+
+TEST(HumanoidPrepare, SeedMissingWearProfileIsDeterministic) {
+  Render::GL::HumanoidVariant first{};
+  Render::GL::HumanoidVariant second{};
+  Render::GL::HumanoidVariant other{};
+
+  Render::GL::seed_missing_humanoid_wear(first, 12345U);
+  Render::GL::seed_missing_humanoid_wear(second, 12345U);
+  Render::GL::seed_missing_humanoid_wear(other, 54321U);
+
+  EXPECT_FLOAT_EQ(first.scarring, second.scarring);
+  EXPECT_FLOAT_EQ(first.weathering, second.weathering);
+  EXPECT_FLOAT_EQ(first.grime, second.grime);
+  EXPECT_FLOAT_EQ(first.bloodiness, second.bloodiness);
+  EXPECT_FLOAT_EQ(first.pattern_seed, second.pattern_seed);
+  EXPECT_GT(first.weathering, 0.0F);
+  EXPECT_GT(first.grime, 0.0F);
+  EXPECT_NE(first.pattern_seed, other.pattern_seed);
+}
 
 auto render_archer_role_color_count(const char* renderer_id) -> std::uint32_t {
   Render::GL::EntityRendererRegistry registry;
@@ -1267,6 +1289,7 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
   anim.is_melee = true;
   anim.attack_family = Engine::Core::CombatAttackFamily::Sword;
   anim.attack_variant = 0U;
+  anim.finisher_attack = false;
   anim.combat_phase = Render::GL::CombatAnimPhase::WindUp;
   anim.combat_phase_progress = 0.5F;
 
@@ -1286,6 +1309,518 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
 
   EXPECT_GT(max_phase - min_phase, 0.001F);
   EXPECT_LT(max_phase - min_phase, 0.08F);
+}
+
+TEST(HumanoidPrepare, MovingCombatRecoveryUsesWalkClipInsteadOfAttackClip) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 10.0F;
+
+  Engine::Core::Entity entity(42);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(combat_state, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  movement->has_target = true;
+  movement->target_x = 4.0F;
+  movement->target_y = 0.0F;
+  combat_state->animation_state = Engine::Core::CombatAnimationState::Recover;
+  combat_state->attack_family = Engine::Core::CombatAttackFamily::Sword;
+  combat_state->state_time = 0.18F;
+  combat_state->state_duration = Engine::Core::CombatStateComponent::k_recover_duration;
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+  EXPECT_FALSE(anim.is_attacking);
+  EXPECT_EQ(anim.combat_phase, Render::GL::CombatAnimPhase::Idle);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  auto const& requests = prep.bodies.requests();
+  ASSERT_FALSE(requests.empty());
+  EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 3.0F;
+
+  Engine::Core::Entity entity(43);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.3F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  movement->has_target = true;
+  movement->target_x = 6.0F;
+  movement->target_y = 0.0F;
+  movement->vx = 0.0F;
+  movement->vz = 0.0F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+  EXPECT_FALSE(anim.is_attacking);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  auto* humanoid_state =
+      entity.get_component<Render::Creature::HumanoidAnimationStateComponent>();
+  ASSERT_NE(humanoid_state, nullptr);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+  EXPECT_EQ(humanoid_state->locomotion_state, Render::GL::HumanoidMotionState::Walk);
+  EXPECT_GT(humanoid_state->filtered_speed, 0.0F);
+  EXPECT_GT(humanoid_state->locomotion_blend, 0.0F);
+}
+
+TEST(HumanoidPrepare, PathPendingMovementStillTriggersWalkAnimation) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 4.0F;
+
+  Engine::Core::Entity entity(44);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.2F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  movement->goal_x = 8.0F;
+  movement->goal_y = 0.0F;
+  movement->path_pending = true;
+  movement->pending_request_id = 77U;
+  movement->time_since_last_path_request = 0.05F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, QueuedWaypointMovementStillTriggersWalkAnimation) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 4.5F;
+
+  Engine::Core::Entity entity(45);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  movement->path.emplace_back(5.0F, 0.0F);
+  movement->path_index = 0;
+  movement->goal_x = 5.0F;
+  movement->goal_y = 0.0F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, VelocityOnlyMovementStillTriggersWalkAnimation) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 5.0F;
+
+  Engine::Core::Entity entity(46);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  movement->vx = 1.4F;
+  movement->vz = 0.2F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, ChaseIntentOutOfRangeTriggersWalkAnimation) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 5.5F;
+
+  Engine::Core::World world;
+  Engine::Core::Entity attacker(47);
+  auto* unit =
+      attacker.add_component<Engine::Core::UnitComponent>(100, 100, 2.4F, 12.0F);
+  auto* attack = attacker.add_component<Engine::Core::AttackComponent>();
+  auto* attack_target = attacker.add_component<Engine::Core::AttackTargetComponent>();
+  auto* transform = attacker.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(attack, nullptr);
+  ASSERT_NE(attack_target, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->range = 1.5F;
+  attack_target->should_chase = true;
+  transform->position = {0.0F, 0.0F, 0.0F};
+
+  auto* enemy = world.create_entity();
+  ASSERT_NE(enemy, nullptr);
+  auto* enemy_unit =
+      enemy->add_component<Engine::Core::UnitComponent>(100, 100, 1.8F, 12.0F);
+  auto* enemy_transform = enemy->add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(enemy_unit, nullptr);
+  ASSERT_NE(enemy_transform, nullptr);
+  enemy_unit->owner_id = 2;
+  enemy_transform->position = {8.0F, 0.0F, 0.0F};
+  attack_target->target_id = enemy->get_id();
+
+  ctx.entity = &attacker;
+  ctx.world = &world;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+  EXPECT_FALSE(anim.is_attacking);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, ChaseIntentInRangePreservesAttackInsteadOfWalk) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 6.0F;
+
+  Engine::Core::World world;
+  Engine::Core::Entity attacker(48);
+  auto* unit =
+      attacker.add_component<Engine::Core::UnitComponent>(100, 100, 2.4F, 12.0F);
+  auto* attack = attacker.add_component<Engine::Core::AttackComponent>();
+  auto* attack_target = attacker.add_component<Engine::Core::AttackTargetComponent>();
+  auto* transform = attacker.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(attack, nullptr);
+  ASSERT_NE(attack_target, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->range = 1.5F;
+  attack->time_since_last = 0.05F;
+  attack_target->should_chase = true;
+  transform->position = {0.0F, 0.0F, 0.0F};
+
+  auto* enemy = world.create_entity();
+  ASSERT_NE(enemy, nullptr);
+  auto* enemy_unit =
+      enemy->add_component<Engine::Core::UnitComponent>(100, 100, 1.8F, 12.0F);
+  auto* enemy_transform = enemy->add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(enemy_unit, nullptr);
+  ASSERT_NE(enemy_transform, nullptr);
+  enemy_unit->owner_id = 2;
+  enemy_transform->position = {1.0F, 0.0F, 0.0F};
+  attack_target->target_id = enemy->get_id();
+
+  ctx.entity = &attacker;
+  ctx.world = &world;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_FALSE(anim.is_moving);
+  EXPECT_TRUE(anim.is_attacking);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_NE(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, ActiveMoveSegmentInRangeStillTriggersWalkAnimation) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 6.1F;
+
+  Engine::Core::World world;
+  Engine::Core::Entity attacker(148);
+  auto* unit =
+      attacker.add_component<Engine::Core::UnitComponent>(100, 100, 2.4F, 12.0F);
+  auto* movement = attacker.add_component<Engine::Core::MovementComponent>();
+  auto* attack = attacker.add_component<Engine::Core::AttackComponent>();
+  auto* attack_target = attacker.add_component<Engine::Core::AttackTargetComponent>();
+  auto* transform = attacker.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(attack, nullptr);
+  ASSERT_NE(attack_target, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->range = 1.5F;
+  attack_target->should_chase = true;
+  movement->has_target = true;
+  movement->target_x = 0.6F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 0.6F;
+  movement->goal_y = 0.0F;
+  movement->vx = 0.05F;
+  movement->vz = 0.0F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+
+  auto* enemy = world.create_entity();
+  ASSERT_NE(enemy, nullptr);
+  auto* enemy_unit =
+      enemy->add_component<Engine::Core::UnitComponent>(100, 100, 1.8F, 12.0F);
+  auto* enemy_transform = enemy->add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(enemy_unit, nullptr);
+  ASSERT_NE(enemy_transform, nullptr);
+  enemy_unit->owner_id = 2;
+  enemy_transform->position = {1.0F, 0.0F, 0.0F};
+  attack_target->target_id = enemy->get_id();
+
+  ctx.entity = &attacker;
+  ctx.world = &world;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+  EXPECT_FALSE(anim.is_attacking);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, MotionSnapshotDrivesWalkWithoutMovementComponentIntent) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 6.2F;
+
+  Engine::Core::Entity entity(149);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.4F, 12.0F);
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(motion, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  motion->snapshot_valid = true;
+  motion->is_moving = true;
+  motion->has_velocity = true;
+  motion->source = Engine::Core::MotionPresentationSource::ForcedDisplacement;
+  motion->direction_x = 1.0F;
+  motion->direction_z = 0.0F;
+  motion->velocity_x = 1.2F;
+  motion->velocity_z = 0.0F;
+  motion->speed = 1.2F;
+
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+  EXPECT_TRUE(anim.visual_movement.is_authoritative);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 6.5F;
+
+  Engine::Core::Entity entity(49);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.3F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  movement->has_target = true;
+  movement->target_x = 7.0F;
+  movement->target_y = 0.0F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  ASSERT_TRUE(anim.visual_movement.is_authoritative);
+  ASSERT_TRUE(anim.is_moving);
+
+  movement->has_target = false;
+  movement->target_x = 0.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 0.0F;
+  movement->goal_y = 0.0F;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  auto* humanoid_state =
+      entity.get_component<Render::Creature::HumanoidAnimationStateComponent>();
+  ASSERT_NE(humanoid_state, nullptr);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+  EXPECT_EQ(humanoid_state->locomotion_state, Render::GL::HumanoidMotionState::Walk);
+  EXPECT_GT(humanoid_state->filtered_speed, 0.0F);
+}
+
+TEST(HumanoidPrepare, IdleAnimationOverrideSuppressesLiveMovementIntent) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 7.0F;
+
+  Engine::Core::Entity entity(50);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  movement->has_target = true;
+  movement->target_x = 9.0F;
+  movement->target_y = 0.0F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs override_anim{};
+  override_anim.time = ctx.animation_time;
+  override_anim.is_moving = false;
+  ctx.animation_override = &override_anim;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  ASSERT_TRUE(anim.visual_movement.is_authoritative);
+  EXPECT_FALSE(anim.is_moving);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Idle);
+}
+
+TEST(HumanoidPrepare, MovingAnimationOverrideBuildsStrideWithoutLiveIntent) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 7.5F;
+
+  Engine::Core::Entity entity(51);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(transform, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs override_anim{};
+  override_anim.time = ctx.animation_time;
+  override_anim.is_moving = true;
+  ctx.animation_override = &override_anim;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  ASSERT_TRUE(anim.visual_movement.is_authoritative);
+  EXPECT_TRUE(anim.is_moving);
+  EXPECT_GT(anim.visual_movement.speed_hint, 0.0F);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, MovingAnimationOverrideWithoutEntityBuildsAuthoritativeStride) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 8.0F;
+
+  Render::GL::AnimationInputs override_anim{};
+  override_anim.time = ctx.animation_time;
+  override_anim.is_moving = true;
+  override_anim.is_running = true;
+  ctx.animation_override = &override_anim;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  ASSERT_TRUE(anim.visual_movement.is_authoritative);
+  EXPECT_TRUE(anim.is_moving);
+  EXPECT_TRUE(anim.is_running);
+  EXPECT_GT(anim.visual_movement.speed_hint, 0.0F);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Run);
 }
 
 TEST(HumanoidPrepare, CommanderFpvAttacksUseExpandedAttackPhaseMapping) {
@@ -1317,9 +1852,9 @@ TEST(HumanoidPrepare, CommanderFpvAttacksUseExpandedAttackPhaseMapping) {
   auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander, nullptr);
   commander->fpv_controlled = true;
-  commander->combo_step = 3;
-  anim.attack_variant =
-      Engine::Core::CombatStateComponent::k_attack_variant_seed_slots - 1U;
+  commander->combo_step = 1;
+  anim.attack_variant = 1U;
+  anim.finisher_attack = true;
 
   Render::Humanoid::HumanoidPreparation commander_prep;
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, commander_prep);
@@ -2327,6 +2862,30 @@ TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {
   EXPECT_GT(first.gait.stride_distance, 0.0F);
 }
 
+TEST(HumanoidPrepare, BuildLocomotionStateUsesSharedWalkRunClassifier) {
+  Render::Humanoid::HumanoidLocomotionInputs inputs{};
+  inputs.anim.is_moving = true;
+  inputs.anim.is_running = false;
+  inputs.variation.walk_speed_mult = 1.0F;
+  inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
+  inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
+  inputs.animation_time = 1.0F;
+  inputs.phase_offset = 0.0F;
+
+  inputs.move_speed = 2.30F;
+  auto const walking = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+  EXPECT_EQ(walking.motion_state, Render::GL::HumanoidMotionState::Walk);
+
+  inputs.move_speed = 3.30F;
+  auto const speed_promoted = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+  EXPECT_EQ(speed_promoted.motion_state, Render::GL::HumanoidMotionState::Run);
+
+  inputs.move_speed = 1.20F;
+  inputs.anim.is_running = true;
+  auto const flag_promoted = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+  EXPECT_EQ(flag_promoted.motion_state, Render::GL::HumanoidMotionState::Run);
+}
+
 TEST(HumanoidPrepare, BuildLocomotionStateAnimatesIdlePhaseOverTime) {
   Render::Humanoid::HumanoidLocomotionInputs inputs{};
   inputs.anim.is_moving = false;
@@ -2345,6 +2904,308 @@ TEST(HumanoidPrepare, BuildLocomotionStateAnimatesIdlePhaseOverTime) {
   EXPECT_NEAR(second.gait.cycle_phase, 0.640625F, 1.0e-6F);
   EXPECT_FLOAT_EQ(first.gait.stride_distance, 0.0F);
   EXPECT_FLOAT_EQ(second.gait.stride_distance, 0.0F);
+}
+
+TEST(HumanoidPrepare, BuildLocomotionStatePreservesPhaseAcrossWalkRunTransition) {
+  auto wrapped_phase_delta = [](float a, float b) {
+    float const direct = std::abs(a - b);
+    return std::min(direct, 1.0F - direct);
+  };
+
+  Render::Creature::HumanoidAnimationStateComponent persistent{};
+  Render::Humanoid::HumanoidLocomotionInputs inputs{};
+  inputs.variation.walk_speed_mult = 1.0F;
+  inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
+  inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
+  inputs.phase_offset = 0.125F;
+  inputs.persistent_state = &persistent;
+  inputs.allow_persistent_update = true;
+
+  inputs.anim.is_moving = true;
+  inputs.anim.is_running = false;
+  inputs.animation_time = 1.50F;
+  inputs.move_speed = 2.30F;
+  auto const walking = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+
+  inputs.anim.is_running = true;
+  inputs.animation_time += 1.0F / 60.0F;
+  inputs.move_speed = 5.10F;
+  auto const running = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+
+  EXPECT_EQ(walking.motion_state, Render::GL::HumanoidMotionState::Walk);
+  EXPECT_EQ(running.motion_state, Render::GL::HumanoidMotionState::Run);
+  EXPECT_LT(wrapped_phase_delta(walking.gait.cycle_phase, running.gait.cycle_phase),
+            0.08F);
+  EXPECT_GT(running.gait.run_blend, 0.0F);
+}
+
+TEST(HumanoidPrepare, BuildLocomotionStateSkipsPersistentWritesWhenUpdatesDisabled) {
+  Render::Creature::HumanoidAnimationStateComponent persistent{};
+  Render::Humanoid::HumanoidLocomotionInputs inputs{};
+  inputs.variation.walk_speed_mult = 1.0F;
+  inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
+  inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
+  inputs.phase_offset = 0.125F;
+  inputs.persistent_state = &persistent;
+  inputs.allow_persistent_update = true;
+  inputs.anim.is_moving = true;
+  inputs.animation_time = 0.75F;
+  inputs.move_speed = 2.30F;
+  auto const seeded = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+  ASSERT_EQ(seeded.motion_state, Render::GL::HumanoidMotionState::Walk);
+
+  auto const snapshot = persistent;
+
+  inputs.allow_persistent_update = false;
+  inputs.anim.is_running = true;
+  inputs.animation_time += 1.0F / 60.0F;
+  inputs.move_speed = 5.10F;
+  auto const preview = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+
+  EXPECT_FLOAT_EQ(persistent.locomotion_phase, snapshot.locomotion_phase);
+  EXPECT_FLOAT_EQ(persistent.filtered_speed, snapshot.filtered_speed);
+  EXPECT_FLOAT_EQ(persistent.run_blend, snapshot.run_blend);
+  EXPECT_EQ(persistent.locomotion_state, snapshot.locomotion_state);
+  EXPECT_GT(preview.gait.run_blend, snapshot.run_blend);
+}
+
+TEST(HumanoidPrepare, TemplatePrewarmSamplingLeavesPersistentAnimationStateUntouched) {
+  Engine::Core::Entity entity(7);
+  auto* humanoid_state =
+      entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
+  ASSERT_NE(humanoid_state, nullptr);
+  humanoid_state->initialized = true;
+  humanoid_state->idle_duration = 2.0F;
+  humanoid_state->last_sample_time = 4.0F;
+  humanoid_state->locomotion_initialized = true;
+  humanoid_state->locomotion_phase = 0.35F;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.animation_time = 6.0F;
+  ctx.template_prewarm = true;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+
+  EXPECT_FLOAT_EQ(anim.idle_duration, 4.0F);
+  EXPECT_FLOAT_EQ(humanoid_state->idle_duration, 2.0F);
+  EXPECT_FLOAT_EQ(humanoid_state->last_sample_time, 4.0F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion_phase, 0.35F);
+}
+
+TEST(HumanoidPrepare, LocomotionBlendSoftensEarlyStrideAmplitude) {
+  Render::GL::VariationParams const variation =
+      Render::GL::VariationParams::from_seed(12345U);
+
+  Render::GL::HumanoidGaitDescriptor eased{};
+  eased.state = Render::GL::HumanoidMotionState::Walk;
+  eased.normalized_speed = 1.0F;
+  eased.cycle_time = 0.92F / std::max(0.1F, variation.walk_speed_mult);
+  eased.cycle_phase = 0.25F;
+  eased.locomotion_blend = 0.20F;
+
+  auto full = eased;
+  full.locomotion_blend = 1.0F;
+
+  Render::GL::HumanoidPose eased_pose{};
+  Render::GL::HumanoidPose full_pose{};
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      12345U, 0.25F, eased, variation, eased_pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      12345U, 0.25F, full, variation, full_pose);
+
+  float const eased_stride = std::abs(eased_pose.foot_l.z() - eased_pose.foot_r.z());
+  float const full_stride = std::abs(full_pose.foot_l.z() - full_pose.foot_r.z());
+  EXPECT_GT(full_stride, eased_stride + 0.015F);
+}
+
+TEST(HumanoidPrepare, TurnSignalIntroducesUpperBodyTwistDuringLocomotion) {
+  Render::GL::VariationParams const variation =
+      Render::GL::VariationParams::from_seed(777U);
+
+  Render::GL::HumanoidGaitDescriptor neutral{};
+  neutral.state = Render::GL::HumanoidMotionState::Walk;
+  neutral.normalized_speed = 1.0F;
+  neutral.cycle_time = 0.92F / std::max(0.1F, variation.walk_speed_mult);
+  neutral.cycle_phase = 0.25F;
+  neutral.locomotion_blend = 1.0F;
+
+  auto turning = neutral;
+  turning.turn_amount = 0.8F;
+
+  Render::GL::HumanoidPose neutral_pose{};
+  Render::GL::HumanoidPose turning_pose{};
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      777U, 0.25F, neutral, variation, neutral_pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      777U, 0.25F, turning, variation, turning_pose);
+
+  float const neutral_twist =
+      std::abs(neutral_pose.shoulder_l.z() - neutral_pose.shoulder_r.z());
+  float const turning_twist =
+      std::abs(turning_pose.shoulder_l.z() - turning_pose.shoulder_r.z());
+  EXPECT_GT(turning_twist, neutral_twist + 0.01F);
+  EXPECT_GT(turning_pose.pelvis_pos.x(), neutral_pose.pelvis_pos.x());
+}
+
+TEST(HumanoidPrepare, AccelerationShapesLeanStrideAndBrakingSink) {
+  Render::GL::VariationParams const variation =
+      Render::GL::VariationParams::from_seed(991U);
+
+  Render::GL::HumanoidGaitDescriptor accelerating{};
+  accelerating.state = Render::GL::HumanoidMotionState::Walk;
+  accelerating.normalized_speed = 1.0F;
+  accelerating.cycle_time = 0.92F / std::max(0.1F, variation.walk_speed_mult);
+  accelerating.cycle_phase = 0.30F;
+  accelerating.locomotion_blend = 1.0F;
+  accelerating.acceleration = 1.5F;
+
+  auto braking = accelerating;
+  braking.acceleration = -1.5F;
+
+  Render::GL::HumanoidPose accelerating_pose{};
+  Render::GL::HumanoidPose braking_pose{};
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      991U, 0.30F, accelerating, variation, accelerating_pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      991U, 0.30F, braking, variation, braking_pose);
+
+  float const accelerating_stride =
+      std::abs(accelerating_pose.foot_l.z() - accelerating_pose.foot_r.z());
+  float const braking_stride =
+      std::abs(braking_pose.foot_l.z() - braking_pose.foot_r.z());
+  EXPECT_GT(accelerating_pose.shoulder_l.z(), braking_pose.shoulder_l.z() + 0.01F);
+  EXPECT_GT(accelerating_pose.pelvis_pos.y(), braking_pose.pelvis_pos.y() + 0.005F);
+  EXPECT_GT(accelerating_stride, braking_stride + 0.01F);
+}
+
+TEST(HumanoidPrepare, TurnSignalCreatesInnerOuterStrideAsymmetry) {
+  Render::GL::VariationParams const variation =
+      Render::GL::VariationParams::from_seed(555U);
+
+  Render::GL::HumanoidGaitDescriptor neutral{};
+  neutral.state = Render::GL::HumanoidMotionState::Walk;
+  neutral.normalized_speed = 1.0F;
+  neutral.cycle_time = 0.92F / std::max(0.1F, variation.walk_speed_mult);
+  neutral.cycle_phase = 0.25F;
+  neutral.locomotion_blend = 1.0F;
+
+  Render::GL::HumanoidGaitDescriptor turning{};
+  turning = neutral;
+  turning.turn_amount = 0.8F;
+
+  Render::GL::HumanoidPose neutral_pose{};
+  Render::GL::HumanoidPose turning_pose{};
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      555U, 0.25F, neutral, variation, neutral_pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      555U, 0.25F, turning, variation, turning_pose);
+
+  float const neutral_asymmetry =
+      std::abs(std::abs(neutral_pose.foot_l.z()) - std::abs(neutral_pose.foot_r.z()));
+  float const turning_asymmetry =
+      std::abs(std::abs(turning_pose.foot_l.z()) - std::abs(turning_pose.foot_r.z()));
+  EXPECT_GT(turning_asymmetry, neutral_asymmetry + 0.001F);
+  EXPECT_LT(turning_pose.foot_l.x(), turning_pose.foot_r.x());
+}
+
+TEST(HumanoidPrepare, TemplatePrewarmRenderLeavesHumanoidAnimationStateUntouched) {
+  SnapshotPrewarmRenderer const renderer;
+  Engine::Core::Entity entity(9);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->owner_id = 1;
+  unit->max_health = 100;
+  unit->health = 100;
+
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+
+  auto* humanoid_state =
+      entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
+  ASSERT_NE(humanoid_state, nullptr);
+  humanoid_state->initialized = true;
+  humanoid_state->idle_duration = 1.5F;
+  humanoid_state->last_sample_time = 5.0F;
+  humanoid_state->locomotion_initialized = true;
+  humanoid_state->locomotion_phase = 0.42F;
+  humanoid_state->locomotion_phase_bias = 0.11F;
+  humanoid_state->filtered_speed = 0.65F;
+  humanoid_state->filtered_acceleration = -0.25F;
+  humanoid_state->filtered_turn = 0.30F;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.template_prewarm = true;
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 8.0F;
+
+  Render::GL::TemplateRecorder recorder;
+  renderer.render(ctx, recorder);
+
+  EXPECT_FLOAT_EQ(humanoid_state->idle_duration, 1.5F);
+  EXPECT_FLOAT_EQ(humanoid_state->last_sample_time, 5.0F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion_phase, 0.42F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion_phase_bias, 0.11F);
+  EXPECT_FLOAT_EQ(humanoid_state->filtered_speed, 0.65F);
+  EXPECT_FLOAT_EQ(humanoid_state->filtered_acceleration, -0.25F);
+  EXPECT_FLOAT_EQ(humanoid_state->filtered_turn, 0.30F);
+}
+
+TEST(HumanoidPrepare, WalkRunTransitionKeepsPlaybackGroundingCoherent) {
+  auto const archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+
+  Render::Creature::HumanoidAnimationStateComponent persistent{};
+  Render::Humanoid::HumanoidLocomotionInputs inputs{};
+  inputs.variation = Render::GL::VariationParams::from_seed(2222U);
+  inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
+  inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
+  inputs.phase_offset = 0.125F;
+  inputs.persistent_state = &persistent;
+  inputs.allow_persistent_update = true;
+  inputs.anim.is_moving = true;
+  inputs.anim.is_running = false;
+  inputs.animation_time = 1.40F;
+  inputs.move_speed = 2.35F;
+
+  auto const walking = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+
+  inputs.anim.is_running = true;
+  inputs.animation_time += 1.0F / 60.0F;
+  inputs.move_speed = 5.10F;
+  auto const running = Render::Humanoid::build_humanoid_locomotion_state(inputs);
+
+  Render::GL::HumanoidAnimationContext walk_ctx{};
+  walk_ctx.inputs.is_moving = true;
+  walk_ctx.motion_state = walking.motion_state;
+  walk_ctx.gait = walking.gait;
+
+  Render::GL::HumanoidAnimationContext run_ctx{};
+  run_ctx.inputs.is_moving = true;
+  run_ctx.inputs.is_running = true;
+  run_ctx.motion_state = running.motion_state;
+  run_ctx.gait = running.gait;
+
+  Render::GL::HumanoidPose walk_pose{};
+  Render::GL::HumanoidPose run_pose{};
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      2222U, inputs.animation_time, walking.gait, inputs.variation, walk_pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+      2222U, inputs.animation_time, running.gait, inputs.variation, run_pose);
+
+  auto const walk_contact = Render::Creature::Pipeline::grounded_humanoid_contact_y(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, walk_pose, walk_ctx);
+  auto const run_contact = Render::Creature::Pipeline::grounded_humanoid_contact_y(
+      archetype_id, Render::Creature::Bpat::k_species_humanoid, run_pose, run_ctx);
+
+  EXPECT_LT(std::abs(Render::Creature::Pipeline::humanoid_phase_for_anim(walk_ctx) -
+                     Render::Creature::Pipeline::humanoid_phase_for_anim(run_ctx)),
+            0.08F);
+  EXPECT_LT(std::abs(walk_contact - run_contact), 0.12F);
 }
 
 TEST(HumanoidPrepare, IdleArchersKeepNeutralBowReadyPhase) {
@@ -2433,6 +3294,92 @@ TEST(HumanoidPrepare,
   ASSERT_EQ(sink.rigged_calls, 1);
   ASSERT_EQ(sink.rigged_world_y.size(), 1U);
   EXPECT_NEAR(sink.rigged_world_y.front(), 1.5F, 0.1F);
+}
+
+// Regression: render-thread race window (snapshot_valid=false, initialized=true).
+// motion->is_moving is written only by finalize_motion_presentation_frame under
+// entity_mutex, so reading it under the render lock is always safe even when
+// snapshot_valid=false.  The legacy fallback path reads MovementComponent fields
+// that the movement system may write without holding entity_mutex — a data race.
+// The fix gates on initialized instead of snapshot_valid so the snapshot is
+// preferred throughout the race window.
+TEST(HumanoidPrepare,
+     RaceWindowInitializedSnapshotDrivesWalkEvenWhenSnapshotValidFalse) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 11.0F;
+
+  Engine::Core::Entity entity(901);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.2F, 12.0F);
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(motion, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  // Simulate race window: begin set snapshot_valid=false but finalize already
+  // ran in the previous tick and populated the motion snapshot correctly.
+  motion->initialized = true;
+  motion->snapshot_valid = false; // as-if in the begin→finalize race window
+  motion->is_moving = true;
+  motion->has_navigation_intent = true;
+  motion->direction_x = 0.0F;
+  motion->direction_z = 1.0F;
+  motion->speed = 2.2F;
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving)
+      << "initialized snapshot must drive walk even when snapshot_valid=false";
+  EXPECT_TRUE(anim.visual_movement.is_authoritative);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Walk)
+      << "infantry must play Walk clip during race window, not slide in Idle";
+}
+
+TEST(HumanoidPrepare, RaceWindowSnapshotRunFlagDrivesRunningEvenWithoutLiveStamina) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 12.0F;
+
+  Engine::Core::Entity entity(902);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 4.0F, 12.0F);
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(motion, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  motion->initialized = true;
+  motion->snapshot_valid = false;
+  motion->is_moving = true;
+  motion->is_running = true;
+  motion->direction_x = 0.0F;
+  motion->direction_z = 1.0F;
+  motion->speed = 4.0F;
+  ctx.entity = &entity;
+
+  // No StaminaComponent — the run flag must come from the snapshot alone.
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_moving);
+  EXPECT_TRUE(anim.is_running)
+      << "is_running must be sourced from initialized snapshot, not live stamina";
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_FALSE(prep.bodies.requests().empty());
+  EXPECT_EQ(prep.bodies.requests().front().state,
+            Render::Creature::AnimationStateId::Run);
 }
 
 } // namespace

@@ -9,6 +9,19 @@
 
 namespace Render::Ground::Scatter {
 
+inline auto visibility_filter_enabled_ref() -> bool& {
+  static thread_local bool enabled = true;
+  return enabled;
+}
+
+inline void set_visibility_filter_enabled_for_current_thread(bool enabled) {
+  visibility_filter_enabled_ref() = enabled;
+}
+
+[[nodiscard]] inline auto visibility_filter_enabled_for_current_thread() -> bool {
+  return visibility_filter_enabled_ref();
+}
+
 struct SyncStats {
   std::uint32_t visibility_rebuilds = 0;
   std::uint32_t buffer_uploads = 0;
@@ -86,7 +99,8 @@ auto sync_filtered_instances(const std::vector<Instance>& instances,
   }
 
   auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
+  const bool use_visibility =
+      visibility_filter_enabled_for_current_thread() && visibility.is_initialized();
   const std::uint64_t current_version = use_visibility ? visibility.version() : 0;
   const bool needs_visibility_update =
       filtered_needs_visibility_rebuild(instances.empty(),

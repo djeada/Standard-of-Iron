@@ -299,7 +299,7 @@ TEST(BpatRegistry, SwordHumanoidAmbientIdleStartsFromShieldReadyIdle) {
   }
 }
 
-TEST(BpatRegistry, HumanoidIdleClipContainsAnimatedMicroMotion) {
+TEST(BpatRegistry, HumanoidIdleClipRemainsStableAcrossLoop) {
   auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
@@ -309,7 +309,7 @@ TEST(BpatRegistry, HumanoidIdleClipContainsAnimatedMicroMotion) {
   ASSERT_TRUE(
       reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
 
-  auto verify_idle_clip_changes = [&](std::uint32_t species_id) {
+  auto verify_idle_clip_stable = [&](std::uint32_t species_id) {
     auto const* blob = reg.blob(species_id);
     ASSERT_NE(blob, nullptr);
     auto const idle_clip = blob->clip(Render::Creature::k_humanoid_idle_clip);
@@ -328,19 +328,54 @@ TEST(BpatRegistry, HumanoidIdleClipContainsAnimatedMicroMotion) {
                                  std::span<QMatrix4x4>(mid_palette)),
               bone_count);
 
-    bool any_different = false;
     for (std::uint32_t bone = 0U; bone < bone_count; ++bone) {
-      if (start_palette[bone] != mid_palette[bone]) {
-        any_different = true;
-        break;
-      }
+      EXPECT_EQ(start_palette[bone], mid_palette[bone])
+          << "species " << species_id
+          << " idle clip should stay stable across the loop";
     }
-    EXPECT_TRUE(any_different)
-        << "species " << species_id << " idle clip should change across the loop";
   };
 
-  verify_idle_clip_changes(k_species_humanoid);
-  verify_idle_clip_changes(k_species_humanoid_sword);
+  verify_idle_clip_stable(k_species_humanoid);
+  verify_idle_clip_stable(k_species_humanoid_sword);
+}
+
+TEST(BpatRegistry, HumanoidAmbientIdleClipStillAnimatesAcrossSequence) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+
+  auto const* blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(blob, nullptr);
+  auto const ambient_clip = blob->clip(Render::Creature::k_humanoid_idle_weapon_clip);
+  ASSERT_GT(ambient_clip.frame_count, 2U);
+
+  std::array<QMatrix4x4, 64> start_palette{};
+  std::array<QMatrix4x4, 64> mid_palette{};
+  auto const bone_count =
+      reg.sample_palette(k_species_humanoid_sword,
+                         Render::Creature::k_humanoid_idle_weapon_clip,
+                         0U,
+                         std::span<QMatrix4x4>(start_palette));
+  ASSERT_GT(bone_count, 0U);
+  ASSERT_EQ(reg.sample_palette(k_species_humanoid_sword,
+                               Render::Creature::k_humanoid_idle_weapon_clip,
+                               ambient_clip.frame_count / 2U,
+                               std::span<QMatrix4x4>(mid_palette)),
+            bone_count);
+
+  bool any_different = false;
+  for (std::uint32_t bone = 0U; bone < bone_count; ++bone) {
+    if (start_palette[bone] != mid_palette[bone]) {
+      any_different = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(any_different)
+      << "ambient idle clip should still animate across the sequence";
 }
 
 TEST(BpatRegistry, SwordHumanoidRidingChargeKeepsShieldHandMountedRelative) {

@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -718,8 +720,70 @@ auto with_variant_palette(
   if (variant_void == nullptr || max_count <= base_count) {
     return base_count;
   }
-  return fn(
-      *static_cast<const HumanoidVariant*>(variant_void), out, base_count, max_count);
+  auto clamp_color = [](const QVector3D& color) -> QVector3D {
+    return {std::clamp(color.x(), 0.0F, 1.0F),
+            std::clamp(color.y(), 0.0F, 1.0F),
+            std::clamp(color.z(), 0.0F, 1.0F)};
+  };
+  auto hash01 = [](float value) -> float {
+    return value - std::floor(value);
+  };
+  auto worn_equipment_color = [&](const HumanoidVariant& variant,
+                                  const QVector3D& base,
+                                  std::uint32_t slot_index) -> QVector3D {
+    float const max_component = std::max({base.x(), base.y(), base.z()});
+    float const min_component = std::min({base.x(), base.y(), base.z()});
+    float const brightness = (base.x() + base.y() + base.z()) / 3.0F;
+    float const saturation = max_component - min_component;
+    float const grayscale = brightness;
+    float const metallicness =
+        std::clamp((max_component - 0.22F) * 1.6F, 0.0F, 1.0F) *
+        (1.0F - std::clamp((saturation - 0.08F) * 2.8F, 0.0F, 1.0F));
+    float const leatherness =
+        (1.0F - metallicness) *
+        std::clamp((base.x() - base.z()) * 1.6F + 0.15F, 0.0F, 1.0F);
+    float const clothness = std::clamp(1.0F - metallicness * 0.75F, 0.0F, 1.0F);
+
+    float const seed =
+        variant.pattern_seed * 131.0F + static_cast<float>(slot_index) * 17.0F;
+    float const wear_noise = hash01(std::sin(seed + 0.37F) * 43758.5453F);
+    float const grime_noise = hash01(std::sin(seed * 1.73F + 1.91F) * 24634.6345F);
+    float const blood_noise = hash01(std::sin(seed * 2.17F + 5.13F) * 15384.1837F);
+    float const fade_noise = hash01(std::sin(seed * 2.81F + 0.83F) * 31415.9265F);
+    float const contrast_noise = hash01(std::sin(seed * 3.71F + 2.63F) * 27182.8183F);
+
+    float const wear =
+        std::clamp(variant.weathering * (0.75F + 0.55F * wear_noise), 0.0F, 1.0F);
+    float const grime =
+        std::clamp(variant.grime * (0.65F + 0.65F * grime_noise), 0.0F, 1.0F);
+    float const blood = std::clamp(
+        variant.bloodiness * std::max(0.0F, blood_noise - 0.58F) / 0.42F, 0.0F, 1.0F);
+    float const fading = wear * (0.45F + 0.55F * fade_noise);
+    float const slot_variation = 0.82F + 0.36F * contrast_noise;
+
+    QVector3D color = base;
+    QVector3D const grayscale_vec(grayscale, grayscale, grayscale);
+    color *= QVector3D(slot_variation, slot_variation, slot_variation);
+    color = color * (1.0F - wear * (0.18F + 0.18F * clothness + 0.10F * leatherness));
+    color += (grayscale_vec - color) * (wear * (0.28F + 0.28F * metallicness));
+    color += (color * QVector3D(0.78F, 0.72F, 0.62F) - color) *
+             (fading * (0.30F * clothness + 0.12F * leatherness));
+    color *= 1.0F - grime * (0.24F + 0.18F * leatherness + 0.16F * clothness);
+    color += (color * QVector3D(0.56F, 0.72F, 0.52F) - color) *
+             (wear * metallicness * 0.34F);
+    color += (color * QVector3D(0.70F, 0.54F, 0.40F) - color) *
+             (grime * leatherness * 0.28F);
+    color += (QVector3D(0.45F, 0.08F, 0.06F) - color) *
+             (blood * (0.26F + 0.50F * clothness + 0.22F * leatherness));
+    return clamp_color(color);
+  };
+
+  auto const& variant = *static_cast<const HumanoidVariant*>(variant_void);
+  std::uint32_t const count = fn(variant, out, base_count, max_count);
+  for (std::uint32_t i = base_count; i < count; ++i) {
+    out[i] = worn_equipment_color(variant, out[i], i - base_count);
+  }
+  return count;
 }
 
 auto with_horse_variant(

@@ -247,7 +247,7 @@ TEST(CreatureRenderGraph, NoCameraMeansFullLod) {
 }
 
 TEST(CreatureRenderGraph, BuildBaseOutputSetsLodFromDecision) {
-  CreatureGraphInputs inputs;
+  CreatureGraphInputs const inputs;
   CreatureLodDecision decision;
   decision.lod = CreatureLOD::Minimal;
   decision.culled = false;
@@ -259,7 +259,7 @@ TEST(CreatureRenderGraph, BuildBaseOutputSetsLodFromDecision) {
 }
 
 TEST(CreatureRenderGraph, BuildBaseOutputSetsCulledFromDecision) {
-  CreatureGraphInputs inputs;
+  CreatureGraphInputs const inputs;
   CreatureLodDecision decision;
   decision.lod = CreatureLOD::Billboard;
   decision.culled = true;
@@ -278,7 +278,7 @@ TEST(CreatureRenderGraph, BuildBaseOutputSetsPassIntentFromContext) {
   CreatureGraphInputs inputs;
   inputs.ctx = &ctx;
 
-  CreatureLodDecision decision;
+  CreatureLodDecision const decision;
   auto output = build_base_graph_output(inputs, decision);
 
   EXPECT_EQ(output.pass_intent, RenderPassIntent::Shadow);
@@ -291,29 +291,29 @@ TEST(CreatureRenderGraph, BuildBaseOutputCopiesWorldMatrix) {
   CreatureGraphInputs inputs;
   inputs.ctx = &ctx;
 
-  CreatureLodDecision decision;
+  CreatureLodDecision const decision;
   auto output = build_base_graph_output(inputs, decision);
 
   EXPECT_EQ(output.world_matrix, ctx.model);
 }
 
 TEST(CreatureRenderBatch, StartsEmpty) {
-  CreatureRenderBatch batch;
+  CreatureRenderBatch const batch;
   EXPECT_TRUE(batch.empty());
-  EXPECT_EQ(batch.size(), 0u);
+  EXPECT_EQ(batch.size(), 0U);
 }
 
 TEST(CreatureRenderBatch, AddHumanoidIncreasesSize) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = false;
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   batch.add_humanoid(output, pose, variant, anim);
 
-  EXPECT_EQ(batch.size(), 1u);
+  EXPECT_EQ(batch.size(), 1U);
   EXPECT_FALSE(batch.empty());
 }
 
@@ -326,17 +326,45 @@ TEST(CreatureRenderBatch, StableRoleColorsAreCachedByVariant) {
   CreatureGraphOutput output;
   output.culled = false;
   output.spec.archetype_id = archetype;
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   batch.add_humanoid(output, pose, variant, anim);
   batch.add_humanoid(output, pose, variant, anim);
 
-  ASSERT_EQ(batch.requests().size(), 2u);
+  ASSERT_EQ(batch.requests().size(), 2U);
   EXPECT_EQ(batch.requests()[0].role_color_count, batch.requests()[1].role_color_count);
   EXPECT_EQ(g_extra_role_color_calls.load(std::memory_order_relaxed), 1)
       << "same asset/archetype/variant should reuse cached role colors";
+}
+
+TEST(CreatureRenderBatch, WearProfileBreaksRoleColorCacheReuse) {
+  g_extra_role_color_calls.store(0, std::memory_order_relaxed);
+  const auto archetype = ArchetypeRegistry::instance().register_unit_archetype(
+      "test.role_color_cache_wear",
+      CreatureKind::Humanoid,
+      {},
+      &counted_extra_role_color);
+
+  CreatureRenderBatch batch;
+  CreatureGraphOutput output;
+  output.culled = false;
+  output.spec.archetype_id = archetype;
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant first{};
+  first.weathering = 0.15F;
+  first.pattern_seed = 0.25F;
+  Render::GL::HumanoidVariant second = first;
+  second.weathering = 0.45F;
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  batch.add_humanoid(output, pose, first, anim);
+  batch.add_humanoid(output, pose, second, anim);
+
+  ASSERT_EQ(batch.requests().size(), 2U);
+  EXPECT_EQ(g_extra_role_color_calls.load(std::memory_order_relaxed), 2)
+      << "wear-sensitive humanoid variants should not share cached role colors";
 }
 
 TEST(CreatureRenderBatch, VariantTableCanOverrideRequestSelection) {
@@ -355,63 +383,85 @@ TEST(CreatureRenderBatch, VariantTableCanOverrideRequestSelection) {
   output.spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
   output.spec.variant_table = &table;
 
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   batch.add_humanoid(output, pose, variant, anim);
 
-  ASSERT_EQ(batch.requests().size(), 1u);
+  ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].archetype, override_archetype);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::AttackSpear);
+}
+
+TEST(CreatureRenderBatch, HumanoidWearParamsPropagateToRequests) {
+  CreatureRenderBatch batch;
+  CreatureGraphOutput output;
+  output.culled = false;
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant variant{};
+  variant.weathering = 0.35F;
+  variant.grime = 0.20F;
+  variant.bloodiness = 0.10F;
+  variant.pattern_seed = 0.75F;
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  batch.add_humanoid(output, pose, variant, anim);
+
+  ASSERT_EQ(batch.requests().size(), 1U);
+  auto const& req = batch.requests()[0];
+  EXPECT_FLOAT_EQ(req.wear_params.x(), variant.weathering);
+  EXPECT_FLOAT_EQ(req.wear_params.y(), variant.grime);
+  EXPECT_FLOAT_EQ(req.wear_params.z(), variant.bloodiness);
+  EXPECT_FLOAT_EQ(req.wear_params.w(), variant.pattern_seed);
 }
 
 TEST(CreatureRenderBatch, CulledCreatureNotAdded) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = true;
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   batch.add_humanoid(output, pose, variant, anim);
 
   EXPECT_TRUE(batch.empty());
-  EXPECT_EQ(batch.size(), 0u);
+  EXPECT_EQ(batch.size(), 0U);
 }
 
 TEST(CreatureRenderBatch, AddHorseIncreasesSize) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = false;
-  Render::GL::HorseVariant variant{};
+  Render::GL::HorseVariant const variant{};
 
   batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
-  EXPECT_EQ(batch.size(), 1u);
+  EXPECT_EQ(batch.size(), 1U);
 }
 
 TEST(CreatureRenderBatch, AddElephantIncreasesSize) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = false;
-  Render::GL::ElephantVariant variant{};
+  Render::GL::ElephantVariant const variant{};
 
   batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
-  EXPECT_EQ(batch.size(), 1u);
+  EXPECT_EQ(batch.size(), 1U);
 }
 
 TEST(CreatureRenderBatch, ClearEmptiesBatch) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = false;
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   batch.add_humanoid(output, pose, variant, anim);
-  EXPECT_EQ(batch.size(), 1u);
+  EXPECT_EQ(batch.size(), 1U);
 
   batch.clear();
   EXPECT_TRUE(batch.empty());
@@ -438,14 +488,14 @@ TEST(CreatureRenderGraph, EndToEndHumanoidPrepare) {
   EXPECT_FALSE(output.culled);
 
   CreatureRenderBatch batch;
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   batch.add_humanoid(output, pose, variant, anim);
 
-  EXPECT_EQ(batch.size(), 1u);
-  ASSERT_EQ(batch.requests().size(), 1u);
+  EXPECT_EQ(batch.size(), 1U);
+  ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].lod, CreatureLOD::Full);
   EXPECT_TRUE(batch.rows().empty());
 }
@@ -464,12 +514,12 @@ TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
   EXPECT_EQ(decision.lod, CreatureLOD::Full);
 
   CreatureRenderBatch batch;
-  Render::GL::HorseVariant variant{};
+  Render::GL::HorseVariant const variant{};
 
   batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
-  EXPECT_EQ(batch.size(), 1u);
-  ASSERT_EQ(batch.requests().size(), 1u);
+  EXPECT_EQ(batch.size(), 1U);
+  ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].lod, CreatureLOD::Full);
   EXPECT_TRUE(batch.rows().empty());
 }
@@ -488,12 +538,12 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
   EXPECT_EQ(decision.lod, CreatureLOD::Full);
 
   CreatureRenderBatch batch;
-  Render::GL::ElephantVariant variant{};
+  Render::GL::ElephantVariant const variant{};
 
   batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle, 0.0F);
 
-  EXPECT_EQ(batch.size(), 1u);
-  ASSERT_EQ(batch.requests().size(), 1u);
+  EXPECT_EQ(batch.size(), 1U);
+  ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].lod, CreatureLOD::Full);
   EXPECT_TRUE(batch.rows().empty());
 }
@@ -505,7 +555,7 @@ TEST(CreatureRenderGraph, PrewarmContextSetsShadowPassIntent) {
   CreatureGraphInputs inputs;
   inputs.ctx = &ctx;
 
-  CreatureLodDecision decision;
+  CreatureLodDecision const decision;
   auto output = build_base_graph_output(inputs, decision);
 
   EXPECT_EQ(output.pass_intent, RenderPassIntent::Shadow);
@@ -525,7 +575,7 @@ TEST(CreatureRenderGraph, ShadowPassRowsSubmitZeroDrawCalls) {
   CountingSubmitter sink;
   const auto stats = submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
   EXPECT_EQ(sink.rigged_calls, 0);
   EXPECT_EQ(sink.meshes, 0);
 }
@@ -544,7 +594,7 @@ TEST(CreatureRenderGraph, MainPassRowsSubmitDrawCalls) {
   CountingSubmitter sink;
   const auto stats = submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 1u);
+  EXPECT_EQ(stats.entities_submitted, 1U);
 }
 
 TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
@@ -552,15 +602,15 @@ TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
 
   CreatureGraphOutput output;
   output.culled = false;
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
 
   result.bodies.add_humanoid(output, pose, variant, anim);
   result.add_post_body_draw(RenderPassIntent::Main, PostBodyDrawRequest::Kind::None);
 
-  EXPECT_EQ(result.bodies.size(), 1u);
-  EXPECT_EQ(result.post_body_draws.size(), 1u);
+  EXPECT_EQ(result.bodies.size(), 1U);
+  EXPECT_EQ(result.post_body_draws.size(), 1U);
 
   result.clear();
 
@@ -570,9 +620,9 @@ TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
 }
 
 TEST(CreaturePreparationResult, ShadowBatchStartsEmpty) {
-  CreaturePreparationResult result;
+  CreaturePreparationResult const result;
   EXPECT_TRUE(result.shadow_batch.empty());
-  EXPECT_EQ(result.shadow_batch.size(), 0u);
+  EXPECT_EQ(result.shadow_batch.size(), 0U);
 }
 
 } // namespace

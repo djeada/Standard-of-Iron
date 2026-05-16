@@ -1008,8 +1008,17 @@ bool GameEngine::enter_commander_control_mode() {
   }
   (void)Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
       commander);
-  (void)Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
-      commander);
+  if (auto* rpg_action =
+          Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
+              commander)) {
+    rpg_action->phase = Engine::Core::RpgCommanderActionPhase::None;
+    rpg_action->melee_attack_style = 0;
+    rpg_action->melee_attack_sequence = 0;
+    rpg_action->active_target_id = 0;
+    rpg_action->last_hit_target_id = 0;
+    rpg_action->last_damage = 0;
+    rpg_action->phase_time = 0.0F;
+  }
 
   emit game_mode_changed();
   if (m_world != nullptr && m_commander_camera != nullptr) {
@@ -1397,6 +1406,8 @@ void GameEngine::clear_controlled_commander_state() {
   if (auto* rpg_action =
           commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
     rpg_action->phase = Engine::Core::RpgCommanderActionPhase::None;
+    rpg_action->melee_attack_style = 0;
+    rpg_action->melee_attack_sequence = 0;
     rpg_action->active_target_id = 0;
     rpg_action->last_hit_target_id = 0;
     rpg_action->last_damage = 0;
@@ -1468,7 +1479,14 @@ void GameEngine::update(float dt) {
   }
 
   if (m_renderer) {
+    const bool rpg_mode = m_game_mode == GameMode::Rpg;
     m_renderer->update_animation_time(dt);
+    m_renderer->set_world_render_mode(rpg_mode
+                                          ? Render::GL::Renderer::WorldRenderMode::Rpg
+                                          : Render::GL::Renderer::WorldRenderMode::Rts);
+  }
+  if (m_fog) {
+    m_fog->set_soft_reveal_enabled(m_game_mode == GameMode::Rpg);
   }
 
   if (m_camera != nullptr) {
@@ -2018,16 +2036,37 @@ void GameEngine::on_minimap_right_click(qreal mx,
   }
 
   const QVector3D target_pos(world_x, 0.0F, world_z);
-  auto targets = Game::Systems::FormationPlanner::spread_formation_by_nation(
+  auto formation_result = Game::Systems::FormationPlanner::get_formation_with_facing(
       *m_world,
       selected,
       target_pos,
       Game::GameConfig::instance().gameplay().formation_spacing_default);
 
+  for (size_t i = 0; i < selected.size(); ++i) {
+    auto* entity = m_world->get_entity(selected[i]);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto* formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if ((formation_mode == nullptr) || !formation_mode->active) {
+      continue;
+    }
+
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if ((transform != nullptr) && (i < formation_result.facing_angles.size())) {
+      transform->desired_yaw = formation_result.facing_angles[i];
+      transform->has_desired_yaw = true;
+    }
+  }
+
   Game::Systems::CommandService::MoveOptions opts;
   opts.group_move = selected.size() > 1;
   opts.retry_individual_on_group_failure = selected.size() > 1;
-  Game::Systems::CommandService::move_units(*m_world, selected, targets, opts);
+  opts.preserve_formation_mode = formation_result.used_tactical_formation;
+  Game::Systems::CommandService::move_units(
+      *m_world, selected, formation_result.positions, opts);
 }
 
 auto GameEngine::selected_units_model() -> QAbstractItemModel* {

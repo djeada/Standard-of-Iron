@@ -430,6 +430,7 @@ auto make_runtime_prewarm_ctx(const Render::GL::DrawContext& ctx) noexcept
   Render::GL::DrawContext runtime_ctx = ctx;
   runtime_ctx.template_prewarm = false;
   runtime_ctx.allow_template_cache = false;
+  runtime_ctx.suppress_animation_state_persistence = true;
   return runtime_ctx;
 }
 

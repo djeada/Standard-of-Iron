@@ -21,6 +21,10 @@ class IFormationCalculator;
 enum class AmbientIdleType : std::uint8_t;
 } // namespace Render::GL
 
+namespace Render::Creature {
+struct HumanoidAnimationStateComponent;
+}
+
 namespace Render::Humanoid {
 
 using HumanoidPreparation = Render::Creature::Pipeline::CreaturePreparationResult;
@@ -55,11 +59,14 @@ struct HumanoidLocomotionInputs {
   Render::GL::AnimationInputs anim{};
   Render::GL::VariationParams variation{};
   float move_speed{0.0F};
+  QVector3D entity_forward{0.0F, 0.0F, 1.0F};
   QVector3D locomotion_direction{0.0F, 0.0F, 1.0F};
   QVector3D movement_target{0.0F, 0.0F, 0.0F};
   bool has_movement_target{false};
   float animation_time{0.0F};
   float phase_offset{0.0F};
+  Render::Creature::HumanoidAnimationStateComponent* persistent_state{nullptr};
+  bool allow_persistent_update{false};
 };
 
 struct HumanoidLocomotionState {

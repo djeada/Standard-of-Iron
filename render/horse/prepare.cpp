@@ -49,23 +49,14 @@ auto horse_state_for_motion(
   if (motion.is_fighting) {
     return Render::Creature::AnimationStateId::AttackMelee;
   }
-  switch (motion.gait_type) {
-  case Render::GL::GaitType::IDLE:
-    return Render::Creature::AnimationStateId::Idle;
-  case Render::GL::GaitType::WALK:
-    return Render::Creature::AnimationStateId::Walk;
-  case Render::GL::GaitType::TROT:
-  case Render::GL::GaitType::CANTER:
-  case Render::GL::GaitType::GALLOP:
-    return Render::Creature::AnimationStateId::Run;
-  }
-  return Render::Creature::AnimationStateId::Idle;
+  return Render::Creature::animation_state_for_movement(
+      Render::GL::movement_animation_for_horse_gait(motion.playback_gait_type));
 }
 
 auto horse_clip_for_motion(const Render::GL::HorseMotionSample& motion) noexcept
     -> std::uint16_t {
   return Render::Creature::Quadruped::clip_for_motion(
-      k_horse_clips, motion.gait_type, motion.is_fighting);
+      k_horse_clips, motion.playback_gait_type, motion.is_fighting);
 }
 
 void ground_horse_model(QMatrix4x4& model,
@@ -113,7 +104,7 @@ void HorseRendererBase::render(const DrawContext& ctx,
                                const HorseMotionSample* shared_motion,
                                ISubmitter& out,
                                HorseLOD lod) const {
-  DrawContext render_ctx =
+  DrawContext const render_ctx =
       ctx.template_prewarm ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx)
                            : ctx;
 
@@ -180,7 +171,7 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   const HorseVariant& v = profile.variant;
 
   HorseMotionSample const motion =
-      shared_motion
+      (shared_motion != nullptr)
           ? *shared_motion
           : evaluate_horse_motion(
                 profile,
