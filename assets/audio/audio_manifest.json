@@ -1,0 +1,316 @@
+{
+  "tracks": [
+    {
+      "id": "voice.roman.archer",
+      "aliases": ["archer_voice", "roman.archer"],
+      "path": "voices/roman/archer.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.swordsman",
+      "aliases": ["swordsman_voice", "roman.swordsman"],
+      "path": "voices/roman/swordsman.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.spearman",
+      "aliases": ["spearman_voice", "roman.spearman"],
+      "path": "voices/roman/spearman.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.horse_archer",
+      "aliases": ["roman.horse_archer"],
+      "path": "voices/roman/horse_archer.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.horse_spearman",
+      "aliases": ["roman.horse_spearman"],
+      "path": "voices/roman/horse_spearman.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.horse_swordsman",
+      "aliases": ["roman.horse_swordsman"],
+      "path": "voices/roman/horse_swordsman.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.healer",
+      "aliases": ["roman.healer"],
+      "path": "voices/roman/healer.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.catapult",
+      "aliases": ["roman.catapult"],
+      "path": "voices/roman/catapult.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.ballista",
+      "aliases": ["roman.ballista"],
+      "path": "voices/roman/ballista.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.roman.builder",
+      "aliases": ["roman.builder"],
+      "path": "voices/roman/builder.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.archer",
+      "aliases": ["carthage.archer"],
+      "path": "voices/carthage/archer.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.swordsman",
+      "aliases": ["carthage.swordsman"],
+      "path": "voices/carthage/swordsman.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.spearman",
+      "aliases": ["carthage.spearman"],
+      "path": "voices/carthage/spearman.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.horse_archer",
+      "aliases": ["carthage.horse_archer"],
+      "path": "voices/carthage/horse_archer.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.horse_spearman",
+      "aliases": ["carthage.horse_spearman"],
+      "path": "voices/carthage/horse_spearman.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.horse_swordsman",
+      "aliases": ["carthage.horse_swordsman"],
+      "path": "voices/carthage/horse_swordsman.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.healer",
+      "aliases": ["carthage.healer"],
+      "path": "voices/carthage/healer.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.catapult",
+      "aliases": ["carthage.catapult"],
+      "path": "voices/carthage/catapult.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.ballista",
+      "aliases": ["carthage.ballista"],
+      "path": "voices/carthage/ballista.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.carthage.elephant",
+      "aliases": ["carthage.elephant"],
+      "path": "voices/carthage/elephant.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.commander.marcellus",
+      "path": "voices/commanders/marcus_claudius_marcellus.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.commander.scipio",
+      "path": "voices/commanders/publius_cornelius_scipio.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "voice.commander.fabius",
+      "path": "voices/commanders/quintus_fabius_maximus.ogg",
+      "category": "voice",
+      "load_policy": "startup"
+    },
+    {
+      "id": "music.base.management_camp",
+      "aliases": ["music_peaceful"],
+      "path": "music/base/base_management_camp.ogg",
+      "category": "music",
+      "load_policy": "startup"
+    },
+    {
+      "id": "music.base.pre_battle_deployment",
+      "aliases": ["music_tense"],
+      "path": "music/base/base_pre_battle_deployment.ogg",
+      "category": "music",
+      "load_policy": "startup"
+    },
+    {
+      "id": "music.combat.battlefield_escalation",
+      "aliases": ["music_combat"],
+      "path": "music/combat/combat_battlefield_escalation.ogg",
+      "category": "music",
+      "load_policy": "startup"
+    },
+    {
+      "id": "music.stinger.victory_roman",
+      "aliases": ["music_victory"],
+      "path": "music/stingers/victory_roman_fanfare.ogg",
+      "category": "music",
+      "load_policy": "startup"
+    },
+    {
+      "id": "music.stinger.defeat_tragic_low_brass",
+      "aliases": ["music_defeat"],
+      "path": "music/stingers/defeat_tragic_low_brass.ogg",
+      "category": "music",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.combat.gladius_shield_impacts_close",
+      "aliases": ["combat_hit_sword"],
+      "path": "sfx/combat/gladius_shield_impacts_close.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.combat.javelin_throw_whoosh",
+      "aliases": ["combat_hit_spear"],
+      "path": "sfx/combat/javelin_throw_whoosh.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.combat.arrows_impact_shields_dirt",
+      "aliases": ["combat_hit_arrow"],
+      "path": "sfx/combat/arrows_impact_shields_dirt.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.combat.battlefield_crowd_chaos",
+      "aliases": ["combat_hit_siege"],
+      "path": "sfx/combat/battlefield_crowd_chaos.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.combat.battlefield_distant_mass_02",
+      "aliases": ["combat_hit_generic"],
+      "path": "sfx/combat/battlefield_distant_mass_02.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.combat.troops_death_scream",
+      "aliases": ["combat_death"],
+      "path": "sfx/combat/troops_death_scream.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.alert.population_limit_horn",
+      "aliases": ["population_limit_horn"],
+      "path": "sfx/alerts/population_limit_horn.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.alert.reinforcements_arrived",
+      "aliases": ["reinforcements_arrived"],
+      "path": "sfx/alerts/reinforcements_arrived.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.alert.low_resources_click",
+      "aliases": ["low_resources_click"],
+      "path": "sfx/alerts/low_resources_click.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.alert.enemy_reinforcements_warning",
+      "aliases": ["enemy_reinforcements_warning"],
+      "path": "sfx/alerts/enemy_reinforcements_warning.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "sfx.alert.enemy_spotted_horn",
+      "aliases": ["enemy_spotted_horn"],
+      "path": "sfx/alerts/enemy_spotted_horn.ogg",
+      "category": "sfx",
+      "load_policy": "startup"
+    },
+    {
+      "id": "ambient.alpine_mountain_pass",
+      "path": "ambience/alpine_mountain_pass.ogg",
+      "category": "sfx",
+      "load_policy": "mission"
+    },
+    {
+      "id": "ambient.mediterranean_plains",
+      "path": "ambience/mediterranean_plains.ogg",
+      "category": "sfx",
+      "load_policy": "mission"
+    },
+    {
+      "id": "ambient.forest_ambush",
+      "path": "ambience/forest_ambush.ogg",
+      "category": "sfx",
+      "load_policy": "mission"
+    },
+    {
+      "id": "ambient.river_crossing",
+      "path": "ambience/river_crossing.ogg",
+      "category": "sfx",
+      "load_policy": "mission"
+    },
+    {
+      "id": "ambient.roman_army_camp_01",
+      "path": "ambience/roman_army_camp_01.ogg",
+      "category": "sfx",
+      "load_policy": "mission"
+    },
+    {
+      "id": "ambient.mountain_camp_night",
+      "path": "ambience/mountain_camp_night.ogg",
+      "category": "sfx",
+      "load_policy": "mission"
+    },
+    {
+      "id": "ambient.battlefield_dry_wind_distant_march_01",
+      "path": "ambience/battlefield_dry_wind_distant_march_01.ogg",
+      "category": "sfx",
+      "load_policy": "mission"
+    }
+  ]
+}

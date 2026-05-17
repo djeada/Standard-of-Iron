@@ -30,7 +30,6 @@ struct HumanoidAnimationStateComponent : public Engine::Core::Component {
   Render::GL::HumanoidMotionState locomotion_state{
       Render::GL::HumanoidMotionState::Idle};
   bool locomotion_initialized{false};
-  bool locomotion_was_moving{false};
 };
 
 struct HorseAnimationStateComponent : public Engine::Core::Component {

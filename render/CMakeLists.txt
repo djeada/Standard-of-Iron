@@ -148,7 +148,6 @@ add_library(render_gl STATIC
     geom/parts.cpp
     humanoid/humanoid_math.cpp
     gl/humanoid/animation/animation_inputs.cpp
-    gl/humanoid/animation/gait.cpp
     palette.cpp
     humanoid/rig.cpp
     humanoid/prepare.cpp

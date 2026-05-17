@@ -33,13 +33,13 @@
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
+#include "../creature/pose_intent.h"
 #include "../creature/spec.h"
 #include "../entity/registry.h"
 #include "../geom/parts.h"
 #include "../geom/transforms.h"
 #include "../gl/backend.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
-#include "../gl/humanoid/animation/gait.h"
 #include "../gl/humanoid/humanoid_constants.h"
 #include "../gl/primitives.h"
 #include "../gl/render_constants.h"
@@ -344,7 +344,6 @@ namespace Render::Humanoid {
 using Render::GL::AmbientIdleType;
 using Render::GL::AnimationInputs;
 using Render::GL::AnimState;
-using Render::GL::classify_motion_state;
 using Render::GL::DrawContext;
 using Render::GL::elbow_bend_torso;
 using Render::GL::FormationCalculatorFactory;
@@ -372,6 +371,56 @@ constexpr float k_run_blend_tau = 0.16F;
 constexpr float k_turn_blend_tau = 0.10F;
 constexpr float k_acceleration_blend_tau = 0.14F;
 constexpr float k_visual_locomotion_speed_epsilon = 1.0e-4F;
+
+struct CommanderJumpPose {
+  bool active = false;
+  float phase = 0.0F;
+  float height_offset = 0.0F;
+};
+
+struct CommanderAttackPose {
+  bool amplified = false;
+  bool has_style = false;
+  std::uint8_t style = 0U;
+};
+
+class HumanoidPreparationModePolicy {
+public:
+  explicit HumanoidPreparationModePolicy(const Engine::Core::Entity* entity)
+      : m_commander(entity != nullptr
+                        ? entity->get_component<Engine::Core::CommanderComponent>()
+                        : nullptr)
+      , m_action(
+            entity != nullptr
+                ? entity->get_component<Engine::Core::RpgCommanderActionComponent>()
+                : nullptr) {}
+
+  [[nodiscard]] auto jump_pose() const -> CommanderJumpPose {
+    if (m_commander == nullptr) {
+      return {};
+    }
+    return {.active = m_commander->jump_active,
+            .phase = std::clamp(m_commander->jump_phase, 0.0F, 1.0F),
+            .height_offset = std::max(0.0F, m_commander->jump_height_offset)};
+  }
+
+  [[nodiscard]] auto
+  attack_pose(const AnimationInputs& anim) const -> CommanderAttackPose {
+    if (m_commander == nullptr || !m_commander->fpv_controlled || !anim.is_melee) {
+      return {};
+    }
+    CommanderAttackPose pose{.amplified = true};
+    if (m_action != nullptr) {
+      pose.has_style = true;
+      pose.style = m_action->melee_attack_style;
+    }
+    return pose;
+  }
+
+private:
+  const Engine::Core::CommanderComponent* m_commander = nullptr;
+  const Engine::Core::RpgCommanderActionComponent* m_action = nullptr;
+};
 
 auto wrap_phase(float phase) noexcept -> float {
   float wrapped = std::fmod(phase, 1.0F);
@@ -408,7 +457,6 @@ void reset_humanoid_locomotion_state(
   state.run_blend = 0.0F;
   state.locomotion_state = HumanoidMotionState::Idle;
   state.locomotion_initialized = false;
-  state.locomotion_was_moving = false;
 }
 
 auto cycle_time_for_motion_state(HumanoidMotionState state,
@@ -446,7 +494,7 @@ auto resolve_visual_locomotion_sample(
     const QVector3D& entity_forward) noexcept -> VisualLocomotionSample {
   VisualLocomotionSample sample{};
   sample.direction = entity_forward;
-  if (movement_state.is_moving) {
+  if (Render::Creature::is_moving_animation(movement_state.movement_state)) {
     sample.speed = movement_state.speed_hint;
     sample.direction = movement_state.locomotion_direction;
     sample.has_movement_target = movement_state.has_movement_target;
@@ -476,29 +524,28 @@ auto build_locomotion_targets(const HumanoidLocomotionState& state,
                               const HumanoidLocomotionInputs& inputs) noexcept
     -> LocomotionTargets {
   LocomotionTargets targets{};
-  float const reference_speed = (state.motion_state == HumanoidMotionState::Run)
+  bool const has_locomotion =
+      Render::Creature::is_moving_animation(inputs.anim.movement_state);
+  float const reference_speed = (state.gait.state == HumanoidMotionState::Run)
                                     ? k_reference_run_speed
                                     : k_reference_walk_speed;
   targets.normalized_speed =
-      (inputs.anim.is_moving && reference_speed > 0.0001F)
+      (has_locomotion && reference_speed > 0.0001F)
           ? std::clamp(state.gait.speed / reference_speed, 0.0F, 1.0F)
           : 0.0F;
   targets.locomotion_blend =
-      inputs.anim.is_moving ? std::clamp(targets.normalized_speed * 1.10F, 0.0F, 1.0F)
-                            : 0.0F;
-  targets.run_blend = inputs.anim.is_moving
-                          ? std::clamp((state.motion_state == HumanoidMotionState::Run)
+      has_locomotion ? std::clamp(targets.normalized_speed * 1.10F, 0.0F, 1.0F) : 0.0F;
+  targets.run_blend = has_locomotion
+                          ? std::clamp((state.gait.state == HumanoidMotionState::Run)
                                            ? 0.70F + targets.normalized_speed * 0.30F
                                            : 0.0F,
                                        0.0F,
                                        1.0F)
                           : 0.0F;
-  targets.turn_amount =
-      inputs.anim.is_moving
-          ? signed_turn_amount(inputs.entity_forward, inputs.locomotion_direction)
-          : 0.0F;
-  targets.cycle_time =
-      cycle_time_for_motion_state(state.motion_state, inputs.variation);
+  targets.turn_amount = has_locomotion ? signed_turn_amount(inputs.entity_forward,
+                                                            inputs.locomotion_direction)
+                                       : 0.0F;
+  targets.cycle_time = cycle_time_for_motion_state(state.gait.state, inputs.variation);
   targets.base_phase = wrap_phase((inputs.animation_time + inputs.phase_offset) /
                                   std::max(0.001F, targets.cycle_time));
   return targets;
@@ -527,7 +574,7 @@ void apply_persistent_locomotion_state(HumanoidLocomotionState& state,
   float phase_bias = persistent->locomotion_phase_bias;
   if (persistent->locomotion_initialized &&
       (std::abs(targets.cycle_time - persistent->locomotion_cycle_time) > 1.0e-4F ||
-       state.motion_state != persistent->locomotion_state)) {
+       state.gait.state != persistent->locomotion_state)) {
     phase_bias = persistent->locomotion_phase - targets.base_phase;
     state.gait.cycle_phase = wrap_phase(targets.base_phase + phase_bias);
   } else if (persistent->locomotion_initialized) {
@@ -575,8 +622,7 @@ void apply_persistent_locomotion_state(HumanoidLocomotionState& state,
   persistent->filtered_turn = state.gait.turn_amount;
   persistent->locomotion_blend = state.gait.locomotion_blend;
   persistent->run_blend = state.gait.run_blend;
-  persistent->locomotion_state = state.motion_state;
-  persistent->locomotion_was_moving = inputs.anim.is_moving;
+  persistent->locomotion_state = state.gait.state;
 }
 } // namespace
 
@@ -623,14 +669,14 @@ auto build_soldier_layout(const IFormationCalculator& formation_calculator,
 auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
     -> HumanoidLocomotionState {
   HumanoidLocomotionState state{};
-  state.motion_state = classify_motion_state(inputs.anim, inputs.move_speed);
+  auto const gait_state = Render::Creature::classify_pose(inputs.anim).motion_state;
   state.move_speed = inputs.move_speed;
   state.has_movement_target = inputs.has_movement_target;
   state.locomotion_direction = inputs.locomotion_direction;
   state.locomotion_velocity = inputs.locomotion_direction * inputs.move_speed;
   state.movement_target = inputs.movement_target;
 
-  state.gait.state = state.motion_state;
+  state.gait.state = gait_state;
   state.gait.speed = state.move_speed;
   state.gait.velocity = state.locomotion_velocity;
   state.gait.has_target = state.has_movement_target;
@@ -667,10 +713,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     unit_comp = ctx.entity->get_component<Engine::Core::UnitComponent>();
   }
 
-  Engine::Core::MovementComponent* movement_comp = nullptr;
   Engine::Core::TransformComponent* transform_comp = nullptr;
   if (ctx.entity != nullptr) {
-    movement_comp = ctx.entity->get_component<Engine::Core::MovementComponent>();
     transform_comp = ctx.entity->get_component<Engine::Core::TransformComponent>();
   }
 
@@ -837,6 +881,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
           : nullptr;
   Render::GL::VisualMovementState const visual_movement =
       Render::GL::visual_movement_for_animation_inputs(ctx, anim);
+  const HumanoidPreparationModePolicy preparation_mode(ctx.entity);
 
   auto append_prepared_soldier = [&](int idx, const AnimationInputs& soldier_anim) {
     SoldierLayout const& layout = soldier_layouts[static_cast<std::size_t>(idx)];
@@ -845,18 +890,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     uint32_t const inst_seed = layout.inst_seed;
     float const phase_offset = layout.phase_offset;
     float const applied_yaw_offset = layout.yaw_offset;
-    auto const* commander_comp =
-        ctx.entity != nullptr
-            ? ctx.entity->get_component<Engine::Core::CommanderComponent>()
-            : nullptr;
-    bool commander_jump_active = false;
-    float commander_jump_phase = 0.0F;
-    float commander_jump_height_offset = 0.0F;
-    if (commander_comp != nullptr) {
-      commander_jump_active = commander_comp->jump_active;
-      commander_jump_phase = std::clamp(commander_comp->jump_phase, 0.0F, 1.0F);
-      commander_jump_height_offset = std::max(0.0F, commander_comp->jump_height_offset);
-    }
+    const CommanderJumpPose commander_jump = preparation_mode.jump_pose();
+    bool const soldier_has_locomotion =
+        Render::Creature::is_moving_animation(soldier_anim.movement_state);
+    bool const soldier_is_running =
+        Render::Creature::is_running_animation(soldier_anim.movement_state);
 
     QMatrix4x4 inst_model;
     float applied_yaw = applied_yaw_offset;
@@ -883,12 +921,12 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
     VariationParams variation = VariationParams::from_seed(inst_seed);
     owner.adjust_variation(inst_ctx, inst_seed, variation);
-    if (soldier_anim.is_running) {
+    if (soldier_is_running) {
       variation.walk_speed_mult *= 1.25F;
       variation.arm_swing_amp *= 1.12F;
       variation.stance_width *= 0.96F;
       variation.posture_slump = std::min(0.16F, variation.posture_slump + 0.020F);
-    } else if (soldier_anim.is_moving) {
+    } else if (soldier_has_locomotion) {
       variation.walk_speed_mult *= 1.05F;
     }
 
@@ -930,8 +968,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     locomotion_inputs.allow_persistent_update = should_persist_animation_state(ctx);
     HumanoidLocomotionState locomotion_state =
         build_humanoid_locomotion_state(locomotion_inputs);
-    if (commander_jump_active) {
-      locomotion_state.motion_state = Render::GL::HumanoidMotionState::Idle;
+    if (commander_jump.active) {
       locomotion_state.move_speed = 0.0F;
       locomotion_state.has_movement_target = false;
       locomotion_state.locomotion_velocity = QVector3D(0.0F, 0.0F, 0.0F);
@@ -944,7 +981,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
     if (unit_comp != nullptr &&
         unit_comp->spawn_type == Game::Units::SpawnType::Archer &&
-        !soldier_anim.is_moving && !soldier_anim.is_attacking) {
+        !soldier_has_locomotion && !soldier_anim.is_attacking) {
       locomotion_state.gait.cycle_phase = 0.5F;
     }
 
@@ -964,54 +1001,39 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     anim_ctx.move_speed = locomotion_state.move_speed;
     anim_ctx.movement_target = locomotion_state.movement_target;
     anim_ctx.locomotion_velocity = locomotion_state.locomotion_velocity;
-    anim_ctx.motion_state = locomotion_state.motion_state;
     anim_ctx.gait = locomotion_state.gait;
     anim_ctx.locomotion_cycle_time = locomotion_state.gait.cycle_time;
     anim_ctx.locomotion_phase = locomotion_state.gait.cycle_phase;
     if (soldier_anim.is_attacking) {
-      bool amplified_attack = false;
       bool const finisher_attack = soldier_anim.finisher_attack;
-      bool has_commander_attack_style = false;
-      std::uint8_t commander_attack_style = 0U;
-      if (ctx.entity != nullptr) {
-        if (auto* commander =
-                ctx.entity->get_component<Engine::Core::CommanderComponent>();
-            commander != nullptr && commander->fpv_controlled &&
-            soldier_anim.is_melee) {
-          amplified_attack = true;
-          if (auto* action =
-                  ctx.entity
-                      ->get_component<Engine::Core::RpgCommanderActionComponent>();
-              action != nullptr) {
-            has_commander_attack_style = true;
-            commander_attack_style = action->melee_attack_style;
-          }
-        }
-      }
+      const CommanderAttackPose commander_attack =
+          preparation_mode.attack_pose(soldier_anim);
       float const attack_visual_offset =
           ctx.force_single_soldier ? 0.0F : visual_attack_phase_offset(phase_offset);
-      anim_ctx.amplified_attack = amplified_attack;
+      anim_ctx.amplified_attack = commander_attack.amplified;
       anim_ctx.finisher_attack = finisher_attack;
       anim_ctx.attack_emphasis =
-          finisher_attack ? 1.45F : (amplified_attack ? 1.22F : 1.0F);
-      anim_ctx.attack_phase = combat_phase_to_attack_phase(
-          soldier_anim, attack_visual_offset, amplified_attack, finisher_attack);
+          finisher_attack ? 1.45F : (commander_attack.amplified ? 1.22F : 1.0F);
+      anim_ctx.attack_phase = combat_phase_to_attack_phase(soldier_anim,
+                                                           attack_visual_offset,
+                                                           commander_attack.amplified,
+                                                           finisher_attack);
       if (ctx.has_attack_variant_override) {
         anim_ctx.inputs.attack_variant = ctx.attack_variant_override;
-      } else if (has_commander_attack_style) {
-        anim_ctx.inputs.attack_variant = commander_attack_style;
+      } else if (commander_attack.has_style) {
+        anim_ctx.inputs.attack_variant = commander_attack.style;
       } else if (!ctx.force_single_soldier) {
         anim_ctx.inputs.attack_variant =
             visual_attack_variant(soldier_anim.attack_variant, inst_seed);
       }
     }
 
-    if (commander_jump_active) {
+    if (commander_jump.active) {
       anim_ctx.ambient_idle_type = AmbientIdleType::Jump;
-      anim_ctx.ambient_idle_phase = commander_jump_phase;
+      anim_ctx.ambient_idle_phase = commander_jump.phase;
     } else if (!is_mounted_spawn) {
       bool const is_ambient_idle_eligible =
-          !soldier_anim.is_moving && !soldier_anim.is_attacking &&
+          !soldier_has_locomotion && !soldier_anim.is_attacking &&
           !soldier_anim.is_in_hold_mode && !soldier_anim.is_guarding &&
           !soldier_anim.is_constructing && !soldier_anim.is_healing &&
           !soldier_anim.is_hit_reacting && !soldier_anim.is_dying &&
@@ -1044,7 +1066,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         HumanoidPoseController kneel_ctrl(pose, anim_ctx);
         kneel_ctrl.kneel(effective_kneel);
       }
-      if (soldier_anim.is_guarding && !soldier_anim.is_moving &&
+      if (soldier_anim.is_guarding && !soldier_has_locomotion &&
           !soldier_anim.is_attacking) {
         HumanoidPoseController guard_ctrl(pose, anim_ctx);
         guard_ctrl.brace_sword_and_shield_for_hold();
@@ -1078,10 +1100,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       RCP::ground_model_contact_to_surface(
           inst_ctx.model, 0.0F, combined_height_scale, entity_ground_offset);
     }
-    if (commander_jump_height_offset > 0.0F) {
+    if (commander_jump.height_offset > 0.0F) {
       RCP::set_model_world_y(inst_ctx.model,
                              RCP::model_world_origin(inst_ctx.model).y() +
-                                 commander_jump_height_offset);
+                                 commander_jump.height_offset);
     }
     anim_ctx.instance_position = inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
 
@@ -1129,7 +1151,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       graph_output.spec.archetype_id = Render::Humanoid::resolve_facial_hair_archetype(
           graph_output.spec.archetype_id, variant);
     }
-    if (soldier_anim.is_guarding && !soldier_anim.is_moving &&
+    if (soldier_anim.is_guarding && !soldier_has_locomotion &&
         !soldier_anim.is_attacking) {
       graph_output.spec.archetype_id =
           guard_shield_archetype(graph_output.spec.archetype_id);

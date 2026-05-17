@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "../../../game/core/component.h"
+#include "../../creature/movement_state.h"
 #include "../../palette.h"
 
 namespace Render::GL {
@@ -50,11 +51,12 @@ enum class CombatAnimPhase : std::uint8_t {
 
 struct VisualMovementState {
   bool is_authoritative{false};
+  Render::Creature::MovementAnimationState movement_state{
+      Render::Creature::MovementAnimationState::Idle};
   bool has_velocity{false};
   bool has_navigation_intent{false};
   bool has_chase_intent{false};
   bool attack_target_in_range{false};
-  bool is_moving{false};
   bool has_movement_target{false};
   QVector3D locomotion_direction{0.0F, 0.0F, 1.0F};
   QVector3D movement_target{0.0F, 0.0F, 0.0F};
@@ -63,8 +65,8 @@ struct VisualMovementState {
 
 struct AnimationInputs {
   float time;
-  bool is_moving;
-  bool is_running;
+  Render::Creature::MovementAnimationState movement_state{
+      Render::Creature::MovementAnimationState::Idle};
   VisualMovementState visual_movement{};
   bool is_attacking;
   bool is_melee;
@@ -268,7 +270,6 @@ enum class HumanoidMotionState {
   Walk,
   Run,
   Hold,
-  ExitingHold,
   Attacking
 };
 
@@ -299,7 +300,6 @@ struct HumanoidAnimationContext {
   VariationParams variation;
   FormationParams formation;
   HumanoidGaitDescriptor gait{};
-  HumanoidMotionState motion_state{HumanoidMotionState::Idle};
   float locomotion_cycle_time{0.0F};
   float locomotion_phase{0.0F};
   float attack_phase{0.0F};

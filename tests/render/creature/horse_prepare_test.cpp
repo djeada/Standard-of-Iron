@@ -366,7 +366,7 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsLocomotionPoseActiveUntilBlendEnds) 
 
   Render::GL::AnimationInputs moving_anim{};
   moving_anim.time = 0.0F;
-  moving_anim.is_moving = true;
+  moving_anim.movement_state = Render::Creature::MovementAnimationState::Walk;
   (void)Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
   moving_anim.time = 0.4F;
   auto const moving_sample =
@@ -380,7 +380,7 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsLocomotionPoseActiveUntilBlendEnds) 
   rider_ctx.gait.cycle_time = 0.0F;
   Render::GL::AnimationInputs idle_anim{};
   idle_anim.time = 0.45F;
-  idle_anim.is_moving = false;
+  idle_anim.movement_state = Render::Creature::MovementAnimationState::Idle;
 
   auto const stop_sample =
       Render::GL::evaluate_horse_motion(profile, idle_anim, rider_ctx, &state);
@@ -404,7 +404,7 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsBpatPhaseContinuous) {
 
   Render::GL::AnimationInputs moving_anim{};
   moving_anim.time = 0.0F;
-  moving_anim.is_moving = true;
+  moving_anim.movement_state = Render::Creature::MovementAnimationState::Walk;
   (void)Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
   moving_anim.time = 0.4F;
   auto const moving_sample =
@@ -417,7 +417,7 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsBpatPhaseContinuous) {
 
   Render::GL::AnimationInputs idle_anim{};
   idle_anim.time = 0.45F;
-  idle_anim.is_moving = false;
+  idle_anim.movement_state = Render::Creature::MovementAnimationState::Idle;
   auto const stop_sample =
       Render::GL::evaluate_horse_motion(profile, idle_anim, rider_ctx, &state);
 
@@ -459,7 +459,7 @@ TEST(HorsePrepare, MoveFromIdleTriggersPlaybackWalkImmediately) {
 
   Render::GL::AnimationInputs moving_anim{};
   moving_anim.time = 0.0F;
-  moving_anim.is_moving = true;
+  moving_anim.movement_state = Render::Creature::MovementAnimationState::Walk;
 
   auto const moving_sample =
       Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);
@@ -483,8 +483,7 @@ TEST(HorsePrepare, FastMoveFromIdleTriggersPlaybackRunImmediately) {
 
   Render::GL::AnimationInputs moving_anim{};
   moving_anim.time = 0.0F;
-  moving_anim.is_moving = true;
-  moving_anim.is_running = true;
+  moving_anim.movement_state = Render::Creature::MovementAnimationState::Run;
 
   auto const moving_sample =
       Render::GL::evaluate_horse_motion(profile, moving_anim, rider_ctx, &state);

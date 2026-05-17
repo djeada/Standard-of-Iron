@@ -20,6 +20,7 @@
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_writer.h"
 #include "render/creature/humanoid_clip_ids.h"
+#include "render/creature/movement_state.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/render_request.h"
 #include "render/creature/snapshot_mesh_asset.h"
@@ -501,7 +502,7 @@ void bake_hold_pose(HumanoidBakeProfile profile,
   Render::GL::HumanoidPose const standing_pose = pose;
   Render::GL::HumanoidAnimationContext anim_ctx{};
   anim_ctx.gait = hold_gait_descriptor();
-  anim_ctx.motion_state = Render::GL::HumanoidMotionState::Hold;
+  anim_ctx.gait.state = Render::GL::HumanoidMotionState::Hold;
   anim_ctx.inputs.is_in_hold_mode = true;
   anim_ctx.inputs.hold_entry_progress = mix;
 
@@ -619,7 +620,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
 
     Render::GL::HumanoidAnimationContext anim_ctx{};
     anim_ctx.gait = hold_gait;
-    anim_ctx.motion_state = Render::GL::HumanoidMotionState::Attacking;
+    anim_ctx.gait.state = Render::GL::HumanoidMotionState::Attacking;
     anim_ctx.attack_phase = phase;
     anim_ctx.jitter_seed = 0U;
     anim_ctx.inputs.is_attacking = true;
@@ -652,8 +653,11 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
 
     Render::GL::HumanoidAnimationContext anim_ctx_r{};
     anim_ctx_r.gait = hold_gait;
-    anim_ctx_r.motion_state = Render::GL::HumanoidMotionState::Hold;
-    anim_ctx_r.inputs.is_moving = (clip.riding_type != BakerRidingType::Idle);
+    anim_ctx_r.gait.state = Render::GL::HumanoidMotionState::Hold;
+    anim_ctx_r.inputs.movement_state =
+        (clip.riding_type != BakerRidingType::Idle)
+            ? Render::Creature::MovementAnimationState::Walk
+            : Render::Creature::MovementAnimationState::Idle;
 
     auto horse_profile = Render::GL::make_horse_profile(0U, {}, {});
     auto mount = Render::GL::compute_mount_frame(horse_profile);
@@ -753,7 +757,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       idle_time = ambient_phase * clip.cycle_time;
       Render::GL::HumanoidAnimationContext anim_ctx{};
       anim_ctx.gait = gait;
-      anim_ctx.motion_state = Render::GL::HumanoidMotionState::Idle;
+      anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
       if (profile == HumanoidBakeProfile::SwordReady) {
         ctrl.hold_sword_and_shield();
@@ -786,20 +790,12 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
         clip.ambient_idle_type == BakerAmbientIdleType::None) {
       Render::GL::HumanoidAnimationContext anim_ctx{};
       anim_ctx.gait = gait;
-      anim_ctx.motion_state = clip.state;
-      anim_ctx.inputs.is_moving = gait.speed > 0.1F;
+      anim_ctx.gait.state = clip.state;
+      anim_ctx.inputs.movement_state =
+          (gait.speed > 0.1F) ? Render::Creature::MovementAnimationState::Walk
+                              : Render::Creature::MovementAnimationState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
       ctrl.hold_sword_and_shield();
-    }
-    if (profile == HumanoidBakeProfile::SpearReady &&
-        clip.state == Render::GL::HumanoidMotionState::Idle &&
-        clip.hold_type == BakerHoldType::None &&
-        clip.ambient_idle_type == BakerAmbientIdleType::None) {
-      Render::GL::HumanoidAnimationContext anim_ctx{};
-      anim_ctx.gait = gait;
-      anim_ctx.motion_state = Render::GL::HumanoidMotionState::Idle;
-      Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
-      ctrl.hold_spear_idle();
     }
     if (clip.state == Render::GL::HumanoidMotionState::Idle &&
         clip.riding_type == BakerRidingType::Idle &&
@@ -807,7 +803,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
         clip.ambient_idle_type == BakerAmbientIdleType::None) {
       Render::GL::HumanoidAnimationContext anim_ctx{};
       anim_ctx.gait = gait;
-      anim_ctx.motion_state = Render::GL::HumanoidMotionState::Idle;
+      anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
       ctrl.apply_micro_idle(idle_time, 0U);
     }

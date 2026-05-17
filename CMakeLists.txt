@@ -291,6 +291,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/campaign_map/hannibal_path.json
             assets/campaign_map/campaign_state.json
             assets/campaign_map/provinces.json
+            assets.qrc
             assets/visuals/unit_visuals.json
             assets/visuals/unit_equipment_loadouts.json
             assets/visuals/emblems/rome.png

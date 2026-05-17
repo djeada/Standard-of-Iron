@@ -406,7 +406,8 @@ auto make_anim_key(const AnimationInputs& anim,
                    float phase_offset,
                    std::uint8_t attack_variant) -> AnimKey {
   AnimKey key{};
-  auto const intent = Render::Creature::resolve_pose_intent(anim);
+  auto const pose_classification = Render::Creature::classify_pose(anim);
+  auto const intent = pose_classification.intent;
   key.state = to_anim_state(intent);
 
   switch (intent) {
@@ -469,8 +470,6 @@ auto make_anim_key(const AnimationInputs& anim,
 auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
   AnimationInputs anim{};
   anim.time = frame_to_phase(key.frame) * k_anim_cycle_seconds;
-  anim.is_moving = false;
-  anim.is_running = false;
   anim.is_attacking = false;
   anim.is_melee = false;
   anim.is_in_hold_mode = false;
@@ -493,11 +492,10 @@ auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
 
   switch (key.state) {
   case AnimState::Move:
-    anim.is_moving = true;
+    anim.movement_state = Render::Creature::MovementAnimationState::Walk;
     break;
   case AnimState::Run:
-    anim.is_moving = true;
-    anim.is_running = true;
+    anim.movement_state = Render::Creature::MovementAnimationState::Run;
     break;
   case AnimState::AttackMelee:
     anim.is_attacking = true;
@@ -530,6 +528,7 @@ auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
     break;
   case AnimState::Idle:
   default:
+    anim.movement_state = Render::Creature::MovementAnimationState::Idle;
     break;
   }
 

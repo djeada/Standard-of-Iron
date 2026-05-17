@@ -7,15 +7,20 @@
 namespace Game::Systems {
 
 namespace {
-constexpr float k_min_movement_speed_sq = 0.01F;
 
-[[nodiscard]] inline auto
-is_unit_moving(const Engine::Core::MovementComponent* movement) noexcept -> bool {
-  if (movement == nullptr) {
-    return false;
+[[nodiscard]] auto has_locomotion_intent(
+    const Engine::Core::MotionPresentationComponent* motion,
+    const Engine::Core::MovementComponent* movement) noexcept -> bool {
+  if (motion != nullptr && motion->initialized) {
+    return motion->has_locomotion();
   }
-  const float speed_sq = movement->vx * movement->vx + movement->vz * movement->vz;
-  return speed_sq > k_min_movement_speed_sq;
+  if (motion != nullptr && motion->has_locomotion()) {
+    return true;
+  }
+  return movement != nullptr &&
+         ((movement->vx * movement->vx + movement->vz * movement->vz) > 1.0e-5F ||
+          movement->has_target || movement->has_waypoints() || movement->path_pending ||
+          movement->pending_request_id != 0);
 }
 } // namespace
 
@@ -45,9 +50,7 @@ void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
     const auto* motion =
         entity->get_component<Engine::Core::MotionPresentationComponent>();
     const auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-    const bool is_moving = (motion != nullptr && motion->snapshot_valid)
-                               ? motion->is_moving
-                               : is_unit_moving(movement);
+    const bool is_moving = has_locomotion_intent(motion, movement);
 
     if (stamina->run_requested && is_moving) {
       if (!stamina->is_running && stamina->can_start_running()) {

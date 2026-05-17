@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <numbers>
 #include <vector>
 
 #include "../core/component.h"
@@ -20,7 +21,14 @@ struct FootOffset {
   float z;
 };
 
-constexpr float k_pi = 3.14159265F;
+constexpr float k_pi = std::numbers::pi_v<float>;
+
+[[nodiscard]] auto
+is_motion_active(const Engine::Core::Entity& entity) noexcept -> bool {
+  auto const* motion =
+      entity.get_component<Engine::Core::MotionPresentationComponent>();
+  return motion != nullptr && motion->has_locomotion();
+}
 
 void add_all_foot_stomps(Engine::Core::TransformComponent* transform,
                          Engine::Core::ElephantComponent* elephant_comp,
@@ -41,7 +49,7 @@ void add_all_foot_stomps(Engine::Core::TransformComponent* transform,
   float const sin_y = std::sin(yaw);
 
   for (const auto& local : foot_locals) {
-    Engine::Core::ElephantStompImpactComponent::ImpactRecord impact;
+    Engine::Core::ElephantStompImpactComponent::ImpactRecord impact{};
     impact.x = transform->position.x + local.x * cos_y + local.z * sin_y;
     impact.z = transform->position.z - local.x * sin_y + local.z * cos_y;
     impact.time = 0.0F;
@@ -171,18 +179,14 @@ void ElephantAttackSystem::process_trample_damage(Engine::Core::Entity* elephant
   auto* elephant_comp = elephant->get_component<Engine::Core::ElephantComponent>();
   auto* unit = elephant->get_component<Engine::Core::UnitComponent>();
   auto* transform = elephant->get_component<Engine::Core::TransformComponent>();
-  auto* movement = elephant->get_component<Engine::Core::MovementComponent>();
   auto* attack = elephant->get_component<Engine::Core::AttackComponent>();
   auto* attack_target = elephant->get_component<Engine::Core::AttackTargetComponent>();
 
-  if (elephant_comp == nullptr || unit == nullptr || transform == nullptr ||
-      movement == nullptr) {
+  if (elephant_comp == nullptr || unit == nullptr || transform == nullptr) {
     return;
   }
 
-  constexpr float k_movement_threshold = 0.1F;
-  bool const is_moving = (std::abs(movement->vx) > k_movement_threshold ||
-                          std::abs(movement->vz) > k_movement_threshold);
+  bool const is_moving = is_motion_active(*elephant);
 
   bool has_close_target = false;
   if (!is_moving && attack_target != nullptr && attack_target->target_id != 0) {
@@ -269,7 +273,7 @@ void ElephantAttackSystem::process_trample_damage(Engine::Core::Entity* elephant
 }
 
 void ElephantAttackSystem::process_panic_mechanic(Engine::Core::Entity* elephant,
-                                                  Engine::Core::World* world,
+                                                  Engine::Core::World* /*world*/,
                                                   float delta_time) {
   auto* elephant_comp = elephant->get_component<Engine::Core::ElephantComponent>();
   auto* movement = elephant->get_component<Engine::Core::MovementComponent>();
@@ -296,7 +300,8 @@ void ElephantAttackSystem::process_panic_mechanic(Engine::Core::Entity* elephant
     if (transform != nullptr) {
 
       float const angle = static_cast<float>(std::rand()) /
-                          static_cast<float>(RAND_MAX) * 3.14159F * 2.0F;
+                          static_cast<float>(RAND_MAX) * std::numbers::pi_v<float> *
+                          2.0F;
       float const distance = 10.0F;
 
       movement->target_x = transform->position.x + std::cos(angle) * distance;
