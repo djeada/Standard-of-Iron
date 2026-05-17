@@ -352,7 +352,10 @@ auto evaluate_horse_motion(const HorseProfile& profile,
 
   HorseMotionSample sample{};
   bool const rider_has_motion = rider_ctx.is_walking() || rider_ctx.is_running();
-  bool const has_locomotion_input = rider_has_motion || anim.is_moving;
+  bool const anim_has_motion =
+      Render::Creature::is_moving_animation(anim.movement_state);
+  bool const anim_has_run = Render::Creature::is_running_animation(anim.movement_state);
+  bool const has_locomotion_input = rider_has_motion || anim_has_motion;
 
   constexpr float k_idle_speed_max = 0.5F;
   constexpr float k_walk_speed_max = 3.0F;
@@ -362,8 +365,8 @@ auto evaluate_horse_motion(const HorseProfile& profile,
 
   float speed = rider_ctx.locomotion_speed();
   if (speed < 0.01F) {
-    speed = anim.is_running ? 6.2F : (anim.is_moving ? 1.4F : 0.0F);
-  } else if (anim.is_running) {
+    speed = anim_has_run ? 6.2F : (anim_has_motion ? 1.4F : 0.0F);
+  } else if (anim_has_run) {
     speed = std::max(speed, 6.2F);
   }
   sample.rider_intensity = std::max(rider_ctx.locomotion_normalized_speed(),
@@ -391,7 +394,7 @@ auto evaluate_horse_motion(const HorseProfile& profile,
 
     switch (anchor) {
     case GaitType::IDLE:
-      if (!anim.is_moving && speed < k_idle_speed_max) {
+      if (!anim_has_motion && speed < k_idle_speed_max) {
         return GaitType::IDLE;
       }
       if (upshift(idle_up)) {
@@ -403,9 +406,9 @@ auto evaluate_horse_motion(const HorseProfile& profile,
         }
         return GaitType::WALK;
       }
-      return anim.is_moving ? GaitType::WALK : GaitType::IDLE;
+      return anim_has_motion ? GaitType::WALK : GaitType::IDLE;
     case GaitType::WALK:
-      if (downshift(idle_dn) && !anim.is_moving) {
+      if (downshift(idle_dn) && !anim_has_motion) {
         return GaitType::IDLE;
       }
       if (upshift(walk_up)) {

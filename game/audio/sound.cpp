@@ -59,6 +59,14 @@ auto Sound::is_loaded() const -> bool {
   return m_loaded.load();
 }
 
+auto Sound::is_playing() const -> bool {
+  if ((m_backend == nullptr) || !m_loaded) {
+    return false;
+  }
+
+  return m_backend->is_sound_active(m_track_id);
+}
+
 void Sound::play(float volume, bool loop) {
   if ((m_backend == nullptr) || !m_loaded) {
     qWarning() << "Sound: Cannot play - backend not available or not loaded";
@@ -73,6 +81,11 @@ void Sound::play(float volume, bool loop) {
 }
 
 void Sound::stop() {
+  if ((m_backend == nullptr) || !m_loaded) {
+    return;
+  }
+
+  m_backend->stop_sound(m_track_id);
 }
 
 void Sound::set_volume(float volume) {

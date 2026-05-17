@@ -188,6 +188,12 @@ enum class MotionPresentationSource : std::uint8_t {
   ForcedDisplacement
 };
 
+enum class MotionPresentationState : std::uint8_t {
+  Idle,
+  Walk,
+  Run
+};
+
 class MotionPresentationComponent : public Component {
 public:
   MotionPresentationComponent() = default;
@@ -199,8 +205,6 @@ public:
   float velocity_x{0.0F}, velocity_z{0.0F};
   float speed{0.0F};
   float direction_x{0.0F}, direction_z{1.0F};
-  bool is_moving{false};
-  bool is_running{false};
   bool has_velocity{false};
   bool has_navigation_intent{false};
   bool has_chase_intent{false};
@@ -208,8 +212,31 @@ public:
   bool has_movement_target{false};
   float movement_target_x{0.0F}, movement_target_z{0.0F};
   MotionPresentationSource source{MotionPresentationSource::None};
+  MotionPresentationState state{MotionPresentationState::Idle};
+  MotionPresentationState previous_state{MotionPresentationState::Idle};
+  bool state_changed{false};
+  float state_time{0.0F};
   float seconds_since_motion{0.0F};
   float tick_delta_time{0.0F};
+
+  void set_state(MotionPresentationState next_state) noexcept {
+    previous_state = state;
+    state = next_state;
+    state_changed = state != previous_state;
+  }
+
+  [[nodiscard]] auto is_idle_state() const noexcept -> bool {
+    return state == MotionPresentationState::Idle;
+  }
+  [[nodiscard]] auto is_walk_state() const noexcept -> bool {
+    return state == MotionPresentationState::Walk;
+  }
+  [[nodiscard]] auto is_run_state() const noexcept -> bool {
+    return state == MotionPresentationState::Run;
+  }
+  [[nodiscard]] auto has_locomotion() const noexcept -> bool {
+    return state != MotionPresentationState::Idle;
+  }
 };
 
 class AttackComponent : public Component {

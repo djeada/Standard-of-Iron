@@ -126,7 +126,8 @@ auto evaluate_elephant_motion(const ElephantProfile& profile,
   sample.gait = g;
 
   Render::Creature::MovementAnimationState const movement_animation =
-      Render::Creature::movement_animation_from_flags(anim.is_moving, anim.is_running);
+      anim.movement_state;
+  sample.movement_state = movement_animation;
   sample.is_moving = Render::Creature::is_moving_animation(movement_animation);
   sample.is_fighting =
       anim.is_attacking || (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
@@ -328,7 +329,7 @@ void update_elephant_gait(ElephantGaitState& state,
   const ElephantGait& g = profile.gait;
   float const cycle_time = std::max(g.cycle_time, 0.001F);
   Render::Creature::MovementAnimationState const movement_animation =
-      Render::Creature::movement_animation_from_flags(anim.is_moving, anim.is_running);
+      anim.movement_state;
   bool const is_moving = Render::Creature::is_moving_animation(movement_animation);
   float const locomotion_scale =
       Render::Creature::is_running_animation(movement_animation) ? 1.18F : 1.0F;

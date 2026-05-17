@@ -8,6 +8,7 @@
 #include <numbers>
 #include <optional>
 
+#include "../creature/movement_state.h"
 #include "humanoid_math.h"
 #include "spear_pose_utils.h"
 
@@ -1331,7 +1332,10 @@ void HumanoidPoseController::hold_sword_and_shield() {
   using HP = HumanProportions;
 
   float const moving_mix =
-      (m_anim_ctx.inputs.is_moving || m_anim_ctx.gait.speed > 0.1F) ? 1.0F : 0.0F;
+      (Render::Creature::is_moving_animation(m_anim_ctx.inputs.movement_state) ||
+       m_anim_ctx.gait.speed > 0.1F)
+          ? 1.0F
+          : 0.0F;
   QVector3D const sword_hand_pos(0.34F + moving_mix * 0.03F,
                                  HP::SHOULDER_Y - 0.06F - moving_mix * 0.05F,
                                  0.44F + moving_mix * 0.06F);

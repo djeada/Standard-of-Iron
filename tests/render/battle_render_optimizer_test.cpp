@@ -22,7 +22,7 @@ protected:
   static auto moving_motion() -> Engine::Core::MotionPresentationComponent {
     Engine::Core::MotionPresentationComponent motion;
     motion.snapshot_valid = true;
-    motion.is_moving = true;
+    motion.set_state(Engine::Core::MotionPresentationState::Walk);
     return motion;
   }
 };
@@ -65,7 +65,7 @@ TEST_F(BattleRenderOptimizerTest, MovingUnitsWithStaleSnapshotAlwaysRender) {
 
   Engine::Core::MotionPresentationComponent motion;
   motion.snapshot_valid = false; // stale: between begin and finalize
-  motion.is_moving = true;
+  motion.set_state(Engine::Core::MotionPresentationState::Walk);
 
   // Find the entity_id that would be temporally culled without the fix
   uint32_t const frame = optimizer.frame_counter();
@@ -94,7 +94,7 @@ TEST_F(BattleRenderOptimizerTest,
 
   Engine::Core::MotionPresentationComponent motion;
   motion.snapshot_valid = false; // stale: between begin and finalize
-  motion.is_moving = true;
+  motion.set_state(Engine::Core::MotionPresentationState::Walk);
 
   float const far_distance_sq = 100.0F * 100.0F;
   EXPECT_TRUE(optimizer.should_update_animation(

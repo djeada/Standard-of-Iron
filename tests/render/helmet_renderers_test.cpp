@@ -116,7 +116,7 @@ protected:
     frames = create_test_frames();
     palette = create_test_palette();
     anim.inputs.time = 0.0F;
-    anim.inputs.is_moving = false;
+    anim.inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
     anim.inputs.is_attacking = false;
     anim.inputs.is_melee = false;
   }

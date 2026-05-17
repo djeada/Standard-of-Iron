@@ -17,6 +17,7 @@ public:
   ~Sound() override;
 
   [[nodiscard]] auto is_loaded() const -> bool;
+  [[nodiscard]] auto is_playing() const -> bool;
   void play(float volume = DEFAULT_VOLUME, bool loop = false);
   void stop();
   void set_volume(float volume);

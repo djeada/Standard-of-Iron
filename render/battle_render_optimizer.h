@@ -71,11 +71,11 @@ public:
       return true;
     }
 
-    // Use is_moving directly — snapshot_valid is false during the gap between
-    // begin_motion_presentation_frame and finalize_motion_presentation_frame.
-    // is_moving retains its last finalized value throughout that window and is
-    // safe to read here because render_world holds entity_mutex.
-    bool const is_moving = motion != nullptr && motion->is_moving;
+    // Use the finalized motion state directly. snapshot_valid is false during the gap
+    // between begin_motion_presentation_frame and finalize_motion_presentation_frame.
+    // state retains its last finalized value throughout that window and is safe
+    // to read here because render_world holds entity_mutex.
+    bool const is_moving = motion != nullptr && motion->has_locomotion();
     if (is_selected || is_hovered || is_moving) {
       return true;
     }
@@ -116,9 +116,10 @@ public:
       return true;
     }
 
-    // Use is_moving directly — same reasoning as should_render_unit: snapshot_valid
-    // may be false during the render window but is_moving retains its last valid state.
-    bool const is_moving = motion != nullptr && motion->is_moving;
+    // Use the finalized motion state directly. Same reasoning as should_render_unit:
+    // snapshot_valid may be false during the render window but state retains its
+    // last valid value.
+    bool const is_moving = motion != nullptr && motion->has_locomotion();
     if (is_moving) {
       return true;
     }

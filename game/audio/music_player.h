@@ -26,6 +26,8 @@ public:
   void play(const std::string& track_id,
             float volume = AudioConstants::DEFAULT_VOLUME,
             bool loop = true);
+  auto
+  play(const std::string& track_id, float volume, bool loop, bool crossfade) -> int;
   void stop();
   void pause();
   void resume();
@@ -64,11 +66,13 @@ private:
   void setMasterVolume_gui(float volume, int fade_ms);
   void stopAll_gui(int fade_ms);
   auto find_free_channel() const -> int;
+  auto find_free_channel_excluding(int excluded_channel) const -> int;
 
   QPointer<MiniaudioBackend> m_backend;
   std::unordered_map<std::string, QString> m_tracks;
   int m_channel_count{0};
   int m_default_channel{0};
+  int m_current_music_channel{-1};
   bool m_initialized{false};
 };
 

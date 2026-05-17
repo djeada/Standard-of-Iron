@@ -506,7 +506,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   EXPECT_TRUE(
       contains(prepare_source, "RCP::model_world_origin(inst_ctx.model).y() +"));
   EXPECT_TRUE(contains(prepare_source,
-                       "locomotion_state.motion_state = "
+                       "locomotion_state.gait.state = "
                        "Render::GL::HumanoidMotionState::Idle;"));
   EXPECT_TRUE(
       contains(prepare_source, "anim_ctx.ambient_idle_type = AmbientIdleType::Jump;"));

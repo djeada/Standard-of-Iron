@@ -89,6 +89,7 @@ void MusicPlayer::shutdown() {
   }
   m_tracks.clear();
   m_channel_count = 0;
+  m_current_music_channel = -1;
   m_initialized = false;
 }
 
@@ -124,10 +125,70 @@ void MusicPlayer::register_track(const std::string& track_id,
 }
 
 void MusicPlayer::play(const std::string& id, float v, bool loop) {
-  play(id, v, loop, m_default_channel, AudioConstants::DEFAULT_FADE_IN_MS);
+  (void)play(id, v, loop, false);
+}
+
+auto MusicPlayer::play(const std::string& id,
+                       float vol,
+                       bool loop,
+                       bool crossfade) -> int {
+  if (!m_initialized || (m_backend == nullptr)) {
+    qWarning() << "MusicPlayer not initialized";
+    return -1;
+  }
+
+  int result = -1;
+  if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
+    QMetaObject::invokeMethod(
+        this,
+        [this, id, vol, loop, crossfade, &result]() mutable {
+          if (crossfade) {
+            int const old_channel = m_current_music_channel;
+            int const new_channel = find_free_channel_excluding(old_channel);
+            if (old_channel >= 0 && old_channel == new_channel) {
+              stop_gui(old_channel, AudioConstants::DEFAULT_FADE_OUT_MS);
+            }
+            play_gui(id, vol, loop, new_channel, AudioConstants::DEFAULT_FADE_IN_MS);
+            if (old_channel >= 0 && old_channel != new_channel) {
+              stop_gui(old_channel, AudioConstants::DEFAULT_FADE_OUT_MS);
+            }
+            m_current_music_channel = new_channel;
+            result = new_channel;
+          } else {
+            stopAll_gui(AudioConstants::NO_FADE_MS);
+            play_gui(id, vol, loop, m_default_channel, AudioConstants::NO_FADE_MS);
+            m_current_music_channel = m_default_channel;
+            result = m_default_channel;
+          }
+        },
+        Qt::BlockingQueuedConnection);
+    return result;
+  }
+
+  if (crossfade) {
+    int const old_channel = m_current_music_channel;
+    int const new_channel = find_free_channel_excluding(old_channel);
+    if (old_channel >= 0 && old_channel == new_channel) {
+      stop_gui(old_channel, AudioConstants::DEFAULT_FADE_OUT_MS);
+    }
+    play_gui(id, vol, loop, new_channel, AudioConstants::DEFAULT_FADE_IN_MS);
+    if (old_channel >= 0 && old_channel != new_channel) {
+      stop_gui(old_channel, AudioConstants::DEFAULT_FADE_OUT_MS);
+    }
+    m_current_music_channel = new_channel;
+    return new_channel;
+  }
+
+  stopAll_gui(AudioConstants::NO_FADE_MS);
+  play_gui(id, vol, loop, m_default_channel, AudioConstants::NO_FADE_MS);
+  m_current_music_channel = m_default_channel;
+  return m_default_channel;
 }
 void MusicPlayer::stop() {
   stop(m_default_channel, AudioConstants::DEFAULT_FADE_OUT_MS);
+  if (m_current_music_channel == m_default_channel) {
+    m_current_music_channel = -1;
+  }
 }
 void MusicPlayer::pause() {
   pause(m_default_channel);
@@ -136,6 +197,10 @@ void MusicPlayer::resume() {
   resume(m_default_channel);
 }
 void MusicPlayer::set_volume(float v) {
+  if (m_current_music_channel >= 0) {
+    set_volume(m_current_music_channel, v, AudioConstants::NO_FADE_MS);
+    return;
+  }
   set_volume(m_default_channel, v, AudioConstants::NO_FADE_MS);
 }
 
@@ -257,6 +322,21 @@ auto MusicPlayer::find_free_channel() const -> int {
   return 0;
 }
 
+auto MusicPlayer::find_free_channel_excluding(int excluded_channel) const -> int {
+  if (m_backend == nullptr) {
+    return 0;
+  }
+  for (int i = 0; i < m_channel_count; ++i) {
+    if (i == excluded_channel) {
+      continue;
+    }
+    if (!m_backend->channel_playing(i)) {
+      return i;
+    }
+  }
+  return find_free_channel();
+}
+
 void MusicPlayer::play_gui(
     const std::string& id, float vol, bool loop, int ch, int fade_ms) {
   if (m_backend == nullptr) {
@@ -286,4 +366,5 @@ void MusicPlayer::setMasterVolume_gui(float v, int fade_ms) {
 }
 void MusicPlayer::stopAll_gui(int fade_ms) {
   m_backend->stop_all(fade_ms);
+  m_current_music_channel = -1;
 }

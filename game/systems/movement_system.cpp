@@ -34,6 +34,85 @@ constexpr float k_stuck_check_dist_sq = 0.01F;
 constexpr float k_time_stuck_threshold = 1.5F;
 constexpr float k_unstuck_cooldown_seconds = 1.5F;
 
+class MovementModePolicy {
+public:
+  virtual ~MovementModePolicy() = default;
+  [[nodiscard]] virtual auto
+  should_skip_movement(const Engine::Core::Entity&) const -> bool {
+    return false;
+  }
+};
+
+class StandardMovementModePolicy final : public MovementModePolicy {};
+
+class CommanderMovementModePolicy final : public MovementModePolicy {
+public:
+  [[nodiscard]] auto
+  should_skip_movement(const Engine::Core::Entity& entity) const -> bool override {
+    auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
+    return commander != nullptr &&
+           (commander->jump_active || commander->fpv_controlled);
+  }
+};
+
+auto movement_mode_policy(const Engine::Core::Entity& entity)
+    -> const MovementModePolicy& {
+  static StandardMovementModePolicy const standard_policy;
+  static CommanderMovementModePolicy const commander_policy;
+  return entity.has_component<Engine::Core::CommanderComponent>()
+             ? static_cast<const MovementModePolicy&>(commander_policy)
+             : static_cast<const MovementModePolicy&>(standard_policy);
+}
+
+class UnitMovementImplementation {
+public:
+  virtual ~UnitMovementImplementation() = default;
+
+  [[nodiscard]] virtual auto
+  max_speed(const Engine::Core::UnitComponent& unit,
+            const Engine::Core::StaminaComponent* stamina) const -> float {
+    float speed = std::max(0.1F, unit.speed);
+    if (stamina != nullptr && stamina->is_running) {
+      speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
+    }
+    return speed;
+  }
+
+  [[nodiscard]] virtual auto movement_turn_speed_degrees() const -> float {
+    return desired_yaw_turn_speed_degrees;
+  }
+
+  [[nodiscard]] virtual auto melee_turn_speed_degrees() const -> float {
+    return desired_yaw_turn_speed_degrees;
+  }
+};
+
+class HumanoidMovementImplementation final : public UnitMovementImplementation {};
+
+class HorseMovementImplementation final : public UnitMovementImplementation {
+public:
+  [[nodiscard]] auto melee_turn_speed_degrees() const -> float override {
+    return 90.0F;
+  }
+};
+
+class ElephantMovementImplementation final : public UnitMovementImplementation {};
+
+[[nodiscard]] auto movement_implementation_for(const Engine::Core::UnitComponent& unit)
+    -> const UnitMovementImplementation& {
+  static HumanoidMovementImplementation const humanoid;
+  static HorseMovementImplementation const horse;
+  static ElephantMovementImplementation const elephant;
+
+  if (unit.spawn_type == Game::Units::SpawnType::Elephant) {
+    return elephant;
+  }
+  if (Game::Units::is_cavalry(unit.spawn_type)) {
+    return horse;
+  }
+  return humanoid;
+}
+
 void synchronize_with_bridge_centerline(
     Engine::Core::TransformComponent* transform,
     const Engine::Core::MovementComponent* movement,
@@ -102,7 +181,8 @@ auto is_point_allowed(const QVector3D& pos,
       return pathfinder->is_walkable(grid.x, grid.y);
     }
     return pathfinder->is_walkable_with_radius(grid.x, grid.y, unit_radius);
-  } else if (terrain_service.is_initialized()) {
+  }
+  if (terrain_service.is_initialized()) {
     int const grid_x = static_cast<int>(std::round(pos.x()));
     int const grid_z = static_cast<int>(std::round(pos.z()));
     return terrain_service.is_walkable(grid_x, grid_z);
@@ -176,15 +256,21 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   if ((transform == nullptr) || (movement == nullptr) || (unit == nullptr)) {
     return;
   }
+  const UnitMovementImplementation& movement_impl = movement_implementation_for(*unit);
 
   if (unit->health <= 0 ||
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
     return;
   }
 
-  if (auto const* commander = entity->get_component<Engine::Core::CommanderComponent>();
-      commander != nullptr && commander->jump_active) {
-
+  if (movement_mode_policy(*entity).should_skip_movement(*entity)) {
+    if (auto const* commander =
+            entity->get_component<Engine::Core::CommanderComponent>();
+        commander != nullptr && commander->fpv_controlled && !commander->jump_active) {
+      movement->has_target = false;
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
+    }
     return;
   }
 
@@ -236,12 +322,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->clear_path();
     movement->path_pending = false;
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-      constexpr float k_cavalry_melee_turn_speed_degrees = 90.0F;
-      bool const is_cavalry_unit = Game::Units::is_cavalry(unit->spawn_type);
-      float const melee_turn_speed = is_cavalry_unit
-                                         ? k_cavalry_melee_turn_speed_degrees
-                                         : desired_yaw_turn_speed_degrees;
-      apply_desired_yaw(transform, delta_time, melee_turn_speed);
+      apply_desired_yaw(
+          transform, delta_time, movement_impl.melee_turn_speed_degrees());
     }
     return;
   }
@@ -273,7 +355,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       float const dist = std::sqrt(std::max(dist_sq, 0.0001F));
       float const nx = dx / dist;
       float const nz = dz / dist;
-      float base_speed = std::max(0.1F, unit->speed);
+      float const base_speed = movement_impl.max_speed(*unit, nullptr);
       movement->vx = nx * base_speed;
       movement->vz = nz * base_speed;
 
@@ -357,12 +439,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->time_since_last_path_request += delta_time;
   }
 
-  float base_speed = std::max(0.1F, unit->speed);
   auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
-  if (stamina != nullptr && stamina->is_running) {
-    base_speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
-  }
-  const float max_speed = base_speed;
+  const float max_speed = movement_impl.max_speed(*unit, stamina);
   const float accel = max_speed * 4.0F;
   const float damping = 6.0F;
 
@@ -644,7 +722,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       float const current = transform->rotation.y;
 
       float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-      float const turn_speed = 720.0F;
+      float const turn_speed = movement_impl.movement_turn_speed_degrees();
       float const step =
           std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
       transform->rotation.y = current + step;

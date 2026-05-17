@@ -33,8 +33,7 @@ auto select_state(const Render::GL::AnimationInputs& inputs,
   if (dead_flag) {
     return HumanoidState::Death;
   }
-  return Render::Creature::to_humanoid_state(
-      Render::Creature::resolve_pose_intent(inputs));
+  return Render::Creature::classify_pose(inputs).humanoid_state;
 }
 
 HumanoidStateMachine::HumanoidStateMachine()

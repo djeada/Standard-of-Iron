@@ -5,7 +5,6 @@
 namespace Engine::Core {
 class Entity;
 class World;
-class MovementComponent;
 class TransformComponent;
 class AttackComponent;
 class AttackTargetComponent;

@@ -437,8 +437,9 @@ void CreatureRenderBatch::add_humanoid(
           : Render::Creature::ArchetypeRegistry::k_humanoid_base;
 
   auto resolved_archetype_id = archetype_id;
-  auto const intent = Render::Creature::resolve_pose_intent(anim.inputs);
-  auto state = humanoid_state_for_anim(anim, intent);
+  auto const pose_classification = Render::Creature::classify_pose(anim.inputs);
+  auto const intent = pose_classification.intent;
+  auto state = pose_classification.animation_state;
   float const phase = humanoid_phase_for_anim(anim);
   auto clip_var = humanoid_clip_variant_for_anim(resolved_archetype_id, anim);
   if (output.spec.variant_table != nullptr) {
