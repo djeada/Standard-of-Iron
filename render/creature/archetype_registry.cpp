@@ -45,6 +45,15 @@ make_snapshot_table_for_clips(const std::array<std::uint16_t, k_state_count>& cl
   return t;
 }
 
+constexpr auto
+make_humanoid_snapshot_table(const std::array<std::uint16_t, k_state_count>& clips)
+    -> std::array<bool, k_state_count> {
+  auto t = make_snapshot_table_for_clips(clips);
+  t[static_cast<std::size_t>(AnimationStateId::Walk)] = false;
+  t[static_cast<std::size_t>(AnimationStateId::Run)] = false;
+  return t;
+}
+
 constexpr auto make_humanoid_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = k_humanoid_idle_clip;
@@ -169,7 +178,7 @@ void ArchetypeRegistry::seed_baseline() {
   humanoid.species = Render::Creature::Pipeline::CreatureKind::Humanoid;
   humanoid.bpat_clip = humanoid_clips;
   humanoid.bpat_clip_variant_count = make_humanoid_variant_count_table();
-  humanoid.snapshot = make_snapshot_table_for_clips(humanoid_clips);
+  humanoid.snapshot = make_humanoid_snapshot_table(humanoid_clips);
   humanoid.role_count = 6;
   register_archetype(humanoid);
 

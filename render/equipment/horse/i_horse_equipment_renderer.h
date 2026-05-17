@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../creature/movement_state.h"
 #include "../../horse/horse_renderer_base.h"
 #include "../i_equipment_renderer.h"
 
@@ -12,7 +13,8 @@ struct HorseAnimationContext {
   float time{0.0F};
   float phase{0.0F};
   float bob{0.0F};
-  bool is_moving{false};
+  Render::Creature::MovementAnimationState movement_state{
+      Render::Creature::MovementAnimationState::Idle};
   float rider_intensity{0.0F};
 };
 

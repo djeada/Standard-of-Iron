@@ -188,8 +188,8 @@ TEST_F(CommanderControlControllerTest,
   Render::GL::Camera camera;
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
 
-  Game::Systems::MovementSystem movement_system;
-  movement_system.update(&world, 0.2F);
+  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.update(0.2F);
 
   Render::GL::DrawContext ctx{};
   ctx.entity = commander;
@@ -203,7 +203,7 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_GT(std::abs(commander_data->fpv_motion_vx) +
                 std::abs(commander_data->fpv_motion_vz),
             0.05F);
-  EXPECT_TRUE(anim.is_moving);
+  EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
 }
 
 TEST_F(CommanderControlControllerTest, LockOnDropsAfterSustainedBuildingOcclusion) {

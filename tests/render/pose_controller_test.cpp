@@ -82,7 +82,7 @@ protected:
 
     anim_ctx = HumanoidAnimationContext{};
     anim_ctx.inputs.time = 0.0F;
-    anim_ctx.inputs.is_moving = false;
+    anim_ctx.inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
     anim_ctx.inputs.is_attacking = false;
     anim_ctx.variation = VariationParams::from_seed(12345);
     anim_ctx.gait.state = HumanoidMotionState::Idle;
@@ -271,7 +271,9 @@ TEST_F(HumanoidPoseControllerTest, AirborneJumpAmbientIdleLiftsFeetAndPelvis) {
 TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
   Engine::Core::Entity entity(1);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
   ASSERT_NE(movement, nullptr);
+  ASSERT_NE(motion, nullptr);
 
   Render::GL::DrawContext ctx{};
   ctx.entity = &entity;
@@ -284,12 +286,12 @@ TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
   anim = Render::GL::sample_anim_state(ctx);
   EXPECT_FLOAT_EQ(anim.idle_duration, 2.0F);
 
-  movement->has_target = true;
+  motion->set_state(Engine::Core::MotionPresentationState::Walk);
   ctx.animation_time = 4.0F;
   anim = Render::GL::sample_anim_state(ctx);
   EXPECT_FLOAT_EQ(anim.idle_duration, 0.0F);
 
-  movement->has_target = false;
+  motion->set_state(Engine::Core::MotionPresentationState::Idle);
   ctx.animation_time = 5.0F;
   anim = Render::GL::sample_anim_state(ctx);
   EXPECT_FLOAT_EQ(anim.idle_duration, 1.0F);
@@ -323,12 +325,17 @@ TEST(HumanoidAnimationInputs, FpvCommanderVelocityTriggersMovementAnimation) {
   Engine::Core::Entity entity(1);
   auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
   ASSERT_NE(commander, nullptr);
   ASSERT_NE(movement, nullptr);
+  ASSERT_NE(motion, nullptr);
   commander->fpv_controlled = true;
   movement->has_target = false;
   movement->vx = 1.4F;
   movement->vz = 0.0F;
+  motion->set_state(Engine::Core::MotionPresentationState::Walk);
+  motion->velocity_x = movement->vx;
+  motion->has_velocity = true;
 
   Render::GL::DrawContext ctx{};
   ctx.entity = &entity;
@@ -336,7 +343,7 @@ TEST(HumanoidAnimationInputs, FpvCommanderVelocityTriggersMovementAnimation) {
 
   auto anim = Render::GL::sample_anim_state(ctx);
 
-  EXPECT_TRUE(anim.is_moving);
+  EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
 }
 
 TEST_F(HumanoidPoseControllerTest, KneelLowersPelvis) {
@@ -534,7 +541,7 @@ TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldCarriesFartherForwardWhileM
 
   HumanoidPose moving_pose = pose;
   HumanoidAnimationContext moving_anim = anim_ctx;
-  moving_anim.inputs.is_moving = true;
+  moving_anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
   moving_anim.gait.speed = 1.5F;
   HumanoidPoseController moving_controller(moving_pose, moving_anim);
   moving_controller.hold_sword_and_shield();

@@ -10,6 +10,7 @@
 #include "../../../../game/core/world.h"
 #include "../../../../game/systems/combat_rules.h"
 #include "../../../creature/animation_state_components.h"
+#include "../../../creature/movement_animation.h"
 #include "../../../entity/registry.h"
 #include "../humanoid_constants.h"
 
@@ -18,10 +19,6 @@ namespace Render::GL {
 namespace {
 
 constexpr float k_builder_construct_cycles_per_second = 1.75F;
-constexpr float k_direct_control_move_speed_sq = 0.01F;
-constexpr float k_visual_move_speed_sq = 0.01F;
-constexpr float k_visual_move_goal_distance_sq = 0.35F * 0.35F;
-constexpr float k_visual_path_request_window = 0.35F;
 
 void reset_humanoid_locomotion_state(
     Render::Creature::HumanoidAnimationStateComponent& state) {
@@ -36,7 +33,6 @@ void reset_humanoid_locomotion_state(
   state.run_blend = 0.0F;
   state.locomotion_state = HumanoidMotionState::Idle;
   state.locomotion_initialized = false;
-  state.locomotion_was_moving = false;
 }
 
 void reset_humanoid_animation_state(
@@ -47,25 +43,32 @@ void reset_humanoid_animation_state(
   reset_humanoid_locomotion_state(state);
 }
 
-[[nodiscard]] auto
-has_direct_control_motion(const Engine::Core::CommanderComponent* commander,
-                          const Engine::Core::MovementComponent* movement) -> bool {
-  if (commander == nullptr || !commander->fpv_controlled) {
+class HumanoidAnimationModePolicy {
+public:
+  virtual ~HumanoidAnimationModePolicy() = default;
+  [[nodiscard]] virtual auto
+  is_guarding(const Engine::Core::CommanderGuardComponent*) const -> bool {
     return false;
   }
+};
 
-  if (movement != nullptr) {
-    float const movement_speed_sq =
-        movement->vx * movement->vx + movement->vz * movement->vz;
-    if (movement_speed_sq > k_direct_control_move_speed_sq) {
-      return true;
-    }
+class StandardHumanoidAnimationPolicy final : public HumanoidAnimationModePolicy {};
+
+class CommanderHumanoidAnimationPolicy final : public HumanoidAnimationModePolicy {
+public:
+  explicit CommanderHumanoidAnimationPolicy(
+      const Engine::Core::CommanderComponent* commander)
+      : m_commander(commander) {}
+
+  [[nodiscard]] auto is_guarding(
+      const Engine::Core::CommanderGuardComponent* guard) const -> bool override {
+    return m_commander != nullptr && m_commander->fpv_controlled && guard != nullptr &&
+           guard->active;
   }
 
-  float const fpv_speed_sq = commander->fpv_motion_vx * commander->fpv_motion_vx +
-                             commander->fpv_motion_vz * commander->fpv_motion_vz;
-  return fpv_speed_sq > k_direct_control_move_speed_sq;
-}
+private:
+  const Engine::Core::CommanderComponent* m_commander = nullptr;
+};
 
 auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
     -> CombatAnimPhase {
@@ -88,30 +91,6 @@ auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
   }
 }
 
-[[nodiscard]] auto combat_state_keeps_attack_pose_while_moving(
-    Engine::Core::CombatAnimationState state) noexcept -> bool {
-  switch (state) {
-  case Engine::Core::CombatAnimationState::WindUp:
-  case Engine::Core::CombatAnimationState::Strike:
-  case Engine::Core::CombatAnimationState::Impact:
-    return true;
-  case Engine::Core::CombatAnimationState::Advance:
-  case Engine::Core::CombatAnimationState::Recover:
-  case Engine::Core::CombatAnimationState::Reposition:
-  case Engine::Core::CombatAnimationState::Idle:
-  default:
-    return false;
-  }
-}
-
-[[nodiscard]] auto
-movement_speed_sq(const Engine::Core::MovementComponent* movement) noexcept -> float {
-  if (movement == nullptr) {
-    return 0.0F;
-  }
-  return movement->vx * movement->vx + movement->vz * movement->vz;
-}
-
 [[nodiscard]] auto forward_from_transform(
     const Engine::Core::TransformComponent* transform) noexcept -> QVector3D {
   if (transform == nullptr) {
@@ -126,76 +105,35 @@ movement_speed_sq(const Engine::Core::MovementComponent* movement) noexcept -> f
   return forward.normalized();
 }
 
-[[nodiscard]] auto attack_target_is_in_range(
-    const DrawContext& ctx,
-    const Engine::Core::AttackComponent* attack,
-    const Engine::Core::AttackTargetComponent* attack_target,
-    const Engine::Core::TransformComponent* transform) noexcept -> bool {
-  if (ctx.world == nullptr || attack == nullptr || attack_target == nullptr ||
-      attack_target->target_id == 0 || transform == nullptr) {
-    return false;
+[[nodiscard]] constexpr auto motion_presentation_to_animation_state(
+    Engine::Core::MotionPresentationState state) noexcept
+    -> Render::Creature::MovementAnimationState {
+  switch (state) {
+  case Engine::Core::MotionPresentationState::Run:
+    return Render::Creature::MovementAnimationState::Run;
+  case Engine::Core::MotionPresentationState::Walk:
+    return Render::Creature::MovementAnimationState::Walk;
+  case Engine::Core::MotionPresentationState::Idle:
+    return Render::Creature::MovementAnimationState::Idle;
   }
-
-  auto* target = ctx.world->get_entity(attack_target->target_id);
-  if (target == nullptr) {
-    return false;
-  }
-
-  auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-  if (target_transform == nullptr) {
-    return false;
-  }
-
-  float const dx = target_transform->position.x - transform->position.x;
-  float const dz = target_transform->position.z - transform->position.z;
-  float const dist_squared = dx * dx + dz * dz;
-  float target_radius =
-      std::max(target_transform->scale.x, target_transform->scale.z) * 0.5F;
-  auto* elephant = target->get_component<Engine::Core::ElephantComponent>();
-  if (elephant != nullptr) {
-    target_radius = std::max(target_radius, elephant->trample_radius);
-  }
-
-  float const effective_range = attack->range + target_radius + 0.25F;
-  return dist_squared <= effective_range * effective_range;
-}
-
-[[nodiscard]] auto movement_goal_is_active(
-    const Engine::Core::MovementComponent* movement,
-    const Engine::Core::TransformComponent* transform) noexcept -> bool {
-  if (movement == nullptr || transform == nullptr) {
-    return false;
-  }
-
-  QVector3D const current(transform->position.x, 0.0F, transform->position.z);
-  QVector3D const goal(movement->goal_x, 0.0F, movement->goal_y);
-  bool const goal_is_meaningful =
-      (goal - current).lengthSquared() > k_visual_move_goal_distance_sq;
-  if (!goal_is_meaningful) {
-    return false;
-  }
-
-  bool const has_recent_request =
-      movement->time_since_last_path_request < k_visual_path_request_window &&
-      (movement->last_goal_x != 0.0F || movement->last_goal_y != 0.0F);
-  return movement->repath_cooldown > 0.0F || has_recent_request ||
-         movement->time_stuck > 0.0F || movement->unstuck_cooldown > 0.0F;
+  return Render::Creature::MovementAnimationState::Idle;
 }
 
 [[nodiscard]] auto synthesize_visual_movement_from_inputs(
     const DrawContext& ctx, const AnimationInputs& anim) -> VisualMovementState {
   VisualMovementState state{};
   state.is_authoritative = true;
+  state.movement_state = anim.movement_state;
 
   auto* transform = (ctx.entity != nullptr)
                         ? ctx.entity->get_component<Engine::Core::TransformComponent>()
                         : nullptr;
   QVector3D const forward = forward_from_transform(transform);
   state.locomotion_direction = forward;
-  state.is_moving = anim.is_moving;
-  state.has_navigation_intent = anim.is_moving;
+  state.has_navigation_intent =
+      Render::Creature::is_moving_animation(state.movement_state);
 
-  if (!anim.is_moving) {
+  if (!Render::Creature::is_moving_animation(state.movement_state)) {
     return state;
   }
 
@@ -204,11 +142,13 @@ movement_speed_sq(const Engine::Core::MovementComponent* movement) noexcept -> f
                    : nullptr;
   if (unit != nullptr) {
     state.speed_hint = std::max(0.1F, unit->speed);
-    if (anim.is_running) {
+    if (Render::Creature::is_running_animation(state.movement_state)) {
       state.speed_hint *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
     }
   } else {
-    state.speed_hint = anim.is_running ? k_reference_run_speed : k_reference_walk_speed;
+    state.speed_hint = Render::Creature::is_running_animation(state.movement_state)
+                           ? k_reference_run_speed
+                           : k_reference_walk_speed;
   }
 
   return state;
@@ -223,7 +163,7 @@ movement_speed_sq(const Engine::Core::MovementComponent* movement) noexcept -> f
   state.has_navigation_intent = motion.has_navigation_intent;
   state.has_chase_intent = motion.has_chase_intent;
   state.attack_target_in_range = motion.attack_target_in_range;
-  state.is_moving = motion.is_moving;
+  state.movement_state = motion_presentation_to_animation_state(motion.state);
   state.has_movement_target = motion.has_movement_target;
   state.movement_target =
       motion.has_movement_target
@@ -240,7 +180,8 @@ movement_speed_sq(const Engine::Core::MovementComponent* movement) noexcept -> f
     state.locomotion_direction.normalize();
   }
   state.speed_hint = motion.speed;
-  if (state.is_moving && state.speed_hint <= 0.0F && ctx.entity != nullptr) {
+  if (Render::Creature::is_moving_animation(state.movement_state) &&
+      state.speed_hint <= 0.0F && ctx.entity != nullptr) {
     auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
     state.speed_hint = (unit != nullptr) ? std::max(0.1F, unit->speed) : 0.0F;
   }
@@ -256,144 +197,14 @@ auto resolve_visual_movement_state(const DrawContext& ctx) -> VisualMovementStat
     return state;
   }
 
-  // Use the motion snapshot whenever the component has been initialized by at
-  // least one begin_motion_presentation_frame call.  snapshot_valid is cleared
-  // at the start of each world tick and restored at the end, so it would be
-  // false during the race window in which the render thread holds entity_mutex
-  // but finalize_motion_presentation_frame has not yet run.  The snapshot
-  // fields (is_moving, speed, direction, …) are written only by finalize, which
-  // also holds entity_mutex, so they are always safe to read here and always
-  // reflect the correct last-finalized state — no data race, no stale idle.
-  // The legacy path reads MovementComponent fields directly; those can be
-  // written by the movement system without holding entity_mutex, producing a
-  // data race that manifests as infantry silently sliding without walk animation.
   if (auto* motion =
           ctx.entity->get_component<Engine::Core::MotionPresentationComponent>();
-      motion != nullptr && motion->initialized) {
+      motion != nullptr) {
     return visual_movement_from_motion_snapshot(ctx, *motion);
   }
 
-  auto* movement = ctx.entity->get_component<Engine::Core::MovementComponent>();
   auto* transform = ctx.entity->get_component<Engine::Core::TransformComponent>();
-  auto* attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
-  auto* attack_target =
-      ctx.entity->get_component<Engine::Core::AttackTargetComponent>();
-  auto* commander = ctx.entity->get_component<Engine::Core::CommanderComponent>();
-  auto* builder_prod =
-      ctx.entity->get_component<Engine::Core::BuilderProductionComponent>();
-  auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
-  auto* stamina = ctx.entity->get_component<Engine::Core::StaminaComponent>();
-
-  QVector3D const forward = forward_from_transform(transform);
-  QVector3D target_position = forward;
-  bool has_target_position = false;
-
-  float const speed_sq = movement_speed_sq(movement);
-  state.has_velocity = speed_sq > k_visual_move_speed_sq;
-  state.speed_hint = state.has_velocity ? std::sqrt(speed_sq) : 0.0F;
-
-  if (movement != nullptr) {
-    if (movement->has_waypoints()) {
-      auto const& waypoint = movement->current_waypoint();
-      target_position = QVector3D(waypoint.first, 0.0F, waypoint.second);
-      has_target_position = true;
-    } else if (movement->has_target) {
-      target_position = QVector3D(movement->target_x, 0.0F, movement->target_y);
-      has_target_position = true;
-    } else if (movement_goal_is_active(movement, transform)) {
-      target_position = QVector3D(movement->goal_x, 0.0F, movement->goal_y);
-      has_target_position = true;
-    }
-  }
-
-  if (state.has_velocity && movement != nullptr) {
-    state.locomotion_direction =
-        QVector3D(movement->vx, 0.0F, movement->vz).normalized();
-  } else if (has_target_position && transform != nullptr) {
-    QVector3D const current(transform->position.x, 0.0F, transform->position.z);
-    QVector3D const delta = target_position - current;
-    if (delta.lengthSquared() > 1.0e-6F) {
-      state.locomotion_direction = delta.normalized();
-    } else {
-      state.locomotion_direction = forward;
-    }
-  } else {
-    state.locomotion_direction = forward;
-  }
-
-  state.has_movement_target = has_target_position;
-  state.movement_target =
-      has_target_position ? target_position : QVector3D(0.0F, 0.0F, 0.0F);
-
-  if (builder_prod != nullptr && builder_prod->bypass_movement_active) {
-    state.is_moving = true;
-    state.has_navigation_intent = true;
-    state.has_movement_target = true;
-    state.movement_target =
-        QVector3D(builder_prod->bypass_target_x, 0.0F, builder_prod->bypass_target_z);
-    if (transform != nullptr) {
-      QVector3D const current(transform->position.x, 0.0F, transform->position.z);
-      QVector3D const delta = state.movement_target - current;
-      if (delta.lengthSquared() > 1.0e-6F) {
-        state.locomotion_direction = delta.normalized();
-      }
-    }
-    if (state.speed_hint <= 0.0F) {
-      state.speed_hint = (unit != nullptr) ? std::max(0.1F, unit->speed) : 0.0F;
-    }
-    return state;
-  }
-
-  state.attack_target_in_range =
-      attack_target_is_in_range(ctx, attack, attack_target, transform);
-  state.has_chase_intent = (attack_target != nullptr) && attack_target->target_id > 0 &&
-                           attack_target->should_chase && !state.attack_target_in_range;
-
-  bool const has_active_navigation_segment =
-      (movement != nullptr) &&
-      (movement->has_target || movement->has_waypoints() || movement->path_pending ||
-       movement->pending_request_id != 0);
-  bool const has_navigation_signal = state.has_velocity ||
-                                     has_active_navigation_segment ||
-                                     movement_goal_is_active(movement, transform);
-  state.has_navigation_intent = has_navigation_signal;
-
-  bool const direct_control_moving = has_direct_control_motion(commander, movement);
-  bool const suppress_for_attack_range =
-      !direct_control_moving && !state.has_velocity && state.attack_target_in_range &&
-      !has_active_navigation_segment;
-
-  state.is_moving = direct_control_moving ||
-                    (!suppress_for_attack_range &&
-                     (state.has_navigation_intent || state.has_chase_intent));
-
-  if (state.has_chase_intent && !state.has_movement_target && ctx.world != nullptr &&
-      attack_target != nullptr) {
-    auto* target = ctx.world->get_entity(attack_target->target_id);
-    auto* target_transform =
-        (target != nullptr) ? target->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
-    if (target_transform != nullptr) {
-      state.has_movement_target = true;
-      state.movement_target =
-          QVector3D(target_transform->position.x, 0.0F, target_transform->position.z);
-      if (transform != nullptr) {
-        QVector3D const current(transform->position.x, 0.0F, transform->position.z);
-        QVector3D const delta = state.movement_target - current;
-        if (delta.lengthSquared() > 1.0e-6F) {
-          state.locomotion_direction = delta.normalized();
-        }
-      }
-    }
-  }
-
-  if (state.is_moving && state.speed_hint <= 0.0F) {
-    state.speed_hint = (unit != nullptr) ? std::max(0.1F, unit->speed) : 0.0F;
-    if (stamina != nullptr && stamina->is_running) {
-      state.speed_hint *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
-    }
-  }
-
+  state.locomotion_direction = forward_from_transform(transform);
   return state;
 }
 
@@ -409,14 +220,12 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   if (ctx.animation_override != nullptr) {
     AnimationInputs anim = *ctx.animation_override;
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);
-    anim.is_moving = anim.visual_movement.is_moving;
-    anim.is_running = anim.is_moving && anim.is_running;
+    anim.movement_state = anim.visual_movement.movement_state;
     return anim;
   }
   AnimationInputs anim{};
   anim.time = ctx.animation_time;
-  anim.is_moving = false;
-  anim.is_running = false;
+  anim.movement_state = Render::Creature::MovementAnimationState::Idle;
   anim.is_attacking = false;
   anim.is_melee = false;
   anim.is_in_hold_mode = false;
@@ -438,6 +247,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
 
   if (ctx.entity == nullptr) {
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);
+    anim.movement_state = anim.visual_movement.movement_state;
     return anim;
   }
 
@@ -451,10 +261,10 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
       reset_humanoid_animation_state(*humanoid_state);
     }
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);
+    anim.movement_state = anim.visual_movement.movement_state;
     return anim;
   }
 
-  auto* movement = ctx.entity->get_component<Engine::Core::MovementComponent>();
   auto* attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
   auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
   auto* attack_target =
@@ -466,14 +276,15 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   auto* commander = ctx.entity->get_component<Engine::Core::CommanderComponent>();
   auto* commander_guard =
       ctx.entity->get_component<Engine::Core::CommanderGuardComponent>();
-  const auto* stamina = ctx.entity->get_component<Engine::Core::StaminaComponent>();
-  const auto* motion =
-      ctx.entity->get_component<Engine::Core::MotionPresentationComponent>();
+  StandardHumanoidAnimationPolicy const standard_policy;
+  const CommanderHumanoidAnimationPolicy commander_policy(commander);
+  const HumanoidAnimationModePolicy& animation_policy =
+      commander != nullptr
+          ? static_cast<const HumanoidAnimationModePolicy&>(commander_policy)
+          : static_cast<const HumanoidAnimationModePolicy&>(standard_policy);
   VisualMovementState const movement_state = resolve_visual_movement_state(ctx);
 
   if (death_anim != nullptr) {
-    anim.is_moving = false;
-    anim.is_running = false;
     anim.is_attacking = false;
     anim.is_melee = false;
     anim.is_hit_reacting = false;
@@ -495,6 +306,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
       reset_humanoid_animation_state(*humanoid_state);
     }
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);
+    anim.movement_state = Render::Creature::MovementAnimationState::Idle;
     return anim;
   }
 
@@ -507,18 +319,10 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.hold_exit_progress =
         1.0F - (hold_mode->exit_cooldown / hold_mode->stand_up_duration);
   }
-  anim.is_guarding = (commander != nullptr) && commander->fpv_controlled &&
-                     (commander_guard != nullptr) && commander_guard->active;
+  anim.is_guarding = animation_policy.is_guarding(commander_guard);
   anim.guard_pose_progress = anim.is_guarding ? 1.0F : 0.0F;
   anim.visual_movement = movement_state;
-  anim.is_moving = anim.visual_movement.is_moving;
-  // Prefer the mutex-safe snapshot field; fall back to live stamina only for
-  // entities that have never been through finalize (newly spawned, pre-first-tick).
-  if (motion != nullptr && motion->initialized) {
-    anim.is_running = anim.is_moving && motion->is_running;
-  } else {
-    anim.is_running = anim.is_moving && (stamina != nullptr) && stamina->is_running;
-  }
+  anim.movement_state = anim.visual_movement.movement_state;
 
   auto* healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
   if (healer != nullptr && healer->is_healing_active && transform != nullptr) {
@@ -549,11 +353,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.has_attack_offset = true;
     anim.attack_family = combat_state->attack_family;
 
-    bool const combat_pose_active =
-        combat_state->animation_state != Engine::Core::CombatAnimationState::Idle &&
-        (!anim.is_moving ||
-         combat_state_keeps_attack_pose_while_moving(combat_state->animation_state));
-    if (combat_pose_active) {
+    if (combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
       anim.combat_phase = map_combat_state_to_phase(combat_state->animation_state);
       if (combat_state->state_duration > 0.0F) {
         anim.combat_phase_progress =
@@ -597,22 +397,42 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.is_melee =
         (attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee);
 
-    bool const stationary = !anim.is_moving;
     float const current_cooldown =
         anim.is_melee ? attack->melee_cooldown : attack->cooldown;
     bool const recently_fired =
         attack->time_since_last < std::min(current_cooldown, 0.45F);
-    anim.is_attacking =
-        stationary && (movement_state.attack_target_in_range || recently_fired);
+    float const effective_range =
+        std::max(0.0F, anim.is_melee ? attack->melee_range : attack->range);
+    auto const target_within_range = [&](float range) -> bool {
+      if (movement_state.attack_target_in_range) {
+        return true;
+      }
+      if (ctx.world == nullptr || range <= 0.0F) {
+        return false;
+      }
+      auto* target_entity = ctx.world->get_entity(attack_target->target_id);
+      if (target_entity == nullptr) {
+        return false;
+      }
+      auto* target_transform =
+          target_entity->get_component<Engine::Core::TransformComponent>();
+      if (target_transform == nullptr) {
+        return false;
+      }
+      float const dx = target_transform->position.x - transform->position.x;
+      float const dz = target_transform->position.z - transform->position.z;
+      return (dx * dx + dz * dz) <= (range * range);
+    };
+    bool const target_in_range = target_within_range(effective_range);
+    bool const target_in_recent_attack_grace =
+        recently_fired && target_within_range(effective_range + 0.35F);
+    anim.is_attacking = target_in_range || target_in_recent_attack_grace;
   }
 
-  if (anim.is_attacking || anim.is_hit_reacting) {
-    anim.is_constructing = false;
-  }
-
-  bool const is_active = anim.is_moving || anim.is_attacking || anim.is_constructing ||
-                         anim.is_healing || anim.is_hit_reacting || anim.is_dying ||
-                         anim.is_dead || anim.is_in_hold_mode || anim.is_exiting_hold ||
+  bool const is_active = Render::Creature::is_moving_animation(anim.movement_state) ||
+                         anim.is_attacking || anim.is_constructing || anim.is_healing ||
+                         anim.is_hit_reacting || anim.is_dying || anim.is_dead ||
+                         anim.is_in_hold_mode || anim.is_exiting_hold ||
                          anim.is_guarding;
 
   if (humanoid_state == nullptr) {

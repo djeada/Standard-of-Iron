@@ -141,9 +141,9 @@ TEST(ArchetypeRegistryBaseline, GameplayStatesUseSnapshotCoverage) {
   const auto& reg = ArchetypeRegistry::instance();
   EXPECT_TRUE(
       reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Idle));
-  EXPECT_TRUE(
+  EXPECT_FALSE(
       reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Walk));
-  EXPECT_TRUE(
+  EXPECT_FALSE(
       reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Run));
   EXPECT_TRUE(
       reg.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Hold));
@@ -225,7 +225,7 @@ TEST(ArchetypeRegistryBaseline, ResolveBpatClipClampsInsideClipFamily) {
 }
 
 TEST(SubmitRequests, EmptySpanProducesZeroStats) {
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   CountingSubmitter sink;
   const auto stats = pipeline.submit_requests({}, sink);
   EXPECT_EQ(stats.entities_submitted, 0U);
@@ -295,9 +295,9 @@ TEST(SubmitPreparation, ExplicitMainRequestDoesNotDependOnShadowRows) {
   output.lod = Render::Creature::CreatureLOD::Full;
   output.pass_intent = Render::Creature::Pipeline::RenderPassIntent::Shadow;
 
-  Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidVariant variant{};
-  Render::GL::HumanoidAnimationContext anim{};
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
   prep.bodies.add_humanoid(output, pose, variant, anim);
 
   CreatureRenderRequest req{};
@@ -315,7 +315,7 @@ TEST(SubmitPreparation, ExplicitMainRequestDoesNotDependOnShadowRows) {
 }
 
 TEST(SubmitRequests, BillboardLodCountsButDoesNotDraw) {
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   CountingSubmitter sink;
 
   CreatureRenderRequest req{};
@@ -333,7 +333,7 @@ TEST(SubmitRequests, BillboardLodCountsButDoesNotDraw) {
 }
 
 TEST(SubmitRequests, UnknownArchetypeIsSkippedSafely) {
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   CountingSubmitter sink;
 
   CreatureRenderRequest req{};
@@ -349,7 +349,7 @@ TEST(SubmitRequests, UnknownArchetypeIsSkippedSafely) {
 }
 
 TEST(SubmitRequests, BatchOfMixedRequestsCountsCorrectly) {
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   CountingSubmitter sink;
 
   std::array<CreatureRenderRequest, 4> reqs{};
@@ -374,7 +374,7 @@ TEST(SubmitRequests, BatchOfMixedRequestsCountsCorrectly) {
 }
 
 TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   CountingSubmitter sink;
 
   std::array<CreatureRenderRequest, 4> reqs{};
@@ -416,7 +416,7 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
   EXPECT_EQ(stats.entities_submitted, 4U);
   EXPECT_EQ(sink.rigged_calls, 4U);
   std::sort(sink.rigged_world_y.begin(), sink.rigged_world_y.end());
-  ASSERT_EQ(sink.rigged_world_y.size(), 4u);
+  ASSERT_EQ(sink.rigged_world_y.size(), 4U);
   EXPECT_NEAR(sink.rigged_world_y[1] - sink.rigged_world_y[0], 0.75F, 1.0e-4F);
   EXPECT_NEAR(sink.rigged_world_y[3] - sink.rigged_world_y[2], 0.75F, 1.0e-4F);
   EXPECT_NEAR(sink.rigged_world_y[2] - sink.rigged_world_y[0], 1.0F, 1.0e-4F);
@@ -446,7 +446,7 @@ TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
   ASSERT_NE(horse_blob, nullptr);
   ASSERT_NE(elephant_blob, nullptr);
 
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   CountingSubmitter sink;
 
   std::array<CreatureRenderRequest, 3> reqs{};
@@ -464,7 +464,7 @@ TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
 
   ASSERT_EQ(stats.entities_submitted, 3U);
   ASSERT_EQ(sink.rigged_calls, 3U);
-  ASSERT_EQ(sink.rigged_world_y.size(), 3u);
+  ASSERT_EQ(sink.rigged_world_y.size(), 3U);
 
   float const humanoid_contact =
       palette_contact_y(CreatureKind::Humanoid, humanoid_blob->frame_palette_view(0));
@@ -487,7 +487,7 @@ TEST(SubmitRequests, GroundedRootCreaturesPreserveProvidedWorldHeight) {
   auto& reg = BpatRegistry::instance();
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
 
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   CountingSubmitter sink;
 
   CreatureRenderRequest req{};
@@ -502,7 +502,7 @@ TEST(SubmitRequests, GroundedRootCreaturesPreserveProvidedWorldHeight) {
 
   ASSERT_EQ(stats.entities_submitted, 1U);
   ASSERT_EQ(sink.rigged_calls, 1U);
-  ASSERT_EQ(sink.rigged_world_y.size(), 1u);
+  ASSERT_EQ(sink.rigged_world_y.size(), 1U);
   EXPECT_NEAR(sink.rigged_world_y[0], 2.75F, 1.0e-4F);
 }
 
@@ -527,7 +527,7 @@ TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
     return req;
   };
 
-  CreaturePipeline pipeline;
+  CreaturePipeline const pipeline;
   CountingSubmitter default_sink;
   std::array<CreatureRenderRequest, 1> default_reqs{
       make_request(Render::Creature::Pipeline::k_humanoid_asset)};

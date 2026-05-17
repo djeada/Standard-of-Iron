@@ -86,7 +86,7 @@ protected:
     anim.time = 0.0F;
     anim.phase = 0.0F;
     anim.bob = 0.0F;
-    anim.is_moving = false;
+    anim.movement_state = Render::Creature::MovementAnimationState::Idle;
     anim.rider_intensity = 0.0F;
   }
 
@@ -97,7 +97,7 @@ protected:
 };
 
 TEST_F(HorseEquipmentRenderersTest, BridleRendererUsesArchetypePath) {
-  BridleRenderer renderer;
+  BridleRenderer const renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);
@@ -115,7 +115,7 @@ TEST_F(HorseEquipmentRenderersTest, BridleRendererUsesArchetypePath) {
 }
 
 TEST_F(HorseEquipmentRenderersTest, BlanketRendererProducesMeshes) {
-  BlanketRenderer renderer;
+  BlanketRenderer const renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);
@@ -134,7 +134,7 @@ TEST_F(HorseEquipmentRenderersTest, BlanketRendererProducesMeshes) {
 }
 
 TEST_F(HorseEquipmentRenderersTest, ReinsRendererUsesArchetypePath) {
-  ReinsRenderer renderer;
+  ReinsRenderer const renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);
@@ -156,7 +156,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
 
   ctx.model.translate(2.0F, 1.0F, -3.0F);
 
-  ReinsRenderer renderer;
+  ReinsRenderer const renderer;
   renderer.render(ctx, frames, variant, anim, batch);
 
   ASSERT_FALSE(batch.archetypes.empty());
@@ -171,7 +171,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
 
 TEST_F(HorseEquipmentRenderersTest, ReinsRendererKeepsGeometryNearMuzzle) {
   EquipmentBatch batch;
-  ReinsRenderer renderer;
+  ReinsRenderer const renderer;
 
   renderer.render(ctx, frames, variant, anim, batch);
   ASSERT_EQ(archetype_count_of(batch), 1);
@@ -186,7 +186,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererKeepsGeometryNearMuzzle) {
 }
 
 TEST_F(HorseEquipmentRenderersTest, ScaleBardingRendererProducesMeshes) {
-  ScaleBardingRenderer renderer;
+  ScaleBardingRenderer const renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);
@@ -196,7 +196,7 @@ TEST_F(HorseEquipmentRenderersTest, ScaleBardingRendererProducesMeshes) {
 }
 
 TEST_F(HorseEquipmentRenderersTest, LeatherBardingRendererProducesMeshes) {
-  LeatherBardingRenderer renderer;
+  LeatherBardingRenderer const renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);
@@ -206,7 +206,7 @@ TEST_F(HorseEquipmentRenderersTest, LeatherBardingRendererProducesMeshes) {
 }
 
 TEST_F(HorseEquipmentRenderersTest, ChampionRendererProducesMeshes) {
-  ChampionRenderer renderer;
+  ChampionRenderer const renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);
@@ -216,7 +216,7 @@ TEST_F(HorseEquipmentRenderersTest, ChampionRendererProducesMeshes) {
 }
 
 TEST_F(HorseEquipmentRenderersTest, CrupperRendererProducesMeshes) {
-  CrupperRenderer renderer;
+  CrupperRenderer const renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);
@@ -226,7 +226,7 @@ TEST_F(HorseEquipmentRenderersTest, CrupperRendererProducesMeshes) {
 }
 
 TEST_F(HorseEquipmentRenderersTest, SaddleBagRendererUsesArchetypePath) {
-  SaddleBagRenderer renderer;
+  SaddleBagRenderer const renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);

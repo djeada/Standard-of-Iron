@@ -400,8 +400,12 @@ private:
     Rts,
     Rpg
   };
-  using ControlModeUpdate = void (GameEngine::*)(float dt);
   using ControlModeToggle = void (GameEngine::*)();
+  class RuntimeMode;
+  class RtsRuntimeMode;
+  class CommanderRuntimeMode;
+  friend class RtsRuntimeMode;
+  friend class CommanderRuntimeMode;
   struct CameraSnapshot {
     QVector3D position{0.0F, 0.0F, 0.0F};
     QVector3D target{0.0F, 0.0F, 1.0F};
@@ -430,6 +434,9 @@ private:
   void update_civilian_delivery_availability();
   static void reset_movement(Engine::Core::Entity* entity);
   QAbstractItemModel* selected_units_model();
+  void apply_mission_ambience(const Game::Mission::MissionDefinition* mission,
+                              const QString& map_path);
+  void stop_mission_ambience();
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
   void on_unit_died(const Engine::Core::UnitDiedEvent& event);
   void rebuild_entity_cache();
@@ -457,6 +464,7 @@ private:
   void spawn_mission_wave(const PendingMissionWave& wave);
   void center_camera_on_local_forces();
   void finalize_skirmish_load();
+  void apply_game_mode_render_policy();
   void render_game_effects();
   void update_loading_overlay();
   void update_cursor_position();
@@ -487,6 +495,7 @@ private:
   std::unique_ptr<Game::Map::MapCatalog> m_map_catalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audio_event_handler;
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
+  QString m_current_ambient_sound_id;
   std::unique_ptr<MinimapManager> m_minimap_manager;
   std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
   std::unique_ptr<InputCommandHandler> m_input_handler;
@@ -495,13 +504,15 @@ private:
   std::unique_ptr<ProductionManager> m_production_manager;
   std::unique_ptr<CampaignManager> m_campaign_manager;
   std::unique_ptr<SelectionQueryService> m_selection_query_service;
+  std::unique_ptr<RuntimeMode> m_rts_runtime_mode;
+  std::unique_ptr<RuntimeMode> m_commander_runtime_mode;
+  RuntimeMode* m_active_runtime_mode = nullptr;
   QQuickWindow* m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
   bool m_follow_selection_enabled = false;
   PlayerControlMode m_control_mode = PlayerControlMode::Rts;
   GameMode m_game_mode = GameMode::Rts;
-  ControlModeUpdate m_control_mode_update = &GameEngine::update_rts_control_mode;
   ControlModeToggle m_control_mode_toggle =
       &GameEngine::request_enter_commander_control_mode;
   Engine::Core::EntityID m_controlled_commander_id = 0;

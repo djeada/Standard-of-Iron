@@ -82,11 +82,14 @@ TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
   ASSERT_TRUE(reg.load_species(k_species_elephant, root + "/elephant.bpat"));
   ASSERT_TRUE(
       reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat"));
 
   for (auto const species : {k_species_humanoid,
                              k_species_horse,
                              k_species_elephant,
-                             k_species_humanoid_sword}) {
+                             k_species_humanoid_sword,
+                             k_species_humanoid_spear}) {
     auto const* blob = reg.blob(species);
     ASSERT_NE(blob, nullptr) << "species " << species;
     ASSERT_GT(blob->clip_count(), 0U);
@@ -107,6 +110,79 @@ TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
     }
     EXPECT_TRUE(any_non_identity)
         << "species " << species << " produced all-identity palette";
+  }
+}
+
+TEST(BpatRegistry, HumanoidWalkClipsAnimateLowerBodyForEveryHumanoidSpecies) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+  auto& reg = BpatRegistry::instance();
+
+  struct SpeciesFile {
+    std::uint32_t id;
+    const char* file;
+  };
+  constexpr std::array<SpeciesFile, 3> k_humanoid_species{{
+      {k_species_humanoid, "humanoid.bpat"},
+      {k_species_humanoid_sword, "humanoid_sword.bpat"},
+      {k_species_humanoid_spear, "humanoid_spear.bpat"},
+  }};
+  constexpr std::array<HumanoidBone, 7> k_lower_body_bones{{
+      HumanoidBone::Pelvis,
+      HumanoidBone::HipL,
+      HumanoidBone::KneeL,
+      HumanoidBone::FootL,
+      HumanoidBone::HipR,
+      HumanoidBone::KneeR,
+      HumanoidBone::FootR,
+  }};
+
+  for (auto const species : k_humanoid_species) {
+    ASSERT_TRUE(reg.load_species(species.id, root + "/" + species.file))
+        << species.file;
+    auto const* blob = reg.blob(species.id);
+    ASSERT_NE(blob, nullptr) << species.file;
+    ASSERT_GT(blob->clip_count(),
+              static_cast<std::uint32_t>(Render::Creature::k_humanoid_walk_clip))
+        << species.file;
+
+    auto const walk_clip = blob->clip(Render::Creature::k_humanoid_walk_clip);
+    ASSERT_GT(walk_clip.frame_count, 1U) << species.file;
+
+    std::array<QMatrix4x4, 64> first_palette{};
+    auto const n = reg.sample_palette(species.id,
+                                      Render::Creature::k_humanoid_walk_clip,
+                                      0U,
+                                      std::span<QMatrix4x4>(first_palette));
+    ASSERT_GE(n, static_cast<std::uint32_t>(HumanoidBone::Count)) << species.file;
+
+    bool lower_body_moves = false;
+    for (std::uint32_t frame = 1U; frame < walk_clip.frame_count; ++frame) {
+      std::array<QMatrix4x4, 64> frame_palette{};
+      ASSERT_EQ(reg.sample_palette(species.id,
+                                   Render::Creature::k_humanoid_walk_clip,
+                                   frame,
+                                   std::span<QMatrix4x4>(frame_palette)),
+                n)
+          << species.file << " frame " << frame;
+      for (auto const bone : k_lower_body_bones) {
+        auto const index = static_cast<std::size_t>(bone);
+        if (frame_palette[index] != first_palette[index]) {
+          lower_body_moves = true;
+          break;
+        }
+      }
+      if (lower_body_moves) {
+        break;
+      }
+    }
+
+    EXPECT_TRUE(lower_body_moves)
+        << species.file << " walk clip has static lower-body bones";
   }
 }
 

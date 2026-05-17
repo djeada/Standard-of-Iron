@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include "../creature/movement_state.h"
 #include "../instance_transform.h"
 #include "elephant_gait.h"
 
@@ -55,6 +56,8 @@ struct ElephantMotionSample {
   QVector3D head_center{0.0F, 0.0F, 0.0F};
   float phase = 0.0F;
   float bob = 0.0F;
+  Render::Creature::MovementAnimationState movement_state{
+      Render::Creature::MovementAnimationState::Idle};
   bool is_moving = false;
   bool is_fighting = false;
   float body_sway = 0.0F;

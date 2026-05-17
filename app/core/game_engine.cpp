@@ -169,6 +169,39 @@
 
 namespace {
 
+auto mission_terrain_to_ambient_sound(const QString& terrain_type) -> QString {
+  const QString lowered = terrain_type.trimmed().toLower();
+  if (lowered == "mountain") {
+    return QStringLiteral("ambient.mountain_camp_night");
+  }
+  if (lowered == "plains") {
+    return QStringLiteral("ambient.mediterranean_plains");
+  }
+  if (lowered == "forest") {
+    return QStringLiteral("ambient.forest_ambush");
+  }
+  if (lowered == "river") {
+    return QStringLiteral("ambient.river_crossing");
+  }
+  return QStringLiteral("ambient.battlefield_dry_wind_distant_march_01");
+}
+
+auto biome_to_ambient_sound(Game::Map::GroundType ground_type) -> QString {
+  switch (ground_type) {
+  case Game::Map::GroundType::AlpineMix:
+    return QStringLiteral("ambient.alpine_mountain_pass");
+  case Game::Map::GroundType::GrassDry:
+    return QStringLiteral("ambient.mediterranean_plains");
+  case Game::Map::GroundType::SoilRocky:
+    return QStringLiteral("ambient.battlefield_dry_wind_distant_march_01");
+  case Game::Map::GroundType::SoilFertile:
+    return QStringLiteral("ambient.roman_army_camp_01");
+  case Game::Map::GroundType::ForestMud:
+  default:
+    return QStringLiteral("ambient.forest_ambush");
+  }
+}
+
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
@@ -267,14 +300,178 @@ auto build_condition_list(const std::vector<Game::Mission::Condition>& condition
 
 } // namespace
 
+class GameEngine::RuntimeMode {
+public:
+  virtual ~RuntimeMode() = default;
+  virtual void enter(GameEngine& engine) { (void)engine; }
+  virtual void exit(GameEngine& engine) { (void)engine; }
+  [[nodiscard]] virtual auto apply_time_effects(GameEngine& engine, float dt) -> float {
+    (void)engine;
+    return dt;
+  }
+  virtual void update_simulation(GameEngine& engine, float dt) = 0;
+  virtual void render_mode_effects(GameEngine& engine) { (void)engine; }
+  [[nodiscard]] virtual auto
+  should_render_selected_entity(const GameEngine& engine,
+                                Engine::Core::EntityID id) const -> bool {
+    (void)engine;
+    (void)id;
+    return true;
+  }
+  virtual void trigger_rally(GameEngine& engine) { (void)engine; }
+  virtual void dodge(GameEngine& engine) { (void)engine; }
+  virtual void jump(GameEngine& engine) { (void)engine; }
+  virtual void cycle_lock_on(GameEngine& engine) { (void)engine; }
+  virtual void special_action(GameEngine& engine) { (void)engine; }
+  virtual void vanguard_rush(GameEngine& engine) { (void)engine; }
+  virtual void second_wind(GameEngine& engine) { (void)engine; }
+  virtual void toggle_camera_mode(GameEngine& engine) { (void)engine; }
+};
+
+class GameEngine::RtsRuntimeMode final : public GameEngine::RuntimeMode {
+public:
+  void enter(GameEngine& engine) override {
+    engine.m_control_mode = PlayerControlMode::Rts;
+    engine.m_game_mode = GameMode::Rts;
+    engine.m_control_mode_toggle = &GameEngine::request_enter_commander_control_mode;
+    engine.apply_game_mode_render_policy();
+  }
+
+  void update_simulation(GameEngine& engine, float dt) override {
+    if (engine.m_world != nullptr) {
+      engine.m_world->update(dt);
+    }
+    engine.update_rts_control_mode(dt);
+  }
+};
+
+class GameEngine::CommanderRuntimeMode final : public GameEngine::RuntimeMode {
+public:
+  void enter(GameEngine& engine) override {
+    engine.m_control_mode = PlayerControlMode::Commander;
+    engine.m_game_mode = GameMode::Rpg;
+    engine.m_control_mode_toggle = &GameEngine::request_exit_commander_control_mode;
+    engine.apply_game_mode_render_policy();
+  }
+
+  void exit(GameEngine& engine) override {
+    engine.m_rpg_hit_stop_timer = 0.0F;
+    engine.m_rpg_telegraphs.clear();
+  }
+
+  [[nodiscard]] auto apply_time_effects(GameEngine& engine,
+                                        float dt) -> float override {
+    if (!engine.m_runtime.paused && engine.m_rpg_hit_stop_timer > 0.0F) {
+      engine.m_rpg_hit_stop_timer -= dt;
+      if (engine.m_rpg_hit_stop_timer < 0.0F) {
+        engine.m_rpg_hit_stop_timer = 0.0F;
+      } else {
+        dt *= 0.10F;
+      }
+    }
+    return dt;
+  }
+
+  void update_simulation(GameEngine& engine, float dt) override {
+    engine.update_commander_control_mode(dt);
+    if (engine.m_world != nullptr) {
+      engine.m_world->update(dt);
+    }
+  }
+
+  void render_mode_effects(GameEngine& engine) override {
+    if (engine.m_world == nullptr || engine.m_renderer == nullptr ||
+        engine.m_controlled_commander_id == 0) {
+      return;
+    }
+
+    Engine::Core::EntityID locked_target_id =
+        engine.m_commander_control.locked_target_id();
+    if (auto* commander =
+            engine.m_world->get_entity(engine.m_controlled_commander_id)) {
+      if (auto* rpg_targets =
+              commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
+        locked_target_id = rpg_targets->explicit_lock_target_id;
+      }
+    }
+    engine.m_rpg_telegraphs.render(engine.m_renderer.get(),
+                                   engine.m_world.get(),
+                                   engine.m_controlled_commander_id,
+                                   locked_target_id,
+                                   engine.m_renderer->get_animation_time());
+  }
+
+  [[nodiscard]] auto
+  should_render_selected_entity(const GameEngine& engine,
+                                Engine::Core::EntityID id) const -> bool override {
+    return id != engine.m_controlled_commander_id;
+  }
+
+  void trigger_rally(GameEngine& engine) override {
+    auto* commander = engine.controlled_commander_entity();
+    if (commander == nullptr) {
+      engine.exit_commander_control_mode();
+      return;
+    }
+
+    auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+    if (commander_data == nullptr) {
+      engine.exit_commander_control_mode();
+      return;
+    }
+
+    commander_data->rally_requested = true;
+  }
+
+  void dodge(GameEngine& engine) override {
+    engine.m_commander_control.request_dodge();
+  }
+  void jump(GameEngine& engine) override { engine.m_commander_control.request_jump(); }
+
+  void cycle_lock_on(GameEngine& engine) override {
+    if (engine.m_world == nullptr) {
+      return;
+    }
+    engine.m_commander_control.cycle_lock_on_target(*engine.m_world,
+                                                    engine.m_controlled_commander_id,
+                                                    engine.m_runtime.local_owner_id);
+  }
+
+  void special_action(GameEngine& engine) override {
+    engine.m_commander_control.special_action();
+  }
+
+  void vanguard_rush(GameEngine& engine) override {
+    engine.m_commander_control.request_vanguard_rush();
+  }
+
+  void second_wind(GameEngine& engine) override {
+    engine.m_commander_control.request_second_wind();
+  }
+
+  void toggle_camera_mode(GameEngine& engine) override {
+    if (engine.m_world == nullptr) {
+      return;
+    }
+    engine.m_commander_control.toggle_close_camera_mode(
+        *engine.m_world,
+        engine.m_controlled_commander_id,
+        engine.m_runtime.local_owner_id);
+  }
+};
+
 GameEngine::GameEngine(QObject* parent)
     : QObject(parent)
+    , m_active_runtime_mode(m_rts_runtime_mode.get())
     , m_commander_input(this, this)
     , m_selected_units_model(new SelectedUnitsModel(this, this)) {
 
   Game::Systems::NationRegistry::instance().initialize_defaults();
   Game::Systems::TroopCountRegistry::instance().initialize();
   Game::Systems::GlobalStatsRegistry::instance().initialize();
+
+  m_rts_runtime_mode = std::make_unique<RtsRuntimeMode>();
+  m_commander_runtime_mode = std::make_unique<CommanderRuntimeMode>();
 
   m_world = std::make_unique<Engine::Core::World>();
 
@@ -290,6 +487,7 @@ GameEngine::GameEngine(QObject* parent)
   m_fog = std::move(rendering.fog);
   m_boundary_fog = std::move(rendering.boundary_fog);
   m_rain = std::move(rendering.rain);
+  apply_game_mode_render_policy();
 
   RendererBootstrap::initialize_world_systems(*m_world);
 
@@ -383,10 +581,44 @@ GameEngine::GameEngine(QObject* parent)
   if (m_audio_event_handler->initialize()) {
     qInfo() << "AudioEventHandler initialized successfully";
 
-    m_audio_event_handler->load_unit_voice_mapping("archer", "archer_voice");
-    m_audio_event_handler->load_unit_voice_mapping("swordsman", "swordsman_voice");
-    m_audio_event_handler->load_unit_voice_mapping("swordsman", "swordsman_voice");
-    m_audio_event_handler->load_unit_voice_mapping("spearman", "spearman_voice");
+    auto load_voice = [this](const char* key, const char* sound_id) {
+      m_audio_event_handler->load_unit_voice_mapping(key, sound_id);
+    };
+
+    const std::pair<const char*, const char*> voice_mappings[] = {
+        {"archer", "archer_voice"},
+        {"swordsman", "swordsman_voice"},
+        {"spearman", "spearman_voice"},
+        {"roman.archer", "roman.archer"},
+        {"roman.swordsman", "roman.swordsman"},
+        {"roman.spearman", "roman.spearman"},
+        {"roman.horse_archer", "roman.horse_archer"},
+        {"roman.horse_spearman", "roman.horse_spearman"},
+        {"roman.horse_swordsman", "roman.horse_swordsman"},
+        {"roman.healer", "roman.healer"},
+        {"roman.catapult", "roman.catapult"},
+        {"roman.ballista", "roman.ballista"},
+        {"roman.builder", "roman.builder"},
+        {"carthage.archer", "carthage.archer"},
+        {"carthage.swordsman", "carthage.swordsman"},
+        {"carthage.spearman", "carthage.spearman"},
+        {"carthage.horse_archer", "carthage.horse_archer"},
+        {"carthage.horse_spearman", "carthage.horse_spearman"},
+        {"carthage.horse_swordsman", "carthage.horse_swordsman"},
+        {"carthage.healer", "carthage.healer"},
+        {"carthage.catapult", "carthage.catapult"},
+        {"carthage.ballista", "carthage.ballista"},
+        {"carthage.elephant", "carthage.elephant"},
+        {"roman.roman_legion_organizer", "voice.commander.marcellus"},
+        {"roman.roman_veteran_consul", "voice.commander.scipio"},
+        {"roman.roman_field_commander", "voice.commander.fabius"},
+        {"carthage.carthage_mercenary_broker", "voice.commander.marcellus"},
+        {"carthage.carthage_cavalry_patron", "voice.commander.scipio"},
+        {"carthage.carthage_elephant_master", "voice.commander.fabius"},
+    };
+    for (const auto& [key, sound_id] : voice_mappings) {
+      load_voice(key, sound_id);
+    }
 
     m_audio_event_handler->load_ambient_music(Engine::Core::AmbientState::PEACEFUL,
                                               "music_peaceful");
@@ -398,6 +630,10 @@ GameEngine::GameEngine(QObject* parent)
                                               "music_victory");
     m_audio_event_handler->load_ambient_music(Engine::Core::AmbientState::DEFEAT,
                                               "music_defeat");
+
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AmbientStateChangedEvent(Engine::Core::AmbientState::PEACEFUL,
+                                               Engine::Core::AmbientState::PEACEFUL));
 
     qInfo() << "Audio mappings configured";
   } else {
@@ -456,11 +692,15 @@ GameEngine::GameEngine(QObject* parent)
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::troop_limit_reached,
           [this]() {
+            AudioSystem::get_instance().play_sound(
+                "population_limit_horn", 0.9F, false, 8, AudioCategory::SFX);
             set_error("Maximum troop limit reached. Cannot produce more units.");
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_manpower,
           [this]() {
+            AudioSystem::get_instance().play_sound(
+                "low_resources_click", 0.85F, false, 7, AudioCategory::SFX);
             set_error("Not enough manpower. Build homes or wait for families.");
           });
   connect(m_command_controller.get(),
@@ -845,6 +1085,17 @@ auto GameEngine::game_mode() const -> QString {
   return m_game_mode == GameMode::Rpg ? QStringLiteral("rpg") : QStringLiteral("rts");
 }
 
+void GameEngine::apply_game_mode_render_policy() {
+  if (m_renderer != nullptr) {
+    m_renderer->set_world_render_mode(m_game_mode == GameMode::Rpg
+                                          ? Render::GL::Renderer::WorldRenderMode::Rpg
+                                          : Render::GL::Renderer::WorldRenderMode::Rts);
+  }
+  if (m_fog != nullptr) {
+    m_fog->set_soft_reveal_enabled(m_game_mode == GameMode::Rpg);
+  }
+}
+
 auto GameEngine::commander_control_available() const -> bool {
   return find_local_commander() != nullptr;
 }
@@ -990,12 +1241,12 @@ bool GameEngine::enter_commander_control_mode() {
   }
   m_commander_control.set_view_pitch(0.0F);
   reset_commander_input();
-  m_control_mode = PlayerControlMode::Commander;
-  m_control_mode_update = &GameEngine::update_commander_control_mode;
-  m_control_mode_toggle = &GameEngine::request_exit_commander_control_mode;
   set_active_camera(m_commander_camera.get());
 
-  m_game_mode = GameMode::Rpg;
+  m_active_runtime_mode = m_commander_runtime_mode.get();
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->enter(*this);
+  }
   if (auto* rpg = Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(
           commander)) {
     auto* unit = commander->get_component<Engine::Core::UnitComponent>();
@@ -1034,13 +1285,15 @@ bool GameEngine::enter_commander_control_mode() {
 }
 
 void GameEngine::exit_commander_control_mode() {
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->exit(*this);
+  }
   reset_commander_input();
   clear_controlled_commander_state();
-  m_rpg_telegraphs.clear();
-  m_control_mode = PlayerControlMode::Rts;
-  m_game_mode = GameMode::Rts;
-  m_control_mode_update = &GameEngine::update_rts_control_mode;
-  m_control_mode_toggle = &GameEngine::request_enter_commander_control_mode;
+  m_active_runtime_mode = m_rts_runtime_mode.get();
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->enter(*this);
+  }
   m_controlled_commander_id = 0;
 
   set_active_camera(m_rts_camera.get());
@@ -1115,77 +1368,51 @@ void GameEngine::commander_secondary_action_up() {
 }
 
 void GameEngine::commander_trigger_rally() {
-  if (m_control_mode != PlayerControlMode::Commander) {
-    return;
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->trigger_rally(*this);
   }
-
-  auto* commander = controlled_commander_entity();
-  if (commander == nullptr) {
-    exit_commander_control_mode();
-    return;
-  }
-
-  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
-  if (commander_data == nullptr) {
-    exit_commander_control_mode();
-    return;
-  }
-
-  commander_data->rally_requested = true;
 }
 
 void GameEngine::commander_dodge() {
-  if (m_control_mode != PlayerControlMode::Commander) {
-    return;
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->dodge(*this);
   }
-  m_commander_control.request_dodge();
 }
 
 void GameEngine::commander_jump() {
-  if (m_control_mode != PlayerControlMode::Commander) {
-    return;
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->jump(*this);
   }
-  m_commander_control.request_jump();
 }
 
 void GameEngine::commander_cycle_lock_on() {
-  if (m_control_mode != PlayerControlMode::Commander) {
-    return;
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->cycle_lock_on(*this);
   }
-  if (m_world == nullptr) {
-    return;
-  }
-  m_commander_control.cycle_lock_on_target(
-      *m_world, m_controlled_commander_id, m_runtime.local_owner_id);
 }
 
 void GameEngine::commander_special_action() {
-  if (m_control_mode != PlayerControlMode::Commander) {
-    return;
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->special_action(*this);
   }
-  m_commander_control.special_action();
 }
 
 void GameEngine::commander_vanguard_rush() {
-  if (m_control_mode != PlayerControlMode::Commander) {
-    return;
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->vanguard_rush(*this);
   }
-  m_commander_control.request_vanguard_rush();
 }
 
 void GameEngine::commander_second_wind() {
-  if (m_control_mode != PlayerControlMode::Commander) {
-    return;
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->second_wind(*this);
   }
-  m_commander_control.request_second_wind();
 }
 
 void GameEngine::commander_toggle_camera_mode() {
-  if (m_control_mode != PlayerControlMode::Commander || m_world == nullptr) {
-    return;
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->toggle_camera_mode(*this);
   }
-  m_commander_control.toggle_close_camera_mode(
-      *m_world, m_controlled_commander_id, m_runtime.local_owner_id);
 }
 
 void GameEngine::commander_mouse_move(qreal dx, qreal dy) {
@@ -1455,14 +1682,8 @@ void GameEngine::update(float dt) {
     dt = 0.0F;
   } else {
     dt *= m_runtime.time_scale;
-
-    if (!m_runtime.paused && m_rpg_hit_stop_timer > 0.0F) {
-      m_rpg_hit_stop_timer -= dt;
-      if (m_rpg_hit_stop_timer < 0.0F) {
-        m_rpg_hit_stop_timer = 0.0F;
-      } else {
-        dt *= 0.10F;
-      }
+    if (m_active_runtime_mode != nullptr) {
+      dt = m_active_runtime_mode->apply_time_effects(*this, dt);
     }
   }
 
@@ -1479,14 +1700,7 @@ void GameEngine::update(float dt) {
   }
 
   if (m_renderer) {
-    const bool rpg_mode = m_game_mode == GameMode::Rpg;
     m_renderer->update_animation_time(dt);
-    m_renderer->set_world_render_mode(rpg_mode
-                                          ? Render::GL::Renderer::WorldRenderMode::Rpg
-                                          : Render::GL::Renderer::WorldRenderMode::Rts);
-  }
-  if (m_fog) {
-    m_fog->set_soft_reveal_enabled(m_game_mode == GameMode::Rpg);
   }
 
   if (m_camera != nullptr) {
@@ -1498,12 +1712,8 @@ void GameEngine::update(float dt) {
     log_render_stage_once(
         "simulation-update",
         QStringLiteral("world systems run before render; combat queries rebuild here"));
-    if (m_control_mode == PlayerControlMode::Commander) {
-      (this->*m_control_mode_update)(dt);
-      m_world->update(dt);
-    } else {
-      m_world->update(dt);
-      (this->*m_control_mode_update)(dt);
+    if (m_active_runtime_mode != nullptr) {
+      m_active_runtime_mode->update_simulation(*this, dt);
     }
 
     auto& visibility_service = Game::Map::VisibilityService::instance();
@@ -1609,8 +1819,8 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     std::vector<unsigned int> ids;
     ids.reserve(sel.size());
     for (const auto id : sel) {
-      if (m_control_mode == PlayerControlMode::Commander &&
-          id == m_controlled_commander_id) {
+      if (m_active_runtime_mode != nullptr &&
+          !m_active_runtime_mode->should_render_selected_entity(*this, id)) {
         continue;
       }
       ids.push_back(id);
@@ -1665,20 +1875,8 @@ void GameEngine::render_game_effects() {
   Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
   Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
 
-  if (m_game_mode == GameMode::Rpg && m_control_mode == PlayerControlMode::Commander &&
-      m_controlled_commander_id != 0) {
-    Engine::Core::EntityID locked_target_id = m_commander_control.locked_target_id();
-    if (auto* commander = m_world->get_entity(m_controlled_commander_id)) {
-      if (auto* rpg_targets =
-              commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
-        locked_target_id = rpg_targets->explicit_lock_target_id;
-      }
-    }
-    m_rpg_telegraphs.render(m_renderer.get(),
-                            m_world.get(),
-                            m_controlled_commander_id,
-                            locked_target_id,
-                            m_renderer->get_animation_time());
+  if (m_active_runtime_mode != nullptr) {
+    m_active_runtime_mode->render_mode_effects(*this);
   }
 
   std::optional<QVector3D> preview_waypoint;
@@ -2472,6 +2670,39 @@ void GameEngine::load_campaigns() {
   }
 }
 
+void GameEngine::stop_mission_ambience() {
+  if (!m_current_ambient_sound_id.isEmpty()) {
+    AudioSystem::get_instance().stop_sound(m_current_ambient_sound_id.toStdString());
+    m_current_ambient_sound_id.clear();
+  }
+}
+
+void GameEngine::apply_mission_ambience(const Game::Mission::MissionDefinition* mission,
+                                        const QString& map_path) {
+  stop_mission_ambience();
+
+  QString ambience_id;
+  if (mission != nullptr && mission->terrain_type.has_value()) {
+    ambience_id = mission_terrain_to_ambient_sound(*mission->terrain_type);
+  } else if (!map_path.isEmpty()) {
+    Game::Map::MapDefinition map_def;
+    QString map_error;
+    const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
+    if (Game::Map::MapLoader::load_from_json_file(
+            resolved_map_path, map_def, &map_error)) {
+      ambience_id = biome_to_ambient_sound(map_def.biome.ground_type);
+    }
+  }
+
+  if (ambience_id.isEmpty()) {
+    ambience_id = QStringLiteral("ambient.battlefield_dry_wind_distant_march_01");
+  }
+
+  AudioSystem::get_instance().play_sound(
+      ambience_id.toStdString(), 0.35F, true, 1, AudioCategory::SFX);
+  m_current_ambient_sound_id = ambience_id;
+}
+
 void GameEngine::start_campaign_mission(const QString& mission_path) {
   clear_error();
 
@@ -2490,6 +2721,7 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
   }
 
   const auto& mission = *m_campaign_manager->current_mission_definition();
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
 
   QVariantList player_configs;
 
@@ -2621,6 +2853,8 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     m_campaign_manager->set_skirmish_context(map_path);
   }
 
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+
   if (!m_runtime.victory_state.isEmpty()) {
     m_runtime.victory_state = "";
     emit victory_state_changed();
@@ -2724,6 +2958,12 @@ void GameEngine::perform_skirmish_load(const QString& map_path,
   }
 
   m_runtime.local_owner_id = load_result.updated_player_id;
+  const Game::Mission::MissionDefinition* mission_def = nullptr;
+  if (m_campaign_manager &&
+      m_campaign_manager->current_mission_definition().has_value()) {
+    mission_def = &*m_campaign_manager->current_mission_definition();
+  }
+  apply_mission_ambience(mission_def, map_path);
   if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     const bool is_campaign =
         m_campaign_manager &&
@@ -3276,6 +3516,7 @@ void GameEngine::reset_preload_interaction_state() {
 void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
   m_pending_mission_waves.clear();
+  stop_mission_ambience();
 }
 
 void GameEngine::update_mission_waves(float dt) {

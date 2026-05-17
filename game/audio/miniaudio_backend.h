@@ -21,7 +21,7 @@ public:
   static constexpr int DECODE_BUFFER_FRAMES = 4096;
   static constexpr int MIN_SAMPLE_RATE = 22050;
   static constexpr float MIN_VOLUME = 0.0F;
-  static constexpr float MAX_VOLUME = 1.0F;
+  static constexpr float MAX_VOLUME = 2.0F;
   static constexpr float DEFAULT_VOLUME = 1.0F;
 
   explicit MiniaudioBackend(QObject* parent = nullptr);
@@ -44,6 +44,8 @@ public:
   auto channel_playing(int channel) const -> bool;
 
   void play_sound(const QString& id, float volume, bool loop = false);
+  void stop_sound(const QString& id);
+  auto is_sound_active(const QString& id) const -> bool;
 
   void on_audio(float* output, unsigned frames);
 

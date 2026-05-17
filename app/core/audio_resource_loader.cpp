@@ -3,103 +3,217 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStringList>
+
+#include <unordered_set>
 
 #include "game/audio/audio_system.h"
+#include "utils/resource_utils.h"
 
-void AudioResourceLoader::load_audio_resources() {
-  auto& audio_sys = AudioSystem::get_instance();
+namespace {
 
+auto audio_root_candidates() -> QStringList {
   const QString app_dir = QCoreApplication::applicationDirPath();
-  const QStringList candidates = {
+  return {
       app_dir + "/assets/audio/",
       app_dir + "/../Resources/assets/audio/",
       app_dir + "/../../assets/audio/",
   };
+}
 
-  QString base_path;
-  for (const QString& candidate : candidates) {
+auto resolve_audio_root() -> QString {
+  for (const QString& candidate : audio_root_candidates()) {
     if (QDir(candidate).exists()) {
-      base_path = candidate;
-      break;
+      return candidate;
+    }
+  }
+  return {};
+}
+
+auto resolve_manifest_path(const QString& audio_root) -> QString {
+  const QStringList candidates = {
+      audio_root + "audio_manifest.json",
+      QStringLiteral(":/assets/audio/audio_manifest.json"),
+  };
+
+  for (const QString& candidate : candidates) {
+    const QString resolved = Utils::Resources::resolve_resource_path(candidate);
+    if (QFile::exists(resolved)) {
+      return resolved;
+    }
+  }
+  return {};
+}
+
+auto normalize(const QString& value) -> QString {
+  return value.trimmed().toLower();
+}
+
+auto parse_category(const QString& value) -> AudioCategory {
+  const QString category = normalize(value);
+  if (category == QStringLiteral("music")) {
+    return AudioCategory::MUSIC;
+  }
+  if (category == QStringLiteral("voice")) {
+    return AudioCategory::VOICE;
+  }
+  return AudioCategory::SFX;
+}
+
+auto parse_policy(const QString& value) -> AudioLoadPolicy {
+  const QString policy = normalize(value);
+  if (policy == QStringLiteral("mission")) {
+    return AudioLoadPolicy::Mission;
+  }
+  if (policy == QStringLiteral("screen")) {
+    return AudioLoadPolicy::Screen;
+  }
+  if (policy == QStringLiteral("lazy")) {
+    return AudioLoadPolicy::Lazy;
+  }
+  if (policy == QStringLiteral("stream")) {
+    return AudioLoadPolicy::Stream;
+  }
+  if (policy == QStringLiteral("all")) {
+    return AudioLoadPolicy::All;
+  }
+  return AudioLoadPolicy::Startup;
+}
+
+auto policy_matches(AudioLoadPolicy requested, AudioLoadPolicy entry) -> bool {
+  return (requested == AudioLoadPolicy::All) || (entry == AudioLoadPolicy::All) ||
+         (requested == entry);
+}
+
+auto load_entry(AudioSystem& audio_sys,
+                const QString& manifest_dir,
+                const QJsonObject& track_object,
+                AudioLoadPolicy requested_policy,
+                std::unordered_set<std::string>& loaded_ids) -> bool {
+  const QString id = track_object.value(QStringLiteral("id")).toString().trimmed();
+  const QString path = track_object.value(QStringLiteral("path")).toString().trimmed();
+  if (id.isEmpty() || path.isEmpty()) {
+    qWarning() << "Audio manifest entry missing id or path";
+    return false;
+  }
+
+  const AudioLoadPolicy entry_policy =
+      parse_policy(track_object.value(QStringLiteral("load_policy")).toString());
+  if (!policy_matches(requested_policy, entry_policy)) {
+    return false;
+  }
+
+  const QString category_value =
+      track_object.value(QStringLiteral("category")).toString(QStringLiteral("sfx"));
+  const AudioCategory category = parse_category(category_value);
+
+  const QString resolved_path =
+      Utils::Resources::resolve_resource_path(QDir(manifest_dir).filePath(path));
+  if (resolved_path.isEmpty() || !QFile::exists(resolved_path)) {
+    qWarning() << "Audio asset missing for manifest entry" << id << "->"
+               << resolved_path;
+    return false;
+  }
+
+  const std::string primary_id = id.toStdString();
+  bool ok = true;
+  if (loaded_ids.insert(primary_id).second) {
+    if (category == AudioCategory::MUSIC) {
+      ok = audio_sys.load_music(primary_id, resolved_path.toStdString());
+    } else {
+      ok = audio_sys.load_sound(primary_id, resolved_path.toStdString(), category);
     }
   }
 
-  if (base_path.isEmpty()) {
-    qWarning() << "Audio assets directory not found. Searched:";
-    for (const QString& c : candidates) {
-      qWarning() << " " << c;
+  if (!ok) {
+    qWarning() << "Failed to load audio asset" << id << "from" << resolved_path;
+    return false;
+  }
+
+  const QJsonArray aliases = track_object.value(QStringLiteral("aliases")).toArray();
+  for (const QJsonValue& alias_value : aliases) {
+    const QString alias = alias_value.toString().trimmed();
+    if (alias.isEmpty()) {
+      continue;
     }
-    qWarning() << "Application directory:" << app_dir;
+    audio_sys.register_alias(alias.toStdString(), primary_id);
+  }
+  return ok;
+}
+
+} // namespace
+
+namespace {
+
+auto manifest_directory(const QString& manifest_path) -> QString {
+  if (manifest_path.startsWith(QStringLiteral(":/"))) {
+    const int slash = manifest_path.lastIndexOf('/');
+    return (slash > 0) ? manifest_path.left(slash) : QString{};
+  }
+  return QFileInfo(manifest_path).absolutePath();
+}
+
+} // namespace
+
+void AudioResourceLoader::load_audio_resources(AudioLoadPolicy load_policy) {
+  auto& audio_sys = AudioSystem::get_instance();
+
+  const QString audio_root = resolve_audio_root();
+  if (audio_root.isEmpty()) {
+    qWarning() << "Audio assets directory not found.";
     return;
   }
 
-  qInfo() << "Loading audio resources from:" << base_path;
-
-  if (audio_sys.load_sound("archer_voice",
-                           (base_path + "voices/archer_voice.wav").toStdString(),
-                           AudioCategory::VOICE)) {
-    qInfo() << "Loaded archer voice";
-  } else {
-    qWarning() << "Failed to load archer voice from:"
-               << (base_path + "voices/archer_voice.wav");
+  const QString manifest_path = resolve_manifest_path(audio_root);
+  if (manifest_path.isEmpty()) {
+    qWarning() << "Audio manifest not found under" << audio_root;
+    return;
   }
 
-  if (audio_sys.load_sound("swordsman_voice",
-                           (base_path + "voices/swordsman_voice.wav").toStdString(),
-                           AudioCategory::VOICE)) {
-    qInfo() << "Loaded swordsman voice";
-  } else {
-    qWarning() << "Failed to load swordsman voice from:"
-               << (base_path + "voices/swordsman_voice.wav");
+  QFile manifest_file(manifest_path);
+  if (!manifest_file.open(QIODevice::ReadOnly)) {
+    qWarning() << "Failed to open audio manifest:" << manifest_path;
+    return;
   }
 
-  if (audio_sys.load_sound("spearman_voice",
-                           (base_path + "voices/spearman_voice.wav").toStdString(),
-                           AudioCategory::VOICE)) {
-    qInfo() << "Loaded spearman voice";
-  } else {
-    qWarning() << "Failed to load spearman voice from:"
-               << (base_path + "voices/spearman_voice.wav");
+  const QJsonDocument document = QJsonDocument::fromJson(manifest_file.readAll());
+  if (document.isNull()) {
+    qWarning() << "Failed to parse audio manifest:" << manifest_path;
+    return;
   }
 
-  if (audio_sys.load_music("music_peaceful",
-                           (base_path + "music/peaceful.wav").toStdString())) {
-    qInfo() << "Loaded peaceful music";
-  } else {
-    qWarning() << "Failed to load peaceful music from:"
-               << (base_path + "music/peaceful.wav");
+  QJsonArray tracks;
+  if (document.isArray()) {
+    tracks = document.array();
+  } else if (document.isObject()) {
+    tracks = document.object().value(QStringLiteral("tracks")).toArray();
   }
 
-  if (audio_sys.load_music("music_tense",
-                           (base_path + "music/tense.wav").toStdString())) {
-    qInfo() << "Loaded tense music";
-  } else {
-    qWarning() << "Failed to load tense music from:" << (base_path + "music/tense.wav");
+  if (tracks.isEmpty()) {
+    qWarning() << "Audio manifest contains no tracks:" << manifest_path;
+    return;
   }
 
-  if (audio_sys.load_music("music_combat",
-                           (base_path + "music/combat.wav").toStdString())) {
-    qInfo() << "Loaded combat music";
-  } else {
-    qWarning() << "Failed to load combat music from:"
-               << (base_path + "music/combat.wav");
+  std::unordered_set<std::string> loaded_ids;
+  const QString manifest_dir = manifest_directory(manifest_path);
+  int loaded_count = 0;
+  for (const QJsonValue& value : tracks) {
+    if (!value.isObject()) {
+      continue;
+    }
+    if (load_entry(audio_sys,
+                   QFileInfo(manifest_path).absolutePath(),
+                   value.toObject(),
+                   load_policy,
+                   loaded_ids)) {
+      ++loaded_count;
+    }
   }
 
-  if (audio_sys.load_music("music_victory",
-                           (base_path + "music/victory.wav").toStdString())) {
-    qInfo() << "Loaded victory music";
-  } else {
-    qWarning() << "Failed to load victory music from:"
-               << (base_path + "music/victory.wav");
-  }
-
-  if (audio_sys.load_music("music_defeat",
-                           (base_path + "music/defeat.wav").toStdString())) {
-    qInfo() << "Loaded defeat music";
-  } else {
-    qWarning() << "Failed to load defeat music from:"
-               << (base_path + "music/defeat.wav");
-  }
-
-  qInfo() << "Audio resources loading complete";
+  qInfo() << "Loaded" << loaded_count << "audio manifest entries from" << manifest_path;
 }
