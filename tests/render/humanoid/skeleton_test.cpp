@@ -5,6 +5,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
+#include "render/creature/movement_state.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/humanoid_clip_registry.h"
 #include "render/humanoid/humanoid_state_machine.h"
@@ -43,18 +44,24 @@ auto basis_is_orthonormal(const QMatrix4x4& m) -> bool {
   QVector3D const x = m.column(0).toVector3D();
   QVector3D const y = m.column(1).toVector3D();
   QVector3D const z = m.column(2).toVector3D();
-  if (std::abs(x.length() - 1.0F) > k_eps)
+  if (std::abs(x.length() - 1.0F) > k_eps) {
     return false;
-  if (std::abs(y.length() - 1.0F) > k_eps)
+  }
+  if (std::abs(y.length() - 1.0F) > k_eps) {
     return false;
-  if (std::abs(z.length() - 1.0F) > k_eps)
+  }
+  if (std::abs(z.length() - 1.0F) > k_eps) {
     return false;
-  if (std::abs(QVector3D::dotProduct(x, y)) > k_eps)
+  }
+  if (std::abs(QVector3D::dotProduct(x, y)) > k_eps) {
     return false;
-  if (std::abs(QVector3D::dotProduct(x, z)) > k_eps)
+  }
+  if (std::abs(QVector3D::dotProduct(x, z)) > k_eps) {
     return false;
-  if (std::abs(QVector3D::dotProduct(y, z)) > k_eps)
+  }
+  if (std::abs(QVector3D::dotProduct(y, z)) > k_eps) {
     return false;
+  }
   return true;
 }
 
@@ -239,33 +246,32 @@ TEST(HumanoidStateMachineTest, DeadOverridesEverything) {
   AnimationInputs inputs{};
   inputs.is_attacking = true;
   inputs.is_hit_reacting = true;
-  inputs.is_moving = true;
+  inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
   EXPECT_EQ(select_state(inputs, true), HumanoidState::Death);
 }
 
 TEST(HumanoidStateMachineTest, RunningBeatsWalking) {
   AnimationInputs inputs{};
-  inputs.is_moving = true;
-  inputs.is_running = true;
+  inputs.movement_state = Render::Creature::MovementAnimationState::Run;
   EXPECT_EQ(select_state(inputs), HumanoidState::Run);
-  inputs.is_running = false;
+  inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
   EXPECT_EQ(select_state(inputs), HumanoidState::Walk);
-  inputs.is_moving = false;
+  inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
   EXPECT_EQ(select_state(inputs), HumanoidState::Idle);
 }
 
-TEST(HumanoidStateMachineTest, HoldBeatsLocomotion) {
+TEST(HumanoidStateMachineTest, LocomotionBeatsHold) {
   AnimationInputs inputs{};
   inputs.is_in_hold_mode = true;
-  inputs.is_moving = true;
-  EXPECT_EQ(select_state(inputs), HumanoidState::Hold);
+  inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  EXPECT_EQ(select_state(inputs), HumanoidState::Walk);
 }
 
-TEST(HumanoidStateMachineTest, ExitingHoldKeepsHoldState) {
+TEST(HumanoidStateMachineTest, LocomotionBeatsHoldExit) {
   AnimationInputs inputs{};
   inputs.is_exiting_hold = true;
-  inputs.is_moving = true;
-  EXPECT_EQ(select_state(inputs), HumanoidState::Hold);
+  inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  EXPECT_EQ(select_state(inputs), HumanoidState::Walk);
 }
 
 TEST(HumanoidStateMachineTest, AttackRangedVsMelee) {
@@ -282,7 +288,7 @@ TEST(HumanoidStateMachineTest, TickTransitionsAndBlends) {
   EXPECT_EQ(sm.current(), HumanoidState::Idle);
 
   AnimationInputs walk{};
-  walk.is_moving = true;
+  walk.movement_state = Render::Creature::MovementAnimationState::Walk;
 
   sm.tick(0.0F, walk);
   EXPECT_EQ(sm.current(), HumanoidState::Walk);
@@ -296,7 +302,7 @@ TEST(HumanoidStateMachineTest, TickTransitionsAndBlends) {
 
 TEST(HumanoidStateMachineTest, DeathSnapsWithoutBlend) {
   HumanoidStateMachine sm;
-  AnimationInputs inputs{};
+  AnimationInputs const inputs{};
   sm.tick(0.0F, inputs, true);
   EXPECT_EQ(sm.current(), HumanoidState::Death);
   EXPECT_FALSE(sm.is_blending());
@@ -344,13 +350,11 @@ TEST(HumanoidClipDriverTest, RunProducesLargerSwayThanIdle) {
 TEST(HumanoidClipDriverTest, TickDrivesStateFromInputs) {
   HumanoidClipDriver driver;
   AnimationInputs inputs{};
-  inputs.is_moving = true;
-  inputs.is_running = true;
+  inputs.movement_state = Render::Creature::MovementAnimationState::Run;
   driver.tick(0.0F, inputs);
   EXPECT_EQ(driver.state(), HumanoidState::Run);
 
-  inputs.is_moving = false;
-  inputs.is_running = false;
+  inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
   driver.tick(1.0F, inputs);
   EXPECT_EQ(driver.state(), HumanoidState::Idle);
 }

@@ -107,7 +107,7 @@ public:
 
     AnimationInputs inputs{};
     inputs.time = 0.0F;
-    inputs.is_moving = false;
+    inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
     inputs.is_attacking = false;
     inputs.is_melee = false;
     inputs.is_in_hold_mode = false;
@@ -115,7 +115,12 @@ public:
     inputs.hold_exit_progress = 0.0F;
 
     HumanoidPose pose;
-    this->computeLocomotionPose(seed, inputs.time, inputs.is_moving, variation, pose);
+    this->computeLocomotionPose(
+        seed,
+        inputs.time,
+        Render::Creature::is_moving_animation(inputs.movement_state),
+        variation,
+        pose);
 
     HumanoidVariant variant;
     QVector3D team_tint(0.8F, 0.9F, 1.0F);

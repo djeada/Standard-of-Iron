@@ -269,8 +269,7 @@ TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
   Render::GL::ElephantProfile const profile = make_test_elephant_profile();
   Render::GL::AnimationInputs const anim{
       .time = 1.25F,
-      .is_moving = true,
-      .is_running = false,
+      .movement_state = Render::Creature::MovementAnimationState::Walk,
       .is_attacking = true,
       .is_melee = false,
       .is_in_hold_mode = false,
@@ -330,8 +329,7 @@ TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {
 
   Render::GL::AnimationInputs walk_anim{};
   walk_anim.time = 0.25F;
-  walk_anim.is_moving = true;
-  walk_anim.is_running = false;
+  walk_anim.movement_state = Render::Creature::MovementAnimationState::Walk;
   Render::Elephant::prepare_elephant_render(renderer,
                                             ctx,
                                             walk_anim,
@@ -346,7 +344,7 @@ TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {
 
   prep = Render::Elephant::ElephantPreparation{};
   Render::GL::AnimationInputs run_anim = walk_anim;
-  run_anim.is_running = true;
+  run_anim.movement_state = Render::Creature::MovementAnimationState::Run;
   Render::Elephant::prepare_elephant_render(renderer,
                                             ctx,
                                             run_anim,
@@ -364,8 +362,7 @@ TEST(ElephantPrepare, PoseMotionBuildsFromPreparedSample) {
   Render::GL::ElephantProfile const profile = make_test_elephant_profile();
   Render::GL::AnimationInputs const anim{
       .time = 0.75F,
-      .is_moving = true,
-      .is_running = false,
+      .movement_state = Render::Creature::MovementAnimationState::Walk,
       .is_attacking = false,
       .is_melee = false,
       .is_in_hold_mode = false,
@@ -405,8 +402,7 @@ TEST(ElephantPrepare, MotionScalesSwayWithGaitIntensity) {
 
   Render::GL::AnimationInputs const anim{
       .time = high.gait.cycle_time * 0.25F,
-      .is_moving = true,
-      .is_running = true,
+      .movement_state = Render::Creature::MovementAnimationState::Run,
   };
 
   Render::GL::ElephantMotionSample const low_motion =
@@ -423,8 +419,7 @@ TEST(ElephantPrepare, MovingMotionAddsForeAftWeightTransfer) {
   Render::GL::ElephantProfile const profile = make_test_elephant_profile();
   Render::GL::AnimationInputs const anim{
       .time = profile.gait.cycle_time * 0.25F,
-      .is_moving = true,
-      .is_running = false,
+      .movement_state = Render::Creature::MovementAnimationState::Walk,
   };
 
   Render::GL::ElephantMotionSample const motion =
@@ -470,8 +465,7 @@ TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
   ctx.template_prewarm = true;
   Render::GL::AnimationInputs const anim{
       .time = 0.4F,
-      .is_moving = true,
-      .is_running = false,
+      .movement_state = Render::Creature::MovementAnimationState::Walk,
   };
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
@@ -502,8 +496,7 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
   ctx.template_prewarm = true;
   Render::GL::AnimationInputs const anim{
       .time = 0.2F,
-      .is_moving = false,
-      .is_running = false,
+      .movement_state = Render::Creature::MovementAnimationState::Idle,
   };
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 

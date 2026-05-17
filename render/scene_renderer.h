@@ -51,6 +51,7 @@ class ArrowSystem;
 namespace Render::GL {
 
 class Backend;
+class EnemyVisibilityPolicy;
 
 class Renderer : public ISubmitter {
 public:
@@ -372,9 +373,9 @@ private:
   std::atomic<bool> m_paused{false};
   float m_alpha_override = 1.0F;
   WorldRenderMode m_world_render_mode = WorldRenderMode::Rts;
-  bool m_soft_visibility_reveal_primed = false;
-  float m_last_visibility_reveal_time = 0.0F;
-  std::unordered_map<uint32_t, float> m_visibility_reveal_alpha;
+  std::unique_ptr<EnemyVisibilityPolicy> m_rts_enemy_visibility_policy;
+  std::unique_ptr<EnemyVisibilityPolicy> m_rpg_enemy_visibility_policy;
+  EnemyVisibilityPolicy* m_enemy_visibility_policy = nullptr;
 
   std::mutex m_world_mutex;
   int m_local_owner_id = 1;

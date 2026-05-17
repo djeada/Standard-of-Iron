@@ -337,59 +337,92 @@ auto soft_visibility_for_enemy(const Game::Map::VisibilityService::Snapshot& sna
   return {true, k_outer_alpha + (k_inner_alpha - k_outer_alpha) * eased};
 }
 
-struct EnemyVisibilityRevealState {
-  std::unordered_map<uint32_t, float>* alpha_by_entity = nullptr;
-  float reveal_dt = 0.0F;
-  bool seed = false;
+} // namespace
+
+class EnemyVisibilityPolicy {
+public:
+  virtual ~EnemyVisibilityPolicy() = default;
+  virtual void activate(float now) { (void)now; }
+  virtual void begin_frame(float now, bool visibility_enabled) {
+    (void)now;
+    (void)visibility_enabled;
+  }
+  [[nodiscard]] virtual auto
+  resolve(uint32_t entity_id,
+          const Engine::Core::TransformComponent& transform,
+          const Game::Map::VisibilityService::Snapshot& snapshot)
+      -> EnemyVisibilityResult = 0;
+  virtual void end_frame(bool visibility_enabled) { (void)visibility_enabled; }
 };
 
-using EnemyVisibilityApplier =
-    void (*)(UnitRenderEntry& entry,
-             uint32_t entity_id,
-             const Engine::Core::TransformComponent& transform,
-             const Game::Map::VisibilityService::Snapshot& snapshot,
-             EnemyVisibilityRevealState* reveal_state);
-
-void apply_rts_enemy_visibility(UnitRenderEntry& entry,
-                                uint32_t,
-                                const Engine::Core::TransformComponent& transform,
-                                const Game::Map::VisibilityService::Snapshot& snapshot,
-                                EnemyVisibilityRevealState*) {
-  const auto visibility =
-      hard_visibility_for_enemy(snapshot, transform.position.x, transform.position.z);
-  entry.fog_visible = visibility.render_visible;
-}
-
-void apply_rpg_enemy_visibility(UnitRenderEntry& entry,
-                                uint32_t entity_id,
-                                const Engine::Core::TransformComponent& transform,
-                                const Game::Map::VisibilityService::Snapshot& snapshot,
-                                EnemyVisibilityRevealState* reveal_state) {
-  const auto visibility =
-      soft_visibility_for_enemy(snapshot, transform.position.x, transform.position.z);
-  entry.fog_visible = visibility.render_visible;
-
-  if (reveal_state == nullptr || reveal_state->alpha_by_entity == nullptr) {
-    entry.fog_reveal_alpha = visibility.target_alpha;
-    return;
+class RtsEnemyVisibilityPolicy final : public EnemyVisibilityPolicy {
+public:
+  [[nodiscard]] auto resolve(uint32_t,
+                             const Engine::Core::TransformComponent& transform,
+                             const Game::Map::VisibilityService::Snapshot& snapshot)
+      -> EnemyVisibilityResult override {
+    return hard_visibility_for_enemy(
+        snapshot, transform.position.x, transform.position.z);
   }
-  if (!entry.fog_visible) {
-    reveal_state->alpha_by_entity->erase(entity_id);
-    return;
+};
+
+class RpgEnemyVisibilityPolicy final : public EnemyVisibilityPolicy {
+public:
+  void activate(float now) override {
+    m_primed = false;
+    m_last_time = now;
+    m_alpha_by_entity.clear();
   }
 
-  auto& alpha = (*reveal_state->alpha_by_entity)[entity_id];
-  if (reveal_state->seed) {
-    alpha = visibility.target_alpha;
-  } else if (alpha <= 0.0F) {
-    alpha = 0.0F;
+  void begin_frame(float now, bool visibility_enabled) override {
+    m_seed = visibility_enabled && !m_primed;
+    m_reveal_dt = std::clamp(now - m_last_time, 0.0F, 0.10F);
+    m_last_time = now;
+    if (!visibility_enabled) {
+      m_primed = false;
+      m_alpha_by_entity.clear();
+    }
   }
-  const float target_alpha = std::clamp(visibility.target_alpha, 0.0F, 1.0F);
-  const float duration = target_alpha > alpha ? 0.24F : 0.12F;
-  const float step = duration > 0.0F ? reveal_state->reveal_dt / duration : 1.0F;
-  alpha += (target_alpha - alpha) * std::clamp(step, 0.0F, 1.0F);
-  entry.fog_reveal_alpha = alpha;
-}
+
+  [[nodiscard]] auto resolve(uint32_t entity_id,
+                             const Engine::Core::TransformComponent& transform,
+                             const Game::Map::VisibilityService::Snapshot& snapshot)
+      -> EnemyVisibilityResult override {
+    const auto visibility =
+        soft_visibility_for_enemy(snapshot, transform.position.x, transform.position.z);
+    if (!visibility.render_visible) {
+      m_alpha_by_entity.erase(entity_id);
+      return visibility;
+    }
+
+    auto& alpha = m_alpha_by_entity[entity_id];
+    if (m_seed) {
+      alpha = visibility.target_alpha;
+    } else if (alpha <= 0.0F) {
+      alpha = 0.0F;
+    }
+    const float target_alpha = std::clamp(visibility.target_alpha, 0.0F, 1.0F);
+    const float duration = target_alpha > alpha ? 0.24F : 0.12F;
+    const float step = duration > 0.0F ? m_reveal_dt / duration : 1.0F;
+    alpha += (target_alpha - alpha) * std::clamp(step, 0.0F, 1.0F);
+    return {true, alpha};
+  }
+
+  void end_frame(bool visibility_enabled) override {
+    if (visibility_enabled) {
+      m_primed = true;
+    }
+  }
+
+private:
+  std::unordered_map<uint32_t, float> m_alpha_by_entity;
+  float m_last_time = 0.0F;
+  float m_reveal_dt = 0.0F;
+  bool m_seed = false;
+  bool m_primed = false;
+};
+
+namespace {
 
 struct RenderEntry {
   Engine::Core::Entity* entity{nullptr};
@@ -445,8 +478,11 @@ public:
 } // namespace
 
 Renderer::Renderer(ShaderQuality quality)
-    : m_shader_quality(quality) {
+    : m_shader_quality(quality)
+    , m_enemy_visibility_policy(m_rts_enemy_visibility_policy.get()) {
   m_active_queue = &m_queues[m_fill_queue_index];
+  m_rts_enemy_visibility_policy = std::make_unique<RtsEnemyVisibilityPolicy>();
+  m_rpg_enemy_visibility_policy = std::make_unique<RpgEnemyVisibilityPolicy>();
 }
 
 Renderer::~Renderer() {
@@ -458,9 +494,12 @@ void Renderer::set_world_render_mode(WorldRenderMode mode) {
     return;
   }
   m_world_render_mode = mode;
-  m_soft_visibility_reveal_primed = false;
-  m_last_visibility_reveal_time = m_accumulated_time;
-  m_visibility_reveal_alpha.clear();
+  m_enemy_visibility_policy = mode == WorldRenderMode::Rpg
+                                  ? m_rpg_enemy_visibility_policy.get()
+                                  : m_rts_enemy_visibility_policy.get();
+  if (m_enemy_visibility_policy != nullptr) {
+    m_enemy_visibility_policy->activate(m_accumulated_time);
+  }
 }
 
 auto Renderer::initialize() -> bool {
@@ -489,8 +528,9 @@ auto Renderer::initialize() -> bool {
 
   const std::size_t loaded_bpat =
       Render::Creature::Bpat::BpatRegistry::instance().load_all("assets/creatures");
-  if (loaded_bpat != 4U) {
-    qWarning() << "Renderer: loaded" << loaded_bpat << "of 4 BPAT creature assets:"
+  if (loaded_bpat != Render::Creature::Bpat::k_species_count) {
+    qWarning() << "Renderer: loaded" << loaded_bpat << "of"
+               << Render::Creature::Bpat::k_species_count << "BPAT creature assets:"
                << QString::fromStdString(std::string(
                       Render::Creature::Bpat::BpatRegistry::instance().last_error()));
   }
@@ -1409,23 +1449,9 @@ void Renderer::render_world(Engine::Core::World* world) {
   }
 
   ++m_frame_counter;
-  const bool rpg_render_mode = m_world_render_mode == WorldRenderMode::Rpg;
-  const bool rpg_visibility_reveal = rpg_render_mode && visibility_enabled;
-  const bool seed_rpg_visibility_reveal =
-      rpg_visibility_reveal && !m_soft_visibility_reveal_primed;
-  const float reveal_dt =
-      std::clamp(m_accumulated_time - m_last_visibility_reveal_time, 0.0F, 0.10F);
-  m_last_visibility_reveal_time = m_accumulated_time;
-  if (!rpg_visibility_reveal) {
-    m_soft_visibility_reveal_primed = false;
-    m_visibility_reveal_alpha.clear();
+  if (m_enemy_visibility_policy != nullptr) {
+    m_enemy_visibility_policy->begin_frame(m_accumulated_time, visibility_enabled);
   }
-  EnemyVisibilityRevealState rpg_reveal_state{
-      &m_visibility_reveal_alpha, reveal_dt, seed_rpg_visibility_reveal};
-  EnemyVisibilityApplier const apply_enemy_visibility =
-      rpg_render_mode ? apply_rpg_enemy_visibility : apply_rts_enemy_visibility;
-  EnemyVisibilityRevealState* const enemy_reveal_state =
-      rpg_render_mode ? &rpg_reveal_state : nullptr;
 
   int visible_unit_count = 0;
   static thread_local std::vector<UnitRenderEntry> unit_entries;
@@ -1503,12 +1529,12 @@ void Renderer::render_world(Engine::Core::World* world) {
         entry.distance_sq = dx * dx + dz * dz;
       }
 
-      if (unit_comp->owner_id != m_local_owner_id && visibility_enabled) {
-        apply_enemy_visibility(entry,
-                               entity_id,
-                               *cached.transform,
-                               visibility_snapshot,
-                               enemy_reveal_state);
+      if (unit_comp->owner_id != m_local_owner_id && visibility_enabled &&
+          m_enemy_visibility_policy != nullptr) {
+        const auto visibility = m_enemy_visibility_policy->resolve(
+            entity_id, *cached.transform, visibility_snapshot);
+        entry.fog_visible = visibility.render_visible;
+        entry.fog_reveal_alpha = visibility.target_alpha;
       }
 
       auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
@@ -1580,8 +1606,8 @@ void Renderer::render_world(Engine::Core::World* world) {
 
   m_unit_render_cache.prune(m_frame_counter);
   m_model_matrix_cache.prune(m_frame_counter);
-  if (rpg_visibility_reveal) {
-    m_soft_visibility_reveal_primed = true;
+  if (m_enemy_visibility_policy != nullptr) {
+    m_enemy_visibility_policy->end_frame(visibility_enabled);
   }
 
   auto& battle_optimizer = Render::BattleRenderOptimizer::instance();

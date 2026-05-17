@@ -1,6 +1,7 @@
 #include "miniaudio_backend.h"
 
 #include <QDebug>
+#include <QFile>
 #include <qglobal.h>
 #include <qhashfunctions.h>
 #include <qmutex.h>
@@ -10,6 +11,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstring>
+#include <memory>
 #include <utility>
 
 #define MINIAUDIO_IMPLEMENTATION
@@ -24,6 +26,8 @@
 #define MA_ENABLE_MP3
 #define MA_ENABLE_FLAC
 #define MA_ENABLE_VORBIS
+#include <stb_vorbis.h>
+#define STB_VORBIS_INCLUDE_STB_VORBIS_H
 #include <miniaudio.h>
 
 struct DeviceWrapper {
@@ -63,7 +67,7 @@ auto MiniaudioBackend::initialize(int device_rate, int, int music_channels) -> b
   config.sampleRate = m_sample_rate;
   config.dataCallback = audioCallback;
 
-  auto wrapper = std::unique_ptr<DeviceWrapper>(new DeviceWrapper{this});
+  auto wrapper = std::make_unique<DeviceWrapper>(DeviceWrapper{this});
   config.pUserData = wrapper.get();
 
   m_device = std::make_unique<ma_device>();
@@ -120,17 +124,30 @@ void MiniaudioBackend::stop_device() {
 }
 
 auto MiniaudioBackend::predecode(const QString& id, const QString& path) -> bool {
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    qWarning() << "miniaudio: QFile open failed for" << path;
+    return false;
+  }
 
-  ma_decoder_config const decoder_config =
-      ma_decoder_config_init(ma_format_f32, m_output_channels, m_sample_rate);
-  ma_decoder decoder;
-  if (ma_decoder_init_file(path.toUtf8().constData(), &decoder_config, &decoder) !=
-      MA_SUCCESS) {
-    qWarning() << "miniaudio: cannot open" << path;
+  const QByteArray data = file.readAll();
+  if (data.isEmpty()) {
+    qWarning() << "miniaudio: empty track data" << path;
     return false;
   }
 
   QVector<float> pcm;
+  ma_decoder_config const decoder_config =
+      ma_decoder_config_init(ma_format_f32, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
+  ma_decoder decoder;
+  ma_result const decoder_result = ma_decoder_init_memory(
+      data.constData(), static_cast<size_t>(data.size()), &decoder_config, &decoder);
+  if (decoder_result != MA_SUCCESS) {
+    qWarning() << "miniaudio: decoder init failed for" << path << "size:" << data.size()
+               << "result:" << decoder_result;
+    return false;
+  }
+
   float buffer[DECODE_BUFFER_FRAMES * DEFAULT_OUTPUT_CHANNELS];
   for (;;) {
     ma_uint64 frames_read = 0;
@@ -147,10 +164,16 @@ auto MiniaudioBackend::predecode(const QString& id, const QString& path) -> bool
     }
     if (result != MA_SUCCESS) {
       ma_decoder_uninit(&decoder);
+      qWarning() << "miniaudio: decode failed for" << path << "result:" << result;
       return false;
     }
   }
   ma_decoder_uninit(&decoder);
+
+  if (pcm.isEmpty()) {
+    qWarning() << "miniaudio: decode produced no PCM for" << path;
+    return false;
+  }
 
   QMutexLocker const locker(&m_mutex);
   DecodedTrack track;
@@ -311,6 +334,43 @@ void MiniaudioBackend::play_sound(const QString& id, float volume, bool loop) {
   sfx.volume = std::clamp(volume, MIN_VOLUME, MAX_VOLUME);
   sfx.looping = loop;
   sfx.active = true;
+}
+
+void MiniaudioBackend::stop_sound(const QString& id) {
+  QMutexLocker const locker(&m_mutex);
+
+  auto it = m_tracks.find(id);
+  if (it == m_tracks.end()) {
+    return;
+  }
+
+  const DecodedTrack* const track = &it.value();
+  for (auto& sfx : m_sound_effects) {
+    if (sfx.active && sfx.track == track) {
+      sfx.track = nullptr;
+      sfx.frame_pos = 0;
+      sfx.volume = DEFAULT_VOLUME;
+      sfx.looping = false;
+      sfx.active = false;
+    }
+  }
+}
+
+auto MiniaudioBackend::is_sound_active(const QString& id) const -> bool {
+  QMutexLocker const locker(&m_mutex);
+
+  auto it = m_tracks.find(id);
+  if (it == m_tracks.end()) {
+    return false;
+  }
+
+  const DecodedTrack* const track = &it.value();
+  for (const auto& sfx : m_sound_effects) {
+    if (sfx.active && sfx.track == track) {
+      return true;
+    }
+  }
+  return false;
 }
 
 auto MiniaudioBackend::find_free_sound_slot() const -> int {

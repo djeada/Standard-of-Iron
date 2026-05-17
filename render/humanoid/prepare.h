@@ -70,7 +70,6 @@ struct HumanoidLocomotionInputs {
 };
 
 struct HumanoidLocomotionState {
-  Render::GL::HumanoidMotionState motion_state{Render::GL::HumanoidMotionState::Idle};
   Render::GL::HumanoidGaitDescriptor gait{};
   QVector3D locomotion_direction{0.0F, 0.0F, 1.0F};
   QVector3D locomotion_velocity{0.0F, 0.0F, 0.0F};

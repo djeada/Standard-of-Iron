@@ -152,13 +152,13 @@ TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
   mounted.rider.kind = CreatureKind::Humanoid;
   mounted.rider.debug_name = "test/rider";
 
-  Render::Horse::HorseSpecPose mount_pose{};
-  Render::GL::HorseVariant mount_variant{};
-  Render::GL::HumanoidPose rider_pose{};
-  Render::GL::HumanoidVariant rider_variant{};
-  Render::GL::HumanoidAnimationContext rider_anim{};
-  QMatrix4x4 mount_world;
-  QMatrix4x4 rider_world;
+  Render::Horse::HorseSpecPose const mount_pose{};
+  Render::GL::HorseVariant const mount_variant{};
+  Render::GL::HumanoidPose const rider_pose{};
+  Render::GL::HumanoidVariant const rider_variant{};
+  Render::GL::HumanoidAnimationContext const rider_anim{};
+  QMatrix4x4 const mount_world;
+  QMatrix4x4 const rider_world;
 
   auto set = Render::GL::prepare_mounted_rows(mounted,
                                               mount_world,
@@ -176,8 +176,8 @@ TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
   EXPECT_EQ(set.rider_row.spec.kind, CreatureKind::Humanoid);
   EXPECT_EQ(set.mount_row.pass, RenderPassIntent::Shadow);
   EXPECT_EQ(set.rider_row.pass, RenderPassIntent::Shadow);
-  EXPECT_EQ(set.mount_row.seed, 99u);
-  EXPECT_EQ(set.rider_row.seed, 99u);
+  EXPECT_EQ(set.mount_row.seed, 99U);
+  EXPECT_EQ(set.rider_row.seed, 99U);
 }
 
 TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
@@ -185,11 +185,11 @@ TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.template_prewarm = true;
   ctx.force_single_soldier = true;
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
@@ -197,7 +197,7 @@ TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
   NullSubmitter sink;
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 0u);
+  EXPECT_EQ(stats.entities_submitted, 0U);
   EXPECT_EQ(sink.rigged_calls, 0);
   EXPECT_EQ(sink.meshes, 0);
 }
@@ -207,10 +207,10 @@ TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
@@ -218,7 +218,7 @@ TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
   NullSubmitter sink;
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 2u);
+  EXPECT_EQ(stats.entities_submitted, 2U);
 }
 
 TEST(MountedPrepare, HorseMountArchetypeUsesHandleBackedEquipmentLoadout) {
@@ -239,7 +239,7 @@ TEST(MountedPrepare, HorseMountArchetypeUsesHandleBackedEquipmentLoadout) {
   cfg.horse_crupper_handle = loadout.horse_crupper_handle;
   cfg.horse_decoration_handle = loadout.horse_decoration_handle;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   const auto mount_archetype_id = renderer.mounted_visual_spec().mount.archetype_id;
   ASSERT_NE(mount_archetype_id, Render::Creature::k_invalid_archetype);
 
@@ -302,8 +302,8 @@ TEST(MountedPrepare, RomanAndCarthageHorseMountArchetypesStayDistinct) {
   carthage_cfg.horse_crupper_handle = carthage_loadout.horse_crupper_handle;
   carthage_cfg.horse_decoration_handle = carthage_loadout.horse_decoration_handle;
 
-  Render::GL::HorseArcherRendererBase roman_renderer(roman_cfg);
-  Render::GL::HorseArcherRendererBase carthage_renderer(carthage_cfg);
+  Render::GL::HorseArcherRendererBase const roman_renderer(roman_cfg);
+  Render::GL::HorseArcherRendererBase const carthage_renderer(carthage_cfg);
 
   const auto roman_mount = roman_renderer.mounted_visual_spec().mount.archetype_id;
   const auto carthage_mount =
@@ -335,7 +335,7 @@ TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -359,7 +359,7 @@ TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
   recorder.snapshot_mesh_cache().clear();
   renderer.render(ctx, recorder);
 
-  EXPECT_GE(recorder.snapshot_mesh_cache().size(), 2u);
+  EXPECT_GE(recorder.snapshot_mesh_cache().size(), 2U);
   EXPECT_TRUE(recorder.commands().empty());
 }
 
@@ -370,15 +370,15 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
 
-  ASSERT_EQ(prep.bodies.size(), 2u);
+  ASSERT_EQ(prep.bodies.size(), 2U);
   int rider_requests = 0;
   int horse_requests = 0;
   float rider_world_y = 0.0F;
@@ -400,7 +400,7 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   EXPECT_EQ(rider_requests, 1);
   EXPECT_EQ(horse_requests, 1);
   EXPECT_GT(std::abs(rider_world_y - horse_world_y), 0.01F);
-  EXPECT_EQ(prep.bodies.requests().size(), 2u);
+  EXPECT_EQ(prep.bodies.requests().size(), 2U);
   EXPECT_TRUE(owns_slot(renderer.visual_spec().owned_legacy_slots,
                         LegacySlotMask::Attachments));
 }
@@ -410,7 +410,7 @@ TEST(MountedPrepare, MountedRiderUsesSemanticAttackClipState) {
   cfg.has_spear = false;
   cfg.has_shield = false;
 
-  Render::GL::HorseSpearmanRendererBase renderer(cfg);
+  Render::GL::HorseSpearmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
@@ -449,7 +449,7 @@ TEST(MountedPrepare, HorseSpearmanShieldBuildsIntoRiderArchetype) {
   cfg.has_shield = true;
   cfg.shield_handle = shield_handle;
 
-  Render::GL::HorseSpearmanRendererBase renderer(cfg);
+  Render::GL::HorseSpearmanRendererBase const renderer(cfg);
 
   auto& registry = Render::Creature::ArchetypeRegistry::instance();
   auto const* base_desc =
@@ -467,10 +467,10 @@ TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
@@ -486,16 +486,16 @@ TEST(MountedPrepare, MountedRiderRequestUsesAbsoluteSeatWorld) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
 
   auto const& requests = prep.bodies.requests();
-  ASSERT_EQ(requests.size(), 2u);
+  ASSERT_EQ(requests.size(), 2U);
 
   auto const horse_req =
       std::find_if(requests.begin(), requests.end(), [](const auto& req) {
@@ -523,7 +523,7 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
 
@@ -533,7 +533,7 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
 
@@ -558,13 +558,13 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
     }
   }
 
-  EXPECT_GT(horse_count, 1u);
+  EXPECT_GT(horse_count, 1U);
   EXPECT_EQ(rider_count, horse_count);
   EXPECT_EQ(groups.size(), horse_count);
   for (const auto& [key, counts] : groups) {
     EXPECT_NE(key, 0U);
-    EXPECT_EQ(counts.horse, 1u);
-    EXPECT_EQ(counts.rider, 1u);
+    EXPECT_EQ(counts.horse, 1U);
+    EXPECT_EQ(counts.rider, 1U);
   }
 }
 
@@ -584,7 +584,7 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
   cfg.has_cavalry_shield = false;
   cfg.rider_creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
 
-  InspectableMountedKnightRenderer renderer(cfg);
+  InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
@@ -595,7 +595,7 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
 
@@ -673,7 +673,7 @@ TEST(MountedPrepare, AttackingMountedRiderRootAttachesToHorseSeatFrame) {
   cfg.has_cavalry_shield = false;
   cfg.rider_creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
 
-  InspectableMountedKnightRenderer renderer(cfg);
+  InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
@@ -769,7 +769,7 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  InspectableMountedKnightRenderer renderer(cfg);
+  InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
@@ -781,8 +781,7 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs anim{};
-  anim.is_moving = true;
-  anim.is_running = true;
+  anim.movement_state = Render::Creature::MovementAnimationState::Run;
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
@@ -856,14 +855,13 @@ TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
   cfg.shoulder_equipment_id = "roman_shoulder_cover_cavalry";
   cfg.has_shoulder = true;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
   Render::GL::AnimationInputs anim{};
-  anim.is_moving = true;
-  anim.is_running = true;
+  anim.movement_state = Render::Creature::MovementAnimationState::Run;
 
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
@@ -871,7 +869,7 @@ TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
   NullSubmitter sink;
   auto const stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
-  EXPECT_EQ(stats.entities_submitted, 2u);
+  EXPECT_EQ(stats.entities_submitted, 2U);
   EXPECT_EQ(sink.rigged_calls, 2);
   EXPECT_EQ(sink.meshes, 0);
 }
@@ -882,7 +880,7 @@ TEST(MountedPrepare, MountedKnightKeepsConfiguredRiderArchetype) {
   cfg.has_cavalry_shield = false;
   cfg.rider_archetype_id = 77U;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   auto const& mounted = renderer.mounted_visual_spec();
 
   EXPECT_EQ(mounted.rider.archetype_id, 77U);
@@ -894,7 +892,7 @@ TEST(MountedPrepare, HorseSpearmanKeepsConfiguredRiderArchetype) {
   cfg.has_shield = false;
   cfg.rider_archetype_id = 91U;
 
-  Render::GL::HorseSpearmanRendererBase renderer(cfg);
+  Render::GL::HorseSpearmanRendererBase const renderer(cfg);
   auto const& mounted = renderer.mounted_visual_spec();
 
   EXPECT_EQ(mounted.rider.archetype_id, 91U);
@@ -905,7 +903,7 @@ TEST(MountedPrepare, StaleLayoutCacheVersionForcesMountedFormationRefresh) {
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
 
-  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
   ctx.allow_template_cache = false;
 
@@ -915,14 +913,14 @@ TEST(MountedPrepare, StaleLayoutCacheVersionForcesMountedFormationRefresh) {
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   ctx.entity = &entity;
 
-  Render::GL::AnimationInputs anim{};
+  Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
 
   auto* layout_cache =
       entity.get_component<Render::Humanoid::HumanoidLayoutCacheComponent>();
   ASSERT_NE(layout_cache, nullptr);
-  ASSERT_GT(layout_cache->soldiers.size(), 1u);
+  ASSERT_GT(layout_cache->soldiers.size(), 1U);
 
   for (auto& soldier : layout_cache->soldiers) {
     soldier.offset_x = 0.0F;

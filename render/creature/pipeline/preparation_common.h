@@ -33,8 +33,7 @@ derive_unit_seed(const Render::GL::DrawContext& ctx,
 humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
     -> Render::Creature::AnimationStateId;
 
-[[nodiscard]] auto humanoid_state_for_anim(
-    const Render::GL::HumanoidAnimationContext& anim,
+[[nodiscard]] auto humanoid_state_for_intent(
     Render::Creature::PoseIntent intent) noexcept -> Render::Creature::AnimationStateId;
 
 [[nodiscard]] auto humanoid_phase_for_anim(

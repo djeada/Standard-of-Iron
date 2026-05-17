@@ -36,7 +36,7 @@ protected:
 
     anim_ctx = HumanoidAnimationContext{};
     anim_ctx.inputs.time = 0.0F;
-    anim_ctx.inputs.is_moving = false;
+    anim_ctx.inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
     anim_ctx.inputs.is_attacking = false;
     anim_ctx.variation = VariationParams::from_seed(12345);
     anim_ctx.gait.state = HumanoidMotionState::Idle;
@@ -70,7 +70,7 @@ protected:
 };
 
 TEST_F(MountedPoseControllerTest, ConstructorInitializesCorrectly) {
-  MountedPoseController controller(pose, anim_ctx);
+  MountedPoseController const controller(pose, anim_ctx);
 
   EXPECT_FLOAT_EQ(pose.pelvis_pos.y(), HumanProportions::WAIST_Y);
 }

@@ -435,6 +435,113 @@ void spawn_blood_stain(Engine::Core::World* world, const Engine::Core::Entity* t
       seed);
 }
 
+struct DamageApplicationState {
+  Engine::Core::World* world{nullptr};
+  Engine::Core::Entity* target{nullptr};
+  Engine::Core::EntityID attacker_id{0};
+  Engine::Core::CommanderComponent* attacker_commander{nullptr};
+  const GuardResolution* guard_resolution{nullptr};
+  int combo_step{0};
+  bool finisher_hit{false};
+  bool power_strike_hit{false};
+  bool punish_opening{false};
+};
+
+class TargetDamagePolicy {
+public:
+  virtual ~TargetDamagePolicy() = default;
+  [[nodiscard]] virtual auto
+  handles(const Engine::Core::Entity& target) const -> bool = 0;
+  [[nodiscard]] virtual auto apply(DamageApplicationState& state,
+                                   int& damage) -> bool = 0;
+};
+
+class RpgTargetDamagePolicy final : public TargetDamagePolicy {
+public:
+  [[nodiscard]] auto
+  handles(const Engine::Core::Entity& target) const -> bool override {
+    auto const* rpg = target.get_component<Engine::Core::RpgHealthComponent>();
+    return rpg != nullptr && rpg->active;
+  }
+
+  [[nodiscard]] auto apply(DamageApplicationState& state,
+                           int& damage) -> bool override {
+    auto* unit = state.target->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || state.guard_resolution == nullptr) {
+      return false;
+    }
+
+    auto const rpg_result = Game::Systems::RpgCombat::resolve_rpg_damage(
+        state.world, state.target, damage, state.attacker_id);
+    if (rpg_result.killed) {
+      damage = unit->health;
+      return false;
+    }
+    if (rpg_result.effective_damage <= 0) {
+      return true;
+    }
+
+    if (state.attacker_commander != nullptr) {
+      state.attacker_commander->combo_step =
+          (state.attacker_commander->combo_step + 1) % 4;
+      state.attacker_commander->just_struck_enemy = true;
+      state.attacker_commander->last_strike_combo_step =
+          static_cast<std::uint8_t>(state.combo_step);
+      if (state.power_strike_hit) {
+        state.attacker_commander->power_strike_active = false;
+      }
+    }
+    if (state.punish_opening || state.guard_resolution->guard_broken ||
+        state.finisher_hit) {
+      add_or_extend_stagger(
+          state.target,
+          state.finisher_hit ? 0.75F
+                             : (state.guard_resolution->guard_broken ? 0.65F : 0.45F));
+    }
+    if (!state.guard_resolution->blocked) {
+      apply_posture_pressure(
+          state.target,
+          std::max(6.0F, static_cast<float>(rpg_result.effective_damage) * 0.25F));
+    }
+    apply_hit_feedback(state.target, state.attacker_id, state.world);
+
+    Game::Units::SpawnType attacker_type_hit = Game::Units::SpawnType::Knight;
+    if (state.attacker_id != 0 && state.world != nullptr) {
+      auto* attacker = state.world->get_entity(state.attacker_id);
+      auto* attacker_unit = attacker != nullptr
+                                ? attacker->get_component<Engine::Core::UnitComponent>()
+                                : nullptr;
+      if (attacker_unit != nullptr) {
+        attacker_type_hit = attacker_unit->spawn_type;
+      }
+    }
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::CombatHitEvent(state.attacker_id,
+                                     state.target->get_id(),
+                                     rpg_result.effective_damage,
+                                     attacker_type_hit,
+                                     false));
+    return true;
+  }
+};
+
+class StandardTargetDamagePolicy final : public TargetDamagePolicy {
+public:
+  [[nodiscard]] auto handles(const Engine::Core::Entity&) const -> bool override {
+    return true;
+  }
+  [[nodiscard]] auto apply(DamageApplicationState&, int&) -> bool override {
+    return false;
+  }
+};
+
+auto target_damage_policy(const Engine::Core::Entity& target) -> TargetDamagePolicy& {
+  static RpgTargetDamagePolicy rpg_policy;
+  static StandardTargetDamagePolicy standard_policy;
+  return rpg_policy.handles(target) ? static_cast<TargetDamagePolicy&>(rpg_policy)
+                                    : static_cast<TargetDamagePolicy&>(standard_policy);
+}
+
 } // namespace
 
 void deal_damage(Engine::Core::World* world,
@@ -482,52 +589,17 @@ void deal_damage(Engine::Core::World* world,
       resolve_commander_guard(world, target, damage, attacker_id);
   damage = guard_resolution.damage;
 
-  if (auto* rpg = target->get_component<Engine::Core::RpgHealthComponent>();
-      rpg != nullptr && rpg->active) {
-    auto const rpg_result = Game::Systems::RpgCombat::resolve_rpg_damage(
-        world, target, damage, attacker_id);
-    if (!rpg_result.killed) {
-      if (rpg_result.effective_damage > 0) {
-        if (attacker_cmd != nullptr) {
-          attacker_cmd->combo_step = (attacker_cmd->combo_step + 1) % 4;
-          attacker_cmd->just_struck_enemy = true;
-          attacker_cmd->last_strike_combo_step = static_cast<std::uint8_t>(combo_step);
-          if (power_strike_hit) {
-            attacker_cmd->power_strike_active = false;
-          }
-        }
-        if (punish_opening || guard_resolution.guard_broken || finisher_hit) {
-          add_or_extend_stagger(
-              target,
-              finisher_hit ? 0.75F : (guard_resolution.guard_broken ? 0.65F : 0.45F));
-        }
-        if (!guard_resolution.blocked) {
-          apply_posture_pressure(
-              target,
-              std::max(6.0F, static_cast<float>(rpg_result.effective_damage) * 0.25F));
-        }
-        apply_hit_feedback(target, attacker_id, world);
-        Game::Units::SpawnType attacker_type_hit = Game::Units::SpawnType::Knight;
-        if (attacker_id != 0 && world != nullptr) {
-          auto* atk_ent = world->get_entity(attacker_id);
-          if (atk_ent != nullptr) {
-            auto* atk_unit = atk_ent->get_component<Engine::Core::UnitComponent>();
-            if (atk_unit != nullptr) {
-              attacker_type_hit = atk_unit->spawn_type;
-            }
-          }
-        }
-        Engine::Core::EventManager::instance().publish(
-            Engine::Core::CombatHitEvent(attacker_id,
-                                         target->get_id(),
-                                         rpg_result.effective_damage,
-                                         attacker_type_hit,
-                                         false));
-      }
-      return;
-    }
-
-    damage = unit->health;
+  DamageApplicationState damage_state{world,
+                                      target,
+                                      attacker_id,
+                                      attacker_cmd,
+                                      &guard_resolution,
+                                      combo_step,
+                                      finisher_hit,
+                                      power_strike_hit,
+                                      punish_opening};
+  if (target_damage_policy(*target).apply(damage_state, damage)) {
+    return;
   }
 
   int const prev_health = unit->health;

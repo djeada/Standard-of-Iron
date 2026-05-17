@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/lod_decision.h"
@@ -392,6 +393,72 @@ TEST(CreatureRenderBatch, VariantTableCanOverrideRequestSelection) {
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].archetype, override_archetype);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::AttackSpear);
+}
+
+TEST(CreatureRenderBatch, MovingCombatHumanoidKeepsMovementRequest) {
+  CreatureRenderBatch batch;
+  CreatureGraphOutput output;
+  output.culled = false;
+  output.spec.creature_asset_id = k_humanoid_spear_asset;
+  output.spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.movement_state = MovementAnimationState::Walk;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  anim.gait.state = Render::GL::HumanoidMotionState::Walk;
+  anim.gait.cycle_phase = 0.42F;
+
+  batch.add_humanoid(output, pose, variant, anim);
+
+  ASSERT_EQ(batch.requests().size(), 1U);
+  auto const& req = batch.requests()[0];
+  EXPECT_EQ(req.creature_asset_id, k_humanoid_spear_asset);
+  EXPECT_EQ(req.archetype, ArchetypeRegistry::k_humanoid_base);
+  EXPECT_EQ(req.state, AnimationStateId::Walk);
+  EXPECT_FLOAT_EQ(req.phase, anim.gait.cycle_phase);
+  EXPECT_FALSE(ArchetypeRegistry::instance().is_snapshot(req.archetype, req.state));
+}
+
+TEST(CreatureRenderBatch, AllPoseVariantTableCannotChangeMovingStateByArchetype) {
+  auto const override_archetype = ArchetypeRegistry::instance().register_unit_archetype(
+      "test.walk_all_pose_variant", CreatureKind::Humanoid, {});
+  ASSERT_NE(override_archetype, k_invalid_archetype);
+
+  ArchetypeVariantTable table{};
+  table.variant_trigger_pose = PoseIntent::Count;
+  table.variant_stride = 1U;
+  table.archetype_for_variant[0] = override_archetype;
+
+  CreatureRenderBatch batch;
+  CreatureGraphOutput output;
+  output.culled = false;
+  output.spec.creature_asset_id = k_humanoid_sword_asset;
+  output.spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+  output.spec.variant_table = &table;
+
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.movement_state = MovementAnimationState::Run;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.gait.state = Render::GL::HumanoidMotionState::Run;
+  anim.gait.cycle_phase = 0.64F;
+
+  batch.add_humanoid(output, pose, variant, anim);
+
+  ASSERT_EQ(batch.requests().size(), 1U);
+  auto const& req = batch.requests()[0];
+  EXPECT_EQ(req.creature_asset_id, k_humanoid_sword_asset);
+  EXPECT_EQ(req.archetype, override_archetype);
+  EXPECT_EQ(req.state, AnimationStateId::Run);
+  EXPECT_FLOAT_EQ(req.phase, anim.gait.cycle_phase);
+  EXPECT_FALSE(ArchetypeRegistry::instance().is_snapshot(req.archetype, req.state));
 }
 
 TEST(CreatureRenderBatch, HumanoidWearParamsPropagateToRequests) {

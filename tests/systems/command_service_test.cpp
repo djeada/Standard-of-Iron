@@ -15,6 +15,9 @@
 #include "game/systems/movement_system.h"
 #include "game/systems/pathfinding.h"
 #include "game/units/troop_config.h"
+#include "render/entity/registry.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace {
 
@@ -117,9 +120,74 @@ TEST_F(CommandServiceTest, MotionSnapshotCapturesDirectTransformDisplacement) {
   auto* motion = unit->get_component<Engine::Core::MotionPresentationComponent>();
   ASSERT_NE(motion, nullptr);
   EXPECT_TRUE(motion->snapshot_valid);
-  EXPECT_TRUE(motion->is_moving);
+  EXPECT_TRUE(motion->has_locomotion());
   EXPECT_EQ(motion->source, Engine::Core::MotionPresentationSource::ForcedDisplacement);
   EXPECT_GT(motion->speed, 0.0F);
+}
+
+TEST_F(CommandServiceTest, InfantryMovementPublishesWalkAnimationStateImmediately) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(unit, nullptr);
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  movement->has_target = true;
+  movement->target_x = 5.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 5.0F;
+  movement->goal_y = 0.0F;
+
+  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.update(0.1F);
+
+  auto* motion = unit->get_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(motion, nullptr);
+  EXPECT_TRUE(motion->has_locomotion());
+  EXPECT_TRUE(motion->is_walk_state());
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = unit;
+  ctx.world = &world;
+  ctx.animation_time = 0.1F;
+  auto const anim = Render::GL::sample_anim_state(ctx);
+
+  EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
+  EXPECT_FALSE(Render::Creature::is_running_animation(anim.movement_state));
+}
+
+TEST_F(CommandServiceTest, AttackRangeDoesNotCancelNavigationMotionPresentation) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  auto* target = create_unit(world, 0.75F, 0.0F, Game::Units::SpawnType::Knight);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(target, nullptr);
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  auto* attack = unit->add_component<Engine::Core::AttackComponent>();
+  auto* attack_target = unit->add_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(attack, nullptr);
+  ASSERT_NE(attack_target, nullptr);
+
+  movement->has_target = true;
+  movement->target_x = 5.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 5.0F;
+  movement->goal_y = 0.0F;
+
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->melee_range = 1.5F;
+  attack_target->target_id = target->get_id();
+  attack_target->should_chase = true;
+
+  world.update(0.1F);
+
+  auto* motion = unit->get_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(motion, nullptr);
+  EXPECT_TRUE(motion->attack_target_in_range);
+  EXPECT_TRUE(motion->has_locomotion());
+  EXPECT_TRUE(motion->is_walk_state());
 }
 
 TEST_F(CommandServiceTest, MoveOptionsControlFormationModePersistence) {

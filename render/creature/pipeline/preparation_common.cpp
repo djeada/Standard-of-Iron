@@ -74,34 +74,12 @@ auto derive_unit_seed(const Render::GL::DrawContext& ctx,
 
 auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
     -> Render::Creature::AnimationStateId {
-  return humanoid_state_for_anim(anim,
-                                 Render::Creature::resolve_pose_intent(anim.inputs));
+  return Render::Creature::classify_pose(anim.inputs).animation_state;
 }
 
-auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim,
-                             Render::Creature::PoseIntent intent) noexcept
+auto humanoid_state_for_intent(Render::Creature::PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId {
-  if (anim.inputs.is_in_hold_mode && anim.inputs.is_attacking) {
-    return anim.inputs.is_melee ? Render::Creature::AnimationStateId::AttackMelee
-                                : Render::Creature::AnimationStateId::AttackRanged;
-  }
-
-  if (intent != Render::Creature::PoseIntent::Idle &&
-      intent != Render::Creature::PoseIntent::Walk &&
-      intent != Render::Creature::PoseIntent::Run) {
-    return Render::Creature::to_animation_state_id(intent);
-  }
-
-  switch (anim.motion_state) {
-  case Render::GL::HumanoidMotionState::Walk:
-    return Render::Creature::AnimationStateId::Walk;
-  case Render::GL::HumanoidMotionState::Run:
-    return Render::Creature::AnimationStateId::Run;
-  case Render::GL::HumanoidMotionState::Hold:
-    return Render::Creature::AnimationStateId::Hold;
-  default:
-    return Render::Creature::AnimationStateId::Idle;
-  }
+  return Render::Creature::to_animation_state_id(intent);
 }
 
 auto humanoid_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept

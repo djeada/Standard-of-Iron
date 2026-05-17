@@ -3,6 +3,7 @@
 #include <qvectornd.h>
 
 #include <cmath>
+#include <numbers>
 
 #include "../core/component.h"
 #include "../core/event_manager.h"
@@ -12,6 +13,15 @@
 #include "projectile_system.h"
 
 namespace Game::Systems {
+
+namespace {
+[[nodiscard]] auto
+is_motion_active(const Engine::Core::Entity& entity) noexcept -> bool {
+  auto const* motion =
+      entity.get_component<Engine::Core::MotionPresentationComponent>();
+  return motion != nullptr && motion->has_locomotion();
+}
+} // namespace
 
 void BallistaAttackSystem::update(Engine::Core::World* world, float delta_time) {
   process_ballista_attacks(world, delta_time);
@@ -40,21 +50,14 @@ void BallistaAttackSystem::process_ballista_attacks(Engine::Core::World* world,
       loading = entity->add_component<Engine::Core::CatapultLoadingComponent>();
     }
 
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-    if (movement != nullptr) {
-      constexpr float k_movement_threshold = 0.01F;
-      bool is_moving = (std::abs(movement->vx) > k_movement_threshold ||
-                        std::abs(movement->vz) > k_movement_threshold);
+    if (is_motion_active(*entity) &&
+        loading->state != Engine::Core::CatapultLoadingComponent::LoadingState::Idle) {
 
-      if (is_moving && loading->state !=
-                           Engine::Core::CatapultLoadingComponent::LoadingState::Idle) {
-
-        loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Idle;
-        loading->loading_time = 0.0F;
-        loading->firing_time = 0.0F;
-        loading->target_position_locked = false;
-        loading->target_id = 0;
-      }
+      loading->state = Engine::Core::CatapultLoadingComponent::LoadingState::Idle;
+      loading->loading_time = 0.0F;
+      loading->firing_time = 0.0F;
+      loading->target_position_locked = false;
+      loading->target_id = 0;
     }
 
     switch (loading->state) {
@@ -133,7 +136,7 @@ void BallistaAttackSystem::start_loading(Engine::Core::Entity* ballista,
   if (ballista_transform != nullptr) {
     float const dx = target_transform->position.x - ballista_transform->position.x;
     float const dz = target_transform->position.z - ballista_transform->position.z;
-    float const yaw = std::atan2(dx, dz) * 180.0F / 3.14159265F;
+    float const yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
     ballista_transform->desired_yaw = yaw;
     ballista_transform->has_desired_yaw = true;
   }

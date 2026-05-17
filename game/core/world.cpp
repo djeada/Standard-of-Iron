@@ -92,6 +92,30 @@ attack_target_is_in_range(World& world,
   return dist_sq <= effective_range * effective_range;
 }
 
+struct MotionPresentationSample {
+  bool displaced{false};
+  bool has_component_velocity{false};
+  bool has_navigation_intent{false};
+  bool direct_control_moving{false};
+  bool builder_bypass{false};
+  bool has_chase_intent{false};
+  bool has_active_navigation_segment{false};
+  bool is_running{false};
+};
+
+[[nodiscard]] auto resolve_motion_presentation_state(
+    const MotionPresentationSample& sample) noexcept -> MotionPresentationState {
+  bool const moving = sample.displaced || sample.direct_control_moving ||
+                      sample.builder_bypass || sample.has_component_velocity ||
+                      sample.has_navigation_intent || sample.has_chase_intent ||
+                      sample.has_active_navigation_segment;
+  if (!moving) {
+    return MotionPresentationState::Idle;
+  }
+  return sample.is_running ? MotionPresentationState::Run
+                           : MotionPresentationState::Walk;
+}
+
 void begin_motion_presentation_frame(World& world, float delta_time) {
   const std::lock_guard<std::recursive_mutex> lock(world.get_entity_mutex());
   for (const auto& [entity_id, entity] : world.get_entities()) {
@@ -169,13 +193,21 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         attack_target != nullptr && attack_target->target_id > 0 &&
         attack_target->should_chase && !motion->attack_target_in_range;
 
-    bool const suppress_for_attack_range =
-        !direct_control_moving && !displaced && !has_component_velocity &&
-        motion->attack_target_in_range && !has_active_navigation_segment;
-    motion->is_moving = displaced || direct_control_moving || builder_bypass ||
-                        (!suppress_for_attack_range &&
-                         (has_navigation_intent || motion->has_chase_intent));
-    motion->is_running = motion->is_moving && stamina != nullptr && stamina->is_running;
+    MotionPresentationSample sample{};
+    sample.displaced = displaced;
+    sample.has_component_velocity = has_component_velocity;
+    sample.has_navigation_intent = has_navigation_intent;
+    sample.direct_control_moving = direct_control_moving;
+    sample.builder_bypass = builder_bypass;
+    sample.has_chase_intent = motion->has_chase_intent;
+    sample.has_active_navigation_segment = has_active_navigation_segment;
+    sample.is_running = stamina != nullptr && stamina->is_running;
+
+    const MotionPresentationState next_state =
+        resolve_motion_presentation_state(sample);
+    motion->set_state(next_state);
+    motion->state_time =
+        motion->state_changed ? 0.0F : motion->state_time + std::max(0.0F, delta_time);
     motion->has_velocity = displaced || has_component_velocity;
     motion->has_navigation_intent = has_navigation_intent || builder_bypass;
 
@@ -192,8 +224,10 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
     } else {
       motion->velocity_x = 0.0F;
       motion->velocity_z = 0.0F;
-      motion->speed = motion->is_moving ? std::max(0.1F, unit->speed) : 0.0F;
-      if (motion->is_running && stamina != nullptr) {
+      motion->speed = next_state != MotionPresentationState::Idle
+                          ? std::max(0.1F, unit->speed)
+                          : 0.0F;
+      if (next_state == MotionPresentationState::Run && stamina != nullptr) {
         motion->speed *= StaminaComponent::k_run_speed_multiplier;
       }
     }
@@ -257,8 +291,9 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
     }
 
     motion->seconds_since_motion =
-        motion->is_moving ? 0.0F
-                          : motion->seconds_since_motion + std::max(0.0F, delta_time);
+        motion->has_locomotion()
+            ? 0.0F
+            : motion->seconds_since_motion + std::max(0.0F, delta_time);
     motion->snapshot_valid = true;
   }
 }
@@ -382,6 +417,7 @@ void World::add_system(std::unique_ptr<System> system) {
 }
 
 void World::update(float delta_time) {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   begin_motion_presentation_frame(*this, delta_time);
   for (auto& system : m_systems) {
     system->update(this, delta_time);

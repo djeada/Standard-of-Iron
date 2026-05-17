@@ -48,19 +48,22 @@ struct AudioEvent {
   bool loop = false;
   int priority = AudioConstants::DEFAULT_PRIORITY;
   AudioCategory category = AudioCategory::SFX;
+  bool crossfade = false;
 
   AudioEvent(AudioEventType t,
              std::string id = "",
              float vol = AudioConstants::DEFAULT_VOLUME,
              bool l = false,
              int p = AudioConstants::DEFAULT_PRIORITY,
-             AudioCategory cat = AudioCategory::SFX)
+             AudioCategory cat = AudioCategory::SFX,
+             bool cf = false)
       : type(t)
       , resource_id(std::move(id))
       , volume(vol)
       , loop(l)
       , priority(p)
-      , category(cat) {}
+      , category(cat)
+      , crossfade(cf) {}
 };
 
 class AudioSystem {
@@ -91,6 +94,7 @@ public:
                   const std::string& file_path,
                   AudioCategory category = AudioCategory::SFX) -> bool;
   auto load_music(const std::string& music_id, const std::string& file_path) -> bool;
+  void register_alias(const std::string& alias_id, const std::string& resource_id);
   void unload_sound(const std::string& sound_id);
   void unload_music(const std::string& music_id);
   void unload_all_sounds();
@@ -114,6 +118,8 @@ private:
   void audio_thread_func();
   void process_event(const AudioEvent& event);
   void cleanup_inactive_sounds();
+  void cleanup_inactive_sounds_locked();
+  auto resolve_resource_id_locked(const std::string& resource_id) const -> std::string;
   auto can_play_sound(int priority) -> bool;
   void evict_lowest_priority_sound();
   void evict_lowest_priority_sound_locked();
@@ -121,6 +127,7 @@ private:
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
   std::unordered_map<std::string, AudioCategory> sound_categories;
+  std::unordered_map<std::string, std::string> resource_aliases;
   std::unordered_set<std::string> active_resources;
   mutable std::mutex resource_mutex;
 
