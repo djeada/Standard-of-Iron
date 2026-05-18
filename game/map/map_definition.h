@@ -78,7 +78,8 @@ struct WorldProp {
     Boulder,
     PineTree,
     OliveTree,
-    Plant
+    Plant,
+    IronOre
   };
 
   Type type = Type::Tent;
@@ -114,6 +115,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return QLatin1String("olive_tree");
   case WorldProp::Type::Plant:
     return QLatin1String("plant");
+  case WorldProp::Type::IronOre:
+    return QLatin1String("iron_ore");
   }
   Q_UNREACHABLE();
 }
@@ -160,6 +163,10 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     out = WorldProp::Type::Plant;
     return true;
   }
+  if (value == QLatin1String("iron_ore")) {
+    out = WorldProp::Type::IronOre;
+    return true;
+  }
   return false;
 }
 
@@ -185,6 +192,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return 4.00F;
   case WorldProp::Type::Plant:
     return 0.55F;
+  case WorldProp::Type::IronOre:
+    return 1.10F;
   }
   return 1.0F;
 }
