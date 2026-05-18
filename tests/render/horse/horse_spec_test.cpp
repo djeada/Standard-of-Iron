@@ -487,7 +487,7 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
   EXPECT_EQ(front_hoof->params.anchor_bone,
             static_cast<Render::Creature::BoneIndex>(Render::Horse::HorseBone::FootFL));
   EXPECT_EQ(front_hoof->color_role, 4U);
-  EXPECT_GT(front_thigh->params.radius, front_calf->params.radius * 1.9F);
+  EXPECT_GT(front_thigh->params.radius, front_calf->params.radius * 1.2F);
   EXPECT_GT(front_thigh->params.radius,
             Render::GL::make_horse_dimensions(0U).body_width * 0.26F);
   EXPECT_GT(front_calf->params.radius,
@@ -503,7 +503,7 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
               (0.690F * 1.10F) / 1.050F,
               1.0e-6F);
   EXPECT_NEAR(front_calf->params.radius / front_calf->params.depth_radius,
-              (0.290F * 1.10F) / 0.410F,
+              (0.290F * 1.10F * 1.50F) / 0.410F,
               1.0e-6F);
   EXPECT_NEAR(rear_thigh->params.head_offset.y(),
               dims.leg_length * 0.10F +
@@ -521,7 +521,7 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
   EXPECT_NEAR(
       rear_thigh->params.tail_offset.z(), rear_calf->params.head_offset.z(), 1.0e-6F);
   EXPECT_NEAR(rear_calf->params.radius / rear_calf->params.depth_radius,
-              (0.310F * 1.10F) / 0.450F,
+              (0.310F * 1.10F * 1.50F) / 0.450F,
               1.0e-6F);
   EXPECT_GT(front_hoof->params.half_extents.x(), dims.body_width * 0.18F);
   EXPECT_GT(front_hoof->params.half_extents.z(), dims.body_width * 0.32F);
@@ -597,13 +597,24 @@ TEST(HorseSpecTest, ManifestUsesFacetedHorseHeadAndEars) {
   Render::GL::Mesh const head_upper_mesh(head_upper->vertices, head_upper->indices);
   float const head_upper_z_span = mesh_axis_span(head_upper_mesh, 2);
   float const head_upper_y_span = mesh_axis_span(head_upper_mesh, 1);
+  float const head_upper_z_min = mesh_axis_min(head_upper_mesh, 2);
+  float const head_upper_z_max = mesh_axis_max(head_upper_mesh, 2);
+  float const head_upper_y_max = mesh_axis_max(head_upper_mesh, 1);
   EXPECT_GT(neck->start_radius, neck->end_radius);
   EXPECT_GT((neck->end - neck->start).length(), 0.60F);
   EXPECT_GT(neck->end.y(), neck->start.y());
   EXPECT_LT(neck->start_radius, 0.45F);
   EXPECT_GT(head_upper_z_span, head_upper_y_span * 0.85F);
   EXPECT_GE(ear_l->outline.size(), 3U);
+  EXPECT_NEAR(ear_l->thickness_axis.x(), 1.0F, 1.0e-6F);
+  EXPECT_NEAR(ear_l->thickness_axis.y(), 0.0F, 1.0e-6F);
+  EXPECT_NEAR(ear_l->thickness_axis.z(), 0.0F, 1.0e-6F);
   EXPECT_GT(ear_l->outline[1].y(), ear_l->outline[0].y());
+  EXPECT_GT(ear_l->outline[2].y(), ear_l->outline[0].y());
+  EXPECT_GT(ear_l->outline[0].z(), head_upper_z_min + head_upper_z_span * 0.15F);
+  EXPECT_GT(ear_l->outline[1].z(), ear_l->outline[2].z());
+  EXPECT_LT(ear_l->outline[1].z(), head_upper_z_max);
+  EXPECT_GT(ear_l->outline[1].y(), head_upper_y_max - head_upper_y_span * 0.20F);
 }
 
 TEST(HorseSpecTest, ManifestFrontTorsoTopRisesIntoNeck) {

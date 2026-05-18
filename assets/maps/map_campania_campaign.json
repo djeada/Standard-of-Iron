@@ -45,7 +45,7 @@
   },
   "terrain": [
     {
-      "type": "plain",
+      "type": "flat",
       "x": 110,
       "z": 110,
       "width": 176,
@@ -264,31 +264,31 @@
       "description": "Northeastern rocky boundary."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 52,
       "z": 124,
       "description": "Western grain village."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 168,
       "z": 124,
       "description": "Eastern olive village."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 110,
       "z": 166,
       "description": "Northern watch village."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 110,
       "z": 54,
       "description": "Southern mill village."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 176,
       "z": 62,
       "description": "Southeastern vineyard hamlet."
@@ -554,35 +554,35 @@
       "description": "Central Carthaginian stronghold"
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 52,
       "z": 124,
       "player_id": 1,
       "description": "Western grain village"
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 168,
       "z": 124,
       "player_id": 1,
       "description": "Eastern olive village"
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 110,
       "z": 166,
       "player_id": 1,
       "description": "Northern watch village"
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 110,
       "z": 54,
       "player_id": 1,
       "description": "Southern mill village"
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 176,
       "z": 62,
       "player_id": 1,

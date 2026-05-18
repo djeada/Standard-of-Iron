@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <utility>
@@ -54,6 +55,7 @@ VisibilityService::~VisibilityService() {
 }
 
 void VisibilityService::initialize(int width, int height, float tile_size) {
+  reset_worker_state();
   std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
   m_width = std::max(1, width);
   m_height = std::max(1, height);
@@ -64,24 +66,30 @@ void VisibilityService::initialize(int width, int height, float tile_size) {
 
   const int count = m_width * m_height;
   m_cells.assign(count, static_cast<std::uint8_t>(VisibilityState::Unseen));
-  m_version.store(1, std::memory_order_release);
-  m_generation.store(0, std::memory_order_release);
+  const auto next_version =
+      std::max<std::uint64_t>(1ULL, m_version.load(std::memory_order_relaxed) + 1ULL);
+  m_version.store(next_version, std::memory_order_release);
+  m_last_positions.clear();
+  m_force_full_update = true;
   reset_throttle();
   m_initialized = true;
+  publish_snapshot_locked(next_version);
 }
 
 void VisibilityService::reset() {
   if (!m_initialized) {
     return;
   }
+  reset_worker_state();
   std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
   std::fill(m_cells.begin(),
             m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Unseen));
-  m_version.fetch_add(1, std::memory_order_release);
+  const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
   m_last_positions.clear();
   m_force_full_update = true;
   reset_throttle();
+  publish_snapshot_locked(next_version);
 }
 
 auto VisibilityService::update(Engine::Core::World& world, int player_id) -> bool {
@@ -123,7 +131,8 @@ void VisibilityService::compute_immediate(Engine::Core::World& world, int player
   if (result.changed) {
     std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
     m_cells = std::move(result.cells);
-    m_version.fetch_add(1, std::memory_order_release);
+    const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
+    publish_snapshot_locked(next_version);
   }
   reset_throttle();
 }
@@ -209,7 +218,8 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
 auto VisibilityService::compose_job_payload(
     const std::vector<VisionSource>& sources) const -> VisibilityService::JobPayload {
   std::shared_lock<std::shared_mutex> const lock(m_cells_mutex);
-  const auto generation_value = m_generation.fetch_add(1ULL, std::memory_order_relaxed);
+  const auto generation_value =
+      m_generation.fetch_add(1ULL, std::memory_order_relaxed) + 1ULL;
   return JobPayload{m_width, m_height, m_cells, sources, generation_value};
 }
 
@@ -224,10 +234,15 @@ void VisibilityService::enqueue_job(JobPayload&& payload) {
 }
 
 void VisibilityService::integrate_result(JobResult&& result) {
+  const auto current_generation = m_generation.load(std::memory_order_acquire);
+  if (result.generation != current_generation) {
+    return;
+  }
   if (result.changed) {
     std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
     m_cells = std::move(result.cells);
-    m_version.fetch_add(1, std::memory_order_release);
+    const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
+    publish_snapshot_locked(next_version);
   }
 }
 
@@ -419,21 +434,21 @@ auto VisibilityService::is_explored_world(float world_x, float world_z) const ->
 }
 
 auto VisibilityService::snapshot() const -> VisibilityService::Snapshot {
-  std::shared_lock<std::shared_mutex> const lock(m_cells_mutex);
-  Snapshot shot;
-  shot.initialized = m_initialized;
-  shot.width = m_width;
-  shot.height = m_height;
-  shot.tile_size = m_tile_size;
-  shot.half_width = m_half_width;
-  shot.half_height = m_half_height;
-  shot.cells = m_cells;
-  return shot;
+  const auto snapshot = snapshot_ptr();
+  return snapshot != nullptr ? *snapshot : Snapshot{};
 }
 
-auto VisibilityService::snapshot_cells() const -> std::vector<std::uint8_t> {
-  std::shared_lock<std::shared_mutex> const lock(m_cells_mutex);
-  return m_cells;
+auto VisibilityService::snapshot_ptr() const -> VisibilityService::SnapshotPtr {
+  return std::atomic_load_explicit(&m_published_snapshot, std::memory_order_acquire);
+}
+
+auto VisibilityService::snapshot_if_newer(std::uint64_t known_version) const
+    -> VisibilityService::SnapshotPtr {
+  auto snapshot = snapshot_ptr();
+  if (snapshot == nullptr || snapshot->version <= known_version) {
+    return nullptr;
+  }
+  return snapshot;
 }
 
 void VisibilityService::reveal_all() {
@@ -444,8 +459,9 @@ void VisibilityService::reveal_all() {
   std::fill(m_cells.begin(),
             m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Visible));
-  m_version.fetch_add(1, std::memory_order_release);
+  const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
   reset_throttle();
+  publish_snapshot_locked(next_version);
 }
 
 auto VisibilityService::in_bounds(int grid_x, int grid_z) const -> bool {
@@ -468,6 +484,28 @@ auto VisibilityService::should_start_new_job() const -> bool {
 
 void VisibilityService::reset_throttle() {
   m_last_job_start_time = {};
+}
+
+void VisibilityService::reset_worker_state() {
+  std::lock_guard<std::mutex> const lock(m_queue_mutex);
+  m_pending_payload.reset();
+  m_completed_result.reset();
+  m_generation.store(0, std::memory_order_release);
+}
+
+void VisibilityService::publish_snapshot_locked(std::uint64_t version) {
+  auto snapshot = std::make_shared<Snapshot>();
+  snapshot->version = version;
+  snapshot->initialized = m_initialized;
+  snapshot->width = m_width;
+  snapshot->height = m_height;
+  snapshot->tile_size = m_tile_size;
+  snapshot->half_width = m_half_width;
+  snapshot->half_height = m_half_height;
+  snapshot->cells = m_cells;
+  auto published_snapshot = std::shared_ptr<const Snapshot>(std::move(snapshot));
+  std::atomic_store_explicit(
+      &m_published_snapshot, std::move(published_snapshot), std::memory_order_release);
 }
 
 } // namespace Game::Map

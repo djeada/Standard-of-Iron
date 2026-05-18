@@ -13,9 +13,9 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/victory_service.h"
-#include "game_engine.h"
 #include "loading_progress_tracker.h"
 #include "minimap_manager.h"
+#include "visibility_coordinator.h"
 #include "render/gl/camera.h"
 #include "render/scene_renderer.h"
 #include "utils/resource_utils.h"
@@ -24,12 +24,12 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
                                       const QVariantList& player_configs,
                                       int selected_player_id,
                                       Engine::Core::World& world,
-                                      const RendererRefs& renderers,
+                                      const AppSceneContext& scene,
                                       Game::Systems::LevelSnapshot& level,
                                       EntityCache& entity_cache,
                                       Game::Systems::VictoryService* victory_service,
                                       MinimapManager* minimap_manager,
-                                      VisibilityReadyCallback visibility_ready,
+                                      VisibilityCoordinator* visibility_coordinator,
                                       OwnerUpdateCallback owner_update,
                                       bool allow_default_player_barracks,
                                       LoadingProgressTracker* progress_tracker)
@@ -45,22 +45,22 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
 
   entity_cache.reset();
 
-  Game::Map::SkirmishLoader loader(world, *renderers.renderer, *renderers.camera);
+  Game::Map::SkirmishLoader loader(world, *scene.renderer, *scene.active_camera);
 
   if (progress_tracker) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_TERRAIN);
     QCoreApplication::processEvents();
   }
 
-  loader.set_ground_renderer(renderers.ground);
-  loader.set_terrain_renderer(renderers.terrain);
+  loader.set_ground_renderer(scene.ground);
+  loader.set_terrain_renderer(scene.terrain);
 
   if (progress_tracker) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_BIOME);
     QCoreApplication::processEvents();
   }
 
-  loader.set_scatter_manager(renderers.scatter);
+  loader.set_scatter_manager(scene.scatter);
 
   if (progress_tracker) {
     progress_tracker->set_stage(
@@ -68,7 +68,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     QCoreApplication::processEvents();
   }
 
-  loader.set_feature_manager(renderers.features);
+  loader.set_feature_manager(scene.features);
 
   if (progress_tracker) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_ROADS);
@@ -81,18 +81,30 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     QCoreApplication::processEvents();
   }
 
-  loader.set_rain_renderer(renderers.rain);
+  loader.set_rain_renderer(scene.rain);
 
   if (progress_tracker) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_FOG);
     QCoreApplication::processEvents();
   }
 
-  loader.set_fog_renderer(renderers.fog);
-  loader.set_boundary_fog_renderer(renderers.boundary_fog);
+  loader.set_fog_renderer(scene.fog);
+  loader.set_boundary_fog_renderer(scene.boundary_fog);
 
   loader.set_on_owners_updated(owner_update);
-  loader.set_on_visibility_mask_ready(visibility_ready);
+  loader.set_on_visibility_initialized(
+      [visibility_coordinator](Engine::Core::World& loaded_world,
+                               int local_owner_id,
+                               int map_width,
+                               int map_height,
+                               float tile_size,
+                               bool spectator_mode) {
+        if (visibility_coordinator == nullptr) {
+          return;
+        }
+        visibility_coordinator->initialize_for_world(
+            loaded_world, local_owner_id, map_width, map_height, tile_size, spectator_mode);
+      });
 
   if (progress_tracker) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_ENTITIES);
@@ -140,12 +152,12 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     victory_service->configure(load_result.victory_config, result.updated_player_id);
   }
 
-  if (load_result.has_focus_position && renderers.camera) {
+  if (load_result.has_focus_position && scene.active_camera) {
     const auto& cam_config = Game::GameConfig::instance().camera();
-    renderers.camera->set_rts_view(load_result.focus_position,
-                                   cam_config.default_distance,
-                                   cam_config.default_pitch,
-                                   cam_config.default_yaw);
+    scene.active_camera->set_rts_view(load_result.focus_position,
+                                      cam_config.default_distance,
+                                      cam_config.default_pitch,
+                                      cam_config.default_yaw);
   }
 
   if (progress_tracker) {
@@ -161,6 +173,9 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
           resolved_map_path, map_def, &map_error)) {
     if (minimap_manager) {
       minimap_manager->generate_for_map(map_def);
+      if (visibility_coordinator != nullptr) {
+        visibility_coordinator->publish_current_frame(true);
+      }
     }
   } else {
     qWarning() << "LevelOrchestrator: Failed to load map for minimap:" << map_error;
@@ -191,8 +206,8 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     }
   }
 
-  if (renderers.renderer) {
-    renderers.renderer->prewarm_unit_templates(
+  if (scene.renderer) {
+    scene.renderer->prewarm_unit_templates(
         &world,
         [progress_tracker](
             const Render::GL::Renderer::TemplatePrewarmProgress& progress) -> bool {

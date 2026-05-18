@@ -29,12 +29,25 @@ auto nation_voice_prefix(Game::Systems::NationID nation_id) -> std::string {
   case Game::Systems::NationID::Carthage:
     return "carthage";
   }
-  return "roman";
+  return {};
 }
 
 auto make_voice_key(Game::Systems::NationID nation_id,
                     const std::string& unit_type) -> std::string {
-  return nation_voice_prefix(nation_id) + "." + unit_type;
+  const std::string faction = nation_voice_prefix(nation_id);
+  if (faction.empty()) {
+    return unit_type;
+  }
+  return faction + "." + unit_type;
+}
+
+auto make_manifest_voice_id(Game::Systems::NationID nation_id,
+                            const std::string& unit_type) -> std::string {
+  const std::string faction = nation_voice_prefix(nation_id);
+  if (faction.empty()) {
+    return {};
+  }
+  return "voice." + faction + "." + unit_type;
 }
 
 auto resolve_voice_id(const Engine::Core::UnitComponent& unit_component,
@@ -50,13 +63,24 @@ auto resolve_voice_id(const Engine::Core::UnitComponent& unit_component,
     return generic_it->second;
   }
 
+  const std::string manifest_voice_id =
+      make_manifest_voice_id(unit_component.nation_id, unit_type);
+  if (!manifest_voice_id.empty() &&
+      AudioSystem::get_instance().has_resource(manifest_voice_id)) {
+    return manifest_voice_id;
+  }
+
+  const std::string legacy_alias = unit_type + "_voice";
+  if (AudioSystem::get_instance().has_resource(legacy_alias)) {
+    return legacy_alias;
+  }
+
   return {};
 }
 
 auto get_hit_sound_for_type(Game::Units::SpawnType type) -> std::string {
   switch (type) {
   case Game::Units::SpawnType::Knight:
-  case Game::Units::SpawnType::MountedKnight:
     return "combat_hit_sword";
   case Game::Units::SpawnType::Spearman:
   case Game::Units::SpawnType::HorseSpearman:
@@ -64,6 +88,10 @@ auto get_hit_sound_for_type(Game::Units::SpawnType type) -> std::string {
   case Game::Units::SpawnType::Archer:
   case Game::Units::SpawnType::HorseArcher:
     return "combat_hit_arrow";
+  case Game::Units::SpawnType::MountedKnight:
+    return "combat_hit_cavalry";
+  case Game::Units::SpawnType::Elephant:
+    return "combat_hit_elephant";
   case Game::Units::SpawnType::Catapult:
   case Game::Units::SpawnType::Ballista:
     return "combat_hit_siege";
@@ -113,7 +141,7 @@ auto AudioEventHandler::initialize() -> bool {
 
   m_combat_hit_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
-          [](const Engine::Core::CombatHitEvent& event) { on_combat_hit(event); });
+          [this](const Engine::Core::CombatHitEvent& event) { on_combat_hit(event); });
 
   m_unit_spawned_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(

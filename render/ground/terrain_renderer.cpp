@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../game/map/render_visibility_rules.h"
 #include "../../game/map/terrain_service.h"
 #include "../../game/map/visibility_service.h"
 #include "../gl/mesh.h"
@@ -33,9 +34,7 @@
 namespace {
 
 using std::uint32_t;
-using namespace Render::GL::BitShift;
 using namespace Render::GL::Geometry;
-using namespace Render::GL::HashXorShift;
 using namespace Render::Ground;
 
 const QMatrix4x4 k_identity_matrix;
@@ -96,11 +95,10 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility =
       renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-  Game::Map::VisibilityService::Snapshot visibility_snapshot;
-  std::uint64_t visibility_version = 0;
-  if (use_visibility) {
-    visibility_snapshot = visibility.snapshot();
-    visibility_version = visibility.version();
+  auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  TerrainSurfaceCmd::VisibilityResources visibility_resources;
+  if (visibility_snapshot != nullptr) {
+    visibility_resources = m_visibility_helper.update(*visibility_snapshot, m_tile_size);
     if (m_chunk_visibility_cache.size() != m_chunks.size()) {
       m_chunk_visibility_cache.assign(m_chunks.size(), {});
     }
@@ -112,23 +110,24 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
 
-    if (use_visibility) {
+    if (visibility_snapshot != nullptr) {
       auto& cache = m_chunk_visibility_cache[chunk_index];
-      if (cache.visibility_version != visibility_version) {
-        bool any_visible = false;
-        for (int gz = chunk.min_z; gz <= chunk.max_z && !any_visible; ++gz) {
+      if (cache.visibility_version != visibility_snapshot->version) {
+        bool any_revealed = false;
+        for (int gz = chunk.min_z; gz <= chunk.max_z && !any_revealed; ++gz) {
           for (int gx = chunk.min_x; gx <= chunk.max_x; ++gx) {
-            if (visibility_snapshot.state_at(gx, gz) ==
-                Game::Map::VisibilityState::Visible) {
-              any_visible = true;
+            if (Game::Map::classify_static_world_cell_visibility(
+                    *visibility_snapshot, gx, gz) !=
+                Game::Map::RenderVisibilityState::Hidden) {
+              any_revealed = true;
               break;
             }
           }
         }
-        cache.any_visible = any_visible;
-        cache.visibility_version = visibility_version;
+        cache.any_revealed = any_revealed;
+        cache.visibility_version = visibility_snapshot->version;
       }
-      if (!cache.any_visible) {
+      if (!cache.any_revealed) {
         continue;
       }
     }
@@ -137,6 +136,7 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.mesh = chunk.mesh.get();
     cmd.model = k_identity_matrix;
     cmd.params = chunk.params;
+    cmd.visibility = visibility_resources;
     cmd.params.light_direction = m_light_direction;
     cmd.sort_key = 0x0080U;
     cmd.depth_write = true;
@@ -225,6 +225,105 @@ void TerrainRenderer::build_meshes() {
   std::vector<QVector3D> positions(vertex_count);
   std::vector<QVector3D> normals(vertex_count, QVector3D(0.0F, 0.0F, 0.0F));
   std::vector<QVector3D> face_accum(vertex_count, QVector3D(0, 0, 0));
+  std::vector<float> feature_foot_weight(vertex_count, 0.0F);
+
+  auto is_elevated_feature = [&](int idx) {
+    if (idx < 0 || idx >= static_cast<int>(m_terrain_types.size())) {
+      return false;
+    }
+    return m_terrain_types[idx] == Game::Map::TerrainType::Hill ||
+           m_terrain_types[idx] == Game::Map::TerrainType::Mountain;
+  };
+
+  {
+    constexpr int k_feature_foot_radius = 5;
+    constexpr float k_height_edge_threshold = 0.035F;
+    for (int z = 0; z < m_height; ++z) {
+      for (int x = 0; x < m_width; ++x) {
+        int const idx = z * m_width + x;
+        bool const center_feature = is_elevated_feature(idx);
+        float min_dist = float(k_feature_foot_radius + 1);
+        float max_height_delta = 0.0F;
+
+        for (int dz = -k_feature_foot_radius; dz <= k_feature_foot_radius; ++dz) {
+          int const nz = z + dz;
+          if (nz < 0 || nz >= m_height) {
+            continue;
+          }
+          for (int dx = -k_feature_foot_radius; dx <= k_feature_foot_radius; ++dx) {
+            int const nx = x + dx;
+            if (nx < 0 || nx >= m_width) {
+              continue;
+            }
+            float const dist = std::sqrt(float(dx * dx + dz * dz));
+            if (dist > float(k_feature_foot_radius)) {
+              continue;
+            }
+
+            int const n_idx = nz * m_width + nx;
+            if (is_elevated_feature(n_idx) != center_feature) {
+              min_dist = std::min(min_dist, dist);
+            }
+            max_height_delta = std::max(
+                max_height_delta, std::abs(height_data[n_idx] - height_data[idx]));
+          }
+        }
+
+        float const boundary_t = (min_dist <= float(k_feature_foot_radius))
+                                     ? 1.0F - (min_dist / float(k_feature_foot_radius))
+                                     : 0.0F;
+        float const height_edge_t =
+            smooth(0.0F,
+                   k_height_edge_threshold * float(k_feature_foot_radius),
+                   max_height_delta);
+        float const foot = boundary_t * boundary_t * (3.0F - 2.0F * boundary_t);
+        feature_foot_weight[idx] =
+            std::clamp(foot * (0.35F + 0.65F * height_edge_t), 0.0F, 1.0F);
+      }
+    }
+  }
+
+  {
+    constexpr int k_visual_blur_passes = 4;
+    constexpr float k_feature_side_blend = 0.42F;
+    constexpr float k_ground_side_blend = 0.58F;
+    for (int pass = 0; pass < k_visual_blur_passes; ++pass) {
+      std::vector<float> next_heights = height_data;
+      for (int z = 1; z < m_height - 1; ++z) {
+        for (int x = 1; x < m_width - 1; ++x) {
+          int const idx = z * m_width + x;
+          float const foot = feature_foot_weight[idx];
+          if (foot <= 0.001F) {
+            continue;
+          }
+
+          float weighted_sum = height_data[idx] * 3.0F;
+          float weight_sum = 3.0F;
+          for (int dz = -1; dz <= 1; ++dz) {
+            for (int dx = -1; dx <= 1; ++dx) {
+              if (dx == 0 && dz == 0) {
+                continue;
+              }
+              int const n_idx = (z + dz) * m_width + (x + dx);
+              float const weight = (dx == 0 || dz == 0) ? 1.0F : 0.65F;
+              weighted_sum += height_data[n_idx] * weight;
+              weight_sum += weight;
+            }
+          }
+
+          float const entry_protection =
+              (!entry_weight.empty()) ? (1.0F - 0.45F * entry_weight[idx]) : 1.0F;
+          float const side_blend =
+              is_elevated_feature(idx) ? k_feature_side_blend : k_ground_side_blend;
+          float const blend =
+              std::clamp(foot * side_blend * entry_protection, 0.0F, 0.85F);
+          float const avg = weighted_sum / weight_sum;
+          next_heights[idx] = height_data[idx] * (1.0F - blend) + avg * blend;
+        }
+      }
+      height_data.swap(next_heights);
+    }
+  }
 
   for (int z = 0; z < m_height; ++z) {
     for (int x = 0; x < m_width; ++x) {
@@ -272,6 +371,27 @@ void TerrainRenderer::build_meshes() {
     float const e0 = e00 * (1.0F - tx) + e10 * tx;
     float const e1 = e01 * (1.0F - tx) + e11 * tx;
     return e0 * (1.0F - tz) + e1 * tz;
+  };
+
+  auto sample_feature_foot_at = [&](float gx, float gz) {
+    if (feature_foot_weight.empty()) {
+      return 0.0F;
+    }
+    gx = std::clamp(gx, 0.0F, float(m_width - 1));
+    gz = std::clamp(gz, 0.0F, float(m_height - 1));
+    int const x0 = int(std::floor(gx));
+    int const z0 = int(std::floor(gz));
+    int const x1 = std::min(x0 + 1, m_width - 1);
+    int const z1 = std::min(z0 + 1, m_height - 1);
+    float const tx = gx - float(x0);
+    float const tz = gz - float(z0);
+    float const f00 = feature_foot_weight[z0 * m_width + x0];
+    float const f10 = feature_foot_weight[z0 * m_width + x1];
+    float const f01 = feature_foot_weight[z1 * m_width + x0];
+    float const f11 = feature_foot_weight[z1 * m_width + x1];
+    float const f0 = f00 * (1.0F - tx) + f10 * tx;
+    float const f1 = f01 * (1.0F - tx) + f11 * tx;
+    return f0 * (1.0F - tz) + f1 * tz;
   };
 
   auto sample_curvature_magnitude_at = [&](int gx, int gz) {
@@ -430,9 +550,6 @@ void TerrainRenderer::build_meshes() {
         std::unordered_map<int, unsigned int> remap;
         float height_sum = 0.0F;
         int height_count = 0;
-        float rotation_deg = 0.0F;
-        bool flip_u = false;
-        float tint = 1.0F;
         QVector3D normal_sum = QVector3D(0, 0, 0);
         float slope_sum = 0.0F;
         float height_var_sum = 0.0F;
@@ -449,33 +566,6 @@ void TerrainRenderer::build_meshes() {
 
       SectionData sections[3];
 
-      uint32_t const chunk_seed = hash_coords(chunk_x, chunk_z, m_noise_seed);
-      uint32_t const variant_seed = chunk_seed ^ k_golden_ratio;
-      constexpr int k_rotation_shift = 5;
-      constexpr int k_rotation_mask = 3;
-      constexpr float k_rotation_step_degrees = 90.0F;
-      constexpr int k_flip_shift = 7;
-      constexpr int k_tint_shift = 12;
-      constexpr int k_tint_variant_count = 7;
-
-      float const rotation_step =
-          static_cast<float>((variant_seed >> k_rotation_shift) & k_rotation_mask) *
-          k_rotation_step_degrees;
-      bool const flip = ((variant_seed >> k_flip_shift) & 1U) != 0U;
-      static const float tint_variants[k_tint_variant_count] = {
-          0.9F, 0.94F, 0.97F, 1.0F, 1.03F, 1.06F, 1.1F};
-      float const tint =
-          tint_variants[(variant_seed >> k_tint_shift) % k_tint_variant_count];
-
-      for (auto& section : sections) {
-        section.rotation_deg = rotation_step;
-        section.flip_u = flip;
-        section.tint = tint;
-      }
-      sections[0].rotation_deg = 0.0F;
-      sections[0].flip_u = false;
-      sections[0].tint = 1.0F;
-
       auto ensure_vertex = [&](SectionData& section, int global_index) -> unsigned int {
         auto it = section.remap.find(global_index);
         if (it != section.remap.end()) {
@@ -491,34 +581,7 @@ void TerrainRenderer::build_meshes() {
         v.normal[1] = normal.y();
         v.normal[2] = normal.z();
 
-        float const tex_scale = 0.2F / std::max(1.0F, m_tile_size);
-        float uu = pos.x() * tex_scale;
-        float const vv = pos.z() * tex_scale;
-
-        if (section.flip_u) {
-          uu = -uu;
-        }
-        float ru = uu;
-        float rv = vv;
-        switch (static_cast<int>(section.rotation_deg)) {
-        case 90: {
-          float const t = ru;
-          ru = -rv;
-          rv = t;
-        } break;
-        case 180:
-          ru = -ru;
-          rv = -rv;
-          break;
-        case 270: {
-          float const t = ru;
-          ru = rv;
-          rv = -t;
-        } break;
-        default:
-          break;
-        }
-        v.tex_coord[0] = ru;
+        v.tex_coord[0] = feature_foot_weight[global_index];
         v.tex_coord[1] = entry_weight.empty() ? 0.0F : entry_weight[global_index];
 
         section.vertices.push_back(v);
@@ -540,33 +603,8 @@ void TerrainRenderer::build_meshes() {
         v.normal[1] = normal.y();
         v.normal[2] = normal.z();
 
-        float const tex_scale = 0.2F / std::max(1.0F, m_tile_size);
-        float uu = pos.x() * tex_scale;
-        float const vv = pos.z() * tex_scale;
-        if (section.flip_u) {
-          uu = -uu;
-        }
-        float ru = uu;
-        float rv = vv;
-        switch (static_cast<int>(section.rotation_deg)) {
-        case 90: {
-          float const t = ru;
-          ru = -rv;
-          rv = t;
-        } break;
-        case 180:
-          ru = -ru;
-          rv = -rv;
-          break;
-        case 270: {
-          float const t = ru;
-          ru = rv;
-          rv = -t;
-        } break;
-        default:
-          break;
-        }
-        v.tex_coord[0] = ru;
+        v.tex_coord[0] = sample_feature_foot_at((pos.x() / m_tile_size) + half_width,
+                                                (pos.z() / m_tile_size) + half_height);
         v.tex_coord[1] = entry_weight.empty() ? 0.0F : entry_mask;
 
         section.vertices.push_back(v);
@@ -610,10 +648,14 @@ void TerrainRenderer::build_meshes() {
             entry_factor = 0.25F * (entry_weight[idx0] + entry_weight[idx1] +
                                     entry_weight[idx2] + entry_weight[idx3]);
           }
+          float const foot_factor =
+              0.25F * (feature_foot_weight[idx0] + feature_foot_weight[idx1] +
+                       feature_foot_weight[idx2] + feature_foot_weight[idx3]);
           section.entry_sum += entry_factor;
           section.entry_peak = std::max(section.entry_peak, entry_factor);
           section.entry_count += 1;
-          bool const subdivide = section_index > 0 && entry_factor > 0.25F;
+          bool const subdivide =
+              section_index > 0 && (entry_factor > 0.20F || foot_factor > 0.16F);
 
           if (subdivide) {
             auto const gx = float(x);
@@ -838,7 +880,7 @@ void TerrainRenderer::build_meshes() {
             1.0F + 0.01F * plateau_factor + 0.02F * entry_factor - 0.01F * edge_factor,
             1.0F - 0.02F * plateau_factor + 0.05F * entry_factor);
 
-        chunk.tint = (chunk.type == Game::Map::TerrainType::Flat) ? 1.0F : section.tint;
+        chunk.tint = 1.0F;
 
         QVector3D color = base_color * (1.0F - slope_mix) + rock_tint * slope_mix;
         color = apply_tint(color, chunk.tint);
@@ -908,24 +950,11 @@ void TerrainRenderer::build_meshes() {
             surface_profile.terrain_soil_sharpness *
                 (chunk.type == Game::Map::TerrainType::Mountain ? 0.80F : 0.95F));
 
-        const uint32_t noise_key_a =
-            hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0xB5297A4DU);
-        const uint32_t noise_key_b =
-            hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0x68E31DA4U);
         constexpr float k_noise_offset_scale = 256.0F;
-        if (chunk.type == Game::Map::TerrainType::Flat) {
-          const uint32_t flat_noise_key_a =
-              hash_coords(0, 0, m_noise_seed ^ 0xB5297A4DU);
-          const uint32_t flat_noise_key_b =
-              hash_coords(0, 0, m_noise_seed ^ 0x68E31DA4U);
-          params.noise_offset =
-              QVector2D(hash_to_01(flat_noise_key_a) * k_noise_offset_scale,
-                        hash_to_01(flat_noise_key_b) * k_noise_offset_scale);
-        } else {
-          params.noise_offset =
-              QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
-                        hash_to_01(noise_key_b) * k_noise_offset_scale);
-        }
+        const uint32_t noise_key_a = hash_coords(0, 0, m_noise_seed ^ 0xB5297A4DU);
+        const uint32_t noise_key_b = hash_coords(0, 0, m_noise_seed ^ 0x68E31DA4U);
+        params.noise_offset = QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
+                                        hash_to_01(noise_key_b) * k_noise_offset_scale);
 
         float base_amp = surface_profile.height_noise_amplitude *
                          (0.7F + 0.3F * std::clamp(roughness * 0.6F, 0.0F, 1.0F));

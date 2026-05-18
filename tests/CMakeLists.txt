@@ -5,19 +5,28 @@
 add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/visibility_coordinator.cpp
     ${CMAKE_SOURCE_DIR}/app/core/commander_control_controller.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/input_command_handler.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_commander_setup.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_definition_view.cpp
     ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/runtime_frame_orchestrator.cpp
+    ${CMAKE_SOURCE_DIR}/app/models/cursor_manager.cpp
+    ${CMAKE_SOURCE_DIR}/app/models/hover_tracker.cpp
+    ${CMAKE_SOURCE_DIR}/app/controllers/action_vfx.cpp
+    ${CMAKE_SOURCE_DIR}/app/controllers/command_controller.cpp
     core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
     core/commander_control_controller_test.cpp
+    core/input_command_handler_test.cpp
     core/mission_commander_setup_test.cpp
     core/mission_definition_view_test.cpp
     core/selection_query_service_test.cpp
+    core/runtime_frame_orchestrator_test.cpp
     db/save_storage_test.cpp
     db/mission_progress_test.cpp
     map/terrain_profiles_test.cpp
@@ -53,6 +62,7 @@ add_executable(standard_of_iron_tests
     render/helmet_renderers_test.cpp
     render/armor_renderer_test.cpp
     render/rider_proportions_test.cpp
+    render/infantry_proportions_test.cpp
     render/horse_equipment_renderers_test.cpp
     render/spawn_validator_test.cpp
     render/battle_render_optimizer_test.cpp
@@ -61,6 +71,7 @@ add_executable(standard_of_iron_tests
     render/building_render_common_test.cpp
     render/mode_indicator_test.cpp
     render/mode_indicator_placement_test.cpp
+    render/renderer_visibility_policy_test.cpp
     render/unit_render_cache_test.cpp
     render/persistent_render_registry_test.cpp
     render/render_archetype_test.cpp
@@ -76,7 +87,6 @@ add_executable(standard_of_iron_tests
     render/map_boundary_fog_renderer_test.cpp
     render/oriented_parts_test.cpp
     render/draw_part_material_test.cpp
-    render/pose_template_cache_test.cpp
     render/rig_dsl_interpreter_test.cpp
     render/rigged_pipeline_test.cpp
     render/rigged_pipeline_instanced_test.cpp

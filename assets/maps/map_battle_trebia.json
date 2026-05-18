@@ -246,7 +246,7 @@
   ],
   "terrain": [
     {
-      "type": "plain",
+      "type": "flat",
       "x": 110,
       "z": 93,
       "width": 92,
@@ -405,19 +405,19 @@
       "description": "Roman eastern rally knoll guarding the cavalry approach."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 110,
       "z": 88,
       "description": "Abandoned riverside hamlet caught between the frozen ford and Hannibal's line."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 112,
       "z": 18,
       "description": "Roman winter camp and baggage fires on the north bank."
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 110,
       "z": 61,
       "width": 82,

@@ -96,14 +96,16 @@ protected:
   }
 };
 
-TEST_F(CommandServiceTest, UnitRadiusMatchesSelectionRingRadius) {
+TEST_F(CommandServiceTest, UnitRadiusUsesSelectionRingFootprint) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
 
-  float const expected_radius =
+  float const expected_radius = std::max(
       Game::Units::TroopConfig::instance().get_selection_ring_size(
-          Game::Units::SpawnType::Archer);
+          Game::Units::SpawnType::Archer) *
+          0.5F,
+      0.5F);
 
   EXPECT_FLOAT_EQ(Game::Systems::CommandService::get_unit_radius(world, unit->get_id()),
                   expected_radius);
@@ -231,6 +233,32 @@ TEST_F(CommandServiceTest,
 
   EXPECT_TRUE(movement->path_pending);
   EXPECT_NE(movement->pending_request_id, 0U);
+}
+
+TEST_F(CommandServiceTest, MovementSystemQueuesRecoveryMoveForNextTick) {
+  Engine::Core::World world;
+  auto* entity = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(entity, nullptr);
+
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  movement->goal_x = 12.0F;
+  movement->goal_y = 0.0F;
+
+  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.update(0.1F);
+
+  auto* repath = entity->get_component<Engine::Core::RepathRequestComponent>();
+  ASSERT_NE(repath, nullptr);
+  EXPECT_FLOAT_EQ(repath->goal_x, 12.0F);
+  EXPECT_FLOAT_EQ(repath->goal_y, 0.0F);
+  EXPECT_FALSE(movement->path_pending);
+  EXPECT_FALSE(movement->has_target);
+
+  world.update(0.1F);
+
+  EXPECT_EQ(entity->get_component<Engine::Core::RepathRequestComponent>(), nullptr);
+  EXPECT_TRUE(movement->path_pending || movement->has_target);
 }
 
 TEST_F(CommandServiceTest, FpvCommanderMoveIgnoresStaleRtsMeleeLockState) {
@@ -419,6 +447,49 @@ TEST_F(CommandServiceTest, GroupMoveCanRetryMembersIndividuallyAfterGroupFailure
   EXPECT_FALSE(left_movement->path.empty());
   EXPECT_FALSE(center_movement->path.empty());
   EXPECT_FALSE(right_movement->path.empty());
+}
+
+TEST_F(CommandServiceTest, GroupMoveKeepsOrdersWhenTargetsOnlyHaveDiagonalObstacles) {
+  Engine::Core::World world;
+
+  auto* left = create_unit(world, -10.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto* center = create_unit(world, -10.0F, 0.0F, Game::Units::SpawnType::Archer);
+  auto* right = create_unit(world, -10.0F, 2.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(left, nullptr);
+  ASSERT_NE(center, nullptr);
+  ASSERT_NE(right, nullptr);
+
+  auto* left_movement = left->get_component<Engine::Core::MovementComponent>();
+  auto* center_movement = center->get_component<Engine::Core::MovementComponent>();
+  auto* right_movement = right->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(left_movement, nullptr);
+  ASSERT_NE(center_movement, nullptr);
+  ASSERT_NE(right_movement, nullptr);
+
+  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_building_obstacles();
+
+  Game::Systems::Point const diagonal_block =
+      Game::Systems::CommandService::world_to_grid(11.0F, 1.0F);
+  pathfinder->set_obstacle(diagonal_block.x, diagonal_block.y, true);
+
+  Game::Systems::CommandService::MoveOptions options;
+  options.allow_direct_fallback = false;
+  options.group_move = true;
+  options.retry_individual_on_group_failure = true;
+
+  Game::Systems::CommandService::move_units(
+      world,
+      {left->get_id(), center->get_id(), right->get_id()},
+      {QVector3D(10.0F, 0.0F, -2.0F),
+       QVector3D(10.0F, 0.0F, 0.0F),
+       QVector3D(10.0F, 0.0F, 2.0F)},
+      options);
+
+  EXPECT_TRUE(left_movement->path_pending || left_movement->has_target);
+  EXPECT_TRUE(center_movement->path_pending || center_movement->has_target);
+  EXPECT_TRUE(right_movement->path_pending || right_movement->has_target);
 }
 
 TEST_F(CommandServiceTest, LocalRecoveryCanRelaxRadiusToEscapeBoundaryTrap) {

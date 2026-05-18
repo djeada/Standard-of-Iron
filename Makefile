@@ -32,6 +32,7 @@ CLANG_FORMAT ?= clang-format
 # Try to find qmlformat in common Qt installation paths if not in PATH
 QMLFORMAT ?= $(shell if command -v qmlformat >/dev/null 2>&1; then command -v qmlformat; elif command -v qmlformat6 >/dev/null 2>&1; then command -v qmlformat6; elif command -v qmlformat-qt6 >/dev/null 2>&1; then command -v qmlformat-qt6; elif [ -x /usr/lib/qt6/bin/qmlformat ]; then echo /usr/lib/qt6/bin/qmlformat; else echo /usr/lib/qt5/bin/qmlformat; fi)
 FORMAT_JOBS ?= $(shell command -v nproc >/dev/null 2>&1 && nproc || echo 4)
+FORMAT_RUN_TIDY ?= 1
 FMT_GLOBS := -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp"
 SHADER_GLOBS := -name "*.frag" -o -name "*.vert"
 QML_GLOBS := -name "*.qml"
@@ -84,6 +85,7 @@ help:
 	@echo "  make run        # Build and run the game"
 	@echo "  make mesh horse # Render a four-view horse mesh comparison sheet"
 	@echo "  DEFAULT_LANG=de make build  # Build with German as default language"
+	@echo "  FORMAT_RUN_TIDY=0 make format # Format without clang-tidy fixes"
 
 # Install dependencies
 .PHONY: install
@@ -113,7 +115,16 @@ configure: build-dir
 			find "$(BUILD_DIR)" -mindepth 1 -maxdepth 1 -exec rm -rf {} +; \
 		fi; \
 	fi
-	@rm -rf "$(BUILD_DIR)/_deps/googletest-subbuild"
+	@if [ ! -f "$(BUILD_DIR)/_deps/googletest-src/googletest/include/gtest/gtest.h" ] || \
+		[ ! -f "$(BUILD_DIR)/_deps/googletest-src/googletest/include/gtest/gtest-assertion-result.h" ] || \
+		[ ! -f "$(BUILD_DIR)/_deps/googletest-src/googlemock/include/gmock/gmock.h" ]; then \
+		echo "$(YELLOW)Detected incomplete googletest cache; refreshing build/_deps/googletest-*$(RESET)"; \
+		rm -rf "$(BUILD_DIR)/_deps/googletest-src" \
+		       "$(BUILD_DIR)/_deps/googletest-build" \
+		       "$(BUILD_DIR)/_deps/googletest-subbuild"; \
+	else \
+		rm -rf "$(BUILD_DIR)/_deps/googletest-subbuild"; \
+	fi
 	@cd $(BUILD_DIR) && cmake -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
 	@echo "$(GREEN)✓ Configuration complete$(RESET)"
 
@@ -318,8 +329,8 @@ EXCLUDE_DIRS := ./$(BUILD_DIR) ./$(BUILD_TIDY_DIR) ./third_party
 EXCLUDE_PATHS := */venv/* */.venv/*
 EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*") \
 	$(foreach p,$(EXCLUDE_PATHS),-not -path "$(p)")
-COMMENT_STRIP_PATHS := app/ game/ render/ scripts/ tests/ tools/ ui/ assets/shaders/
-CXX_FORMAT_PATHS := main.cpp app game render tests tools
+COMMENT_STRIP_PATHS := main.cpp app/ game/ render/ scripts/ tests/ tools/ ui/ utils/ assets/shaders/
+CXX_FORMAT_PATHS := main.cpp app game render tests tools ui utils compat
 QML_FORMAT_PATHS := app tools ui
 SHADER_FORMAT_PATHS := assets/shaders
 PY_FORMAT_PATHS := scripts tests tools
@@ -330,7 +341,7 @@ clean-format-trash:
 		-type f \( -name "*~" -o -name ".#*" -o -name "#*#" \) -print -exec rm -f {} +
 
 format-strip-comments:
-	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... scripts/... tests/... tools/... ui/... assets/shaders/...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Stripping comments in $(COMMENT_STRIP_PATHS)$(RESET)"
 	@if [ -x scripts/remove-comments.sh ]; then \
 		./scripts/remove-comments.sh $(COMMENT_STRIP_PATHS); \
 	elif [ -f scripts/remove-comments.sh ]; then \
@@ -340,8 +351,12 @@ format-strip-comments:
 	fi
 
 format: clean-format-trash
-	@echo "$(BOLD)$(BLUE)Applying clang-tidy auto fixes (changed files, $(or $(CLANG_TIDY_JOBS),auto) jobs)...$(RESET)"
-	@bash $(CLANG_TIDY_FIXER) --nice --build-dir="$(BUILD_DIR)" --default-lang="$(DEFAULT_LANG)" --passes=2 $(if $(CLANG_TIDY_JOBS),--jobs="$(CLANG_TIDY_JOBS)") $(if $(CLANG_TIDY_AUTO_FIX_CHECKS),--checks="$(CLANG_TIDY_AUTO_FIX_CHECKS)")
+	@if [ "$(FORMAT_RUN_TIDY)" = "1" ]; then \
+		echo "$(BOLD)$(BLUE)Applying clang-tidy auto fixes (changed files, $(or $(CLANG_TIDY_JOBS),auto) jobs)...$(RESET)"; \
+		bash $(CLANG_TIDY_FIXER) --nice --build-dir="$(BUILD_DIR)" --default-lang="$(DEFAULT_LANG)" --passes=2 $(if $(CLANG_TIDY_JOBS),--jobs="$(CLANG_TIDY_JOBS)") $(if $(CLANG_TIDY_AUTO_FIX_CHECKS),--checks="$(CLANG_TIDY_AUTO_FIX_CHECKS)"); \
+	else \
+		echo "$(YELLOW)Skipping clang-tidy auto fixes because FORMAT_RUN_TIDY=$(FORMAT_RUN_TIDY)$(RESET)"; \
+	fi
 
 	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format ($(FORMAT_JOBS) jobs)...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \

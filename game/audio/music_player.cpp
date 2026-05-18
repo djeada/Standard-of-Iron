@@ -15,6 +15,7 @@
 #include <qthread.h>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 #include "audio_constants.h"
@@ -27,6 +28,13 @@ static inline void require_gui_thread(const char* where) {
       QThread::currentThread() != QCoreApplication::instance()->thread()) {
     qFatal("%s must be called on the GUI thread", where);
   }
+}
+
+static auto sanitize_music_volume(float volume) -> float {
+  if (!std::isfinite(volume)) {
+    return MiniaudioBackend::MIN_VOLUME;
+  }
+  return std::clamp(volume, MiniaudioBackend::MIN_VOLUME, MiniaudioBackend::MAX_VOLUME);
 }
 
 auto MusicPlayer::get_instance() -> MusicPlayer& {
@@ -266,14 +274,19 @@ void MusicPlayer::set_volume(int ch, float v, int fade_ms) {
   if (!m_initialized || (m_backend == nullptr)) {
     return;
   }
-  if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
+  QCoreApplication* app = QCoreApplication::instance();
+  if (app == nullptr) {
+    return;
+  }
+  const float volume = sanitize_music_volume(v);
+  if (QThread::currentThread() != app->thread()) {
     QMetaObject::invokeMethod(
         this,
-        [this, ch, v, fade_ms]() { setVolume_gui(ch, v, fade_ms); },
+        [this, ch, volume, fade_ms]() { setVolume_gui(ch, volume, fade_ms); },
         Qt::QueuedConnection);
     return;
   }
-  setVolume_gui(ch, v, fade_ms);
+  setVolume_gui(ch, volume, fade_ms);
 }
 void MusicPlayer::stop_all(int fade_ms) {
   if (!m_initialized || (m_backend == nullptr)) {
@@ -290,14 +303,19 @@ void MusicPlayer::set_master_volume(float v, int fade_ms) {
   if (!m_initialized || (m_backend == nullptr)) {
     return;
   }
-  if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
+  QCoreApplication* app = QCoreApplication::instance();
+  if (app == nullptr) {
+    return;
+  }
+  const float volume = sanitize_music_volume(v);
+  if (QThread::currentThread() != app->thread()) {
     QMetaObject::invokeMethod(
         this,
-        [this, v, fade_ms]() { setMasterVolume_gui(v, fade_ms); },
+        [this, volume, fade_ms]() { setMasterVolume_gui(volume, fade_ms); },
         Qt::QueuedConnection);
     return;
   }
-  setMasterVolume_gui(v, fade_ms);
+  setMasterVolume_gui(volume, fade_ms);
 }
 
 auto MusicPlayer::is_playing() const -> bool {

@@ -162,6 +162,14 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["movement"] = movement_obj;
   }
 
+  if (const auto* intent = entity->get_component<PlayerOrderIntentComponent>()) {
+    QJsonObject intent_obj;
+    intent_obj["kind"] = static_cast<int>(intent->kind);
+    intent_obj["suppress_opportunistic_combat"] =
+        intent->suppress_opportunistic_combat;
+    entity_obj["player_order_intent"] = intent_obj;
+  }
+
   if (const auto* attack = entity->get_component<AttackComponent>()) {
     QJsonObject attack_obj;
     attack_obj["range"] = attack->range;
@@ -280,7 +288,6 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     production_obj["rally_set"] = production->rally_set;
     production_obj["villager_cost"] = production->villager_cost;
     production_obj["manpower_available"] = production->manpower_available;
-    production_obj["commander_committed"] = production->commander_committed;
 
     QJsonArray queue_array;
     for (const auto& queued : production->production_queue) {
@@ -617,6 +624,16 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(movement_obj["unstuck_cooldown"].toDouble(0.0));
   }
 
+  if (json.contains("player_order_intent")) {
+    const auto intent_obj = json["player_order_intent"].toObject();
+    auto* intent = entity->add_component<PlayerOrderIntentComponent>();
+    intent->kind =
+        static_cast<PlayerOrderIntentKind>(intent_obj["kind"].toInt(static_cast<int>(
+            PlayerOrderIntentKind::None)));
+    intent->suppress_opportunistic_combat =
+        intent_obj["suppress_opportunistic_combat"].toBool(false);
+  }
+
   if (json.contains("attack")) {
     const auto attack_obj = json["attack"].toObject();
     auto* attack = entity->add_component<AttackComponent>();
@@ -771,8 +788,6 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     production->rally_set = production_obj["rally_set"].toBool(false);
     production->villager_cost = production_obj["villager_cost"].toInt(1);
     production->manpower_available = production_obj["manpower_available"].toInt(0);
-    production->commander_committed =
-        production_obj["commander_committed"].toBool(false);
 
     production->production_queue.clear();
     const auto queue_array = production_obj["queue"].toArray();

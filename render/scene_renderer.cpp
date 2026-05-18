@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "../game/map/terrain_service.h"
+#include "../game/map/render_visibility_rules.h"
 #include "../game/map/visibility_service.h"
 #include "../game/systems/combat_rules.h"
 #include "../game/systems/nation_registry.h"
@@ -33,6 +34,7 @@
 #include "battle_render_optimizer.h"
 #include "creature/archetype_registry.h"
 #include "creature/bpat/bpat_registry.h"
+#include "creature/pose_intent.h"
 #include "creature/quadruped/render_stats.h"
 #include "creature/runtime_bake_guard.h"
 #include "creature/snapshot_mesh_registry.h"
@@ -64,7 +66,6 @@
 #include "pass/frame_pass_runner.h"
 #include "pass/primitive_flush_pass.h"
 #include "pipeline/lod_selector.h"
-#include "pose_palette_cache.h"
 #include "primitive_batch.h"
 #include "profiling/frame_profile.h"
 #include "render_backend_factory.h"
@@ -72,6 +73,7 @@
 #include "software_backend.h"
 #include "submitter.h"
 #include "template_cache.h"
+#include "template_prewarm_catalog.h"
 #include "visibility_budget.h"
 #include "world_chunk.h"
 
@@ -83,21 +85,6 @@ const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
 const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
 constexpr uint32_t k_animation_cache_cleanup_mask = 0x3F;
 constexpr uint32_t k_animation_cache_max_age = 240;
-
-auto prewarm_attack_family_for_spawn(Game::Units::SpawnType spawn_type,
-                                     AnimState state) noexcept
-    -> Engine::Core::CombatAttackFamily {
-  switch (state) {
-  case AnimState::AttackMelee:
-    return Engine::Core::resolve_combat_attack_family(
-        spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
-  case AnimState::AttackRanged:
-    return Engine::Core::resolve_combat_attack_family(
-        spawn_type, Engine::Core::AttackComponent::CombatMode::Ranged);
-  default:
-    return Engine::Core::CombatAttackFamily::None;
-  }
-}
 
 auto prewarm_seed_for_variant(int owner_id,
                               std::uint8_t variant) noexcept -> std::uint32_t {
@@ -118,9 +105,86 @@ auto prewarm_entity_id_for_variant(std::size_t profile_index,
   return 1U + static_cast<std::uint32_t>(
                   (((profile_index * 16U) + static_cast<std::size_t>(owner_id)) * 4U +
                    static_cast<std::size_t>(lod)) *
-                      k_template_variant_count +
-                  static_cast<std::size_t>(variant));
+                       k_template_variant_count +
+                   static_cast<std::size_t>(variant));
 }
+
+void populate_template_prewarm_entity(Engine::Core::Entity& entity,
+                                      Game::Units::SpawnType spawn_type,
+                                      Game::Systems::NationID nation_id,
+                                      int owner_id,
+                                      int max_health,
+                                      const std::string& renderer_id) {
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = spawn_type;
+  unit->owner_id = owner_id;
+  unit->nation_id = nation_id;
+  unit->max_health = std::max(1, max_health);
+  unit->health = unit->max_health;
+
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->renderer_id = renderer_id;
+  renderable->visible = true;
+  QVector3D const team_color = Game::Visuals::team_colorForOwner(owner_id);
+  renderable->color[0] = team_color.x();
+  renderable->color[1] = team_color.y();
+  renderable->color[2] = team_color.z();
+}
+
+auto make_template_prewarm_draw_context(Renderer& renderer,
+                                        Engine::Core::Entity& entity,
+                                        const std::string& renderer_id,
+                                        int owner_id,
+                                        HumanoidLOD lod,
+                                        std::uint8_t variant,
+                                        bool allow_template_cache,
+                                        bool force_horse_lod,
+                                        const AnimationInputs* animation_override,
+                                        std::uint8_t attack_variant_override,
+                                        bool has_attack_variant_override)
+    -> DrawContext {
+  DrawContext ctx{renderer.resources(), &entity, nullptr, QMatrix4x4()};
+  ctx.renderer_id = renderer_id;
+  ctx.backend = renderer.backend();
+  ctx.camera = nullptr;
+  ctx.allow_template_cache = allow_template_cache;
+  ctx.template_prewarm = true;
+  ctx.has_seed_override = true;
+  ctx.seed_override = prewarm_seed_for_variant(owner_id, variant);
+  ctx.has_variant_override = true;
+  ctx.variant_override = variant;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = lod;
+  ctx.force_horse_lod = force_horse_lod;
+  if (ctx.force_horse_lod) {
+    ctx.forced_horse_lod = static_cast<HorseLOD>(lod);
+  }
+  ctx.animation_override = animation_override;
+  ctx.has_attack_variant_override = has_attack_variant_override;
+  ctx.attack_variant_override = attack_variant_override;
+  return ctx;
+}
+
+void execute_template_prewarm_item(Renderer& renderer,
+                                   std::size_t profile_index,
+                                   Game::Units::SpawnType spawn_type,
+                                   Game::Systems::NationID nation_id,
+                                   int max_health,
+                                   const std::string& renderer_id,
+                                   bool is_mounted,
+                                   bool is_elephant,
+                                   const RenderFunc& fn,
+                                   int owner_id,
+                                   HumanoidLOD lod,
+                                   std::uint8_t variant,
+                                   bool allow_template_cache,
+                                   const AnimKey& anim_key);
+
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
@@ -228,6 +292,7 @@ struct UnitRenderEntry {
   Engine::Core::MovementComponent* movement{nullptr};
   Engine::Core::MotionPresentationComponent* motion{nullptr};
   std::string renderer_key;
+  Render::GL::RendererHandle renderer_handle{Render::GL::k_invalid_renderer_handle};
   QMatrix4x4 model_matrix;
   uint32_t entity_id{0};
   bool selected{false};
@@ -235,7 +300,6 @@ struct UnitRenderEntry {
   bool combat_active{false};
   bool in_frustum{true};
   bool fog_visible{true};
-  float fog_reveal_alpha{1.0F};
   bool has_attack{false};
   bool has_guard_mode{false};
   bool has_hold_mode{false};
@@ -243,184 +307,7 @@ struct UnitRenderEntry {
   float distance_sq{0.0F};
 };
 
-struct EnemyVisibilityResult {
-  bool render_visible = false;
-  float target_alpha = 0.0F;
-};
-
-auto visibility_cell_for_world(const Game::Map::VisibilityService::Snapshot& snapshot,
-                               float world_x,
-                               float world_z) -> std::optional<std::pair<int, int>> {
-  if (snapshot.tile_size <= 0.0F || snapshot.width <= 0 || snapshot.height <= 0) {
-    return std::nullopt;
-  }
-
-  constexpr float k_half_cell_offset = 0.5F;
-  const int grid_x = static_cast<int>(std::floor(
-      world_x / snapshot.tile_size + snapshot.half_width + k_half_cell_offset));
-  const int grid_z = static_cast<int>(std::floor(
-      world_z / snapshot.tile_size + snapshot.half_height + k_half_cell_offset));
-  if (grid_x < 0 || grid_x >= snapshot.width || grid_z < 0 ||
-      grid_z >= snapshot.height) {
-    return std::nullopt;
-  }
-  return std::pair<int, int>{grid_x, grid_z};
-}
-
-auto hard_visibility_for_enemy(const Game::Map::VisibilityService::Snapshot& snapshot,
-                               float world_x,
-                               float world_z) -> EnemyVisibilityResult {
-  if (!snapshot.initialized) {
-    return {true, 1.0F};
-  }
-  const auto cell = visibility_cell_for_world(snapshot, world_x, world_z);
-  if (!cell.has_value()) {
-    return {false, 0.0F};
-  }
-  const auto [grid_x, grid_z] = *cell;
-  const bool visible =
-      snapshot.state_at(grid_x, grid_z) == Game::Map::VisibilityState::Visible;
-  return {visible, visible ? 1.0F : 0.0F};
-}
-
-auto soft_visibility_for_enemy(const Game::Map::VisibilityService::Snapshot& snapshot,
-                               float world_x,
-                               float world_z) -> EnemyVisibilityResult {
-  const auto cell = visibility_cell_for_world(snapshot, world_x, world_z);
-  if (!cell.has_value()) {
-    return {false, 0.0F};
-  }
-  const auto [grid_x, grid_z] = *cell;
-  const auto state = snapshot.state_at(grid_x, grid_z);
-  if (state == Game::Map::VisibilityState::Visible) {
-    return {true, 1.0F};
-  }
-
-  constexpr int k_pre_reveal_radius_cells = 10;
-  constexpr float k_outer_alpha = 0.16F;
-  constexpr float k_inner_alpha = 0.72F;
-  int best_dist_sq = k_pre_reveal_radius_cells * k_pre_reveal_radius_cells + 1;
-  for (int dz = -k_pre_reveal_radius_cells; dz <= k_pre_reveal_radius_cells; ++dz) {
-    const int z = grid_z + dz;
-    if (z < 0 || z >= snapshot.height) {
-      continue;
-    }
-    const int dz_sq = dz * dz;
-    if (dz_sq >= best_dist_sq) {
-      continue;
-    }
-    for (int dx = -k_pre_reveal_radius_cells; dx <= k_pre_reveal_radius_cells; ++dx) {
-      const int x = grid_x + dx;
-      if (x < 0 || x >= snapshot.width) {
-        continue;
-      }
-      const int dist_sq = dx * dx + dz_sq;
-      if (dist_sq >= best_dist_sq ||
-          dist_sq > k_pre_reveal_radius_cells * k_pre_reveal_radius_cells) {
-        continue;
-      }
-      if (snapshot.state_at(x, z) == Game::Map::VisibilityState::Visible) {
-        best_dist_sq = dist_sq;
-      }
-    }
-  }
-
-  if (best_dist_sq > k_pre_reveal_radius_cells * k_pre_reveal_radius_cells) {
-    return {false, 0.0F};
-  }
-
-  const float dist = std::sqrt(static_cast<float>(best_dist_sq));
-  const float t =
-      1.0F -
-      std::clamp(dist / static_cast<float>(k_pre_reveal_radius_cells), 0.0F, 1.0F);
-  const float eased = t * t * (3.0F - 2.0F * t);
-  return {true, k_outer_alpha + (k_inner_alpha - k_outer_alpha) * eased};
-}
-
 } // namespace
-
-class EnemyVisibilityPolicy {
-public:
-  virtual ~EnemyVisibilityPolicy() = default;
-  virtual void activate(float now) { (void)now; }
-  virtual void begin_frame(float now, bool visibility_enabled) {
-    (void)now;
-    (void)visibility_enabled;
-  }
-  [[nodiscard]] virtual auto
-  resolve(uint32_t entity_id,
-          const Engine::Core::TransformComponent& transform,
-          const Game::Map::VisibilityService::Snapshot& snapshot)
-      -> EnemyVisibilityResult = 0;
-  virtual void end_frame(bool visibility_enabled) { (void)visibility_enabled; }
-};
-
-class RtsEnemyVisibilityPolicy final : public EnemyVisibilityPolicy {
-public:
-  [[nodiscard]] auto resolve(uint32_t,
-                             const Engine::Core::TransformComponent& transform,
-                             const Game::Map::VisibilityService::Snapshot& snapshot)
-      -> EnemyVisibilityResult override {
-    return hard_visibility_for_enemy(
-        snapshot, transform.position.x, transform.position.z);
-  }
-};
-
-class RpgEnemyVisibilityPolicy final : public EnemyVisibilityPolicy {
-public:
-  void activate(float now) override {
-    m_primed = false;
-    m_last_time = now;
-    m_alpha_by_entity.clear();
-  }
-
-  void begin_frame(float now, bool visibility_enabled) override {
-    m_seed = visibility_enabled && !m_primed;
-    m_reveal_dt = std::clamp(now - m_last_time, 0.0F, 0.10F);
-    m_last_time = now;
-    if (!visibility_enabled) {
-      m_primed = false;
-      m_alpha_by_entity.clear();
-    }
-  }
-
-  [[nodiscard]] auto resolve(uint32_t entity_id,
-                             const Engine::Core::TransformComponent& transform,
-                             const Game::Map::VisibilityService::Snapshot& snapshot)
-      -> EnemyVisibilityResult override {
-    const auto visibility =
-        soft_visibility_for_enemy(snapshot, transform.position.x, transform.position.z);
-    if (!visibility.render_visible) {
-      m_alpha_by_entity.erase(entity_id);
-      return visibility;
-    }
-
-    auto& alpha = m_alpha_by_entity[entity_id];
-    if (m_seed) {
-      alpha = visibility.target_alpha;
-    } else if (alpha <= 0.0F) {
-      alpha = 0.0F;
-    }
-    const float target_alpha = std::clamp(visibility.target_alpha, 0.0F, 1.0F);
-    const float duration = target_alpha > alpha ? 0.24F : 0.12F;
-    const float step = duration > 0.0F ? m_reveal_dt / duration : 1.0F;
-    alpha += (target_alpha - alpha) * std::clamp(step, 0.0F, 1.0F);
-    return {true, alpha};
-  }
-
-  void end_frame(bool visibility_enabled) override {
-    if (visibility_enabled) {
-      m_primed = true;
-    }
-  }
-
-private:
-  std::unordered_map<uint32_t, float> m_alpha_by_entity;
-  float m_last_time = 0.0F;
-  float m_reveal_dt = 0.0F;
-  bool m_seed = false;
-  bool m_primed = false;
-};
 
 namespace {
 
@@ -430,6 +317,7 @@ struct RenderEntry {
   Engine::Core::TransformComponent* transform{nullptr};
   Engine::Core::UnitComponent* unit{nullptr};
   std::string renderer_key;
+  Render::GL::RendererHandle renderer_handle{Render::GL::k_invalid_renderer_handle};
   uint32_t entity_id{0};
   bool selected{false};
   bool hovered{false};
@@ -475,14 +363,55 @@ public:
   }
   void rigged(const RiggedCreatureCmd&) override {}
 };
+
+void execute_template_prewarm_item(Renderer& renderer,
+                                   std::size_t profile_index,
+                                   Game::Units::SpawnType spawn_type,
+                                   Game::Systems::NationID nation_id,
+                                   int max_health,
+                                   const std::string& renderer_id,
+                                   bool is_mounted,
+                                   bool is_elephant,
+                                   const RenderFunc& fn,
+                                   int owner_id,
+                                   HumanoidLOD lod,
+                                   std::uint8_t variant,
+                                   bool allow_template_cache,
+                                   const AnimKey& anim_key) {
+  if (!fn) {
+    return;
+  }
+
+  Engine::Core::Entity entity(
+      prewarm_entity_id_for_variant(profile_index,
+                                    owner_id,
+                                    static_cast<std::uint8_t>(lod),
+                                    variant));
+  populate_template_prewarm_entity(
+      entity, spawn_type, nation_id, owner_id, max_health, renderer_id);
+
+  AnimationInputs const anim = make_animation_inputs(anim_key);
+  bool const attack_state = Render::Creature::is_attack_pose_intent(anim_key.state);
+  DrawContext ctx = make_template_prewarm_draw_context(renderer,
+                                                       entity,
+                                                       renderer_id,
+                                                       owner_id,
+                                                       lod,
+                                                       variant,
+                                                       allow_template_cache,
+                                                       is_mounted || is_elephant,
+                                                       &anim,
+                                                       anim_key.attack_variant,
+                                                       attack_state);
+
+  CreatureCacheWarmupSubmitter warmup_submitter(&renderer);
+  fn(ctx, warmup_submitter);
+}
 } // namespace
 
 Renderer::Renderer(ShaderQuality quality)
-    : m_shader_quality(quality)
-    , m_enemy_visibility_policy(m_rts_enemy_visibility_policy.get()) {
+    : m_shader_quality(quality) {
   m_active_queue = &m_queues[m_fill_queue_index];
-  m_rts_enemy_visibility_policy = std::make_unique<RtsEnemyVisibilityPolicy>();
-  m_rpg_enemy_visibility_policy = std::make_unique<RpgEnemyVisibilityPolicy>();
 }
 
 Renderer::~Renderer() {
@@ -494,12 +423,24 @@ void Renderer::set_world_render_mode(WorldRenderMode mode) {
     return;
   }
   m_world_render_mode = mode;
-  m_enemy_visibility_policy = mode == WorldRenderMode::Rpg
-                                  ? m_rpg_enemy_visibility_policy.get()
-                                  : m_rts_enemy_visibility_policy.get();
-  if (m_enemy_visibility_policy != nullptr) {
-    m_enemy_visibility_policy->activate(m_accumulated_time);
+}
+
+auto Renderer::visibility_mode_config() const -> VisibilityModeConfig {
+  switch (m_world_render_mode) {
+  case WorldRenderMode::Rts:
+    return {.filter_non_local_units = true, .filter_static_world = true};
+  case WorldRenderMode::Rpg:
+    return {.filter_non_local_units = true, .filter_static_world = false};
   }
+  return {};
+}
+
+auto Renderer::non_local_unit_visibility_filter_enabled() const -> bool {
+  return visibility_mode_config().filter_non_local_units;
+}
+
+auto Renderer::static_world_visibility_filter_enabled() const -> bool {
+  return visibility_mode_config().filter_static_world;
 }
 
 auto Renderer::initialize() -> bool {
@@ -877,71 +818,22 @@ void Renderer::cancel_async_template_prewarm() {
   }
 }
 
-void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile& profile,
-                                         const AsyncPrewarmWorkItem& item) {
-  if (!m_backend || !profile.fn) {
-    return;
-  }
-
-  Engine::Core::Entity entity(
-      prewarm_entity_id_for_variant(static_cast<std::size_t>(item.profile_index),
-                                    item.owner_id,
-                                    item.lod,
-                                    item.variant));
-  auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-  unit->spawn_type = static_cast<Game::Units::SpawnType>(profile.spawn_type);
-  unit->owner_id = item.owner_id;
-  unit->nation_id = static_cast<Game::Systems::NationID>(profile.nation_id);
-  unit->max_health = std::max(1, profile.max_health);
-  unit->health = unit->max_health;
-
-  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
-  transform->position = {0.0F, 0.0F, 0.0F};
-  transform->rotation = {0.0F, 0.0F, 0.0F};
-  transform->scale = {1.0F, 1.0F, 1.0F};
-
-  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
-  renderable->renderer_id = profile.renderer_id;
-  renderable->visible = true;
-  const QVector3D team_color = Game::Visuals::team_colorForOwner(item.owner_id);
-  renderable->color[0] = team_color.x();
-  renderable->color[1] = team_color.y();
-  renderable->color[2] = team_color.z();
-
-  DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
-  ctx.renderer_id = profile.renderer_id;
-  ctx.backend = m_gl_backend;
-  ctx.camera = nullptr;
-  ctx.allow_template_cache = true;
-  ctx.template_prewarm = true;
-  ctx.has_seed_override = true;
-  ctx.seed_override = prewarm_seed_for_variant(item.owner_id, item.variant);
-  ctx.has_variant_override = true;
-  ctx.variant_override = item.variant;
-  ctx.force_humanoid_lod = true;
-  ctx.forced_humanoid_lod = static_cast<HumanoidLOD>(item.lod);
-  ctx.force_horse_lod = profile.is_mounted || profile.is_elephant;
-  if (ctx.force_horse_lod) {
-    ctx.forced_horse_lod = static_cast<HorseLOD>(item.lod);
-  }
-
-  AnimKey anim_key{};
-  anim_key.state = static_cast<AnimState>(item.anim_state);
-  anim_key.combat_phase = static_cast<CombatAnimPhase>(item.combat_phase);
-  anim_key.frame = item.frame;
-  anim_key.attack_family =
-      static_cast<Engine::Core::CombatAttackFamily>(item.attack_family);
-  anim_key.attack_variant = item.attack_variant;
-  anim_key.finisher_attack = item.finisher_attack;
-  AnimationInputs const anim = make_animation_inputs(anim_key);
-  ctx.animation_override = &anim;
-  const bool attack_state = (anim_key.state == AnimState::AttackMelee) ||
-                            (anim_key.state == AnimState::AttackRanged);
-  ctx.has_attack_variant_override = attack_state;
-  ctx.attack_variant_override = anim_key.attack_variant;
-
-  CreatureCacheWarmupSubmitter warmup_submitter(this);
-  profile.fn(ctx, warmup_submitter);
+void Renderer::run_template_prewarm_item(const PrewarmProfile& profile,
+                                         const PrewarmWorkItem& item) {
+  execute_template_prewarm_item(*this,
+                                item.profile_index,
+                                profile.spawn_type,
+                                profile.nation_id,
+                                profile.max_health,
+                                profile.renderer_id,
+                                profile.is_mounted,
+                                profile.is_elephant,
+                                profile.fn,
+                                item.owner_id,
+                                item.lod,
+                                item.variant,
+                                true,
+                                item.anim_key);
 }
 
 void Renderer::process_async_template_prewarm() {
@@ -1431,10 +1323,10 @@ void Renderer::render_world(Engine::Core::World* world) {
 
   auto& vis = Game::Map::VisibilityService::instance();
   const bool visibility_enabled = vis.is_initialized();
-  Game::Map::VisibilityService::Snapshot visibility_snapshot;
-  if (visibility_enabled) {
-    visibility_snapshot = vis.snapshot();
-  }
+  const auto visibility_snapshot = visibility_enabled ? vis.snapshot_ptr() : nullptr;
+  const Game::Map::VisibilityService::Snapshot empty_visibility_snapshot;
+  const auto& resolved_visibility_snapshot =
+      visibility_snapshot != nullptr ? *visibility_snapshot : empty_visibility_snapshot;
 
   const auto& unit_ids = m_render_registry.unit_ids();
   const auto& building_ids = m_render_registry.building_ids();
@@ -1449,9 +1341,6 @@ void Renderer::render_world(Engine::Core::World* world) {
   }
 
   ++m_frame_counter;
-  if (m_enemy_visibility_policy != nullptr) {
-    m_enemy_visibility_policy->begin_frame(m_accumulated_time, visibility_enabled);
-  }
 
   int visible_unit_count = 0;
   static thread_local std::vector<UnitRenderEntry> unit_entries;
@@ -1505,7 +1394,19 @@ void Renderer::render_world(Engine::Core::World* world) {
       bool const is_hovered = (entity_id == m_hovered_entity_id);
       entry.selected = is_selected;
       entry.hovered = is_hovered;
+      if (m_entity_registry != nullptr && !cached.has_renderer_handle &&
+          !cached.renderer_key.empty()) {
+        const auto renderer_handle = m_entity_registry->get_handle(cached.renderer_key);
+        if (renderer_handle != Render::GL::k_invalid_renderer_handle) {
+          cached.renderer_handle = renderer_handle;
+          cached.has_renderer_handle = true;
+        }
+      }
       entry.renderer_key = cached.renderer_key;
+      entry.renderer_handle = cached.has_renderer_handle
+                                  ? static_cast<Render::GL::RendererHandle>(
+                                        cached.renderer_handle)
+                                  : Render::GL::k_invalid_renderer_handle;
       entry.movement = cached.movement;
       entry.motion = entity->get_component<Engine::Core::MotionPresentationComponent>();
 
@@ -1530,11 +1431,11 @@ void Renderer::render_world(Engine::Core::World* world) {
       }
 
       if (unit_comp->owner_id != m_local_owner_id && visibility_enabled &&
-          m_enemy_visibility_policy != nullptr) {
-        const auto visibility = m_enemy_visibility_policy->resolve(
-            entity_id, *cached.transform, visibility_snapshot);
-        entry.fog_visible = visibility.render_visible;
-        entry.fog_reveal_alpha = visibility.target_alpha;
+          non_local_unit_visibility_filter_enabled()) {
+        entry.fog_visible = Game::Map::should_render_non_local_unit(
+            resolved_visibility_snapshot,
+            cached.transform->position.x,
+            cached.transform->position.z);
       }
 
       auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
@@ -1592,6 +1493,9 @@ void Renderer::render_world(Engine::Core::World* world) {
     if (!renderable->renderer_id.empty()) {
       entry.renderer_key =
           std::string(canonicalize_building_renderer_key(renderable->renderer_id));
+      if (m_entity_registry != nullptr) {
+        entry.renderer_handle = m_entity_registry->get_handle(entry.renderer_key);
+      }
     }
     dest.push_back(std::move(entry));
   };
@@ -1606,10 +1510,6 @@ void Renderer::render_world(Engine::Core::World* world) {
 
   m_unit_render_cache.prune(m_frame_counter);
   m_model_matrix_cache.prune(m_frame_counter);
-  if (m_enemy_visibility_policy != nullptr) {
-    m_enemy_visibility_policy->end_frame(visibility_enabled);
-  }
-
   auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   battle_optimizer.set_visible_unit_count(visible_unit_count);
   uint32_t const optimizer_frame = battle_optimizer.frame_counter();
@@ -1741,19 +1641,22 @@ void Renderer::render_world(Engine::Core::World* world) {
     bool drawn_by_registry = false;
     bool tier_is_minimal = false;
     if (m_entity_registry) {
-      auto fn = m_entity_registry->get(entry.renderer_key);
-      if (!fn && entry.unit != nullptr) {
+      auto const* fn = m_entity_registry->get(entry.renderer_handle);
+      if (fn == nullptr && entry.unit != nullptr) {
         const std::string profile_renderer_key =
             Render::resolve_profile_unit_renderer_key(*entry.unit);
         if (!profile_renderer_key.empty() &&
             profile_renderer_key != entry.renderer_key) {
-          fn = m_entity_registry->get(profile_renderer_key);
-          if (fn) {
+          const auto profile_renderer_handle =
+              m_entity_registry->get_handle(profile_renderer_key);
+          fn = m_entity_registry->get(profile_renderer_handle);
+          if (fn != nullptr) {
             entry.renderer_key = profile_renderer_key;
+            entry.renderer_handle = profile_renderer_handle;
           }
         }
       }
-      if (fn) {
+      if (fn != nullptr) {
         DrawContext ctx{resources(), entry.entity, world, model_matrix};
 
         ctx.selected = entry.selected;
@@ -1778,6 +1681,7 @@ void Renderer::render_world(Engine::Core::World* world) {
         ctx.animation_time = animation_time;
         ctx.distance_sq = entry.distance_sq;
         ctx.renderer_id = entry.renderer_key;
+        ctx.renderer_handle = entry.renderer_handle;
         ctx.backend = m_gl_backend;
         ctx.camera = m_camera;
         ctx.animation_throttled = !should_update_animation;
@@ -1815,18 +1719,13 @@ void Renderer::render_world(Engine::Core::World* world) {
 
         const bool use_batching = batching_available &&
                                   (tier == Render::Pipeline::LodTier::Simplified ||
-                                   tier == Render::Pipeline::LodTier::Minimal) &&
-                                  entry.fog_reveal_alpha >= k_opaque_threshold;
+                                   tier == Render::Pipeline::LodTier::Minimal);
         tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
-
-        const float prev_alpha = m_alpha_override;
-        m_alpha_override *= entry.fog_reveal_alpha;
         if (use_batching) {
-          fn(ctx, batch_submitter);
+          (*fn)(ctx, batch_submitter);
         } else {
-          fn(ctx, *this);
+          (*fn)(ctx, *this);
         }
-        m_alpha_override = prev_alpha;
 
         drawn_by_registry = true;
       }
@@ -1864,14 +1763,11 @@ void Renderer::render_world(Engine::Core::World* world) {
                            entry.has_guard_mode,
                            entry.has_hold_mode,
                            entry.has_patrol);
-    const float prev_alpha = m_alpha_override;
-    m_alpha_override *= entry.fog_reveal_alpha;
     mesh(mesh_to_draw,
          model_matrix,
          color,
          (res != nullptr) ? res->white() : nullptr,
          1.0F);
-    m_alpha_override = prev_alpha;
   }
 
   auto render_non_unit_entry = [&](const RenderEntry& entry) {
@@ -1879,18 +1775,19 @@ void Renderer::render_world(Engine::Core::World* world) {
         entry.entity_id, entry.transform, m_frame_counter);
 
     bool drawn_by_registry = false;
-    if (m_entity_registry && !entry.renderer_key.empty()) {
-      auto fn = m_entity_registry->get(entry.renderer_key);
-      if (fn) {
+    if (m_entity_registry && entry.renderer_handle != Render::GL::k_invalid_renderer_handle) {
+      auto const* fn = m_entity_registry->get(entry.renderer_handle);
+      if (fn != nullptr) {
         DrawContext ctx{resources(), entry.entity, world, model_matrix};
         ctx.selected = entry.selected;
         ctx.hovered = entry.hovered;
         ctx.animation_time = m_accumulated_time;
         ctx.renderer_id = entry.renderer_key;
+        ctx.renderer_handle = entry.renderer_handle;
         ctx.backend = m_gl_backend;
         ctx.camera = m_camera;
         ctx.animation_throttled = false;
-        fn(ctx, *this);
+        (*fn)(ctx, *this);
         drawn_by_registry = true;
       }
     }
@@ -1974,42 +1871,25 @@ void Renderer::prewarm_unit_templates(
     return;
   }
 
-  struct PrewarmProfile {
-    std::string renderer_id;
-    Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
-    Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
-    int max_health{1};
-    bool is_mounted{false};
-    bool is_elephant{false};
-    RenderFunc fn;
-  };
-
   struct PrewarmProfileKey {
-    std::string renderer_id;
+    Render::GL::RendererHandle renderer_handle{Render::GL::k_invalid_renderer_handle};
     Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
     Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
     bool operator==(const PrewarmProfileKey& other) const {
-      return renderer_id == other.renderer_id && spawn_type == other.spawn_type &&
+      return renderer_handle == other.renderer_handle &&
+             spawn_type == other.spawn_type &&
              nation_id == other.nation_id;
     }
   };
 
   struct PrewarmProfileKeyHash {
     std::size_t operator()(const PrewarmProfileKey& key) const noexcept {
-      std::size_t h = std::hash<std::string>()(key.renderer_id);
+      std::size_t h = static_cast<std::size_t>(key.renderer_handle);
       h ^= static_cast<std::size_t>(key.spawn_type) + 0x9e3779b9 + (h << 6) + (h >> 2);
       h ^= static_cast<std::size_t>(static_cast<std::uint8_t>(key.nation_id)) +
            0x9e3779b9 + (h << 6) + (h >> 2);
       return h;
     }
-  };
-
-  struct PrewarmWorkItem {
-    std::size_t profile_index{0};
-    int owner_id{0};
-    HumanoidLOD lod{HumanoidLOD::Full};
-    std::uint8_t variant{0};
-    AnimKey anim_key{};
   };
 
   auto is_prewarmable_spawn = [](Game::Units::SpawnType spawn_type) -> bool {
@@ -2102,12 +1982,16 @@ void Renderer::prewarm_unit_templates(
     if (!is_prewarmable_spawn(spawn_type) || canonical_renderer_id.empty()) {
       return;
     }
-    PrewarmProfileKey const key{canonical_renderer_id, spawn_type, nation_id};
+    const auto renderer_handle = m_entity_registry->get_handle(canonical_renderer_id);
+    if (renderer_handle == Render::GL::k_invalid_renderer_handle) {
+      return;
+    }
+    PrewarmProfileKey const key{renderer_handle, spawn_type, nation_id};
     if (!profile_seen.insert(key).second) {
       return;
     }
-    auto fn = m_entity_registry->get(canonical_renderer_id);
-    if (!fn) {
+    auto const* fn = m_entity_registry->get(renderer_handle);
+    if (fn == nullptr) {
       return;
     }
 
@@ -2120,7 +2004,7 @@ void Renderer::prewarm_unit_templates(
     p.is_mounted = (spawn_type == Game::Units::SpawnType::MountedKnight ||
                     spawn_type == Game::Units::SpawnType::HorseArcher ||
                     spawn_type == Game::Units::SpawnType::HorseSpearman);
-    p.fn = std::move(fn);
+    p.fn = *fn;
     profiles.push_back(std::move(p));
   };
 
@@ -2223,190 +2107,33 @@ void Renderer::prewarm_unit_templates(
       return;
     }
 
-    CreatureCacheWarmupSubmitter warmup_submitter(this);
     AnimKey idle_key{};
-    idle_key.state = AnimState::Idle;
+    idle_key.state = Render::Creature::PoseIntent::Idle;
     idle_key.combat_phase = CombatAnimPhase::Idle;
-    AnimationInputs const idle_anim = make_animation_inputs(idle_key);
     const int owner_id = owner_ids.front();
 
     for (std::size_t profile_idx = 0; profile_idx < profiles.size(); ++profile_idx) {
       const PrewarmProfile& profile = profiles[profile_idx];
       for (std::uint8_t variant = 0; variant < k_template_variant_count; ++variant) {
-        Engine::Core::Entity entity(
-            prewarm_entity_id_for_variant(profile_idx,
-                                          owner_id,
-                                          static_cast<std::uint8_t>(HumanoidLOD::Full),
-                                          variant));
-
-        auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-        unit->spawn_type = profile.spawn_type;
-        unit->owner_id = owner_id;
-        unit->nation_id = profile.nation_id;
-        unit->max_health = profile.max_health;
-        unit->health = unit->max_health;
-
-        auto* transform = entity.add_component<Engine::Core::TransformComponent>();
-        transform->position = {0.0F, 0.0F, 0.0F};
-        transform->rotation = {0.0F, 0.0F, 0.0F};
-        transform->scale = {1.0F, 1.0F, 1.0F};
-
-        auto* renderable =
-            entity.add_component<Engine::Core::RenderableComponent>("", "");
-        renderable->renderer_id = profile.renderer_id;
-        renderable->visible = true;
-        const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
-        renderable->color[0] = team_color.x();
-        renderable->color[1] = team_color.y();
-        renderable->color[2] = team_color.z();
-
-        DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
-        ctx.renderer_id = profile.renderer_id;
-        ctx.backend = m_gl_backend;
-        ctx.camera = nullptr;
-        ctx.allow_template_cache = false;
-        ctx.template_prewarm = true;
-        ctx.has_seed_override = true;
-        ctx.seed_override = prewarm_seed_for_variant(owner_id, variant);
-        ctx.has_variant_override = true;
-        ctx.variant_override = variant;
-        ctx.force_humanoid_lod = true;
-        ctx.forced_humanoid_lod = HumanoidLOD::Full;
-        ctx.force_horse_lod = profile.is_mounted || profile.is_elephant;
-        if (ctx.force_horse_lod) {
-          ctx.forced_horse_lod = HorseLOD::Full;
-        }
-        ctx.animation_override = &idle_anim;
-
-        profile.fn(ctx, warmup_submitter);
+        execute_template_prewarm_item(*this,
+                                      profile_idx,
+                                      profile.spawn_type,
+                                      profile.nation_id,
+                                      profile.max_health,
+                                      profile.renderer_id,
+                                      profile.is_mounted,
+                                      profile.is_elephant,
+                                      profile.fn,
+                                      owner_id,
+                                      HumanoidLOD::Full,
+                                      variant,
+                                      false,
+                                      idle_key);
       }
     }
   };
 
   preload_profile_archetypes();
-
-  std::vector<AnimKey> core_anim_keys;
-  std::vector<AnimKey> full_anim_keys;
-  core_anim_keys.reserve(192);
-  full_anim_keys.reserve(1024);
-
-  auto push_anim_key = [](std::vector<AnimKey>& keys,
-                          AnimState state,
-                          CombatAnimPhase phase,
-                          std::uint8_t frame,
-                          std::uint8_t attack_variant) {
-    AnimKey key{};
-    key.state = state;
-    key.combat_phase = phase;
-    key.frame = frame;
-    key.attack_variant = attack_variant;
-    keys.push_back(key);
-  };
-
-  auto add_state_frames = [&](std::vector<AnimKey>& keys,
-                              AnimState state,
-                              int frame_step) {
-    const int step = std::max(1, frame_step);
-    for (int frame = 0; frame < static_cast<int>(k_anim_frame_count); frame += step) {
-      push_anim_key(
-          keys, state, CombatAnimPhase::Idle, static_cast<std::uint8_t>(frame), 0);
-    }
-  };
-
-  auto add_attack_frames = [&](std::vector<AnimKey>& keys,
-                               AnimState state,
-                               int frame_step,
-                               std::uint8_t variant_count) {
-    constexpr CombatAnimPhase phases[] = {CombatAnimPhase::Idle,
-                                          CombatAnimPhase::Advance,
-                                          CombatAnimPhase::WindUp,
-                                          CombatAnimPhase::Strike,
-                                          CombatAnimPhase::Impact,
-                                          CombatAnimPhase::Recover,
-                                          CombatAnimPhase::Reposition};
-    const int step = std::max(1, frame_step);
-    variant_count = std::max<std::uint8_t>(variant_count, 1U);
-    for (std::uint8_t attack_variant = 0; attack_variant < variant_count;
-         ++attack_variant) {
-      for (CombatAnimPhase const phase : phases) {
-        for (int frame = 0; frame < static_cast<int>(k_anim_frame_count);
-             frame += step) {
-          push_anim_key(
-              keys, state, phase, static_cast<std::uint8_t>(frame), attack_variant);
-        }
-      }
-    }
-  };
-
-  auto add_core_attack_frames = [&](AnimState state) {
-    constexpr CombatAnimPhase phases[] = {CombatAnimPhase::Idle,
-                                          CombatAnimPhase::Advance,
-                                          CombatAnimPhase::WindUp,
-                                          CombatAnimPhase::Strike,
-                                          CombatAnimPhase::Impact,
-                                          CombatAnimPhase::Recover,
-                                          CombatAnimPhase::Reposition};
-    for (CombatAnimPhase const phase : phases) {
-      push_anim_key(core_anim_keys, state, phase, 0, 0);
-    }
-  };
-
-  push_anim_key(core_anim_keys, AnimState::Idle, CombatAnimPhase::Idle, 0, 0);
-  push_anim_key(core_anim_keys, AnimState::Move, CombatAnimPhase::Idle, 0, 0);
-  push_anim_key(core_anim_keys, AnimState::Run, CombatAnimPhase::Idle, 0, 0);
-  push_anim_key(core_anim_keys, AnimState::Construct, CombatAnimPhase::Idle, 0, 0);
-  push_anim_key(core_anim_keys, AnimState::Heal, CombatAnimPhase::Idle, 0, 0);
-  push_anim_key(core_anim_keys, AnimState::Hit, CombatAnimPhase::Idle, 0, 0);
-  add_core_attack_frames(AnimState::AttackMelee);
-  add_core_attack_frames(AnimState::AttackRanged);
-
-  push_anim_key(full_anim_keys, AnimState::Idle, CombatAnimPhase::Idle, 0, 0);
-  add_state_frames(full_anim_keys, AnimState::Move, 1);
-  add_state_frames(full_anim_keys, AnimState::Run, 1);
-  add_state_frames(full_anim_keys, AnimState::Construct, 1);
-  add_state_frames(full_anim_keys, AnimState::Heal, 1);
-  add_state_frames(full_anim_keys, AnimState::Hit, 1);
-  auto const& archetypes = Render::Creature::ArchetypeRegistry::instance();
-  auto const melee_variant_count =
-      std::max(std::max(archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::k_humanoid_base,
-                            Render::Creature::AnimationStateId::AttackSword),
-                        archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::k_humanoid_base,
-                            Render::Creature::AnimationStateId::AttackSpear)),
-               std::max(archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::k_rider_base,
-                            Render::Creature::AnimationStateId::AttackSword),
-                        archetypes.clip_variant_count(
-                            Render::Creature::ArchetypeRegistry::k_rider_base,
-                            Render::Creature::AnimationStateId::AttackSpear)));
-  auto const ranged_variant_count = archetypes.clip_variant_count(
-      Render::Creature::ArchetypeRegistry::k_humanoid_base,
-      Render::Creature::AnimationStateId::AttackBow);
-  add_attack_frames(full_anim_keys, AnimState::AttackMelee, 1, melee_variant_count);
-  add_attack_frames(full_anim_keys, AnimState::AttackRanged, 1, ranged_variant_count);
-
-  auto encode_anim_key = [](const AnimKey& key) -> std::uint64_t {
-    return static_cast<std::uint64_t>(key.state) |
-           (static_cast<std::uint64_t>(key.combat_phase) << 8U) |
-           (static_cast<std::uint64_t>(key.frame) << 16U) |
-           (static_cast<std::uint64_t>(key.attack_family) << 24U) |
-           (static_cast<std::uint64_t>(key.attack_variant) << 32U);
-  };
-
-  std::unordered_set<std::uint64_t> core_key_set;
-  core_key_set.reserve(core_anim_keys.size() * 2);
-  for (const auto& key : core_anim_keys) {
-    core_key_set.insert(encode_anim_key(key));
-  }
-
-  std::vector<AnimKey> extra_anim_keys;
-  extra_anim_keys.reserve(full_anim_keys.size());
-  for (const auto& key : full_anim_keys) {
-    if (core_key_set.find(encode_anim_key(key)) == core_key_set.end()) {
-      extra_anim_keys.push_back(key);
-    }
-  }
 
   const std::size_t domain_count = profiles.size() * owner_ids.size() * 3U;
   if (domain_count == 0) {
@@ -2416,109 +2143,26 @@ void Renderer::prewarm_unit_templates(
   }
 
   const std::size_t target_template_count = choose_template_budget_by_quality();
-  const std::size_t core_anim_count = core_anim_keys.size();
-  const std::size_t full_anim_count = core_anim_keys.size() + extra_anim_keys.size();
+  auto const anim_catalog = build_template_prewarm_anim_catalog(
+      Render::Creature::ArchetypeRegistry::instance());
+  auto const anim_selection = select_template_prewarm_anim_budget(
+      domain_count, target_template_count, anim_catalog);
 
-  std::size_t variant_count = k_template_variant_count;
-  const std::size_t core_per_variant = domain_count * core_anim_count;
-  if (core_per_variant > 0) {
-    const std::size_t max_variants_for_core = target_template_count / core_per_variant;
-    variant_count =
-        std::clamp<std::size_t>(max_variants_for_core, 1, k_template_variant_count);
-  }
-
-  variant_count = std::max<std::size_t>(variant_count, 4U);
-
-  std::size_t anim_count_budget =
-      target_template_count / std::max<std::size_t>(1, domain_count * variant_count);
-  anim_count_budget = std::max<std::size_t>(anim_count_budget, 1);
-
-  std::size_t const anim_count =
-      std::max(core_anim_count, std::min(full_anim_count, anim_count_budget));
-
-  std::vector<std::uint8_t> variant_values;
-  variant_values.reserve(variant_count);
-  for (std::size_t i = 0; i < variant_count; ++i) {
-    std::size_t idx = 0;
-    if (variant_count > 1) {
-      idx = (i * (k_template_variant_count - 1)) / (variant_count - 1);
-    }
-    variant_values.push_back(static_cast<std::uint8_t>(idx));
-  }
-
-  std::vector<AnimKey> selected_core_anim_keys;
-  selected_core_anim_keys.reserve(core_anim_count);
-  const std::size_t core_take = std::min(core_anim_count, anim_count);
-  selected_core_anim_keys.insert(selected_core_anim_keys.end(),
-                                 core_anim_keys.begin(),
-                                 core_anim_keys.begin() +
-                                     static_cast<std::ptrdiff_t>(core_take));
-
-  std::vector<AnimKey> selected_extra_anim_keys;
-  if (anim_count > core_take) {
-    const std::size_t extra_take =
-        std::min<std::size_t>(anim_count - core_take, extra_anim_keys.size());
-    selected_extra_anim_keys.insert(selected_extra_anim_keys.end(),
-                                    extra_anim_keys.begin(),
-                                    extra_anim_keys.begin() +
-                                        static_cast<std::ptrdiff_t>(extra_take));
-  }
-
-  if (selected_core_anim_keys.empty() || variant_values.empty()) {
+  if (anim_selection.selected_core_keys.empty() ||
+      anim_selection.variant_values.empty()) {
     Render::Creature::set_runtime_bake_forbidden(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);
     return;
   }
 
-  const std::size_t selected_anim_total =
-      selected_core_anim_keys.size() + selected_extra_anim_keys.size();
-  const std::size_t expected_template_count =
-      domain_count * variant_values.size() * selected_anim_total;
-  constexpr std::size_t k_cache_min_cap = 512;
-  constexpr std::size_t k_cache_hard_cap = 4'096;
-  const std::size_t cache_entry_cap = std::clamp<std::size_t>(
-      expected_template_count +
-          std::max<std::size_t>(4096, expected_template_count / 8),
-      k_cache_min_cap,
-      k_cache_hard_cap);
-
-  TemplateCache::instance().set_max_entries(cache_entry_cap);
-  TemplateCache::instance().clear();
   clear_humanoid_caches();
-  PosePaletteCache::instance().generate();
-
-  auto build_work_items =
-      [&](const std::vector<AnimKey>& anim_keys) -> std::vector<PrewarmWorkItem> {
-    std::vector<PrewarmWorkItem> items;
-    items.reserve(domain_count * variant_values.size() * anim_keys.size());
-    constexpr HumanoidLOD lods[] = {HumanoidLOD::Full, HumanoidLOD::Minimal};
-    for (std::size_t profile_idx = 0; profile_idx < profiles.size(); ++profile_idx) {
-      auto const spawn_type = profiles[profile_idx].spawn_type;
-      for (int const owner_id : owner_ids) {
-        for (HumanoidLOD const lod : lods) {
-          for (std::uint8_t const variant : variant_values) {
-            for (const auto& anim_key : anim_keys) {
-              PrewarmWorkItem item;
-              item.profile_index = profile_idx;
-              item.owner_id = owner_id;
-              item.lod = lod;
-              item.variant = variant;
-              item.anim_key = anim_key;
-              item.anim_key.attack_family =
-                  prewarm_attack_family_for_spawn(spawn_type, anim_key.state);
-              items.push_back(item);
-            }
-          }
-        }
-      }
-    }
-    return items;
-  };
 
   std::vector<PrewarmWorkItem> core_work_items =
-      build_work_items(selected_core_anim_keys);
+      build_template_prewarm_work_items(
+          profiles, owner_ids, anim_selection.variant_values, anim_selection.selected_core_keys);
   std::vector<PrewarmWorkItem> const extended_work_items =
-      build_work_items(selected_extra_anim_keys);
+      build_template_prewarm_work_items(
+          profiles, owner_ids, anim_selection.variant_values, anim_selection.selected_extra_keys);
 
   const std::size_t total_work_count =
       core_work_items.size() + extended_work_items.size();
@@ -2544,7 +2188,6 @@ void Renderer::prewarm_unit_templates(
   std::atomic<bool> cancel_requested{false};
 
   auto worker = [&]() {
-    CreatureCacheWarmupSubmitter warmup_submitter(this);
     while (true) {
       if (cancel_requested.load(std::memory_order_relaxed)) {
         break;
@@ -2557,59 +2200,22 @@ void Renderer::prewarm_unit_templates(
       const PrewarmWorkItem& item = core_work_items[idx];
       const PrewarmProfile& profile = profiles[item.profile_index];
 
-      Engine::Core::Entity entity(
-          prewarm_entity_id_for_variant(item.profile_index,
-                                        item.owner_id,
-                                        static_cast<std::uint8_t>(item.lod),
-                                        item.variant));
-      auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-      unit->spawn_type = profile.spawn_type;
-      unit->owner_id = item.owner_id;
-      unit->nation_id = profile.nation_id;
-      unit->max_health = profile.max_health;
-      unit->health = profile.max_health;
-
-      auto* transform = entity.add_component<Engine::Core::TransformComponent>();
-      transform->position = {0.0F, 0.0F, 0.0F};
-      transform->rotation = {0.0F, 0.0F, 0.0F};
-      transform->scale = {1.0F, 1.0F, 1.0F};
-
-      auto* renderable =
-          entity.add_component<Engine::Core::RenderableComponent>("", "");
-      renderable->renderer_id = profile.renderer_id;
-      renderable->visible = true;
-      const QVector3D team_color = Game::Visuals::team_colorForOwner(item.owner_id);
-      renderable->color[0] = team_color.x();
-      renderable->color[1] = team_color.y();
-      renderable->color[2] = team_color.z();
-
-      DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
-      ctx.renderer_id = profile.renderer_id;
-      ctx.backend = m_gl_backend;
-      ctx.camera = nullptr;
-      ctx.allow_template_cache = true;
-      ctx.template_prewarm = true;
-      ctx.has_seed_override = true;
-      ctx.seed_override = prewarm_seed_for_variant(item.owner_id, item.variant);
-      ctx.has_variant_override = true;
-      ctx.variant_override = item.variant;
-      ctx.force_humanoid_lod = true;
-      ctx.forced_humanoid_lod = item.lod;
-      ctx.force_horse_lod = profile.is_mounted || profile.is_elephant;
-      if (ctx.force_horse_lod) {
-        ctx.forced_horse_lod = static_cast<HorseLOD>(item.lod);
-      }
-
-      AnimationInputs const anim = make_animation_inputs(item.anim_key);
-      ctx.animation_override = &anim;
-      const bool attack_state = (item.anim_key.state == AnimState::AttackMelee) ||
-                                (item.anim_key.state == AnimState::AttackRanged);
-      ctx.has_attack_variant_override = attack_state;
-      ctx.attack_variant_override = item.anim_key.attack_variant;
-
       std::lock_guard<std::mutex> const profile_lock(
           profile_mutexes[item.profile_index]);
-      profile.fn(ctx, warmup_submitter);
+      execute_template_prewarm_item(*this,
+                                    item.profile_index,
+                                    profile.spawn_type,
+                                    profile.nation_id,
+                                    profile.max_health,
+                                    profile.renderer_id,
+                                    profile.is_mounted,
+                                    profile.is_elephant,
+                                    profile.fn,
+                                    item.owner_id,
+                                    item.lod,
+                                    item.variant,
+                                    true,
+                                    item.anim_key);
       completed_count.fetch_add(1, std::memory_order_relaxed);
     }
   };
@@ -2676,34 +2282,8 @@ void Renderer::prewarm_unit_templates(
     }
 
     auto async_state = std::make_shared<AsyncTemplatePrewarmState>();
-    async_state->profiles.reserve(profiles.size());
-    for (const auto& profile : profiles) {
-      AsyncPrewarmProfile async_profile;
-      async_profile.renderer_id = profile.renderer_id;
-      async_profile.spawn_type = static_cast<int>(profile.spawn_type);
-      async_profile.nation_id = static_cast<int>(profile.nation_id);
-      async_profile.max_health = profile.max_health;
-      async_profile.is_mounted = profile.is_mounted;
-      async_profile.is_elephant = profile.is_elephant;
-      async_profile.fn = profile.fn;
-      async_state->profiles.push_back(std::move(async_profile));
-    }
-
-    async_state->work_items.reserve(extended_work_items.size());
-    for (const auto& item : extended_work_items) {
-      AsyncPrewarmWorkItem async_item;
-      async_item.profile_index = item.profile_index;
-      async_item.owner_id = item.owner_id;
-      async_item.lod = static_cast<std::uint8_t>(item.lod);
-      async_item.variant = item.variant;
-      async_item.anim_state = static_cast<std::uint8_t>(item.anim_key.state);
-      async_item.combat_phase = static_cast<std::uint8_t>(item.anim_key.combat_phase);
-      async_item.frame = item.anim_key.frame;
-      async_item.attack_family = static_cast<std::uint8_t>(item.anim_key.attack_family);
-      async_item.attack_variant = item.anim_key.attack_variant;
-      async_item.finisher_attack = item.anim_key.finisher_attack;
-      async_state->work_items.push_back(async_item);
-    }
+    async_state->profiles = profiles;
+    async_state->work_items = extended_work_items;
 
     {
       std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
@@ -2725,10 +2305,11 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     return;
   }
 
-  Game::Map::VisibilityService::Snapshot visibility_snapshot;
-  if (visibility_enabled && vis != nullptr) {
-    visibility_snapshot = vis->snapshot();
-  }
+  const auto visibility_snapshot =
+      (visibility_enabled && vis != nullptr) ? vis->snapshot_ptr() : nullptr;
+  const Game::Map::VisibilityService::Snapshot empty_visibility_snapshot;
+  const auto& resolved_visibility_snapshot =
+      visibility_snapshot != nullptr ? *visibility_snapshot : empty_visibility_snapshot;
 
   auto builders = world->get_entities_with<Engine::Core::BuilderProductionComponent>();
 
@@ -2768,7 +2349,8 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
 
     if (unit_comp != nullptr && unit_comp->owner_id != m_local_owner_id) {
       if (visibility_enabled &&
-          !visibility_snapshot.is_visible_world(preview_x, preview_z)) {
+          !Game::Map::should_render_non_local_preview(
+              resolved_visibility_snapshot, preview_x, preview_z)) {
         continue;
       }
     }
@@ -2788,8 +2370,9 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     std::string const renderer_key =
         building_renderer_key(preview_nation, builder_prod->product_type);
 
-    auto fn = m_entity_registry->get(renderer_key);
-    if (!fn) {
+    const auto renderer_handle = m_entity_registry->get_handle(renderer_key);
+    auto const* fn = m_entity_registry->get(renderer_handle);
+    if (fn == nullptr) {
       continue;
     }
 
@@ -2805,13 +2388,14 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     ctx.hovered = false;
     ctx.animation_time = m_accumulated_time;
     ctx.renderer_id = renderer_key;
+    ctx.renderer_handle = renderer_handle;
     ctx.backend = m_gl_backend;
     ctx.camera = m_camera;
 
     float const prev_alpha = m_alpha_override;
     m_alpha_override = 0.60F;
 
-    fn(ctx, *this);
+    (*fn)(ctx, *this);
 
     m_alpha_override = prev_alpha;
   }

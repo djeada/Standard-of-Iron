@@ -28,6 +28,7 @@
 #include "render/humanoid/humanoid_spec.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
+#include "render/template_prewarm_catalog.h"
 
 namespace {
 
@@ -248,6 +249,71 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   const auto stats = submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 0U);
+}
+
+TEST(TemplatePrewarmRegression, AnimCatalogIncludesDistinctMeleeSpearAndRangedAttacks) {
+  auto const catalog = Render::GL::build_template_prewarm_anim_catalog(
+      ArchetypeRegistry::instance());
+
+  auto has_state = [](const std::vector<Render::GL::AnimKey>& keys,
+                      PoseIntent state) {
+    for (auto const& key : keys) {
+      if (key.state == state) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::AttackMelee));
+  EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::AttackSpear));
+  EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::AttackRanged));
+  EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::Dead));
+  EXPECT_TRUE(has_state(catalog.extra_keys, PoseIntent::Walk));
+}
+
+TEST(TemplatePrewarmRegression, WorkItemsSkipUnsupportedAttackFamiliesPerSpawn) {
+  std::vector<Render::GL::PrewarmProfile> profiles(2);
+  profiles[0].renderer_id = "archer";
+  profiles[0].spawn_type = Game::Units::SpawnType::Archer;
+  profiles[1].renderer_id = "spearman";
+  profiles[1].spawn_type = Game::Units::SpawnType::Spearman;
+
+  std::vector<Render::GL::AnimKey> anim_keys(3);
+  anim_keys[0].state = PoseIntent::AttackMelee;
+  anim_keys[1].state = PoseIntent::AttackSpear;
+  anim_keys[2].state = PoseIntent::AttackRanged;
+
+  auto const items = Render::GL::build_template_prewarm_work_items(
+      profiles, {1}, {0}, anim_keys);
+
+  int archer_items = 0;
+  int spearman_items = 0;
+  int spear_attack_items = 0;
+  int ranged_attack_items = 0;
+  for (auto const& item : items) {
+    if (item.profile_index == 0U) {
+      ++archer_items;
+      EXPECT_NE(item.anim_key.attack_family, Engine::Core::CombatAttackFamily::Spear);
+    } else if (item.profile_index == 1U) {
+      ++spearman_items;
+    }
+
+    if (item.anim_key.state == PoseIntent::AttackSpear) {
+      ++spear_attack_items;
+      EXPECT_EQ(item.anim_key.attack_family, Engine::Core::CombatAttackFamily::Spear);
+    }
+    if (item.anim_key.state == PoseIntent::AttackRanged) {
+      ++ranged_attack_items;
+      EXPECT_EQ(item.profile_index, 0U);
+      EXPECT_EQ(item.anim_key.attack_family, Engine::Core::CombatAttackFamily::Bow);
+    }
+  }
+
+  EXPECT_EQ(archer_items, 4);
+  EXPECT_EQ(spearman_items, 2);
+  EXPECT_EQ(spear_attack_items, 2);
+  EXPECT_EQ(ranged_attack_items, 2);
 }
 
 TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {

@@ -205,6 +205,16 @@ void TerrainPipeline::cache_terrain_uniforms() {
   m_terrain_uniforms.fog_color = m_terrain_shader->uniform_handle("u_fog_color");
   m_terrain_uniforms.fog_start = m_terrain_shader->uniform_handle("u_fog_start");
   m_terrain_uniforms.fog_end = m_terrain_shader->uniform_handle("u_fog_end");
+  m_terrain_uniforms.has_visibility =
+      m_terrain_shader->optional_uniform_handle("u_has_visibility");
+  m_terrain_uniforms.visibility_texture =
+      m_terrain_shader->optional_uniform_handle("u_visibility_tex");
+  m_terrain_uniforms.visibility_size =
+      m_terrain_shader->optional_uniform_handle("u_visibility_size");
+  m_terrain_uniforms.visibility_tile_size =
+      m_terrain_shader->optional_uniform_handle("u_visibility_tile_size");
+  m_terrain_uniforms.explored_alpha =
+      m_terrain_shader->optional_uniform_handle("u_explored_alpha");
 }
 
 void TerrainPipeline::initialize_grass_geometry() {

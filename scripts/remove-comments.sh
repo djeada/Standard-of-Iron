@@ -11,6 +11,7 @@ DRY_RUN=0
 BACKUP=0          # OFF by default
 QUIET=0
 EXTS="$EXTS_DEFAULT"
+EXCLUDE_DIRS=(.git .svn build build-tidy build-debug third_party venv .venv)
 
 usage() {
   cat <<'USAGE'
@@ -22,6 +23,7 @@ Usage:
 Options:
   -x, --ext       Comma-separated extensions to scan (default: c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl,py)
   -n, --dry-run   Show files that would be modified; don't write changes
+  --exclude-dir   Directory basename to skip (can be repeated)
   --backup        Create FILE.bak before writing (default: OFF)
   -q, --quiet     Less output
   -h, --help      Show this help
@@ -33,7 +35,7 @@ Examples:
 USAGE
 }
 
-log()  { (( QUIET == 0 )) && printf '%s\n' "$*"; }
+log()  { if (( QUIET == 0 )); then printf '%s\n' "$*"; fi; }
 die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 # --- arg parsing ---
@@ -42,6 +44,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -x|--ext) EXTS="${2:?missing extensions}"; shift 2 ;;
     -n|--dry-run) DRY_RUN=1; shift ;;
+    --exclude-dir) EXCLUDE_DIRS+=("${2:?missing directory name}"); shift 2 ;;
     --backup) BACKUP=1; shift ;;
     -q|--quiet) QUIET=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -63,6 +66,13 @@ for e in "${EXT_ARR[@]}"; do
   FIND_NAME+=(-o -iname "*.${e}")
 done
 FIND_NAME=("${FIND_NAME[@]:1}")    # drop leading -o
+
+FIND_PRUNE=()
+for d in "${EXCLUDE_DIRS[@]}"; do
+  [[ -n "$d" ]] || continue
+  FIND_PRUNE+=(-o -name "$d")
+done
+FIND_PRUNE=("${FIND_PRUNE[@]:1}")  # drop leading -o
 
 # Pick Python
 if command -v python3 >/dev/null 2>&1; then
@@ -275,6 +285,7 @@ process_file() {
     if (( DRY_RUN == 1 )); then
       echo "would modify: $f"
       rm -f "$tmp"
+      ((changed+=1))
       ((processed+=1))
       return
     fi
@@ -294,15 +305,15 @@ process_file() {
 
 log "Scanning: ${ROOTS[*]}"
 log "Extensions: $EXTS"
+log "Excluded dirs: ${EXCLUDE_DIRS[*]}"
 (( DRY_RUN )) && log "(dry run)"
 
 # Find files and process
 while IFS= read -r -d '' f; do
   process_file "$f"
 done < <(
-  find "${ROOTS[@]}" -type f \( "${FIND_NAME[@]}" \) \
-    -not -path '*/.git/*' -not -path '*/.svn/*' -not -path '*/build/*' \
-    -not -path '*/venv/*' -not -path '*/.venv/*' -print0
+  find "${ROOTS[@]}" \( -type d \( "${FIND_PRUNE[@]}" \) -prune \) -o \
+    \( -type f \( "${FIND_NAME[@]}" \) -print0 \)
 )
 
 if (( DRY_RUN == 1 )); then

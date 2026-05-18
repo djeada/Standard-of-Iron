@@ -70,16 +70,14 @@ void RiverRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   }
 
   auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
+  const bool use_visibility =
+      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
 
-  Game::Map::VisibilityService::Snapshot vis_snapshot;
-  if (use_visibility) {
-    vis_snapshot = visibility.snapshot();
-  }
+  auto vis_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
 
-  TerrainFeatureCmd::VisibilityResources vis_res;
-  if (use_visibility) {
-    vis_res = m_vis_helper.update(vis_snapshot, m_tile_size);
+  TerrainSurfaceCmd::VisibilityResources vis_res;
+  if (vis_snapshot != nullptr) {
+    vis_res = m_vis_helper.update(*vis_snapshot, m_tile_size);
   }
 
   QMatrix4x4 model;
@@ -100,9 +98,11 @@ void RiverRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
 
-    if (use_visibility) {
+    if (vis_snapshot != nullptr) {
+      vis_opts.sample_count = Ground::recommended_linear_feature_visibility_sample_count(
+          (segment.end - segment.start).length(), m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          &vis_snapshot, segment.start, segment.end, vis_opts);
+          vis_snapshot.get(), segment.start, segment.end, vis_opts);
       if (!vis_result.visible) {
         continue;
       }

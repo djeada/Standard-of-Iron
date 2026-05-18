@@ -47,6 +47,8 @@ auto is_in_range(Engine::Core::Entity* attacker,
                  Engine::Core::Entity* target,
                  float range) -> bool;
 
+auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool;
+
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool;
 
 auto find_nearest_enemy(Engine::Core::Entity* unit,

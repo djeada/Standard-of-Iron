@@ -4,76 +4,19 @@
 #include <QVector3D>
 
 #include <cstdint>
-#include <functional>
-#include <limits>
-#include <list>
-#include <mutex>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#include "gl/humanoid/humanoid_types.h"
+#include "anim_key.h"
 #include "material.h"
 #include "scene_renderer.h"
 
 namespace Render::GL {
 
-inline constexpr std::uint8_t k_anim_frame_count = 16;
-inline constexpr std::uint8_t k_template_variant_count = 8;
-
 class Mesh;
 class Texture;
 class Shader;
 struct AnimationInputs;
-
-enum class AnimState : std::uint8_t {
-  Idle = 0,
-  Move = 1,
-  Run = 2,
-  AttackMelee = 3,
-  AttackRanged = 4,
-  Construct = 5,
-  Heal = 6,
-  Hit = 7
-};
-
-struct AnimKey {
-  AnimState state{AnimState::Idle};
-  CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
-  std::uint8_t frame{0};
-  Engine::Core::CombatAttackFamily attack_family{
-      Engine::Core::CombatAttackFamily::None};
-  std::uint8_t attack_variant{0};
-  bool finisher_attack{false};
-};
-
-struct TemplateKey {
-  std::string renderer_id;
-  std::uint32_t owner_id{0};
-  std::uint8_t lod{0};
-  std::uint8_t mount_lod{0};
-  std::uint8_t variant{0};
-  Engine::Core::CombatAttackFamily attack_family{
-      Engine::Core::CombatAttackFamily::None};
-  std::uint8_t attack_variant{0};
-  bool finisher_attack{false};
-  AnimState state{AnimState::Idle};
-  CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
-  std::uint8_t frame{0};
-
-  bool operator==(const TemplateKey& other) const {
-    return renderer_id == other.renderer_id && owner_id == other.owner_id &&
-           lod == other.lod && mount_lod == other.mount_lod &&
-           variant == other.variant && attack_family == other.attack_family &&
-           attack_variant == other.attack_variant &&
-           finisher_attack == other.finisher_attack && state == other.state &&
-           combat_phase == other.combat_phase && frame == other.frame;
-  }
-};
-
-struct TemplateKeyHash {
-  std::size_t operator()(const TemplateKey& key) const noexcept;
-};
 
 struct RecordedMeshCmd {
   Mesh* mesh{nullptr};
@@ -152,107 +95,6 @@ private:
   const Material* m_current_material = nullptr;
 };
 
-class TemplateCache {
-public:
-  static constexpr std::size_t k_default_max_entries = 500'000;
-  static constexpr std::size_t k_dense_attack_family_slots = 4;
-  static constexpr std::size_t k_dense_attack_variant_slots = 8;
-  static constexpr std::size_t k_dense_finisher_slots = 2;
-  static constexpr std::size_t k_dense_variant_slots = k_template_variant_count;
-  static constexpr std::size_t k_dense_anim_state_slots = 305;
-  static constexpr std::size_t k_dense_anim_slot_count =
-      k_dense_variant_slots * k_dense_attack_family_slots *
-      k_dense_attack_variant_slots * k_dense_finisher_slots * k_dense_anim_state_slots;
-
-  struct DenseDomainHandle {
-    static constexpr std::size_t k_invalid = std::numeric_limits<std::size_t>::max();
-    std::size_t value{k_invalid};
-    [[nodiscard]] auto is_valid() const -> bool { return value != k_invalid; }
-  };
-
-  static auto instance() noexcept -> TemplateCache& {
-    static TemplateCache inst;
-    return inst;
-  }
-
-  auto
-  get_or_build(const TemplateKey& key,
-               const std::function<PoseTemplate()>& builder) -> const PoseTemplate*;
-
-  auto get_dense_domain_handle(const std::string& renderer_id,
-                               std::uint32_t owner_id,
-                               std::uint8_t lod,
-                               std::uint8_t mount_lod) -> DenseDomainHandle;
-
-  auto get_or_build_dense(DenseDomainHandle domain,
-                          std::size_t dense_slot,
-                          const TemplateKey& key,
-                          const std::function<PoseTemplate()>& builder)
-      -> const PoseTemplate*;
-
-  static auto dense_slot_index(std::uint8_t variant,
-                               const AnimKey& anim_key) -> std::size_t;
-
-  void clear();
-
-  void set_max_entries(std::size_t max) {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_max_entries = max;
-  }
-
-  [[nodiscard]] auto size() const -> std::size_t {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    return m_cache.size();
-  }
-
-private:
-  TemplateCache() = default;
-
-  void evict_lru();
-  void clear_dense_slot_for_key(const TemplateKey& key);
-  auto set_dense_slot(DenseDomainHandle domain,
-                      std::size_t dense_slot,
-                      const PoseTemplate* tpl) -> void;
-
-  using LruList = std::list<TemplateKey>;
-  struct CacheEntry {
-    PoseTemplate tpl;
-    LruList::iterator lru_it;
-  };
-
-  struct DenseDomainKey {
-    std::string renderer_id;
-    std::uint32_t owner_id{0};
-    std::uint8_t lod{0};
-    std::uint8_t mount_lod{0};
-
-    bool operator==(const DenseDomainKey& other) const {
-      return renderer_id == other.renderer_id && owner_id == other.owner_id &&
-             lod == other.lod && mount_lod == other.mount_lod;
-    }
-  };
-
-  struct DenseDomainKeyHash {
-    std::size_t operator()(const DenseDomainKey& key) const noexcept;
-  };
-
-  struct DenseDomainEntry {
-    DenseDomainKey key;
-    std::vector<const PoseTemplate*> template_slots;
-  };
-
-  std::unordered_map<TemplateKey, CacheEntry, TemplateKeyHash> m_cache;
-  LruList m_lru;
-  std::unordered_map<DenseDomainKey, std::size_t, DenseDomainKeyHash>
-      m_dense_domain_lookup;
-  std::vector<DenseDomainEntry> m_dense_domains;
-  std::size_t m_max_entries{k_default_max_entries};
-  mutable std::mutex m_mutex;
-};
-
-auto make_anim_key(const AnimationInputs& anim,
-                   float phase_offset,
-                   std::uint8_t attack_variant) -> AnimKey;
 auto make_animation_inputs(const AnimKey& key) -> AnimationInputs;
 
 } // namespace Render::GL

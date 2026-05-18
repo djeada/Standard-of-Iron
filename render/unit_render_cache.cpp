@@ -55,6 +55,9 @@ auto UnitRenderCache::get_or_create(std::uint32_t entity_id,
     data.renderable = nullptr;
     data.movement = nullptr;
     data.renderer_key.clear();
+    data.has_renderer_handle = false;
+    data.renderer_key_valid = false;
+    data.last_renderable_renderer_id.clear();
     return data;
   }
 
@@ -62,6 +65,8 @@ auto UnitRenderCache::get_or_create(std::uint32_t entity_id,
   auto* new_unit = entity->get_component<Engine::Core::UnitComponent>();
   auto* new_renderable = entity->get_component<Engine::Core::RenderableComponent>();
   auto* new_movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto* previous_unit = data.unit;
+  auto* previous_renderable = data.renderable;
 
   if (data.transform != new_transform) {
     data.model_matrix_valid = false;
@@ -74,20 +79,38 @@ auto UnitRenderCache::get_or_create(std::uint32_t entity_id,
 
   const bool is_building =
       entity->get_component<Engine::Core::BuildingComponent>() != nullptr;
-  if (data.unit != nullptr) {
-    if (is_building) {
-      data.renderer_key = Render::GL::resolve_building_renderer_key(
-          data.renderable != nullptr ? data.renderable->renderer_id : std::string{},
-          Game::Units::spawn_typeToString(data.unit->spawn_type),
-          data.unit->nation_id);
+  const std::string current_renderable_renderer_id =
+      (data.renderable != nullptr) ? data.renderable->renderer_id : std::string{};
+  const bool renderer_key_changed =
+      !data.renderer_key_valid || (previous_unit != new_unit) ||
+      (previous_renderable != new_renderable) ||
+      (data.last_is_building != is_building) ||
+      ((data.unit != nullptr) && (data.last_spawn_type != data.unit->spawn_type ||
+                                  data.last_nation_id != data.unit->nation_id)) ||
+      (data.last_renderable_renderer_id != current_renderable_renderer_id);
+  if (renderer_key_changed) {
+    if (data.unit != nullptr) {
+      if (is_building) {
+        data.renderer_key = Render::GL::resolve_building_renderer_key(
+            current_renderable_renderer_id,
+            Game::Units::spawn_typeToString(data.unit->spawn_type),
+            data.unit->nation_id);
+      } else {
+        data.renderer_key = resolve_unit_renderer_key(*data.unit, data.renderable);
+      }
+      data.last_spawn_type = data.unit->spawn_type;
+      data.last_nation_id = data.unit->nation_id;
+    } else if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {
+      data.renderer_key = std::string(
+          Render::GL::canonicalize_building_renderer_key(data.renderable->renderer_id));
     } else {
-      data.renderer_key = resolve_unit_renderer_key(*data.unit, data.renderable);
+      data.renderer_key.clear();
     }
-  } else if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {
-    data.renderer_key = std::string(
-        Render::GL::canonicalize_building_renderer_key(data.renderable->renderer_id));
-  } else {
-    data.renderer_key.clear();
+
+    data.has_renderer_handle = false;
+    data.renderer_key_valid = true;
+    data.last_is_building = is_building;
+    data.last_renderable_renderer_id = current_renderable_renderer_id;
   }
 
   return data;

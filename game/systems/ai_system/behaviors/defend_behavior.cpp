@@ -94,10 +94,42 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
     desired_count = std::min<std::size_t>(desired_count, max_defenders);
   }
 
-  std::size_t const ready_count = std::min(desired_count, ready_defenders.size());
-  ready_defenders.resize(ready_count);
-
   if (ready_defenders.empty()) {
+    return;
+  }
+
+  auto preferred_ready_defenders = [&]() {
+    std::vector<const EntitySnapshot*> selected;
+    selected.reserve(ready_defenders.size());
+
+    for (const auto* unit : ready_defenders) {
+      if (is_reserved_unit(unit->id, context)) {
+        selected.push_back(unit);
+      }
+    }
+
+    const bool threat_drains_support =
+        context.barracks_under_threat || (context.nearby_threat_count >
+                                          static_cast<int>(selected.size()));
+    if (threat_drains_support) {
+      for (const auto* unit : ready_defenders) {
+        if (!is_reserved_unit(unit->id, context)) {
+          selected.push_back(unit);
+        }
+      }
+    }
+
+    if (selected.empty()) {
+      selected = ready_defenders;
+    }
+
+    const std::size_t ready_count = std::min(desired_count, selected.size());
+    selected.resize(ready_count);
+    return selected;
+  };
+
+  auto selected_ready_defenders = preferred_ready_defenders();
+  if (selected_ready_defenders.empty()) {
     return;
   }
 
@@ -126,7 +158,16 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
 
     if (!nearby_threats.empty()) {
 
-      auto target_info = TacticalUtils::select_focus_fire_target(ready_defenders,
+      const std::size_t reserve_ready_count = static_cast<std::size_t>(std::count_if(
+          selected_ready_defenders.begin(),
+          selected_ready_defenders.end(),
+          [&](const EntitySnapshot* unit) { return is_reserved_unit(unit->id, context); }));
+      if ((nearby_threats.size() > reserve_ready_count) && (selected_ready_defenders.size() <
+                                                            ready_defenders.size())) {
+        selected_ready_defenders = ready_defenders;
+      }
+
+      auto target_info = TacticalUtils::select_focus_fire_target(selected_ready_defenders,
                                                                  nearby_threats,
                                                                  defend_pos_x,
                                                                  defend_pos_y,
@@ -136,8 +177,8 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
       if (target_info.target_id != 0) {
 
         std::vector<Engine::Core::EntityID> defender_ids;
-        defender_ids.reserve(ready_defenders.size());
-        for (const auto* unit : ready_defenders) {
+        defender_ids.reserve(selected_ready_defenders.size());
+        for (const auto* unit : selected_ready_defenders) {
           defender_ids.push_back(unit->id);
         }
 
@@ -145,7 +186,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
                                          get_priority(),
                                          "defending",
                                          context,
-                                         m_defend_timer + delta_time,
+                                         snapshot.game_time,
                                          3.0F);
 
         if (!claimed_units.empty()) {
@@ -177,14 +218,14 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
         }
       }
 
-      if ((closest_threat != nullptr) && !ready_defenders.empty()) {
+      if ((closest_threat != nullptr) && !selected_ready_defenders.empty()) {
 
         std::vector<Engine::Core::EntityID> defender_ids;
         std::vector<float> target_x;
         std::vector<float> target_y;
         std::vector<float> target_z;
 
-        for (const auto* unit : ready_defenders) {
+        for (const auto* unit : selected_ready_defenders) {
           defender_ids.push_back(unit->id);
           target_x.push_back(closest_threat->pos_x);
           target_y.push_back(closest_threat->pos_y);
@@ -195,7 +236,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
                                          get_priority(),
                                          "intercepting",
                                          context,
-                                         m_defend_timer + delta_time,
+                                         snapshot.game_time,
                                          2.0F);
 
         if (!claimed_units.empty()) {
@@ -229,7 +270,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
   }
 
   std::vector<const EntitySnapshot*> unclaimed_defenders;
-  for (const auto* unit : ready_defenders) {
+  for (const auto* unit : selected_ready_defenders) {
     auto it = context.assigned_units.find(unit->id);
     if (it == context.assigned_units.end()) {
       unclaimed_defenders.push_back(unit);
@@ -286,7 +327,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
                                       BehaviorPriority::Low,
                                       "positioning",
                                       context,
-                                      m_defend_timer + delta_time,
+                                      snapshot.game_time,
                                       1.5F);
 
   if (claimed_for_move.empty()) {

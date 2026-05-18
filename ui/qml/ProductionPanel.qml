@@ -58,22 +58,6 @@ Rectangle {
         return "👤";
     }
 
-    function commander_options(nation_id) {
-        if (nation_id && nation_id.indexOf("carthage") !== -1)
-            return ["carthage_mercenary_broker", "carthage_cavalry_patron", "carthage_elephant_master"];
-        return ["roman_legion_organizer", "roman_veteran_consul", "roman_field_commander"];
-    }
-
-    function commander_tooltip(info, enabled, limit_reached, queue_full) {
-        if (!enabled)
-            return limit_reached ? qsTr("Commander limit reached: one commander per player per game") : (queue_full ? qsTr("Queue is full (5/5)") : qsTr("Cannot recruit commander"));
-        var lines = [qsTr("%1").arg(info.display_name || "Commander"), qsTr("COMMANDER — one per game"), qsTr("Cost: %1 villagers").arg(info.cost || 300), qsTr("Build time: %1s").arg((info.build_time || 30).toFixed(0)), qsTr("Rally: %1").arg(info.rally_ability || ""), qsTr("Risk: %1").arg(info.death_consequence || "")];
-        if (info.bonus_summary)
-            lines.push(qsTr("Bonus: %1").arg(info.bonus_summary));
-        lines.push(qsTr("Aura: %1").arg(info.passive_aura || ""));
-        return lines.join("\n");
-    }
-
     function get_unit_production_info(unit_type, nation_id) {
         if (productionPanel.game_instance && productionPanel.game_instance.get_unit_production_info)
             return productionPanel.game_instance.get_unit_production_info(unit_type, nation_id || "");
@@ -296,8 +280,8 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Units Produced: %1 / %2").arg(productionContent.prod.produced_count || 0).arg(productionContent.prod.max_units || 0)
-                        color: (productionContent.prod.produced_count >= productionContent.prod.max_units) ? "#C0403B" : "#D4B57C"
+                        text: qsTr("Available Population: %1 / %2").arg(productionContent.prod.manpower_available || 0).arg(productionContent.prod.max_units || 0)
+                        color: (productionContent.prod.manpower_available <= 0) ? "#C0403B" : "#D4B57C"
                         font.pointSize: 8
                     }
                 }
@@ -332,111 +316,6 @@ Rectangle {
                         font.bold: true
                     }
 
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: parent.width
-                        text: unitGridContent.prod.commander_committed ? qsTr("COMMANDER COMMITTED — one per game") : qsTr("CHOOSE ONE COMMANDER")
-                        color: unitGridContent.prod.commander_committed ? "#C0403B" : hs.bronze
-                        horizontalAlignment: Text.AlignHCenter
-                        font.pointSize: 8
-                        font.bold: true
-                    }
-
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 8
-
-                        Repeater {
-                            model: productionPanel.commander_options(unitGridContent.prod.nation_id)
-
-                            Rectangle {
-                                property string commander_id: modelData
-                                property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                                property bool limit_reached: unitGridContent.prod.commander_committed || false
-                                property var unit_info: productionPanel.get_unit_production_info(commander_id, unitGridContent.prod.nation_id)
-                                property bool is_hovered: commanderMouseArea.containsMouse
-                                property bool is_enabled: unitGridContent.prod.has_barracks && !limit_reached && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
-
-                                width: 110
-                                height: 96
-                                radius: 8
-                                color: is_enabled ? (is_hovered ? "#4A2D15" : "#2F1C10") : Theme.bgShade
-                                border.color: is_enabled ? "#D4AF37" : hs.parchmentLight
-                                border.width: is_enabled ? 2 : 1
-                                opacity: is_enabled ? 1 : 0.55
-                                scale: is_hovered && is_enabled ? 1.025 : 1
-
-                                Text {
-                                    anchors.top: parent.top
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    anchors.topMargin: 6
-                                    text: productionPanel.unit_icon_emoji(parent.commander_id)
-                                    color: "#F4D27A"
-                                    font.pointSize: 26
-                                    font.bold: true
-                                }
-
-                                Text {
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.bottom: commanderCostBadge.top
-                                    anchors.margins: 4
-                                    text: parent.unit_info.display_name || qsTr("Commander")
-                                    color: Theme.textMain
-                                    font.pointSize: 8
-                                    font.bold: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 2
-                                }
-
-                                Rectangle {
-                                    id: commanderCostBadge
-
-                                    width: commanderCostText.implicitWidth + 12
-                                    height: commanderCostText.implicitHeight + 6
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: 6
-                                    radius: 8
-                                    color: "#1f150dcc"
-                                    border.color: "#D4AF37"
-
-                                    Text {
-                                        id: commanderCostText
-
-                                        anchors.centerIn: parent
-                                        text: parent.parent.unit_info.cost || 300
-                                        color: parent.parent.is_enabled ? "#F4E7C8" : Theme.textDim
-                                        font.pointSize: 13
-                                        font.bold: true
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: commanderMouseArea
-
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onClicked: {
-                                        if (parent.is_enabled)
-                                            productionPanel.recruit_unit(parent.commander_id);
-                                    }
-                                    cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                    ToolTip.visible: containsMouse
-                                    ToolTip.text: productionPanel.commander_tooltip(parent.unit_info, parent.is_enabled, parent.limit_reached, parent.queue_total >= 5)
-                                    ToolTip.delay: 300
-                                }
-
-                                Behavior on scale  {
-                                    NumberAnimation {
-                                        duration: 100
-                                    }
-                                }
-                            }
-                        }
-                    }
-
                     Grid {
                         anchors.horizontalCenter: parent.horizontalCenter
                         columns: 3
@@ -445,7 +324,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("archer", unitGridContent.prod.nation_id)
                             property bool is_hovered: archerMouseArea.containsMouse
 
@@ -513,7 +392,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Archer").arg(parent.unit_info.cost || 50).arg((parent.unit_info.build_time || 5).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Archer").arg(parent.unit_info.cost || 50).arg((parent.unit_info.build_time || 5).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -545,7 +424,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("swordsman", unitGridContent.prod.nation_id)
                             property bool is_hovered: swordsmanMouseArea.containsMouse
 
@@ -613,7 +492,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Swordsman").arg(parent.unit_info.cost || 90).arg((parent.unit_info.build_time || 7).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Swordsman").arg(parent.unit_info.cost || 90).arg((parent.unit_info.build_time || 7).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -645,7 +524,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("spearman", unitGridContent.prod.nation_id)
                             property bool is_hovered: spearmanMouseArea.containsMouse
 
@@ -713,7 +592,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Spearman").arg(parent.unit_info.cost || 75).arg((parent.unit_info.build_time || 6).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Spearman").arg(parent.unit_info.cost || 75).arg((parent.unit_info.build_time || 6).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -745,7 +624,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("horse_swordsman", unitGridContent.prod.nation_id)
                             property bool is_hovered: horseKnightMouseArea.containsMouse
 
@@ -813,7 +692,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Mounted Knight").arg(parent.unit_info.cost || 150).arg((parent.unit_info.build_time || 10).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Mounted Knight").arg(parent.unit_info.cost || 150).arg((parent.unit_info.build_time || 10).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -845,7 +724,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("horse_archer", unitGridContent.prod.nation_id)
                             property bool is_hovered: horseArcherMouseArea.containsMouse
 
@@ -913,7 +792,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Archer").arg(parent.unit_info.cost || 120).arg((parent.unit_info.build_time || 9).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Archer").arg(parent.unit_info.cost || 120).arg((parent.unit_info.build_time || 9).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -945,7 +824,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("horse_spearman", unitGridContent.prod.nation_id)
                             property bool is_hovered: horseSpearmanMouseArea.containsMouse
 
@@ -1013,7 +892,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Spearman").arg(parent.unit_info.cost || 130).arg((parent.unit_info.build_time || 9).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Spearman").arg(parent.unit_info.cost || 130).arg((parent.unit_info.build_time || 9).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -1045,7 +924,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("healer", unitGridContent.prod.nation_id)
                             property bool is_hovered: healerMouseArea.containsMouse
 
@@ -1113,7 +992,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Healer").arg(parent.unit_info.cost || 100).arg((parent.unit_info.build_time || 8).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Healer").arg(parent.unit_info.cost || 100).arg((parent.unit_info.build_time || 8).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -1145,7 +1024,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("builder", unitGridContent.prod.nation_id)
                             property bool is_hovered: builderMouseArea.containsMouse
 
@@ -1213,7 +1092,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Builder").arg(parent.unit_info.cost || 60).arg((parent.unit_info.build_time || 6).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Builder").arg(parent.unit_info.cost || 60).arg((parent.unit_info.build_time || 6).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -1245,7 +1124,7 @@ Rectangle {
 
                         Rectangle {
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("elephant", unitGridContent.prod.nation_id)
                             property bool is_hovered: elephantMouseArea.containsMouse
 
@@ -1314,7 +1193,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s\nCarthage exclusive").arg(parent.unit_info.display_name || "War Elephant").arg(parent.unit_info.cost || 250).arg((parent.unit_info.build_time || 20).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s\nCarthage exclusive").arg(parent.unit_info.display_name || "War Elephant").arg(parent.unit_info.cost || 250).arg((parent.unit_info.build_time || 20).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
                                 ToolTip.delay: 300
                             }
 
@@ -1463,7 +1342,7 @@ Rectangle {
                             }
                             cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                             ToolTip.visible: containsMouse
-                            ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 families\nBuild time: %3s\nRight-click on a friendly barracks to send civilians in and transfer manpower.").arg(parent.unit_info.display_name || "Civilian").arg(parent.unit_info.cost || 8).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!parent.has_capacity ? qsTr("This home already committed its 3 civilians") : (!parent.has_families ? qsTr("Not enough families available") : qsTr("Cannot recruit")))
+                            ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 families\nBuild time: %3s\nUse Deliver mode, then click a friendly barracks to add 50 available population.").arg(parent.unit_info.display_name || "Civilian").arg(parent.unit_info.cost || 8).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!parent.has_capacity ? qsTr("This home already committed its 3 civilians") : (!parent.has_families ? qsTr("Not enough families available") : qsTr("Cannot recruit")))
                             ToolTip.delay: 300
                         }
                     }

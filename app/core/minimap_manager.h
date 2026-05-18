@@ -5,7 +5,9 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <vector>
+
+#include "game/map/minimap/minimap_fog_compositor.h"
+#include "game/map/visibility_service.h"
 
 namespace Game::Map {
 struct MapDefinition;
@@ -34,10 +36,7 @@ public:
   ~MinimapManager();
 
   void generate_for_map(const Game::Map::MapDefinition& map_def);
-  void update_fog(int vis_width,
-                  int vis_height,
-                  const std::vector<std::uint8_t>& cells,
-                  std::uint64_t visibility_version);
+  void update_fog(const Game::Map::VisibilityService::Snapshot& snapshot);
   void clear_fog();
   void update_units(Engine::Core::World* world,
                     Game::Systems::SelectionSystem* selection_system,
@@ -53,29 +52,15 @@ public:
   [[nodiscard]] float get_world_width() const { return m_world_width; }
   [[nodiscard]] float get_world_height() const { return m_world_height; }
   [[nodiscard]] float get_tile_size() const { return m_tile_size; }
+  [[nodiscard]] std::uint64_t fog_version() const { return m_fog_compositor.version(); }
 
 private:
-  struct FogLookupEntry {
-    int idx00 = 0;
-    int idx10 = 0;
-    int idx01 = 0;
-    int idx11 = 0;
-    float fx = 0.0F;
-    float fy = 0.0F;
-  };
-
-  void rebuild_fog_lookup(int vis_width, int vis_height);
   void mark_dirty() { m_dirty = true; }
 
   QImage m_minimap_image;
   QImage m_minimap_base_image;
   QImage m_minimap_fog_image;
-  std::uint64_t m_minimap_fog_version = 0;
-  int m_fog_lookup_vis_width = 0;
-  int m_fog_lookup_vis_height = 0;
-  int m_fog_lookup_img_width = 0;
-  int m_fog_lookup_img_height = 0;
-  std::vector<FogLookupEntry> m_fog_lookup_entries;
+  Game::Map::Minimap::MinimapFogCompositor m_fog_compositor;
   std::unique_ptr<Game::Map::Minimap::UnitLayer> m_unit_layer;
   std::unique_ptr<Game::Map::Minimap::CameraViewportLayer> m_camera_viewport_layer;
   float m_world_width = 0.0F;

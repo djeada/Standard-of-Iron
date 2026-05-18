@@ -19,6 +19,11 @@ protected:
         .absoluteFilePath(QStringLiteral("../../assets/missions/%1").arg(file_name));
   }
 
+  auto assetMissionDirectory() -> QDir {
+    return QDir(QDir(QCoreApplication::applicationDirPath())
+                    .absoluteFilePath(QStringLiteral("../../assets/missions")));
+  }
+
   auto createTestMission() -> QString {
     return R"({
       "id": "test_mission",
@@ -236,4 +241,31 @@ TEST_F(MissionLoaderTest, CrossingTheRhonePatrolForcesStayDefensive) {
   EXPECT_EQ(*patrol_it->strategy, "defensive");
   EXPECT_LT(patrol_it->personality.aggression, 0.5F);
   EXPECT_GT(patrol_it->personality.defense, 0.7F);
+}
+
+TEST_F(MissionLoaderTest, ShippedMissionsAuthorCommandersForPlayerAndAiSetups) {
+  const QDir mission_dir = assetMissionDirectory();
+  const QStringList mission_files =
+      mission_dir.entryList(QStringList() << QStringLiteral("*.json"), QDir::Files);
+  ASSERT_FALSE(mission_files.isEmpty());
+
+  for (const QString& file_name : mission_files) {
+    MissionDefinition mission;
+    QString error;
+    ASSERT_TRUE(MissionLoader::load_from_json_file(
+        mission_dir.absoluteFilePath(file_name), mission, &error))
+        << file_name.toStdString() << ": " << error.toStdString();
+
+    ASSERT_TRUE(mission.player_setup.commander_troop.has_value())
+        << file_name.toStdString();
+    EXPECT_FALSE(mission.player_setup.commander_troop->trimmed().isEmpty())
+        << file_name.toStdString();
+
+    for (std::size_t index = 0; index < mission.ai_setups.size(); ++index) {
+      ASSERT_TRUE(mission.ai_setups[index].commander_troop.has_value())
+          << file_name.toStdString() << " ai index " << index;
+      EXPECT_FALSE(mission.ai_setups[index].commander_troop->trimmed().isEmpty())
+          << file_name.toStdString() << " ai index " << index;
+    }
+  }
 }

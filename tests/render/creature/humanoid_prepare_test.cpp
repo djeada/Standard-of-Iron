@@ -48,6 +48,7 @@
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/humanoid/cache_control.h"
 #include "render/humanoid/formation_calculator.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_spec.h"
@@ -74,7 +75,9 @@ public:
   std::vector<std::uint32_t> role_color_counts;
   std::vector<float> rigged_world_y;
   std::vector<float> rigged_mesh_min_world_y;
+  std::vector<std::vector<QMatrix4x4>> rigged_bone_palettes;
   const QMatrix4x4* last_bone_palette{nullptr};
+  std::vector<QMatrix4x4> last_bone_palette_copy;
   void mesh(Render::GL::Mesh*,
             const QMatrix4x4&,
             const QVector3D&,
@@ -112,6 +115,8 @@ public:
     }
     rigged_mesh_min_world_y.push_back(min_world_y);
     last_bone_palette = cmd.bone_palette;
+    last_bone_palette_copy.assign(cmd.bone_palette, cmd.bone_palette + cmd.bone_count);
+    rigged_bone_palettes.push_back(last_bone_palette_copy);
   }
   void cylinder(
       const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
@@ -403,6 +408,111 @@ auto render_archer_idle_bone_palette(const char* renderer_id) -> const QMatrix4x
 
   EXPECT_GT(sink.rigged_calls, 0);
   return sink.last_bone_palette;
+}
+
+auto lower_body_palette_moves_between(std::span<const QMatrix4x4> first,
+                                      std::span<const QMatrix4x4> second) -> bool {
+  using Render::Humanoid::HumanoidBone;
+
+  constexpr std::array<HumanoidBone, 7> k_lower_body_bones{{
+      HumanoidBone::Pelvis,
+      HumanoidBone::HipL,
+      HumanoidBone::KneeL,
+      HumanoidBone::FootL,
+      HumanoidBone::HipR,
+      HumanoidBone::KneeR,
+      HumanoidBone::FootR,
+  }};
+
+  for (auto const bone : k_lower_body_bones) {
+    auto const index = static_cast<std::size_t>(bone);
+    if (index >= first.size() || index >= second.size()) {
+      return false;
+    }
+    if (first[index] != second[index]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto moving_palette_changes_over_time(const char* renderer_id,
+                                      Game::Units::SpawnType spawn_type,
+                                      Game::Systems::NationID nation_id,
+                                      bool use_motion_snapshot = false) -> bool {
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  auto const renderer = registry.get(renderer_id);
+  EXPECT_TRUE(static_cast<bool>(renderer));
+  if (!renderer) {
+    return false;
+  }
+
+  Render::GL::DrawContext ctx{};
+  ctx.allow_template_cache = false;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
+
+  Engine::Core::Entity entity(1);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* motion = use_motion_snapshot
+                     ? entity.add_component<Engine::Core::MotionPresentationComponent>()
+                     : nullptr;
+  EXPECT_NE(unit, nullptr);
+  EXPECT_NE(movement, nullptr);
+  EXPECT_NE(transform, nullptr);
+  if (unit == nullptr || movement == nullptr || transform == nullptr) {
+    return false;
+  }
+  unit->spawn_type = spawn_type;
+  unit->nation_id = nation_id;
+  movement->has_target = true;
+  movement->target_x = 6.0F;
+  movement->target_y = 0.0F;
+  movement->vx = 1.0F;
+  movement->vz = 0.0F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  if (motion != nullptr) {
+    motion->initialized = true;
+    motion->snapshot_valid = true;
+    motion->set_state(Engine::Core::MotionPresentationState::Walk);
+    motion->has_navigation_intent = true;
+    motion->has_movement_target = true;
+    motion->movement_target_x = 6.0F;
+    motion->movement_target_z = 0.0F;
+    motion->direction_x = 1.0F;
+    motion->direction_z = 0.0F;
+    motion->speed = 1.0F;
+  }
+  ctx.entity = &entity;
+
+  ctx.animation_time = 0.10F;
+  CountingSubmitter first_sink;
+  renderer(ctx, first_sink);
+  EXPECT_GT(first_sink.rigged_calls, 0);
+  if (first_sink.rigged_bone_palettes.empty()) {
+    return false;
+  }
+
+  Render::GL::advance_pose_cache_frame();
+  ctx.animation_time = 0.70F;
+  CountingSubmitter second_sink;
+  renderer(ctx, second_sink);
+  EXPECT_GT(second_sink.rigged_calls, 0);
+  if (second_sink.rigged_bone_palettes.empty()) {
+    return false;
+  }
+  auto const comparable_count =
+      std::min(first_sink.rigged_bone_palettes.size(), second_sink.rigged_bone_palettes.size());
+  for (std::size_t i = 0; i < comparable_count; ++i) {
+    if (lower_body_palette_moves_between(first_sink.rigged_bone_palettes[i],
+                                         second_sink.rigged_bone_palettes[i])) {
+      return true;
+    }
+  }
+  return false;
 }
 
 auto render_builder_submission_count(const char* renderer_id,
@@ -865,6 +975,116 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   EXPECT_NE(carthage_idle_palette, request_idle_bone_palette(carthage_id, 0.0F));
 }
 
+TEST(HumanoidPrepare, MotionSnapshotDrivenInfantryMovementChangesVisibleLowerBodyPoseOverTime) {
+  EXPECT_TRUE(moving_palette_changes_over_time("troops/roman/swordsman",
+                                               Game::Units::SpawnType::Knight,
+                                               Game::Systems::NationID::RomanRepublic,
+                                               true));
+  EXPECT_TRUE(moving_palette_changes_over_time("troops/roman/archer",
+                                               Game::Units::SpawnType::Archer,
+                                               Game::Systems::NationID::RomanRepublic,
+                                               true));
+  EXPECT_TRUE(moving_palette_changes_over_time("troops/roman/spearman",
+                                               Game::Units::SpawnType::Spearman,
+                                               Game::Systems::NationID::RomanRepublic,
+                                               true));
+}
+
+TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime) {
+  class FixedSpecRenderer final : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
+        : spec_(std::move(spec)) {}
+
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
+
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  auto const warm_renderer = registry.get("troops/roman/swordsman");
+  ASSERT_TRUE(static_cast<bool>(warm_renderer));
+  if (warm_renderer) {
+    Render::GL::DrawContext warm_ctx{};
+    warm_ctx.allow_template_cache = false;
+    Engine::Core::Entity warm_entity(997);
+    auto* warm_unit =
+        warm_entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+    ASSERT_NE(warm_unit, nullptr);
+    warm_unit->spawn_type = Game::Units::SpawnType::Knight;
+    warm_unit->nation_id = Game::Systems::NationID::RomanRepublic;
+    warm_ctx.entity = &warm_entity;
+    CountingSubmitter warm_sink;
+    warm_renderer(warm_ctx, warm_sink);
+  }
+
+  auto const archetype_id = find_archetype_id("troops/roman/swordsman");
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
+
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "troops/roman/swordsman";
+  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
+  spec.archetype_id = archetype_id;
+  spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+  FixedSpecRenderer owner(spec);
+
+  Engine::Core::Entity entity(1);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(motion, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  movement->has_target = true;
+  movement->target_x = 6.0F;
+  movement->target_y = 0.0F;
+  movement->vx = 1.0F;
+  movement->vz = 0.0F;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  motion->initialized = true;
+  motion->snapshot_valid = true;
+  motion->set_state(Engine::Core::MotionPresentationState::Walk);
+  motion->has_navigation_intent = true;
+  motion->has_movement_target = true;
+  motion->movement_target_x = 6.0F;
+  motion->movement_target_z = 0.0F;
+  motion->direction_x = 1.0F;
+  motion->direction_z = 0.0F;
+  motion->speed = 1.0F;
+
+  auto request_for_time = [&](float animation_time) {
+    Render::GL::DrawContext ctx{};
+    ctx.allow_template_cache = false;
+    ctx.force_humanoid_lod = true;
+    ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
+    ctx.animation_time = animation_time;
+    ctx.entity = &entity;
+    auto const anim = Render::GL::sample_anim_state(ctx);
+    Render::Humanoid::HumanoidPreparation prep;
+    Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+    EXPECT_FALSE(prep.bodies.requests().empty());
+    return prep.bodies.requests().front();
+  };
+
+  auto const first = request_for_time(0.10F);
+  Render::GL::advance_pose_cache_frame();
+  auto const second = request_for_time(0.70F);
+
+  EXPECT_EQ(first.state, Render::Creature::AnimationStateId::Walk);
+  EXPECT_EQ(second.state, Render::Creature::AnimationStateId::Walk);
+  EXPECT_NE(first.phase, second.phase);
+}
+
 TEST(HumanoidPrepare, BuiltInBuildersSubmitRiggedGeometry) {
   EXPECT_GT(render_builder_submission_count(
                 "troops/roman/builder", Game::Systems::NationID::RomanRepublic, false),
@@ -1134,17 +1354,14 @@ TEST(HumanoidPrepare, LocomotionOverridesStationaryActionFlagsForPlayback) {
 
   auto expect_walk = [&](Render::GL::AnimationInputs anim) {
     anim.movement_state = Render::Creature::MovementAnimationState::Walk;
+    auto const resolved_pose = Render::Creature::resolve_pose(anim);
 
-    EXPECT_EQ(Render::Creature::resolve_pose_intent(anim),
-              Render::Creature::PoseIntent::Walk);
-    EXPECT_EQ(Render::Creature::to_humanoid_motion_state(
-                  Render::Creature::resolve_pose_intent(anim)),
-              Render::GL::HumanoidMotionState::Walk);
+    EXPECT_EQ(resolved_pose.intent, Render::Creature::PoseIntent::Walk);
+    EXPECT_EQ(resolved_pose.motion_state, Render::GL::HumanoidMotionState::Walk);
 
     Render::GL::HumanoidAnimationContext anim_ctx{};
     anim_ctx.inputs = anim;
-    anim_ctx.gait.state = Render::Creature::to_humanoid_motion_state(
-        Render::Creature::resolve_pose_intent(anim));
+    anim_ctx.gait.state = resolved_pose.motion_state;
     anim_ctx.gait.cycle_phase = 0.35F;
 
     auto const playback = humanoid_bpat_playback_for_anim(
@@ -1382,7 +1599,7 @@ auto add_walk_motion(Engine::Core::Entity& entity,
   return motion;
 }
 
-TEST(HumanoidPrepare, MovingCombatRecoveryUsesWalkClipInsteadOfAttackClip) {
+TEST(HumanoidPrepare, MovingCombatRecoveryUsesAttackClipInsteadOfWalkClip) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
   ctx.force_single_soldier = true;
@@ -1410,6 +1627,8 @@ TEST(HumanoidPrepare, MovingCombatRecoveryUsesWalkClipInsteadOfAttackClip) {
   auto const anim = Render::GL::sample_anim_state(ctx);
   EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
   EXPECT_TRUE(anim.is_attacking);
+  EXPECT_EQ(Render::Creature::resolve_pose_intent(anim),
+            Render::Creature::PoseIntent::AttackMelee);
   EXPECT_EQ(anim.combat_phase, Render::GL::CombatAnimPhase::Recover);
 
   Render::Humanoid::HumanoidPreparation prep;
@@ -1417,7 +1636,91 @@ TEST(HumanoidPrepare, MovingCombatRecoveryUsesWalkClipInsteadOfAttackClip) {
 
   auto const& requests = prep.bodies.requests();
   ASSERT_FALSE(requests.empty());
+  EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::AttackSword);
+}
+
+TEST(HumanoidPrepare, CombatAdvancePreservesWalkClipWhileClosingDistance) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 10.0F;
+
+  Engine::Core::Entity entity(142);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(combat_state, nullptr);
+  ASSERT_NE(add_walk_motion(entity, unit->speed), nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  movement->has_target = true;
+  movement->target_x = 4.0F;
+  movement->target_y = 0.0F;
+  combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
+  combat_state->attack_family = Engine::Core::CombatAttackFamily::Sword;
+  combat_state->state_time = 0.05F;
+  combat_state->state_duration = Engine::Core::CombatStateComponent::k_advance_duration;
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
+  EXPECT_TRUE(anim.is_attacking);
+  EXPECT_EQ(Render::Creature::resolve_pose_intent(anim),
+            Render::Creature::PoseIntent::Walk);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  auto const& requests = prep.bodies.requests();
+  ASSERT_FALSE(requests.empty());
   EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::Walk);
+}
+
+TEST(HumanoidPrepare, MeleeLockForcedDisplacementUsesAttackClipInsteadOfWalk) {
+  Render::GL::HumanoidRendererBase const owner;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.animation_time = 6.2F;
+
+  Engine::Core::Entity entity(143);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
+  auto* attack = entity.add_component<Engine::Core::AttackComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(attack, nullptr);
+  ASSERT_NE(motion, nullptr);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->in_melee_lock = true;
+  attack->melee_lock_target_id = 99;
+  motion->initialized = true;
+  motion->snapshot_valid = true;
+  motion->set_state(Engine::Core::MotionPresentationState::Walk);
+  motion->has_velocity = true;
+  motion->source = Engine::Core::MotionPresentationSource::ForcedDisplacement;
+  motion->direction_x = 1.0F;
+  motion->direction_z = 0.0F;
+  motion->velocity_x = 0.9F;
+  motion->velocity_z = 0.0F;
+  motion->speed = 0.9F;
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
+  EXPECT_TRUE(anim.is_attacking);
+  EXPECT_TRUE(anim.is_in_melee_lock);
+  EXPECT_EQ(Render::Creature::resolve_pose_intent(anim),
+            Render::Creature::PoseIntent::AttackSpear);
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  auto const& requests = prep.bodies.requests();
+  ASSERT_FALSE(requests.empty());
+  EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::AttackSpear);
 }
 
 TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {

@@ -54,7 +54,7 @@
       "description": "Lake Trasimene. The water seals the northern side of the battlefield and prevents Roman maneuver."
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 105,
       "z": 50,
       "width": 190,
@@ -235,13 +235,13 @@
       "description": "Low road embankment that makes the marching column bunch up."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 24,
       "z": 30,
       "description": "Abandoned lakeside hamlet and Roman baggage clutter near the rear of the column."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 188,
       "z": 48,
       "description": "Small eastern roadside settlement near the Roman escape route."

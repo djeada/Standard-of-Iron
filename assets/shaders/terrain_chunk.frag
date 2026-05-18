@@ -5,6 +5,7 @@ in vec3 v_normal;
 in vec2 v_uv;
 in float v_vertex_displacement;
 in float v_entry_mask;
+in float v_feature_foot;
 
 layout(location = 0) out vec4 frag_color;
 
@@ -45,6 +46,11 @@ uniform vec3 u_camera_pos;
 uniform vec3 u_fog_color;
 uniform float u_fog_start;
 uniform float u_fog_end;
+uniform int u_has_visibility;
+uniform sampler2D u_visibility_tex;
+uniform vec2 u_visibility_size;
+uniform float u_visibility_tile_size;
+uniform float u_explored_alpha;
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -173,9 +179,11 @@ float min_cliff_distance_radial(vec2 uv, int r, float rise_delta) {
 
 void main() {
   float entry_mask = clamp(v_entry_mask, 0.0, 1.0);
+  float feature_foot = clamp(v_feature_foot, 0.0, 1.0);
   vec3 normal = geom_normal();
 
-  normal = normalize(mix(normal, normalize(v_normal), entry_mask * 0.5));
+  normal = normalize(mix(normal, normalize(v_normal), max(entry_mask * 0.5,
+                                                          feature_foot * 0.22)));
 
   if (u_has_height_tex == 1) {
     vec2 huv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
@@ -184,7 +192,7 @@ void main() {
 
     float w = 0.70 * (1.0 - smoothstep(0.70, 0.95, slope0));
 
-    w *= (1.0 - 0.50 * entry_mask);
+    w *= (1.0 - 0.50 * entry_mask - 0.20 * feature_foot);
     normal = normalize(mix(normal, hm_n, w));
   }
 
@@ -192,7 +200,9 @@ void main() {
   float flat_terrain_mask = 1.0 - smoothstep(0.05, 0.18, slope);
 
   slope *= (1.0 - 0.25 * entry_mask);
+  slope *= (1.0 - 0.10 * feature_foot);
   float entry_shelter = entry_mask * (1.0 - smoothstep(0.18, 0.55, slope));
+  float foot_shelter = feature_foot * (1.0 - smoothstep(0.34, 0.74, slope));
   float entry_toe =
       entry_mask * (1.0 - smoothstep(0.24, 0.62, slope * (1.0 - 0.25 * entry_mask)));
   float curvature = compute_curvature();
@@ -228,6 +238,7 @@ void main() {
                   0.0,
                   1.0);
   dryness = clamp(dryness - entry_shelter * (0.14 + 0.10 * u_moisture_level), 0.0, 1.0);
+  dryness = clamp(dryness - foot_shelter * (0.08 + 0.08 * u_moisture_level), 0.0, 1.0);
   dryness += moisture_var * 0.15;
   dryness =
       mix(dryness, dryness * 0.45 + moisture_var * 0.10, flat_terrain_mask * 0.80);
@@ -239,6 +250,9 @@ void main() {
   grass_color = mix(grass_color,
                     mix(u_grass_secondary, u_soil_color, 0.20),
                     entry_shelter * (0.10 + 0.10 * u_moisture_level));
+  grass_color = mix(grass_color,
+                    mix(u_grass_primary, u_soil_color, 0.30),
+                    foot_shelter * 0.22);
   vec3 flat_grass_color =
       mix(u_grass_primary, u_grass_secondary, 0.18 + moisture_var * 0.22);
   grass_color = mix(grass_color, flat_grass_color, flat_terrain_mask * 0.45);
@@ -272,6 +286,7 @@ void main() {
 
   float toe_proximity =
       max(toe_local, max(toe_hm, toe_ss / max(1e-6, u_soil_foot_height)));
+  toe_proximity = max(toe_proximity, feature_foot * (0.45 + 0.25 * foot_shelter));
 
   float concavity_lift =
       gully_mask * ((0.25 + 0.25 * gully_response) * u_soil_foot_height);
@@ -286,6 +301,7 @@ void main() {
       smoothstep(soil_height - band_width, soil_height + band_width, v_world_pos.y);
   soil_mix = clamp(soil_mix, 0.0, 1.0);
   soil_mix = max(soil_mix, entry_shelter * (0.10 + 0.18 * (1.0 - slope)));
+  soil_mix = max(soil_mix, foot_shelter * (0.16 + 0.22 * (1.0 - slope)));
 
   float mud_patch = fbm(world_coord * 0.08 + vec2(7.3, 11.2));
   mud_patch =
@@ -305,6 +321,7 @@ void main() {
   rock_mask *= 1.0 - soil_mix * 0.75;
 
   rock_mask *= (1.0 - 0.50 * entry_shelter);
+  rock_mask *= (1.0 - 0.36 * foot_shelter);
   rock_mask *= (1.0 - flat_terrain_mask * 0.85);
 
   float rock_lerp = clamp(0.35 + detail_noise * 0.65, 0.0, 1.0);
@@ -357,6 +374,7 @@ void main() {
 
   vec3 terrain_color = mix(soil_blend, rock_color, rock_mask);
   terrain_color = mix(terrain_color, soil_blend, entry_shelter * 0.12);
+  terrain_color = mix(terrain_color, soil_blend, foot_shelter * 0.18);
 
   if (u_crack_intensity > 0.01) {
     float crack_noise1 = noise21(world_coord * 8.0);
@@ -456,6 +474,20 @@ void main() {
   vec3 to_camera = u_camera_pos - v_world_pos;
   float view_distance = max(length(to_camera), 1e-4);
   vec3 fog_view_dir = to_camera / view_distance;
+  float visibility_factor = 1.0;
+  if (u_has_visibility == 1 && u_visibility_size.x > 0.0 && u_visibility_size.y > 0.0) {
+    float tile_size = max(u_visibility_tile_size, 0.0001);
+    vec2 grid = vec2(v_world_pos.x / tile_size, v_world_pos.z / tile_size);
+    grid += (u_visibility_size * 0.5) - vec2(0.5);
+    vec2 vis_uv = (grid + vec2(0.5)) / u_visibility_size;
+    float vis_sample = texture(u_visibility_tex, vis_uv).r;
+    if (vis_sample < 0.25) {
+      discard;
+    } else if (vis_sample < 0.75) {
+      visibility_factor = u_explored_alpha;
+    }
+  }
+  lit_color *= visibility_factor;
   float distance_fog =
       smoothstep(u_fog_start, max(u_fog_start + 1e-4, u_fog_end), view_distance);
   float horizon_fog = smoothstep(0.20, 0.88, 1.0 - abs(fog_view_dir.y));

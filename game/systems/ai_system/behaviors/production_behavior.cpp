@@ -18,7 +18,10 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
                                  std::vector<AICommand>& out_commands) {
   m_production_timer += delta_time;
 
-  float production_interval = 1.5F / context.strategy_config.production_rate_modifier;
+  const float effective_production_rate =
+      context.strategy_config.production_rate_modifier *
+      context.strategy_config.difficulty.production_rate_multiplier;
+  float production_interval = 1.5F / std::max(0.1F, effective_production_rate);
 
   if (m_production_timer < production_interval) {
     return;
@@ -32,17 +35,17 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
-  constexpr int MIN_BUILDERS = 2;
-  constexpr int DESIRED_BUILDERS = 4;
   constexpr int BUILDER_PRODUCTION_INTERVAL = 3;
+  const int minimum_builders = std::max(1, context.macro_targets.builder_count - 1);
+  const int desired_builders = std::max(minimum_builders, context.macro_targets.builder_count);
 
   bool should_produce_builder = false;
 
-  if (context.builder_count < MIN_BUILDERS) {
+  if (context.builder_count < minimum_builders) {
     should_produce_builder = true;
   }
 
-  else if (context.builder_count < DESIRED_BUILDERS &&
+  else if (context.builder_count < desired_builders &&
            (m_production_counter % BUILDER_PRODUCTION_INTERVAL == 0)) {
     should_produce_builder = true;
   }
@@ -52,40 +55,6 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   if (should_produce_builder) {
 
     troop_type = nation->get_troop(Game::Units::TroopType::Builder);
-  }
-
-  if (troop_type == nullptr) {
-    const bool has_active_commander = std::any_of(
-        snapshot.friendly_units.begin(),
-        snapshot.friendly_units.end(),
-        [](const EntitySnapshot& entity) {
-          if (entity.is_building || entity.health <= 0) {
-            return false;
-          }
-          const auto troop_type = Game::Units::spawn_typeToTroopType(entity.spawn_type);
-          return troop_type.has_value() && Game::Units::is_commander_troop(*troop_type);
-        });
-    const bool has_commander_committed =
-        std::any_of(snapshot.friendly_units.begin(),
-                    snapshot.friendly_units.end(),
-                    [](const EntitySnapshot& entity) {
-                      return entity.is_building && entity.production.has_component &&
-                             entity.production.commander_committed;
-                    });
-    if (context.allow_commander_recruitment && !has_active_commander &&
-        !has_commander_committed && context.nation != nullptr) {
-      const auto commander_defs =
-          Game::Units::commander_definitions_for_nation(context.nation->id);
-      for (const auto* commander_def : commander_defs) {
-        if (commander_def == nullptr) {
-          continue;
-        }
-        troop_type = nation->get_troop(commander_def->troop_type);
-        if (troop_type != nullptr) {
-          break;
-        }
-      }
-    }
   }
 
   if (troop_type == nullptr) {
@@ -103,10 +72,14 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
       const float target_ranged_ratio =
           std::clamp(0.5F + (context.strategy_config.defense_modifier -
                              context.strategy_config.aggression_modifier) *
-                                0.1F,
+                                 0.1F,
                      0.25F,
                      0.75F);
       produce_ranged = (ranged_ratio < target_ranged_ratio);
+      if (context.assembled_unit_count < context.macro_targets.assembly_size &&
+          context.strategy_config.aggression_modifier > 1.0F) {
+        produce_ranged = false;
+      }
     }
 
     troop_type = produce_ranged ? nation->get_best_ranged_troop()
@@ -121,8 +94,6 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   if (troop_type == nullptr) {
     return;
   }
-  const bool producing_commander =
-      Game::Units::is_commander_troop(troop_type->unit_type);
 
   for (const auto& entity : snapshot.friendly_units) {
     if (!entity.is_building || entity.spawn_type != Game::Units::SpawnType::Barracks) {
@@ -134,10 +105,6 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     }
 
     if (!entity.production.has_component) {
-      continue;
-    }
-    if (producing_commander && context.primary_barracks != 0 &&
-        entity.id != context.primary_barracks) {
       continue;
     }
 
@@ -160,9 +127,6 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     out_commands.push_back(std::move(command));
 
     m_production_counter++;
-    if (producing_commander) {
-      break;
-    }
   }
 }
 

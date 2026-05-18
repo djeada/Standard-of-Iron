@@ -259,7 +259,7 @@ void PlantRenderer::generate_plant_instances() {
       float const cluster_mult = 0.55F + cell_scene.cluster_bias * 1.10F;
 
       float const effective_density = plant_density * density_mult * cluster_mult *
-                                      0.8F * k_plant_density_area_scale;
+                                      0.48F * k_plant_density_area_scale;
       if (effective_density < 0.05F) {
         continue;
       }

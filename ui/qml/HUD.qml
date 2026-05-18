@@ -30,7 +30,7 @@ Item {
             selection_tick += 1;
             var has_troops = false;
             if (typeof game !== 'undefined' && game.has_units_selected && game.has_selected_type) {
-                var troop_types = ["warrior", "archer", "swordsman", "spearman", "healer", "catapult", "ballista", "horse_archer", "horse_swordsman", "horse_spearman", "elephant"];
+                var troop_types = ["warrior", "archer", "swordsman", "spearman", "healer", "catapult", "ballista", "horse_archer", "horse_swordsman", "horse_spearman", "elephant", "builder", "civilian"];
                 for (var i = 0; i < troop_types.length; i++) {
                     if (game.has_selected_type(troop_types[i])) {
                         has_troops = true;
@@ -39,7 +39,9 @@ Item {
                 }
             }
             var actual_mode = "normal";
-            if (has_troops && typeof game !== 'undefined' && game.get_selected_units_command_mode)
+            if (has_troops && typeof game !== 'undefined' && game.cursor_mode && game.cursor_mode !== "normal")
+                actual_mode = game.cursor_mode;
+            else if (has_troops && typeof game !== 'undefined' && game.get_selected_units_command_mode)
                 actual_mode = game.get_selected_units_command_mode();
             if (current_command_mode !== actual_mode) {
                 current_command_mode = actual_mode;
@@ -60,7 +62,7 @@ Item {
         onTriggered: {
             selection_tick += 1;
             if (has_movable_units && typeof game !== 'undefined' && game.get_selected_units_command_mode) {
-                var actual_mode = game.get_selected_units_command_mode();
+                var actual_mode = (game.cursor_mode && game.cursor_mode !== "normal") ? game.cursor_mode : game.get_selected_units_command_mode();
                 if (current_command_mode !== actual_mode)
                     current_command_mode = actual_mode;
             }

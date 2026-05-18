@@ -8,6 +8,7 @@
 
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
+#include "../../game/map/render_visibility_rules.h"
 #include "../../game/map/visibility_service.h"
 #include "../../game/systems/camera_visibility_service.h"
 #include "../../game/systems/combat_rules.h"
@@ -99,12 +100,10 @@ void render_combat_dust(Renderer* renderer,
   float const animation_time = renderer->get_animation_time();
   auto& visibility = Game::Systems::CameraVisibilityService::instance();
   auto& fog_of_war = Game::Map::VisibilityService::instance();
-  Game::Map::VisibilityService::Snapshot fog_snapshot;
-  if (fog_of_war.is_initialized()) {
-    fog_snapshot = fog_of_war.snapshot();
-  }
+  auto fog_snapshot = fog_of_war.is_initialized() ? fog_of_war.snapshot_ptr() : nullptr;
   auto is_fog_visible = [&fog_snapshot](float world_x, float world_z) -> bool {
-    return fog_snapshot.is_visible_world(world_x, world_z);
+    return fog_snapshot == nullptr ||
+           Game::Map::should_render_combat_effect(*fog_snapshot, world_x, world_z);
   };
 
   auto units = world->get_entities_with<Engine::Core::AttackComponent>();

@@ -45,6 +45,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -97,6 +98,7 @@
 #include "game/systems/capture_system.h"
 #include "game/systems/catapult_attack_system.h"
 #include "game/systems/cleanup_system.h"
+#include "game/systems/civilian_delivery_system.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
@@ -124,6 +126,7 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/systems/victory_service.h"
+#include "game/units/commander_catalog.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
@@ -164,6 +167,7 @@
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 #include "renderer_bootstrap.h"
+#include "visibility_coordinator.h"
 #include "selection_query_service.h"
 #include "utils/resource_utils.h"
 
@@ -200,6 +204,32 @@ auto biome_to_ambient_sound(Game::Map::GroundType ground_type) -> QString {
   default:
     return QStringLiteral("ambient.forest_ambush");
   }
+}
+
+auto nation_audio_tag(Game::Systems::NationID nation_id) -> QString {
+  switch (nation_id) {
+  case Game::Systems::NationID::RomanRepublic:
+    return QStringLiteral("roman");
+  case Game::Systems::NationID::Carthage:
+    return QStringLiteral("carthage");
+  }
+  return QStringLiteral("roman");
+}
+
+auto ambient_state_tag(Engine::Core::AmbientState state) -> QString {
+  switch (state) {
+  case Engine::Core::AmbientState::PEACEFUL:
+    return QStringLiteral("peaceful");
+  case Engine::Core::AmbientState::TENSE:
+    return QStringLiteral("tense");
+  case Engine::Core::AmbientState::COMBAT:
+    return QStringLiteral("combat");
+  case Engine::Core::AmbientState::VICTORY:
+    return QStringLiteral("victory");
+  case Engine::Core::AmbientState::DEFEAT:
+    return QStringLiteral("defeat");
+  }
+  return QStringLiteral("peaceful");
 }
 
 auto render_stage_logging_enabled() -> bool {
@@ -267,6 +297,21 @@ auto classify_wave_direction(const QVector3D& entry_point) -> QString {
   return QStringLiteral("northwest");
 }
 
+auto build_available_commander_entry(const Game::Units::CommanderDefinition& definition,
+                                     bool is_default) -> QVariantMap {
+  QVariantMap entry;
+  entry["id"] = QString::fromStdString(definition.id);
+  entry["troop"] =
+      QString::fromStdString(Game::Units::troop_typeToString(definition.troop_type));
+  entry["display_name"] = QString::fromStdString(definition.display_name);
+  entry["battlefield_role"] = QString::fromStdString(definition.battlefield_role);
+  entry["bonus_summary"] = QString::fromStdString(definition.bonus_summary);
+  entry["passive_aura"] = QString::fromStdString(definition.passive_aura);
+  entry["rally_ability"] = QString::fromStdString(definition.rally_ability);
+  entry["is_default"] = is_default;
+  return entry;
+}
+
 auto build_condition_list(const std::vector<Game::Mission::Condition>& conditions)
     -> QVariantList {
   QVariantList list;
@@ -300,178 +345,14 @@ auto build_condition_list(const std::vector<Game::Mission::Condition>& condition
 
 } // namespace
 
-class GameEngine::RuntimeMode {
-public:
-  virtual ~RuntimeMode() = default;
-  virtual void enter(GameEngine& engine) { (void)engine; }
-  virtual void exit(GameEngine& engine) { (void)engine; }
-  [[nodiscard]] virtual auto apply_time_effects(GameEngine& engine, float dt) -> float {
-    (void)engine;
-    return dt;
-  }
-  virtual void update_simulation(GameEngine& engine, float dt) = 0;
-  virtual void render_mode_effects(GameEngine& engine) { (void)engine; }
-  [[nodiscard]] virtual auto
-  should_render_selected_entity(const GameEngine& engine,
-                                Engine::Core::EntityID id) const -> bool {
-    (void)engine;
-    (void)id;
-    return true;
-  }
-  virtual void trigger_rally(GameEngine& engine) { (void)engine; }
-  virtual void dodge(GameEngine& engine) { (void)engine; }
-  virtual void jump(GameEngine& engine) { (void)engine; }
-  virtual void cycle_lock_on(GameEngine& engine) { (void)engine; }
-  virtual void special_action(GameEngine& engine) { (void)engine; }
-  virtual void vanguard_rush(GameEngine& engine) { (void)engine; }
-  virtual void second_wind(GameEngine& engine) { (void)engine; }
-  virtual void toggle_camera_mode(GameEngine& engine) { (void)engine; }
-};
-
-class GameEngine::RtsRuntimeMode final : public GameEngine::RuntimeMode {
-public:
-  void enter(GameEngine& engine) override {
-    engine.m_control_mode = PlayerControlMode::Rts;
-    engine.m_game_mode = GameMode::Rts;
-    engine.m_control_mode_toggle = &GameEngine::request_enter_commander_control_mode;
-    engine.apply_game_mode_render_policy();
-  }
-
-  void update_simulation(GameEngine& engine, float dt) override {
-    if (engine.m_world != nullptr) {
-      engine.m_world->update(dt);
-    }
-    engine.update_rts_control_mode(dt);
-  }
-};
-
-class GameEngine::CommanderRuntimeMode final : public GameEngine::RuntimeMode {
-public:
-  void enter(GameEngine& engine) override {
-    engine.m_control_mode = PlayerControlMode::Commander;
-    engine.m_game_mode = GameMode::Rpg;
-    engine.m_control_mode_toggle = &GameEngine::request_exit_commander_control_mode;
-    engine.apply_game_mode_render_policy();
-  }
-
-  void exit(GameEngine& engine) override {
-    engine.m_rpg_hit_stop_timer = 0.0F;
-    engine.m_rpg_telegraphs.clear();
-  }
-
-  [[nodiscard]] auto apply_time_effects(GameEngine& engine,
-                                        float dt) -> float override {
-    if (!engine.m_runtime.paused && engine.m_rpg_hit_stop_timer > 0.0F) {
-      engine.m_rpg_hit_stop_timer -= dt;
-      if (engine.m_rpg_hit_stop_timer < 0.0F) {
-        engine.m_rpg_hit_stop_timer = 0.0F;
-      } else {
-        dt *= 0.10F;
-      }
-    }
-    return dt;
-  }
-
-  void update_simulation(GameEngine& engine, float dt) override {
-    engine.update_commander_control_mode(dt);
-    if (engine.m_world != nullptr) {
-      engine.m_world->update(dt);
-    }
-  }
-
-  void render_mode_effects(GameEngine& engine) override {
-    if (engine.m_world == nullptr || engine.m_renderer == nullptr ||
-        engine.m_controlled_commander_id == 0) {
-      return;
-    }
-
-    Engine::Core::EntityID locked_target_id =
-        engine.m_commander_control.locked_target_id();
-    if (auto* commander =
-            engine.m_world->get_entity(engine.m_controlled_commander_id)) {
-      if (auto* rpg_targets =
-              commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
-        locked_target_id = rpg_targets->explicit_lock_target_id;
-      }
-    }
-    engine.m_rpg_telegraphs.render(engine.m_renderer.get(),
-                                   engine.m_world.get(),
-                                   engine.m_controlled_commander_id,
-                                   locked_target_id,
-                                   engine.m_renderer->get_animation_time());
-  }
-
-  [[nodiscard]] auto
-  should_render_selected_entity(const GameEngine& engine,
-                                Engine::Core::EntityID id) const -> bool override {
-    return id != engine.m_controlled_commander_id;
-  }
-
-  void trigger_rally(GameEngine& engine) override {
-    auto* commander = engine.controlled_commander_entity();
-    if (commander == nullptr) {
-      engine.exit_commander_control_mode();
-      return;
-    }
-
-    auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
-    if (commander_data == nullptr) {
-      engine.exit_commander_control_mode();
-      return;
-    }
-
-    commander_data->rally_requested = true;
-  }
-
-  void dodge(GameEngine& engine) override {
-    engine.m_commander_control.request_dodge();
-  }
-  void jump(GameEngine& engine) override { engine.m_commander_control.request_jump(); }
-
-  void cycle_lock_on(GameEngine& engine) override {
-    if (engine.m_world == nullptr) {
-      return;
-    }
-    engine.m_commander_control.cycle_lock_on_target(*engine.m_world,
-                                                    engine.m_controlled_commander_id,
-                                                    engine.m_runtime.local_owner_id);
-  }
-
-  void special_action(GameEngine& engine) override {
-    engine.m_commander_control.special_action();
-  }
-
-  void vanguard_rush(GameEngine& engine) override {
-    engine.m_commander_control.request_vanguard_rush();
-  }
-
-  void second_wind(GameEngine& engine) override {
-    engine.m_commander_control.request_second_wind();
-  }
-
-  void toggle_camera_mode(GameEngine& engine) override {
-    if (engine.m_world == nullptr) {
-      return;
-    }
-    engine.m_commander_control.toggle_close_camera_mode(
-        *engine.m_world,
-        engine.m_controlled_commander_id,
-        engine.m_runtime.local_owner_id);
-  }
-};
-
 GameEngine::GameEngine(QObject* parent)
     : QObject(parent)
-    , m_active_runtime_mode(m_rts_runtime_mode.get())
     , m_commander_input(this, this)
     , m_selected_units_model(new SelectedUnitsModel(this, this)) {
 
   Game::Systems::NationRegistry::instance().initialize_defaults();
   Game::Systems::TroopCountRegistry::instance().initialize();
   Game::Systems::GlobalStatsRegistry::instance().initialize();
-
-  m_rts_runtime_mode = std::make_unique<RtsRuntimeMode>();
-  m_commander_runtime_mode = std::make_unique<CommanderRuntimeMode>();
 
   m_world = std::make_unique<Engine::Core::World>();
 
@@ -480,6 +361,7 @@ GameEngine::GameEngine(QObject* parent)
   m_rts_camera = std::move(rendering.camera);
   m_commander_camera = std::make_unique<Render::GL::Camera>(*m_rts_camera);
   set_active_camera(m_rts_camera.get());
+  enter_rts_runtime_mode();
   m_terrain_scene = std::move(rendering.terrain_scene);
   m_surface = std::move(rendering.surface);
   m_features = std::move(rendering.features);
@@ -487,7 +369,6 @@ GameEngine::GameEngine(QObject* parent)
   m_fog = std::move(rendering.fog);
   m_boundary_fog = std::move(rendering.boundary_fog);
   m_rain = std::move(rendering.rain);
-  apply_game_mode_render_policy();
 
   RendererBootstrap::initialize_world_systems(*m_world);
 
@@ -547,6 +428,8 @@ GameEngine::GameEngine(QObject* parent)
   m_audio_systemProxy = std::make_unique<App::Models::AudioSystemProxy>(this);
 
   m_minimap_manager = std::make_unique<MinimapManager>();
+  m_visibility_coordinator = std::make_unique<VisibilityCoordinator>();
+  m_visibility_coordinator->set_presenters(m_fog.get(), m_minimap_manager.get());
   m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
   m_input_handler = std::make_unique<InputCommandHandler>(m_world.get(),
@@ -580,60 +463,8 @@ GameEngine::GameEngine(QObject* parent)
       std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
   if (m_audio_event_handler->initialize()) {
     qInfo() << "AudioEventHandler initialized successfully";
-
-    auto load_voice = [this](const char* key, const char* sound_id) {
-      m_audio_event_handler->load_unit_voice_mapping(key, sound_id);
-    };
-
-    const std::pair<const char*, const char*> voice_mappings[] = {
-        {"archer", "archer_voice"},
-        {"swordsman", "swordsman_voice"},
-        {"spearman", "spearman_voice"},
-        {"roman.archer", "roman.archer"},
-        {"roman.swordsman", "roman.swordsman"},
-        {"roman.spearman", "roman.spearman"},
-        {"roman.horse_archer", "roman.horse_archer"},
-        {"roman.horse_spearman", "roman.horse_spearman"},
-        {"roman.horse_swordsman", "roman.horse_swordsman"},
-        {"roman.healer", "roman.healer"},
-        {"roman.catapult", "roman.catapult"},
-        {"roman.ballista", "roman.ballista"},
-        {"roman.builder", "roman.builder"},
-        {"carthage.archer", "carthage.archer"},
-        {"carthage.swordsman", "carthage.swordsman"},
-        {"carthage.spearman", "carthage.spearman"},
-        {"carthage.horse_archer", "carthage.horse_archer"},
-        {"carthage.horse_spearman", "carthage.horse_spearman"},
-        {"carthage.horse_swordsman", "carthage.horse_swordsman"},
-        {"carthage.healer", "carthage.healer"},
-        {"carthage.catapult", "carthage.catapult"},
-        {"carthage.ballista", "carthage.ballista"},
-        {"carthage.elephant", "carthage.elephant"},
-        {"roman.roman_legion_organizer", "voice.commander.marcellus"},
-        {"roman.roman_veteran_consul", "voice.commander.scipio"},
-        {"roman.roman_field_commander", "voice.commander.fabius"},
-        {"carthage.carthage_mercenary_broker", "voice.commander.marcellus"},
-        {"carthage.carthage_cavalry_patron", "voice.commander.scipio"},
-        {"carthage.carthage_elephant_master", "voice.commander.fabius"},
-    };
-    for (const auto& [key, sound_id] : voice_mappings) {
-      load_voice(key, sound_id);
-    }
-
-    m_audio_event_handler->load_ambient_music(Engine::Core::AmbientState::PEACEFUL,
-                                              "music_peaceful");
-    m_audio_event_handler->load_ambient_music(Engine::Core::AmbientState::TENSE,
-                                              "music_tense");
-    m_audio_event_handler->load_ambient_music(Engine::Core::AmbientState::COMBAT,
-                                              "music_combat");
-    m_audio_event_handler->load_ambient_music(Engine::Core::AmbientState::VICTORY,
-                                              "music_victory");
-    m_audio_event_handler->load_ambient_music(Engine::Core::AmbientState::DEFEAT,
-                                              "music_defeat");
-
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AmbientStateChangedEvent(Engine::Core::AmbientState::PEACEFUL,
-                                               Engine::Core::AmbientState::PEACEFUL));
+    AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Screen);
+    configure_audio_manifest_mappings();
 
     qInfo() << "Audio mappings configured";
   } else {
@@ -866,30 +697,109 @@ void GameEngine::on_right_double_click(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
+
+  if (m_right_mouse_gesture.placement_was_active_on_press) {
+    m_right_mouse_gesture.double_click_handled = true;
+    return;
+  }
+
+  bool const started_formation_placement =
+      m_right_mouse_gesture.started_formation_placement && m_input_handler &&
+      m_input_handler->is_placing_formation();
+  if (started_formation_placement) {
+    m_input_handler->on_formation_cancel();
+  } else if (m_right_mouse_gesture.suppress_release_click || is_placing_construction()) {
+    m_right_mouse_gesture.double_click_handled = true;
+    return;
+  }
+
   if (m_input_handler) {
     m_input_handler->on_right_double_click(
         sx, sy, m_runtime.local_owner_id, m_viewport);
   }
+  m_right_mouse_gesture.double_click_handled = true;
 }
 
-void GameEngine::on_right_press(qreal sx, qreal sy) {
+auto GameEngine::on_right_press(qreal sx, qreal sy) -> bool {
+  if (m_window == nullptr) {
+    return false;
+  }
+  ensure_initialized();
+  m_right_mouse_gesture.reset();
+  m_right_mouse_gesture.active = true;
+  m_right_mouse_gesture.press_position = QPointF(sx, sy);
+  m_right_mouse_gesture.placement_was_active_on_press =
+      is_placing_formation() || is_placing_construction();
+
+  if (is_placing_formation()) {
+    on_formation_cancel();
+    m_right_mouse_gesture.suppress_release_click = true;
+    return true;
+  }
+  if (is_placing_construction()) {
+    on_construction_cancel();
+    m_right_mouse_gesture.suppress_release_click = true;
+    return true;
+  }
+  if (m_input_handler) {
+    m_right_mouse_gesture.suppress_release_click =
+        m_input_handler->on_right_press(sx, sy, m_runtime.local_owner_id, m_viewport);
+    m_right_mouse_gesture.started_formation_placement =
+        !m_right_mouse_gesture.placement_was_active_on_press &&
+        m_right_mouse_gesture.suppress_release_click &&
+        m_input_handler->is_placing_formation();
+    return m_right_mouse_gesture.suppress_release_click;
+  }
+  return false;
+}
+
+void GameEngine::on_right_move(qreal sx, qreal sy) {
   if (m_window == nullptr) {
     return;
   }
   ensure_initialized();
-  if (m_input_handler) {
-    m_input_handler->on_right_press(sx, sy, m_runtime.local_owner_id, m_viewport);
+  if (!m_right_mouse_gesture.active) {
+    return;
   }
+
+  QPointF const delta = QPointF(sx, sy) - m_right_mouse_gesture.press_position;
+  if ((delta.x() * delta.x() + delta.y() * delta.y()) > 36.0) {
+    m_right_mouse_gesture.dragged = true;
+  }
+
+  if (m_input_handler && m_input_handler->is_placing_formation()) {
+    m_input_handler->on_right_drag_orient(sx, sy, m_viewport);
+  }
+}
+
+void GameEngine::on_right_release(qreal sx, qreal sy) {
+  if (m_window == nullptr) {
+    m_right_mouse_gesture.reset();
+    return;
+  }
+  ensure_initialized();
+
+  if (m_right_mouse_gesture.double_click_handled) {
+    m_right_mouse_gesture.reset();
+    return;
+  }
+
+  if (m_input_handler && m_input_handler->is_placing_formation()) {
+    m_input_handler->on_formation_confirm();
+    m_right_mouse_gesture.reset();
+    return;
+  }
+
+  if (!m_right_mouse_gesture.dragged && !m_right_mouse_gesture.suppress_release_click &&
+      m_input_handler) {
+    m_input_handler->on_right_click(sx, sy, m_runtime.local_owner_id, m_viewport);
+  }
+
+  m_right_mouse_gesture.reset();
 }
 
 void GameEngine::on_right_drag_orient(qreal sx, qreal sy) {
-  if (m_window == nullptr) {
-    return;
-  }
-  ensure_initialized();
-  if (m_input_handler) {
-    m_input_handler->on_right_drag_orient(sx, sy, m_viewport);
-  }
+  on_right_move(sx, sy);
 }
 
 void GameEngine::on_attack_click(qreal sx, qreal sy) {
@@ -960,6 +870,17 @@ void GameEngine::on_build_command() {
   }
   ensure_initialized();
   m_cursor_manager->set_mode(CursorMode::Build);
+}
+
+void GameEngine::on_civilian_delivery_click(qreal sx, qreal sy) {
+  if (!m_input_handler || (m_camera == nullptr)) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_civilian_delivery_click(sx,
+                                              sy,
+                                              m_runtime.local_owner_id,
+                                              m_viewport);
 }
 
 void GameEngine::on_guard_click(qreal sx, qreal sy) {
@@ -1243,10 +1164,7 @@ bool GameEngine::enter_commander_control_mode() {
   reset_commander_input();
   set_active_camera(m_commander_camera.get());
 
-  m_active_runtime_mode = m_commander_runtime_mode.get();
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->enter(*this);
-  }
+  enter_commander_runtime_mode();
   if (auto* rpg = Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(
           commander)) {
     auto* unit = commander->get_component<Engine::Core::UnitComponent>();
@@ -1285,15 +1203,10 @@ bool GameEngine::enter_commander_control_mode() {
 }
 
 void GameEngine::exit_commander_control_mode() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->exit(*this);
-  }
+  exit_commander_runtime_mode();
   reset_commander_input();
   clear_controlled_commander_state();
-  m_active_runtime_mode = m_rts_runtime_mode.get();
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->enter(*this);
-  }
+  enter_rts_runtime_mode();
   m_controlled_commander_id = 0;
 
   set_active_camera(m_rts_camera.get());
@@ -1317,8 +1230,29 @@ void GameEngine::request_exit_commander_control_mode() {
   exit_commander_control_mode();
 }
 
+void GameEngine::enter_rts_runtime_mode() {
+  m_control_mode = PlayerControlMode::Rts;
+  m_game_mode = GameMode::Rts;
+  apply_game_mode_render_policy();
+}
+
+void GameEngine::enter_commander_runtime_mode() {
+  m_control_mode = PlayerControlMode::Commander;
+  m_game_mode = GameMode::Rpg;
+  apply_game_mode_render_policy();
+}
+
+void GameEngine::exit_commander_runtime_mode() {
+  m_rpg_hit_stop_timer = 0.0F;
+  m_rpg_telegraphs.clear();
+}
+
 void GameEngine::toggle_commander_control_mode() {
-  (this->*m_control_mode_toggle)();
+  if (m_control_mode == PlayerControlMode::Commander) {
+    request_exit_commander_control_mode();
+    return;
+  }
+  request_enter_commander_control_mode();
 }
 
 void GameEngine::commander_key_down(int key, int modifiers) {
@@ -1368,51 +1302,68 @@ void GameEngine::commander_secondary_action_up() {
 }
 
 void GameEngine::commander_trigger_rally() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->trigger_rally(*this);
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return;
   }
+
+  auto* commander = controlled_commander_entity();
+  if (commander == nullptr) {
+    exit_commander_control_mode();
+    return;
+  }
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  if (commander_data == nullptr) {
+    exit_commander_control_mode();
+    return;
+  }
+  commander_data->rally_requested = true;
 }
 
 void GameEngine::commander_dodge() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->dodge(*this);
+  if (m_control_mode == PlayerControlMode::Commander) {
+    m_commander_control.request_dodge();
   }
 }
 
 void GameEngine::commander_jump() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->jump(*this);
+  if (m_control_mode == PlayerControlMode::Commander) {
+    m_commander_control.request_jump();
   }
 }
 
 void GameEngine::commander_cycle_lock_on() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->cycle_lock_on(*this);
+  if (m_control_mode != PlayerControlMode::Commander || m_world == nullptr) {
+    return;
   }
+  m_commander_control.cycle_lock_on_target(
+      *m_world, m_controlled_commander_id, m_runtime.local_owner_id);
 }
 
 void GameEngine::commander_special_action() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->special_action(*this);
+  if (m_control_mode == PlayerControlMode::Commander) {
+    m_commander_control.special_action();
   }
 }
 
 void GameEngine::commander_vanguard_rush() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->vanguard_rush(*this);
+  if (m_control_mode == PlayerControlMode::Commander) {
+    m_commander_control.request_vanguard_rush();
   }
 }
 
 void GameEngine::commander_second_wind() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->second_wind(*this);
+  if (m_control_mode == PlayerControlMode::Commander) {
+    m_commander_control.request_second_wind();
   }
 }
 
 void GameEngine::commander_toggle_camera_mode() {
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->toggle_camera_mode(*this);
+  if (m_control_mode != PlayerControlMode::Commander || m_world == nullptr) {
+    return;
   }
+  m_commander_control.toggle_close_camera_mode(
+      *m_world, m_controlled_commander_id, m_runtime.local_owner_id);
 }
 
 void GameEngine::commander_mouse_move(qreal dx, qreal dy) {
@@ -1558,6 +1509,24 @@ auto GameEngine::enemy_troops_defeated() const -> int {
   return m_enemy_troops_defeated;
 }
 
+auto GameEngine::scene_context() const -> AppSceneContext {
+  return AppSceneContext{
+      .world = m_world.get(),
+      .renderer = m_renderer.get(),
+      .active_camera = m_camera,
+      .ground = m_surface ? m_surface->ground() : nullptr,
+      .terrain = m_surface ? m_surface->terrain() : nullptr,
+      .features = m_features.get(),
+      .scatter = m_scatter.get(),
+      .fog = m_fog.get(),
+      .boundary_fog = m_boundary_fog.get(),
+      .rain = m_rain.get(),
+      .minimap_manager = m_minimap_manager.get(),
+      .visibility_coordinator = m_visibility_coordinator.get(),
+      .victory_service = m_victory_service.get(),
+      .rain_manager = m_rain_manager.get()};
+}
+
 auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
   QVariantMap result;
 
@@ -1672,6 +1641,64 @@ void GameEngine::update_commander_control_mode(float dt) {
       m_world.get(), m_controlled_commander_id, dt);
 }
 
+auto GameEngine::apply_runtime_time_effects(float dt) -> float {
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return dt;
+  }
+
+  if (!m_runtime.paused && m_rpg_hit_stop_timer > 0.0F) {
+    m_rpg_hit_stop_timer -= dt;
+    if (m_rpg_hit_stop_timer < 0.0F) {
+      m_rpg_hit_stop_timer = 0.0F;
+    } else {
+      dt *= 0.10F;
+    }
+  }
+  return dt;
+}
+
+void GameEngine::update_active_runtime_simulation(float dt) {
+  if (m_world == nullptr) {
+    return;
+  }
+
+  if (m_control_mode == PlayerControlMode::Commander) {
+    update_commander_control_mode(dt);
+    m_world->update(dt);
+    return;
+  }
+
+  m_world->update(dt);
+  update_rts_control_mode(dt);
+}
+
+auto GameEngine::should_render_selected_entity(Engine::Core::EntityID id) const
+    -> bool {
+  return m_control_mode != PlayerControlMode::Commander ||
+         id != m_controlled_commander_id;
+}
+
+void GameEngine::render_runtime_mode_effects() {
+  if (m_control_mode != PlayerControlMode::Commander || m_world == nullptr ||
+      m_renderer == nullptr || m_controlled_commander_id == 0) {
+    return;
+  }
+
+  Engine::Core::EntityID locked_target_id = m_commander_control.locked_target_id();
+  if (auto* commander = m_world->get_entity(m_controlled_commander_id)) {
+    if (auto* rpg_targets =
+            commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
+      locked_target_id = rpg_targets->explicit_lock_target_id;
+    }
+  }
+
+  m_rpg_telegraphs.render(m_renderer.get(),
+                          m_world.get(),
+                          m_controlled_commander_id,
+                          locked_target_id,
+                          m_renderer->get_animation_time());
+}
+
 void GameEngine::update(float dt) {
 
   if (m_runtime.loading) {
@@ -1682,119 +1709,37 @@ void GameEngine::update(float dt) {
     dt = 0.0F;
   } else {
     dt *= m_runtime.time_scale;
-    if (m_active_runtime_mode != nullptr) {
-      dt = m_active_runtime_mode->apply_time_effects(*this, dt);
-    }
+    dt = apply_runtime_time_effects(dt);
   }
 
   update_mission_waves(dt);
 
-  if (!m_runtime.paused && !m_runtime.loading) {
-    if (m_ambient_state_manager) {
-      m_ambient_state_manager->update(dt,
-                                      m_world.get(),
-                                      m_runtime.local_owner_id,
-                                      m_entity_cache,
-                                      m_runtime.victory_state);
-    }
-  }
+  RuntimeFrameState frame_state{
+      .local_owner_id = m_runtime.local_owner_id,
+      .spectator_mode = m_level.is_spectator_mode,
+      .viewport_width = m_viewport.width,
+      .viewport_height = m_viewport.height,
+      .selection_refresh_enabled = (m_selected_units_model != nullptr),
+      .selection_refresh_counter = m_runtime.selection_refresh_counter};
+  const FrameUpdateCallbacks callbacks{
+      .on_minimap_image_changed = [this]() { emit minimap_image_changed(); },
+      .on_selected_units_data_changed = [this]() { emit selected_units_data_changed(); }};
 
-  if (m_renderer) {
-    m_renderer->update_animation_time(dt);
-  }
-
-  if (m_camera != nullptr) {
-    m_camera->update(dt);
-  }
-
-  if (m_world) {
-
-    log_render_stage_once(
-        "simulation-update",
-        QStringLiteral("world systems run before render; combat queries rebuild here"));
-    if (m_active_runtime_mode != nullptr) {
-      m_active_runtime_mode->update_simulation(*this, dt);
-    }
-
-    auto& visibility_service = Game::Map::VisibilityService::instance();
-    if (visibility_service.is_initialized() && !m_level.is_spectator_mode) {
-      m_runtime.visibility_update_accumulator += dt;
-      const float visibility_update_interval =
-          Game::GameConfig::instance().gameplay().visibility_update_interval;
-      if (m_runtime.visibility_update_accumulator >= visibility_update_interval) {
-        m_runtime.visibility_update_accumulator = 0.0F;
-        visibility_service.update(*m_world, m_runtime.local_owner_id);
-      }
-
-      const auto new_version = visibility_service.version();
-      if (new_version != m_runtime.visibility_version) {
-        const auto visibility_cells = visibility_service.snapshot_cells();
-        if (m_fog) {
-          m_fog->update_mask(visibility_service.get_width(),
-                             visibility_service.get_height(),
-                             visibility_service.get_tile_size(),
-                             visibility_cells);
-        }
-        if (m_minimap_manager) {
-          m_minimap_manager->update_fog(visibility_service.get_width(),
-                                        visibility_service.get_height(),
-                                        visibility_cells,
-                                        new_version);
-        }
-        m_runtime.visibility_version = new_version;
-      }
-    } else if (m_runtime.visibility_version != 0) {
-      if (m_fog) {
-        m_fog->update_mask(0, 0, 1.0F, {});
-      }
-      if (m_minimap_manager) {
-        m_minimap_manager->clear_fog();
-      }
-      m_runtime.visibility_version = 0;
-    }
-
-    if (m_minimap_manager) {
-      auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-      m_minimap_manager->update_units(
-          m_world.get(), selection_system, m_runtime.local_owner_id);
-      m_minimap_manager->update_camera_viewport(m_camera,
-                                                static_cast<float>(m_viewport.width),
-                                                static_cast<float>(m_viewport.height));
-
-      if (m_minimap_manager->consume_dirty_flag()) {
-        emit minimap_image_changed();
-      }
-    }
-  }
-
-  if (m_rain_manager) {
-    m_rain_manager->update(dt);
-    if (m_rain) {
-      m_rain->set_enabled(m_rain_manager->is_enabled());
-      m_rain->set_intensity(m_rain_manager->get_intensity());
-      m_rain->set_weather_type(m_rain_manager->get_weather_type());
-      m_rain->set_wind_strength(m_rain_manager->get_wind_strength());
-      if (m_camera != nullptr) {
-        m_rain->set_camera_position(m_camera->get_position());
-      }
-    }
-  }
-
-  if (m_victory_service && m_world) {
-    m_victory_service->update(*m_world, dt);
-  }
-
-  if (m_selected_units_model != nullptr) {
-    auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-    if ((selection_system != nullptr) &&
-        !selection_system->get_selected_units().empty()) {
-      m_runtime.selection_refresh_counter++;
-      if (m_runtime.selection_refresh_counter >= 15) {
-        m_runtime.selection_refresh_counter = 0;
-        emit selected_units_data_changed();
-      }
-    }
-  }
+  m_frame_orchestrator.update(
+      scene_context(),
+      frame_state,
+      m_entity_cache,
+      (!m_runtime.paused && !m_runtime.loading) ? m_ambient_state_manager.get() : nullptr,
+      m_runtime.victory_state,
+      dt,
+      callbacks,
+      [this](float step_dt) {
+        log_render_stage_once(
+            "simulation-update",
+            QStringLiteral("world systems run before render; combat queries rebuild here"));
+        update_active_runtime_simulation(step_dt);
+      });
+  m_runtime.selection_refresh_counter = frame_state.selection_refresh_counter;
 }
 
 void GameEngine::render(int pixel_width, int pixel_height) {
@@ -1819,8 +1764,7 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     std::vector<unsigned int> ids;
     ids.reserve(sel.size());
     for (const auto id : sel) {
-      if (m_active_runtime_mode != nullptr &&
-          !m_active_runtime_mode->should_render_selected_entity(*this, id)) {
+      if (!should_render_selected_entity(id)) {
         continue;
       }
       ids.push_back(id);
@@ -1875,9 +1819,7 @@ void GameEngine::render_game_effects() {
   Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
   Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
 
-  if (m_active_runtime_mode != nullptr) {
-    m_active_runtime_mode->render_mode_effects(*this);
-  }
+  render_runtime_mode_effects();
 
   std::optional<QVector3D> preview_waypoint;
   if (m_command_controller && m_command_controller->has_patrol_first_waypoint()) {
@@ -2003,8 +1945,16 @@ void GameEngine::update_civilian_delivery_availability() {
         (hovered_unit != nullptr) &&
         hovered_unit->owner_id == m_runtime.local_owner_id &&
         hovered_unit->spawn_type == Game::Units::SpawnType::Barracks;
+    auto* hovered_production =
+        hovered != nullptr ? hovered->get_component<Engine::Core::ProductionComponent>()
+                           : nullptr;
+    const bool barracks_has_room =
+        (hovered_production != nullptr) &&
+        (hovered_production->manpower_available +
+             Game::Systems::k_civilian_delivery_population_grant <=
+         hovered_production->max_units);
 
-    if (hovered_friendly_barracks) {
+    if (hovered_friendly_barracks && barracks_has_room) {
       auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
       if (selection_system != nullptr) {
         for (const auto id : selection_system->get_selected_units()) {
@@ -2260,6 +2210,7 @@ void GameEngine::on_minimap_right_click(qreal mx,
   }
 
   Game::Systems::CommandService::MoveOptions opts;
+  opts.kind = Game::Systems::MoveOrderKind::FormationMove;
   opts.group_move = selected.size() > 1;
   opts.retry_individual_on_group_failure = selected.size() > 1;
   opts.preserve_formation_mode = formation_result.used_tactical_formation;
@@ -2273,6 +2224,194 @@ auto GameEngine::selected_units_model() -> QAbstractItemModel* {
 
 auto GameEngine::audio_system() -> QObject* {
   return m_audio_systemProxy.get();
+}
+
+void GameEngine::set_audio_frontend_context(const QString& context) {
+  const QString normalized = context.trimmed().toLower();
+  if (m_audio_frontend_context == normalized) {
+    return;
+  }
+
+  m_audio_frontend_context = normalized;
+  apply_frontend_music_context(normalized);
+}
+
+void GameEngine::apply_frontend_music_context(const QString& context) {
+  if (context.isEmpty() || context == QStringLiteral("battle")) {
+    AudioSystem::get_instance().stop_music();
+    return;
+  }
+
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Screen);
+
+  QMap<QString, QString> tags;
+  tags.insert(QStringLiteral("screen_context"), context);
+  tags.insert(QStringLiteral("variant"), QStringLiteral("primary"));
+
+  QString track_id =
+      AudioResourceLoader::find_first_resource_id(AudioCategory::MUSIC, tags);
+  if (track_id.isEmpty()) {
+    tags.remove(QStringLiteral("variant"));
+    track_id = AudioResourceLoader::find_first_resource_id(AudioCategory::MUSIC, tags);
+  }
+  if (track_id.isEmpty()) {
+    return;
+  }
+
+  AudioResourceLoader::ensure_audio_resource_loaded(track_id);
+  AudioSystem::get_instance().play_music(track_id.toStdString(), 1.0F, true);
+}
+
+void GameEngine::configure_audio_manifest_mappings() {
+  configure_audio_voice_mappings();
+  configure_audio_ambient_mappings();
+}
+
+void GameEngine::configure_audio_voice_mappings() {
+  if (!m_audio_event_handler) {
+    return;
+  }
+
+  static constexpr const char* k_common_units[] = {
+      "archer",
+      "swordsman",
+      "spearman",
+      "horse_archer",
+      "horse_spearman",
+      "horse_swordsman",
+      "healer",
+      "catapult",
+      "ballista",
+      "builder",
+      "elephant",
+  };
+
+  static constexpr std::pair<Game::Systems::NationID, const char*> k_factions[] = {
+      {Game::Systems::NationID::RomanRepublic, "roman"},
+      {Game::Systems::NationID::Carthage, "carthage"},
+  };
+
+  for (const auto& [nation_id, faction_name] : k_factions) {
+    const QString faction_tag = nation_audio_tag(nation_id);
+    for (const char* unit_name : k_common_units) {
+      QMap<QString, QString> tags;
+      tags.insert(QStringLiteral("faction"), faction_tag);
+      tags.insert(QStringLiteral("unit"), QString::fromLatin1(unit_name));
+
+      const QString track_id =
+          AudioResourceLoader::find_first_resource_id(AudioCategory::VOICE, tags);
+      if (!track_id.isEmpty()) {
+        AudioResourceLoader::ensure_audio_resource_loaded(track_id);
+        const std::string key =
+            std::string(faction_name) + "." + std::string(unit_name);
+        m_audio_event_handler->load_unit_voice_mapping(key, track_id.toStdString());
+      }
+    }
+  }
+
+  static constexpr const char* k_commander_units[] = {
+      "roman_legion_organizer",
+      "roman_veteran_consul",
+      "roman_field_commander",
+      "carthage_mercenary_broker",
+      "carthage_cavalry_patron",
+      "carthage_elephant_master",
+  };
+
+  for (const char* unit_name : k_commander_units) {
+    QMap<QString, QString> tags;
+    tags.insert(QStringLiteral("unit_def"), QString::fromLatin1(unit_name));
+    const QString track_id =
+        AudioResourceLoader::find_first_resource_id(AudioCategory::VOICE, tags);
+    if (!track_id.isEmpty()) {
+      AudioResourceLoader::ensure_audio_resource_loaded(track_id);
+      m_audio_event_handler->load_unit_voice_mapping(unit_name, track_id.toStdString());
+    }
+  }
+}
+
+void GameEngine::configure_audio_ambient_mappings() {
+  if (!m_audio_event_handler) {
+    return;
+  }
+
+  QString faction_tag = QStringLiteral("roman");
+  if (m_runtime.local_owner_id != 0) {
+    if (const auto* nation =
+            Game::Systems::NationRegistry::instance().get_nation_for_player(
+                m_runtime.local_owner_id);
+        nation != nullptr) {
+      faction_tag = nation_audio_tag(nation->id);
+    }
+  }
+
+  const auto resolve_music = [&](Engine::Core::AmbientState state) {
+    QMap<QString, QString> tags;
+    tags.insert(QStringLiteral("ambient_state"), ambient_state_tag(state));
+    if (state == Engine::Core::AmbientState::VICTORY ||
+        state == Engine::Core::AmbientState::DEFEAT) {
+      tags.insert(QStringLiteral("faction"), faction_tag);
+    }
+
+    QString track_id =
+        AudioResourceLoader::find_first_resource_id(AudioCategory::MUSIC, tags);
+    if (track_id.isEmpty() && tags.contains(QStringLiteral("faction"))) {
+      tags.remove(QStringLiteral("faction"));
+      track_id =
+          AudioResourceLoader::find_first_resource_id(AudioCategory::MUSIC, tags);
+    }
+    return track_id;
+  };
+
+  static constexpr Engine::Core::AmbientState k_states[] = {
+      Engine::Core::AmbientState::PEACEFUL,
+      Engine::Core::AmbientState::TENSE,
+      Engine::Core::AmbientState::COMBAT,
+      Engine::Core::AmbientState::VICTORY,
+      Engine::Core::AmbientState::DEFEAT,
+  };
+
+  for (Engine::Core::AmbientState state : k_states) {
+    const QString track_id = resolve_music(state);
+    if (!track_id.isEmpty()) {
+      m_audio_event_handler->load_ambient_music(state, track_id.toStdString());
+    }
+  }
+}
+
+void GameEngine::ensure_result_audio_ready(const QString& state) {
+  Engine::Core::AmbientState ambient_state;
+  if (state == QStringLiteral("victory")) {
+    ambient_state = Engine::Core::AmbientState::VICTORY;
+  } else if (state == QStringLiteral("defeat")) {
+    ambient_state = Engine::Core::AmbientState::DEFEAT;
+  } else {
+    return;
+  }
+
+  configure_audio_ambient_mappings();
+
+  QMap<QString, QString> tags;
+  tags.insert(QStringLiteral("ambient_state"), ambient_state_tag(ambient_state));
+
+  if (m_runtime.local_owner_id != 0) {
+    if (const auto* nation =
+            Game::Systems::NationRegistry::instance().get_nation_for_player(
+                m_runtime.local_owner_id);
+        nation != nullptr) {
+      tags.insert(QStringLiteral("faction"), nation_audio_tag(nation->id));
+    }
+  }
+
+  QString track_id =
+      AudioResourceLoader::find_first_resource_id(AudioCategory::MUSIC, tags);
+  if (track_id.isEmpty() && tags.contains(QStringLiteral("faction"))) {
+    tags.remove(QStringLiteral("faction"));
+    track_id = AudioResourceLoader::find_first_resource_id(AudioCategory::MUSIC, tags);
+  }
+  if (!track_id.isEmpty()) {
+    AudioResourceLoader::ensure_audio_resource_loaded(track_id);
+  }
 }
 
 auto GameEngine::has_units_selected() const -> bool {
@@ -2648,6 +2787,43 @@ auto GameEngine::available_nations() const -> QVariantList {
   return nations;
 }
 
+auto GameEngine::available_commanders(const QString& nation_id) const -> QVariantList {
+  QVariantList commanders;
+  const auto parsed_nation =
+      Game::Systems::nation_id_from_string(nation_id.toStdString());
+  const auto nation = parsed_nation.value_or(
+      Game::Systems::NationRegistry::instance().default_nation_id());
+  const QString default_troop =
+      App::Core::resolve_commander_troop(nation_id, std::nullopt);
+  auto definitions = Game::Units::commander_definitions_for_nation(nation);
+  std::stable_sort(definitions.begin(),
+                   definitions.end(),
+                   [&default_troop](const Game::Units::CommanderDefinition* lhs,
+                                    const Game::Units::CommanderDefinition* rhs) {
+                     const bool lhs_default =
+                         lhs != nullptr &&
+                         QString::fromStdString(
+                             Game::Units::troop_typeToString(lhs->troop_type)) ==
+                             default_troop;
+                     const bool rhs_default =
+                         rhs != nullptr &&
+                         QString::fromStdString(
+                             Game::Units::troop_typeToString(rhs->troop_type)) ==
+                             default_troop;
+                     return lhs_default && !rhs_default;
+                   });
+  for (const auto* definition : definitions) {
+    if (definition == nullptr) {
+      continue;
+    }
+    const QString troop =
+        QString::fromStdString(Game::Units::troop_typeToString(definition->troop_type));
+    commanders.append(build_available_commander_entry(
+        *definition, troop.compare(default_troop, Qt::CaseInsensitive) == 0));
+  }
+  return commanders;
+}
+
 auto GameEngine::available_campaigns() const -> QVariantList {
   return m_campaign_manager ? m_campaign_manager->available_campaigns()
                             : QVariantList();
@@ -2699,7 +2875,7 @@ void GameEngine::apply_mission_ambience(const Game::Mission::MissionDefinition* 
   }
 
   AudioSystem::get_instance().play_sound(
-      ambience_id.toStdString(), 0.35F, true, 1, AudioCategory::SFX);
+      ambience_id.toStdString(), 1.0F, true, 1, AudioCategory::AMBIENCE);
   m_current_ambient_sound_id = ambience_id;
 }
 
@@ -2731,6 +2907,9 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
   player_one.insert("colorIndex", 0);
   player_one.insert("team_id", 0);
   player_one.insert("nationId", mission.player_setup.nation);
+  player_one.insert("commanderTroop",
+                    App::Core::resolve_commander_troop(mission.player_setup.nation,
+                                                       mission.player_setup.commander_troop));
   player_one.insert("isHuman", true);
   player_configs.append(player_one);
 
@@ -2751,6 +2930,9 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
 
     ai_player.insert("team_id", team_id);
     ai_player.insert("nationId", ai_setup.nation);
+    ai_player.insert("commanderTroop",
+                     App::Core::resolve_commander_troop(ai_setup.nation,
+                                                        ai_setup.commander_troop));
     ai_player.insert("isHuman", false);
     player_configs.append(ai_player);
     player_id++;
@@ -2903,21 +3085,7 @@ void GameEngine::perform_skirmish_load(const QString& map_path,
   }
 
   LevelOrchestrator orchestrator;
-  LevelOrchestrator::RendererRefs const renderers{
-      m_renderer.get(),
-      m_camera,
-      m_surface ? m_surface->ground() : nullptr,
-      m_surface ? m_surface->terrain() : nullptr,
-      m_features.get(),
-      m_scatter.get(),
-      m_fog.get(),
-      m_boundary_fog.get(),
-      m_rain.get()};
-
-  auto visibility_ready = [this]() {
-    m_runtime.visibility_version = Game::Map::VisibilityService::instance().version();
-    m_runtime.visibility_update_accumulator = 0.0F;
-  };
+  const AppSceneContext scene = scene_context();
 
   auto owner_update = [this]() {
     emit owner_info_changed();
@@ -2931,12 +3099,12 @@ void GameEngine::perform_skirmish_load(const QString& map_path,
                                                 player_configs,
                                                 m_selected_player_id,
                                                 *m_world,
-                                                renderers,
+                                                scene,
                                                 m_level,
                                                 m_entity_cache,
                                                 m_victory_service.get(),
                                                 m_minimap_manager.get(),
-                                                visibility_ready,
+                                                m_visibility_coordinator.get(),
                                                 owner_update,
                                                 allow_default_player_barracks,
                                                 m_loading_progress_tracker.get());
@@ -2958,29 +3126,24 @@ void GameEngine::perform_skirmish_load(const QString& map_path,
   }
 
   m_runtime.local_owner_id = load_result.updated_player_id;
+  configure_audio_manifest_mappings();
   const Game::Mission::MissionDefinition* mission_def = nullptr;
   if (m_campaign_manager &&
       m_campaign_manager->current_mission_definition().has_value()) {
     mission_def = &*m_campaign_manager->current_mission_definition();
   }
   apply_mission_ambience(mission_def, map_path);
-  if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
-    const bool is_campaign =
-        m_campaign_manager &&
-        m_campaign_manager->current_mission_context().is_campaign();
 
-    ai_system->set_commander_recruitment_enabled(!is_campaign);
-  }
-
+  apply_skirmish_commander_setup(player_configs);
   apply_mission_setup();
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  configure_audio_manifest_mappings();
   configure_mission_victory_conditions();
   configure_rain_system();
   finalize_skirmish_load();
 }
 
 void GameEngine::apply_mission_setup() {
-  reset_mission_runtime_state();
-
   if (!m_world || !m_campaign_manager) {
     return;
   }
@@ -3445,6 +3608,7 @@ void GameEngine::configure_mission_victory_conditions() {
 
   m_victory_service->set_victory_callback([this](const QString& state) {
     if (m_runtime.victory_state != state) {
+      ensure_result_audio_ready(state);
       m_runtime.victory_state = state;
       emit victory_state_changed();
 
@@ -3517,6 +3681,9 @@ void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
   m_pending_mission_waves.clear();
   stop_mission_ambience();
+  AudioSystem::get_instance().stop_music();
+  AudioResourceLoader::unload_audio_resources(AudioLoadPolicy::Mission);
+  AudioResourceLoader::unload_audio_resources(AudioLoadPolicy::Lazy);
 }
 
 void GameEngine::update_mission_waves(float dt) {
@@ -3543,6 +3710,182 @@ void GameEngine::update_mission_waves(float dt) {
 
   if (spawned_any) {
     emit owner_info_changed();
+  }
+}
+
+void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_configs) {
+  if (!m_world || player_configs.isEmpty()) {
+    return;
+  }
+  if (m_campaign_manager && m_campaign_manager->current_mission_context().is_campaign()) {
+    return;
+  }
+
+  auto reg = Game::Map::MapTransformer::get_factory_registry();
+  if (!reg) {
+    qWarning() << "Skirmish commander setup skipped: unit factory registry missing";
+    return;
+  }
+
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+
+  Game::Map::MapDefinition map_def;
+  QString map_error;
+  const QString resolved_map_path =
+      Utils::Resources::resolve_resource_path(m_level.map_path);
+  const bool map_loaded =
+      Game::Map::MapLoader::load_from_json_file(resolved_map_path, map_def, &map_error);
+  if (!map_loaded) {
+    qWarning() << "Skirmish commander setup: failed to load map definition for"
+               << m_level.map_path << "-" << map_error;
+  }
+
+  auto apply_team_color = [&](Engine::Core::Entity* entity, int owner_id) {
+    if (entity == nullptr) {
+      return;
+    }
+    auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
+    if (renderable == nullptr) {
+      return;
+    }
+    const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
+    renderable->color[0] = team_color.x();
+    renderable->color[1] = team_color.y();
+    renderable->color[2] = team_color.z();
+  };
+
+  auto existing_owner_spawn_anchors = [&](int owner_id) {
+    std::vector<App::Core::ExistingOwnerSpawnAnchor> anchors;
+    auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
+    anchors.reserve(entities.size());
+    for (auto* entity : entities) {
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+      if (unit == nullptr || transform == nullptr || unit->owner_id != owner_id ||
+          unit->health <= 0) {
+        continue;
+      }
+      anchors.push_back({.position = {transform->position.x, transform->position.z},
+                         .is_building =
+                             Game::Units::is_building_spawn(unit->spawn_type)});
+    }
+    return anchors;
+  };
+
+  auto map_spawn_fallback = [&](int owner_id) -> std::optional<Game::Mission::Position> {
+    if (!map_loaded) {
+      return std::nullopt;
+    }
+    for (const auto& spawn : map_def.spawns) {
+      if (spawn.player_id != owner_id) {
+        continue;
+      }
+      float world_x = spawn.x;
+      float world_z = spawn.z;
+      if (map_def.coordSystem == Game::Map::CoordSystem::Grid) {
+        const float tile = std::max(0.0001F, map_def.grid.tile_size);
+        world_x = (spawn.x - (map_def.grid.width * 0.5F - 0.5F)) * tile;
+        world_z = (spawn.z - (map_def.grid.height * 0.5F - 0.5F)) * tile;
+      }
+      return Game::Mission::Position{world_x, world_z};
+    }
+    return std::nullopt;
+  };
+
+  auto owner_has_living_commander = [&](int owner_id) {
+    for (auto* entity : m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  QSet<int> processed_owner_ids;
+  for (const QVariant& config_var : player_configs) {
+    const QVariantMap config = config_var.toMap();
+    if (config.isEmpty()) {
+      continue;
+    }
+
+    int owner_id = config.value("player_id", -1).toInt();
+    if (config.value("isHuman", false).toBool()) {
+      owner_id = m_runtime.local_owner_id;
+    }
+    if (owner_id < 0 || processed_owner_ids.contains(owner_id) ||
+        owner_has_living_commander(owner_id)) {
+      continue;
+    }
+    processed_owner_ids.insert(owner_id);
+
+    const auto* assigned_nation = nation_registry.get_nation_for_player(owner_id);
+    const auto nation_id =
+        assigned_nation != nullptr ? assigned_nation->id
+                                   : nation_registry.default_nation_id();
+    QString nation_key = config.value("nationId").toString();
+    if (nation_key.isEmpty()) {
+      nation_key = QString::fromStdString(Game::Systems::nation_id_to_string(nation_id));
+    }
+    const auto configured_commander = config.contains("commanderTroop")
+                                          ? std::optional<QString>(
+                                                config.value("commanderTroop").toString())
+                                          : std::nullopt;
+    const QString commander_troop =
+        App::Core::resolve_commander_troop(nation_key, configured_commander);
+    if (commander_troop.isEmpty()) {
+      continue;
+    }
+
+    const auto spawn_type =
+        Game::Units::spawn_typeFromString(commander_troop.trimmed().toStdString());
+    if (!spawn_type.has_value()) {
+      qWarning() << "Skirmish commander setup: unknown commander troop"
+                 << commander_troop;
+      continue;
+    }
+    const auto troop_type = Game::Units::spawn_typeToTroopType(*spawn_type);
+    if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
+      qWarning() << "Skirmish commander setup: invalid commander troop"
+                 << commander_troop;
+      continue;
+    }
+
+    App::Core::ResolvedCommanderPosition commander_position;
+    const auto anchors = existing_owner_spawn_anchors(owner_id);
+    if (!anchors.empty()) {
+      commander_position = App::Core::resolve_commander_position(
+          {}, {}, anchors, {0.0F, 0.0F});
+    } else if (const auto fallback = map_spawn_fallback(owner_id);
+               fallback.has_value()) {
+      commander_position = {.position = fallback.value(),
+                            .space = App::Core::CommanderPositionSpace::World};
+    } else {
+      commander_position = {.position = {0.0F, 0.0F},
+                            .space = App::Core::CommanderPositionSpace::World};
+    }
+
+    Game::Units::SpawnParams params;
+    params.position = QVector3D(
+        commander_position.position.x, 0.0F, commander_position.position.z);
+    params.player_id = owner_id;
+    params.spawn_type = *spawn_type;
+    params.ai_controlled = owner_registry.is_ai(owner_id);
+    params.nation_id = nation_id;
+    auto unit = reg->create(params.spawn_type, *m_world, params);
+    if (!unit) {
+      qWarning() << "Skirmish commander setup: failed to spawn commander"
+                 << commander_troop << "for owner" << owner_id;
+      continue;
+    }
+    apply_team_color(m_world->get_entity(unit->id()), owner_id);
   }
 }
 
@@ -3805,18 +4148,13 @@ auto GameEngine::load_from_slot(const QString& slot) -> bool {
   Game::Systems::GameStateSerializer::restore_runtime_from_metadata(meta, runtime_snap);
   apply_runtime_snapshot(runtime_snap);
 
-  GameStateRestorer::RendererRefs const renderers{
-      m_renderer.get(),
-      m_camera,
-      m_surface ? m_surface->ground() : nullptr,
-      m_surface ? m_surface->terrain() : nullptr,
-      m_features.get(),
-      m_scatter.get(),
-      m_fog.get(),
-      m_boundary_fog.get(),
-      m_rain.get()};
   GameStateRestorer::restore_environment_from_metadata(
-      meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id, m_viewport);
+      meta,
+      scene_context(),
+      m_level,
+      m_runtime.local_owner_id,
+      m_minimap_manager.get(),
+      m_visibility_coordinator.get());
 
   auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::register_built_in_units(*unit_reg);
@@ -3827,16 +4165,14 @@ auto GameEngine::load_from_slot(const QString& slot) -> bool {
       m_world.get(), m_selected_player_id, m_level, m_runtime.local_owner_id);
   GameStateRestorer::rebuild_entity_cache(
       m_world.get(), m_entity_cache, m_runtime.local_owner_id);
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  configure_audio_manifest_mappings();
 
   emit troop_count_changed();
 
   if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
     ai_system->reinitialize();
-    const bool is_campaign =
-        m_campaign_manager &&
-        m_campaign_manager->current_mission_context().is_campaign();
-    ai_system->set_commander_recruitment_enabled(!is_campaign);
   }
 
   if (m_victory_service) {

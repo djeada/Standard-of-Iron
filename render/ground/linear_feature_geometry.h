@@ -20,6 +20,7 @@ struct LinearFeatureRibbonSegment {
 struct LinearFeatureRibbonSettings {
   float sample_step = 0.5F;
   int min_length_steps = 8;
+  int cross_section_segments = 1;
   std::array<float, 3> edge_noise_frequencies{0.0F, 0.0F, 0.0F};
   std::array<float, 3> edge_noise_weights{1.0F, 0.0F, 0.0F};
   float width_variation_scale = 0.0F;
@@ -27,6 +28,7 @@ struct LinearFeatureRibbonSettings {
   float meander_length_scale = 0.1F;
   float meander_amplitude = 0.0F;
   float y_offset = 0.0F;
+  bool sample_terrain_envelope = false;
   const Game::Map::TerrainHeightMap* height_map = nullptr;
 };
 
