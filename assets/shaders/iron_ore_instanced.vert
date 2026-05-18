@@ -13,10 +13,17 @@ out vec3 v_world_pos;
 out vec3 v_normal;
 out vec3 v_color;
 out vec3 v_local_pos;
+flat out float v_seed;
+
+float hash13(vec3 p) {
+  p = fract(p * 0.1031);
+  p += dot(p, p.yzx + 33.33);
+  return fract((p.x + p.y) * p.z);
+}
 
 void main() {
   float scale = a_pos_scale.w;
-  vec3 world_pos = a_pos_scale.xyz;
+  vec3 world_origin = a_pos_scale.xyz;
   float rotation = a_color_rot.a;
 
   float cos_r = cos(rotation);
@@ -24,16 +31,24 @@ void main() {
   mat2 rot = mat2(cos_r, -sin_r, sin_r, cos_r);
 
   vec3 local_pos = a_pos * scale;
-  vec2 rotated_xz = rot * local_pos.xz;
-  local_pos = vec3(rotated_xz.x, local_pos.y, rotated_xz.y);
+  local_pos.xz = rot * local_pos.xz;
 
-  v_world_pos = local_pos + world_pos;
+  v_world_pos = local_pos + world_origin;
 
   vec2 rotated_normal_xz = rot * a_normal.xz;
   v_normal = normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
 
   v_color = a_color_rot.rgb;
-  v_local_pos = a_pos;
+
+  /*
+    Use scaled local position so large ore chunks get larger vein structure.
+    If you want every ore piece to have identical vein density regardless of scale,
+    change this back to:
+      v_local_pos = a_pos;
+  */
+  v_local_pos = a_pos * scale;
+
+  v_seed = hash13(world_origin * 0.173 + vec3(rotation, scale, 0.37));
 
   gl_Position = u_view_proj * vec4(v_world_pos, 1.0);
 }
