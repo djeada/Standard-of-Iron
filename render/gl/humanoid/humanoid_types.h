@@ -8,6 +8,7 @@
 #include "../../../game/core/component.h"
 #include "../../creature/movement_state.h"
 #include "../../palette.h"
+#include "../../side.h"
 
 namespace Render::GL {
 

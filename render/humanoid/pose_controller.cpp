@@ -544,30 +544,30 @@ void HumanoidPoseController::lean(const QVector3D& direction, float amount) {
   m_pose.head_pos += lean_offset * 0.75F;
 }
 
-void HumanoidPoseController::place_hand_at(bool is_left,
+void HumanoidPoseController::place_hand_at(Side side,
                                            const QVector3D& target_position) {
 
-  get_hand(is_left) = target_position;
+  get_hand(side) = target_position;
 
-  const QVector3D& shoulder = get_shoulder(is_left);
-  const QVector3D outward_dir = compute_outward_dir(is_left);
+  const QVector3D& shoulder = get_shoulder(side);
+  const QVector3D outward_dir = compute_outward_dir(side);
 
-  float const along_frac = is_left ? 0.45F : 0.48F;
-  float const lateral_offset = is_left ? 0.15F : 0.12F;
-  float const y_bias = is_left ? -0.08F : 0.02F;
+  float const along_frac = (side == Side::Left) ? 0.45F : 0.48F;
+  float const lateral_offset = (side == Side::Left) ? 0.15F : 0.12F;
+  float const y_bias = (side == Side::Left) ? -0.08F : 0.02F;
   float const outward_sign = 1.0F;
 
-  get_elbow(is_left) = solve_elbow_ik(is_left,
-                                      shoulder,
-                                      target_position,
-                                      outward_dir,
-                                      along_frac,
-                                      lateral_offset,
-                                      y_bias,
-                                      outward_sign);
+  get_elbow(side) = solve_elbow_ik(side,
+                                    shoulder,
+                                    target_position,
+                                    outward_dir,
+                                    along_frac,
+                                    lateral_offset,
+                                    y_bias,
+                                    outward_sign);
 }
 
-auto HumanoidPoseController::solve_elbow_ik(bool,
+auto HumanoidPoseController::solve_elbow_ik(Side,
                                             const QVector3D& shoulder,
                                             const QVector3D& hand,
                                             const QVector3D& outward_dir,
@@ -580,7 +580,7 @@ auto HumanoidPoseController::solve_elbow_ik(bool,
       shoulder, hand, outward_dir, along_frac, lateral_offset, y_bias, outward_sign);
 }
 
-auto HumanoidPoseController::solve_knee_ik(bool is_left,
+auto HumanoidPoseController::solve_knee_ik(Side side,
                                            const QVector3D& hip,
                                            const QVector3D& foot,
                                            float height_scale) const -> QVector3D {
@@ -608,7 +608,7 @@ auto HumanoidPoseController::solve_knee_ik(bool is_left,
   float const sin_theta = std::sqrt(std::max(0.0F, 1.0F - cos_theta * cos_theta));
 
   QVector3D bend_pref =
-      is_left ? QVector3D(-0.24F, 0.0F, 0.95F) : QVector3D(0.24F, 0.0F, 0.95F);
+      (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F) : QVector3D(0.24F, 0.0F, 0.95F);
   bend_pref.normalize();
 
   QVector3D bend_axis = bend_pref - dir * QVector3D::dotProduct(dir, bend_pref);
@@ -635,20 +635,20 @@ auto HumanoidPoseController::solve_knee_ik(bool is_left,
   return knee;
 }
 
-auto HumanoidPoseController::get_shoulder(bool is_left) const -> const QVector3D& {
-  return is_left ? m_pose.shoulder_l : m_pose.shoulder_r;
+auto HumanoidPoseController::get_shoulder(Side side) const -> const QVector3D& {
+  return (side == Side::Left) ? m_pose.shoulder_l : m_pose.shoulder_r;
 }
 
-auto HumanoidPoseController::get_hand(bool is_left) -> QVector3D& {
-  return is_left ? m_pose.hand_l : m_pose.hand_r;
+auto HumanoidPoseController::get_hand(Side side) -> QVector3D& {
+  return (side == Side::Left) ? m_pose.hand_l : m_pose.hand_r;
 }
 
-auto HumanoidPoseController::get_hand(bool is_left) const -> const QVector3D& {
-  return is_left ? m_pose.hand_l : m_pose.hand_r;
+auto HumanoidPoseController::get_hand(Side side) const -> const QVector3D& {
+  return (side == Side::Left) ? m_pose.hand_l : m_pose.hand_r;
 }
 
-auto HumanoidPoseController::get_elbow(bool is_left) -> QVector3D& {
-  return is_left ? m_pose.elbow_l : m_pose.elbow_r;
+auto HumanoidPoseController::get_elbow(Side side) -> QVector3D& {
+  return (side == Side::Left) ? m_pose.elbow_l : m_pose.elbow_r;
 }
 
 auto HumanoidPoseController::compute_right_axis() const -> QVector3D {
@@ -661,13 +661,13 @@ auto HumanoidPoseController::compute_right_axis() const -> QVector3D {
   return right_axis;
 }
 
-auto HumanoidPoseController::compute_outward_dir(bool is_left) const -> QVector3D {
+auto HumanoidPoseController::compute_outward_dir(Side side) const -> QVector3D {
   QVector3D const right_axis = compute_right_axis();
-  return is_left ? -right_axis : right_axis;
+  return (side == Side::Left) ? -right_axis : right_axis;
 }
 
-auto HumanoidPoseController::get_shoulder_y(bool is_left) const -> float {
-  return is_left ? m_pose.shoulder_l.y() : m_pose.shoulder_r.y();
+auto HumanoidPoseController::get_shoulder_y(Side side) const -> float {
+  return (side == Side::Left) ? m_pose.shoulder_l.y() : m_pose.shoulder_r.y();
 }
 
 auto HumanoidPoseController::get_pelvis_y() const -> float {
@@ -739,8 +739,8 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
   QVector3D hand_r_target(0.03F, HP::SHOULDER_Y + 0.08F, 0.55F);
   hand_r_target.setX(hand_r_target.x() + draw_sway_x * 0.3F);
   hand_r_target.setY(hand_r_target.y() + draw_sway_y * 0.3F);
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 
   if (shoulder_twist > 0.01F) {
     m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + shoulder_twist);
@@ -858,8 +858,8 @@ void HumanoidPoseController::melee_strike(float strike_phase) {
     m_pose.knee_r.setZ(m_pose.knee_r.z() + step_forward * 0.5F);
   }
 
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 }
 
 void HumanoidPoseController::grasp_two_handed(const QVector3D& grip_center,
@@ -871,8 +871,8 @@ void HumanoidPoseController::grasp_two_handed(const QVector3D& grip_center,
   QVector3D const right_hand_pos = grip_center + right_axis * (hand_separation * 0.5F);
   QVector3D const left_hand_pos = grip_center - right_axis * (hand_separation * 0.5F);
 
-  place_hand_at(false, right_hand_pos);
-  place_hand_at(true, left_hand_pos);
+  place_hand_at(Side::Right, right_hand_pos);
+  place_hand_at(Side::Left, left_hand_pos);
 }
 
 void HumanoidPoseController::spear_thrust(float attack_phase) {
@@ -1007,10 +1007,10 @@ void HumanoidPoseController::spear_thrust(float attack_phase) {
   float const y_drop = 0.05F + 0.03F * thrust_extent;
 
   hand_l_target = compute_offhand_spear_grip(
-      m_pose, m_anim_ctx, hand_r_target, false, along_offset, y_drop, -0.05F);
+      m_pose, m_anim_ctx, hand_r_target, Side::Right, along_offset, y_drop, -0.05F);
 
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 }
 
 void HumanoidPoseController::spear_thrust_from_hold(float attack_phase,
@@ -1129,10 +1129,10 @@ void HumanoidPoseController::spear_thrust_from_hold(float attack_phase,
   float const y_drop = 0.06F + 0.02F * thrust_extent;
 
   hand_l_target = compute_offhand_spear_grip(
-      m_pose, m_anim_ctx, hand_r_target, false, along_offset, y_drop, -0.05F);
+      m_pose, m_anim_ctx, hand_r_target, Side::Right, along_offset, y_drop, -0.05F);
 
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 }
 
 void HumanoidPoseController::sword_slash(float attack_phase) {
@@ -1245,8 +1245,8 @@ void HumanoidPoseController::sword_slash(float attack_phase) {
     m_pose.knee_r.setZ(m_pose.knee_r.z() + weight_shift * 0.6F);
   }
 
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 }
 
 void HumanoidPoseController::mount_on_horse(float saddle_height) {
@@ -1260,12 +1260,12 @@ void HumanoidPoseController::hold_spear_idle() {
 
   QVector3D const hand_r_target(0.34F, HP::SHOULDER_Y - 0.02F, 0.30F);
   QVector3D hand_l_target = compute_offhand_spear_grip(
-      m_pose, m_anim_ctx, hand_r_target, false, 0.46F, -0.03F, -0.08F);
+      m_pose, m_anim_ctx, hand_r_target, Side::Right, 0.46F, -0.03F, -0.08F);
   hand_l_target.setX(std::max(0.10F, hand_l_target.x()));
   hand_l_target.setY(std::min(HP::SHOULDER_Y + 0.12F, hand_l_target.y()));
 
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 
   m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + 0.025F);
   m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + 0.015F);
@@ -1278,11 +1278,11 @@ void HumanoidPoseController::brace_spear_for_hold() {
 
   QVector3D const hand_r_target(0.30F, HP::SHOULDER_Y - 0.10F, 0.58F);
   QVector3D hand_l_target = compute_offhand_spear_grip(
-      m_pose, m_anim_ctx, hand_r_target, false, -0.24F, 0.045F, -0.04F);
+      m_pose, m_anim_ctx, hand_r_target, Side::Right, -0.24F, 0.045F, -0.04F);
   hand_l_target.setZ(hand_l_target.z() + 0.03F);
 
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 
   m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.05F);
   m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - 0.03F);
@@ -1299,8 +1299,8 @@ void HumanoidPoseController::hold_bow_ready() {
   QVector3D const bow_hand_pos(0.08F, HP::SHOULDER_Y - 0.08F, 0.34F);
   QVector3D const support_hand_pos(0.02F, HP::SHOULDER_Y + 0.02F, 0.60F);
 
-  place_hand_at(false, bow_hand_pos);
-  place_hand_at(true, support_hand_pos);
+  place_hand_at(Side::Right, bow_hand_pos);
+  place_hand_at(Side::Left, support_hand_pos);
 
   m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - 0.01F);
   m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.05F);
@@ -1317,8 +1317,8 @@ void HumanoidPoseController::brace_sword_and_shield_for_hold() {
   QVector3D const sword_hand_pos(0.22F, HP::SHOULDER_Y - 0.18F, 0.28F);
   QVector3D const shield_hand_pos(-0.12F, HP::SHOULDER_Y + 0.08F, 0.58F);
 
-  place_hand_at(false, sword_hand_pos);
-  place_hand_at(true, shield_hand_pos);
+  place_hand_at(Side::Right, sword_hand_pos);
+  place_hand_at(Side::Left, shield_hand_pos);
 
   m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + 0.03F);
   m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.03F);
@@ -1343,8 +1343,8 @@ void HumanoidPoseController::hold_sword_and_shield() {
                                   HP::SHOULDER_Y - 0.02F - moving_mix * 0.03F,
                                   0.28F + moving_mix * 0.05F);
 
-  place_hand_at(false, sword_hand_pos);
-  place_hand_at(true, shield_hand_pos);
+  place_hand_at(Side::Right, sword_hand_pos);
+  place_hand_at(Side::Left, shield_hand_pos);
 }
 
 void HumanoidPoseController::look_at(const QVector3D& target) {
@@ -1582,8 +1582,8 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     m_pose.knee_r.setZ(m_pose.knee_r.z() + weight_shift * 0.6F);
   }
 
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 }
 
 void HumanoidPoseController::spear_thrust_variant(float attack_phase,
@@ -1769,10 +1769,10 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
   float const y_drop = 0.05F + 0.03F * thrust_extent;
 
   hand_l_target = compute_offhand_spear_grip(
-      m_pose, m_anim_ctx, hand_r_target, false, along_offset, y_drop, -0.05F);
+      m_pose, m_anim_ctx, hand_r_target, Side::Right, along_offset, y_drop, -0.05F);
 
-  place_hand_at(false, hand_r_target);
-  place_hand_at(true, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+  place_hand_at(Side::Left, hand_l_target);
 }
 
 void HumanoidPoseController::tilt_torso(float side_tilt, float forward_tilt) {
