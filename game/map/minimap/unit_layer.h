@@ -29,19 +29,19 @@ struct TeamColors {
     std::uint8_t border_r, border_g, border_b;
   };
 
-  static constexpr ColorSet PLAYER_1 = {70, 100, 160, 35, 50, 80};
+  static constexpr ColorSet PLAYER_1 = {48, 82, 210, 20, 38, 125};
 
-  static constexpr ColorSet PLAYER_2 = {180, 60, 50, 90, 30, 25};
+  static constexpr ColorSet PLAYER_2 = {218, 38, 28, 122, 16, 12};
 
-  static constexpr ColorSet PLAYER_3 = {60, 130, 70, 30, 65, 35};
+  static constexpr ColorSet PLAYER_3 = {22, 158, 45, 10, 88, 22};
 
-  static constexpr ColorSet PLAYER_4 = {190, 160, 60, 95, 80, 30};
+  static constexpr ColorSet PLAYER_4 = {212, 178, 18, 118, 98, 8};
 
-  static constexpr ColorSet PLAYER_5 = {120, 60, 140, 60, 30, 70};
+  static constexpr ColorSet PLAYER_5 = {148, 28, 192, 82, 12, 115};
 
-  static constexpr ColorSet PLAYER_6 = {60, 140, 140, 30, 70, 70};
+  static constexpr ColorSet PLAYER_6 = {18, 172, 172, 8, 100, 100};
 
-  static constexpr ColorSet NEUTRAL = {100, 95, 85, 50, 48, 43};
+  static constexpr ColorSet NEUTRAL = {125, 115, 98, 68, 60, 48};
 
   static constexpr std::uint8_t SELECT_R = 255;
   static constexpr std::uint8_t SELECT_G = 215;
