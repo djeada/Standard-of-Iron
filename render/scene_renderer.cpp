@@ -389,17 +389,17 @@ void execute_template_prewarm_item(Renderer& renderer,
 
   AnimationInputs const anim = make_animation_inputs(anim_key);
   bool const attack_state = Render::Creature::is_attack_pose_intent(anim_key.state);
-  DrawContext ctx = make_template_prewarm_draw_context(renderer,
-                                                       entity,
-                                                       renderer_id,
-                                                       owner_id,
-                                                       lod,
-                                                       variant,
-                                                       allow_template_cache,
-                                                       is_mounted || is_elephant,
-                                                       &anim,
-                                                       anim_key.attack_variant,
-                                                       attack_state);
+  DrawContext const ctx = make_template_prewarm_draw_context(renderer,
+                                                             entity,
+                                                             renderer_id,
+                                                             owner_id,
+                                                             lod,
+                                                             variant,
+                                                             allow_template_cache,
+                                                             is_mounted || is_elephant,
+                                                             &anim,
+                                                             anim_key.attack_variant,
+                                                             attack_state);
 
   CreatureCacheWarmupSubmitter warmup_submitter(&renderer);
   fn(ctx, warmup_submitter);
@@ -1881,7 +1881,7 @@ void Renderer::prewarm_unit_templates(
 
   struct PrewarmProfileKeyHash {
     std::size_t operator()(const PrewarmProfileKey& key) const noexcept {
-      std::size_t h = static_cast<std::size_t>(key.renderer_handle);
+      auto h = static_cast<std::size_t>(key.renderer_handle);
       h ^= static_cast<std::size_t>(key.spawn_type) + 0x9e3779b9 + (h << 6) + (h >> 2);
       h ^= static_cast<std::size_t>(static_cast<std::uint8_t>(key.nation_id)) +
            0x9e3779b9 + (h << 6) + (h >> 2);
@@ -2341,6 +2341,12 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     }
 
     if (!show_preview) {
+      continue;
+    }
+
+    if (builder_prod->product_type == "cut_tree" ||
+        builder_prod->product_type == "collect_stone" ||
+        builder_prod->product_type == "collect_iron_ore") {
       continue;
     }
 

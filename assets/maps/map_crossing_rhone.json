@@ -2968,6 +2968,10 @@
         }
     ],
     "victory": {
+        "defeat_conditions": [
+            "no_commander",
+            "only_commander_remaining"
+        ],
         "description": "Force the Rhone crossing and capture both Roman barracks at the northern command fort and southern military fort.",
         "optional": [
             {

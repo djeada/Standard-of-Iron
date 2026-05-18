@@ -1303,7 +1303,9 @@
     "defeat_conditions": [
       "central_stronghold_destroyed",
       "fewer_than_3_villages_held_at_end",
-      "all_supply_roads_cut"
+      "all_supply_roads_cut",
+      "no_commander",
+      "only_commander_remaining"
     ],
     "failure_hint": "Do not turtle only at the central hill. Roman raiders will burn the outer villages unless cavalry reserves rotate between the roads."
   }

@@ -310,7 +310,7 @@ Each map is a JSON document that defines terrain dimensions, spawn points, and v
   "victory": {
     "type": "elimination",
     "key_structures": ["barracks", "HQ"],
-    "defeat_conditions": ["no_key_structures"]
+    "defeat_conditions": ["no_commander", "only_commander_remaining"]
   },
   "spawns": [
     {
@@ -335,7 +335,9 @@ Each map is a JSON document that defines terrain dimensions, spawn points, and v
 
 * Setting the *victory type* to `elimination` ends the match when all key structures are destroyed. Setting it to `survive_time` with a `duration` value requires holding out for that many seconds.
 * Listing structures in *key_structures* marks them as required for victory. Unlisted buildings can be lost without triggering defeat.
-* Adding `no_key_structures` to *defeat_conditions* causes a loss when all key structures fall. Adding `no_units` triggers defeat when the last unit dies.
+* The default defeat model is commander-centric: `no_commander` loses when the commander dies, and `only_commander_remaining` loses when the commander is the only thing left after troops and barracks are gone.
+* `no_key_structures` and `no_units` remain available as explicit opt-in defeat rules.
+* See [docs/VICTORY_SYSTEM.md](docs/VICTORY_SYSTEM.md) for the full runtime rule model and extension workflow.
 
 ### Neutral Barracks
 

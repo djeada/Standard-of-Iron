@@ -1046,6 +1046,10 @@
   ],
   "victory": {
     "type": "custom",
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ],
     "description": "Bait the Roman army across the freezing Trebia, hold them on the muddy south bank, then spring Mago's hidden force to destroy their rear and prevent a retreat.",
     "primary_objectives": [
       "Use Numidian horse archers to draw the Romans across the Trebia",

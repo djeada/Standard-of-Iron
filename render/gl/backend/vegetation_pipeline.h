@@ -116,6 +116,9 @@ public:
   struct PropUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle magic_strength{GL::Shader::InvalidUniform};
   };
 
   PropUniforms m_tent_uniforms;

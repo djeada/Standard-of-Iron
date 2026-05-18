@@ -1,6 +1,7 @@
 #include "game_state_serializer.h"
 
 #include <qglobal.h>
+#include <qjsonarray.h>
 #include <qjsonobject.h>
 #include <qvectornd.h>
 
@@ -71,6 +72,18 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
   runtime_obj["cursor_mode"] = runtime.cursor_mode;
   runtime_obj["selected_player_id"] = runtime.selected_player_id;
   runtime_obj["follow_selection"] = runtime.follow_selection;
+  QJsonArray resources_array;
+  for (const auto& row : runtime.resources_by_owner) {
+    QJsonObject row_obj;
+    row_obj["owner_id"] = row.owner_id;
+    QJsonObject resources_obj;
+    for (ResourceType const type : k_all_resource_types) {
+      resources_obj[QLatin1String(resource_type_key(type))] = row.amounts.get(type);
+    }
+    row_obj["resources"] = resources_obj;
+    resources_array.append(row_obj);
+  }
+  runtime_obj["resources_by_owner"] = resources_array;
   metadata["runtime"] = runtime_obj;
 
   return metadata;
@@ -150,6 +163,37 @@ void GameStateSerializer::restore_runtime_from_metadata(const QJsonObject& metad
           value_for_key(runtime_obj, "follow_selection", "followSelection");
       !follow_selection.isUndefined()) {
     runtime.follow_selection = follow_selection.toBool(runtime.follow_selection);
+  }
+
+  if (runtime_obj.contains("resources_by_owner")) {
+    runtime.resources_by_owner.clear();
+    const auto resources_array = runtime_obj.value("resources_by_owner").toArray();
+    runtime.resources_by_owner.reserve(resources_array.size());
+    for (const auto& value : resources_array) {
+      const auto row_obj = value.toObject();
+      OwnerResourceState row;
+      row.owner_id = row_obj.value("owner_id").toInt(0);
+      const auto resources_obj = row_obj.value("resources").toObject();
+      for (auto it = resources_obj.begin(); it != resources_obj.end(); ++it) {
+        ResourceType type;
+        if (!resource_type_from_key(QStringView(it.key()), type)) {
+          continue;
+        }
+        row.amounts.set(type, it.value().toInt(0));
+      }
+      runtime.resources_by_owner.push_back(row);
+    }
+  } else if (runtime_obj.contains("wood_by_owner")) {
+    runtime.resources_by_owner.clear();
+    const auto wood_array = runtime_obj.value("wood_by_owner").toArray();
+    runtime.resources_by_owner.reserve(wood_array.size());
+    for (const auto& value : wood_array) {
+      const auto wood_obj = value.toObject();
+      OwnerResourceState row;
+      row.owner_id = wood_obj.value("owner_id").toInt(0);
+      row.amounts.set(ResourceType::Wood, wood_obj.value("wood").toInt(0));
+      runtime.resources_by_owner.push_back(row);
+    }
   }
 }
 

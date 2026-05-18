@@ -33,7 +33,8 @@ public:
 
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
-                 const std::vector<Game::Map::WorldProp>& world_props = {});
+                 const std::vector<Game::Map::WorldProp>& world_props = {},
+                 bool use_world_props_exclusively = false);
 
   void set_light_direction(const QVector3D& dir);
 

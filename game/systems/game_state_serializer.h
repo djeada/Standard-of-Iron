@@ -6,8 +6,10 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <vector>
 
 #include "../map/map_definition.h"
+#include "resource_types.h"
 
 namespace Engine::Core {
 class World;
@@ -45,6 +47,7 @@ struct RuntimeSnapshot {
   int cursor_mode = 0;
   int selected_player_id = 1;
   bool follow_selection = false;
+  std::vector<OwnerResourceState> resources_by_owner;
 };
 
 class GameStateSerializer {

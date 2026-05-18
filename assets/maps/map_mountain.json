@@ -842,7 +842,9 @@
       "barracks"
     ],
     "defeat_conditions": [
-      "no_key_structures"
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
     ]
   }
 }

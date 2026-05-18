@@ -1159,6 +1159,17 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
           }
           prop_shader->set_uniform(prop_uniforms->light_direction, ld);
         }
+        if (prop_uniforms->camera_pos != Shader::InvalidUniform) {
+          prop_shader->set_uniform(prop_uniforms->camera_pos, cam.get_position());
+        }
+        if (prop_uniforms->time != Shader::InvalidUniform) {
+          prop_shader->set_uniform(prop_uniforms->time, m_animation_time);
+        }
+        if (prop_uniforms->magic_strength != Shader::InvalidUniform) {
+          float const magic_strength =
+              deco_cmd_.species == TerrainScatterCmd::Species::IronOre ? 1.15F : 0.0F;
+          prop_shader->set_uniform(prop_uniforms->magic_strength, magic_strength);
+        }
 
         glBindVertexArray(prop_vao);
         deco_cmd_.instance_buffer->bind();

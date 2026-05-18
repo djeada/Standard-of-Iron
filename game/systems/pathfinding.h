@@ -44,6 +44,14 @@ struct DirtyRegion {
 
 class Pathfinding {
 public:
+  enum class CellValue : std::uint8_t {
+    Walkable = 0,
+    Blocked = 1,
+    Tree = 2,
+    Boulder = 3,
+    IronOre = 4,
+  };
+
   Pathfinding(int width, int height);
   ~Pathfinding();
 
@@ -54,6 +62,10 @@ public:
 
   void set_obstacle(int x, int y, bool is_obstacle);
   auto is_walkable(int x, int y) const -> bool;
+  auto is_tree(int x, int y) const -> bool;
+  auto is_boulder(int x, int y) const -> bool;
+  auto is_iron_ore(int x, int y) const -> bool;
+  auto cell_value(int x, int y) const -> CellValue;
   auto is_walkable_with_radius(int x, int y, float unit_radius) const -> bool;
 
   void update_building_obstacles();
@@ -140,6 +152,7 @@ private:
   void process_dirty_regions();
 
   void update_region(int min_x, int max_x, int min_z, int max_z);
+  void apply_resource_prop_cells(int min_x, int max_x, int min_z, int max_z);
 
   int m_width, m_height;
   std::vector<std::vector<std::uint8_t>> m_obstacles;
