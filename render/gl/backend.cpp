@@ -1070,7 +1070,8 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
       case TerrainScatterCmd::Species::SupplyCart:
       case TerrainScatterCmd::Species::WeaponRack:
       case TerrainScatterCmd::Species::Ruins:
-      case TerrainScatterCmd::Species::DeadTree: {
+      case TerrainScatterCmd::Species::DeadTree:
+      case TerrainScatterCmd::Species::IronOre: {
         if (!m_vegetation_pipeline) {
           break;
         }
@@ -1117,6 +1118,13 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
           prop_idx_count = m_vegetation_pipeline->m_dead_tree_index_count;
           prop_uniforms = &m_vegetation_pipeline->m_dead_tree_uniforms;
           prop_light_dir = deco_cmd_.dead_tree.light_direction;
+          break;
+        case TerrainScatterCmd::Species::IronOre:
+          prop_shader = m_vegetation_pipeline->iron_ore_shader();
+          prop_vao = m_vegetation_pipeline->m_iron_ore_vao;
+          prop_idx_count = m_vegetation_pipeline->m_iron_ore_index_count;
+          prop_uniforms = &m_vegetation_pipeline->m_iron_ore_uniforms;
+          prop_light_dir = deco_cmd_.iron_ore.light_direction;
           break;
         default:
           break;

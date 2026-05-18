@@ -50,6 +50,8 @@ auto VegetationPipeline::initialize() -> bool {
   m_ruins_shader = m_shader_cache->get(QStringLiteral("ruins_instanced"));
   m_dead_tree_shader = m_shader_cache->get(QStringLiteral("dead_tree_instanced"));
 
+  m_iron_ore_shader = m_shader_cache->get(QStringLiteral("iron_ore_instanced"));
+
   if (m_stone_shader == nullptr) {
     qWarning() << "VegetationPipeline: stone shader missing";
   }
@@ -80,6 +82,9 @@ auto VegetationPipeline::initialize() -> bool {
   if (m_dead_tree_shader == nullptr) {
     qWarning() << "VegetationPipeline: dead_tree_instanced shader missing";
   }
+  if (m_iron_ore_shader == nullptr) {
+    qWarning() << "VegetationPipeline: iron_ore_instanced shader missing";
+  }
 
   initialize_stone_pipeline();
   initialize_plant_pipeline();
@@ -91,6 +96,7 @@ auto VegetationPipeline::initialize() -> bool {
   initialize_weapon_rack_pipeline();
   initialize_ruins_pipeline();
   initialize_dead_tree_pipeline();
+  initialize_iron_ore_pipeline();
   cache_uniforms();
 
   m_initialized = true;
@@ -108,6 +114,7 @@ void VegetationPipeline::shutdown() {
   shutdown_weapon_rack_pipeline();
   shutdown_ruins_pipeline();
   shutdown_dead_tree_pipeline();
+  shutdown_iron_ore_pipeline();
   m_initialized = false;
 }
 
@@ -176,6 +183,7 @@ void VegetationPipeline::cache_uniforms() {
   cache_prop_uniforms(m_weapon_rack_uniforms, m_weapon_rack_shader);
   cache_prop_uniforms(m_ruins_uniforms, m_ruins_shader);
   cache_prop_uniforms(m_dead_tree_uniforms, m_dead_tree_shader);
+  cache_prop_uniforms(m_iron_ore_uniforms, m_iron_ore_shader);
 }
 
 void VegetationPipeline::initialize_stone_pipeline() {
@@ -1910,6 +1918,58 @@ void VegetationPipeline::shutdown_dead_tree_pipeline() {
                             m_dead_tree_index_buffer,
                             m_dead_tree_vertex_count,
                             m_dead_tree_index_count);
+}
+
+void VegetationPipeline::initialize_iron_ore_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_iron_ore_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+
+  // Flat base slab — ore seam embedded in ground
+  append_box(verts, idx, {-0.55F, -0.02F, -0.45F}, {0.55F, 0.10F, 0.45F});
+
+  // Main ore mass — blocky central body
+  append_box(verts, idx, {-0.42F, 0.08F, -0.35F}, {0.40F, 0.42F, 0.32F});
+
+  // Upper-left angular chunk
+  append_box(verts, idx, {-0.38F, 0.38F, -0.28F}, {-0.06F, 0.70F, 0.18F});
+
+  // Upper-right chunk
+  append_box(verts, idx, {0.06F, 0.34F, -0.22F}, {0.34F, 0.64F, 0.14F});
+
+  // Front protrusion
+  append_box(verts, idx, {-0.20F, 0.10F, 0.28F}, {0.18F, 0.42F, 0.50F});
+
+  // Back overhang
+  append_box(verts, idx, {-0.28F, 0.12F, -0.50F}, {0.14F, 0.34F, -0.28F});
+
+  // Small surface nodules
+  append_box(verts, idx, {-0.44F, 0.40F, -0.08F}, {-0.26F, 0.58F, 0.10F});
+  append_box(verts, idx, {0.22F, 0.38F, 0.08F}, {0.40F, 0.54F, 0.26F});
+
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_iron_ore_vao,
+                        m_iron_ore_vertex_buffer,
+                        m_iron_ore_index_buffer,
+                        m_iron_ore_vertex_count,
+                        m_iron_ore_index_count);
+}
+
+void VegetationPipeline::shutdown_iron_ore_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_iron_ore_vao = m_iron_ore_vertex_buffer = m_iron_ore_index_buffer = 0;
+    m_iron_ore_vertex_count = m_iron_ore_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_iron_ore_vao,
+                            m_iron_ore_vertex_buffer,
+                            m_iron_ore_index_buffer,
+                            m_iron_ore_vertex_count,
+                            m_iron_ore_index_count);
 }
 
 } // namespace Render::GL::BackendPipelines

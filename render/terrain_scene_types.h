@@ -57,7 +57,8 @@ enum class ScatterSpeciesId {
   WeaponRack,
   Ruins,
   DeadTree,
-  Boulder
+  Boulder,
+  IronOre
 };
 
 enum class ScatterVisibilityMode {
