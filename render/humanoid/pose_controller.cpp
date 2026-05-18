@@ -558,13 +558,13 @@ void HumanoidPoseController::place_hand_at(Side side,
   float const outward_sign = 1.0F;
 
   get_elbow(side) = solve_elbow_ik(side,
-                                   shoulder,
-                                   target_position,
-                                   outward_dir,
-                                   along_frac,
-                                   lateral_offset,
-                                   y_bias,
-                                   outward_sign);
+                                    shoulder,
+                                    target_position,
+                                    outward_dir,
+                                    along_frac,
+                                    lateral_offset,
+                                    y_bias,
+                                    outward_sign);
 }
 
 auto HumanoidPoseController::solve_elbow_ik(Side,
@@ -607,8 +607,8 @@ auto HumanoidPoseController::solve_knee_ik(Side side,
   cos_theta = std::clamp(cos_theta, -1.0F, 1.0F);
   float const sin_theta = std::sqrt(std::max(0.0F, 1.0F - cos_theta * cos_theta));
 
-  QVector3D bend_pref = (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F)
-                                             : QVector3D(0.24F, 0.0F, 0.95F);
+  QVector3D bend_pref =
+      (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F) : QVector3D(0.24F, 0.0F, 0.95F);
   bend_pref.normalize();
 
   QVector3D bend_axis = bend_pref - dir * QVector3D::dotProduct(dir, bend_pref);

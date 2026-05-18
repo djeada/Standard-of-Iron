@@ -379,8 +379,8 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
     cos_theta = std::clamp(cos_theta, -1.0F, 1.0F);
     float const sin_theta = std::sqrt(std::max(0.0F, 1.0F - cos_theta * cos_theta));
 
-    QVector3D bend_pref = (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F)
-                                               : QVector3D(0.24F, 0.0F, 0.95F);
+    QVector3D bend_pref =
+        (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F) : QVector3D(0.24F, 0.0F, 0.95F);
     bend_pref.normalize();
 
     QVector3D bend_axis = bend_pref - dir * QVector3D::dotProduct(dir, bend_pref);

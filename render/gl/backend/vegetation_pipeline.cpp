@@ -176,9 +176,6 @@ void VegetationPipeline::cache_uniforms() {
     }
     u.view_proj = shader->optional_uniform_handle("u_view_proj");
     u.light_direction = shader->uniform_handle("u_light_direction");
-    u.camera_pos = shader->optional_uniform_handle("u_camera_pos");
-    u.time = shader->optional_uniform_handle("u_time");
-    u.magic_strength = shader->optional_uniform_handle("u_magic_strength");
   };
 
   cache_prop_uniforms(m_tent_uniforms, m_tent_shader);
@@ -1231,41 +1228,6 @@ static void append_quad(std::vector<std::pair<QVector3D, QVector3D>>& verts,
       {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
 }
 
-static auto quad_normal(const QVector3D& p0,
-                        const QVector3D& p1,
-                        const QVector3D& p2) -> QVector3D {
-  QVector3D n = QVector3D::crossProduct(p1 - p0, p2 - p0);
-  if (n.lengthSquared() < 1.0e-8F) {
-    return {0.0F, 1.0F, 0.0F};
-  }
-  n.normalize();
-  return n;
-}
-
-static void append_tapered_prism(std::vector<std::pair<QVector3D, QVector3D>>& verts,
-                                 std::vector<uint16_t>& idx,
-                                 const QVector3D& bottom_lo,
-                                 const QVector3D& bottom_hi,
-                                 const QVector3D& top_lo,
-                                 const QVector3D& top_hi) {
-  const QVector3D b0(bottom_lo.x(), bottom_lo.y(), bottom_lo.z());
-  const QVector3D b1(bottom_hi.x(), bottom_lo.y(), bottom_lo.z());
-  const QVector3D b2(bottom_hi.x(), bottom_lo.y(), bottom_hi.z());
-  const QVector3D b3(bottom_lo.x(), bottom_lo.y(), bottom_hi.z());
-
-  const QVector3D t0(top_lo.x(), top_hi.y(), top_lo.z());
-  const QVector3D t1(top_hi.x(), top_hi.y(), top_lo.z());
-  const QVector3D t2(top_hi.x(), top_hi.y(), top_hi.z());
-  const QVector3D t3(top_lo.x(), top_hi.y(), top_hi.z());
-
-  append_quad(verts, idx, t3, t2, t1, t0, quad_normal(t3, t2, t1));
-  append_quad(verts, idx, b0, b1, b2, b3, quad_normal(b0, b1, b2));
-  append_quad(verts, idx, b3, b2, t2, t3, quad_normal(b3, b2, t2));
-  append_quad(verts, idx, b1, b0, t0, t1, quad_normal(b1, b0, t0));
-  append_quad(verts, idx, b2, b1, t1, t2, quad_normal(b2, b1, t1));
-  append_quad(verts, idx, b0, b3, t3, t0, quad_normal(b0, b3, t3));
-}
-
 static void append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>>& verts,
                                 std::vector<uint16_t>& idx,
                                 const QVector3D& a,
@@ -1965,55 +1927,27 @@ void VegetationPipeline::initialize_iron_ore_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  append_tapered_prism(verts,
-                       idx,
-                       {-0.88F, -0.06F, -0.70F},
-                       {0.86F, 0.08F, 0.70F},
-                       {-0.68F, 0.0F, -0.50F},
-                       {0.62F, 0.16F, 0.52F});
-  append_tapered_prism(verts,
-                       idx,
-                       {-0.62F, 0.04F, -0.48F},
-                       {0.56F, 0.42F, 0.46F},
-                       {-0.42F, 0.0F, -0.30F},
-                       {0.34F, 0.72F, 0.30F});
+  // Flat base slab — ore seam embedded in ground
+  append_box(verts, idx, {-0.55F, -0.02F, -0.45F}, {0.55F, 0.10F, 0.45F});
 
-  append_tapered_prism(verts,
-                       idx,
-                       {-0.32F, 0.34F, -0.30F},
-                       {0.08F, 0.82F, 0.18F},
-                       {-0.18F, 0.0F, -0.16F},
-                       {-0.02F, 1.18F, 0.06F});
-  append_tapered_prism(verts,
-                       idx,
-                       {0.02F, 0.30F, -0.24F},
-                       {0.42F, 0.78F, 0.22F},
-                       {0.14F, 0.0F, -0.10F},
-                       {0.30F, 1.04F, 0.08F});
-  append_tapered_prism(verts,
-                       idx,
-                       {-0.48F, 0.18F, 0.04F},
-                       {-0.10F, 0.60F, 0.46F},
-                       {-0.36F, 0.0F, 0.18F},
-                       {-0.18F, 0.86F, 0.34F});
-  append_tapered_prism(verts,
-                       idx,
-                       {0.16F, 0.12F, 0.20F},
-                       {0.54F, 0.54F, 0.58F},
-                       {0.28F, 0.0F, 0.32F},
-                       {0.42F, 0.72F, 0.46F});
+  // Main ore mass — blocky central body
+  append_box(verts, idx, {-0.42F, 0.08F, -0.35F}, {0.40F, 0.42F, 0.32F});
 
-  append_box(verts, idx, {-0.98F, -0.035F, -0.08F}, {-0.40F, 0.035F, 0.08F});
-  append_box(verts, idx, {0.42F, -0.030F, -0.06F}, {0.94F, 0.035F, 0.06F});
-  append_box(verts, idx, {-0.08F, -0.030F, -0.92F}, {0.08F, 0.035F, -0.44F});
-  append_box(verts, idx, {-0.06F, -0.030F, 0.46F}, {0.08F, 0.035F, 0.98F});
+  // Upper-left angular chunk
+  append_box(verts, idx, {-0.38F, 0.38F, -0.28F}, {-0.06F, 0.70F, 0.18F});
 
-  append_tapered_prism(verts,
-                       idx,
-                       {-0.18F, 0.76F, -0.12F},
-                       {0.10F, 1.04F, 0.12F},
-                       {-0.08F, 0.0F, -0.04F},
-                       {0.02F, 1.42F, 0.04F});
+  // Upper-right chunk
+  append_box(verts, idx, {0.06F, 0.34F, -0.22F}, {0.34F, 0.64F, 0.14F});
+
+  // Front protrusion
+  append_box(verts, idx, {-0.20F, 0.10F, 0.28F}, {0.18F, 0.42F, 0.50F});
+
+  // Back overhang
+  append_box(verts, idx, {-0.28F, 0.12F, -0.50F}, {0.14F, 0.34F, -0.28F});
+
+  // Small surface nodules
+  append_box(verts, idx, {-0.44F, 0.40F, -0.08F}, {-0.26F, 0.58F, 0.10F});
+  append_box(verts, idx, {0.22F, 0.38F, 0.08F}, {0.40F, 0.54F, 0.26F});
 
   upload_prop_mesh_impl(verts,
                         idx,
