@@ -14,6 +14,7 @@
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../registry.h"
+#include "../siege_anim_types.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -33,20 +34,6 @@ struct CarthageCatapultPalette {
   QVector3D purple_trim{0.45F, 0.18F, 0.55F};
   QVector3D stone{0.55F, 0.52F, 0.48F};
   QVector3D team{0.8F, 0.9F, 1.0F};
-};
-
-enum class CatapultAnimState {
-  Idle,
-  Loading,
-  Firing,
-  Resetting
-};
-
-struct CatapultAnimContext {
-  CatapultAnimState state{CatapultAnimState::Idle};
-  float loading_progress{0.0F};
-  float firing_progress{0.0F};
-  bool show_stone{false};
 };
 
 inline auto make_palette(const QVector3D& team) -> CarthageCatapultPalette {

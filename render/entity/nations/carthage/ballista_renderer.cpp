@@ -14,6 +14,7 @@
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../registry.h"
+#include "../siege_anim_types.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -34,20 +35,6 @@ struct CarthageBallistaPalette {
   QVector3D purple_accent{0.45F, 0.20F, 0.50F};
   QVector3D bolt{0.35F, 0.30F, 0.25F};
   QVector3D team{0.8F, 0.9F, 1.0F};
-};
-
-enum class BallistaAnimState {
-  Idle,
-  Loading,
-  Firing,
-  Resetting
-};
-
-struct BallistaAnimContext {
-  BallistaAnimState state{BallistaAnimState::Idle};
-  float loading_progress{0.0F};
-  float firing_progress{0.0F};
-  bool show_bolt{false};
 };
 
 inline auto make_palette(const QVector3D& team) -> CarthageBallistaPalette {

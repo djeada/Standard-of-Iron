@@ -6,23 +6,13 @@
 #include <string>
 #include <unordered_map>
 
-namespace Engine::Core {
-class RenderableComponent;
-}
+#include "../core/component.h"
 
 namespace Game::Visuals {
 
 struct VisualDef {
-
-  enum class MeshKind {
-    None,
-    Quad,
-    Plane,
-    Cube,
-    Capsule,
-    Ring
-  };
-  MeshKind mesh = MeshKind::Cube;
+  Engine::Core::RenderableComponent::MeshKind mesh =
+      Engine::Core::RenderableComponent::MeshKind::Cube;
   QVector3D color{1.0F, 1.0F, 1.0F};
   QString texture;
 };
@@ -36,7 +26,8 @@ private:
   std::unordered_map<std::string, VisualDef> m_units;
 };
 
-auto mesh_kind_from_string(const QString& s) -> VisualDef::MeshKind;
+auto mesh_kind_from_string(const QString& s)
+    -> Engine::Core::RenderableComponent::MeshKind;
 
 void apply_to_renderable(const VisualDef& def, Engine::Core::RenderableComponent& r);
 
