@@ -110,12 +110,6 @@ enum BuilderChiselPaletteSlot : std::uint8_t {
   k_builder_chisel_metal_slot = 1U,
 };
 
-enum class BuilderConstructionTool : std::uint8_t {
-  Hammer = 0U,
-  Saw = 1U,
-  Chisel = 2U,
-};
-
 auto builder_work_tunic_fill_role_colors(const HumanoidPalette& palette,
                                          QVector3D* out,
                                          std::size_t max) -> std::uint32_t {

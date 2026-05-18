@@ -106,12 +106,6 @@ enum CarthageChiselPaletteSlot : std::uint8_t {
   k_carthage_chisel_metal_slot = 1U,
 };
 
-enum class BuilderConstructionTool : std::uint8_t {
-  Hammer = 0U,
-  Saw = 1U,
-  Chisel = 2U,
-};
-
 auto carthage_headwrap_archetype() -> const RenderArchetype& {
   static const RenderArchetype arch = []() {
     QVector3D const top_local(0.0F, 0.05F, 0.0F);
