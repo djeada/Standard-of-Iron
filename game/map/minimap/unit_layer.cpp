@@ -142,7 +142,7 @@ void UnitLayer::draw_unit_marker(QPainter& painter,
   QColor border_color(colors.border_r, colors.border_g, colors.border_b);
 
   painter.setBrush(fill_color);
-  painter.setPen(QPen(border_color, 1.2));
+  painter.setPen(QPen(border_color, 1.8));
   painter.drawEllipse(center, m_unit_radius, m_unit_radius);
 }
 
@@ -167,7 +167,7 @@ void UnitLayer::draw_building_marker(QPainter& painter,
   QColor border_color(colors.border_r, colors.border_g, colors.border_b);
 
   painter.setBrush(fill_color);
-  painter.setPen(QPen(border_color, 1.5));
+  painter.setPen(QPen(border_color, 2.2));
   painter.drawRect(rect);
 
   const qreal inner = half * 0.4;
