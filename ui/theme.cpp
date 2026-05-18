@@ -1,4 +1,5 @@
 #include "theme.h"
+
 #include <QString>
 #include <qglobal.h>
 #include <qjsengine.h>
@@ -6,18 +7,20 @@
 #include <qobject.h>
 #include <qqmlengine.h>
 
-Theme *Theme::m_instance = nullptr;
+Theme* Theme::m_instance = nullptr;
 
-Theme::Theme(QObject *parent) : QObject(parent) {}
+Theme::Theme(QObject* parent)
+    : QObject(parent) {
+}
 
-auto Theme::instance() -> Theme * {
+auto Theme::instance() -> Theme* {
   if (m_instance == nullptr) {
     m_instance = new Theme();
   }
   return m_instance;
 }
 
-auto Theme::create(QQmlEngine *engine, QJSEngine *scriptEngine) -> Theme * {
+auto Theme::create(QQmlEngine* engine, QJSEngine* scriptEngine) -> Theme* {
   Q_UNUSED(engine)
   Q_UNUSED(scriptEngine)
   return instance();
@@ -71,8 +74,7 @@ QVariantMap Theme::nationEmblems() {
 #else
       "qrc:/assets/visuals/emblems/";
 #endif
-  emblems["roman_republic"] =
-      QString::fromLatin1(k_resource_prefix) + "rome.png";
+  emblems["roman_republic"] = QString::fromLatin1(k_resource_prefix) + "rome.png";
   emblems["carthage"] = QString::fromLatin1(k_resource_prefix) + "cartaghe.png";
   return emblems;
 }

@@ -99,8 +99,9 @@ void RiverRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     }
 
     if (vis_snapshot != nullptr) {
-      vis_opts.sample_count = Ground::recommended_linear_feature_visibility_sample_count(
-          (segment.end - segment.start).length(), m_tile_size);
+      vis_opts.sample_count =
+          Ground::recommended_linear_feature_visibility_sample_count(
+              (segment.end - segment.start).length(), m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
           vis_snapshot.get(), segment.start, segment.end, vis_opts);
       if (!vis_result.visible) {

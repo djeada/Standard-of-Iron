@@ -176,10 +176,10 @@ auto humanoid_clip_matches_requested_idle_variant(
 
 } // namespace
 
-auto humanoid_clip_variant_for_state(
-    Render::Creature::ArchetypeId archetype_id,
-    const Render::GL::HumanoidAnimationContext& anim,
-    Render::Creature::AnimationStateId state) noexcept -> std::uint8_t {
+auto humanoid_clip_variant_for_state(Render::Creature::ArchetypeId archetype_id,
+                                     const Render::GL::HumanoidAnimationContext& anim,
+                                     Render::Creature::AnimationStateId state) noexcept
+    -> std::uint8_t {
   auto const resolved_archetype = default_humanoid_archetype(archetype_id);
   auto const variant_count =
       Render::Creature::ArchetypeRegistry::instance().clip_variant_count(

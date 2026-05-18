@@ -98,7 +98,8 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
   TerrainSurfaceCmd::VisibilityResources visibility_resources;
   if (visibility_snapshot != nullptr) {
-    visibility_resources = m_visibility_helper.update(*visibility_snapshot, m_tile_size);
+    visibility_resources =
+        m_visibility_helper.update(*visibility_snapshot, m_tile_size);
     if (m_chunk_visibility_cache.size() != m_chunks.size()) {
       m_chunk_visibility_cache.assign(m_chunks.size(), {});
     }

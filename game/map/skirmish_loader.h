@@ -51,16 +51,15 @@ struct SkirmishLoadResult {
   LightingSettings lighting_settings;
 };
 
- class SkirmishLoader {
- public:
+class SkirmishLoader {
+public:
   using OwnersUpdatedCallback = std::function<void()>;
-  using VisibilityInitializedCallback =
-      std::function<void(Engine::Core::World& world,
-                         int local_owner_id,
-                         int map_width,
-                         int map_height,
-                         float tile_size,
-                         bool spectator_mode)>;
+  using VisibilityInitializedCallback = std::function<void(Engine::Core::World& world,
+                                                           int local_owner_id,
+                                                           int map_width,
+                                                           int map_height,
+                                                           float tile_size,
+                                                           bool spectator_mode)>;
 
   SkirmishLoader(Engine::Core::World& world,
                  Render::GL::Renderer& renderer,

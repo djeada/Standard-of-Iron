@@ -28,16 +28,14 @@ auto is_at_barracks_delivery_edge(
   auto const size = BuildingCollisionRegistry::get_building_size("barracks");
   float const half_width = size.width * 0.5F;
   float const half_depth = size.depth * 0.5F;
-  float const edge_dx =
-      std::max(std::fabs(civilian_transform.position.x -
-                         barracks_transform.position.x) -
-                   half_width,
-               0.0F);
-  float const edge_dz =
-      std::max(std::fabs(civilian_transform.position.z -
-                         barracks_transform.position.z) -
-                   half_depth,
-               0.0F);
+  float const edge_dx = std::max(
+      std::fabs(civilian_transform.position.x - barracks_transform.position.x) -
+          half_width,
+      0.0F);
+  float const edge_dz = std::max(
+      std::fabs(civilian_transform.position.z - barracks_transform.position.z) -
+          half_depth,
+      0.0F);
 
   return std::max(edge_dx, edge_dz) <= barracks_delivery_clearance();
 }
@@ -96,8 +94,7 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    if (barracks_prod->manpower_available +
-            k_civilian_delivery_population_grant >
+    if (barracks_prod->manpower_available + k_civilian_delivery_population_grant >
         barracks_prod->max_units) {
       civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
       continue;

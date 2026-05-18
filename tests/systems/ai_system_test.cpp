@@ -1,6 +1,5 @@
-#include <gtest/gtest.h>
-
 #include <algorithm>
+#include <gtest/gtest.h>
 
 #include "game/core/component.h"
 #include "game/core/ownership_constants.h"
@@ -77,19 +76,20 @@ protected:
     return building;
   }
 
-  static auto add_world_unit(Engine::Core::World& world,
-                             int owner_id,
-                             float x,
-                             float z,
-                             float vision_range,
-                             bool ai_controlled,
-                             bool is_building = false,
-                             Game::Units::SpawnType spawn_type =
-                                 Game::Units::SpawnType::Spearman) -> Engine::Core::Entity* {
+  static auto
+  add_world_unit(Engine::Core::World& world,
+                 int owner_id,
+                 float x,
+                 float z,
+                 float vision_range,
+                 bool ai_controlled,
+                 bool is_building = false,
+                 Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Spearman)
+      -> Engine::Core::Entity* {
     auto* entity = world.create_entity();
     (void)entity->add_component<Engine::Core::TransformComponent>(x, 0.0F, z);
-    auto* unit =
-        entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, vision_range);
+    auto* unit = entity->add_component<Engine::Core::UnitComponent>(
+        100, 100, 1.0F, vision_range);
     unit->owner_id = owner_id;
     unit->spawn_type = spawn_type;
     if (ai_controlled) {
@@ -162,14 +162,15 @@ TEST_F(AISystemTest, PersonalityChangesArmyCommitmentAndOrganization) {
       Game::Systems::AI::AIStrategy::Balanced);
   auto defensive = aggressive;
 
-  Game::Systems::AI::AIStrategyFactory::apply_personality(aggressive, 0.85F, 0.25F, 0.25F);
-  Game::Systems::AI::AIStrategyFactory::apply_personality(defensive, 0.25F, 0.85F, 0.25F);
+  Game::Systems::AI::AIStrategyFactory::apply_personality(
+      aggressive, 0.85F, 0.25F, 0.25F);
+  Game::Systems::AI::AIStrategyFactory::apply_personality(
+      defensive, 0.25F, 0.85F, 0.25F);
 
   EXPECT_LT(aggressive.reactive_attack_size, defensive.reactive_attack_size);
   EXPECT_LT(aggressive.proactive_attack_size, defensive.proactive_attack_size);
   EXPECT_LT(aggressive.reserve_units, defensive.reserve_units);
-  EXPECT_LT(aggressive.attack_formation_spacing,
-            defensive.attack_formation_spacing);
+  EXPECT_LT(aggressive.attack_formation_spacing, defensive.attack_formation_spacing);
   EXPECT_GT(defensive.desired_defense_tower_count,
             aggressive.desired_defense_tower_count);
 }
@@ -241,8 +242,9 @@ TEST_F(AISystemTest, AIReasonerKeepsPrimaryBarracksAnchoredToOriginalBase) {
   EXPECT_FLOAT_EQ(context.base_pos_z, 40.0F);
 }
 
-TEST_F(AISystemTest,
-       AIReasonerChoosesExpansionSiteFromEnemyStrategicObjectiveAndIgnoresNeutralBarracks) {
+TEST_F(
+    AISystemTest,
+    AIReasonerChoosesExpansionSiteFromEnemyStrategicObjectiveAndIgnoresNeutralBarracks) {
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;
   snapshot.friendly_units = {
@@ -400,12 +402,13 @@ TEST_F(AISystemTest, ClaimUnitsRefreshesExistingSameTaskAssignments) {
   context.assigned_units[7] = {
       Game::Systems::AI::BehaviorPriority::Normal, 1.0F, "gathering"};
 
-  const auto claimed = Game::Systems::AI::claim_units({7},
-                                                      Game::Systems::AI::BehaviorPriority::Normal,
-                                                      "gathering",
-                                                      context,
-                                                      5.0F,
-                                                      2.0F);
+  const auto claimed =
+      Game::Systems::AI::claim_units({7},
+                                     Game::Systems::AI::BehaviorPriority::Normal,
+                                     "gathering",
+                                     context,
+                                     5.0F,
+                                     2.0F);
 
   ASSERT_EQ(claimed.size(), 1U);
   EXPECT_EQ(claimed.front(), 7U);
@@ -422,8 +425,8 @@ TEST_F(AISystemTest, CleanupDeadUnitsRemovesStaleAssignmentsForAliveUnits) {
   context.assigned_units[7] = {
       Game::Systems::AI::BehaviorPriority::Normal, 1.0F, "attacking"};
 
-  const auto alive = Game::Systems::AI::cleanup_dead_units(
-      snapshot, context, snapshot.game_time);
+  const auto alive =
+      Game::Systems::AI::cleanup_dead_units(snapshot, context, snapshot.game_time);
 
   EXPECT_EQ(alive.size(), 1U);
   EXPECT_TRUE(context.assigned_units.empty());
@@ -589,8 +592,7 @@ TEST_F(AISystemTest, SnapshotBuilderFiltersEnemiesByOwnedVision) {
   owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
   owners.register_owner_with_id(7, Game::Systems::OwnerType::Player, "Enemy");
 
-  auto* visible_enemy =
-      add_world_unit(world, 7, 8.0F, 0.0F, 12.0F, false, false);
+  auto* visible_enemy = add_world_unit(world, 7, 8.0F, 0.0F, 12.0F, false, false);
   (void)add_world_unit(world, 7, 30.0F, 0.0F, 12.0F, false, false);
   (void)add_world_unit(world, 3, 0.0F, 0.0F, 12.0F, true, false);
 
@@ -606,16 +608,9 @@ TEST_F(AISystemTest, SnapshotBuilderUsesBuildingVisionForBaseDefense) {
   owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
   owners.register_owner_with_id(7, Game::Systems::OwnerType::Player, "Enemy");
 
-  auto* visible_enemy =
-      add_world_unit(world, 7, 15.0F, 0.0F, 12.0F, false, false);
-  (void)add_world_unit(world,
-                       3,
-                       0.0F,
-                       0.0F,
-                       5.0F,
-                       true,
-                       true,
-                       Game::Units::SpawnType::Barracks);
+  auto* visible_enemy = add_world_unit(world, 7, 15.0F, 0.0F, 12.0F, false, false);
+  (void)add_world_unit(
+      world, 3, 0.0F, 0.0F, 5.0F, true, true, Game::Units::SpawnType::Barracks);
 
   const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
 
@@ -629,8 +624,8 @@ TEST_F(AISystemTest, SnapshotBuilderKeepsHiddenStrategicObjectives) {
   owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
   owners.register_owner_with_id(7, Game::Systems::OwnerType::Player, "Enemy");
 
-  auto* hidden_enemy_base =
-      add_world_unit(world, 7, 60.0F, 0.0F, 12.0F, false, true, Game::Units::SpawnType::Barracks);
+  auto* hidden_enemy_base = add_world_unit(
+      world, 7, 60.0F, 0.0F, 12.0F, false, true, Game::Units::SpawnType::Barracks);
   (void)add_world_unit(world, 3, 0.0F, 0.0F, 12.0F, true, false);
 
   const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
@@ -648,7 +643,7 @@ TEST_F(AISystemTest, DefensiveAILeavesDefendingWhenOnlyDistantEnemyRemainsVisibl
       make_unit(1, 30.0F, 20.0F),
       make_unit(2, 32.0F, 22.0F),
       make_unit(3, 34.0F, 24.0F),
-   };
+  };
   snapshot.visible_enemies = {make_enemy(101, 120.0F, 120.0F)};
 
   Game::Systems::AI::AIContext context;
@@ -949,8 +944,9 @@ TEST_F(AISystemTest, GatherBehaviorDoesNotPullReserveUnitsToRally) {
 
   ASSERT_EQ(commands.size(), 1U);
   EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
-  EXPECT_TRUE(std::find(commands.front().units.begin(), commands.front().units.end(), 1U) ==
-              commands.front().units.end());
+  EXPECT_TRUE(std::find(commands.front().units.begin(),
+                        commands.front().units.end(),
+                        1U) == commands.front().units.end());
 }
 
 TEST_F(AISystemTest, ExpandBehaviorMovesAttackForceToExpansionSite) {
@@ -1039,8 +1035,9 @@ TEST_F(AISystemTest, AttackBehaviorLeavesReserveUnitsAtHome) {
 
   ASSERT_EQ(commands.size(), 1U);
   EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::AttackTarget);
-  EXPECT_TRUE(std::find(commands.front().units.begin(), commands.front().units.end(), 1U) ==
-              commands.front().units.end());
+  EXPECT_TRUE(std::find(commands.front().units.begin(),
+                        commands.front().units.end(),
+                        1U) == commands.front().units.end());
 }
 
 TEST_F(AISystemTest, AttackBehaviorLeavesHarassUnitsOutOfMainAttack) {
@@ -1192,11 +1189,10 @@ TEST_F(AISystemTest, AttackBehaviorUsesConfiguredFormationSpacing) {
                         compact_commands.front().move_target_x.end()) -
       *std::min_element(compact_commands.front().move_target_x.begin(),
                         compact_commands.front().move_target_x.end());
-  const float wide_span =
-      *std::max_element(wide_commands.front().move_target_x.begin(),
-                        wide_commands.front().move_target_x.end()) -
-      *std::min_element(wide_commands.front().move_target_x.begin(),
-                        wide_commands.front().move_target_x.end());
+  const float wide_span = *std::max_element(wide_commands.front().move_target_x.begin(),
+                                            wide_commands.front().move_target_x.end()) -
+                          *std::min_element(wide_commands.front().move_target_x.begin(),
+                                            wide_commands.front().move_target_x.end());
 
   EXPECT_LT(compact_span, wide_span);
 }

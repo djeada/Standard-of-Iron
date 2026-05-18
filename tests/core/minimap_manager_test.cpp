@@ -1,8 +1,7 @@
-#include <gtest/gtest.h>
-
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <gtest/gtest.h>
 #include <utility>
 #include <vector>
 
@@ -20,8 +19,9 @@ using namespace Game::Map;
 
 namespace {
 
-auto make_test_map(int width = 12, int height = 12, float yaw_deg = 0.0F)
-    -> MapDefinition {
+auto make_test_map(int width = 12,
+                   int height = 12,
+                   float yaw_deg = 0.0F) -> MapDefinition {
   MapDefinition map;
   map.name = "Minimap Fog Test";
   map.grid.width = width;
@@ -98,7 +98,8 @@ auto add_unit(Engine::Core::World& world,
 auto make_visibility_snapshot(int width,
                               int height,
                               std::uint64_t version,
-                              VisibilityState fill_state) -> VisibilityService::Snapshot {
+                              VisibilityState fill_state)
+    -> VisibilityService::Snapshot {
   VisibilityService::Snapshot snapshot;
   snapshot.version = version;
   snapshot.initialized = true;
@@ -107,8 +108,8 @@ auto make_visibility_snapshot(int width,
   snapshot.tile_size = 1.0F;
   snapshot.half_width = static_cast<float>(width) * 0.5F - 0.5F;
   snapshot.half_height = static_cast<float>(height) * 0.5F - 0.5F;
-  snapshot.cells.assign(
-      static_cast<std::size_t>(width * height), static_cast<std::uint8_t>(fill_state));
+  snapshot.cells.assign(static_cast<std::size_t>(width * height),
+                        static_cast<std::uint8_t>(fill_state));
   return snapshot;
 }
 
@@ -215,8 +216,7 @@ TEST(MinimapManagerTest, UpdateUnitsMarksDirtyOnFirstCallAfterFogChange) {
   manager.generate_for_map(make_test_map());
   (void)manager.consume_dirty_flag();
 
-  auto visible_snapshot =
-      make_visibility_snapshot(12, 12, 1, VisibilityState::Visible);
+  auto visible_snapshot = make_visibility_snapshot(12, 12, 1, VisibilityState::Visible);
   manager.update_fog(visible_snapshot);
   (void)manager.consume_dirty_flag();
 
@@ -291,9 +291,10 @@ TEST(MinimapManagerTest, NonLocalMarkersDisappearWhenCellsFallBackToExplored) {
   const QImage image_with_enemy_visible = manager.get_image().copy();
   const auto [enemy_px, enemy_py] =
       world_to_pixel(image_with_enemy_visible, map, 1.0F, 1.0F);
-  EXPECT_GT(changed_pixels_in_radius(
-                fog_with_enemy_visible, image_with_enemy_visible, enemy_px, enemy_py, 3),
-            0)
+  EXPECT_GT(
+      changed_pixels_in_radius(
+          fog_with_enemy_visible, image_with_enemy_visible, enemy_px, enemy_py, 3),
+      0)
       << "Enemy markers should render while their cell is currently visible.";
 
   auto* scout_transform = scout->get_component<Engine::Core::TransformComponent>();
@@ -307,9 +308,10 @@ TEST(MinimapManagerTest, NonLocalMarkersDisappearWhenCellsFallBackToExplored) {
 
   manager.update_units(world.get(), nullptr, 1);
   const QImage image_with_enemy_explored = manager.get_image().copy();
-  EXPECT_EQ(changed_pixels_in_radius(
-                fog_with_enemy_explored, image_with_enemy_explored, enemy_px, enemy_py, 3),
-            0)
+  EXPECT_EQ(
+      changed_pixels_in_radius(
+          fog_with_enemy_explored, image_with_enemy_explored, enemy_px, enemy_py, 3),
+      0)
       << "The minimap must cull enemy markers once the cell is no longer visible.";
 }
 
@@ -325,7 +327,8 @@ TEST(VisibilityServiceSnapshotTest, SnapshotIfNewerReturnsPublishedFrames) {
 
   visibility.reveal_all();
 
-  const auto revealed_snapshot = visibility.snapshot_if_newer(initial_snapshot->version);
+  const auto revealed_snapshot =
+      visibility.snapshot_if_newer(initial_snapshot->version);
   ASSERT_NE(revealed_snapshot, nullptr);
   EXPECT_GT(revealed_snapshot->version, initial_snapshot->version);
   EXPECT_TRUE(std::all_of(revealed_snapshot->cells.begin(),
@@ -373,8 +376,10 @@ TEST(VisibilityCoordinatorTest, InitializePublishesSameSnapshotVersionToAllPrese
 
   ASSERT_EQ(fog_presenter.applied_versions.size(), 1U);
   ASSERT_EQ(minimap_presenter.applied_versions.size(), 1U);
-  EXPECT_EQ(fog_presenter.applied_versions.back(), minimap_presenter.applied_versions.back());
-  EXPECT_EQ(fog_presenter.applied_versions.back(), coordinator.last_published_version());
+  EXPECT_EQ(fog_presenter.applied_versions.back(),
+            minimap_presenter.applied_versions.back());
+  EXPECT_EQ(fog_presenter.applied_versions.back(),
+            coordinator.last_published_version());
 }
 
 TEST(VisibilityCoordinatorTest, UpdateSkipsPresenterRepublishWhenVersionIsUnchanged) {
@@ -419,7 +424,8 @@ TEST(VisibilityCoordinatorTest, SpectatorToggleClearsAndRepublishesAllPresenters
 
   ASSERT_EQ(fog_presenter.applied_versions.size(), 2U);
   ASSERT_EQ(minimap_presenter.applied_versions.size(), 2U);
-  EXPECT_EQ(fog_presenter.applied_versions.back(), minimap_presenter.applied_versions.back());
+  EXPECT_EQ(fog_presenter.applied_versions.back(),
+            minimap_presenter.applied_versions.back());
 }
 
 TEST(MinimapManagerTest, NonLocalMarkersRemainHiddenInUnseenCells) {
@@ -444,7 +450,8 @@ TEST(MinimapManagerTest, NonLocalMarkersRemainHiddenInUnseenCells) {
   manager.update_units(world.get(), nullptr, 1);
   const QImage image_with_units = manager.get_image().copy();
   const auto [enemy_px, enemy_py] = world_to_pixel(image_with_units, map, 20.0F, 20.0F);
-  EXPECT_EQ(changed_pixels_in_radius(fog_only, image_with_units, enemy_px, enemy_py, 3), 0)
+  EXPECT_EQ(changed_pixels_in_radius(fog_only, image_with_units, enemy_px, enemy_py, 3),
+            0)
       << "Enemy markers must not reveal unseen positions through fog.";
 }
 
@@ -467,6 +474,7 @@ TEST(MinimapManagerTest, LocalMarkersIgnoreFogVisibilityFiltering) {
   manager.update_units(world.get(), nullptr, 1);
   const QImage with_local_marker = manager.get_image().copy();
   const auto [local_px, local_py] = world_to_pixel(with_local_marker, map, 1.0F, 1.0F);
-  EXPECT_GT(changed_pixels_in_radius(fog_only, with_local_marker, local_px, local_py, 3), 0)
+  EXPECT_GT(
+      changed_pixels_in_radius(fog_only, with_local_marker, local_px, local_py, 3), 0)
       << "Local markers must remain visible even if the fog snapshot is fully unseen.";
 }

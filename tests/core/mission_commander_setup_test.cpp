@@ -14,8 +14,8 @@ TEST(MissionCommanderSetupTest, KeepsConfiguredCommanderWhenPresent) {
 }
 
 TEST(MissionCommanderSetupTest, FallsBackWhenConfiguredCommanderBelongsToOtherNation) {
-  EXPECT_EQ(App::Core::resolve_commander_troop(
-                "carthage", QStringLiteral("roman_veteran_consul")),
+  EXPECT_EQ(App::Core::resolve_commander_troop("carthage",
+                                               QStringLiteral("roman_veteran_consul")),
             QStringLiteral("carthage_elephant_master"));
 }
 

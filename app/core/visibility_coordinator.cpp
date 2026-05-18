@@ -11,7 +11,8 @@ void VisibilityCoordinator::FogPresenterAdapter::bind(Render::GL::FogRenderer* f
 void VisibilityCoordinator::FogPresenterAdapter::apply_visibility_frame(
     const Game::Map::VisibilityService::Snapshot& snapshot) {
   if (m_fog != nullptr) {
-    m_fog->update_mask(snapshot.width, snapshot.height, snapshot.tile_size, snapshot.cells);
+    m_fog->update_mask(
+        snapshot.width, snapshot.height, snapshot.tile_size, snapshot.cells);
   }
 }
 

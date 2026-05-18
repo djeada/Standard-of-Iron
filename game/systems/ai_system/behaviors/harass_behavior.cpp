@@ -59,8 +59,12 @@ auto select_visible_harass_target(const AISnapshot& snapshot,
       if (other.id == candidate.id) {
         continue;
       }
-      const float support_dist_sq = distance_squared(
-          other.pos_x, other.pos_y, other.pos_z, candidate.pos_x, candidate.pos_y, candidate.pos_z);
+      const float support_dist_sq = distance_squared(other.pos_x,
+                                                     other.pos_y,
+                                                     other.pos_z,
+                                                     candidate.pos_x,
+                                                     candidate.pos_y,
+                                                     candidate.pos_z);
       if (support_dist_sq <= 12.0F * 12.0F) {
         nearby_support++;
       }
@@ -135,18 +139,15 @@ void HarassBehavior::execute(const AISnapshot& snapshot,
     harass_unit_ids.push_back(unit->id);
   }
 
-  auto claimed_units = claim_units(harass_unit_ids,
-                                   get_priority(),
-                                   "harassing",
-                                   context,
-                                   snapshot.game_time,
-                                   1.5F);
+  auto claimed_units = claim_units(
+      harass_unit_ids, get_priority(), "harassing", context, snapshot.game_time, 1.5F);
   if (claimed_units.empty()) {
     return;
   }
 
-  const float harassment_range = std::max(
-      context.strategy_config.harassment_range, context.strategy_config.scouting_distance * 0.75F);
+  const float harassment_range =
+      std::max(context.strategy_config.harassment_range,
+               context.strategy_config.scouting_distance * 0.75F);
   const ContactSnapshot* visible_target = select_visible_harass_target(
       snapshot, group_center_x, group_center_y, group_center_z, harassment_range);
 

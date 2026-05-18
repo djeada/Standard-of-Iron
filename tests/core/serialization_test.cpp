@@ -217,7 +217,8 @@ TEST_F(SerializationTest, MovementComponentSerialization) {
 
   ASSERT_TRUE(json.contains("player_order_intent"));
   QJsonObject intent_obj = json["player_order_intent"].toObject();
-  EXPECT_EQ(intent_obj["kind"].toInt(), static_cast<int>(PlayerOrderIntentKind::ManualMove));
+  EXPECT_EQ(intent_obj["kind"].toInt(),
+            static_cast<int>(PlayerOrderIntentKind::ManualMove));
   EXPECT_TRUE(intent_obj["suppress_opportunistic_combat"].toBool());
 }
 
@@ -1531,8 +1532,7 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   EXPECT_FLOAT_EQ(restored_movement->path[2].first, 50.0F);
   EXPECT_FLOAT_EQ(restored_movement->path[2].second, 60.0F);
 
-  auto* restored_intent =
-      restored_entity->get_component<PlayerOrderIntentComponent>();
+  auto* restored_intent = restored_entity->get_component<PlayerOrderIntentComponent>();
   ASSERT_NE(restored_intent, nullptr);
   EXPECT_EQ(restored_intent->kind, PlayerOrderIntentKind::ManualMove);
   EXPECT_TRUE(restored_intent->suppress_opportunistic_combat);

@@ -1,7 +1,4 @@
 #include "campaign_map_view.h"
-#include "campaign_map_render_utils.h"
-
-#include "../utils/resource_utils.h"
 
 #include <QDateTime>
 #include <QDebug>
@@ -23,16 +20,25 @@
 #include <QVector4D>
 #include <QtGlobal>
 #include <QtMath>
+
 #include <cmath>
 #include <cstring>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include "../utils/resource_utils.h"
+#include "campaign_map_render_utils.h"
+
 namespace {
 
-auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
-                      float distance, float pan_u, float pan_v) -> QMatrix4x4 {
+auto build_mvp_matrix(float width,
+                      float height,
+                      float yaw_deg,
+                      float pitch_deg,
+                      float distance,
+                      float pan_u,
+                      float pan_v) -> QMatrix4x4 {
   const float view_w = qMax(1.0F, width);
   const float view_h = qMax(1.0F, height);
   const float aspect = view_w / view_h;
@@ -45,8 +51,7 @@ auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
   const QVector3D center(0.5F + clamped_pan_u, 0.0F, 0.5F + clamped_pan_v);
   const float yaw_rad = qDegreesToRadians(yaw_deg);
   const float pitch_rad = qDegreesToRadians(pitch_deg);
-  const float clamped_distance =
-      qMax(CampaignMapView::k_min_orbit_distance, distance);
+  const float clamped_distance = qMax(CampaignMapView::k_min_orbit_distance, distance);
 
   const float cos_pitch = std::cos(pitch_rad);
   const float sin_pitch = std::sin(pitch_rad);
@@ -64,8 +69,10 @@ auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
   return projection * view * model;
 }
 
-auto point_in_triangle(const QVector2D &p, const QVector2D &a,
-                       const QVector2D &b, const QVector2D &c) -> bool {
+auto point_in_triangle(const QVector2D& p,
+                       const QVector2D& a,
+                       const QVector2D& b,
+                       const QVector2D& c) -> bool {
   const QVector2D v0 = c - a;
   const QVector2D v1 = b - a;
   const QVector2D v2 = p - a;
@@ -228,16 +235,16 @@ struct LabelLayer {
 };
 
 struct QStringHash {
-  std::size_t operator()(const QString &s) const noexcept { return qHash(s); }
+  std::size_t operator()(const QString& s) const noexcept { return qHash(s); }
 };
 
 struct CampaignMapTextureCache {
-  static CampaignMapTextureCache &instance() {
+  static CampaignMapTextureCache& instance() {
     static CampaignMapTextureCache s_instance;
     return s_instance;
   }
 
-  QOpenGLTexture *get_or_load(const QString &resource_path) {
+  QOpenGLTexture* get_or_load(const QString& resource_path) {
 
     if (!m_allow_loading) {
       qWarning() << "CampaignMapTextureCache: Attempted to load texture after "
@@ -259,7 +266,7 @@ struct CampaignMapTextureCache {
     }
 
     QImage rgba = image.convertToFormat(QImage::Format_RGBA8888);
-    auto *texture = new QOpenGLTexture(rgba);
+    auto* texture = new QOpenGLTexture(rgba);
     texture->setWrapMode(QOpenGLTexture::ClampToEdge);
     texture->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
     m_textures[resource_path] = texture;
@@ -270,9 +277,9 @@ struct CampaignMapTextureCache {
 
   void clear() {
 
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QOpenGLContext* ctx = QOpenGLContext::currentContext();
     if (ctx != nullptr && ctx->isValid()) {
-      for (auto &pair : m_textures) {
+      for (auto& pair : m_textures) {
         delete pair.second;
       }
     }
@@ -282,7 +289,7 @@ struct CampaignMapTextureCache {
 private:
   CampaignMapTextureCache() = default;
   ~CampaignMapTextureCache() { clear(); }
-  std::unordered_map<QString, QOpenGLTexture *, QStringHash> m_textures;
+  std::unordered_map<QString, QOpenGLTexture*, QStringHash> m_textures;
   bool m_allow_loading = true;
 };
 
@@ -313,8 +320,8 @@ public:
     if (m_terrain_mesh.ready && m_terrain_program.isLinked()) {
       draw_terrain_layer(m_terrain_mesh, mvp);
     } else if (m_land_vertex_count > 0) {
-      draw_textured_layer(m_base_texture, m_land_vao, m_land_vertex_count, mvp,
-                          1.0F, 0.0F);
+      draw_textured_layer(
+          m_base_texture, m_land_vao, m_land_vertex_count, mvp, 1.0F, 0.0F);
     } else {
       draw_textured_layer(m_base_texture, m_quad_vao, 6, mvp, 1.0F, 0.0F);
     }
@@ -343,8 +350,8 @@ public:
     }
   }
 
-  auto createFramebufferObject(const QSize &size)
-      -> QOpenGLFramebufferObject * override {
+  auto
+  createFramebufferObject(const QSize& size) -> QOpenGLFramebufferObject* override {
     m_size = size;
     QOpenGLFramebufferObjectFormat fmt;
     fmt.setAttachment(QOpenGLFramebufferObject::Depth);
@@ -352,8 +359,8 @@ public:
     return new QOpenGLFramebufferObject(size, fmt);
   }
 
-  void synchronize(QQuickFramebufferObject *item) override {
-    auto *view = dynamic_cast<CampaignMapView *>(item);
+  void synchronize(QQuickFramebufferObject* item) override {
+    auto* view = dynamic_cast<CampaignMapView*>(item);
     if (view == nullptr) {
       return;
     }
@@ -398,8 +405,8 @@ private:
   GLuint m_land_vbo = 0;
   int m_land_vertex_count = 0;
 
-  QOpenGLTexture *m_base_texture = nullptr;
-  QOpenGLTexture *m_water_texture = nullptr;
+  QOpenGLTexture* m_base_texture = nullptr;
+  QOpenGLTexture* m_water_texture = nullptr;
 
   LineLayer m_coast_layer;
   LineLayer m_river_layer;
@@ -430,7 +437,7 @@ private:
       return true;
     }
 
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QOpenGLContext* ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr || !ctx->isValid()) {
       qWarning() << "CampaignMapRenderer: No valid OpenGL context";
       return false;
@@ -444,7 +451,7 @@ private:
 
     init_quad();
 
-    auto &tex_cache = CampaignMapTextureCache::instance();
+    auto& tex_cache = CampaignMapTextureCache::instance();
     tex_cache.set_loading_allowed(true);
     m_water_texture = tex_cache.get_or_load(
         QStringLiteral(":/assets/campaign_map/campaign_water.png"));
@@ -456,7 +463,8 @@ private:
 
     init_line_layer(m_coast_layer,
                     QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
-                    QVector4D(0.12F, 0.10F, 0.08F, 0.95F), 2.5F);
+                    QVector4D(0.12F, 0.10F, 0.08F, 0.95F),
+                    2.5F);
 
     m_coast_layer.double_stroke = true;
     m_coast_layer.outer_color = QVector4D(0.12F, 0.10F, 0.08F, 0.95F);
@@ -464,7 +472,8 @@ private:
 
     init_line_layer(m_river_layer,
                     QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
-                    QVector4D(0.35F, 0.48F, 0.58F, 0.90F), 1.5F);
+                    QVector4D(0.35F, 0.48F, 0.58F, 0.90F),
+                    1.5F);
 
     init_path_layer(m_path_layer,
                     QStringLiteral(":/assets/campaign_map/hannibal_path.json"));
@@ -473,7 +482,8 @@ private:
 
     init_borders_layer(m_province_border_layer,
                        QStringLiteral(":/assets/campaign_map/provinces.json"),
-                       QVector4D(0.25F, 0.22F, 0.20F, 0.65F), 1.2F);
+                       QVector4D(0.25F, 0.22F, 0.20F, 0.65F),
+                       1.2F);
 
     init_symbol_layer(m_symbol_layer,
                       QStringLiteral(":/assets/campaign_map/provinces.json"));
@@ -490,7 +500,7 @@ private:
   }
 
   auto init_shaders() -> bool {
-    static const char *k_tex_vert = R"(
+    static const char* k_tex_vert = R"(
 #version 330 core
 layout(location = 0) in vec2 a_pos;
 
@@ -506,7 +516,7 @@ void main() {
 }
 )";
 
-    static const char *k_tex_frag = R"(
+    static const char* k_tex_frag = R"(
 #version 330 core
 in vec2 v_uv;
 
@@ -522,7 +532,7 @@ void main() {
 }
 )";
 
-    static const char *k_line_vert = R"(
+    static const char* k_line_vert = R"(
 #version 330 core
 layout(location = 0) in vec2 a_pos;
 
@@ -535,7 +545,7 @@ void main() {
 }
 )";
 
-    static const char *k_line_frag = R"(
+    static const char* k_line_frag = R"(
 #version 330 core
 uniform vec4 u_color;
 
@@ -546,16 +556,13 @@ void main() {
 }
 )";
 
-    if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                   k_tex_vert)) {
-      qWarning()
-          << "CampaignMapRenderer: Failed to compile texture vertex shader";
+    if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Vertex, k_tex_vert)) {
+      qWarning() << "CampaignMapRenderer: Failed to compile texture vertex shader";
       return false;
     }
     if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
                                                    k_tex_frag)) {
-      qWarning()
-          << "CampaignMapRenderer: Failed to compile texture fragment shader";
+      qWarning() << "CampaignMapRenderer: Failed to compile texture fragment shader";
       return false;
     }
     if (!m_texture_program.link()) {
@@ -563,15 +570,12 @@ void main() {
       return false;
     }
 
-    if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                k_line_vert)) {
+    if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Vertex, k_line_vert)) {
       qWarning() << "CampaignMapRenderer: Failed to compile line vertex shader";
       return false;
     }
-    if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
-                                                k_line_frag)) {
-      qWarning()
-          << "CampaignMapRenderer: Failed to compile line fragment shader";
+    if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Fragment, k_line_frag)) {
+      qWarning() << "CampaignMapRenderer: Failed to compile line fragment shader";
       return false;
     }
     if (!m_line_program.link()) {
@@ -589,8 +593,7 @@ void main() {
     const QString frag_path = Utils::Resources::resolve_resource_path(
         QStringLiteral(":/assets/shaders/campaign_terrain.frag"));
 
-    if (!m_terrain_program.addShaderFromSourceFile(QOpenGLShader::Vertex,
-                                                   vert_path)) {
+    if (!m_terrain_program.addShaderFromSourceFile(QOpenGLShader::Vertex, vert_path)) {
       qWarning() << "CampaignMapRenderer: Failed to compile terrain vertex"
                  << vert_path;
       m_terrain_program.removeAllShaders();
@@ -615,7 +618,18 @@ void main() {
     }
 
     static const float k_quad_verts[] = {
-        0.0F, 0.0F, 1.0F, 0.0F, 1.0F, 1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 1.0F,
+        0.0F,
+        0.0F,
+        1.0F,
+        0.0F,
+        1.0F,
+        1.0F,
+        0.0F,
+        0.0F,
+        1.0F,
+        1.0F,
+        0.0F,
+        1.0F,
     };
 
     glGenVertexArrays(1, &m_quad_vao);
@@ -623,11 +637,10 @@ void main() {
 
     glBindVertexArray(m_quad_vao);
     glBindBuffer(GL_ARRAY_BUFFER, m_quad_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(k_quad_verts), k_quad_verts,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(k_quad_verts), k_quad_verts, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
     glBindVertexArray(0);
   }
 
@@ -665,16 +678,20 @@ void main() {
 
     glBindVertexArray(m_land_vao);
     glBindBuffer(GL_ARRAY_BUFFER, m_land_vbo);
-    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(data.size()),
-                 verts.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(data.size()),
+                 verts.data(),
+                 GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
     glBindVertexArray(0);
   }
 
-  void init_line_layer(LineLayer &layer, const QString &resource_path,
-                       const QVector4D &color, float width) {
+  void init_line_layer(LineLayer& layer,
+                       const QString& resource_path,
+                       const QVector4D& color,
+                       float width) {
     const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -695,7 +712,7 @@ void main() {
     std::vector<LineSpan> spans;
     int cursor = 0;
 
-    for (const auto &line_val : lines) {
+    for (const auto& line_val : lines) {
       const QJsonArray line = line_val.toArray();
       if (line.isEmpty()) {
         continue;
@@ -703,7 +720,7 @@ void main() {
 
       const int start = cursor;
       int count = 0;
-      for (const auto &pt_val : line) {
+      for (const auto& pt_val : line) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
@@ -730,10 +747,11 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
-                 verts.data(), GL_STATIC_DRAW);
+                 verts.data(),
+                 GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
     glBindVertexArray(0);
 
     layer.color = color;
@@ -742,7 +760,7 @@ void main() {
     layer.ready = true;
   }
 
-  void init_province_layer(ProvinceLayer &layer, const QString &resource_path) {
+  void init_province_layer(ProvinceLayer& layer, const QString& resource_path) {
     const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -765,7 +783,7 @@ void main() {
     std::vector<ProvinceSpan> spans;
     int cursor = 0;
 
-    for (const auto &prov_val : provinces) {
+    for (const auto& prov_val : provinces) {
       const QJsonObject prov = prov_val.toObject();
       const QString province_id = prov.value("id").toString();
       const QJsonArray tri = prov.value("triangles").toArray();
@@ -775,7 +793,7 @@ void main() {
 
       const int start = cursor;
       int count = 0;
-      for (const auto &pt_val : tri) {
+      for (const auto& pt_val : tri) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
@@ -810,18 +828,21 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
-                 verts.data(), GL_STATIC_DRAW);
+                 verts.data(),
+                 GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
     glBindVertexArray(0);
 
     layer.spans = std::move(spans);
     layer.ready = true;
   }
 
-  void init_borders_layer(LineLayer &layer, const QString &resource_path,
-                          const QVector4D &color, float width) {
+  void init_borders_layer(LineLayer& layer,
+                          const QString& resource_path,
+                          const QVector4D& color,
+                          float width) {
     const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -842,7 +863,7 @@ void main() {
     std::vector<LineSpan> spans;
     int cursor = 0;
 
-    for (const auto &line_val : lines) {
+    for (const auto& line_val : lines) {
       const QJsonArray line = line_val.toArray();
       if (line.isEmpty()) {
         continue;
@@ -850,7 +871,7 @@ void main() {
 
       const int start = cursor;
       int count = 0;
-      for (const auto &pt_val : line) {
+      for (const auto& pt_val : line) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
@@ -877,10 +898,11 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
-                 verts.data(), GL_STATIC_DRAW);
+                 verts.data(),
+                 GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
     glBindVertexArray(0);
 
     layer.color = color;
@@ -889,7 +911,7 @@ void main() {
     layer.ready = true;
   }
 
-  void init_path_layer(PathLayer &layer, const QString &resource_path) {
+  void init_path_layer(PathLayer& layer, const QString& resource_path) {
     const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -904,7 +926,7 @@ void main() {
     }
 
     const QJsonArray lines = doc.object().value("lines").toArray();
-    for (const auto &line_val : lines) {
+    for (const auto& line_val : lines) {
       const QJsonArray line = line_val.toArray();
       if (line.isEmpty()) {
         continue;
@@ -912,7 +934,7 @@ void main() {
 
       std::vector<QVector2D> raw_points;
       raw_points.reserve(static_cast<size_t>(line.size()));
-      for (const auto &pt_val : line) {
+      for (const auto& pt_val : line) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
@@ -939,13 +961,11 @@ void main() {
     layer.ready = !layer.lines.empty();
   }
 
-  void init_symbol_layer(CartographicSymbolLayer &layer,
-                         const QString &resource_path) {
+  void init_symbol_layer(CartographicSymbolLayer& layer, const QString& resource_path) {
     const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
-      qWarning() << "CampaignMapRenderer: Failed to open symbols source"
-                 << path;
+      qWarning() << "CampaignMapRenderer: Failed to open symbols source" << path;
       return;
     }
 
@@ -956,11 +976,11 @@ void main() {
     }
 
     const QJsonArray provinces = doc.object().value("provinces").toArray();
-    for (const auto &prov_val : provinces) {
+    for (const auto& prov_val : provinces) {
       const QJsonObject prov = prov_val.toObject();
       const QJsonArray cities = prov.value("cities").toArray();
 
-      for (const auto &city_val : cities) {
+      for (const auto& city_val : cities) {
         const QJsonObject city = city_val.toObject();
         const QJsonArray uv = city.value("uv").toArray();
         if (uv.size() < 2) {
@@ -996,9 +1016,8 @@ void main() {
         const QJsonArray label_uv = prov.value("label_uv").toArray();
         if (label_uv.size() >= 2) {
           CartographicSymbolInstance mountain;
-          mountain.position =
-              QVector2D(static_cast<float>(label_uv.at(0).toDouble()),
-                        static_cast<float>(label_uv.at(1).toDouble()));
+          mountain.position = QVector2D(static_cast<float>(label_uv.at(0).toDouble()),
+                                        static_cast<float>(label_uv.at(1).toDouble()));
           mountain.symbol_type = 0;
           mountain.importance = 2;
           mountain.size = 0.018F;
@@ -1012,13 +1031,13 @@ void main() {
     }
   }
 
-  void build_symbol_geometry(CartographicSymbolLayer &layer) {
+  void build_symbol_geometry(CartographicSymbolLayer& layer) {
     std::vector<float> verts;
 
     verts.reserve(layer.symbols.size() * 20 * 4);
     layer.spans.clear();
 
-    for (const auto &symbol : layer.symbols) {
+    for (const auto& symbol : layer.symbols) {
       std::vector<QVector2D> outline;
 
       switch (symbol.symbol_type) {
@@ -1031,12 +1050,11 @@ void main() {
             QVector2D(0.0F, 0.0F), 1.0F, symbol.importance);
         break;
       case 2:
-        outline = CampaignMapRender::generate_anchor_icon(QVector2D(0.0F, 0.0F),
-                                                          1.0F);
+        outline = CampaignMapRender::generate_anchor_icon(QVector2D(0.0F, 0.0F), 1.0F);
         break;
       default:
-        outline = CampaignMapRender::generate_city_marker(QVector2D(0.0F, 0.0F),
-                                                          1.0F, 1);
+        outline =
+            CampaignMapRender::generate_city_marker(QVector2D(0.0F, 0.0F), 1.0F, 1);
         break;
       }
 
@@ -1047,7 +1065,7 @@ void main() {
       const int start = static_cast<int>(verts.size() / 4);
       const int count = static_cast<int>(outline.size());
 
-      for (const auto &pt : outline) {
+      for (const auto& pt : outline) {
         float world_x = symbol.position.x() + pt.x() * symbol.size;
         float world_y = symbol.position.y() + pt.y() * symbol.size;
         verts.push_back(world_x);
@@ -1073,15 +1091,20 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
-                 verts.data(), GL_STATIC_DRAW);
+                 verts.data(),
+                 GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(0));
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          reinterpret_cast<void *>(2 * sizeof(float)));
+    glVertexAttribPointer(1,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          4 * sizeof(float),
+                          reinterpret_cast<void*>(2 * sizeof(float)));
 
     glBindVertexArray(0);
 
@@ -1089,8 +1112,9 @@ void main() {
     layer.ready = true;
   }
 
-  void draw_symbol_layer(const CartographicSymbolLayer &layer,
-                         const QMatrix4x4 &mvp, float z_offset) {
+  void draw_symbol_layer(const CartographicSymbolLayer& layer,
+                         const QMatrix4x4& mvp,
+                         float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
       return;
     }
@@ -1102,7 +1126,7 @@ void main() {
       m_line_program.setUniformValue("u_z", z_offset);
       m_line_program.setUniformValue("u_color", layer.shadow_color);
       glBindVertexArray(layer.vao);
-      for (const auto &span : layer.spans) {
+      for (const auto& span : layer.spans) {
         glDrawArrays(GL_LINE_STRIP, span.start, span.count);
       }
       glBindVertexArray(0);
@@ -1111,7 +1135,7 @@ void main() {
     m_line_program.setUniformValue("u_z", z_offset + 0.001F);
     m_line_program.setUniformValue("u_color", layer.fill_color);
     glBindVertexArray(layer.vao);
-    for (const auto &span : layer.spans) {
+    for (const auto& span : layer.spans) {
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
     glBindVertexArray(0);
@@ -1119,7 +1143,7 @@ void main() {
     m_line_program.setUniformValue("u_z", z_offset + 0.002F);
     m_line_program.setUniformValue("u_color", layer.stroke_color);
     glBindVertexArray(layer.vao);
-    for (const auto &span : layer.spans) {
+    for (const auto& span : layer.spans) {
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
     glBindVertexArray(0);
@@ -1127,7 +1151,7 @@ void main() {
     m_line_program.release();
   }
 
-  void init_terrain_mesh(TerrainMesh &mesh, int resolution) {
+  void init_terrain_mesh(TerrainMesh& mesh, int resolution) {
     constexpr float k_height_scale = 1.0F;
     std::vector<float> vertices;
     HeightmapData heightmap = load_heightmap_data(
@@ -1136,8 +1160,7 @@ void main() {
 
     if (heightmap.ready) {
       mesh.height_scale = k_height_scale;
-      const int grid =
-          qMax(resolution, qMax(heightmap.width, heightmap.height) / 4);
+      const int grid = qMax(resolution, qMax(heightmap.width, heightmap.height) / 4);
       if (grid > 1) {
         const float step = 1.0F / static_cast<float>(grid - 1);
         const float sample_dist =
@@ -1156,8 +1179,7 @@ void main() {
           const float cu = qBound(0.0F, u, 1.0F);
           const float cv = qBound(0.0F, v, 1.0F);
           const float x = cu * static_cast<float>(heightmap.width - 1);
-          const float y =
-              (1.0F - cv) * static_cast<float>(heightmap.height - 1);
+          const float y = (1.0F - cv) * static_cast<float>(heightmap.height - 1);
 
           const int x0 = static_cast<int>(std::floor(x));
           const int y0 = static_cast<int>(std::floor(y));
@@ -1200,18 +1222,17 @@ void main() {
 
           const float dx =
               (h_right - h_left) / (2.0F * sample_dist) * mesh.height_scale;
-          const float dz =
-              (h_up - h_down) / (2.0F * sample_dist) * mesh.height_scale;
+          const float dz = (h_up - h_down) / (2.0F * sample_dist) * mesh.height_scale;
 
           QVector3D normal(-dx, 1.0F, -dz);
           normal.normalize();
           return normal;
         };
 
-        vertices.reserve(static_cast<size_t>(grid - 1) *
-                         static_cast<size_t>(grid - 1) * 6 * 8);
+        vertices.reserve(static_cast<size_t>(grid - 1) * static_cast<size_t>(grid - 1) *
+                         6 * 8);
 
-        auto add_vertex = [&](float u, float v, float h, const QVector3D &n) {
+        auto add_vertex = [&](float u, float v, float h, const QVector3D& n) {
           vertices.push_back(u);
           vertices.push_back(v);
           vertices.push_back(u);
@@ -1270,25 +1291,25 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(vertices.size() * sizeof(float)),
-                 vertices.data(), GL_STATIC_DRAW);
+                 vertices.data(),
+                 GL_STATIC_DRAW);
 
     const int stride = 8 * sizeof(float);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride,
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(0));
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
-                          reinterpret_cast<void *>(2 * sizeof(float)));
+    glVertexAttribPointer(
+        1, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(2 * sizeof(float)));
 
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride,
-                          reinterpret_cast<void *>(4 * sizeof(float)));
+    glVertexAttribPointer(
+        2, 1, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(4 * sizeof(float)));
 
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride,
-                          reinterpret_cast<void *>(5 * sizeof(float)));
+    glVertexAttribPointer(
+        3, 3, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(5 * sizeof(float)));
 
     glBindVertexArray(0);
 
@@ -1296,7 +1317,7 @@ void main() {
     mesh.ready = true;
   }
 
-  void init_hillshade_layer(HillshadeLayer &layer, int width, int height) {
+  void init_hillshade_layer(HillshadeLayer& layer, int width, int height) {
     CampaignMapRender::HillshadeConfig config;
     config.light_direction = layer.light_direction;
     config.ambient = layer.ambient;
@@ -1315,8 +1336,15 @@ void main() {
     }
 
     glBindTexture(GL_TEXTURE_2D, layer.texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, pixels.data());
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_RGBA,
+                 width,
+                 height,
+                 0,
+                 GL_RGBA,
+                 GL_UNSIGNED_BYTE,
+                 pixels.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1328,16 +1356,14 @@ void main() {
     layer.ready = true;
   }
 
-  auto load_heightmap_data(const QString &image_path,
-                           const QString &meta_path) -> HeightmapData {
+  auto load_heightmap_data(const QString& image_path,
+                           const QString& meta_path) -> HeightmapData {
     HeightmapData data;
 
-    const QString resolved_image =
-        Utils::Resources::resolve_resource_path(image_path);
+    const QString resolved_image = Utils::Resources::resolve_resource_path(image_path);
     QImage image(resolved_image);
     if (image.isNull()) {
-      qWarning() << "CampaignMapRenderer: Failed to load heightmap"
-                 << resolved_image;
+      qWarning() << "CampaignMapRenderer: Failed to load heightmap" << resolved_image;
       return data;
     }
 
@@ -1354,8 +1380,7 @@ void main() {
     float min_m = -6000.0F;
     float max_m = 4000.0F;
 
-    const QString resolved_meta =
-        Utils::Resources::resolve_resource_path(meta_path);
+    const QString resolved_meta = Utils::Resources::resolve_resource_path(meta_path);
     QFile meta_file(resolved_meta);
     if (meta_file.open(QIODevice::ReadOnly)) {
       const QJsonDocument doc = QJsonDocument::fromJson(meta_file.readAll());
@@ -1371,8 +1396,7 @@ void main() {
     }
 
     if (!(min_m < max_m)) {
-      qWarning() << "CampaignMapRenderer: Heightmap metadata invalid"
-                 << resolved_meta;
+      qWarning() << "CampaignMapRenderer: Heightmap metadata invalid" << resolved_meta;
       return data;
     }
 
@@ -1392,8 +1416,7 @@ void main() {
 
     data.samples.resize(static_cast<size_t>(width * height));
     for (int y = 0; y < height; ++y) {
-      const auto *row =
-          reinterpret_cast<const quint16 *>(image.constScanLine(y));
+      const auto* row = reinterpret_cast<const quint16*>(image.constScanLine(y));
       for (int x = 0; x < width; ++x) {
         const float norm = static_cast<float>(row[x]) / 65535.0F;
         const float height_m = min_m + norm * range;
@@ -1409,7 +1432,7 @@ void main() {
     return data;
   }
 
-  void init_label_layer(LabelLayer &layer, const QString &resource_path) {
+  void init_label_layer(LabelLayer& layer, const QString& resource_path) {
     const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -1424,7 +1447,7 @@ void main() {
     }
 
     const QJsonArray provinces = doc.object().value("provinces").toArray();
-    for (const auto &prov_val : provinces) {
+    for (const auto& prov_val : provinces) {
       const QJsonObject prov = prov_val.toObject();
       const QString name = prov.value("name").toString();
       const QJsonArray label_uv = prov.value("label_uv").toArray();
@@ -1441,15 +1464,14 @@ void main() {
       const QString id = prov.value("id").toString().toLower();
       if (id.contains("core") || id.contains("capital")) {
         label.importance = 3;
-      } else if (id.contains("major") ||
-                 prov.value("cities").toArray().size() > 2) {
+      } else if (id.contains("major") || prov.value("cities").toArray().size() > 2) {
         label.importance = 2;
       } else {
         label.importance = 1;
       }
 
-      label.is_sea = id.contains("sea") || id.contains("mare") ||
-                     id.contains("mediterranean");
+      label.is_sea =
+          id.contains("sea") || id.contains("mare") || id.contains("mediterranean");
 
       layer.labels.push_back(label);
     }
@@ -1457,10 +1479,10 @@ void main() {
     build_label_geometry(layer);
   }
 
-  void build_label_geometry(LabelLayer &layer) {
+  void build_label_geometry(LabelLayer& layer) {
     std::vector<float> verts;
 
-    for (const auto &label : layer.labels) {
+    for (const auto& label : layer.labels) {
 
       CampaignMapRender::LabelStyle style;
       if (label.is_sea) {
@@ -1493,21 +1515,21 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
-                 verts.data(), GL_STATIC_DRAW);
+                 verts.data(),
+                 GL_STATIC_DRAW);
 
     const int stride = 6 * sizeof(float);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride,
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(0));
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
-                          reinterpret_cast<void *>(2 * sizeof(float)));
+    glVertexAttribPointer(
+        1, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(2 * sizeof(float)));
 
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride,
-                          reinterpret_cast<void *>(4 * sizeof(float)));
+    glVertexAttribPointer(
+        2, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(4 * sizeof(float)));
 
     glBindVertexArray(0);
 
@@ -1515,8 +1537,8 @@ void main() {
     layer.ready = true;
   }
 
-  void draw_label_layer(const LabelLayer &layer, const QMatrix4x4 &mvp,
-                        float z_offset) {
+  void
+  draw_label_layer(const LabelLayer& layer, const QMatrix4x4& mvp, float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.total_vertices <= 0) {
       return;
     }
@@ -1529,8 +1551,7 @@ void main() {
     m_line_program.setUniformValue("u_mvp", mvp);
     m_line_program.setUniformValue("u_z", z_offset);
 
-    m_line_program.setUniformValue("u_color",
-                                   QVector4D(0.25F, 0.20F, 0.15F, 0.85F));
+    m_line_program.setUniformValue("u_color", QVector4D(0.25F, 0.20F, 0.15F, 0.85F));
 
     glBindVertexArray(layer.vao);
     glDrawArrays(GL_TRIANGLES, 0, layer.total_vertices);
@@ -1539,7 +1560,7 @@ void main() {
     m_line_program.release();
   }
 
-  auto load_texture(const QString &resource_path) -> QOpenGLTexture * {
+  auto load_texture(const QString& resource_path) -> QOpenGLTexture* {
     const QString path = Utils::Resources::resolve_resource_path(resource_path);
     QImage image(path);
     if (image.isNull()) {
@@ -1548,20 +1569,27 @@ void main() {
     }
 
     QImage rgba = image.convertToFormat(QImage::Format_RGBA8888);
-    auto *texture = new QOpenGLTexture(rgba);
+    auto* texture = new QOpenGLTexture(rgba);
     texture->setWrapMode(QOpenGLTexture::ClampToEdge);
     texture->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
     return texture;
   }
 
-  void compute_mvp(QMatrix4x4 &out_mvp) const {
-    out_mvp = build_mvp_matrix(
-        static_cast<float>(m_size.width()), static_cast<float>(m_size.height()),
-        m_orbit_yaw, m_orbit_pitch, m_orbit_distance, m_pan_u, m_pan_v);
+  void compute_mvp(QMatrix4x4& out_mvp) const {
+    out_mvp = build_mvp_matrix(static_cast<float>(m_size.width()),
+                               static_cast<float>(m_size.height()),
+                               m_orbit_yaw,
+                               m_orbit_pitch,
+                               m_orbit_distance,
+                               m_pan_u,
+                               m_pan_v);
   }
 
-  void draw_textured_layer(QOpenGLTexture *texture, GLuint vao,
-                           int vertex_count, const QMatrix4x4 &mvp, float alpha,
+  void draw_textured_layer(QOpenGLTexture* texture,
+                           GLuint vao,
+                           int vertex_count,
+                           const QMatrix4x4& mvp,
+                           float alpha,
                            float z_offset) {
     if (texture == nullptr || vao == 0 || vertex_count <= 0) {
       return;
@@ -1582,7 +1610,7 @@ void main() {
     m_texture_program.release();
   }
 
-  void draw_terrain_layer(const TerrainMesh &mesh, const QMatrix4x4 &mvp) {
+  void draw_terrain_layer(const TerrainMesh& mesh, const QMatrix4x4& mvp) {
     if (!mesh.ready || mesh.vao == 0 || mesh.vertex_count <= 0 ||
         m_base_texture == nullptr || !m_terrain_program.isLinked()) {
       return;
@@ -1590,8 +1618,8 @@ void main() {
 
     m_terrain_program.bind();
     m_terrain_program.setUniformValue("u_mvp", mvp);
-    m_terrain_program.setUniformValue(
-        "u_height_scale", mesh.height_scale * m_terrain_height_scale);
+    m_terrain_program.setUniformValue("u_height_scale",
+                                      mesh.height_scale * m_terrain_height_scale);
     m_terrain_program.setUniformValue("u_z_base", mesh.z_base);
     m_terrain_program.setUniformValue("u_light_direction",
                                       QVector3D(0.35F, 0.85F, 0.40F));
@@ -1605,8 +1633,7 @@ void main() {
                                       QVector3D(0.10F, 0.22F, 0.30F));
     m_terrain_program.setUniformValue("u_water_shallow_color",
                                       QVector3D(0.26F, 0.42F, 0.52F));
-    m_terrain_program.setUniformValue("u_lowland_tint",
-                                      QVector3D(0.96F, 0.92F, 0.86F));
+    m_terrain_program.setUniformValue("u_lowland_tint", QVector3D(0.96F, 0.92F, 0.86F));
     m_terrain_program.setUniformValue("u_highland_tint",
                                       QVector3D(0.82F, 0.74F, 0.64F));
     m_terrain_program.setUniformValue("u_mountain_tint",
@@ -1625,8 +1652,7 @@ void main() {
     m_terrain_program.release();
   }
 
-  void draw_line_layer(const LineLayer &layer, const QMatrix4x4 &mvp,
-                       float z_offset) {
+  void draw_line_layer(const LineLayer& layer, const QMatrix4x4& mvp, float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
       return;
     }
@@ -1641,7 +1667,7 @@ void main() {
       m_line_program.setUniformValue("u_color", layer.outer_color);
 
       glBindVertexArray(layer.vao);
-      for (const auto &span : layer.spans) {
+      for (const auto& span : layer.spans) {
         glDrawArrays(GL_LINE_STRIP, span.start, span.count);
       }
 
@@ -1649,7 +1675,7 @@ void main() {
       m_line_program.setUniformValue("u_z", z_offset + 0.001F);
       m_line_program.setUniformValue("u_color", layer.inner_color);
 
-      for (const auto &span : layer.spans) {
+      for (const auto& span : layer.spans) {
         glDrawArrays(GL_LINE_STRIP, span.start, span.count);
       }
       glBindVertexArray(0);
@@ -1660,7 +1686,7 @@ void main() {
       m_line_program.setUniformValue("u_color", layer.color);
 
       glBindVertexArray(layer.vao);
-      for (const auto &span : layer.spans) {
+      for (const auto& span : layer.spans) {
         glDrawArrays(GL_LINE_STRIP, span.start, span.count);
       }
       glBindVertexArray(0);
@@ -1669,7 +1695,7 @@ void main() {
     m_line_program.release();
   }
 
-  static auto safe_normalized(const QVector2D &v) -> QVector2D {
+  static auto safe_normalized(const QVector2D& v) -> QVector2D {
     const float len = v.length();
     if (len < 1e-5F) {
       return QVector2D(0.0F, 0.0F);
@@ -1677,12 +1703,11 @@ void main() {
     return v / len;
   }
 
-  static auto perp(const QVector2D &v) -> QVector2D {
-    return QVector2D(-v.y(), v.x());
-  }
+  static auto perp(const QVector2D& v) -> QVector2D { return QVector2D(-v.y(), v.x()); }
 
-  void build_path_strip(const std::vector<QVector2D> &input, float half_width,
-                        std::vector<QVector2D> &out) const {
+  void build_path_strip(const std::vector<QVector2D>& input,
+                        float half_width,
+                        std::vector<QVector2D>& out) const {
     out.clear();
     if (input.size() < 2 || half_width <= 0.0F) {
       return;
@@ -1690,7 +1715,7 @@ void main() {
 
     std::vector<QVector2D> points;
     points.reserve(input.size());
-    for (const auto &pt : input) {
+    for (const auto& pt : input) {
       if (points.empty()) {
         points.push_back(pt);
         continue;
@@ -1749,7 +1774,8 @@ void main() {
     }
   }
 
-  void update_path_mesh(StrokeMesh &mesh, const std::vector<QVector2D> &points,
+  void update_path_mesh(StrokeMesh& mesh,
+                        const std::vector<QVector2D>& points,
                         float width) {
     if (points.size() < 2) {
       mesh.ready = false;
@@ -1769,8 +1795,7 @@ void main() {
     config.cap_segments = 6;
     config.miter_params.max_miter_ratio = 3.0F;
 
-    std::vector<QVector2D> strip =
-        CampaignMapRender::build_stroke_mesh(points, config);
+    std::vector<QVector2D> strip = CampaignMapRender::build_stroke_mesh(points, config);
 
     if (strip.size() < 4) {
       mesh.ready = false;
@@ -1780,7 +1805,7 @@ void main() {
 
     std::vector<float> verts;
     verts.reserve(strip.size() * 2);
-    for (const auto &v : strip) {
+    for (const auto& v : strip) {
       verts.push_back(v.x());
       verts.push_back(v.y());
     }
@@ -1794,10 +1819,11 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
-                 verts.data(), GL_DYNAMIC_DRAW);
+                 verts.data(),
+                 GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
     glBindVertexArray(0);
 
     mesh.vertex_count = static_cast<int>(strip.size());
@@ -1813,7 +1839,7 @@ void main() {
     return qMax(0.0005F, uv_width);
   }
 
-  void draw_path_mesh(const StrokeMesh &mesh) {
+  void draw_path_mesh(const StrokeMesh& mesh) {
     if (!mesh.ready || mesh.vao == 0 || mesh.vertex_count <= 0) {
       return;
     }
@@ -1822,7 +1848,8 @@ void main() {
     glBindVertexArray(0);
   }
 
-  void draw_progressive_path_layers(PathLayer &layer, const QMatrix4x4 &mvp,
+  void draw_progressive_path_layers(PathLayer& layer,
+                                    const QMatrix4x4& mvp,
                                     float z_offset) {
     if (!layer.ready || layer.lines.empty()) {
       return;
@@ -1839,23 +1866,22 @@ void main() {
         break;
       }
 
-      auto &line = layer.lines[static_cast<size_t>(i)];
+      auto& line = layer.lines[static_cast<size_t>(i)];
 
       const int age = max_mission - i;
       auto passes =
-          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F,
-                                                                        age);
+          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F, age);
 
       if (!passes.empty()) {
-        const auto &border_pass = passes[0];
+        const auto& border_pass = passes[0];
         float border_width_px = 6.0F * border_pass.width_multiplier;
         if (i != max_mission) {
           border_width_px *= 0.85F;
         }
 
         m_line_program.setUniformValue("u_z", z_offset + border_pass.z_offset);
-        update_path_mesh(line.border, line.points,
-                         uv_width_for_pixels(border_width_px));
+        update_path_mesh(
+            line.border, line.points, uv_width_for_pixels(border_width_px));
         m_line_program.setUniformValue("u_color", border_pass.color);
         draw_path_mesh(line.border);
       }
@@ -1866,24 +1892,22 @@ void main() {
         break;
       }
 
-      auto &line = layer.lines[static_cast<size_t>(i)];
+      auto& line = layer.lines[static_cast<size_t>(i)];
 
       const int age = max_mission - i;
       auto passes =
-          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F,
-                                                                        age);
+          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F, age);
 
       if (passes.size() > 2) {
-        const auto &highlight_pass = passes[2];
+        const auto& highlight_pass = passes[2];
         float highlight_width_px = 4.0F * highlight_pass.width_multiplier;
         if (i != max_mission) {
           highlight_width_px *= 0.8F;
         }
 
-        m_line_program.setUniformValue("u_z",
-                                       z_offset + highlight_pass.z_offset);
-        update_path_mesh(line.highlight, line.points,
-                         uv_width_for_pixels(highlight_width_px));
+        m_line_program.setUniformValue("u_z", z_offset + highlight_pass.z_offset);
+        update_path_mesh(
+            line.highlight, line.points, uv_width_for_pixels(highlight_width_px));
         m_line_program.setUniformValue("u_color", highlight_pass.color);
         draw_path_mesh(line.highlight);
       }
@@ -1894,23 +1918,21 @@ void main() {
         break;
       }
 
-      auto &line = layer.lines[static_cast<size_t>(i)];
+      auto& line = layer.lines[static_cast<size_t>(i)];
 
       const int age = max_mission - i;
       auto passes =
-          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F,
-                                                                        age);
+          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F, age);
 
       if (passes.size() > 3) {
-        const auto &core_pass = passes[3];
+        const auto& core_pass = passes[3];
         float core_width_px = 3.0F * core_pass.width_multiplier;
         if (i != max_mission) {
           core_width_px *= 0.75F;
         }
 
         m_line_program.setUniformValue("u_z", z_offset + core_pass.z_offset);
-        update_path_mesh(line.core, line.points,
-                         uv_width_for_pixels(core_width_px));
+        update_path_mesh(line.core, line.points, uv_width_for_pixels(core_width_px));
         m_line_program.setUniformValue("u_color", core_pass.color);
         draw_path_mesh(line.core);
       }
@@ -1919,8 +1941,8 @@ void main() {
     m_line_program.release();
   }
 
-  void update_mission_badge_position(MissionBadge &badge,
-                                     const PathLayer &path_layer,
+  void update_mission_badge_position(MissionBadge& badge,
+                                     const PathLayer& path_layer,
                                      int mission_index) {
     if (!path_layer.ready || path_layer.lines.empty()) {
       badge.ready = false;
@@ -1929,7 +1951,7 @@ void main() {
 
     const int clamped_mission =
         qBound(0, mission_index, static_cast<int>(path_layer.lines.size()) - 1);
-    const auto &line = path_layer.lines[static_cast<size_t>(clamped_mission)];
+    const auto& line = path_layer.lines[static_cast<size_t>(clamped_mission)];
 
     if (line.points.empty()) {
       badge.ready = false;
@@ -1940,13 +1962,13 @@ void main() {
     badge.ready = true;
   }
 
-  void build_badge_geometry(MissionBadge &badge) {
+  void build_badge_geometry(MissionBadge& badge) {
     if (!badge.ready) {
       return;
     }
 
-    std::vector<QVector2D> outline = CampaignMapRender::generate_shield_badge(
-        QVector2D(0.0F, 0.0F), 1.0F, 16);
+    std::vector<QVector2D> outline =
+        CampaignMapRender::generate_shield_badge(QVector2D(0.0F, 0.0F), 1.0F, 16);
 
     if (outline.size() < 3) {
       badge.ready = false;
@@ -1961,7 +1983,7 @@ void main() {
     verts.push_back(0.0F);
     verts.push_back(0.0F);
 
-    for (const auto &pt : outline) {
+    for (const auto& pt : outline) {
       verts.push_back(badge.position.x() + pt.x() * badge.size);
       verts.push_back(badge.position.y() + pt.y() * badge.size);
       verts.push_back(pt.x());
@@ -1977,23 +1999,27 @@ void main() {
     glBindBuffer(GL_ARRAY_BUFFER, badge.vbo);
     glBufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
-                 verts.data(), GL_DYNAMIC_DRAW);
+                 verts.data(),
+                 GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          reinterpret_cast<void *>(0));
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(0));
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-                          reinterpret_cast<void *>(2 * sizeof(float)));
+    glVertexAttribPointer(1,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          4 * sizeof(float),
+                          reinterpret_cast<void*>(2 * sizeof(float)));
 
     glBindVertexArray(0);
 
     badge.vertex_count = static_cast<int>(outline.size() + 1);
   }
 
-  void draw_mission_badge(MissionBadge &badge, const QMatrix4x4 &mvp,
-                          float z_offset) {
+  void draw_mission_badge(MissionBadge& badge, const QMatrix4x4& mvp, float z_offset) {
     if (!badge.ready) {
       return;
     }
@@ -2032,12 +2058,12 @@ void main() {
   }
 
   void apply_province_overrides(
-      const QHash<QString, CampaignMapView::ProvinceVisual> &overrides) {
+      const QHash<QString, CampaignMapView::ProvinceVisual>& overrides) {
     if (!m_province_layer.ready || m_province_layer.spans.empty()) {
       return;
     }
 
-    for (auto &span : m_province_layer.spans) {
+    for (auto& span : m_province_layer.spans) {
       const auto it = overrides.find(span.id);
       if (it != overrides.end() && it->has_color) {
         span.color = it->color;
@@ -2047,7 +2073,8 @@ void main() {
     }
   }
 
-  void draw_province_layer(const ProvinceLayer &layer, const QMatrix4x4 &mvp,
+  void draw_province_layer(const ProvinceLayer& layer,
+                           const QMatrix4x4& mvp,
                            float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
       return;
@@ -2058,7 +2085,7 @@ void main() {
     m_line_program.setUniformValue("u_z", z_offset);
 
     glBindVertexArray(layer.vao);
-    for (const auto &span : layer.spans) {
+    for (const auto& span : layer.spans) {
       if (span.color.w() <= 0.0F) {
         continue;
       }
@@ -2075,11 +2102,9 @@ void main() {
 
       if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
 
-        qint64 elapsed =
-            QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
+        qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
         float pulse_cycle = 1200.0F;
-        float pulse =
-            0.5F + 0.5F * std::sin(elapsed * 2.0F * M_PI / pulse_cycle);
+        float pulse = 0.5F + 0.5F * std::sin(elapsed * 2.0F * M_PI / pulse_cycle);
 
         float brightness_boost = 0.3F + 0.15F * pulse;
         color = QVector4D(qMin(1.0F, color.x() + brightness_boost),
@@ -2131,7 +2156,7 @@ void main() {
       glDeleteVertexArrays(1, &m_river_layer.vao);
       m_river_layer.vao = 0;
     }
-    for (auto &line : m_path_layer.lines) {
+    for (auto& line : m_path_layer.lines) {
       if (line.border.vbo != 0) {
         glDeleteBuffers(1, &line.border.vbo);
         line.border.vbo = 0;
@@ -2232,9 +2257,11 @@ void main() {
   }
 };
 
-} 
+} // namespace
 
-CampaignMapView::CampaignMapView() { setMirrorVertically(true); }
+CampaignMapView::CampaignMapView() {
+  setMirrorVertically(true);
+}
 
 void CampaignMapView::load_provinces_for_hit_test() {
   if (m_provinces_loaded) {
@@ -2257,7 +2284,7 @@ void CampaignMapView::load_provinces_for_hit_test() {
   }
 
   const QJsonArray provinces = doc.object().value("provinces").toArray();
-  for (const auto &prov_val : provinces) {
+  for (const auto& prov_val : provinces) {
     const QJsonObject prov = prov_val.toObject();
     const QJsonArray tri = prov.value("triangles").toArray();
     if (tri.isEmpty()) {
@@ -2270,7 +2297,7 @@ void CampaignMapView::load_provinces_for_hit_test() {
     province.owner = prov.value("owner").toString();
     province.triangles.reserve(static_cast<size_t>(tri.size()));
 
-    for (const auto &pt_val : tri) {
+    for (const auto& pt_val : tri) {
       const QJsonArray pt = pt_val.toArray();
       if (pt.size() < 2) {
         continue;
@@ -2285,7 +2312,7 @@ void CampaignMapView::load_provinces_for_hit_test() {
   }
 
   if (!m_province_overrides.isEmpty()) {
-    for (auto &province : m_provinces) {
+    for (auto& province : m_provinces) {
       const auto it = m_province_overrides.find(province.id);
       if (it != m_province_overrides.end() && !it->owner.isEmpty()) {
         province.owner = it->owner;
@@ -2315,7 +2342,7 @@ void CampaignMapView::load_province_labels() {
   }
 
   const QJsonArray provinces = doc.object().value("provinces").toArray();
-  for (const auto &prov_val : provinces) {
+  for (const auto& prov_val : provinces) {
     const QJsonObject prov = prov_val.toObject();
     QVariantMap entry;
     entry.insert(QStringLiteral("id"), prov.value("id").toString());
@@ -2334,7 +2361,7 @@ void CampaignMapView::load_province_labels() {
     const QJsonArray cities = prov.value("cities").toArray();
     QVariantList city_list;
     city_list.reserve(cities.size());
-    for (const auto &city_val : cities) {
+    for (const auto& city_val : cities) {
       const QJsonObject city = city_val.toObject();
       const QString name = city.value("name").toString();
       const QJsonArray uv = city.value("uv").toArray();
@@ -2359,7 +2386,7 @@ void CampaignMapView::load_province_labels() {
   if (!m_province_overrides.isEmpty()) {
     QVariantList updated;
     updated.reserve(m_province_labels.size());
-    for (const auto &entry_val : m_province_labels) {
+    for (const auto& entry_val : m_province_labels) {
       QVariantMap entry = entry_val.toMap();
       const QString id = entry.value(QStringLiteral("id")).toString();
       const auto it = m_province_overrides.find(id);
@@ -2379,11 +2406,11 @@ QVariantList CampaignMapView::province_labels() {
   return m_province_labels;
 }
 
-void CampaignMapView::apply_province_state(const QVariantList &states) {
+void CampaignMapView::apply_province_state(const QVariantList& states) {
   QHash<QString, ProvinceVisual> next_overrides;
   next_overrides.reserve(states.size());
 
-  for (const auto &state_val : states) {
+  for (const auto& state_val : states) {
     const QVariantMap state = state_val.toMap();
     const QString id = state.value(QStringLiteral("id")).toString();
     if (id.isEmpty()) {
@@ -2393,8 +2420,7 @@ void CampaignMapView::apply_province_state(const QVariantList &states) {
     ProvinceVisual visual;
     visual.owner = state.value(QStringLiteral("owner")).toString();
 
-    const QVariantList color_list =
-        state.value(QStringLiteral("color")).toList();
+    const QVariantList color_list = state.value(QStringLiteral("color")).toList();
     if (color_list.size() >= 4) {
       visual.color = QVector4D(static_cast<float>(color_list.at(0).toDouble()),
                                static_cast<float>(color_list.at(1).toDouble()),
@@ -2410,7 +2436,7 @@ void CampaignMapView::apply_province_state(const QVariantList &states) {
   ++m_province_state_version;
 
   if (m_provinces_loaded) {
-    for (auto &province : m_provinces) {
+    for (auto& province : m_provinces) {
       const auto it = m_province_overrides.find(province.id);
       if (it != m_province_overrides.end() && !it->owner.isEmpty()) {
         province.owner = it->owner;
@@ -2421,7 +2447,7 @@ void CampaignMapView::apply_province_state(const QVariantList &states) {
   if (m_province_labels_loaded) {
     QVariantList updated;
     updated.reserve(m_province_labels.size());
-    for (const auto &entry_val : m_province_labels) {
+    for (const auto& entry_val : m_province_labels) {
       QVariantMap entry = entry_val.toMap();
       const QString id = entry.value(QStringLiteral("id")).toString();
       const auto it = m_province_overrides.find(id);
@@ -2452,8 +2478,8 @@ QString CampaignMapView::province_at_screen(float x, float y) {
   const float ndc_x = (2.0F * x / w) - 1.0F;
   const float ndc_y = 1.0F - (2.0F * y / h);
 
-  const QMatrix4x4 mvp = build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch,
-                                          m_orbit_distance, m_pan_u, m_pan_v);
+  const QMatrix4x4 mvp = build_mvp_matrix(
+      w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance, m_pan_u, m_pan_v);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -2486,11 +2512,10 @@ QString CampaignMapView::province_at_screen(float x, float y) {
   }
 
   const QVector2D p(u, v);
-  for (const auto &province : m_provinces) {
-    const auto &triangles = province.triangles;
+  for (const auto& province : m_provinces) {
+    const auto& triangles = province.triangles;
     for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
-      if (point_in_triangle(p, triangles[i], triangles[i + 1],
-                            triangles[i + 2])) {
+      if (point_in_triangle(p, triangles[i], triangles[i + 1], triangles[i + 2])) {
         return province.id;
       }
     }
@@ -2515,8 +2540,8 @@ QVariantMap CampaignMapView::province_info_at_screen(float x, float y) {
   const float ndc_x = (2.0F * x / w) - 1.0F;
   const float ndc_y = 1.0F - (2.0F * y / h);
 
-  const QMatrix4x4 mvp = build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch,
-                                          m_orbit_distance, m_pan_u, m_pan_v);
+  const QMatrix4x4 mvp = build_mvp_matrix(
+      w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance, m_pan_u, m_pan_v);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -2549,11 +2574,10 @@ QVariantMap CampaignMapView::province_info_at_screen(float x, float y) {
   }
 
   const QVector2D p(u, v);
-  for (const auto &province : m_provinces) {
-    const auto &triangles = province.triangles;
+  for (const auto& province : m_provinces) {
+    const auto& triangles = province.triangles;
     for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
-      if (point_in_triangle(p, triangles[i], triangles[i + 1],
-                            triangles[i + 2])) {
+      if (point_in_triangle(p, triangles[i], triangles[i + 1], triangles[i + 2])) {
         info.insert(QStringLiteral("id"), province.id);
         info.insert(QStringLiteral("name"), province.name);
         info.insert(QStringLiteral("owner"), province.owner);
@@ -2575,8 +2599,8 @@ QPointF CampaignMapView::screen_pos_for_uv(float u, float v) {
   const float clamped_u = qBound(0.0F, u, 1.0F);
   const float clamped_v = qBound(0.0F, v, 1.0F);
 
-  const QMatrix4x4 mvp = build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch,
-                                          m_orbit_distance, m_pan_u, m_pan_v);
+  const QMatrix4x4 mvp = build_mvp_matrix(
+      w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance, m_pan_u, m_pan_v);
   const QVector4D world(1.0F - clamped_u, 0.0F, clamped_v, 1.0F);
   const QVector4D clip = mvp * world;
   if (qFuzzyIsNull(clip.w())) {
@@ -2612,12 +2636,12 @@ void CampaignMapView::load_hannibal_paths() {
   }
 
   const QJsonArray lines = doc.object().value("lines").toArray();
-  for (const auto &line_val : lines) {
+  for (const auto& line_val : lines) {
     const QJsonArray line = line_val.toArray();
     std::vector<QVector2D> path;
     path.reserve(static_cast<size_t>(line.size()));
 
-    for (const auto &pt_val : line) {
+    for (const auto& pt_val : line) {
       const QJsonArray pt = pt_val.toArray();
       if (pt.size() < 2) {
         continue;
@@ -2639,15 +2663,15 @@ QPointF CampaignMapView::hannibal_icon_position() {
     return {};
   }
 
-  const int mission_idx = qBound(0, m_current_mission,
-                                 static_cast<int>(m_hannibal_paths.size()) - 1);
-  const auto &path = m_hannibal_paths[static_cast<size_t>(mission_idx)];
+  const int mission_idx =
+      qBound(0, m_current_mission, static_cast<int>(m_hannibal_paths.size()) - 1);
+  const auto& path = m_hannibal_paths[static_cast<size_t>(mission_idx)];
 
   if (path.empty()) {
     return {};
   }
 
-  const QVector2D &endpoint = path.back();
+  const QVector2D& endpoint = path.back();
   return screen_pos_for_uv(endpoint.x(), endpoint.y());
 }
 
@@ -2671,8 +2695,7 @@ void CampaignMapView::set_orbit_pitch(float pitch) {
 }
 
 void CampaignMapView::set_orbit_distance(float distance) {
-  const float clamped =
-      qBound(k_min_orbit_distance, distance, k_max_orbit_distance);
+  const float clamped = qBound(k_min_orbit_distance, distance, k_max_orbit_distance);
   if (qFuzzyCompare(m_orbit_distance, clamped)) {
     return;
   }
@@ -2701,7 +2724,7 @@ void CampaignMapView::set_pan_v(float pan) {
   update();
 }
 
-void CampaignMapView::set_hover_province_id(const QString &province_id) {
+void CampaignMapView::set_hover_province_id(const QString& province_id) {
   if (m_hover_province_id == province_id) {
     return;
   }
@@ -2738,13 +2761,11 @@ void CampaignMapView::set_show_province_fills(bool show) {
   update();
 }
 
-auto CampaignMapView::createRenderer() const -> Renderer * {
-  QOpenGLContext *ctx = QOpenGLContext::currentContext();
+auto CampaignMapView::createRenderer() const -> Renderer* {
+  QOpenGLContext* ctx = QOpenGLContext::currentContext();
   if ((ctx == nullptr) || !ctx->isValid()) {
-    qCritical()
-        << "CampaignMapView::createRenderer() - No valid OpenGL context";
-    qCritical()
-        << "Running in software rendering mode - map view not available";
+    qCritical() << "CampaignMapView::createRenderer() - No valid OpenGL context";
+    qCritical() << "Running in software rendering mode - map view not available";
     return nullptr;
   }
 

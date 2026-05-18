@@ -401,8 +401,12 @@ auto SkirmishLoader::start(const QString& map_path,
   Game::Systems::CommandService::initialize(map_width, map_height);
 
   if (m_on_visibility_initialized) {
-    m_on_visibility_initialized(
-        m_world, player_owner_id, map_width, map_height, level_result.tile_size, is_spectator_mode);
+    m_on_visibility_initialized(m_world,
+                                player_owner_id,
+                                map_width,
+                                map_height,
+                                level_result.tile_size,
+                                is_spectator_mode);
   }
   pump_events();
 

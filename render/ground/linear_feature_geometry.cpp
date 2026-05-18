@@ -81,43 +81,41 @@ auto sample_height_envelope(const Game::Map::TerrainHeightMap& height_map,
   int const longitudinal_samples =
       clamped_longitudinal > 1e-4F
           ? std::max(2,
-                     static_cast<int>(std::ceil((clamped_longitudinal * 2.0F) /
-                                                sample_spacing)) +
+                     static_cast<int>(
+                         std::ceil((clamped_longitudinal * 2.0F) / sample_spacing)) +
                          1)
           : 1;
   int const lateral_samples =
       clamped_lateral > 1e-4F
-          ? std::max(2,
-                     static_cast<int>(
-                         std::ceil((clamped_lateral * 2.0F) / sample_spacing)) +
-                         1)
+          ? std::max(
+                2,
+                static_cast<int>(std::ceil((clamped_lateral * 2.0F) / sample_spacing)) +
+                    1)
           : 1;
 
   float max_height = sample_height_clamped(height_map, center.x(), center.z());
   for (int longitudinal_index = 0; longitudinal_index < longitudinal_samples;
        ++longitudinal_index) {
-    float longitudinal_t =
-        longitudinal_samples > 1
-            ? static_cast<float>(longitudinal_index) /
-                  static_cast<float>(longitudinal_samples - 1)
-            : 0.5F;
+    float longitudinal_t = longitudinal_samples > 1
+                               ? static_cast<float>(longitudinal_index) /
+                                     static_cast<float>(longitudinal_samples - 1)
+                               : 0.5F;
     float const longitudinal_offset =
         -clamped_longitudinal + longitudinal_t * (clamped_longitudinal * 2.0F);
 
     for (int lateral_index = 0; lateral_index < lateral_samples; ++lateral_index) {
-      float lateral_t =
-          lateral_samples > 1
-              ? static_cast<float>(lateral_index) /
-                    static_cast<float>(lateral_samples - 1)
-              : 0.5F;
+      float lateral_t = lateral_samples > 1
+                            ? static_cast<float>(lateral_index) /
+                                  static_cast<float>(lateral_samples - 1)
+                            : 0.5F;
       float const lateral_offset =
           -clamped_lateral + lateral_t * (clamped_lateral * 2.0F);
 
-      QVector3D const sample_pos = center + dir * longitudinal_offset +
-                                   perpendicular * lateral_offset;
-      max_height = std::max(
-          max_height,
-          sample_height_clamped(height_map, sample_pos.x(), sample_pos.z()));
+      QVector3D const sample_pos =
+          center + dir * longitudinal_offset + perpendicular * lateral_offset;
+      max_height =
+          std::max(max_height,
+                   sample_height_clamped(height_map, sample_pos.x(), sample_pos.z()));
     }
   }
   return max_height;
@@ -155,8 +153,8 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
 
   int length_steps = static_cast<int>(std::ceil(length / step)) + 1;
   length_steps = std::max(length_steps, settings.min_length_steps);
-  float const row_step = length_steps > 1 ? (length / static_cast<float>(length_steps - 1))
-                                          : 0.0F;
+  float const row_step =
+      length_steps > 1 ? (length / static_cast<float>(length_steps - 1)) : 0.0F;
 
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;
@@ -222,8 +220,8 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
                                             lateral_radius,
                                             tile_size);
         } else {
-          vertex_y =
-              sample_height_clamped(*settings.height_map, vertex_pos.x(), vertex_pos.z());
+          vertex_y = sample_height_clamped(
+              *settings.height_map, vertex_pos.x(), vertex_pos.z());
         }
       }
 

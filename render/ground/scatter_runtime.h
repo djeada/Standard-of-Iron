@@ -119,8 +119,8 @@ auto sync_filtered_instances(const std::vector<Instance>& instances,
       ++stats->visibility_rebuilds;
     }
     if (visibility_snapshot != nullptr) {
-      visible_instances = collect_visible_instances(
-          instances, *visibility_snapshot, position_accessor);
+      visible_instances =
+          collect_visible_instances(instances, *visibility_snapshot, position_accessor);
     } else {
       visible_instances = instances;
     }

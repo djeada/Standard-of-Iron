@@ -8,24 +8,25 @@
 #include <QVariantMap>
 #include <QVector2D>
 #include <QVector4D>
+
 #include <vector>
 
 class CampaignMapView : public QQuickFramebufferObject {
   Q_OBJECT
-  Q_PROPERTY(float orbit_yaw READ orbit_yaw WRITE set_orbit_yaw NOTIFY
-                 orbit_yaw_changed)
+  Q_PROPERTY(
+      float orbit_yaw READ orbit_yaw WRITE set_orbit_yaw NOTIFY orbit_yaw_changed)
   Q_PROPERTY(float orbit_pitch READ orbit_pitch WRITE set_orbit_pitch NOTIFY
                  orbit_pitch_changed)
-  Q_PROPERTY(float orbit_distance READ orbit_distance WRITE set_orbit_distance
-                 NOTIFY orbit_distance_changed)
+  Q_PROPERTY(float orbit_distance READ orbit_distance WRITE set_orbit_distance NOTIFY
+                 orbit_distance_changed)
   Q_PROPERTY(float pan_u READ pan_u WRITE set_pan_u NOTIFY pan_u_changed)
   Q_PROPERTY(float pan_v READ pan_v WRITE set_pan_v NOTIFY pan_v_changed)
   Q_PROPERTY(QString hover_province_id READ hover_province_id WRITE
                  set_hover_province_id NOTIFY hover_province_id_changed)
-  Q_PROPERTY(QVariantList province_labels READ province_labels NOTIFY
-                 province_labels_changed)
-  Q_PROPERTY(int current_mission READ current_mission WRITE set_current_mission
-                 NOTIFY current_mission_changed)
+  Q_PROPERTY(
+      QVariantList province_labels READ province_labels NOTIFY province_labels_changed)
+  Q_PROPERTY(int current_mission READ current_mission WRITE set_current_mission NOTIFY
+                 current_mission_changed)
   Q_PROPERTY(float terrain_height_scale READ terrain_height_scale WRITE
                  set_terrain_height_scale NOTIFY terrain_height_scale_changed)
   Q_PROPERTY(bool show_province_fills READ show_province_fills WRITE
@@ -44,20 +45,20 @@ public:
 
   CampaignMapView();
 
-  [[nodiscard]] auto createRenderer() const -> Renderer * override;
+  [[nodiscard]] auto createRenderer() const -> Renderer* override;
 
   Q_INVOKABLE QString province_at_screen(float x, float y);
   Q_INVOKABLE QVariantMap province_info_at_screen(float x, float y);
   Q_INVOKABLE QPointF screen_pos_for_uv(float u, float v);
   Q_INVOKABLE QVariantList province_labels();
-  Q_INVOKABLE void apply_province_state(const QVariantList &states);
+  Q_INVOKABLE void apply_province_state(const QVariantList& states);
   Q_INVOKABLE QPointF hannibal_icon_position();
 
   [[nodiscard]] auto province_state_version() const -> int {
     return m_province_state_version;
   }
   [[nodiscard]] auto
-  province_overrides() const -> const QHash<QString, ProvinceVisual> & {
+  province_overrides() const -> const QHash<QString, ProvinceVisual>& {
     return m_province_overrides;
   }
 
@@ -67,9 +68,7 @@ public:
   [[nodiscard]] auto orbit_pitch() const -> float { return m_orbit_pitch; }
   void set_orbit_pitch(float pitch);
 
-  [[nodiscard]] auto orbit_distance() const -> float {
-    return m_orbit_distance;
-  }
+  [[nodiscard]] auto orbit_distance() const -> float { return m_orbit_distance; }
   void set_orbit_distance(float distance);
 
   [[nodiscard]] auto min_orbit_distance() const -> float {
@@ -88,11 +87,9 @@ public:
   [[nodiscard]] auto hover_province_id() const -> QString {
     return m_hover_province_id;
   }
-  void set_hover_province_id(const QString &province_id);
+  void set_hover_province_id(const QString& province_id);
 
-  [[nodiscard]] auto current_mission() const -> int {
-    return m_current_mission;
-  }
+  [[nodiscard]] auto current_mission() const -> int { return m_current_mission; }
   void set_current_mission(int mission);
 
   [[nodiscard]] auto terrain_height_scale() const -> float {

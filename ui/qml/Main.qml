@@ -16,7 +16,6 @@ ApplicationWindow {
     function sync_audio_context() {
         if (typeof game === 'undefined' || !game.set_audio_frontend_context)
             return;
-
         if (campaign_screen.visible) {
             game.set_audio_frontend_context("campaign");
         } else if (mainWindow.menu_visible || mapSelect.visible || (!mainWindow.game_started && (save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible))) {

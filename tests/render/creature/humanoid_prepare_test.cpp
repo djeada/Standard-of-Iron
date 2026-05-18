@@ -504,8 +504,8 @@ auto moving_palette_changes_over_time(const char* renderer_id,
   if (second_sink.rigged_bone_palettes.empty()) {
     return false;
   }
-  auto const comparable_count =
-      std::min(first_sink.rigged_bone_palettes.size(), second_sink.rigged_bone_palettes.size());
+  auto const comparable_count = std::min(first_sink.rigged_bone_palettes.size(),
+                                         second_sink.rigged_bone_palettes.size());
   for (std::size_t i = 0; i < comparable_count; ++i) {
     if (lower_body_palette_moves_between(first_sink.rigged_bone_palettes[i],
                                          second_sink.rigged_bone_palettes[i])) {
@@ -975,7 +975,8 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   EXPECT_NE(carthage_idle_palette, request_idle_bone_palette(carthage_id, 0.0F));
 }
 
-TEST(HumanoidPrepare, MotionSnapshotDrivenInfantryMovementChangesVisibleLowerBodyPoseOverTime) {
+TEST(HumanoidPrepare,
+     MotionSnapshotDrivenInfantryMovementChangesVisibleLowerBodyPoseOverTime) {
   EXPECT_TRUE(moving_palette_changes_over_time("troops/roman/swordsman",
                                                Game::Units::SpawnType::Knight,
                                                Game::Systems::NationID::RomanRepublic,

@@ -316,8 +316,10 @@ void CommandService::process_repath_requests(Engine::Core::World& world) {
     MoveOptions options;
     options.kind = MoveOrderKind::RecoveryMove;
     options.allow_direct_fallback = repath->allow_direct_fallback;
-    move_unit(
-        world, entity->get_id(), QVector3D(repath->goal_x, 0.0F, repath->goal_y), options);
+    move_unit(world,
+              entity->get_id(),
+              QVector3D(repath->goal_x, 0.0F, repath->goal_y),
+              options);
     entity->remove_component<Engine::Core::RepathRequestComponent>();
   }
 }
@@ -650,7 +652,8 @@ void CommandService::move_group(Engine::Core::World& world,
       continue;
     }
 
-    OrderService::prepare_for_move(entity, options.kind, options.preserve_formation_mode);
+    OrderService::prepare_for_move(
+        entity, options.kind, options.preserve_formation_mode);
     bool engaged =
         entity->get_component<Engine::Core::AttackTargetComponent>() != nullptr;
 

@@ -51,14 +51,17 @@ protected:
     Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
-  auto create_unit(float x, float z, int owner_id, Game::Units::SpawnType spawn_type)
-      -> Engine::Core::Entity* {
+  auto create_unit(float x,
+                   float z,
+                   int owner_id,
+                   Game::Units::SpawnType spawn_type) -> Engine::Core::Entity* {
     auto* entity = world.create_entity();
     if (entity == nullptr) {
       return nullptr;
     }
 
-    auto* transform = entity->add_component<Engine::Core::TransformComponent>(x, 0.0F, z);
+    auto* transform =
+        entity->add_component<Engine::Core::TransformComponent>(x, 0.0F, z);
     auto* unit = entity->add_component<Engine::Core::UnitComponent>();
     auto* movement = entity->add_component<Engine::Core::MovementComponent>();
     if (transform == nullptr || unit == nullptr || movement == nullptr) {
@@ -73,8 +76,8 @@ protected:
 
   auto world_to_screen(const QVector3D& world_pos) const -> QPointF {
     QPointF screen_pos;
-    EXPECT_TRUE(camera.world_to_screen(
-        world_pos, viewport.width, viewport.height, screen_pos));
+    EXPECT_TRUE(
+        camera.world_to_screen(world_pos, viewport.width, viewport.height, screen_pos));
     return screen_pos;
   }
 
@@ -111,7 +114,8 @@ TEST_F(InputCommandHandlerTest, RightPressConsumesEnemyAttackCommand) {
 
   QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
 
-  EXPECT_TRUE(input_handler->on_right_press(enemy_screen.x(), enemy_screen.y(), 1, viewport));
+  EXPECT_TRUE(
+      input_handler->on_right_press(enemy_screen.x(), enemy_screen.y(), 1, viewport));
 
   auto* attack_target = unit->get_component<Engine::Core::AttackTargetComponent>();
   ASSERT_NE(attack_target, nullptr);
@@ -126,7 +130,8 @@ TEST_F(InputCommandHandlerTest, RightPressStartsFormationPlacementForGroundMove)
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
 
-  EXPECT_TRUE(input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+  EXPECT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
   EXPECT_TRUE(input_handler->is_placing_formation());
 
   input_handler->on_formation_confirm();
@@ -148,7 +153,8 @@ TEST_F(InputCommandHandlerTest, FormationConfirmClearsPatrolBeforeApplyingMove) 
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
 
-  EXPECT_TRUE(input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+  EXPECT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
   input_handler->on_formation_confirm();
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
@@ -165,7 +171,8 @@ TEST_F(InputCommandHandlerTest, RightDoubleClickDoesNotBypassFormationPlacement)
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
 
-  EXPECT_TRUE(input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+  EXPECT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
   ASSERT_TRUE(input_handler->is_placing_formation());
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
@@ -173,7 +180,8 @@ TEST_F(InputCommandHandlerTest, RightDoubleClickDoesNotBypassFormationPlacement)
   EXPECT_FALSE(movement->has_target);
   EXPECT_FALSE(movement->path_pending);
 
-  input_handler->on_right_double_click(ground_screen.x(), ground_screen.y(), 1, viewport);
+  input_handler->on_right_double_click(
+      ground_screen.x(), ground_screen.y(), 1, viewport);
 
   EXPECT_TRUE(input_handler->is_placing_formation());
   EXPECT_FALSE(movement->has_target);
@@ -191,7 +199,8 @@ TEST_F(InputCommandHandlerTest, RightDoubleClickEnablesRunModeAndDispatchesMove)
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
 
-  input_handler->on_right_double_click(ground_screen.x(), ground_screen.y(), 1, viewport);
+  input_handler->on_right_double_click(
+      ground_screen.x(), ground_screen.y(), 1, viewport);
 
   auto* stamina = unit->get_component<Engine::Core::StaminaComponent>();
   ASSERT_NE(stamina, nullptr);

@@ -252,11 +252,10 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
 }
 
 TEST(TemplatePrewarmRegression, AnimCatalogIncludesDistinctMeleeSpearAndRangedAttacks) {
-  auto const catalog = Render::GL::build_template_prewarm_anim_catalog(
-      ArchetypeRegistry::instance());
+  auto const catalog =
+      Render::GL::build_template_prewarm_anim_catalog(ArchetypeRegistry::instance());
 
-  auto has_state = [](const std::vector<Render::GL::AnimKey>& keys,
-                      PoseIntent state) {
+  auto has_state = [](const std::vector<Render::GL::AnimKey>& keys, PoseIntent state) {
     for (auto const& key : keys) {
       if (key.state == state) {
         return true;
@@ -284,8 +283,8 @@ TEST(TemplatePrewarmRegression, WorkItemsSkipUnsupportedAttackFamiliesPerSpawn) 
   anim_keys[1].state = PoseIntent::AttackSpear;
   anim_keys[2].state = PoseIntent::AttackRanged;
 
-  auto const items = Render::GL::build_template_prewarm_work_items(
-      profiles, {1}, {0}, anim_keys);
+  auto const items =
+      Render::GL::build_template_prewarm_work_items(profiles, {1}, {0}, anim_keys);
 
   int archer_items = 0;
   int spearman_items = 0;
