@@ -70,27 +70,6 @@ private:
   const Engine::Core::CommanderComponent* m_commander = nullptr;
 };
 
-auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
-    -> CombatAnimPhase {
-  switch (state) {
-  case Engine::Core::CombatAnimationState::Advance:
-    return CombatAnimPhase::Advance;
-  case Engine::Core::CombatAnimationState::WindUp:
-    return CombatAnimPhase::WindUp;
-  case Engine::Core::CombatAnimationState::Strike:
-    return CombatAnimPhase::Strike;
-  case Engine::Core::CombatAnimationState::Impact:
-    return CombatAnimPhase::Impact;
-  case Engine::Core::CombatAnimationState::Recover:
-    return CombatAnimPhase::Recover;
-  case Engine::Core::CombatAnimationState::Reposition:
-    return CombatAnimPhase::Reposition;
-  case Engine::Core::CombatAnimationState::Idle:
-  default:
-    return CombatAnimPhase::Idle;
-  }
-}
-
 [[nodiscard]] auto forward_from_transform(
     const Engine::Core::TransformComponent* transform) noexcept -> QVector3D {
   if (transform == nullptr) {
@@ -355,7 +334,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.attack_family = combat_state->attack_family;
 
     if (combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
-      anim.combat_phase = map_combat_state_to_phase(combat_state->animation_state);
+      anim.combat_phase = combat_state->animation_state;
       if (combat_state->state_duration > 0.0F) {
         anim.combat_phase_progress =
             combat_state->state_time / combat_state->state_duration;

@@ -13,47 +13,28 @@
 
 #include <string>
 
-#include "../core/component.h"
-
 namespace Game::Visuals {
 
-auto mesh_kind_from_string(const QString& s) -> VisualDef::MeshKind {
+auto mesh_kind_from_string(const QString& s)
+    -> Engine::Core::RenderableComponent::MeshKind {
+  using MeshKind = Engine::Core::RenderableComponent::MeshKind;
   const QString t = s.trimmed().toLower();
   if (t == "quad") {
-    return VisualDef::MeshKind::Quad;
+    return MeshKind::Quad;
   }
   if (t == "plane") {
-    return VisualDef::MeshKind::Plane;
+    return MeshKind::Plane;
   }
   if (t == "cube") {
-    return VisualDef::MeshKind::Cube;
+    return MeshKind::Cube;
   }
   if (t == "capsule") {
-    return VisualDef::MeshKind::Capsule;
+    return MeshKind::Capsule;
   }
   if (t == "ring") {
-    return VisualDef::MeshKind::Ring;
+    return MeshKind::Ring;
   }
-  return VisualDef::MeshKind::None;
-}
-
-static auto to_renderable_mesh(VisualDef::MeshKind k)
-    -> Engine::Core::RenderableComponent::MeshKind {
-  using RM = Engine::Core::RenderableComponent::MeshKind;
-  switch (k) {
-  case VisualDef::MeshKind::Quad:
-    return RM::Quad;
-  case VisualDef::MeshKind::Plane:
-    return RM::Plane;
-  case VisualDef::MeshKind::Cube:
-    return RM::Cube;
-  case VisualDef::MeshKind::Capsule:
-    return RM::Capsule;
-  case VisualDef::MeshKind::Ring:
-    return RM::Ring;
-  default:
-    return RM::None;
-  }
+  return MeshKind::None;
 }
 
 auto VisualCatalog::load_from_json_file(const QString& path,
@@ -105,7 +86,7 @@ auto VisualCatalog::lookup(const std::string& unit_type, VisualDef& out) const -
 }
 
 void apply_to_renderable(const VisualDef& def, Engine::Core::RenderableComponent& r) {
-  r.mesh = to_renderable_mesh(def.mesh);
+  r.mesh = def.mesh;
   r.color[0] = def.color.x();
   r.color[1] = def.color.y();
   r.color[2] = def.color.z();
