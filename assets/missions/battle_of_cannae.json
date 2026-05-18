@@ -167,6 +167,14 @@
     {
       "type": "lose_all_units",
       "description": "Do not lose all your units"
+    },
+    {
+      "type": "lose_commander",
+      "description": "Do not lose your commander"
+    },
+    {
+      "type": "only_commander_remaining",
+      "description": "Do not leave only your commander alive without troops or barracks"
     }
   ],
   "optional_objectives": [

@@ -447,6 +447,11 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
         static_cast<double>(builder->construction_site_x);
     builder_obj["construction_site_z"] =
         static_cast<double>(builder->construction_site_z);
+    builder_obj["has_task_target"] = builder->has_task_target;
+    builder_obj["task_target_id"] = static_cast<qint64>(builder->task_target_id);
+    builder_obj["task_target_x"] = static_cast<double>(builder->task_target_x);
+    builder_obj["task_target_z"] = static_cast<double>(builder->task_target_z);
+    builder_obj["task_target_reserved"] = builder->task_target_reserved;
     builder_obj["at_construction_site"] = builder->at_construction_site;
     builder_obj["is_placement_preview"] = builder->is_placement_preview;
     builder_obj["bypass_movement_active"] = builder->bypass_movement_active;
@@ -986,6 +991,14 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(builder_obj["construction_site_x"].toDouble(0.0));
     builder->construction_site_z =
         static_cast<float>(builder_obj["construction_site_z"].toDouble(0.0));
+    builder->has_task_target = builder_obj["has_task_target"].toBool(false);
+    builder->task_target_id = static_cast<std::uint64_t>(
+        builder_obj["task_target_id"].toVariant().toULongLong());
+    builder->task_target_x =
+        static_cast<float>(builder_obj["task_target_x"].toDouble(0.0));
+    builder->task_target_z =
+        static_cast<float>(builder_obj["task_target_z"].toDouble(0.0));
+    builder->task_target_reserved = builder_obj["task_target_reserved"].toBool(false);
     builder->at_construction_site = builder_obj["at_construction_site"].toBool(false);
     builder->is_placement_preview = builder_obj["is_placement_preview"].toBool(false);
     builder->bypass_movement_active =
@@ -1132,6 +1145,7 @@ auto Serialization::serialize_terrain(
   QJsonArray world_props_array;
   for (const auto& world_prop : world_props) {
     QJsonObject world_prop_obj;
+    world_prop_obj["id"] = static_cast<qint64>(world_prop.id);
     world_prop_obj["type"] =
         QString(Game::Map::world_prop_type_to_string(world_prop.type));
     world_prop_obj["x"] = world_prop.x;
@@ -1436,6 +1450,8 @@ void Serialization::deserialize_terrain(Game::Map::TerrainHeightMap* height_map,
                    << world_prop_obj["type"].toString() << "- skipping";
         continue;
       }
+      world_prop.id =
+          static_cast<std::uint64_t>(world_prop_obj["id"].toVariant().toULongLong());
       world_prop.x = static_cast<float>(world_prop_obj["x"].toDouble(0.0));
       world_prop.z = static_cast<float>(world_prop_obj["z"].toDouble(0.0));
       world_prop.scale = static_cast<float>(world_prop_obj["scale"].toDouble(1.0));

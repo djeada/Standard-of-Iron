@@ -8,6 +8,7 @@
 
 #include "game/map/map_definition.h"
 #include "game/map/mission_loader.h"
+#include "game/map/mission_victory_rules.h"
 #include "game/systems/save_load_service.h"
 #include "game/systems/save_storage.h"
 #include "game/systems/victory_service.h"
@@ -26,17 +27,17 @@ void CampaignManager::set_available_campaigns(const QVariantList& campaigns) {
 }
 
 void CampaignManager::start_campaign_mission(const QString& mission_path,
-                                             int& selected_player_id) {
+                                             int& /*selected_player_id*/) {
   const QStringList parts = mission_path.split('/');
   if (parts.size() != 2) {
     qWarning() << "Invalid mission path format. Expected: campaign_id/mission_id";
     return;
   }
 
-  const QString campaign_id = parts[0];
-  const QString mission_id = parts[1];
+  const QString& campaign_id = parts[0];
+  const QString& mission_id = parts[1];
 
-  QStringList search_paths = {
+  QStringList const search_paths = {
       QString("assets/missions/%1.json").arg(mission_id),
       QString("../assets/missions/%1.json").arg(mission_id),
       QString("../../assets/missions/%1.json").arg(mission_id),
@@ -96,21 +97,22 @@ void CampaignManager::mark_current_mission_completed() {
   if (save_service != nullptr) {
     QString error;
 
-    bool saved = save_service->save_mission_result(m_current_mission_id,
-                                                   m_current_mission_context.mode,
-                                                   m_current_campaign_id,
-                                                   true,
-                                                   "victory",
-                                                   m_current_mission_context.difficulty,
-                                                   0.0F,
-                                                   &error);
+    bool const saved =
+        save_service->save_mission_result(m_current_mission_id,
+                                          m_current_mission_context.mode,
+                                          m_current_campaign_id,
+                                          true,
+                                          "victory",
+                                          m_current_mission_context.difficulty,
+                                          0.0F,
+                                          &error);
 
     if (!saved) {
       qWarning() << "Failed to save mission result:" << error;
     } else {
 
       if (m_current_mission_context.is_campaign()) {
-        bool unlocked = save_service->unlock_next_campaign_mission(
+        bool const unlocked = save_service->unlock_next_campaign_mission(
             m_current_campaign_id, m_current_mission_id, &error);
         if (!unlocked) {
           qWarning() << "Failed to unlock next mission:" << error;
@@ -139,65 +141,13 @@ void CampaignManager::set_skirmish_context(const QString& map_path) {
 
 void CampaignManager::configure_mission_victory_conditions(
     Game::Systems::VictoryService* victory_service, int local_owner_id) {
-  if (!victory_service || !m_current_mission_context.is_campaign() ||
+  if ((victory_service == nullptr) || !m_current_mission_context.is_campaign() ||
       !m_current_mission_definition.has_value()) {
     return;
   }
 
   const auto& mission = *m_current_mission_definition;
-  Game::Map::VictoryConfig mission_victory_config;
-
-  if (!mission.victory_conditions.empty()) {
-    const auto& first_condition = mission.victory_conditions[0];
-    if (first_condition.type == "destroy_all_enemies") {
-      mission_victory_config.victory_type = "elimination";
-      mission_victory_config.key_structures = {"barracks"};
-    } else if (first_condition.type == "survive_duration" &&
-               first_condition.duration.has_value()) {
-      mission_victory_config.victory_type = "survive_time";
-      mission_victory_config.survive_time_duration = *first_condition.duration;
-    } else if (first_condition.type == "control_structures" ||
-               first_condition.type == "capture_structures") {
-      mission_victory_config.victory_type = first_condition.type;
-      if (!first_condition.structure_types.empty()) {
-        mission_victory_config.key_structures.clear();
-        for (const auto& structure_type : first_condition.structure_types) {
-          if (structure_type == "village") {
-            mission_victory_config.key_structures.push_back("barracks");
-          } else {
-            mission_victory_config.key_structures.push_back(structure_type);
-          }
-        }
-      } else if (first_condition.structure_type.has_value()) {
-        if (*first_condition.structure_type == "village") {
-          mission_victory_config.key_structures = {"barracks"};
-        } else {
-          mission_victory_config.key_structures = {*first_condition.structure_type};
-        }
-      } else {
-        mission_victory_config.key_structures = {"barracks"};
-      }
-      mission_victory_config.required_key_structures =
-          first_condition.min_count.value_or(1);
-    } else {
-      mission_victory_config.victory_type = "elimination";
-      mission_victory_config.key_structures = {"barracks"};
-    }
-  }
-
-  if (!mission.defeat_conditions.empty()) {
-    mission_victory_config.defeat_conditions.clear();
-  }
-  for (const auto& defeat_condition : mission.defeat_conditions) {
-    if (defeat_condition.type == "lose_structure" &&
-        defeat_condition.structure_type.has_value()) {
-      mission_victory_config.defeat_conditions.push_back("no_key_structures");
-      mission_victory_config.key_structures.push_back(*defeat_condition.structure_type);
-    } else if (defeat_condition.type == "lose_all_units") {
-      mission_victory_config.defeat_conditions.push_back("no_units");
-    }
-  }
-
-  victory_service->configure(mission_victory_config, local_owner_id);
+  victory_service->configure(Game::Mission::build_victory_rules(mission),
+                             local_owner_id);
   qInfo() << "Applied mission victory conditions from" << m_current_mission_id;
 }

@@ -288,9 +288,14 @@ Supported victory condition types:
 
 - **destroy_all_enemies**: Eliminate all enemy forces
 - **survive_duration**: Survive for specified time (in seconds)
-- **hold_capture_points**: Control specific map locations
-- **escort_unit**: Safely move a unit to a destination
-- **reach_resource_quota**: Accumulate specified resources
+- **control_structures**: Control the specified structure types
+- **capture_structures**: Capture the specified structure types from another nation
+
+Victory conditions are evaluated as **OR** conditions: if any configured victory condition
+is satisfied, the mission ends in victory.
+
+For the runtime architecture, default-rule behavior, and extension workflow, see
+[VICTORY_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/VICTORY_SYSTEM.md).
 
 Example:
 ```json
@@ -309,8 +314,16 @@ Supported defeat condition types:
 
 - **lose_structure**: Specific building type is destroyed
 - **lose_all_units**: All units are eliminated
-- **timer_expires**: Time limit exceeded
-- **lose_capture_points**: Control of key locations lost
+- **lose_commander**: Your commander dies
+- **only_commander_remaining**: Your commander is the last surviving force after all troops and barracks are gone
+
+Defeat conditions are evaluated as **OR** conditions: if any configured defeat condition
+is satisfied, the mission ends in defeat.
+
+If a mission omits `defeat_conditions`, the engine adds the default commander rules:
+
+- `lose_commander`
+- `only_commander_remaining`
 
 Example:
 ```json
@@ -319,6 +332,10 @@ Example:
     "type": "lose_structure",
     "structure_type": "barracks",
     "description": "Do not lose your barracks"
+  },
+  {
+    "type": "lose_commander",
+    "description": "Protect Hannibal"
   }
 ]
 ```
@@ -499,6 +516,7 @@ Mission-specific victory conditions override map defaults:
 - VictoryService configured from mission JSON
 - Win/loss checks match mission requirements
 - Campaign progress tracked on completion
+- When defeat conditions are omitted, commander-default defeat rules are injected automatically
 
 ## Best Practices
 

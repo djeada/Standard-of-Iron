@@ -630,7 +630,9 @@
   "time_of_day": "day",
   "victory": {
     "defeat_conditions": [
-      "no_key_structures"
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
     ],
     "key_structures": [
       "barracks"

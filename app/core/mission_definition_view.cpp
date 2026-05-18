@@ -160,8 +160,10 @@ auto build_player_setup_map(const Game::Mission::PlayerSetup& setup) -> QVariant
   map["starting_buildings"] = build_building_setup_list(setup.starting_buildings);
 
   QVariantMap resources;
-  resources["gold"] = setup.starting_resources.gold;
-  resources["food"] = setup.starting_resources.food;
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    resources[QLatin1String(Game::Systems::resource_type_key(type))] =
+        setup.starting_resources.get(type);
+  }
   map["starting_resources"] = resources;
 
   return map;

@@ -63,3 +63,18 @@ TEST(MissionDefinitionViewTest, IncludesEveryEnemySetupAndCommanderDetails) {
   EXPECT_EQ(second_force.value("commander").toMap().value("display_name").toString(),
             QStringLiteral("Publius Cornelius Scipio"));
 }
+
+TEST(MissionDefinitionViewTest, ExposesWoodInStartingResources) {
+  Game::Mission::MissionDefinition mission;
+  mission.player_setup.starting_resources.set(Game::Systems::ResourceType::Gold, 100);
+  mission.player_setup.starting_resources.set(Game::Systems::ResourceType::Food, 80);
+  mission.player_setup.starting_resources.set(Game::Systems::ResourceType::Wood, 45);
+
+  const QVariantMap view_model = build_mission_definition_map(mission);
+  const QVariantMap resources =
+      view_model.value("player_setup").toMap().value("starting_resources").toMap();
+
+  EXPECT_EQ(resources.value("gold").toInt(), 100);
+  EXPECT_EQ(resources.value("food").toInt(), 80);
+  EXPECT_EQ(resources.value("wood").toInt(), 45);
+}

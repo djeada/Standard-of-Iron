@@ -32,8 +32,9 @@ auto MissionLoader::parse_building_setup(const QJsonObject& obj) -> BuildingSetu
 
 auto MissionLoader::parse_resources(const QJsonObject& obj) -> Resources {
   Resources res;
-  res.gold = obj["gold"].toInt(0);
-  res.food = obj["food"].toInt(0);
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    res.set(type, obj[Game::Systems::resource_type_key(type)].toInt(0));
+  }
   return res;
 }
 

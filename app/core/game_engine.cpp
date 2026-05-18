@@ -115,6 +115,7 @@
 #include "game/systems/pathfinding.h"
 #include "game/systems/patrol_system.h"
 #include "game/systems/picking_service.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
 #include "game/systems/projectile_system.h"
@@ -343,6 +344,27 @@ auto build_condition_list(const std::vector<Game::Mission::Condition>& condition
   return list;
 }
 
+auto build_resource_map(int owner_id) -> QVariantMap {
+  QVariantMap resources;
+  Game::Systems::ResourceAmounts const amounts =
+      Game::Systems::PlayerResourceRegistry::instance().get_all(owner_id);
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    resources[QLatin1String(Game::Systems::resource_type_key(type))] =
+        amounts.get(type);
+  }
+  return resources;
+}
+
+auto build_player_state_map(int owner_id, int population_cap) -> QVariantMap {
+  QVariantMap state;
+  state["owner_id"] = owner_id;
+  state["population"] =
+      Game::Systems::TroopCountRegistry::instance().get_troop_count(owner_id);
+  state["population_cap"] = population_cap;
+  state["resources"] = build_resource_map(owner_id);
+  return state;
+}
+
 } // namespace
 
 GameEngine::GameEngine(QObject* parent)
@@ -449,6 +471,18 @@ GameEngine::GameEngine(QObject* parent)
           &ProductionManager::placing_construction_changed,
           this,
           &GameEngine::placing_construction_changed);
+  connect(m_production_manager.get(),
+          &ProductionManager::construction_preview_valid_changed,
+          this,
+          &GameEngine::construction_preview_valid_changed);
+  connect(m_production_manager.get(),
+          &ProductionManager::construction_placement_rejected,
+          this,
+          [this](const QString& reason) {
+            if (!reason.isEmpty()) {
+              set_error(reason);
+            }
+          });
 
   m_campaign_manager = std::make_unique<CampaignManager>(this);
   connect(m_campaign_manager.get(),
@@ -966,6 +1000,11 @@ void GameEngine::on_formation_cancel() {
 
 auto GameEngine::is_placing_construction() const -> bool {
   return m_production_manager ? m_production_manager->is_placing_construction() : false;
+}
+
+auto GameEngine::construction_preview_valid() const -> bool {
+  return m_production_manager ? m_production_manager->construction_preview_valid()
+                              : false;
 }
 
 void GameEngine::on_construction_mouse_move(qreal sx, qreal sy) {
@@ -1508,6 +1547,19 @@ auto GameEngine::enemy_troops_defeated() const -> int {
   return m_enemy_troops_defeated;
 }
 
+auto GameEngine::selected_player_state() const -> QVariantMap {
+  return m_selected_player_state;
+}
+
+void GameEngine::set_selected_player_id(int id) {
+  if (m_selected_player_id == id) {
+    return;
+  }
+  m_selected_player_id = id;
+  sync_selected_player_state();
+  emit selected_player_id_changed();
+}
+
 auto GameEngine::scene_context() const -> AppSceneContext {
   return AppSceneContext{.world = m_world.get(),
                          .renderer = m_renderer.get(),
@@ -1743,6 +1795,8 @@ void GameEngine::update(float dt) {
         update_active_runtime_simulation(step_dt);
       });
   m_runtime.selection_refresh_counter = frame_state.selection_refresh_counter;
+  sync_scatter_world_props();
+  sync_selected_player_state();
 }
 
 void GameEngine::render(int pixel_width, int pixel_height) {
@@ -2374,7 +2428,7 @@ void GameEngine::configure_audio_ambient_mappings() {
       Engine::Core::AmbientState::DEFEAT,
   };
 
-  for (Engine::Core::AmbientState state : k_states) {
+  for (Engine::Core::AmbientState const state : k_states) {
     const QString track_id = resolve_music(state);
     if (!track_id.isEmpty()) {
       m_audio_event_handler->load_ambient_music(state, track_id.toStdString());
@@ -3139,6 +3193,7 @@ void GameEngine::perform_skirmish_load(const QString& map_path,
 
   apply_skirmish_commander_setup(player_configs);
   apply_mission_setup();
+  initialize_player_resources();
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   configure_audio_manifest_mappings();
   configure_mission_victory_conditions();
@@ -3683,6 +3738,8 @@ void GameEngine::reset_preload_interaction_state() {
 void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
   m_pending_mission_waves.clear();
+  Game::Systems::PlayerResourceRegistry::instance().clear();
+  sync_selected_player_state();
   stop_mission_ambience();
   AudioSystem::get_instance().stop_music();
   AudioResourceLoader::unload_audio_resources(AudioLoadPolicy::Mission);
@@ -4071,6 +4128,8 @@ void GameEngine::finalize_skirmish_load() {
   GameStateRestorer::rebuild_entity_cache(
       m_world.get(), m_entity_cache, m_runtime.local_owner_id);
   emit troop_count_changed();
+  sync_scatter_world_props();
+  sync_selected_player_state();
 
   m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
@@ -4272,6 +4331,8 @@ auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
   snapshot.cursor_mode = static_cast<int>(m_runtime.cursor_mode);
   snapshot.selected_player_id = m_selected_player_id;
   snapshot.follow_selection = m_follow_selection_enabled;
+  snapshot.resources_by_owner =
+      Game::Systems::PlayerResourceRegistry::instance().snapshot();
   return snapshot;
 }
 
@@ -4283,11 +4344,66 @@ void GameEngine::apply_runtime_snapshot(
   m_runtime.victory_state = snapshot.victory_state;
   m_selected_player_id = snapshot.selected_player_id;
   m_follow_selection_enabled = snapshot.follow_selection;
+  Game::Systems::PlayerResourceRegistry::instance().restore(
+      snapshot.resources_by_owner);
 
   m_runtime.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
   if (m_cursor_manager) {
     m_cursor_manager->set_mode(m_runtime.cursor_mode);
   }
+  sync_selected_player_state();
+}
+
+void GameEngine::sync_selected_player_state() {
+  int const owner_id =
+      m_selected_player_id > 0 ? m_selected_player_id : m_runtime.local_owner_id;
+  QVariantMap const next_state =
+      build_player_state_map(owner_id, m_level.max_troops_per_player);
+  if (m_selected_player_state == next_state) {
+    return;
+  }
+  m_selected_player_state = next_state;
+  emit selected_player_state_changed();
+  emit owner_info_changed();
+}
+
+void GameEngine::sync_scatter_world_props() {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (m_scatter == nullptr || !terrain_service.is_initialized() ||
+      terrain_service.get_height_map() == nullptr) {
+    return;
+  }
+
+  auto const revision = terrain_service.world_props_revision();
+  if (revision == m_last_world_props_revision) {
+    return;
+  }
+
+  m_scatter->configure(*terrain_service.get_height_map(),
+                       terrain_service.biome_settings(),
+                       terrain_service.world_props(),
+                       true);
+  m_last_world_props_revision = revision;
+}
+
+void GameEngine::initialize_player_resources() {
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.clear();
+
+  for (const auto& owner : Game::Systems::OwnerRegistry::instance().get_all_owners()) {
+    resources.ensure_owner(owner.owner_id);
+  }
+
+  if (m_campaign_manager &&
+      m_campaign_manager->current_mission_definition().has_value()) {
+    auto const& mission_resources = m_campaign_manager->current_mission_definition()
+                                        ->player_setup.starting_resources;
+    for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+      resources.set(m_runtime.local_owner_id, type, mission_resources.get(type));
+    }
+  }
+
+  sync_selected_player_state();
 }
 
 auto GameEngine::capture_screenshot() const -> QByteArray {
@@ -4325,6 +4441,8 @@ auto GameEngine::get_owner_info() const -> QVariantList {
     }
     owner_map["type"] = type_str;
     owner_map["isLocal"] = (owner.owner_id == m_runtime.local_owner_id);
+    owner_map["state"] =
+        build_player_state_map(owner.owner_id, m_level.max_troops_per_player);
 
     result.append(owner_map);
   }

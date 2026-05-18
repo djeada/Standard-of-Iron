@@ -1145,6 +1145,10 @@
   ],
   "victory": {
     "type": "custom",
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ],
     "description": "Defeat Scipio's army despite his prepared counters. Use elephants to disrupt, preserve Hannibal's veteran reserve, survive the Roman cavalry return, and break the Roman camp.",
     "primary_objectives": [
       "Send the elephants forward and disrupt Scipio's first line",

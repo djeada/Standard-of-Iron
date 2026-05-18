@@ -45,6 +45,9 @@ public:
   [[nodiscard]] bool is_placing_construction() const {
     return m_is_placing_construction;
   }
+  [[nodiscard]] bool construction_preview_valid() const {
+    return m_construction_preview_valid;
+  }
   void on_construction_mouse_move(qreal sx, qreal sy, const ViewportState& viewport);
   void on_construction_confirm();
   void on_construction_cancel();
@@ -64,13 +67,15 @@ public:
 
 signals:
   void placing_construction_changed();
-  void construction_placement_rejected();
+  void construction_preview_valid_changed();
+  void construction_placement_rejected(const QString& reason);
 
 private:
   std::vector<Engine::Core::EntityID> collect_available_builders();
   QVector3D calculate_builder_center_position(
       const std::vector<Engine::Core::EntityID>& builder_ids);
   static float get_construction_build_time(const std::string& item_type);
+  void set_construction_preview_valid(bool valid);
 
   Engine::Core::World* m_world;
   Game::Systems::PickingService* m_picking_service;
@@ -81,4 +86,5 @@ private:
   std::vector<Engine::Core::EntityID> m_pending_construction_builders;
   QVector3D m_construction_placement_position;
   bool m_is_placing_construction = false;
+  bool m_construction_preview_valid = false;
 };

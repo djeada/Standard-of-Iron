@@ -17,6 +17,7 @@
 #include "command_service.h"
 #include "nation_registry.h"
 #include "pathfinding.h"
+#include "player_resource_registry.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
@@ -24,6 +25,13 @@
 namespace Game::Systems {
 
 namespace {
+
+constexpr auto k_cut_tree_product_type = "cut_tree";
+constexpr auto k_collect_stone_product_type = "collect_stone";
+constexpr auto k_collect_iron_ore_product_type = "collect_iron_ore";
+constexpr int k_cut_tree_wood_reward = 25;
+constexpr int k_collect_stone_reward = 25;
+constexpr int k_collect_iron_ore_reward = 25;
 
 void apply_production_profile(Engine::Core::ProductionComponent* prod,
                               Game::Systems::NationID nation_id,
@@ -37,8 +45,7 @@ void apply_production_profile(Engine::Core::ProductionComponent* prod,
   prod->villager_cost = profile.production.cost;
 }
 
-auto resolve_nation_id(const Engine::Core::UnitComponent* unit,
-                       int owner_id) -> Game::Systems::NationID {
+auto resolve_nation_id(int owner_id) -> Game::Systems::NationID {
   auto& registry = NationRegistry::instance();
   if (const auto* nation = registry.get_nation_for_player(owner_id)) {
     return nation->id;
@@ -152,6 +159,21 @@ void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
   builder->bypass_target_z = target_z;
 }
 
+void clear_builder_task_target(Engine::Core::BuilderProductionComponent* builder,
+                               bool release_tree = true) {
+  if (builder == nullptr) {
+    return;
+  }
+  if (release_tree && builder->task_target_reserved) {
+    Game::Map::TerrainService::instance().release_world_prop(builder->task_target_id);
+  }
+  builder->has_task_target = false;
+  builder->task_target_id = 0;
+  builder->task_target_x = 0.0F;
+  builder->task_target_z = 0.0F;
+  builder->task_target_reserved = false;
+}
+
 } // namespace
 
 void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
@@ -175,7 +197,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     const int owner_id = (unit_comp != nullptr) ? unit_comp->owner_id : -1;
-    const auto nation_id = resolve_nation_id(unit_comp, owner_id);
+    const auto nation_id = resolve_nation_id(owner_id);
     const auto current_profile =
         TroopProfileService::instance().get_profile(nation_id, prod->product_type);
     int const individuals_per_unit = current_profile.individuals_per_unit;
@@ -271,9 +293,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
     if (builder_prod->has_construction_site && !builder_prod->at_construction_site) {
       if (transform != nullptr) {
-        float dx = builder_prod->construction_site_x - transform->position.x;
-        float dz = builder_prod->construction_site_z - transform->position.z;
-        float dist_sq = dx * dx + dz * dz;
+        float const dx = builder_prod->construction_site_x - transform->position.x;
+        float const dz = builder_prod->construction_site_z - transform->position.z;
+        float const dist_sq = dx * dx + dz * dz;
 
         if (dist_sq < CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
 
@@ -311,9 +333,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     if (builder_prod->at_construction_site && transform != nullptr) {
-      float dx = builder_prod->construction_site_x - transform->position.x;
-      float dz = builder_prod->construction_site_z - transform->position.z;
-      float dist_sq = dx * dx + dz * dz;
+      float const dx = builder_prod->construction_site_x - transform->position.x;
+      float const dz = builder_prod->construction_site_z - transform->position.z;
+      float const dist_sq = dx * dx + dz * dz;
 
       if (dist_sq > MAX_CONSTRUCTION_DISTANCE_SQ) {
         builder_prod->has_construction_site = false;
@@ -321,6 +343,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         builder_prod->in_progress = false;
         builder_prod->construction_complete = false;
         builder_prod->time_remaining = 0.0F;
+        clear_builder_task_target(builder_prod);
         continue;
       }
     }
@@ -331,63 +354,93 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       auto* t = e->get_component<Engine::Core::TransformComponent>();
       auto* u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
-        auto reg = Game::Map::MapTransformer::get_factory_registry();
-        if (reg) {
-          Game::Units::SpawnParams sp;
-
-          if (builder_prod->has_construction_site) {
-            sp.position = QVector3D(builder_prod->construction_site_x,
-                                    t->position.y,
-                                    builder_prod->construction_site_z);
+        if (builder_prod->product_type == k_cut_tree_product_type ||
+            builder_prod->product_type == k_collect_stone_product_type ||
+            builder_prod->product_type == k_collect_iron_ore_product_type) {
+          bool const harvested =
+              builder_prod->has_task_target &&
+              Game::Map::TerrainService::instance().harvest_world_prop(
+                  builder_prod->task_target_id);
+          if (harvested) {
+            ResourceType resource_type = ResourceType::Wood;
+            int reward_amount = k_cut_tree_wood_reward;
+            if (builder_prod->product_type == k_collect_stone_product_type) {
+              resource_type = ResourceType::Stone;
+              reward_amount = k_collect_stone_reward;
+            } else if (builder_prod->product_type == k_collect_iron_ore_product_type) {
+              resource_type = ResourceType::Iron;
+              reward_amount = k_collect_iron_ore_reward;
+            }
+            PlayerResourceRegistry::instance().add(
+                u->owner_id, resource_type, reward_amount);
+            if (auto* pathfinder = CommandService::get_pathfinder()) {
+              Point const tree_grid = CommandService::world_to_grid(
+                  builder_prod->task_target_x, builder_prod->task_target_z);
+              pathfinder->mark_region_dirty(
+                  tree_grid.x - 1, tree_grid.x + 1, tree_grid.y - 1, tree_grid.y + 1);
+            }
           } else {
-            sp.position = QVector3D(t->position.x, t->position.y, t->position.z);
+            clear_builder_task_target(builder_prod);
           }
-          sp.player_id = u->owner_id;
-          sp.ai_controlled = e->has_component<Engine::Core::AIControlledComponent>();
-          sp.nation_id = u->nation_id;
-          sp.is_initial_spawn = false;
+        } else {
+          auto reg = Game::Map::MapTransformer::get_factory_registry();
+          if (reg) {
+            Game::Units::SpawnParams sp;
 
-          if (builder_prod->product_type == "catapult") {
-            sp.spawn_type = Game::Units::SpawnType::Catapult;
-          } else if (builder_prod->product_type == "ballista") {
-            sp.spawn_type = Game::Units::SpawnType::Ballista;
-          } else if (builder_prod->product_type == "barracks") {
-            sp.spawn_type = Game::Units::SpawnType::Barracks;
-          } else if (builder_prod->product_type == "defense_tower") {
-            sp.spawn_type = Game::Units::SpawnType::DefenseTower;
-          } else if (builder_prod->product_type == "home") {
-            sp.spawn_type = Game::Units::SpawnType::Home;
-          } else {
+            if (builder_prod->has_construction_site) {
+              sp.position = QVector3D(builder_prod->construction_site_x,
+                                      t->position.y,
+                                      builder_prod->construction_site_z);
+            } else {
+              sp.position = QVector3D(t->position.x, t->position.y, t->position.z);
+            }
+            sp.player_id = u->owner_id;
+            sp.ai_controlled = e->has_component<Engine::Core::AIControlledComponent>();
+            sp.nation_id = u->nation_id;
+            sp.is_initial_spawn = false;
 
-            builder_prod->in_progress = false;
-            builder_prod->time_remaining = 0.0F;
-            builder_prod->has_construction_site = false;
-            builder_prod->at_construction_site = false;
-            continue;
-          }
+            if (builder_prod->product_type == "catapult") {
+              sp.spawn_type = Game::Units::SpawnType::Catapult;
+            } else if (builder_prod->product_type == "ballista") {
+              sp.spawn_type = Game::Units::SpawnType::Ballista;
+            } else if (builder_prod->product_type == "barracks") {
+              sp.spawn_type = Game::Units::SpawnType::Barracks;
+            } else if (builder_prod->product_type == "defense_tower") {
+              sp.spawn_type = Game::Units::SpawnType::DefenseTower;
+            } else if (builder_prod->product_type == "home") {
+              sp.spawn_type = Game::Units::SpawnType::Home;
+            } else {
+              builder_prod->in_progress = false;
+              builder_prod->time_remaining = 0.0F;
+              builder_prod->has_construction_site = false;
+              builder_prod->at_construction_site = false;
+              clear_builder_task_target(builder_prod, false);
+              continue;
+            }
 
-          reg->create(sp.spawn_type, *world, sp);
+            reg->create(sp.spawn_type, *world, sp);
 
-          if (builder_prod->has_construction_site && movement != nullptr &&
-              t != nullptr) {
-            float const unit_radius =
-                CommandService::get_unit_radius(*world, e->get_id());
-            QVector3D const preferred_exit = compute_builder_exit_position(
-                builder_prod->construction_site_x,
-                builder_prod->construction_site_z,
-                QVector3D(t->position.x, t->position.y, t->position.z),
-                unit_radius,
-                builder_prod->product_type);
+            if (builder_prod->has_construction_site && movement != nullptr &&
+                t != nullptr) {
+              float const unit_radius =
+                  CommandService::get_unit_radius(*world, e->get_id());
+              QVector3D const preferred_exit = compute_builder_exit_position(
+                  builder_prod->construction_site_x,
+                  builder_prod->construction_site_z,
+                  QVector3D(t->position.x, t->position.y, t->position.z),
+                  unit_radius,
+                  builder_prod->product_type);
 
-            QVector3D const safe_exit = find_guaranteed_valid_exit(
-                preferred_exit.x(), preferred_exit.z(), unit_radius);
+              QVector3D const safe_exit = find_guaranteed_valid_exit(
+                  preferred_exit.x(), preferred_exit.z(), unit_radius);
 
-            activate_bypass_movement(builder_prod, safe_exit.x(), safe_exit.z());
+              activate_bypass_movement(builder_prod, safe_exit.x(), safe_exit.z());
 
-            movement->goal_x = safe_exit.x();
-            movement->goal_y = safe_exit.z();
-            movement->target_x = safe_exit.x();
-            movement->target_y = safe_exit.z();
+              movement->goal_x = safe_exit.x();
+              movement->goal_y = safe_exit.z();
+              movement->target_x = safe_exit.x();
+              movement->target_y = safe_exit.z();
+            }
           }
         }
       }
@@ -397,6 +450,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->construction_complete = true;
       builder_prod->has_construction_site = false;
       builder_prod->at_construction_site = false;
+      clear_builder_task_target(builder_prod, false);
     }
   }
 }
