@@ -157,6 +157,9 @@ auto world_prop_type_from_string(const QString& prop_type)
   if (normalized == QStringLiteral("plant")) {
     return Game::Map::WorldProp::Type::Plant;
   }
+  if (normalized == QStringLiteral("iron_ore")) {
+    return Game::Map::WorldProp::Type::IronOre;
+  }
   return Game::Map::WorldProp::Type::FireCamp;
 }
 

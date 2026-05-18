@@ -8,6 +8,7 @@
 #include "../ground/boulder_renderer.h"
 #include "../ground/dead_tree_renderer.h"
 #include "../ground/firecamp_renderer.h"
+#include "../ground/iron_ore_renderer.h"
 #include "../ground/olive_renderer.h"
 #include "../ground/pine_renderer.h"
 #include "../ground/plant_renderer.h"
@@ -33,6 +34,7 @@ TerrainScatterManager::TerrainScatterManager()
     , m_ruins(std::make_unique<RuinsRenderer>())
     , m_dead_tree(std::make_unique<DeadTreeRenderer>())
     , m_boulder(std::make_unique<BoulderRenderer>())
+    , m_iron_ore(std::make_unique<IronOreRenderer>())
     , m_passes{m_biome.get(),
                m_stone.get(),
                m_plant.get(),
@@ -44,7 +46,8 @@ TerrainScatterManager::TerrainScatterManager()
                m_weapon_rack.get(),
                m_ruins.get(),
                m_dead_tree.get(),
-               m_boulder.get()} {
+               m_boulder.get(),
+               m_iron_ore.get()} {
 }
 
 TerrainScatterManager::~TerrainScatterManager() = default;
@@ -67,6 +70,7 @@ void TerrainScatterManager::configure(
   m_ruins->configure(height_map, biome_settings, world_props);
   m_dead_tree->configure(height_map, biome_settings, world_props);
   m_boulder->configure(height_map, biome_settings, world_props);
+  m_iron_ore->configure(height_map, biome_settings, world_props);
 }
 
 void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
@@ -82,6 +86,7 @@ void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
   m_ruins->set_light_direction(dir);
   m_dead_tree->set_light_direction(dir);
   m_boulder->set_light_direction(dir);
+  m_iron_ore->set_light_direction(dir);
 }
 
 void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resources) {
@@ -115,6 +120,7 @@ void TerrainScatterManager::clear() {
   m_ruins->clear();
   m_dead_tree->clear();
   m_boulder->clear();
+  m_iron_ore->clear();
 }
 
 void TerrainScatterManager::refresh_grass() {
@@ -129,7 +135,7 @@ auto TerrainScatterManager::is_gpu_ready() const -> bool {
          m_firecamp->is_gpu_ready() && m_tent->is_gpu_ready() &&
          m_supply_cart->is_gpu_ready() && m_weapon_rack->is_gpu_ready() &&
          m_ruins->is_gpu_ready() && m_dead_tree->is_gpu_ready() &&
-         m_boulder->is_gpu_ready();
+         m_boulder->is_gpu_ready() && m_iron_ore->is_gpu_ready();
 }
 
 auto TerrainScatterManager::biome() const -> BiomeRenderer* {
@@ -178,6 +184,10 @@ auto TerrainScatterManager::dead_tree() const -> DeadTreeRenderer* {
 
 auto TerrainScatterManager::boulder() const -> BoulderRenderer* {
   return m_boulder.get();
+}
+
+auto TerrainScatterManager::iron_ore() const -> IronOreRenderer* {
+  return m_iron_ore.get();
 }
 
 auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
@@ -266,7 +276,14 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
            m_boulder != nullptr ? m_boulder->instance_count() : 0U,
            m_boulder == nullptr || m_boulder->is_gpu_ready(),
            m_boulder != nullptr ? m_boulder->last_sync_stats()
-                                : Render::Ground::Scatter::SyncStats{}}};
+                                : Render::Ground::Scatter::SyncStats{}},
+          {ScatterSpeciesId::IronOre,
+           ScatterVisibilityMode::InstanceFiltered,
+           m_iron_ore.get(),
+           m_iron_ore != nullptr ? m_iron_ore->instance_count() : 0U,
+           m_iron_ore == nullptr || m_iron_ore->is_gpu_ready(),
+           m_iron_ore != nullptr ? m_iron_ore->last_sync_stats()
+                                 : Render::Ground::Scatter::SyncStats{}}};
 }
 
 auto TerrainScatterManager::last_sync_stats() const
@@ -309,6 +326,9 @@ auto TerrainScatterManager::last_sync_stats() const
   }
   if (m_boulder != nullptr) {
     stats += m_boulder->last_sync_stats();
+  }
+  if (m_iron_ore != nullptr) {
+    stats += m_iron_ore->last_sync_stats();
   }
   return stats;
 }
