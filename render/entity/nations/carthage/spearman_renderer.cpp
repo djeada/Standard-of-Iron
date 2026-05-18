@@ -32,6 +32,7 @@
 #include "../../../gl/primitives.h"
 #include "../../../humanoid/facial_hair_catalog.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
@@ -56,6 +57,9 @@ constexpr std::uint8_t k_template_variant_bucket_count = 8U;
 
 constexpr float k_kneel_depth_multiplier = 0.875F;
 constexpr float k_lean_amount_multiplier = 0.67F;
+constexpr auto k_profile =
+    Render::GL::Humanoid::k_polearm_infantry_proportion_profile.with_offset(
+        {.x = -0.02F, .y = 0.01F, .torso_scale = 0.03F});
 
 auto spearman_style_registry()
     -> std::unordered_map<std::string, SpearmanStyleConfig>& {
@@ -386,8 +390,10 @@ static auto spearman_variant_table() -> const Render::Creature::ArchetypeVariant
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.72F, 1.02F, 0.74F};
+    return k_profile.as_vector();
   }
+
+  auto get_torso_scale() const -> float override { return k_profile.torso_scale; }
 
   void adjust_variation(const DrawContext&,
                         uint32_t,
@@ -416,7 +422,7 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/spearman";
       s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
-      s.scaling = ProportionScaling{0.72F, 1.02F, 0.74F};
+      s.scaling = k_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/spearman",

@@ -8,7 +8,7 @@
     "height": 150,
     "tile_size": 1.0
   },
-  "time_of_day": "late_afternoon",
+  "time_of_day": "afternoon",
   "difficulty_intent": "hard_mobile_tactical",
   "design_pillars": [
     "Keep the center readable for cavalry combat, but surround it with meaningful lanes, cutoffs, groves, irrigation channels, and bridge choices.",
@@ -369,7 +369,7 @@
   "terrain": [
     {
       "id": "central_cavalry_meadow",
-      "type": "plain",
+      "type": "flat",
       "x": 116,
       "z": 70,
       "width": 108,
@@ -378,7 +378,7 @@
     },
     {
       "id": "roman_withdrawal_basin",
-      "type": "plain",
+      "type": "flat",
       "x": 158,
       "z": 68,
       "width": 54,
@@ -595,21 +595,21 @@
     },
     {
       "id": "central_farmstead",
-      "type": "village",
+      "type": "flat",
       "x": 112,
       "z": 74,
       "description": "Po Valley farmstead in the center of the battlefield."
     },
     {
       "id": "baggage_hamlet",
-      "type": "village",
+      "type": "flat",
       "x": 226,
       "z": 98,
       "description": "Roman baggage hamlet beside the southern fallback bridge."
     },
     {
       "id": "southern_farmland",
-      "type": "plain",
+      "type": "flat",
       "x": 58,
       "z": 106,
       "width": 48,
@@ -618,7 +618,7 @@
     },
     {
       "id": "northern_farmland",
-      "type": "plain",
+      "type": "flat",
       "x": 74,
       "z": 36,
       "width": 48,
@@ -1074,10 +1074,10 @@
     { "id": "western_grove_dead_tree_01", "type": "dead_tree", "x": 23, "z": 31, "scale": 1.2, "rotation": 0.6 },
     { "id": "western_grove_dead_tree_02", "type": "dead_tree", "x": 32, "z": 27, "scale": 1.0, "rotation": 2.3 },
     { "id": "western_grove_dead_tree_03", "type": "dead_tree", "x": 19, "z": 38, "scale": 1.1, "rotation": 4.1 },
-    { "id": "north_flank_broken_cart", "type": "broken_cart", "x": 72, "z": 32, "scale": 0.9, "rotation": 1.4, "purpose": "marks northern route entrance" },
+    { "id": "north_flank_broken_cart", "type": "supply_cart", "x": 72, "z": 32, "scale": 0.9, "rotation": 1.4, "purpose": "marks northern route entrance" },
     { "id": "north_riparian_dead_tree_01", "type": "dead_tree", "x": 84, "z": 31, "scale": 1.0, "rotation": 2.1 },
     { "id": "north_riparian_dead_tree_02", "type": "dead_tree", "x": 94, "z": 37, "scale": 0.9, "rotation": 4.5 },
-    { "id": "northern_farm_crossing_cart", "type": "broken_cart", "x": 104, "z": 24, "scale": 0.75, "rotation": 0.2 },
+    { "id": "northern_farm_crossing_cart", "type": "supply_cart", "x": 104, "z": 24, "scale": 0.75, "rotation": 0.2 },
     { "id": "willow_ford_dead_tree_01", "type": "dead_tree", "x": 174, "z": 30, "scale": 1.0, "rotation": 2.7 },
     { "id": "willow_ford_dead_tree_02", "type": "dead_tree", "x": 181, "z": 34, "scale": 0.8, "rotation": 5.2 },
 
@@ -1091,15 +1091,15 @@
 
     { "id": "roman_ridge_weapon_rack_01", "type": "weapon_rack", "x": 162, "z": 68, "scale": 0.9, "rotation": 4.1 },
     { "id": "roman_ridge_supply_cart_01", "type": "supply_cart", "x": 170, "z": 64, "scale": 0.85, "rotation": 2.0 },
-    { "id": "roman_ridge_broken_cart_01", "type": "broken_cart", "x": 176, "z": 70, "scale": 0.8, "rotation": 5.6 },
+    { "id": "roman_ridge_broken_cart_01", "type": "supply_cart", "x": 176, "z": 70, "scale": 0.8, "rotation": 5.6 },
 
     { "id": "southern_farmland_cart_01", "type": "supply_cart", "x": 86, "z": 103, "scale": 0.9, "rotation": 1.6 },
-    { "id": "southern_irrigation_broken_cart", "type": "broken_cart", "x": 108, "z": 104, "scale": 0.9, "rotation": 0.8 },
+    { "id": "southern_irrigation_broken_cart", "type": "supply_cart", "x": 108, "z": 104, "scale": 0.9, "rotation": 0.8 },
     { "id": "southern_spur_dead_tree_01", "type": "dead_tree", "x": 142, "z": 101, "scale": 0.95, "rotation": 2.5 },
     { "id": "southern_spur_weapon_rack", "type": "weapon_rack", "x": 151, "z": 106, "scale": 0.8, "rotation": 4.4 },
     { "id": "retreat_cover_dead_tree_01", "type": "dead_tree", "x": 178, "z": 93, "scale": 1.0, "rotation": 1.5 },
     { "id": "retreat_cover_dead_tree_02", "type": "dead_tree", "x": 188, "z": 99, "scale": 1.2, "rotation": 3.8 },
-    { "id": "southern_ditch_broken_cart", "type": "broken_cart", "x": 204, "z": 118, "scale": 0.9, "rotation": 2.6 },
+    { "id": "southern_ditch_broken_cart", "type": "supply_cart", "x": 204, "z": 118, "scale": 0.9, "rotation": 2.6 },
 
     { "id": "northern_supply_tent", "type": "tent", "x": 210, "z": 40, "scale": 0.85, "rotation": 2.2 },
     { "id": "northern_supply_cart", "type": "supply_cart", "x": 216, "z": 43, "scale": 0.9, "rotation": 1.0 },

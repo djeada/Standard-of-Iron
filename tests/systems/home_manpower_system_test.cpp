@@ -20,7 +20,7 @@ protected:
 };
 
 TEST_F(HomeManpowerSystemTest,
-       HomesIncreaseBarracksCapacityAndGenerateManpowerOverTime) {
+       HomesTrackNearestBarracksAndGenerateCivilianManpowerOverTime) {
   Engine::Core::World world;
 
   auto* barracks = world.create_entity();
@@ -62,7 +62,7 @@ TEST_F(HomeManpowerSystemTest,
   home_system.update(&world, 0.1F);
 
   EXPECT_EQ(home_component->nearest_barracks_id, barracks->get_id());
-  EXPECT_EQ(barracks_production->max_units, 150);
+  EXPECT_EQ(barracks_production->max_units, 100);
   EXPECT_EQ(home_production->manpower_available, 12);
   EXPECT_FLOAT_EQ(home_component->family_generation_cooldown, 8.0F);
 
@@ -70,7 +70,7 @@ TEST_F(HomeManpowerSystemTest,
   home_component->family_generation_cooldown = 0.0F;
   home_system.update(&world, 0.1F);
 
-  EXPECT_EQ(barracks_production->max_units, 150);
+  EXPECT_EQ(barracks_production->max_units, 100);
   EXPECT_EQ(home_production->manpower_available, 24);
   EXPECT_FLOAT_EQ(home_component->family_generation_cooldown, 8.0F);
 }
@@ -87,6 +87,7 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   unit->owner_id = 1;
   production->max_units = 500;
+  production->produced_count = 500;
   production->manpower_available = 40;
 
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};

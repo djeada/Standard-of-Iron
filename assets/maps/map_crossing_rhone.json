@@ -1807,7 +1807,7 @@
             "capture_required": true,
             "id": "rome_north_barracks",
             "max_population": 150,
-            "nation": "rome",
+            "nation": "roman_republic",
             "player_id": 2,
             "role": "command_economy_fort",
             "type": "barracks",
@@ -1818,7 +1818,7 @@
             "capture_required": true,
             "id": "rome_south_barracks",
             "max_population": 150,
-            "nation": "rome",
+            "nation": "roman_republic",
             "player_id": 2,
             "role": "military_fort",
             "type": "barracks",
@@ -1828,7 +1828,6 @@
         {
             "id": "gaul_barracks",
             "max_population": 80,
-            "nation": "gaul",
             "player_id": 3,
             "role": "optional_ally_or_neutral",
             "type": "barracks",
@@ -2364,7 +2363,7 @@
             "id": "western_low_basin",
             "radius": 10,
             "rotation": 6,
-            "type": "depression",
+            "type": "flat",
             "x": 32,
             "z": 84
         },
@@ -2675,7 +2674,7 @@
             "z": 44
         }
     ],
-    "time_of_day": "late_afternoon",
+    "time_of_day": "afternoon",
     "triggered_spawns": [
         {
             "delay_seconds": 35,
@@ -3065,7 +3064,7 @@
             "purpose": "marks scout cache",
             "rotation": 34,
             "scale": 1,
-            "type": "broken_cart",
+            "type": "supply_cart",
             "x": 45,
             "z": 26
         },
@@ -3106,7 +3105,7 @@
             "id": "burnt_cart_north_approach",
             "rotation": 70,
             "scale": 1.0499999523162842,
-            "type": "broken_cart",
+            "type": "supply_cart",
             "x": 86,
             "z": 57
         },
@@ -3160,7 +3159,7 @@
             "id": "central_bridge_marker_cart",
             "rotation": 100,
             "scale": 0.8500000238418579,
-            "type": "broken_cart",
+            "type": "supply_cart",
             "x": 87,
             "z": 86
         },
@@ -3193,7 +3192,7 @@
             "purpose": "draws eye to southern crossing",
             "rotation": 70,
             "scale": 1,
-            "type": "broken_cart",
+            "type": "supply_cart",
             "x": 82,
             "z": 116
         },
@@ -3272,7 +3271,7 @@
         {
             "id": "roman_watch_fire_prop",
             "scale": 1,
-            "type": "watch_fire",
+            "type": "firecamp",
             "x": 116,
             "z": 91
         },
@@ -3351,7 +3350,7 @@
             "id": "signal_tower",
             "purpose": "north command identity and optional objective",
             "scale": 1,
-            "type": "signal_tower",
+            "type": "ruins",
             "x": 124,
             "z": 34
         },
@@ -3407,7 +3406,7 @@
             "id": "south_fort_siege_cache",
             "purpose": "south fort reward marker",
             "scale": 1,
-            "type": "siege_cache",
+            "type": "supply_cart",
             "x": 136,
             "z": 130
         },
@@ -3431,7 +3430,7 @@
             "id": "far_east_broken_cart_01",
             "rotation": 4,
             "scale": 0.8999999761581421,
-            "type": "broken_cart",
+            "type": "supply_cart",
             "x": 148,
             "z": 78
         },

@@ -14,6 +14,7 @@
 #include "game/map/minimap/camera_viewport_layer.h"
 #include "game/map/minimap/minimap_generator.h"
 #include "game/map/minimap/minimap_utils.h"
+#include "game/map/render_visibility_rules.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/selection_system.h"
@@ -62,13 +63,9 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
     m_world_height = static_cast<float>(map_def.grid.height);
     m_tile_size = map_def.grid.tile_size;
 
+    m_fog_compositor.reset();
     m_minimap_fog_image = m_minimap_base_image.copy();
     m_minimap_image = m_minimap_fog_image.copy();
-    m_fog_lookup_entries.clear();
-    m_fog_lookup_vis_width = 0;
-    m_fog_lookup_vis_height = 0;
-    m_fog_lookup_img_width = 0;
-    m_fog_lookup_img_height = 0;
 
     m_unit_layer = std::make_unique<Game::Map::Minimap::UnitLayer>();
     m_unit_layer->init(m_minimap_base_image.width(),
@@ -85,7 +82,6 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
                                   m_world_width,
                                   m_world_height);
 
-    m_minimap_fog_version = 0;
     m_last_fog_composite_version = std::numeric_limits<std::uint64_t>::max();
     mark_dirty();
   } else {
@@ -93,162 +89,19 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
   }
 }
 
-void MinimapManager::rebuild_fog_lookup(int vis_width, int vis_height) {
-  if (m_minimap_base_image.isNull() || vis_width <= 0 || vis_height <= 0) {
-    m_fog_lookup_entries.clear();
-    m_fog_lookup_vis_width = 0;
-    m_fog_lookup_vis_height = 0;
-    m_fog_lookup_img_width = 0;
-    m_fog_lookup_img_height = 0;
-    return;
-  }
-
-  m_fog_lookup_vis_width = vis_width;
-  m_fog_lookup_vis_height = vis_height;
-  m_fog_lookup_img_width = m_minimap_base_image.width();
-  m_fog_lookup_img_height = m_minimap_base_image.height();
-
-  const int img_width = m_fog_lookup_img_width;
-  const int img_height = m_fog_lookup_img_height;
-  m_fog_lookup_entries.resize(static_cast<std::size_t>(img_width * img_height));
-
-  const auto& orient = Game::Map::Minimap::MinimapOrientation::instance();
-  const float inv_cos = orient.cos_yaw();
-  const float inv_sin = -orient.sin_yaw();
-
-  const float scale_x = static_cast<float>(vis_width) / static_cast<float>(img_width);
-  const float scale_y = static_cast<float>(vis_height) / static_cast<float>(img_height);
-  const float half_img_w = static_cast<float>(img_width) * 0.5F;
-  const float half_img_h = static_cast<float>(img_height) * 0.5F;
-  const float half_vis_w = static_cast<float>(vis_width) * 0.5F;
-  const float half_vis_h = static_cast<float>(vis_height) * 0.5F;
-
-  std::size_t lookup_idx = 0;
-  for (int y = 0; y < img_height; ++y) {
-    const float centered_y = static_cast<float>(y) - half_img_h;
-    for (int x = 0; x < img_width; ++x) {
-      const float centered_x = static_cast<float>(x) - half_img_w;
-
-      const float world_x = centered_x * inv_cos - centered_y * inv_sin;
-      const float world_y = centered_x * inv_sin + centered_y * inv_cos;
-
-      const float vis_x = (world_x * scale_x) + half_vis_w;
-      const float vis_y = (world_y * scale_y) + half_vis_h;
-
-      const int base_vx = static_cast<int>(std::floor(vis_x));
-      const int base_vy = static_cast<int>(std::floor(vis_y));
-      const int vx0 = std::clamp(base_vx, 0, vis_width - 1);
-      const int vx1 = std::clamp(base_vx + 1, 0, vis_width - 1);
-      const int vy0 = std::clamp(base_vy, 0, vis_height - 1);
-      const int vy1 = std::clamp(base_vy + 1, 0, vis_height - 1);
-
-      FogLookupEntry& entry = m_fog_lookup_entries[lookup_idx++];
-      entry.idx00 = vy0 * vis_width + vx0;
-      entry.idx10 = vy0 * vis_width + vx1;
-      entry.idx01 = vy1 * vis_width + vx0;
-      entry.idx11 = vy1 * vis_width + vx1;
-      entry.fx = std::clamp(vis_x - static_cast<float>(base_vx), 0.0F, 1.0F);
-      entry.fy = std::clamp(vis_y - static_cast<float>(base_vy), 0.0F, 1.0F);
-    }
-  }
-}
-
-void MinimapManager::update_fog(int vis_width,
-                                int vis_height,
-                                const std::vector<std::uint8_t>& cells,
-                                std::uint64_t visibility_version) {
+void MinimapManager::update_fog(const Game::Map::VisibilityService::Snapshot& snapshot) {
   if (m_minimap_base_image.isNull()) {
     return;
   }
 
-  if (visibility_version == m_minimap_fog_version && !m_minimap_fog_image.isNull()) {
-    return;
-  }
-
-  if (cells.empty() || vis_width <= 0 || vis_height <= 0) {
+  if (!snapshot.initialized || snapshot.cells.empty() || snapshot.width <= 0 ||
+      snapshot.height <= 0) {
     clear_fog();
     return;
   }
 
-  m_minimap_fog_version = visibility_version;
-
-  const int img_width = m_minimap_base_image.width();
-  const int img_height = m_minimap_base_image.height();
-
-  if (m_fog_lookup_vis_width != vis_width || m_fog_lookup_vis_height != vis_height ||
-      m_fog_lookup_img_width != img_width || m_fog_lookup_img_height != img_height ||
-      m_fog_lookup_entries.size() != static_cast<std::size_t>(img_width * img_height)) {
-    rebuild_fog_lookup(vis_width, vis_height);
-  }
-
-  if (m_minimap_fog_image.isNull() ||
-      m_minimap_fog_image.size() != m_minimap_base_image.size() ||
-      m_minimap_fog_image.format() != m_minimap_base_image.format()) {
-    m_minimap_fog_image = m_minimap_base_image.copy();
-  }
-
-  constexpr int FOG_R = 45;
-  constexpr int FOG_G = 38;
-  constexpr int FOG_B = 30;
-  constexpr int ALPHA_UNSEEN = 180;
-  constexpr int ALPHA_EXPLORED = 60;
-  constexpr int ALPHA_VISIBLE = 0;
-  constexpr float ALPHA_THRESHOLD = 0.5F;
-  constexpr float ALPHA_SCALE = 1.0F / 255.0F;
-  constexpr std::uint8_t k_visible =
-      static_cast<std::uint8_t>(Game::Map::VisibilityState::Visible);
-  constexpr std::uint8_t k_explored =
-      static_cast<std::uint8_t>(Game::Map::VisibilityState::Explored);
-
-  auto alpha_from_cell = [&](std::uint8_t state) -> float {
-    if (state == k_visible) {
-      return static_cast<float>(ALPHA_VISIBLE);
-    }
-    if (state == k_explored) {
-      return static_cast<float>(ALPHA_EXPLORED);
-    }
-    return static_cast<float>(ALPHA_UNSEEN);
-  };
-
-  std::size_t lookup_idx = 0;
-  for (int y = 0; y < img_height; ++y) {
-    const auto* base_scanline =
-        reinterpret_cast<const QRgb*>(m_minimap_base_image.constScanLine(y));
-    auto* scanline = reinterpret_cast<QRgb*>(m_minimap_fog_image.scanLine(y));
-
-    for (int x = 0; x < img_width; ++x) {
-      const FogLookupEntry& sample = m_fog_lookup_entries[lookup_idx++];
-      const float a00 = alpha_from_cell(cells[static_cast<std::size_t>(sample.idx00)]);
-      const float a10 = alpha_from_cell(cells[static_cast<std::size_t>(sample.idx10)]);
-      const float a01 = alpha_from_cell(cells[static_cast<std::size_t>(sample.idx01)]);
-      const float a11 = alpha_from_cell(cells[static_cast<std::size_t>(sample.idx11)]);
-
-      const float alpha_top = a00 + (a10 - a00) * sample.fx;
-      const float alpha_bot = a01 + (a11 - a01) * sample.fx;
-      const float fog_alpha =
-          std::clamp(alpha_top + (alpha_bot - alpha_top) * sample.fy, 0.0F, 255.0F);
-
-      if (fog_alpha > ALPHA_THRESHOLD) {
-        const QRgb original = base_scanline[x];
-        const int orig_r = qRed(original);
-        const int orig_g = qGreen(original);
-        const int orig_b = qBlue(original);
-
-        const float blend = fog_alpha * ALPHA_SCALE;
-        const float inv_blend = 1.0F - blend;
-
-        const int new_r =
-            std::clamp(static_cast<int>(orig_r * inv_blend + FOG_R * blend), 0, 255);
-        const int new_g =
-            std::clamp(static_cast<int>(orig_g * inv_blend + FOG_G * blend), 0, 255);
-        const int new_b =
-            std::clamp(static_cast<int>(orig_b * inv_blend + FOG_B * blend), 0, 255);
-
-        scanline[x] = qRgba(new_r, new_g, new_b, 255);
-      } else {
-        scanline[x] = base_scanline[x];
-      }
-    }
+  if (!m_fog_compositor.apply(m_minimap_base_image, snapshot, m_minimap_fog_image)) {
+    return;
   }
 
   m_minimap_image = m_minimap_fog_image.copy();
@@ -260,15 +113,11 @@ void MinimapManager::clear_fog() {
     return;
   }
 
-  if (m_minimap_fog_version == 0 && !m_minimap_fog_image.isNull() &&
-      m_minimap_fog_image.size() == m_minimap_base_image.size() &&
-      m_minimap_fog_image.format() == m_minimap_base_image.format()) {
+  if (!m_fog_compositor.clear(m_minimap_base_image, m_minimap_fog_image)) {
     return;
   }
 
-  m_minimap_fog_version = 0;
   m_last_fog_composite_version = std::numeric_limits<std::uint64_t>::max();
-  m_minimap_fog_image = m_minimap_base_image.copy();
   m_minimap_image = m_minimap_fog_image.copy();
   mark_dirty();
 }
@@ -334,25 +183,23 @@ void MinimapManager::update_units(Engine::Core::World* world,
   unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(markers.size()));
 
   const bool units_changed = (unit_hash != m_last_unit_hash);
-  const bool fog_changed = (m_minimap_fog_version != m_last_fog_composite_version);
+  const bool fog_changed = (fog_version() != m_last_fog_composite_version);
 
   if (units_changed || fog_changed) {
     if (units_changed) {
       m_last_unit_hash = unit_hash;
     }
-    m_last_fog_composite_version = m_minimap_fog_version;
+    m_last_fog_composite_version = fog_version();
     mark_dirty();
 
     auto& visibility_service = Game::Map::VisibilityService::instance();
     Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
 
     if (visibility_service.is_initialized()) {
-      auto visibility_snapshot =
-          std::make_shared<Game::Map::VisibilityService::Snapshot>(
-              visibility_service.snapshot());
+      auto visibility_snapshot = visibility_service.snapshot_ptr();
       visibility_check = [visibility_snapshot](float world_x, float world_z) -> bool {
-        return visibility_snapshot->is_visible_world(world_x, world_z) ||
-               visibility_snapshot->is_explored_world(world_x, world_z);
+        return Game::Map::should_render_non_local_unit(
+            *visibility_snapshot, world_x, world_z);
       };
     }
 

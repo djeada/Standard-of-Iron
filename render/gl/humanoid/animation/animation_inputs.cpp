@@ -238,6 +238,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   anim.attack_variant = 0;
   anim.attack_offset = 0.0F;
   anim.has_attack_offset = false;
+  anim.is_in_melee_lock = false;
   anim.is_hit_reacting = false;
   anim.hit_reaction_intensity = 0.0F;
   anim.is_dying = false;
@@ -373,6 +374,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
       Game::Systems::CombatRules::participates_in_rts_melee_lock(ctx.entity)) {
     anim.is_attacking = true;
     anim.is_melee = true;
+    anim.is_in_melee_lock = true;
     if (anim.attack_family == Engine::Core::CombatAttackFamily::None &&
         unit != nullptr) {
       anim.attack_family = Engine::Core::resolve_combat_attack_family(

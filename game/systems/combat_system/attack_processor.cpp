@@ -16,6 +16,7 @@
 #include "../arrow_system.h"
 #include "../combat_rules.h"
 #include "../command_service.h"
+#include "../order_service.h"
 #include "../owner_registry.h"
 #include "../pathfinding.h"
 #include "../troop_profile_service.h"
@@ -166,6 +167,7 @@ void stop_unit_movement(Engine::Core::Entity* unit,
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   if ((movement != nullptr) && movement->has_target) {
     movement->has_target = false;
+    OrderService::clear_player_order_intent(unit);
     movement->vx = 0.0F;
     movement->vz = 0.0F;
     movement->clear_path();
@@ -751,6 +753,12 @@ void process_attacks(Engine::Core::World* world,
         Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)
             ? attacker->get_component<Engine::Core::AttackTargetComponent>()
             : nullptr;
+    bool const suppress_opportunistic_combat =
+        suppresses_opportunistic_combat(attacker);
+    if (suppress_opportunistic_combat && (attack_target != nullptr)) {
+      attacker->remove_component<Engine::Core::AttackTargetComponent>();
+      attack_target = nullptr;
+    }
     Engine::Core::Entity* best_target = nullptr;
     Engine::Core::UnitComponent* best_target_unit = nullptr;
     Engine::Core::TransformComponent* best_target_transform = nullptr;
@@ -908,7 +916,8 @@ void process_attacks(Engine::Core::World* world,
 
     bool const has_attack_target =
         attacker->has_component<Engine::Core::AttackTargetComponent>();
-    if ((best_target == nullptr) && !has_attack_target) {
+    if ((best_target == nullptr) && !has_attack_target &&
+        !suppress_opportunistic_combat) {
       if (Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
         best_target = find_nearest_enemy(attacker, query_context, range);
         if (best_target != nullptr) {
@@ -921,6 +930,10 @@ void process_attacks(Engine::Core::World* world,
 
     if ((best_target != nullptr) && (best_target_unit != nullptr) &&
         (best_target_transform != nullptr)) {
+      if (auto* movement = attacker->get_component<Engine::Core::MovementComponent>();
+          movement != nullptr) {
+        OrderService::clear_player_order_intent(attacker);
+      }
       if (!attacker->has_component<Engine::Core::AttackTargetComponent>()) {
         auto* new_target =
             attacker->add_component<Engine::Core::AttackTargetComponent>();
@@ -1013,7 +1026,7 @@ void process_attacks(Engine::Core::World* world,
         if (dist_sq > k_return_threshold_sq) {
           guard_mode->returning_to_guard_position = true;
           CommandService::MoveOptions options;
-          options.clear_attack_intent = true;
+          options.kind = MoveOrderKind::GuardReturn;
           options.allow_direct_fallback = true;
           CommandService::move_unit(
               *world, attacker->get_id(), QVector3D(guard_x, 0.0F, guard_z), options);
@@ -1024,7 +1037,7 @@ void process_attacks(Engine::Core::World* world,
 
   if (!chase_move_intents.empty()) {
     CommandService::MoveOptions options;
-    options.clear_attack_intent = false;
+    options.kind = MoveOrderKind::AttackChase;
     options.allow_direct_fallback = true;
     CommandService::move_units(*world, chase_move_intents, options);
   }

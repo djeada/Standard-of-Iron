@@ -1,8 +1,11 @@
 #include "ai_worker.h"
 
+#include <QDebug>
+
 #include <queue>
 
 #include <atomic>
+#include <exception>
 #include <mutex>
 #include <utility>
 
@@ -98,7 +101,10 @@ void AIWorker::worker_loop() {
         std::lock_guard<std::mutex> const lock(m_result_mutex);
         m_results.push(std::move(result));
       }
+    } catch (const std::exception& ex) {
+      qWarning() << "AIWorker job failed:" << ex.what();
     } catch (...) {
+      qWarning() << "AIWorker job failed with an unknown exception";
     }
 
     m_worker_busy.store(false, std::memory_order_release);

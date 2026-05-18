@@ -63,7 +63,8 @@ void InputCommandHandler::on_right_click(qreal sx,
       m_cursor_manager->mode() == CursorMode::Guard ||
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
-      m_cursor_manager->mode() == CursorMode::Build) {
+      m_cursor_manager->mode() == CursorMode::Build ||
+      m_cursor_manager->mode() == CursorMode::Deliver) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return;
   }
@@ -76,7 +77,6 @@ void InputCommandHandler::on_right_click(qreal sx,
   if (m_command_controller) {
     m_command_controller->disable_run_mode_for_selected();
   }
-
   App::Utils::issue_move_or_attack_command(m_world,
                                            sel,
                                            m_picking_service,
@@ -101,12 +101,17 @@ void InputCommandHandler::on_right_double_click(qreal sx,
     return;
   }
 
+  if (m_command_controller && m_command_controller->is_placing_formation()) {
+    return;
+  }
+
   if (m_cursor_manager->mode() == CursorMode::Patrol ||
       m_cursor_manager->mode() == CursorMode::Attack ||
       m_cursor_manager->mode() == CursorMode::Guard ||
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
-      m_cursor_manager->mode() == CursorMode::Build) {
+      m_cursor_manager->mode() == CursorMode::Build ||
+      m_cursor_manager->mode() == CursorMode::Deliver) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return;
   }
@@ -119,7 +124,6 @@ void InputCommandHandler::on_right_double_click(qreal sx,
   if (m_command_controller) {
     m_command_controller->enable_run_mode_for_selected();
   }
-
   App::Utils::issue_move_or_attack_command(m_world,
                                            sel,
                                            m_picking_service,
@@ -131,17 +135,17 @@ void InputCommandHandler::on_right_double_click(qreal sx,
                                            local_owner_id);
 }
 
-void InputCommandHandler::on_right_press(qreal sx,
+auto InputCommandHandler::on_right_press(qreal sx,
                                          qreal sy,
                                          int local_owner_id,
-                                         const ViewportState& viewport) {
+                                         const ViewportState& viewport) -> bool {
   if (m_is_spectator_mode || !m_world) {
-    return;
+    return false;
   }
 
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (selection_system == nullptr) {
-    return;
+    return false;
   }
 
   if (m_cursor_manager->mode() == CursorMode::Patrol ||
@@ -149,18 +153,15 @@ void InputCommandHandler::on_right_press(qreal sx,
       m_cursor_manager->mode() == CursorMode::Guard ||
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
-      m_cursor_manager->mode() == CursorMode::Build) {
+      m_cursor_manager->mode() == CursorMode::Build ||
+      m_cursor_manager->mode() == CursorMode::Deliver) {
     m_cursor_manager->set_mode(CursorMode::Normal);
-    return;
+    return true;
   }
 
   const auto& sel = selection_system->get_selected_units();
   if (sel.empty()) {
-    return;
-  }
-
-  if (m_command_controller) {
-    m_command_controller->disable_run_mode_for_selected();
+    return false;
   }
 
   if (m_picking_service != nullptr && m_camera != nullptr) {
@@ -175,9 +176,12 @@ void InputCommandHandler::on_right_press(qreal sx,
           bool const is_building =
               target_entity->has_component<Engine::Core::BuildingComponent>();
           if (is_enemy && !is_building) {
+            if (m_command_controller) {
+              m_command_controller->disable_run_mode_for_selected();
+            }
             Game::Systems::CommandService::attack_target(
                 *m_world, sel, target_id, true);
-            return;
+            return true;
           }
         }
       }
@@ -185,15 +189,18 @@ void InputCommandHandler::on_right_press(qreal sx,
   }
 
   if (!m_command_controller || !m_camera || !m_picking_service) {
-    return;
+    return false;
   }
 
   QVector3D hit;
   if (m_picking_service->screen_to_ground(
           QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
+    m_command_controller->disable_run_mode_for_selected();
     hit = App::Utils::snap_to_walkable_ground(hit);
     m_command_controller->begin_move_placement_at_position(hit);
+    return true;
   }
+  return false;
 }
 
 void InputCommandHandler::on_right_drag_orient(qreal sx,
@@ -353,6 +360,24 @@ void InputCommandHandler::on_guard_click(qreal sx,
 
   auto result = m_command_controller->on_guard_click(
       sx, sy, viewport.width, viewport.height, m_camera);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
+void InputCommandHandler::on_civilian_delivery_click(qreal sx,
+                                                     qreal sy,
+                                                     int local_owner_id,
+                                                     const ViewportState& viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller || !m_camera) {
+    return;
+  }
+
+  auto result = m_command_controller->on_civilian_delivery_click(
+      sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
   if (result.reset_cursor_to_normal) {
     m_cursor_manager->set_mode(CursorMode::Normal);
   }

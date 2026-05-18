@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import "ui_audio.js" as UiAudio
 
 Item {
     id: root
@@ -462,12 +463,18 @@ Item {
                         acceptedButtons: Qt.LeftButton
                         cursorShape: item_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                         onEntered: {
-                            if (item_enabled)
+                            if (item_enabled) {
                                 commandList.currentIndex = commandItem.index;
+                                if (typeof game !== "undefined")
+                                    UiAudio.play_hover(game.audio_system);
+                            }
                         }
                         onClicked: {
-                            if (item_enabled)
+                            if (item_enabled) {
+                                if (typeof game !== "undefined")
+                                    UiAudio.play_click(game.audio_system);
                                 root.trigger_selection(commandItem.index);
+                            }
                         }
                     }
                 }

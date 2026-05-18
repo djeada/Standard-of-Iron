@@ -351,13 +351,13 @@
       "description": "Italian-side forest signaling the end of the crossing."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 80,
       "z": 144,
       "description": "Abandoned mountain hamlet on the safer mule trail."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 232,
       "z": 228,
       "description": "Italian frontier village and mission endpoint."
@@ -604,7 +604,6 @@
       "z": 74,
       "player_id": 2,
       "max_population": 70,
-      "nation": "gaul",
       "description": "First mountain tribe toll camp"
     },
     {
@@ -643,7 +642,6 @@
       "z": 144,
       "player_id": 2,
       "max_population": 70,
-      "nation": "gaul",
       "description": "Mule trail hamlet defenders"
     },
     {
@@ -674,7 +672,6 @@
       "z": 92,
       "player_id": 2,
       "max_population": 85,
-      "nation": "gaul",
       "description": "Eastern cliff tribe camp"
     },
     {

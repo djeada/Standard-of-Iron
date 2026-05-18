@@ -79,7 +79,7 @@
   "time_of_day": "afternoon",
   "terrain": [
     {
-      "type": "plain",
+      "type": "flat",
       "x": 64,
       "z": 72,
       "width": 46,
@@ -87,7 +87,7 @@
       "description": "Southwestern Carthaginian base clearing."
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 216,
       "z": 208,
       "width": 46,
@@ -157,7 +157,7 @@
       ]
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 140,
       "z": 140,
       "width": 68,
@@ -361,19 +361,19 @@
       "description": "Central east olive rows masking movement away from the estate."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 140,
       "z": 140,
       "description": "Old olive press estate at the center of the valley."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 82,
       "z": 194,
       "description": "Abandoned shepherd hamlet near the southern wadi."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 198,
       "z": 86,
       "description": "Abandoned farmstead near the northern terrace road."

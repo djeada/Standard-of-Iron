@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include "render/creature/movement_state.h"
+#include "render/creature/pose_intent.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/humanoid_clip_registry.h"
 #include "render/humanoid/humanoid_state_machine.h"
@@ -281,6 +282,33 @@ TEST(HumanoidStateMachineTest, AttackRangedVsMelee) {
   EXPECT_EQ(select_state(inputs), HumanoidState::AttackRanged);
   inputs.is_melee = true;
   EXPECT_EQ(select_state(inputs), HumanoidState::AttackMelee);
+}
+
+TEST(HumanoidStateMachineTest, HoldModeAttackKeepsAttackIntentButUsesHoldAnimationState) {
+  AnimationInputs inputs{};
+  inputs.is_attacking = true;
+  inputs.is_melee = true;
+  inputs.is_in_hold_mode = true;
+  inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+
+  auto const resolved_pose = Render::Creature::resolve_pose(inputs);
+
+  EXPECT_EQ(resolved_pose.intent, Render::Creature::PoseIntent::AttackMelee);
+  EXPECT_EQ(resolved_pose.humanoid_state, HumanoidState::AttackMelee);
+  EXPECT_EQ(resolved_pose.animation_state,
+            Render::Creature::AnimationStateId::AttackMelee);
+}
+
+TEST(HumanoidStateMachineTest, PoseIntentHelpersMatchResolvedStateCategories) {
+  EXPECT_TRUE(
+      Render::Creature::is_attack_pose_intent(Render::Creature::PoseIntent::AttackSpear));
+  EXPECT_FALSE(Render::Creature::is_attack_pose_intent(Render::Creature::PoseIntent::Walk));
+  EXPECT_TRUE(Render::Creature::is_locomotion_pose_intent(
+      Render::Creature::PoseIntent::Run));
+  EXPECT_TRUE(Render::Creature::is_attack_animation_state(
+      Render::Creature::AnimationStateId::AttackBow));
+  EXPECT_FALSE(Render::Creature::is_attack_animation_state(
+      Render::Creature::AnimationStateId::Hold));
 }
 
 TEST(HumanoidStateMachineTest, TickTransitionsAndBlends) {

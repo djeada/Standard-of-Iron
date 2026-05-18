@@ -3,6 +3,8 @@
 #include <algorithm>
 
 #include "game/systems/nation_id.h"
+#include "game/units/commander_catalog.h"
+#include "game/units/spawn_type.h"
 
 namespace App::Core {
 namespace {
@@ -102,13 +104,28 @@ auto existing_positions(const std::vector<ExistingOwnerSpawnAnchor>& anchors,
 auto resolve_commander_troop(const QString& nation,
                              const std::optional<QString>& configured_commander)
     -> QString {
-  if (configured_commander.has_value() && !configured_commander->trimmed().isEmpty()) {
-    return configured_commander->trimmed();
+  Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
+  const bool parsed_nation = Game::Systems::try_parse_nation_id(nation, nation_id);
+
+  if (configured_commander.has_value()) {
+    const QString configured = configured_commander->trimmed();
+    if (!configured.isEmpty()) {
+      const auto spawn_type =
+          Game::Units::spawn_typeFromString(configured.toStdString());
+      if (spawn_type.has_value()) {
+        const auto troop_type = Game::Units::spawn_typeToTroopType(*spawn_type);
+        if (troop_type.has_value()) {
+          if (const auto* definition = Game::Units::commander_definition(*troop_type)) {
+            if (!parsed_nation || definition->nation_id == nation_id) {
+              return configured;
+            }
+          }
+        }
+      }
+    }
   }
 
-  Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
-  if (Game::Systems::try_parse_nation_id(nation, nation_id) &&
-      nation_id == Game::Systems::NationID::Carthage) {
+  if (parsed_nation && nation_id == Game::Systems::NationID::Carthage) {
     return QStringLiteral("carthage_elephant_master");
   }
 

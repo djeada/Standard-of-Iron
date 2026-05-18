@@ -35,6 +35,7 @@
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
@@ -56,6 +57,11 @@ constexpr std::string_view k_swordsman_default_style_key = "default";
 constexpr float k_swordsman_team_mix_weight = 0.6F;
 constexpr float k_swordsman_style_mix_weight = 0.4F;
 constexpr float k_kneel_depth_multiplier = 0.825F;
+constexpr auto k_profile =
+    Render::GL::Humanoid::k_sword_infantry_proportion_profile.with_offset(
+        {.y = -0.02F, .z = -0.02F, .torso_scale = -0.04F});
+constexpr float k_bulk_scale_multiplier = 0.95F;
+constexpr float k_stance_width_multiplier = 0.95F;
 
 auto swordsman_style_registry() -> std::unordered_map<std::string, KnightStyleConfig>& {
   static std::unordered_map<std::string, KnightStyleConfig> styles;
@@ -91,16 +97,18 @@ using Render::GL::Humanoid::saturate_color;
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
-  static constexpr float k_limb_width_scale = 1.00F;
-  static constexpr float k_torso_width_scale = 0.55F;
-  static constexpr float k_height_scale = 0.78F;
-  static constexpr float k_depth_scale = 0.26F;
-
   auto get_proportion_scaling() const -> QVector3D override {
-    return {1.00F, k_height_scale, k_depth_scale};
+    return k_profile.as_vector();
   }
 
-  auto get_torso_scale() const -> float override { return k_torso_width_scale; }
+  auto get_torso_scale() const -> float override { return k_profile.torso_scale; }
+
+  void adjust_variation(const DrawContext&,
+                        uint32_t,
+                        VariationParams& variation) const override {
+    variation.bulk_scale *= k_bulk_scale_multiplier;
+    variation.stance_width *= k_stance_width_multiplier;
+  }
 
   auto get_hold_kneel_depth() const -> float override {
     return k_kneel_depth_multiplier;
@@ -125,7 +133,7 @@ public:
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/swordsman";
-      s.scaling = ProportionScaling{1.00F, 0.78F, 0.26F};
+      s.scaling = k_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/roman/swordsman",

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import "ui_audio.js" as UiAudio
 
 Rectangle {
     id: root
@@ -51,7 +52,15 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onContainsMouseChanged: {
+            if (containsMouse && typeof game !== "undefined")
+                UiAudio.play_hover(game.audio_system);
+        }
+        onClicked: {
+            if (typeof game !== "undefined")
+                UiAudio.play_click(game.audio_system);
+            root.clicked();
+        }
     }
 
     RowLayout {

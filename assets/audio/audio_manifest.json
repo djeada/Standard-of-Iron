@@ -5,312 +5,574 @@
       "aliases": ["archer_voice", "roman.archer"],
       "path": "voices/roman/archer.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "archer"}
     },
     {
       "id": "voice.roman.swordsman",
       "aliases": ["swordsman_voice", "roman.swordsman"],
       "path": "voices/roman/swordsman.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "swordsman"}
     },
     {
       "id": "voice.roman.spearman",
       "aliases": ["spearman_voice", "roman.spearman"],
       "path": "voices/roman/spearman.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "spearman"}
     },
     {
       "id": "voice.roman.horse_archer",
       "aliases": ["roman.horse_archer"],
       "path": "voices/roman/horse_archer.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "horse_archer"}
     },
     {
       "id": "voice.roman.horse_spearman",
       "aliases": ["roman.horse_spearman"],
       "path": "voices/roman/horse_spearman.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "horse_spearman"}
     },
     {
       "id": "voice.roman.horse_swordsman",
       "aliases": ["roman.horse_swordsman"],
       "path": "voices/roman/horse_swordsman.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "horse_swordsman"}
     },
     {
       "id": "voice.roman.healer",
       "aliases": ["roman.healer"],
       "path": "voices/roman/healer.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "healer"}
     },
     {
       "id": "voice.roman.catapult",
       "aliases": ["roman.catapult"],
       "path": "voices/roman/catapult.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "catapult"}
     },
     {
       "id": "voice.roman.ballista",
       "aliases": ["roman.ballista"],
       "path": "voices/roman/ballista.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "ballista"}
     },
     {
       "id": "voice.roman.builder",
       "aliases": ["roman.builder"],
       "path": "voices/roman/builder.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "unit": "builder"}
+    },
+    {
+      "id": "voice.commander.marcellus",
+      "path": "voices/commanders/marcus_claudius_marcellus.ogg",
+      "category": "voice",
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "role": "commander", "unit_def": "roman_legion_organizer"}
+    },
+    {
+      "id": "voice.commander.scipio",
+      "path": "voices/commanders/publius_cornelius_scipio.ogg",
+      "category": "voice",
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "role": "commander", "unit_def": "roman_veteran_consul"}
+    },
+    {
+      "id": "voice.commander.fabius",
+      "path": "voices/commanders/quintus_fabius_maximus.ogg",
+      "category": "voice",
+      "load_policy": "mission",
+      "tags": {"faction": "roman", "role": "commander", "unit_def": "roman_field_commander"}
     },
     {
       "id": "voice.carthage.archer",
       "aliases": ["carthage.archer"],
       "path": "voices/carthage/archer.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "archer"}
     },
     {
       "id": "voice.carthage.swordsman",
       "aliases": ["carthage.swordsman"],
       "path": "voices/carthage/swordsman.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "swordsman"}
     },
     {
       "id": "voice.carthage.spearman",
       "aliases": ["carthage.spearman"],
       "path": "voices/carthage/spearman.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "spearman"}
     },
     {
       "id": "voice.carthage.horse_archer",
       "aliases": ["carthage.horse_archer"],
       "path": "voices/carthage/horse_archer.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "horse_archer"}
     },
     {
       "id": "voice.carthage.horse_spearman",
       "aliases": ["carthage.horse_spearman"],
       "path": "voices/carthage/horse_spearman.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "horse_spearman"}
     },
     {
       "id": "voice.carthage.horse_swordsman",
       "aliases": ["carthage.horse_swordsman"],
       "path": "voices/carthage/horse_swordsman.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "horse_swordsman"}
     },
     {
       "id": "voice.carthage.healer",
       "aliases": ["carthage.healer"],
       "path": "voices/carthage/healer.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "healer"}
     },
     {
       "id": "voice.carthage.catapult",
       "aliases": ["carthage.catapult"],
       "path": "voices/carthage/catapult.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "catapult"}
     },
     {
       "id": "voice.carthage.ballista",
       "aliases": ["carthage.ballista"],
       "path": "voices/carthage/ballista.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "ballista"}
     },
     {
       "id": "voice.carthage.elephant",
       "aliases": ["carthage.elephant"],
       "path": "voices/carthage/elephant.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "unit": "elephant"}
     },
     {
-      "id": "voice.commander.marcellus",
-      "path": "voices/commanders/marcus_claudius_marcellus.ogg",
+      "id": "voice.carthage.hannibal",
+      "path": "voices/carthage/hannibal.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "role": "commander", "unit_def": "carthage_elephant_master"}
     },
     {
-      "id": "voice.commander.scipio",
-      "path": "voices/commanders/publius_cornelius_scipio.ogg",
+      "id": "voice.carthage.hasdrubal_barca",
+      "path": "voices/carthage/hasdrubal_barca.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "role": "commander", "unit_def": "carthage_cavalry_patron"}
     },
     {
-      "id": "voice.commander.fabius",
-      "path": "voices/commanders/quintus_fabius_maximus.ogg",
+      "id": "voice.carthage.hanno_the_great",
+      "path": "voices/carthage/hanno_the_great.ogg",
       "category": "voice",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"faction": "carthage", "role": "commander", "unit_def": "carthage_mercenary_broker"}
+    },
+    {
+      "id": "music.menu.rome_vs_carthage",
+      "path": "music/menu/main_theme_rome_vs_carthage.ogg",
+      "category": "music",
+      "load_policy": "screen",
+      "tags": {"screen_context": "menu", "variant": "primary"}
+    },
+    {
+      "id": "music.menu.ancient_mediterranean_war",
+      "path": "music/menu/main_theme_ancient_mediterranean_war.ogg",
+      "category": "music",
+      "load_policy": "screen",
+      "tags": {"screen_context": "menu", "variant": "alternate"}
+    },
+    {
+      "id": "music.campaign.strategy_command_tent",
+      "path": "music/campaign/strategy_command_tent.ogg",
+      "category": "music",
+      "load_policy": "screen",
+      "tags": {"screen_context": "campaign", "variant": "primary"}
+    },
+    {
+      "id": "music.campaign.hannibal_march",
+      "path": "music/campaign/campaign_hannibal_march.ogg",
+      "category": "music",
+      "load_policy": "screen",
+      "tags": {"screen_context": "campaign", "variant": "alternate"}
     },
     {
       "id": "music.base.management_camp",
       "aliases": ["music_peaceful"],
       "path": "music/base/base_management_camp.ogg",
       "category": "music",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"ambient_state": "peaceful", "variant": "primary"}
     },
     {
       "id": "music.base.pre_battle_deployment",
       "aliases": ["music_tense"],
       "path": "music/base/base_pre_battle_deployment.ogg",
       "category": "music",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"ambient_state": "tense", "variant": "primary"}
     },
     {
       "id": "music.combat.battlefield_escalation",
       "aliases": ["music_combat"],
       "path": "music/combat/combat_battlefield_escalation.ogg",
       "category": "music",
-      "load_policy": "startup"
+      "load_policy": "mission",
+      "tags": {"ambient_state": "combat", "variant": "primary"}
+    },
+    {
+      "id": "music.combat.large_scale_rome_carthage",
+      "path": "music/combat/combat_large_scale_rome_carthage.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "combat", "variant": "high"}
     },
     {
       "id": "music.stinger.victory_roman",
       "aliases": ["music_victory"],
       "path": "music/stingers/victory_roman_fanfare.ogg",
       "category": "music",
-      "load_policy": "startup"
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "victory", "faction": "roman"}
+    },
+    {
+      "id": "music.stinger.victory_carthage",
+      "path": "music/stingers/victory_carthage_fanfare.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "victory", "faction": "carthage"}
     },
     {
       "id": "music.stinger.defeat_tragic_low_brass",
       "aliases": ["music_defeat"],
       "path": "music/stingers/defeat_tragic_low_brass.ogg",
       "category": "music",
-      "load_policy": "startup"
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "defeat", "variant": "primary"}
+    },
+    {
+      "id": "music.stinger.mission_failed_distant_horn",
+      "path": "music/stingers/mission_failed_distant_horn.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "defeat", "variant": "alternate"}
+    },
+    {
+      "id": "ambient.alpine_mountain_pass",
+      "path": "ambience/alpine_mountain_pass.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "mountain", "variant": "pass"}
+    },
+    {
+      "id": "ambient.mediterranean_plains",
+      "path": "ambience/mediterranean_plains.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "plains", "variant": "primary"}
+    },
+    {
+      "id": "ambient.forest_ambush",
+      "path": "ambience/forest_ambush.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "forest", "variant": "primary"}
+    },
+    {
+      "id": "ambient.river_crossing",
+      "path": "ambience/river_crossing.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "river", "variant": "primary"}
+    },
+    {
+      "id": "ambient.roman_army_camp_01",
+      "path": "ambience/roman_army_camp_01.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "camp", "faction": "roman", "variant": "primary"}
+    },
+    {
+      "id": "ambient.mountain_camp_night",
+      "path": "ambience/mountain_camp_night.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "mountain", "variant": "camp"}
+    },
+    {
+      "id": "ambient.battlefield_dry_wind_distant_march_01",
+      "path": "ambience/battlefield_dry_wind_distant_march_01.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "battlefield", "variant": "primary"}
+    },
+    {
+      "id": "ambient.burning_village_aftermath",
+      "path": "ambience/burning_village_aftermath.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "village", "variant": "aftermath"}
+    },
+    {
+      "id": "ambient.mediterranean_harbor",
+      "path": "ambience/mediterranean_harbor.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "harbor", "variant": "primary"}
+    },
+    {
+      "id": "ambient.mediterranean_city_market",
+      "path": "ambience/mediterranean_city_market.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "city", "variant": "market"}
+    },
+    {
+      "id": "ambient.rainy_battlefield",
+      "path": "ambience/rainy_battlefield.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "battlefield", "weather": "rain", "variant": "rainy"}
     },
     {
       "id": "sfx.combat.gladius_shield_impacts_close",
       "aliases": ["combat_hit_sword"],
       "path": "sfx/combat/gladius_shield_impacts_close.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "volume": 0.9,
+      "priority": 3,
+      "cooldown_ms": 90,
+      "max_instances": 6,
+      "load_policy": "mission",
+      "tags": {"attack_family": "sword"}
     },
     {
       "id": "sfx.combat.javelin_throw_whoosh",
       "aliases": ["combat_hit_spear"],
       "path": "sfx/combat/javelin_throw_whoosh.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "volume": 0.9,
+      "priority": 3,
+      "cooldown_ms": 100,
+      "max_instances": 6,
+      "load_policy": "mission",
+      "tags": {"attack_family": "spear"}
     },
     {
       "id": "sfx.combat.arrows_impact_shields_dirt",
       "aliases": ["combat_hit_arrow"],
       "path": "sfx/combat/arrows_impact_shields_dirt.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "volume": 0.85,
+      "priority": 3,
+      "cooldown_ms": 120,
+      "max_instances": 4,
+      "load_policy": "mission",
+      "tags": {"attack_family": "arrow"}
     },
     {
       "id": "sfx.combat.battlefield_crowd_chaos",
       "aliases": ["combat_hit_siege"],
       "path": "sfx/combat/battlefield_crowd_chaos.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "volume": 0.85,
+      "priority": 3,
+      "cooldown_ms": 250,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {"attack_family": "siege"}
     },
     {
       "id": "sfx.combat.battlefield_distant_mass_02",
       "aliases": ["combat_hit_generic"],
       "path": "sfx/combat/battlefield_distant_mass_02.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "volume": 0.8,
+      "priority": 2,
+      "cooldown_ms": 140,
+      "max_instances": 4,
+      "load_policy": "mission",
+      "tags": {"attack_family": "generic"}
+    },
+    {
+      "id": "sfx.combat.roman_cavalry_charge",
+      "aliases": ["combat_hit_cavalry"],
+      "path": "sfx/combat/roman_cavalry_charge.ogg",
+      "category": "sfx",
+      "volume": 0.95,
+      "priority": 4,
+      "cooldown_ms": 220,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {"attack_family": "cavalry"}
+    },
+    {
+      "id": "sfx.combat.elephant_charge_carthage",
+      "aliases": ["combat_hit_elephant"],
+      "path": "sfx/combat/elephant_charge_carthage.ogg",
+      "category": "sfx",
+      "volume": 1.0,
+      "priority": 4,
+      "cooldown_ms": 260,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {"attack_family": "elephant"}
     },
     {
       "id": "sfx.combat.troops_death_scream",
       "aliases": ["combat_death"],
       "path": "sfx/combat/troops_death_scream.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "volume": 0.8,
+      "priority": 4,
+      "cooldown_ms": 160,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {"attack_family": "death"}
     },
     {
       "id": "sfx.alert.population_limit_horn",
       "aliases": ["population_limit_horn"],
       "path": "sfx/alerts/population_limit_horn.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "priority": 8,
+      "cooldown_ms": 1200,
+      "max_instances": 1,
+      "load_policy": "startup",
+      "tags": {"alert": "population_limit"}
     },
     {
       "id": "sfx.alert.reinforcements_arrived",
       "aliases": ["reinforcements_arrived"],
       "path": "sfx/alerts/reinforcements_arrived.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "priority": 8,
+      "cooldown_ms": 3000,
+      "max_instances": 1,
+      "load_policy": "startup",
+      "tags": {"alert": "reinforcements"}
     },
     {
       "id": "sfx.alert.low_resources_click",
       "aliases": ["low_resources_click"],
       "path": "sfx/alerts/low_resources_click.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "priority": 7,
+      "cooldown_ms": 800,
+      "max_instances": 1,
+      "load_policy": "startup",
+      "tags": {"alert": "low_resources"}
+    },
+    {
+      "id": "ui.hover.soft",
+      "path": "sfx/alerts/low_resources_click.ogg",
+      "category": "sfx",
+      "volume": 0.4,
+      "priority": 4,
+      "cooldown_ms": 90,
+      "max_instances": 1,
+      "load_policy": "startup",
+      "tags": {"ui": "hover"}
+    },
+    {
+      "id": "ui.click.primary",
+      "path": "sfx/alerts/low_resources_click.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 5,
+      "cooldown_ms": 40,
+      "max_instances": 1,
+      "load_policy": "startup",
+      "tags": {"ui": "click"}
     },
     {
       "id": "sfx.alert.enemy_reinforcements_warning",
       "aliases": ["enemy_reinforcements_warning"],
       "path": "sfx/alerts/enemy_reinforcements_warning.ogg",
       "category": "sfx",
-      "load_policy": "startup"
+      "priority": 7,
+      "cooldown_ms": 2000,
+      "max_instances": 1,
+      "load_policy": "startup",
+      "tags": {"alert": "enemy_reinforcements"}
     },
     {
       "id": "sfx.alert.enemy_spotted_horn",
       "aliases": ["enemy_spotted_horn"],
       "path": "sfx/alerts/enemy_spotted_horn.ogg",
       "category": "sfx",
-      "load_policy": "startup"
-    },
-    {
-      "id": "ambient.alpine_mountain_pass",
-      "path": "ambience/alpine_mountain_pass.ogg",
-      "category": "sfx",
-      "load_policy": "mission"
-    },
-    {
-      "id": "ambient.mediterranean_plains",
-      "path": "ambience/mediterranean_plains.ogg",
-      "category": "sfx",
-      "load_policy": "mission"
-    },
-    {
-      "id": "ambient.forest_ambush",
-      "path": "ambience/forest_ambush.ogg",
-      "category": "sfx",
-      "load_policy": "mission"
-    },
-    {
-      "id": "ambient.river_crossing",
-      "path": "ambience/river_crossing.ogg",
-      "category": "sfx",
-      "load_policy": "mission"
-    },
-    {
-      "id": "ambient.roman_army_camp_01",
-      "path": "ambience/roman_army_camp_01.ogg",
-      "category": "sfx",
-      "load_policy": "mission"
-    },
-    {
-      "id": "ambient.mountain_camp_night",
-      "path": "ambience/mountain_camp_night.ogg",
-      "category": "sfx",
-      "load_policy": "mission"
-    },
-    {
-      "id": "ambient.battlefield_dry_wind_distant_march_01",
-      "path": "ambience/battlefield_dry_wind_distant_march_01.ogg",
-      "category": "sfx",
-      "load_policy": "mission"
+      "priority": 7,
+      "cooldown_ms": 1500,
+      "max_instances": 1,
+      "load_policy": "startup",
+      "tags": {"alert": "enemy_spotted"}
     }
   ]
 }

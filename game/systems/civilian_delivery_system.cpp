@@ -1,6 +1,7 @@
 #include "civilian_delivery_system.h"
 
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 #include "../core/component.h"
@@ -12,14 +13,33 @@
 namespace Game::Systems {
 namespace {
 
-auto barracks_delivery_radius() -> float {
-  auto const size = BuildingCollisionRegistry::get_building_size("barracks");
+auto barracks_delivery_clearance() -> float {
   float const unit_radius =
-      Game::Units::TroopConfig::instance().get_selection_ring_size(
-          Game::Units::SpawnType::Civilian) *
-      0.5F;
-  return std::max(size.width, size.depth) * 0.5F +
-         BuildingCollisionRegistry::get_grid_padding() + unit_radius + 0.5F;
+      std::max(Game::Units::TroopConfig::instance().get_selection_ring_size(
+                   Game::Units::SpawnType::Civilian) *
+                   0.5F,
+               0.5F);
+  return BuildingCollisionRegistry::get_grid_padding() + unit_radius + 0.75F;
+}
+
+auto is_at_barracks_delivery_edge(
+    const Engine::Core::TransformComponent& civilian_transform,
+    const Engine::Core::TransformComponent& barracks_transform) -> bool {
+  auto const size = BuildingCollisionRegistry::get_building_size("barracks");
+  float const half_width = size.width * 0.5F;
+  float const half_depth = size.depth * 0.5F;
+  float const edge_dx =
+      std::max(std::fabs(civilian_transform.position.x -
+                         barracks_transform.position.x) -
+                   half_width,
+               0.0F);
+  float const edge_dz =
+      std::max(std::fabs(civilian_transform.position.z -
+                         barracks_transform.position.z) -
+                   half_depth,
+               0.0F);
+
+  return std::max(edge_dx, edge_dz) <= barracks_delivery_clearance();
 }
 
 } // namespace
@@ -72,18 +92,18 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    float const dx = civilian_transform->position.x - barracks_transform->position.x;
-    float const dz = civilian_transform->position.z - barracks_transform->position.z;
-    float const dist_sq = dx * dx + dz * dz;
-
-    float const delivery_radius = barracks_delivery_radius();
-    if (dist_sq > (delivery_radius * delivery_radius)) {
+    if (!is_at_barracks_delivery_edge(*civilian_transform, *barracks_transform)) {
       continue;
     }
 
-    int const manpower_value = Game::Units::TroopConfig::instance().get_production_cost(
-        Game::Units::SpawnType::Civilian);
-    barracks_prod->manpower_available += manpower_value;
+    if (barracks_prod->manpower_available +
+            k_civilian_delivery_population_grant >
+        barracks_prod->max_units) {
+      civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+      continue;
+    }
+
+    barracks_prod->manpower_available += k_civilian_delivery_population_grant;
     to_remove.push_back(civilian_entity->get_id());
   }
 

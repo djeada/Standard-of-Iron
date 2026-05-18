@@ -281,7 +281,6 @@ auto ProductionManager::get_selected_production_state(int local_owner_id) const
   m["max_units"] = 0;
   m["villager_cost"] = 1;
   m["manpower_available"] = 0;
-  m["commander_committed"] = false;
 
   if (!m_world) {
     return m;
@@ -306,7 +305,6 @@ auto ProductionManager::get_selected_production_state(int local_owner_id) const
   m["max_units"] = st.max_units;
   m["villager_cost"] = st.villager_cost;
   m["manpower_available"] = st.manpower_available;
-  m["commander_committed"] = st.commander_committed;
   m["queue_size"] = st.queue_size;
   m["nation_id"] =
       QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));

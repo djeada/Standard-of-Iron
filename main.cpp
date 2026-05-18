@@ -411,14 +411,14 @@ auto main(int argc, char* argv[]) -> int {
   engine->addImageProvider("mappreview", map_preview_provider);
 
   qInfo() << "Adding context properties...";
-  engine->rootContext()->setContextProperty("languageManager", language_manager.get());
+  engine->rootContext()->setContextProperty("language_manager", language_manager.get());
   engine->rootContext()->setContextProperty("game", game_engine.get());
-  engine->rootContext()->setContextProperty("mapPreviewProvider", map_preview_provider);
-  engine->rootContext()->setContextProperty("graphicsSettings",
+  engine->rootContext()->setContextProperty("map_preview_provider", map_preview_provider);
+  engine->rootContext()->setContextProperty("graphics_settings",
                                             graphics_settings.get());
 
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
-  engine->rootContext()->setContextProperty("profilingHud", profiling_hud.get());
+  engine->rootContext()->setContextProperty("profiling_hud", profiling_hud.get());
 
   // Connect minimap image updates to the provider with DirectConnection
   // This ensures the image is set in the provider BEFORE QML reacts to the
@@ -470,7 +470,7 @@ auto main(int argc, char* argv[]) -> int {
   // Connect language changed signal to retranslate QML
   qInfo() << "Connecting language change handler...";
   QObject::connect(language_manager.get(),
-                   &LanguageManager::languageChanged,
+                   &LanguageManager::language_changed,
                    engine.get(),
                    &QQmlApplicationEngine::retranslate);
   qInfo() << "Language change handler connected";

@@ -32,34 +32,19 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
   }
 
   QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
+  const float gather_tolerance =
+      std::max(2.0F, context.macro_targets.assembly_radius * 0.35F);
+  const float gather_tolerance_sq = gather_tolerance * gather_tolerance;
 
   std::vector<const EntitySnapshot*> units_to_gather;
-  units_to_gather.reserve(snapshot.friendly_units.size());
-
-  for (const auto& entity : snapshot.friendly_units) {
-    if (entity.is_building) {
-      continue;
-    }
-
-    if (entity.spawn_type == Game::Units::SpawnType::Builder) {
-      continue;
-    }
-
-    if (is_entity_engaged(entity, snapshot.visible_enemies)) {
-      continue;
-    }
-
-    const float dx = entity.pos_x - rally_point.x();
-    const float dz = entity.pos_z - rally_point.z();
+  for (const auto* entity : collect_attack_force_units(snapshot, context)) {
+    const float dx = entity->pos_x - rally_point.x();
+    const float dz = entity->pos_z - rally_point.z();
     const float dist_sq = dx * dx + dz * dz;
 
-    if (dist_sq > 2.0F * 2.0F) {
-      units_to_gather.push_back(&entity);
+    if (dist_sq > gather_tolerance_sq) {
+      units_to_gather.push_back(entity);
     }
-  }
-
-  if (units_to_gather.empty()) {
-    return;
   }
 
   const Nation* nation =
@@ -69,66 +54,89 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
     formation_type = nation->formation_type;
   }
 
-  auto formation_targets = FormationSystem::instance().get_formation_positions(
-      formation_type, static_cast<int>(units_to_gather.size()), rally_point, 1.4F);
+  auto emit_move_command =
+      [&](const std::vector<const EntitySnapshot*>& units,
+          const QVector3D& center,
+          float spacing,
+          const char* task_name,
+          BehaviorPriority priority) {
+        if (units.empty()) {
+          return;
+        }
 
-  std::vector<Engine::Core::EntityID> units_to_move;
-  std::vector<float> target_x;
-  std::vector<float> target_y;
-  std::vector<float> target_z;
-  units_to_move.reserve(units_to_gather.size());
-  target_x.reserve(units_to_gather.size());
-  target_y.reserve(units_to_gather.size());
-  target_z.reserve(units_to_gather.size());
+        auto formation_targets = FormationSystem::instance().get_formation_positions(
+            formation_type, static_cast<int>(units.size()), center, spacing);
 
-  for (size_t i = 0; i < units_to_gather.size(); ++i) {
-    const auto* entity = units_to_gather[i];
-    const auto& target = formation_targets[i];
+        std::vector<Engine::Core::EntityID> units_to_move;
+        std::vector<float> target_x;
+        std::vector<float> target_y;
+        std::vector<float> target_z;
+        units_to_move.reserve(units.size());
+        target_x.reserve(units.size());
+        target_y.reserve(units.size());
+        target_z.reserve(units.size());
 
-    units_to_move.push_back(entity->id);
-    target_x.push_back(target.x());
-    target_y.push_back(target.y());
-    target_z.push_back(target.z());
-  }
+        for (size_t i = 0; i < units.size(); ++i) {
+          units_to_move.push_back(units[i]->id);
+          target_x.push_back(formation_targets[i].x());
+          target_y.push_back(formation_targets[i].y());
+          target_z.push_back(formation_targets[i].z());
+        }
 
-  if (units_to_move.empty()) {
-    return;
-  }
+        auto claimed_units = claim_units(
+            units_to_move, priority, task_name, context, snapshot.game_time, 2.0F);
+        if (claimed_units.empty()) {
+          return;
+        }
 
-  auto claimed_units = claim_units(units_to_move,
-                                   get_priority(),
-                                   "gathering",
-                                   context,
-                                   m_gather_timer + delta_time,
-                                   2.0F);
+        std::vector<float> filtered_x;
+        std::vector<float> filtered_y;
+        std::vector<float> filtered_z;
+        const std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(),
+                                                                     claimed_units.end());
+        for (size_t i = 0; i < units_to_move.size(); ++i) {
+          if (claimed_set.count(units_to_move[i])) {
+            filtered_x.push_back(target_x[i]);
+            filtered_y.push_back(target_y[i]);
+            filtered_z.push_back(target_z[i]);
+          }
+        }
 
-  if (claimed_units.empty()) {
-    return;
-  }
+        AICommand command;
+        command.type = AICommandType::MoveUnits;
+        command.units = std::move(claimed_units);
+        command.move_target_x = std::move(filtered_x);
+        command.move_target_y = std::move(filtered_y);
+        command.move_target_z = std::move(filtered_z);
+        out_commands.push_back(std::move(command));
+      };
 
-  std::vector<float> filtered_x;
-  std::vector<float> filtered_y;
-  std::vector<float> filtered_z;
-  {
-    const std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(),
-                                                                 claimed_units.end());
-    for (size_t i = 0; i < units_to_move.size(); ++i) {
-      if (claimed_set.count(units_to_move[i])) {
-        filtered_x.push_back(target_x[i]);
-        filtered_y.push_back(target_y[i]);
-        filtered_z.push_back(target_z[i]);
+  emit_move_command(units_to_gather,
+                    rally_point,
+                    context.macro_targets.gather_spacing,
+                    "gathering",
+                    get_priority());
+
+  if (context.anchor_is_structural && context.effective_reserve_units > 0) {
+    QVector3D const reserve_center(context.base_pos_x, context.base_pos_y, context.base_pos_z);
+    const float reserve_hold_radius_sq =
+        context.strategy_config.reserve_hold_radius * context.strategy_config.reserve_hold_radius;
+    std::vector<const EntitySnapshot*> reserve_units_to_hold;
+    for (const auto* entity : collect_reserve_force_units(snapshot, context)) {
+      const float dx = entity->pos_x - reserve_center.x();
+      const float dz = entity->pos_z - reserve_center.z();
+      const float dist_sq = dx * dx + dz * dz;
+      if (dist_sq > reserve_hold_radius_sq) {
+        reserve_units_to_hold.push_back(entity);
       }
     }
+
+    emit_move_command(reserve_units_to_hold,
+                      reserve_center,
+                      std::max(1.2F, context.macro_targets.gather_spacing * 0.8F),
+                      "holding-reserve",
+                      BehaviorPriority::VeryLow);
   }
-
-  AICommand command;
-  command.type = AICommandType::MoveUnits;
-  command.units = std::move(claimed_units);
-  command.move_target_x = std::move(filtered_x);
-  command.move_target_y = std::move(filtered_y);
-  command.move_target_z = std::move(filtered_z);
-
-  out_commands.push_back(std::move(command));
 }
 
 auto GatherBehavior::should_execute(const AISnapshot& snapshot,
@@ -148,6 +156,9 @@ auto GatherBehavior::should_execute(const AISnapshot& snapshot,
   if (context.state == AIState::Defending) {
 
     QVector3D const rally_point(context.rally_x, 0.0F, context.rally_z);
+    const float defend_gather_radius =
+        std::max(10.0F, context.macro_targets.assembly_radius);
+    const float defend_gather_radius_sq = defend_gather_radius * defend_gather_radius;
     for (const auto& entity : snapshot.friendly_units) {
       if (entity.is_building) {
         continue;
@@ -157,7 +168,7 @@ auto GatherBehavior::should_execute(const AISnapshot& snapshot,
       const float dz = entity.pos_z - rally_point.z();
       const float dist_sq = dx * dx + dz * dz;
 
-      if (dist_sq > 10.0F * 10.0F) {
+      if (dist_sq > defend_gather_radius_sq) {
         return true;
       }
     }

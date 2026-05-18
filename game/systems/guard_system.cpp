@@ -71,7 +71,7 @@ void GuardSystem::update(Engine::Core::World* world, float) {
               guard_mode->returning_to_guard_position = true;
 
               CommandService::MoveOptions opts;
-              opts.clear_attack_intent = false;
+              opts.kind = MoveOrderKind::GuardReturn;
               opts.allow_direct_fallback = true;
               std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
               std::vector<QVector3D> const targets = {
@@ -96,7 +96,7 @@ void GuardSystem::update(Engine::Core::World* world, float) {
           guard_mode->returning_to_guard_position = true;
 
           CommandService::MoveOptions opts;
-          opts.clear_attack_intent = false;
+          opts.kind = MoveOrderKind::GuardReturn;
           opts.allow_direct_fallback = true;
           std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
           std::vector<QVector3D> const targets = {QVector3D(

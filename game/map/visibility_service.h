@@ -4,6 +4,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
@@ -26,6 +27,7 @@ enum class VisibilityState : std::uint8_t {
 class VisibilityService {
 public:
   struct Snapshot {
+    std::uint64_t version = 0;
     bool initialized = false;
     int width = 0;
     int height = 0;
@@ -44,6 +46,8 @@ public:
     auto world_to_grid(float world_coord, float half) const -> int;
   };
 
+  using SnapshotPtr = std::shared_ptr<const Snapshot>;
+
   static auto instance() -> VisibilityService&;
 
   void initialize(int width, int height, float tile_size);
@@ -61,11 +65,8 @@ public:
   auto is_visible_world(float world_x, float world_z) const -> bool;
   auto is_explored_world(float world_x, float world_z) const -> bool;
   auto snapshot() const -> Snapshot;
-
-  auto snapshot_cells() const -> std::vector<std::uint8_t>;
-  auto version() const -> std::uint64_t {
-    return m_version.load(std::memory_order_relaxed);
-  }
+  auto snapshot_ptr() const -> SnapshotPtr;
+  auto snapshot_if_newer(std::uint64_t known_version) const -> SnapshotPtr;
 
   void reveal_all();
 
@@ -105,6 +106,8 @@ private:
   void integrate_result(JobResult&& result);
   auto should_start_new_job() const -> bool;
   void reset_throttle();
+  void reset_worker_state();
+  void publish_snapshot_locked(std::uint64_t version);
   void worker_loop();
   void ensure_worker_running();
   static auto execute_job(JobPayload payload) -> JobResult;
@@ -122,6 +125,7 @@ private:
   std::vector<std::uint8_t> m_cells;
   std::atomic<std::uint64_t> m_version{0};
   mutable std::atomic<std::uint64_t> m_generation{0};
+  std::shared_ptr<const Snapshot> m_published_snapshot;
   std::chrono::steady_clock::time_point m_last_job_start_time{};
 
   std::mutex m_queue_mutex;

@@ -43,6 +43,22 @@ Item {
         };
     }
 
+    function commanders_for_nation(nationId) {
+        if (typeof game !== "undefined" && game.available_commanders)
+            return variant_list_to_array(game.available_commanders(nationId || ""));
+        return [];
+    }
+
+    function default_commander_entry(nationId) {
+        let commanders = commanders_for_nation(nationId);
+        if (commanders.length > 0)
+            return commanders[0];
+        return {
+            "troop": "",
+            "display_name": qsTr("Commander")
+        };
+    }
+
     function has_minimum_distinct_teams() {
         let enabledPlayers = [];
         for (let i = 0; i < players_model.count; i++) {
@@ -163,6 +179,7 @@ Item {
         let requestedPlayerId = (typeof game !== "undefined") ? Number(game.selected_player_id) : Number(playerIds[0]);
         let humanPlayerId = playerIds.indexOf(requestedPlayerId) !== -1 ? requestedPlayerId : Number(playerIds[0]);
         let defaultNation = default_nation_entry();
+        let defaultCommander = default_commander_entry(defaultNation.id);
         players_model.append({
                 "player_id": humanPlayerId,
                 "playerName": "Player " + (humanPlayerId + 1),
@@ -173,6 +190,8 @@ Item {
                 "teamIcon": Theme.teamIcons[0],
                 "nationId": defaultNation.id,
                 "nationName": defaultNation.name,
+                "commanderTroop": defaultCommander.troop,
+                "commanderName": defaultCommander.display_name,
                 "isHuman": true,
                 "isEnabled": true
             });
@@ -215,6 +234,7 @@ Item {
         }
         let defaultTeamId = players_model.count > 0 ? 1 : 0;
         let defaultNation = default_nation_entry();
+        let defaultCommander = default_commander_entry(defaultNation.id);
         players_model.append({
                 "player_id": nextId,
                 "playerName": "CPU " + nextId,
@@ -225,6 +245,8 @@ Item {
                 "teamIcon": Theme.teamIcons[defaultTeamId],
                 "nationId": defaultNation.id,
                 "nationName": defaultNation.name,
+                "commanderTroop": defaultCommander.troop,
+                "commanderName": defaultCommander.display_name,
                 "isHuman": false,
                 "isEnabled": true
             });
@@ -294,8 +316,32 @@ Item {
             }
         }
         let nextNation = available_nations[nextIndex];
+        let nextCommander = default_commander_entry(nextNation.id);
         players_model.setProperty(index, "nationId", nextNation.id);
         players_model.setProperty(index, "nationName", nextNation.name);
+        players_model.setProperty(index, "commanderTroop", nextCommander.troop);
+        players_model.setProperty(index, "commanderName", nextCommander.display_name);
+        refresh_map_preview();
+    }
+
+    function cycle_player_commander(index) {
+        if (index < 0 || index >= players_model.count)
+            return;
+        let p = players_model.get(index);
+        let commanders = commanders_for_nation(p.nationId);
+        if (commanders.length === 0)
+            return;
+        let currentTroop = p.commanderTroop || commanders[0].troop;
+        let nextIndex = 0;
+        for (let i = 0; i < commanders.length; i++) {
+            if (commanders[i].troop === currentTroop) {
+                nextIndex = (i + 1) % commanders.length;
+                break;
+            }
+        }
+        let nextCommander = commanders[nextIndex];
+        players_model.setProperty(index, "commanderTroop", nextCommander.troop);
+        players_model.setProperty(index, "commanderName", nextCommander.display_name);
         refresh_map_preview();
     }
 
@@ -320,9 +366,10 @@ Item {
                 "colorHex": p.colorHex,
                 "team_id": p.team_id,
                 "nationId": p.nationId,
+                "commanderTroop": p.commanderTroop,
                 "isHuman": p.isHuman
             };
-            console.log("MapSelect: Player", p.player_id, "config - Team:", p.team_id, "Color:", p.colorHex, "Nation:", p.nationId, "Human:", p.isHuman);
+            console.log("MapSelect: Player", p.player_id, "config - Team:", p.team_id, "Color:", p.colorHex, "Nation:", p.nationId, "Commander:", p.commanderTroop, "Human:", p.isHuman);
             configs.push(config);
         }
         return configs;
@@ -1181,6 +1228,70 @@ Item {
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: cycle_player_nation(index)
+                                        }
+
+                                        Behavior on color  {
+                                            ColorAnimation {
+                                                duration: Theme.animFast
+                                            }
+                                        }
+
+                                        Behavior on border.color  {
+                                            ColorAnimation {
+                                                duration: Theme.animFast
+                                            }
+                                        }
+
+                                        Behavior on border.width  {
+                                            NumberAnimation {
+                                                duration: Theme.animFast
+                                            }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        width: 168
+                                        height: playerCard.height - (Theme.spacingSmall + 2) * 2 - 4
+                                        radius: Theme.radiusSmall
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        color: commanderMA.containsMouse ? Qt.lighter(Theme.cardBaseA, 1.08) : Theme.cardBaseA
+                                        border.color: commanderMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
+                                        border.width: commanderMA.containsMouse ? 2 : 1
+                                        ToolTip.visible: commanderMA.containsMouse
+                                        ToolTip.text: qsTr("Commander: %1 - Click to change").arg(model.commanderName || qsTr("Commander"))
+
+                                        Column {
+                                            anchors.centerIn: parent
+                                            spacing: 2
+
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: qsTr("Commander")
+                                                color: Theme.textSubLite
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                            }
+
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                width: parent.parent.width - Theme.spacingSmall * 2
+                                                text: model.commanderName || qsTr("Commander")
+                                                color: Theme.textMain
+                                                font.pixelSize: 12
+                                                font.bold: true
+                                                horizontalAlignment: Text.AlignHCenter
+                                                wrapMode: Text.WordWrap
+                                                maximumLineCount: 2
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: commanderMA
+
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: cycle_player_commander(index)
                                         }
 
                                         Behavior on color  {

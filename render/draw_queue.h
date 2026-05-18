@@ -118,21 +118,6 @@ struct RainBatchCmd {
 };
 
 struct TerrainSurfaceCmd {
-
-  Mesh* mesh = nullptr;
-  const Material* material = nullptr;
-  QMatrix4x4 model;
-  BoundingBox aabb;
-  TerrainChunkParams params;
-  std::uint16_t sort_key = 0x8000U;
-  bool depth_write = true;
-  bool wireframe = false;
-  float depth_bias = 0.0F;
-  CommandPriority priority{CommandPriority::High};
-};
-
-struct TerrainFeatureCmd {
-
   struct VisibilityResources {
     Texture* texture = nullptr;
     QVector2D size{0.0F, 0.0F};
@@ -142,11 +127,25 @@ struct TerrainFeatureCmd {
   };
 
   Mesh* mesh = nullptr;
+  const Material* material = nullptr;
+  QMatrix4x4 model;
+  BoundingBox aabb;
+  TerrainChunkParams params;
+  VisibilityResources visibility{};
+  std::uint16_t sort_key = 0x8000U;
+  bool depth_write = true;
+  bool wireframe = false;
+  float depth_bias = 0.0F;
+  CommandPriority priority{CommandPriority::High};
+};
+
+struct TerrainFeatureCmd {
+  Mesh* mesh = nullptr;
   QMatrix4x4 model;
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha = 1.0F;
   LinearFeatureKind kind = LinearFeatureKind::River;
-  VisibilityResources visibility{};
+  TerrainSurfaceCmd::VisibilityResources visibility{};
   CommandPriority priority{CommandPriority::High};
 };
 

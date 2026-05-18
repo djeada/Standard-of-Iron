@@ -15,7 +15,7 @@ namespace Render::Ground {
 
 class VisibilityTextureHelper {
 public:
-  using VisibilityResources = GL::TerrainFeatureCmd::VisibilityResources;
+  using VisibilityResources = GL::TerrainSurfaceCmd::VisibilityResources;
 
   void reset() {
     m_texture.reset();
@@ -42,7 +42,7 @@ public:
       m_cached_version = 0;
     }
 
-    const std::uint64_t version = Game::Map::VisibilityService::instance().version();
+    const std::uint64_t version = snapshot.version;
     if (version != m_cached_version || size_changed) {
       const auto& cells = snapshot.cells;
       std::vector<unsigned char> texels(static_cast<std::size_t>(vis_w * vis_h * 4),

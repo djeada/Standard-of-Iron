@@ -12,6 +12,7 @@ target_include_directories(engine_core PUBLIC .)
 target_link_libraries(engine_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)
 
 add_library(game_systems STATIC
+    systems/order_service.cpp
     systems/movement_system.cpp
     systems/combat_system.cpp
     systems/combat_system/combat_utils.cpp
@@ -35,6 +36,7 @@ add_library(game_systems STATIC
     systems/ai_system/ai_strategy.cpp
     systems/ai_system/behaviors/production_behavior.cpp
     systems/ai_system/behaviors/gather_behavior.cpp
+    systems/ai_system/behaviors/harass_behavior.cpp
     systems/ai_system/behaviors/attack_behavior.cpp
     systems/ai_system/behaviors/defend_behavior.cpp
     systems/ai_system/behaviors/retreat_behavior.cpp
@@ -97,8 +99,7 @@ add_library(game_systems STATIC
     map/minimap/minimap_generator.cpp
     map/minimap/map_preview_generator.cpp
     map/minimap/minimap_texture_manager.cpp
-    map/minimap/fog_of_war_mask.cpp
-    map/minimap/minimap_manager.cpp
+    map/minimap/minimap_fog_compositor.cpp
     map/minimap/unit_layer.cpp
     map/minimap/camera_viewport_layer.cpp
     visuals/visual_catalog.cpp

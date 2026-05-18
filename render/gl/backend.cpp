@@ -1414,6 +1414,43 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
           }
           set_fog_uniforms(m_terrain_pipeline->m_ground_uniforms);
         } else {
+          const auto& visibility = single.visibility;
+          if (m_terrain_pipeline->m_terrain_uniforms.has_visibility !=
+              Shader::InvalidUniform) {
+            int const has_vis =
+                visibility.enabled && (visibility.texture != nullptr) ? 1 : 0;
+            active_shader->set_uniform(
+                m_terrain_pipeline->m_terrain_uniforms.has_visibility, has_vis);
+          }
+          if (visibility.enabled && visibility.texture != nullptr) {
+            if (m_terrain_pipeline->m_terrain_uniforms.visibility_size !=
+                Shader::InvalidUniform) {
+              active_shader->set_uniform(
+                  m_terrain_pipeline->m_terrain_uniforms.visibility_size,
+                  visibility.size);
+            }
+            if (m_terrain_pipeline->m_terrain_uniforms.visibility_tile_size !=
+                Shader::InvalidUniform) {
+              active_shader->set_uniform(
+                  m_terrain_pipeline->m_terrain_uniforms.visibility_tile_size,
+                  visibility.tile_size);
+            }
+            if (m_terrain_pipeline->m_terrain_uniforms.explored_alpha !=
+                Shader::InvalidUniform) {
+              active_shader->set_uniform(
+                  m_terrain_pipeline->m_terrain_uniforms.explored_alpha,
+                  visibility.explored_alpha);
+            }
+            constexpr int k_terrain_vis_texture_unit = 7;
+            visibility.texture->bind(k_terrain_vis_texture_unit);
+            m_last_bound_texture = visibility.texture;
+            if (m_terrain_pipeline->m_terrain_uniforms.visibility_texture !=
+                Shader::InvalidUniform) {
+              active_shader->set_uniform(
+                  m_terrain_pipeline->m_terrain_uniforms.visibility_texture,
+                  k_terrain_vis_texture_unit);
+            }
+          }
           if (m_terrain_pipeline->m_terrain_uniforms.mvp != Shader::InvalidUniform) {
             active_shader->set_uniform(m_terrain_pipeline->m_terrain_uniforms.mvp, mvp);
           }

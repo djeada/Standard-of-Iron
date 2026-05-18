@@ -72,19 +72,24 @@ auto derive_unit_seed(const Render::GL::DrawContext& ctx,
   return seed;
 }
 
-auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
-    -> Render::Creature::AnimationStateId {
-  return Render::Creature::classify_pose(anim.inputs).animation_state;
+auto resolved_humanoid_pose(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> Render::Creature::ResolvedPose {
+  return Render::Creature::resolve_pose(anim.inputs);
 }
 
 auto humanoid_state_for_intent(Render::Creature::PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId {
-  return Render::Creature::to_animation_state_id(intent);
+  return Render::Creature::animation_state_for_intent(intent);
 }
 
-auto humanoid_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
+auto humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> Render::Creature::AnimationStateId {
+  return resolved_humanoid_pose(anim).animation_state;
+}
+
+auto humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
+                              Render::Creature::AnimationStateId state) noexcept
     -> float {
-  auto const state = humanoid_state_for_anim(anim);
   if (state == Render::Creature::AnimationStateId::Die) {
     return std::clamp(anim.inputs.death_progress, 0.0F, 1.0F);
   }
@@ -97,11 +102,7 @@ auto humanoid_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) n
   if (anim.inputs.is_constructing) {
     return looping_phase(anim.inputs.construction_progress + anim.jitter_seed);
   }
-  bool const is_attack_state =
-      (state == Render::Creature::AnimationStateId::AttackSword ||
-       state == Render::Creature::AnimationStateId::AttackSpear ||
-       state == Render::Creature::AnimationStateId::AttackBow);
-  if (is_attack_state) {
+  if (Render::Creature::is_attack_animation_state(state)) {
     return anim.attack_phase;
   }
   if (state == Render::Creature::AnimationStateId::Idle &&
@@ -120,9 +121,9 @@ auto default_humanoid_archetype(Render::Creature::ArchetypeId archetype_id) noex
              : Render::Creature::ArchetypeRegistry::k_humanoid_base;
 }
 
-auto humanoid_requested_clip_variant_for_anim(
-    const Render::GL::HumanoidAnimationContext& anim) noexcept -> std::uint8_t {
-  auto const state = humanoid_state_for_anim(anim);
+auto humanoid_requested_clip_variant_for_state(
+    const Render::GL::HumanoidAnimationContext& anim,
+    Render::Creature::AnimationStateId state) noexcept -> std::uint8_t {
   if (state == Render::Creature::AnimationStateId::Die ||
       state == Render::Creature::AnimationStateId::Dead) {
     return anim.inputs.death_variant;
@@ -133,11 +134,7 @@ auto humanoid_requested_clip_variant_for_anim(
         static_cast<std::uint32_t>(std::floor(anim.jitter_seed * 64.0F));
     return static_cast<std::uint8_t>(bucket % 3U);
   }
-  bool const is_attack_state =
-      (state == Render::Creature::AnimationStateId::AttackSword ||
-       state == Render::Creature::AnimationStateId::AttackSpear ||
-       state == Render::Creature::AnimationStateId::AttackBow);
-  if (is_attack_state) {
+  if (Render::Creature::is_attack_animation_state(state)) {
     return anim.inputs.attack_variant;
   }
   if (state == Render::Creature::AnimationStateId::Idle &&
@@ -179,19 +176,31 @@ auto humanoid_clip_matches_requested_idle_variant(
 
 } // namespace
 
-auto humanoid_clip_variant_for_anim(
+auto humanoid_clip_variant_for_state(
     Render::Creature::ArchetypeId archetype_id,
-    const Render::GL::HumanoidAnimationContext& anim) noexcept -> std::uint8_t {
+    const Render::GL::HumanoidAnimationContext& anim,
+    Render::Creature::AnimationStateId state) noexcept -> std::uint8_t {
   auto const resolved_archetype = default_humanoid_archetype(archetype_id);
-  auto const state = humanoid_state_for_anim(anim);
   auto const variant_count =
       Render::Creature::ArchetypeRegistry::instance().clip_variant_count(
           resolved_archetype, state);
   if (variant_count <= 1U) {
     return 0U;
   }
-  return std::min<std::uint8_t>(humanoid_requested_clip_variant_for_anim(anim),
+  return std::min<std::uint8_t>(humanoid_requested_clip_variant_for_state(anim, state),
                                 variant_count - 1U);
+}
+
+auto humanoid_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
+    -> float {
+  return humanoid_phase_for_state(anim, humanoid_state_for_anim(anim));
+}
+
+auto humanoid_clip_variant_for_anim(
+    Render::Creature::ArchetypeId archetype_id,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept -> std::uint8_t {
+  return humanoid_clip_variant_for_state(
+      archetype_id, anim, humanoid_state_for_anim(anim));
 }
 
 auto humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeId archetype_id,
@@ -202,8 +211,9 @@ auto humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeId archetype_id,
 
   archetype_id = default_humanoid_archetype(archetype_id);
 
-  auto const state = humanoid_state_for_anim(anim);
-  auto clip_variant = humanoid_clip_variant_for_anim(archetype_id, anim);
+  auto const resolved_pose = resolved_humanoid_pose(anim);
+  auto const state = resolved_pose.animation_state;
+  auto clip_variant = humanoid_clip_variant_for_state(archetype_id, anim, state);
   auto clip_id = Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
       archetype_id, state, clip_variant);
   if (clip_id == ArchetypeDescriptor::k_unmapped_clip) {
@@ -230,7 +240,7 @@ auto humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeId archetype_id,
     return std::nullopt;
   }
 
-  float phase = humanoid_phase_for_anim(anim);
+  float phase = humanoid_phase_for_state(anim, state);
   if (!clip.loops && phase >= 1.0F) {
     phase = 1.0F;
   } else {

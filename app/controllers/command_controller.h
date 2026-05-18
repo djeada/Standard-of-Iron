@@ -49,6 +49,12 @@ public:
                       int viewport_width,
                       int viewport_height,
                       void* camera) -> CommandResult;
+  auto on_civilian_delivery_click(qreal sx,
+                                  qreal sy,
+                                  int viewport_width,
+                                  int viewport_height,
+                                  void* camera,
+                                  int local_owner_id) -> CommandResult;
   auto on_patrol_click(qreal sx,
                        qreal sy,
                        int viewport_width,

@@ -72,6 +72,11 @@ public:
     GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
   };
 
   struct TerrainUniforms {
@@ -115,6 +120,11 @@ public:
     GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
   };
 
   GL::Shader* m_grass_shader = nullptr;

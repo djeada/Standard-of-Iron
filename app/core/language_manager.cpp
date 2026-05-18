@@ -20,31 +20,31 @@ LanguageManager::LanguageManager(QObject* parent)
 
   QString const default_lang = QString(DEFAULT_LANG);
   if (m_available_languages.contains(default_lang)) {
-    loadLanguage(default_lang);
+    load_language(default_lang);
   } else {
-    loadLanguage("en");
+    load_language("en");
   }
 }
 
 LanguageManager::~LanguageManager() = default;
 
-auto LanguageManager::currentLanguage() const -> QString {
+auto LanguageManager::current_language() const -> QString {
   return m_current_language;
 }
 
-auto LanguageManager::availableLanguages() const -> QStringList {
+auto LanguageManager::available_languages() const -> QStringList {
   return m_available_languages;
 }
 
-void LanguageManager::setLanguage(const QString& language) {
+void LanguageManager::set_language(const QString& language) {
   if (language == m_current_language || !m_available_languages.contains(language)) {
     return;
   }
 
-  loadLanguage(language);
+  load_language(language);
 }
 
-void LanguageManager::loadLanguage(const QString& language) {
+void LanguageManager::load_language(const QString& language) {
   QCoreApplication::removeTranslator(m_translator);
 
   QString const qm_file =
@@ -54,13 +54,13 @@ void LanguageManager::loadLanguage(const QString& language) {
     QCoreApplication::installTranslator(m_translator);
     m_current_language = language;
     qInfo() << "Language changed to:" << language;
-    emit languageChanged();
+    emit language_changed();
   } else {
     qWarning() << "Failed to load translation file:" << qm_file;
   }
 }
 
-auto LanguageManager::languageDisplayName(const QString& language) -> QString {
+auto LanguageManager::language_display_name(const QString& language) -> QString {
   if (language == "en") {
     return "English";
   }

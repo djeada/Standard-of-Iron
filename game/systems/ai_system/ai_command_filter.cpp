@@ -23,8 +23,9 @@ auto AICommandFilter::filter(const std::vector<AICommand>& commands,
     }
 
     std::vector<Engine::Core::EntityID> valid_units;
+    std::vector<size_t> valid_indices;
     valid_units.reserve(cmd.units.size());
-    int blocked_count = 0;
+    valid_indices.reserve(cmd.units.size());
 
     for (size_t i = 0; i < cmd.units.size(); ++i) {
       Engine::Core::EntityID const unit_id = cmd.units[i];
@@ -48,36 +49,27 @@ auto AICommandFilter::filter(const std::vector<AICommand>& commands,
       if (!is_duplicate(
               unit_id, cmd.type, target_id, move_x, move_y, move_z, current_time)) {
         valid_units.push_back(unit_id);
-      } else {
-        blocked_count++;
+        valid_indices.push_back(i);
       }
-    }
-
-    if (blocked_count > 0) {
-      continue;
     }
 
     if (!valid_units.empty()) {
       AICommand filtered_cmd = cmd;
-      filtered_cmd.units = valid_units;
+      filtered_cmd.units = std::move(valid_units);
 
       if (cmd.type == AICommandType::MoveUnits) {
         std::vector<float> new_target_x;
         std::vector<float> new_target_y;
         std::vector<float> new_target_z;
-        new_target_x.reserve(valid_units.size());
-        new_target_y.reserve(valid_units.size());
-        new_target_z.reserve(valid_units.size());
+        new_target_x.reserve(valid_indices.size());
+        new_target_y.reserve(valid_indices.size());
+        new_target_z.reserve(valid_indices.size());
 
-        for (size_t i = 0; i < cmd.units.size(); ++i) {
-
-          if (std::find(valid_units.begin(), valid_units.end(), cmd.units[i]) !=
-              valid_units.end()) {
-            if (i < cmd.move_target_x.size()) {
-              new_target_x.push_back(cmd.move_target_x[i]);
-              new_target_y.push_back(cmd.move_target_y[i]);
-              new_target_z.push_back(cmd.move_target_z[i]);
-            }
+        for (size_t index : valid_indices) {
+          if (index < cmd.move_target_x.size()) {
+            new_target_x.push_back(cmd.move_target_x[index]);
+            new_target_y.push_back(cmd.move_target_y[index]);
+            new_target_z.push_back(cmd.move_target_z[index]);
           }
         }
 

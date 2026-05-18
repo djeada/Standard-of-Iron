@@ -1,6 +1,36 @@
 # Audio Asset Integration Plan
 
-Status: draft for approval. No code changes have been made for this plan.
+Status: complete for the current runtime scope. Phases 1 to 4 are now implemented for the shipped audio pipeline, with screen/mission/lazy policies, tag-driven manifest routing, front-end music states, and ambience mix control all wired.
+
+## Progress Snapshot (as of latest implementation)
+
+Implemented:
+
+- Audio manifest exists at `assets/audio/audio_manifest.json` and is loaded by `AudioResourceLoader`.
+- OGG runtime loading replaced hardcoded WAV file paths.
+- Legacy runtime IDs are supported through manifest aliases.
+- Audio now consumes `UnitSpawnedEvent`, `UnitDiedEvent`, `BuildingAttackedEvent`, and `BarrackCapturedEvent`.
+- `AudioSystem::play_music(..., crossfade)` now passes crossfade to `MusicPlayer` and uses multi-channel fade behavior.
+- `Sound::stop()` now stops active miniaudio SFX slots through backend stop-by-track.
+- Combat-hit IDs referenced by `AudioEventHandler` are loaded from manifest.
+- Combat-hit routing now includes dedicated cavalry and elephant families.
+- Manifest playback metadata now supports `volume`, `priority`, `cooldown_ms`, and `max_instances`.
+- `AudioSystem` now enforces cooldown and per-ID instance caps generically and only allows stricter-priority requests to evict active sounds.
+- Ambience now has its own runtime category instead of sharing the SFX category path.
+- `AudioResourceLoader` now caches the manifest, resolves tracks by tags, and supports targeted single-resource loads for screen/lazy flows.
+- Standard faction/unit voice mappings and ambient-state music mappings are now configured from manifest tags rather than hardcoded sound-id tables.
+- Front-end audio now has explicit menu and campaign screen contexts, with screen-policy music tracks crossfaded independently from battle-state music.
+- Result stingers now use lazy-load preparation so victory/defeat tracks can stay out of startup memory.
+- Settings now expose a dedicated ambience volume slider alongside master/music/SFX/voice.
+- Loader path handling now works for both filesystem and qrc-backed manifests.
+- Voice playback still keeps the hidden 2x gain on top of the visible voice slider.
+
+No blocking items remain from this plan.
+
+Optional future follow-ups:
+
+- Add a true streaming path if long-track memory pressure becomes a real runtime problem.
+- Expand manifest coverage further for alternate staged tracks that are not yet chosen by gameplay/runtime rules.
 
 ## Asset Staging Done
 
@@ -39,35 +69,30 @@ Strengths:
 - Music has 4 backend channels available.
 - Audio requests are queued through `AudioSystem`, so gameplay code does not play directly on the audio callback.
 
-Risks / limitations before wiring in the new library:
+Current risks / limitations:
 
-- The loader is still hardcoded to removed WAV filenames, so code must change before runtime audio loading works again.
-- Predecoding every new long music and ambience file at startup would increase memory use sharply.
-- `AudioSystem::play_music(..., crossfade)` ignores the `crossfade` argument and always plays on the default music channel.
-- `AudioEventHandler::on_combat_hit()` requests `combat_hit_sword`, `combat_hit_spear`, `combat_hit_arrow`, `combat_hit_siege`, `combat_hit_generic`, and `combat_death`, but these IDs are not loaded today.
-- `Sound::stop()` is empty, so evicting/stopping a named SFX removes bookkeeping but does not stop an already active backend SFX slot.
-- Active SFX bookkeeping is not cleaned up when one-shots finish, so channel pressure can become inaccurate over time.
-- No per-sound cooldowns exist for high-frequency combat hits, only unit selection has a 300 ms cooldown.
+- Predecoding every long music and ambience asset can still become memory-heavy if the active mission/screen catalog grows significantly.
+- `stream` remains a reserved manifest policy rather than an active backend mode because the current asset set still fits the predecode approach comfortably.
 
 ## Current Incoming Audio Signals
 
 Core event bus event types found in `game/core/event_manager.h`: 10.
 
-Audio currently subscribes to 5 of them:
+Audio currently subscribes to 9 of them:
 
 - `UnitSelectedEvent`
 - `AmbientStateChangedEvent`
 - `AudioTriggerEvent`
 - `MusicTriggerEvent`
 - `CombatHitEvent`
+- `UnitSpawnedEvent`
+- `UnitDiedEvent`
+- `BuildingAttackedEvent`
+- `BarrackCapturedEvent`
 
 Existing core event types not consumed by audio:
 
 - `UnitMovedEvent`
-- `UnitDiedEvent`
-- `UnitSpawnedEvent`
-- `BuildingAttackedEvent`
-- `BarrackCapturedEvent`
 
 The generic trigger events are useful escape hatches:
 
@@ -211,19 +236,19 @@ SFX concurrency targets:
   - distant battlefield beds: 20
   - ambience: separate bus, not SFX eviction
 
-## Approval Checklist
+Current manifest defaults already start enforcing low-risk caps for combat hits, alerts, and ambience loops through `cooldown_ms`, `max_instances`, and per-entry priority/volume values.
 
-- [ ] Approve the staged directory layout.
-- [ ] Approve keeping OGG as the primary asset format.
-- [ ] Approve adding `assets/audio/audio_manifest.json`.
-- [ ] Approve keeping current runtime IDs as temporary aliases while removing all WAV path assumptions.
-- [ ] Approve wiring audio to `UnitSpawnedEvent`, `UnitDiedEvent`, `BuildingAttackedEvent`, and `BarrackCapturedEvent`.
-- [ ] Approve adding map/mission ambience metadata.
-- [ ] Approve transition timings and bus balance starting values.
+## Delivered Scope
 
-## Open Questions
+- [x] Keep the staged directory layout and OGG-only runtime asset tree.
+- [x] Load runtime audio from `assets/audio/audio_manifest.json` with legacy aliases preserved.
+- [x] Wire audio to `UnitSpawnedEvent`, `UnitDiedEvent`, `BuildingAttackedEvent`, and `BarrackCapturedEvent`.
+- [x] Select ambience from mission/map metadata and keep it on its own mix path.
+- [x] Apply the documented transition/mix starting point with menu/campaign/battle state separation.
 
-- Should unit selection voices be faction-specific for every unit, or should neutral/generic unit voices remain acceptable for missing factions?
-- Should ambience be selected by map file, mission file, or runtime terrain/biome detection?
-- Should result stingers be faction-specific, mission-specific, or both?
-- Should combat music intensity be driven by nearby player combat only, or by global battle scale?
+## Resolved Design Choices
+
+- Unit selection voices are faction-specific when tagged assets exist, with safe fallback paths still allowed for missing entries.
+- Ambience selection uses mission terrain first, then map biome fallback.
+- Result stingers are faction-specific for victory where assets exist and generic for defeat.
+- Combat intensity remains driven by the existing ambient-state manager thresholds rather than a broader global battle-score system.

@@ -1,6 +1,5 @@
 #include "command_service.h"
 
-#include <QDebug>
 #include <QVector3D>
 #include <qvectornd.h>
 
@@ -171,6 +170,7 @@ void clear_pending_movement_state(Engine::Core::MovementComponent* movement_comp
   movement_component->vx = 0.0F;
   movement_component->vz = 0.0F;
 }
+
 } // namespace
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
@@ -235,7 +235,7 @@ auto CommandService::get_unit_radius(Engine::Core::World& world,
       Game::Units::TroopConfig::instance().get_selection_ring_size(
           unit_comp->spawn_type);
 
-  return std::max(selection_ring_size, k_unit_radius_threshold);
+  return std::max(selection_ring_size * 0.5F, k_unit_radius_threshold);
 }
 
 auto CommandService::try_queue_local_recovery_move(
@@ -273,6 +273,53 @@ auto CommandService::try_queue_local_recovery_move(
   movement->has_target = true;
   movement->repath_cooldown = 0.0F;
   return true;
+}
+
+void CommandService::queue_repath_request(Engine::Core::World& world,
+                                          Engine::Core::EntityID entity_id,
+                                          const QVector3D& goal,
+                                          bool allow_direct_fallback) {
+  auto* entity = world.get_entity(entity_id);
+  if (entity == nullptr) {
+    return;
+  }
+
+  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+  if (movement == nullptr) {
+    return;
+  }
+
+  auto* repath = entity->get_component<Engine::Core::RepathRequestComponent>();
+  if (repath == nullptr) {
+    repath = entity->add_component<Engine::Core::RepathRequestComponent>();
+  }
+  if (repath == nullptr) {
+    return;
+  }
+
+  repath->goal_x = goal.x();
+  repath->goal_y = goal.z();
+  repath->allow_direct_fallback = allow_direct_fallback;
+}
+
+void CommandService::process_repath_requests(Engine::Core::World& world) {
+  auto entities = world.get_entities_with<Engine::Core::RepathRequestComponent>();
+  for (auto* entity : entities) {
+    if (entity == nullptr) {
+      continue;
+    }
+    auto* repath = entity->get_component<Engine::Core::RepathRequestComponent>();
+    if (repath == nullptr) {
+      continue;
+    }
+
+    MoveOptions options;
+    options.kind = MoveOrderKind::RecoveryMove;
+    options.allow_direct_fallback = repath->allow_direct_fallback;
+    move_unit(
+        world, entity->get_id(), QVector3D(repath->goal_x, 0.0F, repath->goal_y), options);
+    entity->remove_component<Engine::Core::RepathRequestComponent>();
+  }
 }
 
 void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
@@ -317,22 +364,7 @@ void CommandService::move_unit(Engine::Core::World& world,
     return;
   }
 
-  auto* hold_mode = e->get_component<Engine::Core::HoldModeComponent>();
-  if ((hold_mode != nullptr) && hold_mode->active) {
-    hold_mode->begin_exit();
-  }
-
-  auto* guard_mode = e->get_component<Engine::Core::GuardModeComponent>();
-  if ((guard_mode != nullptr) && guard_mode->active &&
-      !guard_mode->returning_to_guard_position) {
-    guard_mode->active = false;
-  }
-
-  auto* formation_mode = e->get_component<Engine::Core::FormationModeComponent>();
-  if (!options.preserve_formation_mode && (formation_mode != nullptr) &&
-      formation_mode->active) {
-    formation_mode->active = false;
-  }
+  OrderService::prepare_for_move(e, options.kind, options.preserve_formation_mode);
 
   auto* atk = e->get_component<Engine::Core::AttackComponent>();
   if ((atk != nullptr) && atk->in_melee_lock &&
@@ -351,10 +383,6 @@ void CommandService::move_unit(Engine::Core::World& world,
   }
   if (mv == nullptr) {
     return;
-  }
-
-  if (options.clear_attack_intent) {
-    e->remove_component<Engine::Core::AttackTargetComponent>();
   }
 
   float const target_x = target.x();
@@ -514,7 +542,6 @@ void CommandService::move_unit(Engine::Core::World& world,
       }
 
       s_pathfinder->submit_path_request(request_id, start, end, unit_radius);
-
       mv->time_since_last_path_request = 0.0F;
       mv->last_goal_x = target_x;
       mv->last_goal_y = target_z;
@@ -610,24 +637,6 @@ void CommandService::move_group(Engine::Core::World& world,
       continue;
     }
 
-    auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-    if ((hold_mode != nullptr) && hold_mode->active) {
-      hold_mode->begin_exit();
-    }
-
-    auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
-    if ((guard_mode != nullptr) && guard_mode->active &&
-        !guard_mode->returning_to_guard_position) {
-      guard_mode->active = false;
-    }
-
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if (!options.preserve_formation_mode && (formation_mode != nullptr) &&
-        formation_mode->active) {
-      formation_mode->active = false;
-    }
-
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
       continue;
@@ -641,13 +650,9 @@ void CommandService::move_group(Engine::Core::World& world,
       continue;
     }
 
+    OrderService::prepare_for_move(entity, options.kind, options.preserve_formation_mode);
     bool engaged =
         entity->get_component<Engine::Core::AttackTargetComponent>() != nullptr;
-
-    if (options.clear_attack_intent) {
-      entity->remove_component<Engine::Core::AttackTargetComponent>();
-      engaged = false;
-    }
 
     auto* unit_component = entity->get_component<Engine::Core::UnitComponent>();
     float const member_speed =
@@ -1090,6 +1095,7 @@ void CommandService::process_path_results(Engine::Core::World& world) {
 
         clear_pending_movement_state(movement_component);
         movement_component->has_target = false;
+        OrderService::clear_player_order_intent(member_entity);
         retry_ids.push_back(member_id);
         retry_targets.push_back(target);
       };
@@ -1196,6 +1202,7 @@ void CommandService::process_path_results(Engine::Core::World& world) {
             return;
           }
           movement_component->has_target = false;
+          OrderService::clear_player_order_intent(member_entity);
           return;
         }
 
@@ -1208,6 +1215,7 @@ void CommandService::process_path_results(Engine::Core::World& world) {
             return;
           }
           movement_component->has_target = false;
+          OrderService::clear_player_order_intent(member_entity);
           return;
         }
       }
@@ -1218,6 +1226,7 @@ void CommandService::process_path_results(Engine::Core::World& world) {
         movement_component->has_target = true;
       } else {
         movement_component->has_target = false;
+        OrderService::clear_player_order_intent(member_entity);
       }
     };
 
@@ -1262,20 +1271,7 @@ void CommandService::attack_target(Engine::Core::World& world,
       continue;
     }
 
-    auto* hold_mode = e->get_component<Engine::Core::HoldModeComponent>();
-    if ((hold_mode != nullptr) && hold_mode->active) {
-      hold_mode->begin_exit();
-    }
-
-    auto* guard_mode = e->get_component<Engine::Core::GuardModeComponent>();
-    if ((guard_mode != nullptr) && guard_mode->active) {
-      guard_mode->active = false;
-    }
-
-    auto* formation_mode = e->get_component<Engine::Core::FormationModeComponent>();
-    if ((formation_mode != nullptr) && formation_mode->active) {
-      formation_mode->active = false;
-    }
+    OrderService::prepare_for_attack(e);
 
     auto* attack_target = e->get_component<Engine::Core::AttackTargetComponent>();
     if (attack_target == nullptr) {
@@ -1341,7 +1337,7 @@ void CommandService::attack_target(Engine::Core::World& world,
     }
 
     CommandService::MoveOptions opts;
-    opts.clear_attack_intent = false;
+    opts.kind = MoveOrderKind::AttackChase;
     opts.allow_direct_fallback = true;
     CommandService::move_unit(world, unit_id, desired_pos, opts);
 
@@ -1350,6 +1346,7 @@ void CommandService::attack_target(Engine::Core::World& world,
       mv = e->add_component<Engine::Core::MovementComponent>();
     }
     if (mv != nullptr) {
+      OrderService::clear_player_order_intent(e);
 
       mv->target_x = desired_pos.x();
       mv->target_y = desired_pos.z();

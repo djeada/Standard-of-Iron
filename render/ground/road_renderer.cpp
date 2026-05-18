@@ -46,6 +46,7 @@ void RoadRenderer::build_meshes() {
   Ground::LinearFeatureRibbonSettings settings;
   settings.sample_step = 0.5F;
   settings.min_length_steps = 8;
+  settings.cross_section_segments = 4;
   settings.edge_noise_frequencies = {1.5F, 4.0F, 0.0F};
   settings.edge_noise_weights = {0.6F, 0.4F, 0.0F};
   settings.width_variation_scale = 0.15F;
@@ -53,6 +54,7 @@ void RoadRenderer::build_meshes() {
   settings.meander_length_scale = 0.1F;
   settings.meander_amplitude = 0.0F;
   settings.y_offset = Game::Map::k_road_surface_y_offset;
+  settings.sample_terrain_envelope = true;
   settings.height_map = m_height_map;
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
@@ -72,16 +74,14 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   }
 
   auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
+  const bool use_visibility =
+      renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
 
-  Game::Map::VisibilityService::Snapshot vis_snapshot;
-  if (use_visibility) {
-    vis_snapshot = visibility.snapshot();
-  }
+  auto vis_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
 
-  TerrainFeatureCmd::VisibilityResources vis_res;
-  if (use_visibility) {
-    vis_res = m_vis_helper.update(vis_snapshot, m_tile_size);
+  TerrainSurfaceCmd::VisibilityResources vis_res;
+  if (vis_snapshot != nullptr) {
+    vis_res = m_vis_helper.update(*vis_snapshot, m_tile_size);
   }
 
   QMatrix4x4 model;
@@ -100,10 +100,12 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
 
-    if (use_visibility) {
-      const Ground::LinearFeatureVisibilityOptions vis_opts;
+    if (vis_snapshot != nullptr) {
+      Ground::LinearFeatureVisibilityOptions vis_opts;
+      vis_opts.sample_count = Ground::recommended_linear_feature_visibility_sample_count(
+          (segment.end - segment.start).length(), m_tile_size);
       const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          &vis_snapshot, segment.start, segment.end, vis_opts);
+          vis_snapshot.get(), segment.start, segment.end, vis_opts);
       if (!vis_result.visible) {
         continue;
       }

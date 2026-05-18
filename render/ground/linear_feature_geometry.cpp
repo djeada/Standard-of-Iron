@@ -67,6 +67,62 @@ auto sample_height_clamped(const Game::Map::TerrainHeightMap& height_map,
   return h0 * (1.0F - tz) + h1 * tz;
 }
 
+auto sample_height_envelope(const Game::Map::TerrainHeightMap& height_map,
+                            const QVector3D& center,
+                            const QVector3D& dir,
+                            const QVector3D& perpendicular,
+                            float longitudinal_radius,
+                            float lateral_radius,
+                            float tile_size) -> float {
+  float const clamped_longitudinal = std::max(longitudinal_radius, 0.0F);
+  float const clamped_lateral = std::max(lateral_radius, 0.0F);
+
+  float const sample_spacing = std::max(tile_size * 0.25F, 0.1F);
+  int const longitudinal_samples =
+      clamped_longitudinal > 1e-4F
+          ? std::max(2,
+                     static_cast<int>(std::ceil((clamped_longitudinal * 2.0F) /
+                                                sample_spacing)) +
+                         1)
+          : 1;
+  int const lateral_samples =
+      clamped_lateral > 1e-4F
+          ? std::max(2,
+                     static_cast<int>(
+                         std::ceil((clamped_lateral * 2.0F) / sample_spacing)) +
+                         1)
+          : 1;
+
+  float max_height = sample_height_clamped(height_map, center.x(), center.z());
+  for (int longitudinal_index = 0; longitudinal_index < longitudinal_samples;
+       ++longitudinal_index) {
+    float longitudinal_t =
+        longitudinal_samples > 1
+            ? static_cast<float>(longitudinal_index) /
+                  static_cast<float>(longitudinal_samples - 1)
+            : 0.5F;
+    float const longitudinal_offset =
+        -clamped_longitudinal + longitudinal_t * (clamped_longitudinal * 2.0F);
+
+    for (int lateral_index = 0; lateral_index < lateral_samples; ++lateral_index) {
+      float lateral_t =
+          lateral_samples > 1
+              ? static_cast<float>(lateral_index) /
+                    static_cast<float>(lateral_samples - 1)
+              : 0.5F;
+      float const lateral_offset =
+          -clamped_lateral + lateral_t * (clamped_lateral * 2.0F);
+
+      QVector3D const sample_pos = center + dir * longitudinal_offset +
+                                   perpendicular * lateral_offset;
+      max_height = std::max(
+          max_height,
+          sample_height_clamped(height_map, sample_pos.x(), sample_pos.z()));
+    }
+  }
+  return max_height;
+}
+
 auto smoothstep01(float value) -> float {
   float const t = std::clamp(value, 0.0F, 1.0F);
   return t * t * (3.0F - 2.0F * t);
@@ -94,15 +150,20 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
   float const half_width = segment.width * 0.5F;
   float const step = std::max(tile_size * settings.sample_step, 0.001F);
+  int const cross_section_segments = std::max(settings.cross_section_segments, 1);
+  int const vertices_per_row = cross_section_segments + 1;
 
   int length_steps = static_cast<int>(std::ceil(length / step)) + 1;
   length_steps = std::max(length_steps, settings.min_length_steps);
+  float const row_step = length_steps > 1 ? (length / static_cast<float>(length_steps - 1))
+                                          : 0.0F;
 
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;
 
-  vertices.reserve(static_cast<size_t>(length_steps * 2));
-  indices.reserve(static_cast<size_t>((length_steps - 1) * 6));
+  vertices.reserve(static_cast<size_t>(length_steps * vertices_per_row));
+  indices.reserve(static_cast<size_t>(length_steps - 1) *
+                  static_cast<size_t>(cross_section_segments) * 6U);
 
   for (int i = 0; i < length_steps; ++i) {
     float const t = static_cast<float>(i) / static_cast<float>(length_steps - 1);
@@ -137,52 +198,67 @@ auto build_linear_ribbon_mesh(const LinearFeatureRibbonSegment& segment,
       center_pos += perpendicular * meander;
     }
 
-    QVector3D const left = center_pos - perpendicular * (half_width + width_variation);
-    QVector3D const right = center_pos + perpendicular * (half_width + width_variation);
-    float left_y = left.y();
-    float right_y = right.y();
-    if (settings.height_map != nullptr) {
-      left_y = sample_height_clamped(*settings.height_map, left.x(), left.z());
-      right_y = sample_height_clamped(*settings.height_map, right.x(), right.z());
-    }
-
     float const normal[3] = {0.0F, 1.0F, 0.0F};
 
-    Render::GL::Vertex left_vertex{};
-    left_vertex.position[0] = left.x();
-    left_vertex.position[1] = left_y + settings.y_offset;
-    left_vertex.position[2] = left.z();
-    left_vertex.normal[0] = normal[0];
-    left_vertex.normal[1] = normal[1];
-    left_vertex.normal[2] = normal[2];
-    left_vertex.tex_coord[0] = 0.0F;
-    left_vertex.tex_coord[1] = t;
-    vertices.push_back(left_vertex);
+    float const row_half_width = std::max(half_width + width_variation, 0.01F);
+    float const longitudinal_radius = row_step * 0.5F;
+    float const lateral_radius =
+        row_half_width / static_cast<float>(cross_section_segments);
 
-    Render::GL::Vertex right_vertex{};
-    right_vertex.position[0] = right.x();
-    right_vertex.position[1] = right_y + settings.y_offset;
-    right_vertex.position[2] = right.z();
-    right_vertex.normal[0] = normal[0];
-    right_vertex.normal[1] = normal[1];
-    right_vertex.normal[2] = normal[2];
-    right_vertex.tex_coord[0] = 1.0F;
-    right_vertex.tex_coord[1] = t;
-    vertices.push_back(right_vertex);
+    for (int lateral_index = 0; lateral_index < vertices_per_row; ++lateral_index) {
+      float const cross_t = static_cast<float>(lateral_index) /
+                            static_cast<float>(cross_section_segments);
+      float const lateral_offset = (cross_t * 2.0F - 1.0F) * row_half_width;
+      QVector3D const vertex_pos = center_pos + perpendicular * lateral_offset;
+
+      float vertex_y = vertex_pos.y();
+      if (settings.height_map != nullptr) {
+        if (settings.sample_terrain_envelope) {
+          vertex_y = sample_height_envelope(*settings.height_map,
+                                            vertex_pos,
+                                            dir,
+                                            perpendicular,
+                                            longitudinal_radius,
+                                            lateral_radius,
+                                            tile_size);
+        } else {
+          vertex_y =
+              sample_height_clamped(*settings.height_map, vertex_pos.x(), vertex_pos.z());
+        }
+      }
+
+      Render::GL::Vertex vertex{};
+      vertex.position[0] = vertex_pos.x();
+      vertex.position[1] = vertex_y + settings.y_offset;
+      vertex.position[2] = vertex_pos.z();
+      vertex.normal[0] = normal[0];
+      vertex.normal[1] = normal[1];
+      vertex.normal[2] = normal[2];
+      vertex.tex_coord[0] = cross_t;
+      vertex.tex_coord[1] = t;
+      vertices.push_back(vertex);
+    }
 
     if (i < length_steps - 1) {
-      auto const idx0 = static_cast<unsigned int>(i * 2);
-      unsigned int const idx1 = idx0 + 1;
-      unsigned int const idx2 = idx0 + 2;
-      unsigned int const idx3 = idx0 + 3;
+      auto const row_offset = static_cast<unsigned int>(i * vertices_per_row);
+      auto const next_row_offset =
+          static_cast<unsigned int>((i + 1) * vertices_per_row);
+      for (int segment_index = 0; segment_index < cross_section_segments;
+           ++segment_index) {
+        unsigned int const idx0 = row_offset + static_cast<unsigned int>(segment_index);
+        unsigned int const idx1 =
+            next_row_offset + static_cast<unsigned int>(segment_index);
+        unsigned int const idx2 = idx0 + 1;
+        unsigned int const idx3 = idx1 + 1;
 
-      indices.push_back(idx0);
-      indices.push_back(idx2);
-      indices.push_back(idx1);
+        indices.push_back(idx0);
+        indices.push_back(idx1);
+        indices.push_back(idx2);
 
-      indices.push_back(idx1);
-      indices.push_back(idx2);
-      indices.push_back(idx3);
+        indices.push_back(idx2);
+        indices.push_back(idx1);
+        indices.push_back(idx3);
+      }
     }
   }
 

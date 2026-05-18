@@ -8,6 +8,7 @@
 #include <QWheelEvent>
 
 #include <cmath>
+#include <limits>
 
 #include "canvas_transform.h"
 #include "spawn_icon_library.h"
@@ -715,52 +716,77 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent* event) {
     if (m_selected_type == 0) {
       const auto& terrain = m_map_data->terrain_elements();
       if (m_selected_index < terrain.size()) {
-        m_map_data->record_command(std::make_unique<UpdateTerrainCmd>(
-            m_map_data,
-            m_selected_index,
-            m_drag_pre_terrain,
-            terrain[m_selected_index],
-            "Move " + terrain[m_selected_index].type));
+        const TerrainElement& current = terrain[m_selected_index];
+        const bool moved = (m_drag_pre_terrain.x != current.x) ||
+                           (m_drag_pre_terrain.z != current.z);
+        if (moved) {
+          m_map_data->record_command(std::make_unique<UpdateTerrainCmd>(
+              m_map_data,
+              m_selected_index,
+              m_drag_pre_terrain,
+              current,
+              "Move " + current.type));
+        }
       }
     } else if (m_selected_type == 1) {
       const auto& world_props = m_map_data->world_props();
       if (m_selected_index < world_props.size()) {
-        m_map_data->record_command(std::make_unique<UpdateWorldPropCmd>(
-            m_map_data,
-            m_selected_index,
-            m_drag_pre_world_prop,
-            world_props[m_selected_index],
-            "Move " + world_props[m_selected_index].type));
+        const WorldPropElement& current = world_props[m_selected_index];
+        const bool moved = (m_drag_pre_world_prop.x != current.x) ||
+                           (m_drag_pre_world_prop.z != current.z);
+        if (moved) {
+          m_map_data->record_command(std::make_unique<UpdateWorldPropCmd>(
+              m_map_data,
+              m_selected_index,
+              m_drag_pre_world_prop,
+              current,
+              "Move " + current.type));
+        }
       }
     } else if (m_selected_type == 2) {
       const auto& linear = m_map_data->linear_elements();
       if (m_selected_index < linear.size()) {
-        m_map_data->record_command(
-            std::make_unique<UpdateLinearCmd>(m_map_data,
-                                              m_selected_index,
-                                              m_drag_pre_linear,
-                                              linear[m_selected_index],
-                                              "Move " + linear[m_selected_index].type));
+        const LinearElement& current = linear[m_selected_index];
+        const bool moved =
+            (m_drag_pre_linear.start != current.start) || (m_drag_pre_linear.end != current.end);
+        if (moved) {
+          m_map_data->record_command(std::make_unique<UpdateLinearCmd>(
+              m_map_data,
+              m_selected_index,
+              m_drag_pre_linear,
+              current,
+              "Move " + current.type));
+        }
       }
     } else if (m_selected_type == 3) {
       const auto& structures = m_map_data->structures();
       if (m_selected_index < structures.size()) {
-        m_map_data->record_command(std::make_unique<UpdateStructureCmd>(
-            m_map_data,
-            m_selected_index,
-            m_drag_pre_structure,
-            structures[m_selected_index],
-            "Move " + structures[m_selected_index].type));
+        const StructureElement& current = structures[m_selected_index];
+        const bool moved = (m_drag_pre_structure.x != current.x) ||
+                           (m_drag_pre_structure.z != current.z);
+        if (moved) {
+          m_map_data->record_command(std::make_unique<UpdateStructureCmd>(
+              m_map_data,
+              m_selected_index,
+              m_drag_pre_structure,
+              current,
+              "Move " + current.type));
+        }
       }
     } else if (m_selected_type == 4) {
       const auto& troop_spawns = m_map_data->troop_spawns();
       if (m_selected_index < troop_spawns.size()) {
-        m_map_data->record_command(std::make_unique<UpdateTroopSpawnCmd>(
-            m_map_data,
-            m_selected_index,
-            m_drag_pre_troop,
-            troop_spawns[m_selected_index],
-            "Move " + troop_spawns[m_selected_index].type));
+        const TroopSpawnElement& current = troop_spawns[m_selected_index];
+        const bool moved = (m_drag_pre_troop.x != current.x) ||
+                           (m_drag_pre_troop.z != current.z);
+        if (moved) {
+          m_map_data->record_command(std::make_unique<UpdateTroopSpawnCmd>(
+              m_map_data,
+              m_selected_index,
+              m_drag_pre_troop,
+              current,
+              "Move " + current.type));
+        }
       }
     }
   }
@@ -927,108 +953,114 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     return result;
   }
 
-  QPointF const grid_pos = map_to_grid(pos);
+  const QVector2D cursor(static_cast<float>(pos.x()), static_cast<float>(pos.y()));
+  const float point_hit_radius_px = static_cast<float>(icon_size) + 4.0F;
+  float best_dist = std::numeric_limits<float>::infinity();
+  int best_priority = std::numeric_limits<int>::max();
+
+  auto consider_hit = [&](int element_type,
+                          int index,
+                          int endpoint,
+                          float distance,
+                          float max_distance,
+                          int priority) {
+    if (distance > max_distance) {
+      return;
+    }
+    if (distance < best_dist ||
+        ((std::abs(distance - best_dist) < 0.01F) && priority < best_priority)) {
+      best_dist = distance;
+      best_priority = priority;
+      result.element_type = element_type;
+      result.index = index;
+      result.endpoint = endpoint;
+    }
+  };
 
   const auto& troop_spawns = m_map_data->troop_spawns();
   for (int i = troop_spawns.size() - 1; i >= 0; --i) {
     const auto& elem = troop_spawns[i];
-    float const dx = static_cast<float>(grid_pos.x()) - elem.x;
-    float const dz = static_cast<float>(grid_pos.y()) - elem.z;
-    float const dist = std::sqrt(dx * dx + dz * dz);
-    if (dist <= hit_radius) {
-      result.element_type = 4;
-      result.index = i;
-      return result;
-    }
+    const QPoint center = grid_to_widget(elem.x, elem.z);
+    const QVector2D center_vec(static_cast<float>(center.x()),
+                               static_cast<float>(center.y()));
+    consider_hit(4, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 0);
   }
 
   const auto& structures = m_map_data->structures();
-  for (int i = 0; i < structures.size(); ++i) {
+  for (int i = structures.size() - 1; i >= 0; --i) {
     const auto& elem = structures[i];
-    float const dx = static_cast<float>(grid_pos.x()) - elem.x;
-    float const dz = static_cast<float>(grid_pos.y()) - elem.z;
-    float const dist = std::sqrt(dx * dx + dz * dz);
-    if (dist <= hit_radius) {
-      result.element_type = 3;
-      result.index = i;
-      return result;
-    }
-  }
-
-  const auto& terrain = m_map_data->terrain_elements();
-  for (int i = 0; i < terrain.size(); ++i) {
-    const auto& elem = terrain[i];
-    float const dx = static_cast<float>(grid_pos.x()) - elem.x;
-    float const dz = static_cast<float>(grid_pos.y()) - elem.z;
-    float const dist = std::sqrt(dx * dx + dz * dz);
-    if (dist <= hit_radius) {
-      result.element_type = 0;
-      result.index = i;
-      return result;
-    }
+    const QPoint center = grid_to_widget(elem.x, elem.z);
+    const QVector2D center_vec(static_cast<float>(center.x()),
+                               static_cast<float>(center.y()));
+    consider_hit(3, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 1);
   }
 
   const auto& world_props = m_map_data->world_props();
-  for (int i = 0; i < world_props.size(); ++i) {
+  for (int i = world_props.size() - 1; i >= 0; --i) {
     const auto& elem = world_props[i];
-    float const dx = static_cast<float>(grid_pos.x()) - elem.x;
-    float const dz = static_cast<float>(grid_pos.y()) - elem.z;
-    float const dist = std::sqrt(dx * dx + dz * dz);
-    if (dist <= hit_radius) {
-      result.element_type = 1;
-      result.index = i;
-      return result;
-    }
+    const QPoint center = grid_to_widget(elem.x, elem.z);
+    const QVector2D center_vec(static_cast<float>(center.x()),
+                               static_cast<float>(center.y()));
+    consider_hit(1, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 2);
+  }
+
+  const auto& terrain = m_map_data->terrain_elements();
+  for (int i = terrain.size() - 1; i >= 0; --i) {
+    const auto& elem = terrain[i];
+    const QPoint center = grid_to_widget(elem.x, elem.z);
+    const QVector2D center_vec(static_cast<float>(center.x()),
+                               static_cast<float>(center.y()));
+    consider_hit(0, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 3);
   }
 
   const auto& linear = m_map_data->linear_elements();
-  for (int i = 0; i < linear.size(); ++i) {
+  for (int i = linear.size() - 1; i >= 0; --i) {
     const auto& elem = linear[i];
-    QVector2D const p(static_cast<float>(grid_pos.x()),
-                      static_cast<float>(grid_pos.y()));
+    const QPoint start_pos = grid_to_widget(elem.start.x(), elem.start.y());
+    const QPoint end_pos = grid_to_widget(elem.end.x(), elem.end.y());
+    const QVector2D start_vec(static_cast<float>(start_pos.x()),
+                              static_cast<float>(start_pos.y()));
+    const QVector2D end_vec(static_cast<float>(end_pos.x()),
+                            static_cast<float>(end_pos.y()));
 
-    float const start_dist = (p - elem.start).length();
-    if (start_dist <= endpoint_hit_radius) {
-      result.element_type = 2;
-      result.index = i;
-      result.endpoint = 0;
-      return result;
-    }
-
-    float const end_dist = (p - elem.end).length();
-    if (end_dist <= endpoint_hit_radius) {
-      result.element_type = 2;
-      result.index = i;
-      result.endpoint = 1;
-      return result;
-    }
+    consider_hit(2,
+                 i,
+                 0,
+                 (cursor - start_vec).length(),
+                 point_hit_radius_px,
+                 4);
+    consider_hit(2,
+                 i,
+                 1,
+                 (cursor - end_vec).length(),
+                 point_hit_radius_px,
+                 4);
   }
 
-  for (int i = 0; i < linear.size(); ++i) {
+  for (int i = linear.size() - 1; i >= 0; --i) {
     const auto& elem = linear[i];
-    QVector2D const p(static_cast<float>(grid_pos.x()),
-                      static_cast<float>(grid_pos.y()));
-    QVector2D const a = elem.start;
-    QVector2D const b = elem.end;
-    QVector2D const ab = b - a;
-    float const ab_length_sq = QVector2D::dotProduct(ab, ab);
+    const QPoint start_pos = grid_to_widget(elem.start.x(), elem.start.y());
+    const QPoint end_pos = grid_to_widget(elem.end.x(), elem.end.y());
 
-    float dist = NAN;
+    const QVector2D a(static_cast<float>(start_pos.x()), static_cast<float>(start_pos.y()));
+    const QVector2D b(static_cast<float>(end_pos.x()), static_cast<float>(end_pos.y()));
+    const QVector2D ab = b - a;
+    const float ab_length_sq = QVector2D::dotProduct(ab, ab);
+
+    float dist = std::numeric_limits<float>::infinity();
     if (ab_length_sq < 0.0001F) {
-      dist = (p - a).length();
+      dist = (cursor - a).length();
     } else {
-      float const t =
-          std::clamp(QVector2D::dotProduct(p - a, ab) / ab_length_sq, 0.0F, 1.0F);
-      QVector2D const closest = a + t * ab;
-      dist = (p - closest).length();
+      const float t =
+          std::clamp(QVector2D::dotProduct(cursor - a, ab) / ab_length_sq, 0.0F, 1.0F);
+      const QVector2D closest = a + t * ab;
+      dist = (cursor - closest).length();
     }
 
-    if (dist <= elem.width + 2.0F) {
-      result.element_type = 2;
-      result.index = i;
-      result.endpoint = -1;
-      return result;
-    }
+    int line_width_px = static_cast<int>(elem.width * m_zoom);
+    line_width_px = std::max(2, std::min(line_width_px, 20));
+    const float line_hit_radius_px = static_cast<float>(line_width_px) * 0.5F + 4.0F;
+    consider_hit(2, i, -1, dist, line_hit_radius_px, 5);
   }
 
   return result;

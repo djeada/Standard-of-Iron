@@ -7,6 +7,113 @@
 
 namespace Render::Creature {
 
+[[nodiscard]] inline constexpr auto
+is_stationary_melee_combat_phase(Render::GL::CombatAnimPhase phase) noexcept -> bool {
+  switch (phase) {
+  case Render::GL::CombatAnimPhase::WindUp:
+  case Render::GL::CombatAnimPhase::Strike:
+  case Render::GL::CombatAnimPhase::Impact:
+  case Render::GL::CombatAnimPhase::Recover:
+    return true;
+  case Render::GL::CombatAnimPhase::Idle:
+  case Render::GL::CombatAnimPhase::Advance:
+  case Render::GL::CombatAnimPhase::Reposition:
+    return false;
+  }
+  return false;
+}
+
+[[nodiscard]] inline auto
+should_prioritize_attack_pose_over_locomotion(
+    const Render::GL::AnimationInputs& inputs) noexcept -> bool {
+  if (!inputs.is_attacking || !inputs.is_melee ||
+      !Render::Creature::is_moving_animation(inputs.movement_state)) {
+    return false;
+  }
+
+  if (inputs.is_in_melee_lock) {
+    return true;
+  }
+
+  return is_stationary_melee_combat_phase(inputs.combat_phase) &&
+         !inputs.visual_movement.has_chase_intent;
+}
+
+[[nodiscard]] inline constexpr auto is_attack_pose_intent(PoseIntent intent) noexcept
+    -> bool {
+  switch (intent) {
+  case PoseIntent::AttackMelee:
+  case PoseIntent::AttackSpear:
+  case PoseIntent::AttackRanged:
+    return true;
+  case PoseIntent::Idle:
+  case PoseIntent::Walk:
+  case PoseIntent::Run:
+  case PoseIntent::Hold:
+  case PoseIntent::HitReaction:
+  case PoseIntent::Healing:
+  case PoseIntent::Construct:
+  case PoseIntent::RidingIdle:
+  case PoseIntent::RidingCharge:
+  case PoseIntent::RidingReining:
+  case PoseIntent::RidingBowShot:
+  case PoseIntent::Dying:
+  case PoseIntent::Dead:
+  case PoseIntent::Count:
+    return false;
+  }
+  return false;
+}
+
+[[nodiscard]] inline constexpr auto is_locomotion_pose_intent(PoseIntent intent) noexcept
+    -> bool {
+  switch (intent) {
+  case PoseIntent::Walk:
+  case PoseIntent::Run:
+    return true;
+  case PoseIntent::Idle:
+  case PoseIntent::Hold:
+  case PoseIntent::AttackMelee:
+  case PoseIntent::AttackSpear:
+  case PoseIntent::AttackRanged:
+  case PoseIntent::HitReaction:
+  case PoseIntent::Healing:
+  case PoseIntent::Construct:
+  case PoseIntent::RidingIdle:
+  case PoseIntent::RidingCharge:
+  case PoseIntent::RidingReining:
+  case PoseIntent::RidingBowShot:
+  case PoseIntent::Dying:
+  case PoseIntent::Dead:
+  case PoseIntent::Count:
+    return false;
+  }
+  return false;
+}
+
+[[nodiscard]] inline constexpr auto
+is_attack_animation_state(AnimationStateId state) noexcept -> bool {
+  switch (state) {
+  case AnimationStateId::AttackSword:
+  case AnimationStateId::AttackSpear:
+  case AnimationStateId::AttackBow:
+    return true;
+  case AnimationStateId::Idle:
+  case AnimationStateId::Walk:
+  case AnimationStateId::Run:
+  case AnimationStateId::Hold:
+  case AnimationStateId::Die:
+  case AnimationStateId::Dead:
+  case AnimationStateId::RidingIdle:
+  case AnimationStateId::RidingCharge:
+  case AnimationStateId::RidingReining:
+  case AnimationStateId::RidingBowShot:
+  case AnimationStateId::Count:
+    return false;
+  }
+  return false;
+}
+
 [[nodiscard]] inline auto
 resolve_pose_intent(const Render::GL::AnimationInputs& inputs) noexcept -> PoseIntent {
   if (inputs.is_dying) {
@@ -18,13 +125,15 @@ resolve_pose_intent(const Render::GL::AnimationInputs& inputs) noexcept -> PoseI
   if (inputs.is_hit_reacting) {
     return PoseIntent::HitReaction;
   }
-  switch (inputs.movement_state) {
-  case Render::Creature::MovementAnimationState::Run:
-    return PoseIntent::Run;
-  case Render::Creature::MovementAnimationState::Walk:
-    return PoseIntent::Walk;
-  case Render::Creature::MovementAnimationState::Idle:
-    break;
+  if (!should_prioritize_attack_pose_over_locomotion(inputs)) {
+    switch (inputs.movement_state) {
+    case Render::Creature::MovementAnimationState::Run:
+      return PoseIntent::Run;
+    case Render::Creature::MovementAnimationState::Walk:
+      return PoseIntent::Walk;
+    case Render::Creature::MovementAnimationState::Idle:
+      break;
+    }
   }
   if (inputs.is_attacking) {
     if (inputs.is_in_hold_mode) {
@@ -57,7 +166,7 @@ resolve_pose_intent(const Render::GL::AnimationInputs& inputs) noexcept -> PoseI
   return PoseIntent::Idle;
 }
 
-struct PoseClassification {
+struct ResolvedPose {
   PoseIntent intent{PoseIntent::Idle};
   Render::GL::HumanoidMotionState motion_state{Render::GL::HumanoidMotionState::Idle};
   Render::Humanoid::HumanoidState humanoid_state{Render::Humanoid::HumanoidState::Idle};
@@ -66,7 +175,7 @@ struct PoseClassification {
 };
 
 [[nodiscard]] inline auto
-classify_pose(PoseIntent intent) noexcept -> PoseClassification {
+resolve_pose_for_intent(PoseIntent intent) noexcept -> ResolvedPose {
   using A = Render::Creature::AnimationStateId;
   using H = Render::Humanoid::HumanoidState;
   using M = Render::GL::HumanoidMotionState;
@@ -107,24 +216,29 @@ classify_pose(PoseIntent intent) noexcept -> PoseClassification {
   }
 }
 
-[[nodiscard]] inline auto classify_pose(
-    const Render::GL::AnimationInputs& inputs) noexcept -> PoseClassification {
-  return classify_pose(resolve_pose_intent(inputs));
+[[nodiscard]] inline auto
+resolve_pose(const Render::GL::AnimationInputs& inputs) noexcept -> ResolvedPose {
+  auto resolved_pose = resolve_pose_for_intent(resolve_pose_intent(inputs));
+  if (inputs.is_attacking && inputs.is_in_hold_mode) {
+    resolved_pose.animation_state = inputs.is_melee ? AnimationStateId::AttackMelee
+                                                    : AnimationStateId::AttackRanged;
+  }
+  return resolved_pose;
 }
 
-[[nodiscard]] inline auto to_humanoid_motion_state(PoseIntent intent) noexcept
+[[nodiscard]] inline auto humanoid_motion_state_for_intent(PoseIntent intent) noexcept
     -> Render::GL::HumanoidMotionState {
-  return classify_pose(intent).motion_state;
+  return resolve_pose_for_intent(intent).motion_state;
 }
 
 [[nodiscard]] inline auto
-to_humanoid_state(PoseIntent intent) noexcept -> Render::Humanoid::HumanoidState {
-  return classify_pose(intent).humanoid_state;
+humanoid_state_for_intent(PoseIntent intent) noexcept -> Render::Humanoid::HumanoidState {
+  return resolve_pose_for_intent(intent).humanoid_state;
 }
 
-[[nodiscard]] inline auto to_animation_state_id(PoseIntent intent) noexcept
+[[nodiscard]] inline auto animation_state_for_intent(PoseIntent intent) noexcept
     -> Render::Creature::AnimationStateId {
-  return classify_pose(intent).animation_state;
+  return resolve_pose_for_intent(intent).animation_state;
 }
 
 } // namespace Render::Creature

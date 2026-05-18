@@ -26,9 +26,11 @@
 #include "../utils/movement_utils.h"
 #include "../utils/selection_utils.h"
 #include "ambient_state_manager.h"
+#include "app_scene_context.h"
 #include "camera_controller.h"
 #include "commander_control_controller.h"
 #include "commander_input_adapter.h"
+#include "entity_cache.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
@@ -37,10 +39,12 @@
 #include "minimap_manager.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "renderer_bootstrap.h"
+#include "runtime_frame_orchestrator.h"
 
 class ProductionManager;
 class CampaignManager;
 class SelectionQueryService;
+class VisibilityCoordinator;
 
 namespace Engine::Core {
 class World;
@@ -94,20 +98,6 @@ class AudioSystemProxy;
 
 class QQuickWindow;
 class LoadingProgressTracker;
-
-struct EntityCache {
-  int player_troop_count = 0;
-  bool player_barracks_alive = false;
-  bool enemy_barracks_alive = false;
-  int enemy_barracks_count = 0;
-
-  void reset() {
-    player_troop_count = 0;
-    player_barracks_alive = false;
-    enemy_barracks_alive = false;
-    enemy_barracks_count = 0;
-  }
-};
 
 class GameEngine : public QObject {
   Q_OBJECT
@@ -171,7 +161,9 @@ public:
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_double_click(qreal sx, qreal sy);
-  Q_INVOKABLE void on_right_press(qreal sx, qreal sy);
+  Q_INVOKABLE [[nodiscard]] bool on_right_press(qreal sx, qreal sy);
+  Q_INVOKABLE void on_right_move(qreal sx, qreal sy);
+  Q_INVOKABLE void on_right_release(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_drag_orient(qreal sx, qreal sy);
   Q_INVOKABLE void on_click_select(qreal sx, qreal sy, bool additive = false);
   Q_INVOKABLE void
@@ -188,6 +180,7 @@ public:
   Q_INVOKABLE void on_heal_command();
   Q_INVOKABLE void on_build_command();
   Q_INVOKABLE void on_guard_click(qreal sx, qreal sy);
+  Q_INVOKABLE void on_civilian_delivery_click(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
@@ -238,6 +231,7 @@ public:
   Q_INVOKABLE void
   on_minimap_right_click(qreal mx, qreal my, qreal minimap_width, qreal minimap_height);
   Q_INVOKABLE void start_loading_maps();
+  Q_INVOKABLE void set_audio_frontend_context(const QString& context);
 
   Q_INVOKABLE void set_paused(bool paused) { m_runtime.paused = paused; }
   Q_INVOKABLE void set_game_speed(float speed) {
@@ -297,6 +291,8 @@ public:
   Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] QVariantList available_maps() const;
   [[nodiscard]] QVariantList available_nations() const;
+  Q_INVOKABLE [[nodiscard]] QVariantList available_commanders(
+      const QString& nation_id) const;
   [[nodiscard]] QVariantList available_campaigns() const;
   [[nodiscard]] bool maps_loading() const { return m_maps_loading; }
   Q_INVOKABLE void start_skirmish(const QString& map_path,
@@ -377,8 +373,6 @@ private:
     QString last_error = "";
     Qt::CursorShape current_cursor = Qt::ArrowCursor;
     int last_troop_count = 0;
-    std::uint64_t visibility_version = 0;
-    float visibility_update_accumulator = 0.0F;
     qreal last_cursor_x = -1.0;
     qreal last_cursor_y = -1.0;
     int selection_refresh_counter = 0;
@@ -400,12 +394,25 @@ private:
     Rts,
     Rpg
   };
-  using ControlModeToggle = void (GameEngine::*)();
-  class RuntimeMode;
-  class RtsRuntimeMode;
-  class CommanderRuntimeMode;
-  friend class RtsRuntimeMode;
-  friend class CommanderRuntimeMode;
+  struct RightMouseGestureState {
+    QPointF press_position;
+    bool active = false;
+    bool dragged = false;
+    bool suppress_release_click = false;
+    bool double_click_handled = false;
+    bool placement_was_active_on_press = false;
+    bool started_formation_placement = false;
+
+    void reset() {
+      press_position = QPointF();
+      active = false;
+      dragged = false;
+      suppress_release_click = false;
+      double_click_handled = false;
+      placement_was_active_on_press = false;
+      started_formation_placement = false;
+    }
+  };
   struct CameraSnapshot {
     QVector3D position{0.0F, 0.0F, 0.0F};
     QVector3D target{0.0F, 0.0F, 1.0F};
@@ -420,7 +427,15 @@ private:
   void exit_commander_control_mode();
   void request_enter_commander_control_mode();
   void request_exit_commander_control_mode();
+  void enter_rts_runtime_mode();
+  void enter_commander_runtime_mode();
+  void exit_commander_runtime_mode();
   void set_active_camera(Render::GL::Camera* camera);
+  [[nodiscard]] auto apply_runtime_time_effects(float dt) -> float;
+  void update_active_runtime_simulation(float dt);
+  [[nodiscard]] auto should_render_selected_entity(Engine::Core::EntityID id) const
+      -> bool;
+  void render_runtime_mode_effects();
   void update_rts_control_mode(float dt);
   void update_commander_control_mode(float dt);
   [[nodiscard]] Engine::Core::Entity* controlled_commander_entity();
@@ -436,6 +451,11 @@ private:
   QAbstractItemModel* selected_units_model();
   void apply_mission_ambience(const Game::Mission::MissionDefinition* mission,
                               const QString& map_path);
+  void configure_audio_manifest_mappings();
+  void configure_audio_voice_mappings();
+  void configure_audio_ambient_mappings();
+  void ensure_result_audio_ready(const QString& state);
+  void apply_frontend_music_context(const QString& context);
   void stop_mission_ambience();
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
   void on_unit_died(const Engine::Core::UnitDiedEvent& event);
@@ -450,11 +470,13 @@ private:
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot& snapshot);
   [[nodiscard]] QByteArray capture_screenshot() const;
+  [[nodiscard]] AppSceneContext scene_context() const;
   void start_skirmish_internal(const QString& map_path,
                                const QVariantList& player_configs,
                                bool set_skirmish_context);
   void perform_skirmish_load(const QString& map_path,
                              const QVariantList& player_configs);
+  void apply_skirmish_commander_setup(const QVariantList& player_configs);
   void apply_mission_setup();
   void configure_mission_victory_conditions();
   void configure_rain_system();
@@ -495,8 +517,10 @@ private:
   std::unique_ptr<Game::Map::MapCatalog> m_map_catalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audio_event_handler;
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
+  QString m_audio_frontend_context;
   QString m_current_ambient_sound_id;
   std::unique_ptr<MinimapManager> m_minimap_manager;
+  std::unique_ptr<VisibilityCoordinator> m_visibility_coordinator;
   std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
   std::unique_ptr<InputCommandHandler> m_input_handler;
   std::unique_ptr<CameraController> m_camera_controller;
@@ -504,20 +528,16 @@ private:
   std::unique_ptr<ProductionManager> m_production_manager;
   std::unique_ptr<CampaignManager> m_campaign_manager;
   std::unique_ptr<SelectionQueryService> m_selection_query_service;
-  std::unique_ptr<RuntimeMode> m_rts_runtime_mode;
-  std::unique_ptr<RuntimeMode> m_commander_runtime_mode;
-  RuntimeMode* m_active_runtime_mode = nullptr;
   QQuickWindow* m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
   bool m_follow_selection_enabled = false;
   PlayerControlMode m_control_mode = PlayerControlMode::Rts;
   GameMode m_game_mode = GameMode::Rts;
-  ControlModeToggle m_control_mode_toggle =
-      &GameEngine::request_enter_commander_control_mode;
   Engine::Core::EntityID m_controlled_commander_id = 0;
   std::vector<Engine::Core::EntityID> m_saved_rts_selection_ids;
   CameraSnapshot m_rts_camera_snapshot;
+  RightMouseGestureState m_right_mouse_gesture;
   CommanderControlController m_commander_control;
   Render::GL::RpgTelegraphRenderer m_rpg_telegraphs;
   CommanderInputAdapter m_commander_input;
@@ -557,6 +577,7 @@ private:
   std::uint32_t m_rpg_damage_event_sequence{0};
   float m_rpg_hit_stop_timer{0.0F};
   EntityCache m_entity_cache;
+  RuntimeFrameOrchestrator m_frame_orchestrator;
 
 signals:
   void selected_units_changed();

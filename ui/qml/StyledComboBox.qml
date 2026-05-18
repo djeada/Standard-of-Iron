@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import StandardOfIron 1.0
+import "ui_audio.js" as UiAudio
 
 ComboBox {
     id: root
@@ -22,6 +23,15 @@ ComboBox {
 
     function resolve_delegate_text(data) {
         return (typeof delegate_text === "function") ? delegate_text(data) : data;
+    }
+
+    onHoveredChanged: {
+        if (hovered && enabled && typeof game !== "undefined")
+            UiAudio.play_hover(game.audio_system);
+    }
+    onActivated: {
+        if (typeof game !== "undefined")
+            UiAudio.play_click(game.audio_system);
     }
 
     contentItem: Text {
@@ -116,6 +126,10 @@ ComboBox {
         width: root.width
         implicitHeight: contentItem.implicitHeight
         padding: 0
+        onVisibleChanged: {
+            if (visible && typeof game !== "undefined")
+                UiAudio.play_click(game.audio_system);
+        }
 
         contentItem: ListView {
             clip: true

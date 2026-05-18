@@ -59,52 +59,7 @@ TEST(CommanderCatalogTest, DefinesThreeCommandersForEachPlayableNation) {
   EXPECT_TRUE(has_production_bonus);
 }
 
-TEST(CommanderProductionTest, ReservesOneCommanderPerOwnerWhenQueued) {
-  Engine::Core::World world;
-
-  auto* first_barracks = world.create_entity();
-  auto* first_unit = first_barracks->add_component<Engine::Core::UnitComponent>();
-  auto* first_production =
-      first_barracks->add_component<Engine::Core::ProductionComponent>();
-  ASSERT_NE(first_unit, nullptr);
-  ASSERT_NE(first_production, nullptr);
-  first_unit->spawn_type = Game::Units::SpawnType::Barracks;
-  first_unit->owner_id = 1;
-  first_production->max_units = 10000;
-  first_production->manpower_available = 1000;
-
-  auto* second_barracks = world.create_entity();
-  auto* second_unit = second_barracks->add_component<Engine::Core::UnitComponent>();
-  auto* second_production =
-      second_barracks->add_component<Engine::Core::ProductionComponent>();
-  ASSERT_NE(second_unit, nullptr);
-  ASSERT_NE(second_production, nullptr);
-  second_unit->spawn_type = Game::Units::SpawnType::Barracks;
-  second_unit->owner_id = 1;
-  second_production->max_units = 10000;
-  second_production->manpower_available = 1000;
-
-  auto result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world,
-          {first_barracks->get_id()},
-          1,
-          Game::Units::TroopType::RomanLegionOrganizer);
-  EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
-  EXPECT_TRUE(first_production->commander_committed);
-
-  result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world,
-          {second_barracks->get_id()},
-          1,
-          Game::Units::TroopType::RomanVeteranConsul);
-  EXPECT_EQ(result, Game::Systems::ProductionResult::CommanderLimitReached);
-  EXPECT_FALSE(second_production->commander_committed);
-  EXPECT_FALSE(second_production->in_progress);
-}
-
-TEST(CommanderProductionTest, AllowsRecruitingReplacementCommanderAfterDeath) {
+TEST(CommanderProductionTest, RejectsCommanderProductionFromBarracks) {
   Engine::Core::World world;
 
   auto* barracks = world.create_entity();
@@ -117,12 +72,26 @@ TEST(CommanderProductionTest, AllowsRecruitingReplacementCommanderAfterDeath) {
   production->max_units = 10000;
   production->manpower_available = 1000;
 
-  auto* commander = world.create_entity();
-  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
-  ASSERT_NE(commander_unit, nullptr);
-  commander_unit->owner_id = 1;
-  commander_unit->health = 100;
-  commander_unit->spawn_type = Game::Units::SpawnType::CarthageElephantMaster;
+  auto result =
+      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
+          world, {barracks->get_id()}, 1, Game::Units::TroopType::RomanLegionOrganizer);
+  EXPECT_EQ(result, Game::Systems::ProductionResult::CommanderNotRecruitable);
+  EXPECT_FALSE(production->in_progress);
+  EXPECT_EQ(production->manpower_available, 1000);
+}
+
+TEST(CommanderProductionTest, RejectsCommanderProductionEvenIfOwnerHasNoCommander) {
+  Engine::Core::World world;
+
+  auto* barracks = world.create_entity();
+  auto* barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
+  auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(barracks_unit, nullptr);
+  ASSERT_NE(production, nullptr);
+  barracks_unit->spawn_type = Game::Units::SpawnType::Barracks;
+  barracks_unit->owner_id = 1;
+  production->max_units = 10000;
+  production->manpower_available = 1000;
 
   auto result =
       Game::Systems::ProductionService::start_production_for_first_selected_barracks(
@@ -130,16 +99,8 @@ TEST(CommanderProductionTest, AllowsRecruitingReplacementCommanderAfterDeath) {
           {barracks->get_id()},
           1,
           Game::Units::TroopType::CarthageMercenaryBroker);
-  EXPECT_EQ(result, Game::Systems::ProductionResult::CommanderLimitReached);
-
-  commander_unit->health = 0;
-  result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world,
-          {barracks->get_id()},
-          1,
-          Game::Units::TroopType::CarthageMercenaryBroker);
-  EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
+  EXPECT_EQ(result, Game::Systems::ProductionResult::CommanderNotRecruitable);
+  EXPECT_FALSE(production->in_progress);
 }
 
 TEST(CommanderFactoryTest, RefusesSecondLivingCommanderForOwner) {
