@@ -71,7 +71,7 @@ auto compute_mount_frame(const HorseProfile& profile) -> MountedAttachmentFrame;
 auto compute_rein_state(uint32_t horse_seed,
                         const HumanoidAnimationContext& rider_ctx) -> ReinState;
 auto compute_rein_handle(const MountedAttachmentFrame& mount,
-                         bool is_left,
+                         Side side,
                          float slack,
                          float tension) -> QVector3D;
 auto movement_animation_for_horse_gait(GaitType gait) noexcept

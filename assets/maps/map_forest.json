@@ -990,7 +990,7 @@
   "victory": {
     "type": "elimination",
     "key_structures": ["barracks"],
-    "defeat_conditions": ["no_key_structures"],
+    "defeat_conditions": ["no_key_structures", "no_commander", "only_commander_remaining"],
     "neutral_barracks_do_not_count_for_elimination_until_captured": true,
     "description": "Eliminate the enemy player's key barracks. Neutral barracks are optional objectives and do not count as active player bases until captured."
   }

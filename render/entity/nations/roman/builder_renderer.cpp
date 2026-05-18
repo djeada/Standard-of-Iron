@@ -48,6 +48,7 @@
 #include "../../../submitter.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
+#include "../builder_tool_palette.h"
 #include "../equipment_loadout_catalog.h"
 #include "builder_style.h"
 
@@ -96,24 +97,6 @@ enum BuilderHammerPaletteSlot : std::uint8_t {
   k_builder_hammer_wood_slot = 0U,
   k_builder_hammer_metal_slot = 1U,
   k_builder_hammer_metal_dark_slot = 2U,
-};
-
-enum BuilderSawPaletteSlot : std::uint8_t {
-  k_builder_saw_wood_slot = 0U,
-  k_builder_saw_metal_slot = 1U,
-  k_builder_saw_metal_dark_slot = 2U,
-  k_builder_saw_leather_slot = 3U,
-};
-
-enum BuilderChiselPaletteSlot : std::uint8_t {
-  k_builder_chisel_wood_slot = 0U,
-  k_builder_chisel_metal_slot = 1U,
-};
-
-enum class BuilderConstructionTool : std::uint8_t {
-  Hammer = 0U,
-  Saw = 1U,
-  Chisel = 2U,
 };
 
 auto builder_work_tunic_fill_role_colors(const HumanoidPalette& palette,
@@ -460,25 +443,20 @@ auto builder_saw_archetype() -> const RenderArchetype& {
         generated_cylinder(QVector3D(-0.02F, -0.18F, 0.03F),
                            QVector3D(0.06F, -0.08F, 0.03F),
                            0.018F,
-                           k_builder_saw_wood_slot),
-        generated_sphere(
-            QVector3D(0.065F, -0.07F, 0.03F), 0.024F, k_builder_saw_leather_slot),
+                           k_saw_wood_slot),
+        generated_sphere(QVector3D(0.065F, -0.07F, 0.03F), 0.024F, k_saw_leather_slot),
         generated_cylinder(QVector3D(0.02F, -0.06F, 0.03F),
                            QVector3D(0.03F, 0.20F, 0.03F),
                            0.013F,
-                           k_builder_saw_metal_slot),
+                           k_saw_metal_slot),
         generated_cylinder(QVector3D(0.03F, 0.20F, 0.03F),
                            QVector3D(-0.09F, 0.12F, 0.03F),
                            0.018F,
-                           k_builder_saw_metal_dark_slot),
-        generated_sphere(
-            QVector3D(-0.02F, 0.16F, 0.03F), 0.016F, k_builder_saw_metal_slot),
-        generated_sphere(
-            QVector3D(-0.045F, 0.145F, 0.03F), 0.014F, k_builder_saw_metal_slot),
-        generated_sphere(
-            QVector3D(-0.07F, 0.13F, 0.03F), 0.012F, k_builder_saw_metal_slot),
-        generated_sphere(
-            QVector3D(-0.09F, 0.115F, 0.03F), 0.010F, k_builder_saw_metal_slot),
+                           k_saw_metal_dark_slot),
+        generated_sphere(QVector3D(-0.02F, 0.16F, 0.03F), 0.016F, k_saw_metal_slot),
+        generated_sphere(QVector3D(-0.045F, 0.145F, 0.03F), 0.014F, k_saw_metal_slot),
+        generated_sphere(QVector3D(-0.07F, 0.13F, 0.03F), 0.012F, k_saw_metal_slot),
+        generated_sphere(QVector3D(-0.09F, 0.115F, 0.03F), 0.010F, k_saw_metal_slot),
     }};
     return build_generated_equipment_archetype("roman_builder_saw", primitives);
   }();
@@ -491,15 +469,13 @@ auto builder_chisel_archetype() -> const RenderArchetype& {
         generated_cylinder(QVector3D(0.0F, -0.16F, 0.01F),
                            QVector3D(0.0F, 0.06F, 0.01F),
                            0.017F,
-                           k_builder_chisel_wood_slot),
-        generated_sphere(
-            QVector3D(0.0F, -0.18F, 0.01F), 0.022F, k_builder_chisel_wood_slot),
+                           k_chisel_wood_slot),
+        generated_sphere(QVector3D(0.0F, -0.18F, 0.01F), 0.022F, k_chisel_wood_slot),
         generated_cylinder(QVector3D(0.0F, 0.06F, 0.01F),
                            QVector3D(0.0F, 0.20F, 0.01F),
                            0.011F,
-                           k_builder_chisel_metal_slot),
-        generated_sphere(
-            QVector3D(0.0F, 0.215F, 0.01F), 0.012F, k_builder_chisel_metal_slot),
+                           k_chisel_metal_slot),
+        generated_sphere(QVector3D(0.0F, 0.215F, 0.01F), 0.012F, k_chisel_metal_slot),
     }};
     return build_generated_equipment_archetype("roman_builder_chisel", primitives);
   }();
@@ -753,10 +729,8 @@ auto roman_builder_hammer_unit_archetype() -> Render::Creature::ArchetypeId {
 }
 
 auto roman_builder_saw_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 4> k_slots{k_builder_saw_wood_slot,
-                                                       k_builder_saw_metal_slot,
-                                                       k_builder_saw_metal_dark_slot,
-                                                       k_builder_saw_leather_slot};
+  static constexpr std::array<std::uint8_t, 4> k_slots{
+      k_saw_wood_slot, k_saw_metal_slot, k_saw_metal_dark_slot, k_saw_leather_slot};
   static const auto k_tool_spec = builder_tool_make_static_attachment(
       builder_saw_archetype(),
       Render::Creature::ArchetypeRegistry::instance()
@@ -783,8 +757,8 @@ auto roman_builder_saw_unit_archetype() -> Render::Creature::ArchetypeId {
 }
 
 auto roman_builder_chisel_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 2> k_slots{k_builder_chisel_wood_slot,
-                                                       k_builder_chisel_metal_slot};
+  static constexpr std::array<std::uint8_t, 2> k_slots{k_chisel_wood_slot,
+                                                       k_chisel_metal_slot};
   static const auto k_tool_spec = builder_tool_make_static_attachment(
       builder_chisel_archetype(),
       Render::Creature::ArchetypeRegistry::instance()

@@ -1162,6 +1162,10 @@
   ],
   "victory": {
     "type": "encirclement",
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ],
     "description": "Execute the double envelopment. Draw the Roman center into the killing plain, close both cavalry wings behind it, and destroy the Roman army before it escapes to the camp roads.",
     "encirclement_zone": {
       "x": 122,

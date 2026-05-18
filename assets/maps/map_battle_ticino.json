@@ -1243,6 +1243,10 @@
   },
   "victory": {
     "type": "custom",
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ],
     "description": "Defeat the Roman reconnaissance cavalry, prevent the main Roman force from escaping across the Ticino, and capture the bridgehead.",
     "primary_objectives": [
       { "id": "rout_roman_cavalry", "description": "Rout the Roman cavalry in the central meadow." },

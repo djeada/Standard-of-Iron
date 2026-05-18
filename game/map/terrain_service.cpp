@@ -10,16 +10,98 @@
 
 #include "../systems/building_collision_registry.h"
 #include "map_definition.h"
+#include "procedural_tree_generation.h"
 #include "terrain.h"
 
 namespace Game::Map {
 
 namespace {
 
+constexpr float k_min_tile_size = 0.0001F;
+
 struct SurfaceBaseSample {
   float world_y{0.0F};
   SurfaceHeightKind kind{SurfaceHeightKind::Fallback};
 };
+
+auto authored_grid_to_world(float grid_coord, int grid_size, float tile_size) -> float {
+  float const safe_tile_size = std::max(tile_size, k_min_tile_size);
+  return (grid_coord - (static_cast<float>(grid_size) * 0.5F - 0.5F)) * safe_tile_size;
+}
+
+auto world_prop_world_position(const TerrainHeightMap* height_map,
+                               CoordSystem coord_system,
+                               const WorldProp& prop) -> std::pair<float, float> {
+  if (coord_system == CoordSystem::World || height_map == nullptr) {
+    return {prop.x, prop.z};
+  }
+  return {authored_grid_to_world(
+              prop.x, height_map->get_width(), height_map->get_tile_size()),
+          authored_grid_to_world(
+              prop.z, height_map->get_height(), height_map->get_tile_size())};
+}
+
+auto make_world_prop_target(const TerrainHeightMap* height_map,
+                            CoordSystem coord_system,
+                            const WorldProp& prop) -> WorldPropTarget {
+  auto const [world_x, world_z] =
+      world_prop_world_position(height_map, coord_system, prop);
+  return WorldPropTarget{.id = prop.id, .type = prop.type, .x = world_x, .z = world_z};
+}
+
+template <typename Predicate>
+auto find_world_prop_near_world(const TerrainHeightMap* height_map,
+                                CoordSystem coord_system,
+                                const std::vector<WorldProp>& world_props,
+                                const std::unordered_set<std::uint64_t>& reserved_ids,
+                                float world_x,
+                                float world_z,
+                                float max_world_distance,
+                                Predicate&& matches) -> std::optional<WorldPropTarget> {
+  float const max_distance_sq =
+      std::max(max_world_distance, 0.0F) * std::max(max_world_distance, 0.0F);
+  const WorldProp* best = nullptr;
+  float best_distance_sq = max_distance_sq;
+  for (const auto& prop : world_props) {
+    if (!matches(prop.type) || reserved_ids.contains(prop.id)) {
+      continue;
+    }
+    auto const [prop_world_x, prop_world_z] =
+        world_prop_world_position(height_map, coord_system, prop);
+    float const dx = prop_world_x - world_x;
+    float const dz = prop_world_z - world_z;
+    float const distance_sq = dx * dx + dz * dz;
+    if (distance_sq > best_distance_sq) {
+      continue;
+    }
+    best = &prop;
+    best_distance_sq = distance_sq;
+  }
+  if (best == nullptr) {
+    return std::nullopt;
+  }
+  return make_world_prop_target(height_map, coord_system, *best);
+}
+
+template <typename Predicate>
+auto find_world_prop_by_id(const TerrainHeightMap* height_map,
+                           CoordSystem coord_system,
+                           const std::vector<WorldProp>& world_props,
+                           std::uint64_t world_prop_id,
+                           Predicate&& matches) -> std::optional<WorldPropTarget> {
+  if (world_prop_id == 0) {
+    return std::nullopt;
+  }
+  const auto it = std::find_if(world_props.begin(),
+                               world_props.end(),
+                               [world_prop_id, &matches](const WorldProp& prop) {
+                                 return prop.id == world_prop_id && matches(prop.type);
+                               });
+  if (it == world_props.end()) {
+    return std::nullopt;
+  }
+  return make_world_prop_target(height_map, coord_system, *it);
+}
 
 auto sample_grid_clamped(
     const std::vector<float>& values, int width, int height, int x, int z) -> float {
@@ -133,18 +215,29 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_height_map->add_river_segments(map_def.rivers);
   m_height_map->add_bridges(map_def.bridges);
   m_biome_settings = map_def.biome;
+  m_coord_system = map_def.coordSystem;
   m_height_map->apply_biome_variation(m_biome_settings);
   m_world_props = map_def.world_props;
+  auto generated_world_props = generate_procedural_world_props(
+      *m_height_map, m_biome_settings, m_coord_system, m_world_props);
+  m_world_props.insert(
+      m_world_props.end(), generated_world_props.begin(), generated_world_props.end());
+  normalize_world_props();
   m_road_segments = map_def.roads;
   rebuild_terrain_field();
+  bump_world_props_revision();
 }
 
 void TerrainService::clear() {
   m_height_map.reset();
   m_terrain_field.clear();
   m_biome_settings = BiomeSettings();
+  m_coord_system = CoordSystem::Grid;
   m_world_props.clear();
   m_road_segments.clear();
+  m_reserved_world_prop_ids.clear();
+  m_next_world_prop_id = 1;
+  bump_world_props_revision();
 }
 
 void TerrainService::remove_non_persistent_props() {
@@ -152,6 +245,115 @@ void TerrainService::remove_non_persistent_props() {
                                      m_world_props.end(),
                                      [](const WorldProp& p) { return !p.persistent; }),
                       m_world_props.end());
+  normalize_world_props();
+  bump_world_props_revision();
+}
+
+auto TerrainService::find_tree_near_world(float world_x,
+                                          float world_z,
+                                          float max_world_distance) const
+    -> std::optional<WorldPropTarget> {
+  return find_world_prop_near_world(m_height_map.get(),
+                                    m_coord_system,
+                                    m_world_props,
+                                    m_reserved_world_prop_ids,
+                                    world_x,
+                                    world_z,
+                                    max_world_distance,
+                                    is_tree_world_prop_type);
+}
+
+auto TerrainService::find_tree_by_id(std::uint64_t tree_id) const
+    -> std::optional<WorldPropTarget> {
+  return find_world_prop_by_id(m_height_map.get(),
+                               m_coord_system,
+                               m_world_props,
+                               tree_id,
+                               is_tree_world_prop_type);
+}
+
+auto TerrainService::find_boulder_near_world(float world_x,
+                                             float world_z,
+                                             float max_world_distance) const
+    -> std::optional<WorldPropTarget> {
+  return find_world_prop_near_world(m_height_map.get(),
+                                    m_coord_system,
+                                    m_world_props,
+                                    m_reserved_world_prop_ids,
+                                    world_x,
+                                    world_z,
+                                    max_world_distance,
+                                    is_boulder_world_prop_type);
+}
+
+auto TerrainService::find_boulder_by_id(std::uint64_t boulder_id) const
+    -> std::optional<WorldPropTarget> {
+  return find_world_prop_by_id(m_height_map.get(),
+                               m_coord_system,
+                               m_world_props,
+                               boulder_id,
+                               is_boulder_world_prop_type);
+}
+
+auto TerrainService::find_iron_ore_near_world(float world_x,
+                                              float world_z,
+                                              float max_world_distance) const
+    -> std::optional<WorldPropTarget> {
+  return find_world_prop_near_world(m_height_map.get(),
+                                    m_coord_system,
+                                    m_world_props,
+                                    m_reserved_world_prop_ids,
+                                    world_x,
+                                    world_z,
+                                    max_world_distance,
+                                    is_iron_ore_world_prop_type);
+}
+
+auto TerrainService::find_iron_ore_by_id(std::uint64_t iron_ore_id) const
+    -> std::optional<WorldPropTarget> {
+  return find_world_prop_by_id(m_height_map.get(),
+                               m_coord_system,
+                               m_world_props,
+                               iron_ore_id,
+                               is_iron_ore_world_prop_type);
+}
+
+auto TerrainService::reserve_world_prop(std::uint64_t world_prop_id) -> bool {
+  if (!find_world_prop_by_id(m_height_map.get(),
+                             m_coord_system,
+                             m_world_props,
+                             world_prop_id,
+                             is_harvestable_world_prop_type)
+           .has_value() ||
+      m_reserved_world_prop_ids.contains(world_prop_id)) {
+    return false;
+  }
+  m_reserved_world_prop_ids.insert(world_prop_id);
+  return true;
+}
+
+void TerrainService::release_world_prop(std::uint64_t world_prop_id) {
+  if (world_prop_id == 0) {
+    return;
+  }
+  m_reserved_world_prop_ids.erase(world_prop_id);
+}
+
+auto TerrainService::harvest_world_prop(std::uint64_t world_prop_id) -> bool {
+  const auto it = std::find_if(m_world_props.begin(),
+                               m_world_props.end(),
+                               [world_prop_id](const WorldProp& prop) {
+                                 return prop.id == world_prop_id &&
+                                        is_harvestable_world_prop_type(prop.type);
+                               });
+  if (it == m_world_props.end()) {
+    release_world_prop(world_prop_id);
+    return false;
+  }
+  m_world_props.erase(it);
+  release_world_prop(world_prop_id);
+  bump_world_props_revision();
+  return true;
 }
 
 auto TerrainService::get_terrain_height(float world_x, float world_z) const -> float {
@@ -179,7 +381,7 @@ auto TerrainService::resolve_surface_world_y(float world_x,
   float const surface_world_y = base_sample.kind == SurfaceHeightKind::Road
                                     ? road_surface_world_y(base_sample.world_y)
                                     : base_sample.world_y;
-  double resolved_world_y =
+  double const resolved_world_y =
       static_cast<double>(surface_world_y) + static_cast<double>(world_y_offset);
 
   return static_cast<float>(resolved_world_y);
@@ -286,9 +488,12 @@ void TerrainService::restore_from_serialized(
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
   m_height_map->restore_from_data(heights, terrain_types, rivers, bridges);
   m_biome_settings = biome;
+  m_coord_system = CoordSystem::Grid;
   m_world_props = world_props;
+  normalize_world_props();
   m_road_segments = roads;
   rebuild_terrain_field();
+  bump_world_props_revision();
 }
 
 auto TerrainService::is_point_on_road(float world_x, float world_z) const -> bool {
@@ -377,7 +582,7 @@ void TerrainService::rebuild_terrain_field() {
   const int width = m_terrain_field.width;
   const int height = m_terrain_field.height;
   const float tile = std::max(0.001F, m_terrain_field.tile_size);
-  const size_t count = static_cast<size_t>(width * height);
+  const auto count = static_cast<size_t>(width * height);
   m_terrain_field.slopes.assign(count, 0.0F);
   m_terrain_field.curvature.assign(count, 0.0F);
 
@@ -405,7 +610,7 @@ void TerrainService::rebuild_terrain_field() {
       const float dx = (h_r - h_l) / (2.0F * tile);
       const float dz = (h_u - h_d) / (2.0F * tile);
       const float normal_y = 1.0F / std::sqrt(1.0F + dx * dx + dz * dz);
-      const size_t index = static_cast<size_t>(z * width + x);
+      const auto index = static_cast<size_t>(z * width + x);
       const float dxx = h_r - 2.0F * h_c + h_l;
       const float dzz = h_u - 2.0F * h_c + h_d;
       const float dxz = 0.25F * (h_ur - h_ul - h_dr + h_dl);
@@ -416,6 +621,22 @@ void TerrainService::rebuild_terrain_field() {
           std::sqrt(dxx * dxx + dzz * dzz + 2.0F * dxz * dxz) / curvature_scale;
     }
   }
+}
+
+void TerrainService::normalize_world_props() {
+  m_reserved_world_prop_ids.clear();
+  std::uint64_t max_id = 0;
+  for (auto& prop : m_world_props) {
+    if (prop.id == 0) {
+      prop.id = m_next_world_prop_id++;
+    }
+    max_id = std::max(max_id, prop.id);
+  }
+  m_next_world_prop_id = std::max(m_next_world_prop_id, max_id + 1);
+}
+
+void TerrainService::bump_world_props_revision() {
+  ++m_world_props_revision;
 }
 
 } // namespace Game::Map

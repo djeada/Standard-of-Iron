@@ -155,7 +155,8 @@ When adding new assets, update `assets.qrc` to include them in the build.
 
 ## Documentation
 
-See [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md) for detailed documentation on:
+See [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md) for mission and campaign authoring details, and
+[VICTORY_SYSTEM.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/VICTORY_SYSTEM.md) for the runtime victory/defeat architecture. These docs cover:
 - Mission configuration options
 - Victory/defeat condition types
 - AI setup and personality

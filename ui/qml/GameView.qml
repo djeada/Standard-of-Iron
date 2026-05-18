@@ -11,7 +11,18 @@ Item {
     property string cursor_mode: "normal"
     property bool is_placing_formation: false
     property bool is_placing_construction: false
+    property bool construction_preview_valid: typeof game !== 'undefined' && game.construction_preview_valid
     property var pressed_keys: ({})
+
+    onConstruction_preview_validChanged: {
+        if (constructionCursor)
+            constructionCursor.requestPaint();
+    }
+
+    onIs_placing_constructionChanged: {
+        if (constructionCursor)
+            constructionCursor.requestPaint();
+    }
 
     signal map_clicked(real x, real y)
     signal unit_selected(int unitId)
@@ -356,7 +367,7 @@ Item {
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
-            cursorShape: game_view.cursor_mode !== "normal" ? Qt.BlankCursor : Qt.ArrowCursor
+            cursorShape: (game_view.cursor_mode !== "normal" || game_view.is_placing_construction) ? Qt.BlankCursor : Qt.ArrowCursor
             enabled: game_view.visible && typeof game !== 'undefined' && game.control_mode !== "commander"
             onEntered: {
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
@@ -564,7 +575,7 @@ Item {
     Item {
         id: customCursorContainer
 
-        visible: game_view.cursor_mode !== "normal"
+        visible: game_view.cursor_mode !== "normal" || game_view.is_placing_construction
         width: 32
         height: 32
         z: 999999
@@ -746,6 +757,58 @@ Item {
                 ctx.lineTo(18, 21);
                 ctx.closePath();
                 ctx.fill();
+            }
+            Component.onCompleted: requestPaint()
+        }
+
+        Canvas {
+            id: constructionCursor
+
+            visible: game_view.is_placing_construction
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                var ok = game_view.construction_preview_valid;
+                var primary = ok ? "#75D36B" : "#D36060";
+                var secondary = ok ? "#163A16" : "#4A1717";
+                ctx.strokeStyle = primary;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(16, 16, 10, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = Qt.rgba(0, 0, 0, 0.25);
+                ctx.beginPath();
+                ctx.arc(16, 16, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = secondary;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(16, 5);
+                ctx.lineTo(16, 11);
+                ctx.moveTo(16, 21);
+                ctx.lineTo(16, 27);
+                ctx.moveTo(5, 16);
+                ctx.lineTo(11, 16);
+                ctx.moveTo(21, 16);
+                ctx.lineTo(27, 16);
+                ctx.stroke();
+                ctx.strokeStyle = primary;
+                ctx.lineWidth = 2.5;
+                if (ok) {
+                    ctx.beginPath();
+                    ctx.moveTo(11, 17);
+                    ctx.lineTo(15, 21);
+                    ctx.lineTo(22, 12);
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(11, 11);
+                    ctx.lineTo(21, 21);
+                    ctx.moveTo(21, 11);
+                    ctx.lineTo(11, 21);
+                    ctx.stroke();
+                }
             }
             Component.onCompleted: requestPaint()
         }

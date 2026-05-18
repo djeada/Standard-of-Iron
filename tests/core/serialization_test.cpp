@@ -434,6 +434,30 @@ TEST_F(SerializationTest, WorldSerializationPreservesScatterSources) {
   EXPECT_FLOAT_EQ(terrain.world_props().back().scale, 1.4F);
 }
 
+TEST_F(SerializationTest, WorldSerializationPreservesIronOreProp) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 5;
+  map_def.grid.height = 5;
+  map_def.grid.tile_size = 1.0F;
+  map_def.world_props.push_back({.type = Game::Map::WorldProp::Type::IronOre,
+                                 .x = 3.0F,
+                                 .z = 2.0F,
+                                 .scale = 1.2F,
+                                 .rotation = 0.3F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
+  auto new_world = std::make_unique<World>();
+  Serialization::deserialize_world(new_world.get(), doc);
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  ASSERT_EQ(terrain.world_props().size(), 1U);
+  EXPECT_EQ(terrain.world_props().front().type, Game::Map::WorldProp::Type::IronOre);
+  EXPECT_FLOAT_EQ(terrain.world_props().front().x, 3.0F);
+  EXPECT_FLOAT_EQ(terrain.world_props().front().z, 2.0F);
+  EXPECT_FLOAT_EQ(terrain.world_props().front().scale, 1.2F);
+}
+
 TEST_F(SerializationTest, ProductionComponentSerialization) {
   auto* entity = world->create_entity();
   auto* production = entity->add_component<ProductionComponent>();

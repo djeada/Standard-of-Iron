@@ -4,6 +4,7 @@
 #include <QVector3D>
 
 #include "../instance_transform.h"
+#include "../side.h"
 #include "horse_gait.h"
 
 namespace Render::GL {
@@ -51,8 +52,8 @@ struct MountedAttachmentFrame {
   QVector3D rein_bit_right;
   QVector3D bridle_base;
   QVector3D ground_offset;
-  auto stirrup_attach(bool is_left) const -> const QVector3D&;
-  auto stirrup_bottom(bool is_left) const -> const QVector3D&;
+  auto stirrup_attach(Side side) const -> const QVector3D&;
+  auto stirrup_bottom(Side side) const -> const QVector3D&;
 };
 
 struct ReinState {

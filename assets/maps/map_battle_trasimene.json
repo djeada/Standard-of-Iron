@@ -906,6 +906,10 @@
   ],
   "victory": {
     "type": "custom",
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ],
     "description": "Spring the ambush, destroy the Roman marching column, and prevent the vanguard or rear guard from escaping the lakeside corridor.",
     "primary_objectives": [
       "Block the western rear of the Roman column",

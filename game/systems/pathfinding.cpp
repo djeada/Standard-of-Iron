@@ -45,7 +45,7 @@ Pathfinding::Pathfinding(int width, int height)
   m_obstacles.resize(height, std::vector<std::uint8_t>(width, 0));
   ensure_working_buffers();
   m_obstacles_dirty.store(true, std::memory_order_release);
-  m_full_update_required = true;
+
   m_worker_thread = std::thread(&Pathfinding::worker_loop, this);
 }
 
@@ -64,7 +64,8 @@ void Pathfinding::set_grid_offset(float offset_x, float offset_z) {
 
 void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
   if (x >= 0 && x < m_width && y >= 0 && y < m_height) {
-    m_obstacles[y][x] = static_cast<std::uint8_t>(is_obstacle);
+    m_obstacles[y][x] = static_cast<std::uint8_t>(is_obstacle ? CellValue::Blocked
+                                                              : CellValue::Walkable);
   }
 }
 
@@ -72,7 +73,35 @@ auto Pathfinding::is_walkable(int x, int y) const -> bool {
   if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
     return false;
   }
-  return m_obstacles[y][x] == 0;
+  return cell_value(x, y) == CellValue::Walkable;
+}
+
+auto Pathfinding::is_tree(int x, int y) const -> bool {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+    return false;
+  }
+  return cell_value(x, y) == CellValue::Tree;
+}
+
+auto Pathfinding::is_boulder(int x, int y) const -> bool {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+    return false;
+  }
+  return cell_value(x, y) == CellValue::Boulder;
+}
+
+auto Pathfinding::is_iron_ore(int x, int y) const -> bool {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+    return false;
+  }
+  return cell_value(x, y) == CellValue::IronOre;
+}
+
+auto Pathfinding::cell_value(int x, int y) const -> CellValue {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+    return CellValue::Blocked;
+  }
+  return static_cast<CellValue>(m_obstacles[y][x]);
 }
 
 auto Pathfinding::is_walkable_with_radius(int x,
@@ -104,7 +133,7 @@ auto Pathfinding::is_walkable_with_radius(int x,
         return false;
       }
 
-      if (m_obstacles[check_y][check_x] == 0) {
+      if (cell_value(check_x, check_y) == CellValue::Walkable) {
         continue;
       }
 
@@ -192,7 +221,7 @@ void Pathfinding::process_dirty_regions() {
             }
 
             if (blocked) {
-              m_obstacles[z][x] = static_cast<std::uint8_t>(1);
+              m_obstacles[z][x] = static_cast<std::uint8_t>(CellValue::Blocked);
             }
           }
         }
@@ -210,10 +239,12 @@ void Pathfinding::process_dirty_regions() {
               static_cast<int>(std::round(cell.second - m_grid_offset_z));
 
           if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
-            m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(1);
+            m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(CellValue::Blocked);
           }
         }
       }
+
+      apply_resource_prop_cells(0, m_width - 1, 0, m_height - 1);
 
       return;
     }
@@ -252,7 +283,8 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
 
         blocked = true;
       }
-      m_obstacles[z][x] = static_cast<std::uint8_t>(blocked ? 1 : 0);
+      m_obstacles[z][x] =
+          static_cast<std::uint8_t>(blocked ? CellValue::Blocked : CellValue::Walkable);
     }
   }
 
@@ -268,9 +300,47 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
 
       if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z && grid_z <= max_z &&
           grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
-        m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(1);
+        m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(CellValue::Blocked);
       }
     }
+  }
+
+  apply_resource_prop_cells(min_x, max_x, min_z, max_z);
+}
+
+void Pathfinding::apply_resource_prop_cells(int min_x,
+                                            int max_x,
+                                            int min_z,
+                                            int max_z) {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto* height_map = terrain_service.get_height_map();
+  float const tile_size =
+      (height_map != nullptr) ? std::max(height_map->get_tile_size(), 0.0001F) : 1.0F;
+  const auto& world_props = terrain_service.world_props();
+  for (const auto& prop : world_props) {
+    CellValue resource_cell = CellValue::Blocked;
+    if (Game::Map::is_tree_world_prop_type(prop.type)) {
+      resource_cell = CellValue::Tree;
+    } else if (Game::Map::is_boulder_world_prop_type(prop.type)) {
+      resource_cell = CellValue::Boulder;
+    } else if (Game::Map::is_iron_ore_world_prop_type(prop.type)) {
+      resource_cell = CellValue::IronOre;
+    } else {
+      continue;
+    }
+    float grid_x_f = prop.x;
+    float grid_z_f = prop.z;
+    if (terrain_service.coord_system() == Game::Map::CoordSystem::World) {
+      grid_x_f = prop.x / tile_size - m_grid_offset_x;
+      grid_z_f = prop.z / tile_size - m_grid_offset_z;
+    }
+    int const grid_x = static_cast<int>(std::round(grid_x_f));
+    int const grid_z = static_cast<int>(std::round(grid_z_f));
+    if (grid_x < min_x || grid_x > max_x || grid_z < min_z || grid_z > max_z ||
+        grid_x < 0 || grid_x >= m_width || grid_z < 0 || grid_z >= m_height) {
+      continue;
+    }
+    m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(resource_cell);
   }
 }
 

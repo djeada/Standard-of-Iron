@@ -8,6 +8,7 @@
 #include "../../../game/core/component.h"
 #include "../../creature/movement_state.h"
 #include "../../palette.h"
+#include "../../side.h"
 
 namespace Render::GL {
 
@@ -39,15 +40,7 @@ ambient_idle_clip_variant(AmbientIdleType t) noexcept -> std::uint8_t {
   }
 }
 
-enum class CombatAnimPhase : std::uint8_t {
-  Idle,
-  Advance,
-  WindUp,
-  Strike,
-  Impact,
-  Recover,
-  Reposition
-};
+using CombatAnimPhase = Engine::Core::CombatAnimationState;
 
 struct VisualMovementState {
   bool is_authoritative{false};

@@ -156,17 +156,19 @@ auto compute_rein_state(uint32_t horse_seed,
 }
 
 auto compute_rein_handle(const MountedAttachmentFrame& mount,
-                         bool is_left,
+                         Side side,
                          float slack,
                          float tension) -> QVector3D {
   using namespace ReinConstants;
   float const clamped_slack = std::clamp(slack, 0.0F, 1.0F);
   float const clamped_tension = std::clamp(tension, 0.0F, 1.0F);
 
-  QVector3D const& bit = is_left ? mount.rein_bit_left : mount.rein_bit_right;
+  QVector3D const& bit =
+      (side == Side::Left) ? mount.rein_bit_left : mount.rein_bit_right;
 
   QVector3D desired = mount.seat_position;
-  desired += (is_left ? -mount.seat_right : mount.seat_right) * k_handle_right_offset;
+  desired += ((side == Side::Left) ? -mount.seat_right : mount.seat_right) *
+             k_handle_right_offset;
   desired += -mount.seat_forward *
              (k_handle_forward_base + clamped_tension * k_handle_forward_tension_scale);
   desired +=

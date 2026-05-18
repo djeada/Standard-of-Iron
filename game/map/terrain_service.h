@@ -2,8 +2,10 @@
 
 #include <QVector3D>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <unordered_set>
 #include <vector>
 
 #include "map_definition.h"
@@ -22,6 +24,13 @@ enum class SurfaceHeightKind {
 struct SurfaceHeightSample {
   float world_y{0.0F};
   SurfaceHeightKind kind{SurfaceHeightKind::Fallback};
+};
+
+struct WorldPropTarget {
+  std::uint64_t id = 0;
+  WorldProp::Type type = WorldProp::Type::Tent;
+  float x = 0.0F;
+  float z = 0.0F;
 };
 
 class TerrainService {
@@ -69,6 +78,7 @@ public:
   [[nodiscard]] auto biome_settings() const -> const BiomeSettings& {
     return m_biome_settings;
   }
+  [[nodiscard]] auto coord_system() const -> CoordSystem { return m_coord_system; }
 
   [[nodiscard]] auto terrain_field() const -> const TerrainField& {
     return m_terrain_field;
@@ -77,8 +87,32 @@ public:
   [[nodiscard]] auto world_props() const -> const std::vector<WorldProp>& {
     return m_world_props;
   }
+  [[nodiscard]] auto world_props_revision() const -> std::uint64_t {
+    return m_world_props_revision;
+  }
 
   void remove_non_persistent_props();
+  [[nodiscard]] auto find_tree_near_world(float world_x,
+                                          float world_z,
+                                          float max_world_distance = 2.5F) const
+      -> std::optional<WorldPropTarget>;
+  [[nodiscard]] auto
+  find_tree_by_id(std::uint64_t tree_id) const -> std::optional<WorldPropTarget>;
+  [[nodiscard]] auto find_boulder_near_world(float world_x,
+                                             float world_z,
+                                             float max_world_distance = 2.5F) const
+      -> std::optional<WorldPropTarget>;
+  [[nodiscard]] auto
+  find_boulder_by_id(std::uint64_t boulder_id) const -> std::optional<WorldPropTarget>;
+  [[nodiscard]] auto find_iron_ore_near_world(float world_x,
+                                              float world_z,
+                                              float max_world_distance = 2.5F) const
+      -> std::optional<WorldPropTarget>;
+  [[nodiscard]] auto find_iron_ore_by_id(std::uint64_t iron_ore_id) const
+      -> std::optional<WorldPropTarget>;
+  [[nodiscard]] auto reserve_world_prop(std::uint64_t world_prop_id) -> bool;
+  void release_world_prop(std::uint64_t world_prop_id);
+  [[nodiscard]] auto harvest_world_prop(std::uint64_t world_prop_id) -> bool;
 
   [[nodiscard]] auto road_segments() const -> const std::vector<RoadSegment>& {
     return m_road_segments;
@@ -121,12 +155,18 @@ private:
   auto operator=(const TerrainService&) -> TerrainService& = delete;
 
   void rebuild_terrain_field();
+  void normalize_world_props();
+  void bump_world_props_revision();
 
   std::unique_ptr<TerrainHeightMap> m_height_map;
   TerrainField m_terrain_field;
   BiomeSettings m_biome_settings;
+  CoordSystem m_coord_system{CoordSystem::Grid};
   std::vector<WorldProp> m_world_props;
   std::vector<RoadSegment> m_road_segments;
+  std::unordered_set<std::uint64_t> m_reserved_world_prop_ids;
+  std::uint64_t m_next_world_prop_id{1};
+  std::uint64_t m_world_props_revision{0};
 };
 
 } // namespace Game::Map

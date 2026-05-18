@@ -218,6 +218,9 @@ public:
     load(QStringLiteral("dead_tree_instanced"),
          resolve(shader_base + QStringLiteral("dead_tree_instanced.vert")),
          resolve(shader_base + QStringLiteral("dead_tree_instanced.frag")));
+    load(QStringLiteral("iron_ore_instanced"),
+         resolve(shader_base + QStringLiteral("iron_ore_instanced.vert")),
+         resolve(shader_base + QStringLiteral("iron_ore_instanced.frag")));
   }
 
   void clear() {

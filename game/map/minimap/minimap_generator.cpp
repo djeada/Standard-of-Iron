@@ -30,10 +30,10 @@ constexpr QColor INK_DARK{45, 35, 25};
 constexpr QColor INK_MEDIUM{80, 65, 50};
 constexpr QColor INK_LIGHT{120, 100, 80};
 
-constexpr QColor MOUNTAIN_SHADOW{95, 80, 65};
-constexpr QColor MOUNTAIN_FACE{140, 125, 105};
-constexpr QColor MOUNTAIN_HIGHLIGHT{180, 165, 145};
-constexpr QColor HILL_BASE{160, 145, 120};
+constexpr QColor MOUNTAIN_SHADOW{70, 52, 38};
+constexpr QColor MOUNTAIN_FACE{115, 96, 75};
+constexpr QColor MOUNTAIN_HIGHLIGHT{198, 185, 165};
+constexpr QColor HILL_BASE{130, 112, 85};
 
 constexpr QColor WATER_DARK{62, 86, 104};
 constexpr QColor WATER_MAIN{86, 120, 142};
@@ -41,18 +41,20 @@ constexpr QColor WATER_LIGHT{138, 169, 184};
 constexpr QColor WATER_WASH{120, 150, 165, 48};
 constexpr QColor WATER_GLOW{204, 219, 224, 88};
 
-constexpr QColor FOREST_BASE{100, 130, 90};
+constexpr QColor FOREST_BASE{50, 95, 40};
+constexpr QColor FOREST_DARK{28, 60, 20};
 
-constexpr QColor ROAD_MAIN{130, 105, 75};
-constexpr QColor ROAD_HIGHLIGHT{165, 140, 110};
+constexpr QColor ROAD_MAIN{92, 66, 34};
+constexpr QColor ROAD_SHADOW{55, 38, 15};
+constexpr QColor ROAD_HIGHLIGHT{145, 112, 65};
 
-constexpr QColor STRUCTURE_STONE{160, 150, 135};
-constexpr QColor STRUCTURE_SHADOW{100, 85, 70};
+constexpr QColor STRUCTURE_STONE{110, 95, 75};
+constexpr QColor STRUCTURE_SHADOW{62, 44, 28};
 
-constexpr QColor TEAM_BLUE{65, 105, 165};
-constexpr QColor TEAM_BLUE_DARK{40, 65, 100};
-constexpr QColor TEAM_RED{175, 65, 55};
-constexpr QColor TEAM_RED_DARK{110, 40, 35};
+constexpr QColor TEAM_BLUE{42, 88, 205};
+constexpr QColor TEAM_BLUE_DARK{18, 45, 122};
+constexpr QColor TEAM_RED{218, 38, 28};
+constexpr QColor TEAM_RED_DARK{130, 16, 12};
 
 } // namespace Palette
 
@@ -405,7 +407,7 @@ void MinimapGenerator::render_terrain_base(QImage& image,
   const QColor biome_color = biome_to_base_color(map_def.biome);
 
   painter.setCompositionMode(QPainter::CompositionMode_Multiply);
-  painter.setOpacity(0.15);
+  painter.setOpacity(0.28);
   painter.fillRect(image.rect(), biome_color);
   painter.setOpacity(1.0);
   painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
@@ -552,7 +554,7 @@ void MinimapGenerator::draw_forest_symbol(
   const float start_y = cy - (rows - 1) * spacing * 0.5F;
 
   painter.setBrush(Palette::FOREST_BASE);
-  painter.setPen(QPen(Palette::INK_LIGHT, 0.5));
+  painter.setPen(QPen(Palette::FOREST_DARK, 0.8));
 
   for (int row = 0; row < rows; ++row) {
     for (int col = 0; col < cols; ++col) {
@@ -688,33 +690,26 @@ void MinimapGenerator::render_roads(QImage& image, const MapDefinition& map_def)
 void MinimapGenerator::draw_road_segment(
     QPainter& painter, float x1, float y1, float x2, float y2, float width) {
 
+  // Shadow pass — slightly wider, dark edge gives roads a clear outline
+  QPen shadow_pen(Palette::ROAD_SHADOW);
+  shadow_pen.setWidthF(width + 2.0F);
+  shadow_pen.setCapStyle(Qt::RoundCap);
+  painter.setPen(shadow_pen);
+  painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
+
+  // Main road fill
   QPen road_pen(Palette::ROAD_MAIN);
   road_pen.setWidthF(width);
   road_pen.setCapStyle(Qt::RoundCap);
-
-  QVector<qreal> dash_pattern;
-  dash_pattern << 3.0 << 2.0;
-  road_pen.setDashPattern(dash_pattern);
-
   painter.setPen(road_pen);
   painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
 
-  const float dx = x2 - x1;
-  const float dy = y2 - y1;
-  const float length = std::sqrt(dx * dx + dy * dy);
-
-  if (length > 8.0F) {
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(Palette::ROAD_HIGHLIGHT);
-
-    const int num_dots = static_cast<int>(length / 6.0F);
-    for (int i = 1; i < num_dots; ++i) {
-      const float t = static_cast<float>(i) / static_cast<float>(num_dots);
-      const float dot_x = x1 + dx * t;
-      const float dot_y = y1 + dy * t;
-      painter.drawEllipse(QPointF(dot_x, dot_y), width * 0.25F, width * 0.25F);
-    }
-  }
+  // Centre highlight — thin lighter stripe along the road crown
+  QPen highlight_pen(Palette::ROAD_HIGHLIGHT);
+  highlight_pen.setWidthF(std::max(width * 0.35F, 0.8F));
+  highlight_pen.setCapStyle(Qt::RoundCap);
+  painter.setPen(highlight_pen);
+  painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
 }
 
 void MinimapGenerator::render_bridges(QImage& image, const MapDefinition& map_def) {

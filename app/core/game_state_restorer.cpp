@@ -37,7 +37,7 @@
 void GameStateRestorer::rebuild_entity_cache(Engine::Core::World* world,
                                              EntityCache& entity_cache,
                                              int local_owner_id) {
-  if (!world) {
+  if (world == nullptr) {
     entity_cache.reset();
     return;
   }
@@ -74,7 +74,7 @@ void GameStateRestorer::rebuild_registries_after_load(
     int& selected_player_id,
     Game::Systems::LevelSnapshot& level,
     int local_owner_id) {
-  if (!world) {
+  if (world == nullptr) {
     return;
   }
 
@@ -117,7 +117,7 @@ void GameStateRestorer::rebuild_registries_after_load(
 void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) {
   auto& registry = Game::Systems::BuildingCollisionRegistry::instance();
   registry.clear();
-  if (!world) {
+  if (world == nullptr) {
     return;
   }
 
@@ -145,7 +145,7 @@ void GameStateRestorer::restore_environment_from_metadata(
     MinimapManager* minimap_manager,
     VisibilityCoordinator* visibility_coordinator) {
   auto* world = scene.world;
-  if (!world) {
+  if (world == nullptr) {
     return;
   }
 
@@ -184,7 +184,7 @@ void GameStateRestorer::restore_environment_from_metadata(
     level.cam_far = def.camera.far_plane;
   }
 
-  if (scene.renderer && scene.active_camera) {
+  if ((scene.renderer != nullptr) && (scene.active_camera != nullptr)) {
     if (loaded_definition) {
       Game::Map::Environment::apply(def, *scene.renderer, *scene.active_camera);
     } else {
@@ -205,26 +205,27 @@ void GameStateRestorer::restore_environment_from_metadata(
     const float tile_size =
         (height_map != nullptr) ? height_map->get_tile_size() : fallback_tile_size;
 
-    if (scene.ground) {
+    if (scene.ground != nullptr) {
       scene.ground->configure(tile_size, grid_width, grid_height);
       scene.ground->set_biome(terrain_service.biome_settings());
     }
 
-    if (scene.boundary_fog) {
+    if (scene.boundary_fog != nullptr) {
       scene.boundary_fog->configure(grid_width, grid_height, tile_size);
     }
 
     if (height_map != nullptr) {
-      if (scene.terrain) {
+      if (scene.terrain != nullptr) {
         scene.terrain->configure(*height_map, terrain_service.biome_settings());
       }
-      if (scene.features) {
+      if (scene.features != nullptr) {
         scene.features->configure(*height_map, terrain_service.road_segments());
       }
-      if (scene.scatter) {
+      if (scene.scatter != nullptr) {
         scene.scatter->configure(*height_map,
                                  terrain_service.biome_settings(),
-                                 terrain_service.world_props());
+                                 terrain_service.world_props(),
+                                 true);
       }
     }
 

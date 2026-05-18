@@ -489,49 +489,264 @@ Item {
             visible: !root.compact
 
             Item {
+                id: portraitPanel
+
                 anchors.right: parent.right
                 anchors.top: parent.top
                 width: Math.min(parent.width, 500)
                 height: Math.min(parent.height, 620)
-
-                Image {
-                    id: commanderPortrait
+                Rectangle {
+                    id: warBanner
 
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    source: "qrc:/StandardOfIron/assets/visuals/hannibal.png"
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    smooth: true
-                    opacity: 0.92
+                    anchors.bottom: footerBanner.top
+                    anchors.bottomMargin: 18
+                    radius: 24
+                    color: "#15100C"
+                    border.color: "#7B5B34"
+                    border.width: 1
                     clip: true
-                }
 
-                Rectangle {
-                    anchors.fill: parent
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        radius: 18
+                        color: "#21160E"
+                        border.color: hs.bronze
+                        border.width: 1
+                    }
 
-                        GradientStop {
-                            position: 0
-                            color: "#120D09EE"
+                    Image {
+                        id: commanderPortrait
+
+                        anchors.fill: parent
+                        anchors.margins: 14
+                        source: "qrc:/StandardOfIron/assets/visuals/hannibal.png"
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        smooth: true
+                        mipmap: true
+                        opacity: 0.9
+                    }
+
+                    Rectangle {
+                        anchors.fill: commanderPortrait
+                        color: "#6A4725"
+                        opacity: 0.18
+                    }
+
+                    Rectangle {
+                        anchors.fill: commanderPortrait
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+
+                            GradientStop {
+                                position: 0
+                                color: "#17100BDD"
+                            }
+
+                            GradientStop {
+                                position: 0.38
+                                color: "#100B0822"
+                            }
+
+                            GradientStop {
+                                position: 1
+                                color: "#080605CC"
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.fill: commanderPortrait
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: "#C7934626"
+                            }
+
+                            GradientStop {
+                                position: 0.22
+                                color: "#00000000"
+                            }
+
+                            GradientStop {
+                                position: 0.7
+                                color: "#00000000"
+                            }
+
+                            GradientStop {
+                                position: 1
+                                color: "#0C0806DD"
+                            }
+                        }
+                    }
+
+                    Canvas {
+                        id: portraitDistress
+
+                        anchors.fill: commanderPortrait
+                        opacity: 0.42
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.clearRect(0, 0, width, height);
+                            function noise(seed, value) {
+                                return Math.sin(value * 0.173 + seed * 3.1) * 0.5 + Math.cos(value * 0.071 + seed * 1.7) * 0.5;
+                            }
+                            for (var i = 0; i < 34; ++i) {
+                                var x = (i + 0.5) * width / 34;
+                                var top = Math.abs(noise(0.7, i)) * height * 0.12;
+                                var len = height * (0.18 + (Math.abs(noise(1.9, i)) * 0.22));
+                                ctx.strokeStyle = "rgba(242,223,188,0.045)";
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(x, top);
+                                ctx.lineTo(x + noise(2.3, i) * 8, top + len);
+                                ctx.stroke();
+                            }
+                            for (var j = 0; j < 22; ++j) {
+                                var cx = (j * 37) % width;
+                                var cy = (j * 61) % height;
+                                var radius = 10 + Math.abs(noise(4.1, j)) * 16;
+                                var alpha = 0.018 + Math.abs(noise(5.6, j)) * 0.03;
+                                ctx.fillStyle = "rgba(33,22,14," + alpha.toFixed(3) + ")";
+                                ctx.beginPath();
+                                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            for (var k = 0; k < 16; ++k) {
+                                var sx = (k * 53) % width;
+                                var sy = (k * 29) % height;
+                                ctx.strokeStyle = "rgba(18,13,9,0.16)";
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(sx, sy);
+                                ctx.lineTo(sx + 18 + Math.abs(noise(7.1, k)) * 36, sy + 4 + Math.abs(noise(8.4, k)) * 14);
+                                ctx.stroke();
+                            }
+                        }
+                        Component.onCompleted: requestPaint()
+                        onWidthChanged: requestPaint()
+                        onHeightChanged: requestPaint()
+                    }
+
+                    Canvas {
+                        id: portraitFray
+
+                        anchors.fill: commanderPortrait
+                        opacity: 0.86
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.clearRect(0, 0, width, height);
+                            function edge(seed, value) {
+                                return Math.sin(value * 0.19 + seed * 0.9) * 0.5 + Math.cos(value * 0.043 + seed * 2.7) * 0.5;
+                            }
+                            ctx.fillStyle = "rgba(18,13,9,0.72)";
+                            ctx.beginPath();
+                            ctx.moveTo(0, 0);
+                            for (var x = 0; x <= width; x += 12) {
+                                ctx.lineTo(x, 5 + Math.abs(edge(1.2, x)) * 8);
+                            }
+                            ctx.lineTo(width, 0);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(0, height);
+                            for (var xb = 0; xb <= width; xb += 12) {
+                                ctx.lineTo(xb, height - 6 - Math.abs(edge(2.8, xb)) * 10);
+                            }
+                            ctx.lineTo(width, height);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(0, 0);
+                            for (var y = 0; y <= height; y += 12) {
+                                ctx.lineTo(6 + Math.abs(edge(4.4, y)) * 10, y);
+                            }
+                            ctx.lineTo(0, height);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(width, 0);
+                            for (var yr = 0; yr <= height; yr += 12) {
+                                ctx.lineTo(width - 5 - Math.abs(edge(5.6, yr)) * 8, yr);
+                            }
+                            ctx.lineTo(width, height);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.strokeStyle = "rgba(194,149,85,0.45)";
+                            ctx.lineWidth = 1.2;
+                            ctx.strokeRect(6, 6, width - 12, height - 12);
+                        }
+                        Component.onCompleted: requestPaint()
+                        onWidthChanged: requestPaint()
+                        onHeightChanged: requestPaint()
+                    }
+
+                    Column {
+                        z: 2
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.leftMargin: 28
+                        anchors.topMargin: 28
+                        spacing: 6
+
+                        Text {
+                            text: qsTr("HANNIBAL BARCA")
+                            color: Theme.textMain
+                            font.family: "serif"
+                            font.pixelSize: 28
+                            font.bold: true
+                            style: Text.Outline
+                            styleColor: "#120D09"
                         }
 
-                        GradientStop {
-                            position: 0.45
-                            color: "#120D0944"
+                        Rectangle {
+                            width: 124
+                            height: 1
+                            color: hs.bronze
+                            opacity: 0.82
                         }
 
-                        GradientStop {
-                            position: 1
-                            color: "#120D0900"
+                        Text {
+                            width: Math.min(warBanner.width * 0.46, 220)
+                            text: qsTr("General of Carthage")
+                            color: Theme.textSubLite
+                            font.pixelSize: 13
+                            font.letterSpacing: 0.6
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+
+                    Rectangle {
+                        z: 1
+                        anchors.fill: parent
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+
+                            GradientStop {
+                                position: 0
+                                color: "#120D09EE"
+                            }
+
+                            GradientStop {
+                                position: 0.45
+                                color: "#120D0944"
+                            }
+
+                            GradientStop {
+                                position: 1
+                                color: "#120D0900"
+                            }
                         }
                     }
                 }
 
                 Rectangle {
+                    id: footerBanner
+
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom

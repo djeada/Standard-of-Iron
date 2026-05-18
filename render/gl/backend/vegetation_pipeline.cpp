@@ -50,6 +50,8 @@ auto VegetationPipeline::initialize() -> bool {
   m_ruins_shader = m_shader_cache->get(QStringLiteral("ruins_instanced"));
   m_dead_tree_shader = m_shader_cache->get(QStringLiteral("dead_tree_instanced"));
 
+  m_iron_ore_shader = m_shader_cache->get(QStringLiteral("iron_ore_instanced"));
+
   if (m_stone_shader == nullptr) {
     qWarning() << "VegetationPipeline: stone shader missing";
   }
@@ -80,6 +82,9 @@ auto VegetationPipeline::initialize() -> bool {
   if (m_dead_tree_shader == nullptr) {
     qWarning() << "VegetationPipeline: dead_tree_instanced shader missing";
   }
+  if (m_iron_ore_shader == nullptr) {
+    qWarning() << "VegetationPipeline: iron_ore_instanced shader missing";
+  }
 
   initialize_stone_pipeline();
   initialize_plant_pipeline();
@@ -91,6 +96,7 @@ auto VegetationPipeline::initialize() -> bool {
   initialize_weapon_rack_pipeline();
   initialize_ruins_pipeline();
   initialize_dead_tree_pipeline();
+  initialize_iron_ore_pipeline();
   cache_uniforms();
 
   m_initialized = true;
@@ -108,6 +114,7 @@ void VegetationPipeline::shutdown() {
   shutdown_weapon_rack_pipeline();
   shutdown_ruins_pipeline();
   shutdown_dead_tree_pipeline();
+  shutdown_iron_ore_pipeline();
   m_initialized = false;
 }
 
@@ -169,6 +176,9 @@ void VegetationPipeline::cache_uniforms() {
     }
     u.view_proj = shader->optional_uniform_handle("u_view_proj");
     u.light_direction = shader->uniform_handle("u_light_direction");
+    u.camera_pos = shader->optional_uniform_handle("u_camera_pos");
+    u.time = shader->optional_uniform_handle("u_time");
+    u.magic_strength = shader->optional_uniform_handle("u_magic_strength");
   };
 
   cache_prop_uniforms(m_tent_uniforms, m_tent_shader);
@@ -176,6 +186,7 @@ void VegetationPipeline::cache_uniforms() {
   cache_prop_uniforms(m_weapon_rack_uniforms, m_weapon_rack_shader);
   cache_prop_uniforms(m_ruins_uniforms, m_ruins_shader);
   cache_prop_uniforms(m_dead_tree_uniforms, m_dead_tree_shader);
+  cache_prop_uniforms(m_iron_ore_uniforms, m_iron_ore_shader);
 }
 
 void VegetationPipeline::initialize_stone_pipeline() {
@@ -1220,6 +1231,41 @@ static void append_quad(std::vector<std::pair<QVector3D, QVector3D>>& verts,
       {b, uint16_t(b + 1), uint16_t(b + 2), b, uint16_t(b + 2), uint16_t(b + 3)});
 }
 
+static auto quad_normal(const QVector3D& p0,
+                        const QVector3D& p1,
+                        const QVector3D& p2) -> QVector3D {
+  QVector3D n = QVector3D::crossProduct(p1 - p0, p2 - p0);
+  if (n.lengthSquared() < 1.0e-8F) {
+    return {0.0F, 1.0F, 0.0F};
+  }
+  n.normalize();
+  return n;
+}
+
+static void append_tapered_prism(std::vector<std::pair<QVector3D, QVector3D>>& verts,
+                                 std::vector<uint16_t>& idx,
+                                 const QVector3D& bottom_lo,
+                                 const QVector3D& bottom_hi,
+                                 const QVector3D& top_lo,
+                                 const QVector3D& top_hi) {
+  const QVector3D b0(bottom_lo.x(), bottom_lo.y(), bottom_lo.z());
+  const QVector3D b1(bottom_hi.x(), bottom_lo.y(), bottom_lo.z());
+  const QVector3D b2(bottom_hi.x(), bottom_lo.y(), bottom_hi.z());
+  const QVector3D b3(bottom_lo.x(), bottom_lo.y(), bottom_hi.z());
+
+  const QVector3D t0(top_lo.x(), top_hi.y(), top_lo.z());
+  const QVector3D t1(top_hi.x(), top_hi.y(), top_lo.z());
+  const QVector3D t2(top_hi.x(), top_hi.y(), top_hi.z());
+  const QVector3D t3(top_lo.x(), top_hi.y(), top_hi.z());
+
+  append_quad(verts, idx, t3, t2, t1, t0, quad_normal(t3, t2, t1));
+  append_quad(verts, idx, b0, b1, b2, b3, quad_normal(b0, b1, b2));
+  append_quad(verts, idx, b3, b2, t2, t3, quad_normal(b3, b2, t2));
+  append_quad(verts, idx, b1, b0, t0, t1, quad_normal(b1, b0, t0));
+  append_quad(verts, idx, b2, b1, t1, t2, quad_normal(b2, b1, t1));
+  append_quad(verts, idx, b0, b3, t3, t0, quad_normal(b0, b3, t3));
+}
+
 static void append_oriented_box(std::vector<std::pair<QVector3D, QVector3D>>& verts,
                                 std::vector<uint16_t>& idx,
                                 const QVector3D& a,
@@ -1910,6 +1956,86 @@ void VegetationPipeline::shutdown_dead_tree_pipeline() {
                             m_dead_tree_index_buffer,
                             m_dead_tree_vertex_count,
                             m_dead_tree_index_count);
+}
+
+void VegetationPipeline::initialize_iron_ore_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_iron_ore_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+
+  append_tapered_prism(verts,
+                       idx,
+                       {-0.88F, -0.06F, -0.70F},
+                       {0.86F, 0.08F, 0.70F},
+                       {-0.68F, 0.0F, -0.50F},
+                       {0.62F, 0.16F, 0.52F});
+  append_tapered_prism(verts,
+                       idx,
+                       {-0.62F, 0.04F, -0.48F},
+                       {0.56F, 0.42F, 0.46F},
+                       {-0.42F, 0.0F, -0.30F},
+                       {0.34F, 0.72F, 0.30F});
+
+  append_tapered_prism(verts,
+                       idx,
+                       {-0.32F, 0.34F, -0.30F},
+                       {0.08F, 0.82F, 0.18F},
+                       {-0.18F, 0.0F, -0.16F},
+                       {-0.02F, 1.18F, 0.06F});
+  append_tapered_prism(verts,
+                       idx,
+                       {0.02F, 0.30F, -0.24F},
+                       {0.42F, 0.78F, 0.22F},
+                       {0.14F, 0.0F, -0.10F},
+                       {0.30F, 1.04F, 0.08F});
+  append_tapered_prism(verts,
+                       idx,
+                       {-0.48F, 0.18F, 0.04F},
+                       {-0.10F, 0.60F, 0.46F},
+                       {-0.36F, 0.0F, 0.18F},
+                       {-0.18F, 0.86F, 0.34F});
+  append_tapered_prism(verts,
+                       idx,
+                       {0.16F, 0.12F, 0.20F},
+                       {0.54F, 0.54F, 0.58F},
+                       {0.28F, 0.0F, 0.32F},
+                       {0.42F, 0.72F, 0.46F});
+
+  append_box(verts, idx, {-0.98F, -0.035F, -0.08F}, {-0.40F, 0.035F, 0.08F});
+  append_box(verts, idx, {0.42F, -0.030F, -0.06F}, {0.94F, 0.035F, 0.06F});
+  append_box(verts, idx, {-0.08F, -0.030F, -0.92F}, {0.08F, 0.035F, -0.44F});
+  append_box(verts, idx, {-0.06F, -0.030F, 0.46F}, {0.08F, 0.035F, 0.98F});
+
+  append_tapered_prism(verts,
+                       idx,
+                       {-0.18F, 0.76F, -0.12F},
+                       {0.10F, 1.04F, 0.12F},
+                       {-0.08F, 0.0F, -0.04F},
+                       {0.02F, 1.42F, 0.04F});
+
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_iron_ore_vao,
+                        m_iron_ore_vertex_buffer,
+                        m_iron_ore_index_buffer,
+                        m_iron_ore_vertex_count,
+                        m_iron_ore_index_count);
+}
+
+void VegetationPipeline::shutdown_iron_ore_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_iron_ore_vao = m_iron_ore_vertex_buffer = m_iron_ore_index_buffer = 0;
+    m_iron_ore_vertex_count = m_iron_ore_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_iron_ore_vao,
+                            m_iron_ore_vertex_buffer,
+                            m_iron_ore_index_buffer,
+                            m_iron_ore_vertex_count,
+                            m_iron_ore_index_count);
 }
 
 } // namespace Render::GL::BackendPipelines

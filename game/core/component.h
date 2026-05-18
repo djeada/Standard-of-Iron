@@ -605,6 +605,11 @@ public:
   bool has_construction_site{false};
   float construction_site_x{0.0F};
   float construction_site_z{0.0F};
+  bool has_task_target{false};
+  std::uint64_t task_target_id{0};
+  float task_target_x{0.0F};
+  float task_target_z{0.0F};
+  bool task_target_reserved{false};
   bool at_construction_site{false};
   bool is_placement_preview{false};
 

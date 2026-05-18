@@ -78,9 +78,11 @@ struct WorldProp {
     Boulder,
     PineTree,
     OliveTree,
-    Plant
+    Plant,
+    IronOre
   };
 
+  std::uint64_t id = 0;
   Type type = Type::Tent;
   float x = 0.0F;
   float z = 0.0F;
@@ -90,6 +92,24 @@ struct WorldProp {
   float radius = 3.0F;
   bool persistent = true;
 };
+
+[[nodiscard]] constexpr auto is_tree_world_prop_type(WorldProp::Type type) -> bool {
+  return type == WorldProp::Type::PineTree || type == WorldProp::Type::OliveTree;
+}
+
+[[nodiscard]] constexpr auto is_boulder_world_prop_type(WorldProp::Type type) -> bool {
+  return type == WorldProp::Type::Boulder;
+}
+
+[[nodiscard]] constexpr auto is_iron_ore_world_prop_type(WorldProp::Type type) -> bool {
+  return type == WorldProp::Type::IronOre;
+}
+
+[[nodiscard]] constexpr auto
+is_harvestable_world_prop_type(WorldProp::Type type) -> bool {
+  return is_tree_world_prop_type(type) || is_boulder_world_prop_type(type) ||
+         is_iron_ore_world_prop_type(type);
+}
 
 [[nodiscard]] inline auto
 world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
@@ -114,6 +134,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return QLatin1String("olive_tree");
   case WorldProp::Type::Plant:
     return QLatin1String("plant");
+  case WorldProp::Type::IronOre:
+    return QLatin1String("iron_ore");
   }
   Q_UNREACHABLE();
 }
@@ -160,6 +182,10 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     out = WorldProp::Type::Plant;
     return true;
   }
+  if (value == QLatin1String("iron_ore")) {
+    out = WorldProp::Type::IronOre;
+    return true;
+  }
   return false;
 }
 
@@ -185,6 +211,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return 4.00F;
   case WorldProp::Type::Plant:
     return 0.55F;
+  case WorldProp::Type::IronOre:
+    return 1.10F;
   }
   return 1.0F;
 }
@@ -198,7 +226,7 @@ struct VictoryConfig {
   QString victory_type = "elimination";
   std::vector<QString> key_structures = {"barracks"};
   float survive_time_duration = 0.0F;
-  std::vector<QString> defeat_conditions = {"no_key_structures"};
+  std::vector<QString> defeat_conditions = {"no_commander", "only_commander_remaining"};
   int required_key_structures = 0;
 };
 
