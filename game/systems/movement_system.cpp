@@ -14,10 +14,10 @@
 #include "../units/troop_config.h"
 #include "combat_rules.h"
 #include "command_service.h"
-#include "order_service.h"
 #include "core/component.h"
 #include "core/event_manager.h"
 #include "map/terrain.h"
+#include "order_service.h"
 #include "pathfinding.h"
 
 namespace Game::Systems {
@@ -460,8 +460,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (!movement->path_pending && movement->repath_cooldown <= 0.0F &&
         goal_dist_sq > k_stuck_distance_sq && std::isfinite(goal_dist_sq) &&
         destination_allowed) {
-      CommandService::queue_repath_request(
-          *world, entity->get_id(), final_goal, true);
+      CommandService::queue_repath_request(*world, entity->get_id(), final_goal, true);
       movement->repath_cooldown = repath_cooldown_seconds;
       requested_recovery_move = true;
     }

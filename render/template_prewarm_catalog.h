@@ -45,14 +45,13 @@ struct TemplatePrewarmAnimSelection {
   std::size_t expected_template_count{0};
 };
 
-auto build_template_prewarm_anim_catalog(
-    const Render::Creature::ArchetypeRegistry& archetypes)
-    -> TemplatePrewarmAnimCatalog;
+auto build_template_prewarm_anim_catalog(const Render::Creature::ArchetypeRegistry&
+                                             archetypes) -> TemplatePrewarmAnimCatalog;
 
-auto select_template_prewarm_anim_budget(
-    std::size_t domain_count,
-    std::size_t target_template_count,
-    const TemplatePrewarmAnimCatalog& catalog) -> TemplatePrewarmAnimSelection;
+auto select_template_prewarm_anim_budget(std::size_t domain_count,
+                                         std::size_t target_template_count,
+                                         const TemplatePrewarmAnimCatalog& catalog)
+    -> TemplatePrewarmAnimSelection;
 
 auto build_template_prewarm_work_items(const std::vector<PrewarmProfile>& profiles,
                                        const std::vector<int>& owner_ids,

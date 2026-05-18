@@ -14,8 +14,8 @@
 #include "game/map/minimap/camera_viewport_layer.h"
 #include "game/map/minimap/minimap_generator.h"
 #include "game/map/minimap/minimap_utils.h"
-#include "game/map/render_visibility_rules.h"
 #include "game/map/minimap/unit_layer.h"
+#include "game/map/render_visibility_rules.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/selection_system.h"
 #include "game/units/troop_type.h"
@@ -89,7 +89,8 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
   }
 }
 
-void MinimapManager::update_fog(const Game::Map::VisibilityService::Snapshot& snapshot) {
+void MinimapManager::update_fog(
+    const Game::Map::VisibilityService::Snapshot& snapshot) {
   if (m_minimap_base_image.isNull()) {
     return;
   }

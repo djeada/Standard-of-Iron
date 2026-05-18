@@ -21,30 +21,24 @@ struct ProportionProfile {
 
   [[nodiscard]] constexpr auto as_vector() const -> QVector3D { return {x, y, z}; }
 
-  [[nodiscard]] constexpr auto as_pipeline_scaling() const
-      -> Render::Creature::Pipeline::ProportionScaling {
+  [[nodiscard]] constexpr auto
+  as_pipeline_scaling() const -> Render::Creature::Pipeline::ProportionScaling {
     return {x, y, z};
   }
 
-  [[nodiscard]] constexpr auto with_offset(ProportionOffset offset) const
-      -> ProportionProfile {
-    return {x + offset.x,
-            y + offset.y,
-            z + offset.z,
-            torso_scale + offset.torso_scale};
+  [[nodiscard]] constexpr auto
+  with_offset(ProportionOffset offset) const -> ProportionProfile {
+    return {x + offset.x, y + offset.y, z + offset.z, torso_scale + offset.torso_scale};
   }
 };
 
-[[nodiscard]] constexpr auto make_proportion_profile(float x, float y, float z)
-    -> ProportionProfile {
+[[nodiscard]] constexpr auto
+make_proportion_profile(float x, float y, float z) -> ProportionProfile {
   return {x, y, z, x};
 }
 
-[[nodiscard]] constexpr auto make_proportion_profile(float x,
-                                                     float y,
-                                                     float z,
-                                                     float torso_scale)
-    -> ProportionProfile {
+[[nodiscard]] constexpr auto make_proportion_profile(
+    float x, float y, float z, float torso_scale) -> ProportionProfile {
   return {x, y, z, torso_scale};
 }
 

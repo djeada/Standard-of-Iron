@@ -96,8 +96,8 @@ auto MinimapFogCompositor::apply(const QImage& base_image,
 
       const float alpha_top = a00 + (a10 - a00) * sample.fx;
       const float alpha_bottom = a01 + (a11 - a01) * sample.fx;
-      const float fog_alpha = std::clamp(
-          alpha_top + (alpha_bottom - alpha_top) * sample.fy, 0.0F, 255.0F);
+      const float fog_alpha =
+          std::clamp(alpha_top + (alpha_bottom - alpha_top) * sample.fy, 0.0F, 255.0F);
 
       if (fog_alpha > k_alpha_threshold) {
         const QRgb original = base_scanline[x];
@@ -120,7 +120,8 @@ auto MinimapFogCompositor::apply(const QImage& base_image,
   return true;
 }
 
-auto MinimapFogCompositor::clear(const QImage& base_image, QImage& fogged_image) -> bool {
+auto MinimapFogCompositor::clear(const QImage& base_image,
+                                 QImage& fogged_image) -> bool {
   if (base_image.isNull()) {
     return false;
   }

@@ -109,8 +109,8 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
     }
 
     const bool threat_drains_support =
-        context.barracks_under_threat || (context.nearby_threat_count >
-                                          static_cast<int>(selected.size()));
+        context.barracks_under_threat ||
+        (context.nearby_threat_count > static_cast<int>(selected.size()));
     if (threat_drains_support) {
       for (const auto* unit : ready_defenders) {
         if (!is_reserved_unit(unit->id, context)) {
@@ -158,22 +158,25 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
 
     if (!nearby_threats.empty()) {
 
-      const std::size_t reserve_ready_count = static_cast<std::size_t>(std::count_if(
-          selected_ready_defenders.begin(),
-          selected_ready_defenders.end(),
-          [&](const EntitySnapshot* unit) { return is_reserved_unit(unit->id, context); }));
-      if ((nearby_threats.size() > reserve_ready_count) && (selected_ready_defenders.size() <
-                                                            ready_defenders.size())) {
+      const std::size_t reserve_ready_count = static_cast<std::size_t>(
+          std::count_if(selected_ready_defenders.begin(),
+                        selected_ready_defenders.end(),
+                        [&](const EntitySnapshot* unit) {
+                          return is_reserved_unit(unit->id, context);
+                        }));
+      if ((nearby_threats.size() > reserve_ready_count) &&
+          (selected_ready_defenders.size() < ready_defenders.size())) {
         selected_ready_defenders = ready_defenders;
       }
 
-      auto target_info = TacticalUtils::select_focus_fire_target(selected_ready_defenders,
-                                                                 nearby_threats,
-                                                                 defend_pos_x,
-                                                                 defend_pos_y,
-                                                                 defend_pos_z,
-                                                                 context,
-                                                                 0);
+      auto target_info =
+          TacticalUtils::select_focus_fire_target(selected_ready_defenders,
+                                                  nearby_threats,
+                                                  defend_pos_x,
+                                                  defend_pos_y,
+                                                  defend_pos_z,
+                                                  context,
+                                                  0);
       if (target_info.target_id != 0) {
 
         std::vector<Engine::Core::EntityID> defender_ids;

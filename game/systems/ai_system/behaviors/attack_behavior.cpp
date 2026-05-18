@@ -28,10 +28,10 @@ constexpr float k_gathering_advance_aggression_threshold = 0.70F;
 
 auto can_advance_from_gathering(const AIContext& context, int ready_units) -> bool {
   return context.state == AIState::Attacking ||
-          (context.state == AIState::Gathering &&
-           ready_units >= context.strategy_config.reactive_attack_size &&
-           context.strategy_config.aggression_modifier >=
-               k_gathering_advance_aggression_threshold);
+         (context.state == AIState::Gathering &&
+          ready_units >= context.strategy_config.reactive_attack_size &&
+          context.strategy_config.aggression_modifier >=
+              k_gathering_advance_aggression_threshold);
 }
 
 auto select_strategic_objective(const AISnapshot& snapshot,
@@ -96,7 +96,8 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
     constexpr int MIN_UNITS_FOR_SCOUTING = 3;
     if (context.state == AIState::Attacking &&
         static_cast<int>(ready_units.size()) >=
-            std::max(MIN_UNITS_FOR_SCOUTING, context.strategy_config.reactive_attack_size)) {
+            std::max(MIN_UNITS_FOR_SCOUTING,
+                     context.strategy_config.reactive_attack_size)) {
 
       constexpr float SCOUT_ROTATION_INTERVAL = 10.0F;
       const float scout_advance_distance =
@@ -359,12 +360,8 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
     unit_ids.push_back(unit->id);
   }
 
-  auto claimed_units = claim_units(unit_ids,
-                                   get_priority(),
-                                   "attacking",
-                                   context,
-                                   snapshot.game_time,
-                                   2.5F);
+  auto claimed_units = claim_units(
+      unit_ids, get_priority(), "attacking", context, snapshot.game_time, 2.5F);
 
   if (claimed_units.empty()) {
     return;

@@ -101,11 +101,11 @@ TEST_F(CommandServiceTest, UnitRadiusUsesSelectionRingFootprint) {
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
 
-  float const expected_radius = std::max(
-      Game::Units::TroopConfig::instance().get_selection_ring_size(
-          Game::Units::SpawnType::Archer) *
-          0.5F,
-      0.5F);
+  float const expected_radius =
+      std::max(Game::Units::TroopConfig::instance().get_selection_ring_size(
+                   Game::Units::SpawnType::Archer) *
+                   0.5F,
+               0.5F);
 
   EXPECT_FLOAT_EQ(Game::Systems::CommandService::get_unit_radius(world, unit->get_id()),
                   expected_radius);

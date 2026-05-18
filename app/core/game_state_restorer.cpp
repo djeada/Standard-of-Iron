@@ -18,7 +18,6 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "minimap_manager.h"
-#include "visibility_coordinator.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
@@ -33,6 +32,7 @@
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/scene_renderer.h"
+#include "visibility_coordinator.h"
 
 void GameStateRestorer::rebuild_entity_cache(Engine::Core::World* world,
                                              EntityCache& entity_cache,
@@ -205,34 +205,38 @@ void GameStateRestorer::restore_environment_from_metadata(
     const float tile_size =
         (height_map != nullptr) ? height_map->get_tile_size() : fallback_tile_size;
 
-      if (scene.ground) {
-        scene.ground->configure(tile_size, grid_width, grid_height);
-        scene.ground->set_biome(terrain_service.biome_settings());
-      }
+    if (scene.ground) {
+      scene.ground->configure(tile_size, grid_width, grid_height);
+      scene.ground->set_biome(terrain_service.biome_settings());
+    }
 
-      if (scene.boundary_fog) {
-        scene.boundary_fog->configure(grid_width, grid_height, tile_size);
-      }
+    if (scene.boundary_fog) {
+      scene.boundary_fog->configure(grid_width, grid_height, tile_size);
+    }
 
-      if (height_map != nullptr) {
-        if (scene.terrain) {
-          scene.terrain->configure(*height_map, terrain_service.biome_settings());
-        }
-        if (scene.features) {
-          scene.features->configure(*height_map, terrain_service.road_segments());
-        }
-        if (scene.scatter) {
-          scene.scatter->configure(*height_map,
-                                   terrain_service.biome_settings(),
-                                   terrain_service.world_props());
-        }
+    if (height_map != nullptr) {
+      if (scene.terrain) {
+        scene.terrain->configure(*height_map, terrain_service.biome_settings());
       }
+      if (scene.features) {
+        scene.features->configure(*height_map, terrain_service.road_segments());
+      }
+      if (scene.scatter) {
+        scene.scatter->configure(*height_map,
+                                 terrain_service.biome_settings(),
+                                 terrain_service.world_props());
+      }
+    }
 
     Game::Systems::CommandService::initialize(grid_width, grid_height);
 
     if (visibility_coordinator != nullptr) {
-      visibility_coordinator->initialize_for_world(
-          *world, local_owner_id, grid_width, grid_height, tile_size, level.is_spectator_mode);
+      visibility_coordinator->initialize_for_world(*world,
+                                                   local_owner_id,
+                                                   grid_width,
+                                                   grid_height,
+                                                   tile_size,
+                                                   level.is_spectator_mode);
     }
   } else {
     Game::Map::MapDefinition fallback_def;

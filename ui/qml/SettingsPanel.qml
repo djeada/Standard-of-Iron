@@ -21,7 +21,6 @@ Item {
     function set_audio_volume(volume_name, value) {
         if (syncing_audio_sliders || typeof game === 'undefined' || !game.audio_system)
             return;
-
         var normalized = Math.max(0, Math.min(1, value / 100));
         if (volume_name === "master")
             game.audio_system.set_master_volume(normalized);
@@ -38,7 +37,6 @@ Item {
     function sync_audio_sliders() {
         if (typeof game === 'undefined' || !game.audio_system)
             return;
-
         syncing_audio_sliders = true;
         set_audio_slider_values();
         syncing_audio_sliders = false;

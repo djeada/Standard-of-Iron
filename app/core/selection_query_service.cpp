@@ -197,8 +197,8 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
 
   for (auto id : sel) {
 
-    if (can_attack && can_guard && can_hold && can_patrol && can_heal &&
-        can_build && can_deliver) {
+    if (can_attack && can_guard && can_hold && can_patrol && can_heal && can_build &&
+        can_deliver) {
       break;
     }
 

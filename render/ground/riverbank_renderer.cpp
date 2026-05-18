@@ -162,10 +162,8 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       } else {
         auto state = Game::Map::RenderVisibilityState::Hidden;
         for (const auto& sample : samples) {
-          const auto sample_state =
-              Game::Map::classify_world_visibility(*visibility_snapshot,
-                                                   sample.x(),
-                                                   sample.z());
+          const auto sample_state = Game::Map::classify_world_visibility(
+              *visibility_snapshot, sample.x(), sample.z());
           if (sample_state == Game::Map::RenderVisibilityState::Visible) {
             state = Game::Map::RenderVisibilityState::Visible;
             break;

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <functional>
+
 #include "app_scene_context.h"
 #include "entity_cache.h"
-
-#include <functional>
 
 class AmbientStateManager;
 class QString;

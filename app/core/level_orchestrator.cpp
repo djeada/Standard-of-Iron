@@ -15,10 +15,10 @@
 #include "game/systems/victory_service.h"
 #include "loading_progress_tracker.h"
 #include "minimap_manager.h"
-#include "visibility_coordinator.h"
 #include "render/gl/camera.h"
 #include "render/scene_renderer.h"
 #include "utils/resource_utils.h"
+#include "visibility_coordinator.h"
 
 auto LevelOrchestrator::load_skirmish(const QString& map_path,
                                       const QVariantList& player_configs,
@@ -92,19 +92,19 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
   loader.set_boundary_fog_renderer(scene.boundary_fog);
 
   loader.set_on_owners_updated(owner_update);
-  loader.set_on_visibility_initialized(
-      [visibility_coordinator](Engine::Core::World& loaded_world,
-                               int local_owner_id,
-                               int map_width,
-                               int map_height,
-                               float tile_size,
-                               bool spectator_mode) {
-        if (visibility_coordinator == nullptr) {
-          return;
-        }
-        visibility_coordinator->initialize_for_world(
-            loaded_world, local_owner_id, map_width, map_height, tile_size, spectator_mode);
-      });
+  loader.set_on_visibility_initialized([visibility_coordinator](
+                                           Engine::Core::World& loaded_world,
+                                           int local_owner_id,
+                                           int map_width,
+                                           int map_height,
+                                           float tile_size,
+                                           bool spectator_mode) {
+    if (visibility_coordinator == nullptr) {
+      return;
+    }
+    visibility_coordinator->initialize_for_world(
+        loaded_world, local_owner_id, map_width, map_height, tile_size, spectator_mode);
+  });
 
   if (progress_tracker) {
     progress_tracker->set_stage(LoadingProgressTracker::LoadingStage::LOADING_ENTITIES);

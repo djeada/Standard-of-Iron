@@ -143,7 +143,7 @@ Item {
 
     objectName: "GameView"
     focus: true
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (typeof game === 'undefined')
             return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
@@ -258,7 +258,7 @@ Item {
             break;
         }
     }
-    Keys.onReleased: function(event) {
+    Keys.onReleased: function (event) {
         if (typeof game === 'undefined')
             return;
         if (is_commander_mode()) {
@@ -377,8 +377,7 @@ Item {
                 } else {
                     if (typeof game !== 'undefined' && game.set_hover_at_screen)
                         game.set_hover_at_screen(mouse.x, mouse.y);
-                    if ((mouse.buttons & Qt.RightButton) &&
-                            typeof game !== 'undefined' && game.on_right_move) {
+                    if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.on_right_move) {
                         game.on_right_move(mouse.x, mouse.y);
                     } else if (game_view.is_placing_formation) {
                         if (typeof game !== 'undefined' && game.on_formation_mouse_move)

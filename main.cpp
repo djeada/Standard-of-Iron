@@ -413,7 +413,8 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Adding context properties...";
   engine->rootContext()->setContextProperty("language_manager", language_manager.get());
   engine->rootContext()->setContextProperty("game", game_engine.get());
-  engine->rootContext()->setContextProperty("map_preview_provider", map_preview_provider);
+  engine->rootContext()->setContextProperty("map_preview_provider",
+                                            map_preview_provider);
   engine->rootContext()->setContextProperty("graphics_settings",
                                             graphics_settings.get());
 

@@ -1,8 +1,8 @@
 #include "ai_system.h"
 
-#include <algorithm>
 #include <queue>
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -132,7 +132,8 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
     ai.update_timer += delta_time;
     const float effective_update_interval =
         m_update_interval *
-        std::max(0.25F, ai.context.strategy_config.difficulty.update_interval_multiplier);
+        std::max(0.25F,
+                 ai.context.strategy_config.difficulty.update_interval_multiplier);
 
     if (ai.update_timer < effective_update_interval) {
       continue;
@@ -147,9 +148,9 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
     snapshot.game_time = m_total_game_time;
 
     AI::AIJob job;
-     job.snapshot = std::move(snapshot);
-     job.context = ai.context;
-     job.delta_time = ai.update_timer;
+    job.snapshot = std::move(snapshot);
+    job.context = ai.context;
+    job.delta_time = ai.update_timer;
 
     if (ai.worker->try_submit(std::move(job))) {
       ai.update_timer = 0.0F;

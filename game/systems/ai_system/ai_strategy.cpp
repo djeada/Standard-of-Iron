@@ -362,7 +362,8 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
 void AIStrategyFactory::apply_difficulty(AIStrategyConfig& config,
                                          const QString& difficulty) {
   const QString normalized = difficulty.trimmed().toLower();
-  config.difficulty.level = normalized.isEmpty() ? QStringLiteral("normal") : normalized;
+  config.difficulty.level =
+      normalized.isEmpty() ? QStringLiteral("normal") : normalized;
 
   config.difficulty.update_interval_multiplier = 1.0F;
   config.difficulty.production_rate_multiplier = 1.0F;

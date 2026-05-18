@@ -89,12 +89,8 @@ void RetreatBehavior::execute(const AISnapshot& snapshot,
     target_z.push_back(retreat_targets[i].z());
   }
 
-  auto claimed_units = claim_units(unit_ids,
-                                   get_priority(),
-                                   "retreating",
-                                   context,
-                                   snapshot.game_time,
-                                   1.0F);
+  auto claimed_units = claim_units(
+      unit_ids, get_priority(), "retreating", context, snapshot.game_time, 1.0F);
 
   if (claimed_units.empty()) {
     return;

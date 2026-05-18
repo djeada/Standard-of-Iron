@@ -105,12 +105,12 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
       offset_z = std::sin(angle) * radius;
     }
 
-    const float target_center_x =
-        (closest_neutral_barracks != nullptr) ? closest_neutral_barracks->pos_x
-                                              : context.expansion_site_x;
-    const float target_center_z =
-        (closest_neutral_barracks != nullptr) ? closest_neutral_barracks->pos_z
-                                              : context.expansion_site_z;
+    const float target_center_x = (closest_neutral_barracks != nullptr)
+                                      ? closest_neutral_barracks->pos_x
+                                      : context.expansion_site_x;
+    const float target_center_z = (closest_neutral_barracks != nullptr)
+                                      ? closest_neutral_barracks->pos_z
+                                      : context.expansion_site_z;
     target_x.push_back(target_center_x + offset_x);
     target_y.push_back(0.0F);
     target_z.push_back(target_center_z + offset_z);
