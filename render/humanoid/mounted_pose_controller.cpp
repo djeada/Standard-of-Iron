@@ -27,10 +27,10 @@ auto seat_relative(const MountedAttachmentFrame& mount,
 }
 
 auto rein_anchor(const MountedAttachmentFrame& mount,
-                 bool is_left,
+                 Side side,
                  float slack,
                  float tension) -> QVector3D {
-  return compute_rein_handle(mount, is_left, slack, tension);
+  return compute_rein_handle(mount, side, slack, tension);
 }
 
 } // namespace
@@ -61,21 +61,21 @@ void MountedPoseController::riding_idle(const MountedAttachmentFrame& mount) {
   QVector3D const left_hand_rest = seat_relative(mount, 0.12F, -0.14F, -0.05F);
   QVector3D const right_hand_rest = seat_relative(mount, 0.12F, 0.14F, -0.05F);
 
-  get_hand(true) = left_hand_rest;
-  get_hand(false) = right_hand_rest;
+  get_hand(Side::Left) = left_hand_rest;
+  get_hand(Side::Right) = right_hand_rest;
 
-  const QVector3D left_outward = compute_outward_dir(true);
-  const QVector3D right_outward = compute_outward_dir(false);
-  get_elbow(true) = solve_elbow_ik(true,
-                                   get_shoulder(true),
+  const QVector3D left_outward = compute_outward_dir(Side::Left);
+  const QVector3D right_outward = compute_outward_dir(Side::Right);
+  get_elbow(Side::Left) = solve_elbow_ik(Side::Left,
+                                   get_shoulder(Side::Left),
                                    left_hand_rest,
                                    left_outward,
                                    0.45F,
                                    0.12F,
                                    -0.05F,
                                    1.0F);
-  get_elbow(false) = solve_elbow_ik(false,
-                                    get_shoulder(false),
+  get_elbow(Side::Right) = solve_elbow_ik(Side::Right,
+                                    get_shoulder(Side::Right),
                                     right_hand_rest,
                                     right_outward,
                                     0.45F,
@@ -122,24 +122,24 @@ void MountedPoseController::riding_reining(const MountedAttachmentFrame& mount,
 
   mount_on_horse(mount);
 
-  QVector3D left_rein_pos = rein_anchor(mount, true, 0.15F, left_tension);
-  QVector3D right_rein_pos = rein_anchor(mount, false, 0.15F, right_tension);
+  QVector3D left_rein_pos = rein_anchor(mount, Side::Left, 0.15F, left_tension);
+  QVector3D right_rein_pos = rein_anchor(mount, Side::Right, 0.15F, right_tension);
 
-  get_hand(true) = left_rein_pos;
-  get_hand(false) = right_rein_pos;
+  get_hand(Side::Left) = left_rein_pos;
+  get_hand(Side::Right) = right_rein_pos;
 
-  const QVector3D left_outward = compute_outward_dir(true);
-  const QVector3D right_outward = compute_outward_dir(false);
-  get_elbow(true) = solve_elbow_ik(true,
-                                   get_shoulder(true),
+  const QVector3D left_outward = compute_outward_dir(Side::Left);
+  const QVector3D right_outward = compute_outward_dir(Side::Right);
+  get_elbow(Side::Left) = solve_elbow_ik(Side::Left,
+                                   get_shoulder(Side::Left),
                                    left_rein_pos,
                                    left_outward,
                                    0.52F,
                                    0.08F,
                                    -0.12F,
                                    1.0F);
-  get_elbow(false) = solve_elbow_ik(false,
-                                    get_shoulder(false),
+  get_elbow(Side::Right) = solve_elbow_ik(Side::Right,
+                                    get_shoulder(Side::Right),
                                     right_rein_pos,
                                     right_outward,
                                     0.52F,
@@ -367,17 +367,17 @@ void MountedPoseController::apply_shield_defense(const MountedAttachmentFrame& m
                                 : seat_relative(mount, 0.05F, -0.16F, 0.22F);
   float const rein_slack = raised ? 0.15F : 0.30F;
   float const rein_tension = raised ? 0.45F : 0.25F;
-  QVector3D const rein_pos = rein_anchor(mount, false, rein_slack, rein_tension);
+  QVector3D const rein_pos = rein_anchor(mount, Side::Right, rein_slack, rein_tension);
 
-  get_hand(true) = shield_pos;
-  get_hand(false) = rein_pos;
+  get_hand(Side::Left) = shield_pos;
+  get_hand(Side::Right) = rein_pos;
 
-  const QVector3D left_outward = compute_outward_dir(true);
-  const QVector3D right_outward = compute_outward_dir(false);
-  get_elbow(true) = solve_elbow_ik(
-      true, get_shoulder(true), shield_pos, left_outward, 0.45F, 0.15F, -0.10F, 1.0F);
-  get_elbow(false) = solve_elbow_ik(
-      false, get_shoulder(false), rein_pos, right_outward, 0.45F, 0.12F, -0.08F, 1.0F);
+  const QVector3D left_outward = compute_outward_dir(Side::Left);
+  const QVector3D right_outward = compute_outward_dir(Side::Right);
+  get_elbow(Side::Left) = solve_elbow_ik(
+      Side::Left, get_shoulder(Side::Left), shield_pos, left_outward, 0.45F, 0.15F, -0.10F, 1.0F);
+  get_elbow(Side::Right) = solve_elbow_ik(
+      Side::Right, get_shoulder(Side::Right), rein_pos, right_outward, 0.45F, 0.12F, -0.08F, 1.0F);
 
   update_head_hierarchy(mount, 0.0F, 0.0F, "shield_defense");
 }
@@ -388,26 +388,26 @@ void MountedPoseController::apply_shield_stowed(const MountedAttachmentFrame& mo
                                        dims.body_length * -0.05F,
                                        -dims.body_width * 0.55F,
                                        dims.saddle_thickness * 0.5F);
-  get_hand(true) = rest;
-  const QVector3D left_outward = compute_outward_dir(true);
-  get_elbow(true) = solve_elbow_ik(
-      true, get_shoulder(true), rest, left_outward, 0.42F, 0.12F, -0.05F, 1.0F);
+  get_hand(Side::Left) = rest;
+  const QVector3D left_outward = compute_outward_dir(Side::Left);
+  get_elbow(Side::Left) = solve_elbow_ik(
+      Side::Left, get_shoulder(Side::Left), rest, left_outward, 0.42F, 0.12F, -0.05F, 1.0F);
 
   update_head_hierarchy(mount, 0.0F, 0.0F, "shield_stowed");
 }
 
 void MountedPoseController::apply_sword_idle_pose(const MountedAttachmentFrame& mount,
                                                   const HorseDimensions& dims) {
-  QVector3D const shoulder_r = get_shoulder(false);
+  QVector3D const shoulder_r = get_shoulder(Side::Right);
   QVector3D const sword_anchor =
       shoulder_r + mount.seat_right * (dims.body_width * 0.90F) +
       mount.seat_forward * (dims.body_length * 0.22F) +
       mount.seat_up * (dims.body_height * 0.06F + dims.saddle_thickness * 0.10F);
 
-  get_hand(false) = sword_anchor;
-  const QVector3D right_outward = compute_outward_dir(false);
-  get_elbow(false) = solve_elbow_ik(
-      false, shoulder_r, sword_anchor, right_outward, 0.46F, 0.24F, -0.05F, 1.0F);
+  get_hand(Side::Right) = sword_anchor;
+  const QVector3D right_outward = compute_outward_dir(Side::Right);
+  get_elbow(Side::Right) = solve_elbow_ik(
+      Side::Right, shoulder_r, sword_anchor, right_outward, 0.46F, 0.24F, -0.05F, 1.0F);
 
   update_head_hierarchy(mount, 0.0F, 0.0F, "sword_idle");
 }
@@ -425,7 +425,7 @@ void MountedPoseController::apply_sword_strike(const MountedAttachmentFrame& mou
 
   QVector3D hand_r_target;
   QVector3D hand_l_target =
-      rein_anchor(mount, true, 0.20F, 0.25F) + mount.seat_up * -0.02F;
+      rein_anchor(mount, Side::Left, 0.20F, 0.25F) + mount.seat_up * -0.02F;
 
   float torso_twist = 0.0F;
   float side_lean = 0.0F;
@@ -516,14 +516,14 @@ void MountedPoseController::apply_sword_strike(const MountedAttachmentFrame& mou
     m_pose.shoulder_r += mount.seat_up * shoulder_dip;
   }
 
-  get_hand(false) = hand_r_target;
+  get_hand(Side::Right) = hand_r_target;
   if (!keep_left_hand) {
-    get_hand(true) = hand_l_target;
+    get_hand(Side::Left) = hand_l_target;
   }
 
-  const QVector3D right_outward = compute_outward_dir(false);
-  get_elbow(false) = solve_elbow_ik(false,
-                                    get_shoulder(false),
+  const QVector3D right_outward = compute_outward_dir(Side::Right);
+  get_elbow(Side::Right) = solve_elbow_ik(Side::Right,
+                                    get_shoulder(Side::Right),
                                     hand_r_target,
                                     right_outward,
                                     0.42F,
@@ -532,9 +532,9 @@ void MountedPoseController::apply_sword_strike(const MountedAttachmentFrame& mou
                                     1.0F);
 
   if (!keep_left_hand) {
-    const QVector3D left_outward = compute_outward_dir(true);
-    get_elbow(true) = solve_elbow_ik(true,
-                                     get_shoulder(true),
+    const QVector3D left_outward = compute_outward_dir(Side::Left);
+    get_elbow(Side::Left) = solve_elbow_ik(Side::Left,
+                                     get_shoulder(Side::Left),
                                      hand_l_target,
                                      left_outward,
                                      0.45F,
@@ -648,21 +648,21 @@ void MountedPoseController::apply_spear_thrust(const MountedAttachmentFrame& mou
     m_pose.neck_base -= mount.seat_up * (torso_compression * 0.6F);
   }
 
-  get_hand(false) = hand_r_target;
-  get_hand(true) = hand_l_target;
+  get_hand(Side::Right) = hand_r_target;
+  get_hand(Side::Left) = hand_l_target;
 
-  const QVector3D left_outward = compute_outward_dir(true);
-  const QVector3D right_outward = compute_outward_dir(false);
-  get_elbow(true) = solve_elbow_ik(true,
-                                   get_shoulder(true),
+  const QVector3D left_outward = compute_outward_dir(Side::Left);
+  const QVector3D right_outward = compute_outward_dir(Side::Right);
+  get_elbow(Side::Left) = solve_elbow_ik(Side::Left,
+                                   get_shoulder(Side::Left),
                                    hand_l_target,
                                    left_outward,
                                    0.48F,
                                    0.10F,
                                    -0.06F,
                                    1.0F);
-  get_elbow(false) = solve_elbow_ik(false,
-                                    get_shoulder(false),
+  get_elbow(Side::Right) = solve_elbow_ik(Side::Right,
+                                    get_shoulder(Side::Right),
                                     hand_r_target,
                                     right_outward,
                                     0.48F,
@@ -679,11 +679,11 @@ void MountedPoseController::apply_spear_guard(const MountedAttachmentFrame& moun
   switch (grip_style) {
   case SpearGrip::OVERHAND:
     hand_r_target = seat_relative(mount, 0.0F, 0.12F, 0.55F);
-    hand_l_target = rein_anchor(mount, true, 0.30F, 0.30F);
+    hand_l_target = rein_anchor(mount, Side::Left, 0.30F, 0.30F);
     break;
   case SpearGrip::COUCHED:
     hand_r_target = seat_relative(mount, -0.15F, 0.08F, 0.08F);
-    hand_l_target = rein_anchor(mount, true, 0.35F, 0.20F);
+    hand_l_target = rein_anchor(mount, Side::Left, 0.35F, 0.20F);
     break;
   case SpearGrip::TWO_HANDED:
     hand_r_target = seat_relative(mount, 0.15F, 0.15F, 0.12F);
@@ -691,21 +691,21 @@ void MountedPoseController::apply_spear_guard(const MountedAttachmentFrame& moun
     break;
   }
 
-  get_hand(false) = hand_r_target;
-  get_hand(true) = hand_l_target;
+  get_hand(Side::Right) = hand_r_target;
+  get_hand(Side::Left) = hand_l_target;
 
-  const QVector3D left_outward = compute_outward_dir(true);
-  const QVector3D right_outward = compute_outward_dir(false);
-  get_elbow(true) = solve_elbow_ik(true,
-                                   get_shoulder(true),
+  const QVector3D left_outward = compute_outward_dir(Side::Left);
+  const QVector3D right_outward = compute_outward_dir(Side::Right);
+  get_elbow(Side::Left) = solve_elbow_ik(Side::Left,
+                                   get_shoulder(Side::Left),
                                    hand_l_target,
                                    left_outward,
                                    0.45F,
                                    0.12F,
                                    -0.08F,
                                    1.0F);
-  get_elbow(false) = solve_elbow_ik(false,
-                                    get_shoulder(false),
+  get_elbow(Side::Right) = solve_elbow_ik(Side::Right,
+                                    get_shoulder(Side::Right),
                                     hand_r_target,
                                     right_outward,
                                     0.45F,
@@ -740,21 +740,21 @@ void MountedPoseController::apply_bow_draw(const MountedAttachmentFrame& mount,
     hand_r_target = draw_end_pos * (1.0F - t) + draw_start_pos * t;
   }
 
-  get_hand(true) = hand_l_target;
-  get_hand(false) = hand_r_target;
+  get_hand(Side::Left) = hand_l_target;
+  get_hand(Side::Right) = hand_r_target;
 
-  const QVector3D left_outward = compute_outward_dir(true);
-  const QVector3D right_outward = compute_outward_dir(false);
-  get_elbow(true) = solve_elbow_ik(true,
-                                   get_shoulder(true),
+  const QVector3D left_outward = compute_outward_dir(Side::Left);
+  const QVector3D right_outward = compute_outward_dir(Side::Right);
+  get_elbow(Side::Left) = solve_elbow_ik(Side::Left,
+                                   get_shoulder(Side::Left),
                                    hand_l_target,
                                    left_outward,
                                    0.50F,
                                    0.08F,
                                    -0.05F,
                                    1.0F);
-  get_elbow(false) = solve_elbow_ik(false,
-                                    get_shoulder(false),
+  get_elbow(Side::Right) = solve_elbow_ik(Side::Right,
+                                    get_shoulder(Side::Right),
                                     hand_r_target,
                                     right_outward,
                                     0.48F,
@@ -819,11 +819,11 @@ void MountedPoseController::hold_reins_impl(const MountedAttachmentFrame& mount,
   right_tension = std::clamp(right_tension, 0.0F, 1.0F);
 
   if (apply_left) {
-    QVector3D const left_rein_pos = rein_anchor(mount, true, left_slack, left_tension);
-    get_hand(true) = left_rein_pos;
-    const QVector3D left_outward = compute_outward_dir(true);
-    get_elbow(true) = solve_elbow_ik(true,
-                                     get_shoulder(true),
+    QVector3D const left_rein_pos = rein_anchor(mount, Side::Left, left_slack, left_tension);
+    get_hand(Side::Left) = left_rein_pos;
+    const QVector3D left_outward = compute_outward_dir(Side::Left);
+    get_elbow(Side::Left) = solve_elbow_ik(Side::Left,
+                                     get_shoulder(Side::Left),
                                      left_rein_pos,
                                      left_outward,
                                      0.45F,
@@ -834,11 +834,11 @@ void MountedPoseController::hold_reins_impl(const MountedAttachmentFrame& mount,
 
   if (apply_right) {
     QVector3D const right_rein_pos =
-        rein_anchor(mount, false, right_slack, right_tension);
-    get_hand(false) = right_rein_pos;
-    const QVector3D right_outward = compute_outward_dir(false);
-    get_elbow(false) = solve_elbow_ik(false,
-                                      get_shoulder(false),
+        rein_anchor(mount, Side::Right, right_slack, right_tension);
+    get_hand(Side::Right) = right_rein_pos;
+    const QVector3D right_outward = compute_outward_dir(Side::Right);
+    get_elbow(Side::Right) = solve_elbow_ik(Side::Right,
+                                      get_shoulder(Side::Right),
                                       right_rein_pos,
                                       right_outward,
                                       0.45F,
@@ -883,11 +883,11 @@ void MountedPoseController::calculate_riding_knees(
 
   float const height_scale = m_anim_ctx.variation.height_scale;
 
-  m_pose.knee_l = solve_knee_ik(true, hip_left, m_pose.foot_l, height_scale);
-  m_pose.knee_r = solve_knee_ik(false, hip_right, m_pose.foot_r, height_scale);
+  m_pose.knee_l = solve_knee_ik(Side::Left, hip_left, m_pose.foot_l, height_scale);
+  m_pose.knee_r = solve_knee_ik(Side::Right, hip_right, m_pose.foot_r, height_scale);
 }
 
-auto MountedPoseController::solve_elbow_ik(bool,
+auto MountedPoseController::solve_elbow_ik(Side,
                                            const QVector3D& shoulder,
                                            const QVector3D& hand,
                                            const QVector3D& outward_dir,
@@ -899,7 +899,7 @@ auto MountedPoseController::solve_elbow_ik(bool,
       shoulder, hand, outward_dir, along_frac, lateral_offset, y_bias, outward_sign);
 }
 
-auto MountedPoseController::solve_knee_ik(bool is_left,
+auto MountedPoseController::solve_knee_ik(Side side,
                                           const QVector3D& hip,
                                           const QVector3D& foot,
                                           float height_scale) const -> QVector3D {
@@ -927,7 +927,7 @@ auto MountedPoseController::solve_knee_ik(bool is_left,
   float const sin_theta = std::sqrt(std::max(0.0F, 1.0F - cos_theta * cos_theta));
 
   QVector3D bend_pref =
-      is_left ? QVector3D(-0.70F, -0.15F, 0.30F) : QVector3D(0.70F, -0.15F, 0.30F);
+      (side == Side::Left) ? QVector3D(-0.70F, -0.15F, 0.30F) : QVector3D(0.70F, -0.15F, 0.30F);
   bend_pref.normalize();
 
   QVector3D bend_axis = bend_pref - dir * QVector3D::dotProduct(dir, bend_pref);
@@ -954,20 +954,20 @@ auto MountedPoseController::solve_knee_ik(bool is_left,
   return knee;
 }
 
-auto MountedPoseController::get_shoulder(bool is_left) const -> const QVector3D& {
-  return is_left ? m_pose.shoulder_l : m_pose.shoulder_r;
+auto MountedPoseController::get_shoulder(Side side) const -> const QVector3D& {
+  return (side == Side::Left) ? m_pose.shoulder_l : m_pose.shoulder_r;
 }
 
-auto MountedPoseController::get_hand(bool is_left) -> QVector3D& {
-  return is_left ? m_pose.hand_l : m_pose.hand_r;
+auto MountedPoseController::get_hand(Side side) -> QVector3D& {
+  return (side == Side::Left) ? m_pose.hand_l : m_pose.hand_r;
 }
 
-auto MountedPoseController::get_hand(bool is_left) const -> const QVector3D& {
-  return is_left ? m_pose.hand_l : m_pose.hand_r;
+auto MountedPoseController::get_hand(Side side) const -> const QVector3D& {
+  return (side == Side::Left) ? m_pose.hand_l : m_pose.hand_r;
 }
 
-auto MountedPoseController::get_elbow(bool is_left) -> QVector3D& {
-  return is_left ? m_pose.elbow_l : m_pose.elbow_r;
+auto MountedPoseController::get_elbow(Side side) -> QVector3D& {
+  return (side == Side::Left) ? m_pose.elbow_l : m_pose.elbow_r;
 }
 
 auto MountedPoseController::compute_right_axis() const -> QVector3D {
@@ -980,9 +980,9 @@ auto MountedPoseController::compute_right_axis() const -> QVector3D {
   return right_axis;
 }
 
-auto MountedPoseController::compute_outward_dir(bool is_left) const -> QVector3D {
+auto MountedPoseController::compute_outward_dir(Side side) const -> QVector3D {
   QVector3D const right_axis = compute_right_axis();
-  return is_left ? -right_axis : right_axis;
+  return (side == Side::Left) ? -right_axis : right_axis;
 }
 
 void MountedPoseController::apply_fixed_head_frame(const MountedAttachmentFrame& mount,

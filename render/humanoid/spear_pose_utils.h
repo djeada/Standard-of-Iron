@@ -43,7 +43,7 @@ inline auto compute_spear_direction(const AnimationInputs& anim_inputs) -> QVect
 inline auto compute_offhand_spear_grip(const HumanoidPose& pose,
                                        const HumanoidAnimationContext& anim_ctx,
                                        const QVector3D& main_hand_pos,
-                                       bool main_is_left,
+                                       Side main_side,
                                        float along_offset,
                                        float y_drop = 0.05F,
                                        float lateral_offset = 0.05F) -> QVector3D {
@@ -59,7 +59,7 @@ inline auto compute_offhand_spear_grip(const HumanoidPose& pose,
     right_axis.normalize();
   }
 
-  offhand += (main_is_left ? right_axis : -right_axis) * lateral_offset;
+  offhand += ((main_side == Side::Left) ? right_axis : -right_axis) * lateral_offset;
   offhand.setY(offhand.y() - y_drop);
 
   QVector3D torso_center = (pose.shoulder_l + pose.shoulder_r) * 0.5F;

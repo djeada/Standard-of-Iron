@@ -317,12 +317,12 @@ auto make_horse_profile(uint32_t seed,
   return profile;
 }
 
-auto MountedAttachmentFrame::stirrup_attach(bool is_left) const -> const QVector3D& {
-  return is_left ? stirrup_attach_left : stirrup_attach_right;
+auto MountedAttachmentFrame::stirrup_attach(Side side) const -> const QVector3D& {
+  return (side == Side::Left) ? stirrup_attach_left : stirrup_attach_right;
 }
 
-auto MountedAttachmentFrame::stirrup_bottom(bool is_left) const -> const QVector3D& {
-  return is_left ? stirrup_bottom_left : stirrup_bottom_right;
+auto MountedAttachmentFrame::stirrup_bottom(Side side) const -> const QVector3D& {
+  return (side == Side::Left) ? stirrup_bottom_left : stirrup_bottom_right;
 }
 
 } // namespace Render::GL
