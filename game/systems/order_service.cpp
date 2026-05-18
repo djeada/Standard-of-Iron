@@ -152,7 +152,8 @@ void OrderService::set_guard_mode_active(Engine::Core::Entity* entity, bool acti
   }
 }
 
-void OrderService::set_formation_mode_active(Engine::Core::Entity* entity, bool active) {
+void OrderService::set_formation_mode_active(Engine::Core::Entity* entity,
+                                             bool active) {
   if (entity == nullptr) {
     return;
   }

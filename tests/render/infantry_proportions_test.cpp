@@ -3,10 +3,9 @@
 #include <QVector4D>
 
 #include <algorithm>
+#include <gtest/gtest.h>
 #include <limits>
 #include <string_view>
-
-#include <gtest/gtest.h>
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -41,11 +40,10 @@ struct ProportionTolerance {
 
 constexpr ProportionTolerance k_infantry_tolerance{};
 // Support robes create a looser rendered depth silhouette than infantry armor.
-constexpr ProportionTolerance k_support_tolerance{
-    .min_height_ratio = 0.90F,
-    .max_height_ratio = 1.12F,
-    .min_silhouette_ratio = 0.82F,
-    .max_silhouette_ratio = 1.22F};
+constexpr ProportionTolerance k_support_tolerance{.min_height_ratio = 0.90F,
+                                                  .max_height_ratio = 1.12F,
+                                                  .min_silhouette_ratio = 0.82F,
+                                                  .max_silhouette_ratio = 1.22F};
 
 class BoundsSubmitter : public ISubmitter {
 public:
@@ -155,10 +153,10 @@ auto render_single_soldier_bounds(std::string_view renderer_key,
   return submitter.bounds;
 }
 
-void expect_close_overall_proportions(const RenderBounds& roman,
-                                      const RenderBounds& carthage,
-                                      const ProportionTolerance& tolerance =
-                                          k_infantry_tolerance) {
+void expect_close_overall_proportions(
+    const RenderBounds& roman,
+    const RenderBounds& carthage,
+    const ProportionTolerance& tolerance = k_infantry_tolerance) {
   float const roman_height = roman.height();
   float const carthage_height = carthage.height();
   ASSERT_GT(roman_height, 0.0F);
@@ -180,10 +178,11 @@ void expect_close_overall_proportions(const RenderBounds& roman,
 } // namespace
 
 TEST(InfantryProportionsTest, RomanAndCarthageArchersStayComparable) {
-  auto const roman = render_single_soldier_bounds("troops/roman/archer",
-                                                  Game::Units::SpawnType::Archer,
-                                                  Game::Systems::NationID::RomanRepublic,
-                                                  1337U);
+  auto const roman =
+      render_single_soldier_bounds("troops/roman/archer",
+                                   Game::Units::SpawnType::Archer,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   1337U);
   auto const carthage = render_single_soldier_bounds("troops/carthage/archer",
                                                      Game::Units::SpawnType::Archer,
                                                      Game::Systems::NationID::Carthage,
@@ -193,10 +192,11 @@ TEST(InfantryProportionsTest, RomanAndCarthageArchersStayComparable) {
 }
 
 TEST(InfantryProportionsTest, RomanAndCarthageSpearmenStayComparable) {
-  auto const roman = render_single_soldier_bounds("troops/roman/spearman",
-                                                  Game::Units::SpawnType::Spearman,
-                                                  Game::Systems::NationID::RomanRepublic,
-                                                  4242U);
+  auto const roman =
+      render_single_soldier_bounds("troops/roman/spearman",
+                                   Game::Units::SpawnType::Spearman,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   4242U);
   auto const carthage = render_single_soldier_bounds("troops/carthage/spearman",
                                                      Game::Units::SpawnType::Spearman,
                                                      Game::Systems::NationID::Carthage,
@@ -206,10 +206,11 @@ TEST(InfantryProportionsTest, RomanAndCarthageSpearmenStayComparable) {
 }
 
 TEST(InfantryProportionsTest, RomanAndCarthageSwordsmenStayComparable) {
-  auto const roman = render_single_soldier_bounds("troops/roman/swordsman",
-                                                  Game::Units::SpawnType::Knight,
-                                                  Game::Systems::NationID::RomanRepublic,
-                                                  9001U);
+  auto const roman =
+      render_single_soldier_bounds("troops/roman/swordsman",
+                                   Game::Units::SpawnType::Knight,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   9001U);
   auto const carthage = render_single_soldier_bounds("troops/carthage/swordsman",
                                                      Game::Units::SpawnType::Knight,
                                                      Game::Systems::NationID::Carthage,
@@ -219,10 +220,11 @@ TEST(InfantryProportionsTest, RomanAndCarthageSwordsmenStayComparable) {
 }
 
 TEST(InfantryProportionsTest, RomanAndCarthageHealersStayComparable) {
-  auto const roman = render_single_soldier_bounds("troops/roman/healer",
-                                                  Game::Units::SpawnType::Healer,
-                                                  Game::Systems::NationID::RomanRepublic,
-                                                  777U);
+  auto const roman =
+      render_single_soldier_bounds("troops/roman/healer",
+                                   Game::Units::SpawnType::Healer,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   777U);
   auto const carthage = render_single_soldier_bounds("troops/carthage/healer",
                                                      Game::Units::SpawnType::Healer,
                                                      Game::Systems::NationID::Carthage,

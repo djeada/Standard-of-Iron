@@ -284,7 +284,8 @@ TEST(HumanoidStateMachineTest, AttackRangedVsMelee) {
   EXPECT_EQ(select_state(inputs), HumanoidState::AttackMelee);
 }
 
-TEST(HumanoidStateMachineTest, HoldModeAttackKeepsAttackIntentButUsesHoldAnimationState) {
+TEST(HumanoidStateMachineTest,
+     HoldModeAttackKeepsAttackIntentButUsesHoldAnimationState) {
   AnimationInputs inputs{};
   inputs.is_attacking = true;
   inputs.is_melee = true;
@@ -300,11 +301,12 @@ TEST(HumanoidStateMachineTest, HoldModeAttackKeepsAttackIntentButUsesHoldAnimati
 }
 
 TEST(HumanoidStateMachineTest, PoseIntentHelpersMatchResolvedStateCategories) {
+  EXPECT_TRUE(Render::Creature::is_attack_pose_intent(
+      Render::Creature::PoseIntent::AttackSpear));
+  EXPECT_FALSE(
+      Render::Creature::is_attack_pose_intent(Render::Creature::PoseIntent::Walk));
   EXPECT_TRUE(
-      Render::Creature::is_attack_pose_intent(Render::Creature::PoseIntent::AttackSpear));
-  EXPECT_FALSE(Render::Creature::is_attack_pose_intent(Render::Creature::PoseIntent::Walk));
-  EXPECT_TRUE(Render::Creature::is_locomotion_pose_intent(
-      Render::Creature::PoseIntent::Run));
+      Render::Creature::is_locomotion_pose_intent(Render::Creature::PoseIntent::Run));
   EXPECT_TRUE(Render::Creature::is_attack_animation_state(
       Render::Creature::AnimationStateId::AttackBow));
   EXPECT_FALSE(Render::Creature::is_attack_animation_state(

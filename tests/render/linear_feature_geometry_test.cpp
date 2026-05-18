@@ -151,9 +151,12 @@ TEST(LinearFeatureGeometryTest, SamplesRoadInteriorAboveLocalizedTerrainHump) {
     for (float world_z = -0.90F; world_z <= 0.90F; world_z += 0.15F) {
       std::optional<float> road_height;
       for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
-        auto const maybe_height = interpolate_triangle_height_at(
-            vertices[indices[i]], vertices[indices[i + 1]], vertices[indices[i + 2]],
-            world_x, world_z);
+        auto const maybe_height =
+            interpolate_triangle_height_at(vertices[indices[i]],
+                                           vertices[indices[i + 1]],
+                                           vertices[indices[i + 2]],
+                                           world_x,
+                                           world_z);
         if (maybe_height.has_value()) {
           if (!road_height.has_value() || *maybe_height > *road_height) {
             road_height = *maybe_height;
@@ -162,9 +165,9 @@ TEST(LinearFeatureGeometryTest, SamplesRoadInteriorAboveLocalizedTerrainHump) {
       }
 
       ASSERT_TRUE(road_height.has_value());
-      EXPECT_GE(*road_height + 1e-4F,
-                Game::Map::road_surface_world_y(
-                    height_map.get_height_at(world_x, world_z)));
+      EXPECT_GE(
+          *road_height + 1e-4F,
+          Game::Map::road_surface_world_y(height_map.get_height_at(world_x, world_z)));
     }
   }
 }

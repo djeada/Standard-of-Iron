@@ -89,8 +89,8 @@ class Theme : public QObject {
   Q_PROPERTY(QVariantMap nationEmblems READ nationEmblems CONSTANT)
 
 public:
-  static auto instance() -> Theme *;
-  static auto create(QQmlEngine *engine, QJSEngine *scriptEngine) -> Theme *;
+  static auto instance() -> Theme*;
+  static auto create(QQmlEngine* engine, QJSEngine* scriptEngine) -> Theme*;
 
   [[nodiscard]] static auto bg() -> QColor { return {"#17110C"}; }
   [[nodiscard]] static auto bgShade() -> QColor { return {"#120D09"}; }
@@ -171,8 +171,8 @@ public:
   [[nodiscard]] static auto nationEmblems() -> QVariantMap;
 
 private:
-  explicit Theme(QObject *parent = nullptr);
-  static Theme *m_instance;
+  explicit Theme(QObject* parent = nullptr);
+  static Theme* m_instance;
 };
 
 #endif

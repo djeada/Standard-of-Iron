@@ -165,8 +165,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
   if (const auto* intent = entity->get_component<PlayerOrderIntentComponent>()) {
     QJsonObject intent_obj;
     intent_obj["kind"] = static_cast<int>(intent->kind);
-    intent_obj["suppress_opportunistic_combat"] =
-        intent->suppress_opportunistic_combat;
+    intent_obj["suppress_opportunistic_combat"] = intent->suppress_opportunistic_combat;
     entity_obj["player_order_intent"] = intent_obj;
   }
 
@@ -627,9 +626,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
   if (json.contains("player_order_intent")) {
     const auto intent_obj = json["player_order_intent"].toObject();
     auto* intent = entity->add_component<PlayerOrderIntentComponent>();
-    intent->kind =
-        static_cast<PlayerOrderIntentKind>(intent_obj["kind"].toInt(static_cast<int>(
-            PlayerOrderIntentKind::None)));
+    intent->kind = static_cast<PlayerOrderIntentKind>(
+        intent_obj["kind"].toInt(static_cast<int>(PlayerOrderIntentKind::None)));
     intent->suppress_opportunistic_combat =
         intent_obj["suppress_opportunistic_combat"].toBool(false);
   }

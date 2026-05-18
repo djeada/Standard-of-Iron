@@ -17,8 +17,8 @@ class MinimapManager;
 class VisibilityFramePresenter {
 public:
   virtual ~VisibilityFramePresenter() = default;
-  virtual void apply_visibility_frame(
-      const Game::Map::VisibilityService::Snapshot& snapshot) = 0;
+  virtual void
+  apply_visibility_frame(const Game::Map::VisibilityService::Snapshot& snapshot) = 0;
   virtual void clear_visibility_frame() = 0;
 };
 
@@ -66,8 +66,8 @@ public:
   void publish_current_frame(bool force = false);
   void clear_presenters();
 
-  [[nodiscard]] auto current_snapshot() const
-      -> Game::Map::VisibilityService::SnapshotPtr;
+  [[nodiscard]] auto
+  current_snapshot() const -> Game::Map::VisibilityService::SnapshotPtr;
   [[nodiscard]] auto last_published_version() const -> std::uint64_t {
     return m_last_published_version;
   }

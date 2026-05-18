@@ -15,11 +15,8 @@ void play_ui_sound(const QString& sound_id, float volume, int priority) {
     return;
   }
 
-  AudioSystem::get_instance().play_sound(sound_id.toStdString(),
-                                         volume,
-                                         false,
-                                         priority,
-                                         AudioCategory::SFX);
+  AudioSystem::get_instance().play_sound(
+      sound_id.toStdString(), volume, false, priority, AudioCategory::SFX);
 }
 
 } // namespace

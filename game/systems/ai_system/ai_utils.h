@@ -67,17 +67,18 @@ inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
   return !entity.is_building && entity.spawn_type != Game::Units::SpawnType::Builder;
 }
 
-inline auto is_reserved_unit(Engine::Core::EntityID unit_id, const AIContext& context)
-    -> bool {
-  return std::find(
-             context.reserve_unit_ids.begin(), context.reserve_unit_ids.end(), unit_id) !=
-         context.reserve_unit_ids.end();
+inline auto is_reserved_unit(Engine::Core::EntityID unit_id,
+                             const AIContext& context) -> bool {
+  return std::find(context.reserve_unit_ids.begin(),
+                   context.reserve_unit_ids.end(),
+                   unit_id) != context.reserve_unit_ids.end();
 }
 
-inline auto is_harass_unit(Engine::Core::EntityID unit_id, const AIContext& context) -> bool {
-  return std::find(
-             context.harass_unit_ids.begin(), context.harass_unit_ids.end(), unit_id) !=
-         context.harass_unit_ids.end();
+inline auto is_harass_unit(Engine::Core::EntityID unit_id,
+                           const AIContext& context) -> bool {
+  return std::find(context.harass_unit_ids.begin(),
+                   context.harass_unit_ids.end(),
+                   unit_id) != context.harass_unit_ids.end();
 }
 
 inline auto collect_attack_force_units(const AISnapshot& snapshot,

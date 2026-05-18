@@ -20,8 +20,8 @@
 #include <unordered_set>
 #include <utility>
 
-#include "../game/map/terrain_service.h"
 #include "../game/map/render_visibility_rules.h"
+#include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
 #include "../game/systems/combat_rules.h"
 #include "../game/systems/nation_registry.h"
@@ -105,8 +105,8 @@ auto prewarm_entity_id_for_variant(std::size_t profile_index,
   return 1U + static_cast<std::uint32_t>(
                   (((profile_index * 16U) + static_cast<std::size_t>(owner_id)) * 4U +
                    static_cast<std::size_t>(lod)) *
-                       k_template_variant_count +
-                   static_cast<std::size_t>(variant));
+                      k_template_variant_count +
+                  static_cast<std::size_t>(variant));
 }
 
 void populate_template_prewarm_entity(Engine::Core::Entity& entity,
@@ -382,11 +382,8 @@ void execute_template_prewarm_item(Renderer& renderer,
     return;
   }
 
-  Engine::Core::Entity entity(
-      prewarm_entity_id_for_variant(profile_index,
-                                    owner_id,
-                                    static_cast<std::uint8_t>(lod),
-                                    variant));
+  Engine::Core::Entity entity(prewarm_entity_id_for_variant(
+      profile_index, owner_id, static_cast<std::uint8_t>(lod), variant));
   populate_template_prewarm_entity(
       entity, spawn_type, nation_id, owner_id, max_health, renderer_id);
 
@@ -1403,10 +1400,10 @@ void Renderer::render_world(Engine::Core::World* world) {
         }
       }
       entry.renderer_key = cached.renderer_key;
-      entry.renderer_handle = cached.has_renderer_handle
-                                  ? static_cast<Render::GL::RendererHandle>(
-                                        cached.renderer_handle)
-                                  : Render::GL::k_invalid_renderer_handle;
+      entry.renderer_handle =
+          cached.has_renderer_handle
+              ? static_cast<Render::GL::RendererHandle>(cached.renderer_handle)
+              : Render::GL::k_invalid_renderer_handle;
       entry.movement = cached.movement;
       entry.motion = entity->get_component<Engine::Core::MotionPresentationComponent>();
 
@@ -1432,10 +1429,10 @@ void Renderer::render_world(Engine::Core::World* world) {
 
       if (unit_comp->owner_id != m_local_owner_id && visibility_enabled &&
           non_local_unit_visibility_filter_enabled()) {
-        entry.fog_visible = Game::Map::should_render_non_local_unit(
-            resolved_visibility_snapshot,
-            cached.transform->position.x,
-            cached.transform->position.z);
+        entry.fog_visible =
+            Game::Map::should_render_non_local_unit(resolved_visibility_snapshot,
+                                                    cached.transform->position.x,
+                                                    cached.transform->position.z);
       }
 
       auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
@@ -1717,8 +1714,8 @@ void Renderer::render_world(Engine::Core::World* world) {
                               ? Render::Pipeline::LodTier::Full
                               : Render::Pipeline::select_lod(lod_in);
 
-        const bool use_batching = batching_available &&
-                                  (tier == Render::Pipeline::LodTier::Simplified ||
+        const bool use_batching =
+            batching_available && (tier == Render::Pipeline::LodTier::Simplified ||
                                    tier == Render::Pipeline::LodTier::Minimal);
         tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
         if (use_batching) {
@@ -1775,7 +1772,8 @@ void Renderer::render_world(Engine::Core::World* world) {
         entry.entity_id, entry.transform, m_frame_counter);
 
     bool drawn_by_registry = false;
-    if (m_entity_registry && entry.renderer_handle != Render::GL::k_invalid_renderer_handle) {
+    if (m_entity_registry &&
+        entry.renderer_handle != Render::GL::k_invalid_renderer_handle) {
       auto const* fn = m_entity_registry->get(entry.renderer_handle);
       if (fn != nullptr) {
         DrawContext ctx{resources(), entry.entity, world, model_matrix};
@@ -1877,8 +1875,7 @@ void Renderer::prewarm_unit_templates(
     Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
     bool operator==(const PrewarmProfileKey& other) const {
       return renderer_handle == other.renderer_handle &&
-             spawn_type == other.spawn_type &&
-             nation_id == other.nation_id;
+             spawn_type == other.spawn_type && nation_id == other.nation_id;
     }
   };
 
@@ -2158,11 +2155,15 @@ void Renderer::prewarm_unit_templates(
   clear_humanoid_caches();
 
   std::vector<PrewarmWorkItem> core_work_items =
-      build_template_prewarm_work_items(
-          profiles, owner_ids, anim_selection.variant_values, anim_selection.selected_core_keys);
+      build_template_prewarm_work_items(profiles,
+                                        owner_ids,
+                                        anim_selection.variant_values,
+                                        anim_selection.selected_core_keys);
   std::vector<PrewarmWorkItem> const extended_work_items =
-      build_template_prewarm_work_items(
-          profiles, owner_ids, anim_selection.variant_values, anim_selection.selected_extra_keys);
+      build_template_prewarm_work_items(profiles,
+                                        owner_ids,
+                                        anim_selection.variant_values,
+                                        anim_selection.selected_extra_keys);
 
   const std::size_t total_work_count =
       core_work_items.size() + extended_work_items.size();

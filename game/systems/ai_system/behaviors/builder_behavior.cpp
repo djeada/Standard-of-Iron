@@ -89,7 +89,8 @@ auto needs_outpost_construction(const AIContext& context) -> bool {
     return false;
   }
 
-  if (context.outpost_barracks_count < context.strategy_config.desired_outpost_barracks_count) {
+  if (context.outpost_barracks_count <
+      context.strategy_config.desired_outpost_barracks_count) {
     return true;
   }
 
@@ -98,7 +99,8 @@ auto needs_outpost_construction(const AIContext& context) -> bool {
          context.outpost_home_count < context.strategy_config.outpost_home_target;
 }
 
-auto recent_outpost_order(const AISnapshot& snapshot, const AIContext& context) -> bool {
+auto recent_outpost_order(const AISnapshot& snapshot,
+                          const AIContext& context) -> bool {
   return (snapshot.game_time - context.last_expansion_order_time) < 4.0F;
 }
 
@@ -110,18 +112,16 @@ auto select_best_builder(const AISnapshot& snapshot,
   float best_distance_sq = std::numeric_limits<float>::infinity();
 
   for (auto builder_id : available_builders) {
-    auto it = std::find_if(snapshot.friendly_units.begin(),
-                           snapshot.friendly_units.end(),
-                           [builder_id](const EntitySnapshot& entity) {
-                             return entity.id == builder_id;
-                           });
+    auto it = std::find_if(
+        snapshot.friendly_units.begin(),
+        snapshot.friendly_units.end(),
+        [builder_id](const EntitySnapshot& entity) { return entity.id == builder_id; });
     if (it == snapshot.friendly_units.end()) {
       continue;
     }
 
-    const float distance_sq =
-        (it->pos_x - target_x) * (it->pos_x - target_x) +
-        (it->pos_z - target_z) * (it->pos_z - target_z);
+    const float distance_sq = (it->pos_x - target_x) * (it->pos_x - target_x) +
+                              (it->pos_z - target_z) * (it->pos_z - target_z);
     if (distance_sq < best_distance_sq) {
       best_distance_sq = distance_sq;
       best_id = builder_id;
@@ -183,11 +183,13 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   bool expansion_order = false;
 
   if (context.state == AIState::Expanding && needs_outpost_construction(context)) {
-    if (context.expansion_construction_pending || recent_outpost_order(snapshot, context)) {
+    if (context.expansion_construction_pending ||
+        recent_outpost_order(snapshot, context)) {
       return;
     }
 
-    if (context.outpost_barracks_count < context.strategy_config.desired_outpost_barracks_count) {
+    if (context.outpost_barracks_count <
+        context.strategy_config.desired_outpost_barracks_count) {
       building_to_construct = BUILDING_TYPE_BARRACKS;
       construction_x = context.expansion_site_x;
       construction_z = context.expansion_site_z;
@@ -264,24 +266,27 @@ auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
     return false;
   }
 
-  const int catapult_count = static_cast<int>(std::count_if(
-      snapshot.friendly_units.begin(),
-      snapshot.friendly_units.end(),
-      [](const EntitySnapshot& entity) {
-        return !entity.is_building &&
-               entity.spawn_type == Game::Units::SpawnType::Catapult;
-      }));
+  const int catapult_count = static_cast<int>(
+      std::count_if(snapshot.friendly_units.begin(),
+                    snapshot.friendly_units.end(),
+                    [](const EntitySnapshot& entity) {
+                      return !entity.is_building &&
+                             entity.spawn_type == Game::Units::SpawnType::Catapult;
+                    }));
 
   if (context.state == AIState::Expanding && needs_outpost_construction(context)) {
     return true;
   }
 
-  return context.home_count < std::clamp(context.macro_targets.home_count, 2, MAX_HOMES) ||
+  return context.home_count <
+             std::clamp(context.macro_targets.home_count, 2, MAX_HOMES) ||
          context.barracks_count <
              std::clamp(context.macro_targets.barracks_count, 1, MAX_BARRACKS) ||
          context.defense_tower_count <
-             std::clamp(context.macro_targets.defense_tower_count, 0, MAX_DEFENSE_TOWERS) ||
-         catapult_count < std::clamp(context.macro_targets.catapult_count, 0, MAX_CATAPULTS);
+             std::clamp(
+                 context.macro_targets.defense_tower_count, 0, MAX_DEFENSE_TOWERS) ||
+         catapult_count <
+             std::clamp(context.macro_targets.catapult_count, 0, MAX_CATAPULTS);
 }
 
 } // namespace Game::Systems::AI

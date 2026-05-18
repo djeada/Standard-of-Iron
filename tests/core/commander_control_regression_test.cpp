@@ -32,7 +32,8 @@ auto find_repo_root() -> std::filesystem::path {
       !from_file.empty()) {
     return from_file;
   }
-  if (const auto from_cwd = walk_up(std::filesystem::current_path()); !from_cwd.empty()) {
+  if (const auto from_cwd = walk_up(std::filesystem::current_path());
+      !from_cwd.empty()) {
     return from_cwd;
   }
   return std::filesystem::current_path();
@@ -111,7 +112,8 @@ TEST(CommanderControlRegressionTest, GameViewRestoresInputFocusAcrossModes) {
   EXPECT_FALSE(contains(commander_source, "root.game.commander_"));
 }
 
-TEST(CommanderControlRegressionTest, GameViewRoutesRightGestureThroughEngineController) {
+TEST(CommanderControlRegressionTest,
+     GameViewRoutesRightGestureThroughEngineController) {
   const auto root = find_repo_root();
   const auto source = read_text(root / "ui" / "qml" / "GameView.qml");
   ASSERT_FALSE(source.empty());
@@ -133,7 +135,8 @@ TEST(CommanderControlRegressionTest,
   EXPECT_FALSE(contains(source, "property bool suppress_right_release_click"));
 }
 
-TEST(CommanderControlRegressionTest, GameEngineInitializesRtsRuntimeStateDuringConstruction) {
+TEST(CommanderControlRegressionTest,
+     GameEngineInitializesRtsRuntimeStateDuringConstruction) {
   const auto root = find_repo_root();
   const auto source = read_text(root / "app" / "core" / "game_engine.cpp");
   ASSERT_FALSE(source.empty());
@@ -154,7 +157,8 @@ TEST(CommanderControlRegressionTest,
 
   EXPECT_TRUE(contains(header, "bool placement_was_active_on_press = false;"));
   EXPECT_TRUE(contains(header, "bool started_formation_placement = false;"));
-  EXPECT_TRUE(contains(source, "if (m_right_mouse_gesture.placement_was_active_on_press)"));
+  EXPECT_TRUE(
+      contains(source, "if (m_right_mouse_gesture.placement_was_active_on_press)"));
   EXPECT_TRUE(contains(source, "if (started_formation_placement) {"));
   EXPECT_TRUE(contains(source, "m_input_handler->on_formation_cancel();"));
   EXPECT_TRUE(contains(source, "m_right_mouse_gesture.started_formation_placement ="));

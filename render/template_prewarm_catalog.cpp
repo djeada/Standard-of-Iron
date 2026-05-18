@@ -37,7 +37,8 @@ void push_anim_key(std::vector<AnimKey>& keys,
 void add_state_frames(std::vector<AnimKey>& keys, PoseIntent state, int frame_step) {
   int const step = std::max(1, frame_step);
   for (int frame = 0; frame < static_cast<int>(k_anim_frame_count); frame += step) {
-    push_anim_key(keys, state, CombatAnimPhase::Idle, static_cast<std::uint8_t>(frame), 0);
+    push_anim_key(
+        keys, state, CombatAnimPhase::Idle, static_cast<std::uint8_t>(frame), 0);
   }
 }
 
@@ -92,9 +93,8 @@ auto prewarm_attack_family_for_spawn(Game::Units::SpawnType spawn_type,
 
 } // namespace
 
-auto build_template_prewarm_anim_catalog(
-    const Render::Creature::ArchetypeRegistry& archetypes)
-    -> TemplatePrewarmAnimCatalog {
+auto build_template_prewarm_anim_catalog(const Render::Creature::ArchetypeRegistry&
+                                             archetypes) -> TemplatePrewarmAnimCatalog {
   TemplatePrewarmAnimCatalog catalog;
   catalog.core_keys.reserve(192);
 
@@ -104,7 +104,8 @@ auto build_template_prewarm_anim_catalog(
   push_anim_key(catalog.core_keys, PoseIntent::Hold, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(catalog.core_keys, PoseIntent::Construct, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(catalog.core_keys, PoseIntent::Healing, CombatAnimPhase::Idle, 0, 0);
-  push_anim_key(catalog.core_keys, PoseIntent::HitReaction, CombatAnimPhase::Idle, 0, 0);
+  push_anim_key(
+      catalog.core_keys, PoseIntent::HitReaction, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(catalog.core_keys, PoseIntent::Dying, CombatAnimPhase::Idle, 0, 0);
   push_anim_key(catalog.core_keys, PoseIntent::Dead, CombatAnimPhase::Idle, 0, 0);
   add_core_attack_frames(catalog.core_keys, PoseIntent::AttackMelee);
@@ -123,20 +124,18 @@ auto build_template_prewarm_anim_catalog(
   add_state_frames(full_keys, PoseIntent::Dying, 1);
   push_anim_key(full_keys, PoseIntent::Dead, CombatAnimPhase::Idle, 0, 0);
 
-  auto const sword_variant_count =
-      std::max(archetypes.clip_variant_count(
-                   Render::Creature::ArchetypeRegistry::k_humanoid_base,
-                   Render::Creature::AnimationStateId::AttackSword),
-               archetypes.clip_variant_count(
-                   Render::Creature::ArchetypeRegistry::k_rider_base,
-                   Render::Creature::AnimationStateId::AttackSword));
-  auto const spear_variant_count =
-      std::max(archetypes.clip_variant_count(
-                   Render::Creature::ArchetypeRegistry::k_humanoid_base,
-                   Render::Creature::AnimationStateId::AttackSpear),
-               archetypes.clip_variant_count(
-                   Render::Creature::ArchetypeRegistry::k_rider_base,
-                   Render::Creature::AnimationStateId::AttackSpear));
+  auto const sword_variant_count = std::max(
+      archetypes.clip_variant_count(
+          Render::Creature::ArchetypeRegistry::k_humanoid_base,
+          Render::Creature::AnimationStateId::AttackSword),
+      archetypes.clip_variant_count(Render::Creature::ArchetypeRegistry::k_rider_base,
+                                    Render::Creature::AnimationStateId::AttackSword));
+  auto const spear_variant_count = std::max(
+      archetypes.clip_variant_count(
+          Render::Creature::ArchetypeRegistry::k_humanoid_base,
+          Render::Creature::AnimationStateId::AttackSpear),
+      archetypes.clip_variant_count(Render::Creature::ArchetypeRegistry::k_rider_base,
+                                    Render::Creature::AnimationStateId::AttackSpear));
   auto const ranged_variant_count = archetypes.clip_variant_count(
       Render::Creature::ArchetypeRegistry::k_humanoid_base,
       Render::Creature::AnimationStateId::AttackBow);
@@ -168,7 +167,8 @@ auto select_template_prewarm_anim_budget(std::size_t domain_count,
 
   std::size_t variant_count = k_template_variant_count;
   std::size_t const core_anim_count = catalog.core_keys.size();
-  std::size_t const full_anim_count = catalog.core_keys.size() + catalog.extra_keys.size();
+  std::size_t const full_anim_count =
+      catalog.core_keys.size() + catalog.extra_keys.size();
   std::size_t const core_per_variant = domain_count * core_anim_count;
   if (core_per_variant > 0) {
     std::size_t const max_variants_for_core = target_template_count / core_per_variant;
@@ -176,7 +176,8 @@ auto select_template_prewarm_anim_budget(std::size_t domain_count,
         std::clamp<std::size_t>(max_variants_for_core, 1, k_template_variant_count);
   }
 
-  // Keep at least four visual variants in the prewarm set; cache sizing is clamped later.
+  // Keep at least four visual variants in the prewarm set; cache sizing is clamped
+  // later.
   variant_count = std::max<std::size_t>(variant_count, 4U);
 
   std::size_t anim_count_budget =

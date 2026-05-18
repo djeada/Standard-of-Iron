@@ -32,8 +32,7 @@ float bush_sdf(vec2 uv, float seed) {
   for (int i = 0; i < 5; i++) {
     float fi = float(i);
     float ang = fi * 1.25663706 + seed * 3.7;
-    vec2 c = vec2(cos(ang), sin(ang)) *
-             (0.18 + h11(seed * 7.9 + fi) * 0.05);
+    vec2 c = vec2(cos(ang), sin(ang)) * (0.18 + h11(seed * 7.9 + fi) * 0.05);
     float r = 0.30 + h11(seed * 5.7 + fi) * 0.06;
     sdf = min(sdf, length(p - c) - r);
   }
@@ -70,8 +69,10 @@ float cactus_sdf(vec2 uv, float seed) {
 }
 
 float plant_sdf(vec2 uv, float type_val, float seed) {
-  if (type_val < 0.45) return bush_sdf(uv, seed);
-  if (type_val < 0.80) return rosette_sdf(uv, seed);
+  if (type_val < 0.45)
+    return bush_sdf(uv, seed);
+  if (type_val < 0.80)
+    return rosette_sdf(uv, seed);
   return cactus_sdf(uv, seed);
 }
 
@@ -121,22 +122,15 @@ void main() {
   float r2 = clamp(dot(uv2, uv2), 0.0, 1.0);
   float z = sqrt(max(1.0 - r2, 0.0));
 
-  vec3 Nbulge = normalize(
-    v_tangent * uv2.x +
-    v_bitangent * uv2.y +
-    v_normal * (z * 1.8)
-  );
+  vec3 Nbulge =
+      normalize(v_tangent * uv2.x + v_bitangent * uv2.y + v_normal * (z * 1.8));
 
   vec3 N = normalize(mix(v_normal, Nbulge, 0.85));
 
   float grad_step = max(pixel_width_uv(v_tex_coord) * 1.5, sdf_aa);
   vec2 g = sdf_grad(v_tex_coord, type_val, v_seed, grad_step);
 
-  vec3 Nshape = normalize(
-    v_tangent * (-g.x) +
-    v_bitangent * (-g.y) +
-    v_normal * 3.0
-  );
+  vec3 Nshape = normalize(v_tangent * (-g.x) + v_bitangent * (-g.y) + v_normal * 3.0);
 
   /*
     Stable rim factor.
@@ -173,8 +167,7 @@ void main() {
   albedo *= mix(0.95, 1.0, inner);
 
   vec3 color =
-    albedo * (ambient + diffuse * ao_stem) +
-    albedo * sss * vec3(1.0, 0.95, 0.85);
+      albedo * (ambient + diffuse * ao_stem) + albedo * sss * vec3(1.0, 0.95, 0.85);
 
   frag_color = vec4(color, coverage);
 }

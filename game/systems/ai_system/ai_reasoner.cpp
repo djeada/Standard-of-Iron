@@ -107,11 +107,13 @@ auto needs_outpost_construction(const Game::Systems::AI::AIContext& ctx) -> bool
     return false;
   }
 
-  if (ctx.outpost_barracks_count < desired_outpost_barracks_count(ctx.strategy_config)) {
+  if (ctx.outpost_barracks_count <
+      desired_outpost_barracks_count(ctx.strategy_config)) {
     return true;
   }
 
-  return ctx.outpost_barracks_count >= desired_outpost_barracks_count(ctx.strategy_config) &&
+  return ctx.outpost_barracks_count >=
+             desired_outpost_barracks_count(ctx.strategy_config) &&
          ctx.outpost_home_count < ctx.strategy_config.outpost_home_target;
 }
 
@@ -126,13 +128,12 @@ auto select_enemy_expansion_objective(const Game::Systems::AI::AISnapshot& snaps
       continue;
     }
 
-    const float distance_sq = Game::Systems::AI::distance_squared(
-        objective.pos_x,
-        objective.pos_y,
-        objective.pos_z,
-        ctx.base_pos_x,
-        ctx.base_pos_y,
-        ctx.base_pos_z);
+    const float distance_sq = Game::Systems::AI::distance_squared(objective.pos_x,
+                                                                  objective.pos_y,
+                                                                  objective.pos_z,
+                                                                  ctx.base_pos_x,
+                                                                  ctx.base_pos_y,
+                                                                  ctx.base_pos_z);
     if (distance_sq < best_distance_sq) {
       best_distance_sq = distance_sq;
       best = &objective;
@@ -152,7 +153,8 @@ void update_expansion_site(const Game::Systems::AI::AISnapshot& snapshot,
   ctx.outpost_home_count = 0;
   ctx.expansion_construction_pending = false;
 
-  if (!ctx.anchor_is_structural || desired_outpost_barracks_count(ctx.strategy_config) <= 0) {
+  if (!ctx.anchor_is_structural ||
+      desired_outpost_barracks_count(ctx.strategy_config) <= 0) {
     return;
   }
 
@@ -180,16 +182,18 @@ void update_expansion_site(const Game::Systems::AI::AISnapshot& snapshot,
     ctx.has_expansion_site = true;
   }
 
-  const float outpost_radius_sq = k_outpost_structure_radius * k_outpost_structure_radius;
+  const float outpost_radius_sq =
+      k_outpost_structure_radius * k_outpost_structure_radius;
   const float pending_radius_sq = k_outpost_pending_radius * k_outpost_pending_radius;
 
   for (const auto& entity : snapshot.friendly_units) {
-    const float site_distance_sq = Game::Systems::AI::distance_squared(entity.pos_x,
-                                                                       entity.pos_y,
-                                                                       entity.pos_z,
-                                                                       ctx.expansion_site_x,
-                                                                       0.0F,
-                                                                       ctx.expansion_site_z);
+    const float site_distance_sq =
+        Game::Systems::AI::distance_squared(entity.pos_x,
+                                            entity.pos_y,
+                                            entity.pos_z,
+                                            ctx.expansion_site_x,
+                                            0.0F,
+                                            ctx.expansion_site_z);
 
     if (entity.is_building && site_distance_sq <= outpost_radius_sq) {
       if (entity.spawn_type == Game::Units::SpawnType::Barracks) {
@@ -217,14 +221,15 @@ void update_expansion_site(const Game::Systems::AI::AISnapshot& snapshot,
 }
 
 auto can_capture_neutral_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
-  return ctx.strategy_config.expansion_priority > 0.8F && ctx.neutral_barracks_count > 0 &&
+  return ctx.strategy_config.expansion_priority > 0.8F &&
+         ctx.neutral_barracks_count > 0 &&
          committable_attack_force(ctx) >= expansion_force_threshold(ctx);
 }
 
 auto can_build_outpost_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
   if (ctx.strategy_config.expansion_priority <= 0.8F || !ctx.has_expansion_site ||
-      ctx.home_count < ctx.strategy_config.base_home_target || ctx.barracks_count == 0 ||
-      ctx.builder_count == 0) {
+      ctx.home_count < ctx.strategy_config.base_home_target ||
+      ctx.barracks_count == 0 || ctx.builder_count == 0) {
     return false;
   }
 
@@ -239,8 +244,8 @@ auto wants_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
   return can_capture_neutral_expansion(ctx) || can_build_outpost_expansion(ctx);
 }
 
-auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx,
-                           int catapult_count) -> Game::Systems::AI::AIContext::MacroTargets {
+auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx, int catapult_count)
+    -> Game::Systems::AI::AIContext::MacroTargets {
   Game::Systems::AI::AIContext::MacroTargets targets;
   targets.builder_count = ctx.strategy_config.target_builder_count;
   targets.barracks_count = ctx.strategy_config.desired_barracks_count;
@@ -256,11 +261,9 @@ auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx,
   const int extra_barracks = troop_pressure / 10;
   const int extra_catapults = std::max(0, ctx.barracks_count - 1) / 2;
 
-  targets.home_count =
-      std::max(ctx.strategy_config.base_home_target,
-               2 + home_growth + std::min(2, extra_barracks));
-  targets.barracks_count =
-      std::max(targets.barracks_count, 1 + extra_barracks);
+  targets.home_count = std::max(ctx.strategy_config.base_home_target,
+                                2 + home_growth + std::min(2, extra_barracks));
+  targets.barracks_count = std::max(targets.barracks_count, 1 + extra_barracks);
   targets.defense_tower_count =
       std::max(targets.defense_tower_count,
                (ctx.home_count >= 4 || ctx.barracks_under_threat ||
@@ -304,7 +307,8 @@ auto compute_effective_reserve_units(const Game::Systems::AI::AISnapshot& snapsh
 
 auto compute_effective_harass_units(const Game::Systems::AI::AISnapshot& snapshot,
                                     const Game::Systems::AI::AIContext& ctx) -> int {
-  if (ctx.strategy_config.harass_units <= 0 || ctx.strategy_config.harassment_range <= 0.0F) {
+  if (ctx.strategy_config.harass_units <= 0 ||
+      ctx.strategy_config.harassment_range <= 0.0F) {
     return 0;
   }
 
@@ -357,10 +361,20 @@ void update_reserve_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
             candidates.end(),
             [&ctx](const Game::Systems::AI::EntitySnapshot* a,
                    const Game::Systems::AI::EntitySnapshot* b) {
-              const float distance_a = Game::Systems::AI::distance_squared(
-                  a->pos_x, a->pos_y, a->pos_z, ctx.base_pos_x, ctx.base_pos_y, ctx.base_pos_z);
-              const float distance_b = Game::Systems::AI::distance_squared(
-                  b->pos_x, b->pos_y, b->pos_z, ctx.base_pos_x, ctx.base_pos_y, ctx.base_pos_z);
+              const float distance_a =
+                  Game::Systems::AI::distance_squared(a->pos_x,
+                                                      a->pos_y,
+                                                      a->pos_z,
+                                                      ctx.base_pos_x,
+                                                      ctx.base_pos_y,
+                                                      ctx.base_pos_z);
+              const float distance_b =
+                  Game::Systems::AI::distance_squared(b->pos_x,
+                                                      b->pos_y,
+                                                      b->pos_z,
+                                                      ctx.base_pos_x,
+                                                      ctx.base_pos_y,
+                                                      ctx.base_pos_z);
               if (distance_a != distance_b) {
                 return distance_a < distance_b;
               }
@@ -388,13 +402,14 @@ void update_harass_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
   std::vector<Engine::Core::EntityID> surviving_harass;
   surviving_harass.reserve(static_cast<std::size_t>(ctx.effective_harass_units));
   for (auto unit_id : ctx.harass_unit_ids) {
-    auto it = std::find_if(snapshot.friendly_units.begin(),
-                           snapshot.friendly_units.end(),
-                           [&](const Game::Systems::AI::EntitySnapshot& entity) {
-                             return entity.id == unit_id &&
-                                    Game::Systems::AI::is_combat_role_unit(entity) &&
-                                    !Game::Systems::AI::is_reserved_unit(entity.id, ctx);
-                           });
+    auto it =
+        std::find_if(snapshot.friendly_units.begin(),
+                     snapshot.friendly_units.end(),
+                     [&](const Game::Systems::AI::EntitySnapshot& entity) {
+                       return entity.id == unit_id &&
+                              Game::Systems::AI::is_combat_role_unit(entity) &&
+                              !Game::Systems::AI::is_reserved_unit(entity.id, ctx);
+                     });
     if (it != snapshot.friendly_units.end()) {
       surviving_harass.push_back(unit_id);
     }
@@ -433,10 +448,20 @@ void update_harass_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
                 return a_outside_assembly > b_outside_assembly;
               }
 
-              const float distance_a = Game::Systems::AI::distance_squared(
-                  a->pos_x, a->pos_y, a->pos_z, ctx.base_pos_x, ctx.base_pos_y, ctx.base_pos_z);
-              const float distance_b = Game::Systems::AI::distance_squared(
-                  b->pos_x, b->pos_y, b->pos_z, ctx.base_pos_x, ctx.base_pos_y, ctx.base_pos_z);
+              const float distance_a =
+                  Game::Systems::AI::distance_squared(a->pos_x,
+                                                      a->pos_y,
+                                                      a->pos_z,
+                                                      ctx.base_pos_x,
+                                                      ctx.base_pos_y,
+                                                      ctx.base_pos_z);
+              const float distance_b =
+                  Game::Systems::AI::distance_squared(b->pos_x,
+                                                      b->pos_y,
+                                                      b->pos_z,
+                                                      ctx.base_pos_x,
+                                                      ctx.base_pos_y,
+                                                      ctx.base_pos_z);
               if (distance_a != distance_b) {
                 return distance_a > distance_b;
               }
@@ -487,10 +512,10 @@ auto committed_army_count(const Game::Systems::AI::AISnapshot& snapshot,
 }
 
 auto ready_attack_force(const Game::Systems::AI::AIContext& ctx) -> int {
-  return ctx.anchor_is_structural ? ctx.assembled_unit_count
-                                  : std::max(0,
-                                             ctx.total_units - ctx.builder_count -
-                                                 ctx.effective_harass_units);
+  return ctx.anchor_is_structural
+             ? ctx.assembled_unit_count
+             : std::max(
+                   0, ctx.total_units - ctx.builder_count - ctx.effective_harass_units);
 }
 
 auto committable_attack_force(const Game::Systems::AI::AIContext& ctx) -> int {
@@ -512,8 +537,8 @@ auto has_active_local_threat(const Game::Systems::AI::AIContext& ctx) -> bool {
          (ctx.nearby_threat_count > 0);
 }
 
-auto has_recent_local_threat(const Game::Systems::AI::AIContext& ctx, float game_time)
-    -> bool {
+auto has_recent_local_threat(const Game::Systems::AI::AIContext& ctx,
+                             float game_time) -> bool {
   return has_active_local_threat(ctx) ||
          ((ctx.last_local_threat_time > 0.0F) &&
           ((game_time - ctx.last_local_threat_time) <= k_local_threat_memory_duration));
@@ -658,9 +683,9 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
     }
   }
 
-  const EntitySnapshot* primary_barracks_snapshot =
-      (sticky_primary_barracks != nullptr) ? sticky_primary_barracks
-                                           : fallback_primary_barracks;
+  const EntitySnapshot* primary_barracks_snapshot = (sticky_primary_barracks != nullptr)
+                                                        ? sticky_primary_barracks
+                                                        : fallback_primary_barracks;
   if (primary_barracks_snapshot != nullptr) {
     ctx.primary_barracks = primary_barracks_snapshot->id;
     ctx.rally_x = primary_barracks_snapshot->pos_x - 5.0F;
@@ -693,7 +718,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
     }
   }
 
-  update_expansion_site(snapshot, ctx, had_previous_site, previous_site_x, previous_site_z);
+  update_expansion_site(
+      snapshot, ctx, had_previous_site, previous_site_x, previous_site_z);
 
   int catapult_count = 0;
   for (const auto& entity : snapshot.friendly_units) {
@@ -826,14 +852,14 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
 
   if (deadlock_detected && ctx.state != AIState::Defending) {
 
-     if (ctx.state == AIState::Idle && ctx.total_units > 0) {
-       ctx.state = AIState::Gathering;
-     } else if (ctx.state == AIState::Gathering) {
-       if (ctx.visible_enemy_count > 0 && can_initiate_attack(ctx.strategy_config) &&
-           committable_attack_force(ctx) >= reactive_attack_size(ctx.strategy_config)) {
-         ctx.state = AIState::Attacking;
-       } else if (ctx.visible_enemy_count == 0) {
-         ctx.state = AIState::Idle;
+    if (ctx.state == AIState::Idle && ctx.total_units > 0) {
+      ctx.state = AIState::Gathering;
+    } else if (ctx.state == AIState::Gathering) {
+      if (ctx.visible_enemy_count > 0 && can_initiate_attack(ctx.strategy_config) &&
+          committable_attack_force(ctx) >= reactive_attack_size(ctx.strategy_config)) {
+        ctx.state = AIState::Attacking;
+      } else if (ctx.visible_enemy_count == 0) {
+        ctx.state = AIState::Idle;
       }
     } else if (ctx.state == AIState::Attacking) {
 
@@ -861,8 +887,7 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
   previous_state = ctx.state;
 
   if (ctx.state_timer < min_state_duration &&
-      ((!has_active_local_threat(ctx)) ||
-        ctx.state == AIState::Defending)) {
+      ((!has_active_local_threat(ctx)) || ctx.state == AIState::Defending)) {
     return;
   }
 
@@ -878,21 +903,21 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
     } else if (wants_expansion(ctx)) {
 
       ctx.state = AIState::Expanding;
-     } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
+    } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
 
-       if (can_initiate_attack(ctx.strategy_config) &&
-           committable_attack_force(ctx) >= reactive_attack_size(ctx.strategy_config)) {
-         ctx.state = AIState::Attacking;
-       }
-     }
+      if (can_initiate_attack(ctx.strategy_config) &&
+          committable_attack_force(ctx) >= reactive_attack_size(ctx.strategy_config)) {
+        ctx.state = AIState::Attacking;
+      }
+    }
     break;
 
   case AIState::Gathering: {
 
-     const auto& strategy = ctx.strategy_config;
+    const auto& strategy = ctx.strategy_config;
 
-     const int MIN_UNITS_FOR_REACTIVE_ATTACK = reactive_attack_size(strategy);
-     const int MIN_UNITS_FOR_PROACTIVE_ATTACK = proactive_attack_size(strategy);
+    const int MIN_UNITS_FOR_REACTIVE_ATTACK = reactive_attack_size(strategy);
+    const int MIN_UNITS_FOR_PROACTIVE_ATTACK = proactive_attack_size(strategy);
     if (ctx.total_units < 1) {
       ctx.state = AIState::Idle;
     } else if (ctx.average_health < (0.40F * strategy.defense_modifier)) {
@@ -901,16 +926,16 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
     } else if (wants_expansion(ctx)) {
 
       ctx.state = AIState::Expanding;
-      } else if (ctx.visible_enemy_count > 0 && can_initiate_attack(strategy) &&
-                committable_attack_force(ctx) >= MIN_UNITS_FOR_REACTIVE_ATTACK) {
+    } else if (ctx.visible_enemy_count > 0 && can_initiate_attack(strategy) &&
+               committable_attack_force(ctx) >= MIN_UNITS_FOR_REACTIVE_ATTACK) {
 
-       ctx.state = AIState::Attacking;
-     } else if (committable_attack_force(ctx) >=
-                    std::max(MIN_UNITS_FOR_PROACTIVE_ATTACK,
-                             ctx.macro_targets.assembly_size) &&
-                can_initiate_attack(strategy)) {
+      ctx.state = AIState::Attacking;
+    } else if (committable_attack_force(ctx) >=
+                   std::max(MIN_UNITS_FOR_PROACTIVE_ATTACK,
+                            ctx.macro_targets.assembly_size) &&
+               can_initiate_attack(strategy)) {
 
-       ctx.state = AIState::Attacking;
+      ctx.state = AIState::Attacking;
     }
   } break;
 
@@ -936,14 +961,14 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
 
   case AIState::Defending:
 
-     if (has_recent_local_threat(ctx, snapshot.game_time)) {
+    if (has_recent_local_threat(ctx, snapshot.game_time)) {
 
-     } else if (can_initiate_attack(ctx.strategy_config) &&
-                committable_attack_force(ctx) >=
-                    std::max(proactive_attack_size(ctx.strategy_config),
-                             ctx.macro_targets.assembly_size) &&
-                ctx.average_health >
-                     resume_attack_health_threshold(ctx.strategy_config)) {
+    } else if (can_initiate_attack(ctx.strategy_config) &&
+               committable_attack_force(ctx) >=
+                   std::max(proactive_attack_size(ctx.strategy_config),
+                            ctx.macro_targets.assembly_size) &&
+               ctx.average_health >
+                   resume_attack_health_threshold(ctx.strategy_config)) {
 
       ctx.state = AIState::Attacking;
     } else if (ctx.total_units < 2) {

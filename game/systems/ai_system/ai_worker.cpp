@@ -1,7 +1,6 @@
 #include "ai_worker.h"
 
 #include <QDebug>
-
 #include <queue>
 
 #include <atomic>

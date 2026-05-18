@@ -172,11 +172,11 @@ TEST_F(CombatModeTest, ManualGroupMoveSuppressesAutoEngagementWhilePathPending) 
   CommandService::MoveOptions options;
   options.group_move = true;
   options.retry_individual_on_group_failure = true;
-  CommandService::move_units(*world,
-                             {leader->get_id(), flank->get_id()},
-                             {QVector3D(18.0F, 0.0F, 0.0F),
-                              QVector3D(18.0F, 0.0F, 1.0F)},
-                             options);
+  CommandService::move_units(
+      *world,
+      {leader->get_id(), flank->get_id()},
+      {QVector3D(18.0F, 0.0F, 0.0F), QVector3D(18.0F, 0.0F, 1.0F)},
+      options);
 
   auto* leader_movement = leader->get_component<MovementComponent>();
   ASSERT_NE(leader_movement, nullptr);

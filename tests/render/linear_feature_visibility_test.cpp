@@ -64,12 +64,15 @@ TEST(LinearFeatureVisibilityTest, AllowsOutOfBoundsOverride) {
 }
 
 TEST(LinearFeatureVisibilityTest, RecommendedSampleCountScalesWithFeatureLength) {
-  EXPECT_EQ(Render::Ground::recommended_linear_feature_visibility_sample_count(0.1F, 1.0F),
-            2);
-  EXPECT_EQ(Render::Ground::recommended_linear_feature_visibility_sample_count(4.2F, 1.0F),
-            6);
-  EXPECT_EQ(Render::Ground::recommended_linear_feature_visibility_sample_count(4.2F, 0.5F),
-            10);
+  EXPECT_EQ(
+      Render::Ground::recommended_linear_feature_visibility_sample_count(0.1F, 1.0F),
+      2);
+  EXPECT_EQ(
+      Render::Ground::recommended_linear_feature_visibility_sample_count(4.2F, 1.0F),
+      6);
+  EXPECT_EQ(
+      Render::Ground::recommended_linear_feature_visibility_sample_count(4.2F, 0.5F),
+      10);
 }
 
 } // namespace

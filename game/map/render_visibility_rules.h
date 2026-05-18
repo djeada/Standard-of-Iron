@@ -13,10 +13,10 @@ enum class RenderVisibilityState : std::uint8_t {
   Visible = 2,
 };
 
-[[nodiscard]] inline auto classify_world_visibility(
-    const VisibilityService::Snapshot& snapshot,
-    float world_x,
-    float world_z) -> RenderVisibilityState {
+[[nodiscard]] inline auto
+classify_world_visibility(const VisibilityService::Snapshot& snapshot,
+                          float world_x,
+                          float world_z) -> RenderVisibilityState {
   if (!snapshot.initialized) {
     return RenderVisibilityState::Visible;
   }
@@ -29,10 +29,10 @@ enum class RenderVisibilityState : std::uint8_t {
   return RenderVisibilityState::Hidden;
 }
 
-[[nodiscard]] inline auto classify_static_world_cell_visibility(
-    const VisibilityService::Snapshot& snapshot,
-    int grid_x,
-    int grid_z) -> RenderVisibilityState {
+[[nodiscard]] inline auto
+classify_static_world_cell_visibility(const VisibilityService::Snapshot& snapshot,
+                                      int grid_x,
+                                      int grid_z) -> RenderVisibilityState {
   if (!snapshot.initialized) {
     return RenderVisibilityState::Visible;
   }
@@ -48,9 +48,7 @@ enum class RenderVisibilityState : std::uint8_t {
 }
 
 [[nodiscard]] inline auto is_world_position_in_visibility_bounds(
-    const VisibilityService::Snapshot& snapshot,
-    float world_x,
-    float world_z) -> bool {
+    const VisibilityService::Snapshot& snapshot, float world_x, float world_z) -> bool {
   if (!snapshot.initialized) {
     return true;
   }
@@ -63,32 +61,24 @@ enum class RenderVisibilityState : std::uint8_t {
 }
 
 [[nodiscard]] inline auto should_render_non_local_unit(
-    const VisibilityService::Snapshot& snapshot,
-    float world_x,
-    float world_z) -> bool {
+    const VisibilityService::Snapshot& snapshot, float world_x, float world_z) -> bool {
   return classify_world_visibility(snapshot, world_x, world_z) ==
          RenderVisibilityState::Visible;
 }
 
 [[nodiscard]] inline auto should_render_non_local_preview(
-    const VisibilityService::Snapshot& snapshot,
-    float world_x,
-    float world_z) -> bool {
+    const VisibilityService::Snapshot& snapshot, float world_x, float world_z) -> bool {
   return should_render_non_local_unit(snapshot, world_x, world_z);
 }
 
 [[nodiscard]] inline auto should_render_combat_effect(
-    const VisibilityService::Snapshot& snapshot,
-    float world_x,
-    float world_z) -> bool {
+    const VisibilityService::Snapshot& snapshot, float world_x, float world_z) -> bool {
   return classify_world_visibility(snapshot, world_x, world_z) ==
          RenderVisibilityState::Visible;
 }
 
 [[nodiscard]] inline auto is_static_world_cell_visible(
-    const VisibilityService::Snapshot& snapshot,
-    int grid_x,
-    int grid_z) -> bool {
+    const VisibilityService::Snapshot& snapshot, int grid_x, int grid_z) -> bool {
   return classify_static_world_cell_visibility(snapshot, grid_x, grid_z) ==
          RenderVisibilityState::Visible;
 }

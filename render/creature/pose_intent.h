@@ -23,8 +23,7 @@ is_stationary_melee_combat_phase(Render::GL::CombatAnimPhase phase) noexcept -> 
   return false;
 }
 
-[[nodiscard]] inline auto
-should_prioritize_attack_pose_over_locomotion(
+[[nodiscard]] inline auto should_prioritize_attack_pose_over_locomotion(
     const Render::GL::AnimationInputs& inputs) noexcept -> bool {
   if (!inputs.is_attacking || !inputs.is_melee ||
       !Render::Creature::is_moving_animation(inputs.movement_state)) {
@@ -39,8 +38,8 @@ should_prioritize_attack_pose_over_locomotion(
          !inputs.visual_movement.has_chase_intent;
 }
 
-[[nodiscard]] inline constexpr auto is_attack_pose_intent(PoseIntent intent) noexcept
-    -> bool {
+[[nodiscard]] inline constexpr auto
+is_attack_pose_intent(PoseIntent intent) noexcept -> bool {
   switch (intent) {
   case PoseIntent::AttackMelee:
   case PoseIntent::AttackSpear:
@@ -65,8 +64,8 @@ should_prioritize_attack_pose_over_locomotion(
   return false;
 }
 
-[[nodiscard]] inline constexpr auto is_locomotion_pose_intent(PoseIntent intent) noexcept
-    -> bool {
+[[nodiscard]] inline constexpr auto
+is_locomotion_pose_intent(PoseIntent intent) noexcept -> bool {
   switch (intent) {
   case PoseIntent::Walk:
   case PoseIntent::Run:
@@ -231,8 +230,8 @@ resolve_pose(const Render::GL::AnimationInputs& inputs) noexcept -> ResolvedPose
   return resolve_pose_for_intent(intent).motion_state;
 }
 
-[[nodiscard]] inline auto
-humanoid_state_for_intent(PoseIntent intent) noexcept -> Render::Humanoid::HumanoidState {
+[[nodiscard]] inline auto humanoid_state_for_intent(PoseIntent intent) noexcept
+    -> Render::Humanoid::HumanoidState {
   return resolve_pose_for_intent(intent).humanoid_state;
 }
 

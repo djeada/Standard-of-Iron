@@ -124,12 +124,11 @@ auto parse_resource_config(const QJsonObject& track_object) -> AudioResourceConf
   AudioResourceConfig config;
   config.category =
       parse_category(track_object.value(QStringLiteral("category")).toString());
-  config.volume = std::max(
-      0.0F,
-      float(track_object.value(QStringLiteral("volume")).toDouble(
-          AudioConstants::DEFAULT_VOLUME)));
-  config.priority =
-      track_object.value(QStringLiteral("priority")).toInt(AudioConstants::DEFAULT_PRIORITY);
+  config.volume = std::max(0.0F,
+                           float(track_object.value(QStringLiteral("volume"))
+                                     .toDouble(AudioConstants::DEFAULT_VOLUME)));
+  config.priority = track_object.value(QStringLiteral("priority"))
+                        .toInt(AudioConstants::DEFAULT_PRIORITY);
   config.cooldown_ms =
       std::max(0, track_object.value(QStringLiteral("cooldown_ms")).toInt(0));
   config.max_instances = static_cast<size_t>(
@@ -275,16 +274,15 @@ auto load_cached_entry(AudioSystem& audio_sys, const CachedAudioEntry& entry) ->
 
   bool ok = false;
   if (entry.config.category == AudioCategory::MUSIC) {
-    ok = audio_sys.load_music(entry.id.toStdString(),
-                              entry.resolved_path.toStdString(),
-                              entry.config);
+    ok = audio_sys.load_music(
+        entry.id.toStdString(), entry.resolved_path.toStdString(), entry.config);
   } else {
-    ok = audio_sys.load_sound(entry.id.toStdString(),
-                              entry.resolved_path.toStdString(),
-                              entry.config);
+    ok = audio_sys.load_sound(
+        entry.id.toStdString(), entry.resolved_path.toStdString(), entry.config);
   }
   if (!ok) {
-    qWarning() << "Failed to load audio asset" << entry.id << "from" << entry.resolved_path;
+    qWarning() << "Failed to load audio asset" << entry.id << "from"
+               << entry.resolved_path;
     return false;
   }
 
@@ -294,7 +292,8 @@ auto load_cached_entry(AudioSystem& audio_sys, const CachedAudioEntry& entry) ->
   return true;
 }
 
-auto tags_match(const CachedAudioEntry& entry, const QMap<QString, QString>& tags) -> bool {
+auto tags_match(const CachedAudioEntry& entry,
+                const QMap<QString, QString>& tags) -> bool {
   for (auto it = tags.begin(); it != tags.end(); ++it) {
     auto entry_it = entry.tags.find(normalize(it.key()));
     if (entry_it == entry.tags.end() || entry_it.value() != normalize(it.value())) {
@@ -355,7 +354,8 @@ void AudioResourceLoader::unload_audio_resources(AudioLoadPolicy load_policy) {
   }
 }
 
-auto AudioResourceLoader::ensure_audio_resource_loaded(const QString& resource_id) -> bool {
+auto AudioResourceLoader::ensure_audio_resource_loaded(const QString& resource_id)
+    -> bool {
   std::lock_guard<std::mutex> const lock(registry_mutex());
   const CachedAudioEntry* entry = find_cached_entry_locked(resource_id);
   if (entry == nullptr) {
@@ -364,9 +364,8 @@ auto AudioResourceLoader::ensure_audio_resource_loaded(const QString& resource_i
   return load_cached_entry(AudioSystem::get_instance(), *entry);
 }
 
-auto AudioResourceLoader::find_first_resource_id(AudioCategory category,
-                                                 const QMap<QString, QString>& tags)
-    -> QString {
+auto AudioResourceLoader::find_first_resource_id(
+    AudioCategory category, const QMap<QString, QString>& tags) -> QString {
   std::lock_guard<std::mutex> const lock(registry_mutex());
   cache_manifest_locked();
 

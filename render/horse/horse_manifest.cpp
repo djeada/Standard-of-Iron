@@ -798,8 +798,8 @@ auto horse_front_calf_mesh() noexcept -> Render::GL::Mesh* {
         {0.50F, 0.00F, -0.01F, 0.16F, 0.15F, 0.19F, 0.18F},
     }};
     scale_leg_span_thickness(rings, k_horse_calf_thickness_scale);
-    scale_leg_span_width(
-        rings, k_horse_segmented_leg_width_scale * k_horse_calf_width_scale);
+    scale_leg_span_width(rings,
+                         k_horse_segmented_leg_width_scale * k_horse_calf_width_scale);
     return build_horse_leg_span_mesh(rings);
   }();
   return mesh.get();
@@ -814,8 +814,8 @@ auto horse_rear_calf_mesh() noexcept -> Render::GL::Mesh* {
         {0.50F, 0.00F, 0.00F, 0.16F, 0.15F, 0.18F, 0.20F},
     }};
     scale_leg_span_thickness(rings, k_horse_calf_thickness_scale);
-    scale_leg_span_width(
-        rings, k_horse_segmented_leg_width_scale * k_horse_calf_width_scale);
+    scale_leg_span_width(rings,
+                         k_horse_segmented_leg_width_scale * k_horse_calf_width_scale);
     return build_horse_leg_span_mesh(rings);
   }();
   return mesh.get();
@@ -905,8 +905,7 @@ auto build_horse_full_leg_overlays()
                                         dims.body_length * (front ? 0.010F : 0.020F));
     calf.params.radius = dims.body_width * (front ? 0.290F : 0.310F) * 2.0F *
                          k_horse_calf_thickness_scale *
-                         k_horse_segmented_leg_width_scale *
-                         k_horse_calf_width_scale;
+                         k_horse_segmented_leg_width_scale * k_horse_calf_width_scale;
     calf.params.depth_radius = dims.body_width * (front ? 0.410F : 0.450F) * 2.0F *
                                k_horse_calf_thickness_scale;
     calf.custom_mesh = front ? horse_front_calf_mesh() : horse_rear_calf_mesh();

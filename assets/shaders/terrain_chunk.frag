@@ -182,8 +182,8 @@ void main() {
   float feature_foot = clamp(v_feature_foot, 0.0, 1.0);
   vec3 normal = geom_normal();
 
-  normal = normalize(mix(normal, normalize(v_normal), max(entry_mask * 0.5,
-                                                          feature_foot * 0.22)));
+  normal = normalize(
+      mix(normal, normalize(v_normal), max(entry_mask * 0.5, feature_foot * 0.22)));
 
   if (u_has_height_tex == 1) {
     vec2 huv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
@@ -250,9 +250,8 @@ void main() {
   grass_color = mix(grass_color,
                     mix(u_grass_secondary, u_soil_color, 0.20),
                     entry_shelter * (0.10 + 0.10 * u_moisture_level));
-  grass_color = mix(grass_color,
-                    mix(u_grass_primary, u_soil_color, 0.30),
-                    foot_shelter * 0.22);
+  grass_color =
+      mix(grass_color, mix(u_grass_primary, u_soil_color, 0.30), foot_shelter * 0.22);
   vec3 flat_grass_color =
       mix(u_grass_primary, u_grass_secondary, 0.18 + moisture_var * 0.22);
   grass_color = mix(grass_color, flat_grass_color, flat_terrain_mask * 0.45);

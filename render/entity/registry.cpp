@@ -61,7 +61,8 @@ auto EntityRendererRegistry::get(RendererHandle handle) const -> const RenderFun
   return &m_renderers[handle];
 }
 
-auto EntityRendererRegistry::get_handle(const std::string& type) const -> RendererHandle {
+auto EntityRendererRegistry::get_handle(const std::string& type) const
+    -> RendererHandle {
   auto it = m_lookup.find(type);
   if (it == m_lookup.end()) {
     return k_invalid_renderer_handle;

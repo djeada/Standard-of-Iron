@@ -22,12 +22,13 @@ auto make_test_map(int width = 12, int height = 12) -> Game::Map::MapDefinition 
   return map;
 }
 
-auto add_unit(Engine::Core::World& world, float x, float z, int owner_id)
-    -> Engine::Core::Entity* {
+auto add_unit(Engine::Core::World& world,
+              float x,
+              float z,
+              int owner_id) -> Engine::Core::Entity* {
   auto* entity = world.create_entity();
   (void)entity->add_component<Engine::Core::TransformComponent>(x, 0.0F, z);
-  auto* unit =
-      entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
+  auto* unit = entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
   unit->owner_id = owner_id;
   return entity;
 }
@@ -49,27 +50,26 @@ TEST(RuntimeFrameOrchestratorTest, SimulationRunsBeforeMinimapNotifier) {
                  QVector3D(0.0F, 1.0F, 0.0F));
 
   RuntimeFrameOrchestrator orchestrator;
-  RuntimeFrameState state{.local_owner_id = 1, .viewport_width = 800, .viewport_height = 600};
+  RuntimeFrameState state{
+      .local_owner_id = 1, .viewport_width = 800, .viewport_height = 600};
   EntityCache entity_cache;
   bool simulation_ran = false;
   int minimap_notifications = 0;
 
-  orchestrator.update(
-      AppSceneContext{.world = &world,
-                      .active_camera = &camera,
-                      .minimap_manager = &minimap_manager},
-      state,
-      entity_cache,
-      nullptr,
-      QString(),
-      0.016F,
-      FrameUpdateCallbacks{
-          .on_minimap_image_changed =
-              [&]() {
-                EXPECT_TRUE(simulation_ran);
-                ++minimap_notifications;
-              }},
-      [&](float) { simulation_ran = true; });
+  orchestrator.update(AppSceneContext{.world = &world,
+                                      .active_camera = &camera,
+                                      .minimap_manager = &minimap_manager},
+                      state,
+                      entity_cache,
+                      nullptr,
+                      QString(),
+                      0.016F,
+                      FrameUpdateCallbacks{.on_minimap_image_changed =
+                                               [&]() {
+                                                 EXPECT_TRUE(simulation_ran);
+                                                 ++minimap_notifications;
+                                               }},
+                      [&](float) { simulation_ran = true; });
 
   EXPECT_TRUE(simulation_ran);
   EXPECT_EQ(minimap_notifications, 1);
@@ -86,8 +86,9 @@ TEST(RuntimeFrameOrchestratorTest, SelectionRefreshNotifierFiresAtThreshold) {
   selection_system->select_unit(unit->get_id());
 
   RuntimeFrameOrchestrator orchestrator;
-  RuntimeFrameState state{
-      .local_owner_id = 1, .selection_refresh_enabled = true, .selection_refresh_counter = 14};
+  RuntimeFrameState state{.local_owner_id = 1,
+                          .selection_refresh_enabled = true,
+                          .selection_refresh_counter = 14};
   EntityCache entity_cache;
   int selection_notifications = 0;
 
@@ -97,9 +98,10 @@ TEST(RuntimeFrameOrchestratorTest, SelectionRefreshNotifierFiresAtThreshold) {
                       nullptr,
                       QString(),
                       0.016F,
-                      FrameUpdateCallbacks{
-                          .on_selected_units_data_changed =
-                              [&]() { ++selection_notifications; }},
+                      FrameUpdateCallbacks{.on_selected_units_data_changed =
+                                               [&]() {
+                                                 ++selection_notifications;
+                                               }},
                       [](float) {});
 
   EXPECT_EQ(selection_notifications, 1);

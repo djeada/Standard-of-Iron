@@ -37,7 +37,8 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
 
   constexpr int BUILDER_PRODUCTION_INTERVAL = 3;
   const int minimum_builders = std::max(1, context.macro_targets.builder_count - 1);
-  const int desired_builders = std::max(minimum_builders, context.macro_targets.builder_count);
+  const int desired_builders =
+      std::max(minimum_builders, context.macro_targets.builder_count);
 
   bool should_produce_builder = false;
 
@@ -72,7 +73,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
       const float target_ranged_ratio =
           std::clamp(0.5F + (context.strategy_config.defense_modifier -
                              context.strategy_config.aggression_modifier) *
-                                 0.1F,
+                                0.1F,
                      0.25F,
                      0.75F);
       produce_ranged = (ranged_ratio < target_ranged_ratio);

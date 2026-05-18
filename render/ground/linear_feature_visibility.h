@@ -22,9 +22,9 @@ struct LinearFeatureVisibilityResult {
   QVector3D color_multiplier{1.0F, 1.0F, 1.0F};
 };
 
-[[nodiscard]] inline auto recommended_linear_feature_visibility_sample_count(
-    float segment_length,
-    float tile_size) -> int {
+[[nodiscard]] inline auto
+recommended_linear_feature_visibility_sample_count(float segment_length,
+                                                   float tile_size) -> int {
   const float safe_tile = std::max(tile_size, 0.001F);
   return std::max(2, static_cast<int>(std::ceil(segment_length / safe_tile)) + 1);
 }
@@ -47,9 +47,9 @@ inline auto evaluate_linear_feature_visibility(
   for (int i = 0; i < sample_count; ++i) {
     const float t = static_cast<float>(i) / static_cast<float>(sample_count - 1);
     const QVector3D sample = start + (end - start) * t;
-    any_sample_in_bounds = any_sample_in_bounds ||
-                           Game::Map::is_world_position_in_visibility_bounds(
-                               *snapshot, sample.x(), sample.z());
+    any_sample_in_bounds =
+        any_sample_in_bounds || Game::Map::is_world_position_in_visibility_bounds(
+                                    *snapshot, sample.x(), sample.z());
 
     const auto sample_visibility =
         Game::Map::classify_world_visibility(*snapshot, sample.x(), sample.z());

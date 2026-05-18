@@ -276,9 +276,9 @@ TEST(CivilianDeliverySystemTest, FullBarracksRejectsCivilianWithoutConsumingIt) 
 
   auto* remaining_civilian = world.get_entity(civilian_id);
   ASSERT_NE(remaining_civilian, nullptr);
-  EXPECT_EQ(remaining_civilian
-                ->get_component<Engine::Core::CivilianDeliveryComponent>(),
-            nullptr);
+  EXPECT_EQ(
+      remaining_civilian->get_component<Engine::Core::CivilianDeliveryComponent>(),
+      nullptr);
   EXPECT_EQ(barracks_prod->manpower_available, 100);
 }
 

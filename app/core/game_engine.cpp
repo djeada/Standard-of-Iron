@@ -97,8 +97,8 @@
 #include "game/systems/camera_visibility_service.h"
 #include "game/systems/capture_system.h"
 #include "game/systems/catapult_attack_system.h"
-#include "game/systems/cleanup_system.h"
 #include "game/systems/civilian_delivery_system.h"
+#include "game/systems/cleanup_system.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
@@ -167,9 +167,9 @@
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 #include "renderer_bootstrap.h"
-#include "visibility_coordinator.h"
 #include "selection_query_service.h"
 #include "utils/resource_utils.h"
+#include "visibility_coordinator.h"
 
 namespace {
 
@@ -708,7 +708,8 @@ void GameEngine::on_right_double_click(qreal sx, qreal sy) {
       m_input_handler->is_placing_formation();
   if (started_formation_placement) {
     m_input_handler->on_formation_cancel();
-  } else if (m_right_mouse_gesture.suppress_release_click || is_placing_construction()) {
+  } else if (m_right_mouse_gesture.suppress_release_click ||
+             is_placing_construction()) {
     m_right_mouse_gesture.double_click_handled = true;
     return;
   }
@@ -877,10 +878,8 @@ void GameEngine::on_civilian_delivery_click(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  m_input_handler->on_civilian_delivery_click(sx,
-                                              sy,
-                                              m_runtime.local_owner_id,
-                                              m_viewport);
+  m_input_handler->on_civilian_delivery_click(
+      sx, sy, m_runtime.local_owner_id, m_viewport);
 }
 
 void GameEngine::on_guard_click(qreal sx, qreal sy) {
@@ -1510,21 +1509,20 @@ auto GameEngine::enemy_troops_defeated() const -> int {
 }
 
 auto GameEngine::scene_context() const -> AppSceneContext {
-  return AppSceneContext{
-      .world = m_world.get(),
-      .renderer = m_renderer.get(),
-      .active_camera = m_camera,
-      .ground = m_surface ? m_surface->ground() : nullptr,
-      .terrain = m_surface ? m_surface->terrain() : nullptr,
-      .features = m_features.get(),
-      .scatter = m_scatter.get(),
-      .fog = m_fog.get(),
-      .boundary_fog = m_boundary_fog.get(),
-      .rain = m_rain.get(),
-      .minimap_manager = m_minimap_manager.get(),
-      .visibility_coordinator = m_visibility_coordinator.get(),
-      .victory_service = m_victory_service.get(),
-      .rain_manager = m_rain_manager.get()};
+  return AppSceneContext{.world = m_world.get(),
+                         .renderer = m_renderer.get(),
+                         .active_camera = m_camera,
+                         .ground = m_surface ? m_surface->ground() : nullptr,
+                         .terrain = m_surface ? m_surface->terrain() : nullptr,
+                         .features = m_features.get(),
+                         .scatter = m_scatter.get(),
+                         .fog = m_fog.get(),
+                         .boundary_fog = m_boundary_fog.get(),
+                         .rain = m_rain.get(),
+                         .minimap_manager = m_minimap_manager.get(),
+                         .visibility_coordinator = m_visibility_coordinator.get(),
+                         .victory_service = m_victory_service.get(),
+                         .rain_manager = m_rain_manager.get()};
 }
 
 auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
@@ -1723,20 +1721,25 @@ void GameEngine::update(float dt) {
       .selection_refresh_counter = m_runtime.selection_refresh_counter};
   const FrameUpdateCallbacks callbacks{
       .on_minimap_image_changed = [this]() { emit minimap_image_changed(); },
-      .on_selected_units_data_changed = [this]() { emit selected_units_data_changed(); }};
+      .on_selected_units_data_changed =
+          [this]() {
+            emit selected_units_data_changed();
+          }};
 
   m_frame_orchestrator.update(
       scene_context(),
       frame_state,
       m_entity_cache,
-      (!m_runtime.paused && !m_runtime.loading) ? m_ambient_state_manager.get() : nullptr,
+      (!m_runtime.paused && !m_runtime.loading) ? m_ambient_state_manager.get()
+                                                : nullptr,
       m_runtime.victory_state,
       dt,
       callbacks,
       [this](float step_dt) {
         log_render_stage_once(
             "simulation-update",
-            QStringLiteral("world systems run before render; combat queries rebuild here"));
+            QStringLiteral(
+                "world systems run before render; combat queries rebuild here"));
         update_active_runtime_simulation(step_dt);
       });
   m_runtime.selection_refresh_counter = frame_state.selection_refresh_counter;
@@ -2796,22 +2799,21 @@ auto GameEngine::available_commanders(const QString& nation_id) const -> QVarian
   const QString default_troop =
       App::Core::resolve_commander_troop(nation_id, std::nullopt);
   auto definitions = Game::Units::commander_definitions_for_nation(nation);
-  std::stable_sort(definitions.begin(),
-                   definitions.end(),
-                   [&default_troop](const Game::Units::CommanderDefinition* lhs,
-                                    const Game::Units::CommanderDefinition* rhs) {
-                     const bool lhs_default =
-                         lhs != nullptr &&
-                         QString::fromStdString(
-                             Game::Units::troop_typeToString(lhs->troop_type)) ==
-                             default_troop;
-                     const bool rhs_default =
-                         rhs != nullptr &&
-                         QString::fromStdString(
-                             Game::Units::troop_typeToString(rhs->troop_type)) ==
-                             default_troop;
-                     return lhs_default && !rhs_default;
-                   });
+  std::stable_sort(
+      definitions.begin(),
+      definitions.end(),
+      [&default_troop](const Game::Units::CommanderDefinition* lhs,
+                       const Game::Units::CommanderDefinition* rhs) {
+        const bool lhs_default =
+            lhs != nullptr &&
+            QString::fromStdString(Game::Units::troop_typeToString(lhs->troop_type)) ==
+                default_troop;
+        const bool rhs_default =
+            rhs != nullptr &&
+            QString::fromStdString(Game::Units::troop_typeToString(rhs->troop_type)) ==
+                default_troop;
+        return lhs_default && !rhs_default;
+      });
   for (const auto* definition : definitions) {
     if (definition == nullptr) {
       continue;
@@ -2907,9 +2909,10 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
   player_one.insert("colorIndex", 0);
   player_one.insert("team_id", 0);
   player_one.insert("nationId", mission.player_setup.nation);
-  player_one.insert("commanderTroop",
-                    App::Core::resolve_commander_troop(mission.player_setup.nation,
-                                                       mission.player_setup.commander_troop));
+  player_one.insert(
+      "commanderTroop",
+      App::Core::resolve_commander_troop(mission.player_setup.nation,
+                                         mission.player_setup.commander_troop));
   player_one.insert("isHuman", true);
   player_configs.append(player_one);
 
@@ -2930,9 +2933,9 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
 
     ai_player.insert("team_id", team_id);
     ai_player.insert("nationId", ai_setup.nation);
-    ai_player.insert("commanderTroop",
-                     App::Core::resolve_commander_troop(ai_setup.nation,
-                                                        ai_setup.commander_troop));
+    ai_player.insert(
+        "commanderTroop",
+        App::Core::resolve_commander_troop(ai_setup.nation, ai_setup.commander_troop));
     ai_player.insert("isHuman", false);
     player_configs.append(ai_player);
     player_id++;
@@ -3717,7 +3720,8 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
   if (!m_world || player_configs.isEmpty()) {
     return;
   }
-  if (m_campaign_manager && m_campaign_manager->current_mission_context().is_campaign()) {
+  if (m_campaign_manager &&
+      m_campaign_manager->current_mission_context().is_campaign()) {
     return;
   }
 
@@ -3769,14 +3773,15 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
           unit->health <= 0) {
         continue;
       }
-      anchors.push_back({.position = {transform->position.x, transform->position.z},
-                         .is_building =
-                             Game::Units::is_building_spawn(unit->spawn_type)});
+      anchors.push_back(
+          {.position = {transform->position.x, transform->position.z},
+           .is_building = Game::Units::is_building_spawn(unit->spawn_type)});
     }
     return anchors;
   };
 
-  auto map_spawn_fallback = [&](int owner_id) -> std::optional<Game::Mission::Position> {
+  auto map_spawn_fallback =
+      [&](int owner_id) -> std::optional<Game::Mission::Position> {
     if (!map_loaded) {
       return std::nullopt;
     }
@@ -3797,7 +3802,8 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
   };
 
   auto owner_has_living_commander = [&](int owner_id) {
-    for (auto* entity : m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
+    for (auto* entity :
+         m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
       if (entity == nullptr) {
         continue;
       }
@@ -3827,17 +3833,18 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
     processed_owner_ids.insert(owner_id);
 
     const auto* assigned_nation = nation_registry.get_nation_for_player(owner_id);
-    const auto nation_id =
-        assigned_nation != nullptr ? assigned_nation->id
-                                   : nation_registry.default_nation_id();
+    const auto nation_id = assigned_nation != nullptr
+                               ? assigned_nation->id
+                               : nation_registry.default_nation_id();
     QString nation_key = config.value("nationId").toString();
     if (nation_key.isEmpty()) {
-      nation_key = QString::fromStdString(Game::Systems::nation_id_to_string(nation_id));
+      nation_key =
+          QString::fromStdString(Game::Systems::nation_id_to_string(nation_id));
     }
-    const auto configured_commander = config.contains("commanderTroop")
-                                          ? std::optional<QString>(
-                                                config.value("commanderTroop").toString())
-                                          : std::nullopt;
+    const auto configured_commander =
+        config.contains("commanderTroop")
+            ? std::optional<QString>(config.value("commanderTroop").toString())
+            : std::nullopt;
     const QString commander_troop =
         App::Core::resolve_commander_troop(nation_key, configured_commander);
     if (commander_troop.isEmpty()) {
@@ -3861,8 +3868,8 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
     App::Core::ResolvedCommanderPosition commander_position;
     const auto anchors = existing_owner_spawn_anchors(owner_id);
     if (!anchors.empty()) {
-      commander_position = App::Core::resolve_commander_position(
-          {}, {}, anchors, {0.0F, 0.0F});
+      commander_position =
+          App::Core::resolve_commander_position({}, {}, anchors, {0.0F, 0.0F});
     } else if (const auto fallback = map_spawn_fallback(owner_id);
                fallback.has_value()) {
       commander_position = {.position = fallback.value(),
@@ -3873,8 +3880,8 @@ void GameEngine::apply_skirmish_commander_setup(const QVariantList& player_confi
     }
 
     Game::Units::SpawnParams params;
-    params.position = QVector3D(
-        commander_position.position.x, 0.0F, commander_position.position.z);
+    params.position =
+        QVector3D(commander_position.position.x, 0.0F, commander_position.position.z);
     params.player_id = owner_id;
     params.spawn_type = *spawn_type;
     params.ai_controlled = owner_registry.is_ai(owner_id);
@@ -4148,13 +4155,12 @@ auto GameEngine::load_from_slot(const QString& slot) -> bool {
   Game::Systems::GameStateSerializer::restore_runtime_from_metadata(meta, runtime_snap);
   apply_runtime_snapshot(runtime_snap);
 
-  GameStateRestorer::restore_environment_from_metadata(
-      meta,
-      scene_context(),
-      m_level,
-      m_runtime.local_owner_id,
-      m_minimap_manager.get(),
-      m_visibility_coordinator.get());
+  GameStateRestorer::restore_environment_from_metadata(meta,
+                                                       scene_context(),
+                                                       m_level,
+                                                       m_runtime.local_owner_id,
+                                                       m_minimap_manager.get(),
+                                                       m_visibility_coordinator.get());
 
   auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::register_built_in_units(*unit_reg);

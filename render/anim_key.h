@@ -33,8 +33,10 @@ struct AnimKeyHash {
     h ^= static_cast<std::size_t>(key.combat_phase) + 0x9e3779b9 + (h << 6) + (h >> 2);
     h ^= static_cast<std::size_t>(key.frame) + 0x9e3779b9 + (h << 6) + (h >> 2);
     h ^= static_cast<std::size_t>(key.attack_family) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= static_cast<std::size_t>(key.attack_variant) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= static_cast<std::size_t>(key.finisher_attack) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^=
+        static_cast<std::size_t>(key.attack_variant) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= static_cast<std::size_t>(key.finisher_attack) + 0x9e3779b9 + (h << 6) +
+         (h >> 2);
     return h;
   }
 };

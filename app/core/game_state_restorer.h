@@ -31,12 +31,13 @@ class VisibilityCoordinator;
 
 class GameStateRestorer {
 public:
-  static void restore_environment_from_metadata(const QJsonObject& metadata,
-                                                const AppSceneContext& scene,
-                                                Game::Systems::LevelSnapshot& level,
-                                                int local_owner_id,
-                                                MinimapManager* minimap_manager,
-                                                VisibilityCoordinator* visibility_coordinator);
+  static void
+  restore_environment_from_metadata(const QJsonObject& metadata,
+                                    const AppSceneContext& scene,
+                                    Game::Systems::LevelSnapshot& level,
+                                    int local_owner_id,
+                                    MinimapManager* minimap_manager,
+                                    VisibilityCoordinator* visibility_coordinator);
 
   static void rebuild_registries_after_load(Engine::Core::World* world,
                                             int& selected_player_id,

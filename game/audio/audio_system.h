@@ -136,10 +136,10 @@ private:
   auto resolve_resource_id_locked(const std::string& resource_id) const -> std::string;
   auto should_accept_sound_locked(int priority) -> bool;
   auto get_active_instance_count_locked(const std::string& resource_id) const -> size_t;
-  auto is_sound_on_cooldown_locked(const std::string& resource_id,
-                                   int cooldown_ms,
-                                   std::chrono::steady_clock::time_point now) const
-      -> bool;
+  auto
+  is_sound_on_cooldown_locked(const std::string& resource_id,
+                              int cooldown_ms,
+                              std::chrono::steady_clock::time_point now) const -> bool;
   void mark_sound_played_locked(const std::string& resource_id,
                                 std::chrono::steady_clock::time_point now);
   auto get_resource_config_locked(const std::string& resource_id) const

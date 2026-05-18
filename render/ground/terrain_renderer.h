@@ -11,8 +11,8 @@
 
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
-#include "visibility_texture_helper.h"
 #include "../world_chunk.h"
+#include "visibility_texture_helper.h"
 
 namespace Render::GL {
 class Buffer;

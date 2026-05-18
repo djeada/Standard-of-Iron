@@ -52,8 +52,10 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     }
 
     if (scene.minimap_manager != nullptr) {
-      auto* selection_system = scene.world->get_system<Game::Systems::SelectionSystem>();
-      scene.minimap_manager->update_units(scene.world, selection_system, state.local_owner_id);
+      auto* selection_system =
+          scene.world->get_system<Game::Systems::SelectionSystem>();
+      scene.minimap_manager->update_units(
+          scene.world, selection_system, state.local_owner_id);
       scene.minimap_manager->update_camera_viewport(
           scene.active_camera,
           static_cast<float>(state.viewport_width),

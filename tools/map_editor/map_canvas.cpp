@@ -717,15 +717,15 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent* event) {
       const auto& terrain = m_map_data->terrain_elements();
       if (m_selected_index < terrain.size()) {
         const TerrainElement& current = terrain[m_selected_index];
-        const bool moved = (m_drag_pre_terrain.x != current.x) ||
-                           (m_drag_pre_terrain.z != current.z);
+        const bool moved =
+            (m_drag_pre_terrain.x != current.x) || (m_drag_pre_terrain.z != current.z);
         if (moved) {
-          m_map_data->record_command(std::make_unique<UpdateTerrainCmd>(
-              m_map_data,
-              m_selected_index,
-              m_drag_pre_terrain,
-              current,
-              "Move " + current.type));
+          m_map_data->record_command(
+              std::make_unique<UpdateTerrainCmd>(m_map_data,
+                                                 m_selected_index,
+                                                 m_drag_pre_terrain,
+                                                 current,
+                                                 "Move " + current.type));
         }
       }
     } else if (m_selected_type == 1) {
@@ -735,27 +735,27 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent* event) {
         const bool moved = (m_drag_pre_world_prop.x != current.x) ||
                            (m_drag_pre_world_prop.z != current.z);
         if (moved) {
-          m_map_data->record_command(std::make_unique<UpdateWorldPropCmd>(
-              m_map_data,
-              m_selected_index,
-              m_drag_pre_world_prop,
-              current,
-              "Move " + current.type));
+          m_map_data->record_command(
+              std::make_unique<UpdateWorldPropCmd>(m_map_data,
+                                                   m_selected_index,
+                                                   m_drag_pre_world_prop,
+                                                   current,
+                                                   "Move " + current.type));
         }
       }
     } else if (m_selected_type == 2) {
       const auto& linear = m_map_data->linear_elements();
       if (m_selected_index < linear.size()) {
         const LinearElement& current = linear[m_selected_index];
-        const bool moved =
-            (m_drag_pre_linear.start != current.start) || (m_drag_pre_linear.end != current.end);
+        const bool moved = (m_drag_pre_linear.start != current.start) ||
+                           (m_drag_pre_linear.end != current.end);
         if (moved) {
-          m_map_data->record_command(std::make_unique<UpdateLinearCmd>(
-              m_map_data,
-              m_selected_index,
-              m_drag_pre_linear,
-              current,
-              "Move " + current.type));
+          m_map_data->record_command(
+              std::make_unique<UpdateLinearCmd>(m_map_data,
+                                                m_selected_index,
+                                                m_drag_pre_linear,
+                                                current,
+                                                "Move " + current.type));
         }
       }
     } else if (m_selected_type == 3) {
@@ -765,27 +765,27 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent* event) {
         const bool moved = (m_drag_pre_structure.x != current.x) ||
                            (m_drag_pre_structure.z != current.z);
         if (moved) {
-          m_map_data->record_command(std::make_unique<UpdateStructureCmd>(
-              m_map_data,
-              m_selected_index,
-              m_drag_pre_structure,
-              current,
-              "Move " + current.type));
+          m_map_data->record_command(
+              std::make_unique<UpdateStructureCmd>(m_map_data,
+                                                   m_selected_index,
+                                                   m_drag_pre_structure,
+                                                   current,
+                                                   "Move " + current.type));
         }
       }
     } else if (m_selected_type == 4) {
       const auto& troop_spawns = m_map_data->troop_spawns();
       if (m_selected_index < troop_spawns.size()) {
         const TroopSpawnElement& current = troop_spawns[m_selected_index];
-        const bool moved = (m_drag_pre_troop.x != current.x) ||
-                           (m_drag_pre_troop.z != current.z);
+        const bool moved =
+            (m_drag_pre_troop.x != current.x) || (m_drag_pre_troop.z != current.z);
         if (moved) {
-          m_map_data->record_command(std::make_unique<UpdateTroopSpawnCmd>(
-              m_map_data,
-              m_selected_index,
-              m_drag_pre_troop,
-              current,
-              "Move " + current.type));
+          m_map_data->record_command(
+              std::make_unique<UpdateTroopSpawnCmd>(m_map_data,
+                                                    m_selected_index,
+                                                    m_drag_pre_troop,
+                                                    current,
+                                                    "Move " + current.type));
         }
       }
     }
@@ -1023,18 +1023,8 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QVector2D end_vec(static_cast<float>(end_pos.x()),
                             static_cast<float>(end_pos.y()));
 
-    consider_hit(2,
-                 i,
-                 0,
-                 (cursor - start_vec).length(),
-                 point_hit_radius_px,
-                 4);
-    consider_hit(2,
-                 i,
-                 1,
-                 (cursor - end_vec).length(),
-                 point_hit_radius_px,
-                 4);
+    consider_hit(2, i, 0, (cursor - start_vec).length(), point_hit_radius_px, 4);
+    consider_hit(2, i, 1, (cursor - end_vec).length(), point_hit_radius_px, 4);
   }
 
   for (int i = linear.size() - 1; i >= 0; --i) {
@@ -1042,7 +1032,8 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QPoint start_pos = grid_to_widget(elem.start.x(), elem.start.y());
     const QPoint end_pos = grid_to_widget(elem.end.x(), elem.end.y());
 
-    const QVector2D a(static_cast<float>(start_pos.x()), static_cast<float>(start_pos.y()));
+    const QVector2D a(static_cast<float>(start_pos.x()),
+                      static_cast<float>(start_pos.y()));
     const QVector2D b(static_cast<float>(end_pos.x()), static_cast<float>(end_pos.y()));
     const QVector2D ab = b - a;
     const float ab_length_sq = QVector2D::dotProduct(ab, ab);

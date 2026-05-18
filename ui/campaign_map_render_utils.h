@@ -4,13 +4,16 @@
 #include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>
+
 #include <cmath>
 #include <vector>
 
 namespace CampaignMapRender {
 
-inline auto catmull_rom(const QVector2D &p0, const QVector2D &p1,
-                        const QVector2D &p2, const QVector2D &p3,
+inline auto catmull_rom(const QVector2D& p0,
+                        const QVector2D& p1,
+                        const QVector2D& p2,
+                        const QVector2D& p3,
                         float t) -> QVector2D {
   const float t2 = t * t;
   const float t3 = t2 * t;
@@ -23,8 +26,10 @@ inline auto catmull_rom(const QVector2D &p0, const QVector2D &p1,
   return p0 * c0 + p1 * c1 + p2 * c2 + p3 * c3;
 }
 
-inline auto catmull_rom_tangent(const QVector2D &p0, const QVector2D &p1,
-                                const QVector2D &p2, const QVector2D &p3,
+inline auto catmull_rom_tangent(const QVector2D& p0,
+                                const QVector2D& p1,
+                                const QVector2D& p2,
+                                const QVector2D& p3,
                                 float t) -> QVector2D {
   const float t2 = t * t;
 
@@ -36,9 +41,8 @@ inline auto catmull_rom_tangent(const QVector2D &p0, const QVector2D &p1,
   return p0 * c0 + p1 * c1 + p2 * c2 + p3 * c3;
 }
 
-inline auto
-smooth_catmull_rom(const std::vector<QVector2D> &input,
-                   int samples_per_segment = 8) -> std::vector<QVector2D> {
+inline auto smooth_catmull_rom(const std::vector<QVector2D>& input,
+                               int samples_per_segment = 8) -> std::vector<QVector2D> {
   if (input.size() < 2) {
     return input;
   }
@@ -48,15 +52,14 @@ smooth_catmull_rom(const std::vector<QVector2D> &input,
 
   for (size_t i = 0; i + 1 < input.size(); ++i) {
 
-    const QVector2D &p0 = (i == 0) ? input[0] : input[i - 1];
-    const QVector2D &p1 = input[i];
-    const QVector2D &p2 = input[i + 1];
-    const QVector2D &p3 =
+    const QVector2D& p0 = (i == 0) ? input[0] : input[i - 1];
+    const QVector2D& p1 = input[i];
+    const QVector2D& p2 = input[i + 1];
+    const QVector2D& p3 =
         (i + 2 >= input.size()) ? input[input.size() - 1] : input[i + 2];
 
     for (int s = 0; s < samples_per_segment; ++s) {
-      const float t =
-          static_cast<float>(s) / static_cast<float>(samples_per_segment);
+      const float t = static_cast<float>(s) / static_cast<float>(samples_per_segment);
       result.push_back(catmull_rom(p0, p1, p2, p3, t));
     }
   }
@@ -71,9 +74,17 @@ struct MiterParams {
   float min_denom = 0.2F;
 };
 
-enum class CapStyle { Flat, Round, Square };
+enum class CapStyle {
+  Flat,
+  Round,
+  Square
+};
 
-enum class JoinStyle { Miter, Round, Bevel };
+enum class JoinStyle {
+  Miter,
+  Round,
+  Bevel
+};
 
 struct StrokeMeshConfig {
   float width = 4.0F;
@@ -85,12 +96,11 @@ struct StrokeMeshConfig {
   int join_segments = 4;
 };
 
-inline auto perp_ccw(const QVector2D &v) -> QVector2D {
+inline auto perp_ccw(const QVector2D& v) -> QVector2D {
   return QVector2D(-v.y(), v.x());
 }
 
-inline auto safe_normalize(const QVector2D &v,
-                           float epsilon = 1e-5F) -> QVector2D {
+inline auto safe_normalize(const QVector2D& v, float epsilon = 1e-5F) -> QVector2D {
   const float len = v.length();
   if (len < epsilon) {
     return QVector2D(0.0F, 0.0F);
@@ -98,8 +108,9 @@ inline auto safe_normalize(const QVector2D &v,
   return v / len;
 }
 
-inline auto generate_round_cap(const QVector2D &center,
-                               const QVector2D &direction, float half_width,
+inline auto generate_round_cap(const QVector2D& center,
+                               const QVector2D& direction,
+                               float half_width,
                                int segments,
                                bool is_start) -> std::vector<QVector2D> {
   std::vector<QVector2D> verts;
@@ -127,12 +138,12 @@ inline auto generate_round_cap(const QVector2D &center,
   return verts;
 }
 
-inline auto generate_square_cap(const QVector2D &center,
-                                const QVector2D &direction, float half_width,
+inline auto generate_square_cap(const QVector2D& center,
+                                const QVector2D& direction,
+                                float half_width,
                                 bool is_start) -> std::vector<QVector2D> {
   const QVector2D perp = perp_ccw(direction) * half_width;
-  const QVector2D extension =
-      direction * half_width * (is_start ? -1.0F : 1.0F);
+  const QVector2D extension = direction * half_width * (is_start ? -1.0F : 1.0F);
 
   std::vector<QVector2D> verts;
   verts.reserve(4);
@@ -146,8 +157,8 @@ inline auto generate_square_cap(const QVector2D &center,
 }
 
 inline auto
-build_stroke_mesh(const std::vector<QVector2D> &points,
-                  const StrokeMeshConfig &config) -> std::vector<QVector2D> {
+build_stroke_mesh(const std::vector<QVector2D>& points,
+                  const StrokeMeshConfig& config) -> std::vector<QVector2D> {
   std::vector<QVector2D> result;
 
   if (points.size() < 2 || config.width <= 0.0F) {
@@ -156,7 +167,7 @@ build_stroke_mesh(const std::vector<QVector2D> &points,
 
   std::vector<QVector2D> cleaned;
   cleaned.reserve(points.size());
-  for (const auto &pt : points) {
+  for (const auto& pt : points) {
     if (cleaned.empty()) {
       cleaned.push_back(pt);
       continue;
@@ -176,13 +187,12 @@ build_stroke_mesh(const std::vector<QVector2D> &points,
 
   if (config.start_cap == CapStyle::Round) {
     const QVector2D start_dir = safe_normalize(cleaned[1] - cleaned[0]);
-    auto cap_verts = generate_round_cap(cleaned[0], start_dir, half_width,
-                                        config.cap_segments, true);
+    auto cap_verts = generate_round_cap(
+        cleaned[0], start_dir, half_width, config.cap_segments, true);
     result.insert(result.end(), cap_verts.begin(), cap_verts.end());
   } else if (config.start_cap == CapStyle::Square) {
     const QVector2D start_dir = safe_normalize(cleaned[1] - cleaned[0]);
-    auto cap_verts =
-        generate_square_cap(cleaned[0], start_dir, half_width, true);
+    auto cap_verts = generate_square_cap(cleaned[0], start_dir, half_width, true);
     result.insert(result.end(), cap_verts.begin(), cap_verts.end());
   }
 
@@ -243,14 +253,13 @@ build_stroke_mesh(const std::vector<QVector2D> &points,
   if (config.end_cap == CapStyle::Round) {
     const QVector2D end_dir =
         safe_normalize(cleaned.back() - cleaned[cleaned.size() - 2]);
-    auto cap_verts = generate_round_cap(cleaned.back(), end_dir, half_width,
-                                        config.cap_segments, false);
+    auto cap_verts = generate_round_cap(
+        cleaned.back(), end_dir, half_width, config.cap_segments, false);
     result.insert(result.end(), cap_verts.begin(), cap_verts.end());
   } else if (config.end_cap == CapStyle::Square) {
     const QVector2D end_dir =
         safe_normalize(cleaned.back() - cleaned[cleaned.size() - 2]);
-    auto cap_verts =
-        generate_square_cap(cleaned.back(), end_dir, half_width, false);
+    auto cap_verts = generate_square_cap(cleaned.back(), end_dir, half_width, false);
     result.insert(result.end(), cap_verts.begin(), cap_verts.end());
   }
 
@@ -265,29 +274,37 @@ struct StrokePass {
 
 namespace CartographicStyles {
 
-inline auto get_inked_route_passes(float base_width, int age_factor = 0)
-    -> std::vector<StrokePass> {
+inline auto get_inked_route_passes(float base_width,
+                                   int age_factor = 0) -> std::vector<StrokePass> {
   const float fade = 1.0F - static_cast<float>(age_factor) * 0.08F;
   const float fade_clamped = std::max(0.3F, fade);
 
   return {
 
-      {{0.12F * fade_clamped, 0.09F * fade_clamped, 0.07F * fade_clamped,
+      {{0.12F * fade_clamped,
+        0.09F * fade_clamped,
+        0.07F * fade_clamped,
         0.65F * fade_clamped},
        1.3F,
        0.000F},
 
-      {{0.18F * fade_clamped, 0.14F * fade_clamped, 0.10F * fade_clamped,
+      {{0.18F * fade_clamped,
+        0.14F * fade_clamped,
+        0.10F * fade_clamped,
         0.55F * fade_clamped},
        1.05F,
        0.001F},
 
-      {{0.70F * fade_clamped, 0.58F * fade_clamped, 0.32F * fade_clamped,
+      {{0.70F * fade_clamped,
+        0.58F * fade_clamped,
+        0.32F * fade_clamped,
         0.65F * fade_clamped},
        0.8F,
        0.002F},
 
-      {{0.62F * fade_clamped, 0.22F * fade_clamped, 0.18F * fade_clamped,
+      {{0.62F * fade_clamped,
+        0.22F * fade_clamped,
+        0.18F * fade_clamped,
         0.75F * fade_clamped},
        0.6F,
        0.003F}};
@@ -321,10 +338,12 @@ inline auto get_river_passes(float base_width) -> std::vector<StrokePass> {
       {{0.55F, 0.68F, 0.78F, 0.50F}, 0.4F, 0.002F}};
 }
 
-} 
+} // namespace CartographicStyles
 
-inline auto compute_normal_from_heights(float h_left, float h_right,
-                                        float h_down, float h_up,
+inline auto compute_normal_from_heights(float h_left,
+                                        float h_right,
+                                        float h_down,
+                                        float h_up,
                                         float scale = 1.0F) -> QVector3D {
   const float dx = (h_right - h_left) * scale;
   const float dz = (h_up - h_down) * scale;
@@ -357,7 +376,9 @@ inline auto value_noise_2d(float x, float y) -> float {
   return x0 * (1.0F - sy) + x1 * sy;
 }
 
-inline auto fbm_noise_2d(float x, float y, int octaves = 4,
+inline auto fbm_noise_2d(float x,
+                         float y,
+                         int octaves = 4,
                          float lacunarity = 2.0F,
                          float persistence = 0.5F) -> float {
   float value = 0.0F;
@@ -375,8 +396,8 @@ inline auto fbm_noise_2d(float x, float y, int octaves = 4,
   return value / max_value;
 }
 
-inline auto compute_hillshade(const QVector3D &normal,
-                              const QVector3D &light_dir,
+inline auto compute_hillshade(const QVector3D& normal,
+                              const QVector3D& light_dir,
                               float ambient = 0.3F) -> float {
   const float ndotl = QVector3D::dotProduct(normal, light_dir);
   return ambient + (1.0F - ambient) * std::max(0.0F, ndotl);
@@ -385,10 +406,11 @@ inline auto compute_hillshade(const QVector3D &normal,
 inline auto elevation_to_tint(float elevation, bool is_water) -> QVector4D {
   if (is_water) {
 
-    const float depth_factor =
-        1.0F - std::min(1.0F, std::abs(elevation) * 2.0F);
-    return QVector4D(0.6F * depth_factor + 0.2F, 0.7F * depth_factor + 0.2F,
-                     0.85F * depth_factor + 0.15F, 1.0F);
+    const float depth_factor = 1.0F - std::min(1.0F, std::abs(elevation) * 2.0F);
+    return QVector4D(0.6F * depth_factor + 0.2F,
+                     0.7F * depth_factor + 0.2F,
+                     0.85F * depth_factor + 0.15F,
+                     1.0F);
   }
 
   if (elevation < 0.2F) {
@@ -402,15 +424,14 @@ inline auto elevation_to_tint(float elevation, bool is_water) -> QVector4D {
   }
 
   const float t = (elevation - 0.5F) / 0.5F;
-  return QVector4D(0.95F - t * 0.1F, 0.88F - t * 0.15F, 0.82F - t * 0.12F,
-                   1.0F);
+  return QVector4D(0.95F - t * 0.1F, 0.88F - t * 0.15F, 0.82F - t * 0.12F, 1.0F);
 }
 
 inline auto parchment_pattern(float u, float v, float scale = 8.0F) -> float {
 
   const float n1 = fbm_noise_2d(u * scale, v * scale, 3, 2.0F, 0.5F);
-  const float n2 = fbm_noise_2d(u * scale * 2.5F + 100.0F,
-                                v * scale * 2.5F + 100.0F, 2, 2.0F, 0.4F);
+  const float n2 =
+      fbm_noise_2d(u * scale * 2.5F + 100.0F, v * scale * 2.5F + 100.0F, 2, 2.0F, 0.4F);
 
   const float combined = n1 * 0.6F + n2 * 0.4F;
   return 0.85F + combined * 0.15F;
@@ -430,19 +451,21 @@ struct RegionFocus {
   float yaw;
 };
 
-inline constexpr RegionFocus k_focus_carthage = {0.35F, 0.55F, 1.0F, 48.0F,
-                                                 200.0F};
+inline constexpr RegionFocus k_focus_carthage = {0.35F, 0.55F, 1.0F, 48.0F, 200.0F};
 inline constexpr RegionFocus k_focus_rome = {0.55F, 0.35F, 0.9F, 50.0F, 175.0F};
-inline constexpr RegionFocus k_focus_spain = {0.18F, 0.42F, 1.1F, 45.0F,
-                                              195.0F};
-inline constexpr RegionFocus k_focus_alps = {0.52F, 0.28F, 0.85F, 55.0F,
-                                             180.0F};
-inline constexpr RegionFocus k_focus_sicily = {0.58F, 0.48F, 0.75F, 52.0F,
-                                               185.0F};
+inline constexpr RegionFocus k_focus_spain = {0.18F, 0.42F, 1.1F, 45.0F, 195.0F};
+inline constexpr RegionFocus k_focus_alps = {0.52F, 0.28F, 0.85F, 55.0F, 180.0F};
+inline constexpr RegionFocus k_focus_sicily = {0.58F, 0.48F, 0.75F, 52.0F, 185.0F};
 
-} 
+} // namespace CinematicCameraDefaults
 
-enum class BadgeStyle { Standard, Seal, Banner, Shield, Medallion };
+enum class BadgeStyle {
+  Standard,
+  Seal,
+  Banner,
+  Shield,
+  Medallion
+};
 
 struct MissionBadgeConfig {
   BadgeStyle style = BadgeStyle::Standard;
@@ -456,7 +479,8 @@ struct MissionBadgeConfig {
   float shadow_opacity = 0.4F;
 };
 
-inline auto generate_shield_badge(const QVector2D &center, float size,
+inline auto generate_shield_badge(const QVector2D& center,
+                                  float size,
                                   int segments = 16) -> std::vector<QVector2D> {
   std::vector<QVector2D> verts;
   verts.reserve(static_cast<size_t>(segments * 2 + 4));
@@ -489,7 +513,8 @@ inline auto generate_shield_badge(const QVector2D &center, float size,
   return verts;
 }
 
-inline auto generate_banner_badge(const QVector2D &center, float size,
+inline auto generate_banner_badge(const QVector2D& center,
+                                  float size,
                                   int segments = 12) -> std::vector<QVector2D> {
   std::vector<QVector2D> verts;
   const float w = size * 0.4F;
@@ -504,9 +529,9 @@ inline auto generate_banner_badge(const QVector2D &center, float size,
   return verts;
 }
 
-inline auto
-generate_medallion_badge(const QVector2D &center, float size,
-                         int segments = 24) -> std::vector<QVector2D> {
+inline auto generate_medallion_badge(const QVector2D& center,
+                                     float size,
+                                     int segments = 24) -> std::vector<QVector2D> {
   std::vector<QVector2D> verts;
   verts.reserve(static_cast<size_t>(segments + 1));
 
@@ -516,16 +541,23 @@ generate_medallion_badge(const QVector2D &center, float size,
   for (int i = 0; i <= segments; ++i) {
     const float angle =
         2.0F * pi * static_cast<float>(i) / static_cast<float>(segments);
-    verts.push_back(
-        center + QVector2D(radius * std::cos(angle), radius * std::sin(angle)));
+    verts.push_back(center +
+                    QVector2D(radius * std::cos(angle), radius * std::sin(angle)));
   }
 
   return verts;
 }
 
-enum class CartographicSymbol { Mountain, City, Port, Fort, Temple };
+enum class CartographicSymbol {
+  Mountain,
+  City,
+  Port,
+  Fort,
+  Temple
+};
 
-inline auto generate_mountain_icon(const QVector2D &center, float size,
+inline auto generate_mountain_icon(const QVector2D& center,
+                                   float size,
                                    int peaks = 2) -> std::vector<QVector2D> {
   std::vector<QVector2D> verts;
   const float h = size * 0.5F;
@@ -557,7 +589,8 @@ inline auto generate_mountain_icon(const QVector2D &center, float size,
   return verts;
 }
 
-inline auto generate_city_marker(const QVector2D &center, float size,
+inline auto generate_city_marker(const QVector2D& center,
+                                 float size,
                                  int importance = 1) -> std::vector<QVector2D> {
   std::vector<QVector2D> verts;
   const float h = size * 0.5F;
@@ -591,7 +624,7 @@ inline auto generate_city_marker(const QVector2D &center, float size,
   return verts;
 }
 
-inline auto generate_anchor_icon(const QVector2D &center,
+inline auto generate_anchor_icon(const QVector2D& center,
                                  float size) -> std::vector<QVector2D> {
   std::vector<QVector2D> verts;
   const float h = size * 0.5F;
@@ -607,8 +640,8 @@ inline auto generate_anchor_icon(const QVector2D &center,
   for (int i = 0; i <= ring_segs; ++i) {
     const float angle =
         2.0F * pi * static_cast<float>(i) / static_cast<float>(ring_segs);
-    verts.push_back(ring_center + QVector2D(ring_r * std::cos(angle),
-                                            ring_r * std::sin(angle)));
+    verts.push_back(ring_center +
+                    QVector2D(ring_r * std::cos(angle), ring_r * std::sin(angle)));
   }
 
   verts.push_back(center + QVector2D(-w * 0.6F, -h * 0.2F));
@@ -651,17 +684,19 @@ struct MediterraneanTerrainConfig {
   static constexpr float max_depth = -0.35F;
 };
 
-inline auto compute_mountain_contribution(float u, float v, float u_min,
-                                          float u_max, float v_min, float v_max,
+inline auto compute_mountain_contribution(float u,
+                                          float v,
+                                          float u_min,
+                                          float u_max,
+                                          float v_min,
+                                          float v_max,
                                           float peak_height) -> float {
   if (u < u_min || u > u_max || v < v_min || v > v_max) {
     return 0.0F;
   }
 
-  float dist_u =
-      1.0F - 2.0F * std::abs(u - (u_min + u_max) * 0.5F) / (u_max - u_min);
-  float dist_v =
-      1.0F - 2.0F * std::abs(v - (v_min + v_max) * 0.5F) / (v_max - v_min);
+  float dist_u = 1.0F - 2.0F * std::abs(u - (u_min + u_max) * 0.5F) / (u_max - u_min);
+  float dist_v = 1.0F - 2.0F * std::abs(v - (v_min + v_max) * 0.5F) / (v_max - v_min);
   float falloff = dist_u * dist_v;
   falloff = falloff * falloff;
   return peak_height * falloff;
@@ -672,22 +707,37 @@ inline auto generate_terrain_height(float u, float v) -> float {
 
   float height = 0.05F;
 
-  height += compute_mountain_contribution(
-      u, v, Config::alps_u_min, Config::alps_u_max, Config::alps_v_min,
-      Config::alps_v_max, Config::alps_height);
+  height += compute_mountain_contribution(u,
+                                          v,
+                                          Config::alps_u_min,
+                                          Config::alps_u_max,
+                                          Config::alps_v_min,
+                                          Config::alps_v_max,
+                                          Config::alps_height);
 
-  height += compute_mountain_contribution(
-      u, v, Config::pyrenees_u_min, Config::pyrenees_u_max,
-      Config::pyrenees_v_min, Config::pyrenees_v_max, Config::pyrenees_height);
+  height += compute_mountain_contribution(u,
+                                          v,
+                                          Config::pyrenees_u_min,
+                                          Config::pyrenees_u_max,
+                                          Config::pyrenees_v_min,
+                                          Config::pyrenees_v_max,
+                                          Config::pyrenees_height);
 
-  height += compute_mountain_contribution(
-      u, v, Config::apennines_u_min, Config::apennines_u_max,
-      Config::apennines_v_min, Config::apennines_v_max,
-      Config::apennines_height);
+  height += compute_mountain_contribution(u,
+                                          v,
+                                          Config::apennines_u_min,
+                                          Config::apennines_u_max,
+                                          Config::apennines_v_min,
+                                          Config::apennines_v_max,
+                                          Config::apennines_height);
 
-  height += compute_mountain_contribution(
-      u, v, Config::atlas_u_min, Config::atlas_u_max, Config::atlas_v_min,
-      Config::atlas_v_max, Config::atlas_height);
+  height += compute_mountain_contribution(u,
+                                          v,
+                                          Config::atlas_u_min,
+                                          Config::atlas_u_max,
+                                          Config::atlas_v_min,
+                                          Config::atlas_v_max,
+                                          Config::atlas_height);
 
   float noise = fbm_noise_2d(u * 8.0F, v * 8.0F, 4, 2.0F, 0.5F);
   height += (noise - 0.5F) * 0.15F;
@@ -695,8 +745,8 @@ inline auto generate_terrain_height(float u, float v) -> float {
   return height;
 }
 
-inline auto compute_terrain_normal(float u, float v,
-                                   float sample_dist = 0.01F) -> QVector3D {
+inline auto
+compute_terrain_normal(float u, float v, float sample_dist = 0.01F) -> QVector3D {
   float h_left = generate_terrain_height(u - sample_dist, v);
   float h_right = generate_terrain_height(u + sample_dist, v);
   float h_down = generate_terrain_height(u, v - sample_dist);
@@ -710,13 +760,11 @@ inline auto compute_terrain_normal(float u, float v,
   return normal;
 }
 
-inline auto
-generate_terrain_mesh(int resolution = 64,
-                      float height_scale = 0.05F) -> std::vector<float> {
+inline auto generate_terrain_mesh(int resolution = 64,
+                                  float height_scale = 0.05F) -> std::vector<float> {
   std::vector<float> vertices;
   const int vertex_floats = 8;
-  vertices.reserve(
-      static_cast<size_t>(resolution * resolution * 6 * vertex_floats));
+  vertices.reserve(static_cast<size_t>(resolution * resolution * 6 * vertex_floats));
 
   const float step = 1.0F / static_cast<float>(resolution - 1);
 
@@ -737,7 +785,7 @@ generate_terrain_mesh(int resolution = 64,
       QVector3D n01 = compute_terrain_normal(u0, v1);
       QVector3D n11 = compute_terrain_normal(u1, v1);
 
-      auto add_vertex = [&](float u, float v, float h, const QVector3D &n) {
+      auto add_vertex = [&](float u, float v, float h, const QVector3D& n) {
         vertices.push_back(u);
         vertices.push_back(v);
         vertices.push_back(u);
@@ -768,8 +816,8 @@ struct HillshadeConfig {
   float z_factor = 2.5F;
 };
 
-inline auto compute_hillshade_at(float u, float v,
-                                 const HillshadeConfig &config) -> float {
+inline auto
+compute_hillshade_at(float u, float v, const HillshadeConfig& config) -> float {
   QVector3D normal = compute_terrain_normal(u, v, 0.005F);
 
   normal.setY(normal.y() * config.z_factor);
@@ -781,10 +829,10 @@ inline auto compute_hillshade_at(float u, float v,
   return std::min(1.0F, shade * config.intensity);
 }
 
-inline auto
-generate_hillshade_texture(int width, int height,
-                           const HillshadeConfig &config = HillshadeConfig{})
-    -> std::vector<unsigned char> {
+inline auto generate_hillshade_texture(
+    int width,
+    int height,
+    const HillshadeConfig& config = HillshadeConfig{}) -> std::vector<unsigned char> {
   std::vector<unsigned char> pixels;
   pixels.reserve(static_cast<size_t>(width * height * 4));
 
@@ -870,12 +918,12 @@ inline auto sea_label() -> LabelStyle {
           .line_height = 1.2F};
 }
 
-} 
+} // namespace LabelStyles
 
-inline auto
-generate_label_quads(const QVector2D &position, const std::string &text,
-                     const LabelStyle &style,
-                     float base_font_size = 12.0F) -> std::vector<float> {
+inline auto generate_label_quads(const QVector2D& position,
+                                 const std::string& text,
+                                 const LabelStyle& style,
+                                 float base_font_size = 12.0F) -> std::vector<float> {
   std::vector<float> vertices;
   if (text.empty()) {
     return vertices;
@@ -886,8 +934,7 @@ generate_label_quads(const QVector2D &position, const std::string &text,
   const float char_height = 0.012F * scale;
   const float spacing = char_width * style.letter_spacing;
 
-  const float total_width =
-      static_cast<float>(text.length()) * (char_width + spacing);
+  const float total_width = static_cast<float>(text.length()) * (char_width + spacing);
   float x_offset = -total_width * 0.5F;
 
   for (size_t i = 0; i < text.length(); ++i) {
@@ -908,17 +955,13 @@ generate_label_quads(const QVector2D &position, const std::string &text,
     float y1 = y0 + char_height;
 
     vertices.insert(vertices.end(), {x0, y0, atlas_u, atlas_v, 0.0F, 0.0F});
-    vertices.insert(vertices.end(),
-                    {x1, y0, atlas_u + atlas_w, atlas_v, 1.0F, 0.0F});
-    vertices.insert(vertices.end(),
-                    {x0, y1, atlas_u, atlas_v + atlas_h, 0.0F, 1.0F});
+    vertices.insert(vertices.end(), {x1, y0, atlas_u + atlas_w, atlas_v, 1.0F, 0.0F});
+    vertices.insert(vertices.end(), {x0, y1, atlas_u, atlas_v + atlas_h, 0.0F, 1.0F});
 
-    vertices.insert(vertices.end(),
-                    {x1, y0, atlas_u + atlas_w, atlas_v, 1.0F, 0.0F});
+    vertices.insert(vertices.end(), {x1, y0, atlas_u + atlas_w, atlas_v, 1.0F, 0.0F});
     vertices.insert(vertices.end(),
                     {x1, y1, atlas_u + atlas_w, atlas_v + atlas_h, 1.0F, 1.0F});
-    vertices.insert(vertices.end(),
-                    {x0, y1, atlas_u, atlas_v + atlas_h, 0.0F, 1.0F});
+    vertices.insert(vertices.end(), {x0, y1, atlas_u, atlas_v + atlas_h, 0.0F, 1.0F});
 
     x_offset += char_width + spacing;
   }
@@ -926,7 +969,8 @@ generate_label_quads(const QVector2D &position, const std::string &text,
   return vertices;
 }
 
-inline auto compute_label_scale(float viewport_height, float camera_distance,
+inline auto compute_label_scale(float viewport_height,
+                                float camera_distance,
                                 float base_size = 12.0F) -> float {
 
   const float fov_rad = 0.7854F;
@@ -935,4 +979,4 @@ inline auto compute_label_scale(float viewport_height, float camera_distance,
   return base_size * px_to_uv;
 }
 
-} 
+} // namespace CampaignMapRender

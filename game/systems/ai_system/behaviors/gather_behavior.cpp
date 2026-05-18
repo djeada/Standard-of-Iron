@@ -54,62 +54,61 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
     formation_type = nation->formation_type;
   }
 
-  auto emit_move_command =
-      [&](const std::vector<const EntitySnapshot*>& units,
-          const QVector3D& center,
-          float spacing,
-          const char* task_name,
-          BehaviorPriority priority) {
-        if (units.empty()) {
-          return;
-        }
+  auto emit_move_command = [&](const std::vector<const EntitySnapshot*>& units,
+                               const QVector3D& center,
+                               float spacing,
+                               const char* task_name,
+                               BehaviorPriority priority) {
+    if (units.empty()) {
+      return;
+    }
 
-        auto formation_targets = FormationSystem::instance().get_formation_positions(
-            formation_type, static_cast<int>(units.size()), center, spacing);
+    auto formation_targets = FormationSystem::instance().get_formation_positions(
+        formation_type, static_cast<int>(units.size()), center, spacing);
 
-        std::vector<Engine::Core::EntityID> units_to_move;
-        std::vector<float> target_x;
-        std::vector<float> target_y;
-        std::vector<float> target_z;
-        units_to_move.reserve(units.size());
-        target_x.reserve(units.size());
-        target_y.reserve(units.size());
-        target_z.reserve(units.size());
+    std::vector<Engine::Core::EntityID> units_to_move;
+    std::vector<float> target_x;
+    std::vector<float> target_y;
+    std::vector<float> target_z;
+    units_to_move.reserve(units.size());
+    target_x.reserve(units.size());
+    target_y.reserve(units.size());
+    target_z.reserve(units.size());
 
-        for (size_t i = 0; i < units.size(); ++i) {
-          units_to_move.push_back(units[i]->id);
-          target_x.push_back(formation_targets[i].x());
-          target_y.push_back(formation_targets[i].y());
-          target_z.push_back(formation_targets[i].z());
-        }
+    for (size_t i = 0; i < units.size(); ++i) {
+      units_to_move.push_back(units[i]->id);
+      target_x.push_back(formation_targets[i].x());
+      target_y.push_back(formation_targets[i].y());
+      target_z.push_back(formation_targets[i].z());
+    }
 
-        auto claimed_units = claim_units(
-            units_to_move, priority, task_name, context, snapshot.game_time, 2.0F);
-        if (claimed_units.empty()) {
-          return;
-        }
+    auto claimed_units = claim_units(
+        units_to_move, priority, task_name, context, snapshot.game_time, 2.0F);
+    if (claimed_units.empty()) {
+      return;
+    }
 
-        std::vector<float> filtered_x;
-        std::vector<float> filtered_y;
-        std::vector<float> filtered_z;
-        const std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(),
-                                                                     claimed_units.end());
-        for (size_t i = 0; i < units_to_move.size(); ++i) {
-          if (claimed_set.count(units_to_move[i])) {
-            filtered_x.push_back(target_x[i]);
-            filtered_y.push_back(target_y[i]);
-            filtered_z.push_back(target_z[i]);
-          }
-        }
+    std::vector<float> filtered_x;
+    std::vector<float> filtered_y;
+    std::vector<float> filtered_z;
+    const std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(),
+                                                                 claimed_units.end());
+    for (size_t i = 0; i < units_to_move.size(); ++i) {
+      if (claimed_set.count(units_to_move[i])) {
+        filtered_x.push_back(target_x[i]);
+        filtered_y.push_back(target_y[i]);
+        filtered_z.push_back(target_z[i]);
+      }
+    }
 
-        AICommand command;
-        command.type = AICommandType::MoveUnits;
-        command.units = std::move(claimed_units);
-        command.move_target_x = std::move(filtered_x);
-        command.move_target_y = std::move(filtered_y);
-        command.move_target_z = std::move(filtered_z);
-        out_commands.push_back(std::move(command));
-      };
+    AICommand command;
+    command.type = AICommandType::MoveUnits;
+    command.units = std::move(claimed_units);
+    command.move_target_x = std::move(filtered_x);
+    command.move_target_y = std::move(filtered_y);
+    command.move_target_z = std::move(filtered_z);
+    out_commands.push_back(std::move(command));
+  };
 
   emit_move_command(units_to_gather,
                     rally_point,
@@ -118,9 +117,10 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
                     get_priority());
 
   if (context.anchor_is_structural && context.effective_reserve_units > 0) {
-    QVector3D const reserve_center(context.base_pos_x, context.base_pos_y, context.base_pos_z);
-    const float reserve_hold_radius_sq =
-        context.strategy_config.reserve_hold_radius * context.strategy_config.reserve_hold_radius;
+    QVector3D const reserve_center(
+        context.base_pos_x, context.base_pos_y, context.base_pos_z);
+    const float reserve_hold_radius_sq = context.strategy_config.reserve_hold_radius *
+                                         context.strategy_config.reserve_hold_radius;
     std::vector<const EntitySnapshot*> reserve_units_to_hold;
     for (const auto* entity : collect_reserve_force_units(snapshot, context)) {
       const float dx = entity->pos_x - reserve_center.x();

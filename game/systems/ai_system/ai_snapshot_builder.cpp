@@ -45,8 +45,10 @@ auto collect_vision_sources(const std::vector<Engine::Core::Entity*>& entities)
       continue;
     }
 
-    sources.push_back(
-        {transform->position.x, 0.0F, transform->position.z, vision_range * vision_range});
+    sources.push_back({transform->position.x,
+                       0.0F,
+                       transform->position.z,
+                       vision_range * vision_range});
   }
 
   return sources;
@@ -135,10 +137,8 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
           builder_prod->has_construction_site;
       data.builder_production.in_progress = builder_prod->in_progress;
       data.builder_production.at_construction_site = builder_prod->at_construction_site;
-      data.builder_production.construction_site_x =
-          builder_prod->construction_site_x;
-      data.builder_production.construction_site_z =
-          builder_prod->construction_site_z;
+      data.builder_production.construction_site_x = builder_prod->construction_site_x;
+      data.builder_production.construction_site_z = builder_prod->construction_site_z;
     }
 
     snapshot.friendly_units.push_back(std::move(data));

@@ -32,7 +32,8 @@ auto find_repo_root() -> std::filesystem::path {
       !from_file.empty()) {
     return from_file;
   }
-  if (const auto from_cwd = walk_up(std::filesystem::current_path()); !from_cwd.empty()) {
+  if (const auto from_cwd = walk_up(std::filesystem::current_path());
+      !from_cwd.empty()) {
     return from_cwd;
   }
   return std::filesystem::current_path();

@@ -291,8 +291,8 @@ public:
   Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] QVariantList available_maps() const;
   [[nodiscard]] QVariantList available_nations() const;
-  Q_INVOKABLE [[nodiscard]] QVariantList available_commanders(
-      const QString& nation_id) const;
+  Q_INVOKABLE [[nodiscard]] QVariantList
+  available_commanders(const QString& nation_id) const;
   [[nodiscard]] QVariantList available_campaigns() const;
   [[nodiscard]] bool maps_loading() const { return m_maps_loading; }
   Q_INVOKABLE void start_skirmish(const QString& map_path,
@@ -433,8 +433,8 @@ private:
   void set_active_camera(Render::GL::Camera* camera);
   [[nodiscard]] auto apply_runtime_time_effects(float dt) -> float;
   void update_active_runtime_simulation(float dt);
-  [[nodiscard]] auto should_render_selected_entity(Engine::Core::EntityID id) const
-      -> bool;
+  [[nodiscard]] auto
+  should_render_selected_entity(Engine::Core::EntityID id) const -> bool;
   void render_runtime_mode_effects();
   void update_rts_control_mode(float dt);
   void update_commander_control_mode(float dt);

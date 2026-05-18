@@ -9,7 +9,7 @@
 namespace Utils::Resources {
 
 // Resolve resources that may have been relocated under a Qt QML module prefix.
-inline auto resolve_resource_path(const QString &path) -> QString {
+inline auto resolve_resource_path(const QString& path) -> QString {
   if (path.isEmpty()) {
     return path;
   }
@@ -17,7 +17,7 @@ inline auto resolve_resource_path(const QString &path) -> QString {
   const bool is_resource = path.startsWith(QStringLiteral(":/"));
   const QString relative = is_resource ? path.mid(2) : QString{};
 
-  auto exists = [](const QString &candidate) {
+  auto exists = [](const QString& candidate) {
     QFileInfo const info(candidate);
     if (info.exists()) {
       return true;
@@ -29,7 +29,7 @@ inline auto resolve_resource_path(const QString &path) -> QString {
   // For Qt resource paths, prefer a filesystem override when available so live
   // shader edits are picked up without rebuilding the resource bundle.
   if (is_resource) {
-    auto search_upwards = [&](const QString &start_dir) -> QString {
+    auto search_upwards = [&](const QString& start_dir) -> QString {
       if (start_dir.isEmpty()) {
         return {};
       }
@@ -46,13 +46,11 @@ inline auto resolve_resource_path(const QString &path) -> QString {
       return {};
     };
 
-    if (QString candidate =
-            search_upwards(QCoreApplication::applicationDirPath());
+    if (QString candidate = search_upwards(QCoreApplication::applicationDirPath());
         !candidate.isEmpty()) {
       return candidate;
     }
-    if (QString candidate = search_upwards(QDir::currentPath());
-        !candidate.isEmpty()) {
+    if (QString candidate = search_upwards(QDir::currentPath()); !candidate.isEmpty()) {
       return candidate;
     }
   }
@@ -70,7 +68,7 @@ inline auto resolve_resource_path(const QString &path) -> QString {
       QStringLiteral(":/qt/qml/StandardOfIron"),
       QStringLiteral(":/qt/qml/default")};
 
-  for (const auto &root : k_alternate_roots) {
+  for (const auto& root : k_alternate_roots) {
     QString candidate = root;
     if (!candidate.endsWith('/')) {
       candidate.append('/');
