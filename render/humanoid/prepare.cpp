@@ -45,7 +45,6 @@
 #include "../gl/render_constants.h"
 #include "../graphics_settings.h"
 #include "../palette.h"
-#include "../pose_palette_cache.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
 #include "cache_control.h"
@@ -343,7 +342,6 @@ namespace Render::Humanoid {
 
 using Render::GL::AmbientIdleType;
 using Render::GL::AnimationInputs;
-using Render::GL::AnimState;
 using Render::GL::DrawContext;
 using Render::GL::elbow_bend_torso;
 using Render::GL::FormationCalculatorFactory;
@@ -359,8 +357,6 @@ using Render::GL::IFormationCalculator;
 using Render::GL::ISubmitter;
 using Render::GL::k_reference_run_speed;
 using Render::GL::k_reference_walk_speed;
-using Render::GL::PosePaletteCache;
-using Render::GL::PosePaletteKey;
 using Render::GL::VariationParams;
 
 namespace {
@@ -669,7 +665,7 @@ auto build_soldier_layout(const IFormationCalculator& formation_calculator,
 auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
     -> HumanoidLocomotionState {
   HumanoidLocomotionState state{};
-  auto const gait_state = Render::Creature::classify_pose(inputs.anim).motion_state;
+  auto const gait_state = Render::Creature::resolve_pose(inputs.anim).motion_state;
   state.move_speed = inputs.move_speed;
   state.has_movement_target = inputs.has_movement_target;
   state.locomotion_direction = inputs.locomotion_direction;
@@ -874,6 +870,19 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
   }
 
+  bool const use_per_soldier_locomotion_state = total_layout_count > 1;
+  if (layout_cache_comp != nullptr && use_per_soldier_locomotion_state) {
+    auto& animation_states = layout_cache_comp->animation_states;
+    bool const state_count_changed =
+        animation_states.size() != static_cast<std::size_t>(total_layout_count);
+    animation_states.resize(static_cast<std::size_t>(total_layout_count));
+    if (!loaded_cached_layouts || state_count_changed) {
+      for (auto& state : animation_states) {
+        reset_humanoid_locomotion_state(state);
+      }
+    }
+  }
+
   auto* humanoid_anim_state =
       ctx.entity != nullptr
           ? ctx.entity
@@ -954,6 +963,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     VisualLocomotionSample const visual_locomotion =
         resolve_visual_locomotion_sample(visual_movement, forward);
 
+    auto* locomotion_persistent_state = humanoid_anim_state;
+    if (layout_cache_comp != nullptr && use_per_soldier_locomotion_state) {
+      auto& animation_states = layout_cache_comp->animation_states;
+      auto const state_index = static_cast<std::size_t>(idx);
+      if (state_index < animation_states.size()) {
+        locomotion_persistent_state = &animation_states[state_index];
+      }
+    }
+
     HumanoidLocomotionInputs locomotion_inputs{};
     locomotion_inputs.anim = soldier_anim;
     locomotion_inputs.variation = variation;
@@ -964,7 +982,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     locomotion_inputs.has_movement_target = visual_locomotion.has_movement_target;
     locomotion_inputs.animation_time = anim.time;
     locomotion_inputs.phase_offset = phase_offset;
-    locomotion_inputs.persistent_state = humanoid_anim_state;
+    locomotion_inputs.persistent_state = locomotion_persistent_state;
     locomotion_inputs.allow_persistent_update = should_persist_animation_state(ctx);
     HumanoidLocomotionState locomotion_state =
         build_humanoid_locomotion_state(locomotion_inputs);

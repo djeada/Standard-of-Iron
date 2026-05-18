@@ -179,6 +179,24 @@ public:
   }
 };
 
+enum class PlayerOrderIntentKind : std::uint8_t {
+  None,
+  ManualMove
+};
+
+class PlayerOrderIntentComponent : public Component {
+public:
+  PlayerOrderIntentKind kind{PlayerOrderIntentKind::None};
+  bool suppress_opportunistic_combat{false};
+};
+
+class RepathRequestComponent : public Component {
+public:
+  float goal_x{0.0F};
+  float goal_y{0.0F};
+  bool allow_direct_fallback{false};
+};
+
 enum class MotionPresentationSource : std::uint8_t {
   None,
   Navigation,
@@ -467,7 +485,6 @@ public:
   bool rally_set{false};
   int villager_cost{1};
   int manpower_available{0};
-  bool commander_committed{false};
   std::vector<Game::Units::TroopType> production_queue;
 };
 

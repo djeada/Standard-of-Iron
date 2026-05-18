@@ -137,7 +137,7 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
                                get_priority(),
                                "commander_positioning",
                                context,
-                               m_update_timer + delta_time,
+                               snapshot.game_time,
                                1.5F);
     if (claimed.empty()) {
       continue;

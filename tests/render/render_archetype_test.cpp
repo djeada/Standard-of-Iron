@@ -261,6 +261,36 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   EXPECT_EQ(submitter.meshes.size(), 47u);
 }
 
+TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_home_renderer(registry);
+  const auto renderer_handle = registry.get_handle("troops/roman/home");
+  ASSERT_NE(renderer_handle, k_invalid_renderer_handle);
+
+  const auto* renderer = registry.get(renderer_handle);
+  ASSERT_NE(renderer, nullptr);
+
+  Engine::Core::Entity entity(2);
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+  ctx.model = QMatrix4x4{};
+  ctx.renderer_handle = renderer_handle;
+
+  RecordingSubmitter submitter;
+  (*renderer)(ctx, submitter);
+
+  EXPECT_EQ(submitter.meshes.size(), 47u);
+}
+
 TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {
   using namespace Render::GL;
 

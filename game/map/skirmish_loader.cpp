@@ -400,31 +400,9 @@ auto SkirmishLoader::start(const QString& map_path,
   const int map_height = level_result.ok ? level_result.grid_height : default_map_size;
   Game::Systems::CommandService::initialize(map_width, map_height);
 
-  auto& visibility_service = Game::Map::VisibilityService::instance();
-  visibility_service.initialize(map_width, map_height, level_result.tile_size);
-  pump_events();
-
-  if (is_spectator_mode) {
-    visibility_service.reveal_all();
-    if (m_fog != nullptr) {
-      m_fog->set_enabled(false);
-    }
-  } else {
-    visibility_service.compute_immediate(m_world, player_owner_id);
-    if (m_fog != nullptr) {
-      m_fog->set_enabled(true);
-    }
-  }
-
-  if ((m_fog != nullptr) && visibility_service.is_initialized()) {
-    m_fog->update_mask(visibility_service.get_width(),
-                       visibility_service.get_height(),
-                       visibility_service.get_tile_size(),
-                       visibility_service.snapshot_cells());
-
-    if (m_on_visibility_mask_ready) {
-      m_on_visibility_mask_ready();
-    }
+  if (m_on_visibility_initialized) {
+    m_on_visibility_initialized(
+        m_world, player_owner_id, map_width, map_height, level_result.tile_size, is_spectator_mode);
   }
   pump_events();
 

@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "../../game/map/render_visibility_rules.h"
 #include "../../game/map/visibility_service.h"
 #include "../gl/buffer.h"
 
@@ -72,7 +73,8 @@ auto collect_visible_instances(const std::vector<Instance>& instances,
   visible_instances.reserve(instances.size());
   for (const auto& instance : instances) {
     const auto position = position_accessor(instance);
-    if (snapshot.is_visible_world(position.x(), position.z())) {
+    if (Game::Map::classify_world_visibility(snapshot, position.x(), position.z()) ==
+        Game::Map::RenderVisibilityState::Visible) {
       visible_instances.push_back(instance);
     }
   }
@@ -101,7 +103,9 @@ auto sync_filtered_instances(const std::vector<Instance>& instances,
   auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility =
       visibility_filter_enabled_for_current_thread() && visibility.is_initialized();
-  const std::uint64_t current_version = use_visibility ? visibility.version() : 0;
+  auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
+  const std::uint64_t current_version =
+      visibility_snapshot != nullptr ? visibility_snapshot->version : 0;
   const bool needs_visibility_update =
       filtered_needs_visibility_rebuild(instances.empty(),
                                         visible_instances.empty(),
@@ -114,9 +118,9 @@ auto sync_filtered_instances(const std::vector<Instance>& instances,
     if (stats != nullptr) {
       ++stats->visibility_rebuilds;
     }
-    if (use_visibility) {
+    if (visibility_snapshot != nullptr) {
       visible_instances = collect_visible_instances(
-          instances, visibility.snapshot(), position_accessor);
+          instances, *visibility_snapshot, position_accessor);
     } else {
       visible_instances = instances;
     }

@@ -11,6 +11,7 @@
 
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
+#include "visibility_texture_helper.h"
 #include "../world_chunk.h"
 
 namespace Render::GL {
@@ -63,7 +64,7 @@ private:
 
   struct ChunkVisibilityCacheEntry {
     std::uint64_t visibility_version = std::numeric_limits<std::uint64_t>::max();
-    bool any_visible = true;
+    bool any_revealed = true;
   };
 
   int m_width = 0;
@@ -79,6 +80,7 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
   QVector3D m_light_direction{0.65F, 0.50F, 0.40F};
+  Ground::VisibilityTextureHelper m_visibility_helper;
 };
 
 } // namespace Render::GL

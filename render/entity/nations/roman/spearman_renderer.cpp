@@ -32,6 +32,7 @@
 #include "../../../geom/transforms.h"
 #include "../../../gl/primitives.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
@@ -54,6 +55,11 @@ constexpr float k_spearman_style_mix_weight = 0.4F;
 
 constexpr float k_kneel_depth_multiplier = 0.875F;
 constexpr float k_lean_amount_multiplier = 0.67F;
+constexpr auto k_profile =
+    Render::GL::Humanoid::k_polearm_infantry_proportion_profile.with_offset(
+        {.x = 0.02F, .y = -0.01F, .torso_scale = -0.03F});
+constexpr float k_bulk_scale_multiplier = 0.94F;
+constexpr float k_stance_width_multiplier = 0.95F;
 
 auto spearman_style_registry()
     -> std::unordered_map<std::string, SpearmanStyleConfig>& {
@@ -99,11 +105,17 @@ public:
   SpearmanRenderer() = default;
 
   auto get_proportion_scaling() const -> QVector3D override {
-
-    return {0.90F, 0.80F, 0.76F};
+    return k_profile.as_vector();
   }
 
-  auto get_torso_scale() const -> float override { return 0.64F; }
+  auto get_torso_scale() const -> float override { return k_profile.torso_scale; }
+
+  void adjust_variation(const DrawContext&,
+                        uint32_t,
+                        VariationParams& variation) const override {
+    variation.bulk_scale *= k_bulk_scale_multiplier;
+    variation.stance_width *= k_stance_width_multiplier;
+  }
 
   auto get_hold_kneel_depth() const -> float override {
     return k_kneel_depth_multiplier;
@@ -126,7 +138,7 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/spearman";
       s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
-      s.scaling = ProportionScaling{0.90F, 0.80F, 0.76F};
+      s.scaling = k_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/roman/spearman",

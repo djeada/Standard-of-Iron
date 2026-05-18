@@ -15,6 +15,7 @@ out vec3 v_normal;
 out vec2 v_uv;
 out float v_vertex_displacement;
 out float v_entry_mask;
+out float v_feature_foot;
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -82,6 +83,7 @@ void main() {
   vec3 base_wp = (u_model * vec4(a_position, 1.0)).xyz;
   vec3 world_normal = normalize(mat3(u_model) * a_normal);
   float entry_mask = clamp(a_uv.y, 0.0, 1.0);
+  float feature_foot = clamp(a_uv.x, 0.0, 1.0);
 
   float displacement = sample_terrain_displacement(base_wp,
                                                    world_normal,
@@ -119,6 +121,7 @@ void main() {
   v_uv = a_uv;
   v_vertex_displacement = displacement;
   v_entry_mask = entry_mask;
+  v_feature_foot = feature_foot;
 
   gl_Position = u_mvp * vec4(wp, 1.0);
 }

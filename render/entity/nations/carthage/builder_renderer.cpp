@@ -38,6 +38,7 @@
 #include "../../../gl/render_constants.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
@@ -75,6 +76,12 @@ void ensure_builder_styles_registered() {
 
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
+constexpr auto k_builder_profile =
+    Render::GL::Humanoid::k_laborer_proportion_profile.with_offset(
+        {.x = -0.02F, .y = 0.01F, .z = -0.02F});
+constexpr auto k_civilian_profile =
+    Render::GL::Humanoid::k_civilian_proportion_profile.with_offset(
+        {.x = -0.01F, .y = 0.01F, .z = -0.02F});
 
 } // namespace
 
@@ -975,7 +982,7 @@ public:
   friend void register_builder_renderer(Render::GL::EntityRendererRegistry& registry);
 
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.98F, 1.01F, 0.96F};
+    return k_builder_profile.as_vector();
   }
 
   auto
@@ -985,7 +992,7 @@ public:
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/builder";
-      s.scaling = ProportionScaling{0.98F, 1.01F, 0.96F};
+      s.scaling = k_builder_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = carthage_builder_idle_archetype();
       s.variant_table = &carthage_builder_variant_table();
@@ -1008,7 +1015,7 @@ public:
 class CivilianRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.96F, 1.0F, 0.94F};
+    return k_civilian_profile.as_vector();
   }
 
   auto
@@ -1023,7 +1030,7 @@ public:
           loadout.helmet_handle, loadout.armor_handle, loadout.cloak_handle};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/civilian";
-      s.scaling = ProportionScaling{0.96F, 1.0F, 0.94F};
+      s.scaling = k_civilian_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/civilian",

@@ -1,5 +1,6 @@
 #include "command_controller.h"
 
+#include <QDebug>
 #include <QPointF>
 #include <qglobal.h>
 #include <qobject.h>
@@ -16,6 +17,7 @@
 #include "../../game/systems/combat_rules.h"
 #include "../../game/systems/command_service.h"
 #include "../../game/systems/formation_planner.h"
+#include "../../game/systems/order_service.h"
 #include "../../game/systems/picking_service.h"
 #include "../../game/systems/production_service.h"
 #include "../../game/systems/selection_system.h"
@@ -101,17 +103,10 @@ auto CommandController::on_stop_command() -> CommandResult {
       continue;
     }
 
-    reset_movement(entity);
-    entity->remove_component<Engine::Core::AttackTargetComponent>();
-
-    if (auto* patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
-      patrol->patrolling = false;
-      patrol->waypoints.clear();
-    }
+    Game::Systems::OrderService::apply_stop(entity);
 
     auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-    if ((hold_mode != nullptr) && hold_mode->active) {
-      hold_mode->begin_exit();
+    if (hold_mode != nullptr) {
       emit hold_mode_changed(false);
     }
 
@@ -189,33 +184,22 @@ auto CommandController::on_hold_command() -> CommandResult {
     auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if (should_enable_hold) {
 
-      reset_movement(entity);
-      entity->remove_component<Engine::Core::AttackTargetComponent>();
+      Game::Systems::OrderService::reset_movement(entity);
+      Game::Systems::OrderService::clear_attack_target(entity);
+      Game::Systems::OrderService::clear_player_order_intent(entity);
 
       auto* attack_comp = entity->get_component<Engine::Core::AttackComponent>();
       if (attack_comp != nullptr) {
         Game::Systems::CombatRules::clear_rts_melee_lock(entity);
       }
 
-      if (auto* patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
-        patrol->patrolling = false;
-        patrol->waypoints.clear();
-      }
+      Game::Systems::OrderService::clear_patrol(entity);
 
       if (hold_mode == nullptr) {
         hold_mode = entity->add_component<Engine::Core::HoldModeComponent>();
       }
       hold_mode->active = true;
       hold_mode->exit_cooldown = 0.0F;
-
-      auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-      if (movement != nullptr) {
-        movement->has_target = false;
-        movement->path.clear();
-        movement->path_pending = false;
-        movement->vx = 0.0F;
-        movement->vz = 0.0F;
-      }
     } else {
 
       if ((hold_mode != nullptr) && hold_mode->active) {
@@ -300,8 +284,9 @@ auto CommandController::on_patrol_click(qreal sx,
       patrol->patrolling = true;
     }
 
-    reset_movement(entity);
-    entity->remove_component<Engine::Core::AttackTargetComponent>();
+    Game::Systems::OrderService::reset_movement(entity);
+    Game::Systems::OrderService::clear_attack_target(entity);
+    Game::Systems::OrderService::clear_player_order_intent(entity);
   }
 
   clear_patrol_first_waypoint();
@@ -524,10 +509,7 @@ auto CommandController::on_guard_command() -> CommandResult {
         hold_mode->active = false;
       }
 
-      if (auto* patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
-        patrol->patrolling = false;
-        patrol->waypoints.clear();
-      }
+      Game::Systems::OrderService::clear_patrol(entity);
     } else {
 
       if ((guard_mode != nullptr) && guard_mode->active) {
@@ -602,18 +584,49 @@ auto CommandController::on_guard_click(qreal sx,
       hold_mode->active = false;
     }
 
-    if (auto* patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
-      patrol->patrolling = false;
-      patrol->waypoints.clear();
-    }
-
-    reset_movement(entity);
-    entity->remove_component<Engine::Core::AttackTargetComponent>();
+    Game::Systems::OrderService::clear_patrol(entity);
+    Game::Systems::OrderService::reset_movement(entity);
+    Game::Systems::OrderService::clear_attack_target(entity);
+    Game::Systems::OrderService::clear_player_order_intent(entity);
   }
 
   emit guard_mode_changed(true);
 
   result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
+  return result;
+}
+
+auto CommandController::on_civilian_delivery_click(qreal sx,
+                                                   qreal sy,
+                                                   int viewport_width,
+                                                   int viewport_height,
+                                                   void* camera,
+                                                   int local_owner_id)
+    -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
+      (camera == nullptr) || (m_world == nullptr)) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  const auto& selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  auto* cam = static_cast<Render::GL::Camera*>(camera);
+  result.input_consumed = App::Utils::issue_civilian_delivery_command(m_world,
+                                                                      selected,
+                                                                      m_picking_service,
+                                                                      cam,
+                                                                      sx,
+                                                                      sy,
+                                                                      viewport_width,
+                                                                      viewport_height,
+                                                                      local_owner_id);
   result.reset_cursor_to_normal = true;
   return result;
 }
@@ -697,10 +710,7 @@ auto CommandController::on_formation_command() -> CommandResult {
         guard_mode->active = false;
       }
 
-      if (auto* patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
-        patrol->patrolling = false;
-        patrol->waypoints.clear();
-      }
+      Game::Systems::OrderService::clear_patrol(entity);
     } else {
 
       if ((formation_mode != nullptr) && formation_mode->active) {
@@ -880,11 +890,13 @@ void CommandController::confirm_formation_placement() {
       transform->desired_yaw = unit_facing + m_formation_placement_angle;
       transform->has_desired_yaw = true;
     }
+
+    Game::Systems::OrderService::clear_patrol(entity);
   }
 
   Game::Systems::CommandService::MoveOptions opts;
+  opts.kind = Game::Systems::MoveOrderKind::FormationMove;
   opts.group_move = m_formation_units.size() > 1;
-  opts.clear_attack_intent = true;
   opts.retry_individual_on_group_failure = m_formation_units.size() > 1;
   opts.preserve_formation_mode = formation_result.used_tactical_formation;
   Game::Systems::CommandService::move_units(

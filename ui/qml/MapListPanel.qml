@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import "ui_audio.js" as UiAudio
 
 Item {
     id: root
@@ -116,7 +117,15 @@ Item {
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: list.currentIndex = index
+                    onContainsMouseChanged: {
+                        if (containsMouse && typeof game !== "undefined")
+                            UiAudio.play_hover(game.audio_system);
+                    }
+                    onClicked: {
+                        if (typeof game !== "undefined")
+                            UiAudio.play_click(game.audio_system);
+                        list.currentIndex = index;
+                    }
                     onDoubleClicked: root.map_double_clicked()
                 }
 

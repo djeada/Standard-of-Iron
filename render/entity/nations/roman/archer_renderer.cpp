@@ -40,6 +40,7 @@
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_full_builder.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
@@ -63,6 +64,13 @@ constexpr std::string_view k_attachment_headwrap = "carthage_headwrap";
 
 constexpr float k_kneel_depth_multiplier = 1.125F;
 constexpr float k_lean_amount_multiplier = 0.83F;
+constexpr auto k_profile =
+    Render::GL::Humanoid::k_ranged_infantry_proportion_profile.with_offset(
+        {.x = -0.04F, .z = -0.01F});
+constexpr float k_height_scale_multiplier = 1.02F;
+constexpr float k_bulk_scale_multiplier = 0.95F;
+constexpr float k_stance_width_multiplier = 0.94F;
+constexpr float k_arm_swing_multiplier = 0.96F;
 
 auto style_registry() -> std::unordered_map<std::string, ArcherStyleConfig>& {
   static std::unordered_map<std::string, ArcherStyleConfig> styles;
@@ -106,7 +114,16 @@ using Render::GL::Humanoid::saturate_color;
 class ArcherRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.78F, 1.01F, 0.96F};
+    return k_profile.as_vector();
+  }
+
+  void adjust_variation(const DrawContext&,
+                        uint32_t,
+                        VariationParams& variation) const override {
+    variation.height_scale *= k_height_scale_multiplier;
+    variation.bulk_scale *= k_bulk_scale_multiplier;
+    variation.stance_width *= k_stance_width_multiplier;
+    variation.arm_swing_amp *= k_arm_swing_multiplier;
   }
 
   auto get_hold_kneel_depth() const -> float override {
@@ -153,7 +170,7 @@ public:
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/archer";
-      s.scaling = ProportionScaling{0.78F, 1.01F, 0.96F};
+      s.scaling = k_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/roman/archer", k_archer_base_archetype, handles);

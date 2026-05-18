@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../../game/core/entity.h"
+#include "../creature/animation_state_components.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "formation_calculator.h"
 #include "prepare.h"
@@ -12,6 +13,7 @@ namespace Render::Humanoid {
 
 struct HumanoidLayoutCacheComponent : public Engine::Core::Component {
   std::vector<SoldierLayout> soldiers;
+  std::vector<Render::Creature::HumanoidAnimationStateComponent> animation_states;
   Render::GL::FormationParams formation{};
   Render::GL::FormationCalculatorFactory::Nation nation{
       Render::GL::FormationCalculatorFactory::Nation::Roman};

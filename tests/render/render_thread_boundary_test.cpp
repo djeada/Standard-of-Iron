@@ -8,17 +8,32 @@
 namespace {
 
 auto find_repo_root() -> std::filesystem::path {
-  auto path = std::filesystem::current_path();
-  while (!path.empty()) {
-    if (std::filesystem::exists(path / "todo.md") &&
-        std::filesystem::exists(path / "render" / "scene_renderer.cpp")) {
-      return path;
+  auto has_repo_markers = [](const std::filesystem::path& path) {
+    return std::filesystem::exists(path / "CMakeLists.txt") &&
+           std::filesystem::exists(path / "ui" / "gl_view.cpp") &&
+           std::filesystem::exists(path / "render" / "scene_renderer.cpp");
+  };
+
+  auto walk_up = [&](std::filesystem::path path) -> std::filesystem::path {
+    while (!path.empty()) {
+      if (has_repo_markers(path)) {
+        return path;
+      }
+      const auto parent = path.parent_path();
+      if (parent == path) {
+        break;
+      }
+      path = parent;
     }
-    const auto parent = path.parent_path();
-    if (parent == path) {
-      break;
-    }
-    path = parent;
+    return {};
+  };
+
+  if (const auto from_file = walk_up(std::filesystem::path(__FILE__).parent_path());
+      !from_file.empty()) {
+    return from_file;
+  }
+  if (const auto from_cwd = walk_up(std::filesystem::current_path()); !from_cwd.empty()) {
+    return from_cwd;
   }
   return std::filesystem::current_path();
 }

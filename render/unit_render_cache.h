@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../game/systems/nation_id.h"
+#include "../game/units/spawn_type.h"
+
 namespace Engine::Core {
 class Entity;
 class TransformComponent;
@@ -34,6 +37,8 @@ struct CachedUnitData {
   Engine::Core::MovementComponent* movement{nullptr};
 
   std::string renderer_key;
+  std::uint32_t renderer_handle{0};
+  bool has_renderer_handle{false};
   QMatrix4x4 model_matrix;
   float distance_sq{0.0F};
   bool moving{false};
@@ -54,6 +59,11 @@ struct CachedUnitData {
   float last_scale_y{0.0F};
   float last_scale_z{0.0F};
   bool model_matrix_valid{false};
+  bool renderer_key_valid{false};
+  bool last_is_building{false};
+  Game::Units::SpawnType last_spawn_type{Game::Units::SpawnType::Archer};
+  Game::Systems::NationID last_nation_id{Game::Systems::NationID::RomanRepublic};
+  std::string last_renderable_renderer_id;
 
   std::uint32_t last_seen_frame{0};
 };

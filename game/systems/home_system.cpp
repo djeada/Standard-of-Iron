@@ -87,34 +87,7 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
 
-    Engine::Core::EntityID old_barracks = home_comp->nearest_barracks_id;
     home_comp->nearest_barracks_id = nearest_barracks;
-
-    if (old_barracks != 0 && old_barracks != nearest_barracks) {
-      auto* old_barracks_entity = world->get_entity(old_barracks);
-      if (old_barracks_entity != nullptr) {
-        auto* prod_comp =
-            old_barracks_entity->get_component<Engine::Core::ProductionComponent>();
-        if (prod_comp != nullptr) {
-
-          prod_comp->max_units =
-              std::max(0, prod_comp->max_units - home_comp->population_contribution);
-        }
-      }
-    }
-
-    if (nearest_barracks != 0) {
-      auto* barracks_entity = world->get_entity(nearest_barracks);
-      if (barracks_entity != nullptr) {
-        auto* prod_comp =
-            barracks_entity->get_component<Engine::Core::ProductionComponent>();
-        if (prod_comp != nullptr) {
-          if (old_barracks != nearest_barracks) {
-            prod_comp->max_units += home_comp->population_contribution;
-          }
-        }
-      }
-    }
 
     if ((home_prod != nullptr) && (home_comp->family_generation_interval > 0.0F) &&
         (home_comp->family_manpower_value > 0) &&

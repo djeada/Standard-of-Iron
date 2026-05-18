@@ -82,6 +82,7 @@ struct AnimationInputs {
   bool finisher_attack{false};
   float attack_offset{0.0F};
   bool has_attack_offset{false};
+  bool is_in_melee_lock{false};
   bool is_hit_reacting{false};
   float hit_reaction_intensity{0.0F};
   bool is_healing{false};

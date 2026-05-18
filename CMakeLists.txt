@@ -142,6 +142,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/selection_query_service.cpp
         app/core/language_manager.cpp
         app/core/minimap_manager.cpp
+        app/core/visibility_coordinator.cpp
         app/core/ambient_state_manager.cpp
         app/core/audio_resource_loader.cpp
         app/core/renderer_bootstrap.cpp
@@ -150,6 +151,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/core/input_command_handler.cpp
         app/core/camera_controller.cpp
         app/core/game_state_restorer.cpp
+        app/core/runtime_frame_orchestrator.cpp
         app/models/audio_system_proxy.cpp
         app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
@@ -177,6 +179,7 @@ else()
         app/core/selection_query_service.cpp
         app/core/language_manager.cpp
         app/core/minimap_manager.cpp
+        app/core/visibility_coordinator.cpp
         app/core/ambient_state_manager.cpp
         app/core/audio_resource_loader.cpp
         app/core/renderer_bootstrap.cpp
@@ -185,6 +188,7 @@ else()
         app/core/input_command_handler.cpp
         app/core/camera_controller.cpp
         app/core/game_state_restorer.cpp
+        app/core/runtime_frame_orchestrator.cpp
         app/models/audio_system_proxy.cpp
         app/models/graphics_settings_proxy.cpp
         app/models/cursor_manager.cpp
@@ -242,6 +246,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/CursorManager.qml
             ui/qml/LoadScreen.qml
         RESOURCES
+            ui/qml/ui_audio.js
             assets/shaders/basic.frag
             assets/shaders/basic.vert
             assets/shaders/bridge.frag

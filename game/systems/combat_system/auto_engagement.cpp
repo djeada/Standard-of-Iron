@@ -50,6 +50,10 @@ void AutoEngagement::process(Engine::Core::World*,
       continue;
     }
 
+    if (suppresses_opportunistic_combat(unit)) {
+      continue;
+    }
+
     if (m_engagement_cooldowns.find(unit->get_id()) != m_engagement_cooldowns.end()) {
       continue;
     }

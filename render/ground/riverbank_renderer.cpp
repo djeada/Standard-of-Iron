@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../game/map/render_visibility_rules.h"
 #include "../../game/map/visibility_service.h"
 #include "../gl/mesh.h"
 #include "../gl/resources.h"
@@ -62,18 +63,14 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility =
       renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-  const std::uint64_t visibility_version = use_visibility ? visibility.version() : 0;
-  Game::Map::VisibilityService::Snapshot visibility_snapshot;
-  if (use_visibility) {
-    visibility_snapshot = visibility.snapshot();
-  }
+  auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
 
   Texture* visibility_tex = nullptr;
   QVector2D visibility_size(0.0F, 0.0F);
 
-  if (use_visibility) {
-    const int vis_w = visibility_snapshot.width;
-    const int vis_h = visibility_snapshot.height;
+  if (visibility_snapshot != nullptr) {
+    const int vis_w = visibility_snapshot->width;
+    const int vis_h = visibility_snapshot->height;
     bool const size_changed =
         (vis_w != m_visibility_width) || (vis_h != m_visibility_height);
 
@@ -89,8 +86,8 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       m_cached_visibility_version = 0;
     }
 
-    if (visibility_version != m_cached_visibility_version || size_changed) {
-      const auto& cells = visibility_snapshot.cells;
+    if (visibility_snapshot->version != m_cached_visibility_version || size_changed) {
+      const auto& cells = visibility_snapshot->cells;
       std::vector<unsigned char> texels(static_cast<std::size_t>(vis_w * vis_h * 4),
                                         0U);
 
@@ -126,7 +123,7 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
                       GL_UNSIGNED_BYTE,
                       texels.data());
       visibility_tex = m_visibility_texture.get();
-      m_cached_visibility_version = visibility_version;
+      m_cached_visibility_version = visibility_snapshot->version;
     } else {
       visibility_tex = m_visibility_texture.get();
     }
@@ -137,7 +134,7 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   QMatrix4x4 model;
   model.setToIdentity();
 
-  TerrainFeatureCmd::VisibilityResources visibility_resources;
+  TerrainSurfaceCmd::VisibilityResources visibility_resources;
   visibility_resources.texture = visibility_tex;
   visibility_resources.size = visibility_size;
   visibility_resources.tile_size = m_tile_size;
@@ -158,35 +155,33 @@ void RiverbankRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     }
 
     float segment_visibility = 1.0F;
-    if (use_visibility) {
-      enum class SegmentState {
-        Hidden,
-        Explored,
-        Visible
-      };
-      SegmentState state = SegmentState::Hidden;
-
+    if (visibility_snapshot != nullptr) {
       const auto& samples = m_visibility_samples[mesh_index - 1];
       if (samples.empty()) {
-        state = SegmentState::Visible;
-      }
-      for (const auto& sample : samples) {
-        if (visibility_snapshot.is_visible_world(sample.x(), sample.z())) {
-          state = SegmentState::Visible;
-          break;
+        segment_visibility = 1.0F;
+      } else {
+        auto state = Game::Map::RenderVisibilityState::Hidden;
+        for (const auto& sample : samples) {
+          const auto sample_state =
+              Game::Map::classify_world_visibility(*visibility_snapshot,
+                                                   sample.x(),
+                                                   sample.z());
+          if (sample_state == Game::Map::RenderVisibilityState::Visible) {
+            state = Game::Map::RenderVisibilityState::Visible;
+            break;
+          }
+          if (sample_state == Game::Map::RenderVisibilityState::Explored) {
+            state = Game::Map::RenderVisibilityState::Explored;
+          }
         }
-        if ((state == SegmentState::Hidden) &&
-            visibility_snapshot.is_explored_world(sample.x(), sample.z())) {
-          state = SegmentState::Explored;
+
+        if (state == Game::Map::RenderVisibilityState::Hidden) {
+          continue;
         }
+        segment_visibility = state == Game::Map::RenderVisibilityState::Visible
+                                 ? 1.0F
+                                 : m_explored_dim_factor;
       }
-
-      if (state == SegmentState::Hidden) {
-        continue;
-      }
-
-      segment_visibility =
-          (state == SegmentState::Visible) ? 1.0F : m_explored_dim_factor;
     }
 
     TerrainFeatureCmd cmd;

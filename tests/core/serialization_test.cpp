@@ -166,6 +166,7 @@ TEST_F(SerializationTest, UnitComponentRoundTrip) {
 TEST_F(SerializationTest, MovementComponentSerialization) {
   auto* entity = world->create_entity();
   auto* movement = entity->add_component<MovementComponent>();
+  auto* intent = entity->add_component<PlayerOrderIntentComponent>();
 
   movement->has_target = true;
   movement->target_x = 50.0F;
@@ -180,6 +181,9 @@ TEST_F(SerializationTest, MovementComponentSerialization) {
   movement->last_goal_x = 45.0F;
   movement->last_goal_y = 55.0F;
   movement->time_since_last_path_request = 0.5F;
+  ASSERT_NE(intent, nullptr);
+  intent->kind = PlayerOrderIntentKind::ManualMove;
+  intent->suppress_opportunistic_combat = true;
 
   movement->path.emplace_back(10.0F, 20.0F);
   movement->path.emplace_back(30.0F, 40.0F);
@@ -210,6 +214,11 @@ TEST_F(SerializationTest, MovementComponentSerialization) {
   QJsonObject waypoint2 = path_array[1].toObject();
   EXPECT_FLOAT_EQ(waypoint2["x"].toDouble(), 30.0);
   EXPECT_FLOAT_EQ(waypoint2["y"].toDouble(), 40.0);
+
+  ASSERT_TRUE(json.contains("player_order_intent"));
+  QJsonObject intent_obj = json["player_order_intent"].toObject();
+  EXPECT_EQ(intent_obj["kind"].toInt(), static_cast<int>(PlayerOrderIntentKind::ManualMove));
+  EXPECT_TRUE(intent_obj["suppress_opportunistic_combat"].toBool());
 }
 
 TEST_F(SerializationTest, AttackComponentSerialization) {
@@ -439,7 +448,6 @@ TEST_F(SerializationTest, ProductionComponentSerialization) {
   production->rally_set = true;
   production->villager_cost = 2;
   production->manpower_available = 37;
-  production->commander_committed = true;
   production->production_queue.push_back(Game::Units::TroopType::Spearman);
   production->production_queue.push_back(Game::Units::TroopType::Archer);
 
@@ -459,7 +467,6 @@ TEST_F(SerializationTest, ProductionComponentSerialization) {
   EXPECT_TRUE(prod_obj["rally_set"].toBool());
   EXPECT_EQ(prod_obj["villager_cost"].toInt(), 2);
   EXPECT_EQ(prod_obj["manpower_available"].toInt(), 37);
-  EXPECT_TRUE(prod_obj["commander_committed"].toBool());
 
   ASSERT_TRUE(prod_obj.contains("queue"));
   QJsonArray queue = prod_obj["queue"].toArray();
@@ -520,6 +527,7 @@ TEST_F(SerializationTest, PatrolComponentRoundTrip) {
 TEST_F(SerializationTest, MovementComponentRoundTrip) {
   auto* original_entity = world->create_entity();
   auto* movement = original_entity->add_component<MovementComponent>();
+  auto* intent = original_entity->add_component<PlayerOrderIntentComponent>();
   movement->has_target = true;
   movement->target_x = 100.0F;
   movement->target_y = 200.0F;
@@ -529,6 +537,9 @@ TEST_F(SerializationTest, MovementComponentRoundTrip) {
   movement->vz = 2.5F;
   movement->path.emplace_back(10.0F, 20.0F);
   movement->path.emplace_back(30.0F, 40.0F);
+  ASSERT_NE(intent, nullptr);
+  intent->kind = PlayerOrderIntentKind::ManualMove;
+  intent->suppress_opportunistic_combat = true;
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
 
@@ -545,6 +556,11 @@ TEST_F(SerializationTest, MovementComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->vx, 1.5F);
   EXPECT_FLOAT_EQ(deserialized->vz, 2.5F);
   EXPECT_EQ(deserialized->path.size(), 2UL);
+
+  auto* deserialized_intent = new_entity->get_component<PlayerOrderIntentComponent>();
+  ASSERT_NE(deserialized_intent, nullptr);
+  EXPECT_EQ(deserialized_intent->kind, PlayerOrderIntentKind::ManualMove);
+  EXPECT_TRUE(deserialized_intent->suppress_opportunistic_combat);
 }
 
 TEST_F(SerializationTest, AttackComponentRoundTrip) {
@@ -675,7 +691,6 @@ TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   production->rally_set = true;
   production->villager_cost = 3;
   production->manpower_available = 65;
-  production->commander_committed = true;
   production->production_queue.push_back(Game::Units::TroopType::Archer);
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
@@ -696,7 +711,6 @@ TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   EXPECT_TRUE(deserialized->rally_set);
   EXPECT_EQ(deserialized->villager_cost, 3);
   EXPECT_EQ(deserialized->manpower_available, 65);
-  EXPECT_TRUE(deserialized->commander_committed);
   EXPECT_EQ(deserialized->production_queue.size(), 1UL);
   EXPECT_EQ(deserialized->production_queue[0], Game::Units::TroopType::Archer);
 }
@@ -924,6 +938,7 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   unit->max_health = 100;
 
   auto* movement = entity->add_component<MovementComponent>();
+  auto* intent = entity->add_component<PlayerOrderIntentComponent>();
   movement->has_target = true;
   movement->target_x = 100.0F;
 
@@ -1473,6 +1488,7 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   unit->health = 85;
 
   auto* movement = entity->add_component<MovementComponent>();
+  auto* intent = entity->add_component<PlayerOrderIntentComponent>();
   movement->has_target = true;
   movement->target_x = 50.0F;
   movement->target_y = 60.0F;
@@ -1480,6 +1496,9 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   movement->goal_y = 65.0F;
   movement->vx = 2.5F;
   movement->vz = 3.0F;
+  ASSERT_NE(intent, nullptr);
+  intent->kind = PlayerOrderIntentKind::ManualMove;
+  intent->suppress_opportunistic_combat = true;
 
   movement->path.emplace_back(20.0F, 30.0F);
   movement->path.emplace_back(35.0F, 45.0F);
@@ -1511,6 +1530,12 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   EXPECT_FLOAT_EQ(restored_movement->path[1].second, 45.0F);
   EXPECT_FLOAT_EQ(restored_movement->path[2].first, 50.0F);
   EXPECT_FLOAT_EQ(restored_movement->path[2].second, 60.0F);
+
+  auto* restored_intent =
+      restored_entity->get_component<PlayerOrderIntentComponent>();
+  ASSERT_NE(restored_intent, nullptr);
+  EXPECT_EQ(restored_intent->kind, PlayerOrderIntentKind::ManualMove);
+  EXPECT_TRUE(restored_intent->suppress_opportunistic_combat);
 }
 
 TEST_F(SerializationTest, CombatStatePreserved) {

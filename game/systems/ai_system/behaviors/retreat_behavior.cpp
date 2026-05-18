@@ -93,7 +93,7 @@ void RetreatBehavior::execute(const AISnapshot& snapshot,
                                    get_priority(),
                                    "retreating",
                                    context,
-                                   m_retreat_timer + delta_time,
+                                   snapshot.game_time,
                                    1.0F);
 
   if (claimed_units.empty()) {

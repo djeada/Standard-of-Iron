@@ -44,7 +44,7 @@ private:
   void on_barrack_captured(const Engine::Core::BarrackCapturedEvent& event);
   static void on_audio_trigger(const Engine::Core::AudioTriggerEvent& event);
   static void on_music_trigger(const Engine::Core::MusicTriggerEvent& event);
-  static void on_combat_hit(const Engine::Core::CombatHitEvent& event);
+  void on_combat_hit(const Engine::Core::CombatHitEvent& event);
 
   auto should_play_alert(const std::string& sound_id, int cooldown_ms) -> bool;
   void play_alert_sound(const std::string& sound_id,

@@ -10,12 +10,43 @@
 #include <QJsonObject>
 #include <QStringList>
 
-#include <unordered_set>
+#include <algorithm>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
 
-#include "game/audio/audio_system.h"
 #include "utils/resource_utils.h"
 
 namespace {
+
+struct CachedAudioEntry {
+  QString id;
+  QString path;
+  QString resolved_path;
+  AudioResourceConfig config;
+  AudioLoadPolicy load_policy = AudioLoadPolicy::Startup;
+  bool loop = false;
+  QMap<QString, QString> tags;
+  QStringList aliases;
+};
+
+struct ManifestRegistry {
+  QString manifest_path;
+  QString manifest_dir;
+  std::vector<CachedAudioEntry> entries;
+  std::unordered_map<std::string, size_t> lookup;
+  bool loaded = false;
+};
+
+auto registry_mutex() -> std::mutex& {
+  static std::mutex mutex;
+  return mutex;
+}
+
+auto manifest_registry() -> ManifestRegistry& {
+  static ManifestRegistry registry;
+  return registry;
+}
 
 auto audio_root_candidates() -> QStringList {
   const QString app_dir = QCoreApplication::applicationDirPath();
@@ -36,10 +67,11 @@ auto resolve_audio_root() -> QString {
 }
 
 auto resolve_manifest_path(const QString& audio_root) -> QString {
-  const QStringList candidates = {
-      audio_root + "audio_manifest.json",
-      QStringLiteral(":/assets/audio/audio_manifest.json"),
-  };
+  QStringList candidates;
+  if (!audio_root.isEmpty()) {
+    candidates.push_back(audio_root + "audio_manifest.json");
+  }
+  candidates.push_back(QStringLiteral(":/assets/audio/audio_manifest.json"));
 
   for (const QString& candidate : candidates) {
     const QString resolved = Utils::Resources::resolve_resource_path(candidate);
@@ -61,6 +93,9 @@ auto parse_category(const QString& value) -> AudioCategory {
   }
   if (category == QStringLiteral("voice")) {
     return AudioCategory::VOICE;
+  }
+  if (category == QStringLiteral("ambience") || category == QStringLiteral("ambient")) {
+    return AudioCategory::AMBIENCE;
   }
   return AudioCategory::SFX;
 }
@@ -85,70 +120,46 @@ auto parse_policy(const QString& value) -> AudioLoadPolicy {
   return AudioLoadPolicy::Startup;
 }
 
-auto policy_matches(AudioLoadPolicy requested, AudioLoadPolicy entry) -> bool {
-  return (requested == AudioLoadPolicy::All) || (entry == AudioLoadPolicy::All) ||
-         (requested == entry);
+auto parse_resource_config(const QJsonObject& track_object) -> AudioResourceConfig {
+  AudioResourceConfig config;
+  config.category =
+      parse_category(track_object.value(QStringLiteral("category")).toString());
+  config.volume = std::max(
+      0.0F,
+      float(track_object.value(QStringLiteral("volume")).toDouble(
+          AudioConstants::DEFAULT_VOLUME)));
+  config.priority =
+      track_object.value(QStringLiteral("priority")).toInt(AudioConstants::DEFAULT_PRIORITY);
+  config.cooldown_ms =
+      std::max(0, track_object.value(QStringLiteral("cooldown_ms")).toInt(0));
+  config.max_instances = static_cast<size_t>(
+      std::max(0, track_object.value(QStringLiteral("max_instances")).toInt(0)));
+  return config;
 }
 
-auto load_entry(AudioSystem& audio_sys,
-                const QString& manifest_dir,
-                const QJsonObject& track_object,
-                AudioLoadPolicy requested_policy,
-                std::unordered_set<std::string>& loaded_ids) -> bool {
-  const QString id = track_object.value(QStringLiteral("id")).toString().trimmed();
-  const QString path = track_object.value(QStringLiteral("path")).toString().trimmed();
-  if (id.isEmpty() || path.isEmpty()) {
-    qWarning() << "Audio manifest entry missing id or path";
-    return false;
+auto parse_tags(const QJsonObject& track_object) -> QMap<QString, QString> {
+  QMap<QString, QString> tags;
+  const QJsonValue tags_value = track_object.value(QStringLiteral("tags"));
+  if (!tags_value.isObject()) {
+    return tags;
   }
 
-  const AudioLoadPolicy entry_policy =
-      parse_policy(track_object.value(QStringLiteral("load_policy")).toString());
-  if (!policy_matches(requested_policy, entry_policy)) {
-    return false;
-  }
-
-  const QString category_value =
-      track_object.value(QStringLiteral("category")).toString(QStringLiteral("sfx"));
-  const AudioCategory category = parse_category(category_value);
-
-  const QString resolved_path =
-      Utils::Resources::resolve_resource_path(QDir(manifest_dir).filePath(path));
-  if (resolved_path.isEmpty() || !QFile::exists(resolved_path)) {
-    qWarning() << "Audio asset missing for manifest entry" << id << "->"
-               << resolved_path;
-    return false;
-  }
-
-  const std::string primary_id = id.toStdString();
-  bool ok = true;
-  if (loaded_ids.insert(primary_id).second) {
-    if (category == AudioCategory::MUSIC) {
-      ok = audio_sys.load_music(primary_id, resolved_path.toStdString());
-    } else {
-      ok = audio_sys.load_sound(primary_id, resolved_path.toStdString(), category);
-    }
-  }
-
-  if (!ok) {
-    qWarning() << "Failed to load audio asset" << id << "from" << resolved_path;
-    return false;
-  }
-
-  const QJsonArray aliases = track_object.value(QStringLiteral("aliases")).toArray();
-  for (const QJsonValue& alias_value : aliases) {
-    const QString alias = alias_value.toString().trimmed();
-    if (alias.isEmpty()) {
+  const QJsonObject tags_object = tags_value.toObject();
+  for (auto it = tags_object.begin(); it != tags_object.end(); ++it) {
+    if (!it.value().isString()) {
       continue;
     }
-    audio_sys.register_alias(alias.toStdString(), primary_id);
+    tags.insert(normalize(it.key()), normalize(it.value().toString()));
   }
-  return ok;
+  return tags;
 }
 
-} // namespace
-
-namespace {
+auto policy_matches(AudioLoadPolicy requested, AudioLoadPolicy entry) -> bool {
+  if (requested == AudioLoadPolicy::All) {
+    return entry != AudioLoadPolicy::Lazy && entry != AudioLoadPolicy::Stream;
+  }
+  return (entry == AudioLoadPolicy::All) || (requested == entry);
+}
 
 auto manifest_directory(const QString& manifest_path) -> QString {
   if (manifest_path.startsWith(QStringLiteral(":/"))) {
@@ -158,20 +169,16 @@ auto manifest_directory(const QString& manifest_path) -> QString {
   return QFileInfo(manifest_path).absolutePath();
 }
 
-} // namespace
-
-void AudioResourceLoader::load_audio_resources(AudioLoadPolicy load_policy) {
-  auto& audio_sys = AudioSystem::get_instance();
-
-  const QString audio_root = resolve_audio_root();
-  if (audio_root.isEmpty()) {
-    qWarning() << "Audio assets directory not found.";
+void cache_manifest_locked() {
+  auto& registry = manifest_registry();
+  if (registry.loaded) {
     return;
   }
 
+  const QString audio_root = resolve_audio_root();
   const QString manifest_path = resolve_manifest_path(audio_root);
   if (manifest_path.isEmpty()) {
-    qWarning() << "Audio manifest not found under" << audio_root;
+    qWarning() << "Audio manifest not found";
     return;
   }
 
@@ -199,21 +206,178 @@ void AudioResourceLoader::load_audio_resources(AudioLoadPolicy load_policy) {
     return;
   }
 
-  std::unordered_set<std::string> loaded_ids;
-  const QString manifest_dir = manifest_directory(manifest_path);
-  int loaded_count = 0;
+  registry.manifest_path = manifest_path;
+  registry.manifest_dir = manifest_directory(manifest_path);
+  registry.entries.clear();
+  registry.lookup.clear();
+
   for (const QJsonValue& value : tracks) {
     if (!value.isObject()) {
       continue;
     }
-    if (load_entry(audio_sys,
-                   QFileInfo(manifest_path).absolutePath(),
-                   value.toObject(),
-                   load_policy,
-                   loaded_ids)) {
+
+    const QJsonObject track_object = value.toObject();
+    CachedAudioEntry entry;
+    entry.id = track_object.value(QStringLiteral("id")).toString().trimmed();
+    entry.path = track_object.value(QStringLiteral("path")).toString().trimmed();
+    if (entry.id.isEmpty() || entry.path.isEmpty()) {
+      qWarning() << "Audio manifest entry missing id or path";
+      continue;
+    }
+
+    entry.config = parse_resource_config(track_object);
+    entry.load_policy =
+        parse_policy(track_object.value(QStringLiteral("load_policy")).toString());
+    entry.loop = track_object.value(QStringLiteral("loop")).toBool(false);
+    entry.tags = parse_tags(track_object);
+    entry.resolved_path = Utils::Resources::resolve_resource_path(
+        QDir(registry.manifest_dir).filePath(entry.path));
+
+    const QJsonArray aliases = track_object.value(QStringLiteral("aliases")).toArray();
+    for (const QJsonValue& alias_value : aliases) {
+      const QString alias = alias_value.toString().trimmed();
+      if (!alias.isEmpty()) {
+        entry.aliases.push_back(alias);
+      }
+    }
+
+    const size_t index = registry.entries.size();
+    registry.lookup[entry.id.toStdString()] = index;
+    for (const QString& alias : entry.aliases) {
+      registry.lookup[alias.toStdString()] = index;
+    }
+    registry.entries.push_back(std::move(entry));
+  }
+
+  registry.loaded = true;
+}
+
+auto find_cached_entry_locked(const QString& resource_id) -> const CachedAudioEntry* {
+  auto& registry = manifest_registry();
+  cache_manifest_locked();
+  auto it = registry.lookup.find(resource_id.toStdString());
+  if (it == registry.lookup.end()) {
+    return nullptr;
+  }
+  return &registry.entries[it->second];
+}
+
+auto load_cached_entry(AudioSystem& audio_sys, const CachedAudioEntry& entry) -> bool {
+  if (entry.resolved_path.isEmpty() || !QFile::exists(entry.resolved_path)) {
+    qWarning() << "Audio asset missing for manifest entry" << entry.id << "->"
+               << entry.resolved_path;
+    return false;
+  }
+
+  if (audio_sys.has_resource(entry.id.toStdString())) {
+    return true;
+  }
+
+  bool ok = false;
+  if (entry.config.category == AudioCategory::MUSIC) {
+    ok = audio_sys.load_music(entry.id.toStdString(),
+                              entry.resolved_path.toStdString(),
+                              entry.config);
+  } else {
+    ok = audio_sys.load_sound(entry.id.toStdString(),
+                              entry.resolved_path.toStdString(),
+                              entry.config);
+  }
+  if (!ok) {
+    qWarning() << "Failed to load audio asset" << entry.id << "from" << entry.resolved_path;
+    return false;
+  }
+
+  for (const QString& alias : entry.aliases) {
+    audio_sys.register_alias(alias.toStdString(), entry.id.toStdString());
+  }
+  return true;
+}
+
+auto tags_match(const CachedAudioEntry& entry, const QMap<QString, QString>& tags) -> bool {
+  for (auto it = tags.begin(); it != tags.end(); ++it) {
+    auto entry_it = entry.tags.find(normalize(it.key()));
+    if (entry_it == entry.tags.end() || entry_it.value() != normalize(it.value())) {
+      return false;
+    }
+  }
+  return true;
+}
+
+} // namespace
+
+void AudioResourceLoader::load_audio_resources(AudioLoadPolicy load_policy) {
+  auto& audio_sys = AudioSystem::get_instance();
+
+  std::lock_guard<std::mutex> const lock(registry_mutex());
+  cache_manifest_locked();
+
+  auto& registry = manifest_registry();
+  int loaded_count = 0;
+  for (const auto& entry : registry.entries) {
+    if (!policy_matches(load_policy, entry.load_policy)) {
+      continue;
+    }
+    if (load_cached_entry(audio_sys, entry)) {
       ++loaded_count;
     }
   }
 
-  qInfo() << "Loaded" << loaded_count << "audio manifest entries from" << manifest_path;
+  if (!registry.manifest_path.isEmpty()) {
+    qInfo() << "Loaded" << loaded_count << "audio manifest entries from"
+            << registry.manifest_path;
+  }
+}
+
+void AudioResourceLoader::unload_audio_resources(AudioLoadPolicy load_policy) {
+  auto& audio_sys = AudioSystem::get_instance();
+
+  std::lock_guard<std::mutex> const lock(registry_mutex());
+  cache_manifest_locked();
+
+  bool stop_music = false;
+  auto& registry = manifest_registry();
+  for (const auto& entry : registry.entries) {
+    if (!policy_matches(load_policy, entry.load_policy)) {
+      continue;
+    }
+
+    if (entry.config.category == AudioCategory::MUSIC) {
+      stop_music = true;
+      audio_sys.unload_music(entry.id.toStdString());
+    } else {
+      audio_sys.unload_sound(entry.id.toStdString());
+    }
+  }
+
+  if (stop_music) {
+    audio_sys.stop_music();
+  }
+}
+
+auto AudioResourceLoader::ensure_audio_resource_loaded(const QString& resource_id) -> bool {
+  std::lock_guard<std::mutex> const lock(registry_mutex());
+  const CachedAudioEntry* entry = find_cached_entry_locked(resource_id);
+  if (entry == nullptr) {
+    return false;
+  }
+  return load_cached_entry(AudioSystem::get_instance(), *entry);
+}
+
+auto AudioResourceLoader::find_first_resource_id(AudioCategory category,
+                                                 const QMap<QString, QString>& tags)
+    -> QString {
+  std::lock_guard<std::mutex> const lock(registry_mutex());
+  cache_manifest_locked();
+
+  const auto& registry = manifest_registry();
+  for (const auto& entry : registry.entries) {
+    if (entry.config.category != category) {
+      continue;
+    }
+    if (tags_match(entry, tags)) {
+      return entry.id;
+    }
+  }
+  return {};
 }

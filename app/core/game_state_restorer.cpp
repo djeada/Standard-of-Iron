@@ -17,8 +17,8 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
-#include "game_engine.h"
 #include "minimap_manager.h"
+#include "visibility_coordinator.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
@@ -139,11 +139,12 @@ void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) 
 
 void GameStateRestorer::restore_environment_from_metadata(
     const QJsonObject& metadata,
-    Engine::Core::World* world,
-    const RendererRefs& renderers,
+    const AppSceneContext& scene,
     Game::Systems::LevelSnapshot& level,
     int local_owner_id,
-    const ViewportState& viewport) {
+    MinimapManager* minimap_manager,
+    VisibilityCoordinator* visibility_coordinator) {
+  auto* world = scene.world;
   if (!world) {
     return;
   }
@@ -183,12 +184,16 @@ void GameStateRestorer::restore_environment_from_metadata(
     level.cam_far = def.camera.far_plane;
   }
 
-  if (renderers.renderer && renderers.camera) {
+  if (scene.renderer && scene.active_camera) {
     if (loaded_definition) {
-      Game::Map::Environment::apply(def, *renderers.renderer, *renderers.camera);
+      Game::Map::Environment::apply(def, *scene.renderer, *scene.active_camera);
     } else {
-      Game::Map::Environment::apply_default(*renderers.renderer, *renderers.camera);
+      Game::Map::Environment::apply_default(*scene.renderer, *scene.active_camera);
     }
+  }
+
+  if (loaded_definition && minimap_manager != nullptr) {
+    minimap_manager->generate_for_map(def);
   }
 
   if (terrain_service.is_initialized()) {
@@ -200,40 +205,34 @@ void GameStateRestorer::restore_environment_from_metadata(
     const float tile_size =
         (height_map != nullptr) ? height_map->get_tile_size() : fallback_tile_size;
 
-    if (renderers.ground) {
-      renderers.ground->configure(tile_size, grid_width, grid_height);
-      renderers.ground->set_biome(terrain_service.biome_settings());
-    }
+      if (scene.ground) {
+        scene.ground->configure(tile_size, grid_width, grid_height);
+        scene.ground->set_biome(terrain_service.biome_settings());
+      }
 
-    if (renderers.boundary_fog) {
-      renderers.boundary_fog->configure(grid_width, grid_height, tile_size);
-    }
+      if (scene.boundary_fog) {
+        scene.boundary_fog->configure(grid_width, grid_height, tile_size);
+      }
 
-    if (height_map != nullptr) {
-      if (renderers.terrain) {
-        renderers.terrain->configure(*height_map, terrain_service.biome_settings());
+      if (height_map != nullptr) {
+        if (scene.terrain) {
+          scene.terrain->configure(*height_map, terrain_service.biome_settings());
+        }
+        if (scene.features) {
+          scene.features->configure(*height_map, terrain_service.road_segments());
+        }
+        if (scene.scatter) {
+          scene.scatter->configure(*height_map,
+                                   terrain_service.biome_settings(),
+                                   terrain_service.world_props());
+        }
       }
-      if (renderers.features) {
-        renderers.features->configure(*height_map, terrain_service.road_segments());
-      }
-      if (renderers.scatter) {
-        renderers.scatter->configure(*height_map,
-                                     terrain_service.biome_settings(),
-                                     terrain_service.world_props());
-      }
-    }
 
     Game::Systems::CommandService::initialize(grid_width, grid_height);
 
-    auto& visibility_service = Game::Map::VisibilityService::instance();
-    visibility_service.initialize(grid_width, grid_height, tile_size);
-    visibility_service.compute_immediate(*world, local_owner_id);
-
-    if (renderers.fog && visibility_service.is_initialized()) {
-      renderers.fog->update_mask(visibility_service.get_width(),
-                                 visibility_service.get_height(),
-                                 visibility_service.get_tile_size(),
-                                 visibility_service.snapshot_cells());
+    if (visibility_coordinator != nullptr) {
+      visibility_coordinator->initialize_for_world(
+          *world, local_owner_id, grid_width, grid_height, tile_size, level.is_spectator_mode);
     }
   } else {
     Game::Map::MapDefinition fallback_def;
@@ -244,16 +243,13 @@ void GameStateRestorer::restore_environment_from_metadata(
     Game::Systems::CommandService::initialize(fallback_grid_width,
                                               fallback_grid_height);
 
-    auto& visibility_service = Game::Map::VisibilityService::instance();
-    visibility_service.initialize(
-        fallback_grid_width, fallback_grid_height, fallback_tile_size);
-    visibility_service.compute_immediate(*world, local_owner_id);
-
-    if (renderers.fog && visibility_service.is_initialized()) {
-      renderers.fog->update_mask(visibility_service.get_width(),
-                                 visibility_service.get_height(),
-                                 visibility_service.get_tile_size(),
-                                 visibility_service.snapshot_cells());
+    if (visibility_coordinator != nullptr) {
+      visibility_coordinator->initialize_for_world(*world,
+                                                   local_owner_id,
+                                                   fallback_grid_width,
+                                                   fallback_grid_height,
+                                                   fallback_tile_size,
+                                                   level.is_spectator_mode);
     }
   }
 }

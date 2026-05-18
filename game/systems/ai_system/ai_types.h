@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QString>
+
 #include <unordered_map>
 #include <vector>
 
@@ -59,7 +61,6 @@ struct MovementSnapshot {
 struct ProductionSnapshot {
   bool has_component = false;
   bool in_progress = false;
-  bool commander_committed = false;
   float build_time = 0.0F;
   float time_remaining = 0.0F;
   int produced_count = 0;
@@ -76,6 +77,8 @@ struct BuilderProductionSnapshot {
   bool has_construction_site = false;
   bool in_progress = false;
   bool at_construction_site = false;
+  float construction_site_x = 0.0F;
+  float construction_site_z = 0.0F;
 };
 
 struct EntitySnapshot {
@@ -114,12 +117,28 @@ struct AISnapshot {
   int player_id = 0;
   std::vector<EntitySnapshot> friendly_units;
   std::vector<ContactSnapshot> visible_enemies;
+  std::vector<ContactSnapshot> strategic_objectives;
 
   float game_time = 0.0F;
 };
 
 struct AIStrategyConfig {
+  struct PersonalityInputs {
+    float aggression = 0.5F;
+    float defense = 0.5F;
+    float harassment = 0.5F;
+  };
+
+  struct DifficultyTuning {
+    QString level = "normal";
+    float update_interval_multiplier = 1.0F;
+    float production_rate_multiplier = 1.0F;
+    float scouting_distance_multiplier = 1.0F;
+  };
+
   AIStrategy strategy = AIStrategy::Balanced;
+  PersonalityInputs personality;
+  DifficultyTuning difficulty;
 
   float aggression_modifier = 1.0F;
   float defense_modifier = 1.0F;
@@ -128,6 +147,24 @@ struct AIStrategyConfig {
   float min_attack_force = 1.0F;
   float retreat_threshold = 0.25F;
   float harassment_range = 0.0F;
+  int target_builder_count = 3;
+  int base_home_target = 2;
+  int desired_barracks_count = 1;
+  int desired_defense_tower_count = 1;
+  int desired_catapult_count = 0;
+  int desired_assembly_size = 4;
+  int reactive_attack_size = 2;
+  int proactive_attack_size = 4;
+  int reserve_units = 0;
+  int harass_units = 0;
+  int desired_outpost_barracks_count = 0;
+  int outpost_home_target = 0;
+  float assembly_radius = 10.0F;
+  float gather_spacing = 1.4F;
+  float attack_formation_spacing = 2.5F;
+  float scouting_distance = 40.0F;
+  float reserve_hold_radius = 8.0F;
+  float expansion_site_distance = 28.0F;
 };
 
 struct AIContext {
@@ -161,6 +198,10 @@ struct AIContext {
   float base_pos_y = 0.0F;
   float base_pos_z = 0.0F;
   bool has_base_anchor = false;
+  bool anchor_is_structural = false;
+  bool has_expansion_site = false;
+  float expansion_site_x = 0.0F;
+  float expansion_site_z = 0.0F;
 
   struct UnitAssignment {
     BehaviorPriority owner_priority = BehaviorPriority::Normal;
@@ -182,11 +223,32 @@ struct AIContext {
   int home_count = 0;
   int defense_tower_count = 0;
   int barracks_count = 0;
+  int assembled_unit_count = 0;
+  int effective_reserve_units = 0;
+  int effective_harass_units = 0;
+  int outpost_barracks_count = 0;
+  int outpost_home_count = 0;
+  std::vector<Engine::Core::EntityID> reserve_unit_ids;
+  std::vector<Engine::Core::EntityID> harass_unit_ids;
 
   int max_troops_per_player = 500;
-  bool allow_commander_recruitment = false;
+  bool expansion_construction_pending = false;
+  float last_expansion_order_time = -1000.0F;
 
   std::unordered_map<Engine::Core::EntityID, float> buildings_under_attack;
+  float last_local_threat_time = 0.0F;
+
+  struct MacroTargets {
+    int builder_count = 3;
+    int home_count = 2;
+    int barracks_count = 1;
+    int defense_tower_count = 1;
+    int catapult_count = 0;
+    int assembly_size = 4;
+    float assembly_radius = 10.0F;
+    float gather_spacing = 1.4F;
+  };
+  MacroTargets macro_targets;
 
   int consecutive_no_progress_cycles = 0;
   float last_meaningful_action_time = 0.0F;

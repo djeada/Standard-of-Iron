@@ -30,6 +30,7 @@
 #include "../../../gl/render_constants.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
@@ -51,6 +52,8 @@ namespace Render::GL::Carthage {
 namespace {
 
 constexpr std::string_view k_default_style_key = "default";
+constexpr auto k_profile =
+    Render::GL::Humanoid::k_support_proportion_profile.with_offset({.x = 0.01F});
 
 auto style_registry() -> std::unordered_map<std::string, HealerStyleConfig>& {
   static std::unordered_map<std::string, HealerStyleConfig> styles;
@@ -83,8 +86,7 @@ using Render::GL::Humanoid::saturate_color;
 class HealerRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-
-    return {0.88F, 0.99F, 0.90F};
+    return k_profile.as_vector();
   }
 
   auto
@@ -101,7 +103,7 @@ public:
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/healer";
-      s.scaling = ProportionScaling{0.88F, 0.99F, 0.90F};
+      s.scaling = k_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/healer",

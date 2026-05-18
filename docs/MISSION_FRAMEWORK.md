@@ -85,13 +85,34 @@ Defines AI opponents with personality and behavior:
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "blue",
-    "difficulty": "medium",
+    "difficulty": "hard",
+    "strategy": "aggressive",
     "team_id": 1,
+    "commander_troop": "carthage_war_leader",
     "personality": {
       "aggression": 0.7,
       "defense": 0.3,
       "harassment": 0.5
     },
+    "starting_buildings": [
+      {
+        "type": "barracks",
+        "position": {"x": 180, "z": 180},
+        "max_population": 140
+      }
+    ],
+    "starting_units": [
+      {
+        "type": "builder",
+        "count": 2,
+        "position": {"x": 176, "z": 178}
+      },
+      {
+        "type": "spearman",
+        "count": 6,
+        "position": {"x": 182, "z": 182}
+      }
+    ],
     "waves": [
       {
         "timing": 120.0,
@@ -106,6 +127,59 @@ Defines AI opponents with personality and behavior:
 ]
 ```
 
+#### AI fields
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `id` | Yes | Mission-local identifier for the AI setup |
+| `nation` | Yes | Nation used for roster resolution |
+| `faction` | Yes | Faction metadata for mission/UI use |
+| `color` | Yes | Player color |
+| `difficulty` | No | Execution tuning; omitted falls back to normal behavior |
+| `strategy` | No | Base strategic preset; omitted falls back to `balanced` |
+| `team_id` | No | Allies AIs with the same team and prevents them fighting each other |
+| `commander_troop` | No | Explicit commander troop override |
+| `personality` | No | Fine-tunes aggression / defense / harassment on top of the strategy |
+| `starting_units` | No | Spawns the AI with units at mission start |
+| `starting_buildings` | No | Spawns the AI with structures at mission start |
+| `waves` | No | Timed reinforcements layered on top of the regular AI |
+
+#### Supported strategy values
+
+The current AI strategy parser accepts:
+
+- `balanced`
+- `aggressive`
+- `defensive`
+- `expansionist`
+- `economic`
+- `harasser` or `harassment`
+- `rusher` or `rush`
+
+If the string is omitted or unrecognized, the engine falls back to `balanced`.
+
+#### Difficulty values
+
+The current difficulty pipeline is execution-only. It affects things like AI update cadence, production speed, and scouting reach without changing the chosen strategic identity.
+
+- `easy`
+- `hard`
+- `very_hard`
+- `medium` currently behaves like normal/default tuning
+- omitted or any other value -> normal/default tuning
+
+#### Personality values
+
+`personality` currently exposes three normalized floats, usually in the `0.0` to `1.0` range:
+
+- `aggression`
+- `defense`
+- `harassment`
+
+If any value is omitted, it defaults to `0.5`.
+
+These values are applied **after** the base strategy preset, so a `defensive` AI with high aggression still feels defensive overall, but attacks sooner and commits more readily than the default preset.
+
 #### Team ID (Optional)
 
 AI opponents can be assigned to teams using the `team_id` field. AI players with the same `team_id` will be allied and won't attack each other. If `team_id` is not specified, each AI player will be on their own team (enemies to all other AI players).
@@ -116,16 +190,96 @@ Example with allied AI opponents:
   {
     "id": "roman_legion_1",
     "nation": "roman_republic",
+    "strategy": "balanced",
+    "difficulty": "hard",
     "team_id": 1,
     ...
   },
   {
     "id": "roman_legion_2",
     "nation": "roman_republic",
+    "strategy": "harasser",
+    "difficulty": "hard",
     "team_id": 1,
     ...
   }
 ]
+```
+
+#### Authoring examples
+
+Balanced frontline AI:
+
+```json
+{
+  "id": "roman_line",
+  "nation": "roman_republic",
+  "faction": "roman",
+  "color": "red",
+  "difficulty": "hard",
+  "strategy": "balanced",
+  "personality": {
+    "aggression": 0.6,
+    "defense": 0.55,
+    "harassment": 0.25
+  },
+  "starting_buildings": [
+    {
+      "type": "barracks",
+      "position": {"x": 132, "z": 82},
+      "max_population": 180
+    }
+  ],
+  "starting_units": [
+    {
+      "type": "builder",
+      "count": 2,
+      "position": {"x": 130, "z": 80}
+    },
+    {
+      "type": "spearman",
+      "count": 8,
+      "position": {"x": 134, "z": 84}
+    }
+  ]
+}
+```
+
+Forward pressure harasser:
+
+```json
+{
+  "id": "numidian_raiders",
+  "nation": "carthage",
+  "faction": "carthaginian",
+  "color": "yellow",
+  "difficulty": "hard",
+  "strategy": "harasser",
+  "personality": {
+    "aggression": 0.76,
+    "defense": 0.3,
+    "harassment": 0.85
+  },
+  "starting_buildings": [
+    {
+      "type": "barracks",
+      "position": {"x": 12, "z": 78},
+      "max_population": 120
+    }
+  ],
+  "starting_units": [
+    {
+      "type": "builder",
+      "count": 1,
+      "position": {"x": 14, "z": 80}
+    },
+    {
+      "type": "horse_swordsman",
+      "count": 5,
+      "position": {"x": 10, "z": 80}
+    }
+  ]
+}
 ```
 
 ### Victory Conditions

@@ -1,5 +1,6 @@
 #include "ai_system.h"
 
+#include <algorithm>
 #include <queue>
 
 #include <cstdint>
@@ -14,6 +15,7 @@
 #include "ai_system/behaviors/defend_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
+#include "ai_system/behaviors/harass_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
 #include "core/event_manager.h"
@@ -57,6 +59,7 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
   registry.register_behavior(std::make_unique<AI::BuilderBehavior>());
   registry.register_behavior(std::make_unique<AI::CommanderBehavior>());
   registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
+  registry.register_behavior(std::make_unique<AI::HarassBehavior>());
   registry.register_behavior(std::make_unique<AI::AttackBehavior>());
   registry.register_behavior(std::make_unique<AI::GatherBehavior>());
 }
@@ -81,7 +84,6 @@ void AISystem::initialize_ai_players() {
     AIInstance instance;
     instance.context.player_id = player_id;
     instance.context.state = AI::AIState::Idle;
-    instance.context.allow_commander_recruitment = m_allow_commander_recruitment;
     instance.behavior_registry = std::make_unique<AI::AIBehaviorRegistry>();
     populate_behavior_registry(*instance.behavior_registry);
     instance.worker = std::make_unique<AI::AIWorker>(
@@ -114,13 +116,6 @@ void AISystem::set_ai_strategy(int player_id,
   }
 }
 
-void AISystem::set_commander_recruitment_enabled(bool enabled) {
-  m_allow_commander_recruitment = enabled;
-  for (auto& ai : m_ai_instances) {
-    ai.context.allow_commander_recruitment = enabled;
-  }
-}
-
 void AISystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
@@ -135,8 +130,11 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
   for (auto& ai : m_ai_instances) {
 
     ai.update_timer += delta_time;
+    const float effective_update_interval =
+        m_update_interval *
+        std::max(0.25F, ai.context.strategy_config.difficulty.update_interval_multiplier);
 
-    if (ai.update_timer < m_update_interval) {
+    if (ai.update_timer < effective_update_interval) {
       continue;
     }
 
@@ -149,9 +147,9 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
     snapshot.game_time = m_total_game_time;
 
     AI::AIJob job;
-    job.snapshot = std::move(snapshot);
-    job.context = ai.context;
-    job.delta_time = ai.update_timer;
+     job.snapshot = std::move(snapshot);
+     job.context = ai.context;
+     job.delta_time = ai.update_timer;
 
     if (ai.worker->try_submit(std::move(job))) {
       ai.update_timer = 0.0F;
@@ -186,6 +184,7 @@ void AISystem::on_building_attacked(const Engine::Core::BuildingAttackedEvent& e
   for (auto& ai : m_ai_instances) {
     if (ai.context.player_id == event.owner_id) {
       ai.context.buildings_under_attack[event.building_id] = m_total_game_time;
+      ai.context.last_local_threat_time = m_total_game_time;
 
       if (event.building_id == ai.context.primary_barracks) {
         ai.context.barracks_under_threat = true;

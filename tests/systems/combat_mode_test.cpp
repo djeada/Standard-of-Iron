@@ -103,6 +103,135 @@ TEST_F(CombatModeTest, MoveCommandScalesHoldExitToCurrentKneelDepth) {
   EXPECT_FLOAT_EQ(hold_mode->exit_cooldown, 1.0F);
 }
 
+TEST_F(CombatModeTest, ManualMoveSuppressesRangedOpportunisticAttackStop) {
+  auto* archer = world->create_entity();
+  archer->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* archer_unit = archer->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  archer_unit->owner_id = 1;
+  archer_unit->spawn_type = Game::Units::SpawnType::Archer;
+  auto* archer_attack = archer->add_component<AttackComponent>();
+  archer_attack->can_melee = false;
+  archer_attack->can_ranged = true;
+  archer_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  archer_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  archer_attack->range = 10.0F;
+  archer_attack->melee_range = 1.0F;
+  archer_attack->cooldown = 0.0F;
+  archer_attack->time_since_last = 1.0F;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(4.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  CommandService::move_unit(*world, archer->get_id(), QVector3D(7.0F, 0.0F, 0.0F));
+
+  auto* movement = archer->get_component<MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_TRUE(movement->has_target);
+  EXPECT_TRUE(Game::Systems::Combat::suppresses_opportunistic_combat(archer));
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_FLOAT_EQ(movement->goal_x, 7.0F);
+  EXPECT_FALSE(archer->has_component<AttackTargetComponent>());
+  EXPECT_EQ(enemy_unit->health, 100);
+}
+
+TEST_F(CombatModeTest, ManualGroupMoveSuppressesAutoEngagementWhilePathPending) {
+  auto* leader = world->create_entity();
+  leader->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* leader_unit = leader->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  leader_unit->owner_id = 1;
+  leader_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto* leader_attack = leader->add_component<AttackComponent>();
+  leader_attack->can_melee = true;
+  leader_attack->can_ranged = false;
+  leader_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  leader_attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto* flank = world->create_entity();
+  flank->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* flank_unit = flank->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  flank_unit->owner_id = 1;
+  flank_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto* flank_attack = flank->add_component<AttackComponent>();
+  flank_attack->can_melee = true;
+  flank_attack->can_ranged = false;
+  flank_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  flank_attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  CommandService::MoveOptions options;
+  options.group_move = true;
+  options.retry_individual_on_group_failure = true;
+  CommandService::move_units(*world,
+                             {leader->get_id(), flank->get_id()},
+                             {QVector3D(18.0F, 0.0F, 0.0F),
+                              QVector3D(18.0F, 0.0F, 1.0F)},
+                             options);
+
+  auto* leader_movement = leader->get_component<MovementComponent>();
+  ASSERT_NE(leader_movement, nullptr);
+  EXPECT_TRUE(leader_movement->path_pending);
+  EXPECT_FALSE(leader_movement->has_target);
+  EXPECT_TRUE(Game::Systems::Combat::suppresses_opportunistic_combat(leader));
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::AutoEngagement auto_engagement;
+  auto_engagement.process(world.get(), query_context, 0.016F);
+
+  EXPECT_FALSE(leader->has_component<AttackTargetComponent>());
+  EXPECT_FALSE(flank->has_component<AttackTargetComponent>());
+}
+
+TEST_F(CombatModeTest, AutoEngagementResumesAfterManualMoveArrives) {
+  auto* spearman = world->create_entity();
+  spearman->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* spearman_unit = spearman->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  spearman_unit->owner_id = 1;
+  spearman_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto* spearman_attack = spearman->add_component<AttackComponent>();
+  spearman_attack->can_melee = true;
+  spearman_attack->can_ranged = false;
+  spearman_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  spearman_attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  CommandService::move_unit(*world, spearman->get_id(), QVector3D(0.02F, 0.0F, 0.0F));
+
+  auto* movement = spearman->get_component<MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_TRUE(Game::Systems::Combat::suppresses_opportunistic_combat(spearman));
+
+  MovementSystem movement_system;
+  movement_system.update(world.get(), 0.016F);
+
+  EXPECT_FALSE(movement->has_target);
+  EXPECT_FALSE(Game::Systems::Combat::suppresses_opportunistic_combat(spearman));
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::AutoEngagement auto_engagement;
+  auto_engagement.process(world.get(), query_context, 0.016F);
+
+  auto* attack_target = spearman->get_component<AttackTargetComponent>();
+  ASSERT_NE(attack_target, nullptr);
+  EXPECT_EQ(attack_target->target_id, enemy->get_id());
+}
+
 TEST_F(CombatModeTest, HoldModeSpearmanStillLocksEnemyInMelee) {
   auto* spearman = world->create_entity();
   auto* spearman_transform =
