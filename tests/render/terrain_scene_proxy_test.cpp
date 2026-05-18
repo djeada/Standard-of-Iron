@@ -132,7 +132,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(feature_chunks[3].geometry_count, 1U);
 
   const auto scatters = proxy.scatter_chunks();
-  ASSERT_EQ(scatters.size(), 12U);
+  ASSERT_EQ(scatters.size(), 13U);
   EXPECT_EQ(scatters[0].species, Render::GL::ScatterSpeciesId::Grass);
   EXPECT_EQ(scatters[0].visibility_mode,
             Render::GL::ScatterVisibilityMode::InstanceFiltered);
@@ -161,6 +161,8 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_TRUE(scatters[10].gpu_ready);
   EXPECT_EQ(scatters[11].species, Render::GL::ScatterSpeciesId::Boulder);
   EXPECT_TRUE(scatters[11].gpu_ready);
+  EXPECT_EQ(scatters[12].species, Render::GL::ScatterSpeciesId::IronOre);
+  EXPECT_TRUE(scatters[12].gpu_ready);
   EXPECT_FALSE(scatter.last_sync_stats().did_upload_or_rebuild());
 }
 

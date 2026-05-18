@@ -319,7 +319,8 @@ private:
         continue;
       }
       if (world_prop.type != Game::Map::WorldProp::Type::Boulder &&
-          world_prop.type != Game::Map::WorldProp::Type::Ruins) {
+          world_prop.type != Game::Map::WorldProp::Type::Ruins &&
+          world_prop.type != Game::Map::WorldProp::Type::IronOre) {
         continue;
       }
       float const radius = std::max(1.0F, world_prop.scale * 1.8F);

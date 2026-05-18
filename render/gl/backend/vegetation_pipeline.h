@@ -109,6 +109,9 @@ public:
   [[nodiscard]] auto dead_tree_shader() const -> GL::Shader* {
     return m_dead_tree_shader;
   }
+  [[nodiscard]] auto iron_ore_shader() const -> GL::Shader* {
+    return m_iron_ore_shader;
+  }
 
   struct PropUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -120,6 +123,7 @@ public:
   PropUniforms m_weapon_rack_uniforms;
   PropUniforms m_ruins_uniforms;
   PropUniforms m_dead_tree_uniforms;
+  PropUniforms m_iron_ore_uniforms;
 
   GLuint m_tent_vao{0};
   GLuint m_tent_vertex_buffer{0};
@@ -151,6 +155,12 @@ public:
   GLsizei m_dead_tree_index_count{0};
   GLsizei m_dead_tree_vertex_count{0};
 
+  GLuint m_iron_ore_vao{0};
+  GLuint m_iron_ore_vertex_buffer{0};
+  GLuint m_iron_ore_index_buffer{0};
+  GLsizei m_iron_ore_index_count{0};
+  GLsizei m_iron_ore_vertex_count{0};
+
 private:
   void initialize_stone_pipeline();
   void shutdown_stone_pipeline();
@@ -172,6 +182,8 @@ private:
   void shutdown_ruins_pipeline();
   void initialize_dead_tree_pipeline();
   void shutdown_dead_tree_pipeline();
+  void initialize_iron_ore_pipeline();
+  void shutdown_iron_ore_pipeline();
   void upload_prop_mesh_impl(const std::vector<std::pair<QVector3D, QVector3D>>& verts,
                              const std::vector<uint16_t>& idx,
                              GLuint& vao,
@@ -195,6 +207,7 @@ private:
   GL::Shader* m_weapon_rack_shader{nullptr};
   GL::Shader* m_ruins_shader{nullptr};
   GL::Shader* m_dead_tree_shader{nullptr};
+  GL::Shader* m_iron_ore_shader{nullptr};
 };
 
 } // namespace Render::GL::BackendPipelines

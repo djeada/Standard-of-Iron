@@ -68,6 +68,8 @@
         <file>assets/shaders/ruins_instanced.vert</file>
         <file>assets/shaders/dead_tree_instanced.frag</file>
         <file>assets/shaders/dead_tree_instanced.vert</file>
+        <file>assets/shaders/iron_ore_instanced.frag</file>
+        <file>assets/shaders/iron_ore_instanced.vert</file>
         
         <!-- Map files -->
         <file>assets/maps/map_battle_trebia.json</file>
