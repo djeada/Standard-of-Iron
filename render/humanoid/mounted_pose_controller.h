@@ -103,7 +103,7 @@ private:
   void translate_upper_body(const QVector3D& delta);
   void calculate_riding_knees(const MountedAttachmentFrame& mount);
 
-  auto solve_elbow_ik(bool is_left,
+  auto solve_elbow_ik(Side side,
                       const QVector3D& shoulder,
                       const QVector3D& hand,
                       const QVector3D& outward_dir,
@@ -112,17 +112,17 @@ private:
                       float y_bias,
                       float outward_sign) const -> QVector3D;
 
-  auto solve_knee_ik(bool is_left,
+  auto solve_knee_ik(Side side,
                      const QVector3D& hip,
                      const QVector3D& foot,
                      float height_scale) const -> QVector3D;
 
-  auto get_shoulder(bool is_left) const -> const QVector3D&;
-  auto get_hand(bool is_left) -> QVector3D&;
-  auto get_hand(bool is_left) const -> const QVector3D&;
-  auto get_elbow(bool is_left) -> QVector3D&;
+  auto get_shoulder(Side side) const -> const QVector3D&;
+  auto get_hand(Side side) -> QVector3D&;
+  auto get_hand(Side side) const -> const QVector3D&;
+  auto get_elbow(Side side) -> QVector3D&;
   auto compute_right_axis() const -> QVector3D;
-  auto compute_outward_dir(bool is_left) const -> QVector3D;
+  auto compute_outward_dir(Side side) const -> QVector3D;
 
   void
   apply_lean(const MountedAttachmentFrame& mount, float forward_lean, float side_lean);

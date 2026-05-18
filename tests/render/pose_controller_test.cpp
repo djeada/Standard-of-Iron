@@ -408,7 +408,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtSetsHandPosition) {
 
   QVector3D const target_position(0.30F, 1.20F, 0.80F);
 
-  controller.place_hand_at(false, target_position);
+  controller.place_hand_at(Side::Right, target_position);
 
   EXPECT_TRUE(approx_equal(pose.hand_r, target_position));
 }
@@ -419,7 +419,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
   QVector3D const target_position(0.30F, 1.20F, 0.80F);
   QVector3D const original_elbow = pose.elbow_r;
 
-  controller.place_hand_at(false, target_position);
+  controller.place_hand_at(Side::Right, target_position);
 
   EXPECT_FALSE(approx_equal(pose.elbow_r, original_elbow));
 
@@ -437,7 +437,7 @@ TEST_F(HumanoidPoseControllerTest, SolveElbowIKReturnsValidPosition) {
   QVector3D const outward_dir(1.0F, 0.0F, 0.0F);
 
   QVector3D const elbow = controller.solve_elbow_ik(
-      false, shoulder, hand, outward_dir, 0.45F, 0.15F, 0.0F, 1.0F);
+      Side::Right, shoulder, hand, outward_dir, 0.45F, 0.15F, 0.0F, 1.0F);
 
   EXPECT_GT(elbow.length(), 0.0F);
 
@@ -453,7 +453,7 @@ TEST_F(HumanoidPoseControllerTest, SolveKneeIKReturnsValidPosition) {
   QVector3D const foot(0.10F, 0.0F, 0.05F);
   float const height_scale = 1.0F;
 
-  QVector3D const knee = controller.solve_knee_ik(false, hip, foot, height_scale);
+  QVector3D const knee = controller.solve_knee_ik(Side::Right, hip, foot, height_scale);
 
   EXPECT_LT(knee.y(), hip.y());
   EXPECT_GT(knee.y(), foot.y());
@@ -468,7 +468,7 @@ TEST_F(HumanoidPoseControllerTest, SolveKneeIKPreventsGroundPenetration) {
   QVector3D const foot(0.50F, 0.0F, 0.50F);
   float const height_scale = 1.0F;
 
-  QVector3D const knee = controller.solve_knee_ik(true, hip, foot, height_scale);
+  QVector3D const knee = controller.solve_knee_ik(Side::Left, hip, foot, height_scale);
 
   float const min_knee_y = HumanProportions::GROUND_Y + pose.foot_y_offset * 0.5F;
   EXPECT_GE(knee.y(), min_knee_y - 0.001F);
@@ -479,7 +479,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtLeftHandWorks) {
 
   QVector3D const target_position(-0.40F, 1.30F, 0.60F);
 
-  controller.place_hand_at(true, target_position);
+  controller.place_hand_at(Side::Left, target_position);
 
   EXPECT_TRUE(approx_equal(pose.hand_l, target_position));
 
@@ -641,8 +641,8 @@ TEST_F(HumanoidPoseControllerTest, LookAtWithSamePositionDoesNothing) {
 TEST_F(HumanoidPoseControllerTest, GetShoulderYReturnsCorrectValues) {
   HumanoidPoseController const controller(pose, anim_ctx);
 
-  float const left_y = controller.get_shoulder_y(true);
-  float const right_y = controller.get_shoulder_y(false);
+  float const left_y = controller.get_shoulder_y(Side::Left);
+  float const right_y = controller.get_shoulder_y(Side::Right);
 
   EXPECT_FLOAT_EQ(left_y, pose.shoulder_l.y());
   EXPECT_FLOAT_EQ(right_y, pose.shoulder_r.y());
@@ -659,11 +659,11 @@ TEST_F(HumanoidPoseControllerTest, GetPelvisYReturnsCorrectValue) {
 TEST_F(HumanoidPoseControllerTest, GetShoulderYReflectsKneeling) {
   HumanoidPoseController controller(pose, anim_ctx);
 
-  float const original_shoulder_y = controller.get_shoulder_y(true);
+  float const original_shoulder_y = controller.get_shoulder_y(Side::Left);
 
   controller.kneel(0.5F);
 
-  float const kneeling_shoulder_y = controller.get_shoulder_y(true);
+  float const kneeling_shoulder_y = controller.get_shoulder_y(Side::Left);
 
   EXPECT_LT(kneeling_shoulder_y, original_shoulder_y);
 }
