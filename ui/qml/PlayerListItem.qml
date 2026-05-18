@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import "ui_audio.js" as UiAudio
 
 Rectangle {
     id: root
@@ -58,13 +59,24 @@ Rectangle {
             }
 
             MouseArea {
+                id: colorMouseArea
+
                 anchors.fill: parent
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.color_clicked()
+                onContainsMouseChanged: {
+                    if (containsMouse && typeof game !== "undefined")
+                        UiAudio.play_hover(game.audio_system);
+                }
+                onClicked: {
+                    if (typeof game !== "undefined")
+                        UiAudio.play_click(game.audio_system);
+                    root.color_clicked();
+                }
             }
 
             ToolTip {
-                visible: parent.children[1].containsMouse
+                visible: colorMouseArea.containsMouse
                 text: "Click to change color"
                 delay: 500
             }
@@ -102,14 +114,24 @@ Rectangle {
             }
 
             MouseArea {
+                id: teamMouseArea
+
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
-                onClicked: root.team_clicked()
+                onContainsMouseChanged: {
+                    if (containsMouse && typeof game !== "undefined")
+                        UiAudio.play_hover(game.audio_system);
+                }
+                onClicked: {
+                    if (typeof game !== "undefined")
+                        UiAudio.play_click(game.audio_system);
+                    root.team_clicked();
+                }
             }
 
             ToolTip {
-                visible: parent.children[1].containsMouse
+                visible: teamMouseArea.containsMouse
                 text: "Click to change team"
                 delay: 500
             }
@@ -170,7 +192,15 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.remove_clicked()
+                onContainsMouseChanged: {
+                    if (containsMouse && typeof game !== "undefined")
+                        UiAudio.play_hover(game.audio_system);
+                }
+                onClicked: {
+                    if (typeof game !== "undefined")
+                        UiAudio.play_click(game.audio_system);
+                    root.remove_clicked();
+                }
             }
 
             ToolTip {

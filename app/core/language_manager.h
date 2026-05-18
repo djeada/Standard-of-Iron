@@ -6,29 +6,30 @@
 
 class LanguageManager : public QObject {
   Q_OBJECT
-  Q_PROPERTY(QString currentLanguage READ currentLanguage WRITE setLanguage NOTIFY
-                 languageChanged)
-  Q_PROPERTY(QStringList availableLanguages READ availableLanguages CONSTANT)
+  Q_PROPERTY(QString current_language READ current_language WRITE set_language NOTIFY
+                 language_changed)
+  Q_PROPERTY(QStringList available_languages READ available_languages CONSTANT)
 
 public:
   explicit LanguageManager(QObject* parent = nullptr);
   ~LanguageManager() override;
 
-  [[nodiscard]] QString currentLanguage() const;
-  [[nodiscard]] QStringList availableLanguages() const;
+  [[nodiscard]] QString current_language() const;
+  [[nodiscard]] QStringList available_languages() const;
 
-  Q_INVOKABLE void setLanguage(const QString& language);
-  Q_INVOKABLE [[nodiscard]] static QString languageDisplayName(const QString& language);
+  Q_INVOKABLE void set_language(const QString& language);
+  Q_INVOKABLE [[nodiscard]] static QString
+  language_display_name(const QString& language);
 
 signals:
-  void languageChanged();
+  void language_changed();
 
 private:
   QString m_current_language;
   QTranslator* m_translator;
   QStringList m_available_languages;
 
-  void loadLanguage(const QString& language);
+  void load_language(const QString& language);
 };
 
 #endif

@@ -13,12 +13,26 @@ ApplicationWindow {
     property bool edge_scroll_disabled: false
     property string mission_announcement_text: ""
 
+    function sync_audio_context() {
+        if (typeof game === 'undefined' || !game.set_audio_frontend_context)
+            return;
+
+        if (campaign_screen.visible) {
+            game.set_audio_frontend_context("campaign");
+        } else if (mainWindow.menu_visible || mapSelect.visible || (!mainWindow.game_started && (save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible))) {
+            game.set_audio_frontend_context("menu");
+        } else {
+            game.set_audio_frontend_context("battle");
+        }
+    }
+
     width: 1280
     height: 720
     visibility: Window.FullScreen
     visible: true
     title: qsTr("Standard of Iron - RTS Game")
     color: Theme.bg
+    Component.onCompleted: sync_audio_context()
 
     GameView {
         id: gameViewItem
@@ -202,6 +216,7 @@ ApplicationWindow {
             } else if (mainMenu.game_started) {
                 gameViewItem.forceActiveFocus();
             }
+            mainWindow.sync_audio_context();
         }
         onOpen_skirmish: function () {
             mapSelect.visible = true;
@@ -246,6 +261,7 @@ ApplicationWindow {
                 mapSelect.forceActiveFocus();
                 gameViewItem.focus = false;
             }
+            mainWindow.sync_audio_context();
         }
         onMap_chosen: function (map_path, player_configs) {
             console.log("Main: onMap_chosen received", map_path, "with", player_configs.length, "player configs");
@@ -274,6 +290,7 @@ ApplicationWindow {
                 campaign_screen.forceActiveFocus();
                 gameViewItem.focus = false;
             }
+            mainWindow.sync_audio_context();
         }
         onMission_selected: function (campaign_id, mission_id) {
             console.log("Main: Campaign mission selected:", campaign_id + "/" + mission_id);
@@ -303,6 +320,7 @@ ApplicationWindow {
                 save_game_panel.forceActiveFocus();
                 gameViewItem.focus = false;
             }
+            mainWindow.sync_audio_context();
         }
         onSave_requested: function (slot_name) {
             console.log("Main: Save requested for slot:", slot_name);
@@ -328,6 +346,7 @@ ApplicationWindow {
                 load_game_panel.forceActiveFocus();
                 gameViewItem.focus = false;
             }
+            mainWindow.sync_audio_context();
         }
         onLoad_requested: function (slot_name) {
             console.log("Main: Load requested for slot:", slot_name);
@@ -357,6 +376,7 @@ ApplicationWindow {
                 settingsPanel.forceActiveFocus();
                 gameViewItem.focus = false;
             }
+            mainWindow.sync_audio_context();
         }
         onCancelled: function () {
             settingsPanel.visible = false;
@@ -375,6 +395,7 @@ ApplicationWindow {
                 objectivesPanel.forceActiveFocus();
                 gameViewItem.focus = false;
             }
+            mainWindow.sync_audio_context();
         }
         onClose_requested: function () {
             objectivesPanel.visible = false;

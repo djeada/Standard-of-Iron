@@ -54,22 +54,16 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
   }
 
   if (closest_neutral_barracks == nullptr) {
-    return;
+    if (!context.has_expansion_site) {
+      return;
+    }
   }
 
   std::vector<const EntitySnapshot*> available_units;
-  available_units.reserve(snapshot.friendly_units.size());
-
-  for (const auto& entity : snapshot.friendly_units) {
-    if (entity.is_building) {
-      continue;
-    }
-
-    if (is_entity_engaged(entity, snapshot.visible_enemies)) {
-      continue;
-    }
-
-    available_units.push_back(&entity);
+  if (closest_neutral_barracks != nullptr) {
+    available_units = collect_attack_force_units(snapshot, context);
+  } else {
+    available_units = collect_attack_force_units(snapshot, context);
   }
 
   if (available_units.empty()) {
@@ -88,13 +82,14 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
   target_y.reserve(available_units.size());
   target_z.reserve(available_units.size());
 
-  for (const auto* unit : available_units) {
+  for (size_t index = 0; index < available_units.size(); ++index) {
+    const auto* unit = available_units[index];
     unit_ids.push_back(unit->id);
 
     float offset_x = 0.0F;
     float offset_z = 0.0F;
 
-    if (context.primary_barracks != 0) {
+    if (closest_neutral_barracks != nullptr && context.primary_barracks != 0) {
       float const dx = unit->pos_x - closest_neutral_barracks->pos_x;
       float const dz = unit->pos_z - closest_neutral_barracks->pos_z;
       float const dist = std::sqrt(dx * dx + dz * dz);
@@ -103,11 +98,22 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
         offset_x = -(dx / dist) * CAPTURE_APPROACH_DISTANCE;
         offset_z = -(dz / dist) * CAPTURE_APPROACH_DISTANCE;
       }
+    } else if (closest_neutral_barracks == nullptr) {
+      const float angle = static_cast<float>(index) * 0.85F;
+      const float radius = 6.0F + static_cast<float>(index % 3) * 1.5F;
+      offset_x = std::cos(angle) * radius;
+      offset_z = std::sin(angle) * radius;
     }
 
-    target_x.push_back(closest_neutral_barracks->pos_x + offset_x);
+    const float target_center_x =
+        (closest_neutral_barracks != nullptr) ? closest_neutral_barracks->pos_x
+                                              : context.expansion_site_x;
+    const float target_center_z =
+        (closest_neutral_barracks != nullptr) ? closest_neutral_barracks->pos_z
+                                              : context.expansion_site_z;
+    target_x.push_back(target_center_x + offset_x);
     target_y.push_back(0.0F);
-    target_z.push_back(closest_neutral_barracks->pos_z + offset_z);
+    target_z.push_back(target_center_z + offset_z);
   }
 
   auto claimed_units = claim_units(
@@ -154,7 +160,7 @@ auto ExpandBehavior::should_execute(const AISnapshot& snapshot,
     }
   }
 
-  return false;
+  return context.has_expansion_site;
 }
 
 } // namespace Game::Systems::AI

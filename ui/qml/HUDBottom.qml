@@ -16,7 +16,8 @@ RowLayout {
             "canHold": true,
             "canPatrol": true,
             "canHeal": true,
-            "canBuild": true
+            "canBuild": true,
+            "canDeliver": true
         })
 
     signal command_mode_changed(string mode)
@@ -80,6 +81,8 @@ RowLayout {
             orderText = qsTr("Medic order");
         else if (current_command_mode === "build")
             orderText = qsTr("Engineer order");
+        else if (current_command_mode === "deliver")
+            orderText = qsTr("Barracks delivery");
         return orderText;
     }
 
@@ -96,7 +99,7 @@ RowLayout {
     }
 
     function should_pulse_command_banner() {
-        return has_movable_units && (current_command_mode === "attack" || current_command_mode === "guard" || current_command_mode === "patrol");
+        return has_movable_units && (current_command_mode === "attack" || current_command_mode === "guard" || current_command_mode === "patrol" || current_command_mode === "deliver");
     }
 
     Component.onCompleted: update_mode_availability()
@@ -601,6 +604,62 @@ RowLayout {
                         font.pointSize: 11
                         font.bold: true
                         color: stopButton.enabled ? Theme.textMain : Theme.textDim
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+
+            Button {
+                id: deliverButton
+
+                property bool mode_available: bottomRoot.mode_availability.canDeliver === true
+                property bool has_civilian_selected: {
+                    bottomRoot.selection_tick;
+                    return bottomRoot.has_selected_unit("civilian");
+                }
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
+                text: qsTr("Deliver")
+                focusPolicy: Qt.NoFocus
+                enabled: bottomRoot.has_movable_units && mode_available && has_civilian_selected
+                checkable: true
+                checked: bottomRoot.current_command_mode === "deliver" && bottomRoot.has_movable_units
+                onClicked: {
+                    bottomRoot.command_mode_changed(checked ? "deliver" : "normal");
+                }
+                ToolTip.visible: hovered
+                ToolTip.text: !has_civilian_selected ? qsTr("Select civilians") : qsTr("Click a friendly barracks. Each accepted civilian disappears and adds 50 available population.")
+                ToolTip.delay: 500
+
+                background: Rectangle {
+                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
+                    radius: 6
+                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
+                    border.width: 2
+                }
+
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
+                        source: bottomRoot.command_icon("troop_count.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: source !== ""
+                    }
+
+                    Text {
+                        text: deliverButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: deliverButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }

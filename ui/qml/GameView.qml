@@ -143,7 +143,7 @@ Item {
 
     objectName: "GameView"
     focus: true
-    Keys.onPressed: function (event) {
+    Keys.onPressed: function(event) {
         if (typeof game === 'undefined')
             return;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
@@ -258,7 +258,7 @@ Item {
             break;
         }
     }
-    Keys.onReleased: function (event) {
+    Keys.onReleased: function(event) {
         if (typeof game === 'undefined')
             return;
         if (is_commander_mode()) {
@@ -317,7 +317,7 @@ Item {
                 if (typeof game !== 'undefined') {
                     game_view.is_placing_formation = game.is_placing_formation;
                     if (!game.is_placing_formation)
-                        mouseArea.is_right_drag_orient = false;
+                        mouseArea.is_selecting = false;
                 }
             }
 
@@ -331,7 +331,6 @@ Item {
                     return;
                 if (game.control_mode === "commander") {
                     mouseArea.is_selecting = false;
-                    mouseArea.is_right_drag_orient = false;
                     selectionBox.visible = false;
                     game_view.set_rally_mode = false;
                     game_view.forceActiveFocus();
@@ -352,14 +351,12 @@ Item {
             property bool is_selecting: false
             property real start_x: 0
             property real start_y: 0
-            property bool is_right_drag_orient: false
-
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
-            cursorShape: game_view.cursor_mode !== "normal" ? Qt.BlankCursor : ((typeof game !== 'undefined' && game.civilian_delivery_available) ? Qt.PointingHandCursor : Qt.ArrowCursor)
+            cursorShape: game_view.cursor_mode !== "normal" ? Qt.BlankCursor : Qt.ArrowCursor
             enabled: game_view.visible && typeof game !== 'undefined' && game.control_mode !== "commander"
             onEntered: {
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
@@ -380,9 +377,9 @@ Item {
                 } else {
                     if (typeof game !== 'undefined' && game.set_hover_at_screen)
                         game.set_hover_at_screen(mouse.x, mouse.y);
-                    if (mouseArea.is_right_drag_orient && (mouse.buttons & Qt.RightButton)) {
-                        if (typeof game !== 'undefined' && game.on_right_drag_orient)
-                            game.on_right_drag_orient(mouse.x, mouse.y);
+                    if ((mouse.buttons & Qt.RightButton) &&
+                            typeof game !== 'undefined' && game.on_right_move) {
+                        game.on_right_move(mouse.x, mouse.y);
                     } else if (game_view.is_placing_formation) {
                         if (typeof game !== 'undefined' && game.on_formation_mouse_move)
                             game.on_formation_mouse_move(mouse.x, mouse.y);
@@ -424,6 +421,11 @@ Item {
                             game.on_guard_click(mouse.x, mouse.y);
                         return;
                     }
+                    if (game_view.cursor_mode === "deliver") {
+                        if (typeof game !== 'undefined' && game.on_civilian_delivery_click)
+                            game.on_civilian_delivery_click(mouse.x, mouse.y);
+                        return;
+                    }
                     if (game_view.cursor_mode === "patrol") {
                         if (typeof game !== 'undefined' && game.on_patrol_click)
                             game.on_patrol_click(mouse.x, mouse.y);
@@ -453,22 +455,10 @@ Item {
                     selectionBox.height = 0;
                     selectionBox.visible = true;
                 } else if (mouse.button === Qt.RightButton) {
-                    if (typeof game !== 'undefined' && game.is_placing_formation) {
-                        if (game.on_formation_cancel)
-                            game.on_formation_cancel();
-                        mouseArea.is_right_drag_orient = false;
-                        return;
-                    }
-                    if (typeof game !== 'undefined' && game.is_placing_construction) {
-                        if (game.on_construction_cancel)
-                            game.on_construction_cancel();
-                        return;
-                    }
                     renderArea.mouse_pan_active = true;
                     mainWindow.edge_scroll_disabled = true;
                     if (game_view.set_rally_mode)
                         game_view.set_rally_mode = false;
-                    mouseArea.is_right_drag_orient = true;
                     if (typeof game !== 'undefined' && game.on_right_press)
                         game.on_right_press(mouse.x, mouse.y);
                 }
@@ -494,13 +484,8 @@ Item {
                     }
                 }
                 if (mouse.button === Qt.RightButton) {
-                    if (mouseArea.is_right_drag_orient) {
-                        mouseArea.is_right_drag_orient = false;
-                        if (typeof game !== 'undefined' && game.is_placing_formation) {
-                            if (game.on_formation_confirm)
-                                game.on_formation_confirm();
-                        }
-                    }
+                    if (typeof game !== 'undefined' && game.on_right_release)
+                        game.on_right_release(mouse.x, mouse.y);
                     renderArea.mouse_pan_active = false;
                     mainWindow.edge_scroll_disabled = (renderArea.key_pan_count > 0) || renderArea.mouse_pan_active;
                 }
@@ -518,7 +503,6 @@ Item {
         mainWindowRef: mainWindow
         onInputCaptured: {
             mouseArea.is_selecting = false;
-            mouseArea.is_right_drag_orient = false;
             selectionBox.visible = false;
         }
     }
@@ -730,6 +714,38 @@ Item {
                 ctx.fill();
                 ctx.beginPath();
                 ctx.arc(16, 16, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            Component.onCompleted: requestPaint()
+        }
+
+        Canvas {
+            id: deliverCursor
+
+            visible: game_view.cursor_mode === "deliver"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                ctx.strokeStyle = Theme.accentBright;
+                ctx.fillStyle = StyleGuide.historical.wax;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(16, 16, 11, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(9, 16);
+                ctx.lineTo(23, 16);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(16, 9);
+                ctx.lineTo(16, 23);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(24, 16);
+                ctx.lineTo(18, 11);
+                ctx.lineTo(18, 21);
+                ctx.closePath();
                 ctx.fill();
             }
             Component.onCompleted: requestPaint()

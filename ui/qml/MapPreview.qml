@@ -13,7 +13,7 @@ Rectangle {
 
     function refresh_preview() {
         if (!map_path || map_path === "" || !player_configs || player_configs.length === 0) {
-            previewImage.source = "";
+            preview_image.source = "";
             preview_id = "";
             return;
         }
@@ -21,19 +21,19 @@ Rectangle {
             return;
         loading = true;
         try {
-            var configStr = JSON.stringify(player_configs);
+            var config_str = JSON.stringify(player_configs);
             var hash = 0;
-            for (var i = 0; i < configStr.length; i++) {
-                var codePoint = configStr.charCodeAt(i);
-                hash = ((hash << 5) - hash) + codePoint;
+            for (var i = 0; i < config_str.length; i++) {
+                var code_point = config_str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + code_point;
                 hash = hash & hash;
             }
-            var newId = map_path + "_" + hash + "_" + Date.now();
+            var new_id = map_path + "_" + hash + "_" + Date.now();
             var preview = game.generate_map_preview(map_path, player_configs);
-            if (typeof mapPreviewProvider !== "undefined") {
-                mapPreviewProvider.set_preview_image(newId, preview);
-                preview_id = newId;
-                previewImage.source = "image://mappreview/" + newId;
+            if (typeof map_preview_provider !== "undefined") {
+                map_preview_provider.set_preview_image(new_id, preview);
+                preview_id = new_id;
+                preview_image.source = "image://mappreview/" + new_id;
             }
             loading = false;
         } catch (e) {
@@ -51,7 +51,7 @@ Rectangle {
     onPlayer_configsChanged: refresh_preview()
 
     Text {
-        id: titleText
+        id: title_text
 
         text: qsTr("Map Preview")
         color: Theme.textMain
@@ -66,7 +66,7 @@ Rectangle {
     }
 
     Rectangle {
-        id: previewContainer
+        id: preview_container
 
         color: Theme.cardBaseB
         radius: Theme.radiusMedium
@@ -74,7 +74,7 @@ Rectangle {
         border.width: 1
 
         anchors {
-            top: titleText.bottom
+            top: title_text.bottom
             left: parent.left
             right: parent.right
             bottom: parent.bottom
@@ -82,7 +82,7 @@ Rectangle {
         }
 
         RowLayout {
-            id: previewRow
+            id: preview_row
 
             anchors.fill: parent
             anchors.margins: Theme.spacingSmall
@@ -90,14 +90,14 @@ Rectangle {
             visible: !loading
 
             Item {
-                id: imageWrapper
+                id: image_wrapper
 
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-                Layout.preferredWidth: Math.min(previewContainer.width * 0.6, previewContainer.height - Theme.spacingLarge)
+                Layout.preferredWidth: Math.min(preview_container.width * 0.6, preview_container.height - Theme.spacingLarge)
                 Layout.preferredHeight: Layout.preferredWidth
 
                 Image {
-                    id: previewImage
+                    id: preview_image
 
                     anchors.fill: parent
                     fillMode: Image.PreserveAspectFit
@@ -108,7 +108,7 @@ Rectangle {
             }
 
             Text {
-                id: legendText
+                id: legend_text
 
                 text: qsTr("Player bases shown as colored circles")
                 color: Theme.textSubLite
@@ -129,7 +129,7 @@ Rectangle {
             color: Theme.textHint
             font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
-            visible: !loading && previewImage.status !== Image.Ready && map_path === ""
+            visible: !loading && preview_image.status !== Image.Ready && map_path === ""
         }
 
         Text {
@@ -138,7 +138,7 @@ Rectangle {
             color: Theme.textHint
             font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
-            visible: !loading && previewImage.status !== Image.Ready && map_path !== ""
+            visible: !loading && preview_image.status !== Image.Ready && map_path !== ""
         }
 
         Item {

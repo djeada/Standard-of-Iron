@@ -14,8 +14,10 @@
 #include "game/game_config.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/civilian_delivery_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
+#include "game/systems/order_service.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
 #include "render/gl/camera.h"
@@ -23,32 +25,7 @@
 namespace App::Utils {
 
 inline void reset_movement(Engine::Core::Entity* entity) {
-  if (entity == nullptr) {
-    return;
-  }
-
-  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-  if (movement == nullptr) {
-    return;
-  }
-
-  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-  movement->has_target = false;
-  movement->path.clear();
-  movement->path_pending = false;
-  movement->pending_request_id = 0;
-  movement->repath_cooldown = 0.0F;
-  if (transform != nullptr) {
-    movement->target_x = transform->position.x;
-    movement->target_y = transform->position.z;
-    movement->goal_x = transform->position.x;
-    movement->goal_y = transform->position.z;
-  } else {
-    movement->target_x = 0.0F;
-    movement->target_y = 0.0F;
-    movement->goal_x = 0.0F;
-    movement->goal_y = 0.0F;
-  }
+  Game::Systems::OrderService::reset_movement(entity);
 }
 
 inline auto snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D {
@@ -104,16 +81,11 @@ inline auto snap_to_walkable_ground(const QVector3D& world_position) -> QVector3
 }
 
 inline void clear_civilian_delivery_command(Engine::Core::Entity* entity) {
-  if (entity == nullptr) {
-    return;
-  }
+  Game::Systems::OrderService::clear_civilian_delivery(entity);
+}
 
-  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Civilian) {
-    return;
-  }
-
-  entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+inline void clear_patrol_command(Engine::Core::Entity* entity) {
+  Game::Systems::OrderService::clear_patrol(entity);
 }
 
 inline auto snap_to_walkable_ground_for_unit(const QVector3D& world_position,
@@ -217,6 +189,113 @@ inline auto barracks_delivery_target_position(const QVector3D& civilian_position
   return snap_to_walkable_ground_for_unit(target, unit_radius);
 }
 
+inline auto issue_civilian_delivery_command(
+    Engine::Core::World* world,
+    const std::vector<Engine::Core::EntityID>& selected,
+    Game::Systems::PickingService* picking_service,
+    Render::GL::Camera* camera,
+    qreal sx,
+    qreal sy,
+    int viewport_width,
+    int viewport_height,
+    int local_owner_id) -> bool {
+  if ((world == nullptr) || selected.empty() || (picking_service == nullptr) ||
+      (camera == nullptr) || (viewport_width <= 0) || (viewport_height <= 0)) {
+    return false;
+  }
+
+  Engine::Core::EntityID const target_id = picking_service->pick_unit_first(
+      float(sx), float(sy), *world, *camera, viewport_width, viewport_height, 0);
+  auto* target_entity = target_id != 0U ? world->get_entity(target_id) : nullptr;
+  auto* target_unit =
+      target_entity != nullptr
+          ? target_entity->get_component<Engine::Core::UnitComponent>()
+          : nullptr;
+  auto* target_transform =
+      target_entity != nullptr
+          ? target_entity->get_component<Engine::Core::TransformComponent>()
+          : nullptr;
+  auto* target_production =
+      target_entity != nullptr
+          ? target_entity->get_component<Engine::Core::ProductionComponent>()
+          : nullptr;
+  if ((target_unit == nullptr) || (target_transform == nullptr) ||
+      (target_production == nullptr) ||
+      (target_unit->owner_id != local_owner_id) ||
+      (target_unit->spawn_type != Game::Units::SpawnType::Barracks)) {
+    return false;
+  }
+
+  int const free_population =
+      std::max(0, target_production->max_units - target_production->manpower_available);
+  int remaining_deliveries =
+      free_population / Game::Systems::k_civilian_delivery_population_grant;
+  if (remaining_deliveries <= 0) {
+    return false;
+  }
+
+  std::vector<Engine::Core::EntityID> civilian_ids;
+  civilian_ids.reserve(std::min<std::size_t>(selected.size(), remaining_deliveries));
+  std::vector<QVector3D> targets;
+  targets.reserve(civilian_ids.capacity());
+
+  for (const auto selected_id : selected) {
+    if (remaining_deliveries <= 0) {
+      break;
+    }
+
+    auto* selected_entity = world->get_entity(selected_id);
+    auto* selected_unit =
+        selected_entity != nullptr
+            ? selected_entity->get_component<Engine::Core::UnitComponent>()
+            : nullptr;
+    if ((selected_unit == nullptr) || (selected_unit->owner_id != local_owner_id) ||
+        (selected_unit->spawn_type != Game::Units::SpawnType::Civilian)) {
+      continue;
+    }
+
+    auto* delivery =
+        selected_entity->get_component<Engine::Core::CivilianDeliveryComponent>();
+    if (delivery == nullptr) {
+      delivery =
+          selected_entity->add_component<Engine::Core::CivilianDeliveryComponent>();
+    }
+    if (delivery == nullptr) {
+      continue;
+    }
+    delivery->target_barracks_id = target_id;
+
+    auto* selected_transform =
+        selected_entity->get_component<Engine::Core::TransformComponent>();
+    float const unit_radius =
+        Game::Systems::CommandService::get_unit_radius(*world, selected_id);
+    QVector3D const current_position =
+        selected_transform != nullptr
+            ? QVector3D(selected_transform->position.x,
+                        selected_transform->position.y,
+                        selected_transform->position.z)
+            : QVector3D(target_transform->position.x,
+                        0.0F,
+                        target_transform->position.z);
+    civilian_ids.push_back(selected_id);
+    targets.push_back(barracks_delivery_target_position(
+        current_position,
+        QVector3D(target_transform->position.x, 0.0F, target_transform->position.z),
+        unit_radius));
+    --remaining_deliveries;
+  }
+
+  if (civilian_ids.empty() || targets.size() != civilian_ids.size()) {
+    return false;
+  }
+
+  Game::Systems::CommandService::MoveOptions opts;
+  opts.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  opts.group_move = false;
+  Game::Systems::CommandService::move_units(*world, civilian_ids, targets, opts);
+  return true;
+}
+
 inline void
 issue_move_or_attack_command(Engine::Core::World* world,
                              const std::vector<Engine::Core::EntityID>& selected,
@@ -240,70 +319,6 @@ issue_move_or_attack_command(Engine::Core::World* world,
     if (target_entity != nullptr) {
       auto* target_unit = target_entity->get_component<Engine::Core::UnitComponent>();
       if (target_unit != nullptr) {
-        bool const is_friendly_barracks =
-            (target_unit->owner_id == local_owner_id) &&
-            (target_unit->spawn_type == Game::Units::SpawnType::Barracks);
-        if (is_friendly_barracks) {
-          std::vector<Engine::Core::EntityID> civilian_ids;
-          civilian_ids.reserve(selected.size());
-          std::vector<QVector3D> targets;
-          targets.reserve(selected.size());
-          auto* target_transform =
-              target_entity->get_component<Engine::Core::TransformComponent>();
-          for (const auto selected_id : selected) {
-            auto* selected_entity = world->get_entity(selected_id);
-            auto* selected_unit =
-                selected_entity
-                    ? selected_entity->get_component<Engine::Core::UnitComponent>()
-                    : nullptr;
-            if ((selected_unit != nullptr) &&
-                (selected_unit->owner_id == local_owner_id) &&
-                (selected_unit->spawn_type == Game::Units::SpawnType::Civilian)) {
-              civilian_ids.push_back(selected_id);
-              auto* delivery =
-                  selected_entity
-                      ->get_component<Engine::Core::CivilianDeliveryComponent>();
-              if (delivery == nullptr) {
-                delivery =
-                    selected_entity
-                        ->add_component<Engine::Core::CivilianDeliveryComponent>();
-              }
-              if (delivery != nullptr) {
-                delivery->target_barracks_id = target_id;
-              }
-              auto* selected_transform =
-                  selected_entity->get_component<Engine::Core::TransformComponent>();
-              if (target_transform != nullptr) {
-                float const unit_radius =
-                    Game::Systems::CommandService::get_unit_radius(*world, selected_id);
-                QVector3D const current_position =
-                    selected_transform != nullptr
-                        ? QVector3D(selected_transform->position.x,
-                                    selected_transform->position.y,
-                                    selected_transform->position.z)
-                        : QVector3D(target_transform->position.x,
-                                    0.0F,
-                                    target_transform->position.z);
-                targets.push_back(barracks_delivery_target_position(
-                    current_position,
-                    QVector3D(target_transform->position.x,
-                              0.0F,
-                              target_transform->position.z),
-                    unit_radius));
-              }
-            }
-          }
-
-          if (!civilian_ids.empty() && target_transform != nullptr &&
-              targets.size() == civilian_ids.size()) {
-            Game::Systems::CommandService::MoveOptions opts;
-            opts.group_move = false;
-            Game::Systems::CommandService::move_units(
-                *world, civilian_ids, targets, opts);
-            return;
-          }
-        }
-
         for (const auto selected_id : selected) {
           clear_civilian_delivery_command(world->get_entity(selected_id));
         }
@@ -335,6 +350,7 @@ issue_move_or_attack_command(Engine::Core::World* world,
 
   for (const auto selected_id : selected) {
     clear_civilian_delivery_command(world->get_entity(selected_id));
+    clear_patrol_command(world->get_entity(selected_id));
   }
 
   for (size_t i = 0; i < selected.size(); ++i) {
@@ -357,6 +373,7 @@ issue_move_or_attack_command(Engine::Core::World* world,
   }
 
   Game::Systems::CommandService::MoveOptions opts;
+  opts.kind = Game::Systems::MoveOrderKind::FormationMove;
   opts.group_move = selected.size() > 1;
   opts.retry_individual_on_group_failure = selected.size() > 1;
   opts.preserve_formation_mode = formation_result.used_tactical_formation;

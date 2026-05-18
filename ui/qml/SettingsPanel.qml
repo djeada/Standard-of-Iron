@@ -8,6 +8,41 @@ Item {
     id: root
 
     signal cancelled
+    property bool syncing_audio_sliders: false
+
+    function set_audio_slider_values() {
+        master_volume_slider.value = game.audio_system.get_master_volume() * 100;
+        music_volume_slider.value = game.audio_system.get_music_volume() * 100;
+        sfx_volume_slider.value = game.audio_system.get_sound_volume() * 100;
+        voice_volume_slider.value = game.audio_system.get_voice_volume() * 100;
+        ambience_volume_slider.value = game.audio_system.get_ambience_volume() * 100;
+    }
+
+    function set_audio_volume(volume_name, value) {
+        if (syncing_audio_sliders || typeof game === 'undefined' || !game.audio_system)
+            return;
+
+        var normalized = Math.max(0, Math.min(1, value / 100));
+        if (volume_name === "master")
+            game.audio_system.set_master_volume(normalized);
+        else if (volume_name === "music")
+            game.audio_system.set_music_volume(normalized);
+        else if (volume_name === "sfx")
+            game.audio_system.set_sound_volume(normalized);
+        else if (volume_name === "voice")
+            game.audio_system.set_voice_volume(normalized);
+        else if (volume_name === "ambience")
+            game.audio_system.set_ambience_volume(normalized);
+    }
+
+    function sync_audio_sliders() {
+        if (typeof game === 'undefined' || !game.audio_system)
+            return;
+
+        syncing_audio_sliders = true;
+        set_audio_slider_values();
+        syncing_audio_sliders = false;
+    }
 
     anchors.fill: parent
     z: 25
@@ -19,6 +54,11 @@ Item {
     }
     Component.onCompleted: {
         forceActiveFocus();
+        sync_audio_sliders();
+    }
+    onVisibleChanged: {
+        if (visible)
+            sync_audio_sliders();
     }
 
     Rectangle {
@@ -114,7 +154,7 @@ Item {
                                 spacing: Theme.spacingSmall
 
                                 Slider {
-                                    id: masterVolumeSlider
+                                    id: master_volume_slider
 
                                     Layout.fillWidth: true
                                     from: 0
@@ -122,13 +162,12 @@ Item {
                                     value: 100
                                     stepSize: 1
                                     onValueChanged: {
-                                        if (typeof game !== 'undefined' && game.audioSystem)
-                                            game.audioSystem.set_master_volume(value / 100);
+                                        root.set_audio_volume("master", value);
                                     }
                                 }
 
                                 Label {
-                                    text: Math.round(masterVolumeSlider.value) + "%"
+                                    text: Math.round(master_volume_slider.value) + "%"
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
                                     Layout.minimumWidth: 45
@@ -146,7 +185,7 @@ Item {
                                 spacing: Theme.spacingSmall
 
                                 Slider {
-                                    id: musicVolumeSlider
+                                    id: music_volume_slider
 
                                     Layout.fillWidth: true
                                     from: 0
@@ -154,13 +193,12 @@ Item {
                                     value: 100
                                     stepSize: 1
                                     onValueChanged: {
-                                        if (typeof game !== 'undefined' && game.audioSystem)
-                                            game.audioSystem.set_music_volume(value / 100);
+                                        root.set_audio_volume("music", value);
                                     }
                                 }
 
                                 Label {
-                                    text: Math.round(musicVolumeSlider.value) + "%"
+                                    text: Math.round(music_volume_slider.value) + "%"
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
                                     Layout.minimumWidth: 45
@@ -178,7 +216,7 @@ Item {
                                 spacing: Theme.spacingSmall
 
                                 Slider {
-                                    id: sfxVolumeSlider
+                                    id: sfx_volume_slider
 
                                     Layout.fillWidth: true
                                     from: 0
@@ -186,13 +224,12 @@ Item {
                                     value: 100
                                     stepSize: 1
                                     onValueChanged: {
-                                        if (typeof game !== 'undefined' && game.audioSystem)
-                                            game.audioSystem.set_sound_volume(value / 100);
+                                        root.set_audio_volume("sfx", value);
                                     }
                                 }
 
                                 Label {
-                                    text: Math.round(sfxVolumeSlider.value) + "%"
+                                    text: Math.round(sfx_volume_slider.value) + "%"
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
                                     Layout.minimumWidth: 45
@@ -210,7 +247,7 @@ Item {
                                 spacing: Theme.spacingSmall
 
                                 Slider {
-                                    id: voiceVolumeSlider
+                                    id: voice_volume_slider
 
                                     Layout.fillWidth: true
                                     from: 0
@@ -218,13 +255,43 @@ Item {
                                     value: 100
                                     stepSize: 1
                                     onValueChanged: {
-                                        if (typeof game !== 'undefined' && game.audioSystem)
-                                            game.audioSystem.set_voice_volume(value / 100);
+                                        root.set_audio_volume("voice", value);
                                     }
                                 }
 
                                 Label {
-                                    text: Math.round(voiceVolumeSlider.value) + "%"
+                                    text: Math.round(voice_volume_slider.value) + "%"
+                                    color: Theme.textSub
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.minimumWidth: 45
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Ambience Volume:")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeMedium
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingSmall
+
+                                Slider {
+                                    id: ambience_volume_slider
+
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 100
+                                    value: 100
+                                    stepSize: 1
+                                    onValueChanged: {
+                                        root.set_audio_volume("ambience", value);
+                                    }
+                                }
+
+                                Label {
+                                    text: Math.round(ambience_volume_slider.value) + "%"
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
                                     Layout.minimumWidth: 45
@@ -270,19 +337,19 @@ Item {
                             }
 
                             StyledComboBox {
-                                id: graphicsQualityComboBox
+                                id: graphics_quality_combo_box
 
                                 Layout.fillWidth: true
-                                model: typeof graphicsSettings !== 'undefined' ? graphicsSettings.quality_options : ["Low", "Medium", "High", "Ultra"]
-                                currentIndex: typeof graphicsSettings !== 'undefined' ? graphicsSettings.quality_level : 1
+                                model: typeof graphics_settings !== 'undefined' ? graphics_settings.quality_options : ["Low", "Medium", "High", "Ultra"]
+                                currentIndex: typeof graphics_settings !== 'undefined' ? graphics_settings.quality_level : 1
                                 onActivated: function (index) {
-                                    if (typeof graphicsSettings !== 'undefined')
-                                        graphicsSettings.quality_level = index;
+                                    if (typeof graphics_settings !== 'undefined')
+                                        graphics_settings.quality_level = index;
                                 }
                             }
 
                             Label {
-                                text: typeof graphicsSettings !== 'undefined' ? graphicsSettings.get_quality_description() : ""
+                                text: typeof graphics_settings !== 'undefined' ? graphics_settings.get_quality_description() : ""
                                 color: Theme.textSub
                                 font.pointSize: Theme.fontSizeSmall
                                 opacity: 0.7
@@ -330,27 +397,27 @@ Item {
                             }
 
                             StyledComboBox {
-                                id: languageComboBox
+                                id: language_combo_box
 
                                 Layout.fillWidth: true
-                                model: typeof languageManager !== 'undefined' ? languageManager.availableLanguages : []
+                                model: typeof language_manager !== 'undefined' ? language_manager.available_languages : []
                                 currentIndex: {
-                                    if (typeof languageManager === 'undefined')
+                                    if (typeof language_manager === 'undefined')
                                         return 0;
-                                    var idx = languageManager.availableLanguages.indexOf(languageManager.currentLanguage);
+                                    var idx = language_manager.available_languages.indexOf(language_manager.current_language);
                                     return idx >= 0 ? idx : 0;
                                 }
                                 displayText: {
-                                    if (typeof languageManager === 'undefined' || !currentText)
+                                    if (typeof language_manager === 'undefined' || !currentText)
                                         return "";
-                                    return languageManager.languageDisplayName(currentText);
+                                    return language_manager.language_display_name(currentText);
                                 }
                                 onActivated: function (index) {
-                                    if (typeof languageManager !== 'undefined' && currentText)
-                                        languageManager.setLanguage(currentText);
+                                    if (typeof language_manager !== 'undefined' && currentText)
+                                        language_manager.set_language(currentText);
                                 }
                                 delegate_text: function (data) {
-                                    return typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(data) : data;
+                                    return typeof language_manager !== 'undefined' ? language_manager.language_display_name(data) : data;
                                 }
                             }
 

@@ -164,17 +164,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     if (prod == nullptr) {
       continue;
     }
-    bool commander_in_queue =
-        prod->in_progress && Game::Units::is_commander_troop(prod->product_type);
-    if (!commander_in_queue) {
-      for (const auto queued : prod->production_queue) {
-        if (Game::Units::is_commander_troop(queued)) {
-          commander_in_queue = true;
-          break;
-        }
-      }
-    }
-    prod->commander_committed = commander_in_queue;
 
     auto* unit_comp = e->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) && Game::Core::is_neutral_owner(unit_comp->owner_id)) {
@@ -194,7 +183,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     int const capacity_increment =
         production_count_increment(unit_comp, production_cost);
 
-    if (prod->produced_count + capacity_increment > prod->max_units) {
+    if ((unit_comp != nullptr) &&
+        (unit_comp->spawn_type == Game::Units::SpawnType::Home) &&
+        (prod->produced_count + capacity_increment > prod->max_units)) {
       prod->in_progress = false;
       continue;
     }
@@ -360,6 +351,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             sp.spawn_type = Game::Units::SpawnType::Catapult;
           } else if (builder_prod->product_type == "ballista") {
             sp.spawn_type = Game::Units::SpawnType::Ballista;
+          } else if (builder_prod->product_type == "barracks") {
+            sp.spawn_type = Game::Units::SpawnType::Barracks;
           } else if (builder_prod->product_type == "defense_tower") {
             sp.spawn_type = Game::Units::SpawnType::DefenseTower;
           } else if (builder_prod->product_type == "home") {

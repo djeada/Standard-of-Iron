@@ -45,7 +45,7 @@
   },
   "terrain": [
     {
-      "type": "plain",
+      "type": "flat",
       "x": 130,
       "z": 85,
       "width": 190,
@@ -53,7 +53,7 @@
       "description": "Open Zama plain. The center must remain clear so elephant lanes, infantry lines, and cavalry returns are readable."
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 125,
       "z": 85,
       "width": 92,
@@ -61,7 +61,7 @@
       "description": "Main clash zone between Hannibal's infantry lines and Scipio's manipular formation."
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 132,
       "z": 60,
       "width": 120,
@@ -69,7 +69,7 @@
       "description": "Northern elephant corridor. Roman maniples are spaced to let elephants pass through instead of stopping them."
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 132,
       "z": 85,
       "width": 120,
@@ -77,7 +77,7 @@
       "description": "Central elephant corridor."
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 132,
       "z": 110,
       "width": 120,
@@ -233,13 +233,13 @@
       "description": "Dry scrub beside the southern Roman cavalry lane."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 20,
       "z": 128,
       "description": "Carthaginian supply village. It visually marks Hannibal's rear."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 238,
       "z": 42,
       "description": "Roman allied supply village near Scipio's camp."

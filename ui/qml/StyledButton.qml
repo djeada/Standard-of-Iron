@@ -1,11 +1,13 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import StandardOfIron 1.0
+import "ui_audio.js" as UiAudio
 
 Button {
     id: control
 
     property string button_style: "primary"
+    property bool ui_sound_enabled: true
     property var style_config: {
         if (button_style === "primary")
             return StyleGuide.button.primary;
@@ -21,27 +23,40 @@ Button {
     implicitHeight: style_config.height
     implicitWidth: style_config.minWidth
     hoverEnabled: true
-    ToolTip.visible: control.ToolTip.text !== "" && hoverArea.containsMouse
+    ToolTip.visible: control.ToolTip.text !== "" && hover_area.containsMouse
     ToolTip.delay: 500
 
     MouseArea {
-        id: hoverArea
+        id: hover_area
 
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
         cursorShape: control.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onContainsMouseChanged: {
+            if (containsMouse && control.enabled && control.ui_sound_enabled && typeof game !== "undefined")
+                UiAudio.play_hover(game.audio_system);
+        }
+    }
+
+    Connections {
+        target: control
+
+        function onClicked() {
+            if (control.enabled && control.ui_sound_enabled && typeof game !== "undefined")
+                UiAudio.play_click(game.audio_system);
+        }
     }
 
     contentItem: Text {
         text: control.text
-        font.pointSize: control.enabled ? (hoverArea.containsMouse ? style_config.hoverFontSize : style_config.fontSize) : style_config.fontSize
+        font.pointSize: control.enabled ? (hover_area.containsMouse ? style_config.hoverFontSize : style_config.fontSize) : style_config.fontSize
         font.bold: true
         font.letterSpacing: style_config.letterSpacing !== undefined ? style_config.letterSpacing : 0.0
         color: {
             if (!control.enabled)
                 return style_config.disabledTextColor;
-            if (button_style === "danger" && hoverArea.containsMouse)
+            if (button_style === "danger" && hover_area.containsMouse)
                 return style_config.hoverTextColor || style_config.text_color;
             return style_config.text_color;
         }
@@ -90,7 +105,7 @@ Button {
         }
 
         Rectangle {
-            id: bodyRect
+            id: body_rect
 
             anchors.fill: parent
             radius: style_config.radius
@@ -99,7 +114,7 @@ Button {
                     return style_config.disabledBg;
                 if (control.down)
                     return style_config.pressBg;
-                if (hoverArea.containsMouse)
+                if (hover_area.containsMouse)
                     return style_config.hoverBg;
                 return style_config.normalBg;
             }
@@ -107,7 +122,7 @@ Button {
             border.color: {
                 if (!control.enabled)
                     return style_config.disabledBorder;
-                if (hoverArea.containsMouse)
+                if (hover_area.containsMouse)
                     return style_config.hoverBorder;
                 return style_config.normalBorder;
             }

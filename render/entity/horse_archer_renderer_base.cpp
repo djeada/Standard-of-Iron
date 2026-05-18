@@ -12,6 +12,7 @@
 #include "../equipment/horse_equipment_archetype.h"
 #include "../equipment/humanoid_equipment_archetype.h"
 #include "../humanoid/humanoid_math.h"
+#include "../humanoid/humanoid_proportion_profiles.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
 #include "mounted_knight_pose.h"
@@ -21,7 +22,7 @@ namespace Render::GL {
 
 namespace {
 
-constexpr QVector3D k_default_proportion_scale{0.82F, 0.90F, 0.90F};
+constexpr auto k_profile = Render::GL::Humanoid::k_mounted_rider_proportion_profile;
 
 }
 
@@ -114,7 +115,7 @@ HorseArcherRendererBase::HorseArcherRendererBase(HorseArcherRendererConfig confi
 }
 
 auto HorseArcherRendererBase::get_proportion_scaling() const -> QVector3D {
-  return k_default_proportion_scale;
+  return k_profile.as_vector();
 }
 
 auto HorseArcherRendererBase::mounted_visual_spec() const
@@ -176,8 +177,7 @@ void HorseArcherRendererBase::build_visual_spec() {
   m_spec = UnitVisualSpec{};
   m_spec.kind = CreatureKind::Humanoid;
   m_spec.debug_name = m_config.rider_debug_name;
-  const QVector3D scale = get_proportion_scaling();
-  m_spec.scaling = ProportionScaling{scale.x(), scale.y(), scale.z()};
+  m_spec.scaling = k_profile.as_pipeline_scaling();
   m_spec.owned_legacy_slots = LegacySlotMask::AllHumanoid;
   m_spec.archetype_id = resolve_humanoid_equipment_archetype(
       m_config.rider_debug_name, base_rider_id, handles);

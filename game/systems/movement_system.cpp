@@ -14,6 +14,7 @@
 #include "../units/troop_config.h"
 #include "combat_rules.h"
 #include "command_service.h"
+#include "order_service.h"
 #include "core/component.h"
 #include "core/event_manager.h"
 #include "map/terrain.h"
@@ -238,6 +239,7 @@ auto is_segment_walkable(const QVector3D& from,
 } // namespace
 
 void MovementSystem::update(Engine::Core::World* world, float delta_time) {
+  CommandService::process_repath_requests(*world);
   CommandService::process_path_results(*world);
   auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
 
@@ -268,6 +270,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
             entity->get_component<Engine::Core::CommanderComponent>();
         commander != nullptr && commander->fpv_controlled && !commander->jump_active) {
       movement->has_target = false;
+      OrderService::clear_player_order_intent(entity);
       movement->vx = 0.0F;
       movement->vz = 0.0F;
     }
@@ -283,6 +286,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
     if (hold_mode->active) {
       movement->has_target = false;
+      OrderService::clear_player_order_intent(entity);
       movement->vx = 0.0F;
       movement->vz = 0.0F;
       movement->clear_path();
@@ -317,6 +321,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   if ((atk != nullptr) && atk->in_melee_lock &&
       CombatRules::participates_in_rts_melee_lock(entity)) {
     movement->has_target = false;
+    OrderService::clear_player_order_intent(entity);
     movement->vx = 0.0F;
     movement->vz = 0.0F;
     movement->clear_path();
@@ -349,6 +354,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       movement->vx = 0.0F;
       movement->vz = 0.0F;
       movement->has_target = false;
+      OrderService::clear_player_order_intent(entity);
       movement->clear_path();
     } else {
 
@@ -424,6 +430,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   if (movement->has_target && !destination_allowed && current_position_allowed) {
     movement->clear_path();
     movement->has_target = false;
+    OrderService::clear_player_order_intent(entity);
     movement->path_pending = false;
     movement->pending_request_id = 0;
     movement->vx = 0.0F;
@@ -453,12 +460,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (!movement->path_pending && movement->repath_cooldown <= 0.0F &&
         goal_dist_sq > k_stuck_distance_sq && std::isfinite(goal_dist_sq) &&
         destination_allowed) {
-      CommandService::MoveOptions opts;
-      opts.clear_attack_intent = false;
-      opts.allow_direct_fallback = true;
-      std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
-      std::vector<QVector3D> const targets = {final_goal};
-      CommandService::move_units(*world, ids, targets, opts);
+      CommandService::queue_repath_request(
+          *world, entity->get_id(), final_goal, true);
       movement->repath_cooldown = repath_cooldown_seconds;
       requested_recovery_move = true;
     }
@@ -525,20 +528,16 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (!(escaping_invalid_ground && destination_tile_walkable) &&
         !is_segment_walkable(
             current_pos, segment_target, entity->get_id(), unit_radius)) {
-      if (try_advance_past_blocked_segment()) {
-
-      } else {
+      if (!try_advance_past_blocked_segment()) {
         bool issued_path_request = false;
         if (!movement->path_pending && movement->repath_cooldown <= 0.0F) {
           float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
           if (goal_dist_sq > 0.01F && destination_allowed) {
-            CommandService::MoveOptions opts;
-            opts.clear_attack_intent = false;
-            opts.allow_direct_fallback = false;
-            std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
-            std::vector<QVector3D> const targets = {
-                QVector3D(movement->goal_x, 0.0F, movement->goal_y)};
-            CommandService::move_units(*world, ids, targets, opts);
+            CommandService::queue_repath_request(
+                *world,
+                entity->get_id(),
+                QVector3D(movement->goal_x, 0.0F, movement->goal_y),
+                false);
             movement->repath_cooldown = repath_cooldown_seconds;
             issued_path_request = true;
           }
@@ -551,6 +550,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
         movement->clear_path();
         movement->has_target = false;
+        OrderService::clear_player_order_intent(entity);
         movement->vx = 0.0F;
         movement->vz = 0.0F;
         return;
@@ -582,6 +582,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       transform->position.x = movement->target_x;
       transform->position.z = movement->target_y;
       movement->has_target = false;
+      OrderService::clear_player_order_intent(entity);
       movement->vx = movement->vz = 0.0F;
 
       auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
@@ -648,6 +649,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
         movement->vx = 0.0F;
         movement->vz = 0.0F;
         movement->has_target = false;
+        OrderService::clear_player_order_intent(entity);
         movement->clear_path();
         movement->path_pending = false;
 
@@ -665,13 +667,11 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
           Point const goal_grid =
               CommandService::world_to_grid(movement->goal_x, movement->goal_y);
           if (pathfinder_check->is_walkable(goal_grid.x, goal_grid.y)) {
-            CommandService::MoveOptions opts;
-            opts.clear_attack_intent = false;
-            opts.allow_direct_fallback = false;
-            std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
-            std::vector<QVector3D> const targets = {
-                QVector3D(movement->goal_x, 0.0F, movement->goal_y)};
-            CommandService::move_units(*world, ids, targets, opts);
+            CommandService::queue_repath_request(
+                *world,
+                entity->get_id(),
+                QVector3D(movement->goal_x, 0.0F, movement->goal_y),
+                false);
           }
         }
       }

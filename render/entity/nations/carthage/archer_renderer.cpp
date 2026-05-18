@@ -41,6 +41,7 @@
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_full_builder.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
@@ -64,6 +65,9 @@ constexpr std::string_view k_attachment_headwrap = "carthage_headwrap";
 
 constexpr float k_kneel_depth_multiplier = 1.125F;
 constexpr float k_lean_amount_multiplier = 0.83F;
+constexpr auto k_profile =
+    Render::GL::Humanoid::k_ranged_infantry_proportion_profile.with_offset(
+        {.x = 0.05F, .z = 0.01F});
 
 auto style_registry() -> std::unordered_map<std::string, ArcherStyleConfig>& {
   static std::unordered_map<std::string, ArcherStyleConfig> styles;
@@ -131,8 +135,7 @@ using Render::GL::Humanoid::saturate_color;
 class ArcherRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-
-    return {1.03F, 1.08F, 0.98F};
+    return k_profile.as_vector();
   }
 
   void adjust_variation(const DrawContext&,
@@ -187,7 +190,7 @@ public:
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/archer";
-      s.scaling = ProportionScaling{1.03F, 1.08F, 0.98F};
+      s.scaling = k_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/archer", k_archer_base_archetype, handles);

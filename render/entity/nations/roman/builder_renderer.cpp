@@ -37,6 +37,7 @@
 #include "../../../gl/render_constants.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_proportion_profiles.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
@@ -79,6 +80,12 @@ constexpr std::uint32_t k_builder_hammer_role_count = 3;
 constexpr std::uint32_t k_builder_saw_role_count = 4;
 constexpr std::uint32_t k_builder_chisel_role_count = 2;
 constexpr std::uint32_t k_roman_civilian_mantle_role_count = 2;
+constexpr auto k_builder_profile =
+    Render::GL::Humanoid::k_laborer_proportion_profile.with_offset(
+        {.x = 0.02F, .y = -0.01F, .z = 0.02F});
+constexpr auto k_civilian_profile =
+    Render::GL::Humanoid::k_civilian_proportion_profile.with_offset(
+        {.x = 0.02F, .y = -0.01F, .z = 0.02F});
 
 enum BuilderWorkTunicPaletteSlot : std::uint8_t {
   k_builder_tunic_base_slot = 0U,
@@ -899,7 +906,7 @@ public:
   friend void register_builder_renderer(Render::GL::EntityRendererRegistry& registry);
 
   auto get_proportion_scaling() const -> QVector3D override {
-    return {1.05F, 0.98F, 1.02F};
+    return k_builder_profile.as_vector();
   }
 
   auto
@@ -909,7 +916,7 @@ public:
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/builder";
-      s.scaling = ProportionScaling{1.05F, 0.98F, 1.02F};
+      s.scaling = k_builder_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = roman_builder_idle_archetype();
       s.variant_table = &roman_builder_variant_table();
@@ -930,7 +937,7 @@ public:
 class CivilianRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-    return {1.0F, 0.97F, 1.0F};
+    return k_civilian_profile.as_vector();
   }
 
   auto
@@ -945,7 +952,7 @@ public:
                                                    loadout.cloak_handle};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/civilian";
-      s.scaling = ProportionScaling{1.0F, 0.97F, 1.0F};
+      s.scaling = k_civilian_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/roman/civilian",

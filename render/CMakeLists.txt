@@ -34,6 +34,7 @@ add_library(render_gl STATIC
     world_chunk.cpp
     primitive_batch.cpp
     template_cache.cpp
+    template_prewarm_catalog.cpp
     rig_dsl/rig_interpreter.cpp
     pipeline/instance_coalescer.cpp
     pass/frame_pass_runner.cpp
@@ -195,7 +196,6 @@ add_library(render_gl STATIC
     static_attachment_spec.cpp
     bone_palette_arena.cpp
     unit_render_cache.cpp
-    pose_palette_cache.cpp
     mesh_geometry_pool.cpp
      equipment/equipment_registry.cpp
      equipment/humanoid_equipment_archetype.cpp

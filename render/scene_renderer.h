@@ -27,6 +27,7 @@
 #include "rigged_mesh_cache.h"
 #include "snapshot_mesh_cache.h"
 #include "submitter.h"
+#include "template_prewarm_catalog.h"
 #include "unit_render_cache.h"
 
 namespace Engine::Core {
@@ -51,7 +52,6 @@ class ArrowSystem;
 namespace Render::GL {
 
 class Backend;
-class EnemyVisibilityPolicy;
 
 class Renderer : public ISubmitter {
 public:
@@ -90,9 +90,8 @@ public:
   [[nodiscard]] auto world_render_mode() const -> WorldRenderMode {
     return m_world_render_mode;
   }
-  [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool {
-    return m_world_render_mode == WorldRenderMode::Rts;
-  }
+  [[nodiscard]] auto non_local_unit_visibility_filter_enabled() const -> bool;
+  [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool;
 
   void set_frame_budget(const FrameBudgetConfig& config) {
     if (m_backend) {
@@ -291,6 +290,13 @@ public:
   }
 
 private:
+  struct VisibilityModeConfig {
+    bool filter_non_local_units = true;
+    bool filter_static_world = true;
+  };
+
+  [[nodiscard]] auto visibility_mode_config() const -> VisibilityModeConfig;
+
   void render_construction_previews(Engine::Core::World* world,
                                     const Game::Map::VisibilityService* vis,
                                     bool visibility_enabled);
@@ -320,38 +326,15 @@ private:
   void process_async_template_prewarm();
   void cancel_async_template_prewarm();
 
-  struct AsyncPrewarmProfile {
-    std::string renderer_id;
-    int spawn_type{0};
-    int nation_id{0};
-    int max_health{1};
-    bool is_mounted{false};
-    bool is_elephant{false};
-    RenderFunc fn;
-  };
-
-  struct AsyncPrewarmWorkItem {
-    std::size_t profile_index{0};
-    int owner_id{0};
-    std::uint8_t lod{0};
-    std::uint8_t variant{0};
-    std::uint8_t anim_state{0};
-    std::uint8_t combat_phase{0};
-    std::uint8_t frame{0};
-    std::uint8_t attack_family{0};
-    std::uint8_t attack_variant{0};
-    bool finisher_attack{false};
-  };
-
   struct AsyncTemplatePrewarmState {
-    std::vector<AsyncPrewarmProfile> profiles;
-    std::vector<AsyncPrewarmWorkItem> work_items;
+    std::vector<PrewarmProfile> profiles;
+    std::vector<PrewarmWorkItem> work_items;
     std::atomic<std::size_t> next_index{0};
     std::atomic<bool> cancel_requested{false};
   };
 
-  void run_template_prewarm_item(const AsyncPrewarmProfile& profile,
-                                 const AsyncPrewarmWorkItem& item);
+  void run_template_prewarm_item(const PrewarmProfile& profile,
+                                 const PrewarmWorkItem& item);
 
   Camera* m_camera = nullptr;
   std::unique_ptr<IRenderBackend> m_backend;
@@ -373,9 +356,6 @@ private:
   std::atomic<bool> m_paused{false};
   float m_alpha_override = 1.0F;
   WorldRenderMode m_world_render_mode = WorldRenderMode::Rts;
-  std::unique_ptr<EnemyVisibilityPolicy> m_rts_enemy_visibility_policy;
-  std::unique_ptr<EnemyVisibilityPolicy> m_rpg_enemy_visibility_policy;
-  EnemyVisibilityPolicy* m_enemy_visibility_policy = nullptr;
 
   std::mutex m_world_mutex;
   int m_local_owner_id = 1;

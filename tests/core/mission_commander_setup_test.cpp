@@ -13,6 +13,12 @@ TEST(MissionCommanderSetupTest, KeepsConfiguredCommanderWhenPresent) {
             QStringLiteral("carthage_cavalry_patron"));
 }
 
+TEST(MissionCommanderSetupTest, FallsBackWhenConfiguredCommanderBelongsToOtherNation) {
+  EXPECT_EQ(App::Core::resolve_commander_troop(
+                "carthage", QStringLiteral("roman_veteran_consul")),
+            QStringLiteral("carthage_elephant_master"));
+}
+
 TEST(MissionCommanderSetupTest, PrefersAuthoredTroopPositions) {
   std::vector<Game::Mission::UnitSetup> units = {
       {.type = "spearman", .count = 2, .position = {10.0F, 20.0F}},

@@ -8,7 +8,7 @@
     "height": 250,
     "tile_size": 1.0
   },
-  "time_of_day": "afternoon_after_rain",
+  "time_of_day": "afternoon",
   "difficulty_intent": "balanced_forest_maze",
   "design_pillars": [
     "This is a forest map, not a river map: no rivers, bridges, mountains, or water chokepoints.",
@@ -111,7 +111,7 @@
   "terrain": [
     {
       "id": "southwest_starting_clearing",
-      "type": "plain",
+      "type": "flat",
       "x": 62,
       "z": 62,
       "width": 46,
@@ -120,7 +120,7 @@
     },
     {
       "id": "northeast_starting_clearing",
-      "type": "plain",
+      "type": "flat",
       "x": 188,
       "z": 188,
       "width": 46,
@@ -159,7 +159,7 @@
     },
     {
       "id": "central_west_clearing",
-      "type": "plain",
+      "type": "flat",
       "x": 101,
       "z": 124,
       "width": 24,
@@ -168,7 +168,7 @@
     },
     {
       "id": "central_east_clearing",
-      "type": "plain",
+      "type": "flat",
       "x": 149,
       "z": 126,
       "width": 24,
@@ -177,7 +177,7 @@
     },
     {
       "id": "central_north_clearing",
-      "type": "plain",
+      "type": "flat",
       "x": 126,
       "z": 98,
       "width": 36,
@@ -186,7 +186,7 @@
     },
     {
       "id": "central_south_clearing",
-      "type": "plain",
+      "type": "flat",
       "x": 124,
       "z": 152,
       "width": 36,
@@ -405,21 +405,21 @@
     },
     {
       "id": "south_neutral_lodge_village",
-      "type": "village",
+      "type": "flat",
       "x": 82,
       "z": 174,
       "description": "Abandoned hunter lodge converted into a neutral barracks objective."
     },
     {
       "id": "north_neutral_lodge_village",
-      "type": "village",
+      "type": "flat",
       "x": 168,
       "z": 76,
       "description": "Abandoned hunter lodge converted into a neutral barracks objective."
     },
     {
       "id": "central_shrine_village",
-      "type": "village",
+      "type": "flat",
       "x": 125,
       "z": 125,
       "description": "Ruined woodland shrine at the central ridge."
@@ -716,7 +716,6 @@
       "z": 190,
       "player_id": 2,
       "max_population": 500,
-      "nation": "gaul",
       "description": "Player 2 main barracks"
     },
     { "id": "p2_archer_01", "type": "archer", "x": 186, "z": 194, "player_id": 2 },
@@ -736,7 +735,6 @@
       "z": 76,
       "player_id": 0,
       "max_population": 120,
-      "nation": "neutral_forest_clan",
       "description": "Neutral northern hunter lodge barracks. Can be captured by either active player.",
       "capture_reward": "archer_support"
     },
@@ -751,7 +749,6 @@
       "z": 174,
       "player_id": 0,
       "max_population": 120,
-      "nation": "neutral_forest_clan",
       "description": "Neutral southern hunter lodge barracks. Can be captured by either active player.",
       "capture_reward": "spearman_support"
     },
@@ -833,20 +830,20 @@
     { "id": "central_ruins_03", "type": "ruins", "x": 124, "z": 132, "scale": 0.9, "rotation": 4.6 },
     { "id": "central_ruins_04", "type": "ruins", "x": 132, "z": 118, "scale": 0.9, "rotation": 5.5 },
     { "id": "central_supply_cart_01", "type": "supply_cart", "x": 108, "z": 125, "scale": 0.75, "rotation": 1.2 },
-    { "id": "central_broken_cart_01", "type": "broken_cart", "x": 146, "z": 130, "scale": 0.85, "rotation": 4.1 },
+    { "id": "central_broken_cart_01", "type": "supply_cart", "x": 146, "z": 130, "scale": 0.85, "rotation": 4.1 },
     { "id": "central_dead_tree_01", "type": "dead_tree", "x": 125, "z": 104, "scale": 1.0, "rotation": 3.4 },
     { "id": "central_dead_tree_02", "type": "dead_tree", "x": 125, "z": 146, "scale": 1.0, "rotation": 0.6 },
 
     { "id": "west_dead_tree_01", "type": "dead_tree", "x": 42, "z": 112, "scale": 1.2, "rotation": 0.7 },
     { "id": "west_dead_tree_02", "type": "dead_tree", "x": 52, "z": 106, "scale": 1.0, "rotation": 2.1 },
     { "id": "west_dead_tree_03", "type": "dead_tree", "x": 36, "z": 124, "scale": 0.9, "rotation": 4.5 },
-    { "id": "west_broken_cart_01", "type": "broken_cart", "x": 58, "z": 122, "scale": 0.85, "rotation": 2.9 },
+    { "id": "west_broken_cart_01", "type": "supply_cart", "x": 58, "z": 122, "scale": 0.85, "rotation": 2.9 },
     { "id": "west_ruins_marker_01", "type": "ruins", "x": 36, "z": 115, "scale": 0.7, "rotation": 1.4 },
 
     { "id": "east_dead_tree_01", "type": "dead_tree", "x": 204, "z": 138, "scale": 1.2, "rotation": 1.2 },
     { "id": "east_dead_tree_02", "type": "dead_tree", "x": 214, "z": 132, "scale": 1.0, "rotation": 3.4 },
     { "id": "east_dead_tree_03", "type": "dead_tree", "x": 198, "z": 150, "scale": 0.9, "rotation": 5.7 },
-    { "id": "east_broken_cart_01", "type": "broken_cart", "x": 192, "z": 128, "scale": 0.85, "rotation": 6.0 },
+    { "id": "east_broken_cart_01", "type": "supply_cart", "x": 192, "z": 128, "scale": 0.85, "rotation": 6.0 },
     { "id": "east_ruins_marker_01", "type": "ruins", "x": 214, "z": 134, "scale": 0.7, "rotation": 4.2 },
 
     { "id": "south_lodge_tent_01", "type": "tent", "x": 78, "z": 170, "scale": 0.9, "rotation": 0.7 },
@@ -862,9 +859,9 @@
     { "id": "north_lodge_dead_tree_01", "type": "dead_tree", "x": 154, "z": 73, "scale": 0.9, "rotation": 2.1 },
 
     { "id": "north_overlook_dead_tree_01", "type": "dead_tree", "x": 106, "z": 54, "scale": 0.9, "rotation": 1.0 },
-    { "id": "north_overlook_broken_cart", "type": "broken_cart", "x": 144, "z": 56, "scale": 0.8, "rotation": 4.4 },
+    { "id": "north_overlook_broken_cart", "type": "supply_cart", "x": 144, "z": 56, "scale": 0.8, "rotation": 4.4 },
     { "id": "south_overlook_dead_tree_01", "type": "dead_tree", "x": 106, "z": 194, "scale": 0.9, "rotation": 2.7 },
-    { "id": "south_overlook_broken_cart", "type": "broken_cart", "x": 144, "z": 196, "scale": 0.8, "rotation": 5.9 },
+    { "id": "south_overlook_broken_cart", "type": "supply_cart", "x": 144, "z": 196, "scale": 0.8, "rotation": 5.9 },
 
     { "id": "north_outer_dead_tree_01", "type": "dead_tree", "x": 70, "z": 31, "scale": 1.0, "rotation": 0.2 },
     { "id": "north_outer_dead_tree_02", "type": "dead_tree", "x": 153, "z": 55, "scale": 1.0, "rotation": 3.7 },

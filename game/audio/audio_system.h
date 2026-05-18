@@ -38,7 +38,16 @@ enum class AudioEventType {
 enum class AudioCategory {
   SFX,
   VOICE,
+  AMBIENCE,
   MUSIC
+};
+
+struct AudioResourceConfig {
+  AudioCategory category = AudioCategory::SFX;
+  float volume = AudioConstants::DEFAULT_VOLUME;
+  int priority = AudioConstants::DEFAULT_PRIORITY;
+  int cooldown_ms = 0;
+  size_t max_instances = 0;
 };
 
 struct AudioEvent {
@@ -87,14 +96,18 @@ public:
   void set_sound_volume(float volume);
   void set_music_volume(float volume);
   void set_voice_volume(float volume);
+  void set_ambience_volume(float volume);
   void pause_all();
   void resume_all();
 
   auto load_sound(const std::string& sound_id,
                   const std::string& file_path,
-                  AudioCategory category = AudioCategory::SFX) -> bool;
-  auto load_music(const std::string& music_id, const std::string& file_path) -> bool;
+                  const AudioResourceConfig& config = {}) -> bool;
+  auto load_music(const std::string& music_id,
+                  const std::string& file_path,
+                  const AudioResourceConfig& config = {}) -> bool;
   void register_alias(const std::string& alias_id, const std::string& resource_id);
+  auto has_resource(const std::string& resource_id) const -> bool;
   void unload_sound(const std::string& sound_id);
   void unload_music(const std::string& music_id);
   void unload_all_sounds();
@@ -107,6 +120,7 @@ public:
   auto get_sound_volume() const -> float { return sound_volume; }
   auto get_music_volume() const -> float { return music_volume; }
   auto get_voice_volume() const -> float { return voice_volume; }
+  auto get_ambience_volume() const -> float { return ambience_volume; }
 
 private:
   AudioSystem();
@@ -120,14 +134,24 @@ private:
   void cleanup_inactive_sounds();
   void cleanup_inactive_sounds_locked();
   auto resolve_resource_id_locked(const std::string& resource_id) const -> std::string;
-  auto can_play_sound(int priority) -> bool;
-  void evict_lowest_priority_sound();
+  auto should_accept_sound_locked(int priority) -> bool;
+  auto get_active_instance_count_locked(const std::string& resource_id) const -> size_t;
+  auto is_sound_on_cooldown_locked(const std::string& resource_id,
+                                   int cooldown_ms,
+                                   std::chrono::steady_clock::time_point now) const
+      -> bool;
+  void mark_sound_played_locked(const std::string& resource_id,
+                                std::chrono::steady_clock::time_point now);
+  auto get_resource_config_locked(const std::string& resource_id) const
+      -> AudioResourceConfig;
   void evict_lowest_priority_sound_locked();
   auto get_effective_volume(AudioCategory category, float event_volume) const -> float;
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
-  std::unordered_map<std::string, AudioCategory> sound_categories;
+  std::unordered_map<std::string, AudioResourceConfig> resource_configs;
   std::unordered_map<std::string, std::string> resource_aliases;
+  std::unordered_map<std::string, std::chrono::steady_clock::time_point>
+      resource_last_played_at;
   std::unordered_set<std::string> active_resources;
   mutable std::mutex resource_mutex;
 
@@ -143,6 +167,7 @@ private:
   std::atomic<float> sound_volume;
   std::atomic<float> music_volume;
   std::atomic<float> voice_volume;
+  std::atomic<float> ambience_volume;
 
   size_t max_channels{AudioConstants::DEFAULT_MAX_CHANNELS};
 

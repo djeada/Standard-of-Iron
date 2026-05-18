@@ -5,9 +5,11 @@
 
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "../creature/part_graph.h"
 #include "../submitter.h"
@@ -30,6 +32,9 @@ namespace Render::GL {
 
 using HumanoidLOD = ::Render::Creature::CreatureLOD;
 using HorseLOD = ::Render::Creature::CreatureLOD;
+using RendererHandle = std::uint32_t;
+inline constexpr RendererHandle k_invalid_renderer_handle =
+    std::numeric_limits<RendererHandle>::max();
 
 struct DrawContext {
   ResourceManager* resources = nullptr;
@@ -41,6 +46,7 @@ struct DrawContext {
   float animation_time = 0.0F;
   float distance_sq = 0.0F;
   std::string renderer_id;
+  RendererHandle renderer_handle = k_invalid_renderer_handle;
   class Backend* backend = nullptr;
   const Camera* camera = nullptr;
   float alpha_multiplier = 1.0F;
@@ -74,9 +80,12 @@ class EntityRendererRegistry {
 public:
   void register_renderer(const std::string& type, RenderFunc func);
   auto get(const std::string& type) const -> RenderFunc;
+  auto get(RendererHandle handle) const -> const RenderFunc*;
+  auto get_handle(const std::string& type) const -> RendererHandle;
 
 private:
-  std::unordered_map<std::string, RenderFunc> m_map;
+  std::unordered_map<std::string, RendererHandle> m_lookup;
+  std::vector<RenderFunc> m_renderers;
 };
 
 void register_built_in_entity_renderers(EntityRendererRegistry& registry);

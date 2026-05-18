@@ -6,7 +6,11 @@
 #include <functional>
 #include <memory>
 
+#include "app_scene_context.h"
+#include "entity_cache.h"
+
 class LoadingProgressTracker;
+class VisibilityCoordinator;
 
 namespace Engine::Core {
 class World;
@@ -30,8 +34,6 @@ class VictoryService;
 } // namespace Game::Systems
 
 class MinimapManager;
-class EntityCache;
-
 struct LevelLoadResult {
   bool success = false;
   QString error_message;
@@ -40,31 +42,18 @@ struct LevelLoadResult {
 
 class LevelOrchestrator {
 public:
-  struct RendererRefs {
-    Render::GL::Renderer* renderer;
-    Render::GL::Camera* camera;
-    Render::GL::GroundRenderer* ground;
-    Render::GL::TerrainRenderer* terrain;
-    Render::GL::TerrainFeatureManager* features;
-    Render::GL::TerrainScatterManager* scatter;
-    Render::GL::FogRenderer* fog;
-    Render::GL::MapBoundaryFogRenderer* boundary_fog;
-    Render::GL::RainRenderer* rain;
-  };
-
-  using VisibilityReadyCallback = std::function<void()>;
   using OwnerUpdateCallback = std::function<void()>;
 
   LevelLoadResult load_skirmish(const QString& map_path,
                                 const QVariantList& player_configs,
                                 int selected_player_id,
                                 Engine::Core::World& world,
-                                const RendererRefs& renderers,
+                                const AppSceneContext& scene,
                                 Game::Systems::LevelSnapshot& level,
                                 EntityCache& entity_cache,
                                 Game::Systems::VictoryService* victory_service,
                                 MinimapManager* minimap_manager,
-                                VisibilityReadyCallback visibility_ready,
+                                VisibilityCoordinator* visibility_coordinator,
                                 OwnerUpdateCallback owner_update,
                                 bool allow_default_player_barracks,
                                 LoadingProgressTracker* progress_tracker = nullptr);

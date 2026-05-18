@@ -36,15 +36,37 @@ namespace Render::GL {
 
 void EntityRendererRegistry::register_renderer(const std::string& type,
                                                RenderFunc func) {
-  m_map[type] = std::move(func);
+  auto it = m_lookup.find(type);
+  if (it != m_lookup.end()) {
+    m_renderers[it->second] = std::move(func);
+    return;
+  }
+
+  const RendererHandle handle = static_cast<RendererHandle>(m_renderers.size());
+  m_renderers.push_back(std::move(func));
+  m_lookup.emplace(type, handle);
 }
 
 auto EntityRendererRegistry::get(const std::string& type) const -> RenderFunc {
-  auto it = m_map.find(type);
-  if (it != m_map.end()) {
-    return it->second;
+  if (const auto handle = get_handle(type); handle != k_invalid_renderer_handle) {
+    return m_renderers[handle];
   }
   return {};
+}
+
+auto EntityRendererRegistry::get(RendererHandle handle) const -> const RenderFunc* {
+  if (handle >= m_renderers.size()) {
+    return nullptr;
+  }
+  return &m_renderers[handle];
+}
+
+auto EntityRendererRegistry::get_handle(const std::string& type) const -> RendererHandle {
+  auto it = m_lookup.find(type);
+  if (it == m_lookup.end()) {
+    return k_invalid_renderer_handle;
+  }
+  return it->second;
 }
 
 void register_built_in_entity_renderers(EntityRendererRegistry& registry) {

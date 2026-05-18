@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../game/map/visibility_service.h"
+#include "../../game/map/render_visibility_rules.h"
 
 namespace Render::Ground {
 
@@ -22,6 +22,13 @@ struct LinearFeatureVisibilityResult {
   QVector3D color_multiplier{1.0F, 1.0F, 1.0F};
 };
 
+[[nodiscard]] inline auto recommended_linear_feature_visibility_sample_count(
+    float segment_length,
+    float tile_size) -> int {
+  const float safe_tile = std::max(tile_size, 0.001F);
+  return std::max(2, static_cast<int>(std::ceil(segment_length / safe_tile)) + 1);
+}
+
 inline auto evaluate_linear_feature_visibility(
     const Game::Map::VisibilityService::Snapshot* snapshot,
     const QVector3D& start,
@@ -33,30 +40,25 @@ inline auto evaluate_linear_feature_visibility(
     return result;
   }
 
-  auto is_in_bounds = [&](const QVector3D& position) -> bool {
-    constexpr float k_half_cell_offset = 0.5F;
-    const float grid_x = position.x() / snapshot->tile_size + snapshot->half_width;
-    const float grid_z = position.z() / snapshot->tile_size + snapshot->half_height;
-    const int ix = static_cast<int>(std::floor(grid_x + k_half_cell_offset));
-    const int iz = static_cast<int>(std::floor(grid_z + k_half_cell_offset));
-    return ix >= 0 && ix < snapshot->width && iz >= 0 && iz < snapshot->height;
-  };
-
   const int sample_count = std::max(2, options.sample_count);
-  int max_visibility_state = 0;
+  auto max_visibility_state = Game::Map::RenderVisibilityState::Hidden;
   bool any_sample_in_bounds = false;
 
   for (int i = 0; i < sample_count; ++i) {
     const float t = static_cast<float>(i) / static_cast<float>(sample_count - 1);
     const QVector3D sample = start + (end - start) * t;
-    any_sample_in_bounds = any_sample_in_bounds || is_in_bounds(sample);
+    any_sample_in_bounds = any_sample_in_bounds ||
+                           Game::Map::is_world_position_in_visibility_bounds(
+                               *snapshot, sample.x(), sample.z());
 
-    if (snapshot->is_visible_world(sample.x(), sample.z())) {
-      max_visibility_state = 2;
+    const auto sample_visibility =
+        Game::Map::classify_world_visibility(*snapshot, sample.x(), sample.z());
+    if (sample_visibility == Game::Map::RenderVisibilityState::Visible) {
+      max_visibility_state = Game::Map::RenderVisibilityState::Visible;
       break;
     }
-    if (snapshot->is_explored_world(sample.x(), sample.z())) {
-      max_visibility_state = std::max(max_visibility_state, 1);
+    if (sample_visibility == Game::Map::RenderVisibilityState::Explored) {
+      max_visibility_state = Game::Map::RenderVisibilityState::Explored;
     }
   }
 
@@ -64,12 +66,12 @@ inline auto evaluate_linear_feature_visibility(
     return result;
   }
 
-  if (max_visibility_state == 0) {
+  if (max_visibility_state == Game::Map::RenderVisibilityState::Hidden) {
     result.visible = false;
     return result;
   }
 
-  if (max_visibility_state == 1) {
+  if (max_visibility_state == Game::Map::RenderVisibilityState::Explored) {
     result.alpha = options.explored_alpha;
     result.color_multiplier = options.explored_tint;
   }

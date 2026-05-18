@@ -180,6 +180,17 @@ auto is_in_range(Engine::Core::Entity* attacker,
   return true;
 }
 
+auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool {
+  if (unit == nullptr) {
+    return false;
+  }
+
+  auto* intent = unit->get_component<Engine::Core::PlayerOrderIntentComponent>();
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  return (intent != nullptr) && intent->suppress_opportunistic_combat &&
+         (movement != nullptr) && (movement->has_target || movement->path_pending);
+}
+
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool {
   auto* hold_mode = unit->get_component<Engine::Core::HoldModeComponent>();
   if ((hold_mode != nullptr) && hold_mode->active) {

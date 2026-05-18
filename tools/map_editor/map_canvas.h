@@ -107,8 +107,6 @@ private:
 
   static constexpr int grid_cell_size = 8;
   static constexpr int icon_size = 16;
-  static constexpr float hit_radius = 5.0F;
-  static constexpr float endpoint_hit_radius = 3.0F;
   static constexpr int pan_drag_threshold = 4;
   static constexpr int min_player_id = 0;
   static constexpr int max_player_id = 4;

@@ -9,6 +9,34 @@
 
 namespace {
 
+auto interpolate_triangle_height_at(const Render::GL::Vertex& a,
+                                    const Render::GL::Vertex& b,
+                                    const Render::GL::Vertex& c,
+                                    float x,
+                                    float z) -> std::optional<float> {
+  float const ax = a.position[0];
+  float const az = a.position[2];
+  float const bx = b.position[0];
+  float const bz = b.position[2];
+  float const cx = c.position[0];
+  float const cz = c.position[2];
+
+  float const denom = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
+  if (std::abs(denom) < 1e-6F) {
+    return std::nullopt;
+  }
+
+  float const w0 = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / denom;
+  float const w1 = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / denom;
+  float const w2 = 1.0F - w0 - w1;
+  constexpr float k_epsilon = 1e-4F;
+  if (w0 < -k_epsilon || w1 < -k_epsilon || w2 < -k_epsilon) {
+    return std::nullopt;
+  }
+
+  return w0 * a.position[1] + w1 * b.position[1] + w2 * c.position[1];
+}
+
 TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshWithConfiguredYOffset) {
   Render::Ground::LinearFeatureRibbonSettings settings;
   settings.sample_step = 0.5F;
@@ -89,6 +117,56 @@ TEST(LinearFeatureGeometryTest, BuildsRoadRibbonMeshAboveCrossSlopeTerrain) {
   EXPECT_FLOAT_EQ(
       mesh->get_vertices()[1].position[1],
       Game::Map::road_surface_world_y(height_map.get_height_at(-2.0F, 1.0F)));
+}
+
+TEST(LinearFeatureGeometryTest, SamplesRoadInteriorAboveLocalizedTerrainHump) {
+  std::vector<float> const heights = {
+      0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.1F, 0.2F, 0.1F, 0.0F, 0.0F, 0.2F, 1.0F,
+      0.2F, 0.0F, 0.0F, 0.1F, 0.2F, 0.1F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
+  std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
+                                                          Game::Map::TerrainType::Flat);
+  Game::Map::TerrainHeightMap height_map(5, 5, 1.0F);
+  height_map.restore_from_data(heights, terrain_types, {}, {});
+
+  Render::Ground::LinearFeatureRibbonSettings settings;
+  settings.sample_step = 1.0F;
+  settings.min_length_steps = 2;
+  settings.cross_section_segments = 4;
+  settings.y_offset = Game::Map::k_road_surface_y_offset;
+  settings.sample_terrain_envelope = true;
+  settings.height_map = &height_map;
+
+  auto mesh = Render::Ground::build_linear_ribbon_mesh(
+      {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F},
+      1.0F,
+      settings);
+
+  ASSERT_NE(mesh, nullptr);
+  auto const& vertices = mesh->get_vertices();
+  auto const& indices = mesh->get_indices();
+  ASSERT_FALSE(vertices.empty());
+  ASSERT_FALSE(indices.empty());
+
+  for (float world_x = -1.75F; world_x <= 1.75F; world_x += 0.25F) {
+    for (float world_z = -0.90F; world_z <= 0.90F; world_z += 0.15F) {
+      std::optional<float> road_height;
+      for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
+        auto const maybe_height = interpolate_triangle_height_at(
+            vertices[indices[i]], vertices[indices[i + 1]], vertices[indices[i + 2]],
+            world_x, world_z);
+        if (maybe_height.has_value()) {
+          if (!road_height.has_value() || *maybe_height > *road_height) {
+            road_height = *maybe_height;
+          }
+        }
+      }
+
+      ASSERT_TRUE(road_height.has_value());
+      EXPECT_GE(*road_height + 1e-4F,
+                Game::Map::road_surface_world_y(
+                    height_map.get_height_at(world_x, world_z)));
+    }
+  }
 }
 
 TEST(LinearFeatureGeometryTest, BuildsRiverRibbonMeshWithMeanderSupport) {

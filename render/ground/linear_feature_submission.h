@@ -30,10 +30,7 @@ void submit_linear_feature_segments(
   auto& visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility =
       renderer.static_world_visibility_filter_enabled() && visibility.is_initialized();
-  Game::Map::VisibilityService::Snapshot visibility_snapshot;
-  if (use_visibility) {
-    visibility_snapshot = visibility.snapshot();
-  }
+  auto visibility_snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
 
   QMatrix4x4 model;
   model.setToIdentity();
@@ -53,9 +50,9 @@ void submit_linear_feature_segments(
     float alpha = 1.0F;
     QVector3D color_multiplier(1.0F, 1.0F, 1.0F);
 
-    if (use_visibility) {
+    if (visibility_snapshot != nullptr) {
       const auto visibility_result = evaluate_linear_feature_visibility(
-          &visibility_snapshot, segment.start, segment.end, visibility_options);
+          visibility_snapshot.get(), segment.start, segment.end, visibility_options);
       if (!visibility_result.visible) {
         continue;
       }

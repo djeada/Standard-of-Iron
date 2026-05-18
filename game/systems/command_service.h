@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "order_service.h"
+
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
@@ -23,8 +25,8 @@ struct Point;
 class CommandService {
 public:
   struct MoveOptions {
+    MoveOrderKind kind = MoveOrderKind::PlayerMove;
     bool allow_direct_fallback = true;
-    bool clear_attack_intent = true;
     bool group_move = false;
     bool retry_individual_on_group_failure = false;
     bool preserve_formation_mode = false;
@@ -79,6 +81,11 @@ public:
                          const MoveOptions& options);
 
   static void process_path_results(Engine::Core::World& world);
+  static void process_repath_requests(Engine::Core::World& world);
+  static void queue_repath_request(Engine::Core::World& world,
+                                   Engine::Core::EntityID entity_id,
+                                   const QVector3D& goal,
+                                   bool allow_direct_fallback);
 
   static void attack_target(Engine::Core::World& world,
                             const std::vector<Engine::Core::EntityID>& units,

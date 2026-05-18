@@ -211,7 +211,7 @@
   ],
   "terrain": [
     {
-      "type": "plain",
+      "type": "flat",
       "x": 124,
       "z": 80,
       "width": 160,
@@ -219,7 +219,7 @@
       "description": "The open killing plain. This area must stay readable and uncluttered for the main encirclement."
     },
     {
-      "type": "plain",
+      "type": "flat",
       "x": 121,
       "z": 80,
       "width": 66,
@@ -376,13 +376,13 @@
       "description": "Thin scrub around the Roman baggage road."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 27,
       "z": 126,
       "description": "Cannae village ruins behind the Carthaginian position."
     },
     {
-      "type": "village",
+      "type": "flat",
       "x": 224,
       "z": 117,
       "description": "Roman baggage market and supply camp."
