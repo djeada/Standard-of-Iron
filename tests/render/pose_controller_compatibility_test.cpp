@@ -57,7 +57,7 @@ TEST_F(PoseControllerCompatibilityTest, ElbowIKMatchesLegacyFunction) {
       shoulder, hand, outward_dir, along_frac, lateral_offset, y_bias, outward_sign);
 
   HumanoidPoseController controller(pose, anim_ctx);
-  QVector3D const controller_elbow = controller.solve_elbow_ik(false,
+  QVector3D const controller_elbow = controller.solve_elbow_ik(Side::Right,
                                                                shoulder,
                                                                hand,
                                                                outward_dir,
@@ -88,7 +88,7 @@ TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
       legacy_pose.shoulder_r, target_hand, outward_r, 0.48F, 0.12F, 0.02F, 1.0F);
 
   HumanoidPoseController controller(pose, anim_ctx);
-  controller.place_hand_at(false, target_hand);
+  controller.place_hand_at(Side::Right, target_hand);
 
   EXPECT_TRUE(approx_equal(pose.hand_r, target_hand, 0.001F));
 
@@ -105,13 +105,13 @@ TEST_F(PoseControllerCompatibilityTest, KneeIKHandlesExtremeCases) {
 
   QVector3D const hip1(0.0F, 0.50F, 0.0F);
   QVector3D const foot1(0.05F, 0.45F, 0.05F);
-  QVector3D const knee1 = controller.solve_knee_ik(true, hip1, foot1, 1.0F);
+  QVector3D const knee1 = controller.solve_knee_ik(Side::Left, hip1, foot1, 1.0F);
   EXPECT_GE(knee1.y(), HumanProportions::GROUND_Y);
   EXPECT_LE(knee1.y(), hip1.y());
 
   QVector3D const hip2(0.0F, 1.00F, 0.0F);
   QVector3D const foot2(0.80F, 0.0F, 0.80F);
-  QVector3D const knee2 = controller.solve_knee_ik(false, hip2, foot2, 1.0F);
+  QVector3D const knee2 = controller.solve_knee_ik(Side::Right, hip2, foot2, 1.0F);
   EXPECT_GE(knee2.y(), HumanProportions::GROUND_Y);
   EXPECT_LE(knee2.y(), hip2.y());
 }
@@ -173,8 +173,8 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateBowAimingPose) {
   controller.lean(QVector3D(0.0F, 0.0F, 1.0F), 0.2F);
 
   float const lowered_shoulder_y = pose.shoulder_l.y();
-  controller.place_hand_at(true, QVector3D(-0.15F, lowered_shoulder_y + 0.30F, 0.55F));
-  controller.place_hand_at(false, QVector3D(0.12F, pose.shoulder_r.y() + 0.15F, 0.10F));
+  controller.place_hand_at(Side::Left, QVector3D(-0.15F, lowered_shoulder_y + 0.30F, 0.55F));
+  controller.place_hand_at(Side::Right, QVector3D(0.12F, pose.shoulder_r.y() + 0.15F, 0.10F));
 
   EXPECT_LT(pose.pelvis_pos.y(), HP::WAIST_Y);
   EXPECT_GT(pose.hand_l.y(), pose.shoulder_l.y());
@@ -191,9 +191,9 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateMeleeAttackPose) {
   controller.lean(QVector3D(0.0F, 0.0F, 1.0F), 0.5F);
 
   QVector3D const thrust_hand(0.32F, HP::SHOULDER_Y + 0.10F, 0.90F);
-  controller.place_hand_at(false, thrust_hand);
+  controller.place_hand_at(Side::Right, thrust_hand);
 
-  controller.place_hand_at(true, QVector3D(-0.05F, HP::SHOULDER_Y + 0.03F, 0.53F));
+  controller.place_hand_at(Side::Left, QVector3D(-0.05F, HP::SHOULDER_Y + 0.03F, 0.53F));
 
   EXPECT_GT(pose.hand_r.z(), 0.80F);
   EXPECT_GT(pose.shoulder_l.z(), 0.0F);
