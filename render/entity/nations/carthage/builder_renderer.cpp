@@ -1,4 +1,5 @@
 #include "builder_renderer.h"
+#include "../builder_tool_palette.h"
 
 #include <QMatrix4x4>
 #include <QString>
@@ -93,18 +94,6 @@ constexpr std::uint32_t k_carthage_hammer_role_count = 2U;
 constexpr std::uint32_t k_carthage_saw_role_count = 4U;
 constexpr std::uint32_t k_carthage_chisel_role_count = 2U;
 constexpr std::uint32_t k_carthage_civilian_sash_role_count = 2U;
-
-enum CarthageSawPaletteSlot : std::uint8_t {
-  k_carthage_saw_wood_slot = 0U,
-  k_carthage_saw_metal_slot = 1U,
-  k_carthage_saw_metal_dark_slot = 2U,
-  k_carthage_saw_leather_slot = 3U,
-};
-
-enum CarthageChiselPaletteSlot : std::uint8_t {
-  k_carthage_chisel_wood_slot = 0U,
-  k_carthage_chisel_metal_slot = 1U,
-};
 
 auto carthage_headwrap_archetype() -> const RenderArchetype& {
   static const RenderArchetype arch = []() {
@@ -283,25 +272,25 @@ auto carthage_saw_archetype() -> const RenderArchetype& {
         generated_cylinder(QVector3D(-0.01F, -0.17F, 0.03F),
                            QVector3D(0.07F, -0.08F, 0.03F),
                            0.019F,
-                           k_carthage_saw_wood_slot),
+                           k_saw_wood_slot),
         generated_sphere(
-            QVector3D(0.07F, -0.07F, 0.03F), 0.024F, k_carthage_saw_leather_slot),
+            QVector3D(0.07F, -0.07F, 0.03F), 0.024F, k_saw_leather_slot),
         generated_cylinder(QVector3D(0.02F, -0.06F, 0.03F),
                            QVector3D(0.04F, 0.18F, 0.03F),
                            0.013F,
-                           k_carthage_saw_metal_slot),
+                           k_saw_metal_slot),
         generated_cylinder(QVector3D(0.04F, 0.18F, 0.03F),
                            QVector3D(-0.08F, 0.11F, 0.03F),
                            0.018F,
-                           k_carthage_saw_metal_dark_slot),
+                           k_saw_metal_dark_slot),
         generated_sphere(
-            QVector3D(-0.01F, 0.145F, 0.03F), 0.017F, k_carthage_saw_metal_slot),
+            QVector3D(-0.01F, 0.145F, 0.03F), 0.017F, k_saw_metal_slot),
         generated_sphere(
-            QVector3D(-0.04F, 0.13F, 0.03F), 0.014F, k_carthage_saw_metal_slot),
+            QVector3D(-0.04F, 0.13F, 0.03F), 0.014F, k_saw_metal_slot),
         generated_sphere(
-            QVector3D(-0.065F, 0.117F, 0.03F), 0.012F, k_carthage_saw_metal_slot),
+            QVector3D(-0.065F, 0.117F, 0.03F), 0.012F, k_saw_metal_slot),
         generated_sphere(
-            QVector3D(-0.085F, 0.105F, 0.03F), 0.010F, k_carthage_saw_metal_slot),
+            QVector3D(-0.085F, 0.105F, 0.03F), 0.010F, k_saw_metal_slot),
     }};
     return build_generated_equipment_archetype("carthage_builder_saw", prims);
   }();
@@ -314,15 +303,15 @@ auto carthage_chisel_archetype() -> const RenderArchetype& {
         generated_cylinder(QVector3D(0.0F, -0.15F, 0.01F),
                            QVector3D(0.0F, 0.05F, 0.01F),
                            0.017F,
-                           k_carthage_chisel_wood_slot),
+                           k_chisel_wood_slot),
         generated_sphere(
-            QVector3D(0.0F, -0.17F, 0.01F), 0.022F, k_carthage_chisel_wood_slot),
+            QVector3D(0.0F, -0.17F, 0.01F), 0.022F, k_chisel_wood_slot),
         generated_cylinder(QVector3D(0.0F, 0.05F, 0.01F),
                            QVector3D(0.0F, 0.20F, 0.01F),
                            0.011F,
-                           k_carthage_chisel_metal_slot),
+                           k_chisel_metal_slot),
         generated_sphere(
-            QVector3D(0.0F, 0.215F, 0.01F), 0.011F, k_carthage_chisel_metal_slot),
+            QVector3D(0.0F, 0.215F, 0.01F), 0.011F, k_chisel_metal_slot),
     }};
     return build_generated_equipment_archetype("carthage_builder_chisel", prims);
   }();
@@ -793,10 +782,10 @@ auto carthage_builder_hammer_unit_archetype() -> Render::Creature::ArchetypeId {
 }
 
 auto carthage_builder_saw_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 4> k_slots{k_carthage_saw_wood_slot,
-                                                       k_carthage_saw_metal_slot,
-                                                       k_carthage_saw_metal_dark_slot,
-                                                       k_carthage_saw_leather_slot};
+  static constexpr std::array<std::uint8_t, 4> k_slots{k_saw_wood_slot,
+                                                       k_saw_metal_slot,
+                                                       k_saw_metal_dark_slot,
+                                                       k_saw_leather_slot};
   static const auto k_tool_spec = carthage_tool_make_static_attachment(
       carthage_saw_archetype(),
       Render::Creature::ArchetypeRegistry::instance()
@@ -823,8 +812,8 @@ auto carthage_builder_saw_unit_archetype() -> Render::Creature::ArchetypeId {
 }
 
 auto carthage_builder_chisel_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 2> k_slots{k_carthage_chisel_wood_slot,
-                                                       k_carthage_chisel_metal_slot};
+  static constexpr std::array<std::uint8_t, 2> k_slots{k_chisel_wood_slot,
+                                                       k_chisel_metal_slot};
   static const auto k_tool_spec = carthage_tool_make_static_attachment(
       carthage_chisel_archetype(),
       Render::Creature::ArchetypeRegistry::instance()
