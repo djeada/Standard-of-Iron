@@ -82,6 +82,7 @@ struct WorldProp {
     IronOre
   };
 
+  std::uint64_t id = 0;
   Type type = Type::Tent;
   float x = 0.0F;
   float z = 0.0F;
@@ -91,6 +92,24 @@ struct WorldProp {
   float radius = 3.0F;
   bool persistent = true;
 };
+
+[[nodiscard]] constexpr auto is_tree_world_prop_type(WorldProp::Type type) -> bool {
+  return type == WorldProp::Type::PineTree || type == WorldProp::Type::OliveTree;
+}
+
+[[nodiscard]] constexpr auto is_boulder_world_prop_type(WorldProp::Type type) -> bool {
+  return type == WorldProp::Type::Boulder;
+}
+
+[[nodiscard]] constexpr auto is_iron_ore_world_prop_type(WorldProp::Type type) -> bool {
+  return type == WorldProp::Type::IronOre;
+}
+
+[[nodiscard]] constexpr auto
+is_harvestable_world_prop_type(WorldProp::Type type) -> bool {
+  return is_tree_world_prop_type(type) || is_boulder_world_prop_type(type) ||
+         is_iron_ore_world_prop_type(type);
+}
 
 [[nodiscard]] inline auto
 world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
@@ -207,7 +226,7 @@ struct VictoryConfig {
   QString victory_type = "elimination";
   std::vector<QString> key_structures = {"barracks"};
   float survive_time_duration = 0.0F;
-  std::vector<QString> defeat_conditions = {"no_key_structures"};
+  std::vector<QString> defeat_conditions = {"no_commander", "only_commander_remaining"};
   int required_key_structures = 0;
 };
 

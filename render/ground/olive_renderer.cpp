@@ -38,13 +38,15 @@ OliveRenderer::~OliveRenderer() = default;
 
 void OliveRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                               const Game::Map::BiomeSettings& biome_settings,
-                              const std::vector<Game::Map::WorldProp>& world_props) {
+                              const std::vector<Game::Map::WorldProp>& world_props,
+                              bool use_world_props_exclusively) {
   m_width = height_map.get_width();
   m_height = height_map.get_height();
   m_tile_size = height_map.get_tile_size();
   m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
   m_world_props = world_props;
+  m_use_world_props_exclusively = use_world_props_exclusively;
   m_biome_settings = biome_settings;
   m_noise_seed = biome_settings.seed;
 
@@ -94,13 +96,11 @@ void OliveRenderer::generate_olive_instances() {
   auto& olive_instances = m_olive_state.instances;
   auto& olive_instance_count = m_olive_state.instance_count;
   auto& olive_instances_dirty = m_olive_state.instances_dirty;
-
   olive_instances.clear();
 
   {
-    const float half_w = static_cast<float>(m_width) * 0.5F;
-    const float half_h = static_cast<float>(m_height) * 0.5F;
-    auto& terrain_service = Game::Map::TerrainService::instance();
+    const float half_w = static_cast<float>(m_width) * 0.5F - 0.5F;
+    const float half_h = static_cast<float>(m_height) * 0.5F - 0.5F;
     for (const auto& prop : m_world_props) {
       if (prop.type != Game::Map::WorldProp::Type::OliveTree) {
         continue;
@@ -108,7 +108,8 @@ void OliveRenderer::generate_olive_instances() {
       const float wx = (prop.x - half_w) * m_tile_size;
       const float wz = (prop.z - half_h) * m_tile_size;
       const QVector3D pos =
-          terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
+          Game::Map::TerrainService::instance().resolve_surface_world_position(
+              wx, wz, 0.0F, 0.0F);
 
       uint32_t var_state = hash_coords(static_cast<int>(std::round(prop.x)),
                                        static_cast<int>(std::round(prop.z)),
@@ -133,6 +134,12 @@ void OliveRenderer::generate_olive_instances() {
       inst.rotation = QVector4D(prop.rotation, silhouette_seed, leaf_seed, bark_seed);
       olive_instances.push_back(inst);
     }
+  }
+
+  if (m_use_world_props_exclusively) {
+    olive_instance_count = olive_instances.size();
+    olive_instances_dirty = olive_instance_count > 0;
+    return;
   }
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {

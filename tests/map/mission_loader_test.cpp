@@ -51,7 +51,8 @@ protected:
         ],
         "starting_resources": {
           "gold": 1000,
-          "food": 500
+          "food": 500,
+          "wood": 125
         }
       },
       "ai_setups": [
@@ -108,7 +109,7 @@ TEST_F(MissionLoaderTest, LoadsValidMission) {
 
   MissionDefinition mission;
   QString error;
-  bool result =
+  bool const result =
       MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error);
 
   EXPECT_TRUE(result) << "Error: " << error.toStdString();
@@ -137,8 +138,15 @@ TEST_F(MissionLoaderTest, ParsesPlayerSetup) {
   EXPECT_EQ(*mission.player_setup.commander_troop, "roman_veteran_consul");
   EXPECT_EQ(mission.player_setup.starting_units.size(), 1);
   EXPECT_EQ(mission.player_setup.starting_buildings.size(), 1);
-  EXPECT_EQ(mission.player_setup.starting_resources.gold, 1000);
-  EXPECT_EQ(mission.player_setup.starting_resources.food, 500);
+  EXPECT_EQ(
+      mission.player_setup.starting_resources.get(Game::Systems::ResourceType::Gold),
+      1000);
+  EXPECT_EQ(
+      mission.player_setup.starting_resources.get(Game::Systems::ResourceType::Food),
+      500);
+  EXPECT_EQ(
+      mission.player_setup.starting_resources.get(Game::Systems::ResourceType::Wood),
+      125);
 }
 
 TEST_F(MissionLoaderTest, ParsesAISetups) {
@@ -208,7 +216,7 @@ TEST_F(MissionLoaderTest, FailsOnInvalidJSON) {
 
   MissionDefinition mission;
   QString error;
-  bool result =
+  bool const result =
       MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error);
 
   EXPECT_FALSE(result);
@@ -218,7 +226,7 @@ TEST_F(MissionLoaderTest, FailsOnInvalidJSON) {
 TEST_F(MissionLoaderTest, FailsOnNonexistentFile) {
   MissionDefinition mission;
   QString error;
-  bool result =
+  bool const result =
       MissionLoader::load_from_json_file("/nonexistent/file.json", mission, &error);
 
   EXPECT_FALSE(result);

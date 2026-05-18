@@ -123,6 +123,8 @@ public:
   Q_PROPERTY(int player_troop_count READ player_troop_count NOTIFY troop_count_changed)
   Q_PROPERTY(
       int max_troops_per_player READ max_troops_per_player NOTIFY troop_count_changed)
+  Q_PROPERTY(QVariantMap selected_player_state READ selected_player_state NOTIFY
+                 selected_player_state_changed)
   Q_PROPERTY(
       QVariantList available_maps READ available_maps NOTIFY available_maps_changed)
   Q_PROPERTY(bool maps_loading READ maps_loading NOTIFY maps_loading_changed)
@@ -148,6 +150,8 @@ public:
                  placing_formation_changed)
   Q_PROPERTY(bool is_placing_construction READ is_placing_construction NOTIFY
                  placing_construction_changed)
+  Q_PROPERTY(bool construction_preview_valid READ construction_preview_valid NOTIFY
+                 construction_preview_valid_changed)
   Q_PROPERTY(
       bool is_campaign_mission READ is_campaign_mission NOTIFY campaign_mission_changed)
   Q_PROPERTY(bool civilian_delivery_available READ civilian_delivery_available NOTIFY
@@ -187,6 +191,7 @@ public:
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_run_mode() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_construction() const;
+  Q_INVOKABLE [[nodiscard]] bool construction_preview_valid() const;
   Q_INVOKABLE void on_formation_mouse_move(qreal sx, qreal sy);
   Q_INVOKABLE void on_formation_scroll(float delta);
   Q_INVOKABLE void on_formation_confirm();
@@ -251,16 +256,12 @@ public:
     return m_level.max_troops_per_player;
   }
   [[nodiscard]] int enemy_troops_defeated() const;
+  [[nodiscard]] QVariantMap selected_player_state() const;
 
   Q_INVOKABLE [[nodiscard]] static QVariantMap get_player_stats(int owner_id);
 
   [[nodiscard]] int selected_player_id() const { return m_selected_player_id; }
-  void set_selected_player_id(int id) {
-    if (m_selected_player_id != id) {
-      m_selected_player_id = id;
-      emit selected_player_id_changed();
-    }
-  }
+  void set_selected_player_id(int id);
   [[nodiscard]] QString last_error() const { return m_runtime.last_error; }
   Q_INVOKABLE void clear_error() {
     if (!m_runtime.last_error.isEmpty()) {
@@ -447,6 +448,9 @@ private:
   void reset_commander_input();
   void sync_selection_flags();
   void update_civilian_delivery_availability();
+  void sync_selected_player_state();
+  void sync_scatter_world_props();
+  void initialize_player_resources();
   static void reset_movement(Engine::Core::Entity* entity);
   QAbstractItemModel* selected_units_model();
   void apply_mission_ambience(const Game::Mission::MissionDefinition* mission,
@@ -545,6 +549,8 @@ private:
   SelectedUnitsModel* m_selected_units_model = nullptr;
   int m_enemy_troops_defeated = 0;
   int m_selected_player_id = 1;
+  QVariantMap m_selected_player_state;
+  std::uint64_t m_last_world_props_revision = 0;
   QVariantList m_available_maps;
   bool m_maps_loading = false;
   bool m_loading_overlay_active = false;
@@ -591,6 +597,7 @@ signals:
   void available_campaigns_changed();
   void owner_info_changed();
   void selected_player_id_changed();
+  void selected_player_state_changed();
   void last_error_changed();
   void maps_loading_changed();
   void minimap_image_changed();
@@ -605,6 +612,7 @@ signals:
   void loading_stage_changed(QString stage_text);
   void placing_formation_changed();
   void placing_construction_changed();
+  void construction_preview_valid_changed();
   void campaign_mission_changed();
   void civilian_delivery_available_changed();
   void control_mode_changed();

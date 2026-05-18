@@ -30,8 +30,10 @@ BoulderRenderer::~BoulderRenderer() = default;
 
 void BoulderRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                                 const Game::Map::BiomeSettings& biome_settings,
-                                const std::vector<Game::Map::WorldProp>& world_props) {
+                                const std::vector<Game::Map::WorldProp>& world_props,
+                                bool use_world_props_exclusively) {
   m_biome_settings = biome_settings;
+  m_use_world_props_exclusively = use_world_props_exclusively;
   m_state.reset_instances();
   m_state.params.light_direction = m_light_direction;
   generate_instances(world_props, height_map);
@@ -169,6 +171,12 @@ void BoulderRenderer::generate_instances(
                                                 Game::Map::WorldProp::Type::Boulder));
     inst.color_rot = QVector4D(color.x(), color.y(), color.z(), prop.rotation);
     m_state.instances.push_back(inst);
+  }
+
+  if (m_use_world_props_exclusively) {
+    m_state.instance_count = m_state.instances.size();
+    m_state.instances_dirty = m_state.instance_count > 0;
+    return;
   }
 
   if (width >= 2 && map_height >= 2 && !height_map.get_height_data().empty()) {

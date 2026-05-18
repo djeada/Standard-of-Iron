@@ -549,6 +549,108 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
 
                     Row {
+                        id: stoneRow
+
+                        spacing: 6
+
+                        Label {
+                            text: qsTr("Stone")
+                            color: hs.bronze
+                            font.pixelSize: 14
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        Label {
+                            text: {
+                                if (typeof game === 'undefined' || !game.selected_player_state || !game.selected_player_state.resources)
+                                    return 0;
+                                return game.selected_player_state.resources.stone || 0;
+                            }
+                            color: Theme.accent
+                            font.pixelSize: 14
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Rectangle {
+                        width: 2
+                        height: 24
+                        color: hs.bronzeDeep
+                        opacity: 0.5
+                        visible: !topRoot.compact
+                    }
+
+                    Row {
+                        id: ironRow
+
+                        spacing: 6
+
+                        Label {
+                            text: qsTr("Iron")
+                            color: hs.bronze
+                            font.pixelSize: 14
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        Label {
+                            text: {
+                                if (typeof game === 'undefined' || !game.selected_player_state || !game.selected_player_state.resources)
+                                    return 0;
+                                return game.selected_player_state.resources.iron || 0;
+                            }
+                            color: Theme.accent
+                            font.pixelSize: 14
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Rectangle {
+                        width: 2
+                        height: 24
+                        color: hs.bronzeDeep
+                        opacity: 0.5
+                        visible: !topRoot.compact
+                    }
+
+                    Row {
+                        id: woodRow
+
+                        spacing: 6
+
+                        Label {
+                            text: qsTr("Wood")
+                            color: hs.bronze
+                            font.pixelSize: 14
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        Label {
+                            text: {
+                                if (typeof game === 'undefined' || !game.selected_player_state || !game.selected_player_state.resources)
+                                    return 0;
+                                return game.selected_player_state.resources.wood || 0;
+                            }
+                            color: Theme.accent
+                            font.pixelSize: 14
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Rectangle {
+                        width: 2
+                        height: 24
+                        color: hs.bronzeDeep
+                        opacity: 0.5
+                        visible: !topRoot.compact
+                    }
+
+                    Row {
                         id: playerRow
 
                         spacing: 6
@@ -565,12 +667,20 @@ Item {
                         Label {
                             id: playerLbl
 
-                            text: (typeof game !== 'undefined' ? game.player_troop_count : 0) + " / " + (typeof game !== 'undefined' ? game.max_troops_per_player : 0)
+                            text: {
+                                if (typeof game === 'undefined' || !game.selected_player_state)
+                                    return "0 / 0";
+                                var population = game.selected_player_state.population || 0;
+                                var populationCap = game.selected_player_state.population_cap || 0;
+                                return population + " / " + populationCap;
+                            }
                             color: {
-                                if (typeof game === 'undefined')
+                                if (typeof game === 'undefined' || !game.selected_player_state)
                                     return Theme.textDim;
-                                var count = game.player_troop_count;
-                                var max = game.max_troops_per_player;
+                                var count = game.selected_player_state.population || 0;
+                                var max = game.selected_player_state.population_cap || 0;
+                                if (max <= 0)
+                                    return Theme.textDim;
                                 if (count >= max)
                                     return hs.waxHover;
                                 if (count >= max * 0.8)

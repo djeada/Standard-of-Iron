@@ -23,7 +23,8 @@ public:
 
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
-                 const std::vector<Game::Map::WorldProp>& world_props = {});
+                 const std::vector<Game::Map::WorldProp>& world_props = {},
+                 bool use_world_props_exclusively = false);
 
   void set_light_direction(const QVector3D& dir);
 
@@ -50,6 +51,7 @@ private:
   std::vector<float> m_height_data;
   std::vector<Game::Map::TerrainType> m_terrain_types;
   std::vector<Game::Map::WorldProp> m_world_props;
+  bool m_use_world_props_exclusively = false;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
   QVector3D m_light_direction{0.35F, 0.8F, 0.45F};

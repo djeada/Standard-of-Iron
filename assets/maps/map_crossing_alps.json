@@ -984,6 +984,10 @@
   ],
   "victory": {
     "type": "reach_destination",
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ],
     "destination": {
       "x": 232,
       "z": 228

@@ -34,6 +34,8 @@ add_executable(standard_of_iron_tests
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/mission_loader_test.cpp
+    map/mission_asset_rules_test.cpp
+    map/mission_victory_rules_test.cpp
     map/campaign_loader_test.cpp
     map/time_of_day_test.cpp
     systems/rain_manager_test.cpp
@@ -49,6 +51,9 @@ add_executable(standard_of_iron_tests
     systems/combat_mode_test.cpp
     systems/command_service_test.cpp
     systems/commander_system_test.cpp
+    systems/pathfinding_test.cpp
+    systems/production_system_test.cpp
+    systems/victory_service_test.cpp
     systems/archer_bonus_test.cpp
     systems/arrow_system_test.cpp
     systems/ai_system_test.cpp

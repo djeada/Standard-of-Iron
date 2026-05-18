@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../systems/nation_id.h"
+#include "../systems/resource_types.h"
 
 namespace Game::Mission {
 
@@ -26,10 +27,7 @@ struct BuildingSetup {
   int max_population = 100;
 };
 
-struct Resources {
-  int gold = 0;
-  int food = 0;
-};
+using Resources = Game::Systems::ResourceAmounts;
 
 struct PlayerSetup {
   QString nation;
