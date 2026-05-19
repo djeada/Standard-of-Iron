@@ -502,6 +502,8 @@ private:
   void render_game_effects();
   void update_loading_overlay();
   void update_cursor_position();
+  void restore_controlled_commander_direct_control_if_ready();
+  void seed_commander_rally_preview_from_view_center();
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;

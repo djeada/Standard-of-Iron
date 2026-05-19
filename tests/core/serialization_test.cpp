@@ -647,6 +647,16 @@ TEST_F(SerializationTest, CommanderComponentRoundTrip) {
   commander->death_morale_shock = 34.0F;
   commander->aura_active = false;
   commander->wounded = true;
+  commander->flag_rally_cost = 2.5F;
+  commander->flag_rally_pending_x = 14.0F;
+  commander->flag_rally_pending_z = -6.0F;
+  commander->flag_rally_animation_timer = 1.25F;
+  commander->flag_rally_in_progress = true;
+  commander->flag_rally_at_position = true;
+  commander->flag_rally_flag_x = 18.0F;
+  commander->flag_rally_flag_z = -9.0F;
+  commander->flag_rally_flag_active = true;
+  commander->flag_rally_issue_commands = true;
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
 
@@ -677,6 +687,17 @@ TEST_F(SerializationTest, CommanderComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->death_morale_shock, commander->death_morale_shock);
   EXPECT_FALSE(deserialized->aura_active);
   EXPECT_TRUE(deserialized->wounded);
+  EXPECT_FLOAT_EQ(deserialized->flag_rally_cost, commander->flag_rally_cost);
+  EXPECT_FLOAT_EQ(deserialized->flag_rally_pending_x, commander->flag_rally_pending_x);
+  EXPECT_FLOAT_EQ(deserialized->flag_rally_pending_z, commander->flag_rally_pending_z);
+  EXPECT_FLOAT_EQ(deserialized->flag_rally_animation_timer,
+                  commander->flag_rally_animation_timer);
+  EXPECT_TRUE(deserialized->flag_rally_in_progress);
+  EXPECT_TRUE(deserialized->flag_rally_at_position);
+  EXPECT_FLOAT_EQ(deserialized->flag_rally_flag_x, commander->flag_rally_flag_x);
+  EXPECT_FLOAT_EQ(deserialized->flag_rally_flag_z, commander->flag_rally_flag_z);
+  EXPECT_TRUE(deserialized->flag_rally_flag_active);
+  EXPECT_TRUE(deserialized->flag_rally_issue_commands);
 }
 
 TEST_F(SerializationTest, MoraleComponentRoundTrip) {

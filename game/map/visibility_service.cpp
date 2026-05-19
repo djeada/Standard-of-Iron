@@ -25,6 +25,7 @@ constexpr float k_half_cell_offset = 0.5F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr std::chrono::milliseconds k_min_job_interval{50};
 constexpr std::uint8_t k_current_visible_marker = 0x80U;
+constexpr std::uint32_t k_rally_flag_visibility_tag = 0x80000000U;
 
 auto in_bounds_static(int grid_x, int grid_z, int width, int height) -> bool {
   return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
@@ -37,6 +38,10 @@ auto index_static(int grid_x, int grid_z, int width) -> int {
 auto world_to_grid_static(float world_coord, float half, float tile_size) -> int {
   const float grid_coord = world_coord / tile_size + half;
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
+}
+
+auto rally_flag_visibility_id(std::uint32_t commander_id) -> std::uint32_t {
+  return commander_id ^ k_rally_flag_visibility_tag;
 }
 
 } // namespace
@@ -194,6 +199,32 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
     const float expanded_radius_cells_sq = expanded_range_sq * inverse_tile_size_sq;
 
     sources.push_back({center_x, center_z, cell_radius, expanded_radius_cells_sq});
+
+    auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
+    if (commander == nullptr || !commander->flag_rally_flag_active) {
+      continue;
+    }
+
+    const int rally_center_x =
+        world_to_grid(commander->flag_rally_flag_x, m_half_width);
+    const int rally_center_z =
+        world_to_grid(commander->flag_rally_flag_z, m_half_height);
+    if (!in_bounds(rally_center_x, rally_center_z)) {
+      continue;
+    }
+
+    std::uint32_t const rally_id = rally_flag_visibility_id(entity_id);
+    current_positions[rally_id] = {rally_center_x, rally_center_z};
+    if (!any_moved) {
+      auto it = m_last_positions.find(rally_id);
+      if (it == m_last_positions.end() || it->second.grid_x != rally_center_x ||
+          it->second.grid_z != rally_center_z) {
+        any_moved = true;
+      }
+    }
+
+    sources.push_back(
+        {rally_center_x, rally_center_z, cell_radius, expanded_radius_cells_sq});
   }
 
   if (!any_moved) {

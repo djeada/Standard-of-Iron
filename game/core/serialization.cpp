@@ -225,6 +225,18 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     commander_obj["rally_requires_manual_trigger"] =
         commander->rally_requires_manual_trigger;
     commander_obj["fpv_controlled"] = commander->fpv_controlled;
+    commander_obj["flag_rally_cost"] = commander->flag_rally_cost;
+    commander_obj["flag_rally_pending_x"] = commander->flag_rally_pending_x;
+    commander_obj["flag_rally_pending_z"] = commander->flag_rally_pending_z;
+    commander_obj["flag_rally_animation_timer"] =
+        commander->flag_rally_animation_timer;
+    commander_obj["flag_rally_in_progress"] = commander->flag_rally_in_progress;
+    commander_obj["flag_rally_at_position"] = commander->flag_rally_at_position;
+    commander_obj["flag_rally_flag_x"] = commander->flag_rally_flag_x;
+    commander_obj["flag_rally_flag_z"] = commander->flag_rally_flag_z;
+    commander_obj["flag_rally_flag_active"] = commander->flag_rally_flag_active;
+    commander_obj["flag_rally_issue_commands"] =
+        commander->flag_rally_issue_commands;
     entity_obj["commander"] = commander_obj;
   }
 
@@ -716,6 +728,29 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     commander->rally_requires_manual_trigger =
         commander_obj["rally_requires_manual_trigger"].toBool(false);
     commander->fpv_controlled = commander_obj["fpv_controlled"].toBool(false);
+    commander->flag_rally_cost = static_cast<float>(
+        commander_obj["flag_rally_cost"].toDouble(commander->flag_rally_cost));
+    commander->flag_rally_pending_x = static_cast<float>(
+        commander_obj["flag_rally_pending_x"].toDouble(
+            commander->flag_rally_pending_x));
+    commander->flag_rally_pending_z = static_cast<float>(
+        commander_obj["flag_rally_pending_z"].toDouble(
+            commander->flag_rally_pending_z));
+    commander->flag_rally_animation_timer = static_cast<float>(
+        commander_obj["flag_rally_animation_timer"].toDouble(
+            commander->flag_rally_animation_timer));
+    commander->flag_rally_in_progress =
+        commander_obj["flag_rally_in_progress"].toBool(false);
+    commander->flag_rally_at_position =
+        commander_obj["flag_rally_at_position"].toBool(false);
+    commander->flag_rally_flag_x = static_cast<float>(
+        commander_obj["flag_rally_flag_x"].toDouble(commander->flag_rally_flag_x));
+    commander->flag_rally_flag_z = static_cast<float>(
+        commander_obj["flag_rally_flag_z"].toDouble(commander->flag_rally_flag_z));
+    commander->flag_rally_flag_active =
+        commander_obj["flag_rally_flag_active"].toBool(false);
+    commander->flag_rally_issue_commands =
+        commander_obj["flag_rally_issue_commands"].toBool(false);
   }
 
   if (json.contains("rpg_health")) {

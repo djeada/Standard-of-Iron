@@ -503,6 +503,38 @@ class CommanderComponent : public Component {
 public:
   CommanderComponent() = default;
 
+  void begin_flag_rally(float target_x, float target_z, bool already_at_position) noexcept {
+    flag_rally_pending_x = target_x;
+    flag_rally_pending_z = target_z;
+    flag_rally_animation_timer = already_at_position ? flag_rally_cost : 0.0F;
+    flag_rally_in_progress = true;
+    flag_rally_at_position = already_at_position;
+    flag_rally_flag_active = false;
+    flag_rally_issue_commands = false;
+  }
+
+  void cancel_flag_rally() noexcept {
+    flag_rally_animation_timer = 0.0F;
+    flag_rally_in_progress = false;
+    flag_rally_at_position = false;
+    flag_rally_flag_active = false;
+    flag_rally_issue_commands = false;
+  }
+
+  void complete_flag_rally() noexcept {
+    flag_rally_flag_x = flag_rally_pending_x;
+    flag_rally_flag_z = flag_rally_pending_z;
+    flag_rally_flag_active = true;
+    flag_rally_issue_commands = true;
+    flag_rally_animation_timer = 0.0F;
+    flag_rally_in_progress = false;
+    flag_rally_at_position = false;
+  }
+
+  [[nodiscard]] auto is_flag_rally_planting() const noexcept -> bool {
+    return flag_rally_in_progress && flag_rally_at_position;
+  }
+
   std::string commander_id;
   std::string display_name;
   std::string strategic_identity;

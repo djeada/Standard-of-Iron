@@ -1343,52 +1343,34 @@ void GameEngine::commander_trigger_rally() {
   if (m_control_mode != PlayerControlMode::Commander) {
     return;
   }
-
-  auto* commander = controlled_commander_entity();
-  if (commander == nullptr) {
-    exit_commander_control_mode();
-    return;
-  }
-
-  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
-  if (commander_data == nullptr) {
-    exit_commander_control_mode();
-    return;
-  }
-
-  // In RPG/commander mode, pressing R starts the flag rally at the
-  // commander's current position immediately (no position selection required
-  // since the player is physically controlling the commander).
-  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return;
-  }
-  if (commander_data->flag_rally_in_progress) {
-    return; // already performing a flag rally
-  }
-  commander_data->flag_rally_pending_x = transform->position.x;
-  commander_data->flag_rally_pending_z = transform->position.z;
-  commander_data->flag_rally_animation_timer = commander_data->flag_rally_cost;
-  commander_data->flag_rally_in_progress = true;
-  // Commander is already at the position, so skip the move phase.
-  commander_data->flag_rally_at_position = true;
+  begin_commander_flag_rally();
 }
 
 void GameEngine::begin_commander_flag_rally() {
   if (m_world == nullptr || m_cursor_manager == nullptr) {
     return;
   }
-  // Find the local commander entity to verify one exists.
-  auto* commander = find_local_commander();
+
+  auto* commander = m_control_mode == PlayerControlMode::Commander
+                        ? controlled_commander_entity()
+                        : find_local_commander();
   if (commander == nullptr) {
+    if (m_control_mode == PlayerControlMode::Commander) {
+      exit_commander_control_mode();
+    }
     return;
   }
   auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
   if (commander_data == nullptr || commander_data->flag_rally_in_progress) {
     return;
   }
+
+  if (m_control_mode == PlayerControlMode::Commander) {
+    reset_commander_input();
+  }
   m_commander_rally_preview_pos = std::nullopt;
   set_cursor_mode(CursorMode::PlaceCommanderRally);
+  seed_commander_rally_preview_from_view_center();
 }
 
 void GameEngine::confirm_commander_flag_rally(qreal sx, qreal sy) {
@@ -1407,33 +1389,42 @@ void GameEngine::confirm_commander_flag_rally(qreal sx, qreal sy) {
     return;
   }
 
-  // Find the player's commander and start the flag rally.
-  for (auto* entity :
-       m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->owner_id != m_runtime.local_owner_id) {
-      continue;
-    }
-    auto* commander_data =
-        entity->get_component<Engine::Core::CommanderComponent>();
-    if (commander_data == nullptr || commander_data->flag_rally_in_progress) {
-      continue;
-    }
-
-    commander_data->flag_rally_pending_x = hit.x();
-    commander_data->flag_rally_pending_z = hit.z();
-    commander_data->flag_rally_in_progress = true;
-    commander_data->flag_rally_at_position = false;
-    commander_data->flag_rally_animation_timer = 0.0F;
-
-    // Issue a move command to the commander to go to the rally position.
-    Game::Systems::CommandService::MoveOptions opts;
-    opts.kind = Game::Systems::MoveOrderKind::PlayerMove;
-    opts.group_move = false;
-    Game::Systems::CommandService::move_unit(
-        *m_world, entity->get_id(), hit, opts);
-    break;
+  auto* commander = m_control_mode == PlayerControlMode::Commander
+                        ? controlled_commander_entity()
+                        : find_local_commander();
+  auto* unit =
+      commander != nullptr ? commander->get_component<Engine::Core::UnitComponent>()
+                           : nullptr;
+  auto* commander_data =
+      commander != nullptr
+          ? commander->get_component<Engine::Core::CommanderComponent>()
+          : nullptr;
+  if (commander == nullptr || unit == nullptr || commander_data == nullptr ||
+      commander_data->flag_rally_in_progress ||
+      unit->owner_id != m_runtime.local_owner_id || unit->health <= 0) {
+    cancel_commander_flag_rally();
+    return;
   }
+
+  std::vector<Engine::Core::EntityID> const commander_selection{commander->get_id()};
+  auto const move_plan =
+      Game::Systems::CommandService::plan_ground_move(*m_world, commander_selection, hit);
+  if (move_plan.positions.empty()) {
+    cancel_commander_flag_rally();
+    return;
+  }
+
+  commander_data->begin_flag_rally(
+      move_plan.resolved_target.x(), move_plan.resolved_target.z(), false);
+  if (m_control_mode == PlayerControlMode::Commander) {
+    commander_data->fpv_controlled = false;
+    reset_commander_input();
+  }
+  if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+    stamina->run_requested = false;
+    stamina->is_running = false;
+  }
+  Game::Systems::CommandService::issue_ground_move(*m_world, commander_selection, move_plan);
 
   m_commander_rally_preview_pos = std::nullopt;
   set_cursor_mode(CursorMode::Normal);
@@ -1498,6 +1489,48 @@ auto GameEngine::get_commander_rally_flag_position() const -> QVector3D {
     }
   }
   return {};
+}
+
+void GameEngine::seed_commander_rally_preview_from_view_center() {
+  if (m_picking_service == nullptr || m_camera == nullptr || m_viewport.width <= 0 ||
+      m_viewport.height <= 0) {
+    return;
+  }
+
+  QVector3D hit;
+  if (!m_picking_service->screen_to_ground(QPointF(m_viewport.width * 0.5,
+                                                   m_viewport.height * 0.5),
+                                           *m_camera,
+                                           m_viewport.width,
+                                           m_viewport.height,
+                                           hit)) {
+    return;
+  }
+  m_commander_rally_preview_pos =
+      Game::Systems::CommandService::snap_to_walkable_ground(hit);
+}
+
+void GameEngine::restore_controlled_commander_direct_control_if_ready() {
+  if (m_control_mode != PlayerControlMode::Commander) {
+    return;
+  }
+
+  auto* commander = controlled_commander_entity();
+  auto* unit =
+      commander != nullptr ? commander->get_component<Engine::Core::UnitComponent>()
+                           : nullptr;
+  auto* commander_data =
+      commander != nullptr
+          ? commander->get_component<Engine::Core::CommanderComponent>()
+          : nullptr;
+  if (commander == nullptr || unit == nullptr || commander_data == nullptr ||
+      unit->health <= 0 || commander_data->fpv_controlled ||
+      commander_data->flag_rally_in_progress || is_placing_commander_rally()) {
+    return;
+  }
+
+  commander_data->fpv_controlled = true;
+  reset_commander_input();
 }
 
 void GameEngine::commander_dodge() {
@@ -1641,7 +1674,8 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
     QVector3D hit;
     if (m_picking_service->screen_to_ground(
             QPointF(sx, sy), *m_camera, m_viewport.width, m_viewport.height, hit)) {
-      m_commander_rally_preview_pos = hit;
+      m_commander_rally_preview_pos =
+          Game::Systems::CommandService::snap_to_walkable_ground(hit);
     }
   }
 }
@@ -1868,6 +1902,7 @@ void GameEngine::update_active_runtime_simulation(float dt) {
   if (m_control_mode == PlayerControlMode::Commander) {
     update_commander_control_mode(dt);
     m_world->update(dt);
+    restore_controlled_commander_direct_control_if_ready();
     return;
   }
 
@@ -2043,6 +2078,7 @@ void GameEngine::render_game_effects() {
       m_renderer.get(),
       res,
       m_world.get(),
+      m_runtime.local_owner_id,
       m_commander_rally_preview_pos);
 
   if (m_command_controller && m_command_controller->is_placing_formation()) {
@@ -2730,6 +2766,11 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["rally_cooldown_remaining"] = 0.0;
   result["rally_feedback_time"] = 0.0;
   result["rally_ready"] = false;
+  result["rally_placing"] = false;
+  result["rally_in_progress"] = false;
+  result["rally_is_planting"] = false;
+  result["rally_has_flag"] = false;
+  result["rally_action_progress"] = 0.0;
   result["aura_active"] = false;
   result["posture"] = 0.0;
   result["posture_max"] = 100.0;
@@ -2822,7 +2863,21 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["rally_cooldown"] = commander->rally_cooldown;
   result["rally_cooldown_remaining"] = commander->rally_cooldown_remaining;
   result["rally_feedback_time"] = commander->rally_feedback_time;
-  result["rally_ready"] = commander->rally_cooldown_remaining <= 0.0F;
+  result["rally_placing"] = is_placing_commander_rally();
+  result["rally_in_progress"] = commander->flag_rally_in_progress;
+  result["rally_is_planting"] = commander->is_flag_rally_planting();
+  result["rally_has_flag"] = commander->flag_rally_flag_active;
+  result["rally_action_progress"] =
+      commander->is_flag_rally_planting() && commander->flag_rally_cost > 0.0F
+          ? std::clamp(static_cast<double>(
+                           1.0F - (commander->flag_rally_animation_timer /
+                                   commander->flag_rally_cost)),
+                       0.0,
+                       1.0)
+          : (commander->flag_rally_flag_active ? 1.0 : 0.0);
+  result["rally_ready"] = commander->rally_cooldown_remaining <= 0.0F &&
+                          !commander->flag_rally_in_progress &&
+                          !is_placing_commander_rally();
   result["aura_active"] = commander->aura_active && !commander->wounded;
   result["posture"] = static_cast<double>(commander->posture);
   result["posture_max"] = static_cast<double>(commander->posture_max);

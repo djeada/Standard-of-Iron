@@ -24,6 +24,7 @@ void render_commander_rally_flags(
     Renderer* renderer,
     ResourceManager* resources,
     Engine::Core::World* world,
+    int preview_owner_id,
     const std::optional<QVector3D>& preview_pos = std::nullopt);
 
 }

@@ -24,6 +24,13 @@ struct Point;
 
 class CommandService {
 public:
+  struct GroundMovePlan {
+    QVector3D resolved_target;
+    std::vector<QVector3D> positions;
+    std::vector<float> facing_angles;
+    bool preserve_formation_mode = false;
+  };
+
   struct MoveOptions {
     MoveOrderKind kind = MoveOrderKind::PlayerMove;
     bool allow_direct_fallback = true;
@@ -46,6 +53,13 @@ public:
   static auto get_pathfinder() -> Pathfinding*;
   static auto world_to_grid(float world_x, float world_z) -> Point;
   static auto grid_to_world(const Point& grid_pos) -> QVector3D;
+  static auto snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D;
+  static auto plan_ground_move(Engine::Core::World& world,
+                               const std::vector<Engine::Core::EntityID>& units,
+                               const QVector3D& target) -> GroundMovePlan;
+  static void issue_ground_move(Engine::Core::World& world,
+                                const std::vector<Engine::Core::EntityID>& units,
+                                const GroundMovePlan& plan);
   static auto get_unit_radius(Engine::Core::World& world,
                               Engine::Core::EntityID entity_id) -> float;
   static auto

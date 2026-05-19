@@ -13,10 +13,19 @@
 namespace Game::Systems {
 namespace {
 
+constexpr float k_flag_rally_arrival_threshold_sq = 2.25F;
+constexpr float k_flag_rally_order_tolerance_sq = 4.0F;
+
 [[nodiscard]] auto distance_sq(const Engine::Core::TransformComponent& a,
                                const Engine::Core::TransformComponent& b) -> float {
   const float dx = a.position.x - b.position.x;
   const float dz = a.position.z - b.position.z;
+  return dx * dx + dz * dz;
+}
+
+[[nodiscard]] auto distance_sq(float ax, float az, float bx, float bz) -> float {
+  float const dx = ax - bx;
+  float const dz = az - bz;
   return dx * dx + dz * dz;
 }
 
@@ -45,6 +54,89 @@ auto resolve_troop_type(const Engine::Core::UnitComponent* unit)
 auto is_living_troop(const Engine::Core::UnitComponent* unit) -> bool {
   return unit != nullptr && unit->health > 0 &&
          Game::Units::is_troop_spawn(unit->spawn_type);
+}
+
+void halt_rally_movement(Engine::Core::MovementComponent* movement) {
+  if (movement == nullptr) {
+    return;
+  }
+
+  movement->has_target = false;
+  movement->path_pending = false;
+  movement->pending_request_id = 0;
+  movement->vx = 0.0F;
+  movement->vz = 0.0F;
+  movement->clear_path();
+}
+
+[[nodiscard]] auto movement_targets_rally(
+    const Engine::Core::MovementComponent* movement,
+    const Engine::Core::CommanderComponent& commander) -> bool {
+  if (movement == nullptr || !movement->has_target) {
+    return false;
+  }
+
+  return distance_sq(movement->goal_x,
+                     movement->goal_y,
+                     commander.flag_rally_pending_x,
+                     commander.flag_rally_pending_z) <=
+             k_flag_rally_order_tolerance_sq ||
+         distance_sq(movement->target_x,
+                     movement->target_y,
+                     commander.flag_rally_pending_x,
+                     commander.flag_rally_pending_z) <=
+             k_flag_rally_order_tolerance_sq;
+}
+
+[[nodiscard]] auto is_flag_rally_interrupted(
+    Engine::Core::Entity& entity,
+    const Engine::Core::CommanderComponent& commander,
+    const Engine::Core::TransformComponent& transform) -> bool {
+  if (!commander.flag_rally_in_progress) {
+    return false;
+  }
+
+  if (commander.jump_active || commander.power_strike_active) {
+    return true;
+  }
+
+  if (auto* rpg_action =
+          entity.get_component<Engine::Core::RpgCommanderActionComponent>();
+      rpg_action != nullptr &&
+      rpg_action->phase != Engine::Core::RpgCommanderActionPhase::None) {
+    return true;
+  }
+
+  if (auto* attack_target = entity.get_component<Engine::Core::AttackTargetComponent>();
+      attack_target != nullptr && attack_target->target_id != 0) {
+    return true;
+  }
+
+  if (auto* attack = entity.get_component<Engine::Core::AttackComponent>();
+      attack != nullptr && attack->in_melee_lock) {
+    return true;
+  }
+
+  if (auto* combat_state = entity.get_component<Engine::Core::CombatStateComponent>();
+      combat_state != nullptr &&
+      combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
+    return true;
+  }
+
+  auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+  if (!commander.flag_rally_at_position) {
+    if (distance_sq(transform.position.x,
+                    transform.position.z,
+                    commander.flag_rally_pending_x,
+                    commander.flag_rally_pending_z) <=
+        k_flag_rally_arrival_threshold_sq) {
+      return false;
+    }
+    return !movement_targets_rally(movement, commander);
+  }
+
+  return movement != nullptr && movement->has_target &&
+         !movement_targets_rally(movement, commander);
 }
 
 auto try_trigger_rally(Engine::Core::World* world,
@@ -180,11 +272,9 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         apply_commander_death_shock(
             world, commander_entity, *commander, *unit, *transform);
       }
-      // Cancel any in-progress flag rally if the commander dies.
-      if (commander->flag_rally_in_progress) {
-        commander->flag_rally_in_progress = false;
-        commander->flag_rally_at_position = false;
-        commander->flag_rally_animation_timer = 0.0F;
+      if (commander->flag_rally_in_progress || commander->flag_rally_flag_active ||
+          commander->flag_rally_issue_commands) {
+        commander->cancel_flag_rally();
       }
       continue;
     }
@@ -198,43 +288,41 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
       (void)try_trigger_rally(world, commander_entity, *commander, *unit, *transform);
     }
 
+    if (commander->flag_rally_in_progress &&
+        is_flag_rally_interrupted(*commander_entity, *commander, *transform)) {
+      commander->cancel_flag_rally();
+    }
+
     // --- Flag rally processing ---
-    // Phase 1: commander is moving toward the rally position.
+    bool started_flag_planting = false;
     if (commander->flag_rally_in_progress && !commander->flag_rally_at_position) {
-      constexpr float k_arrival_threshold_sq = 2.25F; // 1.5 units
       const float dx = transform->position.x - commander->flag_rally_pending_x;
       const float dz = transform->position.z - commander->flag_rally_pending_z;
-      if ((dx * dx + dz * dz) <= k_arrival_threshold_sq) {
+      if ((dx * dx + dz * dz) <= k_flag_rally_arrival_threshold_sq) {
         commander->flag_rally_at_position = true;
         commander->flag_rally_animation_timer = commander->flag_rally_cost;
+        halt_rally_movement(
+            commander_entity->get_component<Engine::Core::MovementComponent>());
+        started_flag_planting = true;
       }
     }
 
-    // Phase 2: commander is at position, playing the flag placement animation.
-    if (commander->flag_rally_in_progress && commander->flag_rally_at_position) {
+    if (commander->is_flag_rally_planting() && !started_flag_planting) {
       commander->flag_rally_animation_timer =
           std::max(0.0F, commander->flag_rally_animation_timer - delta_time);
       if (commander->flag_rally_animation_timer <= 0.0F) {
-        commander->flag_rally_flag_x = commander->flag_rally_pending_x;
-        commander->flag_rally_flag_z = commander->flag_rally_pending_z;
-        commander->flag_rally_flag_active = true;
-        commander->flag_rally_issue_commands = true;
-        commander->flag_rally_in_progress = false;
-        commander->flag_rally_at_position = false;
+        commander->complete_flag_rally();
       }
     }
 
-    // Phase 3: flag just placed — issue move commands to all allied controllable units.
-    // This is equivalent to the player selecting all troops and right-clicking the
-    // rally position, so use PlayerMove (individual pathfinding to the target).
+    // Phase 3: flag just placed — issue the same ground move order the player would
+    // get from selecting their troops and right-clicking the rally position.
     if (commander->flag_rally_issue_commands) {
       commander->flag_rally_issue_commands = false;
       const QVector3D rally_pos(commander->flag_rally_flag_x,
                                 0.0F,
                                 commander->flag_rally_flag_z);
-      CommandService::MoveOptions opts;
-      opts.kind = MoveOrderKind::PlayerMove;
-      opts.group_move = false;
+      std::vector<Engine::Core::EntityID> rallied_units;
 
       for (auto* candidate :
            world->get_entities_with<Engine::Core::UnitComponent>()) {
@@ -247,7 +335,22 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
             !is_living_troop(candidate_unit)) {
           continue;
         }
-        CommandService::move_unit(*world, candidate->get_id(), rally_pos, opts);
+        rallied_units.push_back(candidate->get_id());
+      }
+
+      if (!rallied_units.empty()) {
+        for (auto const unit_id : rallied_units) {
+          if (auto* rallied_entity = world->get_entity(unit_id)) {
+            if (auto* stamina =
+                    rallied_entity->get_component<Engine::Core::StaminaComponent>()) {
+              stamina->run_requested = false;
+              stamina->is_running = false;
+            }
+          }
+        }
+        auto const move_plan =
+            CommandService::plan_ground_move(*world, rallied_units, rally_pos);
+        CommandService::issue_ground_move(*world, rallied_units, move_plan);
       }
     }
 
