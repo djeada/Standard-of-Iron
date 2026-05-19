@@ -17,7 +17,8 @@ RowLayout {
             "canPatrol": true,
             "canHeal": true,
             "canBuild": true,
-            "canDeliver": true
+            "canDeliver": true,
+            "canRally": false
         })
 
     signal command_mode_changed(string mode)
@@ -889,6 +890,48 @@ RowLayout {
                         font.pointSize: 11
                         font.bold: true
                         color: formationButton.enabled ? Theme.textMain : Theme.textDim
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+
+            Button {
+                id: rallyButton
+
+                property bool mode_available: bottomRoot.mode_availability.canRally !== false
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
+                text: qsTr("Rally")
+                focusPolicy: Qt.NoFocus
+                visible: mode_available
+                enabled: bottomRoot.has_movable_units && mode_available
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Commander plants a rally flag at a chosen position.\nAll troops will march to the flag once it is placed.")
+                ToolTip.delay: 500
+                onClicked: {
+                    if (typeof game !== 'undefined' && game.begin_commander_flag_rally)
+                        game.begin_commander_flag_rally();
+                }
+
+                background: Rectangle {
+                    color: parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
+                    radius: 6
+                    border.color: parent.enabled ? hs.bronze : hs.bronzeDeep
+                    border.width: 2
+                }
+
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        text: rallyButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: rallyButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }

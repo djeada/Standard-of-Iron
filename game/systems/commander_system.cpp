@@ -6,6 +6,7 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "command_service.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 
@@ -179,6 +180,12 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         apply_commander_death_shock(
             world, commander_entity, *commander, *unit, *transform);
       }
+      // Cancel any in-progress flag rally if the commander dies.
+      if (commander->flag_rally_in_progress) {
+        commander->flag_rally_in_progress = false;
+        commander->flag_rally_at_position = false;
+        commander->flag_rally_animation_timer = 0.0F;
+      }
       continue;
     }
 
@@ -189,6 +196,59 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     if (commander->rally_requested) {
       commander->rally_requested = false;
       (void)try_trigger_rally(world, commander_entity, *commander, *unit, *transform);
+    }
+
+    // --- Flag rally processing ---
+    // Phase 1: commander is moving toward the rally position.
+    if (commander->flag_rally_in_progress && !commander->flag_rally_at_position) {
+      constexpr float k_arrival_threshold_sq = 2.25F; // 1.5 units
+      const float dx = transform->position.x - commander->flag_rally_pending_x;
+      const float dz = transform->position.z - commander->flag_rally_pending_z;
+      if ((dx * dx + dz * dz) <= k_arrival_threshold_sq) {
+        commander->flag_rally_at_position = true;
+        commander->flag_rally_animation_timer = commander->flag_rally_cost;
+      }
+    }
+
+    // Phase 2: commander is at position, playing the flag placement animation.
+    if (commander->flag_rally_in_progress && commander->flag_rally_at_position) {
+      commander->flag_rally_animation_timer =
+          std::max(0.0F, commander->flag_rally_animation_timer - delta_time);
+      if (commander->flag_rally_animation_timer <= 0.0F) {
+        commander->flag_rally_flag_x = commander->flag_rally_pending_x;
+        commander->flag_rally_flag_z = commander->flag_rally_pending_z;
+        commander->flag_rally_flag_active = true;
+        commander->flag_rally_issue_commands = true;
+        commander->flag_rally_in_progress = false;
+        commander->flag_rally_at_position = false;
+      }
+    }
+
+    // Phase 3: flag just placed — issue move commands to all allied controllable units.
+    if (commander->flag_rally_issue_commands) {
+      commander->flag_rally_issue_commands = false;
+      const QVector3D rally_pos(commander->flag_rally_flag_x,
+                                0.0F,
+                                commander->flag_rally_flag_z);
+      CommandService::MoveOptions opts;
+      opts.kind = MoveOrderKind::FormationMove;
+      opts.group_move = true;
+      opts.retry_individual_on_group_failure = true;
+
+      for (auto* candidate :
+           world->get_entities_with<Engine::Core::UnitComponent>()) {
+        if (candidate == commander_entity) {
+          continue;
+        }
+        auto* candidate_unit =
+            candidate->get_component<Engine::Core::UnitComponent>();
+        if (candidate_unit == nullptr || candidate_unit->owner_id != unit->owner_id ||
+            candidate_unit->health <= 0 ||
+            !is_living_troop(candidate_unit)) {
+          continue;
+        }
+        CommandService::move_unit(*world, candidate->get_id(), rally_pos, opts);
+      }
     }
 
     const float aura_radius_sq = commander->aura_radius * commander->aura_radius;

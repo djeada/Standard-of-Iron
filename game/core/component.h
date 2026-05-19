@@ -543,6 +543,19 @@ public:
   float posture_max{100.0F};
   float punish_window_remaining{0.0F};
   bool close_camera_mode{false};
+
+  // Flag rally: commander moves to a chosen position, plants a flag, then all
+  // allied units receive a move command to converge on that position.
+  float flag_rally_cost{3.0F};            // seconds to complete the flag placement
+  float flag_rally_pending_x{0.0F};       // target world X for flag placement
+  float flag_rally_pending_z{0.0F};       // target world Z for flag placement
+  float flag_rally_animation_timer{0.0F}; // counts down from flag_rally_cost
+  bool flag_rally_in_progress{false};     // commander is moving / animating
+  bool flag_rally_at_position{false};     // commander has arrived, animating
+  float flag_rally_flag_x{0.0F};          // world X of the placed flag
+  float flag_rally_flag_z{0.0F};          // world Z of the placed flag
+  bool flag_rally_flag_active{false};     // a rally flag is currently placed
+  bool flag_rally_issue_commands{false};  // system should issue move commands to all allied units
 };
 
 class CommanderGuardComponent : public Component {

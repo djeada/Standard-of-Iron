@@ -64,7 +64,8 @@ void InputCommandHandler::on_right_click(qreal sx,
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
       m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Deliver) {
+      m_cursor_manager->mode() == CursorMode::Deliver ||
+      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return;
   }
@@ -111,7 +112,8 @@ void InputCommandHandler::on_right_double_click(qreal sx,
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
       m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Deliver) {
+      m_cursor_manager->mode() == CursorMode::Deliver ||
+      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return;
   }
@@ -154,7 +156,8 @@ auto InputCommandHandler::on_right_press(qreal sx,
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
       m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Deliver) {
+      m_cursor_manager->mode() == CursorMode::Deliver ||
+      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return true;
   }

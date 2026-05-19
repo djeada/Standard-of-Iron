@@ -237,8 +237,15 @@ Item {
             event.accepted = true;
             break;
         case Qt.Key_R:
-            game.camera_orbit_direction(1, shiftHeld);
-            event.accepted = true;
+            if (game.get_selected_units_mode_availability &&
+                game.get_selected_units_mode_availability().canRally &&
+                game.begin_commander_flag_rally) {
+                game.begin_commander_flag_rally();
+                event.accepted = true;
+            } else {
+                game.camera_orbit_direction(1, shiftHeld);
+                event.accepted = true;
+            }
             break;
         case Qt.Key_F:
             game.camera_orbit_direction(-1, shiftHeld);
@@ -444,6 +451,11 @@ Item {
                     if (game_view.cursor_mode === "place_building") {
                         if (typeof game !== 'undefined' && game.place_building_at_screen)
                             game.place_building_at_screen(mouse.x, mouse.y);
+                        return;
+                    }
+                    if (game_view.cursor_mode === "place_commander_rally") {
+                        if (typeof game !== 'undefined' && game.confirm_commander_flag_rally)
+                            game.confirm_commander_flag_rally(mouse.x, mouse.y);
                         return;
                     }
                     if (typeof game !== 'undefined' && game.is_placing_formation) {
@@ -756,6 +768,38 @@ Item {
                 ctx.lineTo(18, 11);
                 ctx.lineTo(18, 21);
                 ctx.closePath();
+                ctx.fill();
+            }
+            Component.onCompleted: requestPaint()
+        }
+
+        Canvas {
+            id: rallyPlacementCursor
+
+            visible: game_view.cursor_mode === "place_commander_rally"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                // Draw a gold flag icon to indicate rally placement.
+                ctx.strokeStyle = "#F4C430";
+                ctx.fillStyle = "#F4C430";
+                ctx.lineWidth = 2;
+                // Flag pole
+                ctx.beginPath();
+                ctx.moveTo(14, 6);
+                ctx.lineTo(14, 26);
+                ctx.stroke();
+                // Flag pennant
+                ctx.beginPath();
+                ctx.moveTo(14, 6);
+                ctx.lineTo(24, 10);
+                ctx.lineTo(14, 14);
+                ctx.closePath();
+                ctx.fill();
+                // Base circle
+                ctx.beginPath();
+                ctx.arc(14, 26, 3, 0, Math.PI * 2);
                 ctx.fill();
             }
             Component.onCompleted: requestPaint()

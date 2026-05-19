@@ -128,4 +128,41 @@ void render_patrol_flags(Renderer* renderer,
   }
 }
 
+void render_commander_rally_flags(Renderer* renderer,
+                                  ResourceManager* resources,
+                                  Engine::Core::World* world,
+                                  const std::optional<QVector3D>& preview_pos) {
+  if ((renderer == nullptr) || (resources == nullptr)) {
+    return;
+  }
+
+  // Draw the placement preview flag (shown while picking a rally position).
+  if (preview_pos.has_value()) {
+    auto flag = Geom::Flag::create(preview_pos->x(),
+                                   preview_pos->z(),
+                                   QVector3D(1.0F, 0.85F, 0.1F), // gold
+                                   QVector3D(0.35F, 0.25F, 0.15F),
+                                   1.6F);
+    draw_flag(renderer, resources, flag);
+  }
+
+  // Draw placed rally flags from all commander components.
+  if (world == nullptr) {
+    return;
+  }
+  for (auto* entity :
+       world->get_entities_with<Engine::Core::CommanderComponent>()) {
+    auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
+    if ((commander == nullptr) || !commander->flag_rally_flag_active) {
+      continue;
+    }
+    auto flag = Geom::Flag::create(commander->flag_rally_flag_x,
+                                   commander->flag_rally_flag_z,
+                                   QVector3D(1.0F, 0.85F, 0.1F), // gold
+                                   QVector3D(0.35F, 0.25F, 0.15F),
+                                   1.6F);
+    draw_flag(renderer, resources, flag);
+  }
+}
+
 } // namespace Render::GL
