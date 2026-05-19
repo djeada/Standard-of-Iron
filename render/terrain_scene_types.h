@@ -58,7 +58,8 @@ enum class ScatterSpeciesId {
   Ruins,
   DeadTree,
   Boulder,
-  IronOre
+  IronOre,
+  MagicShrine
 };
 
 enum class ScatterVisibilityMode {

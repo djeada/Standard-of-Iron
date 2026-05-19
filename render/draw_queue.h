@@ -88,7 +88,8 @@ struct TerrainScatterCmd {
     WeaponRack,
     Ruins,
     DeadTree,
-    IronOre
+    IronOre,
+    MagicShrine
   };
 
   Species species = Species::Grass;
@@ -108,6 +109,7 @@ struct TerrainScatterCmd {
   RuinsBatchParams ruins{};
   DeadTreeBatchParams dead_tree{};
   IronOreBatchParams iron_ore{};
+  MagicShrineBatchParams magic_shrine{};
 
   CommandPriority priority{CommandPriority::Low};
 };
