@@ -1,6 +1,7 @@
 #include "mission_commander_setup.h"
 
 #include <algorithm>
+#include <limits>
 
 #include "game/systems/nation_id.h"
 #include "game/units/commander_catalog.h"

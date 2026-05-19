@@ -12,6 +12,7 @@
 #include <limits>
 #include <mutex>
 #include <numbers>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -411,6 +412,19 @@ public:
       pose.style = m_action->melee_attack_style;
     }
     return pose;
+  }
+
+  [[nodiscard]] auto flag_rally_phase() const -> std::optional<float> {
+    if (m_commander == nullptr || !m_commander->is_flag_rally_planting()) {
+      return std::nullopt;
+    }
+    if (m_commander->flag_rally_cost <= 0.0F) {
+      return 1.0F;
+    }
+    return std::clamp(1.0F - (m_commander->flag_rally_animation_timer /
+                              m_commander->flag_rally_cost),
+                      0.0F,
+                      1.0F);
   }
 
 private:
@@ -1049,6 +1063,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     if (commander_jump.active) {
       anim_ctx.ambient_idle_type = AmbientIdleType::Jump;
       anim_ctx.ambient_idle_phase = commander_jump.phase;
+    } else if (auto const rally_phase = preparation_mode.flag_rally_phase();
+               rally_phase.has_value()) {
+      anim_ctx.ambient_idle_type = AmbientIdleType::PlantFlag;
+      anim_ctx.ambient_idle_phase = *rally_phase;
     } else if (!is_mounted_spawn) {
       bool const is_ambient_idle_eligible =
           !soldier_has_locomotion && !soldier_anim.is_attacking &&

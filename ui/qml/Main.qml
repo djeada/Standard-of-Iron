@@ -86,7 +86,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 11
-        visible: game_started && !mainWindow.menu_visible && typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode === "rpg" && !mapSelect.visible && !campaign_screen.visible && !save_game_panel.visible && !load_game_panel.visible && !settingsPanel.visible && !objectivesPanel.visible && !error_dialog.visible
+        visible: game_started && !mainWindow.menu_visible && typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode === "rpg" && game.cursor_mode !== "place_commander_rally" && !mapSelect.visible && !campaign_screen.visible && !save_game_panel.visible && !load_game_panel.visible && !settingsPanel.visible && !objectivesPanel.visible && !error_dialog.visible
         enabled: visible
         acceptedButtons: Qt.NoButton
         hoverEnabled: true

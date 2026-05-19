@@ -503,6 +503,38 @@ class CommanderComponent : public Component {
 public:
   CommanderComponent() = default;
 
+  void begin_flag_rally(float target_x, float target_z, bool already_at_position) noexcept {
+    flag_rally_pending_x = target_x;
+    flag_rally_pending_z = target_z;
+    flag_rally_animation_timer = already_at_position ? flag_rally_cost : 0.0F;
+    flag_rally_in_progress = true;
+    flag_rally_at_position = already_at_position;
+    flag_rally_flag_active = false;
+    flag_rally_issue_commands = false;
+  }
+
+  void cancel_flag_rally() noexcept {
+    flag_rally_animation_timer = 0.0F;
+    flag_rally_in_progress = false;
+    flag_rally_at_position = false;
+    flag_rally_flag_active = false;
+    flag_rally_issue_commands = false;
+  }
+
+  void complete_flag_rally() noexcept {
+    flag_rally_flag_x = flag_rally_pending_x;
+    flag_rally_flag_z = flag_rally_pending_z;
+    flag_rally_flag_active = true;
+    flag_rally_issue_commands = true;
+    flag_rally_animation_timer = 0.0F;
+    flag_rally_in_progress = false;
+    flag_rally_at_position = false;
+  }
+
+  [[nodiscard]] auto is_flag_rally_planting() const noexcept -> bool {
+    return flag_rally_in_progress && flag_rally_at_position;
+  }
+
   std::string commander_id;
   std::string display_name;
   std::string strategic_identity;
@@ -543,6 +575,19 @@ public:
   float posture_max{100.0F};
   float punish_window_remaining{0.0F};
   bool close_camera_mode{false};
+
+  // Flag rally: commander moves to a chosen position, plants a flag, then all
+  // allied units receive a move command to converge on that position.
+  float flag_rally_cost{3.0F};            // seconds to complete the flag placement
+  float flag_rally_pending_x{0.0F};       // target world X for flag placement
+  float flag_rally_pending_z{0.0F};       // target world Z for flag placement
+  float flag_rally_animation_timer{0.0F}; // counts down from flag_rally_cost
+  bool flag_rally_in_progress{false};     // commander is moving / animating
+  bool flag_rally_at_position{false};     // commander has arrived, animating
+  float flag_rally_flag_x{0.0F};          // world X of the placed flag
+  float flag_rally_flag_z{0.0F};          // world Z of the placed flag
+  bool flag_rally_flag_active{false};     // a rally flag is currently placed
+  bool flag_rally_issue_commands{false};  // system should issue move commands to all allied units
 };
 
 class CommanderGuardComponent : public Component {

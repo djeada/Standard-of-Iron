@@ -222,6 +222,14 @@ public:
   Q_INVOKABLE void commander_secondary_action_down();
   Q_INVOKABLE void commander_secondary_action_up();
   Q_INVOKABLE void commander_trigger_rally();
+  Q_INVOKABLE void begin_commander_flag_rally();
+  Q_INVOKABLE void confirm_commander_flag_rally(qreal sx, qreal sy);
+  Q_INVOKABLE void cancel_commander_flag_rally();
+  [[nodiscard]] bool is_placing_commander_rally() const;
+  [[nodiscard]] bool has_commander_rally_preview() const;
+  [[nodiscard]] QVector3D get_commander_rally_preview() const;
+  [[nodiscard]] bool has_commander_rally_flag() const;
+  [[nodiscard]] QVector3D get_commander_rally_flag_position() const;
   Q_INVOKABLE void commander_dodge();
   Q_INVOKABLE void commander_jump();
   Q_INVOKABLE void commander_cycle_lock_on();
@@ -507,6 +515,8 @@ private:
   void render_game_effects();
   void update_loading_overlay();
   void update_cursor_position();
+  void restore_controlled_commander_direct_control_if_ready();
+  void seed_commander_rally_preview_from_view_center();
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -597,6 +607,7 @@ private:
   float m_rpg_hit_stop_timer{0.0F};
   EntityCache m_entity_cache;
   RuntimeFrameOrchestrator m_frame_orchestrator;
+  std::optional<QVector3D> m_commander_rally_preview_pos;
 
 signals:
   void selected_units_changed();

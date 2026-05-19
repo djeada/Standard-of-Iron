@@ -11,12 +11,10 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
-#include "game/game_config.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/command_service.h"
-#include "game/systems/formation_planner.h"
 #include "game/systems/order_service.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
@@ -29,55 +27,7 @@ inline void reset_movement(Engine::Core::Entity* entity) {
 }
 
 inline auto snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D {
-  QVector3D snapped = world_position;
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  snapped.setY(terrain_service.resolve_surface_world_y(
-      snapped.x(), snapped.z(), 0.0F, snapped.y()));
-
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
-  if (pathfinder == nullptr && !terrain_service.is_initialized()) {
-    return snapped;
-  }
-
-  Game::Systems::Point const grid =
-      Game::Systems::CommandService::world_to_grid(snapped.x(), snapped.z());
-  auto const is_walkable = [&](int x, int z) {
-    if (terrain_service.is_initialized()) {
-      return terrain_service.is_walkable(x, z);
-    }
-    return pathfinder != nullptr && pathfinder->is_walkable(x, z);
-  };
-  if (is_walkable(grid.x, grid.y)) {
-    return snapped;
-  }
-
-  Game::Systems::Point nearest = grid;
-  bool found = false;
-  for (int radius = 1; radius <= 24 && !found; ++radius) {
-    for (int dz = -radius; dz <= radius && !found; ++dz) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dz) != radius) {
-          continue;
-        }
-        int const check_x = grid.x + dx;
-        int const check_z = grid.y + dz;
-        if (!is_walkable(check_x, check_z)) {
-          continue;
-        }
-        nearest = {check_x, check_z};
-        found = true;
-        break;
-      }
-    }
-  }
-
-  QVector3D const nearest_world =
-      Game::Systems::CommandService::grid_to_world(found ? nearest : grid);
-  snapped.setX(nearest_world.x());
-  snapped.setZ(nearest_world.z());
-  snapped.setY(terrain_service.resolve_surface_world_y(
-      snapped.x(), snapped.z(), 0.0F, snapped.y()));
-  return snapped;
+  return Game::Systems::CommandService::snap_to_walkable_ground(world_position);
 }
 
 inline void clear_civilian_delivery_command(Engine::Core::Entity* entity) {
@@ -337,45 +287,8 @@ issue_move_or_attack_command(Engine::Core::World* world,
           QPointF(sx, sy), *camera, viewport_width, viewport_height, hit)) {
     return;
   }
-  hit = snap_to_walkable_ground(hit);
-
-  auto formation_result = Game::Systems::FormationPlanner::get_formation_with_facing(
-      *world,
-      selected,
-      hit,
-      Game::GameConfig::instance().gameplay().formation_spacing_default);
-
-  for (const auto selected_id : selected) {
-    clear_civilian_delivery_command(world->get_entity(selected_id));
-    clear_patrol_command(world->get_entity(selected_id));
-  }
-
-  for (size_t i = 0; i < selected.size(); ++i) {
-    auto* entity = world->get_entity(selected[i]);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if ((formation_mode == nullptr) || !formation_mode->active) {
-      continue;
-    }
-
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if ((transform != nullptr) && (i < formation_result.facing_angles.size())) {
-      transform->desired_yaw = formation_result.facing_angles[i];
-      transform->has_desired_yaw = true;
-    }
-  }
-
-  Game::Systems::CommandService::MoveOptions opts;
-  opts.kind = Game::Systems::MoveOrderKind::FormationMove;
-  opts.group_move = selected.size() > 1;
-  opts.retry_individual_on_group_failure = selected.size() > 1;
-  opts.preserve_formation_mode = formation_result.used_tactical_formation;
-  Game::Systems::CommandService::move_units(
-      *world, selected, formation_result.positions, opts);
+  auto const plan = Game::Systems::CommandService::plan_ground_move(*world, selected, hit);
+  Game::Systems::CommandService::issue_ground_move(*world, selected, plan);
 }
 
 } // namespace App::Utils
