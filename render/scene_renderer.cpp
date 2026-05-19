@@ -2390,10 +2390,19 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     QMatrix4x4 model_matrix;
     model_matrix.translate(preview_pos);
 
+    float preview_distance_sq = 0.0F;
+    if (m_camera != nullptr) {
+      QVector3D const cam_pos = m_camera->get_position();
+      float const dx = preview_pos.x() - cam_pos.x();
+      float const dz = preview_pos.z() - cam_pos.z();
+      preview_distance_sq = dx * dx + dz * dz;
+    }
+
     DrawContext ctx{resources(), builder, world, model_matrix};
     ctx.selected = false;
     ctx.hovered = false;
     ctx.animation_time = m_accumulated_time;
+    ctx.distance_sq = preview_distance_sq;
     ctx.renderer_id = renderer_key;
     ctx.renderer_handle = renderer_handle;
     ctx.backend = m_gl_backend;
