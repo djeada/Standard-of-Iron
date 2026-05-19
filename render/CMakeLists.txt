@@ -123,6 +123,9 @@ add_library(render_gl STATIC
     entity/home_renderer.cpp
     entity/nations/roman/home_renderer.cpp
     entity/nations/carthage/home_renderer.cpp
+    entity/wall_renderer.cpp
+    entity/nations/roman/wall_renderer.cpp
+    entity/nations/carthage/wall_renderer.cpp
     entity/catapult_renderer.cpp
     entity/nations/roman/catapult_renderer.cpp
     entity/nations/carthage/catapult_renderer.cpp

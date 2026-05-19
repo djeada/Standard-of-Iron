@@ -17,11 +17,13 @@ namespace {
 
 constexpr const char* BUILDING_TYPE_HOME = "home";
 constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
+constexpr const char* BUILDING_TYPE_WALL_SEGMENT = "wall_segment";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
 constexpr const char* BUILDING_TYPE_CATAPULT = "catapult";
 
 constexpr int MAX_HOMES = 20;
 constexpr int MAX_DEFENSE_TOWERS = 10;
+constexpr int MAX_WALL_SEGMENTS = 12;
 constexpr int MAX_BARRACKS = 6;
 constexpr int MAX_CATAPULTS = 5;
 
@@ -175,6 +177,8 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   const int target_barracks = std::clamp(targets.barracks_count, 1, MAX_BARRACKS);
   const int target_towers =
       std::clamp(targets.defense_tower_count, 0, MAX_DEFENSE_TOWERS);
+  const int target_walls =
+      std::clamp(targets.wall_segment_count, 0, MAX_WALL_SEGMENTS);
   const int target_catapults = std::clamp(targets.catapult_count, 0, MAX_CATAPULTS);
 
   const char* building_to_construct = nullptr;
@@ -216,6 +220,9 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
                    {BUILDING_TYPE_DEFENSE_TOWER,
                     context.defense_tower_count,
                     target_towers},
+                   {BUILDING_TYPE_WALL_SEGMENT,
+                    context.wall_segment_count,
+                    target_walls},
                    {BUILDING_TYPE_HOME, context.home_count, target_homes},
                    {BUILDING_TYPE_CATAPULT, catapult_count, target_catapults},
                })) {
@@ -285,6 +292,9 @@ auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
          context.defense_tower_count <
              std::clamp(
                  context.macro_targets.defense_tower_count, 0, MAX_DEFENSE_TOWERS) ||
+         context.wall_segment_count <
+             std::clamp(
+                 context.macro_targets.wall_segment_count, 0, MAX_WALL_SEGMENTS) ||
          catapult_count <
              std::clamp(context.macro_targets.catapult_count, 0, MAX_CATAPULTS);
 }

@@ -5,7 +5,11 @@
 #include <QVariantMap>
 #include <QVector3D>
 
+#include <cstdint>
+#include <string>
 #include <vector>
+
+#include "game/systems/nation_id.h"
 
 namespace Engine::Core {
 class World;
@@ -48,7 +52,20 @@ public:
   [[nodiscard]] bool construction_preview_valid() const {
     return m_construction_preview_valid;
   }
+  [[nodiscard]] int construction_preview_segment_count() const {
+    return m_construction_preview_segment_count;
+  }
+  [[nodiscard]] int construction_preview_valid_segment_count() const {
+    return m_construction_preview_valid_segment_count;
+  }
+  [[nodiscard]] int construction_preview_total_cost() const {
+    return m_construction_preview_total_cost;
+  }
   void on_construction_mouse_move(qreal sx, qreal sy, const ViewportState& viewport);
+  void
+  on_construction_pointer_pressed(qreal sx, qreal sy, const ViewportState& viewport);
+  void
+  on_construction_pointer_released(qreal sx, qreal sy, const ViewportState& viewport);
   void on_construction_confirm();
   void on_construction_cancel();
   void start_builder_construction(const QString& item_type);
@@ -68,14 +85,36 @@ public:
 signals:
   void placing_construction_changed();
   void construction_preview_valid_changed();
+  void construction_preview_summary_changed();
   void construction_placement_rejected(const QString& reason);
 
 private:
+  struct WallPlacementSegment {
+    int grid_x{0};
+    int grid_z{0};
+    QVector3D world_position;
+    bool valid{false};
+    std::string failure_reason;
+    std::uint8_t connection_mask{0};
+    float rotation_y{0.0F};
+  };
+
   std::vector<Engine::Core::EntityID> collect_available_builders();
   QVector3D calculate_builder_center_position(
       const std::vector<Engine::Core::EntityID>& builder_ids);
   static float get_construction_build_time(const std::string& item_type);
   void set_construction_preview_valid(bool valid);
+  void clear_construction_preview_summary();
+  void set_construction_preview_summary(int segment_count,
+                                        int valid_segment_count,
+                                        int total_cost);
+  void clear_wall_preview_entities();
+  void rebuild_wall_preview_entities();
+  void rebuild_wall_preview_plan(const QVector3D& current_world_position);
+  void confirm_wall_construction_plan();
+  [[nodiscard]] auto pending_construction_owner_id() const -> int;
+  [[nodiscard]] auto pending_construction_nation_id() const -> Game::Systems::NationID;
+  [[nodiscard]] auto is_wall_construction_mode() const -> bool;
 
   Engine::Core::World* m_world;
   Game::Systems::PickingService* m_picking_service;
@@ -87,4 +126,13 @@ private:
   QVector3D m_construction_placement_position;
   bool m_is_placing_construction = false;
   bool m_construction_preview_valid = false;
+  int m_construction_preview_segment_count = 0;
+  int m_construction_preview_valid_segment_count = 0;
+  int m_construction_preview_total_cost = 0;
+
+  bool m_wall_drag_active = false;
+  bool m_wall_drag_anchor_set = false;
+  QVector3D m_wall_drag_anchor_world;
+  std::vector<WallPlacementSegment> m_wall_preview_segments;
+  std::vector<Engine::Core::EntityID> m_wall_preview_entity_ids;
 };

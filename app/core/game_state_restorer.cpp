@@ -15,6 +15,7 @@
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/wall_network_service.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "minimap_manager.h"
@@ -135,6 +136,8 @@ void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) 
                                transform->position.z,
                                unit->owner_id);
   }
+
+  Game::Systems::WallNetworkService::refresh_world(*world);
 }
 
 void GameStateRestorer::restore_environment_from_metadata(

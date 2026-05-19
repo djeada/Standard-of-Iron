@@ -452,8 +452,8 @@ Item {
                         return;
                     }
                     if (typeof game !== 'undefined' && game.is_placing_construction) {
-                        if (game.on_construction_confirm)
-                            game.on_construction_confirm();
+                        if (game.on_construction_pointer_pressed)
+                            game.on_construction_pointer_pressed(mouse.x, mouse.y);
                         return;
                     }
                     is_selecting = true;
@@ -492,6 +492,9 @@ Item {
                         if (typeof game !== 'undefined' && game.on_click_select)
                             game.on_click_select(mouse.x, mouse.y, false);
                     }
+                } else if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.is_placing_construction) {
+                    if (game.on_construction_pointer_released)
+                        game.on_construction_pointer_released(mouse.x, mouse.y);
                 }
                 if (mouse.button === Qt.RightButton) {
                     if (typeof game !== 'undefined' && game.on_right_release)
@@ -811,6 +814,30 @@ Item {
                 }
             }
             Component.onCompleted: requestPaint()
+        }
+    }
+
+    Rectangle {
+        visible: game_view.is_placing_construction && typeof game !== 'undefined' && game.construction_preview_segment_count > 0
+        z: 999999
+        radius: 6
+        color: "#B8141414"
+        border.color: "#5FFFFFFF"
+        border.width: 1
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.leftMargin: 18
+        anchors.topMargin: 18
+        width: previewSummaryText.implicitWidth + 18
+        height: previewSummaryText.implicitHeight + 12
+
+        Text {
+            id: previewSummaryText
+
+            anchors.centerIn: parent
+            color: Theme.textMain
+            text: game.construction_preview_valid_segment_count + "/" + game.construction_preview_segment_count + " walls  •  " + game.construction_preview_total_cost + " wood"
+            font.pixelSize: 14
         }
     }
 

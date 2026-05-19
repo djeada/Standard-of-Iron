@@ -216,6 +216,7 @@ void submit_building_instance(ISubmitter& out,
     instance.palette = palette;
     instance.default_texture = default_texture;
     instance.lod = lod;
+    instance.alpha_multiplier = ctx.alpha_multiplier;
     submit_render_instance(damage_out, instance);
     return;
   }
@@ -249,6 +250,7 @@ void submit_building_instance(ISubmitter& out,
     cached.instance.lod = lod;
     cached.instance.set_palette(palette);
   }
+  cached.instance.alpha_multiplier = ctx.alpha_multiplier;
 
   submit_render_instance(damage_out, cached.instance.render_instance());
 }
