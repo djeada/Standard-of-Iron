@@ -906,7 +906,7 @@ RowLayout {
                 text: qsTr("Rally")
                 focusPolicy: Qt.NoFocus
                 visible: mode_available
-                enabled: bottomRoot.has_movable_units && mode_available
+                enabled: mode_available
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Commander plants a rally flag at a chosen position.\nAll troops will march to the flag once it is placed.")
                 ToolTip.delay: 500

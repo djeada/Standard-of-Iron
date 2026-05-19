@@ -225,15 +225,16 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     // Phase 3: flag just placed — issue move commands to all allied controllable units.
+    // This is equivalent to the player selecting all troops and right-clicking the
+    // rally position, so use PlayerMove (individual pathfinding to the target).
     if (commander->flag_rally_issue_commands) {
       commander->flag_rally_issue_commands = false;
       const QVector3D rally_pos(commander->flag_rally_flag_x,
                                 0.0F,
                                 commander->flag_rally_flag_z);
       CommandService::MoveOptions opts;
-      opts.kind = MoveOrderKind::FormationMove;
-      opts.group_move = true;
-      opts.retry_individual_on_group_failure = true;
+      opts.kind = MoveOrderKind::PlayerMove;
+      opts.group_move = false;
 
       for (auto* candidate :
            world->get_entities_with<Engine::Core::UnitComponent>()) {
@@ -243,7 +244,6 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         auto* candidate_unit =
             candidate->get_component<Engine::Core::UnitComponent>();
         if (candidate_unit == nullptr || candidate_unit->owner_id != unit->owner_id ||
-            candidate_unit->health <= 0 ||
             !is_living_troop(candidate_unit)) {
           continue;
         }

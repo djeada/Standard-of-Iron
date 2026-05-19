@@ -1372,8 +1372,6 @@ void GameEngine::commander_trigger_rally() {
   commander_data->flag_rally_in_progress = true;
   // Commander is already at the position, so skip the move phase.
   commander_data->flag_rally_at_position = true;
-  // Also keep the old morale rally request for compatibility.
-  commander_data->rally_requested = true;
 }
 
 void GameEngine::begin_commander_flag_rally() {

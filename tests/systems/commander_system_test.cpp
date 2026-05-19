@@ -447,14 +447,17 @@ TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
 
   Game::Systems::CommanderSystem system;
 
-  // First tick: commander is within arrival threshold → starts animation.
+  // First tick (0.1s): commander is within arrival threshold → arrives and
+  // immediately starts the animation timer (Phase 1 and Phase 2 both run in
+  // the same tick, so the timer is set to flag_rally_cost then decremented
+  // by delta_time in the same update).
   system.update(&world, 0.1F);
   EXPECT_TRUE(commander_data->flag_rally_at_position);
-  EXPECT_NEAR(commander_data->flag_rally_animation_timer, 2.0F, 0.01F);
+  EXPECT_NEAR(commander_data->flag_rally_animation_timer, 1.9F, 0.01F);
   EXPECT_FALSE(commander_data->flag_rally_flag_active);
 
-  // Advance past the full animation cost.
-  system.update(&world, 2.1F);
+  // Advance past the full animation cost (remaining ~1.9s left).
+  system.update(&world, 2.0F);
   EXPECT_FALSE(commander_data->flag_rally_in_progress);
   EXPECT_FALSE(commander_data->flag_rally_at_position);
   EXPECT_TRUE(commander_data->flag_rally_flag_active);

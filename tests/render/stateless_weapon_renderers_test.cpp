@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <cstring>
 #include <gtest/gtest.h>
 #include <limits>
 #include <utility>

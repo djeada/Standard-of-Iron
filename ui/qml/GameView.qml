@@ -173,7 +173,11 @@ Item {
         var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
         switch (event.key) {
         case Qt.Key_Escape:
-            if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
+            if (game_view.cursor_mode === "place_commander_rally") {
+                if (typeof game !== 'undefined' && game.cancel_commander_flag_rally)
+                    game.cancel_commander_flag_rally();
+                event.accepted = true;
+            } else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
                 mainWindow.menu_visible = true;
                 event.accepted = true;
             }
