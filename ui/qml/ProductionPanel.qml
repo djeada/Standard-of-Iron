@@ -1549,6 +1549,8 @@ Rectangle {
                                 label = qsTr("Collect Stone");
                             else if (label === "collect_iron_ore")
                                 label = qsTr("Collect Iron Ore");
+                            else if (label === "wall_segment")
+                                label = qsTr("Wall Segment");
                             return qsTr("Building: %1").arg(label);
                         }
                         color: builderProductionContent.builder_prod.in_progress ? "#7F9A5F" : "#8D7146"
@@ -2097,6 +2099,91 @@ Rectangle {
                                 anchors.fill: parent
                                 color: "#F4E7C8"
                                 opacity: builderCollectIronOreMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on scale  {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
+                            property bool is_hovered: builderWallSegmentMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
+                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
+                            border.width: is_hovered && is_enabled ? 2 : 1
+                            opacity: is_enabled ? 1 : 0.5
+                            scale: is_hovered && is_enabled ? 1.025 : 1
+
+                            Image {
+                                id: builderWallSegmentIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unit_icon_source("wall_segment")
+                                visible: source !== ""
+                                opacity: parent.is_enabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !builderWallSegmentIcon.visible
+                                text: "🪵"
+                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
+                                font.pointSize: 34
+                                opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                text: qsTr("Wall Segment")
+                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
+                                font.pointSize: 8
+                                font.bold: true
+                            }
+
+                            MouseArea {
+                                id: builderWallSegmentMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.is_enabled)
+                                        productionPanel.builder_construction("wall_segment");
+                                }
+                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Wall Segment\nWooden defensive wall\nBlocks enemy movement\nBuild time: 8s") : qsTr("Already building...")
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#F4E7C8"
+                                opacity: builderWallSegmentMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 

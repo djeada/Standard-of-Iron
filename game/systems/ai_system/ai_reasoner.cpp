@@ -250,6 +250,7 @@ auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx, int catapult
   targets.builder_count = ctx.strategy_config.target_builder_count;
   targets.barracks_count = ctx.strategy_config.desired_barracks_count;
   targets.defense_tower_count = ctx.strategy_config.desired_defense_tower_count;
+  targets.wall_segment_count = ctx.strategy_config.desired_wall_segment_count;
   targets.catapult_count = ctx.strategy_config.desired_catapult_count;
   targets.assembly_size = std::max(ctx.strategy_config.desired_assembly_size,
                                    proactive_attack_size(ctx.strategy_config));
@@ -594,6 +595,7 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.average_enemy_distance = 0.0F;
   ctx.home_count = 0;
   ctx.defense_tower_count = 0;
+  ctx.wall_segment_count = 0;
   ctx.barracks_count = 0;
   ctx.assembled_unit_count = 0;
   ctx.effective_reserve_units = 0;
@@ -626,6 +628,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
         ctx.home_count++;
       } else if (entity.spawn_type == Game::Units::SpawnType::DefenseTower) {
         ctx.defense_tower_count++;
+      } else if (entity.spawn_type == Game::Units::SpawnType::WallSegment) {
+        ctx.wall_segment_count++;
       } else if (entity.spawn_type == Game::Units::SpawnType::Barracks) {
         ctx.barracks_count++;
       }

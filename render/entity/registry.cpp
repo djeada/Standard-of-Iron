@@ -10,6 +10,7 @@
 #include "defense_tower_renderer.h"
 #include "elephant_renderer.h"
 #include "home_renderer.h"
+#include "wall_renderer.h"
 #include "nations/carthage/archer_renderer.h"
 #include "nations/carthage/ballista_renderer.h"
 #include "nations/carthage/builder_renderer.h"
@@ -121,6 +122,8 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   register_defense_tower_renderer(registry);
 
   register_home_renderer(registry);
+
+  register_wall_renderer(registry);
 }
 
 } // namespace Render::GL

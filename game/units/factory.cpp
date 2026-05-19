@@ -19,6 +19,7 @@
 #include "swordsman.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
+#include "wall_segment.h"
 
 namespace Game::Units {
 namespace {
@@ -130,6 +131,11 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::Home,
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return Home::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::WallSegment,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return WallSegment::create(world, params);
                        });
 }
 
