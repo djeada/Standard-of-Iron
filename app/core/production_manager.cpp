@@ -863,6 +863,7 @@ auto ProductionManager::get_construction_build_time(const std::string& item_type
   constexpr float CATAPULT_BUILD_TIME = 15.0F;
   constexpr float BALLISTA_BUILD_TIME = 12.0F;
   constexpr float DEFENSE_TOWER_BUILD_TIME = 20.0F;
+  constexpr float WALL_SEGMENT_BUILD_TIME = 8.0F;
 
   if (item_type == "catapult") {
     return CATAPULT_BUILD_TIME;
@@ -872,6 +873,9 @@ auto ProductionManager::get_construction_build_time(const std::string& item_type
   }
   if (item_type == "defense_tower") {
     return DEFENSE_TOWER_BUILD_TIME;
+  }
+  if (item_type == "wall_segment") {
+    return WALL_SEGMENT_BUILD_TIME;
   }
   if (item_type == k_cut_tree_item_type) {
     return k_cut_tree_build_time;

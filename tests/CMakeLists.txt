@@ -12,6 +12,7 @@ add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/app/core/mission_definition_view.cpp
     ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
     ${CMAKE_SOURCE_DIR}/app/core/runtime_frame_orchestrator.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/ambient_state_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/models/cursor_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/models/hover_tracker.cpp
     ${CMAKE_SOURCE_DIR}/app/controllers/action_vfx.cpp

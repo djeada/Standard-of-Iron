@@ -17,6 +17,7 @@
 #include "game/systems/healing_system.h"
 #include "game/systems/home_system.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/wall_system.h"
 #include "game/systems/patrol_system.h"
 #include "game/systems/production_system.h"
 #include "game/systems/projectile_system.h"
@@ -76,6 +77,7 @@ void RendererBootstrap::initialize_world_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<Game::Systems::AISystem>());
   world.add_system(std::make_unique<Game::Systems::ProductionSystem>());
   world.add_system(std::make_unique<Game::Systems::HomeSystem>());
+  world.add_system(std::make_unique<Game::Systems::WallSystem>());
   world.add_system(std::make_unique<Game::Systems::CivilianDeliverySystem>());
   world.add_system(std::make_unique<Game::Systems::TerrainAlignmentSystem>());
   world.add_system(std::make_unique<Game::Systems::CleanupSystem>());

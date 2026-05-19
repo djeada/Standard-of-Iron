@@ -12,6 +12,8 @@ void clamp_style_targets(AIStrategyConfig& config) {
   config.desired_barracks_count = std::clamp(config.desired_barracks_count, 1, 6);
   config.desired_defense_tower_count =
       std::clamp(config.desired_defense_tower_count, 0, 10);
+  config.desired_wall_segment_count =
+      std::clamp(config.desired_wall_segment_count, 0, 12);
   config.desired_catapult_count = std::clamp(config.desired_catapult_count, 0, 5);
   config.desired_assembly_size = std::clamp(config.desired_assembly_size, 2, 12);
   config.reactive_attack_size = std::clamp(config.reactive_attack_size, 1, 12);
@@ -98,6 +100,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.base_home_target = 2;
     config.desired_barracks_count = 3;
     config.desired_defense_tower_count = 1;
+    config.desired_wall_segment_count = 0;
     config.desired_catapult_count = 1;
     config.desired_assembly_size = 4;
     config.reactive_attack_size = 2;
@@ -127,6 +130,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.base_home_target = 3;
     config.desired_barracks_count = 1;
     config.desired_defense_tower_count = 3;
+    config.desired_wall_segment_count = 3;
     config.desired_catapult_count = 1;
     config.desired_assembly_size = 6;
     config.reactive_attack_size = 3;
@@ -156,6 +160,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.base_home_target = 3;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 1;
+    config.desired_wall_segment_count = 0;
     config.desired_catapult_count = 0;
     config.desired_assembly_size = 5;
     config.reactive_attack_size = 2;
@@ -185,6 +190,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.base_home_target = 4;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 1;
+    config.desired_wall_segment_count = 1;
     config.desired_catapult_count = 1;
     config.desired_assembly_size = 7;
     config.reactive_attack_size = 3;
@@ -214,6 +220,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.base_home_target = 2;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 1;
+    config.desired_wall_segment_count = 0;
     config.desired_catapult_count = 0;
     config.desired_assembly_size = 3;
     config.reactive_attack_size = 1;
@@ -243,6 +250,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.base_home_target = 2;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 0;
+    config.desired_wall_segment_count = 0;
     config.desired_catapult_count = 0;
     config.desired_assembly_size = 3;
     config.reactive_attack_size = 1;
@@ -273,6 +281,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.base_home_target = 2;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 1;
+    config.desired_wall_segment_count = 1;
     config.desired_catapult_count = 1;
     config.desired_assembly_size = 5;
     config.reactive_attack_size = 2;
@@ -327,6 +336,7 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
   if (defense > 0.65F) {
     config.target_builder_count += 1;
     config.desired_defense_tower_count += 1;
+    config.desired_wall_segment_count += 1;
     config.desired_assembly_size += 1;
     config.assembly_radius += 1.5F;
     config.reactive_attack_size += 1;

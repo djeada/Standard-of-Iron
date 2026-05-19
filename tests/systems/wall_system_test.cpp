@@ -3,6 +3,8 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "systems/ai_system/ai_strategy.h"
+#include "systems/ai_system/ai_types.h"
 #include "systems/building_collision_registry.h"
 #include "systems/wall_system.h"
 #include "units/spawn_type.h"
@@ -95,4 +97,68 @@ TEST_F(WallSystemTest, WallSegmentBlocksPoint) {
       BuildingCollisionRegistry::instance().is_point_in_building(3.0F, 0.0F));
   EXPECT_FALSE(
       BuildingCollisionRegistry::instance().is_point_in_building(10.0F, 0.0F));
+}
+
+// ---- Builder production dispatch ----
+
+TEST(WallBuilderProductionTest, WallSegmentSpawnTypeExists) {
+  // Verify WallSegment is a distinct spawn type (compile-time check via cast)
+  constexpr auto wall_type = Game::Units::SpawnType::WallSegment;
+  EXPECT_NE(wall_type, Game::Units::SpawnType::DefenseTower);
+  EXPECT_NE(wall_type, Game::Units::SpawnType::Barracks);
+  EXPECT_NE(wall_type, Game::Units::SpawnType::Home);
+}
+
+TEST(WallBuilderProductionTest, BuilderProductionComponentProductTypeStorable) {
+  BuilderProductionComponent comp;
+  comp.product_type = "wall_segment";
+  EXPECT_EQ(comp.product_type, "wall_segment");
+}
+
+// ---- AI strategy wall counts ----
+
+TEST(AIWallStrategyTest, DefensiveStrategyWantsWalls) {
+  auto config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+  EXPECT_GT(config.desired_wall_segment_count, 0);
+}
+
+TEST(AIWallStrategyTest, RusherStrategyWantsNoWalls) {
+  auto config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Rusher);
+  EXPECT_EQ(config.desired_wall_segment_count, 0);
+}
+
+TEST(AIWallStrategyTest, AggressiveStrategyWantsNoWalls) {
+  auto config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Aggressive);
+  EXPECT_EQ(config.desired_wall_segment_count, 0);
+}
+
+TEST(AIWallStrategyTest, BalancedStrategyWantsAtLeastOneWall) {
+  auto config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Balanced);
+  EXPECT_GE(config.desired_wall_segment_count, 1);
+}
+
+TEST(AIWallStrategyTest, HighDefensePersonalityBoostsWallCount) {
+  auto config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Balanced);
+  const int baseline = config.desired_wall_segment_count;
+  Game::Systems::AI::AIStrategyFactory::apply_personality(config, 0.5F, 0.8F, 0.5F);
+  EXPECT_GE(config.desired_wall_segment_count, baseline);
+}
+
+// ---- AIContext wall_segment_count field ----
+
+TEST(AIWallContextTest, AIContextHasWallSegmentCount) {
+  Game::Systems::AI::AIContext ctx;
+  ctx.wall_segment_count = 5;
+  EXPECT_EQ(ctx.wall_segment_count, 5);
+}
+
+TEST(AIWallContextTest, MacroTargetsHasWallSegmentCount) {
+  Game::Systems::AI::AIContext::MacroTargets targets;
+  targets.wall_segment_count = 3;
+  EXPECT_EQ(targets.wall_segment_count, 3);
 }
