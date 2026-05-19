@@ -1071,7 +1071,8 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
       case TerrainScatterCmd::Species::WeaponRack:
       case TerrainScatterCmd::Species::Ruins:
       case TerrainScatterCmd::Species::DeadTree:
-      case TerrainScatterCmd::Species::IronOre: {
+      case TerrainScatterCmd::Species::IronOre:
+      case TerrainScatterCmd::Species::MagicShrine: {
         if (!m_vegetation_pipeline) {
           break;
         }
@@ -1126,6 +1127,13 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
           prop_uniforms = &m_vegetation_pipeline->m_iron_ore_uniforms;
           prop_light_dir = deco_cmd_.iron_ore.light_direction;
           break;
+        case TerrainScatterCmd::Species::MagicShrine:
+          prop_shader = m_vegetation_pipeline->magic_shrine_shader();
+          prop_vao = m_vegetation_pipeline->m_magic_shrine_vao;
+          prop_idx_count = m_vegetation_pipeline->m_magic_shrine_index_count;
+          prop_uniforms = &m_vegetation_pipeline->m_magic_shrine_uniforms;
+          prop_light_dir = deco_cmd_.magic_shrine.light_direction;
+          break;
         default:
           break;
         }
@@ -1167,7 +1175,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
         }
         if (prop_uniforms->magic_strength != Shader::InvalidUniform) {
           float const magic_strength =
-              deco_cmd_.species == TerrainScatterCmd::Species::IronOre ? 1.15F : 0.0F;
+              (deco_cmd_.species == TerrainScatterCmd::Species::IronOre ||
+               deco_cmd_.species == TerrainScatterCmd::Species::MagicShrine)
+                  ? 1.15F
+                  : 0.0F;
           prop_shader->set_uniform(prop_uniforms->magic_strength, magic_strength);
         }
 

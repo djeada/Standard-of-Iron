@@ -48,6 +48,7 @@ add_library(game_systems STATIC
     systems/pathfinding.cpp
     systems/spatial_grid.cpp
     systems/building_collision_registry.cpp
+    systems/wall_network_service.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp
     systems/projectile_system.cpp
@@ -126,6 +127,7 @@ add_library(game_systems STATIC
     units/barracks.cpp
     units/defense_tower.cpp
     units/home.cpp
+    units/wall_segment.cpp
     systems/defense_tower_system.cpp
     systems/home_system.cpp
 )

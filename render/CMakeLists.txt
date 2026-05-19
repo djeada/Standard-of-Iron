@@ -67,6 +67,7 @@ add_library(render_gl STATIC
     ground/dead_tree_renderer.cpp
     ground/boulder_renderer.cpp
     ground/iron_ore_renderer.cpp
+    ground/magic_shrine_renderer.cpp
     ground/rain_renderer.cpp
     entity/registry.cpp
     entity/nations/roman/archer_renderer.cpp
@@ -122,6 +123,9 @@ add_library(render_gl STATIC
     entity/home_renderer.cpp
     entity/nations/roman/home_renderer.cpp
     entity/nations/carthage/home_renderer.cpp
+    entity/wall_renderer.cpp
+    entity/nations/roman/wall_renderer.cpp
+    entity/nations/carthage/wall_renderer.cpp
     entity/catapult_renderer.cpp
     entity/nations/roman/catapult_renderer.cpp
     entity/nations/carthage/catapult_renderer.cpp

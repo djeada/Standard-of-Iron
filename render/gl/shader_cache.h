@@ -221,6 +221,9 @@ public:
     load(QStringLiteral("iron_ore_instanced"),
          resolve(shader_base + QStringLiteral("iron_ore_instanced.vert")),
          resolve(shader_base + QStringLiteral("iron_ore_instanced.frag")));
+    load(QStringLiteral("magic_shrine_instanced"),
+         resolve(shader_base + QStringLiteral("magic_shrine_instanced.vert")),
+         resolve(shader_base + QStringLiteral("magic_shrine_instanced.frag")));
   }
 
   void clear() {

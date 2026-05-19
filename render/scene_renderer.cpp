@@ -2390,10 +2390,19 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     QMatrix4x4 model_matrix;
     model_matrix.translate(preview_pos);
 
+    float preview_distance_sq = 0.0F;
+    if (m_camera != nullptr) {
+      QVector3D const cam_pos = m_camera->get_position();
+      float const dx = preview_pos.x() - cam_pos.x();
+      float const dz = preview_pos.z() - cam_pos.z();
+      preview_distance_sq = dx * dx + dz * dz;
+    }
+
     DrawContext ctx{resources(), builder, world, model_matrix};
     ctx.selected = false;
     ctx.hovered = false;
     ctx.animation_time = m_accumulated_time;
+    ctx.distance_sq = preview_distance_sq;
     ctx.renderer_id = renderer_key;
     ctx.renderer_handle = renderer_handle;
     ctx.backend = m_gl_backend;
@@ -2405,6 +2414,153 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     (*fn)(ctx, *this);
 
     m_alpha_override = prev_alpha;
+  }
+
+  auto render_preview_like_entity = [&](Engine::Core::Entity* entity,
+                                        float alpha_multiplier,
+                                        const QVector3D& marker_color,
+                                        float marker_alpha,
+                                        float progress) {
+    if (entity == nullptr) {
+      return;
+    }
+
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
+    if (transform == nullptr || renderable == nullptr) {
+      return;
+    }
+
+    const float preview_x = transform->position.x;
+    const float preview_z = transform->position.z;
+
+    int preview_owner = m_local_owner_id;
+    if (const auto* preview =
+            entity->get_component<Engine::Core::ConstructionPreviewComponent>()) {
+      preview_owner = preview->owner_id;
+    } else if (const auto* site =
+                   entity
+                       ->get_component<Engine::Core::WallConstructionSiteComponent>()) {
+      preview_owner = site->owner_id;
+    }
+
+    if (preview_owner != m_local_owner_id && visibility_enabled &&
+        !Game::Map::should_render_non_local_preview(
+            resolved_visibility_snapshot, preview_x, preview_z)) {
+      return;
+    }
+
+    if (m_camera != nullptr) {
+      QVector3D const pos(preview_x, transform->position.y, preview_z);
+      if (!m_camera->is_in_frustum(pos, 5.0F)) {
+        return;
+      }
+    }
+
+    std::string const renderer_key =
+        std::string(canonicalize_building_renderer_key(renderable->renderer_id));
+    const auto renderer_handle = m_entity_registry->get_handle(renderer_key);
+    auto const* fn = m_entity_registry->get(renderer_handle);
+    if (fn == nullptr) {
+      return;
+    }
+
+    QMatrix4x4 model_matrix;
+    model_matrix.translate(
+        transform->position.x, transform->position.y, transform->position.z);
+    model_matrix.rotate(transform->rotation.x, 1.0F, 0.0F, 0.0F);
+    model_matrix.rotate(transform->rotation.y, 0.0F, 1.0F, 0.0F);
+    model_matrix.rotate(transform->rotation.z, 0.0F, 0.0F, 1.0F);
+    model_matrix.scale(transform->scale.x, transform->scale.y, transform->scale.z);
+
+    float preview_distance_sq = 0.0F;
+    if (m_camera != nullptr) {
+      QVector3D const cam_pos = m_camera->get_position();
+      float const dx = transform->position.x - cam_pos.x();
+      float const dz = transform->position.z - cam_pos.z();
+      preview_distance_sq = dx * dx + dz * dz;
+    }
+
+    if (auto* quad = (resources() != nullptr) ? resources()->quad() : nullptr;
+        quad != nullptr) {
+      QMatrix4x4 marker_model;
+      marker_model.translate(
+          transform->position.x, transform->position.y + 0.03F, transform->position.z);
+      marker_model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+      marker_model.scale(1.15F, 1.15F, 1.0F);
+      mesh(quad,
+           marker_model,
+           marker_color,
+           (resources() != nullptr) ? resources()->white() : nullptr,
+           marker_alpha);
+    }
+
+    DrawContext ctx{resources(), entity, world, model_matrix};
+    ctx.selected = false;
+    ctx.hovered = false;
+    ctx.animation_time = m_accumulated_time;
+    ctx.distance_sq = preview_distance_sq;
+    ctx.renderer_id = renderer_key;
+    ctx.renderer_handle = renderer_handle;
+    ctx.backend = m_gl_backend;
+    ctx.camera = m_camera;
+    ctx.alpha_multiplier = alpha_multiplier;
+
+    (*fn)(ctx, *this);
+
+    if (progress > 0.0F) {
+      if (auto* quad = (resources() != nullptr) ? resources()->quad() : nullptr;
+          quad != nullptr) {
+        QMatrix4x4 bar_bg;
+        bar_bg.translate(transform->position.x,
+                         transform->position.y + 1.45F,
+                         transform->position.z);
+        bar_bg.scale(1.25F, 0.08F, 1.0F);
+        mesh(quad,
+             bar_bg,
+             QVector3D(0.08F, 0.08F, 0.08F),
+             (resources() != nullptr) ? resources()->white() : nullptr,
+             0.70F);
+
+        QMatrix4x4 bar_fill;
+        bar_fill.translate(transform->position.x - 0.625F + 0.625F * progress,
+                           transform->position.y + 1.46F,
+                           transform->position.z);
+        bar_fill.scale(1.25F * progress, 0.05F, 1.0F);
+        mesh(quad,
+             bar_fill,
+             QVector3D(0.90F, 0.72F, 0.24F),
+             (resources() != nullptr) ? resources()->white() : nullptr,
+             0.92F);
+      }
+    }
+  };
+
+  auto preview_entities =
+      world->get_entities_with<Engine::Core::ConstructionPreviewComponent>();
+  for (auto* entity : preview_entities) {
+    auto* preview = entity->get_component<Engine::Core::ConstructionPreviewComponent>();
+    if (preview == nullptr) {
+      continue;
+    }
+    render_preview_like_entity(entity,
+                               0.62F,
+                               preview->valid ? QVector3D(0.24F, 0.75F, 0.30F)
+                                              : QVector3D(0.82F, 0.24F, 0.24F),
+                               preview->valid ? 0.28F : 0.36F,
+                               0.0F);
+  }
+
+  auto site_entities =
+      world->get_entities_with<Engine::Core::WallConstructionSiteComponent>();
+  for (auto* entity : site_entities) {
+    auto* site = entity->get_component<Engine::Core::WallConstructionSiteComponent>();
+    if (site == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    render_preview_like_entity(
+        entity, 0.82F, QVector3D(0.78F, 0.60F, 0.20F), 0.22F, site->progress);
   }
 }
 

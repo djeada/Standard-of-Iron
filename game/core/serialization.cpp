@@ -466,10 +466,33 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     builder_obj["task_target_reserved"] = builder->task_target_reserved;
     builder_obj["at_construction_site"] = builder->at_construction_site;
     builder_obj["is_placement_preview"] = builder->is_placement_preview;
+    builder_obj["construction_site_entity_id"] =
+        static_cast<qint64>(builder->construction_site_entity_id);
+    QJsonArray queued_sites;
+    for (const auto site_id : builder->queued_construction_site_ids) {
+      queued_sites.append(static_cast<qint64>(site_id));
+    }
+    builder_obj["queued_construction_site_ids"] = queued_sites;
     builder_obj["bypass_movement_active"] = builder->bypass_movement_active;
     builder_obj["bypass_target_x"] = static_cast<double>(builder->bypass_target_x);
     builder_obj["bypass_target_z"] = static_cast<double>(builder->bypass_target_z);
     entity_obj["builder_production"] = builder_obj;
+  }
+
+  if (const auto* wall = entity->get_component<WallSegmentComponent>()) {
+    QJsonObject wall_obj;
+    wall_obj["grid_x"] = wall->grid_x;
+    wall_obj["grid_z"] = wall->grid_z;
+    entity_obj["wall_segment"] = wall_obj;
+  }
+
+  if (const auto* site = entity->get_component<WallConstructionSiteComponent>()) {
+    QJsonObject site_obj;
+    site_obj["owner_id"] = site->owner_id;
+    site_obj["nation_id"] = static_cast<int>(site->nation_id);
+    site_obj["build_time"] = static_cast<double>(site->build_time);
+    site_obj["progress"] = static_cast<double>(site->progress);
+    entity_obj["wall_construction_site"] = site_obj;
   }
 
   if (const auto* formation = entity->get_component<FormationModeComponent>()) {
@@ -1036,12 +1059,39 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     builder->task_target_reserved = builder_obj["task_target_reserved"].toBool(false);
     builder->at_construction_site = builder_obj["at_construction_site"].toBool(false);
     builder->is_placement_preview = builder_obj["is_placement_preview"].toBool(false);
+    builder->construction_site_entity_id = static_cast<EntityID>(
+        builder_obj["construction_site_entity_id"].toVariant().toULongLong());
+    if (builder_obj.contains("queued_construction_site_ids")) {
+      const auto queued_sites = builder_obj["queued_construction_site_ids"].toArray();
+      builder->queued_construction_site_ids.reserve(queued_sites.size());
+      for (const auto& value : queued_sites) {
+        builder->queued_construction_site_ids.push_back(
+            static_cast<EntityID>(value.toVariant().toULongLong()));
+      }
+    }
     builder->bypass_movement_active =
         builder_obj["bypass_movement_active"].toBool(false);
     builder->bypass_target_x =
         static_cast<float>(builder_obj["bypass_target_x"].toDouble(0.0));
     builder->bypass_target_z =
         static_cast<float>(builder_obj["bypass_target_z"].toDouble(0.0));
+  }
+
+  if (json.contains("wall_segment")) {
+    const auto wall_obj = json["wall_segment"].toObject();
+    auto* wall = entity->add_component<WallSegmentComponent>();
+    wall->grid_x = wall_obj["grid_x"].toInt(0);
+    wall->grid_z = wall_obj["grid_z"].toInt(0);
+  }
+
+  if (json.contains("wall_construction_site")) {
+    const auto site_obj = json["wall_construction_site"].toObject();
+    auto* site = entity->add_component<WallConstructionSiteComponent>();
+    site->owner_id = site_obj["owner_id"].toInt(0);
+    site->nation_id = static_cast<Game::Systems::NationID>(site_obj["nation_id"].toInt(
+        static_cast<int>(Game::Systems::NationID::RomanRepublic)));
+    site->build_time = static_cast<float>(site_obj["build_time"].toDouble(0.0));
+    site->progress = static_cast<float>(site_obj["progress"].toDouble(0.0));
   }
 
   if (json.contains("formation_mode")) {
@@ -1509,6 +1559,10 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
 
   const auto& entities = world->get_entities();
   for (const auto& [id, entity] : entities) {
+    if (entity != nullptr &&
+        entity->get_component<ConstructionPreviewComponent>() != nullptr) {
+      continue;
+    }
     QJsonObject const entity_obj = serialize_entity(entity.get());
     entities_array.append(entity_obj);
   }

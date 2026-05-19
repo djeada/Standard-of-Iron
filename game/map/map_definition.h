@@ -79,7 +79,8 @@ struct WorldProp {
     PineTree,
     OliveTree,
     Plant,
-    IronOre
+    IronOre,
+    MagicShrine
   };
 
   std::uint64_t id = 0;
@@ -136,6 +137,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return QLatin1String("plant");
   case WorldProp::Type::IronOre:
     return QLatin1String("iron_ore");
+  case WorldProp::Type::MagicShrine:
+    return QLatin1String("magic_shrine");
   }
   Q_UNREACHABLE();
 }
@@ -186,6 +189,10 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     out = WorldProp::Type::IronOre;
     return true;
   }
+  if (value == QLatin1String("magic_shrine")) {
+    out = WorldProp::Type::MagicShrine;
+    return true;
+  }
   return false;
 }
 
@@ -213,6 +220,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return 0.55F;
   case WorldProp::Type::IronOre:
     return 1.10F;
+  case WorldProp::Type::MagicShrine:
+    return 1.80F;
   }
   return 1.0F;
 }

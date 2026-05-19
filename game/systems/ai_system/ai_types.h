@@ -151,6 +151,7 @@ struct AIStrategyConfig {
   int base_home_target = 2;
   int desired_barracks_count = 1;
   int desired_defense_tower_count = 1;
+  int desired_wall_segment_count = 0;
   int desired_catapult_count = 0;
   int desired_assembly_size = 4;
   int reactive_attack_size = 2;
@@ -222,6 +223,7 @@ struct AIContext {
 
   int home_count = 0;
   int defense_tower_count = 0;
+  int wall_segment_count = 0;
   int barracks_count = 0;
   int assembled_unit_count = 0;
   int effective_reserve_units = 0;
@@ -243,6 +245,7 @@ struct AIContext {
     int home_count = 2;
     int barracks_count = 1;
     int defense_tower_count = 1;
+    int wall_segment_count = 0;
     int catapult_count = 0;
     int assembly_size = 4;
     float assembly_radius = 10.0F;

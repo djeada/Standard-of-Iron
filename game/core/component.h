@@ -657,10 +657,42 @@ public:
   bool task_target_reserved{false};
   bool at_construction_site{false};
   bool is_placement_preview{false};
+  EntityID construction_site_entity_id{0};
+  std::vector<EntityID> queued_construction_site_ids{};
 
   bool bypass_movement_active{false};
   float bypass_target_x{0.0F};
   float bypass_target_z{0.0F};
+};
+
+class WallSegmentComponent : public Component {
+public:
+  WallSegmentComponent() = default;
+
+  int grid_x{0};
+  int grid_z{0};
+  std::uint8_t connection_mask{0};
+};
+
+class WallConstructionSiteComponent : public Component {
+public:
+  WallConstructionSiteComponent() = default;
+
+  int owner_id{0};
+  Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
+  float build_time{0.0F};
+  float progress{0.0F};
+};
+
+class ConstructionPreviewComponent : public Component {
+public:
+  ConstructionPreviewComponent() = default;
+
+  int owner_id{0};
+  Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
+  int grid_x{0};
+  int grid_z{0};
+  bool valid{false};
 };
 
 class PendingRemovalComponent : public Component {
