@@ -96,8 +96,7 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
     out = SpawnType::Archer;
     return true;
   }
-  if (lowered == QStringLiteral("swordsman") ||
-      lowered == QStringLiteral("swordsman")) {
+  if (lowered == QStringLiteral("swordsman")) {
     out = SpawnType::Knight;
     return true;
   }
@@ -192,7 +191,7 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   if (str == "archer") {
     return SpawnType::Archer;
   }
-  if (str == "swordsman" || str == "swordsman") {
+  if (str == "swordsman") {
     return SpawnType::Knight;
   }
   if (str == "spearman") {

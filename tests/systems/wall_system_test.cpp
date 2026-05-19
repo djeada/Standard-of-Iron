@@ -1,102 +1,230 @@
 #include <gtest/gtest.h>
+#include <memory>
+#include <string>
 
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "game/map/map_transformer.h"
 #include "systems/ai_system/ai_strategy.h"
 #include "systems/ai_system/ai_types.h"
 #include "systems/building_collision_registry.h"
-#include "systems/wall_system.h"
+#include "systems/combat_system/damage_processor.h"
+#include "systems/command_service.h"
+#include "systems/nation_id.h"
+#include "systems/pathfinding.h"
+#include "systems/production_system.h"
+#include "systems/wall_network_service.h"
+#include "units/factory.h"
 #include "units/spawn_type.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;
 
-class WallSystemTest : public ::testing::Test {
+namespace {
+
+class WallMechanicsTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    world = std::make_unique<World>();
     BuildingCollisionRegistry::instance().clear();
+    CommandService::initialize(8, 8);
+
+    auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
+    Game::Units::register_built_in_units(*registry);
+    Game::Map::MapTransformer::setFactoryRegistry(std::move(registry));
   }
 
   void TearDown() override {
+    Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     BuildingCollisionRegistry::instance().clear();
-    world.reset();
   }
 
-  auto make_wall(float x, float y, float z, int owner_id, int health = 800)
-      -> Entity* {
-    auto* wall = world->create_entity();
+  auto make_wall(Engine::Core::World& world,
+                 float x,
+                 float y,
+                 float z,
+                 int owner_id,
+                 int health = 800) -> Entity* {
+    auto* wall = world.create_entity();
     wall->add_component<TransformComponent>(x, y, z);
+    wall->add_component<RenderableComponent>("mesh", "texture");
     auto* unit = wall->add_component<UnitComponent>(health, 800, 0.0F, 0.0F);
     unit->owner_id = owner_id;
     unit->spawn_type = Game::Units::SpawnType::WallSegment;
+    unit->nation_id = Game::Systems::NationID::RomanRepublic;
     wall->add_component<BuildingComponent>();
+    auto* wall_segment = wall->add_component<WallSegmentComponent>();
+    auto snapped = WallNetworkService::snap_world_position(x, z);
+    wall_segment->grid_x = snapped.x;
+    wall_segment->grid_z = snapped.z;
     BuildingCollisionRegistry::instance().register_building(
         wall->get_id(), "wall_segment", x, z, owner_id);
     return wall;
   }
 
-  std::unique_ptr<World> world;
-  WallSystem wall_system;
+  auto make_construction_site(Engine::Core::World& world,
+                              float x,
+                              float z,
+                              int owner_id) -> Entity* {
+    auto* site = world.create_entity();
+    auto* transform = site->add_component<TransformComponent>(x, 0.0F, z);
+    transform->rotation.y = 0.0F;
+    auto* renderable = site->add_component<RenderableComponent>("mesh", "texture");
+    renderable->visible = false;
+    auto* wall = site->add_component<WallSegmentComponent>();
+    auto snapped = WallNetworkService::snap_world_position(x, z);
+    wall->grid_x = snapped.x;
+    wall->grid_z = snapped.z;
+    auto* construction = site->add_component<WallConstructionSiteComponent>();
+    construction->owner_id = owner_id;
+    construction->nation_id = Game::Systems::NationID::RomanRepublic;
+    construction->build_time = 1.0F;
+    construction->progress = 0.0F;
+    return site;
+  }
 };
 
-TEST_F(WallSystemTest, HealthyWallIsNotRemoved) {
-  auto* wall = make_wall(0.0F, 0.0F, 0.0F, 1);
+} // namespace
 
-  wall_system.update(world.get(), 0.1F);
+TEST_F(WallMechanicsTest, WallSegmentUsesDedicatedFootprint) {
+  const auto size = BuildingCollisionRegistry::get_building_size("wall_segment");
 
-  EXPECT_FALSE(wall->has_component<PendingRemovalComponent>());
+  EXPECT_FLOAT_EQ(size.width, 2.0F);
+  EXPECT_FLOAT_EQ(size.depth, 2.0F);
 }
 
-TEST_F(WallSystemTest, DestroyedWallIsMarkedForRemoval) {
-  auto* wall = make_wall(0.0F, 0.0F, 0.0F, 1, 0);
+TEST_F(WallMechanicsTest, CombatDamageRemovesWallSegmentThroughBuildingLifecycle) {
+  Engine::Core::World world;
 
-  wall_system.update(world.get(), 0.1F);
+  auto* attacker = world.create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+
+  auto* wall = make_wall(world, 4.0F, 0.0F, 1.0F, 2, 40);
+  auto* renderable = wall->get_component<RenderableComponent>();
+  ASSERT_NE(renderable, nullptr);
+
+  EXPECT_TRUE(BuildingCollisionRegistry::instance().is_point_in_building(4.0F, 1.0F));
+
+  Game::Systems::Combat::deal_damage(&world, wall, 40, attacker->get_id());
 
   EXPECT_TRUE(wall->has_component<PendingRemovalComponent>());
+  EXPECT_FALSE(renderable->visible);
+  EXPECT_FALSE(BuildingCollisionRegistry::instance().is_point_in_building(4.0F, 1.0F));
 }
 
-TEST_F(WallSystemTest, DestroyedWallIsUnregisteredFromCollision) {
-  make_wall(5.0F, 0.0F, 0.0F, 1, 0);
+TEST_F(WallMechanicsTest, BuilderConstructionSpawnsWallSegment) {
+  Engine::Core::World world;
 
-  EXPECT_TRUE(
-      BuildingCollisionRegistry::instance().is_point_in_building(5.0F, 0.0F));
+  const QVector3D site = CommandService::grid_to_world(Game::Systems::Point{4, 4});
 
-  wall_system.update(world.get(), 0.1F);
-
-  EXPECT_FALSE(
-      BuildingCollisionRegistry::instance().is_point_in_building(5.0F, 0.0F));
-}
-
-TEST_F(WallSystemTest, DamagedButAliveWallIsNotRemoved) {
-  auto* wall = make_wall(0.0F, 0.0F, 0.0F, 1, 400);
-
-  wall_system.update(world.get(), 0.1F);
-
-  EXPECT_FALSE(wall->has_component<PendingRemovalComponent>());
-}
-
-TEST_F(WallSystemTest, OnlyWallSegmentsAreProcessed) {
-  auto* tower = world->create_entity();
-  tower->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto* unit = tower->add_component<UnitComponent>(0, 2000, 0.0F, 20.0F);
+  auto* builder = world.create_entity();
+  builder->add_component<TransformComponent>(site.x(), 0.0F, site.z());
+  builder->add_component<MovementComponent>();
+  auto* unit = builder->add_component<UnitComponent>(100, 100, 1.0F, 10.0F);
   unit->owner_id = 1;
-  unit->spawn_type = Game::Units::SpawnType::DefenseTower;
-  tower->add_component<BuildingComponent>();
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  unit->spawn_type = Game::Units::SpawnType::Builder;
 
-  wall_system.update(world.get(), 0.1F);
+  auto* production = builder->add_component<BuilderProductionComponent>();
+  production->in_progress = true;
+  production->time_remaining = 0.0F;
+  production->product_type = "wall_segment";
+  production->has_construction_site = true;
+  production->construction_site_x = site.x();
+  production->construction_site_z = site.z();
+  production->at_construction_site = true;
 
-  EXPECT_FALSE(tower->has_component<PendingRemovalComponent>());
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  Entity* spawned_wall = nullptr;
+  for (auto* entity : world.get_entities_with<UnitComponent>()) {
+    if (entity == builder) {
+      continue;
+    }
+
+    auto* spawned_unit = entity->get_component<UnitComponent>();
+    if (spawned_unit != nullptr &&
+        spawned_unit->spawn_type == Game::Units::SpawnType::WallSegment) {
+      spawned_wall = entity;
+      break;
+    }
+  }
+
+  ASSERT_NE(spawned_wall, nullptr);
+  EXPECT_TRUE(spawned_wall->has_component<BuildingComponent>());
+  EXPECT_TRUE(
+      BuildingCollisionRegistry::instance().is_point_in_building(site.x(), site.z()));
+  EXPECT_TRUE(production->construction_complete);
+  EXPECT_FALSE(production->has_construction_site);
+  EXPECT_FALSE(production->in_progress);
 }
 
-TEST_F(WallSystemTest, WallSegmentBlocksPoint) {
-  make_wall(3.0F, 0.0F, 0.0F, 1);
+TEST_F(WallMechanicsTest, AdjacentWallsRefreshConnectionVisuals) {
+  Engine::Core::World world;
 
-  EXPECT_TRUE(
-      BuildingCollisionRegistry::instance().is_point_in_building(3.0F, 0.0F));
-  EXPECT_FALSE(
-      BuildingCollisionRegistry::instance().is_point_in_building(10.0F, 0.0F));
+  auto* left = make_wall(world, 0.0F, 0.0F, 0.0F, 1);
+  auto* right = make_wall(world, 2.0F, 0.0F, 0.0F, 1);
+
+  WallNetworkService::refresh_world(world);
+
+  const auto* left_wall = left->get_component<WallSegmentComponent>();
+  const auto* right_wall = right->get_component<WallSegmentComponent>();
+  const auto* left_renderable = left->get_component<RenderableComponent>();
+  const auto* right_renderable = right->get_component<RenderableComponent>();
+
+  ASSERT_NE(left_wall, nullptr);
+  ASSERT_NE(right_wall, nullptr);
+  ASSERT_NE(left_renderable, nullptr);
+  ASSERT_NE(right_renderable, nullptr);
+
+  EXPECT_EQ(left_wall->connection_mask, WallNetworkService::k_connection_east);
+  EXPECT_EQ(right_wall->connection_mask, WallNetworkService::k_connection_west);
+  EXPECT_NE(left_renderable->renderer_id.find("wall_segment_end"), std::string::npos);
+  EXPECT_NE(right_renderable->renderer_id.find("wall_segment_end"), std::string::npos);
+}
+
+TEST_F(WallMechanicsTest, BuilderConstructionQueueConsumesMultipleWallSites) {
+  Engine::Core::World world;
+
+  auto* first_site = make_construction_site(world, 2.0F, 0.0F, 1);
+  auto* second_site = make_construction_site(world, 4.0F, 0.0F, 1);
+
+  auto* builder = world.create_entity();
+  builder->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  builder->add_component<MovementComponent>();
+  auto* unit = builder->add_component<UnitComponent>(100, 100, 1.0F, 10.0F);
+  unit->owner_id = 1;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+
+  auto* production = builder->add_component<BuilderProductionComponent>();
+  production->product_type = "wall_segment";
+  production->build_time = 1.0F;
+  production->time_remaining = 0.0F;
+  production->has_construction_site = true;
+  production->construction_site_entity_id = first_site->get_id();
+  production->construction_site_x = 2.0F;
+  production->construction_site_z = 0.0F;
+  production->at_construction_site = true;
+  production->in_progress = true;
+  production->queued_construction_site_ids.push_back(second_site->get_id());
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_EQ(world.get_entity(first_site->get_id()), nullptr);
+  EXPECT_FALSE(production->has_construction_site);
+  EXPECT_EQ(production->queued_construction_site_ids.size(), 1U);
+
+  system.update(&world, 0.1F);
+
+  EXPECT_TRUE(production->has_construction_site);
+  EXPECT_EQ(production->construction_site_entity_id, second_site->get_id());
+  EXPECT_FLOAT_EQ(production->construction_site_x, 4.0F);
 }
 
 // ---- Builder production dispatch ----

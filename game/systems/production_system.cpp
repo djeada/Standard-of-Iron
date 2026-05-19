@@ -21,6 +21,7 @@
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
+#include "wall_network_service.h"
 
 namespace Game::Systems {
 
@@ -174,6 +175,59 @@ void clear_builder_task_target(Engine::Core::BuilderProductionComponent* builder
   builder->task_target_reserved = false;
 }
 
+auto assign_next_wall_site(Engine::Core::World* world,
+                           Engine::Core::Entity* builder_entity,
+                           Engine::Core::BuilderProductionComponent* builder) -> bool {
+  if (world == nullptr || builder_entity == nullptr || builder == nullptr) {
+    return false;
+  }
+
+  while (!builder->queued_construction_site_ids.empty()) {
+    const auto site_id = builder->queued_construction_site_ids.front();
+    builder->queued_construction_site_ids.erase(
+        builder->queued_construction_site_ids.begin());
+    auto* site_entity = world->get_entity(site_id);
+    auto* site_transform =
+        site_entity != nullptr
+            ? site_entity->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
+    auto* site =
+        site_entity != nullptr
+            ? site_entity->get_component<Engine::Core::WallConstructionSiteComponent>()
+            : nullptr;
+    if (site_transform == nullptr || site == nullptr) {
+      continue;
+    }
+
+    builder->construction_site_entity_id = site_id;
+    builder->has_construction_site = true;
+    builder->construction_site_x = site_transform->position.x;
+    builder->construction_site_z = site_transform->position.z;
+    builder->at_construction_site = false;
+    builder->in_progress = false;
+    builder->build_time = site->build_time;
+    builder->time_remaining = site->build_time;
+    builder->construction_complete = false;
+    builder->bypass_movement_active = false;
+
+    if (auto* movement =
+            builder_entity->get_component<Engine::Core::MovementComponent>()) {
+      movement->goal_x = builder->construction_site_x;
+      movement->goal_y = builder->construction_site_z;
+      movement->target_x = builder->construction_site_x;
+      movement->target_y = builder->construction_site_z;
+    }
+    return true;
+  }
+
+  builder->construction_site_entity_id = 0;
+  builder->has_construction_site = false;
+  builder->at_construction_site = false;
+  builder->in_progress = false;
+  builder->time_remaining = 0.0F;
+  return false;
+}
+
 } // namespace
 
 void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
@@ -291,6 +345,22 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     auto* transform = e->get_component<Engine::Core::TransformComponent>();
     auto* movement = e->get_component<Engine::Core::MovementComponent>();
 
+    if (builder_prod->product_type == "wall_segment" &&
+        builder_prod->construction_site_entity_id != 0 &&
+        world->get_entity(builder_prod->construction_site_entity_id) == nullptr) {
+      builder_prod->construction_site_entity_id = 0;
+      builder_prod->has_construction_site = false;
+      builder_prod->at_construction_site = false;
+      builder_prod->in_progress = false;
+      builder_prod->time_remaining = 0.0F;
+    }
+
+    if (builder_prod->product_type == "wall_segment" &&
+        !builder_prod->has_construction_site && !builder_prod->in_progress &&
+        !builder_prod->queued_construction_site_ids.empty()) {
+      assign_next_wall_site(world, e, builder_prod);
+    }
+
     if (builder_prod->has_construction_site && !builder_prod->at_construction_site) {
       if (transform != nullptr) {
         float const dx = builder_prod->construction_site_x - transform->position.x;
@@ -349,6 +419,19 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     builder_prod->time_remaining -= delta_time;
+    if (builder_prod->product_type == "wall_segment" &&
+        builder_prod->construction_site_entity_id != 0) {
+      if (auto* site_entity =
+              world->get_entity(builder_prod->construction_site_entity_id)) {
+        if (auto* site =
+                site_entity
+                    ->get_component<Engine::Core::WallConstructionSiteComponent>()) {
+          const float duration = std::max(builder_prod->build_time, 0.001F);
+          site->progress =
+              std::clamp(1.0F - builder_prod->time_remaining / duration, 0.0F, 1.0F);
+        }
+      }
+    }
     if (builder_prod->time_remaining <= 0.0F) {
 
       auto* t = e->get_component<Engine::Core::TransformComponent>();
@@ -394,10 +477,28 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             } else {
               sp.position = QVector3D(t->position.x, t->position.y, t->position.z);
             }
+            float wall_rotation_y = 0.0F;
+            Engine::Core::Entity* wall_site_entity = nullptr;
+            if (builder_prod->product_type == "wall_segment" &&
+                builder_prod->construction_site_entity_id != 0) {
+              wall_site_entity =
+                  world->get_entity(builder_prod->construction_site_entity_id);
+              if (auto* site_transform =
+                      wall_site_entity != nullptr
+                          ? wall_site_entity
+                                ->get_component<Engine::Core::TransformComponent>()
+                          : nullptr) {
+                sp.position = QVector3D(site_transform->position.x,
+                                        site_transform->position.y,
+                                        site_transform->position.z);
+                wall_rotation_y = site_transform->rotation.y;
+              }
+            }
             sp.player_id = u->owner_id;
             sp.ai_controlled = e->has_component<Engine::Core::AIControlledComponent>();
             sp.nation_id = u->nation_id;
             sp.is_initial_spawn = false;
+            sp.rotation_y = wall_rotation_y;
 
             if (builder_prod->product_type == "catapult") {
               sp.spawn_type = Game::Units::SpawnType::Catapult;
@@ -421,6 +522,13 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             }
 
             reg->create(sp.spawn_type, *world, sp);
+
+            if (builder_prod->product_type == "wall_segment" &&
+                builder_prod->construction_site_entity_id != 0) {
+              world->destroy_entity(builder_prod->construction_site_entity_id);
+              builder_prod->construction_site_entity_id = 0;
+              WallNetworkService::refresh_world(*world);
+            }
 
             if (builder_prod->has_construction_site && movement != nullptr &&
                 t != nullptr) {
@@ -452,6 +560,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->construction_complete = true;
       builder_prod->has_construction_site = false;
       builder_prod->at_construction_site = false;
+      builder_prod->construction_site_entity_id = 0;
       clear_builder_task_target(builder_prod, false);
     }
   }

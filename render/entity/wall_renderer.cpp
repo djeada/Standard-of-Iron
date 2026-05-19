@@ -14,6 +14,36 @@ void register_wall_renderer(EntityRendererRegistry& registry) {
                                    "wall_segment",
                                    building_renderer_key("roman", "wall_segment"),
                                    building_renderer_key("carthage", "wall_segment"));
+  register_nation_variant_renderer(
+      registry,
+      "wall_segment_isolated",
+      building_renderer_key("roman", "wall_segment_isolated"),
+      building_renderer_key("carthage", "wall_segment_isolated"));
+  register_nation_variant_renderer(
+      registry,
+      "wall_segment_end",
+      building_renderer_key("roman", "wall_segment_end"),
+      building_renderer_key("carthage", "wall_segment_end"));
+  register_nation_variant_renderer(
+      registry,
+      "wall_segment_straight",
+      building_renderer_key("roman", "wall_segment_straight"),
+      building_renderer_key("carthage", "wall_segment_straight"));
+  register_nation_variant_renderer(
+      registry,
+      "wall_segment_corner",
+      building_renderer_key("roman", "wall_segment_corner"),
+      building_renderer_key("carthage", "wall_segment_corner"));
+  register_nation_variant_renderer(
+      registry,
+      "wall_segment_tee",
+      building_renderer_key("roman", "wall_segment_tee"),
+      building_renderer_key("carthage", "wall_segment_tee"));
+  register_nation_variant_renderer(
+      registry,
+      "wall_segment_cross",
+      building_renderer_key("roman", "wall_segment_cross"),
+      building_renderer_key("carthage", "wall_segment_cross"));
 }
 
 } // namespace Render::GL

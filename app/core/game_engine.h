@@ -153,6 +153,14 @@ public:
   Q_PROPERTY(bool construction_preview_valid READ construction_preview_valid NOTIFY
                  construction_preview_valid_changed)
   Q_PROPERTY(
+      int construction_preview_segment_count READ construction_preview_segment_count
+          NOTIFY construction_preview_summary_changed)
+  Q_PROPERTY(int construction_preview_valid_segment_count READ
+                 construction_preview_valid_segment_count NOTIFY
+                     construction_preview_summary_changed)
+  Q_PROPERTY(int construction_preview_total_cost READ construction_preview_total_cost
+                 NOTIFY construction_preview_summary_changed)
+  Q_PROPERTY(
       bool is_campaign_mission READ is_campaign_mission NOTIFY campaign_mission_changed)
   Q_PROPERTY(bool civilian_delivery_available READ civilian_delivery_available NOTIFY
                  civilian_delivery_available_changed)
@@ -192,11 +200,16 @@ public:
   Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_construction() const;
   Q_INVOKABLE [[nodiscard]] bool construction_preview_valid() const;
+  Q_INVOKABLE [[nodiscard]] int construction_preview_segment_count() const;
+  Q_INVOKABLE [[nodiscard]] int construction_preview_valid_segment_count() const;
+  Q_INVOKABLE [[nodiscard]] int construction_preview_total_cost() const;
   Q_INVOKABLE void on_formation_mouse_move(qreal sx, qreal sy);
   Q_INVOKABLE void on_formation_scroll(float delta);
   Q_INVOKABLE void on_formation_confirm();
   Q_INVOKABLE void on_formation_cancel();
   Q_INVOKABLE void on_construction_mouse_move(qreal sx, qreal sy);
+  Q_INVOKABLE void on_construction_pointer_pressed(qreal sx, qreal sy);
+  Q_INVOKABLE void on_construction_pointer_released(qreal sx, qreal sy);
   Q_INVOKABLE void on_construction_confirm();
   Q_INVOKABLE void on_construction_cancel();
   Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
@@ -613,6 +626,7 @@ signals:
   void placing_formation_changed();
   void placing_construction_changed();
   void construction_preview_valid_changed();
+  void construction_preview_summary_changed();
   void campaign_mission_changed();
   void civilian_delivery_available_changed();
   void control_mode_changed();
