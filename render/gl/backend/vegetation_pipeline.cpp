@@ -52,6 +52,8 @@ auto VegetationPipeline::initialize() -> bool {
 
   m_iron_ore_shader = m_shader_cache->get(QStringLiteral("iron_ore_instanced"));
 
+  m_magic_shrine_shader = m_shader_cache->get(QStringLiteral("magic_shrine_instanced"));
+
   if (m_stone_shader == nullptr) {
     qWarning() << "VegetationPipeline: stone shader missing";
   }
@@ -85,6 +87,9 @@ auto VegetationPipeline::initialize() -> bool {
   if (m_iron_ore_shader == nullptr) {
     qWarning() << "VegetationPipeline: iron_ore_instanced shader missing";
   }
+  if (m_magic_shrine_shader == nullptr) {
+    qWarning() << "VegetationPipeline: magic_shrine_instanced shader missing";
+  }
 
   initialize_stone_pipeline();
   initialize_plant_pipeline();
@@ -97,6 +102,7 @@ auto VegetationPipeline::initialize() -> bool {
   initialize_ruins_pipeline();
   initialize_dead_tree_pipeline();
   initialize_iron_ore_pipeline();
+  initialize_magic_shrine_pipeline();
   cache_uniforms();
 
   m_initialized = true;
@@ -115,6 +121,7 @@ void VegetationPipeline::shutdown() {
   shutdown_ruins_pipeline();
   shutdown_dead_tree_pipeline();
   shutdown_iron_ore_pipeline();
+  shutdown_magic_shrine_pipeline();
   m_initialized = false;
 }
 
@@ -184,6 +191,7 @@ void VegetationPipeline::cache_uniforms() {
   cache_prop_uniforms(m_ruins_uniforms, m_ruins_shader);
   cache_prop_uniforms(m_dead_tree_uniforms, m_dead_tree_shader);
   cache_prop_uniforms(m_iron_ore_uniforms, m_iron_ore_shader);
+  cache_prop_uniforms(m_magic_shrine_uniforms, m_magic_shrine_shader);
 }
 
 void VegetationPipeline::initialize_stone_pipeline() {
@@ -1970,6 +1978,77 @@ void VegetationPipeline::shutdown_iron_ore_pipeline() {
                             m_iron_ore_index_buffer,
                             m_iron_ore_vertex_count,
                             m_iron_ore_index_count);
+}
+
+void VegetationPipeline::initialize_magic_shrine_pipeline() {
+  initializeOpenGLFunctions();
+  shutdown_magic_shrine_pipeline();
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+
+  // Base platform — flat stone foundation
+  append_box(verts, idx, {-0.55F, -0.02F, -0.55F}, {0.55F, 0.06F, 0.55F});
+
+  // Lower tier
+  append_box(verts, idx, {-0.40F, 0.06F, -0.40F}, {0.40F, 0.14F, 0.40F});
+
+  // Central pillar / altar block
+  append_box(verts, idx, {-0.18F, 0.14F, -0.18F}, {0.18F, 0.72F, 0.18F});
+
+  // Altar top cap
+  append_box(verts, idx, {-0.22F, 0.72F, -0.22F}, {0.22F, 0.82F, 0.22F});
+
+  // Four corner columns
+  append_box(verts, idx, {-0.44F, 0.06F, -0.44F}, {-0.30F, 0.78F, -0.30F});
+  append_box(verts, idx, { 0.30F, 0.06F, -0.44F}, { 0.44F, 0.78F, -0.30F});
+  append_box(verts, idx, {-0.44F, 0.06F,  0.30F}, {-0.30F, 0.78F,  0.44F});
+  append_box(verts, idx, { 0.30F, 0.06F,  0.30F}, { 0.44F, 0.78F,  0.44F});
+
+  // Column capitals (top caps on columns)
+  append_box(verts, idx, {-0.48F, 0.78F, -0.48F}, {-0.26F, 0.86F, -0.26F});
+  append_box(verts, idx, { 0.26F, 0.78F, -0.48F}, { 0.48F, 0.86F, -0.26F});
+  append_box(verts, idx, {-0.48F, 0.78F,  0.26F}, {-0.26F, 0.86F,  0.48F});
+  append_box(verts, idx, { 0.26F, 0.78F,  0.26F}, { 0.48F, 0.86F,  0.48F});
+
+  // Lintel beams connecting front and back pairs
+  append_box(verts, idx, {-0.50F, 0.84F, -0.42F}, { 0.50F, 0.92F, -0.32F});
+  append_box(verts, idx, {-0.50F, 0.84F,  0.32F}, { 0.50F, 0.92F,  0.42F});
+
+  // Side lintels
+  append_box(verts, idx, {-0.42F, 0.84F, -0.50F}, {-0.32F, 0.92F,  0.50F});
+  append_box(verts, idx, { 0.32F, 0.84F, -0.50F}, { 0.42F, 0.92F,  0.50F});
+
+  // Offering bowl atop altar
+  append_box(verts, idx, {-0.12F, 0.82F, -0.12F}, { 0.12F, 0.88F,  0.12F});
+  append_box(verts, idx, {-0.08F, 0.88F, -0.08F}, { 0.08F, 0.96F,  0.08F});
+
+  // Small rune stones scattered around base
+  append_box(verts, idx, {-0.64F, 0.00F, -0.10F}, {-0.52F, 0.22F,  0.04F});
+  append_box(verts, idx, { 0.52F, 0.00F,  0.06F}, { 0.64F, 0.18F,  0.18F});
+  append_box(verts, idx, {-0.08F, 0.00F,  0.52F}, { 0.06F, 0.20F,  0.64F});
+
+  upload_prop_mesh_impl(verts,
+                        idx,
+                        m_magic_shrine_vao,
+                        m_magic_shrine_vertex_buffer,
+                        m_magic_shrine_index_buffer,
+                        m_magic_shrine_vertex_count,
+                        m_magic_shrine_index_count);
+}
+
+void VegetationPipeline::shutdown_magic_shrine_pipeline() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_magic_shrine_vao = m_magic_shrine_vertex_buffer = m_magic_shrine_index_buffer = 0;
+    m_magic_shrine_vertex_count = m_magic_shrine_index_count = 0;
+    return;
+  }
+  initializeOpenGLFunctions();
+  delete_prop_pipeline_impl(m_magic_shrine_vao,
+                            m_magic_shrine_vertex_buffer,
+                            m_magic_shrine_index_buffer,
+                            m_magic_shrine_vertex_count,
+                            m_magic_shrine_index_count);
 }
 
 } // namespace Render::GL::BackendPipelines
