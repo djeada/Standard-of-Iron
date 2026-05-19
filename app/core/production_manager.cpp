@@ -287,6 +287,18 @@ void ProductionManager::place_building_at_screen(qreal sx,
     }
   }
 
+  if (m_pending_building_type == QStringLiteral("wall_segment")) {
+    params.spawn_type = Game::Units::SpawnType::WallSegment;
+
+    auto registry = Game::Map::MapTransformer::get_factory_registry();
+    if (registry) {
+      auto unit = registry->create(params.spawn_type, *m_world, params);
+      if (unit) {
+        qInfo() << "Placed wall segment at" << hit.x() << hit.z();
+      }
+    }
+  }
+
   m_pending_building_type.clear();
 }
 

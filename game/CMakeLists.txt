@@ -126,8 +126,10 @@ add_library(game_systems STATIC
     units/barracks.cpp
     units/defense_tower.cpp
     units/home.cpp
+    units/wall_segment.cpp
     systems/defense_tower_system.cpp
     systems/home_system.cpp
+    systems/wall_system.cpp
 )
 
 target_include_directories(game_systems PUBLIC .)
