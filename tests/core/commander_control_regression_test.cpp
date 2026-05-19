@@ -498,7 +498,6 @@ TEST(CommanderControlRegressionTest, CommanderAbilityKitIsWiredThroughAdapter) {
   const auto root = find_repo_root();
   const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
   const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
-  const auto overlay_source = read_text(root / "ui" / "qml" / "RpgFpvOverlay.qml");
   const auto commander_hud_source =
       read_text(root / "ui" / "qml" / "HUDBottomCommander.qml");
   const auto adapter_header =
@@ -511,7 +510,6 @@ TEST(CommanderControlRegressionTest, CommanderAbilityKitIsWiredThroughAdapter) {
       read_text(root / "app" / "core" / "commander_control_controller.h");
   ASSERT_FALSE(layer_source.empty());
   ASSERT_FALSE(game_view_source.empty());
-  ASSERT_FALSE(overlay_source.empty());
   ASSERT_FALSE(commander_hud_source.empty());
   ASSERT_FALSE(adapter_header.empty());
   ASSERT_FALSE(adapter_source.empty());
@@ -527,13 +525,13 @@ TEST(CommanderControlRegressionTest, CommanderAbilityKitIsWiredThroughAdapter) {
   EXPECT_TRUE(contains(game_view_source, "game.commander_vanguard_rush()"));
   EXPECT_TRUE(contains(game_view_source, "case Qt.Key_2:"));
   EXPECT_TRUE(contains(game_view_source, "game.commander_second_wind()"));
-  EXPECT_TRUE(contains(overlay_source, "\"key\": \"1\""));
-  EXPECT_TRUE(contains(overlay_source, "\"key\": \"2\""));
-  EXPECT_TRUE(contains(overlay_source, "get_controlled_commander_status"));
-  EXPECT_TRUE(contains(overlay_source, "cooldown_ratio"));
-  EXPECT_TRUE(contains(overlay_source, "vanguard_rush_cooldown_remaining"));
-  EXPECT_TRUE(contains(overlay_source, "second_wind_cooldown_remaining"));
-  EXPECT_TRUE(contains(overlay_source, "shield_bash_cooldown_remaining"));
+  EXPECT_TRUE(contains(commander_hud_source, "\"key\": \"1\""));
+  EXPECT_TRUE(contains(commander_hud_source, "\"key\": \"2\""));
+  EXPECT_TRUE(contains(commander_hud_source, "get_controlled_commander_status"));
+  EXPECT_TRUE(contains(commander_hud_source, "cooldown_progress"));
+  EXPECT_TRUE(contains(commander_hud_source, "vanguard_rush_cooldown_remaining"));
+  EXPECT_TRUE(contains(commander_hud_source, "second_wind_cooldown_remaining"));
+  EXPECT_TRUE(contains(commander_hud_source, "shield_bash_cooldown_remaining"));
   EXPECT_TRUE(contains(commander_hud_source, "Vanguard Rush"));
   EXPECT_TRUE(contains(commander_hud_source, "Second Wind"));
   EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void vanguard_rush();"));

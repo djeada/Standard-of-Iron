@@ -64,7 +64,8 @@ void InputCommandHandler::on_right_click(qreal sx,
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
       m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Deliver) {
+      m_cursor_manager->mode() == CursorMode::Deliver ||
+      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return;
   }
@@ -86,6 +87,9 @@ void InputCommandHandler::on_right_click(qreal sx,
                                            viewport.width,
                                            viewport.height,
                                            local_owner_id);
+  if (m_command_controller) {
+    m_command_controller->disable_run_mode_for_selected();
+  }
 }
 
 void InputCommandHandler::on_right_double_click(qreal sx,
@@ -111,7 +115,8 @@ void InputCommandHandler::on_right_double_click(qreal sx,
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
       m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Deliver) {
+      m_cursor_manager->mode() == CursorMode::Deliver ||
+      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return;
   }
@@ -133,6 +138,9 @@ void InputCommandHandler::on_right_double_click(qreal sx,
                                            viewport.width,
                                            viewport.height,
                                            local_owner_id);
+  if (m_command_controller) {
+    m_command_controller->enable_run_mode_for_selected();
+  }
 }
 
 auto InputCommandHandler::on_right_press(qreal sx,
@@ -154,7 +162,8 @@ auto InputCommandHandler::on_right_press(qreal sx,
       m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
       m_cursor_manager->mode() == CursorMode::Heal ||
       m_cursor_manager->mode() == CursorMode::Build ||
-      m_cursor_manager->mode() == CursorMode::Deliver) {
+      m_cursor_manager->mode() == CursorMode::Deliver ||
+      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
     m_cursor_manager->set_mode(CursorMode::Normal);
     return true;
   }

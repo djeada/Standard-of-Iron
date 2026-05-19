@@ -8,6 +8,7 @@
 
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
+#include "../../game/visuals/team_colors.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "flag.h"
@@ -125,6 +126,49 @@ void render_patrol_flags(Renderer* renderer,
                                      1.4F);
       draw_flag(renderer, resources, flag);
     }
+  }
+}
+
+void render_commander_rally_flags(Renderer* renderer,
+                                  ResourceManager* resources,
+                                  Engine::Core::World* world,
+                                  int preview_owner_id,
+                                  const std::optional<QVector3D>& preview_pos) {
+  if ((renderer == nullptr) || (resources == nullptr)) {
+    return;
+  }
+
+  // Draw the placement preview flag (shown while picking a rally position).
+  if (preview_pos.has_value()) {
+    QVector3D const preview_color =
+        Game::Visuals::team_colorForOwner(preview_owner_id);
+    auto flag = Geom::Flag::create(preview_pos->x(),
+                                   preview_pos->z(),
+                                   preview_color,
+                                    QVector3D(0.35F, 0.25F, 0.15F),
+                                    1.6F);
+    draw_flag(renderer, resources, flag);
+  }
+
+  // Draw placed rally flags from all commander components.
+  if (world == nullptr) {
+    return;
+  }
+  for (auto* entity :
+       world->get_entities_with<Engine::Core::CommanderComponent>()) {
+    auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if ((commander == nullptr) || (unit == nullptr) ||
+        !commander->flag_rally_flag_active) {
+      continue;
+    }
+    QVector3D const flag_color = Game::Visuals::team_colorForOwner(unit->owner_id);
+    auto flag = Geom::Flag::create(commander->flag_rally_flag_x,
+                                   commander->flag_rally_flag_z,
+                                   flag_color,
+                                    QVector3D(0.35F, 0.25F, 0.15F),
+                                    1.6F);
+    draw_flag(renderer, resources, flag);
   }
 }
 

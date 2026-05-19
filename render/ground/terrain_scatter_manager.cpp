@@ -60,22 +60,21 @@ void TerrainScatterManager::configure(
     const Game::Map::BiomeSettings& biome_settings,
     const std::vector<Game::Map::WorldProp>& world_props,
     bool use_world_props_exclusively) {
-  Q_UNUSED(use_world_props_exclusively);
   std::lock_guard<std::mutex> const lock(m_mutex);
   (void)use_world_props_exclusively;
 
   m_biome->configure(height_map, biome_settings);
   m_stone->configure(height_map, biome_settings, world_props);
   m_plant->configure(height_map, biome_settings, world_props);
-  m_pine->configure(height_map, biome_settings, world_props);
-  m_olive->configure(height_map, biome_settings, world_props);
+  m_pine->configure(height_map, biome_settings, world_props, use_world_props_exclusively);
+  m_olive->configure(height_map, biome_settings, world_props, use_world_props_exclusively);
   m_firecamp->configure(height_map, biome_settings, world_props);
   m_tent->configure(height_map, biome_settings, world_props);
   m_supply_cart->configure(height_map, biome_settings, world_props);
   m_weapon_rack->configure(height_map, biome_settings, world_props);
   m_ruins->configure(height_map, biome_settings, world_props);
   m_dead_tree->configure(height_map, biome_settings, world_props);
-  m_boulder->configure(height_map, biome_settings, world_props);
+  m_boulder->configure(height_map, biome_settings, world_props, use_world_props_exclusively);
   m_iron_ore->configure(height_map, biome_settings, world_props);
   m_magic_shrine->configure(height_map, biome_settings, world_props);
 }

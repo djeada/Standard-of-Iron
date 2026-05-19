@@ -21,7 +21,8 @@ enum class AmbientIdleType : std::uint8_t {
   StepInPlace,
   BendKnee,
   RaiseWeapon,
-  Jump
+  Jump,
+  PlantFlag
 };
 
 [[nodiscard]] inline constexpr auto
@@ -35,6 +36,8 @@ ambient_idle_clip_variant(AmbientIdleType t) noexcept -> std::uint8_t {
     return 3U;
   case AmbientIdleType::ShiftWeight:
     return 4U;
+  case AmbientIdleType::PlantFlag:
+    return 5U;
   default:
     return 0U;
   }
