@@ -73,8 +73,12 @@ Item {
     function handle_commander_key_pressed(event) {
         switch (event.key) {
         case Qt.Key_Escape:
-            if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible)
+            if (game_view.cursor_mode === "place_commander_rally") {
+                if (typeof game !== 'undefined' && game.cancel_commander_flag_rally)
+                    game.cancel_commander_flag_rally();
+            } else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
                 mainWindow.menu_visible = true;
+            }
             event.accepted = true;
             return;
         case Qt.Key_Space:
@@ -173,7 +177,11 @@ Item {
         var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
         switch (event.key) {
         case Qt.Key_Escape:
-            if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
+            if (game_view.cursor_mode === "place_commander_rally") {
+                if (typeof game !== 'undefined' && game.cancel_commander_flag_rally)
+                    game.cancel_commander_flag_rally();
+                event.accepted = true;
+            } else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
                 mainWindow.menu_visible = true;
                 event.accepted = true;
             }
@@ -237,8 +245,15 @@ Item {
             event.accepted = true;
             break;
         case Qt.Key_R:
-            game.camera_orbit_direction(1, shiftHeld);
-            event.accepted = true;
+            if (game.get_selected_units_mode_availability &&
+                game.get_selected_units_mode_availability().canRally &&
+                game.begin_commander_flag_rally) {
+                game.begin_commander_flag_rally();
+                event.accepted = true;
+            } else {
+                game.camera_orbit_direction(1, shiftHeld);
+                event.accepted = true;
+            }
             break;
         case Qt.Key_F:
             game.camera_orbit_direction(-1, shiftHeld);
@@ -367,8 +382,8 @@ Item {
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
-            cursorShape: (game_view.cursor_mode !== "normal" || game_view.is_placing_construction) ? Qt.BlankCursor : Qt.ArrowCursor
-            enabled: game_view.visible && typeof game !== 'undefined' && game.control_mode !== "commander"
+            cursorShape: game_view.cursor_mode === "place_commander_rally" ? Qt.CrossCursor : ((game_view.cursor_mode !== "normal" || game_view.is_placing_construction) ? Qt.BlankCursor : Qt.ArrowCursor)
+            enabled: game_view.visible && typeof game !== 'undefined' && (game.control_mode !== "commander" || game_view.cursor_mode === "place_commander_rally")
             onEntered: {
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
                     game.set_hover_at_screen(0, 0);
@@ -389,7 +404,8 @@ Item {
                     if (typeof game !== 'undefined' && game.set_hover_at_screen)
                         game.set_hover_at_screen(mouse.x, mouse.y);
                     if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.on_right_move) {
-                        game.on_right_move(mouse.x, mouse.y);
+                        if (game_view.cursor_mode !== "place_commander_rally")
+                            game.on_right_move(mouse.x, mouse.y);
                     } else if (game_view.is_placing_formation) {
                         if (typeof game !== 'undefined' && game.on_formation_mouse_move)
                             game.on_formation_mouse_move(mouse.x, mouse.y);
@@ -446,6 +462,11 @@ Item {
                             game.place_building_at_screen(mouse.x, mouse.y);
                         return;
                     }
+                    if (game_view.cursor_mode === "place_commander_rally") {
+                        if (typeof game !== 'undefined' && game.confirm_commander_flag_rally)
+                            game.confirm_commander_flag_rally(mouse.x, mouse.y);
+                        return;
+                    }
                     if (typeof game !== 'undefined' && game.is_placing_formation) {
                         if (game.on_formation_confirm)
                             game.on_formation_confirm();
@@ -465,6 +486,11 @@ Item {
                     selectionBox.height = 0;
                     selectionBox.visible = true;
                 } else if (mouse.button === Qt.RightButton) {
+                    if (game_view.cursor_mode === "place_commander_rally") {
+                        if (typeof game !== 'undefined' && game.cancel_commander_flag_rally)
+                            game.cancel_commander_flag_rally();
+                        return;
+                    }
                     renderArea.mouse_pan_active = true;
                     mainWindow.edge_scroll_disabled = true;
                     if (game_view.set_rally_mode)
@@ -510,7 +536,7 @@ Item {
         id: commanderInputLayer
 
         anchors.fill: parent
-        active: game_view.visible && typeof game !== 'undefined' && game.control_mode === "commander"
+        active: game_view.visible && typeof game !== 'undefined' && game.control_mode === "commander" && game_view.cursor_mode !== "place_commander_rally"
         commanderInput: typeof game !== 'undefined' ? game.commander_input : null
         gameView: game_view
         mainWindowRef: mainWindow
@@ -532,7 +558,7 @@ Item {
     Item {
         id: commanderReticle
 
-        visible: typeof game !== 'undefined' && game.control_mode === "commander"
+        visible: typeof game !== 'undefined' && game.control_mode === "commander" && game_view.cursor_mode !== "place_commander_rally"
         width: 22
         height: 22
         anchors.centerIn: parent
@@ -759,6 +785,38 @@ Item {
                 ctx.lineTo(18, 11);
                 ctx.lineTo(18, 21);
                 ctx.closePath();
+                ctx.fill();
+            }
+            Component.onCompleted: requestPaint()
+        }
+
+        Canvas {
+            id: rallyPlacementCursor
+
+            visible: game_view.cursor_mode === "place_commander_rally"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                // Draw a gold flag icon to indicate rally placement.
+                ctx.strokeStyle = "#F4C430";
+                ctx.fillStyle = "#F4C430";
+                ctx.lineWidth = 2;
+                // Flag pole
+                ctx.beginPath();
+                ctx.moveTo(14, 6);
+                ctx.lineTo(14, 26);
+                ctx.stroke();
+                // Flag pennant
+                ctx.beginPath();
+                ctx.moveTo(14, 6);
+                ctx.lineTo(24, 10);
+                ctx.lineTo(14, 14);
+                ctx.closePath();
+                ctx.fill();
+                // Base circle
+                ctx.beginPath();
+                ctx.arc(14, 26, 3, 0, Math.PI * 2);
                 ctx.fill();
             }
             Component.onCompleted: requestPaint()

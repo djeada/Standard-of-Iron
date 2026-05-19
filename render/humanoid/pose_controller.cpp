@@ -390,6 +390,53 @@ void HumanoidPoseController::apply_ambient_idle_explicit(AmbientIdleType idle_ty
     break;
   }
 
+  case AmbientIdleType::PlantFlag: {
+    float const prepare = plateau01(phase, 0.08F, 0.26F);
+    float const plant = plateau01(phase, 0.30F, 0.72F);
+    float const recover =
+        (phase > 0.72F)
+            ? std::sin(((phase - 0.72F) / 0.28F) * std::numbers::pi_v<float>)
+            : 0.0F;
+    float const lean = plant * 0.11F + recover * 0.03F;
+    float const crouch = prepare * 0.05F + plant * 0.16F;
+    float const right_drive = prepare * 0.16F + plant * 0.22F - recover * 0.07F;
+    float const left_brace = prepare * 0.08F + plant * 0.14F - recover * 0.04F;
+
+    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - crouch);
+    m_pose.pelvis_pos.setZ(m_pose.pelvis_pos.z() + lean * 0.35F);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - crouch * 0.42F);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - crouch * 0.32F);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + lean * 0.55F);
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + lean * 0.72F);
+    m_pose.neck_base.setZ(m_pose.neck_base.z() + lean * 0.72F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() + lean * 0.86F);
+    m_pose.head_pos.setY(m_pose.head_pos.y() - crouch * 0.22F);
+
+    m_pose.knee_l.setY(m_pose.knee_l.y() - crouch * 0.18F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() - crouch * 0.40F);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + plant * 0.05F);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + plant * 0.15F);
+    m_pose.foot_l.setX(m_pose.foot_l.x() - plant * 0.03F);
+    m_pose.foot_l.setZ(m_pose.foot_l.z() - plant * 0.04F);
+    m_pose.foot_r.setX(m_pose.foot_r.x() + plant * 0.02F);
+    m_pose.foot_r.setZ(m_pose.foot_r.z() + plant * 0.12F);
+
+    m_pose.hand_r.setY(m_pose.hand_r.y() - right_drive);
+    m_pose.hand_r.setZ(m_pose.hand_r.z() + plant * 0.16F + prepare * 0.04F);
+    m_pose.hand_r.setX(m_pose.hand_r.x() + prepare * 0.03F);
+    m_pose.elbow_r.setY(m_pose.elbow_r.y() - right_drive * 0.50F);
+    m_pose.elbow_r.setZ(m_pose.elbow_r.z() + plant * 0.11F);
+    m_pose.elbow_r.setX(m_pose.elbow_r.x() + prepare * 0.02F);
+
+    m_pose.hand_l.setY(m_pose.hand_l.y() - left_brace * 0.75F + recover * 0.02F);
+    m_pose.hand_l.setZ(m_pose.hand_l.z() + plant * 0.10F);
+    m_pose.hand_l.setX(m_pose.hand_l.x() - plant * 0.04F);
+    m_pose.elbow_l.setY(m_pose.elbow_l.y() - left_brace * 0.35F);
+    m_pose.elbow_l.setZ(m_pose.elbow_l.z() + plant * 0.07F);
+    m_pose.elbow_l.setX(m_pose.elbow_l.x() - plant * 0.03F);
+    break;
+  }
+
   case AmbientIdleType::None:
   default:
     break;

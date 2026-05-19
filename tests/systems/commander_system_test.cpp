@@ -4,6 +4,7 @@
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/systems/command_service.h"
 #include "game/systems/commander_system.h"
 #include "game/systems/production_service.h"
 #include "game/systems/troop_profile_service.h"
@@ -409,6 +410,238 @@ TEST(CommanderSystemTest, ManualRallyModeDoesNotAutoTriggerWithoutRequest) {
   EXPECT_FLOAT_EQ(commander_data->rally_feedback_time, 0.0F);
   EXPECT_FLOAT_EQ(ally_morale->morale, 25.0F);
   EXPECT_TRUE(ally_morale->wavering);
+}
+
+TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
+  // Simulate a commander that is already at the rally position so the system
+  // immediately starts the animation timer, then completes and plants the flag.
+  Engine::Core::World world;
+  Game::Systems::CommandService::initialize(64, 64);
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  commander_transform->position = {5.0F, 0.0F, 5.0F};
+
+  // Set up the flag rally: commander is already at the pending position.
+  commander_data->flag_rally_pending_x = 5.0F;
+  commander_data->flag_rally_pending_z = 5.0F;
+  commander_data->flag_rally_cost = 2.0F;
+  commander_data->flag_rally_in_progress = true;
+  commander_data->flag_rally_at_position = false;
+
+  // Add allied troops that should receive the same formation move order as a
+  // ground right-click.
+  auto* ally_a = world.create_entity();
+  auto* ally_a_unit = ally_a->add_component<Engine::Core::UnitComponent>();
+  auto* ally_a_transform = ally_a->add_component<Engine::Core::TransformComponent>();
+  auto* ally_a_stamina = ally_a->add_component<Engine::Core::StaminaComponent>();
+  ally_a_unit->owner_id = 1;
+  ally_a_unit->health = 100;
+  ally_a_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  ally_a_transform->position = {0.0F, 0.0F, 0.0F};
+  ally_a_stamina->run_requested = true;
+
+  auto* ally_b = world.create_entity();
+  auto* ally_b_unit = ally_b->add_component<Engine::Core::UnitComponent>();
+  auto* ally_b_transform = ally_b->add_component<Engine::Core::TransformComponent>();
+  auto* ally_b_stamina = ally_b->add_component<Engine::Core::StaminaComponent>();
+  ally_b_unit->owner_id = 1;
+  ally_b_unit->health = 100;
+  ally_b_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  ally_b_transform->position = {1.0F, 0.0F, 0.0F};
+  ally_b_stamina->run_requested = true;
+
+  Game::Systems::CommanderSystem system;
+
+  // First tick: commander arrives and starts the planting phase.
+  system.update(&world, 0.1F);
+  EXPECT_TRUE(commander_data->flag_rally_at_position);
+  EXPECT_NEAR(commander_data->flag_rally_animation_timer, 2.0F, 0.01F);
+  EXPECT_FALSE(commander_data->flag_rally_flag_active);
+
+  // Advance past the full planting cost.
+  system.update(&world, 2.0F);
+  EXPECT_FALSE(commander_data->flag_rally_in_progress);
+  EXPECT_FALSE(commander_data->flag_rally_at_position);
+  EXPECT_TRUE(commander_data->flag_rally_flag_active);
+  EXPECT_NEAR(commander_data->flag_rally_flag_x, 5.0F, 0.01F);
+  EXPECT_NEAR(commander_data->flag_rally_flag_z, 5.0F, 0.01F);
+  // issue_commands is consumed immediately in the same tick.
+  EXPECT_FALSE(commander_data->flag_rally_issue_commands);
+
+  auto* ally_a_movement = ally_a->get_component<Engine::Core::MovementComponent>();
+  auto* ally_b_movement = ally_b->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(ally_a_movement, nullptr);
+  ASSERT_NE(ally_b_movement, nullptr);
+  EXPECT_TRUE(ally_a_movement->has_target);
+  EXPECT_TRUE(ally_b_movement->has_target);
+  EXPECT_FALSE(ally_a_stamina->run_requested);
+  EXPECT_FALSE(ally_b_stamina->run_requested);
+  EXPECT_FALSE(std::abs(ally_a_movement->goal_x - 5.0F) < 0.01F &&
+               std::abs(ally_a_movement->goal_y - 5.0F) < 0.01F &&
+               std::abs(ally_b_movement->goal_x - 5.0F) < 0.01F &&
+               std::abs(ally_b_movement->goal_y - 5.0F) < 0.01F);
+  EXPECT_NEAR(ally_a_movement->goal_y, ally_b_movement->goal_y, 0.01F);
+  EXPECT_GT(std::abs(ally_a_movement->goal_x - ally_b_movement->goal_x), 0.01F);
+}
+
+TEST(CommanderFlagRallyTest, FlagRallyCancelledOnCommanderDeath) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 0; // commander is dead
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  commander_transform->position = {5.0F, 0.0F, 5.0F};
+  commander_data->flag_rally_pending_x = 5.0F;
+  commander_data->flag_rally_pending_z = 5.0F;
+  commander_data->flag_rally_in_progress = true;
+  commander_data->flag_rally_at_position = true;
+  commander_data->flag_rally_animation_timer = 1.5F;
+  commander_data->flag_rally_flag_active = true;
+  commander_data->flag_rally_issue_commands = true;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  // The rally should be cancelled on death.
+  EXPECT_FALSE(commander_data->flag_rally_in_progress);
+  EXPECT_FALSE(commander_data->flag_rally_at_position);
+  EXPECT_FALSE(commander_data->flag_rally_flag_active);
+  EXPECT_FALSE(commander_data->flag_rally_issue_commands);
+  EXPECT_TRUE(commander_data->wounded);
+}
+
+TEST(CommanderFlagRallyTest, StartingNewFlagRallyClearsExistingPlacedFlag) {
+  Engine::Core::CommanderComponent commander_data;
+  commander_data.flag_rally_cost = 2.0F;
+  commander_data.flag_rally_flag_x = 3.0F;
+  commander_data.flag_rally_flag_z = 4.0F;
+  commander_data.flag_rally_flag_active = true;
+  commander_data.flag_rally_issue_commands = true;
+
+  commander_data.begin_flag_rally(10.0F, 12.0F, false);
+
+  EXPECT_FLOAT_EQ(commander_data.flag_rally_pending_x, 10.0F);
+  EXPECT_FLOAT_EQ(commander_data.flag_rally_pending_z, 12.0F);
+  EXPECT_TRUE(commander_data.flag_rally_in_progress);
+  EXPECT_FALSE(commander_data.flag_rally_at_position);
+  EXPECT_FLOAT_EQ(commander_data.flag_rally_animation_timer, 0.0F);
+  EXPECT_FALSE(commander_data.flag_rally_flag_active);
+  EXPECT_FALSE(commander_data.flag_rally_issue_commands);
+}
+
+TEST(CommanderFlagRallyTest, CommanderMovingTowardsFlagPositionDoesNotCompleteEarly) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  // Commander is far from the target — has not arrived yet.
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->flag_rally_pending_x = 50.0F;
+  commander_data->flag_rally_pending_z = 50.0F;
+  commander_data->flag_rally_cost = 2.0F;
+  commander_data->flag_rally_in_progress = true;
+  commander_data->flag_rally_at_position = false;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  // Commander has not arrived yet — no phase transition.
+  EXPECT_FALSE(commander_data->flag_rally_at_position);
+  EXPECT_FALSE(commander_data->flag_rally_flag_active);
+}
+
+TEST(CommanderFlagRallyTest, DivergentMoveOrderCancelsFlagRally) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_movement = commander->add_component<Engine::Core::MovementComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_movement, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->flag_rally_pending_x = 10.0F;
+  commander_data->flag_rally_pending_z = 0.0F;
+  commander_data->flag_rally_in_progress = true;
+  commander_movement->has_target = true;
+  commander_movement->goal_x = 25.0F;
+  commander_movement->goal_y = 0.0F;
+  commander_movement->target_x = 25.0F;
+  commander_movement->target_y = 0.0F;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_FALSE(commander_data->flag_rally_in_progress);
+  EXPECT_FALSE(commander_data->flag_rally_at_position);
+  EXPECT_FALSE(commander_data->flag_rally_flag_active);
+}
+
+TEST(CommanderFlagRallyTest, CombatInterruptCancelsPlantingPhase) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  auto* commander_action =
+      commander->add_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  ASSERT_NE(commander_action, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  commander_transform->position = {5.0F, 0.0F, 5.0F};
+  commander_data->flag_rally_pending_x = 5.0F;
+  commander_data->flag_rally_pending_z = 5.0F;
+  commander_data->flag_rally_in_progress = true;
+  commander_data->flag_rally_at_position = true;
+  commander_data->flag_rally_animation_timer = 1.5F;
+  commander_action->phase = Engine::Core::RpgCommanderActionPhase::Ability;
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_FALSE(commander_data->flag_rally_in_progress);
+  EXPECT_FALSE(commander_data->flag_rally_at_position);
+  EXPECT_FALSE(commander_data->flag_rally_flag_active);
 }
 
 } // namespace

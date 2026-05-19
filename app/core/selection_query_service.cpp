@@ -173,6 +173,7 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
   result["canHeal"] = false;
   result["canBuild"] = false;
   result["canDeliver"] = false;
+  result["canRally"] = false;
 
   if (m_world == nullptr) {
     return result;
@@ -194,11 +195,12 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
   bool can_heal = false;
   bool can_build = false;
   bool can_deliver = false;
+  bool can_rally = false;
 
   for (auto id : sel) {
 
     if (can_attack && can_guard && can_hold && can_patrol && can_heal && can_build &&
-        can_deliver) {
+        can_deliver && can_rally) {
       break;
     }
 
@@ -233,6 +235,10 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
     if (!can_deliver && u->spawn_type == Game::Units::SpawnType::Civilian) {
       can_deliver = true;
     }
+    if (!can_rally &&
+        e->get_component<Engine::Core::CommanderComponent>() != nullptr) {
+      can_rally = true;
+    }
   }
 
   result["canAttack"] = can_attack;
@@ -242,6 +248,7 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
   result["canHeal"] = can_heal;
   result["canBuild"] = can_build;
   result["canDeliver"] = can_deliver;
+  result["canRally"] = can_rally;
 
   return result;
 }

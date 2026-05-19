@@ -26,6 +26,11 @@ RowLayout {
             "rally_cooldown_remaining": 0.0,
             "rally_feedback_time": 0.0,
             "rally_ready": false,
+            "rally_placing": false,
+            "rally_in_progress": false,
+            "rally_is_planting": false,
+            "rally_has_flag": false,
+            "rally_action_progress": 0.0,
             "aura_active": false,
             "combo_step": 0,
             "posture": 0.0,
@@ -72,19 +77,47 @@ RowLayout {
     }
 
     function rally_progress() {
-        var cooldown = Number(status_value("rally_cooldown", 0));
-        var remaining = Number(status_value("rally_cooldown_remaining", 0));
-        if (cooldown <= 0)
-            return 1;
-        return Math.max(0, Math.min(1, 1 - remaining / cooldown));
+        if (status_value("rally_is_planting", false))
+            return Math.max(0, Math.min(1, Number(status_value("rally_action_progress", 0))));
+        if (status_value("rally_in_progress", false))
+            return 0.25;
+        if (status_value("rally_placing", false))
+            return 0.12;
+        return status_value("rally_has_flag", false) ? 1 : 0;
     }
 
     function rally_label() {
         if (!status_value("has_commander", false))
             return qsTr("Commander unavailable");
-        if (status_value("rally_ready", false))
-            return qsTr("Rally ready");
-        return qsTr("Recovering %1s").arg(Number(status_value("rally_cooldown_remaining", 0)).toFixed(1));
+        if (status_value("rally_placing", false))
+            return qsTr("Choose destination");
+        if (status_value("rally_is_planting", false))
+            return qsTr("Planting flag");
+        if (status_value("rally_in_progress", false))
+            return qsTr("Moving commander");
+        if (status_value("rally_has_flag", false))
+            return qsTr("Flag active");
+        return qsTr("Ready");
+    }
+
+    function rally_description() {
+        if (status_value("rally_placing", false))
+            return qsTr("Left-click a destination to confirm the rally flag.");
+        if (status_value("rally_is_planting", false))
+            return qsTr("The commander is planting the flag. Interruptions will cancel the rally.");
+        if (status_value("rally_in_progress", false))
+            return qsTr("The commander is marching to the chosen point before planting the flag.");
+        if (status_value("rally_has_flag", false))
+            return qsTr("Troops have already received a normal move order to this rally flag.");
+        return qsTr("Choose a destination, march there, plant the flag, then order all controllable troops there.");
+    }
+
+    function rally_button_text() {
+        if (status_value("rally_placing", false))
+            return qsTr("Cancel Rally Placement");
+        if (status_value("rally_in_progress", false))
+            return qsTr("Rally In Progress");
+        return status_value("rally_has_flag", false) ? qsTr("Reposition Rally [R]") : qsTr("Place Rally [R]");
     }
 
     function cooldown_progress(cooldownKey, remainingKey) {
@@ -328,7 +361,7 @@ RowLayout {
                 Layout.fillHeight: true
                 color: hs.parchmentLight
                 radius: 6
-                border.color: bottomRoot.status_value("rally_ready", false) ? hs.bronze : hs.bronzeDeep
+                border.color: (bottomRoot.status_value("rally_placing", false) || bottomRoot.status_value("rally_in_progress", false) || bottomRoot.status_value("rally_has_flag", false)) ? hs.bronze : hs.bronzeDeep
                 border.width: 2
 
                 ColumnLayout {
@@ -352,7 +385,7 @@ RowLayout {
 
                         Rectangle {
                             radius: 10
-                            color: bottomRoot.status_value("rally_ready", false) ? hs.wax : hs.parchmentDark
+                            color: (bottomRoot.status_value("rally_placing", false) || bottomRoot.status_value("rally_in_progress", false) || bottomRoot.status_value("rally_has_flag", false)) ? hs.wax : hs.parchmentDark
                             implicitWidth: rallyStateText.implicitWidth + 16
                             implicitHeight: rallyStateText.implicitHeight + 8
 
@@ -380,13 +413,13 @@ RowLayout {
                             width: parent.width * bottomRoot.rally_progress()
                             height: parent.height
                             radius: 5
-                            color: bottomRoot.status_value("rally_ready", false) ? Theme.accent : hs.bronze
+                            color: (bottomRoot.status_value("rally_in_progress", false) || bottomRoot.status_value("rally_has_flag", false)) ? Theme.accent : hs.bronze
                         }
                     }
 
                     Text {
                         Layout.fillWidth: true
-                        text: qsTr("Restore nearby wavering troops and keep the line steady.")
+                        text: bottomRoot.rally_description()
                         color: Theme.textSubLite
                         wrapMode: Text.WordWrap
                         font.pointSize: 9
@@ -395,12 +428,18 @@ RowLayout {
                     Button {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 42
-                        text: bottomRoot.status_value("rally_ready", false) ? qsTr("Trigger Rally [R]") : qsTr("Rally Cooling Down")
-                        enabled: bottomRoot.status_value("has_commander", false) && bottomRoot.status_value("rally_ready", false)
+                        text: bottomRoot.rally_button_text()
+                        enabled: bottomRoot.status_value("has_commander", false) && !bottomRoot.status_value("rally_in_progress", false)
                         focusPolicy: Qt.NoFocus
                         onClicked: {
-                            if (typeof game !== 'undefined' && game.commander_trigger_rally)
+                            if (typeof game === 'undefined')
+                                return;
+                            if (bottomRoot.status_value("rally_placing", false)) {
+                                if (game.cancel_commander_flag_rally)
+                                    game.cancel_commander_flag_rally();
+                            } else if (game.commander_trigger_rally) {
                                 game.commander_trigger_rally();
+                            }
                         }
 
                         background: Rectangle {
@@ -576,7 +615,7 @@ RowLayout {
             }
 
             Text {
-                text: qsTr("[R] Rally  [C] Camera  [Enter] Return to RTS")
+                text: qsTr("[R] Place Rally  [C] Camera  [Enter] Return to RTS")
                 color: Theme.textMain
                 font.pointSize: 10
                 wrapMode: Text.WordWrap
@@ -587,7 +626,7 @@ RowLayout {
             }
 
             Text {
-                text: bottomRoot.status_value("alive", false) ? qsTr("First-person command engaged") : qsTr("Commander unavailable")
+                text: !bottomRoot.status_value("alive", false) ? qsTr("Commander unavailable") : (bottomRoot.status_value("rally_in_progress", false) ? qsTr("Rally autopilot engaged until the flag is planted") : qsTr("First-person command engaged"))
                 color: Theme.textSubLite
                 font.pointSize: 9
                 wrapMode: Text.WordWrap

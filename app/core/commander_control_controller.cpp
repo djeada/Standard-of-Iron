@@ -1150,6 +1150,46 @@ auto CommanderControlController::update(Engine::Core::World& world,
   if (movement == nullptr) {
     movement = commander->add_component<Engine::Core::MovementComponent>();
   }
+  auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>();
+
+  if (cmd_comp != nullptr && cmd_comp->flag_rally_in_progress &&
+      !cmd_comp->fpv_controlled) {
+    update_ability_cooldowns(cmd_comp, dt);
+    cmd_comp->fpv_motion_vx = 0.0F;
+    cmd_comp->fpv_motion_vz = 0.0F;
+
+    m_input.primary_action = false;
+    m_input.secondary_action = false;
+    m_input.dodge_requested = false;
+    m_input.jump_requested = false;
+    m_input.shield_bash_requested = false;
+    m_input.vanguard_rush_requested = false;
+    m_input.second_wind_requested = false;
+    m_move_speed = 0.0F;
+    m_move_right_axis = 0;
+    m_move_running = false;
+    m_guard_was_active = false;
+    m_view_yaw = wrap_angle_degrees(transform->rotation.y);
+
+    if (movement != nullptr) {
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
+    }
+    if (guard != nullptr) {
+      guard->active = false;
+      guard->perfect_guard_remaining =
+          std::max(0.0F, guard->perfect_guard_remaining - dt);
+      guard->guard_break_remaining = std::max(0.0F, guard->guard_break_remaining - dt);
+      guard->rearm_requires_release = false;
+    }
+    if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
+      rpg->dodge_invincible = false;
+    }
+
+    update_camera(world, *commander, camera, dt);
+    return true;
+  }
+
   if (movement != nullptr) {
     movement->has_target = false;
     movement->path_pending = false;
@@ -1232,7 +1272,6 @@ auto CommanderControlController::update(Engine::Core::World& world,
             ((m_guard_was_active || m_input.secondary_action) ? 8.0F : 18.0F) * dt);
   }
 
-  auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>();
   if (guard != nullptr) {
     guard->perfect_guard_remaining =
         std::max(0.0F, guard->perfect_guard_remaining - dt);

@@ -18,9 +18,11 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../game_config.h"
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
 #include "combat_rules.h"
+#include "formation_planner.h"
 #include "pathfinding.h"
 #include "units/spawn_type.h"
 
@@ -217,6 +219,115 @@ auto CommandService::grid_to_world(const Point& grid_pos) -> QVector3D {
             static_cast<float>(grid_pos.y) + s_pathfinder->get_grid_offset_z()};
   }
   return {static_cast<float>(grid_pos.x), 0.0F, static_cast<float>(grid_pos.y)};
+}
+
+auto CommandService::snap_to_walkable_ground(const QVector3D& world_position)
+    -> QVector3D {
+  QVector3D snapped = world_position;
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  snapped.setY(terrain_service.resolve_surface_world_y(
+      snapped.x(), snapped.z(), 0.0F, snapped.y()));
+
+  auto* pathfinder = get_pathfinder();
+  if (pathfinder == nullptr && !terrain_service.is_initialized()) {
+    return snapped;
+  }
+
+  Point const grid = world_to_grid(snapped.x(), snapped.z());
+  auto const is_walkable = [&](int x, int z) {
+    if (terrain_service.is_initialized()) {
+      return terrain_service.is_walkable(x, z);
+    }
+    return pathfinder != nullptr && pathfinder->is_walkable(x, z);
+  };
+  if (is_walkable(grid.x, grid.y)) {
+    return snapped;
+  }
+
+  Point nearest = grid;
+  bool found = false;
+  for (int radius = 1; radius <= 24 && !found; ++radius) {
+    for (int dz = -radius; dz <= radius && !found; ++dz) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::abs(dx) != radius && std::abs(dz) != radius) {
+          continue;
+        }
+        int const check_x = grid.x + dx;
+        int const check_z = grid.y + dz;
+        if (!is_walkable(check_x, check_z)) {
+          continue;
+        }
+        nearest = {check_x, check_z};
+        found = true;
+        break;
+      }
+    }
+  }
+
+  QVector3D const nearest_world = grid_to_world(found ? nearest : grid);
+  snapped.setX(nearest_world.x());
+  snapped.setZ(nearest_world.z());
+  snapped.setY(terrain_service.resolve_surface_world_y(
+      snapped.x(), snapped.z(), 0.0F, snapped.y()));
+  return snapped;
+}
+
+auto CommandService::plan_ground_move(Engine::Core::World& world,
+                                      const std::vector<Engine::Core::EntityID>& units,
+                                      const QVector3D& target) -> GroundMovePlan {
+  GroundMovePlan plan;
+  if (units.empty()) {
+    return plan;
+  }
+
+  plan.resolved_target = snap_to_walkable_ground(target);
+  auto formation_result = FormationPlanner::get_formation_with_facing(
+      world,
+      units,
+      plan.resolved_target,
+      Game::GameConfig::instance().gameplay().formation_spacing_default);
+  plan.positions = std::move(formation_result.positions);
+  plan.facing_angles = std::move(formation_result.facing_angles);
+  plan.preserve_formation_mode = formation_result.used_tactical_formation;
+  if (units.size() == 1 && !plan.positions.empty()) {
+    plan.resolved_target = plan.positions.front();
+  }
+  return plan;
+}
+
+void CommandService::issue_ground_move(Engine::Core::World& world,
+                                       const std::vector<Engine::Core::EntityID>& units,
+                                       const GroundMovePlan& plan) {
+  if (units.empty() || units.size() != plan.positions.size()) {
+    return;
+  }
+
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    auto* entity = world.get_entity(units[i]);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto* formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if ((formation_mode == nullptr) || !formation_mode->active ||
+        i >= plan.facing_angles.size()) {
+      continue;
+    }
+
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (transform != nullptr) {
+      transform->desired_yaw = plan.facing_angles[i];
+      transform->has_desired_yaw = true;
+    }
+  }
+
+  MoveOptions opts;
+  opts.kind = MoveOrderKind::FormationMove;
+  opts.group_move = units.size() > 1;
+  opts.retry_individual_on_group_failure = units.size() > 1;
+  opts.preserve_formation_mode = plan.preserve_formation_mode;
+  move_units(world, units, plan.positions, opts);
 }
 
 auto CommandService::get_unit_radius(Engine::Core::World& world,

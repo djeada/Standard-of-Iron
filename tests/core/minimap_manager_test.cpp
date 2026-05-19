@@ -339,6 +339,33 @@ TEST(VisibilityServiceSnapshotTest, SnapshotIfNewerReturnsPublishedFrames) {
                           }));
 }
 
+TEST(VisibilityServiceSnapshotTest, CommanderRallyFlagAddsVisionSource) {
+  auto& visibility = VisibilityService::instance();
+  visibility.initialize(64, 64, 1.0F);
+  visibility.reset();
+
+  auto world = std::make_unique<Engine::Core::World>();
+  auto* commander = world->create_entity();
+  auto* transform =
+      commander->add_component<Engine::Core::TransformComponent>(-20.0F, 0.0F, -20.0F);
+  auto* unit =
+      commander->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  unit->owner_id = 1;
+  commander_data->flag_rally_flag_x = 20.0F;
+  commander_data->flag_rally_flag_z = 20.0F;
+
+  visibility.compute_immediate(*world, 1);
+  EXPECT_FALSE(visibility.is_visible_world(20.0F, 20.0F));
+
+  commander_data->flag_rally_flag_active = true;
+  visibility.compute_immediate(*world, 1);
+  EXPECT_TRUE(visibility.is_visible_world(20.0F, 20.0F));
+}
+
 TEST(VisibilityCoordinatorTest, ForceRepublishSyncsFogAfterMinimapGeneration) {
   auto world = std::make_unique<Engine::Core::World>();
   auto* scout = add_unit(*world, 0.0F, 0.0F, 1);
