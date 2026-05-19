@@ -26,6 +26,7 @@ namespace Game::Units {
 struct SpawnParams {
 
   QVector3D position{0, 0, 0};
+  float rotation_y = 0.0F;
   int player_id = 0;
   SpawnType spawn_type = SpawnType::Archer;
   bool ai_controlled = false;

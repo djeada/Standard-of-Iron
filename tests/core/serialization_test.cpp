@@ -1799,3 +1799,54 @@ TEST_F(SerializationTest, ElephantStompImpactComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->impacts[1].z, 45.0F);
   EXPECT_FLOAT_EQ(deserialized->impacts[1].time, 2.0F);
 }
+
+TEST_F(SerializationTest, WallConstructionSiteRoundTrips) {
+  auto* entity = world->create_entity();
+  entity->add_component<TransformComponent>(4.0F, 0.0F, 6.0F);
+  auto* renderable = entity->add_component<RenderableComponent>("mesh", "texture");
+  renderable->renderer_id = "troops/roman/wall_segment_end";
+
+  auto* wall = entity->add_component<WallSegmentComponent>();
+  wall->grid_x = 4;
+  wall->grid_z = 6;
+  wall->connection_mask = 2;
+
+  auto* site = entity->add_component<WallConstructionSiteComponent>();
+  site->owner_id = 3;
+  site->nation_id = Game::Systems::NationID::Carthage;
+  site->build_time = 8.0F;
+  site->progress = 0.5F;
+
+  QJsonObject const json = Serialization::serialize_entity(entity);
+  auto* restored = world->create_entity();
+  Serialization::deserialize_entity(restored, json);
+
+  const auto* restored_wall = restored->get_component<WallSegmentComponent>();
+  const auto* restored_site = restored->get_component<WallConstructionSiteComponent>();
+  ASSERT_NE(restored_wall, nullptr);
+  ASSERT_NE(restored_site, nullptr);
+  EXPECT_EQ(restored_wall->grid_x, 4);
+  EXPECT_EQ(restored_wall->grid_z, 6);
+  EXPECT_EQ(restored_site->owner_id, 3);
+  EXPECT_EQ(restored_site->nation_id, Game::Systems::NationID::Carthage);
+  EXPECT_FLOAT_EQ(restored_site->build_time, 8.0F);
+  EXPECT_FLOAT_EQ(restored_site->progress, 0.5F);
+}
+
+TEST_F(SerializationTest, SerializeWorldSkipsConstructionPreviewEntities) {
+  auto* preview = world->create_entity();
+  preview->add_component<TransformComponent>(2.0F, 0.0F, 2.0F);
+  preview->add_component<RenderableComponent>("mesh", "texture");
+  preview->add_component<ConstructionPreviewComponent>();
+
+  auto* wall = world->create_entity();
+  wall->add_component<TransformComponent>(4.0F, 0.0F, 4.0F);
+  wall->add_component<UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::WallSegment;
+  wall->add_component<WallSegmentComponent>();
+
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
+  const auto entities = doc.object()["entities"].toArray();
+
+  EXPECT_EQ(entities.size(), 1);
+}

@@ -62,6 +62,7 @@ void TerrainScatterManager::configure(
     bool use_world_props_exclusively) {
   Q_UNUSED(use_world_props_exclusively);
   std::lock_guard<std::mutex> const lock(m_mutex);
+  (void)use_world_props_exclusively;
 
   m_biome->configure(height_map, biome_settings);
   m_stone->configure(height_map, biome_settings, world_props);

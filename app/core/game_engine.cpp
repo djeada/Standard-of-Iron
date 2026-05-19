@@ -476,6 +476,10 @@ GameEngine::GameEngine(QObject* parent)
           this,
           &GameEngine::construction_preview_valid_changed);
   connect(m_production_manager.get(),
+          &ProductionManager::construction_preview_summary_changed,
+          this,
+          &GameEngine::construction_preview_summary_changed);
+  connect(m_production_manager.get(),
           &ProductionManager::construction_placement_rejected,
           this,
           [this](const QString& reason) {
@@ -1007,10 +1011,41 @@ auto GameEngine::construction_preview_valid() const -> bool {
                               : false;
 }
 
+auto GameEngine::construction_preview_segment_count() const -> int {
+  return m_production_manager
+             ? m_production_manager->construction_preview_segment_count()
+             : 0;
+}
+
+auto GameEngine::construction_preview_valid_segment_count() const -> int {
+  return m_production_manager
+             ? m_production_manager->construction_preview_valid_segment_count()
+             : 0;
+}
+
+auto GameEngine::construction_preview_total_cost() const -> int {
+  return m_production_manager ? m_production_manager->construction_preview_total_cost()
+                              : 0;
+}
+
 void GameEngine::on_construction_mouse_move(qreal sx, qreal sy) {
   ensure_initialized();
   if (m_production_manager) {
     m_production_manager->on_construction_mouse_move(sx, sy, m_viewport);
+  }
+}
+
+void GameEngine::on_construction_pointer_pressed(qreal sx, qreal sy) {
+  ensure_initialized();
+  if (m_production_manager) {
+    m_production_manager->on_construction_pointer_pressed(sx, sy, m_viewport);
+  }
+}
+
+void GameEngine::on_construction_pointer_released(qreal sx, qreal sy) {
+  ensure_initialized();
+  if (m_production_manager) {
+    m_production_manager->on_construction_pointer_released(sx, sy, m_viewport);
   }
 }
 

@@ -16,6 +16,7 @@
 #include "../../units/troop_config.h"
 #include "../building_collision_registry.h"
 #include "../rpg_combat_system/rpg_damage_resolver.h"
+#include "../wall_network_service.h"
 
 namespace Game::Systems::Combat {
 
@@ -704,6 +705,10 @@ void deal_damage(Engine::Core::World* world,
 
     if (target->has_component<Engine::Core::BuildingComponent>()) {
       BuildingCollisionRegistry::instance().unregister_building(target->get_id());
+    }
+    if (world != nullptr &&
+        target->get_component<Engine::Core::WallSegmentComponent>() != nullptr) {
+      WallNetworkService::refresh_world(*world);
     }
 
     if (auto* movement = target->get_component<Engine::Core::MovementComponent>()) {
