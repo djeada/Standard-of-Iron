@@ -17,6 +17,7 @@ class BoulderRenderer;
 class DeadTreeRenderer;
 class FireCampRenderer;
 class IronOreRenderer;
+class MagicShrineRenderer;
 class OliveRenderer;
 class PineRenderer;
 class PlantRenderer;
@@ -58,6 +59,7 @@ public:
   [[nodiscard]] auto dead_tree() const -> DeadTreeRenderer*;
   [[nodiscard]] auto boulder() const -> BoulderRenderer*;
   [[nodiscard]] auto iron_ore() const -> IronOreRenderer*;
+  [[nodiscard]] auto magic_shrine() const -> MagicShrineRenderer*;
   [[nodiscard]] auto chunks() const -> std::vector<ScatterChunk>;
   [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats;
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass*>&;
@@ -76,6 +78,7 @@ private:
   std::unique_ptr<DeadTreeRenderer> m_dead_tree;
   std::unique_ptr<BoulderRenderer> m_boulder;
   std::unique_ptr<IronOreRenderer> m_iron_ore;
+  std::unique_ptr<MagicShrineRenderer> m_magic_shrine;
   std::vector<IRenderPass*> m_passes;
   mutable std::mutex m_mutex;
 };
