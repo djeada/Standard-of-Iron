@@ -9,6 +9,7 @@
 #include "../ground/dead_tree_renderer.h"
 #include "../ground/firecamp_renderer.h"
 #include "../ground/iron_ore_renderer.h"
+#include "../ground/magic_shrine_renderer.h"
 #include "../ground/olive_renderer.h"
 #include "../ground/pine_renderer.h"
 #include "../ground/plant_renderer.h"
@@ -35,6 +36,7 @@ TerrainScatterManager::TerrainScatterManager()
     , m_dead_tree(std::make_unique<DeadTreeRenderer>())
     , m_boulder(std::make_unique<BoulderRenderer>())
     , m_iron_ore(std::make_unique<IronOreRenderer>())
+    , m_magic_shrine(std::make_unique<MagicShrineRenderer>())
     , m_passes{m_biome.get(),
                m_stone.get(),
                m_plant.get(),
@@ -47,7 +49,8 @@ TerrainScatterManager::TerrainScatterManager()
                m_ruins.get(),
                m_dead_tree.get(),
                m_boulder.get(),
-               m_iron_ore.get()} {
+               m_iron_ore.get(),
+               m_magic_shrine.get()} {
 }
 
 TerrainScatterManager::~TerrainScatterManager() = default;
@@ -57,6 +60,7 @@ void TerrainScatterManager::configure(
     const Game::Map::BiomeSettings& biome_settings,
     const std::vector<Game::Map::WorldProp>& world_props,
     bool use_world_props_exclusively) {
+  Q_UNUSED(use_world_props_exclusively);
   std::lock_guard<std::mutex> const lock(m_mutex);
   (void)use_world_props_exclusively;
 
@@ -73,6 +77,7 @@ void TerrainScatterManager::configure(
   m_dead_tree->configure(height_map, biome_settings, world_props);
   m_boulder->configure(height_map, biome_settings, world_props);
   m_iron_ore->configure(height_map, biome_settings, world_props);
+  m_magic_shrine->configure(height_map, biome_settings, world_props);
 }
 
 void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
@@ -89,6 +94,7 @@ void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
   m_dead_tree->set_light_direction(dir);
   m_boulder->set_light_direction(dir);
   m_iron_ore->set_light_direction(dir);
+  m_magic_shrine->set_light_direction(dir);
 }
 
 void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resources) {
@@ -123,6 +129,7 @@ void TerrainScatterManager::clear() {
   m_dead_tree->clear();
   m_boulder->clear();
   m_iron_ore->clear();
+  m_magic_shrine->clear();
 }
 
 void TerrainScatterManager::refresh_grass() {
@@ -137,7 +144,8 @@ auto TerrainScatterManager::is_gpu_ready() const -> bool {
          m_firecamp->is_gpu_ready() && m_tent->is_gpu_ready() &&
          m_supply_cart->is_gpu_ready() && m_weapon_rack->is_gpu_ready() &&
          m_ruins->is_gpu_ready() && m_dead_tree->is_gpu_ready() &&
-         m_boulder->is_gpu_ready() && m_iron_ore->is_gpu_ready();
+         m_boulder->is_gpu_ready() && m_iron_ore->is_gpu_ready() &&
+         m_magic_shrine->is_gpu_ready();
 }
 
 auto TerrainScatterManager::biome() const -> BiomeRenderer* {
@@ -190,6 +198,10 @@ auto TerrainScatterManager::boulder() const -> BoulderRenderer* {
 
 auto TerrainScatterManager::iron_ore() const -> IronOreRenderer* {
   return m_iron_ore.get();
+}
+
+auto TerrainScatterManager::magic_shrine() const -> MagicShrineRenderer* {
+  return m_magic_shrine.get();
 }
 
 auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
@@ -285,7 +297,14 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
            m_iron_ore != nullptr ? m_iron_ore->instance_count() : 0U,
            m_iron_ore == nullptr || m_iron_ore->is_gpu_ready(),
            m_iron_ore != nullptr ? m_iron_ore->last_sync_stats()
-                                 : Render::Ground::Scatter::SyncStats{}}};
+                                 : Render::Ground::Scatter::SyncStats{}},
+          {ScatterSpeciesId::MagicShrine,
+           ScatterVisibilityMode::InstanceFiltered,
+           m_magic_shrine.get(),
+           m_magic_shrine != nullptr ? m_magic_shrine->instance_count() : 0U,
+           m_magic_shrine == nullptr || m_magic_shrine->is_gpu_ready(),
+           m_magic_shrine != nullptr ? m_magic_shrine->last_sync_stats()
+                                     : Render::Ground::Scatter::SyncStats{}}};
 }
 
 auto TerrainScatterManager::last_sync_stats() const
@@ -331,6 +350,9 @@ auto TerrainScatterManager::last_sync_stats() const
   }
   if (m_iron_ore != nullptr) {
     stats += m_iron_ore->last_sync_stats();
+  }
+  if (m_magic_shrine != nullptr) {
+    stats += m_magic_shrine->last_sync_stats();
   }
   return stats;
 }
