@@ -10,6 +10,7 @@
 #include "../units/troop_type.h"
 #include "formation_system.h"
 #include "nation_id.h"
+#include "resource_types.h"
 
 namespace Game::Systems {
 
@@ -45,6 +46,7 @@ struct TroopType {
   std::string display_name;
   bool is_melee = false;
   int cost = 100;
+  ResourceAmounts resource_costs{};
   float build_time = 5.0F;
   int priority = 0;
 };

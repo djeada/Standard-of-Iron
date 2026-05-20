@@ -31,6 +31,7 @@ public:
   void update(Engine::Core::World* world, float delta_time) override;
 
   void reinitialize();
+  void shutdown_workers();
 
   void set_update_interval(float interval) { m_update_interval = interval; }
   float get_update_interval() const { return m_update_interval; }

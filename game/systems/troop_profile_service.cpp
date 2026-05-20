@@ -84,6 +84,9 @@ auto TroopProfileService::build_profile(const Nation& nation,
   if (const auto* nation_troop = nation.get_troop(type)) {
     profile.display_name = nation_troop->display_name;
     profile.production.cost = nation_troop->cost;
+    if (!nation_troop->resource_costs.empty()) {
+      profile.production.resource_costs = nation_troop->resource_costs;
+    }
     profile.production.build_time = nation_troop->build_time;
     profile.production.priority = nation_troop->priority;
     profile.production.is_melee = nation_troop->is_melee;

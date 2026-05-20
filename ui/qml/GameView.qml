@@ -17,22 +17,22 @@ Item {
     onConstruction_preview_activeChanged: {
         if (constructionCursor)
             constructionCursor.requestPaint();
-        if (collectCursor)
-            collectCursor.requestPaint();
+        if (collectCursorOverlay)
+            collectCursorOverlay.requestPaint();
     }
 
     onConstruction_preview_validChanged: {
         if (constructionCursor)
             constructionCursor.requestPaint();
-        if (collectCursor)
-            collectCursor.requestPaint();
+        if (collectCursorOverlay)
+            collectCursorOverlay.requestPaint();
     }
 
     onIs_placing_constructionChanged: {
         if (constructionCursor)
             constructionCursor.requestPaint();
-        if (collectCursor)
-            collectCursor.requestPaint();
+        if (collectCursorOverlay)
+            collectCursorOverlay.requestPaint();
     }
 
     signal map_clicked(real x, real y)
@@ -840,36 +840,21 @@ Item {
             Component.onCompleted: requestPaint()
         }
 
-        Canvas {
+        Item {
             id: rallyPlacementCursor
 
             visible: game_view.is_rally_placement()
             anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                // Draw a gold flag icon to indicate rally placement.
-                ctx.strokeStyle = "#F4C430";
-                ctx.fillStyle = "#F4C430";
-                ctx.lineWidth = 2;
-                // Flag pole
-                ctx.beginPath();
-                ctx.moveTo(14, 6);
-                ctx.lineTo(14, 26);
-                ctx.stroke();
-                // Flag pennant
-                ctx.beginPath();
-                ctx.moveTo(14, 6);
-                ctx.lineTo(24, 10);
-                ctx.lineTo(14, 14);
-                ctx.closePath();
-                ctx.fill();
-                // Base circle
-                ctx.beginPath();
-                ctx.arc(14, 26, 3, 0, Math.PI * 2);
-                ctx.fill();
+
+            Image {
+                anchors.centerIn: parent
+                width: 28
+                height: 28
+                source: StyleGuide.icon_path("rally_mode.png")
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
             }
-            Component.onCompleted: requestPaint()
         }
 
         Canvas {
@@ -932,72 +917,85 @@ Item {
             Component.onCompleted: requestPaint()
         }
 
-        Canvas {
-            id: collectCursor
+        Item {
+            id: collectCursorContainer
 
             visible: game_view.cursor_mode === "collect"
             anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                var active = game_view.construction_preview_active;
-                var ok = active && game_view.construction_preview_valid;
-                var primary = !active ? "#D8C17A" : (ok ? "#75D36B" : "#D36060");
-                var secondary = !active ? "#51401A" : (ok ? "#163A16" : "#4A1717");
-                ctx.strokeStyle = primary;
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.arc(16, 16, 10, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.fillStyle = Qt.rgba(0, 0, 0, 0.25);
-                ctx.beginPath();
-                ctx.arc(16, 16, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = secondary;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(16, 5);
-                ctx.lineTo(16, 11);
-                ctx.moveTo(16, 21);
-                ctx.lineTo(16, 27);
-                ctx.moveTo(5, 16);
-                ctx.lineTo(11, 16);
-                ctx.moveTo(21, 16);
-                ctx.lineTo(27, 16);
-                ctx.stroke();
-                ctx.strokeStyle = primary;
-                ctx.lineWidth = 2.5;
-                ctx.fillStyle = primary;
-                ctx.beginPath();
-                ctx.arc(11, 11, 2, 0, Math.PI * 2);
-                ctx.arc(21, 11, 2, 0, Math.PI * 2);
-                ctx.arc(16, 22, 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = primary;
-                ctx.lineWidth = 2.5;
-                if (!active) {
-                    ctx.beginPath();
-                    ctx.moveTo(16, 10);
-                    ctx.lineTo(16, 22);
-                    ctx.moveTo(10, 16);
-                    ctx.lineTo(22, 16);
-                    ctx.stroke();
-                } else if (ok) {
-                    ctx.beginPath();
-                    ctx.moveTo(11, 17);
-                    ctx.lineTo(15, 21);
-                    ctx.lineTo(22, 12);
-                    ctx.stroke();
-                } else {
-                    ctx.beginPath();
-                    ctx.moveTo(11, 11);
-                    ctx.lineTo(21, 21);
-                    ctx.moveTo(21, 11);
-                    ctx.lineTo(11, 21);
-                    ctx.stroke();
-                }
+
+            Image {
+                anchors.centerIn: parent
+                width: 18
+                height: 18
+                source: StyleGuide.icon_path("collect_mode.png")
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
+                opacity: !game_view.construction_preview_active ? 0.9 : (game_view.construction_preview_valid ? 1 : 0.7)
             }
-            Component.onCompleted: requestPaint()
+
+            Canvas {
+                id: collectCursorOverlay
+
+                anchors.fill: parent
+                onPaint: {
+                    var ctx = getContext("2d");
+                    ctx.clearRect(0, 0, width, height);
+                    var active = game_view.construction_preview_active;
+                    var ok = active && game_view.construction_preview_valid;
+                    var primary = !active ? "#D8C17A" : (ok ? "#75D36B" : "#D36060");
+                    var secondary = !active ? "#51401A" : (ok ? "#163A16" : "#4A1717");
+                    ctx.strokeStyle = primary;
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.arc(16, 16, 10, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.strokeStyle = secondary;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(16, 5);
+                    ctx.lineTo(16, 9);
+                    ctx.moveTo(16, 23);
+                    ctx.lineTo(16, 27);
+                    ctx.moveTo(5, 16);
+                    ctx.lineTo(9, 16);
+                    ctx.moveTo(23, 16);
+                    ctx.lineTo(27, 16);
+                    ctx.stroke();
+                    ctx.strokeStyle = primary;
+                    ctx.lineWidth = 2.5;
+                    ctx.fillStyle = primary;
+                    ctx.beginPath();
+                    ctx.arc(11, 11, 2, 0, Math.PI * 2);
+                    ctx.arc(21, 11, 2, 0, Math.PI * 2);
+                    ctx.arc(16, 22, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = primary;
+                    ctx.lineWidth = 2.5;
+                    if (!active) {
+                        ctx.beginPath();
+                        ctx.moveTo(16, 10);
+                        ctx.lineTo(16, 22);
+                        ctx.moveTo(10, 16);
+                        ctx.lineTo(22, 16);
+                        ctx.stroke();
+                    } else if (ok) {
+                        ctx.beginPath();
+                        ctx.moveTo(11, 17);
+                        ctx.lineTo(15, 21);
+                        ctx.lineTo(22, 12);
+                        ctx.stroke();
+                    } else {
+                        ctx.beginPath();
+                        ctx.moveTo(11, 11);
+                        ctx.lineTo(21, 21);
+                        ctx.moveTo(21, 11);
+                        ctx.lineTo(11, 21);
+                        ctx.stroke();
+                    }
+                }
+                Component.onCompleted: requestPaint()
+            }
         }
     }
 

@@ -549,16 +549,52 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
 
                     Row {
+                        id: goldRow
+
+                        spacing: 6
+
+                        Image {
+                            width: topRoot.compact ? 22 : 26
+                            height: width
+                            source: StyleGuide.icon_path("gold.png")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
+
+                        Label {
+                            text: {
+                                if (typeof game === 'undefined' || !game.selected_player_state || !game.selected_player_state.resources)
+                                    return 0;
+                                return game.selected_player_state.resources.gold || 0;
+                            }
+                            color: Theme.accent
+                            font.pixelSize: 14
+                            font.bold: true
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Rectangle {
+                        width: 2
+                        height: 24
+                        color: hs.bronzeDeep
+                        opacity: 0.5
+                        visible: !topRoot.compact
+                    }
+
+                    Row {
                         id: stoneRow
 
                         spacing: 6
 
-                        Label {
-                            text: qsTr("Stone")
-                            color: hs.bronze
-                            font.pixelSize: 14
-                            font.bold: true
-                            verticalAlignment: Text.AlignVCenter
+                        Image {
+                            width: topRoot.compact ? 22 : 26
+                            height: width
+                            source: StyleGuide.icon_path("stone.png")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
                         }
 
                         Label {
@@ -587,12 +623,13 @@ Item {
 
                         spacing: 6
 
-                        Label {
-                            text: qsTr("Iron")
-                            color: hs.bronze
-                            font.pixelSize: 14
-                            font.bold: true
-                            verticalAlignment: Text.AlignVCenter
+                        Image {
+                            width: topRoot.compact ? 22 : 26
+                            height: width
+                            source: StyleGuide.icon_path("iron.png")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
                         }
 
                         Label {
@@ -621,12 +658,13 @@ Item {
 
                         spacing: 6
 
-                        Label {
-                            text: qsTr("Wood")
-                            color: hs.bronze
-                            font.pixelSize: 14
-                            font.bold: true
-                            verticalAlignment: Text.AlignVCenter
+                        Image {
+                            width: topRoot.compact ? 22 : 26
+                            height: width
+                            source: StyleGuide.icon_path("wood.png")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
                         }
 
                         Label {

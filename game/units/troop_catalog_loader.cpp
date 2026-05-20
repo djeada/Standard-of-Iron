@@ -63,6 +63,22 @@ read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
   return obj.value(key).toBool(fallback);
 }
 
+[[nodiscard]] auto read_resource_amounts(const QJsonObject& obj,
+                                         const char* key,
+                                         Game::Systems::ResourceAmounts fallback)
+    -> Game::Systems::ResourceAmounts {
+  if (!obj.contains(key)) {
+    return fallback;
+  }
+
+  const QJsonObject resource_costs = ensure_object(obj.value(key));
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    const char* const resource_key = Game::Systems::resource_type_key(type);
+    fallback.set(type, read_int(resource_costs, resource_key, fallback.get(type)));
+  }
+  return fallback;
+}
+
 } // namespace
 
 namespace Game::Units {
@@ -103,21 +119,14 @@ auto TroopCatalogLoader::resolve_data_path(const QString& relative) -> QString {
 }
 
 auto TroopCatalogLoader::load_default_catalog() -> bool {
-  if (g_catalog_loaded) {
-    return true;
-  }
-
   const QString path = resolve_data_path("assets/data/troops/base.json");
   if (path.isEmpty()) {
     qCWarning(logger()) << "Failed to locate base troop catalog at"
                         << "assets/data/troops/base.json";
     return false;
   }
-  if (!load_from_file(path)) {
-    return false;
-  }
-  g_catalog_loaded = true;
-  return true;
+  g_catalog_loaded = load_from_file(path);
+  return g_catalog_loaded;
 }
 
 auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
@@ -169,6 +178,8 @@ auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
     const QJsonObject production = ensure_object(troop_obj.value("production"));
     troop_class.production.cost =
         read_int(production, "cost", troop_class.production.cost);
+    troop_class.production.resource_costs = read_resource_amounts(
+        production, "resource_costs", troop_class.production.resource_costs);
     troop_class.production.build_time =
         read_float(production, "build_time", troop_class.production.build_time);
     troop_class.production.priority =

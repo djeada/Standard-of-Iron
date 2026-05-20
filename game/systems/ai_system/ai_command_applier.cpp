@@ -12,6 +12,8 @@
 #include "../../game_config.h"
 #include "../../units/troop_config.h"
 #include "../command_service.h"
+#include "../construction_cost_catalog.h"
+#include "../player_resource_registry.h"
 #include "../production_service.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
@@ -193,6 +195,16 @@ void AICommandApplier::apply(Engine::Core::World& world,
         break;
       }
 
+      const auto resource_costs =
+          Game::Systems::construction_cost_info(command.construction_type)
+              .resource_costs;
+      if (!resource_costs.empty() &&
+          !Game::Systems::PlayerResourceRegistry::instance().has_at_least(
+              ai_owner_id, resource_costs)) {
+        break;
+      }
+
+      bool assigned_any = false;
       for (auto entity_id : command.units) {
         auto* entity = world.get_entity(entity_id);
         if (entity == nullptr) {
@@ -234,6 +246,12 @@ void AICommandApplier::apply(Engine::Core::World& world,
           builder_prod->build_time = BUILD_TIME_DEFAULT;
         }
         builder_prod->time_remaining = builder_prod->build_time;
+        assigned_any = true;
+      }
+
+      if (assigned_any) {
+        Game::Systems::PlayerResourceRegistry::instance().spend(ai_owner_id,
+                                                                resource_costs);
       }
 
       break;

@@ -4,19 +4,31 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/home_system.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
+#include "game/systems/resource_types.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/units/barracks.h"
 #include "game/units/home.h"
 #include "game/units/spawn_type.h"
+#include "game/units/troop_catalog.h"
+#include "game/units/troop_catalog_loader.h"
 
 namespace {
 
 class HomeManpowerSystemTest : public ::testing::Test {
 protected:
-  void SetUp() override { Game::Systems::TroopCountRegistry::instance().clear(); }
+  void SetUp() override {
+    Game::Systems::TroopCountRegistry::instance().clear();
+    Game::Systems::PlayerResourceRegistry::instance().clear();
+    Game::Units::TroopCatalog::instance().reset_to_defaults();
+  }
 
-  void TearDown() override { Game::Systems::TroopCountRegistry::instance().clear(); }
+  void TearDown() override {
+    Game::Systems::PlayerResourceRegistry::instance().clear();
+    Game::Systems::TroopCountRegistry::instance().clear();
+    Game::Units::TroopCatalog::instance().reset_to_defaults();
+  }
 };
 
 TEST_F(HomeManpowerSystemTest,
@@ -106,6 +118,41 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(production->in_progress);
   EXPECT_EQ(production->manpower_available, 10);
+}
+
+TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {
+  Engine::Core::World world;
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+
+  auto* barracks = world.create_entity();
+  auto* unit = barracks->add_component<Engine::Core::UnitComponent>();
+  auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(production, nullptr);
+
+  unit->spawn_type = Game::Units::SpawnType::Barracks;
+  unit->owner_id = 1;
+  production->max_units = 500;
+  production->produced_count = 500;
+  production->manpower_available = 60;
+
+  const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+
+  auto result =
+      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
+          world, selected, 1, Game::Units::TroopType::Archer);
+  EXPECT_EQ(result, Game::Systems::ProductionResult::InsufficientResources);
+  EXPECT_FALSE(production->in_progress);
+
+  resources.set(1, Game::Systems::ResourceType::Wood, 6);
+
+  result =
+      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
+          world, selected, 1, Game::Units::TroopType::Archer);
+  EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
+  EXPECT_TRUE(production->in_progress);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Wood), 0);
 }
 
 TEST_F(HomeManpowerSystemTest, InitialBarracksSpawnStartsWithAuthoredManpowerReserve) {

@@ -49,14 +49,6 @@ auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
     out.lod = CreatureLOD::Minimal;
   }
 
-  if (out.lod == CreatureLOD::Minimal && in.distance > in.temporal.distance_minimal) {
-    if (!should_render_temporal(
-            in.frame_index, in.instance_seed, in.temporal.period_minimal)) {
-      out.culled = true;
-      out.reason = CullReason::Temporal;
-    }
-  }
-
   return out;
 }
 

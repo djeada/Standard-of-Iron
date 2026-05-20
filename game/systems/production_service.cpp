@@ -6,6 +6,7 @@
 #include "../core/world.h"
 #include "../game_config.h"
 #include "../systems/nation_registry.h"
+#include "../systems/player_resource_registry.h"
 #include "../systems/troop_profile_service.h"
 #include "../units/commander_catalog.h"
 #include "../units/troop_config.h"
@@ -53,8 +54,7 @@ find_first_selected_home(Engine::Core::World& world,
 
 namespace {
 
-auto resolve_nation_id(const Engine::Core::UnitComponent* unit,
-                       int owner_id) -> Game::Systems::NationID {
+auto resolve_nation_id(int owner_id) -> Game::Systems::NationID {
   auto& registry = NationRegistry::instance();
   if (const auto* nation = registry.get_nation_for_player(owner_id)) {
     return nation->id;
@@ -96,7 +96,7 @@ auto ProductionService::start_production_for_first_selected_barracks(
     return ProductionResult::NoBarracks;
   }
   auto* unit = e->get_component<Engine::Core::UnitComponent>();
-  const auto nation_id = resolve_nation_id(unit, owner_id);
+  const auto nation_id = resolve_nation_id(owner_id);
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
 
@@ -133,6 +133,11 @@ auto ProductionService::start_production_for_first_selected_barracks(
     return ProductionResult::QueueFull;
   }
 
+  auto& resources = PlayerResourceRegistry::instance();
+  if (!resources.has_at_least(owner_id, profile.production.resource_costs)) {
+    return ProductionResult::InsufficientResources;
+  }
+
   if (p->in_progress) {
     p->production_queue.push_back(unit_type);
   } else {
@@ -142,6 +147,7 @@ auto ProductionService::start_production_for_first_selected_barracks(
     p->in_progress = true;
   }
   p->manpower_available -= production_cost;
+  resources.spend(owner_id, profile.production.resource_costs);
 
   return ProductionResult::Success;
 }
@@ -182,7 +188,7 @@ auto ProductionService::get_selected_barracks_state(
   out_state = {};
   out_state.has_barracks = true;
   if (auto* unit = e->get_component<Engine::Core::UnitComponent>()) {
-    out_state.nation_id = resolve_nation_id(unit, owner_id);
+    out_state.nation_id = resolve_nation_id(owner_id);
   } else {
     out_state.nation_id = NationRegistry::instance().default_nation_id();
   }
@@ -212,7 +218,7 @@ auto ProductionService::start_production_for_first_selected_home(
   }
 
   auto* unit = e->get_component<Engine::Core::UnitComponent>();
-  const auto nation_id = resolve_nation_id(unit, owner_id);
+  const auto nation_id = resolve_nation_id(owner_id);
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
 
@@ -240,6 +246,11 @@ auto ProductionService::start_production_for_first_selected_home(
     return ProductionResult::QueueFull;
   }
 
+  auto& resources = PlayerResourceRegistry::instance();
+  if (!resources.has_at_least(owner_id, profile.production.resource_costs)) {
+    return ProductionResult::InsufficientResources;
+  }
+
   if (p->in_progress) {
     p->production_queue.push_back(unit_type);
   } else {
@@ -250,6 +261,7 @@ auto ProductionService::start_production_for_first_selected_home(
   }
 
   p->manpower_available -= production_cost;
+  resources.spend(owner_id, profile.production.resource_costs);
   return ProductionResult::Success;
 }
 
@@ -267,7 +279,7 @@ auto ProductionService::get_selected_home_state(
   out_state = {};
   out_state.has_home = true;
   if (auto* unit = e->get_component<Engine::Core::UnitComponent>()) {
-    out_state.nation_id = resolve_nation_id(unit, owner_id);
+    out_state.nation_id = resolve_nation_id(owner_id);
   } else {
     out_state.nation_id = NationRegistry::instance().default_nation_id();
   }

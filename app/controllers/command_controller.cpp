@@ -361,6 +361,9 @@ void CommandController::recruit_near_selected(const QString& unit_type,
     emit troop_limit_reached();
   } else if (result == Game::Systems::ProductionResult::InsufficientManpower) {
     emit insufficient_manpower();
+  } else if (result == Game::Systems::ProductionResult::InsufficientResources) {
+    emit insufficient_resources(
+        QStringLiteral("Not enough wood, stone, or iron to recruit this unit."));
   }
 }
 
