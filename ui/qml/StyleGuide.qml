@@ -225,9 +225,14 @@ QtObject {
                     "carthage": root.icon_path("defense_tower_cartaghe.png")
                 }),
             "wall": ({
-                    "default": root.icon_path("wall_rome.png"),
-                    "roman_republic": root.icon_path("wall_rome.png"),
-                    "carthage": root.icon_path("wall_cartaghe.png")
+                    "default": root.icon_path("wall.png"),
+                    "roman_republic": root.icon_path("wall.png"),
+                    "carthage": root.icon_path("wall.png")
+                }),
+            "wall_segment": ({
+                    "default": root.icon_path("wall.png"),
+                    "roman_republic": root.icon_path("wall.png"),
+                    "carthage": root.icon_path("wall.png")
                 }),
             "home": ({
                     "default": root.icon_path("house_rome.png"),

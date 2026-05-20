@@ -55,6 +55,7 @@
         <file alias="assets/visuals/icons/spearman_rome.png">assets/visuals/icons/spearman_rome.png</file>
         <file alias="assets/visuals/icons/swordsman_cartaghe.png">assets/visuals/icons/swordsman_cartaghe.png</file>
         <file alias="assets/visuals/icons/swordsman_rome.png">assets/visuals/icons/swordsman_rome.png</file>
+        <file alias="assets/visuals/icons/wall.png">assets/visuals/icons/wall.png</file>
         <file alias="assets/visuals/icons/wall_cartaghe.png">assets/visuals/icons/wall_cartaghe.png</file>
         <file alias="assets/visuals/icons/wall_rome.png">assets/visuals/icons/wall_rome.png</file>
         <file alias="assets/visuals/icons/house_cartaghe.png">assets/visuals/icons/house_cartaghe.png</file>
@@ -66,6 +67,14 @@
         <file alias="assets/visuals/icons/formation_mode.png">assets/visuals/icons/formation_mode.png</file>
         <file alias="assets/visuals/icons/build_mode.png">assets/visuals/icons/build_mode.png</file>
         <file alias="assets/visuals/icons/heal_mode.png">assets/visuals/icons/heal_mode.png</file>
+        <file alias="assets/visuals/icons/collect_mode.png">assets/visuals/icons/collect_mode.png</file>
+        <file alias="assets/visuals/icons/rally_mode.png">assets/visuals/icons/rally_mode.png</file>
+        <file alias="assets/visuals/icons/deliver_mode.png">assets/visuals/icons/deliver_mode.png</file>
+        <file alias="assets/visuals/icons/aura_mode.png">assets/visuals/icons/aura_mode.png</file>
+        <file alias="assets/visuals/icons/gold.png">assets/visuals/icons/gold.png</file>
+        <file alias="assets/visuals/icons/wood.png">assets/visuals/icons/wood.png</file>
+        <file alias="assets/visuals/icons/stone.png">assets/visuals/icons/stone.png</file>
+        <file alias="assets/visuals/icons/iron.png">assets/visuals/icons/iron.png</file>
         <file alias="assets/visuals/icons/ai_player.png">assets/visuals/icons/ai_player.png</file>
         <file alias="assets/visuals/icons/human_player.png">assets/visuals/icons/human_player.png</file>
         <file alias="assets/visuals/icons/troop_count.png">assets/visuals/icons/troop_count.png</file>
@@ -79,6 +88,7 @@
     <qresource prefix="/qt/qml/StandardOfIron">
         <file alias="assets/visuals/icons/defense_tower_cartaghe.png">assets/visuals/icons/defense_tower_cartaghe.png</file>
         <file alias="assets/visuals/icons/defense_tower_rome.png">assets/visuals/icons/defense_tower_rome.png</file>
+        <file alias="assets/visuals/icons/wall.png">assets/visuals/icons/wall.png</file>
         <file alias="assets/visuals/icons/wall_cartaghe.png">assets/visuals/icons/wall_cartaghe.png</file>
         <file alias="assets/visuals/icons/wall_rome.png">assets/visuals/icons/wall_rome.png</file>
         <file alias="assets/visuals/icons/house_cartaghe.png">assets/visuals/icons/house_cartaghe.png</file>
@@ -90,6 +100,14 @@
         <file alias="assets/visuals/icons/formation_mode.png">assets/visuals/icons/formation_mode.png</file>
         <file alias="assets/visuals/icons/build_mode.png">assets/visuals/icons/build_mode.png</file>
         <file alias="assets/visuals/icons/heal_mode.png">assets/visuals/icons/heal_mode.png</file>
+        <file alias="assets/visuals/icons/collect_mode.png">assets/visuals/icons/collect_mode.png</file>
+        <file alias="assets/visuals/icons/rally_mode.png">assets/visuals/icons/rally_mode.png</file>
+        <file alias="assets/visuals/icons/deliver_mode.png">assets/visuals/icons/deliver_mode.png</file>
+        <file alias="assets/visuals/icons/aura_mode.png">assets/visuals/icons/aura_mode.png</file>
+        <file alias="assets/visuals/icons/gold.png">assets/visuals/icons/gold.png</file>
+        <file alias="assets/visuals/icons/wood.png">assets/visuals/icons/wood.png</file>
+        <file alias="assets/visuals/icons/stone.png">assets/visuals/icons/stone.png</file>
+        <file alias="assets/visuals/icons/iron.png">assets/visuals/icons/iron.png</file>
         <file alias="assets/visuals/icons/ai_player.png">assets/visuals/icons/ai_player.png</file>
         <file alias="assets/visuals/icons/human_player.png">assets/visuals/icons/human_player.png</file>
         <file alias="assets/visuals/icons/troop_count.png">assets/visuals/icons/troop_count.png</file>

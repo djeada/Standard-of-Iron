@@ -15,6 +15,34 @@ Rectangle {
     signal build_tower
     signal builder_construction(string item_type)
 
+    readonly property var recruit_unit_cards: ["archer", "swordsman", "spearman", "horse_swordsman", "horse_archer", "horse_spearman", "healer", "builder", "elephant"]
+    readonly property var builder_card_specs: [{
+            "item_type": "catapult",
+            "label": qsTr("Catapult"),
+            "description": qsTr("Long-range siege weapon\nEffective against structures"),
+            "fallback_emoji": ""
+        }, {
+            "item_type": "ballista",
+            "label": qsTr("Ballista"),
+            "description": qsTr("Precision siege weapon\nEffective against units"),
+            "fallback_emoji": ""
+        }, {
+            "item_type": "defense_tower",
+            "label": qsTr("Defense Tower"),
+            "description": qsTr("Stationary defense structure\nShoots arrows at enemies"),
+            "fallback_emoji": "🏰"
+        }, {
+            "item_type": "home",
+            "label": qsTr("Home"),
+            "description": qsTr("Residential building\nAdds +50 population to nearest barracks"),
+            "fallback_emoji": "🏠"
+        }, {
+            "item_type": "wall_segment",
+            "label": qsTr("Wall Segment"),
+            "description": qsTr("Wooden defensive wall\nBlocks enemy movement"),
+            "fallback_emoji": "🪵"
+        }]
+
     function default_production_state() {
         return {
             "has_barracks": false,
@@ -63,9 +91,155 @@ Rectangle {
             return productionPanel.game_instance.get_unit_production_info(unit_type, nation_id || "");
         return {
             "cost": 50,
+            "population_cost": 50,
+            "resource_costs": {},
             "build_time": 5,
             "individuals_per_unit": 1,
             "display_name": unit_type
+        };
+    }
+
+    function get_construction_info(item_type) {
+        if (productionPanel.game_instance && productionPanel.game_instance.get_construction_info)
+            return productionPanel.game_instance.get_construction_info(item_type || "");
+        return {
+            "build_time": 10,
+            "resource_costs": {},
+            "display_name": item_type
+        };
+    }
+
+    function current_resources() {
+        if (productionPanel.game_instance && productionPanel.game_instance.selected_player_state && productionPanel.game_instance.selected_player_state.resources)
+            return productionPanel.game_instance.selected_player_state.resources;
+        return {};
+    }
+
+    function population_cost(info) {
+        if (!info)
+            return 0;
+        if (info.population_cost !== undefined)
+            return Math.max(0, info.population_cost || 0);
+        return Math.max(0, info.cost || 0);
+    }
+
+    function resource_amount(costs, key) {
+        if (!costs || costs[key] === undefined)
+            return 0;
+        return Math.max(0, costs[key] || 0);
+    }
+
+    function missing_resource_names(costs) {
+        var resources = current_resources();
+        var missing = [];
+        var ordered = [{
+                "key": "wood",
+                "label": qsTr("wood")
+            }, {
+                "key": "stone",
+                "label": qsTr("stone")
+            }, {
+                "key": "iron",
+                "label": qsTr("iron")
+            }];
+        for (var i = 0; i < ordered.length; ++i) {
+            var entry = ordered[i];
+            if (resource_amount(resources, entry.key) < resource_amount(costs, entry.key))
+                missing.push(entry.label);
+        }
+        return missing;
+    }
+
+    function can_afford_resource_costs(costs) {
+        return missing_resource_names(costs).length === 0;
+    }
+
+    function cost_entries(popCost, resourceCosts, includePopulation) {
+        var entries = [];
+        if (includePopulation && popCost > 0)
+            entries.push({
+                    "key": "population",
+                    "amount": popCost
+                });
+        var ordered = ["wood", "stone", "iron"];
+        for (var i = 0; i < ordered.length; ++i) {
+            var key = ordered[i];
+            var amount = resource_amount(resourceCosts, key);
+            if (amount > 0)
+                entries.push({
+                        "key": key,
+                        "amount": amount
+                    });
+        }
+        return entries;
+    }
+
+    function cost_icon_source(key) {
+        if (key === "population")
+            return StyleGuide.icon_path("troop_count.png");
+        return StyleGuide.icon_path(key + ".png");
+    }
+
+    function format_cost_summary(popCost, resourceCosts, populationLabel) {
+        var parts = [];
+        if (popCost > 0)
+            parts.push(qsTr("%1 %2").arg(popCost).arg(populationLabel));
+        var woodCost = resource_amount(resourceCosts, "wood");
+        var stoneCost = resource_amount(resourceCosts, "stone");
+        var ironCost = resource_amount(resourceCosts, "iron");
+        if (woodCost > 0)
+            parts.push(qsTr("%1 wood").arg(woodCost));
+        if (stoneCost > 0)
+            parts.push(qsTr("%1 stone").arg(stoneCost));
+        if (ironCost > 0)
+            parts.push(qsTr("%1 iron").arg(ironCost));
+        return parts.join(", ");
+    }
+
+    function recruit_card_state(prod, unitInfo, queueTotal) {
+        var popCost = population_cost(unitInfo);
+        if (!(prod.has_barracks || prod.has_home))
+            return {
+                "enabled": false,
+                "reason": qsTr("Cannot recruit")
+            };
+        if (queueTotal >= 5)
+            return {
+                "enabled": false,
+                "reason": qsTr("Queue is full (5/5)")
+            };
+        if ((prod.manpower_available || 0) < popCost)
+            return {
+                "enabled": false,
+                "reason": qsTr("Not enough available population")
+            };
+        var missing = missing_resource_names(unitInfo.resource_costs || {});
+        if (missing.length > 0)
+            return {
+                "enabled": false,
+                "reason": qsTr("Not enough %1").arg(missing.join(", "))
+            };
+        return {
+            "enabled": true,
+            "reason": ""
+        };
+    }
+
+    function construction_card_state(builderProd, constructionInfo) {
+        if (builderProd.in_progress)
+            return {
+                "enabled": false,
+                "reason": qsTr("Already building...")
+            };
+        var missing = missing_resource_names(constructionInfo.resource_costs || {});
+        if (missing.length > 0)
+            return {
+                "enabled": false,
+                "reason": qsTr("Not enough %1").arg(missing.join(", "))
+            };
+        return {
+            "enabled": true,
+            "reason": ""
         };
     }
 
@@ -323,9 +497,12 @@ Rectangle {
                         rowSpacing: 8
 
                         Rectangle {
+                            id: archerCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("archer", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: archerMouseArea.containsMouse
 
                             width: 110
@@ -357,27 +534,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: archerCostBadge
-
-                                width: archerCostText.implicitWidth + 12
-                                height: archerCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: archerCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(archerCard.unit_info), archerCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 50
-                                    color: archerCostBadge.parent.is_enabled ? Theme.textMain : Theme.textDim
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: archerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: archerCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: archerCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -392,7 +588,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Archer").arg(parent.unit_info.cost || 50).arg((parent.unit_info.build_time || 5).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Archer").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 5).toFixed(0)) : archerCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -423,9 +619,12 @@ Rectangle {
                         }
 
                         Rectangle {
+                            id: swordsmanCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("swordsman", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: swordsmanMouseArea.containsMouse
 
                             width: 110
@@ -457,27 +656,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: swordsmanCostBadge
-
-                                width: swordsmanCostText.implicitWidth + 12
-                                height: swordsmanCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: swordsmanCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(swordsmanCard.unit_info), swordsmanCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 90
-                                    color: swordsmanCostBadge.parent.is_enabled ? Theme.textMain : Theme.textDim
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: swordsmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: swordsmanCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: swordsmanCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -492,7 +710,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Swordsman").arg(parent.unit_info.cost || 90).arg((parent.unit_info.build_time || 7).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Swordsman").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 7).toFixed(0)) : swordsmanCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -523,9 +741,12 @@ Rectangle {
                         }
 
                         Rectangle {
+                            id: spearmanCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("spearman", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: spearmanMouseArea.containsMouse
 
                             width: 110
@@ -557,27 +778,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: spearmanCostBadge
-
-                                width: spearmanCostText.implicitWidth + 12
-                                height: spearmanCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: spearmanCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(spearmanCard.unit_info), spearmanCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 75
-                                    color: spearmanCostBadge.parent.is_enabled ? Theme.textMain : Theme.textDim
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: spearmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: spearmanCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: spearmanCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -592,7 +832,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Spearman").arg(parent.unit_info.cost || 75).arg((parent.unit_info.build_time || 6).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Spearman").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 6).toFixed(0)) : spearmanCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -623,9 +863,12 @@ Rectangle {
                         }
 
                         Rectangle {
+                            id: horseKnightCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("horse_swordsman", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: horseKnightMouseArea.containsMouse
 
                             width: 110
@@ -657,27 +900,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: horseKnightCostBadge
-
-                                width: horseKnightCostText.implicitWidth + 12
-                                height: horseKnightCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: horseKnightCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(horseKnightCard.unit_info), horseKnightCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 150
-                                    color: horseKnightCostBadge.parent.is_enabled ? "#F4E7C8" : "#8D7146"
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: horseKnightCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: horseKnightCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: horseKnightCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -692,7 +954,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Mounted Knight").arg(parent.unit_info.cost || 150).arg((parent.unit_info.build_time || 10).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Mounted Knight").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 10).toFixed(0)) : horseKnightCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -723,9 +985,12 @@ Rectangle {
                         }
 
                         Rectangle {
+                            id: horseArcherCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("horse_archer", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: horseArcherMouseArea.containsMouse
 
                             width: 110
@@ -757,27 +1022,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: horseArcherCostBadge
-
-                                width: horseArcherCostText.implicitWidth + 12
-                                height: horseArcherCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: horseArcherCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(horseArcherCard.unit_info), horseArcherCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 120
-                                    color: horseArcherCostBadge.parent.is_enabled ? "#F4E7C8" : "#8D7146"
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: horseArcherCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: horseArcherCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: horseArcherCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -792,7 +1076,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Archer").arg(parent.unit_info.cost || 120).arg((parent.unit_info.build_time || 9).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Archer").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 9).toFixed(0)) : horseArcherCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -823,9 +1107,12 @@ Rectangle {
                         }
 
                         Rectangle {
+                            id: horseSpearmanCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("horse_spearman", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: horseSpearmanMouseArea.containsMouse
 
                             width: 110
@@ -857,27 +1144,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: horseSpearmanCostBadge
-
-                                width: horseSpearmanCostText.implicitWidth + 12
-                                height: horseSpearmanCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: horseSpearmanCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(horseSpearmanCard.unit_info), horseSpearmanCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 130
-                                    color: horseSpearmanCostBadge.parent.is_enabled ? "#F4E7C8" : "#8D7146"
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: horseSpearmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: horseSpearmanCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: horseSpearmanCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -892,7 +1198,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Spearman").arg(parent.unit_info.cost || 130).arg((parent.unit_info.build_time || 9).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Horse Spearman").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 9).toFixed(0)) : horseSpearmanCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -923,9 +1229,12 @@ Rectangle {
                         }
 
                         Rectangle {
+                            id: healerCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("healer", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: healerMouseArea.containsMouse
 
                             width: 110
@@ -957,27 +1266,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: healerCostBadge
-
-                                width: healerCostText.implicitWidth + 12
-                                height: healerCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: healerCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(healerCard.unit_info), healerCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 100
-                                    color: healerCostBadge.parent.is_enabled ? "#F4E7C8" : "#8D7146"
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: healerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: healerCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: healerCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -992,7 +1320,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Healer").arg(parent.unit_info.cost || 100).arg((parent.unit_info.build_time || 8).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Healer").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 8).toFixed(0)) : healerCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1023,9 +1351,12 @@ Rectangle {
                         }
 
                         Rectangle {
+                            id: builderRecruitCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("builder", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderMouseArea.containsMouse
 
                             width: 110
@@ -1057,27 +1388,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: builderCostBadge
-
-                                width: builderCostText.implicitWidth + 12
-                                height: builderCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: builderCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(builderRecruitCard.unit_info), builderRecruitCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 60
-                                    color: builderCostBadge.parent.is_enabled ? "#F4E7C8" : "#8D7146"
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: builderRecruitCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: builderRecruitCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderRecruitCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -1092,7 +1442,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s").arg(parent.unit_info.display_name || "Builder").arg(parent.unit_info.cost || 60).arg((parent.unit_info.build_time || 6).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s").arg(parent.unit_info.display_name || "Builder").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 6).toFixed(0)) : builderRecruitCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1123,9 +1473,12 @@ Rectangle {
                         }
 
                         Rectangle {
+                            id: elephantCard
+
                             property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool is_enabled: unitGridContent.prod.has_barracks && (unitGridContent.prod.manpower_available || 0) >= (unit_info.cost || 0) && queue_total < 5
                             property var unit_info: productionPanel.get_unit_production_info("elephant", unitGridContent.prod.nation_id)
+                            property var card_state: productionPanel.recruit_card_state(unitGridContent.prod, unit_info, queue_total)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: elephantMouseArea.containsMouse
 
                             width: 110
@@ -1158,27 +1511,46 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
-                            Rectangle {
-                                id: elephantCostBadge
-
-                                width: elephantCostText.implicitWidth + 12
-                                height: elephantCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.is_enabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.is_enabled ? hs.bronze : "#8C6A3E"
-                                border.width: 1
+                                anchors.margins: 4
+                                spacing: 4
 
-                                Text {
-                                    id: elephantCostText
+                                Repeater {
+                                    model: productionPanel.cost_entries(productionPanel.population_cost(elephantCard.unit_info), elephantCard.unit_info.resource_costs || {}, true)
 
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unit_info.cost || 250
-                                    color: elephantCostBadge.parent.is_enabled ? "#F4E7C8" : "#8D7146"
-                                    font.pointSize: 16
-                                    font.bold: true
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: elephantCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: elephantCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: elephantCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -1193,7 +1565,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 villagers\nBuild time: %3s\nCarthage exclusive").arg(parent.unit_info.display_name || "War Elephant").arg(parent.unit_info.cost || 250).arg((parent.unit_info.build_time || 20).toFixed(0)) : (parent.queue_total >= 5 ? qsTr("Queue is full (5/5)") : ((unitGridContent.prod.manpower_available || 0) < (parent.unit_info.cost || 0) ? qsTr("Not enough available population") : qsTr("Cannot recruit")))
+                                ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nCarthage exclusive").arg(parent.unit_info.display_name || "War Elephant").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("population"))).arg((parent.unit_info.build_time || 20).toFixed(0)) : elephantCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1269,12 +1641,15 @@ Rectangle {
                     }
 
                     Rectangle {
+                        id: civilianCard
+
                         property int queue_total: (homeProductionContent.prod.in_progress ? 1 : 0) + (homeProductionContent.prod.queue_size || 0)
                         property var unit_info: productionPanel.get_unit_production_info("civilian", homeProductionContent.prod.nation_id)
                         property int committed_total: (homeProductionContent.prod.produced_count || 0) + queue_total
                         property bool has_capacity: committed_total < (homeProductionContent.prod.max_units || 0)
-                        property bool has_families: (homeProductionContent.prod.manpower_available || 0) >= (unit_info.cost || 0)
-                        property bool is_enabled: homeProductionContent.prod.has_home && has_capacity && has_families
+                        property bool has_families: (homeProductionContent.prod.manpower_available || 0) >= productionPanel.population_cost(unit_info)
+                        property var recruit_state: productionPanel.recruit_card_state(homeProductionContent.prod, unit_info, queue_total)
+                        property bool is_enabled: homeProductionContent.prod.has_home && has_capacity && recruit_state.enabled
                         property bool is_hovered: civilianMouseArea.containsMouse
 
                         width: 110
@@ -1307,27 +1682,46 @@ Rectangle {
                             opacity: parent.is_enabled ? 0.9 : 0.4
                         }
 
-                        Rectangle {
-                            id: civilianCostBadge
-
-                            width: civilianCostText.implicitWidth + 12
-                            height: civilianCostText.implicitHeight + 6
-                            anchors.horizontalCenter: parent.horizontalCenter
+                        Flow {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
                             anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 6
-                            radius: 8
-                            color: parent.is_enabled ? "#000000b3" : "#00000066"
-                            border.color: parent.is_enabled ? "#f39c12" : "#555555"
-                            border.width: 1
+                            anchors.margins: 4
+                            spacing: 4
 
-                            Text {
-                                id: civilianCostText
+                            Repeater {
+                                model: productionPanel.cost_entries(productionPanel.population_cost(civilianCard.unit_info), civilianCard.unit_info.resource_costs || {}, true)
 
-                                anchors.centerIn: parent
-                                text: parent.parent.unit_info.cost || 8
-                                color: civilianCostBadge.parent.is_enabled ? "#fdf7e3" : "#8a8a8a"
-                                font.pointSize: 16
-                                font.bold: true
+                                delegate: Rectangle {
+                                    width: costRow.implicitWidth + 8
+                                    height: 16
+                                    radius: 8
+                                    color: civilianCard.is_enabled ? "#000000b3" : "#00000066"
+                                    border.color: civilianCard.is_enabled ? "#f39c12" : "#555555"
+                                    border.width: 1
+
+                                    Row {
+                                        id: costRow
+
+                                        anchors.centerIn: parent
+                                        spacing: 3
+
+                                        Image {
+                                            width: 9
+                                            height: 9
+                                            fillMode: Image.PreserveAspectFit
+                                            smooth: true
+                                            source: productionPanel.cost_icon_source(modelData.key)
+                                        }
+
+                                        Text {
+                                            text: modelData.amount
+                                            color: civilianCard.is_enabled ? "#fdf7e3" : "#8a8a8a"
+                                            font.pointSize: 7
+                                            font.bold: true
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -1342,7 +1736,7 @@ Rectangle {
                             }
                             cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                             ToolTip.visible: containsMouse
-                            ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 families\nBuild time: %3s\nUse Deliver mode, then click a friendly barracks to add 50 available population.").arg(parent.unit_info.display_name || "Civilian").arg(parent.unit_info.cost || 8).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!parent.has_capacity ? qsTr("This home already committed its 3 civilians") : (!parent.has_families ? qsTr("Not enough families available") : qsTr("Cannot recruit")))
+                            ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nUse Deliver mode, then click a friendly barracks to add 50 available population.").arg(parent.unit_info.display_name || "Civilian").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("families"))).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!civilianCard.has_capacity ? qsTr("This home already committed its 3 civilians") : civilianCard.recruit_state.reason)
                             ToolTip.delay: 300
                         }
                     }
@@ -1572,7 +1966,11 @@ Rectangle {
                         rowSpacing: 8
 
                         Rectangle {
-                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
+                            id: builderCatapultCard
+
+                            property var construction_info: productionPanel.get_construction_info("catapult")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderCatapultMouseArea.containsMouse
 
                             width: 110
@@ -1608,11 +2006,54 @@ Rectangle {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
+                                anchors.bottomMargin: 24
                                 text: qsTr("Catapult")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
+                            }
+
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderCatapultCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: builderCatapultCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: builderCatapultCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderCatapultCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             MouseArea {
@@ -1626,7 +2067,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Catapult\nLong-range siege weapon\nEffective against structures\nBuild time: 15s") : qsTr("Already building...")
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Catapult\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Long-range siege weapon\nEffective against structures")).arg(productionPanel.format_cost_summary(0, builderCatapultCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderCatapultCard.construction_info.build_time || 15).toFixed(0)) : builderCatapultCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1657,7 +2098,11 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
+                            id: builderBallistaCard
+
+                            property var construction_info: productionPanel.get_construction_info("ballista")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderBallistaMouseArea.containsMouse
 
                             width: 110
@@ -1693,11 +2138,54 @@ Rectangle {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
+                                anchors.bottomMargin: 24
                                 text: qsTr("Ballista")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
+                            }
+
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderBallistaCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: builderBallistaCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: builderBallistaCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderBallistaCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             MouseArea {
@@ -1711,7 +2199,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Ballista\nPrecision siege weapon\nEffective against units\nBuild time: 12s") : qsTr("Already building...")
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Ballista\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Precision siege weapon\nEffective against units")).arg(productionPanel.format_cost_summary(0, builderBallistaCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderBallistaCard.construction_info.build_time || 12).toFixed(0)) : builderBallistaCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1742,7 +2230,11 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
+                            id: builderDefenseTowerCard
+
+                            property var construction_info: productionPanel.get_construction_info("defense_tower")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderDefenseTowerMouseArea.containsMouse
 
                             width: 110
@@ -1778,11 +2270,54 @@ Rectangle {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
+                                anchors.bottomMargin: 24
                                 text: qsTr("Defense Tower")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
+                            }
+
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderDefenseTowerCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: builderDefenseTowerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: builderDefenseTowerCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderDefenseTowerCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             MouseArea {
@@ -1796,7 +2331,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Defense Tower\nStationary defense structure\nShoots arrows at enemies\nBuild time: 20s") : qsTr("Already building...")
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Defense Tower\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Stationary defense structure\nShoots arrows at enemies")).arg(productionPanel.format_cost_summary(0, builderDefenseTowerCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderDefenseTowerCard.construction_info.build_time || 20).toFixed(0)) : builderDefenseTowerCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1827,7 +2362,11 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
+                            id: builderHomeCard
+
+                            property var construction_info: productionPanel.get_construction_info("home")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderHomeMouseArea.containsMouse
 
                             width: 110
@@ -1863,11 +2402,54 @@ Rectangle {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
+                                anchors.bottomMargin: 24
                                 text: qsTr("Home")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
+                            }
+
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderHomeCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: builderHomeCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: builderHomeCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderHomeCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             MouseArea {
@@ -1881,7 +2463,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Home\nResidential building\nAdds +50 population to nearest barracks\nBuild time: 10s") : qsTr("Already building...")
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Home\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Residential building\nAdds +50 population to nearest barracks")).arg(productionPanel.format_cost_summary(0, builderHomeCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderHomeCard.construction_info.build_time || 10).toFixed(0)) : builderHomeCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1912,7 +2494,11 @@ Rectangle {
                         }
 
                         Rectangle {
-                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
+                            id: builderWallSegmentCard
+
+                            property var construction_info: productionPanel.get_construction_info("wall_segment")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
                             property bool is_hovered: builderWallSegmentMouseArea.containsMouse
 
                             width: 110
@@ -1948,11 +2534,54 @@ Rectangle {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
+                                anchors.bottomMargin: 24
                                 text: qsTr("Wall Segment")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
+                            }
+
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderWallSegmentCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: costRow.implicitWidth + 8
+                                        height: 16
+                                        radius: 8
+                                        color: builderWallSegmentCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        border.color: builderWallSegmentCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: costRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: 9
+                                                height: 9
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderWallSegmentCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pointSize: 7
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             MouseArea {
@@ -1966,7 +2595,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Wall Segment\nWooden defensive wall\nBlocks enemy movement\nBuild time: 8s") : qsTr("Already building...")
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Wall Segment\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Wooden defensive wall\nBlocks enemy movement")).arg(productionPanel.format_cost_summary(0, builderWallSegmentCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderWallSegmentCard.construction_info.build_time || 8).toFixed(0)) : builderWallSegmentCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 

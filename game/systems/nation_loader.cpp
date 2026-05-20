@@ -11,6 +11,7 @@
 
 #include "../units/building_type.h"
 #include "../units/troop_catalog.h"
+#include "../units/troop_catalog_loader.h"
 #include "../units/troop_type.h"
 #include "nation_id.h"
 #include "nation_registry.h"
@@ -94,6 +95,23 @@ read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
   return obj.value(key).toBool();
 }
 
+[[nodiscard]] auto read_resource_amounts(const QJsonObject& obj,
+                                         const char* key,
+                                         Game::Systems::ResourceAmounts fallback)
+    -> Game::Systems::ResourceAmounts {
+  if (!obj.contains(key)) {
+    return fallback;
+  }
+
+  const QJsonObject resource_costs = ensure_object(obj.value(key));
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    const char* const resource_key = Game::Systems::resource_type_key(type);
+    fallback.set(
+        type, read_int_opt(resource_costs, resource_key).value_or(fallback.get(type)));
+  }
+  return fallback;
+}
+
 [[nodiscard]] auto
 parse_formation_type(const QString& value) -> std::optional<FormationType> {
   const QString lowered = value.trimmed().toLower();
@@ -114,9 +132,9 @@ parse_formation_type(const QString& value) -> std::optional<FormationType> {
   return category;
 }
 
-static constexpr const char* k_nation_troops_key = "troops";
+constexpr const char* k_nation_troops_key = "troops";
 
-static auto nation_loader_logger() -> QLoggingCategory& {
+auto nation_loader_logger() -> QLoggingCategory& {
   return logger();
 }
 
@@ -149,6 +167,8 @@ static auto nation_loader_logger() -> QLoggingCategory& {
                              base_class.production.is_melee);
   const QJsonObject production = ensure_object(obj.value("production"));
   entry.cost = production.value("cost").toInt(base_class.production.cost);
+  entry.resource_costs = read_resource_amounts(
+      production, "resource_costs", base_class.production.resource_costs);
   entry.build_time = static_cast<float>(
       production.value("build_time").toDouble(base_class.production.build_time));
   entry.priority = production.value("priority").toInt(base_class.production.priority);
@@ -298,6 +318,11 @@ auto NationLoader::resolve_data_path(const QString& relative) -> QString {
 }
 
 auto NationLoader::load_default_nations() -> std::vector<Nation> {
+  if (!Game::Units::TroopCatalogLoader::load_default_catalog()) {
+    qCWarning(nation_loader_logger())
+        << "Failed to load troop catalog for nation defaults";
+    return {};
+  }
   const QString dir = resolve_data_path("assets/data/nations");
   if (dir.isEmpty()) {
     qCWarning(nation_loader_logger())
@@ -311,7 +336,7 @@ auto NationLoader::load_from_directory(const QString& directory)
     -> std::vector<Nation> {
   std::vector<Nation> nations;
 
-  QDir dir(directory);
+  QDir const dir(directory);
   if (!dir.exists()) {
     qCWarning(nation_loader_logger()) << "Nation directory does not exist" << directory;
     return nations;

@@ -7,6 +7,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/troop_catalog.h"
+#include "game/units/troop_catalog_loader.h"
 
 namespace {
 
@@ -139,6 +140,36 @@ TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierWithoutNationData) {
 
   EXPECT_FLOAT_EQ(archer.combat.ranged_range, 9.0F);
   EXPECT_FLOAT_EQ(horse_archer.combat.ranged_range, 10.5F);
+}
+
+TEST(NationLoader, ProfilesPreserveConfiguredResourceCostsAcrossNations) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  ASSERT_FALSE(nations.empty());
+
+  auto& registry = Game::Systems::NationRegistry::instance();
+  registry.clear();
+  registry.clear_player_assignments();
+  for (const auto& nation : nations) {
+    registry.register_nation(nation);
+  }
+
+  auto& profiles = Game::Systems::TroopProfileService::instance();
+  profiles.clear();
+
+  auto const roman_archer = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                                 Game::Units::TroopType::Archer);
+  auto const carthage_archer = profiles.get_profile(Game::Systems::NationID::Carthage,
+                                                    Game::Units::TroopType::Archer);
+  auto const roman_builder = profiles.get_profile(
+      Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Builder);
+
+  EXPECT_EQ(
+      roman_archer.production.resource_costs.get(Game::Systems::ResourceType::Wood), 6);
+  EXPECT_EQ(
+      carthage_archer.production.resource_costs.get(Game::Systems::ResourceType::Wood),
+      6);
+  EXPECT_TRUE(roman_builder.production.resource_costs.empty());
 }
 
 } // namespace

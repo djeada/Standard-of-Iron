@@ -75,6 +75,19 @@ struct ResourceAmounts {
 
   void add(ResourceType type, int delta) { set(type, get(type) + delta); }
 
+  [[nodiscard]] auto empty() const -> bool {
+    return std::all_of(
+        values.begin(), values.end(), [](int amount) { return amount <= 0; });
+  }
+
+  [[nodiscard]] auto can_cover(const ResourceAmounts& required) const -> bool {
+    return std::all_of(k_all_resource_types.begin(),
+                       k_all_resource_types.end(),
+                       [this, &required](ResourceType type) {
+                         return get(type) >= required.get(type);
+                       });
+  }
+
   std::array<int, k_resource_type_count> values{};
 };
 

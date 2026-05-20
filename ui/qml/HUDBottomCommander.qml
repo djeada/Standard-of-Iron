@@ -233,17 +233,35 @@ RowLayout {
                     color: bottomRoot.status_value("aura_active", false) ? hs.wax : hs.parchmentLight
                     border.color: hs.bronzeDeep
                     border.width: 1
-                    implicitWidth: auraText.implicitWidth + 18
-                    implicitHeight: auraText.implicitHeight + 8
+                    implicitWidth: auraRow.implicitWidth + 18
+                    implicitHeight: auraRow.implicitHeight + 8
 
-                    Text {
-                        id: auraText
+                    Row {
+                        id: auraRow
 
                         anchors.centerIn: parent
-                        text: bottomRoot.status_value("aura_active", false) ? qsTr("Aura online") : qsTr("Aura offline")
-                        color: Theme.textMain
-                        font.pointSize: 8
-                        font.bold: true
+                        spacing: 6
+
+                        Image {
+                            width: 14
+                            height: 14
+                            source: StyleGuide.icon_path("aura_mode.png")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                            opacity: bottomRoot.status_value("aura_active", false) ? 1 : 0.7
+                            visible: source !== ""
+                        }
+
+                        Text {
+                            id: auraText
+
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: bottomRoot.status_value("aura_active", false) ? qsTr("Aura online") : qsTr("Aura offline")
+                            color: Theme.textMain
+                            font.pointSize: 8
+                            font.bold: true
+                        }
                     }
                 }
             }

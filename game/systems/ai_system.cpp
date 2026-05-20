@@ -65,9 +65,19 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
 }
 
 void AISystem::reinitialize() {
-  m_ai_instances.clear();
+  shutdown_workers();
 
   initialize_ai_players();
+}
+
+void AISystem::shutdown_workers() {
+  for (auto& ai : m_ai_instances) {
+    if (ai.worker) {
+      ai.worker->stop();
+    }
+    ai.context.nation = nullptr;
+  }
+  m_ai_instances.clear();
 }
 
 void AISystem::initialize_ai_players() {
@@ -150,6 +160,7 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
     AI::AIJob job;
     job.snapshot = std::move(snapshot);
     job.context = ai.context;
+    job.context.nation = nullptr;
     job.delta_time = ai.update_timer;
 
     if (ai.worker->try_submit(std::move(job))) {

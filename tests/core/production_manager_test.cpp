@@ -13,6 +13,8 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/picking_service.h"
+#include "game/systems/player_resource_registry.h"
+#include "game/systems/resource_types.h"
 #include "game/systems/selection_system.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -25,6 +27,11 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
+    Game::Systems::PlayerResourceRegistry::instance().clear();
+    auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+    resources.set(1, Game::Systems::ResourceType::Wood, 1000);
+    resources.set(1, Game::Systems::ResourceType::Stone, 1000);
+    resources.set(1, Game::Systems::ResourceType::Iron, 1000);
     Game::Systems::CommandService::initialize(32, 32);
 
     auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
@@ -44,6 +51,7 @@ protected:
   void TearDown() override {
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     Game::Map::TerrainService::instance().clear();
+    Game::Systems::PlayerResourceRegistry::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
@@ -328,6 +336,32 @@ TEST_F(ProductionManagerTest, BuilderConstructionPreviewRotationCarriesIntoQueue
   EXPECT_TRUE(builder_prod->has_construction_site);
   EXPECT_FLOAT_EQ(builder_prod->construction_site_rotation_y, 15.0F);
   EXPECT_TRUE(preview_entities().empty());
+}
+
+TEST_F(ProductionManagerTest, DirectBuildingPlacementRejectsConfirmWithoutResources) {
+  ProductionManager manager(&world, &picking_service, &camera);
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.set(1, Game::Systems::ResourceType::Wood, 0);
+  resources.set(1, Game::Systems::ResourceType::Stone, 0);
+
+  manager.start_building_placement(QStringLiteral("defense_tower"), 1);
+
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  ASSERT_TRUE(manager.construction_preview_valid());
+
+  manager.on_construction_confirm();
+
+  EXPECT_TRUE(manager.is_placing_construction());
+  EXPECT_EQ(find_spawned_unit(Game::Units::SpawnType::DefenseTower), nullptr);
+
+  resources.set(1, Game::Systems::ResourceType::Wood, 90);
+  resources.set(1, Game::Systems::ResourceType::Stone, 120);
+
+  manager.on_construction_confirm();
+
+  EXPECT_FALSE(manager.is_placing_construction());
+  EXPECT_NE(find_spawned_unit(Game::Units::SpawnType::DefenseTower), nullptr);
 }
 
 TEST_F(ProductionManagerTest, CollectPreviewSnapsToResourceCenterWhenNearby) {

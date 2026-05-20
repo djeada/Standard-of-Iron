@@ -66,6 +66,7 @@ add_library(game_systems STATIC
     systems/picking_service.cpp
     systems/command_service.cpp
     systems/commander_system.cpp
+    systems/construction_cost_catalog.cpp
     systems/production_service.cpp
     systems/production_system.cpp
     systems/civilian_delivery_system.cpp

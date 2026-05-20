@@ -578,6 +578,13 @@ GameEngine::GameEngine(QObject* parent)
             set_error("Not enough manpower. Build homes or wait for families.");
           });
   connect(m_command_controller.get(),
+          &App::Controllers::CommandController::insufficient_resources,
+          [this](const QString& message) {
+            AudioSystem::get_instance().play_sound(
+                "low_resources_click", 0.85F, false, 7, AudioCategory::SFX);
+            set_error(message);
+          });
+  connect(m_command_controller.get(),
           &App::Controllers::CommandController::hold_mode_changed,
           this,
           &GameEngine::hold_mode_changed);
@@ -3009,6 +3016,11 @@ auto GameEngine::get_unit_production_info(
   return m_production_manager
              ? m_production_manager->get_unit_production_info(unit_type, nation_id)
              : QVariantMap();
+}
+
+auto GameEngine::get_construction_info(const QString& item_type) const -> QVariantMap {
+  return m_production_manager ? m_production_manager->get_construction_info(item_type)
+                              : QVariantMap();
 }
 
 auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {

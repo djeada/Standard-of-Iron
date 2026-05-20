@@ -15,6 +15,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/construction_cost_catalog.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
@@ -313,6 +314,53 @@ auto harvest_target_kind_for_world_prop_type(Game::Map::WorldProp::Type type)
 
 auto is_collect_item(const QString& item_type) -> bool {
   return item_type == QLatin1String(k_collect_item_type);
+}
+
+auto resource_amounts_to_variant_map(const Game::Systems::ResourceAmounts& amounts)
+    -> QVariantMap {
+  QVariantMap map;
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    int const amount = amounts.get(type);
+    if (amount > 0) {
+      map[QLatin1String(Game::Systems::resource_type_key(type))] = amount;
+    }
+  }
+  return map;
+}
+
+auto scaled_resource_amounts(const Game::Systems::ResourceAmounts& base,
+                             int multiplier) -> Game::Systems::ResourceAmounts {
+  Game::Systems::ResourceAmounts scaled;
+  if (multiplier <= 0) {
+    return scaled;
+  }
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    scaled.set(type, base.get(type) * multiplier);
+  }
+  return scaled;
+}
+
+auto first_missing_resource_name(
+    int owner_id, const Game::Systems::ResourceAmounts& cost) -> QString {
+  Game::Systems::ResourceAmounts const available =
+      Game::Systems::PlayerResourceRegistry::instance().get_all(owner_id);
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    if (available.get(type) < cost.get(type)) {
+      return QLatin1String(Game::Systems::resource_type_key(type));
+    }
+  }
+  return QStringLiteral("resources");
+}
+
+auto construction_costs_for_item(const QString& item_type)
+    -> Game::Systems::ResourceAmounts {
+  return Game::Systems::construction_cost_info(item_type.toStdString()).resource_costs;
+}
+
+auto insufficient_construction_resources_reason(
+    int owner_id, const Game::Systems::ResourceAmounts& cost) -> QString {
+  return QStringLiteral("Not enough %1.")
+      .arg(first_missing_resource_name(owner_id, cost));
 }
 
 auto is_harvest_construction_item(const QString& item_type) -> bool {
@@ -1625,18 +1673,18 @@ void ProductionManager::confirm_wall_construction_plan() {
   }
 
   const int owner_id = pending_construction_owner_id();
-  const int total_cost =
-      valid_segment_count * Game::Systems::WallNetworkService::k_wall_segment_wood_cost;
-  if (Game::Systems::PlayerResourceRegistry::instance().get(
-          owner_id, Game::Systems::ResourceType::Wood) < total_cost) {
-    emit construction_placement_rejected(QStringLiteral("Not enough wood."));
+  const Game::Systems::ResourceAmounts total_cost = scaled_resource_amounts(
+      construction_costs_for_item(QStringLiteral("wall_segment")), valid_segment_count);
+  if (!Game::Systems::PlayerResourceRegistry::instance().has_at_least(owner_id,
+                                                                      total_cost)) {
+    emit construction_placement_rejected(
+        insufficient_construction_resources_reason(owner_id, total_cost));
     set_construction_preview_active(!m_wall_preview_segments.empty());
     set_construction_preview_valid(false);
     return;
   }
 
-  Game::Systems::PlayerResourceRegistry::instance().add(
-      owner_id, Game::Systems::ResourceType::Wood, -total_cost);
+  Game::Systems::PlayerResourceRegistry::instance().spend(owner_id, total_cost);
 
   const auto nation_id = pending_construction_nation_id();
   const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
@@ -1792,6 +1840,17 @@ void ProductionManager::confirm_direct_building_placement() {
     return;
   }
 
+  const int owner_id = pending_construction_owner_id();
+  const Game::Systems::ResourceAmounts resource_costs =
+      construction_costs_for_item(m_pending_construction_type);
+  if (!resource_costs.empty() &&
+      !Game::Systems::PlayerResourceRegistry::instance().has_at_least(owner_id,
+                                                                      resource_costs)) {
+    emit construction_placement_rejected(
+        insufficient_construction_resources_reason(owner_id, resource_costs));
+    return;
+  }
+
   auto registry = Game::Map::MapTransformer::get_factory_registry();
   if (registry == nullptr) {
     emit construction_placement_rejected(
@@ -1815,6 +1874,9 @@ void ProductionManager::confirm_direct_building_placement() {
     emit construction_placement_rejected(QStringLiteral("Failed to place building."));
     return;
   }
+
+  Game::Systems::PlayerResourceRegistry::instance().spend(params.player_id,
+                                                          resource_costs);
 
   if (params.spawn_type == Game::Units::SpawnType::WallSegment) {
     Game::Systems::WallNetworkService::refresh_world(*m_world);
@@ -1985,6 +2047,8 @@ auto ProductionManager::get_unit_production_info(
   std::string const type_str = unit_type.toStdString();
 
   info["cost"] = config.get_production_cost(type_str);
+  info["population_cost"] = info["cost"];
+  info["resource_costs"] = QVariantMap{};
   info["build_time"] = static_cast<double>(config.get_build_time(type_str));
   info["individuals_per_unit"] = config.get_individuals_per_unit(type_str);
 
@@ -1996,6 +2060,9 @@ auto ProductionManager::get_unit_production_info(
     auto profile = Game::Systems::TroopProfileService::instance().get_profile(
         nation_id_enum, *troop_type_opt);
     info["cost"] = profile.production.cost;
+    info["population_cost"] = profile.production.cost;
+    info["resource_costs"] =
+        resource_amounts_to_variant_map(profile.production.resource_costs);
     info["build_time"] = static_cast<double>(profile.production.build_time);
     info["individuals_per_unit"] = profile.individuals_per_unit;
     info["display_name"] = QString::fromStdString(profile.display_name);
@@ -2028,6 +2095,17 @@ auto ProductionManager::get_unit_production_info(
     info["is_commander"] = false;
   }
 
+  return info;
+}
+
+auto ProductionManager::get_construction_info(const QString& item_type) const
+    -> QVariantMap {
+  QVariantMap info;
+  std::string const item_str = item_type.toStdString();
+  info["build_time"] = static_cast<double>(get_construction_build_time(item_str));
+  info["resource_costs"] =
+      resource_amounts_to_variant_map(construction_costs_for_item(item_type));
+  info["display_name"] = item_type;
   return info;
 }
 
