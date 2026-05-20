@@ -328,10 +328,15 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/icons/builder_cartaghe.png
             assets/visuals/icons/defense_tower_rome.png
             assets/visuals/icons/defense_tower_cartaghe.png
+            assets/visuals/icons/wall.png
             assets/visuals/icons/wall_rome.png
             assets/visuals/icons/wall_cartaghe.png
             assets/visuals/icons/house_rome.png
             assets/visuals/icons/house_cartaghe.png
+            assets/visuals/icons/gold.png
+            assets/visuals/icons/wood.png
+            assets/visuals/icons/stone.png
+            assets/visuals/icons/iron.png
             assets/visuals/icons/attack_mode.png
             assets/visuals/icons/defend_mode.png
             assets/visuals/icons/hold_mode.png
@@ -339,6 +344,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/icons/formation_mode.png
             assets/visuals/icons/build_mode.png
             assets/visuals/icons/heal_mode.png
+            assets/visuals/icons/collect_mode.png
+            assets/visuals/icons/rally_mode.png
+            assets/visuals/icons/deliver_mode.png
+            assets/visuals/icons/aura_mode.png
             assets/visuals/icons/ai_player.png
             assets/visuals/icons/human_player.png
             assets/visuals/icons/troop_count.png

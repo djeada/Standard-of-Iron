@@ -59,41 +59,14 @@ public:
                      bool is_hovered,
                      bool is_combat_active = false,
                      float distance_sq = 0.0F) const noexcept -> bool {
-    BattleRenderConfig cfg;
-    int visible_count = 0;
-    {
-      std::lock_guard<std::mutex> lock(m_config_mutex);
-      cfg = m_config;
-      visible_count = m_visible_unit_count.load(std::memory_order_relaxed);
-    }
-
-    if (!cfg.enabled || visible_count < cfg.temporal_culling_threshold) {
-      return true;
-    }
-
-    // Use the finalized motion state directly. snapshot_valid is false during the gap
-    // between begin_motion_presentation_frame and finalize_motion_presentation_frame.
-    // state retains its last finalized value throughout that window and is safe
-    // to read here because render_world holds entity_mutex.
-    bool const is_moving = motion != nullptr && motion->has_locomotion();
-    if (is_selected || is_hovered || is_moving) {
-      return true;
-    }
-
-    if (is_combat_active) {
-      return true;
-    }
-
-    uint32_t frame = m_frame_counter.load(std::memory_order_relaxed);
-    bool render = ((entity_id + frame) % 2) == 0;
-
-    if (!render) {
-      m_units_skipped_temporal.fetch_add(1, std::memory_order_relaxed);
-    } else {
-      m_units_rendered_this_frame.fetch_add(1, std::memory_order_relaxed);
-    }
-
-    return render;
+    (void)entity_id;
+    (void)motion;
+    (void)is_selected;
+    (void)is_hovered;
+    (void)is_combat_active;
+    (void)distance_sq;
+    m_units_rendered_this_frame.fetch_add(1, std::memory_order_relaxed);
+    return true;
   }
 
   [[nodiscard]] auto should_update_animation(

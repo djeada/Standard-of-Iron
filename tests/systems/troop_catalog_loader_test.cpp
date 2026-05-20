@@ -47,4 +47,23 @@ TEST(TroopCatalogLoader, FrontlineInfantryKeepConfiguredFormationSpacing) {
                   1.05F);
 }
 
+TEST(TroopCatalogLoader, ProductionResourceCostsLoadForEconomyUnits) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+
+  auto const* archer =
+      Game::Units::TroopCatalog::instance().get_class(Game::Units::TroopType::Archer);
+  auto const* builder =
+      Game::Units::TroopCatalog::instance().get_class(Game::Units::TroopType::Builder);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(builder, nullptr);
+
+  EXPECT_EQ(archer->production.resource_costs.get(Game::Systems::ResourceType::Wood),
+            6);
+  EXPECT_EQ(archer->production.resource_costs.get(Game::Systems::ResourceType::Stone),
+            0);
+  EXPECT_EQ(builder->production.resource_costs.get(Game::Systems::ResourceType::Wood),
+            0);
+  EXPECT_TRUE(builder->production.resource_costs.empty());
+}
+
 } // namespace

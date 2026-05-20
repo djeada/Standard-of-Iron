@@ -244,6 +244,7 @@
         <file>assets/visuals/icons/builder_cartaghe.png</file>
         <file>assets/visuals/icons/defense_tower_rome.png</file>
         <file>assets/visuals/icons/defense_tower_cartaghe.png</file>
+        <file>assets/visuals/icons/wall.png</file>
         <file>assets/visuals/icons/wall_rome.png</file>
         <file>assets/visuals/icons/wall_cartaghe.png</file>
         <file>assets/visuals/icons/house_rome.png</file>
@@ -257,6 +258,14 @@
         <file>assets/visuals/icons/formation_mode.png</file>
         <file>assets/visuals/icons/build_mode.png</file>
         <file>assets/visuals/icons/heal_mode.png</file>
+        <file>assets/visuals/icons/collect_mode.png</file>
+        <file>assets/visuals/icons/rally_mode.png</file>
+        <file>assets/visuals/icons/deliver_mode.png</file>
+        <file>assets/visuals/icons/aura_mode.png</file>
+        <file>assets/visuals/icons/gold.png</file>
+        <file>assets/visuals/icons/wood.png</file>
+        <file>assets/visuals/icons/stone.png</file>
+        <file>assets/visuals/icons/iron.png</file>
         <file>assets/visuals/icons/ai_player.png</file>
         <file>assets/visuals/icons/human_player.png</file>
         <file>assets/visuals/icons/troop_count.png</file>

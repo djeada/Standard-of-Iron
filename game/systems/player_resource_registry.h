@@ -34,6 +34,11 @@ public:
     return it != m_resources_by_owner.end() ? it->second : ResourceAmounts{};
   }
 
+  [[nodiscard]] auto has_at_least(int owner_id,
+                                  const ResourceAmounts& required) const -> bool {
+    return get_all(owner_id).can_cover(required);
+  }
+
   void set(int owner_id, ResourceType type, int amount) {
     if (owner_id <= 0) {
       return;
@@ -46,6 +51,18 @@ public:
       return;
     }
     m_resources_by_owner[owner_id].add(type, delta);
+  }
+
+  void spend(int owner_id, const ResourceAmounts& cost) {
+    if (owner_id <= 0) {
+      return;
+    }
+    for (ResourceType const type : k_all_resource_types) {
+      int const amount = cost.get(type);
+      if (amount > 0) {
+        add(owner_id, type, -amount);
+      }
+    }
   }
 
   [[nodiscard]] auto snapshot() const -> std::vector<OwnerResourceState> {

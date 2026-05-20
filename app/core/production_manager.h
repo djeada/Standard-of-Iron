@@ -84,6 +84,7 @@ public:
   [[nodiscard]] QVariantMap get_selected_builder_production_state() const;
   [[nodiscard]] QVariantMap get_unit_production_info(const QString& unit_type,
                                                      const QString& nation_id) const;
+  [[nodiscard]] QVariantMap get_construction_info(const QString& item_type) const;
 
   auto set_rally_at_screen(qreal sx,
                            qreal sy,

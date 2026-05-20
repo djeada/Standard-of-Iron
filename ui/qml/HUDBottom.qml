@@ -657,7 +657,7 @@ RowLayout {
                     Image {
                         width: cmdGrid.cmd_icon_size
                         height: cmdGrid.cmd_icon_size
-                        source: bottomRoot.command_icon("troop_count.png")
+                        source: bottomRoot.command_icon("deliver_mode.png")
                         fillMode: Image.PreserveAspectFit
                         smooth: true
                         mipmap: true
@@ -716,13 +716,15 @@ RowLayout {
                     spacing: 8
                     anchors.verticalCenter: parent.verticalCenter
 
-                    Text {
-                        text: "⛏"
-                        font.pointSize: 18
-                        font.bold: true
-                        color: collectButton.enabled ? Theme.textMain : Theme.textDim
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+                    Image {
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
+                        source: bottomRoot.command_icon("collect_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        opacity: collectButton.enabled ? 1 : 0.45
+                        visible: source !== ""
                     }
 
                     Text {
@@ -968,6 +970,17 @@ RowLayout {
                     anchors.centerIn: parent
                     spacing: 8
                     anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
+                        source: bottomRoot.command_icon("rally_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        opacity: rallyButton.enabled ? 1 : 0.45
+                        visible: source !== ""
+                    }
 
                     Text {
                         text: rallyButton.text
