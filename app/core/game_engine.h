@@ -150,6 +150,10 @@ public:
                  placing_formation_changed)
   Q_PROPERTY(bool is_placing_construction READ is_placing_construction NOTIFY
                  placing_construction_changed)
+  Q_PROPERTY(QString pending_builder_construction_type READ
+                 pending_builder_construction_type NOTIFY placing_construction_changed)
+  Q_PROPERTY(bool construction_preview_active READ construction_preview_active NOTIFY
+                 construction_preview_active_changed)
   Q_PROPERTY(bool construction_preview_valid READ construction_preview_valid NOTIFY
                  construction_preview_valid_changed)
   Q_PROPERTY(
@@ -199,7 +203,10 @@ public:
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_run_mode() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_construction() const;
+  Q_INVOKABLE [[nodiscard]] QString pending_builder_construction_type() const;
+  Q_INVOKABLE [[nodiscard]] bool construction_preview_active() const;
   Q_INVOKABLE [[nodiscard]] bool construction_preview_valid() const;
+  Q_INVOKABLE [[nodiscard]] bool construction_preview_rotatable() const;
   Q_INVOKABLE [[nodiscard]] int construction_preview_segment_count() const;
   Q_INVOKABLE [[nodiscard]] int construction_preview_valid_segment_count() const;
   Q_INVOKABLE [[nodiscard]] int construction_preview_total_cost() const;
@@ -210,6 +217,7 @@ public:
   Q_INVOKABLE void on_construction_mouse_move(qreal sx, qreal sy);
   Q_INVOKABLE void on_construction_pointer_pressed(qreal sx, qreal sy);
   Q_INVOKABLE void on_construction_pointer_released(qreal sx, qreal sy);
+  Q_INVOKABLE void on_construction_scroll(float delta);
   Q_INVOKABLE void on_construction_confirm();
   Q_INVOKABLE void on_construction_cancel();
   Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
@@ -225,6 +233,9 @@ public:
   Q_INVOKABLE void begin_commander_flag_rally();
   Q_INVOKABLE void confirm_commander_flag_rally(qreal sx, qreal sy);
   Q_INVOKABLE void cancel_commander_flag_rally();
+  Q_INVOKABLE void begin_barracks_rally_placement();
+  Q_INVOKABLE void confirm_barracks_rally_placement(qreal sx, qreal sy);
+  Q_INVOKABLE void cancel_barracks_rally_placement();
   [[nodiscard]] bool is_placing_commander_rally() const;
   [[nodiscard]] bool has_commander_rally_preview() const;
   [[nodiscard]] QVector3D get_commander_rally_preview() const;
@@ -306,6 +317,7 @@ public:
   Q_INVOKABLE void start_builder_construction(const QString& item_type);
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString& unit_type, const QString& nation_id) const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap get_hud_action_states() const;
   Q_INVOKABLE [[nodiscard]] QString get_selected_units_command_mode() const;
   Q_INVOKABLE [[nodiscard]] QString
   get_selected_units_toggle_state(const QString& mode) const;
@@ -365,6 +377,7 @@ public:
   void ensure_initialized();
   void update(float dt);
   void render(int pixel_width, int pixel_height);
+  void set_input_viewport_size(qreal width, qreal height);
 
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const;
   bool get_unit_type_key(Engine::Core::EntityID id, QString& type_key) const;
@@ -444,6 +457,7 @@ private:
   };
   bool screen_to_ground(const QPointF& screen_pt, QVector3D& out_world);
   bool world_to_screen(const QVector3D& world, QPointF& out_screen) const;
+  [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const;
   [[nodiscard]] Engine::Core::Entity* find_local_commander() const;
   bool enter_commander_control_mode();
   void exit_commander_control_mode();
@@ -468,6 +482,8 @@ private:
   void poll_commander_mouse_look();
   void reset_commander_input();
   void sync_selection_flags();
+  void prune_unavailable_action_context();
+  [[nodiscard]] bool is_action_enabled(const QString& action_id) const;
   void update_civilian_delivery_availability();
   void sync_selected_player_state();
   void sync_scatter_world_props();
@@ -517,6 +533,8 @@ private:
   void update_cursor_position();
   void restore_controlled_commander_direct_control_if_ready();
   void seed_commander_rally_preview_from_view_center();
+  void seed_barracks_rally_preview_from_selection();
+  [[nodiscard]] bool has_selected_local_barracks() const;
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -636,6 +654,7 @@ signals:
   void loading_stage_changed(QString stage_text);
   void placing_formation_changed();
   void placing_construction_changed();
+  void construction_preview_active_changed();
   void construction_preview_valid_changed();
   void construction_preview_summary_changed();
   void campaign_mission_changed();

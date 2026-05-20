@@ -10,6 +10,8 @@ add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/app/core/input_command_handler.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_commander_setup.cpp
     ${CMAKE_SOURCE_DIR}/app/core/mission_definition_view.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/production_manager.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/rts_action_model.cpp
     ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
     ${CMAKE_SOURCE_DIR}/app/core/runtime_frame_orchestrator.cpp
     ${CMAKE_SOURCE_DIR}/app/core/ambient_state_manager.cpp
@@ -26,7 +28,9 @@ add_executable(standard_of_iron_tests
     core/input_command_handler_test.cpp
     core/mission_commander_setup_test.cpp
     core/mission_definition_view_test.cpp
+    core/production_manager_test.cpp
     core/selection_query_service_test.cpp
+    controllers/command_controller_test.cpp
     core/runtime_frame_orchestrator_test.cpp
     db/save_storage_test.cpp
     db/mission_progress_test.cpp
@@ -50,6 +54,7 @@ add_executable(standard_of_iron_tests
     systems/civilian_delivery_system_test.cpp
     systems/building_collision_test.cpp
     systems/combat_mode_test.cpp
+    systems/rpg_engagement_system_test.cpp
     systems/command_service_test.cpp
     systems/commander_system_test.cpp
     systems/pathfinding_test.cpp

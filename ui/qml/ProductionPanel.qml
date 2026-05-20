@@ -1373,6 +1373,7 @@ Rectangle {
                     id: rallyContent
 
                     property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_production_state) ? productionPanel.game_instance.get_selected_production_state() : productionPanel.default_production_state())
+                    property bool placing_barracks_rally: typeof gameView !== 'undefined' && gameView.cursor_mode === "place_barracks_rally"
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -1383,7 +1384,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.parent.width - 20
                         height: 32
-                        text: (typeof gameView !== 'undefined' && gameView.set_rally_mode) ? qsTr("📍 Click Map to Set Rally") : qsTr("📍 Set Rally Point")
+                        text: rallyContent.placing_barracks_rally ? qsTr("📍 Click Map to Set Rally") : qsTr("📍 Set Rally Point")
                         focusPolicy: Qt.NoFocus
                         enabled: rallyContent.prod.has_barracks
                         onClicked: productionPanel.rally_mode_toggled()
@@ -1394,7 +1395,7 @@ Rectangle {
                         background: Rectangle {
                             color: parent.enabled ? (parent.down ? hs.bronzeDeep : (parent.hovered ? hs.bronze : hs.parchmentDark)) : Theme.bgShade
                             radius: 6
-                            border.color: (typeof gameView !== 'undefined' && gameView.set_rally_mode) ? hs.bronze : hs.bronzeDeep
+                            border.color: rallyContent.placing_barracks_rally ? hs.bronze : hs.bronzeDeep
                             border.width: 2
                         }
 
@@ -1410,7 +1411,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: (typeof gameView !== 'undefined' && gameView.set_rally_mode) ? qsTr("Right-click to cancel") : ""
+                        text: rallyContent.placing_barracks_rally ? qsTr("Right-click to cancel") : ""
                         color: "#8D7146"
                         font.pointSize: 8
                         font.italic: true
@@ -1541,17 +1542,22 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: {
                             if (!builderProductionContent.builder_prod.in_progress)
-                                return qsTr("Select an item to build");
+                                return qsTr("Select a structure to build");
                             var label = builderProductionContent.builder_prod.product_type;
-                            if (label === "cut_tree")
+                            var is_collection_task = false;
+                            if (label === "cut_tree") {
+                                is_collection_task = true;
                                 label = qsTr("Cut Tree");
-                            else if (label === "collect_stone")
+                            } else if (label === "collect_stone") {
+                                is_collection_task = true;
                                 label = qsTr("Collect Stone");
-                            else if (label === "collect_iron_ore")
+                            } else if (label === "collect_iron_ore") {
+                                is_collection_task = true;
                                 label = qsTr("Collect Iron Ore");
-                            else if (label === "wall_segment")
+                            } else if (label === "wall_segment") {
                                 label = qsTr("Wall Segment");
-                            return qsTr("Building: %1").arg(label);
+                            }
+                            return (is_collection_task ? qsTr("Task: %1") : qsTr("Building: %1")).arg(label);
                         }
                         color: builderProductionContent.builder_prod.in_progress ? "#7F9A5F" : "#8D7146"
                         font.pointSize: 8
@@ -1883,222 +1889,6 @@ Rectangle {
                                 anchors.fill: parent
                                 color: "#F4E7C8"
                                 opacity: builderHomeMouseArea.pressed ? 0.2 : 0
-                                radius: parent.radius
-                            }
-
-                            Behavior on color  {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-                            }
-
-                            Behavior on border.color  {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-                            }
-
-                            Behavior on scale  {
-                                NumberAnimation {
-                                    duration: 100
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
-                            property bool is_hovered: builderCutTreeMouseArea.containsMouse
-
-                            width: 110
-                            height: 80
-                            radius: 6
-                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
-                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
-                            border.width: is_hovered && is_enabled ? 2 : 1
-                            opacity: is_enabled ? 1 : 0.5
-                            scale: is_hovered && is_enabled ? 1.025 : 1
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "🌲"
-                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 34
-                                opacity: parent.is_enabled ? 0.9 : 0.4
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                text: qsTr("Cut Tree")
-                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
-                                font.bold: true
-                            }
-
-                            MouseArea {
-                                id: builderCutTreeMouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (parent.is_enabled)
-                                        productionPanel.builder_construction("cut_tree");
-                                }
-                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Cut Tree\nSend one selected builder to a tree.\nGenerates wood when the tree is chopped.") : qsTr("Already building...")
-                                ToolTip.delay: 300
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#F4E7C8"
-                                opacity: builderCutTreeMouseArea.pressed ? 0.2 : 0
-                                radius: parent.radius
-                            }
-
-                            Behavior on color  {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-                            }
-
-                            Behavior on border.color  {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-                            }
-
-                            Behavior on scale  {
-                                NumberAnimation {
-                                    duration: 100
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
-                            property bool is_hovered: builderCollectStoneMouseArea.containsMouse
-
-                            width: 110
-                            height: 80
-                            radius: 6
-                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
-                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
-                            border.width: is_hovered && is_enabled ? 2 : 1
-                            opacity: is_enabled ? 1 : 0.5
-                            scale: is_hovered && is_enabled ? 1.025 : 1
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "🪨"
-                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 34
-                                opacity: parent.is_enabled ? 0.9 : 0.4
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                text: qsTr("Collect Stone")
-                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
-                                font.bold: true
-                            }
-
-                            MouseArea {
-                                id: builderCollectStoneMouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (parent.is_enabled)
-                                        productionPanel.builder_construction("collect_stone");
-                                }
-                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Collect Stone\nSend one selected builder to a boulder.\nGenerates stone when the boulder is cleared.") : qsTr("Already building...")
-                                ToolTip.delay: 300
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#F4E7C8"
-                                opacity: builderCollectStoneMouseArea.pressed ? 0.2 : 0
-                                radius: parent.radius
-                            }
-
-                            Behavior on color  {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-                            }
-
-                            Behavior on border.color  {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-                            }
-
-                            Behavior on scale  {
-                                NumberAnimation {
-                                    duration: 100
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            property bool is_enabled: !builderProductionContent.builder_prod.in_progress
-                            property bool is_hovered: builderCollectIronOreMouseArea.containsMouse
-
-                            width: 110
-                            height: 80
-                            radius: 6
-                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
-                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
-                            border.width: is_hovered && is_enabled ? 2 : 1
-                            opacity: is_enabled ? 1 : 0.5
-                            scale: is_hovered && is_enabled ? 1.025 : 1
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "⛏"
-                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 34
-                                opacity: parent.is_enabled ? 0.9 : 0.4
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                text: qsTr("Iron Ore")
-                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
-                                font.bold: true
-                            }
-
-                            MouseArea {
-                                id: builderCollectIronOreMouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (parent.is_enabled)
-                                        productionPanel.builder_construction("collect_iron_ore");
-                                }
-                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Collect Iron Ore\nSend one selected builder to an iron ore deposit.\nGenerates iron when the deposit is cleared.") : qsTr("Already building...")
-                                ToolTip.delay: 300
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#F4E7C8"
-                                opacity: builderCollectIronOreMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 

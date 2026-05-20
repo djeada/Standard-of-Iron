@@ -247,8 +247,7 @@ auto SkirmishLoader::start(const QString& map_path,
 
   auto& nation_registry = Game::Systems::NationRegistry::instance();
 
-  for (auto it = map_player_ids.begin(); it != map_player_ids.end(); ++it) {
-    int player_id = *it;
+  for (int const player_id : map_player_ids) {
     auto nat_it = nation_overrides.find(player_id);
     if (nat_it != nation_overrides.end()) {
       nation_registry.set_player_nation(player_id, nat_it->second);
@@ -322,10 +321,6 @@ auto SkirmishLoader::start(const QString& map_path,
 
   auto& terrain_service = Game::Map::TerrainService::instance();
 
-  if (terrain_service.is_initialized()) {
-    terrain_service.remove_non_persistent_props();
-  }
-
   if (m_ground != nullptr) {
     if (level_result.ok) {
       m_ground->configure(
@@ -351,6 +346,7 @@ auto SkirmishLoader::start(const QString& map_path,
         (terrain_service.get_height_map() != nullptr)) {
       m_scatter->configure(*terrain_service.get_height_map(),
                            terrain_service.biome_settings(),
+                           terrain_service.authored_world_props(),
                            terrain_service.world_props());
     }
   }

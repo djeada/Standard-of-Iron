@@ -224,7 +224,39 @@ TEST(CommanderControlRegressionTest, CommanderModePreservesAndRestoresRtsSelecti
   EXPECT_TRUE(contains(engine_source,
                        "m_selection_controller->select_single_unit("
                        "m_controlled_commander_id,"));
-  EXPECT_TRUE(contains(game_view_source, "game_view.set_rally_mode = false;"));
+  EXPECT_TRUE(contains(game_view_source, "game.cancel_barracks_rally_placement();"));
+}
+
+TEST(CommanderControlRegressionTest, BarracksRallyPlacementUsesDedicatedCursorMode) {
+  const auto root = find_repo_root();
+  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+  const auto cursor_mode_header = read_text(root / "app" / "models" / "cursor_mode.h");
+  const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
+  const auto hud_source = read_text(root / "ui" / "qml" / "HUDBottom.qml");
+  const auto production_panel_source =
+      read_text(root / "ui" / "qml" / "ProductionPanel.qml");
+  ASSERT_FALSE(engine_header.empty());
+  ASSERT_FALSE(cursor_mode_header.empty());
+  ASSERT_FALSE(game_view_source.empty());
+  ASSERT_FALSE(hud_source.empty());
+  ASSERT_FALSE(production_panel_source.empty());
+
+  EXPECT_TRUE(
+      contains(engine_header, "Q_INVOKABLE void begin_barracks_rally_placement();"));
+  EXPECT_TRUE(contains(
+      engine_header,
+      "Q_INVOKABLE void confirm_barracks_rally_placement(qreal sx, qreal sy);"));
+  EXPECT_TRUE(
+      contains(engine_header, "Q_INVOKABLE void cancel_barracks_rally_placement();"));
+  EXPECT_TRUE(contains(cursor_mode_header, "PlaceBarracksRally"));
+  EXPECT_TRUE(contains(cursor_mode_header, "\"place_barracks_rally\""));
+  EXPECT_TRUE(contains(game_view_source, "function is_barracks_rally_placement()"));
+  EXPECT_TRUE(contains(game_view_source,
+                       "game.confirm_barracks_rally_placement(mouse.x, mouse.y);"));
+  EXPECT_TRUE(contains(game_view_source, "game.cancel_barracks_rally_placement();"));
+  EXPECT_TRUE(contains(production_panel_source,
+                       "gameView.cursor_mode === \"place_barracks_rally\""));
+  EXPECT_TRUE(contains(hud_source, "game.begin_barracks_rally_placement();"));
 }
 
 TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
@@ -330,9 +362,8 @@ TEST(CommanderControlRegressionTest, FpvAttackAlwaysTriggersAnimationEvenWithNoT
   EXPECT_TRUE(
       contains(source, "find_primary_target(world, commander_id, local_owner_id);"));
   EXPECT_TRUE(contains(source, "if (target_id == 0) {"));
-  EXPECT_TRUE(contains(
-      source,
-      "Game::Systems::Combat::deal_damage(&world, target, damage, commander_id);"));
+  EXPECT_TRUE(
+      contains(source, "Game::Systems::RpgCombat::deal_commander_attack_damage("));
   EXPECT_FALSE(contains(source, "target_comp->target_id = target_id;"));
 }
 

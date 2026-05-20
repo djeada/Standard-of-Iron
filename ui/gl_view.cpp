@@ -124,4 +124,7 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
   auto* view = dynamic_cast<GLView*>(item);
   m_engine = qobject_cast<GameEngine*>(view->engine());
+  if (m_engine != nullptr) {
+    m_engine->set_input_viewport_size(view->width(), view->height());
+  }
 }

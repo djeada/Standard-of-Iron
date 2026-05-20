@@ -27,4 +27,4 @@ void render_commander_rally_flags(
     int preview_owner_id,
     const std::optional<QVector3D>& preview_pos = std::nullopt);
 
-}
+} // namespace Render::GL

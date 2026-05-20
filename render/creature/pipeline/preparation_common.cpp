@@ -36,6 +36,11 @@ auto looping_phase(float phase) noexcept -> float {
 
 auto hold_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
     -> float {
+  if (anim.inputs.is_constructing &&
+      anim.construction_role == Render::GL::ConstructionRole::KneelingChisel) {
+    return k_terminal_non_looping_phase;
+  }
+
   float const hold_phase = Render::GL::hold_transition_amount(anim.inputs);
   if (hold_phase > 0.0F) {
     return std::clamp(hold_phase, 0.0F, k_terminal_non_looping_phase);
@@ -99,6 +104,11 @@ auto humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
   if (state == Render::Creature::AnimationStateId::Hold) {
     return hold_phase_for_anim(anim);
   }
+  if (state == Render::Creature::AnimationStateId::RidingCharge &&
+      anim.inputs.is_mounted && anim.inputs.is_attacking && anim.inputs.is_melee &&
+      !Render::Creature::is_moving_animation(anim.inputs.movement_state)) {
+    return 0.12F + 0.66F * std::clamp(anim.attack_phase, 0.0F, 1.0F);
+  }
   if (anim.inputs.is_constructing) {
     return looping_phase(anim.inputs.construction_progress + anim.jitter_seed);
   }
@@ -130,6 +140,19 @@ auto humanoid_requested_clip_variant_for_state(
   }
   if (anim.inputs.is_constructing &&
       state == Render::Creature::AnimationStateId::AttackSword) {
+    switch (anim.construction_role) {
+    case Render::GL::ConstructionRole::Hammer:
+      return 0U;
+    case Render::GL::ConstructionRole::Saw:
+      return 1U;
+    case Render::GL::ConstructionRole::Chisel:
+      return 2U;
+    case Render::GL::ConstructionRole::KneelingChisel:
+      return 2U;
+    case Render::GL::ConstructionRole::None:
+      break;
+    }
+
     auto const bucket =
         static_cast<std::uint32_t>(std::floor(anim.jitter_seed * 64.0F));
     return static_cast<std::uint8_t>(bucket % 3U);

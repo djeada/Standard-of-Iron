@@ -20,7 +20,8 @@ public:
 
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
-                 const std::vector<Game::Map::WorldProp>& world_props = {},
+                 const std::vector<Game::Map::WorldProp>& scatter_seed_world_props = {},
+                 const std::vector<Game::Map::WorldProp>& runtime_world_props = {},
                  bool use_world_props_exclusively = false);
   void set_light_direction(const QVector3D& dir);
 
@@ -37,8 +38,10 @@ public:
   }
 
 private:
-  void generate_instances(const std::vector<Game::Map::WorldProp>& world_props,
-                          const Game::Map::TerrainHeightMap& height_map);
+  void
+  generate_instances(const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
+                     const std::vector<Game::Map::WorldProp>& runtime_world_props,
+                     const Game::Map::TerrainHeightMap& height_map);
 
   Game::Map::BiomeSettings m_biome_settings;
   bool m_use_world_props_exclusively = false;

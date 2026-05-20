@@ -485,3 +485,87 @@ TEST(BpatRegistry, SwordHumanoidRidingChargeKeepsShieldHandMountedRelative) {
   EXPECT_NEAR(hand_l.y(), expected.y(), 0.12F);
   EXPECT_NEAR(hand_l.z(), expected.z(), 0.12F);
 }
+
+TEST(BpatRegistry, SwordHumanoidRidingSwordStrikeDropsHandBelowChamber) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+
+  std::array<QMatrix4x4, 64> chamber_palette{};
+  std::array<QMatrix4x4, 64> strike_palette{};
+  auto const bone_count =
+      reg.sample_palette(k_species_humanoid_sword,
+                         Render::Creature::k_humanoid_riding_sword_strike_clip,
+                         8U,
+                         std::span<QMatrix4x4>(chamber_palette));
+  ASSERT_GT(bone_count, 0U);
+  ASSERT_EQ(reg.sample_palette(k_species_humanoid_sword,
+                               Render::Creature::k_humanoid_riding_sword_strike_clip,
+                               22U,
+                               std::span<QMatrix4x4>(strike_palette)),
+            bone_count);
+
+  auto const hand_index = static_cast<std::size_t>(HumanoidBone::HandR);
+  auto const shoulder_index = static_cast<std::size_t>(HumanoidBone::ShoulderR);
+  ASSERT_GT(bone_count, shoulder_index);
+
+  QVector3D const chamber_hand = chamber_palette[hand_index].column(3).toVector3D();
+  QVector3D const strike_hand = strike_palette[hand_index].column(3).toVector3D();
+  QVector3D const chamber_shoulder =
+      chamber_palette[shoulder_index].column(3).toVector3D();
+  QVector3D const strike_shoulder =
+      strike_palette[shoulder_index].column(3).toVector3D();
+
+  EXPECT_GT(strike_hand.x(), chamber_hand.x() + 0.08F);
+  EXPECT_LT(strike_hand.y(), chamber_hand.y());
+  EXPECT_LT(strike_shoulder.y(), chamber_shoulder.y());
+  EXPECT_GT(strike_hand.z(), chamber_hand.z());
+}
+
+TEST(BpatRegistry, SwordHumanoidRidingSwordStrikeRotatesGripIntoCut) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(blob, nullptr);
+
+  std::uint32_t hand_socket_index = blob->socket_count();
+  for (std::uint32_t i = 0U; i < blob->socket_count(); ++i) {
+    if (blob->socket(i).name == "hand_r") {
+      hand_socket_index = i;
+      break;
+    }
+  }
+  ASSERT_LT(hand_socket_index, blob->socket_count());
+
+  QMatrix4x4 chamber_hand;
+  QMatrix4x4 strike_hand;
+  ASSERT_TRUE(reg.sample_socket(k_species_humanoid_sword,
+                                Render::Creature::k_humanoid_riding_sword_strike_clip,
+                                8U,
+                                hand_socket_index,
+                                chamber_hand));
+  ASSERT_TRUE(reg.sample_socket(k_species_humanoid_sword,
+                                Render::Creature::k_humanoid_riding_sword_strike_clip,
+                                22U,
+                                hand_socket_index,
+                                strike_hand));
+
+  QVector3D const chamber_up = chamber_hand.column(1).toVector3D().normalized();
+  QVector3D const strike_up = strike_hand.column(1).toVector3D().normalized();
+
+  EXPECT_LT(strike_up.y(), chamber_up.y() - 0.12F);
+  EXPECT_GT(strike_up.z(), chamber_up.z() + 0.30F);
+}

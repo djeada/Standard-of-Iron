@@ -503,7 +503,8 @@ class CommanderComponent : public Component {
 public:
   CommanderComponent() = default;
 
-  void begin_flag_rally(float target_x, float target_z, bool already_at_position) noexcept {
+  void
+  begin_flag_rally(float target_x, float target_z, bool already_at_position) noexcept {
     flag_rally_pending_x = target_x;
     flag_rally_pending_z = target_z;
     flag_rally_animation_timer = already_at_position ? flag_rally_cost : 0.0F;
@@ -587,7 +588,8 @@ public:
   float flag_rally_flag_x{0.0F};          // world X of the placed flag
   float flag_rally_flag_z{0.0F};          // world Z of the placed flag
   bool flag_rally_flag_active{false};     // a rally flag is currently placed
-  bool flag_rally_issue_commands{false};  // system should issue move commands to all allied units
+  bool flag_rally_issue_commands{
+      false}; // system should issue move commands to all allied units
 };
 
 class CommanderGuardComponent : public Component {
@@ -622,6 +624,30 @@ public:
   float remaining;
 };
 
+enum class RpgEngagementRole : std::uint8_t {
+  Support,
+  FrontAttacker,
+  LeftThreat,
+  RightThreat
+};
+
+class RpgEngagementComponent : public Component {
+public:
+  struct Slot {
+    EntityID entity_id{0};
+    RpgEngagementRole role{RpgEngagementRole::Support};
+    float distance{0.0F};
+    float signed_angle_degrees{0.0F};
+  };
+
+  std::vector<Slot> engagement_slots;
+  EntityID front_attacker_id{0};
+  EntityID left_threat_id{0};
+  EntityID right_threat_id{0};
+  int active_attackers{0};
+  float ring_radius{5.0F};
+};
+
 class AIControlledComponent : public Component {
 public:
   AIControlledComponent() = default;
@@ -650,6 +676,7 @@ public:
   bool has_construction_site{false};
   float construction_site_x{0.0F};
   float construction_site_z{0.0F};
+  float construction_site_rotation_y{0.0F};
   bool has_task_target{false};
   std::uint64_t task_target_id{0};
   float task_target_x{0.0F};

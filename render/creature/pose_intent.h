@@ -124,6 +124,16 @@ resolve_pose_intent(const Render::GL::AnimationInputs& inputs) noexcept -> PoseI
   if (inputs.is_hit_reacting) {
     return PoseIntent::HitReaction;
   }
+  if (inputs.is_mounted && inputs.is_attacking && inputs.is_melee) {
+    switch (inputs.attack_family) {
+    case Engine::Core::CombatAttackFamily::Sword:
+      return PoseIntent::AttackMelee;
+    case Engine::Core::CombatAttackFamily::Spear:
+    case Engine::Core::CombatAttackFamily::None:
+    default:
+      return PoseIntent::RidingCharge;
+    }
+  }
   if (!should_prioritize_attack_pose_over_locomotion(inputs)) {
     switch (inputs.movement_state) {
     case Render::Creature::MovementAnimationState::Run:

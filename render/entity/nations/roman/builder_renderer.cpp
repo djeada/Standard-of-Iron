@@ -1,5 +1,4 @@
 #include "builder_renderer.h"
-#include "../builder_tool_palette.h"
 
 #include <QMatrix4x4>
 #include <QString>
@@ -49,6 +48,7 @@
 #include "../../../submitter.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
+#include "../builder_tool_palette.h"
 #include "../equipment_loadout_catalog.h"
 #include "builder_style.h"
 
@@ -444,8 +444,7 @@ auto builder_saw_archetype() -> const RenderArchetype& {
                            QVector3D(0.06F, -0.08F, 0.03F),
                            0.018F,
                            k_saw_wood_slot),
-        generated_sphere(
-            QVector3D(0.065F, -0.07F, 0.03F), 0.024F, k_saw_leather_slot),
+        generated_sphere(QVector3D(0.065F, -0.07F, 0.03F), 0.024F, k_saw_leather_slot),
         generated_cylinder(QVector3D(0.02F, -0.06F, 0.03F),
                            QVector3D(0.03F, 0.20F, 0.03F),
                            0.013F,
@@ -454,14 +453,10 @@ auto builder_saw_archetype() -> const RenderArchetype& {
                            QVector3D(-0.09F, 0.12F, 0.03F),
                            0.018F,
                            k_saw_metal_dark_slot),
-        generated_sphere(
-            QVector3D(-0.02F, 0.16F, 0.03F), 0.016F, k_saw_metal_slot),
-        generated_sphere(
-            QVector3D(-0.045F, 0.145F, 0.03F), 0.014F, k_saw_metal_slot),
-        generated_sphere(
-            QVector3D(-0.07F, 0.13F, 0.03F), 0.012F, k_saw_metal_slot),
-        generated_sphere(
-            QVector3D(-0.09F, 0.115F, 0.03F), 0.010F, k_saw_metal_slot),
+        generated_sphere(QVector3D(-0.02F, 0.16F, 0.03F), 0.016F, k_saw_metal_slot),
+        generated_sphere(QVector3D(-0.045F, 0.145F, 0.03F), 0.014F, k_saw_metal_slot),
+        generated_sphere(QVector3D(-0.07F, 0.13F, 0.03F), 0.012F, k_saw_metal_slot),
+        generated_sphere(QVector3D(-0.09F, 0.115F, 0.03F), 0.010F, k_saw_metal_slot),
     }};
     return build_generated_equipment_archetype("roman_builder_saw", primitives);
   }();
@@ -475,14 +470,12 @@ auto builder_chisel_archetype() -> const RenderArchetype& {
                            QVector3D(0.0F, 0.06F, 0.01F),
                            0.017F,
                            k_chisel_wood_slot),
-        generated_sphere(
-            QVector3D(0.0F, -0.18F, 0.01F), 0.022F, k_chisel_wood_slot),
+        generated_sphere(QVector3D(0.0F, -0.18F, 0.01F), 0.022F, k_chisel_wood_slot),
         generated_cylinder(QVector3D(0.0F, 0.06F, 0.01F),
                            QVector3D(0.0F, 0.20F, 0.01F),
                            0.011F,
                            k_chisel_metal_slot),
-        generated_sphere(
-            QVector3D(0.0F, 0.215F, 0.01F), 0.012F, k_chisel_metal_slot),
+        generated_sphere(QVector3D(0.0F, 0.215F, 0.01F), 0.012F, k_chisel_metal_slot),
     }};
     return build_generated_equipment_archetype("roman_builder_chisel", primitives);
   }();
@@ -736,10 +729,8 @@ auto roman_builder_hammer_unit_archetype() -> Render::Creature::ArchetypeId {
 }
 
 auto roman_builder_saw_unit_archetype() -> Render::Creature::ArchetypeId {
-  static constexpr std::array<std::uint8_t, 4> k_slots{k_saw_wood_slot,
-                                                       k_saw_metal_slot,
-                                                       k_saw_metal_dark_slot,
-                                                       k_saw_leather_slot};
+  static constexpr std::array<std::uint8_t, 4> k_slots{
+      k_saw_wood_slot, k_saw_metal_slot, k_saw_metal_dark_slot, k_saw_leather_slot};
   static const auto k_tool_spec = builder_tool_make_static_attachment(
       builder_saw_archetype(),
       Render::Creature::ArchetypeRegistry::instance()
@@ -793,12 +784,11 @@ auto roman_builder_chisel_unit_archetype() -> Render::Creature::ArchetypeId {
   return k_archetype;
 }
 
-static auto
-roman_builder_variant_table() -> const Render::Creature::ArchetypeVariantTable& {
+auto roman_builder_variant_table() -> const Render::Creature::ArchetypeVariantTable& {
   static const Render::Creature::ArchetypeVariantTable k_table = []() {
     Render::Creature::ArchetypeVariantTable t{};
     t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
-    t.variant_stride = 3;
+    t.variant_stride = 4;
     t.variant_is_seed_based = true;
 
     t.archetype_for_variant[0] = roman_builder_hammer_unit_archetype();
@@ -808,7 +798,10 @@ roman_builder_variant_table() -> const Render::Creature::ArchetypeVariantTable& 
     t.state_for_variant[1] = Render::Creature::AnimationStateId::AttackSword;
 
     t.archetype_for_variant[2] = roman_builder_chisel_unit_archetype();
-    t.state_for_variant[2] = Render::Creature::AnimationStateId::AttackSpear;
+    t.state_for_variant[2] = Render::Creature::AnimationStateId::AttackSword;
+
+    t.archetype_for_variant[3] = roman_builder_chisel_unit_archetype();
+    t.state_for_variant[3] = Render::Creature::AnimationStateId::Hold;
     return t;
   }();
   return k_table;
