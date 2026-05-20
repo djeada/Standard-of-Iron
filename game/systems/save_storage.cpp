@@ -178,8 +178,7 @@ auto SaveStorage::save_slot(const QString& slot_name,
   query.bindValue(QStringLiteral(":metadata"), metadata_bytes);
   query.bindValue(QStringLiteral(":world_state"), world_state);
   if (screenshot.isEmpty()) {
-    query.bindValue(QStringLiteral(":screenshot"),
-                    QVariant(QByteArray()));
+    query.bindValue(QStringLiteral(":screenshot"), QVariant(QByteArray()));
   } else {
     query.bindValue(QStringLiteral(":screenshot"), screenshot);
   }

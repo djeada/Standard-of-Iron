@@ -10,23 +10,16 @@ RowLayout {
     property int selection_tick
     property bool has_movable_units
     readonly property var hs: StyleGuide.historical
-    property var mode_availability: ({
-            "canAttack": true,
-            "canGuard": true,
-            "canHold": true,
-            "canPatrol": true,
-            "canHeal": true,
-            "canBuild": true,
-            "canDeliver": true,
-            "canRally": false
-        })
+    property var action_states: ({})
 
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
 
-    function update_mode_availability() {
-        if (typeof game !== 'undefined' && game.get_selected_units_mode_availability)
-            mode_availability = game.get_selected_units_mode_availability();
+    function update_action_states() {
+        if (typeof game !== 'undefined' && game.get_hud_action_states)
+            action_states = game.get_hud_action_states();
+        else
+            action_states = ({});
     }
 
     function unit_icon_source(unitType, nation_key) {
@@ -60,10 +53,16 @@ RowLayout {
         return StyleGuide.icon_path(filename);
     }
 
-    function has_selected_unit(type) {
-        if (typeof game !== 'undefined' && game.has_selected_type)
-            return game.has_selected_type(type);
-        return false;
+    function action_state(actionId) {
+        var state = action_states ? action_states[actionId] : null;
+        return state || {
+            "enabled": false,
+            "active": false,
+            "mixed": false,
+            "placing": false,
+            "passive": false,
+            "eligibleCount": 0
+        };
     }
 
     function command_banner_text() {
@@ -82,8 +81,14 @@ RowLayout {
             orderText = qsTr("Medic order");
         else if (current_command_mode === "build")
             orderText = qsTr("Engineer order");
+        else if (current_command_mode === "collect")
+            orderText = qsTr("Collection order");
         else if (current_command_mode === "deliver")
             orderText = qsTr("Barracks delivery");
+        else if (current_command_mode === "formation")
+            orderText = qsTr("Formation order");
+        else if (current_command_mode === "rally")
+            orderText = qsTr("Rally order");
         return orderText;
     }
 
@@ -100,14 +105,30 @@ RowLayout {
     }
 
     function should_pulse_command_banner() {
-        return has_movable_units && (current_command_mode === "attack" || current_command_mode === "guard" || current_command_mode === "patrol" || current_command_mode === "deliver");
+        return has_movable_units && (current_command_mode === "attack" || current_command_mode === "guard" || current_command_mode === "patrol" || current_command_mode === "collect" || current_command_mode === "deliver");
     }
 
-    Component.onCompleted: update_mode_availability()
-    onSelection_tickChanged: update_mode_availability()
+    Component.onCompleted: update_action_states()
+    onSelection_tickChanged: update_action_states()
     anchors.fill: parent
     anchors.margins: 10
     spacing: 12
+
+    Connections {
+        function onCursor_mode_changed() {
+            bottomRoot.update_action_states();
+        }
+
+        function onPlacing_construction_changed() {
+            bottomRoot.update_action_states();
+        }
+
+        function onPlacing_formation_changed() {
+            bottomRoot.update_action_states();
+        }
+
+        target: (typeof game !== 'undefined') ? game : null
+    }
 
     Rectangle {
         Layout.fillWidth: true
@@ -352,26 +373,26 @@ RowLayout {
             Button {
                 id: attackButton
 
-                property bool mode_available: bottomRoot.mode_availability.canAttack !== false
+                property var action_state: bottomRoot.action_state("attack")
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Attack")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && mode_available
+                enabled: bottomRoot.has_movable_units && action_state.enabled
                 checkable: true
                 checked: bottomRoot.current_command_mode === "attack" && bottomRoot.has_movable_units
                 onClicked: {
                     bottomRoot.command_mode_changed(checked ? "attack" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !mode_available ? qsTr("Attack not available for selected units (e.g. healers)") : (bottomRoot.has_movable_units ? qsTr("Attack enemy units or buildings.\nUnits will chase targets.") : qsTr("Select troops first"))
+                ToolTip.text: !bottomRoot.has_movable_units ? qsTr("Select troops first") : (!action_state.enabled ? qsTr("Attack not available for the current selection") : qsTr("Attack enemy units or buildings.\nOnly eligible selected troops will receive the order."))
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
+                    color: parent.enabled ? (parent.checked ? hs.wax : (attackButton.action_state.mixed ? hs.waxHover : (parent.hovered ? hs.waxHover : hs.parchmentLight))) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
+                    border.color: (parent.checked || attackButton.action_state.mixed) ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -404,26 +425,26 @@ RowLayout {
             Button {
                 id: guardButton
 
-                property bool mode_available: bottomRoot.mode_availability.canGuard !== false
+                property var action_state: bottomRoot.action_state("guard")
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Guard")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && mode_available
+                enabled: bottomRoot.has_movable_units && action_state.enabled
                 checkable: true
                 checked: bottomRoot.current_command_mode === "guard" && bottomRoot.has_movable_units
                 onClicked: {
                     bottomRoot.command_mode_changed(checked ? "guard" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !mode_available ? qsTr("Guard not available for selected units") : (bottomRoot.has_movable_units ? qsTr("Guard a position.\nUnits will defend from all sides.") : qsTr("Select troops first"))
+                ToolTip.text: !bottomRoot.has_movable_units ? qsTr("Select troops first") : (!action_state.enabled ? qsTr("Guard not available for the current selection") : qsTr("Guard a position.\nOnly guard-capable selected troops will receive the order."))
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
+                    color: parent.enabled ? (parent.checked ? hs.wax : (guardButton.action_state.mixed ? hs.waxHover : (parent.hovered ? hs.waxHover : hs.parchmentLight))) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
+                    border.color: (parent.checked || guardButton.action_state.mixed) ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -443,7 +464,7 @@ RowLayout {
                     }
 
                     Text {
-                        text: guardButton.text
+                        text: (guardButton.action_state.active ? qsTr("Active ") : (guardButton.action_state.mixed ? qsTr("Mixed ") : "")) + guardButton.text
                         font.pointSize: 11
                         font.bold: true
                         color: guardButton.enabled ? Theme.textMain : Theme.textDim
@@ -456,26 +477,26 @@ RowLayout {
             Button {
                 id: patrolButton
 
-                property bool mode_available: bottomRoot.mode_availability.canPatrol !== false
+                property var action_state: bottomRoot.action_state("patrol")
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Patrol")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && mode_available
+                enabled: bottomRoot.has_movable_units && action_state.enabled
                 checkable: true
                 checked: bottomRoot.current_command_mode === "patrol" && bottomRoot.has_movable_units
                 onClicked: {
                     bottomRoot.command_mode_changed(checked ? "patrol" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !mode_available ? qsTr("Patrol not available for selected units") : (bottomRoot.has_movable_units ? qsTr("Patrol between waypoints.\nClick start and end points.") : qsTr("Select troops first"))
+                ToolTip.text: !bottomRoot.has_movable_units ? qsTr("Select troops first") : (!action_state.enabled ? qsTr("Patrol not available for the current selection") : qsTr("Patrol between waypoints.\nOnly patrol-capable selected troops will receive the order."))
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
+                    color: parent.enabled ? (parent.checked ? hs.wax : (patrolButton.action_state.mixed ? hs.waxHover : (parent.hovered ? hs.waxHover : hs.parchmentLight))) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
+                    border.color: (parent.checked || patrolButton.action_state.mixed) ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -495,7 +516,7 @@ RowLayout {
                     }
 
                     Text {
-                        text: patrolButton.text
+                        text: (patrolButton.action_state.active ? qsTr("Active ") : (patrolButton.action_state.mixed ? qsTr("Mixed ") : "")) + patrolButton.text
                         font.pointSize: 11
                         font.bold: true
                         color: patrolButton.enabled ? Theme.textMain : Theme.textDim
@@ -508,26 +529,17 @@ RowLayout {
             Button {
                 id: healButton
 
-                property bool mode_available: bottomRoot.mode_availability.canHeal !== false
-                property bool has_healer_selected: {
-                    bottomRoot.selection_tick;
-                    return bottomRoot.has_selected_unit("healer");
-                }
+                property var action_state: bottomRoot.action_state("heal")
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Heal")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && mode_available && has_healer_selected
+                enabled: false
                 checkable: true
                 checked: bottomRoot.current_command_mode === "heal" && bottomRoot.has_movable_units
-                onClicked: {
-                    if (typeof game !== 'undefined' && game.on_heal_command)
-                        game.on_heal_command();
-                    bottomRoot.command_mode_changed(checked ? "heal" : "normal");
-                }
                 ToolTip.visible: hovered
-                ToolTip.text: !mode_available ? qsTr("Heal not available for selected units") : (!has_healer_selected ? qsTr("Select healer units") : qsTr("Heal allies in range"))
+                ToolTip.text: action_state.passive ? qsTr("Healers automatically heal nearby allies.\nThis is passive, not a manual order.") : qsTr("Select healer units")
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -614,24 +626,20 @@ RowLayout {
             Button {
                 id: deliverButton
 
-                property bool mode_available: bottomRoot.mode_availability.canDeliver === true
-                property bool has_civilian_selected: {
-                    bottomRoot.selection_tick;
-                    return bottomRoot.has_selected_unit("civilian");
-                }
+                property var action_state: bottomRoot.action_state("deliver")
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Deliver")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && mode_available && has_civilian_selected
+                enabled: bottomRoot.has_movable_units && action_state.enabled
                 checkable: true
                 checked: bottomRoot.current_command_mode === "deliver" && bottomRoot.has_movable_units
                 onClicked: {
                     bottomRoot.command_mode_changed(checked ? "deliver" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !has_civilian_selected ? qsTr("Select civilians") : qsTr("Click a friendly barracks. Each accepted civilian disappears and adds 50 available population.")
+                ToolTip.text: !bottomRoot.has_movable_units ? qsTr("Select troops first") : (!action_state.enabled ? qsTr("Deliver is only available to civilians") : qsTr("Click a friendly barracks.\nOnly selected civilians will receive the order."))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -668,28 +676,94 @@ RowLayout {
             }
 
             Button {
+                id: collectButton
+
+                property var action_state: bottomRoot.action_state("collect")
+                readonly property bool is_collect_active: action_state.placing
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
+                text: qsTr("Collect")
+                focusPolicy: Qt.NoFocus
+                enabled: bottomRoot.has_movable_units && action_state.enabled
+                checkable: true
+                checked: is_collect_active && bottomRoot.has_movable_units
+                onClicked: {
+                    if (typeof game === 'undefined')
+                        return;
+                    if (is_collect_active) {
+                        if (game.on_construction_cancel)
+                            game.on_construction_cancel();
+                        bottomRoot.command_mode_changed("normal");
+                        return;
+                    }
+                    if (game.start_builder_construction)
+                        game.start_builder_construction("collect");
+                }
+                ToolTip.visible: hovered
+                ToolTip.text: !bottomRoot.has_movable_units ? qsTr("Select troops first") : (!action_state.enabled ? qsTr("Collect is only available to builders") : (is_collect_active ? qsTr("Click a tree, boulder, or iron ore deposit.\nRight-click to cancel.") : qsTr("Only selected builders will receive the collect order.")))
+                ToolTip.delay: 500
+
+                background: Rectangle {
+                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
+                    radius: 6
+                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
+                    border.width: 2
+                }
+
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        text: "⛏"
+                        font.pointSize: 18
+                        font.bold: true
+                        color: collectButton.enabled ? Theme.textMain : Theme.textDim
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        text: collectButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: collectButton.enabled ? Theme.textMain : Theme.textDim
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+
+            Button {
                 id: buildButton
 
-                property bool mode_available: bottomRoot.mode_availability.canBuild !== false
-                property bool has_builder_selected: {
-                    bottomRoot.selection_tick;
-                    return bottomRoot.has_selected_unit("builder");
-                }
+                property var action_state: bottomRoot.action_state("build")
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Build")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && mode_available && has_builder_selected
+                enabled: bottomRoot.has_movable_units && action_state.enabled
                 checkable: true
                 checked: bottomRoot.current_command_mode === "build" && bottomRoot.has_movable_units
                 onClicked: {
-                    if (typeof game !== 'undefined' && game.on_build_command)
+                    if (typeof game === 'undefined')
+                        return;
+                    if (game.is_placing_construction && game.on_construction_cancel) {
+                        game.on_construction_cancel();
+                        return;
+                    }
+                    if (bottomRoot.current_command_mode === "build") {
+                        bottomRoot.command_mode_changed("normal");
+                        return;
+                    }
+                    if (game.on_build_command)
                         game.on_build_command();
-                    bottomRoot.command_mode_changed(checked ? "build" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !mode_available ? qsTr("Build not available for selected units") : (!has_builder_selected ? qsTr("Select builder units") : qsTr("Build structures or place foundations"))
+                ToolTip.text: !bottomRoot.has_movable_units ? qsTr("Select troops first") : (!action_state.enabled ? qsTr("Build is only available to builders") : qsTr("Open builder orders and place structures.\nOnly selected builders will receive build orders."))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -728,36 +802,22 @@ RowLayout {
             Button {
                 id: holdButton
 
-                property int active_state_tick: 0
-                property string hold_mode_state: {
-                    bottomRoot.selection_tick;
-                    active_state_tick;
-                    return (typeof game !== 'undefined' && game.get_selected_units_toggle_state) ? game.get_selected_units_toggle_state("hold") : "none";
-                }
-                readonly property bool is_hold_active: hold_mode_state === "all"
-                readonly property bool is_hold_mixed: hold_mode_state === "mixed"
-                property bool mode_available: bottomRoot.mode_availability.canHold !== false
+                property var action_state: bottomRoot.action_state("hold")
+                readonly property bool is_hold_active: action_state.active
+                readonly property bool is_hold_mixed: action_state.mixed
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Hold")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && mode_available
+                enabled: bottomRoot.has_movable_units && action_state.enabled
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_hold_command)
                         game.on_hold_command();
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !mode_available ? qsTr("Hold not available for selected units") : (bottomRoot.has_movable_units ? (is_hold_active ? qsTr("Exit hold mode (toggle)") : (is_hold_mixed ? qsTr("Some selected troops are already holding. Click to apply hold to all eligible selected troops.") : qsTr("Hold position and defend"))) : qsTr("Select troops first"))
+                ToolTip.text: !bottomRoot.has_movable_units ? qsTr("Select troops first") : (!action_state.enabled ? qsTr("Hold not available for the current selection") : (is_hold_active ? qsTr("Exit hold mode (toggle)") : (is_hold_mixed ? qsTr("Some selected troops are already holding. Click to apply hold to all eligible selected troops.") : qsTr("Hold position and defend"))))
                 ToolTip.delay: 500
-
-                Connections {
-                    function onHold_mode_changed(active) {
-                        holdButton.active_state_tick += 1;
-                    }
-
-                    target: (typeof game !== 'undefined') ? game : null
-                }
 
                 background: Rectangle {
                     color: {
@@ -807,24 +867,15 @@ RowLayout {
             Button {
                 id: formationButton
 
-                property int active_state_tick: 0
-                property string formation_mode_state: {
-                    bottomRoot.selection_tick;
-                    active_state_tick;
-                    return (typeof game !== 'undefined' && game.get_selected_units_toggle_state) ? game.get_selected_units_toggle_state("formation") : "none";
-                }
-                readonly property bool is_formation_active: formation_mode_state === "all"
-                readonly property bool is_formation_mixed: formation_mode_state === "mixed"
-                property int selected_count: {
-                    bottomRoot.selection_tick;
-                    return (typeof game !== 'undefined' && game.selected_units_model) ? game.selected_units_model.rowCount() : 0;
-                }
+                property var action_state: bottomRoot.action_state("formation")
+                readonly property bool is_formation_active: action_state.active
+                readonly property bool is_formation_mixed: action_state.mixed
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Formation")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && selected_count > 1
+                enabled: bottomRoot.has_movable_units && action_state.enabled
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_formation_command)
                         game.on_formation_command();
@@ -833,7 +884,7 @@ RowLayout {
                 ToolTip.text: {
                     if (!bottomRoot.has_movable_units)
                         return qsTr("Select troops first");
-                    if (selected_count <= 1)
+                    if (!action_state.enabled)
                         return qsTr("Select multiple units to use formation");
                     if (is_formation_active)
                         return qsTr("Exit formation mode (toggle)");
@@ -842,14 +893,6 @@ RowLayout {
                     return qsTr("Arrange units in tactical formation");
                 }
                 ToolTip.delay: 500
-
-                Connections {
-                    function onFormation_mode_changed(active) {
-                        formationButton.active_state_tick += 1;
-                    }
-
-                    target: (typeof game !== 'undefined') ? game : null
-                }
 
                 background: Rectangle {
                     color: {
@@ -899,16 +942,15 @@ RowLayout {
             Button {
                 id: rallyButton
 
-                property bool mode_available: bottomRoot.mode_availability.canRally !== false
+                property var action_state: bottomRoot.action_state("rally")
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Rally")
                 focusPolicy: Qt.NoFocus
-                visible: mode_available
-                enabled: mode_available
+                enabled: action_state.enabled
                 ToolTip.visible: hovered
-                ToolTip.text: qsTr("Commander plants a rally flag at a chosen position.\nAll troops will march to the flag once it is placed.")
+                ToolTip.text: action_state.enabled ? qsTr("Commander plants a rally flag at a chosen position.\nAll troops will march to the flag once it is placed.") : qsTr("Select a commander to use rally")
                 ToolTip.delay: 500
                 onClicked: {
                     if (typeof game !== 'undefined' && game.begin_commander_flag_rally)
@@ -951,8 +993,14 @@ RowLayout {
             bottomRoot.recruit_unit(unit_type);
         }
         onRally_mode_toggled: {
-            if (typeof gameView !== 'undefined')
-                gameView.set_rally_mode = !gameView.set_rally_mode;
+            if (typeof game === 'undefined' || typeof gameView === 'undefined')
+                return;
+            if (gameView.cursor_mode === "place_barracks_rally") {
+                if (game.cancel_barracks_rally_placement)
+                    game.cancel_barracks_rally_placement();
+            } else if (game.begin_barracks_rally_placement) {
+                game.begin_barracks_rally_placement();
+            }
         }
         onBuild_tower: {
             if (typeof game !== 'undefined' && game.start_building_placement)

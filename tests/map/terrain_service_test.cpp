@@ -3,14 +3,26 @@
 #include <gtest/gtest.h>
 #include <utility>
 
+#include "game/core/world.h"
 #include "game/map/map_definition.h"
+#include "game/map/map_transformer.h"
+#include "game/map/skirmish_loader.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/owner_registry.h"
+#include "render/gl/camera.h"
+#include "render/scene_renderer.h"
 
 namespace {
 
 class TerrainServiceTest : public ::testing::Test {
 protected:
-  void TearDown() override { Game::Map::TerrainService::instance().clear(); }
+  void TearDown() override {
+    Game::Map::MapTransformer::setFactoryRegistry(nullptr);
+    Game::Systems::NationRegistry::instance().clear();
+    Game::Systems::OwnerRegistry::instance().clear();
+    Game::Map::TerrainService::instance().clear();
+  }
 };
 
 TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {
@@ -84,31 +96,10 @@ TEST_F(TerrainServiceTest, TreeLookupConvertsGridAuthoredPropsToWorldCoordinates
   EXPECT_NEAR(tree->z, -11.5F, 0.0001F);
 }
 
-TEST_F(TerrainServiceTest, InitializesProceduralTreesForLargeForestMaps) {
+TEST_F(TerrainServiceTest, SmallMapsDoNotGenerateRuntimeHarvestScatter) {
   Game::Map::MapDefinition map_def;
-  map_def.grid.width = 64;
-  map_def.grid.height = 64;
-  map_def.grid.tile_size = 1.0F;
-  map_def.biome.seed = 42U;
-  Game::Map::apply_ground_type_defaults(map_def.biome,
-                                        Game::Map::GroundType::ForestMud);
-
-  auto& terrain = Game::Map::TerrainService::instance();
-  terrain.initialize(map_def);
-
-  auto const generated_tree_count =
-      std::count_if(terrain.world_props().begin(),
-                    terrain.world_props().end(),
-                    [](const Game::Map::WorldProp& prop) {
-                      return Game::Map::is_tree_world_prop_type(prop.type);
-                    });
-  EXPECT_GT(generated_tree_count, 0);
-}
-
-TEST_F(TerrainServiceTest, InitializesProceduralBouldersForLargeRockyMaps) {
-  Game::Map::MapDefinition map_def;
-  map_def.grid.width = 64;
-  map_def.grid.height = 64;
+  map_def.grid.width = 16;
+  map_def.grid.height = 16;
   map_def.grid.tile_size = 1.0F;
   map_def.biome.seed = 42U;
   Game::Map::apply_ground_type_defaults(map_def.biome,
@@ -117,16 +108,11 @@ TEST_F(TerrainServiceTest, InitializesProceduralBouldersForLargeRockyMaps) {
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
 
-  auto const generated_boulder_count =
-      std::count_if(terrain.world_props().begin(),
-                    terrain.world_props().end(),
-                    [](const Game::Map::WorldProp& prop) {
-                      return Game::Map::is_boulder_world_prop_type(prop.type);
-                    });
-  EXPECT_GT(generated_boulder_count, 0);
+  EXPECT_TRUE(terrain.world_props().empty());
+  EXPECT_TRUE(terrain.authored_world_props().empty());
 }
 
-TEST_F(TerrainServiceTest, InitializesProceduralIronOreForLargeRockyMaps) {
+TEST_F(TerrainServiceTest, LargeMapsGenerateRuntimeHarvestScatterOnce) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 96;
   map_def.grid.height = 96;
@@ -138,13 +124,14 @@ TEST_F(TerrainServiceTest, InitializesProceduralIronOreForLargeRockyMaps) {
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
 
-  auto const generated_iron_ore_count =
-      std::count_if(terrain.world_props().begin(),
-                    terrain.world_props().end(),
-                    [](const Game::Map::WorldProp& prop) {
-                      return Game::Map::is_iron_ore_world_prop_type(prop.type);
-                    });
-  EXPECT_GT(generated_iron_ore_count, 0);
+  EXPECT_TRUE(terrain.authored_world_props().empty());
+  EXPECT_FALSE(terrain.world_props().empty());
+  EXPECT_TRUE(std::any_of(terrain.world_props().begin(),
+                          terrain.world_props().end(),
+                          [](const Game::Map::WorldProp& prop) {
+                            return !prop.persistent &&
+                                   Game::Map::is_harvestable_world_prop_type(prop.type);
+                          }));
 }
 
 TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
@@ -234,6 +221,73 @@ TEST_F(TerrainServiceTest, RestoringTerrainUpdatesScatterSources) {
   EXPECT_FALSE(terrain.world_props().front().persistent);
   EXPECT_EQ(terrain.world_props().back().type, Game::Map::WorldProp::Type::Tent);
   EXPECT_FLOAT_EQ(terrain.world_props().back().rotation, 1.2F);
+  ASSERT_EQ(terrain.authored_world_props().size(), 2U);
+  EXPECT_EQ(terrain.authored_world_props().front().type,
+            Game::Map::WorldProp::Type::FireCamp);
+  EXPECT_EQ(terrain.authored_world_props().back().type,
+            Game::Map::WorldProp::Type::Tent);
+}
+
+TEST_F(TerrainServiceTest, RestoringTerrainPreservesSeparateAuthoredScatterSeeds) {
+  std::vector<float> const heights(9, 0.0F);
+  std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
+                                                          Game::Map::TerrainType::Flat);
+  std::vector<Game::Map::WorldProp> const runtime_world_props{
+      {.id = 7,
+       .type = Game::Map::WorldProp::Type::IronOre,
+       .x = 7.0F,
+       .z = 8.0F,
+       .scale = 1.3F,
+       .rotation = 0.4F}};
+  std::vector<Game::Map::WorldProp> const authored_world_props{
+      {.id = 3,
+       .type = Game::Map::WorldProp::Type::PineTree,
+       .x = 1.0F,
+       .z = 2.0F,
+       .scale = 1.0F,
+       .rotation = 0.1F},
+      runtime_world_props.front()};
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.restore_from_serialized(3,
+                                  3,
+                                  1.0F,
+                                  heights,
+                                  terrain_types,
+                                  {},
+                                  {},
+                                  {},
+                                  {},
+                                  runtime_world_props,
+                                  authored_world_props);
+
+  ASSERT_EQ(terrain.world_props().size(), 1U);
+  EXPECT_EQ(terrain.world_props().front().id, 7U);
+  ASSERT_EQ(terrain.authored_world_props().size(), 2U);
+  EXPECT_EQ(terrain.authored_world_props().front().id, 3U);
+  EXPECT_EQ(terrain.authored_world_props().back().id, 7U);
+}
+
+TEST_F(TerrainServiceTest, RestoringLegacyTerrainBackfillsRuntimeHarvestScatter) {
+  std::vector<float> const heights(64 * 64, 0.0F);
+  std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
+                                                          Game::Map::TerrainType::Flat);
+  Game::Map::BiomeSettings biome;
+  biome.seed = 42U;
+  Game::Map::apply_ground_type_defaults(biome, Game::Map::GroundType::SoilRocky);
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.restore_from_serialized(
+      64, 64, 1.0F, heights, terrain_types, {}, {}, {}, biome);
+
+  EXPECT_TRUE(terrain.authored_world_props().empty());
+  EXPECT_FALSE(terrain.world_props().empty());
+  EXPECT_TRUE(std::any_of(terrain.world_props().begin(),
+                          terrain.world_props().end(),
+                          [](const Game::Map::WorldProp& prop) {
+                            return !prop.persistent &&
+                                   Game::Map::is_harvestable_world_prop_type(prop.type);
+                          }));
 }
 
 TEST_F(TerrainServiceTest, SurfaceHeightResolverUsesFallbackWhenUninitialized) {
@@ -428,6 +482,33 @@ TEST_F(TerrainServiceTest, IronOreLookupReserveAndHarvest) {
   EXPECT_TRUE(terrain.world_props().empty());
   EXPECT_FALSE(terrain.find_iron_ore_by_id(iron_ore->id).has_value());
   EXPECT_FALSE(terrain.harvest_world_prop(iron_ore->id));
+}
+
+TEST_F(TerrainServiceTest, SkirmishLoaderKeepsRuntimeHarvestScatterAvailable) {
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  nation_registry.initialize_defaults();
+  Game::Systems::OwnerRegistry::instance().clear();
+
+  Engine::Core::World world;
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  Game::Map::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = 1;
+  auto const result = loader.start(
+      QStringLiteral("assets/maps/map_forest.json"), {}, 1, false, selected_player_id);
+
+  ASSERT_TRUE(result.ok) << result.error_message.toStdString();
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  EXPECT_GT(terrain.world_props().size(), terrain.authored_world_props().size());
+  EXPECT_TRUE(std::any_of(terrain.world_props().begin(),
+                          terrain.world_props().end(),
+                          [](const Game::Map::WorldProp& prop) {
+                            return !prop.persistent &&
+                                   Game::Map::is_harvestable_world_prop_type(prop.type);
+                          }));
 }
 
 } // namespace

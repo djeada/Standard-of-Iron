@@ -440,7 +440,7 @@ void CreatureRenderBatch::add_humanoid(
   auto const resolved_pose = Render::Creature::resolve_pose(anim.inputs);
   auto const intent = resolved_pose.intent;
   auto state = resolved_pose.animation_state;
-  float const phase = humanoid_phase_for_anim(anim);
+  float phase = humanoid_phase_for_anim(anim);
   auto clip_var = humanoid_clip_variant_for_anim(resolved_archetype_id, anim);
   if (output.spec.variant_table != nullptr) {
     auto const* t = output.spec.variant_table;
@@ -466,7 +466,7 @@ void CreatureRenderBatch::add_humanoid(
       if (trigger_matches) {
         std::size_t var_idx{0};
         if (t->variant_is_seed_based) {
-          var_idx = output.seed % t->variant_stride;
+          var_idx = seeded_variant_index(output.seed, t->variant_stride);
         } else {
           var_idx =
               std::min<std::size_t>(static_cast<std::size_t>(variant.facial_hair.style),
@@ -486,13 +486,8 @@ void CreatureRenderBatch::add_humanoid(
     }
 
     if (changed) {
-      auto const new_variant_count =
-          Render::Creature::ArchetypeRegistry::instance().clip_variant_count(
-              resolved_archetype_id, state);
-      clip_var = (new_variant_count > 0U)
-                     ? static_cast<std::uint8_t>(
-                           std::min<std::uint32_t>(clip_var, new_variant_count - 1U))
-                     : 0U;
+      phase = humanoid_phase_for_state(anim, state);
+      clip_var = humanoid_clip_variant_for_state(resolved_archetype_id, anim, state);
     }
   }
   const auto* asset = CreatureAssetRegistry::instance().resolve(output.spec);

@@ -3,13 +3,16 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <string_view>
 #include <vector>
 
 #include "../../render/entity/building_render_common.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
+#include "building_collision_registry.h"
 #include "command_service.h"
 #include "pathfinding.h"
 
@@ -17,6 +20,7 @@ namespace Game::Systems {
 
 namespace {
 
+using Engine::Core::BuildingComponent;
 using Engine::Core::ConstructionPreviewComponent;
 using Engine::Core::PendingRemovalComponent;
 using Engine::Core::RenderableComponent;
@@ -32,10 +36,14 @@ constexpr std::string_view k_wall_variant_corner = "wall_segment_corner";
 constexpr std::string_view k_wall_variant_tee = "wall_segment_tee";
 constexpr std::string_view k_wall_variant_cross = "wall_segment_cross";
 
+auto is_excluded_from_wall_network(const Engine::Core::Entity* entity) -> bool {
+  return entity == nullptr || entity->has_component<PendingRemovalComponent>() ||
+         entity->has_component<ConstructionPreviewComponent>();
+}
+
 auto is_live_wall_entity(Engine::Core::Entity* entity,
                          bool include_construction_sites) -> bool {
-  if (entity == nullptr || entity->has_component<PendingRemovalComponent>() ||
-      entity->has_component<ConstructionPreviewComponent>()) {
+  if (is_excluded_from_wall_network(entity)) {
     return false;
   }
 
@@ -50,6 +58,109 @@ auto is_live_wall_entity(Engine::Core::Entity* entity,
 
   return include_construction_sites &&
          entity->get_component<WallConstructionSiteComponent>() != nullptr;
+}
+
+auto is_live_tower_socket_entity(Engine::Core::Entity* entity) -> bool {
+  if (is_excluded_from_wall_network(entity) ||
+      !entity->has_component<BuildingComponent>()) {
+    return false;
+  }
+
+  const auto* unit = entity->get_component<UnitComponent>();
+  return unit != nullptr && unit->spawn_type == Game::Units::SpawnType::DefenseTower &&
+         unit->health > 0;
+}
+
+auto resolve_wall_network_owner_id(const Engine::Core::Entity* entity)
+    -> std::optional<int> {
+  if (entity == nullptr) {
+    return std::nullopt;
+  }
+
+  if (const auto* unit = entity->get_component<UnitComponent>()) {
+    return unit->owner_id;
+  }
+  if (const auto* site = entity->get_component<WallConstructionSiteComponent>()) {
+    return site->owner_id;
+  }
+  return std::nullopt;
+}
+
+auto decode_key(std::uint64_t key) -> WallGridPosition {
+  return {
+      .x = static_cast<int>(static_cast<std::int32_t>(key >> 32U)),
+      .z = static_cast<int>(static_cast<std::int32_t>(key & 0xFFFFFFFFU)),
+  };
+}
+
+void add_owner_occupancy(WallNetworkService::OwnerOccupancyMap& out,
+                         int owner_id,
+                         int grid_x,
+                         int grid_z) {
+  if (owner_id <= 0) {
+    return;
+  }
+  out[owner_id].insert(WallNetworkService::encode_key(grid_x, grid_z));
+}
+
+auto is_buildable_world_position(float pos_x,
+                                 float pos_z,
+                                 const std::string& building_type,
+                                 unsigned int ignore_entity_id = 0) -> bool {
+  auto& collision_registry = Game::Systems::BuildingCollisionRegistry::instance();
+  auto size =
+      Game::Systems::BuildingCollisionRegistry::get_building_size(building_type);
+
+  if (collision_registry.is_circle_overlapping_building(
+          pos_x, pos_z, std::max(size.width, size.depth) * 0.5F, ignore_entity_id)) {
+    return false;
+  }
+
+  Game::Systems::Pathfinding* pathfinder =
+      Game::Systems::CommandService::get_pathfinder();
+  if (pathfinder != nullptr) {
+    Game::Systems::Point const grid =
+        Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
+    if (!pathfinder->is_walkable(grid.x, grid.y)) {
+      return false;
+    }
+    if (auto& terrain_service = Game::Map::TerrainService::instance();
+        terrain_service.is_initialized() &&
+        !terrain_service.is_walkable(grid.x, grid.y)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+auto is_wall_key_occupied(Engine::Core::World& world,
+                          int grid_x,
+                          int grid_z,
+                          bool include_construction_sites,
+                          unsigned int ignore_entity_id = 0) -> bool {
+  auto entities = world.get_entities_with<WallSegmentComponent>();
+  for (auto* entity : entities) {
+    if (entity == nullptr || entity->get_id() == ignore_entity_id ||
+        !is_live_wall_entity(entity, include_construction_sites)) {
+      continue;
+    }
+
+    auto* transform = entity->get_component<TransformComponent>();
+    auto* wall = entity->get_component<WallSegmentComponent>();
+    if (transform == nullptr || wall == nullptr) {
+      continue;
+    }
+
+    const auto snapped = WallNetworkService::snap_world_position(transform->position.x,
+                                                                 transform->position.z);
+    wall->grid_x = snapped.x;
+    wall->grid_z = snapped.z;
+    if (snapped.x == grid_x && snapped.z == grid_z) {
+      return true;
+    }
+  }
+  return false;
 }
 
 auto canonical_variant_for_mask(std::uint8_t mask)
@@ -219,6 +330,54 @@ void WallNetworkService::add_world_occupancy(Engine::Core::World& world,
   }
 }
 
+void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
+                                                    OwnerOccupancyMap& out,
+                                                    bool include_construction_sites,
+                                                    bool include_towers) {
+  out.clear();
+
+  auto wall_entities = world.get_entities_with<WallSegmentComponent>();
+  for (auto* entity : wall_entities) {
+    if (!is_live_wall_entity(entity, include_construction_sites)) {
+      continue;
+    }
+
+    auto owner_id = resolve_wall_network_owner_id(entity);
+    auto* transform = entity->get_component<TransformComponent>();
+    auto* wall = entity->get_component<WallSegmentComponent>();
+    if (!owner_id.has_value() || transform == nullptr || wall == nullptr) {
+      continue;
+    }
+
+    const auto snapped =
+        snap_world_position(transform->position.x, transform->position.z);
+    wall->grid_x = snapped.x;
+    wall->grid_z = snapped.z;
+    add_owner_occupancy(out, *owner_id, snapped.x, snapped.z);
+  }
+
+  if (!include_towers) {
+    return;
+  }
+
+  auto unit_entities = world.get_entities_with<UnitComponent>();
+  for (auto* entity : unit_entities) {
+    if (!is_live_tower_socket_entity(entity)) {
+      continue;
+    }
+
+    const auto* unit = entity->get_component<UnitComponent>();
+    const auto* transform = entity->get_component<TransformComponent>();
+    if (unit == nullptr || transform == nullptr) {
+      continue;
+    }
+
+    const auto snapped =
+        snap_world_position(transform->position.x, transform->position.z);
+    add_owner_occupancy(out, unit->owner_id, snapped.x, snapped.z);
+  }
+}
+
 auto WallNetworkService::compute_connection_mask(const OccupancySet& occupancy,
                                                  int grid_x,
                                                  int grid_z) -> std::uint8_t {
@@ -242,6 +401,89 @@ auto WallNetworkService::compute_connection_mask(const OccupancySet& occupancy,
   return mask;
 }
 
+auto WallNetworkService::validate_wall_segment_placement(
+    Engine::Core::World& world,
+    const WallGridPosition& position,
+    bool include_construction_sites,
+    unsigned int ignore_entity_id) -> WallPlacementValidation {
+  if (is_wall_key_occupied(world,
+                           position.x,
+                           position.z,
+                           include_construction_sites,
+                           ignore_entity_id)) {
+    return {.valid = false, .failure_reason = "Blocked by an existing wall."};
+  }
+
+  const auto world_position =
+      CommandService::grid_to_world(Point{position.x, position.z});
+  if (!is_buildable_world_position(
+          world_position.x(), world_position.z(), "wall_segment", ignore_entity_id)) {
+    return {.valid = false, .failure_reason = "Cannot build there."};
+  }
+
+  return {.valid = true};
+}
+
+auto WallNetworkService::find_tower_snap_socket(Engine::Core::World& world,
+                                                int owner_id,
+                                                float world_x,
+                                                float world_z,
+                                                float max_snap_distance)
+    -> std::optional<WallGridPosition> {
+  if (owner_id <= 0 || max_snap_distance <= 0.0F) {
+    return std::nullopt;
+  }
+
+  OwnerOccupancyMap connection_occupancy;
+  build_connection_occupancy(world, connection_occupancy, true, true);
+
+  const auto owner_it = connection_occupancy.find(owner_id);
+  if (owner_it == connection_occupancy.end() || owner_it->second.empty()) {
+    return std::nullopt;
+  }
+
+  OccupancySet candidate_keys;
+  for (const auto key : owner_it->second) {
+    const auto base = decode_key(key);
+    candidate_keys.insert(encode_key(base.x, base.z - k_segment_spacing));
+    candidate_keys.insert(encode_key(base.x + k_segment_spacing, base.z));
+    candidate_keys.insert(encode_key(base.x, base.z + k_segment_spacing));
+    candidate_keys.insert(encode_key(base.x - k_segment_spacing, base.z));
+  }
+
+  const float max_distance_sq = max_snap_distance * max_snap_distance;
+  float best_distance_sq = max_distance_sq;
+  std::optional<WallGridPosition> best_position;
+
+  for (const auto key : candidate_keys) {
+    if (owner_it->second.find(key) != owner_it->second.end()) {
+      continue;
+    }
+
+    const auto candidate = decode_key(key);
+    if (is_wall_key_occupied(world, candidate.x, candidate.z, true, 0)) {
+      continue;
+    }
+
+    const auto candidate_world =
+        CommandService::grid_to_world(Point{candidate.x, candidate.z});
+    if (!is_buildable_world_position(
+            candidate_world.x(), candidate_world.z(), "defense_tower")) {
+      continue;
+    }
+
+    const float dx = candidate_world.x() - world_x;
+    const float dz = candidate_world.z() - world_z;
+    const float distance_sq = dx * dx + dz * dz;
+    if (distance_sq <= best_distance_sq) {
+      best_distance_sq = distance_sq;
+      best_position = candidate;
+    }
+  }
+
+  return best_position;
+}
+
 auto WallNetworkService::resolve_appearance(Game::Systems::NationID nation_id,
                                             std::uint8_t mask) -> WallAppearance {
   const auto [variant_name, rotation_y] = canonical_variant_for_mask(mask);
@@ -253,8 +495,9 @@ auto WallNetworkService::resolve_appearance(Game::Systems::NationID nation_id,
 }
 
 void WallNetworkService::refresh_world(Engine::Core::World& world) {
-  OccupancySet occupancy;
-  add_world_occupancy(world, occupancy, true);
+  OwnerOccupancyMap connection_occupancy;
+  build_connection_occupancy(world, connection_occupancy, true, true);
+  OccupancySet const empty_occupancy;
 
   auto entities = world.get_entities_with<WallSegmentComponent>();
   for (auto* entity : entities) {
@@ -262,11 +505,18 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
       continue;
     }
 
+    auto owner_id = resolve_wall_network_owner_id(entity);
     auto* wall = entity->get_component<WallSegmentComponent>();
     if (wall == nullptr) {
       continue;
     }
 
+    const auto occupancy_it = owner_id.has_value()
+                                  ? connection_occupancy.find(*owner_id)
+                                  : connection_occupancy.end();
+    const auto& occupancy = occupancy_it != connection_occupancy.end()
+                                ? occupancy_it->second
+                                : empty_occupancy;
     const auto mask = compute_connection_mask(occupancy, wall->grid_x, wall->grid_z);
     update_wall_entity_visuals(entity, wall, mask);
   }

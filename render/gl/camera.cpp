@@ -417,6 +417,31 @@ auto Camera::screen_to_ground(qreal sx,
                               qreal screen_w,
                               qreal screen_h,
                               QVector3D& out_world) const -> bool {
+  QVector3D ray_origin;
+  QVector3D ray_dir;
+  if (!screen_to_world_ray(sx, sy, screen_w, screen_h, ray_origin, ray_dir)) {
+    return false;
+  }
+
+  if (std::abs(ray_dir.y()) < k_eps) {
+    return false;
+  }
+
+  float const t = (m_ground_y - ray_origin.y()) / ray_dir.y();
+  if (!finite(t) || t < 0.0F) {
+    return false;
+  }
+
+  out_world = ray_origin + ray_dir * t;
+  return finite(out_world);
+}
+
+auto Camera::screen_to_world_ray(qreal sx,
+                                 qreal sy,
+                                 qreal screen_w,
+                                 qreal screen_h,
+                                 QVector3D& out_origin,
+                                 QVector3D& out_direction) const -> bool {
   if (screen_w <= 0 || screen_h <= 0) {
     return false;
   }
@@ -449,17 +474,13 @@ auto Camera::screen_to_ground(qreal sx,
   }
 
   QVector3D const ray_dir = safe_normalize(ray_end - ray_origin, QVector3D(0, -1, 0));
-  if (std::abs(ray_dir.y()) < k_eps) {
+  if (!finite(ray_dir)) {
     return false;
   }
 
-  float const t = (m_ground_y - ray_origin.y()) / ray_dir.y();
-  if (!finite(t) || t < 0.0F) {
-    return false;
-  }
-
-  out_world = ray_origin + ray_dir * t;
-  return finite(out_world);
+  out_origin = ray_origin;
+  out_direction = ray_dir;
+  return true;
 }
 
 auto Camera::world_to_screen(const QVector3D& world,

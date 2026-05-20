@@ -38,8 +38,8 @@ TEST(TerrainProfilesTest, ScatterRulesCentralizeDryGroundTreeChoice) {
   EXPECT_TRUE(dry_rules.allow_olives);
   EXPECT_FLOAT_EQ(dry_rules.olive_base_density, 0.12F);
   EXPECT_FLOAT_EQ(dry_rules.olive_density_scale, 0.15F);
-  EXPECT_FLOAT_EQ(dry_rules.olive_scale_min, 6.4F);
-  EXPECT_FLOAT_EQ(dry_rules.olive_scale_max, 13.0F);
+  EXPECT_FLOAT_EQ(dry_rules.olive_scale_min, 3.6F);
+  EXPECT_FLOAT_EQ(dry_rules.olive_scale_max, 6.4F);
 
   const auto forest_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::ForestMud);
@@ -47,6 +47,8 @@ TEST(TerrainProfilesTest, ScatterRulesCentralizeDryGroundTreeChoice) {
   EXPECT_FALSE(forest_rules.allow_olives);
   EXPECT_FLOAT_EQ(forest_rules.pine_base_density, 0.32F);
   EXPECT_FLOAT_EQ(forest_rules.pine_density_scale, 0.42F);
+  EXPECT_FLOAT_EQ(forest_rules.pine_scale_min, 2.1F);
+  EXPECT_FLOAT_EQ(forest_rules.pine_scale_max, 3.8F);
   EXPECT_FLOAT_EQ(forest_rules.olive_base_density, 0.05F);
   EXPECT_FLOAT_EQ(forest_rules.olive_density_scale, 0.08F);
 
@@ -56,6 +58,8 @@ TEST(TerrainProfilesTest, ScatterRulesCentralizeDryGroundTreeChoice) {
   EXPECT_TRUE(fertile_rules.allow_olives);
   EXPECT_FLOAT_EQ(fertile_rules.olive_base_density, 0.08F);
   EXPECT_FLOAT_EQ(fertile_rules.olive_density_scale, 0.12F);
+  EXPECT_FLOAT_EQ(fertile_rules.olive_scale_min, 3.0F);
+  EXPECT_FLOAT_EQ(fertile_rules.olive_scale_max, 5.4F);
 
   const auto rocky_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::SoilRocky);
@@ -68,6 +72,8 @@ TEST(TerrainProfilesTest, ScatterRulesCentralizeDryGroundTreeChoice) {
   EXPECT_FALSE(alpine_rules.allow_olives);
   EXPECT_FLOAT_EQ(alpine_rules.pine_base_density, 0.10F);
   EXPECT_FLOAT_EQ(alpine_rules.pine_density_scale, 0.20F);
+  EXPECT_FLOAT_EQ(alpine_rules.pine_scale_min, 1.7F);
+  EXPECT_FLOAT_EQ(alpine_rules.pine_scale_max, 3.0F);
 }
 
 } // namespace

@@ -436,10 +436,13 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
                                                m_config.metal_color * 0.65F,
                                                palette.leather};
   AttachmentFrame const grip =
-      frames.grip_r.radius > 0.0F
-          ? frames.grip_r
-          : Render::Humanoid::socket_attachment_frame(
-                frames.hand_r, Render::Humanoid::HumanoidSocket::GripR);
+      frames.hand_r.radius > 0.0F
+          ? Render::Humanoid::socket_attachment_frame(
+                frames.hand_r, Render::Humanoid::HumanoidSocket::GripR)
+          : (frames.grip_r.radius > 0.0F
+                 ? frames.grip_r
+                 : Render::Humanoid::socket_attachment_frame(
+                       frames.hand_r, Render::Humanoid::HumanoidSocket::GripR));
   append_equipment_archetype(batch,
                              sword_archetype(m_config),
                              hand_basis_transform(ctx.model, grip) *

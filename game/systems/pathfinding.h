@@ -185,6 +185,7 @@ private:
   std::mutex m_dirty_mutex;
   std::vector<DirtyRegion> m_dirty_regions;
   bool m_full_update_required{true};
+  std::atomic<std::uint64_t> m_applied_world_props_revision{0};
 };
 
 } // namespace Game::Systems

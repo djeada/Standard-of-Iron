@@ -36,6 +36,7 @@
 #include "render/horse/horse_manifest.h"
 #include "render/horse/horse_motion.h"
 #include "render/horse/horse_spec.h"
+#include "render/humanoid/humanoid_full_builder.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/mounted_pose_controller.h"
 #include "render/humanoid/pose_controller.h"
@@ -69,7 +70,8 @@ enum class BakerRidingType : std::uint8_t {
   Idle,
   Charge,
   Reining,
-  BowShot
+  BowShot,
+  SwordStrike
 };
 enum class BakerAmbientIdleType : std::uint8_t {
   None,
@@ -99,7 +101,7 @@ struct HumanoidClipSpec {
   bool loops{};
 };
 
-constexpr std::array<HumanoidClipSpec, 24> k_humanoid_clips{{
+constexpr std::array<HumanoidClipSpec, 25> k_humanoid_clips{{
     {"idle",
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
@@ -339,6 +341,18 @@ constexpr std::array<HumanoidClipSpec, 24> k_humanoid_clips{{
      24U,
      24.0F,
      1.0F,
+     false},
+    {"riding_sword_strike",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::SwordStrike,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     32U,
+     24.0F,
+     1.2F,
      false},
     {"die_infantry",
      Render::GL::HumanoidMotionState::Idle,
@@ -665,7 +679,8 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
 
     Render::GL::MountedPoseController ctrl(pose, anim_ctx_r);
     if (profile == HumanoidBakeProfile::SwordReady &&
-        clip.riding_type != BakerRidingType::BowShot) {
+        clip.riding_type != BakerRidingType::BowShot &&
+        clip.riding_type != BakerRidingType::SwordStrike) {
       Render::GL::MountedPoseController::MountedRiderPoseRequest request{};
       request.dims = horse_profile.dims;
       request.weapon_pose =
@@ -712,6 +727,9 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
         break;
       case BakerRidingType::BowShot:
         ctrl.riding_bow_shot(mount, phase);
+        break;
+      case BakerRidingType::SwordStrike:
+        ctrl.riding_melee_strike(mount, phase);
         break;
       default:
         break;
@@ -807,6 +825,10 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
       ctrl.apply_micro_idle(idle_time, 0U);
     }
+  }
+
+  if (clip.riding_type == BakerRidingType::SwordStrike) {
+    Render::Humanoid::rebuild_humanoid_frames(pose, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);
   }
 
   Render::Humanoid::BonePalette palette{};
@@ -1314,8 +1336,9 @@ int main(int argc, char** argv) {
   static_assert(Render::Creature::k_humanoid_attack_bow_clip == 15U);
   static_assert(Render::Creature::k_humanoid_riding_idle_clip == 16U);
   static_assert(Render::Creature::k_humanoid_riding_bow_shot_clip == 19U);
-  static_assert(Render::Creature::k_humanoid_die_infantry_clip == 20U);
-  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 23U);
+  static_assert(Render::Creature::k_humanoid_riding_sword_strike_clip == 20U);
+  static_assert(Render::Creature::k_humanoid_die_infantry_clip == 21U);
+  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 24U);
   std::filesystem::path out_dir = "assets/creatures";
   if (argc >= 2) {
     out_dir = argv[1];

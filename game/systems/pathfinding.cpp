@@ -345,6 +345,13 @@ void Pathfinding::apply_resource_prop_cells(int min_x,
 }
 
 void Pathfinding::update_building_obstacles() {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  std::uint64_t const world_props_revision =
+      terrain_service.is_initialized() ? terrain_service.world_props_revision() : 0;
+  if (world_props_revision !=
+      m_applied_world_props_revision.load(std::memory_order_acquire)) {
+    mark_obstacles_dirty();
+  }
 
   if (!m_obstacles_dirty.load(std::memory_order_acquire)) {
     return;
@@ -357,6 +364,7 @@ void Pathfinding::update_building_obstacles() {
   }
 
   process_dirty_regions();
+  m_applied_world_props_revision.store(world_props_revision, std::memory_order_release);
 
   m_obstacles_dirty.store(false, std::memory_order_release);
 }

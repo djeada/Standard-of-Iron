@@ -47,8 +47,9 @@ void IronOreRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_state,
-      [](const IronOreInstanceGpu& inst) -> const QVector4D& { return inst.pos_scale; });
+      m_state, [](const IronOreInstanceGpu& inst) -> const QVector4D& {
+        return inst.pos_scale;
+      });
   if (visible_count == 0 || !m_state.instance_buffer) {
     return;
   }
@@ -67,14 +68,9 @@ void IronOreRenderer::clear() {
 
 void IronOreRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
-    const Game::Map::TerrainHeightMap& height_map) {
+    const Game::Map::TerrainHeightMap& /*height_map*/) {
 
   auto& terrain_service = Game::Map::TerrainService::instance();
-  const float tile_size = height_map.get_tile_size();
-  const int width = height_map.get_width();
-  const int map_height = height_map.get_height();
-  const float half_w = static_cast<float>(width) * 0.5F;
-  const float half_h = static_cast<float>(map_height) * 0.5F;
 
   const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
 
@@ -82,10 +78,7 @@ void IronOreRenderer::generate_instances(
     if (prop.type != Game::Map::WorldProp::Type::IronOre) {
       continue;
     }
-    const float wx = (prop.x - half_w) * tile_size;
-    const float wz = (prop.z - half_h) * tile_size;
-    const QVector3D resolved =
-        terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
+    const QVector3D resolved = terrain_service.world_prop_world_position(prop);
 
     uint32_t state = hash_coords(static_cast<int>(prop.x),
                                  static_cast<int>(prop.z),

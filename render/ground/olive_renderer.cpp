@@ -29,6 +29,17 @@ constexpr int k_tree_cell_span = 4;
 constexpr float k_tree_density_area_scale = 16.0F / 36.0F;
 constexpr float k_tree_edge_padding_scale = 0.35F;
 
+auto resolve_tree_surface_position(float world_x,
+                                   float world_z,
+                                   float fallback_y) -> QVector3D {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (terrain_service.is_initialized()) {
+    return terrain_service.resolve_surface_world_position(
+        world_x, world_z, 0.0F, fallback_y);
+  }
+  return {world_x, fallback_y, world_z};
+}
+
 } // namespace
 
 namespace Render::GL {
@@ -36,16 +47,19 @@ namespace Render::GL {
 OliveRenderer::OliveRenderer() = default;
 OliveRenderer::~OliveRenderer() = default;
 
-void OliveRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
-                              const Game::Map::BiomeSettings& biome_settings,
-                              const std::vector<Game::Map::WorldProp>& world_props,
-                              bool use_world_props_exclusively) {
+void OliveRenderer::configure(
+    const Game::Map::TerrainHeightMap& height_map,
+    const Game::Map::BiomeSettings& biome_settings,
+    const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
+    const std::vector<Game::Map::WorldProp>& runtime_world_props,
+    bool use_world_props_exclusively) {
   m_width = height_map.get_width();
   m_height = height_map.get_height();
   m_tile_size = height_map.get_tile_size();
   m_height_data = height_map.get_height_data();
   m_terrain_types = height_map.getTerrainTypes();
-  m_world_props = world_props;
+  m_scatter_seed_world_props = scatter_seed_world_props;
+  m_runtime_world_props = runtime_world_props;
   m_use_world_props_exclusively = use_world_props_exclusively;
   m_biome_settings = biome_settings;
   m_noise_seed = biome_settings.seed;
@@ -99,17 +113,12 @@ void OliveRenderer::generate_olive_instances() {
   olive_instances.clear();
 
   {
-    const float half_w = static_cast<float>(m_width) * 0.5F - 0.5F;
-    const float half_h = static_cast<float>(m_height) * 0.5F - 0.5F;
-    for (const auto& prop : m_world_props) {
+    auto& terrain_service = Game::Map::TerrainService::instance();
+    for (const auto& prop : m_runtime_world_props) {
       if (prop.type != Game::Map::WorldProp::Type::OliveTree) {
         continue;
       }
-      const float wx = (prop.x - half_w) * m_tile_size;
-      const float wz = (prop.z - half_h) * m_tile_size;
-      const QVector3D pos =
-          Game::Map::TerrainService::instance().resolve_surface_world_position(
-              wx, wz, 0.0F, 0.0F);
+      const QVector3D pos = terrain_service.world_prop_world_position(prop);
 
       uint32_t var_state = hash_coords(static_cast<int>(std::round(prop.x)),
                                        static_cast<int>(std::round(prop.z)),
@@ -175,8 +184,12 @@ void OliveRenderer::generate_olive_instances() {
   config.max_slope = 0.65F;
 
   SpawnValidator validator(terrain_cache, config);
-  ScatterCompositionContext composition(
-      terrain_cache, m_width, m_height, m_tile_size, m_biome_settings, m_world_props);
+  ScatterCompositionContext composition(terrain_cache,
+                                        m_width,
+                                        m_height,
+                                        m_tile_size,
+                                        m_biome_settings,
+                                        m_scatter_seed_world_props);
 
   auto add_olive = [&](float gx, float gz, uint32_t& state) -> bool {
     if (!validator.can_spawn_at_grid(gx, gz)) {
@@ -188,17 +201,11 @@ void OliveRenderer::generate_olive_instances() {
       return false;
     }
 
-    float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
-    float const sgz = std::clamp(gz, 0.0F, float(m_height - 1));
-
-    int const ix = std::clamp(int(std::floor(sgx + 0.5F)), 0, m_width - 1);
-    int const iz = std::clamp(int(std::floor(sgz + 0.5F)), 0, m_height - 1);
-    int const normal_idx = iz * m_width + ix;
-
     float world_x = 0.0F;
     float world_z = 0.0F;
     validator.grid_to_world(gx, gz, world_x, world_z);
-    float const world_y = m_height_data[static_cast<size_t>(normal_idx)];
+    QVector3D const world_pos = resolve_tree_surface_position(
+        world_x, world_z, terrain_cache.sample_height_at(gx, gz));
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
     QVector3D const base_color(0.32F + scene.dryness * 0.05F,
@@ -230,7 +237,8 @@ void OliveRenderer::generate_olive_instances() {
                                tile_safe *
                                scatter_scale_bias(ScatterRuleSpecies::Olive, scene);
 
-    instance.pos_scale = QVector4D(world_x, world_y, world_z, chosen_scale);
+    instance.pos_scale =
+        QVector4D(world_pos.x(), world_pos.y(), world_pos.z(), chosen_scale);
     instance.color_sway =
         QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
     instance.rotation = QVector4D(rotation, silhouette_seed, leaf_seed, bark_seed);

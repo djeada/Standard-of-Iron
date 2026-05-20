@@ -2,6 +2,8 @@
 
 #include <QVector3D>
 
+#include <algorithm>
+
 #include "../../game/map/map_definition.h"
 #include "../../game/map/terrain_service.h"
 #include "../ground/biome_renderer.h"
@@ -21,6 +23,24 @@
 #include "../scene_renderer.h"
 
 namespace Render::GL {
+
+namespace {
+
+auto should_use_runtime_harvest_props_exclusively(
+    const std::vector<Game::Map::WorldProp>& runtime_world_props,
+    bool requested_exclusive) -> bool {
+  if (requested_exclusive) {
+    return true;
+  }
+  return std::any_of(runtime_world_props.begin(),
+                     runtime_world_props.end(),
+                     [](const Game::Map::WorldProp& prop) {
+                       return !prop.persistent &&
+                              Game::Map::is_harvestable_world_prop_type(prop.type);
+                     });
+}
+
+} // namespace
 
 TerrainScatterManager::TerrainScatterManager()
     : m_biome(std::make_unique<BiomeRenderer>())
@@ -58,25 +78,71 @@ TerrainScatterManager::~TerrainScatterManager() = default;
 void TerrainScatterManager::configure(
     const Game::Map::TerrainHeightMap& height_map,
     const Game::Map::BiomeSettings& biome_settings,
-    const std::vector<Game::Map::WorldProp>& world_props,
+    const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
+    const std::vector<Game::Map::WorldProp>& runtime_world_props,
     bool use_world_props_exclusively) {
   std::lock_guard<std::mutex> const lock(m_mutex);
-  (void)use_world_props_exclusively;
+  m_height_map = &height_map;
+  m_biome_settings = biome_settings;
+  m_scatter_seed_world_props = scatter_seed_world_props;
+  m_use_world_props_exclusively = should_use_runtime_harvest_props_exclusively(
+      runtime_world_props, use_world_props_exclusively);
 
   m_biome->configure(height_map, biome_settings);
-  m_stone->configure(height_map, biome_settings, world_props);
-  m_plant->configure(height_map, biome_settings, world_props);
-  m_pine->configure(height_map, biome_settings, world_props, use_world_props_exclusively);
-  m_olive->configure(height_map, biome_settings, world_props, use_world_props_exclusively);
-  m_firecamp->configure(height_map, biome_settings, world_props);
-  m_tent->configure(height_map, biome_settings, world_props);
-  m_supply_cart->configure(height_map, biome_settings, world_props);
-  m_weapon_rack->configure(height_map, biome_settings, world_props);
-  m_ruins->configure(height_map, biome_settings, world_props);
-  m_dead_tree->configure(height_map, biome_settings, world_props);
-  m_boulder->configure(height_map, biome_settings, world_props, use_world_props_exclusively);
-  m_iron_ore->configure(height_map, biome_settings, world_props);
-  m_magic_shrine->configure(height_map, biome_settings, world_props);
+  m_stone->configure(height_map, biome_settings, m_scatter_seed_world_props);
+  m_plant->configure(height_map, biome_settings, m_scatter_seed_world_props);
+  m_pine->configure(height_map,
+                    biome_settings,
+                    m_scatter_seed_world_props,
+                    runtime_world_props,
+                    m_use_world_props_exclusively);
+  m_olive->configure(height_map,
+                     biome_settings,
+                     m_scatter_seed_world_props,
+                     runtime_world_props,
+                     m_use_world_props_exclusively);
+  m_firecamp->configure(height_map, biome_settings, runtime_world_props);
+  m_tent->configure(height_map, biome_settings, runtime_world_props);
+  m_supply_cart->configure(height_map, biome_settings, runtime_world_props);
+  m_weapon_rack->configure(height_map, biome_settings, runtime_world_props);
+  m_ruins->configure(height_map, biome_settings, runtime_world_props);
+  m_dead_tree->configure(height_map, biome_settings, runtime_world_props);
+  m_boulder->configure(height_map,
+                       biome_settings,
+                       m_scatter_seed_world_props,
+                       runtime_world_props,
+                       m_use_world_props_exclusively);
+  m_iron_ore->configure(height_map, biome_settings, runtime_world_props);
+  m_magic_shrine->configure(height_map, biome_settings, runtime_world_props);
+}
+
+void TerrainScatterManager::refresh_runtime_world_props(
+    const std::vector<Game::Map::WorldProp>& runtime_world_props) {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+
+  if (m_height_map == nullptr) {
+    return;
+  }
+
+  m_use_world_props_exclusively =
+      should_use_runtime_harvest_props_exclusively(runtime_world_props, false);
+
+  m_pine->configure(*m_height_map,
+                    m_biome_settings,
+                    m_scatter_seed_world_props,
+                    runtime_world_props,
+                    m_use_world_props_exclusively);
+  m_olive->configure(*m_height_map,
+                     m_biome_settings,
+                     m_scatter_seed_world_props,
+                     runtime_world_props,
+                     m_use_world_props_exclusively);
+  m_boulder->configure(*m_height_map,
+                       m_biome_settings,
+                       m_scatter_seed_world_props,
+                       runtime_world_props,
+                       m_use_world_props_exclusively);
+  m_iron_ore->configure(*m_height_map, m_biome_settings, runtime_world_props);
 }
 
 void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
@@ -114,6 +180,11 @@ void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resource
 
 void TerrainScatterManager::clear() {
   std::lock_guard<std::mutex> const lock(m_mutex);
+
+  m_height_map = nullptr;
+  m_biome_settings = Game::Map::BiomeSettings{};
+  m_scatter_seed_world_props.clear();
+  m_use_world_props_exclusively = false;
 
   m_biome->clear();
   m_stone->clear();

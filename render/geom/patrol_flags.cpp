@@ -140,13 +140,12 @@ void render_commander_rally_flags(Renderer* renderer,
 
   // Draw the placement preview flag (shown while picking a rally position).
   if (preview_pos.has_value()) {
-    QVector3D const preview_color =
-        Game::Visuals::team_colorForOwner(preview_owner_id);
+    QVector3D const preview_color = Game::Visuals::team_colorForOwner(preview_owner_id);
     auto flag = Geom::Flag::create(preview_pos->x(),
                                    preview_pos->z(),
                                    preview_color,
-                                    QVector3D(0.35F, 0.25F, 0.15F),
-                                    1.6F);
+                                   QVector3D(0.35F, 0.25F, 0.15F),
+                                   1.6F);
     draw_flag(renderer, resources, flag);
   }
 
@@ -154,8 +153,7 @@ void render_commander_rally_flags(Renderer* renderer,
   if (world == nullptr) {
     return;
   }
-  for (auto* entity :
-       world->get_entities_with<Engine::Core::CommanderComponent>()) {
+  for (auto* entity : world->get_entities_with<Engine::Core::CommanderComponent>()) {
     auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((commander == nullptr) || (unit == nullptr) ||
@@ -166,8 +164,8 @@ void render_commander_rally_flags(Renderer* renderer,
     auto flag = Geom::Flag::create(commander->flag_rally_flag_x,
                                    commander->flag_rally_flag_z,
                                    flag_color,
-                                    QVector3D(0.35F, 0.25F, 0.15F),
-                                    1.6F);
+                                   QVector3D(0.35F, 0.25F, 0.15F),
+                                   1.6F);
     draw_flag(renderer, resources, flag);
   }
 }

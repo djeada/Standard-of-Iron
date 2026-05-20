@@ -20,8 +20,10 @@ TEST(RidingClip, HumanoidBpatHasAtLeast16Clips) {
   ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
   auto const* blob = reg.blob(k_species_humanoid);
   ASSERT_NE(blob, nullptr);
-  EXPECT_GE(blob->clip_count(), 16U)
-      << "humanoid.bpat must contain riding clips (re-run bpat_baker)";
+  EXPECT_GT(
+      blob->clip_count(),
+      static_cast<std::uint32_t>(Render::Creature::k_humanoid_riding_sword_strike_clip))
+      << "humanoid.bpat must contain the mounted sword strike clip (re-run bpat_baker)";
 }
 
 TEST(RidingClip, RidingIdleClipDiffersFromInfantryIdle) {
@@ -78,5 +80,23 @@ TEST(RidingClip, RidingChargeClipIsNonLooping) {
       Render::Creature::k_humanoid_riding_charge_clip;
   auto const clip = blob->clip(k_riding_charge_clip);
   EXPECT_FALSE(clip.loops) << "riding_charge must be non-looping";
+  EXPECT_GT(clip.frame_count, 0U);
+}
+
+TEST(RidingClip, RidingSwordStrikeClipIsNonLooping) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid);
+  ASSERT_NE(blob, nullptr);
+  ASSERT_GT(blob->clip_count(),
+            static_cast<std::uint32_t>(
+                Render::Creature::k_humanoid_riding_sword_strike_clip));
+
+  auto const clip = blob->clip(Render::Creature::k_humanoid_riding_sword_strike_clip);
+  EXPECT_FALSE(clip.loops) << "riding_sword_strike must be non-looping";
   EXPECT_GT(clip.frame_count, 0U);
 }

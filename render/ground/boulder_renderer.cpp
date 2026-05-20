@@ -28,15 +28,17 @@ namespace Render::GL {
 BoulderRenderer::BoulderRenderer() = default;
 BoulderRenderer::~BoulderRenderer() = default;
 
-void BoulderRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
-                                const Game::Map::BiomeSettings& biome_settings,
-                                const std::vector<Game::Map::WorldProp>& world_props,
-                                bool use_world_props_exclusively) {
+void BoulderRenderer::configure(
+    const Game::Map::TerrainHeightMap& height_map,
+    const Game::Map::BiomeSettings& biome_settings,
+    const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
+    const std::vector<Game::Map::WorldProp>& runtime_world_props,
+    bool use_world_props_exclusively) {
   m_biome_settings = biome_settings;
   m_use_world_props_exclusively = use_world_props_exclusively;
   m_state.reset_instances();
   m_state.params.light_direction = m_light_direction;
-  generate_instances(world_props, height_map);
+  generate_instances(scatter_seed_world_props, runtime_world_props, height_map);
 }
 
 void BoulderRenderer::set_light_direction(const QVector3D& dir) {
@@ -68,15 +70,14 @@ void BoulderRenderer::clear() {
 }
 
 void BoulderRenderer::generate_instances(
-    const std::vector<Game::Map::WorldProp>& world_props,
+    const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
+    const std::vector<Game::Map::WorldProp>& runtime_world_props,
     const Game::Map::TerrainHeightMap& height_map) {
 
   auto& terrain_service = Game::Map::TerrainService::instance();
   const float tile_size = height_map.get_tile_size();
   const int width = height_map.get_width();
   const int map_height = height_map.get_height();
-  const float half_w = static_cast<float>(width) * 0.5F;
-  const float half_h = static_cast<float>(map_height) * 0.5F;
 
   const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
   const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
@@ -99,8 +100,12 @@ void BoulderRenderer::generate_instances(
   config.river_clearance = 1.4F;
 
   SpawnValidator validator(terrain_cache, config);
-  ScatterCompositionContext composition(
-      terrain_cache, width, map_height, tile_size, m_biome_settings, world_props);
+  ScatterCompositionContext composition(terrain_cache,
+                                        width,
+                                        map_height,
+                                        tile_size,
+                                        m_biome_settings,
+                                        scatter_seed_world_props);
 
   auto add_boulder = [&](float gx,
                          float gz,
@@ -143,14 +148,11 @@ void BoulderRenderer::generate_instances(
     return true;
   };
 
-  for (const auto& prop : world_props) {
+  for (const auto& prop : runtime_world_props) {
     if (prop.type != Game::Map::WorldProp::Type::Boulder) {
       continue;
     }
-    const float wx = (prop.x - half_w) * tile_size;
-    const float wz = (prop.z - half_h) * tile_size;
-    const QVector3D resolved =
-        terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
+    const QVector3D resolved = terrain_service.world_prop_world_position(prop);
 
     uint32_t state = hash_coords(static_cast<int>(prop.x),
                                  static_cast<int>(prop.z),

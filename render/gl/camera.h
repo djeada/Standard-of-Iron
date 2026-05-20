@@ -56,6 +56,12 @@ public:
                         qreal screen_w,
                         qreal screen_h,
                         QVector3D& out_world) const -> bool;
+  auto screen_to_world_ray(qreal sx,
+                           qreal sy,
+                           qreal screen_w,
+                           qreal screen_h,
+                           QVector3D& out_origin,
+                           QVector3D& out_direction) const -> bool;
   auto world_to_screen(const QVector3D& world,
                        qreal screen_w,
                        qreal screen_h,

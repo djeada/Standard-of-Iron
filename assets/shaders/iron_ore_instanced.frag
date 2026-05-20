@@ -22,11 +22,7 @@ float hash13(vec3 p) {
 vec3 hash33(vec3 p) {
   p = fract(p * vec3(0.1031, 0.11369, 0.13787));
   p += dot(p, p.yxz + 19.19);
-  return fract(vec3(
-    (p.x + p.y) * p.z,
-    (p.x + p.z) * p.y,
-    (p.y + p.z) * p.x
-  ));
+  return fract(vec3((p.x + p.y) * p.z, (p.x + p.z) * p.y, (p.y + p.z) * p.x));
 }
 
 float noise3(vec3 p) {
@@ -98,19 +94,10 @@ void main() {
     wide_* gives stained ore around the vein.
     core_* gives the hot magical center.
   */
-  float field1 = sin(
-    q.y * 7.0 +
-    q.x * 2.8 -
-    q.z * 2.2 +
-    fbm(q * 2.0) * 5.5
-  );
+  float field1 = sin(q.y * 7.0 + q.x * 2.8 - q.z * 2.2 + fbm(q * 2.0) * 5.5);
 
-  float field2 = sin(
-    q.x * 8.5 +
-    q.z * 4.2 +
-    q.y * 1.8 +
-    fbm(q * 2.7 + vec3(11.0)) * 4.0
-  );
+  float field2 =
+      sin(q.x * 8.5 + q.z * 4.2 + q.y * 1.8 + fbm(q * 2.7 + vec3(11.0)) * 4.0);
 
   float wide1 = vein_line(field1, 0.42);
   float wide2 = vein_line(field2, 0.34) * 0.75;
@@ -159,7 +146,7 @@ void main() {
   float crystal_mask = crystal_shape * step(0.925, crystal_rand);
 
   float crystal_twinkle =
-    0.65 + 0.35 * sin(u_time * 3.2 + crystal_rand * 18.0 + v_seed * 6.28318);
+      0.65 + 0.35 * sin(u_time * 3.2 + crystal_rand * 18.0 + v_seed * 6.28318);
 
   float crystal = crystal_mask * crystal_twinkle * mix(0.35, 1.0, vein_wide);
 
@@ -183,26 +170,13 @@ void main() {
 
   float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
 
-  float pulse =
-    0.78 +
-    0.22 * sin(
-      u_time * 2.1 +
-      v_seed * 12.0 +
-      fbm(q * 2.0) * 5.0
-    );
+  float pulse = 0.78 + 0.22 * sin(u_time * 2.1 + v_seed * 12.0 + fbm(q * 2.0) * 5.0);
 
   float magic_strength = max(u_magic_strength, 0.0);
 
-  vec3 glow =
-    magic_color *
-    magic_strength *
-    pulse *
-    (
-      vein_core * 1.75 +
-      vein_wide * 0.22 +
-      fresnel * vein_wide * 0.45 +
-      crystal * 1.35
-    );
+  vec3 glow = magic_color * magic_strength * pulse *
+              (vein_core * 1.75 + vein_wide * 0.22 + fresnel * vein_wide * 0.45 +
+               crystal * 1.35);
 
   vec3 color = albedo * (ambient + direct) * ao;
   color += sun_color * ore_spec * ao;

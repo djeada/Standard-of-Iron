@@ -605,13 +605,13 @@ void HumanoidPoseController::place_hand_at(Side side,
   float const outward_sign = 1.0F;
 
   get_elbow(side) = solve_elbow_ik(side,
-                                    shoulder,
-                                    target_position,
-                                    outward_dir,
-                                    along_frac,
-                                    lateral_offset,
-                                    y_bias,
-                                    outward_sign);
+                                   shoulder,
+                                   target_position,
+                                   outward_dir,
+                                   along_frac,
+                                   lateral_offset,
+                                   y_bias,
+                                   outward_sign);
 }
 
 auto HumanoidPoseController::solve_elbow_ik(Side,
@@ -654,8 +654,8 @@ auto HumanoidPoseController::solve_knee_ik(Side side,
   cos_theta = std::clamp(cos_theta, -1.0F, 1.0F);
   float const sin_theta = std::sqrt(std::max(0.0F, 1.0F - cos_theta * cos_theta));
 
-  QVector3D bend_pref =
-      (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F) : QVector3D(0.24F, 0.0F, 0.95F);
+  QVector3D bend_pref = (side == Side::Left) ? QVector3D(-0.24F, 0.0F, 0.95F)
+                                             : QVector3D(0.24F, 0.0F, 0.95F);
   bend_pref.normalize();
 
   QVector3D bend_axis = bend_pref - dir * QVector3D::dotProduct(dir, bend_pref);
@@ -920,6 +920,108 @@ void HumanoidPoseController::grasp_two_handed(const QVector3D& grip_center,
 
   place_hand_at(Side::Right, right_hand_pos);
   place_hand_at(Side::Left, left_hand_pos);
+}
+
+void HumanoidPoseController::construction_saw(float work_phase) {
+  using HP = HumanProportions;
+
+  work_phase = std::clamp(work_phase, 0.0F, 1.0F);
+
+  float const two_pi = 2.0F * std::numbers::pi_v<float>;
+  float const cycle = work_phase * two_pi;
+  float const jitter_phase = m_anim_ctx.jitter_seed * two_pi;
+  float const stroke = std::sin(cycle);
+  float const body_sway = std::cos(cycle + jitter_phase * 0.7F);
+
+  QVector3D const saw_center(0.04F + body_sway * 0.012F,
+                             HP::SHOULDER_Y - 0.12F + std::abs(stroke) * 0.010F,
+                             0.46F + stroke * 0.18F);
+  float const hand_separation = 0.22F + std::abs(stroke) * 0.03F;
+  grasp_two_handed(saw_center, hand_separation);
+
+  float const lean = 0.065F + std::abs(stroke) * 0.030F;
+  m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + lean);
+  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + lean);
+  m_pose.neck_base.setZ(m_pose.neck_base.z() + lean * 0.75F);
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + lean * 0.55F);
+
+  float const shoulder_drop = 0.030F + std::abs(stroke) * 0.010F;
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - shoulder_drop);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - shoulder_drop);
+  m_pose.head_pos.setY(m_pose.head_pos.y() - shoulder_drop * 0.30F);
+
+  float const lateral_shift = stroke * 0.018F;
+  m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + lateral_shift);
+  m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + lateral_shift * 0.50F);
+  m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + lateral_shift * 0.50F);
+
+  m_pose.foot_l.setZ(m_pose.foot_l.z() - 0.030F);
+  m_pose.foot_r.setZ(m_pose.foot_r.z() + 0.045F);
+  m_pose.knee_l.setZ(m_pose.knee_l.z() - 0.015F);
+  m_pose.knee_r.setZ(m_pose.knee_r.z() + 0.020F);
+}
+
+void HumanoidPoseController::construction_chisel(float work_phase, bool kneeling) {
+  using HP = HumanProportions;
+
+  work_phase = std::clamp(work_phase, 0.0F, 1.0F);
+
+  QVector3D const brace_pos(
+      -0.05F, HP::SHOULDER_Y + (kneeling ? -0.19F : -0.14F), kneeling ? 0.54F : 0.48F);
+  QVector3D const raised_pos(
+      0.15F, HP::SHOULDER_Y + (kneeling ? -0.05F : 0.03F), kneeling ? 0.30F : 0.24F);
+  QVector3D const strike_pos(
+      0.09F, HP::SHOULDER_Y + (kneeling ? -0.16F : -0.10F), kneeling ? 0.58F : 0.52F);
+  QVector3D const recover_pos(
+      0.12F, HP::SHOULDER_Y + (kneeling ? -0.10F : -0.04F), kneeling ? 0.42F : 0.38F);
+
+  QVector3D hand_r_target;
+  QVector3D const hand_l_target = brace_pos;
+  float torso_lean = kneeling ? 0.08F : 0.05F;
+  float shoulder_drop = 0.0F;
+
+  if (work_phase < 0.24F) {
+    float const t = work_phase / 0.24F;
+    float const ease_t = t * t;
+    hand_r_target = recover_pos * (1.0F - ease_t) + raised_pos * ease_t;
+    shoulder_drop = -0.01F * ease_t;
+  } else if (work_phase < 0.36F) {
+    hand_r_target = raised_pos;
+    shoulder_drop = -0.01F;
+  } else if (work_phase < 0.58F) {
+    float const t = (work_phase - 0.36F) / 0.22F;
+    float const ease_t = t * t * (3.0F - 2.0F * t);
+    hand_r_target = raised_pos * (1.0F - ease_t) + strike_pos * ease_t;
+    shoulder_drop = 0.04F * ease_t;
+    torso_lean += 0.04F * ease_t;
+  } else if (work_phase < 0.70F) {
+    hand_r_target = strike_pos;
+    shoulder_drop = 0.04F;
+    torso_lean += 0.04F;
+  } else {
+    float const t = (work_phase - 0.70F) / 0.30F;
+    float const ease_t = 1.0F - (1.0F - t) * (1.0F - t);
+    hand_r_target = strike_pos * (1.0F - ease_t) + recover_pos * ease_t;
+    shoulder_drop = 0.04F * (1.0F - ease_t);
+    torso_lean += 0.04F * (1.0F - ease_t);
+  }
+
+  place_hand_at(Side::Left, hand_l_target);
+  place_hand_at(Side::Right, hand_r_target);
+
+  m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + torso_lean * 0.75F);
+  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_lean);
+  m_pose.neck_base.setZ(m_pose.neck_base.z() + torso_lean * 0.70F);
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + torso_lean * 0.55F);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + shoulder_drop);
+
+  if (!kneeling) {
+    m_pose.foot_r.setZ(m_pose.foot_r.z() + 0.03F);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + 0.02F);
+  } else {
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - 0.02F);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.02F);
+  }
 }
 
 void HumanoidPoseController::spear_thrust(float attack_phase) {

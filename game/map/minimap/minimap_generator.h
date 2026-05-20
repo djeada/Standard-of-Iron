@@ -45,8 +45,12 @@ private:
   draw_forest_symbol(QPainter& painter, float cx, float cy, float width, float height);
   static void draw_road_segment(
       QPainter& painter, float x1, float y1, float x2, float y2, float width);
-  static void draw_fortress_icon(
-      QPainter& painter, float cx, float cy, const QColor& fill, const QColor& border);
+  static void draw_fortress_icon(QPainter& painter,
+                                 float cx,
+                                 float cy,
+                                 float size,
+                                 const QColor& fill,
+                                 const QColor& border);
 
   static void draw_map_border(QPainter& painter, int width, int height);
   static void apply_vignette(QPainter& painter, int width, int height);

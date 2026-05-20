@@ -301,8 +301,8 @@ public:
 
 private:
   void build_point_anchors(const std::vector<Game::Map::WorldProp>& world_props) {
-    float const half_anchor_width = static_cast<float>(m_width) * 0.5F;
-    float const half_anchor_height = static_cast<float>(m_height) * 0.5F;
+    float const half_anchor_width = static_cast<float>(m_width) * 0.5F - 0.5F;
+    float const half_anchor_height = static_cast<float>(m_height) * 0.5F - 0.5F;
 
     for (const auto& world_prop : world_props) {
       float const world_x = (world_prop.x - half_anchor_width) * m_tile_size;

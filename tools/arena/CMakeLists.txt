@@ -8,6 +8,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         building_panel.cpp
         prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
+        ../../app/core/rts_action_model.cpp
     )
 else()
     add_executable(arena_app
@@ -19,6 +20,7 @@ else()
         building_panel.cpp
         prop_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
+        ../../app/core/rts_action_model.cpp
     )
 endif()
 

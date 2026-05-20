@@ -7,21 +7,32 @@ Item {
 
     property bool is_paused: false
     property real game_speed: 1
-    property bool set_rally_mode: false
     property string cursor_mode: "normal"
     property bool is_placing_formation: false
     property bool is_placing_construction: false
+    property bool construction_preview_active: typeof game !== 'undefined' && game.construction_preview_active
     property bool construction_preview_valid: typeof game !== 'undefined' && game.construction_preview_valid
     property var pressed_keys: ({})
+
+    onConstruction_preview_activeChanged: {
+        if (constructionCursor)
+            constructionCursor.requestPaint();
+        if (collectCursor)
+            collectCursor.requestPaint();
+    }
 
     onConstruction_preview_validChanged: {
         if (constructionCursor)
             constructionCursor.requestPaint();
+        if (collectCursor)
+            collectCursor.requestPaint();
     }
 
     onIs_placing_constructionChanged: {
         if (constructionCursor)
             constructionCursor.requestPaint();
+        if (collectCursor)
+            collectCursor.requestPaint();
     }
 
     signal map_clicked(real x, real y)
@@ -43,6 +54,14 @@ Item {
     function issue_command(command) {
     }
 
+    function action_enabled(actionId) {
+        if (typeof game === 'undefined' || !game.get_hud_action_states)
+            return false;
+        var states = game.get_hud_action_states();
+        var state = states ? states[actionId] : null;
+        return state && state.enabled === true;
+    }
+
     function begin_pan_key(e) {
         if (!e.isAutoRepeat && !pressed_keys[e.key]) {
             pressed_keys[e.key] = true;
@@ -60,6 +79,30 @@ Item {
         return typeof game !== 'undefined' && game.control_mode === "commander";
     }
 
+    function is_commander_rally_placement() {
+        return cursor_mode === "place_commander_rally";
+    }
+
+    function is_barracks_rally_placement() {
+        return cursor_mode === "place_barracks_rally";
+    }
+
+    function is_rally_placement() {
+        return is_commander_rally_placement() || is_barracks_rally_placement();
+    }
+
+    function cancel_rally_placement() {
+        if (typeof game === 'undefined')
+            return;
+        if (is_commander_rally_placement()) {
+            if (game.cancel_commander_flag_rally)
+                game.cancel_commander_flag_rally();
+        } else if (is_barracks_rally_placement()) {
+            if (game.cancel_barracks_rally_placement)
+                game.cancel_barracks_rally_placement();
+        }
+    }
+
     function reset_rts_pan_keys() {
         pressed_keys = ({});
         if (keyPanTimer.running)
@@ -73,9 +116,8 @@ Item {
     function handle_commander_key_pressed(event) {
         switch (event.key) {
         case Qt.Key_Escape:
-            if (game_view.cursor_mode === "place_commander_rally") {
-                if (typeof game !== 'undefined' && game.cancel_commander_flag_rally)
-                    game.cancel_commander_flag_rally();
+            if (game_view.is_rally_placement()) {
+                game_view.cancel_rally_placement();
             } else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
                 mainWindow.menu_visible = true;
             }
@@ -177,9 +219,14 @@ Item {
         var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
         switch (event.key) {
         case Qt.Key_Escape:
-            if (game_view.cursor_mode === "place_commander_rally") {
-                if (typeof game !== 'undefined' && game.cancel_commander_flag_rally)
-                    game.cancel_commander_flag_rally();
+            if (typeof game !== 'undefined' && game.is_placing_construction && game.on_construction_cancel) {
+                game.on_construction_cancel();
+                event.accepted = true;
+            } else if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_cancel) {
+                game.on_formation_cancel();
+                event.accepted = true;
+            } else if (game_view.is_rally_placement()) {
+                game_view.cancel_rally_placement();
                 event.accepted = true;
             } else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible) {
                 mainWindow.menu_visible = true;
@@ -201,7 +248,7 @@ Item {
             }
             break;
         case Qt.Key_A:
-            if (game.has_units_selected) {
+            if (game.has_units_selected && action_enabled("attack")) {
                 game.cursor_mode = "attack";
                 event.accepted = true;
             }
@@ -245,9 +292,7 @@ Item {
             event.accepted = true;
             break;
         case Qt.Key_R:
-            if (game.get_selected_units_mode_availability &&
-                game.get_selected_units_mode_availability().canRally &&
-                game.begin_commander_flag_rally) {
+            if (action_enabled("rally") && game.begin_commander_flag_rally) {
                 game.begin_commander_flag_rally();
                 event.accepted = true;
             } else {
@@ -265,13 +310,13 @@ Item {
             event.accepted = true;
             break;
         case Qt.Key_P:
-            if (game.has_units_selected) {
+            if (game.has_units_selected && action_enabled("patrol")) {
                 game.cursor_mode = "patrol";
                 event.accepted = true;
             }
             break;
         case Qt.Key_G:
-            if (game.has_units_selected) {
+            if (game.has_units_selected && action_enabled("guard")) {
                 game.cursor_mode = "guard";
                 event.accepted = true;
             }
@@ -358,7 +403,8 @@ Item {
                 if (game.control_mode === "commander") {
                     mouseArea.is_selecting = false;
                     selectionBox.visible = false;
-                    game_view.set_rally_mode = false;
+                    if (game_view.cursor_mode === "place_barracks_rally" && game.cancel_barracks_rally_placement)
+                        game.cancel_barracks_rally_placement();
                     game_view.forceActiveFocus();
                     commanderInputLayer.center_mouse();
                 } else {
@@ -382,8 +428,8 @@ Item {
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
-            cursorShape: game_view.cursor_mode === "place_commander_rally" ? Qt.CrossCursor : ((game_view.cursor_mode !== "normal" || game_view.is_placing_construction) ? Qt.BlankCursor : Qt.ArrowCursor)
-            enabled: game_view.visible && typeof game !== 'undefined' && (game.control_mode !== "commander" || game_view.cursor_mode === "place_commander_rally")
+            cursorShape: game_view.is_rally_placement() ? Qt.CrossCursor : (game_view.cursor_mode !== "normal" ? Qt.BlankCursor : Qt.ArrowCursor)
+            enabled: game_view.visible && typeof game !== 'undefined' && (game.control_mode !== "commander" || game_view.is_rally_placement())
             onEntered: {
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
                     game.set_hover_at_screen(0, 0);
@@ -404,7 +450,7 @@ Item {
                     if (typeof game !== 'undefined' && game.set_hover_at_screen)
                         game.set_hover_at_screen(mouse.x, mouse.y);
                     if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.on_right_move) {
-                        if (game_view.cursor_mode !== "place_commander_rally")
+                        if (!game_view.is_rally_placement())
                             game.on_right_move(mouse.x, mouse.y);
                     } else if (game_view.is_placing_formation) {
                         if (typeof game !== 'undefined' && game.on_formation_mouse_move)
@@ -418,6 +464,12 @@ Item {
             }
             onWheel: function (w) {
                 var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
+                if (typeof game !== 'undefined' && game.construction_preview_rotatable && game.construction_preview_rotatable()) {
+                    if (game.on_construction_scroll)
+                        game.on_construction_scroll(dy);
+                    w.accepted = true;
+                    return;
+                }
                 if (typeof game !== 'undefined' && game.is_placing_formation) {
                     if (game.on_formation_scroll)
                         game.on_formation_scroll(dy);
@@ -431,12 +483,6 @@ Item {
             onPressed: function (mouse) {
                 game_view.forceActiveFocus();
                 if (mouse.button === Qt.LeftButton) {
-                    if (game_view.set_rally_mode) {
-                        if (typeof game !== 'undefined' && game.set_rally_at_screen)
-                            game.set_rally_at_screen(mouse.x, mouse.y);
-                        game_view.set_rally_mode = false;
-                        return;
-                    }
                     if (game_view.cursor_mode === "attack") {
                         if (typeof game !== 'undefined' && game.on_attack_click)
                             game.on_attack_click(mouse.x, mouse.y);
@@ -458,13 +504,20 @@ Item {
                         return;
                     }
                     if (game_view.cursor_mode === "place_building") {
-                        if (typeof game !== 'undefined' && game.place_building_at_screen)
+                        if (typeof game !== 'undefined' && game.is_placing_construction && game.on_construction_pointer_pressed)
+                            game.on_construction_pointer_pressed(mouse.x, mouse.y);
+                        else if (typeof game !== 'undefined' && game.place_building_at_screen)
                             game.place_building_at_screen(mouse.x, mouse.y);
                         return;
                     }
                     if (game_view.cursor_mode === "place_commander_rally") {
                         if (typeof game !== 'undefined' && game.confirm_commander_flag_rally)
                             game.confirm_commander_flag_rally(mouse.x, mouse.y);
+                        return;
+                    }
+                    if (game_view.cursor_mode === "place_barracks_rally") {
+                        if (typeof game !== 'undefined' && game.confirm_barracks_rally_placement)
+                            game.confirm_barracks_rally_placement(mouse.x, mouse.y);
                         return;
                     }
                     if (typeof game !== 'undefined' && game.is_placing_formation) {
@@ -486,15 +539,12 @@ Item {
                     selectionBox.height = 0;
                     selectionBox.visible = true;
                 } else if (mouse.button === Qt.RightButton) {
-                    if (game_view.cursor_mode === "place_commander_rally") {
-                        if (typeof game !== 'undefined' && game.cancel_commander_flag_rally)
-                            game.cancel_commander_flag_rally();
+                    if (game_view.is_rally_placement()) {
+                        game_view.cancel_rally_placement();
                         return;
                     }
                     renderArea.mouse_pan_active = true;
                     mainWindow.edge_scroll_disabled = true;
-                    if (game_view.set_rally_mode)
-                        game_view.set_rally_mode = false;
                     if (typeof game !== 'undefined' && game.on_right_press)
                         game.on_right_press(mouse.x, mouse.y);
                 }
@@ -536,7 +586,7 @@ Item {
         id: commanderInputLayer
 
         anchors.fill: parent
-        active: game_view.visible && typeof game !== 'undefined' && game.control_mode === "commander" && game_view.cursor_mode !== "place_commander_rally"
+        active: game_view.visible && typeof game !== 'undefined' && game.control_mode === "commander" && !game_view.is_rally_placement()
         commanderInput: typeof game !== 'undefined' ? game.commander_input : null
         gameView: game_view
         mainWindowRef: mainWindow
@@ -558,7 +608,7 @@ Item {
     Item {
         id: commanderReticle
 
-        visible: typeof game !== 'undefined' && game.control_mode === "commander" && game_view.cursor_mode !== "place_commander_rally"
+        visible: typeof game !== 'undefined' && game.control_mode === "commander" && !game_view.is_rally_placement()
         width: 22
         height: 22
         anchors.centerIn: parent
@@ -604,7 +654,7 @@ Item {
     Item {
         id: customCursorContainer
 
-        visible: game_view.cursor_mode !== "normal" || game_view.is_placing_construction
+        visible: game_view.cursor_mode !== "normal"
         width: 32
         height: 32
         z: 999999
@@ -793,7 +843,7 @@ Item {
         Canvas {
             id: rallyPlacementCursor
 
-            visible: game_view.cursor_mode === "place_commander_rally"
+            visible: game_view.is_rally_placement()
             anchors.fill: parent
             onPaint: {
                 var ctx = getContext("2d");
@@ -825,14 +875,15 @@ Item {
         Canvas {
             id: constructionCursor
 
-            visible: game_view.is_placing_construction
+            visible: game_view.is_placing_construction && game_view.cursor_mode !== "collect"
             anchors.fill: parent
             onPaint: {
                 var ctx = getContext("2d");
                 ctx.clearRect(0, 0, width, height);
-                var ok = game_view.construction_preview_valid;
-                var primary = ok ? "#75D36B" : "#D36060";
-                var secondary = ok ? "#163A16" : "#4A1717";
+                var active = game_view.construction_preview_active;
+                var ok = active && game_view.construction_preview_valid;
+                var primary = !active ? "#D8C17A" : (ok ? "#75D36B" : "#D36060");
+                var secondary = !active ? "#51401A" : (ok ? "#163A16" : "#4A1717");
                 ctx.strokeStyle = primary;
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
@@ -856,7 +907,82 @@ Item {
                 ctx.stroke();
                 ctx.strokeStyle = primary;
                 ctx.lineWidth = 2.5;
-                if (ok) {
+                if (!active) {
+                    ctx.beginPath();
+                    ctx.moveTo(16, 10);
+                    ctx.lineTo(16, 22);
+                    ctx.moveTo(10, 16);
+                    ctx.lineTo(22, 16);
+                    ctx.stroke();
+                } else if (ok) {
+                    ctx.beginPath();
+                    ctx.moveTo(11, 17);
+                    ctx.lineTo(15, 21);
+                    ctx.lineTo(22, 12);
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(11, 11);
+                    ctx.lineTo(21, 21);
+                    ctx.moveTo(21, 11);
+                    ctx.lineTo(11, 21);
+                    ctx.stroke();
+                }
+            }
+            Component.onCompleted: requestPaint()
+        }
+
+        Canvas {
+            id: collectCursor
+
+            visible: game_view.cursor_mode === "collect"
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                var active = game_view.construction_preview_active;
+                var ok = active && game_view.construction_preview_valid;
+                var primary = !active ? "#D8C17A" : (ok ? "#75D36B" : "#D36060");
+                var secondary = !active ? "#51401A" : (ok ? "#163A16" : "#4A1717");
+                ctx.strokeStyle = primary;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(16, 16, 10, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = Qt.rgba(0, 0, 0, 0.25);
+                ctx.beginPath();
+                ctx.arc(16, 16, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = secondary;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(16, 5);
+                ctx.lineTo(16, 11);
+                ctx.moveTo(16, 21);
+                ctx.lineTo(16, 27);
+                ctx.moveTo(5, 16);
+                ctx.lineTo(11, 16);
+                ctx.moveTo(21, 16);
+                ctx.lineTo(27, 16);
+                ctx.stroke();
+                ctx.strokeStyle = primary;
+                ctx.lineWidth = 2.5;
+                ctx.fillStyle = primary;
+                ctx.beginPath();
+                ctx.arc(11, 11, 2, 0, Math.PI * 2);
+                ctx.arc(21, 11, 2, 0, Math.PI * 2);
+                ctx.arc(16, 22, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = primary;
+                ctx.lineWidth = 2.5;
+                if (!active) {
+                    ctx.beginPath();
+                    ctx.moveTo(16, 10);
+                    ctx.lineTo(16, 22);
+                    ctx.moveTo(10, 16);
+                    ctx.lineTo(22, 16);
+                    ctx.stroke();
+                } else if (ok) {
                     ctx.beginPath();
                     ctx.moveTo(11, 17);
                     ctx.lineTo(15, 21);

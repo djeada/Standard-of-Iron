@@ -1,5 +1,7 @@
+#include <QColor>
 #include <QImage>
 
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "map/map_definition.h"
@@ -8,6 +10,43 @@
 
 using namespace Game::Map;
 using namespace Game::Map::Minimap;
+
+namespace {
+
+auto color_distance(const QColor& lhs, const QColor& rhs) -> int {
+  return std::abs(lhs.red() - rhs.red()) + std::abs(lhs.green() - rhs.green()) +
+         std::abs(lhs.blue() - rhs.blue());
+}
+
+auto color_luminance(const QColor& color) -> int {
+  return color.red() + color.green() + color.blue();
+}
+
+auto region_distance(const QImage& lhs,
+                     const QImage& rhs,
+                     const QPoint& center,
+                     int radius) -> int {
+  int total = 0;
+  for (int dy = -radius; dy <= radius; ++dy) {
+    for (int dx = -radius; dx <= radius; ++dx) {
+      const int x = center.x() + dx;
+      const int y = center.y() + dy;
+      total += color_distance(lhs.pixelColor(x, y), rhs.pixelColor(x, y));
+    }
+  }
+  return total;
+}
+
+auto world_dimensions(const GridDefinition& grid) -> std::pair<float, float> {
+  return {grid.width * grid.tile_size, grid.height * grid.tile_size};
+}
+
+auto image_dimensions(const GridDefinition& grid,
+                      float pixels_per_tile) -> std::pair<float, float> {
+  return {grid.width * pixels_per_tile, grid.height * pixels_per_tile};
+}
+
+} // namespace
 
 class MinimapGeneratorTest : public ::testing::Test {
 protected:
@@ -33,7 +72,7 @@ protected:
 
 TEST_F(MinimapGeneratorTest, GeneratesValidImage) {
   MinimapGenerator generator;
-  QImage result = generator.generate(test_map);
+  QImage const result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
   EXPECT_GT(result.width(), 0);
@@ -46,7 +85,7 @@ TEST_F(MinimapGeneratorTest, ImageDimensionsMatchGrid) {
   config.pixels_per_tile = 2.0F;
   MinimapGenerator generator(config);
 
-  QImage result = generator.generate(test_map);
+  QImage const result = generator.generate(test_map);
 
   const int expected_width = test_map.grid.width * config.pixels_per_tile;
   const int expected_height = test_map.grid.height * config.pixels_per_tile;
@@ -64,7 +103,7 @@ TEST_F(MinimapGeneratorTest, RendersRivers) {
   test_map.rivers.push_back(river);
 
   MinimapGenerator generator;
-  QImage result = generator.generate(test_map);
+  QImage const result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
 }
@@ -77,7 +116,7 @@ TEST_F(MinimapGeneratorTest, RiversNearBoundaryContinueToMapEdge) {
   test_map.rivers.push_back(river);
 
   MinimapGenerator generator;
-  QImage result = generator.generate(test_map);
+  QImage const result = generator.generate(test_map);
 
   ASSERT_FALSE(result.isNull());
 
@@ -98,7 +137,7 @@ TEST_F(MinimapGeneratorTest, RendersTerrainFeatures) {
   test_map.terrain.push_back(hill);
 
   MinimapGenerator generator;
-  QImage result = generator.generate(test_map);
+  QImage const result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
 }
@@ -115,7 +154,7 @@ TEST_F(MinimapGeneratorTest, RendersForestFeatures) {
   test_map.terrain.push_back(forest);
 
   MinimapGenerator generator;
-  QImage result = generator.generate(test_map);
+  QImage const result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
 }
@@ -130,7 +169,7 @@ TEST_F(MinimapGeneratorTest, RendersRoads) {
   test_map.roads.push_back(road);
 
   MinimapGenerator generator;
-  QImage result = generator.generate(test_map);
+  QImage const result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
 }
@@ -145,9 +184,124 @@ TEST_F(MinimapGeneratorTest, RendersStructures) {
   test_map.spawns.push_back(barracks);
 
   MinimapGenerator generator;
-  QImage result = generator.generate(test_map);
+  QImage const result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
+}
+
+TEST_F(MinimapGeneratorTest, RoadsRenderBelowTerrainFeatures) {
+  RoadSegment road;
+  road.start = QVector3D(-15.0F, 0.0F, 0.0F);
+  road.end = QVector3D(15.0F, 0.0F, 0.0F);
+  road.width = 4.0F;
+  test_map.roads.push_back(road);
+
+  TerrainFeature forest;
+  forest.type = TerrainType::Forest;
+  forest.center_x = 0.0F;
+  forest.center_z = 0.0F;
+  forest.width = 12.0F;
+  forest.depth = 12.0F;
+  forest.height = 2.0F;
+
+  MinimapGenerator generator;
+
+  MapDefinition forest_only_map = test_map;
+  forest_only_map.terrain.push_back(forest);
+
+  MapDefinition road_only_map = test_map;
+  road_only_map.terrain.clear();
+
+  MapDefinition const combined_map = forest_only_map;
+
+  const QImage road_only = generator.generate(road_only_map);
+  const QImage forest_only = generator.generate(forest_only_map);
+  const QImage combined = generator.generate(combined_map);
+
+  const QPoint sample(road_only.width() / 2, road_only.height() / 2);
+  EXPECT_LT(region_distance(combined, forest_only, sample, 5),
+            region_distance(combined, road_only, sample, 5));
+}
+
+TEST_F(MinimapGeneratorTest, RoadIntersectionsDoNotDarkenAgainstSingleSegment) {
+  RoadSegment horizontal;
+  horizontal.start = QVector3D(-15.0F, 0.0F, 0.0F);
+  horizontal.end = QVector3D(15.0F, 0.0F, 0.0F);
+  horizontal.width = 4.0F;
+
+  RoadSegment vertical;
+  vertical.start = QVector3D(0.0F, 0.0F, -15.0F);
+  vertical.end = QVector3D(0.0F, 0.0F, 15.0F);
+  vertical.width = 4.0F;
+
+  MinimapGenerator generator;
+
+  MapDefinition single_road_map = test_map;
+  single_road_map.roads.push_back(horizontal);
+
+  MapDefinition crossing_road_map = test_map;
+  crossing_road_map.roads.push_back(horizontal);
+  crossing_road_map.roads.push_back(vertical);
+
+  const QImage single = generator.generate(single_road_map);
+  const QImage crossing = generator.generate(crossing_road_map);
+
+  const QPoint sample(single.width() / 2, single.height() / 2);
+  const QColor single_pixel = single.pixelColor(sample);
+  const QColor crossing_pixel = crossing.pixelColor(sample);
+
+  EXPECT_GE(color_luminance(crossing_pixel), color_luminance(single_pixel) - 12);
+  EXPECT_LT(color_distance(crossing_pixel, single_pixel), 24);
+}
+
+TEST_F(MinimapGeneratorTest, BarracksAndHomesExtendFartherThanOtherBuildingIcons) {
+  MinimapGenerator generator;
+
+  const auto [world_width, world_height] = world_dimensions(test_map.grid);
+  const auto [img_width, img_height] = image_dimensions(test_map.grid, 2.0F);
+
+  const auto [home_world_x, home_world_z] =
+      grid_to_world_coords(25.0F, 25.0F, test_map);
+  const auto [px, py] = world_to_pixel(
+      home_world_x, home_world_z, world_width, world_height, img_width, img_height);
+  const QPoint sample(static_cast<int>(std::lround(px + 7.0F)),
+                      static_cast<int>(std::lround(py - 5.0F)));
+
+  MapDefinition const empty_map = test_map;
+
+  MapDefinition barracks_map = test_map;
+  UnitSpawn barracks;
+  barracks.type = Game::Units::SpawnType::Barracks;
+  barracks.x = 25.0F;
+  barracks.z = 25.0F;
+  barracks.player_id = 1;
+  barracks_map.spawns.push_back(barracks);
+
+  MapDefinition home_map = test_map;
+  UnitSpawn home;
+  home.type = Game::Units::SpawnType::Home;
+  home.x = 25.0F;
+  home.z = 25.0F;
+  home.player_id = 1;
+  home_map.spawns.push_back(home);
+
+  MapDefinition tower_map = test_map;
+  UnitSpawn tower;
+  tower.type = Game::Units::SpawnType::DefenseTower;
+  tower.x = 25.0F;
+  tower.z = 25.0F;
+  tower.player_id = 1;
+  tower_map.spawns.push_back(tower);
+
+  const QColor empty_pixel = generator.generate(empty_map).pixelColor(sample);
+  const QColor barracks_pixel = generator.generate(barracks_map).pixelColor(sample);
+  const QColor home_pixel = generator.generate(home_map).pixelColor(sample);
+  const QColor tower_pixel = generator.generate(tower_map).pixelColor(sample);
+
+  EXPECT_GT(color_distance(barracks_pixel, empty_pixel),
+            color_distance(tower_pixel, empty_pixel) + 20);
+  EXPECT_GT(color_distance(home_pixel, empty_pixel),
+            color_distance(tower_pixel, empty_pixel) + 20);
 }
 
 TEST_F(MinimapGeneratorTest, HandlesEmptyMap) {
@@ -159,7 +313,7 @@ TEST_F(MinimapGeneratorTest, HandlesEmptyMap) {
   empty_map.biome.grass_primary = QVector3D(0.3F, 0.6F, 0.28F);
 
   MinimapGenerator generator;
-  QImage result = generator.generate(empty_map);
+  QImage const result = generator.generate(empty_map);
 
   EXPECT_FALSE(result.isNull());
   EXPECT_GT(result.width(), 0);

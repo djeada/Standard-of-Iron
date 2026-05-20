@@ -476,11 +476,46 @@ TEST_F(SerializationTest, WorldSerializationPreservesMagicShrineProp) {
 
   auto& terrain = Game::Map::TerrainService::instance();
   ASSERT_EQ(terrain.world_props().size(), 1U);
-  EXPECT_EQ(terrain.world_props().front().type, Game::Map::WorldProp::Type::MagicShrine);
+  EXPECT_EQ(terrain.world_props().front().type,
+            Game::Map::WorldProp::Type::MagicShrine);
   EXPECT_FLOAT_EQ(terrain.world_props().front().x, 2.0F);
   EXPECT_FLOAT_EQ(terrain.world_props().front().z, 4.0F);
   EXPECT_FLOAT_EQ(terrain.world_props().front().scale, 1.0F);
   EXPECT_FLOAT_EQ(terrain.world_props().front().rotation, 0.5F);
+}
+
+TEST_F(SerializationTest, WorldSerializationPreservesAuthoredScatterSeedsAfterHarvest) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 5;
+  map_def.grid.height = 5;
+  map_def.grid.tile_size = 1.0F;
+  map_def.world_props.push_back({.type = Game::Map::WorldProp::Type::PineTree,
+                                 .x = 1.0F,
+                                 .z = 1.0F,
+                                 .scale = 1.2F,
+                                 .rotation = 0.2F});
+  map_def.world_props.push_back({.type = Game::Map::WorldProp::Type::IronOre,
+                                 .x = 3.0F,
+                                 .z = 2.0F,
+                                 .scale = 1.0F,
+                                 .rotation = 0.4F});
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  ASSERT_EQ(terrain.world_props().size(), 2U);
+  ASSERT_TRUE(terrain.harvest_world_prop(terrain.world_props().front().id));
+
+  QJsonDocument const doc = Serialization::serialize_world(world.get());
+  auto new_world = std::make_unique<World>();
+  Serialization::deserialize_world(new_world.get(), doc);
+
+  ASSERT_EQ(terrain.world_props().size(), 1U);
+  EXPECT_EQ(terrain.world_props().front().type, Game::Map::WorldProp::Type::IronOre);
+  ASSERT_EQ(terrain.authored_world_props().size(), 2U);
+  EXPECT_EQ(terrain.authored_world_props().front().type,
+            Game::Map::WorldProp::Type::PineTree);
+  EXPECT_EQ(terrain.authored_world_props().back().type,
+            Game::Map::WorldProp::Type::IronOre);
 }
 
 TEST_F(SerializationTest, ProductionComponentSerialization) {

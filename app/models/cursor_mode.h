@@ -11,7 +11,9 @@ enum class CursorMode {
   Heal,
   Build,
   Deliver,
-  PlaceCommanderRally
+  PlaceCommanderRally,
+  Collect,
+  PlaceBarracksRally
 };
 
 namespace CursorModeUtils {
@@ -36,6 +38,10 @@ inline auto toString(CursorMode mode) -> QString {
     return "deliver";
   case CursorMode::PlaceCommanderRally:
     return "place_commander_rally";
+  case CursorMode::Collect:
+    return "collect";
+  case CursorMode::PlaceBarracksRally:
+    return "place_barracks_rally";
   }
   return "normal";
 }
@@ -65,6 +71,12 @@ inline auto fromString(const QString& str) -> CursorMode {
   if (str == "place_commander_rally") {
     return CursorMode::PlaceCommanderRally;
   }
+  if (str == "collect") {
+    return CursorMode::Collect;
+  }
+  if (str == "place_barracks_rally") {
+    return CursorMode::PlaceBarracksRally;
+  }
   return CursorMode::Normal;
 }
 
@@ -92,6 +104,10 @@ inline auto fromInt(int value) -> CursorMode {
     return CursorMode::Deliver;
   case 8:
     return CursorMode::PlaceCommanderRally;
+  case 9:
+    return CursorMode::Collect;
+  case 10:
+    return CursorMode::PlaceBarracksRally;
   default:
     return CursorMode::Normal;
   }

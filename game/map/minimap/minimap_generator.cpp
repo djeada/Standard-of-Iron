@@ -4,6 +4,7 @@
 #include <QLinearGradient>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPainterPathStroker>
 #include <QPen>
 #include <QRadialGradient>
 
@@ -79,9 +80,15 @@ struct RiverPool {
   float radius = 0.0F;
 };
 
+struct RoadLayerPaths {
+  QPainterPath shadow;
+  QPainterPath surface;
+  QPainterPath highlight;
+};
+
 auto point_distance(const QPointF& a, const QPointF& b) -> float {
-  const float dx = static_cast<float>(a.x() - b.x());
-  const float dy = static_cast<float>(a.y() - b.y());
+  const auto dx = static_cast<float>(a.x() - b.x());
+  const auto dy = static_cast<float>(a.y() - b.y());
   return std::sqrt(dx * dx + dy * dy);
 }
 
@@ -178,7 +185,7 @@ auto line_segments_intersection(const QPointF& a1,
 
   const QPointF r = a2 - a1;
   const QPointF s = b2 - b1;
-  const float denom = static_cast<float>(r.x() * s.y() - r.y() * s.x());
+  const auto denom = static_cast<float>(r.x() * s.y() - r.y() * s.x());
   if (std::abs(denom) <= epsilon) {
     return std::nullopt;
   }
@@ -225,8 +232,8 @@ auto build_river_stroke(const QPointF& start,
 
   QPainterPath river_path(stroke.start);
 
-  const float dx = static_cast<float>(stroke.end.x() - stroke.start.x());
-  const float dy = static_cast<float>(stroke.end.y() - stroke.start.y());
+  const auto dx = static_cast<float>(stroke.end.x() - stroke.start.x());
+  const auto dy = static_cast<float>(stroke.end.y() - stroke.start.y());
   const float length = std::sqrt(dx * dx + dy * dy);
 
   if (length <= 0.01F) {
@@ -273,7 +280,7 @@ void draw_river_pool(QPainter& painter, const RiverPool& pool) {
   painter.drawEllipse(pool.center, pool.radius, pool.radius * 0.82F);
 
   painter.setPen(Qt::NoPen);
-  QColor glow = Palette::WATER_GLOW;
+  QColor const glow = Palette::WATER_GLOW;
   painter.setBrush(glow);
   painter.drawEllipse(QPointF(pool.center.x() - pool.radius * 0.18F,
                               pool.center.y() - pool.radius * 0.12F),
@@ -295,11 +302,28 @@ void draw_river_stroke_pass(QPainter& painter,
   painter.drawPath(path);
 }
 
+auto stroke_path(const QPainterPath& path, float width) -> QPainterPath {
+  QPainterPathStroker stroker;
+  stroker.setWidth(width);
+  stroker.setCapStyle(Qt::RoundCap);
+  stroker.setJoinStyle(Qt::RoundJoin);
+  return stroker.createStroke(path);
+}
+
+auto structure_icon_size(Game::Units::SpawnType spawn_type) -> float {
+  constexpr float base_size = 10.0F;
+  constexpr float large_structure_scale = 1.25F;
+
+  if (spawn_type == Game::Units::SpawnType::Barracks ||
+      spawn_type == Game::Units::SpawnType::Home) {
+    return base_size * large_structure_scale;
+  }
+  return base_size;
+}
+
 } // namespace
 
-MinimapGenerator::MinimapGenerator()
-    : m_config() {
-}
+MinimapGenerator::MinimapGenerator() = default;
 
 MinimapGenerator::MinimapGenerator(const Config& config)
     : m_config(config) {
@@ -316,9 +340,9 @@ auto MinimapGenerator::generate(const MapDefinition& map_def) -> QImage {
 
   render_parchment_background(image);
   render_terrain_base(image, map_def);
-  render_terrain_features(image, map_def);
-  render_rivers(image, map_def);
   render_roads(image, map_def);
+  render_rivers(image, map_def);
+  render_terrain_features(image, map_def);
   render_bridges(image, map_def);
   render_structures(image, map_def);
   apply_historical_styling(image);
@@ -673,9 +697,7 @@ void MinimapGenerator::render_roads(QImage& image, const MapDefinition& map_def)
     return;
   }
 
-  QPainter painter(&image);
-  painter.setRenderHint(QPainter::Antialiasing, true);
-
+  RoadLayerPaths paths;
   for (const auto& road : map_def.roads) {
     const auto [x1, y1] = world_to_pixel(road.start.x(), road.start.z(), map_def.grid);
     const auto [x2, y2] = world_to_pixel(road.end.x(), road.end.z(), map_def.grid);
@@ -683,8 +705,27 @@ void MinimapGenerator::render_roads(QImage& image, const MapDefinition& map_def)
     float pixel_width = world_to_pixel_size(road.width, map_def.grid);
     pixel_width = std::max(pixel_width, 1.5F);
 
-    draw_road_segment(painter, x1, y1, x2, y2, pixel_width);
+    QPainterPath centerline(QPointF(x1, y1));
+    centerline.lineTo(x2, y2);
+
+    paths.shadow = paths.shadow.united(stroke_path(centerline, pixel_width + 2.0F));
+    paths.surface = paths.surface.united(stroke_path(centerline, pixel_width));
+    paths.highlight = paths.highlight.united(
+        stroke_path(centerline, std::max(pixel_width * 0.35F, 0.8F)));
   }
+
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+  QColor shadow_color = Palette::ROAD_SHADOW;
+  shadow_color.setAlpha(220);
+  painter.fillPath(paths.shadow, shadow_color);
+  painter.fillPath(paths.surface, Palette::ROAD_MAIN);
+
+  QColor highlight_color = Palette::ROAD_HIGHLIGHT;
+  highlight_color.setAlpha(235);
+  painter.fillPath(paths.highlight, highlight_color);
 }
 
 void MinimapGenerator::draw_road_segment(
@@ -792,23 +833,28 @@ void MinimapGenerator::render_structures(QImage& image, const MapDefinition& map
       border_color.setHsv(hue, 180, 100);
     }
 
-    draw_fortress_icon(painter, px, py, fill_color, border_color);
+    draw_fortress_icon(
+        painter, px, py, structure_icon_size(spawn.type), fill_color, border_color);
   }
 }
 
-void MinimapGenerator::draw_fortress_icon(
-    QPainter& painter, float cx, float cy, const QColor& fill, const QColor& border) {
+void MinimapGenerator::draw_fortress_icon(QPainter& painter,
+                                          float cx,
+                                          float cy,
+                                          float size,
+                                          const QColor& fill,
+                                          const QColor& border) {
 
-  constexpr float SIZE = 10.0F;
-  constexpr float HALF = SIZE * 0.5F;
+  const float SIZE = size;
+  const float HALF = SIZE * 0.5F;
 
   painter.setBrush(fill);
   painter.setPen(QPen(border, 1.5));
   painter.drawRect(
       QRectF(cx - HALF * 0.7F, cy - HALF * 0.7F, SIZE * 0.7F, SIZE * 0.7F));
 
-  constexpr float TOWER_SIZE = SIZE * 0.35F;
-  constexpr float TOWER_OFFSET = HALF * 0.85F;
+  const float TOWER_SIZE = SIZE * 0.35F;
+  const float TOWER_OFFSET = HALF * 0.85F;
 
   painter.setBrush(fill);
   painter.setPen(QPen(border, 1.0));
@@ -825,8 +871,8 @@ void MinimapGenerator::draw_fortress_icon(
   painter.drawRect(
       QRectF(cx - SIZE * 0.12F, cy + SIZE * 0.15F, SIZE * 0.24F, SIZE * 0.25F));
 
-  constexpr float MERLON_W = SIZE * 0.15F;
-  constexpr float MERLON_H = SIZE * 0.12F;
+  const float MERLON_W = SIZE * 0.15F;
+  const float MERLON_H = SIZE * 0.12F;
   painter.setBrush(fill);
   painter.setPen(QPen(border, 0.8));
 
@@ -882,7 +928,7 @@ void MinimapGenerator::apply_vignette(QPainter& painter, int width, int height) 
 }
 
 void MinimapGenerator::draw_compass_rose(QPainter& painter, int width, int height) {
-  const float min_dim = static_cast<float>(std::min(width, height));
+  const auto min_dim = static_cast<float>(std::min(width, height));
   const float margin = std::clamp(min_dim * 0.06F, 12.0F, 32.0F);
   const float SIZE = std::clamp(min_dim * 0.08F, 14.0F, 42.0F);
   const float cx = static_cast<float>(width) - margin;
@@ -938,7 +984,9 @@ auto MinimapGenerator::biome_to_base_color(const BiomeSettings& biome) -> QColor
                                  static_cast<double>(grass.y()),
                                  static_cast<double>(grass.z()));
 
-  int h, s, v;
+  int h = 0;
+  int s = 0;
+  int v = 0;
   base.getHsv(&h, &s, &v);
   base.setHsv(h, static_cast<int>(s * 0.4), static_cast<int>(v * 0.85));
 

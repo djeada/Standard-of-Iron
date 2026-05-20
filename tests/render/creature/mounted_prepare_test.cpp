@@ -13,6 +13,7 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/units/spawn_type.h"
+#include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
@@ -405,7 +406,7 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
                         LegacySlotMask::Attachments));
 }
 
-TEST(MountedPrepare, MountedRiderUsesSemanticAttackClipState) {
+TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {
   Render::GL::HorseSpearmanRendererConfig cfg;
   cfg.has_spear = false;
   cfg.has_shield = false;
@@ -430,7 +431,107 @@ TEST(MountedPrepare, MountedRiderUsesSemanticAttackClipState) {
                Render::Creature::Pipeline::CreatureKind::Humanoid;
       });
   ASSERT_NE(rider_req, requests.end());
-  EXPECT_EQ(rider_req->state, Render::Creature::AnimationStateId::AttackSpear);
+  EXPECT_EQ(rider_req->state, Render::Creature::AnimationStateId::RidingCharge);
+}
+
+TEST(MountedPrepare, MountedSwordAttackUsesMountedSwordStateWhileMoving) {
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Render::GL::AnimationInputs anim{};
+  anim.movement_state = Render::Creature::MovementAnimationState::Run;
+  anim.is_attacking = true;
+  anim.is_melee = true;
+  anim.attack_family = Engine::Core::CombatAttackFamily::Sword;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+
+  auto const& requests = prep.bodies.requests();
+  auto const rider_req =
+      std::find_if(requests.begin(), requests.end(), [](const auto& req) {
+        return Render::Creature::ArchetypeRegistry::instance().species(req.archetype) ==
+               Render::Creature::Pipeline::CreatureKind::Humanoid;
+      });
+  ASSERT_NE(rider_req, requests.end());
+  EXPECT_EQ(rider_req->state, Render::Creature::AnimationStateId::AttackSword);
+  EXPECT_EQ(rider_req->clip_variant, 0U);
+}
+
+TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+
+  Render::GL::MountedKnightRendererBase const renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  auto* persistent =
+      entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
+  ASSERT_NE(persistent, nullptr);
+  ctx.entity = &entity;
+
+  auto find_rider_request = [](const auto& requests) {
+    return std::find_if(requests.begin(), requests.end(), [](const auto& req) {
+      return Render::Creature::ArchetypeRegistry::instance().species(req.archetype) ==
+             Render::Creature::Pipeline::CreatureKind::Humanoid;
+    });
+  };
+
+  Render::GL::AnimationInputs attack_anim{};
+  attack_anim.time = 2.0F;
+  attack_anim.movement_state = Render::Creature::MovementAnimationState::Run;
+  attack_anim.is_attacking = true;
+  attack_anim.is_melee = true;
+  attack_anim.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  attack_anim.combat_phase = Render::GL::CombatAnimPhase::Recover;
+  attack_anim.combat_phase_progress = 0.30F;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, attack_anim, 0, prep);
+
+  auto const attack_req = find_rider_request(prep.bodies.requests());
+  ASSERT_NE(attack_req, prep.bodies.requests().end());
+  EXPECT_EQ(attack_req->state, Render::Creature::AnimationStateId::AttackSword);
+  float const attack_phase = attack_req->phase;
+
+  Render::GL::AnimationInputs recover_anim = attack_anim;
+  recover_anim.time += 0.06F;
+  recover_anim.is_attacking = false;
+  recover_anim.combat_phase = Render::GL::CombatAnimPhase::Idle;
+  recover_anim.combat_phase_progress = 0.0F;
+
+  prep.clear();
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, recover_anim, 1, prep);
+
+  auto const recover_req = find_rider_request(prep.bodies.requests());
+  ASSERT_NE(recover_req, prep.bodies.requests().end());
+  EXPECT_EQ(recover_req->state, Render::Creature::AnimationStateId::AttackSword);
+  EXPECT_GT(recover_req->phase, attack_phase);
+
+  Render::GL::AnimationInputs idle_anim = recover_anim;
+  idle_anim.time += 0.28F;
+  idle_anim.movement_state = Render::Creature::MovementAnimationState::Idle;
+
+  prep.clear();
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, idle_anim, 2, prep);
+
+  auto const idle_req = find_rider_request(prep.bodies.requests());
+  ASSERT_NE(idle_req, prep.bodies.requests().end());
+  EXPECT_NE(idle_req->state, Render::Creature::AnimationStateId::AttackSword);
+  EXPECT_FALSE(persistent->transient_attack_active);
 }
 
 TEST(MountedPrepare, HorseSpearmanShieldBuildsIntoRiderArchetype) {

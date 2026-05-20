@@ -45,6 +45,14 @@ ambient_idle_clip_variant(AmbientIdleType t) noexcept -> std::uint8_t {
 
 using CombatAnimPhase = Engine::Core::CombatAnimationState;
 
+enum class ConstructionRole : std::uint8_t {
+  None = 0,
+  Hammer,
+  Saw,
+  Chisel,
+  KneelingChisel,
+};
+
 struct VisualMovementState {
   bool is_authoritative{false};
   Render::Creature::MovementAnimationState movement_state{
@@ -64,6 +72,7 @@ struct AnimationInputs {
   Render::Creature::MovementAnimationState movement_state{
       Render::Creature::MovementAnimationState::Idle};
   VisualMovementState visual_movement{};
+  bool is_mounted{false};
   bool is_attacking;
   bool is_melee;
   bool is_in_hold_mode;
@@ -317,6 +326,7 @@ struct HumanoidAnimationContext {
   float yaw_degrees{0.0F};
   AmbientIdleType ambient_idle_type{AmbientIdleType::None};
   float ambient_idle_phase{0.0F};
+  ConstructionRole construction_role{ConstructionRole::None};
 
   auto locomotion_speed() const -> float { return gait.speed; }
   auto locomotion_normalized_speed() const -> float { return gait.normalized_speed; }

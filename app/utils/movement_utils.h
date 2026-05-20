@@ -8,6 +8,7 @@
 #include <limits>
 #include <vector>
 
+#include "../core/rts_action_model.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
@@ -274,8 +275,13 @@ issue_move_or_attack_command(Engine::Core::World* world,
         bool const is_building =
             target_entity->has_component<Engine::Core::BuildingComponent>();
         if (is_enemy && !is_building) {
+          auto const attackers = App::Core::filter_selected_units_for_action(
+              world, selected, QStringLiteral("attack"));
+          if (attackers.empty()) {
+            return;
+          }
           Game::Systems::CommandService::attack_target(
-              *world, selected, target_id, true);
+              *world, attackers, target_id, true);
           return;
         }
       }
@@ -287,7 +293,8 @@ issue_move_or_attack_command(Engine::Core::World* world,
           QPointF(sx, sy), *camera, viewport_width, viewport_height, hit)) {
     return;
   }
-  auto const plan = Game::Systems::CommandService::plan_ground_move(*world, selected, hit);
+  auto const plan =
+      Game::Systems::CommandService::plan_ground_move(*world, selected, hit);
   Game::Systems::CommandService::issue_ground_move(*world, selected, plan);
 }
 

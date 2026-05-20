@@ -105,6 +105,28 @@ TEST_F(InputCommandHandlerTest, RightPressConsumesCursorModeCancellation) {
   EXPECT_FALSE(input_handler->is_placing_formation());
 }
 
+TEST_F(InputCommandHandlerTest, RightPressConsumesCollectCursorModeCancellation) {
+  auto* unit = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+
+  cursor_manager.set_mode(CursorMode::Collect);
+
+  EXPECT_TRUE(input_handler->on_right_press(400.0, 300.0, 1, viewport));
+  EXPECT_EQ(cursor_manager.mode(), CursorMode::Normal);
+}
+
+TEST_F(InputCommandHandlerTest, RightPressConsumesBarracksRallyCursorModeCancellation) {
+  auto* unit = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Barracks);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+
+  cursor_manager.set_mode(CursorMode::PlaceBarracksRally);
+
+  EXPECT_TRUE(input_handler->on_right_press(400.0, 300.0, 1, viewport));
+  EXPECT_EQ(cursor_manager.mode(), CursorMode::Normal);
+}
+
 TEST_F(InputCommandHandlerTest, RightPressConsumesEnemyAttackCommand) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
@@ -121,6 +143,27 @@ TEST_F(InputCommandHandlerTest, RightPressConsumesEnemyAttackCommand) {
   ASSERT_NE(attack_target, nullptr);
   EXPECT_EQ(attack_target->target_id, enemy->get_id());
   EXPECT_TRUE(attack_target->should_chase);
+}
+
+TEST_F(InputCommandHandlerTest, RightPressAppliesAttackOnlyToEligibleUnits) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* builder = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(builder, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(archer->get_id());
+  selection_system->select_unit(builder->get_id());
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+
+  EXPECT_TRUE(
+      input_handler->on_right_press(enemy_screen.x(), enemy_screen.y(), 1, viewport));
+
+  auto* archer_target = archer->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(archer_target, nullptr);
+  EXPECT_EQ(archer_target->target_id, enemy->get_id());
+  EXPECT_EQ(builder->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
 }
 
 TEST_F(InputCommandHandlerTest, RightPressStartsFormationPlacementForGroundMove) {
