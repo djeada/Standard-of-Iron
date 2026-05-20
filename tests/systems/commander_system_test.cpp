@@ -584,7 +584,8 @@ TEST(CommanderFlagRallyTest, DivergentMoveOrderCancelsFlagRally) {
   auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
   auto* commander_transform =
       commander->add_component<Engine::Core::TransformComponent>();
-  auto* commander_movement = commander->add_component<Engine::Core::MovementComponent>();
+  auto* commander_movement =
+      commander->add_component<Engine::Core::MovementComponent>();
   auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander_unit, nullptr);
   ASSERT_NE(commander_transform, nullptr);

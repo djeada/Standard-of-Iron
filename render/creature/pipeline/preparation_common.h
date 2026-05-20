@@ -36,8 +36,17 @@ humanoid_state_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexce
 [[nodiscard]] auto humanoid_state_for_intent(
     Render::Creature::PoseIntent intent) noexcept -> Render::Creature::AnimationStateId;
 
+[[nodiscard]] auto
+humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
+                         Render::Creature::AnimationStateId state) noexcept -> float;
+
 [[nodiscard]] auto humanoid_phase_for_anim(
     const Render::GL::HumanoidAnimationContext& anim) noexcept -> float;
+
+[[nodiscard]] auto humanoid_clip_variant_for_state(
+    Render::Creature::ArchetypeId archetype_id,
+    const Render::GL::HumanoidAnimationContext& anim,
+    Render::Creature::AnimationStateId state) noexcept -> std::uint8_t;
 
 [[nodiscard]] auto humanoid_clip_variant_for_anim(
     Render::Creature::ArchetypeId archetype_id,
@@ -92,6 +101,20 @@ void set_model_world_y(QMatrix4x4& model, float world_y) noexcept;
 [[nodiscard]] inline auto instance_seed(std::uint32_t base_seed,
                                         int index) noexcept -> std::uint32_t {
   return base_seed ^ static_cast<std::uint32_t>(index * 9176);
+}
+
+[[nodiscard]] inline auto
+seeded_variant_index(std::uint32_t seed, std::uint8_t stride) noexcept -> std::uint8_t {
+  if (stride == 0U) {
+    return 0U;
+  }
+
+  seed ^= seed >> 16U;
+  seed *= 0x7FEB352DU;
+  seed ^= seed >> 15U;
+  seed *= 0x846CA68BU;
+  seed ^= seed >> 16U;
+  return static_cast<std::uint8_t>(seed % stride);
 }
 
 } // namespace Render::Creature::Pipeline

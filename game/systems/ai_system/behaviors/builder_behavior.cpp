@@ -177,8 +177,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   const int target_barracks = std::clamp(targets.barracks_count, 1, MAX_BARRACKS);
   const int target_towers =
       std::clamp(targets.defense_tower_count, 0, MAX_DEFENSE_TOWERS);
-  const int target_walls =
-      std::clamp(targets.wall_segment_count, 0, MAX_WALL_SEGMENTS);
+  const int target_walls = std::clamp(targets.wall_segment_count, 0, MAX_WALL_SEGMENTS);
   const int target_catapults = std::clamp(targets.catapult_count, 0, MAX_CATAPULTS);
 
   const char* building_to_construct = nullptr;

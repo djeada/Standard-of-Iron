@@ -25,9 +25,10 @@ inline constexpr std::uint16_t k_humanoid_riding_idle_clip = 16U;
 inline constexpr std::uint16_t k_humanoid_riding_charge_clip = 17U;
 inline constexpr std::uint16_t k_humanoid_riding_reining_clip = 18U;
 inline constexpr std::uint16_t k_humanoid_riding_bow_shot_clip = 19U;
-inline constexpr std::uint16_t k_humanoid_die_infantry_clip = 20U;
-inline constexpr std::uint16_t k_humanoid_dead_infantry_clip = 21U;
-inline constexpr std::uint16_t k_humanoid_die_mounted_clip = 22U;
-inline constexpr std::uint16_t k_humanoid_dead_mounted_clip = 23U;
+inline constexpr std::uint16_t k_humanoid_riding_sword_strike_clip = 20U;
+inline constexpr std::uint16_t k_humanoid_die_infantry_clip = 21U;
+inline constexpr std::uint16_t k_humanoid_dead_infantry_clip = 22U;
+inline constexpr std::uint16_t k_humanoid_die_mounted_clip = 23U;
+inline constexpr std::uint16_t k_humanoid_dead_mounted_clip = 24U;
 
 } // namespace Render::Creature

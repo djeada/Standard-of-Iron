@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <optional>
+#include <vector>
 
 #include "game/map/map_definition.h"
+#include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/pathfinding.h"
@@ -16,6 +19,33 @@ protected:
     Game::Map::TerrainService::instance().clear();
   }
 };
+
+auto prop_grid_position(const Game::Map::MapDefinition& map_def,
+                        const Game::Map::WorldProp& prop) -> Game::Systems::Point {
+  if (map_def.coordSystem == Game::Map::CoordSystem::Grid) {
+    return {static_cast<int>(std::round(prop.x)), static_cast<int>(std::round(prop.z))};
+  }
+
+  float const safe_tile_size = std::max(map_def.grid.tile_size, 0.0001F);
+  float const half_w = static_cast<float>(map_def.grid.width) * 0.5F - 0.5F;
+  float const half_h = static_cast<float>(map_def.grid.height) * 0.5F - 0.5F;
+  return {static_cast<int>(std::round(prop.x / safe_tile_size + half_w)),
+          static_cast<int>(std::round(prop.z / safe_tile_size + half_h))};
+}
+
+auto cell_value_for_prop(const Game::Map::WorldProp& prop)
+    -> std::optional<Game::Systems::Pathfinding::CellValue> {
+  if (Game::Map::is_tree_world_prop_type(prop.type)) {
+    return Game::Systems::Pathfinding::CellValue::Tree;
+  }
+  if (Game::Map::is_boulder_world_prop_type(prop.type)) {
+    return Game::Systems::Pathfinding::CellValue::Boulder;
+  }
+  if (Game::Map::is_iron_ore_world_prop_type(prop.type)) {
+    return Game::Systems::Pathfinding::CellValue::IronOre;
+  }
+  return std::nullopt;
+}
 
 TEST_F(PathfindingTest, TreeCellsRemainBlockedButDistinguishable) {
   Game::Map::MapDefinition map_def;
@@ -164,91 +194,55 @@ TEST_F(PathfindingTest, HarvestedIronOreClearsMarkerAfterDirtyUpdate) {
   EXPECT_TRUE(pathfinding.is_walkable(3, 4));
 }
 
-TEST_F(PathfindingTest, ProceduralIronOreMarksPathfindingGrid) {
+TEST_F(PathfindingTest, RuntimeHarvestPropsAreMarkedAfterTerrainLoads) {
   Game::Map::MapDefinition map_def;
-  map_def.grid.width = 96;
-  map_def.grid.height = 96;
-  map_def.grid.tile_size = 1.0F;
-  map_def.biome.seed = 42U;
-  Game::Map::apply_ground_type_defaults(map_def.biome,
-                                        Game::Map::GroundType::SoilRocky);
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QStringLiteral("assets/maps/map_forest.json"), map_def, &error))
+      << error.toStdString();
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_building_obstacles();
 
   auto& terrain = Game::Map::TerrainService::instance();
   terrain.initialize(map_def);
-
-  auto first_iron_ore_it =
-      std::find_if(terrain.world_props().begin(),
-                   terrain.world_props().end(),
-                   [](const Game::Map::WorldProp& prop) {
-                     return Game::Map::is_iron_ore_world_prop_type(prop.type);
-                   });
-  ASSERT_NE(first_iron_ore_it, terrain.world_props().end());
-
-  Game::Systems::Pathfinding pathfinding(96, 96);
-  pathfinding.set_grid_offset(-(96.0F * 0.5F - 0.5F), -(96.0F * 0.5F - 0.5F));
   pathfinding.update_building_obstacles();
 
-  int const iron_ore_x = static_cast<int>(std::round(first_iron_ore_it->x));
-  int const iron_ore_z = static_cast<int>(std::round(first_iron_ore_it->z));
-  EXPECT_TRUE(pathfinding.is_iron_ore(iron_ore_x, iron_ore_z));
-}
+  using CellValue = Game::Systems::Pathfinding::CellValue;
+  std::vector<std::optional<CellValue>> expected_cells(
+      static_cast<std::size_t>(map_def.grid.width * map_def.grid.height));
+  for (const auto& prop : terrain.world_props()) {
+    const auto expected = cell_value_for_prop(prop);
+    if (!expected.has_value()) {
+      continue;
+    }
 
-TEST_F(PathfindingTest, ProceduralTreesMarkPathfindingGrid) {
-  Game::Map::MapDefinition map_def;
-  map_def.grid.width = 64;
-  map_def.grid.height = 64;
-  map_def.grid.tile_size = 1.0F;
-  map_def.biome.seed = 42U;
-  Game::Map::apply_ground_type_defaults(map_def.biome,
-                                        Game::Map::GroundType::ForestMud);
+    const auto grid = prop_grid_position(map_def, prop);
+    if (grid.x < 0 || grid.x >= map_def.grid.width || grid.y < 0 ||
+        grid.y >= map_def.grid.height) {
+      continue;
+    }
+    expected_cells[static_cast<std::size_t>(grid.y * map_def.grid.width + grid.x)] =
+        *expected;
+  }
 
-  auto& terrain = Game::Map::TerrainService::instance();
-  terrain.initialize(map_def);
+  int checked = 0;
+  for (int z = 0; z < map_def.grid.height; ++z) {
+    for (int x = 0; x < map_def.grid.width; ++x) {
+      const auto& expected =
+          expected_cells[static_cast<std::size_t>(z * map_def.grid.width + x)];
+      if (!expected.has_value()) {
+        continue;
+      }
+      EXPECT_EQ(pathfinding.cell_value(x, z), *expected)
+          << "resource marker at grid " << x << "," << z;
+      ++checked;
+    }
+  }
 
-  auto first_tree_it =
-      std::find_if(terrain.world_props().begin(),
-                   terrain.world_props().end(),
-                   [](const Game::Map::WorldProp& prop) {
-                     return Game::Map::is_tree_world_prop_type(prop.type);
-                   });
-  ASSERT_NE(first_tree_it, terrain.world_props().end());
-
-  Game::Systems::Pathfinding pathfinding(64, 64);
-  pathfinding.set_grid_offset(-(64.0F * 0.5F - 0.5F), -(64.0F * 0.5F - 0.5F));
-  pathfinding.update_building_obstacles();
-
-  int const tree_x = static_cast<int>(std::round(first_tree_it->x));
-  int const tree_z = static_cast<int>(std::round(first_tree_it->z));
-  EXPECT_TRUE(pathfinding.is_tree(tree_x, tree_z));
-}
-
-TEST_F(PathfindingTest, ProceduralBouldersMarkPathfindingGrid) {
-  Game::Map::MapDefinition map_def;
-  map_def.grid.width = 64;
-  map_def.grid.height = 64;
-  map_def.grid.tile_size = 1.0F;
-  map_def.biome.seed = 42U;
-  Game::Map::apply_ground_type_defaults(map_def.biome,
-                                        Game::Map::GroundType::SoilRocky);
-
-  auto& terrain = Game::Map::TerrainService::instance();
-  terrain.initialize(map_def);
-
-  auto first_boulder_it =
-      std::find_if(terrain.world_props().begin(),
-                   terrain.world_props().end(),
-                   [](const Game::Map::WorldProp& prop) {
-                     return Game::Map::is_boulder_world_prop_type(prop.type);
-                   });
-  ASSERT_NE(first_boulder_it, terrain.world_props().end());
-
-  Game::Systems::Pathfinding pathfinding(64, 64);
-  pathfinding.set_grid_offset(-(64.0F * 0.5F - 0.5F), -(64.0F * 0.5F - 0.5F));
-  pathfinding.update_building_obstacles();
-
-  int const boulder_x = static_cast<int>(std::round(first_boulder_it->x));
-  int const boulder_z = static_cast<int>(std::round(first_boulder_it->z));
-  EXPECT_TRUE(pathfinding.is_boulder(boulder_x, boulder_z));
+  EXPECT_GT(checked, 0);
 }
 
 } // namespace

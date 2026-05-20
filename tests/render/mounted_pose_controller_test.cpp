@@ -4,9 +4,11 @@
 #include <gtest/gtest.h>
 
 #include "render/horse/horse_renderer_base.h"
+#include "render/humanoid/humanoid_full_builder.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_specs.h"
 #include "render/humanoid/mounted_pose_controller.h"
+#include "render/humanoid/skeleton.h"
 
 using namespace Render::GL;
 
@@ -191,11 +193,49 @@ TEST_F(MountedPoseControllerTest, RidingMeleeStrikeAnimatesCorrectly) {
 
   controller.riding_melee_strike(mount, 0.15F);
   float const chamber_y = pose.hand_r.y();
+  float const chamber_x = pose.hand_r.x();
+  float const chamber_neck_y = pose.neck_base.y();
+  float const chamber_neck_z = pose.neck_base.z();
+  float const chamber_head_z = pose.head_pos.z();
 
   controller.riding_melee_strike(mount, 0.25F);
   float const apex_y = pose.hand_r.y();
 
+  controller.riding_melee_strike(mount, 0.62F);
+  float const strike_x = pose.hand_r.x();
+  float const strike_y = pose.hand_r.y();
+  float const strike_z = pose.hand_r.z();
+  float const strike_neck_y = pose.neck_base.y();
+  float const strike_neck_z = pose.neck_base.z();
+  float const strike_head_z = pose.head_pos.z();
+
   EXPECT_GT(apex_y, chamber_y);
+  EXPECT_GT(strike_x, chamber_x + 0.10F);
+  EXPECT_LT(strike_y, chamber_y);
+  EXPECT_GT(strike_z, 0.6F);
+  EXPECT_GT(strike_neck_z, chamber_neck_z);
+  EXPECT_GT(strike_neck_y, chamber_neck_y - 0.03F);
+  EXPECT_GT(strike_head_z, strike_neck_z + 0.02F);
+  EXPECT_GT(strike_head_z, chamber_head_z + 0.02F);
+}
+
+TEST_F(MountedPoseControllerTest, RidingMeleeStrikeTiltsGripIntoSlash) {
+  MountedPoseController controller(pose, anim_ctx);
+
+  controller.riding_melee_strike(mount, 0.62F);
+  Render::Humanoid::rebuild_humanoid_frames(pose, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);
+
+  QVector3D swing_axis = pose.hand_r - pose.elbow_r;
+  ASSERT_GT(swing_axis.lengthSquared(), 1e-6F);
+  swing_axis.normalize();
+
+  auto const sword_grip = Render::Humanoid::socket_attachment_frame(
+      pose.body_frames.hand_r, Render::Humanoid::HumanoidSocket::GripR);
+  QVector3D grip_axis = sword_grip.up;
+  ASSERT_GT(grip_axis.lengthSquared(), 1e-6F);
+  grip_axis.normalize();
+
+  EXPECT_GT(QVector3D::dotProduct(grip_axis, swing_axis), 0.85F);
 }
 
 TEST_F(MountedPoseControllerTest, RidingSpearThrustAnimatesCorrectly) {

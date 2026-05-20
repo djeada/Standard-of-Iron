@@ -918,7 +918,7 @@ void ArenaViewport::update_selected_entities() {
     return;
   }
   const auto& selected = selection->get_selected_units();
-  std::vector<unsigned int> ids(selected.begin(), selected.end());
+  std::vector<unsigned int> const ids(selected.begin(), selected.end());
   m_renderer->set_selected_entities(ids);
 }
 
@@ -1048,7 +1048,7 @@ void ArenaViewport::regenerate_terrain() {
       float const blended =
           Game::Map::sample_mountain_region(world_x, world_z, noise_settings);
       float const height = safe_scale * blended * radial;
-      size_t const index = static_cast<size_t>(z * k_terrain_width + x);
+      auto const index = static_cast<size_t>(z * k_terrain_width + x);
       heights[index] = height;
       max_height = std::max(max_height, height);
     }
@@ -1072,7 +1072,7 @@ void ArenaViewport::regenerate_terrain() {
         continue;
       }
 
-      size_t const index = static_cast<size_t>(z * k_terrain_width + x);
+      auto const index = static_cast<size_t>(z * k_terrain_width + x);
       heights[index] = arena_floor_height;
       terrain_types[index] = Game::Map::TerrainType::Flat;
     }
@@ -1110,7 +1110,7 @@ void ArenaViewport::reconfigure_terrain_from_state() {
 
 void ArenaViewport::configure_rendering_from_terrain() {
   auto& terrain_service = Game::Map::TerrainService::instance();
-  auto* height_map = terrain_service.get_height_map();
+  const auto* height_map = terrain_service.get_height_map();
   if (height_map == nullptr || m_surface == nullptr || m_features == nullptr ||
       m_scatter == nullptr) {
     return;
@@ -1121,8 +1121,10 @@ void ArenaViewport::configure_rendering_from_terrain() {
   m_surface->ground()->set_biome(terrain_service.biome_settings());
   m_surface->terrain()->configure(*height_map, terrain_service.biome_settings());
   m_features->configure(*height_map, terrain_service.road_segments());
-  m_scatter->configure(
-      *height_map, terrain_service.biome_settings(), terrain_service.world_props());
+  m_scatter->configure(*height_map,
+                       terrain_service.biome_settings(),
+                       terrain_service.authored_world_props(),
+                       terrain_service.world_props());
   if (m_rain != nullptr) {
     float const world_width =
         static_cast<float>(height_map->get_width()) * height_map->get_tile_size();
@@ -1295,7 +1297,7 @@ void ArenaViewport::spawn_mirror_match(int count) {
   std::vector<Engine::Core::EntityID> spawned_ids;
   spawned_ids.reserve(static_cast<size_t>(clamped_count * 2));
 
-  for (int owner_id : {k_local_owner_id, k_enemy_owner_id}) {
+  for (int const owner_id : {k_local_owner_id, k_enemy_owner_id}) {
     for (int i = 0; i < clamped_count; ++i) {
       Engine::Core::EntityID const entity_id =
           spawn_single_unit(owner_id, m_spawn_nation_id, m_spawn_unit_type);
@@ -2043,7 +2045,7 @@ void ArenaViewport::draw_pose_overlay(QPainter& painter) {
       QColor color;
     };
 
-    std::array<AxisLine, 3> axes{
+    std::array<AxisLine, 3> const axes{
         AxisLine{origin + right * axis_length, QColor(255, 120, 120, 220)},
         AxisLine{origin + up * axis_length, QColor(120, 220, 255, 220)},
         AxisLine{origin + forward * axis_length, QColor(160, 255, 120, 220)}};

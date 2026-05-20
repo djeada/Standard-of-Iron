@@ -69,9 +69,9 @@ void halt_rally_movement(Engine::Core::MovementComponent* movement) {
   movement->clear_path();
 }
 
-[[nodiscard]] auto movement_targets_rally(
-    const Engine::Core::MovementComponent* movement,
-    const Engine::Core::CommanderComponent& commander) -> bool {
+[[nodiscard]] auto
+movement_targets_rally(const Engine::Core::MovementComponent* movement,
+                       const Engine::Core::CommanderComponent& commander) -> bool {
   if (movement == nullptr || !movement->has_target) {
     return false;
   }
@@ -84,14 +84,13 @@ void halt_rally_movement(Engine::Core::MovementComponent* movement) {
          distance_sq(movement->target_x,
                      movement->target_y,
                      commander.flag_rally_pending_x,
-                     commander.flag_rally_pending_z) <=
-             k_flag_rally_order_tolerance_sq;
+                     commander.flag_rally_pending_z) <= k_flag_rally_order_tolerance_sq;
 }
 
-[[nodiscard]] auto is_flag_rally_interrupted(
-    Engine::Core::Entity& entity,
-    const Engine::Core::CommanderComponent& commander,
-    const Engine::Core::TransformComponent& transform) -> bool {
+[[nodiscard]] auto
+is_flag_rally_interrupted(Engine::Core::Entity& entity,
+                          const Engine::Core::CommanderComponent& commander,
+                          const Engine::Core::TransformComponent& transform) -> bool {
   if (!commander.flag_rally_in_progress) {
     return false;
   }
@@ -319,18 +318,15 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     // get from selecting their troops and right-clicking the rally position.
     if (commander->flag_rally_issue_commands) {
       commander->flag_rally_issue_commands = false;
-      const QVector3D rally_pos(commander->flag_rally_flag_x,
-                                0.0F,
-                                commander->flag_rally_flag_z);
+      const QVector3D rally_pos(
+          commander->flag_rally_flag_x, 0.0F, commander->flag_rally_flag_z);
       std::vector<Engine::Core::EntityID> rallied_units;
 
-      for (auto* candidate :
-           world->get_entities_with<Engine::Core::UnitComponent>()) {
+      for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
         if (candidate == commander_entity) {
           continue;
         }
-        auto* candidate_unit =
-            candidate->get_component<Engine::Core::UnitComponent>();
+        auto* candidate_unit = candidate->get_component<Engine::Core::UnitComponent>();
         if (candidate_unit == nullptr || candidate_unit->owner_id != unit->owner_id ||
             !is_living_troop(candidate_unit)) {
           continue;

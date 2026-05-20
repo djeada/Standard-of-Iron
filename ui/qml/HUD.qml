@@ -20,6 +20,14 @@ Item {
     signal return_to_main_menu_requested
     signal hud_became_visible
 
+    function refresh_command_mode() {
+        var actual_mode = "normal";
+        if (has_movable_units && typeof game !== 'undefined' && game.get_selected_units_command_mode)
+            actual_mode = game.get_selected_units_command_mode();
+        if (current_command_mode !== actual_mode)
+            current_command_mode = actual_mode;
+    }
+
     onVisibleChanged: {
         if (visible)
             hud_became_visible();
@@ -38,16 +46,8 @@ Item {
                     }
                 }
             }
-            var actual_mode = "normal";
-            if (has_troops && typeof game !== 'undefined' && game.cursor_mode && game.cursor_mode !== "normal")
-                actual_mode = game.cursor_mode;
-            else if (has_troops && typeof game !== 'undefined' && game.get_selected_units_command_mode)
-                actual_mode = game.get_selected_units_command_mode();
-            if (current_command_mode !== actual_mode) {
-                current_command_mode = actual_mode;
-                command_mode_changed(actual_mode);
-            }
             has_movable_units = has_troops;
+            refresh_command_mode();
         }
 
         target: (typeof game !== 'undefined') ? game : null
@@ -61,11 +61,7 @@ Item {
         running: true
         onTriggered: {
             selection_tick += 1;
-            if (has_movable_units && typeof game !== 'undefined' && game.get_selected_units_command_mode) {
-                var actual_mode = (game.cursor_mode && game.cursor_mode !== "normal") ? game.cursor_mode : game.get_selected_units_command_mode();
-                if (current_command_mode !== actual_mode)
-                    current_command_mode = actual_mode;
-            }
+            refresh_command_mode();
         }
     }
 

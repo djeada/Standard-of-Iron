@@ -40,6 +40,17 @@ void reset_humanoid_animation_state(
   state.idle_duration = 0.0F;
   state.last_sample_time = 0.0F;
   state.initialized = false;
+  state.transient_attack_active = false;
+  state.transient_attack_is_melee = false;
+  state.transient_attack_is_mounted = false;
+  state.transient_attack_finisher = false;
+  state.transient_attack_amplified = false;
+  state.transient_attack_phase = 0.0F;
+  state.transient_attack_last_sample_time = 0.0F;
+  state.transient_attack_emphasis = 1.0F;
+  state.transient_attack_variant = 0U;
+  state.transient_attack_family = Engine::Core::CombatAttackFamily::None;
+  state.transient_attack_state = Render::Creature::AnimationStateId::Idle;
   reset_humanoid_locomotion_state(state);
 }
 

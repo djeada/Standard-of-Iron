@@ -136,6 +136,14 @@ build: run-map-pipeline configure
 	@$(MAKE) bake-bpat
 	@echo "$(GREEN)✓ Build complete$(RESET)"
 
+# Build only the runnable application and runtime assets.
+.PHONY: build-app
+build-app: run-map-pipeline configure
+	@echo "$(BOLD)$(BLUE)Building Standard of Iron...$(RESET)"
+	@cd $(BUILD_DIR) && cmake --build . -j$$(nproc) --target $(BINARY_NAME)
+	@$(MAKE) bake-bpat
+	@echo "$(GREEN)✓ Application build complete$(RESET)"
+
 # Bake creature animation textures (BPAT) into assets/creatures/.
 # Runs after build so the bpat_baker binary exists. Idempotent.
 .PHONY: bake-bpat
@@ -183,7 +191,7 @@ run-map-pipeline:
 
 # Run the main application
 .PHONY: run
-run: run-map-pipeline build
+run: build-app
 	@echo "$(BOLD)$(BLUE)Running Standard of Iron...$(RESET)"
 	@python3 scripts/purge-stale-saves.py "$(CURDIR)"
 	@cd $(BUILD_DIR) && \

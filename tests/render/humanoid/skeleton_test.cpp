@@ -184,6 +184,38 @@ TEST(HumanoidSocketTest, HandSocketsMatchHandPositions) {
             k_eps);
 }
 
+TEST(HumanoidSocketTest, GripSocketFollowsHandSwingAxis) {
+  auto pose = make_upright_pose();
+  pose.elbow_r = QVector3D(0.18F, 1.28F, 0.05F);
+  pose.hand_r = QVector3D(0.42F, 1.02F, 0.42F);
+
+  QVector3D expected = pose.hand_r - pose.elbow_r;
+  ASSERT_GT(expected.lengthSquared(), 1e-6F);
+  expected.normalize();
+
+  QVector3D right_hint(1.0F, 0.0F, 0.0F);
+  right_hint -= expected * QVector3D::dotProduct(right_hint, expected);
+  ASSERT_GT(right_hint.lengthSquared(), 1e-6F);
+  right_hint.normalize();
+  QVector3D const forward = QVector3D::crossProduct(right_hint, expected).normalized();
+
+  pose.body_frames.hand_r.origin = pose.hand_r;
+  pose.body_frames.hand_r.right = right_hint;
+  pose.body_frames.hand_r.up = expected;
+  pose.body_frames.hand_r.forward = forward;
+  pose.body_frames.hand_r.radius = 0.05F;
+
+  BonePalette palette;
+  evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+
+  auto const grip = socket_attachment_frame(palette, HumanoidSocket::GripR);
+  QVector3D actual = grip.up;
+  ASSERT_GT(actual.lengthSquared(), 1e-6F);
+  actual.normalize();
+
+  EXPECT_GT(QVector3D::dotProduct(actual, expected), 0.9F);
+}
+
 TEST(HumanoidSocketTest, BackSocketIsBehindChest) {
   auto const pose = make_upright_pose();
   BonePalette palette;

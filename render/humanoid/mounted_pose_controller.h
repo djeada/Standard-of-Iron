@@ -160,6 +160,8 @@ private:
                        bool apply_right);
 
   void apply_fixed_head_frame(const MountedAttachmentFrame& mount,
+                              float extra_forward_tilt,
+                              float extra_side_tilt,
                               std::string_view debug_label);
 };
 

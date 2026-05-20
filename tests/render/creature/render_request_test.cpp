@@ -178,6 +178,9 @@ TEST(ArchetypeRegistryBaseline, VariantCountsReflectBakedClipFamilies) {
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::AttackSword),
             3U);
+  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_rider_base,
+                                   AnimationStateId::AttackSword),
+            1U);
   EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
                                    AnimationStateId::AttackBow),
             1U);
@@ -216,6 +219,12 @@ TEST(ArchetypeRegistryBaseline, ResolveBpatClipClampsInsideClipFamily) {
   EXPECT_EQ(reg.resolve_bpat_clip(
                 ArchetypeRegistry::k_humanoid_base, AnimationStateId::AttackSword, 99U),
             Render::Creature::k_humanoid_attack_sword_c_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_rider_base, AnimationStateId::AttackSword, 0U),
+            Render::Creature::k_humanoid_riding_sword_strike_clip);
+  EXPECT_EQ(reg.resolve_bpat_clip(
+                ArchetypeRegistry::k_rider_base, AnimationStateId::AttackSword, 99U),
+            Render::Creature::k_humanoid_riding_sword_strike_clip);
   EXPECT_EQ(
       reg.resolve_bpat_clip(ArchetypeRegistry::k_rider_base, AnimationStateId::Die, 3U),
       Render::Creature::k_humanoid_die_mounted_clip);

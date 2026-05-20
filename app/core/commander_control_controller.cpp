@@ -5,6 +5,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 #include <vector>
@@ -17,6 +18,8 @@
 #include "game/systems/command_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
+#include "game/systems/rpg_combat_system/rpg_combat_processor.h"
+#include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "render/gl/camera.h"
 
 namespace {
@@ -693,6 +696,40 @@ auto CommanderControlController::find_primary_target(
     }
   }
 
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander_id);
+  if (auto* engagement =
+          commander->get_component<Engine::Core::RpgEngagementComponent>()) {
+    std::array<Engine::Core::EntityID, 3> const ring_targets = {
+        engagement->front_attacker_id,
+        engagement->left_threat_id,
+        engagement->right_threat_id};
+    for (auto ring_target_id : ring_targets) {
+      auto* ring_target = world.get_entity(ring_target_id);
+      auto* ring_unit = ring_target != nullptr
+                            ? ring_target->get_component<Engine::Core::UnitComponent>()
+                            : nullptr;
+      auto* ring_transform =
+          ring_target != nullptr
+              ? ring_target->get_component<Engine::Core::TransformComponent>()
+              : nullptr;
+      if (ring_unit == nullptr || ring_transform == nullptr || ring_unit->health <= 0 ||
+          !owners.are_enemies(local_owner_id, ring_unit->owner_id)) {
+        continue;
+      }
+      const QVector3D ring_pos(
+          ring_transform->position.x, 0.0F, ring_transform->position.z);
+      QVector3D to_ring_target = ring_pos - origin;
+      float const dist_sq = to_ring_target.lengthSquared();
+      if (dist_sq > 0.0001F && dist_sq <= max_range_sq &&
+          has_clear_building_los(origin, ring_pos)) {
+        to_ring_target.normalize();
+        if (QVector3D::dotProduct(forward, to_ring_target) >= 0.05F) {
+          return ring_target_id;
+        }
+      }
+    }
+  }
+
   Engine::Core::EntityID best_id = 0;
   float best_score = -1000000.0F;
 
@@ -829,7 +866,8 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
       damage = std::max(1, attack->get_current_damage());
       attack->time_since_last = 0.0F;
     }
-    Game::Systems::Combat::deal_damage(&world, target, damage, commander_id);
+    Game::Systems::RpgCombat::deal_commander_attack_damage(
+        &world, target, damage, commander_id);
     if (auto* action =
             commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
       action->active_target_id = target_id;
@@ -1063,7 +1101,8 @@ void CommanderControlController::try_activate_vanguard_rush(
                                  target_transform->position.z);
       if ((target_pos - resolved).length() <= 2.35F &&
           has_clear_building_los(resolved, target_pos)) {
-        Game::Systems::Combat::deal_damage(&world, target, k_rush_damage, commander_id);
+        Game::Systems::RpgCombat::deal_commander_attack_damage(
+            &world, target, k_rush_damage, commander_id);
         if (target_unit->health > 0) {
           if (auto* stagger = target->get_component<Engine::Core::StaggerComponent>()) {
             stagger->remaining = std::max(stagger->remaining, k_rush_stagger_duration);

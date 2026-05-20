@@ -34,8 +34,8 @@ void MagicShrineRenderer::configure(
 }
 
 void MagicShrineRenderer::set_light_direction(const QVector3D& dir) {
-  m_light_direction =
-      dir.isNull() ? MagicShrineBatchParams::default_light_direction() : dir.normalized();
+  m_light_direction = dir.isNull() ? MagicShrineBatchParams::default_light_direction()
+                                   : dir.normalized();
   m_state.params.light_direction = m_light_direction;
 }
 
@@ -43,8 +43,9 @@ void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources)
   Q_UNUSED(resources);
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_state,
-      [](const MagicShrineInstanceGpu& inst) -> const QVector4D& { return inst.pos_scale; });
+      m_state, [](const MagicShrineInstanceGpu& inst) -> const QVector4D& {
+        return inst.pos_scale;
+      });
   if (visible_count == 0 || !m_state.instance_buffer) {
     return;
   }

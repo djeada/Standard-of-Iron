@@ -29,6 +29,8 @@ class HoverTracker;
 struct ViewportState {
   int width = 0;
   int height = 0;
+  qreal input_width = 0.0;
+  qreal input_height = 0.0;
 };
 
 class InputCommandHandler {

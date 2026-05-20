@@ -27,7 +27,7 @@ TEST(SelectionQueryService, ReportsMixedHoldStateForPartialSelection) {
   active->add_component<Engine::Core::HoldModeComponent>()->active = true;
   add_selected_unit(world, *selection, Game::Units::SpawnType::Spearman);
 
-  SelectionQueryService service(&world);
+  SelectionQueryService const service(&world);
   EXPECT_EQ(service.get_selected_units_toggle_state(QStringLiteral("hold")),
             QStringLiteral("mixed"));
 }
@@ -42,7 +42,7 @@ TEST(SelectionQueryService, IgnoresIneligibleUnitsInHoldState) {
   active->add_component<Engine::Core::HoldModeComponent>()->active = true;
   add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
 
-  SelectionQueryService service(&world);
+  SelectionQueryService const service(&world);
   EXPECT_EQ(service.get_selected_units_toggle_state(QStringLiteral("hold")),
             QStringLiteral("all"));
 }
@@ -57,9 +57,53 @@ TEST(SelectionQueryService, ReportsMixedFormationStateForPartialSelection) {
   active->add_component<Engine::Core::FormationModeComponent>()->active = true;
   add_selected_unit(world, *selection, Game::Units::SpawnType::Spearman);
 
-  SelectionQueryService service(&world);
+  SelectionQueryService const service(&world);
   EXPECT_EQ(service.get_selected_units_toggle_state(QStringLiteral("formation")),
             QStringLiteral("mixed"));
+}
+
+TEST(SelectionQueryService, BuilderSelectionEnablesCollectMode) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+
+  SelectionQueryService const service(&world);
+  QVariantMap const availability = service.get_selected_units_mode_availability();
+  EXPECT_TRUE(availability.value(QStringLiteral("canBuild")).toBool());
+  EXPECT_TRUE(availability.value(QStringLiteral("canCollect")).toBool());
+}
+
+TEST(SelectionQueryService, MixedSelectionUsesUnionAvailability) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+
+  SelectionQueryService const service(&world);
+  QVariantMap const availability = service.get_selected_units_mode_availability();
+  EXPECT_TRUE(availability.value(QStringLiteral("canAttack")).toBool());
+  EXPECT_TRUE(availability.value(QStringLiteral("canBuild")).toBool());
+  EXPECT_TRUE(availability.value(QStringLiteral("canCollect")).toBool());
+}
+
+TEST(SelectionQueryService, CommandModeIgnoresIneligibleUnitsForGuardState) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  auto* archer = add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
+  archer->add_component<Engine::Core::GuardModeComponent>()->active = true;
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Barracks);
+
+  SelectionQueryService const service(&world);
+  EXPECT_EQ(service.get_selected_units_command_mode(), QStringLiteral("guard"));
 }
 
 } // namespace
