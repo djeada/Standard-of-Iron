@@ -2,7 +2,7 @@
 
 ## Goal
 
-Add **The Iron Sepulcher** as a campaign-only, non-playable ancient death faction. This is not a normal third playable nation. Rome and Carthage stay as the main historical factions; Iron Sepulcher is a defensive undead hazard/enemy awakened by shrines, tombs, ruins, and late-campaign bloodshed.
+Add **The Iron Sepulcher** as a non-playable ancient death faction. This is not a normal third playable nation. Rome and Carthage stay as the main historical factions; Iron Sepulcher is a defensive undead hazard/enemy awakened by shrines, tombs, ruins, and late-campaign bloodshed.
 
 Core constraints:
 
@@ -13,7 +13,7 @@ Core constraints:
 - AI defaults to defense, shrine guarding, ambushes, and local retaliation.
 - Units never rout.
 - Weak to fire, priests/healers, and heavy cavalry shock.
-- Campaign/map scripts spawn them from shrines, ruins, tombs, and battlefields.
+- Campaign/map json scripts spawn them from shrines, ruins, tombs, and battlefields.
 
 ## Existing Repo Systems To Use
 
@@ -26,7 +26,6 @@ Core constraints:
 - Unit factories are registered in `game/units/factory.cpp`.
 - Unit implementations live in `game/units/*.cpp`.
 - AI strategy/state/config lives under `game/systems/ai_system/`.
-- Morale already exists as `Engine::Core::MoraleComponent` in `game/core/component.h`.
 - Commander aura/rally/death morale behavior already exists in `game/systems/commander_system.cpp`.
 - Map props already support `ruins` and `magic_shrine` in `game/map/map_definition.h`.
 - Fire props already exist as `firecamp`.
@@ -210,14 +209,6 @@ Core constraints:
 
 - [ ] Add `UndeadComponent` to the three undead unit constructors.
 
-- [ ] Update morale handling.
-  - Find all logic that applies `MoraleComponent`, especially `game/systems/commander_system.cpp` and combat morale shock code.
-  - If target has `UndeadComponent::morale_immune`, skip morale reduction, wavering, and routing.
-  - Acceptance: skeletons and Grave Priests never route even under commander death shock or cursed volleys.
-
-- [ ] Decide whether undead units should have no `MoraleComponent` or have one that never changes.
-  - Preferred: do not add `MoraleComponent` to undead units unless UI requires it.
-  - If UI expects morale, set morale to max and hide routing.
 
 - [ ] Update serialization in `game/core/serialization.cpp`.
   - Persist `UndeadComponent`.
@@ -274,11 +265,6 @@ Core constraints:
   - Add `std::vector<std::string> abilities` to `NationTroopVariant`.
   - Parse from troop JSON.
   - Merge through `TroopProfileService`.
-
-- [ ] Morale interaction.
-  - Living units hit by cursed arrows lose morale.
-  - Undead units ignore cursed morale effects.
-  - Cursed volley should pressure the player without doing high raw damage.
 
 - [ ] Tests.
   - Cursed arrows reduce living morale.
@@ -500,53 +486,6 @@ make test
 ```
 
 If the project does not use `make test` in the local environment, run the relevant CTest target from the build directory.
-
-## Phase 12: Minimum Vertical Slice
-
-The first playable slice should be intentionally small:
-
-- [ ] Add `NationID::IronSepulcher`.
-- [ ] Add three troop/spawn types.
-- [ ] Add `assets/data/nations/iron_sepulcher.json`.
-- [ ] Add base catalog entries.
-- [ ] Add factories using simple copied unit behavior.
-- [ ] Add `UndeadComponent` with morale immunity.
-- [ ] Add one test map or mission with:
-  - one `magic_shrine`
-  - one `undead_zone`
-  - 3 Skeleton Swordsmen
-  - 2 Skeleton Archers
-  - 1 Grave Priest
-- [ ] AI behavior: hold/guard shrine only, no production, no building.
-- [ ] Cursed volley and fireball can be placeholders in slice 1, but Grave Priest must at least heal undead.
-
-Acceptance for slice 1:
-
-- Rome/Carthage selection still works.
-- Iron Sepulcher is not selectable by player UI.
-- Map can spawn Iron Sepulcher units.
-- Undead units do not route.
-- Iron Sepulcher AI issues no economy/build commands.
-- Undead guard a shrine/ruin area and attack living units entering it.
-- Save/load does not lose undead unit nation IDs.
-
-## Balance Targets
-
-- Skeleton Swordsman:
-  - Low damage, low speed, weak one-on-one.
-  - Threat comes from numbers and morale immunity.
-  - Should lose to disciplined Roman infantry at equal population unless supported.
-
-- Skeleton Archer:
-  - Low accuracy/low damage feel.
-  - High pressure from volume and cursed morale later.
-  - Dangerous from ruins, weak if caught in melee.
-
-- Grave Priest:
-  - Highest priority target.
-  - Heals undead.
-  - Uses fire magic.
-  - Fragile if reached by cavalry or focused archers.
 
 ## Important Non-Goals
 
