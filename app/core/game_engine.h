@@ -317,6 +317,8 @@ public:
   Q_INVOKABLE void start_builder_construction(const QString& item_type);
   Q_INVOKABLE [[nodiscard]] QVariantMap
   get_unit_production_info(const QString& unit_type, const QString& nation_id) const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap
+  get_construction_info(const QString& item_type) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_hud_action_states() const;
   Q_INVOKABLE [[nodiscard]] QString get_selected_units_command_mode() const;
   Q_INVOKABLE [[nodiscard]] QString

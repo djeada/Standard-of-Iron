@@ -5,6 +5,9 @@
       "display_name": "Archer",
       "production": {
         "cost": 50,
+        "resource_costs": {
+          "wood": 6
+        },
         "build_time": 5.0,
         "priority": 10,
         "is_melee": false
@@ -39,6 +42,10 @@
       "display_name": "Swordsman",
       "production": {
         "cost": 90,
+        "resource_costs": {
+          "wood": 10,
+          "iron": 4
+        },
         "build_time": 7.0,
         "priority": 10,
         "is_melee": true
@@ -74,6 +81,10 @@
       "display_name": "Spearman",
       "production": {
         "cost": 75,
+        "resource_costs": {
+          "wood": 8,
+          "iron": 2
+        },
         "build_time": 6.0,
         "priority": 5,
         "is_melee": true
@@ -109,6 +120,10 @@
       "display_name": "Mounted Knight",
       "production": {
         "cost": 150,
+        "resource_costs": {
+          "wood": 16,
+          "iron": 10
+        },
         "build_time": 10.0,
         "priority": 15,
         "is_melee": true
@@ -142,6 +157,10 @@
       "display_name": "Horse Archer",
       "production": {
         "cost": 120,
+        "resource_costs": {
+          "wood": 18,
+          "iron": 8
+        },
         "build_time": 9.0,
         "priority": 12,
         "is_melee": false
@@ -175,6 +194,10 @@
       "display_name": "Horse Spearman",
       "production": {
         "cost": 140,
+        "resource_costs": {
+          "wood": 18,
+          "iron": 9
+        },
         "build_time": 9.5,
         "priority": 13,
         "is_melee": true
@@ -208,6 +231,10 @@
       "display_name": "Healer",
       "production": {
         "cost": 75,
+        "resource_costs": {
+          "wood": 6,
+          "stone": 2
+        },
         "build_time": 7.0,
         "priority": 8,
         "is_melee": false
@@ -242,6 +269,10 @@
       "display_name": "Catapult",
       "production": {
         "cost": 250,
+        "resource_costs": {
+          "wood": 90,
+          "iron": 35
+        },
         "build_time": 15.0,
         "priority": 5,
         "is_melee": false
@@ -276,6 +307,10 @@
       "display_name": "Ballista",
       "production": {
         "cost": 200,
+        "resource_costs": {
+          "wood": 75,
+          "iron": 45
+        },
         "build_time": 12.0,
         "priority": 6,
         "is_melee": false
@@ -310,6 +345,10 @@
       "display_name": "War Elephant",
       "production": {
         "cost": 350,
+        "resource_costs": {
+          "wood": 24,
+          "iron": 16
+        },
         "build_time": 20.0,
         "priority": 2,
         "is_melee": true

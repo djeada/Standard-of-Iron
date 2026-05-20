@@ -22,6 +22,7 @@
 #include <qvectornd.h>
 
 #include <algorithm>
+#include <mutex>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -33,6 +34,7 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/systems/ai_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/global_stats_registry.h"
@@ -79,6 +81,12 @@ void SkirmishLoader::reset_game_state() {
 
   m_renderer.pause();
   m_renderer.lock_world_for_modification();
+  const std::lock_guard<std::recursive_mutex> world_lock(m_world.get_entity_mutex());
+
+  if (auto* ai_system = m_world.get_system<Game::Systems::AISystem>()) {
+    ai_system->shutdown_workers();
+  }
+
   m_renderer.set_selected_entities({});
   m_renderer.set_hovered_entity_id(0);
 

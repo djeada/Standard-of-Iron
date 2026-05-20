@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "../systems/resource_types.h"
 #include "troop_type.h"
 
 namespace Game::Units {
@@ -31,6 +32,7 @@ struct TroopCombatStats {
 
 struct TroopProductionStats {
   int cost = 100;
+  Game::Systems::ResourceAmounts resource_costs{};
   float build_time = 4.0F;
   int priority = 0;
   bool is_melee = true;

@@ -121,19 +121,20 @@ TEST_F(BattleRenderOptimizerTest, BelowThresholdAlwaysRenders) {
   EXPECT_TRUE(optimizer.should_render_unit(3, nullptr, false, false));
 }
 
-TEST_F(BattleRenderOptimizerTest, AboveThresholdSkipsIdleUnitsAlternately) {
+TEST_F(BattleRenderOptimizerTest, AboveThresholdStillRendersIdleUnitsEveryFrame) {
   auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
-  uint32_t const frame = optimizer.frame_counter();
   bool const unit1_render = optimizer.should_render_unit(1, nullptr, false, false);
   bool const unit2_render = optimizer.should_render_unit(2, nullptr, false, false);
 
-  EXPECT_NE(unit1_render, unit2_render);
+  EXPECT_TRUE(unit1_render);
+  EXPECT_TRUE(unit2_render);
+  EXPECT_EQ(optimizer.units_skipped_temporal(), 0);
 }
 
-TEST_F(BattleRenderOptimizerTest, TemporalCullingAlternatesBetweenFrames) {
+TEST_F(BattleRenderOptimizerTest, TemporalCullingDoesNotDropDrawSubmission) {
   auto& optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
@@ -143,7 +144,9 @@ TEST_F(BattleRenderOptimizerTest, TemporalCullingAlternatesBetweenFrames) {
   optimizer.begin_frame();
   bool const frame2_result = optimizer.should_render_unit(1, nullptr, false, false);
 
-  EXPECT_NE(frame1_result, frame2_result);
+  EXPECT_TRUE(frame1_result);
+  EXPECT_TRUE(frame2_result);
+  EXPECT_EQ(optimizer.units_skipped_temporal(), 0);
 }
 
 TEST_F(BattleRenderOptimizerTest, ActiveCombatUnitsAlwaysRender) {

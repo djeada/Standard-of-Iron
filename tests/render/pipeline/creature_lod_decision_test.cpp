@@ -86,7 +86,7 @@ TEST(CreatureLodDecision, BudgetIgnoredWhenNotEnabled) {
   EXPECT_EQ(d.lod, CreatureLOD::Full);
 }
 
-TEST(CreatureLodDecision, TemporalSkipMinimalFiresWhenFarAndOffPhase) {
+TEST(CreatureLodDecision, TemporalSkipMinimalDoesNotCullDrawSubmission) {
   auto in = make_inputs(46.0F);
   in.thresholds = {12.0F, 80.0F};
   in.temporal = TemporalSkipParams{45.0F, 3U};
@@ -94,11 +94,11 @@ TEST(CreatureLodDecision, TemporalSkipMinimalFiresWhenFarAndOffPhase) {
   in.instance_seed = 0U;
   const auto d = decide_creature_lod(in);
   EXPECT_EQ(d.lod, CreatureLOD::Minimal);
-  EXPECT_TRUE(d.culled);
-  EXPECT_EQ(d.reason, CullReason::Temporal);
+  EXPECT_FALSE(d.culled);
+  EXPECT_EQ(d.reason, CullReason::None);
 }
 
-TEST(CreatureLodDecision, TemporalSkipMinimalRendersOnPhase) {
+TEST(CreatureLodDecision, TemporalSkipMinimalAlsoRendersOnPhase) {
   auto in = make_inputs(46.0F);
   in.thresholds = {12.0F, 80.0F};
   in.temporal = TemporalSkipParams{45.0F, 3U};

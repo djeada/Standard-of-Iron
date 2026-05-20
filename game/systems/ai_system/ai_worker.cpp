@@ -28,9 +28,6 @@ AIWorker::AIWorker(AIReasoner& reasoner,
 AIWorker::~AIWorker() {
   stop();
 
-  { std::lock_guard<std::mutex> const lock(m_job_mutex); }
-  m_job_condition.notify_all();
-
   if (m_thread.joinable()) {
     m_thread.join();
   }
@@ -65,6 +62,12 @@ void AIWorker::drain_results(std::queue<AIResult>& out) {
 
 void AIWorker::stop() {
   m_should_stop.store(true, std::memory_order_release);
+  {
+    std::lock_guard<std::mutex> const lock(m_job_mutex);
+    m_has_pending_job = false;
+    m_pending_job = AIJob{};
+  }
+  m_job_condition.notify_all();
 }
 
 void AIWorker::worker_loop() {
@@ -95,6 +98,7 @@ void AIWorker::worker_loop() {
       Game::Systems::AI::AIReasoner::validate_state(result.context);
       Game::Systems::AI::AIExecutor::run(
           job.snapshot, result.context, job.delta_time, m_registry, result.commands);
+      result.context.nation = nullptr;
 
       {
         std::lock_guard<std::mutex> const lock(m_result_mutex);
