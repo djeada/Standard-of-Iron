@@ -13,6 +13,7 @@
 #include "systems/command_service.h"
 #include "systems/nation_id.h"
 #include "systems/pathfinding.h"
+#include "systems/player_resource_registry.h"
 #include "systems/production_system.h"
 #include "systems/wall_network_service.h"
 #include "units/factory.h"
@@ -27,6 +28,7 @@ class WallMechanicsTest : public ::testing::Test {
 protected:
   void SetUp() override {
     BuildingCollisionRegistry::instance().clear();
+    PlayerResourceRegistry::instance().clear();
     CommandService::initialize(8, 8);
 
     auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
@@ -36,6 +38,7 @@ protected:
 
   void TearDown() override {
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
+    PlayerResourceRegistry::instance().clear();
     BuildingCollisionRegistry::instance().clear();
   }
 
@@ -81,6 +84,21 @@ protected:
     construction->build_time = 1.0F;
     construction->progress = 0.0F;
     return site;
+  }
+
+  auto
+  make_tower(Engine::Core::World& world, float x, float z, int owner_id) -> Entity* {
+    auto* tower = world.create_entity();
+    tower->add_component<TransformComponent>(x, 0.0F, z);
+    tower->add_component<RenderableComponent>("mesh", "texture");
+    auto* unit = tower->add_component<UnitComponent>(2000, 2000, 0.0F, 20.0F);
+    unit->owner_id = owner_id;
+    unit->spawn_type = Game::Units::SpawnType::DefenseTower;
+    unit->nation_id = Game::Systems::NationID::RomanRepublic;
+    tower->add_component<BuildingComponent>();
+    BuildingCollisionRegistry::instance().register_building(
+        tower->get_id(), "defense_tower", x, z, owner_id);
+    return tower;
   }
 };
 
@@ -187,6 +205,80 @@ TEST_F(WallMechanicsTest, AdjacentWallsRefreshConnectionVisuals) {
   EXPECT_NE(right_renderable->renderer_id.find("wall_segment_end"), std::string::npos);
 }
 
+TEST_F(WallMechanicsTest, EnemyWallsDoNotMergeConnectionVisuals) {
+  Engine::Core::World world;
+
+  auto* left = make_wall(world, 0.0F, 0.0F, 0.0F, 1);
+  auto* right = make_wall(world, 2.0F, 0.0F, 0.0F, 2);
+
+  WallNetworkService::refresh_world(world);
+
+  const auto* left_wall = left->get_component<WallSegmentComponent>();
+  const auto* right_wall = right->get_component<WallSegmentComponent>();
+  ASSERT_NE(left_wall, nullptr);
+  ASSERT_NE(right_wall, nullptr);
+
+  EXPECT_EQ(left_wall->connection_mask, 0);
+  EXPECT_EQ(right_wall->connection_mask, 0);
+}
+
+TEST_F(WallMechanicsTest, WallConnectionsIncludeFriendlyTowerSockets) {
+  Engine::Core::World world;
+
+  auto* wall = make_wall(world, 0.0F, 0.0F, 0.0F, 1);
+  make_tower(world, 2.0F, 0.0F, 1);
+
+  WallNetworkService::refresh_world(world);
+
+  const auto* wall_segment = wall->get_component<WallSegmentComponent>();
+  ASSERT_NE(wall_segment, nullptr);
+  EXPECT_EQ(wall_segment->connection_mask, WallNetworkService::k_connection_east);
+}
+
+TEST_F(WallMechanicsTest, ConstructionSitesUseSiteOwnerForFriendlyTowerSockets) {
+  Engine::Core::World world;
+
+  auto* site = make_construction_site(world, 0.0F, 0.0F, 1);
+  make_tower(world, 2.0F, 0.0F, 1);
+
+  WallNetworkService::refresh_world(world);
+
+  const auto* wall_segment = site->get_component<WallSegmentComponent>();
+  ASSERT_NE(wall_segment, nullptr);
+  EXPECT_EQ(wall_segment->connection_mask, WallNetworkService::k_connection_east);
+}
+
+TEST_F(WallMechanicsTest, TowerSnapSocketFindsNearestFriendlyWallEndpoint) {
+  Engine::Core::World world;
+
+  make_wall(world, 0.0F, 0.0F, 0.0F, 1);
+  const auto wall_grid = WallNetworkService::snap_world_position(0.0F, 0.0F);
+  const auto endpoint_world = CommandService::grid_to_world(Game::Systems::Point{
+      wall_grid.x + WallNetworkService::k_segment_spacing, wall_grid.z});
+
+  const auto snapped = WallNetworkService::find_tower_snap_socket(
+      world, 1, endpoint_world.x() + 0.1F, endpoint_world.z() + 0.1F);
+
+  ASSERT_TRUE(snapped.has_value());
+  EXPECT_EQ(snapped->x, wall_grid.x + WallNetworkService::k_segment_spacing);
+  EXPECT_EQ(snapped->z, wall_grid.z);
+}
+
+TEST_F(WallMechanicsTest, TowerSnapSocketRejectsOccupiedEndpoint) {
+  Engine::Core::World world;
+
+  make_wall(world, 0.0F, 0.0F, 0.0F, 1);
+  make_tower(world, 2.0F, 0.0F, 1);
+  const auto wall_grid = WallNetworkService::snap_world_position(0.0F, 0.0F);
+  const auto endpoint_world = CommandService::grid_to_world(Game::Systems::Point{
+      wall_grid.x + WallNetworkService::k_segment_spacing, wall_grid.z});
+
+  const auto snapped = WallNetworkService::find_tower_snap_socket(
+      world, 1, endpoint_world.x() + 0.1F, endpoint_world.z() + 0.1F);
+
+  EXPECT_FALSE(snapped.has_value());
+}
+
 TEST_F(WallMechanicsTest, BuilderConstructionQueueConsumesMultipleWallSites) {
   Engine::Core::World world;
 
@@ -225,6 +317,50 @@ TEST_F(WallMechanicsTest, BuilderConstructionQueueConsumesMultipleWallSites) {
   EXPECT_TRUE(production->has_construction_site);
   EXPECT_EQ(production->construction_site_entity_id, second_site->get_id());
   EXPECT_FLOAT_EQ(production->construction_site_x, 4.0F);
+}
+
+TEST_F(WallMechanicsTest, InvalidatedWallSiteRefundsWoodAndAdvancesQueue) {
+  Engine::Core::World world;
+
+  PlayerResourceRegistry::instance().set(1, ResourceType::Wood, 0);
+  PlayerResourceRegistry::instance().set(2, ResourceType::Wood, 0);
+
+  auto* first_site = make_construction_site(world, 2.0F, 0.0F, 1);
+  auto* second_site = make_construction_site(world, 4.0F, 0.0F, 1);
+  make_wall(world, 2.0F, 0.0F, 0.0F, 3);
+
+  auto* builder = world.create_entity();
+  builder->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  builder->add_component<MovementComponent>();
+  auto* unit = builder->add_component<UnitComponent>(100, 100, 1.0F, 10.0F);
+  unit->owner_id = 2;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+
+  auto* production = builder->add_component<BuilderProductionComponent>();
+  production->product_type = "wall_segment";
+  production->build_time = 1.0F;
+  production->time_remaining = 0.0F;
+  production->has_construction_site = true;
+  production->construction_site_entity_id = first_site->get_id();
+  production->construction_site_x = 2.0F;
+  production->construction_site_z = 0.0F;
+  production->at_construction_site = true;
+  production->in_progress = true;
+  production->queued_construction_site_ids.push_back(second_site->get_id());
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_EQ(world.get_entity(first_site->get_id()), nullptr);
+  EXPECT_EQ(PlayerResourceRegistry::instance().get(1, ResourceType::Wood),
+            WallNetworkService::k_wall_segment_wood_cost);
+  EXPECT_EQ(PlayerResourceRegistry::instance().get(2, ResourceType::Wood), 0);
+  EXPECT_TRUE(production->has_construction_site);
+  EXPECT_EQ(production->construction_site_entity_id, second_site->get_id());
+  EXPECT_FALSE(production->in_progress);
+  EXPECT_FALSE(production->construction_complete);
+  EXPECT_TRUE(production->queued_construction_site_ids.empty());
 }
 
 // ---- Builder production dispatch ----

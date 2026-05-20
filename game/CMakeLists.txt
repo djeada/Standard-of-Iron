@@ -16,6 +16,7 @@ add_library(game_systems STATIC
     systems/movement_system.cpp
     systems/combat_system.cpp
     systems/combat_system/combat_utils.cpp
+    systems/combat_system/damage_application.cpp
     systems/combat_system/damage_processor.cpp
     systems/combat_system/combat_mode_processor.cpp
     systems/combat_system/auto_engagement.cpp
@@ -23,6 +24,7 @@ add_library(game_systems STATIC
     systems/combat_system/combat_state_processor.cpp
     systems/combat_system/attack_processor.cpp
     systems/cleanup_system.cpp
+    systems/rpg_combat_system/rpg_commander_damage.cpp
     systems/rpg_combat_system/rpg_damage_resolver.cpp
     systems/rpg_combat_system/rpg_combat_processor.cpp
     systems/ai_system.cpp

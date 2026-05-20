@@ -227,8 +227,9 @@ void GameStateRestorer::restore_environment_from_metadata(
       if (scene.scatter != nullptr) {
         scene.scatter->configure(*height_map,
                                  terrain_service.biome_settings(),
+                                 terrain_service.authored_world_props(),
                                  terrain_service.world_props(),
-                                 true);
+                                 false);
       }
     }
 

@@ -168,6 +168,7 @@
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 #include "renderer_bootstrap.h"
+#include "rts_action_model.h"
 #include "selection_query_service.h"
 #include "utils/resource_utils.h"
 #include "visibility_coordinator.h"
@@ -471,6 +472,10 @@ GameEngine::GameEngine(QObject* parent)
           &ProductionManager::placing_construction_changed,
           this,
           &GameEngine::placing_construction_changed);
+  connect(m_production_manager.get(),
+          &ProductionManager::construction_preview_active_changed,
+          this,
+          &GameEngine::construction_preview_active_changed);
   connect(m_production_manager.get(),
           &ProductionManager::construction_preview_valid_changed,
           this,
@@ -900,6 +905,9 @@ void GameEngine::on_heal_command() {
     return;
   }
   ensure_initialized();
+  if (!is_action_enabled(QStringLiteral("heal"))) {
+    return;
+  }
   m_cursor_manager->set_mode(CursorMode::Heal);
 }
 
@@ -908,6 +916,9 @@ void GameEngine::on_build_command() {
     return;
   }
   ensure_initialized();
+  if (!is_action_enabled(QStringLiteral("build"))) {
+    return;
+  }
   m_cursor_manager->set_mode(CursorMode::Build);
 }
 
@@ -1006,8 +1017,24 @@ auto GameEngine::is_placing_construction() const -> bool {
   return m_production_manager ? m_production_manager->is_placing_construction() : false;
 }
 
+auto GameEngine::pending_builder_construction_type() const -> QString {
+  return m_production_manager
+             ? m_production_manager->pending_builder_construction_type()
+             : QString();
+}
+
+auto GameEngine::construction_preview_active() const -> bool {
+  return m_production_manager ? m_production_manager->construction_preview_active()
+                              : false;
+}
+
 auto GameEngine::construction_preview_valid() const -> bool {
   return m_production_manager ? m_production_manager->construction_preview_valid()
+                              : false;
+}
+
+auto GameEngine::construction_preview_rotatable() const -> bool {
+  return m_production_manager ? m_production_manager->construction_preview_rotatable()
                               : false;
 }
 
@@ -1031,21 +1058,37 @@ auto GameEngine::construction_preview_total_cost() const -> int {
 void GameEngine::on_construction_mouse_move(qreal sx, qreal sy) {
   ensure_initialized();
   if (m_production_manager) {
-    m_production_manager->on_construction_mouse_move(sx, sy, m_viewport);
+    QPointF const viewport_point = map_input_to_viewport(sx, sy);
+    m_production_manager->on_construction_mouse_move(
+        viewport_point.x(), viewport_point.y(), m_viewport);
   }
 }
 
 void GameEngine::on_construction_pointer_pressed(qreal sx, qreal sy) {
   ensure_initialized();
   if (m_production_manager) {
-    m_production_manager->on_construction_pointer_pressed(sx, sy, m_viewport);
+    QPointF const viewport_point = map_input_to_viewport(sx, sy);
+    m_production_manager->on_construction_pointer_pressed(
+        viewport_point.x(), viewport_point.y(), m_viewport);
   }
 }
 
 void GameEngine::on_construction_pointer_released(qreal sx, qreal sy) {
   ensure_initialized();
   if (m_production_manager) {
-    m_production_manager->on_construction_pointer_released(sx, sy, m_viewport);
+    QPointF const viewport_point = map_input_to_viewport(sx, sy);
+    m_production_manager->on_construction_pointer_released(
+        viewport_point.x(), viewport_point.y(), m_viewport);
+  }
+  if (!is_placing_construction()) {
+    set_cursor_mode(CursorMode::Normal);
+  }
+}
+
+void GameEngine::on_construction_scroll(float delta) {
+  ensure_initialized();
+  if (m_production_manager) {
+    m_production_manager->on_construction_scroll(delta);
   }
 }
 
@@ -1054,11 +1097,17 @@ void GameEngine::on_construction_confirm() {
   if (m_production_manager) {
     m_production_manager->on_construction_confirm();
   }
+  if (!is_placing_construction()) {
+    set_cursor_mode(CursorMode::Normal);
+  }
 }
 
 void GameEngine::on_construction_cancel() {
   if (m_production_manager) {
     m_production_manager->on_construction_cancel();
+  }
+  if (!is_placing_construction()) {
+    set_cursor_mode(CursorMode::Normal);
   }
 }
 
@@ -1427,9 +1476,9 @@ void GameEngine::confirm_commander_flag_rally(qreal sx, qreal sy) {
   auto* commander = m_control_mode == PlayerControlMode::Commander
                         ? controlled_commander_entity()
                         : find_local_commander();
-  auto* unit =
-      commander != nullptr ? commander->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
+  auto* unit = commander != nullptr
+                   ? commander->get_component<Engine::Core::UnitComponent>()
+                   : nullptr;
   auto* commander_data =
       commander != nullptr
           ? commander->get_component<Engine::Core::CommanderComponent>()
@@ -1442,8 +1491,8 @@ void GameEngine::confirm_commander_flag_rally(qreal sx, qreal sy) {
   }
 
   std::vector<Engine::Core::EntityID> const commander_selection{commander->get_id()};
-  auto const move_plan =
-      Game::Systems::CommandService::plan_ground_move(*m_world, commander_selection, hit);
+  auto const move_plan = Game::Systems::CommandService::plan_ground_move(
+      *m_world, commander_selection, hit);
   if (move_plan.positions.empty()) {
     cancel_commander_flag_rally();
     return;
@@ -1459,7 +1508,8 @@ void GameEngine::confirm_commander_flag_rally(qreal sx, qreal sy) {
     stamina->run_requested = false;
     stamina->is_running = false;
   }
-  Game::Systems::CommandService::issue_ground_move(*m_world, commander_selection, move_plan);
+  Game::Systems::CommandService::issue_ground_move(
+      *m_world, commander_selection, move_plan);
 
   m_commander_rally_preview_pos = std::nullopt;
   set_cursor_mode(CursorMode::Normal);
@@ -1467,8 +1517,7 @@ void GameEngine::confirm_commander_flag_rally(qreal sx, qreal sy) {
 
 void GameEngine::cancel_commander_flag_rally() {
   m_commander_rally_preview_pos = std::nullopt;
-  if (m_cursor_manager &&
-      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
+  if (m_cursor_manager && m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
     set_cursor_mode(CursorMode::Normal);
   }
 }
@@ -1486,18 +1535,53 @@ auto GameEngine::get_commander_rally_preview() const -> QVector3D {
   return m_commander_rally_preview_pos.value_or(QVector3D{});
 }
 
+void GameEngine::begin_barracks_rally_placement() {
+  ensure_initialized();
+  if (!has_selected_local_barracks()) {
+    return;
+  }
+
+  m_commander_rally_preview_pos = std::nullopt;
+  set_cursor_mode(CursorMode::PlaceBarracksRally);
+  seed_barracks_rally_preview_from_selection();
+}
+
+void GameEngine::confirm_barracks_rally_placement(qreal sx, qreal sy) {
+  if (m_cursor_manager == nullptr ||
+      m_cursor_manager->mode() != CursorMode::PlaceBarracksRally) {
+    return;
+  }
+  if (!has_selected_local_barracks() || m_production_manager == nullptr) {
+    cancel_barracks_rally_placement();
+    return;
+  }
+
+  if (!m_production_manager->set_rally_at_screen(
+          sx, sy, m_runtime.local_owner_id, m_viewport)) {
+    return;
+  }
+
+  m_commander_rally_preview_pos = std::nullopt;
+  set_cursor_mode(CursorMode::Normal);
+}
+
+void GameEngine::cancel_barracks_rally_placement() {
+  m_commander_rally_preview_pos = std::nullopt;
+  if (m_cursor_manager && m_cursor_manager->mode() == CursorMode::PlaceBarracksRally) {
+    set_cursor_mode(CursorMode::Normal);
+  }
+}
+
 auto GameEngine::has_commander_rally_flag() const -> bool {
   if (m_world == nullptr) {
     return false;
   }
-  for (auto* entity :
-       m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
+  for (auto* entity : m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->owner_id != m_runtime.local_owner_id) {
       continue;
     }
-    auto* commander_data =
-        entity->get_component<Engine::Core::CommanderComponent>();
+    auto* commander_data = entity->get_component<Engine::Core::CommanderComponent>();
     if (commander_data != nullptr && commander_data->flag_rally_flag_active) {
       return true;
     }
@@ -1509,18 +1593,15 @@ auto GameEngine::get_commander_rally_flag_position() const -> QVector3D {
   if (m_world == nullptr) {
     return {};
   }
-  for (auto* entity :
-       m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
+  for (auto* entity : m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->owner_id != m_runtime.local_owner_id) {
       continue;
     }
-    auto* commander_data =
-        entity->get_component<Engine::Core::CommanderComponent>();
+    auto* commander_data = entity->get_component<Engine::Core::CommanderComponent>();
     if (commander_data != nullptr && commander_data->flag_rally_flag_active) {
-      return {commander_data->flag_rally_flag_x,
-              0.0F,
-              commander_data->flag_rally_flag_z};
+      return {
+          commander_data->flag_rally_flag_x, 0.0F, commander_data->flag_rally_flag_z};
     }
   }
   return {};
@@ -1533,16 +1614,84 @@ void GameEngine::seed_commander_rally_preview_from_view_center() {
   }
 
   QVector3D hit;
-  if (!m_picking_service->screen_to_ground(QPointF(m_viewport.width * 0.5,
-                                                   m_viewport.height * 0.5),
-                                           *m_camera,
-                                           m_viewport.width,
-                                           m_viewport.height,
-                                           hit)) {
+  if (!m_picking_service->screen_to_ground(
+          QPointF(m_viewport.width * 0.5, m_viewport.height * 0.5),
+          *m_camera,
+          m_viewport.width,
+          m_viewport.height,
+          hit)) {
     return;
   }
   m_commander_rally_preview_pos =
       Game::Systems::CommandService::snap_to_walkable_ground(hit);
+}
+
+void GameEngine::seed_barracks_rally_preview_from_selection() {
+  if (m_world == nullptr) {
+    return;
+  }
+
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return;
+  }
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  for (auto const entity_id : selection_system->get_selected_units()) {
+    auto* entity = m_world->get_entity(entity_id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if ((unit == nullptr) || unit->owner_id != m_runtime.local_owner_id ||
+        unit->spawn_type != Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+
+    if (auto* production = entity->get_component<Engine::Core::ProductionComponent>();
+        production != nullptr && production->rally_set) {
+      m_commander_rally_preview_pos = QVector3D(
+          production->rally_x,
+          terrain.resolve_surface_world_y(production->rally_x, production->rally_z),
+          production->rally_z);
+      return;
+    }
+
+    if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
+      m_commander_rally_preview_pos = QVector3D(
+          transform->position.x,
+          terrain.resolve_surface_world_y(transform->position.x, transform->position.z),
+          transform->position.z);
+      return;
+    }
+  }
+}
+
+auto GameEngine::has_selected_local_barracks() const -> bool {
+  if (m_world == nullptr) {
+    return false;
+  }
+
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return false;
+  }
+
+  for (auto const entity_id : selection_system->get_selected_units()) {
+    auto* entity = m_world->get_entity(entity_id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if ((unit != nullptr) && unit->owner_id == m_runtime.local_owner_id &&
+        unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void GameEngine::restore_controlled_commander_direct_control_if_ready() {
@@ -1551,9 +1700,9 @@ void GameEngine::restore_controlled_commander_direct_control_if_ready() {
   }
 
   auto* commander = controlled_commander_entity();
-  auto* unit =
-      commander != nullptr ? commander->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
+  auto* unit = commander != nullptr
+                   ? commander->get_component<Engine::Core::UnitComponent>()
+                   : nullptr;
   auto* commander_data =
       commander != nullptr
           ? commander->get_component<Engine::Core::CommanderComponent>()
@@ -1702,16 +1851,24 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
   }
   update_civilian_delivery_availability();
 
-  // Update rally flag preview position when in placement mode.
-  if (m_cursor_manager &&
-      m_cursor_manager->mode() == CursorMode::PlaceCommanderRally &&
-      m_picking_service != nullptr && m_camera != nullptr) {
-    QVector3D hit;
-    if (m_picking_service->screen_to_ground(
-            QPointF(sx, sy), *m_camera, m_viewport.width, m_viewport.height, hit)) {
-      m_commander_rally_preview_pos =
-          Game::Systems::CommandService::snap_to_walkable_ground(hit);
-    }
+  if (m_cursor_manager == nullptr || m_picking_service == nullptr ||
+      m_camera == nullptr) {
+    return;
+  }
+
+  QVector3D hit;
+  if (m_cursor_manager->mode() == CursorMode::PlaceCommanderRally &&
+      m_picking_service->screen_to_ground(
+          QPointF(sx, sy), *m_camera, m_viewport.width, m_viewport.height, hit)) {
+    m_commander_rally_preview_pos =
+        Game::Systems::CommandService::snap_to_walkable_ground(hit);
+  } else if (m_cursor_manager->mode() == CursorMode::PlaceBarracksRally &&
+             m_picking_service->screen_to_surface(QPointF(sx, sy),
+                                                  *m_camera,
+                                                  m_viewport.width,
+                                                  m_viewport.height,
+                                                  hit)) {
+    m_commander_rally_preview_pos = hit;
   }
 }
 
@@ -2073,6 +2230,13 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   update_cursor_position();
 }
 
+void GameEngine::set_input_viewport_size(qreal width, qreal height) {
+  if (width > 0.0 && height > 0.0) {
+    m_viewport.input_width = width;
+    m_viewport.input_height = height;
+  }
+}
+
 void GameEngine::render_game_effects() {
   auto* res = m_renderer->resources();
   if (res == nullptr) {
@@ -2109,12 +2273,11 @@ void GameEngine::render_game_effects() {
 
   // Render the commander rally flag preview (during placement mode) and
   // any placed rally flags from CommanderComponents.
-  Render::GL::render_commander_rally_flags(
-      m_renderer.get(),
-      res,
-      m_world.get(),
-      m_runtime.local_owner_id,
-      m_commander_rally_preview_pos);
+  Render::GL::render_commander_rally_flags(m_renderer.get(),
+                                           res,
+                                           m_world.get(),
+                                           m_runtime.local_owner_id,
+                                           m_commander_rally_preview_pos);
 
   if (m_command_controller && m_command_controller->is_placing_formation()) {
     Render::GL::FormationPlacementInfo placement;
@@ -2291,25 +2454,94 @@ auto GameEngine::world_to_screen(const QVector3D& world,
                                      out_screen);
 }
 
+auto GameEngine::map_input_to_viewport(qreal sx, qreal sy) const -> QPointF {
+  if (m_viewport.width <= 0 || m_viewport.height <= 0 ||
+      m_viewport.input_width <= 0.0 || m_viewport.input_height <= 0.0) {
+    return {sx, sy};
+  }
+
+  qreal const scale_x = qreal(m_viewport.width) / m_viewport.input_width;
+  qreal const scale_y = qreal(m_viewport.height) / m_viewport.input_height;
+  return {sx * scale_x, sy * scale_y};
+}
+
 void GameEngine::sync_selection_flags() {
+  if (!m_world) {
+    return;
+  }
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-  if (!m_world || (selection_system == nullptr)) {
+  if (selection_system == nullptr) {
     return;
   }
 
   App::Utils::sanitize_selection(m_world.get(), selection_system);
-
-  if (selection_system->get_selected_units().empty()) {
-    if (m_cursor_manager && m_cursor_manager->mode() != CursorMode::Normal) {
-      set_cursor_mode(CursorMode::Normal);
-    }
-  }
+  prune_unavailable_action_context();
 
   emit hold_mode_changed(any_selected_in_hold_mode());
   emit guard_mode_changed(any_selected_in_guard_mode());
   emit formation_mode_changed(any_selected_in_formation_mode());
   emit run_mode_changed(any_selected_in_run_mode());
   update_civilian_delivery_availability();
+}
+
+void GameEngine::prune_unavailable_action_context() {
+  auto const states = get_hud_action_states();
+  auto const state_enabled = [&states](const QString& action_id) {
+    return states.value(action_id).toMap().value(QStringLiteral("enabled")).toBool();
+  };
+
+  if (m_production_manager && m_production_manager->is_placing_construction()) {
+    QString const action_id =
+        (m_production_manager->pending_builder_construction_type() ==
+         QStringLiteral("collect"))
+            ? QStringLiteral("collect")
+            : QStringLiteral("build");
+    if (!state_enabled(action_id)) {
+      on_construction_cancel();
+    }
+  }
+
+  if (m_command_controller && m_command_controller->is_placing_formation() &&
+      !state_enabled(QStringLiteral("formation"))) {
+    on_formation_cancel();
+  }
+
+  if (m_cursor_manager == nullptr) {
+    return;
+  }
+
+  if (m_cursor_manager->mode() == CursorMode::PlaceBarracksRally) {
+    if (!has_selected_local_barracks()) {
+      cancel_barracks_rally_placement();
+    }
+    return;
+  }
+
+  QString const cursor_action =
+      App::Core::action_id_for_cursor_mode(m_cursor_manager->mode());
+  if (cursor_action.isEmpty() || state_enabled(cursor_action)) {
+    return;
+  }
+
+  if (m_cursor_manager->mode() == CursorMode::PlaceCommanderRally) {
+    cancel_commander_flag_rally();
+    return;
+  }
+
+  if ((m_cursor_manager->mode() == CursorMode::Patrol) && m_command_controller &&
+      m_command_controller->has_patrol_first_waypoint()) {
+    m_command_controller->clear_patrol_first_waypoint();
+  }
+
+  set_cursor_mode(CursorMode::Normal);
+}
+
+auto GameEngine::is_action_enabled(const QString& action_id) const -> bool {
+  return get_hud_action_states()
+      .value(action_id)
+      .toMap()
+      .value(QStringLiteral("enabled"))
+      .toBool();
 }
 
 void GameEngine::camera_move(float dx, float dz) {
@@ -2732,7 +2964,8 @@ void GameEngine::recruit_near_selected(const QString& unit_type) {
 void GameEngine::start_building_placement(const QString& building_type) {
   ensure_initialized();
   if (m_production_manager) {
-    m_production_manager->start_building_placement(building_type);
+    m_production_manager->start_building_placement(building_type,
+                                                   m_runtime.local_owner_id);
     set_cursor_mode(CursorMode::PlaceBuilding);
   }
 }
@@ -2904,11 +3137,11 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["rally_has_flag"] = commander->flag_rally_flag_active;
   result["rally_action_progress"] =
       commander->is_flag_rally_planting() && commander->flag_rally_cost > 0.0F
-          ? std::clamp(static_cast<double>(
-                           1.0F - (commander->flag_rally_animation_timer /
-                                   commander->flag_rally_cost)),
-                       0.0,
-                       1.0)
+          ? std::clamp(
+                static_cast<double>(1.0F - (commander->flag_rally_animation_timer /
+                                            commander->flag_rally_cost)),
+                0.0,
+                1.0)
           : (commander->flag_rally_flag_active ? 1.0 : 0.0);
   result["rally_ready"] = commander->rally_cooldown_remaining <= 0.0F &&
                           !commander->flag_rally_in_progress &&
@@ -3029,25 +3262,55 @@ auto GameEngine::rpg_project_world(float x, float y, float z) const -> QVariantM
 void GameEngine::start_builder_construction(const QString& item_type) {
   if (m_production_manager) {
     m_production_manager->start_builder_construction(item_type);
+    if (m_production_manager->is_placing_construction()) {
+      set_cursor_mode(item_type == QStringLiteral("collect") ? CursorMode::Collect
+                                                             : CursorMode::Build);
+    }
   }
 }
 
 auto GameEngine::get_selected_units_command_mode() const -> QString {
-  return m_selection_query_service
-             ? m_selection_query_service->get_selected_units_command_mode()
-             : "normal";
+  App::Core::ActionContext context;
+  context.world = m_world.get();
+  context.cursor_mode =
+      m_cursor_manager != nullptr ? m_cursor_manager->mode() : CursorMode::Normal;
+  context.placing_construction = m_production_manager != nullptr &&
+                                 m_production_manager->is_placing_construction();
+  context.pending_builder_construction_type =
+      m_production_manager != nullptr
+          ? m_production_manager->pending_builder_construction_type()
+          : QString();
+  context.placing_formation =
+      m_command_controller != nullptr && m_command_controller->is_placing_formation();
+  context.has_patrol_first_waypoint = m_command_controller != nullptr &&
+                                      m_command_controller->has_patrol_first_waypoint();
+  return App::Core::get_current_action_mode(context);
 }
 
 auto GameEngine::get_selected_units_toggle_state(const QString& mode) const -> QString {
-  return m_selection_query_service
-             ? m_selection_query_service->get_selected_units_toggle_state(mode)
-             : "none";
+  return App::Core::get_toggle_state(m_world.get(), mode);
 }
 
 auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
-  return m_selection_query_service
-             ? m_selection_query_service->get_selected_units_mode_availability()
-             : QVariantMap();
+  return App::Core::get_mode_availability(m_world.get());
+}
+
+auto GameEngine::get_hud_action_states() const -> QVariantMap {
+  App::Core::ActionContext context;
+  context.world = m_world.get();
+  context.cursor_mode =
+      m_cursor_manager != nullptr ? m_cursor_manager->mode() : CursorMode::Normal;
+  context.placing_construction = m_production_manager != nullptr &&
+                                 m_production_manager->is_placing_construction();
+  context.pending_builder_construction_type =
+      m_production_manager != nullptr
+          ? m_production_manager->pending_builder_construction_type()
+          : QString();
+  context.placing_formation =
+      m_command_controller != nullptr && m_command_controller->is_placing_formation();
+  context.has_patrol_first_waypoint = m_command_controller != nullptr &&
+                                      m_command_controller->has_patrol_first_waypoint();
+  return App::Core::get_action_states(context);
 }
 
 void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
@@ -4630,10 +4893,7 @@ void GameEngine::sync_scatter_world_props() {
     return;
   }
 
-  m_scatter->configure(*terrain_service.get_height_map(),
-                       terrain_service.biome_settings(),
-                       terrain_service.world_props(),
-                       true);
+  m_scatter->refresh_runtime_world_props(terrain_service.world_props());
   m_last_world_props_revision = revision;
 }
 

@@ -170,12 +170,24 @@ void apply_desired_yaw(Engine::Core::TransformComponent* transform,
 }
 
 auto is_point_allowed(const QVector3D& pos,
-                      Engine::Core::EntityID ignore_entity,
+                      const Engine::Core::Entity& entity,
                       float unit_radius = 0.5F) -> bool {
+  if (auto const* builder_prod =
+          entity.get_component<Engine::Core::BuilderProductionComponent>();
+      builder_prod != nullptr && builder_prod->in_progress &&
+      builder_prod->at_construction_site && builder_prod->has_task_target &&
+      builder_prod->task_target_id != 0) {
+    Point const position_grid = CommandService::world_to_grid(pos.x(), pos.z());
+    Point const target_grid = CommandService::world_to_grid(
+        builder_prod->task_target_x, builder_prod->task_target_z);
+    if (position_grid.x == target_grid.x && position_grid.y == target_grid.y) {
+      return true;
+    }
+  }
+
   auto& terrain_service = Game::Map::TerrainService::instance();
   Pathfinding* pathfinder = CommandService::get_pathfinder();
 
-  (void)ignore_entity;
   if (pathfinder != nullptr) {
     Point const grid = CommandService::world_to_grid(pos.x(), pos.z());
     if (unit_radius <= radius_aware_walkability_threshold) {
@@ -386,9 +398,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   QVector3D const current_pos_3d(transform->position.x, 0.0F, transform->position.z);
   bool const current_position_allowed =
-      is_point_allowed(current_pos_3d, entity->get_id(), unit_radius);
-  bool const destination_allowed =
-      is_point_allowed(final_goal, entity->get_id(), unit_radius);
+      is_point_allowed(current_pos_3d, *entity, unit_radius);
+  bool const destination_allowed = is_point_allowed(final_goal, *entity, unit_radius);
 
   if (movement->unstuck_cooldown > 0.0F) {
     movement->unstuck_cooldown =

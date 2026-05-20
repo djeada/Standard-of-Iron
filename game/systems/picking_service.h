@@ -41,6 +41,18 @@ public:
                                QVector3D& out_world) -> bool {
     return screen_to_ground(camera, view_w, view_h, screen_pt, out_world);
   }
+  static auto screen_to_surface(const Render::GL::Camera& camera,
+                                int view_w,
+                                int view_h,
+                                const QPointF& screen_pt,
+                                QVector3D& out_world) -> bool;
+  static auto screen_to_surface(const QPointF& screen_pt,
+                                const Render::GL::Camera& camera,
+                                int view_w,
+                                int view_h,
+                                QVector3D& out_world) -> bool {
+    return screen_to_surface(camera, view_w, view_h, screen_pt, out_world);
+  }
   static auto world_to_screen(const Render::GL::Camera& camera,
                               int view_w,
                               int view_h,

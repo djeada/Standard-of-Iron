@@ -228,6 +228,56 @@ auto assign_next_wall_site(Engine::Core::World* world,
   return false;
 }
 
+auto skip_invalid_wall_site(Engine::Core::World* world,
+                            Engine::Core::Entity* builder_entity,
+                            Engine::Core::BuilderProductionComponent* builder) -> bool {
+  if (world == nullptr || builder_entity == nullptr || builder == nullptr ||
+      builder->construction_site_entity_id == 0) {
+    return false;
+  }
+
+  auto* site_entity = world->get_entity(builder->construction_site_entity_id);
+  auto* site =
+      site_entity != nullptr
+          ? site_entity->get_component<Engine::Core::WallConstructionSiteComponent>()
+          : nullptr;
+  auto* transform = site_entity != nullptr
+                        ? site_entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  auto* wall = site_entity != nullptr
+                   ? site_entity->get_component<Engine::Core::WallSegmentComponent>()
+                   : nullptr;
+  if (site_entity == nullptr || site == nullptr || transform == nullptr) {
+    return false;
+  }
+
+  Game::Systems::WallGridPosition const position =
+      wall != nullptr ? Game::Systems::WallGridPosition{wall->grid_x, wall->grid_z}
+                      : Game::Systems::WallNetworkService::snap_world_position(
+                            transform->position.x, transform->position.z);
+  const auto validation =
+      Game::Systems::WallNetworkService::validate_wall_segment_placement(
+          *world, position, true, site_entity->get_id());
+  if (validation.valid) {
+    return false;
+  }
+
+  PlayerResourceRegistry::instance().add(
+      site->owner_id, ResourceType::Wood, WallNetworkService::k_wall_segment_wood_cost);
+  world->destroy_entity(site_entity->get_id());
+  builder->construction_site_entity_id = 0;
+  builder->has_construction_site = false;
+  builder->at_construction_site = false;
+  builder->in_progress = false;
+  builder->time_remaining = 0.0F;
+  builder->construction_complete = false;
+  builder->bypass_movement_active = false;
+  clear_builder_task_target(builder, false);
+  WallNetworkService::refresh_world(*world);
+  assign_next_wall_site(world, builder_entity, builder);
+  return true;
+}
+
 } // namespace
 
 void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
@@ -477,10 +527,15 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             } else {
               sp.position = QVector3D(t->position.x, t->position.y, t->position.z);
             }
-            float wall_rotation_y = 0.0F;
+            float construction_rotation_y = builder_prod->construction_site_rotation_y;
             Engine::Core::Entity* wall_site_entity = nullptr;
             if (builder_prod->product_type == "wall_segment" &&
                 builder_prod->construction_site_entity_id != 0) {
+              wall_site_entity =
+                  world->get_entity(builder_prod->construction_site_entity_id);
+              if (skip_invalid_wall_site(world, e, builder_prod)) {
+                continue;
+              }
               wall_site_entity =
                   world->get_entity(builder_prod->construction_site_entity_id);
               if (auto* site_transform =
@@ -491,14 +546,14 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                 sp.position = QVector3D(site_transform->position.x,
                                         site_transform->position.y,
                                         site_transform->position.z);
-                wall_rotation_y = site_transform->rotation.y;
+                construction_rotation_y = site_transform->rotation.y;
               }
             }
             sp.player_id = u->owner_id;
             sp.ai_controlled = e->has_component<Engine::Core::AIControlledComponent>();
             sp.nation_id = u->nation_id;
             sp.is_initial_spawn = false;
-            sp.rotation_y = wall_rotation_y;
+            sp.rotation_y = construction_rotation_y;
 
             if (builder_prod->product_type == "catapult") {
               sp.spawn_type = Game::Units::SpawnType::Catapult;

@@ -117,8 +117,10 @@ void append_generated_pines(std::vector<WorldProp>& out,
     float world_z = 0.0F;
     validator.grid_to_world(gx, gz, world_x, world_z);
 
-    float const scale = remap(rand_01(state), 3.0F, 6.0F) * tile_safe *
-                        scatter_scale_bias(ScatterRuleSpecies::Pine, scene);
+    float const scale = remap(rand_01(state),
+                              scatter_rules.pine_scale_min,
+                              scatter_rules.pine_scale_max) *
+                        tile_safe * scatter_scale_bias(ScatterRuleSpecies::Pine, scene);
     (void)remap(rand_01(state), 0.0F, 1.0F);
     (void)remap(
         rand_01(state), 0.03F + scene.dryness * 0.05F, 0.10F + scene.rockiness * 0.06F);

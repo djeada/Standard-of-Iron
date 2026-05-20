@@ -163,10 +163,12 @@ auto compute_rein_handle(const MountedAttachmentFrame& mount,
   float const clamped_slack = std::clamp(slack, 0.0F, 1.0F);
   float const clamped_tension = std::clamp(tension, 0.0F, 1.0F);
 
-  QVector3D const& bit = (side == Side::Left) ? mount.rein_bit_left : mount.rein_bit_right;
+  QVector3D const& bit =
+      (side == Side::Left) ? mount.rein_bit_left : mount.rein_bit_right;
 
   QVector3D desired = mount.seat_position;
-  desired += ((side == Side::Left) ? -mount.seat_right : mount.seat_right) * k_handle_right_offset;
+  desired += ((side == Side::Left) ? -mount.seat_right : mount.seat_right) *
+             k_handle_right_offset;
   desired += -mount.seat_forward *
              (k_handle_forward_base + clamped_tension * k_handle_forward_tension_scale);
   desired +=

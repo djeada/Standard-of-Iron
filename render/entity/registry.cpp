@@ -10,7 +10,6 @@
 #include "defense_tower_renderer.h"
 #include "elephant_renderer.h"
 #include "home_renderer.h"
-#include "wall_renderer.h"
 #include "nations/carthage/archer_renderer.h"
 #include "nations/carthage/ballista_renderer.h"
 #include "nations/carthage/builder_renderer.h"
@@ -32,6 +31,7 @@
 #include "nations/roman/horse_swordsman_renderer.h"
 #include "nations/roman/spearman_renderer.h"
 #include "nations/roman/swordsman_renderer.h"
+#include "wall_renderer.h"
 
 namespace Render::GL {
 

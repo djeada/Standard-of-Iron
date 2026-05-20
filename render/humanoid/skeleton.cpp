@@ -8,6 +8,7 @@
 #include <cmath>
 
 #include "../creature/skeleton.h"
+#include "../side.h"
 #include "humanoid_spec.h"
 
 namespace Render::Humanoid {
@@ -93,7 +94,7 @@ namespace {
 namespace Creature = Render::Creature;
 
 struct HumanoidProviderContext {
-  const Render::GL::HumanoidPose* pose;
+  const Render::GL::HumanoidPose* pose{};
   QVector3D pelvis;
   QVector3D neck_base;
   QVector3D head;
@@ -102,6 +103,26 @@ struct HumanoidProviderContext {
   QVector3D hip_r;
   QVector3D body_up;
 };
+
+auto resolved_hand_axis(const Render::GL::HumanoidPose& pose,
+                        Render::GL::Side side,
+                        const QVector3D& body_up) noexcept -> QVector3D {
+  Render::GL::AttachmentFrame const& hand_frame = (side == Render::GL::Side::Left)
+                                                      ? pose.body_frames.hand_l
+                                                      : pose.body_frames.hand_r;
+  QVector3D axis{};
+  if (hand_frame.radius > 0.0F && hand_frame.up.lengthSquared() >= 1e-6F) {
+    axis = hand_frame.up;
+  } else {
+    axis = body_up;
+  }
+  if (axis.lengthSquared() < 1e-6F) {
+    axis = QVector3D(0.0F, 1.0F, 0.0F);
+  } else {
+    axis.normalize();
+  }
+  return axis;
+}
 
 auto humanoid_provider(void* user,
                        Creature::BoneIndex bone) noexcept -> Creature::BoneResolution {
@@ -155,7 +176,8 @@ auto humanoid_provider(void* user,
   case HumanoidBone::HandL:
     r.kind = Creature::BoneBasisKind::FromHeadTail;
     r.head = p->hand_l;
-    r.tail = p->hand_l + ctx->body_up * 0.10F;
+    r.tail = p->hand_l +
+             resolved_hand_axis(*p, Render::GL::Side::Left, ctx->body_up) * 0.10F;
     break;
   case HumanoidBone::ShoulderR:
     r.kind = Creature::BoneBasisKind::FromParent;
@@ -174,7 +196,8 @@ auto humanoid_provider(void* user,
   case HumanoidBone::HandR:
     r.kind = Creature::BoneBasisKind::FromHeadTail;
     r.head = p->hand_r;
-    r.tail = p->hand_r + ctx->body_up * 0.10F;
+    r.tail = p->hand_r +
+             resolved_hand_axis(*p, Render::GL::Side::Right, ctx->body_up) * 0.10F;
     break;
   case HumanoidBone::HipL:
     r.kind = Creature::BoneBasisKind::FromHeadTail;

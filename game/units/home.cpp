@@ -44,6 +44,7 @@ void Home::init(const SpawnParams& params) {
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(), params.position.z()};
+  m_t->rotation = {0.0F, params.rotation_y, 0.0F};
   m_t->scale = {k_home_scale_xz, k_home_scale_y, k_home_scale_xz};
 
   m_u = e->add_component<Engine::Core::UnitComponent>();

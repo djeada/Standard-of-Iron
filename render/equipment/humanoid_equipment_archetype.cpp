@@ -16,10 +16,12 @@ namespace {
 struct LoadoutCacheKey {
   Render::Creature::ArchetypeId base_archetype_id{
       Render::Creature::k_invalid_archetype};
+  std::string debug_name;
   std::vector<EquipmentHandle> handles;
 
   auto operator==(const LoadoutCacheKey& other) const -> bool {
-    return base_archetype_id == other.base_archetype_id && handles == other.handles;
+    return base_archetype_id == other.base_archetype_id &&
+           debug_name == other.debug_name && handles == other.handles;
   }
 };
 
@@ -27,6 +29,8 @@ struct LoadoutCacheKeyHash {
   auto operator()(const LoadoutCacheKey& key) const noexcept -> std::size_t {
     std::size_t hash =
         std::hash<std::uint32_t>{}(static_cast<std::uint32_t>(key.base_archetype_id));
+    hash ^= std::hash<std::string>{}(key.debug_name) + 0x9E3779B9U + (hash << 6U) +
+            (hash >> 2U);
     for (const EquipmentHandle handle : key.handles) {
       hash ^= std::hash<EquipmentHandle>{}(handle) + 0x9E3779B9U + (hash << 6U) +
               (hash >> 2U);
@@ -91,6 +95,7 @@ auto resolve_humanoid_equipment_archetype(
 
   LoadoutCacheKey key{};
   key.base_archetype_id = base_archetype_id;
+  key.debug_name = debug_name;
   key.handles.assign(handles.begin(), handles.end());
   if (const auto it = archetype_cache().find(key); it != archetype_cache().end()) {
     return it->second;

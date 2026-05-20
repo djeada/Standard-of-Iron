@@ -2001,32 +2001,32 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
 
   // Four corner columns
   append_box(verts, idx, {-0.44F, 0.06F, -0.44F}, {-0.30F, 0.78F, -0.30F});
-  append_box(verts, idx, { 0.30F, 0.06F, -0.44F}, { 0.44F, 0.78F, -0.30F});
-  append_box(verts, idx, {-0.44F, 0.06F,  0.30F}, {-0.30F, 0.78F,  0.44F});
-  append_box(verts, idx, { 0.30F, 0.06F,  0.30F}, { 0.44F, 0.78F,  0.44F});
+  append_box(verts, idx, {0.30F, 0.06F, -0.44F}, {0.44F, 0.78F, -0.30F});
+  append_box(verts, idx, {-0.44F, 0.06F, 0.30F}, {-0.30F, 0.78F, 0.44F});
+  append_box(verts, idx, {0.30F, 0.06F, 0.30F}, {0.44F, 0.78F, 0.44F});
 
   // Column capitals (top caps on columns)
   append_box(verts, idx, {-0.48F, 0.78F, -0.48F}, {-0.26F, 0.86F, -0.26F});
-  append_box(verts, idx, { 0.26F, 0.78F, -0.48F}, { 0.48F, 0.86F, -0.26F});
-  append_box(verts, idx, {-0.48F, 0.78F,  0.26F}, {-0.26F, 0.86F,  0.48F});
-  append_box(verts, idx, { 0.26F, 0.78F,  0.26F}, { 0.48F, 0.86F,  0.48F});
+  append_box(verts, idx, {0.26F, 0.78F, -0.48F}, {0.48F, 0.86F, -0.26F});
+  append_box(verts, idx, {-0.48F, 0.78F, 0.26F}, {-0.26F, 0.86F, 0.48F});
+  append_box(verts, idx, {0.26F, 0.78F, 0.26F}, {0.48F, 0.86F, 0.48F});
 
   // Lintel beams connecting front and back pairs
-  append_box(verts, idx, {-0.50F, 0.84F, -0.42F}, { 0.50F, 0.92F, -0.32F});
-  append_box(verts, idx, {-0.50F, 0.84F,  0.32F}, { 0.50F, 0.92F,  0.42F});
+  append_box(verts, idx, {-0.50F, 0.84F, -0.42F}, {0.50F, 0.92F, -0.32F});
+  append_box(verts, idx, {-0.50F, 0.84F, 0.32F}, {0.50F, 0.92F, 0.42F});
 
   // Side lintels
-  append_box(verts, idx, {-0.42F, 0.84F, -0.50F}, {-0.32F, 0.92F,  0.50F});
-  append_box(verts, idx, { 0.32F, 0.84F, -0.50F}, { 0.42F, 0.92F,  0.50F});
+  append_box(verts, idx, {-0.42F, 0.84F, -0.50F}, {-0.32F, 0.92F, 0.50F});
+  append_box(verts, idx, {0.32F, 0.84F, -0.50F}, {0.42F, 0.92F, 0.50F});
 
   // Offering bowl atop altar
-  append_box(verts, idx, {-0.12F, 0.82F, -0.12F}, { 0.12F, 0.88F,  0.12F});
-  append_box(verts, idx, {-0.08F, 0.88F, -0.08F}, { 0.08F, 0.96F,  0.08F});
+  append_box(verts, idx, {-0.12F, 0.82F, -0.12F}, {0.12F, 0.88F, 0.12F});
+  append_box(verts, idx, {-0.08F, 0.88F, -0.08F}, {0.08F, 0.96F, 0.08F});
 
   // Small rune stones scattered around base
-  append_box(verts, idx, {-0.64F, 0.00F, -0.10F}, {-0.52F, 0.22F,  0.04F});
-  append_box(verts, idx, { 0.52F, 0.00F,  0.06F}, { 0.64F, 0.18F,  0.18F});
-  append_box(verts, idx, {-0.08F, 0.00F,  0.52F}, { 0.06F, 0.20F,  0.64F});
+  append_box(verts, idx, {-0.64F, 0.00F, -0.10F}, {-0.52F, 0.22F, 0.04F});
+  append_box(verts, idx, {0.52F, 0.00F, 0.06F}, {0.64F, 0.18F, 0.18F});
+  append_box(verts, idx, {-0.08F, 0.00F, 0.52F}, {0.06F, 0.20F, 0.64F});
 
   upload_prop_mesh_impl(verts,
                         idx,

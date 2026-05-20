@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <filesystem>
 #include <gtest/gtest.h>
 
@@ -10,10 +11,14 @@
 #include "render/ground/boulder_renderer.h"
 #include "render/ground/dead_tree_renderer.h"
 #include "render/ground/ground_utils.h"
+#include "render/ground/iron_ore_renderer.h"
+#include "render/ground/olive_renderer.h"
+#include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_renderer.h"
+#include "render/ground/terrain_scatter_manager.h"
 
 namespace {
 
@@ -50,6 +55,20 @@ auto make_snapshot() -> Game::Map::VisibilityService::Snapshot {
   return snapshot;
 }
 
+auto make_tree_map_definition(Game::Map::GroundType ground_type,
+                              std::uint32_t seed) -> Game::Map::MapDefinition {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 72;
+  map_def.grid.height = 72;
+  map_def.grid.tile_size = 1.0F;
+  Game::Map::apply_ground_type_defaults(map_def.biome, ground_type);
+  map_def.biome.seed = seed;
+  map_def.biome.ground_irregularity_enabled = true;
+  map_def.biome.irregularity_amplitude =
+      std::max(0.65F, map_def.biome.irregularity_amplitude);
+  return map_def;
+}
+
 TEST(ScatterRuntimeTest, CollectVisibleInstancesFiltersBySnapshot) {
   std::vector<Render::GL::PlantInstanceGpu> instances(3);
   instances[0].pos_scale = QVector4D(0.0F, 0.0F, 0.0F, 1.0F);
@@ -69,9 +88,9 @@ TEST(ScatterRuntimeTest, CollectVisibleInstancesFiltersBySnapshot) {
 }
 
 TEST(ScatterRuntimeTest, FilteredGpuReadyReflectsVisibilityState) {
-  std::vector<Render::GL::PlantInstanceGpu> instances(1);
-  std::vector<Render::GL::PlantInstanceGpu> visible_instances;
-  std::unique_ptr<Render::GL::Buffer> buffer;
+  std::vector<Render::GL::PlantInstanceGpu> const instances(1);
+  std::vector<Render::GL::PlantInstanceGpu> const visible_instances;
+  std::unique_ptr<Render::GL::Buffer> const buffer;
 
   EXPECT_TRUE(Render::Ground::Scatter::is_filtered_gpu_ready(
       instances, visible_instances, buffer, false));
@@ -134,7 +153,7 @@ TEST(ScatterRuntimeTest, NonDryGrassColorIsUnchangedByContrastAdjustment) {
 
 TEST(ScatterRuntimeTest, DirectGpuReadyAllowsEmptyScatterBuffers) {
   std::vector<Render::GL::StoneInstanceGpu> instances;
-  std::unique_ptr<Render::GL::Buffer> buffer;
+  std::unique_ptr<Render::GL::Buffer> const buffer;
 
   EXPECT_TRUE(Render::Ground::Scatter::is_direct_gpu_ready(instances, buffer));
 
@@ -202,8 +221,8 @@ TEST(ScatterRuntimeTest, SyncStatsAggregateUploadAndRebuildCounters) {
 }
 
 TEST(ScatterRuntimeTest, BiomeRendererConfiguresLargeTerrainWithoutReallocationCrash) {
-  Game::Map::TerrainHeightMap height_map(160, 160, 1.0F);
-  Game::Map::BiomeSettings biome_settings;
+  Game::Map::TerrainHeightMap const height_map(160, 160, 1.0F);
+  Game::Map::BiomeSettings const biome_settings;
 
   Render::GL::BiomeRenderer renderer;
   renderer.configure(height_map, biome_settings);
@@ -215,7 +234,7 @@ TEST(ScatterRuntimeTest, BiomeRendererConfiguresLargeTerrainWithoutReallocationC
 }
 
 TEST(ScatterRuntimeTest, LargeRockyMapsGetProceduralBouldersAndLogs) {
-  Game::Map::TerrainHeightMap height_map(96, 96, 1.0F);
+  Game::Map::TerrainHeightMap const height_map(96, 96, 1.0F);
   Game::Map::BiomeSettings biome_settings;
   Game::Map::apply_ground_type_defaults(biome_settings,
                                         Game::Map::GroundType::SoilRocky);
@@ -224,10 +243,10 @@ TEST(ScatterRuntimeTest, LargeRockyMapsGetProceduralBouldersAndLogs) {
   biome_settings.moisture_level = 0.20F;
   biome_settings.plant_density = 0.35F;
 
-  std::vector<Game::Map::WorldProp> no_authored_props;
+  std::vector<Game::Map::WorldProp> const no_authored_props;
 
   Render::GL::BoulderRenderer boulders;
-  boulders.configure(height_map, biome_settings, no_authored_props);
+  boulders.configure(height_map, biome_settings, no_authored_props, no_authored_props);
   EXPECT_GT(boulders.instance_count(), 0U);
 
   Render::GL::DeadTreeRenderer dead_trees;
@@ -256,7 +275,8 @@ TEST(ScatterRuntimeTest, CampaniaCampaignMaintainsRichNaturalScatter) {
   Render::GL::StoneRenderer stones;
   stones.configure(*height_map, map_def.biome, map_def.world_props);
   Render::GL::BoulderRenderer boulders;
-  boulders.configure(*height_map, map_def.biome, map_def.world_props);
+  boulders.configure(
+      *height_map, map_def.biome, map_def.world_props, map_def.world_props);
 
   EXPECT_GE(plants.instance_count(), 2500U);
   EXPECT_LE(plants.instance_count(), 7000U);
@@ -264,6 +284,134 @@ TEST(ScatterRuntimeTest, CampaniaCampaignMaintainsRichNaturalScatter) {
   EXPECT_LE(stones.instance_count(), 900U);
   EXPECT_GE(boulders.instance_count(), 14U);
   EXPECT_LE(boulders.instance_count(), 120U);
+
+  terrain.clear();
+}
+
+TEST(ScatterRuntimeTest, RuntimePropRefreshDoesNotRescatterPlantsOrStones) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 64;
+  map_def.grid.height = 64;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.seed = 4242U;
+  Game::Map::apply_ground_type_defaults(map_def.biome,
+                                        Game::Map::GroundType::SoilRocky);
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::PineTree, .x = 20.0F, .z = 20.0F});
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::Boulder, .x = 24.0F, .z = 24.0F});
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::IronOre, .x = 28.0F, .z = 28.0F});
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+  auto const* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  Render::GL::TerrainScatterManager scatter;
+  scatter.configure(*height_map,
+                    terrain.biome_settings(),
+                    terrain.authored_world_props(),
+                    terrain.world_props());
+
+  const std::size_t plant_count_before = scatter.plant()->instance_count();
+  const std::size_t stone_count_before = scatter.stone()->instance_count();
+  const std::size_t pine_count_before = scatter.pine()->instance_count();
+  const std::size_t boulder_count_before = scatter.boulder()->instance_count();
+  const std::size_t iron_ore_count_before = scatter.iron_ore()->instance_count();
+
+  ASSERT_GT(pine_count_before, 0U);
+  ASSERT_GT(boulder_count_before, 0U);
+  ASSERT_GT(iron_ore_count_before, 0U);
+
+  std::uint64_t harvested_tree_id = 0;
+  std::uint64_t harvested_boulder_id = 0;
+  std::uint64_t harvested_iron_ore_id = 0;
+  for (const auto& prop : terrain.world_props()) {
+    if (harvested_tree_id == 0 && prop.type == Game::Map::WorldProp::Type::PineTree) {
+      harvested_tree_id = prop.id;
+    } else if (harvested_boulder_id == 0 &&
+               prop.type == Game::Map::WorldProp::Type::Boulder) {
+      harvested_boulder_id = prop.id;
+    } else if (harvested_iron_ore_id == 0 &&
+               prop.type == Game::Map::WorldProp::Type::IronOre) {
+      harvested_iron_ore_id = prop.id;
+    }
+  }
+
+  ASSERT_NE(harvested_tree_id, 0U);
+  ASSERT_NE(harvested_boulder_id, 0U);
+  ASSERT_NE(harvested_iron_ore_id, 0U);
+
+  EXPECT_TRUE(terrain.harvest_world_prop(harvested_tree_id));
+  EXPECT_TRUE(terrain.harvest_world_prop(harvested_boulder_id));
+  EXPECT_TRUE(terrain.harvest_world_prop(harvested_iron_ore_id));
+
+  scatter.refresh_runtime_world_props(terrain.world_props());
+
+  EXPECT_EQ(scatter.plant()->instance_count(), plant_count_before);
+  EXPECT_EQ(scatter.stone()->instance_count(), stone_count_before);
+  EXPECT_LT(scatter.pine()->instance_count(), pine_count_before);
+  EXPECT_LT(scatter.boulder()->instance_count(), boulder_count_before);
+  EXPECT_LT(scatter.iron_ore()->instance_count(), iron_ore_count_before);
+
+  terrain.clear();
+}
+
+TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleRange) {
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(make_tree_map_definition(Game::Map::GroundType::ForestMud, 1337U));
+  auto const* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  Render::GL::PineRenderer renderer;
+  renderer.configure(*height_map,
+                     terrain.biome_settings(),
+                     terrain.authored_world_props(),
+                     terrain.world_props());
+
+  ASSERT_GT(renderer.instance_count(), 0U);
+
+  auto const scatter_rules =
+      Game::Map::make_scatter_rules(terrain.biome_settings().ground_type);
+  for (auto const& instance : renderer.instances_for_test()) {
+    EXPECT_NEAR(instance.pos_scale.y(),
+                terrain.resolve_surface_world_y(
+                    instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F),
+                0.001F);
+    EXPECT_LE(instance.pos_scale.w(),
+              scatter_rules.pine_scale_max * height_map->get_tile_size() * 1.18F +
+                  0.001F);
+  }
+
+  terrain.clear();
+}
+
+TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScaleRange) {
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(make_tree_map_definition(Game::Map::GroundType::GrassDry, 4242U));
+  auto const* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  Render::GL::OliveRenderer renderer;
+  renderer.configure(*height_map,
+                     terrain.biome_settings(),
+                     terrain.authored_world_props(),
+                     terrain.world_props());
+
+  ASSERT_GT(renderer.instance_count(), 0U);
+
+  auto const scatter_rules =
+      Game::Map::make_scatter_rules(terrain.biome_settings().ground_type);
+  for (auto const& instance : renderer.instances_for_test()) {
+    EXPECT_NEAR(instance.pos_scale.y(),
+                terrain.resolve_surface_world_y(
+                    instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F),
+                0.001F);
+    EXPECT_LE(instance.pos_scale.w(),
+              scatter_rules.olive_scale_max * height_map->get_tile_size() * 1.22F +
+                  0.001F);
+  }
 
   terrain.clear();
 }

@@ -23,6 +23,7 @@
 #include "../../game/systems/selection_system.h"
 #include "../../game/systems/troop_profile_service.h"
 #include "../../render/gl/camera.h"
+#include "../core/rts_action_model.h"
 #include "../utils/movement_utils.h"
 #include "game/game_config.h"
 #include "units/spawn_type.h"
@@ -57,6 +58,13 @@ auto CommandController::on_attack_click(qreal sx,
     return result;
   }
 
+  auto const attackers = App::Core::filter_selected_units_for_action(
+      m_world, selected, QStringLiteral("attack"));
+  if (attackers.empty()) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
   auto* cam = static_cast<Render::GL::Camera*>(camera);
   Engine::Core::EntityID const target_id =
       Game::Systems::PickingService::pick_unit_first(
@@ -77,7 +85,7 @@ auto CommandController::on_attack_click(qreal sx,
     return result;
   }
 
-  Game::Systems::CommandService::attack_target(*m_world, selected, target_id, true);
+  Game::Systems::CommandService::attack_target(*m_world, attackers, target_id, true);
 
   emit attack_target_selected();
 
@@ -239,6 +247,16 @@ auto CommandController::on_patrol_click(qreal sx,
     return result;
   }
 
+  auto const patrol_units = App::Core::filter_selected_units_for_action(
+      m_world, selected, QStringLiteral("patrol"));
+  if (patrol_units.empty()) {
+    if (m_has_patrol_first_waypoint) {
+      clear_patrol_first_waypoint();
+    }
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
   auto* cam = static_cast<Render::GL::Camera*>(camera);
   QVector3D hit;
   if (!Game::Systems::PickingService::screen_to_ground(
@@ -259,14 +277,9 @@ auto CommandController::on_patrol_click(qreal sx,
 
   QVector3D const second_waypoint = hit;
 
-  for (auto id : selected) {
+  for (auto id : patrol_units) {
     auto* entity = m_world->get_entity(id);
     if (entity == nullptr) {
-      continue;
-    }
-
-    auto* building = entity->get_component<Engine::Core::BuildingComponent>();
-    if (building != nullptr) {
       continue;
     }
 
@@ -453,7 +466,7 @@ auto CommandController::on_guard_command() -> CommandResult {
       continue;
     }
 
-    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+    if (!Game::Units::can_use_guard_mode(unit->spawn_type)) {
       continue;
     }
 
@@ -482,7 +495,7 @@ auto CommandController::on_guard_command() -> CommandResult {
       continue;
     }
 
-    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+    if (!Game::Units::can_use_guard_mode(unit->spawn_type)) {
       continue;
     }
 
@@ -548,6 +561,13 @@ auto CommandController::on_guard_click(qreal sx,
     return result;
   }
 
+  auto const guard_units = App::Core::filter_selected_units_for_action(
+      m_world, selected, QStringLiteral("guard"));
+  if (guard_units.empty()) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
   auto* cam = static_cast<Render::GL::Camera*>(camera);
   QVector3D hit;
   if (!Game::Systems::PickingService::screen_to_ground(
@@ -556,14 +576,9 @@ auto CommandController::on_guard_click(qreal sx,
     return result;
   }
 
-  for (auto id : selected) {
+  for (auto id : guard_units) {
     auto* entity = m_world->get_entity(id);
     if (entity == nullptr) {
-      continue;
-    }
-
-    auto* building = entity->get_component<Engine::Core::BuildingComponent>();
-    if (building != nullptr) {
       continue;
     }
 

@@ -254,10 +254,12 @@ struct TerrainScatterRules {
   bool allow_olives = false;
   float pine_base_density = 0.2F;
   float pine_density_scale = 0.3F;
+  float pine_scale_min = 1.9F;
+  float pine_scale_max = 3.4F;
   float olive_base_density = 0.05F;
   float olive_density_scale = 0.08F;
-  float olive_scale_min = 5.6F;
-  float olive_scale_max = 11.0F;
+  float olive_scale_min = 3.2F;
+  float olive_scale_max = 5.8F;
 };
 
 inline auto
@@ -348,20 +350,22 @@ inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
     rules.allow_olives = true;
     rules.olive_base_density = 0.12F;
     rules.olive_density_scale = 0.15F;
-    rules.olive_scale_min = 6.4F;
-    rules.olive_scale_max = 13.0F;
+    rules.olive_scale_min = 3.6F;
+    rules.olive_scale_max = 6.4F;
     break;
   case GroundType::ForestMud:
     rules.pine_base_density = 0.32F;
     rules.pine_density_scale = 0.42F;
+    rules.pine_scale_min = 2.1F;
+    rules.pine_scale_max = 3.8F;
     break;
   case GroundType::SoilFertile:
     rules.allow_pines = false;
     rules.allow_olives = true;
     rules.olive_base_density = 0.08F;
     rules.olive_density_scale = 0.12F;
-    rules.olive_scale_min = 5.6F;
-    rules.olive_scale_max = 10.5F;
+    rules.olive_scale_min = 3.0F;
+    rules.olive_scale_max = 5.4F;
     break;
   case GroundType::SoilRocky:
     rules.allow_pines = false;
@@ -370,6 +374,8 @@ inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
   case GroundType::AlpineMix:
     rules.pine_base_density = 0.10F;
     rules.pine_density_scale = 0.20F;
+    rules.pine_scale_min = 1.7F;
+    rules.pine_scale_max = 3.0F;
     break;
   }
   return rules;

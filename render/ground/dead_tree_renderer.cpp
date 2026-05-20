@@ -22,6 +22,17 @@ constexpr float k_base_color_r = 0.43F;
 constexpr float k_base_color_g = 0.35F;
 constexpr float k_base_color_b = 0.24F;
 
+auto resolve_tree_surface_position(float world_x,
+                                   float world_z,
+                                   float fallback_y) -> QVector3D {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (terrain_service.is_initialized()) {
+    return terrain_service.resolve_surface_world_position(
+        world_x, world_z, 0.0F, fallback_y);
+  }
+  return {world_x, fallback_y, world_z};
+}
+
 } // namespace
 
 namespace Render::GL {
@@ -125,7 +136,8 @@ void DeadTreeRenderer::generate_instances(
     float world_x = 0.0F;
     float world_z = 0.0F;
     validator.grid_to_world(gx, gz, world_x, world_z);
-    float const world_y = terrain_cache.sample_height_at(gx, gz);
+    QVector3D const world_pos = resolve_tree_surface_position(
+        world_x, world_z, terrain_cache.sample_height_at(gx, gz));
 
     float const color_var = rand_01(state);
     QVector3D const base_color(k_base_color_r, k_base_color_g, k_base_color_b);
@@ -136,7 +148,7 @@ void DeadTreeRenderer::generate_instances(
     DeadTreeInstanceGpu inst;
     float const scale = remap(rand_01(state), scale_min, scale_max) *
                         scatter_scale_bias(ScatterRuleSpecies::DeadTree, scene);
-    inst.pos_scale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
+    inst.pos_scale = QVector4D(world_pos.x(), world_pos.y(), world_pos.z(), scale);
     inst.color_rot = QVector4D(
         color.x(), color.y(), color.z(), rand_01(state) * MathConstants::k_two_pi);
     m_state.instances.push_back(inst);

@@ -5,12 +5,14 @@
 #include <qvectornd.h>
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <vector>
 
 #include "../../render/gl/camera.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../map/terrain_service.h"
 
 namespace Game::Systems {
 
@@ -32,6 +34,68 @@ auto PickingService::screen_to_ground(const Render::GL::Camera& cam,
   }
   return cam.screen_to_ground(
       screen_pt.x(), screen_pt.y(), qreal(view_w), qreal(view_h), out_world);
+}
+
+auto PickingService::screen_to_surface(const Render::GL::Camera& cam,
+                                       int view_w,
+                                       int view_h,
+                                       const QPointF& screen_pt,
+                                       QVector3D& out_world) -> bool {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (view_w <= 0 || view_h <= 0 || !terrain_service.is_initialized() ||
+      terrain_service.get_height_map() == nullptr) {
+    return screen_to_ground(cam, view_w, view_h, screen_pt, out_world);
+  }
+
+  QVector3D ray_origin;
+  QVector3D ray_dir;
+  if (!cam.screen_to_world_ray(screen_pt.x(),
+                               screen_pt.y(),
+                               qreal(view_w),
+                               qreal(view_h),
+                               ray_origin,
+                               ray_dir)) {
+    return false;
+  }
+
+  auto height_delta = [&terrain_service, &ray_origin, &ray_dir](float t) {
+    QVector3D const point = ray_origin + ray_dir * t;
+    return point.y() -
+           terrain_service.sample_surface_height(point.x(), point.z()).world_y;
+  };
+
+  constexpr float k_step = 1.0F;
+  float const max_t = std::max(cam.get_far(), k_step);
+  float prev_t = 0.0F;
+  float prev_delta = height_delta(prev_t);
+  for (float t = k_step; t <= max_t; t += k_step) {
+    float const delta = height_delta(t);
+    if ((prev_delta >= 0.0F && delta <= 0.0F) ||
+        (prev_delta <= 0.0F && delta >= 0.0F)) {
+      float lo = prev_t;
+      float hi = t;
+      for (int i = 0; i < 16; ++i) {
+        float const mid = (lo + hi) * 0.5F;
+        float const mid_delta = height_delta(mid);
+        if ((prev_delta >= 0.0F && mid_delta >= 0.0F) ||
+            (prev_delta <= 0.0F && mid_delta <= 0.0F)) {
+          lo = mid;
+          prev_delta = mid_delta;
+        } else {
+          hi = mid;
+        }
+      }
+
+      out_world = ray_origin + ray_dir * ((lo + hi) * 0.5F);
+      out_world.setY(
+          terrain_service.sample_surface_height(out_world.x(), out_world.z()).world_y);
+      return true;
+    }
+    prev_t = t;
+    prev_delta = delta;
+  }
+
+  return screen_to_ground(cam, view_w, view_h, screen_pt, out_world);
 }
 
 auto PickingService::project_bounds(const Render::GL::Camera& cam,

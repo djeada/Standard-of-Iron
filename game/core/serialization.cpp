@@ -228,15 +228,13 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     commander_obj["flag_rally_cost"] = commander->flag_rally_cost;
     commander_obj["flag_rally_pending_x"] = commander->flag_rally_pending_x;
     commander_obj["flag_rally_pending_z"] = commander->flag_rally_pending_z;
-    commander_obj["flag_rally_animation_timer"] =
-        commander->flag_rally_animation_timer;
+    commander_obj["flag_rally_animation_timer"] = commander->flag_rally_animation_timer;
     commander_obj["flag_rally_in_progress"] = commander->flag_rally_in_progress;
     commander_obj["flag_rally_at_position"] = commander->flag_rally_at_position;
     commander_obj["flag_rally_flag_x"] = commander->flag_rally_flag_x;
     commander_obj["flag_rally_flag_z"] = commander->flag_rally_flag_z;
     commander_obj["flag_rally_flag_active"] = commander->flag_rally_flag_active;
-    commander_obj["flag_rally_issue_commands"] =
-        commander->flag_rally_issue_commands;
+    commander_obj["flag_rally_issue_commands"] = commander->flag_rally_issue_commands;
     entity_obj["commander"] = commander_obj;
   }
 
@@ -459,6 +457,8 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
         static_cast<double>(builder->construction_site_x);
     builder_obj["construction_site_z"] =
         static_cast<double>(builder->construction_site_z);
+    builder_obj["construction_site_rotation_y"] =
+        static_cast<double>(builder->construction_site_rotation_y);
     builder_obj["has_task_target"] = builder->has_task_target;
     builder_obj["task_target_id"] = static_cast<qint64>(builder->task_target_id);
     builder_obj["task_target_x"] = static_cast<double>(builder->task_target_x);
@@ -753,14 +753,14 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     commander->fpv_controlled = commander_obj["fpv_controlled"].toBool(false);
     commander->flag_rally_cost = static_cast<float>(
         commander_obj["flag_rally_cost"].toDouble(commander->flag_rally_cost));
-    commander->flag_rally_pending_x = static_cast<float>(
-        commander_obj["flag_rally_pending_x"].toDouble(
+    commander->flag_rally_pending_x =
+        static_cast<float>(commander_obj["flag_rally_pending_x"].toDouble(
             commander->flag_rally_pending_x));
-    commander->flag_rally_pending_z = static_cast<float>(
-        commander_obj["flag_rally_pending_z"].toDouble(
+    commander->flag_rally_pending_z =
+        static_cast<float>(commander_obj["flag_rally_pending_z"].toDouble(
             commander->flag_rally_pending_z));
-    commander->flag_rally_animation_timer = static_cast<float>(
-        commander_obj["flag_rally_animation_timer"].toDouble(
+    commander->flag_rally_animation_timer =
+        static_cast<float>(commander_obj["flag_rally_animation_timer"].toDouble(
             commander->flag_rally_animation_timer));
     commander->flag_rally_in_progress =
         commander_obj["flag_rally_in_progress"].toBool(false);
@@ -1049,6 +1049,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(builder_obj["construction_site_x"].toDouble(0.0));
     builder->construction_site_z =
         static_cast<float>(builder_obj["construction_site_z"].toDouble(0.0));
+    builder->construction_site_rotation_y =
+        static_cast<float>(builder_obj["construction_site_rotation_y"].toDouble(0.0));
     builder->has_task_target = builder_obj["has_task_target"].toBool(false);
     builder->task_target_id = static_cast<std::uint64_t>(
         builder_obj["task_target_id"].toVariant().toULongLong());
@@ -1156,7 +1158,8 @@ auto Serialization::serialize_terrain(
     const Game::Map::TerrainHeightMap* height_map,
     const Game::Map::BiomeSettings& biome,
     const std::vector<Game::Map::RoadSegment>& roads,
-    const std::vector<Game::Map::WorldProp>& world_props) -> QJsonObject {
+    const std::vector<Game::Map::WorldProp>& world_props,
+    const std::vector<Game::Map::WorldProp>& authored_world_props) -> QJsonObject {
   QJsonObject terrain_obj;
 
   if (height_map == nullptr) {
@@ -1227,24 +1230,32 @@ auto Serialization::serialize_terrain(
   }
   terrain_obj["roads"] = roads_array;
 
-  QJsonArray world_props_array;
-  for (const auto& world_prop : world_props) {
-    QJsonObject world_prop_obj;
-    world_prop_obj["id"] = static_cast<qint64>(world_prop.id);
-    world_prop_obj["type"] =
-        QString(Game::Map::world_prop_type_to_string(world_prop.type));
-    world_prop_obj["x"] = world_prop.x;
-    world_prop_obj["z"] = world_prop.z;
-    world_prop_obj["scale"] = world_prop.scale;
-    world_prop_obj["rotation"] = world_prop.rotation;
-    if (world_prop.type == Game::Map::WorldProp::Type::FireCamp) {
-      world_prop_obj["intensity"] = world_prop.intensity;
-      world_prop_obj["radius"] = world_prop.radius;
-      world_prop_obj["persistent"] = world_prop.persistent;
+  const auto serialize_world_props_array =
+      [](const std::vector<Game::Map::WorldProp>& props) -> QJsonArray {
+    QJsonArray world_props_array;
+    for (const auto& world_prop : props) {
+      QJsonObject world_prop_obj;
+      world_prop_obj["id"] = static_cast<qint64>(world_prop.id);
+      world_prop_obj["type"] =
+          QString(Game::Map::world_prop_type_to_string(world_prop.type));
+      world_prop_obj["x"] = world_prop.x;
+      world_prop_obj["z"] = world_prop.z;
+      world_prop_obj["scale"] = world_prop.scale;
+      world_prop_obj["rotation"] = world_prop.rotation;
+      if (world_prop.type == Game::Map::WorldProp::Type::FireCamp) {
+        world_prop_obj["intensity"] = world_prop.intensity;
+        world_prop_obj["radius"] = world_prop.radius;
+        world_prop_obj["persistent"] = world_prop.persistent;
+      }
+      world_props_array.append(world_prop_obj);
     }
-    world_props_array.append(world_prop_obj);
-  }
+    return world_props_array;
+  };
+
+  QJsonArray const world_props_array = serialize_world_props_array(world_props);
   terrain_obj["world_props"] = world_props_array;
+  terrain_obj["authored_world_props"] =
+      serialize_world_props_array(authored_world_props);
 
   const auto profiles = Game::Map::make_biome_profiles(biome);
   const auto& surface = profiles.surface;
@@ -1309,11 +1320,13 @@ auto Serialization::serialize_terrain(
   return terrain_obj;
 }
 
-void Serialization::deserialize_terrain(Game::Map::TerrainHeightMap* height_map,
-                                        Game::Map::BiomeSettings& biome,
-                                        std::vector<Game::Map::RoadSegment>& roads,
-                                        std::vector<Game::Map::WorldProp>& world_props,
-                                        const QJsonObject& json) {
+void Serialization::deserialize_terrain(
+    Game::Map::TerrainHeightMap* height_map,
+    Game::Map::BiomeSettings& biome,
+    std::vector<Game::Map::RoadSegment>& roads,
+    std::vector<Game::Map::WorldProp>& world_props,
+    std::vector<Game::Map::WorldProp>& authored_world_props,
+    const QJsonObject& json) {
   if ((height_map == nullptr) || json.isEmpty()) {
     return;
   }
@@ -1505,6 +1518,39 @@ void Serialization::deserialize_terrain(Game::Map::TerrainHeightMap* height_map,
     }
   }
 
+  const auto deserialize_world_props_array =
+      [](const QJsonValue& json_value,
+         std::vector<Game::Map::WorldProp>& out_world_props) {
+        if (!json_value.isArray()) {
+          return;
+        }
+        const auto world_props_array = json_value.toArray();
+        out_world_props.reserve(out_world_props.size() + world_props_array.size());
+        for (const auto& val : world_props_array) {
+          const auto world_prop_obj = val.toObject();
+          Game::Map::WorldProp world_prop;
+          if (!Game::Map::world_prop_type_from_string(world_prop_obj["type"].toString(),
+                                                      world_prop.type)) {
+            qWarning() << "Unknown world prop type in save file:"
+                       << world_prop_obj["type"].toString() << "- skipping";
+            continue;
+          }
+          world_prop.id = static_cast<std::uint64_t>(
+              world_prop_obj["id"].toVariant().toULongLong());
+          world_prop.x = static_cast<float>(world_prop_obj["x"].toDouble(0.0));
+          world_prop.z = static_cast<float>(world_prop_obj["z"].toDouble(0.0));
+          world_prop.scale = static_cast<float>(world_prop_obj["scale"].toDouble(1.0));
+          world_prop.rotation =
+              static_cast<float>(world_prop_obj["rotation"].toDouble(0.0));
+          world_prop.intensity =
+              static_cast<float>(world_prop_obj["intensity"].toDouble(1.0));
+          world_prop.radius =
+              static_cast<float>(world_prop_obj["radius"].toDouble(3.0));
+          world_prop.persistent = world_prop_obj["persistent"].toBool(true);
+          out_world_props.push_back(world_prop);
+        }
+      };
+
   world_props.clear();
   if (json.contains("firecamps")) {
     const auto fire_camps_array = json["firecamps"].toArray();
@@ -1524,30 +1570,14 @@ void Serialization::deserialize_terrain(Game::Map::TerrainHeightMap* height_map,
   }
 
   if (json.contains("world_props")) {
-    const auto world_props_array = json["world_props"].toArray();
-    world_props.reserve(world_props.size() + world_props_array.size());
-    for (const auto& val : world_props_array) {
-      const auto world_prop_obj = val.toObject();
-      Game::Map::WorldProp world_prop;
-      if (!Game::Map::world_prop_type_from_string(world_prop_obj["type"].toString(),
-                                                  world_prop.type)) {
-        qWarning() << "Unknown world prop type in save file:"
-                   << world_prop_obj["type"].toString() << "- skipping";
-        continue;
-      }
-      world_prop.id =
-          static_cast<std::uint64_t>(world_prop_obj["id"].toVariant().toULongLong());
-      world_prop.x = static_cast<float>(world_prop_obj["x"].toDouble(0.0));
-      world_prop.z = static_cast<float>(world_prop_obj["z"].toDouble(0.0));
-      world_prop.scale = static_cast<float>(world_prop_obj["scale"].toDouble(1.0));
-      world_prop.rotation =
-          static_cast<float>(world_prop_obj["rotation"].toDouble(0.0));
-      world_prop.intensity =
-          static_cast<float>(world_prop_obj["intensity"].toDouble(1.0));
-      world_prop.radius = static_cast<float>(world_prop_obj["radius"].toDouble(3.0));
-      world_prop.persistent = world_prop_obj["persistent"].toBool(true);
-      world_props.push_back(world_prop);
-    }
+    deserialize_world_props_array(json["world_props"], world_props);
+  }
+
+  authored_world_props.clear();
+  if (json.contains("authored_world_props")) {
+    deserialize_world_props_array(json["authored_world_props"], authored_world_props);
+  } else {
+    authored_world_props = world_props;
   }
 
   height_map->restore_from_data(heights, terrain_types, rivers, bridges);
@@ -1578,7 +1608,8 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
     world_obj["terrain"] = serialize_terrain(terrain_service.get_height_map(),
                                              terrain_service.biome_settings(),
                                              terrain_service.road_segments(),
-                                             terrain_service.world_props());
+                                             terrain_service.world_props(),
+                                             terrain_service.authored_world_props());
   }
 
   return QJsonDocument(world_obj);
@@ -1618,6 +1649,7 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
     Game::Map::BiomeSettings biome;
     std::vector<Game::Map::RoadSegment> roads;
     std::vector<Game::Map::WorldProp> world_props;
+    std::vector<Game::Map::WorldProp> authored_world_props;
     std::vector<float> const heights;
     std::vector<Game::Map::TerrainType> const terrain_types;
     std::vector<Game::Map::RiverSegment> const rivers;
@@ -1625,7 +1657,12 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
 
     auto temp_height_map =
         std::make_unique<Game::Map::TerrainHeightMap>(width, height, tile_size);
-    deserialize_terrain(temp_height_map.get(), biome, roads, world_props, terrain_obj);
+    deserialize_terrain(temp_height_map.get(),
+                        biome,
+                        roads,
+                        world_props,
+                        authored_world_props,
+                        terrain_obj);
 
     auto& terrain_service = Game::Map::TerrainService::instance();
     terrain_service.restore_from_serialized(width,
@@ -1637,7 +1674,8 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
                                             roads,
                                             temp_height_map->get_bridges(),
                                             biome,
-                                            world_props);
+                                            world_props,
+                                            authored_world_props);
   }
 }
 

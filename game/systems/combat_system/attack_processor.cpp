@@ -19,6 +19,7 @@
 #include "../order_service.h"
 #include "../owner_registry.h"
 #include "../pathfinding.h"
+#include "../rpg_combat_system/rpg_commander_damage.h"
 #include "../troop_profile_service.h"
 #include "combat_mode_processor.h"
 #include "combat_types.h"
@@ -983,7 +984,12 @@ void process_attacks(Engine::Core::World* world,
       apply_high_ground_defense_bonuses(
           attacker, best_target, best_target_unit, damage);
 
-      deal_damage(world, best_target, damage, attacker->get_id());
+      if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
+        Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+            world, best_target, damage, attacker->get_id());
+      } else {
+        deal_damage(world, best_target, damage, attacker->get_id());
+      }
       *t_accum = -deterministic_attack_delay(
           attacker->get_id(), best_target->get_id(), cooldown);
 

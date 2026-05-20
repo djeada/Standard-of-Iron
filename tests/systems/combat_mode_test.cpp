@@ -17,6 +17,7 @@
 #include "systems/command_service.h"
 #include "systems/movement_system.h"
 #include "systems/owner_registry.h"
+#include "systems/rpg_combat_system/rpg_commander_damage.h"
 #include "units/troop_config.h"
 
 using namespace Engine::Core;
@@ -1610,14 +1611,74 @@ TEST_F(CombatModeTest, PerfectGuardNegatesDamageAndDoesNotConsumeCommanderComboS
   guard->active = true;
   guard->perfect_guard_remaining = 0.1F;
 
-  Game::Systems::Combat::deal_damage(world.get(), target, 40, attacker->get_id());
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
+
+  Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+      world.get(), target, 40, attacker->get_id());
 
   EXPECT_EQ(target_unit->health, 100);
+  EXPECT_EQ(target_rpg->rpg_hp, 100);
   EXPECT_TRUE(attacker->has_component<StaggerComponent>());
   EXPECT_EQ(attacker_cmd->combo_step, 2);
   EXPECT_TRUE(attacker_cmd->power_strike_active);
   EXPECT_FALSE(attacker_cmd->just_struck_enemy);
   EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
+}
+
+TEST_F(CombatModeTest, RtsDamageDoesNotReadCommanderGuardOrComboState) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto* attacker_cmd = attacker->add_component<CommanderComponent>();
+  attacker_cmd->combo_step = 3;
+  attacker_cmd->power_strike_active = true;
+
+  auto* target = world->create_entity();
+  target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+  auto* target_cmd = target->add_component<CommanderComponent>();
+  target_cmd->posture = 95.0F;
+  auto* guard = target->add_component<CommanderGuardComponent>();
+  guard->active = true;
+  guard->perfect_guard_remaining = 0.1F;
+
+  Game::Systems::Combat::deal_damage(world.get(), target, 20, attacker->get_id());
+
+  EXPECT_EQ(target_unit->health, 80);
+  EXPECT_TRUE(guard->active);
+  EXPECT_FLOAT_EQ(guard->perfect_guard_remaining, 0.1F);
+  EXPECT_FLOAT_EQ(target_cmd->posture, 95.0F);
+  EXPECT_EQ(attacker_cmd->combo_step, 3);
+  EXPECT_TRUE(attacker_cmd->power_strike_active);
+  EXPECT_FALSE(attacker_cmd->just_struck_enemy);
+}
+
+TEST_F(CombatModeTest, RpgCommanderAttackUsesCommanderComboOnFormationDamage) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto* attacker_cmd = attacker->add_component<CommanderComponent>();
+  attacker_cmd->combo_step = 3;
+  attacker_cmd->power_strike_active = true;
+
+  auto* target = world->create_entity();
+  target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+
+  Game::Systems::RpgCombat::deal_commander_attack_damage(
+      world.get(), target, 20, attacker->get_id());
+
+  EXPECT_EQ(target_unit->health, 46);
+  EXPECT_EQ(attacker_cmd->combo_step, 0);
+  EXPECT_FALSE(attacker_cmd->power_strike_active);
+  EXPECT_TRUE(attacker_cmd->just_struck_enemy);
 }
 
 TEST_F(CombatModeTest, GuardBreakDropsGuardAndLetsTheBreakingHitThrough) {
@@ -1636,9 +1697,16 @@ TEST_F(CombatModeTest, GuardBreakDropsGuardAndLetsTheBreakingHitThrough) {
   auto* guard = target->add_component<CommanderGuardComponent>();
   guard->active = true;
 
-  Game::Systems::Combat::deal_damage(world.get(), target, 20, attacker->get_id());
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100;
+  target_rpg->rpg_max_hp = 100;
 
-  EXPECT_EQ(target_unit->health, 80);
+  Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+      world.get(), target, 20, attacker->get_id());
+
+  EXPECT_EQ(target_unit->health, 100);
+  EXPECT_EQ(target_rpg->rpg_hp, 80);
   EXPECT_FALSE(guard->active);
   EXPECT_TRUE(guard->rearm_requires_release);
   EXPECT_GT(guard->guard_break_remaining, 0.0F);
