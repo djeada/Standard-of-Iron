@@ -162,7 +162,10 @@ add_executable(standard_of_iron_tests
     render/profiling/frame_profile_test.cpp
     tools/map_editor_map_data_test.cpp
     tools/map_editor_canvas_transform_test.cpp
+    ${CMAKE_SOURCE_DIR}/tools/arena/unit_panel.cpp
+    ${CMAKE_SOURCE_DIR}/tools/arena/building_panel.cpp
     tools/arena_scenarios_test.cpp
+    tools/arena_panel_population_test.cpp
     tools/arena_unit_spawn_options_test.cpp
     test_main.cpp
 )
@@ -176,6 +179,7 @@ target_link_libraries(standard_of_iron_tests
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::Sql
+        Qt${QT_VERSION_MAJOR}::Widgets
         engine_core
         render_gl
         game_systems
@@ -231,6 +235,7 @@ target_link_libraries(standard_of_iron_tests_subset
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::Sql
+        Qt${QT_VERSION_MAJOR}::Widgets
         engine_core
         render_gl
         game_systems
