@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "../systems/nation_id.h"
+#include "../systems/projectile_kind.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
@@ -372,6 +373,8 @@ enum class CombatAttackFamily : std::uint8_t {
   if (mode == AttackComponent::CombatMode::Ranged) {
     switch (spawn_type) {
     case SpawnType::Archer:
+    case SpawnType::SkeletonArcher:
+    case SpawnType::GravePriest:
     case SpawnType::HorseArcher:
       return CombatAttackFamily::Bow;
     default:
@@ -384,6 +387,8 @@ enum class CombatAttackFamily : std::uint8_t {
   case SpawnType::MountedKnight:
   case SpawnType::Archer:
   case SpawnType::HorseArcher:
+  case SpawnType::SkeletonSwordsman:
+  case SpawnType::SkeletonArcher:
   case SpawnType::RomanLegionOrganizer:
   case SpawnType::RomanVeteranConsul:
   case SpawnType::RomanFieldCommander:
@@ -394,6 +399,8 @@ enum class CombatAttackFamily : std::uint8_t {
   case SpawnType::Spearman:
   case SpawnType::HorseSpearman:
     return CombatAttackFamily::Spear;
+  case SpawnType::GravePriest:
+    return CombatAttackFamily::Sword;
   default:
     return CombatAttackFamily::None;
   }
@@ -497,6 +504,47 @@ public:
   float shock_timer{0.0F};
   bool wavering{false};
   bool routing{false};
+};
+
+inline void refresh_morale_state(MoraleComponent& morale) noexcept {
+  morale.morale = std::clamp(morale.morale, 0.0F, 100.0F);
+  morale.routing = morale.morale < 20.0F;
+  morale.wavering = !morale.routing && morale.morale < 40.0F;
+}
+
+class UndeadComponent : public Component {
+public:
+  UndeadComponent() = default;
+
+  bool morale_immune{true};
+  float fire_damage_multiplier{1.5F};
+  float priest_damage_multiplier{1.4F};
+  float cavalry_charge_damage_multiplier{1.25F};
+  bool counts_for_economy{false};
+};
+
+class CursedStatusComponent : public Component {
+public:
+  CursedStatusComponent() = default;
+
+  float morale_penalty_per_hit{8.0F};
+  float duration{6.0F};
+  float remaining_duration{6.0F};
+  int stacks{1};
+};
+
+class BurningStatusComponent : public Component {
+public:
+  BurningStatusComponent() = default;
+
+  float duration{2.5F};
+  float remaining_duration{2.5F};
+  float ignition_elapsed{0.0F};
+  float tick_interval{0.5F};
+  float tick_accumulator{0.0F};
+  int damage_per_tick{2};
+  EntityID attacker_id{0};
+  float fire_bonus_multiplier{1.0F};
 };
 
 class CommanderComponent : public Component {
@@ -748,6 +796,22 @@ public:
   float seed{0.0F};
 };
 
+class FirePatchComponent : public Component {
+public:
+  FirePatchComponent() = default;
+
+  float radius{1.8F};
+  float duration{4.0F};
+  float remaining_duration{4.0F};
+  float burn_duration{1.5F};
+  float burn_tick_interval{0.5F};
+  int burn_damage_per_tick{2};
+  int attacker_owner_id{0};
+  EntityID attacker_id{0};
+  bool friendly_fire{false};
+  float fire_bonus_multiplier{1.0F};
+};
+
 enum class DeathSequenceProfile : std::uint8_t {
   Infantry = 0,
   MountedRider = 1,
@@ -821,6 +885,11 @@ public:
 
 class HealerComponent : public Component {
 public:
+  enum class TargetAffinity : std::uint8_t {
+    LivingAllies = 0,
+    UndeadAllies
+  };
+
   HealerComponent() = default;
 
   float healing_range{8.0F};
@@ -830,6 +899,28 @@ public:
   bool is_healing_active{false};
   float healing_target_x{0.0F};
   float healing_target_z{0.0F};
+  TargetAffinity target_affinity{TargetAffinity::LivingAllies};
+  bool suppress_attack_while_healing{true};
+};
+
+class SpecialAttackComponent : public Component {
+public:
+  SpecialAttackComponent() = default;
+
+  Game::Systems::ProjectileKind projectile_kind = Game::Systems::ProjectileKind::Arrow;
+  bool use_projectile_system{false};
+  bool friendly_fire{false};
+  float splash_radius{0.0F};
+  float splash_damage_multiplier{0.6F};
+  float bonus_damage_multiplier_vs_fire_vulnerable{1.0F};
+  float cursed_duration{0.0F};
+  float cursed_morale_penalty_per_hit{0.0F};
+  int cursed_stacks_per_hit{0};
+  float fire_patch_duration{0.0F};
+  float fire_patch_radius{0.0F};
+  float burn_duration{0.0F};
+  float burn_tick_interval{0.5F};
+  int burn_damage_per_tick{0};
 };
 
 class CatapultLoadingComponent : public Component {

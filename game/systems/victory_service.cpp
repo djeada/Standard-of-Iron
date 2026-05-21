@@ -278,6 +278,13 @@ void VictoryService::refresh_rule_metadata() {
                 m_tracked_local_structure_types.insert(structure_type);
               }
             },
+            [this](const ClearUndeadZoneVictoryRule&) {
+              m_has_world_based_rules = true;
+            },
+            [this](const PurifyShrineVictoryRule&) { m_has_world_based_rules = true; },
+            [this](const SurviveUndeadWaveVictoryRule&) {
+              m_has_world_based_rules = true;
+            },
             [this](const SurviveTimeVictoryRule&) {
               m_has_time_based_victory = true;
             }},
@@ -443,6 +450,10 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
 
     if (track_enemy_structures && m_tracked_enemy_structure_types.contains(unit_type) &&
         m_owner_registry.are_enemies(m_local_owner_id, unit->owner_id)) {
+      if (!m_rule_set.include_ambient_undead &&
+          unit->nation_id == Game::Systems::NationID::IronSepulcher) {
+        continue;
+      }
       summary.enemy_structure_counts[unit_type] += 1;
     }
   }
@@ -470,6 +481,19 @@ auto VictoryService::check_victory_rule(const VictoryRule& rule,
             return count_matching_structures(summary.local_captured_structure_counts,
                                              capture_rule.target.structure_types) >=
                    std::max(1, capture_rule.target.required_count);
+          },
+          [this](const ClearUndeadZoneVictoryRule& zone_rule) {
+            return m_undead_zone_query != nullptr &&
+                   m_undead_zone_query->is_zone_cleared(zone_rule.zone_id);
+          },
+          [this](const PurifyShrineVictoryRule& zone_rule) {
+            return m_undead_zone_query != nullptr &&
+                   m_undead_zone_query->is_shrine_purified(zone_rule.zone_id);
+          },
+          [this](const SurviveUndeadWaveVictoryRule& zone_rule) {
+            return m_undead_zone_query != nullptr &&
+                   m_undead_zone_query->completed_wave_count(zone_rule.zone_id) >=
+                       std::max(1, zone_rule.required_wave_count);
           }},
       rule);
 }

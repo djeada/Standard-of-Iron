@@ -289,6 +289,8 @@ auto should_auto_engage_melee(Engine::Core::Entity* unit) -> bool {
 
   switch (unit_comp->spawn_type) {
   case Game::Units::SpawnType::Archer:
+  case Game::Units::SpawnType::SkeletonArcher:
+  case Game::Units::SpawnType::GravePriest:
   case Game::Units::SpawnType::HorseArcher:
   case Game::Units::SpawnType::Healer:
   case Game::Units::SpawnType::Catapult:
@@ -297,6 +299,7 @@ auto should_auto_engage_melee(Engine::Core::Entity* unit) -> bool {
 
   case Game::Units::SpawnType::Knight:
   case Game::Units::SpawnType::Spearman:
+  case Game::Units::SpawnType::SkeletonSwordsman:
   case Game::Units::SpawnType::MountedKnight:
   case Game::Units::SpawnType::HorseSpearman:
     return true;

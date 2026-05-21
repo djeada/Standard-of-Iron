@@ -45,6 +45,7 @@ inline constexpr CreatureAssetId k_horse_asset = 1;
 inline constexpr CreatureAssetId k_elephant_asset = 2;
 inline constexpr CreatureAssetId k_humanoid_sword_asset = 3;
 inline constexpr CreatureAssetId k_humanoid_spear_asset = 4;
+inline constexpr CreatureAssetId k_skeleton_humanoid_asset = 5;
 
 struct CreatureAsset {
   CreatureAssetId id{k_invalid_creature_asset};
@@ -95,7 +96,8 @@ public:
   [[nodiscard]] static auto instance() -> CreatureRenderAssetHandleRegistry&;
 
   [[nodiscard]] auto get_or_create(CreatureAssetId asset_id,
-                                   Render::Creature::ArchetypeId archetype_id)
+                                   Render::Creature::ArchetypeId archetype_id,
+                                   bool* created = nullptr)
       -> Render::Creature::CreatureRenderAssetHandleId;
 
   [[nodiscard]] auto get(Render::Creature::CreatureRenderAssetHandleId id) const
@@ -160,6 +162,7 @@ private:
   CreatureAsset m_elephant{};
   CreatureAsset m_humanoid_sword{};
   CreatureAsset m_humanoid_spear{};
+  CreatureAsset m_skeleton_humanoid{};
 };
 
 [[nodiscard]] auto resolve_creature_render_asset_handle(

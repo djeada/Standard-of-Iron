@@ -296,6 +296,8 @@ TEST(StatelessWeaponRenderers, SwordSubmitIsStateless) {
   b.metal_color = {0.3F, 0.6F, 0.4F};
   b.sword_length = 1.10F;
   b.guard_half_width = 0.18F;
+  b.blade_curve = 0.16F;
+  b.guard_spike_length = 0.14F;
   run_stateless_battery<SwordRenderer>(a, b);
 }
 
@@ -313,7 +315,7 @@ TEST(StatelessWeaponRenderers, SwordUsesArchetypePath) {
 
   EXPECT_TRUE(via_submit.meshes.empty());
   EXPECT_EQ(via_submit.archetypes.size(), 1U);
-  EXPECT_EQ(draw_count_of(via_submit), 15);
+  EXPECT_EQ(draw_count_of(via_submit), 13);
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
@@ -334,7 +336,7 @@ TEST(StatelessWeaponRenderers, SwordTrailUsesArchetypePath) {
 
   EXPECT_TRUE(via_submit.meshes.empty());
   EXPECT_EQ(via_submit.archetypes.size(), 2U);
-  EXPECT_EQ(draw_count_of(via_submit), 16);
+  EXPECT_EQ(draw_count_of(via_submit), 14);
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
@@ -360,6 +362,33 @@ TEST(StatelessWeaponRenderers, CommanderSwordAttackVariantChangesVisibleSway) {
   SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim_b, batch_b);
 
   EXPECT_NE(hash_batch(batch_a), hash_batch(batch_b));
+}
+
+TEST(StatelessWeaponRenderers, SwordProfileFieldsChangeVisibleMesh) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  SwordRenderConfig legion;
+  legion.sword_length = 0.84F;
+  legion.sword_width = 0.090F;
+  legion.blade_mid_width_scale = 1.20F;
+  legion.guard_spike_length = 0.04F;
+
+  SwordRenderConfig reaver = legion;
+  reaver.blade_curve = 0.18F;
+  reaver.blade_tip_width_scale = 0.08F;
+  reaver.guard_curve = -0.06F;
+  reaver.guard_spike_length = 0.14F;
+  reaver.pommel_length = 0.12F;
+
+  EquipmentBatch legion_batch;
+  EquipmentBatch reaver_batch;
+  SwordRenderer::submit(legion, ctx, frames, palette, anim, legion_batch);
+  SwordRenderer::submit(reaver, ctx, frames, palette, anim, reaver_batch);
+
+  EXPECT_NE(hash_batch(legion_batch), hash_batch(reaver_batch));
 }
 
 TEST(StatelessWeaponRenderers, ShieldSubmitIsStateless) {
@@ -614,7 +643,7 @@ TEST(StatelessWeaponRenderers, CarthageShieldUsesArchetypePath) {
   EXPECT_NE(hash_batch(base_submit), hash_batch(cavalry_submit));
 }
 
-TEST(StatelessWeaponRenderers, CarthageShieldOffsetsFromHandOrigin) {
+TEST(StatelessWeaponRenderers, CarthageShieldKeepsMinimalGapFromHandOrigin) {
   auto frames = make_frames();
   frames.hand_l.right = {1.0F, 0.0F, 0.0F};
   const auto anim = make_anim();
@@ -630,14 +659,13 @@ TEST(StatelessWeaponRenderers, CarthageShieldOffsetsFromHandOrigin) {
   const auto grip = Render::Humanoid::socket_attachment_frame(
       frames.hand_l, Render::Humanoid::HumanoidSocket::GripL);
   const AABB world_box = archetype_world_aabb(batch.archetypes.front());
-  QVector3D const world_center = (world_box.mn + world_box.mx) * 0.5F;
-  const float side_offset =
-      QVector3D::dotProduct(world_center - grip.origin, grip.right.normalized());
-  EXPECT_GT(std::abs(side_offset), 0.08F);
   const auto [min_side, max_side] =
       project_aabb_on_axis(world_box, grip.origin, grip.right.normalized());
-  EXPECT_GT(min_side, 0.04F);
-  EXPECT_GT(std::abs(world_center.z() - frames.hand_l.origin.z()), 0.02F);
+  const float nearest_edge_offset =
+      (min_side <= 0.0F && max_side >= 0.0F)
+          ? 0.0F
+          : std::min(std::abs(min_side), std::abs(max_side));
+  EXPECT_LT(nearest_edge_offset, 0.08F);
 
   const AABB box = archetype_local_aabb(*batch.archetypes.front().archetype);
   const float width = box.mx.x() - box.mn.x();
@@ -665,7 +693,7 @@ TEST(StatelessWeaponRenderers, RomanScutumUsesArchetypePath) {
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
-TEST(StatelessWeaponRenderers, RomanScutumKeepsModerateStandOffFromGrip) {
+TEST(StatelessWeaponRenderers, RomanScutumKeepsMinimalGapFromGrip) {
   auto frames = make_frames();
   frames.hand_l.radius = 0.05F;
   const auto anim = make_anim();
@@ -687,8 +715,7 @@ TEST(StatelessWeaponRenderers, RomanScutumKeepsModerateStandOffFromGrip) {
       (min_side <= 0.0F && max_side >= 0.0F)
           ? 0.0F
           : std::min(std::abs(min_side), std::abs(max_side));
-  EXPECT_GT(nearest_edge_offset, 0.24F);
-  EXPECT_LT(nearest_edge_offset, 0.34F);
+  EXPECT_LT(nearest_edge_offset, 0.10F);
 }
 
 TEST(StatelessWeaponRenderers, RomanScutumDefaultKeepsSideCarriedOrientation) {

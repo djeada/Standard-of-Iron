@@ -170,6 +170,34 @@ void draw_glyph(QPainter& painter, const QRectF& bounds, const QString& type) {
                                    QPointF(13.0, 2.0),
                                    QPointF(15.0, 4.0),
                                    QPointF(17.0, 2.0)});
+  } else if (type == QStringLiteral("skeleton_swordsman")) {
+    painter.drawEllipse(QPointF(12.0, 8.0), 2.8, 2.8);
+    painter.drawLine(QPointF(12.0, 11.0), QPointF(12.0, 17.0));
+    painter.drawLine(QPointF(8.5, 13.5), QPointF(15.5, 13.5));
+    painter.drawLine(QPointF(12.0, 17.0), QPointF(9.0, 20.0));
+    painter.drawLine(QPointF(12.0, 17.0), QPointF(15.0, 20.0));
+    painter.drawLine(QPointF(14.5, 16.5), QPointF(19.0, 11.0));
+    painter.drawPolyline(
+        QPolygonF{QPointF(19.0, 11.0), QPointF(20.2, 9.0), QPointF(18.2, 12.0)});
+  } else if (type == QStringLiteral("skeleton_archer")) {
+    painter.drawEllipse(QPointF(11.0, 8.0), 2.8, 2.8);
+    painter.drawLine(QPointF(11.0, 11.0), QPointF(11.0, 18.0));
+    painter.drawLine(QPointF(7.5, 14.0), QPointF(14.0, 14.0));
+    QPainterPath bow;
+    bow.moveTo(16.0, 6.0);
+    bow.cubicTo(14.0, 8.5, 14.0, 15.0, 16.0, 18.0);
+    painter.drawPath(bow);
+    painter.drawLine(QPointF(16.0, 6.0), QPointF(16.0, 18.0));
+    painter.drawLine(QPointF(13.0, 12.0), QPointF(19.5, 12.0));
+  } else if (type == QStringLiteral("grave_priest")) {
+    painter.drawEllipse(QPointF(12.0, 7.0), 2.7, 2.7);
+    QPainterPath robe;
+    robe.moveTo(8.0, 20.0);
+    robe.cubicTo(8.0, 14.0, 9.5, 11.0, 12.0, 11.0);
+    robe.cubicTo(14.5, 11.0, 16.0, 14.0, 16.0, 20.0);
+    painter.drawPath(robe);
+    painter.drawLine(QPointF(12.0, 5.0), QPointF(12.0, 16.0));
+    painter.drawLine(QPointF(8.5, 10.5), QPointF(15.5, 10.5));
   } else if (type == QStringLiteral("civilian")) {
     painter.drawEllipse(QPointF(12.0, 8.0), 3.0, 3.0);
     QPainterPath shoulders;

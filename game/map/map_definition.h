@@ -94,6 +94,29 @@ struct WorldProp {
   bool persistent = true;
 };
 
+struct UndeadWaveUnitSpawn {
+  Game::Units::SpawnType type = Game::Units::SpawnType::SkeletonSwordsman;
+  int count = 1;
+};
+
+struct UndeadWave {
+  QString trigger = "initial";
+  std::vector<UndeadWaveUnitSpawn> units;
+};
+
+struct UndeadZone {
+  QString id;
+  WorldProp::Type anchor_type = WorldProp::Type::Ruins;
+  float x = 0.0F;
+  float z = 0.0F;
+  float radius = 8.0F;
+  float leash_radius = 14.0F;
+  int owner_id = 99;
+  int team_id = 0;
+  std::vector<QString> awaken_on;
+  std::vector<UndeadWave> waves;
+};
+
 [[nodiscard]] constexpr auto is_tree_world_prop_type(WorldProp::Type type) -> bool {
   return type == WorldProp::Type::PineTree || type == WorldProp::Type::OliveTree;
 }
@@ -264,6 +287,7 @@ struct MapDefinition {
   std::vector<RoadSegment> roads;
   std::vector<Bridge> bridges;
   std::vector<WorldProp> world_props;
+  std::vector<UndeadZone> undead_zones;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int max_troops_per_player = 500;

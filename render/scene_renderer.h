@@ -227,6 +227,16 @@ public:
                       float radius,
                       float intensity,
                       float time);
+  void burning_flame(const QVector3D& position,
+                     const QVector3D& color,
+                     float radius,
+                     float intensity,
+                     float time);
+  void fireball(const QVector3D& position,
+                const QVector3D& color,
+                float radius,
+                float intensity,
+                float time);
   void blood_pool(const QVector3D& position,
                   float radius,
                   float alpha_scale,

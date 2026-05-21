@@ -45,6 +45,8 @@ auto toolDescription(ToolType tool) -> QString {
     return "Place authored weapon racks as explicit world props.";
   case ToolType::PropRuins:
     return "Place authored ruins as explicit world props.";
+  case ToolType::PropMagicShrine:
+    return "Place authored magic shrines as explicit world props.";
   case ToolType::PropDeadTree:
     return "Place authored dead trees as explicit world props.";
   case ToolType::PropBoulder:
@@ -71,6 +73,9 @@ auto toolDescription(ToolType tool) -> QString {
   case ToolType::TroopCarthageMercenaryBroker:
   case ToolType::TroopCarthageCavalryPatron:
   case ToolType::TroopCarthageElephantMaster:
+  case ToolType::TroopSkeletonSwordsman:
+  case ToolType::TroopSkeletonArcher:
+  case ToolType::TroopGravePriest:
   case ToolType::TroopCivilian:
   case ToolType::TroopBuilder:
     break;
@@ -203,13 +208,20 @@ void ToolPanel::setup_ui() {
   add_tool_button(props_layout,
                   2,
                   1,
+                  "Magic Shrine",
+                  "✦",
+                  "Place authored magic shrines.",
+                  ToolType::PropMagicShrine);
+  add_tool_button(props_layout,
+                  3,
+                  0,
                   "Dead Tree",
                   "🌲",
                   "Place authored dead trees.",
                   ToolType::PropDeadTree);
   add_tool_button(props_layout,
                   3,
-                  0,
+                  1,
                   "Boulder",
                   "🪨",
                   "Place authored boulders.",
@@ -264,6 +276,13 @@ void ToolPanel::setup_ui() {
   command_layout->setVerticalSpacing(6);
   add_troop_buttons_for_section(command_layout, "Command");
   layout->addWidget(command_group);
+
+  auto* sepulcher_group = new QGroupBox("Troops: Iron Sepulcher", this);
+  auto* sepulcher_layout = new QGridLayout(sepulcher_group);
+  sepulcher_layout->setHorizontalSpacing(6);
+  sepulcher_layout->setVerticalSpacing(6);
+  add_troop_buttons_for_section(sepulcher_layout, "Sepulcher");
+  layout->addWidget(sepulcher_group);
 
   auto* paths_group = new QGroupBox("Paths & Bridges", this);
   auto* paths_layout = new QGridLayout(paths_group);

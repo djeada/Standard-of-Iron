@@ -28,11 +28,12 @@ enum class AnimationStateId : std::uint8_t {
   AttackSword = 8,
   AttackSpear = 9,
   AttackBow = 10,
+  Cast = 11,
 
-  RidingIdle = 11,
-  RidingCharge = 12,
-  RidingReining = 13,
-  RidingBowShot = 14,
+  RidingIdle = 12,
+  RidingCharge = 13,
+  RidingReining = 14,
+  RidingBowShot = 15,
 
   Count
 };
@@ -50,6 +51,26 @@ using WorldKey = std::uint64_t;
 using CreatureRenderAssetHandleId = std::uint16_t;
 inline constexpr CreatureRenderAssetHandleId k_invalid_creature_render_asset_handle =
     static_cast<CreatureRenderAssetHandleId>(0xFFFFu);
+
+enum class PlaybackLayerMode : std::uint8_t {
+  None = 0,
+  FullBodyBlend,
+  UpperBodyOverlay,
+};
+
+struct PlaybackLayerRequest {
+  ArchetypeId archetype{k_invalid_archetype};
+  AnimationStateId state{AnimationStateId::Idle};
+  float phase{0.0F};
+  float weight{0.0F};
+  std::uint8_t clip_variant{0U};
+  PlaybackLayerMode mode{PlaybackLayerMode::None};
+
+  [[nodiscard]] auto active() const noexcept -> bool {
+    return mode != PlaybackLayerMode::None && archetype != k_invalid_archetype &&
+           weight > 0.0F;
+  }
+};
 
 struct CreatureRenderRequest {
   ArchetypeId archetype{k_invalid_archetype};
@@ -78,6 +99,8 @@ struct CreatureRenderRequest {
   std::uint8_t role_color_count{0};
   QVector3D base_color{0.5F, 0.5F, 0.5F};
   QVector4D wear_params{0.0F, 0.0F, 0.0F, 0.0F};
+  PlaybackLayerRequest full_body_blend{};
+  PlaybackLayerRequest upper_body_overlay{};
 
   [[nodiscard]] auto role_colors_view() const noexcept -> std::span<const QVector3D> {
     return {role_colors.data(), static_cast<std::size_t>(role_color_count)};

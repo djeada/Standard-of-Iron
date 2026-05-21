@@ -11,7 +11,8 @@ namespace Game::Systems {
 
 enum class NationID : std::uint8_t {
   RomanRepublic,
-  Carthage
+  Carthage,
+  IronSepulcher
 };
 
 inline auto nation_id_to_qstring(NationID id) -> QString {
@@ -20,6 +21,8 @@ inline auto nation_id_to_qstring(NationID id) -> QString {
     return QStringLiteral("roman_republic");
   case NationID::Carthage:
     return QStringLiteral("carthage");
+  case NationID::IronSepulcher:
+    return QStringLiteral("iron_sepulcher");
   }
 
   return QStringLiteral("roman_republic");
@@ -37,6 +40,10 @@ inline auto try_parse_nation_id(const QString& value, NationID& out) -> bool {
   }
   if (lowered == QStringLiteral("carthage")) {
     out = NationID::Carthage;
+    return true;
+  }
+  if (lowered == QStringLiteral("iron_sepulcher")) {
+    out = NationID::IronSepulcher;
     return true;
   }
   return false;

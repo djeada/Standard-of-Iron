@@ -530,8 +530,18 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
 
   auto const idle_req = find_rider_request(prep.bodies.requests());
   ASSERT_NE(idle_req, prep.bodies.requests().end());
-  EXPECT_NE(idle_req->state, Render::Creature::AnimationStateId::AttackSword);
-  EXPECT_FALSE(persistent->transient_attack_active);
+  EXPECT_EQ(idle_req->state, Render::Creature::AnimationStateId::AttackSword);
+  EXPECT_TRUE(persistent->combat_visual.active);
+
+  Render::GL::AnimationInputs settled_anim = idle_anim;
+  settled_anim.time += 0.20F;
+
+  prep.clear();
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, settled_anim, 3, prep);
+
+  auto const settled_req = find_rider_request(prep.bodies.requests());
+  ASSERT_NE(settled_req, prep.bodies.requests().end());
+  EXPECT_NE(settled_req->state, Render::Creature::AnimationStateId::AttackSword);
 }
 
 TEST(MountedPrepare, HorseSpearmanShieldBuildsIntoRiderArchetype) {

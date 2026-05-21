@@ -95,6 +95,19 @@ read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
   return obj.value(key).toBool();
 }
 
+[[nodiscard]] auto read_string_array(const QJsonObject& obj,
+                                     const char* key) -> std::vector<std::string> {
+  std::vector<std::string> values;
+  const QJsonArray array = ensure_array(obj.value(key));
+  values.reserve(array.size());
+  for (const auto& entry : array) {
+    if (entry.isString()) {
+      values.push_back(entry.toString().toStdString());
+    }
+  }
+  return values;
+}
+
 [[nodiscard]] auto read_resource_amounts(const QJsonObject& obj,
                                          const char* key,
                                          Game::Systems::ResourceAmounts fallback)
@@ -278,6 +291,10 @@ auto nation_loader_logger() -> QLoggingCategory& {
     variant.formation_type = formation_override;
     has_variant = true;
   }
+  variant.abilities = read_string_array(obj, "abilities");
+  if (!variant.abilities.empty()) {
+    has_variant = true;
+  }
 
   if (has_variant) {
     nation.troop_variants[troop_type] = std::move(variant);
@@ -391,13 +408,24 @@ auto NationLoader::load_from_file(const QString& path) -> std::optional<Nation> 
 
   const QString building_str =
       root.value("primary_building").toString(QStringLiteral("barracks"));
-  auto parsed_building =
-      Game::Units::building_type_from_string(building_str.toStdString());
-  nation.primary_building =
-      parsed_building.value_or(Game::Units::BuildingType::Barracks);
+  if (building_str.trimmed().compare(QStringLiteral("none"), Qt::CaseInsensitive) ==
+      0) {
+    nation.primary_building = std::nullopt;
+  } else {
+    auto parsed_building =
+        Game::Units::building_type_from_string(building_str.toStdString());
+    nation.primary_building =
+        parsed_building.value_or(Game::Units::BuildingType::Barracks);
+  }
   if (auto formation = parse_formation_type(root.value("formation_type").toString())) {
     nation.formation_type = *formation;
   }
+  nation.playable = read_bool(root, "playable", nation.playable);
+  nation.has_economy = read_bool(root, "has_economy", nation.has_economy);
+  nation.ai_profile =
+      read_string(root, "ai_profile", QStringLiteral("standard")).toStdString();
+  nation.selectable_in_skirmish =
+      read_bool(root, "selectable_in_skirmish", nation.selectable_in_skirmish);
 
   const QJsonArray troops = ensure_array(root.value(k_nation_troops_key));
   for (const auto& value : troops) {

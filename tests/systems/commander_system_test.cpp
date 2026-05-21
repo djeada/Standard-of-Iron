@@ -6,11 +6,14 @@
 #include "game/core/world.h"
 #include "game/systems/command_service.h"
 #include "game/systems/commander_system.h"
+#include "game/systems/nation_loader.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
+#include "game/units/troop_catalog_loader.h"
 #include "game/units/troop_type.h"
 
 namespace {
@@ -131,6 +134,120 @@ TEST(CommanderFactoryTest, RefusesSecondLivingCommanderForOwner) {
   first_unit->health = 0;
   auto replacement = registry.create(params.spawn_type, world, params);
   EXPECT_NE(replacement, nullptr);
+}
+
+TEST(UndeadSpawnTypeTest, RoundTripsAndModesMatchDesign) {
+  EXPECT_EQ(Game::Units::troop_typeToString(Game::Units::TroopType::SkeletonSwordsman),
+            "skeleton_swordsman");
+  EXPECT_EQ(Game::Units::troop_typeToString(Game::Units::TroopType::SkeletonArcher),
+            "skeleton_archer");
+  EXPECT_EQ(Game::Units::troop_typeToString(Game::Units::TroopType::GravePriest),
+            "grave_priest");
+
+  EXPECT_EQ(
+      Game::Units::spawn_typeFromTroopType(Game::Units::TroopType::SkeletonSwordsman),
+      Game::Units::SpawnType::SkeletonSwordsman);
+  EXPECT_EQ(Game::Units::spawn_typeToTroopType(Game::Units::SpawnType::SkeletonArcher),
+            Game::Units::TroopType::SkeletonArcher);
+  EXPECT_EQ(Game::Units::spawn_typeFromTroopType(Game::Units::TroopType::GravePriest),
+            Game::Units::SpawnType::GravePriest);
+
+  EXPECT_FALSE(
+      Game::Units::is_commander_troop(Game::Units::TroopType::SkeletonSwordsman));
+  EXPECT_FALSE(Game::Units::is_commander_troop(Game::Units::TroopType::SkeletonArcher));
+  EXPECT_FALSE(Game::Units::is_commander_troop(Game::Units::TroopType::GravePriest));
+
+  EXPECT_TRUE(
+      Game::Units::can_use_attack_mode(Game::Units::SpawnType::SkeletonSwordsman));
+  EXPECT_TRUE(Game::Units::can_use_guard_mode(Game::Units::SpawnType::SkeletonArcher));
+  EXPECT_TRUE(
+      Game::Units::can_use_hold_mode(Game::Units::SpawnType::SkeletonSwordsman));
+  EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::SkeletonArcher));
+  EXPECT_TRUE(Game::Units::can_use_hold_mode(Game::Units::SpawnType::GravePriest));
+  EXPECT_TRUE(Game::Units::can_use_patrol_mode(Game::Units::SpawnType::GravePriest));
+  EXPECT_FALSE(
+      Game::Units::can_use_run_mode(Game::Units::SpawnType::SkeletonSwordsman));
+  EXPECT_FALSE(Game::Units::can_use_run_mode(Game::Units::SpawnType::SkeletonArcher));
+  EXPECT_FALSE(Game::Units::can_use_run_mode(Game::Units::SpawnType::GravePriest));
+}
+
+TEST(UndeadFactoryTest, CreatesUndeadUnitsWithoutCommanderRestrictions) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  nation_registry.clear_player_assignments();
+  for (const auto& nation : nations) {
+    nation_registry.register_nation(nation);
+  }
+  Game::Systems::TroopProfileService::instance().clear();
+
+  Engine::Core::World world;
+  Game::Units::UnitFactoryRegistry registry;
+  Game::Units::register_built_in_units(registry);
+
+  Game::Units::SpawnParams params;
+  params.position = {0.0F, 0.0F, 0.0F};
+  params.player_id = 3;
+  params.nation_id = Game::Systems::NationID::IronSepulcher;
+  params.ai_controlled = true;
+
+  params.spawn_type = Game::Units::SpawnType::SkeletonSwordsman;
+  auto skeleton_swordsman = registry.create(params.spawn_type, world, params);
+  ASSERT_NE(skeleton_swordsman, nullptr);
+  auto* skeleton_swordsman_entity = world.get_entity(skeleton_swordsman->id());
+  ASSERT_NE(skeleton_swordsman_entity, nullptr);
+  EXPECT_NE(skeleton_swordsman_entity->get_component<Engine::Core::UndeadComponent>(),
+            nullptr);
+  EXPECT_NE(skeleton_swordsman_entity->get_component<Engine::Core::AttackComponent>(),
+            nullptr);
+
+  params.spawn_type = Game::Units::SpawnType::SkeletonArcher;
+  auto skeleton_archer = registry.create(params.spawn_type, world, params);
+  ASSERT_NE(skeleton_archer, nullptr);
+  auto* skeleton_archer_entity = world.get_entity(skeleton_archer->id());
+  ASSERT_NE(skeleton_archer_entity, nullptr);
+  EXPECT_NE(skeleton_archer_entity->get_component<Engine::Core::UndeadComponent>(),
+            nullptr);
+  EXPECT_NE(skeleton_archer_entity->get_component<Engine::Core::AttackComponent>(),
+            nullptr);
+
+  params.spawn_type = Game::Units::SpawnType::GravePriest;
+  auto first_priest = registry.create(params.spawn_type, world, params);
+  ASSERT_NE(first_priest, nullptr);
+  auto second_priest = registry.create(params.spawn_type, world, params);
+  ASSERT_NE(second_priest, nullptr);
+
+  auto* first_priest_entity = world.get_entity(first_priest->id());
+  ASSERT_NE(first_priest_entity, nullptr);
+  EXPECT_NE(first_priest_entity->get_component<Engine::Core::UndeadComponent>(),
+            nullptr);
+  auto* priest_healer =
+      first_priest_entity->get_component<Engine::Core::HealerComponent>();
+  ASSERT_NE(priest_healer, nullptr);
+  EXPECT_EQ(priest_healer->target_affinity,
+            Engine::Core::HealerComponent::TargetAffinity::UndeadAllies);
+  EXPECT_GE(priest_healer->time_since_last_heal, priest_healer->healing_cooldown);
+  auto* priest_attack =
+      first_priest_entity->get_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(priest_attack, nullptr);
+  EXPECT_TRUE(priest_attack->can_ranged);
+  EXPECT_EQ(priest_attack->current_mode,
+            Engine::Core::AttackComponent::CombatMode::Ranged);
+  EXPECT_GE(priest_attack->time_since_last, priest_attack->cooldown);
+  auto* priest_special =
+      first_priest_entity->get_component<Engine::Core::SpecialAttackComponent>();
+  ASSERT_NE(priest_special, nullptr);
+  EXPECT_TRUE(priest_special->use_projectile_system);
+  EXPECT_EQ(priest_special->projectile_kind, Game::Systems::ProjectileKind::Fireball);
+  EXPECT_GT(priest_special->fire_patch_duration, 0.0F);
+  EXPECT_GT(priest_special->burn_damage_per_tick, 0);
+  EXPECT_EQ(first_priest_entity->get_component<Engine::Core::CommanderComponent>(),
+            nullptr);
+
+  nation_registry.clear();
+  nation_registry.clear_player_assignments();
+  Game::Systems::TroopProfileService::instance().clear();
 }
 
 TEST(CommanderSystemTest, CommanderDeathDisablesAuraAndShocksNearbyAllies) {

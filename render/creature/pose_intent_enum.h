@@ -14,6 +14,7 @@ enum class PoseIntent : std::uint8_t {
   AttackMelee,
   AttackSpear,
   AttackRanged,
+  Cast,
   HitReaction,
 
   Healing,

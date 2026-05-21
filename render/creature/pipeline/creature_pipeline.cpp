@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <memory>
 #include <sstream>
 #include <string_view>
 #include <unordered_map>
@@ -14,6 +15,7 @@
 #include "../../bone_palette_arena.h"
 #include "../../entity/registry.h"
 #include "../../humanoid/skeleton.h"
+#include "../../profiling/frame_profile.h"
 #include "../../rigged_mesh_cache.h"
 #include "../../scene_renderer.h"
 #include "../../snapshot_mesh_cache.h"
@@ -173,6 +175,187 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
   return cmd;
 }
 
+auto humanoid_idle_variant_clip_is_usable(const Render::Creature::Bpat::BpatBlob* blob,
+                                          std::uint16_t clip_id,
+                                          Render::Creature::AnimationStateId state,
+                                          std::uint8_t clip_variant) noexcept -> bool;
+
+struct ResolvedRequestPlayback {
+  const CreatureRenderAssetHandle* handle{nullptr};
+  const Render::Creature::Bpat::BpatBlob* blob{nullptr};
+  ArchetypeId archetype{k_invalid_archetype};
+  AnimationStateId state{AnimationStateId::Idle};
+  std::uint16_t clip_id{k_invalid_bpat_clip};
+  std::uint8_t clip_variant{0U};
+  std::uint32_t global_frame{0U};
+  std::uint32_t frame_in_clip{0U};
+  bool snapshot{false};
+
+  [[nodiscard]] auto valid() const noexcept -> bool {
+    return handle != nullptr && blob != nullptr && clip_id != k_invalid_bpat_clip;
+  }
+};
+
+auto resolve_playback_handle(const CreatureRenderAssetHandle& primary_handle,
+                             CreatureAssetId asset_id,
+                             ArchetypeId archetype) noexcept
+    -> const CreatureRenderAssetHandle* {
+  if (archetype == k_invalid_archetype) {
+    return nullptr;
+  }
+  if (primary_handle.archetype != nullptr &&
+      primary_handle.archetype->id == archetype) {
+    return &primary_handle;
+  }
+  auto const alt_handle_id =
+      CreatureRenderAssetHandleRegistry::instance().get_or_create(asset_id, archetype);
+  return CreatureRenderAssetHandleRegistry::instance().get(alt_handle_id);
+}
+
+auto resolve_request_playback(const CreatureRenderAssetHandle& primary_handle,
+                              CreatureAssetId asset_id,
+                              ArchetypeId archetype,
+                              AnimationStateId state,
+                              float phase,
+                              std::uint8_t clip_variant) noexcept
+    -> ResolvedRequestPlayback {
+  ResolvedRequestPlayback resolved{};
+  resolved.archetype = archetype;
+  resolved.state = state;
+  resolved.clip_variant = clip_variant;
+  resolved.handle = resolve_playback_handle(primary_handle, asset_id, archetype);
+  if (resolved.handle == nullptr) {
+    return resolved;
+  }
+
+  auto const state_index = static_cast<std::size_t>(state);
+  if (state_index >= resolved.handle->playback.size()) {
+    return resolved;
+  }
+
+  const CreatureClipPlaybackDesc& playback_desc =
+      resolved.handle->playback[state_index];
+  std::uint8_t effective_clip_variant = clip_variant;
+  std::uint16_t effective_clip_id =
+      (clip_variant == 0U)
+          ? playback_desc.clip_id
+          : Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+                archetype, state, clip_variant);
+
+  ResolvedClipPlayback playback =
+      (effective_clip_id == playback_desc.clip_id)
+          ? resolve_bpat_playback(playback_desc.blob, playback_desc.clip_id, phase)
+          : resolve_bpat_playback(
+                resolved.handle->asset->bpat_species_id, effective_clip_id, phase);
+  if (!humanoid_idle_variant_clip_is_usable(
+          playback.blob, effective_clip_id, state, effective_clip_variant)) {
+    effective_clip_variant = 0U;
+    effective_clip_id = playback_desc.clip_id;
+    playback = resolve_bpat_playback(playback_desc.blob, playback_desc.clip_id, phase);
+  }
+  if (playback.blob == nullptr) {
+    return resolved;
+  }
+
+  resolved.blob = playback.blob;
+  resolved.clip_id = effective_clip_id;
+  resolved.clip_variant = effective_clip_variant;
+  resolved.global_frame = playback.global_frame;
+  resolved.frame_in_clip = playback.frame_in_clip;
+  resolved.snapshot = playback_desc.snapshot;
+  return resolved;
+}
+
+auto frame_palette_for_global_frame(const Render::GL::RiggedMeshEntry& entry,
+                                    std::uint32_t global_frame) noexcept
+    -> const QMatrix4x4* {
+  if (entry.skinned_palettes.empty() || entry.skinned_bone_count == 0 ||
+      global_frame >= entry.skinned_frame_total) {
+    return nullptr;
+  }
+  return entry.skinned_palettes.data() +
+         static_cast<std::size_t>(global_frame) * entry.skinned_bone_count;
+}
+
+auto lerp_matrix(const QMatrix4x4& a,
+                 const QMatrix4x4& b,
+                 float t) noexcept -> QMatrix4x4 {
+  QMatrix4x4 out;
+  float* dst = out.data();
+  const float* av = a.constData();
+  const float* bv = b.constData();
+  float const inv_t = 1.0F - t;
+  for (int i = 0; i < 16; ++i) {
+    dst[i] = av[i] * inv_t + bv[i] * t;
+  }
+  return out;
+}
+
+auto is_humanoid_upper_body_bone(std::size_t bone_index) noexcept -> bool {
+  using Bone = Render::Humanoid::HumanoidBone;
+  switch (static_cast<Bone>(bone_index)) {
+  case Bone::Chest:
+  case Bone::Neck:
+  case Bone::Head:
+  case Bone::ShoulderL:
+  case Bone::UpperArmL:
+  case Bone::ForearmL:
+  case Bone::HandL:
+  case Bone::ShoulderR:
+  case Bone::UpperArmR:
+  case Bone::ForearmR:
+  case Bone::HandR:
+    return true;
+  default:
+    return false;
+  }
+}
+
+auto blend_palette_owned(const QMatrix4x4* primary_palette,
+                         const QMatrix4x4* secondary_palette,
+                         std::uint32_t bone_count,
+                         float secondary_weight,
+                         bool upper_body_only,
+                         CreatureKind species_kind) noexcept
+    -> std::shared_ptr<
+        std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>> {
+  if (primary_palette == nullptr || secondary_palette == nullptr || bone_count == 0U) {
+    return {};
+  }
+  auto owned = std::make_shared<
+      std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>();
+  float const weight = std::clamp(secondary_weight, 0.0F, 1.0F);
+  for (std::uint32_t bone = 0;
+       bone < bone_count && bone < Render::GL::RiggedCreatureCmd::k_max_owned_bones;
+       ++bone) {
+    bool const apply_secondary =
+        !upper_body_only ||
+        (species_kind == CreatureKind::Humanoid && is_humanoid_upper_body_bone(bone));
+    (*owned)[bone] =
+        apply_secondary
+            ? lerp_matrix(primary_palette[bone], secondary_palette[bone], weight)
+            : primary_palette[bone];
+  }
+  return owned;
+}
+
+void attach_owned_palette(
+    Render::GL::RiggedCreatureCmd& cmd,
+    std::shared_ptr<
+        std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>
+        owned_palette,
+    std::uint32_t bone_count) {
+  if (!owned_palette) {
+    return;
+  }
+  cmd.owned_bone_palette = std::move(owned_palette);
+  cmd.bone_palette = cmd.owned_bone_palette->data();
+  cmd.bone_count = std::min<std::uint32_t>(
+      bone_count, Render::GL::RiggedCreatureCmd::k_max_owned_bones);
+  cmd.palette_ubo = 0U;
+  cmd.palette_offset = 0U;
+}
+
 void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             CreatureLOD lod,
                             ArchetypeId archetype,
@@ -188,6 +371,10 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             const QMatrix4x4& world_from_unit,
                             const Render::Creature::Bpat::BpatBlob& blob,
                             std::uint32_t global_frame,
+                            const ResolvedRequestPlayback* full_body_blend,
+                            const ResolvedRequestPlayback* upper_body_overlay,
+                            float full_body_blend_weight,
+                            float upper_body_overlay_weight,
                             Render::GL::ISubmitter& out,
                             Render::GL::Renderer* renderer) {
   const CreatureAsset* asset = handle.asset;
@@ -228,14 +415,12 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     ensure_skin_ubo_for_submit(cache, *entry);
   }
 
-  if (entry->skinned_palettes.empty() || entry->skinned_bone_count == 0 ||
-      global_frame >= entry->skinned_frame_total) {
+  const QMatrix4x4* frame_palette =
+      frame_palette_for_global_frame(*entry, global_frame);
+  if (frame_palette == nullptr) {
     return;
   }
 
-  const QMatrix4x4* frame_palette =
-      entry->skinned_palettes.data() +
-      static_cast<std::size_t>(global_frame) * entry->skinned_bone_count;
   QMatrix4x4 const& draw_world = world_from_unit;
 
   auto cmd = make_rigged_cmd(entry->mesh.get(),
@@ -248,6 +433,37 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
   cmd.palette_ubo = entry->skin_palette_ubo;
   cmd.palette_offset = static_cast<std::uint32_t>(
       static_cast<std::size_t>(global_frame) * entry->skin_palette_frame_stride_bytes);
+  if (full_body_blend != nullptr && full_body_blend->valid() &&
+      full_body_blend_weight > 0.0F) {
+    if (const QMatrix4x4* secondary_palette =
+            frame_palette_for_global_frame(*entry, full_body_blend->global_frame);
+        secondary_palette != nullptr) {
+      attach_owned_palette(cmd,
+                           blend_palette_owned(frame_palette,
+                                               secondary_palette,
+                                               entry->skinned_bone_count,
+                                               full_body_blend_weight,
+                                               false,
+                                               handle.archetype->species),
+                           entry->skinned_bone_count);
+    }
+  }
+  if (upper_body_overlay != nullptr && upper_body_overlay->valid() &&
+      upper_body_overlay_weight > 0.0F) {
+    const QMatrix4x4* primary_palette = cmd.bone_palette;
+    if (const QMatrix4x4* secondary_palette =
+            frame_palette_for_global_frame(*entry, upper_body_overlay->global_frame);
+        primary_palette != nullptr && secondary_palette != nullptr) {
+      attach_owned_palette(cmd,
+                           blend_palette_owned(primary_palette,
+                                               secondary_palette,
+                                               cmd.bone_count,
+                                               upper_body_overlay_weight,
+                                               true,
+                                               handle.archetype->species),
+                           cmd.bone_count);
+    }
+  }
   out.rigged(cmd);
 }
 
@@ -403,71 +619,6 @@ void bump_lod_counters(CreatureLOD lod, SubmitStats& stats) {
   }
 }
 
-struct ResolvedPlayback {
-  const Render::Creature::Bpat::BpatBlob* blob{nullptr};
-  std::uint32_t global_frame{0U};
-  std::uint32_t frame_in_clip{0U};
-};
-
-auto resolve_clip_playback(std::uint32_t species_id,
-                           std::uint16_t clip_id,
-                           float phase) noexcept -> ResolvedPlayback {
-  ResolvedPlayback r{};
-  if (clip_id == Render::Creature::ArchetypeDescriptor::k_unmapped_clip) {
-    return r;
-  }
-  const auto* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
-  if (blob == nullptr || clip_id >= blob->clip_count()) {
-    return r;
-  }
-  auto const c = blob->clip(clip_id);
-  if (c.frame_count == 0U) {
-    return r;
-  }
-  float p = phase - std::floor(phase);
-  if (p < 0.0F) {
-    p += 1.0F;
-  }
-  auto const fc = static_cast<float>(c.frame_count);
-  auto frame_idx = static_cast<int>(p * fc);
-  if (frame_idx < 0) {
-    frame_idx = 0;
-  }
-  if (frame_idx >= static_cast<int>(c.frame_count)) {
-    frame_idx = static_cast<int>(c.frame_count) - 1;
-  }
-  r.blob = blob;
-  r.frame_in_clip = static_cast<std::uint32_t>(frame_idx);
-  r.global_frame = c.frame_offset + r.frame_in_clip;
-  return r;
-}
-
-auto resolve_clip_playback(const CreatureClipPlaybackDesc& desc,
-                           float phase) noexcept -> ResolvedPlayback {
-  ResolvedPlayback r{};
-  if (desc.blob == nullptr ||
-      desc.clip_id == Render::Creature::ArchetypeDescriptor::k_unmapped_clip ||
-      desc.frame_count == 0U) {
-    return r;
-  }
-  float p = phase - std::floor(phase);
-  if (p < 0.0F) {
-    p += 1.0F;
-  }
-  auto const fc = static_cast<float>(desc.frame_count);
-  auto frame_idx = static_cast<int>(p * fc);
-  if (frame_idx < 0) {
-    frame_idx = 0;
-  }
-  if (frame_idx >= static_cast<int>(desc.frame_count)) {
-    frame_idx = static_cast<int>(desc.frame_count) - 1;
-  }
-  r.blob = desc.blob;
-  r.frame_in_clip = static_cast<std::uint32_t>(frame_idx);
-  r.global_frame = desc.frame_offset + r.frame_in_clip;
-  return r;
-}
-
 auto resolve_blob_palette(std::uint32_t species_id,
                           BpatPlayback playback,
                           const Render::Creature::Bpat::BpatBlob*& out_blob,
@@ -543,6 +694,7 @@ auto CreaturePipeline::submit_requests(
   }
 
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest& req) {
+    auto& profile = Render::Profiling::global_profile();
     ++stats.entities_submitted;
     bump_lod_counters(req.lod, stats);
 
@@ -561,62 +713,92 @@ auto CreaturePipeline::submit_requests(
     }
 
     const auto species_kind = handle->archetype->species;
-    const auto state_index = static_cast<std::size_t>(req.state);
-    if (state_index >= handle->playback.size()) {
+    auto const primary = resolve_request_playback(*handle,
+                                                  req.creature_asset_id,
+                                                  req.archetype,
+                                                  req.state,
+                                                  req.phase,
+                                                  req.clip_variant);
+    if (!primary.valid()) {
       return;
     }
-
-    const CreatureClipPlaybackDesc& playback_desc = handle->playback[state_index];
-
-    std::uint8_t effective_clip_variant = req.clip_variant;
-    std::uint16_t effective_clip_id =
-        (req.clip_variant == 0U)
-            ? playback_desc.clip_id
-            : Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
-                  req.archetype, req.state, req.clip_variant);
-
-    auto playback = (effective_clip_id == playback_desc.clip_id)
-                        ? resolve_clip_playback(playback_desc, req.phase)
-                        : resolve_clip_playback(handle->asset->bpat_species_id,
-                                                effective_clip_id,
-                                                req.phase);
-    if (!humanoid_idle_variant_clip_is_usable(
-            playback.blob, effective_clip_id, req.state, effective_clip_variant)) {
-      effective_clip_variant = 0U;
-      effective_clip_id = playback_desc.clip_id;
-      playback = resolve_clip_playback(playback_desc, req.phase);
-    }
-    if (playback.blob == nullptr) {
-      return;
+    ResolvedRequestPlayback full_body{};
+    ResolvedRequestPlayback overlay{};
+    {
+      Render::Profiling::AccumulatorScope const playback_scope(
+          &profile.bpat_playback_us);
+      if (req.full_body_blend.active()) {
+        full_body = resolve_request_playback(*handle,
+                                             req.creature_asset_id,
+                                             req.full_body_blend.archetype,
+                                             req.full_body_blend.state,
+                                             req.full_body_blend.phase,
+                                             req.full_body_blend.clip_variant);
+      }
+      if (req.upper_body_overlay.active()) {
+        overlay = resolve_request_playback(*handle,
+                                           req.creature_asset_id,
+                                           req.upper_body_overlay.archetype,
+                                           req.upper_body_overlay.state,
+                                           req.upper_body_overlay.phase,
+                                           req.upper_body_overlay.clip_variant);
+      }
     }
 
     QMatrix4x4 draw_world = req.world;
     if (!req.world_already_grounded) {
-      draw_world = adjust_world_to_palette_contact(
-          req.world,
-          species_kind,
-          playback.blob->frame_palette_view(playback.global_frame));
+      float contact_y = palette_contact_y(
+          species_kind, primary.blob->frame_palette_view(primary.global_frame));
+      if (req.full_body_blend.active() && full_body.valid()) {
+        float const secondary_contact = palette_contact_y(
+            species_kind, full_body.blob->frame_palette_view(full_body.global_frame));
+        float const blend_weight = std::clamp(req.full_body_blend.weight, 0.0F, 1.0F);
+        contact_y =
+            contact_y * (1.0F - blend_weight) + secondary_contact * blend_weight;
+      }
+      if (std::abs(contact_y) > 1.0e-6F) {
+        QMatrix4x4 adjusted = req.world;
+        QVector3D origin = adjusted.column(3).toVector3D();
+        origin.setY(origin.y() - contact_y);
+        adjusted.setColumn(3, QVector4D(origin, 1.0F));
+        draw_world = adjusted;
+      }
     }
     const bool prebaked_lowpoly_required =
         req.lod == CreatureLOD::Minimal && handle->requires_prebaked_minimal_snapshot;
+    bool const has_dynamic_layers =
+        (req.full_body_blend.active() && full_body.valid()) ||
+        (req.upper_body_overlay.active() && overlay.valid());
+    if (req.full_body_blend.active() && full_body.valid()) {
+      ++stats.full_body_blend_requests;
+    }
+    if (req.upper_body_overlay.active() && overlay.valid()) {
+      ++stats.upper_body_overlay_requests;
+    }
 
-    if (playback_desc.snapshot) {
+    if (primary.snapshot && (!has_dynamic_layers || req.lod != CreatureLOD::Full)) {
+      auto snapshot_playback = primary;
+      if (req.full_body_blend.active() && full_body.valid() &&
+          req.full_body_blend.weight >= 0.5F) {
+        snapshot_playback = full_body;
+        ++stats.dominant_snapshot_collapses;
+      }
       const bool emitted =
           submit_snapshot_creature(*handle,
                                    req.lod,
-                                   req.archetype,
+                                   snapshot_playback.archetype,
                                    req.variant,
-                                   req.state,
-                                   effective_clip_id,
-                                   effective_clip_variant,
+                                   snapshot_playback.state,
+                                   snapshot_playback.clip_id,
+                                   snapshot_playback.clip_variant,
                                    req.role_colors_view(),
                                    static_cast<std::uint16_t>(req.variant),
                                    req.base_color,
                                    req.wear_params,
                                    draw_world,
-                                   *playback.blob,
-                                   playback.global_frame,
-                                   playback.frame_in_clip,
+                                   *snapshot_playback.blob,
+                                   snapshot_playback.global_frame,
+                                   snapshot_playback.frame_in_clip,
                                    out,
                                    renderer,
                                    !prebaked_lowpoly_required);
@@ -628,12 +810,12 @@ auto CreaturePipeline::submit_requests(
       report_submit_cache_miss("snapshot_prebaked_required",
                                *handle,
                                req.lod,
-                               req.archetype,
+                               primary.archetype,
                                req.variant,
-                               req.state,
-                               effective_clip_id,
-                               effective_clip_variant,
-                               playback.frame_in_clip,
+                               primary.state,
+                               primary.clip_id,
+                               primary.clip_variant,
+                               primary.frame_in_clip,
                                handle->attachment_set_id,
                                handle->attachments_hash);
       return;
@@ -641,19 +823,23 @@ auto CreaturePipeline::submit_requests(
 
     submit_rigged_creature(*handle,
                            req.lod,
-                           req.archetype,
+                           primary.archetype,
                            req.variant,
-                           req.state,
-                           effective_clip_id,
-                           effective_clip_variant,
-                           playback.frame_in_clip,
+                           primary.state,
+                           primary.clip_id,
+                           primary.clip_variant,
+                           primary.frame_in_clip,
                            req.role_colors_view(),
                            static_cast<std::uint16_t>(req.variant),
                            req.base_color,
                            req.wear_params,
                            draw_world,
-                           *playback.blob,
-                           playback.global_frame,
+                           *primary.blob,
+                           primary.global_frame,
+                           full_body.valid() ? &full_body : nullptr,
+                           overlay.valid() ? &overlay : nullptr,
+                           req.full_body_blend.weight,
+                           req.upper_body_overlay.weight,
                            out,
                            renderer);
   };

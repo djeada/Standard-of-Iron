@@ -111,6 +111,11 @@ protected:
     return nullptr;
   }
 
+  auto find_wall_construction_site() -> Engine::Core::Entity* {
+    auto sites = world.get_entities_with<Engine::Core::WallConstructionSiteComponent>();
+    return sites.empty() ? nullptr : sites.front();
+  }
+
   void initialize_collect_map(Game::Map::WorldProp::Type prop_type) {
     Game::Map::MapDefinition map_def;
     map_def.grid.width = 32;
@@ -253,7 +258,7 @@ TEST_F(ProductionManagerTest, NonWallBuilderConstructionStartsWithoutGhostPrevie
   EXPECT_TRUE(preview_entities().empty());
 }
 
-TEST_F(ProductionManagerTest, WallConstructionStartsNeutralUntilDragBegins) {
+TEST_F(ProductionManagerTest, WallConstructionPreviewAppearsOnHoverAndRotates) {
   auto* builder = add_selected_builder();
   ProductionManager manager(&world, &picking_service, &camera);
 
@@ -268,6 +273,50 @@ TEST_F(ProductionManagerTest, WallConstructionStartsNeutralUntilDragBegins) {
   EXPECT_EQ(manager.construction_preview_segment_count(), 0);
   EXPECT_FALSE(builder_prod->is_placement_preview);
   EXPECT_FALSE(builder_prod->has_construction_site);
+
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+
+  auto previews = preview_entities();
+  ASSERT_EQ(previews.size(), 1U);
+  EXPECT_TRUE(manager.construction_preview_active());
+  EXPECT_TRUE(manager.construction_preview_valid());
+  EXPECT_TRUE(manager.construction_preview_rotatable());
+  EXPECT_EQ(manager.construction_preview_segment_count(), 1);
+  auto* preview_transform =
+      previews.front()->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(preview_transform, nullptr);
+  EXPECT_FLOAT_EQ(preview_transform->rotation.y, 0.0F);
+
+  manager.on_construction_scroll(1.0F);
+
+  previews = preview_entities();
+  ASSERT_EQ(previews.size(), 1U);
+  preview_transform =
+      previews.front()->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(preview_transform, nullptr);
+  EXPECT_FLOAT_EQ(preview_transform->rotation.y, 90.0F);
+}
+
+TEST_F(ProductionManagerTest, WallConstructionKeepsRotatedSingleSegmentOrientation) {
+  add_selected_builder();
+  ProductionManager manager(&world, &picking_service, &camera);
+
+  manager.start_builder_construction(QStringLiteral("wall_segment"));
+
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  manager.on_construction_scroll(1.0F);
+  manager.on_construction_pointer_pressed(screen.x(), screen.y(), viewport);
+  manager.on_construction_pointer_released(screen.x(), screen.y(), viewport);
+
+  EXPECT_FALSE(manager.is_placing_construction());
+
+  auto* site = find_wall_construction_site();
+  ASSERT_NE(site, nullptr);
+  auto* transform = site->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_FLOAT_EQ(transform->rotation.y, 90.0F);
 }
 
 TEST_F(ProductionManagerTest, DirectBuildingPlacementUsesGhostPreviewAndRotation) {

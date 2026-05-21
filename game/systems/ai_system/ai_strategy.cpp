@@ -7,9 +7,16 @@ namespace Game::Systems::AI {
 namespace {
 
 void clamp_style_targets(AIStrategyConfig& config) {
-  config.target_builder_count = std::clamp(config.target_builder_count, 1, 8);
-  config.base_home_target = std::clamp(config.base_home_target, 2, 12);
-  config.desired_barracks_count = std::clamp(config.desired_barracks_count, 1, 6);
+  int const min_builder_count =
+      (config.strategy == AIStrategy::SepulcherDefense) ? 0 : 1;
+  int const min_home_target = (config.strategy == AIStrategy::SepulcherDefense) ? 0 : 2;
+  int const min_barracks_count =
+      (config.strategy == AIStrategy::SepulcherDefense) ? 0 : 1;
+  config.target_builder_count =
+      std::clamp(config.target_builder_count, min_builder_count, 8);
+  config.base_home_target = std::clamp(config.base_home_target, min_home_target, 12);
+  config.desired_barracks_count =
+      std::clamp(config.desired_barracks_count, min_barracks_count, 6);
   config.desired_defense_tower_count =
       std::clamp(config.desired_defense_tower_count, 0, 10);
   config.desired_wall_segment_count =
@@ -38,7 +45,7 @@ void clamp_style_targets(AIStrategyConfig& config) {
 } // namespace
 
 auto AIStrategyFactory::parse_strategy(const QString& strategy_str) -> AIStrategy {
-  QString lower = strategy_str.toLower();
+  QString const lower = strategy_str.toLower();
 
   if (lower == "aggressive") {
     return AIStrategy::Aggressive;
@@ -58,6 +65,9 @@ auto AIStrategyFactory::parse_strategy(const QString& strategy_str) -> AIStrateg
   if (lower == "rusher" || lower == "rush") {
     return AIStrategy::Rusher;
   }
+  if (lower == "sepulcher_defense" || lower == "undead_defense") {
+    return AIStrategy::SepulcherDefense;
+  }
 
   return AIStrategy::Balanced;
 }
@@ -76,6 +86,8 @@ auto AIStrategyFactory::strategy_to_string(AIStrategy strategy) -> QString {
     return "Harasser";
   case AIStrategy::Rusher:
     return "Rusher";
+  case AIStrategy::SepulcherDefense:
+    return "SepulcherDefense";
   case AIStrategy::Balanced:
   default:
     return "Balanced";
@@ -267,6 +279,35 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.expansion_site_distance = 24.0F;
     break;
 
+  case AIStrategy::SepulcherDefense:
+    config.aggression_modifier = 0.35F;
+    config.defense_modifier = 2.2F;
+    config.expansion_priority = 0.0F;
+    config.production_rate_modifier = 0.0F;
+    config.min_attack_force = 999.0F;
+    config.retreat_threshold = 0.20F;
+    config.harassment_range = 0.0F;
+    config.target_builder_count = 0;
+    config.base_home_target = 0;
+    config.desired_barracks_count = 0;
+    config.desired_defense_tower_count = 0;
+    config.desired_wall_segment_count = 0;
+    config.desired_catapult_count = 0;
+    config.desired_assembly_size = 8;
+    config.reactive_attack_size = 1;
+    config.proactive_attack_size = 999;
+    config.reserve_units = 6;
+    config.harass_units = 0;
+    config.desired_outpost_barracks_count = 0;
+    config.outpost_home_target = 0;
+    config.assembly_radius = 11.0F;
+    config.gather_spacing = 1.6F;
+    config.attack_formation_spacing = 2.2F;
+    config.scouting_distance = 22.0F;
+    config.reserve_hold_radius = 10.0F;
+    config.expansion_site_distance = 0.0F;
+    break;
+
   case AIStrategy::Balanced:
   default:
 
@@ -311,9 +352,9 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
   config.personality.defense = defense;
   config.personality.harassment = harassment;
 
-  float aggression_factor = (aggression - 0.5F) * 2.0F;
-  float defense_factor = (defense - 0.5F) * 2.0F;
-  float harassment_factor = (harassment - 0.5F) * 2.0F;
+  float const aggression_factor = (aggression - 0.5F) * 2.0F;
+  float const defense_factor = (defense - 0.5F) * 2.0F;
+  float const harassment_factor = (harassment - 0.5F) * 2.0F;
 
   config.aggression_modifier *= (1.0F + aggression_factor * 0.3F);
   config.defense_modifier *= (1.0F + defense_factor * 0.3F);

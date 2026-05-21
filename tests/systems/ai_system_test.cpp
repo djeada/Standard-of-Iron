@@ -4,6 +4,7 @@
 #include "game/core/component.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
+#include "game/map/terrain_service.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_command_filter.h"
 #include "game/systems/ai_system/ai_reasoner.h"
@@ -16,15 +17,25 @@
 #include "game/systems/ai_system/behaviors/expand_behavior.h"
 #include "game/systems/ai_system/behaviors/gather_behavior.h"
 #include "game/systems/ai_system/behaviors/harass_behavior.h"
+#include "game/systems/ai_system/behaviors/production_behavior.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 
 namespace {
 
 class AISystemTest : public ::testing::Test {
 protected:
-  void SetUp() override { Game::Systems::OwnerRegistry::instance().clear(); }
+  void SetUp() override {
+    Game::Systems::OwnerRegistry::instance().clear();
+    Game::Systems::NationRegistry::instance().clear();
+    Game::Map::TerrainService::instance().clear();
+  }
 
-  void TearDown() override { Game::Systems::OwnerRegistry::instance().clear(); }
+  void TearDown() override {
+    Game::Systems::OwnerRegistry::instance().clear();
+    Game::Systems::NationRegistry::instance().clear();
+    Game::Map::TerrainService::instance().clear();
+  }
 
   static auto make_unit(Engine::Core::EntityID id,
                         float x,
@@ -99,6 +110,34 @@ protected:
       (void)entity->add_component<Engine::Core::BuildingComponent>();
     }
     return entity;
+  }
+
+  static void register_sepulcher_nation(int owner_id = 3) {
+    Game::Systems::Nation nation;
+    nation.id = Game::Systems::NationID::IronSepulcher;
+    nation.display_name = "The Iron Sepulcher";
+    nation.playable = false;
+    nation.has_economy = false;
+    nation.ai_profile = "sepulcher_defense";
+    nation.selectable_in_skirmish = false;
+    Game::Systems::NationRegistry::instance().register_nation(std::move(nation));
+    Game::Systems::NationRegistry::instance().set_player_nation(
+        owner_id, Game::Systems::NationID::IronSepulcher);
+  }
+
+  static void initialize_world_props(const std::vector<Game::Map::WorldProp>& props) {
+    Game::Map::TerrainService::instance().restore_from_serialized(
+        8,
+        8,
+        1.0F,
+        std::vector<float>(64, 0.0F),
+        std::vector<Game::Map::TerrainType>(64, Game::Map::TerrainType::Flat),
+        {},
+        {},
+        {},
+        {},
+        props,
+        props);
   }
 };
 
@@ -618,6 +657,146 @@ TEST_F(AISystemTest, SnapshotBuilderUsesBuildingVisionForBaseDefense) {
   EXPECT_EQ(snapshot.visible_enemies.front().id, visible_enemy->get_id());
 }
 
+TEST_F(AISystemTest, SepulcherStrategyParsesAliasesAndDisablesEconomyTargets) {
+  EXPECT_EQ(Game::Systems::AI::AIStrategyFactory::parse_strategy("sepulcher_defense"),
+            Game::Systems::AI::AIStrategy::SepulcherDefense);
+  EXPECT_EQ(Game::Systems::AI::AIStrategyFactory::parse_strategy("undead_defense"),
+            Game::Systems::AI::AIStrategy::SepulcherDefense);
+
+  const auto config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::SepulcherDefense);
+  EXPECT_EQ(config.target_builder_count, 0);
+  EXPECT_EQ(config.base_home_target, 0);
+  EXPECT_EQ(config.desired_barracks_count, 0);
+  EXPECT_EQ(config.desired_defense_tower_count, 0);
+  EXPECT_EQ(config.desired_outpost_barracks_count, 0);
+  EXPECT_EQ(config.harass_units, 0);
+  EXPECT_GT(config.reserve_units, 0);
+}
+
+TEST_F(AISystemTest, SnapshotBuilderAddsShrineAndRuinDefenseAnchorsForSepulcherAI) {
+  register_sepulcher_nation();
+  initialize_world_props({{1, Game::Map::WorldProp::Type::MagicShrine, 12.0F, 14.0F},
+                          {2, Game::Map::WorldProp::Type::Ruins, 18.0F, 20.0F},
+                          {3, Game::Map::WorldProp::Type::Tent, 2.0F, 3.0F}});
+
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "Sepulcher");
+  owners.register_owner_with_id(7, Game::Systems::OwnerType::Player, "Enemy");
+  (void)add_world_unit(world, 3, 10.0F, 10.0F, 12.0F, true, false);
+
+  const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+
+  ASSERT_EQ(snapshot.defense_anchors.size(), 2U);
+  EXPECT_FLOAT_EQ(snapshot.defense_anchors[0].pos_x, 12.0F);
+  EXPECT_FLOAT_EQ(snapshot.defense_anchors[1].pos_x, 18.0F);
+}
+
+TEST_F(AISystemTest, SepulcherReasonerPrefersStructuralShrineAnchorWithoutBarracks) {
+  register_sepulcher_nation();
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.friendly_units = {
+      make_unit(1, 13.0F, 11.0F),
+      make_unit(2, 12.0F, 9.0F),
+      make_unit(3, 70.0F, 70.0F),
+  };
+  snapshot.defense_anchors = {
+      make_enemy(901, 12.0F, 10.0F),
+      make_enemy(902, 80.0F, 80.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  EXPECT_TRUE(context.has_base_anchor);
+  EXPECT_TRUE(context.anchor_is_structural);
+  EXPECT_EQ(context.primary_barracks, 0U);
+  EXPECT_FLOAT_EQ(context.base_pos_x, 12.0F);
+  EXPECT_FLOAT_EQ(context.base_pos_z, 10.0F);
+  EXPECT_FLOAT_EQ(context.rally_x, 12.0F);
+  EXPECT_FLOAT_EQ(context.rally_z, 10.0F);
+}
+
+TEST_F(AISystemTest, NoEconomyBehaviorsDoNotRequestProductionBuildersOrExpansion) {
+  register_sepulcher_nation();
+
+  Game::Systems::AI::ProductionBehavior production_behavior;
+  Game::Systems::AI::BuilderBehavior builder_behavior;
+  Game::Systems::AI::ExpandBehavior expand_behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_builder(11, 18.0F, 12.0F),
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      make_unit(1, 42.0F, 40.0F),
+      make_unit(2, 43.0F, 41.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.nation = Game::Systems::NationRegistry::instance().get_nation_for_player(
+      context.player_id);
+  context.state = Game::Systems::AI::AIState::Expanding;
+  context.builder_count = 1;
+  context.total_units = 3;
+  context.max_troops_per_player = 500;
+  context.has_expansion_site = true;
+
+  EXPECT_FALSE(production_behavior.should_execute(snapshot, context));
+  EXPECT_FALSE(builder_behavior.should_execute(snapshot, context));
+  EXPECT_FALSE(expand_behavior.should_execute(snapshot, context));
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  production_behavior.execute(snapshot, context, 2.0F, commands);
+  builder_behavior.execute(snapshot, context, 4.0F, commands);
+  expand_behavior.execute(snapshot, context, 2.0F, commands);
+  EXPECT_TRUE(commands.empty());
+}
+
+TEST_F(AISystemTest, SepulcherStateMachineStaysLocalAndReturnsToGathering) {
+  register_sepulcher_nation();
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 20.0F;
+  snapshot.friendly_units = {
+      make_unit(1, 12.0F, 10.0F),
+      make_unit(2, 13.0F, 9.0F),
+      make_unit(3, 14.0F, 10.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(101, 60.0F, 60.0F)};
+  snapshot.defense_anchors = {make_enemy(901, 12.0F, 10.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::SepulcherDefense);
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.state_timer = 3.1F;
+  context.decision_timer = 2.1F;
+
+  Game::Systems::AI::AIReasoner::update_state_machine(snapshot, context, 0.0F);
+  EXPECT_EQ(context.state, Game::Systems::AI::AIState::Gathering);
+
+  context.state = Game::Systems::AI::AIState::Defending;
+  context.state_timer = 3.1F;
+  context.decision_timer = 2.1F;
+  context.nearby_threat_count = 0;
+  context.barracks_under_threat = false;
+  context.buildings_under_attack.clear();
+  context.last_local_threat_time = 5.0F;
+
+  Game::Systems::AI::AIReasoner::update_state_machine(snapshot, context, 0.0F);
+  EXPECT_EQ(context.state, Game::Systems::AI::AIState::Gathering);
+}
+
 TEST_F(AISystemTest, SnapshotBuilderKeepsHiddenStrategicObjectives) {
   Engine::Core::World world;
   auto& owners = Game::Systems::OwnerRegistry::instance();
@@ -1134,7 +1313,7 @@ TEST_F(AISystemTest, HarassBehaviorUsesDedicatedRaidersTowardStrategicObjective)
 }
 
 TEST_F(AISystemTest, HarassBehaviorStopsWhenBaseIsUnderThreat) {
-  Game::Systems::AI::HarassBehavior behavior;
+  Game::Systems::AI::HarassBehavior const behavior;
 
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.friendly_units = {

@@ -1,8 +1,16 @@
 # Test suite for Standard of Iron
 # Uses Google Test framework
 
+set(_soi_optional_test_sources)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/render/creature/combat_visual_state_test.cpp")
+    list(APPEND _soi_optional_test_sources
+        render/creature/combat_visual_state_test.cpp
+    )
+endif()
+
 # Test executable
 add_executable(standard_of_iron_tests
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     ${CMAKE_SOURCE_DIR}/tools/map_editor/map_data.cpp
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
     ${CMAKE_SOURCE_DIR}/app/core/visibility_coordinator.cpp
@@ -38,6 +46,7 @@ add_executable(standard_of_iron_tests
     map/terrain_service_test.cpp
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
+    map/map_loader_test.cpp
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
     map/mission_victory_rules_test.cpp
@@ -60,6 +69,7 @@ add_executable(standard_of_iron_tests
     systems/pathfinding_test.cpp
     systems/production_system_test.cpp
     systems/victory_service_test.cpp
+    systems/undead_awakening_system_test.cpp
     systems/archer_bonus_test.cpp
     systems/arrow_system_test.cpp
     systems/ai_system_test.cpp
@@ -83,6 +93,7 @@ add_executable(standard_of_iron_tests
     render/building_render_common_test.cpp
     render/mode_indicator_test.cpp
     render/mode_indicator_placement_test.cpp
+    render/shader_source_test.cpp
     render/renderer_visibility_policy_test.cpp
     render/unit_render_cache_test.cpp
     render/persistent_render_registry_test.cpp
@@ -123,6 +134,7 @@ add_executable(standard_of_iron_tests
     render/creature/rigged_mesh_cache_test.cpp
     render/creature/quadruped_topology_test.cpp
     render/creature/quadruped_gait_test.cpp
+    ${_soi_optional_test_sources}
     render/creature/humanoid_prepare_test.cpp
     render/creature/horse_prepare_test.cpp
     render/creature/elephant_prepare_test.cpp
@@ -150,6 +162,7 @@ add_executable(standard_of_iron_tests
     render/profiling/frame_profile_test.cpp
     tools/map_editor_map_data_test.cpp
     tools/map_editor_canvas_transform_test.cpp
+    tools/arena_scenarios_test.cpp
     tools/arena_unit_spawn_options_test.cpp
     test_main.cpp
 )
@@ -178,6 +191,7 @@ target_include_directories(standard_of_iron_tests
 # Set output directory
 set_target_properties(standard_of_iron_tests PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    AUTORCC ON
 )
 
 if(TARGET bake_creature_assets)
@@ -186,7 +200,9 @@ endif()
 
 # Add tests to CTest after target properties are finalized.
 include(GoogleTest)
-gtest_discover_tests(standard_of_iron_tests)
+gtest_discover_tests(standard_of_iron_tests
+    DISCOVERY_MODE PRE_TEST
+)
 
 # --- Subset test binary -------------------------------------------------
 # Three test files have pre-existing compile breakage as of Stage 15.5c

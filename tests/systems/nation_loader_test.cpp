@@ -172,4 +172,82 @@ TEST(NationLoader, ProfilesPreserveConfiguredResourceCostsAcrossNations) {
   EXPECT_TRUE(roman_builder.production.resource_costs.empty());
 }
 
+TEST(NationLoader, IronSepulcherRoundTripsNationId) {
+  Game::Systems::NationID parsed{};
+  EXPECT_TRUE(
+      Game::Systems::try_parse_nation_id(QStringLiteral("iron_sepulcher"), parsed));
+  EXPECT_EQ(parsed, Game::Systems::NationID::IronSepulcher);
+  EXPECT_EQ(Game::Systems::nation_id_to_qstring(Game::Systems::NationID::IronSepulcher),
+            QStringLiteral("iron_sepulcher"));
+}
+
+TEST(NationLoader, IronSepulcherMetadataLoadsAsNonPlayableRoster) {
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  ASSERT_FALSE(nations.empty());
+
+  auto const it = std::find_if(
+      nations.begin(), nations.end(), [](const Game::Systems::Nation& nation) {
+        return nation.id == Game::Systems::NationID::IronSepulcher;
+      });
+  ASSERT_NE(it, nations.end());
+
+  EXPECT_EQ(it->display_name, "The Iron Sepulcher");
+  EXPECT_EQ(it->formation_type, Game::Systems::FormationType::Barbarian);
+  EXPECT_FALSE(it->primary_building.has_value());
+  EXPECT_FALSE(it->playable);
+  EXPECT_FALSE(it->has_economy);
+  EXPECT_EQ(it->ai_profile, "sepulcher_defense");
+  EXPECT_FALSE(it->selectable_in_skirmish);
+  ASSERT_EQ(it->available_troops.size(), 3U);
+  EXPECT_NE(it->get_troop(Game::Units::TroopType::SkeletonSwordsman), nullptr);
+  EXPECT_NE(it->get_troop(Game::Units::TroopType::SkeletonArcher), nullptr);
+  EXPECT_NE(it->get_troop(Game::Units::TroopType::GravePriest), nullptr);
+  ASSERT_TRUE(it->troop_variants.contains(Game::Units::TroopType::SkeletonArcher));
+  ASSERT_TRUE(it->troop_variants.contains(Game::Units::TroopType::GravePriest));
+  EXPECT_EQ(it->troop_variants.at(Game::Units::TroopType::SkeletonArcher).abilities,
+            (std::vector<std::string>{"cursed_arrow_volley"}));
+  EXPECT_EQ(it->troop_variants.at(Game::Units::TroopType::GravePriest).abilities,
+            (std::vector<std::string>{"fireball"}));
+}
+
+TEST(NationLoader, IronSepulcherProfilesResolveUndeadRenderers) {
+  auto const nations = Game::Systems::NationLoader::load_default_nations();
+  ASSERT_FALSE(nations.empty());
+
+  auto& registry = Game::Systems::NationRegistry::instance();
+  registry.clear();
+  registry.clear_player_assignments();
+  for (const auto& nation : nations) {
+    registry.register_nation(nation);
+  }
+
+  auto& profiles = Game::Systems::TroopProfileService::instance();
+  profiles.clear();
+
+  auto const skeleton_swordsman =
+      profiles.get_profile(Game::Systems::NationID::IronSepulcher,
+                           Game::Units::TroopType::SkeletonSwordsman);
+  auto const skeleton_archer = profiles.get_profile(
+      Game::Systems::NationID::IronSepulcher, Game::Units::TroopType::SkeletonArcher);
+  auto const grave_priest = profiles.get_profile(Game::Systems::NationID::IronSepulcher,
+                                                 Game::Units::TroopType::GravePriest);
+
+  EXPECT_EQ(skeleton_swordsman.visuals.renderer_id,
+            "troops/iron_sepulcher/skeleton_swordsman");
+  EXPECT_EQ(skeleton_archer.visuals.renderer_id,
+            "troops/iron_sepulcher/skeleton_archer");
+  EXPECT_EQ(grave_priest.visuals.renderer_id, "troops/iron_sepulcher/grave_priest");
+  EXPECT_TRUE(skeleton_archer.has_ability("cursed_arrow_volley"));
+  EXPECT_TRUE(grave_priest.has_ability("fireball"));
+}
+
+TEST(NationLoader, DefaultNationRemainsRomanRepublic) {
+  auto& registry = Game::Systems::NationRegistry::instance();
+  registry.clear();
+  registry.clear_player_assignments();
+  registry.initialize_defaults();
+
+  EXPECT_EQ(registry.default_nation_id(), Game::Systems::NationID::RomanRepublic);
+}
+
 } // namespace

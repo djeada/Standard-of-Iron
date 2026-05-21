@@ -22,6 +22,7 @@
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
 #include "../../../creature/humanoid_clip_ids.h"
+#include "../../../creature/pipeline/creature_asset.h"
 #include "../../../creature/pipeline/creature_render_graph.h"
 #include "../../../creature/pipeline/preparation_common.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
@@ -134,6 +135,13 @@ using Render::GL::Humanoid::saturate_color;
 
 class ArcherRenderer : public HumanoidRendererBase {
 public:
+  explicit ArcherRenderer(
+      std::string_view renderer_key = "troops/carthage/archer",
+      Render::Creature::Pipeline::CreatureAssetId creature_asset_id =
+          Render::Creature::Pipeline::k_humanoid_asset)
+      : m_renderer_key(renderer_key)
+      , m_creature_asset_id(creature_asset_id) {}
+
   auto get_proportion_scaling() const -> QVector3D override {
     return k_profile.as_vector();
   }
@@ -155,48 +163,51 @@ public:
   visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
-    static const UnitVisualSpec spec = []() {
-      static const auto k_archer_base_archetype = []() {
-        using Render::Creature::AnimationStateId;
-        using Render::Creature::ArchetypeDescriptor;
-        using Render::Creature::ArchetypeRegistry;
+    if (m_visual_spec_baked) {
+      return m_visual_spec_cache;
+    }
 
-        auto& registry = ArchetypeRegistry::instance();
-        auto const* base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
-        if (base_desc == nullptr) {
-          return Render::Creature::k_invalid_archetype;
-        }
+    static const auto k_archer_base_archetype = []() {
+      using Render::Creature::AnimationStateId;
+      using Render::Creature::ArchetypeDescriptor;
+      using Render::Creature::ArchetypeRegistry;
 
-        ArchetypeDescriptor desc = *base_desc;
-        desc.debug_name = "troops/carthage/archer/base";
-        auto const attack_bow_clip =
-            desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackBow)];
-        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
-            attack_bow_clip;
-        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
-            Render::Creature::k_humanoid_hold_bow_clip;
-        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
-            Render::Creature::k_humanoid_hold_bow_clip;
-        return registry.register_archetype(desc);
-      }();
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/carthage/archer");
-      const std::array<EquipmentHandle, 5> handles{loadout.helmet_handle,
-                                                   loadout.armor_handle,
-                                                   loadout.quiver_handle,
-                                                   loadout.bow_handle,
-                                                   loadout.cloak_handle};
+      auto& registry = ArchetypeRegistry::instance();
+      auto const* base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
+      if (base_desc == nullptr) {
+        return Render::Creature::k_invalid_archetype;
+      }
 
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/carthage/archer";
-      s.scaling = k_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/carthage/archer", k_archer_base_archetype, handles);
-      return s;
+      ArchetypeDescriptor desc = *base_desc;
+      desc.debug_name = "troops/carthage/archer/base";
+      auto const attack_bow_clip =
+          desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackBow)];
+      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
+          attack_bow_clip;
+      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
+          Render::Creature::k_humanoid_hold_bow_clip;
+      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
+          Render::Creature::k_humanoid_hold_bow_clip;
+      return registry.register_archetype(desc);
     }();
-    return spec;
+    const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
+    const std::array<EquipmentHandle, 5> handles{loadout.helmet_handle,
+                                                 loadout.armor_handle,
+                                                 loadout.quiver_handle,
+                                                 loadout.bow_handle,
+                                                 loadout.cloak_handle};
+
+    UnitVisualSpec s{};
+    s.kind = CreatureKind::Humanoid;
+    s.debug_name = m_renderer_key;
+    s.scaling = k_profile.as_pipeline_scaling();
+    s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+    s.archetype_id = resolve_humanoid_equipment_archetype(
+        m_renderer_key, k_archer_base_archetype, handles);
+    s.creature_asset_id = m_creature_asset_id;
+    m_visual_spec_cache = s;
+    m_visual_spec_baked = true;
+    return m_visual_spec_cache;
   }
 
   void get_variant(const DrawContext& ctx,
@@ -237,6 +248,9 @@ public:
   }
 
 private:
+  std::string_view m_renderer_key;
+  Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
+
   auto resolve_style(const DrawContext& ctx) const -> const ArcherStyleConfig& {
     ensure_archer_styles_registered();
     auto& styles = style_registry();
@@ -264,11 +278,14 @@ private:
                                const QVector3D& team_tint,
                                HumanoidVariant& variant) const {
     auto apply_color = [&](const std::optional<QVector3D>& override_color,
-                           QVector3D& target) {
+                           QVector3D& target,
+                           float team_weight = k_team_mix_weight,
+                           float style_weight = k_style_mix_weight) {
       target = mix_palette_color(
-          target, override_color, team_tint, k_team_mix_weight, k_style_mix_weight);
+          target, override_color, team_tint, team_weight, style_weight);
     };
 
+    apply_color(style.skin_color, variant.palette.skin, 0.0F, 1.0F);
     apply_color(style.cloth_color, variant.palette.cloth);
     apply_color(style.leather_color, variant.palette.leather);
     apply_color(style.leather_dark_color, variant.palette.leather_dark);
@@ -279,11 +296,28 @@ private:
 
 void register_archer_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_archer_styles_registered();
-  static ArcherRenderer const renderer;
   registry.register_renderer("troops/carthage/archer",
                              [](const DrawContext& ctx, ISubmitter& out) {
                                static ArcherRenderer const static_renderer;
                                static_renderer.render(ctx, out);
                              });
+  registry.register_renderer("troops/carthage/commanders/hasdrubal_barca",
+                             [](const DrawContext& ctx, ISubmitter& out) {
+                               static ArcherRenderer const static_renderer{
+                                   "troops/carthage/commanders/hasdrubal_barca"};
+                               static_renderer.render(ctx, out);
+                             });
+}
+
+void register_skeleton_archer_renderer(Render::GL::EntityRendererRegistry& registry) {
+  ensure_archer_styles_registered();
+  registry.register_renderer(
+      "troops/iron_sepulcher/skeleton_archer",
+      [](const DrawContext& ctx, ISubmitter& out) {
+        static ArcherRenderer const static_renderer{
+            "troops/iron_sepulcher/skeleton_archer",
+            Render::Creature::Pipeline::k_skeleton_humanoid_asset};
+        static_renderer.render(ctx, out);
+      });
 }
 } // namespace Render::GL::Carthage

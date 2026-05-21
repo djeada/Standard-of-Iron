@@ -31,13 +31,16 @@ TEST(BpatRegistry, LoadsAllSpecies) {
       static_cast<std::size_t>(
           reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat")) +
       static_cast<std::size_t>(
-          reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat"));
+          reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat")) +
+      static_cast<std::size_t>(reg.load_species(k_species_humanoid_skeleton,
+                                                root + "/humanoid_skeleton.bpat"));
   EXPECT_EQ(loaded, k_species_count);
   EXPECT_TRUE(reg.has_species(k_species_humanoid));
   EXPECT_TRUE(reg.has_species(k_species_horse));
   EXPECT_TRUE(reg.has_species(k_species_elephant));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_sword));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_spear));
+  EXPECT_TRUE(reg.has_species(k_species_humanoid_skeleton));
 }
 
 TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
@@ -69,6 +72,7 @@ TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
   EXPECT_TRUE(reg.has_species(k_species_elephant));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_sword));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_spear));
+  EXPECT_TRUE(reg.has_species(k_species_humanoid_skeleton));
 }
 
 TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
@@ -84,12 +88,15 @@ TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
       reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
   ASSERT_TRUE(
       reg.load_species(k_species_humanoid_spear, root + "/humanoid_spear.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_skeleton, root + "/humanoid_skeleton.bpat"));
 
   for (auto const species : {k_species_humanoid,
                              k_species_horse,
                              k_species_elephant,
                              k_species_humanoid_sword,
-                             k_species_humanoid_spear}) {
+                             k_species_humanoid_spear,
+                             k_species_humanoid_skeleton}) {
     auto const* blob = reg.blob(species);
     ASSERT_NE(blob, nullptr) << "species " << species;
     ASSERT_GT(blob->clip_count(), 0U);
@@ -126,10 +133,11 @@ TEST(BpatRegistry, HumanoidWalkClipsAnimateLowerBodyForEveryHumanoidSpecies) {
     std::uint32_t id;
     const char* file;
   };
-  constexpr std::array<SpeciesFile, 3> k_humanoid_species{{
+  constexpr std::array<SpeciesFile, 4> k_humanoid_species{{
       {k_species_humanoid, "humanoid.bpat"},
       {k_species_humanoid_sword, "humanoid_sword.bpat"},
       {k_species_humanoid_spear, "humanoid_spear.bpat"},
+      {k_species_humanoid_skeleton, "humanoid_skeleton.bpat"},
   }};
   constexpr std::array<HumanoidBone, 7> k_lower_body_bones{{
       HumanoidBone::Pelvis,
@@ -340,6 +348,94 @@ TEST(BpatRegistry, SwordHumanoidIdleDiffersFromDefaultHumanoid) {
   }
   EXPECT_TRUE(any_different)
       << "humanoid_sword idle must differ from generic humanoid idle";
+}
+
+TEST(BpatRegistry, SkeletonHumanoidSwordAttackReachIsShorterThanDefaultHumanoid) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_skeleton, root + "/humanoid_skeleton.bpat"));
+
+  std::array<QMatrix4x4, 64> default_palette{};
+  std::array<QMatrix4x4, 64> skeleton_palette{};
+  constexpr std::uint32_t k_frame = 14U;
+  auto const bone_count =
+      reg.sample_palette(k_species_humanoid,
+                         Render::Creature::k_humanoid_attack_sword_a_clip,
+                         k_frame,
+                         std::span<QMatrix4x4>(default_palette));
+  ASSERT_GT(bone_count, static_cast<std::uint32_t>(HumanoidBone::HandR));
+  ASSERT_EQ(reg.sample_palette(k_species_humanoid_skeleton,
+                               Render::Creature::k_humanoid_attack_sword_a_clip,
+                               k_frame,
+                               std::span<QMatrix4x4>(skeleton_palette)),
+            bone_count);
+
+  auto const hand_index = static_cast<std::size_t>(HumanoidBone::HandR);
+  auto const shoulder_index = static_cast<std::size_t>(HumanoidBone::ShoulderR);
+  QVector3D const default_hand = default_palette[hand_index].column(3).toVector3D();
+  QVector3D const default_shoulder =
+      default_palette[shoulder_index].column(3).toVector3D();
+  QVector3D const skeleton_hand = skeleton_palette[hand_index].column(3).toVector3D();
+  QVector3D const skeleton_shoulder =
+      skeleton_palette[shoulder_index].column(3).toVector3D();
+
+  EXPECT_LT(skeleton_hand.z() - skeleton_shoulder.z(),
+            default_hand.z() - default_shoulder.z());
+}
+
+TEST(BpatRegistry, SwordHumanoidSwordAttackDiffersFromDefaultHumanoidAttack) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(k_species_humanoid_sword, root + "/humanoid_sword.bpat"));
+
+  auto const* default_blob = reg.blob(k_species_humanoid);
+  auto const* sword_blob = reg.blob(k_species_humanoid_sword);
+  ASSERT_NE(default_blob, nullptr);
+  ASSERT_NE(sword_blob, nullptr);
+
+  constexpr std::uint16_t k_attack_clip =
+      Render::Creature::k_humanoid_attack_sword_a_clip;
+  ASSERT_GT(default_blob->clip_count(), static_cast<std::uint32_t>(k_attack_clip));
+  ASSERT_GT(sword_blob->clip_count(), static_cast<std::uint32_t>(k_attack_clip));
+
+  std::uint32_t const frame = std::min(default_blob->clip(k_attack_clip).frame_count,
+                                       sword_blob->clip(k_attack_clip).frame_count) /
+                              2U;
+  std::array<QMatrix4x4, 64> default_palette{};
+  std::array<QMatrix4x4, 64> sword_palette{};
+  auto const bone_count = reg.sample_palette(
+      k_species_humanoid, k_attack_clip, frame, std::span<QMatrix4x4>(default_palette));
+  ASSERT_GT(bone_count, static_cast<std::uint32_t>(HumanoidBone::HandR));
+  ASSERT_EQ(reg.sample_palette(k_species_humanoid_sword,
+                               k_attack_clip,
+                               frame,
+                               std::span<QMatrix4x4>(sword_palette)),
+            bone_count);
+
+  auto const hand_index = static_cast<std::size_t>(HumanoidBone::HandR);
+  auto const shoulder_index = static_cast<std::size_t>(HumanoidBone::ShoulderR);
+  QVector3D const default_hand = default_palette[hand_index].column(3).toVector3D();
+  QVector3D const default_shoulder =
+      default_palette[shoulder_index].column(3).toVector3D();
+  QVector3D const sword_hand = sword_palette[hand_index].column(3).toVector3D();
+  QVector3D const sword_shoulder = sword_palette[shoulder_index].column(3).toVector3D();
+
+  EXPECT_GT((sword_hand - default_hand).length(), 0.05F);
+  EXPECT_GT((sword_shoulder - default_shoulder).length(), 0.05F);
 }
 
 TEST(BpatRegistry, SwordHumanoidAmbientIdleStartsFromShieldReadyIdle) {

@@ -16,6 +16,29 @@
 #include "units/troop_type.h"
 
 namespace Game::Systems {
+namespace {
+
+auto choose_default_nation_id(const std::vector<Nation>& nations) -> NationID {
+  const auto roman =
+      std::find_if(nations.begin(), nations.end(), [](const Nation& nation) {
+        return nation.id == NationID::RomanRepublic;
+      });
+  if (roman != nations.end()) {
+    return roman->id;
+  }
+
+  const auto selectable =
+      std::find_if(nations.begin(), nations.end(), [](const Nation& nation) {
+        return nation.playable && nation.selectable_in_skirmish;
+      });
+  if (selectable != nations.end()) {
+    return selectable->id;
+  }
+
+  return nations.front().id;
+}
+
+} // namespace
 
 auto Nation::get_melee_troops() const -> std::vector<const TroopType*> {
   std::vector<const TroopType*> result;
@@ -168,7 +191,7 @@ void NationRegistry::initialize_defaults() {
     register_nation(std::move(roman));
     m_default_nation = NationID::RomanRepublic;
   } else {
-    NationID fallback_default = nations.front().id;
+    NationID const fallback_default = choose_default_nation_id(nations);
     for (auto& nation : nations) {
       register_nation(std::move(nation));
     }

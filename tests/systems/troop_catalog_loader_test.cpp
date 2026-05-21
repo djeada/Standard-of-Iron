@@ -66,4 +66,32 @@ TEST(TroopCatalogLoader, ProductionResourceCostsLoadForEconomyUnits) {
   EXPECT_TRUE(builder->production.resource_costs.empty());
 }
 
+TEST(TroopCatalogLoader, IronSepulcherTroopsLoadFromCatalog) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+
+  auto const* skeleton_swordsman = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::SkeletonSwordsman);
+  auto const* skeleton_archer = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::SkeletonArcher);
+  auto const* grave_priest = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::GravePriest);
+  ASSERT_NE(skeleton_swordsman, nullptr);
+  ASSERT_NE(skeleton_archer, nullptr);
+  ASSERT_NE(grave_priest, nullptr);
+
+  EXPECT_EQ(skeleton_swordsman->production.cost, 0);
+  EXPECT_FALSE(skeleton_swordsman->combat.can_ranged);
+  EXPECT_EQ(skeleton_swordsman->visuals.renderer_id,
+            "troops/iron_sepulcher/skeleton_swordsman");
+
+  EXPECT_EQ(skeleton_archer->production.cost, 0);
+  EXPECT_TRUE(skeleton_archer->combat.can_ranged);
+  EXPECT_EQ(skeleton_archer->visuals.renderer_id,
+            "troops/iron_sepulcher/skeleton_archer");
+
+  EXPECT_EQ(grave_priest->production.cost, 0);
+  EXPECT_TRUE(grave_priest->combat.can_ranged);
+  EXPECT_EQ(grave_priest->visuals.renderer_id, "troops/iron_sepulcher/grave_priest");
+}
+
 } // namespace

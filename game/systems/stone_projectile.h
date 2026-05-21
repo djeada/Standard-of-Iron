@@ -24,6 +24,7 @@ public:
   auto get_arc_height() const -> float override { return m_arc_height; }
   auto get_progress() const -> float override { return m_t; }
   auto get_scale() const -> float override { return m_scale; }
+  auto get_kind() const -> ProjectileKind override { return ProjectileKind::Stone; }
   auto is_active() const -> bool override { return m_active; }
 
   auto should_apply_damage() const -> bool override { return m_should_apply_damage; }

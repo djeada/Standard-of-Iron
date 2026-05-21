@@ -2,8 +2,8 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QtGui/qopengl.h>
 
-#include <GL/gl.h>
 #include <vector>
 
 #include "../shader.h"
@@ -21,9 +21,11 @@ class Camera;
 namespace BackendPipelines {
 
 enum class EffectType {
-  Dust,
-  Flame,
-  StoneImpact
+  Dust = 0,
+  Flame = 1,
+  StoneImpact = 2,
+  Fireball = 3,
+  BurningFlame = 4
 };
 
 struct CombatDustData {
@@ -79,6 +81,13 @@ public:
                            float time,
                            const QMatrix4x4& view_proj);
 
+  void render_single_fireball(const QVector3D& position,
+                              const QVector3D& color,
+                              float radius,
+                              float intensity,
+                              float time,
+                              const QMatrix4x4& view_proj);
+
   void render_single_stone_impact(const QVector3D& position,
                                   const QVector3D& color,
                                   float radius,
@@ -101,6 +110,7 @@ public:
     float intensity{0.6F};
     float time{0.0F};
     EffectType effect_type{EffectType::Dust};
+    bool overlay{false};
   };
 
   void render_dust_batch(const DustInstanceData* instances,
@@ -141,6 +151,8 @@ private:
   void render_dust(const CombatDustData& data, const Camera& cam);
   auto create_dust_geometry() -> bool;
   void shutdown_geometry();
+  auto create_fireball_geometry() -> bool;
+  void shutdown_fireball_geometry();
   auto create_blood_geometry() -> bool;
   void shutdown_blood_geometry();
   void render_blood_pools(const Camera& cam);
@@ -154,6 +166,10 @@ private:
   GLuint m_vertex_buffer = 0;
   GLuint m_index_buffer = 0;
   GLsizei m_index_count = 0;
+  GLuint m_fireball_vao = 0;
+  GLuint m_fireball_vertex_buffer = 0;
+  GLuint m_fireball_index_buffer = 0;
+  GLsizei m_fireball_index_count = 0;
   GLuint m_blood_vao = 0;
   GLuint m_blood_vertex_buffer = 0;
   GLuint m_blood_index_buffer = 0;

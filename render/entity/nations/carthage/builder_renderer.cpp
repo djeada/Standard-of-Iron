@@ -972,7 +972,7 @@ public:
       s.scaling = k_builder_profile.as_pipeline_scaling();
       s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = carthage_builder_idle_archetype();
-      s.variant_table = &carthage_builder_variant_table();
+      s.animation_manifest.variant_table = &carthage_builder_variant_table();
       return s;
     }();
     return spec;

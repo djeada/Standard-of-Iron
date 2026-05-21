@@ -12,5 +12,6 @@ void register_healer_style(const std::string& nation_id,
                            const HealerStyleConfig& style);
 
 void register_healer_renderer(EntityRendererRegistry& registry);
+void register_grave_priest_renderer(EntityRendererRegistry& registry);
 
 } // namespace Render::GL::Carthage

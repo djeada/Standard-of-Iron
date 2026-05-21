@@ -2,9 +2,11 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 
@@ -43,11 +45,24 @@ enum class Phase : std::uint8_t {
 struct FrameProfile {
   std::array<std::uint64_t, static_cast<std::size_t>(Phase::_Count)> phase_us{};
 
+  std::uint64_t combat_state_update_us{0};
+  std::uint64_t animation_input_sampling_us{0};
+  std::uint64_t humanoid_preparation_us{0};
+  std::uint64_t bpat_playback_us{0};
+  std::uint64_t render_asset_cache_lookup_us{0};
+  std::uint64_t soldier_layout_generation_us{0};
+
+  std::uint64_t visible_soldiers{0};
+  std::uint64_t render_asset_cache_hits{0};
+  std::uint64_t render_asset_cache_misses{0};
+
   std::uint64_t draw_calls{0};
   std::uint64_t triangles{0};
   std::uint64_t instances{0};
 
   double budget_headroom_ms{16.67};
+  double average_frame_ms{0.0};
+  double p95_frame_ms{0.0};
 
   std::uint64_t frame_index{0};
 
@@ -57,6 +72,15 @@ struct FrameProfile {
     for (auto& v : phase_us) {
       v = 0;
     }
+    combat_state_update_us = 0;
+    animation_input_sampling_us = 0;
+    humanoid_preparation_us = 0;
+    bpat_playback_us = 0;
+    render_asset_cache_lookup_us = 0;
+    soldier_layout_generation_us = 0;
+    visible_soldiers = 0;
+    render_asset_cache_hits = 0;
+    render_asset_cache_misses = 0;
     draw_calls = 0;
     triangles = 0;
     instances = 0;
@@ -77,6 +101,38 @@ struct FrameProfile {
     }
     return total;
   }
+
+  void finish_frame_sample() {
+    constexpr std::size_t k_history_size = 120U;
+    recent_total_us[recent_cursor] = total_us();
+    recent_cursor = (recent_cursor + 1U) % k_history_size;
+    recent_count = std::min<std::size_t>(recent_count + 1U, k_history_size);
+
+    if (recent_count == 0U) {
+      average_frame_ms = 0.0;
+      p95_frame_ms = 0.0;
+      return;
+    }
+
+    std::array<std::uint64_t, k_history_size> sorted{};
+    std::uint64_t sum = 0U;
+    for (std::size_t i = 0; i < recent_count; ++i) {
+      sorted[i] = recent_total_us[i];
+      sum += recent_total_us[i];
+    }
+    std::sort(sorted.begin(), sorted.begin() + recent_count);
+
+    average_frame_ms =
+        static_cast<double>(sum) / static_cast<double>(recent_count) / 1000.0;
+    std::size_t const p95_index = std::min<std::size_t>(
+        recent_count - 1U, ((recent_count * 95U) + 99U) / 100U - 1U);
+    p95_frame_ms = static_cast<double>(sorted[p95_index]) / 1000.0;
+  }
+
+private:
+  std::array<std::uint64_t, 120> recent_total_us{};
+  std::size_t recent_cursor{0U};
+  std::size_t recent_count{0U};
 };
 
 class PhaseScope {
@@ -106,6 +162,33 @@ public:
 private:
   FrameProfile* m_profile;
   Phase m_phase;
+  std::chrono::steady_clock::time_point m_start;
+};
+
+class AccumulatorScope {
+public:
+  explicit AccumulatorScope(std::uint64_t* accumulator)
+      : m_accumulator(accumulator)
+      , m_start(accumulator != nullptr ? std::chrono::steady_clock::now()
+                                       : std::chrono::steady_clock::time_point{}) {}
+
+  AccumulatorScope(const AccumulatorScope&) = delete;
+  auto operator=(const AccumulatorScope&) -> AccumulatorScope& = delete;
+  AccumulatorScope(AccumulatorScope&&) = delete;
+  auto operator=(AccumulatorScope&&) -> AccumulatorScope& = delete;
+
+  ~AccumulatorScope() {
+    if (m_accumulator == nullptr) {
+      return;
+    }
+    auto const now = std::chrono::steady_clock::now();
+    auto const us =
+        std::chrono::duration_cast<std::chrono::microseconds>(now - m_start).count();
+    *m_accumulator += static_cast<std::uint64_t>(us);
+  }
+
+private:
+  std::uint64_t* m_accumulator;
   std::chrono::steady_clock::time_point m_start;
 };
 

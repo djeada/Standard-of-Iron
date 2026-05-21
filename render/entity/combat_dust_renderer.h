@@ -17,6 +17,7 @@ class ResourceManager;
 
 struct StoneImpactEffect {
   QVector3D position;
+  QVector3D color{0.75F, 0.65F, 0.45F};
   float start_time{0.0F};
   float duration{5.0F};
   float radius{6.0F};
@@ -30,7 +31,8 @@ public:
   void add_impact(const QVector3D& position,
                   float current_time,
                   float radius = 6.0F,
-                  float intensity = 1.5F);
+                  float intensity = 1.5F,
+                  const QVector3D& color = QVector3D(0.75F, 0.65F, 0.45F));
   void update(float current_time);
   [[nodiscard]] auto impacts() const -> const std::vector<StoneImpactEffect>& {
     return m_impacts;

@@ -29,15 +29,101 @@
 #include <qurl.h>
 
 #include <cstdio>
+#include <cstring>
 #include <memory>
 #include <optional>
+#include <string_view>
 
 #ifdef Q_OS_WIN
-#include <QProcess>
-
 #include <gl/gl.h>
 #include <windows.h>
 #pragma comment(lib, "opengl32.lib")
+
+#ifndef WGL_CONTEXT_MAJOR_VERSION_ARB
+#define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
+#endif
+
+#ifndef WGL_CONTEXT_MINOR_VERSION_ARB
+#define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
+#endif
+
+#ifndef WGL_CONTEXT_PROFILE_MASK_ARB
+#define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
+#endif
+
+#ifndef WGL_CONTEXT_CORE_PROFILE_BIT_ARB
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
+#endif
+
+using PFNWGLCREATECONTEXTATTRIBSARBPROC = HGLRC(WINAPI*)(HDC hDC,
+                                                         HGLRC hShareContext,
+                                                         const int* attribList);
+
+namespace {
+
+constexpr int k_required_gl_major = 3;
+constexpr int k_required_gl_minor = 3;
+
+struct NativeOpenGLProbeResult {
+  bool supported = false;
+  bool generic_software = false;
+  bool used_core_context = false;
+  int major = 0;
+  int minor = 0;
+  QString vendor = QStringLiteral("<unknown>");
+  QString renderer = QStringLiteral("<unknown>");
+  QString version = QStringLiteral("<unknown>");
+};
+
+auto windows_software_requested_from_argv(int argc, char* argv[]) -> bool {
+  for (int index = 1; index < argc; ++index) {
+    const std::string_view arg =
+        argv[index] != nullptr ? std::string_view(argv[index]) : std::string_view();
+    if (arg == "-s" || arg == "--force-software" || arg == "--quality=none" ||
+        arg == "--quality=software") {
+      return true;
+    }
+    if (arg == "--quality" && index + 1 < argc) {
+      const std::string_view value = argv[index + 1] != nullptr
+                                         ? std::string_view(argv[index + 1])
+                                         : std::string_view();
+      if (value == "none" || value == "software") {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+auto parse_opengl_version(const char* version, int* major, int* minor) -> bool {
+  return version != nullptr && major != nullptr && minor != nullptr &&
+         std::sscanf(version, "%d.%d", major, minor) == 2;
+}
+
+void capture_current_gl_info(NativeOpenGLProbeResult& result) {
+  const auto* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+  const auto* renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+  const auto* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+
+  result.vendor =
+      vendor != nullptr ? QString::fromLatin1(vendor) : QStringLiteral("<unknown>");
+  result.renderer =
+      renderer != nullptr ? QString::fromLatin1(renderer) : QStringLiteral("<unknown>");
+  result.version =
+      version != nullptr ? QString::fromLatin1(version) : QStringLiteral("<unknown>");
+  result.major = 0;
+  result.minor = 0;
+  if (version != nullptr) {
+    (void)parse_opengl_version(version, &result.major, &result.minor);
+  }
+}
+
+auto opengl_version_supported(int major, int minor) -> bool {
+  return major > k_required_gl_major ||
+         (major == k_required_gl_major && minor >= k_required_gl_minor);
+}
+
+} // namespace
 #endif
 
 #include "app/core/game_engine.h"
@@ -58,15 +144,17 @@ constexpr int k_stencil_buffer_bits = 8;
 
 #ifdef Q_OS_WIN
 // Test OpenGL using native Win32 API (before any Qt initialization)
-// Returns true if OpenGL is available, false otherwise
-static bool testNativeOpenGL() {
+// Returns whether a 3.3 core-capable, non-GDI context appears available.
+static auto testNativeOpenGL() -> NativeOpenGLProbeResult {
+  NativeOpenGLProbeResult result;
+
   WNDCLASSA wc = {};
   wc.lpfnWndProc = DefWindowProcA;
   wc.hInstance = GetModuleHandle(nullptr);
   wc.lpszClassName = "OpenGLTest";
 
   if (!RegisterClassA(&wc)) {
-    return false;
+    return result;
   }
 
   HWND hwnd = CreateWindowExA(0,
@@ -83,14 +171,14 @@ static bool testNativeOpenGL() {
                               nullptr);
   if (!hwnd) {
     UnregisterClassA("OpenGLTest", wc.hInstance);
-    return false;
+    return result;
   }
 
   HDC hdc = GetDC(hwnd);
   if (!hdc) {
     DestroyWindow(hwnd);
     UnregisterClassA("OpenGLTest", wc.hInstance);
-    return false;
+    return result;
   }
 
   PIXELFORMATDESCRIPTOR pfd = {};
@@ -104,23 +192,73 @@ static bool testNativeOpenGL() {
   pfd.iLayerType = PFD_MAIN_PLANE;
 
   int pixel_format = ChoosePixelFormat(hdc, &pfd);
-  bool success = false;
-
   if (pixel_format != 0 && SetPixelFormat(hdc, pixel_format, &pfd)) {
+    PIXELFORMATDESCRIPTOR chosen_pfd = {};
+    if (DescribePixelFormat(hdc, pixel_format, sizeof(chosen_pfd), &chosen_pfd) != 0) {
+      result.generic_software = (chosen_pfd.dwFlags & PFD_GENERIC_FORMAT) != 0 &&
+                                (chosen_pfd.dwFlags & PFD_GENERIC_ACCELERATED) == 0;
+    }
+
     HGLRC hglrc = wglCreateContext(hdc);
     if (hglrc) {
       if (wglMakeCurrent(hdc, hglrc)) {
-        // Successfully created OpenGL context
-        const char* vendor = (const char*)glGetString(GL_VENDOR);
-        const char* renderer = (const char*)glGetString(GL_RENDERER);
-        const char* version = (const char*)glGetString(GL_VERSION);
+        capture_current_gl_info(result);
 
-        if (vendor && renderer && version) {
-          fprintf(stderr, "[OpenGL Test] Native context created successfully\n");
-          fprintf(stderr, "[OpenGL Test] Vendor: %s\n", vendor);
-          fprintf(stderr, "[OpenGL Test] Renderer: %s\n", renderer);
-          fprintf(stderr, "[OpenGL Test] Version: %s\n", version);
-          success = true;
+        auto* create_core_context = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(
+            wglGetProcAddress("wglCreateContextAttribsARB"));
+        if (create_core_context != nullptr) {
+          const int attribs[] = {WGL_CONTEXT_MAJOR_VERSION_ARB,
+                                 k_required_gl_major,
+                                 WGL_CONTEXT_MINOR_VERSION_ARB,
+                                 k_required_gl_minor,
+                                 WGL_CONTEXT_PROFILE_MASK_ARB,
+                                 WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+                                 0};
+          HGLRC core_ctx = create_core_context(hdc, nullptr, attribs);
+          if (core_ctx != nullptr) {
+            wglMakeCurrent(nullptr, nullptr);
+            if (wglMakeCurrent(hdc, core_ctx)) {
+              result.used_core_context = true;
+              capture_current_gl_info(result);
+            }
+            wglMakeCurrent(nullptr, nullptr);
+            wglDeleteContext(core_ctx);
+            (void)wglMakeCurrent(hdc, hglrc);
+          }
+        }
+
+        QByteArray vendor_bytes = result.vendor.toLocal8Bit();
+        QByteArray renderer_bytes = result.renderer.toLocal8Bit();
+        QByteArray version_bytes = result.version.toLocal8Bit();
+        fprintf(stderr, "[OpenGL Test] Native context created successfully\n");
+        fprintf(stderr, "[OpenGL Test] Vendor: %s\n", vendor_bytes.constData());
+        fprintf(stderr, "[OpenGL Test] Renderer: %s\n", renderer_bytes.constData());
+        fprintf(stderr, "[OpenGL Test] Version: %s\n", version_bytes.constData());
+        fprintf(stderr,
+                "[OpenGL Test] Probe context: %s\n",
+                result.used_core_context ? "3.3 core" : "legacy");
+        if (result.generic_software) {
+          fprintf(stderr, "[OpenGL Test] Pixel format is generic software rendering\n");
+        }
+
+        const bool microsoft_gdi =
+            result.vendor.contains("Microsoft", Qt::CaseInsensitive) ||
+            result.renderer.contains("GDI Generic", Qt::CaseInsensitive);
+        const bool version_ok = opengl_version_supported(result.major, result.minor);
+        result.supported = version_ok && !result.generic_software && !microsoft_gdi;
+        if (!version_ok) {
+          fprintf(stderr,
+                  "[OpenGL Test] Rejected: requires OpenGL %d.%d Core, found %d.%d\n",
+                  k_required_gl_major,
+                  k_required_gl_minor,
+                  result.major,
+                  result.minor);
+        }
+        if (microsoft_gdi) {
+          fprintf(
+              stderr,
+              "[OpenGL Test] Rejected: Microsoft GDI generic renderer is not usable "
+              "for the 3D renderer\n");
         }
 
         wglMakeCurrent(nullptr, nullptr);
@@ -133,7 +271,7 @@ static bool testNativeOpenGL() {
   DestroyWindow(hwnd);
   UnregisterClassA("OpenGLTest", wc.hInstance);
 
-  return success;
+  return result;
 }
 
 // Windows crash handler to detect OpenGL failures and suggest fallback
@@ -145,7 +283,7 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
     if (crash_log) {
       fprintf(crash_log, "OpenGL/Qt rendering crash detected (Access Violation)\n");
       fprintf(crash_log, "Try running with: run_debug_softwaregl.cmd\n");
-      fprintf(crash_log, "Or set environment variable: QT_QUICK_BACKEND=software\n");
+      fprintf(crash_log, "Or set environment variable: QT_OPENGL=software\n");
       fclose(crash_log);
     }
 
@@ -156,7 +294,7 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
     qCritical() << "3. GPU doesn't support required OpenGL version";
     qCritical() << "";
     qCritical() << "To fix: Run run_debug_softwaregl.cmd instead";
-    qCritical() << "Or set: set QT_QUICK_BACKEND=software";
+    qCritical() << "Or set: set QT_OPENGL=software";
 
     g_opengl_crashed = true;
   }
@@ -169,27 +307,43 @@ auto main(int argc, char* argv[]) -> int {
   // Install crash handler to detect OpenGL failures
   SetUnhandledExceptionFilter(crashHandler);
 
-  // Test OpenGL BEFORE any Qt initialization (using native Win32 API)
-  fprintf(stderr, "[Pre-Init] Testing native OpenGL availability...\n");
-  bool opengl_available = testNativeOpenGL();
-
-  if (!opengl_available) {
-    fprintf(stderr, "[Pre-Init] WARNING: OpenGL test failed!\n");
-    fprintf(stderr, "[Pre-Init] Forcing software rendering mode\n");
-    _putenv("QT_QUICK_BACKEND=software");
-    _putenv("QT_OPENGL=software");
-  } else {
-    fprintf(stderr, "[Pre-Init] OpenGL test passed\n");
+  if (windows_software_requested_from_argv(argc, argv)) {
+    fprintf(stderr, "[Pre-Init] Command line requested software OpenGL fallback\n");
+    qputenv("QT_OPENGL", "software");
   }
 
-  // Check if we should use software rendering
-  bool use_software = qEnvironmentVariableIsSet("QT_QUICK_BACKEND") &&
-                      qEnvironmentVariable("QT_QUICK_BACKEND") == "software";
+  if (qEnvironmentVariable("QT_QUICK_BACKEND")
+          .compare("software", Qt::CaseInsensitive) == 0) {
+    fprintf(stderr,
+            "[Pre-Init] QT_QUICK_BACKEND=software disables QQuickFramebufferObject; "
+            "using QT_OPENGL=software instead\n");
+    qunsetenv("QT_QUICK_BACKEND");
+    qputenv("QT_OPENGL", "software");
+  }
 
-  if (use_software) {
-    qInfo() << "=== SOFTWARE RENDERING MODE ===";
-    qInfo() << "Using Qt Quick Software renderer (CPU-based)";
-    qInfo() << "Performance will be limited but should work on all systems";
+  const QString requested_qt_opengl =
+      qEnvironmentVariable("QT_OPENGL").trimmed().toLower();
+  const bool explicit_qt_opengl = !requested_qt_opengl.isEmpty();
+
+  if (!explicit_qt_opengl) {
+    fprintf(stderr, "[Pre-Init] Testing native OpenGL availability...\n");
+    const auto probe = testNativeOpenGL();
+    if (!probe.supported) {
+      fprintf(stderr, "[Pre-Init] WARNING: hardware OpenGL probe failed\n");
+      fprintf(stderr,
+              "[Pre-Init] Falling back to Qt software OpenGL (opengl32sw.dll)\n");
+      qputenv("QT_OPENGL", "software");
+    } else {
+      fprintf(stderr, "[Pre-Init] OpenGL test passed\n");
+    }
+  } else {
+    fprintf(stderr,
+            "[Pre-Init] Respecting QT_OPENGL=%s\n",
+            requested_qt_opengl.toLocal8Bit().constData());
+  }
+
+  if (qEnvironmentVariable("QT_OPENGL").compare("software", Qt::CaseInsensitive) == 0) {
+    fprintf(stderr, "[Pre-Init] Software OpenGL fallback enabled\n");
   }
 #endif
 
@@ -226,7 +380,7 @@ auto main(int argc, char* argv[]) -> int {
               msg.contains("RHI", Qt::CaseInsensitive)) {
             fprintf(out,
                     "[HINT] If you see crashes, try software rendering: set "
-                    "QT_QUICK_BACKEND=software\n");
+                    "QT_OPENGL=software\n");
           }
           break;
         case QtCriticalMsg:
@@ -248,7 +402,7 @@ auto main(int argc, char* argv[]) -> int {
                   function);
           fprintf(out, "[FATAL] === RECOVERY SUGGESTION ===\n");
           fprintf(out, "[FATAL] Run: run_debug_softwaregl.cmd\n");
-          fprintf(out, "[FATAL] Or set: QT_QUICK_BACKEND=software\n");
+          fprintf(out, "[FATAL] Or set: QT_OPENGL=software\n");
           abort();
         }
         fflush(out);
@@ -315,10 +469,10 @@ auto main(int argc, char* argv[]) -> int {
     QCommandLineParser parser;
     parser.setApplicationDescription("Standard of Iron");
     parser.addHelpOption();
-    QCommandLineOption force_software_opt(
+    QCommandLineOption const force_software_opt(
         QStringList{"s", "force-software"},
         "Force the CPU software rendering backend (ShaderQuality::None).");
-    QCommandLineOption quality_opt(
+    QCommandLineOption const quality_opt(
         "quality",
         "Override shader quality: full | reduced | minimal | none.",
         "level");
@@ -566,7 +720,7 @@ auto main(int argc, char* argv[]) -> int {
     qCritical() << "This is a known issue with Qt + some Windows graphics drivers.";
     qCritical() << "";
     qCritical() << "SOLUTION: Set environment variable before running:";
-    qCritical() << "  set QT_QUICK_BACKEND=software";
+    qCritical() << "  set QT_OPENGL=software";
     qCritical() << "";
     qCritical() << "Or use the provided launcher:";
     qCritical() << "  run_debug_softwaregl.cmd";

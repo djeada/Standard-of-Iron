@@ -12,14 +12,16 @@
 #include "../../game/map/visibility_service.h"
 #include "../../game/systems/camera_visibility_service.h"
 #include "../../game/systems/combat_rules.h"
+#include "../../game/systems/projectile_kind.h"
 #include "../../game/systems/projectile_system.h"
-#include "../../game/systems/stone_projectile.h"
+#include "../../game/units/troop_config.h"
 #include "../combat_dust_defaults.h"
 #include "../scene_renderer.h"
 
 namespace Render::GL {
 
 namespace {
+constexpr float k_degrees_to_radians = 0.017453292519943295F;
 constexpr float k_dust_y_offset = 0.05F;
 constexpr float k_dust_color_r = 0.6F;
 constexpr float k_dust_color_g = 0.55F;
@@ -33,10 +35,22 @@ constexpr float k_flame_color_r = 1.0F;
 constexpr float k_flame_color_g = 0.4F;
 constexpr float k_flame_color_b = 0.1F;
 constexpr float k_building_health_threshold = 0.5F;
+constexpr float k_fire_patch_flame_y_offset = 0.10F;
+constexpr float k_fire_patch_flame_radius_scale = 0.28F;
+constexpr float k_fire_patch_flame_min_radius = 0.26F;
+constexpr float k_fire_patch_flame_offset_scale = 0.36F;
+constexpr float k_burning_flame_intensity = 1.32F;
+constexpr float k_burning_min_scale = 1.0F;
+constexpr float k_burning_body_height = 0.88F;
+constexpr float k_burning_head_height = 1.40F;
+constexpr float k_burning_side_offset = 0.40F;
+constexpr float k_burning_front_offset = 0.34F;
+constexpr float k_burning_head_radius = 0.54F;
+constexpr float k_burning_body_radius = 0.46F;
+constexpr float k_burning_shoulder_radius = 0.36F;
 
 constexpr float k_blood_y_offset = 0.02F;
 
-constexpr float k_stone_impact_radius = 0.6F;
 constexpr float k_elephant_stomp_impact_radius = 0.52F;
 constexpr float k_stone_impact_intensity = 1.5F;
 constexpr float k_stone_impact_color_r = 0.75F;
@@ -45,6 +59,23 @@ constexpr float k_stone_impact_color_b = 0.45F;
 constexpr float k_stone_impact_y_offset = 0.1F;
 constexpr float k_stone_impact_duration = 10.0F;
 constexpr float k_stone_impact_trigger_progress = 0.99F;
+struct UnitFlameAnchor {
+  float local_x{0.0F};
+  float local_y{0.0F};
+  float local_z{0.0F};
+  float radius{0.5F};
+  float intensity{1.0F};
+  float time_offset{0.0F};
+  QVector3D color{k_flame_color_r, k_flame_color_g, k_flame_color_b};
+};
+
+struct GroundFlameLobe {
+  float local_x{0.0F};
+  float local_z{0.0F};
+  float radius_scale{1.0F};
+  float intensity_scale{1.0F};
+  float time_offset{0.0F};
+};
 
 auto blood_alpha_scale(float elapsed_time, float lifetime) -> float {
   if (lifetime <= 0.0F) {
@@ -60,6 +91,29 @@ auto blood_alpha_scale(float elapsed_time, float lifetime) -> float {
 }
 
 std::unordered_set<const void*> g_tracked_projectiles;
+
+auto transform_unit_anchor(const Engine::Core::TransformComponent& transform,
+                           const UnitFlameAnchor& anchor,
+                           float size_scale) -> QVector3D {
+  float const yaw = transform.rotation.y * k_degrees_to_radians;
+  float const sin_yaw = std::sin(yaw);
+  float const cos_yaw = std::cos(yaw);
+  float const local_x = anchor.local_x * size_scale;
+  float const local_z = anchor.local_z * size_scale;
+  float const world_x = transform.position.x + local_x * cos_yaw + local_z * sin_yaw;
+  float const world_z = transform.position.z - local_x * sin_yaw + local_z * cos_yaw;
+  float const world_y = transform.position.y + anchor.local_y * size_scale;
+  return {world_x, world_y, world_z};
+}
+
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit_comp)
+    -> int {
+  if (unit_comp.render_individuals_per_unit_override > 0) {
+    return unit_comp.render_individuals_per_unit_override;
+  }
+  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
+      unit_comp.spawn_type);
+}
 } // namespace
 
 auto StoneImpactTracker::instance() -> StoneImpactTracker& {
@@ -70,9 +124,11 @@ auto StoneImpactTracker::instance() -> StoneImpactTracker& {
 void StoneImpactTracker::add_impact(const QVector3D& position,
                                     float current_time,
                                     float radius,
-                                    float intensity) {
+                                    float intensity,
+                                    const QVector3D& color) {
   StoneImpactEffect effect;
   effect.position = position;
+  effect.color = color;
   effect.start_time = current_time;
   effect.duration = k_stone_impact_duration;
   effect.radius = radius;
@@ -280,6 +336,181 @@ void render_combat_dust(Renderer* renderer,
                          blood_stain->seed);
   }
 
+  auto burning_units = world->get_entities_with<Engine::Core::BurningStatusComponent>();
+  for (auto* burning_entity : burning_units) {
+    if (burning_entity == nullptr ||
+        burning_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto* transform = burning_entity->get_component<Engine::Core::TransformComponent>();
+    auto* burning =
+        burning_entity->get_component<Engine::Core::BurningStatusComponent>();
+    auto* unit_comp = burning_entity->get_component<Engine::Core::UnitComponent>();
+    if (transform == nullptr || burning == nullptr || unit_comp == nullptr ||
+        burning->remaining_duration <= 0.0F || unit_comp->health <= 0) {
+      continue;
+    }
+
+    if (!is_fog_visible(transform->position.x, transform->position.z)) {
+      continue;
+    }
+
+    if (!visibility.is_entity_visible(
+            transform->position.x, transform->position.z, k_visibility_check_radius)) {
+      continue;
+    }
+
+    float const duration = std::max(0.05F, burning->duration);
+    float const life_ratio =
+        std::clamp(burning->remaining_duration / duration, 0.0F, 1.0F);
+    float const fade_in = std::clamp(burning->ignition_elapsed / 0.18F, 0.0F, 1.0F);
+    float const fade_out = std::clamp(life_ratio / 0.22F, 0.0F, 1.0F);
+    float const size_scale = std::max(
+        k_burning_min_scale,
+        std::max({transform->scale.x, transform->scale.y, transform->scale.z}));
+    int const individuals_per_unit =
+        std::max(1, resolved_individuals_per_unit(*unit_comp));
+    int const surviving_individuals = Engine::Core::resolve_surviving_individual_count(
+        unit_comp->health, unit_comp->max_health, individuals_per_unit);
+    float const coverage_ratio = std::clamp(
+        surviving_individuals / static_cast<float>(individuals_per_unit), 0.0F, 1.0F);
+    float const footprint_scale =
+        0.42F + 0.58F * std::sqrt(std::max(coverage_ratio, 0.0F));
+    float const pulse =
+        0.90F + 0.10F * std::sin(animation_time * 9.0F + transform->position.x * 0.31F +
+                                 transform->position.z * 0.27F);
+    float const intensity = k_burning_flame_intensity * fade_in * fade_out * pulse;
+    if (intensity <= 0.01F) {
+      continue;
+    }
+
+    UnitFlameAnchor const anchors[] = {
+        {0.0F,
+         k_burning_body_height,
+         k_burning_front_offset,
+         k_burning_body_radius,
+         1.0F,
+         0.0F,
+         QVector3D(1.0F, 0.42F, 0.10F)},
+        {0.0F,
+         k_burning_body_height * 0.96F,
+         -k_burning_front_offset,
+         k_burning_body_radius * 0.92F,
+         0.9F,
+         0.09F,
+         QVector3D(1.0F, 0.42F, 0.10F)},
+        {-k_burning_side_offset,
+         k_burning_body_height * 0.98F,
+         0.03F,
+         k_burning_shoulder_radius,
+         0.82F,
+         0.17F,
+         QVector3D(1.0F, 0.42F, 0.10F)},
+        {k_burning_side_offset,
+         k_burning_body_height * 0.94F,
+         -0.03F,
+         k_burning_shoulder_radius,
+         0.78F,
+         0.29F,
+         QVector3D(1.0F, 0.42F, 0.10F)},
+        {0.0F,
+         k_burning_head_height,
+         0.0F,
+         k_burning_head_radius,
+         0.88F,
+         0.41F,
+         QVector3D(1.0F, 0.48F, 0.16F)},
+    };
+
+    constexpr std::size_t k_anchor_order[] = {0U, 4U, 2U, 3U, 1U};
+    int const active_anchor_count =
+        std::clamp(static_cast<int>(std::ceil(
+                       coverage_ratio * static_cast<float>(std::size(k_anchor_order)))),
+                   1,
+                   static_cast<int>(std::size(k_anchor_order)));
+
+    for (int anchor_idx = 0; anchor_idx < active_anchor_count; ++anchor_idx) {
+      UnitFlameAnchor anchor = anchors[k_anchor_order[anchor_idx]];
+      anchor.local_x *= footprint_scale;
+      anchor.local_z *= footprint_scale;
+      anchor.radius *= 0.68F + 0.32F * coverage_ratio;
+      renderer->burning_flame(transform_unit_anchor(*transform, anchor, size_scale),
+                              anchor.color,
+                              anchor.radius * size_scale,
+                              intensity * anchor.intensity,
+                              animation_time + anchor.time_offset);
+    }
+  }
+
+  auto fire_patches = world->get_entities_with<Engine::Core::FirePatchComponent>();
+  for (auto* fire_patch_entity : fire_patches) {
+    if (fire_patch_entity == nullptr ||
+        fire_patch_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto* transform =
+        fire_patch_entity->get_component<Engine::Core::TransformComponent>();
+    auto* fire_patch =
+        fire_patch_entity->get_component<Engine::Core::FirePatchComponent>();
+    if (transform == nullptr || fire_patch == nullptr ||
+        fire_patch->remaining_duration <= 0.0F) {
+      continue;
+    }
+
+    if (!is_fog_visible(transform->position.x, transform->position.z)) {
+      continue;
+    }
+
+    if (!visibility.is_entity_visible(
+            transform->position.x, transform->position.z, fire_patch->radius)) {
+      continue;
+    }
+
+    float const life_ratio =
+        (fire_patch->duration > 0.0F)
+            ? std::clamp(
+                  fire_patch->remaining_duration / fire_patch->duration, 0.0F, 1.0F)
+            : 0.0F;
+    float const fade_in = std::clamp(
+        (fire_patch->duration - fire_patch->remaining_duration) / 0.25F, 0.0F, 1.0F);
+    float const fade_out = std::clamp(life_ratio / 0.35F, 0.0F, 1.0F);
+    float const pulse =
+        0.92F + 0.12F * std::sin(animation_time * 8.0F + transform->position.x * 0.35F +
+                                 transform->position.z * 0.28F);
+    float const intensity = 1.2F * fade_in * fade_out * pulse;
+    if (intensity <= 0.01F) {
+      continue;
+    }
+
+    QVector3D const color(k_flame_color_r, k_flame_color_g, k_flame_color_b);
+    float const offset = fire_patch->radius * k_fire_patch_flame_offset_scale;
+    float const base_radius =
+        std::max(k_fire_patch_flame_min_radius,
+                 fire_patch->radius * k_fire_patch_flame_radius_scale);
+    GroundFlameLobe const lobes[] = {
+        {-0.65F, 0.00F, 1.00F, 0.86F, 0.00F},
+        {0.55F, 0.12F, 0.92F, 0.80F, 0.11F},
+        {-0.08F, 0.58F, 0.84F, 0.74F, 0.23F},
+        {0.12F, -0.56F, 0.78F, 0.70F, 0.37F},
+    };
+
+    for (GroundFlameLobe const& lobe : lobes) {
+      QVector3D const position(transform->position.x + lobe.local_x * offset,
+                               transform->position.y + k_fire_patch_flame_y_offset,
+                               transform->position.z + lobe.local_z * offset);
+      float const radius =
+          base_radius * lobe.radius_scale *
+          (0.96F + 0.05F * std::sin(animation_time * 6.0F + lobe.time_offset * 9.0F));
+      renderer->building_flame(position,
+                               color,
+                               radius,
+                               intensity * lobe.intensity_scale,
+                               animation_time + lobe.time_offset);
+    }
+  }
+
   auto* projectile_sys = world->get_system<Game::Systems::ProjectileSystem>();
   auto& impact_tracker = StoneImpactTracker::instance();
 
@@ -287,25 +518,28 @@ void render_combat_dust(Renderer* renderer,
     const auto& projectiles = projectile_sys->projectiles();
 
     for (const auto& projectile : projectiles) {
-      const auto* stone_proj =
-          dynamic_cast<const Game::Systems::StoneProjectile*>(projectile.get());
-      if (stone_proj == nullptr) {
+      if (projectile == nullptr) {
         continue;
       }
 
-      float const progress = stone_proj->get_progress();
+      auto const kind = projectile->get_kind();
+      if (kind != Game::Systems::ProjectileKind::Stone) {
+        continue;
+      }
+
+      float const progress = projectile->get_progress();
       if (progress < k_stone_impact_trigger_progress) {
         continue;
       }
 
-      const void* proj_ptr = static_cast<const void*>(stone_proj);
+      const void* proj_ptr = static_cast<const void*>(projectile.get());
       if (g_tracked_projectiles.find(proj_ptr) != g_tracked_projectiles.end()) {
         continue;
       }
 
       g_tracked_projectiles.insert(proj_ptr);
 
-      QVector3D const impact_pos = stone_proj->get_end();
+      QVector3D const impact_pos = projectile->get_end();
 
       if (!is_fog_visible(impact_pos.x(), impact_pos.z())) {
         continue;
@@ -318,11 +552,14 @@ void render_combat_dust(Renderer* renderer,
 
       QVector3D const position(
           impact_pos.x(), impact_pos.y() + k_stone_impact_y_offset, impact_pos.z());
+      QVector3D const color(
+          k_stone_impact_color_r, k_stone_impact_color_g, k_stone_impact_color_b);
 
       impact_tracker.add_impact(position,
                                 animation_time,
                                 k_elephant_stomp_impact_radius,
-                                k_stone_impact_intensity);
+                                k_stone_impact_intensity,
+                                color);
     }
   }
 
@@ -388,8 +625,6 @@ void render_combat_dust(Renderer* renderer,
 
   impact_tracker.update(animation_time);
 
-  QVector3D const color(
-      k_stone_impact_color_r, k_stone_impact_color_g, k_stone_impact_color_b);
   for (const auto& impact : impact_tracker.impacts()) {
     if (!is_fog_visible(impact.position.x(), impact.position.z())) {
       continue;
@@ -403,7 +638,7 @@ void render_combat_dust(Renderer* renderer,
     float const impact_time = animation_time - impact.start_time;
 
     renderer->stone_impact(
-        impact.position, color, impact.radius, impact.intensity, impact_time);
+        impact.position, impact.color, impact.radius, impact.intensity, impact_time);
   }
 }
 

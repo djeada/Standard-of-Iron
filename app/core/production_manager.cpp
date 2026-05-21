@@ -51,6 +51,7 @@ constexpr auto k_collect_stone_item_type = "collect_stone";
 constexpr auto k_collect_iron_ore_item_type = "collect_iron_ore";
 constexpr float k_collect_build_time = 6.0F;
 constexpr float k_construction_rotation_step_degrees = 5.0F;
+constexpr float k_wall_preview_rotation_step_degrees = 90.0F;
 
 enum class HarvestTargetKind {
   Tree,
@@ -159,6 +160,12 @@ auto normalize_rotation_degrees(float angle) -> float {
     angle -= 360.0F;
   }
   return angle;
+}
+
+auto wall_preview_is_vertical(float angle) -> bool {
+  int const quarter_turns =
+      static_cast<int>(std::round(normalize_rotation_degrees(angle) / 90.0F));
+  return (quarter_turns % 2) != 0;
 }
 
 auto is_previewable_structure_item(const QString& item_type) -> bool {
@@ -806,6 +813,8 @@ void ProductionManager::start_building_placement(const QString& building_type,
   }
 
   m_construction_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
   clear_preview_entities();
   clear_construction_preview_summary();
@@ -855,6 +864,8 @@ void ProductionManager::reset_transient_state() {
   m_active_placement_owner_id = 0;
   m_active_placement_nation_id = Game::Systems::NationID::RomanRepublic;
   m_construction_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
@@ -887,14 +898,19 @@ void ProductionManager::on_construction_mouse_move(qreal sx,
       clear_preview_entities();
       m_wall_preview_segments.clear();
       clear_construction_preview_summary();
+      if (!m_wall_drag_active) {
+        m_wall_drag_anchor_set = false;
+      }
       set_construction_preview_active(false);
       set_construction_preview_valid(false);
       return;
     }
     m_construction_placement_position = resolved_hit->world_position;
-    if (m_wall_drag_active) {
-      rebuild_wall_preview_plan(resolved_hit->world_position);
+    if (!m_wall_drag_active) {
+      m_wall_drag_anchor_set = true;
+      m_wall_drag_anchor_world = resolved_hit->world_position;
     }
+    rebuild_wall_preview_plan(resolved_hit->world_position);
     return;
   }
 
@@ -1151,6 +1167,8 @@ void ProductionManager::on_construction_confirm() {
   m_pending_building_type.clear();
   m_pending_construction_builders.clear();
   m_construction_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
   clear_preview_entities();
   set_construction_preview_active(false);
@@ -1190,6 +1208,8 @@ void ProductionManager::on_construction_cancel() {
   m_pending_building_type.clear();
   m_pending_construction_builders.clear();
   m_construction_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
@@ -1222,6 +1242,8 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
   m_wall_drag_active = false;
   m_wall_drag_anchor_set = false;
   m_construction_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
   m_active_placement_owner_id = pending_construction_owner_id();
   m_active_placement_nation_id = pending_construction_nation_id();
@@ -1310,9 +1332,19 @@ void ProductionManager::clear_builder_preview_sites() {
 }
 
 void ProductionManager::on_construction_scroll(float delta) {
-  if (!m_is_placing_construction || is_wall_construction_mode() ||
-      !item_supports_preview_rotation(m_pending_construction_type) ||
-      !m_construction_preview_active) {
+  if (!m_is_placing_construction || !m_construction_preview_active) {
+    return;
+  }
+
+  if (is_wall_construction_mode()) {
+    m_wall_preview_rotation_y = normalize_rotation_degrees(
+        m_wall_preview_rotation_y + delta * k_wall_preview_rotation_step_degrees);
+    m_wall_preview_rotation_explicit = true;
+    rebuild_wall_preview_plan(m_construction_placement_position);
+    return;
+  }
+
+  if (!item_supports_preview_rotation(m_pending_construction_type)) {
     return;
   }
 
@@ -1354,8 +1386,8 @@ void ProductionManager::clear_non_wall_construction_preview() {
 
 auto ProductionManager::construction_preview_rotatable() const -> bool {
   return m_is_placing_construction && m_construction_preview_active &&
-         !is_wall_construction_mode() &&
-         item_supports_preview_rotation(m_pending_construction_type);
+         (is_wall_construction_mode() ||
+          item_supports_preview_rotation(m_pending_construction_type));
 }
 
 void ProductionManager::set_construction_preview_summary(int segment_count,
@@ -1571,8 +1603,15 @@ void ProductionManager::rebuild_wall_preview_plan(
 
   const auto anchor = Game::Systems::WallNetworkService::snap_world_position(
       m_wall_drag_anchor_world.x(), m_wall_drag_anchor_world.z());
-  const auto target = Game::Systems::WallNetworkService::snap_world_position(
+  auto target = Game::Systems::WallNetworkService::snap_world_position(
       current_world_position.x(), current_world_position.z());
+  if (m_wall_drag_active && m_wall_preview_rotation_explicit) {
+    if (wall_preview_is_vertical(m_wall_preview_rotation_y)) {
+      target.x = anchor.x;
+    } else {
+      target.z = anchor.z;
+    }
+  }
   const auto chain =
       Game::Systems::WallNetworkService::build_axis_aligned_chain(anchor, target);
 
@@ -1637,6 +1676,10 @@ void ProductionManager::rebuild_wall_preview_plan(
     const auto appearance = Game::Systems::WallNetworkService::resolve_appearance(
         nation_id, segment.connection_mask);
     segment.rotation_y = appearance.rotation_y;
+    if (chain.size() == 1U && segment.connection_mask == 0U) {
+      segment.rotation_y =
+          wall_preview_is_vertical(m_wall_preview_rotation_y) ? 90.0F : 0.0F;
+    }
     if (terrain_service.is_initialized()) {
       segment.world_position = terrain_service.resolve_surface_world_position(
           segment.world_position.x(), segment.world_position.z(), 0.0F, 0.0F);
@@ -1815,6 +1858,8 @@ void ProductionManager::confirm_wall_construction_plan() {
   m_pending_building_type.clear();
   m_pending_construction_builders.clear();
   m_construction_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_explicit = false;
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   clear_construction_preview_summary();
@@ -1894,6 +1939,8 @@ void ProductionManager::confirm_direct_building_placement() {
   m_pending_building_type.clear();
   m_pending_construction_builders.clear();
   m_construction_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_y = 0.0F;
+  m_wall_preview_rotation_explicit = false;
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   clear_construction_preview_summary();

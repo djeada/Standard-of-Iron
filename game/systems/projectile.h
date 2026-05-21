@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "../core/entity.h"
+#include "projectile_kind.h"
 
 namespace Game::Systems {
 
@@ -18,6 +19,7 @@ public:
   virtual auto get_arc_height() const -> float = 0;
   virtual auto get_progress() const -> float = 0;
   virtual auto get_scale() const -> float = 0;
+  virtual auto get_kind() const -> ProjectileKind = 0;
 
   virtual auto is_active() const -> bool = 0;
   virtual void update(float delta_time) = 0;

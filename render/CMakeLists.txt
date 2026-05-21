@@ -176,6 +176,7 @@ add_library(render_gl STATIC
     creature/skeleton.cpp
     creature/part_graph.cpp
     creature/spec.cpp
+    creature/combat_visual_state.cpp
     creature/species_manifest.cpp
     creature/runtime_bake_guard.cpp
     creature/quadruped/skeleton_factory.cpp
@@ -183,6 +184,7 @@ add_library(render_gl STATIC
     creature/quadruped/mesh_graph.cpp
     creature/anatomy_bake.cpp
     creature/archetype_registry.cpp
+    creature/pose_intent.cpp
     creature/pipeline/creature_render_state.cpp
     creature/pipeline/creature_pipeline.cpp
     creature/pipeline/creature_visual_definition.cpp
@@ -191,7 +193,9 @@ add_library(render_gl STATIC
     creature/pipeline/shadow_batch.cpp
     creature/pipeline/creature_prepared_state.cpp
     creature/pipeline/lod_decision.cpp
+    creature/pipeline/bpat_playback.cpp
     creature/pipeline/preparation_common.cpp
+    creature/pipeline/humanoid_animation_selection.cpp
     creature/pipeline/creature_render_graph.cpp
     rigged_mesh.cpp
     rigged_mesh_bake.cpp
@@ -248,6 +252,7 @@ add_library(render_gl STATIC
     equipment/horse/decorations/saddle_bag_renderer.cpp
     software/software_rasterizer.cpp
     software_backend.cpp
+    profiling/combat_animation_diagnostics.cpp
     profiling/frame_profile.cpp
     profiling/profiling_hud.cpp
 )

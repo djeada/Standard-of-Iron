@@ -26,14 +26,6 @@ namespace {
 
 constexpr float k_terminal_non_looping_phase = std::nextafter(1.0F, 0.0F);
 
-auto looping_phase(float phase) noexcept -> float {
-  float wrapped = std::fmod(phase, 1.0F);
-  if (wrapped < 0.0F) {
-    wrapped += 1.0F;
-  }
-  return wrapped;
-}
-
 auto hold_phase_for_anim(const Render::GL::HumanoidAnimationContext& anim) noexcept
     -> float {
   if (anim.inputs.is_constructing &&
@@ -110,7 +102,8 @@ auto humanoid_phase_for_state(const Render::GL::HumanoidAnimationContext& anim,
     return 0.12F + 0.66F * std::clamp(anim.attack_phase, 0.0F, 1.0F);
   }
   if (anim.inputs.is_constructing) {
-    return looping_phase(anim.inputs.construction_progress + anim.jitter_seed);
+    return normalize_bpat_phase(anim.inputs.construction_progress + anim.jitter_seed,
+                                true);
   }
   if (Render::Creature::is_attack_animation_state(state)) {
     return anim.attack_phase;
@@ -258,28 +251,14 @@ auto humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeId archetype_id,
     }
   }
 
-  auto const clip = blob->clip(clip_id);
-  if (clip.frame_count == 0U) {
+  auto const playback =
+      resolve_bpat_playback(blob, clip_id, humanoid_phase_for_state(anim, state));
+  if (!playback.valid()) {
     return std::nullopt;
   }
 
-  float phase = humanoid_phase_for_state(anim, state);
-  if (!clip.loops && phase >= 1.0F) {
-    phase = 1.0F;
-  } else {
-    phase -= std::floor(phase);
-    if (phase < 0.0F) {
-      phase += 1.0F;
-    }
-  }
-
-  auto const frame_count = static_cast<float>(clip.frame_count);
-  int frame_idx = (!clip.loops && phase >= 1.0F)
-                      ? static_cast<int>(clip.frame_count - 1U)
-                      : static_cast<int>(phase * frame_count);
-  frame_idx = std::clamp(frame_idx, 0, static_cast<int>(clip.frame_count) - 1);
-
-  return BpatPlayback{clip_id, static_cast<std::uint16_t>(frame_idx)};
+  return BpatPlayback{playback.clip_id,
+                      static_cast<std::uint16_t>(playback.frame_in_clip)};
 }
 
 auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
@@ -333,28 +312,12 @@ auto horse_clip_contact_y(std::uint16_t clip_id,
     return std::nullopt;
   }
 
-  auto const clip = blob->clip(clip_id);
-  if (clip.frame_count == 0U) {
+  auto const playback = resolve_bpat_playback(blob, clip_id, phase);
+  if (!playback.valid()) {
     return std::nullopt;
   }
 
-  if (!clip.loops && phase >= 1.0F) {
-    phase = 1.0F;
-  } else {
-    phase -= std::floor(phase);
-    if (phase < 0.0F) {
-      phase += 1.0F;
-    }
-  }
-
-  auto const frame_count = static_cast<float>(clip.frame_count);
-  int frame_idx = (!clip.loops && phase >= 1.0F)
-                      ? static_cast<int>(clip.frame_count - 1U)
-                      : static_cast<int>(phase * frame_count);
-  frame_idx = std::clamp(frame_idx, 0, static_cast<int>(clip.frame_count) - 1);
-
-  auto const palette = blob->frame_palette_view(clip.frame_offset +
-                                                static_cast<std::uint32_t>(frame_idx));
+  auto const palette = blob->frame_palette_view(playback.global_frame);
   if (palette.size() < Render::Horse::k_horse_bone_count) {
     return std::nullopt;
   }

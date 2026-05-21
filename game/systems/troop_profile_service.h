@@ -14,9 +14,12 @@ struct TroopProfile {
   Game::Units::TroopProductionStats production;
   Game::Units::TroopCombatStats combat;
   Game::Units::TroopVisualStats visuals;
+  std::vector<std::string> abilities;
   int individuals_per_unit = 1;
   int max_units_per_row = 1;
   FormationType formation_type = FormationType::Roman;
+
+  [[nodiscard]] auto has_ability(const std::string& ability_id) const -> bool;
 };
 
 class TroopProfileService {

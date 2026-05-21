@@ -16,7 +16,7 @@ struct TroopToolSpec {
   const char* section;
 };
 
-inline constexpr std::array<TroopToolSpec, 18> k_troop_tool_specs{{
+inline constexpr std::array<TroopToolSpec, 21> k_troop_tool_specs{{
     {ToolType::TroopArcher,
      "archer",
      "Archer",
@@ -107,6 +107,21 @@ inline constexpr std::array<TroopToolSpec, 18> k_troop_tool_specs{{
      "Elephant Master",
      "Place Carthaginian elephant master spawns.",
      "Command"},
+    {ToolType::TroopSkeletonSwordsman,
+     "skeleton_swordsman",
+     "Skeleton Swordsman",
+     "Place Iron Sepulcher skeleton swordsman spawns.",
+     "Sepulcher"},
+    {ToolType::TroopSkeletonArcher,
+     "skeleton_archer",
+     "Skeleton Archer",
+     "Place Iron Sepulcher skeleton archer spawns.",
+     "Sepulcher"},
+    {ToolType::TroopGravePriest,
+     "grave_priest",
+     "Grave Priest",
+     "Place Iron Sepulcher grave priest spawns.",
+     "Sepulcher"},
 }};
 
 [[nodiscard]] inline auto troop_tool_spec(ToolType tool) -> const TroopToolSpec* {

@@ -23,6 +23,7 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/stamina_system.h"
 #include "game/systems/terrain_alignment_system.h"
+#include "game/systems/undead_awakening_system.h"
 #include "render/gl/camera.h"
 #include "render/graphics_settings.h"
 #include "render/ground/fog_renderer.h"
@@ -74,6 +75,7 @@ void RendererBootstrap::initialize_world_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<Game::Systems::HealingSystem>());
   world.add_system(std::make_unique<Game::Systems::CaptureSystem>());
   world.add_system(std::make_unique<Game::Systems::AISystem>());
+  world.add_system(std::make_unique<Game::Systems::UndeadAwakeningSystem>());
   world.add_system(std::make_unique<Game::Systems::ProductionSystem>());
   world.add_system(std::make_unique<Game::Systems::HomeSystem>());
   world.add_system(std::make_unique<Game::Systems::CivilianDeliverySystem>());

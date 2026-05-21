@@ -30,6 +30,7 @@ void register_catapult_renderer(EntityRendererRegistry& registry) {
           renderer_key = "troops/carthage/catapult";
           break;
         case Game::Systems::NationID::RomanRepublic:
+        case Game::Systems::NationID::IronSepulcher:
           renderer_key = "troops/roman/catapult";
           break;
         default:

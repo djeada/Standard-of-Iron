@@ -783,6 +783,51 @@ TEST_F(SerializationTest, MoraleComponentRoundTrip) {
   EXPECT_TRUE(deserialized->routing);
 }
 
+TEST_F(SerializationTest, UndeadComponentSerialization) {
+  auto* entity = world->create_entity();
+  auto* undead = entity->add_component<UndeadComponent>();
+
+  undead->morale_immune = true;
+  undead->fire_damage_multiplier = 1.75F;
+  undead->priest_damage_multiplier = 1.55F;
+  undead->cavalry_charge_damage_multiplier = 1.35F;
+  undead->counts_for_economy = false;
+
+  QJsonObject json = Serialization::serialize_entity(entity);
+
+  ASSERT_TRUE(json.contains("undead"));
+  QJsonObject undead_obj = json["undead"].toObject();
+
+  EXPECT_TRUE(undead_obj["morale_immune"].toBool());
+  EXPECT_FLOAT_EQ(undead_obj["fire_damage_multiplier"].toDouble(), 1.75);
+  EXPECT_FLOAT_EQ(undead_obj["priest_damage_multiplier"].toDouble(), 1.55);
+  EXPECT_FLOAT_EQ(undead_obj["cavalry_charge_damage_multiplier"].toDouble(), 1.35);
+  EXPECT_FALSE(undead_obj["counts_for_economy"].toBool());
+}
+
+TEST_F(SerializationTest, UndeadComponentRoundTrip) {
+  auto* original_entity = world->create_entity();
+  auto* undead = original_entity->add_component<UndeadComponent>();
+  undead->morale_immune = false;
+  undead->fire_damage_multiplier = 1.6F;
+  undead->priest_damage_multiplier = 1.45F;
+  undead->cavalry_charge_damage_multiplier = 1.3F;
+  undead->counts_for_economy = true;
+
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
+
+  auto* new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto* deserialized = new_entity->get_component<UndeadComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FALSE(deserialized->morale_immune);
+  EXPECT_FLOAT_EQ(deserialized->fire_damage_multiplier, 1.6F);
+  EXPECT_FLOAT_EQ(deserialized->priest_damage_multiplier, 1.45F);
+  EXPECT_FLOAT_EQ(deserialized->cavalry_charge_damage_multiplier, 1.3F);
+  EXPECT_TRUE(deserialized->counts_for_economy);
+}
+
 TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   auto* original_entity = world->create_entity();
   auto* production = original_entity->add_component<ProductionComponent>();
@@ -1267,6 +1312,8 @@ TEST_F(SerializationTest, HealerComponentSerialization) {
   healer->healing_amount = 10;
   healer->healing_cooldown = 3.0F;
   healer->time_since_last_heal = 1.0F;
+  healer->target_affinity = HealerComponent::TargetAffinity::UndeadAllies;
+  healer->suppress_attack_while_healing = false;
 
   QJsonObject json = Serialization::serialize_entity(entity);
 
@@ -1277,6 +1324,8 @@ TEST_F(SerializationTest, HealerComponentSerialization) {
   EXPECT_EQ(healer_obj["healing_amount"].toInt(), 10);
   EXPECT_FLOAT_EQ(healer_obj["healing_cooldown"].toDouble(), 3.0);
   EXPECT_FLOAT_EQ(healer_obj["time_since_last_heal"].toDouble(), 1.0);
+  EXPECT_EQ(healer_obj["target_affinity"].toString(), QString("undead_allies"));
+  EXPECT_FALSE(healer_obj["suppress_attack_while_healing"].toBool());
 }
 
 TEST_F(SerializationTest, HealerComponentRoundTrip) {
@@ -1286,6 +1335,8 @@ TEST_F(SerializationTest, HealerComponentRoundTrip) {
   healer->healing_amount = 8;
   healer->healing_cooldown = 4.0F;
   healer->time_since_last_heal = 2.0F;
+  healer->target_affinity = HealerComponent::TargetAffinity::UndeadAllies;
+  healer->suppress_attack_while_healing = false;
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
 
@@ -1298,6 +1349,133 @@ TEST_F(SerializationTest, HealerComponentRoundTrip) {
   EXPECT_EQ(deserialized->healing_amount, 8);
   EXPECT_FLOAT_EQ(deserialized->healing_cooldown, 4.0F);
   EXPECT_FLOAT_EQ(deserialized->time_since_last_heal, 2.0F);
+  EXPECT_EQ(deserialized->target_affinity,
+            HealerComponent::TargetAffinity::UndeadAllies);
+  EXPECT_FALSE(deserialized->suppress_attack_while_healing);
+}
+
+TEST_F(SerializationTest, CursedStatusComponentRoundTrip) {
+  auto* original_entity = world->create_entity();
+  auto* cursed = original_entity->add_component<CursedStatusComponent>();
+  cursed->morale_penalty_per_hit = 12.0F;
+  cursed->duration = 9.0F;
+  cursed->remaining_duration = 4.5F;
+  cursed->stacks = 3;
+
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
+
+  auto* new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto* deserialized = new_entity->get_component<CursedStatusComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->morale_penalty_per_hit, 12.0F);
+  EXPECT_FLOAT_EQ(deserialized->duration, 9.0F);
+  EXPECT_FLOAT_EQ(deserialized->remaining_duration, 4.5F);
+  EXPECT_EQ(deserialized->stacks, 3);
+}
+
+TEST_F(SerializationTest, BurningStatusComponentRoundTrip) {
+  auto* original_entity = world->create_entity();
+  auto* burning = original_entity->add_component<BurningStatusComponent>();
+  burning->duration = 3.0F;
+  burning->remaining_duration = 1.25F;
+  burning->ignition_elapsed = 0.6F;
+  burning->tick_interval = 0.4F;
+  burning->tick_accumulator = 0.15F;
+  burning->damage_per_tick = 4;
+  burning->attacker_id = 42;
+  burning->fire_bonus_multiplier = 1.8F;
+
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
+
+  auto* new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto* deserialized = new_entity->get_component<BurningStatusComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->duration, 3.0F);
+  EXPECT_FLOAT_EQ(deserialized->remaining_duration, 1.25F);
+  EXPECT_FLOAT_EQ(deserialized->ignition_elapsed, 0.6F);
+  EXPECT_FLOAT_EQ(deserialized->tick_interval, 0.4F);
+  EXPECT_FLOAT_EQ(deserialized->tick_accumulator, 0.15F);
+  EXPECT_EQ(deserialized->damage_per_tick, 4);
+  EXPECT_EQ(deserialized->attacker_id, 42U);
+  EXPECT_FLOAT_EQ(deserialized->fire_bonus_multiplier, 1.8F);
+}
+
+TEST_F(SerializationTest, SpecialAttackComponentRoundTrip) {
+  auto* original_entity = world->create_entity();
+  auto* special_attack = original_entity->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::Fireball;
+  special_attack->use_projectile_system = true;
+  special_attack->friendly_fire = true;
+  special_attack->splash_radius = 2.5F;
+  special_attack->splash_damage_multiplier = 0.75F;
+  special_attack->bonus_damage_multiplier_vs_fire_vulnerable = 1.8F;
+  special_attack->cursed_duration = 6.0F;
+  special_attack->cursed_morale_penalty_per_hit = 8.0F;
+  special_attack->cursed_stacks_per_hit = 2;
+  special_attack->fire_patch_duration = 4.0F;
+  special_attack->fire_patch_radius = 1.9F;
+  special_attack->burn_duration = 1.5F;
+  special_attack->burn_tick_interval = 0.5F;
+  special_attack->burn_damage_per_tick = 2;
+
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
+
+  auto* new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto* deserialized = new_entity->get_component<SpecialAttackComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->projectile_kind, Game::Systems::ProjectileKind::Fireball);
+  EXPECT_TRUE(deserialized->use_projectile_system);
+  EXPECT_TRUE(deserialized->friendly_fire);
+  EXPECT_FLOAT_EQ(deserialized->splash_radius, 2.5F);
+  EXPECT_FLOAT_EQ(deserialized->splash_damage_multiplier, 0.75F);
+  EXPECT_FLOAT_EQ(deserialized->bonus_damage_multiplier_vs_fire_vulnerable, 1.8F);
+  EXPECT_FLOAT_EQ(deserialized->cursed_duration, 6.0F);
+  EXPECT_FLOAT_EQ(deserialized->cursed_morale_penalty_per_hit, 8.0F);
+  EXPECT_EQ(deserialized->cursed_stacks_per_hit, 2);
+  EXPECT_FLOAT_EQ(deserialized->fire_patch_duration, 4.0F);
+  EXPECT_FLOAT_EQ(deserialized->fire_patch_radius, 1.9F);
+  EXPECT_FLOAT_EQ(deserialized->burn_duration, 1.5F);
+  EXPECT_FLOAT_EQ(deserialized->burn_tick_interval, 0.5F);
+  EXPECT_EQ(deserialized->burn_damage_per_tick, 2);
+}
+
+TEST_F(SerializationTest, FirePatchComponentRoundTrip) {
+  auto* original_entity = world->create_entity();
+  auto* fire_patch = original_entity->add_component<FirePatchComponent>();
+  fire_patch->radius = 2.2F;
+  fire_patch->duration = 4.0F;
+  fire_patch->remaining_duration = 2.7F;
+  fire_patch->burn_duration = 1.5F;
+  fire_patch->burn_tick_interval = 0.3F;
+  fire_patch->burn_damage_per_tick = 3;
+  fire_patch->attacker_owner_id = 2;
+  fire_patch->attacker_id = 17;
+  fire_patch->friendly_fire = true;
+  fire_patch->fire_bonus_multiplier = 1.6F;
+
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
+
+  auto* new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto* deserialized = new_entity->get_component<FirePatchComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->radius, 2.2F);
+  EXPECT_FLOAT_EQ(deserialized->duration, 4.0F);
+  EXPECT_FLOAT_EQ(deserialized->remaining_duration, 2.7F);
+  EXPECT_FLOAT_EQ(deserialized->burn_duration, 1.5F);
+  EXPECT_FLOAT_EQ(deserialized->burn_tick_interval, 0.3F);
+  EXPECT_EQ(deserialized->burn_damage_per_tick, 3);
+  EXPECT_EQ(deserialized->attacker_owner_id, 2);
+  EXPECT_EQ(deserialized->attacker_id, 17U);
+  EXPECT_TRUE(deserialized->friendly_fire);
+  EXPECT_FLOAT_EQ(deserialized->fire_bonus_multiplier, 1.6F);
 }
 
 TEST_F(SerializationTest, CatapultLoadingComponentSerialization) {

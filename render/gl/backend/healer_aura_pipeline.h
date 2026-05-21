@@ -2,8 +2,8 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QtGui/qopengl.h>
 
-#include <GL/gl.h>
 #include <vector>
 
 #include "../shader.h"

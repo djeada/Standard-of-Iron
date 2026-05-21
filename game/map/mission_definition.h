@@ -76,6 +76,7 @@ struct Condition {
   QString description;
   std::optional<float> duration;
   std::optional<QString> structure_type;
+  std::optional<QString> zone_id;
   std::vector<QString> structure_types;
   std::optional<int> min_count;
   std::optional<int> wave_count;
@@ -111,6 +112,7 @@ struct MissionDefinition {
   std::vector<Condition> defeat_conditions;
   std::vector<Condition> optional_objectives;
   std::vector<GameEvent> events;
+  bool include_ambient_undead = false;
 };
 
 } // namespace Game::Mission

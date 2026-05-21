@@ -76,6 +76,7 @@ protected:
       return nullptr;
     }
     unit->owner_id = owner_id;
+    unit->nation_id = original_nation_id;
     unit->spawn_type = spawn_type;
     unit->health = 100;
     unit->max_health = 100;
@@ -335,6 +336,66 @@ TEST_F(VictoryServiceTest, OnlyCommanderRemainingArmsAfterPlayerHadArmyOrBarrack
 
   EXPECT_TRUE(m_service->is_game_over());
   EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("defeat"));
+}
+
+TEST_F(VictoryServiceTest, AmbientSepulcherStructuresAreIgnoredByDefault) {
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  owner_registry.register_owner_with_id(99, Game::Systems::OwnerType::AI, "Sepulcher");
+  owner_registry.set_owner_team(99, 99);
+  Game::Systems::NationRegistry::instance().set_player_nation(
+      99, Game::Systems::NationID::IronSepulcher);
+
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  ASSERT_NE(create_unit(world,
+                        99,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::IronSepulcher),
+            nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.emplace_back(
+      Game::Systems::EliminationVictoryRule{{QStringLiteral("barracks")}});
+
+  m_service->configure(rules, 1);
+  advance_past_startup_delay(world);
+
+  EXPECT_TRUE(m_service->is_game_over());
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
+}
+
+TEST_F(VictoryServiceTest, AmbientSepulcherStructuresCanBeCountedWhenMissionOptsIn) {
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  owner_registry.register_owner_with_id(99, Game::Systems::OwnerType::AI, "Sepulcher");
+  owner_registry.set_owner_team(99, 99);
+  Game::Systems::NationRegistry::instance().set_player_nation(
+      99, Game::Systems::NationID::IronSepulcher);
+
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  ASSERT_NE(create_unit(world,
+                        99,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::IronSepulcher),
+            nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.include_ambient_undead = true;
+  rules.victory_rules.emplace_back(
+      Game::Systems::EliminationVictoryRule{{QStringLiteral("barracks")}});
+
+  m_service->configure(rules, 1);
+  advance_past_startup_delay(world);
+
+  EXPECT_FALSE(m_service->is_game_over());
 }
 
 } // namespace

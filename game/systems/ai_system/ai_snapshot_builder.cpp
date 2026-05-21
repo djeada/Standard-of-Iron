@@ -7,6 +7,8 @@
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../map/terrain_service.h"
+#include "../nation_registry.h"
 #include "systems/ai_system/ai_types.h"
 
 namespace {
@@ -78,6 +80,8 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   snapshot.player_id = ai_owner_id;
 
   auto friendlies = world.get_units_owned_by(ai_owner_id);
+  const auto* nation =
+      Game::Systems::NationRegistry::instance().get_nation_for_player(ai_owner_id);
   const auto vision_sources = collect_vision_sources(friendlies);
   snapshot.friendly_units.reserve(friendlies.size());
 
@@ -147,6 +151,26 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   auto enemies = world.get_enemy_units(ai_owner_id);
   snapshot.visible_enemies.reserve(enemies.size());
   snapshot.strategic_objectives.reserve(enemies.size());
+
+  if (nation != nullptr && !nation->has_economy) {
+    const auto& world_props = Game::Map::TerrainService::instance().world_props();
+    snapshot.defense_anchors.reserve(world_props.size());
+    for (const auto& prop : world_props) {
+      if (prop.type != Game::Map::WorldProp::Type::Ruins &&
+          prop.type != Game::Map::WorldProp::Type::MagicShrine) {
+        continue;
+      }
+
+      ContactSnapshot anchor;
+      anchor.id = static_cast<Engine::Core::EntityID>(prop.id);
+      anchor.pos_x = prop.x;
+      anchor.pos_y = 0.0F;
+      anchor.pos_z = prop.z;
+      anchor.health = 1;
+      anchor.max_health = 1;
+      snapshot.defense_anchors.push_back(std::move(anchor));
+    }
+  }
 
   for (auto* entity : enemies) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();

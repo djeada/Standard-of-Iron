@@ -19,6 +19,7 @@
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
 #include "core/event_manager.h"
+#include "nation_registry.h"
 #include "owner_registry.h"
 #include "systems/ai_system/ai_command_applier.h"
 #include "systems/ai_system/ai_snapshot_builder.h"
@@ -37,6 +38,23 @@ auto initial_ai_update_timer(std::size_t index,
   }
 
   return update_interval * static_cast<float>(index) / static_cast<float>(count);
+}
+
+void apply_nation_default_strategy(AI::AIContext& context) {
+  const auto* nation = Game::Systems::NationRegistry::instance().get_nation_for_player(
+      context.player_id);
+  if (nation == nullptr) {
+    return;
+  }
+
+  context.nation = nation;
+  if (nation->ai_profile.empty()) {
+    return;
+  }
+
+  context.strategy_config =
+      AI::AIStrategyFactory::create_config(AI::AIStrategyFactory::parse_strategy(
+          QString::fromStdString(nation->ai_profile)));
 }
 
 } // namespace
@@ -100,6 +118,7 @@ void AISystem::initialize_ai_players() {
         m_reasoner, m_executor, *instance.behavior_registry);
     instance.update_timer =
         initial_ai_update_timer(index, ai_owner_ids.size(), m_update_interval);
+    apply_nation_default_strategy(instance.context);
 
     m_ai_instances.push_back(std::move(instance));
   }

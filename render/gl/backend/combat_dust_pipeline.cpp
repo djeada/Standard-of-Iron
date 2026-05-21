@@ -50,6 +50,65 @@ auto blood_alpha_scale(float elapsed_time, float lifetime) -> float {
   return std::clamp(remaining_time / fade_window, 0.0F, 1.0F);
 }
 
+struct EffectRenderState {
+  GLboolean cull_enabled{GL_FALSE};
+  GLboolean depth_test_enabled{GL_FALSE};
+  GLboolean blend_enabled{GL_FALSE};
+  GLboolean depth_mask_enabled{GL_TRUE};
+};
+
+auto capture_effect_render_state() -> EffectRenderState {
+  EffectRenderState state;
+  state.cull_enabled = glIsEnabled(GL_CULL_FACE);
+  state.depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
+  state.blend_enabled = glIsEnabled(GL_BLEND);
+  glGetBooleanv(GL_DEPTH_WRITEMASK, &state.depth_mask_enabled);
+  return state;
+}
+
+void apply_alpha_blend_effect_state() {
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void apply_overlay_alpha_effect_state() {
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+}
+
+void apply_additive_effect_state() {
+  glDisable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void restore_effect_render_state(const EffectRenderState& state) {
+  glDepthMask(state.depth_mask_enabled);
+  if (state.blend_enabled != 0U) {
+    glEnable(GL_BLEND);
+  } else {
+    glDisable(GL_BLEND);
+  }
+  if (state.depth_test_enabled != 0U) {
+    glEnable(GL_DEPTH_TEST);
+  } else {
+    glDisable(GL_DEPTH_TEST);
+  }
+  if (state.cull_enabled != 0U) {
+    glEnable(GL_CULL_FACE);
+  } else {
+    glDisable(GL_CULL_FACE);
+  }
+}
+
 void clear_gl_errors() {
 #ifndef NDEBUG
   while (glGetError() != GL_NO_ERROR) {
@@ -111,6 +170,11 @@ auto CombatDustPipeline::initialize() -> bool {
     return false;
   }
 
+  if (!create_fireball_geometry()) {
+    qWarning() << "CombatDustPipeline: Failed to create fireball geometry";
+    return false;
+  }
+
   if (m_blood_shader != nullptr && !create_blood_geometry()) {
     qWarning() << "CombatDustPipeline: Blood pools disabled; failed to create "
                   "blood geometry";
@@ -125,6 +189,7 @@ auto CombatDustPipeline::initialize() -> bool {
 
 void CombatDustPipeline::shutdown() {
   shutdown_blood_geometry();
+  shutdown_fireball_geometry();
   shutdown_geometry();
   m_blood_shader = nullptr;
   m_dust_shader = nullptr;
@@ -157,6 +222,33 @@ void CombatDustPipeline::shutdown_geometry() {
     m_index_buffer = 0;
   }
   m_index_count = 0;
+}
+
+void CombatDustPipeline::shutdown_fireball_geometry() {
+  if (QOpenGLContext::currentContext() == nullptr) {
+    m_fireball_vao = 0;
+    m_fireball_vertex_buffer = 0;
+    m_fireball_index_buffer = 0;
+    m_fireball_index_count = 0;
+    return;
+  }
+
+  initializeOpenGLFunctions();
+  clear_gl_errors();
+
+  if (m_fireball_vao != 0) {
+    glDeleteVertexArrays(1, &m_fireball_vao);
+    m_fireball_vao = 0;
+  }
+  if (m_fireball_vertex_buffer != 0) {
+    glDeleteBuffers(1, &m_fireball_vertex_buffer);
+    m_fireball_vertex_buffer = 0;
+  }
+  if (m_fireball_index_buffer != 0) {
+    glDeleteBuffers(1, &m_fireball_index_buffer);
+    m_fireball_index_buffer = 0;
+  }
+  m_fireball_index_count = 0;
 }
 
 void CombatDustPipeline::shutdown_blood_geometry() {
@@ -212,7 +304,8 @@ void CombatDustPipeline::cache_uniforms() {
 }
 
 auto CombatDustPipeline::is_initialized() const -> bool {
-  return m_dust_shader != nullptr && m_vao != 0 && m_index_count > 0;
+  return m_dust_shader != nullptr && m_vao != 0 && m_index_count > 0 &&
+         m_fireball_vao != 0 && m_fireball_index_count > 0;
 }
 
 struct DustVertex {
@@ -346,6 +439,133 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
 
   if (!check_gl_error("vertex attributes")) {
     shutdown_geometry();
+    return false;
+  }
+
+  return true;
+}
+
+auto CombatDustPipeline::create_fireball_geometry() -> bool {
+  initializeOpenGLFunctions();
+  shutdown_fireball_geometry();
+  clear_gl_errors();
+
+  std::vector<DustVertex> vertices;
+  std::vector<unsigned int> indices;
+
+  constexpr int latitude_segments = 12;
+  constexpr int longitude_segments = 24;
+  constexpr float pi = std::numbers::pi_v<float>;
+
+  vertices.reserve(
+      static_cast<size_t>((latitude_segments + 1) * (longitude_segments + 1)));
+  indices.reserve(static_cast<size_t>(latitude_segments * longitude_segments * 6));
+
+  for (int lat = 0; lat <= latitude_segments; ++lat) {
+    float const v = static_cast<float>(lat) / static_cast<float>(latitude_segments);
+    float const theta = v * pi;
+    float const sin_theta = std::sin(theta);
+    float const cos_theta = std::cos(theta);
+
+    for (int lon = 0; lon <= longitude_segments; ++lon) {
+      float const u = static_cast<float>(lon) / static_cast<float>(longitude_segments);
+      float const phi = u * pi * 2.0F;
+      float const sin_phi = std::sin(phi);
+      float const cos_phi = std::cos(phi);
+
+      DustVertex vertex{};
+      vertex.position[0] = sin_theta * cos_phi;
+      vertex.position[1] = cos_theta;
+      vertex.position[2] = sin_theta * sin_phi;
+      vertex.normal[0] = vertex.position[0];
+      vertex.normal[1] = vertex.position[1];
+      vertex.normal[2] = vertex.position[2];
+      vertex.tex_coord[0] = u;
+      vertex.tex_coord[1] = v;
+      vertices.push_back(vertex);
+    }
+  }
+
+  int const row = longitude_segments + 1;
+  for (int lat = 0; lat < latitude_segments; ++lat) {
+    for (int lon = 0; lon < longitude_segments; ++lon) {
+      auto const a = static_cast<unsigned int>(lat * row + lon);
+      unsigned int const b = a + 1U;
+      unsigned int const c = a + static_cast<unsigned int>(row) + 1U;
+      unsigned int const d = a + static_cast<unsigned int>(row);
+      indices.push_back(a);
+      indices.push_back(b);
+      indices.push_back(c);
+      indices.push_back(c);
+      indices.push_back(d);
+      indices.push_back(a);
+    }
+  }
+
+  glGenVertexArrays(1, &m_fireball_vao);
+  if (!check_gl_error("glGenVertexArrays fireball") || m_fireball_vao == 0) {
+    return false;
+  }
+
+  glBindVertexArray(m_fireball_vao);
+  if (!check_gl_error("glBindVertexArray fireball")) {
+    glDeleteVertexArrays(1, &m_fireball_vao);
+    m_fireball_vao = 0;
+    return false;
+  }
+
+  glGenBuffers(1, &m_fireball_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_fireball_vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
+               vertices.data(),
+               GL_STATIC_DRAW);
+  if (!check_gl_error("fireball vertex buffer")) {
+    shutdown_fireball_geometry();
+    return false;
+  }
+
+  glGenBuffers(1, &m_fireball_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_fireball_index_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+               indices.data(),
+               GL_STATIC_DRAW);
+  if (!check_gl_error("fireball index buffer")) {
+    shutdown_fireball_geometry();
+    return false;
+  }
+
+  m_fireball_index_count = static_cast<GLsizei>(indices.size());
+
+  glEnableVertexAttribArray(VertexAttrib::position);
+  glVertexAttribPointer(VertexAttrib::position,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, position)));
+
+  glEnableVertexAttribArray(VertexAttrib::normal);
+  glVertexAttribPointer(VertexAttrib::normal,
+                        ComponentCount::vec3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, normal)));
+
+  glEnableVertexAttribArray(VertexAttrib::tex_coord);
+  glVertexAttribPointer(VertexAttrib::tex_coord,
+                        ComponentCount::vec2,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(DustVertex),
+                        reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
+
+  glBindVertexArray(0);
+
+  if (!check_gl_error("fireball vertex attributes")) {
+    shutdown_fireball_geometry();
     return false;
   }
 
@@ -676,41 +896,18 @@ void CombatDustPipeline::render(const Camera& cam, float animation_time) {
   clear_gl_errors();
 
   if (!m_dust_data.empty()) {
-    GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
-    GLboolean const depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-    GLboolean const blend_enabled = glIsEnabled(GL_BLEND);
-    GLboolean depth_mask_enabled = GL_TRUE;
-    glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    m_dust_shader->use();
-    glBindVertexArray(m_vao);
-
+    QMatrix4x4 const view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
+    std::vector<DustInstanceData> instances;
+    instances.reserve(m_dust_data.size());
     for (const auto& data : m_dust_data) {
-      CombatDustData render_data = data;
-      render_data.time = animation_time;
-      render_dust(render_data, cam);
+      instances.push_back({.position = data.position,
+                           .color = data.color,
+                           .radius = data.radius,
+                           .intensity = data.intensity,
+                           .time = animation_time,
+                           .effect_type = data.effect_type});
     }
-
-    glBindVertexArray(0);
-
-    glDepthMask(depth_mask_enabled);
-    if (blend_enabled == 0U) {
-      glDisable(GL_BLEND);
-    }
-    if (depth_test_enabled != 0U) {
-      glEnable(GL_DEPTH_TEST);
-    } else {
-      glDisable(GL_DEPTH_TEST);
-    }
-    if (cull_enabled != 0U) {
-      glEnable(GL_CULL_FACE);
-    }
+    render_dust_batch(instances.data(), instances.size(), view_proj);
   }
 
   if (!m_blood_data.empty()) {
@@ -739,25 +936,14 @@ void CombatDustPipeline::render_blood_pools(const Camera& cam) {
 }
 
 void CombatDustPipeline::render_dust(const CombatDustData& data, const Camera& cam) {
-  QMatrix4x4 model;
-  model.setToIdentity();
-  model.translate(data.position);
-  model.scale(data.radius);
-
-  QMatrix4x4 const vp = cam.get_projection_matrix() * cam.get_view_matrix();
-  QMatrix4x4 const mvp = vp * model;
-
-  m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
-  m_dust_shader->set_uniform(m_uniforms.model, model);
-  m_dust_shader->set_uniform(m_uniforms.time, data.time);
-  m_dust_shader->set_uniform(m_uniforms.center, data.position);
-  m_dust_shader->set_uniform(m_uniforms.radius, data.radius);
-  m_dust_shader->set_uniform(m_uniforms.intensity, data.intensity);
-  m_dust_shader->set_uniform(m_uniforms.dust_color, data.color);
-  m_dust_shader->set_uniform(m_uniforms.effect_type,
-                             static_cast<int>(data.effect_type));
-
-  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
+  QMatrix4x4 const view_proj = cam.get_projection_matrix() * cam.get_view_matrix();
+  DustInstanceData const instance{.position = data.position,
+                                  .color = data.color,
+                                  .radius = data.radius,
+                                  .intensity = data.intensity,
+                                  .time = data.time,
+                                  .effect_type = data.effect_type};
+  render_dust_batch(&instance, 1U, view_proj);
 }
 
 void CombatDustPipeline::render_single_dust(const QVector3D& position,
@@ -766,51 +952,13 @@ void CombatDustPipeline::render_single_dust(const QVector3D& position,
                                             float intensity,
                                             float time,
                                             const QMatrix4x4& view_proj) {
-  if (!is_initialized()) {
-    return;
-  }
-  if (intensity < k_min_dust_intensity) {
-    return;
-  }
-
-  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  m_dust_shader->use();
-  glBindVertexArray(m_vao);
-
-  QMatrix4x4 model;
-  model.setToIdentity();
-  model.translate(position);
-  model.scale(radius);
-
-  QMatrix4x4 const mvp = view_proj * model;
-
-  m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
-  m_dust_shader->set_uniform(m_uniforms.model, model);
-  m_dust_shader->set_uniform(m_uniforms.time, time);
-  m_dust_shader->set_uniform(m_uniforms.center, position);
-  m_dust_shader->set_uniform(m_uniforms.radius, radius);
-  m_dust_shader->set_uniform(m_uniforms.intensity, intensity);
-  m_dust_shader->set_uniform(m_uniforms.dust_color, color);
-  m_dust_shader->set_uniform(m_uniforms.effect_type,
-                             static_cast<int>(EffectType::Dust));
-
-  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
-
-  glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  if (cull_enabled != 0U) {
-    glEnable(GL_CULL_FACE);
-  }
+  DustInstanceData const instance{.position = position,
+                                  .color = color,
+                                  .radius = radius,
+                                  .intensity = intensity,
+                                  .time = time,
+                                  .effect_type = EffectType::Dust};
+  render_dust_batch(&instance, 1U, view_proj);
 }
 
 void CombatDustPipeline::render_single_flame(const QVector3D& position,
@@ -819,51 +967,29 @@ void CombatDustPipeline::render_single_flame(const QVector3D& position,
                                              float intensity,
                                              float time,
                                              const QMatrix4x4& view_proj) {
-  if (!is_initialized()) {
-    return;
-  }
-  if (intensity < k_min_dust_intensity) {
-    return;
-  }
+  DustInstanceData const instance{.position = position,
+                                  .color = color,
+                                  .radius = radius,
+                                  .intensity = intensity,
+                                  .time = time,
+                                  .effect_type = EffectType::Flame,
+                                  .overlay = false};
+  render_dust_batch(&instance, 1U, view_proj);
+}
 
-  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  m_dust_shader->use();
-  glBindVertexArray(m_vao);
-
-  QMatrix4x4 model;
-  model.setToIdentity();
-  model.translate(position);
-  model.scale(radius);
-
-  QMatrix4x4 const mvp = view_proj * model;
-
-  m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
-  m_dust_shader->set_uniform(m_uniforms.model, model);
-  m_dust_shader->set_uniform(m_uniforms.time, time);
-  m_dust_shader->set_uniform(m_uniforms.center, position);
-  m_dust_shader->set_uniform(m_uniforms.radius, radius);
-  m_dust_shader->set_uniform(m_uniforms.intensity, intensity);
-  m_dust_shader->set_uniform(m_uniforms.dust_color, color);
-  m_dust_shader->set_uniform(m_uniforms.effect_type,
-                             static_cast<int>(EffectType::Flame));
-
-  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
-
-  glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  if (cull_enabled != 0U) {
-    glEnable(GL_CULL_FACE);
-  }
+void CombatDustPipeline::render_single_fireball(const QVector3D& position,
+                                                const QVector3D& color,
+                                                float radius,
+                                                float intensity,
+                                                float time,
+                                                const QMatrix4x4& view_proj) {
+  DustInstanceData const instance{.position = position,
+                                  .color = color,
+                                  .radius = radius,
+                                  .intensity = intensity,
+                                  .time = time,
+                                  .effect_type = EffectType::Fireball};
+  render_dust_batch(&instance, 1U, view_proj);
 }
 
 void CombatDustPipeline::render_single_stone_impact(const QVector3D& position,
@@ -872,51 +998,13 @@ void CombatDustPipeline::render_single_stone_impact(const QVector3D& position,
                                                     float intensity,
                                                     float time,
                                                     const QMatrix4x4& view_proj) {
-  if (!is_initialized()) {
-    return;
-  }
-  if (intensity < k_min_dust_intensity) {
-    return;
-  }
-
-  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  m_dust_shader->use();
-  glBindVertexArray(m_vao);
-
-  QMatrix4x4 model;
-  model.setToIdentity();
-  model.translate(position);
-  model.scale(radius);
-
-  QMatrix4x4 const mvp = view_proj * model;
-
-  m_dust_shader->set_uniform(m_uniforms.mvp, mvp);
-  m_dust_shader->set_uniform(m_uniforms.model, model);
-  m_dust_shader->set_uniform(m_uniforms.time, time);
-  m_dust_shader->set_uniform(m_uniforms.center, position);
-  m_dust_shader->set_uniform(m_uniforms.radius, radius);
-  m_dust_shader->set_uniform(m_uniforms.intensity, intensity);
-  m_dust_shader->set_uniform(m_uniforms.dust_color, color);
-  m_dust_shader->set_uniform(m_uniforms.effect_type,
-                             static_cast<int>(EffectType::StoneImpact));
-
-  glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
-
-  glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  if (cull_enabled != 0U) {
-    glEnable(GL_CULL_FACE);
-  }
+  DustInstanceData const instance{.position = position,
+                                  .color = color,
+                                  .radius = radius,
+                                  .intensity = intensity,
+                                  .time = time,
+                                  .effect_type = EffectType::StoneImpact};
+  render_dust_batch(&instance, 1U, view_proj);
 }
 
 void CombatDustPipeline::render_single_blood_pool(const QVector3D& position,
@@ -942,23 +1030,52 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     return;
   }
 
-  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_mask_enabled = GL_TRUE;
-  glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
-
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  EffectRenderState const state = capture_effect_render_state();
 
   m_dust_shader->use();
-  glBindVertexArray(m_vao);
+  GLuint current_vao = 0;
+  GLsizei current_index_count = 0;
+  enum class EffectStateMode : std::uint8_t {
+    AlphaDepth,
+    AlphaOverlay,
+    Additive
+  };
+  EffectStateMode current_state = EffectStateMode::AlphaDepth;
+  bool state_initialized = false;
 
   for (std::size_t idx = 0; idx < count; ++idx) {
     const DustInstanceData& inst = instances[idx];
     if (inst.intensity < k_min_dust_intensity) {
       continue;
+    }
+
+    bool const use_fireball_geometry = inst.effect_type == EffectType::Fireball;
+    EffectStateMode const target_state =
+        use_fireball_geometry ? EffectStateMode::Additive
+                              : (inst.overlay ? EffectStateMode::AlphaOverlay
+                                              : EffectStateMode::AlphaDepth);
+    if (!state_initialized || current_state != target_state) {
+      if (target_state == EffectStateMode::Additive) {
+        apply_additive_effect_state();
+      } else if (target_state == EffectStateMode::AlphaOverlay) {
+        apply_overlay_alpha_effect_state();
+      } else {
+        apply_alpha_blend_effect_state();
+      }
+      current_state = target_state;
+      state_initialized = true;
+    }
+
+    GLuint const target_vao = use_fireball_geometry ? m_fireball_vao : m_vao;
+    GLsizei const target_index_count =
+        use_fireball_geometry ? m_fireball_index_count : m_index_count;
+    if (target_vao == 0 || target_index_count <= 0) {
+      continue;
+    }
+    if (current_vao != target_vao) {
+      glBindVertexArray(target_vao);
+      current_vao = target_vao;
+      current_index_count = target_index_count;
     }
 
     QMatrix4x4 model;
@@ -978,15 +1095,11 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     m_dust_shader->set_uniform(m_uniforms.effect_type,
                                static_cast<int>(inst.effect_type));
 
-    glDrawElements(GL_TRIANGLES, m_index_count, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, current_index_count, GL_UNSIGNED_INT, nullptr);
   }
 
   glBindVertexArray(0);
-
-  glDepthMask(depth_mask_enabled);
-  if (cull_enabled != 0U) {
-    glEnable(GL_CULL_FACE);
-  }
+  restore_effect_render_state(state);
 }
 
 void CombatDustPipeline::render_blood_pool_batch(const BloodPoolInstanceData* instances,

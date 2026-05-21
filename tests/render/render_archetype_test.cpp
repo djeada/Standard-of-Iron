@@ -10,6 +10,7 @@
 #include "render/entity/nations/carthage/defense_tower_renderer.h"
 #include "render/entity/nations/roman/defense_tower_renderer.h"
 #include "render/entity/nations/roman/home_renderer.h"
+#include "render/entity/nations/roman/wall_renderer.h"
 #include "render/entity/registry.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/scale_barding_renderer.h"
@@ -75,6 +76,29 @@ auto near_vec3(const QVector3D& lhs, const QVector3D& rhs, float eps = 1e-4F) ->
   return (lhs - rhs).length() <= eps;
 }
 
+auto bounds_for_recorded_meshes(const std::vector<RecordedMesh>& meshes)
+    -> Render::GL::BoundingBox {
+  auto bounds = Render::GL::empty_bounding_box();
+  static const std::array<QVector3D, 8> k_unit_corners = {
+      QVector3D(-0.5F, -0.5F, -0.5F),
+      QVector3D(0.5F, -0.5F, -0.5F),
+      QVector3D(-0.5F, 0.5F, -0.5F),
+      QVector3D(0.5F, 0.5F, -0.5F),
+      QVector3D(-0.5F, -0.5F, 0.5F),
+      QVector3D(0.5F, -0.5F, 0.5F),
+      QVector3D(-0.5F, 0.5F, 0.5F),
+      QVector3D(0.5F, 0.5F, 0.5F),
+  };
+
+  for (const RecordedMesh& mesh : meshes) {
+    for (const QVector3D& corner : k_unit_corners) {
+      bounds.expand(mesh.model.map(corner));
+    }
+  }
+
+  return bounds;
+}
+
 auto make_test_horse_frames() -> Render::GL::HorseBodyFrames {
   using namespace Render::GL;
 
@@ -113,7 +137,7 @@ TEST(RenderArchetype, AppliesPaletteAndTracksBounds) {
       0);
 
   RenderArchetype archetype = std::move(builder).build();
-  ASSERT_EQ(archetype.lods[0].draws.size(), 2u);
+  ASSERT_EQ(archetype.lods[0].draws.size(), 2U);
   EXPECT_TRUE(
       near_vec3(archetype.lods[0].local_bounds.min, QVector3D(-1.5F, -1.0F, -0.5F)));
   EXPECT_TRUE(
@@ -132,7 +156,7 @@ TEST(RenderArchetype, AppliesPaletteAndTracksBounds) {
   instance.alpha_multiplier = 0.5F;
   submit_render_instance(submitter, instance);
 
-  ASSERT_EQ(submitter.meshes.size(), 2u);
+  ASSERT_EQ(submitter.meshes.size(), 2U);
   EXPECT_TRUE(near_vec3(submitter.meshes[0].model.column(3).toVector3D(),
                         QVector3D(12.0F, 1.0F, 3.0F)));
   EXPECT_TRUE(near_vec3(submitter.meshes[1].model.column(3).toVector3D(),
@@ -148,7 +172,7 @@ TEST(RenderArchetype, StoredRenderInstanceOwnsPaletteData) {
 
   RenderArchetypeBuilder builder("stored_instance_test");
   builder.add_palette_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F), 0);
-  RenderArchetype archetype = std::move(builder).build();
+  RenderArchetype const archetype = std::move(builder).build();
 
   StoredRenderInstance<2> stored;
   stored.archetype = &archetype;
@@ -161,7 +185,7 @@ TEST(RenderArchetype, StoredRenderInstanceOwnsPaletteData) {
   RecordingSubmitter submitter;
   submit_render_instance(submitter, stored.render_instance());
 
-  ASSERT_EQ(submitter.meshes.size(), 1u);
+  ASSERT_EQ(submitter.meshes.size(), 1U);
   EXPECT_TRUE(near_vec3(submitter.meshes[0].color, QVector3D(0.7F, 0.2F, 0.1F)));
   EXPECT_EQ(submitter.meshes[0].texture, fake_texture(11));
 }
@@ -172,7 +196,7 @@ TEST(RenderArchetypeEquipment, ReplaysArchetypeInstancesThroughEquipmentBatch) {
   RenderArchetypeBuilder builder("equipment_archetype");
   builder.add_palette_box(
       QVector3D(0.5F, 0.25F, -0.5F), QVector3D(0.5F, 0.25F, 0.75F), 0);
-  RenderArchetype archetype = std::move(builder).build();
+  RenderArchetype const archetype = std::move(builder).build();
 
   EquipmentBatch batch;
   std::array<QVector3D, 1> palette{QVector3D(0.3F, 0.5F, 0.8F)};
@@ -183,7 +207,7 @@ TEST(RenderArchetypeEquipment, ReplaysArchetypeInstancesThroughEquipmentBatch) {
   RecordingSubmitter submitter;
   submit_equipment_batch(batch, submitter);
 
-  ASSERT_EQ(submitter.meshes.size(), 1u);
+  ASSERT_EQ(submitter.meshes.size(), 1U);
   EXPECT_TRUE(near_vec3(submitter.meshes[0].model.column(3).toVector3D(),
                         QVector3D(2.5F, 3.25F, 3.5F)));
   EXPECT_TRUE(near_vec3(submitter.meshes[0].color, palette[0]));
@@ -205,11 +229,11 @@ TEST(RenderArchetypeEquipment, ScaleBardingUsesMultipleAnchoredArchetypes) {
 
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_TRUE(batch.cylinders.empty());
-  ASSERT_EQ(batch.archetypes.size(), 3u);
+  ASSERT_EQ(batch.archetypes.size(), 3U);
 
   RecordingSubmitter submitter;
   submit_equipment_batch(batch, submitter);
-  ASSERT_EQ(submitter.meshes.size(), 4u);
+  ASSERT_EQ(submitter.meshes.size(), 4U);
 }
 
 TEST(RenderArchetypeEquipment, SaddleBagsBakeAllRigidPieces) {
@@ -226,13 +250,13 @@ TEST(RenderArchetypeEquipment, SaddleBagsBakeAllRigidPieces) {
   SaddleBagRenderer::submit(ctx, make_test_horse_frames(), variant, {}, batch);
 
   EXPECT_TRUE(batch.meshes.empty());
-  ASSERT_EQ(batch.archetypes.size(), 1u);
+  ASSERT_EQ(batch.archetypes.size(), 1U);
   EXPECT_TRUE(batch.cylinders.empty());
 
   RecordingSubmitter submitter;
   submit_equipment_batch(batch, submitter);
-  EXPECT_EQ(submitter.meshes.size(), 4u);
-  EXPECT_EQ(submitter.cylinder_count, 0u);
+  EXPECT_EQ(submitter.meshes.size(), 4U);
+  EXPECT_EQ(submitter.cylinder_count, 0U);
 }
 
 TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
@@ -258,7 +282,7 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   RecordingSubmitter submitter;
   renderer(ctx, submitter);
 
-  EXPECT_EQ(submitter.meshes.size(), 47u);
+  EXPECT_EQ(submitter.meshes.size(), 47U);
 }
 
 TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
@@ -288,7 +312,7 @@ TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
   RecordingSubmitter submitter;
   (*renderer)(ctx, submitter);
 
-  EXPECT_EQ(submitter.meshes.size(), 47u);
+  EXPECT_EQ(submitter.meshes.size(), 47U);
 }
 
 TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {
@@ -397,6 +421,69 @@ TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
     }
   }
   EXPECT_TRUE(found_team_tint);
+}
+
+TEST(RenderArchetypeBuildings, RomanStraightWallFormsTallContinuousPalisade) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_wall_renderer(registry);
+  const auto renderer = registry.get("troops/roman/wall_segment_straight");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Engine::Core::Entity entity(4);
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+
+  RecordingSubmitter left_submitter;
+  ctx.model = QMatrix4x4{};
+  renderer(ctx, left_submitter);
+  const auto left_bounds = bounds_for_recorded_meshes(left_submitter.meshes);
+
+  RecordingSubmitter right_submitter;
+  ctx.model = QMatrix4x4{};
+  ctx.model.translate(2.0F, 0.0F, 0.0F);
+  renderer(ctx, right_submitter);
+  const auto right_bounds = bounds_for_recorded_meshes(right_submitter.meshes);
+
+  EXPECT_GT(left_bounds.max.y(), 2.5F);
+  EXPECT_GT(left_bounds.max.x() - left_bounds.min.x(), 2.0F);
+  EXPECT_GE(left_bounds.max.x() + 0.001F, right_bounds.min.x());
+}
+
+TEST(RenderArchetypeBuildings, RomanWallEndKeepsFullSegmentFootprint) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_wall_renderer(registry);
+  const auto renderer = registry.get("troops/roman/wall_segment_end");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Engine::Core::Entity entity(5);
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+  ctx.model = QMatrix4x4{};
+
+  RecordingSubmitter submitter;
+  renderer(ctx, submitter);
+  const auto bounds = bounds_for_recorded_meshes(submitter.meshes);
+
+  EXPECT_LT(bounds.min.x(), -0.9F);
+  EXPECT_GT(bounds.max.x(), 0.9F);
 }
 
 } // namespace

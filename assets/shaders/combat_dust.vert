@@ -15,8 +15,41 @@ uniform int u_effect_type;
 out vec3 v_world_pos;
 out vec3 v_normal;
 out vec2 v_texcoord;
+out vec3 v_local_pos;
 out float v_intensity;
 out float v_alpha;
+
+float hash12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+float noise2(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = hash12(i);
+  float b = hash12(i + vec2(1.0, 0.0));
+  float c = hash12(i + vec2(0.0, 1.0));
+  float d = hash12(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+float fbm(vec2 p) {
+  float value = 0.0;
+  float amplitude = 0.5;
+  for (int octave = 0; octave < 4; ++octave) {
+    value += amplitude * noise2(p);
+    p = p * 2.03 + vec2(13.1, 7.7);
+    amplitude *= 0.5;
+  }
+  return value;
+}
+
+float inv_smoothstep(float edge0, float edge1, float x) {
+  return 1.0 - smoothstep(edge0, edge1, x);
+}
 
 void main() {
   vec3 pos = a_position;
@@ -38,49 +71,68 @@ void main() {
     float rise = max(0.0, sin(u_time * 0.5 + normalized_dist * 2.0)) * 0.3;
     pos.y += rise;
 
-    float edge_fade = smoothstep(1.0, 0.7, normalized_dist);
+    float edge_fade = inv_smoothstep(0.7, 1.0, normalized_dist);
     float time_pulse = 0.7 + 0.3 * sin(u_time * 1.5);
     v_alpha = edge_fade * time_pulse * u_intensity;
-  } else if (u_effect_type == 1) {
-
-    float height = a_texcoord.y;
+  } else if (u_effect_type == 1 || u_effect_type == 4) {
+    bool unit_flame = (u_effect_type == 4);
+    float height = clamp(a_texcoord.y, 0.0, 1.0);
     float angle_t = a_texcoord.x;
     float angle = angle_t * 6.28318;
+    float radius_factor = smoothstep(0.18, 2.8, u_radius);
 
-    float tongue_count = 8.0;
-    float tongue_id = floor(angle_t * tongue_count);
-    float tongue_local = fract(angle_t * tongue_count);
-    float tongue_phase = tongue_id * 1.618;
+    float flow_noise = fbm(vec2(angle_t * 3.6 + 4.0,
+                                height * 3.8 - u_time * (1.2 + radius_factor * 0.15)));
+    float curl_noise = fbm(vec2(angle_t * 7.8 - u_time * 0.65,
+                                height * 6.3 - u_time * (2.2 + radius_factor * 0.25)));
+    float detail_noise =
+        fbm(vec2(angle_t * 14.5 + curl_noise * 0.6, height * 12.0 - u_time * 3.2));
 
-    float tongue_time = u_time + tongue_phase * 0.5;
+    float lobe = 0.84 + 0.24 * sin(angle * 3.0 + u_time * 2.1 + flow_noise * 2.4) +
+                 0.12 * sin(angle * 6.0 - u_time * 3.2 + detail_noise * 3.14159);
+    float taper =
+        mix(unit_flame ? 0.78 : 1.05, unit_flame ? 0.16 : 0.22, pow(height, 0.72));
+    float smoke_expand =
+        smoothstep(0.58, 1.0, height) *
+        (unit_flame ? 0.02 : 0.16 + (unit_flame ? 0.04 : 0.10) * curl_noise);
+    float radial_scale =
+        max(0.18, taper * (0.86 + 0.24 * flow_noise) * lobe + smoke_expand);
+    pos.xz *= radial_scale;
 
-    float sway_x = sin(tongue_time * 3.5 + height * 4.0) * 0.2 * height;
-    float sway_z = cos(tongue_time * 3.0 + height * 3.5) * 0.2 * height;
+    vec2 drift_dir = vec2(cos(angle + (curl_noise - 0.5) * 1.1),
+                          sin(angle + (curl_noise - 0.5) * 1.1));
+    float sway =
+        (sin(u_time * 3.1 + height * 4.8 + flow_noise * 2.5) * 0.11 +
+         (curl_noise - 0.5) * 0.28) *
+        (unit_flame ? (0.10 + height * height * 0.36)
+                    : (0.18 + height * height * 0.9)) *
+        (unit_flame ? (0.42 + 0.10 * radius_factor) : (0.8 + 0.25 * radius_factor));
+    pos.x += drift_dir.x * sway;
+    pos.z += drift_dir.y * sway;
 
-    float cos_a = cos(angle);
-    float sin_a = sin(angle);
-    pos.x += sway_x * (-sin_a) + sway_z * cos_a;
-    pos.z += sway_x * cos_a + sway_z * sin_a;
+    float lift =
+        mix(unit_flame ? 0.58 : 1.2, unit_flame ? 0.92 : 2.05, radius_factor) +
+        height * ((unit_flame ? 0.06 : 0.28) + (unit_flame ? 0.08 : 0.18) * flow_noise);
+    pos.y *= lift;
+    pos.y +=
+        (detail_noise - 0.5) * (unit_flame ? 0.04 : 0.08) * (0.2 + height * height) +
+        smoothstep(unit_flame ? 0.58 : 0.65, 1.0, height) *
+            ((unit_flame ? 0.03 : 0.06) + (unit_flame ? 0.03 : 0.08) * curl_noise);
 
-    float tongue_bulge = sin(tongue_local * 3.14159) * 0.3;
-    float radial_expansion = 1.0 + tongue_bulge * (0.5 + 0.5 * height);
-    pos.x *= radial_expansion;
-    pos.z *= radial_expansion;
-
-    float rise_speed = sin(tongue_time * 5.0 + height * 2.0) * 0.15;
-    float vertical_scale = 1.8 + rise_speed + height * 0.5;
-    pos.y *= vertical_scale;
-
-    float turb = sin(tongue_time * 8.0 + height * 10.0) * 0.1 * height * height;
-    pos.y += turb;
-
-    float flicker = 0.85 + 0.15 * sin(tongue_time * 12.0 + height * 8.0);
-
-    float height_fade = 1.0 - smoothstep(0.5, 1.0, height);
-    float tongue_edge_fade =
-        smoothstep(0.0, 0.2, tongue_local) * smoothstep(1.0, 0.8, tongue_local);
-    v_alpha = height_fade * tongue_edge_fade * flicker * u_intensity * 1.5;
-  } else {
+    float base_mask = smoothstep(0.0, 0.06, height);
+    float tip_fade = 1.0 - smoothstep(unit_flame ? 0.56 : 0.7,
+                                      unit_flame ? 0.86 : 1.04,
+                                      height + (detail_noise - 0.5) * 0.12);
+    float radius_from_axis = length(pos.xz);
+    float side_fade = 1.0 - smoothstep(unit_flame ? 0.34 : 0.62,
+                                       unit_flame ? 0.72 : 1.05,
+                                       radius_from_axis);
+    float flicker = 0.90 + 0.10 * sin(u_time * 10.5 + angle * 4.0 + detail_noise * 4.5);
+    v_alpha = clamp(base_mask * tip_fade * side_fade * flicker * u_intensity *
+                        mix(1.05, 1.35, 1.0 - height),
+                    0.0,
+                    1.0);
+  } else if (u_effect_type == 2) {
 
     float height = a_texcoord.y;
     float angle_t = a_texcoord.x;
@@ -134,8 +186,36 @@ void main() {
                         u_intensity * 1.2,
                     0.0,
                     1.0);
+  } else {
+    vec3 normal_dir = normalize(a_normal);
+    vec2 flow_uv = vec2(a_texcoord.x * 6.0 + normal_dir.y * 1.4,
+                        a_texcoord.y * 6.5 - u_time * 1.8);
+    float shell_noise = fbm(flow_uv);
+    float detail_noise = fbm(flow_uv * 1.9 + vec2(2.7, -u_time * 0.55));
+    float flare =
+        sin((a_texcoord.x + a_texcoord.y) * 18.0 + u_time * 11.0 + detail_noise * 4.0);
+    float pulse = 0.92 + 0.08 * sin(u_time * 9.0 + shell_noise * 3.14159);
+    float shell_offset =
+        (shell_noise - 0.5) * 0.18 + (detail_noise - 0.5) * 0.08 + flare * 0.03;
+    pos += normal_dir * shell_offset * pulse;
+
+    vec3 tangent = normalize(vec3(-normal_dir.z, 0.0, normal_dir.x));
+    if (length(tangent) < 0.001) {
+      tangent = vec3(1.0, 0.0, 0.0);
+    }
+    vec3 bitangent = normalize(cross(normal_dir, tangent));
+    pos += tangent * (detail_noise - 0.5) * 0.05 * pulse;
+    pos += bitangent * (shell_noise - 0.5) * 0.04 * pulse;
+
+    float polar_fade = 1.0 - smoothstep(0.88, 1.0, abs(normal_dir.y));
+    float spark = pow(max(detail_noise - 0.68, 0.0) * 3.4, 2.2);
+    v_alpha = clamp((0.42 + 0.38 * shell_noise + spark * 0.28) *
+                        (0.72 + 0.28 * polar_fade) * u_intensity,
+                    0.0,
+                    1.2);
   }
 
+  v_local_pos = pos;
   v_world_pos = (u_model * vec4(pos, 1.0)).xyz;
   v_normal = normalize(mat3(u_model) * a_normal);
   v_texcoord = a_texcoord;

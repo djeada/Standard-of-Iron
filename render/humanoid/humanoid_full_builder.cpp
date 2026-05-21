@@ -128,7 +128,7 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
   pose.body_frames.waist.radius = m.torso_r * 0.80F;
   pose.body_frames.waist.depth = m.torso_depth * 0.72F;
 
-  QVector3D shoulder_up = (pose.shoulder_l - pose.pelvis_pos).normalized();
+  QVector3D const shoulder_up = (pose.shoulder_l - pose.pelvis_pos).normalized();
   QVector3D shoulder_fwd_l = QVector3D::crossProduct(-m.right_axis, shoulder_up);
   if (shoulder_fwd_l.lengthSquared() < 1e-8F) {
     shoulder_fwd_l = m.forward_axis;
@@ -171,6 +171,8 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
   };
   AF const hand_bone_l = compute_hand_bone_frame(pose.hand_l);
   AF const hand_bone_r = compute_hand_bone_frame(pose.hand_r);
+  pose.body_frames.shield_l = Render::Humanoid::socket_attachment_frame(
+      pose.body_frames.hand_l, Render::Humanoid::HumanoidSocket::GripL);
   pose.body_frames.grip_l = Render::Humanoid::socket_attachment_frame(
       hand_bone_l, Render::Humanoid::HumanoidSocket::GripL);
   pose.body_frames.grip_r = Render::Humanoid::socket_attachment_frame(
@@ -202,8 +204,8 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
       [&](const QVector3D& ankle, const QVector3D& knee, float right_sign) -> AF {
     AF shin{};
     shin.origin = ankle;
-    QVector3D shin_dir = knee - ankle;
-    float shin_len = shin_dir.length();
+    QVector3D const shin_dir = knee - ankle;
+    float const shin_len = shin_dir.length();
     shin.up = (shin_len > 1e-6F) ? shin_dir / shin_len : m.up_axis;
     QVector3D shin_fwd = m.forward_axis;
     shin_fwd = shin_fwd - shin.up * QVector3D::dotProduct(shin_fwd, shin.up);

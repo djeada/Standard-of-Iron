@@ -112,3 +112,34 @@ TEST(MissionVictoryRulesTest, OnlyCommanderRemainingKeepsLegacyVillageNormalizat
   ASSERT_EQ(isolated_commander_rule->structure_types.size(), 1);
   EXPECT_EQ(isolated_commander_rule->structure_types[0], QStringLiteral("barracks"));
 }
+
+TEST(MissionVictoryRulesTest, BuildsUndeadObjectiveRulesAndAmbientFlag) {
+  Game::Mission::MissionDefinition mission;
+  mission.include_ambient_undead = true;
+
+  Game::Mission::Condition clear_zone_condition;
+  clear_zone_condition.type = QStringLiteral("clear_undead_zone");
+  clear_zone_condition.zone_id = QStringLiteral("sepulcher_ruin");
+
+  Game::Mission::Condition survive_wave_condition;
+  survive_wave_condition.type = QStringLiteral("survive_undead_wave");
+  survive_wave_condition.zone_id = QStringLiteral("sepulcher_ruin");
+  survive_wave_condition.wave_count = 2;
+
+  mission.victory_conditions = {clear_zone_condition, survive_wave_condition};
+
+  const auto rules = Game::Mission::build_victory_rules(mission);
+
+  EXPECT_TRUE(rules.include_ambient_undead);
+  ASSERT_EQ(rules.victory_rules.size(), 2);
+  auto const* clear_rule = std::get_if<Game::Systems::ClearUndeadZoneVictoryRule>(
+      rules.victory_rules.data());
+  ASSERT_NE(clear_rule, nullptr);
+  EXPECT_EQ(clear_rule->zone_id, QStringLiteral("sepulcher_ruin"));
+
+  auto const* wave_rule =
+      std::get_if<Game::Systems::SurviveUndeadWaveVictoryRule>(&rules.victory_rules[1]);
+  ASSERT_NE(wave_rule, nullptr);
+  EXPECT_EQ(wave_rule->zone_id, QStringLiteral("sepulcher_ruin"));
+  EXPECT_EQ(wave_rule->required_wave_count, 2);
+}
