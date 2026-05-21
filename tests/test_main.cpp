@@ -1,5 +1,4 @@
-#include <QCoreApplication>
-#include <QGuiApplication>
+#include <QApplication>
 
 #include <filesystem>
 #include <gtest/gtest.h>
@@ -10,7 +9,7 @@
 
 int main(int argc, char** argv) {
   qputenv("QT_QPA_PLATFORM", "offscreen");
-  QGuiApplication app(argc, argv);
+  QApplication app(argc, argv);
 
   namespace fs = std::filesystem;
   const fs::path app_dir = fs::path(app.applicationDirPath().toStdString());
