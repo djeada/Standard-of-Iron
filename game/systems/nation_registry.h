@@ -39,6 +39,7 @@ struct NationTroopVariant {
   std::optional<float> max_stamina;
   std::optional<float> stamina_regen_rate;
   std::optional<float> stamina_depletion_rate;
+  std::vector<std::string> abilities;
 };
 
 struct TroopType {
@@ -55,8 +56,13 @@ struct Nation {
   NationID id;
   std::string display_name;
   std::vector<TroopType> available_troops;
-  Game::Units::BuildingType primary_building = Game::Units::BuildingType::Barracks;
+  std::optional<Game::Units::BuildingType> primary_building =
+      Game::Units::BuildingType::Barracks;
   FormationType formation_type = FormationType::Roman;
+  bool playable = true;
+  bool has_economy = true;
+  std::string ai_profile = "standard";
+  bool selectable_in_skirmish = true;
   std::unordered_map<Game::Units::TroopType, NationTroopVariant> troop_variants;
 
   [[nodiscard]] auto get_melee_troops() const -> std::vector<const TroopType*>;

@@ -11,6 +11,7 @@
 #include "../horse/attachment_frames.h"
 #include "../horse/dimensions.h"
 #include "../horse/horse_gait.h"
+#include "combat_visual_state.h"
 #include "render_request.h"
 
 namespace Render::Creature {
@@ -31,19 +32,9 @@ struct HumanoidAnimationStateComponent : public Engine::Core::Component {
   Render::GL::HumanoidMotionState locomotion_state{
       Render::GL::HumanoidMotionState::Idle};
   bool locomotion_initialized{false};
-  bool transient_attack_active{false};
-  bool transient_attack_is_melee{false};
-  bool transient_attack_is_mounted{false};
-  bool transient_attack_finisher{false};
-  bool transient_attack_amplified{false};
-  float transient_attack_phase{0.0F};
-  float transient_attack_last_sample_time{0.0F};
-  float transient_attack_emphasis{1.0F};
-  std::uint8_t transient_attack_variant{0U};
-  Engine::Core::CombatAttackFamily transient_attack_family{
-      Engine::Core::CombatAttackFamily::None};
-  Render::Creature::AnimationStateId transient_attack_state{
-      Render::Creature::AnimationStateId::Idle};
+  float guard_pose_progress{0.0F};
+  float hold_pose_progress{0.0F};
+  CombatVisualPersistentState combat_visual{};
 };
 
 struct HorseAnimationStateComponent : public Engine::Core::Component {

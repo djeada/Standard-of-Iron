@@ -19,6 +19,7 @@
 #include "../order_service.h"
 #include "../owner_registry.h"
 #include "../pathfinding.h"
+#include "../projectile_system.h"
 #include "../rpg_combat_system/rpg_commander_damage.h"
 #include "../troop_profile_service.h"
 #include "combat_mode_processor.h"
@@ -179,6 +180,140 @@ void stop_unit_movement(Engine::Core::Entity* unit,
       movement->goal_y = transform->position.z;
     }
   }
+}
+
+auto matches_heal_affinity(const Engine::Core::Entity* target,
+                           Engine::Core::HealerComponent::TargetAffinity affinity)
+    -> bool {
+  if (target == nullptr) {
+    return false;
+  }
+
+  bool const target_is_undead = target->has_component<Engine::Core::UndeadComponent>();
+  switch (affinity) {
+  case Engine::Core::HealerComponent::TargetAffinity::UndeadAllies:
+    return target_is_undead;
+  case Engine::Core::HealerComponent::TargetAffinity::LivingAllies:
+  default:
+    return !target_is_undead;
+  }
+}
+
+auto should_prioritize_healing(Engine::Core::Entity* healer,
+                               Engine::Core::World* world) -> bool {
+  if (healer == nullptr || world == nullptr) {
+    return false;
+  }
+
+  auto* healer_component = healer->get_component<Engine::Core::HealerComponent>();
+  auto* healer_unit = healer->get_component<Engine::Core::UnitComponent>();
+  auto* healer_transform = healer->get_component<Engine::Core::TransformComponent>();
+  if (healer_component == nullptr || healer_unit == nullptr ||
+      healer_transform == nullptr || !healer_component->suppress_attack_while_healing ||
+      healer_component->time_since_last_heal < healer_component->healing_cooldown) {
+    return false;
+  }
+
+  for (auto* target : world->get_entities_with<Engine::Core::UnitComponent>()) {
+    if (target == nullptr ||
+        target->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
+    auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
+    if (target_unit == nullptr || target_transform == nullptr ||
+        target_unit->owner_id != healer_unit->owner_id || target_unit->health <= 0 ||
+        target_unit->health >= target_unit->max_health ||
+        !matches_heal_affinity(target, healer_component->target_affinity)) {
+      continue;
+    }
+
+    float const dx = target_transform->position.x - healer_transform->position.x;
+    float const dz = target_transform->position.z - healer_transform->position.z;
+    float const dist_sq = dx * dx + dz * dz;
+    if (dist_sq <= healer_component->healing_range * healer_component->healing_range) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+auto projectile_color_for_kind(Game::Systems::ProjectileKind kind,
+                               const QVector3D& team_color) -> QVector3D {
+  switch (kind) {
+  case Game::Systems::ProjectileKind::Fireball:
+    return {1.0F, 0.45F, 0.10F};
+  case Game::Systems::ProjectileKind::CursedArrow:
+    return {0.58F, 0.20F, 0.82F};
+  case Game::Systems::ProjectileKind::Arrow:
+  case Game::Systems::ProjectileKind::Stone:
+  default:
+    return team_color;
+  }
+}
+
+auto projectile_speed_for_kind(Game::Systems::ProjectileKind kind) -> float {
+  switch (kind) {
+  case Game::Systems::ProjectileKind::Fireball:
+    return Constants::k_arrow_speed * 0.72F;
+  case Game::Systems::ProjectileKind::CursedArrow:
+    return Constants::k_arrow_speed * 0.92F;
+  case Game::Systems::ProjectileKind::Arrow:
+  case Game::Systems::ProjectileKind::Stone:
+  default:
+    return Constants::k_arrow_speed;
+  }
+}
+
+void launch_special_projectile(Engine::Core::Entity* attacker,
+                               Engine::Core::Entity* target,
+                               int damage,
+                               ProjectileSystem* projectile_system) {
+  if (attacker == nullptr || target == nullptr || projectile_system == nullptr) {
+    return;
+  }
+
+  auto* attacker_transform =
+      attacker->get_component<Engine::Core::TransformComponent>();
+  auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
+  auto* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  auto* special_attack =
+      attacker->get_component<Engine::Core::SpecialAttackComponent>();
+  if (attacker_transform == nullptr || target_transform == nullptr ||
+      attacker_unit == nullptr || special_attack == nullptr) {
+    return;
+  }
+
+  QVector3D const attacker_pos(attacker_transform->position.x,
+                               attacker_transform->position.y,
+                               attacker_transform->position.z);
+  QVector3D const target_pos(target_transform->position.x,
+                             target_transform->position.y,
+                             target_transform->position.z);
+  QVector3D const direction = (target_pos - attacker_pos).normalized();
+  QVector3D const start = attacker_pos + QVector3D(0.0F, 1.15F, 0.0F) +
+                          direction * Constants::k_arrow_start_offset;
+  QVector3D const end = target_pos + QVector3D(0.0F, 0.85F, 0.0F) +
+                        direction * Constants::k_arrow_target_offset;
+  QVector3D const team_color =
+      Game::Visuals::team_colorForOwner(attacker_unit->owner_id);
+
+  projectile_system->spawn_arrow(
+      start,
+      end,
+      projectile_color_for_kind(special_attack->projectile_kind, team_color),
+      projectile_speed_for_kind(special_attack->projectile_kind),
+      false,
+      special_attack->projectile_kind,
+      true,
+      damage,
+      attacker->get_id(),
+      target->get_id(),
+      special_attack->splash_radius,
+      special_attack->splash_damage_multiplier,
+      special_attack->friendly_fire);
 }
 
 void face_target(Engine::Core::TransformComponent* attacker_transform,
@@ -692,6 +827,7 @@ void process_attacks(Engine::Core::World* world,
                      float delta_time) {
   auto const& units = query_context.units;
   auto* arrow_sys = world->get_system<ArrowSystem>();
+  auto* projectile_sys = world->get_system<ProjectileSystem>();
   std::vector<CommandService::MoveIntent> chase_move_intents;
   chase_move_intents.reserve(units.size());
 
@@ -743,6 +879,10 @@ void process_attacks(Engine::Core::World* world,
     }
 
     if (*t_accum < cooldown) {
+      continue;
+    }
+
+    if (should_prioritize_healing(attacker, world)) {
       continue;
     }
 
@@ -964,13 +1104,6 @@ void process_attacks(Engine::Core::World* world,
           attacker_unit->spawn_type != Game::Units::SpawnType::Catapult &&
           attacker_unit->spawn_type != Game::Units::SpawnType::Ballista;
 
-      if (should_show_arrow_vfx &&
-          ((attacker_atk == nullptr) ||
-           attacker_atk->current_mode !=
-               Engine::Core::AttackComponent::CombatMode::Melee)) {
-        spawn_arrows(attacker, best_target, arrow_sys);
-      }
-
       if ((attacker_atk != nullptr) &&
           attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Melee) {
@@ -984,11 +1117,29 @@ void process_attacks(Engine::Core::World* world,
       apply_high_ground_defense_bonuses(
           attacker, best_target, best_target_unit, damage);
 
-      if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
-        Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
-            world, best_target, damage, attacker->get_id());
+      auto* special_attack =
+          attacker->get_component<Engine::Core::SpecialAttackComponent>();
+      bool const use_special_projectile = ranged_unit && special_attack != nullptr &&
+                                          special_attack->use_projectile_system &&
+                                          projectile_sys != nullptr;
+
+      if (should_show_arrow_vfx &&
+          ((attacker_atk == nullptr) ||
+           attacker_atk->current_mode !=
+               Engine::Core::AttackComponent::CombatMode::Melee) &&
+          !use_special_projectile) {
+        spawn_arrows(attacker, best_target, arrow_sys);
+      }
+
+      if (use_special_projectile) {
+        launch_special_projectile(attacker, best_target, damage, projectile_sys);
       } else {
-        deal_damage(world, best_target, damage, attacker->get_id());
+        if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
+          Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+              world, best_target, damage, attacker->get_id());
+        } else {
+          deal_damage(world, best_target, damage, attacker->get_id());
+        }
       }
       *t_accum = -deterministic_attack_delay(
           attacker->get_id(), best_target->get_id(), cooldown);

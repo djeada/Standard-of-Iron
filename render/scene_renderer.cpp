@@ -67,6 +67,7 @@
 #include "pass/primitive_flush_pass.h"
 #include "pipeline/lod_selector.h"
 #include "primitive_batch.h"
+#include "profiling/combat_animation_diagnostics.h"
 #include "profiling/frame_profile.h"
 #include "render_backend_factory.h"
 #include "selection_ring_layout.h"
@@ -492,6 +493,8 @@ void Renderer::begin_frame() {
   auto& profile = Render::Profiling::global_profile();
   profile.reset();
   profile.frame_index += 1;
+  Render::Profiling::CombatAnimationDiagnostics::instance().begin_frame(
+      profile.frame_index);
   Render::Profiling::PhaseScope const collect_scope(
       &profile, Render::Profiling::Phase::Collection);
 
@@ -545,6 +548,7 @@ void Renderer::end_frame() {
     constexpr double k_frame_budget_ms = 16.67;
     profile.budget_headroom_ms =
         k_frame_budget_ms - static_cast<double>(profile.total_us()) / 1000.0;
+    profile.finish_frame_sample();
   }
 }
 
@@ -1035,6 +1039,42 @@ void Renderer::building_flame(const QVector3D& position,
   }
 }
 
+void Renderer::burning_flame(const QVector3D& position,
+                             const QVector3D& color,
+                             float radius,
+                             float intensity,
+                             float time) {
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::BurningFlame;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  cmd.priority = CommandPriority::High;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(std::move(cmd));
+  }
+}
+
+void Renderer::fireball(const QVector3D& position,
+                        const QVector3D& color,
+                        float radius,
+                        float intensity,
+                        float time) {
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::Fireball;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  cmd.priority = CommandPriority::High;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(std::move(cmd));
+  }
+}
+
 void Renderer::blood_pool(const QVector3D& position,
                           float radius,
                           float alpha_scale,
@@ -1509,6 +1549,8 @@ void Renderer::render_world(Engine::Core::World* world) {
   m_model_matrix_cache.prune(m_frame_counter);
   auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   battle_optimizer.set_visible_unit_count(visible_unit_count);
+  auto& frame_profile = Render::Profiling::global_profile();
+  frame_profile.visible_soldiers = get_humanoid_render_stats().soldiers_rendered;
   uint32_t const optimizer_frame = battle_optimizer.frame_counter();
 
   float batching_ratio =
@@ -1895,6 +1937,9 @@ void Renderer::prewarm_unit_templates(
     case SpawnType::Archer:
     case SpawnType::Knight:
     case SpawnType::Spearman:
+    case SpawnType::SkeletonSwordsman:
+    case SpawnType::SkeletonArcher:
+    case SpawnType::GravePriest:
     case SpawnType::MountedKnight:
     case SpawnType::HorseArcher:
     case SpawnType::HorseSpearman:
@@ -1916,6 +1961,9 @@ void Renderer::prewarm_unit_templates(
     case TroopType::Archer:
     case TroopType::Swordsman:
     case TroopType::Spearman:
+    case TroopType::SkeletonSwordsman:
+    case TroopType::SkeletonArcher:
+    case TroopType::GravePriest:
     case TroopType::MountedKnight:
     case TroopType::HorseArcher:
     case TroopType::HorseSpearman:
@@ -2047,28 +2095,56 @@ void Renderer::prewarm_unit_templates(
     const auto& troops = Game::Units::TroopCatalog::instance().get_all_classes();
     const auto& nations = Game::Systems::NationRegistry::instance().get_all_nations();
     const bool restrict_to_active_nations = !active_nation_ids.empty();
+    const bool has_catalog_entries = !troops.empty();
+
+    auto add_troop_profile = [&](const Game::Systems::Nation& nation,
+                                 Game::Units::TroopType type) {
+      if (!is_prewarmable_troop(type)) {
+        return;
+      }
+
+      auto profile =
+          Game::Systems::TroopProfileService::instance().get_profile(nation.id, type);
+      if (profile.visuals.renderer_id.empty()) {
+        return;
+      }
+
+      add_profile(profile.visuals.renderer_id,
+                  Game::Units::spawn_typeFromTroopType(type),
+                  nation.id,
+                  profile.combat.max_health);
+    };
 
     for (const auto& nation : nations) {
       if (restrict_to_active_nations &&
           (active_nation_ids.find(nation.id) == active_nation_ids.end())) {
         continue;
       }
-      for (const auto& entry : troops) {
-        auto type = entry.first;
-        if (!is_prewarmable_troop(type)) {
-          continue;
+      if (!restrict_to_active_nations && nation.available_troops.empty()) {
+        continue;
+      }
+      if (has_catalog_entries) {
+        for (const auto& entry : troops) {
+          add_troop_profile(nation, entry.first);
         }
+        continue;
+      }
 
-        auto profile =
-            Game::Systems::TroopProfileService::instance().get_profile(nation.id, type);
-        if (profile.visuals.renderer_id.empty()) {
-          continue;
-        }
-
-        add_profile(profile.visuals.renderer_id,
-                    Game::Units::spawn_typeFromTroopType(type),
-                    nation.id,
-                    profile.combat.max_health);
+      using Game::Units::TroopType;
+      for (auto type : {TroopType::Archer,
+                        TroopType::Swordsman,
+                        TroopType::Spearman,
+                        TroopType::SkeletonSwordsman,
+                        TroopType::SkeletonArcher,
+                        TroopType::GravePriest,
+                        TroopType::MountedKnight,
+                        TroopType::HorseArcher,
+                        TroopType::HorseSpearman,
+                        TroopType::Healer,
+                        TroopType::Civilian,
+                        TroopType::Builder,
+                        TroopType::Elephant}) {
+        add_troop_profile(nation, type);
       }
     }
   }

@@ -20,6 +20,7 @@
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
+#include "../../../creature/pipeline/creature_asset.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/equipment_submit.h"
 #include "../../../equipment/humanoid_equipment_archetype.h"
@@ -34,6 +35,7 @@
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
+#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -71,6 +73,41 @@ void ensure_healer_styles_registered() {
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
 
+void apply_grave_priest_cast_pose_layer(
+    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
+    HumanoidPose& io_pose) {
+  if (context.animation == nullptr) {
+    return;
+  }
+
+  auto const& anim = *context.animation;
+  if (!anim.inputs.is_casting || anim.inputs.cast_kind != CastVisualKind::Fireball) {
+    return;
+  }
+
+  float const phase = std::clamp(anim.attack_phase, 0.0F, 1.0F);
+  float const intensity = std::sin(phase * std::numbers::pi_v<float>);
+  if (intensity <= 0.0F) {
+    return;
+  }
+
+  HumanoidPoseController controller(io_pose, anim);
+  controller.tilt_torso(-0.08F * intensity, -0.12F * intensity);
+
+  QVector3D const forward = anim.heading_forward();
+  QVector3D const right = anim.heading_right();
+  QVector3D const up = anim.heading_up();
+
+  io_pose.hand_r += forward * (0.18F + 0.12F * intensity) +
+                    up * (0.08F + 0.06F * intensity) - right * 0.03F;
+  io_pose.elbow_r += forward * (0.04F + 0.05F * intensity) +
+                     up * (0.05F + 0.04F * intensity) - right * 0.04F;
+  io_pose.hand_l += -right * 0.05F + up * (0.03F + 0.03F * intensity) - forward * 0.03F;
+  io_pose.elbow_l +=
+      -right * 0.02F + up * (0.02F + 0.03F * intensity) - forward * 0.02F;
+  io_pose.head_pos += up * (0.01F * intensity) + forward * (0.01F * intensity);
+}
+
 } // namespace
 
 void register_healer_style(const std::string& nation_id,
@@ -85,6 +122,13 @@ using Render::GL::Humanoid::saturate_color;
 
 class HealerRenderer : public HumanoidRendererBase {
 public:
+  explicit HealerRenderer(
+      std::string_view renderer_key = "troops/carthage/healer",
+      Render::Creature::Pipeline::CreatureAssetId creature_asset_id =
+          Render::Creature::Pipeline::k_invalid_creature_asset)
+      : m_renderer_key(renderer_key)
+      , m_creature_asset_id(creature_asset_id) {}
+
   auto get_proportion_scaling() const -> QVector3D override {
     return k_profile.as_vector();
   }
@@ -95,23 +139,28 @@ public:
 
     ensure_healer_styles_registered();
 
-    static const UnitVisualSpec spec = []() {
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/carthage/healer");
-      const std::array<EquipmentHandle, 1> handles{loadout.armor_handle};
+    if (m_visual_spec_baked) {
+      return m_visual_spec_cache;
+    }
 
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/carthage/healer";
-      s.scaling = k_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/carthage/healer",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base,
-          handles);
-      return s;
-    }();
-    return spec;
+    const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
+    const std::array<EquipmentHandle, 2> handles{loadout.armor_handle,
+                                                 loadout.cloak_handle};
+
+    UnitVisualSpec s{};
+    s.kind = CreatureKind::Humanoid;
+    s.debug_name = m_renderer_key;
+    s.scaling = k_profile.as_pipeline_scaling();
+    s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+    s.archetype_id = resolve_humanoid_equipment_archetype(
+        m_renderer_key, Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+    s.creature_asset_id = m_creature_asset_id;
+    if (m_renderer_key == "troops/iron_sepulcher/grave_priest") {
+      s.animation_manifest.pose_layer = &apply_grave_priest_cast_pose_layer;
+    }
+    m_visual_spec_cache = s;
+    m_visual_spec_baked = true;
+    return m_visual_spec_cache;
   }
 
   void get_variant(const DrawContext& ctx,
@@ -176,6 +225,9 @@ public:
   }
 
 private:
+  std::string_view m_renderer_key;
+  Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
+
   auto resolve_style(const DrawContext& ctx) const -> const HealerStyleConfig& {
     ensure_healer_styles_registered();
     auto& styles = style_registry();
@@ -199,7 +251,6 @@ private:
     return default_style;
   }
 
-private:
   void apply_palette_overrides(const HealerStyleConfig& style,
                                const QVector3D& team_tint,
                                HumanoidVariant& variant) const {
@@ -244,12 +295,23 @@ private:
 
 void register_healer_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_healer_styles_registered();
-  static HealerRenderer const renderer;
   registry.register_renderer("troops/carthage/healer",
                              [](const DrawContext& ctx, ISubmitter& out) {
                                static HealerRenderer const static_renderer;
                                static_renderer.render(ctx, out);
                              });
+}
+
+void register_grave_priest_renderer(Render::GL::EntityRendererRegistry& registry) {
+  ensure_healer_styles_registered();
+  registry.register_renderer(
+      "troops/iron_sepulcher/grave_priest",
+      [](const DrawContext& ctx, ISubmitter& out) {
+        static HealerRenderer const static_renderer{
+            "troops/iron_sepulcher/grave_priest",
+            Render::Creature::Pipeline::k_skeleton_humanoid_asset};
+        static_renderer.render(ctx, out);
+      });
 }
 
 } // namespace Render::GL::Carthage

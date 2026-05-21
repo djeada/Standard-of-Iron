@@ -2,8 +2,7 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
-
-#include <GL/gl.h>
+#include <QtGui/qopengl.h>
 
 #include "../shader.h"
 #include "pipeline_interface.h"

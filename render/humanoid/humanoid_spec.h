@@ -30,6 +30,9 @@ inline constexpr std::size_t k_humanoid_role_count = 7;
 [[nodiscard]] auto
 humanoid_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
 
+[[nodiscard]] auto
+skeleton_humanoid_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
+
 auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4>;
 
 [[nodiscard]] auto

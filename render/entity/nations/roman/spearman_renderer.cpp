@@ -102,7 +102,8 @@ struct SpearmanExtras {
 
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
-  SpearmanRenderer() = default;
+  explicit SpearmanRenderer(std::string_view renderer_key = "troops/roman/spearman")
+      : m_renderer_key(renderer_key) {}
 
   auto get_proportion_scaling() const -> QVector3D override {
     return k_profile.as_vector();
@@ -125,28 +126,28 @@ public:
   visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
-    static const UnitVisualSpec spec = []() {
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/roman/spearman");
-      const std::array<EquipmentHandle, 5> handles{loadout.helmet_handle,
-                                                   loadout.greaves_handle,
-                                                   loadout.shoulder_handle,
-                                                   loadout.armor_handle,
-                                                   loadout.spear_handle};
+    if (m_visual_spec_baked) {
+      return m_visual_spec_cache;
+    }
 
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/roman/spearman";
-      s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
-      s.scaling = k_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/roman/spearman",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base,
-          handles);
-      return s;
-    }();
-    return spec;
+    const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
+    const std::array<EquipmentHandle, 5> handles{loadout.helmet_handle,
+                                                 loadout.greaves_handle,
+                                                 loadout.shoulder_handle,
+                                                 loadout.armor_handle,
+                                                 loadout.spear_handle};
+
+    UnitVisualSpec s{};
+    s.kind = CreatureKind::Humanoid;
+    s.debug_name = m_renderer_key;
+    s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
+    s.scaling = k_profile.as_pipeline_scaling();
+    s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+    s.archetype_id = resolve_humanoid_equipment_archetype(
+        m_renderer_key, Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+    m_visual_spec_cache = s;
+    m_visual_spec_baked = true;
+    return m_visual_spec_cache;
   }
 
   void get_variant(const DrawContext& ctx,
@@ -159,6 +160,10 @@ public:
   }
 
 private:
+  std::string_view m_renderer_key;
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked = false;
+
   static auto compute_spearman_extras(uint32_t seed,
                                       const HumanoidVariant& v) -> SpearmanExtras {
     SpearmanExtras e;
@@ -242,10 +247,15 @@ private:
 
 void register_spearman_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_spearman_styles_registered();
-  static SpearmanRenderer const renderer;
   registry.register_renderer("troops/roman/spearman",
                              [](const DrawContext& ctx, ISubmitter& out) {
                                static SpearmanRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
+  registry.register_renderer("troops/roman/commanders/fabius_maximus",
+                             [](const DrawContext& ctx, ISubmitter& out) {
+                               static SpearmanRenderer const static_renderer{
+                                   "troops/roman/commanders/fabius_maximus"};
                                static_renderer.render(ctx, out);
                              });
 }

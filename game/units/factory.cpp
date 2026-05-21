@@ -10,11 +10,14 @@
 #include "civilian.h"
 #include "defense_tower.h"
 #include "elephant.h"
+#include "grave_priest.h"
 #include "healer.h"
 #include "home.h"
 #include "horse_archer.h"
 #include "horse_spearman.h"
 #include "horse_swordsman.h"
+#include "skeleton_archer.h"
+#include "skeleton_swordsman.h"
 #include "spearman.h"
 #include "swordsman.h"
 #include "units/spawn_type.h"
@@ -62,6 +65,21 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::Spearman,
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return Spearman::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::SkeletonSwordsman,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return SkeletonSwordsman::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::SkeletonArcher,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return SkeletonArcher::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::GravePriest,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return GravePriest::Create(world, params);
                        });
 
   reg.register_factory(SpawnType::HorseArcher,

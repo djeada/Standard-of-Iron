@@ -21,7 +21,15 @@ public:
                    const QVector3D& end,
                    const QVector3D& color,
                    float speed = 8.0F,
-                   bool is_ballista_bolt = false);
+                   bool is_ballista_bolt = false,
+                   ProjectileKind kind = ProjectileKind::Arrow,
+                   bool should_apply_damage = false,
+                   int damage = 0,
+                   Engine::Core::EntityID attacker_id = 0,
+                   Engine::Core::EntityID target_id = 0,
+                   float impact_radius = 0.0F,
+                   float splash_damage_multiplier = 0.6F,
+                   bool friendly_fire = false);
 
   void spawn_stone(const QVector3D& start,
                    const QVector3D& end,

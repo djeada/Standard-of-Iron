@@ -97,6 +97,9 @@ using Render::GL::Humanoid::saturate_color;
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
+  explicit KnightRenderer(std::string_view renderer_key = "troops/roman/swordsman")
+      : m_renderer_key(renderer_key) {}
+
   auto get_proportion_scaling() const -> QVector3D override {
     return k_profile.as_vector();
   }
@@ -120,29 +123,30 @@ public:
   visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
-    static const UnitVisualSpec spec = []() {
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/roman/swordsman");
-      const std::array<EquipmentHandle, 6> handles{loadout.helmet_handle,
-                                                   loadout.greaves_handle,
-                                                   loadout.shoulder_handle,
-                                                   loadout.shield_handle,
-                                                   loadout.armor_handle,
-                                                   loadout.sword_handle};
+    if (m_visual_spec_baked) {
+      return m_visual_spec_cache;
+    }
 
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/roman/swordsman";
-      s.scaling = k_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/roman/swordsman",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base,
-          handles);
-      s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
-      return s;
-    }();
-    return spec;
+    const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
+    const std::array<EquipmentHandle, 7> handles{loadout.helmet_handle,
+                                                 loadout.greaves_handle,
+                                                 loadout.shoulder_handle,
+                                                 loadout.shield_handle,
+                                                 loadout.armor_handle,
+                                                 loadout.sword_handle,
+                                                 loadout.cloak_handle};
+
+    UnitVisualSpec s{};
+    s.kind = CreatureKind::Humanoid;
+    s.debug_name = m_renderer_key;
+    s.scaling = k_profile.as_pipeline_scaling();
+    s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+    s.archetype_id = resolve_humanoid_equipment_archetype(
+        m_renderer_key, Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+    s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+    m_visual_spec_cache = s;
+    m_visual_spec_baked = true;
+    return m_visual_spec_cache;
   }
 
   void get_variant(const DrawContext& ctx,
@@ -155,6 +159,10 @@ public:
   }
 
 private:
+  std::string_view m_renderer_key;
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked = false;
+
   auto resolve_style(const DrawContext& ctx) const -> const KnightStyleConfig& {
     ensure_swordsman_styles_registered();
     auto& styles = swordsman_style_registry();
@@ -178,7 +186,6 @@ private:
     return k_empty;
   }
 
-private:
   void apply_palette_overrides(const KnightStyleConfig& style,
                                const QVector3D& team_tint,
                                HumanoidVariant& variant) const {
@@ -200,10 +207,15 @@ private:
 
 void register_knight_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_swordsman_styles_registered();
-  static KnightRenderer const renderer;
   registry.register_renderer("troops/roman/swordsman",
                              [](const DrawContext& ctx, ISubmitter& out) {
                                static KnightRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
+  registry.register_renderer("troops/roman/commanders/scipio_africanus",
+                             [](const DrawContext& ctx, ISubmitter& out) {
+                               static KnightRenderer const static_renderer{
+                                   "troops/roman/commanders/scipio_africanus"};
                                static_renderer.render(ctx, out);
                              });
 }

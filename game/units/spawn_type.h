@@ -15,6 +15,9 @@ enum class SpawnType : std::uint8_t {
   Archer,
   Knight,
   Spearman,
+  SkeletonSwordsman,
+  SkeletonArcher,
+  GravePriest,
   MountedKnight,
   HorseArcher,
   HorseSpearman,
@@ -44,6 +47,12 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("swordsman");
   case SpawnType::Spearman:
     return QStringLiteral("spearman");
+  case SpawnType::SkeletonSwordsman:
+    return QStringLiteral("skeleton_swordsman");
+  case SpawnType::SkeletonArcher:
+    return QStringLiteral("skeleton_archer");
+  case SpawnType::GravePriest:
+    return QStringLiteral("grave_priest");
   case SpawnType::MountedKnight:
     return QStringLiteral("horse_swordsman");
   case SpawnType::HorseArcher:
@@ -102,6 +111,18 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
   }
   if (lowered == QStringLiteral("spearman")) {
     out = SpawnType::Spearman;
+    return true;
+  }
+  if (lowered == QStringLiteral("skeleton_swordsman")) {
+    out = SpawnType::SkeletonSwordsman;
+    return true;
+  }
+  if (lowered == QStringLiteral("skeleton_archer")) {
+    out = SpawnType::SkeletonArcher;
+    return true;
+  }
+  if (lowered == QStringLiteral("grave_priest")) {
+    out = SpawnType::GravePriest;
     return true;
   }
   if (lowered == QStringLiteral("horse_swordsman")) {
@@ -197,6 +218,15 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   if (str == "spearman") {
     return SpawnType::Spearman;
   }
+  if (str == "skeleton_swordsman") {
+    return SpawnType::SkeletonSwordsman;
+  }
+  if (str == "skeleton_archer") {
+    return SpawnType::SkeletonArcher;
+  }
+  if (str == "grave_priest") {
+    return SpawnType::GravePriest;
+  }
   if (str == "horse_swordsman") {
     return SpawnType::MountedKnight;
   }
@@ -287,7 +317,9 @@ inline auto can_use_guard_mode(SpawnType type) -> bool {
 }
 
 inline auto can_use_hold_mode(SpawnType type) -> bool {
-  return type == SpawnType::Archer || type == SpawnType::Spearman;
+  return type == SpawnType::Archer || type == SpawnType::Spearman ||
+         type == SpawnType::SkeletonSwordsman || type == SpawnType::SkeletonArcher ||
+         type == SpawnType::GravePriest;
 }
 
 inline auto can_use_patrol_mode(SpawnType type) -> bool {
@@ -313,6 +345,9 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::CarthageCavalryPatron:
   case SpawnType::CarthageElephantMaster:
     return true;
+  case SpawnType::SkeletonSwordsman:
+  case SpawnType::SkeletonArcher:
+  case SpawnType::GravePriest:
   case SpawnType::Catapult:
   case SpawnType::Ballista:
   case SpawnType::Barracks:
@@ -332,6 +367,12 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::Swordsman;
   case SpawnType::Spearman:
     return TroopType::Spearman;
+  case SpawnType::SkeletonSwordsman:
+    return TroopType::SkeletonSwordsman;
+  case SpawnType::SkeletonArcher:
+    return TroopType::SkeletonArcher;
+  case SpawnType::GravePriest:
+    return TroopType::GravePriest;
   case SpawnType::MountedKnight:
     return TroopType::MountedKnight;
   case SpawnType::HorseArcher:
@@ -382,6 +423,12 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::Knight;
   case TroopType::Spearman:
     return SpawnType::Spearman;
+  case TroopType::SkeletonSwordsman:
+    return SpawnType::SkeletonSwordsman;
+  case TroopType::SkeletonArcher:
+    return SpawnType::SkeletonArcher;
+  case TroopType::GravePriest:
+    return SpawnType::GravePriest;
   case TroopType::MountedKnight:
     return SpawnType::MountedKnight;
   case TroopType::HorseArcher:

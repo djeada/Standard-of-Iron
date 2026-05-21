@@ -389,6 +389,9 @@ static auto spearman_variant_table() -> const Render::Creature::ArchetypeVariant
 
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
+  explicit SpearmanRenderer(std::string_view renderer_key = "troops/carthage/spearman")
+      : m_renderer_key(renderer_key) {}
+
   auto get_proportion_scaling() const -> QVector3D override {
     return k_profile.as_vector();
   }
@@ -411,27 +414,28 @@ public:
     using namespace Render::Creature::Pipeline;
 
     ensure_spearman_styles_registered();
-    static const UnitVisualSpec spec = []() {
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/carthage/spearman");
-      const std::array<EquipmentHandle, 4> handles{loadout.helmet_handle,
-                                                   loadout.shoulder_handle,
-                                                   loadout.spear_handle,
-                                                   loadout.armor_handle};
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/carthage/spearman";
-      s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
-      s.scaling = k_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/carthage/spearman",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base,
-          handles);
-      s.variant_table = &spearman_variant_table();
-      return s;
-    }();
-    return spec;
+    if (m_visual_spec_baked) {
+      return m_visual_spec_cache;
+    }
+
+    const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
+    const std::array<EquipmentHandle, 5> handles{loadout.helmet_handle,
+                                                 loadout.shoulder_handle,
+                                                 loadout.spear_handle,
+                                                 loadout.armor_handle,
+                                                 loadout.cloak_handle};
+    UnitVisualSpec s{};
+    s.kind = CreatureKind::Humanoid;
+    s.debug_name = m_renderer_key;
+    s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_spear_asset;
+    s.scaling = k_profile.as_pipeline_scaling();
+    s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+    s.archetype_id = resolve_humanoid_equipment_archetype(
+        m_renderer_key, Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+    s.animation_manifest.variant_table = &spearman_variant_table();
+    m_visual_spec_cache = s;
+    m_visual_spec_baked = true;
+    return m_visual_spec_cache;
   }
 
   void get_variant(const DrawContext& ctx,
@@ -493,6 +497,10 @@ public:
   }
 
 private:
+  std::string_view m_renderer_key;
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked = false;
+
   auto resolve_style(const DrawContext& ctx) const -> const SpearmanStyleConfig& {
     ensure_spearman_styles_registered();
     auto& styles = spearman_style_registry();
@@ -537,10 +545,15 @@ private:
 
 void register_spearman_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_spearman_styles_registered();
-  static SpearmanRenderer const renderer;
   registry.register_renderer("troops/carthage/spearman",
                              [](const DrawContext& ctx, ISubmitter& out) {
                                static SpearmanRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
+  registry.register_renderer("troops/carthage/commanders/hanno_the_great",
+                             [](const DrawContext& ctx, ISubmitter& out) {
+                               static SpearmanRenderer const static_renderer{
+                                   "troops/carthage/commanders/hanno_the_great"};
                                static_renderer.render(ctx, out);
                              });
 }

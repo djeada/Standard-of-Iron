@@ -68,6 +68,15 @@ void add_core_attack_frames(std::vector<AnimKey>& keys, PoseIntent state) {
 auto prewarm_attack_family_for_spawn(Game::Units::SpawnType spawn_type,
                                      PoseIntent state) noexcept
     -> Engine::Core::CombatAttackFamily {
+  auto const is_cast_user_spawn = [spawn_type]() noexcept {
+    switch (spawn_type) {
+    case Game::Units::SpawnType::GravePriest:
+      return true;
+    default:
+      return false;
+    }
+  };
+
   switch (state) {
   case PoseIntent::AttackMelee: {
     auto const family = Engine::Core::resolve_combat_attack_family(
@@ -86,6 +95,9 @@ auto prewarm_attack_family_for_spawn(Game::Units::SpawnType spawn_type,
   case PoseIntent::AttackRanged:
     return Engine::Core::resolve_combat_attack_family(
         spawn_type, Engine::Core::AttackComponent::CombatMode::Ranged);
+  case PoseIntent::Cast:
+    return is_cast_user_spawn() ? Engine::Core::CombatAttackFamily::Bow
+                                : Engine::Core::CombatAttackFamily::None;
   default:
     return Engine::Core::CombatAttackFamily::None;
   }
@@ -111,6 +123,7 @@ auto build_template_prewarm_anim_catalog(const Render::Creature::ArchetypeRegist
   add_core_attack_frames(catalog.core_keys, PoseIntent::AttackMelee);
   add_core_attack_frames(catalog.core_keys, PoseIntent::AttackSpear);
   add_core_attack_frames(catalog.core_keys, PoseIntent::AttackRanged);
+  add_core_attack_frames(catalog.core_keys, PoseIntent::Cast);
 
   std::vector<AnimKey> full_keys;
   full_keys.reserve(1024);
@@ -139,9 +152,13 @@ auto build_template_prewarm_anim_catalog(const Render::Creature::ArchetypeRegist
   auto const ranged_variant_count = archetypes.clip_variant_count(
       Render::Creature::ArchetypeRegistry::k_humanoid_base,
       Render::Creature::AnimationStateId::AttackBow);
+  auto const cast_variant_count = archetypes.clip_variant_count(
+      Render::Creature::ArchetypeRegistry::k_humanoid_base,
+      Render::Creature::AnimationStateId::Cast);
   add_attack_frames(full_keys, PoseIntent::AttackMelee, 1, sword_variant_count);
   add_attack_frames(full_keys, PoseIntent::AttackSpear, 1, spear_variant_count);
   add_attack_frames(full_keys, PoseIntent::AttackRanged, 1, ranged_variant_count);
+  add_attack_frames(full_keys, PoseIntent::Cast, 1, cast_variant_count);
 
   std::unordered_set<AnimKey, AnimKeyHash> core_key_set;
   core_key_set.reserve(catalog.core_keys.size() * 2U);

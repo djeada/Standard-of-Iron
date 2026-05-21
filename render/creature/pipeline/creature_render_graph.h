@@ -12,6 +12,7 @@
 #include "../render_request.h"
 #include "bpat_playback.h"
 #include "creature_render_state.h"
+#include "humanoid_animation_selection.h"
 #include "lod_decision.h"
 #include "shadow_batch.h"
 #include "unit_visual_spec.h"
@@ -81,6 +82,7 @@ struct CreatureGraphOutput {
   EntityId entity_id{0};
 
   UnitVisualSpec spec{};
+  std::optional<HumanoidAnimationSelection> humanoid_selection{};
 };
 
 struct CreatureLodConfig {

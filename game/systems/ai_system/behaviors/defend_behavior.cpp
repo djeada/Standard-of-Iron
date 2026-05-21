@@ -32,7 +32,8 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
   }
   m_defend_timer = 0.0F;
 
-  if (context.primary_barracks == 0) {
+  if (context.primary_barracks == 0 &&
+      (!context.has_base_anchor || !context.anchor_is_structural)) {
     return;
   }
 
@@ -158,7 +159,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
 
     if (!nearby_threats.empty()) {
 
-      const std::size_t reserve_ready_count = static_cast<std::size_t>(
+      const auto reserve_ready_count = static_cast<std::size_t>(
           std::count_if(selected_ready_defenders.begin(),
                         selected_ready_defenders.end(),
                         [&](const EntitySnapshot* unit) {
@@ -251,7 +252,8 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
             const std::unordered_set<Engine::Core::EntityID> claimed_set(
                 claimed_units.begin(), claimed_units.end());
             for (size_t i = 0; i < defender_ids.size(); ++i) {
-              if (claimed_set.count(defender_ids[i])) {
+              if (static_cast<unsigned int>(claimed_set.contains(defender_ids[i])) !=
+                  0U) {
                 filtered_x.push_back(target_x[i]);
                 filtered_y.push_back(target_y[i]);
                 filtered_z.push_back(target_z[i]);
@@ -344,7 +346,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
     const std::unordered_set<Engine::Core::EntityID> claimed_set(
         claimed_for_move.begin(), claimed_for_move.end());
     for (size_t i = 0; i < units_to_move.size(); ++i) {
-      if (claimed_set.count(units_to_move[i])) {
+      if (static_cast<unsigned int>(claimed_set.contains(units_to_move[i])) != 0U) {
         filtered_x.push_back(target_x[i]);
         filtered_y.push_back(target_y[i]);
         filtered_z.push_back(target_z[i]);
@@ -365,7 +367,8 @@ auto DefendBehavior::should_execute(const AISnapshot& snapshot,
                                     const AIContext& context) const -> bool {
   (void)snapshot;
 
-  if (context.primary_barracks == 0) {
+  if (context.primary_barracks == 0 &&
+      (!context.has_base_anchor || !context.anchor_is_structural)) {
     return false;
   }
 

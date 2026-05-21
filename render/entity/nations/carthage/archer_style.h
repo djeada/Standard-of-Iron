@@ -9,6 +9,7 @@ namespace Render::GL::Carthage {
 
 struct ArcherStyleConfig {
   std::optional<QVector3D> cloth_color;
+  std::optional<QVector3D> skin_color;
   std::optional<QVector3D> leather_color;
   std::optional<QVector3D> leather_dark_color;
   std::optional<QVector3D> metal_color;

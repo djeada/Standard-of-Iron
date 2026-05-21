@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "game/core/event_manager.h"
+#include "game/systems/undead_zone_query.h"
 
 namespace Engine::Core {
 class World;
@@ -46,10 +47,26 @@ struct CaptureStructuresVictoryRule {
   StructureRequirement target;
 };
 
+struct ClearUndeadZoneVictoryRule {
+  QString zone_id;
+};
+
+struct PurifyShrineVictoryRule {
+  QString zone_id;
+};
+
+struct SurviveUndeadWaveVictoryRule {
+  QString zone_id;
+  int required_wave_count = 1;
+};
+
 using VictoryRule = std::variant<EliminationVictoryRule,
                                  SurviveTimeVictoryRule,
                                  ControlStructuresVictoryRule,
-                                 CaptureStructuresVictoryRule>;
+                                 CaptureStructuresVictoryRule,
+                                 ClearUndeadZoneVictoryRule,
+                                 PurifyShrineVictoryRule,
+                                 SurviveUndeadWaveVictoryRule>;
 
 struct NoUnitsDefeatRule {};
 
@@ -71,6 +88,7 @@ using DefeatRule = std::variant<NoUnitsDefeatRule,
 struct VictoryRuleSet {
   std::vector<VictoryRule> victory_rules;
   std::vector<DefeatRule> defeat_rules;
+  bool include_ambient_undead = false;
 };
 
 class VictoryService {
@@ -80,6 +98,10 @@ public:
 
   void configure(const Game::Map::VictoryConfig& config, int local_owner_id);
   void configure(const VictoryRuleSet& rules, int local_owner_id);
+  void set_undead_zone_query(const UndeadZoneQuery* query) {
+    m_undead_zone_query = query;
+    mark_world_dirty();
+  }
 
   void reset();
 
@@ -149,6 +171,7 @@ private:
       m_barrack_captured_subscription;
 
   Engine::Core::World* m_world_ptr = nullptr;
+  const UndeadZoneQuery* m_undead_zone_query = nullptr;
 
   Game::Systems::GlobalStatsRegistry& m_stats_registry;
   Game::Systems::OwnerRegistry& m_owner_registry;

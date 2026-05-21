@@ -267,6 +267,7 @@ TEST(TemplatePrewarmRegression, AnimCatalogIncludesDistinctMeleeSpearAndRangedAt
   EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::AttackMelee));
   EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::AttackSpear));
   EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::AttackRanged));
+  EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::Cast));
   EXPECT_TRUE(has_state(catalog.core_keys, PoseIntent::Dead));
   EXPECT_TRUE(has_state(catalog.extra_keys, PoseIntent::Walk));
 }
@@ -313,6 +314,27 @@ TEST(TemplatePrewarmRegression, WorkItemsSkipUnsupportedAttackFamiliesPerSpawn) 
   EXPECT_EQ(spearman_items, 2);
   EXPECT_EQ(spear_attack_items, 2);
   EXPECT_EQ(ranged_attack_items, 2);
+}
+
+TEST(TemplatePrewarmRegression, WorkItemsReserveCastForFireballUsersOnly) {
+  std::vector<Render::GL::PrewarmProfile> profiles(2);
+  profiles[0].renderer_id = "priest";
+  profiles[0].spawn_type = Game::Units::SpawnType::GravePriest;
+  profiles[1].renderer_id = "skeleton_archer";
+  profiles[1].spawn_type = Game::Units::SpawnType::SkeletonArcher;
+
+  std::vector<Render::GL::AnimKey> anim_keys(1);
+  anim_keys[0].state = PoseIntent::Cast;
+
+  auto const items =
+      Render::GL::build_template_prewarm_work_items(profiles, {1}, {0}, anim_keys);
+
+  ASSERT_EQ(items.size(), 2U);
+  for (auto const& item : items) {
+    EXPECT_EQ(item.profile_index, 0U);
+    EXPECT_EQ(item.anim_key.state, PoseIntent::Cast);
+    EXPECT_EQ(item.anim_key.attack_family, Engine::Core::CombatAttackFamily::Bow);
+  }
 }
 
 TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {

@@ -25,7 +25,8 @@ enum class AIStrategy {
   Expansionist,
   Economic,
   Harasser,
-  Rusher
+  Rusher,
+  SepulcherDefense
 };
 
 enum class AIState {
@@ -118,6 +119,7 @@ struct AISnapshot {
   std::vector<EntitySnapshot> friendly_units;
   std::vector<ContactSnapshot> visible_enemies;
   std::vector<ContactSnapshot> strategic_objectives;
+  std::vector<ContactSnapshot> defense_anchors;
 
   float game_time = 0.0F;
 };

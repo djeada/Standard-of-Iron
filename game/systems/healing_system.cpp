@@ -4,6 +4,7 @@
 #include <qvectornd.h>
 
 #include <cmath>
+#include <numbers>
 #include <vector>
 
 #include "../core/component.h"
@@ -13,6 +14,27 @@
 #include "nation_id.h"
 
 namespace Game::Systems {
+
+namespace {
+
+auto matches_heal_affinity(const Engine::Core::Entity* target,
+                           Engine::Core::HealerComponent::TargetAffinity affinity)
+    -> bool {
+  if (target == nullptr) {
+    return false;
+  }
+
+  bool const target_is_undead = target->has_component<Engine::Core::UndeadComponent>();
+  switch (affinity) {
+  case Engine::Core::HealerComponent::TargetAffinity::UndeadAllies:
+    return target_is_undead;
+  case Engine::Core::HealerComponent::TargetAffinity::LivingAllies:
+  default:
+    return !target_is_undead;
+  }
+}
+
+} // namespace
 
 void HealingSystem::update(Engine::Core::World* world, float delta_time) {
   process_healing(world, delta_time);
@@ -68,6 +90,9 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
       if (target_unit->owner_id != healer_unit->owner_id) {
         continue;
       }
+      if (!matches_heal_affinity(target, healer_comp->target_affinity)) {
+        continue;
+      }
 
       float const dx = target_transform->position.x - healer_transform->position.x;
       float const dz = target_transform->position.z - healer_transform->position.z;
@@ -83,7 +108,8 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
         healer_comp->healing_target_z = target_transform->position.z;
 
         if (dist > 0.1F) {
-          float const target_yaw = std::atan2(dx, dz) * 180.0F / 3.14159265F;
+          float const target_yaw =
+              std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
           healer_transform->desired_yaw = target_yaw;
           healer_transform->has_desired_yaw = true;
         }

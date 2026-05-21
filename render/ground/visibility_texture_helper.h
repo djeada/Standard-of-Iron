@@ -1,8 +1,11 @@
 #pragma once
 
+#include <QDebug>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include <QVector2D>
+#include <QtGui/qopengl.h>
 
-#include <GL/gl.h>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -29,6 +32,19 @@ public:
               float explored_alpha = 0.6F) -> VisibilityResources {
     const int vis_w = snapshot.width;
     const int vis_h = snapshot.height;
+    auto* gl_context = QOpenGLContext::currentContext();
+    auto* gl_functions = gl_context != nullptr ? gl_context->functions() : nullptr;
+    if (gl_functions == nullptr) {
+      qWarning() << "VisibilityTextureHelper: no current OpenGL context for visibility "
+                    "texture upload";
+      VisibilityResources res;
+      res.size = QVector2D(static_cast<float>(vis_w), static_cast<float>(vis_h));
+      res.tile_size = tile_size;
+      res.explored_alpha = explored_alpha;
+      res.enabled = false;
+      return res;
+    }
+
     bool const size_changed = (vis_w != m_width) || (vis_h != m_height);
 
     if (!m_texture || size_changed) {
@@ -70,15 +86,15 @@ public:
       }
 
       m_texture->bind();
-      glTexSubImage2D(GL_TEXTURE_2D,
-                      0,
-                      0,
-                      0,
-                      vis_w,
-                      vis_h,
-                      GL_RGBA,
-                      GL_UNSIGNED_BYTE,
-                      texels.data());
+      gl_functions->glTexSubImage2D(GL_TEXTURE_2D,
+                                    0,
+                                    0,
+                                    0,
+                                    vis_w,
+                                    vis_h,
+                                    GL_RGBA,
+                                    GL_UNSIGNED_BYTE,
+                                    texels.data());
       m_cached_version = version;
     }
 

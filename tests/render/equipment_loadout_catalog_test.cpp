@@ -1,11 +1,16 @@
+#include <array>
 #include <gtest/gtest.h>
 
+#include "render/creature/archetype_registry.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/equipment/equipment_registry.h"
+#include "render/equipment/humanoid_equipment_archetype.h"
 
 namespace {
 
 using Render::GL::k_invalid_equipment_handle;
+using LoadoutHandleMember =
+    Render::GL::EquipmentHandle Render::GL::Nation::ResolvedEquipmentLoadout::*;
 
 class EquipmentLoadoutCatalogTest : public ::testing::Test {
 protected:
@@ -120,6 +125,23 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageHealerLoadoutResolvesSupportArmor) {
   EXPECT_NE(loadout.armor_handle, k_invalid_equipment_handle);
 }
 
+TEST_F(EquipmentLoadoutCatalogTest, IronSepulcherLoadoutsExposeBonesAndPriestCloak) {
+  const auto swordsman = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/iron_sepulcher/skeleton_swordsman");
+  ASSERT_TRUE(swordsman.found);
+  EXPECT_EQ(swordsman.ids.sword, "sword_sepulcher");
+  EXPECT_TRUE(swordsman.ids.shield.empty());
+  EXPECT_NE(swordsman.sword_handle, k_invalid_equipment_handle);
+  EXPECT_EQ(swordsman.shield_handle, k_invalid_equipment_handle);
+
+  const auto priest = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/iron_sepulcher/grave_priest");
+  ASSERT_TRUE(priest.found);
+  EXPECT_EQ(priest.ids.cloak, "cloak_sepulcher");
+  EXPECT_NE(priest.cloak_handle, k_invalid_equipment_handle);
+  EXPECT_EQ(priest.armor_handle, k_invalid_equipment_handle);
+}
+
 TEST_F(EquipmentLoadoutCatalogTest, RomanBuilderLoadoutResolvesSupportGear) {
   const auto loadout =
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/builder");
@@ -206,6 +228,165 @@ TEST_F(EquipmentLoadoutCatalogTest, MountedNationsUseDistinctHorseSaddles) {
   EXPECT_NE(roman.horse_saddle_handle, k_invalid_equipment_handle);
   EXPECT_NE(carthage.horse_saddle_handle, k_invalid_equipment_handle);
   EXPECT_NE(roman.horse_saddle_handle, carthage.horse_saddle_handle);
+}
+
+TEST_F(EquipmentLoadoutCatalogTest, CommanderLoadoutsResolveAllExpectedHandles) {
+  struct CommanderLoadoutExpectation {
+    const char* renderer_key;
+    const char* primary_id;
+    LoadoutHandleMember primary_handle;
+    std::array<LoadoutHandleMember, 5> extra_handles;
+  };
+
+  const std::array<CommanderLoadoutExpectation, 6> expectations{{
+      {"troops/roman/commanders/fabius_maximus",
+       "spear_fabius",
+       &Render::GL::Nation::ResolvedEquipmentLoadout::spear_handle,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::greaves_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::shoulder_handle,
+        nullptr}},
+      {"troops/roman/commanders/scipio_africanus",
+       "sword_scipio",
+       &Render::GL::Nation::ResolvedEquipmentLoadout::sword_handle,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::shield_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::greaves_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        nullptr}},
+      {"troops/roman/commanders/marcellus",
+       "bow_marcellus",
+       &Render::GL::Nation::ResolvedEquipmentLoadout::bow_handle,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::quiver_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::cloak_handle,
+        nullptr}},
+      {"troops/carthage/commanders/hanno_the_great",
+       "spear_hanno",
+       &Render::GL::Nation::ResolvedEquipmentLoadout::spear_handle,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::cloak_handle,
+        nullptr,
+        nullptr}},
+      {"troops/carthage/commanders/hasdrubal_barca",
+       "bow_hasdrubal",
+       &Render::GL::Nation::ResolvedEquipmentLoadout::bow_handle,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::quiver_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        nullptr,
+        nullptr}},
+      {"troops/carthage/commanders/hannibal_barca",
+       "sword_hannibal",
+       &Render::GL::Nation::ResolvedEquipmentLoadout::sword_handle,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::shield_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::shoulder_handle,
+        nullptr}},
+  }};
+
+  for (const auto& expectation : expectations) {
+    SCOPED_TRACE(expectation.renderer_key);
+    const auto loadout =
+        Render::GL::Nation::resolve_equipment_loadout(expectation.renderer_key);
+    ASSERT_TRUE(loadout.found);
+    EXPECT_NE(loadout.*(expectation.primary_handle), k_invalid_equipment_handle)
+        << expectation.primary_id;
+    for (auto extra_handle : expectation.extra_handles) {
+      if (extra_handle == nullptr) {
+        continue;
+      }
+      EXPECT_NE(loadout.*extra_handle, k_invalid_equipment_handle);
+    }
+  }
+}
+
+TEST_F(EquipmentLoadoutCatalogTest, CommanderLoadoutsBakeDistinctArchetypesFromBase) {
+  struct CommanderBakeExpectation {
+    const char* renderer_key;
+    Render::Creature::ArchetypeId base_archetype;
+    std::array<LoadoutHandleMember, 7> handles;
+  };
+
+  const std::array<CommanderBakeExpectation, 6> expectations{{
+      {"troops/roman/commanders/fabius_maximus",
+       Render::Creature::ArchetypeRegistry::k_humanoid_base,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::greaves_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::shoulder_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::spear_handle,
+        nullptr,
+        nullptr}},
+      {"troops/roman/commanders/scipio_africanus",
+       Render::Creature::ArchetypeRegistry::k_humanoid_base,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::greaves_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::shield_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::sword_handle,
+        nullptr,
+        nullptr}},
+      {"troops/roman/commanders/marcellus",
+       Render::Creature::ArchetypeRegistry::k_humanoid_base,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::quiver_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::bow_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::cloak_handle,
+        nullptr,
+        nullptr}},
+      {"troops/carthage/commanders/hanno_the_great",
+       Render::Creature::ArchetypeRegistry::k_humanoid_base,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::spear_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::cloak_handle,
+        nullptr,
+        nullptr,
+        nullptr}},
+      {"troops/carthage/commanders/hasdrubal_barca",
+       Render::Creature::ArchetypeRegistry::k_humanoid_base,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::quiver_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::bow_handle,
+        nullptr,
+        nullptr,
+        nullptr}},
+      {"troops/carthage/commanders/hannibal_barca",
+       Render::Creature::ArchetypeRegistry::k_humanoid_base,
+       {&Render::GL::Nation::ResolvedEquipmentLoadout::helmet_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::shield_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::shoulder_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::armor_handle,
+        &Render::GL::Nation::ResolvedEquipmentLoadout::sword_handle,
+        nullptr,
+        nullptr}},
+  }};
+
+  for (const auto& expectation : expectations) {
+    SCOPED_TRACE(expectation.renderer_key);
+    const auto loadout =
+        Render::GL::Nation::resolve_equipment_loadout(expectation.renderer_key);
+    ASSERT_TRUE(loadout.found);
+
+    std::array<Render::GL::EquipmentHandle, 7> handles{};
+    for (std::size_t i = 0; i < expectation.handles.size(); ++i) {
+      handles[i] = expectation.handles[i] == nullptr
+                       ? k_invalid_equipment_handle
+                       : loadout.*(expectation.handles[i]);
+    }
+
+    const auto archetype = Render::GL::resolve_humanoid_equipment_archetype(
+        expectation.renderer_key, expectation.base_archetype, handles);
+    EXPECT_NE(archetype, Render::Creature::k_invalid_archetype);
+    EXPECT_NE(archetype, expectation.base_archetype);
+  }
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, MissingLoadoutReturnsNotFound) {

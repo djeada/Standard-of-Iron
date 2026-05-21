@@ -14,6 +14,9 @@
 #include <QStringList>
 #include <QVBoxLayout>
 
+#include <cmath>
+
+#include "arena_scenarios.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/units/troop_type.h"
@@ -39,7 +42,9 @@ auto prettify_identifier(const QString& value) -> QString {
 } // namespace
 
 UnitPanel::UnitPanel(QWidget* parent)
-    : QWidget(parent) {
+    : QWidget(parent)
+    , m_saved_manual_individuals_per_unit(m_individuals_per_unit_box->value())
+    , m_saved_manual_rider_visible(m_render_rider_checkbox->isChecked()) {
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
@@ -65,8 +70,6 @@ UnitPanel::UnitPanel(QWidget* parent)
   m_individuals_per_unit_box->setSpecialValueText(QStringLiteral("Default"));
   m_individuals_per_unit_box->setValue(0);
   m_render_rider_checkbox->setChecked(true);
-  m_saved_manual_individuals_per_unit = m_individuals_per_unit_box->value();
-  m_saved_manual_rider_visible = m_render_rider_checkbox->isChecked();
 
   spawn_form->addRow("Side", m_owner_box);
   spawn_form->addRow("Nation", m_nation_box);
@@ -136,14 +139,51 @@ UnitPanel::UnitPanel(QWidget* parent)
 
   m_pause_checkbox = new QCheckBox("Pause Simulation", anim_group);
   auto* skeleton_debug_box = new QCheckBox("Skeleton / Pose Overlay", anim_group);
+  m_combat_debug_checkbox = new QCheckBox("Combat Animation Debug Overlay", anim_group);
+  m_attack_scrub_checkbox = new QCheckBox("Freeze Selected Attack Phase", anim_group);
+  auto* scrub_container = new QWidget(anim_group);
+  auto* scrub_layout = new QHBoxLayout(scrub_container);
+  scrub_layout->setContentsMargins(0, 0, 0, 0);
+  scrub_layout->setSpacing(6);
+  m_attack_scrub_slider = new QSlider(Qt::Horizontal, scrub_container);
+  m_attack_scrub_spin = new QDoubleSpinBox(scrub_container);
+  m_attack_scrub_slider->setRange(0, 100);
+  m_attack_scrub_slider->setValue(50);
+  m_attack_scrub_spin->setRange(0.0, 1.0);
+  m_attack_scrub_spin->setDecimals(2);
+  m_attack_scrub_spin->setSingleStep(0.01);
+  m_attack_scrub_spin->setValue(0.5);
+  scrub_layout->addWidget(m_attack_scrub_slider, 1);
+  scrub_layout->addWidget(m_attack_scrub_spin);
   anim_group_layout->addWidget(m_pause_checkbox);
   anim_group_layout->addWidget(skeleton_debug_box);
+  anim_group_layout->addWidget(m_combat_debug_checkbox);
+  anim_group_layout->addWidget(m_attack_scrub_checkbox);
+  anim_form->addRow("Attack Phase", scrub_container);
 
   layout->addWidget(anim_group);
 
   auto* quick_setup_group = new QGroupBox("Quick Setup", this);
   auto* quick_setup_layout = new QVBoxLayout(quick_setup_group);
   quick_setup_layout->setSpacing(4);
+  auto* scenario_form = new QFormLayout();
+  scenario_form->setSpacing(4);
+  m_scenario_box = new QComboBox(quick_setup_group);
+  for (const Arena::Scenarios::ScenarioOption& option : Arena::Scenarios::options()) {
+    m_scenario_box->addItem(option.label, option.id);
+    m_scenario_box->setItemData(
+        m_scenario_box->count() - 1, option.description, Qt::ToolTipRole);
+  }
+  auto* load_scenario_button = new QPushButton("Load Scenario", quick_setup_group);
+  load_scenario_button->setToolTip(
+      "Reset the arena and load a Phase 1 combat animation scenario.");
+  scenario_form->addRow("Scenario", m_scenario_box);
+  scenario_form->addRow("", load_scenario_button);
+  quick_setup_layout->addLayout(scenario_form);
+  m_scenario_description_label = new QLabel(quick_setup_group);
+  m_scenario_description_label->setWordWrap(true);
+  m_scenario_description_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  quick_setup_layout->addWidget(m_scenario_description_label);
   auto* spawn_opposing_button =
       new QPushButton("Spawn Opposing Batch", quick_setup_group);
   auto* spawn_mirror_button = new QPushButton("Spawn Mirror Match", quick_setup_group);
@@ -234,6 +274,23 @@ UnitPanel::UnitPanel(QWidget* parent)
           &QPushButton::clicked,
           this,
           &UnitPanel::reset_arena_requested);
+  connect(load_scenario_button, &QPushButton::clicked, this, [this]() {
+    if (m_scenario_box == nullptr) {
+      return;
+    }
+    emit load_scenario_requested(m_scenario_box->currentData().toString());
+  });
+  connect(m_scenario_box,
+          qOverload<int>(&QComboBox::currentIndexChanged),
+          this,
+          [this](int index) {
+            if (m_scenario_box == nullptr || m_scenario_description_label == nullptr ||
+                index < 0) {
+              return;
+            }
+            m_scenario_description_label->setText(
+                m_scenario_box->itemData(index, Qt::ToolTipRole).toString());
+          });
   connect(m_pause_checkbox,
           &QCheckBox::toggled,
           this,
@@ -246,6 +303,32 @@ UnitPanel::UnitPanel(QWidget* parent)
           &QCheckBox::toggled,
           this,
           &UnitPanel::skeleton_debug_toggled);
+  connect(m_combat_debug_checkbox,
+          &QCheckBox::toggled,
+          this,
+          &UnitPanel::combat_debug_toggled);
+  connect(m_attack_scrub_checkbox,
+          &QCheckBox::toggled,
+          this,
+          &UnitPanel::attack_scrub_toggled);
+  connect(m_attack_scrub_slider, &QSlider::valueChanged, this, [this](int value) {
+    if (m_attack_scrub_spin != nullptr) {
+      const QSignalBlocker blocker(m_attack_scrub_spin);
+      m_attack_scrub_spin->setValue(static_cast<double>(value) / 100.0);
+    }
+    emit attack_scrub_phase_changed(static_cast<float>(value) / 100.0F);
+  });
+  connect(m_attack_scrub_spin,
+          qOverload<double>(&QDoubleSpinBox::valueChanged),
+          this,
+          [this](double value) {
+            if (m_attack_scrub_slider != nullptr) {
+              const QSignalBlocker blocker(m_attack_scrub_slider);
+              m_attack_scrub_slider->setValue(
+                  static_cast<int>(std::round(value * 100.0)));
+            }
+            emit attack_scrub_phase_changed(static_cast<float>(value));
+          });
 
   connect(speed_slider, &QSlider::valueChanged, speed_spin, [speed_spin](int value) {
     const QSignalBlocker blocker(speed_spin);
@@ -266,6 +349,12 @@ UnitPanel::UnitPanel(QWidget* parent)
 
   populate_nation_options();
   populate_unit_options(selected_nation_id());
+  if (m_scenario_box != nullptr && m_scenario_description_label != nullptr &&
+      m_scenario_box->count() > 0) {
+    m_scenario_description_label->setText(
+        m_scenario_box->itemData(m_scenario_box->currentIndex(), Qt::ToolTipRole)
+            .toString());
+  }
 }
 
 void UnitPanel::apply_special_unit_defaults(const QString& unit_id) {
@@ -350,6 +439,9 @@ void UnitPanel::populate_nation_options() {
 
   m_nation_box->clear();
   for (const auto& nation : nations) {
+    if (nation.available_troops.empty()) {
+      continue;
+    }
     QString const nation_id = Game::Systems::nation_id_to_qstring(nation.id);
     QString label = QString::fromStdString(nation.display_name);
     if (label.trimmed().isEmpty()) {
@@ -389,7 +481,7 @@ void UnitPanel::populate_unit_options(const QString& nation_id,
     return;
   }
 
-  QString preferred =
+  QString const preferred =
       preferred_unit_type.isEmpty() ? selected_unit_type_id() : preferred_unit_type;
 
   m_unit_box->clear();
@@ -433,6 +525,6 @@ void UnitPanel::populate_unit_options(const QString& nation_id,
     return;
   }
 
-  int index = preferred.isEmpty() ? -1 : m_unit_box->findData(preferred);
+  int const index = preferred.isEmpty() ? -1 : m_unit_box->findData(preferred);
   m_unit_box->setCurrentIndex(index >= 0 ? index : 0);
 }

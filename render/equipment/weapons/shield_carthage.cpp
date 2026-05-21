@@ -17,6 +17,7 @@
 #include "../../render_archetype.h"
 #include "../attachment_builder.h"
 #include "../equipment_submit.h"
+#include "shield_anchor.h"
 
 namespace Render::GL {
 
@@ -83,10 +84,9 @@ auto get_unit_hemisphere_mesh() -> Mesh* {
 }
 
 constexpr float k_base_shield_diameter = 1.08F;
-constexpr float k_shield_grip_standoff = 0.25F;
-
 auto shield_center_local(float shield_radius) -> QVector3D {
-  return {shield_radius * k_shield_grip_standoff, -0.02F, 0.05F};
+  static_cast<void>(shield_radius);
+  return {};
 }
 
 auto carthage_shield_archetype(float scale_multiplier) -> const RenderArchetype& {
@@ -199,14 +199,9 @@ auto carthage_shield_archetype(float scale_multiplier) -> const RenderArchetype&
   return cache.back().archetype;
 }
 
-auto hand_basis_transform(const QMatrix4x4& parent,
-                          const AttachmentFrame& hand) -> QMatrix4x4 {
-  QMatrix4x4 local;
-  local.setColumn(0, QVector4D(hand.right, 0.0F));
-  local.setColumn(1, QVector4D(hand.up, 0.0F));
-  local.setColumn(2, QVector4D(hand.forward, 0.0F));
-  local.setColumn(3, QVector4D(hand.origin, 1.0F));
-  return parent * local;
+auto shield_basis_transform(const QMatrix4x4& parent,
+                            const AttachmentFrame& shield_frame) -> QMatrix4x4 {
+  return parent * attachment_frame_transform(shield_frame);
 }
 
 auto carthage_shield_local_pose(float scale_multiplier) -> QMatrix4x4 {
@@ -249,18 +244,19 @@ void CarthageShieldRenderer::submit(const CarthageShieldConfig& config,
                                     const HumanoidPalette& palette,
                                     const HumanoidAnimationContext&,
                                     EquipmentBatch& batch) {
-  AttachmentFrame const grip =
-      frames.grip_l.radius > 0.0F
-          ? frames.grip_l
-          : Render::Humanoid::socket_attachment_frame(
-                frames.hand_l, Render::Humanoid::HumanoidSocket::GripL);
+  AttachmentFrame const shield_frame = resolve_left_shield_frame(frames);
+  QMatrix4x4 pose_adjustment;
+  if (frames.shield_l.radius > 0.0F) {
+    pose_adjustment = bind_left_shield_pose_calibration();
+  }
   std::array<QVector3D, 4> const palette_slots{QVector3D(0.20F, 0.46F, 0.62F),
                                                QVector3D(0.76F, 0.68F, 0.42F),
                                                QVector3D(0.70F, 0.68F, 0.52F),
                                                palette.leather};
   append_equipment_archetype(batch,
                              carthage_shield_archetype(config.scale_multiplier),
-                             hand_basis_transform(ctx.model, grip) *
+                             shield_basis_transform(ctx.model, shield_frame) *
+                                 pose_adjustment *
                                  carthage_shield_local_pose(config.scale_multiplier),
                              palette_slots);
 }
@@ -284,14 +280,15 @@ auto carthage_shield_make_static_attachment(const CarthageShieldConfig& config,
   constexpr auto k_bone = Render::Humanoid::HumanoidBone::HandL;
   QMatrix4x4 const bind_bone =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
-  auto const& bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_l;
-  QMatrix4x4 const bind_socket = hand_basis_transform(QMatrix4x4{}, bind_grip);
+  auto const& bind_shield = Render::Humanoid::humanoid_bind_body_frames().shield_l;
+  QMatrix4x4 const bind_socket = attachment_frame_transform(bind_shield);
   auto spec = Render::Equipment::build_socket_static_attachment({
       .archetype = &carthage_shield_archetype(config.scale_multiplier),
       .socket_bone_index = static_cast<std::uint16_t>(k_bone),
       .bind_bone_transform = bind_bone,
       .bind_socket_transform = bind_socket,
-      .mesh_from_socket = carthage_shield_local_pose(config.scale_multiplier),
+      .mesh_from_socket = bind_left_shield_pose_calibration() *
+                          carthage_shield_local_pose(config.scale_multiplier),
   });
   spec.palette_role_remap[k_shield_slot] = base_role_byte;
   spec.palette_role_remap[k_trim_slot] = static_cast<std::uint8_t>(base_role_byte + 1U);

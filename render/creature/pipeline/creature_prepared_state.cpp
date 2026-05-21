@@ -17,6 +17,7 @@
 #include "../../gl/humanoid/animation/animation_inputs.h"
 #include "../../gl/resources.h"
 #include "../../graphics_settings.h"
+#include "../../profiling/combat_animation_diagnostics.h"
 #include "../../visibility_budget.h"
 
 namespace Render::Creature::Pipeline {
@@ -75,6 +76,9 @@ auto resolve_elephant_animation_state(const Render::GL::DrawContext& ctx)
     state.inputs.is_attacking = true;
     state.inputs.is_melee = true;
   }
+
+  Render::Profiling::CombatAnimationDiagnostics::instance().mark_elephant_override(
+      ctx.entity->get_id());
 
   return state;
 }

@@ -61,6 +61,20 @@ TEST(CreatureAssetRegistry, SpearHumanoidAssetUsesDedicatedBpatSpecies) {
   EXPECT_EQ(asset->bpat_species_id, Render::Creature::Bpat::k_species_humanoid_spear);
 }
 
+TEST(CreatureAssetRegistry, SkeletonHumanoidAssetUsesDedicatedAnimationSpecies) {
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Humanoid;
+  spec.creature_asset_id = k_skeleton_humanoid_asset;
+
+  const auto* asset = CreatureAssetRegistry::instance().resolve(spec);
+  ASSERT_NE(asset, nullptr);
+  EXPECT_EQ(asset->id, k_skeleton_humanoid_asset);
+  EXPECT_EQ(asset->kind, CreatureKind::Humanoid);
+  EXPECT_EQ(asset->bpat_species_id,
+            Render::Creature::Bpat::k_species_humanoid_skeleton);
+  EXPECT_EQ(asset->spec, &Render::Humanoid::skeleton_humanoid_creature_spec());
+}
+
 TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
   UnitVisualSpec horse{};
   horse.kind = CreatureKind::Horse;

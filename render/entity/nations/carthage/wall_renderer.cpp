@@ -37,82 +37,125 @@ struct WallPalette {
   QVector3D shadow{0.22F, 0.15F, 0.08F};
 };
 
+constexpr float k_connected_span_length = 1.04F;
+constexpr float k_open_span_length = 0.96F;
+constexpr float k_stake_center_y = 1.16F;
+constexpr float k_stake_half_height = 1.16F;
+constexpr float k_tip_center_y = 2.44F;
+constexpr float k_tip_half_height = 0.18F;
+constexpr float k_lower_lashing_y = 0.72F;
+constexpr float k_upper_lashing_y = 1.48F;
+
 void add_x_span(BuildingArchetypeDesc& desc,
                 const WallPalette& c,
                 float direction,
-                float length) {
-  constexpr int k_stakes = 6;
+                float length,
+                bool capped_outer_end) {
+  constexpr int k_stakes = 5;
   const float center_x = direction * (length * 0.5F);
 
-  desc.add_box(QVector3D(center_x, 0.32F, 0.0F),
-               QVector3D(length * 0.5F + 0.02F, 0.05F, 0.10F),
+  desc.add_box(QVector3D(center_x, k_lower_lashing_y, 0.0F),
+               QVector3D(length + 0.06F, 0.09F, 0.22F),
                c.rope,
                BuildingStateMask::All,
                BuildingLODMask::Full);
-  desc.add_box(QVector3D(center_x, 0.98F, 0.0F),
-               QVector3D(length * 0.5F + 0.02F, 0.05F, 0.10F),
+  desc.add_box(QVector3D(center_x, k_upper_lashing_y, 0.0F),
+               QVector3D(length + 0.06F, 0.09F, 0.22F),
                c.rope,
+               BuildingStateMask::All,
+               BuildingLODMask::Full);
+  desc.add_box(QVector3D(center_x, 0.28F, 0.0F),
+               QVector3D(length + 0.08F, 0.07F, 0.26F),
+               c.shadow,
                BuildingStateMask::All,
                BuildingLODMask::Full);
 
   for (int i = 0; i < k_stakes; ++i) {
     const float t = (static_cast<float>(i) + 0.5F) / static_cast<float>(k_stakes);
     const float x = direction * (t * length);
-    desc.add_box(QVector3D(x, 0.76F, 0.0F),
-                 QVector3D(0.06F, 0.76F, 0.08F),
+    desc.add_box(QVector3D(x, k_stake_center_y, 0.0F),
+                 QVector3D(0.16F, k_stake_half_height * 2.0F, 0.20F),
                  (i % 2 == 0) ? c.wood_mid : c.wood_light,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(x, 1.52F, 0.0F),
-                 QVector3D(0.04F, 0.12F, 0.06F),
+    desc.add_box(QVector3D(x, k_tip_center_y, 0.0F),
+                 QVector3D(0.09F, k_tip_half_height * 2.0F, 0.12F),
                  c.wood_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
   }
 
-  desc.add_box(QVector3D(direction * length, 0.82F, 0.0F),
-               QVector3D(0.09F, 0.82F, 0.11F),
-               c.shadow,
-               BuildingStateMask::All,
-               BuildingLODMask::Full);
+  if (capped_outer_end) {
+    desc.add_box(QVector3D(direction * (length - 0.02F), k_stake_center_y, 0.0F),
+                 QVector3D(0.21F, k_stake_half_height * 2.0F, 0.24F),
+                 c.shadow,
+                 BuildingStateMask::All,
+                 BuildingLODMask::Full);
+  }
 }
 
 void add_z_span(BuildingArchetypeDesc& desc,
                 const WallPalette& c,
                 float direction,
-                float length) {
-  constexpr int k_stakes = 6;
+                float length,
+                bool capped_outer_end) {
+  constexpr int k_stakes = 5;
   const float center_z = direction * (length * 0.5F);
 
-  desc.add_box(QVector3D(0.0F, 0.32F, center_z),
-               QVector3D(0.10F, 0.05F, length * 0.5F + 0.02F),
+  desc.add_box(QVector3D(0.0F, k_lower_lashing_y, center_z),
+               QVector3D(0.22F, 0.09F, length + 0.06F),
                c.rope,
                BuildingStateMask::All,
                BuildingLODMask::Full);
-  desc.add_box(QVector3D(0.0F, 0.98F, center_z),
-               QVector3D(0.10F, 0.05F, length * 0.5F + 0.02F),
+  desc.add_box(QVector3D(0.0F, k_upper_lashing_y, center_z),
+               QVector3D(0.22F, 0.09F, length + 0.06F),
                c.rope,
+               BuildingStateMask::All,
+               BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.0F, 0.28F, center_z),
+               QVector3D(0.26F, 0.07F, length + 0.08F),
+               c.shadow,
                BuildingStateMask::All,
                BuildingLODMask::Full);
 
   for (int i = 0; i < k_stakes; ++i) {
     const float t = (static_cast<float>(i) + 0.5F) / static_cast<float>(k_stakes);
     const float z = direction * (t * length);
-    desc.add_box(QVector3D(0.0F, 0.76F, z),
-                 QVector3D(0.08F, 0.76F, 0.06F),
+    desc.add_box(QVector3D(0.0F, k_stake_center_y, z),
+                 QVector3D(0.20F, k_stake_half_height * 2.0F, 0.16F),
                  (i % 2 == 0) ? c.wood_mid : c.wood_light,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.0F, 1.52F, z),
-                 QVector3D(0.06F, 0.12F, 0.04F),
+    desc.add_box(QVector3D(0.0F, k_tip_center_y, z),
+                 QVector3D(0.12F, k_tip_half_height * 2.0F, 0.09F),
                  c.wood_dark,
                  BuildingStateMask::All,
                  BuildingLODMask::Full);
   }
 
-  desc.add_box(QVector3D(0.0F, 0.82F, direction * length),
-               QVector3D(0.11F, 0.82F, 0.09F),
+  if (capped_outer_end) {
+    desc.add_box(QVector3D(0.0F, k_stake_center_y, direction * (length - 0.02F)),
+                 QVector3D(0.24F, k_stake_half_height * 2.0F, 0.21F),
+                 c.shadow,
+                 BuildingStateMask::All,
+                 BuildingLODMask::Full);
+  }
+}
+
+void add_center_post(BuildingArchetypeDesc& desc, const WallPalette& c) {
+  desc.add_box(QVector3D(0.0F, 0.17F, 0.0F),
+               QVector3D(0.56F, 0.06F, 0.56F),
+               c.wood_dark,
+               BuildingStateMask::All,
+               BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.0F, k_stake_center_y, 0.0F),
+               QVector3D(0.28F, k_stake_half_height * 2.0F, 0.28F),
                c.shadow,
+               BuildingStateMask::All,
+               BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.0F, k_tip_center_y + 0.02F, 0.0F),
+               QVector3D(0.12F, (k_tip_half_height + 0.02F) * 2.0F, 0.12F),
+               c.wood_dark,
                BuildingStateMask::All,
                BuildingLODMask::Full);
 }
@@ -145,32 +188,26 @@ auto wall_archetype(WallVariant variant) -> const RenderArchetype& {
       const WallPalette c{};
       BuildingArchetypeDesc desc("carthage_wall_variant_" + std::to_string(i));
 
-      desc.add_box(QVector3D(0.0F, 0.80F, 0.0F),
-                   QVector3D(0.11F, 0.80F, 0.11F),
-                   c.shadow,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
-      desc.add_box(QVector3D(0.0F, 0.17F, 0.0F),
-                   QVector3D(0.22F, 0.03F, 0.22F),
-                   c.wood_dark,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+      add_center_post(desc, c);
 
       if (v == WallVariant::Isolated) {
-        add_x_span(desc, c, -1.0F, 0.56F);
-        add_x_span(desc, c, 1.0F, 0.56F);
+        add_x_span(desc, c, -1.0F, k_open_span_length, true);
+        add_x_span(desc, c, 1.0F, k_open_span_length, true);
+      } else if (v == WallVariant::End) {
+        add_x_span(desc, c, 1.0F, k_connected_span_length, false);
+        add_x_span(desc, c, -1.0F, k_open_span_length, true);
       } else {
         if ((mask & k_connection_east) != 0U) {
-          add_x_span(desc, c, 1.0F, 0.94F);
+          add_x_span(desc, c, 1.0F, k_connected_span_length, false);
         }
         if ((mask & k_connection_west) != 0U) {
-          add_x_span(desc, c, -1.0F, 0.94F);
+          add_x_span(desc, c, -1.0F, k_connected_span_length, false);
         }
         if ((mask & k_connection_north) != 0U) {
-          add_z_span(desc, c, -1.0F, 0.94F);
+          add_z_span(desc, c, -1.0F, k_connected_span_length, false);
         }
         if ((mask & k_connection_south) != 0U) {
-          add_z_span(desc, c, 1.0F, 0.94F);
+          add_z_span(desc, c, 1.0F, k_connected_span_length, false);
         }
       }
 

@@ -128,6 +128,24 @@ TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
   settings.set_quality(Render::GraphicsQuality::Ultra);
 }
 
+TEST(ArchetypeRegistry, BaselineAnimationManifestPreservesHumanoidMappings) {
+  auto& registry = ArchetypeRegistry::instance();
+
+  EXPECT_EQ(
+      registry.bpat_clip(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Cast),
+      registry.bpat_clip(ArchetypeRegistry::k_humanoid_base,
+                         AnimationStateId::AttackBow));
+  EXPECT_EQ(registry.clip_variant_count(ArchetypeRegistry::k_humanoid_base,
+                                        AnimationStateId::Idle),
+            5U);
+  EXPECT_FALSE(
+      registry.is_snapshot(ArchetypeRegistry::k_humanoid_base, AnimationStateId::Walk));
+  EXPECT_EQ(
+      registry.bpat_clip(ArchetypeRegistry::k_rider_base,
+                         AnimationStateId::RidingBowShot),
+      registry.bpat_clip(ArchetypeRegistry::k_rider_base, AnimationStateId::Cast));
+}
+
 TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
   auto& settings = Render::GraphicsSettings::instance();
   settings.set_quality(Render::GraphicsQuality::High);
@@ -382,7 +400,7 @@ TEST(CreatureRenderBatch, VariantTableCanOverrideRequestSelection) {
   CreatureGraphOutput output;
   output.culled = false;
   output.spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
-  output.spec.variant_table = &table;
+  output.spec.animation_manifest.variant_table = &table;
 
   Render::GL::HumanoidPose const pose{};
   Render::GL::HumanoidVariant const variant{};
@@ -393,6 +411,39 @@ TEST(CreatureRenderBatch, VariantTableCanOverrideRequestSelection) {
   ASSERT_EQ(batch.requests().size(), 1U);
   EXPECT_EQ(batch.requests()[0].archetype, override_archetype);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::AttackSpear);
+}
+
+TEST(CreatureRenderBatch, PrecomputedHumanoidSelectionOverridesResolverWork) {
+  auto const override_archetype = ArchetypeRegistry::instance().register_unit_archetype(
+      "test.precomputed_selection_override", CreatureKind::Humanoid, {});
+  ASSERT_NE(override_archetype, k_invalid_archetype);
+
+  CreatureRenderBatch batch;
+  CreatureGraphOutput output;
+  output.culled = false;
+  output.spec.creature_asset_id = k_humanoid_sword_asset;
+  output.spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  HumanoidAnimationSelection selection{};
+  selection.requested_archetype = ArchetypeRegistry::k_humanoid_base;
+  selection.resolved_archetype = override_archetype;
+  selection.state = AnimationStateId::AttackSpear;
+  selection.phase = 0.73F;
+  selection.clip_variant = 2U;
+  output.humanoid_selection = selection;
+
+  Render::GL::HumanoidPose const pose{};
+  Render::GL::HumanoidVariant const variant{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  batch.add_humanoid(output, pose, variant, anim);
+
+  ASSERT_EQ(batch.requests().size(), 1U);
+  auto const& req = batch.requests().front();
+  EXPECT_EQ(req.archetype, override_archetype);
+  EXPECT_EQ(req.state, AnimationStateId::AttackSpear);
+  EXPECT_FLOAT_EQ(req.phase, 0.73F);
+  EXPECT_EQ(req.clip_variant, 2U);
 }
 
 TEST(CreatureRenderBatch, MovingCombatHumanoidKeepsMovementRequest) {
@@ -438,7 +489,7 @@ TEST(CreatureRenderBatch, AllPoseVariantTableCannotChangeMovingStateByArchetype)
   output.culled = false;
   output.spec.creature_asset_id = k_humanoid_sword_asset;
   output.spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
-  output.spec.variant_table = &table;
+  output.spec.animation_manifest.variant_table = &table;
 
   Render::GL::HumanoidPose const pose{};
   Render::GL::HumanoidVariant const variant{};
