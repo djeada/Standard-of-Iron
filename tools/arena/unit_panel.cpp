@@ -42,9 +42,7 @@ auto prettify_identifier(const QString& value) -> QString {
 } // namespace
 
 UnitPanel::UnitPanel(QWidget* parent)
-    : QWidget(parent)
-    , m_saved_manual_individuals_per_unit(m_individuals_per_unit_box->value())
-    , m_saved_manual_rider_visible(m_render_rider_checkbox->isChecked()) {
+    : QWidget(parent) {
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
@@ -70,6 +68,8 @@ UnitPanel::UnitPanel(QWidget* parent)
   m_individuals_per_unit_box->setSpecialValueText(QStringLiteral("Default"));
   m_individuals_per_unit_box->setValue(0);
   m_render_rider_checkbox->setChecked(true);
+  m_saved_manual_individuals_per_unit = m_individuals_per_unit_box->value();
+  m_saved_manual_rider_visible = m_render_rider_checkbox->isChecked();
 
   spawn_form->addRow("Side", m_owner_box);
   spawn_form->addRow("Nation", m_nation_box);
@@ -434,7 +434,8 @@ void UnitPanel::populate_nation_options() {
   }
 
   QString const preferred = selected_nation_id();
-  const auto& registry = Game::Systems::NationRegistry::instance();
+  auto& registry = Game::Systems::NationRegistry::instance();
+  registry.initialize_defaults();
   const auto& nations = registry.get_all_nations();
 
   m_nation_box->clear();

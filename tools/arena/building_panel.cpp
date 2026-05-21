@@ -145,7 +145,8 @@ void BuildingPanel::populate_nation_options() {
     return;
   }
 
-  const auto& registry = Game::Systems::NationRegistry::instance();
+  auto& registry = Game::Systems::NationRegistry::instance();
+  registry.initialize_defaults();
   const auto& nations = registry.get_all_nations();
 
   m_nation_box->clear();
