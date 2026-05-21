@@ -474,6 +474,398 @@ constexpr std::array<Creature::PrimitiveInstance, 41> k_full_parts = {
     make_full_foot(false),
 };
 
+constexpr auto make_skeleton_minimal_capsule() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p = make_minimal_capsule();
+  p.debug_name = "skeleton_humanoid_minimal";
+  p.params.radius = HP::TORSO_TOP_R * 0.62F;
+  p.color_role = Skin;
+  return p;
+}
+
+constexpr std::array<Creature::PrimitiveInstance, 1> k_skeleton_minimal_parts = {
+    make_skeleton_minimal_capsule(),
+};
+
+constexpr auto make_skeleton_spine() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "skeleton_spine";
+  p.shape = Creature::PrimitiveShape::Cylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Pelvis);
+  p.params.head_offset = QVector3D(0.0F, 0.07F, -0.015F);
+  p.params.tail_bone = bone(HumanoidBone::Chest);
+  p.params.tail_offset = QVector3D(0.0F, 0.03F, -0.015F);
+  p.params.radius = HP::NECK_RADIUS * 0.42F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_upper_spine() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "skeleton_upper_spine";
+  p.shape = Creature::PrimitiveShape::Cylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  p.params.head_offset = QVector3D(0.0F, -0.12F, -0.03F);
+  p.params.tail_bone = bone(HumanoidBone::Neck);
+  p.params.tail_offset = QVector3D(0.0F, -0.015F, -0.01F);
+  p.params.radius = HP::NECK_RADIUS * 0.28F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_neck() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "skeleton_neck";
+  p.shape = Creature::PrimitiveShape::Cylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Neck);
+  p.params.head_offset = QVector3D(0.0F, 0.0F, -0.005F);
+  p.params.tail_bone = bone(HumanoidBone::Head);
+  p.params.tail_offset = QVector3D(0.0F, -HP::HEAD_RADIUS * 0.36F, -0.005F);
+  p.params.radius = HP::NECK_RADIUS * 0.18F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_neck_base() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "skeleton_neck_base";
+  p.shape = Creature::PrimitiveShape::Cylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  p.params.head_offset = QVector3D(0.0F, 0.12F, 0.01F);
+  p.params.tail_bone = bone(HumanoidBone::Neck);
+  p.params.tail_offset = QVector3D(0.0F, -0.06F, 0.01F);
+  p.params.radius = HP::NECK_RADIUS * 0.23F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_collar(bool left) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = left ? "skeleton_collar_l" : "skeleton_collar_r";
+  p.shape = Creature::PrimitiveShape::Cylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  float const side = left ? -1.0F : 1.0F;
+  p.params.head_offset = QVector3D(
+      side * HP::TORSO_TOP_R * 0.12F, HP::TORSO_TOP_R * 0.28F, HP::TORSO_TOP_R * 0.10F);
+  p.params.tail_bone = bone(left ? HumanoidBone::ShoulderL : HumanoidBone::ShoulderR);
+  p.params.radius = HP::NECK_RADIUS * 0.26F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_ribcage_mass(bool left, bool back) noexcept
+    -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = left ? (back ? "skeleton_ribcage_back_l" : "skeleton_ribcage_front_l")
+                      : (back ? "skeleton_ribcage_back_r" : "skeleton_ribcage_front_r");
+  p.shape = Creature::PrimitiveShape::OrientedSphere;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  float const side = left ? -1.0F : 1.0F;
+  float const y = back ? -HP::TORSO_TOP_R * 0.16F : HP::TORSO_TOP_R * 0.18F;
+  float const z = back ? -HP::TORSO_TOP_R * 0.22F : HP::TORSO_TOP_R * 0.28F;
+  p.params.head_offset = QVector3D(side * HP::TORSO_TOP_R * 0.50F, y, z);
+  p.params.half_extents = QVector3D(
+      HP::TORSO_TOP_R * 0.28F, HP::TORSO_TOP_R * 0.18F, HP::TORSO_TOP_R * 0.14F);
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_abdomen_bar(const char* name, float y, float z) noexcept
+    -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = name;
+  p.shape = Creature::PrimitiveShape::OrientedCylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Spine);
+  p.params.head_offset = QVector3D(-HP::TORSO_BOT_R * 0.42F, y, z);
+  p.params.tail_bone = bone(HumanoidBone::Spine);
+  p.params.tail_offset = QVector3D(HP::TORSO_BOT_R * 0.42F, y, z);
+  p.params.radius = HP::NECK_RADIUS * 0.20F;
+  p.params.depth_radius = HP::NECK_RADIUS * 0.14F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_sternum() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = "skeleton_sternum";
+  p.shape = Creature::PrimitiveShape::Cylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  p.params.head_offset = QVector3D(0.0F, 0.16F, 0.045F);
+  p.params.tail_bone = bone(HumanoidBone::Spine);
+  p.params.tail_offset = QVector3D(0.0F, -0.16F, 0.018F);
+  p.params.radius = HP::NECK_RADIUS * 0.22F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto
+make_skeleton_torso_joint(const char* name,
+                          HumanoidBone anchor,
+                          const QVector3D& offset,
+                          float radius) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = name;
+  p.shape = Creature::PrimitiveShape::Sphere;
+  p.params.anchor_bone = bone(anchor);
+  p.params.head_offset = offset;
+  p.params.radius = radius;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_rib(bool left,
+                                 int index) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = left ? (index == 0   ? "skeleton_rib_l_high"
+                         : index == 1 ? "skeleton_rib_l_upper"
+                         : index == 2 ? "skeleton_rib_l_mid"
+                         : index == 3 ? "skeleton_rib_l_low"
+                                      : "skeleton_rib_l_floating")
+                      : (index == 0   ? "skeleton_rib_r_high"
+                         : index == 1 ? "skeleton_rib_r_upper"
+                         : index == 2 ? "skeleton_rib_r_mid"
+                         : index == 3 ? "skeleton_rib_r_low"
+                                      : "skeleton_rib_r_floating");
+  p.shape = Creature::PrimitiveShape::OrientedCylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  float const side = left ? -1.0F : 1.0F;
+  auto const idx = static_cast<float>(index);
+  float const y = 0.16F - idx * 0.07F;
+  float const outer = 0.17F - idx * 0.01F;
+  p.params.head_offset = QVector3D(side * 0.035F, y, 0.045F);
+  p.params.tail_bone = bone(HumanoidBone::Chest);
+  p.params.tail_offset = QVector3D(side * outer, y - 0.01F, 0.015F);
+  p.params.radius = HP::NECK_RADIUS * 0.22F;
+  p.params.depth_radius = HP::NECK_RADIUS * 0.14F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto
+make_skeleton_back_rib(bool left, int index) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = left ? (index == 0   ? "skeleton_back_rib_l_high"
+                         : index == 1 ? "skeleton_back_rib_l_upper"
+                         : index == 2 ? "skeleton_back_rib_l_mid"
+                         : index == 3 ? "skeleton_back_rib_l_low"
+                                      : "skeleton_back_rib_l_floating")
+                      : (index == 0   ? "skeleton_back_rib_r_high"
+                         : index == 1 ? "skeleton_back_rib_r_upper"
+                         : index == 2 ? "skeleton_back_rib_r_mid"
+                         : index == 3 ? "skeleton_back_rib_r_low"
+                                      : "skeleton_back_rib_r_floating");
+  p.shape = Creature::PrimitiveShape::OrientedCylinder;
+  p.params.anchor_bone = bone(HumanoidBone::Chest);
+  float const side = left ? -1.0F : 1.0F;
+  auto const idx = static_cast<float>(index);
+  float const y = 0.15F - idx * 0.07F;
+  float const outer = 0.16F - idx * 0.01F;
+  p.params.head_offset = QVector3D(side * 0.03F, y, -0.035F);
+  p.params.tail_bone = bone(HumanoidBone::Chest);
+  p.params.tail_offset = QVector3D(side * outer, y - 0.008F, -0.015F);
+  p.params.radius = HP::NECK_RADIUS * 0.20F;
+  p.params.depth_radius = HP::NECK_RADIUS * 0.13F;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_pelvis(bool left) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = left ? "skeleton_pelvis_l" : "skeleton_pelvis_r";
+  p.shape = Creature::PrimitiveShape::OrientedSphere;
+  p.params.anchor_bone = bone(HumanoidBone::Pelvis);
+  float const side = left ? -1.0F : 1.0F;
+  p.params.head_offset =
+      QVector3D(side * HP::TORSO_BOT_R * 0.38F, -0.02F, -HP::TORSO_BOT_R * 0.04F);
+  p.params.half_extents = QVector3D(
+      HP::TORSO_BOT_R * 0.28F, HP::TORSO_BOT_R * 0.20F, HP::TORSO_BOT_R * 0.32F);
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto
+make_skeleton_limb(const char* name,
+                   HumanoidBone anchor,
+                   HumanoidBone tail,
+                   float radius) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = name;
+  p.shape = Creature::PrimitiveShape::Cylinder;
+  p.params.anchor_bone = bone(anchor);
+  p.params.tail_bone = bone(tail);
+  p.params.radius = radius;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto
+make_skeleton_joint(const char* name,
+                    HumanoidBone anchor,
+                    float radius) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = name;
+  p.shape = Creature::PrimitiveShape::Sphere;
+  p.params.anchor_bone = bone(anchor);
+  p.params.radius = radius;
+  p.color_role = Skin;
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr auto make_skeleton_hand(bool left) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p = make_full_hand(left);
+  p.debug_name = left ? "skeleton_hand_l" : "skeleton_hand_r";
+  p.params.half_extents = QVector3D(
+      HP::HAND_RADIUS * 0.80F, HP::HAND_RADIUS * 1.05F, HP::HAND_RADIUS * 0.34F);
+  p.color_role = Skin;
+  return p;
+}
+
+constexpr auto make_skeleton_foot(bool left) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p = make_full_foot(left);
+  p.debug_name = left ? "skeleton_foot_l" : "skeleton_foot_r";
+  p.params.half_extents = QVector3D(
+      HP::LOWER_LEG_R * 0.50F, HP::LOWER_LEG_R * 0.18F, HP::LOWER_LEG_R * 1.20F);
+  p.color_role = Skin;
+  return p;
+}
+
+constexpr auto make_skeleton_skull() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p = make_full_cranium();
+  p.debug_name = "skeleton_skull";
+  p.params.half_extents = QVector3D(
+      HP::HEAD_RADIUS * 0.74F, HP::HEAD_RADIUS * 0.90F, HP::HEAD_RADIUS * 0.80F);
+  p.color_role = Skin;
+  return p;
+}
+
+constexpr auto make_skeleton_jaw() noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p = make_full_jaw();
+  p.debug_name = "skeleton_jaw";
+  p.params.half_extents = QVector3D(
+      HP::HEAD_RADIUS * 0.40F, HP::HEAD_RADIUS * 0.18F, HP::HEAD_RADIUS * 0.26F);
+  p.color_role = Skin;
+  return p;
+}
+
+constexpr auto make_skeleton_eye(bool left) noexcept -> Creature::PrimitiveInstance {
+  Creature::PrimitiveInstance p{};
+  p.debug_name = left ? "skeleton_eye_socket_l" : "skeleton_eye_socket_r";
+  p.shape = Creature::PrimitiveShape::OrientedSphere;
+  p.params.anchor_bone = bone(HumanoidBone::Head);
+  float const side = left ? -1.0F : 1.0F;
+  p.params.head_offset = QVector3D(
+      side * HP::HEAD_RADIUS * 0.27F, HP::HEAD_RADIUS * 0.12F, HP::HEAD_RADIUS * 0.74F);
+  p.params.half_extents = QVector3D(
+      HP::HEAD_RADIUS * 0.18F, HP::HEAD_RADIUS * 0.16F, HP::HEAD_RADIUS * 0.07F);
+  p.color = QVector3D(0.045F, 0.050F, 0.055F);
+  p.lod_mask = Creature::k_lod_full;
+  return p;
+}
+
+constexpr std::array<Creature::PrimitiveInstance, 56> k_skeleton_full_parts = {
+    make_skeleton_spine(),
+    make_skeleton_upper_spine(),
+    make_skeleton_neck_base(),
+    make_skeleton_collar(true),
+    make_skeleton_collar(false),
+    make_skeleton_sternum(),
+    make_skeleton_abdomen_bar(
+        "skeleton_abdomen_bar_high", HP::TORSO_TOP_R * 0.02F, HP::TORSO_TOP_R * 0.22F),
+    make_skeleton_abdomen_bar(
+        "skeleton_abdomen_bar_low", -HP::TORSO_TOP_R * 0.20F, HP::TORSO_TOP_R * 0.18F),
+    make_skeleton_rib(true, 0),
+    make_skeleton_rib(false, 0),
+    make_skeleton_rib(true, 1),
+    make_skeleton_rib(false, 1),
+    make_skeleton_rib(true, 2),
+    make_skeleton_rib(false, 2),
+    make_skeleton_rib(true, 3),
+    make_skeleton_rib(false, 3),
+    make_skeleton_rib(true, 4),
+    make_skeleton_rib(false, 4),
+    make_skeleton_back_rib(true, 0),
+    make_skeleton_back_rib(false, 0),
+    make_skeleton_back_rib(true, 1),
+    make_skeleton_back_rib(false, 1),
+    make_skeleton_back_rib(true, 2),
+    make_skeleton_back_rib(false, 2),
+    make_skeleton_back_rib(true, 3),
+    make_skeleton_back_rib(false, 3),
+    make_skeleton_back_rib(true, 4),
+    make_skeleton_back_rib(false, 4),
+    make_skeleton_pelvis(true),
+    make_skeleton_pelvis(false),
+    make_skeleton_limb("skeleton_upper_arm_l",
+                       HumanoidBone::UpperArmL,
+                       HumanoidBone::ForearmL,
+                       HP::UPPER_ARM_R * 0.46F),
+    make_skeleton_limb("skeleton_upper_arm_r",
+                       HumanoidBone::UpperArmR,
+                       HumanoidBone::ForearmR,
+                       HP::UPPER_ARM_R * 0.46F),
+    make_skeleton_limb("skeleton_forearm_l",
+                       HumanoidBone::ForearmL,
+                       HumanoidBone::HandL,
+                       HP::FORE_ARM_R * 0.42F),
+    make_skeleton_limb("skeleton_forearm_r",
+                       HumanoidBone::ForearmR,
+                       HumanoidBone::HandR,
+                       HP::FORE_ARM_R * 0.42F),
+    make_skeleton_joint(
+        "skeleton_shoulder_l", HumanoidBone::ShoulderL, HP::UPPER_ARM_R * 0.68F),
+    make_skeleton_joint(
+        "skeleton_shoulder_r", HumanoidBone::ShoulderR, HP::UPPER_ARM_R * 0.68F),
+    make_skeleton_joint(
+        "skeleton_elbow_l", HumanoidBone::ForearmL, HP::FORE_ARM_R * 0.62F),
+    make_skeleton_joint(
+        "skeleton_elbow_r", HumanoidBone::ForearmR, HP::FORE_ARM_R * 0.62F),
+    make_skeleton_hand(true),
+    make_skeleton_hand(false),
+    make_skeleton_limb("skeleton_thigh_l",
+                       HumanoidBone::HipL,
+                       HumanoidBone::KneeL,
+                       HP::UPPER_LEG_R * 0.42F),
+    make_skeleton_limb("skeleton_thigh_r",
+                       HumanoidBone::HipR,
+                       HumanoidBone::KneeR,
+                       HP::UPPER_LEG_R * 0.42F),
+    make_skeleton_limb("skeleton_calf_l",
+                       HumanoidBone::KneeL,
+                       HumanoidBone::FootL,
+                       HP::LOWER_LEG_R * 0.40F),
+    make_skeleton_limb("skeleton_calf_r",
+                       HumanoidBone::KneeR,
+                       HumanoidBone::FootR,
+                       HP::LOWER_LEG_R * 0.40F),
+    make_skeleton_joint("skeleton_hip_l", HumanoidBone::HipL, HP::UPPER_LEG_R * 0.58F),
+    make_skeleton_joint("skeleton_hip_r", HumanoidBone::HipR, HP::UPPER_LEG_R * 0.58F),
+    make_skeleton_joint(
+        "skeleton_knee_l", HumanoidBone::KneeL, HP::LOWER_LEG_R * 0.56F),
+    make_skeleton_joint(
+        "skeleton_knee_r", HumanoidBone::KneeR, HP::LOWER_LEG_R * 0.56F),
+    make_skeleton_foot(true),
+    make_skeleton_foot(false),
+    make_skeleton_neck(),
+    make_skeleton_skull(),
+    make_skeleton_jaw(),
+    make_full_brow(),
+    make_skeleton_eye(true),
+    make_skeleton_eye(false),
+};
+
 } // namespace
 
 auto humanoid_creature_spec() noexcept -> const Creature::CreatureSpec& {
@@ -490,6 +882,24 @@ auto humanoid_creature_spec() noexcept -> const Creature::CreatureSpec& {
                                                      k_full_parts.size()),
     };
 
+    return s;
+  }();
+  return spec;
+}
+
+auto skeleton_humanoid_creature_spec() noexcept -> const Creature::CreatureSpec& {
+  static const Creature::CreatureSpec spec = [] {
+    Creature::CreatureSpec s;
+    s.species_name = "skeleton_humanoid";
+    s.topology = humanoid_topology();
+    s.lod_minimal = Creature::PartGraph{
+        std::span<const Creature::PrimitiveInstance>(k_skeleton_minimal_parts.data(),
+                                                     k_skeleton_minimal_parts.size()),
+    };
+    s.lod_full = Creature::PartGraph{
+        std::span<const Creature::PrimitiveInstance>(k_skeleton_full_parts.data(),
+                                                     k_skeleton_full_parts.size()),
+    };
     return s;
   }();
   return spec;
@@ -529,7 +939,7 @@ auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, k_bone_count> {
 auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4> {
   static const std::array<QMatrix4x4, k_bone_count> palette =
       build_humanoid_bind_palette();
-  return std::span<const QMatrix4x4>(palette.data(), palette.size());
+  return {palette.data(), palette.size()};
 }
 
 auto humanoid_bind_body_frames() noexcept -> const Render::GL::BodyFrames& {

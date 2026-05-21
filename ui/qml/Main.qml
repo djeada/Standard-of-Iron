@@ -459,6 +459,13 @@ ApplicationWindow {
                 }
             }
             onWheel: function (w) {
+                if (typeof game !== 'undefined' && game.construction_preview_rotatable && game.construction_preview_rotatable()) {
+                    var constructionDy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
+                    if (constructionDy !== 0 && game.on_construction_scroll)
+                        game.on_construction_scroll(constructionDy);
+                    w.accepted = true;
+                    return;
+                }
                 if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_scroll) {
                     var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
                     if (dy !== 0)

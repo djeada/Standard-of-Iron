@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include "../../../utils/resource_utils.h"
+
 namespace Render::GL::Nation {
 namespace {
 
@@ -73,6 +75,20 @@ auto default_loadouts() -> LoadoutMap {
   EquipmentLoadoutIds carthage_healer{};
   carthage_healer.armor = "armor_light_carthage";
   map.emplace("troops/carthage/healer", std::move(carthage_healer));
+
+  EquipmentLoadoutIds sepulcher_swordsman{};
+  sepulcher_swordsman.sword = "sword_sepulcher";
+  map.emplace("troops/iron_sepulcher/skeleton_swordsman",
+              std::move(sepulcher_swordsman));
+
+  EquipmentLoadoutIds sepulcher_archer{};
+  sepulcher_archer.bow = "bow_carthage";
+  sepulcher_archer.quiver = "quiver_carthage";
+  map.emplace("troops/iron_sepulcher/skeleton_archer", std::move(sepulcher_archer));
+
+  EquipmentLoadoutIds grave_priest{};
+  grave_priest.cloak = "cloak_sepulcher";
+  map.emplace("troops/iron_sepulcher/grave_priest", std::move(grave_priest));
 
   EquipmentLoadoutIds roman_builder{};
   roman_builder.helmet = "roman_light";
@@ -201,7 +217,9 @@ void parse_loadout_object(const QJsonObject& obj, EquipmentLoadoutIds& out) {
 }
 
 void merge_json_loadouts(LoadoutMap& map) {
-  QFile file(QStringLiteral(":/assets/visuals/unit_equipment_loadouts.json"));
+  const QString path = Utils::Resources::resolve_resource_path(
+      QStringLiteral(":/assets/visuals/unit_equipment_loadouts.json"));
+  QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
     return;
   }

@@ -1,496 +1,156 @@
-# TODO: The Iron Sepulcher Non-Playable Death Faction
-
-## Goal
-
-Add **The Iron Sepulcher** as a non-playable ancient death faction. This is not a normal third playable nation. Rome and Carthage stay as the main historical factions; Iron Sepulcher is a defensive undead hazard/enemy awakened by shrines, tombs, ruins, and late-campaign bloodshed.
-
-Core constraints:
-
-- No economy.
-- No farms, homes, barracks, towers, walls, or normal production buildings.
-- No diplomacy or player selection.
-- No normal expansion.
-- AI defaults to defense, shrine guarding, ambushes, and local retaliation.
-- Units never rout.
-- Weak to fire, priests/healers, and heavy cavalry shock.
-- Campaign/map json scripts spawn them from shrines, ruins, tombs, and battlefields.
-
-## Existing Repo Systems To Use
-
-- Nation data already lives in `assets/data/nations/*.json`.
-- Base troop catalog already lives in `assets/data/troops/base.json`.
-- Nation parsing is in `game/systems/nation_loader.cpp`.
-- Nation IDs are hardcoded in `game/systems/nation_id.h`.
-- Troop IDs are hardcoded in `game/units/troop_type.h`.
-- Spawn IDs are hardcoded in `game/units/spawn_type.h`.
-- Unit factories are registered in `game/units/factory.cpp`.
-- Unit implementations live in `game/units/*.cpp`.
-- AI strategy/state/config lives under `game/systems/ai_system/`.
-- Commander aura/rally/death morale behavior already exists in `game/systems/commander_system.cpp`.
-- Map props already support `ruins` and `magic_shrine` in `game/map/map_definition.h`.
-- Fire props already exist as `firecamp`.
-- Serialization already persists nation/unit/morale/world prop data in `game/core/serialization.cpp`.
-
-## Phase 1: Register The Faction Without Making It Playable
-
-- [ ] Add `NationID::IronSepulcher` to `game/systems/nation_id.h`.
-  - String ID: `iron_sepulcher`.
-  - Display name: `The Iron Sepulcher`.
-  - Update `nation_id_to_qstring`, `try_parse_nation_id`, and hash behavior if needed.
-
-- [ ] Add `assets/data/nations/iron_sepulcher.json`.
-  - Include only undead troops.
-  - Do not define builder/civilian/building economy troops.
-  - Use a defensive formation type until an undead formation exists.
-  - Candidate shape:
-
-```json
-{
-  "id": "iron_sepulcher",
-  "display_name": "The Iron Sepulcher",
-  "primary_building": "none",
-  "playable": false,
-  "has_economy": false,
-  "ai_profile": "sepulcher_defense",
-  "formation_type": "barbarian",
-  "troops": [
-    {
-      "id": "skeleton_swordsman",
-      "display_name": "Skeleton Swordsman",
-      "production": { "cost": 0, "build_time": 0.0, "priority": 10, "is_melee": true },
-      "combat": {
-        "health": 620,
-        "max_health": 620,
-        "speed": 1.9,
-        "vision_range": 13.0,
-        "ranged_range": 1.4,
-        "ranged_damage": 1,
-        "ranged_cooldown": 2.0,
-        "melee_range": 1.45,
-        "melee_damage": 11,
-        "melee_cooldown": 0.9,
-        "can_ranged": false,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.56,
-        "selection_ring_size": 1.05,
-        "renderer_id": "troops/iron_sepulcher/skeleton_swordsman"
-      },
-      "formation": { "individuals_per_unit": 18, "max_units_per_row": 6 }
-    },
-    {
-      "id": "skeleton_archer",
-      "display_name": "Skeleton Archer",
-      "production": { "cost": 0, "build_time": 0.0, "priority": 8, "is_melee": false },
-      "combat": {
-        "health": 480,
-        "max_health": 480,
-        "speed": 1.8,
-        "vision_range": 16.0,
-        "ranged_range": 7.2,
-        "ranged_damage": 14,
-        "ranged_cooldown": 0.85,
-        "melee_range": 1.3,
-        "melee_damage": 3,
-        "melee_cooldown": 1.2,
-        "can_ranged": true,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.52,
-        "selection_ring_size": 1.05,
-        "renderer_id": "troops/iron_sepulcher/skeleton_archer"
-      },
-      "formation": { "individuals_per_unit": 18, "max_units_per_row": 6 }
-    },
-    {
-      "id": "grave_priest",
-      "display_name": "Grave Priest",
-      "production": { "cost": 0, "build_time": 0.0, "priority": 20, "is_melee": false },
-      "combat": {
-        "health": 520,
-        "max_health": 520,
-        "speed": 1.65,
-        "vision_range": 15.0,
-        "ranged_range": 8.0,
-        "ranged_damage": 24,
-        "ranged_cooldown": 2.6,
-        "melee_range": 1.2,
-        "melee_damage": 2,
-        "melee_cooldown": 1.8,
-        "can_ranged": true,
-        "can_melee": true
-      },
-      "visuals": {
-        "render_scale": 0.6,
-        "selection_ring_size": 0.7,
-        "renderer_id": "troops/iron_sepulcher/grave_priest"
-      },
-      "formation": { "individuals_per_unit": 1, "max_units_per_row": 1 }
-    }
-  ]
-}
-```
-
-- [ ] Extend `Nation` in `game/systems/nation_registry.h` with metadata flags:
-  - `bool playable = true;`
-  - `bool has_economy = true;`
-  - `QString ai_profile = "standard";`
-  - Optional: `bool selectable_in_skirmish = true;`
-
-- [ ] Update `game/systems/nation_loader.cpp`.
-  - Parse `playable`.
-  - Parse `has_economy`.
-  - Parse `ai_profile`.
-  - Accept `primary_building: "none"` without warning or fallback to barracks.
-  - Keep Rome/Carthage defaults unchanged.
-
-- [ ] Update UI/skirmish nation selection so Iron Sepulcher is hidden.
-  - Check `ui/qml/PlayerConfigPanel.qml`, `ui/qml/MapSelect.qml`, `ui/theme.h`, and code exposing nation lists.
-  - Acceptance: player can still select Rome/Carthage only; campaign/map scripts can still assign `iron_sepulcher` to owner 3 or higher.
-
-## Phase 2: Add Undead Troop And Spawn Types
-
-- [ ] Extend `game/units/troop_type.h`.
-  - Add `SkeletonSwordsman`.
-  - Add `SkeletonArcher`.
-  - Add `GravePriest`.
-  - Add string mappings:
-    - `skeleton_swordsman`
-    - `skeleton_archer`
-    - `grave_priest`
-  - Update `is_commander_troop` if Grave Priest should count as a commander for one-per-owner restrictions. Preferred: do **not** use the existing commander limit; allow multiple shrine priests if a map requires them.
-
-- [ ] Extend `game/units/spawn_type.h`.
-  - Add `SkeletonSwordsman`.
-  - Add `SkeletonArcher`.
-  - Add `GravePriest`.
-  - Update parse/to-string functions.
-  - Update `spawn_typeToTroopType`.
-  - Update `spawn_typeFromTroopType`.
-  - Update command eligibility helpers:
-    - undead can attack, guard, hold, patrol.
-    - undead should not use run mode unless deliberately balanced later.
-
-- [ ] Add base troop catalog entries to `assets/data/troops/base.json`.
-  - Add the three undead troop IDs so `TroopCatalog` and `TroopProfileService` can resolve them.
-  - Keep production cost/build time at `0` because they are spawned by scripts/hazards, not buildings.
-
-- [ ] Create unit implementation files.
-  - `game/units/skeleton_swordsman.h`
-  - `game/units/skeleton_swordsman.cpp`
-  - `game/units/skeleton_archer.h`
-  - `game/units/skeleton_archer.cpp`
-  - `game/units/grave_priest.h`
-  - `game/units/grave_priest.cpp`
-
-- [ ] Register factories in `game/units/factory.cpp`.
-  - `SpawnType::SkeletonSwordsman -> SkeletonSwordsman::Create`
-  - `SpawnType::SkeletonArcher -> SkeletonArcher::Create`
-  - `SpawnType::GravePriest -> GravePriest::Create`
-
-- [ ] Reuse existing unit creation patterns.
-  - Skeleton Swordsman can start as a copy of `Swordsman` with undead profile lookup.
-  - Skeleton Archer can start as a copy of `Archer` with undead profile lookup.
-  - Grave Priest can start as a copy of `Healer`, then add magic attack behavior in a later phase.
-
-- [ ] Update `game/CMakeLists.txt` with new unit source/header files.
-
-## Phase 3: Add Undead Rule Components
-
-- [ ] Add an `UndeadComponent` to `game/core/component.h`.
-  - Fields:
-    - `bool morale_immune = true;`
-    - `float fire_damage_multiplier = 1.5F;`
-    - `float priest_damage_multiplier = 1.4F;`
-    - `float cavalry_charge_damage_multiplier = 1.25F;`
-    - `bool counts_for_economy = false;`
-
-- [ ] Add `UndeadComponent` to the three undead unit constructors.
-
-
-- [ ] Update serialization in `game/core/serialization.cpp`.
-  - Persist `UndeadComponent`.
-  - Add tests in `tests/core/serialization_test.cpp`.
-
-## Phase 4: Grave Priest Healing And Fire Magic
-
-- [ ] Reuse `HealerComponent` for Grave Priest undead healing.
-  - Healing target filter must heal only allies with `UndeadComponent`.
-  - It must not heal Rome/Carthage living units.
-  - It must not be healed by normal Roman/Carthage healers unless deliberately allowed later.
-
-- [ ] Add a fire magic projectile path.
-  - Existing ranged logic uses `AttackComponent` and projectile systems such as `game/systems/arrow_system.cpp`.
-  - Add either:
-    - a new `MagicProjectileComponent` and `MagicProjectileSystem`, or
-    - an extension to existing projectile code with projectile type `Fireball`.
-  - Preferred first pass: add `ProjectileKind { Arrow, Fireball, CursedArrow }` rather than duplicating all projectile movement logic.
-
-- [ ] Grave Priest ability: `Fireball`.
-  - Medium range.
-  - Slow cooldown.
-  - Splash damage in a small radius.
-  - Applies high bonus damage to units marked vulnerable to fire.
-  - Adds visible VFX through existing render/effects paths.
-
-- [ ] Add renderer/VFX assets.
-  - Search existing VFX hooks in `app/controllers/action_vfx.cpp`.
-  - Add a small orange/red projectile trail and impact burst.
-  - Avoid making this a UI-only effect; it must be tied to combat events.
-
-- [ ] Tests.
-  - Fireball damages enemies in area.
-  - Fireball does not damage allied undead unless friendly fire is globally enabled.
-  - Fireball respects cooldown.
-  - Fireball can kill units and triggers existing cleanup/death behavior.
-
-## Phase 5: Skeleton Archer Cursed Volley
-
-- [ ] Add cursed arrow support.
-  - Implement as projectile/combat status, not raw extra damage.
-  - Suggested status component: `CursedStatusComponent`.
-  - Fields:
-    - `float morale_penalty_per_hit = 8.0F;`
-    - `float duration = 6.0F;`
-    - `int stacks = 1;`
-
-- [ ] Hook cursed arrows to `SkeletonArcher`.
-  - Early campaign: normal low-damage arrows.
-  - Late campaign/map flag: cursed volley enabled.
-  - Data option in nation/troop JSON: `abilities: ["cursed_arrow_volley"]`.
-
-- [ ] Extend nation/troop loader to parse ability IDs.
-  - Add `std::vector<std::string> abilities` to `NationTroopVariant`.
-  - Parse from troop JSON.
-  - Merge through `TroopProfileService`.
-
-- [ ] Tests.
-  - Cursed arrows reduce living morale.
-  - Cursed arrows do not affect undead morale.
-  - Cursed arrows stack or refresh exactly as specified.
-
-## Phase 6: Defensive No-Economy AI
-
-- [ ] Add `AIStrategy::SepulcherDefense` in `game/systems/ai_system/ai_types.h`.
-
-- [ ] Update `game/systems/ai_system/ai_strategy.cpp`.
-  - Parse strategy strings:
-    - `sepulcher_defense`
-    - `undead_defense`
-  - Config:
-    - `target_builder_count = 0`
-    - `base_home_target = 0`
-    - `desired_barracks_count = 0`
-    - `desired_defense_tower_count = 0`
-    - `desired_wall_segment_count = 0`
-    - `desired_catapult_count = 0`
-    - `desired_outpost_barracks_count = 0`
-    - `outpost_home_target = 0`
-    - `reserve_units = high`
-    - `harass_units = low or 0`
-    - `proactive_attack_size = very high`
-    - `reactive_attack_size = low`
-    - `scouting_distance = shrine guard radius`
-
-- [ ] Update AI behaviors to respect no-economy nations.
-  - `game/systems/ai_system/behaviors/production_behavior.cpp`
-    - If `nation->has_economy == false`, return immediately.
-  - `game/systems/ai_system/behaviors/builder_behavior.cpp`
-    - If no economy, return immediately.
-  - `game/systems/ai_system/behaviors/expand_behavior.cpp`
-    - If no economy, return immediately.
-  - `game/systems/ai_system/ai_reasoner.cpp`
-    - Do not transition no-economy AI into economy/expansion states.
-
-- [ ] Add shrine/ruin guard anchors.
-  - Current AI can use buildings/unit clusters as anchors.
-  - Add support for map hazard anchors:
-    - shrine position
-    - tomb/ruin position
-    - configured undead spawn zone
-  - If no building exists, Iron Sepulcher should still defend its anchor rather than wandering.
-
-- [ ] Add local retaliation.
-  - If living units enter shrine radius, undead attack.
-  - If living units retreat beyond leash radius, undead return to shrine.
-  - Do not chase across the full map unless a campaign event explicitly unlocks the horde.
-
-- [ ] Tests in `tests/systems/ai_system_test.cpp`.
-  - Sepulcher AI never requests builders.
-  - Sepulcher AI never requests barracks/home/tower/wall construction.
-  - Sepulcher AI does not expand.
-  - Sepulcher AI defends nearest shrine/ruin anchor.
-  - Sepulcher AI returns to anchor when enemies leave leash radius.
-
-## Phase 7: Shrine/Ruin Awakening System
-
-- [ ] Add an `UndeadAwakeningSystem`.
-  - Suggested files:
-    - `game/systems/undead_awakening_system.h`
-    - `game/systems/undead_awakening_system.cpp`
-  - Runs after map/world bootstrap and during gameplay.
-
-- [ ] Add map data for undead spawn zones.
-  - Option A: extend existing `WorldProp::MagicShrine`/`Ruins` with undead fields.
-  - Option B: add a new JSON section `undead_zones`.
-  - Preferred for designer clarity: `undead_zones`.
-
-```json
-"undead_zones": [
-  {
-    "id": "old_temple_north",
-    "anchor_type": "magic_shrine",
-    "x": 42.0,
-    "z": 18.0,
-    "radius": 12.0,
-    "leash_radius": 28.0,
-    "owner_id": 3,
-    "nation": "iron_sepulcher",
-    "awaken_on": ["unit_enters_radius", "shrine_desecrated", "turn_8"],
-    "waves": [
-      { "trigger": "initial", "skeleton_swordsman": 3, "skeleton_archer": 2, "grave_priest": 1 },
-      { "trigger": "late_campaign", "skeleton_swordsman": 8, "skeleton_archer": 5, "grave_priest": 2 }
-    ]
-  }
-]
-```
-
-- [ ] Update map loader.
-  - Add data structs in `game/map/map_definition.h`.
-  - Parse in `game/map/map_loader.cpp`.
-  - Serialize in `game/core/serialization.cpp` if saves need active zone state.
-
-- [ ] Trigger conditions.
-  - Unit enters shrine/ruin radius.
-  - Shrine is desecrated/captured/interacted with.
-  - Battle deaths near shrine exceed threshold.
-  - Campaign turn/event reaches threshold.
-
-- [ ] Spawn behavior.
-  - Use `UnitFactoryRegistry` with `SpawnParams`.
-  - Owner should usually be player id `3` or a reserved AI owner.
-  - Nation must be `NationID::IronSepulcher`.
-  - `ai_controlled = true`.
-  - Spawn around anchor with spacing and collision checks.
-
-- [ ] State persistence.
-  - Zone awakened/not awakened.
-  - Wave index.
-  - Cooldowns.
-  - Remaining anchor/leash data.
-
-- [ ] Tests.
-  - Zone does not spawn before trigger.
-  - Zone spawns correct units after trigger.
-  - Spawned units have Iron Sepulcher nation and AI component.
-  - Dead/cleared zone does not respawn unless configured.
-
-## Phase 8: Campaign Integration
-
-- [ ] Decide campaign role.
-  - Early: shrine warning, ruins guarded by a few skeletons.
-  - Mid: desecrated shrines awaken patrols.
-  - Late: larger sepulcher zones and Grave Priests appear.
-
-- [ ] Add campaign mission/map JSON examples.
-  - Use existing mission loading in `game/map/mission_loader.cpp`.
-  - Add a map with `magic_shrine`, `ruins`, and one `undead_zone`.
-
-- [ ] Make victory conditions ignore undead unless mission opts in.
-  - Current victory rules likely check enemy structures/units.
-  - Update `game/map/mission_victory_rules.cpp` so Iron Sepulcher can be:
-    - ignored as ambient hazard, or
-    - required objective: clear shrine/banish priest.
-
-- [ ] Add objective types if needed.
-  - `clear_undead_zone`
-  - `purify_shrine`
-  - `survive_undead_wave`
-
-- [ ] Save/load.
-  - Campaign saves must remember awakened zones and surviving undead units.
-
-## Phase 9: Rendering And Audio
-
-- [ ] Add renderer IDs.
-  - `troops/iron_sepulcher/skeleton_swordsman`
-  - `troops/iron_sepulcher/skeleton_archer`
-  - `troops/iron_sepulcher/grave_priest`
-
-- [ ] Implement renderers.
-  - Search existing renderer registry and nation renderer patterns under `render/entity/nations/`.
-  - First pass can reuse humanoid geometry with bone/ash colors, no new mesh requirement.
-  - Grave Priest should be visually distinct from skeleton infantry: darker robe, staff/flame hand, shrine glow.
-
-- [ ] Update `assets/visuals/unit_visuals.json` and `assets/visuals/unit_equipment_loadouts.json` if renderer lookup depends on those files.
-
-- [ ] Add audio hooks.
-  - Existing voice prefix logic is in `game/audio/audio_event_handler.cpp`.
-  - Do not give Iron Sepulcher normal human command barks.
-  - Use ambient rattle/whisper/stone scrape events for spawn/attack/death if the audio system has suitable placeholders.
-
-## Phase 10: Fire And Priest Weaknesses
-
-- [ ] Define damage tags.
-  - `Physical`
-  - `Piercing`
-  - `Fire`
-  - `Holy` or `Priest`
-  - `Cursed`
-
-- [ ] Extend damage application.
-  - Check `game/systems/combat_system/damage_application.cpp`.
-  - Apply `UndeadComponent` multipliers based on damage tag.
-
-- [ ] Existing healer/medicus interaction.
-  - Roman/Carthage healer can either:
-    - damage undead as priest/holy attack, or
-    - stay pure support and a later priest unit handles undead.
-  - Preferred short-term: Healer attacks do small holy damage to undead only when directly ordered/auto-threatened.
-
-- [ ] Cavalry charge vulnerability.
-  - Check existing cavalry/elephant attack systems.
-  - If there is no charge system yet, defer this to balance pass and document it.
-
-- [ ] Tests.
-  - Fireball deals increased damage to undead.
-  - Holy/priest damage deals increased damage to undead.
-  - Normal arrows/swords do baseline damage.
-  - Morale damage does nothing to undead.
-
-## Phase 11: Tooling And Validation
-
-- [ ] Update content validator.
-  - `tools/content_validator/main.cpp` should accept:
-    - `iron_sepulcher`
-    - undead troop IDs
-    - non-playable/no-economy nation metadata
-    - `primary_building: "none"`
-    - `undead_zones`
-
-- [ ] Update map editor.
-  - `tools/map_editor/` should expose undead zones if map JSON supports them.
-  - At minimum, it must preserve unknown `undead_zones` data instead of deleting it on save.
-
-- [ ] Update arena tool.
-  - `tools/arena/unit_spawn_options.h`
-  - Add undead units for debug spawning.
-  - Mark them as Iron Sepulcher units by default.
-
-- [ ] Tests to run before considering complete:
-
-```bash
-make test
-```
-
-If the project does not use `make test` in the local environment, run the relevant CTest target from the build directory.
-
-## Important Non-Goals
-
-- Do not add Iron Sepulcher to normal skirmish nation selection.
-- Do not give Iron Sepulcher builders, civilians, homes, barracks, farms, resource gathering, or capture economy.
-- Do not make Iron Sepulcher a symmetric Rome/Carthage opponent.
-- Do not let undead use normal morale/routing.
-- Do not require new final art before the gameplay slice works.
+# Fight Animation Fluidity Refactor
+
+Users are reporting short, flickering, jumpy fight animations and mechanical synchronized movement across all soldiers in a unit. The current code confirms the likely causes:
+
+- Combat animation is driven by very short gameplay phases in `Engine::Core::CombatStateComponent` (`0.10s` impact, `0.16s` advance, `0.18s` strike, etc.) and `process_combat_state()` hard-switches phase state when each timer expires.
+- `sample_anim_state()` can set `is_attacking` from either `CombatStateComponent` or melee lock fallback. That means soldiers can enter/leave attack intent from multiple conditions without a single visual ownership contract.
+- `combat_phase_to_attack_phase()` maps current combat phase directly into a clip phase. When gameplay state exits early or flips between chase, melee lock, attack, and idle, the rendered clip can jump to a different phase.
+- `apply_transient_attack_recovery()` exists, but the exit runway is only `0.18s` and it only stores a small amount of attack context. This is not enough to hide state churn, retargeting, LOD switches, or moving/attacking transitions.
+- Per-soldier offsets and `visual_attack_variant()` exist, but all soldiers still inherit the same unit-level combat phase. The offsets are small, deterministic, and phase-locked, so units can still read as one synchronized mechanical puppet.
+
+## Phase 1 - Diagnose And Stabilize The Current Pipeline
+
+- [x] Add debug visualization/logging for each unit/soldier: `combat_phase`, `combat_phase_progress`, `attack_phase`, `attack_variant`, `is_attacking`, `is_in_melee_lock`, locomotion state, and chosen `AnimationStateId`.
+- [x] Add a render debug overlay or arena toggle to freeze one selected unit and scrub attack phase from `0.0` to `1.0`.
+- [x] Add assertions/counters for attack state churn: count transitions between attack/idle/walk/run per entity per second and flag units exceeding a threshold.
+- [x] Add profiling scopes around combat state update, animation input sampling, humanoid preparation, BPAT playback, template cache lookup, and per-soldier layout generation.
+- [x] Record current CPU cost for dense melee scenes before changing behavior: average frame time, p95 frame time, visible soldier count, cache miss count, and animation preparation time.
+- [x] Extend arena test scenarios for sword, spear, bow, mounted, melee lock, chase-to-attack, attack-to-chase, target death, retargeting, hold/guard exit, and LOD switching.
+- [x] Document exact current attack flow across `attack_processor.cpp`, `combat_state_processor.cpp`, `animation_inputs.cpp`, `pose_intent.cpp`, and `humanoid/prepare.cpp`.
+- [x] Identify duplicated combat-animation decisions across `sample_anim_state()`, `resolve_animation_intent()`, `combat_phase_to_attack_phase()`, `resolve_humanoid_animation_selection()`, and renderer-specific pose layers.
+- [x] Mark code smells with owner notes: attack booleans from multiple systems, magic timing constants, mixed gameplay/render state, direct component mutation from render preparation, and hidden fallback loops.
+- [x] Temporarily increase `k_transient_attack_recovery_seconds` behind a tuning constant and test whether longer exits immediately reduce visible flicker.
+
+Acceptance criteria:
+
+- We can reproduce the flicker in a controlled arena scene.
+- We can identify whether each visible pop came from gameplay phase churn, clip phase discontinuity, variant change, LOD/template switch, movement state switch, or target/mode retargeting.
+- We have baseline CPU numbers before the refactor, so performance wins or regressions are measurable.
+- No visual refactor starts without baseline recordings/screenshots.
+
+## Phase 2 - Introduce A Dedicated Visual Combat Animation State Machine
+
+- [x] Add `CombatVisualAnimationComponent` or extend `HumanoidAnimationStateComponent` with a stable visual attack transaction: `None`, `Enter`, `Anticipation`, `Strike`, `FollowThrough`, `Recover`, `ExitBlend`.
+- [x] Decouple visual attack lifetime from damage timing. Gameplay can still apply damage on cooldown, but visuals must complete minimum readable windows before exiting.
+- [x] Replace direct attack/idle flipping in render selection with a visual state resolver that owns:
+  - attack start time,
+  - locked attack family,
+  - locked variant,
+  - source target id,
+  - phase,
+  - minimum hold time,
+  - exit blend progress,
+  - interruption reason.
+- [x] Move combat animation timing constants out of scattered code and into one typed configuration object with names for gameplay timing, visual timing, blend timing, and debug overrides.
+- [x] Split pure decision logic from ECS mutation. State resolution should be testable with simple structs before it writes components.
+- [x] Replace ambiguous visual-state booleans like `is_attacking`, `is_melee`, and `is_in_melee_lock` with a richer resolved intent object, while keeping compatibility fields only at system boundaries.
+- [x] Stop render preparation from recomputing the same unit-level combat facts for every soldier. Compute once per unit, then pass compact immutable inputs into per-soldier preparation.
+- [x] Avoid adding/removing visual components every frame. Prefer stable components with explicit state fields to reduce ECS churn and allocator pressure.
+- [x] Add explicit exit policies:
+  - normal complete: finish follow-through and recover,
+  - target died: finish current recovery unless unit is dying/staggered,
+  - chase resumes: blend attack upper body out while lower body resumes locomotion,
+  - retarget: keep current attack until recovery, then enter next attack,
+  - hit reaction/death: allowed hard interrupt.
+- [x] Make attack phase monotonic inside a visual attack transaction. Never jump backwards unless a new transaction starts.
+- [x] Add tests for visual state continuity: attack phase cannot reset to `0` during recovery, variant cannot change mid-attack, and exit blend lasts at least the configured duration.
+
+Acceptance criteria:
+
+- A unit leaving combat no longer snaps from strike/recover directly to idle/walk.
+- Target death and retargeting do not restart the same soldier at frame zero unless a new attack transaction is intentionally created.
+- The renderer has one authoritative combat visual state per soldier, not multiple ad hoc attack booleans.
+- Combat visual state transition logic has focused unit tests and can be read without following five separate render/gameplay files.
+- CPU cost does not increase from state-machine bookkeeping in the baseline dense melee scene.
+
+## Phase 3 - Per-Soldier Variety, Desynchronization, And Combat Roles
+
+- [x] Promote per-soldier combat state from derived offsets to persistent lane state. Each soldier gets a stable combat lane: lead striker, support striker, shield bracer, step-in, step-out, idle-ready, ranged reload, etc.
+- [x] Assign lanes from deterministic seeds, row/column position, health, weapon family, and local enemy pressure.
+- [x] Store per-soldier lane, variant, and phase state in a compact structure owned by the existing layout/animation cache, not in separate heap allocations per soldier.
+- [x] Make per-soldier state invalidation explicit: formation changed, soldier count changed, unit type changed, visual seed changed, or combat animation schema changed.
+- [x] Give each soldier independent timing windows within a unit-level attack event:
+  - front rank attacks first,
+  - second rank thrusts/supports,
+  - rear rank braces, reloads, or shifts weight,
+  - wounded/missing soldiers reduce visible participation.
+- [x] Increase attack phase offset range for active combat, but keep it structured by rank so it looks tactical instead of random noise.
+- [x] Expand `visual_attack_variant()` into a richer selector: slash left/right, overhead, shield bash, spear thrust high/low, bow draw/release/reload, mounted pass, blocked strike.
+- [x] Add micro-variation layers: torso lean, shoulder delay, wrist angle, shield reaction, small foot adjustment, head tracking, breathing, stagger on nearby impact.
+- [x] Ensure variety is stable across frames and LOD changes by deriving it from persistent soldier seed plus current visual attack transaction id.
+- [x] Replace ad hoc random/thread-local RNG in visual selection paths with deterministic hash helpers where possible, improving reproducibility and avoiding hidden synchronization costs.
+- [x] Precompute row/column/rank data in the layout cache instead of recalculating it in every per-soldier render path.
+- [x] Keep lane selection branch-light in hot loops: resolve high-level lane once, then use small tables for phase offsets, variant weights, and role probabilities.
+
+Acceptance criteria:
+
+- A 15-soldier infantry unit never has every soldier in the same attack phase.
+- At least three visible behaviors are present in melee: striking, bracing/blocking, and repositioning.
+- Ranged units show staggered draw/release/reload instead of one simultaneous identical volley animation.
+- Per-soldier variety does not add avoidable allocations or repeated formation math in the hot render path.
+
+## Phase 4 - Blend System, Assets, And Procedural Pose Layers
+
+- [x] Add clip blend support for humanoid BPAT playback: previous clip, next clip, blend weight, and configurable blend duration.
+- [x] Add upper/lower body layering so soldiers can keep walking while upper body attacks, aims, blocks, or exits.
+- [x] Design BPAT blend data for cache locality: contiguous bone palettes, stable clip ids, reusable blend descriptors, and no per-frame vector growth.
+- [ ] Add a fast path for zero-weight and one-weight blends so unchanged single-clip playback pays no blend overhead.
+- [x] Centralize clip playback normalization and frame lookup. Remove duplicate phase wrapping/frame index code currently present in multiple preparation/pipeline paths.
+- [ ] Add additive procedural layers after clip sampling:
+  - attack anticipation lean,
+  - follow-through recoil,
+  - shield absorb,
+  - weapon trail pose,
+  - small step recovery,
+  - hit reaction overlay.
+- [ ] Replace hard combat phase boundaries with eased curves. Use cubic/smoothstep curves for anticipation, strike acceleration, impact settle, and recovery.
+- [ ] Add missing clips or generated BPAT variants for:
+  - sword slash left/right/overhead,
+  - spear thrust high/low/brace,
+  - bow draw/release/reload,
+  - shield block/bash,
+  - melee idle-ready,
+  - attack exit to idle,
+  - attack exit to walk/run.
+- [ ] Add event markers to clips: anticipation start, weapon release, contact, recover unlocked, exit-safe. Damage/VFX/audio should align to markers instead of arbitrary cooldown phase.
+- [ ] Ensure template prewarm includes new attack variants and blend pairs to avoid first-use hitches that look like flicker.
+- [ ] Keep procedural pose layers small and composable. Each layer should accept immutable pose/context input and return a clear output or mutate only the pose it owns.
+- [ ] Remove renderer-specific attack pose hacks once the shared clip/layer system covers those cases.
+- [ ] Add cache metrics for blended clips: prepared pair count, hit rate, eviction count, and bytes used.
+
+Acceptance criteria:
+
+- Attack entry and exit blend smoothly at 30 FPS and 60 FPS.
+- No visible pop when switching attack sword/spear/bow to idle/walk/run.
+- Damage, weapon motion, audio, dust, and hit feedback occur at visually credible contact frames.
+- Blend support keeps the old single-clip path simple and fast.
+
+## Phase 5 - Validation, Performance, And Rollout
+
+- [x] Add automated continuity tests for attack phase monotonicity, minimum exit duration, variant stability, and legal interruption paths.
+- [ ] Add screenshot/video capture tests in arena for before/after comparison across dense battles.
+- [ ] Add performance metrics for per-soldier animation state memory, BPAT blend cost, template cache hit rate, and visible soldier count.
+- [ ] Add a budget test or benchmark for dense melee humanoid preparation so future changes cannot silently reintroduce CPU spikes.
+- [ ] Add a static cleanup pass after rollout: remove obsolete fallback attack loops, unused transient recovery fields, duplicated phase helpers, and compatibility booleans no longer needed outside boundaries.
+- [ ] Add tuning config for combat animation durations, exit blend, per-rank delays, lane probabilities, and attack variant weights.
+- [ ] Keep tuning data data-driven and validated at startup. Invalid durations, blend windows, variant weights, or lane tables should fail loudly in tools/tests.
+- [ ] Replace the old combat animation path completely. Do not keep a feature flag, compatibility mode, or permanent parallel renderer path.
+- [ ] Compare player-facing scenarios: small skirmish, dense infantry line, cavalry charge, archer volley, mixed melee/ranged, commander-controlled RPG combat.
+- [ ] Delete the old direct attack fallback in the same migration once the new state machine covers melee lock, ranged attacks, specials, mounted attacks, hold/guard, death, and hit reaction.
+- [ ] Remove obsolete tests that assert old attack fallback behavior and replace them with continuity/state-machine tests.
+- [ ] Fail CI if old combat animation entry points are reintroduced outside the new state resolver.
+- [x] Update architecture docs with the final ownership rule: gameplay emits attack opportunities/events, visual combat state owns animation lifetime, and render preparation consumes immutable resolved state.
+
+Acceptance criteria:
+
+- No regression in large-battle frame time beyond the agreed budget.
+- Dense melee CPU cost is equal or better than baseline after cache and cleanup work.
+- Dense melee reads as fluid and varied instead of synchronized.
+- Exiting combat is smooth in the worst cases: target death, retarget, chase resume, hold/guard exit, stagger, and LOD switch.
+- The old flicker/jitter reproduction scene passes without visible snapping.
+- There is exactly one combat animation path after migration.
+- The final code has fewer duplicated phase/variant decisions and a clearer separation between gameplay combat, visual state, and render preparation.
+
+## Core Design Principle
+
+Gameplay decides when attacks are valid and when damage happens. The visual combat state machine decides how soldiers enter, express, and exit those attacks. Exiting an attack must be a first-class animation state, not the absence of an attack boolean.

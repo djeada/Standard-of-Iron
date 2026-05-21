@@ -142,6 +142,8 @@ At the moment, the prebaker writes all built-in species in one pass:
 |---|---|
 | `humanoid.bpat` | default humanoid animation set |
 | `humanoid_sword.bpat` | sword-ready humanoid animation set |
+| `humanoid_spear.bpat` | spear-ready humanoid animation set |
+| `humanoid_skeleton.bpat` | skeleton humanoid animation set |
 | `horse.bpat` | horse creature BPAT |
 | `horse_minimal.bpsm` | horse minimal snapshot mesh |
 | `elephant.bpat` | elephant creature BPAT |
@@ -197,7 +199,7 @@ For readers who want the important hard facts without drowning in byte offset ta
 - Variable-sized data lives in trailing blocks referenced by **absolute file offsets**.
 - Reserved and padding bytes must be **zero**.
 - The file magic must be **`BPAT`**.
-- Current supported species ids are **0 = humanoid, 1 = horse, 2 = elephant, 3 = humanoid_sword**.
+- Current supported species ids are **0 = humanoid, 1 = horse, 2 = elephant, 3 = humanoid_sword, 4 = humanoid_spear, 5 = humanoid_skeleton**.
 
 ## How the frame data is packed
 
@@ -215,7 +217,7 @@ The current reader accepts a BPAT file when:
 
 1. it starts with the `BPAT` magic
 2. it uses version `1`
-3. its species id is known (`0..3` today)
+3. its species id is known (`0..5` today)
 4. it has at least one clip
 5. its bone count is in range
 6. its clip frame offsets are contiguous and its frame counts add up correctly

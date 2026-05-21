@@ -83,7 +83,8 @@ enum class BakerAmbientIdleType : std::uint8_t {
 enum class HumanoidBakeProfile : std::uint8_t {
   Default,
   SwordReady,
-  SpearReady
+  SpearReady,
+  Skeleton
 };
 
 struct HumanoidClipSpec {
@@ -642,9 +643,16 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     anim_ctx.inputs.attack_variant = clip.attack_variant;
 
     Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+    float const sword_reach_scale =
+        profile == HumanoidBakeProfile::Skeleton ? 0.88F : 1.0F;
     switch (clip.attack_type) {
     case BakerAttackType::Sword:
-      ctrl.sword_slash_variant(phase, clip.attack_variant);
+      if (profile == HumanoidBakeProfile::SwordReady ||
+          profile == HumanoidBakeProfile::Skeleton) {
+        ctrl.combat_sword_slash_variant(phase, clip.attack_variant, sword_reach_scale);
+      } else {
+        ctrl.sword_slash_variant(phase, clip.attack_variant, sword_reach_scale);
+      }
       break;
     case BakerAttackType::Spear:
       ctrl.spear_thrust_variant(phase, clip.attack_variant);
@@ -1358,6 +1366,11 @@ int main(int argc, char** argv) {
                      bpat::k_species_humanoid_spear,
                      "humanoid_spear.bpat",
                      HumanoidBakeProfile::SpearReady) &&
+       ok;
+  ok = bake_humanoid(out_dir,
+                     bpat::k_species_humanoid_skeleton,
+                     "humanoid_skeleton.bpat",
+                     HumanoidBakeProfile::Skeleton) &&
        ok;
   ok = bake_species_manifest(out_dir, Render::Horse::horse_manifest()) && ok;
   ok = bake_species_manifest(out_dir, Render::Elephant::elephant_manifest()) && ok;

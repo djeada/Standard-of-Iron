@@ -20,6 +20,7 @@ public:
   auto get_arc_height() const -> float override;
   auto get_progress() const -> float override { return m_progress; }
   auto get_scale() const -> float override { return m_beam_width; }
+  auto get_kind() const -> ProjectileKind override { return ProjectileKind::Arrow; }
   auto is_active() const -> bool override { return m_active; }
 
   auto should_apply_damage() const -> bool override { return false; }

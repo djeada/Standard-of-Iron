@@ -16,6 +16,12 @@ constexpr std::uint16_t k_horse_dead_clip = 7U;
 constexpr std::uint16_t k_elephant_die_clip = 4U;
 constexpr std::uint16_t k_elephant_dead_clip = 5U;
 
+struct ArchetypeAnimationManifest {
+  std::array<std::uint16_t, k_state_count> clips{};
+  std::array<std::uint8_t, k_state_count> variant_counts{};
+  std::array<bool, k_state_count> snapshot{};
+};
+
 constexpr auto make_unmapped_clip_table() -> std::array<std::uint16_t, k_state_count> {
   std::array<std::uint16_t, k_state_count> t{};
   for (std::size_t i = 0; i < k_state_count; ++i) {
@@ -69,6 +75,7 @@ constexpr auto make_humanoid_clip_table() -> std::array<std::uint16_t, k_state_c
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =
       k_humanoid_attack_spear_a_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = k_humanoid_attack_bow_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Cast)] = k_humanoid_attack_bow_clip;
   return t;
 }
 
@@ -85,6 +92,7 @@ constexpr auto make_horse_clip_table() -> std::array<std::uint16_t, k_state_coun
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 5U;
+  t[static_cast<std::size_t>(AnimationStateId::Cast)] = 5U;
   return t;
 }
 
@@ -101,6 +109,7 @@ constexpr auto make_elephant_clip_table() -> std::array<std::uint16_t, k_state_c
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 3U;
+  t[static_cast<std::size_t>(AnimationStateId::Cast)] = 3U;
   return t;
 }
 
@@ -122,6 +131,7 @@ constexpr auto make_rider_clip_table() -> std::array<std::uint16_t, k_state_coun
       k_humanoid_attack_spear_a_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] =
       k_humanoid_riding_bow_shot_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Cast)] = k_humanoid_riding_bow_shot_clip;
   t[static_cast<std::size_t>(AnimationStateId::RidingIdle)] =
       k_humanoid_riding_idle_clip;
   t[static_cast<std::size_t>(AnimationStateId::RidingCharge)] =
@@ -159,6 +169,44 @@ make_rider_variant_count_table() -> std::array<std::uint8_t, k_state_count> {
   return t;
 }
 
+constexpr auto make_humanoid_animation_manifest() -> ArchetypeAnimationManifest {
+  auto const clips = make_humanoid_clip_table();
+  return {
+      clips, make_humanoid_variant_count_table(), make_humanoid_snapshot_table(clips)};
+}
+
+constexpr auto make_horse_animation_manifest() -> ArchetypeAnimationManifest {
+  auto const clips = make_horse_clip_table();
+  return {
+      clips, make_horse_variant_count_table(), make_snapshot_table_for_clips(clips)};
+}
+
+constexpr auto make_elephant_animation_manifest() -> ArchetypeAnimationManifest {
+  auto const clips = make_elephant_clip_table();
+  return {
+      clips, make_elephant_variant_count_table(), make_snapshot_table_for_clips(clips)};
+}
+
+constexpr auto make_rider_animation_manifest() -> ArchetypeAnimationManifest {
+  auto const clips = make_rider_clip_table();
+  return {
+      clips, make_rider_variant_count_table(), make_snapshot_table_for_clips(clips)};
+}
+
+auto make_baseline_archetype(std::string_view debug_name,
+                             Render::Creature::Pipeline::CreatureKind species,
+                             const ArchetypeAnimationManifest& manifest,
+                             std::uint8_t role_count) -> ArchetypeDescriptor {
+  ArchetypeDescriptor desc{};
+  desc.debug_name = debug_name;
+  desc.species = species;
+  desc.bpat_clip = manifest.clips;
+  desc.bpat_clip_variant_count = manifest.variant_counts;
+  desc.snapshot = manifest.snapshot;
+  desc.role_count = role_count;
+  return desc;
+}
+
 } // namespace
 
 auto ArchetypeRegistry::instance() noexcept -> ArchetypeRegistry& {
@@ -171,45 +219,31 @@ ArchetypeRegistry::ArchetypeRegistry() {
 }
 
 void ArchetypeRegistry::seed_baseline() {
-  auto const humanoid_clips = make_humanoid_clip_table();
-  ArchetypeDescriptor humanoid{};
-  humanoid.debug_name = "humanoid_base";
-  humanoid.species = Render::Creature::Pipeline::CreatureKind::Humanoid;
-  humanoid.bpat_clip = humanoid_clips;
-  humanoid.bpat_clip_variant_count = make_humanoid_variant_count_table();
-  humanoid.snapshot = make_humanoid_snapshot_table(humanoid_clips);
-  humanoid.role_count = 6;
-  register_archetype(humanoid);
+  static constexpr auto k_humanoid_manifest = make_humanoid_animation_manifest();
+  static constexpr auto k_horse_manifest = make_horse_animation_manifest();
+  static constexpr auto k_elephant_manifest = make_elephant_animation_manifest();
+  static constexpr auto k_rider_manifest = make_rider_animation_manifest();
 
-  auto const horse_clips = make_horse_clip_table();
-  ArchetypeDescriptor horse{};
-  horse.debug_name = "horse_base";
-  horse.species = Render::Creature::Pipeline::CreatureKind::Horse;
-  horse.bpat_clip = horse_clips;
-  horse.bpat_clip_variant_count = make_horse_variant_count_table();
-  horse.snapshot = make_snapshot_table_for_clips(horse_clips);
-  horse.role_count = 8;
-  register_archetype(horse);
-
-  auto const elephant_clips = make_elephant_clip_table();
-  ArchetypeDescriptor elephant{};
-  elephant.debug_name = "elephant_base";
-  elephant.species = Render::Creature::Pipeline::CreatureKind::Elephant;
-  elephant.bpat_clip = elephant_clips;
-  elephant.bpat_clip_variant_count = make_elephant_variant_count_table();
-  elephant.snapshot = make_snapshot_table_for_clips(elephant_clips);
-  elephant.role_count = 6;
-  register_archetype(elephant);
-
-  auto const rider_clips = make_rider_clip_table();
-  ArchetypeDescriptor rider{};
-  rider.debug_name = "rider_base";
-  rider.species = Render::Creature::Pipeline::CreatureKind::Humanoid;
-  rider.bpat_clip = rider_clips;
-  rider.bpat_clip_variant_count = make_rider_variant_count_table();
-  rider.snapshot = make_snapshot_table_for_clips(rider_clips);
-  rider.role_count = 6;
-  register_archetype(rider);
+  register_archetype(
+      make_baseline_archetype("humanoid_base",
+                              Render::Creature::Pipeline::CreatureKind::Humanoid,
+                              k_humanoid_manifest,
+                              6U));
+  register_archetype(
+      make_baseline_archetype("horse_base",
+                              Render::Creature::Pipeline::CreatureKind::Horse,
+                              k_horse_manifest,
+                              8U));
+  register_archetype(
+      make_baseline_archetype("elephant_base",
+                              Render::Creature::Pipeline::CreatureKind::Elephant,
+                              k_elephant_manifest,
+                              6U));
+  register_archetype(
+      make_baseline_archetype("rider_base",
+                              Render::Creature::Pipeline::CreatureKind::Humanoid,
+                              k_rider_manifest,
+                              6U));
 }
 
 auto ArchetypeRegistry::register_archetype(ArchetypeDescriptor desc) -> ArchetypeId {

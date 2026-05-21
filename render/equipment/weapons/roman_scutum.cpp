@@ -17,6 +17,7 @@
 #include "../../render_archetype.h"
 #include "../attachment_builder.h"
 #include "../equipment_submit.h"
+#include "shield_anchor.h"
 
 namespace Render::GL {
 
@@ -140,22 +141,15 @@ auto roman_scutum_archetype() -> const RenderArchetype& {
 
 namespace {
 
-auto hand_l_basis_transform(const QMatrix4x4& parent,
-                            const AttachmentFrame& hand_l) -> QMatrix4x4 {
-  QMatrix4x4 local;
-  local.setColumn(0, QVector4D(hand_l.right, 0.0F));
-  local.setColumn(1, QVector4D(hand_l.up, 0.0F));
-  local.setColumn(2, QVector4D(hand_l.forward, 0.0F));
-  local.setColumn(3, QVector4D(hand_l.origin, 1.0F));
-  return parent * local;
+auto shield_basis_transform(const QMatrix4x4& parent,
+                            const AttachmentFrame& shield_frame) -> QMatrix4x4 {
+  return parent * attachment_frame_transform(shield_frame);
 }
 
 auto scutum_local_pose() -> QMatrix4x4 {
   QMatrix4x4 pose;
-  pose.translate(0.16F, -0.04F, -0.07F);
-  pose.translate(k_shield_center);
   pose.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-  pose.translate(-k_shield_center);
+  pose.translate(0.0F, 0.0F, -0.30F);
   return pose;
 }
 
@@ -175,15 +169,14 @@ void RomanScutumRenderer::submit(const RomanScutumConfig&,
                                  const HumanoidPalette& palette,
                                  const HumanoidAnimationContext&,
                                  EquipmentBatch& batch) {
-  const AttachmentFrame& hand_l = frames.hand_l;
-  if (hand_l.radius <= 0.0F) {
+  if (frames.hand_l.radius <= 0.0F) {
     return;
   }
-  AttachmentFrame const grip =
-      frames.grip_l.radius > 0.0F
-          ? frames.grip_l
-          : Render::Humanoid::socket_attachment_frame(
-                frames.hand_l, Render::Humanoid::HumanoidSocket::GripL);
+  AttachmentFrame const shield_frame = resolve_left_shield_frame(frames);
+  QMatrix4x4 pose_adjustment;
+  if (frames.shield_l.radius > 0.0F) {
+    pose_adjustment = bind_left_shield_pose_calibration();
+  }
 
   QVector3D const shield_red =
       saturate_color(palette.cloth * QVector3D(1.5F, 0.3F, 0.3F));
@@ -202,8 +195,8 @@ void RomanScutumRenderer::submit(const RomanScutumConfig&,
 
   append_equipment_archetype(batch,
                              roman_scutum_archetype(),
-                             hand_l_basis_transform(ctx.model, grip) *
-                                 scutum_local_pose(),
+                             shield_basis_transform(ctx.model, shield_frame) *
+                                 pose_adjustment * scutum_local_pose(),
                              palette_slots);
 }
 
@@ -232,18 +225,14 @@ auto roman_scutum_make_static_attachment(std::uint8_t base_role_byte)
   constexpr auto k_bone = Render::Humanoid::HumanoidBone::HandL;
   QMatrix4x4 const bind_bone =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
-  auto const& bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_l;
-  QMatrix4x4 bind_socket;
-  bind_socket.setColumn(0, QVector4D(bind_grip.right, 0.0F));
-  bind_socket.setColumn(1, QVector4D(bind_grip.up, 0.0F));
-  bind_socket.setColumn(2, QVector4D(bind_grip.forward, 0.0F));
-  bind_socket.setColumn(3, QVector4D(bind_grip.origin, 1.0F));
+  auto const& bind_shield = Render::Humanoid::humanoid_bind_body_frames().shield_l;
+  QMatrix4x4 const bind_socket = attachment_frame_transform(bind_shield);
   auto spec = Render::Equipment::build_socket_static_attachment({
       .archetype = &roman_scutum_archetype(),
       .socket_bone_index = static_cast<std::uint16_t>(k_bone),
       .bind_bone_transform = bind_bone,
       .bind_socket_transform = bind_socket,
-      .mesh_from_socket = scutum_local_pose(),
+      .mesh_from_socket = bind_left_shield_pose_calibration() * scutum_local_pose(),
   });
   spec.palette_role_remap[k_red_even] = base_role_byte;
   spec.palette_role_remap[k_red_odd] = static_cast<std::uint8_t>(base_role_byte + 1U);

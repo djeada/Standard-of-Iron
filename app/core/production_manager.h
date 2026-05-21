@@ -151,6 +151,8 @@ private:
   Game::Systems::NationID m_active_placement_nation_id{
       Game::Systems::NationID::RomanRepublic};
   float m_construction_preview_rotation_y = 0.0F;
+  float m_wall_preview_rotation_y = 0.0F;
+  bool m_wall_preview_rotation_explicit = false;
   bool m_construction_preview_active = false;
   bool m_construction_preview_valid = false;
   int m_construction_preview_segment_count = 0;

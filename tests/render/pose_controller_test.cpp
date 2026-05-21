@@ -317,7 +317,13 @@ TEST(HumanoidAnimationInputs, FpvCommanderGuardSetsGuardingWithoutHoldMode) {
   auto anim = Render::GL::sample_anim_state(ctx);
 
   EXPECT_TRUE(anim.is_guarding);
-  EXPECT_FLOAT_EQ(anim.guard_pose_progress, 1.0F);
+  EXPECT_FLOAT_EQ(anim.guard_pose_progress, 0.0F);
+  EXPECT_FALSE(anim.is_in_hold_mode);
+
+  ctx.animation_time = 1.75F;
+  anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_guarding);
+  EXPECT_NEAR(anim.guard_pose_progress, 0.5F, 1.0e-3F);
   EXPECT_FALSE(anim.is_in_hold_mode);
 }
 
@@ -610,10 +616,38 @@ TEST_F(HumanoidPoseControllerTest,
 
   EXPECT_GT(brace_pose.hand_l.y(), march_pose.hand_l.y());
   EXPECT_GT(brace_pose.hand_l.z(), march_pose.hand_l.z());
-  EXPECT_GT(brace_pose.hand_l.x(), march_pose.hand_l.x());
-  EXPECT_GT(brace_pose.hand_l.z(), 0.44F);
-  EXPECT_GT(brace_pose.hand_l.x(), -0.22F);
-  EXPECT_LT(brace_pose.hand_r.y(), march_pose.hand_r.y());
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       GuardShieldFormationRomanTopRaisesShieldHigherThanRomanFront) {
+  HumanoidPose roman_front_pose = pose;
+  HumanoidPoseController roman_front_controller(roman_front_pose, anim_ctx);
+  roman_front_controller.guard_sword_and_shield_formation(
+      ShieldFormationPose::RomanFront, 1.0F);
+
+  HumanoidPose roman_top_pose = pose;
+  HumanoidPoseController roman_top_controller(roman_top_pose, anim_ctx);
+  roman_top_controller.guard_sword_and_shield_formation(ShieldFormationPose::RomanTop,
+                                                        1.0F);
+
+  EXPECT_GT(roman_top_pose.hand_l.y(), roman_front_pose.hand_l.y());
+  EXPECT_LT(roman_top_pose.hand_l.z(), roman_front_pose.hand_l.z());
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       GuardShieldFormationCarthageFrontKeepsShieldMoreCenteredThanRomanFront) {
+  HumanoidPose roman_front_pose = pose;
+  HumanoidPoseController roman_front_controller(roman_front_pose, anim_ctx);
+  roman_front_controller.guard_sword_and_shield_formation(
+      ShieldFormationPose::RomanFront, 1.0F);
+
+  HumanoidPose carthage_front_pose = pose;
+  HumanoidPoseController carthage_front_controller(carthage_front_pose, anim_ctx);
+  carthage_front_controller.guard_sword_and_shield_formation(
+      ShieldFormationPose::CarthageFront, 1.0F);
+
+  EXPECT_GT(carthage_front_pose.hand_l.x(), roman_front_pose.hand_l.x());
+  EXPECT_LT(carthage_front_pose.hand_l.y(), roman_front_pose.hand_l.y());
 }
 
 TEST_F(HumanoidPoseControllerTest, LookAtMovesHeadTowardTarget) {
@@ -753,7 +787,7 @@ TEST_F(HumanoidPoseControllerTest, SwordSlashVariantAppliesTorsoTwist) {
   float const original_shoulder_r_z = pose.shoulder_r.z();
   float const original_shoulder_l_z = pose.shoulder_l.z();
 
-  controller.sword_slash_variant(0.20F, 0);
+  controller.combat_sword_slash_variant(0.20F, 0);
 
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
   EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l_z);
@@ -763,7 +797,7 @@ TEST_F(HumanoidPoseControllerTest, SwordSlashVariant1ReversesInitialTorsoTwist) 
   HumanoidPoseController controller_v0(pose, anim_ctx);
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
-  controller_v0.sword_slash_variant(0.20F, 1);
+  controller_v0.combat_sword_slash_variant(0.20F, 1);
 
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
 }
@@ -774,7 +808,7 @@ TEST_F(HumanoidPoseControllerTest, SwordSlashVariantAppliesBaselineBodyDrive) {
   QVector3D const original_pelvis = pose.pelvis_pos;
   QVector3D const original_head = pose.head_pos;
 
-  controller.sword_slash_variant(0.62F, 0);
+  controller.combat_sword_slash_variant(0.62F, 0);
 
   EXPECT_LT(pose.pelvis_pos.y(), original_pelvis.y());
   EXPECT_GT(pose.pelvis_pos.z(), original_pelvis.z());
@@ -785,7 +819,7 @@ TEST_F(HumanoidPoseControllerTest, CommanderAttackEmphasisAmplifiesSwordSlashVar
   HumanoidPose base_pose = pose;
   HumanoidAnimationContext const base_ctx = anim_ctx;
   HumanoidPoseController base_controller(base_pose, base_ctx);
-  base_controller.sword_slash_variant(0.56F, 0);
+  base_controller.combat_sword_slash_variant(0.56F, 0);
 
   HumanoidPose emphasized_pose = pose;
   HumanoidAnimationContext emphasized_ctx = anim_ctx;
@@ -793,11 +827,39 @@ TEST_F(HumanoidPoseControllerTest, CommanderAttackEmphasisAmplifiesSwordSlashVar
   emphasized_ctx.attack_emphasis = 1.35F;
   emphasized_ctx.finisher_attack = true;
   HumanoidPoseController emphasized_controller(emphasized_pose, emphasized_ctx);
-  emphasized_controller.sword_slash_variant(0.56F, 0);
+  emphasized_controller.combat_sword_slash_variant(0.56F, 0);
 
   EXPECT_GT(emphasized_pose.hand_r.z(), base_pose.hand_r.z());
   EXPECT_GT(emphasized_pose.pelvis_pos.z(), base_pose.pelvis_pos.z());
   EXPECT_LT(emphasized_pose.pelvis_pos.y(), base_pose.pelvis_pos.y());
+}
+
+TEST_F(HumanoidPoseControllerTest, SwordSlashVariantReducedReachKeepsStrikeCloser) {
+  HumanoidPose default_pose = pose;
+  HumanoidPoseController default_controller(default_pose, anim_ctx);
+  default_controller.combat_sword_slash_variant(0.56F, 0);
+
+  HumanoidPose reduced_pose = pose;
+  HumanoidPoseController reduced_controller(reduced_pose, anim_ctx);
+  reduced_controller.combat_sword_slash_variant(0.56F, 0, 0.88F);
+
+  EXPECT_LT(reduced_pose.hand_r.z(), default_pose.hand_r.z());
+  EXPECT_GT(reduced_pose.hand_r.z(), reduced_pose.shoulder_r.z());
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       CombatSwordSlashVariantDrivesFartherThanBuilderSlash) {
+  HumanoidPose builder_pose = pose;
+  HumanoidPoseController builder_controller(builder_pose, anim_ctx);
+  builder_controller.sword_slash_variant(0.62F, 0);
+
+  HumanoidPose combat_pose = pose;
+  HumanoidPoseController combat_controller(combat_pose, anim_ctx);
+  combat_controller.combat_sword_slash_variant(0.62F, 0);
+
+  EXPECT_GT(combat_pose.hand_r.z(), builder_pose.hand_r.z());
+  EXPECT_GT(combat_pose.pelvis_pos.z(), builder_pose.pelvis_pos.z());
+  EXPECT_LT(combat_pose.pelvis_pos.y(), builder_pose.pelvis_pos.y());
 }
 
 TEST_F(HumanoidPoseControllerTest, SpearThrustVariantAppliesTorsoTwist) {

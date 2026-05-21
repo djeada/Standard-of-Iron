@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/StandardOfIron/">
+        <file alias="assets/visuals/unit_equipment_loadouts.json">../assets/visuals/unit_equipment_loadouts.json</file>
+    </qresource>
+</RCC>

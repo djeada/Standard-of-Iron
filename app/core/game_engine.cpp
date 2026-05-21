@@ -126,6 +126,7 @@
 #include "game/systems/terrain_alignment_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/troop_profile_service.h"
+#include "game/systems/undead_awakening_system.h"
 #include "game/systems/victory_service.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/factory.h"
@@ -214,6 +215,8 @@ auto nation_audio_tag(Game::Systems::NationID nation_id) -> QString {
     return QStringLiteral("roman");
   case Game::Systems::NationID::Carthage:
     return QStringLiteral("carthage");
+  case Game::Systems::NationID::IronSepulcher:
+    return QStringLiteral("iron_sepulcher");
   }
   return QStringLiteral("roman");
 }
@@ -2307,6 +2310,10 @@ void GameEngine::render_game_effects() {
 
         placement.accent_color = QVector3D(0.62F, 0.08F, 0.78F);
         break;
+      case Game::Systems::NationID::IronSepulcher:
+
+        placement.accent_color = QVector3D(0.58F, 0.60F, 0.66F);
+        break;
       default:
 
         break;
@@ -3352,6 +3359,9 @@ auto GameEngine::available_nations() const -> QVariantList {
   QList<QVariantMap> ordered;
   ordered.reserve(static_cast<int>(all.size()));
   for (const auto& nation : all) {
+    if (!nation.playable || !nation.selectable_in_skirmish) {
+      continue;
+    }
     QVariantMap entry;
     entry.insert(QStringLiteral("id"),
                  QString::fromStdString(Game::Systems::nation_id_to_string(nation.id)));
@@ -4756,6 +4766,25 @@ auto GameEngine::load_from_slot(const QString& slot) -> bool {
       m_world.get(), m_selected_player_id, m_level, m_runtime.local_owner_id);
   GameStateRestorer::rebuild_entity_cache(
       m_world.get(), m_entity_cache, m_runtime.local_owner_id);
+  if (!m_level.map_path.isEmpty()) {
+    Game::Map::MapDefinition map_def;
+    QString map_error;
+    const QString resolved_map_path =
+        Utils::Resources::resolve_resource_path(m_level.map_path);
+    if (Game::Map::MapLoader::load_from_json_file(
+            resolved_map_path, map_def, &map_error)) {
+      if (auto* undead_system =
+              m_world->get_system<Game::Systems::UndeadAwakeningSystem>()) {
+        undead_system->configure(map_def);
+        undead_system->restore_state(meta["undead_zones"].toArray());
+        if (m_victory_service) {
+          m_victory_service->set_undead_zone_query(undead_system);
+        }
+      }
+    } else {
+      qWarning() << "GameEngine: failed to load undead zone map data:" << map_error;
+    }
+  }
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   configure_audio_manifest_mappings();
 
@@ -4767,7 +4796,14 @@ auto GameEngine::load_from_slot(const QString& slot) -> bool {
   }
 
   if (m_victory_service) {
-    m_victory_service->configure(Game::Map::VictoryConfig(), m_runtime.local_owner_id);
+    if (m_campaign_manager &&
+        m_campaign_manager->current_mission_context().is_campaign()) {
+      m_campaign_manager->configure_mission_victory_conditions(
+          m_victory_service.get(), m_runtime.local_owner_id);
+    } else {
+      m_victory_service->configure(Game::Map::VictoryConfig(),
+                                   m_runtime.local_owner_id);
+    }
   }
 
   m_runtime.loading = false;
@@ -4797,6 +4833,10 @@ auto GameEngine::save_to_slot(const QString& slot, const QString& title) -> bool
   QJsonObject meta = Game::Systems::GameStateSerializer::build_metadata(
       *m_world, m_camera, m_level, runtime_snap);
   meta["title"] = title;
+  if (auto* undead_system =
+          m_world->get_system<Game::Systems::UndeadAwakeningSystem>()) {
+    meta["undead_zones"] = undead_system->serialize_state();
+  }
 
   if (m_campaign_manager) {
     const auto& mission_context = m_campaign_manager->current_mission_context();

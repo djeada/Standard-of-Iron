@@ -205,6 +205,19 @@ TEST_F(WallMechanicsTest, AdjacentWallsRefreshConnectionVisuals) {
   EXPECT_NE(right_renderable->renderer_id.find("wall_segment_end"), std::string::npos);
 }
 
+TEST_F(WallMechanicsTest, IsolatedWallsPreserveChosenOrientationAcrossRefresh) {
+  Engine::Core::World world;
+
+  auto* wall = make_wall(world, 0.0F, 0.0F, 0.0F, 1);
+  auto* transform = wall->get_component<TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->rotation.y = 90.0F;
+
+  WallNetworkService::refresh_world(world);
+
+  EXPECT_FLOAT_EQ(transform->rotation.y, 90.0F);
+}
+
 TEST_F(WallMechanicsTest, EnemyWallsDoNotMergeConnectionVisuals) {
   Engine::Core::World world;
 

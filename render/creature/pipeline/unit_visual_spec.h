@@ -57,14 +57,24 @@ using CreatureAssetId = std::uint16_t;
 inline constexpr CreatureAssetId k_invalid_creature_asset =
     static_cast<CreatureAssetId>(0xFFFFu);
 
-using PoseHookFn = void (*)(const Render::GL::DrawContext& ctx,
-                            const Render::GL::HumanoidAnimationContext& anim,
-                            std::uint32_t seed,
-                            Render::GL::HumanoidPose& io_pose);
+struct HumanoidPoseLayerContext {
+  const Render::GL::DrawContext* draw_ctx{nullptr};
+  const Render::GL::HumanoidAnimationContext* animation{nullptr};
+  const Render::GL::HumanoidVariant* variant{nullptr};
+  std::uint32_t seed{0U};
+};
+
+using PoseLayerFn = void (*)(const HumanoidPoseLayerContext& context,
+                             Render::GL::HumanoidPose& io_pose);
 
 using VariantHookFn = void (*)(const Render::GL::DrawContext& ctx,
                                std::uint32_t seed,
                                Render::GL::VariationParams& io_variation);
+
+struct HumanoidAnimationManifest {
+  const Render::Creature::ArchetypeVariantTable* variant_table{nullptr};
+  PoseLayerFn pose_layer{nullptr};
+};
 
 struct ProportionScaling {
   float x{1.0F};
@@ -114,9 +124,8 @@ struct UnitVisualSpec {
   CreatureKind kind{CreatureKind::Humanoid};
   CreatureAssetId creature_asset_id{k_invalid_creature_asset};
   PaletteId palette_id{k_default_palette};
-  PoseHookFn pose_hook{nullptr};
+  HumanoidAnimationManifest animation_manifest{};
   VariantHookFn variant_hook{nullptr};
-  const Render::Creature::ArchetypeVariantTable* variant_table{nullptr};
   ProportionScaling scaling{};
   const CreatureVisualDefinition* creature_definition{nullptr};
 

@@ -1,5 +1,7 @@
 #include "troop_profile_service.h"
 
+#include <algorithm>
+
 #include "nation_registry.h"
 #include "units/troop_catalog.h"
 
@@ -24,6 +26,10 @@ void apply_archer_range_bonus(Game::Units::TroopType type, TroopProfile& profile
 auto TroopProfileService::instance() -> TroopProfileService& {
   static TroopProfileService inst;
   return inst;
+}
+
+auto TroopProfile::has_ability(const std::string& ability_id) const -> bool {
+  return std::find(abilities.begin(), abilities.end(), ability_id) != abilities.end();
 }
 
 void TroopProfileService::clear() {
@@ -164,6 +170,9 @@ auto TroopProfileService::build_profile(const Nation& nation,
     }
     if (variant.stamina_depletion_rate) {
       profile.combat.stamina_depletion_rate = *variant.stamina_depletion_rate;
+    }
+    if (!variant.abilities.empty()) {
+      profile.abilities = variant.abilities;
     }
   }
 

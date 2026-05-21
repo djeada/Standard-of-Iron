@@ -223,16 +223,94 @@ auto carthage_quiver_config() -> const QuiverRenderConfig& {
   return config;
 }
 
+auto marcellus_bow_config() -> const BowRenderConfig& {
+  static const BowRenderConfig config = []() {
+    BowRenderConfig cfg = roman_bow_config();
+    cfg.bow_depth = 0.18F;
+    cfg.bow_curve_factor = 0.92F;
+    cfg.bow_height_scale = 0.88F;
+    cfg.string_color = QVector3D(0.42F, 0.16F, 0.14F);
+    return cfg;
+  }();
+  return config;
+}
+
+auto hasdrubal_bow_config() -> const BowRenderConfig& {
+  static const BowRenderConfig config = []() {
+    BowRenderConfig cfg = carthage_bow_config();
+    cfg.bow_depth = 0.34F;
+    cfg.bow_curve_factor = 1.36F;
+    cfg.bow_height_scale = 1.04F;
+    cfg.string_color = QVector3D(0.26F, 0.18F, 0.12F);
+    return cfg;
+  }();
+  return config;
+}
+
 auto roman_sword_config() -> const SwordRenderConfig& {
   static const SwordRenderConfig config = []() {
     SwordRenderConfig cfg;
-    cfg.sword_length = 0.80F;
-    cfg.sword_width = 0.060F;
-    cfg.guard_half_width = 0.120F;
-    cfg.handle_radius = 0.016F;
-    cfg.pommel_radius = 0.045F;
-    cfg.blade_ricasso = 0.14F;
+    cfg.metal_color = QVector3D(0.76F, 0.79F, 0.88F);
+    cfg.sword_length = 0.84F;
+    cfg.sword_width = 0.088F;
+    cfg.guard_half_width = 0.104F;
+    cfg.handle_radius = 0.018F;
+    cfg.pommel_radius = 0.054F;
+    cfg.pommel_length = 0.050F;
+    cfg.blade_ricasso = 0.10F;
+    cfg.blade_taper_bias = 0.32F;
+    cfg.blade_mid_width_scale = 1.18F;
+    cfg.blade_tip_width_scale = 0.22F;
+    cfg.blade_curve = 0.0F;
+    cfg.guard_curve = 0.03F;
+    cfg.guard_spike_length = 0.045F;
     cfg.material_id = 3;
+    return cfg;
+  }();
+  return config;
+}
+
+auto marcellus_quiver_config() -> const QuiverRenderConfig& {
+  static const QuiverRenderConfig config = []() {
+    QuiverRenderConfig cfg = roman_quiver_config();
+    cfg.quiver_radius = HumanProportions::HEAD_RADIUS * 0.38F;
+    cfg.fletching_color = QVector3D(0.74F, 0.22F, 0.20F);
+    return cfg;
+  }();
+  return config;
+}
+
+auto hasdrubal_quiver_config() -> const QuiverRenderConfig& {
+  static const QuiverRenderConfig config = []() {
+    QuiverRenderConfig cfg = carthage_quiver_config();
+    cfg.quiver_radius = HumanProportions::HEAD_RADIUS * 0.50F;
+    cfg.fletching_color = QVector3D(0.92F, 0.72F, 0.16F);
+    return cfg;
+  }();
+  return config;
+}
+
+auto fabius_spear_config() -> const SpearRenderConfig& {
+  static const SpearRenderConfig config = []() {
+    SpearRenderConfig cfg;
+    cfg.shaft_color = QVector3D(0.46F, 0.33F, 0.20F);
+    cfg.spearhead_color = QVector3D(0.82F, 0.84F, 0.88F);
+    cfg.spear_length = 1.30F;
+    cfg.shaft_radius = 0.021F;
+    cfg.spearhead_length = 0.20F;
+    return cfg;
+  }();
+  return config;
+}
+
+auto hanno_spear_config() -> const SpearRenderConfig& {
+  static const SpearRenderConfig config = []() {
+    SpearRenderConfig cfg;
+    cfg.shaft_color = QVector3D(0.52F, 0.34F, 0.18F);
+    cfg.spearhead_color = QVector3D(0.82F, 0.68F, 0.32F);
+    cfg.spear_length = 1.08F;
+    cfg.shaft_radius = 0.017F;
+    cfg.spearhead_length = 0.24F;
     return cfg;
   }();
   return config;
@@ -241,14 +319,88 @@ auto roman_sword_config() -> const SwordRenderConfig& {
 auto carthage_sword_config() -> const SwordRenderConfig& {
   static const SwordRenderConfig config = []() {
     SwordRenderConfig cfg;
-    cfg.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
-    cfg.sword_length = 0.80F;
-    cfg.sword_width = 0.060F;
-    cfg.guard_half_width = 0.120F;
-    cfg.handle_radius = 0.016F;
-    cfg.pommel_radius = 0.045F;
+    cfg.metal_color = QVector3D(0.78F, 0.70F, 0.56F);
+    cfg.sword_length = 0.96F;
+    cfg.sword_width = 0.076F;
+    cfg.guard_half_width = 0.116F;
+    cfg.handle_radius = 0.015F;
+    cfg.pommel_radius = 0.042F;
+    cfg.pommel_length = 0.035F;
     cfg.blade_ricasso = 0.14F;
+    cfg.blade_taper_bias = 0.80F;
+    cfg.blade_mid_width_scale = 1.10F;
+    cfg.blade_tip_width_scale = 0.12F;
+    cfg.blade_curve = 0.14F;
+    cfg.guard_curve = -0.04F;
+    cfg.guard_spike_length = 0.070F;
     cfg.material_id = 3;
+    return cfg;
+  }();
+  return config;
+}
+
+auto scipio_sword_config() -> const SwordRenderConfig& {
+  static const SwordRenderConfig config = []() {
+    SwordRenderConfig cfg = roman_sword_config();
+    cfg.metal_color = QVector3D(0.84F, 0.86F, 0.92F);
+    cfg.sword_length = 0.92F;
+    cfg.sword_width = 0.100F;
+    cfg.guard_half_width = 0.140F;
+    cfg.handle_radius = 0.020F;
+    cfg.pommel_radius = 0.060F;
+    cfg.pommel_length = 0.090F;
+    cfg.blade_ricasso = 0.08F;
+    cfg.blade_taper_bias = 0.40F;
+    cfg.blade_mid_width_scale = 1.28F;
+    cfg.blade_tip_width_scale = 0.15F;
+    cfg.blade_curve = -0.02F;
+    cfg.guard_curve = 0.06F;
+    cfg.guard_spike_length = 0.090F;
+    return cfg;
+  }();
+  return config;
+}
+
+auto hannibal_sword_config() -> const SwordRenderConfig& {
+  static const SwordRenderConfig config = []() {
+    SwordRenderConfig cfg = carthage_sword_config();
+    cfg.metal_color = QVector3D(0.82F, 0.72F, 0.38F);
+    cfg.sword_length = 1.00F;
+    cfg.sword_width = 0.082F;
+    cfg.guard_half_width = 0.122F;
+    cfg.handle_radius = 0.019F;
+    cfg.pommel_radius = 0.055F;
+    cfg.pommel_length = 0.055F;
+    cfg.blade_ricasso = 0.06F;
+    cfg.blade_taper_bias = 0.88F;
+    cfg.blade_mid_width_scale = 1.02F;
+    cfg.blade_tip_width_scale = 0.10F;
+    cfg.blade_curve = 0.20F;
+    cfg.guard_curve = -0.06F;
+    cfg.guard_spike_length = 0.105F;
+    return cfg;
+  }();
+  return config;
+}
+
+auto sepulcher_sword_config() -> const SwordRenderConfig& {
+  static const SwordRenderConfig config = []() {
+    SwordRenderConfig cfg = carthage_sword_config();
+    cfg.metal_color = QVector3D(0.64F, 0.68F, 0.70F);
+    cfg.sword_length = 1.05F;
+    cfg.sword_width = 0.058F;
+    cfg.guard_half_width = 0.132F;
+    cfg.handle_radius = 0.014F;
+    cfg.pommel_radius = 0.040F;
+    cfg.pommel_length = 0.120F;
+    cfg.blade_ricasso = 0.05F;
+    cfg.blade_taper_bias = 0.94F;
+    cfg.blade_mid_width_scale = 0.78F;
+    cfg.blade_tip_width_scale = 0.06F;
+    cfg.blade_curve = 0.08F;
+    cfg.guard_curve = -0.08F;
+    cfg.guard_spike_length = 0.140F;
+    cfg.has_scabbard = false;
     return cfg;
   }();
   return config;
@@ -287,6 +439,24 @@ auto carthage_mounted_cloak_config() -> const CloakConfig& {
     cfg.drape_anchor_up = 0.00F;
     cfg.drape_anchor_back = 0.62F;
     cfg.clasp_anchor_up = 0.06F;
+    return cfg;
+  }();
+  return config;
+}
+
+auto sepulcher_cloak_config() -> const CloakConfig& {
+  static const CloakConfig config = []() {
+    CloakConfig cfg;
+    cfg.primary_color = QVector3D(0.095F, 0.095F, 0.11F);
+    cfg.trim_color = QVector3D(0.50F, 0.53F, 0.56F);
+    cfg.length_scale = 1.08F;
+    cfg.width_scale = 0.92F;
+    cfg.shoulder_anchor_up = 0.10F;
+    cfg.drape_anchor_up = 0.02F;
+    cfg.drape_anchor_back = 0.60F;
+    cfg.clasp_anchor_up = 0.08F;
+    cfg.back_material_id = 12;
+    cfg.shoulder_material_id = 13;
     return cfg;
   }();
   return config;
@@ -401,6 +571,12 @@ auto build_roman_light_helmet_attachment(std::uint8_t base_role_byte)
       humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
 }
 
+auto build_headwrap_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::headwrap_make_static_attachment(
+      humanoid_head_bone(), base_role_byte, humanoid_head_bind_matrix())};
+}
+
 auto build_roman_light_armor_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::roman_light_armor_make_static_attachment(humanoid_chest_bone(),
@@ -495,6 +671,18 @@ auto build_spear_attachments(std::uint8_t base_role_byte)
   return to_vector(Render::GL::spear_make_static_attachments(config, base_role_byte));
 }
 
+auto build_fabius_spear_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return to_vector(
+      Render::GL::spear_make_static_attachments(fabius_spear_config(), base_role_byte));
+}
+
+auto build_hanno_spear_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return to_vector(
+      Render::GL::spear_make_static_attachments(hanno_spear_config(), base_role_byte));
+}
+
 auto build_roman_scutum_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::roman_scutum_make_static_attachment(base_role_byte)};
@@ -517,6 +705,17 @@ auto build_roman_sword_attachments(std::uint8_t base_role_byte)
   };
 }
 
+auto build_scipio_sword_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {
+      Render::GL::sword_make_static_attachment(scipio_sword_config(), base_role_byte),
+      Render::GL::scabbard_make_static_attachment(
+          k_scabbard_radius * 1.08F,
+          humanoid_hip_l_bone(),
+          static_cast<std::uint8_t>(base_role_byte + Render::GL::k_sword_role_count)),
+  };
+}
+
 auto build_carthage_sword_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {
@@ -528,16 +727,45 @@ auto build_carthage_sword_attachments(std::uint8_t base_role_byte)
   };
 }
 
+auto build_hannibal_sword_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {
+      Render::GL::sword_make_static_attachment(hannibal_sword_config(), base_role_byte),
+      Render::GL::scabbard_make_static_attachment(
+          k_scabbard_radius * 1.02F,
+          humanoid_hip_l_bone(),
+          static_cast<std::uint8_t>(base_role_byte + Render::GL::k_sword_role_count)),
+  };
+}
+
+auto build_sepulcher_sword_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::sword_make_static_attachment(
+      sepulcher_sword_config(), base_role_byte, QVector3D(0.02F, 0.90F, 0.36F))};
+}
+
 auto build_roman_bow_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return to_vector(
       Render::GL::bow_make_static_attachments(roman_bow_config(), base_role_byte));
 }
 
+auto build_marcellus_bow_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return to_vector(
+      Render::GL::bow_make_static_attachments(marcellus_bow_config(), base_role_byte));
+}
+
 auto build_carthage_bow_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return to_vector(
       Render::GL::bow_make_static_attachments(carthage_bow_config(), base_role_byte));
+}
+
+auto build_hasdrubal_bow_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return to_vector(
+      Render::GL::bow_make_static_attachments(hasdrubal_bow_config(), base_role_byte));
 }
 
 auto build_quiver_attachments(std::uint8_t base_role_byte)
@@ -552,10 +780,22 @@ auto build_roman_quiver_attachments(std::uint8_t base_role_byte)
       roman_quiver_config(), humanoid_pelvis_bone(), base_role_byte));
 }
 
+auto build_marcellus_quiver_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return to_vector(Render::GL::quiver_make_static_attachments(
+      marcellus_quiver_config(), humanoid_pelvis_bone(), base_role_byte));
+}
+
 auto build_carthage_quiver_attachments(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return to_vector(Render::GL::quiver_make_static_attachments(
       carthage_quiver_config(), humanoid_pelvis_bone(), base_role_byte));
+}
+
+auto build_hasdrubal_quiver_attachments(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return to_vector(Render::GL::quiver_make_static_attachments(
+      hasdrubal_quiver_config(), humanoid_pelvis_bone(), base_role_byte));
 }
 
 auto build_carthage_cloak_attachment(std::uint8_t base_role_byte)
@@ -573,6 +813,14 @@ auto build_carthage_mounted_cloak_attachment(std::uint8_t base_role_byte)
       cloak_meshes_for("cloak_carthage_mounted"),
       humanoid_chest_bone(),
       base_role_byte)};
+}
+
+auto build_sepulcher_cloak_attachment(std::uint8_t base_role_byte)
+    -> std::vector<StaticAttachmentSpec> {
+  return {Render::GL::cloak_make_static_attachment(sepulcher_cloak_config(),
+                                                   cloak_meshes_for("cloak_sepulcher"),
+                                                   humanoid_chest_bone(),
+                                                   base_role_byte)};
 }
 
 auto build_roman_cloak_attachment(std::uint8_t base_role_byte)
@@ -1223,6 +1471,44 @@ auto spear_role_colors(const void* variant_void,
       max_count);
 }
 
+auto fabius_spear_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [&](const HumanoidVariant& variant,
+          QVector3D* colors,
+          std::uint32_t count,
+          std::size_t max) {
+        return count +
+               Render::GL::spear_fill_role_colors(
+                   variant.palette, fabius_spear_config(), colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto hanno_spear_role_colors(const void* variant_void,
+                             QVector3D* out,
+                             std::uint32_t base_count,
+                             std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [&](const HumanoidVariant& variant,
+          QVector3D* colors,
+          std::uint32_t count,
+          std::size_t max) {
+        return count +
+               Render::GL::spear_fill_role_colors(
+                   variant.palette, hanno_spear_config(), colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
 auto roman_scutum_role_colors(const void* variant_void,
                               QVector3D* out,
                               std::uint32_t base_count,
@@ -1282,6 +1568,29 @@ auto roman_sword_role_colors(const void* variant_void,
       max_count);
 }
 
+auto scipio_sword_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        count += Render::GL::sword_fill_role_colors(
+            variant.palette, scipio_sword_config(), colors + count, max - count);
+        if (max <= count) {
+          return count;
+        }
+        return count + Render::GL::scabbard_fill_role_colors(
+                           variant.palette, colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
 auto carthage_sword_role_colors(const void* variant_void,
                                 QVector3D* out,
                                 std::uint32_t base_count,
@@ -1305,6 +1614,49 @@ auto carthage_sword_role_colors(const void* variant_void,
       max_count);
 }
 
+auto hannibal_sword_role_colors(const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        count += Render::GL::sword_fill_role_colors(
+            variant.palette, hannibal_sword_config(), colors + count, max - count);
+        if (max <= count) {
+          return count;
+        }
+        return count + Render::GL::scabbard_fill_role_colors(
+                           variant.palette, colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto sepulcher_sword_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::sword_fill_role_colors(variant.palette,
+                                                          sepulcher_sword_config(),
+                                                          colors + count,
+                                                          max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
 auto bow_role_colors(const void* variant_void,
                      QVector3D* out,
                      std::uint32_t base_count,
@@ -1317,6 +1669,50 @@ auto bow_role_colors(const void* variant_void,
          std::size_t max) {
         return count + Render::GL::bow_fill_role_colors(
                            variant.palette, colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto marcellus_bow_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant&,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        if (max - count < Render::GL::k_bow_role_count) {
+          return count;
+        }
+        colors[count] = QVector3D(0.07F, 0.04F, 0.02F);
+        colors[count + 1] = marcellus_bow_config().string_color;
+        return count + static_cast<std::uint32_t>(Render::GL::k_bow_role_count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto hasdrubal_bow_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant&,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        if (max - count < Render::GL::k_bow_role_count) {
+          return count;
+        }
+        colors[count] = QVector3D(0.09F, 0.05F, 0.02F);
+        colors[count + 1] = hasdrubal_bow_config().string_color;
+        return count + static_cast<std::uint32_t>(Render::GL::k_bow_role_count);
       },
       out,
       base_count,
@@ -1343,6 +1739,26 @@ auto quiver_role_colors(const void* variant_void,
       max_count);
 }
 
+auto marcellus_quiver_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::quiver_fill_role_colors(variant.palette,
+                                                           marcellus_quiver_config(),
+                                                           colors + count,
+                                                           max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
 auto roman_quiver_role_colors(const void* variant_void,
                               QVector3D* out,
                               std::uint32_t base_count,
@@ -1356,6 +1772,26 @@ auto roman_quiver_role_colors(const void* variant_void,
         return count +
                Render::GL::quiver_fill_role_colors(
                    variant.palette, roman_quiver_config(), colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto hasdrubal_quiver_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::quiver_fill_role_colors(variant.palette,
+                                                           hasdrubal_quiver_config(),
+                                                           colors + count,
+                                                           max - count);
       },
       out,
       base_count,
@@ -1394,6 +1830,27 @@ auto carthage_cloak_role_colors(const void* variant_void,
          std::size_t max) {
         return count + Render::GL::cloak_fill_role_colors_with_primary(
                            carthage_cloak_config().primary_color,
+                           variant.palette,
+                           colors + count,
+                           max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto sepulcher_cloak_role_colors(const void* variant_void,
+                                 QVector3D* out,
+                                 std::uint32_t base_count,
+                                 std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::cloak_fill_role_colors_with_primary(
+                           sepulcher_cloak_config().primary_color,
                            variant.palette,
                            colors + count,
                            max - count);
@@ -1594,6 +2051,14 @@ void register_built_in_equipment() {
   auto carthage_quiver = std::make_shared<QuiverRenderer>(carthage_quiver_config());
   registry.register_equipment(
       EquipmentCategory::Weapon, "quiver_carthage", carthage_quiver);
+  registry.register_equipment(
+      EquipmentCategory::Weapon,
+      "quiver_marcellus",
+      std::make_shared<QuiverRenderer>(marcellus_quiver_config()));
+  registry.register_equipment(
+      EquipmentCategory::Weapon,
+      "quiver_hasdrubal",
+      std::make_shared<QuiverRenderer>(hasdrubal_quiver_config()));
 
   auto roman_scutum = std::make_shared<RomanScutumRenderer>();
   registry.register_equipment(EquipmentCategory::Weapon, "roman_scutum", roman_scutum);
@@ -1661,6 +2126,9 @@ void register_built_in_equipment() {
       std::make_shared<CloakRenderer>(carthage_mounted_cloak_config());
   registry.register_equipment(
       EquipmentCategory::Armor, "cloak_carthage_mounted", cloak_carthage_mounted);
+  auto cloak_sepulcher = std::make_shared<CloakRenderer>(sepulcher_cloak_config());
+  registry.register_equipment(
+      EquipmentCategory::Armor, "cloak_sepulcher", cloak_sepulcher);
   CloakConfig roman_cloak_config;
   roman_cloak_config.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
   roman_cloak_config.trim_color = QVector3D(0.78F, 0.72F, 0.58F);
@@ -1679,12 +2147,35 @@ void register_built_in_equipment() {
   auto sword_carthage = std::make_shared<CarthageSwordRenderer>();
   registry.register_equipment(
       EquipmentCategory::Weapon, "sword_carthage", sword_carthage);
+  registry.register_equipment(
+      EquipmentCategory::Weapon,
+      "sword_sepulcher",
+      std::make_shared<SwordRenderer>(sepulcher_sword_config()));
 
   auto sword_roman = std::make_shared<RomanSwordRenderer>();
   registry.register_equipment(EquipmentCategory::Weapon, "sword_roman", sword_roman);
+  registry.register_equipment(EquipmentCategory::Weapon,
+                              "sword_scipio",
+                              std::make_shared<SwordRenderer>(scipio_sword_config()));
+  registry.register_equipment(EquipmentCategory::Weapon,
+                              "sword_hannibal",
+                              std::make_shared<SwordRenderer>(hannibal_sword_config()));
 
   auto spear = std::make_shared<SpearRenderer>();
   registry.register_equipment(EquipmentCategory::Weapon, "spear", spear);
+  registry.register_equipment(EquipmentCategory::Weapon,
+                              "spear_fabius",
+                              std::make_shared<SpearRenderer>(fabius_spear_config()));
+  registry.register_equipment(EquipmentCategory::Weapon,
+                              "spear_hanno",
+                              std::make_shared<SpearRenderer>(hanno_spear_config()));
+
+  registry.register_equipment(EquipmentCategory::Weapon,
+                              "bow_marcellus",
+                              std::make_shared<BowRenderer>(marcellus_bow_config()));
+  registry.register_equipment(EquipmentCategory::Weapon,
+                              "bow_hasdrubal",
+                              std::make_shared<BowRenderer>(hasdrubal_bow_config()));
 
   auto shield = std::make_shared<ShieldRenderer>();
   registry.register_equipment(EquipmentCategory::Weapon, "shield", shield);
@@ -1868,6 +2359,28 @@ void register_built_in_equipment() {
        .role_count =
            static_cast<std::uint8_t>(Render::GL::k_roman_light_helmet_role_count)});
   register_humanoid_descriptor(
+      EquipmentCategory::Helmet,
+      "headwrap",
+      {.build_attachments = &build_headwrap_attachment,
+       .append_role_colors = [](const void* variant_void,
+                                QVector3D* out,
+                                std::uint32_t base_count,
+                                std::size_t max_count) -> std::uint32_t {
+         return with_variant_palette(
+             variant_void,
+             [](const HumanoidVariant& variant,
+                QVector3D* colors,
+                std::uint32_t count,
+                std::size_t max) {
+               return count + Render::GL::headwrap_fill_role_colors(
+                                  variant.palette, colors + count, max - count);
+             },
+             out,
+             base_count,
+             max_count);
+       },
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_headwrap_role_count)});
+  register_humanoid_descriptor(
       EquipmentCategory::Armor,
       "roman_light_armor",
       {.build_attachments = &build_roman_light_armor_attachment,
@@ -1935,6 +2448,18 @@ void register_built_in_equipment() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_spear_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
+      "spear_fabius",
+      {.build_attachments = &build_fabius_spear_attachments,
+       .append_role_colors = &fabius_spear_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_spear_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "spear_hanno",
+      {.build_attachments = &build_hanno_spear_attachments,
+       .append_role_colors = &hanno_spear_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_spear_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
       "roman_scutum",
       {.build_attachments = &build_roman_scutum_attachment,
        .append_role_colors = &roman_scutum_role_colors,
@@ -1954,11 +2479,31 @@ void register_built_in_equipment() {
                                                Render::GL::k_scabbard_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
+      "sword_scipio",
+      {.build_attachments = &build_scipio_sword_attachments,
+       .append_role_colors = &scipio_sword_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_sword_role_count +
+                                               Render::GL::k_scabbard_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
       "sword_carthage",
       {.build_attachments = &build_carthage_sword_attachments,
        .append_role_colors = &carthage_sword_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_sword_role_count +
                                                Render::GL::k_scabbard_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "sword_hannibal",
+      {.build_attachments = &build_hannibal_sword_attachments,
+       .append_role_colors = &hannibal_sword_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_sword_role_count +
+                                               Render::GL::k_scabbard_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "sword_sepulcher",
+      {.build_attachments = &build_sepulcher_sword_attachments,
+       .append_role_colors = &sepulcher_sword_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_sword_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
       "bow_roman",
@@ -1967,9 +2512,21 @@ void register_built_in_equipment() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_bow_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
+      "bow_marcellus",
+      {.build_attachments = &build_marcellus_bow_attachments,
+       .append_role_colors = &marcellus_bow_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_bow_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
       "bow_carthage",
       {.build_attachments = &build_carthage_bow_attachments,
        .append_role_colors = &bow_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_bow_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "bow_hasdrubal",
+      {.build_attachments = &build_hasdrubal_bow_attachments,
+       .append_role_colors = &hasdrubal_bow_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_bow_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
@@ -1985,9 +2542,21 @@ void register_built_in_equipment() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_quiver_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
+      "quiver_marcellus",
+      {.build_attachments = &build_marcellus_quiver_attachments,
+       .append_role_colors = &marcellus_quiver_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_quiver_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
       "quiver_carthage",
       {.build_attachments = &build_carthage_quiver_attachments,
        .append_role_colors = &carthage_quiver_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_quiver_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Weapon,
+      "quiver_hasdrubal",
+      {.build_attachments = &build_hasdrubal_quiver_attachments,
+       .append_role_colors = &hasdrubal_quiver_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_quiver_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
@@ -2000,6 +2569,12 @@ void register_built_in_equipment() {
       "cloak_carthage_mounted",
       {.build_attachments = &build_carthage_mounted_cloak_attachment,
        .append_role_colors = &carthage_cloak_role_colors,
+       .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
+  register_humanoid_descriptor(
+      EquipmentCategory::Armor,
+      "cloak_sepulcher",
+      {.build_attachments = &build_sepulcher_cloak_attachment,
+       .append_role_colors = &sepulcher_cloak_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_cloak_role_count)});
   register_humanoid_descriptor(
       EquipmentCategory::Armor,

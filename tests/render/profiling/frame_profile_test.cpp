@@ -31,7 +31,7 @@ TEST(FrameProfileTest, DisabledProfileIgnoresWrites) {
 TEST(FrameProfileTest, PhaseScopeRecordsElapsed) {
   FrameProfile p;
   {
-    PhaseScope scope(&p, Phase::Submit);
+    PhaseScope const scope(&p, Phase::Submit);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
   }
   auto const us = p.phase_us[static_cast<std::size_t>(Phase::Submit)];
@@ -43,7 +43,7 @@ TEST(FrameProfileTest, PhaseScopeSkipsWhenDisabled) {
   FrameProfile p;
   p.enabled = false;
   {
-    PhaseScope scope(&p, Phase::Sort);
+    PhaseScope const scope(&p, Phase::Sort);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
   EXPECT_EQ(p.total_us(), 0U);
@@ -63,12 +63,22 @@ TEST(FrameProfileTest, FormatOverlayIncludesAllPhases) {
   p.add_phase_us(Phase::Collection, 1000);
   p.add_phase_us(Phase::Sort, 500);
   p.add_phase_us(Phase::Playback, 2500);
+  p.combat_state_update_us = 250;
+  p.animation_input_sampling_us = 500;
+  p.humanoid_preparation_us = 750;
+  p.bpat_playback_us = 1000;
+  p.render_asset_cache_lookup_us = 125;
+  p.soldier_layout_generation_us = 375;
+  p.visible_soldiers = 64;
+  p.render_asset_cache_hits = 120;
+  p.render_asset_cache_misses = 8;
   p.draw_calls = 123;
   p.triangles = 4567;
   p.instances = 890;
   p.budget_headroom_ms = 5.5;
+  p.finish_frame_sample();
 
-  std::string s = format_overlay(p);
+  std::string const s = format_overlay(p);
   EXPECT_NE(s.find("frame #42"), std::string::npos);
   EXPECT_NE(s.find("collect"), std::string::npos);
   EXPECT_NE(s.find("sort"), std::string::npos);
@@ -76,11 +86,15 @@ TEST(FrameProfileTest, FormatOverlayIncludesAllPhases) {
   EXPECT_NE(s.find("draws=123"), std::string::npos);
   EXPECT_NE(s.find("tris=4567"), std::string::npos);
   EXPECT_NE(s.find("inst=890"), std::string::npos);
+  EXPECT_NE(s.find("avg/p95"), std::string::npos);
+  EXPECT_NE(s.find("soldiers=64"), std::string::npos);
+  EXPECT_NE(s.find("cache h/m=120/8"), std::string::npos);
+  EXPECT_NE(s.find("combat"), std::string::npos);
 }
 
 TEST(FrameProfileTest, FormatOverlayHandlesZeroTotal) {
-  FrameProfile p;
-  std::string s = format_overlay(p);
+  FrameProfile const p;
+  std::string const s = format_overlay(p);
   EXPECT_NE(s.find("frame #0"), std::string::npos);
   EXPECT_NE(s.find("total"), std::string::npos);
   EXPECT_NE(s.find("draws="), std::string::npos);
@@ -94,6 +108,21 @@ TEST(FrameProfileTest, GlobalProfileIsSingleton) {
   a.add_phase_us(Phase::Sort, 10);
   EXPECT_EQ(b.phase_us[static_cast<std::size_t>(Phase::Sort)], 10U);
   a.reset();
+}
+
+TEST(FrameProfileTest, FinishFrameSampleComputesRollingAverageAndP95) {
+  FrameProfile p;
+  p.add_phase_us(Phase::Collection, 1000);
+  p.finish_frame_sample();
+  p.reset();
+  p.add_phase_us(Phase::Collection, 3000);
+  p.finish_frame_sample();
+  p.reset();
+  p.add_phase_us(Phase::Collection, 5000);
+  p.finish_frame_sample();
+
+  EXPECT_NEAR(p.average_frame_ms, 3.0, 0.01);
+  EXPECT_NEAR(p.p95_frame_ms, 5.0, 0.01);
 }
 
 TEST(FrameProfileTest, PhaseNameMatchesEnum) {

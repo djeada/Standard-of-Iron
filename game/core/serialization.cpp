@@ -59,6 +59,52 @@ auto combat_mode_from_string(const QString& value) -> AttackComponent::CombatMod
   return AttackComponent::CombatMode::Auto;
 }
 
+auto healer_affinity_to_string(HealerComponent::TargetAffinity affinity) -> QString {
+  switch (affinity) {
+  case HealerComponent::TargetAffinity::UndeadAllies:
+    return "undead_allies";
+  case HealerComponent::TargetAffinity::LivingAllies:
+  default:
+    return "living_allies";
+  }
+}
+
+auto healer_affinity_from_string(const QString& value)
+    -> HealerComponent::TargetAffinity {
+  if (value == "undead_allies") {
+    return HealerComponent::TargetAffinity::UndeadAllies;
+  }
+  return HealerComponent::TargetAffinity::LivingAllies;
+}
+
+auto projectile_kind_to_string(Game::Systems::ProjectileKind kind) -> QString {
+  switch (kind) {
+  case Game::Systems::ProjectileKind::Fireball:
+    return "fireball";
+  case Game::Systems::ProjectileKind::CursedArrow:
+    return "cursed_arrow";
+  case Game::Systems::ProjectileKind::Stone:
+    return "stone";
+  case Game::Systems::ProjectileKind::Arrow:
+  default:
+    return "arrow";
+  }
+}
+
+auto projectile_kind_from_string(const QString& value)
+    -> Game::Systems::ProjectileKind {
+  if (value == "fireball") {
+    return Game::Systems::ProjectileKind::Fireball;
+  }
+  if (value == "cursed_arrow") {
+    return Game::Systems::ProjectileKind::CursedArrow;
+  }
+  if (value == "stone") {
+    return Game::Systems::ProjectileKind::Stone;
+  }
+  return Game::Systems::ProjectileKind::Arrow;
+}
+
 auto serialize_color(const std::array<float, 3>& color) -> QJsonArray {
   QJsonArray array;
   array.append(color[0]);
@@ -259,6 +305,44 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["morale"] = morale_obj;
   }
 
+  if (const auto* undead = entity->get_component<UndeadComponent>()) {
+    QJsonObject undead_obj;
+    undead_obj["morale_immune"] = undead->morale_immune;
+    undead_obj["fire_damage_multiplier"] =
+        static_cast<double>(undead->fire_damage_multiplier);
+    undead_obj["priest_damage_multiplier"] =
+        static_cast<double>(undead->priest_damage_multiplier);
+    undead_obj["cavalry_charge_damage_multiplier"] =
+        static_cast<double>(undead->cavalry_charge_damage_multiplier);
+    undead_obj["counts_for_economy"] = undead->counts_for_economy;
+    entity_obj["undead"] = undead_obj;
+  }
+
+  if (const auto* cursed = entity->get_component<CursedStatusComponent>()) {
+    QJsonObject cursed_obj;
+    cursed_obj["morale_penalty_per_hit"] =
+        static_cast<double>(cursed->morale_penalty_per_hit);
+    cursed_obj["duration"] = static_cast<double>(cursed->duration);
+    cursed_obj["remaining_duration"] = static_cast<double>(cursed->remaining_duration);
+    cursed_obj["stacks"] = cursed->stacks;
+    entity_obj["cursed_status"] = cursed_obj;
+  }
+
+  if (const auto* burning = entity->get_component<BurningStatusComponent>()) {
+    QJsonObject burning_obj;
+    burning_obj["duration"] = static_cast<double>(burning->duration);
+    burning_obj["remaining_duration"] =
+        static_cast<double>(burning->remaining_duration);
+    burning_obj["ignition_elapsed"] = static_cast<double>(burning->ignition_elapsed);
+    burning_obj["tick_interval"] = static_cast<double>(burning->tick_interval);
+    burning_obj["tick_accumulator"] = static_cast<double>(burning->tick_accumulator);
+    burning_obj["damage_per_tick"] = burning->damage_per_tick;
+    burning_obj["attacker_id"] = static_cast<qint64>(burning->attacker_id);
+    burning_obj["fire_bonus_multiplier"] =
+        static_cast<double>(burning->fire_bonus_multiplier);
+    entity_obj["burning_status"] = burning_obj;
+  }
+
   if (const auto* patrol = entity->get_component<PatrolComponent>()) {
     QJsonObject patrol_obj;
     patrol_obj["current_waypoint"] = static_cast<int>(patrol->current_waypoint);
@@ -358,7 +442,56 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     healer_obj["is_healing_active"] = healer->is_healing_active;
     healer_obj["healing_target_x"] = static_cast<double>(healer->healing_target_x);
     healer_obj["healing_target_z"] = static_cast<double>(healer->healing_target_z);
+    healer_obj["target_affinity"] = healer_affinity_to_string(healer->target_affinity);
+    healer_obj["suppress_attack_while_healing"] = healer->suppress_attack_while_healing;
     entity_obj["healer"] = healer_obj;
+  }
+
+  if (const auto* special_attack = entity->get_component<SpecialAttackComponent>()) {
+    QJsonObject special_attack_obj;
+    special_attack_obj["projectile_kind"] =
+        projectile_kind_to_string(special_attack->projectile_kind);
+    special_attack_obj["use_projectile_system"] = special_attack->use_projectile_system;
+    special_attack_obj["friendly_fire"] = special_attack->friendly_fire;
+    special_attack_obj["splash_radius"] =
+        static_cast<double>(special_attack->splash_radius);
+    special_attack_obj["splash_damage_multiplier"] =
+        static_cast<double>(special_attack->splash_damage_multiplier);
+    special_attack_obj["bonus_damage_multiplier_vs_fire_vulnerable"] =
+        static_cast<double>(special_attack->bonus_damage_multiplier_vs_fire_vulnerable);
+    special_attack_obj["cursed_duration"] =
+        static_cast<double>(special_attack->cursed_duration);
+    special_attack_obj["cursed_morale_penalty_per_hit"] =
+        static_cast<double>(special_attack->cursed_morale_penalty_per_hit);
+    special_attack_obj["cursed_stacks_per_hit"] = special_attack->cursed_stacks_per_hit;
+    special_attack_obj["fire_patch_duration"] =
+        static_cast<double>(special_attack->fire_patch_duration);
+    special_attack_obj["fire_patch_radius"] =
+        static_cast<double>(special_attack->fire_patch_radius);
+    special_attack_obj["burn_duration"] =
+        static_cast<double>(special_attack->burn_duration);
+    special_attack_obj["burn_tick_interval"] =
+        static_cast<double>(special_attack->burn_tick_interval);
+    special_attack_obj["burn_damage_per_tick"] = special_attack->burn_damage_per_tick;
+    entity_obj["special_attack"] = special_attack_obj;
+  }
+
+  if (const auto* fire_patch = entity->get_component<FirePatchComponent>()) {
+    QJsonObject fire_patch_obj;
+    fire_patch_obj["radius"] = static_cast<double>(fire_patch->radius);
+    fire_patch_obj["duration"] = static_cast<double>(fire_patch->duration);
+    fire_patch_obj["remaining_duration"] =
+        static_cast<double>(fire_patch->remaining_duration);
+    fire_patch_obj["burn_duration"] = static_cast<double>(fire_patch->burn_duration);
+    fire_patch_obj["burn_tick_interval"] =
+        static_cast<double>(fire_patch->burn_tick_interval);
+    fire_patch_obj["burn_damage_per_tick"] = fire_patch->burn_damage_per_tick;
+    fire_patch_obj["attacker_owner_id"] = fire_patch->attacker_owner_id;
+    fire_patch_obj["attacker_id"] = static_cast<qint64>(fire_patch->attacker_id);
+    fire_patch_obj["friendly_fire"] = fire_patch->friendly_fire;
+    fire_patch_obj["fire_bonus_multiplier"] =
+        static_cast<double>(fire_patch->fire_bonus_multiplier);
+    entity_obj["fire_patch"] = fire_patch_obj;
   }
 
   if (const auto* commander_guard = entity->get_component<CommanderGuardComponent>()) {
@@ -801,6 +934,55 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     morale->routing = morale_obj["routing"].toBool(morale->routing);
   }
 
+  if (json.contains("undead")) {
+    const auto undead_obj = json["undead"].toObject();
+    auto* undead = entity->add_component<UndeadComponent>();
+    undead->morale_immune = undead_obj["morale_immune"].toBool(undead->morale_immune);
+    undead->fire_damage_multiplier = static_cast<float>(
+        undead_obj["fire_damage_multiplier"].toDouble(undead->fire_damage_multiplier));
+    undead->priest_damage_multiplier =
+        static_cast<float>(undead_obj["priest_damage_multiplier"].toDouble(
+            undead->priest_damage_multiplier));
+    undead->cavalry_charge_damage_multiplier =
+        static_cast<float>(undead_obj["cavalry_charge_damage_multiplier"].toDouble(
+            undead->cavalry_charge_damage_multiplier));
+    undead->counts_for_economy =
+        undead_obj["counts_for_economy"].toBool(undead->counts_for_economy);
+  }
+
+  if (json.contains("cursed_status")) {
+    const auto cursed_obj = json["cursed_status"].toObject();
+    auto* cursed = entity->add_component<CursedStatusComponent>();
+    cursed->morale_penalty_per_hit = static_cast<float>(
+        cursed_obj["morale_penalty_per_hit"].toDouble(cursed->morale_penalty_per_hit));
+    cursed->duration =
+        static_cast<float>(cursed_obj["duration"].toDouble(cursed->duration));
+    cursed->remaining_duration = static_cast<float>(
+        cursed_obj["remaining_duration"].toDouble(cursed->remaining_duration));
+    cursed->stacks = cursed_obj["stacks"].toInt(cursed->stacks);
+  }
+
+  if (json.contains("burning_status")) {
+    const auto burning_obj = json["burning_status"].toObject();
+    auto* burning = entity->add_component<BurningStatusComponent>();
+    burning->duration =
+        static_cast<float>(burning_obj["duration"].toDouble(burning->duration));
+    burning->remaining_duration = static_cast<float>(
+        burning_obj["remaining_duration"].toDouble(burning->remaining_duration));
+    burning->ignition_elapsed = static_cast<float>(
+        burning_obj["ignition_elapsed"].toDouble(burning->ignition_elapsed));
+    burning->tick_interval = static_cast<float>(
+        burning_obj["tick_interval"].toDouble(burning->tick_interval));
+    burning->tick_accumulator = static_cast<float>(
+        burning_obj["tick_accumulator"].toDouble(burning->tick_accumulator));
+    burning->damage_per_tick =
+        burning_obj["damage_per_tick"].toInt(burning->damage_per_tick);
+    burning->attacker_id =
+        static_cast<EntityID>(burning_obj["attacker_id"].toVariant().toULongLong());
+    burning->fire_bonus_multiplier = static_cast<float>(
+        burning_obj["fire_bonus_multiplier"].toDouble(burning->fire_bonus_multiplier));
+  }
+
   if (json.contains("patrol")) {
     const auto patrol_obj = json["patrol"].toObject();
     auto* patrol = entity->add_component<PatrolComponent>();
@@ -923,6 +1105,78 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(healer_obj["healing_target_x"].toDouble(0.0));
     healer->healing_target_z =
         static_cast<float>(healer_obj["healing_target_z"].toDouble(0.0));
+    healer->target_affinity =
+        healer_affinity_from_string(healer_obj["target_affinity"].toString());
+    healer->suppress_attack_while_healing =
+        healer_obj["suppress_attack_while_healing"].toBool(
+            healer->suppress_attack_while_healing);
+  }
+
+  if (json.contains("special_attack")) {
+    const auto special_attack_obj = json["special_attack"].toObject();
+    auto* special_attack = entity->add_component<SpecialAttackComponent>();
+    special_attack->projectile_kind =
+        projectile_kind_from_string(special_attack_obj["projectile_kind"].toString());
+    special_attack->use_projectile_system =
+        special_attack_obj["use_projectile_system"].toBool(false);
+    special_attack->friendly_fire = special_attack_obj["friendly_fire"].toBool(false);
+    special_attack->splash_radius = static_cast<float>(
+        special_attack_obj["splash_radius"].toDouble(special_attack->splash_radius));
+    special_attack->splash_damage_multiplier =
+        static_cast<float>(special_attack_obj["splash_damage_multiplier"].toDouble(
+            special_attack->splash_damage_multiplier));
+    special_attack->bonus_damage_multiplier_vs_fire_vulnerable = static_cast<float>(
+        special_attack_obj["bonus_damage_multiplier_vs_fire_vulnerable"].toDouble(
+            special_attack->bonus_damage_multiplier_vs_fire_vulnerable));
+    special_attack->cursed_duration =
+        static_cast<float>(special_attack_obj["cursed_duration"].toDouble(
+            special_attack->cursed_duration));
+    special_attack->cursed_morale_penalty_per_hit =
+        static_cast<float>(special_attack_obj["cursed_morale_penalty_per_hit"].toDouble(
+            special_attack->cursed_morale_penalty_per_hit));
+    special_attack->cursed_stacks_per_hit =
+        special_attack_obj["cursed_stacks_per_hit"].toInt(
+            special_attack->cursed_stacks_per_hit);
+    special_attack->fire_patch_duration =
+        static_cast<float>(special_attack_obj["fire_patch_duration"].toDouble(
+            special_attack->fire_patch_duration));
+    special_attack->fire_patch_radius =
+        static_cast<float>(special_attack_obj["fire_patch_radius"].toDouble(
+            special_attack->fire_patch_radius));
+    special_attack->burn_duration = static_cast<float>(
+        special_attack_obj["burn_duration"].toDouble(special_attack->burn_duration));
+    special_attack->burn_tick_interval =
+        static_cast<float>(special_attack_obj["burn_tick_interval"].toDouble(
+            special_attack->burn_tick_interval));
+    special_attack->burn_damage_per_tick =
+        special_attack_obj["burn_damage_per_tick"].toInt(
+            special_attack->burn_damage_per_tick);
+  }
+
+  if (json.contains("fire_patch")) {
+    const auto fire_patch_obj = json["fire_patch"].toObject();
+    auto* fire_patch = entity->add_component<FirePatchComponent>();
+    fire_patch->radius =
+        static_cast<float>(fire_patch_obj["radius"].toDouble(fire_patch->radius));
+    fire_patch->duration =
+        static_cast<float>(fire_patch_obj["duration"].toDouble(fire_patch->duration));
+    fire_patch->remaining_duration = static_cast<float>(
+        fire_patch_obj["remaining_duration"].toDouble(fire_patch->remaining_duration));
+    fire_patch->burn_duration = static_cast<float>(
+        fire_patch_obj["burn_duration"].toDouble(fire_patch->burn_duration));
+    fire_patch->burn_tick_interval = static_cast<float>(
+        fire_patch_obj["burn_tick_interval"].toDouble(fire_patch->burn_tick_interval));
+    fire_patch->burn_damage_per_tick =
+        fire_patch_obj["burn_damage_per_tick"].toInt(fire_patch->burn_damage_per_tick);
+    fire_patch->attacker_owner_id =
+        fire_patch_obj["attacker_owner_id"].toInt(fire_patch->attacker_owner_id);
+    fire_patch->attacker_id =
+        static_cast<EntityID>(fire_patch_obj["attacker_id"].toVariant().toULongLong());
+    fire_patch->friendly_fire =
+        fire_patch_obj["friendly_fire"].toBool(fire_patch->friendly_fire);
+    fire_patch->fire_bonus_multiplier =
+        static_cast<float>(fire_patch_obj["fire_bonus_multiplier"].toDouble(
+            fire_patch->fire_bonus_multiplier));
   }
 
   if (json.contains("commander_guard")) {

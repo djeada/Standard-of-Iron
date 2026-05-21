@@ -152,6 +152,10 @@ auto MissionLoader::parse_condition(const QJsonObject& obj) -> Condition {
     cond.structure_type = obj["structure_type"].toString();
   }
 
+  if (obj.contains("zone_id")) {
+    cond.zone_id = obj["zone_id"].toString();
+  }
+
   if (obj.contains("structure_types") && obj["structure_types"].isArray()) {
     const QJsonArray types = obj["structure_types"].toArray();
     for (const auto& type_val : types) {
@@ -294,6 +298,9 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
       out_mission.events.push_back(parse_game_event(event_val.toObject()));
     }
   }
+
+  out_mission.include_ambient_undead =
+      root["include_ambient_undead"].toBool(out_mission.include_ambient_undead);
 
   return true;
 }

@@ -12,6 +12,8 @@
 #include "../../../creature/animation_state_components.h"
 #include "../../../creature/movement_animation.h"
 #include "../../../entity/registry.h"
+#include "../../../profiling/combat_animation_diagnostics.h"
+#include "../../../profiling/frame_profile.h"
 #include "../humanoid_constants.h"
 
 namespace Render::GL {
@@ -40,17 +42,9 @@ void reset_humanoid_animation_state(
   state.idle_duration = 0.0F;
   state.last_sample_time = 0.0F;
   state.initialized = false;
-  state.transient_attack_active = false;
-  state.transient_attack_is_melee = false;
-  state.transient_attack_is_mounted = false;
-  state.transient_attack_finisher = false;
-  state.transient_attack_amplified = false;
-  state.transient_attack_phase = 0.0F;
-  state.transient_attack_last_sample_time = 0.0F;
-  state.transient_attack_emphasis = 1.0F;
-  state.transient_attack_variant = 0U;
-  state.transient_attack_family = Engine::Core::CombatAttackFamily::None;
-  state.transient_attack_state = Render::Creature::AnimationStateId::Idle;
+  state.guard_pose_progress = 0.0F;
+  state.hold_pose_progress = 0.0F;
+  state.combat_visual = {};
   reset_humanoid_locomotion_state(state);
 }
 
@@ -80,6 +74,23 @@ public:
 private:
   const Engine::Core::CommanderComponent* m_commander = nullptr;
 };
+
+[[nodiscard]] auto is_infantry_formation_candidate(
+    const Engine::Core::UnitComponent* unit,
+    const Engine::Core::FormationModeComponent* formation_mode,
+    bool is_mounted) noexcept -> bool {
+  if (unit == nullptr || formation_mode == nullptr || is_mounted ||
+      !formation_mode->active) {
+    return false;
+  }
+
+  if (unit->spawn_type != Game::Units::SpawnType::Knight) {
+    return false;
+  }
+
+  return unit->nation_id == Game::Systems::NationID::RomanRepublic ||
+         unit->nation_id == Game::Systems::NationID::Carthage;
+}
 
 [[nodiscard]] auto forward_from_transform(
     const Engine::Core::TransformComponent* transform) noexcept -> QVector3D {
@@ -152,6 +163,8 @@ private:
   state.has_velocity = motion.has_velocity;
   state.has_navigation_intent = motion.has_navigation_intent;
   state.has_chase_intent = motion.has_chase_intent;
+  state.forced_displacement =
+      motion.source == Engine::Core::MotionPresentationSource::ForcedDisplacement;
   state.attack_target_in_range = motion.attack_target_in_range;
   state.movement_state = motion_presentation_to_animation_state(motion.state);
   state.has_movement_target = motion.has_movement_target;
@@ -176,6 +189,55 @@ private:
     state.speed_hint = (unit != nullptr) ? std::max(0.1F, unit->speed) : 0.0F;
   }
   return state;
+}
+
+struct StanceTargets {
+  bool hold{false};
+  bool exiting_hold{false};
+  float hold_entry_progress{0.0F};
+  float hold_exit_progress{0.0F};
+  bool guard{false};
+};
+
+[[nodiscard]] auto
+action_blocks_hold_pose(const AnimationInputs& anim) noexcept -> bool {
+  return (anim.is_attacking && anim.is_melee) || anim.is_hit_reacting ||
+         anim.is_constructing || anim.is_healing || anim.is_dying || anim.is_dead;
+}
+
+[[nodiscard]] auto
+action_allows_guard_pose(const AnimationInputs& anim) noexcept -> bool {
+  return !anim.is_attacking && !anim.is_hit_reacting && !anim.is_constructing &&
+         !anim.is_healing && !anim.is_dying && !anim.is_dead;
+}
+
+[[nodiscard]] auto resolve_stance_targets(
+    const Engine::Core::HoldModeComponent* hold_mode,
+    bool raw_guard_requested,
+    const Render::Creature::HumanoidAnimationStateComponent* humanoid_state,
+    const AnimationInputs& anim) noexcept -> StanceTargets {
+  StanceTargets targets{};
+
+  bool const hold_requested = hold_mode != nullptr && hold_mode->active;
+  bool const hold_exit_requested =
+      hold_mode != nullptr && !hold_mode->active && hold_mode->exit_cooldown > 0.0F;
+  bool const hold_blocked = action_blocks_hold_pose(anim);
+  targets.hold = hold_requested && !hold_blocked;
+  targets.exiting_hold = hold_blocked ? (humanoid_state != nullptr &&
+                                         humanoid_state->hold_pose_progress > 1.0e-4F)
+                                      : hold_exit_requested;
+  if (targets.hold && hold_mode != nullptr) {
+    targets.hold_entry_progress =
+        std::clamp(hold_mode->kneel_entry_progress, 0.0F, 1.0F);
+  }
+  if (targets.exiting_hold && !hold_blocked && hold_mode != nullptr) {
+    targets.hold_exit_progress =
+        1.0F -
+        (hold_mode->exit_cooldown / std::max(hold_mode->stand_up_duration, 1.0e-4F));
+  }
+
+  targets.guard = raw_guard_requested && action_allows_guard_pose(anim);
+  return targets;
 }
 
 } // namespace
@@ -206,12 +268,59 @@ auto visual_movement_for_animation_inputs(
   return synthesize_visual_movement_from_inputs(ctx, anim);
 }
 
+auto approximate_attack_phase(const AnimationInputs& anim) noexcept -> float {
+  if (!anim.is_attacking) {
+    return 0.0F;
+  }
+  if (anim.combat_phase == CombatAnimPhase::Idle) {
+    float const attack_offset = anim.has_attack_offset ? anim.attack_offset : 0.0F;
+    float const phase = std::fmod(anim.time + attack_offset, 1.0F);
+    return phase < 0.0F ? phase + 1.0F : phase;
+  }
+
+  auto const window = Render::Profiling::attack_phase_window(
+      anim.combat_phase, false, anim.finisher_attack);
+  return window.start + (window.end - window.start) *
+                            std::clamp(anim.combat_phase_progress, 0.0F, 1.0F);
+}
+
 auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
+  auto& profile = Render::Profiling::global_profile();
+  Render::Profiling::AccumulatorScope const scope(
+      ctx.template_prewarm ? nullptr : &profile.animation_input_sampling_us);
+
+  bool attack_from_combat_state = false;
+  bool attack_from_melee_lock = false;
+  auto finalize_sample = [&](const AnimationInputs& sampled_anim) {
+    if (!ctx.template_prewarm && ctx.entity != nullptr) {
+      Render::Profiling::UnitAnimationDebugSample debug_sample{};
+      debug_sample.entity_id = ctx.entity->get_id();
+      debug_sample.sample_time = sampled_anim.time;
+      debug_sample.combat_phase = sampled_anim.combat_phase;
+      debug_sample.combat_phase_progress = sampled_anim.combat_phase_progress;
+      debug_sample.attack_phase = approximate_attack_phase(sampled_anim);
+      debug_sample.attack_variant = sampled_anim.attack_variant;
+      debug_sample.is_attacking = sampled_anim.is_attacking;
+      debug_sample.is_in_melee_lock = sampled_anim.is_in_melee_lock;
+      debug_sample.locomotion_state = sampled_anim.movement_state;
+      debug_sample.attack_from_combat_state = attack_from_combat_state;
+      debug_sample.attack_from_melee_lock = attack_from_melee_lock;
+      if (auto* attack_target =
+              ctx.entity->get_component<Engine::Core::AttackTargetComponent>();
+          attack_target != nullptr) {
+        debug_sample.attack_target_id = attack_target->target_id;
+      }
+      Render::Profiling::CombatAnimationDiagnostics::instance().record_unit_sample(
+          debug_sample);
+    }
+    return sampled_anim;
+  };
+
   if (ctx.animation_override != nullptr) {
     AnimationInputs anim = *ctx.animation_override;
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);
     anim.movement_state = anim.visual_movement.movement_state;
-    return anim;
+    return finalize_sample(anim);
   }
   AnimationInputs anim{};
   anim.time = ctx.animation_time;
@@ -229,6 +338,8 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   anim.attack_offset = 0.0F;
   anim.has_attack_offset = false;
   anim.is_in_melee_lock = false;
+  anim.is_casting = false;
+  anim.cast_kind = CastVisualKind::None;
   anim.is_hit_reacting = false;
   anim.hit_reaction_intensity = 0.0F;
   anim.is_dying = false;
@@ -239,7 +350,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   if (ctx.entity == nullptr) {
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);
     anim.movement_state = anim.visual_movement.movement_state;
-    return anim;
+    return finalize_sample(anim);
   }
 
   auto* death_anim = ctx.entity->get_component<Engine::Core::DeathAnimationComponent>();
@@ -253,20 +364,22 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     }
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);
     anim.movement_state = anim.visual_movement.movement_state;
-    return anim;
+    return finalize_sample(anim);
   }
 
   auto* attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
   auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
-  auto* attack_target =
-      ctx.entity->get_component<Engine::Core::AttackTargetComponent>();
   auto* transform = ctx.entity->get_component<Engine::Core::TransformComponent>();
   auto* hold_mode = ctx.entity->get_component<Engine::Core::HoldModeComponent>();
+  auto* formation_mode =
+      ctx.entity->get_component<Engine::Core::FormationModeComponent>();
   auto* combat_state = ctx.entity->get_component<Engine::Core::CombatStateComponent>();
   auto* hit_feedback = ctx.entity->get_component<Engine::Core::HitFeedbackComponent>();
   auto* commander = ctx.entity->get_component<Engine::Core::CommanderComponent>();
   auto* commander_guard =
       ctx.entity->get_component<Engine::Core::CommanderGuardComponent>();
+  auto* special_attack =
+      ctx.entity->get_component<Engine::Core::SpecialAttackComponent>();
   StandardHumanoidAnimationPolicy const standard_policy;
   const CommanderHumanoidAnimationPolicy commander_policy(commander);
   const HumanoidAnimationModePolicy& animation_policy =
@@ -298,22 +411,15 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     }
     anim.visual_movement = visual_movement_for_animation_inputs(ctx, anim);
     anim.movement_state = Render::Creature::MovementAnimationState::Idle;
-    return anim;
+    return finalize_sample(anim);
   }
 
-  anim.is_in_hold_mode = ((hold_mode != nullptr) && hold_mode->active);
-  if (anim.is_in_hold_mode && hold_mode != nullptr) {
-    anim.hold_entry_progress = hold_mode->kneel_entry_progress;
-  }
-  if ((hold_mode != nullptr) && !hold_mode->active && hold_mode->exit_cooldown > 0.0F) {
-    anim.is_exiting_hold = true;
-    anim.hold_exit_progress =
-        1.0F - (hold_mode->exit_cooldown / hold_mode->stand_up_duration);
-  }
-  anim.is_guarding = animation_policy.is_guarding(commander_guard);
-  anim.guard_pose_progress = anim.is_guarding ? 1.0F : 0.0F;
   anim.visual_movement = movement_state;
   anim.movement_state = anim.visual_movement.movement_state;
+  bool const commander_guarding = animation_policy.is_guarding(commander_guard);
+  bool const infantry_formation_guarding =
+      is_infantry_formation_candidate(unit, formation_mode, false);
+  bool const raw_target_guarding = commander_guarding || infantry_formation_guarding;
 
   auto* healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
   if (healer != nullptr && healer->is_healing_active && transform != nullptr) {
@@ -351,6 +457,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
             combat_state->state_time / combat_state->state_duration;
       }
       anim.is_attacking = true;
+      attack_from_combat_state = true;
       anim.is_melee =
           (anim.attack_family == Engine::Core::CombatAttackFamily::None)
               ? ((attack != nullptr) &&
@@ -365,6 +472,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     anim.is_attacking = true;
     anim.is_melee = true;
     anim.is_in_melee_lock = true;
+    attack_from_melee_lock = true;
     if (anim.attack_family == Engine::Core::CombatAttackFamily::None &&
         unit != nullptr) {
       anim.attack_family = Engine::Core::resolve_combat_attack_family(
@@ -380,56 +488,42 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
         hit_feedback->reaction_intensity * std::max(0.0F, 1.0F - progress);
   }
 
-  if ((combat_state == nullptr) && (attack != nullptr) && (attack_target != nullptr) &&
-      attack_target->target_id > 0 && (transform != nullptr)) {
-    if (unit != nullptr) {
-      anim.attack_family = Engine::Core::resolve_combat_attack_family(
-          unit->spawn_type, attack->current_mode);
+  if (anim.is_attacking && !anim.is_melee && !anim.is_in_melee_lock &&
+      special_attack != nullptr && special_attack->use_projectile_system &&
+      Game::Systems::is_cast_projectile_kind(special_attack->projectile_kind)) {
+    anim.is_casting = true;
+    switch (special_attack->projectile_kind) {
+    case Game::Systems::ProjectileKind::Fireball:
+      anim.cast_kind = CastVisualKind::Fireball;
+      break;
+    case Game::Systems::ProjectileKind::Arrow:
+    case Game::Systems::ProjectileKind::CursedArrow:
+    case Game::Systems::ProjectileKind::Stone:
+      break;
     }
-    anim.is_melee =
-        (attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee);
-
-    float const current_cooldown =
-        anim.is_melee ? attack->melee_cooldown : attack->cooldown;
-    bool const recently_fired =
-        attack->time_since_last < std::min(current_cooldown, 0.45F);
-    float const effective_range =
-        std::max(0.0F, anim.is_melee ? attack->melee_range : attack->range);
-    auto const target_within_range = [&](float range) -> bool {
-      if (movement_state.attack_target_in_range) {
-        return true;
-      }
-      if (ctx.world == nullptr || range <= 0.0F) {
-        return false;
-      }
-      auto* target_entity = ctx.world->get_entity(attack_target->target_id);
-      if (target_entity == nullptr) {
-        return false;
-      }
-      auto* target_transform =
-          target_entity->get_component<Engine::Core::TransformComponent>();
-      if (target_transform == nullptr) {
-        return false;
-      }
-      float const dx = target_transform->position.x - transform->position.x;
-      float const dz = target_transform->position.z - transform->position.z;
-      return (dx * dx + dz * dz) <= (range * range);
-    };
-    bool const target_in_range = target_within_range(effective_range);
-    bool const target_in_recent_attack_grace =
-        recently_fired && target_within_range(effective_range + 0.35F);
-    anim.is_attacking = target_in_range || target_in_recent_attack_grace;
   }
 
+  StanceTargets const stance =
+      resolve_stance_targets(hold_mode, raw_target_guarding, humanoid_state, anim);
+  anim.is_in_hold_mode = stance.hold;
+  anim.is_exiting_hold = stance.exiting_hold;
+  anim.hold_entry_progress = stance.hold_entry_progress;
+  anim.hold_exit_progress = stance.hold_exit_progress;
+
+  bool const has_guard_pose =
+      stance.guard ||
+      (humanoid_state != nullptr && humanoid_state->guard_pose_progress > 1.0e-4F);
   bool const is_active = Render::Creature::is_moving_animation(anim.movement_state) ||
                          anim.is_attacking || anim.is_constructing || anim.is_healing ||
                          anim.is_hit_reacting || anim.is_dying || anim.is_dead ||
-                         anim.is_in_hold_mode || anim.is_exiting_hold ||
-                         anim.is_guarding;
+                         anim.is_in_hold_mode || anim.is_exiting_hold || has_guard_pose;
 
   if (humanoid_state == nullptr) {
+    anim.is_guarding = stance.guard;
+    anim.is_exiting_guard = false;
+    anim.guard_pose_progress = stance.guard ? 1.0F : 0.0F;
     anim.idle_duration = 0.0F;
-    return anim;
+    return finalize_sample(anim);
   }
 
   bool const should_persist = should_persist_animation_state(ctx);
@@ -446,14 +540,65 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
 
   float idle_duration = humanoid_state->idle_duration;
   bool const initialized = humanoid_state->initialized;
+  float guard_pose_progress = stance.guard ? 1.0F : 0.0F;
+  float hold_pose_progress =
+      stance.hold ? std::clamp(anim.hold_entry_progress, 0.0F, 1.0F) : 0.0F;
+  bool is_exiting_guard = false;
+  bool is_exiting_hold = anim.is_exiting_hold;
   if (!initialized) {
     idle_duration = 0.0F;
+    guard_pose_progress = 0.0F;
+    hold_pose_progress = 0.0F;
     if (should_persist) {
       humanoid_state->initialized = true;
       humanoid_state->idle_duration = 0.0F;
       humanoid_state->last_sample_time = anim.time;
+      humanoid_state->guard_pose_progress = guard_pose_progress;
+      humanoid_state->hold_pose_progress = hold_pose_progress;
     }
   } else {
+    float const previous_guard_pose =
+        std::clamp(humanoid_state->guard_pose_progress, 0.0F, 1.0F);
+    float const previous_hold_pose =
+        std::clamp(humanoid_state->hold_pose_progress, 0.0F, 1.0F);
+    if (stance.guard) {
+      float const enter_duration =
+          std::max(Engine::Core::Defaults::k_hold_kneel_duration, 1.0e-4F);
+      guard_pose_progress =
+          std::min(1.0F, previous_guard_pose + delta_time / enter_duration);
+    } else if (previous_guard_pose > 0.0F) {
+      float const exit_duration =
+          std::max(Engine::Core::Defaults::k_hold_stand_up_duration, 1.0e-4F);
+      guard_pose_progress =
+          std::max(0.0F, previous_guard_pose - delta_time / exit_duration);
+      is_exiting_guard = guard_pose_progress > 0.0F;
+    } else {
+      guard_pose_progress = 0.0F;
+    }
+
+    if (stance.hold) {
+      float const enter_duration = std::max(
+          (hold_mode != nullptr) ? hold_mode->kneel_duration
+                                 : Engine::Core::Defaults::k_hold_kneel_duration,
+          1.0e-4F);
+      float const gameplay_progress = std::clamp(anim.hold_entry_progress, 0.0F, 1.0F);
+      float const max_visual_progress =
+          std::min(1.0F, previous_hold_pose + delta_time / enter_duration);
+      hold_pose_progress = std::min(std::max(previous_hold_pose, gameplay_progress),
+                                    max_visual_progress);
+    } else if (previous_hold_pose > 0.0F) {
+      float const exit_duration = std::max(
+          (hold_mode != nullptr) ? hold_mode->stand_up_duration
+                                 : Engine::Core::Defaults::k_hold_stand_up_duration,
+          1.0e-4F);
+      hold_pose_progress =
+          std::max(0.0F, previous_hold_pose - delta_time / exit_duration);
+      is_exiting_hold = hold_pose_progress > 0.0F;
+    } else {
+      hold_pose_progress = 0.0F;
+      is_exiting_hold = false;
+    }
+
     if (is_active) {
       idle_duration = 0.0F;
     } else {
@@ -467,10 +612,27 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     }
     humanoid_state->last_sample_time = anim.time;
     humanoid_state->idle_duration = idle_duration;
+    humanoid_state->guard_pose_progress = guard_pose_progress;
+    humanoid_state->hold_pose_progress = hold_pose_progress;
   }
 
+  anim.is_guarding = stance.guard;
+  anim.is_exiting_guard = is_exiting_guard;
+  anim.guard_pose_progress = guard_pose_progress;
+  anim.is_in_hold_mode = stance.hold;
+  anim.is_exiting_hold = is_exiting_hold;
+  if (stance.hold) {
+    anim.hold_entry_progress = hold_pose_progress;
+    anim.hold_exit_progress = 0.0F;
+  } else if (is_exiting_hold) {
+    anim.hold_entry_progress = 0.0F;
+    anim.hold_exit_progress = 1.0F - hold_pose_progress;
+  } else {
+    anim.hold_entry_progress = 0.0F;
+    anim.hold_exit_progress = 0.0F;
+  }
   anim.idle_duration = idle_duration;
-  return anim;
+  return finalize_sample(anim);
 }
 
 } // namespace Render::GL

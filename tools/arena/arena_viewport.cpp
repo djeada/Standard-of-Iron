@@ -22,20 +22,26 @@
 
 #include "app/core/renderer_bootstrap.h"
 #include "app/utils/movement_utils.h"
+#include "arena_scenarios.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
+#include "game/map/visibility_service.h"
 #include "game/map/world_bootstrap.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/arrow_system.h"
 #include "game/systems/camera_service.h"
+#include "game/systems/camera_visibility_service.h"
 #include "game/systems/command_service.h"
+#include "game/systems/healing_beam_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/picking_service.h"
+#include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/units/factory.h"
@@ -43,12 +49,20 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
+#include "render/entity/combat_dust_renderer.h"
+#include "render/entity/healer_aura_renderer.h"
+#include "render/entity/healing_beam_renderer.h"
+#include "render/entity/healing_waves_renderer.h"
+#include "render/geom/arrow.h"
+#include "render/geom/projectile_renderer.h"
 #include "render/gl/camera.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
+#include "render/profiling/combat_animation_diagnostics.h"
+#include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 #include "unit_spawn_options.h"
@@ -67,6 +81,26 @@ constexpr float k_unit_spawn_clearance = 3.25F;
 constexpr float k_building_spawn_clearance = 5.0F;
 constexpr float k_spawn_search_step_factor = 1.1F;
 constexpr int k_max_spawn_search_ring = 20;
+
+auto combat_phase_duration(Render::GL::CombatAnimPhase phase) -> float {
+  switch (phase) {
+  case Render::GL::CombatAnimPhase::Advance:
+    return Engine::Core::CombatStateComponent::k_advance_duration;
+  case Render::GL::CombatAnimPhase::WindUp:
+    return Engine::Core::CombatStateComponent::k_wind_up_duration;
+  case Render::GL::CombatAnimPhase::Strike:
+    return Engine::Core::CombatStateComponent::k_strike_duration;
+  case Render::GL::CombatAnimPhase::Impact:
+    return Engine::Core::CombatStateComponent::k_impact_duration;
+  case Render::GL::CombatAnimPhase::Recover:
+    return Engine::Core::CombatStateComponent::k_recover_duration;
+  case Render::GL::CombatAnimPhase::Reposition:
+    return Engine::Core::CombatStateComponent::k_reposition_duration;
+  case Render::GL::CombatAnimPhase::Idle:
+  default:
+    return 0.0F;
+  }
+}
 
 auto local_controllable_selection(
     Engine::Core::World* world, const std::vector<Engine::Core::EntityID>& selected_ids)
@@ -142,6 +176,9 @@ auto world_prop_type_from_string(const QString& prop_type)
   if (normalized == QStringLiteral("ruins")) {
     return Game::Map::WorldProp::Type::Ruins;
   }
+  if (normalized == QStringLiteral("magic_shrine")) {
+    return Game::Map::WorldProp::Type::MagicShrine;
+  }
   if (normalized == QStringLiteral("dead_tree")) {
     return Game::Map::WorldProp::Type::DeadTree;
   }
@@ -204,6 +241,34 @@ auto entity_spawn_clearance(const Engine::Core::Entity& entity) -> float {
              : k_unit_spawn_clearance;
 }
 
+auto scenario_center(Engine::Core::World* world,
+                     const std::vector<Engine::Core::EntityID>& entity_ids)
+    -> QVector3D {
+  if (world == nullptr || entity_ids.empty()) {
+    return {};
+  }
+
+  QVector3D accumulated(0.0F, 0.0F, 0.0F);
+  int count = 0;
+  for (Engine::Core::EntityID const entity_id : entity_ids) {
+    auto* entity = world->get_entity(entity_id);
+    auto* transform = entity != nullptr
+                          ? entity->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+    if (transform == nullptr) {
+      continue;
+    }
+    accumulated +=
+        QVector3D(transform->position.x, transform->position.y, transform->position.z);
+    ++count;
+  }
+
+  if (count <= 0) {
+    return {};
+  }
+  return accumulated / static_cast<float>(count);
+}
+
 } // namespace
 
 ArenaViewport::ArenaViewport(QWidget* parent)
@@ -227,11 +292,12 @@ ArenaViewport::ArenaViewport(QWidget* parent)
   m_rain = std::move(rendering.rain);
   m_camera_service = std::make_unique<Game::Systems::CameraService>();
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
-  if (m_renderer != nullptr) {
-    m_renderer->set_force_full_creature_lod(true);
-  }
+  set_force_full_creature_lod(true);
 
   RendererBootstrap::initialize_world_systems(*m_world);
+  Game::Map::VisibilityService::instance().initialize(
+      k_terrain_width, k_terrain_height, k_terrain_tile_size);
+  Game::Map::VisibilityService::instance().reveal_all();
   configure_runtime();
   regenerate_terrain();
   reset_camera();
@@ -245,6 +311,7 @@ ArenaViewport::ArenaViewport(QWidget* parent)
 ArenaViewport::~ArenaViewport() {
   m_frame_timer.stop();
   m_units.clear();
+  Game::Systems::CameraVisibilityService::instance().clear_camera();
   Game::Map::TerrainService::instance().clear();
 
   if (context() != nullptr) {
@@ -352,13 +419,16 @@ void ArenaViewport::paintGL() {
   std::erase_if(m_units, [this](const std::unique_ptr<Game::Units::Unit>& unit) {
     return unit == nullptr || m_world->get_entity(unit->id()) == nullptr;
   });
+  update_active_scenario(simulation_dt);
 
   if (width() > 0 && height() > 0) {
     m_renderer->set_viewport(width(), height());
   }
+  Game::Systems::CameraVisibilityService::instance().set_camera(m_camera.get());
 
   update_selected_entities();
   sync_selection_summary();
+  apply_attack_scrub_override();
   m_renderer->set_hovered_entity_id(m_hovered_entity_id);
   m_renderer->set_local_owner_id(k_local_owner_id);
   m_renderer->update_animation_time(simulation_dt);
@@ -367,6 +437,22 @@ void ArenaViewport::paintGL() {
     m_terrain_scene->submit(*m_renderer, m_renderer->resources());
   }
   m_renderer->render_world(m_world.get());
+  if (auto* res = m_renderer->resources(); res != nullptr) {
+    if (auto* arrow_system = m_world->get_system<Game::Systems::ArrowSystem>()) {
+      Render::GL::render_arrows(m_renderer.get(), res, *arrow_system);
+    }
+    if (auto* projectile_system =
+            m_world->get_system<Game::Systems::ProjectileSystem>()) {
+      Render::GL::render_projectiles(m_renderer.get(), res, *projectile_system);
+    }
+    if (auto* healing_beam_system =
+            m_world->get_system<Game::Systems::HealingBeamSystem>()) {
+      Render::GL::render_healing_beams(m_renderer.get(), res, *healing_beam_system);
+      Render::GL::render_healing_waves(m_renderer.get(), res, *healing_beam_system);
+    }
+    Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
+    Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
+  }
   m_renderer->end_frame();
 
   {
@@ -1378,20 +1464,29 @@ auto ArenaViewport::spawn_single_unit(int owner_id,
                                       Game::Systems::NationID nation_id,
                                       Game::Units::TroopType unit_type)
     -> Engine::Core::EntityID {
+  QVector3D const spawn_position = find_available_spawn_position(
+      resolve_spawn_anchor_world(), k_unit_spawn_clearance);
+  return spawn_single_unit(
+      owner_id, nation_id, unit_type, spawn_position, owner_id == k_enemy_owner_id);
+}
+
+auto ArenaViewport::spawn_single_unit(int owner_id,
+                                      Game::Systems::NationID nation_id,
+                                      Game::Units::TroopType unit_type,
+                                      const QVector3D& spawn_position,
+                                      bool ai_controlled) -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
   }
 
   Game::Units::TroopType const resolved_unit_type =
       resolve_spawn_unit_type(nation_id, unit_type);
-  QVector3D const spawn_position = find_available_spawn_position(
-      resolve_spawn_anchor_world(), k_unit_spawn_clearance);
 
   Game::Units::SpawnParams params;
   params.position = spawn_position;
   params.player_id = owner_id;
   params.spawn_type = Game::Units::spawn_typeFromTroopType(resolved_unit_type);
-  params.ai_controlled = (owner_id == k_enemy_owner_id);
+  params.ai_controlled = ai_controlled;
   params.nation_id = nation_id;
 
   auto unit = m_unit_factory->create(resolved_unit_type, *m_world, params);
@@ -1421,6 +1516,16 @@ auto ArenaViewport::spawn_single_unit(int owner_id,
   Engine::Core::EntityID const entity_id = unit->id();
   m_units.push_back(std::move(unit));
   return entity_id;
+}
+
+auto ArenaViewport::find_unit_handle(Engine::Core::EntityID entity_id) const
+    -> Game::Units::Unit* {
+  auto it = std::find_if(m_units.begin(),
+                         m_units.end(),
+                         [entity_id](const std::unique_ptr<Game::Units::Unit>& unit) {
+                           return unit != nullptr && unit->id() == entity_id;
+                         });
+  return it != m_units.end() ? it->get() : nullptr;
 }
 
 void ArenaViewport::clear_units() {
@@ -1609,8 +1714,346 @@ void ArenaViewport::clear_world_props_of_type() {
 void ArenaViewport::reset_arena() {
   clear_units();
   clear_world_props();
+  m_active_scenario = {};
+  m_attack_scrub_entity_id = 0;
+  m_attack_scrub_enabled = false;
+  m_attack_scrub_phase = 0.5F;
+  set_force_full_creature_lod(true);
   pause_simulation(false);
   reset_camera();
+}
+
+void ArenaViewport::load_scenario(const QString& scenario_id) {
+  if (Arena::Scenarios::find_option(scenario_id) == nullptr || m_world == nullptr) {
+    return;
+  }
+
+  reset_arena();
+  clear_camera_key_state();
+
+  auto set_attack_target =
+      [this](Engine::Core::EntityID attacker_id,
+             Engine::Core::EntityID target_id,
+             bool should_chase,
+             Engine::Core::AttackComponent::CombatMode preferred_mode) {
+        auto* attacker = m_world->get_entity(attacker_id);
+        auto* attack = attacker != nullptr
+                           ? attacker->get_component<Engine::Core::AttackComponent>()
+                           : nullptr;
+        if (attacker == nullptr || attack == nullptr) {
+          return;
+        }
+        auto* attack_target =
+            attacker->get_component<Engine::Core::AttackTargetComponent>();
+        if (attack_target == nullptr) {
+          attack_target =
+              attacker->add_component<Engine::Core::AttackTargetComponent>();
+        }
+        if (attack_target == nullptr) {
+          return;
+        }
+        attack_target->target_id = target_id;
+        attack_target->should_chase = should_chase;
+        attack->preferred_mode = preferred_mode;
+        attack->current_mode = preferred_mode;
+      };
+
+  auto set_unit_visuals = [this](Engine::Core::EntityID entity_id,
+                                 int individuals_per_unit,
+                                 bool render_rider) {
+    auto* entity = m_world->get_entity(entity_id);
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    if (unit == nullptr) {
+      return;
+    }
+    unit->render_individuals_per_unit_override = individuals_per_unit;
+    unit->render_rider = render_rider;
+  };
+
+  auto set_unit_health =
+      [this](Engine::Core::EntityID entity_id, int health, int max_health) {
+        auto* entity = m_world->get_entity(entity_id);
+        auto* unit = entity != nullptr
+                         ? entity->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+        if (unit == nullptr) {
+          return;
+        }
+        unit->health = std::max(0, health);
+        unit->max_health = std::max(1, max_health);
+      };
+
+  QVector3D const anchor = resolve_spawn_anchor_world();
+  auto spawn_at = [this, anchor, &set_unit_visuals](int owner_id,
+                                                    Game::Systems::NationID nation_id,
+                                                    Game::Units::TroopType troop_type,
+                                                    const QVector3D& offset,
+                                                    int individuals_per_unit = 1,
+                                                    bool render_rider = true) {
+    QVector3D const world_position = App::Utils::snap_to_walkable_ground(QVector3D(
+        anchor.x() + offset.x(), anchor.y() + offset.y(), anchor.z() + offset.z()));
+    Engine::Core::EntityID const entity_id =
+        spawn_single_unit(owner_id, nation_id, troop_type, world_position, false);
+    if (entity_id != 0U) {
+      set_unit_visuals(entity_id, individuals_per_unit, render_rider);
+    }
+    return entity_id;
+  };
+
+  std::vector<Engine::Core::EntityID> spawned_ids;
+  auto finalize_scenario = [this,
+                            &spawned_ids](float distance, float angle, float yaw) {
+    m_active_scenario.tracked_entities = spawned_ids;
+    select_spawned_entities(spawned_ids);
+    if (m_camera != nullptr) {
+      m_camera->set_rts_view(
+          scenario_center(m_world.get(), spawned_ids), distance, angle, yaw);
+    }
+    update();
+  };
+
+  m_active_scenario = {};
+  m_active_scenario.id = scenario_id;
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_sword_duel_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(-1.4F, 0.0F, 0.0F));
+    auto const defender = spawn_at(k_enemy_owner_id,
+                                   Game::Systems::NationID::Carthage,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(1.4F, 0.0F, 0.0F));
+    set_attack_target(
+        attacker, defender, false, Engine::Core::AttackComponent::CombatMode::Melee);
+    set_attack_target(
+        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Melee);
+    spawned_ids = {attacker, defender};
+    finalize_scenario(9.0F, 42.0F, 30.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_spear_duel_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::Spearman,
+                                   QVector3D(-1.8F, 0.0F, 0.0F));
+    auto const defender = spawn_at(k_enemy_owner_id,
+                                   Game::Systems::NationID::Carthage,
+                                   Game::Units::TroopType::Spearman,
+                                   QVector3D(1.8F, 0.0F, 0.0F));
+    set_attack_target(
+        attacker, defender, false, Engine::Core::AttackComponent::CombatMode::Melee);
+    set_attack_target(
+        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Melee);
+    spawned_ids = {attacker, defender};
+    finalize_scenario(9.5F, 42.0F, 30.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_bow_exchange_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::Archer,
+                                   QVector3D(-8.0F, 0.0F, 0.0F),
+                                   6);
+    auto const defender = spawn_at(k_enemy_owner_id,
+                                   Game::Systems::NationID::Carthage,
+                                   Game::Units::TroopType::Archer,
+                                   QVector3D(8.0F, 0.0F, 0.0F),
+                                   6);
+    set_attack_target(
+        attacker, defender, false, Engine::Core::AttackComponent::CombatMode::Ranged);
+    set_attack_target(
+        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Ranged);
+    spawned_ids = {attacker, defender};
+    finalize_scenario(14.0F, 45.0F, 35.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_mounted_charge_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::MountedKnight,
+                                   QVector3D(0.0F, 0.0F, -10.0F));
+    auto const defender = spawn_at(k_enemy_owner_id,
+                                   Game::Systems::NationID::Carthage,
+                                   Game::Units::TroopType::HorseSpearman,
+                                   QVector3D(0.0F, 0.0F, 10.0F));
+    set_attack_target(
+        attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
+    set_attack_target(
+        defender, attacker, true, Engine::Core::AttackComponent::CombatMode::Melee);
+    spawned_ids = {attacker, defender};
+    finalize_scenario(18.0F, 48.0F, 20.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_melee_lock_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(-0.8F, 0.0F, 0.0F));
+    auto const defender = spawn_at(k_enemy_owner_id,
+                                   Game::Systems::NationID::Carthage,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(0.8F, 0.0F, 0.0F));
+    set_attack_target(
+        attacker, defender, false, Engine::Core::AttackComponent::CombatMode::Melee);
+    set_attack_target(
+        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Melee);
+    for (auto [entity_id, target_id] :
+         {std::pair{attacker, defender}, std::pair{defender, attacker}}) {
+      auto* entity = m_world->get_entity(entity_id);
+      auto* attack = entity != nullptr
+                         ? entity->get_component<Engine::Core::AttackComponent>()
+                         : nullptr;
+      if (attack == nullptr) {
+        continue;
+      }
+      attack->in_melee_lock = true;
+      attack->melee_lock_target_id = target_id;
+      attack->preferred_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+      attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+    }
+    spawned_ids = {attacker, defender};
+    finalize_scenario(8.0F, 40.0F, 28.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_chase_to_attack_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(0.0F, 0.0F, -10.0F));
+    auto const defender = spawn_at(k_enemy_owner_id,
+                                   Game::Systems::NationID::Carthage,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(0.0F, 0.0F, 4.0F));
+    set_attack_target(
+        attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
+    spawned_ids = {attacker, defender};
+    finalize_scenario(16.0F, 46.0F, 20.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_attack_to_chase_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(0.0F, 0.0F, -2.0F));
+    auto const defender = spawn_at(k_enemy_owner_id,
+                                   Game::Systems::NationID::Carthage,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(0.0F, 0.0F, 1.6F));
+    set_attack_target(
+        attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
+    set_attack_target(
+        defender, attacker, false, Engine::Core::AttackComponent::CombatMode::Melee);
+    spawned_ids = {attacker, defender};
+    finalize_scenario(10.0F, 42.0F, 28.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_target_death_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(0.0F, 0.0F, -2.0F));
+    auto const defender = spawn_at(k_enemy_owner_id,
+                                   Game::Systems::NationID::Carthage,
+                                   Game::Units::TroopType::Healer,
+                                   QVector3D(0.0F, 0.0F, 1.8F));
+    set_unit_health(defender, 6, 6);
+    set_attack_target(
+        attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
+    spawned_ids = {attacker, defender};
+    finalize_scenario(10.0F, 42.0F, 28.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_retargeting_id)) {
+    auto const attacker = spawn_at(k_local_owner_id,
+                                   Game::Systems::NationID::RomanRepublic,
+                                   Game::Units::TroopType::Swordsman,
+                                   QVector3D(0.0F, 0.0F, -2.0F));
+    auto const primary = spawn_at(k_enemy_owner_id,
+                                  Game::Systems::NationID::Carthage,
+                                  Game::Units::TroopType::Healer,
+                                  QVector3D(-0.9F, 0.0F, 1.8F));
+    auto const secondary = spawn_at(k_enemy_owner_id,
+                                    Game::Systems::NationID::Carthage,
+                                    Game::Units::TroopType::Swordsman,
+                                    QVector3D(2.4F, 0.0F, 2.8F));
+    set_unit_health(primary, 6, 6);
+    set_attack_target(
+        attacker, primary, true, Engine::Core::AttackComponent::CombatMode::Melee);
+    spawned_ids = {attacker, primary, secondary};
+    finalize_scenario(11.0F, 42.0F, 28.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_hold_guard_exit_id)) {
+    auto const hold_unit = spawn_at(k_local_owner_id,
+                                    Game::Systems::NationID::RomanRepublic,
+                                    Game::Units::TroopType::Spearman,
+                                    QVector3D(-1.8F, 0.0F, 0.0F));
+    auto const guard_unit = spawn_at(k_local_owner_id,
+                                     Game::Systems::NationID::RomanRepublic,
+                                     Game::Units::TroopType::Swordsman,
+                                     QVector3D(1.8F, 0.0F, 0.0F));
+    auto const enemy = spawn_at(k_enemy_owner_id,
+                                Game::Systems::NationID::Carthage,
+                                Game::Units::TroopType::Swordsman,
+                                QVector3D(0.0F, 0.0F, 7.0F));
+    if (auto* hold = find_unit_handle(hold_unit); hold != nullptr) {
+      hold->set_hold_mode(true);
+    }
+    if (auto* guard = find_unit_handle(guard_unit); guard != nullptr) {
+      guard->set_guard_mode(true);
+      guard->set_guard_target(hold_unit);
+    }
+    set_attack_target(
+        enemy, hold_unit, true, Engine::Core::AttackComponent::CombatMode::Melee);
+    spawned_ids = {hold_unit, guard_unit, enemy};
+    finalize_scenario(12.0F, 44.0F, 32.0F);
+    return;
+  }
+
+  if (scenario_id == QLatin1String(Arena::Scenarios::k_lod_switch_id)) {
+    set_force_full_creature_lod(false);
+    for (int lane = -2; lane <= 2; ++lane) {
+      QVector3D const local_offset(static_cast<float>(lane) * 5.0F, 0.0F, -10.0F);
+      QVector3D const enemy_offset(static_cast<float>(lane) * 5.0F, 0.0F, 10.0F);
+      auto const attacker = spawn_at(k_local_owner_id,
+                                     Game::Systems::NationID::RomanRepublic,
+                                     Game::Units::TroopType::Swordsman,
+                                     local_offset,
+                                     20);
+      auto const defender = spawn_at(k_enemy_owner_id,
+                                     Game::Systems::NationID::Carthage,
+                                     Game::Units::TroopType::Swordsman,
+                                     enemy_offset,
+                                     20);
+      set_attack_target(
+          attacker, defender, true, Engine::Core::AttackComponent::CombatMode::Melee);
+      set_attack_target(
+          defender, attacker, true, Engine::Core::AttackComponent::CombatMode::Melee);
+      spawned_ids.push_back(attacker);
+      spawned_ids.push_back(defender);
+    }
+    finalize_scenario(34.0F, 52.0F, 24.0F);
+    return;
+  }
+}
+
+void ArenaViewport::set_force_full_creature_lod(bool enabled) {
+  m_force_full_creature_lod = enabled;
+  if (m_renderer != nullptr) {
+    m_renderer->set_force_full_creature_lod(enabled);
+  }
 }
 
 void ArenaViewport::set_animation_name(const QString& animation_name) {
@@ -1690,6 +2133,113 @@ void ArenaViewport::play_idle_animation() {
   auto ids = selected_unit_ids_or_fallback();
   clear_forced_animation_state(ids);
   update();
+}
+
+void ArenaViewport::update_active_scenario(float simulation_dt) {
+  if (simulation_dt <= 0.0F || m_world == nullptr || m_active_scenario.id.isEmpty()) {
+    return;
+  }
+
+  m_active_scenario.elapsed += simulation_dt;
+
+  auto entity_alive = [this](Engine::Core::EntityID entity_id) {
+    auto* entity = m_world->get_entity(entity_id);
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    return entity != nullptr && unit != nullptr && unit->health > 0 &&
+           !entity->has_component<Engine::Core::PendingRemovalComponent>();
+  };
+
+  if (m_active_scenario.id == QLatin1String(Arena::Scenarios::k_attack_to_chase_id)) {
+    if (!m_active_scenario.first_event_applied && m_active_scenario.elapsed >= 0.85F &&
+        m_active_scenario.tracked_entities.size() >= 2) {
+      Engine::Core::EntityID const target_id = m_active_scenario.tracked_entities[1];
+      auto* target = m_world->get_entity(target_id);
+      auto* transform = target != nullptr
+                            ? target->get_component<Engine::Core::TransformComponent>()
+                            : nullptr;
+      auto* movement = target != nullptr
+                           ? target->get_component<Engine::Core::MovementComponent>()
+                           : nullptr;
+      if (transform != nullptr) {
+        if (movement != nullptr) {
+          movement->target_x = transform->position.x;
+          movement->target_y = transform->position.z + 8.0F;
+          movement->goal_x = movement->target_x;
+          movement->goal_y = movement->target_y;
+          movement->has_target = true;
+          movement->clear_path();
+          movement->path_pending = false;
+        }
+        m_active_scenario.first_event_applied = true;
+      }
+    }
+    return;
+  }
+
+  if (m_active_scenario.id == QLatin1String(Arena::Scenarios::k_retargeting_id)) {
+    if (!m_active_scenario.first_event_applied &&
+        m_active_scenario.tracked_entities.size() >= 3 &&
+        !entity_alive(m_active_scenario.tracked_entities[1])) {
+      auto* attacker = m_world->get_entity(m_active_scenario.tracked_entities[0]);
+      auto* attack_target =
+          attacker != nullptr
+              ? attacker->get_component<Engine::Core::AttackTargetComponent>()
+              : nullptr;
+      if (attack_target != nullptr) {
+        attack_target->target_id = m_active_scenario.tracked_entities[2];
+        attack_target->should_chase = true;
+        m_active_scenario.first_event_applied = true;
+      }
+    }
+    return;
+  }
+
+  if (m_active_scenario.id == QLatin1String(Arena::Scenarios::k_hold_guard_exit_id)) {
+    if (!m_active_scenario.first_event_applied && m_active_scenario.elapsed >= 1.0F &&
+        m_active_scenario.tracked_entities.size() >= 3) {
+      if (auto* hold = find_unit_handle(m_active_scenario.tracked_entities[0]);
+          hold != nullptr) {
+        hold->set_hold_mode(false);
+      }
+      if (auto* guard = find_unit_handle(m_active_scenario.tracked_entities[1]);
+          guard != nullptr) {
+        guard->clear_guard_mode();
+      }
+
+      auto* guard_entity = m_world->get_entity(m_active_scenario.tracked_entities[1]);
+      auto* guard_attack =
+          guard_entity != nullptr
+              ? guard_entity->get_component<Engine::Core::AttackTargetComponent>()
+              : nullptr;
+      if (guard_attack == nullptr && guard_entity != nullptr) {
+        guard_attack =
+            guard_entity->add_component<Engine::Core::AttackTargetComponent>();
+      }
+      if (guard_attack != nullptr) {
+        guard_attack->target_id = m_active_scenario.tracked_entities[2];
+        guard_attack->should_chase = true;
+      }
+      m_active_scenario.first_event_applied = true;
+    }
+    return;
+  }
+
+  if (m_active_scenario.id == QLatin1String(Arena::Scenarios::k_lod_switch_id) &&
+      m_camera != nullptr) {
+    QVector3D const center =
+        scenario_center(m_world.get(), m_active_scenario.tracked_entities);
+    if (!m_active_scenario.first_event_applied && m_active_scenario.elapsed >= 1.5F) {
+      m_camera->set_rts_view(center, 12.0F, 44.0F, 28.0F);
+      m_active_scenario.first_event_applied = true;
+      return;
+    }
+    if (!m_active_scenario.second_event_applied && m_active_scenario.elapsed >= 3.0F) {
+      m_camera->set_rts_view(center, 34.0F, 52.0F, 24.0F);
+      m_active_scenario.second_event_applied = true;
+    }
+  }
 }
 
 void ArenaViewport::play_walk_animation() {
@@ -1862,6 +2412,144 @@ void ArenaViewport::set_skeleton_debug_enabled(bool enabled) {
   update();
 }
 
+void ArenaViewport::set_combat_debug_enabled(bool enabled) {
+  m_combat_debug_overlay_enabled = enabled;
+  Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(enabled);
+  Render::Profiling::CombatAnimationDiagnostics::instance().set_logging_enabled(
+      enabled);
+  update();
+}
+
+void ArenaViewport::set_attack_scrub_enabled(bool enabled) {
+  m_attack_scrub_enabled = enabled;
+  if (m_attack_scrub_enabled) {
+    capture_attack_scrub_anchor();
+  } else {
+    m_attack_scrub_entity_id = 0;
+  }
+  update();
+}
+
+void ArenaViewport::set_attack_scrub_phase(float phase) {
+  m_attack_scrub_phase = std::clamp(phase, 0.0F, 1.0F);
+  update();
+}
+
+void ArenaViewport::capture_attack_scrub_anchor() {
+  if (m_world == nullptr) {
+    m_attack_scrub_entity_id = 0;
+    return;
+  }
+
+  auto ids = selected_unit_ids_or_fallback();
+  if (ids.empty()) {
+    m_attack_scrub_entity_id = 0;
+    return;
+  }
+
+  auto* entity = m_world->get_entity(ids.front());
+  auto* transform = entity != nullptr
+                        ? entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (entity == nullptr || transform == nullptr) {
+    m_attack_scrub_entity_id = 0;
+    return;
+  }
+
+  m_attack_scrub_entity_id = entity->get_id();
+  m_attack_scrub_position =
+      QVector3D(transform->position.x, transform->position.y, transform->position.z);
+  m_attack_scrub_rotation =
+      QVector3D(transform->rotation.x, transform->rotation.y, transform->rotation.z);
+  m_attack_scrub_scale =
+      QVector3D(transform->scale.x, transform->scale.y, transform->scale.z);
+  m_attack_scrub_family = Engine::Core::CombatAttackFamily::Sword;
+  m_attack_scrub_variant = 0U;
+  m_attack_scrub_offset = 0.0F;
+  m_attack_scrub_finisher = false;
+
+  if (auto* combat_state = entity->get_component<Engine::Core::CombatStateComponent>();
+      combat_state != nullptr) {
+    m_attack_scrub_family = combat_state->attack_family;
+    m_attack_scrub_variant = combat_state->attack_variant;
+    m_attack_scrub_offset = combat_state->attack_offset;
+    m_attack_scrub_finisher = combat_state->finisher_attack;
+  } else if (auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+             unit != nullptr) {
+    auto const mode =
+        (entity->get_component<Engine::Core::AttackComponent>() != nullptr &&
+         entity->get_component<Engine::Core::AttackComponent>()->current_mode ==
+             Engine::Core::AttackComponent::CombatMode::Ranged)
+            ? Engine::Core::AttackComponent::CombatMode::Ranged
+            : Engine::Core::AttackComponent::CombatMode::Melee;
+    m_attack_scrub_family =
+        Engine::Core::resolve_combat_attack_family(unit->spawn_type, mode);
+  }
+}
+
+void ArenaViewport::apply_attack_scrub_override() {
+  if (!m_attack_scrub_enabled || m_world == nullptr) {
+    return;
+  }
+
+  auto ids = selected_unit_ids_or_fallback();
+  if (ids.empty()) {
+    m_attack_scrub_entity_id = 0;
+    return;
+  }
+  if (m_attack_scrub_entity_id != ids.front()) {
+    capture_attack_scrub_anchor();
+  }
+
+  auto* entity = m_world->get_entity(m_attack_scrub_entity_id);
+  auto* transform = entity != nullptr
+                        ? entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (entity == nullptr || transform == nullptr) {
+    m_attack_scrub_entity_id = 0;
+    return;
+  }
+
+  transform->position.x = m_attack_scrub_position.x();
+  transform->position.y = m_attack_scrub_position.y();
+  transform->position.z = m_attack_scrub_position.z();
+  transform->rotation.x = m_attack_scrub_rotation.x();
+  transform->rotation.y = m_attack_scrub_rotation.y();
+  transform->rotation.z = m_attack_scrub_rotation.z();
+  transform->scale.x = m_attack_scrub_scale.x();
+  transform->scale.y = m_attack_scrub_scale.y();
+  transform->scale.z = m_attack_scrub_scale.z();
+
+  if (auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+      movement != nullptr) {
+    movement->vx = 0.0F;
+    movement->vz = 0.0F;
+    movement->has_target = false;
+    movement->path_pending = false;
+    movement->clear_path();
+  }
+
+  auto* combat_state = entity->get_component<Engine::Core::CombatStateComponent>();
+  if (combat_state == nullptr) {
+    combat_state = entity->add_component<Engine::Core::CombatStateComponent>();
+  }
+  if (combat_state == nullptr) {
+    return;
+  }
+
+  auto const scrubbed = Render::Profiling::scrubbed_combat_phase_from_attack_phase(
+      m_attack_scrub_phase, false, m_attack_scrub_finisher);
+  combat_state->animation_state = scrubbed.phase;
+  combat_state->state_duration = combat_phase_duration(scrubbed.phase);
+  combat_state->state_time = scrubbed.progress * combat_state->state_duration;
+  combat_state->attack_family = m_attack_scrub_family;
+  combat_state->attack_variant = m_attack_scrub_variant;
+  combat_state->attack_offset = m_attack_scrub_offset;
+  combat_state->finisher_attack = m_attack_scrub_finisher;
+  combat_state->is_hit_paused = false;
+  combat_state->hit_pause_remaining = 0.0F;
+}
+
 void ArenaViewport::pause_simulation(bool paused) {
   if (m_paused == paused) {
     return;
@@ -1911,6 +2599,9 @@ void ArenaViewport::draw_debug_overlay(QPainter& painter) {
   }
   if (m_pose_overlay_enabled) {
     draw_pose_overlay(painter);
+  }
+  if (m_combat_debug_overlay_enabled) {
+    draw_combat_animation_overlay(painter);
   }
 }
 
@@ -2066,6 +2757,120 @@ void ArenaViewport::draw_pose_overlay(QPainter& painter) {
   }
 }
 
+void ArenaViewport::draw_combat_animation_overlay(QPainter& painter) {
+  if (m_world == nullptr || width() <= 0 || height() <= 0) {
+    return;
+  }
+
+  auto ids = selected_unit_ids_or_fallback();
+  if (ids.empty()) {
+    return;
+  }
+
+  auto const* debug_unit =
+      Render::Profiling::CombatAnimationDiagnostics::instance().find_unit(ids.front());
+  if (debug_unit == nullptr) {
+    return;
+  }
+
+  QFont font = painter.font();
+  font.setPixelSize(12);
+  painter.setFont(font);
+  QFontMetrics const fm(font);
+  int const line_h = fm.height() + 2;
+  int const pad = 6;
+
+  QStringList lines;
+  auto const& unit = debug_unit->unit;
+  lines << QStringLiteral("Combat Debug")
+        << QStringLiteral("phase=%1 %2  attack=%3  var=%4  locomotion=%5")
+               .arg(QString::fromLatin1(
+                   Render::Profiling::combat_phase_name(unit.combat_phase)))
+               .arg(unit.combat_phase_progress, 0, 'f', 2)
+               .arg(unit.is_attacking ? QStringLiteral("on") : QStringLiteral("off"))
+               .arg(unit.attack_variant)
+               .arg(QString::fromLatin1(
+                   Render::Profiling::locomotion_state_name(unit.locomotion_state)))
+        << QStringLiteral("attackPhase=%1  meleeLock=%2  target=%3")
+               .arg(unit.attack_phase, 0, 'f', 2)
+               .arg(unit.is_in_melee_lock ? QStringLiteral("yes")
+                                          : QStringLiteral("no"))
+               .arg(unit.attack_target_id)
+        << QStringLiteral("sources combat=%1 meleeLock=%2 elephant=%3")
+               .arg(unit.attack_from_combat_state ? QStringLiteral("1")
+                                                  : QStringLiteral("0"))
+               .arg(unit.attack_from_melee_lock ? QStringLiteral("1")
+                                                : QStringLiteral("0"))
+               .arg(unit.elephant_attack_override ? QStringLiteral("1")
+                                                  : QStringLiteral("0"));
+
+  if (m_attack_scrub_enabled && ids.front() == m_attack_scrub_entity_id) {
+    lines << QStringLiteral("scrub=%1").arg(m_attack_scrub_phase, 0, 'f', 2);
+  }
+
+  int soldier_lines = 0;
+  for (const auto& soldier : debug_unit->soldiers) {
+    if (soldier_lines >= 8) {
+      lines << QStringLiteral("... %1 more soldiers")
+                   .arg(static_cast<int>(debug_unit->soldiers.size()) - soldier_lines);
+      break;
+    }
+
+    QStringList flags;
+    if (soldier.transient_recovery_override) {
+      flags << QStringLiteral("recovery");
+    }
+    if (soldier.visual_state_changed) {
+      flags << QStringLiteral("state");
+    }
+    if (soldier.attack_phase_reset) {
+      flags << QStringLiteral("phase-reset");
+    }
+    if (soldier.variant_changed) {
+      flags << QStringLiteral("variant");
+    }
+    if (soldier.lod_changed) {
+      flags << QStringLiteral("lod");
+    }
+    if (soldier.movement_state_changed) {
+      flags << QStringLiteral("move");
+    }
+    if (soldier.churn_flagged) {
+      flags << QStringLiteral("churn");
+    }
+    lines << QStringLiteral("#%1 %2 %3 ap=%4 state=%5 lod=%6 cull=%7 tps=%8 %9")
+                 .arg(soldier.soldier_index)
+                 .arg(QString::fromLatin1(Render::Profiling::soldier_visual_state_name(
+                     soldier.visual_state)))
+                 .arg(QString::fromLatin1(
+                     Render::Profiling::combat_phase_name(soldier.combat_phase)))
+                 .arg(soldier.attack_phase, 0, 'f', 2)
+                 .arg(QString::fromLatin1(
+                     Render::Profiling::animation_state_name(soldier.animation_state)))
+                 .arg(soldier.lod)
+                 .arg(QString::fromLatin1(
+                     Render::Profiling::soldier_cull_reason_name(soldier.cull_reason)))
+                 .arg(soldier.transitions_last_second)
+                 .arg(flags.join(QLatin1Char(',')));
+    ++soldier_lines;
+  }
+
+  int max_w = 0;
+  for (const auto& line : lines) {
+    max_w = std::max(max_w, fm.horizontalAdvance(line));
+  }
+  QRect const box(width() - max_w - pad * 3,
+                  pad,
+                  max_w + pad * 2,
+                  static_cast<int>(lines.size()) * line_h + pad * 2);
+  painter.fillRect(box, QColor(0, 0, 0, 160));
+  painter.setPen(QColor(235, 235, 235, 230));
+  for (int i = 0; i < lines.size(); ++i) {
+    painter.drawText(
+        box.left() + pad, box.top() + pad + (i + 1) * line_h - 2, lines[i]);
+  }
+}
+
 void ArenaViewport::sync_spawn_selection_defaults() {
   const auto* nation =
       Game::Systems::NationRegistry::instance().get_nation(m_spawn_nation_id);
@@ -2120,9 +2925,26 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
   int const pad = 6;
 
   QStringList lines;
+  auto const& profile = Render::Profiling::global_profile();
   lines << QStringLiteral("FPS: %1").arg(static_cast<int>(m_fps + 0.5F));
   lines << QStringLiteral("Player: %1").arg(player_count);
   lines << QStringLiteral("Enemy:  %1").arg(enemy_count);
+  lines << QStringLiteral("Avg/P95: %1 / %2 ms")
+               .arg(profile.average_frame_ms, 0, 'f', 2)
+               .arg(profile.p95_frame_ms, 0, 'f', 2);
+  lines << QStringLiteral("Visible Soldiers: %1").arg(profile.visible_soldiers);
+  lines << QStringLiteral("Cache Misses: %1").arg(profile.render_asset_cache_misses);
+  lines << QStringLiteral("Anim Prep: %1 ms")
+               .arg(static_cast<double>(profile.humanoid_preparation_us) / 1000.0,
+                    0,
+                    'f',
+                    2);
+  if (m_combat_debug_overlay_enabled) {
+    lines << QStringLiteral("Churn Flags: %1")
+                 .arg(static_cast<int>(
+                     Render::Profiling::CombatAnimationDiagnostics::instance()
+                         .flagged_unit_count()));
+  }
   if (m_paused) {
     lines << QStringLiteral("PAUSED");
   }

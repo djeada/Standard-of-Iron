@@ -52,7 +52,14 @@ struct SwordArchetypeKey {
   int guard_half_width_key{0};
   int handle_radius_key{0};
   int pommel_radius_key{0};
+  int pommel_length_key{0};
   int blade_ricasso_key{0};
+  int blade_taper_bias_key{0};
+  int blade_mid_width_scale_key{0};
+  int blade_tip_width_scale_key{0};
+  int blade_curve_key{0};
+  int guard_curve_key{0};
+  int guard_spike_length_key{0};
   int material_id{0};
 };
 
@@ -62,7 +69,14 @@ auto operator==(const SwordArchetypeKey& lhs, const SwordArchetypeKey& rhs) -> b
          lhs.guard_half_width_key == rhs.guard_half_width_key &&
          lhs.handle_radius_key == rhs.handle_radius_key &&
          lhs.pommel_radius_key == rhs.pommel_radius_key &&
+         lhs.pommel_length_key == rhs.pommel_length_key &&
          lhs.blade_ricasso_key == rhs.blade_ricasso_key &&
+         lhs.blade_taper_bias_key == rhs.blade_taper_bias_key &&
+         lhs.blade_mid_width_scale_key == rhs.blade_mid_width_scale_key &&
+         lhs.blade_tip_width_scale_key == rhs.blade_tip_width_scale_key &&
+         lhs.blade_curve_key == rhs.blade_curve_key &&
+         lhs.guard_curve_key == rhs.guard_curve_key &&
+         lhs.guard_spike_length_key == rhs.guard_spike_length_key &&
          lhs.material_id == rhs.material_id;
 }
 
@@ -101,6 +115,45 @@ auto sword_basis_transform(const QMatrix4x4& parent,
   local.setColumn(2, QVector4D(z_axis, 0.0F));
   local.setColumn(3, QVector4D(origin, 1.0F));
   return parent * local;
+}
+
+auto oriented_box_between(const QVector3D& start,
+                          const QVector3D& end,
+                          float half_width,
+                          float half_depth,
+                          QVector3D right_hint = QVector3D(1.0F,
+                                                           0.0F,
+                                                           0.0F)) -> QMatrix4x4 {
+  QVector3D y_axis = end - start;
+  float const length = y_axis.length();
+  if (length <= 1e-5F) {
+    return box_local_model((start + end) * 0.5F,
+                           QVector3D(half_width, half_width, half_depth));
+  }
+  y_axis /= length;
+
+  QVector3D x_axis = right_hint - y_axis * QVector3D::dotProduct(right_hint, y_axis);
+  if (x_axis.lengthSquared() <= 1e-6F) {
+    x_axis = QVector3D::crossProduct(QVector3D(0.0F, 0.0F, 1.0F), y_axis);
+  }
+  if (x_axis.lengthSquared() <= 1e-6F) {
+    x_axis = QVector3D(1.0F, 0.0F, 0.0F);
+  }
+  x_axis.normalize();
+
+  QVector3D z_axis = QVector3D::crossProduct(x_axis, y_axis);
+  if (z_axis.lengthSquared() <= 1e-6F) {
+    z_axis = QVector3D(0.0F, 0.0F, 1.0F);
+  } else {
+    z_axis.normalize();
+  }
+
+  QMatrix4x4 local;
+  local.setColumn(0, QVector4D(x_axis * half_width, 0.0F));
+  local.setColumn(1, QVector4D(y_axis * (length * 0.5F), 0.0F));
+  local.setColumn(2, QVector4D(z_axis * half_depth, 0.0F));
+  local.setColumn(3, QVector4D((start + end) * 0.5F, 1.0F));
+  return local;
 }
 
 auto hand_basis_transform(const QMatrix4x4& parent,
@@ -157,7 +210,14 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
                               quantize_sword_value(config.guard_half_width),
                               quantize_sword_value(config.handle_radius),
                               quantize_sword_value(config.pommel_radius),
+                              quantize_sword_value(config.pommel_length),
                               quantize_sword_value(config.blade_ricasso),
+                              quantize_sword_value(config.blade_taper_bias),
+                              quantize_sword_value(config.blade_mid_width_scale),
+                              quantize_sword_value(config.blade_tip_width_scale),
+                              quantize_sword_value(config.blade_curve),
+                              quantize_sword_value(config.guard_curve),
+                              quantize_sword_value(config.guard_spike_length),
                               config.material_id};
   for (const auto& entry : cache) {
     if (entry.key == key) {
@@ -167,21 +227,45 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
 
   float const l = config.sword_length;
   float const base_w = config.sword_width;
-  float const blade_thickness = base_w * 0.15F;
+  float const base_half_w = base_w * 0.5F;
+  float const blade_thickness = base_w * 0.16F;
   float const ricasso_len = clamp_f(config.blade_ricasso, 0.10F, l * 0.30F);
-  float const mid_w = base_w * 0.95F;
-  float const tip_start_dist = lerp(ricasso_len, l, 0.70F);
+  float const taper_bias = clamp01(config.blade_taper_bias);
+  float const mid_scale = clamp_f(config.blade_mid_width_scale, 0.70F, 1.45F);
+  float const tip_scale = clamp_f(config.blade_tip_width_scale, 0.05F, 0.50F);
+  float const curve = config.blade_curve;
+  float const mid_half_w = base_half_w * mid_scale;
+  float const upper_half_w = lerp(mid_half_w,
+                                  base_half_w * 0.64F,
+                                  clamp_f((taper_bias - 0.25F) * 0.9F, 0.0F, 1.0F));
+  float const tip_half_w = std::max(base_half_w * tip_scale, blade_thickness * 0.65F);
+  float const belly_y = lerp(ricasso_len, l, 0.34F + taper_bias * 0.18F);
+  float const tip_start_dist = lerp(belly_y, l, 0.44F + (1.0F - tip_scale) * 0.18F);
   float const handle_len = clamp_f(base_w * 1.35F, 0.09F, 0.16F);
-  float const pommel_y = -(handle_len + config.pommel_radius * 0.4F);
-  float const guard_r = base_w * 0.22F;
-  float const guard_end_r = guard_r * 1.5F;
+  float const pommel_y = -(handle_len + config.pommel_radius * 0.25F);
+  float const guard_depth = base_w * 0.18F;
+  float const guard_end_r = base_w * 0.20F;
+  QVector3D const blade0(0.0F, 0.0F, 0.0F);
+  QVector3D const blade1(curve * 0.08F, ricasso_len, 0.0F);
+  QVector3D const blade2(curve * (0.30F + taper_bias * 0.20F), belly_y, 0.0F);
+  QVector3D const blade3(curve * 0.82F, tip_start_dist, 0.0F);
+  QVector3D const blade4(curve, l, 0.0F);
+  QVector3D const guard_left(-config.guard_half_width, config.guard_curve, 0.0F);
+  QVector3D const guard_right(config.guard_half_width, config.guard_curve, 0.0F);
 
   RenderArchetypeBuilder builder{"sword_" + std::to_string(key.sword_length_key) + "_" +
                                  std::to_string(key.sword_width_key) + "_" +
                                  std::to_string(key.guard_half_width_key) + "_" +
                                  std::to_string(key.handle_radius_key) + "_" +
                                  std::to_string(key.pommel_radius_key) + "_" +
+                                 std::to_string(key.pommel_length_key) + "_" +
                                  std::to_string(key.blade_ricasso_key) + "_" +
+                                 std::to_string(key.blade_taper_bias_key) + "_" +
+                                 std::to_string(key.blade_mid_width_scale_key) + "_" +
+                                 std::to_string(key.blade_tip_width_scale_key) + "_" +
+                                 std::to_string(key.blade_curve_key) + "_" +
+                                 std::to_string(key.guard_curve_key) + "_" +
+                                 std::to_string(key.guard_spike_length_key) + "_" +
                                  std::to_string(key.material_id)};
 
   builder.add_palette_mesh(get_unit_cylinder(),
@@ -194,108 +278,116 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
                            config.material_id);
 
   builder.add_palette_mesh(
-      get_unit_cylinder(),
-      cylinder_between(QVector3D(-config.guard_half_width, 0.0F, 0.0F),
-                       QVector3D(config.guard_half_width, 0.0F, 0.0F),
-                       guard_r),
+      get_unit_cube(),
+      oriented_box_between(guard_left, guard_right, guard_depth, guard_depth * 0.9F),
       k_metal_slot,
       nullptr,
       1.0F,
       config.material_id);
   builder.add_palette_mesh(
-      get_unit_sphere(),
-      sphere_at(QVector3D(-config.guard_half_width, 0.0F, 0.0F), guard_end_r),
-      k_metal_slot,
-      nullptr,
-      1.0F,
-      config.material_id);
-  builder.add_palette_mesh(
-      get_unit_sphere(),
-      sphere_at(QVector3D(config.guard_half_width, 0.0F, 0.0F), guard_end_r),
-      k_metal_slot,
+      get_unit_cube(),
+      box_local_model(QVector3D(0.0F, config.guard_curve * 0.5F, 0.0F),
+                      QVector3D(base_w * 0.16F, base_w * 0.14F, guard_depth * 1.2F)),
+      k_metal_dark_slot,
       nullptr,
       1.0F,
       config.material_id);
 
-  auto add_flat_section = [&](float start_y, float end_y, float width) {
-    float const offset = width * 0.33F;
-    builder.add_palette_mesh(get_unit_cylinder(),
-                             cylinder_between(QVector3D(0.0F, start_y, 0.0F),
-                                              QVector3D(0.0F, end_y, 0.0F),
-                                              blade_thickness),
-                             k_metal_slot,
-                             nullptr,
-                             1.0F,
-                             config.material_id);
-    builder.add_palette_mesh(get_unit_cylinder(),
-                             cylinder_between(QVector3D(offset, start_y, 0.0F),
-                                              QVector3D(offset, end_y, 0.0F),
-                                              blade_thickness * 0.8F),
-                             k_metal_dark_slot,
-                             nullptr,
-                             1.0F,
-                             config.material_id);
-    builder.add_palette_mesh(get_unit_cylinder(),
-                             cylinder_between(QVector3D(-offset, start_y, 0.0F),
-                                              QVector3D(-offset, end_y, 0.0F),
-                                              blade_thickness * 0.8F),
-                             k_metal_dark_slot,
-                             nullptr,
-                             1.0F,
-                             config.material_id);
-  };
-
-  add_flat_section(0.0F, ricasso_len, base_w);
-  add_flat_section(ricasso_len, tip_start_dist, mid_w);
-
-  {
-    float const t_offset = base_w * 0.33F;
+  if (config.guard_spike_length > 1e-4F) {
+    QVector3D const left_tip =
+        guard_left +
+        QVector3D(-config.guard_spike_length, config.guard_curve * 0.30F + 0.01F, 0.0F);
+    QVector3D const right_tip =
+        guard_right +
+        QVector3D(config.guard_spike_length, config.guard_curve * 0.30F + 0.01F, 0.0F);
     builder.add_palette_mesh(
         get_unit_cone(),
-        Render::Geom::cone_from_to(QVector3D(0.0F, tip_start_dist, 0.0F),
-                                   QVector3D(0.0F, l, 0.0F),
-                                   blade_thickness),
+        Render::Geom::cone_from_to(guard_left, left_tip, guard_end_r),
         k_metal_slot,
         nullptr,
         1.0F,
         config.material_id);
     builder.add_palette_mesh(
         get_unit_cone(),
-        Render::Geom::cone_from_to(QVector3D(t_offset, tip_start_dist, 0.0F),
-                                   QVector3D(0.0F, l, 0.0F),
-                                   blade_thickness * 0.8F),
-        k_metal_dark_slot,
-        nullptr,
-        1.0F,
-        config.material_id);
-    builder.add_palette_mesh(
-        get_unit_cone(),
-        Render::Geom::cone_from_to(QVector3D(-t_offset, tip_start_dist, 0.0F),
-                                   QVector3D(0.0F, l, 0.0F),
-                                   blade_thickness * 0.8F),
-        k_metal_dark_slot,
+        Render::Geom::cone_from_to(guard_right, right_tip, guard_end_r),
+        k_metal_slot,
         nullptr,
         1.0F,
         config.material_id);
   }
 
-  builder.add_palette_mesh(
-      get_unit_cylinder(),
-      cylinder_between(QVector3D(0.0F, ricasso_len + 0.02F, 0.0F),
-                       QVector3D(0.0F, tip_start_dist - 0.06F, 0.0F),
-                       blade_thickness * 0.6F),
-      k_fuller_slot,
-      nullptr,
-      1.0F,
-      config.material_id);
+  auto add_blade_segment = [&](const QVector3D& start,
+                               const QVector3D& end,
+                               float half_width,
+                               float depth_scale,
+                               std::uint8_t slot) {
+    builder.add_palette_mesh(get_unit_cube(),
+                             oriented_box_between(start,
+                                                  end,
+                                                  half_width,
+                                                  blade_thickness * depth_scale,
+                                                  QVector3D(1.0F, 0.0F, 0.0F)),
+                             slot,
+                             nullptr,
+                             1.0F,
+                             config.material_id);
+  };
 
-  builder.add_palette_mesh(
-      get_unit_sphere(),
-      sphere_at(QVector3D(0.0F, pommel_y, 0.0F), config.pommel_radius),
-      k_metal_slot,
-      nullptr,
-      1.0F,
-      config.material_id);
+  add_blade_segment(blade0, blade1, base_half_w, 1.00F, k_metal_slot);
+  add_blade_segment(blade1, blade2, mid_half_w, 0.96F, k_metal_slot);
+  add_blade_segment(blade2, blade3, upper_half_w, 0.86F, k_metal_slot);
+
+  builder.add_palette_mesh(get_unit_cube(),
+                           oriented_box_between(blade1 + QVector3D(0.0F, 0.01F, 0.0F),
+                                                blade2,
+                                                base_half_w * 0.20F,
+                                                blade_thickness * 0.55F,
+                                                QVector3D(1.0F, 0.0F, 0.0F)),
+                           k_fuller_slot,
+                           nullptr,
+                           1.0F,
+                           config.material_id);
+  builder.add_palette_mesh(get_unit_cube(),
+                           oriented_box_between(blade2,
+                                                blade3 - QVector3D(0.0F, 0.02F, 0.0F),
+                                                upper_half_w * 0.18F,
+                                                blade_thickness * 0.50F,
+                                                QVector3D(1.0F, 0.0F, 0.0F)),
+                           k_metal_dark_slot,
+                           nullptr,
+                           1.0F,
+                           config.material_id);
+
+  builder.add_palette_mesh(get_unit_cone(),
+                           Render::Geom::cone_from_to(blade3, blade4, tip_half_w),
+                           k_metal_slot,
+                           nullptr,
+                           1.0F,
+                           config.material_id);
+
+  builder.add_palette_mesh(get_unit_cube(),
+                           box_local_model(QVector3D(0.0F, pommel_y, 0.0F),
+                                           QVector3D(config.pommel_radius * 0.85F,
+                                                     config.pommel_radius * 0.70F,
+                                                     config.pommel_radius * 0.85F)),
+                           k_metal_slot,
+                           nullptr,
+                           1.0F,
+                           config.material_id);
+  if (config.pommel_length > 1e-4F) {
+    builder.add_palette_mesh(
+        get_unit_cone(),
+        Render::Geom::cone_from_to(
+            QVector3D(0.0F, pommel_y - config.pommel_radius * 0.35F, 0.0F),
+            QVector3D(0.0F,
+                      pommel_y - config.pommel_radius * 0.35F - config.pommel_length,
+                      0.0F),
+            config.pommel_radius * 0.65F),
+        k_metal_dark_slot,
+        nullptr,
+        1.0F,
+        config.material_id);
+  }
 
   cache.push_back({key, std::move(builder).build()});
   return cache.back().archetype;
@@ -496,12 +588,19 @@ auto sword_fill_role_colors(const HumanoidPalette& palette,
 auto sword_make_static_attachment(const SwordRenderConfig& config,
                                   std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec {
+  return sword_make_static_attachment(
+      config, base_role_byte, QVector3D(0.02F, 0.97F, 0.0F));
+}
+
+auto sword_make_static_attachment(const SwordRenderConfig& config,
+                                  std::uint8_t base_role_byte,
+                                  const QVector3D& blade_dir_local)
+    -> Render::Creature::StaticAttachmentSpec {
   constexpr auto k_bone = Render::Humanoid::HumanoidBone::HandR;
   QMatrix4x4 const bind_bone =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
   auto const& bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_r;
   QMatrix4x4 const bind_socket = hand_basis_transform(QMatrix4x4{}, bind_grip);
-  QVector3D const blade_dir_local(0.02F, 0.97F, 0.0F);
   auto spec = Render::Equipment::build_socket_static_attachment({
       .archetype = &sword_archetype(config),
       .socket_bone_index = static_cast<std::uint16_t>(k_bone),

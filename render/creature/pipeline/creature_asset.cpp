@@ -144,6 +144,20 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
       static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
   m_humanoid_spear.bind_palette = &humanoid_bind;
   m_humanoid_spear.fill_role_colors = &humanoid_fill_roles;
+
+  m_skeleton_humanoid.id = k_skeleton_humanoid_asset;
+  m_skeleton_humanoid.debug_name = "humanoid.skeleton.v1";
+  m_skeleton_humanoid.kind = CreatureKind::Humanoid;
+  m_skeleton_humanoid.bpat_species_id =
+      Render::Creature::Bpat::k_species_humanoid_skeleton;
+  m_skeleton_humanoid.spec = &Render::Humanoid::skeleton_humanoid_creature_spec();
+  m_skeleton_humanoid.topology = &m_skeleton_humanoid.spec->topology;
+  m_skeleton_humanoid.role_count =
+      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
+  m_skeleton_humanoid.max_bones =
+      static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
+  m_skeleton_humanoid.bind_palette = &humanoid_bind;
+  m_skeleton_humanoid.fill_role_colors = &humanoid_fill_roles;
 }
 
 auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
@@ -159,6 +173,8 @@ auto CreatureAssetRegistry::get(CreatureAssetId id) const noexcept
     return &m_humanoid_sword;
   case k_humanoid_spear_asset:
     return &m_humanoid_spear;
+  case k_skeleton_humanoid_asset:
+    return &m_skeleton_humanoid;
   default:
     return nullptr;
   }
@@ -248,11 +264,18 @@ auto CreatureRenderAssetHandleRegistry::instance()
 }
 
 auto CreatureRenderAssetHandleRegistry::get_or_create(
-    CreatureAssetId asset_id, Render::Creature::ArchetypeId archetype_id)
-    -> Render::Creature::CreatureRenderAssetHandleId {
+    CreatureAssetId asset_id,
+    Render::Creature::ArchetypeId archetype_id,
+    bool* created) -> Render::Creature::CreatureRenderAssetHandleId {
+  if (created != nullptr) {
+    *created = false;
+  }
   const Key key{asset_id, archetype_id};
   if (const auto found = lookup_.find(key); found != lookup_.end()) {
     return found->second;
+  }
+  if (created != nullptr) {
+    *created = true;
   }
 
   CreatureRenderAssetHandle handle =

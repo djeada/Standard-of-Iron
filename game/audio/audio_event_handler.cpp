@@ -28,6 +28,8 @@ auto nation_voice_prefix(Game::Systems::NationID nation_id) -> std::string {
     return "roman";
   case Game::Systems::NationID::Carthage:
     return "carthage";
+  case Game::Systems::NationID::IronSepulcher:
+    return {};
   }
   return {};
 }
@@ -81,11 +83,14 @@ auto resolve_voice_id(const Engine::Core::UnitComponent& unit_component,
 auto get_hit_sound_for_type(Game::Units::SpawnType type) -> std::string {
   switch (type) {
   case Game::Units::SpawnType::Knight:
+  case Game::Units::SpawnType::SkeletonSwordsman:
+  case Game::Units::SpawnType::GravePriest:
     return "combat_hit_sword";
   case Game::Units::SpawnType::Spearman:
   case Game::Units::SpawnType::HorseSpearman:
     return "combat_hit_spear";
   case Game::Units::SpawnType::Archer:
+  case Game::Units::SpawnType::SkeletonArcher:
   case Game::Units::SpawnType::HorseArcher:
     return "combat_hit_arrow";
   case Game::Units::SpawnType::MountedKnight:
