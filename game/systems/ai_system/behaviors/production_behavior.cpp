@@ -21,7 +21,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   const float effective_production_rate =
       context.strategy_config.production_rate_modifier *
       context.strategy_config.difficulty.production_rate_multiplier;
-  float production_interval = 1.5F / std::max(0.1F, effective_production_rate);
+  float const production_interval = 1.5F / std::max(0.1F, effective_production_rate);
 
   if (m_production_timer < production_interval) {
     return;
@@ -32,6 +32,9 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   const auto* nation = nation_registry.get_nation_for_player(context.player_id);
 
   if (nation == nullptr) {
+    return;
+  }
+  if (!nation->has_economy) {
     return;
   }
 
@@ -134,6 +137,10 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
 auto ProductionBehavior::should_execute(const AISnapshot& snapshot,
                                         const AIContext& context) const -> bool {
   (void)snapshot;
+
+  if (context.nation != nullptr && !context.nation->has_economy) {
+    return false;
+  }
 
   return context.total_units < context.max_troops_per_player;
 }

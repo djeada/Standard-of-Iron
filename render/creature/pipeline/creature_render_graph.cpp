@@ -11,11 +11,13 @@
 #include "../../gl/humanoid/humanoid_types.h"
 #include "../../graphics_settings.h"
 #include "../../humanoid/humanoid_spec.h"
+#include "../../profiling/frame_profile.h"
 #include "../archetype_registry.h"
 #include "../bpat/bpat_format.h"
 #include "../bpat/bpat_registry.h"
 #include "creature_asset.h"
 #include "creature_prepared_state.h"
+#include "humanoid_animation_selection.h"
 #include "preparation_common.h"
 
 namespace Render::Creature::Pipeline {
@@ -431,65 +433,10 @@ void CreatureRenderBatch::add_humanoid(
     return;
   }
 
-  auto const archetype_id =
-      (output.spec.archetype_id != Render::Creature::k_invalid_archetype)
-          ? output.spec.archetype_id
-          : Render::Creature::ArchetypeRegistry::k_humanoid_base;
-
-  auto resolved_archetype_id = archetype_id;
-  auto const resolved_pose = Render::Creature::resolve_pose(anim.inputs);
-  auto const intent = resolved_pose.intent;
-  auto state = resolved_pose.animation_state;
-  float phase = humanoid_phase_for_anim(anim);
-  auto clip_var = humanoid_clip_variant_for_anim(resolved_archetype_id, anim);
-  if (output.spec.variant_table != nullptr) {
-    auto const* t = output.spec.variant_table;
-    auto const pose_idx = static_cast<std::size_t>(intent);
-
-    bool changed = false;
-
-    auto const pose_arch = t->archetype_for_pose[pose_idx];
-    if (pose_arch != Render::Creature::k_invalid_archetype) {
-      resolved_archetype_id = pose_arch;
-      changed = true;
-    }
-    auto const pose_state = t->state_for_pose[pose_idx];
-    if (pose_state != Render::Creature::AnimationStateId::Count) {
-      state = pose_state;
-      changed = true;
-    }
-
-    if (t->variant_stride > 0U) {
-      bool const trigger_matches =
-          (t->variant_trigger_pose == Render::Creature::PoseIntent::Count) ||
-          (intent == t->variant_trigger_pose);
-      if (trigger_matches) {
-        std::size_t var_idx{0};
-        if (t->variant_is_seed_based) {
-          var_idx = seeded_variant_index(output.seed, t->variant_stride);
-        } else {
-          var_idx =
-              std::min<std::size_t>(static_cast<std::size_t>(variant.facial_hair.style),
-                                    static_cast<std::size_t>(t->variant_stride) - 1U);
-        }
-        auto const var_arch = t->archetype_for_variant[var_idx];
-        if (var_arch != Render::Creature::k_invalid_archetype) {
-          resolved_archetype_id = var_arch;
-          changed = true;
-        }
-        auto const var_state = t->state_for_variant[var_idx];
-        if (var_state != Render::Creature::AnimationStateId::Count) {
-          state = var_state;
-          changed = true;
-        }
-      }
-    }
-
-    if (changed) {
-      phase = humanoid_phase_for_state(anim, state);
-      clip_var = humanoid_clip_variant_for_state(resolved_archetype_id, anim, state);
-    }
-  }
+  auto const selection = output.humanoid_selection.has_value()
+                             ? *output.humanoid_selection
+                             : resolve_humanoid_animation_selection(
+                                   output.spec, anim, output.seed, &variant);
   const auto* asset = CreatureAssetRegistry::instance().resolve(output.spec);
   if (asset == nullptr) {
     return;
@@ -508,14 +455,43 @@ void CreatureRenderBatch::add_humanoid(
     rows_.push_back(std::move(row));
   }
 
-  auto req = build_request(output, resolved_archetype_id, state, phase);
+  auto req = build_request(
+      output, selection.resolved_archetype, selection.state, selection.phase);
   req.creature_asset_id = asset->id;
-  req.render_asset_handle = CreatureRenderAssetHandleRegistry::instance().get_or_create(
-      asset->id, resolved_archetype_id);
-  req.clip_variant = clip_var;
+  bool created_handle = false;
+  {
+    auto& profile = Render::Profiling::global_profile();
+    Render::Profiling::AccumulatorScope const scope(
+        output.pass_intent == RenderPassIntent::Main
+            ? &profile.render_asset_cache_lookup_us
+            : nullptr);
+    req.render_asset_handle =
+        CreatureRenderAssetHandleRegistry::instance().get_or_create(
+            asset->id, selection.resolved_archetype, &created_handle);
+    if (output.pass_intent == RenderPassIntent::Main) {
+      if (created_handle) {
+        ++profile.render_asset_cache_misses;
+      } else {
+        ++profile.render_asset_cache_hits;
+      }
+    }
+  }
+  req.clip_variant = selection.clip_variant;
   populate_role_colors(req, variant);
   req.wear_params = QVector4D(
       variant.weathering, variant.grime, variant.bloodiness, variant.pattern_seed);
+  req.full_body_blend.archetype = selection.full_body_blend.archetype;
+  req.full_body_blend.state = selection.full_body_blend.state;
+  req.full_body_blend.phase = selection.full_body_blend.phase;
+  req.full_body_blend.weight = selection.full_body_blend.weight;
+  req.full_body_blend.clip_variant = selection.full_body_blend.clip_variant;
+  req.full_body_blend.mode = selection.full_body_blend.mode;
+  req.upper_body_overlay.archetype = selection.upper_body_overlay.archetype;
+  req.upper_body_overlay.state = selection.upper_body_overlay.state;
+  req.upper_body_overlay.phase = selection.upper_body_overlay.phase;
+  req.upper_body_overlay.weight = selection.upper_body_overlay.weight;
+  req.upper_body_overlay.clip_variant = selection.upper_body_overlay.clip_variant;
+  req.upper_body_overlay.mode = selection.upper_body_overlay.mode;
   requests_.push_back(req);
 }
 
@@ -552,8 +528,24 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
           : default_archetype_for(CreatureKind::Horse);
   auto req = build_request(output, archetype_id, state, phase);
   req.creature_asset_id = asset->id;
-  req.render_asset_handle = CreatureRenderAssetHandleRegistry::instance().get_or_create(
-      asset->id, archetype_id);
+  bool created_handle = false;
+  {
+    auto& profile = Render::Profiling::global_profile();
+    Render::Profiling::AccumulatorScope const scope(
+        output.pass_intent == RenderPassIntent::Main
+            ? &profile.render_asset_cache_lookup_us
+            : nullptr);
+    req.render_asset_handle =
+        CreatureRenderAssetHandleRegistry::instance().get_or_create(
+            asset->id, archetype_id, &created_handle);
+    if (output.pass_intent == RenderPassIntent::Main) {
+      if (created_handle) {
+        ++profile.render_asset_cache_misses;
+      } else {
+        ++profile.render_asset_cache_hits;
+      }
+    }
+  }
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
   requests_.push_back(req);
@@ -596,8 +588,24 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
           : default_archetype_for(CreatureKind::Elephant);
   auto req = build_request(output, archetype_id, state, phase);
   req.creature_asset_id = asset->id;
-  req.render_asset_handle = CreatureRenderAssetHandleRegistry::instance().get_or_create(
-      asset->id, archetype_id);
+  bool created_handle = false;
+  {
+    auto& profile = Render::Profiling::global_profile();
+    Render::Profiling::AccumulatorScope const scope(
+        output.pass_intent == RenderPassIntent::Main
+            ? &profile.render_asset_cache_lookup_us
+            : nullptr);
+    req.render_asset_handle =
+        CreatureRenderAssetHandleRegistry::instance().get_or_create(
+            asset->id, archetype_id, &created_handle);
+    if (output.pass_intent == RenderPassIntent::Main) {
+      if (created_handle) {
+        ++profile.render_asset_cache_misses;
+      } else {
+        ++profile.render_asset_cache_hits;
+      }
+    }
+  }
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
   requests_.push_back(req);

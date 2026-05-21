@@ -14,6 +14,7 @@
 #include "../creature/bpat/bpat_registry.h"
 #include "../creature/pipeline/creature_asset.h"
 #include "../creature/pipeline/creature_render_graph.h"
+#include "../creature/pipeline/humanoid_animation_selection.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../gl/camera.h"
@@ -138,7 +139,7 @@ auto MountedHumanoidRendererBase::resolve_entity_ground_offset(
         static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
   }
 
-  HorseDimensions dims = get_scaled_horse_dimensions(horse_seed);
+  HorseDimensions const dims = get_scaled_horse_dimensions(horse_seed);
   float offset = -dims.barrel_center_y;
   if (transform_comp != nullptr) {
     offset *= transform_comp->scale.y;
@@ -274,11 +275,17 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   RCP::CreatureLodDecision rider_lod{};
   rider_lod.lod = lod;
   auto rider_output = RCP::build_base_graph_output(rider_inputs, rider_lod);
-  rider_output.spec = mounted_visual_spec().rider;
+  rider_output.spec = RCP::finalize_visible_humanoid_spec(
+      mounted_visual_spec().rider,
+      variant,
+      anim_ctx.inputs,
+      Render::Creature::is_moving_animation(anim_ctx.inputs.movement_state));
   rider_output.seed = seed;
   rider_output.world_already_grounded = true;
   rider_output.world_matrix = rider_ctx.model * rider_local_world_from_mount(
                                                     mount, rider_output.spec, anim_ctx);
+  rider_output.humanoid_selection = RCP::resolve_humanoid_animation_selection(
+      rider_output.spec, anim_ctx, rider_output.seed, &variant);
   out.bodies.add_humanoid(rider_output, pose, variant, anim_ctx);
 }
 

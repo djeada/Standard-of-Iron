@@ -2,6 +2,7 @@
 
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
+#include "../../game/systems/healing_colors.h"
 #include "../../game/systems/nation_id.h"
 #include "../scene_renderer.h"
 
@@ -14,7 +15,7 @@ void render_healer_auras(Renderer* renderer,
     return;
   }
 
-  float animation_time = renderer->get_animation_time();
+  float const animation_time = renderer->get_animation_time();
 
   auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
 
@@ -44,13 +45,15 @@ void render_healer_auras(Renderer* renderer,
       continue;
     }
 
-    QVector3D position(
+    QVector3D const position(
         transform->position.x, transform->position.y + 0.1F, transform->position.z);
-    float radius = healer_comp->healing_range;
+    float const radius = healer_comp->healing_range;
 
-    float intensity = 1.0F;
+    float const intensity = 1.0F;
 
-    QVector3D color(0.4F, 1.0F, 0.5F);
+    QVector3D const color = unit_comp != nullptr
+                                ? Game::Systems::get_healing_color(unit_comp->nation_id)
+                                : Game::Systems::get_carthage_healing_color();
 
     renderer->healer_aura(position, color, radius, intensity, animation_time);
   }

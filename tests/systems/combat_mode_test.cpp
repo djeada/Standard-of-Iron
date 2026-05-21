@@ -15,8 +15,10 @@
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/command_service.h"
+#include "systems/healing_system.h"
 #include "systems/movement_system.h"
 #include "systems/owner_registry.h"
+#include "systems/projectile_system.h"
 #include "systems/rpg_combat_system/rpg_commander_damage.h"
 #include "units/troop_config.h"
 
@@ -35,6 +37,14 @@ protected:
 
   std::unique_ptr<World> world;
 };
+
+void advance_projectiles(World& world, float total_time = 1.5F, float step = 0.1F) {
+  auto* projectile_system = world.get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  for (float elapsed = 0.0F; elapsed < total_time; elapsed += step) {
+    projectile_system->update(&world, step);
+  }
+}
 
 TEST_F(CombatModeTest, NoAttackModeWhenMovingNearEnemy) {
 
@@ -85,6 +95,39 @@ TEST_F(CombatModeTest, AttackModeTriggersWhenEngaged) {
   Combat::update_combat_mode(attacker, world.get(), attacker_attack);
 
   EXPECT_EQ(attacker_attack->current_mode, AttackComponent::CombatMode::Melee);
+}
+
+TEST_F(CombatModeTest, UndeadHelpersMapCombatFamiliesAndAutoEngageRoles) {
+  EXPECT_EQ(resolve_combat_attack_family(Game::Units::SpawnType::SkeletonSwordsman,
+                                         AttackComponent::CombatMode::Melee),
+            CombatAttackFamily::Sword);
+  EXPECT_EQ(resolve_combat_attack_family(Game::Units::SpawnType::SkeletonArcher,
+                                         AttackComponent::CombatMode::Ranged),
+            CombatAttackFamily::Bow);
+  EXPECT_EQ(resolve_combat_attack_family(Game::Units::SpawnType::GravePriest,
+                                         AttackComponent::CombatMode::Ranged),
+            CombatAttackFamily::Bow);
+
+  auto* skeleton_swordsman = world->create_entity();
+  auto* swordsman_unit =
+      skeleton_swordsman->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(swordsman_unit, nullptr);
+  swordsman_unit->spawn_type = Game::Units::SpawnType::SkeletonSwordsman;
+
+  auto* skeleton_archer = world->create_entity();
+  auto* archer_unit =
+      skeleton_archer->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(archer_unit, nullptr);
+  archer_unit->spawn_type = Game::Units::SpawnType::SkeletonArcher;
+
+  auto* grave_priest = world->create_entity();
+  auto* priest_unit = grave_priest->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  ASSERT_NE(priest_unit, nullptr);
+  priest_unit->spawn_type = Game::Units::SpawnType::GravePriest;
+
+  EXPECT_TRUE(Game::Systems::Combat::should_auto_engage_melee(skeleton_swordsman));
+  EXPECT_FALSE(Game::Systems::Combat::should_auto_engage_melee(skeleton_archer));
+  EXPECT_FALSE(Game::Systems::Combat::should_auto_engage_melee(grave_priest));
 }
 
 TEST_F(CombatModeTest, MoveCommandScalesHoldExitToCurrentKneelDepth) {
@@ -1759,6 +1802,427 @@ TEST_F(CombatModeTest, CleanupSystemExpiresBloodStainsAfterLifetime) {
 
   cleanup.update(world.get(), 0.05F);
   EXPECT_EQ(world->get_entity(blood_stain_id), nullptr);
+}
+
+TEST_F(CombatModeTest, GravePriestHealingTargetsUndeadAndLivingHealersSkipThem) {
+  HealingSystem healing_system;
+
+  auto* grave_priest = world->create_entity();
+  grave_priest->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* grave_priest_unit =
+      grave_priest->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  grave_priest_unit->owner_id = 1;
+  auto* grave_priest_healer = grave_priest->add_component<HealerComponent>();
+  grave_priest_healer->healing_range = 8.0F;
+  grave_priest_healer->healing_amount = 12;
+  grave_priest_healer->healing_cooldown = 1.0F;
+  grave_priest_healer->time_since_last_heal = 1.0F;
+  grave_priest_healer->target_affinity = HealerComponent::TargetAffinity::UndeadAllies;
+
+  auto* living_healer = world->create_entity();
+  living_healer->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* living_healer_unit =
+      living_healer->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  living_healer_unit->owner_id = 1;
+  auto* living_healer_comp = living_healer->add_component<HealerComponent>();
+  living_healer_comp->healing_range = 8.0F;
+  living_healer_comp->healing_amount = 9;
+  living_healer_comp->healing_cooldown = 1.0F;
+  living_healer_comp->time_since_last_heal = 1.0F;
+  living_healer_comp->target_affinity = HealerComponent::TargetAffinity::LivingAllies;
+
+  auto* undead_ally = world->create_entity();
+  undead_ally->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  auto* undead_unit = undead_ally->add_component<UnitComponent>(50, 80, 1.0F, 12.0F);
+  undead_unit->owner_id = 1;
+  undead_ally->add_component<UndeadComponent>();
+
+  auto* living_ally = world->create_entity();
+  living_ally->add_component<TransformComponent>(2.0F, 0.0F, 1.0F);
+  auto* living_unit = living_ally->add_component<UnitComponent>(45, 90, 1.0F, 12.0F);
+  living_unit->owner_id = 1;
+
+  healing_system.update(world.get(), 0.1F);
+
+  EXPECT_EQ(undead_unit->health, 62);
+  EXPECT_EQ(living_unit->health, 54);
+}
+
+TEST_F(CombatModeTest, GravePriestSuppressesFireballWhileUndeadHealingIsAvailable) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 14.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::GravePriest;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_ranged = true;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->range = 8.0F;
+  attacker_attack->damage = 24;
+  attacker_attack->cooldown = 0.0F;
+  attacker_attack->time_since_last = 1.0F;
+  attacker->add_component<SpecialAttackComponent>()->projectile_kind =
+      Game::Systems::ProjectileKind::Fireball;
+  auto* special_attack = attacker->get_component<SpecialAttackComponent>();
+  special_attack->use_projectile_system = true;
+  special_attack->splash_radius = 2.4F;
+  auto* healer = attacker->add_component<HealerComponent>();
+  healer->healing_range = 8.0F;
+  healer->healing_amount = 10;
+  healer->healing_cooldown = 0.5F;
+  healer->time_since_last_heal = 1.0F;
+  healer->target_affinity = HealerComponent::TargetAffinity::UndeadAllies;
+  healer->suppress_attack_while_healing = true;
+
+  auto* undead_ally = world->create_entity();
+  undead_ally->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  auto* undead_unit = undead_ally->add_component<UnitComponent>(60, 80, 1.0F, 12.0F);
+  undead_unit->owner_id = 1;
+  undead_ally->add_component<UndeadComponent>();
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto* target = attacker->add_component<AttackTargetComponent>();
+  target->target_id = enemy->get_id();
+  target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  EXPECT_TRUE(projectile_system->projectiles().empty());
+  EXPECT_EQ(enemy_unit->health, 100);
+}
+
+TEST_F(CombatModeTest,
+       FireballProjectileDamagesEnemiesInAreaWithoutHittingAlliedUndead) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 14.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::GravePriest;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_ranged = true;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->range = 8.0F;
+  attacker_attack->damage = 24;
+  attacker_attack->cooldown = 0.0F;
+  attacker_attack->time_since_last = 1.0F;
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::Fireball;
+  special_attack->use_projectile_system = true;
+  special_attack->splash_radius = 2.5F;
+  special_attack->splash_damage_multiplier = 0.5F;
+  special_attack->fire_patch_duration = 2.0F;
+  special_attack->fire_patch_radius = 2.1F;
+  special_attack->burn_duration = 1.2F;
+  special_attack->burn_tick_interval = 0.3F;
+  special_attack->burn_damage_per_tick = 3;
+
+  auto* primary_enemy = world->create_entity();
+  primary_enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto* primary_enemy_unit =
+      primary_enemy->add_component<UnitComponent>(40, 40, 1.0F, 12.0F);
+  primary_enemy_unit->owner_id = 2;
+
+  auto* splash_enemy = world->create_entity();
+  splash_enemy->add_component<TransformComponent>(7.5F, 0.0F, 0.2F);
+  auto* splash_enemy_unit =
+      splash_enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  splash_enemy_unit->owner_id = 2;
+
+  auto* allied_undead = world->create_entity();
+  allied_undead->add_component<TransformComponent>(6.5F, 0.0F, 0.1F);
+  auto* allied_undead_unit =
+      allied_undead->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  allied_undead_unit->owner_id = 1;
+  allied_undead->add_component<UndeadComponent>();
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = primary_enemy->get_id();
+  attack_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  ASSERT_EQ(projectile_system->projectiles().size(), 1U);
+  EXPECT_EQ(primary_enemy_unit->health, 40);
+
+  advance_projectiles(*world);
+
+  EXPECT_LT(primary_enemy_unit->health, 40);
+  EXPECT_LT(splash_enemy_unit->health, 100);
+  EXPECT_EQ(allied_undead_unit->health, 100);
+  EXPECT_EQ(world->get_entities_with<FirePatchComponent>().size(), 1U);
+  EXPECT_NE(primary_enemy->get_component<BurningStatusComponent>(), nullptr);
+  EXPECT_NE(splash_enemy->get_component<BurningStatusComponent>(), nullptr);
+  EXPECT_EQ(allied_undead->get_component<BurningStatusComponent>(), nullptr);
+
+  int const primary_after_impact = primary_enemy_unit->health;
+  int const splash_after_impact = splash_enemy_unit->health;
+  advance_projectiles(*world, 0.6F, 0.05F);
+  EXPECT_LT(primary_enemy_unit->health, primary_after_impact);
+  EXPECT_LT(splash_enemy_unit->health, splash_after_impact);
+  EXPECT_EQ(allied_undead_unit->health, 100);
+}
+
+TEST_F(CombatModeTest, FireballRespectsAttackCooldownBeforeLaunchingProjectile) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 14.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::GravePriest;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_ranged = true;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->range = 8.0F;
+  attacker_attack->damage = 24;
+  attacker_attack->cooldown = 2.0F;
+  attacker_attack->time_since_last = 0.2F;
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::Fireball;
+  special_attack->use_projectile_system = true;
+  special_attack->splash_radius = 2.5F;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  auto* projectile_system = world->get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectile_system, nullptr);
+  EXPECT_TRUE(projectile_system->projectiles().empty());
+  EXPECT_EQ(enemy_unit->health, 100);
+}
+
+TEST_F(CombatModeTest, FireballBurnContinuesAfterCasterDies) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 14.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::GravePriest;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_ranged = true;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->range = 8.0F;
+  attacker_attack->damage = 24;
+  attacker_attack->cooldown = 0.0F;
+  attacker_attack->time_since_last = 1.0F;
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::Fireball;
+  special_attack->use_projectile_system = true;
+  special_attack->splash_radius = 2.0F;
+  special_attack->splash_damage_multiplier = 0.6F;
+  special_attack->fire_patch_duration = 1.8F;
+  special_attack->fire_patch_radius = 1.8F;
+  special_attack->burn_duration = 1.4F;
+  special_attack->burn_tick_interval = 0.25F;
+  special_attack->burn_damage_per_tick = 2;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  advance_projectiles(*world, 0.8F, 0.08F);
+
+  ASSERT_NE(enemy->get_component<BurningStatusComponent>(), nullptr);
+  int const health_after_impact = enemy_unit->health;
+
+  world->destroy_entity(attacker->get_id());
+  advance_projectiles(*world, 0.6F, 0.05F);
+
+  EXPECT_LT(enemy_unit->health, health_after_impact);
+}
+
+TEST_F(CombatModeTest, FireballBurnKeepsIgnitionAgeWhileFirePatchRefreshesDuration) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 14.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::GravePriest;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_ranged = true;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->range = 8.0F;
+  attacker_attack->damage = 24;
+  attacker_attack->cooldown = 0.0F;
+  attacker_attack->time_since_last = 1.0F;
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::Fireball;
+  special_attack->use_projectile_system = true;
+  special_attack->splash_radius = 2.0F;
+  special_attack->splash_damage_multiplier = 0.6F;
+  special_attack->fire_patch_duration = 1.8F;
+  special_attack->fire_patch_radius = 1.8F;
+  special_attack->burn_duration = 1.4F;
+  special_attack->burn_tick_interval = 0.25F;
+  special_attack->burn_damage_per_tick = 2;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  advance_projectiles(*world, 0.8F, 0.08F);
+
+  auto* burning = enemy->get_component<BurningStatusComponent>();
+  ASSERT_NE(burning, nullptr);
+  float const initial_ignition_elapsed = burning->ignition_elapsed;
+  float const refreshed_duration = burning->duration;
+
+  advance_projectiles(*world, 0.4F, 0.05F);
+
+  burning = enemy->get_component<BurningStatusComponent>();
+  ASSERT_NE(burning, nullptr);
+  EXPECT_GT(burning->ignition_elapsed, initial_ignition_elapsed);
+  EXPECT_FLOAT_EQ(burning->duration, refreshed_duration);
+  EXPECT_FLOAT_EQ(burning->remaining_duration, burning->duration);
+}
+
+TEST_F(CombatModeTest, CursedVolleyAppliesAndRefreshesCurseOnLivingTargets) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 14.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::SkeletonArcher;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_ranged = true;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->range = 8.0F;
+  attacker_attack->damage = 14;
+  attacker_attack->cooldown = 0.0F;
+  attacker_attack->time_since_last = 1.0F;
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::CursedArrow;
+  special_attack->use_projectile_system = true;
+  special_attack->cursed_duration = 6.0F;
+  special_attack->cursed_morale_penalty_per_hit = 8.0F;
+  special_attack->cursed_stacks_per_hit = 1;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+  auto* morale = enemy->add_component<MoraleComponent>();
+  morale->morale = 70.0F;
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = false;
+
+  auto query_context = Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  advance_projectiles(*world, 0.8F, 0.08F);
+
+  auto* cursed = enemy->get_component<CursedStatusComponent>();
+  ASSERT_NE(cursed, nullptr);
+  EXPECT_EQ(cursed->stacks, 1);
+  EXPECT_FLOAT_EQ(morale->morale, 62.0F);
+
+  cursed->remaining_duration = 1.5F;
+  attacker_attack->time_since_last = 1.0F;
+  query_context = Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  advance_projectiles(*world, 0.8F, 0.08F);
+
+  ASSERT_NE(enemy->get_component<CursedStatusComponent>(), nullptr);
+  EXPECT_EQ(enemy->get_component<CursedStatusComponent>()->stacks, 2);
+  EXPECT_GT(enemy->get_component<CursedStatusComponent>()->remaining_duration, 5.0F);
+  EXPECT_FLOAT_EQ(morale->morale, 54.0F);
+}
+
+TEST_F(CombatModeTest, CursedVolleyDoesNotAffectUndeadTargets) {
+  world->add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 14.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::SkeletonArcher;
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_ranged = true;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  attacker_attack->range = 8.0F;
+  attacker_attack->damage = 14;
+  attacker_attack->cooldown = 0.0F;
+  attacker_attack->time_since_last = 1.0F;
+  auto* special_attack = attacker->add_component<SpecialAttackComponent>();
+  special_attack->projectile_kind = Game::Systems::ProjectileKind::CursedArrow;
+  special_attack->use_projectile_system = true;
+  special_attack->cursed_duration = 6.0F;
+  special_attack->cursed_morale_penalty_per_hit = 8.0F;
+  special_attack->cursed_stacks_per_hit = 1;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+  enemy->add_component<UndeadComponent>();
+  auto* morale = enemy->add_component<MoraleComponent>();
+  morale->morale = 70.0F;
+
+  auto* attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  advance_projectiles(*world, 0.8F, 0.08F);
+
+  EXPECT_EQ(enemy_unit->health, 86);
+  EXPECT_EQ(morale->morale, 70.0F);
+  EXPECT_EQ(enemy->get_component<CursedStatusComponent>(), nullptr);
 }
 
 TEST_F(CombatModeTest, BuildingDeathsDoNotCreateBloodStains) {

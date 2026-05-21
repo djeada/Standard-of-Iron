@@ -277,3 +277,35 @@ TEST_F(MissionLoaderTest, ShippedMissionsAuthorCommandersForPlayerAndAiSetups) {
     }
   }
 }
+
+TEST_F(MissionLoaderTest, ParsesUndeadMissionFields) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  temp_file.write(R"({
+    "id": "sepulcher_objective",
+    "title": "Sepulcher Objective",
+    "summary": "Test undead objective parsing",
+    "map_path": ":/assets/maps/map_forest.json",
+    "include_ambient_undead": true,
+    "player_setup": {"nation": "roman_republic", "faction": "roman", "color": "red"},
+    "victory_conditions": [
+      {"type": "clear_undead_zone", "zone_id": "sepulcher_ruin"},
+      {"type": "survive_undead_wave", "zone_id": "sepulcher_ruin", "wave_count": 2}
+    ],
+    "defeat_conditions": [],
+    "events": []
+  })");
+  temp_file.flush();
+
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error))
+      << error.toStdString();
+
+  EXPECT_TRUE(mission.include_ambient_undead);
+  ASSERT_EQ(mission.victory_conditions.size(), 2);
+  ASSERT_TRUE(mission.victory_conditions[0].zone_id.has_value());
+  EXPECT_EQ(*mission.victory_conditions[0].zone_id, QStringLiteral("sepulcher_ruin"));
+  EXPECT_EQ(mission.victory_conditions[1].wave_count.value_or(0), 2);
+}

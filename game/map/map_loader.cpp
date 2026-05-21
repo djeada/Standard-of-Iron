@@ -281,7 +281,7 @@ void read_rain_config(const QJsonObject& obj, RainSettings& out) {
     out.enabled = obj.value(RAIN_ENABLED).toBool(out.enabled);
   }
   if (obj.contains(RAIN_TYPE)) {
-    QString type_str = obj.value(RAIN_TYPE).toString("rain").toLower();
+    QString const type_str = obj.value(RAIN_TYPE).toString("rain").toLower();
     if (type_str == "snow") {
       out.type = WeatherType::Snow;
     } else {
@@ -384,6 +384,92 @@ void append_world_props(const QJsonArray& arr, std::vector<WorldProp>& out) {
     prop.radius = float(obj.value(JsonKeys::RADIUS).toDouble(3.0));
     prop.persistent = obj.value(JsonKeys::PERSISTENT).toBool(true);
     out.push_back(prop);
+  }
+}
+
+void append_undead_wave_units_from_object(const QJsonObject& obj, UndeadWave& out) {
+  for (auto it = obj.begin(); it != obj.end(); ++it) {
+    Game::Units::SpawnType spawn_type;
+    if (!Game::Units::try_parse_spawn_type(it.key(), spawn_type)) {
+      continue;
+    }
+    int const count = it.value().toInt(0);
+    if (count <= 0) {
+      continue;
+    }
+    out.units.push_back({spawn_type, count});
+  }
+}
+
+void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
+  out.clear();
+  out.reserve(arr.size());
+  int next_zone_index = 1;
+  for (const auto& val : arr) {
+    auto obj = val.toObject();
+    UndeadZone zone;
+    zone.id = obj.value(ID).toString().trimmed();
+    if (zone.id.isEmpty()) {
+      zone.id = QStringLiteral("undead_zone_%1").arg(next_zone_index++);
+    }
+
+    if (!world_prop_type_from_string(obj.value(ANCHOR_TYPE).toString(),
+                                     zone.anchor_type)) {
+      zone.anchor_type = WorldProp::Type::Ruins;
+    }
+
+    zone.x = float(obj.value(X).toDouble(0.0));
+    zone.z = float(obj.value(Z).toDouble(0.0));
+    zone.radius = float(obj.value(RADIUS).toDouble(zone.radius));
+    zone.leash_radius = float(
+        obj.value(LEASH_RADIUS).toDouble(std::max(zone.radius, zone.leash_radius)));
+    zone.owner_id = obj.value(OWNER_ID).toInt(zone.owner_id);
+    zone.team_id = obj.value(TEAM_ID).toInt(zone.team_id);
+
+    if (obj.contains(AWAKEN_ON) && obj.value(AWAKEN_ON).isArray()) {
+      const auto awaken_on = obj.value(AWAKEN_ON).toArray();
+      for (const auto& trigger_value : awaken_on) {
+        QString const trigger = trigger_value.toString().trimmed().toLower();
+        if (!trigger.isEmpty()) {
+          zone.awaken_on.push_back(trigger);
+        }
+      }
+    }
+
+    if (zone.awaken_on.empty()) {
+      zone.awaken_on.push_back(QStringLiteral("unit_enters_radius"));
+    }
+
+    if (obj.contains(WAVES) && obj.value(WAVES).isArray()) {
+      const auto waves = obj.value(WAVES).toArray();
+      for (const auto& wave_value : waves) {
+        auto wave_obj = wave_value.toObject();
+        UndeadWave wave;
+        wave.trigger =
+            wave_obj.value(TRIGGER).toString(wave.trigger).trimmed().toLower();
+        if (wave_obj.contains(UNITS) && wave_obj.value(UNITS).isObject()) {
+          append_undead_wave_units_from_object(wave_obj.value(UNITS).toObject(), wave);
+        }
+        append_undead_wave_units_from_object(wave_obj, wave);
+        if (!wave.units.empty()) {
+          std::sort(wave.units.begin(),
+                    wave.units.end(),
+                    [](auto const& lhs, auto const& rhs) {
+                      return static_cast<std::uint8_t>(lhs.type) <
+                             static_cast<std::uint8_t>(rhs.type);
+                    });
+          zone.waves.push_back(std::move(wave));
+        }
+      }
+    }
+
+    if (zone.waves.empty()) {
+      qWarning() << "MapLoader: undead zone" << zone.id
+                 << "has no valid waves - skipping";
+      continue;
+    }
+
+    out.push_back(std::move(zone));
   }
 }
 
@@ -739,6 +825,12 @@ auto MapLoader::load_from_json_file(const QString& path,
 
   if (root.contains(WORLD_PROPS) && root.value(WORLD_PROPS).isArray()) {
     append_world_props(root.value(WORLD_PROPS).toArray(), out_map.world_props);
+  }
+
+  if (root.contains(UNDEAD_ZONES) && root.value(UNDEAD_ZONES).isArray()) {
+    read_undead_zones(root.value(UNDEAD_ZONES).toArray(), out_map.undead_zones);
+  } else {
+    out_map.undead_zones.clear();
   }
 
   if (root.contains(TERRAIN) && root.value(TERRAIN).isArray()) {

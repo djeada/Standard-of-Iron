@@ -50,6 +50,16 @@
     "troops/carthage/healer": {
       "armor": "armor_light_carthage"
     },
+    "troops/iron_sepulcher/skeleton_swordsman": {
+      "sword": "sword_sepulcher"
+    },
+    "troops/iron_sepulcher/skeleton_archer": {
+      "bow": "bow_carthage",
+      "quiver": "quiver_carthage"
+    },
+    "troops/iron_sepulcher/grave_priest": {
+      "cloak": "cloak_sepulcher"
+    },
     "troops/roman/builder": {
       "helmet": "roman_light",
       "tool_belt": "tool_belt_roman",
@@ -69,6 +79,46 @@
       "helmet": "headwrap_carthage_civilian",
       "armor": "carthage_robes",
       "cloak": "carthage_civilian_sash"
+    },
+    "troops/roman/commanders/fabius_maximus": {
+      "spear": "spear_fabius",
+      "helmet": "roman_heavy",
+      "greaves": "roman_greaves",
+      "armor": "roman_heavy_armor",
+      "shoulder": "roman_shoulder_cover"
+    },
+    "troops/roman/commanders/scipio_africanus": {
+      "sword": "sword_scipio",
+      "shield": "roman_scutum",
+      "helmet": "roman_light",
+      "greaves": "roman_greaves",
+      "armor": "roman_heavy_armor"
+    },
+    "troops/roman/commanders/marcellus": {
+      "bow": "bow_marcellus",
+      "quiver": "quiver_marcellus",
+      "helmet": "roman_light",
+      "armor": "roman_light_armor",
+      "cloak": "cloak_roman"
+    },
+    "troops/carthage/commanders/hanno_the_great": {
+      "spear": "spear_hanno",
+      "helmet": "headwrap",
+      "armor": "armor_light_carthage",
+      "cloak": "cloak_carthage"
+    },
+    "troops/carthage/commanders/hasdrubal_barca": {
+      "bow": "bow_hasdrubal",
+      "quiver": "quiver_hasdrubal",
+      "helmet": "carthage_light",
+      "armor": "armor_light_carthage"
+    },
+    "troops/carthage/commanders/hannibal_barca": {
+      "sword": "sword_hannibal",
+      "shield": "shield_carthage",
+      "helmet": "carthage_heavy",
+      "armor": "armor_heavy_carthage",
+      "shoulder": "carthage_shoulder_cover"
     },
     "troops/roman/horse_archer": {
       "bow": "bow_roman",

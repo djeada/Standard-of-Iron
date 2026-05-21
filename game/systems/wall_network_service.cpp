@@ -227,6 +227,22 @@ auto canonical_variant_for_mask(std::uint8_t mask)
   return {k_wall_variant_tee, -90.0F};
 }
 
+auto normalize_rotation_degrees(float angle) -> float {
+  while (angle < 0.0F) {
+    angle += 360.0F;
+  }
+  while (angle >= 360.0F) {
+    angle -= 360.0F;
+  }
+  return angle;
+}
+
+auto preserved_isolated_rotation(float current_rotation_y) -> float {
+  int const quarter_turns = static_cast<int>(
+      std::round(normalize_rotation_degrees(current_rotation_y) / 90.0F));
+  return (quarter_turns % 2) == 0 ? 0.0F : 90.0F;
+}
+
 void update_wall_entity_visuals(Engine::Core::Entity* entity,
                                 WallSegmentComponent* wall,
                                 std::uint8_t connection_mask) {
@@ -251,7 +267,9 @@ void update_wall_entity_visuals(Engine::Core::Entity* entity,
 
   const auto appearance =
       WallNetworkService::resolve_appearance(nation_id, connection_mask);
-  transform->rotation.y = appearance.rotation_y;
+  transform->rotation.y = connection_mask == 0U
+                              ? preserved_isolated_rotation(transform->rotation.y)
+                              : appearance.rotation_y;
   renderable->renderer_id = appearance.renderer_id;
   wall->connection_mask = connection_mask;
 }

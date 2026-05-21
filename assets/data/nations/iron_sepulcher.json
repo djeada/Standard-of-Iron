@@ -1,0 +1,113 @@
+{
+  "id": "iron_sepulcher",
+  "display_name": "The Iron Sepulcher",
+  "primary_building": "none",
+  "playable": false,
+  "has_economy": false,
+  "ai_profile": "sepulcher_defense",
+  "selectable_in_skirmish": false,
+  "formation_type": "barbarian",
+  "troops": [
+    {
+      "id": "skeleton_swordsman",
+      "display_name": "Skeleton Swordsman",
+      "production": {
+        "cost": 0,
+        "build_time": 0.0,
+        "priority": 10,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 1020,
+        "max_health": 1020,
+        "speed": 2.2,
+        "vision_range": 14.5,
+        "ranged_range": 1.5,
+        "ranged_damage": 1,
+        "ranged_cooldown": 1.8,
+        "melee_range": 1.6,
+        "melee_damage": 18,
+        "melee_cooldown": 0.75,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.56,
+        "selection_ring_size": 1.05,
+        "renderer_id": "troops/iron_sepulcher/skeleton_swordsman"
+      },
+      "formation": {
+        "individuals_per_unit": 18,
+        "max_units_per_row": 6
+      }
+    },
+    {
+      "id": "skeleton_archer",
+      "display_name": "Skeleton Archer",
+      "production": {
+        "cost": 0,
+        "build_time": 0.0,
+        "priority": 8,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 620,
+        "max_health": 620,
+        "speed": 2.3,
+        "vision_range": 17.2,
+        "ranged_range": 7.8,
+        "ranged_damage": 28,
+        "ranged_cooldown": 0.95,
+        "melee_range": 1.35,
+        "melee_damage": 4,
+        "melee_cooldown": 1.1,
+        "can_ranged": true,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.52,
+        "selection_ring_size": 1.05,
+        "renderer_id": "troops/iron_sepulcher/skeleton_archer"
+      },
+      "formation": {
+        "individuals_per_unit": 18,
+        "max_units_per_row": 6
+      },
+      "abilities": ["cursed_arrow_volley"]
+    },
+    {
+      "id": "grave_priest",
+      "display_name": "Grave Priest",
+      "production": {
+        "cost": 0,
+        "build_time": 0.0,
+        "priority": 20,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 760,
+        "max_health": 760,
+        "speed": 2.0,
+        "vision_range": 16.0,
+        "ranged_range": 8.6,
+        "ranged_damage": 30,
+        "ranged_cooldown": 2.3,
+        "melee_range": 1.25,
+        "melee_damage": 3,
+        "melee_cooldown": 1.6,
+        "can_ranged": true,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.6,
+        "selection_ring_size": 0.7,
+        "renderer_id": "troops/iron_sepulcher/grave_priest"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      },
+      "abilities": ["fireball"]
+    }
+  ]
+}

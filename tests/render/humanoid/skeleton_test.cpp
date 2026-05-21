@@ -9,6 +9,7 @@
 #include "render/creature/pose_intent.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/humanoid_clip_registry.h"
+#include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/humanoid_state_machine.h"
 #include "render/humanoid/skeleton.h"
 
@@ -267,6 +268,27 @@ TEST(HumanoidSocketTest, FootSocketsStayLevelInsteadOfFollowingShinTilt) {
   EXPECT_LT(std::abs(foot_r.up.z()), 0.10F);
 }
 
+TEST(HumanoidSocketTest, BindLeftShieldFrameMatchesHandSocketFrame) {
+  auto const& bind_frames = humanoid_bind_body_frames();
+
+  auto const expected_shield_l =
+      socket_attachment_frame(bind_frames.hand_l, HumanoidSocket::GripL);
+
+  EXPECT_LT((bind_frames.shield_l.origin - expected_shield_l.origin).length(), k_eps);
+  EXPECT_LT((bind_frames.shield_l.right - expected_shield_l.right).length(), k_eps);
+  EXPECT_LT((bind_frames.shield_l.up - expected_shield_l.up).length(), k_eps);
+  EXPECT_LT((bind_frames.shield_l.forward - expected_shield_l.forward).length(), k_eps);
+}
+
+TEST(HumanoidSocketTest, BindLeftGripFrameKeepsBodySideCarryBasis) {
+  auto const& bind_frames = humanoid_bind_body_frames();
+
+  EXPECT_LT((bind_frames.grip_l.origin - bind_frames.hand_l.origin).length(), k_eps);
+  EXPECT_LT((bind_frames.grip_l.right + bind_frames.torso.right).length(), k_eps);
+  EXPECT_LT((bind_frames.grip_l.up - bind_frames.torso.up).length(), k_eps);
+  EXPECT_LT((bind_frames.grip_l.forward + bind_frames.torso.forward).length(), k_eps);
+}
+
 TEST(HumanoidStateMachineTest, PriorityHitOverridesAttack) {
   AnimationInputs inputs{};
   inputs.is_attacking = true;
@@ -316,6 +338,23 @@ TEST(HumanoidStateMachineTest, AttackRangedVsMelee) {
   EXPECT_EQ(select_state(inputs), HumanoidState::AttackMelee);
 }
 
+TEST(HumanoidStateMachineTest, CastUsesExplicitPoseIntentButRangedHumanoidState) {
+  AnimationInputs inputs{};
+  inputs.is_attacking = true;
+  inputs.is_melee = false;
+  inputs.is_casting = true;
+  inputs.cast_kind = Render::GL::CastVisualKind::Fireball;
+  inputs.attack_family = Engine::Core::CombatAttackFamily::Bow;
+
+  auto const resolved_pose = Render::Creature::resolve_pose(inputs);
+
+  EXPECT_EQ(resolved_pose.intent, Render::Creature::PoseIntent::Cast);
+  EXPECT_EQ(resolved_pose.humanoid_state, HumanoidState::AttackRanged);
+  EXPECT_EQ(resolved_pose.animation_state, Render::Creature::AnimationStateId::Cast);
+  EXPECT_EQ(resolved_pose.animation.action, Render::Creature::ActionIntent::Cast);
+  EXPECT_EQ(resolved_pose.animation.cast_kind, Render::GL::CastVisualKind::Fireball);
+}
+
 TEST(HumanoidStateMachineTest,
      HoldModeAttackKeepsAttackIntentButUsesHoldAnimationState) {
   AnimationInputs inputs{};
@@ -335,12 +374,16 @@ TEST(HumanoidStateMachineTest,
 TEST(HumanoidStateMachineTest, PoseIntentHelpersMatchResolvedStateCategories) {
   EXPECT_TRUE(Render::Creature::is_attack_pose_intent(
       Render::Creature::PoseIntent::AttackSpear));
+  EXPECT_TRUE(
+      Render::Creature::is_attack_pose_intent(Render::Creature::PoseIntent::Cast));
   EXPECT_FALSE(
       Render::Creature::is_attack_pose_intent(Render::Creature::PoseIntent::Walk));
   EXPECT_TRUE(
       Render::Creature::is_locomotion_pose_intent(Render::Creature::PoseIntent::Run));
   EXPECT_TRUE(Render::Creature::is_attack_animation_state(
       Render::Creature::AnimationStateId::AttackBow));
+  EXPECT_TRUE(Render::Creature::is_attack_animation_state(
+      Render::Creature::AnimationStateId::Cast));
   EXPECT_FALSE(Render::Creature::is_attack_animation_state(
       Render::Creature::AnimationStateId::Hold));
 }

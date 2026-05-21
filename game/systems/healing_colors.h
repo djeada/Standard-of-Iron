@@ -16,12 +16,18 @@ inline auto get_carthage_healing_color() -> QVector3D {
   return QVector3D(0.4F, 1.0F, 0.5F);
 }
 
+inline auto get_iron_sepulcher_healing_color() -> QVector3D {
+  return QVector3D(0.60F, 0.48F, 0.82F);
+}
+
 inline auto get_healing_color(NationID nation_id) -> QVector3D {
   switch (nation_id) {
   case NationID::RomanRepublic:
     return get_roman_healing_color();
   case NationID::Carthage:
     return get_carthage_healing_color();
+  case NationID::IronSepulcher:
+    return get_iron_sepulcher_healing_color();
   default:
     return get_carthage_healing_color();
   }

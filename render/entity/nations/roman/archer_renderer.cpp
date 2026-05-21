@@ -113,6 +113,9 @@ using Render::GL::Humanoid::saturate_color;
 
 class ArcherRenderer : public HumanoidRendererBase {
 public:
+  explicit ArcherRenderer(std::string_view renderer_key = "troops/roman/archer")
+      : m_renderer_key(renderer_key) {}
+
   auto get_proportion_scaling() const -> QVector3D override {
     return k_profile.as_vector();
   }
@@ -134,49 +137,52 @@ public:
   visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
     using namespace Render::Creature::Pipeline;
 
-    static const UnitVisualSpec spec = []() {
-      static const auto k_archer_base_archetype = []() {
-        using Render::Creature::AnimationStateId;
-        using Render::Creature::ArchetypeDescriptor;
-        using Render::Creature::ArchetypeRegistry;
+    if (m_visual_spec_baked) {
+      return m_visual_spec_cache;
+    }
 
-        auto& registry = ArchetypeRegistry::instance();
-        auto const* base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
-        if (base_desc == nullptr) {
-          return Render::Creature::k_invalid_archetype;
-        }
+    static const auto k_archer_base_archetype = []() {
+      using Render::Creature::AnimationStateId;
+      using Render::Creature::ArchetypeDescriptor;
+      using Render::Creature::ArchetypeRegistry;
 
-        ArchetypeDescriptor desc = *base_desc;
-        desc.debug_name = "troops/roman/archer/base";
-        auto const attack_bow_clip =
-            desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackBow)];
-        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
-            attack_bow_clip;
-        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
-            Render::Creature::k_humanoid_hold_bow_clip;
-        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
-            Render::Creature::k_humanoid_hold_bow_clip;
-        return registry.register_archetype(desc);
-      }();
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/roman/archer");
-      const std::array<EquipmentHandle, 6> handles{loadout.helmet_handle,
-                                                   loadout.greaves_handle,
-                                                   loadout.quiver_handle,
-                                                   loadout.armor_handle,
-                                                   loadout.bow_handle,
-                                                   loadout.cloak_handle};
+      auto& registry = ArchetypeRegistry::instance();
+      auto const* base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
+      if (base_desc == nullptr) {
+        return Render::Creature::k_invalid_archetype;
+      }
 
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/roman/archer";
-      s.scaling = k_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/roman/archer", k_archer_base_archetype, handles);
-      return s;
+      ArchetypeDescriptor desc = *base_desc;
+      desc.debug_name = "troops/roman/archer/base";
+      auto const attack_bow_clip =
+          desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackBow)];
+      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
+          attack_bow_clip;
+      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
+          Render::Creature::k_humanoid_hold_bow_clip;
+      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
+          Render::Creature::k_humanoid_hold_bow_clip;
+      return registry.register_archetype(desc);
     }();
-    return spec;
+    const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
+    const std::array<EquipmentHandle, 6> handles{loadout.helmet_handle,
+                                                 loadout.greaves_handle,
+                                                 loadout.quiver_handle,
+                                                 loadout.armor_handle,
+                                                 loadout.bow_handle,
+                                                 loadout.cloak_handle};
+
+    UnitVisualSpec s{};
+    s.kind = CreatureKind::Humanoid;
+    s.debug_name = m_renderer_key;
+    s.scaling = k_profile.as_pipeline_scaling();
+    s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+    s.archetype_id = resolve_humanoid_equipment_archetype(
+        m_renderer_key, k_archer_base_archetype, handles);
+    s.creature_asset_id = Render::Creature::Pipeline::k_humanoid_asset;
+    m_visual_spec_cache = s;
+    m_visual_spec_baked = true;
+    return m_visual_spec_cache;
   }
 
   void get_variant(const DrawContext& ctx,
@@ -204,6 +210,10 @@ public:
   }
 
 private:
+  std::string_view m_renderer_key;
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked = false;
+
   auto resolve_style(const DrawContext& ctx) const -> const ArcherStyleConfig& {
     ensure_archer_styles_registered();
     auto& styles = style_registry();
@@ -246,10 +256,15 @@ private:
 
 void register_archer_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_archer_styles_registered();
-  static ArcherRenderer const renderer;
   registry.register_renderer("troops/roman/archer",
                              [](const DrawContext& ctx, ISubmitter& out) {
                                static ArcherRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
+  registry.register_renderer("troops/roman/commanders/marcellus",
+                             [](const DrawContext& ctx, ISubmitter& out) {
+                               static ArcherRenderer const static_renderer{
+                                   "troops/roman/commanders/marcellus"};
                                static_renderer.render(ctx, out);
                              });
 }

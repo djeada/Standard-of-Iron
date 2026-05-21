@@ -47,6 +47,7 @@ auto normalize_structure_types(const Condition& condition,
 auto build_victory_rules(const MissionDefinition& mission)
     -> Game::Systems::VictoryRuleSet {
   Game::Systems::VictoryRuleSet rules;
+  rules.include_ambient_undead = mission.include_ambient_undead;
 
   for (const auto& condition : mission.victory_conditions) {
     QString const type = condition.type.trimmed().toLower();
@@ -76,6 +77,33 @@ auto build_victory_rules(const MissionDefinition& mission)
         rules.victory_rules.emplace_back(
             Game::Systems::CaptureStructuresVictoryRule{target});
       }
+      continue;
+    }
+
+    if (type == "clear_undead_zone" || type == "purify_shrine") {
+      if (!condition.zone_id.has_value() || condition.zone_id->isEmpty()) {
+        qWarning() << "Mission victory condition" << condition.type
+                   << "is missing zone_id";
+        continue;
+      }
+      if (type == "clear_undead_zone") {
+        rules.victory_rules.emplace_back(
+            Game::Systems::ClearUndeadZoneVictoryRule{*condition.zone_id});
+      } else {
+        rules.victory_rules.emplace_back(
+            Game::Systems::PurifyShrineVictoryRule{*condition.zone_id});
+      }
+      continue;
+    }
+
+    if (type == "survive_undead_wave") {
+      if (!condition.zone_id.has_value() || condition.zone_id->isEmpty()) {
+        qWarning()
+            << "Mission victory condition survive_undead_wave is missing zone_id";
+        continue;
+      }
+      rules.victory_rules.emplace_back(Game::Systems::SurviveUndeadWaveVictoryRule{
+          *condition.zone_id, std::max(1, condition.wave_count.value_or(1))});
       continue;
     }
 

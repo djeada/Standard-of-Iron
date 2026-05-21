@@ -28,6 +28,7 @@ void register_elephant_renderer(EntityRendererRegistry& registry) {
           renderer_key = "troops/carthage/elephant";
           break;
         case Game::Systems::NationID::RomanRepublic:
+        case Game::Systems::NationID::IronSepulcher:
 
           renderer_key = "troops/carthage/elephant";
           break;

@@ -43,6 +43,8 @@ auto world_prop_type_for_tool(ToolType tool) -> QString {
     return QStringLiteral("weapon_rack");
   case ToolType::PropRuins:
     return QStringLiteral("ruins");
+  case ToolType::PropMagicShrine:
+    return QStringLiteral("magic_shrine");
   case ToolType::PropDeadTree:
     return QStringLiteral("dead_tree");
   case ToolType::PropBoulder:
@@ -511,6 +513,7 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   case ToolType::PropSupplyCart:
   case ToolType::PropWeaponRack:
   case ToolType::PropRuins:
+  case ToolType::PropMagicShrine:
   case ToolType::PropDeadTree:
   case ToolType::PropBoulder:
     type = world_prop_type_for_tool(m_current_tool);
@@ -566,6 +569,9 @@ void MapCanvas::draw_element(QPainter& painter,
   } else if (type == "ruins") {
     fill_color = QColor(102, 98, 90);
     symbol = "🏚";
+  } else if (type == "magic_shrine") {
+    fill_color = QColor(118, 96, 196);
+    symbol = "✦";
   } else if (type == "dead_tree") {
     fill_color = QColor(111, 86, 67);
     symbol = "🌲";
@@ -620,7 +626,10 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
   if (event->button() == Qt::LeftButton && (m_map_data != nullptr)) {
     QPointF const raw_pos = map_to_grid(event->pos());
     const bool shift_held =
-        event->modifiers() & static_cast<int>(Qt::ShiftModifier != 0U != 0u);
+        event->modifiers() &
+        static_cast<int>(
+            static_cast<int>(static_cast<unsigned int>(Qt::ShiftModifier != 0U) !=
+                             0U) != 0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     switch (m_current_tool) {
@@ -665,6 +674,7 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
     case ToolType::PropSupplyCart:
     case ToolType::PropWeaponRack:
     case ToolType::PropRuins:
+    case ToolType::PropMagicShrine:
     case ToolType::PropDeadTree:
     case ToolType::PropBoulder:
     case ToolType::Barracks:
@@ -685,6 +695,9 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
     case ToolType::TroopCarthageMercenaryBroker:
     case ToolType::TroopCarthageCavalryPatron:
     case ToolType::TroopCarthageElephantMaster:
+    case ToolType::TroopSkeletonSwordsman:
+    case ToolType::TroopSkeletonArcher:
+    case ToolType::TroopGravePriest:
     case ToolType::TroopCivilian:
     case ToolType::TroopBuilder:
       place_element(grid_pos);
@@ -829,7 +842,10 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
     m_did_drag_move = true;
     QPointF const raw_pos = map_to_grid(event->pos());
     const bool shift_held =
-        event->modifiers() & static_cast<int>(Qt::ShiftModifier != 0U != 0u);
+        event->modifiers() &
+        static_cast<int>(
+            static_cast<int>(static_cast<unsigned int>(Qt::ShiftModifier != 0U) !=
+                             0U) != 0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     if (m_selected_type == 0) {

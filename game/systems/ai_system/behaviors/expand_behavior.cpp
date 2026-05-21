@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../../../core/ownership_constants.h"
+#include "../../nation_registry.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -18,6 +19,10 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
                              AIContext& context,
                              float delta_time,
                              std::vector<AICommand>& out_commands) {
+  if (context.nation != nullptr && !context.nation->has_economy) {
+    return;
+  }
+
   m_expand_timer += delta_time;
 
   if (m_expand_timer < 1.0F) {
@@ -123,8 +128,8 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
-  std::unordered_set<Engine::Core::EntityID> claimed_set(claimed_units.begin(),
-                                                         claimed_units.end());
+  std::unordered_set<Engine::Core::EntityID> const claimed_set(claimed_units.begin(),
+                                                               claimed_units.end());
   std::vector<float> filtered_x;
   std::vector<float> filtered_y;
   std::vector<float> filtered_z;
@@ -149,6 +154,10 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
 
 auto ExpandBehavior::should_execute(const AISnapshot& snapshot,
                                     const AIContext& context) const -> bool {
+  if (context.nation != nullptr && !context.nation->has_economy) {
+    return false;
+  }
+
   if (context.state != AIState::Expanding) {
     return false;
   }

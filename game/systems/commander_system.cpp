@@ -37,12 +37,6 @@ auto morale_for(Engine::Core::Entity* entity) -> Engine::Core::MoraleComponent* 
   return morale;
 }
 
-void refresh_morale_state(Engine::Core::MoraleComponent& morale) {
-  morale.morale = std::clamp(morale.morale, 0.0F, 100.0F);
-  morale.routing = morale.morale < 20.0F;
-  morale.wavering = !morale.routing && morale.morale < 40.0F;
-}
-
 auto resolve_troop_type(const Engine::Core::UnitComponent* unit)
     -> std::optional<Game::Units::TroopType> {
   if (unit == nullptr) {

@@ -9,6 +9,7 @@
 
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
+#include "../../../game/systems/healing_colors.h"
 #include "../../../game/systems/nation_id.h"
 #include "../backend.h"
 #include "../camera.h"
@@ -30,7 +31,7 @@ void clear_gl_errors() {
 
 auto check_gl_error(const char* operation) -> bool {
 #ifndef NDEBUG
-  GLenum err = glGetError();
+  GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "HealerAuraPipeline GL error in" << operation << ":" << err;
     return false;
@@ -137,16 +138,17 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   vertices.reserve(static_cast<size_t>((stacks + 1) * (slices + 1)));
 
   for (int i = 0; i <= stacks; ++i) {
-    float phi = (static_cast<float>(i) / static_cast<float>(stacks)) * pi * 0.5F;
-    float y = std::sin(phi);
-    float r = std::cos(phi);
+    float const phi = (static_cast<float>(i) / static_cast<float>(stacks)) * pi * 0.5F;
+    float const y = std::sin(phi);
+    float const r = std::cos(phi);
 
     for (int j = 0; j <= slices; ++j) {
-      float theta = (static_cast<float>(j) / static_cast<float>(slices)) * pi * 2.0F;
-      float x = r * std::cos(theta);
-      float z = r * std::sin(theta);
+      float const theta =
+          (static_cast<float>(j) / static_cast<float>(slices)) * pi * 2.0F;
+      float const x = r * std::cos(theta);
+      float const z = r * std::sin(theta);
 
-      AuraVertex v;
+      AuraVertex v{};
       v.position[0] = x;
       v.position[1] = y;
       v.position[2] = z;
@@ -162,8 +164,8 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
   indices.reserve(static_cast<size_t>(stacks * slices * 6));
   for (int i = 0; i < stacks; ++i) {
     for (int j = 0; j < slices; ++j) {
-      unsigned int curr = static_cast<unsigned int>(i * (slices + 1) + j);
-      unsigned int next = curr + static_cast<unsigned int>(slices + 1);
+      auto const curr = static_cast<unsigned int>(i * (slices + 1) + j);
+      unsigned int const next = curr + static_cast<unsigned int>(slices + 1);
 
       indices.push_back(curr);
       indices.push_back(next);
@@ -284,7 +286,9 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World* world) {
 
     data.intensity = data.is_active ? 1.0F : 0.5F;
 
-    data.color = QVector3D(0.4F, 1.0F, 0.5F);
+    data.color = unit_comp != nullptr
+                     ? Game::Systems::get_healing_color(unit_comp->nation_id)
+                     : Game::Systems::get_carthage_healing_color();
 
     m_healer_data.push_back(data);
   }
@@ -297,9 +301,9 @@ void HealerAuraPipeline::render(const Camera& cam, float animation_time) {
 
   clear_gl_errors();
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
-  GLboolean blend_enabled = glIsEnabled(GL_BLEND);
+  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean const depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
+  GLboolean const blend_enabled = glIsEnabled(GL_BLEND);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -320,15 +324,15 @@ void HealerAuraPipeline::render(const Camera& cam, float animation_time) {
 
   glDepthMask(depth_mask_enabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (!blend_enabled) {
+  if (blend_enabled == 0U) {
     glDisable(GL_BLEND);
   }
-  if (depth_test_enabled) {
+  if (depth_test_enabled != 0U) {
     glEnable(GL_DEPTH_TEST);
   } else {
     glDisable(GL_DEPTH_TEST);
   }
-  if (cull_enabled) {
+  if (cull_enabled != 0U) {
     glEnable(GL_CULL_FACE);
   }
 }
@@ -343,8 +347,8 @@ void HealerAuraPipeline::render_aura(const HealerAuraData& data,
 
   model.scale(data.radius);
 
-  QMatrix4x4 vp = cam.get_projection_matrix() * cam.get_view_matrix();
-  QMatrix4x4 mvp = vp * model;
+  QMatrix4x4 const vp = cam.get_projection_matrix() * cam.get_view_matrix();
+  QMatrix4x4 const mvp = vp * model;
 
   m_aura_shader->set_uniform(m_uniforms.mvp, mvp);
   m_aura_shader->set_uniform(m_uniforms.model, model);
@@ -370,7 +374,7 @@ void HealerAuraPipeline::render_single_aura(const QVector3D& position,
     return;
   }
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -388,7 +392,7 @@ void HealerAuraPipeline::render_single_aura(const QVector3D& position,
   model.translate(position);
   model.scale(radius);
 
-  QMatrix4x4 mvp = view_proj * model;
+  QMatrix4x4 const mvp = view_proj * model;
 
   m_aura_shader->set_uniform(m_uniforms.mvp, mvp);
   m_aura_shader->set_uniform(m_uniforms.model, model);
@@ -403,7 +407,7 @@ void HealerAuraPipeline::render_single_aura(const QVector3D& position,
 
   glDepthMask(depth_mask_enabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (cull_enabled) {
+  if (cull_enabled != 0U) {
     glEnable(GL_CULL_FACE);
   }
 }
@@ -415,7 +419,7 @@ void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
     return;
   }
 
-  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean const cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
 
@@ -439,7 +443,7 @@ void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
     model.translate(inst.position);
     model.scale(inst.radius);
 
-    QMatrix4x4 mvp = view_proj * model;
+    QMatrix4x4 const mvp = view_proj * model;
 
     m_aura_shader->set_uniform(m_uniforms.mvp, mvp);
     m_aura_shader->set_uniform(m_uniforms.model, model);
@@ -455,7 +459,7 @@ void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,
 
   glDepthMask(depth_mask_enabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (cull_enabled) {
+  if (cull_enabled != 0U) {
     glEnable(GL_CULL_FACE);
   }
 }

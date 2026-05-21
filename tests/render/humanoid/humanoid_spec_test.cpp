@@ -4,6 +4,7 @@
 #include <QVector3D>
 
 #include <array>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <span>
 #include <string_view>
@@ -22,6 +23,7 @@ using Render::GL::ISubmitter;
 using Render::Humanoid::humanoid_creature_spec;
 using Render::Humanoid::HumanoidBone;
 using Render::Humanoid::k_bone_count;
+using Render::Humanoid::skeleton_humanoid_creature_spec;
 
 class NullSubmitter : public ISubmitter {
 public:
@@ -132,9 +134,9 @@ TEST(HumanoidSpecTest, BillboardLodProducesNoDraws) {
   CreatureSpec const& s = humanoid_creature_spec();
 
   std::array<QMatrix4x4, k_bone_count> palette;
-  std::span<const QMatrix4x4> palette_view(palette);
+  std::span<const QMatrix4x4> const palette_view(palette);
 
-  QMatrix4x4 identity;
+  QMatrix4x4 const identity;
   NullSubmitter sub;
   auto stats = Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Billboard, identity, sub);
@@ -172,8 +174,8 @@ public:
   struct PartCall {
     Render::GL::Mesh* mesh{nullptr};
     Render::GL::Material* material{nullptr};
-    QMatrix4x4 model{};
-    QVector3D color{};
+    QMatrix4x4 model;
+    QVector3D color;
     Render::GL::Texture* texture{nullptr};
     float alpha{1.0F};
     int material_id{0};
@@ -255,9 +257,9 @@ TEST(HumanoidSpecTest, MinimalLodEmitsExactlyOneCapsule) {
 
   std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
-  std::span<const QMatrix4x4> palette_view(palette);
+  std::span<const QMatrix4x4> const palette_view(palette);
 
-  QMatrix4x4 identity;
+  QMatrix4x4 const identity;
   RecordingSubmitter sub;
   auto stats = Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Minimal, identity, sub);
@@ -276,9 +278,9 @@ TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
 
   std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
-  std::span<const QMatrix4x4> palette_view(palette);
+  std::span<const QMatrix4x4> const palette_view(palette);
 
-  QMatrix4x4 identity;
+  QMatrix4x4 const identity;
 
   RecordingSubmitter sub;
   auto stats = Render::Creature::submit_creature(
@@ -364,15 +366,86 @@ TEST(HumanoidSpecTest, FullSpecKeepsArmsAndLegsTaperedTowardExtremities) {
   EXPECT_GT(foot->params.half_extents.z(), foot->params.half_extents.x());
 }
 
+TEST(HumanoidSpecTest, SkeletonSpecReusesHumanoidTopologyWithBoneGraph) {
+  auto const& base = humanoid_creature_spec();
+  auto const& skeleton = skeleton_humanoid_creature_spec();
+
+  EXPECT_EQ(skeleton.species_name, "skeleton_humanoid");
+  EXPECT_EQ(skeleton.topology.bones.size(), base.topology.bones.size());
+  EXPECT_TRUE(Render::Creature::validate_creature_spec(skeleton));
+  EXPECT_GT(skeleton.lod_full.primitives.size(), base.lod_full.primitives.size());
+
+  auto const* spine = find_primitive(skeleton.lod_full.primitives, "skeleton_spine");
+  auto const* upper_spine =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_upper_spine");
+  auto const* high_rib =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_rib_l_high");
+  auto const* rib = find_primitive(skeleton.lod_full.primitives, "skeleton_rib_l_mid");
+  auto const* low_rib =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_rib_l_floating");
+  auto const* neck_base =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_neck_base");
+  auto const* neck = find_primitive(skeleton.lod_full.primitives, "skeleton_neck");
+  auto const* sternum =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_sternum");
+  auto const* ribcage_blob =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_ribcage_front_l");
+  auto const* sternum_blob =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_sternum_top");
+  auto const* skull = find_primitive(skeleton.lod_full.primitives, "skeleton_skull");
+  auto const* eye =
+      find_primitive(skeleton.lod_full.primitives, "skeleton_eye_socket_l");
+  auto const* thigh = find_primitive(skeleton.lod_full.primitives, "skeleton_thigh_l");
+
+  ASSERT_NE(spine, nullptr);
+  ASSERT_NE(upper_spine, nullptr);
+  ASSERT_NE(high_rib, nullptr);
+  ASSERT_NE(rib, nullptr);
+  ASSERT_NE(low_rib, nullptr);
+  ASSERT_NE(neck_base, nullptr);
+  ASSERT_NE(neck, nullptr);
+  ASSERT_NE(sternum, nullptr);
+  ASSERT_NE(skull, nullptr);
+  ASSERT_NE(eye, nullptr);
+  ASSERT_NE(thigh, nullptr);
+
+  EXPECT_EQ(spine->params.anchor_bone,
+            static_cast<std::uint16_t>(HumanoidBone::Pelvis));
+  EXPECT_EQ(skeleton.topology.bones.size(), Render::Humanoid::k_bone_count);
+  EXPECT_EQ(spine->params.tail_bone, static_cast<std::uint16_t>(HumanoidBone::Chest));
+  EXPECT_EQ(upper_spine->params.tail_bone,
+            static_cast<std::uint16_t>(HumanoidBone::Neck));
+  EXPECT_GT(neck_base->params.radius, neck->params.radius);
+  EXPECT_GT(neck_base->params.head_offset.y(), 0.0F);
+  EXPECT_LT(neck->params.radius, upper_spine->params.radius);
+  EXPECT_GT(std::abs(sternum->params.head_offset.y() - sternum->params.tail_offset.y()),
+            std::abs(neck->params.head_offset.y() - neck->params.tail_offset.y()) *
+                3.0F);
+  EXPECT_GT(
+      std::abs(high_rib->params.head_offset.y() - low_rib->params.head_offset.y()),
+      0.20F);
+  EXPECT_LT(sternum->params.tail_offset.y(), 0.0F);
+  EXPECT_GT(std::abs(rib->params.tail_offset.x() - rib->params.head_offset.x()),
+            std::abs(rib->params.tail_offset.y() - rib->params.head_offset.y()));
+  EXPECT_EQ(ribcage_blob, nullptr);
+  EXPECT_EQ(sternum_blob, nullptr);
+  EXPECT_EQ(rib->shape, Render::Creature::PrimitiveShape::OrientedCylinder);
+  EXPECT_EQ(skull->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_EQ(eye->color_role, 0U);
+  EXPECT_LT(thigh->params.radius,
+            find_primitive(base.lod_full.primitives, "humanoid_full_thigh_l_bot")
+                ->params.radius);
+}
+
 TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
   CreatureSpec const& s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
-  std::span<const QMatrix4x4> palette_view(palette);
+  std::span<const QMatrix4x4> const palette_view(palette);
 
-  QMatrix4x4 identity;
+  QMatrix4x4 const identity;
   RecordingSubmitter sub;
   Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Minimal, identity, sub);
@@ -398,9 +471,9 @@ TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
 
   std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
-  std::span<const QMatrix4x4> palette_view(palette);
+  std::span<const QMatrix4x4> const palette_view(palette);
 
-  QMatrix4x4 identity;
+  QMatrix4x4 const identity;
   RecordingSubmitter sub;
   Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Minimal, identity, sub);
@@ -434,10 +507,10 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
 
   std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
-  std::span<const QMatrix4x4> palette_view(palette);
+  std::span<const QMatrix4x4> const palette_view(palette);
 
   RecordingSubmitter base_sub;
-  QMatrix4x4 identity;
+  QMatrix4x4 const identity;
   Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Minimal, identity, base_sub);
   ASSERT_EQ(base_sub.parts.size(), 1U);
@@ -449,7 +522,7 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
       s, palette_view, CreatureLOD::Minimal, world, moved_sub);
   ASSERT_EQ(moved_sub.parts.size(), 1U);
 
-  for (float y : {0.5F, -0.5F}) {
+  for (float const y : {0.5F, -0.5F}) {
     QVector3D const base = base_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
     QVector3D const moved = moved_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
     EXPECT_NEAR(moved.x() - base.x(), 10.0F, 1.0e-4F);

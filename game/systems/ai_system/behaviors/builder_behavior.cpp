@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../../../map/terrain_service.h"
+#include "../../nation_registry.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -139,6 +140,10 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
                               AIContext& context,
                               float delta_time,
                               std::vector<AICommand>& out_commands) {
+  if (context.nation != nullptr && !context.nation->has_economy) {
+    return;
+  }
+
   m_construction_timer += delta_time;
   if (m_construction_timer < 3.0F) {
     return;
@@ -233,7 +238,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     }
 
     if (context.primary_barracks != 0) {
-      float angle = m_construction_counter * 0.8F;
+      float const angle = m_construction_counter * 0.8F;
       float radius = 15.0F + (m_construction_counter % 3) * 5.0F;
 
       if (building_to_construct == BUILDING_TYPE_DEFENSE_TOWER) {
@@ -268,6 +273,10 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 
 auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
                                      const AIContext& context) const -> bool {
+  if (context.nation != nullptr && !context.nation->has_economy) {
+    return false;
+  }
+
   if (context.builder_count == 0) {
     return false;
   }

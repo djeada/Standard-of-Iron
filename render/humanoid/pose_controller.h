@@ -43,7 +43,12 @@ public:
   void construction_saw(float work_phase);
   void construction_chisel(float work_phase, bool kneeling);
   void sword_slash(float attack_phase);
-  void sword_slash_variant(float attack_phase, std::uint8_t variant);
+  void combat_sword_slash_variant(float attack_phase,
+                                  std::uint8_t variant,
+                                  float reach_scale = 1.0F);
+  void sword_slash_variant(float attack_phase,
+                           std::uint8_t variant,
+                           float reach_scale = 1.0F);
   void spear_thrust_variant(float attack_phase, std::uint8_t variant);
   void mount_on_horse(float saddle_height);
   void hold_spear_idle();
@@ -51,6 +56,7 @@ public:
   void hold_bow_ready();
   void brace_sword_and_shield_for_hold();
   void hold_sword_and_shield();
+  void guard_sword_and_shield_formation(ShieldFormationPose pose, float amount);
   void look_at(const QVector3D& target);
   void hit_flinch(float intensity);
   void tilt_torso(float side_tilt, float forward_tilt);

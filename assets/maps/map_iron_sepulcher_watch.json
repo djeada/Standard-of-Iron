@@ -1,0 +1,119 @@
+{
+  "name": "Iron Sepulcher Watch",
+  "description": "Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.",
+  "coord_system": "grid",
+  "max_troops_per_player": 800,
+  "grid": {
+    "width": 48,
+    "height": 48,
+    "tile_size": 1.0
+  },
+  "camera": {
+    "center": [0.0, 0.0, 0.0],
+    "distance": 18.0,
+    "tilt_deg": 48.0,
+    "yaw": 225.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 220.0
+  },
+  "spawns": [
+    {
+      "type": "barracks",
+      "x": 11,
+      "z": 36,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic",
+      "max_population": 180
+    },
+    {
+      "type": "roman_field_commander",
+      "x": 13,
+      "z": 34,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    }
+  ],
+  "world_props": [
+    {
+      "type": "ruins",
+      "x": 24,
+      "z": 24,
+      "scale": 1.1
+    },
+    {
+      "type": "magic_shrine",
+      "x": 33,
+      "z": 16,
+      "scale": 1.0
+    },
+    {
+      "type": "dead_tree",
+      "x": 29,
+      "z": 21,
+      "scale": 1.1
+    },
+    {
+      "type": "boulder",
+      "x": 19,
+      "z": 27,
+      "scale": 1.0
+    }
+  ],
+  "undead_zones": [
+    {
+      "id": "ruins_guard",
+      "anchor_type": "ruins",
+      "x": 24,
+      "z": 24,
+      "radius": 8.0,
+      "leash_radius": 14.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "awaken_on": ["unit_enters_radius"],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 2,
+            "grave_priest": 1
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "skeleton_archer": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "shrine_sentinels",
+      "anchor_type": "magic_shrine",
+      "x": 33,
+      "z": 16,
+      "radius": 7.0,
+      "leash_radius": 12.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "awaken_on": ["unit_enters_radius"],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 2,
+            "skeleton_archer": 2
+          }
+        }
+      ]
+    }
+  ],
+  "victory": {
+    "type": "survive_time",
+    "duration": 600.0,
+    "defeat_conditions": ["no_commander", "only_commander_remaining"]
+  },
+  "time_of_day": "night"
+}

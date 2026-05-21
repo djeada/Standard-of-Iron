@@ -144,6 +144,17 @@ auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {
       anim.attack_family = Engine::Core::CombatAttackFamily::Bow;
     }
     break;
+  case Render::Creature::PoseIntent::Cast:
+    anim.is_attacking = true;
+    anim.is_melee = false;
+    anim.is_casting = true;
+    anim.cast_kind = Render::GL::CastVisualKind::Fireball;
+    anim.combat_phase = key.combat_phase;
+    anim.combat_phase_progress = phase;
+    if (anim.attack_family == Engine::Core::CombatAttackFamily::None) {
+      anim.attack_family = Engine::Core::CombatAttackFamily::Bow;
+    }
+    break;
   case Render::Creature::PoseIntent::Construct:
     anim.is_constructing = true;
     anim.construction_progress = phase;

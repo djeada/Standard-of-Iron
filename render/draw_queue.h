@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -188,6 +189,8 @@ struct EffectBatchCmd {
     HealerAura,
     CombatDust,
     BuildingFlame,
+    BurningFlame,
+    Fireball,
     BloodPool,
     StoneImpact
   };
@@ -223,12 +226,14 @@ struct ModeIndicatorCmd {
 
 struct RiggedCreatureCmd {
   static constexpr std::size_t k_max_role_colors = 32;
+  static constexpr std::size_t k_max_owned_bones = 64;
 
   RiggedMesh* mesh = nullptr;
   const Material* material = nullptr;
   QMatrix4x4 world;
 
   const QMatrix4x4* bone_palette = nullptr;
+  std::shared_ptr<std::array<QMatrix4x4, k_max_owned_bones>> owned_bone_palette{};
 
   std::uint32_t palette_ubo = 0;
   std::uint32_t palette_offset = 0;

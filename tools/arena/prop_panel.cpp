@@ -33,7 +33,8 @@ auto add_prop_button(QButtonGroup* group,
 } // namespace
 
 PropPanel::PropPanel(QWidget* parent)
-    : QWidget(parent) {
+    : QWidget(parent)
+    , m_prop_group(new QButtonGroup(this)) {
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
@@ -44,7 +45,6 @@ PropPanel::PropPanel(QWidget* parent)
   button_grid->setHorizontalSpacing(6);
   button_grid->setVerticalSpacing(6);
 
-  m_prop_group = new QButtonGroup(this);
   m_prop_group->setExclusive(true);
   add_prop_button(m_prop_group, button_grid, 0, 0, "Fire Camp", "firecamp")
       ->setChecked(true);
@@ -52,11 +52,12 @@ PropPanel::PropPanel(QWidget* parent)
   add_prop_button(m_prop_group, button_grid, 1, 0, "Supply Cart", "supply_cart");
   add_prop_button(m_prop_group, button_grid, 1, 1, "Weapon Rack", "weapon_rack");
   add_prop_button(m_prop_group, button_grid, 2, 0, "Ruins", "ruins");
-  add_prop_button(m_prop_group, button_grid, 2, 1, "Dead Tree", "dead_tree");
-  add_prop_button(m_prop_group, button_grid, 3, 0, "Boulder", "boulder");
-  add_prop_button(m_prop_group, button_grid, 3, 1, "Pine Tree", "pine_tree");
-  add_prop_button(m_prop_group, button_grid, 4, 0, "Olive Tree", "olive_tree");
-  add_prop_button(m_prop_group, button_grid, 4, 1, "Plant", "plant");
+  add_prop_button(m_prop_group, button_grid, 2, 1, "Magic Shrine", "magic_shrine");
+  add_prop_button(m_prop_group, button_grid, 3, 0, "Dead Tree", "dead_tree");
+  add_prop_button(m_prop_group, button_grid, 3, 1, "Boulder", "boulder");
+  add_prop_button(m_prop_group, button_grid, 4, 0, "Pine Tree", "pine_tree");
+  add_prop_button(m_prop_group, button_grid, 4, 1, "Olive Tree", "olive_tree");
+  add_prop_button(m_prop_group, button_grid, 5, 0, "Plant", "plant");
   placement_layout->addLayout(button_grid);
 
   auto* hint = new QLabel("Click the arena to set an anchor, then place the "

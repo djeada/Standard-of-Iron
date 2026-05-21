@@ -406,6 +406,43 @@ TEST(MapEditorMapDataTest, RealMapRoundTripsSpawnTypeSequenceWithoutDuplicates) 
   }
 }
 
+TEST(MapEditorMapDataTest, PreservesUndeadZonesRootFieldOnRoundTrip) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+
+  const QString input_path = temp_dir.filePath("input.json");
+  const QString output_path = temp_dir.filePath("output.json");
+
+  QJsonObject const input{
+      {"name", "Undead Root"},
+      {MapJsonKeys::grid,
+       QJsonObject{{MapJsonKeys::width, 32},
+                   {MapJsonKeys::height, 32},
+                   {MapJsonKeys::tile_size, 1.0}}},
+      {"undead_zones",
+       QJsonArray{
+           QJsonObject{{"id", "sepulcher_ruin"},
+                       {"anchor_type", "ruins"},
+                       {"x", 16},
+                       {"z", 16},
+                       {"waves",
+                        QJsonArray{QJsonObject{
+                            {"trigger", "initial"},
+                            {"units", QJsonObject{{"skeleton_swordsman", 2}}}}}}}}}};
+  write_json(input_path, input);
+
+  MapEditor::MapData data;
+  ASSERT_TRUE(data.load_from_json(input_path));
+  ASSERT_TRUE(data.save_to_json(output_path));
+
+  const QJsonObject output = read_json(output_path);
+  ASSERT_TRUE(output.value("undead_zones").isArray());
+  const QJsonObject saved_zone =
+      output.value("undead_zones").toArray().first().toObject();
+  EXPECT_EQ(saved_zone.value("id").toString(), "sepulcher_ruin");
+  EXPECT_EQ(saved_zone.value("anchor_type").toString(), "ruins");
+}
+
 TEST(MapEditorMapDataTest, SaveReportsWriteErrors) {
   QTemporaryDir const temp_dir;
   ASSERT_TRUE(temp_dir.isValid());

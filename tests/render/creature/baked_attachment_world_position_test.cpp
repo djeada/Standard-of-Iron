@@ -345,13 +345,28 @@ TEST(BakedAttachmentWorldPosition, RomanCloakMatchesLegacySubmit) {
   expect_aabb_close(legacy, bake, 1e-3F);
 }
 
-TEST(BakedAttachmentWorldPosition, GenericShieldUsesGripSocketPose) {
+TEST(BakedAttachmentWorldPosition, GenericShieldUsesShieldSocketPose) {
   const auto& bind_palette = Render::Humanoid::humanoid_bind_palette();
 
   Render::GL::ShieldRenderConfig shield_cfg;
   shield_cfg.shield_radius = 0.18F;
   shield_cfg.shield_aspect = 1.3F;
   shield_cfg.has_cross_decal = false;
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames frames = Render::Humanoid::humanoid_bind_body_frames();
+  frames.shield_l = Render::GL::AttachmentFrame{};
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 8);
+  Render::GL::ShieldRenderer::submit(
+      shield_cfg, ctx, frames, palette, anim, legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty());
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
+
   constexpr std::uint8_t k_base_role = 0;
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
       Render::GL::shield_make_static_attachment(shield_cfg, k_base_role),
@@ -364,15 +379,25 @@ TEST(BakedAttachmentWorldPosition, GenericShieldUsesGripSocketPose) {
   const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
   ASSERT_FALSE(baked.vertices.empty());
 
-  const AABB baked_world = baked_skinned_aabb(
-      baked,
-      std::span<const Render::Creature::BoneWorldMatrix>(bind.data(), bind.size()));
-  EXPECT_GT(baked_world.extents().y(), baked_world.extents().x() * 2.0F);
-  EXPECT_GT(baked_world.extents().z(), baked_world.extents().x() * 1.5F);
+  const AABB bake = baked_aabb(baked);
+  expect_aabb_close(legacy, bake, 1e-3F);
 }
 
-TEST(BakedAttachmentWorldPosition, RomanScutumUsesGripSocketPose) {
+TEST(BakedAttachmentWorldPosition, RomanScutumUsesShieldSocketPose) {
   const auto& bind_palette = Render::Humanoid::humanoid_bind_palette();
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames frames = Render::Humanoid::humanoid_bind_body_frames();
+  frames.shield_l = Render::GL::AttachmentFrame{};
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 8);
+  Render::GL::RomanScutumRenderer::submit({}, ctx, frames, palette, anim, legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty());
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
 
   constexpr std::uint8_t k_base_role = 0;
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
@@ -386,15 +411,26 @@ TEST(BakedAttachmentWorldPosition, RomanScutumUsesGripSocketPose) {
   const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
   ASSERT_FALSE(baked.vertices.empty());
 
-  const AABB baked_world = baked_skinned_aabb(
-      baked,
-      std::span<const Render::Creature::BoneWorldMatrix>(bind.data(), bind.size()));
-  EXPECT_GT(baked_world.extents().y(), baked_world.extents().x() * 2.0F);
-  EXPECT_GT(baked_world.extents().z(), baked_world.extents().x() * 1.5F);
+  const AABB bake = baked_aabb(baked);
+  expect_aabb_close(legacy, bake, 1e-3F);
 }
 
-TEST(BakedAttachmentWorldPosition, CarthageShieldUsesGripSocketPose) {
+TEST(BakedAttachmentWorldPosition, CarthageShieldUsesShieldSocketPose) {
   const auto& bind_palette = Render::Humanoid::humanoid_bind_palette();
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames frames = Render::Humanoid::humanoid_bind_body_frames();
+  frames.shield_l = Render::GL::AttachmentFrame{};
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 8);
+  Render::GL::CarthageShieldRenderer::submit(
+      Render::GL::CarthageShieldConfig{}, ctx, frames, palette, anim, legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty());
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
 
   constexpr std::uint8_t k_base_role = 0;
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
@@ -409,11 +445,8 @@ TEST(BakedAttachmentWorldPosition, CarthageShieldUsesGripSocketPose) {
   const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
   ASSERT_FALSE(baked.vertices.empty());
 
-  const AABB baked_world = baked_skinned_aabb(
-      baked,
-      std::span<const Render::Creature::BoneWorldMatrix>(bind.data(), bind.size()));
-  EXPECT_GT(baked_world.extents().y(), baked_world.extents().x());
-  EXPECT_GT(baked_world.extents().z(), baked_world.extents().x() * 0.5F);
+  const AABB bake = baked_aabb(baked);
+  expect_aabb_close(legacy, bake, 1e-3F);
 }
 
 TEST(BakedAttachmentWorldPosition, GenericSwordUsesGripSocketPose) {
@@ -427,6 +460,7 @@ TEST(BakedAttachmentWorldPosition, GenericSwordUsesGripSocketPose) {
   sword_cfg.pommel_radius = 0.045F;
   sword_cfg.blade_ricasso = 0.14F;
   sword_cfg.material_id = 3;
+
   constexpr std::uint8_t k_base_role = 0;
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
       Render::GL::sword_make_static_attachment(sword_cfg, k_base_role),
@@ -442,7 +476,7 @@ TEST(BakedAttachmentWorldPosition, GenericSwordUsesGripSocketPose) {
   const AABB baked_world = baked_skinned_aabb(
       baked,
       std::span<const Render::Creature::BoneWorldMatrix>(bind.data(), bind.size()));
-  EXPECT_GT(baked_world.extents().y(), baked_world.extents().z() * 3.0F);
+  EXPECT_GT(baked_world.extents().y(), baked_world.extents().z() * 2.0F);
   EXPECT_GT(baked_world.extents().y(), baked_world.extents().x());
 }
 

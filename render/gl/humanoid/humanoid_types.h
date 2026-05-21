@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "../../../game/core/component.h"
+#include "../../creature/combat_visual_state.h"
 #include "../../creature/movement_state.h"
 #include "../../palette.h"
 #include "../../side.h"
@@ -43,6 +44,11 @@ ambient_idle_clip_variant(AmbientIdleType t) noexcept -> std::uint8_t {
   }
 }
 
+enum class CastVisualKind : std::uint8_t {
+  None = 0,
+  Fireball,
+};
+
 using CombatAnimPhase = Engine::Core::CombatAnimationState;
 
 enum class ConstructionRole : std::uint8_t {
@@ -53,6 +59,14 @@ enum class ConstructionRole : std::uint8_t {
   KneelingChisel,
 };
 
+enum class ShieldFormationPose : std::uint8_t {
+  None = 0,
+  GuardDefault,
+  RomanFront,
+  RomanTop,
+  CarthageFront,
+};
+
 struct VisualMovementState {
   bool is_authoritative{false};
   Render::Creature::MovementAnimationState movement_state{
@@ -60,6 +74,7 @@ struct VisualMovementState {
   bool has_velocity{false};
   bool has_navigation_intent{false};
   bool has_chase_intent{false};
+  bool forced_displacement{false};
   bool attack_target_in_range{false};
   bool has_movement_target{false};
   QVector3D locomotion_direction{0.0F, 0.0F, 1.0F};
@@ -88,6 +103,8 @@ struct AnimationInputs {
   float attack_offset{0.0F};
   bool has_attack_offset{false};
   bool is_in_melee_lock{false};
+  bool is_casting{false};
+  CastVisualKind cast_kind{CastVisualKind::None};
   bool is_hit_reacting{false};
   float hit_reaction_intensity{0.0F};
   bool is_healing{false};
@@ -101,7 +118,10 @@ struct AnimationInputs {
   std::uint8_t death_variant{0};
   float idle_duration{0.0F};
   bool is_guarding{false};
+  bool is_exiting_guard{false};
   float guard_pose_progress{0.0F};
+  ShieldFormationPose shield_formation_pose{ShieldFormationPose::None};
+  Render::Creature::CombatVisualResolvedState combat_visual{};
 };
 
 inline auto hold_transition_amount(const AnimationInputs& inputs) -> float {
@@ -115,7 +135,7 @@ inline auto hold_transition_amount(const AnimationInputs& inputs) -> float {
 }
 
 inline auto guard_pose_amount(const AnimationInputs& inputs) -> float {
-  if (!inputs.is_guarding) {
+  if (!inputs.is_guarding && !inputs.is_exiting_guard) {
     return 0.0F;
   }
   return std::clamp(inputs.guard_pose_progress, 0.0F, 1.0F);
@@ -147,6 +167,7 @@ struct BodyFrames {
   AttachmentFrame shoulder_r{};
   AttachmentFrame hand_l{};
   AttachmentFrame hand_r{};
+  AttachmentFrame shield_l{};
   AttachmentFrame grip_l{};
   AttachmentFrame grip_r{};
   AttachmentFrame foot_l{};

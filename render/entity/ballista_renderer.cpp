@@ -30,6 +30,7 @@ void register_ballista_renderer(EntityRendererRegistry& registry) {
           renderer_key = "troops/carthage/ballista";
           break;
         case Game::Systems::NationID::RomanRepublic:
+        case Game::Systems::NationID::IronSepulcher:
           renderer_key = "troops/roman/ballista";
           break;
         default:

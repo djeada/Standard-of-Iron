@@ -46,6 +46,8 @@ namespace Detail {
     return FormationCalculatorFactory::Nation::Carthage;
   case Game::Systems::NationID::RomanRepublic:
     return FormationCalculatorFactory::Nation::Roman;
+  case Game::Systems::NationID::IronSepulcher:
+    return FormationCalculatorFactory::Nation::Carthage;
   }
   return FormationCalculatorFactory::Nation::Roman;
 }

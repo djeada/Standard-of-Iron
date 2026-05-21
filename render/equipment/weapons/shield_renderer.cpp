@@ -19,6 +19,7 @@
 #include "../../render_archetype.h"
 #include "../attachment_builder.h"
 #include "../equipment_submit.h"
+#include "shield_anchor.h"
 
 namespace Render::GL {
 
@@ -56,8 +57,8 @@ auto quantize_shield_value(float value) -> int {
 }
 
 auto shield_center_local(const ShieldRenderConfig& config) -> QVector3D {
-  float const shield_width = config.shield_radius * k_scale_factor;
-  return {-shield_width * 0.36F, -0.05F, 0.05F};
+  static_cast<void>(config);
+  return {};
 }
 
 auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype& {
@@ -186,14 +187,9 @@ auto shield_archetype(const ShieldRenderConfig& config) -> const RenderArchetype
   return cache.back().archetype;
 }
 
-auto hand_basis_transform(const QMatrix4x4& parent,
-                          const AttachmentFrame& hand) -> QMatrix4x4 {
-  QMatrix4x4 local;
-  local.setColumn(0, QVector4D(hand.right, 0.0F));
-  local.setColumn(1, QVector4D(hand.up, 0.0F));
-  local.setColumn(2, QVector4D(hand.forward, 0.0F));
-  local.setColumn(3, QVector4D(hand.origin, 1.0F));
-  return parent * local;
+auto shield_basis_transform(const QMatrix4x4& parent,
+                            const AttachmentFrame& shield_frame) -> QMatrix4x4 {
+  return parent * attachment_frame_transform(shield_frame);
 }
 
 auto shield_local_pose(const ShieldRenderConfig& config) -> QMatrix4x4 {
@@ -207,7 +203,7 @@ auto shield_local_pose(const ShieldRenderConfig& config) -> QMatrix4x4 {
 } // namespace
 
 ShieldRenderer::ShieldRenderer(ShieldRenderConfig config)
-    : m_base(std::move(config)) {
+    : m_base(config) {
 }
 
 void ShieldRenderer::render(const DrawContext& ctx,
@@ -230,15 +226,15 @@ void ShieldRenderer::submit(const ShieldRenderConfig& m_config,
                                                palette.leather * 0.90F,
                                                m_config.metal_color,
                                                palette.leather};
-  AttachmentFrame const grip =
-      frames.grip_l.radius > 0.0F
-          ? frames.grip_l
-          : Render::Humanoid::socket_attachment_frame(
-                frames.hand_l, Render::Humanoid::HumanoidSocket::GripL);
+  AttachmentFrame const shield_frame = resolve_left_shield_frame(frames);
+  QMatrix4x4 pose_adjustment;
+  if (frames.shield_l.radius > 0.0F) {
+    pose_adjustment = bind_left_shield_pose_calibration();
+  }
   append_equipment_archetype(batch,
                              shield_archetype(m_config),
-                             hand_basis_transform(ctx.model, grip) *
-                                 shield_local_pose(m_config),
+                             shield_basis_transform(ctx.model, shield_frame) *
+                                 pose_adjustment * shield_local_pose(m_config),
                              palette_slots);
 }
 
@@ -264,14 +260,15 @@ auto shield_make_static_attachment(const ShieldRenderConfig& config,
   constexpr auto k_bone = Render::Humanoid::HumanoidBone::HandL;
   QMatrix4x4 const bind_bone =
       Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(k_bone)];
-  auto const& bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_l;
-  QMatrix4x4 const bind_socket = hand_basis_transform(QMatrix4x4{}, bind_grip);
+  auto const& bind_shield = Render::Humanoid::humanoid_bind_body_frames().shield_l;
+  QMatrix4x4 const bind_socket = attachment_frame_transform(bind_shield);
   auto spec = Render::Equipment::build_socket_static_attachment({
       .archetype = &shield_archetype(config),
       .socket_bone_index = static_cast<std::uint16_t>(k_bone),
       .bind_bone_transform = bind_bone,
       .bind_socket_transform = bind_socket,
-      .mesh_from_socket = shield_local_pose(config),
+      .mesh_from_socket =
+          bind_left_shield_pose_calibration() * shield_local_pose(config),
   });
   spec.palette_role_remap[k_shield_slot] = base_role_byte;
   spec.palette_role_remap[k_back_slot] = static_cast<std::uint8_t>(base_role_byte + 1U);

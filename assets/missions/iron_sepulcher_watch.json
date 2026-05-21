@@ -1,0 +1,51 @@
+{
+  "id": "iron_sepulcher_watch",
+  "title": "Iron Sepulcher Watch",
+  "summary": "Investigate the cursed shrine, survive the awakening, and clear the ruins.",
+  "map_path": ":/assets/maps/map_iron_sepulcher_watch.json",
+  "player_setup": {
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "commander_troop": "roman_field_commander",
+    "starting_units": [],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 250,
+      "food": 100,
+      "wood": 60
+    }
+  },
+  "ai_setups": [],
+  "victory_conditions": [
+    {
+      "type": "clear_undead_zone",
+      "zone_id": "ruins_guard",
+      "description": "Clear the undead guarding the ruined sepulcher."
+    },
+    {
+      "type": "purify_shrine",
+      "zone_id": "shrine_sentinels",
+      "description": "Purge the magic shrine of undead sentinels."
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "survive_undead_wave",
+      "zone_id": "ruins_guard",
+      "wave_count": 2,
+      "description": "Endure both sepulcher waves."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_commander",
+      "description": "Your commander must survive."
+    },
+    {
+      "type": "only_commander_remaining",
+      "description": "Your formation cannot be reduced to the commander alone."
+    }
+  ],
+  "events": []
+}

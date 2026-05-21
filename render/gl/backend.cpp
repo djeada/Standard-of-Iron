@@ -2522,6 +2522,8 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
         }
         case EffectBatchCmd::Kind::CombatDust:
         case EffectBatchCmd::Kind::BuildingFlame:
+        case EffectBatchCmd::Kind::BurningFlame:
+        case EffectBatchCmd::Kind::Fireball:
         case EffectBatchCmd::Kind::BloodPool:
         case EffectBatchCmd::Kind::StoneImpact: {
           if (m_combat_dust_pipeline == nullptr ||
@@ -2557,11 +2559,20 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
             BackendPipelines::EffectType const etype =
                 (eff.kind == EffectBatchCmd::Kind::BuildingFlame)
                     ? BackendPipelines::EffectType::Flame
+                : (eff.kind == EffectBatchCmd::Kind::BurningFlame)
+                    ? BackendPipelines::EffectType::BurningFlame
+                : (eff.kind == EffectBatchCmd::Kind::Fireball)
+                    ? BackendPipelines::EffectType::Fireball
                 : (eff.kind == EffectBatchCmd::Kind::StoneImpact)
                     ? BackendPipelines::EffectType::StoneImpact
                     : BackendPipelines::EffectType::Dust;
-            dust_instances.push_back(
-                {eff.position, eff.color, eff.radius, eff.intensity, eff.time, etype});
+            dust_instances.push_back({eff.position,
+                                      eff.color,
+                                      eff.radius,
+                                      eff.intensity,
+                                      eff.time,
+                                      etype,
+                                      eff.kind == EffectBatchCmd::Kind::BurningFlame});
           }
           m_combat_dust_pipeline->render_dust_batch(
               dust_instances.data(), dust_instances.size(), view_proj);
@@ -2683,6 +2694,61 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
                                                     flame.intensity,
                                                     flame.time,
                                                     view_proj);
+        m_last_bound_shader = nullptr;
+        break;
+      }
+      case EffectBatchCmd::Kind::BurningFlame: {
+        struct BurningFlameView {
+          const QVector3D& position;
+          const QVector3D& color;
+          float radius;
+          float intensity;
+          float time;
+        };
+        const BurningFlameView flame{eff_cmd_.position,
+                                     eff_cmd_.color,
+                                     eff_cmd_.radius,
+                                     eff_cmd_.intensity,
+                                     eff_cmd_.time};
+        if (m_combat_dust_pipeline == nullptr ||
+            !m_combat_dust_pipeline->is_initialized()) {
+          break;
+        }
+        BackendPipelines::CombatDustPipeline::DustInstanceData const instance{
+            .position = flame.position,
+            .color = flame.color,
+            .radius = flame.radius,
+            .intensity = flame.intensity,
+            .time = flame.time,
+            .effect_type = BackendPipelines::EffectType::BurningFlame,
+            .overlay = true};
+        m_combat_dust_pipeline->render_dust_batch(&instance, 1U, view_proj);
+        m_last_bound_shader = nullptr;
+        break;
+      }
+      case EffectBatchCmd::Kind::Fireball: {
+        struct FireballView {
+          const QVector3D& position;
+          const QVector3D& color;
+          float radius;
+          float intensity;
+          float time;
+        };
+        const FireballView fireball{eff_cmd_.position,
+                                    eff_cmd_.color,
+                                    eff_cmd_.radius,
+                                    eff_cmd_.intensity,
+                                    eff_cmd_.time};
+        if (m_combat_dust_pipeline == nullptr ||
+            !m_combat_dust_pipeline->is_initialized()) {
+          break;
+        }
+        m_combat_dust_pipeline->render_single_fireball(fireball.position,
+                                                       fireball.color,
+                                                       fireball.radius,
+                                                       fireball.intensity,
+                                                       fireball.time,
+                                                       view_proj);
         m_last_bound_shader = nullptr;
         break;
       }

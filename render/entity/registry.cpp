@@ -43,7 +43,7 @@ void EntityRendererRegistry::register_renderer(const std::string& type,
     return;
   }
 
-  const RendererHandle handle = static_cast<RendererHandle>(m_renderers.size());
+  const auto handle = static_cast<RendererHandle>(m_renderers.size());
   m_renderers.push_back(std::move(func));
   m_lookup.emplace(type, handle);
 }
@@ -98,18 +98,9 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   Roman::register_civilian_renderer(registry);
   Carthage::register_civilian_renderer(registry);
 
-  registry.register_renderer("troops/roman/commanders/fabius_maximus",
-                             registry.get("troops/roman/spearman"));
-  registry.register_renderer("troops/roman/commanders/scipio_africanus",
-                             registry.get("troops/roman/swordsman"));
-  registry.register_renderer("troops/roman/commanders/marcellus",
-                             registry.get("troops/roman/archer"));
-  registry.register_renderer("troops/carthage/commanders/hanno_the_great",
-                             registry.get("troops/carthage/spearman"));
-  registry.register_renderer("troops/carthage/commanders/hasdrubal_barca",
-                             registry.get("troops/carthage/archer"));
-  registry.register_renderer("troops/carthage/commanders/hannibal_barca",
-                             registry.get("troops/carthage/swordsman"));
+  Carthage::register_skeleton_swordsman_renderer(registry);
+  Carthage::register_skeleton_archer_renderer(registry);
+  Carthage::register_grave_priest_renderer(registry);
 
   register_catapult_renderer(registry);
 

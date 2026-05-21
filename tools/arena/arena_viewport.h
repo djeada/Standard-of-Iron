@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 
+#include "game/core/component.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
 #include "game/systems/nation_id.h"
@@ -96,6 +97,7 @@ public slots:
   void clear_world_props();
   void clear_world_props_of_type();
   void reset_arena();
+  void load_scenario(const QString& scenario_id);
   void apply_visual_overrides_to_selection();
   void set_animation_name(const QString& animation_name);
   void play_selected_animation();
@@ -106,6 +108,9 @@ public slots:
   void move_selected_unit_forward();
   void set_movement_speed(float speed);
   void set_skeleton_debug_enabled(bool enabled);
+  void set_combat_debug_enabled(bool enabled);
+  void set_attack_scrub_enabled(bool enabled);
+  void set_attack_scrub_phase(float phase);
 
   void pause_simulation(bool paused);
   void reset_camera();
@@ -157,14 +162,21 @@ private:
                                                  float clearance) const -> bool;
   void apply_keyboard_camera_controls(float real_dt);
   void clear_camera_key_state();
+  void update_active_scenario(float simulation_dt);
   void select_spawned_entities(const std::vector<Engine::Core::EntityID>& ids);
   auto spawn_single_unit() -> Engine::Core::EntityID;
   auto spawn_single_unit(int owner_id,
                          Game::Systems::NationID nation_id,
                          Game::Units::TroopType unit_type) -> Engine::Core::EntityID;
+  auto spawn_single_unit(int owner_id,
+                         Game::Systems::NationID nation_id,
+                         Game::Units::TroopType unit_type,
+                         const QVector3D& spawn_position,
+                         bool ai_controlled) -> Engine::Core::EntityID;
   auto resolve_spawn_unit_type(Game::Systems::NationID nation_id,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
+  auto find_unit_handle(Engine::Core::EntityID entity_id) const -> Game::Units::Unit*;
   void reconfigure_terrain_from_state();
   auto
   spawn_single_building(int owner_id,
@@ -183,8 +195,20 @@ private:
   void draw_selection_marquee(QPainter& painter);
   void draw_terrain_normals(QPainter& painter);
   void draw_pose_overlay(QPainter& painter);
+  void draw_combat_animation_overlay(QPainter& painter);
   void draw_stats_overlay(QPainter& painter);
   void draw_controls_overlay(QPainter& painter);
+  void capture_attack_scrub_anchor();
+  void apply_attack_scrub_override();
+  void set_force_full_creature_lod(bool enabled);
+
+  struct ActiveScenarioState {
+    QString id;
+    float elapsed = 0.0F;
+    std::vector<Engine::Core::EntityID> tracked_entities;
+    bool first_event_applied = false;
+    bool second_event_applied = false;
+  };
 
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
@@ -235,8 +259,11 @@ private:
   bool m_wireframe_enabled = false;
   bool m_normals_overlay_enabled = false;
   bool m_pose_overlay_enabled = false;
+  bool m_combat_debug_overlay_enabled = false;
+  bool m_attack_scrub_enabled = false;
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
+  bool m_force_full_creature_lod = true;
   bool m_pan_up_pressed = false;
   bool m_pan_down_pressed = false;
   bool m_pan_left_pressed = false;
@@ -244,4 +271,15 @@ private:
   QString m_last_selection_summary;
   float m_default_unit_speed = 2.2F;
   float m_fps = 0.0F;
+  float m_attack_scrub_phase = 0.5F;
+  Engine::Core::EntityID m_attack_scrub_entity_id = 0;
+  QVector3D m_attack_scrub_position{0.0F, 0.0F, 0.0F};
+  QVector3D m_attack_scrub_rotation{0.0F, 0.0F, 0.0F};
+  QVector3D m_attack_scrub_scale{1.0F, 1.0F, 1.0F};
+  Engine::Core::CombatAttackFamily m_attack_scrub_family{
+      Engine::Core::CombatAttackFamily::Sword};
+  std::uint8_t m_attack_scrub_variant = 0U;
+  float m_attack_scrub_offset = 0.0F;
+  bool m_attack_scrub_finisher = false;
+  ActiveScenarioState m_active_scenario;
 };

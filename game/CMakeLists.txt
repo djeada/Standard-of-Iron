@@ -79,6 +79,7 @@ add_library(game_systems STATIC
     systems/troop_count_registry.cpp
     systems/global_stats_registry.cpp
     systems/victory_service.cpp
+    systems/undead_awakening_system.cpp
     systems/save_load_service.cpp
     systems/save_storage.cpp
     systems/game_state_serializer.cpp
@@ -112,6 +113,9 @@ add_library(game_systems STATIC
     units/unit.cpp
     units/archer.cpp
     units/swordsman.cpp
+    units/skeleton_swordsman.cpp
+    units/skeleton_archer.cpp
+    units/grave_priest.cpp
     units/horse_swordsman.cpp
     units/horse_archer.cpp
     units/horse_spearman.cpp

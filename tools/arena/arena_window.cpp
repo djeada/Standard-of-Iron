@@ -19,7 +19,11 @@
 #include "unit_panel.h"
 
 ArenaWindow::ArenaWindow(QWidget* parent)
-    : QMainWindow(parent) {
+    : QMainWindow(parent)
+    , m_terrain_panel(new TerrainPanel())
+    , m_unit_panel(new UnitPanel())
+    , m_building_panel(new BuildingPanel())
+    , m_prop_panel(new PropPanel()) {
   setWindowTitle("Standard of Iron Arena");
 
   auto* toolbar = addToolBar("Arena");
@@ -54,28 +58,24 @@ ArenaWindow::ArenaWindow(QWidget* parent)
   tab_widget->setMinimumWidth(280);
   tab_widget->setMaximumWidth(480);
 
-  m_terrain_panel = new TerrainPanel();
   auto* terrain_scroll = new QScrollArea();
   terrain_scroll->setWidget(m_terrain_panel);
   terrain_scroll->setWidgetResizable(true);
   terrain_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   tab_widget->addTab(terrain_scroll, "Terrain");
 
-  m_unit_panel = new UnitPanel();
   auto* unit_scroll = new QScrollArea();
   unit_scroll->setWidget(m_unit_panel);
   unit_scroll->setWidgetResizable(true);
   unit_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   tab_widget->addTab(unit_scroll, "Units");
 
-  m_building_panel = new BuildingPanel();
   auto* building_scroll = new QScrollArea();
   building_scroll->setWidget(m_building_panel);
   building_scroll->setWidgetResizable(true);
   building_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   tab_widget->addTab(building_scroll, "Buildings");
 
-  m_prop_panel = new PropPanel();
   auto* prop_scroll = new QScrollArea();
   prop_scroll->setWidget(m_prop_panel);
   prop_scroll->setWidgetResizable(true);
@@ -202,6 +202,10 @@ ArenaWindow::ArenaWindow(QWidget* parent)
           m_viewport,
           &ArenaViewport::reset_arena);
   connect(m_unit_panel,
+          &UnitPanel::load_scenario_requested,
+          m_viewport,
+          &ArenaViewport::load_scenario);
+  connect(m_unit_panel,
           &UnitPanel::animation_selected,
           m_viewport,
           &ArenaViewport::set_animation_name);
@@ -225,6 +229,18 @@ ArenaWindow::ArenaWindow(QWidget* parent)
           &UnitPanel::skeleton_debug_toggled,
           m_viewport,
           &ArenaViewport::set_skeleton_debug_enabled);
+  connect(m_unit_panel,
+          &UnitPanel::combat_debug_toggled,
+          m_viewport,
+          &ArenaViewport::set_combat_debug_enabled);
+  connect(m_unit_panel,
+          &UnitPanel::attack_scrub_toggled,
+          m_viewport,
+          &ArenaViewport::set_attack_scrub_enabled);
+  connect(m_unit_panel,
+          &UnitPanel::attack_scrub_phase_changed,
+          m_viewport,
+          &ArenaViewport::set_attack_scrub_phase);
   connect(m_viewport,
           &ArenaViewport::selection_summary_changed,
           m_unit_panel,

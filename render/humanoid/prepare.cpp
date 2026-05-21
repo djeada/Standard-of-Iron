@@ -13,7 +13,6 @@
 #include <mutex>
 #include <numbers>
 #include <optional>
-#include <unordered_map>
 #include <vector>
 
 #include "../../game/core/component.h"
@@ -30,6 +29,7 @@
 #include "../creature/pipeline/creature_asset.h"
 #include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/creature_render_graph.h"
+#include "../creature/pipeline/humanoid_animation_selection.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
@@ -46,6 +46,8 @@
 #include "../gl/render_constants.h"
 #include "../graphics_settings.h"
 #include "../palette.h"
+#include "../profiling/combat_animation_diagnostics.h"
+#include "../profiling/frame_profile.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
 #include "cache_control.h"
@@ -90,87 +92,30 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit) -> i
   return Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
 }
 
-struct AttackPhaseSegment {
-  float start;
-  float end;
-  float offset_weight;
-};
-
-auto attack_phase_segment(CombatAnimPhase phase,
-                          bool amplified_attack,
-                          bool finisher_attack) noexcept -> AttackPhaseSegment {
-  if (amplified_attack) {
-    switch (phase) {
-    case CombatAnimPhase::Advance:
-      return finisher_attack ? AttackPhaseSegment{0.00F, 0.22F, 0.95F}
-                             : AttackPhaseSegment{0.00F, 0.18F, 0.95F};
-    case CombatAnimPhase::WindUp:
-      return finisher_attack ? AttackPhaseSegment{0.22F, 0.50F, 0.82F}
-                             : AttackPhaseSegment{0.18F, 0.42F, 0.80F};
-    case CombatAnimPhase::Strike:
-      return finisher_attack ? AttackPhaseSegment{0.50F, 0.74F, 0.28F}
-                             : AttackPhaseSegment{0.42F, 0.66F, 0.32F};
-    case CombatAnimPhase::Impact:
-      return finisher_attack ? AttackPhaseSegment{0.74F, 0.84F, 0.18F}
-                             : AttackPhaseSegment{0.66F, 0.74F, 0.18F};
-    case CombatAnimPhase::Recover:
-      return finisher_attack ? AttackPhaseSegment{0.84F, 0.975F, 0.88F}
-                             : AttackPhaseSegment{0.74F, 0.95F, 0.85F};
-    case CombatAnimPhase::Reposition:
-      return finisher_attack ? AttackPhaseSegment{0.975F, 0.995F, 0.70F}
-                             : AttackPhaseSegment{0.95F, 0.995F, 0.70F};
-    case CombatAnimPhase::Idle:
-    default:
-      break;
-    }
+auto infantry_guard_shield_pose(
+    const Engine::Core::UnitComponent* unit,
+    const Engine::Core::FormationModeComponent* formation_mode,
+    int row,
+    int col,
+    int rows,
+    int cols) noexcept -> ShieldFormationPose {
+  if (unit == nullptr || formation_mode == nullptr || !formation_mode->active ||
+      unit->spawn_type != Game::Units::SpawnType::Knight) {
+    return ShieldFormationPose::None;
   }
 
-  switch (phase) {
-  case CombatAnimPhase::Advance:
-    return {0.00F, 0.14F, 0.90F};
-  case CombatAnimPhase::WindUp:
-    return {0.14F, 0.34F, 0.75F};
-  case CombatAnimPhase::Strike:
-    return {0.34F, 0.52F, 0.25F};
-  case CombatAnimPhase::Impact:
-    return {0.52F, 0.60F, 0.15F};
-  case CombatAnimPhase::Recover:
-    return {0.60F, 0.86F, 0.80F};
-  case CombatAnimPhase::Reposition:
-    return {0.86F, 0.995F, 0.70F};
-  case CombatAnimPhase::Idle:
+  switch (unit->nation_id) {
+  case Game::Systems::NationID::RomanRepublic: {
+    bool const is_interior =
+        rows > 2 && cols > 2 && row > 0 && row + 1 < rows && col > 0 && col + 1 < cols;
+    return is_interior ? ShieldFormationPose::RomanTop
+                       : ShieldFormationPose::RomanFront;
+  }
+  case Game::Systems::NationID::Carthage:
+    return ShieldFormationPose::CarthageFront;
   default:
-    break;
+    return ShieldFormationPose::None;
   }
-
-  return {};
-}
-
-auto combat_phase_to_attack_phase(const AnimationInputs& anim,
-                                  float segment_phase_offset,
-                                  float fallback_loop_offset,
-                                  bool amplified_attack,
-                                  bool finisher_attack) noexcept -> float {
-  auto segment = [](float start, float end, float progress) noexcept {
-    return start + (end - start) * std::clamp(progress, 0.0F, 1.0F);
-  };
-  auto progress_with_offset = [segment_phase_offset](float progress,
-                                                     float weight) noexcept -> float {
-    return std::clamp(progress + segment_phase_offset * weight, 0.0F, 1.0F);
-  };
-
-  if (anim.combat_phase != CombatAnimPhase::Idle) {
-    AttackPhaseSegment const phase_segment =
-        attack_phase_segment(anim.combat_phase, amplified_attack, finisher_attack);
-    return segment(
-        phase_segment.start,
-        phase_segment.end,
-        progress_with_offset(anim.combat_phase_progress, phase_segment.offset_weight));
-  }
-
-  float const attack_offset = anim.has_attack_offset ? anim.attack_offset : 0.0F;
-  float const phase = std::fmod(anim.time + attack_offset + fallback_loop_offset, 1.0F);
-  return (phase < 0.0F) ? phase + 1.0F : phase;
 }
 
 auto centered_grid_coordinate(int index, int count) noexcept -> float {
@@ -203,32 +148,6 @@ auto structured_layout_phase_offset(
                     0.25F);
 }
 
-auto active_combat_phase_offset(float layout_phase_offset,
-                                std::uint32_t inst_seed) noexcept -> float {
-  float const centered =
-      std::clamp((layout_phase_offset - 0.125F) / 0.125F, -1.0F, 1.0F);
-  float const cohort_bias = phase_cohort_offset(inst_seed) * 0.015F;
-  return std::clamp(centered * 0.050F + cohort_bias, -0.080F, 0.080F);
-}
-
-auto fallback_combat_phase_offset(float layout_phase_offset,
-                                  std::uint32_t inst_seed) noexcept -> float {
-  float const centered =
-      std::clamp((layout_phase_offset - 0.125F) / 0.125F, -1.0F, 1.0F);
-  float const cohort_bias = phase_cohort_offset(inst_seed) * 0.28F;
-  float const lane_bias = centered * 0.090F;
-  float const micro_bias = (((inst_seed >> 17U) & 1U) == 0U ? -1.0F : 1.0F) * 0.028F;
-  return std::clamp(cohort_bias + lane_bias + micro_bias, -0.42F, 0.42F);
-}
-
-auto visual_attack_variant(std::uint8_t base_variant,
-                           std::uint32_t inst_seed) noexcept -> std::uint8_t {
-  constexpr std::uint8_t k_variant_slots =
-      Engine::Core::CombatStateComponent::k_attack_variant_seed_slots;
-  auto const variant_jitter = static_cast<std::uint8_t>((inst_seed >> 11U) % 3U);
-  return static_cast<std::uint8_t>((base_variant + variant_jitter) % k_variant_slots);
-}
-
 auto construction_role_for_variant_index(std::uint8_t variant_index) noexcept
     -> ConstructionRole {
   switch (variant_index) {
@@ -253,7 +172,7 @@ auto resolve_construction_role(
     return ConstructionRole::Hammer;
   }
 
-  auto const* variant_table = visual_spec.variant_table;
+  auto const* variant_table = visual_spec.animation_manifest.variant_table;
   if (variant_table == nullptr ||
       variant_table->variant_trigger_pose != Render::Creature::PoseIntent::Construct ||
       variant_table->variant_stride == 0U || !variant_table->variant_is_seed_based) {
@@ -265,57 +184,24 @@ auto resolve_construction_role(
   return construction_role_for_variant_index(variant_index);
 }
 
-auto guard_shield_archetype(Render::Creature::ArchetypeId base_archetype)
-    -> Render::Creature::ArchetypeId {
-  if (base_archetype == Render::Creature::k_invalid_archetype) {
-    return base_archetype;
+void apply_spec_pose_layer(
+    const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,
+    const DrawContext& ctx,
+    const HumanoidAnimationContext& anim_ctx,
+    const HumanoidVariant& variant,
+    std::uint32_t inst_seed,
+    HumanoidPose& pose) {
+  auto const pose_layer = visual_spec.animation_manifest.pose_layer;
+  if (pose_layer == nullptr) {
+    return;
   }
 
-  static std::mutex cache_mutex;
-  static std::unordered_map<Render::Creature::ArchetypeId,
-                            Render::Creature::ArchetypeId>
-      cache;
-  std::lock_guard<std::mutex> const lock(cache_mutex);
-  if (auto const it = cache.find(base_archetype); it != cache.end()) {
-    return it->second;
-  }
-
-  auto& registry = Render::Creature::ArchetypeRegistry::instance();
-  auto const* base_desc = registry.get(base_archetype);
-  if (base_desc == nullptr || base_desc->bake_attachment_count == 0U) {
-    cache.emplace(base_archetype, base_archetype);
-    return base_archetype;
-  }
-
-  auto desc = *base_desc;
-  desc.debug_name += "_guard_shield";
-  bool changed = false;
-
-  QMatrix4x4 guard_turn;
-  guard_turn.rotate(-90.0F, 0.0F, 1.0F, 0.0F);
-  constexpr auto k_hand_l_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::HandL);
-
-  for (std::uint8_t i = 0; i < desc.bake_attachment_count; ++i) {
-    auto& attachment = desc.bake_attachments[i];
-    if (attachment.socket_bone_index != k_hand_l_bone) {
-      continue;
-    }
-    attachment.local_offset = attachment.local_offset * guard_turn;
-    changed = true;
-  }
-
-  if (!changed) {
-    cache.emplace(base_archetype, base_archetype);
-    return base_archetype;
-  }
-
-  auto const guard_archetype = registry.register_archetype(desc);
-  auto const resolved = guard_archetype != Render::Creature::k_invalid_archetype
-                            ? guard_archetype
-                            : base_archetype;
-  cache.emplace(base_archetype, resolved);
-  return resolved;
+  Render::Creature::Pipeline::HumanoidPoseLayerContext layer_ctx;
+  layer_ctx.draw_ctx = &ctx;
+  layer_ctx.animation = &anim_ctx;
+  layer_ctx.variant = &variant;
+  layer_ctx.seed = inst_seed;
+  pose_layer(layer_ctx, pose);
 }
 
 auto HumanoidRendererBase::resolve_formation(
@@ -438,7 +324,7 @@ using Render::GL::k_reference_walk_speed;
 using Render::GL::VariationParams;
 
 namespace {
-constexpr std::uint32_t k_humanoid_layout_cache_version = 3U;
+constexpr std::uint32_t k_humanoid_layout_cache_version = 4U;
 constexpr float k_humanoid_idle_cycle_time = 1.6F;
 constexpr float k_locomotion_blend_tau = 0.12F;
 constexpr float k_cadence_blend_tau = 0.14F;
@@ -536,23 +422,6 @@ auto lerp(float a, float b, float t) noexcept -> float {
   return a + (b - a) * t;
 }
 
-constexpr float k_transient_attack_recovery_seconds = 0.18F;
-
-void clear_transient_attack_state(
-    Render::Creature::HumanoidAnimationStateComponent& state) {
-  state.transient_attack_active = false;
-  state.transient_attack_is_melee = false;
-  state.transient_attack_is_mounted = false;
-  state.transient_attack_finisher = false;
-  state.transient_attack_amplified = false;
-  state.transient_attack_phase = 0.0F;
-  state.transient_attack_last_sample_time = 0.0F;
-  state.transient_attack_emphasis = 1.0F;
-  state.transient_attack_variant = 0U;
-  state.transient_attack_family = Engine::Core::CombatAttackFamily::None;
-  state.transient_attack_state = Render::Creature::AnimationStateId::Idle;
-}
-
 void reset_humanoid_locomotion_state(
     Render::Creature::HumanoidAnimationStateComponent& state) {
   state.locomotion_last_sample_time = 0.0F;
@@ -566,107 +435,143 @@ void reset_humanoid_locomotion_state(
   state.run_blend = 0.0F;
   state.locomotion_state = HumanoidMotionState::Idle;
   state.locomotion_initialized = false;
-  clear_transient_attack_state(state);
+  state.combat_visual = {};
 }
 
-auto is_transient_humanoid_attack_state(
-    Render::Creature::AnimationStateId state) noexcept -> bool {
-  switch (state) {
-  case Render::Creature::AnimationStateId::AttackSword:
-  case Render::Creature::AnimationStateId::AttackSpear:
-  case Render::Creature::AnimationStateId::AttackBow:
-  case Render::Creature::AnimationStateId::RidingCharge:
-  case Render::Creature::AnimationStateId::RidingBowShot:
-    return true;
-  case Render::Creature::AnimationStateId::Idle:
-  case Render::Creature::AnimationStateId::Walk:
-  case Render::Creature::AnimationStateId::Run:
-  case Render::Creature::AnimationStateId::Hold:
-  case Render::Creature::AnimationStateId::AttackMelee:
-  case Render::Creature::AnimationStateId::AttackRanged:
-  case Render::Creature::AnimationStateId::Die:
-  case Render::Creature::AnimationStateId::Dead:
-  case Render::Creature::AnimationStateId::RidingIdle:
-  case Render::Creature::AnimationStateId::RidingReining:
-  case Render::Creature::AnimationStateId::Count:
-    return false;
-  }
-  return false;
-}
-
-void apply_transient_attack_recovery(
-    HumanoidAnimationContext& anim_ctx,
-    Render::Creature::HumanoidAnimationStateComponent* persistent_state,
-    bool allow_persistent_update) {
-  if (persistent_state == nullptr || !allow_persistent_update) {
+void sync_combat_visual_inputs(
+    AnimationInputs& inputs,
+    const Render::Creature::CombatVisualResolvedState& visual) {
+  inputs.combat_visual = visual;
+  if (!visual.authoritative) {
     return;
   }
 
-  if (persistent_state->transient_attack_active &&
-      anim_ctx.inputs.time < persistent_state->transient_attack_last_sample_time) {
-    clear_transient_attack_state(*persistent_state);
-  }
+  inputs.is_attacking = visual.active;
+  inputs.is_melee = visual.is_melee;
+  inputs.is_mounted = visual.is_mounted;
+  inputs.is_casting = visual.is_casting;
+  inputs.finisher_attack = visual.finisher_attack;
+  inputs.attack_family = visual.attack_family;
+  inputs.attack_variant = visual.attack_variant;
 
-  auto const current_state =
-      Render::Creature::resolve_pose(anim_ctx.inputs).animation_state;
-  if (anim_ctx.inputs.is_attacking) {
-    if (is_transient_humanoid_attack_state(current_state)) {
-      persistent_state->transient_attack_active = true;
-      persistent_state->transient_attack_is_melee = anim_ctx.inputs.is_melee;
-      persistent_state->transient_attack_is_mounted = anim_ctx.inputs.is_mounted;
-      persistent_state->transient_attack_finisher = anim_ctx.finisher_attack;
-      persistent_state->transient_attack_amplified = anim_ctx.amplified_attack;
-      persistent_state->transient_attack_phase =
-          std::clamp(anim_ctx.attack_phase, 0.0F, 1.0F);
-      persistent_state->transient_attack_last_sample_time = anim_ctx.inputs.time;
-      persistent_state->transient_attack_emphasis = anim_ctx.attack_emphasis;
-      persistent_state->transient_attack_variant = anim_ctx.inputs.attack_variant;
-      persistent_state->transient_attack_family = anim_ctx.inputs.attack_family;
-      persistent_state->transient_attack_state = current_state;
-    } else {
-      clear_transient_attack_state(*persistent_state);
+  if (!visual.active) {
+    if (visual.lane == Render::Creature::SoldierCombatLane::ShieldBrace) {
+      inputs.is_guarding = true;
+    } else if (visual.lane == Render::Creature::SoldierCombatLane::StepOut) {
+      inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
     }
+    inputs.combat_phase = Render::GL::CombatAnimPhase::Idle;
+    inputs.combat_phase_progress = 0.0F;
     return;
   }
 
-  if (!persistent_state->transient_attack_active) {
+  auto const scrubbed = Render::Profiling::scrubbed_combat_phase_from_attack_phase(
+      visual.attack_phase, visual.amplified_attack, visual.finisher_attack);
+  inputs.combat_phase = scrubbed.phase;
+  inputs.combat_phase_progress = scrubbed.progress;
+}
+
+void apply_combat_micro_variation(const HumanoidAnimationContext& anim_ctx,
+                                  std::uint32_t inst_seed,
+                                  bool multi_soldier_unit,
+                                  HumanoidPose& pose) {
+  if (!multi_soldier_unit || !anim_ctx.inputs.combat_visual.authoritative ||
+      anim_ctx.inputs.is_dying || anim_ctx.inputs.is_dead) {
     return;
   }
 
-  if (anim_ctx.inputs.is_dying || anim_ctx.inputs.is_dead ||
-      anim_ctx.inputs.is_hit_reacting || anim_ctx.inputs.is_healing ||
-      anim_ctx.inputs.is_constructing) {
-    clear_transient_attack_state(*persistent_state);
-    return;
+  auto const lane = anim_ctx.inputs.combat_visual.lane;
+  float const time = anim_ctx.inputs.time;
+  float const attack_phase = std::clamp(anim_ctx.attack_phase, 0.0F, 1.0F);
+  float const lane_sign = ((inst_seed >> 7U) & 1U) == 0U ? -1.0F : 1.0F;
+  float const breath =
+      std::sin(time * 5.3F + static_cast<float>(inst_seed & 31U)) * 0.004F;
+  float const pressure = anim_ctx.inputs.is_attacking ? 1.0F : 0.45F;
+  float torso_lean = 0.0F;
+  float lateral_tilt = 0.0F;
+  float shoulder_delay = 0.0F;
+  float wrist_angle = 0.0F;
+  float foot_adjust = 0.0F;
+  float shield_reaction = 0.0F;
+  float head_tracking = 0.0F;
+  float impact_stagger = 0.0F;
+
+  switch (lane) {
+  case Render::Creature::SoldierCombatLane::LeadStrike:
+    torso_lean = 0.030F * pressure;
+    shoulder_delay = 0.018F;
+    wrist_angle = 0.014F;
+    foot_adjust = 0.022F;
+    head_tracking = 0.010F;
+    break;
+  case Render::Creature::SoldierCombatLane::SupportStrike:
+    torso_lean = 0.018F * pressure;
+    shoulder_delay = -0.010F;
+    wrist_angle = 0.010F;
+    foot_adjust = 0.014F;
+    head_tracking = 0.008F;
+    break;
+  case Render::Creature::SoldierCombatLane::ShieldBrace:
+    lateral_tilt = -0.018F * lane_sign;
+    shield_reaction = 0.020F;
+    foot_adjust = -0.010F;
+    head_tracking = -0.006F;
+    break;
+  case Render::Creature::SoldierCombatLane::StepIn:
+    torso_lean = 0.016F;
+    foot_adjust = 0.030F;
+    head_tracking = 0.006F;
+    break;
+  case Render::Creature::SoldierCombatLane::StepOut:
+    torso_lean = -0.012F;
+    foot_adjust = -0.028F;
+    lateral_tilt = 0.010F * lane_sign;
+    break;
+  case Render::Creature::SoldierCombatLane::IdleReady:
+    lateral_tilt = 0.008F * lane_sign;
+    head_tracking = 0.005F;
+    break;
+  case Render::Creature::SoldierCombatLane::RangedReload:
+    torso_lean = -0.014F;
+    shoulder_delay = -0.012F;
+    wrist_angle = -0.010F;
+    foot_adjust = -0.012F;
+    break;
+  case Render::Creature::SoldierCombatLane::None:
+    break;
   }
 
-  float const delta_time = std::max(
-      0.0F, anim_ctx.inputs.time - persistent_state->transient_attack_last_sample_time);
-  float const recovered_phase =
-      std::clamp(persistent_state->transient_attack_phase +
-                     delta_time / k_transient_attack_recovery_seconds,
-                 0.0F,
-                 1.0F);
-
-  anim_ctx.inputs.is_attacking = true;
-  anim_ctx.inputs.is_melee = persistent_state->transient_attack_is_melee;
-  anim_ctx.inputs.is_mounted = persistent_state->transient_attack_is_mounted;
-  anim_ctx.inputs.attack_family = persistent_state->transient_attack_family;
-  anim_ctx.inputs.attack_variant = persistent_state->transient_attack_variant;
-  anim_ctx.inputs.finisher_attack = persistent_state->transient_attack_finisher;
-  anim_ctx.inputs.combat_phase = Render::GL::CombatAnimPhase::Recover;
-  anim_ctx.inputs.combat_phase_progress =
-      std::clamp((recovered_phase - 0.60F) / 0.40F, 0.0F, 1.0F);
-  anim_ctx.attack_phase = recovered_phase;
-  anim_ctx.finisher_attack = persistent_state->transient_attack_finisher;
-  anim_ctx.amplified_attack = persistent_state->transient_attack_amplified;
-  anim_ctx.attack_emphasis = persistent_state->transient_attack_emphasis;
-
-  persistent_state->transient_attack_phase = recovered_phase;
-  persistent_state->transient_attack_last_sample_time = anim_ctx.inputs.time;
-  if (recovered_phase >= 0.999F) {
-    clear_transient_attack_state(*persistent_state);
+  if (anim_ctx.inputs.combat_phase == Render::GL::CombatAnimPhase::Impact ||
+      (attack_phase >= 0.50F && attack_phase <= 0.68F)) {
+    impact_stagger = 0.016F * pressure;
   }
+
+  pose.neck_base.setY(pose.neck_base.y() + breath);
+  pose.head_pos.setY(pose.head_pos.y() + breath * 1.4F);
+  pose.shoulder_l.setY(pose.shoulder_l.y() + breath);
+  pose.shoulder_r.setY(pose.shoulder_r.y() + breath * 0.9F);
+
+  pose.shoulder_l.setZ(pose.shoulder_l.z() - torso_lean + impact_stagger * 0.3F);
+  pose.shoulder_r.setZ(pose.shoulder_r.z() - torso_lean + impact_stagger * 0.3F);
+  pose.head_pos.setZ(pose.head_pos.z() - torso_lean * 0.55F - impact_stagger);
+  pose.pelvis_pos.setZ(pose.pelvis_pos.z() + torso_lean * 0.30F +
+                       impact_stagger * 0.7F);
+
+  pose.shoulder_l.setX(pose.shoulder_l.x() + lateral_tilt + head_tracking);
+  pose.shoulder_r.setX(pose.shoulder_r.x() + lateral_tilt + head_tracking);
+  pose.head_pos.setX(pose.head_pos.x() + lateral_tilt * 0.55F +
+                     head_tracking * lane_sign);
+  pose.neck_base.setX(pose.neck_base.x() + lateral_tilt * 0.35F);
+
+  pose.hand_r.setZ(pose.hand_r.z() + shoulder_delay + wrist_angle);
+  pose.elbow_r.setZ(pose.elbow_r.z() + shoulder_delay * 0.6F);
+  pose.hand_l.setZ(pose.hand_l.z() - shield_reaction);
+  pose.elbow_l.setZ(pose.elbow_l.z() - shield_reaction * 0.6F);
+
+  pose.foot_l.setZ(pose.foot_l.z() + foot_adjust);
+  pose.knee_l.setZ(pose.knee_l.z() + foot_adjust * 0.6F);
+  pose.foot_r.setZ(pose.foot_r.z() - foot_adjust * 0.5F);
+  pose.knee_r.setZ(pose.knee_r.z() - foot_adjust * 0.3F);
 }
 
 auto reference_cycle_time_for_motion_state(
@@ -864,6 +769,12 @@ void apply_persistent_locomotion_state(HumanoidLocomotionState& state,
 auto build_soldier_layout(const IFormationCalculator& formation_calculator,
                           const SoldierLayoutInputs& inputs) -> SoldierLayout {
   SoldierLayout layout{};
+  layout.row_index = static_cast<std::uint8_t>(std::clamp(inputs.row, 0, 255));
+  layout.col_index = static_cast<std::uint8_t>(std::clamp(inputs.col, 0, 255));
+  layout.rank_band = static_cast<std::uint8_t>(
+      (inputs.force_single_soldier || inputs.rows <= 1)
+          ? 0
+          : ((inputs.row <= 0) ? 0 : ((inputs.row + 1 >= inputs.rows) ? 2 : 1)));
   layout.inst_seed = inputs.seed ^ std::uint32_t(inputs.idx * 9176U);
 
   std::uint32_t rng_state = layout.inst_seed;
@@ -950,6 +861,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                 HumanoidPreparation& out) {
   using namespace Render::GL;
 
+  auto& profile = Render::Profiling::global_profile();
+  Render::Profiling::AccumulatorScope const prepare_scope(
+      ctx.template_prewarm ? nullptr : &profile.humanoid_preparation_us);
+
   FormationParams const formation = HumanoidRendererBase::resolve_formation(owner, ctx);
 
   Engine::Core::UnitComponent* unit_comp = nullptr;
@@ -960,6 +875,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   Engine::Core::TransformComponent* transform_comp = nullptr;
   if (ctx.entity != nullptr) {
     transform_comp = ctx.entity->get_component<Engine::Core::TransformComponent>();
+  }
+  Engine::Core::FormationModeComponent* formation_mode = nullptr;
+  if (ctx.entity != nullptr) {
+    formation_mode = ctx.entity->get_component<Engine::Core::FormationModeComponent>();
   }
 
   float entity_ground_offset =
@@ -1035,9 +954,16 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   using Nation = FormationCalculatorFactory::Nation;
   using UnitCategory = FormationCalculatorFactory::UnitCategory;
   Nation nation = Nation::Roman;
-  if (unit_comp != nullptr &&
-      unit_comp->nation_id == Game::Systems::NationID::Carthage) {
-    nation = Nation::Carthage;
+  if (unit_comp != nullptr) {
+    switch (unit_comp->nation_id) {
+    case Game::Systems::NationID::Carthage:
+    case Game::Systems::NationID::IronSepulcher:
+      nation = Nation::Carthage;
+      break;
+    case Game::Systems::NationID::RomanRepublic:
+    default:
+      break;
+    }
   }
 
   UnitCategory category =
@@ -1064,69 +990,92 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       (ctx.entity != nullptr)
           ? Engine::Core::get_or_add_component<HumanoidLayoutCacheComponent>(ctx.entity)
           : nullptr;
+  bool const allow_animation_persistence = should_persist_animation_state(ctx);
+  bool preserve_soldier_state_prefix = false;
   bool loaded_cached_layouts = false;
-  if (layout_cache_comp != nullptr && layout_cache_comp->valid) {
-    auto& entry = *layout_cache_comp;
-    bool const matches =
-        entry.seed == seed && entry.rows == rows && entry.cols == cols &&
-        entry.layout_version == k_humanoid_layout_cache_version &&
-        entry.formation.individuals_per_unit == formation.individuals_per_unit &&
-        entry.formation.max_per_row == formation.max_per_row &&
-        entry.formation.spacing == formation.spacing && entry.nation == nation &&
-        entry.category == category &&
-        entry.soldiers.size() == static_cast<std::size_t>(total_layout_count);
-    bool const cache_valid = !matches ? false
-                                      : ((anim.is_attacking && anim.is_melee)
-                                             ? (entry.frame_number == frame_index)
-                                             : (frame_index - entry.frame_number <=
-                                                ::Render::GL::k_layout_cache_max_age));
-    if (cache_valid) {
-      soldier_layouts = entry.soldiers;
-      entry.frame_number = frame_index;
-      loaded_cached_layouts = true;
-    }
-  }
+  {
+    Render::Profiling::AccumulatorScope const layout_scope(
+        ctx.template_prewarm ? nullptr : &profile.soldier_layout_generation_us);
 
-  if (!loaded_cached_layouts) {
-    soldier_layouts.reserve(static_cast<std::size_t>(total_layout_count));
-    for (int idx = 0; idx < total_layout_count; ++idx) {
-      SoldierLayoutInputs inputs{};
-      inputs.idx = idx;
-      inputs.row = idx / cols;
-      inputs.col = idx % cols;
-      inputs.rows = rows;
-      inputs.cols = cols;
-      inputs.formation_spacing = formation.spacing;
-      inputs.seed = seed;
-      inputs.force_single_soldier = ctx.force_single_soldier;
-      inputs.melee_attack = anim.is_attacking && anim.is_melee;
-      inputs.animation_time = anim.time;
-      soldier_layouts.push_back(build_soldier_layout(*formation_calculator, inputs));
+    if (layout_cache_comp != nullptr && layout_cache_comp->valid) {
+      auto& entry = *layout_cache_comp;
+      preserve_soldier_state_prefix =
+          entry.seed == seed && entry.rows == rows && entry.cols == cols &&
+          entry.layout_version == k_humanoid_layout_cache_version &&
+          entry.formation.individuals_per_unit == formation.individuals_per_unit &&
+          entry.formation.max_per_row == formation.max_per_row &&
+          entry.formation.spacing == formation.spacing && entry.nation == nation &&
+          entry.category == category;
+      bool const matches =
+          preserve_soldier_state_prefix &&
+          entry.soldiers.size() == static_cast<std::size_t>(total_layout_count);
+      bool const cache_valid = !matches
+                                   ? false
+                                   : ((anim.is_attacking && anim.is_melee)
+                                          ? (entry.frame_number == frame_index)
+                                          : (frame_index - entry.frame_number <=
+                                             ::Render::GL::k_layout_cache_max_age));
+      if (cache_valid) {
+        soldier_layouts = entry.soldiers;
+        entry.frame_number = frame_index;
+        loaded_cached_layouts = true;
+      }
     }
 
-    if (layout_cache_comp != nullptr) {
-      layout_cache_comp->soldiers = soldier_layouts;
-      layout_cache_comp->formation = formation;
-      layout_cache_comp->nation = nation;
-      layout_cache_comp->category = category;
-      layout_cache_comp->rows = rows;
-      layout_cache_comp->cols = cols;
-      layout_cache_comp->layout_version = k_humanoid_layout_cache_version;
-      layout_cache_comp->seed = seed;
-      layout_cache_comp->frame_number = frame_index;
-      layout_cache_comp->valid = true;
+    if (!loaded_cached_layouts) {
+      soldier_layouts.reserve(static_cast<std::size_t>(total_layout_count));
+      for (int idx = 0; idx < total_layout_count; ++idx) {
+        SoldierLayoutInputs inputs{};
+        inputs.idx = idx;
+        inputs.row = idx / cols;
+        inputs.col = idx % cols;
+        inputs.rows = rows;
+        inputs.cols = cols;
+        inputs.formation_spacing = formation.spacing;
+        inputs.seed = seed;
+        inputs.force_single_soldier = ctx.force_single_soldier;
+        inputs.melee_attack = anim.is_attacking && anim.is_melee;
+        inputs.animation_time = anim.time;
+        soldier_layouts.push_back(build_soldier_layout(*formation_calculator, inputs));
+      }
+
+      if (layout_cache_comp != nullptr) {
+        layout_cache_comp->soldiers = soldier_layouts;
+        layout_cache_comp->formation = formation;
+        layout_cache_comp->nation = nation;
+        layout_cache_comp->category = category;
+        layout_cache_comp->rows = rows;
+        layout_cache_comp->cols = cols;
+        layout_cache_comp->layout_version = k_humanoid_layout_cache_version;
+        layout_cache_comp->seed = seed;
+        layout_cache_comp->frame_number = frame_index;
+        layout_cache_comp->valid = true;
+      }
     }
   }
 
   bool const use_per_soldier_locomotion_state = total_layout_count > 1;
   if (layout_cache_comp != nullptr && use_per_soldier_locomotion_state) {
     auto& animation_states = layout_cache_comp->animation_states;
+    auto& combat_lanes = layout_cache_comp->combat_lanes;
+    std::size_t const previous_state_count = animation_states.size();
     bool const state_count_changed =
         animation_states.size() != static_cast<std::size_t>(total_layout_count);
     animation_states.resize(static_cast<std::size_t>(total_layout_count));
-    if (!loaded_cached_layouts || state_count_changed) {
+    combat_lanes.resize(static_cast<std::size_t>(total_layout_count));
+    if (!preserve_soldier_state_prefix) {
       for (auto& state : animation_states) {
         reset_humanoid_locomotion_state(state);
+      }
+      for (auto& lane_state : combat_lanes) {
+        lane_state = {};
+      }
+    } else if (state_count_changed) {
+      for (std::size_t idx = previous_state_count;
+           idx < static_cast<std::size_t>(total_layout_count);
+           ++idx) {
+        reset_humanoid_locomotion_state(animation_states[idx]);
+        combat_lanes[idx] = {};
       }
     }
   }
@@ -1138,10 +1087,79 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
           : nullptr;
   Render::GL::VisualMovementState const visual_movement =
       Render::GL::visual_movement_for_animation_inputs(ctx, anim);
+  float const local_enemy_pressure = anim.is_in_melee_lock
+                                         ? 1.0F
+                                         : (visual_movement.attack_target_in_range
+                                                ? 0.7F
+                                                : (anim.is_attacking ? 0.35F : 0.0F));
   const HumanoidPreparationModePolicy preparation_mode(ctx.entity);
+  float const unit_health_ratio =
+      (unit_comp != nullptr && unit_comp->max_health > 0)
+          ? std::clamp(static_cast<float>(unit_comp->health) /
+                           static_cast<float>(unit_comp->max_health),
+                       0.0F,
+                       1.0F)
+          : 1.0F;
+  std::uint32_t unit_attack_target_id = 0U;
+  bool unit_attack_target_alive = false;
+  if (ctx.entity != nullptr) {
+    if (auto* attack_target =
+            ctx.entity->get_component<Engine::Core::AttackTargetComponent>();
+        attack_target != nullptr && attack_target->target_id > 0U) {
+      unit_attack_target_id = attack_target->target_id;
+      if (ctx.world != nullptr) {
+        if (auto* target_entity = ctx.world->get_entity(attack_target->target_id);
+            target_entity != nullptr &&
+            !target_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+          if (auto* death_anim =
+                  target_entity->get_component<Engine::Core::DeathAnimationComponent>();
+              death_anim == nullptr ||
+              death_anim->state == Engine::Core::DeathSequenceState::Dying) {
+            unit_attack_target_alive = (death_anim == nullptr);
+          }
+        }
+      }
+    }
+  }
+  auto record_soldier_debug = [&](int idx,
+                                  const AnimationInputs& /*raw_anim*/,
+                                  const AnimationInputs& resolved_anim,
+                                  float attack_phase,
+                                  Render::Creature::AnimationStateId animation_state,
+                                  HumanoidLOD lod,
+                                  Render::Profiling::SoldierCullReason cull_reason,
+                                  bool transient_recovery_override) {
+    if (ctx.template_prewarm || ctx.entity == nullptr) {
+      return;
+    }
+
+    Render::Profiling::SoldierAnimationDebugSample sample{};
+    sample.soldier_index = idx;
+    sample.sample_time = resolved_anim.time;
+    sample.combat_phase = resolved_anim.combat_phase;
+    sample.combat_phase_progress = resolved_anim.combat_phase_progress;
+    sample.attack_phase = attack_phase;
+    sample.attack_variant = resolved_anim.attack_variant;
+    sample.is_attacking = resolved_anim.is_attacking;
+    sample.is_in_melee_lock = resolved_anim.is_in_melee_lock;
+    sample.transient_recovery_override = transient_recovery_override;
+    sample.locomotion_state = resolved_anim.movement_state;
+    sample.animation_state = animation_state;
+    sample.lod = static_cast<std::uint8_t>(lod);
+    sample.cull_reason = cull_reason;
+    Render::Profiling::CombatAnimationDiagnostics::instance().record_soldier_sample(
+        ctx.entity->get_id(), sample);
+  };
 
   auto append_prepared_soldier = [&](int idx, const AnimationInputs& soldier_anim) {
     SoldierLayout const& layout = soldier_layouts[static_cast<std::size_t>(idx)];
+    AnimationInputs soldier_render_anim = soldier_anim;
+    if (!is_mounted_spawn && guard_pose_amount(soldier_render_anim) > 0.0F) {
+      int const row = idx / cols;
+      int const col = idx % cols;
+      soldier_render_anim.shield_formation_pose =
+          infantry_guard_shield_pose(unit_comp, formation_mode, row, col, rows, cols);
+    }
     float const offset_x = layout.offset_x;
     float const offset_z = layout.offset_z;
     uint32_t const inst_seed = layout.inst_seed;
@@ -1149,9 +1167,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     float const applied_yaw_offset = layout.yaw_offset;
     const CommanderJumpPose commander_jump = preparation_mode.jump_pose();
     bool const soldier_has_locomotion =
-        Render::Creature::is_moving_animation(soldier_anim.movement_state);
+        Render::Creature::is_moving_animation(soldier_render_anim.movement_state);
     bool const soldier_is_running =
-        Render::Creature::is_running_animation(soldier_anim.movement_state);
+        Render::Creature::is_running_animation(soldier_render_anim.movement_state);
 
     QMatrix4x4 inst_model;
     float applied_yaw = applied_yaw_offset;
@@ -1212,16 +1230,90 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         resolve_visual_locomotion_sample(visual_movement, forward);
 
     auto* locomotion_persistent_state = humanoid_anim_state;
+    Render::Creature::SoldierCombatLaneState* cached_lane_state = nullptr;
     if (layout_cache_comp != nullptr && use_per_soldier_locomotion_state) {
       auto& animation_states = layout_cache_comp->animation_states;
       auto const state_index = static_cast<std::size_t>(idx);
       if (state_index < animation_states.size()) {
         locomotion_persistent_state = &animation_states[state_index];
       }
+      auto& combat_lanes = layout_cache_comp->combat_lanes;
+      if (state_index < combat_lanes.size()) {
+        cached_lane_state = &combat_lanes[state_index];
+      }
     }
 
+    const CommanderAttackPose commander_attack =
+        preparation_mode.attack_pose(soldier_render_anim);
+    std::uint8_t base_attack_variant = soldier_render_anim.attack_variant;
+    if (ctx.has_attack_variant_override) {
+      base_attack_variant = ctx.attack_variant_override;
+    } else if (commander_attack.has_style) {
+      base_attack_variant = commander_attack.style;
+    }
+
+    Render::Creature::CombatLaneInputs lane_inputs{};
+    lane_inputs.unit_seed = seed;
+    lane_inputs.soldier_seed = inst_seed;
+    lane_inputs.row = static_cast<int>(layout.row_index);
+    lane_inputs.col = static_cast<int>(layout.col_index);
+    lane_inputs.rows = rows;
+    lane_inputs.cols = cols;
+    lane_inputs.health_ratio = unit_health_ratio;
+    lane_inputs.local_enemy_pressure = local_enemy_pressure;
+    lane_inputs.force_single_soldier = ctx.force_single_soldier;
+    lane_inputs.is_melee = soldier_render_anim.is_melee;
+    lane_inputs.is_mounted = is_mounted_spawn;
+    lane_inputs.attack_family = soldier_render_anim.attack_family;
+
+    Render::Creature::SoldierCombatLaneState const lane_snapshot =
+        (cached_lane_state != nullptr) ? *cached_lane_state
+                                       : Render::Creature::SoldierCombatLaneState{};
+    auto const lane_resolution =
+        Render::Creature::resolve_soldier_combat_lane(lane_snapshot, lane_inputs);
+    if (allow_animation_persistence && cached_lane_state != nullptr) {
+      *cached_lane_state = lane_resolution.state;
+    }
+
+    Render::Creature::CombatVisualPersistentState previous_combat_visual{};
+    if (locomotion_persistent_state != nullptr) {
+      previous_combat_visual = locomotion_persistent_state->combat_visual;
+    }
+
+    Render::Creature::CombatVisualRawInputs raw_combat{};
+    raw_combat.sample_time = soldier_render_anim.time;
+    raw_combat.attack_offset = soldier_render_anim.attack_offset;
+    raw_combat.has_attack_offset = soldier_render_anim.has_attack_offset;
+    raw_combat.attack_requested = soldier_render_anim.is_attacking;
+    raw_combat.is_melee = soldier_render_anim.is_melee;
+    raw_combat.is_mounted = is_mounted_spawn;
+    raw_combat.is_casting = soldier_render_anim.is_casting;
+    raw_combat.finisher_attack = soldier_render_anim.finisher_attack;
+    raw_combat.amplified_attack = commander_attack.amplified;
+    raw_combat.is_hit_reacting = soldier_render_anim.is_hit_reacting;
+    raw_combat.is_healing = soldier_render_anim.is_healing;
+    raw_combat.is_constructing = soldier_render_anim.is_constructing;
+    raw_combat.is_dying = soldier_render_anim.is_dying;
+    raw_combat.is_dead = soldier_render_anim.is_dead;
+    raw_combat.locomotion = soldier_render_anim.movement_state;
+    raw_combat.combat_phase = soldier_render_anim.combat_phase;
+    raw_combat.combat_phase_progress = soldier_render_anim.combat_phase_progress;
+    raw_combat.attack_variant = base_attack_variant;
+    raw_combat.attack_target_id = unit_attack_target_id;
+    raw_combat.attack_target_alive = unit_attack_target_alive;
+    raw_combat.attack_family = soldier_render_anim.attack_family;
+
+    auto const combat_resolution = Render::Creature::resolve_combat_visual_state(
+        previous_combat_visual, raw_combat, lane_resolution.profile);
+    if (allow_animation_persistence && locomotion_persistent_state != nullptr) {
+      locomotion_persistent_state->combat_visual = combat_resolution.persistent;
+    }
+    sync_combat_visual_inputs(soldier_render_anim, combat_resolution.resolved);
+    bool const render_has_locomotion =
+        Render::Creature::is_moving_animation(soldier_render_anim.movement_state);
+
     HumanoidLocomotionInputs locomotion_inputs{};
-    locomotion_inputs.anim = soldier_anim;
+    locomotion_inputs.anim = soldier_render_anim;
     locomotion_inputs.variation = variation;
     locomotion_inputs.move_speed = visual_locomotion.speed;
     locomotion_inputs.entity_forward = forward;
@@ -1231,7 +1323,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     locomotion_inputs.animation_time = anim.time;
     locomotion_inputs.phase_offset = phase_offset;
     locomotion_inputs.persistent_state = locomotion_persistent_state;
-    locomotion_inputs.allow_persistent_update = should_persist_animation_state(ctx);
+    locomotion_inputs.allow_persistent_update = allow_animation_persistence;
     HumanoidLocomotionState locomotion_state =
         build_humanoid_locomotion_state(locomotion_inputs);
     if (commander_jump.active) {
@@ -1247,19 +1339,19 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
     if (unit_comp != nullptr &&
         unit_comp->spawn_type == Game::Units::SpawnType::Archer &&
-        !soldier_has_locomotion && !soldier_anim.is_attacking) {
+        !render_has_locomotion && !soldier_render_anim.is_attacking) {
       locomotion_state.gait.cycle_phase = 0.5F;
     }
 
     auto const visual_spec = owner.visual_spec();
     ConstructionRole construction_role = ConstructionRole::None;
-    if (soldier_anim.is_constructing) {
+    if (soldier_render_anim.is_constructing) {
       construction_role =
           resolve_construction_role(visual_spec, inst_seed, ctx.force_single_soldier);
     }
 
     HumanoidAnimationContext anim_ctx{};
-    anim_ctx.inputs = soldier_anim;
+    anim_ctx.inputs = soldier_render_anim;
     anim_ctx.inputs.is_mounted = is_mounted_spawn;
     anim_ctx.variation = variation;
     anim_ctx.formation = formation;
@@ -1279,39 +1371,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     anim_ctx.locomotion_cycle_time = locomotion_state.gait.cycle_time;
     anim_ctx.locomotion_phase = locomotion_state.gait.cycle_phase;
     anim_ctx.construction_role = construction_role;
-    if (soldier_anim.is_attacking) {
-      bool const finisher_attack = soldier_anim.finisher_attack;
-      const CommanderAttackPose commander_attack =
-          preparation_mode.attack_pose(soldier_anim);
-      float const segment_attack_offset =
-          ctx.force_single_soldier
-              ? 0.0F
-              : active_combat_phase_offset(phase_offset, inst_seed);
-      float const fallback_attack_offset =
-          ctx.force_single_soldier
-              ? 0.0F
-              : fallback_combat_phase_offset(phase_offset, inst_seed);
-      anim_ctx.amplified_attack = commander_attack.amplified;
-      anim_ctx.finisher_attack = finisher_attack;
-      anim_ctx.attack_emphasis =
-          finisher_attack ? 1.45F : (commander_attack.amplified ? 1.22F : 1.0F);
-      anim_ctx.attack_phase = combat_phase_to_attack_phase(soldier_anim,
-                                                           segment_attack_offset,
-                                                           fallback_attack_offset,
-                                                           commander_attack.amplified,
-                                                           finisher_attack);
-      if (ctx.has_attack_variant_override) {
-        anim_ctx.inputs.attack_variant = ctx.attack_variant_override;
-      } else if (commander_attack.has_style) {
-        anim_ctx.inputs.attack_variant = commander_attack.style;
-      } else if (!ctx.force_single_soldier) {
-        anim_ctx.inputs.attack_variant =
-            visual_attack_variant(soldier_anim.attack_variant, inst_seed);
-      }
-    }
-
-    apply_transient_attack_recovery(
-        anim_ctx, locomotion_persistent_state, should_persist_animation_state(ctx));
+    anim_ctx.attack_phase = anim_ctx.inputs.combat_visual.attack_phase;
+    anim_ctx.attack_emphasis = anim_ctx.inputs.combat_visual.attack_emphasis;
+    anim_ctx.amplified_attack = anim_ctx.inputs.combat_visual.amplified_attack;
+    anim_ctx.finisher_attack = anim_ctx.inputs.combat_visual.finisher_attack;
 
     if (commander_jump.active) {
       anim_ctx.ambient_idle_type = AmbientIdleType::Jump;
@@ -1322,11 +1385,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       anim_ctx.ambient_idle_phase = *rally_phase;
     } else if (!is_mounted_spawn) {
       bool const is_ambient_idle_eligible =
-          !soldier_has_locomotion && !anim_ctx.inputs.is_attacking &&
+          !render_has_locomotion && !anim_ctx.inputs.is_attacking &&
           !anim_ctx.inputs.is_in_hold_mode && !anim_ctx.inputs.is_guarding &&
-          !anim_ctx.inputs.is_constructing && !anim_ctx.inputs.is_healing &&
-          !anim_ctx.inputs.is_hit_reacting && !anim_ctx.inputs.is_dying &&
-          !anim_ctx.inputs.is_dead;
+          !anim_ctx.inputs.is_exiting_guard && !anim_ctx.inputs.is_constructing &&
+          !anim_ctx.inputs.is_healing && !anim_ctx.inputs.is_hit_reacting &&
+          !anim_ctx.inputs.is_dying && !anim_ctx.inputs.is_dead;
       if (is_ambient_idle_eligible) {
         AmbientIdleType const ambient_type =
             HumanoidPoseController::get_ambient_idle_type(
@@ -1349,15 +1412,17 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
       const float hold_kneel_depth = owner.get_hold_kneel_depth();
       float const effective_kneel =
-          hold_transition_amount(soldier_anim) * hold_kneel_depth;
+          hold_transition_amount(anim_ctx.inputs) * hold_kneel_depth;
       if (effective_kneel > 1e-4F) {
         HumanoidPoseController kneel_ctrl(pose, anim_ctx);
         kneel_ctrl.kneel(effective_kneel);
       }
-      if (anim_ctx.inputs.is_guarding && !soldier_has_locomotion &&
+      float const guard_amount = guard_pose_amount(anim_ctx.inputs);
+      if (guard_amount > 0.0F && !render_has_locomotion &&
           !anim_ctx.inputs.is_attacking) {
         HumanoidPoseController guard_ctrl(pose, anim_ctx);
-        guard_ctrl.brace_sword_and_shield_for_hold();
+        guard_ctrl.guard_sword_and_shield_formation(
+            anim_ctx.inputs.shield_formation_pose, guard_amount);
       }
       if (anim_ctx.inputs.is_constructing) {
         HumanoidPoseController construct_ctrl(pose, anim_ctx);
@@ -1381,6 +1446,12 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
           break;
         }
       }
+
+      apply_spec_pose_layer(visual_spec, inst_ctx, anim_ctx, variant, inst_seed, pose);
+      apply_combat_micro_variation(anim_ctx,
+                                   inst_seed,
+                                   !ctx.force_single_soldier && total_layout_count > 1,
+                                   pose);
     }
     bool const world_already_grounded = ctx.skip_ground_offset || requires_runtime_pose;
     if (!ctx.skip_ground_offset && requires_runtime_pose) {
@@ -1417,6 +1488,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     if (ctx.camera != nullptr &&
         !ctx.camera->is_in_frustum(soldier_world_pos, k_soldier_cull_radius)) {
       ++s_render_stats.soldiers_skipped_frustum;
+      record_soldier_debug(
+          idx,
+          soldier_render_anim,
+          anim_ctx.inputs,
+          anim_ctx.attack_phase,
+          Render::Creature::resolve_pose(anim_ctx.inputs).animation_state,
+          HumanoidLOD::Billboard,
+          Render::Profiling::SoldierCullReason::Frustum,
+          false);
       return;
     }
 
@@ -1429,11 +1509,23 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     const auto lod_state = RCP::resolve_humanoid_lod_state(lod_inputs);
     const auto lod_decision = lod_state.decision;
     if (lod_decision.culled) {
+      auto const cull_reason = lod_decision.reason == RCP::CullReason::Temporal
+                                   ? Render::Profiling::SoldierCullReason::Temporal
+                                   : Render::Profiling::SoldierCullReason::Billboard;
       if (lod_decision.reason == RCP::CullReason::Billboard) {
         ++s_render_stats.soldiers_skipped_lod;
       } else if (lod_decision.reason == RCP::CullReason::Temporal) {
         ++s_render_stats.soldiers_skipped_temporal;
       }
+      record_soldier_debug(
+          idx,
+          soldier_render_anim,
+          anim_ctx.inputs,
+          anim_ctx.attack_phase,
+          Render::Creature::resolve_pose(anim_ctx.inputs).animation_state,
+          static_cast<HumanoidLOD>(lod_decision.lod),
+          cull_reason,
+          false);
       return;
     }
     auto const soldier_lod = static_cast<HumanoidLOD>(lod_decision.lod);
@@ -1442,26 +1534,30 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
     RCP::CreatureGraphInputs graph_inputs{};
     graph_inputs.ctx = &inst_ctx;
-    graph_inputs.anim = &soldier_anim;
+    graph_inputs.anim = &soldier_render_anim;
     graph_inputs.entity = ctx.entity;
     graph_inputs.unit = unit_comp;
     graph_inputs.transform = transform_comp;
     auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
-    graph_output.spec = visual_spec;
-    graph_output.spec.owned_legacy_slots =
-        graph_output.spec.owned_legacy_slots |
-        Render::Creature::Pipeline::LegacySlotMask::FacialHair;
-    if (!graph_output.spec.skip_default_facial_hair_archetype) {
-      graph_output.spec.archetype_id = Render::Humanoid::resolve_facial_hair_archetype(
-          graph_output.spec.archetype_id, variant);
-    }
-    if (soldier_anim.is_guarding && !soldier_has_locomotion &&
-        !soldier_anim.is_attacking) {
-      graph_output.spec.archetype_id =
-          guard_shield_archetype(graph_output.spec.archetype_id);
-    }
+    graph_output.spec = RCP::finalize_visible_humanoid_spec(
+        visual_spec, variant, soldier_render_anim, render_has_locomotion);
     graph_output.seed = inst_seed;
     graph_output.world_already_grounded = world_already_grounded;
+    graph_output.humanoid_selection = RCP::resolve_humanoid_animation_selection(
+        graph_output.spec, anim_ctx, graph_output.seed, &variant);
+    bool const transient_recovery_override =
+        (soldier_render_anim.is_attacking != anim_ctx.inputs.is_attacking) ||
+        (soldier_render_anim.combat_phase != anim_ctx.inputs.combat_phase) ||
+        (std::abs(soldier_render_anim.combat_phase_progress -
+                  anim_ctx.inputs.combat_phase_progress) > 1.0e-4F);
+    record_soldier_debug(idx,
+                         soldier_render_anim,
+                         anim_ctx.inputs,
+                         anim_ctx.attack_phase,
+                         graph_output.humanoid_selection->state,
+                         soldier_lod,
+                         Render::Profiling::SoldierCullReason::None,
+                         transient_recovery_override);
 
     RCP::HumanoidShadowStateInputs shadow_inputs{};
     shadow_inputs.ctx = &inst_ctx;
