@@ -110,6 +110,7 @@ add_executable(standard_of_iron_tests
     render/map_boundary_fog_renderer_test.cpp
     render/oriented_parts_test.cpp
     render/draw_part_material_test.cpp
+    render/roman_light_helmet_mesh_test.cpp
     render/rig_dsl_interpreter_test.cpp
     render/rigged_pipeline_test.cpp
     render/rigged_pipeline_instanced_test.cpp
@@ -146,6 +147,7 @@ add_executable(standard_of_iron_tests
     render/creature/render_request_test.cpp
     render/selection_ring_layout_test.cpp
     render/selection_ring_mesh_test.cpp
+    render/arrow_cloud_render_test.cpp
     render/orientation_arrow_mesh_test.cpp
     render/creature/snapshot_mesh_asset_test.cpp
     render/creature/snapshot_mesh_cache_test.cpp

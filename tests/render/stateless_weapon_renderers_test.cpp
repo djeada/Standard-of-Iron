@@ -521,6 +521,31 @@ TEST(StatelessWeaponRenderers, BowBodyUsesArchetypePath) {
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
+TEST(StatelessWeaponRenderers, BowBodyMeshIsTallerAndMoreDeeplyCurved) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  BowRenderConfig config;
+  config.bow_top_y = 1.4F;
+  config.bow_bot_y = 0.6F;
+  config.bow_depth = 0.22F;
+
+  EquipmentBatch batch;
+  BowRenderer::submit(config, ctx, frames, palette, anim, batch);
+
+  ASSERT_FALSE(batch.archetypes.empty());
+  ASSERT_NE(batch.archetypes.front().archetype, nullptr);
+
+  const AABB box = archetype_local_aabb(*batch.archetypes.front().archetype);
+  const float height = box.mx.y() - box.mn.y();
+  const float depth = box.mx.z() - box.mn.z();
+  EXPECT_GT(height, 1.10F);
+  EXPECT_LT(height, 1.20F);
+  EXPECT_GT(depth, 0.44F);
+}
+
 TEST(StatelessWeaponRenderers, BowArrowUsesArchetypePath) {
   const auto frames = make_frames();
   const auto anim = make_anim();
@@ -589,7 +614,91 @@ TEST(StatelessWeaponRenderers, BowHoldTiltsUpperLimbForward) {
   EXPECT_GT(bow_up.y(), 0.45F);
 }
 
-TEST(StatelessWeaponRenderers, BowHoldStringDoesNotFollowOffhandDrawPosition) {
+TEST(StatelessWeaponRenderers, BowUsesHandSocketInsteadOfCarryGripFrame) {
+  auto frames_a = make_frames();
+  auto frames_b = make_frames();
+  frames_b.grip_r.origin = frames_b.hand_r.origin + QVector3D(0.18F, 0.00F, 0.00F);
+  frames_b.grip_r.right = {0.0F, 0.0F, -1.0F};
+  frames_b.grip_r.up = {0.0F, 1.0F, 0.0F};
+  frames_b.grip_r.forward = {1.0F, 0.0F, 0.0F};
+  frames_b.grip_r.radius = 0.05F;
+
+  auto anim = make_anim();
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 1.0F;
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch batch_a;
+  EquipmentBatch batch_b;
+  BowRenderer::submit(BowRenderConfig{}, ctx, frames_a, palette, anim, batch_a);
+  BowRenderer::submit(BowRenderConfig{}, ctx, frames_b, palette, anim, batch_b);
+
+  EXPECT_EQ(hash_batch(batch_a), hash_batch(batch_b));
+}
+
+TEST(StatelessWeaponRenderers, BowStringSitsBehindGripPlane) {
+  // The nock (string midpoint, tracked by the draw arm) must sit behind the bow grip.
+  auto frames = make_frames();
+  frames.hand_l.origin = frames.hand_r.origin + QVector3D(0.0F, 0.0F, -0.50F);
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch batch;
+  BowRenderer::submit(BowRenderConfig{}, ctx, frames, palette, anim, batch);
+
+  ASSERT_GE(batch.archetypes.size(), 3U);
+  QVector3D const grip = batch.archetypes.front().world.column(3).toVector3D();
+  QVector3D bow_forward = batch.archetypes.front().world.column(2).toVector3D();
+  bow_forward.normalize();
+
+  // archetypes[2] starts at the nock (origin of the bottom V-segment).
+  QVector3D const nock = batch.archetypes[2].world.column(3).toVector3D();
+  EXPECT_LT(QVector3D::dotProduct(nock - grip, bow_forward), -0.01F);
+}
+
+TEST(StatelessWeaponRenderers, BowForwardOffsetPullsBowTowardArcherWithoutMovingGrip) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  BowRenderConfig const centered;
+  BowRenderConfig shifted = centered;
+  shifted.bow_forward_offset = -0.24F;
+
+  EquipmentBatch centered_batch;
+  EquipmentBatch shifted_batch;
+  BowRenderer::submit(centered, ctx, frames, palette, anim, centered_batch);
+  BowRenderer::submit(shifted, ctx, frames, palette, anim, shifted_batch);
+
+  ASSERT_FALSE(centered_batch.archetypes.empty());
+  ASSERT_FALSE(shifted_batch.archetypes.empty());
+
+  QVector3D const centered_grip =
+      centered_batch.archetypes.front().world.column(3).toVector3D();
+  QVector3D const shifted_grip =
+      shifted_batch.archetypes.front().world.column(3).toVector3D();
+  EXPECT_NEAR((shifted_grip - centered_grip).length(), 0.0F, 1e-5F);
+
+  QVector3D const bow_forward =
+      centered_batch.archetypes.front().world.column(2).toVector3D().normalized();
+
+  const auto centered_range =
+      project_aabb_on_axis(archetype_world_aabb(centered_batch.archetypes.front()),
+                           centered_grip,
+                           bow_forward);
+  const auto shifted_range =
+      project_aabb_on_axis(archetype_world_aabb(shifted_batch.archetypes.front()),
+                           shifted_grip,
+                           bow_forward);
+
+  EXPECT_LT(shifted_range.first, centered_range.first - 0.15F);
+  EXPECT_LT(shifted_range.second, centered_range.second - 0.18F);
+}
+
+TEST(StatelessWeaponRenderers, BowHoldStringFollowsOffhandDrawPosition) {
   auto frames_a = make_frames();
   auto frames_b = make_frames();
   frames_b.hand_l.origin = {-0.60F, 1.42F, -0.18F};
@@ -605,7 +714,7 @@ TEST(StatelessWeaponRenderers, BowHoldStringDoesNotFollowOffhandDrawPosition) {
   BowRenderer::submit(BowRenderConfig{}, ctx, frames_a, palette, anim, batch_a);
   BowRenderer::submit(BowRenderConfig{}, ctx, frames_b, palette, anim, batch_b);
 
-  EXPECT_EQ(hash_batch(batch_a), hash_batch(batch_b));
+  EXPECT_NE(hash_batch(batch_a), hash_batch(batch_b));
 }
 
 TEST(StatelessWeaponRenderers, QuiverSubmitIsStateless) {
@@ -665,7 +774,8 @@ TEST(StatelessWeaponRenderers, CarthageShieldKeepsMinimalGapFromHandOrigin) {
       (min_side <= 0.0F && max_side >= 0.0F)
           ? 0.0F
           : std::min(std::abs(min_side), std::abs(max_side));
-  EXPECT_LT(nearest_edge_offset, 0.08F);
+  EXPECT_LT(nearest_edge_offset, 0.08F)
+      << " min_side=" << min_side << " max_side=" << max_side;
 
   const AABB box = archetype_local_aabb(*batch.archetypes.front().archetype);
   const float width = box.mx.x() - box.mn.x();
@@ -689,7 +799,7 @@ TEST(StatelessWeaponRenderers, RomanScutumUsesArchetypePath) {
 
   EXPECT_TRUE(via_submit.meshes.empty());
   EXPECT_EQ(via_submit.archetypes.size(), 1U);
-  EXPECT_EQ(draw_count_of(via_submit), 13);
+  EXPECT_EQ(draw_count_of(via_submit), 7);
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
@@ -711,11 +821,18 @@ TEST(StatelessWeaponRenderers, RomanScutumKeepsMinimalGapFromGrip) {
   QVector3D const side_axis = grip.right.normalized();
   const auto [min_side, max_side] =
       project_aabb_on_axis(world_box, grip.origin, side_axis);
-  const float nearest_edge_offset =
-      (min_side <= 0.0F && max_side >= 0.0F)
-          ? 0.0F
-          : std::min(std::abs(min_side), std::abs(max_side));
-  EXPECT_LT(nearest_edge_offset, 0.10F);
+  const float nearest_edge_offset = std::min(std::abs(min_side), std::abs(max_side));
+  EXPECT_LT(nearest_edge_offset, 0.08F);
+  EXPECT_GT(min_side, -0.08F);
+  EXPECT_GT(max_side, 0.22F);
+
+  const AABB local_box = archetype_local_aabb(*batch.archetypes.front().archetype);
+  const float width = local_box.mx.x() - local_box.mn.x();
+  const float height = local_box.mx.y() - local_box.mn.y();
+  EXPECT_GT(width, 0.70F);
+  EXPECT_LT(width, 0.82F);
+  EXPECT_GT(height, 1.08F);
+  EXPECT_LT(height, 1.18F);
 }
 
 TEST(StatelessWeaponRenderers, RomanScutumDefaultKeepsSideCarriedOrientation) {

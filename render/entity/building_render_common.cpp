@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "../../game/core/component.h"
 #include "../../game/systems/nation_id.h"
@@ -87,11 +88,27 @@ auto building_capture(const DrawContext& ctx) -> Engine::Core::CaptureComponent*
 }
 
 auto building_box_mesh(const DrawContext& ctx) -> Mesh* {
-  return (ctx.resources != nullptr) ? ctx.resources->unit() : nullptr;
+  if (ctx.resources == nullptr) {
+    return nullptr;
+  }
+  Mesh* mesh = ctx.resources->unit();
+  return (mesh != nullptr) ? mesh : get_unit_cube();
 }
 
 auto building_white_texture(const DrawContext& ctx) -> Texture* {
   return (ctx.resources != nullptr) ? ctx.resources->white() : nullptr;
+}
+
+auto building_under_attack(const DrawContext& ctx) -> bool {
+  auto* capture = building_capture(ctx);
+  if ((capture != nullptr) && capture->is_being_captured) {
+    return true;
+  }
+
+  auto* feedback = (ctx.entity != nullptr)
+                       ? ctx.entity->get_component<Engine::Core::HitFeedbackComponent>()
+                       : nullptr;
+  return (feedback != nullptr) && feedback->is_reacting;
 }
 
 void submit_box(ISubmitter& out,
@@ -190,7 +207,7 @@ void submit_building_instance(ISubmitter& out,
                               const RenderArchetype& archetype,
                               std::span<const QVector3D> palette) {
   Texture* default_texture = building_white_texture(ctx);
-  RenderArchetypeLod lod =
+  RenderArchetypeLod const lod =
       select_render_archetype_lod(archetype, std::sqrt(ctx.distance_sq));
 
   int damage_id = 0;
@@ -315,9 +332,7 @@ void draw_building_health_bar(ISubmitter& out,
     return;
   }
 
-  auto* capture = building_capture(ctx);
-  bool const under_attack = (capture != nullptr) && capture->is_being_captured;
-  if (!under_attack && unit->health >= unit->max_health) {
+  if (!building_under_attack(ctx)) {
     return;
   }
 
@@ -325,120 +340,125 @@ void draw_building_health_bar(ISubmitter& out,
   float const bar_height = style.height;
   float const bar_y = style.y;
   constexpr float k_border_thickness = 0.012F;
+  constexpr float k_panel_depth = 0.09F;
+  constexpr float k_fill_depth = 0.078F;
+  QVector3D const frame_dark(0.08F, 0.05F, 0.03F);
+  QVector3D const frame_bronze(0.42F, 0.31F, 0.18F);
+  QVector3D const frame_highlight(0.82F, 0.68F, 0.34F);
+  QVector3D const shadow(0.01F, 0.01F, 0.01F);
 
-  if (under_attack) {
-    float const pulse =
-        HEALTHBAR_PULSE_MIN + HEALTHBAR_PULSE_AMPLITUDE *
-                                  std::sin(ctx.animation_time * HEALTHBAR_PULSE_SPEED);
+  float const pulse =
+      HEALTHBAR_PULSE_MIN +
+      HEALTHBAR_PULSE_AMPLITUDE * std::sin(ctx.animation_time * HEALTHBAR_PULSE_SPEED);
+  submit_box(
+      out,
+      ctx,
+      QVector3D(0.0F, bar_y - bar_height * 0.10F, -0.01F),
+      QVector3D(bar_width * 0.5F + k_border_thickness * 4.0F, bar_height * 0.9F, 0.11F),
+      HealthBarColors::GLOW_ATTACK * pulse * 0.75F);
+  submit_box(out,
+             ctx,
+             QVector3D(0.0F, bar_y - bar_height * 0.18F, -0.015F),
+             QVector3D(bar_width * 0.5F + k_border_thickness * 2.8F,
+                       bar_height * 0.8F,
+                       k_panel_depth),
+             shadow * 10.0F);
+  submit_box(out,
+             ctx,
+             QVector3D(0.0F, bar_y, 0.0F),
+             QVector3D(bar_width * 0.5F + k_border_thickness * 2.0F,
+                       bar_height * 0.70F + k_border_thickness,
+                       k_panel_depth),
+             frame_dark);
+  submit_box(out,
+             ctx,
+             QVector3D(0.0F, bar_y + bar_height * 0.02F, 0.002F),
+             QVector3D(bar_width * 0.5F + k_border_thickness,
+                       bar_height * 0.58F + k_border_thickness * 0.5F,
+                       k_panel_depth - 0.004F),
+             frame_bronze);
+  submit_box(out,
+             ctx,
+             QVector3D(0.0F, bar_y + bar_height * 0.06F, 0.004F),
+             QVector3D(bar_width * 0.5F, bar_height * 0.46F, k_panel_depth - 0.008F),
+             HealthBarColors::BACKGROUND * 0.75F);
+
+  for (float const x : {-bar_width * 0.5F - 0.035F, bar_width * 0.5F + 0.035F}) {
     submit_box(out,
                ctx,
-               QVector3D(0.0F, bar_y, 0.0F),
-               QVector3D(bar_width * 0.5F + k_border_thickness * 3.0F,
-                         bar_height * 0.5F + k_border_thickness * 3.0F,
-                         0.095F),
-               HealthBarColors::GLOW_ATTACK * pulse * 0.6F);
+               QVector3D(x, bar_y + bar_height * 0.03F, 0.002F),
+               QVector3D(0.025F, bar_height * 0.78F, 0.082F),
+               frame_bronze);
+    submit_box(out,
+               ctx,
+               QVector3D(x, bar_y + bar_height * 0.30F, 0.004F),
+               QVector3D(0.012F, bar_height * 0.16F, 0.078F),
+               frame_highlight);
   }
-
-  submit_box(out,
-             ctx,
-             QVector3D(0.0F, bar_y, 0.0F),
-             QVector3D(bar_width * 0.5F + k_border_thickness,
-                       bar_height * 0.5F + k_border_thickness,
-                       0.09F),
-             HealthBarColors::BORDER);
-  submit_box(out,
-             ctx,
-             QVector3D(0.0F, bar_y, 0.0F),
-             QVector3D(bar_width * 0.5F + k_border_thickness * 0.5F,
-                       bar_height * 0.5F + k_border_thickness * 0.5F,
-                       0.088F),
-             HealthBarColors::INNER_BORDER);
-  submit_box(out,
-             ctx,
-             QVector3D(0.0F, bar_y + 0.003F, 0.0F),
-             QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.085F),
-             HealthBarColors::BACKGROUND);
 
   auto [fg_color, fg_dark] = resolve_bar_colors(ratio);
   submit_box(out,
              ctx,
-             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.005F, 0.0F),
-             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.48F, 0.08F),
+             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
+                       bar_y + bar_height * 0.01F,
+                       0.006F),
+             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.34F, k_fill_depth),
              fg_dark);
-  submit_box(out,
-             ctx,
-             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.008F, 0.0F),
-             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.40F, 0.078F),
-             fg_color);
+  submit_box(
+      out,
+      ctx,
+      QVector3D(
+          -(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.06F, 0.009F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.26F, k_fill_depth - 0.006F),
+      fg_color);
 
   QVector3D const highlight = clamp_vec_01(fg_color * 1.6F);
   submit_box(
       out,
       ctx,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.35F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.20F, 0.075F),
+      QVector3D(
+          -(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.18F, 0.012F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.10F, k_fill_depth - 0.012F),
       highlight);
   submit_box(
       out,
       ctx,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.48F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.08F, 0.073F),
-      HealthBarColors::SHINE * 0.8F);
+      QVector3D(
+          -(bar_width * (1.0F - ratio)) * 0.5F, bar_y + bar_height * 0.27F, 0.014F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.04F, k_fill_depth - 0.016F),
+      HealthBarColors::SHINE * 0.9F);
 
   float const marker_70_x = bar_width * 0.5F * (HEALTH_THRESHOLD_NORMAL - 0.5F);
   submit_box(out,
              ctx,
-             QVector3D(marker_70_x, bar_y, 0.0F),
-             QVector3D(0.015F, bar_height * 0.55F, 0.09F),
+             QVector3D(marker_70_x, bar_y + bar_height * 0.03F, 0.011F),
+             QVector3D(0.013F, bar_height * 0.42F, k_fill_depth - 0.008F),
              HealthBarColors::SEGMENT);
-  if (style.draw_segment_highlights) {
-    submit_box(out,
-               ctx,
-               QVector3D(marker_70_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
-               QVector3D(0.008F, bar_height * 0.15F, 0.091F),
-               HealthBarColors::SEGMENT_HIGHLIGHT);
-  }
+  submit_box(out,
+             ctx,
+             QVector3D(marker_70_x - 0.002F, bar_y + bar_height * 0.18F, 0.013F),
+             QVector3D(0.006F, bar_height * 0.08F, k_fill_depth - 0.014F),
+             HealthBarColors::SEGMENT_HIGHLIGHT);
 
   float const marker_30_x = bar_width * 0.5F * (HEALTH_THRESHOLD_DAMAGED - 0.5F);
   submit_box(out,
              ctx,
-             QVector3D(marker_30_x, bar_y, 0.0F),
-             QVector3D(0.015F, bar_height * 0.55F, 0.09F),
+             QVector3D(marker_30_x, bar_y + bar_height * 0.03F, 0.011F),
+             QVector3D(0.013F, bar_height * 0.42F, k_fill_depth - 0.008F),
              HealthBarColors::SEGMENT);
+  submit_box(out,
+             ctx,
+             QVector3D(marker_30_x - 0.002F, bar_y + bar_height * 0.18F, 0.013F),
+             QVector3D(0.006F, bar_height * 0.08F, k_fill_depth - 0.014F),
+             HealthBarColors::SEGMENT_HIGHLIGHT);
+
   if (style.draw_segment_highlights) {
     submit_box(out,
                ctx,
-               QVector3D(marker_30_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
-               QVector3D(0.008F, bar_height * 0.15F, 0.091F),
-               HealthBarColors::SEGMENT_HIGHLIGHT);
+               QVector3D(0.0F, bar_y + bar_height * 0.34F, 0.010F),
+               QVector3D(bar_width * 0.48F, bar_height * 0.02F, k_fill_depth - 0.010F),
+               frame_highlight * (0.65F + 0.25F * pulse));
   }
-}
-
-void draw_building_compact_health_bar(ISubmitter& out,
-                                      const DrawContext& ctx,
-                                      float y) {
-  if (building_box_mesh(ctx) == nullptr) {
-    return;
-  }
-
-  float const ratio = resolve_building_health_ratio(ctx);
-  if (ratio <= 0.0F) {
-    return;
-  }
-
-  submit_box(out,
-             ctx,
-             QVector3D(0.0F, y, 0.0F),
-             QVector3D(0.6F, 0.03F, 0.05F),
-             QVector3D(0.06F, 0.06F, 0.06F));
-
-  QVector3D const fg = QVector3D(0.22F, 0.78F, 0.22F) * ratio +
-                       QVector3D(0.85F, 0.15F, 0.15F) * (1.0F - ratio);
-  submit_box(out,
-             ctx,
-             QVector3D(-0.3F * (1.0F - ratio), y + 0.01F, 0.0F),
-             QVector3D(0.3F * ratio, 0.025F, 0.045F),
-             fg);
 }
 
 void draw_building_selection_overlay(ISubmitter& out,
@@ -498,7 +518,7 @@ void register_building_renderer(EntityRendererRegistry& registry,
                                 std::string_view building_type,
                                 RenderFunc func) {
   const std::string canonical_key = building_renderer_key(nation_slug, building_type);
-  registry.register_renderer(canonical_key, func);
+  registry.register_renderer(canonical_key, std::move(func));
 }
 
 } // namespace Render::GL

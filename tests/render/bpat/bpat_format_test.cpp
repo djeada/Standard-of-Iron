@@ -9,6 +9,7 @@
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_reader.h"
 #include "render/creature/bpat/bpat_writer.h"
+#include "render/creature/pipeline/bpat_playback.h"
 
 using namespace Render::Creature::Bpat;
 
@@ -40,7 +41,7 @@ TEST(BpatFormat, HeaderAndEntrySizesAreFrozen) {
 }
 
 TEST(BpatWriter, RejectsEmptyClipList) {
-  BpatWriter w(k_species_humanoid, 20U);
+  BpatWriter const w(k_species_humanoid, 20U);
   std::stringstream ss;
   EXPECT_FALSE(w.write(ss));
 }
@@ -49,8 +50,8 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
   constexpr std::uint32_t bone_count = 20U;
   BpatWriter w(k_species_humanoid, bone_count);
 
-  ClipDescriptor idle{"idle", 4U, 30.0F, true};
-  ClipDescriptor walk{"walk", 6U, 30.0F, true};
+  ClipDescriptor const idle{"idle", 4U, 30.0F, true};
+  ClipDescriptor const walk{"walk", 6U, 30.0F, true};
 
   w.add_clip(idle);
   std::vector<QMatrix4x4> idle_palettes(bone_count * idle.frame_count);
@@ -108,12 +109,13 @@ TEST(BpatWriter, BakedSocketsRoundTrip) {
   w.add_socket({"hand_r", 13U, QVector3D(0.1F, -0.2F, 0.0F)});
   w.add_socket({"head", 5U, QVector3D(0.0F, 0.05F, 0.0F)});
 
-  ClipDescriptor c{"idle", 2U, 30.0F, true};
+  ClipDescriptor const c{"idle", 2U, 30.0F, true};
   w.add_clip(c);
 
   std::vector<QMatrix4x4> palettes(bone_count * c.frame_count);
-  for (auto& m : palettes)
+  for (auto& m : palettes) {
     m.setToIdentity();
+  }
   w.append_clip_palettes(palettes);
 
   std::vector<QMatrix4x4> sockets(2U * c.frame_count);
@@ -151,11 +153,12 @@ TEST(BpatReader, RejectsBadMagic) {
 
 TEST(BpatReader, RejectsTruncatedFile) {
   BpatWriter w(k_species_humanoid, 20U);
-  ClipDescriptor c{"idle", 1U, 30.0F, true};
+  ClipDescriptor const c{"idle", 1U, 30.0F, true};
   w.add_clip(c);
   std::vector<QMatrix4x4> palettes(20U);
-  for (auto& m : palettes)
+  for (auto& m : palettes) {
     m.setToIdentity();
+  }
   w.append_clip_palettes(palettes);
   auto bytes = serialize(w);
   bytes.resize(bytes.size() / 2U);
@@ -165,15 +168,44 @@ TEST(BpatReader, RejectsTruncatedFile) {
 
 TEST(BpatReader, RejectsBadVersion) {
   BpatWriter w(k_species_humanoid, 20U);
-  ClipDescriptor c{"idle", 1U, 30.0F, true};
+  ClipDescriptor const c{"idle", 1U, 30.0F, true};
   w.add_clip(c);
   std::vector<QMatrix4x4> palettes(20U);
-  for (auto& m : palettes)
+  for (auto& m : palettes) {
     m.setToIdentity();
+  }
   w.append_clip_palettes(palettes);
   auto bytes = serialize(w);
 
   bytes[4] = 99U;
   auto blob = BpatBlob::from_bytes(std::move(bytes));
   EXPECT_FALSE(blob.loaded());
+}
+
+TEST(BpatPlayback, ResolvesAdjacentFrameAndLerpForSmoothRiggedPlayback) {
+  BpatWriter w(k_species_humanoid, 1U);
+  ClipDescriptor const looping{"idle", 4U, 30.0F, true};
+  w.add_clip(looping);
+  std::vector<QMatrix4x4> palettes(looping.frame_count);
+  for (auto& m : palettes) {
+    m.setToIdentity();
+  }
+  w.append_clip_palettes(palettes);
+
+  auto bytes = serialize(w);
+  auto blob = BpatBlob::from_bytes(std::move(bytes));
+  ASSERT_TRUE(blob.loaded()) << blob.last_error();
+
+  auto const playback =
+      Render::Creature::Pipeline::resolve_bpat_playback(&blob, 0U, 0.375F);
+  ASSERT_TRUE(playback.valid());
+  EXPECT_EQ(playback.frame_in_clip, 1U);
+  EXPECT_EQ(playback.next_frame_in_clip, 2U);
+  EXPECT_FLOAT_EQ(playback.frame_lerp, 0.5F);
+
+  auto const wrap = Render::Creature::Pipeline::resolve_bpat_playback(&blob, 0U, 0.95F);
+  ASSERT_TRUE(wrap.valid());
+  EXPECT_EQ(wrap.frame_in_clip, 3U);
+  EXPECT_EQ(wrap.next_frame_in_clip, 0U);
+  EXPECT_GT(wrap.frame_lerp, 0.0F);
 }

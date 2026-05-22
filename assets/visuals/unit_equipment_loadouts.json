@@ -123,6 +123,7 @@
     "troops/roman/horse_archer": {
       "bow": "bow_roman",
       "quiver": "quiver",
+      "helmet": "roman_light",
       "armor": "roman_light_armor",
       "cloak": "cloak_roman",
       "horse_saddle": "roman_horse_saddle",

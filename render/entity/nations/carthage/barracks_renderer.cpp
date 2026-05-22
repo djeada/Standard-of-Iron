@@ -19,6 +19,7 @@
 #include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
@@ -39,6 +40,7 @@ struct CarthagePalette {
   QVector3D wood{0.42F, 0.28F, 0.16F};
   QVector3D wood_dark{0.32F, 0.20F, 0.10F};
   QVector3D iron{0.35F, 0.35F, 0.38F};
+  QVector3D royal_purple{0.46F, 0.22F, 0.44F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
@@ -75,54 +77,69 @@ void draw_fortress_base(const DrawContext& p,
                         ISubmitter& out,
                         Mesh* unit,
                         Texture* white,
-                        const CarthagePalette& c);
+                        const CarthagePalette& c,
+                        bool detailed);
 void draw_fortress_walls(const DrawContext& p,
                          ISubmitter& out,
                          Mesh* unit,
                          Texture* white,
                          const CarthagePalette& c,
-                         BuildingState state);
+                         BuildingState state,
+                         bool detailed);
 void draw_corner_towers(const DrawContext& p,
                         ISubmitter& out,
                         Mesh* unit,
                         Texture* white,
                         const CarthagePalette& c,
-                        BuildingState state);
+                        BuildingState state,
+                        bool detailed);
 void draw_courtyard(const DrawContext& p,
                     ISubmitter& out,
                     Mesh* unit,
                     Texture* white,
-                    const CarthagePalette& c);
+                    const CarthagePalette& c,
+                    BuildingState state,
+                    bool detailed);
 void draw_carthage_roof(const DrawContext& p,
                         ISubmitter& out,
                         Mesh* unit,
                         Texture* white,
                         const CarthagePalette& c,
-                        BuildingState state);
+                        BuildingState state,
+                        bool detailed);
 void draw_gate(const DrawContext& p,
                ISubmitter& out,
                Mesh* unit,
                Texture* white,
-               const CarthagePalette& c);
+               const CarthagePalette& c,
+               BuildingState state,
+               bool detailed);
 
 auto build_barracks_archetype(BuildingState state,
                               Mesh* unit,
                               Texture* white) -> RenderArchetype {
-  TemplateRecorder recorder;
-  recorder.reset(96);
-
-  DrawContext local_ctx;
-  local_ctx.model = QMatrix4x4{};
   CarthagePalette const palette = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+  auto record_variant = [&](TemplateRecorder& recorder, bool detailed) {
+    DrawContext local_ctx;
+    local_ctx.model = QMatrix4x4{};
+    draw_fortress_base(local_ctx, recorder, unit, white, palette, detailed);
+    draw_fortress_walls(local_ctx, recorder, unit, white, palette, state, detailed);
+    draw_corner_towers(local_ctx, recorder, unit, white, palette, state, detailed);
+    draw_courtyard(local_ctx, recorder, unit, white, palette, state, detailed);
+    draw_carthage_roof(local_ctx, recorder, unit, white, palette, state, detailed);
+    draw_gate(local_ctx, recorder, unit, white, palette, state, detailed);
+  };
 
-  draw_fortress_base(local_ctx, recorder, unit, white, palette);
-  draw_fortress_walls(local_ctx, recorder, unit, white, palette, state);
-  draw_corner_towers(local_ctx, recorder, unit, white, palette, state);
-  draw_courtyard(local_ctx, recorder, unit, white, palette);
-  draw_carthage_roof(local_ctx, recorder, unit, white, palette, state);
-  draw_gate(local_ctx, recorder, unit, white, palette);
-  return build_building_archetype_from_recorded("carthage_barracks",
-                                                recorder.take_commands());
+  TemplateRecorder full_recorder;
+  TemplateRecorder minimal_recorder;
+  full_recorder.reset(144);
+  minimal_recorder.reset(72);
+  record_variant(full_recorder, true);
+  record_variant(minimal_recorder, false);
+  return build_building_archetype_from_recorded_lods("carthage_barracks",
+                                                     full_recorder.take_commands(),
+                                                     minimal_recorder.take_commands(),
+                                                     70.0F);
 }
 
 auto barracks_archetype(BuildingState state,
@@ -139,7 +156,8 @@ void draw_fortress_base(const DrawContext& p,
                         ISubmitter& out,
                         Mesh* unit,
                         Texture* white,
-                        const CarthagePalette& c) {
+                        const CarthagePalette& c,
+                        bool detailed) {
 
   draw_box(out,
            unit,
@@ -148,6 +166,25 @@ void draw_fortress_base(const DrawContext& p,
            QVector3D(0.0F, 0.15F, 0.0F),
            QVector3D(1.8F, 0.15F, 1.5F),
            c.stone_base);
+
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 0.08F, 1.60F),
+           QVector3D(0.72F, 0.04F, 0.18F),
+           c.stone_dark);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 0.16F, 1.40F),
+           QVector3D(0.58F, 0.04F, 0.16F),
+           c.stone_light);
+
+  if (!detailed) {
+    return;
+  }
 
   for (float x = -1.6F; x <= 1.6F; x += 0.4F) {
     draw_box(out,
@@ -188,7 +225,8 @@ void draw_fortress_walls(const DrawContext& p,
                          Mesh* unit,
                          Texture* white,
                          const CarthagePalette& c,
-                         BuildingState state) {
+                         BuildingState state,
+                         bool detailed) {
   float const wall_height = 1.2F;
 
   float height_multiplier = 1.0F;
@@ -228,15 +266,64 @@ void draw_fortress_walls(const DrawContext& p,
            c.stone_light);
 
   if (state != BuildingState::Destroyed) {
-    for (int i = 0; i < 6; ++i) {
-      float const x = -1.2F + float(i) * 0.5F;
+    const int front_merlons = (state == BuildingState::Damaged) ? 4 : 6;
+    add_merlon_strip_x(
+        [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+          draw_box(out, unit, white, p.model, center, size, color);
+        },
+        wall_height * height_multiplier + 0.35F,
+        -1.25F,
+        (state == BuildingState::Damaged) ? -0.75F : -1.2F,
+        0.5F,
+        front_merlons,
+        QVector3D(0.2F, 0.05F, 0.05F),
+        c.brick);
+    if (detailed && state == BuildingState::Normal) {
+      add_merlon_strip_x(
+          [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+            draw_box(out, unit, white, p.model, center, size, color);
+          },
+          wall_height * height_multiplier + 0.35F,
+          1.25F,
+          -1.2F,
+          0.5F,
+          6,
+          QVector3D(0.2F, 0.05F, 0.05F),
+          c.brick);
+      add_merlon_strip_z(
+          [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+            draw_box(out, unit, white, p.model, center, size, color);
+          },
+          -1.55F,
+          wall_height * height_multiplier + 0.35F,
+          -0.95F,
+          0.48F,
+          5,
+          QVector3D(0.05F, 0.05F, 0.18F),
+          c.brick_dark);
+      add_merlon_strip_z(
+          [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+            draw_box(out, unit, white, p.model, center, size, color);
+          },
+          1.55F,
+          wall_height * height_multiplier + 0.35F,
+          -0.95F,
+          0.48F,
+          5,
+          QVector3D(0.05F, 0.05F, 0.18F),
+          c.brick_dark);
+    }
+  }
+
+  if (detailed && state != BuildingState::Destroyed) {
+    for (float const x : {-1.32F, 1.32F}) {
       draw_box(out,
                unit,
                white,
                p.model,
-               QVector3D(x, wall_height * height_multiplier + 0.35F, -1.25F),
-               QVector3D(0.2F, 0.05F, 0.05F),
-               c.brick);
+               QVector3D(x, 0.55F, 1.08F),
+               QVector3D(0.12F, 0.32F, 0.20F),
+               c.stone_dark);
     }
   }
 }
@@ -246,11 +333,12 @@ void draw_corner_towers(const DrawContext& p,
                         Mesh* unit,
                         Texture* white,
                         const CarthagePalette& c,
-                        BuildingState state) {
-  QVector3D corners[4] = {QVector3D(-1.5F, 0.0F, -1.2F),
-                          QVector3D(1.5F, 0.0F, -1.2F),
-                          QVector3D(-1.5F, 0.0F, 1.2F),
-                          QVector3D(1.5F, 0.0F, 1.2F)};
+                        BuildingState state,
+                        bool detailed) {
+  QVector3D const corners[4] = {QVector3D(-1.5F, 0.0F, -1.2F),
+                                QVector3D(1.5F, 0.0F, -1.2F),
+                                QVector3D(-1.5F, 0.0F, 1.2F),
+                                QVector3D(1.5F, 0.0F, 1.2F)};
 
   float height_multiplier = 1.0F;
   if (state == BuildingState::Damaged) {
@@ -259,13 +347,13 @@ void draw_corner_towers(const DrawContext& p,
     height_multiplier = 0.3F;
   }
 
-  for (int i = 0; i < 4; ++i) {
+  for (auto corner : corners) {
 
     draw_box(out,
              unit,
              white,
              p.model,
-             QVector3D(corners[i].x(), 0.65F * height_multiplier, corners[i].z()),
+             QVector3D(corner.x(), 0.65F * height_multiplier, corner.z()),
              QVector3D(0.25F, 0.65F * height_multiplier, 0.25F),
              c.stone_dark);
 
@@ -274,23 +362,24 @@ void draw_corner_towers(const DrawContext& p,
                unit,
                white,
                p.model,
-               QVector3D(corners[i].x(), 1.45F * height_multiplier, corners[i].z()),
+               QVector3D(corner.x(), 1.45F * height_multiplier, corner.z()),
                QVector3D(0.28F, 0.15F, 0.28F),
                c.brick_dark);
 
-      for (int j = 0; j < 4; ++j) {
-        float angle = float(j) * 1.57F;
-        float ox = sinf(angle) * 0.18F;
-        float oz = cosf(angle) * 0.18F;
-        draw_box(out,
-                 unit,
-                 white,
-                 p.model,
-                 QVector3D(corners[i].x() + ox,
-                           1.68F * height_multiplier,
-                           corners[i].z() + oz),
-                 QVector3D(0.06F, 0.08F, 0.06F),
-                 c.stone_light);
+      if (detailed) {
+        for (int j = 0; j < 4; ++j) {
+          float const angle = float(j) * 1.57F;
+          float const ox = sinf(angle) * 0.18F;
+          float const oz = cosf(angle) * 0.18F;
+          draw_box(
+              out,
+              unit,
+              white,
+              p.model,
+              QVector3D(corner.x() + ox, 1.68F * height_multiplier, corner.z() + oz),
+              QVector3D(0.06F, 0.08F, 0.06F),
+              c.stone_light);
+        }
       }
     }
   }
@@ -300,7 +389,9 @@ void draw_courtyard(const DrawContext& p,
                     ISubmitter& out,
                     Mesh* unit,
                     Texture* white,
-                    const CarthagePalette& c) {
+                    const CarthagePalette& c,
+                    BuildingState state,
+                    bool detailed) {
 
   draw_box(out,
            unit,
@@ -325,6 +416,46 @@ void draw_courtyard(const DrawContext& p,
            QVector3D(0.0F, 0.65F, -0.85F),
            QVector3D(0.35F, 0.35F, 0.08F),
            c.brick);
+
+  if (state != BuildingState::Destroyed) {
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, 0.92F, 0.10F),
+             QVector3D(0.36F, 0.05F, 0.24F),
+             c.royal_purple);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(-0.30F, 0.68F, 0.10F),
+             QVector3D(0.02F, 0.24F, 0.02F),
+             c.wood_dark);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.30F, 0.68F, 0.10F),
+             QVector3D(0.02F, 0.24F, 0.02F),
+             c.wood_dark);
+    if (detailed) {
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(0.0F, 1.18F, 0.05F),
+               QVector3D(0.18F, 0.10F, 0.18F),
+               c.stone_light);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(0.0F, 1.34F, 0.05F),
+               QVector3D(0.08F, 0.06F, 0.08F),
+               c.royal_purple);
+    }
+  }
 }
 
 void draw_carthage_roof(const DrawContext& p,
@@ -332,7 +463,8 @@ void draw_carthage_roof(const DrawContext& p,
                         Mesh* unit,
                         Texture* white,
                         const CarthagePalette& c,
-                        BuildingState state) {
+                        BuildingState state,
+                        bool detailed) {
 
   if (state == BuildingState::Destroyed) {
     return;
@@ -343,17 +475,26 @@ void draw_carthage_roof(const DrawContext& p,
            white,
            p.model,
            QVector3D(0.0F, 1.58F, 0.0F),
-           QVector3D(1.55F, 0.05F, 1.25F),
+           QVector3D(detailed ? 1.55F : 1.42F, 0.05F, detailed ? 1.25F : 1.14F),
            c.tile_red);
-
-  for (float z = -1.0F; z <= 1.0F; z += 0.3F) {
+  add_tile_rows_z(
+      [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+        draw_box(out, unit, white, p.model, center, size, color);
+      },
+      1.62F,
+      -1.0F,
+      1.0F,
+      0.3F,
+      QVector3D(detailed ? 1.5F : 1.34F, 0.02F, 0.08F),
+      c.tile_dark);
+  if (detailed && state == BuildingState::Normal) {
     draw_box(out,
              unit,
              white,
              p.model,
-             QVector3D(0.0F, 1.62F, z),
-             QVector3D(1.5F, 0.02F, 0.08F),
-             c.tile_dark);
+             QVector3D(0.0F, 1.76F, -0.10F),
+             QVector3D(0.42F, 0.04F, 0.24F),
+             c.stone_dark);
   }
 }
 
@@ -361,18 +502,24 @@ void draw_gate(const DrawContext& p,
                ISubmitter& out,
                Mesh* unit,
                Texture* white,
-               const CarthagePalette& c) {
+               const CarthagePalette& c,
+               BuildingState state,
+               bool detailed) {
+  const float gate_half_height = (state == BuildingState::Destroyed) ? 0.32F
+                                 : (state == BuildingState::Damaged) ? 0.48F
+                                                                     : 0.60F;
 
   draw_box(out,
            unit,
            white,
            p.model,
-           QVector3D(0.0F, 0.6F, 1.35F),
-           QVector3D(0.5F, 0.6F, 0.08F),
+           QVector3D(0.0F, gate_half_height, 1.35F),
+           QVector3D(0.5F, gate_half_height, 0.08F),
            c.wood_dark);
 
-  for (int i = 0; i < 3; ++i) {
-    float y = 0.3F + float(i) * 0.3F;
+  const int strap_count = detailed ? 3 : 2;
+  for (int i = 0; i < strap_count; ++i) {
+    float const y = 0.3F + float(i) * 0.3F;
     draw_box(out,
              unit,
              white,
@@ -380,6 +527,15 @@ void draw_gate(const DrawContext& p,
              QVector3D(0.0F, y, 1.37F),
              QVector3D(0.45F, 0.03F, 0.02F),
              c.iron);
+  }
+  if (state != BuildingState::Destroyed) {
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, gate_half_height * 2.0F + 0.10F, 1.28F),
+             QVector3D(0.58F, 0.05F, 0.12F),
+             c.brick_dark);
   }
 }
 
@@ -421,26 +577,29 @@ void draw_rally_flag(const DrawContext& p,
                      Texture* white,
                      const CarthagePalette& c,
                      const BarracksFlagRenderer::ClothBannerResources* cloth) {
-  BarracksFlagRenderer::FlagColors colors{.team = c.team,
-                                          .team_trim = c.team_trim,
-                                          .timber = c.wood,
-                                          .timber_light = c.stone_light,
-                                          .wood_dark = c.wood_dark};
+  BarracksFlagRenderer::FlagColors const colors{.team = c.team,
+                                                .team_trim = c.team_trim,
+                                                .timber = c.wood,
+                                                .timber_light = c.stone_light,
+                                                .wood_dark = c.wood_dark};
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors, cloth);
 }
 
 void draw_barracks(const DrawContext& p, ISubmitter& out) {
-  if (!p.resources || !p.entity) {
+  if ((p.resources == nullptr) || (p.entity == nullptr)) {
     return;
   }
 
   auto* t = p.entity->get_component<Engine::Core::TransformComponent>();
   auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if (!t || !r) {
+  if ((t == nullptr) || (r == nullptr)) {
     return;
   }
 
   Mesh* unit = p.resources->unit();
+  if (unit == nullptr) {
+    unit = get_unit_cube();
+  }
   Texture* white = p.resources->white();
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
   CarthagePalette const c = make_palette(team);

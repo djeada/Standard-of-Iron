@@ -145,12 +145,16 @@ TEST(HorsePrepare, MountFrameSeatsRiderOverMiddleTorso) {
   auto const mount = Render::GL::compute_mount_frame(profile);
   auto const& d = profile.dims;
 
-  EXPECT_GT(mount.saddle_center.z(), -d.body_length * 0.05F);
-  EXPECT_LT(mount.saddle_center.z(), d.body_length * 0.10F);
-  EXPECT_GT(mount.seat_position.z(), mount.saddle_center.z() - 0.001F);
-  EXPECT_GT(mount.saddle_center.y(), d.saddle_height + d.body_height * 0.14F);
-  EXPECT_GT(mount.seat_position.y(), d.saddle_height + d.body_height * 0.34F);
+  EXPECT_GT(mount.saddle_center.z(), d.body_length * 0.04F);
+  EXPECT_LT(mount.saddle_center.z(), d.body_length * 0.16F);
+  EXPECT_GT(mount.seat_position.z(), mount.saddle_center.z() + d.body_length * 0.02F);
+  EXPECT_GT(mount.saddle_center.y(), d.saddle_height + d.body_height * 0.22F);
+  EXPECT_GT(mount.seat_position.y(), d.saddle_height + d.body_height * 0.44F);
   EXPECT_GT(mount.seat_position.y(), mount.saddle_center.y() + d.body_height * 0.16F);
+  EXPECT_GT(std::abs(mount.stirrup_bottom_left.x()), d.body_width * 0.72F);
+  EXPECT_GT(std::abs(mount.stirrup_bottom_right.x()), d.body_width * 0.72F);
+  EXPECT_GT(mount.stirrup_bottom_left.z(), mount.saddle_center.z());
+  EXPECT_GT(mount.stirrup_bottom_right.z(), mount.saddle_center.z());
 }
 
 TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {

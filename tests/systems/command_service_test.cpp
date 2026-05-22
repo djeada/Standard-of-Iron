@@ -517,6 +517,47 @@ TEST_F(CommandServiceTest, LocalRecoveryCanRelaxRadiusToEscapeBoundaryTrap) {
   EXPECT_FLOAT_EQ(movement->goal_y, 0.0F);
 }
 
+TEST_F(CommandServiceTest, PersistentInvalidPositionRetargetsToNearbyRecoveryCell) {
+  Game::Systems::CommandService::initialize(16, 16);
+  Engine::Core::World world;
+
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  auto* transform = unit->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  movement->has_target = true;
+  movement->target_x = 6.0F;
+  movement->target_y = 0.0F;
+  movement->goal_x = 6.0F;
+  movement->goal_y = 0.0F;
+
+  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_building_obstacles();
+
+  for (int world_x = 0; world_x <= 3; ++world_x) {
+    Game::Systems::Point const blocked =
+        Game::Systems::CommandService::world_to_grid(static_cast<float>(world_x), 0.0F);
+    pathfinder->set_obstacle(blocked.x, blocked.y, true);
+  }
+
+  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+
+  for (int i = 0; i < 8; ++i) {
+    world.update(0.1F);
+  }
+
+  Game::Systems::Point const current_grid =
+      Game::Systems::CommandService::world_to_grid(transform->position.x,
+                                                   transform->position.z);
+  EXPECT_TRUE(pathfinder->is_walkable(current_grid.x, current_grid.y));
+  EXPECT_FLOAT_EQ(movement->goal_x, 6.0F);
+  EXPECT_FLOAT_EQ(movement->goal_y, 0.0F);
+}
+
 TEST_F(CommandServiceTest, GroupBridgeCrossingUsesSharedBridgeCenterlineWaypoints) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 21;

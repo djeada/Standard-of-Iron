@@ -6,6 +6,9 @@
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/helmets/carthage_light_helmet.h"
 #include "render/equipment/helmets/headwrap.h"
+#include "render/equipment/helmets/helmet_alignment.h"
+#include "render/equipment/helmets/roman_heavy_helmet.h"
+#include "render/equipment/helmets/roman_light_helmet.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/palette.h"
 #include "render/submitter.h"
@@ -164,6 +167,42 @@ TEST_F(HelmetRenderersTest, CarthageLightHelmetHandlesZeroHeadRadius) {
   EXPECT_EQ(draw_count_of(submitter), 0);
 }
 
+TEST_F(HelmetRenderersTest, RomanHeavyHelmetRendersWithValidFrames) {
+  RomanHeavyHelmetRenderer helmet;
+
+  helmet.render(ctx, frames, palette, anim, submitter);
+
+  EXPECT_GT(submitter.archetypes.size(), 0U);
+  EXPECT_GE(draw_count_of(submitter), 20);
+}
+
+TEST_F(HelmetRenderersTest, RomanHeavyHelmetHandlesZeroHeadRadius) {
+  RomanHeavyHelmetRenderer helmet;
+  frames.head.radius = 0.0F;
+
+  helmet.render(ctx, frames, palette, anim, submitter);
+
+  EXPECT_EQ(draw_count_of(submitter), 0);
+}
+
+TEST_F(HelmetRenderersTest, RomanLightHelmetRendersWithValidFrames) {
+  RomanLightHelmetRenderer helmet;
+
+  helmet.render(ctx, frames, palette, anim, submitter);
+
+  EXPECT_GT(submitter.archetypes.size(), 0U);
+  EXPECT_GE(draw_count_of(submitter), 8);
+}
+
+TEST_F(HelmetRenderersTest, RomanLightHelmetHandlesZeroHeadRadius) {
+  RomanLightHelmetRenderer helmet;
+  frames.head.radius = 0.0F;
+
+  helmet.render(ctx, frames, palette, anim, submitter);
+
+  EXPECT_EQ(draw_count_of(submitter), 0);
+}
+
 TEST_F(HelmetRenderersTest, HeadwrapRendersWithValidFrames) {
   HeadwrapRenderer headwrap;
 
@@ -186,47 +225,24 @@ TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
   auto& registry = EquipmentRegistry::instance();
 
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "carthage_heavy"));
-  auto carthage_heavy = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
-  ASSERT_NE(carthage_heavy, nullptr);
+  EXPECT_NE(registry.resolve_handle(EquipmentCategory::Helmet, "carthage_heavy"),
+            k_invalid_equipment_handle);
 
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "carthage_light"));
-  auto carthage_light = registry.get(EquipmentCategory::Helmet, "carthage_light");
-  ASSERT_NE(carthage_light, nullptr);
+  EXPECT_NE(registry.resolve_handle(EquipmentCategory::Helmet, "carthage_light"),
+            k_invalid_equipment_handle);
+
+  EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "roman_heavy"));
+  EXPECT_NE(registry.resolve_handle(EquipmentCategory::Helmet, "roman_heavy"),
+            k_invalid_equipment_handle);
+
+  EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "roman_light"));
+  EXPECT_NE(registry.resolve_handle(EquipmentCategory::Helmet, "roman_light"),
+            k_invalid_equipment_handle);
 
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "headwrap"));
-  auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
-  ASSERT_NE(headwrap, nullptr);
-}
-
-TEST_F(HelmetRenderersTest, CarthageHeavyHelmetFromRegistryRenders) {
-  auto& registry = EquipmentRegistry::instance();
-  auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
-  ASSERT_NE(helmet, nullptr);
-
-  helmet->render(ctx, frames, palette, anim, submitter);
-
-  EXPECT_GT(draw_count_of(submitter), 0);
-}
-
-TEST_F(HelmetRenderersTest, CarthageLightHelmetFromRegistryRenders) {
-  auto& registry = EquipmentRegistry::instance();
-  auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_light");
-  ASSERT_NE(helmet, nullptr);
-
-  helmet->render(ctx, frames, palette, anim, submitter);
-
-  EXPECT_GE(draw_count_of(submitter), 20);
-}
-
-TEST_F(HelmetRenderersTest, HeadwrapFromRegistryRenders) {
-  auto& registry = EquipmentRegistry::instance();
-  auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
-  ASSERT_NE(headwrap, nullptr);
-
-  headwrap->render(ctx, frames, palette, anim, submitter);
-
-  EXPECT_GT(submitter.archetypes.size(), 0U);
-  EXPECT_GT(draw_count_of(submitter), 0);
+  EXPECT_NE(registry.resolve_handle(EquipmentCategory::Helmet, "headwrap"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {
@@ -248,9 +264,67 @@ TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {
   light_helmet.render(ctx, frames, palette, anim, submitter_light);
   EXPECT_GE(draw_count_of(submitter_light), 20);
 
+  RomanHeavyHelmetRenderer heavy_roman_helmet;
+  MockSubmitter submitter_heavy_roman;
+  heavy_roman_helmet.render(ctx, frames, palette, anim, submitter_heavy_roman);
+  EXPECT_GE(draw_count_of(submitter_heavy_roman), 20);
+
+  RomanLightHelmetRenderer light_roman_helmet;
+  MockSubmitter submitter_light_roman;
+  light_roman_helmet.render(ctx, frames, palette, anim, submitter_light_roman);
+  EXPECT_GE(draw_count_of(submitter_light_roman), 8);
+
   HeadwrapRenderer headwrap;
   MockSubmitter submitter2;
   headwrap.render(ctx, frames, palette, anim, submitter2);
 
   EXPECT_GT(draw_count_of(submitter2), 0);
+}
+
+TEST_F(HelmetRenderersTest, HelmetsApplyVisibleVerticalOffset) {
+  auto const expected_origin =
+      frames.head.origin +
+      frames.head.up *
+          (k_helmet_local_offset.y() * frames.head.radius * k_helmet_uniform_scale);
+
+  CarthageHeavyHelmetRenderer carthage_heavy;
+  carthage_heavy.render(ctx, frames, palette, anim, submitter);
+  ASSERT_FALSE(submitter.archetypes.empty());
+  auto const carthage_heavy_origin =
+      submitter.archetypes.front().world.column(3).toVector3D();
+  EXPECT_NEAR(carthage_heavy_origin.x(), expected_origin.x(), 1.0e-5F);
+  EXPECT_NEAR(carthage_heavy_origin.y(), expected_origin.y(), 1.0e-5F);
+  EXPECT_NEAR(carthage_heavy_origin.z(), expected_origin.z(), 1.0e-5F);
+  EXPECT_GT(carthage_heavy_origin.y(), frames.head.origin.y());
+
+  MockSubmitter headwrap_submitter;
+  HeadwrapRenderer headwrap;
+  headwrap.render(ctx, frames, palette, anim, headwrap_submitter);
+  ASSERT_FALSE(headwrap_submitter.archetypes.empty());
+  auto const headwrap_origin =
+      headwrap_submitter.archetypes.front().world.column(3).toVector3D();
+  EXPECT_NEAR(headwrap_origin.x(), expected_origin.x(), 1.0e-5F);
+  EXPECT_NEAR(headwrap_origin.y(), expected_origin.y(), 1.0e-5F);
+  EXPECT_NEAR(headwrap_origin.z(), expected_origin.z(), 1.0e-5F);
+}
+
+TEST_F(HelmetRenderersTest, HelmetsApplyUniformScale) {
+  auto const expected_scale = frames.head.radius * k_helmet_uniform_scale;
+
+  RomanHeavyHelmetRenderer heavy_helmet;
+  heavy_helmet.render(ctx, frames, palette, anim, submitter);
+  ASSERT_FALSE(submitter.archetypes.empty());
+  auto const heavy_world = submitter.archetypes.front().world;
+  EXPECT_NEAR(heavy_world.column(0).toVector3D().length(), expected_scale, 1.0e-5F);
+  EXPECT_NEAR(heavy_world.column(1).toVector3D().length(), expected_scale, 1.0e-5F);
+  EXPECT_NEAR(heavy_world.column(2).toVector3D().length(), expected_scale, 1.0e-5F);
+
+  MockSubmitter headwrap_submitter;
+  HeadwrapRenderer headwrap;
+  headwrap.render(ctx, frames, palette, anim, headwrap_submitter);
+  ASSERT_FALSE(headwrap_submitter.archetypes.empty());
+  auto const headwrap_world = headwrap_submitter.archetypes.front().world;
+  EXPECT_NEAR(headwrap_world.column(0).toVector3D().length(), expected_scale, 1.0e-5F);
+  EXPECT_NEAR(headwrap_world.column(1).toVector3D().length(), expected_scale, 1.0e-5F);
+  EXPECT_NEAR(headwrap_world.column(2).toVector3D().length(), expected_scale, 1.0e-5F);
 }

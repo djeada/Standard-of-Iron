@@ -21,12 +21,12 @@
     {
       "type": "clear_undead_zone",
       "zone_id": "ruins_guard",
-      "description": "Clear the undead guarding the ruined sepulcher."
+      "description": "Burn every cursed guardian from the sepulcher ruins. Kill what cannot die."
     },
     {
       "type": "purify_shrine",
       "zone_id": "shrine_sentinels",
-      "description": "Purge the magic shrine of undead sentinels."
+      "description": "Drive the dead from the shrine. Salt the earth where they stood."
     }
   ],
   "optional_objectives": [
@@ -34,18 +34,19 @@
       "type": "survive_undead_wave",
       "zone_id": "ruins_guard",
       "wave_count": 2,
-      "description": "Endure both sepulcher waves."
+      "description": "Endure both waves from the depths. Do not flinch when the ground tears open."
     }
   ],
   "defeat_conditions": [
     {
       "type": "lose_commander",
-      "description": "Your commander must survive."
+      "description": "The commander falls — the vigil ends. And the dead keep walking."
     },
     {
       "type": "only_commander_remaining",
-      "description": "Your formation cannot be reduced to the commander alone."
+      "description": "Stand your ground. The last soldier alone is not a force — he is a sacrifice."
     }
   ],
-  "events": []
+  "events": [],
+  "theme": "The dead do not rest here. Neither will you."
 }

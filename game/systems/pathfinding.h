@@ -108,6 +108,9 @@ private:
   auto find_path_internal(const Point& start,
                           const Point& end,
                           float unit_radius) -> std::vector<Point>;
+  auto resolve_walkable_endpoint(const Point& requested,
+                                 float unit_radius,
+                                 Point& resolved) const -> bool;
 
   static auto calculate_heuristic(const Point& a, const Point& b) -> int;
 

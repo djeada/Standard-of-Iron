@@ -366,17 +366,24 @@ auto AudioResourceLoader::ensure_audio_resource_loaded(const QString& resource_i
 
 auto AudioResourceLoader::find_first_resource_id(
     AudioCategory category, const QMap<QString, QString>& tags) -> QString {
+  const QStringList resource_ids = find_resource_ids(category, tags);
+  return resource_ids.isEmpty() ? QString{} : resource_ids.front();
+}
+
+auto AudioResourceLoader::find_resource_ids(
+    AudioCategory category, const QMap<QString, QString>& tags) -> QStringList {
   std::lock_guard<std::mutex> const lock(registry_mutex());
   cache_manifest_locked();
 
+  QStringList matches;
   const auto& registry = manifest_registry();
   for (const auto& entry : registry.entries) {
     if (entry.config.category != category) {
       continue;
     }
     if (tags_match(entry, tags)) {
-      return entry.id;
+      matches.push_back(entry.id);
     }
   }
-  return {};
+  return matches;
 }

@@ -18,6 +18,16 @@ namespace {
 
 thread_local std::mt19937 gen(std::random_device{}());
 
+auto is_enemy_tower_building(Engine::Core::Entity* entity) -> bool {
+  if ((entity == nullptr) ||
+      !entity->has_component<Engine::Core::BuildingComponent>()) {
+    return false;
+  }
+
+  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  return (unit != nullptr) && unit->spawn_type == Game::Units::SpawnType::DefenseTower;
+}
+
 auto find_nearest_enemy_in_range(Engine::Core::Entity* tower,
                                  Engine::Core::World* world,
                                  float range,
@@ -57,7 +67,8 @@ auto find_nearest_enemy_in_range(Engine::Core::Entity* tower,
       continue;
     }
 
-    if (entity->has_component<Engine::Core::BuildingComponent>()) {
+    if (entity->has_component<Engine::Core::BuildingComponent>() &&
+        !is_enemy_tower_building(entity)) {
       continue;
     }
 

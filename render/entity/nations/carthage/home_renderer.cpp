@@ -9,6 +9,7 @@
 #include "../../../geom/math_utils.h"
 #include "../../../submitter.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
@@ -30,6 +31,7 @@ struct CarthagePalette {
   QVector3D tile_dark{0.58F, 0.30F, 0.22F};
   QVector3D wood{0.42F, 0.28F, 0.16F};
   QVector3D wood_dark{0.32F, 0.20F, 0.10F};
+  QVector3D royal_purple{0.46F, 0.22F, 0.44F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
@@ -108,51 +110,65 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                QVector3D(1.00F, 0.05F, 1.00F),
                c.tile_red,
                k_building_state_mask_intact);
-  for (float z = -0.80F; z <= 0.80F; z += 0.32F) {
-    desc.add_box(QVector3D(0.0F, 1.13F, z),
-                 QVector3D(0.96F, 0.02F, 0.06F),
-                 c.tile_dark,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
-  }
+  add_tile_rows_z(
+      [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+        desc.add_box(
+            center, size, color, k_building_state_mask_intact, BuildingLODMask::Full);
+      },
+      1.13F,
+      -0.80F,
+      0.80F,
+      0.32F,
+      QVector3D(0.96F, 0.02F, 0.06F),
+      c.tile_dark);
 
   float const parapet_y = 1.14F;
   float const merlon_h = 0.12F;
-
-  for (int i = 0; i < 4; ++i) {
-    float const mx = -0.54F + float(i) * 0.36F;
-    desc.add_box(QVector3D(mx, parapet_y, -0.92F),
-                 QVector3D(0.14F, merlon_h, 0.10F),
-                 c.brick,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
-  }
-
-  for (int i = 0; i < 2; ++i) {
-    desc.add_box(QVector3D(-0.76F + float(i) * 0.34F, parapet_y, 0.92F),
-                 QVector3D(0.14F, merlon_h, 0.10F),
-                 c.brick,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.42F + float(i) * 0.34F, parapet_y, 0.92F),
-                 QVector3D(0.14F, merlon_h, 0.10F),
-                 c.brick,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
-  }
-
-  for (float const zp : {-0.55F, 0.0F, 0.55F}) {
-    desc.add_box(QVector3D(-0.92F, parapet_y, zp),
-                 QVector3D(0.10F, merlon_h, 0.14F),
-                 c.brick,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.92F, parapet_y, zp),
-                 QVector3D(0.10F, merlon_h, 0.14F),
-                 c.brick,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
-  }
+  auto add_merlon =
+      [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+        desc.add_box(
+            center, size, color, k_building_state_mask_intact, BuildingLODMask::Full);
+      };
+  add_merlon_strip_x(add_merlon,
+                     parapet_y,
+                     -0.92F,
+                     -0.54F,
+                     0.36F,
+                     4,
+                     QVector3D(0.14F, merlon_h, 0.10F),
+                     c.brick);
+  add_merlon_strip_x(add_merlon,
+                     parapet_y,
+                     0.92F,
+                     -0.76F,
+                     0.34F,
+                     2,
+                     QVector3D(0.14F, merlon_h, 0.10F),
+                     c.brick);
+  add_merlon_strip_x(add_merlon,
+                     parapet_y,
+                     0.92F,
+                     0.42F,
+                     0.34F,
+                     2,
+                     QVector3D(0.14F, merlon_h, 0.10F),
+                     c.brick);
+  add_merlon_strip_z(add_merlon,
+                     -0.92F,
+                     parapet_y,
+                     -0.55F,
+                     0.55F,
+                     3,
+                     QVector3D(0.10F, merlon_h, 0.14F),
+                     c.brick);
+  add_merlon_strip_z(add_merlon,
+                     0.92F,
+                     parapet_y,
+                     -0.55F,
+                     0.55F,
+                     3,
+                     QVector3D(0.10F, merlon_h, 0.14F),
+                     c.brick);
 
   desc.add_box(
       QVector3D(0.0F, 0.46F, 0.95F), QVector3D(0.30F, 0.46F, 0.05F), c.wood_dark);
@@ -196,6 +212,36 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.stone_base,
                k_building_state_mask_intact,
                BuildingLODMask::Full);
+
+  if (state != BuildingState::Destroyed) {
+    desc.add_box(QVector3D(0.0F, 0.76F, 1.02F),
+                 QVector3D(0.42F, 0.04F, 0.10F),
+                 c.royal_purple,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
+    desc.add_box(QVector3D(-0.34F, 0.60F, 0.98F),
+                 QVector3D(0.02F, 0.18F, 0.02F),
+                 c.wood_dark,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
+    desc.add_box(QVector3D(0.34F, 0.60F, 0.98F),
+                 QVector3D(0.02F, 0.18F, 0.02F),
+                 c.wood_dark,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
+    desc.add_box(QVector3D(0.0F, 1.32F, -0.08F),
+                 QVector3D(0.24F, 0.10F, 0.24F),
+                 c.stone_light,
+                 k_building_state_mask_intact,
+                 BuildingLODMask::Full);
+    if (state == BuildingState::Normal) {
+      desc.add_box(QVector3D(0.0F, 1.46F, -0.08F),
+                   QVector3D(0.10F, 0.06F, 0.10F),
+                   c.royal_purple,
+                   BuildingStateMask::Normal,
+                   BuildingLODMask::Full);
+    }
+  }
 
   desc.add_palette_box(QVector3D(0.0F, 0.78F, 0.99F),
                        QVector3D(0.28F, 0.10F, 0.02F),

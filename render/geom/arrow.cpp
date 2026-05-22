@@ -26,7 +26,7 @@ static auto create_arrow_shaft_mesh() -> std::unique_ptr<GL::Mesh> {
 
   constexpr int k_arrow_radial_segments = 12;
   const float shaft_radius = 0.05F;
-  const float shaft_len = 0.85F;
+  const float shaft_len = Arrow::k_shaft_length;
 
   int const base_index = 0;
   for (int ring = 0; ring < 2; ++ring) {
@@ -66,17 +66,18 @@ static auto create_arrow_tip_mesh() -> std::unique_ptr<GL::Mesh> {
 
   constexpr int k_arrow_radial_segments = 12;
   const float shaft_radius = 0.05F;
-  const float shaft_len = 0.85F;
-  const float tip_len = 0.15F;
+  const float shaft_len = Arrow::k_shaft_length;
+  const float tip_len = Arrow::k_tip_length;
   const float tip_start_z = shaft_len;
   const float tip_end_z = shaft_len + tip_len;
+  const float tip_base_radius = shaft_radius * Arrow::k_tip_base_radius_scale;
 
   int const ring_start = 0;
   for (int i = 0; i < k_arrow_radial_segments; ++i) {
     float const a = (float(i) / k_arrow_radial_segments) * 6.2831853F;
-    float x = std::cos(a) * shaft_radius * 1.4F;
-    float y = std::sin(a) * shaft_radius * 1.4F;
-    QVector3D n(x, y, 0.2F);
+    float x = std::cos(a) * tip_base_radius;
+    float y = std::sin(a) * tip_base_radius;
+    QVector3D n(x, y, 0.32F);
     n.normalize();
     verts.push_back({{x, y, tip_start_z},
                      {n.x(), n.y(), n.z()},
@@ -251,7 +252,7 @@ void render_arrows(Renderer* renderer,
     QVector3D const fletch_color =
         scaled_color(Geom::Arrow::fletch_color(arrow.color), arrow.brightness);
     QVector3D const tip_color =
-        scaled_color(QVector3D(0.70F, 0.72F, 0.75F), 0.95F + (arrow.brightness * 0.1F));
+        Geom::Arrow::tip_color(0.94F + (arrow.brightness * 0.12F));
 
     if (arrow.trail_alpha > 0.001F && arrow.trail_length > 0.0F) {
       float const tail_t = std::max(0.0F, clamped_t - arrow.trail_length);

@@ -240,6 +240,39 @@ auto build_building_archetype_from_recorded(
   return std::move(builder).build();
 }
 
+auto build_building_archetype_from_recorded_lods(
+    std::string name,
+    const std::vector<RecordedMeshCmd>& full_commands,
+    const std::vector<RecordedMeshCmd>& minimal_commands,
+    float full_lod_max_distance) -> RenderArchetype {
+  RenderArchetypeBuilder builder(std::move(name));
+  builder.set_max_distance(full_lod_max_distance);
+
+  for (const auto& cmd : full_commands) {
+    builder.add_mesh(cmd.mesh,
+                     cmd.local_model,
+                     cmd.color,
+                     cmd.texture,
+                     cmd.alpha,
+                     cmd.material_id,
+                     const_cast<Material*>(cmd.material));
+  }
+
+  builder.use_lod(RenderArchetypeLod::Minimal);
+  builder.set_max_distance(std::numeric_limits<float>::infinity());
+  for (const auto& cmd : minimal_commands) {
+    builder.add_mesh(cmd.mesh,
+                     cmd.local_model,
+                     cmd.color,
+                     cmd.texture,
+                     cmd.alpha,
+                     cmd.material_id,
+                     const_cast<Material*>(cmd.material));
+  }
+
+  return std::move(builder).build();
+}
+
 auto BuildingArchetypeSet::for_state(BuildingState state) const
     -> const RenderArchetype& {
   return states[state_index(state)];

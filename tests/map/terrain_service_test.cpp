@@ -11,6 +11,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "render/gl/camera.h"
+#include "render/ground/spawn_validator.h"
 #include "render/scene_renderer.h"
 
 namespace {
@@ -24,6 +25,27 @@ protected:
     Game::Map::TerrainService::instance().clear();
   }
 };
+
+auto runtime_tree_count(const Game::Map::TerrainService& terrain) -> std::size_t {
+  return static_cast<std::size_t>(std::count_if(
+      terrain.world_props().begin(), terrain.world_props().end(), [](const auto& prop) {
+        return !prop.persistent && Game::Map::is_tree_world_prop_type(prop.type);
+      }));
+}
+
+auto runtime_trees_respect_road_clearance(const Game::Map::TerrainService& terrain,
+                                          float clearance) -> bool {
+  return std::none_of(
+      terrain.world_props().begin(),
+      terrain.world_props().end(),
+      [&](const auto& prop) {
+        if (prop.persistent || !Game::Map::is_tree_world_prop_type(prop.type)) {
+          return false;
+        }
+        QVector3D const world_pos = terrain.world_prop_world_position(prop);
+        return terrain.is_point_near_road(world_pos.x(), world_pos.z(), clearance);
+      });
+}
 
 TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {
   Game::Map::MapDefinition map_def;
@@ -132,6 +154,24 @@ TEST_F(TerrainServiceTest, LargeMapsGenerateRuntimeHarvestScatterOnce) {
                             return !prop.persistent &&
                                    Game::Map::is_harvestable_world_prop_type(prop.type);
                           }));
+}
+
+TEST_F(TerrainServiceTest, GeneratedRuntimeTreesAvoidRoadClearanceOnInitialize) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 96;
+  map_def.grid.height = 96;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.seed = 4242U;
+  Game::Map::apply_ground_type_defaults(map_def.biome, Game::Map::GroundType::GrassDry);
+  map_def.roads.push_back(
+      {QVector3D(-40.0F, 0.0F, 0.0F), QVector3D(40.0F, 0.0F, 0.0F), 4.0F});
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+
+  float const clearance = Render::Ground::make_tree_spawn_config().road_clearance;
+  EXPECT_GT(runtime_tree_count(terrain), 0U);
+  EXPECT_TRUE(runtime_trees_respect_road_clearance(terrain, clearance));
 }
 
 TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
@@ -288,6 +328,27 @@ TEST_F(TerrainServiceTest, RestoringLegacyTerrainBackfillsRuntimeHarvestScatter)
                             return !prop.persistent &&
                                    Game::Map::is_harvestable_world_prop_type(prop.type);
                           }));
+}
+
+TEST_F(TerrainServiceTest, RestoringLegacyTerrainBackfillsTreesAwayFromRoads) {
+  std::vector<float> const heights(96 * 96, 0.0F);
+  std::vector<Game::Map::TerrainType> const terrain_types(heights.size(),
+                                                          Game::Map::TerrainType::Flat);
+  std::vector<Game::Map::RoadSegment> const roads{
+      {.start = QVector3D(-40.0F, 0.0F, 0.0F),
+       .end = QVector3D(40.0F, 0.0F, 0.0F),
+       .width = 4.0F}};
+  Game::Map::BiomeSettings biome;
+  biome.seed = 9001U;
+  Game::Map::apply_ground_type_defaults(biome, Game::Map::GroundType::GrassDry);
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.restore_from_serialized(
+      96, 96, 1.0F, heights, terrain_types, {}, roads, {}, biome);
+
+  float const clearance = Render::Ground::make_tree_spawn_config().road_clearance;
+  EXPECT_GT(runtime_tree_count(terrain), 0U);
+  EXPECT_TRUE(runtime_trees_respect_road_clearance(terrain, clearance));
 }
 
 TEST_F(TerrainServiceTest, SurfaceHeightResolverUsesFallbackWhenUninitialized) {

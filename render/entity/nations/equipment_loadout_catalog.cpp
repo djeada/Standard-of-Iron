@@ -117,6 +117,7 @@ auto default_loadouts() -> LoadoutMap {
   EquipmentLoadoutIds roman_horse_archer{};
   roman_horse_archer.bow = "bow_roman";
   roman_horse_archer.quiver = "quiver";
+  roman_horse_archer.helmet = "roman_light";
   roman_horse_archer.armor = "roman_light_armor";
   roman_horse_archer.cloak = "cloak_roman";
   roman_horse_archer.horse_saddle = "roman_horse_saddle";

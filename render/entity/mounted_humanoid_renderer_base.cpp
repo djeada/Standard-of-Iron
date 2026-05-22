@@ -32,6 +32,11 @@ namespace Render::GL {
 
 namespace {
 
+[[nodiscard]] auto is_runtime_prewarm(const DrawContext& ctx) noexcept -> bool {
+  return ctx.template_prewarm ||
+         (!ctx.allow_template_cache && ctx.suppress_animation_state_persistence);
+}
+
 auto rider_mount_frame(const MountedAttachmentFrame& mount) noexcept -> QMatrix4x4 {
   QMatrix4x4 local;
   local.setColumn(0, QVector4D(mount.seat_right, 0.0F));
@@ -193,6 +198,10 @@ auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext& ctx) cons
     -> HorseLOD {
   namespace RCP = Render::Creature::Pipeline;
 
+  if (is_runtime_prewarm(ctx) && !ctx.force_horse_lod) {
+    return HorseLOD::Minimal;
+  }
+
   const auto lod_config = RCP::horse_lod_config_from_settings();
   RCP::CreatureGraphInputs inputs{};
   inputs.ctx = &ctx;
@@ -231,8 +240,8 @@ void MountedHumanoidRendererBase::append_companion_preparation(
     Render::Creature::CreatureLOD lod,
     Render::Creature::Pipeline::CreaturePreparationResult& out) const {
   (void)pose;
-  if (lod == Render::Creature::CreatureLOD::Minimal ||
-      lod == Render::Creature::CreatureLOD::Billboard) {
+  if (!is_runtime_prewarm(ctx) && (lod == Render::Creature::CreatureLOD::Minimal ||
+                                   lod == Render::Creature::CreatureLOD::Billboard)) {
     return;
   }
 
@@ -273,7 +282,13 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   rider_inputs.anim = &anim_ctx.inputs;
   rider_inputs.entity = ctx.entity;
   RCP::CreatureLodDecision rider_lod{};
-  rider_lod.lod = lod;
+  if (is_runtime_prewarm(ctx) && !ctx.force_humanoid_lod) {
+    rider_lod.lod = Render::Creature::CreatureLOD::Minimal;
+  } else if (ctx.force_humanoid_lod) {
+    rider_lod.lod = ctx.forced_humanoid_lod;
+  } else {
+    rider_lod.lod = lod;
+  }
   auto rider_output = RCP::build_base_graph_output(rider_inputs, rider_lod);
   rider_output.spec = RCP::finalize_visible_humanoid_spec(
       mounted_visual_spec().rider,
