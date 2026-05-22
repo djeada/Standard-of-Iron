@@ -309,7 +309,10 @@ auto resolve_humanoid_animation_selection(
       build_selection_for_pose(spec, anim, locomotion_only_pose(anim), seed, variant);
   auto const action_selection =
       build_selection_for_pose(spec, anim, action_only_pose(anim), seed, variant);
-  float const combat_weight = attack_visual_weight(*combat);
+  float const emphasis = std::clamp(
+      combat->attack_emphasis, 0.72F, combat->finisher_attack ? 1.35F : 1.18F);
+  float const combat_weight =
+      std::clamp(attack_visual_weight(*combat) * emphasis, 0.0F, 1.0F);
   if (combat->phase == Render::Creature::CombatVisualTransactionPhase::ExitBlend &&
       combat_weight <= 0.01F) {
     return base_selection;

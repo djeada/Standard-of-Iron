@@ -447,7 +447,13 @@ auto Pathfinding::find_path_internal(const Point& start,
   };
 
   if (!is_walkableFunc(start.x, start.y) || !is_walkableFunc(end.x, end.y)) {
-    return {};
+    Point resolved_end{};
+    if (!is_walkableFunc(start.x, start.y) ||
+        !resolve_walkable_endpoint(end, unit_radius, resolved_end)) {
+      return {};
+    }
+
+    return find_path_internal(start, resolved_end, unit_radius);
   }
 
   const int start_idx = to_index(start);
@@ -534,6 +540,75 @@ auto Pathfinding::find_path_internal(const Point& start,
   path.reserve(final_cost + 1);
   build_path(start_idx, end_idx, generation, final_cost + 1, path);
   return path;
+}
+
+auto Pathfinding::resolve_walkable_endpoint(const Point& requested,
+                                            float unit_radius,
+                                            Point& resolved) const -> bool {
+  auto const is_walkable_func = [this, unit_radius](int x, int y) -> bool {
+    if (unit_radius <= 0.5F) {
+      return is_walkable(x, y);
+    }
+    return is_walkable_with_radius(x, y, unit_radius);
+  };
+
+  if (is_walkable_func(requested.x, requested.y)) {
+    resolved = requested;
+    return true;
+  }
+
+  Point const clamped_origin{
+      std::clamp(requested.x, 0, std::max(m_width - 1, 0)),
+      std::clamp(requested.y, 0, std::max(m_height - 1, 0)),
+  };
+
+  if (is_walkable_func(clamped_origin.x, clamped_origin.y)) {
+    resolved = clamped_origin;
+    return true;
+  }
+
+  int const max_search_radius =
+      std::max({clamped_origin.x,
+                std::max(0, m_width - 1 - clamped_origin.x),
+                clamped_origin.y,
+                std::max(0, m_height - 1 - clamped_origin.y)});
+
+  for (int radius = 1; radius <= max_search_radius; ++radius) {
+    bool found_candidate = false;
+    int best_distance_sq = std::numeric_limits<int>::max();
+    Point best_candidate{};
+
+    for (int dy = -radius; dy <= radius; ++dy) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::abs(dx) != radius && std::abs(dy) != radius) {
+          continue;
+        }
+
+        int const check_x = clamped_origin.x + dx;
+        int const check_y = clamped_origin.y + dy;
+        if (!is_walkable_func(check_x, check_y)) {
+          continue;
+        }
+
+        int const requested_dx = check_x - requested.x;
+        int const requested_dy = check_y - requested.y;
+        int const distance_sq =
+            requested_dx * requested_dx + requested_dy * requested_dy;
+        if (distance_sq < best_distance_sq) {
+          best_distance_sq = distance_sq;
+          best_candidate = {check_x, check_y};
+          found_candidate = true;
+        }
+      }
+    }
+
+    if (found_candidate) {
+      resolved = best_candidate;
+      return true;
+    }
+  }
+
+  return false;
 }
 
 auto Pathfinding::calculate_heuristic(const Point& a, const Point& b) -> int {

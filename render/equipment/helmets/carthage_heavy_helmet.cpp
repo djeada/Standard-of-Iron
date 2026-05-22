@@ -6,6 +6,7 @@
 #include "../attachment_builder.h"
 #include "../generated_equipment.h"
 #include "../humanoid_attachment_archetype.h"
+#include "helmet_alignment.h"
 
 namespace Render::GL {
 
@@ -19,8 +20,6 @@ enum CarthageHeavyPaletteSlot : std::uint8_t {
   k_metal_light_slot = 2U,
   k_crest_slot = 3U,
 };
-
-constexpr QVector3D k_authored_local_offset{0.0F, 0.05F, 0.0F};
 
 auto carthage_heavy_palette(const HumanoidPalette& palette,
                             const CarthageHeavyHelmetConfig& config)
@@ -183,7 +182,8 @@ auto carthage_heavy_helmet_make_static_attachment(
   auto spec = Render::Equipment::build_static_attachment({
       .archetype = &sub_archetype,
       .socket_bone_index = socket_bone_index,
-      .authored_local_offset = k_authored_local_offset,
+      .uniform_scale = k_helmet_uniform_scale,
+      .authored_local_offset = k_helmet_local_offset * k_helmet_uniform_scale,
       .bind_radius = k_head_socket_radius,
       .bind_socket_transform = bind_palette_socket_bone,
   });
@@ -216,23 +216,23 @@ void CarthageHeavyHelmetRenderer::submit(const CarthageHeavyHelmetConfig& config
   if (frames.head.radius <= 0.0F) {
     return;
   }
-
   auto const equipment_palette = carthage_heavy_palette(palette, config);
-  QVector3D const head_offset{0.0F, 0.05F, 0.0F};
 
   append_humanoid_attachment_archetype(batch,
                                        ctx,
                                        frames.head,
                                        carthage_heavy_helmet_shell_archetype(),
                                        equipment_palette,
-                                       head_offset);
+                                       k_helmet_local_offset,
+                                       k_helmet_uniform_scale);
   if (config.has_neck_guard) {
     append_humanoid_attachment_archetype(batch,
                                          ctx,
                                          frames.head,
                                          carthage_heavy_helmet_neck_guard_archetype(),
                                          equipment_palette,
-                                         head_offset);
+                                         k_helmet_local_offset,
+                                         k_helmet_uniform_scale);
   }
   if (config.has_cheek_guards) {
     append_humanoid_attachment_archetype(batch,
@@ -240,7 +240,8 @@ void CarthageHeavyHelmetRenderer::submit(const CarthageHeavyHelmetConfig& config
                                          frames.head,
                                          carthage_heavy_helmet_cheek_guards_archetype(),
                                          equipment_palette,
-                                         head_offset);
+                                         k_helmet_local_offset,
+                                         k_helmet_uniform_scale);
   }
   if (config.has_face_plate) {
     append_humanoid_attachment_archetype(batch,
@@ -248,7 +249,8 @@ void CarthageHeavyHelmetRenderer::submit(const CarthageHeavyHelmetConfig& config
                                          frames.head,
                                          carthage_heavy_helmet_face_plate_archetype(),
                                          equipment_palette,
-                                         head_offset);
+                                         k_helmet_local_offset,
+                                         k_helmet_uniform_scale);
   }
   if (config.has_hair_crest) {
     append_humanoid_attachment_archetype(batch,
@@ -256,7 +258,8 @@ void CarthageHeavyHelmetRenderer::submit(const CarthageHeavyHelmetConfig& config
                                          frames.head,
                                          carthage_heavy_helmet_crest_archetype(),
                                          equipment_palette,
-                                         head_offset);
+                                         k_helmet_local_offset,
+                                         k_helmet_uniform_scale);
   }
   if (config.detail_level > 0) {
     append_humanoid_attachment_archetype(batch,
@@ -264,7 +267,8 @@ void CarthageHeavyHelmetRenderer::submit(const CarthageHeavyHelmetConfig& config
                                          frames.head,
                                          carthage_heavy_helmet_rivets_archetype(),
                                          equipment_palette,
-                                         head_offset);
+                                         k_helmet_local_offset,
+                                         k_helmet_uniform_scale);
   }
 }
 

@@ -671,6 +671,29 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     }
 
     title = "Edit Troop: " + prettifyIdentifier(elem.type);
+  } else if (element_type == 5) {
+    const auto& undead_zones = m_map_data->undead_zones();
+    if (index < 0 || index >= undead_zones.size()) {
+      return;
+    }
+    const auto& elem = undead_zones[index];
+
+    json["id"] = elem.id;
+    json["anchor_type"] = elem.anchor_type;
+    json[MapJsonKeys::x] = static_cast<double>(elem.x);
+    json[MapJsonKeys::z] = static_cast<double>(elem.z);
+    json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
+    json["leash_radius"] = static_cast<double>(elem.leash_radius);
+    json["owner_id"] = elem.owner_id;
+    json["team_id"] = elem.team_id;
+    if (!elem.awaken_on.isEmpty()) {
+      json["awaken_on"] = elem.awaken_on;
+    }
+    if (!elem.waves.isEmpty()) {
+      json["waves"] = elem.waves;
+    }
+
+    title = "Edit Undead Zone: " + elem.id;
   } else {
     return;
   }
@@ -837,6 +860,26 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
                                                 m_map_data->troop_spawns()[index],
                                                 elem,
                                                 "Edit " + elem.type));
+    } else if (element_type == 5) {
+      UndeadZoneElement elem;
+      elem.id = new_json["id"].toString();
+      elem.anchor_type =
+          new_json["anchor_type"].toString(QStringLiteral("magic_shrine"));
+      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
+      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
+      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(8.0));
+      elem.leash_radius = static_cast<float>(new_json["leash_radius"].toDouble(14.0));
+      elem.owner_id = new_json["owner_id"].toInt(99);
+      elem.team_id = new_json["team_id"].toInt(99);
+      elem.awaken_on = new_json["awaken_on"].toArray();
+      elem.waves = new_json["waves"].toArray();
+
+      m_map_data->execute_command(
+          std::make_unique<UpdateUndeadZoneCmd>(m_map_data,
+                                                index,
+                                                m_map_data->undead_zones()[index],
+                                                elem,
+                                                "Edit undead zone"));
     }
   }
 }
@@ -1038,6 +1081,16 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
                                 : QString("(%1, %2)")
                                       .arg(static_cast<int>(e.x))
                                       .arg(static_cast<int>(e.z));
+    }
+  } else if (element_type == 5) {
+    const auto& undead_zones = m_map_data->undead_zones();
+    if (index < undead_zones.size()) {
+      const auto& e = undead_zones[index];
+      type_name = "undead_zone";
+      coords = QString("(%1, %2) r=%3")
+                   .arg(static_cast<int>(e.x))
+                   .arg(static_cast<int>(e.z))
+                   .arg(static_cast<int>(e.radius));
     }
   }
 

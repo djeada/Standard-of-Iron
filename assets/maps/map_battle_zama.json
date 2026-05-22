@@ -17,18 +17,49 @@
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.11,
     "irregularity_amplitude": 0.04,
-    "grass_primary": [0.48, 0.46, 0.24],
-    "grass_secondary": [0.58, 0.53, 0.29],
-    "grass_dry": [0.72, 0.61, 0.35],
-    "soil_color": [0.36, 0.28, 0.18],
-    "rock_low": [0.45, 0.41, 0.35],
-    "rock_high": [0.7, 0.66, 0.56],
-    "height_noise": [0.11, 0.035],
+    "grass_primary": [
+      0.48,
+      0.46,
+      0.24
+    ],
+    "grass_secondary": [
+      0.58,
+      0.53,
+      0.29
+    ],
+    "grass_dry": [
+      0.72,
+      0.61,
+      0.35
+    ],
+    "soil_color": [
+      0.36,
+      0.28,
+      0.18
+    ],
+    "rock_low": [
+      0.45,
+      0.41,
+      0.35
+    ],
+    "rock_high": [
+      0.7,
+      0.66,
+      0.56
+    ],
+    "height_noise": [
+      0.11,
+      0.035
+    ],
     "sway_speed": 0.85,
     "sway_strength": 0.12
   },
   "camera": {
-    "center": [130, 0, 85],
+    "center": [
+      130,
+      0,
+      85
+    ],
     "distance": 82.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
@@ -37,12 +68,6 @@
     "far": 700.0
   },
   "time_of_day": "day",
-  "weather": {
-    "type": "clear",
-    "intensity": 0.1,
-    "temperature": "hot",
-    "description": "A hot, dry African battlefield. Dust makes cavalry movement readable across the plain."
-  },
   "terrain": [
     {
       "type": "flat",
@@ -92,9 +117,18 @@
       "height": 2.3,
       "description": "Carthaginian command mound. Hannibal's camp and veteran reserve begin behind this position.",
       "entrances": [
-        { "x": 48, "z": 85 },
-        { "x": 34, "z": 70 },
-        { "x": 34, "z": 100 }
+        {
+          "x": 48,
+          "z": 85
+        },
+        {
+          "x": 34,
+          "z": 70
+        },
+        {
+          "x": 34,
+          "z": 100
+        }
       ]
     },
     {
@@ -105,9 +139,18 @@
       "height": 2.4,
       "description": "Roman command mound. Scipio's reserves and camp guard hold this position.",
       "entrances": [
-        { "x": 211, "z": 85 },
-        { "x": 226, "z": 70 },
-        { "x": 226, "z": 100 }
+        {
+          "x": 211,
+          "z": 85
+        },
+        {
+          "x": 226,
+          "z": 70
+        },
+        {
+          "x": 226,
+          "z": 100
+        }
       ]
     },
     {
@@ -120,8 +163,14 @@
       "rotation": -8,
       "description": "Carthaginian northern cavalry rise. Useful for delaying Roman allied cavalry.",
       "entrances": [
-        { "x": 66, "z": 35 },
-        { "x": 94, "z": 34 }
+        {
+          "x": 66,
+          "z": 35
+        },
+        {
+          "x": 94,
+          "z": 34
+        }
       ]
     },
     {
@@ -134,8 +183,14 @@
       "rotation": 8,
       "description": "Carthaginian southern cavalry rise.",
       "entrances": [
-        { "x": 66, "z": 135 },
-        { "x": 94, "z": 136 }
+        {
+          "x": 66,
+          "z": 135
+        },
+        {
+          "x": 94,
+          "z": 136
+        }
       ]
     },
     {
@@ -148,8 +203,14 @@
       "rotation": 8,
       "description": "Roman northern cavalry launch ridge. Numidian allies can sweep wide from here.",
       "entrances": [
-        { "x": 168, "z": 34 },
-        { "x": 200, "z": 36 }
+        {
+          "x": 168,
+          "z": 34
+        },
+        {
+          "x": 200,
+          "z": 36
+        }
       ]
     },
     {
@@ -162,8 +223,14 @@
       "rotation": -8,
       "description": "Roman southern cavalry launch ridge.",
       "entrances": [
-        { "x": 168, "z": 136 },
-        { "x": 200, "z": 134 }
+        {
+          "x": 168,
+          "z": 136
+        },
+        {
+          "x": 200,
+          "z": 134
+        }
       ]
     },
     {
@@ -175,8 +242,14 @@
       "height": 2.6,
       "description": "Northern observation ridge. It frames the battlefield without blocking cavalry.",
       "entrances": [
-        { "x": 108, "z": 20 },
-        { "x": 152, "z": 20 }
+        {
+          "x": 108,
+          "z": 20
+        },
+        {
+          "x": 152,
+          "z": 20
+        }
       ]
     },
     {
@@ -188,8 +261,14 @@
       "height": 2.6,
       "description": "Southern observation ridge.",
       "entrances": [
-        { "x": 108, "z": 150 },
-        { "x": 152, "z": 150 }
+        {
+          "x": 108,
+          "z": 150
+        },
+        {
+          "x": 152,
+          "z": 150
+        }
       ]
     },
     {
@@ -247,43 +326,79 @@
   ],
   "rivers": [
     {
-      "start": [0, 46],
-      "end": [260, 38],
+      "start": [
+        0,
+        46
+      ],
+      "end": [
+        260,
+        38
+      ],
       "width": 3.0,
       "description": "Dry northern wadi. It slightly shapes cavalry movement but does not dominate the battle."
     },
     {
-      "start": [0, 124],
-      "end": [260, 132],
+      "start": [
+        0,
+        124
+      ],
+      "end": [
+        260,
+        132
+      ],
       "width": 3.0,
       "description": "Dry southern wadi line."
     }
   ],
   "bridges": [
     {
-      "start": [121, 43],
-      "end": [130, 43],
+      "start": [
+        121,
+        43
+      ],
+      "end": [
+        130,
+        43
+      ],
       "width": 4.5,
       "height": 0.55,
       "description": "Northern wadi crossing."
     },
     {
-      "start": [121, 127],
-      "end": [130, 127],
+      "start": [
+        121,
+        127
+      ],
+      "end": [
+        130,
+        127
+      ],
       "width": 4.5,
       "height": 0.55,
       "description": "Southern wadi crossing."
     },
     {
-      "start": [180, 41],
-      "end": [189, 41],
+      "start": [
+        180,
+        41
+      ],
+      "end": [
+        189,
+        41
+      ],
       "width": 4.0,
       "height": 0.55,
       "description": "Roman northern cavalry crossing."
     },
     {
-      "start": [180, 129],
-      "end": [189, 129],
+      "start": [
+        180,
+        129
+      ],
+      "end": [
+        189,
+        129
+      ],
       "width": 4.0,
       "height": 0.55,
       "description": "Roman southern cavalry crossing."
@@ -291,149 +406,380 @@
   ],
   "roads": [
     {
-      "start": [5, 85],
-      "end": [255, 85],
+      "start": [
+        5,
+        85
+      ],
+      "end": [
+        255,
+        85
+      ],
       "width": 4.6,
       "style": "default",
       "waypoints": [
-        [5, 85],
-        [34, 85],
-        [62, 85],
-        [90, 85],
-        [118, 85],
-        [145, 85],
-        [173, 85],
-        [202, 85],
-        [226, 85],
-        [255, 85]
+        [
+          5,
+          85
+        ],
+        [
+          34,
+          85
+        ],
+        [
+          62,
+          85
+        ],
+        [
+          90,
+          85
+        ],
+        [
+          118,
+          85
+        ],
+        [
+          145,
+          85
+        ],
+        [
+          173,
+          85
+        ],
+        [
+          202,
+          85
+        ],
+        [
+          226,
+          85
+        ],
+        [
+          255,
+          85
+        ]
       ],
       "description": "Main battle road across the Zama plain."
     },
     {
-      "start": [65, 60],
-      "end": [180, 60],
+      "start": [
+        65,
+        60
+      ],
+      "end": [
+        180,
+        60
+      ],
       "width": 3.2,
       "style": "default",
       "waypoints": [
-        [65, 60],
-        [88, 60],
-        [111, 60],
-        [135, 60],
-        [158, 60],
-        [180, 60]
+        [
+          65,
+          60
+        ],
+        [
+          88,
+          60
+        ],
+        [
+          111,
+          60
+        ],
+        [
+          135,
+          60
+        ],
+        [
+          158,
+          60
+        ],
+        [
+          180,
+          60
+        ]
       ],
       "description": "Northern elephant lane leading into Scipio's prepared gap."
     },
     {
-      "start": [65, 85],
-      "end": [180, 85],
+      "start": [
+        65,
+        85
+      ],
+      "end": [
+        180,
+        85
+      ],
       "width": 3.2,
       "style": "default",
       "waypoints": [
-        [65, 85],
-        [88, 85],
-        [111, 85],
-        [135, 85],
-        [158, 85],
-        [180, 85]
+        [
+          65,
+          85
+        ],
+        [
+          88,
+          85
+        ],
+        [
+          111,
+          85
+        ],
+        [
+          135,
+          85
+        ],
+        [
+          158,
+          85
+        ],
+        [
+          180,
+          85
+        ]
       ],
       "description": "Central elephant lane."
     },
     {
-      "start": [65, 110],
-      "end": [180, 110],
+      "start": [
+        65,
+        110
+      ],
+      "end": [
+        180,
+        110
+      ],
       "width": 3.2,
       "style": "default",
       "waypoints": [
-        [65, 110],
-        [88, 110],
-        [111, 110],
-        [135, 110],
-        [158, 110],
-        [180, 110]
+        [
+          65,
+          110
+        ],
+        [
+          88,
+          110
+        ],
+        [
+          111,
+          110
+        ],
+        [
+          135,
+          110
+        ],
+        [
+          158,
+          110
+        ],
+        [
+          180,
+          110
+        ]
       ],
       "description": "Southern elephant lane."
     },
     {
-      "start": [38, 85],
-      "end": [76, 52],
+      "start": [
+        38,
+        85
+      ],
+      "end": [
+        76,
+        52
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [38, 85],
-        [48, 73],
-        [60, 62],
-        [76, 52]
+        [
+          38,
+          85
+        ],
+        [
+          48,
+          73
+        ],
+        [
+          60,
+          62
+        ],
+        [
+          76,
+          52
+        ]
       ],
       "description": "Carthaginian northern wing route."
     },
     {
-      "start": [38, 85],
-      "end": [76, 118],
+      "start": [
+        38,
+        85
+      ],
+      "end": [
+        76,
+        118
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [38, 85],
-        [48, 97],
-        [60, 108],
-        [76, 118]
+        [
+          38,
+          85
+        ],
+        [
+          48,
+          97
+        ],
+        [
+          60,
+          108
+        ],
+        [
+          76,
+          118
+        ]
       ],
       "description": "Carthaginian southern wing route."
     },
     {
-      "start": [184, 34],
-      "end": [65, 25],
+      "start": [
+        184,
+        34
+      ],
+      "end": [
+        65,
+        25
+      ],
       "width": 2.7,
       "style": "default",
       "waypoints": [
-        [184, 34],
-        [163, 27],
-        [140, 24],
-        [112, 23],
-        [88, 24],
-        [65, 25]
+        [
+          184,
+          34
+        ],
+        [
+          163,
+          27
+        ],
+        [
+          140,
+          24
+        ],
+        [
+          112,
+          23
+        ],
+        [
+          88,
+          24
+        ],
+        [
+          65,
+          25
+        ]
       ],
       "description": "Roman and Numidian northern cavalry sweep. This threatens the Carthaginian rear later."
     },
     {
-      "start": [184, 136],
-      "end": [65, 145],
+      "start": [
+        184,
+        136
+      ],
+      "end": [
+        65,
+        145
+      ],
       "width": 2.7,
       "style": "default",
       "waypoints": [
-        [184, 136],
-        [163, 143],
-        [140, 146],
-        [112, 147],
-        [88, 146],
-        [65, 145]
+        [
+          184,
+          136
+        ],
+        [
+          163,
+          143
+        ],
+        [
+          140,
+          146
+        ],
+        [
+          112,
+          147
+        ],
+        [
+          88,
+          146
+        ],
+        [
+          65,
+          145
+        ]
       ],
       "description": "Roman southern cavalry sweep."
     },
     {
-      "start": [20, 128],
-      "end": [34, 85],
+      "start": [
+        20,
+        128
+      ],
+      "end": [
+        34,
+        85
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [20, 128],
-        [24, 116],
-        [28, 104],
-        [32, 94],
-        [34, 85]
+        [
+          20,
+          128
+        ],
+        [
+          24,
+          116
+        ],
+        [
+          28,
+          104
+        ],
+        [
+          32,
+          94
+        ],
+        [
+          34,
+          85
+        ]
       ],
       "description": "Carthaginian supply village road."
     },
     {
-      "start": [238, 42],
-      "end": [226, 85],
+      "start": [
+        238,
+        42
+      ],
+      "end": [
+        226,
+        85
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [238, 42],
-        [235, 54],
-        [231, 68],
-        [226, 85]
+        [
+          238,
+          42
+        ],
+        [
+          235,
+          54
+        ],
+        [
+          231,
+          68
+        ],
+        [
+          226,
+          85
+        ]
       ],
       "description": "Roman allied supply road."
     }
@@ -466,7 +812,6 @@
       "nation": "roman_republic",
       "description": "Roman allied supply post"
     },
-
     {
       "type": "elephant",
       "x": 72,
@@ -500,7 +845,6 @@
       "player_id": 1,
       "description": "Elephant screen, southern lane"
     },
-
     {
       "type": "spearman",
       "x": 52,
@@ -574,7 +918,6 @@
       "z": 106,
       "player_id": 1
     },
-
     {
       "type": "swordsman",
       "x": 39,
@@ -618,7 +961,6 @@
       "z": 85,
       "player_id": 1
     },
-
     {
       "type": "swordsman",
       "x": 20,
@@ -662,7 +1004,6 @@
       "z": 85,
       "player_id": 1
     },
-
     {
       "type": "horse_swordsman",
       "x": 62,
@@ -688,7 +1029,6 @@
       "z": 42,
       "player_id": 1
     },
-
     {
       "type": "horse_swordsman",
       "x": 62,
@@ -714,7 +1054,6 @@
       "z": 128,
       "player_id": 1
     },
-
     {
       "type": "archer",
       "x": 142,
@@ -746,7 +1085,6 @@
       "z": 116,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 158,
@@ -796,7 +1134,6 @@
       "z": 120,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 181,
@@ -852,7 +1189,6 @@
       "z": 112,
       "player_id": 2
     },
-
     {
       "type": "swordsman",
       "x": 210,
@@ -896,7 +1232,6 @@
       "z": 85,
       "player_id": 2
     },
-
     {
       "type": "horse_swordsman",
       "x": 172,
@@ -922,7 +1257,6 @@
       "z": 39,
       "player_id": 2
     },
-
     {
       "type": "horse_swordsman",
       "x": 172,
@@ -948,7 +1282,6 @@
       "z": 131,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 226,
@@ -1144,62 +1477,45 @@
     }
   ],
   "victory": {
-    "type": "custom",
+    "type": "capture_structures",
     "defeat_conditions": [
       "no_commander",
       "only_commander_remaining"
     ],
-    "description": "Defeat Scipio's army despite his prepared counters. Use elephants to disrupt, preserve Hannibal's veteran reserve, survive the Roman cavalry return, and break the Roman camp.",
-    "primary_objectives": [
-      "Send the elephants forward and disrupt Scipio's first line",
-      "Do not allow the first Carthaginian line to collapse before the veterans are committed",
-      "Hold both cavalry wings long enough to prevent an early rear attack",
-      "Commit Hannibal's veteran reserve only after the Roman second line is engaged",
-      "Capture or destroy the Roman command camp"
+    "key_structures": [
+      "barracks"
     ],
-    "secondary_objectives": [
-      "Keep at least two elephants alive after the first clash",
-      "Destroy the Roman skirmishers opening the elephant corridors",
-      "Seize the Roman allied supply post",
-      "Prevent Roman cavalry from reaching the Carthaginian camp road"
-    ],
-    "elephant_corridors": [
-      {
-        "name": "northern_corridor",
-        "x": 132,
-        "z": 60,
-        "width": 120,
-        "depth": 12
-      },
-      {
-        "name": "central_corridor",
-        "x": 132,
-        "z": 85,
-        "width": 120,
-        "depth": 12
-      },
-      {
-        "name": "southern_corridor",
-        "x": 132,
-        "z": 110,
-        "width": 120,
-        "depth": 12
-      }
-    ],
-    "roman_cavalry_return_zones": [
-      {
-        "name": "northern_return",
-        "x": 65,
-        "z": 25,
-        "radius": 14
-      },
-      {
-        "name": "southern_return",
-        "x": 65,
-        "z": 145,
-        "radius": 14
-      }
-    ],
-    "failure_hint": "If the elephants are wasted, the cavalry wings collapse early, or the veterans are committed too soon, Scipio's reserves will grind down Hannibal's army."
-  }
+    "min_count": 2
+  },
+  "starting_resources": {
+    "gold": 300,
+    "food": 200,
+    "wood": 100,
+    "stone": 50,
+    "iron": 150
+  },
+  "undead_zones": [
+    {
+      "id": "desert_shrine",
+      "anchor_type": "magic_shrine",
+      "x": 130,
+      "z": 40,
+      "radius": 8.0,
+      "leash_radius": 14.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "grave_priest": 1,
+            "skeleton_archer": 2
+          }
+        }
+      ]
+    }
+  ]
 }

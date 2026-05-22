@@ -7,6 +7,7 @@
 #include "../attachment_builder.h"
 #include "../generated_equipment.h"
 #include "../humanoid_attachment_archetype.h"
+#include "helmet_alignment.h"
 
 namespace Render::GL {
 
@@ -29,8 +30,6 @@ auto roman_heavy_palette(const HumanoidPalette& palette) -> std::array<QVector3D
       saturate_color(palette.metal * QVector3D(1.40F, 1.15F, 0.65F));
   return {steel, steel_light, brass, QVector3D(0.96F, 0.12F, 0.12F)};
 }
-
-constexpr QVector3D k_authored_local_offset(0.0F, 0.05F, 0.0F);
 
 } // namespace
 
@@ -156,7 +155,8 @@ auto roman_heavy_helmet_make_static_attachment(
   auto spec = Render::Equipment::build_static_attachment({
       .archetype = &roman_heavy_helmet_archetype(),
       .socket_bone_index = socket_bone_index,
-      .authored_local_offset = k_authored_local_offset,
+      .uniform_scale = k_helmet_uniform_scale,
+      .authored_local_offset = k_helmet_local_offset * k_helmet_uniform_scale,
       .bind_radius = k_head_socket_radius,
       .bind_socket_transform = bind_palette_socket_bone,
   });
@@ -191,8 +191,13 @@ void RomanHeavyHelmetRenderer::submit(const RomanHeavyHelmetConfig&,
   }
 
   auto const colors = roman_heavy_palette(palette);
-  append_humanoid_attachment_archetype(
-      batch, ctx, frames.head, roman_heavy_helmet_archetype(), colors);
+  append_humanoid_attachment_archetype(batch,
+                                       ctx,
+                                       frames.head,
+                                       roman_heavy_helmet_archetype(),
+                                       colors,
+                                       k_helmet_local_offset,
+                                       k_helmet_uniform_scale);
 }
 
 } // namespace Render::GL

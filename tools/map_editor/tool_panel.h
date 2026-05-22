@@ -46,6 +46,7 @@ enum class ToolType {
   TroopGravePriest,
   TroopCivilian,
   TroopBuilder,
+  UndeadZone,
   Barracks,
   Village,
   Eraser

@@ -79,6 +79,9 @@ auto toolDescription(ToolType tool) -> QString {
   case ToolType::TroopCivilian:
   case ToolType::TroopBuilder:
     break;
+  case ToolType::UndeadZone:
+    return "Place an undead zone (shrine or ruins anchor with skeleton wave spawns). "
+           "Double-click to edit waves.";
   }
 
   return "Choose a tool to start editing.";
@@ -282,6 +285,15 @@ void ToolPanel::setup_ui() {
   sepulcher_layout->setHorizontalSpacing(6);
   sepulcher_layout->setVerticalSpacing(6);
   add_troop_buttons_for_section(sepulcher_layout, "Sepulcher");
+  add_tool_button(
+      sepulcher_layout,
+      (sepulcher_layout->rowCount()),
+      0,
+      "Undead Zone",
+      "☠",
+      "Place an undead zone (shrine or ruins anchor with skeleton wave spawns). "
+      "Double-click to edit waves.",
+      ToolType::UndeadZone);
   layout->addWidget(sepulcher_group);
 
   auto* paths_group = new QGroupBox("Paths & Bridges", this);

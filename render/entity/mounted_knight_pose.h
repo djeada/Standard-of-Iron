@@ -9,24 +9,24 @@
 namespace Render::GL {
 
 struct MountedKnightPoseTuning {
-  float stirrup_inset_factor = 0.60F;
+  float stirrup_inset_factor = 0.82F;
   float stirrup_drop_scale = 0.74F;
-  float stirrup_forward_bias = 0.02F;
-  float stirrup_back_offset = -0.05F;
+  float stirrup_forward_bias = 0.12F;
+  float stirrup_back_offset = -0.02F;
   float stirrup_height_bias = 0.18F;
-  float stirrup_outward_bias = 0.08F;
-  float thigh_wrap_factor = 0.64F;
-  float knee_along = 0.46F;
+  float stirrup_outward_bias = 0.18F;
+  float thigh_wrap_factor = 0.78F;
+  float knee_along = 0.42F;
   float knee_plane_lerp = 0.65F;
   float knee_blend = 0.60F;
-  float calf_surface_blend = 0.65F;
-  float calf_out_offset = 0.24F;
-  float calf_back_offset = -0.16F;
+  float calf_surface_blend = 0.72F;
+  float calf_out_offset = 0.32F;
+  float calf_back_offset = -0.08F;
   float calf_down_extra = 0.22F;
-  float calf_behind_girth = -0.05F;
+  float calf_behind_girth = 0.02F;
   float calf_relax = 0.32F;
   float calf_blend = 0.48F;
-  float foot_back_offset = -0.12F;
+  float foot_back_offset = -0.04F;
   float foot_down_offset = 0.14F;
   float foot_blend = 0.55F;
   float shield_raise_speed = 8.0F;

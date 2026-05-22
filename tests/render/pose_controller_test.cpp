@@ -595,13 +595,16 @@ TEST_F(HumanoidPoseControllerTest, HoldBowReadyKeepsHandsInLowerReadyPose) {
 
   controller.hold_bow_ready();
 
-  EXPECT_GT(pose.hand_r.x(), 0.03F);
-  EXPECT_GT(pose.hand_l.x(), -0.02F);
-  EXPECT_GT(pose.hand_r.z(), 0.28F);
-  EXPECT_GT(pose.hand_l.z(), 0.52F);
-  EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y);
-  EXPECT_LT(pose.hand_l.y(), HumanProportions::SHOULDER_Y + 0.04F);
-  EXPECT_GT((pose.hand_r - pose.hand_l).length(), 0.18F);
+  EXPECT_GT(pose.hand_r.x(), 0.02F);
+  EXPECT_GT(pose.hand_r.x(), pose.hand_l.x());
+  EXPECT_GT(pose.hand_l.x(), 0.02F);
+  EXPECT_GT(pose.hand_r.z(), 0.60F);
+  EXPECT_GT(pose.hand_r.z(), pose.hand_l.z());
+  EXPECT_LT(pose.hand_l.z(), 0.45F);
+  EXPECT_GT(pose.hand_l.z(), 0.25F);
+  EXPECT_LT(pose.hand_l.y(), HumanProportions::SHOULDER_Y + 0.05F);
+  EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y + 0.12F);
+  EXPECT_GT((pose.hand_r - pose.hand_l).length(), 0.15F);
 }
 
 TEST_F(HumanoidPoseControllerTest,

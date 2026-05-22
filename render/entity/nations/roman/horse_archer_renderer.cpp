@@ -13,6 +13,7 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
       Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_archer");
   config.bow_equipment_id = loadout.ids.bow;
   config.quiver_equipment_id = loadout.ids.quiver;
+  config.helmet_equipment_id = loadout.ids.helmet;
   config.armor_equipment_id = loadout.ids.armor;
   config.cloak_equipment_id = "cloak_roman_mounted";
   config.horse_saddle_equipment_id = loadout.ids.horse_saddle;
@@ -24,6 +25,7 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
   config.horse_decoration_equipment_id = loadout.ids.horse_decoration;
   config.bow_handle = loadout.bow_handle;
   config.quiver_handle = loadout.quiver_handle;
+  config.helmet_handle = loadout.helmet_handle;
   config.armor_handle = loadout.armor_handle;
   config.horse_saddle_handle = loadout.horse_saddle_handle;
   config.horse_bridle_handle = loadout.horse_bridle_handle;

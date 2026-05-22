@@ -178,6 +178,7 @@ auto roman_bow_config() -> const BowRenderConfig& {
     cfg.bow_depth = 0.22F;
     cfg.bow_curve_factor = 1.0F;
     cfg.bow_height_scale = 1.0F;
+    cfg.bow_forward_offset = -0.24F;
     cfg.bow_top_y = HumanProportions::SHOULDER_Y + 0.55F;
     cfg.bow_bot_y = HumanProportions::WAIST_Y - 0.25F;
     return cfg;
@@ -191,6 +192,7 @@ auto carthage_bow_config() -> const BowRenderConfig& {
     cfg.bow_depth = 0.28F;
     cfg.bow_curve_factor = 1.2F;
     cfg.bow_height_scale = 0.95F;
+    cfg.bow_forward_offset = -0.24F;
     cfg.bow_top_y = HumanProportions::SHOULDER_Y + 0.55F;
     cfg.bow_bot_y = HumanProportions::WAIST_Y - 0.25F;
     return cfg;
@@ -407,19 +409,6 @@ auto sepulcher_sword_config() -> const SwordRenderConfig& {
 }
 
 constexpr float k_scabbard_radius = 0.060F * 0.85F;
-
-auto cloak_meshes_for(const char* id) -> CloakMeshes {
-  auto& registry = EquipmentRegistry::instance();
-  const auto handle = registry.resolve_handle(EquipmentCategory::Armor, id);
-  auto renderer = registry.get(handle);
-  if (renderer == nullptr) {
-    return {};
-  }
-  if (const auto* cloak = dynamic_cast<CloakRenderer*>(renderer.get())) {
-    return cloak->meshes();
-  }
-  return {};
-}
 
 auto carthage_cloak_config() -> const CloakConfig& {
   static const CloakConfig config = []() {
@@ -801,24 +790,23 @@ auto build_hasdrubal_quiver_attachments(std::uint8_t base_role_byte)
 auto build_carthage_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::cloak_make_static_attachment(carthage_cloak_config(),
-                                                   cloak_meshes_for("cloak_carthage"),
+                                                   Render::GL::shared_cloak_meshes(),
                                                    humanoid_chest_bone(),
                                                    base_role_byte)};
 }
 
 auto build_carthage_mounted_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {Render::GL::cloak_make_static_attachment(
-      carthage_mounted_cloak_config(),
-      cloak_meshes_for("cloak_carthage_mounted"),
-      humanoid_chest_bone(),
-      base_role_byte)};
+  return {Render::GL::cloak_make_static_attachment(carthage_mounted_cloak_config(),
+                                                   Render::GL::shared_cloak_meshes(),
+                                                   humanoid_chest_bone(),
+                                                   base_role_byte)};
 }
 
 auto build_sepulcher_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::cloak_make_static_attachment(sepulcher_cloak_config(),
-                                                   cloak_meshes_for("cloak_sepulcher"),
+                                                   Render::GL::shared_cloak_meshes(),
                                                    humanoid_chest_bone(),
                                                    base_role_byte)};
 }
@@ -826,18 +814,17 @@ auto build_sepulcher_cloak_attachment(std::uint8_t base_role_byte)
 auto build_roman_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
   return {Render::GL::cloak_make_static_attachment(roman_cloak_config(),
-                                                   cloak_meshes_for("cloak_roman"),
+                                                   Render::GL::shared_cloak_meshes(),
                                                    humanoid_chest_bone(),
                                                    base_role_byte)};
 }
 
 auto build_roman_mounted_cloak_attachment(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  return {
-      Render::GL::cloak_make_static_attachment(roman_mounted_cloak_config(),
-                                               cloak_meshes_for("cloak_roman_mounted"),
-                                               humanoid_chest_bone(),
-                                               base_role_byte)};
+  return {Render::GL::cloak_make_static_attachment(roman_mounted_cloak_config(),
+                                                   Render::GL::shared_cloak_meshes(),
+                                                   humanoid_chest_bone(),
+                                                   base_role_byte)};
 }
 
 auto build_roman_horse_saddle_attachment(std::uint8_t base_role_byte)
@@ -2026,202 +2013,60 @@ void register_horse_descriptor(EquipmentCategory category,
 
 void register_built_in_equipment() {
   auto& registry = EquipmentRegistry::instance();
+  registry.register_equipment_id(EquipmentCategory::Weapon, "bow");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "bow_carthage");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "bow_roman");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "bow_marcellus");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "bow_hasdrubal");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "quiver");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "quiver_roman");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "quiver_carthage");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "quiver_marcellus");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "quiver_hasdrubal");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "roman_scutum");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "sword");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "sword_carthage");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "sword_sepulcher");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "sword_roman");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "sword_scipio");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "sword_hannibal");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "spear");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "spear_fabius");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "spear_hanno");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "shield");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "shield_carthage");
+  registry.register_equipment_id(EquipmentCategory::Weapon, "shield_carthage_cavalry");
 
-  BowRenderConfig carthage_config;
-  carthage_config.bow_depth = 0.28F;
-  carthage_config.bow_curve_factor = 1.2F;
-  carthage_config.bow_height_scale = 0.95F;
-  auto carthage_bow = std::make_shared<BowRenderer>(carthage_config);
-  registry.register_equipment(EquipmentCategory::Weapon, "bow_carthage", carthage_bow);
+  registry.register_equipment_id(EquipmentCategory::Helmet, "carthage_heavy");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "carthage_light");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "roman_heavy");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "roman_light");
+  registry.register_equipment_id(EquipmentCategory::Helmet, "headwrap");
 
-  BowRenderConfig roman_config;
-  roman_config.bow_depth = 0.22F;
-  roman_config.bow_curve_factor = 1.0F;
-  roman_config.bow_height_scale = 1.0F;
-  auto roman_bow = std::make_shared<BowRenderer>(roman_config);
-  registry.register_equipment(EquipmentCategory::Weapon, "bow_roman", roman_bow);
+  registry.register_equipment_id(EquipmentCategory::Armor, "roman_heavy_armor");
+  registry.register_equipment_id(EquipmentCategory::Armor, "roman_light_armor");
+  registry.register_equipment_id(EquipmentCategory::Armor, "armor_light_carthage");
+  registry.register_equipment_id(EquipmentCategory::Armor, "armor_heavy_carthage");
+  registry.register_equipment_id(EquipmentCategory::Armor, "roman_shoulder_cover");
+  registry.register_equipment_id(EquipmentCategory::Armor,
+                                 "roman_shoulder_cover_cavalry");
+  registry.register_equipment_id(EquipmentCategory::Armor, "roman_greaves");
+  registry.register_equipment_id(EquipmentCategory::Armor, "carthage_shoulder_cover");
+  registry.register_equipment_id(EquipmentCategory::Armor,
+                                 "carthage_shoulder_cover_cavalry");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_carthage");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_carthage_mounted");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_sepulcher");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_roman");
+  registry.register_equipment_id(EquipmentCategory::Armor, "cloak_roman_mounted");
+  registry.register_equipment_id(EquipmentCategory::Armor, "work_apron_roman");
+  registry.register_equipment_id(EquipmentCategory::Armor, "work_apron_carthage");
+  registry.register_equipment_id(EquipmentCategory::Armor, "tool_belt_roman");
+  registry.register_equipment_id(EquipmentCategory::Armor, "tool_belt_carthage");
+  registry.register_equipment_id(EquipmentCategory::Armor, "arm_guards");
+  registry.register_equipment_id(EquipmentCategory::Armor, "arm_guards_roman");
+  registry.register_equipment_id(EquipmentCategory::Armor, "arm_guards_carthage");
 
-  auto bow = std::make_shared<BowRenderer>();
-  registry.register_equipment(EquipmentCategory::Weapon, "bow", bow);
-
-  auto quiver = std::make_shared<QuiverRenderer>();
-  registry.register_equipment(EquipmentCategory::Weapon, "quiver", quiver);
-  auto roman_quiver = std::make_shared<QuiverRenderer>(roman_quiver_config());
-  registry.register_equipment(EquipmentCategory::Weapon, "quiver_roman", roman_quiver);
-  auto carthage_quiver = std::make_shared<QuiverRenderer>(carthage_quiver_config());
-  registry.register_equipment(
-      EquipmentCategory::Weapon, "quiver_carthage", carthage_quiver);
-  registry.register_equipment(
-      EquipmentCategory::Weapon,
-      "quiver_marcellus",
-      std::make_shared<QuiverRenderer>(marcellus_quiver_config()));
-  registry.register_equipment(
-      EquipmentCategory::Weapon,
-      "quiver_hasdrubal",
-      std::make_shared<QuiverRenderer>(hasdrubal_quiver_config()));
-
-  auto roman_scutum = std::make_shared<RomanScutumRenderer>();
-  registry.register_equipment(EquipmentCategory::Weapon, "roman_scutum", roman_scutum);
-
-  auto carthage_heavy_helmet = std::make_shared<CarthageHeavyHelmetRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Helmet, "carthage_heavy", carthage_heavy_helmet);
-  auto roman_heavy_helmet = std::make_shared<RomanHeavyHelmetRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Helmet, "roman_heavy", roman_heavy_helmet);
-  auto roman_light_helmet = std::make_shared<RomanLightHelmetRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Helmet, "roman_light", roman_light_helmet);
-
-  auto carthage_light_helmet = std::make_shared<CarthageLightHelmetRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Helmet, "carthage_light", carthage_light_helmet);
-
-  auto headwrap = std::make_shared<HeadwrapRenderer>();
-  registry.register_equipment(EquipmentCategory::Helmet, "headwrap", headwrap);
-
-  auto roman_heavy_armor = std::make_shared<RomanHeavyArmorRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Armor, "roman_heavy_armor", roman_heavy_armor);
-
-  auto roman_light_armor = std::make_shared<RomanLightArmorRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Armor, "roman_light_armor", roman_light_armor);
-
-  auto armor_light_carthage = std::make_shared<ArmorLightCarthageRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Armor, "armor_light_carthage", armor_light_carthage);
-
-  auto armor_heavy_carthage = std::make_shared<ArmorHeavyCarthageRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Armor, "armor_heavy_carthage", armor_heavy_carthage);
-
-  auto roman_shoulder_cover = std::make_shared<RomanShoulderCoverRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Armor, "roman_shoulder_cover", roman_shoulder_cover);
-  auto roman_shoulder_cover_cavalry =
-      std::make_shared<RomanShoulderCoverRenderer>(1.8F);
-  registry.register_equipment(EquipmentCategory::Armor,
-                              "roman_shoulder_cover_cavalry",
-                              roman_shoulder_cover_cavalry);
-
-  auto roman_greaves = std::make_shared<RomanGreavesRenderer>();
-  registry.register_equipment(EquipmentCategory::Armor, "roman_greaves", roman_greaves);
-
-  auto carthage_shoulder_cover = std::make_shared<CarthageShoulderCoverRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Armor, "carthage_shoulder_cover", carthage_shoulder_cover);
-  auto carthage_shoulder_cover_cavalry =
-      std::make_shared<CarthageShoulderCoverRenderer>(1.8F);
-  registry.register_equipment(EquipmentCategory::Armor,
-                              "carthage_shoulder_cover_cavalry",
-                              carthage_shoulder_cover_cavalry);
-  CloakConfig carthage_cloak_config;
-  carthage_cloak_config.primary_color = QVector3D(0.14F, 0.38F, 0.54F);
-  carthage_cloak_config.trim_color = QVector3D(0.75F, 0.66F, 0.42F);
-  auto cloak_carthage = std::make_shared<CloakRenderer>(carthage_cloak_config);
-  registry.register_equipment(
-      EquipmentCategory::Armor, "cloak_carthage", cloak_carthage);
-  auto cloak_carthage_mounted =
-      std::make_shared<CloakRenderer>(carthage_mounted_cloak_config());
-  registry.register_equipment(
-      EquipmentCategory::Armor, "cloak_carthage_mounted", cloak_carthage_mounted);
-  auto cloak_sepulcher = std::make_shared<CloakRenderer>(sepulcher_cloak_config());
-  registry.register_equipment(
-      EquipmentCategory::Armor, "cloak_sepulcher", cloak_sepulcher);
-  CloakConfig roman_cloak_config;
-  roman_cloak_config.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
-  roman_cloak_config.trim_color = QVector3D(0.78F, 0.72F, 0.58F);
-  roman_cloak_config.back_material_id = 12;
-  roman_cloak_config.shoulder_material_id = 13;
-  auto cloak_roman = std::make_shared<CloakRenderer>(roman_cloak_config);
-  registry.register_equipment(EquipmentCategory::Armor, "cloak_roman", cloak_roman);
-  auto cloak_roman_mounted =
-      std::make_shared<CloakRenderer>(roman_mounted_cloak_config());
-  registry.register_equipment(
-      EquipmentCategory::Armor, "cloak_roman_mounted", cloak_roman_mounted);
-
-  auto sword = std::make_shared<SwordRenderer>();
-  registry.register_equipment(EquipmentCategory::Weapon, "sword", sword);
-
-  auto sword_carthage = std::make_shared<CarthageSwordRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Weapon, "sword_carthage", sword_carthage);
-  registry.register_equipment(
-      EquipmentCategory::Weapon,
-      "sword_sepulcher",
-      std::make_shared<SwordRenderer>(sepulcher_sword_config()));
-
-  auto sword_roman = std::make_shared<RomanSwordRenderer>();
-  registry.register_equipment(EquipmentCategory::Weapon, "sword_roman", sword_roman);
-  registry.register_equipment(EquipmentCategory::Weapon,
-                              "sword_scipio",
-                              std::make_shared<SwordRenderer>(scipio_sword_config()));
-  registry.register_equipment(EquipmentCategory::Weapon,
-                              "sword_hannibal",
-                              std::make_shared<SwordRenderer>(hannibal_sword_config()));
-
-  auto spear = std::make_shared<SpearRenderer>();
-  registry.register_equipment(EquipmentCategory::Weapon, "spear", spear);
-  registry.register_equipment(EquipmentCategory::Weapon,
-                              "spear_fabius",
-                              std::make_shared<SpearRenderer>(fabius_spear_config()));
-  registry.register_equipment(EquipmentCategory::Weapon,
-                              "spear_hanno",
-                              std::make_shared<SpearRenderer>(hanno_spear_config()));
-
-  registry.register_equipment(EquipmentCategory::Weapon,
-                              "bow_marcellus",
-                              std::make_shared<BowRenderer>(marcellus_bow_config()));
-  registry.register_equipment(EquipmentCategory::Weapon,
-                              "bow_hasdrubal",
-                              std::make_shared<BowRenderer>(hasdrubal_bow_config()));
-
-  auto shield = std::make_shared<ShieldRenderer>();
-  registry.register_equipment(EquipmentCategory::Weapon, "shield", shield);
-
-  auto shield_carthage = std::make_shared<CarthageShieldRenderer>();
-  registry.register_equipment(
-      EquipmentCategory::Weapon, "shield_carthage", shield_carthage);
-
-  auto shield_carthage_cavalry = std::make_shared<CarthageShieldRenderer>(0.84F);
-  registry.register_equipment(
-      EquipmentCategory::Weapon, "shield_carthage_cavalry", shield_carthage_cavalry);
-
-  WorkApronConfig roman_apron_config;
-  roman_apron_config.leather_color = QVector3D(0.48F, 0.35F, 0.22F);
-  auto work_apron_roman = std::make_shared<WorkApronRenderer>(roman_apron_config);
-  registry.register_equipment(
-      EquipmentCategory::Armor, "work_apron_roman", work_apron_roman);
-
-  WorkApronConfig carthage_apron_config;
-  carthage_apron_config.leather_color = QVector3D(0.44F, 0.30F, 0.18F);
-  auto work_apron_carthage = std::make_shared<WorkApronRenderer>(carthage_apron_config);
-  registry.register_equipment(
-      EquipmentCategory::Armor, "work_apron_carthage", work_apron_carthage);
-
-  ToolBeltConfig roman_tool_belt_config;
-  roman_tool_belt_config.leather_color = QVector3D(0.52F, 0.40F, 0.28F);
-  roman_tool_belt_config.include_saw = true;
-  auto tool_belt_roman = std::make_shared<ToolBeltRenderer>(roman_tool_belt_config);
-  registry.register_equipment(
-      EquipmentCategory::Armor, "tool_belt_roman", tool_belt_roman);
-
-  ToolBeltConfig carthage_tool_belt_config;
-  carthage_tool_belt_config.leather_color = QVector3D(0.46F, 0.34F, 0.22F);
-  carthage_tool_belt_config.include_saw = true;
-  auto tool_belt_carthage =
-      std::make_shared<ToolBeltRenderer>(carthage_tool_belt_config);
-  registry.register_equipment(
-      EquipmentCategory::Armor, "tool_belt_carthage", tool_belt_carthage);
-
-  ArmGuardsConfig arm_guards_config;
-  arm_guards_config.leather_color = QVector3D(0.50F, 0.38F, 0.26F);
-  auto arm_guards = std::make_shared<ArmGuardsRenderer>(arm_guards_config);
-  registry.register_equipment(EquipmentCategory::Armor, "arm_guards", arm_guards);
-  registry.register_equipment(EquipmentCategory::Armor, "arm_guards_roman", arm_guards);
-  registry.register_equipment(
-      EquipmentCategory::Armor, "arm_guards_carthage", arm_guards);
   registry.register_placeholder_equipment(EquipmentCategory::Armor,
                                           "builder_tunic_roman");
   registry.register_placeholder_equipment(EquipmentCategory::Armor,
@@ -2231,35 +2076,21 @@ void register_built_in_equipment() {
   registry.register_placeholder_equipment(EquipmentCategory::Armor, "carthage_robes");
   registry.register_placeholder_equipment(EquipmentCategory::Armor,
                                           "carthage_civilian_sash");
-  registry.register_placeholder_equipment(EquipmentCategory::HorseTack,
-                                          "roman_horse_saddle");
-  registry.register_placeholder_equipment(EquipmentCategory::HorseTack,
-                                          "carthage_horse_saddle");
-  registry.register_placeholder_equipment(EquipmentCategory::HorseTack,
-                                          "light_cavalry_saddle");
 
-  registry.register_horse_equipment(
-      EquipmentCategory::HorseTack, "horse_bridle", std::make_shared<BridleRenderer>());
-  registry.register_horse_equipment(
-      EquipmentCategory::HorseTack, "horse_reins", std::make_shared<ReinsRenderer>());
-  registry.register_horse_equipment(EquipmentCategory::HorseTack,
-                                    "horse_blanket",
-                                    std::make_shared<BlanketRenderer>());
-  registry.register_horse_equipment(EquipmentCategory::HorseArmor,
-                                    "horse_leather_barding",
-                                    std::make_shared<LeatherBardingRenderer>());
-  registry.register_horse_equipment(EquipmentCategory::HorseArmor,
-                                    "horse_scale_barding",
-                                    std::make_shared<ScaleBardingRenderer>());
-  registry.register_horse_equipment(EquipmentCategory::HorseArmor,
-                                    "horse_champion_barding",
-                                    std::make_shared<ChampionRenderer>());
-  registry.register_horse_equipment(EquipmentCategory::HorseArmor,
-                                    "horse_crupper",
-                                    std::make_shared<CrupperRenderer>());
-  registry.register_horse_equipment(EquipmentCategory::HorseDecoration,
-                                    "horse_saddle_bag",
-                                    std::make_shared<SaddleBagRenderer>());
+  registry.register_equipment_id(EquipmentCategory::HorseTack, "roman_horse_saddle");
+  registry.register_equipment_id(EquipmentCategory::HorseTack, "carthage_horse_saddle");
+  registry.register_equipment_id(EquipmentCategory::HorseTack, "light_cavalry_saddle");
+  registry.register_equipment_id(EquipmentCategory::HorseTack, "horse_bridle");
+  registry.register_equipment_id(EquipmentCategory::HorseTack, "horse_reins");
+  registry.register_equipment_id(EquipmentCategory::HorseTack, "horse_blanket");
+  registry.register_equipment_id(EquipmentCategory::HorseArmor,
+                                 "horse_leather_barding");
+  registry.register_equipment_id(EquipmentCategory::HorseArmor, "horse_scale_barding");
+  registry.register_equipment_id(EquipmentCategory::HorseArmor,
+                                 "horse_champion_barding");
+  registry.register_equipment_id(EquipmentCategory::HorseArmor, "horse_crupper");
+  registry.register_equipment_id(EquipmentCategory::HorseDecoration,
+                                 "horse_saddle_bag");
 
   register_horse_descriptor(
       EquipmentCategory::HorseTack,

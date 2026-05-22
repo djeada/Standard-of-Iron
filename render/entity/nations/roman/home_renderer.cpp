@@ -9,6 +9,7 @@
 #include "../../../geom/math_utils.h"
 #include "../../../submitter.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
@@ -31,6 +32,7 @@ struct RomanPalette {
   QVector3D terracotta_dark{0.68F, 0.48F, 0.32F};
   QVector3D blue_accent{0.28F, 0.48F, 0.68F};
   QVector3D blue_light{0.40F, 0.60F, 0.80F};
+  QVector3D gold{0.85F, 0.72F, 0.35F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
@@ -148,17 +150,62 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.limestone,
                k_building_state_mask_intact);
 
+  desc.add_box(
+      QVector3D(0.0F, 0.06F, 1.06F), QVector3D(0.56F, 0.04F, 0.16F), c.limestone_dark);
+  desc.add_box(QVector3D(0.0F, 0.14F, 0.92F),
+               QVector3D(0.42F, 0.04F, 0.14F),
+               c.limestone_shade,
+               k_building_state_mask_intact);
+  if (state != BuildingState::Destroyed) {
+    desc.add_box(QVector3D(0.0F, 0.22F, 0.80F),
+                 QVector3D(0.30F, 0.04F, 0.12F),
+                 c.marble,
+                 k_building_state_mask_intact);
+  }
+
   desc.add_box(QVector3D(0.0F, 1.25F, 0.0F),
                QVector3D(1.06F, 0.06F, 1.06F),
                c.terracotta,
                k_building_state_mask_intact);
 
-  for (float z = -0.84F; z <= 0.84F; z += 0.42F) {
-    desc.add_box(QVector3D(0.0F, 1.32F, z),
-                 QVector3D(1.02F, 0.03F, 0.06F),
+  add_tile_rows_z(
+      [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+        desc.add_box(
+            center, size, color, k_building_state_mask_intact, BuildingLODMask::Full);
+      },
+      1.32F,
+      -0.84F,
+      0.84F,
+      0.42F,
+      QVector3D(1.02F, 0.03F, 0.06F),
+      c.terracotta_dark);
+
+  if (state != BuildingState::Destroyed) {
+    desc.add_box(QVector3D(0.0F, 1.38F, 0.94F),
+                 QVector3D(0.60F, 0.05F, 0.05F),
                  c.terracotta_dark,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(0.0F, 1.45F, 0.86F),
+                 QVector3D(0.42F, 0.05F, 0.05F),
+                 c.terracotta,
+                 k_building_state_mask_intact);
+    if (state == BuildingState::Normal) {
+      desc.add_box(QVector3D(0.0F, 1.52F, 0.78F),
+                   QVector3D(0.24F, 0.05F, 0.04F),
+                   c.blue_accent,
+                   BuildingStateMask::Normal,
+                   BuildingLODMask::Full);
+      desc.add_box(QVector3D(-0.58F, 1.40F, 0.88F),
+                   QVector3D(0.05F, 0.07F, 0.05F),
+                   c.gold,
+                   BuildingStateMask::Normal,
+                   BuildingLODMask::Full);
+      desc.add_box(QVector3D(0.58F, 1.40F, 0.88F),
+                   QVector3D(0.05F, 0.07F, 0.05F),
+                   c.gold,
+                   BuildingStateMask::Normal,
+                   BuildingLODMask::Full);
+    }
   }
 
   desc.add_box(

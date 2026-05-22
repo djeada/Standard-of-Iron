@@ -9,7 +9,11 @@
     "tile_size": 1.0
   },
   "camera": {
-    "center": [0.0, 0.0, 0.0],
+    "center": [
+      0.0,
+      0.0,
+      0.0
+    ],
     "distance": 18.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
@@ -72,7 +76,9 @@
       "leash_radius": 14.0,
       "owner_id": 99,
       "team_id": 99,
-      "awaken_on": ["unit_enters_radius"],
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
       "waves": [
         {
           "trigger": "initial",
@@ -98,7 +104,9 @@
       "leash_radius": 12.0,
       "owner_id": 99,
       "team_id": 99,
-      "awaken_on": ["unit_enters_radius"],
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
       "waves": [
         {
           "trigger": "initial",
@@ -113,7 +121,17 @@
   "victory": {
     "type": "survive_time",
     "duration": 600.0,
-    "defeat_conditions": ["no_commander", "only_commander_remaining"]
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ]
   },
-  "time_of_day": "night"
+  "time_of_day": "night",
+  "starting_resources": {
+    "gold": 150,
+    "food": 100,
+    "wood": 100,
+    "stone": 200,
+    "iron": 200
+  }
 }

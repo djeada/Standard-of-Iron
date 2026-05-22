@@ -257,26 +257,26 @@
     {
       "type": "survive_duration",
       "duration": 780.0,
-      "description": "Hold Campania for 13 minutes against the Roman counteroffensive"
+      "description": "Hold Campania for thirteen minutes of blood. Then hold it more."
     }
   ],
   "defeat_conditions": [
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Do not lose your central command barracks"
+      "description": "Lose the stronghold and Campania is Roman again before morning."
     },
     {
       "type": "lose_all_units",
-      "description": "Do not lose all your units"
+      "description": "Every soldier lost is counted by the enemy tonight."
     },
     {
       "type": "lose_commander",
-      "description": "Do not lose your commander"
+      "description": "The commander falls — and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
-      "description": "Do not leave only your commander alive without troops or barracks"
+      "description": "A general alone on a dead field is just the last corpse standing."
     }
   ],
   "optional_objectives": [
@@ -286,7 +286,7 @@
         "village"
       ],
       "min_count": 3,
-      "description": "Hold all three Campanian villages by the end of the defense"
+      "description": "Hold three command posts when the dust settles. Show them the ground has changed hands."
     },
     {
       "type": "capture_structures",
@@ -294,7 +294,7 @@
         "barracks"
       ],
       "min_count": 1,
-      "description": "Counterattack and capture at least one Roman camp"
+      "description": "Drive into the Roman rear and seize a barracks. Let them taste the same fear."
     }
   ],
   "events": [
@@ -358,5 +358,6 @@
         }
       ]
     }
-  ]
+  ],
+  "theme": "Roman columns gather on every horizon above the Carthaginian fields."
 }

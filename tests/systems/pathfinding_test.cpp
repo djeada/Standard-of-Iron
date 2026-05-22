@@ -245,4 +245,30 @@ TEST_F(PathfindingTest, RuntimeHarvestPropsAreMarkedAfterTerrainLoads) {
   EXPECT_GT(checked, 0);
 }
 
+TEST_F(PathfindingTest, FindPathResolvesBlockedDestinationToNearestWalkableCell) {
+  Game::Systems::Pathfinding pathfinding(8, 8);
+  pathfinding.update_building_obstacles();
+  pathfinding.set_obstacle(5, 5, true);
+
+  auto const path = pathfinding.find_path({2, 2}, {5, 5});
+
+  ASSERT_FALSE(path.empty());
+  EXPECT_EQ(path.front(), (Game::Systems::Point{2, 2}));
+  EXPECT_NE(path.back(), (Game::Systems::Point{5, 5}));
+  EXPECT_TRUE(pathfinding.is_walkable(path.back().x, path.back().y));
+  EXPECT_LE(std::abs(path.back().x - 5), 1);
+  EXPECT_LE(std::abs(path.back().y - 5), 1);
+}
+
+TEST_F(PathfindingTest, FindPathResolvesOutOfBoundsDestinationToNearestWalkableCell) {
+  Game::Systems::Pathfinding pathfinding(8, 8);
+  pathfinding.update_building_obstacles();
+
+  auto const path = pathfinding.find_path({2, 2}, {32, 32});
+
+  ASSERT_FALSE(path.empty());
+  EXPECT_EQ(path.front(), (Game::Systems::Point{2, 2}));
+  EXPECT_EQ(path.back(), (Game::Systems::Point{7, 7}));
+}
+
 } // namespace

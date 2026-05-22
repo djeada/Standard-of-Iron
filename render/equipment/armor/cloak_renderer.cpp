@@ -208,7 +208,7 @@ auto make_cloak_shoulder_surface() -> ClothSurface {
   return surface;
 }
 
-auto shared_cloak_meshes() -> CloakMeshes {
+auto shared_cloak_meshes_impl() -> CloakMeshes {
   static std::unique_ptr<Mesh> const back_mesh =
       make_double_sided_cloth_mesh(make_cloak_back_surface());
   static std::unique_ptr<Mesh> const shoulder_mesh =
@@ -334,12 +334,16 @@ auto cloak_archetype(const CloakConfig& config,
 
 } // namespace
 
+auto shared_cloak_meshes() -> CloakMeshes {
+  return shared_cloak_meshes_impl();
+}
+
 CloakRenderer::CloakRenderer(const CloakConfig& config)
     : m_config(config) {
 }
 
 auto CloakRenderer::meshes() const noexcept -> CloakMeshes {
-  return shared_cloak_meshes();
+  return shared_cloak_meshes_impl();
 }
 
 void CloakRenderer::set_config(const CloakConfig& config) {
@@ -351,7 +355,7 @@ void CloakRenderer::render(const DrawContext& ctx,
                            const HumanoidPalette& palette,
                            const HumanoidAnimationContext& anim,
                            EquipmentBatch& batch) {
-  submit(m_config, shared_cloak_meshes(), ctx, frames, palette, anim, batch);
+  submit(m_config, shared_cloak_meshes_impl(), ctx, frames, palette, anim, batch);
 }
 
 void CloakRenderer::submit(const CloakConfig& config,

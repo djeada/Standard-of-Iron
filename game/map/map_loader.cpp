@@ -20,6 +20,7 @@
 #include "json_keys.h"
 #include "map/map_definition.h"
 #include "map/terrain.h"
+#include "systems/resource_types.h"
 #include "units/spawn_type.h"
 
 namespace Game::Map {
@@ -749,6 +750,15 @@ void read_bridges(const QJsonArray& arr,
   }
 }
 
+void read_starting_resources(const QJsonObject& obj,
+                             Game::Systems::ResourceAmounts& out) {
+  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+    const int value =
+        obj.value(QLatin1String(Game::Systems::resource_type_key(type))).toInt(0);
+    out.set(type, value);
+  }
+}
+
 } // namespace
 
 auto MapLoader::load_from_json_file(const QString& path,
@@ -886,6 +896,11 @@ auto MapLoader::load_from_json_file(const QString& path,
                  << "- defaulting to day";
       out_map.time_of_day = TimeOfDay::Day;
     }
+  }
+
+  if (root.contains(STARTING_RESOURCES) && root.value(STARTING_RESOURCES).isObject()) {
+    read_starting_resources(root.value(STARTING_RESOURCES).toObject(),
+                            out_map.starting_resources);
   }
 
   return true;

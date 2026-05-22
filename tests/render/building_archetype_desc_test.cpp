@@ -2,6 +2,7 @@
 #include <QVector3D>
 
 #include <array>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -46,6 +47,10 @@ public:
   void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
+auto fake_mesh(int id) -> Render::GL::Mesh* {
+  return reinterpret_cast<Render::GL::Mesh*>(static_cast<intptr_t>(id));
+}
+
 TEST(BuildingArchetypeDesc, FiltersPartsByBuildingStateMask) {
   using namespace Render::GL;
 
@@ -62,8 +67,8 @@ TEST(BuildingArchetypeDesc, FiltersPartsByBuildingStateMask) {
   const RenderArchetype destroyed =
       build_building_archetype(desc, BuildingState::Destroyed);
 
-  EXPECT_EQ(normal.lods[0].draws.size(), 2u);
-  EXPECT_EQ(destroyed.lods[0].draws.size(), 1u);
+  EXPECT_EQ(normal.lods[0].draws.size(), 2U);
+  EXPECT_EQ(destroyed.lods[0].draws.size(), 1U);
 }
 
 TEST(BuildingArchetypeDesc, PreservesPaletteDrivenParts) {
@@ -72,7 +77,8 @@ TEST(BuildingArchetypeDesc, PreservesPaletteDrivenParts) {
   BuildingArchetypeDesc desc("palette_test");
   desc.add_palette_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F), 0);
 
-  RenderArchetype archetype = build_building_archetype(desc, BuildingState::Normal);
+  RenderArchetype const archetype =
+      build_building_archetype(desc, BuildingState::Normal);
   std::array<QVector3D, 1> palette{QVector3D(0.2F, 0.4F, 0.8F)};
 
   RenderInstance instance;
@@ -82,7 +88,7 @@ TEST(BuildingArchetypeDesc, PreservesPaletteDrivenParts) {
   RecordingSubmitter submitter;
   submit_render_instance(submitter, instance);
 
-  ASSERT_EQ(submitter.meshes.size(), 1u);
+  ASSERT_EQ(submitter.meshes.size(), 1U);
   EXPECT_EQ(submitter.meshes[0].color, palette[0]);
 }
 
@@ -126,8 +132,8 @@ TEST(BuildingArchetypeDesc, FiltersBuildingLODMask) {
   const RenderArchetype archetype =
       build_building_archetype(desc, BuildingState::Normal);
 
-  EXPECT_EQ(archetype.lods[0].draws.size(), 2u);
-  EXPECT_EQ(archetype.lods[1].draws.size(), 1u);
+  EXPECT_EQ(archetype.lods[0].draws.size(), 2U);
+  EXPECT_EQ(archetype.lods[1].draws.size(), 1U);
 }
 
 TEST(BuildingArchetypeDesc, SetFullLodMaxDistanceConfiguresSlice) {
@@ -143,6 +149,26 @@ TEST(BuildingArchetypeDesc, SetFullLodMaxDistanceConfiguresSlice) {
       build_building_archetype(desc, BuildingState::Normal);
 
   EXPECT_FLOAT_EQ(archetype.lods[0].max_distance, 45.0F);
+}
+
+TEST(BuildingArchetypeDesc, RecordedLodsPreserveSeparateFullAndMinimalMeshes) {
+  using namespace Render::GL;
+
+  RecordedMeshCmd const full_cmd{.mesh = fake_mesh(11),
+                                 .local_model = QMatrix4x4{},
+                                 .color = QVector3D(1.0F, 0.0F, 0.0F)};
+  RecordedMeshCmd const minimal_cmd{.mesh = fake_mesh(22),
+                                    .local_model = QMatrix4x4{},
+                                    .color = QVector3D(0.0F, 1.0F, 0.0F)};
+
+  const RenderArchetype archetype = build_building_archetype_from_recorded_lods(
+      "recorded_lods_test", {full_cmd}, {minimal_cmd}, 72.0F);
+
+  ASSERT_EQ(archetype.lods[0].draws.size(), 1U);
+  ASSERT_EQ(archetype.lods[1].draws.size(), 1U);
+  EXPECT_EQ(archetype.lods[0].draws[0].mesh, fake_mesh(11));
+  EXPECT_EQ(archetype.lods[1].draws[0].mesh, fake_mesh(22));
+  EXPECT_FLOAT_EQ(archetype.lods[0].max_distance, 72.0F);
 }
 
 } // namespace

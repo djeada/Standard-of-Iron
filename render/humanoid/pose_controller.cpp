@@ -730,8 +730,11 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
 
   draw_phase = std::clamp(draw_phase, 0.0F, 1.0F);
 
+  // Pre-lean bow shoulder so the IK chain can reach the extended hand_r target.
+  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + 0.10F);
+
   QVector3D const aim_pos(-0.02F, HP::SHOULDER_Y + 0.18F, 0.42F);
-  QVector3D const draw_pos(-0.05F, HP::SHOULDER_Y + 0.12F, 0.22F);
+  QVector3D const draw_pos(0.03F, HP::SHOULDER_Y + 0.04F, 0.22F);
   QVector3D const release_pos(-0.02F, HP::SHOULDER_Y + 0.20F, 0.34F);
 
   QVector3D hand_l_target;
@@ -787,7 +790,7 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
   hand_l_target.setX(hand_l_target.x() + draw_sway_x);
   hand_l_target.setY(hand_l_target.y() + draw_sway_y);
 
-  QVector3D hand_r_target(0.03F, HP::SHOULDER_Y + 0.08F, 0.55F);
+  QVector3D hand_r_target(0.03F, HP::SHOULDER_Y + 0.08F, 0.62F);
   hand_r_target.setX(hand_r_target.x() + draw_sway_x * 0.3F);
   hand_r_target.setY(hand_r_target.y() + draw_sway_y * 0.3F);
   place_hand_at(Side::Right, hand_r_target);
@@ -1545,18 +1548,22 @@ void HumanoidPoseController::brace_spear_for_hold() {
 void HumanoidPoseController::hold_bow_ready() {
   using HP = HumanProportions;
 
-  QVector3D const bow_hand_pos(0.08F, HP::SHOULDER_Y - 0.08F, 0.34F);
-  QVector3D const support_hand_pos(0.02F, HP::SHOULDER_Y + 0.02F, 0.60F);
+  // Pre-lean bow shoulder before IK so the arm chain can reach the extended target.
+  // Without this the stored hand position (used for bow attachment) diverges from
+  // the rendered wrist position, making the bow float away from the hands.
+  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + 0.16F);
+
+  QVector3D const bow_hand_pos(0.06F, HP::SHOULDER_Y + 0.08F, 0.70F);
+  QVector3D const support_hand_pos(0.05F, HP::SHOULDER_Y + 0.04F, 0.34F);
 
   place_hand_at(Side::Right, bow_hand_pos);
   place_hand_at(Side::Left, support_hand_pos);
 
-  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - 0.01F);
-  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.05F);
-  m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + 0.05F);
-  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + 0.09F);
-  m_pose.neck_base.setZ(m_pose.neck_base.z() + 0.05F);
-  m_pose.head_pos.setZ(m_pose.head_pos.z() + 0.04F);
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + 0.02F);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.04F);
+  m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + 0.01F);
+  m_pose.neck_base.setZ(m_pose.neck_base.z() + 0.03F);
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + 0.02F);
   m_pose.head_pos.setY(m_pose.head_pos.y() - 0.01F);
 }
 

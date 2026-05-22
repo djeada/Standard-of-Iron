@@ -98,11 +98,14 @@ TEST_F(MountedPoseControllerTest, MountOnHorseLiftsUpperBody) {
   MountedPoseController controller(pose, anim_ctx);
 
   float const original_shoulder_y = pose.shoulder_l.y();
+  float const original_head_y = pose.head_pos.y();
 
   controller.mount_on_horse(mount);
 
   EXPECT_GT(pose.shoulder_l.y(), original_shoulder_y);
   EXPECT_GT(pose.shoulder_r.y(), original_shoulder_y);
+  EXPECT_GT(pose.head_pos.y(), original_head_y);
+  EXPECT_GT(pose.head_pos.y(), pose.pelvis_pos.y() + 0.60F);
 }
 
 TEST_F(MountedPoseControllerTest, DismountRestoresStandingPosition) {
@@ -342,11 +345,18 @@ TEST_F(MountedPoseControllerTest, KneePositionValidForMountedRiding) {
 
   controller.mount_on_horse(mount);
 
+  QVector3D const hip_l = pose.pelvis_pos + QVector3D(-0.10F, -0.02F, 0.0F);
+  QVector3D const hip_r = pose.pelvis_pos + QVector3D(0.10F, -0.02F, 0.0F);
+
   EXPECT_LT(pose.knee_l.y(), pose.pelvis_pos.y());
   EXPECT_GT(pose.knee_l.y(), pose.foot_l.y());
+  EXPECT_LT(pose.knee_l.x(), hip_l.x());
+  EXPECT_GT(pose.knee_l.z(), pose.foot_l.z());
 
   EXPECT_LT(pose.knee_r.y(), pose.pelvis_pos.y());
   EXPECT_GT(pose.knee_r.y(), pose.foot_r.y());
+  EXPECT_GT(pose.knee_r.x(), hip_r.x());
+  EXPECT_GT(pose.knee_r.z(), pose.foot_r.z());
 }
 
 TEST_F(MountedPoseControllerTest, ElbowPositionValidForAllActions) {

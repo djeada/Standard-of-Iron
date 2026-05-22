@@ -1601,6 +1601,13 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     case HumanoidLOD::Minimal: {
 
       ++s_render_stats.lod_minimal;
+      if (is_mounted_spawn &&
+          (ctx.template_prewarm ||
+           (!ctx.allow_template_cache && ctx.suppress_animation_state_persistence))) {
+        owner.append_companion_preparation(
+            inst_ctx, variant, pose, anim_ctx, inst_seed, graph_output.lod, out);
+        break;
+      }
       RCP::PreparedHumanoidBodyState body_state;
       body_state.graph = graph_output;
       body_state.pose = pose;

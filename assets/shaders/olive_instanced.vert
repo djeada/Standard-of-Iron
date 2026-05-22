@@ -44,12 +44,12 @@ void main() {
   float branch_id = floor(angle / TWO_PI * 4.0 + silhouette_seed * 4.0);
 
   if (trunk_mask > 0.0) {
-    float twist = sin(a_tex_coord.y * 20.0 + bark_seed * TWO_PI) * 0.02;
+    float twist = sin(a_tex_coord.y * 22.0 + bark_seed * TWO_PI) * 0.028;
     model_pos.x += twist * trunk_mask;
     model_pos.z += twist * 0.7 * trunk_mask;
   }
 
-  float height_norm = clamp(a_pos.y / 0.55, 0.0, 1.0);
+  float height_norm = clamp(a_pos.y / 1.10, 0.0, 1.0);
   float lean_angle = (silhouette_seed - 0.5) * 0.22;
   float lean_yaw = bark_seed * TWO_PI;
   model_pos.x += cos(lean_yaw) * lean_angle * height_norm * height_norm;
@@ -57,12 +57,23 @@ void main() {
 
   if (foliage_mask > 0.1) {
     float ang = atan(model_pos.z, model_pos.x);
-    float lump_base = sin(ang * 3.0 + silhouette_seed * TWO_PI) * 0.10;
-    float lump_fine = sin(ang * 5.0 + leaf_seed * TWO_PI * 1.7) * 0.04;
+    float lump_base = sin(ang * 2.6 + silhouette_seed * TWO_PI) * 0.07;
+    float lump_fine = sin(ang * 5.4 + leaf_seed * TWO_PI * 1.9) * 0.03;
     float lump_mag = (lump_base + lump_fine) * foliage_mask;
     model_pos.xz *= (1.0 + lump_mag);
 
-    float stretch = mix(0.88, 1.14, leaf_seed);
+    float canopy_height = clamp((a_pos.y - 0.34) / 0.76, 0.0, 1.0);
+    float upper_taper = mix(0.98, 0.72, canopy_height);
+    float lower_fill = mix(1.05, 0.94, canopy_height);
+    float canopy_profile =
+        mix(lower_fill, upper_taper, smoothstep(0.10, 0.96, canopy_height));
+    model_pos.xz *= canopy_profile;
+
+    float radial = length(model_pos.xz);
+    model_pos.y += canopy_height * (0.05 + leaf_seed * 0.08) -
+                   radial * radial * (0.03 + 0.02 * canopy_height);
+
+    float stretch = mix(1.08, 1.34, leaf_seed);
     model_pos.y *= mix(1.0, stretch, foliage_mask);
   }
 

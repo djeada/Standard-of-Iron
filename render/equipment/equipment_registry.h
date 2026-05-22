@@ -1,16 +1,12 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
-#include "i_equipment_renderer.h"
-
 namespace Render::GL {
-
-class IHorseEquipmentRenderer;
 
 enum class EquipmentCategory {
   Helmet,
@@ -27,50 +23,29 @@ class EquipmentRegistry {
 public:
   static auto instance() -> EquipmentRegistry&;
 
-  void register_equipment(EquipmentCategory category,
-                          const std::string& id,
-                          std::shared_ptr<IEquipmentRenderer> renderer);
+  void register_equipment_id(EquipmentCategory category, const std::string& id);
 
   void register_placeholder_equipment(EquipmentCategory category,
                                       const std::string& id);
-
-  void register_horse_equipment(EquipmentCategory category,
-                                const std::string& id,
-                                std::shared_ptr<IHorseEquipmentRenderer> renderer);
-
-  auto get(EquipmentCategory category,
-           const std::string& id) const -> std::shared_ptr<IEquipmentRenderer>;
-
-  auto get_horse(EquipmentCategory category, const std::string& id) const
-      -> std::shared_ptr<IHorseEquipmentRenderer>;
 
   auto has(EquipmentCategory category, const std::string& id) const -> bool;
 
   auto resolve_handle(EquipmentCategory category,
                       const std::string& id) const -> EquipmentHandle;
 
-  auto get(EquipmentHandle handle) const -> std::shared_ptr<IEquipmentRenderer>;
-
-  auto
-  get_horse(EquipmentHandle handle) const -> std::shared_ptr<IHorseEquipmentRenderer>;
-
   auto has(EquipmentHandle handle) const -> bool;
 
 private:
   EquipmentRegistry() = default;
-  void register_equipment_entry(EquipmentCategory category,
-                                const std::string& id,
-                                std::shared_ptr<IEquipmentRenderer> renderer);
+  void register_equipment_entry(EquipmentCategory category, const std::string& id);
 
   EquipmentRegistry(const EquipmentRegistry&) = delete;
   EquipmentRegistry(EquipmentRegistry&&) = delete;
   auto operator=(const EquipmentRegistry&) -> EquipmentRegistry& = delete;
   auto operator=(EquipmentRegistry&&) -> EquipmentRegistry& = delete;
 
-  std::unordered_map<
-      EquipmentCategory,
-      std::unordered_map<std::string, std::shared_ptr<IEquipmentRenderer>>>
-      m_renderers;
+  std::unordered_map<EquipmentCategory, std::unordered_set<std::string>>
+      m_registered_ids{};
 
   struct HandleKey {
     EquipmentCategory category{EquipmentCategory::Helmet};
@@ -89,7 +64,7 @@ private:
   };
 
   std::unordered_map<HandleKey, EquipmentHandle, HandleKeyHash> m_handles{};
-  std::vector<std::shared_ptr<IEquipmentRenderer>> m_renderers_by_handle{};
+  std::vector<HandleKey> m_keys_by_handle{};
 };
 
 void register_built_in_equipment();
