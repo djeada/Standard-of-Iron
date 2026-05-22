@@ -17,18 +17,49 @@
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.15,
     "irregularity_amplitude": 0.075,
-    "grass_primary": [0.28, 0.38, 0.25],
-    "grass_secondary": [0.4, 0.46, 0.3],
-    "grass_dry": [0.58, 0.55, 0.42],
-    "soil_color": [0.24, 0.22, 0.18],
-    "rock_low": [0.38, 0.38, 0.36],
-    "rock_high": [0.68, 0.68, 0.65],
-    "height_noise": [0.2, 0.065],
+    "grass_primary": [
+      0.28,
+      0.38,
+      0.25
+    ],
+    "grass_secondary": [
+      0.4,
+      0.46,
+      0.3
+    ],
+    "grass_dry": [
+      0.58,
+      0.55,
+      0.42
+    ],
+    "soil_color": [
+      0.24,
+      0.22,
+      0.18
+    ],
+    "rock_low": [
+      0.38,
+      0.38,
+      0.36
+    ],
+    "rock_high": [
+      0.68,
+      0.68,
+      0.65
+    ],
+    "height_noise": [
+      0.2,
+      0.065
+    ],
     "sway_speed": 0.65,
     "sway_strength": 0.1
   },
   "camera": {
-    "center": [110, 0, 85],
+    "center": [
+      110,
+      0,
+      85
+    ],
     "distance": 78.0,
     "tilt_deg": 50.0,
     "yaw": 225.0,
@@ -37,76 +68,130 @@
     "far": 650.0
   },
   "time_of_day": "morning",
-  "weather": {
-    "type": "snow",
-    "intensity": 0.72,
-    "temperature": "freezing",
-    "description": "Bitter winter snow. Units crossing the Trebia should feel exposed, slowed, and vulnerable."
-  },
   "rivers": [
     {
-      "start": [0, 78],
-      "end": [220, 78],
+      "start": [
+        0,
+        78
+      ],
+      "end": [
+        220,
+        78
+      ],
       "width": 14.0,
       "description": "The freezing Trebia River. The Roman army must cross this before reaching Hannibal's line."
     },
     {
-      "start": [0, 62],
-      "end": [88, 72],
+      "start": [
+        0,
+        62
+      ],
+      "end": [
+        88,
+        72
+      ],
       "width": 4.0,
       "description": "Braided western channel feeding into the main river."
     },
     {
-      "start": [135, 72],
-      "end": [220, 61],
+      "start": [
+        135,
+        72
+      ],
+      "end": [
+        220,
+        61
+      ],
       "width": 4.2,
       "description": "Braided eastern channel, making the flank crossing treacherous."
     },
     {
-      "start": [34, 120],
-      "end": [92, 84],
+      "start": [
+        34,
+        120
+      ],
+      "end": [
+        92,
+        84
+      ],
       "width": 3.0,
       "description": "Reed-filled drainage gully hiding Mago's ambush force."
     },
     {
-      "start": [142, 116],
-      "end": [188, 84],
+      "start": [
+        142,
+        116
+      ],
+      "end": [
+        188,
+        84
+      ],
       "width": 2.8,
       "description": "Eastern runoff ditch cutting the cavalry approach."
     }
   ],
   "bridges": [
     {
-      "start": [104, 69],
-      "end": [116, 87],
+      "start": [
+        104,
+        69
+      ],
+      "end": [
+        116,
+        87
+      ],
       "width": 5.8,
       "height": 0.65,
       "description": "Main frozen ford. This is where the Roman center becomes committed."
     },
     {
-      "start": [55, 66],
-      "end": [66, 82],
+      "start": [
+        55,
+        66
+      ],
+      "end": [
+        66,
+        82
+      ],
       "width": 4.4,
       "height": 0.6,
       "description": "Western timber crossing over the braided channel."
     },
     {
-      "start": [154, 82],
-      "end": [166, 66],
+      "start": [
+        154,
+        82
+      ],
+      "end": [
+        166,
+        66
+      ],
       "width": 4.4,
       "height": 0.6,
       "description": "Eastern timber crossing used by cavalry and flankers."
     },
     {
-      "start": [73, 96],
-      "end": [82, 89],
+      "start": [
+        73,
+        96
+      ],
+      "end": [
+        82,
+        89
+      ],
       "width": 3.8,
       "height": 0.55,
       "description": "Hidden reed crossing used by Mago's ambush troops."
     },
     {
-      "start": [164, 103],
-      "end": [173, 96],
+      "start": [
+        164,
+        103
+      ],
+      "end": [
+        173,
+        96
+      ],
       "width": 3.6,
       "height": 0.55,
       "description": "Small ditch crossing on the eastern cavalry sweep."
@@ -114,132 +199,333 @@
   ],
   "roads": [
     {
-      "start": [110, 8],
-      "end": [110, 158],
+      "start": [
+        110,
+        8
+      ],
+      "end": [
+        110,
+        158
+      ],
       "width": 4.0,
       "style": "default",
       "waypoints": [
-        [110, 8],
-        [110, 24],
-        [109, 40],
-        [108, 58],
-        [110, 78],
-        [111, 96],
-        [112, 116],
-        [112, 137],
-        [110, 158]
+        [
+          110,
+          8
+        ],
+        [
+          110,
+          24
+        ],
+        [
+          109,
+          40
+        ],
+        [
+          108,
+          58
+        ],
+        [
+          110,
+          78
+        ],
+        [
+          111,
+          96
+        ],
+        [
+          112,
+          116
+        ],
+        [
+          112,
+          137
+        ],
+        [
+          110,
+          158
+        ]
       ],
       "description": "Main north-south road through the Trebia ford."
     },
     {
-      "start": [22, 40],
-      "end": [66, 82],
+      "start": [
+        22,
+        40
+      ],
+      "end": [
+        66,
+        82
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [22, 40],
-        [34, 50],
-        [47, 61],
-        [58, 72],
-        [66, 82]
+        [
+          22,
+          40
+        ],
+        [
+          34,
+          50
+        ],
+        [
+          47,
+          61
+        ],
+        [
+          58,
+          72
+        ],
+        [
+          66,
+          82
+        ]
       ],
       "description": "Western Roman advance lane toward the secondary ford."
     },
     {
-      "start": [196, 42],
-      "end": [154, 82],
+      "start": [
+        196,
+        42
+      ],
+      "end": [
+        154,
+        82
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [196, 42],
-        [184, 52],
-        [172, 62],
-        [162, 73],
-        [154, 82]
+        [
+          196,
+          42
+        ],
+        [
+          184,
+          52
+        ],
+        [
+          172,
+          62
+        ],
+        [
+          162,
+          73
+        ],
+        [
+          154,
+          82
+        ]
       ],
       "description": "Eastern Roman advance lane toward the cavalry crossing."
     },
     {
-      "start": [112, 138],
-      "end": [110, 78],
+      "start": [
+        112,
+        138
+      ],
+      "end": [
+        110,
+        78
+      ],
       "width": 3.4,
       "style": "default",
       "waypoints": [
-        [112, 138],
-        [111, 124],
-        [111, 110],
-        [111, 94],
-        [110, 78]
+        [
+          112,
+          138
+        ],
+        [
+          111,
+          124
+        ],
+        [
+          111,
+          110
+        ],
+        [
+          111,
+          94
+        ],
+        [
+          110,
+          78
+        ]
       ],
       "description": "Carthaginian center approach. The warmed main line waits behind this route."
     },
     {
-      "start": [50, 138],
-      "end": [68, 84],
+      "start": [
+        50,
+        138
+      ],
+      "end": [
+        68,
+        84
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [50, 138],
-        [48, 122],
-        [53, 107],
-        [61, 94],
-        [68, 84]
+        [
+          50,
+          138
+        ],
+        [
+          48,
+          122
+        ],
+        [
+          53,
+          107
+        ],
+        [
+          61,
+          94
+        ],
+        [
+          68,
+          84
+        ]
       ],
       "description": "Western cavalry sweep route into the Roman flank."
     },
     {
-      "start": [170, 138],
-      "end": [158, 82],
+      "start": [
+        170,
+        138
+      ],
+      "end": [
+        158,
+        82
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [170, 138],
-        [174, 123],
-        [174, 108],
-        [168, 94],
-        [158, 82]
+        [
+          170,
+          138
+        ],
+        [
+          174,
+          123
+        ],
+        [
+          174,
+          108
+        ],
+        [
+          168,
+          94
+        ],
+        [
+          158,
+          82
+        ]
       ],
       "description": "Eastern cavalry sweep route into the Roman flank."
     },
     {
-      "start": [43, 120],
-      "end": [82, 89],
+      "start": [
+        43,
+        120
+      ],
+      "end": [
+        82,
+        89
+      ],
       "width": 2.2,
       "style": "default",
       "waypoints": [
-        [43, 120],
-        [54, 111],
-        [65, 101],
-        [75, 94],
-        [82, 89]
+        [
+          43,
+          120
+        ],
+        [
+          54,
+          111
+        ],
+        [
+          65,
+          101
+        ],
+        [
+          75,
+          94
+        ],
+        [
+          82,
+          89
+        ]
       ],
       "description": "Hidden reed-gully path for Mago's ambush force."
     },
     {
-      "start": [92, 128],
-      "end": [98, 60],
+      "start": [
+        92,
+        128
+      ],
+      "end": [
+        98,
+        60
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [92, 128],
-        [88, 112],
-        [88, 96],
-        [92, 80],
-        [98, 60]
+        [
+          92,
+          128
+        ],
+        [
+          88,
+          112
+        ],
+        [
+          88,
+          96
+        ],
+        [
+          92,
+          80
+        ],
+        [
+          98,
+          60
+        ]
       ],
       "description": "Numidian bait route. Skirmishers lure the Romans toward the frozen river."
     },
     {
-      "start": [137, 128],
-      "end": [122, 60],
+      "start": [
+        137,
+        128
+      ],
+      "end": [
+        122,
+        60
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [137, 128],
-        [140, 111],
-        [138, 94],
-        [132, 77],
-        [122, 60]
+        [
+          137,
+          128
+        ],
+        [
+          140,
+          111
+        ],
+        [
+          138,
+          94
+        ],
+        [
+          132,
+          77
+        ],
+        [
+          122,
+          60
+        ]
       ],
       "description": "Second bait route used to draw Roman cavalry into the eastern ford."
     }
@@ -284,9 +570,18 @@
       "rotation": 0,
       "description": "Carthaginian command ridge. Hannibal's army waits fed, dry, and prepared.",
       "entrances": [
-        { "x": 90, "z": 137 },
-        { "x": 130, "z": 137 },
-        { "x": 110, "z": 122 }
+        {
+          "x": 90,
+          "z": 137
+        },
+        {
+          "x": 130,
+          "z": 137
+        },
+        {
+          "x": 110,
+          "z": 122
+        }
       ]
     },
     {
@@ -299,9 +594,18 @@
       "rotation": 0,
       "description": "Roman camp ridge on the north bank.",
       "entrances": [
-        { "x": 91, "z": 33 },
-        { "x": 129, "z": 33 },
-        { "x": 110, "z": 46 }
+        {
+          "x": 91,
+          "z": 33
+        },
+        {
+          "x": 129,
+          "z": 33
+        },
+        {
+          "x": 110,
+          "z": 46
+        }
       ]
     },
     {
@@ -370,8 +674,14 @@
       "rotation": -8,
       "description": "Left infantry shoulder of the Carthaginian line.",
       "entrances": [
-        { "x": 70, "z": 111 },
-        { "x": 94, "z": 113 }
+        {
+          "x": 70,
+          "z": 111
+        },
+        {
+          "x": 94,
+          "z": 113
+        }
       ]
     },
     {
@@ -384,8 +694,14 @@
       "rotation": 8,
       "description": "Right infantry shoulder of the Carthaginian line.",
       "entrances": [
-        { "x": 126, "z": 113 },
-        { "x": 150, "z": 111 }
+        {
+          "x": 126,
+          "z": 113
+        },
+        {
+          "x": 150,
+          "z": 111
+        }
       ]
     },
     {
@@ -444,7 +760,6 @@
       "nation": "roman_republic",
       "description": "Roman winter camp"
     },
-
     {
       "type": "horse_archer",
       "x": 96,
@@ -470,7 +785,6 @@
       "z": 126,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 95,
@@ -544,7 +858,6 @@
       "z": 142,
       "player_id": 1
     },
-
     {
       "type": "horse_swordsman",
       "x": 55,
@@ -570,7 +883,6 @@
       "z": 116,
       "player_id": 1
     },
-
     {
       "type": "horse_swordsman",
       "x": 165,
@@ -596,7 +908,6 @@
       "z": 116,
       "player_id": 1
     },
-
     {
       "type": "elephant",
       "x": 91,
@@ -610,7 +921,6 @@
       "z": 135,
       "player_id": 1
     },
-
     {
       "type": "swordsman",
       "x": 45,
@@ -661,7 +971,6 @@
       "player_id": 1,
       "hidden": true
     },
-
     {
       "type": "spearman",
       "x": 95,
@@ -723,7 +1032,6 @@
       "z": 45,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 87,
@@ -773,7 +1081,6 @@
       "z": 63,
       "player_id": 2
     },
-
     {
       "type": "horse_swordsman",
       "x": 54,
@@ -799,7 +1106,6 @@
       "z": 51,
       "player_id": 2
     },
-
     {
       "type": "horse_swordsman",
       "x": 166,
@@ -825,7 +1131,6 @@
       "z": 51,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 91,
@@ -1045,63 +1350,59 @@
     }
   ],
   "victory": {
-    "type": "custom",
+    "type": "capture_structures",
     "defeat_conditions": [
       "no_commander",
       "only_commander_remaining"
     ],
-    "description": "Bait the Roman army across the freezing Trebia, hold them on the muddy south bank, then spring Mago's hidden force to destroy their rear and prevent a retreat.",
-    "primary_objectives": [
-      "Use Numidian horse archers to draw the Romans across the Trebia",
-      "Hold the Carthaginian main line south of the river",
-      "Attack both Roman flanks with cavalry once their center crosses",
-      "Reveal Mago's hidden force from the reed gully and cut off the Roman retreat",
-      "Destroy the Roman army before it can reform north of the river"
+    "key_structures": [
+      "barracks"
     ],
-    "secondary_objectives": [
-      "Keep both elephants alive",
-      "Destroy Roman cavalry on both side fords",
-      "Prevent more than a small group of Romans from escaping to the northern camp",
-      "Hold the abandoned riverside hamlet after the main crossing"
-    ],
-    "trap_zone": {
-      "x": 110,
-      "z": 91,
-      "width": 92,
-      "depth": 40
-    },
-    "river_crossing_zone": {
-      "x": 110,
-      "z": 78,
-      "width": 120,
-      "depth": 24
-    },
-    "ambush_zone": {
-      "x": 58,
-      "z": 106,
-      "width": 44,
-      "depth": 34
-    },
-    "escape_zones": [
-      {
-        "name": "roman_northern_camp",
-        "x": 110,
-        "z": 16,
-        "radius": 16
-      },
-      {
-        "name": "western_ford_escape",
-        "x": 55,
-        "z": 52,
-        "radius": 10
-      },
-      {
-        "name": "eastern_ford_escape",
-        "x": 166,
-        "z": 52,
-        "radius": 10
-      }
-    ],
-    "failure_hint": "If the Romans cross back north of the Trebia with too many units, Hannibal's ambush becomes only a limited victory."
-  }
+    "min_count": 1
+  },
+  "starting_resources": {
+    "gold": 300,
+    "food": 200,
+    "wood": 100,
+    "stone": 50,
+    "iron": 150
+  },
+  "rain": {
+    "enabled": true,
+    "type": "snow",
+    "intensity": 0.72,
+    "cycle_duration": 300.0,
+    "active_duration": 120.0,
+    "fade_duration": 8.0
+  },
+  "undead_zones": [
+    {
+      "id": "frozen_dead",
+      "anchor_type": "ruins",
+      "x": 70,
+      "z": 85,
+      "radius": 9.0,
+      "leash_radius": 16.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "skeleton_archer": 2,
+            "grave_priest": 1
+          }
+        }
+      ]
+    }
+  ]
 }

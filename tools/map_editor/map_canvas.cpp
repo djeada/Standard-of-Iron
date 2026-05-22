@@ -206,12 +206,13 @@ void MapCanvas::paintEvent(QPaintEvent*) {
   draw_world_props(painter);
   draw_structures(painter);
   draw_troop_spawns(painter);
+  draw_undead_zones(painter);
   draw_current_placement(painter);
 
   const bool is_empty =
       m_map_data->terrain_elements().isEmpty() && m_map_data->world_props().isEmpty() &&
       m_map_data->linear_elements().isEmpty() && m_map_data->structures().isEmpty() &&
-      m_map_data->troop_spawns().isEmpty();
+      m_map_data->troop_spawns().isEmpty() && m_map_data->undead_zones().isEmpty();
   if (is_empty) {
     painter.setOpacity(0.55);
     painter.setPen(k_empty_state_text);
@@ -488,6 +489,72 @@ void MapCanvas::draw_linear_elements(QPainter& painter) {
   }
 }
 
+void MapCanvas::draw_undead_zones(QPainter& painter) {
+  if (m_map_data == nullptr) {
+    return;
+  }
+
+  const bool is_eraser = (m_current_tool == ToolType::Eraser);
+  const QColor& hover_ring_color =
+      is_eraser ? k_hover_erase_color : k_hover_select_color;
+
+  static const QColor k_zone_fill(100, 40, 140, 55);
+  static const QColor k_zone_border(180, 80, 220, 200);
+  static const QColor k_leash_ring(140, 100, 180, 80);
+
+  const auto& zones = m_map_data->undead_zones();
+  for (int i = 0; i < zones.size(); ++i) {
+    const auto& elem = zones[i];
+    QPoint const center = grid_to_widget(elem.x, elem.z);
+
+    bool const is_selected = (m_selected_type == 5 && m_selected_index == i);
+    bool const is_hovered = (m_hovered_type == 5 && m_hovered_index == i);
+
+    const int radius_px = static_cast<int>(elem.radius * m_zoom * grid_cell_size);
+    const int leash_px = static_cast<int>(elem.leash_radius * m_zoom * grid_cell_size);
+
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing, true);
+
+    // Leash radius ring (dotted)
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(k_leash_ring, 1, Qt::DotLine));
+    painter.drawEllipse(center, leash_px, leash_px);
+
+    // Fill zone circle
+    painter.setBrush(k_zone_fill);
+    if (is_selected) {
+      painter.setPen(QPen(Qt::yellow, 2));
+    } else if (is_hovered) {
+      painter.setPen(QPen(hover_ring_color, 2));
+    } else {
+      painter.setPen(QPen(k_zone_border, 1));
+    }
+    painter.drawEllipse(center, radius_px, radius_px);
+
+    // Anchor icon in the center
+    const QString icon = (elem.anchor_type == QStringLiteral("ruins")) ? "🏚" : "✦";
+    painter.setPen(QColor(230, 180, 255));
+    QFont f = painter.font();
+    f.setPointSize(9);
+    painter.setFont(f);
+    painter.drawText(
+        QRect(center.x() - 10, center.y() - 10, 20, 20), Qt::AlignCenter, icon);
+
+    // Zone id label below
+    if (!elem.id.isEmpty()) {
+      f.setPointSize(7);
+      painter.setFont(f);
+      painter.setPen(QColor(210, 170, 240, 200));
+      painter.drawText(QRect(center.x() - 40, center.y() + radius_px + 2, 80, 14),
+                       Qt::AlignCenter,
+                       elem.id);
+    }
+
+    painter.restore();
+  }
+}
+
 void MapCanvas::draw_current_placement(QPainter& painter) {
   if (m_current_tool == ToolType::Select || m_current_tool == ToolType::Eraser) {
     return;
@@ -531,6 +598,17 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   if (is_troop_tool(m_current_tool)) {
     draw_troop_marker(
         painter, widget_pos, troop_type_for_tool(m_current_tool), m_current_player_id);
+  } else if (m_current_tool == ToolType::UndeadZone) {
+    const int radius_px = static_cast<int>(8.0F * m_zoom * grid_cell_size);
+    painter.setBrush(QColor(100, 40, 140, 55));
+    painter.setPen(QPen(QColor(180, 80, 220, 160), 1, Qt::DashLine));
+    painter.drawEllipse(widget_pos, radius_px, radius_px);
+    painter.setPen(QColor(230, 180, 255, 160));
+    QFont f = painter.font();
+    f.setPointSize(9);
+    painter.setFont(f);
+    painter.drawText(
+        QRect(widget_pos.x() - 10, widget_pos.y() - 10, 20, 20), Qt::AlignCenter, "☠");
   } else if (!type.isEmpty()) {
     draw_element(painter, type, widget_pos);
   }
@@ -628,8 +706,10 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
     const bool shift_held =
         event->modifiers() &
         static_cast<int>(
-            static_cast<int>(static_cast<unsigned int>(Qt::ShiftModifier != 0U) !=
-                             0U) != 0U != 0u);
+            static_cast<int>(static_cast<unsigned int>(
+                                 static_cast<int>(static_cast<unsigned int>(
+                                                      Qt::ShiftModifier != 0U) != 0U) !=
+                                 0U) != 0U) != 0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     switch (m_current_tool) {
@@ -658,6 +738,9 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
         } else if (hit.element_type == 4 &&
                    hit.index < m_map_data->troop_spawns().size()) {
           m_drag_pre_troop = m_map_data->troop_spawns()[hit.index];
+        } else if (hit.element_type == 5 &&
+                   hit.index < m_map_data->undead_zones().size()) {
+          m_drag_pre_undead_zone = m_map_data->undead_zones()[hit.index];
         }
       } else {
         m_is_pan_drag_pending = true;
@@ -700,6 +783,7 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
     case ToolType::TroopGravePriest:
     case ToolType::TroopCivilian:
     case ToolType::TroopBuilder:
+    case ToolType::UndeadZone:
       place_element(grid_pos);
       break;
     case ToolType::River:
@@ -801,6 +885,21 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent* event) {
                                                     "Move " + current.type));
         }
       }
+    } else if (m_selected_type == 5) {
+      const auto& undead_zones = m_map_data->undead_zones();
+      if (m_selected_index < undead_zones.size()) {
+        const UndeadZoneElement& current = undead_zones[m_selected_index];
+        const bool moved = (m_drag_pre_undead_zone.x != current.x) ||
+                           (m_drag_pre_undead_zone.z != current.z);
+        if (moved) {
+          m_map_data->record_command(
+              std::make_unique<UpdateUndeadZoneCmd>(m_map_data,
+                                                    m_selected_index,
+                                                    m_drag_pre_undead_zone,
+                                                    current,
+                                                    "Move undead zone"));
+        }
+      }
     }
   }
 
@@ -844,8 +943,10 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
     const bool shift_held =
         event->modifiers() &
         static_cast<int>(
-            static_cast<int>(static_cast<unsigned int>(Qt::ShiftModifier != 0U) !=
-                             0U) != 0U != 0u);
+            static_cast<int>(static_cast<unsigned int>(
+                                 static_cast<int>(static_cast<unsigned int>(
+                                                      Qt::ShiftModifier != 0U) != 0U) !=
+                                 0U) != 0U) != 0U != 0u);
     QPointF const grid_pos = shift_held ? raw_pos : snap_pos(raw_pos);
 
     if (m_selected_type == 0) {
@@ -895,6 +996,14 @@ void MapCanvas::mouseMoveEvent(QMouseEvent* event) {
         elem.x = static_cast<float>(grid_pos.x());
         elem.z = static_cast<float>(grid_pos.y());
         m_map_data->update_troop_spawn(m_selected_index, elem);
+      }
+    } else if (m_selected_type == 5) {
+      auto undead_zones = m_map_data->undead_zones();
+      if (m_selected_index < undead_zones.size()) {
+        UndeadZoneElement elem = undead_zones[m_selected_index];
+        elem.x = static_cast<float>(grid_pos.x());
+        elem.z = static_cast<float>(grid_pos.y());
+        m_map_data->update_undead_zone(m_selected_index, elem);
       }
     }
   }
@@ -1000,6 +1109,17 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QVector2D center_vec(static_cast<float>(center.x()),
                                static_cast<float>(center.y()));
     consider_hit(4, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 0);
+  }
+
+  // Undead zones: hit if cursor is within radius circle
+  const auto& undead_zones = m_map_data->undead_zones();
+  for (int i = undead_zones.size() - 1; i >= 0; --i) {
+    const auto& elem = undead_zones[i];
+    const QPoint center = grid_to_widget(elem.x, elem.z);
+    const QVector2D center_vec(static_cast<float>(center.x()),
+                               static_cast<float>(center.y()));
+    const float zone_radius_px = elem.radius * m_zoom * grid_cell_size;
+    consider_hit(5, i, -1, (cursor - center_vec).length(), zone_radius_px + 4.0F, 6);
   }
 
   const auto& structures = m_map_data->structures();
@@ -1117,6 +1237,27 @@ void MapCanvas::place_element(const QPointF& grid_pos) {
     elem.player_id = m_current_player_id;
     elem.max_population = default_troop_max_population;
     m_map_data->execute_command(std::make_unique<AddTroopSpawnCmd>(m_map_data, elem));
+  } else if (m_current_tool == ToolType::UndeadZone) {
+    UndeadZoneElement elem;
+    static int zone_counter = 0;
+    elem.id = QStringLiteral("zone_%1").arg(++zone_counter);
+    elem.anchor_type = QStringLiteral("magic_shrine");
+    elem.x = static_cast<float>(grid_pos.x());
+    elem.z = static_cast<float>(grid_pos.y());
+    elem.radius = 8.0F;
+    elem.leash_radius = 14.0F;
+    elem.owner_id = 99;
+    elem.team_id = 99;
+    elem.awaken_on = QJsonArray{QStringLiteral("unit_enters_radius")};
+    // Default wave: 2 skeleton swordsmen + 1 grave priest
+    QJsonObject units_obj;
+    units_obj[QStringLiteral("skeleton_swordsman")] = 2;
+    units_obj[QStringLiteral("grave_priest")] = 1;
+    QJsonObject wave;
+    wave[QStringLiteral("trigger")] = QStringLiteral("initial");
+    wave[QStringLiteral("units")] = units_obj;
+    elem.waves = QJsonArray{wave};
+    m_map_data->execute_command(std::make_unique<AddUndeadZoneCmd>(m_map_data, elem));
   }
 }
 
@@ -1195,6 +1336,9 @@ void MapCanvas::erase_at_position(const QPointF& grid_pos) {
   } else if (hit.element_type == 4 && hit.index >= 0) {
     m_map_data->execute_command(std::make_unique<RemoveTroopSpawnCmd>(
         m_map_data, hit.index, m_map_data->troop_spawns()[hit.index]));
+  } else if (hit.element_type == 5 && hit.index >= 0) {
+    m_map_data->execute_command(std::make_unique<RemoveUndeadZoneCmd>(
+        m_map_data, hit.index, m_map_data->undead_zones()[hit.index]));
   }
 }
 
@@ -1251,6 +1395,15 @@ void MapCanvas::keyPressEvent(QKeyEvent* event) {
         if (m_selected_index < troop_spawns.size()) {
           m_map_data->execute_command(std::make_unique<RemoveTroopSpawnCmd>(
               m_map_data, m_selected_index, troop_spawns[m_selected_index]));
+          m_selected_type = -1;
+          m_selected_index = -1;
+          emit selection_changed(-1, -1);
+        }
+      } else if (m_selected_type == 5) {
+        const auto& undead_zones = m_map_data->undead_zones();
+        if (m_selected_index < undead_zones.size()) {
+          m_map_data->execute_command(std::make_unique<RemoveUndeadZoneCmd>(
+              m_map_data, m_selected_index, undead_zones[m_selected_index]));
           m_selected_type = -1;
           m_selected_index = -1;
           emit selection_changed(-1, -1);

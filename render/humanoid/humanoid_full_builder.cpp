@@ -44,6 +44,8 @@ void compute_humanoid_body_metrics(const Render::GL::HumanoidPose& pose,
                                    const QVector3D& proportion_scaling,
                                    float torso_scale,
                                    HumanoidBodyMetrics& out) noexcept {
+  constexpr float k_torso_radius_scale = 0.78F;
+  constexpr float k_torso_depth_scale = 0.82F;
   float const width_scale = proportion_scaling.x();
   float const depth_scale = proportion_scaling.z();
 
@@ -73,13 +75,13 @@ void compute_humanoid_body_metrics(const Render::GL::HumanoidPose& pose,
   out.shoulder_half_span = shoulder_half_span;
 
   float const torso_r_base = std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
-  out.torso_r = torso_r_base * torso_scale;
+  out.torso_r = torso_r_base * torso_scale * k_torso_radius_scale;
 
   float const torso_depth_factor =
       std::clamp(HP::TORSO_DEPTH_FACTOR_BASE + (depth_scale - 1.0F) * 0.20F,
                  HP::TORSO_DEPTH_FACTOR_MIN,
                  HP::TORSO_DEPTH_FACTOR_MAX);
-  out.torso_depth = out.torso_r * torso_depth_factor;
+  out.torso_depth = out.torso_r * torso_depth_factor * k_torso_depth_scale;
 
   float const y_shoulder = shoulder_mid.y();
   float const y_neck = pose.neck_base.y();
@@ -125,8 +127,8 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
   pose.body_frames.waist.right = m.right_axis;
   pose.body_frames.waist.up = m.up_axis;
   pose.body_frames.waist.forward = m.forward_axis;
-  pose.body_frames.waist.radius = m.torso_r * 0.80F;
-  pose.body_frames.waist.depth = m.torso_depth * 0.72F;
+  pose.body_frames.waist.radius = m.torso_r * 0.56F;
+  pose.body_frames.waist.depth = m.torso_depth * 0.48F;
 
   QVector3D const shoulder_up = (pose.shoulder_l - pose.pelvis_pos).normalized();
   QVector3D shoulder_fwd_l = QVector3D::crossProduct(-m.right_axis, shoulder_up);

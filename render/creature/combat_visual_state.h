@@ -54,6 +54,13 @@ struct CombatVisualTimingConfig {
   float new_transaction_reset_threshold{0.18F};
 };
 
+struct CombatVisualQueuedAttack {
+  bool pending{false};
+  std::uint32_t target_id{0U};
+  Engine::Core::CombatAttackFamily family{Engine::Core::CombatAttackFamily::None};
+  SoldierCombatLane lane{SoldierCombatLane::None};
+};
+
 struct CombatVisualPersistentState {
   bool active{false};
   bool is_melee{false};
@@ -61,6 +68,8 @@ struct CombatVisualPersistentState {
   bool is_casting{false};
   bool finisher_attack{false};
   bool amplified_attack{false};
+  SoldierCombatLane locked_lane{SoldierCombatLane::None};
+  CombatVisualQueuedAttack queued_next{};
   CombatVisualTransactionPhase phase{CombatVisualTransactionPhase::None};
   CombatVisualExitPolicy exit_policy{CombatVisualExitPolicy::None};
   CombatVisualInterruptReason interruption_reason{CombatVisualInterruptReason::None};

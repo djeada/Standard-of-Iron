@@ -20,6 +20,49 @@ float hash13(vec3 p) {
 }
 
 vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4 wear) {
+  bool horse_material = material_id == 6;
+  bool horse_hoof = color_role == 4;
+  bool horse_hair = color_role == 5 || color_role == 6;
+  bool horse_muzzle = color_role == 7;
+  bool horse_eye = color_role == 8;
+  if (horse_eye) {
+    return base;
+  }
+  if (horse_hoof) {
+    vec3 hoof_pos = abs(pos_local) * vec3(11.0, 6.0, 13.0);
+    float horn = hash13(floor(hoof_pos) + 5.0);
+    float band = 0.5 + 0.5 * sin(pos_local.y * 24.0 + pos_local.z * 7.0);
+    vec3 hoof = base * (0.92 + horn * 0.06);
+    hoof += vec3(0.01) * band * 0.14;
+    return clamp(hoof, 0.0, 1.0);
+  }
+  if (horse_material) {
+    vec3 coat_pos = abs(pos_local);
+    float macro = hash13(floor(coat_pos * vec3(5.0, 9.0, 7.0)) + 7.0);
+    float micro = hash13(floor(coat_pos.yzx * vec3(21.0, 17.0, 23.0)) + 13.0);
+    float streak =
+        0.5 + 0.5 * sin(pos_local.z * 34.0 + pos_local.y * 18.0 + macro * 6.2831);
+    float dorsal = clamp(pos_local.y * 0.9 + 0.55, 0.0, 1.0);
+    vec3 fur = base;
+    if (horse_hair) {
+      float strand = 0.70 + 0.30 * streak;
+      float stray = hash13(floor(coat_pos.zxy * vec3(31.0, 19.0, 27.0)) + 31.0);
+      fur *= 0.90 + strand * 0.16;
+      fur = mix(fur, fur * vec3(0.80, 0.74, 0.68), stray * 0.10);
+      fur = mix(fur, min(fur * 1.10, vec3(1.0)), dorsal * 0.10);
+    } else if (horse_muzzle) {
+      float soft = 0.88 + macro * 0.10;
+      fur *= soft;
+      fur = mix(fur, fur * vec3(0.72, 0.66, 0.62), (1.0 - dorsal) * 0.18);
+    } else {
+      float underside = clamp((-pos_local.y + 0.10) * 0.8, 0.0, 1.0);
+      fur *= 0.92 + macro * 0.10 - underside * 0.06;
+      fur = mix(fur, min(fur * 1.08, vec3(1.0)), dorsal * 0.12 + micro * 0.05);
+      fur = mix(fur, fur * vec3(0.82, 0.80, 0.78), streak * 0.04);
+    }
+    return clamp(fur, 0.0, 1.0);
+  }
+
   float wear_amount = clamp(wear.x * 1.35, 0.0, 1.0);
   float grime_amount = clamp(wear.y * 1.35, 0.0, 1.0);
   float blood_amount = clamp(wear.z * 1.75, 0.0, 1.0);
@@ -97,14 +140,14 @@ void main() {
   }
   base = apply_wear(base, v_material_id, v_color_role, v_pos_local, v_wear_params);
 
-  vec3 normal = normalize(v_normal_ws);
+  vec3 surface_normal = normalize(v_normal_ws);
   vec3 light_dir = normalize(vec3(0.65, 0.50, 0.40));
 
   vec3 sun_color = vec3(1.08, 0.92, 0.74);
   vec3 sky_color = vec3(0.72, 0.80, 1.00);
 
   float wrap = 0.28;
-  float ndl = dot(normal, light_dir);
+  float ndl = dot(surface_normal, light_dir);
   float diff_raw = ndl * (1.0 - wrap) + wrap;
   float diff = max(diff_raw, 0.15);
 
@@ -112,5 +155,18 @@ void main() {
   vec3 light_tint = mix(sky_color * 0.34, sun_color, lit_t);
 
   vec3 color = clamp(base * diff * light_tint, 0.0, 1.0);
+  if (v_material_id == 6) {
+    bool horse_hair = v_color_role == 5 || v_color_role == 6;
+    bool dark_detail = v_color_role == 4 || v_color_role == 8;
+    float sheen =
+        pow(max(dot(normalize(surface_normal + vec3(0.0, 0.28, 0.14)), light_dir), 0.0),
+            horse_hair ? 12.0 : 7.0);
+    float skylight = clamp(surface_normal.y * 0.5 + 0.5, 0.0, 1.0);
+    color += sun_color * sheen * (horse_hair ? 0.14 : 0.06);
+    color += sky_color * (1.0 - skylight) * (horse_hair ? 0.04 : 0.02);
+    if (dark_detail) {
+      color = min(color, base * 1.10 + vec3(0.015));
+    }
+  }
   frag_color = vec4(color, v_alpha);
 }

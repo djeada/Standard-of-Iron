@@ -1170,5 +1170,12 @@
       "no_commander",
       "only_commander_remaining"
     ]
+  },
+  "starting_resources": {
+    "gold": 200,
+    "food": 200,
+    "wood": 150,
+    "stone": 100,
+    "iron": 100
   }
 }

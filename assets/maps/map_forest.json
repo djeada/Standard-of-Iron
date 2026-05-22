@@ -9,39 +9,66 @@
     "tile_size": 1.0
   },
   "time_of_day": "afternoon",
-  "difficulty_intent": "balanced_forest_maze",
-  "design_pillars": [
-    "This is a forest map, not a river map: no rivers, bridges, mountains, or water chokepoints.",
-    "The maze is made from forest density, clearings, roads, fallen trees, ridges, and prop-readable landmarks.",
-    "No road crosses any hill. Roads bend around hills and connect to hill entrances, lookout edges, villages, neutral barracks, and flanking lanes.",
-    "The center is valuable but not mandatory. Players can contest the shrine ridge, capture a neutral lodge, raid through forest trails, or pressure the enemy base through outer roads.",
-    "Two neutral barracks create side-objective tension without adding extra active empires."
-  ],
-  "active_players": [1, 2],
-  "neutral_barracks_count": 2,
   "biome": {
     "ground_type": "forest_mud",
     "seed": 12391,
     "patch_density": 3.45,
     "patch_jitter": 0.88,
-    "blade_height": [0.55, 1.5],
-    "blade_width": [0.026, 0.058],
+    "blade_height": [
+      0.55,
+      1.5
+    ],
+    "blade_width": [
+      0.026,
+      0.058
+    ],
     "sway_strength": 0.24,
     "sway_speed": 1.15,
-    "height_noise": [0.22, 0.07],
-    "grass_primary": [0.24, 0.52, 0.28],
-    "grass_secondary": [0.38, 0.64, 0.31],
-    "grass_dry": [0.52, 0.46, 0.34],
-    "soil_color": [0.24, 0.2, 0.16],
-    "rock_low": [0.42, 0.4, 0.38],
-    "rock_high": [0.66, 0.67, 0.68],
+    "height_noise": [
+      0.22,
+      0.07
+    ],
+    "grass_primary": [
+      0.24,
+      0.52,
+      0.28
+    ],
+    "grass_secondary": [
+      0.38,
+      0.64,
+      0.31
+    ],
+    "grass_dry": [
+      0.52,
+      0.46,
+      0.34
+    ],
+    "soil_color": [
+      0.24,
+      0.2,
+      0.16
+    ],
+    "rock_low": [
+      0.42,
+      0.4,
+      0.38
+    ],
+    "rock_high": [
+      0.66,
+      0.67,
+      0.68
+    ],
     "plant_density": 0.78,
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.13,
     "irregularity_amplitude": 0.065
   },
   "camera": {
-    "center": [125, 0, 125],
+    "center": [
+      125,
+      0,
+      125
+    ],
     "distance": 82.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
@@ -54,60 +81,10 @@
     "cycle_duration": 320.0,
     "active_duration": 75.0,
     "intensity": 0.55,
-    "fade_duration": 6.0,
-    "gameplay_note": "Rain is visual and atmospheric only; it should not create rivers or water crossings. Muddy roads may look darker but remain pathable."
+    "fade_duration": 6.0
   },
   "rivers": [],
   "bridges": [],
-  "map_constraints": {
-    "no_rivers": true,
-    "no_bridges": true,
-    "no_mountains": true,
-    "roads_must_not_cross_hills": true,
-    "road_rule": "Road waypoints may touch a hill entrance or skirt a hill edge, but must not pass through the hill footprint."
-  },
-  "route_design": [
-    {
-      "route_id": "central_shrine_ring",
-      "theme": "high-value middle without one-lane chokepoint",
-      "primary_roads": ["southwest_to_central_west_ring", "northeast_to_central_east_ring", "central_north_arc", "central_south_arc"],
-      "intended_choice": "Fight for the ruined shrine ridge and its surrounding clearings, but approach from multiple roads instead of one direct road over the hill.",
-      "risk": "The center attracts both armies and is vulnerable to flanks from north and south arcs.",
-      "reward": "Vision, safe rally point, and shorter rotations to both neutral barracks."
-    },
-    {
-      "route_id": "north_lodge_control",
-      "theme": "upper forest side objective",
-      "primary_roads": ["southwest_to_north_lodge_outer", "northeast_to_north_lodge_inner", "north_lodge_to_center"],
-      "intended_choice": "Capture the northern neutral barracks to gain archers and a protected route toward the enemy back road.",
-      "risk": "The path is longer and passes through dense ambush woods.",
-      "reward": "Neutral archer support and control over the northern forest loop."
-    },
-    {
-      "route_id": "south_lodge_control",
-      "theme": "lower forest side objective",
-      "primary_roads": ["southwest_to_south_lodge_inner", "northeast_to_south_lodge_outer", "south_lodge_to_center"],
-      "intended_choice": "Capture the southern neutral barracks to gain spearmen and control the lower ambush route.",
-      "risk": "The route is slower for siege and has multiple forest pockets where cavalry can be trapped.",
-      "reward": "Neutral spearmen, safer anti-cavalry screen, and access to the enemy's southern approach."
-    },
-    {
-      "route_id": "outer_raid_loop",
-      "theme": "long forest flank and backdoor pressure",
-      "primary_roads": ["western_outer_forest_road", "northern_outer_road", "eastern_outer_forest_road", "southern_outer_road"],
-      "intended_choice": "Avoid the center and use the long outer forest loop for raids, siege movement, or delayed attacks.",
-      "risk": "Travel time is long and neutral camps can interrupt unsupported armies.",
-      "reward": "Can bypass the central shrine and hit supply props or side entrances."
-    },
-    {
-      "route_id": "ambush_cutpaths",
-      "theme": "small tactical paths for infantry and scouts",
-      "primary_roads": ["western_ambush_cutpath", "eastern_ambush_cutpath", "north_shadow_trail", "south_shadow_trail"],
-      "intended_choice": "Use narrow forest tracks to hide archers, scouts, and small infantry groups.",
-      "risk": "Not ideal for catapults or large formations.",
-      "reward": "Surprise attacks onto roads, neutral barracks, or center ring."
-    }
-  ],
   "terrain": [
     {
       "id": "southwest_starting_clearing",
@@ -135,7 +112,20 @@
       "radius": 14,
       "height": 2.4,
       "description": "Southwestern camp mound. Roads stop at its entrances and loop around it instead of crossing it.",
-      "entrances": [{ "x": 78, "z": 61 }, { "x": 62, "z": 78 }, { "x": 49, "z": 55 }]
+      "entrances": [
+        {
+          "x": 78,
+          "z": 61
+        },
+        {
+          "x": 62,
+          "z": 78
+        },
+        {
+          "x": 49,
+          "z": 55
+        }
+      ]
     },
     {
       "id": "northeast_camp_mound",
@@ -145,7 +135,20 @@
       "radius": 14,
       "height": 2.4,
       "description": "Northeastern camp mound. Roads stop at its entrances and loop around it instead of crossing it.",
-      "entrances": [{ "x": 172, "z": 189 }, { "x": 188, "z": 172 }, { "x": 201, "z": 195 }]
+      "entrances": [
+        {
+          "x": 172,
+          "z": 189
+        },
+        {
+          "x": 188,
+          "z": 172
+        },
+        {
+          "x": 201,
+          "z": 195
+        }
+      ]
     },
     {
       "id": "central_shrine_ridge",
@@ -155,7 +158,24 @@
       "radius": 18,
       "height": 3.6,
       "description": "Central forest shrine ridge. Strong for archers, but all roads bend around it and approach only through entrance pockets.",
-      "entrances": [{ "x": 125, "z": 104 }, { "x": 125, "z": 146 }, { "x": 104, "z": 125 }, { "x": 146, "z": 125 }]
+      "entrances": [
+        {
+          "x": 125,
+          "z": 104
+        },
+        {
+          "x": 125,
+          "z": 146
+        },
+        {
+          "x": 104,
+          "z": 125
+        },
+        {
+          "x": 146,
+          "z": 125
+        }
+      ]
     },
     {
       "id": "central_west_clearing",
@@ -203,7 +223,20 @@
       "height": 2.4,
       "rotation": 20,
       "description": "Southwestern side ridge controlling the lower forest trail. Roads pass north and south of it, never over it.",
-      "entrances": [{ "x": 64, "z": 169 }, { "x": 96, "z": 177 }, { "x": 82, "z": 158 }]
+      "entrances": [
+        {
+          "x": 64,
+          "z": 169
+        },
+        {
+          "x": 96,
+          "z": 177
+        },
+        {
+          "x": 82,
+          "z": 158
+        }
+      ]
     },
     {
       "id": "north_lodge_ridge",
@@ -215,7 +248,20 @@
       "height": 2.4,
       "rotation": 200,
       "description": "Northeastern side ridge controlling the upper forest trail. Roads pass around its edges and connect to entrance pockets.",
-      "entrances": [{ "x": 154, "z": 73 }, { "x": 186, "z": 83 }, { "x": 168, "z": 92 }]
+      "entrances": [
+        {
+          "x": 154,
+          "z": 73
+        },
+        {
+          "x": 186,
+          "z": 83
+        },
+        {
+          "x": 168,
+          "z": 92
+        }
+      ]
     },
     {
       "id": "north_logging_overlook",
@@ -227,7 +273,20 @@
       "height": 2.3,
       "rotation": 90,
       "description": "Northern logging-road overlook. The northern road splits around this hill instead of crossing it.",
-      "entrances": [{ "x": 106, "z": 54 }, { "x": 144, "z": 56 }, { "x": 126, "z": 67 }]
+      "entrances": [
+        {
+          "x": 106,
+          "z": 54
+        },
+        {
+          "x": 144,
+          "z": 56
+        },
+        {
+          "x": 126,
+          "z": 67
+        }
+      ]
     },
     {
       "id": "south_bog_overlook",
@@ -239,7 +298,20 @@
       "height": 2.3,
       "rotation": 270,
       "description": "Southern bog-road overlook. The southern road splits around this hill instead of crossing it.",
-      "entrances": [{ "x": 106, "z": 194 }, { "x": 144, "z": 196 }, { "x": 124, "z": 183 }]
+      "entrances": [
+        {
+          "x": 106,
+          "z": 194
+        },
+        {
+          "x": 144,
+          "z": 196
+        },
+        {
+          "x": 124,
+          "z": 183
+        }
+      ]
     },
     {
       "id": "west_ambush_knoll",
@@ -251,7 +323,16 @@
       "height": 1.9,
       "rotation": -18,
       "description": "Small forest knoll that splits the western ambush road into two lanes.",
-      "entrances": [{ "x": 36, "z": 115 }, { "x": 58, "z": 122 }]
+      "entrances": [
+        {
+          "x": 36,
+          "z": 115
+        },
+        {
+          "x": 58,
+          "z": 122
+        }
+      ]
     },
     {
       "id": "east_ambush_knoll",
@@ -263,7 +344,16 @@
       "height": 1.9,
       "rotation": 162,
       "description": "Mirrored forest knoll that splits the eastern ambush road into two lanes.",
-      "entrances": [{ "x": 192, "z": 128 }, { "x": 214, "z": 134 }]
+      "entrances": [
+        {
+          "x": 192,
+          "z": 128
+        },
+        {
+          "x": 214,
+          "z": 134
+        }
+      ]
     },
     {
       "id": "northwest_inner_ridge",
@@ -275,7 +365,16 @@
       "height": 1.8,
       "rotation": 48,
       "description": "Inner ridge creating a fork between the center and western ambush forest.",
-      "entrances": [{ "x": 72, "z": 95 }, { "x": 92, "z": 109 }]
+      "entrances": [
+        {
+          "x": 72,
+          "z": 95
+        },
+        {
+          "x": 92,
+          "z": 109
+        }
+      ]
     },
     {
       "id": "southeast_inner_ridge",
@@ -287,7 +386,16 @@
       "height": 1.8,
       "rotation": 228,
       "description": "Mirrored inner ridge creating a fork between the center and eastern ambush forest.",
-      "entrances": [{ "x": 158, "z": 141 }, { "x": 178, "z": 155 }]
+      "entrances": [
+        {
+          "x": 158,
+          "z": 141
+        },
+        {
+          "x": 178,
+          "z": 155
+        }
+      ]
     },
     {
       "id": "north_outer_crescent_hill",
@@ -299,7 +407,16 @@
       "height": 1.7,
       "rotation": 8,
       "description": "Outer northern crescent hill; creates a safe-looking but longer route around the logging overlook.",
-      "entrances": [{ "x": 72, "z": 44 }, { "x": 104, "z": 40 }]
+      "entrances": [
+        {
+          "x": 72,
+          "z": 44
+        },
+        {
+          "x": 104,
+          "z": 40
+        }
+      ]
     },
     {
       "id": "south_outer_crescent_hill",
@@ -311,7 +428,16 @@
       "height": 1.7,
       "rotation": 188,
       "description": "Mirrored southern crescent hill; creates a longer route around the bog overlook.",
-      "entrances": [{ "x": 146, "z": 210 }, { "x": 178, "z": 206 }]
+      "entrances": [
+        {
+          "x": 146,
+          "z": 210
+        },
+        {
+          "x": 178,
+          "z": 206
+        }
+      ]
     },
     {
       "id": "western_dense_forest",
@@ -428,265 +554,872 @@
   "roads": [
     {
       "id": "southwest_to_central_west_ring",
-      "start": [78, 61],
-      "end": [104, 125],
+      "start": [
+        78,
+        61
+      ],
+      "end": [
+        104,
+        125
+      ],
       "width": 3.5,
       "style": "default",
-      "waypoints": [[78, 61], [86, 78], [92, 96], [98, 113], [104, 125]],
+      "waypoints": [
+        [
+          78,
+          61
+        ],
+        [
+          86,
+          78
+        ],
+        [
+          92,
+          96
+        ],
+        [
+          98,
+          113
+        ],
+        [
+          104,
+          125
+        ]
+      ],
       "destination": "central_shrine_west_entrance",
       "purpose": "main route from player 1 toward center; skirts west of central ridge and does not cross it",
       "hill_crossing": false
     },
     {
       "id": "central_east_ring_to_northeast",
-      "start": [146, 125],
-      "end": [172, 189],
+      "start": [
+        146,
+        125
+      ],
+      "end": [
+        172,
+        189
+      ],
       "width": 3.5,
       "style": "default",
-      "waypoints": [[146, 125], [153, 138], [160, 154], [166, 172], [172, 189]],
+      "waypoints": [
+        [
+          146,
+          125
+        ],
+        [
+          153,
+          138
+        ],
+        [
+          160,
+          154
+        ],
+        [
+          166,
+          172
+        ],
+        [
+          172,
+          189
+        ]
+      ],
       "destination": "player_2_base_west_entrance",
       "purpose": "main route from center toward player 2; skirts east of central ridge",
       "hill_crossing": false
     },
     {
       "id": "northeast_to_central_east_ring",
-      "start": [188, 172],
-      "end": [146, 125],
+      "start": [
+        188,
+        172
+      ],
+      "end": [
+        146,
+        125
+      ],
       "width": 3.5,
       "style": "default",
-      "waypoints": [[188, 172], [174, 162], [162, 148], [154, 136], [146, 125]],
+      "waypoints": [
+        [
+          188,
+          172
+        ],
+        [
+          174,
+          162
+        ],
+        [
+          162,
+          148
+        ],
+        [
+          154,
+          136
+        ],
+        [
+          146,
+          125
+        ]
+      ],
       "destination": "central_shrine_east_entrance",
       "purpose": "player 2 main route to the center; mirrors player 1 route",
       "hill_crossing": false
     },
     {
       "id": "central_west_ring_to_southwest",
-      "start": [104, 125],
-      "end": [62, 78],
+      "start": [
+        104,
+        125
+      ],
+      "end": [
+        62,
+        78
+      ],
       "width": 3.5,
       "style": "default",
-      "waypoints": [[104, 125], [96, 114], [88, 101], [76, 88], [62, 78]],
+      "waypoints": [
+        [
+          104,
+          125
+        ],
+        [
+          96,
+          114
+        ],
+        [
+          88,
+          101
+        ],
+        [
+          76,
+          88
+        ],
+        [
+          62,
+          78
+        ]
+      ],
       "destination": "player_1_base_south_entrance",
       "purpose": "return path from central west entrance to player 1 base",
       "hill_crossing": false
     },
     {
       "id": "central_north_arc",
-      "start": [104, 125],
-      "end": [146, 125],
+      "start": [
+        104,
+        125
+      ],
+      "end": [
+        146,
+        125
+      ],
       "width": 3.0,
       "style": "default",
-      "waypoints": [[104, 125], [108, 112], [125, 104], [142, 112], [146, 125]],
+      "waypoints": [
+        [
+          104,
+          125
+        ],
+        [
+          108,
+          112
+        ],
+        [
+          125,
+          104
+        ],
+        [
+          142,
+          112
+        ],
+        [
+          146,
+          125
+        ]
+      ],
       "destination": "central_east_entrance",
       "purpose": "north arc around central shrine ridge; touches the north entrance but does not cross the hill",
       "hill_crossing": false
     },
     {
       "id": "central_south_arc",
-      "start": [104, 125],
-      "end": [146, 125],
+      "start": [
+        104,
+        125
+      ],
+      "end": [
+        146,
+        125
+      ],
       "width": 3.0,
       "style": "default",
-      "waypoints": [[104, 125], [108, 138], [125, 146], [142, 138], [146, 125]],
+      "waypoints": [
+        [
+          104,
+          125
+        ],
+        [
+          108,
+          138
+        ],
+        [
+          125,
+          146
+        ],
+        [
+          142,
+          138
+        ],
+        [
+          146,
+          125
+        ]
+      ],
       "destination": "central_east_entrance",
       "purpose": "south arc around central shrine ridge; gives a second way around the center",
       "hill_crossing": false
     },
     {
       "id": "southwest_to_north_lodge_outer",
-      "start": [49, 55],
-      "end": [154, 73],
+      "start": [
+        49,
+        55
+      ],
+      "end": [
+        154,
+        73
+      ],
       "width": 3.0,
       "style": "default",
-      "waypoints": [[49, 55], [68, 44], [91, 45], [109, 67], [135, 70], [154, 73]],
+      "waypoints": [
+        [
+          49,
+          55
+        ],
+        [
+          68,
+          44
+        ],
+        [
+          91,
+          45
+        ],
+        [
+          109,
+          67
+        ],
+        [
+          135,
+          70
+        ],
+        [
+          154,
+          73
+        ]
+      ],
       "destination": "north_neutral_lodge",
       "purpose": "upper side route from player 1 toward north neutral barracks; bends around north logging overlook",
       "hill_crossing": false
     },
     {
       "id": "northeast_to_north_lodge_inner",
-      "start": [188, 172],
-      "end": [186, 83],
+      "start": [
+        188,
+        172
+      ],
+      "end": [
+        186,
+        83
+      ],
       "width": 2.8,
       "style": "default",
-      "waypoints": [[188, 172], [199, 151], [201, 128], [194, 105], [186, 83]],
+      "waypoints": [
+        [
+          188,
+          172
+        ],
+        [
+          199,
+          151
+        ],
+        [
+          201,
+          128
+        ],
+        [
+          194,
+          105
+        ],
+        [
+          186,
+          83
+        ]
+      ],
       "destination": "north_neutral_lodge",
       "purpose": "player 2 access to the north lodge through eastern forest edge",
       "hill_crossing": false
     },
     {
       "id": "north_lodge_to_center",
-      "start": [168, 92],
-      "end": [125, 104],
+      "start": [
+        168,
+        92
+      ],
+      "end": [
+        125,
+        104
+      ],
       "width": 2.7,
       "style": "default",
-      "waypoints": [[168, 92], [157, 101], [143, 104], [125, 104]],
+      "waypoints": [
+        [
+          168,
+          92
+        ],
+        [
+          157,
+          101
+        ],
+        [
+          143,
+          104
+        ],
+        [
+          125,
+          104
+        ]
+      ],
       "destination": "central_shrine_north_entrance",
       "purpose": "connects north neutral barracks to the center without crossing the hill",
       "hill_crossing": false
     },
     {
       "id": "southwest_to_south_lodge_inner",
-      "start": [62, 78],
-      "end": [64, 169],
+      "start": [
+        62,
+        78
+      ],
+      "end": [
+        64,
+        169
+      ],
       "width": 2.8,
       "style": "default",
-      "waypoints": [[62, 78], [50, 96], [41, 116], [48, 142], [64, 169]],
+      "waypoints": [
+        [
+          62,
+          78
+        ],
+        [
+          50,
+          96
+        ],
+        [
+          41,
+          116
+        ],
+        [
+          48,
+          142
+        ],
+        [
+          64,
+          169
+        ]
+      ],
       "destination": "south_neutral_lodge",
       "purpose": "player 1 access to the south lodge through western ambush forest",
       "hill_crossing": false
     },
     {
       "id": "northeast_to_south_lodge_outer",
-      "start": [201, 195],
-      "end": [96, 177],
+      "start": [
+        201,
+        195
+      ],
+      "end": [
+        96,
+        177
+      ],
       "width": 3.0,
       "style": "default",
-      "waypoints": [[201, 195], [179, 205], [151, 207], [123, 199], [96, 177]],
+      "waypoints": [
+        [
+          201,
+          195
+        ],
+        [
+          179,
+          205
+        ],
+        [
+          151,
+          207
+        ],
+        [
+          123,
+          199
+        ],
+        [
+          96,
+          177
+        ]
+      ],
       "destination": "south_neutral_lodge",
       "purpose": "lower side route from player 2 toward south neutral barracks; bends around south bog overlook",
       "hill_crossing": false
     },
     {
       "id": "south_lodge_to_center",
-      "start": [82, 158],
-      "end": [125, 146],
+      "start": [
+        82,
+        158
+      ],
+      "end": [
+        125,
+        146
+      ],
       "width": 2.7,
       "style": "default",
-      "waypoints": [[82, 158], [94, 151], [109, 147], [125, 146]],
+      "waypoints": [
+        [
+          82,
+          158
+        ],
+        [
+          94,
+          151
+        ],
+        [
+          109,
+          147
+        ],
+        [
+          125,
+          146
+        ]
+      ],
       "destination": "central_shrine_south_entrance",
       "purpose": "connects south neutral barracks to the center without crossing the hill",
       "hill_crossing": false
     },
     {
       "id": "western_outer_forest_road",
-      "start": [49, 55],
-      "end": [64, 169],
+      "start": [
+        49,
+        55
+      ],
+      "end": [
+        64,
+        169
+      ],
       "width": 2.3,
       "style": "rough",
-      "waypoints": [[49, 55], [32, 72], [29, 96], [36, 115], [43, 139], [64, 169]],
+      "waypoints": [
+        [
+          49,
+          55
+        ],
+        [
+          32,
+          72
+        ],
+        [
+          29,
+          96
+        ],
+        [
+          36,
+          115
+        ],
+        [
+          43,
+          139
+        ],
+        [
+          64,
+          169
+        ]
+      ],
       "destination": "south_neutral_lodge",
       "purpose": "long western raid route through dense forest; skirts west ambush knoll",
-      "pathing_tags": ["infantry_preferred", "cavalry_slow", "siege_unfriendly"],
+      "pathing_tags": [
+        "infantry_preferred",
+        "cavalry_slow",
+        "siege_unfriendly"
+      ],
       "hill_crossing": false
     },
     {
       "id": "eastern_outer_forest_road",
-      "start": [201, 195],
-      "end": [186, 83],
+      "start": [
+        201,
+        195
+      ],
+      "end": [
+        186,
+        83
+      ],
       "width": 2.3,
       "style": "rough",
-      "waypoints": [[201, 195], [218, 178], [221, 154], [214, 135], [207, 111], [186, 83]],
+      "waypoints": [
+        [
+          201,
+          195
+        ],
+        [
+          218,
+          178
+        ],
+        [
+          221,
+          154
+        ],
+        [
+          214,
+          135
+        ],
+        [
+          207,
+          111
+        ],
+        [
+          186,
+          83
+        ]
+      ],
       "destination": "north_neutral_lodge",
       "purpose": "mirrored long eastern raid route through dense forest",
-      "pathing_tags": ["infantry_preferred", "cavalry_slow", "siege_unfriendly"],
+      "pathing_tags": [
+        "infantry_preferred",
+        "cavalry_slow",
+        "siege_unfriendly"
+      ],
       "hill_crossing": false
     },
     {
       "id": "northern_outer_road",
-      "start": [49, 55],
-      "end": [186, 83],
+      "start": [
+        49,
+        55
+      ],
+      "end": [
+        186,
+        83
+      ],
       "width": 2.5,
       "style": "rough",
-      "waypoints": [[49, 55], [70, 31], [103, 38], [126, 67], [153, 55], [186, 83]],
+      "waypoints": [
+        [
+          49,
+          55
+        ],
+        [
+          70,
+          31
+        ],
+        [
+          103,
+          38
+        ],
+        [
+          126,
+          67
+        ],
+        [
+          153,
+          55
+        ],
+        [
+          186,
+          83
+        ]
+      ],
       "destination": "north_neutral_lodge",
       "purpose": "very long upper forest route; loops around both north hills instead of crossing them",
       "hill_crossing": false
     },
     {
       "id": "southern_outer_road",
-      "start": [64, 169],
-      "end": [201, 195],
+      "start": [
+        64,
+        169
+      ],
+      "end": [
+        201,
+        195
+      ],
       "width": 2.5,
       "style": "rough",
-      "waypoints": [[64, 169], [97, 195], [124, 183], [147, 212], [180, 219], [201, 195]],
+      "waypoints": [
+        [
+          64,
+          169
+        ],
+        [
+          97,
+          195
+        ],
+        [
+          124,
+          183
+        ],
+        [
+          147,
+          212
+        ],
+        [
+          180,
+          219
+        ],
+        [
+          201,
+          195
+        ]
+      ],
       "destination": "player_2_base_southeast_entrance",
       "purpose": "very long lower forest route; loops around both south hills instead of crossing them",
       "hill_crossing": false
     },
     {
       "id": "western_ambush_cutpath",
-      "start": [72, 95],
-      "end": [104, 125],
+      "start": [
+        72,
+        95
+      ],
+      "end": [
+        104,
+        125
+      ],
       "width": 1.9,
       "style": "rough",
-      "waypoints": [[72, 95], [60, 107], [58, 122], [76, 132], [104, 125]],
+      "waypoints": [
+        [
+          72,
+          95
+        ],
+        [
+          60,
+          107
+        ],
+        [
+          58,
+          122
+        ],
+        [
+          76,
+          132
+        ],
+        [
+          104,
+          125
+        ]
+      ],
       "destination": "central_west_clearing",
       "purpose": "narrow cutpath from western ambush forest into central west clearing",
-      "pathing_tags": ["scout_preferred", "infantry_preferred", "catapult_slow"],
+      "pathing_tags": [
+        "scout_preferred",
+        "infantry_preferred",
+        "catapult_slow"
+      ],
       "hill_crossing": false
     },
     {
       "id": "eastern_ambush_cutpath",
-      "start": [178, 155],
-      "end": [146, 125],
+      "start": [
+        178,
+        155
+      ],
+      "end": [
+        146,
+        125
+      ],
       "width": 1.9,
       "style": "rough",
-      "waypoints": [[178, 155], [190, 143], [192, 128], [174, 118], [146, 125]],
+      "waypoints": [
+        [
+          178,
+          155
+        ],
+        [
+          190,
+          143
+        ],
+        [
+          192,
+          128
+        ],
+        [
+          174,
+          118
+        ],
+        [
+          146,
+          125
+        ]
+      ],
       "destination": "central_east_clearing",
       "purpose": "mirrored narrow cutpath from eastern ambush forest into central east clearing",
-      "pathing_tags": ["scout_preferred", "infantry_preferred", "catapult_slow"],
+      "pathing_tags": [
+        "scout_preferred",
+        "infantry_preferred",
+        "catapult_slow"
+      ],
       "hill_crossing": false
     },
     {
       "id": "north_shadow_trail",
-      "start": [106, 54],
-      "end": [144, 56],
+      "start": [
+        106,
+        54
+      ],
+      "end": [
+        144,
+        56
+      ],
       "width": 1.8,
       "style": "rough",
-      "waypoints": [[106, 54], [113, 43], [128, 39], [139, 45], [144, 56]],
+      "waypoints": [
+        [
+          106,
+          54
+        ],
+        [
+          113,
+          43
+        ],
+        [
+          128,
+          39
+        ],
+        [
+          139,
+          45
+        ],
+        [
+          144,
+          56
+        ]
+      ],
       "destination": "north_logging_overlook_east_entrance",
       "purpose": "small scout trail around the north logging hill, never over it",
-      "pathing_tags": ["scout_preferred", "siege_unfriendly"],
+      "pathing_tags": [
+        "scout_preferred",
+        "siege_unfriendly"
+      ],
       "hill_crossing": false
     },
     {
       "id": "south_shadow_trail",
-      "start": [106, 194],
-      "end": [144, 196],
+      "start": [
+        106,
+        194
+      ],
+      "end": [
+        144,
+        196
+      ],
       "width": 1.8,
       "style": "rough",
-      "waypoints": [[106, 194], [113, 207], [128, 211], [139, 205], [144, 196]],
+      "waypoints": [
+        [
+          106,
+          194
+        ],
+        [
+          113,
+          207
+        ],
+        [
+          128,
+          211
+        ],
+        [
+          139,
+          205
+        ],
+        [
+          144,
+          196
+        ]
+      ],
       "destination": "south_bog_overlook_east_entrance",
       "purpose": "small scout trail around the south bog hill, never over it",
-      "pathing_tags": ["scout_preferred", "siege_unfriendly"],
+      "pathing_tags": [
+        "scout_preferred",
+        "siege_unfriendly"
+      ],
       "hill_crossing": false
     },
     {
       "id": "base_one_inner_loop",
-      "start": [49, 55],
-      "end": [78, 61],
+      "start": [
+        49,
+        55
+      ],
+      "end": [
+        78,
+        61
+      ],
       "width": 2.8,
       "style": "default",
-      "waypoints": [[49, 55], [54, 45], [69, 46], [78, 61]],
+      "waypoints": [
+        [
+          49,
+          55
+        ],
+        [
+          54,
+          45
+        ],
+        [
+          69,
+          46
+        ],
+        [
+          78,
+          61
+        ]
+      ],
       "destination": "player_1_base_east_entrance",
       "purpose": "player 1 local defensive loop around camp mound",
       "hill_crossing": false
     },
     {
       "id": "base_two_inner_loop",
-      "start": [201, 195],
-      "end": [172, 189],
+      "start": [
+        201,
+        195
+      ],
+      "end": [
+        172,
+        189
+      ],
       "width": 2.8,
       "style": "default",
-      "waypoints": [[201, 195], [196, 205], [181, 204], [172, 189]],
+      "waypoints": [
+        [
+          201,
+          195
+        ],
+        [
+          196,
+          205
+        ],
+        [
+          181,
+          204
+        ],
+        [
+          172,
+          189
+        ]
+      ],
       "destination": "player_2_base_west_entrance",
       "purpose": "player 2 local defensive loop around camp mound",
       "hill_crossing": false
     }
-  ],
-  "zones": [
-    { "id": "player_1_base_zone", "x": 60, "z": 60, "radius": 18, "owner": 1, "purpose": "southwest player base" },
-    { "id": "player_2_base_zone", "x": 190, "z": 190, "radius": 18, "owner": 2, "purpose": "northeast player base" },
-    { "id": "central_shrine_zone", "x": 125, "z": 125, "radius": 20, "owner": 0, "purpose": "central ridge control and vision" },
-    { "id": "central_west_staging_zone", "x": 104, "z": 125, "radius": 10, "owner": 0, "purpose": "western center staging" },
-    { "id": "central_east_staging_zone", "x": 146, "z": 125, "radius": 10, "owner": 0, "purpose": "eastern center staging" },
-    { "id": "north_neutral_lodge_zone", "x": 168, "z": 76, "radius": 14, "owner": 0, "purpose": "north neutral barracks objective" },
-    { "id": "south_neutral_lodge_zone", "x": 82, "z": 174, "radius": 14, "owner": 0, "purpose": "south neutral barracks objective" },
-    { "id": "western_ambush_zone", "x": 44, "z": 112, "radius": 24, "owner": 0, "purpose": "dense forest ambush route" },
-    { "id": "eastern_ambush_zone", "x": 206, "z": 138, "radius": 24, "owner": 0, "purpose": "mirrored dense forest ambush route" },
-    { "id": "north_overlook_zone", "x": 125, "z": 55, "radius": 12, "owner": 0, "purpose": "northern road lookout" },
-    { "id": "south_overlook_zone", "x": 125, "z": 195, "radius": 12, "owner": 0, "purpose": "southern road lookout" }
   ],
   "spawns": [
     {
@@ -699,16 +1432,69 @@
       "nation": "roman_republic",
       "description": "Player 1 main barracks"
     },
-    { "id": "p1_archer_01", "type": "archer", "x": 56, "z": 64, "player_id": 1 },
-    { "id": "p1_archer_02", "type": "archer", "x": 63, "z": 57, "player_id": 1 },
-    { "id": "p1_swordsman_01", "type": "swordsman", "x": 54, "z": 58, "player_id": 1 },
-    { "id": "p1_swordsman_02", "type": "swordsman", "x": 61, "z": 52, "player_id": 1 },
-    { "id": "p1_spearman_01", "type": "spearman", "x": 60, "z": 66, "player_id": 1 },
-    { "id": "p1_spearman_02", "type": "spearman", "x": 67, "z": 62, "player_id": 1 },
-    { "id": "p1_horse_swordsman_01", "type": "horse_swordsman", "x": 48, "z": 70, "player_id": 1 },
-    { "id": "p1_healer_01", "type": "healer", "x": 54, "z": 52, "player_id": 1 },
-    { "id": "p1_catapult_01", "type": "catapult", "x": 45, "z": 58, "player_id": 1 },
-
+    {
+      "id": "p1_archer_01",
+      "type": "archer",
+      "x": 56,
+      "z": 64,
+      "player_id": 1
+    },
+    {
+      "id": "p1_archer_02",
+      "type": "archer",
+      "x": 63,
+      "z": 57,
+      "player_id": 1
+    },
+    {
+      "id": "p1_swordsman_01",
+      "type": "swordsman",
+      "x": 54,
+      "z": 58,
+      "player_id": 1
+    },
+    {
+      "id": "p1_swordsman_02",
+      "type": "swordsman",
+      "x": 61,
+      "z": 52,
+      "player_id": 1
+    },
+    {
+      "id": "p1_spearman_01",
+      "type": "spearman",
+      "x": 60,
+      "z": 66,
+      "player_id": 1
+    },
+    {
+      "id": "p1_spearman_02",
+      "type": "spearman",
+      "x": 67,
+      "z": 62,
+      "player_id": 1
+    },
+    {
+      "id": "p1_horse_swordsman_01",
+      "type": "horse_swordsman",
+      "x": 48,
+      "z": 70,
+      "player_id": 1
+    },
+    {
+      "id": "p1_healer_01",
+      "type": "healer",
+      "x": 54,
+      "z": 52,
+      "player_id": 1
+    },
+    {
+      "id": "p1_catapult_01",
+      "type": "catapult",
+      "x": 45,
+      "z": 58,
+      "player_id": 1
+    },
     {
       "id": "player_2_main_barracks",
       "type": "barracks",
@@ -718,16 +1504,69 @@
       "max_population": 500,
       "description": "Player 2 main barracks"
     },
-    { "id": "p2_archer_01", "type": "archer", "x": 186, "z": 194, "player_id": 2 },
-    { "id": "p2_archer_02", "type": "archer", "x": 193, "z": 187, "player_id": 2 },
-    { "id": "p2_swordsman_01", "type": "swordsman", "x": 196, "z": 190, "player_id": 2 },
-    { "id": "p2_swordsman_02", "type": "swordsman", "x": 189, "z": 198, "player_id": 2 },
-    { "id": "p2_spearman_01", "type": "spearman", "x": 184, "z": 188, "player_id": 2 },
-    { "id": "p2_spearman_02", "type": "spearman", "x": 192, "z": 182, "player_id": 2 },
-    { "id": "p2_horse_swordsman_01", "type": "horse_swordsman", "x": 202, "z": 180, "player_id": 2 },
-    { "id": "p2_healer_01", "type": "healer", "x": 196, "z": 198, "player_id": 2 },
-    { "id": "p2_catapult_01", "type": "catapult", "x": 205, "z": 192, "player_id": 2 },
-
+    {
+      "id": "p2_archer_01",
+      "type": "archer",
+      "x": 186,
+      "z": 194,
+      "player_id": 2
+    },
+    {
+      "id": "p2_archer_02",
+      "type": "archer",
+      "x": 193,
+      "z": 187,
+      "player_id": 2
+    },
+    {
+      "id": "p2_swordsman_01",
+      "type": "swordsman",
+      "x": 196,
+      "z": 190,
+      "player_id": 2
+    },
+    {
+      "id": "p2_swordsman_02",
+      "type": "swordsman",
+      "x": 189,
+      "z": 198,
+      "player_id": 2
+    },
+    {
+      "id": "p2_spearman_01",
+      "type": "spearman",
+      "x": 184,
+      "z": 188,
+      "player_id": 2
+    },
+    {
+      "id": "p2_spearman_02",
+      "type": "spearman",
+      "x": 192,
+      "z": 182,
+      "player_id": 2
+    },
+    {
+      "id": "p2_horse_swordsman_01",
+      "type": "horse_swordsman",
+      "x": 202,
+      "z": 180,
+      "player_id": 2
+    },
+    {
+      "id": "p2_healer_01",
+      "type": "healer",
+      "x": 196,
+      "z": 198,
+      "player_id": 2
+    },
+    {
+      "id": "p2_catapult_01",
+      "type": "catapult",
+      "x": 205,
+      "z": 192,
+      "player_id": 2
+    },
     {
       "id": "neutral_north_lodge_barracks",
       "type": "barracks",
@@ -738,10 +1577,27 @@
       "description": "Neutral northern hunter lodge barracks. Can be captured by either active player.",
       "capture_reward": "archer_support"
     },
-    { "id": "neutral_north_archer_01", "type": "archer", "x": 164, "z": 74, "player_id": 0 },
-    { "id": "neutral_north_archer_02", "type": "archer", "x": 172, "z": 78, "player_id": 0 },
-    { "id": "neutral_north_spearman_01", "type": "spearman", "x": 168, "z": 84, "player_id": 0 },
-
+    {
+      "id": "neutral_north_archer_01",
+      "type": "archer",
+      "x": 164,
+      "z": 74,
+      "player_id": 0
+    },
+    {
+      "id": "neutral_north_archer_02",
+      "type": "archer",
+      "x": 172,
+      "z": 78,
+      "player_id": 0
+    },
+    {
+      "id": "neutral_north_spearman_01",
+      "type": "spearman",
+      "x": 168,
+      "z": 84,
+      "player_id": 0
+    },
     {
       "id": "neutral_south_lodge_barracks",
       "type": "barracks",
@@ -752,246 +1608,526 @@
       "description": "Neutral southern hunter lodge barracks. Can be captured by either active player.",
       "capture_reward": "spearman_support"
     },
-    { "id": "neutral_south_spearman_01", "type": "spearman", "x": 78, "z": 170, "player_id": 0 },
-    { "id": "neutral_south_spearman_02", "type": "spearman", "x": 86, "z": 178, "player_id": 0 },
-    { "id": "neutral_south_archer_01", "type": "archer", "x": 82, "z": 166, "player_id": 0 }
-  ],
-  "neutral_objectives": [
     {
-      "id": "capture_north_lodge",
-      "title": "Capture the Northern Hunter Lodge",
-      "location": [168, 76],
-      "structure_id": "neutral_north_lodge_barracks",
-      "reward_if_captured": [
-        { "type": "grant_units", "units": ["archer", "archer"], "spawn_offset": [[-3, 2], [3, -2]] },
-        { "type": "vision", "area": "northern_outer_road", "duration_seconds": 160 }
-      ],
-      "strategic_value": "Controls the upper forest road and threatens the enemy base from the north/east."
+      "id": "neutral_south_spearman_01",
+      "type": "spearman",
+      "x": 78,
+      "z": 170,
+      "player_id": 0
     },
     {
-      "id": "capture_south_lodge",
-      "title": "Capture the Southern Hunter Lodge",
-      "location": [82, 174],
-      "structure_id": "neutral_south_lodge_barracks",
-      "reward_if_captured": [
-        { "type": "grant_units", "units": ["spearman", "spearman"], "spawn_offset": [[-3, -2], [3, 2]] },
-        { "type": "vision", "area": "southern_outer_road", "duration_seconds": 160 }
-      ],
-      "strategic_value": "Controls the lower forest road and gives safer anti-cavalry movement through ambush terrain."
+      "id": "neutral_south_spearman_02",
+      "type": "spearman",
+      "x": 86,
+      "z": 178,
+      "player_id": 0
+    },
+    {
+      "id": "neutral_south_archer_01",
+      "type": "archer",
+      "x": 82,
+      "z": 166,
+      "player_id": 0
     }
   ],
-  "ai_and_neutral_rules": {
-    "neutral_barracks_behavior": {
-      "owner_player_id": 0,
-      "stance": "defensive_neutral",
-      "attack_if_approached_within_radius": 8,
-      "does_not_leave_lodge_zone": true,
-      "capturable_by": [1, 2],
-      "capture_time_seconds": 35,
-      "on_capture": "transfer_barracks_to_capturing_player_and_spawn_reward_units"
-    },
-    "recommended_skirmish_ai": {
-      "player_1": "uses central_west_ring, south_lodge, and western_ambush_cutpath based on enemy pressure",
-      "player_2": "uses central_east_ring, north_lodge, and eastern_ambush_cutpath based on enemy pressure"
-    }
-  },
   "firecamps": [
-    { "id": "p1_main_fire", "x": 54, "z": 65, "intensity": 1.05, "radius": 3.2 },
-    { "id": "p1_upper_fire", "x": 66, "z": 54, "intensity": 1.1, "radius": 3.2 },
-    { "id": "p2_main_fire", "x": 184, "z": 195, "intensity": 0.95, "radius": 2.8 },
-    { "id": "p2_lower_fire", "x": 196, "z": 184, "intensity": 1.05, "radius": 3.0 },
-    { "id": "central_shrine_fire", "x": 125, "z": 125, "intensity": 1.15, "radius": 3.5 },
-    { "id": "south_lodge_fire", "x": 82, "z": 174, "intensity": 0.85, "radius": 2.6 },
-    { "id": "north_lodge_fire", "x": 168, "z": 76, "intensity": 0.85, "radius": 2.6 },
-    { "id": "north_overlook_fire", "x": 125, "z": 55, "intensity": 0.75, "radius": 2.4 },
-    { "id": "south_overlook_fire", "x": 125, "z": 195, "intensity": 0.75, "radius": 2.4 },
-    { "id": "west_ambush_fire", "x": 44, "z": 112, "intensity": 0.5, "radius": 1.8 },
-    { "id": "east_ambush_fire", "x": 206, "z": 138, "intensity": 0.5, "radius": 1.8 }
+    {
+      "id": "p1_main_fire",
+      "x": 54,
+      "z": 65,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "id": "p1_upper_fire",
+      "x": 66,
+      "z": 54,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "id": "p2_main_fire",
+      "x": 184,
+      "z": 195,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "p2_lower_fire",
+      "x": 196,
+      "z": 184,
+      "intensity": 1.05,
+      "radius": 3.0
+    },
+    {
+      "id": "central_shrine_fire",
+      "x": 125,
+      "z": 125,
+      "intensity": 1.15,
+      "radius": 3.5
+    },
+    {
+      "id": "south_lodge_fire",
+      "x": 82,
+      "z": 174,
+      "intensity": 0.85,
+      "radius": 2.6
+    },
+    {
+      "id": "north_lodge_fire",
+      "x": 168,
+      "z": 76,
+      "intensity": 0.85,
+      "radius": 2.6
+    },
+    {
+      "id": "north_overlook_fire",
+      "x": 125,
+      "z": 55,
+      "intensity": 0.75,
+      "radius": 2.4
+    },
+    {
+      "id": "south_overlook_fire",
+      "x": 125,
+      "z": 195,
+      "intensity": 0.75,
+      "radius": 2.4
+    },
+    {
+      "id": "west_ambush_fire",
+      "x": 44,
+      "z": 112,
+      "intensity": 0.5,
+      "radius": 1.8
+    },
+    {
+      "id": "east_ambush_fire",
+      "x": 206,
+      "z": 138,
+      "intensity": 0.5,
+      "radius": 1.8
+    }
   ],
   "world_props": [
-    { "id": "p1_tent_01", "type": "tent", "x": 54, "z": 58, "scale": 1.0, "rotation": 0.4 },
-    { "id": "p1_tent_02", "type": "tent", "x": 66, "z": 64, "scale": 1.0, "rotation": 2.6 },
-    { "id": "p1_tent_03", "type": "tent", "x": 50, "z": 68, "scale": 0.85, "rotation": 1.7 },
-    { "id": "p1_supply_cart_01", "type": "supply_cart", "x": 58, "z": 70, "scale": 1.0, "rotation": 1.1 },
-    { "id": "p1_supply_cart_02", "type": "supply_cart", "x": 48, "z": 54, "scale": 0.8, "rotation": 4.8 },
-    { "id": "p1_weapon_rack_01", "type": "weapon_rack", "x": 68, "z": 55, "scale": 1.0, "rotation": 4.2 },
-    { "id": "p1_weapon_rack_02", "type": "weapon_rack", "x": 61, "z": 74, "scale": 0.8, "rotation": 0.9 },
-
-    { "id": "p2_tent_01", "type": "tent", "x": 184, "z": 186, "scale": 1.0, "rotation": 0.8 },
-    { "id": "p2_tent_02", "type": "tent", "x": 196, "z": 196, "scale": 1.0, "rotation": 3.1 },
-    { "id": "p2_tent_03", "type": "tent", "x": 200, "z": 182, "scale": 0.85, "rotation": 4.5 },
-    { "id": "p2_supply_cart_01", "type": "supply_cart", "x": 190, "z": 178, "scale": 1.0, "rotation": 1.8 },
-    { "id": "p2_supply_cart_02", "type": "supply_cart", "x": 202, "z": 196, "scale": 0.8, "rotation": 5.6 },
-    { "id": "p2_weapon_rack_01", "type": "weapon_rack", "x": 202, "z": 188, "scale": 1.0, "rotation": 5.4 },
-    { "id": "p2_weapon_rack_02", "type": "weapon_rack", "x": 188, "z": 176, "scale": 0.8, "rotation": 2.2 },
-
-    { "id": "central_ruins_01", "type": "ruins", "x": 119, "z": 122, "scale": 1.2, "rotation": 0.5 },
-    { "id": "central_ruins_02", "type": "ruins", "x": 129, "z": 128, "scale": 1.1, "rotation": 2.3 },
-    { "id": "central_ruins_03", "type": "ruins", "x": 124, "z": 132, "scale": 0.9, "rotation": 4.6 },
-    { "id": "central_ruins_04", "type": "ruins", "x": 132, "z": 118, "scale": 0.9, "rotation": 5.5 },
-    { "id": "central_supply_cart_01", "type": "supply_cart", "x": 108, "z": 125, "scale": 0.75, "rotation": 1.2 },
-    { "id": "central_broken_cart_01", "type": "supply_cart", "x": 146, "z": 130, "scale": 0.85, "rotation": 4.1 },
-    { "id": "central_dead_tree_01", "type": "dead_tree", "x": 125, "z": 104, "scale": 1.0, "rotation": 3.4 },
-    { "id": "central_dead_tree_02", "type": "dead_tree", "x": 125, "z": 146, "scale": 1.0, "rotation": 0.6 },
-
-    { "id": "west_dead_tree_01", "type": "dead_tree", "x": 42, "z": 112, "scale": 1.2, "rotation": 0.7 },
-    { "id": "west_dead_tree_02", "type": "dead_tree", "x": 52, "z": 106, "scale": 1.0, "rotation": 2.1 },
-    { "id": "west_dead_tree_03", "type": "dead_tree", "x": 36, "z": 124, "scale": 0.9, "rotation": 4.5 },
-    { "id": "west_broken_cart_01", "type": "supply_cart", "x": 58, "z": 122, "scale": 0.85, "rotation": 2.9 },
-    { "id": "west_ruins_marker_01", "type": "ruins", "x": 36, "z": 115, "scale": 0.7, "rotation": 1.4 },
-
-    { "id": "east_dead_tree_01", "type": "dead_tree", "x": 204, "z": 138, "scale": 1.2, "rotation": 1.2 },
-    { "id": "east_dead_tree_02", "type": "dead_tree", "x": 214, "z": 132, "scale": 1.0, "rotation": 3.4 },
-    { "id": "east_dead_tree_03", "type": "dead_tree", "x": 198, "z": 150, "scale": 0.9, "rotation": 5.7 },
-    { "id": "east_broken_cart_01", "type": "supply_cart", "x": 192, "z": 128, "scale": 0.85, "rotation": 6.0 },
-    { "id": "east_ruins_marker_01", "type": "ruins", "x": 214, "z": 134, "scale": 0.7, "rotation": 4.2 },
-
-    { "id": "south_lodge_tent_01", "type": "tent", "x": 78, "z": 170, "scale": 0.9, "rotation": 0.7 },
-    { "id": "south_lodge_supply_cart_01", "type": "supply_cart", "x": 82, "z": 178, "scale": 0.9, "rotation": 2.2 },
-    { "id": "south_lodge_weapon_rack_01", "type": "weapon_rack", "x": 88, "z": 172, "scale": 0.85, "rotation": 5.1 },
-    { "id": "south_lodge_ruins_01", "type": "ruins", "x": 76, "z": 181, "scale": 0.8, "rotation": 3.2 },
-    { "id": "south_lodge_dead_tree_01", "type": "dead_tree", "x": 96, "z": 177, "scale": 0.9, "rotation": 1.1 },
-
-    { "id": "north_lodge_tent_01", "type": "tent", "x": 172, "z": 80, "scale": 0.9, "rotation": 3.9 },
-    { "id": "north_lodge_supply_cart_01", "type": "supply_cart", "x": 164, "z": 72, "scale": 0.9, "rotation": 0.5 },
-    { "id": "north_lodge_weapon_rack_01", "type": "weapon_rack", "x": 168, "z": 72, "scale": 0.9, "rotation": 3.8 },
-    { "id": "north_lodge_ruins_01", "type": "ruins", "x": 174, "z": 70, "scale": 0.8, "rotation": 5.8 },
-    { "id": "north_lodge_dead_tree_01", "type": "dead_tree", "x": 154, "z": 73, "scale": 0.9, "rotation": 2.1 },
-
-    { "id": "north_overlook_dead_tree_01", "type": "dead_tree", "x": 106, "z": 54, "scale": 0.9, "rotation": 1.0 },
-    { "id": "north_overlook_broken_cart", "type": "supply_cart", "x": 144, "z": 56, "scale": 0.8, "rotation": 4.4 },
-    { "id": "south_overlook_dead_tree_01", "type": "dead_tree", "x": 106, "z": 194, "scale": 0.9, "rotation": 2.7 },
-    { "id": "south_overlook_broken_cart", "type": "supply_cart", "x": 144, "z": 196, "scale": 0.8, "rotation": 5.9 },
-
-    { "id": "north_outer_dead_tree_01", "type": "dead_tree", "x": 70, "z": 31, "scale": 1.0, "rotation": 0.2 },
-    { "id": "north_outer_dead_tree_02", "type": "dead_tree", "x": 153, "z": 55, "scale": 1.0, "rotation": 3.7 },
-    { "id": "south_outer_dead_tree_01", "type": "dead_tree", "x": 97, "z": 195, "scale": 1.0, "rotation": 1.8 },
-    { "id": "south_outer_dead_tree_02", "type": "dead_tree", "x": 180, "z": 219, "scale": 1.0, "rotation": 4.9 }
-  ],
-  "prop_clusters": [
     {
-      "id": "player_1_camp_cluster",
-      "center": [60, 60],
-      "theme": "southwest fortified camp clearing",
-      "props": ["tent", "supply_cart", "weapon_rack", "firecamp"],
-      "density": "medium",
-      "gameplay_role": "player 1 base readability and defensive loop"
+      "id": "p1_tent_01",
+      "type": "tent",
+      "x": 54,
+      "z": 58,
+      "scale": 1.0,
+      "rotation": 0.4
     },
     {
-      "id": "player_2_camp_cluster",
-      "center": [190, 190],
-      "theme": "northeast fortified camp clearing",
-      "props": ["tent", "supply_cart", "weapon_rack", "firecamp"],
-      "density": "medium",
-      "gameplay_role": "player 2 base readability and defensive loop"
+      "id": "p1_tent_02",
+      "type": "tent",
+      "x": 66,
+      "z": 64,
+      "scale": 1.0,
+      "rotation": 2.6
     },
     {
-      "id": "central_shrine_cluster",
-      "center": [125, 125],
-      "theme": "ruined woodland shrine",
-      "props": ["ruins", "dead_tree", "broken_cart", "firecamp"],
-      "density": "high",
-      "gameplay_role": "central control landmark and archer ridge identity"
+      "id": "p1_tent_03",
+      "type": "tent",
+      "x": 50,
+      "z": 68,
+      "scale": 0.85,
+      "rotation": 1.7
     },
     {
-      "id": "western_ambush_cluster",
-      "center": [44, 112],
-      "theme": "dense deadwood ambush maze",
-      "props": ["dead_tree", "broken_cart", "ruins"],
-      "density": "high",
-      "gameplay_role": "marks infantry ambush route and makes forest navigation readable"
+      "id": "p1_supply_cart_01",
+      "type": "supply_cart",
+      "x": 58,
+      "z": 70,
+      "scale": 1.0,
+      "rotation": 1.1
     },
     {
-      "id": "eastern_ambush_cluster",
-      "center": [206, 138],
-      "theme": "mirrored dense deadwood ambush maze",
-      "props": ["dead_tree", "broken_cart", "ruins"],
-      "density": "high",
-      "gameplay_role": "mirrored infantry ambush route"
+      "id": "p1_supply_cart_02",
+      "type": "supply_cart",
+      "x": 48,
+      "z": 54,
+      "scale": 0.8,
+      "rotation": 4.8
     },
     {
-      "id": "north_lodge_cluster",
-      "center": [168, 76],
-      "theme": "neutral hunter lodge barracks",
-      "props": ["tent", "supply_cart", "weapon_rack", "ruins", "firecamp"],
-      "density": "high",
-      "gameplay_role": "north side objective and archer reward"
+      "id": "p1_weapon_rack_01",
+      "type": "weapon_rack",
+      "x": 68,
+      "z": 55,
+      "scale": 1.0,
+      "rotation": 4.2
     },
     {
-      "id": "south_lodge_cluster",
-      "center": [82, 174],
-      "theme": "neutral hunter lodge barracks",
-      "props": ["tent", "supply_cart", "weapon_rack", "ruins", "firecamp"],
-      "density": "high",
-      "gameplay_role": "south side objective and spearman reward"
+      "id": "p1_weapon_rack_02",
+      "type": "weapon_rack",
+      "x": 61,
+      "z": 74,
+      "scale": 0.8,
+      "rotation": 0.9
+    },
+    {
+      "id": "p2_tent_01",
+      "type": "tent",
+      "x": 184,
+      "z": 186,
+      "scale": 1.0,
+      "rotation": 0.8
+    },
+    {
+      "id": "p2_tent_02",
+      "type": "tent",
+      "x": 196,
+      "z": 196,
+      "scale": 1.0,
+      "rotation": 3.1
+    },
+    {
+      "id": "p2_tent_03",
+      "type": "tent",
+      "x": 200,
+      "z": 182,
+      "scale": 0.85,
+      "rotation": 4.5
+    },
+    {
+      "id": "p2_supply_cart_01",
+      "type": "supply_cart",
+      "x": 190,
+      "z": 178,
+      "scale": 1.0,
+      "rotation": 1.8
+    },
+    {
+      "id": "p2_supply_cart_02",
+      "type": "supply_cart",
+      "x": 202,
+      "z": 196,
+      "scale": 0.8,
+      "rotation": 5.6
+    },
+    {
+      "id": "p2_weapon_rack_01",
+      "type": "weapon_rack",
+      "x": 202,
+      "z": 188,
+      "scale": 1.0,
+      "rotation": 5.4
+    },
+    {
+      "id": "p2_weapon_rack_02",
+      "type": "weapon_rack",
+      "x": 188,
+      "z": 176,
+      "scale": 0.8,
+      "rotation": 2.2
+    },
+    {
+      "id": "central_ruins_01",
+      "type": "ruins",
+      "x": 119,
+      "z": 122,
+      "scale": 1.2,
+      "rotation": 0.5
+    },
+    {
+      "id": "central_ruins_02",
+      "type": "ruins",
+      "x": 129,
+      "z": 128,
+      "scale": 1.1,
+      "rotation": 2.3
+    },
+    {
+      "id": "central_ruins_03",
+      "type": "ruins",
+      "x": 124,
+      "z": 132,
+      "scale": 0.9,
+      "rotation": 4.6
+    },
+    {
+      "id": "central_ruins_04",
+      "type": "ruins",
+      "x": 132,
+      "z": 118,
+      "scale": 0.9,
+      "rotation": 5.5
+    },
+    {
+      "id": "central_supply_cart_01",
+      "type": "supply_cart",
+      "x": 108,
+      "z": 125,
+      "scale": 0.75,
+      "rotation": 1.2
+    },
+    {
+      "id": "central_broken_cart_01",
+      "type": "supply_cart",
+      "x": 146,
+      "z": 130,
+      "scale": 0.85,
+      "rotation": 4.1
+    },
+    {
+      "id": "central_dead_tree_01",
+      "type": "dead_tree",
+      "x": 125,
+      "z": 104,
+      "scale": 1.0,
+      "rotation": 3.4
+    },
+    {
+      "id": "central_dead_tree_02",
+      "type": "dead_tree",
+      "x": 125,
+      "z": 146,
+      "scale": 1.0,
+      "rotation": 0.6
+    },
+    {
+      "id": "west_dead_tree_01",
+      "type": "dead_tree",
+      "x": 42,
+      "z": 112,
+      "scale": 1.2,
+      "rotation": 0.7
+    },
+    {
+      "id": "west_dead_tree_02",
+      "type": "dead_tree",
+      "x": 52,
+      "z": 106,
+      "scale": 1.0,
+      "rotation": 2.1
+    },
+    {
+      "id": "west_dead_tree_03",
+      "type": "dead_tree",
+      "x": 36,
+      "z": 124,
+      "scale": 0.9,
+      "rotation": 4.5
+    },
+    {
+      "id": "west_broken_cart_01",
+      "type": "supply_cart",
+      "x": 58,
+      "z": 122,
+      "scale": 0.85,
+      "rotation": 2.9
+    },
+    {
+      "id": "west_ruins_marker_01",
+      "type": "ruins",
+      "x": 36,
+      "z": 115,
+      "scale": 0.7,
+      "rotation": 1.4
+    },
+    {
+      "id": "east_dead_tree_01",
+      "type": "dead_tree",
+      "x": 204,
+      "z": 138,
+      "scale": 1.2,
+      "rotation": 1.2
+    },
+    {
+      "id": "east_dead_tree_02",
+      "type": "dead_tree",
+      "x": 214,
+      "z": 132,
+      "scale": 1.0,
+      "rotation": 3.4
+    },
+    {
+      "id": "east_dead_tree_03",
+      "type": "dead_tree",
+      "x": 198,
+      "z": 150,
+      "scale": 0.9,
+      "rotation": 5.7
+    },
+    {
+      "id": "east_broken_cart_01",
+      "type": "supply_cart",
+      "x": 192,
+      "z": 128,
+      "scale": 0.85,
+      "rotation": 6.0
+    },
+    {
+      "id": "east_ruins_marker_01",
+      "type": "ruins",
+      "x": 214,
+      "z": 134,
+      "scale": 0.7,
+      "rotation": 4.2
+    },
+    {
+      "id": "south_lodge_tent_01",
+      "type": "tent",
+      "x": 78,
+      "z": 170,
+      "scale": 0.9,
+      "rotation": 0.7
+    },
+    {
+      "id": "south_lodge_supply_cart_01",
+      "type": "supply_cart",
+      "x": 82,
+      "z": 178,
+      "scale": 0.9,
+      "rotation": 2.2
+    },
+    {
+      "id": "south_lodge_weapon_rack_01",
+      "type": "weapon_rack",
+      "x": 88,
+      "z": 172,
+      "scale": 0.85,
+      "rotation": 5.1
+    },
+    {
+      "id": "south_lodge_ruins_01",
+      "type": "ruins",
+      "x": 76,
+      "z": 181,
+      "scale": 0.8,
+      "rotation": 3.2
+    },
+    {
+      "id": "south_lodge_dead_tree_01",
+      "type": "dead_tree",
+      "x": 96,
+      "z": 177,
+      "scale": 0.9,
+      "rotation": 1.1
+    },
+    {
+      "id": "north_lodge_tent_01",
+      "type": "tent",
+      "x": 172,
+      "z": 80,
+      "scale": 0.9,
+      "rotation": 3.9
+    },
+    {
+      "id": "north_lodge_supply_cart_01",
+      "type": "supply_cart",
+      "x": 164,
+      "z": 72,
+      "scale": 0.9,
+      "rotation": 0.5
+    },
+    {
+      "id": "north_lodge_weapon_rack_01",
+      "type": "weapon_rack",
+      "x": 168,
+      "z": 72,
+      "scale": 0.9,
+      "rotation": 3.8
+    },
+    {
+      "id": "north_lodge_ruins_01",
+      "type": "ruins",
+      "x": 174,
+      "z": 70,
+      "scale": 0.8,
+      "rotation": 5.8
+    },
+    {
+      "id": "north_lodge_dead_tree_01",
+      "type": "dead_tree",
+      "x": 154,
+      "z": 73,
+      "scale": 0.9,
+      "rotation": 2.1
+    },
+    {
+      "id": "north_overlook_dead_tree_01",
+      "type": "dead_tree",
+      "x": 106,
+      "z": 54,
+      "scale": 0.9,
+      "rotation": 1.0
+    },
+    {
+      "id": "north_overlook_broken_cart",
+      "type": "supply_cart",
+      "x": 144,
+      "z": 56,
+      "scale": 0.8,
+      "rotation": 4.4
+    },
+    {
+      "id": "south_overlook_dead_tree_01",
+      "type": "dead_tree",
+      "x": 106,
+      "z": 194,
+      "scale": 0.9,
+      "rotation": 2.7
+    },
+    {
+      "id": "south_overlook_broken_cart",
+      "type": "supply_cart",
+      "x": 144,
+      "z": 196,
+      "scale": 0.8,
+      "rotation": 5.9
+    },
+    {
+      "id": "north_outer_dead_tree_01",
+      "type": "dead_tree",
+      "x": 70,
+      "z": 31,
+      "scale": 1.0,
+      "rotation": 0.2
+    },
+    {
+      "id": "north_outer_dead_tree_02",
+      "type": "dead_tree",
+      "x": 153,
+      "z": 55,
+      "scale": 1.0,
+      "rotation": 3.7
+    },
+    {
+      "id": "south_outer_dead_tree_01",
+      "type": "dead_tree",
+      "x": 97,
+      "z": 195,
+      "scale": 1.0,
+      "rotation": 1.8
+    },
+    {
+      "id": "south_outer_dead_tree_02",
+      "type": "dead_tree",
+      "x": 180,
+      "z": 219,
+      "scale": 1.0,
+      "rotation": 4.9
     }
   ],
-  "maze_readability": {
-    "principle": "The player should feel lost in a forest tactically, not visually. Each road has a landmark and a destination, and hills act as roundabouts rather than road surfaces.",
-    "road_hill_rule": "Roads never cross hill footprints. They bend around hills and connect to entrance points only.",
-    "primary_choices": [
-      {
-        "choice": "take center",
-        "lure": "ruined shrine fire and central clearings",
-        "route": "main ring roads around central_shrine_ridge",
-        "counterplay": "enemy can flank through north or south arc"
-      },
-      {
-        "choice": "take north lodge",
-        "lure": "north hunter lodge fire, weapon rack, and archer defenders",
-        "route": "upper side roads and north_lodge_to_center",
-        "counterplay": "enemy can bypass through central south arc or western/eastern outer road"
-      },
-      {
-        "choice": "take south lodge",
-        "lure": "south hunter lodge fire, supply cart, and spear defenders",
-        "route": "lower side roads and south_lodge_to_center",
-        "counterplay": "enemy can contest center or raid through northern outer road"
-      },
-      {
-        "choice": "ambush",
-        "lure": "dead trees and broken carts in dense forest",
-        "route": "western_ambush_cutpath or eastern_ambush_cutpath",
-        "counterplay": "slow for siege and weak for big cavalry groups"
-      },
-      {
-        "choice": "outer raid",
-        "lure": "long forest roads around map edge",
-        "route": "northern_outer_road or southern_outer_road",
-        "counterplay": "long travel time gives opponent time to react"
-      }
-    ]
-  },
-  "mission_balance": {
-    "intended_match_duration_minutes": [22, 38],
-    "balance_notes": [
-      "Symmetry is rotational: player 1 has faster access to south lodge, player 2 has faster access to north lodge.",
-      "The central shrine is strong but has four entrance pockets and two ring roads, so it should not become a single unbeatable choke.",
-      "Neutral barracks should be valuable but not mandatory; capturing one gives tempo, capturing both risks overextension.",
-      "Catapults prefer the wider default roads; rough cutpaths should slow or discourage siege movement.",
-      "Dense forests create ambush opportunities, while clearings around bases and center keep major fights readable."
-    ],
-    "recommended_tuning": {
-      "small_armies": {
-        "neutral_capture_time_seconds": 25,
-        "neutral_defender_count_modifier": 0.75
-      },
-      "standard": {
-        "neutral_capture_time_seconds": 35,
-        "use_current_values": true
-      },
-      "large_armies": {
-        "neutral_capture_time_seconds": 45,
-        "increase_forest_path_width_percent": 10,
-        "increase_center_clearing_width_percent": 8
-      }
-    }
-  },
   "victory": {
     "type": "elimination",
-    "key_structures": ["barracks"],
-    "defeat_conditions": ["no_key_structures", "no_commander", "only_commander_remaining"],
-    "neutral_barracks_do_not_count_for_elimination_until_captured": true,
-    "description": "Eliminate the enemy player's key barracks. Neutral barracks are optional objectives and do not count as active player bases until captured."
-  }
+    "key_structures": [
+      "barracks"
+    ],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  },
+  "starting_resources": {
+    "gold": 200,
+    "food": 150,
+    "wood": 200,
+    "stone": 50,
+    "iron": 100
+  },
+  "theme": "Two armies fight over a rain-soaked woodland shrine where every path feels like an ambush."
 }

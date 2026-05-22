@@ -4,6 +4,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
+#include "render/humanoid/humanoid_full_builder.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_specs.h"
 
@@ -43,7 +44,7 @@ protected:
 };
 
 TEST_F(BodyFramesTest, AttachmentFrameStructHasCorrectFields) {
-  AttachmentFrame frame;
+  AttachmentFrame const frame;
   EXPECT_EQ(frame.origin, QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_EQ(frame.right, QVector3D(1.0F, 0.0F, 0.0F));
   EXPECT_EQ(frame.up, QVector3D(0.0F, 1.0F, 0.0F));
@@ -65,7 +66,7 @@ TEST_F(BodyFramesTest, HeadFrameIsAliasForAttachmentFrame) {
 }
 
 TEST_F(BodyFramesTest, BodyFramesHasAllRequiredFrames) {
-  BodyFrames frames;
+  BodyFrames const frames;
 
   EXPECT_EQ(frames.head.origin, QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_EQ(frames.torso.origin, QVector3D(0.0F, 0.0F, 0.0F));
@@ -87,10 +88,10 @@ TEST_F(BodyFramesTest, FrameLocalPositionComputesCorrectly) {
   frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frame.radius = 0.5F;
 
-  QVector3D local(1.0F, 0.0F, 0.0F);
-  QVector3D world = HumanoidRendererBase::frame_local_position(frame, local);
+  QVector3D const local(1.0F, 0.0F, 0.0F);
+  QVector3D const world = HumanoidRendererBase::frame_local_position(frame, local);
 
-  QVector3D expected = QVector3D(1.5F, 2.0F, 3.0F);
+  QVector3D const expected = QVector3D(1.5F, 2.0F, 3.0F);
   EXPECT_TRUE(approx_equal(world, expected));
 }
 
@@ -102,10 +103,10 @@ TEST_F(BodyFramesTest, FrameLocalPositionWithMultipleAxes) {
   frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frame.radius = 1.0F;
 
-  QVector3D local(1.0F, 1.0F, 1.0F);
-  QVector3D world = HumanoidRendererBase::frame_local_position(frame, local);
+  QVector3D const local(1.0F, 1.0F, 1.0F);
+  QVector3D const world = HumanoidRendererBase::frame_local_position(frame, local);
 
-  QVector3D expected = QVector3D(1.0F, 1.0F, 1.0F);
+  QVector3D const expected = QVector3D(1.0F, 1.0F, 1.0F);
   EXPECT_TRUE(approx_equal(world, expected));
 }
 
@@ -117,14 +118,14 @@ TEST_F(BodyFramesTest, MakeFrameLocalTransformCreatesValidMatrix) {
   frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frame.radius = 0.5F;
 
-  QMatrix4x4 parent;
-  QVector3D local_offset(0.0F, 0.0F, 0.0F);
-  float uniform_scale = 1.0F;
+  QMatrix4x4 const parent;
+  QVector3D const local_offset(0.0F, 0.0F, 0.0F);
+  float const uniform_scale = 1.0F;
 
-  QMatrix4x4 result = HumanoidRendererBase::make_frame_local_transform(
+  QMatrix4x4 const result = HumanoidRendererBase::make_frame_local_transform(
       parent, frame, local_offset, uniform_scale);
 
-  QVector3D translation = result.map(QVector3D(0.0F, 0.0F, 0.0F));
+  QVector3D const translation = result.map(QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_TRUE(approx_equal(translation, frame.origin));
 }
 
@@ -138,20 +139,36 @@ TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
   head_frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   head_frame.radius = HP::HEAD_RADIUS;
 
-  QVector3D local(1.0F, 0.0F, 0.0F);
-  QVector3D world = HumanoidRendererBase::head_local_position(head_frame, local);
-  QVector3D expected = QVector3D(HP::HEAD_RADIUS, head_center_y, 0.0F);
+  QVector3D const local(1.0F, 0.0F, 0.0F);
+  QVector3D const world = HumanoidRendererBase::head_local_position(head_frame, local);
+  QVector3D const expected = QVector3D(HP::HEAD_RADIUS, head_center_y, 0.0F);
   EXPECT_TRUE(approx_equal(world, expected));
 
-  QMatrix4x4 parent;
-  QVector3D local_offset(0.0F, 0.0F, 0.0F);
-  float uniform_scale = 1.0F;
+  QMatrix4x4 const parent;
+  QVector3D const local_offset(0.0F, 0.0F, 0.0F);
+  float const uniform_scale = 1.0F;
 
-  QMatrix4x4 result = HumanoidRendererBase::make_head_local_transform(
+  QMatrix4x4 const result = HumanoidRendererBase::make_head_local_transform(
       parent, head_frame, local_offset, uniform_scale);
 
-  QVector3D translation = result.map(QVector3D(0.0F, 0.0F, 0.0F));
+  QVector3D const translation = result.map(QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_TRUE(approx_equal(translation, head_frame.origin));
+}
+
+TEST_F(BodyFramesTest, WaistFrameStaysNoticeablySlimmerThanTorsoFrame) {
+  Render::Humanoid::HumanoidBodyMetrics metrics;
+  Render::Humanoid::compute_humanoid_body_metrics(
+      pose, QVector3D(1.0F, 1.0F, 1.0F), 1.0F, metrics);
+  Render::Humanoid::compute_humanoid_head_frame(pose, metrics);
+  Render::Humanoid::compute_humanoid_body_frames(pose, metrics);
+
+  ASSERT_GT(pose.body_frames.torso.radius, 0.0F);
+  ASSERT_GT(pose.body_frames.torso.depth, 0.0F);
+
+  EXPECT_NEAR(
+      pose.body_frames.waist.radius / pose.body_frames.torso.radius, 0.56F, 1e-4F);
+  EXPECT_NEAR(
+      pose.body_frames.waist.depth / pose.body_frames.torso.depth, 0.48F, 1e-4F);
 }
 
 TEST_F(BodyFramesTest, PoseHasBothHeadFrameAndBodyFrames) {

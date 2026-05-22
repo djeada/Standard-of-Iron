@@ -14,6 +14,7 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_config.h"
 #include "../building_collision_registry.h"
+#include "../combat_rules.h"
 #include "../wall_network_service.h"
 
 namespace Game::Systems::Combat {
@@ -243,6 +244,51 @@ auto blood_stain_scale(const Engine::Core::UnitComponent* unit) -> float {
   return 1.0F;
 }
 
+auto is_defense_tower_attacker(Engine::Core::Entity* attacker) -> bool {
+  if ((attacker == nullptr) ||
+      !attacker->has_component<Engine::Core::BuildingComponent>()) {
+    return false;
+  }
+  auto* unit = attacker->get_component<Engine::Core::UnitComponent>();
+  return (unit != nullptr) && unit->spawn_type == Game::Units::SpawnType::DefenseTower;
+}
+
+void assign_retaliation_target_if_needed(Engine::Core::Entity* target,
+                                         Engine::Core::Entity* attacker) {
+  if ((target == nullptr) || (attacker == nullptr) ||
+      target->has_component<Engine::Core::BuildingComponent>() ||
+      !is_defense_tower_attacker(attacker)) {
+    return;
+  }
+
+  auto* attack = target->get_component<Engine::Core::AttackComponent>();
+  if (attack == nullptr) {
+    return;
+  }
+
+  if (attack->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(target)) {
+    return;
+  }
+
+  auto* attack_target = target->get_component<Engine::Core::AttackTargetComponent>();
+  if (attack_target == nullptr) {
+    attack_target = target->add_component<Engine::Core::AttackTargetComponent>();
+  }
+  if (attack_target == nullptr) {
+    return;
+  }
+
+  attack_target->target_id = attacker->get_id();
+  attack_target->should_chase = true;
+
+  if (auto* intent =
+          target->get_component<Engine::Core::PlayerOrderIntentComponent>()) {
+    intent->suppress_opportunistic_combat = false;
+    intent->kind = Engine::Core::PlayerOrderIntentKind::None;
+  }
+}
+
 void spawn_blood_stain(Engine::Core::World* world, const Engine::Core::Entity* target) {
   if (world == nullptr || target == nullptr) {
     return;
@@ -348,6 +394,7 @@ DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
 
   if (unit->health > 0) {
     apply_hit_feedback(target, attacker_id, world);
+    assign_retaliation_target_if_needed(target, attacker);
   }
 
   if (target->has_component<Engine::Core::BuildingComponent>() && unit->health > 0) {

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <limits>
 #include <vector>
 
 #include "render/creature/spec.h"
@@ -118,6 +119,23 @@ auto count_primitives(std::span<const Render::Creature::PrimitiveInstance> prims
       std::count_if(prims.begin(), prims.end(), [&](auto const& prim) {
         return prim.debug_name.rfind(prefix, 0) == 0;
       }));
+}
+
+auto find_manifest_node(const Render::Creature::SpeciesManifest& manifest,
+                        std::string_view name)
+    -> const Render::Creature::Quadruped::MeshNode* {
+  auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                         manifest.lod_full.mesh_nodes.end(),
+                         [&](auto const& node) { return node.debug_name == name; });
+  return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
+}
+
+auto count_manifest_nodes(const Render::Creature::SpeciesManifest& manifest,
+                          std::string_view prefix) -> std::size_t {
+  return static_cast<std::size_t>(std::count_if(
+      manifest.lod_full.mesh_nodes.begin(),
+      manifest.lod_full.mesh_nodes.end(),
+      [&](auto const& node) { return node.debug_name.rfind(prefix, 0) == 0; }));
 }
 
 auto mesh_axis_span(const Render::GL::Mesh& mesh, std::size_t axis) -> float {
@@ -235,6 +253,14 @@ auto point_to_segment_distance(const QVector3D& point,
   return (point - (a + ab * t)).length();
 }
 
+auto hoof_bottom_world_y(const Render::Creature::PrimitiveInstance& hoof,
+                         const QVector3D& foot_world) -> float {
+  EXPECT_EQ(hoof.shape, Render::Creature::PrimitiveShape::Mesh);
+  EXPECT_NE(hoof.custom_mesh, nullptr);
+  return foot_world.y() + hoof.params.head_offset.y() +
+         mesh_axis_min(*hoof.custom_mesh, 1) * hoof.params.half_extents.y();
+}
+
 } // namespace
 
 TEST(HorseSpecTest, CreatureSpecHasTwoLods) {
@@ -316,6 +342,24 @@ TEST(HorseSpecTest, AnimatedPoseKeepsLegsOutsideTorsoSpread) {
   EXPECT_GT(pose.body_half.y(), dims.body_height);
   EXPECT_LT(pose.body_half.y(), Render::Horse::horse_body_visual_height(dims) * 0.75F);
   EXPECT_GT(pose.head_half.z(), pose.head_half.y() * 1.8F);
+}
+
+TEST(HorseSpecTest, BasePoseKeepsBroadForequarterStanceAndSetBackNeckBase) {
+  auto dims = make_horse_dims();
+
+  Render::Horse::HorseSpecPose pose;
+  Render::Horse::make_horse_spec_pose(dims, 0.0F, pose);
+
+  float const front_leg_spacing = pose.foot_fl.x() - pose.foot_fr.x();
+  float const front_shoulder_spacing =
+      pose.shoulder_offset_fl.x() - pose.shoulder_offset_fr.x();
+
+  EXPECT_GT(front_leg_spacing, dims.body_width * 1.45F);
+  EXPECT_GT(front_shoulder_spacing, dims.body_width * 1.55F);
+  EXPECT_GT(front_shoulder_spacing, pose.body_ellipsoid_x * 1.02F);
+  EXPECT_GT(pose.neck_radius, dims.body_width * 0.72F);
+  EXPECT_LT(pose.neck_base.z(), dims.body_length * 0.58F);
+  EXPECT_LT(pose.neck_base.z(), pose.shoulder_offset_fl.z() + dims.body_length * 0.28F);
 }
 
 TEST(HorseSpecTest, BasePoseBodyKeepsDepthCloserToWidthThanFlatBlob) {
@@ -419,6 +463,20 @@ TEST(HorseSpecTest, GeneratedHorseVariantUsesBlackHooves) {
   EXPECT_EQ(variant.hoof_color, QVector3D(0.03F, 0.03F, 0.03F));
 }
 
+TEST(HorseSpecTest, HorseRoleColorsReserveDedicatedBlackEyeSlot) {
+  auto const variant = Render::GL::make_horse_variant(0U, QVector3D(), QVector3D());
+  std::array<QVector3D, 8> roles{};
+  Render::Horse::fill_horse_role_colors(variant, roles);
+
+  EXPECT_EQ(roles[3], variant.hoof_color);
+  EXPECT_EQ(roles[4], variant.mane_color);
+  EXPECT_EQ(roles[5], variant.tail_color);
+  EXPECT_EQ(roles[6], variant.muzzle_color);
+  EXPECT_LT(roles[7].x(), 0.02F);
+  EXPECT_LT(roles[7].y(), 0.02F);
+  EXPECT_LT(roles[7].z(), 0.02F);
+}
+
 TEST(HorseSpecTest, FullSpecUsesWarhorseSilhouette) {
   auto const& spec = Render::Horse::horse_creature_spec();
 
@@ -430,7 +488,7 @@ TEST(HorseSpecTest, FullSpecUsesWarhorseSilhouette) {
   float const x_span = mesh_axis_span(*whole->custom_mesh, 0);
   float const y_span = mesh_axis_span(*whole->custom_mesh, 1);
   float const z_span = mesh_axis_span(*whole->custom_mesh, 2);
-  EXPECT_GT(z_span, y_span * 0.70F);
+  EXPECT_GT(z_span, y_span * 0.68F);
   EXPECT_GT(z_span, x_span * 1.40F);
   EXPECT_LT(y_span, z_span * 1.45F);
   EXPECT_EQ(find_primitive(spec.lod_full.primitives, "horse.full.whole"), nullptr);
@@ -463,12 +521,14 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
   auto const* rear_thigh =
       find_primitive(spec.lod_full.primitives, "horse.leg.bl.thigh");
   auto const* rear_calf = find_primitive(spec.lod_full.primitives, "horse.leg.bl.calf");
+  auto const* rear_hoof = find_primitive(spec.lod_full.primitives, "horse.leg.bl.hoof");
 
   ASSERT_NE(front_thigh, nullptr);
   ASSERT_NE(front_calf, nullptr);
   ASSERT_NE(front_hoof, nullptr);
   ASSERT_NE(rear_thigh, nullptr);
   ASSERT_NE(rear_calf, nullptr);
+  ASSERT_NE(rear_hoof, nullptr);
   EXPECT_EQ(front_thigh->shape, Render::Creature::PrimitiveShape::BoneSpanMesh);
   EXPECT_EQ(front_calf->shape, Render::Creature::PrimitiveShape::BoneSpanMesh);
   EXPECT_EQ(front_hoof->shape, Render::Creature::PrimitiveShape::Mesh);
@@ -487,11 +547,13 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
   EXPECT_EQ(front_hoof->params.anchor_bone,
             static_cast<Render::Creature::BoneIndex>(Render::Horse::HorseBone::FootFL));
   EXPECT_EQ(front_hoof->color_role, 4U);
-  EXPECT_GT(front_thigh->params.radius, front_calf->params.radius * 1.2F);
+  EXPECT_GT(front_thigh->params.radius, front_calf->params.radius * 1.12F);
   EXPECT_GT(front_thigh->params.radius,
-            Render::GL::make_horse_dimensions(0U).body_width * 0.26F);
+            Render::GL::make_horse_dimensions(0U).body_width * 0.20F);
   EXPECT_GT(front_calf->params.radius,
             Render::GL::make_horse_dimensions(0U).body_width * 0.12F);
+  EXPECT_GT(rear_thigh->params.radius, front_thigh->params.radius * 1.08F);
+  EXPECT_GT(rear_thigh->params.depth_radius, front_thigh->params.depth_radius * 1.08F);
   EXPECT_GT(front_thigh->params.head_offset.y(), dims.body_height * 0.82F);
   EXPECT_GE(front_thigh->params.head_offset.z(), dims.body_length * 0.04F);
   EXPECT_GT(front_thigh->params.tail_offset.y(), dims.leg_length * 0.07F);
@@ -500,36 +562,42 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
   EXPECT_GT(front_calf->params.tail_offset.y(), dims.hoof_height * 0.10F);
   EXPECT_LT(front_calf->params.tail_offset.y(), dims.hoof_height * 0.18F);
   EXPECT_NEAR(front_thigh->params.radius / front_thigh->params.depth_radius,
-              (0.690F * 1.10F) / 1.050F,
+              (0.552F * 1.10F) / 0.840F,
               1.0e-6F);
   EXPECT_NEAR(front_calf->params.radius / front_calf->params.depth_radius,
               (0.290F * 1.10F * 1.50F) / 0.410F,
               1.0e-6F);
   EXPECT_NEAR(rear_thigh->params.head_offset.y(),
-              dims.leg_length * 0.10F +
-                  (dims.body_height * 1.02F - dims.leg_length * 0.10F) * 0.60F,
+              dims.leg_length * 0.08F +
+                  (dims.body_height * 1.02F - dims.leg_length * 0.08F) * 0.70F,
               1.0e-6F);
   EXPECT_GT(rear_thigh->params.head_offset.z(), 0.0F);
   EXPECT_LT(rear_thigh->params.head_offset.z(), dims.body_length * 0.03F);
   EXPECT_NEAR(rear_thigh->params.radius / rear_thigh->params.depth_radius,
-              (0.620F * 1.10F) / 0.980F,
+              (0.624F * 1.10F) / 0.920F,
               1.0e-6F);
   EXPECT_NEAR(
       rear_thigh->params.tail_offset.y(), rear_calf->params.head_offset.y(), 1.0e-6F);
-  EXPECT_GT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.04F);
-  EXPECT_LT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.06F);
+  EXPECT_GT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.02F);
+  EXPECT_LT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.03F);
   EXPECT_NEAR(
       rear_thigh->params.tail_offset.z(), rear_calf->params.head_offset.z(), 1.0e-6F);
+  EXPECT_GT(rear_calf->params.head_offset.y(), dims.leg_length * 0.06F);
+  EXPECT_LT(rear_calf->params.tail_offset.y(), dims.hoof_height * 0.04F);
   EXPECT_NEAR(rear_calf->params.radius / rear_calf->params.depth_radius,
               (0.310F * 1.10F * 1.50F) / 0.450F,
               1.0e-6F);
   EXPECT_GT(front_hoof->params.half_extents.x(), dims.body_width * 0.18F);
   EXPECT_GT(front_hoof->params.half_extents.z(), dims.body_width * 0.32F);
   EXPECT_GT(front_hoof->params.half_extents.y(), dims.hoof_height * 0.50F);
+  EXPECT_LT(rear_hoof->params.head_offset.y(), front_hoof->params.head_offset.y());
+  EXPECT_GT(rear_hoof->params.half_extents.x(), front_hoof->params.half_extents.x());
+  EXPECT_GT(rear_hoof->params.half_extents.z(), front_hoof->params.half_extents.z());
+  EXPECT_GT(rear_hoof->params.half_extents.y(), front_hoof->params.half_extents.y());
   EXPECT_GT(max_ring_radius_at_y(*front_thigh->custom_mesh, true),
-            max_ring_radius_at_y(*front_thigh->custom_mesh, false) * 1.7F);
-  EXPECT_LT(max_ring_radius_at_y(*rear_thigh->custom_mesh, true),
-            max_ring_radius_at_y(*front_thigh->custom_mesh, true) * 0.90F);
+            max_ring_radius_at_y(*front_thigh->custom_mesh, false) * 1.45F);
+  EXPECT_GT(max_ring_radius_at_y(*rear_thigh->custom_mesh, true),
+            max_ring_radius_at_y(*front_thigh->custom_mesh, true) * 1.04F);
   EXPECT_GT(max_ring_radius_at_y(*front_calf->custom_mesh, true),
             max_ring_radius_at_y(*front_calf->custom_mesh, false) * 1.35F);
   EXPECT_LT(front_thigh->custom_mesh->get_vertices().size(),
@@ -553,8 +621,8 @@ TEST(HorseSpecTest, RearThighAndCalfShareKneeSeam) {
   EXPECT_NEAR((rear_thigh->params.tail_offset - rear_calf->params.head_offset).length(),
               0.0F,
               1.0e-6F);
-  EXPECT_NEAR(rear_calf->params.head_offset.y(), dims.leg_length * 0.10F, 1.0e-6F);
-  EXPECT_NEAR(rear_calf->params.head_offset.z(), dims.body_length * 0.055F, 1.0e-6F);
+  EXPECT_NEAR(rear_calf->params.head_offset.y(), dims.leg_length * 0.08F, 1.0e-6F);
+  EXPECT_NEAR(rear_calf->params.head_offset.z(), dims.body_length * 0.026F, 1.0e-6F);
 }
 
 TEST(HorseSpecTest, ManifestUsesFacetedHorseHeadAndEars) {
@@ -598,38 +666,43 @@ TEST(HorseSpecTest, ManifestUsesFacetedHorseHeadAndEars) {
   float const head_upper_z_span = mesh_axis_span(head_upper_mesh, 2);
   float const head_upper_y_span = mesh_axis_span(head_upper_mesh, 1);
   float const head_upper_z_min = mesh_axis_min(head_upper_mesh, 2);
-  float const head_upper_z_max = mesh_axis_max(head_upper_mesh, 2);
   float const head_upper_y_max = mesh_axis_max(head_upper_mesh, 1);
+  float const head_upper_x_max = mesh_axis_max(head_upper_mesh, 0);
+  float const rear_crown =
+      max_axis_in_z_band(head_upper_mesh,
+                         head_upper_z_min + head_upper_z_span * 0.03F,
+                         head_upper_z_span * 0.08F,
+                         1);
   EXPECT_GT(neck->start_radius, neck->end_radius);
   EXPECT_GT((neck->end - neck->start).length(), 0.60F);
   EXPECT_GT(neck->end.y(), neck->start.y());
   EXPECT_LT(neck->start_radius, 0.45F);
-  EXPECT_GT(head_upper_z_span, head_upper_y_span * 0.85F);
+  EXPECT_GT(head_upper_z_span, head_upper_y_span * 0.66F);
+  EXPECT_GT(rear_crown, head_upper_y_max - head_upper_y_span * 0.36F);
   EXPECT_GE(ear_l->outline.size(), 3U);
   EXPECT_NEAR(ear_l->thickness_axis.x(), 1.0F, 1.0e-6F);
   EXPECT_NEAR(ear_l->thickness_axis.y(), 0.0F, 1.0e-6F);
   EXPECT_NEAR(ear_l->thickness_axis.z(), 0.0F, 1.0e-6F);
   EXPECT_GT(ear_l->outline[1].y(), ear_l->outline[0].y());
-  EXPECT_GT(ear_l->outline[2].y(), ear_l->outline[0].y());
-  EXPECT_GT(ear_l->outline[0].z(), head_upper_z_min + head_upper_z_span * 0.15F);
-  EXPECT_GT(ear_l->outline[1].z(), ear_l->outline[2].z());
-  EXPECT_LT(ear_l->outline[1].z(), head_upper_z_max);
-  EXPECT_GT(ear_l->outline[1].y(), head_upper_y_max - head_upper_y_span * 0.20F);
+  EXPECT_NEAR(ear_l->outline[2].y(), ear_l->outline[0].y(), head_upper_y_span * 0.06F);
+  EXPECT_GT(ear_l->outline[1].x(), ear_l->outline[0].x());
+  EXPECT_GT(ear_l->outline[1].x(), ear_l->outline[2].x());
+  EXPECT_GT(ear_l->outline[0].x(), head_upper_x_max * 0.40F);
+  EXPECT_GT(ear_l->outline[0].z(), head_upper_z_min);
+  EXPECT_LT(ear_l->outline[0].z(), head_upper_z_min + head_upper_z_span * 0.28F);
+  EXPECT_LT(ear_l->outline[1].z(), ear_l->outline[0].z());
+  EXPECT_LT(ear_l->outline[2].z(), ear_l->outline[0].z());
+  EXPECT_GT(ear_l->outline[1].y(), head_upper_y_max - head_upper_y_span * 0.18F);
+  EXPECT_GT(ear_l->outline[1].y() - ear_l->outline[0].y(), head_upper_y_span * 0.34F);
+  EXPECT_GT(std::abs(ear_l->outline[0].z() - ear_l->outline[2].z()),
+            head_upper_z_span * 0.10F);
 }
 
 TEST(HorseSpecTest, ManifestFrontTorsoTopRisesIntoNeck) {
   auto const& manifest = Render::Horse::horse_manifest();
 
-  auto const find_node =
-      [&](std::string_view name) -> const Render::Creature::Quadruped::MeshNode* {
-    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                           manifest.lod_full.mesh_nodes.end(),
-                           [&](auto const& node) { return node.debug_name == name; });
-    return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
-  };
-
-  auto const* front_node = find_node("horse.body.front");
-  auto const* neck_node = find_node("horse.neck");
+  auto const* front_node = find_manifest_node(manifest, "horse.body.front");
+  auto const* neck_node = find_manifest_node(manifest, "horse.neck");
 
   ASSERT_NE(front_node, nullptr);
   ASSERT_NE(neck_node, nullptr);
@@ -658,6 +731,59 @@ TEST(HorseSpecTest, ManifestFrontTorsoTopRisesIntoNeck) {
   EXPECT_GT(fore_width, mid_width * 0.60F);
   EXPECT_GE(neck->start.z(), z_min + z_span * 0.32F);
   EXPECT_LE(neck->start.z(), z_max + 0.10F);
+}
+
+TEST(HorseSpecTest, ManifestTorsoEnvelopeContainsLegNeckAndTailAnchors) {
+  auto const& manifest = Render::Horse::horse_manifest();
+  auto const dims = Render::GL::make_horse_dimensions(0U);
+
+  auto const* front_node = find_manifest_node(manifest, "horse.body.front");
+  auto const* rear_node = find_manifest_node(manifest, "horse.body.rear");
+
+  ASSERT_NE(front_node, nullptr);
+  ASSERT_NE(rear_node, nullptr);
+
+  auto const* front =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&front_node->data);
+  auto const* rear =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&rear_node->data);
+
+  ASSERT_NE(front, nullptr);
+  ASSERT_NE(rear, nullptr);
+
+  Render::GL::Mesh const front_mesh(front->vertices, front->indices);
+  Render::GL::Mesh const rear_mesh(rear->vertices, rear->indices);
+
+  QVector3D const front_attach = Render::Horse::horse_front_leg_attach_local(dims);
+  QVector3D const rear_attach = Render::Horse::horse_rear_leg_attach_local(dims);
+  QVector3D const neck_base = Render::Horse::horse_neck_base_local(dims);
+  QVector3D const tail_base = Render::Horse::horse_tail_base_local(dims);
+
+  auto const front_top =
+      max_axis_in_z_band(front_mesh, front_attach.z(), dims.body_length * 0.10F, 1);
+  auto const front_bottom =
+      min_axis_in_z_band(front_mesh, front_attach.z(), dims.body_length * 0.10F, 1);
+  auto const rear_top =
+      max_axis_in_z_band(rear_mesh, rear_attach.z(), dims.body_length * 0.10F, 1);
+  auto const rear_bottom =
+      min_axis_in_z_band(rear_mesh, rear_attach.z(), dims.body_length * 0.10F, 1);
+  auto const neck_top =
+      max_axis_in_z_band(front_mesh, neck_base.z(), dims.body_length * 0.12F, 1);
+  auto const neck_bottom =
+      min_axis_in_z_band(front_mesh, neck_base.z(), dims.body_length * 0.12F, 1);
+  auto const tail_top =
+      max_axis_in_z_band(rear_mesh, tail_base.z(), dims.body_length * 0.12F, 1);
+  auto const tail_bottom =
+      min_axis_in_z_band(rear_mesh, tail_base.z(), dims.body_length * 0.12F, 1);
+
+  EXPECT_GT(front_attach.y(), front_bottom);
+  EXPECT_LT(front_attach.y(), front_top);
+  EXPECT_GT(rear_attach.y(), rear_bottom);
+  EXPECT_LT(rear_attach.y(), rear_top);
+  EXPECT_GT(neck_base.y(), neck_bottom);
+  EXPECT_LT(neck_base.y(), neck_top);
+  EXPECT_GT(tail_base.y(), tail_bottom);
+  EXPECT_LT(tail_base.y(), tail_top);
 }
 
 TEST(HorseSpecTest, ManifestTorsoSectionsUseFourFifthsOriginalLength) {
@@ -784,10 +910,58 @@ TEST(HorseSpecTest, ManifestRearTorsoRoundsIntoCroupInsteadOfFlatTube) {
   EXPECT_LT(tail_width, croup_width);
   EXPECT_GT(croup_width, flank_width);
   EXPECT_GT(croup_dorsal, tail_dorsal);
+  float const mid_width =
+      max_abs_axis_in_z_band(mid_mesh, mid_z, mesh_axis_span(mid_mesh, 2) * 0.16F, 0);
+  EXPECT_GT(croup_width, mid_width * 0.94F);
   EXPECT_GT(tail_ventral + 0.01F, croup_ventral);
   EXPECT_GT(flank_ventral, mid_ventral);
   EXPECT_GT(rear_z_max, mesh_axis_min(mid_mesh, 2));
   EXPECT_LT(rear_z_max - mesh_axis_min(mid_mesh, 2), 0.50F);
+}
+
+TEST(HorseSpecTest, ManifestBackLineFormsWithersDipAndRumpRise) {
+  auto const& manifest = Render::Horse::horse_manifest();
+
+  auto const* front_node = find_manifest_node(manifest, "horse.body.front");
+  auto const* mid_node = find_manifest_node(manifest, "horse.body.mid");
+  auto const* rear_node = find_manifest_node(manifest, "horse.body.rear");
+
+  ASSERT_NE(front_node, nullptr);
+  ASSERT_NE(mid_node, nullptr);
+  ASSERT_NE(rear_node, nullptr);
+
+  auto const* front =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&front_node->data);
+  auto const* mid =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&mid_node->data);
+  auto const* rear =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&rear_node->data);
+
+  ASSERT_NE(front, nullptr);
+  ASSERT_NE(mid, nullptr);
+  ASSERT_NE(rear, nullptr);
+
+  Render::GL::Mesh const front_mesh(front->vertices, front->indices);
+  Render::GL::Mesh const mid_mesh(mid->vertices, mid->indices);
+  Render::GL::Mesh const rear_mesh(rear->vertices, rear->indices);
+
+  float const front_z_min = mesh_axis_min(front_mesh, 2);
+  float const front_z_span = mesh_axis_span(front_mesh, 2);
+  float const mid_z_min = mesh_axis_min(mid_mesh, 2);
+  float const mid_z_span = mesh_axis_span(mid_mesh, 2);
+  float const rear_z_min = mesh_axis_min(rear_mesh, 2);
+  float const rear_z_span = mesh_axis_span(rear_mesh, 2);
+
+  float const withers = max_axis_in_z_band(
+      front_mesh, front_z_min + front_z_span * 0.78F, front_z_span * 0.12F, 1);
+  float const back = max_axis_in_z_band(
+      mid_mesh, mid_z_min + mid_z_span * 0.42F, mid_z_span * 0.14F, 1);
+  float const rump = max_axis_in_z_band(
+      rear_mesh, rear_z_min + rear_z_span * 0.54F, rear_z_span * 0.14F, 1);
+
+  EXPECT_GT(withers, back);
+  EXPECT_GT(rump, back);
+  EXPECT_GT(rump, withers - 0.05F);
 }
 
 TEST(HorseSpecTest, ManifestUsesTailDockAndHairInsteadOfSingleTube) {
@@ -823,6 +997,118 @@ TEST(HorseSpecTest, ManifestUsesTailDockAndHairInsteadOfSingleTube) {
   EXPECT_LT(hair->outline[2].y(), hair->outline[1].y());
   EXPECT_LT(hair->outline[2].z(), hair->outline[1].z());
   EXPECT_GT(hair->thickness, 0.01F);
+}
+
+TEST(HorseSpecTest, ManifestAddsManeAndSimpleFacialDetailsAfterSilhouetteLocks) {
+  auto const& manifest = Render::Horse::horse_manifest();
+
+  auto const* mane_node = find_manifest_node(manifest, "horse.mane.2");
+  auto const* brow_l_node = find_manifest_node(manifest, "horse.brow.l");
+  auto const* brow_r_node = find_manifest_node(manifest, "horse.brow.r");
+  auto const* nostril_l_node = find_manifest_node(manifest, "horse.nostril.l");
+  auto const* nostril_r_node = find_manifest_node(manifest, "horse.nostril.r");
+
+  ASSERT_NE(mane_node, nullptr);
+  ASSERT_NE(brow_l_node, nullptr);
+  ASSERT_NE(brow_r_node, nullptr);
+  ASSERT_NE(nostril_l_node, nullptr);
+  ASSERT_NE(nostril_r_node, nullptr);
+
+  auto const* mane =
+      std::get_if<Render::Creature::Quadruped::FlatFanNode>(&mane_node->data);
+  auto const* brow_l =
+      std::get_if<Render::Creature::Quadruped::FlatFanNode>(&brow_l_node->data);
+  auto const* brow_r =
+      std::get_if<Render::Creature::Quadruped::FlatFanNode>(&brow_r_node->data);
+  auto const* nostril_l =
+      std::get_if<Render::Creature::Quadruped::FlatFanNode>(&nostril_l_node->data);
+  auto const* nostril_r =
+      std::get_if<Render::Creature::Quadruped::FlatFanNode>(&nostril_r_node->data);
+
+  ASSERT_NE(mane, nullptr);
+  ASSERT_NE(brow_l, nullptr);
+  ASSERT_NE(brow_r, nullptr);
+  ASSERT_NE(nostril_l, nullptr);
+  ASSERT_NE(nostril_r, nullptr);
+
+  EXPECT_EQ(find_manifest_node(manifest, "horse.mane"), nullptr);
+  EXPECT_GE(count_manifest_nodes(manifest, "horse.mane."), 9U);
+  EXPECT_EQ(mane_node->anchor_bone,
+            static_cast<Render::Creature::BoneIndex>(Render::Horse::HorseBone::Body));
+  EXPECT_EQ(mane_node->color_role, 5U);
+  EXPECT_EQ(nostril_l_node->color_role, 7U);
+  auto const* eye_node = find_manifest_node(manifest, "horse.eye");
+  ASSERT_NE(eye_node, nullptr);
+  EXPECT_EQ(eye_node->color_role, 8U);
+
+  std::size_t positive_tip_count = 0U;
+  std::size_t negative_tip_count = 0U;
+  for (auto const& node : manifest.lod_full.mesh_nodes) {
+    if (!node.debug_name.starts_with("horse.mane.")) {
+      continue;
+    }
+    auto const* strand =
+        std::get_if<Render::Creature::Quadruped::FlatFanNode>(&node.data);
+    ASSERT_NE(strand, nullptr);
+    if (strand->outline.size() > 3U) {
+      positive_tip_count += strand->outline[3].x() > 0.0F ? 1U : 0U;
+      negative_tip_count += strand->outline[3].x() < 0.0F ? 1U : 0U;
+    }
+  }
+
+  ASSERT_GE(mane->outline.size(), 4U);
+  EXPECT_GT(mane->outline[1].y(), mane->outline[0].y());
+  EXPECT_GT(mane->outline[2].y(), mane->outline[1].y());
+  EXPECT_GT(mane->outline[2].y(), mane->outline[1].y());
+  EXPECT_LT(mane->outline[3].y(), mane->outline[2].y());
+  EXPECT_LT(mane->outline.back().z(), mane->outline[1].z());
+  EXPECT_GT(mane->thickness, 0.005F);
+  EXPECT_LT(mane->thickness, 0.02F);
+  EXPECT_GT(positive_tip_count, 0U);
+  EXPECT_GT(negative_tip_count, 0U);
+
+  EXPECT_NEAR(
+      std::abs(brow_l->outline[0].x()), std::abs(brow_r->outline[0].x()), 1.0e-6F);
+  EXPECT_GT(brow_l->outline[0].y(), nostril_l->outline[0].y());
+  EXPECT_GT(nostril_l->outline[1].z(), brow_l->outline[1].z());
+  EXPECT_NEAR(std::abs(nostril_l->outline[1].x()),
+              std::abs(nostril_r->outline[1].x()),
+              1.0e-6F);
+  EXPECT_LT(nostril_l->thickness, 0.01F);
+  EXPECT_LT(nostril_l->outline[2].z() - nostril_l->outline[0].z(), 0.055F);
+}
+
+TEST(HorseSpecTest, ManifestEyesStayInsetWithinHeadSilhouette) {
+  auto const& manifest = Render::Horse::horse_manifest();
+
+  auto const* head_upper_node = find_manifest_node(manifest, "horse.head.upper");
+  ASSERT_NE(head_upper_node, nullptr);
+  auto const* head_upper =
+      std::get_if<Render::Creature::Quadruped::CustomMeshNode>(&head_upper_node->data);
+  ASSERT_NE(head_upper, nullptr);
+
+  std::vector<Render::Creature::Quadruped::EllipsoidNode> eyes;
+  for (auto const& node : manifest.lod_full.mesh_nodes) {
+    if (node.debug_name != "horse.eye") {
+      continue;
+    }
+    auto const* eye =
+        std::get_if<Render::Creature::Quadruped::EllipsoidNode>(&node.data);
+    ASSERT_NE(eye, nullptr);
+    eyes.push_back(*eye);
+  }
+
+  ASSERT_EQ(eyes.size(), 2U);
+
+  Render::GL::Mesh const head_upper_mesh(head_upper->vertices, head_upper->indices);
+  float const head_width = mesh_axis_max(head_upper_mesh, 0);
+  float max_eye_extent = 0.0F;
+  for (auto const& eye : eyes) {
+    max_eye_extent = std::max(max_eye_extent, std::abs(eye.center.x()) + eye.radii.x());
+  }
+
+  EXPECT_GT(max_eye_extent, head_width * 0.55F);
+  EXPECT_LT(max_eye_extent, head_width * 0.92F);
 }
 
 TEST(HorseSpecTest, ManifestAddsWithersAndBrisketMassForForequarterRead) {
@@ -921,10 +1207,10 @@ TEST(HorseSpecTest, ManifestKeepsShorterMoreTaperedMuzzleProfile) {
   float const muzzle_bottom =
       min_axis_in_z_band(head_upper_mesh, muzzle_z, head_band, 1);
 
-  EXPECT_GT(head_z_span, head_length_vis * 0.62F);
-  EXPECT_LT(head_z_span, head_length_vis * 0.67F);
-  EXPECT_LT(muzzle_width, skull_width * 0.75F);
-  EXPECT_LT(muzzle_top - muzzle_bottom, (skull_top - skull_bottom) * 0.85F);
+  EXPECT_GT(head_z_span, head_length_vis * 0.49F);
+  EXPECT_LT(head_z_span, head_length_vis * 0.56F);
+  EXPECT_LT(muzzle_width, skull_width * 0.68F);
+  EXPECT_LT(muzzle_top - muzzle_bottom, (skull_top - skull_bottom) * 0.78F);
   EXPECT_LT((muzzle_top + muzzle_bottom) * 0.5F, (skull_top + skull_bottom) * 0.5F);
 }
 
@@ -948,6 +1234,33 @@ TEST(HorseSpecTest, FullSpecFrontHoofCentersUnderFrontCannon) {
   EXPECT_LT(hoof_bottom, dims.hoof_height * 0.06F);
 }
 
+TEST(HorseSpecTest, BasePoseKeepsAllHoofBottomsOnSharedGroundPlane) {
+  auto const& spec = Render::Horse::horse_creature_spec();
+  auto dims = make_horse_dims();
+
+  auto const* hoof_fl = find_primitive(spec.lod_full.primitives, "horse.leg.fl.hoof");
+  auto const* hoof_fr = find_primitive(spec.lod_full.primitives, "horse.leg.fr.hoof");
+  auto const* hoof_bl = find_primitive(spec.lod_full.primitives, "horse.leg.bl.hoof");
+  auto const* hoof_br = find_primitive(spec.lod_full.primitives, "horse.leg.br.hoof");
+
+  ASSERT_NE(hoof_fl, nullptr);
+  ASSERT_NE(hoof_fr, nullptr);
+  ASSERT_NE(hoof_bl, nullptr);
+  ASSERT_NE(hoof_br, nullptr);
+
+  Render::Horse::HorseSpecPose pose;
+  Render::Horse::make_horse_spec_pose(dims, 0.0F, pose);
+
+  float const bottom_fl = hoof_bottom_world_y(*hoof_fl, pose.foot_fl);
+  float const bottom_fr = hoof_bottom_world_y(*hoof_fr, pose.foot_fr);
+  float const bottom_bl = hoof_bottom_world_y(*hoof_bl, pose.foot_bl);
+  float const bottom_br = hoof_bottom_world_y(*hoof_br, pose.foot_br);
+
+  EXPECT_NEAR(bottom_fl, bottom_fr, dims.hoof_height * 0.06F);
+  EXPECT_NEAR(bottom_fl, bottom_bl, dims.hoof_height * 0.08F);
+  EXPECT_NEAR(bottom_bl, bottom_br, dims.hoof_height * 0.06F);
+}
+
 TEST(HorseSpecTest, MinimalSpecMatchesWarhorseSilhouette) {
   auto const& spec = Render::Horse::horse_creature_spec();
 
@@ -960,7 +1273,7 @@ TEST(HorseSpecTest, MinimalSpecMatchesWarhorseSilhouette) {
   float const x_span = mesh_axis_span(*whole->custom_mesh, 0);
   float const y_span = mesh_axis_span(*whole->custom_mesh, 1);
   float const z_span = mesh_axis_span(*whole->custom_mesh, 2);
-  EXPECT_GT(z_span, y_span * 0.70F);
+  EXPECT_GT(z_span, y_span * 0.68F);
   EXPECT_GT(z_span, x_span * 1.40F);
   EXPECT_EQ(find_primitive(spec.lod_minimal.primitives, "horse.minimal.leg.fl"),
             nullptr);
@@ -1010,13 +1323,51 @@ TEST(HorseSpecTest, AnimatedPoseKeepsStraighterRearThighBreakDuringMotion) {
   EXPECT_LT(pose.knee_bl.y(), shoulder_bl.y());
   EXPECT_GT(pose.knee_bl.y(), pose.foot_bl.y());
   EXPECT_GT(pose.knee_bl.z(), shoulder_bl.z());
-  EXPECT_LT(pose.knee_bl.z(), rear_mid_z - dims.body_length * 0.03F);
+  EXPECT_LT(pose.knee_bl.z(), rear_mid_z + dims.body_length * 0.01F);
   EXPECT_LT(pose.knee_bl.z(), pose.foot_bl.z());
   float const rear_bend =
       point_to_segment_distance(pose.knee_bl, shoulder_bl, pose.foot_bl);
   EXPECT_GT(rear_bend, dims.body_length * 0.004F);
   EXPECT_LT(rear_bend, dims.body_length * 0.03F);
   EXPECT_LT(rear_bend, front_bend * 0.20F);
+}
+
+TEST(HorseSpecTest, AnimatedRearLegUsesLongerUpperSegmentThanBefore) {
+  auto dims = make_horse_dims();
+  auto gait = Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
+
+  Render::Horse::HorseSpecPose pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait, Render::Horse::HorsePoseMotion{0.62F, 0.0F, true}, pose);
+
+  QVector3D const shoulder_bl = pose.barrel_center + pose.shoulder_offset_pose_bl;
+  float const upper_len = (pose.knee_bl - shoulder_bl).length();
+  float const lower_len = (pose.foot_bl - pose.knee_bl).length();
+
+  EXPECT_GT(upper_len, dims.leg_length * 0.40F);
+  EXPECT_LT(lower_len, dims.leg_length * 0.60F);
+  EXPECT_GT(upper_len, lower_len * 0.85F);
+}
+
+TEST(HorseSpecTest, AnimatedGallopKeepsRearUpperLegFromSweepingTooFarBack) {
+  auto dims = make_horse_dims();
+  auto gait =
+      Render::GL::gait_for_type(Render::GL::GaitType::GALLOP, make_horse_gait());
+  QVector3D const rear_anchor = Render::Horse::horse_rear_leg_attach_local(dims);
+
+  float min_shoulder_z = std::numeric_limits<float>::max();
+  for (int i = 0; i < 12; ++i) {
+    Render::Horse::HorseSpecPose pose;
+    Render::Horse::make_horse_spec_pose_animated(
+        dims,
+        gait,
+        Render::Horse::HorsePoseMotion{static_cast<float>(i) / 12.0F, 0.0F, true},
+        pose);
+    min_shoulder_z = std::min(
+        min_shoulder_z, pose.barrel_center.z() + pose.shoulder_offset_pose_bl.z());
+  }
+
+  EXPECT_GT(min_shoulder_z, rear_anchor.z() - dims.body_length * 0.06F);
 }
 
 TEST(HorseSpecTest, WalkAndTrotProduceDifferentKneeFlexProfiles) {

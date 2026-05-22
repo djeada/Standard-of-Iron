@@ -151,6 +151,7 @@ void MapData::clear() {
   m_linear_elements.clear();
   m_structures.clear();
   m_troop_spawns.clear();
+  m_undead_zones.clear();
 
   m_biome = QJsonObject();
   m_camera = QJsonObject();
@@ -272,8 +273,8 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
                                        MapJsonKeys::firecamps,
                                        MapJsonKeys::rivers,
                                        MapJsonKeys::roads,
-                                       MapJsonKeys::bridges};
-
+                                       MapJsonKeys::bridges,
+                                       MapJsonKeys::undead_zones};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
@@ -327,6 +328,10 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
 
   if (root.contains(MapJsonKeys::spawns)) {
     parse_spawns_array(root[MapJsonKeys::spawns].toArray());
+  }
+
+  if (root.contains(MapJsonKeys::undead_zones)) {
+    parse_undead_zones_array(root[MapJsonKeys::undead_zones].toArray());
   }
 
   m_undo_stack.clear();
@@ -424,6 +429,11 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
       spawns_arr.append(entry.object);
     }
     root[MapJsonKeys::spawns] = spawns_arr;
+  }
+
+  QJsonArray const undead_zones_arr = undead_zones_to_json();
+  if (!undead_zones_arr.isEmpty()) {
+    root[MapJsonKeys::undead_zones] = undead_zones_arr;
   }
 
   const QJsonDocument doc(root);
@@ -1017,6 +1027,79 @@ QString MapData::undo_description() const {
 
 QString MapData::redo_description() const {
   return m_redo_stack.empty() ? QString{} : m_redo_stack.back()->description();
+}
+
+void MapData::add_undead_zone(const UndeadZoneElement& element) {
+  m_undead_zones.append(element);
+  set_modified(true);
+  emit data_changed();
+}
+
+void MapData::insert_undead_zone(int index, const UndeadZoneElement& element) {
+  if (index >= 0 && index <= m_undead_zones.size()) {
+    m_undead_zones.insert(index, element);
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::update_undead_zone(int index, const UndeadZoneElement& element) {
+  if (index >= 0 && index < m_undead_zones.size()) {
+    m_undead_zones[index] = element;
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::remove_undead_zone(int index) {
+  if (index >= 0 && index < m_undead_zones.size()) {
+    m_undead_zones.removeAt(index);
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::parse_undead_zones_array(const QJsonArray& arr) {
+  for (const auto& val : arr) {
+    const QJsonObject obj = val.toObject();
+    UndeadZoneElement elem;
+    elem.id = obj["id"].toString();
+    elem.anchor_type = obj["anchor_type"].toString(QStringLiteral("magic_shrine"));
+    elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
+    elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
+    elem.radius = static_cast<float>(obj[MapJsonKeys::radius].toDouble(8.0));
+    elem.leash_radius = static_cast<float>(obj["leash_radius"].toDouble(14.0));
+    elem.owner_id = obj["owner_id"].toInt(99);
+    elem.team_id = obj["team_id"].toInt(99);
+    elem.awaken_on = obj["awaken_on"].toArray();
+    elem.waves = obj["waves"].toArray();
+    m_undead_zones.append(elem);
+  }
+}
+
+QJsonArray MapData::undead_zones_to_json() const {
+  QJsonArray arr;
+  for (const auto& elem : m_undead_zones) {
+    QJsonObject obj;
+    if (!elem.id.isEmpty()) {
+      obj["id"] = elem.id;
+    }
+    obj["anchor_type"] = elem.anchor_type;
+    obj[MapJsonKeys::x] = static_cast<double>(elem.x);
+    obj[MapJsonKeys::z] = static_cast<double>(elem.z);
+    obj[MapJsonKeys::radius] = static_cast<double>(elem.radius);
+    obj["leash_radius"] = static_cast<double>(elem.leash_radius);
+    obj["owner_id"] = elem.owner_id;
+    obj["team_id"] = elem.team_id;
+    if (!elem.awaken_on.isEmpty()) {
+      obj["awaken_on"] = elem.awaken_on;
+    }
+    if (!elem.waves.isEmpty()) {
+      obj["waves"] = elem.waves;
+    }
+    arr.append(obj);
+  }
+  return arr;
 }
 
 } // namespace MapEditor

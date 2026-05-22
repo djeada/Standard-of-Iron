@@ -37,8 +37,8 @@ constexpr float k_hoof_height_max = 0.115F;
 constexpr float k_tail_length_min = 0.55F;
 constexpr float k_tail_length_max = 0.72F;
 
-constexpr float k_saddle_thickness_min = 0.035F;
-constexpr float k_saddle_thickness_max = 0.045F;
+constexpr float k_saddle_thickness_min = 0.050F;
+constexpr float k_saddle_thickness_max = 0.062F;
 constexpr float k_seat_forward_offset_min = 0.010F;
 constexpr float k_seat_forward_offset_max = 0.035F;
 constexpr float k_stirrup_out_scale_min = 0.75F;

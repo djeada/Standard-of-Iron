@@ -14,9 +14,13 @@ public:
   static auto get_shaft() -> GL::Mesh*;
   static auto get_tip() -> GL::Mesh*;
 
+  static constexpr float k_shaft_length = 0.62F;
+  static constexpr float k_tip_length = 0.18F;
+  static constexpr float k_total_length = k_shaft_length + k_tip_length;
+  static constexpr float k_tip_base_radius_scale = 1.9F;
   static constexpr float k_arrow_z_scale = 0.44F;
   static constexpr float k_arrow_xy_scale = 0.36F;
-  static constexpr float k_arrow_z_translate_factor = 0.5F;
+  static constexpr float k_arrow_z_translate_factor = k_total_length * 0.5F;
   static constexpr float k_fletch_z_offset_factor = 0.2F;
   static constexpr float k_fletch_xy_scale = 0.75F;
   static constexpr float k_fletch_z_scale = 0.15F;
@@ -31,6 +35,12 @@ public:
     return {std::clamp(team_color.x() * 0.9F + 0.1F, 0.0F, 1.0F),
             std::clamp(team_color.y() * 0.9F + 0.1F, 0.0F, 1.0F),
             std::clamp(team_color.z() * 0.9F + 0.1F, 0.0F, 1.0F)};
+  }
+
+  static auto tip_color(float brightness = 1.0F) -> QVector3D {
+    return {std::clamp(0.78F * brightness + 0.06F, 0.0F, 1.0F),
+            std::clamp(0.80F * brightness + 0.06F, 0.0F, 1.0F),
+            std::clamp(0.84F * brightness + 0.04F, 0.0F, 1.0F)};
   }
 };
 } // namespace Geom

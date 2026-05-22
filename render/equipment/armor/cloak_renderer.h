@@ -46,6 +46,8 @@ auto cloak_make_static_attachment(const CloakConfig& config,
                                   std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec;
 
+[[nodiscard]] auto shared_cloak_meshes() -> CloakMeshes;
+
 class CloakRenderer : public IEquipmentRenderer {
 public:
   explicit CloakRenderer(const CloakConfig& config = CloakConfig{});

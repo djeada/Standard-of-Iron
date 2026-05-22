@@ -149,6 +149,7 @@ public:
 
   float last_position_x{0.0F}, last_position_z{0.0F};
   float time_stuck{0.0F};
+  float time_on_invalid_tile{0.0F};
   float unstuck_cooldown{0.0F};
 
   void clear_path() {

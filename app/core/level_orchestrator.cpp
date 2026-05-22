@@ -174,6 +174,7 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
   const QString resolved_map_path = Utils::Resources::resolve_resource_path(map_path);
   if (Game::Map::MapLoader::load_from_json_file(
           resolved_map_path, map_def, &map_error)) {
+    level.starting_resources = map_def.starting_resources;
     if (auto* undead_system =
             world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
       undead_system->configure(map_def);

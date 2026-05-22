@@ -68,7 +68,6 @@ void submit_building_cylinder(ISubmitter& out,
 void draw_building_health_bar(ISubmitter& out,
                               const DrawContext& ctx,
                               const BuildingHealthBarStyle& style);
-void draw_building_compact_health_bar(ISubmitter& out, const DrawContext& ctx, float y);
 void draw_building_selection_overlay(ISubmitter& out,
                                      const DrawContext& ctx,
                                      const BuildingSelectionStyle& style);

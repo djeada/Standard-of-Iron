@@ -6,6 +6,7 @@
 #include "../attachment_builder.h"
 #include "../generated_equipment.h"
 #include "../humanoid_attachment_archetype.h"
+#include "helmet_alignment.h"
 
 namespace Render::GL {
 
@@ -18,8 +19,6 @@ enum HeadwrapPaletteSlot : std::uint8_t {
   k_knot_slot = 1U,
   k_tail_slot = 2U,
 };
-
-constexpr QVector3D k_authored_local_offset{0.0F, 0.0F, 0.0F};
 
 auto headwrap_palette(const HumanoidPalette& palette) -> std::array<QVector3D, 3> {
   QVector3D const cloth = saturate_color(palette.cloth * QVector3D(0.9F, 1.05F, 1.05F));
@@ -67,7 +66,8 @@ auto headwrap_make_static_attachment(std::uint16_t socket_bone_index,
   auto spec = Render::Equipment::build_static_attachment({
       .archetype = &headwrap_helmet_archetype(),
       .socket_bone_index = socket_bone_index,
-      .authored_local_offset = k_authored_local_offset,
+      .uniform_scale = k_helmet_uniform_scale,
+      .authored_local_offset = k_helmet_local_offset * k_helmet_uniform_scale,
       .bind_radius = k_head_socket_radius,
       .bind_socket_transform = bind_palette_socket_bone,
   });
@@ -98,8 +98,13 @@ void HeadwrapRenderer::submit(const HeadwrapConfig&,
   }
 
   auto const equipment_palette = headwrap_palette(palette);
-  append_humanoid_attachment_archetype(
-      batch, ctx, frames.head, headwrap_helmet_archetype(), equipment_palette);
+  append_humanoid_attachment_archetype(batch,
+                                       ctx,
+                                       frames.head,
+                                       headwrap_helmet_archetype(),
+                                       equipment_palette,
+                                       k_helmet_local_offset,
+                                       k_helmet_uniform_scale);
 }
 
 } // namespace Render::GL

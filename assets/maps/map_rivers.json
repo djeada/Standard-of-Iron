@@ -1,77 +1,162 @@
 {
   "biome": {
-    "blade_height": [0.55, 1.35],
-    "blade_width": [0.025, 0.055],
-    "grass_dry": [0.62, 0.54, 0.39],
-    "grass_primary": [0.28, 0.58, 0.26],
-    "grass_secondary": [0.42, 0.68, 0.31],
+    "blade_height": [
+      0.55,
+      1.35
+    ],
+    "blade_width": [
+      0.025,
+      0.055
+    ],
+    "grass_dry": [
+      0.62,
+      0.54,
+      0.39
+    ],
+    "grass_primary": [
+      0.28,
+      0.58,
+      0.26
+    ],
+    "grass_secondary": [
+      0.42,
+      0.68,
+      0.31
+    ],
     "ground_irregularity_enabled": true,
     "ground_type": "soil_fertile",
-    "height_noise": [0.18, 0.055],
+    "height_noise": [
+      0.18,
+      0.055
+    ],
     "irregularity_amplitude": 0.055,
     "irregularity_scale": 0.17,
     "patch_density": 3.4,
     "patch_jitter": 0.82,
     "plant_density": 0.48,
-    "rock_high": [0.69, 0.7, 0.74],
-    "rock_low": [0.48, 0.46, 0.43],
+    "rock_high": [
+      0.69,
+      0.7,
+      0.74
+    ],
+    "rock_low": [
+      0.48,
+      0.46,
+      0.43
+    ],
     "seed": 1337,
-    "soil_color": [0.27, 0.23, 0.17],
+    "soil_color": [
+      0.27,
+      0.23,
+      0.17
+    ],
     "sway_speed": 1.25,
     "sway_strength": 0.24
   },
   "bridges": [
     {
-      "start": [55, 24],
-      "end": [65, 24],
+      "start": [
+        55,
+        24
+      ],
+      "end": [
+        65,
+        24
+      ],
       "width": 4.2,
       "height": 0.55
     },
     {
-      "start": [55, 96],
-      "end": [65, 96],
+      "start": [
+        55,
+        96
+      ],
+      "end": [
+        65,
+        96
+      ],
       "width": 4.2,
       "height": 0.55
     },
     {
-      "start": [24, 55],
-      "end": [24, 65],
+      "start": [
+        24,
+        55
+      ],
+      "end": [
+        24,
+        65
+      ],
       "width": 4.2,
       "height": 0.55
     },
     {
-      "start": [96, 55],
-      "end": [96, 65],
+      "start": [
+        96,
+        55
+      ],
+      "end": [
+        96,
+        65
+      ],
       "width": 4.2,
       "height": 0.55
     },
     {
-      "start": [55, 52],
-      "end": [65, 52],
+      "start": [
+        55,
+        52
+      ],
+      "end": [
+        65,
+        52
+      ],
       "width": 4.5,
       "height": 0.6
     },
     {
-      "start": [55, 68],
-      "end": [65, 68],
+      "start": [
+        55,
+        68
+      ],
+      "end": [
+        65,
+        68
+      ],
       "width": 4.5,
       "height": 0.6
     },
     {
-      "start": [52, 55],
-      "end": [52, 65],
+      "start": [
+        52,
+        55
+      ],
+      "end": [
+        52,
+        65
+      ],
       "width": 4.5,
       "height": 0.6
     },
     {
-      "start": [68, 55],
-      "end": [68, 65],
+      "start": [
+        68,
+        55
+      ],
+      "end": [
+        68,
+        65
+      ],
       "width": 4.5,
       "height": 0.6
     }
   ],
   "camera": {
-    "center": [60, 0, 60],
+    "center": [
+      60,
+      0,
+      60
+    ],
     "distance": 28,
     "far": 300,
     "fov_y": 45,
@@ -90,98 +175,194 @@
   "name": "River Crossroads",
   "rivers": [
     {
-      "start": [60, -1],
-      "end": [60, 121],
+      "start": [
+        60,
+        -1
+      ],
+      "end": [
+        60,
+        121
+      ],
       "width": 5.4
     },
     {
-      "start": [-1, 60],
-      "end": [121, 60],
+      "start": [
+        -1,
+        60
+      ],
+      "end": [
+        121,
+        60
+      ],
       "width": 4.8
     }
   ],
   "roads": [
     {
-      "start": [16, 20],
-      "end": [52, 55],
+      "start": [
+        16,
+        20
+      ],
+      "end": [
+        52,
+        55
+      ],
       "style": "default",
       "width": 3.2
     },
     {
-      "start": [104, 100],
-      "end": [68, 65],
+      "start": [
+        104,
+        100
+      ],
+      "end": [
+        68,
+        65
+      ],
       "style": "default",
       "width": 3.2
     },
     {
-      "start": [20, 104],
-      "end": [52, 65],
+      "start": [
+        20,
+        104
+      ],
+      "end": [
+        52,
+        65
+      ],
       "style": "default",
       "width": 2.8
     },
     {
-      "start": [100, 16],
-      "end": [68, 55],
+      "start": [
+        100,
+        16
+      ],
+      "end": [
+        68,
+        55
+      ],
       "style": "default",
       "width": 2.8
     },
     {
-      "start": [0, 24],
-      "end": [120, 24],
+      "start": [
+        0,
+        24
+      ],
+      "end": [
+        120,
+        24
+      ],
       "style": "default",
       "width": 2.6
     },
     {
-      "start": [0, 96],
-      "end": [120, 96],
+      "start": [
+        0,
+        96
+      ],
+      "end": [
+        120,
+        96
+      ],
       "style": "default",
       "width": 2.6
     },
     {
-      "start": [24, 0],
-      "end": [24, 120],
+      "start": [
+        24,
+        0
+      ],
+      "end": [
+        24,
+        120
+      ],
       "style": "default",
       "width": 2.6
     },
     {
-      "start": [96, 0],
-      "end": [96, 120],
+      "start": [
+        96,
+        0
+      ],
+      "end": [
+        96,
+        120
+      ],
       "style": "default",
       "width": 2.6
     },
     {
-      "start": [42, 52],
-      "end": [78, 52],
+      "start": [
+        42,
+        52
+      ],
+      "end": [
+        78,
+        52
+      ],
       "style": "default",
       "width": 2.4
     },
     {
-      "start": [42, 68],
-      "end": [78, 68],
+      "start": [
+        42,
+        68
+      ],
+      "end": [
+        78,
+        68
+      ],
       "style": "default",
       "width": 2.4
     },
     {
-      "start": [52, 42],
-      "end": [52, 78],
+      "start": [
+        52,
+        42
+      ],
+      "end": [
+        52,
+        78
+      ],
       "style": "default",
       "width": 2.4
     },
     {
-      "start": [68, 42],
-      "end": [68, 78],
+      "start": [
+        68,
+        42
+      ],
+      "end": [
+        68,
+        78
+      ],
       "style": "default",
       "width": 2.4
     },
     {
-      "start": [20, 20],
-      "end": [24, 60],
+      "start": [
+        20,
+        20
+      ],
+      "end": [
+        24,
+        60
+      ],
       "style": "default",
       "width": 2.5
     },
     {
-      "start": [100, 100],
-      "end": [96, 60],
+      "start": [
+        100,
+        100
+      ],
+      "end": [
+        96,
+        60
+      ],
       "style": "default",
       "width": 2.5
     }
@@ -217,7 +398,6 @@
       "x": 100,
       "z": 20
     },
-
     {
       "player_id": 1,
       "type": "archer",
@@ -284,7 +464,6 @@
       "x": 16,
       "z": 29
     },
-
     {
       "player_id": 2,
       "type": "archer",
@@ -351,7 +530,6 @@
       "x": 104,
       "z": 91
     },
-
     {
       "type": "archer",
       "x": 18,
@@ -377,7 +555,6 @@
       "x": 16,
       "z": 102
     },
-
     {
       "type": "archer",
       "x": 102,
@@ -403,7 +580,6 @@
       "x": 104,
       "z": 18
     },
-
     {
       "type": "spearman",
       "x": 56,
@@ -682,7 +858,6 @@
       "x": 17,
       "z": 31
     },
-
     {
       "intensity": 1.05,
       "persistent": true,
@@ -725,7 +900,6 @@
       "x": 103,
       "z": 89
     },
-
     {
       "intensity": 0.9,
       "persistent": true,
@@ -753,7 +927,6 @@
       "x": 13,
       "z": 94
     },
-
     {
       "intensity": 0.9,
       "persistent": true,
@@ -781,7 +954,6 @@
       "x": 107,
       "z": 26
     },
-
     {
       "intensity": 0.85,
       "persistent": true,
@@ -878,5 +1050,12 @@
       "x": 86,
       "z": 66
     }
-  ]
+  ],
+  "starting_resources": {
+    "gold": 200,
+    "food": 150,
+    "wood": 150,
+    "stone": 100,
+    "iron": 100
+  }
 }

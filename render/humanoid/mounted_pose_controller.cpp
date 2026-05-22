@@ -223,6 +223,7 @@ void MountedPoseController::apply_saddle_clearance(const MountedAttachmentFrame&
 
 void MountedPoseController::stabilize_upper_body(const MountedAttachmentFrame& mount,
                                                  const HorseDimensions& dims) {
+  using HP = HumanProportions;
   QVector3D const world_up(0.0F, 1.0F, 0.0F);
 
   QVector3D right_flat = mount.seat_right;
@@ -233,24 +234,28 @@ void MountedPoseController::stabilize_upper_body(const MountedAttachmentFrame& m
     right_flat.normalize();
   }
 
+  float const height_scale = m_anim_ctx.variation.height_scale;
   QVector3D const shoulder_mid = (m_pose.shoulder_l + m_pose.shoulder_r) * 0.5F;
-  QVector3D desired_mid = shoulder_mid;
-  desired_mid.setX(m_pose.pelvis_pos.x());
-  desired_mid.setZ(m_pose.pelvis_pos.z());
+  QVector3D const desired_mid =
+      m_pose.pelvis_pos + world_up * ((HP::SHOULDER_Y - HP::WAIST_Y) * height_scale) -
+      mount.seat_forward * (dims.body_length * 0.02F);
 
   QVector3D const mid_offset = desired_mid - shoulder_mid;
   m_pose.shoulder_l += mid_offset;
   m_pose.shoulder_r += mid_offset;
 
-  float const desired_half = std::clamp(dims.body_width * 0.44F, 0.10F, 0.32F);
+  float const desired_half = std::clamp(dims.body_width * 0.52F, 0.14F, 0.36F);
   m_pose.shoulder_l = desired_mid - right_flat * desired_half;
   m_pose.shoulder_r = desired_mid + right_flat * desired_half;
 
-  float const target_neck_height =
-      std::max(0.04F, m_pose.neck_base.y() - desired_mid.y());
+  float const target_neck_height = std::max(
+      (HP::NECK_BASE_Y - HP::SHOULDER_Y) * height_scale + dims.saddle_thickness * 0.35F,
+      m_pose.neck_base.y() - desired_mid.y());
   m_pose.neck_base = desired_mid + world_up * target_neck_height;
 
-  float const head_height = std::max(0.12F, m_pose.head_pos.y() - m_pose.neck_base.y());
+  float const head_height =
+      std::max((HP::HEAD_CENTER_Y - HP::NECK_BASE_Y) * height_scale,
+               m_pose.head_pos.y() - m_pose.neck_base.y());
   m_pose.head_pos = m_pose.neck_base + world_up * head_height;
 }
 
@@ -905,10 +910,20 @@ void MountedPoseController::attach_feet_to_stirrups(
 
 void MountedPoseController::position_pelvis_on_saddle(
     const MountedAttachmentFrame& mount) {
+  using HP = HumanProportions;
   QVector3D const seat_world = mount.seat_position;
   QVector3D const delta = seat_world - m_pose.pelvis_pos;
   m_pose.pelvis_pos = seat_world;
   translate_upper_body(delta);
+
+  float const height_scale = m_anim_ctx.variation.height_scale;
+  float const target_shoulder_height = (HP::SHOULDER_Y - HP::WAIST_Y) * height_scale;
+  QVector3D const shoulder_mid = (m_pose.shoulder_l + m_pose.shoulder_r) * 0.5F;
+  float const current_shoulder_height = shoulder_mid.y() - m_pose.pelvis_pos.y();
+  if (current_shoulder_height < target_shoulder_height) {
+    translate_upper_body(mount.seat_up *
+                         (target_shoulder_height - current_shoulder_height));
+  }
 }
 
 void MountedPoseController::translate_upper_body(const QVector3D& delta) {
@@ -924,15 +939,62 @@ void MountedPoseController::translate_upper_body(const QVector3D& delta) {
 
 void MountedPoseController::calculate_riding_knees(
     const MountedAttachmentFrame& mount) {
-
-  QVector3D const hip_offset = mount.seat_up * -0.02F;
-  QVector3D const hip_left = m_pose.pelvis_pos - mount.seat_right * 0.10F + hip_offset;
-  QVector3D const hip_right = m_pose.pelvis_pos + mount.seat_right * 0.10F + hip_offset;
+  using HP = HumanProportions;
+  QVector3D seat_right = mount.seat_right;
+  if (seat_right.lengthSquared() < 1e-6F) {
+    seat_right = QVector3D(1.0F, 0.0F, 0.0F);
+  } else {
+    seat_right.normalize();
+  }
+  QVector3D seat_forward = mount.seat_forward;
+  if (seat_forward.lengthSquared() < 1e-6F) {
+    seat_forward = QVector3D(0.0F, 0.0F, 1.0F);
+  } else {
+    seat_forward.normalize();
+  }
 
   float const height_scale = m_anim_ctx.variation.height_scale;
+  float const stirrup_half_spread =
+      0.5F * std::abs(QVector3D::dotProduct(
+                 mount.stirrup_bottom_right - mount.stirrup_bottom_left, seat_right));
+  float const hip_spread = std::max({HP::HIP_LATERAL_OFFSET * height_scale * 2.10F,
+                                     0.18F * height_scale,
+                                     stirrup_half_spread * 0.72F});
+  QVector3D const hip_offset =
+      mount.seat_up * (-0.06F * height_scale) - seat_forward * (-0.02F * height_scale);
+  QVector3D const hip_left = m_pose.pelvis_pos - seat_right * hip_spread + hip_offset;
+  QVector3D const hip_right = m_pose.pelvis_pos + seat_right * hip_spread + hip_offset;
 
-  m_pose.knee_l = solve_knee_ik(Side::Left, hip_left, m_pose.foot_l, height_scale);
-  m_pose.knee_r = solve_knee_ik(Side::Right, hip_right, m_pose.foot_r, height_scale);
+  auto solve_mounted_knee =
+      [&](Side side, const QVector3D& hip, const QVector3D& foot) {
+        QVector3D knee = solve_knee_ik(side, hip, foot, height_scale);
+        QVector3D const outward = (side == Side::Left) ? -seat_right : seat_right;
+        float const minimum_knee_out =
+            std::max(hip_spread + 0.10F * height_scale, stirrup_half_spread * 0.92F);
+        float const knee_out = QVector3D::dotProduct(knee - m_pose.pelvis_pos, outward);
+        if (knee_out < minimum_knee_out) {
+          knee += outward * (minimum_knee_out - knee_out);
+        }
+
+        float const foot_forward = QVector3D::dotProduct(foot - hip, seat_forward);
+        float const knee_forward = QVector3D::dotProduct(knee - hip, seat_forward);
+        float const minimum_knee_forward = foot_forward + 0.03F * height_scale;
+        if (knee_forward < minimum_knee_forward) {
+          knee += seat_forward * (minimum_knee_forward - knee_forward);
+        }
+
+        float const knee_floor = HP::GROUND_Y + m_pose.foot_y_offset * 0.5F;
+        if (knee.y() < knee_floor) {
+          knee.setY(knee_floor);
+        }
+        if (knee.y() > hip.y()) {
+          knee.setY(hip.y());
+        }
+        return knee;
+      };
+
+  m_pose.knee_l = solve_mounted_knee(Side::Left, hip_left, m_pose.foot_l);
+  m_pose.knee_r = solve_mounted_knee(Side::Right, hip_right, m_pose.foot_r);
 }
 
 auto MountedPoseController::solve_elbow_ik(Side,

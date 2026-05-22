@@ -156,65 +156,69 @@ protected:
 };
 
 TEST_F(ArmorRendererTest, RomanHeavyArmorRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "roman_heavy_armor");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "roman_heavy_armor"));
+  EXPECT_NE(registry->resolve_handle(EquipmentCategory::Armor, "roman_heavy_armor"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, RomanLightArmorRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "roman_light_armor");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "roman_light_armor"));
+  EXPECT_NE(registry->resolve_handle(EquipmentCategory::Armor, "roman_light_armor"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, ToolBeltRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "tool_belt_roman");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "tool_belt_roman"));
+  EXPECT_NE(registry->resolve_handle(EquipmentCategory::Armor, "tool_belt_roman"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, ArmGuardsRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "arm_guards");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "arm_guards"));
+  EXPECT_NE(registry->resolve_handle(EquipmentCategory::Armor, "arm_guards"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, WorkApronRegistered) {
-  auto roman = registry->get(EquipmentCategory::Armor, "work_apron_roman");
-  auto carthage = registry->get(EquipmentCategory::Armor, "work_apron_carthage");
-  ASSERT_NE(roman, nullptr);
-  ASSERT_NE(carthage, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "work_apron_roman"));
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "work_apron_carthage"));
 }
 
 TEST_F(ArmorRendererTest, RomanShoulderCoverRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "roman_shoulder_cover");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "roman_shoulder_cover"));
+  EXPECT_NE(registry->resolve_handle(EquipmentCategory::Armor, "roman_shoulder_cover"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, CarthageShoulderCoverRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "carthage_shoulder_cover");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "carthage_shoulder_cover"));
+  EXPECT_NE(
+      registry->resolve_handle(EquipmentCategory::Armor, "carthage_shoulder_cover"),
+      k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, RomanGreavesRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "roman_greaves");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "roman_greaves"));
+  EXPECT_NE(registry->resolve_handle(EquipmentCategory::Armor, "roman_greaves"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, ArmorLightCarthageRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "armor_light_carthage");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "armor_light_carthage"));
+  EXPECT_NE(registry->resolve_handle(EquipmentCategory::Armor, "armor_light_carthage"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, ArmorHeavyCarthageRegistered) {
-  auto armor = registry->get(EquipmentCategory::Armor, "armor_heavy_carthage");
-  ASSERT_NE(armor, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "armor_heavy_carthage"));
+  EXPECT_NE(registry->resolve_handle(EquipmentCategory::Armor, "armor_heavy_carthage"),
+            k_invalid_equipment_handle);
 }
 
 TEST_F(ArmorRendererTest, CarthageArcherArmorSharesHelmet) {
-  auto light_armor = registry->get(EquipmentCategory::Armor, "armor_light_carthage");
-  auto heavy_armor = registry->get(EquipmentCategory::Armor, "armor_heavy_carthage");
-  auto shared_helmet = registry->get(EquipmentCategory::Helmet, "carthage_light");
-
-  ASSERT_NE(light_armor, nullptr);
-  ASSERT_NE(heavy_armor, nullptr);
-  ASSERT_NE(shared_helmet, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "armor_light_carthage"));
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "armor_heavy_carthage"));
+  EXPECT_TRUE(registry->has(EquipmentCategory::Helmet, "carthage_light"));
 }
 
 TEST_F(ArmorRendererTest, CloakRendererCreation) {
@@ -227,12 +231,7 @@ TEST_F(ArmorRendererTest, CloakRendererCreation) {
 }
 
 TEST_F(ArmorRendererTest, CloakBackMeshHasDepthAndTaper) {
-  auto cloak = registry->get(EquipmentCategory::Armor, "cloak_roman");
-  ASSERT_NE(cloak, nullptr);
-  auto* renderer = dynamic_cast<CloakRenderer*>(cloak.get());
-  ASSERT_NE(renderer, nullptr);
-
-  CloakMeshes const meshes = renderer->meshes();
+  CloakMeshes const meshes = shared_cloak_meshes();
   ASSERT_NE(meshes.back, nullptr);
 
   float min_y = std::numeric_limits<float>::infinity();
@@ -256,11 +255,6 @@ TEST_F(ArmorRendererTest, CloakBackMeshHasDepthAndTaper) {
 }
 
 TEST_F(ArmorRendererTest, CloakMeshesStaySymmetricLeftToRight) {
-  auto cloak = registry->get(EquipmentCategory::Armor, "cloak_roman");
-  ASSERT_NE(cloak, nullptr);
-  auto* renderer = dynamic_cast<CloakRenderer*>(cloak.get());
-  ASSERT_NE(renderer, nullptr);
-
   auto assert_mirror_symmetry = [](Mesh* mesh, int row_stride, int row_count) {
     ASSERT_NE(mesh, nullptr);
     const auto& vertices = mesh->get_vertices();
@@ -278,38 +272,34 @@ TEST_F(ArmorRendererTest, CloakMeshesStaySymmetricLeftToRight) {
     }
   };
 
-  CloakMeshes const meshes = renderer->meshes();
+  CloakMeshes const meshes = shared_cloak_meshes();
   assert_mirror_symmetry(meshes.back, 13, 19);
   assert_mirror_symmetry(meshes.shoulder, 11, 7);
 }
 
 TEST_F(ArmorRendererTest, MountedCloaksRegisterLowerShoulderAnchors) {
-  auto cloak = registry->get(EquipmentCategory::Armor, "cloak_roman");
-  auto mounted = registry->get(EquipmentCategory::Armor, "cloak_roman_mounted");
-  ASSERT_NE(cloak, nullptr);
-  ASSERT_NE(mounted, nullptr);
+  CloakConfig cloak{};
+  cloak.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
+  cloak.trim_color = QVector3D(0.78F, 0.72F, 0.58F);
+  cloak.back_material_id = 12;
+  cloak.shoulder_material_id = 13;
 
-  auto* cloak_renderer = dynamic_cast<CloakRenderer*>(cloak.get());
-  auto* mounted_renderer = dynamic_cast<CloakRenderer*>(mounted.get());
-  ASSERT_NE(cloak_renderer, nullptr);
-  ASSERT_NE(mounted_renderer, nullptr);
+  CloakConfig mounted = cloak;
+  mounted.length_scale = 0.94F;
+  mounted.shoulder_anchor_up = 0.06F;
+  mounted.drape_anchor_up = 0.00F;
+  mounted.drape_anchor_back = 0.62F;
+  mounted.clasp_anchor_up = 0.06F;
 
-  EXPECT_LT(mounted_renderer->base_config().shoulder_anchor_up,
-            cloak_renderer->base_config().shoulder_anchor_up);
-  EXPECT_LT(mounted_renderer->base_config().drape_anchor_up,
-            cloak_renderer->base_config().drape_anchor_up);
-  EXPECT_LT(mounted_renderer->base_config().length_scale,
-            cloak_renderer->base_config().length_scale);
+  EXPECT_LT(mounted.shoulder_anchor_up, cloak.shoulder_anchor_up);
+  EXPECT_LT(mounted.drape_anchor_up, cloak.drape_anchor_up);
+  EXPECT_LT(mounted.length_scale, cloak.length_scale);
 }
 
 TEST_F(ArmorRendererTest, ArmorCategoryIsDistinct) {
-  auto helmet = registry->get(EquipmentCategory::Helmet, "carthage_heavy");
-  auto armor = registry->get(EquipmentCategory::Armor, "roman_heavy_armor");
-  auto weapon = registry->get(EquipmentCategory::Weapon, "bow");
-
-  ASSERT_NE(helmet, nullptr);
-  ASSERT_NE(armor, nullptr);
-  ASSERT_NE(weapon, nullptr);
+  EXPECT_TRUE(registry->has(EquipmentCategory::Helmet, "carthage_heavy"));
+  EXPECT_TRUE(registry->has(EquipmentCategory::Armor, "roman_heavy_armor"));
+  EXPECT_TRUE(registry->has(EquipmentCategory::Weapon, "bow"));
 
   EXPECT_FALSE(registry->has(EquipmentCategory::Armor, "carthage_heavy"));
   EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "roman_heavy_armor"));

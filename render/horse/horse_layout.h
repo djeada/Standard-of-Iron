@@ -21,7 +21,7 @@ inline constexpr float k_horse_rear_torso_extra_length_scale = 0.80F;
 inline constexpr float k_horse_neck_width_boost = 3.08F;
 inline constexpr float k_horse_neck_base_body_height_scale = 1.86F;
 inline constexpr float k_horse_neck_top_body_height_scale = 2.46F;
-inline constexpr float k_horse_neck_base_body_length_scale = 0.50F;
+inline constexpr float k_horse_neck_base_body_length_scale = 0.43F;
 inline constexpr float k_horse_neck_forward_visual_scale = 0.48F;
 inline constexpr float k_horse_head_setback_scale = 0.08F;
 
@@ -77,7 +77,7 @@ horse_torso_visual_lift(const Render::GL::HorseDimensions& dims) noexcept -> flo
   float const torso_lift = horse_torso_lift(dims);
   float const underside =
       bh * 0.3400F * k_horse_torso_height_scale * k_horse_torso_mesh_height_scale;
-  return {0.0F, bh * 0.20F + torso_lift - underside * 0.36F, bl * 0.33F};
+  return {0.0F, bh * 0.22F + torso_lift - underside * 0.34F, bl * 0.33F};
 }
 
 [[nodiscard]] inline auto horse_rear_leg_attach_local(
