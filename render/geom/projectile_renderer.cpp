@@ -189,7 +189,7 @@ void render_arrow_projectile(Renderer* renderer,
 
     QVector3D const team_color = arrow.get_color();
     QVector3D shaft_color = Geom::Arrow::shaft_color(team_color);
-    QVector3D tip_color(0.70F, 0.72F, 0.75F);
+    QVector3D tip_color = Geom::Arrow::tip_color();
     QVector3D fletch_color = Geom::Arrow::fletch_color(team_color);
     if (arrow.get_kind() == Game::Systems::ProjectileKind::CursedArrow) {
       shaft_color = QVector3D(0.42F, 0.18F, 0.58F);

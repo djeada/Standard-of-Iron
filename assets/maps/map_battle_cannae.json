@@ -17,18 +17,49 @@
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.12,
     "irregularity_amplitude": 0.045,
-    "grass_primary": [0.47, 0.48, 0.24],
-    "grass_secondary": [0.58, 0.54, 0.29],
-    "grass_dry": [0.7, 0.6, 0.34],
-    "soil_color": [0.35, 0.28, 0.17],
-    "rock_low": [0.45, 0.41, 0.35],
-    "rock_high": [0.69, 0.65, 0.56],
-    "height_noise": [0.11, 0.035],
+    "grass_primary": [
+      0.47,
+      0.48,
+      0.24
+    ],
+    "grass_secondary": [
+      0.58,
+      0.54,
+      0.29
+    ],
+    "grass_dry": [
+      0.7,
+      0.6,
+      0.34
+    ],
+    "soil_color": [
+      0.35,
+      0.28,
+      0.17
+    ],
+    "rock_low": [
+      0.45,
+      0.41,
+      0.35
+    ],
+    "rock_high": [
+      0.69,
+      0.65,
+      0.56
+    ],
+    "height_noise": [
+      0.11,
+      0.035
+    ],
     "sway_speed": 0.9,
     "sway_strength": 0.13
   },
   "camera": {
-    "center": [120, 0, 80],
+    "center": [
+      120,
+      0,
+      80
+    ],
     "distance": 74.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
@@ -37,43 +68,67 @@
     "far": 650.0
   },
   "time_of_day": "afternoon",
-  "weather": {
-    "type": "clear",
-    "intensity": 0.15,
-    "temperature": "hot",
-    "description": "Dry heat and dust. Cavalry movement should feel visible across the open plain."
-  },
   "rivers": [
     {
-      "start": [42, 5],
-      "end": [112, 10],
+      "start": [
+        42,
+        5
+      ],
+      "end": [
+        112,
+        10
+      ],
       "width": 8.5,
       "description": "Aufidus River, forming the northern battlefield boundary."
     },
     {
-      "start": [112, 10],
-      "end": [178, 21],
+      "start": [
+        112,
+        10
+      ],
+      "end": [
+        178,
+        21
+      ],
       "width": 7.0,
       "description": "Aufidus bend behind the Roman northern wing."
     },
     {
-      "start": [178, 21],
-      "end": [238, 31],
+      "start": [
+        178,
+        21
+      ],
+      "end": [
+        238,
+        31
+      ],
       "width": 5.5,
       "description": "Eastern river bend near the Roman logistics route."
     }
   ],
   "bridges": [
     {
-      "start": [140, 15],
-      "end": [149, 18],
+      "start": [
+        140,
+        15
+      ],
+      "end": [
+        149,
+        18
+      ],
       "width": 4.5,
       "height": 0.7,
       "description": "Northern ford used by scouts and Roman baggage traffic."
     },
     {
-      "start": [199, 26],
-      "end": [208, 28],
+      "start": [
+        199,
+        26
+      ],
+      "end": [
+        208,
+        28
+      ],
       "width": 4.0,
       "height": 0.7,
       "description": "Roman logistics bridge near the rear camp."
@@ -81,130 +136,325 @@
   ],
   "roads": [
     {
-      "start": [4, 81],
-      "end": [238, 80],
+      "start": [
+        4,
+        81
+      ],
+      "end": [
+        238,
+        80
+      ],
       "width": 4.2,
       "style": "default",
       "waypoints": [
-        [4, 81],
-        [32, 80],
-        [62, 80],
-        [92, 80],
-        [122, 80],
-        [152, 80],
-        [184, 80],
-        [214, 81],
-        [238, 80]
+        [
+          4,
+          81
+        ],
+        [
+          32,
+          80
+        ],
+        [
+          62,
+          80
+        ],
+        [
+          92,
+          80
+        ],
+        [
+          122,
+          80
+        ],
+        [
+          152,
+          80
+        ],
+        [
+          184,
+          80
+        ],
+        [
+          214,
+          81
+        ],
+        [
+          238,
+          80
+        ]
       ],
       "description": "Main battlefield road. The Roman infantry mass advances along this axis."
     },
     {
-      "start": [54, 136],
-      "end": [86, 82],
+      "start": [
+        54,
+        136
+      ],
+      "end": [
+        86,
+        82
+      ],
       "width": 3.2,
       "style": "default",
       "waypoints": [
-        [54, 136],
-        [60, 124],
-        [67, 112],
-        [74, 100],
-        [80, 90],
-        [86, 82]
+        [
+          54,
+          136
+        ],
+        [
+          60,
+          124
+        ],
+        [
+          67,
+          112
+        ],
+        [
+          74,
+          100
+        ],
+        [
+          80,
+          90
+        ],
+        [
+          86,
+          82
+        ]
       ],
       "description": "Carthaginian center road. This visually shows the center's planned withdrawal line."
     },
     {
-      "start": [52, 135],
-      "end": [78, 43],
+      "start": [
+        52,
+        135
+      ],
+      "end": [
+        78,
+        43
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [52, 135],
-        [47, 118],
-        [45, 100],
-        [48, 82],
-        [57, 64],
-        [78, 43]
+        [
+          52,
+          135
+        ],
+        [
+          47,
+          118
+        ],
+        [
+          45,
+          100
+        ],
+        [
+          48,
+          82
+        ],
+        [
+          57,
+          64
+        ],
+        [
+          78,
+          43
+        ]
       ],
       "description": "Northern cavalry redeployment path toward the Aufidus wing."
     },
     {
-      "start": [78, 43],
-      "end": [168, 55],
+      "start": [
+        78,
+        43
+      ],
+      "end": [
+        168,
+        55
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [78, 43],
-        [98, 37],
-        [120, 39],
-        [144, 47],
-        [168, 55]
+        [
+          78,
+          43
+        ],
+        [
+          98,
+          37
+        ],
+        [
+          120,
+          39
+        ],
+        [
+          144,
+          47
+        ],
+        [
+          168,
+          55
+        ]
       ],
       "description": "Northern hook route. Fast cavalry can use this to reach the Roman rear."
     },
     {
-      "start": [55, 136],
-      "end": [85, 122],
+      "start": [
+        55,
+        136
+      ],
+      "end": [
+        85,
+        122
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [55, 136],
-        [65, 138],
-        [75, 133],
-        [85, 122]
+        [
+          55,
+          136
+        ],
+        [
+          65,
+          138
+        ],
+        [
+          75,
+          133
+        ],
+        [
+          85,
+          122
+        ]
       ],
       "description": "Southern cavalry staging path."
     },
     {
-      "start": [85, 122],
-      "end": [166, 105],
+      "start": [
+        85,
+        122
+      ],
+      "end": [
+        166,
+        105
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [85, 122],
-        [105, 126],
-        [126, 123],
-        [146, 116],
-        [166, 105]
+        [
+          85,
+          122
+        ],
+        [
+          105,
+          126
+        ],
+        [
+          126,
+          123
+        ],
+        [
+          146,
+          116
+        ],
+        [
+          166,
+          105
+        ]
       ],
       "description": "Southern hook route. This is the second half of the envelopment."
     },
     {
-      "start": [202, 80],
-      "end": [211, 34],
+      "start": [
+        202,
+        80
+      ],
+      "end": [
+        211,
+        34
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [202, 80],
-        [205, 65],
-        [208, 49],
-        [211, 34]
+        [
+          202,
+          80
+        ],
+        [
+          205,
+          65
+        ],
+        [
+          208,
+          49
+        ],
+        [
+          211,
+          34
+        ]
       ],
       "description": "Roman supply road toward the Aufidus ford."
     },
     {
-      "start": [202, 80],
-      "end": [226, 119],
+      "start": [
+        202,
+        80
+      ],
+      "end": [
+        226,
+        119
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [202, 80],
-        [210, 92],
-        [219, 106],
-        [226, 119]
+        [
+          202,
+          80
+        ],
+        [
+          210,
+          92
+        ],
+        [
+          219,
+          106
+        ],
+        [
+          226,
+          119
+        ]
       ],
       "description": "Roman baggage and retreat road. If the trap is late, Roman units can try to escape this way."
     },
     {
-      "start": [28, 126],
-      "end": [58, 136],
+      "start": [
+        28,
+        126
+      ],
+      "end": [
+        58,
+        136
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [28, 126],
-        [38, 132],
-        [48, 135],
-        [58, 136]
+        [
+          28,
+          126
+        ],
+        [
+          38,
+          132
+        ],
+        [
+          48,
+          135
+        ],
+        [
+          58,
+          136
+        ]
       ],
       "description": "Cannae village track behind the Carthaginian camp."
     }
@@ -236,8 +486,14 @@
       "rotation": -8,
       "description": "Carthaginian command camp overlooking the plain.",
       "entrances": [
-        { "x": 54, "z": 124 },
-        { "x": 73, "z": 132 }
+        {
+          "x": 54,
+          "z": 124
+        },
+        {
+          "x": 73,
+          "z": 132
+        }
       ]
     },
     {
@@ -250,8 +506,14 @@
       "rotation": 6,
       "description": "Northern infantry shoulder. One hinge of the trap.",
       "entrances": [
-        { "x": 76, "z": 56 },
-        { "x": 99, "z": 58 }
+        {
+          "x": 76,
+          "z": 56
+        },
+        {
+          "x": 99,
+          "z": 58
+        }
       ]
     },
     {
@@ -264,8 +526,14 @@
       "rotation": -6,
       "description": "Southern infantry shoulder. The second hinge of the trap.",
       "entrances": [
-        { "x": 76, "z": 104 },
-        { "x": 99, "z": 102 }
+        {
+          "x": 76,
+          "z": 104
+        },
+        {
+          "x": 99,
+          "z": 102
+        }
       ]
     },
     {
@@ -278,8 +546,14 @@
       "rotation": -10,
       "description": "Northern cavalry rise near the river. Carthage begins with a strong cavalry launch point.",
       "entrances": [
-        { "x": 60, "z": 43 },
-        { "x": 86, "z": 39 }
+        {
+          "x": 60,
+          "z": 43
+        },
+        {
+          "x": 86,
+          "z": 39
+        }
       ]
     },
     {
@@ -292,8 +566,14 @@
       "rotation": 10,
       "description": "Southern cavalry rise used to launch the second hook.",
       "entrances": [
-        { "x": 61, "z": 121 },
-        { "x": 88, "z": 119 }
+        {
+          "x": 61,
+          "z": 121
+        },
+        {
+          "x": 88,
+          "z": 119
+        }
       ]
     },
     {
@@ -306,8 +586,14 @@
       "rotation": 8,
       "description": "Roman northern cavalry position by the Aufidus bend.",
       "entrances": [
-        { "x": 154, "z": 56 },
-        { "x": 178, "z": 53 }
+        {
+          "x": 154,
+          "z": 56
+        },
+        {
+          "x": 178,
+          "z": 53
+        }
       ]
     },
     {
@@ -320,8 +606,14 @@
       "rotation": -8,
       "description": "Roman allied cavalry position on the southern wing.",
       "entrances": [
-        { "x": 156, "z": 103 },
-        { "x": 180, "z": 106 }
+        {
+          "x": 156,
+          "z": 103
+        },
+        {
+          "x": 180,
+          "z": 106
+        }
       ]
     },
     {
@@ -332,9 +624,18 @@
       "height": 2.1,
       "description": "Roman main camp elevation anchoring the rear.",
       "entrances": [
-        { "x": 192, "z": 80 },
-        { "x": 208, "z": 65 },
-        { "x": 210, "z": 95 }
+        {
+          "x": 192,
+          "z": 80
+        },
+        {
+          "x": 208,
+          "z": 65
+        },
+        {
+          "x": 210,
+          "z": 95
+        }
       ]
     },
     {
@@ -347,8 +648,14 @@
       "rotation": 5,
       "description": "Roman logistics ridge near the Aufidus ford.",
       "entrances": [
-        { "x": 201, "z": 37 },
-        { "x": 226, "z": 33 }
+        {
+          "x": 201,
+          "z": 37
+        },
+        {
+          "x": 226,
+          "z": 33
+        }
       ]
     },
     {
@@ -416,7 +723,6 @@
       "nation": "roman_republic",
       "description": "Roman baggage camp"
     },
-
     {
       "type": "spearman",
       "x": 86,
@@ -472,7 +778,6 @@
       "z": 80,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 82,
@@ -504,7 +809,6 @@
       "z": 47,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 82,
@@ -536,7 +840,6 @@
       "z": 113,
       "player_id": 1
     },
-
     {
       "type": "horse_swordsman",
       "x": 62,
@@ -574,7 +877,6 @@
       "z": 49,
       "player_id": 1
     },
-
     {
       "type": "horse_swordsman",
       "x": 63,
@@ -612,7 +914,6 @@
       "z": 128,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 60,
@@ -638,7 +939,6 @@
       "z": 137,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 132,
@@ -682,7 +982,6 @@
       "z": 97,
       "player_id": 2
     },
-
     {
       "type": "swordsman",
       "x": 148,
@@ -720,7 +1019,6 @@
       "z": 96,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 163,
@@ -770,7 +1068,6 @@
       "z": 88,
       "player_id": 2
     },
-
     {
       "type": "archer",
       "x": 181,
@@ -796,7 +1093,6 @@
       "z": 93,
       "player_id": 2
     },
-
     {
       "type": "horse_swordsman",
       "x": 151,
@@ -828,7 +1124,6 @@
       "z": 39,
       "player_id": 2
     },
-
     {
       "type": "horse_swordsman",
       "x": 152,
@@ -860,7 +1155,6 @@
       "z": 121,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 199,
@@ -898,7 +1192,6 @@
       "z": 84,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 219,
@@ -1161,23 +1454,52 @@
     }
   ],
   "victory": {
-    "type": "encirclement",
+    "type": "capture_structures",
     "defeat_conditions": [
       "no_commander",
       "only_commander_remaining"
     ],
-    "description": "Execute the double envelopment. Draw the Roman center into the killing plain, close both cavalry wings behind it, and destroy the Roman army before it escapes to the camp roads.",
-    "encirclement_zone": {
-      "x": 122,
-      "z": 80,
-      "width": 72,
-      "depth": 50
-    },
-    "primary_targets": [
-      "roman_center",
-      "roman_cavalry_wings",
-      "roman_main_camp"
+    "key_structures": [
+      "barracks"
     ],
-    "failure_hint": "If the Carthaginian center collapses before both wings close, the Roman army can break through."
-  }
+    "min_count": 2
+  },
+  "starting_resources": {
+    "gold": 300,
+    "food": 200,
+    "wood": 100,
+    "stone": 50,
+    "iron": 150
+  },
+  "undead_zones": [
+    {
+      "id": "old_grave",
+      "anchor_type": "ruins",
+      "x": 50,
+      "z": 80,
+      "radius": 10.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 2,
+            "grave_priest": 1
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        }
+      ]
+    }
+  ]
 }

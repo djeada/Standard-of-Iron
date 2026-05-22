@@ -53,6 +53,7 @@ private:
   void draw_structures(QPainter& painter);
   void draw_troop_spawns(QPainter& painter);
   void draw_linear_elements(QPainter& painter);
+  void draw_undead_zones(QPainter& painter);
   void draw_current_placement(QPainter& painter);
   void draw_element(QPainter& painter,
                     const QString& type,
@@ -102,6 +103,7 @@ private:
   LinearElement m_drag_pre_linear;
   StructureElement m_drag_pre_structure;
   TroopSpawnElement m_drag_pre_troop;
+  UndeadZoneElement m_drag_pre_undead_zone;
 
   int m_current_player_id = 0;
 

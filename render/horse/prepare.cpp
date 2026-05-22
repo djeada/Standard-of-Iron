@@ -108,15 +108,22 @@ void HorseRendererBase::render(const DrawContext& ctx,
       ctx.template_prewarm ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx)
                            : ctx;
 
+  HorseLOD effective_lod = lod;
+  if (ctx.template_prewarm && !render_ctx.force_horse_lod) {
+    effective_lod = HorseLOD::Minimal;
+  } else if (render_ctx.force_horse_lod) {
+    effective_lod = render_ctx.forced_horse_lod;
+  }
+
   ++s_horseRenderStats.total;
 
-  if (lod == HorseLOD::Billboard) {
+  if (effective_lod == HorseLOD::Billboard) {
     ++s_horseRenderStats.skipped_lod;
     return;
   }
 
   ++s_horseRenderStats.rendered;
-  switch (lod) {
+  switch (effective_lod) {
   case HorseLOD::Full:
     ++s_horseRenderStats.lod_full;
     break;
@@ -135,7 +142,7 @@ void HorseRendererBase::render(const DrawContext& ctx,
                                       profile,
                                       shared_mount,
                                       shared_motion,
-                                      lod,
+                                      effective_lod,
                                       prep);
   Render::Creature::Pipeline::submit_preparation(prep, out);
 }

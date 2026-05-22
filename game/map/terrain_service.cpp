@@ -352,13 +352,14 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_biome_settings = map_def.biome;
   m_coord_system = map_def.coordSystem;
   m_height_map->apply_biome_variation(m_biome_settings);
+  // Procedural scatter generation queries road proximity through TerrainService.
+  m_road_segments = map_def.roads;
   m_authored_world_props = map_def.world_props;
   normalize_world_props(m_authored_world_props);
   m_world_props = build_runtime_world_props(
       *m_height_map, m_biome_settings, m_coord_system, m_authored_world_props);
   normalize_world_props(m_world_props);
   sync_world_prop_identity_state();
-  m_road_segments = map_def.roads;
   rebuild_terrain_field();
   bump_authored_world_props_revision();
   bump_world_props_revision();
@@ -689,6 +690,8 @@ void TerrainService::restore_from_serialized(
   m_height_map->restore_from_data(heights, terrain_types, rivers, bridges);
   m_biome_settings = biome;
   m_coord_system = CoordSystem::Grid;
+  // Procedural scatter generation queries road proximity through TerrainService.
+  m_road_segments = roads;
   if (authored_world_props.empty()) {
     m_authored_world_props = world_props;
     normalize_world_props(m_authored_world_props);
@@ -706,7 +709,6 @@ void TerrainService::restore_from_serialized(
     normalize_world_props(m_world_props);
   }
   sync_world_prop_identity_state();
-  m_road_segments = roads;
   rebuild_terrain_field();
   bump_authored_world_props_revision();
   bump_world_props_revision();

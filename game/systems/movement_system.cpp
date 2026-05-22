@@ -33,6 +33,7 @@ constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 
 constexpr float k_stuck_check_dist_sq = 0.01F;
 constexpr float k_time_stuck_threshold = 1.5F;
+constexpr float k_invalid_tile_recovery_threshold = 0.25F;
 constexpr float k_unstuck_cooldown_seconds = 1.5F;
 
 class MovementModePolicy {
@@ -401,6 +402,12 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       is_point_allowed(current_pos_3d, *entity, unit_radius);
   bool const destination_allowed = is_point_allowed(final_goal, *entity, unit_radius);
 
+  if (current_position_allowed) {
+    movement->time_on_invalid_tile = 0.0F;
+  } else {
+    movement->time_on_invalid_tile += delta_time;
+  }
+
   if (movement->unstuck_cooldown > 0.0F) {
     movement->unstuck_cooldown =
         std::max(0.0F, movement->unstuck_cooldown - delta_time);
@@ -422,17 +429,24 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   bool const needs_recovery = !movement->path_pending &&
                               movement->repath_cooldown <= 0.0F &&
                               !current_position_allowed;
+  bool const invalid_position_persistent =
+      movement->time_on_invalid_tile >= k_invalid_tile_recovery_threshold;
+  bool const persistent_invalid_position_recovery = !movement->path_pending &&
+                                                    movement->repath_cooldown <= 0.0F &&
+                                                    invalid_position_persistent;
   bool const has_no_valid_target = !movement->has_target || !destination_allowed;
 
   bool const force_recovery = !current_position_allowed && !movement->path_pending &&
                               movement->unstuck_cooldown <= 0.0F &&
                               movement->time_stuck >= k_time_stuck_threshold;
 
-  if ((needs_recovery && has_no_valid_target || force_recovery) &&
+  if (((needs_recovery && has_no_valid_target) ||
+       persistent_invalid_position_recovery || force_recovery) &&
       CommandService::try_queue_local_recovery_move(
           *world, entity->get_id(), current_pos_3d, final_goal, movement)) {
     movement->repath_cooldown = repath_cooldown_seconds;
-    if (force_recovery) {
+    movement->time_on_invalid_tile = 0.0F;
+    if (force_recovery || persistent_invalid_position_recovery) {
       movement->time_stuck = 0.0F;
       movement->unstuck_cooldown = k_unstuck_cooldown_seconds;
     }

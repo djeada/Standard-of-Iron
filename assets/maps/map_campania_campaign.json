@@ -17,18 +17,49 @@
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.13,
     "irregularity_amplitude": 0.06,
-    "grass_primary": [0.32, 0.58, 0.27],
-    "grass_secondary": [0.46, 0.67, 0.32],
-    "grass_dry": [0.66, 0.57, 0.34],
-    "soil_color": [0.31, 0.24, 0.16],
-    "rock_low": [0.43, 0.4, 0.34],
-    "rock_high": [0.68, 0.65, 0.56],
-    "height_noise": [0.16, 0.045],
+    "grass_primary": [
+      0.32,
+      0.58,
+      0.27
+    ],
+    "grass_secondary": [
+      0.46,
+      0.67,
+      0.32
+    ],
+    "grass_dry": [
+      0.66,
+      0.57,
+      0.34
+    ],
+    "soil_color": [
+      0.31,
+      0.24,
+      0.16
+    ],
+    "rock_low": [
+      0.43,
+      0.4,
+      0.34
+    ],
+    "rock_high": [
+      0.68,
+      0.65,
+      0.56
+    ],
+    "height_noise": [
+      0.16,
+      0.045
+    ],
     "sway_speed": 1.05,
     "sway_strength": 0.18
   },
   "camera": {
-    "center": [110, 0, 110],
+    "center": [
+      110,
+      0,
+      110
+    ],
     "distance": 82.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
@@ -37,12 +68,6 @@
     "far": 650.0
   },
   "time_of_day": "day",
-  "weather": {
-    "type": "clear",
-    "intensity": 0.15,
-    "temperature": "warm",
-    "description": "Clear Campanian weather. Long sightlines across the farms make Roman movements readable before each attack wave."
-  },
   "terrain": [
     {
       "type": "flat",
@@ -62,10 +87,22 @@
       "rotation": 0,
       "description": "Central Carthaginian stronghold. It overlooks all four roads and acts as the player's reserve hub.",
       "entrances": [
-        { "x": 88, "z": 110 },
-        { "x": 132, "z": 110 },
-        { "x": 110, "z": 88 },
-        { "x": 110, "z": 132 }
+        {
+          "x": 88,
+          "z": 110
+        },
+        {
+          "x": 132,
+          "z": 110
+        },
+        {
+          "x": 110,
+          "z": 88
+        },
+        {
+          "x": 110,
+          "z": 132
+        }
       ]
     },
     {
@@ -76,9 +113,18 @@
       "height": 2.5,
       "description": "Western grain village hill. Strong defensive position but exposed to raids from the western road.",
       "entrances": [
-        { "x": 40, "z": 124 },
-        { "x": 64, "z": 124 },
-        { "x": 52, "z": 112 }
+        {
+          "x": 40,
+          "z": 124
+        },
+        {
+          "x": 64,
+          "z": 124
+        },
+        {
+          "x": 52,
+          "z": 112
+        }
       ]
     },
     {
@@ -89,9 +135,18 @@
       "height": 2.5,
       "description": "Eastern olive village hill. Controls the eastern supply road and the bridge over the orchard stream.",
       "entrances": [
-        { "x": 156, "z": 124 },
-        { "x": 180, "z": 124 },
-        { "x": 168, "z": 112 }
+        {
+          "x": 156,
+          "z": 124
+        },
+        {
+          "x": 180,
+          "z": 124
+        },
+        {
+          "x": 168,
+          "z": 112
+        }
       ]
     },
     {
@@ -103,9 +158,18 @@
       "height": 2.7,
       "description": "Northern watch village. This settlement gives early warning of the main Roman legion from the north.",
       "entrances": [
-        { "x": 94, "z": 166 },
-        { "x": 126, "z": 166 },
-        { "x": 110, "z": 150 }
+        {
+          "x": 94,
+          "z": 166
+        },
+        {
+          "x": 126,
+          "z": 166
+        },
+        {
+          "x": 110,
+          "z": 150
+        }
       ]
     },
     {
@@ -117,9 +181,18 @@
       "height": 2.5,
       "description": "Southern mill village. It controls the canal crossings and is vulnerable to early Roman pressure.",
       "entrances": [
-        { "x": 94, "z": 54 },
-        { "x": 126, "z": 54 },
-        { "x": 110, "z": 70 }
+        {
+          "x": 94,
+          "z": 54
+        },
+        {
+          "x": 126,
+          "z": 54
+        },
+        {
+          "x": 110,
+          "z": 70
+        }
       ]
     },
     {
@@ -130,9 +203,18 @@
       "height": 2.3,
       "description": "Southeastern vineyard hamlet. Optional but valuable; if lost, Roman cavalry gains a staging point near the flank road.",
       "entrances": [
-        { "x": 164, "z": 62 },
-        { "x": 186, "z": 62 },
-        { "x": 176, "z": 74 }
+        {
+          "x": 164,
+          "z": 62
+        },
+        {
+          "x": 186,
+          "z": 62
+        },
+        {
+          "x": 176,
+          "z": 74
+        }
       ]
     },
     {
@@ -296,88 +378,166 @@
   ],
   "rivers": [
     {
-      "start": [0, 78],
-      "end": [92, 70],
+      "start": [
+        0,
+        78
+      ],
+      "end": [
+        92,
+        70
+      ],
       "width": 4.5,
       "description": "Western irrigation stream protecting the southern village approach."
     },
     {
-      "start": [128, 70],
-      "end": [220, 78],
+      "start": [
+        128,
+        70
+      ],
+      "end": [
+        220,
+        78
+      ],
       "width": 4.5,
       "description": "Eastern irrigation stream protecting the olive road."
     },
     {
-      "start": [44, 42],
-      "end": [176, 42],
+      "start": [
+        44,
+        42
+      ],
+      "end": [
+        176,
+        42
+      ],
       "width": 4.0,
       "description": "Southern canal. Roman attacks from the south must cross here."
     },
     {
-      "start": [34, 178],
-      "end": [186, 178],
+      "start": [
+        34,
+        178
+      ],
+      "end": [
+        186,
+        178
+      ],
       "width": 5.0,
       "description": "Northern Volturnus branch. It slows the main Roman legion and creates bridge-defense moments."
     },
     {
-      "start": [36, 130],
-      "end": [84, 122],
+      "start": [
+        36,
+        130
+      ],
+      "end": [
+        84,
+        122
+      ],
       "width": 3.2,
       "description": "Western village millrace."
     },
     {
-      "start": [136, 122],
-      "end": [188, 132],
+      "start": [
+        136,
+        122
+      ],
+      "end": [
+        188,
+        132
+      ],
       "width": 3.2,
       "description": "Eastern village millrace."
     }
   ],
   "bridges": [
     {
-      "start": [64, 72],
-      "end": [72, 70],
+      "start": [
+        64,
+        72
+      ],
+      "end": [
+        72,
+        70
+      ],
       "width": 4.5,
       "height": 0.6,
       "description": "Western irrigation bridge."
     },
     {
-      "start": [148, 70],
-      "end": [156, 72],
+      "start": [
+        148,
+        70
+      ],
+      "end": [
+        156,
+        72
+      ],
       "width": 4.5,
       "height": 0.6,
       "description": "Eastern irrigation bridge."
     },
     {
-      "start": [102, 40],
-      "end": [118, 44],
+      "start": [
+        102,
+        40
+      ],
+      "end": [
+        118,
+        44
+      ],
       "width": 5.0,
       "height": 0.65,
       "description": "Main southern canal bridge."
     },
     {
-      "start": [74, 176],
-      "end": [86, 180],
+      "start": [
+        74,
+        176
+      ],
+      "end": [
+        86,
+        180
+      ],
       "width": 4.5,
       "height": 0.65,
       "description": "Northwestern Volturnus bridge."
     },
     {
-      "start": [134, 176],
-      "end": [146, 180],
+      "start": [
+        134,
+        176
+      ],
+      "end": [
+        146,
+        180
+      ],
       "width": 4.5,
       "height": 0.65,
       "description": "Northeastern Volturnus bridge."
     },
     {
-      "start": [47, 126],
-      "end": [57, 124],
+      "start": [
+        47,
+        126
+      ],
+      "end": [
+        57,
+        124
+      ],
       "width": 4.0,
       "height": 0.55,
       "description": "Western village footbridge."
     },
     {
-      "start": [163, 124],
-      "end": [173, 126],
+      "start": [
+        163,
+        124
+      ],
+      "end": [
+        173,
+        126
+      ],
       "width": 4.0,
       "height": 0.55,
       "description": "Eastern village footbridge."
@@ -385,160 +545,403 @@
   ],
   "roads": [
     {
-      "start": [110, 0],
-      "end": [110, 220],
+      "start": [
+        110,
+        0
+      ],
+      "end": [
+        110,
+        220
+      ],
       "width": 4.2,
       "style": "default",
       "waypoints": [
-        [110, 0],
-        [110, 26],
-        [110, 42],
-        [110, 54],
-        [110, 82],
-        [110, 110],
-        [110, 140],
-        [110, 166],
-        [110, 178],
-        [110, 220]
+        [
+          110,
+          0
+        ],
+        [
+          110,
+          26
+        ],
+        [
+          110,
+          42
+        ],
+        [
+          110,
+          54
+        ],
+        [
+          110,
+          82
+        ],
+        [
+          110,
+          110
+        ],
+        [
+          110,
+          140
+        ],
+        [
+          110,
+          166
+        ],
+        [
+          110,
+          178
+        ],
+        [
+          110,
+          220
+        ]
       ],
       "description": "Main north-south Campanian road. Romans attack along this axis in major waves."
     },
     {
-      "start": [0, 110],
-      "end": [220, 110],
+      "start": [
+        0,
+        110
+      ],
+      "end": [
+        220,
+        110
+      ],
       "width": 4.0,
       "style": "default",
       "waypoints": [
-        [0, 110],
-        [28, 110],
-        [52, 124],
-        [82, 116],
-        [110, 110],
-        [138, 116],
-        [168, 124],
-        [194, 112],
-        [220, 110]
+        [
+          0,
+          110
+        ],
+        [
+          28,
+          110
+        ],
+        [
+          52,
+          124
+        ],
+        [
+          82,
+          116
+        ],
+        [
+          110,
+          110
+        ],
+        [
+          138,
+          116
+        ],
+        [
+          168,
+          124
+        ],
+        [
+          194,
+          112
+        ],
+        [
+          220,
+          110
+        ]
       ],
       "description": "East-west supply road linking the grain and olive villages to the central stronghold."
     },
     {
-      "start": [52, 124],
-      "end": [110, 110],
+      "start": [
+        52,
+        124
+      ],
+      "end": [
+        110,
+        110
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [52, 124],
-        [66, 121],
-        [82, 116],
-        [96, 112],
-        [110, 110]
+        [
+          52,
+          124
+        ],
+        [
+          66,
+          121
+        ],
+        [
+          82,
+          116
+        ],
+        [
+          96,
+          112
+        ],
+        [
+          110,
+          110
+        ]
       ],
       "description": "Western relief road."
     },
     {
-      "start": [168, 124],
-      "end": [110, 110],
+      "start": [
+        168,
+        124
+      ],
+      "end": [
+        110,
+        110
+      ],
       "width": 2.8,
       "style": "default",
       "waypoints": [
-        [168, 124],
-        [154, 121],
-        [138, 116],
-        [124, 112],
-        [110, 110]
+        [
+          168,
+          124
+        ],
+        [
+          154,
+          121
+        ],
+        [
+          138,
+          116
+        ],
+        [
+          124,
+          112
+        ],
+        [
+          110,
+          110
+        ]
       ],
       "description": "Eastern relief road."
     },
     {
-      "start": [110, 54],
-      "end": [110, 110],
+      "start": [
+        110,
+        54
+      ],
+      "end": [
+        110,
+        110
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [110, 54],
-        [108, 68],
-        [108, 84],
-        [110, 110]
+        [
+          110,
+          54
+        ],
+        [
+          108,
+          68
+        ],
+        [
+          108,
+          84
+        ],
+        [
+          110,
+          110
+        ]
       ],
       "description": "Southern mill road to the central stronghold."
     },
     {
-      "start": [110, 166],
-      "end": [110, 110],
+      "start": [
+        110,
+        166
+      ],
+      "end": [
+        110,
+        110
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [110, 166],
-        [112, 150],
-        [112, 132],
-        [110, 110]
+        [
+          110,
+          166
+        ],
+        [
+          112,
+          150
+        ],
+        [
+          112,
+          132
+        ],
+        [
+          110,
+          110
+        ]
       ],
       "description": "Northern watch road."
     },
     {
-      "start": [176, 62],
-      "end": [110, 110],
+      "start": [
+        176,
+        62
+      ],
+      "end": [
+        110,
+        110
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [176, 62],
-        [162, 72],
-        [146, 86],
-        [128, 100],
-        [110, 110]
+        [
+          176,
+          62
+        ],
+        [
+          162,
+          72
+        ],
+        [
+          146,
+          86
+        ],
+        [
+          128,
+          100
+        ],
+        [
+          110,
+          110
+        ]
       ],
       "description": "Vineyard hamlet road. Useful for cavalry counterattacks."
     },
     {
-      "start": [20, 184],
-      "end": [52, 124],
+      "start": [
+        20,
+        184
+      ],
+      "end": [
+        52,
+        124
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [20, 184],
-        [30, 166],
-        [40, 146],
-        [52, 124]
+        [
+          20,
+          184
+        ],
+        [
+          30,
+          166
+        ],
+        [
+          40,
+          146
+        ],
+        [
+          52,
+          124
+        ]
       ],
       "description": "Northwestern Roman raid lane toward the grain village."
     },
     {
-      "start": [200, 184],
-      "end": [168, 124],
+      "start": [
+        200,
+        184
+      ],
+      "end": [
+        168,
+        124
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [200, 184],
-        [190, 166],
-        [180, 146],
-        [168, 124]
+        [
+          200,
+          184
+        ],
+        [
+          190,
+          166
+        ],
+        [
+          180,
+          146
+        ],
+        [
+          168,
+          124
+        ]
       ],
       "description": "Northeastern Roman raid lane toward the olive village."
     },
     {
-      "start": [20, 36],
-      "end": [110, 54],
+      "start": [
+        20,
+        36
+      ],
+      "end": [
+        110,
+        54
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [20, 36],
-        [42, 42],
-        [66, 47],
-        [88, 52],
-        [110, 54]
+        [
+          20,
+          36
+        ],
+        [
+          42,
+          42
+        ],
+        [
+          66,
+          47
+        ],
+        [
+          88,
+          52
+        ],
+        [
+          110,
+          54
+        ]
       ],
       "description": "Southwestern Roman probe route."
     },
     {
-      "start": [200, 36],
-      "end": [176, 62],
+      "start": [
+        200,
+        36
+      ],
+      "end": [
+        176,
+        62
+      ],
       "width": 2.5,
       "style": "default",
       "waypoints": [
-        [200, 36],
-        [194, 46],
-        [186, 54],
-        [176, 62]
+        [
+          200,
+          36
+        ],
+        [
+          194,
+          46
+        ],
+        [
+          186,
+          54
+        ],
+        [
+          176,
+          62
+        ]
       ],
       "description": "Southeastern cavalry raid route."
     }
@@ -553,42 +956,6 @@
       "nation": "carthage",
       "description": "Central Carthaginian stronghold"
     },
-    {
-      "type": "flat",
-      "x": 52,
-      "z": 124,
-      "player_id": 1,
-      "description": "Western grain village"
-    },
-    {
-      "type": "flat",
-      "x": 168,
-      "z": 124,
-      "player_id": 1,
-      "description": "Eastern olive village"
-    },
-    {
-      "type": "flat",
-      "x": 110,
-      "z": 166,
-      "player_id": 1,
-      "description": "Northern watch village"
-    },
-    {
-      "type": "flat",
-      "x": 110,
-      "z": 54,
-      "player_id": 1,
-      "description": "Southern mill village"
-    },
-    {
-      "type": "flat",
-      "x": 176,
-      "z": 62,
-      "player_id": 1,
-      "description": "Southeastern vineyard hamlet"
-    },
-
     {
       "type": "spearman",
       "x": 100,
@@ -638,7 +1005,6 @@
       "z": 118,
       "player_id": 1
     },
-
     {
       "type": "horse_swordsman",
       "x": 90,
@@ -664,7 +1030,6 @@
       "z": 118,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 48,
@@ -684,7 +1049,6 @@
       "z": 124,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 172,
@@ -704,7 +1068,6 @@
       "z": 124,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 106,
@@ -724,7 +1087,6 @@
       "z": 154,
       "player_id": 1
     },
-
     {
       "type": "spearman",
       "x": 106,
@@ -744,7 +1106,6 @@
       "z": 66,
       "player_id": 1
     },
-
     {
       "type": "horse_archer",
       "x": 172,
@@ -758,7 +1119,6 @@
       "z": 64,
       "player_id": 1
     },
-
     {
       "type": "barracks",
       "x": 110,
@@ -795,7 +1155,6 @@
       "nation": "roman_republic",
       "description": "Western Roman raider camp"
     },
-
     {
       "type": "spearman",
       "x": 100,
@@ -845,7 +1204,6 @@
       "z": 188,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 100,
@@ -895,7 +1253,6 @@
       "z": 32,
       "player_id": 3
     },
-
     {
       "type": "spearman",
       "x": 194,
@@ -927,7 +1284,6 @@
       "z": 100,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 26,
@@ -959,7 +1315,6 @@
       "z": 100,
       "player_id": 3
     },
-
     {
       "type": "spearman",
       "x": 72,
@@ -979,7 +1334,6 @@
       "z": 194,
       "player_id": 2
     },
-
     {
       "type": "spearman",
       "x": 148,
@@ -1218,95 +1572,43 @@
       "rotation": 4.5
     }
   ],
-  "attack_waves": [
-    {
-      "time": 90,
-      "name": "Southern Probe",
-      "source": "southern_roman_column_camp",
-      "target": "Southern Mill Village",
-      "route": "main_southern_road",
-      "composition": ["spearman", "swordsman", "archer"],
-      "description": "A light early attack teaches the player to defend villages outside the central hill."
-    },
-    {
-      "time": 180,
-      "name": "Western Raiders",
-      "source": "western_roman_raider_camp",
-      "target": "Western Grain Village",
-      "route": "western_supply_road",
-      "composition": ["horse_swordsman", "swordsman", "archer"],
-      "description": "Fast raiders try to burn the grain village and cut the western relief road."
-    },
-    {
-      "time": 270,
-      "name": "Eastern Pressure",
-      "source": "eastern_roman_siege_camp",
-      "target": "Eastern Olive Village",
-      "route": "eastern_supply_road",
-      "composition": ["spearman", "swordsman", "archer", "horse_swordsman"],
-      "description": "A stronger mixed force attacks the olive village and threatens the central stronghold."
-    },
-    {
-      "time": 390,
-      "name": "Northern Legion",
-      "source": "northern_roman_legion_camp",
-      "target": "Northern Watch Village",
-      "route": "volturnus_bridges",
-      "composition": ["spearman", "spearman", "swordsman", "archer"],
-      "description": "The main Roman force crosses the northern branch and tests the player's reserve timing."
-    },
-    {
-      "time": 540,
-      "name": "Coordinated Counteroffensive",
-      "source": "all_roman_camps",
-      "target": "Central Stronghold",
-      "route": "all_major_roads",
-      "composition": ["spearman", "swordsman", "archer", "horse_swordsman"],
-      "description": "Roman attacks converge from north, east, south, and west. The player must choose which village can survive without help."
-    },
-    {
-      "time": 720,
-      "name": "Final Siege Push",
-      "source": "northern_and_eastern_camps",
-      "target": "Central Stronghold",
-      "route": "main_roads_and_village_roads",
-      "composition": ["spearman", "swordsman", "swordsman", "archer", "horse_swordsman"],
-      "description": "The final wave tries to break through if the player has not counterattacked at least one Roman camp."
-    }
-  ],
   "victory": {
-    "type": "defend_duration",
-    "duration": 900.0,
-    "description": "Hold Campania for 15 minutes while maintaining control of at least 3 villages and keeping the central stronghold alive.",
-    "required_villages_held": 3,
-    "key_structures": [
-      "central_carthaginian_stronghold",
-      "western_grain_village",
-      "eastern_olive_village",
-      "northern_watch_village",
-      "southern_mill_village",
-      "southeastern_vineyard_hamlet"
-    ],
-    "primary_objectives": [
-      "Hold at least 3 of the 5 Campanian villages",
-      "Defend the central Carthaginian stronghold",
-      "Keep at least one east-west supply road open",
-      "Survive the final Roman siege push"
-    ],
-    "secondary_objectives": [
-      "Destroy the western Roman raider camp",
-      "Destroy the eastern Roman siege camp",
-      "Prevent the northern watch village from falling before the main Roman legion arrives",
-      "Keep the vineyard hamlet under Carthaginian control",
-      "Lose no more than one village before the final wave"
-    ],
+    "duration": 780.0,
+    "type": "survive_time",
     "defeat_conditions": [
-      "central_stronghold_destroyed",
-      "fewer_than_3_villages_held_at_end",
-      "all_supply_roads_cut",
       "no_commander",
       "only_commander_remaining"
-    ],
-    "failure_hint": "Do not turtle only at the central hill. Roman raiders will burn the outer villages unless cavalry reserves rotate between the roads."
-  }
+    ]
+  },
+  "starting_resources": {
+    "gold": 250,
+    "food": 200,
+    "wood": 150,
+    "stone": 100,
+    "iron": 100
+  },
+  "undead_zones": [
+    {
+      "id": "campania_tomb",
+      "anchor_type": "ruins",
+      "x": 55,
+      "z": 110,
+      "radius": 9.0,
+      "leash_radius": 16.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "grave_priest": 1
+          }
+        }
+      ]
+    }
+  ]
 }

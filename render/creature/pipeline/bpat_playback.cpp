@@ -79,9 +79,24 @@ auto resolve_bpat_playback(const Render::Creature::Bpat::BpatBlob* blob,
   }
 
   float const normalized_phase = normalize_bpat_phase(phase, clip.loops != 0U);
-  int frame_idx =
-      static_cast<int>(normalized_phase * static_cast<float>(clip.frame_count));
+  float const frame_position = normalized_phase * static_cast<float>(clip.frame_count);
+  int frame_idx = static_cast<int>(std::floor(frame_position));
   frame_idx = std::clamp(frame_idx, 0, static_cast<int>(clip.frame_count) - 1);
+  float frame_lerp =
+      std::clamp(frame_position - static_cast<float>(frame_idx), 0.0F, 1.0F);
+
+  std::uint32_t next_frame_idx = static_cast<std::uint32_t>(frame_idx);
+  if (clip.frame_count > 1U) {
+    if (static_cast<std::uint32_t>(frame_idx) + 1U < clip.frame_count) {
+      next_frame_idx = static_cast<std::uint32_t>(frame_idx) + 1U;
+    } else if (clip.loops != 0U) {
+      next_frame_idx = 0U;
+    } else {
+      frame_lerp = 0.0F;
+    }
+  } else {
+    frame_lerp = 0.0F;
+  }
 
   resolved.blob = blob;
   resolved.clip_id = clip_id;
@@ -90,6 +105,9 @@ auto resolve_bpat_playback(const Render::Creature::Bpat::BpatBlob* blob,
   resolved.normalized_phase = normalized_phase;
   resolved.frame_in_clip = static_cast<std::uint32_t>(frame_idx);
   resolved.global_frame = clip.frame_offset + resolved.frame_in_clip;
+  resolved.next_frame_in_clip = next_frame_idx;
+  resolved.next_global_frame = clip.frame_offset + resolved.next_frame_in_clip;
+  resolved.frame_lerp = frame_lerp;
   return resolved;
 }
 

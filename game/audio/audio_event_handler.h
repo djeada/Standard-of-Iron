@@ -4,10 +4,10 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "../core/event_manager.h"
-
-class AudioSystem;
+#include "audio_system.h"
 
 namespace Engine::Core {
 class World;
@@ -32,8 +32,13 @@ public:
                                const std::string& sound_id);
   void load_ambient_music(Engine::Core::AmbientState state,
                           const std::string& music_id);
+  void load_ambient_music(Engine::Core::AmbientState state,
+                          const std::vector<std::string>& music_ids);
+  void load_ambient_state_sfx(Engine::Core::AmbientState state,
+                              const std::vector<std::string>& sound_ids);
 
   void set_voice_sound_category(bool use_voice_category);
+  void set_local_owner_id(int owner_id);
 
 private:
   void on_unit_selected(const Engine::Core::UnitSelectedEvent& event);
@@ -46,17 +51,25 @@ private:
   static void on_music_trigger(const Engine::Core::MusicTriggerEvent& event);
   void on_combat_hit(const Engine::Core::CombatHitEvent& event);
 
-  auto should_play_alert(const std::string& sound_id, int cooldown_ms) -> bool;
-  void play_alert_sound(const std::string& sound_id,
+  auto should_play_sound_group(const std::string& group_id, int cooldown_ms) -> bool;
+  void mark_sound_group_played(const std::string& group_id);
+  void play_sound_group(const std::string& group_id,
+                        const std::vector<std::string>& sound_ids,
                         float volume,
                         int priority,
-                        int cooldown_ms);
+                        AudioCategory category,
+                        int cooldown_ms = 0);
 
   Engine::Core::World* m_world;
+  int m_local_owner_id{0};
   std::unordered_map<std::string, std::string> m_unit_voice_map;
-  std::unordered_map<Engine::Core::AmbientState, std::string> m_ambient_music_map;
+  std::unordered_map<Engine::Core::AmbientState, std::vector<std::string>>
+      m_ambient_music_map;
+  std::unordered_map<Engine::Core::AmbientState, std::vector<std::string>>
+      m_ambient_state_sfx_map;
   std::unordered_map<std::string, std::chrono::steady_clock::time_point>
-      m_last_alert_sound_time;
+      m_last_sound_group_time;
+  std::unordered_map<std::string, std::string> m_last_sound_group_id;
 
   bool m_use_voice_category{true};
 

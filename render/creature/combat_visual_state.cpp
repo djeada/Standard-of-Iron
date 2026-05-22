@@ -40,14 +40,81 @@ auto wrap_phase(float phase) noexcept -> float {
   return wrapped;
 }
 
-auto lane_profile_for_state(const SoldierCombatLaneState& state) noexcept
-    -> CombatLaneProfile {
+auto smooth01(float t) noexcept -> float {
+  t = std::clamp(t, 0.0F, 1.0F);
+  return t * t * (3.0F - 2.0F * t);
+}
+
+auto lane_uses_attack_pose(SoldierCombatLane lane) noexcept -> bool {
+  return lane != SoldierCombatLane::ShieldBrace &&
+         lane != SoldierCombatLane::IdleReady && lane != SoldierCombatLane::StepOut &&
+         lane != SoldierCombatLane::RangedReload && lane != SoldierCombatLane::None;
+}
+
+auto lane_blocks_attack_request(SoldierCombatLane lane) noexcept -> bool {
+  return lane == SoldierCombatLane::ShieldBrace ||
+         lane == SoldierCombatLane::IdleReady || lane == SoldierCombatLane::StepOut ||
+         lane == SoldierCombatLane::RangedReload;
+}
+
+auto default_attack_lane_for_request(SoldierCombatLane requested_lane,
+                                     bool is_mounted,
+                                     Engine::Core::CombatAttackFamily family) noexcept
+    -> SoldierCombatLane {
+  if (lane_uses_attack_pose(requested_lane) ||
+      requested_lane == SoldierCombatLane::None) {
+    return requested_lane;
+  }
+
+  if (is_mounted) {
+    return SoldierCombatLane::StepIn;
+  }
+
+  if (family == Engine::Core::CombatAttackFamily::Bow) {
+    return SoldierCombatLane::SupportStrike;
+  }
+
+  switch (requested_lane) {
+  case SoldierCombatLane::StepOut:
+    return SoldierCombatLane::StepIn;
+  case SoldierCombatLane::ShieldBrace:
+  case SoldierCombatLane::IdleReady:
+  case SoldierCombatLane::RangedReload:
+    return SoldierCombatLane::SupportStrike;
+  case SoldierCombatLane::LeadStrike:
+  case SoldierCombatLane::SupportStrike:
+  case SoldierCombatLane::StepIn:
+  case SoldierCombatLane::None:
+    break;
+  }
+  return requested_lane;
+}
+
+auto eased_combat_phase_progress(Engine::Core::CombatAnimationState phase,
+                                 float progress) noexcept -> float {
+  float const t = std::clamp(progress, 0.0F, 1.0F);
+  switch (phase) {
+  case Engine::Core::CombatAnimationState::Advance:
+    return smooth01(t);
+  case Engine::Core::CombatAnimationState::WindUp:
+    return t * t * (2.4F - 1.4F * t);
+  case Engine::Core::CombatAnimationState::Strike:
+    return 1.0F - ((1.0F - t) * (1.0F - t));
+  case Engine::Core::CombatAnimationState::Impact:
+    return smooth01(t);
+  case Engine::Core::CombatAnimationState::Recover:
+  case Engine::Core::CombatAnimationState::Reposition:
+    return t * t * (3.0F - 2.0F * t);
+  case Engine::Core::CombatAnimationState::Idle:
+    break;
+  }
+  return t;
+}
+
+auto lane_profile_for_lane(SoldierCombatLane lane) noexcept -> CombatLaneProfile {
   CombatLaneProfile profile{};
-  profile.lane = state.lane;
-  profile.local_enemy_pressure = static_cast<float>(state.pressure_bucket) / 2.0F;
-  profile.variant_bias = state.variant_bias;
-  profile.lane_seed = state.lane_seed;
-  switch (state.lane) {
+  profile.lane = lane;
+  switch (lane) {
   case SoldierCombatLane::LeadStrike:
     profile.phase_bias = 0.075F;
     profile.recover_scale = 0.92F;
@@ -87,6 +154,41 @@ auto lane_profile_for_state(const SoldierCombatLaneState& state) noexcept
     break;
   }
   return profile;
+}
+
+auto lane_profile_for_state(const SoldierCombatLaneState& state) noexcept
+    -> CombatLaneProfile {
+  CombatLaneProfile profile = lane_profile_for_lane(state.lane);
+  profile.local_enemy_pressure = static_cast<float>(state.pressure_bucket) / 2.0F;
+  profile.variant_bias = state.variant_bias;
+  profile.lane_seed = state.lane_seed;
+  return profile;
+}
+
+auto profile_with_lane(const CombatLaneProfile& base,
+                       SoldierCombatLane lane) noexcept -> CombatLaneProfile {
+  CombatLaneProfile profile = base;
+  CombatLaneProfile const lane_profile = lane_profile_for_lane(lane);
+  profile.lane = lane;
+  profile.phase_bias = lane_profile.phase_bias;
+  profile.recover_scale = lane_profile.recover_scale;
+  profile.emphasis_scale = lane_profile.emphasis_scale;
+  return profile;
+}
+
+auto attack_lane_profile_for_request(const CombatLaneProfile& requested_lane,
+                                     SoldierCombatLane fallback_lane,
+                                     const CombatVisualRawInputs& raw) noexcept
+    -> std::optional<CombatLaneProfile> {
+  if (!lane_blocks_attack_request(requested_lane.lane)) {
+    return requested_lane;
+  }
+  if (lane_uses_attack_pose(fallback_lane)) {
+    return profile_with_lane(requested_lane, fallback_lane);
+  }
+  return profile_with_lane(requested_lane,
+                           default_attack_lane_for_request(
+                               requested_lane.lane, raw.is_mounted, raw.attack_family));
 }
 
 auto wounded_bucket(float health_ratio) noexcept -> std::uint32_t {
@@ -224,8 +326,10 @@ auto raw_attack_phase_hint(const CombatVisualRawInputs& raw,
   if (raw.combat_phase != Engine::Core::CombatAnimationState::Idle) {
     auto const window = Render::Profiling::attack_phase_window(
         raw.combat_phase, raw.amplified_attack, raw.finisher_attack);
-    float const progress = std::clamp(
-        raw.combat_phase_progress + lane.phase_bias * window.offset_weight, 0.0F, 1.0F);
+    float const biased_progress =
+        raw.combat_phase_progress + lane.phase_bias * window.offset_weight;
+    float const progress =
+        eased_combat_phase_progress(raw.combat_phase, biased_progress);
     return window.start + (window.end - window.start) * progress;
   }
 
@@ -262,6 +366,8 @@ void begin_transaction(CombatVisualPersistentState& state,
   state.is_casting = raw.is_casting;
   state.finisher_attack = raw.finisher_attack;
   state.amplified_attack = raw.amplified_attack;
+  state.locked_lane = lane.lane;
+  state.queued_next = {};
   state.phase = phase_from_attack_phase(raw_phase_hint);
   state.exit_policy = CombatVisualExitPolicy::None;
   state.interruption_reason = CombatVisualInterruptReason::None;
@@ -288,18 +394,60 @@ void begin_transaction(CombatVisualPersistentState& state,
   state.locked_family = raw.attack_family;
 }
 
+void queue_followup_attack(CombatVisualPersistentState& state,
+                           const CombatVisualRawInputs& raw,
+                           const CombatLaneProfile& lane) noexcept {
+  std::optional<CombatLaneProfile> queued_lane;
+  if (lane_uses_attack_pose(lane.lane)) {
+    queued_lane = lane;
+  } else if (lane_uses_attack_pose(state.locked_lane)) {
+    queued_lane = profile_with_lane(lane, state.locked_lane);
+  } else if (lane_blocks_attack_request(lane.lane)) {
+    queued_lane = profile_with_lane(
+        lane,
+        default_attack_lane_for_request(lane.lane, raw.is_mounted, raw.attack_family));
+  }
+  if (!queued_lane.has_value()) {
+    return;
+  }
+
+  state.queued_next.pending = true;
+  state.queued_next.target_id = raw.attack_target_id;
+  state.queued_next.family = raw.attack_family;
+  state.queued_next.lane = queued_lane->lane;
+}
+
+auto queued_followup_valid(const CombatVisualQueuedAttack& queued,
+                           const CombatVisualRawInputs& raw) noexcept -> bool {
+  if (!queued.pending || !raw.attack_requested) {
+    return false;
+  }
+
+  bool const family_matches =
+      queued.family == Engine::Core::CombatAttackFamily::None ||
+      raw.attack_family == Engine::Core::CombatAttackFamily::None ||
+      queued.family == raw.attack_family;
+  if (!family_matches) {
+    return false;
+  }
+
+  if (queued.target_id == 0U) {
+    return true;
+  }
+
+  return raw.attack_target_id == queued.target_id && raw.attack_target_alive;
+}
+
 auto build_resolved_state(const CombatVisualPersistentState& persistent,
                           const CombatVisualRawInputs& raw,
                           const CombatLaneProfile& lane) noexcept
     -> CombatVisualResolvedState {
   CombatVisualResolvedState resolved{};
-  bool const lane_uses_attack_pose = lane.lane != SoldierCombatLane::ShieldBrace &&
-                                     lane.lane != SoldierCombatLane::IdleReady &&
-                                     lane.lane != SoldierCombatLane::StepOut &&
-                                     lane.lane != SoldierCombatLane::RangedReload;
+  SoldierCombatLane const resolved_lane =
+      persistent.active ? persistent.locked_lane : lane.lane;
   resolved.authoritative = persistent.active || raw.attack_requested ||
                            raw.is_hit_reacting || raw.is_dying || raw.is_dead;
-  resolved.active = persistent.active && lane_uses_attack_pose;
+  resolved.active = persistent.active && lane_uses_attack_pose(resolved_lane);
   resolved.prioritize_action_over_locomotion =
       resolved.active && persistent.phase != CombatVisualTransactionPhase::ExitBlend;
   resolved.is_melee = persistent.active ? persistent.is_melee : raw.is_melee;
@@ -314,7 +462,7 @@ auto build_resolved_state(const CombatVisualPersistentState& persistent,
   resolved.exit_policy =
       persistent.active ? persistent.exit_policy : CombatVisualExitPolicy::None;
   resolved.interruption_reason = persistent.interruption_reason;
-  resolved.lane = lane.lane;
+  resolved.lane = resolved_lane;
   resolved.attack_phase = persistent.active ? persistent.attack_phase : 0.0F;
   resolved.phase_progress = persistent.active ? persistent.phase_progress : 0.0F;
   resolved.exit_blend_progress =
@@ -465,12 +613,28 @@ auto resolve_combat_visual_state(const CombatVisualPersistentState& previous,
 
   bool const request_attack =
       raw.attack_requested && !raw.is_healing && !raw.is_constructing;
-  float const raw_phase_hint = raw_attack_phase_hint(raw, lane);
+  bool const request_attack_viable =
+      request_attack && (raw.attack_target_id == 0U || raw.attack_target_alive);
+  CombatLaneProfile const active_lane =
+      next.active ? lane_profile_for_lane(next.locked_lane) : lane;
+  auto const startup_attack_lane =
+      attack_lane_profile_for_request(lane, previous.locked_lane, raw);
+  float const current_lane_phase_hint = raw_attack_phase_hint(raw, lane);
+  float const active_lane_phase_hint =
+      next.active ? raw_attack_phase_hint(raw, active_lane) : current_lane_phase_hint;
+
+  if (!request_attack_viable) {
+    next.queued_next = {};
+  }
 
   if (!next.active) {
-    if (request_attack) {
-      begin_transaction(
-          next, raw, lane, config, previous.transaction_id + 1U, raw_phase_hint);
+    if (request_attack_viable && startup_attack_lane.has_value()) {
+      begin_transaction(next,
+                        raw,
+                        *startup_attack_lane,
+                        config,
+                        previous.transaction_id + 1U,
+                        raw_attack_phase_hint(raw, *startup_attack_lane));
     }
     resolution.resolved = build_resolved_state(next, raw, lane);
     return resolution;
@@ -489,24 +653,28 @@ auto resolve_combat_visual_state(const CombatVisualPersistentState& previous,
       raw.attack_family != Engine::Core::CombatAttackFamily::None &&
       next.locked_family != raw.attack_family;
   bool const cycle_restart =
-      request_attack && next.attack_phase >= 0.92F &&
-      raw_phase_hint + config.new_transaction_reset_threshold < next.attack_phase &&
+      request_attack_viable && next.phase != CombatVisualTransactionPhase::ExitBlend &&
+      next.attack_phase >= 0.92F &&
+      active_lane_phase_hint + config.new_transaction_reset_threshold <
+          next.attack_phase &&
       same_target && !family_changed;
+  bool const queued_followup_requested =
+      request_attack_viable && (cycle_restart || target_changed || family_changed);
+  bool const continue_current_transaction = request_attack_viable && same_target &&
+                                            !target_changed && !family_changed &&
+                                            !cycle_restart && !next.queued_next.pending;
 
-  if (cycle_restart) {
-    begin_transaction(
-        next, raw, lane, config, previous.transaction_id + 1U, raw_phase_hint);
-    resolution.resolved = build_resolved_state(next, raw, lane);
-    return resolution;
+  if (queued_followup_requested) {
+    queue_followup_attack(next, raw, lane);
   }
 
   next.last_sample_time = raw.sample_time;
 
   bool const hold_attack_lifetime = raw.sample_time < next.minimum_hold_until;
-  if (request_attack && same_target && !family_changed &&
+  if (continue_current_transaction &&
       next.exit_policy == CombatVisualExitPolicy::None) {
     next.attack_phase = std::clamp(
-        std::max(next.attack_phase, raw_phase_hint), next.attack_phase, 0.995F);
+        std::max(next.attack_phase, active_lane_phase_hint), next.attack_phase, 0.995F);
     next.phase = phase_from_attack_phase(next.attack_phase);
     next.phase_progress =
         phase_progress_from_attack_phase(next.attack_phase, next.phase);
@@ -515,9 +683,11 @@ auto resolve_combat_visual_state(const CombatVisualPersistentState& previous,
     if (next.exit_policy == CombatVisualExitPolicy::None && !hold_attack_lifetime) {
       if (target_changed) {
         next.exit_policy = CombatVisualExitPolicy::Retarget;
+      } else if (family_changed) {
+        next.exit_policy = CombatVisualExitPolicy::Retarget;
       } else if (target_died) {
         next.exit_policy = CombatVisualExitPolicy::TargetDied;
-      } else if (!request_attack &&
+      } else if (!request_attack_viable &&
                  raw.locomotion != Render::Creature::MovementAnimationState::Idle) {
         next.exit_policy = CombatVisualExitPolicy::ChaseResumes;
       } else {
@@ -527,7 +697,7 @@ auto resolve_combat_visual_state(const CombatVisualPersistentState& previous,
 
     if (next.attack_phase < 0.995F) {
       float const recover_duration =
-          std::max(0.05F, config.recover_duration * lane.recover_scale);
+          std::max(0.05F, config.recover_duration * active_lane.recover_scale);
       float const phase_step = (delta_time / recover_duration) * 0.40F;
       next.attack_phase = std::clamp(
           std::max(next.attack_phase, 0.60F) + phase_step, next.attack_phase, 0.995F);
@@ -553,9 +723,29 @@ auto resolve_combat_visual_state(const CombatVisualPersistentState& previous,
         CombatVisualInterruptReason const reason =
             interrupt_reason_for_exit_policy(next.exit_policy);
         std::uint32_t const transaction_id = next.transaction_id;
+        CombatVisualQueuedAttack const queued_next = next.queued_next;
+        SoldierCombatLane const last_attack_lane = next.locked_lane;
         next = {};
         next.transaction_id = transaction_id;
         next.interruption_reason = reason;
+        next.locked_lane = last_attack_lane;
+        if (queued_followup_valid(queued_next, raw)) {
+          CombatLaneProfile const queued_lane = lane_profile_for_lane(queued_next.lane);
+          begin_transaction(next,
+                            raw,
+                            queued_lane,
+                            config,
+                            transaction_id + 1U,
+                            raw_attack_phase_hint(raw, queued_lane));
+        } else if (request_attack_viable && !target_died &&
+                   startup_attack_lane.has_value()) {
+          begin_transaction(next,
+                            raw,
+                            *startup_attack_lane,
+                            config,
+                            transaction_id + 1U,
+                            raw_attack_phase_hint(raw, *startup_attack_lane));
+        }
       }
     }
   }

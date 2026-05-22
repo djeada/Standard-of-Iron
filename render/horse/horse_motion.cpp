@@ -86,16 +86,18 @@ auto compute_mount_frame(const HorseProfile& profile) -> MountedAttachmentFrame 
                               body_length_vis * 0.02F);
   float const back_top_y = d.barrel_center_y + torso_lift + body_height_vis * 1.06F;
 
-  frame.saddle_center = QVector3D(
-      0.0F,
-      back_top_y + d.saddle_thickness * 0.25F,
-      back_center.z() + d.seat_forward_offset * (k_saddle_seat_forward_scale * 0.35F));
+  frame.saddle_center =
+      QVector3D(0.0F,
+                back_top_y + d.saddle_thickness * k_saddle_thickness_offset +
+                    body_height_vis * k_saddle_body_height_lift_scale,
+                back_center.z() + body_length_vis * k_saddle_body_length_offset +
+                    d.seat_forward_offset * k_saddle_seat_forward_scale);
 
   frame.seat_position = frame.saddle_center +
                         QVector3D(0.0F,
                                   d.saddle_thickness * k_seat_position_height_scale +
-                                      body_height_vis * 0.17F,
-                                  0.0F);
+                                      body_height_vis * k_seat_body_height_lift_scale,
+                                  body_length_vis * 0.035F);
 
   frame.stirrup_attach_left =
       frame.saddle_center + QVector3D(-d.body_width * k_stirrup_width_scale,

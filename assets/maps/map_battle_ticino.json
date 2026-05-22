@@ -9,14 +9,6 @@
     "tile_size": 1.0
   },
   "time_of_day": "afternoon",
-  "difficulty_intent": "hard_mobile_tactical",
-  "design_pillars": [
-    "Keep the center readable for cavalry combat, but surround it with meaningful lanes, cutoffs, groves, irrigation channels, and bridge choices.",
-    "Every road has a destination: Roman retreat, Carthaginian flank, baggage post, farmstead, bridgehead, scout ford, or ambush pocket.",
-    "The player wins by movement, not only by killing: trapping Roman cavalry before the bridge is the core skill test.",
-    "The Roman army should feel like a reconnaissance force that tries to disengage intelligently instead of fighting to the last man in the meadow.",
-    "Props communicate gameplay: carts mark retreat lanes, tents mark camps, weapon racks mark strongpoints, ruins mark villages, dead trees mark groves and line-of-sight breaks."
-  ],
   "biome": {
     "ground_type": "soil_fertile",
     "seed": 10042,
@@ -26,18 +18,49 @@
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.12,
     "irregularity_amplitude": 0.055,
-    "grass_primary": [0.32, 0.58, 0.28],
-    "grass_secondary": [0.45, 0.66, 0.32],
-    "grass_dry": [0.66, 0.58, 0.36],
-    "soil_color": [0.3, 0.24, 0.16],
-    "rock_low": [0.45, 0.42, 0.36],
-    "rock_high": [0.67, 0.65, 0.58],
-    "height_noise": [0.14, 0.045],
+    "grass_primary": [
+      0.32,
+      0.58,
+      0.28
+    ],
+    "grass_secondary": [
+      0.45,
+      0.66,
+      0.32
+    ],
+    "grass_dry": [
+      0.66,
+      0.58,
+      0.36
+    ],
+    "soil_color": [
+      0.3,
+      0.24,
+      0.16
+    ],
+    "rock_low": [
+      0.45,
+      0.42,
+      0.36
+    ],
+    "rock_high": [
+      0.67,
+      0.65,
+      0.58
+    ],
+    "height_noise": [
+      0.14,
+      0.045
+    ],
     "sway_speed": 1.0,
     "sway_strength": 0.18
   },
   "camera": {
-    "center": [120, 0, 75],
+    "center": [
+      120,
+      0,
+      75
+    ],
     "distance": 72.0,
     "tilt_deg": 47.0,
     "yaw": 225.0,
@@ -45,49 +68,73 @@
     "near": 1.0,
     "far": 650.0
   },
-  "weather": {
-    "type": "clear",
-    "intensity": 0.15,
-    "temperature": "mild",
-    "description": "Clear autumn light over the Po Valley. Dust trails from cavalry movement should be easy to read."
-  },
   "rivers": [
     {
       "id": "ticino_main",
-      "start": [222, -2],
-      "end": [224, 152],
+      "start": [
+        222,
+        -2
+      ],
+      "end": [
+        224,
+        152
+      ],
       "width": 10.0,
       "description": "Ticino River forming the eastern boundary and Roman escape route.",
       "role": "hard escape boundary and final objective line"
     },
     {
       "id": "northern_farm_tributary_west",
-      "start": [0, 26],
-      "end": [78, 20],
+      "start": [
+        0,
+        26
+      ],
+      "end": [
+        78,
+        20
+      ],
       "width": 3.6,
       "description": "Northern farm tributary limiting wide cavalry movement.",
       "role": "narrows the northern flank and creates scout crossing choices"
     },
     {
       "id": "northern_farm_tributary_east",
-      "start": [78, 20],
-      "end": [160, 28],
+      "start": [
+        78,
+        20
+      ],
+      "end": [
+        160,
+        28
+      ],
       "width": 3.2,
       "description": "Shallow riparian channel near the northern flank.",
       "role": "screens the Numidian route and Roman supply lane"
     },
     {
       "id": "southern_irrigation_channel",
-      "start": [66, 104],
-      "end": [178, 108],
+      "start": [
+        66,
+        104
+      ],
+      "end": [
+        178,
+        108
+      ],
       "width": 4.0,
       "description": "Southern irrigation channel that complicates Roman retreat and Carthaginian pursuit.",
       "role": "turns southern movement into a timing and bridge-control problem"
     },
     {
       "id": "baggage_drainage_ditch",
-      "start": [178, 118],
-      "end": [238, 120],
+      "start": [
+        178,
+        118
+      ],
+      "end": [
+        238,
+        120
+      ],
       "width": 2.5,
       "description": "Small drainage ditch beside the Roman baggage road.",
       "role": "creates a final southern chase lane near the baggage post"
@@ -96,8 +143,14 @@
   "bridges": [
     {
       "id": "main_ticino_bridge",
-      "start": [216, 62],
-      "end": [230, 62],
+      "start": [
+        216,
+        62
+      ],
+      "end": [
+        230,
+        62
+      ],
       "width": 6.5,
       "height": 0.8,
       "description": "Main Ticino bridge. Capturing this cuts off the Roman retreat.",
@@ -106,8 +159,14 @@
     },
     {
       "id": "northern_supply_bridge",
-      "start": [216, 42],
-      "end": [230, 42],
+      "start": [
+        216,
+        42
+      ],
+      "end": [
+        230,
+        42
+      ],
       "width": 4.6,
       "height": 0.75,
       "description": "Northern supply bridge used by Roman scouts.",
@@ -116,8 +175,14 @@
     },
     {
       "id": "southern_fallback_bridge",
-      "start": [216, 104],
-      "end": [230, 104],
+      "start": [
+        216,
+        104
+      ],
+      "end": [
+        230,
+        104
+      ],
       "width": 5.2,
       "height": 0.75,
       "description": "Southern fallback bridge near the Roman baggage route.",
@@ -126,8 +191,14 @@
     },
     {
       "id": "western_irrigation_bridge",
-      "start": [108, 102],
-      "end": [116, 105],
+      "start": [
+        108,
+        102
+      ],
+      "end": [
+        116,
+        105
+      ],
       "width": 4.0,
       "height": 0.55,
       "description": "Small field bridge over the southern irrigation channel.",
@@ -135,8 +206,14 @@
     },
     {
       "id": "eastern_irrigation_bridge",
-      "start": [151, 105],
-      "end": [160, 108],
+      "start": [
+        151,
+        105
+      ],
+      "end": [
+        160,
+        108
+      ],
       "width": 4.0,
       "height": 0.55,
       "description": "Eastern field bridge on the Roman withdrawal route.",
@@ -144,8 +221,14 @@
     },
     {
       "id": "northern_farm_crossing",
-      "start": [104, 24],
-      "end": [112, 27],
+      "start": [
+        104,
+        24
+      ],
+      "end": [
+        112,
+        27
+      ],
       "width": 3.8,
       "height": 0.55,
       "description": "Narrow farm crossing on the northern tributary.",
@@ -153,215 +236,637 @@
     },
     {
       "id": "hidden_willow_ford",
-      "start": [173, 29],
-      "end": [181, 31],
+      "start": [
+        173,
+        29
+      ],
+      "end": [
+        181,
+        31
+      ],
       "width": 2.6,
       "height": 0.35,
       "description": "A shallow willow ford usable by light cavalry only.",
-      "pathing_tags": ["light_cavalry_preferred", "infantry_slow", "heavy_cavalry_slow"],
+      "pathing_tags": [
+        "light_cavalry_preferred",
+        "infantry_slow",
+        "heavy_cavalry_slow"
+      ],
       "role": "advanced scout cutoff toward northern supply bridge"
     },
     {
       "id": "baggage_ditch_bridge",
-      "start": [204, 118],
-      "end": [212, 120],
+      "start": [
+        204,
+        118
+      ],
+      "end": [
+        212,
+        120
+      ],
       "width": 3.4,
       "height": 0.45,
       "description": "Small bridge over the baggage drainage ditch.",
       "role": "southern escape lane choke point"
     }
   ],
-  "route_design": [
-    {
-      "route_id": "center_charge",
-      "theme": "direct cavalry shock battle",
-      "primary_roads": ["main_po_valley_road", "carthage_approach_to_meadow"],
-      "intended_choice": "Use heavy cavalry to smash the Roman reconnaissance line before it can retreat.",
-      "risk": "Roman spear support and ridge position punish a frontal attack if Numidians do not disrupt them.",
-      "reward": "Fastest route to morale break and decisive victory if micro is strong."
-    },
-    {
-      "route_id": "north_numidian_flank",
-      "theme": "light cavalry harassment and bridge interception",
-      "primary_roads": ["northern_numidian_flank_route", "willow_ford_cutoff_path", "roman_northern_supply_route"],
-      "intended_choice": "Send horse archers through groves and tributary crossings to hit Roman archers, scouts, and northern escape routes.",
-      "risk": "The route is narrow and slow for heavy cavalry; isolated Numidians can be caught by Roman northern reserve.",
-      "reward": "Can silence Roman scouts, block the northern supply bridge, and reveal the main retreat timer early."
-    },
-    {
-      "route_id": "south_pursuit_cutoff",
-      "theme": "wide pursuit and escape denial",
-      "primary_roads": ["southern_pursuit_route", "southern_ditch_chase_lane", "roman_southern_retreat_road"],
-      "intended_choice": "Use the southern wing to cross irrigation channels and reach the fallback road before the Roman rout begins.",
-      "risk": "Overcommitting south weakens the center and can allow Roman cavalry to defeat the heavy vanguard.",
-      "reward": "Best route to decisive victory because it traps routing Romans and threatens the baggage post."
-    },
-    {
-      "route_id": "bridgehead_rush",
-      "theme": "objective-first gamble",
-      "primary_roads": ["main_po_valley_road", "bridgehead_outer_loop"],
-      "intended_choice": "Ignore part of the Roman field force and rush the main bridgehead to cut off retreat immediately.",
-      "risk": "Roman cavalry can collapse onto the player's rear; unsupported units may die at the bridgehead.",
-      "reward": "Locks the main escape route and forces Rome into risky northern or southern fallback paths."
-    },
-    {
-      "route_id": "farmstead_control",
-      "theme": "central terrain and vision control",
-      "primary_roads": ["central_farm_track", "farmstead_inner_loop"],
-      "intended_choice": "Take the central farmstead to split Roman infantry from cavalry and gain warning of retreat direction.",
-      "risk": "Slower than pure cavalry maneuvers and can pull the player into a messy fight around obstacles.",
-      "reward": "Provides vision, healing/firecamp landmark, and a safe pivot between north, center, and south."
-    }
-  ],
   "roads": [
     {
       "id": "main_po_valley_road",
-      "start": [6, 70],
-      "end": [230, 62],
+      "start": [
+        6,
+        70
+      ],
+      "end": [
+        230,
+        62
+      ],
       "width": 4.0,
       "style": "default",
-      "waypoints": [[6, 70], [28, 69], [52, 68], [78, 68], [104, 69], [130, 70], [156, 68], [184, 65], [207, 63], [230, 62]],
+      "waypoints": [
+        [
+          6,
+          70
+        ],
+        [
+          28,
+          69
+        ],
+        [
+          52,
+          68
+        ],
+        [
+          78,
+          68
+        ],
+        [
+          104,
+          69
+        ],
+        [
+          130,
+          70
+        ],
+        [
+          156,
+          68
+        ],
+        [
+          184,
+          65
+        ],
+        [
+          207,
+          63
+        ],
+        [
+          230,
+          62
+        ]
+      ],
       "destination": "main_ticino_bridge",
       "purpose": "main clash and Roman withdrawal line"
     },
     {
       "id": "carthage_approach_to_meadow",
-      "start": [32, 82],
-      "end": [80, 72],
+      "start": [
+        32,
+        82
+      ],
+      "end": [
+        80,
+        72
+      ],
       "width": 3.0,
       "style": "default",
-      "waypoints": [[32, 82], [43, 78], [57, 74], [70, 72], [80, 72]],
+      "waypoints": [
+        [
+          32,
+          82
+        ],
+        [
+          43,
+          78
+        ],
+        [
+          57,
+          74
+        ],
+        [
+          70,
+          72
+        ],
+        [
+          80,
+          72
+        ]
+      ],
       "destination": "central_meadow",
       "purpose": "Carthaginian heavy cavalry entry into the main fight"
     },
     {
       "id": "northern_numidian_flank_route",
-      "start": [36, 48],
-      "end": [136, 42],
+      "start": [
+        36,
+        48
+      ],
+      "end": [
+        136,
+        42
+      ],
       "width": 2.6,
       "style": "default",
-      "waypoints": [[36, 48], [52, 38], [72, 32], [96, 31], [116, 36], [136, 42]],
+      "waypoints": [
+        [
+          36,
+          48
+        ],
+        [
+          52,
+          38
+        ],
+        [
+          72,
+          32
+        ],
+        [
+          96,
+          31
+        ],
+        [
+          116,
+          36
+        ],
+        [
+          136,
+          42
+        ]
+      ],
       "destination": "northern_flank_fields",
       "purpose": "Numidian flank route through groves and tributary crossings"
     },
     {
       "id": "willow_ford_cutoff_path",
-      "start": [136, 42],
-      "end": [181, 31],
+      "start": [
+        136,
+        42
+      ],
+      "end": [
+        181,
+        31
+      ],
       "width": 2.0,
       "style": "rough",
-      "waypoints": [[136, 42], [148, 37], [160, 33], [173, 29], [181, 31]],
+      "waypoints": [
+        [
+          136,
+          42
+        ],
+        [
+          148,
+          37
+        ],
+        [
+          160,
+          33
+        ],
+        [
+          173,
+          29
+        ],
+        [
+          181,
+          31
+        ]
+      ],
       "destination": "hidden_willow_ford",
       "purpose": "advanced light cavalry cutoff toward the northern supply bridge",
-      "pathing_tags": ["light_cavalry_preferred", "heavy_cavalry_slow"]
+      "pathing_tags": [
+        "light_cavalry_preferred",
+        "heavy_cavalry_slow"
+      ]
     },
     {
       "id": "northern_ford_to_supply_bridge",
-      "start": [181, 31],
-      "end": [230, 42],
+      "start": [
+        181,
+        31
+      ],
+      "end": [
+        230,
+        42
+      ],
       "width": 2.4,
       "style": "rough",
-      "waypoints": [[181, 31], [194, 35], [207, 39], [216, 43], [230, 42]],
+      "waypoints": [
+        [
+          181,
+          31
+        ],
+        [
+          194,
+          35
+        ],
+        [
+          207,
+          39
+        ],
+        [
+          216,
+          43
+        ],
+        [
+          230,
+          42
+        ]
+      ],
       "destination": "northern_supply_bridge",
       "purpose": "connects hidden ford to Roman northern escape and supply route"
     },
     {
       "id": "southern_pursuit_route",
-      "start": [42, 96],
-      "end": [160, 108],
+      "start": [
+        42,
+        96
+      ],
+      "end": [
+        160,
+        108
+      ],
       "width": 2.8,
       "style": "default",
-      "waypoints": [[42, 96], [62, 101], [86, 103], [108, 104], [132, 105], [160, 108]],
+      "waypoints": [
+        [
+          42,
+          96
+        ],
+        [
+          62,
+          101
+        ],
+        [
+          86,
+          103
+        ],
+        [
+          108,
+          104
+        ],
+        [
+          132,
+          105
+        ],
+        [
+          160,
+          108
+        ]
+      ],
       "destination": "eastern_irrigation_bridge",
       "purpose": "southern cavalry cutoff route"
     },
     {
       "id": "southern_ditch_chase_lane",
-      "start": [160, 108],
-      "end": [230, 104],
+      "start": [
+        160,
+        108
+      ],
+      "end": [
+        230,
+        104
+      ],
       "width": 2.6,
       "style": "rough",
-      "waypoints": [[160, 108], [178, 112], [196, 116], [204, 118], [216, 112], [230, 104]],
+      "waypoints": [
+        [
+          160,
+          108
+        ],
+        [
+          178,
+          112
+        ],
+        [
+          196,
+          116
+        ],
+        [
+          204,
+          118
+        ],
+        [
+          216,
+          112
+        ],
+        [
+          230,
+          104
+        ]
+      ],
       "destination": "southern_fallback_bridge",
       "purpose": "late chase lane and baggage escape interception"
     },
     {
       "id": "roman_northern_supply_route",
-      "start": [178, 66],
-      "end": [230, 42],
+      "start": [
+        178,
+        66
+      ],
+      "end": [
+        230,
+        42
+      ],
       "width": 3.0,
       "style": "default",
-      "waypoints": [[178, 66], [190, 56], [205, 48], [216, 43], [230, 42]],
+      "waypoints": [
+        [
+          178,
+          66
+        ],
+        [
+          190,
+          56
+        ],
+        [
+          205,
+          48
+        ],
+        [
+          216,
+          43
+        ],
+        [
+          230,
+          42
+        ]
+      ],
       "destination": "northern_supply_bridge",
       "purpose": "Roman scouts and reserve use this as alternate escape"
     },
     {
       "id": "roman_southern_retreat_road",
-      "start": [176, 72],
-      "end": [230, 104],
+      "start": [
+        176,
+        72
+      ],
+      "end": [
+        230,
+        104
+      ],
       "width": 3.0,
       "style": "default",
-      "waypoints": [[176, 72], [188, 82], [200, 92], [215, 101], [230, 104]],
+      "waypoints": [
+        [
+          176,
+          72
+        ],
+        [
+          188,
+          82
+        ],
+        [
+          200,
+          92
+        ],
+        [
+          215,
+          101
+        ],
+        [
+          230,
+          104
+        ]
+      ],
       "destination": "southern_fallback_bridge",
       "purpose": "Roman fallback road if main bridge is threatened"
     },
     {
       "id": "central_farm_track",
-      "start": [112, 74],
-      "end": [152, 96],
+      "start": [
+        112,
+        74
+      ],
+      "end": [
+        152,
+        96
+      ],
       "width": 2.4,
       "style": "default",
-      "waypoints": [[112, 74], [123, 79], [134, 86], [144, 92], [152, 96]],
+      "waypoints": [
+        [
+          112,
+          74
+        ],
+        [
+          123,
+          79
+        ],
+        [
+          134,
+          86
+        ],
+        [
+          144,
+          92
+        ],
+        [
+          152,
+          96
+        ]
+      ],
       "destination": "southern_spur",
       "purpose": "farmstead bypass between central clash and southern cutoff"
     },
     {
       "id": "farmstead_inner_loop",
-      "start": [92, 62],
-      "end": [130, 80],
+      "start": [
+        92,
+        62
+      ],
+      "end": [
+        130,
+        80
+      ],
       "width": 2.0,
       "style": "rough",
-      "waypoints": [[92, 62], [102, 65], [112, 74], [122, 78], [130, 80]],
+      "waypoints": [
+        [
+          92,
+          62
+        ],
+        [
+          102,
+          65
+        ],
+        [
+          112,
+          74
+        ],
+        [
+          122,
+          78
+        ],
+        [
+          130,
+          80
+        ]
+      ],
       "destination": "central_farmstead_zone",
       "purpose": "short tactical loop around farmstead props and ruins"
     },
     {
       "id": "bridgehead_outer_loop",
-      "start": [184, 65],
-      "end": [230, 62],
+      "start": [
+        184,
+        65
+      ],
+      "end": [
+        230,
+        62
+      ],
       "width": 3.0,
       "style": "default",
-      "waypoints": [[184, 65], [198, 56], [212, 54], [220, 66], [212, 78], [198, 74], [184, 65]],
+      "waypoints": [
+        [
+          184,
+          65
+        ],
+        [
+          198,
+          56
+        ],
+        [
+          212,
+          54
+        ],
+        [
+          220,
+          66
+        ],
+        [
+          212,
+          78
+        ],
+        [
+          198,
+          74
+        ],
+        [
+          184,
+          65
+        ]
+      ],
       "destination": "roman_bridgehead_zone",
       "purpose": "loop around the bridgehead hill with multiple attack angles"
     },
     {
       "id": "baggage_hamlet_loop",
-      "start": [202, 92],
-      "end": [230, 104],
+      "start": [
+        202,
+        92
+      ],
+      "end": [
+        230,
+        104
+      ],
       "width": 2.4,
       "style": "default",
-      "waypoints": [[202, 92], [214, 94], [226, 98], [230, 104], [218, 112], [204, 118]],
+      "waypoints": [
+        [
+          202,
+          92
+        ],
+        [
+          214,
+          94
+        ],
+        [
+          226,
+          98
+        ],
+        [
+          230,
+          104
+        ],
+        [
+          218,
+          112
+        ],
+        [
+          204,
+          118
+        ]
+      ],
       "destination": "baggage_post_zone",
       "purpose": "loop around baggage hamlet and southern fallback bridge"
     },
     {
       "id": "western_observation_loop",
-      "start": [30, 78],
-      "end": [66, 96],
+      "start": [
+        30,
+        78
+      ],
+      "end": [
+        66,
+        96
+      ],
       "width": 2.2,
       "style": "rough",
-      "waypoints": [[30, 78], [38, 88], [50, 94], [66, 96]],
+      "waypoints": [
+        [
+          30,
+          78
+        ],
+        [
+          38,
+          88
+        ],
+        [
+          50,
+          94
+        ],
+        [
+          66,
+          96
+        ]
+      ],
       "destination": "southern_pursuit_start",
       "purpose": "connects player camp to southern pursuit wing"
     },
     {
       "id": "western_grove_loop",
-      "start": [30, 78],
-      "end": [58, 42],
+      "start": [
+        30,
+        78
+      ],
+      "end": [
+        58,
+        42
+      ],
       "width": 2.1,
       "style": "rough",
-      "waypoints": [[30, 78], [28, 62], [36, 48], [48, 42], [58, 42]],
+      "waypoints": [
+        [
+          30,
+          78
+        ],
+        [
+          28,
+          62
+        ],
+        [
+          36,
+          48
+        ],
+        [
+          48,
+          42
+        ],
+        [
+          58,
+          42
+        ]
+      ],
       "destination": "northern_numidian_flank_route",
       "purpose": "connects camp to north flank without crossing the central meadow"
     }
@@ -395,7 +900,20 @@
       "height": 2.2,
       "rotation": -8,
       "description": "Carthaginian observation mound above the western approach.",
-      "entrances": [{ "x": 30, "z": 72 }, { "x": 48, "z": 76 }, { "x": 38, "z": 88 }]
+      "entrances": [
+        {
+          "x": 30,
+          "z": 72
+        },
+        {
+          "x": 48,
+          "z": 76
+        },
+        {
+          "x": 38,
+          "z": 88
+        }
+      ]
     },
     {
       "id": "western_grove_bank",
@@ -407,7 +925,16 @@
       "height": 1.7,
       "rotation": 12,
       "description": "Low bank near the western grove that splits the north flank entrance from the central road.",
-      "entrances": [{ "x": 34, "z": 48 }, { "x": 54, "z": 42 }]
+      "entrances": [
+        {
+          "x": 34,
+          "z": 48
+        },
+        {
+          "x": 54,
+          "z": 42
+        }
+      ]
     },
     {
       "id": "northern_levee_west",
@@ -419,7 +946,16 @@
       "height": 1.8,
       "rotation": -4,
       "description": "Western northern levee that protects Numidian horse archers from immediate Roman contact.",
-      "entrances": [{ "x": 72, "z": 32 }, { "x": 104, "z": 31 }]
+      "entrances": [
+        {
+          "x": 72,
+          "z": 32
+        },
+        {
+          "x": 104,
+          "z": 31
+        }
+      ]
     },
     {
       "id": "northern_levee_east",
@@ -431,7 +967,16 @@
       "height": 2.0,
       "rotation": 5,
       "description": "Northern levee overlooking the tributary crossing.",
-      "entrances": [{ "x": 104, "z": 35 }, { "x": 132, "z": 38 }]
+      "entrances": [
+        {
+          "x": 104,
+          "z": 35
+        },
+        {
+          "x": 132,
+          "z": 38
+        }
+      ]
     },
     {
       "id": "willow_ford_embankment",
@@ -443,7 +988,16 @@
       "height": 1.5,
       "rotation": 8,
       "description": "Low embankment at the hidden willow ford; light cavalry can use it to ambush the northern supply bridge route.",
-      "entrances": [{ "x": 164, "z": 34 }, { "x": 183, "z": 31 }]
+      "entrances": [
+        {
+          "x": 164,
+          "z": 34
+        },
+        {
+          "x": 183,
+          "z": 31
+        }
+      ]
     },
     {
       "id": "roman_cavalry_ridge",
@@ -455,7 +1009,16 @@
       "height": 1.9,
       "rotation": 7,
       "description": "Roman cavalry ridge. Strong position at first contact, but vulnerable to being outflanked.",
-      "entrances": [{ "x": 154, "z": 66 }, { "x": 178, "z": 65 }]
+      "entrances": [
+        {
+          "x": 154,
+          "z": 66
+        },
+        {
+          "x": 178,
+          "z": 65
+        }
+      ]
     },
     {
       "id": "central_farmstead_mound",
@@ -467,7 +1030,16 @@
       "height": 1.3,
       "rotation": -10,
       "description": "Small farmstead mound. It breaks line of sight and gives the player a pivot point, but it should not block cavalry movement completely.",
-      "entrances": [{ "x": 101, "z": 69 }, { "x": 123, "z": 78 }]
+      "entrances": [
+        {
+          "x": 101,
+          "z": 69
+        },
+        {
+          "x": 123,
+          "z": 78
+        }
+      ]
     },
     {
       "id": "southern_spur",
@@ -479,7 +1051,16 @@
       "height": 2.4,
       "rotation": -6,
       "description": "Southern spur controlling the Roman retreat track.",
-      "entrances": [{ "x": 134, "z": 101 }, { "x": 158, "z": 106 }]
+      "entrances": [
+        {
+          "x": 134,
+          "z": 101
+        },
+        {
+          "x": 158,
+          "z": 106
+        }
+      ]
     },
     {
       "id": "southern_farmland_low_ridge",
@@ -491,7 +1072,16 @@
       "height": 1.4,
       "rotation": 4,
       "description": "Low ridge along southern farmland that hides the pursuit wing until it reaches the irrigation bridge.",
-      "entrances": [{ "x": 62, "z": 101 }, { "x": 108, "z": 104 }]
+      "entrances": [
+        {
+          "x": 62,
+          "z": 101
+        },
+        {
+          "x": 108,
+          "z": 104
+        }
+      ]
     },
     {
       "id": "baggage_ditch_rise",
@@ -503,7 +1093,16 @@
       "height": 1.6,
       "rotation": -2,
       "description": "Small rise above the baggage ditch bridge. A good interception point during the rout phase.",
-      "entrances": [{ "x": 190, "z": 116 }, { "x": 214, "z": 114 }]
+      "entrances": [
+        {
+          "x": 190,
+          "z": 116
+        },
+        {
+          "x": 214,
+          "z": 114
+        }
+      ]
     },
     {
       "id": "roman_bridgehead_hill",
@@ -513,7 +1112,20 @@
       "radius": 12,
       "height": 2.1,
       "description": "Roman bridgehead camp elevation.",
-      "entrances": [{ "x": 207, "z": 63 }, { "x": 221, "z": 53 }, { "x": 221, "z": 79 }]
+      "entrances": [
+        {
+          "x": 207,
+          "z": 63
+        },
+        {
+          "x": 221,
+          "z": 53
+        },
+        {
+          "x": 221,
+          "z": 79
+        }
+      ]
     },
     {
       "id": "northern_supply_bridge_mound",
@@ -525,7 +1137,16 @@
       "height": 1.8,
       "rotation": 12,
       "description": "Mound guarding the northern supply bridge. Good archer perch, but vulnerable from the willow ford.",
-      "entrances": [{ "x": 205, "z": 48 }, { "x": 216, "z": 43 }]
+      "entrances": [
+        {
+          "x": 205,
+          "z": 48
+        },
+        {
+          "x": 216,
+          "z": 43
+        }
+      ]
     },
     {
       "id": "southern_baggage_hamlet_ridge",
@@ -537,7 +1158,16 @@
       "height": 1.9,
       "rotation": -12,
       "description": "Low hamlet ridge around the Roman baggage post and southern fallback bridge.",
-      "entrances": [{ "x": 215, "z": 101 }, { "x": 230, "z": 104 }]
+      "entrances": [
+        {
+          "x": 215,
+          "z": 101
+        },
+        {
+          "x": 230,
+          "z": 104
+        }
+      ]
     },
     {
       "id": "western_grove",
@@ -626,658 +1256,895 @@
       "description": "Northern farmland and grazing ground for Numidian maneuver."
     }
   ],
-  "zones": [
-    { "id": "carthage_camp_zone", "x": 30, "z": 78, "radius": 14, "owner": 1, "purpose": "starting camp and reinforcement point" },
-    { "id": "central_meadow_zone", "x": 126, "z": 70, "radius": 34, "owner": 0, "purpose": "main cavalry clash area" },
-    { "id": "central_farmstead_zone", "x": 112, "z": 74, "radius": 10, "owner": 0, "purpose": "vision and pivot point" },
-    { "id": "northern_flank_zone", "x": 136, "z": 42, "radius": 14, "owner": 0, "purpose": "Numidian flank route control" },
-    { "id": "willow_ford_zone", "x": 177, "z": 31, "radius": 8, "owner": 0, "purpose": "hidden light cavalry cutoff" },
-    { "id": "southern_pursuit_start", "x": 86, "z": 103, "radius": 12, "owner": 1, "purpose": "southern wing staging" },
-    { "id": "southern_spur_zone", "x": 146, "z": 103, "radius": 12, "owner": 0, "purpose": "Roman retreat control" },
-    { "id": "roman_cavalry_ridge_zone", "x": 166, "z": 66, "radius": 14, "owner": 2, "purpose": "initial Roman strong position" },
-    { "id": "roman_bridgehead_zone", "x": 220, "z": 66, "radius": 15, "owner": 2, "purpose": "main bridgehead objective" },
-    { "id": "northern_supply_bridge_zone", "x": 222, "z": 42, "radius": 10, "owner": 2, "purpose": "alternate scout escape route" },
-    { "id": "southern_fallback_bridge_zone", "x": 222, "z": 104, "radius": 11, "owner": 2, "purpose": "alternate Roman fallback route" },
-    { "id": "baggage_post_zone", "x": 226, "z": 98, "radius": 13, "owner": 2, "purpose": "secondary capture objective" },
-    { "id": "rout_detection_zone", "x": 186, "z": 68, "radius": 18, "owner": 0, "purpose": "Roman retreat phase trigger area" }
-  ],
   "spawns": [
-    { "id": "carthage_forward_camp", "type": "barracks", "x": 30, "z": 78, "player_id": 1, "max_population": 150, "nation": "carthage", "description": "Carthaginian forward cavalry camp" },
-    { "id": "roman_ticino_bridgehead", "type": "barracks", "x": 220, "z": 66, "player_id": 2, "max_population": 190, "nation": "roman_republic", "description": "Roman Ticino bridgehead", "capture_required": true },
-    { "id": "roman_baggage_post", "type": "barracks", "x": 226, "z": 98, "player_id": 2, "max_population": 120, "nation": "roman_republic", "description": "Roman baggage post", "capture_required": false },
-
-    { "id": "p1_heavy_cav_01", "type": "horse_swordsman", "x": 48, "z": 70, "player_id": 1, "description": "Carthaginian heavy cavalry vanguard" },
-    { "id": "p1_heavy_cav_02", "type": "horse_swordsman", "x": 52, "z": 66, "player_id": 1 },
-    { "id": "p1_heavy_cav_03", "type": "horse_swordsman", "x": 56, "z": 72, "player_id": 1 },
-    { "id": "p1_heavy_cav_04", "type": "horse_swordsman", "x": 60, "z": 68, "player_id": 1 },
-    { "id": "p1_heavy_cav_05", "type": "horse_swordsman", "x": 64, "z": 74, "player_id": 1 },
-
-    { "id": "p1_numidian_north_01", "type": "horse_archer", "x": 38, "z": 48, "player_id": 1, "description": "Numidian northern screen" },
-    { "id": "p1_numidian_north_02", "type": "horse_archer", "x": 44, "z": 43, "player_id": 1 },
-    { "id": "p1_numidian_north_03", "type": "horse_archer", "x": 51, "z": 39, "player_id": 1 },
-    { "id": "p1_numidian_north_04", "type": "horse_archer", "x": 58, "z": 42, "player_id": 1 },
-
-    { "id": "p1_numidian_south_01", "type": "horse_archer", "x": 42, "z": 96, "player_id": 1, "description": "Numidian southern pursuit wing" },
-    { "id": "p1_numidian_south_02", "type": "horse_archer", "x": 50, "z": 101, "player_id": 1 },
-    { "id": "p1_south_cav_01", "type": "horse_swordsman", "x": 58, "z": 100, "player_id": 1 },
-    { "id": "p1_south_cav_02", "type": "horse_swordsman", "x": 66, "z": 96, "player_id": 1 },
-
-    { "id": "p1_camp_guard_spear_01", "type": "spearman", "x": 35, "z": 82, "player_id": 1, "description": "Small infantry camp guard" },
-    { "id": "p1_camp_guard_spear_02", "type": "spearman", "x": 39, "z": 86, "player_id": 1 },
-    { "id": "p1_camp_guard_archer_01", "type": "archer", "x": 32, "z": 88, "player_id": 1 },
-    { "id": "p1_healer_01", "type": "healer", "x": 28, "z": 74, "player_id": 1 },
-
-    { "id": "rome_recon_cav_01", "type": "horse_swordsman", "x": 150, "z": 62, "player_id": 2, "description": "Roman cavalry reconnaissance line" },
-    { "id": "rome_recon_cav_02", "type": "horse_swordsman", "x": 156, "z": 58, "player_id": 2 },
-    { "id": "rome_recon_cav_03", "type": "horse_swordsman", "x": 162, "z": 62, "player_id": 2 },
-    { "id": "rome_recon_cav_04", "type": "horse_swordsman", "x": 168, "z": 66, "player_id": 2 },
-    { "id": "rome_recon_cav_05", "type": "horse_swordsman", "x": 174, "z": 70, "player_id": 2 },
-
-    { "id": "rome_support_spear_01", "type": "spearman", "x": 160, "z": 75, "player_id": 2, "description": "Roman infantry support screen" },
-    { "id": "rome_support_spear_02", "type": "spearman", "x": 166, "z": 78, "player_id": 2 },
-    { "id": "rome_support_spear_03", "type": "spearman", "x": 172, "z": 76, "player_id": 2 },
-    { "id": "rome_support_sword_01", "type": "swordsman", "x": 166, "z": 84, "player_id": 2 },
-    { "id": "rome_support_sword_02", "type": "swordsman", "x": 174, "z": 84, "player_id": 2 },
-    { "id": "rome_support_archer_01", "type": "archer", "x": 158, "z": 84, "player_id": 2 },
-    { "id": "rome_support_archer_02", "type": "archer", "x": 178, "z": 80, "player_id": 2 },
-
-    { "id": "rome_north_reserve_cav_01", "type": "horse_swordsman", "x": 184, "z": 54, "player_id": 2, "description": "Roman northern reserve" },
-    { "id": "rome_north_reserve_cav_02", "type": "horse_swordsman", "x": 190, "z": 50, "player_id": 2 },
-    { "id": "rome_north_reserve_archer_01", "type": "archer", "x": 194, "z": 44, "player_id": 2 },
-    { "id": "rome_north_bridge_spear_01", "type": "spearman", "x": 212, "z": 44, "player_id": 2, "description": "Northern supply bridge guard" },
-
-    { "id": "rome_south_reserve_cav_01", "type": "horse_swordsman", "x": 184, "z": 88, "player_id": 2, "description": "Roman southern reserve near retreat road" },
-    { "id": "rome_south_reserve_cav_02", "type": "horse_swordsman", "x": 192, "z": 92, "player_id": 2 },
-    { "id": "rome_south_reserve_spear_01", "type": "spearman", "x": 198, "z": 98, "player_id": 2 },
-
-    { "id": "rome_bridgehead_spear_01", "type": "spearman", "x": 214, "z": 60, "player_id": 2, "description": "Bridgehead guard" },
-    { "id": "rome_bridgehead_spear_02", "type": "spearman", "x": 214, "z": 68, "player_id": 2 },
-    { "id": "rome_bridgehead_sword_01", "type": "swordsman", "x": 220, "z": 58, "player_id": 2 },
-    { "id": "rome_bridgehead_sword_02", "type": "swordsman", "x": 220, "z": 72, "player_id": 2 },
-    { "id": "rome_bridgehead_archer_01", "type": "archer", "x": 228, "z": 62, "player_id": 2 },
-    { "id": "rome_bridgehead_healer_01", "type": "healer", "x": 224, "z": 68, "player_id": 2 },
-
-    { "id": "rome_baggage_spear_01", "type": "spearman", "x": 220, "z": 96, "player_id": 2, "description": "Baggage post guard" },
-    { "id": "rome_baggage_sword_01", "type": "swordsman", "x": 226, "z": 104, "player_id": 2 },
-    { "id": "rome_baggage_archer_01", "type": "archer", "x": 231, "z": 99, "player_id": 2 }
-  ],
-  "patrols": [
     {
-      "id": "roman_recon_screen_patrol",
-      "player_id": 2,
-      "units": ["horse_swordsman", "horse_swordsman"],
-      "spawn": [158, 64],
-      "waypoints": [[150, 62], [136, 68], [122, 70], [136, 68], [166, 66], [184, 65]],
-      "loop": true,
-      "interval_seconds": 70,
-      "behavior": "probe_and_fall_back",
-      "purpose": "makes the center feel alive before full engagement"
-    },
-    {
-      "id": "roman_northern_scout_patrol",
-      "player_id": 2,
-      "units": ["horse_swordsman"],
-      "spawn": [190, 50],
-      "waypoints": [[190, 50], [178, 66], [160, 50], [136, 42], [160, 50], [216, 43], [190, 50]],
-      "loop": true,
-      "interval_seconds": 100,
-      "behavior": "scout_then_retreat",
-      "purpose": "pressures the northern Numidian route and reveals the supply bridge"
-    },
-    {
-      "id": "roman_southern_reserve_patrol",
-      "player_id": 2,
-      "units": ["horse_swordsman", "spearman"],
-      "spawn": [192, 92],
-      "waypoints": [[184, 88], [176, 72], [188, 82], [200, 92], [215, 101], [198, 98], [184, 88]],
-      "loop": true,
-      "interval_seconds": 110,
-      "behavior": "guard_retreat_road",
-      "purpose": "makes southern cutoff contested"
-    },
-    {
-      "id": "baggage_cart_escort",
-      "player_id": 2,
-      "units": ["swordsman", "archer"],
-      "spawn": [226, 98],
-      "waypoints": [[226, 98], [214, 94], [202, 92], [214, 94], [226, 98], [230, 104]],
-      "loop": true,
-      "interval_seconds": 130,
-      "behavior": "escort_and_hold",
-      "purpose": "adds life to the baggage hamlet and creates a secondary fight"
-    },
-    {
-      "id": "carthage_numidian_hint_patrol",
+      "id": "carthage_forward_camp",
+      "type": "barracks",
+      "x": 30,
+      "z": 78,
       "player_id": 1,
-      "units": ["horse_archer"],
-      "spawn": [44, 43],
-      "waypoints": [[44, 43], [58, 42], [72, 32], [96, 31], [104, 24], [96, 31], [58, 42]],
-      "loop": true,
-      "interval_seconds": 125,
-      "behavior": "player_owned_scout_hint",
-      "purpose": "visually teaches the northern route without forcing the player"
-    }
-  ],
-  "side_objectives": [
-    {
-      "id": "seize_farmstead",
-      "title": "Seize the Central Farmstead",
-      "location": [112, 74],
-      "visible_at_start": true,
-      "condition": "Control central_farmstead_zone for 25 seconds",
-      "reward": "Reveal Roman retreat direction for 120 seconds after their morale breaks.",
-      "tradeoff": "Slows the opening charge and risks fighting near props instead of open ground."
+      "max_population": 150,
+      "nation": "carthage",
+      "description": "Carthaginian forward cavalry camp"
     },
     {
-      "id": "cut_northern_supply_bridge",
-      "title": "Cut the Northern Supply Bridge",
-      "location": [222, 42],
-      "visible_at_start": false,
-      "condition": "Control northern_supply_bridge_zone before Roman rout phase begins",
-      "reward": "Roman scouts and northern reserve cannot escape north; decisive victory threshold becomes easier.",
-      "tradeoff": "Requires committing light cavalry far from the main fight."
+      "id": "roman_ticino_bridgehead",
+      "type": "barracks",
+      "x": 220,
+      "z": 66,
+      "player_id": 2,
+      "max_population": 190,
+      "nation": "roman_republic",
+      "description": "Roman Ticino bridgehead",
+      "capture_required": true
     },
     {
-      "id": "hold_southern_spur",
-      "title": "Hold the Southern Spur",
-      "location": [146, 103],
-      "visible_at_start": true,
-      "condition": "Control southern_spur_zone for 35 seconds",
-      "reward": "Roman southern retreat road is slowed and baggage post becomes vulnerable.",
-      "tradeoff": "Overcommitting south can lose the center."
+      "id": "roman_baggage_post",
+      "type": "barracks",
+      "x": 226,
+      "z": 98,
+      "player_id": 2,
+      "max_population": 120,
+      "nation": "roman_republic",
+      "description": "Roman baggage post",
+      "capture_required": false
     },
     {
-      "id": "capture_baggage_post",
-      "title": "Capture the Roman Baggage Post",
-      "location": [226, 98],
-      "visible_at_start": true,
-      "condition": "Capture or destroy roman_baggage_post",
-      "reward": { "food": 300, "wood": 200, "morale_damage_to_rome": 12 },
-      "tradeoff": "The baggage post is not required; chasing it too early may let the Roman cavalry escape."
+      "id": "p1_heavy_cav_01",
+      "type": "horse_swordsman",
+      "x": 48,
+      "z": 70,
+      "player_id": 1,
+      "description": "Carthaginian heavy cavalry vanguard"
     },
     {
-      "id": "decisive_cavalry_preservation",
-      "title": "Preserve the Cavalry Arm",
-      "location": [30, 78],
-      "visible_at_start": true,
-      "condition": "Win with at least 50 percent of player cavalry alive",
-      "reward": "Campaign bonus or next-mission cavalry veterancy.",
-      "tradeoff": "Encourages encirclement and harassment instead of simple frontal trading."
-    }
-  ],
-  "ai": {
-    "player_2_rome": {
-      "style": "recon_force_that_disengages_under_pressure",
-      "global_morale": 100,
-      "morale_break_conditions": [
-        "rome_recon_cavalry_count_below_45_percent",
-        "roman_cavalry_ridge_zone_lost_and_bridgehead_zone_threatened",
-        "central_farmstead_zone_and_southern_spur_zone_controlled_by_player_1",
-        "timer_reaches_12_minutes_and_roman_cavalry_outnumbered"
-      ],
-      "phases": [
-        {
-          "phase": 1,
-          "name": "recon_screen",
-          "starts_at": "mission_start",
-          "behavior": "Roman cavalry probes the meadow but stays near the ridge and keeps retreat roads open."
-        },
-        {
-          "phase": 2,
-          "name": "engaged",
-          "starts_when": "player attacks Roman units or enters central_meadow_zone",
-          "behavior": "Roman cavalry fights in the center while reserves guard north and south retreat lanes."
-        },
-        {
-          "phase": 3,
-          "name": "controlled_withdrawal",
-          "starts_when": "global_morale <= 55 or player threatens bridgehead_outer_loop",
-          "behavior": "Roman units begin falling back toward main_ticino_bridge unless cut off."
-        },
-        {
-          "phase": 4,
-          "name": "rout",
-          "starts_when": "global_morale <= 30 or roman_cavalry_ridge_zone is lost and southern_spur_zone is player-controlled",
-          "behavior": "Roman cavalry tries to escape through main, northern, or southern bridge depending on blocked zones."
-        },
-        {
-          "phase": 5,
-          "name": "bridgehead_last_stand",
-          "starts_when": "roman_ticino_bridgehead is attacked or all escape routes are blocked",
-          "behavior": "Bridgehead infantry forms a final defensive line while remaining cavalry tries to break through."
-        }
-      ],
-      "retreat_route_logic": [
-        {
-          "condition": "main_ticino_bridge not blocked",
-          "route": "main_po_valley_road_to_main_ticino_bridge"
-        },
-        {
-          "condition": "main_ticino_bridge blocked and northern_supply_bridge not blocked",
-          "route": "roman_northern_supply_route_to_northern_supply_bridge"
-        },
-        {
-          "condition": "main_ticino_bridge blocked and southern_fallback_bridge not blocked",
-          "route": "roman_southern_retreat_road_to_southern_fallback_bridge"
-        },
-        {
-          "condition": "all bridges blocked",
-          "route": "fight_to_break_southern_spur_or_bridgehead"
-        }
-      ],
-      "target_priorities": ["isolated_horse_archer", "enemy_healer", "enemy_heavy_cavalry", "units_blocking_escape_route", "nearest_enemy"],
-      "avoidance_rules": {
-        "do_not_chase_far_west_before_phase_3": true,
-        "avoid_southern_channel_if_southern_spur_controlled_by_player": true,
-        "scouts_retreat_below_health_percent": 45,
-        "healer_retreat_below_health_percent": 60
-      }
-    }
-  },
-  "triggered_spawns": [
-    {
-      "id": "roman_center_engagement_support",
-      "trigger": "phase_2_engaged_started",
-      "delay_seconds": 35,
-      "spawns": [
-        { "player_id": 2, "type": "spearman", "x": 170, "z": 74 },
-        { "player_id": 2, "type": "archer", "x": 176, "z": 78 }
-      ],
-      "order": "support_roman_cavalry_ridge"
+      "id": "p1_heavy_cav_02",
+      "type": "horse_swordsman",
+      "x": 52,
+      "z": 66,
+      "player_id": 1
     },
     {
-      "id": "northern_supply_response",
-      "trigger": "player_1_enters_willow_ford_zone_or_northern_supply_bridge_zone",
-      "delay_seconds": 25,
-      "spawns": [
-        { "player_id": 2, "type": "horse_swordsman", "x": 205, "z": 48 },
-        { "player_id": 2, "type": "archer", "x": 212, "z": 44 }
-      ],
-      "order": "defend_northern_supply_bridge"
+      "id": "p1_heavy_cav_03",
+      "type": "horse_swordsman",
+      "x": 56,
+      "z": 72,
+      "player_id": 1
     },
     {
-      "id": "southern_retreat_response",
-      "trigger": "player_1_controls_southern_spur_zone",
-      "delay_seconds": 30,
-      "spawns": [
-        { "player_id": 2, "type": "horse_swordsman", "x": 192, "z": 92 },
-        { "player_id": 2, "type": "spearman", "x": 198, "z": 98 }
-      ],
-      "order": "contest_southern_spur"
+      "id": "p1_heavy_cav_04",
+      "type": "horse_swordsman",
+      "x": 60,
+      "z": 68,
+      "player_id": 1
     },
     {
-      "id": "roman_rout_main_bridge_wave",
-      "trigger": "phase_4_rout_started_and_main_ticino_bridge_open",
-      "delay_seconds": 5,
-      "spawns": [
-        { "player_id": 2, "type": "horse_swordsman", "x": 184, "z": 65 },
-        { "player_id": 2, "type": "horse_swordsman", "x": 190, "z": 64 }
-      ],
-      "order": "escape_to_main_ticino_bridge"
+      "id": "p1_heavy_cav_05",
+      "type": "horse_swordsman",
+      "x": 64,
+      "z": 74,
+      "player_id": 1
     },
     {
-      "id": "roman_rout_northern_escape_wave",
-      "trigger": "phase_4_rout_started_and_main_bridge_blocked_and_northern_supply_bridge_open",
-      "delay_seconds": 8,
-      "spawns": [
-        { "player_id": 2, "type": "horse_swordsman", "x": 184, "z": 54 },
-        { "player_id": 2, "type": "horse_archer", "x": 194, "z": 44 }
-      ],
-      "order": "escape_to_northern_supply_bridge"
+      "id": "p1_numidian_north_01",
+      "type": "horse_archer",
+      "x": 38,
+      "z": 48,
+      "player_id": 1,
+      "description": "Numidian northern screen"
     },
     {
-      "id": "roman_rout_southern_escape_wave",
-      "trigger": "phase_4_rout_started_and_main_bridge_blocked_and_southern_fallback_bridge_open",
-      "delay_seconds": 8,
-      "spawns": [
-        { "player_id": 2, "type": "horse_swordsman", "x": 184, "z": 88 },
-        { "player_id": 2, "type": "horse_swordsman", "x": 192, "z": 92 }
-      ],
-      "order": "escape_to_southern_fallback_bridge"
+      "id": "p1_numidian_north_02",
+      "type": "horse_archer",
+      "x": 44,
+      "z": 43,
+      "player_id": 1
     },
     {
-      "id": "bridgehead_last_stand_guard",
-      "trigger": "phase_5_bridgehead_last_stand_started",
-      "delay_seconds": 12,
-      "spawns": [
-        { "player_id": 2, "type": "spearman", "x": 216, "z": 58 },
-        { "player_id": 2, "type": "spearman", "x": 216, "z": 70 },
-        { "player_id": 2, "type": "archer", "x": 224, "z": 64 }
-      ],
-      "order": "hold_roman_bridgehead_zone"
-    }
-  ],
-  "events": [
-    {
-      "id": "opening_hint",
-      "trigger": "mission_start_plus_6_seconds",
-      "message": "The Roman scouts hold the ridge ahead. Strike their front, ride north through the groves, or send the southern wing to cut off their retreat.",
-      "ping_locations": [[166, 66], [136, 42], [146, 103], [220, 66]]
+      "id": "p1_numidian_north_03",
+      "type": "horse_archer",
+      "x": 51,
+      "z": 39,
+      "player_id": 1
     },
     {
-      "id": "farmstead_taken",
-      "trigger": "player_1_controls_central_farmstead_zone_for_25_seconds",
-      "message": "The farmstead is ours. From here we can read Roman movement toward the bridge roads.",
-      "effects": [
-        { "type": "reveal_area", "center": [176, 72], "radius": 28, "duration_seconds": 120 },
-        { "type": "enable_retreat_direction_warning", "duration_seconds": 180 }
-      ]
+      "id": "p1_numidian_north_04",
+      "type": "horse_archer",
+      "x": 58,
+      "z": 42,
+      "player_id": 1
     },
     {
-      "id": "north_bridge_cut",
-      "trigger": "player_1_controls_northern_supply_bridge_zone_before_phase_4",
-      "message": "The northern supply bridge is blocked. Roman scouts cannot escape that way.",
-      "effects": [
-        { "type": "disable_escape_route", "route": "northern_supply_bridge" },
-        { "type": "morale_damage", "player_id": 2, "amount": 8 }
-      ]
+      "id": "p1_numidian_south_01",
+      "type": "horse_archer",
+      "x": 42,
+      "z": 96,
+      "player_id": 1,
+      "description": "Numidian southern pursuit wing"
     },
     {
-      "id": "southern_spur_held",
-      "trigger": "player_1_controls_southern_spur_zone_for_35_seconds",
-      "message": "The southern spur is held. Roman withdrawal through the irrigation road will be costly.",
-      "effects": [
-        { "type": "slow_escape_route", "route": "southern_fallback_bridge", "percent": 30 },
-        { "type": "reveal_area", "center": [226, 98], "radius": 18, "duration_seconds": 120 }
-      ]
+      "id": "p1_numidian_south_02",
+      "type": "horse_archer",
+      "x": 50,
+      "z": 101,
+      "player_id": 1
     },
     {
-      "id": "roman_controlled_withdrawal",
-      "trigger": "rome_global_morale_below_55_or_bridgehead_threatened",
-      "message": "Roman horns call a withdrawal. Their cavalry is falling back toward the Ticino.",
-      "set_ai_phase": 3,
-      "ping_locations": [[230, 62], [230, 42], [230, 104]]
+      "id": "p1_south_cav_01",
+      "type": "horse_swordsman",
+      "x": 58,
+      "z": 100,
+      "player_id": 1
     },
     {
-      "id": "roman_rout",
-      "trigger": "rome_global_morale_below_30_or_roman_cavalry_ridge_lost_and_southern_spur_held",
-      "message": "The Roman line breaks. Run them down before they reach the bridges.",
-      "set_ai_phase": 4,
-      "effects": [
-        { "type": "start_escape_counter", "allowed_escape_percent_for_decisive_victory": 25 }
-      ]
+      "id": "p1_south_cav_02",
+      "type": "horse_swordsman",
+      "x": 66,
+      "z": 96,
+      "player_id": 1
     },
     {
-      "id": "main_bridge_captured",
-      "trigger": "player_1_controls_roman_bridgehead_zone_for_35_seconds",
-      "message": "The main Ticino bridgehead is ours. Rome's retreat is cut.",
-      "effects": [
-        { "type": "disable_escape_route", "route": "main_ticino_bridge" },
-        { "type": "morale_damage", "player_id": 2, "amount": 15 }
-      ]
+      "id": "p1_camp_guard_spear_01",
+      "type": "spearman",
+      "x": 35,
+      "z": 82,
+      "player_id": 1,
+      "description": "Small infantry camp guard"
     },
     {
-      "id": "baggage_post_captured",
-      "trigger": "roman_baggage_post_captured_or_destroyed",
-      "message": "The Roman baggage is seized. Their withdrawal turns to panic.",
-      "effects": [
-        { "type": "resource", "resource": "food", "amount": 300 },
-        { "type": "resource", "resource": "wood", "amount": 200 },
-        { "type": "morale_damage", "player_id": 2, "amount": 12 }
-      ]
+      "id": "p1_camp_guard_spear_02",
+      "type": "spearman",
+      "x": 39,
+      "z": 86,
+      "player_id": 1
     },
     {
-      "id": "partial_victory_warning",
-      "trigger": "roman_escape_percent_above_25",
-      "message": "Too many Roman riders are reaching the bridge. This will be a victory, but not a decisive one."
-    }
-  ],
-  "rewards": [
-    {
-      "id": "decisive_victory_reward",
-      "trigger": "victory_with_roman_escape_percent_at_or_below_25_and_player_cavalry_survival_at_or_above_50",
-      "effects": [
-        { "type": "campaign_bonus", "bonus": "veteran_cavalry_next_mission" },
-        { "type": "resource", "resource": "food", "amount": 250 }
-      ],
-      "fantasy": "Hannibal's cavalry proves superior and the Romans fail to carry useful intelligence back across the Ticino."
+      "id": "p1_camp_guard_archer_01",
+      "type": "archer",
+      "x": 32,
+      "z": 88,
+      "player_id": 1
     },
     {
-      "id": "bridgehead_reward",
-      "trigger": "roman_ticino_bridgehead_captured",
-      "effects": [
-        { "type": "vision", "area": "ticino_eastern_bank", "duration_seconds": 180 },
-        { "type": "morale_damage", "player_id": 2, "amount": 10 }
-      ],
-      "fantasy": "The river crossing belongs to Carthage."
+      "id": "p1_healer_01",
+      "type": "healer",
+      "x": 28,
+      "z": 74,
+      "player_id": 1
     },
     {
-      "id": "baggage_reward",
-      "trigger": "roman_baggage_post_captured",
-      "effects": [
-        { "type": "resource", "resource": "food", "amount": 300 },
-        { "type": "resource", "resource": "wood", "amount": 200 }
-      ],
-      "fantasy": "Roman supplies feed Hannibal's army."
+      "id": "rome_recon_cav_01",
+      "type": "horse_swordsman",
+      "x": 150,
+      "z": 62,
+      "player_id": 2,
+      "description": "Roman cavalry reconnaissance line"
+    },
+    {
+      "id": "rome_recon_cav_02",
+      "type": "horse_swordsman",
+      "x": 156,
+      "z": 58,
+      "player_id": 2
+    },
+    {
+      "id": "rome_recon_cav_03",
+      "type": "horse_swordsman",
+      "x": 162,
+      "z": 62,
+      "player_id": 2
+    },
+    {
+      "id": "rome_recon_cav_04",
+      "type": "horse_swordsman",
+      "x": 168,
+      "z": 66,
+      "player_id": 2
+    },
+    {
+      "id": "rome_recon_cav_05",
+      "type": "horse_swordsman",
+      "x": 174,
+      "z": 70,
+      "player_id": 2
+    },
+    {
+      "id": "rome_support_spear_01",
+      "type": "spearman",
+      "x": 160,
+      "z": 75,
+      "player_id": 2,
+      "description": "Roman infantry support screen"
+    },
+    {
+      "id": "rome_support_spear_02",
+      "type": "spearman",
+      "x": 166,
+      "z": 78,
+      "player_id": 2
+    },
+    {
+      "id": "rome_support_spear_03",
+      "type": "spearman",
+      "x": 172,
+      "z": 76,
+      "player_id": 2
+    },
+    {
+      "id": "rome_support_sword_01",
+      "type": "swordsman",
+      "x": 166,
+      "z": 84,
+      "player_id": 2
+    },
+    {
+      "id": "rome_support_sword_02",
+      "type": "swordsman",
+      "x": 174,
+      "z": 84,
+      "player_id": 2
+    },
+    {
+      "id": "rome_support_archer_01",
+      "type": "archer",
+      "x": 158,
+      "z": 84,
+      "player_id": 2
+    },
+    {
+      "id": "rome_support_archer_02",
+      "type": "archer",
+      "x": 178,
+      "z": 80,
+      "player_id": 2
+    },
+    {
+      "id": "rome_north_reserve_cav_01",
+      "type": "horse_swordsman",
+      "x": 184,
+      "z": 54,
+      "player_id": 2,
+      "description": "Roman northern reserve"
+    },
+    {
+      "id": "rome_north_reserve_cav_02",
+      "type": "horse_swordsman",
+      "x": 190,
+      "z": 50,
+      "player_id": 2
+    },
+    {
+      "id": "rome_north_reserve_archer_01",
+      "type": "archer",
+      "x": 194,
+      "z": 44,
+      "player_id": 2
+    },
+    {
+      "id": "rome_north_bridge_spear_01",
+      "type": "spearman",
+      "x": 212,
+      "z": 44,
+      "player_id": 2,
+      "description": "Northern supply bridge guard"
+    },
+    {
+      "id": "rome_south_reserve_cav_01",
+      "type": "horse_swordsman",
+      "x": 184,
+      "z": 88,
+      "player_id": 2,
+      "description": "Roman southern reserve near retreat road"
+    },
+    {
+      "id": "rome_south_reserve_cav_02",
+      "type": "horse_swordsman",
+      "x": 192,
+      "z": 92,
+      "player_id": 2
+    },
+    {
+      "id": "rome_south_reserve_spear_01",
+      "type": "spearman",
+      "x": 198,
+      "z": 98,
+      "player_id": 2
+    },
+    {
+      "id": "rome_bridgehead_spear_01",
+      "type": "spearman",
+      "x": 214,
+      "z": 60,
+      "player_id": 2,
+      "description": "Bridgehead guard"
+    },
+    {
+      "id": "rome_bridgehead_spear_02",
+      "type": "spearman",
+      "x": 214,
+      "z": 68,
+      "player_id": 2
+    },
+    {
+      "id": "rome_bridgehead_sword_01",
+      "type": "swordsman",
+      "x": 220,
+      "z": 58,
+      "player_id": 2
+    },
+    {
+      "id": "rome_bridgehead_sword_02",
+      "type": "swordsman",
+      "x": 220,
+      "z": 72,
+      "player_id": 2
+    },
+    {
+      "id": "rome_bridgehead_archer_01",
+      "type": "archer",
+      "x": 228,
+      "z": 62,
+      "player_id": 2
+    },
+    {
+      "id": "rome_bridgehead_healer_01",
+      "type": "healer",
+      "x": 224,
+      "z": 68,
+      "player_id": 2
+    },
+    {
+      "id": "rome_baggage_spear_01",
+      "type": "spearman",
+      "x": 220,
+      "z": 96,
+      "player_id": 2,
+      "description": "Baggage post guard"
+    },
+    {
+      "id": "rome_baggage_sword_01",
+      "type": "swordsman",
+      "x": 226,
+      "z": 104,
+      "player_id": 2
+    },
+    {
+      "id": "rome_baggage_archer_01",
+      "type": "archer",
+      "x": 231,
+      "z": 99,
+      "player_id": 2
     }
   ],
   "firecamps": [
-    { "id": "carthage_main_fire", "x": 30, "z": 78, "intensity": 1.15, "radius": 3.4 },
-    { "id": "carthage_guard_fire", "x": 39, "z": 85, "intensity": 0.95, "radius": 2.8 },
-    { "id": "north_grove_scout_fire", "x": 58, "z": 42, "intensity": 0.55, "radius": 1.9 },
-    { "id": "central_farmstead_fire", "x": 112, "z": 74, "intensity": 0.85, "radius": 2.4 },
-    { "id": "roman_ridge_fire", "x": 166, "z": 66, "intensity": 0.85, "radius": 2.4 },
-    { "id": "willow_ford_watch_fire", "x": 207, "z": 39, "intensity": 0.7, "radius": 2.1 },
-    { "id": "roman_bridgehead_fire", "x": 220, "z": 66, "intensity": 1.15, "radius": 3.4 },
-    { "id": "baggage_hamlet_fire", "x": 226, "z": 98, "intensity": 1.0, "radius": 3.0 },
-    { "id": "southern_ditch_fire", "x": 204, "z": 118, "intensity": 0.55, "radius": 1.8 }
+    {
+      "id": "carthage_main_fire",
+      "x": 30,
+      "z": 78,
+      "intensity": 1.15,
+      "radius": 3.4
+    },
+    {
+      "id": "carthage_guard_fire",
+      "x": 39,
+      "z": 85,
+      "intensity": 0.95,
+      "radius": 2.8
+    },
+    {
+      "id": "north_grove_scout_fire",
+      "x": 58,
+      "z": 42,
+      "intensity": 0.55,
+      "radius": 1.9
+    },
+    {
+      "id": "central_farmstead_fire",
+      "x": 112,
+      "z": 74,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "roman_ridge_fire",
+      "x": 166,
+      "z": 66,
+      "intensity": 0.85,
+      "radius": 2.4
+    },
+    {
+      "id": "willow_ford_watch_fire",
+      "x": 207,
+      "z": 39,
+      "intensity": 0.7,
+      "radius": 2.1
+    },
+    {
+      "id": "roman_bridgehead_fire",
+      "x": 220,
+      "z": 66,
+      "intensity": 1.15,
+      "radius": 3.4
+    },
+    {
+      "id": "baggage_hamlet_fire",
+      "x": 226,
+      "z": 98,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "id": "southern_ditch_fire",
+      "x": 204,
+      "z": 118,
+      "intensity": 0.55,
+      "radius": 1.8
+    }
   ],
   "world_props": [
-    { "id": "carthage_tent_01", "type": "tent", "x": 26, "z": 74, "scale": 1.0, "rotation": 0.4 },
-    { "id": "carthage_tent_02", "type": "tent", "x": 35, "z": 82, "scale": 1.0, "rotation": 2.2 },
-    { "id": "carthage_tent_03", "type": "tent", "x": 28, "z": 84, "scale": 0.85, "rotation": 4.2 },
-    { "id": "carthage_supply_cart_01", "type": "supply_cart", "x": 34, "z": 72, "scale": 1.0, "rotation": 1.1 },
-    { "id": "carthage_supply_cart_02", "type": "supply_cart", "x": 23, "z": 80, "scale": 0.85, "rotation": 5.0 },
-    { "id": "carthage_weapon_rack_01", "type": "weapon_rack", "x": 42, "z": 80, "scale": 1.0, "rotation": 3.0 },
-    { "id": "carthage_weapon_rack_02", "type": "weapon_rack", "x": 36, "z": 88, "scale": 0.8, "rotation": 1.8 },
-
-    { "id": "western_grove_dead_tree_01", "type": "dead_tree", "x": 23, "z": 31, "scale": 1.2, "rotation": 0.6 },
-    { "id": "western_grove_dead_tree_02", "type": "dead_tree", "x": 32, "z": 27, "scale": 1.0, "rotation": 2.3 },
-    { "id": "western_grove_dead_tree_03", "type": "dead_tree", "x": 19, "z": 38, "scale": 1.1, "rotation": 4.1 },
-    { "id": "north_flank_broken_cart", "type": "supply_cart", "x": 72, "z": 32, "scale": 0.9, "rotation": 1.4, "purpose": "marks northern route entrance" },
-    { "id": "north_riparian_dead_tree_01", "type": "dead_tree", "x": 84, "z": 31, "scale": 1.0, "rotation": 2.1 },
-    { "id": "north_riparian_dead_tree_02", "type": "dead_tree", "x": 94, "z": 37, "scale": 0.9, "rotation": 4.5 },
-    { "id": "northern_farm_crossing_cart", "type": "supply_cart", "x": 104, "z": 24, "scale": 0.75, "rotation": 0.2 },
-    { "id": "willow_ford_dead_tree_01", "type": "dead_tree", "x": 174, "z": 30, "scale": 1.0, "rotation": 2.7 },
-    { "id": "willow_ford_dead_tree_02", "type": "dead_tree", "x": 181, "z": 34, "scale": 0.8, "rotation": 5.2 },
-
-    { "id": "central_farm_ruins_01", "type": "ruins", "x": 108, "z": 70, "scale": 1.1, "rotation": 1.2 },
-    { "id": "central_farm_ruins_02", "type": "ruins", "x": 114, "z": 76, "scale": 1.0, "rotation": 3.0 },
-    { "id": "central_farm_ruins_03", "type": "ruins", "x": 110, "z": 79, "scale": 0.9, "rotation": 4.8 },
-    { "id": "central_farm_supply_cart", "type": "supply_cart", "x": 118, "z": 72, "scale": 0.9, "rotation": 2.4 },
-    { "id": "central_farm_dead_tree_01", "type": "dead_tree", "x": 104, "z": 82, "scale": 0.8, "rotation": 2.0 },
-    { "id": "central_copse_dead_tree_01", "type": "dead_tree", "x": 82, "z": 88, "scale": 1.0, "rotation": 1.8 },
-    { "id": "central_copse_dead_tree_02", "type": "dead_tree", "x": 91, "z": 94, "scale": 0.9, "rotation": 3.6 },
-
-    { "id": "roman_ridge_weapon_rack_01", "type": "weapon_rack", "x": 162, "z": 68, "scale": 0.9, "rotation": 4.1 },
-    { "id": "roman_ridge_supply_cart_01", "type": "supply_cart", "x": 170, "z": 64, "scale": 0.85, "rotation": 2.0 },
-    { "id": "roman_ridge_broken_cart_01", "type": "supply_cart", "x": 176, "z": 70, "scale": 0.8, "rotation": 5.6 },
-
-    { "id": "southern_farmland_cart_01", "type": "supply_cart", "x": 86, "z": 103, "scale": 0.9, "rotation": 1.6 },
-    { "id": "southern_irrigation_broken_cart", "type": "supply_cart", "x": 108, "z": 104, "scale": 0.9, "rotation": 0.8 },
-    { "id": "southern_spur_dead_tree_01", "type": "dead_tree", "x": 142, "z": 101, "scale": 0.95, "rotation": 2.5 },
-    { "id": "southern_spur_weapon_rack", "type": "weapon_rack", "x": 151, "z": 106, "scale": 0.8, "rotation": 4.4 },
-    { "id": "retreat_cover_dead_tree_01", "type": "dead_tree", "x": 178, "z": 93, "scale": 1.0, "rotation": 1.5 },
-    { "id": "retreat_cover_dead_tree_02", "type": "dead_tree", "x": 188, "z": 99, "scale": 1.2, "rotation": 3.8 },
-    { "id": "southern_ditch_broken_cart", "type": "supply_cart", "x": 204, "z": 118, "scale": 0.9, "rotation": 2.6 },
-
-    { "id": "northern_supply_tent", "type": "tent", "x": 210, "z": 40, "scale": 0.85, "rotation": 2.2 },
-    { "id": "northern_supply_cart", "type": "supply_cart", "x": 216, "z": 43, "scale": 0.9, "rotation": 1.0 },
-    { "id": "northern_supply_weapon_rack", "type": "weapon_rack", "x": 205, "z": 48, "scale": 0.8, "rotation": 3.9 },
-
-    { "id": "bridgehead_tent_01", "type": "tent", "x": 214, "z": 58, "scale": 1.0, "rotation": 0.7 },
-    { "id": "bridgehead_tent_02", "type": "tent", "x": 217, "z": 74, "scale": 1.0, "rotation": 2.6 },
-    { "id": "bridgehead_tent_03", "type": "tent", "x": 226, "z": 56, "scale": 0.9, "rotation": 4.0 },
-    { "id": "bridgehead_supply_cart_01", "type": "supply_cart", "x": 225, "z": 66, "scale": 1.0, "rotation": 1.5 },
-    { "id": "bridgehead_supply_cart_02", "type": "supply_cart", "x": 212, "z": 65, "scale": 0.85, "rotation": 5.4 },
-    { "id": "bridgehead_weapon_rack_01", "type": "weapon_rack", "x": 211, "z": 70, "scale": 1.0, "rotation": 4.4 },
-    { "id": "bridgehead_weapon_rack_02", "type": "weapon_rack", "x": 224, "z": 72, "scale": 0.9, "rotation": 2.1 },
-
-    { "id": "baggage_supply_cart_01", "type": "supply_cart", "x": 224, "z": 94, "scale": 1.0, "rotation": 0.8 },
-    { "id": "baggage_supply_cart_02", "type": "supply_cart", "x": 231, "z": 103, "scale": 1.0, "rotation": 2.7 },
-    { "id": "baggage_supply_cart_03", "type": "supply_cart", "x": 220, "z": 106, "scale": 0.9, "rotation": 5.1 },
-    { "id": "baggage_tent_01", "type": "tent", "x": 228, "z": 108, "scale": 1.0, "rotation": 5.2 },
-    { "id": "baggage_tent_02", "type": "tent", "x": 222, "z": 100, "scale": 0.85, "rotation": 3.6 },
-    { "id": "baggage_ruins_01", "type": "ruins", "x": 226, "z": 98, "scale": 0.95, "rotation": 0.4 },
-    { "id": "baggage_weapon_rack", "type": "weapon_rack", "x": 232, "z": 96, "scale": 0.85, "rotation": 1.9 }
-  ],
-  "prop_clusters": [
     {
-      "id": "carthage_camp_cluster",
-      "center": [30, 78],
-      "theme": "forward cavalry camp",
-      "props": ["tent", "supply_cart", "weapon_rack", "firecamp"],
-      "density": "medium",
-      "gameplay_role": "safe army staging and route choice start"
+      "id": "carthage_tent_01",
+      "type": "tent",
+      "x": 26,
+      "z": 74,
+      "scale": 1.0,
+      "rotation": 0.4
     },
     {
-      "id": "north_flank_cluster",
-      "center": [88, 34],
-      "theme": "groves and tributary crossing",
-      "props": ["dead_tree", "broken_cart"],
-      "density": "medium",
-      "gameplay_role": "marks light-cavalry flank route"
+      "id": "carthage_tent_02",
+      "type": "tent",
+      "x": 35,
+      "z": 82,
+      "scale": 1.0,
+      "rotation": 2.2
     },
     {
-      "id": "central_farmstead_cluster",
-      "center": [112, 74],
-      "theme": "farmstead ruins",
-      "props": ["ruins", "supply_cart", "dead_tree", "firecamp"],
-      "density": "high",
-      "gameplay_role": "vision and pivot objective"
+      "id": "carthage_tent_03",
+      "type": "tent",
+      "x": 28,
+      "z": 84,
+      "scale": 0.85,
+      "rotation": 4.2
     },
     {
-      "id": "roman_ridge_cluster",
-      "center": [166, 66],
-      "theme": "Roman reconnaissance line",
-      "props": ["weapon_rack", "supply_cart", "broken_cart", "firecamp"],
-      "density": "medium",
-      "gameplay_role": "marks initial enemy strong position"
+      "id": "carthage_supply_cart_01",
+      "type": "supply_cart",
+      "x": 34,
+      "z": 72,
+      "scale": 1.0,
+      "rotation": 1.1
     },
     {
-      "id": "southern_cutoff_cluster",
-      "center": [146, 103],
-      "theme": "irrigation and retreat control",
-      "props": ["dead_tree", "weapon_rack", "broken_cart"],
-      "density": "medium",
-      "gameplay_role": "marks the southern pursuit objective"
+      "id": "carthage_supply_cart_02",
+      "type": "supply_cart",
+      "x": 23,
+      "z": 80,
+      "scale": 0.85,
+      "rotation": 5.0
     },
     {
-      "id": "bridgehead_cluster",
-      "center": [220, 66],
-      "theme": "Roman river camp",
-      "props": ["tent", "supply_cart", "weapon_rack", "firecamp"],
-      "density": "high",
-      "gameplay_role": "primary capture objective and escape route"
+      "id": "carthage_weapon_rack_01",
+      "type": "weapon_rack",
+      "x": 42,
+      "z": 80,
+      "scale": 1.0,
+      "rotation": 3.0
     },
     {
-      "id": "baggage_post_cluster",
-      "center": [226, 98],
-      "theme": "Roman baggage hamlet",
-      "props": ["supply_cart", "tent", "ruins", "weapon_rack", "firecamp"],
-      "density": "high",
-      "gameplay_role": "secondary reward and alternate escape route"
+      "id": "carthage_weapon_rack_02",
+      "type": "weapon_rack",
+      "x": 36,
+      "z": 88,
+      "scale": 0.8,
+      "rotation": 1.8
+    },
+    {
+      "id": "western_grove_dead_tree_01",
+      "type": "dead_tree",
+      "x": 23,
+      "z": 31,
+      "scale": 1.2,
+      "rotation": 0.6
+    },
+    {
+      "id": "western_grove_dead_tree_02",
+      "type": "dead_tree",
+      "x": 32,
+      "z": 27,
+      "scale": 1.0,
+      "rotation": 2.3
+    },
+    {
+      "id": "western_grove_dead_tree_03",
+      "type": "dead_tree",
+      "x": 19,
+      "z": 38,
+      "scale": 1.1,
+      "rotation": 4.1
+    },
+    {
+      "id": "north_flank_broken_cart",
+      "type": "supply_cart",
+      "x": 72,
+      "z": 32,
+      "scale": 0.9,
+      "rotation": 1.4,
+      "purpose": "marks northern route entrance"
+    },
+    {
+      "id": "north_riparian_dead_tree_01",
+      "type": "dead_tree",
+      "x": 84,
+      "z": 31,
+      "scale": 1.0,
+      "rotation": 2.1
+    },
+    {
+      "id": "north_riparian_dead_tree_02",
+      "type": "dead_tree",
+      "x": 94,
+      "z": 37,
+      "scale": 0.9,
+      "rotation": 4.5
+    },
+    {
+      "id": "northern_farm_crossing_cart",
+      "type": "supply_cart",
+      "x": 104,
+      "z": 24,
+      "scale": 0.75,
+      "rotation": 0.2
+    },
+    {
+      "id": "willow_ford_dead_tree_01",
+      "type": "dead_tree",
+      "x": 174,
+      "z": 30,
+      "scale": 1.0,
+      "rotation": 2.7
+    },
+    {
+      "id": "willow_ford_dead_tree_02",
+      "type": "dead_tree",
+      "x": 181,
+      "z": 34,
+      "scale": 0.8,
+      "rotation": 5.2
+    },
+    {
+      "id": "central_farm_ruins_01",
+      "type": "ruins",
+      "x": 108,
+      "z": 70,
+      "scale": 1.1,
+      "rotation": 1.2
+    },
+    {
+      "id": "central_farm_ruins_02",
+      "type": "ruins",
+      "x": 114,
+      "z": 76,
+      "scale": 1.0,
+      "rotation": 3.0
+    },
+    {
+      "id": "central_farm_ruins_03",
+      "type": "ruins",
+      "x": 110,
+      "z": 79,
+      "scale": 0.9,
+      "rotation": 4.8
+    },
+    {
+      "id": "central_farm_supply_cart",
+      "type": "supply_cart",
+      "x": 118,
+      "z": 72,
+      "scale": 0.9,
+      "rotation": 2.4
+    },
+    {
+      "id": "central_farm_dead_tree_01",
+      "type": "dead_tree",
+      "x": 104,
+      "z": 82,
+      "scale": 0.8,
+      "rotation": 2.0
+    },
+    {
+      "id": "central_copse_dead_tree_01",
+      "type": "dead_tree",
+      "x": 82,
+      "z": 88,
+      "scale": 1.0,
+      "rotation": 1.8
+    },
+    {
+      "id": "central_copse_dead_tree_02",
+      "type": "dead_tree",
+      "x": 91,
+      "z": 94,
+      "scale": 0.9,
+      "rotation": 3.6
+    },
+    {
+      "id": "roman_ridge_weapon_rack_01",
+      "type": "weapon_rack",
+      "x": 162,
+      "z": 68,
+      "scale": 0.9,
+      "rotation": 4.1
+    },
+    {
+      "id": "roman_ridge_supply_cart_01",
+      "type": "supply_cart",
+      "x": 170,
+      "z": 64,
+      "scale": 0.85,
+      "rotation": 2.0
+    },
+    {
+      "id": "roman_ridge_broken_cart_01",
+      "type": "supply_cart",
+      "x": 176,
+      "z": 70,
+      "scale": 0.8,
+      "rotation": 5.6
+    },
+    {
+      "id": "southern_farmland_cart_01",
+      "type": "supply_cart",
+      "x": 86,
+      "z": 103,
+      "scale": 0.9,
+      "rotation": 1.6
+    },
+    {
+      "id": "southern_irrigation_broken_cart",
+      "type": "supply_cart",
+      "x": 108,
+      "z": 104,
+      "scale": 0.9,
+      "rotation": 0.8
+    },
+    {
+      "id": "southern_spur_dead_tree_01",
+      "type": "dead_tree",
+      "x": 142,
+      "z": 101,
+      "scale": 0.95,
+      "rotation": 2.5
+    },
+    {
+      "id": "southern_spur_weapon_rack",
+      "type": "weapon_rack",
+      "x": 151,
+      "z": 106,
+      "scale": 0.8,
+      "rotation": 4.4
+    },
+    {
+      "id": "retreat_cover_dead_tree_01",
+      "type": "dead_tree",
+      "x": 178,
+      "z": 93,
+      "scale": 1.0,
+      "rotation": 1.5
+    },
+    {
+      "id": "retreat_cover_dead_tree_02",
+      "type": "dead_tree",
+      "x": 188,
+      "z": 99,
+      "scale": 1.2,
+      "rotation": 3.8
+    },
+    {
+      "id": "southern_ditch_broken_cart",
+      "type": "supply_cart",
+      "x": 204,
+      "z": 118,
+      "scale": 0.9,
+      "rotation": 2.6
+    },
+    {
+      "id": "northern_supply_tent",
+      "type": "tent",
+      "x": 210,
+      "z": 40,
+      "scale": 0.85,
+      "rotation": 2.2
+    },
+    {
+      "id": "northern_supply_cart",
+      "type": "supply_cart",
+      "x": 216,
+      "z": 43,
+      "scale": 0.9,
+      "rotation": 1.0
+    },
+    {
+      "id": "northern_supply_weapon_rack",
+      "type": "weapon_rack",
+      "x": 205,
+      "z": 48,
+      "scale": 0.8,
+      "rotation": 3.9
+    },
+    {
+      "id": "bridgehead_tent_01",
+      "type": "tent",
+      "x": 214,
+      "z": 58,
+      "scale": 1.0,
+      "rotation": 0.7
+    },
+    {
+      "id": "bridgehead_tent_02",
+      "type": "tent",
+      "x": 217,
+      "z": 74,
+      "scale": 1.0,
+      "rotation": 2.6
+    },
+    {
+      "id": "bridgehead_tent_03",
+      "type": "tent",
+      "x": 226,
+      "z": 56,
+      "scale": 0.9,
+      "rotation": 4.0
+    },
+    {
+      "id": "bridgehead_supply_cart_01",
+      "type": "supply_cart",
+      "x": 225,
+      "z": 66,
+      "scale": 1.0,
+      "rotation": 1.5
+    },
+    {
+      "id": "bridgehead_supply_cart_02",
+      "type": "supply_cart",
+      "x": 212,
+      "z": 65,
+      "scale": 0.85,
+      "rotation": 5.4
+    },
+    {
+      "id": "bridgehead_weapon_rack_01",
+      "type": "weapon_rack",
+      "x": 211,
+      "z": 70,
+      "scale": 1.0,
+      "rotation": 4.4
+    },
+    {
+      "id": "bridgehead_weapon_rack_02",
+      "type": "weapon_rack",
+      "x": 224,
+      "z": 72,
+      "scale": 0.9,
+      "rotation": 2.1
+    },
+    {
+      "id": "baggage_supply_cart_01",
+      "type": "supply_cart",
+      "x": 224,
+      "z": 94,
+      "scale": 1.0,
+      "rotation": 0.8
+    },
+    {
+      "id": "baggage_supply_cart_02",
+      "type": "supply_cart",
+      "x": 231,
+      "z": 103,
+      "scale": 1.0,
+      "rotation": 2.7
+    },
+    {
+      "id": "baggage_supply_cart_03",
+      "type": "supply_cart",
+      "x": 220,
+      "z": 106,
+      "scale": 0.9,
+      "rotation": 5.1
+    },
+    {
+      "id": "baggage_tent_01",
+      "type": "tent",
+      "x": 228,
+      "z": 108,
+      "scale": 1.0,
+      "rotation": 5.2
+    },
+    {
+      "id": "baggage_tent_02",
+      "type": "tent",
+      "x": 222,
+      "z": 100,
+      "scale": 0.85,
+      "rotation": 3.6
+    },
+    {
+      "id": "baggage_ruins_01",
+      "type": "ruins",
+      "x": 226,
+      "z": 98,
+      "scale": 0.95,
+      "rotation": 0.4
+    },
+    {
+      "id": "baggage_weapon_rack",
+      "type": "weapon_rack",
+      "x": 232,
+      "z": 96,
+      "scale": 0.85,
+      "rotation": 1.9
     }
   ],
-  "maze_readability": {
-    "principle": "This is not a dense infantry maze. It is a cavalry movement maze: broad lanes, visible cutoffs, soft blockers, and multiple escape routes.",
-    "branches": [
-      {
-        "branch": "center charge",
-        "lure": "open meadow and Roman ridge fire at [166,66]",
-        "leads_to": "quick morale damage and direct bridgehead pressure",
-        "danger": "spear screen and Roman ridge defenders"
-      },
-      {
-        "branch": "north flank",
-        "lure": "dead trees, tributary crossing, and broken cart near [72,32]",
-        "leads_to": "willow ford and northern supply bridge",
-        "danger": "isolated horse archers can be caught by Roman reserve"
-      },
-      {
-        "branch": "farmstead pivot",
-        "lure": "ruins and firecamp at [112,74]",
-        "leads_to": "vision and flexible pivot toward center or south",
-        "danger": "slows the initial attack"
-      },
-      {
-        "branch": "south pursuit",
-        "lure": "irrigation bridge and southern spur at [146,103]",
-        "leads_to": "escape denial and baggage post",
-        "danger": "overcommitting south weakens the main clash"
-      },
-      {
-        "branch": "bridgehead rush",
-        "lure": "main road and Roman camp props at [220,66]",
-        "leads_to": "main escape cutoff",
-        "danger": "Roman cavalry can attack from behind if not routed or screened"
-      }
-    ]
-  },
-  "mission_balance": {
-    "intended_duration_minutes": [14, 24],
-    "intended_difficulty_notes": [
-      "The player should win decisively by controlling routes, not by simply killing every Roman unit in the center.",
-      "The central meadow must remain open enough for cavalry micro and readable dust trails.",
-      "The northern and southern routes are not side decoration; they directly affect Roman escape logic.",
-      "Roman retreat should be readable: horn, ping, dust, and movement toward one of the bridges.",
-      "Bridgehead rush is viable but dangerous if the Roman field force is still intact."
-    ],
-    "recommended_tuning": {
-      "easy": {
-        "roman_morale_break_bonus": 15,
-        "allowed_escape_percent_for_decisive_victory": 40,
-        "remove_spawns": ["rome_support_spear_03", "rome_north_bridge_spear_01", "rome_south_reserve_spear_01"]
-      },
-      "normal": {
-        "use_current_values": true,
-        "allowed_escape_percent_for_decisive_victory": 25
-      },
-      "hard": {
-        "roman_morale_break_penalty": -10,
-        "allowed_escape_percent_for_decisive_victory": 15,
-        "increase_roman_retreat_speed_percent": 10,
-        "increase_patrol_frequency_percent": 15
-      }
-    }
-  },
   "victory": {
-    "type": "custom",
+    "type": "capture_structures",
     "defeat_conditions": [
       "no_commander",
       "only_commander_remaining"
     ],
-    "description": "Defeat the Roman reconnaissance cavalry, prevent the main Roman force from escaping across the Ticino, and capture the bridgehead.",
-    "primary_objectives": [
-      { "id": "rout_roman_cavalry", "description": "Rout the Roman cavalry in the central meadow." },
-      { "id": "cut_roman_retreat", "description": "Cut off the Roman retreat before too many units reach the Ticino bridges." },
-      { "id": "capture_bridgehead", "description": "Capture the Roman bridgehead barracks." }
+    "key_structures": [
+      "barracks"
     ],
-    "secondary_objectives": [
-      { "id": "seize_baggage", "description": "Seize the southern baggage post." },
-      { "id": "preserve_cavalry", "description": "Keep at least half of the Carthaginian cavalry alive." },
-      { "id": "use_northern_route", "description": "Use the northern Numidian route to strike the Roman flank or cut the northern bridge." },
-      { "id": "hold_southern_spur", "description": "Hold the southern spur before the Roman rout begins." }
-    ],
-    "outcomes": [
-      {
-        "id": "decisive_victory",
-        "condition": "roman_ticino_bridgehead_captured_and_roman_escape_percent_at_or_below_25",
-        "message": "Decisive victory: Roman reconnaissance is shattered before it can escape."
-      },
-      {
-        "id": "partial_victory",
-        "condition": "roman_ticino_bridgehead_captured_and_roman_escape_percent_above_25",
-        "message": "Partial victory: the bridgehead falls, but too many Roman riders escape with intelligence."
-      }
-    ],
-    "failure_hint": "If the Roman cavalry escapes across the main Ticino bridge in large numbers, the mission becomes a partial victory instead of a decisive one."
+    "min_count": 1
   },
-  "defeat": {
-    "type": "custom",
-    "conditions": [
-      { "type": "player_has_no_units_and_no_barracks", "player_id": 1 },
-      { "type": "roman_escape_percent_at_or_above_70", "message": "The Roman reconnaissance force escaped across the Ticino." }
-    ]
-  }
+  "starting_resources": {
+    "gold": 300,
+    "food": 200,
+    "wood": 100,
+    "stone": 50,
+    "iron": 150
+  },
+  "undead_zones": [
+    {
+      "id": "ford_shades",
+      "anchor_type": "ruins",
+      "x": 60,
+      "z": 75,
+      "radius": 8.0,
+      "leash_radius": 14.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 2,
+            "grave_priest": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "bridge_watch",
+      "anchor_type": "magic_shrine",
+      "x": 190,
+      "z": 50,
+      "radius": 7.0,
+      "leash_radius": 13.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_archer": 3
+          }
+        }
+      ]
+    }
+  ]
 }

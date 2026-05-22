@@ -22,6 +22,7 @@
 #include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
@@ -80,36 +81,61 @@ void draw_platform(const DrawContext& p,
                    ISubmitter& out,
                    Mesh* unit,
                    Texture* white,
-                   const RomanPalette& c);
+                   const RomanPalette& c,
+                   bool detailed);
+void draw_podium(const DrawContext& p,
+                 ISubmitter& out,
+                 Mesh* unit,
+                 Texture* white,
+                 const RomanPalette& c,
+                 BuildingState state);
 void draw_colonnade(const DrawContext& p,
                     ISubmitter& out,
                     Mesh* unit,
                     Texture* white,
                     const RomanPalette& c,
-                    BuildingState state);
+                    BuildingState state,
+                    bool detailed);
 void draw_terrace(const DrawContext& p,
                   ISubmitter& out,
                   Mesh* unit,
                   Texture* white,
                   const RomanPalette& c,
-                  BuildingState state);
+                  BuildingState state,
+                  bool detailed);
+void draw_roofline(const DrawContext& p,
+                   ISubmitter& out,
+                   Mesh* unit,
+                   Texture* white,
+                   const RomanPalette& c,
+                   BuildingState state,
+                   bool detailed);
 
 auto build_barracks_archetype(BuildingState state,
                               Mesh* unit,
                               Texture* white) -> RenderArchetype {
-  TemplateRecorder recorder;
-  recorder.reset(96);
-
-  DrawContext local_ctx;
-  local_ctx.model = QMatrix4x4{};
   RomanPalette const palette = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+  auto record_variant = [&](TemplateRecorder& recorder, bool detailed) {
+    DrawContext local_ctx;
+    local_ctx.model = QMatrix4x4{};
+    draw_static_structure(local_ctx, recorder);
+    draw_podium(local_ctx, recorder, unit, white, palette, state);
+    draw_platform(local_ctx, recorder, unit, white, palette, detailed);
+    draw_colonnade(local_ctx, recorder, unit, white, palette, state, detailed);
+    draw_terrace(local_ctx, recorder, unit, white, palette, state, detailed);
+    draw_roofline(local_ctx, recorder, unit, white, palette, state, detailed);
+  };
 
-  draw_static_structure(local_ctx, recorder);
-  draw_platform(local_ctx, recorder, unit, white, palette);
-  draw_colonnade(local_ctx, recorder, unit, white, palette, state);
-  draw_terrace(local_ctx, recorder, unit, white, palette, state);
-  return build_building_archetype_from_recorded("roman_barracks",
-                                                recorder.take_commands());
+  TemplateRecorder full_recorder;
+  TemplateRecorder minimal_recorder;
+  full_recorder.reset(144);
+  minimal_recorder.reset(72);
+  record_variant(full_recorder, true);
+  record_variant(minimal_recorder, false);
+  return build_building_archetype_from_recorded_lods("roman_barracks",
+                                                     full_recorder.take_commands(),
+                                                     minimal_recorder.take_commands(),
+                                                     70.0F);
 }
 
 auto barracks_archetype(BuildingState state,
@@ -126,7 +152,25 @@ void draw_platform(const DrawContext& p,
                    ISubmitter& out,
                    Mesh* unit,
                    Texture* white,
-                   const RomanPalette& c) {
+                   const RomanPalette& c,
+                   bool detailed) {
+  if (!detailed) {
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, 0.21F, 0.0F),
+             QVector3D(1.55F, 0.015F, 1.35F),
+             c.terracotta);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, 0.235F, 0.0F),
+             QVector3D(1.42F, 0.012F, 1.22F),
+             c.terracotta_dark);
+    return;
+  }
 
   for (float x = -1.5F; x <= 1.5F; x += 0.35F) {
     for (float z = -1.3F; z <= 1.3F; z += 0.35F) {
@@ -140,6 +184,37 @@ void draw_platform(const DrawContext& p,
                  c.terracotta);
       }
     }
+  }
+}
+
+void draw_podium(const DrawContext& p,
+                 ISubmitter& out,
+                 Mesh* unit,
+                 Texture* white,
+                 const RomanPalette& c,
+                 BuildingState state) {
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 0.06F, 1.64F),
+           QVector3D(0.95F, 0.04F, 0.18F),
+           c.limestone_dark);
+  if (state != BuildingState::Destroyed) {
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, 0.14F, 1.44F),
+             QVector3D(0.78F, 0.04F, 0.16F),
+             c.limestone_shade);
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, 0.22F, 1.24F),
+             QVector3D(0.60F, 0.04F, 0.14F),
+             c.marble);
   }
 }
 
@@ -210,7 +285,8 @@ void draw_colonnade(const DrawContext& p,
                     Mesh* unit,
                     Texture* white,
                     const RomanPalette& c,
-                    BuildingState state) {
+                    BuildingState state,
+                    bool detailed) {
   float const col_height = 1.6F;
   float const col_radius = 0.10F;
   static constexpr float FRONT_COLUMN_SPACING_RANGE = 2.5F;
@@ -224,6 +300,9 @@ void draw_colonnade(const DrawContext& p,
   } else if (state == BuildingState::Destroyed) {
     height_multiplier = 0.4F;
     num_columns = 2;
+  }
+  if (!detailed) {
+    num_columns = std::min(num_columns, 4);
   }
 
   for (int i = 0; i < num_columns; ++i) {
@@ -256,7 +335,7 @@ void draw_colonnade(const DrawContext& p,
              QVector3D(col_radius * 1.5F, 0.08F, col_radius * 1.5F),
              c.marble);
 
-    if (state != BuildingState::Destroyed) {
+    if (state != BuildingState::Destroyed && detailed) {
       draw_box(out,
                unit,
                white,
@@ -267,7 +346,7 @@ void draw_colonnade(const DrawContext& p,
     }
   }
 
-  int side_columns = (state == BuildingState::Destroyed) ? 2 : 3;
+  int const side_columns = (state == BuildingState::Destroyed) ? 2 : (detailed ? 3 : 2);
   for (int i = 0; i < side_columns; ++i) {
     float const z = -1.0F + float(i) * (side_columns > 1 ? SIDE_COLUMN_SPACING_RANGE /
                                                                (side_columns - 1)
@@ -326,7 +405,8 @@ void draw_terrace(const DrawContext& p,
                   Mesh* unit,
                   Texture* white,
                   const RomanPalette& c,
-                  BuildingState state) {
+                  BuildingState state,
+                  bool detailed) {
 
   if (state == BuildingState::Destroyed) {
     return;
@@ -353,7 +433,7 @@ void draw_terrace(const DrawContext& p,
            white,
            p.model,
            QVector3D(0.0F, 2.18F, -0.2F),
-           QVector3D(1.5F, 0.04F, 1.0F),
+           QVector3D(detailed ? 1.5F : 1.38F, 0.04F, detailed ? 1.0F : 0.92F),
            c.terracotta);
 
   draw_box(out,
@@ -364,7 +444,7 @@ void draw_terrace(const DrawContext& p,
            QVector3D(1.45F, 0.06F, 0.05F),
            c.limestone);
 
-  for (float x : {-1.4F, 1.4F}) {
+  for (float const x : {-1.4F, 1.4F}) {
     draw_box(out,
              unit,
              white,
@@ -372,6 +452,86 @@ void draw_terrace(const DrawContext& p,
              QVector3D(x, 2.35F, -0.65F),
              QVector3D(0.08F, 0.08F, 0.08F),
              c.gold);
+  }
+}
+
+void draw_roofline(const DrawContext& p,
+                   ISubmitter& out,
+                   Mesh* unit,
+                   Texture* white,
+                   const RomanPalette& c,
+                   BuildingState state,
+                   bool detailed) {
+  if (state == BuildingState::Destroyed) {
+    return;
+  }
+
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, detailed ? 2.26F : 2.22F, 1.24F),
+           QVector3D(detailed ? 1.18F : 0.96F, 0.04F, 0.14F),
+           c.limestone_shade);
+
+  if (detailed) {
+    add_tile_rows_z(
+        [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
+          draw_box(out,
+                   unit,
+                   white,
+                   p.model,
+                   center + QVector3D(0.0F, 0.0F, 0.18F),
+                   size,
+                   color);
+        },
+        2.34F,
+        -0.58F,
+        0.54F,
+        0.28F,
+        QVector3D(1.34F, 0.025F, 0.05F),
+        c.terracotta_dark);
+  }
+
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 2.42F, 1.10F),
+           QVector3D(detailed ? 0.84F : 0.66F, 0.05F, 0.06F),
+           c.terracotta);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, state == BuildingState::Damaged ? 2.48F : 2.52F, 0.98F),
+           QVector3D(state == BuildingState::Damaged ? 0.46F : 0.58F, 0.05F, 0.05F),
+           c.terracotta_dark);
+
+  if (state == BuildingState::Normal) {
+    draw_box(out,
+             unit,
+             white,
+             p.model,
+             QVector3D(0.0F, 2.60F, 0.88F),
+             QVector3D(detailed ? 0.30F : 0.22F, 0.05F, 0.04F),
+             c.blue_accent);
+    if (detailed) {
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(-0.82F, 2.44F, 1.12F),
+               QVector3D(0.05F, 0.07F, 0.05F),
+               c.gold);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(0.82F, 2.44F, 1.12F),
+               QVector3D(0.05F, 0.07F, 0.05F),
+               c.gold);
+    }
   }
 }
 
@@ -413,26 +573,29 @@ void draw_rally_flag(const DrawContext& p,
                      Texture* white,
                      const RomanPalette& c,
                      const BarracksFlagRenderer::ClothBannerResources* cloth) {
-  BarracksFlagRenderer::FlagColors colors{.team = c.team,
-                                          .team_trim = c.team_trim,
-                                          .timber = c.cedar,
-                                          .timber_light = c.limestone,
-                                          .wood_dark = c.cedar_dark};
+  BarracksFlagRenderer::FlagColors const colors{.team = c.team,
+                                                .team_trim = c.team_trim,
+                                                .timber = c.cedar,
+                                                .timber_light = c.limestone,
+                                                .wood_dark = c.cedar_dark};
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors, cloth);
 }
 
 void draw_barracks(const DrawContext& p, ISubmitter& out) {
-  if (!p.resources || !p.entity) {
+  if ((p.resources == nullptr) || (p.entity == nullptr)) {
     return;
   }
 
   auto* t = p.entity->get_component<Engine::Core::TransformComponent>();
   auto* r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if (!t || !r) {
+  if ((t == nullptr) || (r == nullptr)) {
     return;
   }
 
   Mesh* unit = p.resources->unit();
+  if (unit == nullptr) {
+    unit = get_unit_cube();
+  }
   Texture* white = p.resources->white();
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
   RomanPalette const c = make_palette(team);

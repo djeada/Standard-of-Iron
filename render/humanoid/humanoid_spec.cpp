@@ -78,8 +78,8 @@ constexpr auto make_full_chest() noexcept -> Creature::PrimitiveInstance {
   p.params.anchor_bone = bone(HumanoidBone::Chest);
   p.params.tail_bone = bone(HumanoidBone::Chest);
   p.params.tail_offset = QVector3D(0.0F, -0.17F, 0.0F);
-  p.params.radius = HP::TORSO_TOP_R * 0.98F;
-  p.params.depth_radius = HP::TORSO_TOP_R * 0.74F;
+  p.params.radius = HP::TORSO_TOP_R * 0.78F;
+  p.params.depth_radius = HP::TORSO_TOP_R * 0.58F;
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -90,10 +90,10 @@ constexpr auto make_full_pectoral(bool left) noexcept -> Creature::PrimitiveInst
   p.debug_name = left ? "humanoid_full_pectoral_l" : "humanoid_full_pectoral_r";
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Chest);
-  float const x = left ? -HP::TORSO_TOP_R * 0.56F : HP::TORSO_TOP_R * 0.56F;
-  p.params.head_offset = QVector3D(x, -0.05F, HP::TORSO_TOP_R * 0.40F);
+  float const x = left ? -HP::TORSO_TOP_R * 0.42F : HP::TORSO_TOP_R * 0.42F;
+  p.params.head_offset = QVector3D(x, -0.04F, HP::TORSO_TOP_R * 0.26F);
   p.params.half_extents = QVector3D(
-      HP::TORSO_TOP_R * 0.48F, HP::TORSO_TOP_R * 0.32F, HP::TORSO_TOP_R * 0.22F);
+      HP::TORSO_TOP_R * 0.28F, HP::TORSO_TOP_R * 0.20F, HP::TORSO_TOP_R * 0.12F);
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -104,9 +104,9 @@ constexpr auto make_full_upper_back() noexcept -> Creature::PrimitiveInstance {
   p.debug_name = "humanoid_full_upper_back";
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(HumanoidBone::Chest);
-  p.params.head_offset = QVector3D(0.0F, -0.05F, -HP::TORSO_TOP_R * 0.48F);
+  p.params.head_offset = QVector3D(0.0F, -0.04F, -HP::TORSO_TOP_R * 0.40F);
   p.params.half_extents = QVector3D(
-      HP::TORSO_TOP_R * 0.84F, HP::TORSO_TOP_R * 0.44F, HP::TORSO_TOP_R * 0.22F);
+      HP::TORSO_TOP_R * 0.64F, HP::TORSO_TOP_R * 0.34F, HP::TORSO_TOP_R * 0.16F);
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -160,7 +160,7 @@ constexpr auto make_full_deltoid(bool left) noexcept -> Creature::PrimitiveInsta
   p.shape = Creature::PrimitiveShape::OrientedSphere;
   p.params.anchor_bone = bone(left ? HumanoidBone::ShoulderL : HumanoidBone::ShoulderR);
   p.params.head_offset = QVector3D(0.0F, 0.0F, 0.0F);
-  float const r = HP::UPPER_ARM_R * 1.75F;
+  float const r = HP::UPPER_ARM_R * 1.45F;
   p.params.half_extents = QVector3D(r, r * 0.84F, r * 0.96F);
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;

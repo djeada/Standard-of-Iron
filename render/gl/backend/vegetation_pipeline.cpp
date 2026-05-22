@@ -747,9 +747,9 @@ void VegetationPipeline::initialize_olive_pipeline() {
   constexpr float k_two_pi = 6.28318530718F;
 
   std::vector<OliveVertex> vertices;
-  vertices.reserve(k_segments * 56);
+  vertices.reserve(k_segments * 96);
   std::vector<unsigned short> indices;
-  indices.reserve(k_segments * 6 * 56);
+  indices.reserve(k_segments * 6 * 96);
 
   auto add_ring = [&](float radius,
                       float y,
@@ -795,65 +795,151 @@ void VegetationPipeline::initialize_olive_pipeline() {
     }
   };
 
-  int const t0 = add_ring(0.14F, 0.00F, -0.2F, 0.00F);
-  int const t1 = add_ring(0.12F, 0.08F, 0.0F, 0.06F);
-  int const t2 = add_ring(0.09F, 0.15F, 0.1F, 0.12F);
+  int const t0 = add_ring(0.14F, 0.00F, -0.22F, 0.00F, QVector2D(-0.010F, 0.000F));
+  int const t1 = add_ring(0.13F, 0.09F, -0.05F, 0.07F, QVector2D(0.008F, -0.010F));
+  int const t2 = add_ring(0.11F, 0.18F, 0.08F, 0.14F, QVector2D(0.022F, 0.004F));
+  int const t3 = add_ring(0.085F, 0.28F, 0.20F, 0.22F, QVector2D(0.016F, 0.024F));
+  int const t4 = add_ring(0.065F, 0.36F, 0.34F, 0.29F, QVector2D(0.006F, 0.038F));
   connect_rings(t0, t1);
   connect_rings(t1, t2);
+  connect_rings(t2, t3);
+  connect_rings(t3, t4);
 
   auto add_branch = [&](float dir_x,
                         float dir_z,
+                        const QVector2D& base_offset,
                         float base_y,
                         float length,
+                        float rise,
                         float branch_r,
                         float leaf_r,
-                        float v_start) {
+                        float v_start,
+                        float lateral_bias) {
     float const len = std::sqrt(dir_x * dir_x + dir_z * dir_z);
     dir_x /= len;
     dir_z /= len;
 
-    float const rise = 0.5F;
-    float const dx = dir_x * std::cos(0.5F);
-    float const dz = dir_z * std::cos(0.5F);
-    float const dy = std::sin(0.4F);
+    QVector2D const dir(dir_x, dir_z);
+    QVector2D const ortho(-dir_z, dir_x);
 
-    int const b0 = add_ring(branch_r, base_y, 0.0F, v_start);
+    int const b0 = add_ring(branch_r, base_y, 0.08F, v_start, base_offset);
 
     float const mid_dist = length * 0.5F;
-    QVector2D const mid_offset(dx * mid_dist, dz * mid_dist);
+    QVector2D const mid_offset =
+        base_offset + dir * mid_dist + ortho * (leaf_r * 0.16F * lateral_bias);
     int const b1 = add_ring(
-        branch_r * 0.6F, base_y + dy * mid_dist, 0.3F, v_start + 0.1F, mid_offset);
+        branch_r * 0.72F, base_y + rise * 0.48F, 0.26F, v_start + 0.08F, mid_offset);
 
     float const tip_dist = length;
-    QVector2D const tip_offset(dx * tip_dist, dz * tip_dist);
-    float const tip_y = base_y + dy * tip_dist;
-    int const b2 = add_ring(branch_r * 0.3F, tip_y, 0.5F, v_start + 0.2F, tip_offset);
+    QVector2D const tip_offset =
+        base_offset + dir * tip_dist + ortho * (leaf_r * 0.26F * lateral_bias);
+    float const tip_y = base_y + rise;
+    int const b2 =
+        add_ring(branch_r * 0.42F, tip_y, 0.48F, v_start + 0.18F, tip_offset);
 
     connect_rings(b0, b1);
     connect_rings(b1, b2);
 
-    float const ly = tip_y - leaf_r * 0.28F;
-    int const l0 = add_ring(leaf_r * 0.42F, ly, -0.5F, 0.50F, tip_offset);
-    int const l1 =
-        add_ring(leaf_r * 0.95F, ly + leaf_r * 0.26F, -0.1F, 0.62F, tip_offset);
-    int const l2 =
-        add_ring(leaf_r * 1.05F, ly + leaf_r * 0.54F, 0.2F, 0.76F, tip_offset);
-    int const l3 =
-        add_ring(leaf_r * 0.72F, ly + leaf_r * 0.82F, 0.6F, 0.91F, tip_offset);
+    QVector2D const crown_shift = ortho * (leaf_r * 0.18F * lateral_bias);
+    float const ly = tip_y - leaf_r * 0.22F;
+    int const l0 =
+        add_ring(leaf_r * 0.30F, ly, -0.58F, 0.52F, tip_offset - crown_shift * 0.15F);
+    int const l1 = add_ring(leaf_r * 0.68F,
+                            ly + leaf_r * 0.16F,
+                            -0.18F,
+                            0.64F,
+                            tip_offset + crown_shift * 0.20F);
+    int const l2 = add_ring(leaf_r * 0.90F,
+                            ly + leaf_r * 0.38F,
+                            0.14F,
+                            0.78F,
+                            tip_offset + crown_shift * 0.58F);
+    int const l3 = add_ring(
+        leaf_r * 0.76F, ly + leaf_r * 0.62F, 0.50F, 0.92F, tip_offset + crown_shift);
+    int const l4 = add_ring(leaf_r * 0.40F,
+                            ly + leaf_r * 0.86F,
+                            0.84F,
+                            1.02F,
+                            tip_offset + crown_shift * 0.56F);
 
     connect_rings(b2, l0);
     connect_rings(l0, l1);
     connect_rings(l1, l2);
     connect_rings(l2, l3);
-    add_cap(l3, ly + leaf_r * 1.0F, tip_offset, 1.0F);
+    connect_rings(l3, l4);
+    add_cap(l4, ly + leaf_r * 1.02F, tip_offset + crown_shift * 0.34F, 1.10F);
   };
 
-  add_branch(0.8F, 0.3F, 0.14F, 0.32F, 0.025F, 0.20F, 0.18F);
-  add_branch(-0.7F, 0.5F, 0.15F, 0.34F, 0.022F, 0.22F, 0.20F);
-  add_branch(0.4F, -0.9F, 0.16F, 0.31F, 0.020F, 0.18F, 0.22F);
-  add_branch(-0.5F, -0.7F, 0.14F, 0.36F, 0.024F, 0.21F, 0.19F);
-  add_branch(0.95F, -0.25F, 0.17F, 0.24F, 0.018F, 0.17F, 0.24F);
-  add_branch(-0.2F, 0.95F, 0.16F, 0.25F, 0.018F, 0.18F, 0.23F);
+  add_branch(0.92F,
+             0.22F,
+             QVector2D(0.020F, 0.030F),
+             0.26F,
+             0.36F,
+             0.30F,
+             0.030F,
+             0.19F,
+             0.30F,
+             0.60F);
+  add_branch(-0.72F,
+             0.58F,
+             QVector2D(0.006F, 0.036F),
+             0.30F,
+             0.34F,
+             0.28F,
+             0.026F,
+             0.21F,
+             0.32F,
+             -0.54F);
+  add_branch(0.42F,
+             -0.91F,
+             QVector2D(0.016F, 0.028F),
+             0.28F,
+             0.33F,
+             0.27F,
+             0.024F,
+             0.18F,
+             0.34F,
+             0.42F);
+  add_branch(-0.55F,
+             -0.76F,
+             QVector2D(0.012F, 0.022F),
+             0.25F,
+             0.39F,
+             0.31F,
+             0.027F,
+             0.20F,
+             0.28F,
+             -0.36F);
+  add_branch(0.98F,
+             -0.08F,
+             QVector2D(0.014F, 0.040F),
+             0.34F,
+             0.24F,
+             0.24F,
+             0.018F,
+             0.16F,
+             0.38F,
+             0.28F);
+  add_branch(-0.08F,
+             1.0F,
+             QVector2D(0.008F, 0.044F),
+             0.36F,
+             0.22F,
+             0.23F,
+             0.018F,
+             0.15F,
+             0.40F,
+             -0.20F);
+  add_branch(0.18F,
+             0.98F,
+             QVector2D(-0.004F, 0.046F),
+             0.38F,
+             0.20F,
+             0.22F,
+             0.016F,
+             0.14F,
+             0.42F,
+             0.16F);
 
   m_olive_vertex_count = static_cast<GLsizei>(vertices.size());
   m_olive_index_count = static_cast<GLsizei>(indices.size());

@@ -137,33 +137,33 @@
         "barracks"
       ],
       "min_count": 2,
-      "description": "Capture both Roman field camps after closing the trap"
+      "description": "Seize both Roman camps. The ambush is not finished until their flags come down."
     }
   ],
   "defeat_conditions": [
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Do not lose your command camp"
+      "description": "Your camp falls — the field goes with it."
     },
     {
       "type": "lose_all_units",
-      "description": "Do not lose all your units"
+      "description": "Every soldier lost is counted by the enemy tonight."
     },
     {
       "type": "lose_commander",
-      "description": "Do not lose your commander"
+      "description": "The commander falls — and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
-      "description": "Do not leave only your commander alive without troops or barracks"
+      "description": "A general alone on a dead field is just the last corpse standing."
     }
   ],
   "optional_objectives": [
     {
       "type": "wave_count",
       "wave_count": 2,
-      "description": "Break two Roman breakout waves before they escape the corridor"
+      "description": "Crush both Roman breakout columns before they claw through the hillside."
     }
   ],
   "events": [
@@ -203,5 +203,6 @@
         }
       ]
     }
-  ]
+  ],
+  "theme": "Legions march in column through the shoreline corridor — and the hills swallow them whole."
 }

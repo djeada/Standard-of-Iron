@@ -37,6 +37,7 @@ struct LevelSnapshot {
   Game::Map::RainSettings rain;
   std::uint32_t biome_seed = 0;
   Game::Map::LightingSettings lighting;
+  ResourceAmounts starting_resources{};
 };
 
 struct RuntimeSnapshot {

@@ -1,6 +1,6 @@
 #include <QComboBox>
-#include <gtest/gtest.h>
 
+#include <gtest/gtest.h>
 #include <vector>
 
 #include "game/systems/nation_registry.h"

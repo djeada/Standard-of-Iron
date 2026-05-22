@@ -114,6 +114,7 @@ add_library(render_gl STATIC
     entity/combat_dust_renderer.cpp
     entity/building_archetype_desc.cpp
     entity/building_render_common.cpp
+    entity/wall_renderer_common.cpp
     entity/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
     entity/nations/carthage/barracks_renderer.cpp

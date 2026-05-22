@@ -23,6 +23,7 @@ inline constexpr const char* rain = Game::Map::JsonKeys::RAIN;
 inline constexpr const char* thumbnail = Game::Map::JsonKeys::THUMBNAIL;
 inline constexpr const char* world_props = Game::Map::JsonKeys::WORLD_PROPS;
 inline constexpr const char* time_of_day = Game::Map::JsonKeys::TIME_OF_DAY;
+inline constexpr const char* undead_zones = Game::Map::JsonKeys::UNDEAD_ZONES;
 
 inline constexpr const char* type = Game::Map::JsonKeys::TYPE;
 inline constexpr const char* x = Game::Map::JsonKeys::X;

@@ -1560,6 +1560,42 @@ TEST(HumanoidPrepare, MovingCombatSelectionProducesUpperBodyOverlay) {
   EXPECT_GT(selection.upper_body_overlay.weight, 0.7F);
 }
 
+TEST(HumanoidPrepare, CombatAttackEmphasisScalesUpperBodyOverlayWeight) {
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::CombatVisualTransactionPhase;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/emphasis_overlay_selection";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.inputs.combat_visual.authoritative = true;
+  anim.inputs.combat_visual.active = true;
+  anim.inputs.combat_visual.prioritize_action_over_locomotion = true;
+  anim.inputs.combat_visual.is_melee = true;
+  anim.inputs.combat_visual.phase = CombatVisualTransactionPhase::Anticipation;
+  anim.inputs.combat_visual.phase_progress = 0.5F;
+  anim.inputs.combat_visual.attack_family = Engine::Core::CombatAttackFamily::Sword;
+
+  anim.inputs.combat_visual.attack_emphasis = 0.75F;
+  auto const restrained = resolve_humanoid_animation_selection(spec, anim, 29U);
+
+  anim.inputs.combat_visual.attack_emphasis = 1.18F;
+  auto const forceful = resolve_humanoid_animation_selection(spec, anim, 29U);
+
+  ASSERT_TRUE(restrained.upper_body_overlay.active());
+  ASSERT_TRUE(forceful.upper_body_overlay.active());
+  EXPECT_GT(forceful.upper_body_overlay.weight,
+            restrained.upper_body_overlay.weight + 0.15F);
+}
+
 TEST(HumanoidPrepare, ExitBlendSelectionCarriesFullBodyOutgoingClip) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::ArchetypeRegistry;

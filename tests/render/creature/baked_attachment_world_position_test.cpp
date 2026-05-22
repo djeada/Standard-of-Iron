@@ -15,14 +15,20 @@
 #include "render/equipment/armor/roman_shoulder_cover.h"
 #include "render/equipment/armor/shoulder_cover_archetype.h"
 #include "render/equipment/equipment_submit.h"
+#include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/helmets/carthage_light_helmet.h"
+#include "render/equipment/helmets/headwrap.h"
+#include "render/equipment/helmets/roman_heavy_helmet.h"
+#include "render/equipment/helmets/roman_light_helmet.h"
 #include "render/equipment/humanoid_attachment_archetype.h"
+#include "render/equipment/weapons/bow_renderer.h"
 #include "render/equipment/weapons/roman_scutum.h"
 #include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/shield_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/humanoid_specs.h"
 #include "render/render_archetype.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/static_attachment_spec.h"
@@ -198,6 +204,198 @@ TEST(BakedAttachmentWorldPosition, CarthageLightHelmetMatchesLegacySubmit) {
           k_head_bone,
           k_base_role,
           bone_world),
+  };
+
+  std::array<Render::Creature::BoneWorldMatrix, 1> bind{bone_world};
+
+  Render::Creature::BakeInput input{};
+  input.bind_pose = bind;
+  input.attachments = k_attachments;
+  const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
+  ASSERT_FALSE(baked.vertices.empty());
+
+  const AABB bake = baked_aabb(baked);
+
+  expect_aabb_close(legacy, bake, 1e-3F);
+}
+
+TEST(BakedAttachmentWorldPosition, CarthageHeavyHelmetMatchesLegacySubmit) {
+  const auto frame = make_test_head_frame();
+  const QMatrix4x4 bone_world = bone_matrix_from_frame(frame);
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames frames{};
+  frames.head = frame;
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 8);
+  Render::GL::CarthageHeavyHelmetRenderer::submit(
+      Render::GL::CarthageHeavyHelmetConfig{},
+      ctx,
+      frames,
+      palette,
+      anim,
+      legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty())
+      << "renderer must emit at least one archetype prim";
+
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
+
+  constexpr std::uint16_t k_head_bone = 0;
+  constexpr std::uint8_t k_base_role = 0;
+  const std::array<Render::Creature::StaticAttachmentSpec, 6> k_attachments{
+      Render::GL::carthage_heavy_helmet_make_static_attachment(
+          Render::GL::carthage_heavy_helmet_shell_archetype(),
+          k_head_bone,
+          k_base_role,
+          bone_world),
+      Render::GL::carthage_heavy_helmet_make_static_attachment(
+          Render::GL::carthage_heavy_helmet_neck_guard_archetype(),
+          k_head_bone,
+          k_base_role,
+          bone_world),
+      Render::GL::carthage_heavy_helmet_make_static_attachment(
+          Render::GL::carthage_heavy_helmet_cheek_guards_archetype(),
+          k_head_bone,
+          k_base_role,
+          bone_world),
+      Render::GL::carthage_heavy_helmet_make_static_attachment(
+          Render::GL::carthage_heavy_helmet_face_plate_archetype(),
+          k_head_bone,
+          k_base_role,
+          bone_world),
+      Render::GL::carthage_heavy_helmet_make_static_attachment(
+          Render::GL::carthage_heavy_helmet_crest_archetype(),
+          k_head_bone,
+          k_base_role,
+          bone_world),
+      Render::GL::carthage_heavy_helmet_make_static_attachment(
+          Render::GL::carthage_heavy_helmet_rivets_archetype(),
+          k_head_bone,
+          k_base_role,
+          bone_world),
+  };
+
+  std::array<Render::Creature::BoneWorldMatrix, 1> bind{bone_world};
+
+  Render::Creature::BakeInput input{};
+  input.bind_pose = bind;
+  input.attachments = k_attachments;
+  const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
+  ASSERT_FALSE(baked.vertices.empty());
+
+  const AABB bake = baked_aabb(baked);
+
+  expect_aabb_close(legacy, bake, 1e-3F);
+}
+
+TEST(BakedAttachmentWorldPosition, RomanHeavyHelmetMatchesLegacySubmit) {
+  const auto frame = make_test_head_frame();
+  const QMatrix4x4 bone_world = bone_matrix_from_frame(frame);
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames frames{};
+  frames.head = frame;
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 2);
+  Render::GL::RomanHeavyHelmetRenderer::submit(
+      Render::GL::RomanHeavyHelmetConfig{}, ctx, frames, palette, anim, legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty())
+      << "renderer must emit at least one archetype prim";
+
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
+
+  constexpr std::uint16_t k_head_bone = 0;
+  constexpr std::uint8_t k_base_role = 0;
+  const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
+      Render::GL::roman_heavy_helmet_make_static_attachment(
+          k_head_bone, k_base_role, bone_world),
+  };
+
+  std::array<Render::Creature::BoneWorldMatrix, 1> bind{bone_world};
+
+  Render::Creature::BakeInput input{};
+  input.bind_pose = bind;
+  input.attachments = k_attachments;
+  const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
+  ASSERT_FALSE(baked.vertices.empty());
+
+  const AABB bake = baked_aabb(baked);
+
+  expect_aabb_close(legacy, bake, 1e-3F);
+}
+
+TEST(BakedAttachmentWorldPosition, RomanLightHelmetMatchesLegacySubmit) {
+  const auto frame = make_test_head_frame();
+  const QMatrix4x4 bone_world = bone_matrix_from_frame(frame);
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames frames{};
+  frames.head = frame;
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 2);
+  Render::GL::RomanLightHelmetRenderer::submit(
+      Render::GL::RomanLightHelmetConfig{}, ctx, frames, palette, anim, legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty())
+      << "renderer must emit at least one archetype prim";
+
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
+
+  constexpr std::uint16_t k_head_bone = 0;
+  constexpr std::uint8_t k_base_role = 0;
+  const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
+      Render::GL::roman_light_helmet_make_static_attachment(
+          k_head_bone, k_base_role, bone_world),
+  };
+
+  std::array<Render::Creature::BoneWorldMatrix, 1> bind{bone_world};
+
+  Render::Creature::BakeInput input{};
+  input.bind_pose = bind;
+  input.attachments = k_attachments;
+  const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
+  ASSERT_FALSE(baked.vertices.empty());
+
+  const AABB bake = baked_aabb(baked);
+
+  expect_aabb_close(legacy, bake, 1e-3F);
+}
+
+TEST(BakedAttachmentWorldPosition, HeadwrapMatchesLegacySubmit) {
+  const auto frame = make_test_head_frame();
+  const QMatrix4x4 bone_world = bone_matrix_from_frame(frame);
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames frames{};
+  frames.head = frame;
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 4);
+  Render::GL::HeadwrapRenderer::submit(
+      Render::GL::HeadwrapConfig{}, ctx, frames, palette, anim, legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty())
+      << "renderer must emit at least one archetype prim";
+
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
+
+  constexpr std::uint16_t k_head_bone = 0;
+  constexpr std::uint8_t k_base_role = 0;
+  const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
+      Render::GL::headwrap_make_static_attachment(k_head_bone, k_base_role, bone_world),
   };
 
   std::array<Render::Creature::BoneWorldMatrix, 1> bind{bone_world};
@@ -478,6 +676,42 @@ TEST(BakedAttachmentWorldPosition, GenericSwordUsesGripSocketPose) {
       std::span<const Render::Creature::BoneWorldMatrix>(bind.data(), bind.size()));
   EXPECT_GT(baked_world.extents().y(), baked_world.extents().z() * 2.0F);
   EXPECT_GT(baked_world.extents().y(), baked_world.extents().x());
+}
+
+TEST(BakedAttachmentWorldPosition, BowUsesGripSocketPose) {
+  const auto& bind_palette = Render::Humanoid::humanoid_bind_palette();
+
+  Render::GL::BowRenderConfig bow_cfg;
+  bow_cfg.bow_top_y = Render::GL::HumanProportions::SHOULDER_Y + 0.55F;
+  bow_cfg.bow_bot_y = Render::GL::HumanProportions::WAIST_Y - 0.25F;
+  bow_cfg.bow_depth = 0.22F;
+  bow_cfg.bow_forward_offset = -0.24F;
+
+  Render::GL::DrawContext ctx;
+  ctx.model = QMatrix4x4{};
+  Render::GL::BodyFrames const frames = Render::Humanoid::humanoid_bind_body_frames();
+  Render::GL::HumanoidPalette const palette{};
+  Render::GL::HumanoidAnimationContext const anim{};
+
+  Render::GL::EquipmentBatch legacy_batch;
+  legacy_batch.reserve(0, 0, 8);
+  Render::GL::BowRenderer::submit(bow_cfg, ctx, frames, palette, anim, legacy_batch);
+  ASSERT_FALSE(legacy_batch.archetypes.empty());
+  const AABB legacy = legacy_archetype_aabb(legacy_batch);
+
+  constexpr std::uint8_t k_base_role = 0;
+  const auto attachments =
+      Render::GL::bow_make_static_attachments(bow_cfg, k_base_role);
+  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::k_bone_count> bind{};
+  std::copy(bind_palette.begin(), bind_palette.end(), bind.begin());
+  Render::Creature::BakeInput input{};
+  input.bind_pose = bind;
+  input.attachments = attachments;
+  const auto baked = Render::Creature::bake_rigged_mesh_cpu(input);
+  ASSERT_FALSE(baked.vertices.empty());
+
+  const AABB bake = baked_aabb(baked);
+  expect_aabb_close(legacy, bake, 1e-3F);
 }
 
 } // namespace

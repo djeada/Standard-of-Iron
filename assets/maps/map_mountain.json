@@ -13,24 +13,61 @@
     "seed": 24611,
     "patch_density": 3.1,
     "patch_jitter": 0.82,
-    "blade_height": [0.5, 1.3],
-    "blade_width": [0.025, 0.055],
+    "blade_height": [
+      0.5,
+      1.3
+    ],
+    "blade_width": [
+      0.025,
+      0.055
+    ],
     "sway_strength": 0.22,
     "sway_speed": 1.15,
-    "height_noise": [0.22, 0.08],
-    "grass_primary": [0.28, 0.55, 0.3],
-    "grass_secondary": [0.42, 0.66, 0.33],
-    "grass_dry": [0.58, 0.52, 0.38],
-    "soil_color": [0.27, 0.24, 0.2],
-    "rock_low": [0.46, 0.45, 0.43],
-    "rock_high": [0.7, 0.7, 0.72],
+    "height_noise": [
+      0.22,
+      0.08
+    ],
+    "grass_primary": [
+      0.28,
+      0.55,
+      0.3
+    ],
+    "grass_secondary": [
+      0.42,
+      0.66,
+      0.33
+    ],
+    "grass_dry": [
+      0.58,
+      0.52,
+      0.38
+    ],
+    "soil_color": [
+      0.27,
+      0.24,
+      0.2
+    ],
+    "rock_low": [
+      0.46,
+      0.45,
+      0.43
+    ],
+    "rock_high": [
+      0.7,
+      0.7,
+      0.72
+    ],
     "plant_density": 0.52,
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.11,
     "irregularity_amplitude": 0.055
   },
   "camera": {
-    "center": [150, 0, 150],
+    "center": [
+      150,
+      0,
+      150
+    ],
     "distance": 92.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
@@ -73,8 +110,14 @@
       "height": 2.8,
       "description": "Player 1 mountain stronghold mound.",
       "entrances": [
-        { "x": 78, "z": 62 },
-        { "x": 62, "z": 78 }
+        {
+          "x": 78,
+          "z": 62
+        },
+        {
+          "x": 62,
+          "z": 78
+        }
       ]
     },
     {
@@ -85,8 +128,14 @@
       "height": 2.8,
       "description": "Player 2 mountain stronghold mound.",
       "entrances": [
-        { "x": 222, "z": 238 },
-        { "x": 238, "z": 222 }
+        {
+          "x": 222,
+          "z": 238
+        },
+        {
+          "x": 238,
+          "z": 222
+        }
       ]
     },
     {
@@ -99,10 +148,22 @@
       "rotation": 25,
       "description": "Central fortress ridge. Strong for archers, but attackable from four passes.",
       "entrances": [
-        { "x": 150, "z": 124 },
-        { "x": 124, "z": 150 },
-        { "x": 176, "z": 150 },
-        { "x": 150, "z": 176 }
+        {
+          "x": 150,
+          "z": 124
+        },
+        {
+          "x": 124,
+          "z": 150
+        },
+        {
+          "x": 176,
+          "z": 150
+        },
+        {
+          "x": 150,
+          "z": 176
+        }
       ]
     },
     {
@@ -123,8 +184,14 @@
       "rotation": -20,
       "description": "Western approach ridge controlling the main valley road.",
       "entrances": [
-        { "x": 82, "z": 119 },
-        { "x": 110, "z": 125 }
+        {
+          "x": 82,
+          "z": 119
+        },
+        {
+          "x": 110,
+          "z": 125
+        }
       ]
     },
     {
@@ -137,8 +204,14 @@
       "rotation": 160,
       "description": "Eastern approach ridge controlling the main valley road.",
       "entrances": [
-        { "x": 190, "z": 175 },
-        { "x": 218, "z": 181 }
+        {
+          "x": 190,
+          "z": 175
+        },
+        {
+          "x": 218,
+          "z": 181
+        }
       ]
     },
     {
@@ -151,8 +224,14 @@
       "rotation": 8,
       "description": "Northern high-pass overlook. Excellent archer ground, but far from both bases.",
       "entrances": [
-        { "x": 121, "z": 62 },
-        { "x": 163, "z": 62 }
+        {
+          "x": 121,
+          "z": 62
+        },
+        {
+          "x": 163,
+          "z": 62
+        }
       ]
     },
     {
@@ -165,8 +244,14 @@
       "rotation": 188,
       "description": "Southern high-pass overlook. Mirrors the northern overlook.",
       "entrances": [
-        { "x": 137, "z": 238 },
-        { "x": 179, "z": 238 }
+        {
+          "x": 137,
+          "z": 238
+        },
+        {
+          "x": 179,
+          "z": 238
+        }
       ]
     },
     {
@@ -179,8 +264,14 @@
       "rotation": 20,
       "description": "Southwestern flank ridge above the goat trail.",
       "entrances": [
-        { "x": 56, "z": 198 },
-        { "x": 88, "z": 206 }
+        {
+          "x": 56,
+          "z": 198
+        },
+        {
+          "x": 88,
+          "z": 206
+        }
       ]
     },
     {
@@ -193,8 +284,14 @@
       "rotation": 200,
       "description": "Northeastern flank ridge above the upper trail.",
       "entrances": [
-        { "x": 212, "z": 94 },
-        { "x": 244, "z": 102 }
+        {
+          "x": 212,
+          "z": 94
+        },
+        {
+          "x": 244,
+          "z": 102
+        }
       ]
     },
     {
@@ -346,62 +443,116 @@
   ],
   "rivers": [
     {
-      "start": [34, 134],
-      "end": [124, 142],
+      "start": [
+        34,
+        134
+      ],
+      "end": [
+        124,
+        142
+      ],
       "width": 4.2,
       "description": "Western meltwater stream slowing the approach to the central ridge."
     },
     {
-      "start": [176, 158],
-      "end": [266, 166],
+      "start": [
+        176,
+        158
+      ],
+      "end": [
+        266,
+        166
+      ],
       "width": 4.2,
       "description": "Eastern meltwater stream mirroring the western approach."
     },
     {
-      "start": [96, 58],
-      "end": [204, 82],
+      "start": [
+        96,
+        58
+      ],
+      "end": [
+        204,
+        82
+      ],
       "width": 3.8,
       "description": "Northern high-pass stream."
     },
     {
-      "start": [96, 242],
-      "end": [204, 218],
+      "start": [
+        96,
+        242
+      ],
+      "end": [
+        204,
+        218
+      ],
       "width": 3.8,
       "description": "Southern high-pass stream."
     }
   ],
   "bridges": [
     {
-      "start": [94, 136],
-      "end": [106, 140],
+      "start": [
+        94,
+        136
+      ],
+      "end": [
+        106,
+        140
+      ],
       "width": 4.5,
       "height": 0.65,
       "description": "Western valley bridge."
     },
     {
-      "start": [194, 160],
-      "end": [206, 164],
+      "start": [
+        194,
+        160
+      ],
+      "end": [
+        206,
+        164
+      ],
       "width": 4.5,
       "height": 0.65,
       "description": "Eastern valley bridge."
     },
     {
-      "start": [136, 66],
-      "end": [148, 69],
+      "start": [
+        136,
+        66
+      ],
+      "end": [
+        148,
+        69
+      ],
       "width": 4.0,
       "height": 0.6,
       "description": "Northern high-pass bridge."
     },
     {
-      "start": [152, 231],
-      "end": [164, 234],
+      "start": [
+        152,
+        231
+      ],
+      "end": [
+        164,
+        234
+      ],
       "width": 4.0,
       "height": 0.6,
       "description": "Southern high-pass bridge."
     },
     {
-      "start": [144, 144],
-      "end": [156, 156],
+      "start": [
+        144,
+        144
+      ],
+      "end": [
+        156,
+        156
+      ],
       "width": 5.0,
       "height": 0.7,
       "description": "Old stone causeway below the central fortress ridge."
@@ -409,112 +560,295 @@
   ],
   "roads": [
     {
-      "start": [62, 62],
-      "end": [238, 238],
+      "start": [
+        62,
+        62
+      ],
+      "end": [
+        238,
+        238
+      ],
       "width": 4.2,
       "style": "default",
       "waypoints": [
-        [62, 62],
-        [82, 82],
-        [104, 106],
-        [126, 132],
-        [150, 150],
-        [174, 168],
-        [196, 194],
-        [218, 218],
-        [238, 238]
+        [
+          62,
+          62
+        ],
+        [
+          82,
+          82
+        ],
+        [
+          104,
+          106
+        ],
+        [
+          126,
+          132
+        ],
+        [
+          150,
+          150
+        ],
+        [
+          174,
+          168
+        ],
+        [
+          196,
+          194
+        ],
+        [
+          218,
+          218
+        ],
+        [
+          238,
+          238
+        ]
       ],
       "description": "Main valley road. Fastest route, but it crosses the central fortress ridge."
     },
     {
-      "start": [62, 62],
-      "end": [238, 238],
+      "start": [
+        62,
+        62
+      ],
+      "end": [
+        238,
+        238
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [62, 62],
-        [84, 48],
-        [112, 52],
-        [142, 62],
-        [174, 72],
-        [206, 92],
-        [226, 128],
-        [232, 176],
-        [238, 238]
+        [
+          62,
+          62
+        ],
+        [
+          84,
+          48
+        ],
+        [
+          112,
+          52
+        ],
+        [
+          142,
+          62
+        ],
+        [
+          174,
+          72
+        ],
+        [
+          206,
+          92
+        ],
+        [
+          226,
+          128
+        ],
+        [
+          232,
+          176
+        ],
+        [
+          238,
+          238
+        ]
       ],
       "description": "Northern high pass. Strong archer route, narrow and slower for cavalry."
     },
     {
-      "start": [62, 62],
-      "end": [238, 238],
+      "start": [
+        62,
+        62
+      ],
+      "end": [
+        238,
+        238
+      ],
       "width": 3.0,
       "style": "default",
       "waypoints": [
-        [62, 62],
-        [48, 90],
-        [52, 124],
-        [68, 162],
-        [96, 204],
-        [136, 232],
-        [180, 248],
-        [218, 246],
-        [238, 238]
+        [
+          62,
+          62
+        ],
+        [
+          48,
+          90
+        ],
+        [
+          52,
+          124
+        ],
+        [
+          68,
+          162
+        ],
+        [
+          96,
+          204
+        ],
+        [
+          136,
+          232
+        ],
+        [
+          180,
+          248
+        ],
+        [
+          218,
+          246
+        ],
+        [
+          238,
+          238
+        ]
       ],
       "description": "Southern goat trail. Longest route, best for surprise flanks and avoiding the central fight."
     },
     {
-      "start": [72, 202],
-      "end": [150, 150],
+      "start": [
+        72,
+        202
+      ],
+      "end": [
+        150,
+        150
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [72, 202],
-        [92, 190],
-        [112, 174],
-        [132, 160],
-        [150, 150]
+        [
+          72,
+          202
+        ],
+        [
+          92,
+          190
+        ],
+        [
+          112,
+          174
+        ],
+        [
+          132,
+          160
+        ],
+        [
+          150,
+          150
+        ]
       ],
       "description": "Lower side path from the goat trail to the central ridge."
     },
     {
-      "start": [228, 98],
-      "end": [150, 150],
+      "start": [
+        228,
+        98
+      ],
+      "end": [
+        150,
+        150
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [228, 98],
-        [208, 110],
-        [188, 126],
-        [168, 140],
-        [150, 150]
+        [
+          228,
+          98
+        ],
+        [
+          208,
+          110
+        ],
+        [
+          188,
+          126
+        ],
+        [
+          168,
+          140
+        ],
+        [
+          150,
+          150
+        ]
       ],
       "description": "Upper side path from the high pass to the central ridge."
     },
     {
-      "start": [62, 62],
-      "end": [72, 202],
+      "start": [
+        62,
+        62
+      ],
+      "end": [
+        72,
+        202
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [62, 62],
-        [54, 96],
-        [58, 132],
-        [64, 168],
-        [72, 202]
+        [
+          62,
+          62
+        ],
+        [
+          54,
+          96
+        ],
+        [
+          58,
+          132
+        ],
+        [
+          64,
+          168
+        ],
+        [
+          72,
+          202
+        ]
       ],
       "description": "Western vertical flank road."
     },
     {
-      "start": [238, 238],
-      "end": [228, 98],
+      "start": [
+        238,
+        238
+      ],
+      "end": [
+        228,
+        98
+      ],
       "width": 2.6,
       "style": "default",
       "waypoints": [
-        [238, 238],
-        [246, 204],
-        [242, 168],
-        [236, 132],
-        [228, 98]
+        [
+          238,
+          238
+        ],
+        [
+          246,
+          204
+        ],
+        [
+          242,
+          168
+        ],
+        [
+          236,
+          132
+        ],
+        [
+          228,
+          98
+        ]
       ],
       "description": "Eastern vertical flank road."
     }
@@ -846,5 +1180,12 @@
       "no_commander",
       "only_commander_remaining"
     ]
+  },
+  "starting_resources": {
+    "gold": 200,
+    "food": 100,
+    "wood": 100,
+    "stone": 300,
+    "iron": 150
   }
 }

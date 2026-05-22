@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include "game/map/map_loader.h"
+#include "game/systems/resource_types.h"
 
 TEST(MapLoaderTest, ParsesUndeadZonesAndWaveSpawns) {
   QTemporaryFile temp_file;
@@ -59,4 +60,73 @@ TEST(MapLoaderTest, ParsesUndeadZonesAndWaveSpawns) {
   ASSERT_EQ(zone.waves[1].units.size(), 1);
   EXPECT_EQ(zone.waves[1].units[0].type, Game::Units::SpawnType::SkeletonArcher);
   EXPECT_EQ(zone.waves[1].units[0].count, 3);
+}
+
+TEST(MapLoaderTest, ParsesStartingResources) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Resource Test Map"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"starting_resources",
+       QJsonObject{
+           {"gold", 300}, {"food", 200}, {"wood", 150}, {"stone", 100}, {"iron", 75}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Gold), 300);
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Food), 200);
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Wood), 150);
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Stone), 100);
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Iron), 75);
+}
+
+TEST(MapLoaderTest, StartingResourcesDefaultToZeroWhenAbsent) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "No Resources Map"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  EXPECT_TRUE(map_def.starting_resources.empty());
+}
+
+TEST(MapLoaderTest, StartingResourcesPartialKeysDefaultMissingToZero) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Partial Resources Map"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"starting_resources", QJsonObject{{"gold", 500}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Gold), 500);
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Food), 0);
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Wood), 0);
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Stone), 0);
+  EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Iron), 0);
 }

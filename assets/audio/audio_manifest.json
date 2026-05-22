@@ -239,6 +239,27 @@
       "tags": {"ambient_state": "peaceful", "variant": "primary"}
     },
     {
+      "id": "music.base.army_camp_resting",
+      "path": "music/base/base_army_camp_resting.ogg",
+      "category": "music",
+      "load_policy": "mission",
+      "tags": {"ambient_state": "peaceful", "variant": "resting"}
+    },
+    {
+      "id": "music.base.barracks_recruitment",
+      "path": "music/base/base_barracks_recruitment.ogg",
+      "category": "music",
+      "load_policy": "mission",
+      "tags": {"ambient_state": "peaceful", "variant": "barracks"}
+    },
+    {
+      "id": "music.base.economy_recruitment_loop",
+      "path": "music/base/base_economy_recruitment_loop.ogg",
+      "category": "music",
+      "load_policy": "mission",
+      "tags": {"ambient_state": "peaceful", "variant": "economy"}
+    },
+    {
       "id": "music.base.pre_battle_deployment",
       "aliases": ["music_tense"],
       "path": "music/base/base_pre_battle_deployment.ogg",
@@ -260,6 +281,34 @@
       "category": "music",
       "load_policy": "lazy",
       "tags": {"ambient_state": "combat", "variant": "high"}
+    },
+    {
+      "id": "music.combat.attack_order_carthage_cavalry",
+      "path": "music/combat/combat_attack_order_carthage_cavalry.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "combat", "faction": "carthage", "variant": "cavalry"}
+    },
+    {
+      "id": "music.combat.defensive_hold_roman",
+      "path": "music/combat/combat_defensive_hold_roman.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "combat", "faction": "roman", "variant": "defensive"}
+    },
+    {
+      "id": "music.combat.cavalry_flank_fast",
+      "path": "music/combat/combat_cavalry_flank_fast.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "combat", "variant": "flank"}
+    },
+    {
+      "id": "music.combat.infantry_clash_loop",
+      "path": "music/combat/combat_infantry_clash_loop.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "combat", "variant": "melee"}
     },
     {
       "id": "music.stinger.victory_roman",
@@ -290,6 +339,13 @@
       "category": "music",
       "load_policy": "lazy",
       "tags": {"ambient_state": "defeat", "variant": "alternate"}
+    },
+    {
+      "id": "music.stinger.retreat_tactical_low_horn",
+      "path": "music/stingers/retreat_tactical_low_horn.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {"ambient_state": "defeat", "variant": "retreat"}
     },
     {
       "id": "ambient.alpine_mountain_pass",
@@ -342,6 +398,16 @@
       "tags": {"biome": "camp", "faction": "roman", "variant": "primary"}
     },
     {
+      "id": "ambient.roman_army_camp_02",
+      "path": "ambience/roman_army_camp_02.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "camp", "faction": "roman", "variant": "alternate"}
+    },
+    {
       "id": "ambient.mountain_camp_night",
       "path": "ambience/mountain_camp_night.ogg",
       "category": "ambience",
@@ -360,6 +426,66 @@
       "max_instances": 1,
       "load_policy": "mission",
       "tags": {"biome": "battlefield", "variant": "primary"}
+    },
+    {
+      "id": "ambient.battlefield_dry_wind_distant_march_02",
+      "path": "ambience/battlefield_dry_wind_distant_march_02.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "battlefield", "variant": "alternate"}
+    },
+    {
+      "id": "ambient.carthage_war_camp_01",
+      "path": "ambience/carthage_war_camp_01.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "camp", "faction": "carthage", "variant": "primary"}
+    },
+    {
+      "id": "ambient.carthage_war_camp_02",
+      "path": "ambience/carthage_war_camp_02.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "camp", "faction": "carthage", "variant": "alternate"}
+    },
+    {
+      "id": "ambient.desert_army_march",
+      "path": "ambience/desert_army_march.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "plains", "faction": "carthage", "variant": "march"}
+    },
+    {
+      "id": "ambient.roman_road",
+      "path": "ambience/roman_road.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "plains", "faction": "roman", "context": "road", "variant": "road"}
+    },
+    {
+      "id": "ambient.siege_camp",
+      "path": "ambience/siege_camp.ogg",
+      "category": "ambience",
+      "volume": 0.35,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"biome": "camp", "context": "siege", "variant": "siege"}
     },
     {
       "id": "ambient.burning_village_aftermath",
@@ -438,6 +564,39 @@
       "tags": {"attack_family": "arrow"}
     },
     {
+      "id": "sfx.combat.archer_volley_many",
+      "path": "sfx/combat/archer_volley_many.ogg",
+      "category": "sfx",
+      "volume": 0.82,
+      "priority": 3,
+      "cooldown_ms": 120,
+      "max_instances": 3,
+      "load_policy": "mission",
+      "tags": {"attack_family": "arrow", "variant": "volley"}
+    },
+    {
+      "id": "sfx.combat.archers_shooting_close",
+      "path": "sfx/combat/archers_shooting_close.ogg",
+      "category": "sfx",
+      "volume": 0.84,
+      "priority": 3,
+      "cooldown_ms": 120,
+      "max_instances": 3,
+      "load_policy": "mission",
+      "tags": {"attack_family": "arrow", "variant": "close"}
+    },
+    {
+      "id": "sfx.combat.arrows_whistle_snap_impact",
+      "path": "sfx/combat/arrows_whistle_snap_impact.ogg",
+      "category": "sfx",
+      "volume": 0.88,
+      "priority": 3,
+      "cooldown_ms": 120,
+      "max_instances": 4,
+      "load_policy": "mission",
+      "tags": {"attack_family": "arrow", "variant": "snap"}
+    },
+    {
       "id": "sfx.combat.battlefield_crowd_chaos",
       "aliases": ["combat_hit_siege"],
       "path": "sfx/combat/battlefield_crowd_chaos.ogg",
@@ -462,6 +621,17 @@
       "tags": {"attack_family": "generic"}
     },
     {
+      "id": "sfx.combat.battlefield_distant_mass_01",
+      "path": "sfx/combat/battlefield_distant_mass_01.ogg",
+      "category": "sfx",
+      "volume": 0.8,
+      "priority": 2,
+      "cooldown_ms": 140,
+      "max_instances": 4,
+      "load_policy": "mission",
+      "tags": {"attack_family": "generic", "variant": "alternate"}
+    },
+    {
       "id": "sfx.combat.roman_cavalry_charge",
       "aliases": ["combat_hit_cavalry"],
       "path": "sfx/combat/roman_cavalry_charge.ogg",
@@ -472,6 +642,28 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {"attack_family": "cavalry"}
+    },
+    {
+      "id": "sfx.combat.horse_gallop_close_pass",
+      "path": "sfx/combat/horse_gallop_close_pass.ogg",
+      "category": "sfx",
+      "volume": 0.9,
+      "priority": 4,
+      "cooldown_ms": 220,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {"attack_family": "cavalry", "variant": "gallop"}
+    },
+    {
+      "id": "sfx.combat.numidian_cavalry_chase",
+      "path": "sfx/combat/numidian_cavalry_chase.ogg",
+      "category": "sfx",
+      "volume": 0.92,
+      "priority": 4,
+      "cooldown_ms": 220,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {"attack_family": "cavalry", "faction": "carthage", "variant": "numidian"}
     },
     {
       "id": "sfx.combat.elephant_charge_carthage",
@@ -486,6 +678,17 @@
       "tags": {"attack_family": "elephant"}
     },
     {
+      "id": "sfx.combat.elephant_panic",
+      "path": "sfx/combat/elephant_panic.ogg",
+      "category": "sfx",
+      "volume": 0.95,
+      "priority": 4,
+      "cooldown_ms": 260,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {"attack_family": "elephant", "variant": "panic"}
+    },
+    {
       "id": "sfx.combat.troops_death_scream",
       "aliases": ["combat_death"],
       "path": "sfx/combat/troops_death_scream.ogg",
@@ -496,6 +699,94 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {"attack_family": "death"}
+    },
+    {
+      "id": "sfx.combat.aftermath_battlefield",
+      "path": "sfx/combat/aftermath_battlefield.ogg",
+      "category": "sfx",
+      "volume": 0.76,
+      "priority": 4,
+      "cooldown_ms": 160,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {"attack_family": "death", "variant": "aftermath"}
+    },
+    {
+      "id": "sfx.combat.roman_shield_wall_impact",
+      "path": "sfx/combat/roman_shield_wall_impact.ogg",
+      "category": "sfx",
+      "volume": 0.9,
+      "priority": 3,
+      "cooldown_ms": 90,
+      "max_instances": 4,
+      "load_policy": "mission",
+      "tags": {"attack_family": "sword", "variant": "shield"}
+    },
+    {
+      "id": "sfx.combat.spearmen_formation_advance",
+      "path": "sfx/combat/spearmen_formation_advance.ogg",
+      "category": "sfx",
+      "volume": 0.88,
+      "priority": 3,
+      "cooldown_ms": 100,
+      "max_instances": 4,
+      "load_policy": "mission",
+      "tags": {"attack_family": "spear", "variant": "formation"}
+    },
+    {
+      "id": "sfx.combat.soldiers_victory_cheer",
+      "path": "sfx/combat/soldiers_victory_cheer.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 6,
+      "cooldown_ms": 2000,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"state": "victory"}
+    },
+    {
+      "id": "sfx.combat.roman_war_horns_orders",
+      "path": "sfx/combat/roman_war_horns_orders.ogg",
+      "category": "sfx",
+      "volume": 0.88,
+      "priority": 7,
+      "cooldown_ms": 2000,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"state": "combat", "faction": "roman", "role": "stinger"}
+    },
+    {
+      "id": "sfx.combat.carthage_prepare_battle",
+      "path": "sfx/combat/carthage_prepare_battle.ogg",
+      "category": "sfx",
+      "volume": 0.88,
+      "priority": 7,
+      "cooldown_ms": 2000,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"state": "combat", "faction": "carthage", "role": "stinger"}
+    },
+    {
+      "id": "sfx.combat.army_retreat_panic",
+      "path": "sfx/combat/army_retreat_panic.ogg",
+      "category": "sfx",
+      "volume": 0.85,
+      "priority": 6,
+      "cooldown_ms": 2000,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"state": "defeat"}
+    },
+    {
+      "id": "sfx.combat.army_march_dirt_mass",
+      "path": "sfx/combat/army_march_dirt_mass.ogg",
+      "category": "sfx",
+      "volume": 0.84,
+      "priority": 6,
+      "cooldown_ms": 2500,
+      "max_instances": 1,
+      "load_policy": "mission",
+      "tags": {"alert": "reinforcements", "variant": "march"}
     },
     {
       "id": "sfx.alert.population_limit_horn",

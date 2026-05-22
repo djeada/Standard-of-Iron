@@ -123,5 +123,6 @@ inline constexpr const char* RAIN_WIND_STRENGTH = "wind_strength";
 inline constexpr const char* WORLD_PROPS = "world_props";
 inline constexpr const char* PERSISTENT = "persistent";
 inline constexpr const char* TIME_OF_DAY = "time_of_day";
+inline constexpr const char* STARTING_RESOURCES = "starting_resources";
 
 } // namespace Game::Map::JsonKeys

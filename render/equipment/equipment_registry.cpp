@@ -1,9 +1,6 @@
 #include "equipment_registry.h"
 
 #include <limits>
-#include <utility>
-
-#include "horse/i_horse_equipment_renderer.h"
 
 namespace Render::GL {
 
@@ -12,82 +9,42 @@ auto EquipmentRegistry::instance() -> EquipmentRegistry& {
   return registry;
 }
 
-void EquipmentRegistry::register_equipment_entry(
-    EquipmentCategory category,
-    const std::string& id,
-    std::shared_ptr<IEquipmentRenderer> renderer) {
-  m_renderers[category][id] = std::move(renderer);
+void EquipmentRegistry::register_equipment_entry(EquipmentCategory category,
+                                                 const std::string& id) {
+  m_registered_ids[category].insert(id);
   const HandleKey key{category, id};
   if (const auto it = m_handles.find(key); it != m_handles.end()) {
-    const std::size_t index = static_cast<std::size_t>(it->second - 1U);
-    if (index < m_renderers_by_handle.size()) {
-      m_renderers_by_handle[index] = m_renderers[category][id];
-    }
     return;
   }
 
-  if (m_renderers_by_handle.size() >=
+  if (m_keys_by_handle.size() >=
       static_cast<std::size_t>(std::numeric_limits<EquipmentHandle>::max())) {
     return;
   }
 
-  const EquipmentHandle handle =
-      static_cast<EquipmentHandle>(m_renderers_by_handle.size() + 1U);
-  m_renderers_by_handle.push_back(m_renderers[category][id]);
+  const auto handle = static_cast<EquipmentHandle>(m_keys_by_handle.size() + 1U);
+  m_keys_by_handle.push_back(key);
   m_handles.emplace(key, handle);
 }
 
-void EquipmentRegistry::register_equipment(
-    EquipmentCategory category,
-    const std::string& id,
-    std::shared_ptr<IEquipmentRenderer> renderer) {
-  if (renderer == nullptr) {
-    return;
-  }
-  register_equipment_entry(category, id, std::move(renderer));
+void EquipmentRegistry::register_equipment_id(EquipmentCategory category,
+                                              const std::string& id) {
+  register_equipment_entry(category, id);
 }
 
 void EquipmentRegistry::register_placeholder_equipment(EquipmentCategory category,
                                                        const std::string& id) {
-  register_equipment_entry(category, id, nullptr);
-}
-
-void EquipmentRegistry::register_horse_equipment(
-    EquipmentCategory category,
-    const std::string& id,
-    std::shared_ptr<IHorseEquipmentRenderer> renderer) {
-  register_equipment(
-      category, id, std::static_pointer_cast<IEquipmentRenderer>(std::move(renderer)));
-}
-
-auto EquipmentRegistry::get(EquipmentCategory category, const std::string& id) const
-    -> std::shared_ptr<IEquipmentRenderer> {
-  auto category_it = m_renderers.find(category);
-  if (category_it == m_renderers.end()) {
-    return nullptr;
-  }
-
-  auto renderer_it = category_it->second.find(id);
-  if (renderer_it == category_it->second.end()) {
-    return nullptr;
-  }
-
-  return renderer_it->second;
-}
-
-auto EquipmentRegistry::get_horse(EquipmentCategory category, const std::string& id)
-    const -> std::shared_ptr<IHorseEquipmentRenderer> {
-  return std::dynamic_pointer_cast<IHorseEquipmentRenderer>(get(category, id));
+  register_equipment_entry(category, id);
 }
 
 auto EquipmentRegistry::has(EquipmentCategory category,
                             const std::string& id) const -> bool {
-  auto category_it = m_renderers.find(category);
-  if (category_it == m_renderers.end()) {
+  const auto category_it = m_registered_ids.find(category);
+  if (category_it == m_registered_ids.end()) {
     return false;
   }
 
-  return category_it->second.find(id) != category_it->second.end();
+  return category_it->second.contains(id);
 }
 
 auto EquipmentRegistry::resolve_handle(EquipmentCategory category,
@@ -99,25 +56,12 @@ auto EquipmentRegistry::resolve_handle(EquipmentCategory category,
   return k_invalid_equipment_handle;
 }
 
-auto EquipmentRegistry::get(EquipmentHandle handle) const
-    -> std::shared_ptr<IEquipmentRenderer> {
-  if (handle == k_invalid_equipment_handle) {
-    return nullptr;
-  }
-  const std::size_t index = static_cast<std::size_t>(handle - 1U);
-  if (index >= m_renderers_by_handle.size()) {
-    return nullptr;
-  }
-  return m_renderers_by_handle[index];
-}
-
-auto EquipmentRegistry::get_horse(EquipmentHandle handle) const
-    -> std::shared_ptr<IHorseEquipmentRenderer> {
-  return std::dynamic_pointer_cast<IHorseEquipmentRenderer>(get(handle));
-}
-
 auto EquipmentRegistry::has(EquipmentHandle handle) const -> bool {
-  return get(handle) != nullptr;
+  if (handle == k_invalid_equipment_handle) {
+    return false;
+  }
+  const auto index = static_cast<std::size_t>(handle - 1U);
+  return index < m_keys_by_handle.size();
 }
 
 } // namespace Render::GL

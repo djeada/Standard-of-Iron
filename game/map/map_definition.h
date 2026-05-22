@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../systems/nation_id.h"
+#include "../systems/resource_types.h"
 #include "../units/spawn_type.h"
 #include "terrain.h"
 
@@ -294,6 +295,7 @@ struct MapDefinition {
   VictoryConfig victory;
   RainSettings rain;
   TimeOfDay time_of_day = TimeOfDay::Day;
+  Game::Systems::ResourceAmounts starting_resources{};
 };
 
 } // namespace Game::Map

@@ -3,10 +3,14 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
-#include <numbers>
+#include <memory>
+#include <vector>
 
 #include "../../geom/transforms.h"
+#include "../../gl/mesh.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/humanoid_renderer_base.h"
@@ -27,112 +31,252 @@ using Render::GL::Humanoid::saturate_color;
 
 namespace {
 
-constexpr std::uint8_t k_red_even = 0;
-constexpr std::uint8_t k_red_odd = 1;
-constexpr std::uint8_t k_bronze_ridge = 2;
-constexpr std::uint8_t k_bronze_ring = 3;
-constexpr std::uint8_t k_bronze_boss = 4;
-constexpr std::uint8_t k_bronze_rim = 5;
-constexpr std::uint8_t k_bronze_rivet = 6;
-constexpr QVector3D k_shield_center{0.0F, 0.0F, 0.15F};
+constexpr std::uint8_t k_red_face = 0;
+constexpr std::uint8_t k_wood_back = 1;
+constexpr std::uint8_t k_brass_spine = 2;
+constexpr std::uint8_t k_brass_boss_plate = 3;
+constexpr std::uint8_t k_iron_boss = 4;
+constexpr std::uint8_t k_rawhide_rim = 5;
+constexpr std::uint8_t k_leather_grip = 6;
+
+constexpr float k_half_width = 0.36F;
+constexpr float k_half_height = 0.55F;
+constexpr float k_corner_radius = 0.12F;
+constexpr float k_curve_depth = 0.082F;
+constexpr float k_board_thickness = 0.034F;
+constexpr float k_boss_plate_half_width = 0.105F;
+constexpr float k_boss_plate_half_height = 0.18F;
+constexpr float k_boss_plate_half_depth = 0.010F;
+constexpr float k_spine_half_width = 0.018F;
+constexpr float k_spine_half_height = 0.43F;
+constexpr float k_spine_half_depth = 0.008F;
+constexpr float k_boss_radius = 0.073F;
+constexpr int k_face_columns = 16;
+constexpr int k_face_rows = 20;
+constexpr int k_outline_samples = 16;
+
+struct OutlinePoint {
+  float x{0.0F};
+  float y{0.0F};
+};
+
+auto lerp(float a, float b, float t) -> float {
+  return a + (b - a) * t;
+}
+
+auto scutum_half_width_at(float y) -> float {
+  float const abs_y = std::abs(y);
+  float const straight_half_height = k_half_height - k_corner_radius;
+  if (abs_y <= straight_half_height) {
+    return k_half_width;
+  }
+
+  float const core_half_width = k_half_width - k_corner_radius;
+  float const dy = std::min(abs_y - straight_half_height, k_corner_radius);
+  float const dx =
+      std::sqrt(std::max(k_corner_radius * k_corner_radius - dy * dy, 0.0F));
+  return core_half_width + dx;
+}
+
+auto scutum_front_depth(float x, float row_half_width) -> float {
+  if (row_half_width <= 1e-4F) {
+    return 0.0F;
+  }
+  float const normalized_x = std::clamp(x / row_half_width, -1.0F, 1.0F);
+  return k_curve_depth * (1.0F - normalized_x * normalized_x);
+}
+
+auto scutum_face_point(float x, float y, float z_offset = 0.0F) -> QVector3D {
+  float const row_half_width = scutum_half_width_at(y);
+  float const clamped_x = std::clamp(x, -row_half_width, row_half_width);
+  return {clamped_x, y, scutum_front_depth(clamped_x, row_half_width) + z_offset};
+}
+
+auto scutum_face_sample(float u, float v, float z_offset = 0.0F) -> QVector3D {
+  float const y = lerp(-k_half_height, k_half_height, v);
+  float const row_half_width = scutum_half_width_at(y);
+  float const x = lerp(-row_half_width, row_half_width, u);
+  return scutum_face_point(x, y, z_offset);
+}
+
+auto scutum_face_normal(float u, float v, bool back) -> QVector3D {
+  float const du = 1.0F / static_cast<float>(k_face_columns);
+  float const dv = 1.0F / static_cast<float>(k_face_rows);
+  float const z_offset = back ? -k_board_thickness : 0.0F;
+
+  auto sample = [&](float sample_u, float sample_v) {
+    return scutum_face_sample(
+        std::clamp(sample_u, 0.0F, 1.0F), std::clamp(sample_v, 0.0F, 1.0F), z_offset);
+  };
+
+  QVector3D const tangent_u = sample(u + du, v) - sample(u - du, v);
+  QVector3D const tangent_v = sample(u, v + dv) - sample(u, v - dv);
+  QVector3D normal = QVector3D::crossProduct(tangent_u, tangent_v);
+  if (back) {
+    normal = -normal;
+  }
+  if (normal.lengthSquared() <= 1e-6F) {
+    return back ? QVector3D(0.0F, 0.0F, -1.0F) : QVector3D(0.0F, 0.0F, 1.0F);
+  }
+  normal.normalize();
+  return normal;
+}
+
+auto create_scutum_face_mesh(bool back) -> std::unique_ptr<Mesh> {
+  std::vector<Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve((k_face_columns + 1) * (k_face_rows + 1));
+  indices.reserve(k_face_columns * k_face_rows * 6);
+
+  float const z_offset = back ? -k_board_thickness : 0.0F;
+  for (int row = 0; row <= k_face_rows; ++row) {
+    float const v = static_cast<float>(row) / static_cast<float>(k_face_rows);
+    for (int col = 0; col <= k_face_columns; ++col) {
+      float const u = static_cast<float>(col) / static_cast<float>(k_face_columns);
+      QVector3D const p = scutum_face_sample(u, v, z_offset);
+      QVector3D const n = scutum_face_normal(u, v, back);
+      vertices.push_back({{p.x(), p.y(), p.z()}, {n.x(), n.y(), n.z()}, {u, v}});
+    }
+  }
+
+  int const stride = k_face_columns + 1;
+  for (int row = 0; row < k_face_rows; ++row) {
+    for (int col = 0; col < k_face_columns; ++col) {
+      auto const a = static_cast<unsigned int>(row * stride + col);
+      unsigned int const b = a + 1U;
+      auto const c = static_cast<unsigned int>((row + 1) * stride + col + 1);
+      auto const d = static_cast<unsigned int>((row + 1) * stride + col);
+      if (back) {
+        indices.push_back(a);
+        indices.push_back(d);
+        indices.push_back(c);
+        indices.push_back(c);
+        indices.push_back(b);
+        indices.push_back(a);
+      } else {
+        indices.push_back(a);
+        indices.push_back(b);
+        indices.push_back(c);
+        indices.push_back(c);
+        indices.push_back(d);
+        indices.push_back(a);
+      }
+    }
+  }
+
+  return std::make_unique<Mesh>(vertices, indices);
+}
+
+auto build_scutum_outline() -> std::vector<OutlinePoint> {
+  std::vector<OutlinePoint> outline;
+  outline.reserve((k_outline_samples + 1) * 2);
+
+  for (int i = 0; i <= k_outline_samples; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(k_outline_samples);
+    float const y = lerp(-k_half_height, k_half_height, t);
+    outline.push_back({scutum_half_width_at(y), y});
+  }
+  for (int i = k_outline_samples; i >= 0; --i) {
+    float const t = static_cast<float>(i) / static_cast<float>(k_outline_samples);
+    float const y = lerp(-k_half_height, k_half_height, t);
+    outline.push_back({-scutum_half_width_at(y), y});
+  }
+  return outline;
+}
+
+auto create_scutum_edge_mesh() -> std::unique_ptr<Mesh> {
+  std::vector<OutlinePoint> const outline = build_scutum_outline();
+  std::vector<Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(outline.size() * 2);
+  indices.reserve(outline.size() * 6);
+
+  for (std::size_t i = 0; i < outline.size(); ++i) {
+    OutlinePoint const& prev = outline[(i + outline.size() - 1U) % outline.size()];
+    OutlinePoint const& curr = outline[i];
+    OutlinePoint const& next = outline[(i + 1U) % outline.size()];
+
+    QVector3D const tangent(next.x - prev.x, next.y - prev.y, 0.0F);
+    QVector3D normal(tangent.y(), -tangent.x(), 0.0F);
+    if (normal.lengthSquared() <= 1e-6F) {
+      normal = QVector3D(curr.x >= 0.0F ? 1.0F : -1.0F, 0.0F, 0.0F);
+    } else {
+      normal.normalize();
+    }
+
+    float const u = static_cast<float>(i) / static_cast<float>(outline.size() - 1U);
+    vertices.push_back(
+        {{curr.x, curr.y, 0.0F}, {normal.x(), normal.y(), normal.z()}, {u, 0.0F}});
+    vertices.push_back({{curr.x, curr.y, -k_board_thickness},
+                        {normal.x(), normal.y(), normal.z()},
+                        {u, 1.0F}});
+  }
+
+  for (std::size_t i = 0; i < outline.size(); ++i) {
+    std::size_t const next = (i + 1U) % outline.size();
+    auto const front_a = static_cast<unsigned int>(i * 2U);
+    unsigned int const back_a = front_a + 1U;
+    auto const front_b = static_cast<unsigned int>(next * 2U);
+    unsigned int const back_b = front_b + 1U;
+
+    indices.push_back(front_a);
+    indices.push_back(back_a);
+    indices.push_back(back_b);
+    indices.push_back(back_b);
+    indices.push_back(front_b);
+    indices.push_back(front_a);
+  }
+
+  return std::make_unique<Mesh>(vertices, indices);
+}
+
+auto roman_scutum_front_mesh() -> Mesh* {
+  static std::unique_ptr<Mesh> const mesh = create_scutum_face_mesh(false);
+  return mesh.get();
+}
+
+auto roman_scutum_back_mesh() -> Mesh* {
+  static std::unique_ptr<Mesh> const mesh = create_scutum_face_mesh(true);
+  return mesh.get();
+}
+
+auto roman_scutum_edge_mesh() -> Mesh* {
+  static std::unique_ptr<Mesh> const mesh = create_scutum_edge_mesh();
+  return mesh.get();
+}
 
 } // namespace
 
 auto roman_scutum_archetype() -> const RenderArchetype& {
   static const RenderArchetype k_archetype = []() {
-    constexpr float shield_height = 1.2F;
-    constexpr float shield_width = 0.65F;
-    constexpr float shield_curve = 0.19F;
-    constexpr float body_half_depth = 0.040F;
-    constexpr float face_half_depth = 0.024F;
-    constexpr float frame_half_depth = 0.034F;
-    constexpr float frame_half_width = 0.028F;
-    constexpr float ridge_half_width = 0.045F;
-    constexpr float boss_radius = 0.12F;
-    constexpr float boss_depth = 0.080F;
-
-    constexpr QVector3D shield_forward{0.0F, 0.0F, 1.0F};
-    constexpr QVector3D shield_up{0.0F, 1.0F, 0.0F};
-    constexpr QVector3D shield_right{1.0F, 0.0F, 0.0F};
-
     RenderArchetypeBuilder builder{"roman_scutum"};
 
-    auto curved_box = [&](const QVector3D& offset,
-                          float half_width,
-                          float half_height,
-                          float half_depth,
-                          std::uint8_t slot,
-                          float yaw_scale_degrees = 0.0F) {
-      float const half_span = shield_width * 0.5F;
-      float const normalized_x = (half_span > 1e-4F) ? (offset.x() / half_span) : 0.0F;
+    builder.add_palette_mesh(roman_scutum_front_mesh(), QMatrix4x4{}, k_red_face);
+    builder.add_palette_mesh(roman_scutum_back_mesh(), QMatrix4x4{}, k_wood_back);
+    builder.add_palette_mesh(roman_scutum_edge_mesh(), QMatrix4x4{}, k_rawhide_rim);
 
-      QMatrix4x4 m;
-      m.translate(k_shield_center + offset + shield_forward * shield_curve);
-      m.rotate(-normalized_x * yaw_scale_degrees, 0.0F, 1.0F, 0.0F);
-      m.scale(half_width, half_height, half_depth);
-      builder.add_palette_mesh(get_unit_cube(), m, slot);
-    };
+    QMatrix4x4 spine_m;
+    spine_m.translate(0.0F, 0.0F, k_curve_depth * 0.52F);
+    spine_m.scale(k_spine_half_width, k_spine_half_height, k_spine_half_depth);
+    builder.add_palette_mesh(get_unit_cube(), spine_m, k_brass_spine);
 
-    curved_box(QVector3D(0.0F, 0.0F, 0.0F),
-               shield_width * 0.48F,
-               shield_height * 0.49F,
-               body_half_depth,
-               k_red_even);
-    curved_box(QVector3D(0.0F, 0.0F, 0.028F),
-               shield_width * 0.36F,
-               shield_height * 0.43F,
-               face_half_depth,
-               k_red_odd);
+    QMatrix4x4 boss_plate_m;
+    boss_plate_m.translate(0.0F, 0.0F, k_curve_depth + 0.010F);
+    boss_plate_m.scale(
+        k_boss_plate_half_width, k_boss_plate_half_height, k_boss_plate_half_depth);
+    builder.add_palette_mesh(get_unit_cube(), boss_plate_m, k_brass_boss_plate);
 
-    curved_box(QVector3D(0.0F, shield_height * 0.48F, 0.010F),
-               shield_width * 0.45F,
-               frame_half_width,
-               frame_half_depth,
-               k_bronze_rim);
-    curved_box(QVector3D(0.0F, -shield_height * 0.48F, 0.010F),
-               shield_width * 0.45F,
-               frame_half_width,
-               frame_half_depth,
-               k_bronze_rim);
-    curved_box(QVector3D(shield_width * 0.45F, 0.0F, 0.010F),
-               frame_half_width,
-               shield_height * 0.44F,
-               frame_half_depth,
-               k_bronze_rim);
-    curved_box(QVector3D(-shield_width * 0.45F, 0.0F, 0.010F),
-               frame_half_width,
-               shield_height * 0.44F,
-               frame_half_depth,
-               k_bronze_rim);
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        sphere_at(QVector3D(0.0F, 0.0F, k_curve_depth + 0.030F), k_boss_radius),
+        k_iron_boss);
 
-    curved_box(QVector3D(0.0F, 0.0F, 0.040F),
-               ridge_half_width,
-               shield_height * 0.40F,
-               frame_half_depth,
-               k_bronze_ridge);
-    curved_box(QVector3D(0.0F, 0.0F, 0.070F),
-               boss_radius * 0.95F,
-               boss_radius * 0.85F,
-               frame_half_depth,
-               k_bronze_ring);
-
-    QVector3D const boss_center =
-        k_shield_center + shield_forward * (shield_curve + boss_depth * 0.75F);
-    QMatrix4x4 boss_m;
-    boss_m.translate(boss_center);
-    boss_m.rotate(90.0F, 1.0F, 0.0F, 0.0F);
-    boss_m.scale(boss_radius * 0.72F, boss_depth, boss_radius * 0.72F);
-    builder.add_palette_mesh(get_unit_cylinder(), boss_m, k_bronze_boss);
-
-    std::array<QVector3D, 4> const rivet_offsets{
-        QVector3D(-shield_width * 0.28F, shield_height * 0.30F, 0.060F),
-        QVector3D(shield_width * 0.28F, shield_height * 0.30F, 0.060F),
-        QVector3D(-shield_width * 0.28F, -shield_height * 0.30F, 0.060F),
-        QVector3D(shield_width * 0.28F, -shield_height * 0.30F, 0.060F),
-    };
-    for (const QVector3D& offset : rivet_offsets) {
-      curved_box(offset, 0.018F, 0.018F, 0.020F, k_bronze_rivet, 0.0F);
-    }
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        cylinder_between(QVector3D(-0.055F, 0.0F, -k_board_thickness - 0.020F),
+                         QVector3D(0.055F, 0.0F, -k_board_thickness - 0.020F),
+                         0.012F),
+        k_leather_grip);
 
     return std::move(builder).build();
   }();
@@ -149,7 +293,7 @@ auto shield_basis_transform(const QMatrix4x4& parent,
 auto scutum_local_pose() -> QMatrix4x4 {
   QMatrix4x4 pose;
   pose.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-  pose.translate(0.0F, 0.0F, -0.30F);
+  pose.translate(0.0F, 0.0F, 0.07F);
   return pose;
 }
 
@@ -178,19 +322,23 @@ void RomanScutumRenderer::submit(const RomanScutumConfig&,
     pose_adjustment = bind_left_shield_pose_calibration();
   }
 
-  QVector3D const shield_red =
-      saturate_color(palette.cloth * QVector3D(1.5F, 0.3F, 0.3F));
-  QVector3D const bronze_color =
-      saturate_color(palette.metal * QVector3D(1.3F, 1.0F, 0.5F));
+  QVector3D const shield_red = saturate_color(QVector3D(0.72F, 0.13F, 0.10F));
+  QVector3D const wood_back = saturate_color(QVector3D(0.46F, 0.38F, 0.29F));
+  QVector3D const brass_dark = saturate_color(QVector3D(0.63F, 0.53F, 0.24F));
+  QVector3D const brass_light = saturate_color(QVector3D(0.74F, 0.63F, 0.32F));
+  QVector3D const iron_color = saturate_color(QVector3D(0.58F, 0.58F, 0.60F));
+  QVector3D const rawhide_color = saturate_color(QVector3D(0.64F, 0.57F, 0.44F));
+  QVector3D const grip_color =
+      saturate_color(palette.leather * QVector3D(0.92F, 0.72F, 0.54F));
 
   std::array<QVector3D, k_roman_scutum_role_count> const palette_slots{
-      shield_red * 0.975F,
-      shield_red * 1.025F,
-      bronze_color * 0.9F,
-      bronze_color,
-      bronze_color * 1.1F,
-      bronze_color * 0.95F,
-      bronze_color * 1.15F,
+      shield_red,
+      wood_back,
+      brass_dark,
+      brass_light,
+      iron_color,
+      rawhide_color,
+      grip_color,
   };
 
   append_equipment_archetype(batch,
@@ -206,17 +354,21 @@ auto roman_scutum_fill_role_colors(const HumanoidPalette& palette,
   if (max < k_roman_scutum_role_count) {
     return 0;
   }
-  QVector3D const shield_red =
-      saturate_color(palette.cloth * QVector3D(1.5F, 0.3F, 0.3F));
-  QVector3D const bronze_color =
-      saturate_color(palette.metal * QVector3D(1.3F, 1.0F, 0.5F));
-  out[k_red_even] = shield_red * 0.975F;
-  out[k_red_odd] = shield_red * 1.025F;
-  out[k_bronze_ridge] = bronze_color * 0.9F;
-  out[k_bronze_ring] = bronze_color;
-  out[k_bronze_boss] = bronze_color * 1.1F;
-  out[k_bronze_rim] = bronze_color * 0.95F;
-  out[k_bronze_rivet] = bronze_color * 1.15F;
+  QVector3D const shield_red = saturate_color(QVector3D(0.72F, 0.13F, 0.10F));
+  QVector3D const wood_back = saturate_color(QVector3D(0.46F, 0.38F, 0.29F));
+  QVector3D const brass_dark = saturate_color(QVector3D(0.63F, 0.53F, 0.24F));
+  QVector3D const brass_light = saturate_color(QVector3D(0.74F, 0.63F, 0.32F));
+  QVector3D const iron_color = saturate_color(QVector3D(0.58F, 0.58F, 0.60F));
+  QVector3D const rawhide_color = saturate_color(QVector3D(0.64F, 0.57F, 0.44F));
+  QVector3D const grip_color =
+      saturate_color(palette.leather * QVector3D(0.92F, 0.72F, 0.54F));
+  out[k_red_face] = shield_red;
+  out[k_wood_back] = wood_back;
+  out[k_brass_spine] = brass_dark;
+  out[k_brass_boss_plate] = brass_light;
+  out[k_iron_boss] = iron_color;
+  out[k_rawhide_rim] = rawhide_color;
+  out[k_leather_grip] = grip_color;
   return k_roman_scutum_role_count;
 }
 
@@ -234,17 +386,16 @@ auto roman_scutum_make_static_attachment(std::uint8_t base_role_byte)
       .bind_socket_transform = bind_socket,
       .mesh_from_socket = bind_left_shield_pose_calibration() * scutum_local_pose(),
   });
-  spec.palette_role_remap[k_red_even] = base_role_byte;
-  spec.palette_role_remap[k_red_odd] = static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[k_bronze_ridge] =
+  spec.palette_role_remap[k_red_face] = base_role_byte;
+  spec.palette_role_remap[k_wood_back] = static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_brass_spine] =
       static_cast<std::uint8_t>(base_role_byte + 2U);
-  spec.palette_role_remap[k_bronze_ring] =
+  spec.palette_role_remap[k_brass_boss_plate] =
       static_cast<std::uint8_t>(base_role_byte + 3U);
-  spec.palette_role_remap[k_bronze_boss] =
-      static_cast<std::uint8_t>(base_role_byte + 4U);
-  spec.palette_role_remap[k_bronze_rim] =
+  spec.palette_role_remap[k_iron_boss] = static_cast<std::uint8_t>(base_role_byte + 4U);
+  spec.palette_role_remap[k_rawhide_rim] =
       static_cast<std::uint8_t>(base_role_byte + 5U);
-  spec.palette_role_remap[k_bronze_rivet] =
+  spec.palette_role_remap[k_leather_grip] =
       static_cast<std::uint8_t>(base_role_byte + 6U);
   return spec;
 }

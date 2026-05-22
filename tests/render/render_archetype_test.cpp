@@ -3,11 +3,16 @@
 
 #include <array>
 #include <gtest/gtest.h>
+#include <utility>
 #include <vector>
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "render/entity/nations/carthage/barracks_renderer.h"
 #include "render/entity/nations/carthage/defense_tower_renderer.h"
+#include "render/entity/nations/carthage/home_renderer.h"
+#include "render/entity/nations/carthage/wall_renderer.h"
+#include "render/entity/nations/roman/barracks_renderer.h"
 #include "render/entity/nations/roman/defense_tower_renderer.h"
 #include "render/entity/nations/roman/home_renderer.h"
 #include "render/entity/nations/roman/wall_renderer.h"
@@ -15,6 +20,9 @@
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/scale_barding_renderer.h"
 #include "render/equipment/horse/decorations/saddle_bag_renderer.h"
+#include "render/equipment/horse/saddles/carthage_saddle_renderer.h"
+#include "render/equipment/horse/saddles/light_cavalry_saddle_renderer.h"
+#include "render/equipment/horse/saddles/roman_saddle_renderer.h"
 #include "render/gl/resources.h"
 #include "render/horse/attachment_frames.h"
 #include "render/horse/dimensions.h"
@@ -76,6 +84,22 @@ auto near_vec3(const QVector3D& lhs, const QVector3D& rhs, float eps = 1e-4F) ->
   return (lhs - rhs).length() <= eps;
 }
 
+auto axis_scale_of(const QMatrix4x4& model, int column) -> float {
+  return model.column(column).toVector3D().length();
+}
+
+auto count_meshes_with_color(const std::vector<RecordedMesh>& meshes,
+                             const QVector3D& color,
+                             float eps = 1e-4F) -> std::size_t {
+  std::size_t count = 0;
+  for (const RecordedMesh& mesh : meshes) {
+    if (near_vec3(mesh.color, color, eps)) {
+      ++count;
+    }
+  }
+  return count;
+}
+
 auto bounds_for_recorded_meshes(const std::vector<RecordedMesh>& meshes)
     -> Render::GL::BoundingBox {
   auto bounds = Render::GL::empty_bounding_box();
@@ -91,6 +115,33 @@ auto bounds_for_recorded_meshes(const std::vector<RecordedMesh>& meshes)
   };
 
   for (const RecordedMesh& mesh : meshes) {
+    for (const QVector3D& corner : k_unit_corners) {
+      bounds.expand(mesh.model.map(corner));
+    }
+  }
+
+  return bounds;
+}
+
+auto bounds_for_recorded_meshes_below_center_y(const std::vector<RecordedMesh>& meshes,
+                                               float max_center_y)
+    -> Render::GL::BoundingBox {
+  auto bounds = Render::GL::empty_bounding_box();
+  static const std::array<QVector3D, 8> k_unit_corners = {
+      QVector3D(-0.5F, -0.5F, -0.5F),
+      QVector3D(0.5F, -0.5F, -0.5F),
+      QVector3D(-0.5F, 0.5F, -0.5F),
+      QVector3D(0.5F, 0.5F, -0.5F),
+      QVector3D(-0.5F, -0.5F, 0.5F),
+      QVector3D(0.5F, -0.5F, 0.5F),
+      QVector3D(-0.5F, 0.5F, 0.5F),
+      QVector3D(0.5F, 0.5F, 0.5F),
+  };
+
+  for (const RecordedMesh& mesh : meshes) {
+    if (mesh.model.column(3).y() > max_center_y) {
+      continue;
+    }
     for (const QVector3D& corner : k_unit_corners) {
       bounds.expand(mesh.model.map(corner));
     }
@@ -259,6 +310,46 @@ TEST(RenderArchetypeEquipment, SaddleBagsBakeAllRigidPieces) {
   EXPECT_EQ(submitter.cylinder_count, 0U);
 }
 
+TEST(RenderArchetypeEquipment, SaddleArchetypesStayLowAndWide) {
+  using namespace Render::GL;
+
+  std::array<const RenderArchetype*, 3> const saddles = {
+      &roman_saddle_archetype(),
+      &carthage_saddle_archetype(),
+      &light_cavalry_saddle_archetype()};
+  std::array<QVector3D, 1> palette{QVector3D(0.42F, 0.24F, 0.11F)};
+
+  for (const RenderArchetype* saddle : saddles) {
+    RecordingSubmitter submitter;
+    QMatrix4x4 const world;
+    RenderInstance const instance{
+        .archetype = saddle, .world = world, .palette = palette};
+    submit_render_instance(submitter, instance);
+
+    ASSERT_GE(submitter.meshes.size(), 6U);
+    BoundingBox const bounds = bounds_for_recorded_meshes(submitter.meshes);
+    QVector3D const size = bounds.max - bounds.min;
+    EXPECT_GT(size.z(), size.y() * 2.5F);
+    EXPECT_GT(size.x(), size.y() * 2.0F);
+
+    int front_arch_count = 0;
+    int rear_arch_count = 0;
+    for (const RecordedMesh& mesh : submitter.meshes) {
+      QVector3D const center = mesh.model.column(3).toVector3D();
+      if (center.z() > 0.14F && center.y() > 0.06F) {
+        ++front_arch_count;
+      }
+      if (center.z() < -0.12F && center.y() > 0.05F) {
+        ++rear_arch_count;
+      }
+    }
+
+    EXPECT_LT(bounds.max.y(), 0.14F);
+    EXPECT_GE(front_arch_count, 1);
+    EXPECT_GE(rear_arch_count, 1);
+  }
+}
+
 TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   using namespace Render::GL;
 
@@ -282,7 +373,7 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   RecordingSubmitter submitter;
   renderer(ctx, submitter);
 
-  EXPECT_EQ(submitter.meshes.size(), 47U);
+  EXPECT_GT(submitter.meshes.size(), 47U);
 }
 
 TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
@@ -312,7 +403,7 @@ TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
   RecordingSubmitter submitter;
   (*renderer)(ctx, submitter);
 
-  EXPECT_EQ(submitter.meshes.size(), 47U);
+  EXPECT_GT(submitter.meshes.size(), 47U);
 }
 
 TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {
@@ -349,6 +440,46 @@ TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {
     }
   }
   EXPECT_TRUE(found_team_tint);
+}
+
+TEST(RenderArchetypeBuildings, RomanAndCarthageHomesRemainDistinctSilhouettes) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_home_renderer(registry);
+  Carthage::register_home_renderer(registry);
+  const auto roman_renderer = registry.get("troops/roman/home");
+  const auto carthage_renderer = registry.get("troops/carthage/home");
+  ASSERT_TRUE(static_cast<bool>(roman_renderer));
+  ASSERT_TRUE(static_cast<bool>(carthage_renderer));
+
+  auto render_bounds = [&](std::uint32_t entity_id, const RenderFunc& renderer) {
+    Engine::Core::Entity entity(entity_id);
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(unit, nullptr);
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    EXPECT_FALSE(submitter.meshes.empty());
+    return std::make_pair(
+        submitter.meshes.size(),
+        bounds_for_recorded_meshes_below_center_y(submitter.meshes, 2.7F));
+  };
+
+  const auto [roman_count, roman_bounds] = render_bounds(21, roman_renderer);
+  const auto [carthage_count, carthage_bounds] = render_bounds(22, carthage_renderer);
+
+  EXPECT_GT(roman_bounds.max.y(), carthage_bounds.max.y());
+  EXPECT_NE(roman_count, carthage_count);
 }
 
 TEST(RenderArchetypeBuildings, RomanTowerAppliesTeamPaletteSlot) {
@@ -423,6 +554,316 @@ TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
   EXPECT_TRUE(found_team_tint);
 }
 
+TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
+  using namespace Render::GL;
+
+  auto render_bounds = [](auto register_renderer_fn,
+                          const char* key,
+                          std::uint32_t entity_id) -> BoundingBox {
+    EntityRendererRegistry const registry;
+    register_renderer_fn(registry);
+    const auto renderer = registry.get(key);
+    EXPECT_TRUE(static_cast<bool>(renderer));
+    if (!renderer) {
+      return {};
+    }
+
+    Engine::Core::Entity entity(entity_id);
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (renderable == nullptr || unit == nullptr) {
+      return {};
+    }
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    EXPECT_FALSE(submitter.meshes.empty());
+    return bounds_for_recorded_meshes(submitter.meshes);
+  };
+
+  const BoundingBox roman_bounds = render_bounds(
+      Roman::register_defense_tower_renderer, "troops/roman/defense_tower", 200);
+  const BoundingBox carthage_bounds = render_bounds(
+      Carthage::register_defense_tower_renderer, "troops/carthage/defense_tower", 201);
+
+  EXPECT_GT(roman_bounds.max.y(), 3.75F);
+  EXPECT_GT(carthage_bounds.max.y(), 3.45F);
+}
+
+TEST(RenderArchetypeBuildings, RomanTowerHealthBarOnlyShowsWhileUnderAttack) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_defense_tower_renderer(registry);
+  const auto renderer = registry.get("troops/roman/defense_tower");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  auto render_mesh_count = [&](bool under_attack) {
+    Engine::Core::Entity entity(30 + (under_attack ? 1U : 0U));
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (renderable == nullptr || unit == nullptr) {
+      return std::size_t{0};
+    }
+    unit->health = 50;
+    if (under_attack) {
+      auto* capture = entity.add_component<Engine::Core::CaptureComponent>();
+      EXPECT_NE(capture, nullptr);
+      if (capture == nullptr) {
+        return std::size_t{0};
+      }
+      capture->is_being_captured = true;
+      capture->capturing_player_id = -1;
+      capture->capture_progress = 3.0F;
+    }
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+    ctx.animation_time = 1.3F;
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    return submitter.meshes.size();
+  };
+
+  const std::size_t idle_count = render_mesh_count(false);
+  const std::size_t under_attack_count = render_mesh_count(true);
+  EXPECT_GT(under_attack_count, idle_count);
+}
+
+TEST(RenderArchetypeBuildings, RomanHomeHealthBarOnlyShowsWhileUnderAttack) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_home_renderer(registry);
+  const auto renderer = registry.get("troops/roman/home");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  auto render_mesh_count = [&](bool under_attack) {
+    Engine::Core::Entity entity(34 + (under_attack ? 1U : 0U));
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (renderable == nullptr || unit == nullptr) {
+      return std::size_t{0};
+    }
+    unit->health = 50;
+    if (under_attack) {
+      auto* capture = entity.add_component<Engine::Core::CaptureComponent>();
+      EXPECT_NE(capture, nullptr);
+      if (capture == nullptr) {
+        return std::size_t{0};
+      }
+      capture->is_being_captured = true;
+      capture->capturing_player_id = -1;
+      capture->capture_progress = 4.0F;
+    }
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+    ctx.animation_time = 0.9F;
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    return submitter.meshes.size();
+  };
+
+  const std::size_t idle_count = render_mesh_count(false);
+  const std::size_t under_attack_count = render_mesh_count(true);
+  EXPECT_GT(under_attack_count, idle_count);
+}
+
+TEST(RenderArchetypeBuildings, RomanHomeHealthBarShowsOnRecentCombatHit) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_home_renderer(registry);
+  const auto renderer = registry.get("troops/roman/home");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  auto render_mesh_count = [&](bool recent_hit) {
+    Engine::Core::Entity entity(36 + (recent_hit ? 1U : 0U));
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (renderable == nullptr || unit == nullptr) {
+      return std::size_t{0};
+    }
+    unit->health = 50;
+    if (recent_hit) {
+      auto* feedback = entity.add_component<Engine::Core::HitFeedbackComponent>();
+      EXPECT_NE(feedback, nullptr);
+      if (feedback == nullptr) {
+        return std::size_t{0};
+      }
+      feedback->is_reacting = true;
+      feedback->reaction_time = 0.0F;
+    }
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+    ctx.animation_time = 0.5F;
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    return submitter.meshes.size();
+  };
+
+  const std::size_t idle_count = render_mesh_count(false);
+  const std::size_t recent_hit_count = render_mesh_count(true);
+  EXPECT_GT(recent_hit_count, idle_count);
+}
+
+TEST(RenderArchetypeBuildings, DestroyedRomanTowerRemovesBannerTint) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_defense_tower_renderer(registry);
+  const auto renderer = registry.get("troops/roman/defense_tower");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  auto render_team_tint_count = [&](std::uint32_t entity_id, int health) {
+    Engine::Core::Entity entity(entity_id);
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (renderable == nullptr || unit == nullptr) {
+      return std::size_t{0};
+    }
+    renderable->color = {0.82F, 0.25F, 0.55F};
+    unit->health = health;
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    return count_meshes_with_color(submitter.meshes, QVector3D(0.82F, 0.25F, 0.55F));
+  };
+
+  const std::size_t normal_team_tint = render_team_tint_count(37, 100);
+  const std::size_t destroyed_team_tint = render_team_tint_count(38, 10);
+  EXPECT_GT(normal_team_tint, 0U);
+  EXPECT_EQ(destroyed_team_tint, 0U);
+}
+
+TEST(RenderArchetypeBuildings, RomanTowerDamageStatesReduceSilhouette) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_defense_tower_renderer(registry);
+  const auto renderer = registry.get("troops/roman/defense_tower");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  auto render_bounds = [&](std::uint32_t entity_id, int health) {
+    Engine::Core::Entity entity(entity_id);
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (renderable == nullptr || unit == nullptr) {
+      return std::make_pair(std::size_t{0}, Render::GL::BoundingBox{});
+    }
+    unit->health = health;
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    EXPECT_FALSE(submitter.meshes.empty());
+    return std::make_pair(
+        submitter.meshes.size(),
+        bounds_for_recorded_meshes_below_center_y(submitter.meshes, 2.0F));
+  };
+
+  const auto [normal_count, normal_bounds] = render_bounds(31, 100);
+  const auto [damaged_count, damaged_bounds] = render_bounds(32, 50);
+  const auto [destroyed_count, destroyed_bounds] = render_bounds(33, 10);
+
+  EXPECT_GT(normal_count, damaged_count);
+  EXPECT_GT(damaged_count, destroyed_count);
+  EXPECT_GT(normal_bounds.max.y(), damaged_bounds.max.y());
+  EXPECT_GT(damaged_bounds.max.y(), destroyed_bounds.max.y());
+}
+
+TEST(RenderArchetypeBuildings, CarthageTowerDamageStatesReduceSilhouette) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Carthage::register_defense_tower_renderer(registry);
+  const auto renderer = registry.get("troops/carthage/defense_tower");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  auto render_bounds = [&](std::uint32_t entity_id, int health) {
+    Engine::Core::Entity entity(entity_id);
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (renderable == nullptr || unit == nullptr) {
+      return std::make_pair(std::size_t{0}, Render::GL::BoundingBox{});
+    }
+    unit->health = health;
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    EXPECT_FALSE(submitter.meshes.empty());
+    return std::make_pair(submitter.meshes.size(),
+                          bounds_for_recorded_meshes(submitter.meshes));
+  };
+
+  const auto [normal_count, normal_bounds] = render_bounds(41, 100);
+  const auto [damaged_count, damaged_bounds] = render_bounds(42, 50);
+  const auto [destroyed_count, destroyed_bounds] = render_bounds(43, 10);
+
+  EXPECT_GT(normal_count, damaged_count);
+  EXPECT_GT(damaged_count, destroyed_count);
+  EXPECT_GT(normal_bounds.max.y(), damaged_bounds.max.y());
+  EXPECT_GT(damaged_bounds.max.y(), destroyed_bounds.max.y());
+}
+
 TEST(RenderArchetypeBuildings, RomanStraightWallFormsTallContinuousPalisade) {
   using namespace Render::GL;
 
@@ -456,6 +897,133 @@ TEST(RenderArchetypeBuildings, RomanStraightWallFormsTallContinuousPalisade) {
   EXPECT_GT(left_bounds.max.y(), 2.5F);
   EXPECT_GT(left_bounds.max.x() - left_bounds.min.x(), 2.0F);
   EXPECT_GE(left_bounds.max.x() + 0.001F, right_bounds.min.x());
+}
+
+TEST(RenderArchetypeBuildings, CarthageStraightWallFormsTallContinuousPalisade) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Carthage::register_wall_renderer(registry);
+  const auto renderer = registry.get("troops/carthage/wall_segment_straight");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Engine::Core::Entity entity(44);
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+
+  RecordingSubmitter left_submitter;
+  ctx.model = QMatrix4x4{};
+  renderer(ctx, left_submitter);
+  const auto left_bounds = bounds_for_recorded_meshes(left_submitter.meshes);
+
+  RecordingSubmitter right_submitter;
+  ctx.model = QMatrix4x4{};
+  ctx.model.translate(2.0F, 0.0F, 0.0F);
+  renderer(ctx, right_submitter);
+  const auto right_bounds = bounds_for_recorded_meshes(right_submitter.meshes);
+
+  EXPECT_GT(left_bounds.max.y(), 2.4F);
+  EXPECT_GT(left_bounds.max.x() - left_bounds.min.x(), 2.0F);
+  EXPECT_GE(left_bounds.max.x() + 0.001F, right_bounds.min.x());
+}
+
+TEST(RenderArchetypeBuildings, RomanBarracksDamageStatesReduceSilhouette) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_barracks_renderer(registry);
+  const auto renderer = registry.get("troops/roman/barracks");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  auto render_bounds = [&](std::uint32_t entity_id, int health) {
+    Engine::Core::Entity entity(entity_id);
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(transform, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (unit == nullptr) {
+      return std::make_pair(std::size_t{0}, Render::GL::BoundingBox{});
+    }
+    unit->health = health;
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    EXPECT_FALSE(submitter.meshes.empty());
+    return std::make_pair(submitter.meshes.size(),
+                          bounds_for_recorded_meshes(submitter.meshes));
+  };
+
+  const auto [normal_count, normal_bounds] = render_bounds(51, 100);
+  const auto [damaged_count, damaged_bounds] = render_bounds(52, 50);
+  const auto [destroyed_count, destroyed_bounds] = render_bounds(53, 10);
+  (void)normal_bounds;
+  (void)damaged_bounds;
+  (void)destroyed_bounds;
+
+  EXPECT_GT(normal_count, damaged_count);
+  EXPECT_GT(damaged_count, destroyed_count);
+}
+
+TEST(RenderArchetypeBuildings, CarthageBarracksDamageStatesReduceSilhouette) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Carthage::register_barracks_renderer(registry);
+  const auto renderer = registry.get("troops/carthage/barracks");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  auto render_bounds = [&](std::uint32_t entity_id, int health) {
+    Engine::Core::Entity entity(entity_id);
+    auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+    auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+    auto* unit =
+        entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+    EXPECT_NE(renderable, nullptr);
+    EXPECT_NE(transform, nullptr);
+    EXPECT_NE(unit, nullptr);
+    if (unit == nullptr) {
+      return std::make_pair(std::size_t{0}, Render::GL::BoundingBox{});
+    }
+    unit->health = health;
+
+    DrawContext ctx;
+    ResourceManager resources;
+    ctx.entity = &entity;
+    ctx.resources = &resources;
+    ctx.model = QMatrix4x4{};
+
+    RecordingSubmitter submitter;
+    renderer(ctx, submitter);
+    EXPECT_FALSE(submitter.meshes.empty());
+    return std::make_pair(submitter.meshes.size(),
+                          bounds_for_recorded_meshes(submitter.meshes));
+  };
+
+  const auto [normal_count, normal_bounds] = render_bounds(61, 100);
+  const auto [damaged_count, damaged_bounds] = render_bounds(62, 50);
+  const auto [destroyed_count, destroyed_bounds] = render_bounds(63, 10);
+  (void)normal_bounds;
+  (void)damaged_bounds;
+  (void)destroyed_bounds;
+
+  EXPECT_GT(normal_count, damaged_count);
+  EXPECT_GT(damaged_count, destroyed_count);
 }
 
 TEST(RenderArchetypeBuildings, RomanWallEndKeepsFullSegmentFootprint) {

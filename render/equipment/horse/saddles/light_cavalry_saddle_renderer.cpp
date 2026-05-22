@@ -19,20 +19,40 @@ enum LightCavalrySaddlePaletteSlot : std::uint8_t {
 auto light_cavalry_saddle_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
     RenderArchetypeBuilder builder("light_cavalry_horse_saddle");
-    builder.add_palette_box(QVector3D(0.0F, 0.008F, 0.0F),
-                            QVector3D(0.18F, 0.09F, 0.48F) * 0.21F,
+    builder.add_palette_box(QVector3D(0.0F, 0.022F, 0.00F),
+                            QVector3D(0.26F, 0.038F, 0.50F),
                             k_saddle_slot,
                             nullptr,
                             1.0F,
                             4);
-    builder.add_palette_box(QVector3D(0.0F, 0.016F, 0.11F),
-                            QVector3D(0.07F, 0.28F, 0.16F) * 0.15F,
+    builder.add_palette_box(QVector3D(0.0F, 0.048F, 0.00F),
+                            QVector3D(0.18F, 0.044F, 0.28F),
                             k_saddle_slot,
                             nullptr,
                             1.0F,
                             4);
-    builder.add_palette_box(QVector3D(0.0F, 0.020F, -0.12F),
-                            QVector3D(0.08F, 0.30F, 0.18F) * 0.16F,
+    builder.add_palette_cylinder(QVector3D(-0.10F, 0.072F, 0.16F),
+                                 QVector3D(0.10F, 0.072F, 0.16F),
+                                 0.026F,
+                                 k_saddle_slot,
+                                 nullptr,
+                                 1.0F,
+                                 4);
+    builder.add_palette_cylinder(QVector3D(-0.09F, 0.064F, -0.15F),
+                                 QVector3D(0.09F, 0.064F, -0.15F),
+                                 0.024F,
+                                 k_saddle_slot,
+                                 nullptr,
+                                 1.0F,
+                                 4);
+    builder.add_palette_box(QVector3D(-0.13F, 0.010F, 0.00F),
+                            QVector3D(0.042F, 0.056F, 0.26F),
+                            k_saddle_slot,
+                            nullptr,
+                            1.0F,
+                            4);
+    builder.add_palette_box(QVector3D(0.13F, 0.010F, 0.00F),
+                            QVector3D(0.042F, 0.056F, 0.26F),
                             k_saddle_slot,
                             nullptr,
                             1.0F,

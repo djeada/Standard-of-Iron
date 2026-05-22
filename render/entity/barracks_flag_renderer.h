@@ -266,8 +266,9 @@ inline void draw_hanging_banner(const DrawContext& p,
                                 const QVector3D& base_team_trim,
                                 const HangingBannerStyle& style,
                                 const ClothBannerResources* cloth = nullptr) {
-  QVector3D const pole_center(
-      style.pole_base.x(), style.pole_height / 2.0F, style.pole_base.z());
+  QVector3D const pole_center(style.pole_base.x(),
+                              style.pole_base.y() + style.pole_height / 2.0F,
+                              style.pole_base.z());
   QVector3D const pole_size(
       style.pole_radius * 1.8F, style.pole_height / 2.0F, style.pole_radius * 1.8F);
 
@@ -283,10 +284,10 @@ inline void draw_hanging_banner(const DrawContext& p,
                          style.pole_height * style.capture_lowering_ratio);
 
   float const beam_length = style.banner_width * 0.5F;
-  float const beam_y =
-      style.pole_height - style.banner_height * 0.2F - capture_colors.lowering_offset;
-  float const banner_y =
-      style.pole_height - style.banner_height / 2.0F - capture_colors.lowering_offset;
+  float const beam_y = style.pole_base.y() + style.pole_height -
+                       style.banner_height * 0.2F - capture_colors.lowering_offset;
+  float const banner_y = style.pole_base.y() + style.pole_height -
+                         style.banner_height / 2.0F - capture_colors.lowering_offset;
 
   QVector3D const beam_start(
       style.pole_base.x() + style.beam_inset, beam_y, style.pole_base.z());
@@ -333,13 +334,15 @@ inline void draw_hanging_banner(const DrawContext& p,
   for (int i = 0; i < style.ring_count; ++i) {
     float const ring_y =
         style.ring_y_start + static_cast<float>(i) * style.ring_spacing;
-    QVector3D const ring_start(style.pole_base.x(), ring_y, style.pole_base.z());
-    QVector3D const ring_end(
-        style.pole_base.x(), ring_y + style.ring_height, style.pole_base.z());
+    QVector3D const ring_end(style.pole_base.x(),
+                             style.pole_base.y() + ring_y + style.ring_height,
+                             style.pole_base.z());
+    QVector3D const ring_base(
+        style.pole_base.x(), style.pole_base.y() + ring_y, style.pole_base.z());
     out.mesh(get_unit_cylinder(),
              p.model *
                  Render::Geom::cylinder_between(
-                     ring_start, ring_end, style.pole_radius * style.ring_radius_scale),
+                     ring_base, ring_end, style.pole_radius * style.ring_radius_scale),
              style.ring_color,
              white,
              1.0F);

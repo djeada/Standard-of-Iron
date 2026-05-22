@@ -37,8 +37,11 @@ struct ResolvedClipPlayback {
   std::uint16_t clip_id{0xFFFFu};
   std::uint32_t global_frame{0U};
   std::uint32_t frame_in_clip{0U};
+  std::uint32_t next_global_frame{0U};
+  std::uint32_t next_frame_in_clip{0U};
   std::uint32_t frame_count{0U};
   float normalized_phase{0.0F};
+  float frame_lerp{0.0F};
   bool loops{false};
 
   [[nodiscard]] auto valid() const noexcept -> bool {
