@@ -622,6 +622,12 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     if (elem.type == "road" && !elem.style.isEmpty()) {
       json[MapJsonKeys::style] = elem.style;
     }
+    if (elem.type == "wall") {
+      json[MapJsonKeys::player_id] = elem.player_id;
+      if (!elem.nation.isEmpty()) {
+        json[MapJsonKeys::nation] = elem.nation;
+      }
+    }
     for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];
     }
@@ -786,13 +792,17 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       elem.width = static_cast<float>(new_json[MapJsonKeys::width].toDouble(3.0));
       elem.height = static_cast<float>(new_json[MapJsonKeys::height].toDouble(0.5));
       elem.style = new_json[MapJsonKeys::style].toString("default");
+      elem.player_id = new_json[MapJsonKeys::player_id].toInt(0);
+      elem.nation = new_json[MapJsonKeys::nation].toString();
 
       const QStringList known_keys = {MapJsonKeys::type,
                                       MapJsonKeys::start,
                                       MapJsonKeys::end,
                                       MapJsonKeys::width,
                                       MapJsonKeys::height,
-                                      MapJsonKeys::style};
+                                      MapJsonKeys::style,
+                                      MapJsonKeys::player_id,
+                                      MapJsonKeys::nation};
       for (const QString& key : new_json.keys()) {
         if (!known_keys.contains(key)) {
           elem.extra_fields[key] = new_json[key];

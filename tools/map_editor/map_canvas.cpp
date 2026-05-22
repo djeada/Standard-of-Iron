@@ -452,6 +452,8 @@ void MapCanvas::draw_linear_elements(QPainter& painter) {
       color = QColor(139, 119, 101);
     } else if (elem.type == "bridge") {
       color = QColor(160, 140, 100);
+    } else if (elem.type == "wall") {
+      color = player_color_for_editor(elem.player_id);
     }
 
     if (is_selected) {
@@ -593,6 +595,12 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   case ToolType::Village:
     type = "village";
     break;
+  case ToolType::DefenseTower:
+    type = "defense_tower";
+    break;
+  case ToolType::Home:
+    type = "home";
+    break;
   default:
     break;
   }
@@ -619,6 +627,9 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
       preview.width = 10.0F;
       preview.depth = 10.0F;
       draw_element(painter, type, widget_pos, 0, terrain_marker_radius_px(preview));
+    } else if (type == QStringLiteral("barracks") || type == QStringLiteral("village") ||
+               type == QStringLiteral("defense_tower") || type == QStringLiteral("home")) {
+      draw_element(painter, type, widget_pos, m_current_player_id);
     } else {
       draw_element(painter, type, widget_pos);
     }
@@ -674,6 +685,12 @@ void MapCanvas::draw_element(QPainter& painter,
   } else if (type == "village") {
     fill_color = player_color_for_editor(player_id);
     symbol = "🏘";
+  } else if (type == "defense_tower") {
+    fill_color = player_color_for_editor(player_id);
+    symbol = "🗼";
+  } else if (type == "home") {
+    fill_color = player_color_for_editor(player_id);
+    symbol = "🏠";
   } else {
     fill_color = QColor(128, 128, 128);
     symbol = "?";
@@ -691,7 +708,9 @@ void MapCanvas::draw_element(QPainter& painter,
                    Qt::AlignCenter,
                    symbol);
 
-  if ((type == "barracks" || type == "village") && player_id >= 0) {
+  if ((type == "barracks" || type == "village" || type == "defense_tower" ||
+       type == "home") &&
+      player_id >= 0) {
     QString const player_text = player_id == 0 ? "N" : QString::number(player_id);
     font.setPointSize(8);
     font.setBold(true);
@@ -821,11 +840,14 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
     case ToolType::TroopCivilian:
     case ToolType::TroopBuilder:
     case ToolType::UndeadZone:
+    case ToolType::DefenseTower:
+    case ToolType::Home:
       place_element(grid_pos);
       break;
     case ToolType::River:
     case ToolType::Road:
     case ToolType::Bridge:
+    case ToolType::Wall:
       if (!m_is_placing_linear) {
         start_linear_element(grid_pos);
       } else {
@@ -1272,9 +1294,26 @@ void MapCanvas::place_element(const QPointF& grid_pos) {
     }
     m_map_data->execute_command(std::make_unique<AddWorldPropCmd>(m_map_data, elem));
   } else if (m_current_tool == ToolType::Barracks ||
-             m_current_tool == ToolType::Village) {
+             m_current_tool == ToolType::Village ||
+             m_current_tool == ToolType::DefenseTower ||
+             m_current_tool == ToolType::Home) {
     StructureElement elem;
-    elem.type = (m_current_tool == ToolType::Barracks) ? "barracks" : "village";
+    switch (m_current_tool) {
+    case ToolType::Barracks:
+      elem.type = "barracks";
+      break;
+    case ToolType::Village:
+      elem.type = "village";
+      break;
+    case ToolType::DefenseTower:
+      elem.type = "defense_tower";
+      break;
+    case ToolType::Home:
+      elem.type = "home";
+      break;
+    default:
+      break;
+    }
     elem.x = static_cast<float>(grid_pos.x());
     elem.z = static_cast<float>(grid_pos.y());
     elem.player_id = m_current_player_id;
@@ -1324,6 +1363,8 @@ void MapCanvas::start_linear_element(const QPointF& grid_pos) {
     type_name = "road";
   } else if (m_current_tool == ToolType::Bridge) {
     type_name = "bridge";
+  } else if (m_current_tool == ToolType::Wall) {
+    type_name = "wall";
   }
   emit status_hint_changed("Drawing " + type_name +
                            " \u2014 click to place end point"
@@ -1355,6 +1396,11 @@ void MapCanvas::finish_linear_element(const QPointF& grid_pos) {
     elem.type = "bridge";
     elem.width = 4.0F;
     elem.height = 0.5F;
+    break;
+  case ToolType::Wall:
+    elem.type = "wall";
+    elem.width = 2.0F;
+    elem.player_id = m_current_player_id;
     break;
   default:
     break;

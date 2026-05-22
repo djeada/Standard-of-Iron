@@ -150,7 +150,8 @@ auto normalizedSpawnType(const QJsonObject& obj) -> QString {
 }
 
 auto isStructureSpawnType(const QString& type) -> bool {
-  return type == QStringLiteral("barracks") || type == QStringLiteral("village");
+  return type == QStringLiteral("barracks") || type == QStringLiteral("village") ||
+         type == QStringLiteral("defense_tower") || type == QStringLiteral("home");
 }
 
 auto isEditableTroopSpawnType(const QString& type) -> bool {
@@ -311,7 +312,9 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
                                        MapJsonKeys::rivers,
                                        MapJsonKeys::roads,
                                        MapJsonKeys::bridges,
-                                       MapJsonKeys::undead_zones};
+                                       MapJsonKeys::undead_zones,
+                                       MapJsonKeys::buildings,
+                                       MapJsonKeys::walls};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
@@ -362,9 +365,15 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
   if (root.contains(MapJsonKeys::bridges)) {
     parse_bridges_array(root[MapJsonKeys::bridges].toArray());
   }
+  if (root.contains(MapJsonKeys::walls)) {
+    parse_walls_array(root[MapJsonKeys::walls].toArray());
+  }
 
   if (root.contains(MapJsonKeys::spawns)) {
     parse_spawns_array(root[MapJsonKeys::spawns].toArray());
+  }
+  if (root.contains(MapJsonKeys::buildings)) {
+    parse_buildings_array(root[MapJsonKeys::buildings].toArray());
   }
 
   if (root.contains(MapJsonKeys::undead_zones)) {
@@ -441,10 +450,25 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
     root[MapJsonKeys::bridges] = bridges_arr;
   }
 
+  QJsonArray const buildings_arr = buildings_to_json();
+  if (!buildings_arr.isEmpty()) {
+    root[MapJsonKeys::buildings] = buildings_arr;
+  }
+
+  QJsonArray const walls_arr = walls_to_json();
+  if (!walls_arr.isEmpty()) {
+    root[MapJsonKeys::walls] = walls_arr;
+  }
+
   QVector<OrderedSpawnEntry> ordered_spawns;
   ordered_spawns.reserve(m_structures.size() + m_troop_spawns.size() +
                          m_raw_spawns.size());
   for (const auto& elem : m_structures) {
+    // defense_tower and home are saved to the "buildings" array, not spawns
+    if (elem.type == QStringLiteral("defense_tower") ||
+        elem.type == QStringLiteral("home")) {
+      continue;
+    }
     ordered_spawns.append({elem.spawn_order, structure_to_spawn_json(elem)});
   }
   for (const auto& elem : m_troop_spawns) {
@@ -633,6 +657,56 @@ void MapData::parse_bridges_array(const QJsonArray& arr) {
   }
 }
 
+void MapData::parse_buildings_array(const QJsonArray& arr) {
+  for (qsizetype order = 0; order < arr.size(); ++order) {
+    QJsonObject obj = arr[order].toObject();
+    StructureElement elem;
+    elem.type = obj[MapJsonKeys::type].toString();
+    if (elem.type.isEmpty() || !isStructureSpawnType(elem.type)) {
+      continue;
+    }
+    elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
+    elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
+    elem.player_id = obj[MapJsonKeys::player_id].toInt(0);
+    elem.max_population = obj[MapJsonKeys::max_population].toInt(150);
+    elem.nation = obj[MapJsonKeys::nation].toString();
+    elem.spawn_order = static_cast<int>(order) + m_next_spawn_order;
+
+    const QStringList known_keys = {MapJsonKeys::type,
+                                     MapJsonKeys::x,
+                                     MapJsonKeys::z,
+                                     MapJsonKeys::player_id,
+                                     MapJsonKeys::max_population,
+                                     MapJsonKeys::nation};
+    elem.extra_fields = copyExtraFields(obj, known_keys);
+
+    m_structures.append(elem);
+  }
+  m_next_spawn_order += static_cast<int>(arr.size());
+}
+
+void MapData::parse_walls_array(const QJsonArray& arr) {
+  for (const auto& val : arr) {
+    QJsonObject obj = val.toObject();
+    LinearElement elem;
+    elem.type = "wall";
+
+    applyLinearEndpoints(obj, elem);
+    elem.width = static_cast<float>(obj[MapJsonKeys::width].toDouble(2.0));
+    elem.player_id = obj[MapJsonKeys::player_id].toInt(0);
+    elem.nation = obj[MapJsonKeys::nation].toString();
+
+    const QStringList known_keys = {MapJsonKeys::start,
+                                     MapJsonKeys::end,
+                                     MapJsonKeys::width,
+                                     MapJsonKeys::player_id,
+                                     MapJsonKeys::nation};
+    elem.extra_fields = copyExtraFields(obj, known_keys);
+
+    m_linear_elements.append(elem);
+  }
+}
+
 QJsonArray MapData::terrain_to_json() const {
   QJsonArray arr;
   for (const auto& elem : m_terrain) {
@@ -762,6 +836,61 @@ QJsonArray MapData::bridges_to_json() const {
                                        static_cast<double>(elem.end.y())};
     obj[MapJsonKeys::width] = static_cast<double>(elem.width);
     obj[MapJsonKeys::height] = static_cast<double>(elem.height);
+
+    for (const QString& key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
+    }
+
+    arr.append(obj);
+  }
+  return arr;
+}
+
+QJsonArray MapData::buildings_to_json() const {
+  QJsonArray arr;
+  for (const auto& elem : m_structures) {
+    if (elem.type != QStringLiteral("defense_tower") &&
+        elem.type != QStringLiteral("home")) {
+      continue;
+    }
+    QJsonObject obj;
+    obj[MapJsonKeys::type] = elem.type;
+    obj[MapJsonKeys::x] = static_cast<double>(elem.x);
+    obj[MapJsonKeys::z] = static_cast<double>(elem.z);
+    if (elem.player_id > 0) {
+      obj[MapJsonKeys::player_id] = elem.player_id;
+    }
+    if (!elem.nation.isEmpty()) {
+      obj[MapJsonKeys::nation] = elem.nation;
+    }
+
+    for (const QString& key : elem.extra_fields.keys()) {
+      obj[key] = elem.extra_fields[key];
+    }
+
+    arr.append(obj);
+  }
+  return arr;
+}
+
+QJsonArray MapData::walls_to_json() const {
+  QJsonArray arr;
+  for (const auto& elem : m_linear_elements) {
+    if (elem.type != "wall") {
+      continue;
+    }
+    QJsonObject obj;
+    obj[MapJsonKeys::start] = QJsonArray{static_cast<double>(elem.start.x()),
+                                         static_cast<double>(elem.start.y())};
+    obj[MapJsonKeys::end] = QJsonArray{static_cast<double>(elem.end.x()),
+                                       static_cast<double>(elem.end.y())};
+    obj[MapJsonKeys::width] = static_cast<double>(elem.width);
+    if (elem.player_id > 0) {
+      obj[MapJsonKeys::player_id] = elem.player_id;
+    }
+    if (!elem.nation.isEmpty()) {
+      obj[MapJsonKeys::nation] = elem.nation;
+    }
 
     for (const QString& key : elem.extra_fields.keys()) {
       obj[key] = elem.extra_fields[key];
