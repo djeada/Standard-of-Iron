@@ -6,6 +6,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
         map_canvas.cpp
         spawn_icon_library.cpp
         tool_panel.cpp
+        hill_projection_model.cpp
+        hill_projection_widget.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
     )
@@ -17,6 +19,8 @@ else()
         map_canvas.cpp
         spawn_icon_library.cpp
         tool_panel.cpp
+        hill_projection_model.cpp
+        hill_projection_widget.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
     )

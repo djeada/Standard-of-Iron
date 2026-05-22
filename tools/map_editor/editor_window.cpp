@@ -67,7 +67,8 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
                          "1. Pick a tool on the Tools tab.\n"
                          "2. Click on the canvas to place or start drawing.\n"
                          "3. Drag placed items to refine positioning.\n"
-                         "4. Double-click elements to edit their JSON.\n"
+                         "4. Double-click elements to edit JSON (hills also show a "
+                         "top-projection entrance grid).\n"
                          "5. Save the map when the layout looks right.",
                          panel));
 
@@ -698,7 +699,10 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     return;
   }
 
-  JsonEditDialog dialog(title, json, this);
+  const bool enable_hill_projection =
+      (element_type == 0 &&
+       json.value(MapJsonKeys::type).toString().trimmed().toLower() == "hill");
+  JsonEditDialog dialog(title, json, enable_hill_projection, this);
   if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
     QJsonObject new_json = dialog.get_json();
 

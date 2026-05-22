@@ -58,7 +58,10 @@ private:
   void draw_element(QPainter& painter,
                     const QString& type,
                     const QPoint& pos,
-                    int player_id = 0);
+                    int player_id = 0,
+                    int marker_radius_px = -1);
+  [[nodiscard]] int terrain_marker_radius_px(const TerrainElement& elem) const;
+  [[nodiscard]] float terrain_hit_radius_px(const TerrainElement& elem) const;
 
   struct HitResult {
     int element_type = -1;
@@ -98,6 +101,7 @@ private:
   bool m_is_dragging = false;
   int m_dragged_endpoint = -1;
   bool m_did_drag_move = false;
+  QPointF m_linear_drag_center_offset;
   TerrainElement m_drag_pre_terrain;
   WorldPropElement m_drag_pre_world_prop;
   LinearElement m_drag_pre_linear;

@@ -454,3 +454,64 @@ TEST(MapEditorMapDataTest, SaveReportsWriteErrors) {
   EXPECT_FALSE(data.save_to_json(missing_dir_path, &error_message));
   EXPECT_FALSE(error_message.trimmed().isEmpty());
 }
+
+TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+
+  const QString input_path = temp_dir.filePath("input.json");
+  const QString output_path = temp_dir.filePath("output.json");
+
+  QJsonObject const input{
+      {"name", "Precision Clamp"},
+      {MapJsonKeys::grid,
+       QJsonObject{{MapJsonKeys::width, 64},
+                   {MapJsonKeys::height, 64},
+                   {MapJsonKeys::tile_size, 1.23456}}},
+      {MapJsonKeys::terrain,
+       QJsonArray{QJsonObject{
+           {MapJsonKeys::type, "hill"},
+           {MapJsonKeys::x, 10.1299},
+           {MapJsonKeys::z, 20.1251},
+           {MapJsonKeys::height, 3.9999},
+           {MapJsonKeys::entrances, QJsonArray{QJsonObject{{"x", 11.5555}, {"z", 20.4444}}}},
+       }}},
+      {MapJsonKeys::spawns,
+       QJsonArray{QJsonObject{{MapJsonKeys::type, "defense_tower"},
+                              {MapJsonKeys::x, 30.5678},
+                              {MapJsonKeys::z, 40.1234},
+                              {"strength", 77.7777}}}},
+      {"custom_meta", QJsonObject{{"wind", 4.3219}, {"gust", QJsonArray{1.1111, 2.9999}}}}};
+  write_json(input_path, input);
+
+  MapEditor::MapData data;
+  ASSERT_TRUE(data.load_from_json(input_path));
+  ASSERT_EQ(data.terrain_elements().size(), 1);
+  EXPECT_FLOAT_EQ(data.terrain_elements().first().x, 10.13F);
+  EXPECT_FLOAT_EQ(data.terrain_elements().first().z, 20.13F);
+  EXPECT_FLOAT_EQ(data.terrain_elements().first().height, 4.0F);
+
+  ASSERT_TRUE(data.save_to_json(output_path));
+  const QJsonObject output = read_json(output_path);
+  const QJsonObject terrain_entry = output.value(MapJsonKeys::terrain).toArray().first().toObject();
+  EXPECT_DOUBLE_EQ(terrain_entry.value(MapJsonKeys::x).toDouble(), 10.13);
+  EXPECT_DOUBLE_EQ(terrain_entry.value(MapJsonKeys::z).toDouble(), 20.13);
+  EXPECT_DOUBLE_EQ(terrain_entry.value(MapJsonKeys::height).toDouble(), 4.0);
+
+  const QJsonObject entrance =
+      terrain_entry.value(MapJsonKeys::entrances).toArray().first().toObject();
+  EXPECT_DOUBLE_EQ(entrance.value("x").toDouble(), 11.56);
+  EXPECT_DOUBLE_EQ(entrance.value("z").toDouble(), 20.44);
+
+  const QJsonObject custom_meta = output.value("custom_meta").toObject();
+  EXPECT_DOUBLE_EQ(custom_meta.value("wind").toDouble(), 4.32);
+  const QJsonArray gust = custom_meta.value("gust").toArray();
+  ASSERT_EQ(gust.size(), 2);
+  EXPECT_DOUBLE_EQ(gust[0].toDouble(), 1.11);
+  EXPECT_DOUBLE_EQ(gust[1].toDouble(), 3.0);
+
+  const QJsonObject raw_spawn = output.value(MapJsonKeys::spawns).toArray().first().toObject();
+  EXPECT_DOUBLE_EQ(raw_spawn.value(MapJsonKeys::x).toDouble(), 30.57);
+  EXPECT_DOUBLE_EQ(raw_spawn.value(MapJsonKeys::z).toDouble(), 40.12);
+  EXPECT_DOUBLE_EQ(raw_spawn.value("strength").toDouble(), 77.78);
+}

@@ -355,7 +355,7 @@ void ToolPanel::setup_ui() {
                       "Right click / Escape: return to Select\n"
                       "Del / Backspace: delete selected\n"
                       "Shift + click/drag: free placement (no snap)\n"
-                      "Double-click element: edit JSON\n"
+                      "Double-click element: edit JSON (hills include a top-grid)\n"
                       "Double-click empty grid: resize map",
                       "panelHint",
                       tips_group));

@@ -130,3 +130,43 @@ TEST(MapLoaderTest, StartingResourcesPartialKeysDefaultMissingToZero) {
   EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Stone), 0);
   EXPECT_EQ(map_def.starting_resources.get(Game::Systems::ResourceType::Iron), 0);
 }
+
+TEST(MapLoaderTest, ParsesHillEntranceRadiusIntoExpandedEntrancePoints) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Terrain Entrance Radius Test"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"terrain",
+       QJsonArray{QJsonObject{
+           {"type", "hill"},
+           {"x", 16},
+           {"z", 16},
+           {"width", 10.0},
+           {"depth", 10.0},
+           {"height", 4.0},
+           {"entrances", QJsonArray{QJsonObject{{"x", 16}, {"z", 10}, {"radius", 1.5}}}},
+       }}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.terrain.size(), 1U);
+  const auto& hill = map_def.terrain.front();
+  EXPECT_GT(hill.entrances.size(), 1U);
+
+  bool has_center = false;
+  for (const QVector3D& entrance : hill.entrances) {
+    if (entrance.x() == 0.5F && entrance.z() == -5.5F) {
+      has_center = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(has_center);
+}
