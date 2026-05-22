@@ -237,7 +237,9 @@ run-headless: build
 
 # Run the map editor
 .PHONY: editor
-editor: build
+editor: run-map-pipeline configure
+	@echo "$(BOLD)$(BLUE)Building Map Editor...$(RESET)"
+	@cmake --build $(BUILD_DIR) -j$$(nproc) --target $(MAP_EDITOR_BINARY)
 	@echo "$(BOLD)$(BLUE)Running Map Editor...$(RESET)"
 	@cd $(BUILD_DIR) && ./bin/$(MAP_EDITOR_BINARY)
 

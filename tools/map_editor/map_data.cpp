@@ -5,6 +5,7 @@
 #include <QSaveFile>
 
 #include <algorithm>
+#include <cmath>
 
 #include "game/units/spawn_type.h"
 #include "map_json_keys.h"
@@ -17,6 +18,42 @@ constexpr auto coord_system_key = MapJsonKeys::coord_system;
 constexpr auto legacy_coord_system_key = "coordSystem";
 constexpr auto max_troops_key = MapJsonKeys::max_troops_per_player;
 constexpr auto legacy_max_troops_key = "maxTroopsPerPlayer";
+
+auto round_to_two_decimals(double value) -> double {
+  constexpr double scale = 100.0;
+  return std::round(value * scale) / scale;
+}
+
+auto normalize_json_value(const QJsonValue& value) -> QJsonValue;
+
+auto normalize_json_array(const QJsonArray& array) -> QJsonArray {
+  QJsonArray normalized;
+  for (const QJsonValue& value : array) {
+    normalized.append(normalize_json_value(value));
+  }
+  return normalized;
+}
+
+auto normalize_json_object(const QJsonObject& object) -> QJsonObject {
+  QJsonObject normalized;
+  for (const QString& key : object.keys()) {
+    normalized.insert(key, normalize_json_value(object.value(key)));
+  }
+  return normalized;
+}
+
+auto normalize_json_value(const QJsonValue& value) -> QJsonValue {
+  if (value.isDouble()) {
+    return QJsonValue(round_to_two_decimals(value.toDouble()));
+  }
+  if (value.isArray()) {
+    return QJsonValue(normalize_json_array(value.toArray()));
+  }
+  if (value.isObject()) {
+    return QJsonValue(normalize_json_object(value.toObject()));
+  }
+  return value;
+}
 
 auto readStringWithFallback(const QJsonObject& obj,
                             const QString& primary_key,
@@ -102,7 +139,7 @@ auto copyExtraFields(const QJsonObject& source,
   QJsonObject extra_fields;
   for (const QString& key : source.keys()) {
     if (!known_keys.contains(key)) {
-      extra_fields[key] = source[key];
+      extra_fields[key] = normalize_json_value(source[key]);
     }
   }
   return extra_fields;
@@ -255,7 +292,7 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
     return false;
   }
 
-  QJsonObject root = doc.object();
+  QJsonObject root = normalize_json_object(doc.object());
   const QStringList known_root_keys = {MapJsonKeys::name,
                                        MapJsonKeys::description,
                                        coord_system_key,
@@ -436,6 +473,7 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
     root[MapJsonKeys::undead_zones] = undead_zones_arr;
   }
 
+  root = normalize_json_object(root);
   const QJsonDocument doc(root);
   const QByteArray json_data = doc.toJson(QJsonDocument::Indented);
 
