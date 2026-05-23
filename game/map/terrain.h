@@ -631,6 +631,14 @@ struct Bridge {
   float height = 0.5F;
 };
 
+struct WallLine {
+  QVector3D start;
+  QVector3D end;
+  float width = 2.0F;
+  int player_id = 0;
+  QString nation;
+};
+
 inline constexpr float k_road_surface_y_offset = 0.02F;
 
 [[nodiscard]] inline auto road_surface_world_y(float terrain_height) -> float {

@@ -135,11 +135,24 @@ auto build_model(const QJsonObject& hill_json) -> Model {
 
   const double radius =
       std::max(1.0, hill_json.value(MapJsonKeys::radius).toDouble(10.0));
-  const double width = hill_json.value(MapJsonKeys::width).toDouble(0.0);
-  const double depth = hill_json.value(MapJsonKeys::depth).toDouble(0.0);
+  const QString terrain_type =
+      hill_json.value(MapJsonKeys::type).toString().trimmed().toLower();
+  const bool is_mountain = terrain_type == QStringLiteral("mountain");
 
-  const double resolved_width = width > 0.0 ? width : (radius * 2.0);
-  const double resolved_depth = depth > 0.0 ? depth : (radius * 2.0);
+  double resolved_width;
+  double resolved_depth;
+  if (is_mountain) {
+    // Match game engine: major_radius = radius*1.8, minor_radius = radius*0.22
+    const double major_r = std::max(radius * 1.8, radius + 3.0);
+    const double minor_r = std::max(radius * 0.22, 0.8);
+    resolved_width = major_r * 2.0;
+    resolved_depth = minor_r * 2.0;
+  } else {
+    const double width = hill_json.value(MapJsonKeys::width).toDouble(0.0);
+    const double depth = hill_json.value(MapJsonKeys::depth).toDouble(0.0);
+    resolved_width = width > 0.0 ? width : (radius * 2.0);
+    resolved_depth = depth > 0.0 ? depth : (radius * 2.0);
+  }
   model.hill_half_width = std::max(0.5, resolved_width * 0.5);
   model.hill_half_depth = std::max(0.5, resolved_depth * 0.5);
 
@@ -299,28 +312,38 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
                                    const QVector<QPoint>& hill_cells,
                                    const QVector<QPoint>& entrance_cells) -> QJsonObject {
   QJsonObject updated = base_hill_json;
-  const QVector<QPoint> normalized_hill = unique_in_bounds_cells(model, hill_cells);
-  if (!normalized_hill.isEmpty()) {
-    double min_x = world_x_from_cell(model, normalized_hill.first().x());
-    double max_x = min_x;
-    double min_z = world_z_from_cell(model, normalized_hill.first().y());
-    double max_z = min_z;
 
-    for (const QPoint& cell : normalized_hill) {
-      const double world_x = world_x_from_cell(model, cell.x());
-      const double world_z = world_z_from_cell(model, cell.y());
-      min_x = std::min(min_x, world_x);
-      max_x = std::max(max_x, world_x);
-      min_z = std::min(min_z, world_z);
-      max_z = std::max(max_z, world_z);
+  const QString terrain_type =
+      base_hill_json.value(MapJsonKeys::type).toString().trimmed().toLower();
+  const bool is_mountain = terrain_type == QStringLiteral("mountain");
+
+  if (!is_mountain) {
+    // For hills: update position and size from the painted body cells.
+    const QVector<QPoint> normalized_hill = unique_in_bounds_cells(model, hill_cells);
+    if (!normalized_hill.isEmpty()) {
+      double min_x = world_x_from_cell(model, normalized_hill.first().x());
+      double max_x = min_x;
+      double min_z = world_z_from_cell(model, normalized_hill.first().y());
+      double max_z = min_z;
+
+      for (const QPoint& cell : normalized_hill) {
+        const double world_x = world_x_from_cell(model, cell.x());
+        const double world_z = world_z_from_cell(model, cell.y());
+        min_x = std::min(min_x, world_x);
+        max_x = std::max(max_x, world_x);
+        min_z = std::min(min_z, world_z);
+        max_z = std::max(max_z, world_z);
+      }
+
+      updated[MapJsonKeys::x] = (min_x + max_x) * 0.5;
+      updated[MapJsonKeys::z] = (min_z + max_z) * 0.5;
+      updated[MapJsonKeys::width] = (max_x - min_x) + 1.0;
+      updated[MapJsonKeys::depth] = (max_z - min_z) + 1.0;
+      updated.remove(MapJsonKeys::radius);
     }
-
-    updated[MapJsonKeys::x] = (min_x + max_x) * 0.5;
-    updated[MapJsonKeys::z] = (min_z + max_z) * 0.5;
-    updated[MapJsonKeys::width] = (max_x - min_x) + 1.0;
-    updated[MapJsonKeys::depth] = (max_z - min_z) + 1.0;
-    updated.remove(MapJsonKeys::radius);
   }
+  // For mountains: the game engine derives shape from `radius` (major_radius = radius*1.8,
+  // minor_radius = radius*0.22). Never modify radius/width/depth/x/z — only entrances.
 
   const QJsonArray entrances = entrances_from_cells(model, entrance_cells);
   if (entrances.isEmpty()) {

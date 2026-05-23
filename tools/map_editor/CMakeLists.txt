@@ -7,7 +7,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
         spawn_icon_library.cpp
         tool_panel.cpp
         hill_projection_model.cpp
+        terrain_projection_widget.cpp
         hill_projection_widget.cpp
+        mountain_projection_widget.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
     )
@@ -20,7 +22,9 @@ else()
         spawn_icon_library.cpp
         tool_panel.cpp
         hill_projection_model.cpp
+        terrain_projection_widget.cpp
         hill_projection_widget.cpp
+        mountain_projection_widget.cpp
         json_edit_dialog.cpp
         resize_dialog.cpp
     )

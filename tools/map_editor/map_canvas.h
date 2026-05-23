@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPoint>
+#include <QSizeF>
 #include <QWidget>
 
 #include "map_data.h"
@@ -55,11 +56,14 @@ private:
   void draw_linear_elements(QPainter& painter);
   void draw_undead_zones(QPainter& painter);
   void draw_current_placement(QPainter& painter);
+  void draw_terrain_feature(QPainter& painter, const TerrainElement& elem, const QPoint& center);
+  void draw_world_prop_icon(QPainter& painter, const QString& type, const QPoint& pos, int size);
   void draw_element(QPainter& painter,
                     const QString& type,
                     const QPoint& pos,
                     int player_id = 0,
                     int marker_radius_px = -1);
+  [[nodiscard]] QSizeF terrain_ellipse_px(const TerrainElement& elem) const;
   [[nodiscard]] int terrain_marker_radius_px(const TerrainElement& elem) const;
   [[nodiscard]] float terrain_hit_radius_px(const TerrainElement& elem) const;
 

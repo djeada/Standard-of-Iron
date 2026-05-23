@@ -55,6 +55,12 @@ auto toolDescription(ToolType tool) -> QString {
     return "Place barracks and assign them to a player.";
   case ToolType::Village:
     return "Place villages and assign them to a player.";
+  case ToolType::DefenseTower:
+    return "Place a defense tower and assign it to a player.";
+  case ToolType::Home:
+    return "Place a home building and assign it to a player.";
+  case ToolType::Wall:
+    return "Draw a wall segment between two points and assign it to a player.";
   case ToolType::Eraser:
     return "Remove the element or segment under the cursor.";
   case ToolType::TroopArcher:
@@ -321,6 +327,13 @@ void ToolPanel::setup_ui() {
                   "🌉",
                   "Draw a bridge between two points.",
                   ToolType::Bridge);
+  add_tool_button(paths_layout,
+                  1,
+                  1,
+                  "Wall",
+                  "🧱",
+                  "Draw a wall segment between two points and assign a player.",
+                  ToolType::Wall);
   layout->addWidget(paths_group);
 
   auto* structures_group = new QGroupBox("Structures", this);
@@ -341,6 +354,20 @@ void ToolPanel::setup_ui() {
                   "🏘",
                   "Place a village and assign a player.",
                   ToolType::Village);
+  add_tool_button(structures_layout,
+                  1,
+                  0,
+                  "Tower",
+                  "🗼",
+                  "Place a defense tower and assign a player.",
+                  ToolType::DefenseTower);
+  add_tool_button(structures_layout,
+                  1,
+                  1,
+                  "Home",
+                  "🏠",
+                  "Place a home building and assign a player.",
+                  ToolType::Home);
 
   layout->addWidget(structures_group);
 
