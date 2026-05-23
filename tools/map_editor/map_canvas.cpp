@@ -908,31 +908,25 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
     painter.drawEllipse(QPointF(0, 0), dot_r, dot_r);
 
   } else if (elem.type == QStringLiteral("mountain")) {
-    // Top-down view of an elongated ridge (major:minor ≈ 8:1 in the game engine)
-    const QColor base(135, 135, 148);
-    const QColor shoulder(100, 100, 115);
-    const QColor crest(72, 72, 88);
-    const QColor snow(240, 240, 248);
+    // Same topographic concentric rings as hills but cool grey/blue tones
+    const QColor outer(148, 148, 162);
+    const QColor mid(115, 115, 130);
+    const QColor inner(85, 85, 100);
+    const QColor peak(230, 235, 245); // white snow cap
 
     painter.setPen(Qt::NoPen);
-
-    // Outer base ellipse
-    painter.setBrush(base);
+    painter.setBrush(outer);
     painter.drawEllipse(QPointF(0, 0), rx, ry);
 
-    // Shoulder / mid band
-    painter.setBrush(shoulder);
-    painter.drawEllipse(QPointF(0, 0), rx * 0.70, ry * 0.70);
+    painter.setBrush(mid);
+    painter.drawEllipse(QPointF(0, 0), rx * 0.72, ry * 0.72);
 
-    // Crest band
-    painter.setBrush(crest);
-    painter.drawEllipse(QPointF(0, 0), rx * 0.42, ry * 0.42);
+    painter.setBrush(inner);
+    painter.drawEllipse(QPointF(0, 0), rx * 0.45, ry * 0.45);
 
-    // Snow line along the ridge crest
-    const double snow_len = rx * 0.35;
-    const double snow_w = std::max(1.5, ry * 0.30);
-    painter.setPen(QPen(snow, snow_w, Qt::SolidLine, Qt::RoundCap));
-    painter.drawLine(QPointF(-snow_len, 0), QPointF(snow_len, 0));
+    painter.setBrush(peak);
+    const double dot_r = std::max(2.5, std::min(rx, ry) * 0.18);
+    painter.drawEllipse(QPointF(0, 0), dot_r, dot_r);
   }
 
   painter.restore();
