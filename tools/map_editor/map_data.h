@@ -109,6 +109,7 @@ public:
 
   bool load_from_json(const QString& file_path, QString* out_error = nullptr);
   bool save_to_json(const QString& file_path, QString* out_error = nullptr) const;
+  [[nodiscard]] QString to_json_string() const;
 
   [[nodiscard]] QString name() const { return m_name; }
   void set_name(const QString& name);
@@ -232,6 +233,7 @@ private:
   [[nodiscard]] QJsonArray bridges_to_json() const;
   [[nodiscard]] QJsonArray buildings_to_json() const;
   [[nodiscard]] QJsonArray walls_to_json() const;
+  [[nodiscard]] QJsonObject build_root_json() const;
   [[nodiscard]] QJsonObject structure_to_spawn_json(const StructureElement& elem) const;
   [[nodiscard]] QJsonObject troop_to_spawn_json(const TroopSpawnElement& elem) const;
   [[nodiscard]] QJsonArray undead_zones_to_json() const;

@@ -389,14 +389,7 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
   return true;
 }
 
-bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
-  if (file_path.trimmed().isEmpty()) {
-    if (out_error != nullptr) {
-      *out_error = "No output path was provided.";
-    }
-    return false;
-  }
-
+QJsonObject MapData::build_root_json() const {
   QJsonObject root = m_extra_root_fields;
 
   root[MapJsonKeys::name] = m_name;
@@ -497,8 +490,23 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
     root[MapJsonKeys::undead_zones] = undead_zones_arr;
   }
 
-  root = normalize_json_object(root);
-  const QJsonDocument doc(root);
+  return normalize_json_object(root);
+}
+
+QString MapData::to_json_string() const {
+  const QJsonDocument doc(build_root_json());
+  return QString::fromUtf8(doc.toJson(QJsonDocument::Indented));
+}
+
+bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
+  if (file_path.trimmed().isEmpty()) {
+    if (out_error != nullptr) {
+      *out_error = "No output path was provided.";
+    }
+    return false;
+  }
+
+  const QJsonDocument doc(build_root_json());
   const QByteArray json_data = doc.toJson(QJsonDocument::Indented);
 
   QSaveFile file(file_path);

@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFont>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QJsonArray>
@@ -12,7 +13,9 @@
 #include <QJsonObject>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPlainTextEdit>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
@@ -132,6 +135,8 @@ EditorWindow::EditorWindow(QWidget* parent)
           &EditorWindow::on_undo_redo_changed);
   connect(
       m_map_data, &MapData::data_changed, this, &EditorWindow::update_dimensions_label);
+  connect(
+      m_map_data, &MapData::data_changed, this, &EditorWindow::refresh_json_preview);
 
   setWindowTitle("Standard of Iron - Map Editor");
   resize(1400, 900);
@@ -209,6 +214,16 @@ void EditorWindow::setup_ui() {
   guide_scroll->setWidgetResizable(true);
   guide_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   sidebar_tabs->addTab(guide_scroll, "Guide");
+
+  m_json_preview = new QPlainTextEdit(sidebar_tabs);
+  m_json_preview->setReadOnly(true);
+  m_json_preview->setLineWrapMode(QPlainTextEdit::NoWrap);
+  QFont mono_font("Monospace");
+  mono_font.setStyleHint(QFont::TypeWriter);
+  mono_font.setPointSize(9);
+  m_json_preview->setFont(mono_font);
+  m_json_preview->setPlaceholderText("JSON preview will appear here…");
+  sidebar_tabs->addTab(m_json_preview, "JSON");
 
   splitter->addWidget(m_canvas);
   splitter->addWidget(sidebar_tabs);
@@ -1133,6 +1148,19 @@ void EditorWindow::refresh_status_label() {
     m_tool_label->setText(m_selection_status_text);
   } else {
     m_tool_label->setText(m_tool_status_text);
+  }
+}
+
+void EditorWindow::refresh_json_preview() {
+  if (m_json_preview == nullptr) {
+    return;
+  }
+  const QString json = m_map_data->to_json_string();
+  // Only update text if content changed to avoid resetting scroll position
+  if (m_json_preview->toPlainText() != json) {
+    const int scroll_pos = m_json_preview->verticalScrollBar()->value();
+    m_json_preview->setPlainText(json);
+    m_json_preview->verticalScrollBar()->setValue(scroll_pos);
   }
 }
 
