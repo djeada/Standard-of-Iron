@@ -63,7 +63,7 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
     projection_layout->setContentsMargins(8, 8, 8, 8);
     projection_layout->setSpacing(8);
 
-    auto* projection_title = new QLabel("Hill top projection", projection_panel);
+    auto* projection_title = new QLabel("Terrain projection", projection_panel);
     projection_title->setObjectName("panelTitle");
     projection_layout->addWidget(projection_title);
 
@@ -216,9 +216,9 @@ void JsonEditDialog::update_projection_state() {
 
   const QString terrain_type =
       m_model_json.value(MapJsonKeys::type).toString().trimmed().toLower();
-  if (terrain_type != QStringLiteral("hill")) {
+  if (terrain_type != QStringLiteral("hill") && terrain_type != QStringLiteral("mountain")) {
     m_projection_hint_label->setText(
-        "Projection is only active for terrain with \"type\": \"hill\".");
+        "Projection is only active for terrain with type \"hill\" or \"mountain\".");
     m_hill_projection->setEnabled(false);
     if (m_hill_marker_button != nullptr) {
       m_hill_marker_button->setEnabled(false);
