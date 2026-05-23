@@ -6,10 +6,11 @@
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QVector>
 
 namespace MapEditor {
 
-class HillProjectionWidget;
+class TerrainProjectionWidget;
 
 class JsonEditDialog : public QDialog {
   Q_OBJECT
@@ -35,11 +36,9 @@ private:
   void apply_projection_to_model_json();
 
   QPlainTextEdit* m_editor = nullptr;
-  HillProjectionWidget* m_hill_projection = nullptr;
+  TerrainProjectionWidget* m_projection = nullptr;
   QLabel* m_projection_hint_label = nullptr;
-  QPushButton* m_hill_marker_button = nullptr;
-  QPushButton* m_entrance_marker_button = nullptr;
-  QPushButton* m_nothing_marker_button = nullptr;
+  QVector<QPushButton*> m_marker_buttons;
   QPushButton* m_ok_button = nullptr;
   QJsonObject m_model_json;
   QJsonObject m_result;

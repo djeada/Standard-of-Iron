@@ -1,17 +1,10 @@
 #pragma once
 
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QSet>
-#include <QWidget>
-
-#include <optional>
-
-#include "hill_projection_model.h"
+#include "terrain_projection_widget.h"
 
 namespace MapEditor {
 
-class HillProjectionWidget : public QWidget {
+class HillProjectionWidget : public TerrainProjectionWidget {
   Q_OBJECT
 
 public:
@@ -23,52 +16,16 @@ public:
 
   explicit HillProjectionWidget(QWidget* parent = nullptr);
 
-  void set_hill_json(const QJsonObject& hill_json);
-  void set_edit_layer(EditLayer layer) { m_edit_layer = layer; }
-  [[nodiscard]] bool is_hill_active() const { return m_hill_active; }
-  [[nodiscard]] auto hill_cells() const -> QVector<QPoint>;
-  [[nodiscard]] auto entrance_cells() const -> QVector<QPoint>;
+  // Backward-compatible aliases
+  void set_hill_json(const QJsonObject& json) { set_terrain_json(json); }
+  void set_edit_layer(EditLayer layer) { set_active_layer(static_cast<int>(layer)); }
+  [[nodiscard]] bool is_hill_active() const { return is_active(); }
+  [[nodiscard]] QVector<QPoint> hill_cells() const { return body_cells(); }
 
-signals:
-  void projection_changed();
-
-protected:
-  void paintEvent(QPaintEvent* event) override;
-  void mousePressEvent(QMouseEvent* event) override;
-  void mouseMoveEvent(QMouseEvent* event) override;
-  void mouseReleaseEvent(QMouseEvent* event) override;
-
-private:
-  enum class DragMode {
-    None,
-    Paint,
-    Erase,
-  };
-
-  struct GridGeometry {
-    QRectF rect;
-    double cell_size = 0.0;
-    bool valid = false;
-  };
-
-  [[nodiscard]] auto compute_geometry() const -> GridGeometry;
-  [[nodiscard]] auto cell_from_position(const QPoint& position) const
-      -> std::optional<QPoint>;
-
-  void apply_line(const QPoint& from, const QPoint& to);
-  void set_cell_marked(const QPoint& cell, bool marked);
-  void emit_projection_changed();
-
-  static auto encode_cell(const QPoint& cell) -> quint64;
-  static auto decode_cell(quint64 encoded) -> QPoint;
-
-  HillProjection::Model m_model;
-  QSet<quint64> m_hill_cells;
-  QSet<quint64> m_entrance_cells;
-  QPoint m_last_drag_cell;
-  DragMode m_drag_mode = DragMode::None;
-  EditLayer m_edit_layer = EditLayer::Entrance;
-  bool m_hill_active = false;
+  [[nodiscard]] QVector<QPair<QString, QColor>> layer_definitions() const override;
+  [[nodiscard]] bool body_cells_user_editable() const override { return true; }
+  [[nodiscard]] int entrance_layer_index() const override { return 1; }
+  [[nodiscard]] int body_layer_index() const override { return 0; }
 };
 
 } // namespace MapEditor
