@@ -205,8 +205,8 @@ void MapCanvas::paintEvent(QPaintEvent*) {
   }
 
   draw_grid(painter);
-  draw_linear_elements(painter);
   draw_terrain_elements(painter);
+  draw_linear_elements(painter);
   draw_world_props(painter);
   draw_structures(painter);
   draw_troop_spawns(painter);
