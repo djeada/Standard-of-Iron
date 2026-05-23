@@ -12,6 +12,8 @@
 #include <QVBoxLayout>
 
 #include "hill_projection_widget.h"
+#include "mountain_projection_widget.h"
+#include "terrain_projection_widget.h"
 #include "hill_projection_model.h"
 #include "map_json_keys.h"
 
@@ -67,52 +69,56 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
     projection_title->setObjectName("panelTitle");
     projection_layout->addWidget(projection_title);
 
+    // Factory-create the appropriate projection widget based on terrain type.
+    const QString terrain_type =
+        json.value(MapJsonKeys::type).toString().trimmed().toLower();
+    if (terrain_type == QStringLiteral("mountain")) {
+      m_projection = new MountainProjectionWidget(projection_panel);
+    } else {
+      m_projection = new HillProjectionWidget(projection_panel);
+    }
+
+    // Build marker buttons dynamically from layer definitions.
     auto* marker_row = new QWidget(projection_panel);
     auto* marker_layout = new QHBoxLayout(marker_row);
     marker_layout->setContentsMargins(0, 0, 0, 0);
     marker_layout->setSpacing(6);
     marker_layout->addWidget(new QLabel("Marker:", marker_row));
-    m_hill_marker_button = new QPushButton("Hill", marker_row);
-    m_hill_marker_button->setCheckable(true);
-    m_entrance_marker_button = new QPushButton("Entrance", marker_row);
-    m_entrance_marker_button->setCheckable(true);
-    m_nothing_marker_button = new QPushButton("Nothing", marker_row);
-    m_nothing_marker_button->setCheckable(true);
-    m_entrance_marker_button->setChecked(true);
-    marker_layout->addWidget(m_hill_marker_button);
-    marker_layout->addWidget(m_entrance_marker_button);
-    marker_layout->addWidget(m_nothing_marker_button);
-    marker_layout->addStretch(1);
-    projection_layout->addWidget(marker_row);
 
     auto* marker_group = new QButtonGroup(projection_panel);
     marker_group->setExclusive(true);
-    marker_group->addButton(m_hill_marker_button);
-    marker_group->addButton(m_entrance_marker_button);
-    marker_group->addButton(m_nothing_marker_button);
-    connect(m_hill_marker_button, &QPushButton::clicked, this, [this]() {
-      if (m_hill_projection != nullptr) {
-        m_hill_projection->set_edit_layer(HillProjectionWidget::EditLayer::Hill);
-      }
-    });
-    connect(m_entrance_marker_button, &QPushButton::clicked, this, [this]() {
-      if (m_hill_projection != nullptr) {
-        m_hill_projection->set_edit_layer(HillProjectionWidget::EditLayer::Entrance);
-      }
-    });
-    connect(m_nothing_marker_button, &QPushButton::clicked, this, [this]() {
-      if (m_hill_projection != nullptr) {
-        m_hill_projection->set_edit_layer(HillProjectionWidget::EditLayer::Nothing);
-      }
-    });
+
+    const auto defs = m_projection->layer_definitions();
+    m_marker_buttons.reserve(defs.size());
+    for (int i = 0; i < defs.size(); ++i) {
+      auto* btn = new QPushButton(defs[i].first, marker_row);
+      btn->setCheckable(true);
+      marker_layout->addWidget(btn);
+      marker_group->addButton(btn);
+      m_marker_buttons.append(btn);
+      connect(btn, &QPushButton::clicked, this, [this, i]() {
+        if (m_projection != nullptr) {
+          m_projection->set_active_layer(i);
+        }
+      });
+    }
+
+    // Pre-select the entrance layer button.
+    const int entrance_idx = m_projection->entrance_layer_index();
+    if (entrance_idx >= 0 && entrance_idx < m_marker_buttons.size()) {
+      m_marker_buttons[entrance_idx]->setChecked(true);
+    } else if (!m_marker_buttons.isEmpty()) {
+      m_marker_buttons[0]->setChecked(true);
+    }
+
+    marker_layout->addStretch(1);
+    projection_layout->addWidget(marker_row);
 
     m_projection_hint_label = new QLabel(projection_panel);
     m_projection_hint_label->setWordWrap(true);
     projection_layout->addWidget(m_projection_hint_label);
 
-    m_hill_projection = new HillProjectionWidget(projection_panel);
-    m_hill_projection->set_edit_layer(HillProjectionWidget::EditLayer::Entrance);
-    projection_layout->addWidget(m_hill_projection, 1);
+    projection_layout->addWidget(m_projection, 1);
 
     splitter->addWidget(json_panel);
     splitter->addWidget(projection_panel);
@@ -125,9 +131,9 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
   }
 
   connect(m_editor, &QPlainTextEdit::textChanged, this, &JsonEditDialog::validate_json);
-  if (m_hill_projection != nullptr) {
-    connect(m_hill_projection,
-            &HillProjectionWidget::projection_changed,
+  if (m_projection != nullptr) {
+    connect(m_projection,
+            &TerrainProjectionWidget::projection_changed,
             this,
             &JsonEditDialog::on_projection_entrances_changed);
   }
@@ -193,24 +199,24 @@ void JsonEditDialog::sync_editor_from_model() {
 }
 
 void JsonEditDialog::update_projection_state() {
-  if (m_hill_projection == nullptr) {
+  if (m_projection == nullptr) {
     return;
   }
+
+  const auto set_buttons_enabled = [this](bool enabled) {
+    for (QPushButton* btn : m_marker_buttons) {
+      if (btn != nullptr) {
+        btn->setEnabled(enabled);
+      }
+    }
+  };
 
   if (!m_is_valid) {
     m_projection_hint_label->setText(
         "Projection disabled until JSON is valid.\n"
         "Fix syntax errors in JSON to continue editing entrances.");
-    m_hill_projection->setEnabled(false);
-    if (m_hill_marker_button != nullptr) {
-      m_hill_marker_button->setEnabled(false);
-    }
-    if (m_entrance_marker_button != nullptr) {
-      m_entrance_marker_button->setEnabled(false);
-    }
-    if (m_nothing_marker_button != nullptr) {
-      m_nothing_marker_button->setEnabled(false);
-    }
+    m_projection->setEnabled(false);
+    set_buttons_enabled(false);
     return;
   }
 
@@ -219,51 +225,34 @@ void JsonEditDialog::update_projection_state() {
   if (terrain_type != QStringLiteral("hill") && terrain_type != QStringLiteral("mountain")) {
     m_projection_hint_label->setText(
         "Projection is only active for terrain with type \"hill\" or \"mountain\".");
-    m_hill_projection->setEnabled(false);
-    if (m_hill_marker_button != nullptr) {
-      m_hill_marker_button->setEnabled(false);
-    }
-    if (m_entrance_marker_button != nullptr) {
-      m_entrance_marker_button->setEnabled(false);
-    }
-    if (m_nothing_marker_button != nullptr) {
-      m_nothing_marker_button->setEnabled(false);
-    }
+    m_projection->setEnabled(false);
+    set_buttons_enabled(false);
     return;
   }
 
   m_projection_hint_label->setText(
       "Grid max: 80 x 80 cells\n"
-      "Select marker: Hill, Entrance, or Nothing\n"
       "Left drag: paint selected marker\n"
       "Right drag: erase selected marker\n"
       "Adjacent entrance cells are saved as one JSON entry");
-  m_hill_projection->setEnabled(true);
-  if (m_hill_marker_button != nullptr) {
-    m_hill_marker_button->setEnabled(true);
-  }
-  if (m_entrance_marker_button != nullptr) {
-    m_entrance_marker_button->setEnabled(true);
-  }
-  if (m_nothing_marker_button != nullptr) {
-    m_nothing_marker_button->setEnabled(true);
-  }
+  m_projection->setEnabled(true);
+  set_buttons_enabled(true);
 
   if (m_syncing_projection) {
     return;
   }
   m_syncing_projection = true;
-  m_hill_projection->set_hill_json(m_model_json);
+  m_projection->set_terrain_json(m_model_json);
   m_syncing_projection = false;
 }
 
 void JsonEditDialog::apply_projection_to_model_json() {
-  if (m_hill_projection == nullptr) {
+  if (m_projection == nullptr) {
     return;
   }
   const HillProjection::Model model = HillProjection::build_model(m_model_json);
   m_model_json = HillProjection::apply_projection_to_hill_json(
-      m_model_json, model, m_hill_projection->hill_cells(), m_hill_projection->entrance_cells());
+      m_model_json, model, m_projection->body_cells(), m_projection->entrance_cells());
   m_result = m_model_json;
 }
 
