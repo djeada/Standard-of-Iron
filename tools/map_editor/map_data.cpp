@@ -546,8 +546,9 @@ void MapData::parse_terrain_array(const QJsonArray& arr) {
     elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
     elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
     elem.radius = static_cast<float>(obj[MapJsonKeys::radius].toDouble(10.0));
-    elem.width = static_cast<float>(obj[MapJsonKeys::width].toDouble(10.0));
-    elem.depth = static_cast<float>(obj[MapJsonKeys::depth].toDouble(10.0));
+    const float dim_default = elem.radius > 0.0F ? elem.radius : 10.0F;
+    elem.width = static_cast<float>(obj[MapJsonKeys::width].toDouble(dim_default));
+    elem.depth = static_cast<float>(obj[MapJsonKeys::depth].toDouble(dim_default));
     elem.height = static_cast<float>(obj[MapJsonKeys::height].toDouble(3.0));
     elem.rotation = static_cast<float>(obj[MapJsonKeys::rotation].toDouble(0.0));
     elem.entrances = obj[MapJsonKeys::entrances].toArray();
