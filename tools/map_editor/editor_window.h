@@ -2,6 +2,7 @@
 
 #include <QLabel>
 #include <QMainWindow>
+#include <QPlainTextEdit>
 #include <QWidget>
 
 #include "map_canvas.h"
@@ -36,6 +37,7 @@ private slots:
   void update_dimensions_label();
   void on_selection_changed(int element_type, int index);
   void update_selection_info();
+  void refresh_json_preview();
 
 private:
   void setup_ui();
@@ -60,6 +62,7 @@ private:
   QLabel* m_zoom_label = nullptr;
   QLabel* m_cursor_label = nullptr;
   QLabel* m_file_label = nullptr;
+  QPlainTextEdit* m_json_preview = nullptr;
   QString m_current_file_path;
   QString m_tool_status_text = "Tool: Select";
   QString m_selection_status_text;

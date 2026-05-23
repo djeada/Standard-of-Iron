@@ -46,5 +46,7 @@ inline constexpr const char* nation = Game::Map::JsonKeys::NATION;
 inline constexpr const char* depth = "depth";
 inline constexpr const char* entrances = "entrances";
 inline constexpr const char* waypoints = "waypoints";
+inline constexpr const char* buildings = Game::Map::JsonKeys::BUILDINGS;
+inline constexpr const char* walls = Game::Map::JsonKeys::WALLS;
 
 } // namespace MapEditor::MapJsonKeys

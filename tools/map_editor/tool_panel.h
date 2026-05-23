@@ -49,6 +49,9 @@ enum class ToolType {
   UndeadZone,
   Barracks,
   Village,
+  DefenseTower,
+  Home,
+  Wall,
   Eraser
 };
 

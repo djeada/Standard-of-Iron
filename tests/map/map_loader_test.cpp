@@ -170,3 +170,89 @@ TEST(MapLoaderTest, ParsesHillEntranceRadiusIntoExpandedEntrancePoints) {
   }
   EXPECT_TRUE(has_center);
 }
+
+TEST(MapLoaderTest, ParsesBuildingsArrayWithOwnership) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Buildings Test"},
+      {"grid", QJsonObject{{"width", 50}, {"height", 50}, {"tile_size", 1.0}}},
+      {"buildings",
+       QJsonArray{
+           QJsonObject{{"type", "defense_tower"}, {"x", 10}, {"z", 15}, {"player_id", 1},
+                       {"nation", "rome"}},
+           QJsonObject{{"type", "home"}, {"x", 20}, {"z", 25}, {"player_id", 2}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.buildings.size(), 2U);
+  const auto& tower = map_def.buildings[0];
+  EXPECT_EQ(tower.type, QStringLiteral("defense_tower"));
+  EXPECT_EQ(tower.player_id, 1);
+  EXPECT_EQ(tower.nation, QStringLiteral("rome"));
+
+  const auto& home = map_def.buildings[1];
+  EXPECT_EQ(home.type, QStringLiteral("home"));
+  EXPECT_EQ(home.player_id, 2);
+}
+
+TEST(MapLoaderTest, ParsesWallsArrayWithOwnership) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Walls Test"},
+      {"grid", QJsonObject{{"width", 50}, {"height", 50}, {"tile_size", 1.0}}},
+      {"walls",
+       QJsonArray{
+           QJsonObject{{"start", QJsonArray{5, 10}},
+                       {"end", QJsonArray{30, 10}},
+                       {"player_id", 1},
+                       {"nation", "rome"}},
+           QJsonObject{{"start", QJsonArray{5, 40}},
+                       {"end", QJsonArray{30, 40}},
+                       {"player_id", 2}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_def.wall_lines.size(), 2U);
+  const auto& wall0 = map_def.wall_lines[0];
+  EXPECT_EQ(wall0.player_id, 1);
+  EXPECT_EQ(wall0.nation, QStringLiteral("rome"));
+
+  const auto& wall1 = map_def.wall_lines[1];
+  EXPECT_EQ(wall1.player_id, 2);
+}
+
+TEST(MapLoaderTest, EmptyBuildingsAndWallsWhenArraysAbsent) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "No Buildings Map"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_def;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error))
+      << error.toStdString();
+
+  EXPECT_TRUE(map_def.buildings.empty());
+  EXPECT_TRUE(map_def.wall_lines.empty());
+}

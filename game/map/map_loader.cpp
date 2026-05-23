@@ -807,6 +807,100 @@ void read_starting_resources(const QJsonObject& obj,
   }
 }
 
+void read_buildings(const QJsonArray& arr,
+                    std::vector<BuildingEntry>& out,
+                    const GridDefinition& grid,
+                    CoordSystem coord_sys) {
+  out.clear();
+  out.reserve(static_cast<std::size_t>(arr.size()));
+
+  constexpr float grid_center_offset = 0.5F;
+  constexpr float min_tile_size = 0.0001F;
+
+  for (const auto& val : arr) {
+    auto obj = val.toObject();
+    BuildingEntry entry;
+    entry.type = obj.value("type").toString();
+    entry.player_id = obj.value("player_id").toInt(0);
+    entry.nation = obj.value("nation").toString();
+
+    const float raw_x = static_cast<float>(obj.value("x").toDouble(0.0));
+    const float raw_z = static_cast<float>(obj.value("z").toDouble(0.0));
+
+    if (coord_sys == CoordSystem::Grid) {
+      const float tile = std::max(min_tile_size, grid.tile_size);
+      entry.x = (raw_x - (grid.width * grid_center_offset - grid_center_offset)) * tile;
+      entry.z =
+          (raw_z - (grid.height * grid_center_offset - grid_center_offset)) * tile;
+    } else {
+      entry.x = raw_x;
+      entry.z = raw_z;
+    }
+
+    if (!entry.type.isEmpty()) {
+      out.push_back(entry);
+    }
+  }
+}
+
+void read_wall_lines(const QJsonArray& arr,
+                     std::vector<WallLine>& out,
+                     const GridDefinition& grid,
+                     CoordSystem coord_sys) {
+  out.clear();
+  out.reserve(static_cast<std::size_t>(arr.size()));
+
+  constexpr float grid_center_offset = 0.5F;
+  constexpr float min_tile_size = 0.0001F;
+  constexpr float default_wall_width = 2.0F;
+
+  for (const auto& val : arr) {
+    auto obj = val.toObject();
+    WallLine wall;
+    wall.player_id = obj.value("player_id").toInt(0);
+    wall.nation = obj.value("nation").toString();
+    wall.width = static_cast<float>(obj.value("width").toDouble(default_wall_width));
+
+    if (obj.contains("start") && obj.value("start").isArray()) {
+      auto start_arr = obj.value("start").toArray();
+      if (start_arr.size() >= 2) {
+        const float sx = static_cast<float>(start_arr[0].toDouble(0.0));
+        const float sz = static_cast<float>(start_arr[1].toDouble(0.0));
+        if (coord_sys == CoordSystem::Grid) {
+          const float tile = std::max(min_tile_size, grid.tile_size);
+          wall.start.setX(
+              (sx - (grid.width * grid_center_offset - grid_center_offset)) * tile);
+          wall.start.setY(0.0F);
+          wall.start.setZ(
+              (sz - (grid.height * grid_center_offset - grid_center_offset)) * tile);
+        } else {
+          wall.start = QVector3D(sx, 0.0F, sz);
+        }
+      }
+    }
+
+    if (obj.contains("end") && obj.value("end").isArray()) {
+      auto end_arr = obj.value("end").toArray();
+      if (end_arr.size() >= 2) {
+        const float ex = static_cast<float>(end_arr[0].toDouble(0.0));
+        const float ez = static_cast<float>(end_arr[1].toDouble(0.0));
+        if (coord_sys == CoordSystem::Grid) {
+          const float tile = std::max(min_tile_size, grid.tile_size);
+          wall.end.setX(
+              (ex - (grid.width * grid_center_offset - grid_center_offset)) * tile);
+          wall.end.setY(0.0F);
+          wall.end.setZ(
+              (ez - (grid.height * grid_center_offset - grid_center_offset)) * tile);
+        } else {
+          wall.end = QVector3D(ex, 0.0F, ez);
+        }
+      }
+    }
+
+    out.push_back(wall);
+  }
+}
+
 } // namespace
 
 auto MapLoader::load_from_json_file(const QString& path,
@@ -915,6 +1009,24 @@ auto MapLoader::load_from_json_file(const QString& path,
                  out_map.bridges,
                  out_map.grid,
                  out_map.coordSystem);
+  }
+
+  if (root.contains(BUILDINGS) && root.value(BUILDINGS).isArray()) {
+    read_buildings(root.value(BUILDINGS).toArray(),
+                   out_map.buildings,
+                   out_map.grid,
+                   out_map.coordSystem);
+  } else {
+    out_map.buildings.clear();
+  }
+
+  if (root.contains(WALLS) && root.value(WALLS).isArray()) {
+    read_wall_lines(root.value(WALLS).toArray(),
+                    out_map.wall_lines,
+                    out_map.grid,
+                    out_map.coordSystem);
+  } else {
+    out_map.wall_lines.clear();
   }
 
   if (root.contains(BIOME) && root.value(BIOME).isObject()) {

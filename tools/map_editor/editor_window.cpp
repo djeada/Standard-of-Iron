@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFont>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QJsonArray>
@@ -12,7 +13,9 @@
 #include <QJsonObject>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPlainTextEdit>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
@@ -132,6 +135,8 @@ EditorWindow::EditorWindow(QWidget* parent)
           &EditorWindow::on_undo_redo_changed);
   connect(
       m_map_data, &MapData::data_changed, this, &EditorWindow::update_dimensions_label);
+  connect(
+      m_map_data, &MapData::data_changed, this, &EditorWindow::refresh_json_preview);
 
   setWindowTitle("Standard of Iron - Map Editor");
   resize(1400, 900);
@@ -209,6 +214,16 @@ void EditorWindow::setup_ui() {
   guide_scroll->setWidgetResizable(true);
   guide_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   sidebar_tabs->addTab(guide_scroll, "Guide");
+
+  m_json_preview = new QPlainTextEdit(sidebar_tabs);
+  m_json_preview->setReadOnly(true);
+  m_json_preview->setLineWrapMode(QPlainTextEdit::NoWrap);
+  QFont mono_font("Monospace");
+  mono_font.setStyleHint(QFont::TypeWriter);
+  mono_font.setPointSize(9);
+  m_json_preview->setFont(mono_font);
+  m_json_preview->setPlaceholderText("JSON preview will appear here…");
+  sidebar_tabs->addTab(m_json_preview, "JSON");
 
   splitter->addWidget(m_canvas);
   splitter->addWidget(sidebar_tabs);
@@ -622,6 +637,12 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     if (elem.type == "road" && !elem.style.isEmpty()) {
       json[MapJsonKeys::style] = elem.style;
     }
+    if (elem.type == "wall") {
+      json[MapJsonKeys::player_id] = elem.player_id;
+      if (!elem.nation.isEmpty()) {
+        json[MapJsonKeys::nation] = elem.nation;
+      }
+    }
     for (const QString& key : elem.extra_fields.keys()) {
       json[key] = elem.extra_fields[key];
     }
@@ -699,9 +720,11 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     return;
   }
 
+  const QString terrain_type =
+      json.value(MapJsonKeys::type).toString().trimmed().toLower();
   const bool enable_hill_projection =
       (element_type == 0 &&
-       json.value(MapJsonKeys::type).toString().trimmed().toLower() == "hill");
+       (terrain_type == "hill" || terrain_type == "mountain"));
   JsonEditDialog dialog(title, json, enable_hill_projection, this);
   if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
     QJsonObject new_json = dialog.get_json();
@@ -786,13 +809,17 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       elem.width = static_cast<float>(new_json[MapJsonKeys::width].toDouble(3.0));
       elem.height = static_cast<float>(new_json[MapJsonKeys::height].toDouble(0.5));
       elem.style = new_json[MapJsonKeys::style].toString("default");
+      elem.player_id = new_json[MapJsonKeys::player_id].toInt(0);
+      elem.nation = new_json[MapJsonKeys::nation].toString();
 
       const QStringList known_keys = {MapJsonKeys::type,
                                       MapJsonKeys::start,
                                       MapJsonKeys::end,
                                       MapJsonKeys::width,
                                       MapJsonKeys::height,
-                                      MapJsonKeys::style};
+                                      MapJsonKeys::style,
+                                      MapJsonKeys::player_id,
+                                      MapJsonKeys::nation};
       for (const QString& key : new_json.keys()) {
         if (!known_keys.contains(key)) {
           elem.extra_fields[key] = new_json[key];
@@ -1123,6 +1150,19 @@ void EditorWindow::refresh_status_label() {
     m_tool_label->setText(m_selection_status_text);
   } else {
     m_tool_label->setText(m_tool_status_text);
+  }
+}
+
+void EditorWindow::refresh_json_preview() {
+  if (m_json_preview == nullptr) {
+    return;
+  }
+  const QString json = m_map_data->to_json_string();
+  // Only update text if content changed to avoid resetting scroll position
+  if (m_json_preview->toPlainText() != json) {
+    const int scroll_pos = m_json_preview->verticalScrollBar()->value();
+    m_json_preview->setPlainText(json);
+    m_json_preview->verticalScrollBar()->setValue(scroll_pos);
   }
 }
 

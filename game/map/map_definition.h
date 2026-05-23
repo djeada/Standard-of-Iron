@@ -68,6 +68,14 @@ struct UnitSpawn {
   std::optional<Game::Systems::NationID> nation;
 };
 
+struct BuildingEntry {
+  QString type;
+  float x = 0.0F;
+  float z = 0.0F;
+  int player_id = 0;
+  QString nation;
+};
+
 struct WorldProp {
   enum class Type : std::uint8_t {
     FireCamp = 0,
@@ -287,8 +295,10 @@ struct MapDefinition {
   std::vector<RiverSegment> rivers;
   std::vector<RoadSegment> roads;
   std::vector<Bridge> bridges;
+  std::vector<WallLine> wall_lines;
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
+  std::vector<BuildingEntry> buildings;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
   int max_troops_per_player = 500;
