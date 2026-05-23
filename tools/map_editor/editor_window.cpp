@@ -720,9 +720,11 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     return;
   }
 
+  const QString terrain_type =
+      json.value(MapJsonKeys::type).toString().trimmed().toLower();
   const bool enable_hill_projection =
       (element_type == 0 &&
-       json.value(MapJsonKeys::type).toString().trimmed().toLower() == "hill");
+       (terrain_type == "hill" || terrain_type == "mountain"));
   JsonEditDialog dialog(title, json, enable_hill_projection, this);
   if (dialog.exec() == QDialog::Accepted && dialog.is_valid()) {
     QJsonObject new_json = dialog.get_json();
