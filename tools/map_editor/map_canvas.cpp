@@ -851,16 +851,28 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
 
 QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
   float rx_cells, ry_cells;
-  if (elem.width > 0.0F && elem.depth > 0.0F) {
-    rx_cells = elem.width;
-    ry_cells = elem.depth;
+
+  if (elem.type == QStringLiteral("mountain")) {
+    // Mountains are elongated ridges in the game engine:
+    // major_radius = radius * 1.8, minor_radius = radius * 0.22 (perpendicular)
+    const float r = std::max(elem.radius, 1.0F);
+    rx_cells = r * 1.8F;
+    ry_cells = r * 0.22F;
   } else {
-    rx_cells = ry_cells = std::max(elem.radius, 1.0F);
+    // Hills: width and depth are the half-extents from centre (same as game engine)
+    if (elem.width > 0.0F && elem.depth > 0.0F) {
+      rx_cells = elem.width;
+      ry_cells = elem.depth;
+    } else {
+      rx_cells = ry_cells = std::max(elem.radius, 1.0F);
+    }
   }
+
   const float rx = rx_cells * static_cast<float>(grid_cell_size) * m_zoom;
   const float ry = ry_cells * static_cast<float>(grid_cell_size) * m_zoom;
+  // Enforce a minimum so tiny features are still clickable / visible
   return {std::max(static_cast<float>(icon_size), rx),
-          std::max(static_cast<float>(icon_size), ry)};
+          std::max(4.0F, ry)};
 }
 
 void MapCanvas::draw_terrain_feature(QPainter& painter,
@@ -892,38 +904,35 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
     painter.drawEllipse(QPointF(0, 0), rx * 0.45, ry * 0.45);
 
     painter.setBrush(peak);
-    const double dot_r = std::max(2.5, rx * 0.12);
+    const double dot_r = std::max(2.5, std::min(rx, ry) * 0.18);
     painter.drawEllipse(QPointF(0, 0), dot_r, dot_r);
 
   } else if (elem.type == QStringLiteral("mountain")) {
+    // Top-down view of an elongated ridge (major:minor ≈ 8:1 in the game engine)
     const QColor base(135, 135, 148);
-    const QColor dark(95, 95, 108);
-    const QColor snow(242, 242, 248);
+    const QColor shoulder(100, 100, 115);
+    const QColor crest(72, 72, 88);
+    const QColor snow(240, 240, 248);
 
-    // Base rounded mass
     painter.setPen(Qt::NoPen);
+
+    // Outer base ellipse
     painter.setBrush(base);
     painter.drawEllipse(QPointF(0, 0), rx, ry);
 
-    // Darker shoulder ring
-    painter.setBrush(dark);
-    painter.drawEllipse(QPointF(0, 0), rx * 0.65, ry * 0.65);
+    // Shoulder / mid band
+    painter.setBrush(shoulder);
+    painter.drawEllipse(QPointF(0, 0), rx * 0.70, ry * 0.70);
 
-    // Triangular peak
-    const double ph = ry * 0.85;
-    const double pw = rx * 0.52;
-    QPolygonF peak_poly;
-    peak_poly << QPointF(0, -ph) << QPointF(pw, ph * 0.35) << QPointF(-pw, ph * 0.35);
-    painter.setBrush(dark.darker(115));
-    painter.drawPolygon(peak_poly);
+    // Crest band
+    painter.setBrush(crest);
+    painter.drawEllipse(QPointF(0, 0), rx * 0.42, ry * 0.42);
 
-    // Snow cap
-    const double sh = ph * 0.42;
-    const double sw = pw * 0.38;
-    QPolygonF snow_poly;
-    snow_poly << QPointF(0, -ph) << QPointF(sw, -ph + sh) << QPointF(-sw, -ph + sh);
-    painter.setBrush(snow);
-    painter.drawPolygon(snow_poly);
+    // Snow line along the ridge crest
+    const double snow_len = rx * 0.35;
+    const double snow_w = std::max(1.5, ry * 0.30);
+    painter.setPen(QPen(snow, snow_w, Qt::SolidLine, Qt::RoundCap));
+    painter.drawLine(QPointF(-snow_len, 0), QPointF(snow_len, 0));
   }
 
   painter.restore();
