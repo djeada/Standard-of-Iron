@@ -103,6 +103,9 @@ void JsonEditDialog::setup_ui(const QString& title, const QJsonObject& json) {
       });
     }
 
+    // Hide the marker row entirely when there are no editable layers (e.g. mountains).
+    marker_row->setVisible(!defs.isEmpty());
+
     // Pre-select the entrance layer button.
     const int entrance_idx = m_projection->entrance_layer_index();
     if (entrance_idx >= 0 && entrance_idx < m_marker_buttons.size()) {
@@ -222,7 +225,8 @@ void JsonEditDialog::update_projection_state() {
 
   const QString terrain_type =
       m_model_json.value(MapJsonKeys::type).toString().trimmed().toLower();
-  if (terrain_type != QStringLiteral("hill") && terrain_type != QStringLiteral("mountain")) {
+  const bool is_mountain = terrain_type == QStringLiteral("mountain");
+  if (terrain_type != QStringLiteral("hill") && !is_mountain) {
     m_projection_hint_label->setText(
         "Projection is only active for terrain with type \"hill\" or \"mountain\".");
     m_projection->setEnabled(false);
@@ -230,11 +234,17 @@ void JsonEditDialog::update_projection_state() {
     return;
   }
 
-  m_projection_hint_label->setText(
-      "Grid max: 80 x 80 cells\n"
-      "Left drag: paint selected marker\n"
-      "Right drag: erase selected marker\n"
-      "Adjacent entrance cells are saved as one JSON entry");
+  if (is_mountain) {
+    m_projection_hint_label->setText(
+        "Mountains are fully impassable — the game skips all entrance processing.\n"
+        "This panel shows the approximate footprint for placement reference only.");
+  } else {
+    m_projection_hint_label->setText(
+        "Grid max: 80 x 80 cells\n"
+        "Left drag: paint selected marker\n"
+        "Right drag: erase selected marker\n"
+        "Adjacent entrance cells are saved as one JSON entry");
+  }
   m_projection->setEnabled(true);
   set_buttons_enabled(true);
 
@@ -250,7 +260,9 @@ void JsonEditDialog::apply_projection_to_model_json() {
   if (m_projection == nullptr) {
     return;
   }
-  const HillProjection::Model model = HillProjection::build_model(m_model_json);
+  // Reuse the model cached inside the widget (set when set_terrain_json was last called).
+  // Rebuilding from m_model_json would shift the origin after each edit, causing drift.
+  const HillProjection::Model& model = m_projection->get_model();
   m_model_json = HillProjection::apply_projection_to_hill_json(
       m_model_json, model, m_projection->body_cells(), m_projection->entrance_cells());
   m_result = m_model_json;

@@ -28,6 +28,7 @@ public:
   [[nodiscard]] QVector<QPoint> entrance_cells() const;
   [[nodiscard]] QVector<QPoint> body_cells() const;
   [[nodiscard]] bool is_active() const { return m_active; }
+  [[nodiscard]] const HillProjection::Model& get_model() const { return m_model; }
 
   [[nodiscard]] virtual QVector<QPair<QString, QColor>> layer_definitions() const = 0;
   [[nodiscard]] virtual bool body_cells_user_editable() const = 0;
