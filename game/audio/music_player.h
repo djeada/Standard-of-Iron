@@ -5,11 +5,12 @@
 #include <QThread>
 #include <QVector>
 
-#include <string>
 #include <unordered_map>
+#include <string>
 
 #include "audio_constants.h"
 #include "miniaudio_backend.h"
+#include "music_transition.h"
 
 namespace Game::Audio {
 
@@ -26,8 +27,10 @@ public:
   void play(const std::string& track_id,
             float volume = AudioConstants::DEFAULT_VOLUME,
             bool loop = true);
-  auto
-  play(const std::string& track_id, float volume, bool loop, bool crossfade) -> int;
+  auto play(const std::string& track_id,
+            float volume,
+            bool loop,
+            MusicTransition transition) -> int;
   void stop();
   void pause();
   void resume();

@@ -113,7 +113,7 @@ void AudioSystem::play_sound(const std::string& sound_id,
 
 void AudioSystem::play_music(const std::string& music_id,
                              float volume,
-                             bool crossfade) {
+                             Game::Audio::MusicTransition transition) {
   std::lock_guard<std::mutex> const lock(queue_mutex);
   event_queue.emplace(AudioEventType::PLAY_MUSIC,
                       music_id,
@@ -121,7 +121,7 @@ void AudioSystem::play_music(const std::string& music_id,
                       true,
                       AudioConstants::DEFAULT_PRIORITY,
                       AudioCategory::MUSIC,
-                      crossfade);
+                      transition == Game::Audio::MusicTransition::Crossfade);
   queue_condition.notify_one();
 }
 
@@ -367,7 +367,12 @@ void AudioSystem::process_event(const AudioEvent& event) {
       AudioResourceConfig const config = get_resource_config_locked(resource_id);
       float const effective_volume =
           get_effective_volume(AudioCategory::MUSIC, event.volume * config.volume);
-      (void)m_music_player->play(resource_id, effective_volume, true, event.crossfade);
+      (void)m_music_player->play(
+          resource_id,
+          effective_volume,
+          true,
+          event.crossfade ? Game::Audio::MusicTransition::Crossfade
+                          : Game::Audio::MusicTransition::Immediate);
     }
     break;
   }

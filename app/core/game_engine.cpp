@@ -2935,7 +2935,8 @@ void GameEngine::apply_frontend_music_context(const QString& context) {
   }
 
   AudioResourceLoader::ensure_audio_resource_loaded(track_id);
-  AudioSystem::get_instance().play_music(track_id.toStdString(), 1.0F, true);
+  AudioSystem::get_instance().play_music(
+      track_id.toStdString(), 1.0F, Game::Audio::MusicTransition::Crossfade);
 }
 
 void GameEngine::configure_audio_manifest_mappings() {
