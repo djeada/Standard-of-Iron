@@ -141,6 +141,7 @@ auto FormationCalculatorFactory::get_calculator(Nation nation, UnitCategory cate
 
   switch (nation) {
   case Nation::Roman:
+  case Nation::Barbarian:
     switch (category) {
     case UnitCategory::Infantry:
       return &s_roman_infantry;
