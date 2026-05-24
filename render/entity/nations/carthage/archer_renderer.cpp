@@ -17,9 +17,6 @@
 #include <string_view>
 #include <unordered_map>
 
-#include "../../../../game/core/component.h"
-#include "../../../../game/core/entity.h"
-#include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
 #include "../../../creature/humanoid_clip_ids.h"
 #include "../../../creature/pipeline/creature_asset.h"
@@ -94,30 +91,6 @@ auto canonical_bow_config() -> BowRenderConfig {
   return cfg;
 }
 
-auto resolve_archer_style_fn(const Render::GL::DrawContext& ctx)
-    -> const ArcherStyleConfig& {
-  ensure_archer_styles_registered();
-  auto& styles = style_registry();
-  std::string nation_id;
-  if (ctx.entity != nullptr) {
-    if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
-      nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
-    }
-  }
-  if (!nation_id.empty()) {
-    auto it = styles.find(nation_id);
-    if (it != styles.end()) {
-      return it->second;
-    }
-  }
-  auto it_default = styles.find(std::string(k_default_style_key));
-  if (it_default != styles.end()) {
-    return it_default->second;
-  }
-  static const ArcherStyleConfig k_empty{};
-  return k_empty;
-}
-
 } // namespace
 
 void register_archer_style(const std::string& nation_id,
@@ -137,9 +110,11 @@ class ArcherRenderer : public HumanoidRendererBase {
 public:
   explicit ArcherRenderer(
       std::string_view renderer_key = "troops/carthage/archer",
+      std::string_view style_key = "carthage",
       Render::Creature::Pipeline::CreatureAssetId creature_asset_id =
           Render::Creature::Pipeline::k_humanoid_asset)
       : m_renderer_key(renderer_key)
+      , m_style_key(style_key)
       , m_creature_asset_id(creature_asset_id) {}
 
   auto get_proportion_scaling() const -> QVector3D override {
@@ -249,22 +224,15 @@ public:
 
 private:
   std::string_view m_renderer_key;
+  std::string_view m_style_key;
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
 
-  auto resolve_style(const DrawContext& ctx) const -> const ArcherStyleConfig& {
+  auto resolve_style(const DrawContext&) const -> const ArcherStyleConfig& {
     ensure_archer_styles_registered();
     auto& styles = style_registry();
-    std::string nation_id;
-    if (ctx.entity != nullptr) {
-      if (auto* unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
-        nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
-      }
-    }
-    if (!nation_id.empty()) {
-      auto it = styles.find(nation_id);
-      if (it != styles.end()) {
-        return it->second;
-      }
+    auto it = styles.find(std::string(m_style_key));
+    if (it != styles.end()) {
+      return it->second;
     }
     auto fallback = styles.find(std::string(k_default_style_key));
     if (fallback != styles.end()) {
@@ -316,6 +284,7 @@ void register_skeleton_archer_renderer(Render::GL::EntityRendererRegistry& regis
       [](const DrawContext& ctx, ISubmitter& out) {
         static ArcherRenderer const static_renderer{
             "troops/iron_sepulcher/skeleton_archer",
+            "iron_sepulcher",
             Render::Creature::Pipeline::k_skeleton_humanoid_asset};
         static_renderer.render(ctx, out);
       });
