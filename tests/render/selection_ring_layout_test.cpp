@@ -2,12 +2,20 @@
 
 #include <cmath>
 #include <gtest/gtest.h>
+#include <type_traits>
 
 #include "game/units/troop_config.h"
 #include "render/humanoid/prepare.h"
 #include "render/selection_ring_layout.h"
 
 namespace {
+
+TEST(SelectionRingLayout, FormationFactoryUsesSharedGameEnums) {
+  EXPECT_TRUE((std::is_same_v<Render::GL::FormationCalculatorFactory::Nation,
+                              Game::Systems::FormationType>));
+  EXPECT_TRUE((std::is_same_v<Render::GL::FormationCalculatorFactory::UnitCategory,
+                              Game::Systems::FormationUnitCategory>));
+}
 
 auto build_expected_soldier_positions(const Render::GL::SelectionRingLayoutInput& input)
     -> std::vector<Render::GL::SelectionRingPlacement> {

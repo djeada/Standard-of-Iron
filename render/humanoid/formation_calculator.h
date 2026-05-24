@@ -8,6 +8,11 @@
 
 #include "../../game/units/spawn_type.h"
 
+namespace Game::Systems {
+enum class FormationType;
+enum class FormationUnitCategory;
+} // namespace Game::Systems
+
 namespace Render::GL {
 
 struct FormationOffset {
@@ -109,16 +114,8 @@ public:
 
 class FormationCalculatorFactory {
 public:
-  enum class Nation {
-    Roman,
-    Carthage
-  };
-
-  enum class UnitCategory {
-    Infantry,
-    Cavalry,
-    BuilderConstruction
-  };
+  using Nation = Game::Systems::FormationType;
+  using UnitCategory = Game::Systems::FormationUnitCategory;
 
   static auto get_calculator(Nation nation,
                              UnitCategory category) -> const IFormationCalculator*;
