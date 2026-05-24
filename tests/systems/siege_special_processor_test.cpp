@@ -4,15 +4,16 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/arrow_system.h"
+#include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
-#include "systems/defense_tower_system.h"
+#include "systems/combat_system/siege_special_processor.h"
 #include "systems/owner_registry.h"
 #include "units/spawn_type.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;
 
-class DefenseTowerSystemTest : public ::testing::Test {
+class SiegeSpecialProcessorTest : public ::testing::Test {
 protected:
   void SetUp() override {
     world = std::make_unique<World>();
@@ -21,6 +22,11 @@ protected:
   }
 
   void TearDown() override { world.reset(); }
+
+  void update(float delta_time) {
+    auto query_context = Combat::build_combat_query_context(world.get());
+    Combat::process_siege_specials(world.get(), query_context, delta_time);
+  }
 
   [[nodiscard]] auto arrow_count() const -> std::size_t {
     auto* arrow_sys = world->get_system<ArrowSystem>();
@@ -62,14 +68,13 @@ protected:
   }
 
   std::unique_ptr<World> world;
-  DefenseTowerSystem tower_system;
 };
 
-TEST_F(DefenseTowerSystemTest, TowerAttacksEnemyInRange) {
+TEST_F(SiegeSpecialProcessorTest, TowerAttacksEnemyInRange) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy = make_enemy(10.0F, 0.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 2U);
   auto* enemy_unit = enemy->get_component<UnitComponent>();
@@ -77,11 +82,11 @@ TEST_F(DefenseTowerSystemTest, TowerAttacksEnemyInRange) {
   EXPECT_LT(enemy_unit->health, 100);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackEnemyOutOfRange) {
+TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackEnemyOutOfRange) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy = make_enemy(25.0F, 0.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 0U);
   auto* enemy_unit = enemy->get_component<UnitComponent>();
@@ -89,7 +94,7 @@ TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackEnemyOutOfRange) {
   EXPECT_EQ(enemy_unit->health, 100);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackWhenCooldownActive) {
+TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackWhenCooldownActive) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* atk = tower->get_component<AttackComponent>();
   ASSERT_NE(atk, nullptr);
@@ -97,12 +102,12 @@ TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackWhenCooldownActive) {
 
   make_enemy(10.0F, 0.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 0U);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackAlly) {
+TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackAlly) {
   OwnerRegistry::instance().register_owner_with_id(1, OwnerType::Player, "p1");
   OwnerRegistry::instance().register_owner_with_id(2, OwnerType::Player, "p2");
   OwnerRegistry::instance().set_owner_team(1, 1);
@@ -111,7 +116,7 @@ TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackAlly) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* ally = make_enemy(10.0F, 0.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 0U);
   auto* ally_unit = ally->get_component<UnitComponent>();
@@ -119,11 +124,11 @@ TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackAlly) {
   EXPECT_EQ(ally_unit->health, 100);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackEnemyBeyondHeightDifference) {
+TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackEnemyBeyondHeightDifference) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1, 18.0F, 4.0F);
   auto* enemy = make_enemy(10.0F, 10.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 0U);
   auto* enemy_unit = enemy->get_component<UnitComponent>();
@@ -131,25 +136,25 @@ TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackEnemyBeyondHeightDifference) {
   EXPECT_EQ(enemy_unit->health, 100);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerAttacksEnemyWithinHeightDifference) {
+TEST_F(SiegeSpecialProcessorTest, TowerAttacksEnemyWithinHeightDifference) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1, 18.0F, 4.0F);
   make_enemy(10.0F, 2.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 2U);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerFiresVolleyOfTwoArrows) {
+TEST_F(SiegeSpecialProcessorTest, TowerFiresVolleyOfTwoArrows) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   make_enemy(10.0F, 0.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 2U);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackBuildingEntities) {
+TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackBuildingEntities) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy_building = world->create_entity();
   enemy_building->add_component<TransformComponent>(5.0F, 0.0F, 0.0F);
@@ -158,17 +163,17 @@ TEST_F(DefenseTowerSystemTest, TowerDoesNotAttackBuildingEntities) {
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   enemy_building->add_component<BuildingComponent>();
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 0U);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerTargetsNearestEnemy) {
+TEST_F(SiegeSpecialProcessorTest, TowerTargetsNearestEnemy) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* far_enemy = make_enemy(15.0F, 0.0F, 0.0F, 2);
   auto* near_enemy = make_enemy(5.0F, 0.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   auto* far_unit = far_enemy->get_component<UnitComponent>();
   auto* near_unit = near_enemy->get_component<UnitComponent>();
@@ -178,11 +183,11 @@ TEST_F(DefenseTowerSystemTest, TowerTargetsNearestEnemy) {
   EXPECT_LT(near_unit->health, 100);
 }
 
-TEST_F(DefenseTowerSystemTest, TowerCanAttackEnemyDefenseTowerInRange) {
+TEST_F(SiegeSpecialProcessorTest, TowerCanAttackEnemyDefenseTowerInRange) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy_tower = make_tower(10.0F, 0.0F, 0.0F, 2);
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   EXPECT_EQ(arrow_count(), 4U);
   auto* tower_unit = tower->get_component<UnitComponent>();
@@ -193,7 +198,7 @@ TEST_F(DefenseTowerSystemTest, TowerCanAttackEnemyDefenseTowerInRange) {
   EXPECT_LT(enemy_unit->health, 2000);
 }
 
-TEST_F(DefenseTowerSystemTest, TargetUnitRetaliatesAgainstAttackingDefenseTower) {
+TEST_F(SiegeSpecialProcessorTest, TargetUnitRetaliatesAgainstAttackingDefenseTower) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy = make_enemy(10.0F, 0.0F, 0.0F, 2);
   auto* attack = enemy->add_component<AttackComponent>(2.0F, 12, 1.0F);
@@ -208,7 +213,7 @@ TEST_F(DefenseTowerSystemTest, TargetUnitRetaliatesAgainstAttackingDefenseTower)
   intent->kind = PlayerOrderIntentKind::ManualMove;
   intent->suppress_opportunistic_combat = true;
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   auto* attack_target = enemy->get_component<AttackTargetComponent>();
   ASSERT_NE(attack_target, nullptr);
@@ -218,7 +223,7 @@ TEST_F(DefenseTowerSystemTest, TargetUnitRetaliatesAgainstAttackingDefenseTower)
   EXPECT_EQ(intent->kind, PlayerOrderIntentKind::None);
 }
 
-TEST_F(DefenseTowerSystemTest, MeleeLockedUnitDoesNotRetaliateAgainstTowerAttack) {
+TEST_F(SiegeSpecialProcessorTest, MeleeLockedUnitDoesNotRetaliateAgainstTowerAttack) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy = make_enemy(10.0F, 0.0F, 0.0F, 2);
   auto* attack = enemy->add_component<AttackComponent>(2.0F, 12, 1.0F);
@@ -226,14 +231,14 @@ TEST_F(DefenseTowerSystemTest, MeleeLockedUnitDoesNotRetaliateAgainstTowerAttack
   attack->in_melee_lock = true;
   attack->melee_lock_target_id = 999;
 
-  tower_system.update(world.get(), 0.1F);
+  update(0.1F);
 
   auto* attack_target = enemy->get_component<AttackTargetComponent>();
   EXPECT_TRUE((attack_target == nullptr) ||
               (attack_target->target_id != tower->get_id()));
 }
 
-TEST_F(DefenseTowerSystemTest, UnitDoesNotRetaliateAgainstRegularBuildingDamage) {
+TEST_F(SiegeSpecialProcessorTest, UnitDoesNotRetaliateAgainstRegularBuildingDamage) {
   auto* enemy = make_enemy(10.0F, 0.0F, 0.0F, 2);
   auto* attack = enemy->add_component<AttackComponent>(2.0F, 12, 1.0F);
   ASSERT_NE(attack, nullptr);

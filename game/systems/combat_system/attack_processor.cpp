@@ -6,7 +6,6 @@
 #include <cmath>
 #include <numbers>
 #include <optional>
-#include <random>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -23,6 +22,7 @@
 #include "../rpg_combat_system/rpg_commander_damage.h"
 #include "../troop_profile_service.h"
 #include "combat_mode_processor.h"
+#include "combat_random.h"
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "damage_processor.h"
@@ -30,17 +30,6 @@
 namespace Game::Systems::Combat {
 
 namespace {
-thread_local std::mt19937 gen(std::random_device{}());
-
-auto hash_to_unit(std::uint32_t value) -> float {
-  value ^= value >> 16U;
-  value *= 0x7feb352dU;
-  value ^= value >> 15U;
-  value *= 0x846ca68bU;
-  value ^= value >> 16U;
-  return static_cast<float>(value & 0x00FFFFFFU) / static_cast<float>(0x00FFFFFFU);
-}
-
 auto deterministic_attack_delay(Engine::Core::EntityID attacker_id,
                                 Engine::Core::EntityID target_id,
                                 float cooldown) -> float {
@@ -94,11 +83,22 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
     }
     combat_state->finisher_attack = false;
     if (!preserve_seed || !had_combat_state) {
-      std::uniform_real_distribution<float> offset_dist(0.0F, 0.15F);
-      combat_state->attack_offset = offset_dist(gen);
-      std::uniform_int_distribution<int> variant_dist(
-          0, Engine::Core::CombatStateComponent::k_attack_variant_seed_slots - 1);
-      combat_state->attack_variant = static_cast<std::uint8_t>(variant_dist(gen));
+      auto* attack_target =
+          attacker->get_component<Engine::Core::AttackTargetComponent>();
+      std::uint32_t const target_id =
+          attack_target != nullptr
+              ? static_cast<std::uint32_t>(attack_target->target_id)
+              : 0U;
+      std::uint32_t const seed =
+          static_cast<std::uint32_t>(attacker->get_id() * 2246822519U) ^
+          (target_id * 3266489917U);
+      combat_state->attack_offset = deterministic_range(seed, 1U, 0.0F, 0.15F);
+      constexpr int k_variant_slots =
+          Engine::Core::CombatStateComponent::k_attack_variant_seed_slots;
+      combat_state->attack_variant = static_cast<std::uint8_t>(
+          std::min(k_variant_slots - 1,
+                   static_cast<int>(deterministic_unit_roll(seed, 2U) *
+                                    static_cast<float>(k_variant_slots))));
     }
   }
 }
@@ -669,9 +669,16 @@ void spawn_arrows(Engine::Core::Entity* attacker,
 
     int const max_arrows = std::max(2, (troop_size * 2) / 3);
 
-    static thread_local std::mt19937 arrow_gen(std::random_device{}());
-    std::uniform_int_distribution<> dist(max_arrows / 2, max_arrows);
-    arrow_count = dist(arrow_gen);
+    std::uint32_t const seed =
+        static_cast<std::uint32_t>(attacker->get_id() * 2246822519U) ^
+        static_cast<std::uint32_t>(target->get_id() * 3266489917U) ^
+        static_cast<std::uint32_t>(troop_size * 0x9E37U);
+    int const min_arrows = max_arrows / 2;
+    int const range = std::max(1, max_arrows - min_arrows + 1);
+    arrow_count =
+        min_arrows + std::min(range - 1,
+                              static_cast<int>(deterministic_unit_roll(seed, 3U) *
+                                               static_cast<float>(range)));
   }
   arrow_count = std::min(arrow_count, Constants::k_max_visual_arrows_per_volley);
 
@@ -681,13 +688,16 @@ void spawn_arrows(Engine::Core::Entity* attacker,
   int const rank_count = std::max(1, (arrow_count + wave_count - 1) / wave_count);
 
   for (int i = 0; i < arrow_count; ++i) {
-    static thread_local std::mt19937 spread_gen(std::random_device{}());
-    std::uniform_real_distribution<float> spread_dist(Constants::k_arrow_spread_min,
-                                                      Constants::k_arrow_spread_max);
-
-    float const spread_a = spread_dist(spread_gen);
-    float const spread_b = spread_dist(spread_gen);
-    float const spread_c = spread_dist(spread_gen);
+    std::uint32_t const spread_seed =
+        static_cast<std::uint32_t>(attacker->get_id() * 2246822519U) ^
+        static_cast<std::uint32_t>(target->get_id() * 3266489917U) ^
+        static_cast<std::uint32_t>((i + 1) * 0x85EBCA6BU);
+    float const spread_a = deterministic_range(
+        spread_seed, 11U, Constants::k_arrow_spread_min, Constants::k_arrow_spread_max);
+    float const spread_b = deterministic_range(
+        spread_seed, 12U, Constants::k_arrow_spread_min, Constants::k_arrow_spread_max);
+    float const spread_c = deterministic_range(
+        spread_seed, 13U, Constants::k_arrow_spread_min, Constants::k_arrow_spread_max);
     int const wave_index = i % wave_count;
     int const rank_index = i / wave_count;
     float const centered_wave =
