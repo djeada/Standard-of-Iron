@@ -1058,8 +1058,13 @@ public:
 
   float foot_lateral{0.153F};
   float foot_forward{0.280F};
-  bool is_panicked{false};
-  float panic_duration{0.0F};
+};
+
+class ElephantPanicComponent : public Component {
+public:
+  ElephantPanicComponent() = default;
+
+  float duration{0.0F};
 };
 
 class ElephantStompImpactComponent : public Component {
