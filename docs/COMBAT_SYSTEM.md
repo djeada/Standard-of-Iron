@@ -1,15 +1,28 @@
 # Combat System
 
-This document describes the current combat system in Standard of Iron: the
-runtime update order, how targets are validated, where damage is applied, and
-where special unit behavior plugs in.
+This document describes the RTS combat system in **Standard of Iron**, including:
 
-## Main entry point
+* the per-frame update pipeline;
+* shared target lookup and validation;
+* normal, siege, tower, and elephant attacks;
+* combat animation and visual feedback;
+* the recommended approach for adding new combat behavior.
 
-Combat is owned by `Game::Systems::CombatSystem` in
-`game/systems/combat_system.cpp`.
+## Overview
 
-Each frame, `CombatSystem::update()` runs this pipeline:
+RTS combat is coordinated by `Game::Systems::CombatSystem`, implemented in:
+
+```text
+game/systems/combat_system.cpp
+```
+
+Combat-related side effects should flow through this system whenever possible. Normal unit attacks, siege and tower attacks, elephant trample damage, target selection, and auto-engagement all rely on the same combat query context and enemy-validation rules.
+
+This shared path helps keep combat behavior consistent and prevents individual processors from implementing conflicting targeting or damage logic.
+
+## Per-Frame Update Pipeline
+
+Each frame, `CombatSystem::update()` runs the following pipeline:
 
 ```text
 CombatSystem::update
@@ -23,167 +36,306 @@ CombatSystem::update
   |-- AutoEngagement::process
 ```
 
-The important rule is that combat side effects should flow through this system.
-Normal unit attacks, siege/tower attacks, elephant trample damage, target
-selection, and auto-engagement all share the same query context and enemy
-validation rules.
+The order matters:
 
-## Query context
+1. The shared query context is rebuilt.
+2. Temporary hit feedback and combat animation state are updated.
+3. Normal attacks are resolved.
+4. Special siege and elephant behaviors are processed.
+5. Eligible idle units may automatically acquire nearby enemies.
 
-`CombatQueryContext` lives in `combat_utils.h`.
+## Shared Combat Query Context
 
-It is rebuilt once at the start of the combat update and contains:
+`CombatQueryContext` is defined in:
 
-- `units`: alive unit entities that are not pending removal
-- `entities_by_id`: fast lookup for target ids
-- `unit_grid`: spatial lookup for nearby non-building units
-- `nearby_unit_ids`: reusable scratch storage for range scans
+```text
+combat_utils.h
+```
 
-Most combat processors receive this context instead of calling
-`World::get_entities_with<UnitComponent>()` repeatedly. That keeps target
-selection consistent and avoids each combat subsystem rebuilding its own view of
-the world.
+It is rebuilt once at the beginning of each combat update and provides shared lookup data for combat processors.
 
-## Target validation
+### Contents
 
-The common target gate is:
+The context contains:
+
+* `units`: alive unit entities that are not pending removal;
+* `entities_by_id`: fast lookup of entities by target ID;
+* `unit_grid`: spatial lookup for nearby non-building units;
+* `nearby_unit_ids`: reusable scratch storage for range queries.
+
+### Why It Matters
+
+Combat processors should receive and reuse this context instead of repeatedly calling:
+
+```cpp
+World::get_entities_with<UnitComponent>()
+```
+
+Using the shared context:
+
+* keeps target selection consistent across combat behaviors;
+* avoids rebuilding the same view of the world in multiple processors;
+* reduces unnecessary entity queries during each frame.
+
+## Target Validation
+
+All combat behaviors that select or damage targets should use the shared validation helper:
 
 ```cpp
 Combat::is_valid_enemy_unit(attacker_unit, target, allow_buildings)
 ```
 
-It rejects:
+This helper rejects targets that are:
 
-- null targets
-- pending-removal entities
-- dead or missing `UnitComponent`
-- same-owner targets
-- allied owners from `OwnerRegistry`
-- buildings when `allow_buildings == false`
+* null;
+* pending removal;
+* dead or missing a `UnitComponent`;
+* owned by the attacker;
+* owned by an allied player according to `OwnerRegistry`;
+* buildings when `allow_buildings == false`.
 
-Use this helper for any combat behavior that chooses or damages a target.
-Direct owner checks are easy to get subtly wrong, especially with teams/allies.
+Avoid implementing direct owner checks in individual combat processors. Team and alliance rules are easy to handle incorrectly when duplicated.
 
-## Normal attacks
+## Normal Attacks
 
-Normal attacks are processed by `process_attacks()` in
-`combat_system/attack_processor.cpp`.
+Normal attacks are processed by:
 
-This processor handles:
+```text
+combat_system/attack_processor.cpp
+```
 
-- attack target resolution
-- melee/ranged mode behavior
-- attack cooldowns
-- melee lock behavior
-- tactical damage multipliers
-- ranged arrow visuals
-- special projectile attacks from `SpecialAttackComponent`
-- combat animation starts
+The `process_attacks()` processor handles:
 
-Damage is applied through:
+* target resolution;
+* melee and ranged attack behavior;
+* attack cooldowns;
+* melee lock behavior;
+* tactical damage multipliers;
+* ranged arrow visuals;
+* projectile-based attacks configured through `SpecialAttackComponent`;
+* combat animation triggers.
+
+### Applying Damage
+
+Resolved attacks should apply damage through:
 
 ```cpp
 Combat::deal_damage(world, target, damage, attacker_id)
 ```
 
-That is the preferred damage entry point. It centralizes death handling,
-retaliation behavior, hit feedback, blood/fire status side effects, and event
-publication.
+This is the preferred damage entry point because it centralizes:
 
-## Siege and tower specials
+* health reduction and death handling;
+* retaliation behavior;
+* hit feedback;
+* blood and fire status side effects;
+* combat event publication.
 
-Siege and defensive building combat is handled by
-`combat_system/siege_special_processor.cpp`.
+New attack behaviors should avoid modifying health directly unless there is a strong architectural reason to bypass the standard combat flow.
+
+## Siege Weapons and Defense Towers
+
+Siege weapons and defensive-building combat are handled by:
+
+```text
+combat_system/siege_special_processor.cpp
+```
 
 This processor owns:
 
-- catapult loading, firing, and stone projectile spawning
-- ballista loading, firing, bolt visuals, and delayed hit checks
-- defense tower target selection, arrow volleys, and damage
+* catapult loading, firing, and stone projectile spawning;
+* ballista loading, firing, bolt visuals, and delayed hit checks;
+* defense tower target selection, arrow volleys, and damage application.
 
-Catapults and ballistas use `CatapultLoadingComponent` as their shared loading
-state. The state machine is:
+### Siege Loading State
+
+Catapults and ballistas share `CatapultLoadingComponent` for their loading state.
+
+Their state machine is:
 
 ```text
 Idle -> Loading -> ReadyToFire -> Firing -> Idle
 ```
 
-If a siege unit starts moving while loading or firing, the loading state is
-reset. This prevents stale locked targets from firing after the weapon has moved.
+If a siege unit begins moving while loading or firing, its loading state is reset. This prevents the unit from firing at a previously locked target after changing position.
 
-Defense towers choose the nearest valid enemy in range. They can shoot units and
-enemy defense towers, but they ignore regular buildings. Tower arrow spread is
-deterministic from entity ids, so repeated runs produce stable visuals.
+### Defense Tower Targeting
 
-## Elephant specials
+Defense towers select the nearest valid enemy within range.
 
-Elephant-specific behavior is handled by
-`combat_system/elephant_special_processor.cpp`.
+They may attack:
 
-The processor owns:
+* enemy units;
+* enemy defense towers.
 
-- low-health panic checks
-- charge state transitions
-- trample damage
-- stomp impact records used by visuals
+They ignore ordinary buildings.
 
-Elephant panic state is stored separately on `ElephantPanicComponent`.
-`ElephantComponent` remains focused on elephant combat stats and charge/trample
-state. Panic does not write hidden movement targets; it only affects elephant
-combat decisions.
+Tower arrow spread is generated deterministically from entity IDs, ensuring that repeated runs produce stable visual results.
 
-Trample damage only hits valid enemies. Friendly and allied troops are rejected
-through `is_valid_enemy_unit()`, so a panicked elephant does not damage its own
-side.
+## Elephant Combat Behavior
 
-## Auto-engagement
+Elephant-specific combat behavior is handled by:
 
-`AutoEngagement` runs after explicit attacks and special processors.
+```text
+combat_system/elephant_special_processor.cpp
+```
 
-Its job is to let eligible idle units acquire nearby enemies without requiring a
-direct attack order. It uses the shared `CombatQueryContext` and the common
-enemy validation helpers. Units with suppressing player intent, hold/guard
-constraints, active patrols, or active attack targets are not treated as freely
-idle.
+This processor owns:
 
-## Combat state and visuals
+* low-health panic checks;
+* charge state transitions;
+* trample damage;
+* stomp-impact records used by visual effects.
 
-Combat animation state is stored on `CombatStateComponent` and advanced by
-`process_combat_state()`.
+### Panic State
 
-Hit flash and related transient feedback is handled by `process_hit_feedback()`.
-Projectile and arrow visuals are emitted by combat processors, but final damage
-still goes through `deal_damage()` when the attack is resolved.
+Panic state is stored in:
 
-Random-looking combat visual variation should be deterministic. Current combat
-code uses hash-based rolls from entity ids and target ids for attack animation
-offsets, arrow counts, and arrow spread. Avoid adding `std::random_device` or
-global `std::rand()` in combat code; it makes tests and replays harder to reason
-about.
+```cpp
+ElephantPanicComponent
+```
 
-## Adding a new combat behavior
+`ElephantComponent` remains focused on combat statistics and charge/trample state.
 
-Prefer this path:
+Panic behavior does not create hidden movement targets. Instead, it influences the elephant's combat decisions directly.
 
-1. Add unit-specific state as a component if the behavior has persistent state.
-2. Add the processor under `game/systems/combat_system/`.
-3. Call it from `CombatSystem::update()` after normal attacks if it applies
-   special damage, or before normal attacks if it changes attack eligibility.
-4. Use `CombatQueryContext` for entity lookup and scanning.
-5. Use `is_valid_enemy_unit()` for target validation.
-6. Use `deal_damage()` for damage.
-7. Add focused tests under `tests/systems/`.
+### Trample Damage
 
-Avoid adding a new top-level `System` for combat damage unless it is genuinely a
-non-combat simulation concern. Separate combat systems tend to drift into their
-own targeting and damage rules.
+Trample damage applies only to valid enemies.
 
-## Known boundaries
+Friendly and allied troops are rejected through:
 
-The RPG commander combat resolver still has its own path under
-`game/systems/rpg_combat_system/`. It is related combat code, but it is a
-different abstraction from RTS unit combat.
+```cpp
+Combat::is_valid_enemy_unit()
+```
 
-Projectile movement remains in `ProjectileSystem`, and arrow visual trails
-remain in `ArrowSystem`. Combat decides when to spawn those effects; the
-projectile systems own their simulation and rendering-facing data.
+As a result, even a panicked elephant cannot damage units on its own side.
+
+## Auto-Engagement
+
+`AutoEngagement` runs after explicit attacks and special combat processors.
+
+Its purpose is to allow eligible idle units to acquire nearby enemies without requiring a direct attack command.
+
+Auto-engagement uses:
+
+* the shared `CombatQueryContext`;
+* the common enemy-validation helpers.
+
+A unit is not considered freely idle when it has:
+
+* suppressing player intent;
+* hold or guard constraints;
+* an active patrol;
+* an active attack target.
+
+## Combat State and Visual Feedback
+
+Combat animation state is stored in:
+
+```cpp
+CombatStateComponent
+```
+
+It is advanced by:
+
+```cpp
+process_combat_state()
+```
+
+Transient hit feedback, such as hit flashes, is handled by:
+
+```cpp
+process_hit_feedback()
+```
+
+Combat processors may spawn projectile, arrow, or impact visuals. However, final damage resolution should still go through:
+
+```cpp
+Combat::deal_damage()
+```
+
+when the attack connects.
+
+## Deterministic Visual Variation
+
+Combat visuals may appear random, but their variation should remain deterministic.
+
+The current combat code uses hash-based values derived from entity IDs and target IDs for effects such as:
+
+* attack animation offsets;
+* arrow counts;
+* arrow spread.
+
+Avoid introducing:
+
+```cpp
+std::random_device
+```
+
+or global:
+
+```cpp
+std::rand()
+```
+
+into combat code. Non-deterministic randomness makes combat tests, debugging, and replay behavior harder to reason about.
+
+## Adding New Combat Behavior
+
+Use the following approach when introducing new combat functionality:
+
+I. Add a dedicated component when the behavior requires persistent state.
+
+II. Add a processor under:
+  
+```text
+game/systems/combat_system/
+```
+
+III. Call the processor from `CombatSystem::update()`:
+
+* after normal attacks when it applies special damage;
+* before normal attacks when it changes attack eligibility.
+
+IV. Use `CombatQueryContext` for entity lookup and range scanning.
+
+V. Use `Combat::is_valid_enemy_unit()` for target validation.
+
+VI. Use `Combat::deal_damage()` for damage application.
+
+VII. Add focused tests under:
+
+```text
+tests/systems/
+```
+
+Avoid creating a new top-level `System` for combat damage unless the behavior is genuinely outside the combat simulation. Separate damage systems tend to develop inconsistent targeting, validation, and damage rules.
+
+## Known Boundaries
+
+### RPG Commander Combat
+
+The RPG commander combat resolver has its own implementation under:
+
+```text
+game/systems/rpg_combat_system/
+```
+
+Although it is related to combat, it represents a different abstraction from RTS unit combat and does not share the same processing path.
+
+### Projectile and Arrow Systems
+
+Projectile movement remains the responsibility of:
+
+```text
+ProjectileSystem
+```
+
+Arrow trail visuals remain the responsibility of:
+
+```text
+ArrowSystem
+```
+
+The combat system decides when these effects are created. The projectile and arrow systems own their subsequent simulation and rendering-facing data.
