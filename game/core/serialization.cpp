@@ -530,9 +530,13 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     elephant_obj["trample_damage"] = elephant->trample_damage;
     elephant_obj["trample_damage_accumulator"] =
         static_cast<double>(elephant->trample_damage_accumulator);
-    elephant_obj["is_panicked"] = elephant->is_panicked;
-    elephant_obj["panic_duration"] = static_cast<double>(elephant->panic_duration);
     entity_obj["elephant"] = elephant_obj;
+  }
+
+  if (const auto* panic = entity->get_component<ElephantPanicComponent>()) {
+    QJsonObject panic_obj;
+    panic_obj["duration"] = static_cast<double>(panic->duration);
+    entity_obj["elephant_panic"] = panic_obj;
   }
 
   if (const auto* stomp_impact =
@@ -1232,9 +1236,20 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     elephant->trample_damage = elephant_obj["trample_damage"].toInt(40);
     elephant->trample_damage_accumulator =
         static_cast<float>(elephant_obj["trample_damage_accumulator"].toDouble(0.0));
-    elephant->is_panicked = elephant_obj["is_panicked"].toBool(false);
-    elephant->panic_duration =
-        static_cast<float>(elephant_obj["panic_duration"].toDouble(0.0));
+    if (elephant_obj["is_panicked"].toBool(false)) {
+      auto* panic = entity->add_component<ElephantPanicComponent>();
+      panic->duration =
+          static_cast<float>(elephant_obj["panic_duration"].toDouble(0.0));
+    }
+  }
+
+  if (json.contains("elephant_panic")) {
+    const auto panic_obj = json["elephant_panic"].toObject();
+    auto* panic = entity->get_component<ElephantPanicComponent>();
+    if (panic == nullptr) {
+      panic = entity->add_component<ElephantPanicComponent>();
+    }
+    panic->duration = static_cast<float>(panic_obj["duration"].toDouble(0.0));
   }
 
   if (json.contains("elephant_stomp_impacts")) {

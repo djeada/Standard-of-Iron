@@ -3,15 +3,11 @@
 #include "game/core/world.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
-#include "game/systems/ballista_attack_system.h"
 #include "game/systems/capture_system.h"
-#include "game/systems/catapult_attack_system.h"
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/commander_system.h"
-#include "game/systems/defense_tower_system.h"
-#include "game/systems/elephant_attack_system.h"
 #include "game/systems/guard_system.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
@@ -67,10 +63,6 @@ void RendererBootstrap::initialize_world_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<Game::Systems::GuardSystem>());
   world.add_system(std::make_unique<Game::Systems::CombatSystem>());
   world.add_system(std::make_unique<Game::Systems::CommanderSystem>());
-  world.add_system(std::make_unique<Game::Systems::CatapultAttackSystem>());
-  world.add_system(std::make_unique<Game::Systems::BallistaAttackSystem>());
-  world.add_system(std::make_unique<Game::Systems::ElephantAttackSystem>());
-  world.add_system(std::make_unique<Game::Systems::DefenseTowerSystem>());
   world.add_system(std::make_unique<Game::Systems::HealingBeamSystem>());
   world.add_system(std::make_unique<Game::Systems::HealingSystem>());
   world.add_system(std::make_unique<Game::Systems::CaptureSystem>());

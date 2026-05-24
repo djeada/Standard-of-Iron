@@ -23,6 +23,8 @@ add_library(game_systems STATIC
     systems/combat_system/hit_feedback_processor.cpp
     systems/combat_system/combat_state_processor.cpp
     systems/combat_system/attack_processor.cpp
+    systems/combat_system/elephant_special_processor.cpp
+    systems/combat_system/siege_special_processor.cpp
     systems/cleanup_system.cpp
     systems/rpg_combat_system/rpg_commander_damage.cpp
     systems/rpg_combat_system/rpg_damage_resolver.cpp
@@ -56,9 +58,6 @@ add_library(game_systems STATIC
     systems/projectile_system.cpp
     systems/arrow_projectile.cpp
     systems/stone_projectile.cpp
-    systems/catapult_attack_system.cpp
-    systems/ballista_attack_system.cpp
-    systems/elephant_attack_system.cpp
     systems/camera_follow_system.cpp
     systems/camera_controller.cpp
     systems/camera_service.cpp
@@ -135,7 +134,6 @@ add_library(game_systems STATIC
     units/defense_tower.cpp
     units/home.cpp
     units/wall_segment.cpp
-    systems/defense_tower_system.cpp
     systems/home_system.cpp
 )
 

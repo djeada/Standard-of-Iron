@@ -190,6 +190,140 @@ auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
 
+auto unit_should_emit_rigged_body(Game::Units::SpawnType spawn_type) noexcept -> bool {
+  switch (spawn_type) {
+  case Game::Units::SpawnType::Catapult:
+  case Game::Units::SpawnType::Ballista:
+  case Game::Units::SpawnType::Barracks:
+  case Game::Units::SpawnType::DefenseTower:
+  case Game::Units::SpawnType::Home:
+  case Game::Units::SpawnType::WallSegment:
+    return false;
+  default:
+    return true;
+  }
+}
+
+class RiggedBodyProbeSubmitter final : public ISubmitter {
+public:
+  explicit RiggedBodyProbeSubmitter(ISubmitter& inner)
+      : m_inner(inner) {}
+
+  [[nodiscard]] auto rigged_body_count() const noexcept -> std::uint32_t {
+    return m_rigged_body_count;
+  }
+
+  void mesh(Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
+            int material_id = 0) override {
+    m_inner.mesh(mesh, model, color, tex, alpha, material_id);
+  }
+
+  void banner(Mesh* mesh,
+              const QMatrix4x4& model,
+              const QVector3D& color,
+              const QVector3D& trim_color,
+              Texture* tex = nullptr,
+              float alpha = 1.0F,
+              int material_id = 0) override {
+    m_inner.banner(mesh, model, color, trim_color, tex, alpha, material_id);
+  }
+
+  void part(Mesh* mesh,
+            Material* material,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
+            int material_id = 0) override {
+    m_inner.part(mesh, material, model, color, tex, alpha, material_id);
+  }
+
+  void rigged(const RiggedCreatureCmd& cmd) override {
+    if (cmd.mesh != nullptr) {
+      ++m_rigged_body_count;
+    }
+    m_inner.rigged(cmd);
+  }
+
+  void cylinder(const QVector3D& start,
+                const QVector3D& end,
+                float radius,
+                const QVector3D& color,
+                float alpha = 1.0F) override {
+    m_inner.cylinder(start, end, radius, color, alpha);
+  }
+
+  void selection_ring(const QMatrix4x4& model,
+                      float alpha_inner,
+                      float alpha_outer,
+                      const QVector3D& color) override {
+    m_inner.selection_ring(model, alpha_inner, alpha_outer, color);
+  }
+
+  void grid(const QMatrix4x4& model,
+            const QVector3D& color,
+            float cell_size,
+            float thickness,
+            float extent) override {
+    m_inner.grid(model, color, cell_size, thickness, extent);
+  }
+
+  void selection_smoke(const QMatrix4x4& model,
+                       const QVector3D& color,
+                       float base_alpha = 0.15F) override {
+    m_inner.selection_smoke(model, color, base_alpha);
+  }
+
+  void healing_beam(const QVector3D& start,
+                    const QVector3D& end,
+                    const QVector3D& color,
+                    float progress,
+                    float beam_width,
+                    float intensity,
+                    float time) override {
+    m_inner.healing_beam(start, end, color, progress, beam_width, intensity, time);
+  }
+
+  void healer_aura(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
+    m_inner.healer_aura(position, color, radius, intensity, time);
+  }
+
+  void combat_dust(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
+    m_inner.combat_dust(position, color, radius, intensity, time);
+  }
+
+  void stone_impact(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override {
+    m_inner.stone_impact(position, color, radius, intensity, time);
+  }
+
+  void mode_indicator(const QMatrix4x4& model,
+                      int mode_type,
+                      const QVector3D& color,
+                      float alpha = 1.0F) override {
+    m_inner.mode_indicator(model, mode_type, color, alpha);
+  }
+
+private:
+  ISubmitter& m_inner;
+  std::uint32_t m_rigged_body_count{0U};
+};
+
 void log_render_first_use_once(const char* stage, const QString& detail) {
   if (!render_stage_logging_enabled()) {
     return;
@@ -1760,10 +1894,38 @@ void Renderer::render_world(Engine::Core::World* world) {
             batching_available && (tier == Render::Pipeline::LodTier::Simplified ||
                                    tier == Render::Pipeline::LodTier::Minimal);
         tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
-        if (use_batching) {
-          (*fn)(ctx, batch_submitter);
-        } else {
-          (*fn)(ctx, *this);
+        RiggedBodyProbeSubmitter probe(use_batching
+                                           ? static_cast<ISubmitter&>(batch_submitter)
+                                           : static_cast<ISubmitter&>(*this));
+        (*fn)(ctx, probe);
+
+        if (entry.unit != nullptr && probe.rigged_body_count() == 0U &&
+            unit_should_emit_rigged_body(entry.unit->spawn_type) && !tier_is_minimal) {
+          static std::mutex warning_mutex;
+          static std::unordered_set<std::string> warned_units;
+          const std::string warning_key =
+              std::to_string(entry.entity_id) + ":" + entry.renderer_key;
+          bool should_warn = false;
+          {
+            std::lock_guard<std::mutex> const lock(warning_mutex);
+            should_warn = warned_units.emplace(warning_key).second;
+          }
+          if (should_warn) {
+            qWarning().noquote()
+                << QStringLiteral(
+                       "Renderer: unit renderer emitted no rigged body; "
+                       "entity=%1 renderer='%2' spawn='%3' selected=%4 hovered=%5 "
+                       "combat=%6 distance_sq=%7 batching=%8 lod_tier=%9")
+                       .arg(entry.entity_id)
+                       .arg(QString::fromStdString(entry.renderer_key))
+                       .arg(Game::Units::spawn_typeToQString(entry.unit->spawn_type))
+                       .arg(entry.selected)
+                       .arg(entry.hovered)
+                       .arg(entry.combat_active)
+                       .arg(entry.distance_sq)
+                       .arg(use_batching)
+                       .arg(static_cast<int>(tier));
+          }
         }
 
         drawn_by_registry = true;

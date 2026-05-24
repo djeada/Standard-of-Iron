@@ -135,6 +135,7 @@ private:
     float color_alpha[4];
     float variation_material[4];
     float wear[4];
+    float role_meta[4];
   };
   std::vector<InstanceAttrib> m_instance_scratch;
   std::vector<float> m_role_color_scratch;
