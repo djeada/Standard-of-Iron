@@ -9,6 +9,7 @@ flat in float v_alpha;
 flat in int v_material_id;
 flat in int v_color_role;
 flat in int v_instance_id;
+flat in int v_role_color_count;
 flat in vec4 v_wear_params;
 
 uniform samplerBuffer u_role_color_tbo;
@@ -135,7 +136,7 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
 
 void main() {
   vec3 base = v_color;
-  if (v_color_role > 0) {
+  if (v_color_role > 0 && v_color_role <= v_role_color_count) {
     base = texelFetch(u_role_color_tbo, v_instance_id * 32 + v_color_role - 1).rgb;
   }
   base = apply_wear(base, v_material_id, v_color_role, v_pos_local, v_wear_params);

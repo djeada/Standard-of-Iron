@@ -2,6 +2,7 @@
 .copilot-tmp
 perf*
 *~
+.venv
 # C++ objects and libs
 *.slo
 *.lo

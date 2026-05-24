@@ -1,2379 +1,1961 @@
 {
-  "biome": {
-    "blade_height": [
-      0.45,
-      1.15
+    "biome": {
+        "blade_height": [
+            0.45,
+            1.1500000000000001
+        ],
+        "blade_width": [
+            0.03,
+            0.05
+        ],
+        "grass_dry": [
+            0.66,
+            0.5700000000000001,
+            0.34
+        ],
+        "grass_primary": [
+            0.42,
+            0.52,
+            0.25
+        ],
+        "grass_secondary": [
+            0.56,
+            0.58,
+            0.3
+        ],
+        "ground_irregularity_enabled": true,
+        "ground_type": "grass_dry",
+        "height_noise": [
+            0.18,
+            0.06
+        ],
+        "irregularity_amplitude": 0.08,
+        "irregularity_scale": 0.13,
+        "patch_density": 3.0500000000000003,
+        "patch_jitter": 0.8200000000000001,
+        "plant_density": 0.48,
+        "rock_high": [
+            0.66,
+            0.65,
+            0.61
+        ],
+        "rock_low": [
+            0.44,
+            0.42,
+            0.39
+        ],
+        "seed": 10017,
+        "soil_color": [
+            0.31,
+            0.25,
+            0.17
+        ],
+        "sway_speed": 1.1,
+        "sway_strength": 0.2
+    },
+    "bridges": [
+        {
+            "can_be_retaken_by_rome": true,
+            "capture_zone_radius": 6,
+            "end": [
+                97,
+                55
+            ],
+            "height": 0.65,
+            "id": "northern_bridge",
+            "readability_props": [
+                "burnt_cart_north_approach",
+                "north_warning_banners"
+            ],
+            "role": "fast risky strike route",
+            "start": [
+                93,
+                55
+            ],
+            "width": 3.8000000000000003
+        },
+        {
+            "can_be_retaken_by_rome": true,
+            "capture_zone_radius": 7,
+            "end": [
+                97,
+                88
+            ],
+            "height": 0.75,
+            "id": "central_bridge",
+            "readability_props": [
+                "central_watch_fire",
+                "dead_tree_gate"
+            ],
+            "role": "hard control route",
+            "start": [
+                93,
+                88
+            ],
+            "width": 5.2
+        },
+        {
+            "can_be_retaken_by_rome": true,
+            "capture_zone_radius": 7,
+            "end": [
+                98,
+                118
+            ],
+            "height": 1.1500000000000001,
+            "id": "southern_bridge",
+            "readability_props": [
+                "gaul_guide_cart",
+                "southern_old_marker"
+            ],
+            "role": "ally and preparation route",
+            "start": [
+                93,
+                118
+            ],
+            "width": 5.8
+        },
+        {
+            "end": [
+                126,
+                102
+            ],
+            "height": 0.55,
+            "id": "south_branch_bridge",
+            "role": "central island to southern fort connector",
+            "start": [
+                125,
+                99
+            ],
+            "width": 4
+        },
+        {
+            "end": [
+                134,
+                71
+            ],
+            "height": 0.55,
+            "id": "east_branch_bridge",
+            "role": "central island to northern fort connector",
+            "start": [
+                134,
+                69
+            ],
+            "width": 4
+        },
+        {
+            "end": [
+                97,
+                31
+            ],
+            "height": 0.35000000000000003,
+            "id": "hidden_scout_plank",
+            "pathing_tags": [
+                "light_units_preferred",
+                "siege_blocked",
+                "elephant_blocked"
+            ],
+            "purpose": "gives skilled players a vision route, not a full army shortcut",
+            "role": "scout-only visual route; too narrow for siege and elephants",
+            "start": [
+                93,
+                31
+            ],
+            "width": 2.2
+        },
+        {
+            "end": [
+                71,
+                122
+            ],
+            "height": 0.5,
+            "start": [
+                72,
+                124
+            ],
+            "width": 4
+        }
     ],
-    "blade_width": [
-      0.025,
-      0.05
+    "buildings": [
+        {
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "defense_tower",
+            "x": 144,
+            "z": 16
+        },
+        {
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "defense_tower",
+            "x": 129,
+            "z": 15
+        },
+        {
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "defense_tower",
+            "x": 128,
+            "z": 3
+        },
+        {
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 137,
+            "z": 13
+        },
+        {
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "home",
+            "x": 131,
+            "z": 8
+        }
     ],
-    "grass_dry": [
-      0.66,
-      0.57,
-      0.34
+    "camera": {
+        "center": [
+            75,
+            0,
+            75
+        ],
+        "distance": 88,
+        "far": 500,
+        "fov_y": 45,
+        "near": 1,
+        "tilt_deg": 55,
+        "yaw": 210
+    },
+    "coord_system": "grid",
+    "description": "Hannibal's Carthaginian force begins on the western bank and must break through a layered Roman river defense. The level is built around three viable crossings, a neutral Gallic faction, maze-like approach paths, meaningful route order, asymmetric Roman forts, active patrols, and a supply-line counterattack after the first fort falls.",
+    "grid": {
+        "height": 150,
+        "tile_size": 1,
+        "width": 200
+    },
+    "max_troops_per_player": 1400,
+    "name": "Crossing the Rhone - Polished Maze Version",
+    "rivers": [
+        {
+            "end": [
+                95,
+                150
+            ],
+            "id": "main_rhone",
+            "role": "primary map divider and commitment line",
+            "start": [
+                95,
+                0
+            ],
+            "width": 8
+        },
+        {
+            "end": [
+                200,
+                70
+            ],
+            "id": "south_branch",
+            "role": "separates the southern fort from the central island",
+            "start": [
+                12,
+                148
+            ],
+            "width": 3.4
+        },
+        {
+            "end": [
+                200,
+                70
+            ],
+            "id": "east_branch",
+            "role": "forces the northern route to pass through branch-bridge decisions",
+            "start": [
+                95,
+                70
+            ],
+            "width": 3.2
+        }
     ],
-    "grass_primary": [
-      0.42,
-      0.52,
-      0.25
+    "roads": [
+        {
+            "destination": "central_bridge",
+            "end": [
+                93,
+                88
+            ],
+            "id": "camp_to_central_bridge_main_road",
+            "purpose": "main readable road to the hardest crossing",
+            "start": [
+                0,
+                35
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    0,
+                    35
+                ],
+                [
+                    19,
+                    46
+                ],
+                [
+                    31,
+                    56
+                ],
+                [
+                    43,
+                    67
+                ],
+                [
+                    58,
+                    77
+                ],
+                [
+                    73,
+                    84
+                ],
+                [
+                    93,
+                    88
+                ]
+            ],
+            "width": 3.2
+        },
+        {
+            "destination": "northern_bridge",
+            "end": [
+                93,
+                55
+            ],
+            "id": "camp_to_northern_bridge_flank_road",
+            "purpose": "fast but narrow route for cavalry and early pressure",
+            "start": [
+                12,
+                42
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    12,
+                    42
+                ],
+                [
+                    25,
+                    35
+                ],
+                [
+                    40,
+                    33
+                ],
+                [
+                    57,
+                    39
+                ],
+                [
+                    72,
+                    48
+                ],
+                [
+                    93,
+                    55
+                ]
+            ],
+            "width": 2.4
+        },
+        {
+            "destination": "hidden_scout_plank",
+            "end": [
+                93,
+                31
+            ],
+            "id": "camp_to_hidden_scout_plank",
+            "pathing_tags": [
+                "light_units_preferred",
+                "siege_unfriendly"
+            ],
+            "purpose": "optional scout route ending in vision, not a full army attack path",
+            "start": [
+                1,
+                0
+            ],
+            "style": "rough",
+            "waypoints": [
+                [
+                    1,
+                    0
+                ],
+                [
+                    31,
+                    23
+                ],
+                [
+                    45,
+                    26
+                ],
+                [
+                    60,
+                    25
+                ],
+                [
+                    76,
+                    28
+                ],
+                [
+                    93,
+                    31
+                ]
+            ],
+            "width": 1.7
+        },
+        {
+            "destination": "central_gaul_warning_camp",
+            "end": [
+                71,
+                122
+            ],
+            "id": "western_ruins_loop_upper",
+            "purpose": "connects northern route to neutral Gallic warning camp",
+            "start": [
+                26,
+                9
+            ],
+            "style": "rough",
+            "waypoints": [
+                [
+                    26,
+                    9
+                ],
+                [
+                    32,
+                    43
+                ],
+                [
+                    41,
+                    49
+                ],
+                [
+                    71,
+                    122
+                ]
+            ],
+            "width": 2.1
+        },
+        {
+            "destination": "north_roman_fort_zone",
+            "end": [
+                131,
+                22
+            ],
+            "id": "northern_bridge_to_north_fort",
+            "purpose": "fast road to command fort",
+            "start": [
+                97,
+                55
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    97,
+                    55
+                ],
+                [
+                    111,
+                    48
+                ],
+                [
+                    120,
+                    38
+                ],
+                [
+                    126,
+                    29
+                ],
+                [
+                    131,
+                    22
+                ]
+            ],
+            "width": 2.6
+        },
+        {
+            "destination": "signal_tower_zone",
+            "end": [
+                134,
+                69
+            ],
+            "id": "hidden_plank_to_signal_ridge",
+            "purpose": "scout/raid route to signal rider and tower",
+            "start": [
+                97,
+                31
+            ],
+            "style": "rough",
+            "waypoints": [
+                [
+                    97,
+                    31
+                ],
+                [
+                    108,
+                    30
+                ],
+                [
+                    116,
+                    32
+                ],
+                [
+                    134,
+                    69
+                ]
+            ],
+            "width": 1.7
+        },
+        {
+            "destination": "south_roman_fort_zone",
+            "end": [
+                140,
+                134
+            ],
+            "id": "south_branch_bridge_to_south_fort",
+            "purpose": "central route into southern military fort",
+            "start": [
+                126,
+                102
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    126,
+                    102
+                ],
+                [
+                    128,
+                    113
+                ],
+                [
+                    132,
+                    123
+                ],
+                [
+                    140,
+                    134
+                ]
+            ],
+            "width": 3
+        },
+        {
+            "destination": "south_roman_fort_zone",
+            "end": [
+                140,
+                134
+            ],
+            "id": "southern_bridge_to_south_fort",
+            "purpose": "direct southern assault road",
+            "start": [
+                98,
+                118
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    98,
+                    118
+                ],
+                [
+                    114,
+                    119
+                ],
+                [
+                    126,
+                    123
+                ],
+                [
+                    134,
+                    130
+                ],
+                [
+                    140,
+                    134
+                ]
+            ],
+            "width": 3.1
+        },
+        {
+            "destination": "north_roman_fort_zone",
+            "end": [
+                131,
+                22
+            ],
+            "id": "east_branch_bridge_to_north_fort",
+            "purpose": "inner Roman response road from island to command fort",
+            "start": [
+                134,
+                69
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    134,
+                    69
+                ],
+                [
+                    136,
+                    61
+                ],
+                [
+                    133,
+                    48
+                ],
+                [
+                    130,
+                    36
+                ],
+                [
+                    131,
+                    22
+                ]
+            ],
+            "width": 2.4
+        },
+        {
+            "end": [
+                191,
+                20
+            ],
+            "start": [
+                131,
+                22
+            ],
+            "style": "default",
+            "width": 3
+        },
+        {
+            "end": [
+                134,
+                68
+            ],
+            "start": [
+                191,
+                21
+            ],
+            "style": "default",
+            "width": 3
+        },
+        {
+            "end": [
+                192,
+                4
+            ],
+            "start": [
+                192,
+                21
+            ],
+            "style": "default",
+            "width": 3
+        },
+        {
+            "end": [
+                141,
+                5
+            ],
+            "start": [
+                192,
+                4
+            ],
+            "style": "default",
+            "width": 3
+        },
+        {
+            "end": [
+                125,
+                99
+            ],
+            "start": [
+                134,
+                71
+            ],
+            "style": "default",
+            "width": 3
+        },
+        {
+            "end": [
+                125,
+                99
+            ],
+            "start": [
+                98,
+                88
+            ],
+            "style": "default",
+            "width": 3
+        },
+        {
+            "end": [
+                98,
+                88
+            ],
+            "start": [
+                134,
+                71
+            ],
+            "style": "default",
+            "width": 3
+        },
+        {
+            "end": [
+                73,
+                124
+            ],
+            "start": [
+                94,
+                118
+            ],
+            "style": "default",
+            "width": 3
+        }
     ],
-    "grass_secondary": [
-      0.56,
-      0.58,
-      0.3
+    "spawns": [
+        {
+            "capture_required": true,
+            "id": "rome_north_barracks",
+            "max_population": 150,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "role": "command_economy_fort",
+            "type": "barracks",
+            "x": 138,
+            "z": 8
+        },
+        {
+            "capture_required": true,
+            "id": "rome_south_barracks",
+            "max_population": 150,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "role": "military_fort",
+            "type": "barracks",
+            "x": 141,
+            "z": 135
+        },
+        {
+            "id": "p1_spearman_01",
+            "max_population": -1,
+            "player_id": 1,
+            "type": "spearman",
+            "x": 5,
+            "z": 46
+        },
+        {
+            "id": "p1_spearman_02",
+            "max_population": -1,
+            "player_id": 1,
+            "type": "spearman",
+            "x": 5,
+            "z": 50
+        },
+        {
+            "id": "p1_swordsman_01",
+            "max_population": -1,
+            "player_id": 1,
+            "type": "swordsman",
+            "x": 5,
+            "z": 48
+        },
+        {
+            "id": "p1_archer_01",
+            "max_population": -1,
+            "player_id": 1,
+            "type": "archer",
+            "x": 2,
+            "z": 46
+        },
+        {
+            "id": "p1_archer_02",
+            "max_population": -1,
+            "player_id": 1,
+            "type": "archer",
+            "x": 2,
+            "z": 48
+        },
+        {
+            "id": "p1_horse_swordsman_01",
+            "max_population": -1,
+            "player_id": 1,
+            "type": "horse_swordsman",
+            "x": 5,
+            "z": 44
+        },
+        {
+            "id": "p1_elephant_01",
+            "max_population": -1,
+            "player_id": 1,
+            "role": "bridge breaker",
+            "type": "elephant",
+            "x": 2,
+            "z": 44
+        },
+        {
+            "id": "p1_healer_01",
+            "max_population": -1,
+            "player_id": 1,
+            "type": "healer",
+            "x": 2,
+            "z": 50
+        },
+        {
+            "id": "rome_north_spearman_01",
+            "max_population": -1,
+            "player_id": 2,
+            "type": "spearman",
+            "x": 99,
+            "z": 27
+        },
+        {
+            "id": "rome_north_spearman_02",
+            "max_population": -1,
+            "player_id": 2,
+            "type": "spearman",
+            "x": 119,
+            "z": 16
+        },
+        {
+            "id": "rome_north_swordsman_01",
+            "max_population": -1,
+            "player_id": 2,
+            "type": "swordsman",
+            "x": 118,
+            "z": 22
+        },
+        {
+            "id": "rome_north_archer_01",
+            "max_population": -1,
+            "player_id": 2,
+            "role": "hill defender",
+            "type": "archer",
+            "x": 101,
+            "z": 29
+        },
+        {
+            "id": "rome_north_archer_02",
+            "max_population": -1,
+            "player_id": 2,
+            "role": "hill defender",
+            "type": "archer",
+            "x": 122,
+            "z": 20
+        },
+        {
+            "id": "rome_north_archer_03",
+            "max_population": -1,
+            "player_id": 2,
+            "role": "anti-rush defender",
+            "type": "archer",
+            "x": 122,
+            "z": 23
+        },
+        {
+            "id": "rome_north_catapult_01",
+            "max_population": -1,
+            "player_id": 2,
+            "role": "dangerous exposed target",
+            "type": "catapult",
+            "x": 125,
+            "z": 21
+        },
+        {
+            "id": "rome_north_healer_01",
+            "max_population": -1,
+            "player_id": 2,
+            "type": "healer",
+            "x": 123,
+            "z": 17
+        },
+        {
+            "id": "rome_north_signal_guard_01",
+            "max_population": -1,
+            "player_id": 2,
+            "role": "runs warning to south if not intercepted",
+            "type": "horse_swordsman",
+            "x": 116,
+            "z": 22
+        },
+        {
+            "id": "gaul_center_spearman_01",
+            "max_population": -1,
+            "player_id": 3,
+            "role": "neutral warning encounter",
+            "type": "spearman",
+            "x": 75,
+            "z": 56
+        },
+        {
+            "id": "gaul_center_archer_01",
+            "max_population": -1,
+            "player_id": 3,
+            "role": "neutral warning encounter",
+            "type": "archer",
+            "x": 76,
+            "z": 63
+        },
+        {
+            "id": "gaul_center_swordsman_01",
+            "max_population": -1,
+            "player_id": 3,
+            "role": "neutral warning encounter",
+            "type": "swordsman",
+            "x": 74,
+            "z": 65
+        },
+        {
+            "id": "gaul_bridge_spearman_01",
+            "max_population": -1,
+            "player_id": 3,
+            "role": "hints central crossing danger",
+            "type": "spearman",
+            "x": 72,
+            "z": 86
+        },
+        {
+            "id": "gaul_bridge_archer_01",
+            "max_population": -1,
+            "player_id": 3,
+            "role": "hints central crossing danger",
+            "type": "archer",
+            "x": 75,
+            "z": 83
+        },
+        {
+            "id": "gaul_south_horse_01",
+            "max_population": -1,
+            "player_id": 3,
+            "role": "draws attention to southern alliance route",
+            "type": "horse_swordsman",
+            "x": 149,
+            "z": 119
+        },
+        {
+            "id": "gaul_south_bridge_horse_01",
+            "max_population": -1,
+            "player_id": 3,
+            "role": "visible guide toward southern bridge",
+            "type": "horse_swordsman",
+            "x": 82,
+            "z": 116
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "archer",
+            "x": 100,
+            "z": 58
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "archer",
+            "x": 101,
+            "z": 54
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "carthage_elephant_master",
+            "x": 7,
+            "z": 45
+        },
+        {
+            "max_population": -1,
+            "player_id": 3,
+            "type": "swordsman",
+            "x": 144,
+            "z": 125
+        },
+        {
+            "max_population": -1,
+            "player_id": 3,
+            "type": "swordsman",
+            "x": 141,
+            "z": 120
+        },
+        {
+            "max_population": -1,
+            "player_id": 3,
+            "type": "archer",
+            "x": 135,
+            "z": 146
+        },
+        {
+            "max_population": -1,
+            "player_id": 3,
+            "type": "archer",
+            "x": 129,
+            "z": 146
+        },
+        {
+            "max_population": -1,
+            "player_id": 3,
+            "type": "spearman",
+            "x": 46,
+            "z": 109
+        },
+        {
+            "max_population": -1,
+            "player_id": 3,
+            "type": "spearman",
+            "x": 50,
+            "z": 136
+        }
     ],
-    "ground_irregularity_enabled": true,
-    "ground_type": "grass_dry",
-    "height_noise": [
-      0.18,
-      0.055
+    "starting_resources": {
+        "food": 200,
+        "gold": 200,
+        "iron": 100,
+        "stone": 100,
+        "wood": 150
+    },
+    "terrain": [
+        {
+            "depth": 19,
+            "description": "Island high ground that controls movement between north and south forts; central prize after crossing.",
+            "entrances": [
+                {
+                    "x": 138,
+                    "z": 75
+                },
+                {
+                    "radius": 2.5500000000000003,
+                    "x": 167.5,
+                    "z": 140.5
+                }
+            ],
+            "height": 2.35,
+            "id": "eastern_island_high_ground",
+            "rotation": 4,
+            "type": "hill",
+            "width": 15,
+            "x": 171,
+            "z": 126
+        },
+        {
+            "depth": 15,
+            "description": "Back hill behind the southern Roman fort; creates archer line and prevents the base from feeling flat.",
+            "entrances": [
+                {
+                    "radius": 1.8,
+                    "x": 155,
+                    "z": 106.5
+                }
+            ],
+            "height": 2.4,
+            "id": "south_fort_back_hill",
+            "rotation": -20,
+            "type": "hill",
+            "width": 13,
+            "x": 109,
+            "z": 137
+        },
+        {
+            "depth": 18,
+            "description": "Cliff above the east branch, compressing movement near the branch bridge.",
+            "entrances": [
+                {
+                    "x": 137,
+                    "z": 66
+                }
+            ],
+            "height": 2.7,
+            "id": "northeast_river_cliff",
+            "rotation": 18,
+            "type": "hill",
+            "width": 12,
+            "x": 183,
+            "z": 51
+        },
+        {
+            "description": "Northwestern rocky boundary",
+            "height": 8,
+            "id": "northwestern_rocky_boundary",
+            "radius": 7,
+            "type": "mountain",
+            "x": 27,
+            "z": 3
+        },
+        {
+            "description": "Northern valley wall",
+            "height": 8.5,
+            "id": "northern_valley_wall",
+            "radius": 13,
+            "type": "mountain",
+            "x": 66,
+            "z": 6
+        },
+        {
+            "description": "Southwestern rocky boundary",
+            "height": 8,
+            "id": "southwestern_rocky_boundary",
+            "radius": 6,
+            "type": "mountain",
+            "x": 11,
+            "z": 141
+        },
+        {
+            "description": "Southern valley wall",
+            "height": 9,
+            "id": "southern_valley_wall",
+            "radius": 15,
+            "type": "mountain",
+            "x": 63,
+            "z": 146
+        },
+        {
+            "description": "Far eastern ridge and visual boundary",
+            "height": 8,
+            "id": "far_eastern_ridge",
+            "radius": 8,
+            "type": "mountain",
+            "x": 169,
+            "z": 11
+        },
+        {
+            "height": 8,
+            "radius": 8,
+            "rotation": -30,
+            "type": "mountain",
+            "x": 111,
+            "z": 9
+        },
+        {
+            "height": 8,
+            "radius": 10,
+            "type": "mountain",
+            "x": 16,
+            "z": 71
+        },
+        {
+            "depth": 6,
+            "entrances": [
+                {
+                    "radius": 1.58,
+                    "x": 41.5,
+                    "z": 52.5
+                }
+            ],
+            "height": 3,
+            "type": "hill",
+            "width": 7,
+            "x": 29,
+            "z": 37
+        },
+        {
+            "depth": 11,
+            "entrances": [
+                {
+                    "radius": 1.58,
+                    "x": 52.5,
+                    "z": 88.5
+                }
+            ],
+            "height": 3,
+            "type": "hill",
+            "width": 11,
+            "x": 43,
+            "z": 91
+        },
+        {
+            "depth": 13,
+            "entrances": [
+                {
+                    "radius": 2.06,
+                    "x": 78,
+                    "z": 98.5
+                }
+            ],
+            "height": 3,
+            "type": "hill",
+            "width": 11,
+            "x": 79,
+            "z": 105
+        },
+        {
+            "depth": 11,
+            "entrances": [
+                {
+                    "radius": 1.41,
+                    "x": 117,
+                    "z": 20
+                },
+                {
+                    "radius": 1.8,
+                    "x": 107,
+                    "z": 29.5
+                }
+            ],
+            "height": 3,
+            "type": "hill",
+            "width": 11,
+            "x": 112,
+            "z": 25
+        },
+        {
+            "depth": 11,
+            "entrances": [
+                {
+                    "radius": 1.8,
+                    "x": 85,
+                    "z": 40.5
+                }
+            ],
+            "height": 3,
+            "type": "hill",
+            "width": 11,
+            "x": 80,
+            "z": 41
+        }
     ],
-    "irregularity_amplitude": 0.075,
-    "irregularity_scale": 0.13,
-    "patch_density": 3.05,
-    "patch_jitter": 0.82,
-    "plant_density": 0.48,
-    "rock_high": [
-      0.66,
-      0.65,
-      0.61
+    "time_of_day": "afternoon",
+    "undead_zones": [
+        {
+            "anchor_type": "ruins",
+            "awaken_on": [
+                "unit_enters_radius"
+            ],
+            "id": "crossing_ruins",
+            "leash_radius": 13,
+            "owner_id": 99,
+            "radius": 7,
+            "team_id": 99,
+            "waves": [
+                {
+                    "trigger": "initial",
+                    "units": {
+                        "skeleton_archer": 1,
+                        "skeleton_swordsman": 2
+                    }
+                }
+            ],
+            "x": 15,
+            "z": 105
+        }
     ],
-    "rock_low": [
-      0.44,
-      0.42,
-      0.39
+    "victory": {
+        "defeat_conditions": [
+            "no_commander",
+            "only_commander_remaining"
+        ],
+        "key_structures": [
+            "barracks"
+        ],
+        "min_count": 2,
+        "type": "capture_structures"
+    },
+    "walls": [
+        {
+            "end": [
+                131,
+                15
+            ],
+            "player_id": 2,
+            "start": [
+                143,
+                16
+            ],
+            "width": 2
+        },
+        {
+            "end": [
+                128,
+                4
+            ],
+            "player_id": 2,
+            "start": [
+                129,
+                14
+            ],
+            "width": 2
+        },
+        {
+            "end": [
+                129,
+                0
+            ],
+            "player_id": 2,
+            "start": [
+                128,
+                2
+            ],
+            "width": 2
+        },
+        {
+            "end": [
+                147,
+                9
+            ],
+            "player_id": 2,
+            "start": [
+                145,
+                15
+            ],
+            "width": 2
+        },
+        {
+            "end": [
+                147,
+                9
+            ],
+            "player_id": 2,
+            "start": [
+                154,
+                11
+            ],
+            "width": 2
+        }
     ],
-    "seed": 10017,
-    "soil_color": [
-      0.31,
-      0.25,
-      0.17
-    ],
-    "sway_speed": 1.1,
-    "sway_strength": 0.2
-  },
-  "bridges": [
-    {
-      "can_be_retaken_by_rome": true,
-      "capture_zone_radius": 6,
-      "end": [
-        101,
-        55
-      ],
-      "height": 0.6499999761581421,
-      "id": "northern_bridge",
-      "readability_props": [
-        "burnt_cart_north_approach",
-        "north_warning_banners"
-      ],
-      "role": "fast risky strike route",
-      "start": [
-        89,
-        55
-      ],
-      "width": 3.799999952316284
-    },
-    {
-      "can_be_retaken_by_rome": true,
-      "capture_zone_radius": 7,
-      "end": [
-        101.5,
-        88
-      ],
-      "height": 0.75,
-      "id": "central_bridge",
-      "readability_props": [
-        "central_watch_fire",
-        "dead_tree_gate"
-      ],
-      "role": "hard control route",
-      "start": [
-        88.5,
-        88
-      ],
-      "width": 5.199999809265137
-    },
-    {
-      "can_be_retaken_by_rome": true,
-      "capture_zone_radius": 7,
-      "end": [
-        101.5,
-        118
-      ],
-      "height": 1.149999976158142,
-      "id": "southern_bridge",
-      "readability_props": [
-        "gaul_guide_cart",
-        "southern_old_marker"
-      ],
-      "role": "ally and preparation route",
-      "start": [
-        88.5,
-        118
-      ],
-      "width": 5.800000190734863
-    },
-    {
-      "end": [
-        126,
-        102
-      ],
-      "height": 0.550000011920929,
-      "id": "south_branch_bridge",
-      "role": "central island to southern fort connector",
-      "start": [
-        126,
-        96
-      ],
-      "width": 4
-    },
-    {
-      "end": [
-        134,
-        74
-      ],
-      "height": 0.550000011920929,
-      "id": "east_branch_bridge",
-      "role": "central island to northern fort connector",
-      "start": [
-        134,
-        66
-      ],
-      "width": 4
-    },
-    {
-      "end": [
-        100,
-        31
-      ],
-      "height": 0.3499999940395355,
-      "id": "hidden_scout_plank",
-      "pathing_tags": [
-        "light_units_preferred",
-        "siege_blocked",
-        "elephant_blocked"
-      ],
-      "purpose": "gives skilled players a vision route, not a full army shortcut",
-      "role": "scout-only visual route; too narrow for siege and elephants",
-      "start": [
-        90,
-        31
-      ],
-      "width": 2.200000047683716
-    }
-  ],
-  "camera": {
-    "center": [
-      75,
-      0,
-      75
-    ],
-    "distance": 88,
-    "far": 500,
-    "fov_y": 45,
-    "near": 1,
-    "tilt_deg": 55,
-    "yaw": 210
-  },
-  "coord_system": "grid",
-  "description": "Hannibal's Carthaginian force begins on the western bank and must break through a layered Roman river defense. The level is built around three viable crossings, a neutral Gallic faction, maze-like approach paths, meaningful route order, asymmetric Roman forts, active patrols, and a supply-line counterattack after the first fort falls.",
-  "grid": {
-    "height": 150,
-    "tile_size": 1,
-    "width": 150
-  },
-  "max_troops_per_player": 1400,
-  "name": "Crossing the Rhone - Polished Maze Version",
-  "rivers": [
-    {
-      "end": [
-        95,
-        152
-      ],
-      "id": "main_rhone",
-      "role": "primary map divider and commitment line",
-      "start": [
-        95,
-        -2
-      ],
-      "width": 8
-    },
-    {
-      "end": [
-        151,
-        96
-      ],
-      "id": "south_branch",
-      "role": "separates the southern fort from the central island",
-      "start": [
-        95,
-        100
-      ],
-      "width": 3.4000000953674316
-    },
-    {
-      "end": [
-        151,
-        70
-      ],
-      "id": "east_branch",
-      "role": "forces the northern route to pass through branch-bridge decisions",
-      "start": [
-        95,
-        70
-      ],
-      "width": 3.200000047683716
-    }
-  ],
-  "roads": [
-    {
-      "destination": "central_bridge",
-      "end": [
-        88.5,
-        88
-      ],
-      "id": "camp_to_central_bridge_main_road",
-      "purpose": "main readable road to the hardest crossing",
-      "start": [
-        8,
-        40
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          8,
-          40
-        ],
-        [
-          19,
-          46
-        ],
-        [
-          31,
-          56
-        ],
-        [
-          43,
-          67
-        ],
-        [
-          58,
-          77
-        ],
-        [
-          73,
-          84
-        ],
-        [
-          88.5,
-          88
-        ]
-      ],
-      "width": 3.200000047683716
-    },
-    {
-      "destination": "southern_bridge",
-      "end": [
-        88.5,
-        118
-      ],
-      "id": "camp_to_southern_bridge_alliance_road",
-      "purpose": "long safe route toward Gaul and southern crossing",
-      "start": [
-        8,
-        40
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          8,
-          40
-        ],
-        [
-          18,
-          54
-        ],
-        [
-          30,
-          70
-        ],
-        [
-          42,
-          88
-        ],
-        [
-          56,
-          103
-        ],
-        [
-          72,
-          113
-        ],
-        [
-          88.5,
-          118
-        ]
-      ],
-      "width": 3
-    },
-    {
-      "destination": "northern_bridge",
-      "end": [
-        89,
-        55
-      ],
-      "id": "camp_to_northern_bridge_flank_road",
-      "purpose": "fast but narrow route for cavalry and early pressure",
-      "start": [
-        12,
-        42
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          12,
-          42
-        ],
-        [
-          25,
-          35
-        ],
-        [
-          40,
-          33
-        ],
-        [
-          57,
-          39
-        ],
-        [
-          72,
-          48
-        ],
-        [
-          89,
-          55
-        ]
-      ],
-      "width": 2.4000000953674316
-    },
-    {
-      "destination": "hidden_scout_plank",
-      "end": [
-        90,
-        31
-      ],
-      "id": "camp_to_hidden_scout_plank",
-      "pathing_tags": [
-        "light_units_preferred",
-        "siege_unfriendly"
-      ],
-      "purpose": "optional scout route ending in vision, not a full army attack path",
-      "start": [
-        1,
-        0
-      ],
-      "style": "rough",
-      "waypoints": [
-        [
-          1,
-          0
-        ],
-        [
-          31,
-          23
-        ],
-        [
-          45,
-          26
-        ],
-        [
-          60,
-          25
-        ],
-        [
-          76,
-          28
-        ],
-        [
-          90,
-          31
-        ]
-      ],
-      "width": 1.7000000476837158
-    },
-    {
-      "destination": "central_gaul_warning_camp",
-      "end": [
-        50,
-        58
-      ],
-      "id": "western_ruins_loop_upper",
-      "purpose": "connects northern route to neutral Gallic warning camp",
-      "start": [
-        26,
-        9
-      ],
-      "style": "rough",
-      "waypoints": [
-        [
-          26,
-          9
-        ],
-        [
-          32,
-          43
-        ],
-        [
-          41,
-          49
-        ],
-        [
-          50,
-          58
-        ]
-      ],
-      "width": 2.0999999046325684
-    },
-    {
-      "destination": "southern_gaul_horse_post",
-      "end": [
-        54,
-        150
-      ],
-      "id": "western_ruins_loop_lower",
-      "purpose": "low-risk scouting path from player camp to southern route",
-      "start": [
-        0,
-        0
-      ],
-      "style": "rough",
-      "waypoints": [
-        [
-          0,
-          0
-        ],
-        [
-          25,
-          66
-        ],
-        [
-          30,
-          81
-        ],
-        [
-          34,
-          96
-        ],
-        [
-          54,
-          150
-        ]
-      ],
-      "width": 2.0999999046325684
-    },
-    {
-      "destination": "southern_bridge",
-      "end": [
-        88.5,
-        118
-      ],
-      "id": "gaul_village_to_southern_bridge",
-      "purpose": "makes the Gallic objective clearly feed into the southern plan",
-      "start": [
-        30,
-        128
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          30,
-          128
-        ],
-        [
-          44,
-          126
-        ],
-        [
-          58,
-          123
-        ],
-        [
-          73,
-          120
-        ],
-        [
-          88.5,
-          118
-        ]
-      ],
-      "width": 2.799999952316284
-    },
-    {
-      "destination": "river_overlook_lower_ford",
-      "end": [
-        73,
-        84
-      ],
-      "id": "gaul_village_to_central_bridge_backroad",
-      "purpose": "lets Gaul alliance support a central push instead of only south",
-      "start": [
-        30,
-        128
-      ],
-      "style": "rough",
-      "waypoints": [
-        [
-          30,
-          128
-        ],
-        [
-          36,
-          118
-        ],
-        [
-          45,
-          106
-        ],
-        [
-          54,
-          96
-        ],
-        [
-          64,
-          90
-        ],
-        [
-          73,
-          84
-        ]
-      ],
-      "width": 2
-    },
-    {
-      "destination": "watch_hill_zone",
-      "end": [
-        116,
-        91
-      ],
-      "id": "central_bridge_to_watch_hill",
-      "purpose": "immediate tactical objective after central crossing",
-      "start": [
-        101.5,
-        88
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          101.5,
-          88
-        ],
-        [
-          108,
-          88
-        ],
-        [
-          116,
-          91
-        ]
-      ],
-      "width": 3
-    },
-    {
-      "destination": "south_branch_bridge",
-      "end": [
-        126,
-        102
-      ],
-      "id": "watch_hill_to_south_branch_bridge",
-      "purpose": "connects central control route to southern fort",
-      "start": [
-        116,
-        91
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          116,
-          91
-        ],
-        [
-          121,
-          96
-        ],
-        [
-          126,
-          102
-        ]
-      ],
-      "width": 2.799999952316284
-    },
-    {
-      "destination": "east_branch_bridge",
-      "end": [
-        134,
-        74
-      ],
-      "id": "watch_hill_to_east_branch_bridge",
-      "purpose": "connects central control route to northern fort",
-      "start": [
-        116,
-        91
-      ],
-      "style": "rough",
-      "waypoints": [
-        [
-          116,
-          91
-        ],
-        [
-          124,
-          87
-        ],
-        [
-          132,
-          80
-        ],
-        [
-          134,
-          74
-        ]
-      ],
-      "width": 2.4000000953674316
-    },
-    {
-      "destination": "north_roman_fort_zone",
-      "end": [
-        130,
-        22
-      ],
-      "id": "northern_bridge_to_north_fort",
-      "purpose": "fast road to command fort",
-      "start": [
-        101,
-        55
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          101,
-          55
-        ],
-        [
-          111,
-          48
-        ],
-        [
-          120,
-          38
-        ],
-        [
-          126,
-          29
-        ],
-        [
-          130,
-          22
-        ]
-      ],
-      "width": 2.5999999046325684
-    },
-    {
-      "destination": "signal_tower_zone",
-      "end": [
-        124,
-        35
-      ],
-      "id": "hidden_plank_to_signal_ridge",
-      "purpose": "scout/raid route to signal rider and tower",
-      "start": [
-        100,
-        31
-      ],
-      "style": "rough",
-      "waypoints": [
-        [
-          100,
-          31
-        ],
-        [
-          108,
-          30
-        ],
-        [
-          116,
-          32
-        ],
-        [
-          124,
-          35
-        ]
-      ],
-      "width": 1.7000000476837158
-    },
-    {
-      "destination": "south_roman_fort_zone",
-      "end": [
-        140,
-        134
-      ],
-      "id": "south_branch_bridge_to_south_fort",
-      "purpose": "central route into southern military fort",
-      "start": [
-        126,
-        102
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          126,
-          102
-        ],
-        [
-          128,
-          113
-        ],
-        [
-          132,
-          123
-        ],
-        [
-          140,
-          134
-        ]
-      ],
-      "width": 3
-    },
-    {
-      "destination": "south_roman_fort_zone",
-      "end": [
-        140,
-        134
-      ],
-      "id": "southern_bridge_to_south_fort",
-      "purpose": "direct southern assault road",
-      "start": [
-        101.5,
-        118
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          101.5,
-          118
-        ],
-        [
-          114,
-          119
-        ],
-        [
-          126,
-          123
-        ],
-        [
-          134,
-          130
-        ],
-        [
-          140,
-          134
-        ]
-      ],
-      "width": 3.0999999046325684
-    },
-    {
-      "destination": "forts_connector",
-      "end": [
-        134,
-        74
-      ],
-      "id": "eastern_forts_connector_main",
-      "purpose": "Roman patrol road linking both objectives",
-      "start": [
-        126,
-        102
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          126,
-          102
-        ],
-        [
-          130,
-          95
-        ],
-        [
-          132,
-          86
-        ],
-        [
-          134,
-          74
-        ]
-      ],
-      "width": 2.5
-    },
-    {
-      "destination": "north_roman_fort_zone",
-      "end": [
-        130,
-        22
-      ],
-      "id": "east_branch_bridge_to_north_fort",
-      "purpose": "inner Roman response road from island to command fort",
-      "start": [
-        134,
-        74
-      ],
-      "style": "default",
-      "waypoints": [
-        [
-          134,
-          74
-        ],
-        [
-          136,
-          61
-        ],
-        [
-          133,
-          48
-        ],
-        [
-          130,
-          36
-        ],
-        [
-          130,
-          22
-        ]
-      ],
-      "width": 2.4000000953674316
-    },
-    {
-      "destination": "far_eastern_ridge",
-      "end": [
-        148,
-        44
-      ],
-      "id": "south_fort_escape_lane",
-      "purpose": "visual Roman fallback lane; used by patrols and final cavalry wave",
-      "start": [
-        145,
-        128
-      ],
-      "style": "rough",
-      "waypoints": [
-        [
-          145,
-          128
-        ],
-        [
-          148,
-          113
-        ],
-        [
-          146,
-          96
-        ],
-        [
-          148,
-          78
-        ],
-        [
-          148,
-          61
-        ],
-        [
-          148,
-          44
-        ]
-      ],
-      "width": 1.899999976158142
-    }
-  ],
-  "spawns": [
-    {
-      "id": "carthage_barracks",
-      "max_population": 130,
-      "nation": "carthage",
-      "player_id": 1,
-      "type": "barracks",
-      "x": 5,
-      "z": 39
-    },
-    {
-      "capture_required": true,
-      "id": "rome_north_barracks",
-      "max_population": 150,
-      "nation": "roman_republic",
-      "player_id": 2,
-      "role": "command_economy_fort",
-      "type": "barracks",
-      "x": 130,
-      "z": 22
-    },
-    {
-      "capture_required": true,
-      "id": "rome_south_barracks",
-      "max_population": 150,
-      "nation": "roman_republic",
-      "player_id": 2,
-      "role": "military_fort",
-      "type": "barracks",
-      "x": 140,
-      "z": 134
-    },
-    {
-      "id": "gaul_barracks",
-      "max_population": 80,
-      "player_id": 3,
-      "role": "optional_ally_or_neutral",
-      "type": "barracks",
-      "x": 30,
-      "z": 128
-    },
-    {
-      "id": "p1_spearman_01",
-      "max_population": -1,
-      "player_id": 1,
-      "type": "spearman",
-      "x": 4,
-      "z": 42
-    },
-    {
-      "id": "p1_spearman_02",
-      "max_population": -1,
-      "player_id": 1,
-      "type": "spearman",
-      "x": 5,
-      "z": 41
-    },
-    {
-      "id": "p1_swordsman_01",
-      "max_population": -1,
-      "player_id": 1,
-      "type": "swordsman",
-      "x": 4,
-      "z": 44
-    },
-    {
-      "id": "p1_archer_01",
-      "max_population": -1,
-      "player_id": 1,
-      "type": "archer",
-      "x": 4,
-      "z": 47
-    },
-    {
-      "id": "p1_archer_02",
-      "max_population": -1,
-      "player_id": 1,
-      "type": "archer",
-      "x": 7,
-      "z": 44
-    },
-    {
-      "id": "p1_horse_swordsman_01",
-      "max_population": -1,
-      "player_id": 1,
-      "type": "horse_swordsman",
-      "x": 13,
-      "z": 47
-    },
-    {
-      "id": "p1_elephant_01",
-      "max_population": -1,
-      "player_id": 1,
-      "role": "bridge breaker",
-      "type": "elephant",
-      "x": 13,
-      "z": 34
-    },
-    {
-      "id": "p1_healer_01",
-      "max_population": -1,
-      "player_id": 1,
-      "type": "healer",
-      "x": 7,
-      "z": 47
-    },
-    {
-      "id": "p1_catapult_01",
-      "max_population": -1,
-      "player_id": 1,
-      "type": "catapult",
-      "x": 12,
-      "z": 50
-    },
-    {
-      "id": "rome_north_spearman_01",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "spearman",
-      "x": 126,
-      "z": 26
-    },
-    {
-      "id": "rome_north_spearman_02",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "spearman",
-      "x": 133,
-      "z": 26
-    },
-    {
-      "id": "rome_north_swordsman_01",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "swordsman",
-      "x": 130,
-      "z": 29
-    },
-    {
-      "id": "rome_north_archer_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "hill defender",
-      "type": "archer",
-      "x": 124,
-      "z": 20
-    },
-    {
-      "id": "rome_north_archer_02",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "hill defender",
-      "type": "archer",
-      "x": 136,
-      "z": 20
-    },
-    {
-      "id": "rome_north_archer_03",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "anti-rush defender",
-      "type": "archer",
-      "x": 122,
-      "z": 29
-    },
-    {
-      "id": "rome_north_catapult_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "dangerous exposed target",
-      "type": "catapult",
-      "x": 135,
-      "z": 32
-    },
-    {
-      "id": "rome_north_healer_01",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "healer",
-      "x": 129,
-      "z": 18
-    },
-    {
-      "id": "rome_north_signal_guard_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "runs warning to south if not intercepted",
-      "type": "horse_swordsman",
-      "x": 124,
-      "z": 35
-    },
-    {
-      "id": "rome_south_spearman_01",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "spearman",
-      "x": 137,
-      "z": 130
-    },
-    {
-      "id": "rome_south_spearman_02",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "spearman",
-      "x": 143,
-      "z": 130
-    },
-    {
-      "id": "rome_south_spearman_03",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "anti-elephant screen",
-      "type": "spearman",
-      "x": 132,
-      "z": 126
-    },
-    {
-      "id": "rome_south_swordsman_01",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "swordsman",
-      "x": 137,
-      "z": 136
-    },
-    {
-      "id": "rome_south_swordsman_02",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "swordsman",
-      "x": 143,
-      "z": 136
-    },
-    {
-      "id": "rome_south_swordsman_03",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "counterattack reserve",
-      "type": "swordsman",
-      "x": 140,
-      "z": 126
-    },
-    {
-      "id": "rome_south_archer_01",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "archer",
-      "x": 140,
-      "z": 138
-    },
-    {
-      "id": "rome_south_archer_02",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "archer",
-      "x": 145,
-      "z": 134
-    },
-    {
-      "id": "rome_south_archer_03",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "southern mound defender",
-      "type": "archer",
-      "x": 132,
-      "z": 120
-    },
-    {
-      "id": "rome_south_horse_swordsman_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "flank and backline raid",
-      "type": "horse_swordsman",
-      "x": 133,
-      "z": 127
-    },
-    {
-      "id": "rome_south_healer_01",
-      "max_population": -1,
-      "player_id": 2,
-      "type": "healer",
-      "x": 145,
-      "z": 129
-    },
-    {
-      "id": "rome_central_spearman_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "central bridge block",
-      "type": "spearman",
-      "x": 111,
-      "z": 88
-    },
-    {
-      "id": "rome_central_spearman_02",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "central bridge block",
-      "type": "spearman",
-      "x": 116,
-      "z": 88
-    },
-    {
-      "id": "rome_central_spearman_03",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "central bridge reserve",
-      "type": "spearman",
-      "x": 107,
-      "z": 92
-    },
-    {
-      "id": "rome_central_archer_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "watch hill archer",
-      "type": "archer",
-      "x": 114,
-      "z": 84
-    },
-    {
-      "id": "rome_central_archer_02",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "watch hill archer",
-      "type": "archer",
-      "x": 120,
-      "z": 92
-    },
-    {
-      "id": "rome_central_swordsman_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "island connector guard",
-      "type": "swordsman",
-      "x": 121,
-      "z": 102
-    },
-    {
-      "id": "rome_central_horse_scout_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "early patrol scout",
-      "type": "horse_archer",
-      "x": 112,
-      "z": 76
-    },
-    {
-      "id": "rome_island_spearman_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "island high ground guard",
-      "type": "spearman",
-      "x": 132,
-      "z": 84
-    },
-    {
-      "id": "rome_island_archer_01",
-      "max_population": -1,
-      "player_id": 2,
-      "role": "island high ground guard",
-      "type": "archer",
-      "x": 136,
-      "z": 82
-    },
-    {
-      "id": "gaul_village_spearman_01",
-      "max_population": -1,
-      "player_id": 3,
-      "type": "spearman",
-      "x": 28,
-      "z": 126
-    },
-    {
-      "id": "gaul_village_spearman_02",
-      "max_population": -1,
-      "player_id": 3,
-      "type": "spearman",
-      "x": 25,
-      "z": 130
-    },
-    {
-      "id": "gaul_village_swordsman_01",
-      "max_population": -1,
-      "player_id": 3,
-      "type": "swordsman",
-      "x": 31,
-      "z": 130
-    },
-    {
-      "id": "gaul_village_archer_01",
-      "max_population": -1,
-      "player_id": 3,
-      "type": "archer",
-      "x": 34,
-      "z": 126
-    },
-    {
-      "id": "gaul_village_healer_01",
-      "max_population": -1,
-      "player_id": 3,
-      "role": "alliance reward healer",
-      "type": "healer",
-      "x": 21,
-      "z": 118
-    },
-    {
-      "id": "gaul_center_spearman_01",
-      "max_population": -1,
-      "player_id": 3,
-      "role": "neutral warning encounter",
-      "type": "spearman",
-      "x": 50,
-      "z": 58
-    },
-    {
-      "id": "gaul_center_archer_01",
-      "max_population": -1,
-      "player_id": 3,
-      "role": "neutral warning encounter",
-      "type": "archer",
-      "x": 53,
-      "z": 56
-    },
-    {
-      "id": "gaul_center_swordsman_01",
-      "max_population": -1,
-      "player_id": 3,
-      "role": "neutral warning encounter",
-      "type": "swordsman",
-      "x": 56,
-      "z": 60
-    },
-    {
-      "id": "gaul_bridge_spearman_01",
-      "max_population": -1,
-      "player_id": 3,
-      "role": "hints central crossing danger",
-      "type": "spearman",
-      "x": 72,
-      "z": 86
-    },
-    {
-      "id": "gaul_bridge_archer_01",
-      "max_population": -1,
-      "player_id": 3,
-      "role": "hints central crossing danger",
-      "type": "archer",
-      "x": 75,
-      "z": 83
-    },
-    {
-      "id": "gaul_south_horse_01",
-      "max_population": -1,
-      "player_id": 3,
-      "role": "draws attention to southern alliance route",
-      "type": "horse_swordsman",
-      "x": 33,
-      "z": 106
-    },
-    {
-      "id": "gaul_south_bridge_horse_01",
-      "max_population": -1,
-      "player_id": 3,
-      "role": "visible guide toward southern bridge",
-      "type": "horse_swordsman",
-      "x": 82,
-      "z": 116
-    }
-  ],
-  "terrain": [
-    {
-      "depth": 16,
-      "description": "Player staging ridge overlooking the Carthaginian camp; safe high ground for learning army composition.",
-      "entrances": [
+    "world_props": [
         {
-          "x": 18,
-          "z": 43
+            "id": "carthage_tent_01",
+            "rotation": -10,
+            "scale": 1,
+            "type": "tent",
+            "x": 12,
+            "z": 34
         },
         {
-          "x": 29,
-          "z": 36
-        }
-      ],
-      "height": 2.5999999046325684,
-      "id": "western_staging_ridge",
-      "rotation": -12,
-      "type": "hill",
-      "width": 18,
-      "x": 22,
-      "z": 38
-    },
-    {
-      "depth": 9,
-      "description": "Thin scout ridge above the hidden plank route; not suitable for siege.",
-      "entrances": [
-        {
-          "x": 34,
-          "z": 24
+            "id": "carthage_tent_02",
+            "rotation": 17,
+            "scale": 1,
+            "type": "tent",
+            "x": 9,
+            "z": 56
         },
         {
-          "x": 74,
-          "z": 28
-        }
-      ],
-      "height": 2.4000000953674316,
-      "id": "north_scout_ridge",
-      "rotation": 3,
-      "type": "hill",
-      "width": 32,
-      "x": 52,
-      "z": 25
-    },
-    {
-      "depth": 15,
-      "description": "Low broken woodland hill splitting the camp-to-north route into two sightlines.",
-      "entrances": [
-        {
-          "x": 31,
-          "z": 35
+            "id": "carthage_tent_03",
+            "rotation": 8,
+            "scale": 0.9,
+            "type": "tent",
+            "x": 7,
+            "z": 32
         },
         {
-          "x": 57,
-          "z": 39
-        }
-      ],
-      "height": 2.049999952316284,
-      "id": "north_flank_woodland_hill",
-      "rotation": 16,
-      "type": "hill",
-      "width": 22,
-      "x": 43,
-      "z": 40
-    },
-    {
-      "depth": 34,
-      "description": "Central ridge splitting the southern and northern approach roads; creates maze choice before the river.",
-      "entrances": [
-        {
-          "x": 42,
-          "z": 52
+            "id": "carthage_supply_cart_01",
+            "rotation": 65,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 16,
+            "z": 38
         },
         {
-          "x": 54,
-          "z": 73
-        }
-      ],
-      "height": 3.200000047683716,
-      "id": "central_split_ridge",
-      "rotation": -8,
-      "type": "hill",
-      "width": 14,
-      "x": 48,
-      "z": 62
-    },
-    {
-      "description": "Low basin with ruins and grass that visually separates central and southern roads.",
-      "entrances": [
-        {
-          "x": 25,
-          "z": 70
+            "id": "carthage_supply_cart_02",
+            "rotation": 20,
+            "scale": 0.85,
+            "type": "supply_cart",
+            "x": 11,
+            "z": 46
         },
         {
-          "x": 39,
-          "z": 97
-        }
-      ],
-      "height": -1.2000000476837158,
-      "id": "western_low_basin",
-      "radius": 10,
-      "rotation": 6,
-      "type": "flat",
-      "x": 32,
-      "z": 84
-    },
-    {
-      "depth": 10,
-      "description": "Long broken ridge forming the southern preparation maze and protecting the Gallic road.",
-      "entrances": [
-        {
-          "x": 35,
-          "z": 108
+            "id": "carthage_weapon_rack_01",
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 10,
+            "z": 51
         },
         {
-          "x": 72,
-          "z": 113
-        }
-      ],
-      "height": 2.3499999046325684,
-      "id": "southwest_maze_ridge",
-      "rotation": -5,
-      "type": "hill",
-      "width": 38,
-      "x": 50,
-      "z": 111
-    },
-    {
-      "depth": 12,
-      "description": "River overlook above the central bridge; player can stage archers here before committing.",
-      "entrances": [
-        {
-          "x": 72,
-          "z": 84
+            "id": "carthage_weapon_rack_02",
+            "rotation": 80,
+            "scale": 0.9,
+            "type": "weapon_rack",
+            "x": 19,
+            "z": 37
         },
         {
-          "x": 83,
-          "z": 78
-        }
-      ],
-      "height": 2.5,
-      "id": "river_overlook_lower_ford",
-      "rotation": 18,
-      "type": "hill",
-      "width": 16,
-      "x": 78,
-      "z": 82
-    },
-    {
-      "depth": 10,
-      "description": "Ridge overlooking the north bridge; a staging choice for rush players but vulnerable to Roman catapult fire.",
-      "entrances": [
-        {
-          "x": 67,
-          "z": 49
+            "id": "north_cache_broken_cart",
+            "purpose": "marks scout cache",
+            "rotation": 34,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 45,
+            "z": 26
         },
         {
-          "x": 85,
-          "z": 55
-        }
-      ],
-      "height": 2.0999999046325684,
-      "id": "northern_bridge_approach_ridge",
-      "rotation": -13,
-      "type": "hill",
-      "width": 19,
-      "x": 76,
-      "z": 52
-    },
-    {
-      "depth": 10,
-      "description": "Hill above the southern bridge that allows allied Gaul archers to matter.",
-      "entrances": [
-        {
-          "x": 66,
-          "z": 113
+            "id": "north_cache_supply_cart",
+            "rotation": -18,
+            "scale": 0.75,
+            "type": "supply_cart",
+            "x": 47,
+            "z": 24
         },
         {
-          "x": 80,
-          "z": 120
-        }
-      ],
-      "height": 2.1500000953674316,
-      "id": "southern_bridge_approach_hill",
-      "rotation": -6,
-      "type": "hill",
-      "width": 18,
-      "x": 73,
-      "z": 116
-    },
-    {
-      "depth": 12,
-      "description": "Large Gallic ridge with two entrances; supports diplomacy, conquest, or bypass.",
-      "entrances": [
-        {
-          "x": 25,
-          "z": 124
+            "id": "north_scout_dead_tree_01",
+            "rotation": 12,
+            "scale": 1.1,
+            "type": "dead_tree",
+            "x": 58,
+            "z": 28
         },
         {
-          "x": 42,
-          "z": 130
-        }
-      ],
-      "height": 2.700000047683716,
-      "id": "southern_gallic_village_ridge",
-      "rotation": 7,
-      "type": "hill",
-      "width": 24,
-      "x": 32,
-      "z": 128
-    },
-    {
-      "depth": 10,
-      "description": "Small sacred grove mound behind the Gallic village; prop-heavy landmark and optional healer reward.",
-      "entrances": [
-        {
-          "x": 24,
-          "z": 120
-        }
-      ],
-      "height": 1.7999999523162842,
-      "id": "gaul_sacred_grove_mound",
-      "rotation": 21,
-      "type": "hill",
-      "width": 12,
-      "x": 20,
-      "z": 118
-    },
-    {
-      "depth": 12,
-      "description": "Key Roman watch hill guarding central crossing; capture reveals eastern patrols.",
-      "entrances": [
-        {
-          "x": 110,
-          "z": 94
+            "id": "north_scout_dead_tree_02",
+            "rotation": -30,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 68,
+            "z": 31
         },
         {
-          "x": 122,
-          "z": 88
-        }
-      ],
-      "height": 2.799999952316284,
-      "id": "roman_watch_hill",
-      "rotation": 25,
-      "type": "hill",
-      "width": 16,
-      "x": 116,
-      "z": 91
-    },
-    {
-      "depth": 18,
-      "description": "Island high ground that controls movement between north and south forts; central prize after crossing.",
-      "entrances": [
-        {
-          "x": 130,
-          "z": 92
+            "id": "central_ruins_01",
+            "scale": 1,
+            "type": "ruins",
+            "x": 70,
+            "z": 59
         },
         {
-          "x": 138,
-          "z": 75
-        }
-      ],
-      "height": 2.3499999046325684,
-      "id": "eastern_island_high_ground",
-      "rotation": 4,
-      "type": "hill",
-      "width": 14,
-      "x": 134,
-      "z": 84
-    },
-    {
-      "depth": 14,
-      "description": "Southern mound supporting the military fort; strong infantry defensive position.",
-      "entrances": [
-        {
-          "x": 119,
-          "z": 116
+            "id": "central_ruins_02",
+            "rotation": 45,
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 38,
+            "z": 92
         },
         {
-          "x": 132,
-          "z": 123
-        }
-      ],
-      "height": 2.5999999046325684,
-      "id": "roman_southern_defensive_mound",
-      "rotation": -15,
-      "type": "hill",
-      "width": 18,
-      "x": 125,
-      "z": 118
-    },
-    {
-      "depth": 12,
-      "description": "Back hill behind the southern Roman fort; creates archer line and prevents the base from feeling flat.",
-      "entrances": [
-        {
-          "x": 140,
-          "z": 136
-        }
-      ],
-      "height": 2.4000000953674316,
-      "id": "south_fort_back_hill",
-      "rotation": -20,
-      "type": "hill",
-      "width": 13,
-      "x": 145,
-      "z": 140
-    },
-    {
-      "depth": 16,
-      "description": "Northern command fort hill; supports archers, catapult, and signal tower.",
-      "entrances": [
-        {
-          "x": 123,
-          "z": 28
+            "id": "central_dead_tree_01",
+            "rotation": 15,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 57,
+            "z": 74
         },
         {
-          "x": 135,
-          "z": 18
-        }
-      ],
-      "height": 3.200000047683716,
-      "id": "northern_roman_fort_hill",
-      "rotation": 10,
-      "type": "hill",
-      "width": 18,
-      "x": 130,
-      "z": 24
-    },
-    {
-      "depth": 9,
-      "description": "Outer saddle near the north fort; Roman cavalry rotates through it, but players can flank it from the scout plank.",
-      "entrances": [
-        {
-          "x": 111,
-          "z": 45
+            "id": "central_dead_tree_02",
+            "rotation": -20,
+            "scale": 1.05,
+            "type": "dead_tree",
+            "x": 66,
+            "z": 82
         },
         {
-          "x": 124,
-          "z": 35
-        }
-      ],
-      "height": 1.899999976158142,
-      "id": "north_fort_outer_saddle",
-      "rotation": -9,
-      "type": "hill",
-      "width": 17,
-      "x": 118,
-      "z": 39
-    },
-    {
-      "depth": 18,
-      "description": "Cliff above the east branch, compressing movement near the branch bridge.",
-      "entrances": [
+            "id": "river_overlook_ruins",
+            "rotation": 22,
+            "scale": 1,
+            "type": "ruins",
+            "x": 77,
+            "z": 87
+        },
         {
-          "x": 137,
-          "z": 66
-        }
-      ],
-      "height": 2.700000047683716,
-      "id": "northeast_river_cliff",
-      "rotation": 18,
-      "type": "hill",
-      "width": 12,
-      "x": 143,
-      "z": 62
-    },
-    {
-      "description": "Northwestern rocky boundary",
-      "height": 8,
-      "id": "northwestern_rocky_boundary",
-      "radius": 11,
-      "type": "mountain",
-      "x": 18,
-      "z": 9
-    },
-    {
-      "description": "Northern valley wall",
-      "height": 8.5,
-      "id": "northern_valley_wall",
-      "radius": 13,
-      "type": "mountain",
-      "x": 66,
-      "z": 6
-    },
-    {
-      "description": "Southwestern rocky boundary",
-      "height": 8,
-      "id": "southwestern_rocky_boundary",
-      "radius": 12,
-      "type": "mountain",
-      "x": 14,
-      "z": 143
-    },
-    {
-      "description": "Southern valley wall",
-      "height": 9,
-      "id": "southern_valley_wall",
-      "radius": 15,
-      "type": "mountain",
-      "x": 65,
-      "z": 145
-    },
-    {
-      "description": "Far eastern ridge and visual boundary",
-      "height": 8,
-      "id": "far_eastern_ridge",
-      "radius": 12,
-      "type": "mountain",
-      "x": 148,
-      "z": 44
-    }
-  ],
-  "time_of_day": "afternoon",
-  "victory": {
-    "type": "capture_structures",
-    "defeat_conditions": [
-      "no_commander",
-      "only_commander_remaining"
-    ],
-    "key_structures": [
-      "barracks"
-    ],
-    "min_count": 2
-  },
-  "world_props": [
-    {
-      "id": "carthage_tent_01",
-      "rotation": -10,
-      "scale": 1,
-      "type": "tent",
-      "x": 12,
-      "z": 36
-    },
-    {
-      "id": "carthage_tent_02",
-      "rotation": 17,
-      "scale": 1,
-      "type": "tent",
-      "x": 14,
-      "z": 45
-    },
-    {
-      "id": "carthage_tent_03",
-      "rotation": 8,
-      "scale": 0.8999999761581421,
-      "type": "tent",
-      "x": 6,
-      "z": 34
-    },
-    {
-      "id": "carthage_supply_cart_01",
-      "rotation": 65,
-      "scale": 1,
-      "type": "supply_cart",
-      "x": 17,
-      "z": 41
-    },
-    {
-      "id": "carthage_supply_cart_02",
-      "rotation": 20,
-      "scale": 0.8500000238418579,
-      "type": "supply_cart",
-      "x": 11,
-      "z": 47
-    },
-    {
-      "id": "carthage_weapon_rack_01",
-      "scale": 1,
-      "type": "weapon_rack",
-      "x": 10,
-      "z": 51
-    },
-    {
-      "id": "carthage_weapon_rack_02",
-      "rotation": 80,
-      "scale": 0.8999999761581421,
-      "type": "weapon_rack",
-      "x": 19,
-      "z": 37
-    },
-    {
-      "id": "north_cache_broken_cart",
-      "purpose": "marks scout cache",
-      "rotation": 34,
-      "scale": 1,
-      "type": "supply_cart",
-      "x": 45,
-      "z": 26
-    },
-    {
-      "id": "north_cache_supply_cart",
-      "rotation": -18,
-      "scale": 0.75,
-      "type": "supply_cart",
-      "x": 47,
-      "z": 24
-    },
-    {
-      "id": "north_scout_dead_tree_01",
-      "rotation": 12,
-      "scale": 1.100000023841858,
-      "type": "dead_tree",
-      "x": 58,
-      "z": 28
-    },
-    {
-      "id": "north_scout_dead_tree_02",
-      "rotation": -30,
-      "scale": 0.8999999761581421,
-      "type": "dead_tree",
-      "x": 68,
-      "z": 31
-    },
-    {
-      "id": "north_warning_banners",
-      "purpose": "points at north bridge",
-      "rotation": 95,
-      "scale": 0.800000011920929,
-      "type": "weapon_rack",
-      "x": 84,
-      "z": 54
-    },
-    {
-      "id": "burnt_cart_north_approach",
-      "rotation": 70,
-      "scale": 1.0499999523162842,
-      "type": "supply_cart",
-      "x": 86,
-      "z": 57
-    },
-    {
-      "id": "central_ruins_01",
-      "scale": 1,
-      "type": "ruins",
-      "x": 50,
-      "z": 60
-    },
-    {
-      "id": "central_ruins_02",
-      "rotation": 45,
-      "scale": 0.8500000238418579,
-      "type": "ruins",
-      "x": 43,
-      "z": 67
-    },
-    {
-      "id": "central_dead_tree_01",
-      "rotation": 15,
-      "scale": 0.8999999761581421,
-      "type": "dead_tree",
-      "x": 57,
-      "z": 74
-    },
-    {
-      "id": "central_dead_tree_02",
-      "rotation": -20,
-      "scale": 1.0499999523162842,
-      "type": "dead_tree",
-      "x": 66,
-      "z": 82
-    },
-    {
-      "id": "river_overlook_ruins",
-      "rotation": 22,
-      "scale": 1,
-      "type": "ruins",
-      "x": 77,
-      "z": 87
-    },
-    {
-      "id": "dead_tree_gate",
-      "scale": 1,
-      "type": "dead_tree",
-      "x": 84,
-      "z": 91
-    },
-    {
-      "id": "central_bridge_marker_cart",
-      "rotation": 100,
-      "scale": 0.8500000238418579,
-      "type": "supply_cart",
-      "x": 87,
-      "z": 86
-    },
-    {
-      "id": "south_route_dead_tree_01",
-      "rotation": -13,
-      "scale": 1,
-      "type": "dead_tree",
-      "x": 45,
-      "z": 120
-    },
-    {
-      "id": "south_route_ruins_01",
-      "rotation": 18,
-      "scale": 0.949999988079071,
-      "type": "ruins",
-      "x": 54,
-      "z": 104
-    },
-    {
-      "id": "south_route_supply_cart_01",
-      "rotation": 89,
-      "scale": 0.800000011920929,
-      "type": "supply_cart",
-      "x": 62,
-      "z": 119
-    },
-    {
-      "id": "gaul_guide_cart",
-      "purpose": "draws eye to southern crossing",
-      "rotation": 70,
-      "scale": 1,
-      "type": "supply_cart",
-      "x": 82,
-      "z": 116
-    },
-    {
-      "id": "southern_old_marker",
-      "rotation": 35,
-      "scale": 0.75,
-      "type": "ruins",
-      "x": 86,
-      "z": 121
-    },
-    {
-      "id": "gaul_ruins_01",
-      "rotation": 12,
-      "scale": 1,
-      "type": "ruins",
-      "x": 30,
-      "z": 132
-    },
-    {
-      "id": "gaul_tent_01",
-      "rotation": -22,
-      "scale": 0.8999999761581421,
-      "type": "tent",
-      "x": 26,
-      "z": 124
-    },
-    {
-      "id": "gaul_tent_02",
-      "rotation": 31,
-      "scale": 0.8999999761581421,
-      "type": "tent",
-      "x": 34,
-      "z": 130
-    },
-    {
-      "id": "gaul_supply_cart_01",
-      "rotation": -5,
-      "scale": 0.8500000238418579,
-      "type": "supply_cart",
-      "x": 28,
-      "z": 134
-    },
-    {
-      "id": "gaul_weapon_rack_01",
-      "rotation": 40,
-      "scale": 0.800000011920929,
-      "type": "weapon_rack",
-      "x": 36,
-      "z": 124
-    },
-    {
-      "id": "gaul_grove_dead_tree_01",
-      "rotation": 16,
-      "scale": 1.100000023841858,
-      "type": "dead_tree",
-      "x": 20,
-      "z": 118
-    },
-    {
-      "id": "gaul_grove_ruins_01",
-      "rotation": -16,
-      "scale": 0.699999988079071,
-      "type": "ruins",
-      "x": 22,
-      "z": 116
-    },
-    {
-      "id": "roman_watch_ruins",
-      "rotation": 8,
-      "scale": 1,
-      "type": "ruins",
-      "x": 116,
-      "z": 95
-    },
-    {
-      "id": "roman_watch_fire_prop",
-      "scale": 1,
-      "type": "firecamp",
-      "x": 116,
-      "z": 91
-    },
-    {
-      "id": "roman_watch_weapon_rack",
-      "rotation": 95,
-      "scale": 0.8500000238418579,
-      "type": "weapon_rack",
-      "x": 120,
-      "z": 88
-    },
-    {
-      "id": "roman_central_dead_tree",
-      "rotation": -10,
-      "scale": 1,
-      "type": "dead_tree",
-      "x": 105,
-      "z": 84
-    },
-    {
-      "id": "roman_island_ruins",
-      "scale": 1,
-      "type": "ruins",
-      "x": 132,
-      "z": 84
-    },
-    {
-      "id": "roman_island_supply_cart",
-      "rotation": 18,
-      "scale": 0.8500000238418579,
-      "type": "supply_cart",
-      "x": 136,
-      "z": 86
-    },
-    {
-      "id": "roman_island_dead_tree",
-      "rotation": 27,
-      "scale": 0.800000011920929,
-      "type": "dead_tree",
-      "x": 130,
-      "z": 78
-    },
-    {
-      "id": "north_fort_tent_01",
-      "rotation": 12,
-      "scale": 1,
-      "type": "tent",
-      "x": 126,
-      "z": 18
-    },
-    {
-      "id": "north_fort_tent_02",
-      "rotation": -18,
-      "scale": 0.8999999761581421,
-      "type": "tent",
-      "x": 134,
-      "z": 18
-    },
-    {
-      "id": "north_fort_weapon_rack",
-      "rotation": 75,
-      "scale": 1,
-      "type": "weapon_rack",
-      "x": 135,
-      "z": 28
-    },
-    {
-      "id": "north_fort_supply_cart",
-      "rotation": 25,
-      "scale": 1,
-      "type": "supply_cart",
-      "x": 122,
-      "z": 32
-    },
-    {
-      "id": "signal_tower",
-      "purpose": "north command identity and optional objective",
-      "scale": 1,
-      "type": "ruins",
-      "x": 124,
-      "z": 34
-    },
-    {
-      "id": "north_fort_ruins_01",
-      "rotation": 44,
-      "scale": 0.800000011920929,
-      "type": "ruins",
-      "x": 128,
-      "z": 14
-    },
-    {
-      "id": "north_fort_dead_tree",
-      "rotation": 5,
-      "scale": 0.8999999761581421,
-      "type": "dead_tree",
-      "x": 138,
-      "z": 31
-    },
-    {
-      "id": "south_fort_tent_01",
-      "rotation": -9,
-      "scale": 1,
-      "type": "tent",
-      "x": 145,
-      "z": 128
-    },
-    {
-      "id": "south_fort_tent_02",
-      "rotation": 19,
-      "scale": 0.8999999761581421,
-      "type": "tent",
-      "x": 138,
-      "z": 140
-    },
-    {
-      "id": "south_fort_weapon_rack",
-      "rotation": 70,
-      "scale": 1,
-      "type": "weapon_rack",
-      "x": 134,
-      "z": 139
-    },
-    {
-      "id": "south_fort_supply_cart",
-      "rotation": 35,
-      "scale": 1,
-      "type": "supply_cart",
-      "x": 132,
-      "z": 126
-    },
-    {
-      "id": "south_fort_siege_cache",
-      "purpose": "south fort reward marker",
-      "scale": 1,
-      "type": "supply_cart",
-      "x": 136,
-      "z": 130
-    },
-    {
-      "id": "south_fort_ruins_01",
-      "rotation": 20,
-      "scale": 0.8500000238418579,
-      "type": "ruins",
-      "x": 146,
-      "z": 138
-    },
-    {
-      "id": "south_fort_dead_tree",
-      "rotation": -25,
-      "scale": 0.8500000238418579,
-      "type": "dead_tree",
-      "x": 128,
-      "z": 132
-    },
-    {
-      "id": "far_east_broken_cart_01",
-      "rotation": 4,
-      "scale": 0.8999999761581421,
-      "type": "supply_cart",
-      "x": 148,
-      "z": 78
-    },
-    {
-      "id": "far_east_dead_tree_01",
-      "rotation": 30,
-      "scale": 0.8999999761581421,
-      "type": "dead_tree",
-      "x": 147,
-      "z": 62
-    },
-    {
-      "id": "far_east_ruins_01",
-      "rotation": -40,
-      "scale": 0.800000011920929,
-      "type": "ruins",
-      "x": 146,
-      "z": 96
-    },
-    {
-      "id": "carthage_main_fire",
-      "intensity": 1.25,
-      "persistent": true,
-      "radius": 3.200000047683716,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 8,
-      "z": 40
-    },
-    {
-      "id": "carthage_outer_fire",
-      "intensity": 0.8999999761581421,
-      "persistent": true,
-      "radius": 2.5,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 18,
-      "z": 48
-    },
-    {
-      "id": "north_scout_cache_fire",
-      "intensity": 0.5,
-      "persistent": true,
-      "radius": 1.600000023841858,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 45,
-      "z": 26
-    },
-    {
-      "id": "central_gaul_fire",
-      "intensity": 0.75,
-      "persistent": true,
-      "radius": 2.200000047683716,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 53,
-      "z": 58
-    },
-    {
-      "id": "gaul_village_fire",
-      "intensity": 1,
-      "persistent": true,
-      "radius": 3,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 30,
-      "z": 128
-    },
-    {
-      "id": "gaul_grove_fire",
-      "intensity": 0.6499999761581421,
-      "persistent": true,
-      "radius": 1.7999999523162842,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 20,
-      "z": 118
-    },
-    {
-      "id": "river_overlook_fire",
-      "intensity": 0.800000011920929,
-      "persistent": true,
-      "radius": 2.4000000953674316,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 78,
-      "z": 84
-    },
-    {
-      "id": "roman_watch_fire",
-      "intensity": 0.8500000238418579,
-      "persistent": true,
-      "radius": 2.5,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 116,
-      "z": 91
-    },
-    {
-      "id": "roman_island_fire",
-      "intensity": 0.75,
-      "persistent": true,
-      "radius": 2,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 134,
-      "z": 84
-    },
-    {
-      "id": "north_roman_fort_fire",
-      "intensity": 1.100000023841858,
-      "persistent": true,
-      "radius": 3,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 130,
-      "z": 22
-    },
-    {
-      "id": "south_roman_fort_fire",
-      "intensity": 1.149999976158142,
-      "persistent": true,
-      "radius": 3.200000047683716,
-      "scale": 1,
-      "type": "firecamp",
-      "x": 140,
-      "z": 134
-    }
-  ],
-  "starting_resources": {
-    "gold": 200,
-    "food": 200,
-    "wood": 150,
-    "stone": 100,
-    "iron": 100
-  },
-  "undead_zones": [
-    {
-      "id": "crossing_ruins",
-      "anchor_type": "ruins",
-      "x": 75,
-      "z": 75,
-      "radius": 7.0,
-      "leash_radius": 13.0,
-      "owner_id": 99,
-      "team_id": 99,
-      "awaken_on": [
-        "unit_enters_radius"
-      ],
-      "waves": [
+            "id": "dead_tree_gate",
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 84,
+            "z": 91
+        },
         {
-          "trigger": "initial",
-          "units": {
-            "skeleton_swordsman": 2,
-            "skeleton_archer": 1
-          }
+            "id": "south_route_dead_tree_01",
+            "rotation": -13,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 45,
+            "z": 120
+        },
+        {
+            "id": "south_route_ruins_01",
+            "rotation": 18,
+            "scale": 0.9500000000000001,
+            "type": "ruins",
+            "x": 33,
+            "z": 77
+        },
+        {
+            "id": "south_route_supply_cart_01",
+            "rotation": 89,
+            "scale": 0.8,
+            "type": "supply_cart",
+            "x": 62,
+            "z": 119
+        },
+        {
+            "id": "gaul_guide_cart",
+            "purpose": "draws eye to southern crossing",
+            "rotation": 70,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 82,
+            "z": 116
+        },
+        {
+            "id": "southern_old_marker",
+            "rotation": 35,
+            "scale": 0.75,
+            "type": "ruins",
+            "x": 87,
+            "z": 128
+        },
+        {
+            "id": "gaul_ruins_01",
+            "rotation": 12,
+            "scale": 1,
+            "type": "ruins",
+            "x": 30,
+            "z": 132
+        },
+        {
+            "id": "gaul_tent_01",
+            "rotation": -22,
+            "scale": 0.9,
+            "type": "tent",
+            "x": 26,
+            "z": 124
+        },
+        {
+            "id": "gaul_tent_02",
+            "rotation": 31,
+            "scale": 0.9,
+            "type": "tent",
+            "x": 34,
+            "z": 130
+        },
+        {
+            "id": "gaul_supply_cart_01",
+            "rotation": -5,
+            "scale": 0.85,
+            "type": "supply_cart",
+            "x": 28,
+            "z": 134
+        },
+        {
+            "id": "gaul_weapon_rack_01",
+            "rotation": 40,
+            "scale": 0.8,
+            "type": "weapon_rack",
+            "x": 36,
+            "z": 124
+        },
+        {
+            "id": "gaul_grove_dead_tree_01",
+            "rotation": 16,
+            "scale": 1.1,
+            "type": "dead_tree",
+            "x": 22,
+            "z": 123
+        },
+        {
+            "id": "gaul_grove_ruins_01",
+            "rotation": -16,
+            "scale": 0.7000000000000001,
+            "type": "ruins",
+            "x": 17,
+            "z": 84
+        },
+        {
+            "id": "roman_watch_weapon_rack",
+            "rotation": 95,
+            "scale": 0.85,
+            "type": "weapon_rack",
+            "x": 107,
+            "z": 80
+        },
+        {
+            "id": "roman_island_supply_cart",
+            "rotation": 18,
+            "scale": 0.85,
+            "type": "supply_cart",
+            "x": 119,
+            "z": 90
+        },
+        {
+            "id": "north_fort_tent_01",
+            "rotation": 12,
+            "scale": 1,
+            "type": "tent",
+            "x": 148,
+            "z": 38
+        },
+        {
+            "id": "north_fort_tent_02",
+            "rotation": -18,
+            "scale": 0.9,
+            "type": "tent",
+            "x": 138,
+            "z": 39
+        },
+        {
+            "id": "north_fort_weapon_rack",
+            "rotation": 75,
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 135,
+            "z": 28
+        },
+        {
+            "id": "north_fort_supply_cart",
+            "rotation": 25,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 141,
+            "z": 31
+        },
+        {
+            "id": "signal_tower",
+            "purpose": "north command identity and optional objective",
+            "scale": 1,
+            "type": "ruins",
+            "x": 108,
+            "z": 34
+        },
+        {
+            "id": "north_fort_ruins_01",
+            "rotation": 44,
+            "scale": 0.8,
+            "type": "ruins",
+            "x": 123,
+            "z": 42
+        },
+        {
+            "id": "north_fort_dead_tree",
+            "rotation": 5,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 143,
+            "z": 51
+        },
+        {
+            "id": "south_fort_tent_01",
+            "rotation": -9,
+            "scale": 1,
+            "type": "tent",
+            "x": 118,
+            "z": 138
+        },
+        {
+            "id": "south_fort_tent_02",
+            "rotation": 19,
+            "scale": 0.9,
+            "type": "tent",
+            "x": 122,
+            "z": 134
+        },
+        {
+            "id": "south_fort_weapon_rack",
+            "rotation": 70,
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 134,
+            "z": 139
+        },
+        {
+            "id": "south_fort_supply_cart",
+            "rotation": 35,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 124,
+            "z": 139
+        },
+        {
+            "id": "south_fort_ruins_01",
+            "rotation": 20,
+            "scale": 0.85,
+            "type": "ruins",
+            "x": 119,
+            "z": 115
+        },
+        {
+            "id": "south_fort_dead_tree",
+            "rotation": -25,
+            "scale": 0.85,
+            "type": "dead_tree",
+            "x": 128,
+            "z": 132
+        },
+        {
+            "id": "far_east_broken_cart_01",
+            "rotation": 4,
+            "scale": 0.9,
+            "type": "supply_cart",
+            "x": 114,
+            "z": 75
+        },
+        {
+            "id": "far_east_dead_tree_01",
+            "rotation": 30,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 155,
+            "z": 63
+        },
+        {
+            "id": "far_east_ruins_01",
+            "rotation": -40,
+            "scale": 0.8,
+            "type": "ruins",
+            "x": 143,
+            "z": 83
+        },
+        {
+            "id": "carthage_main_fire",
+            "intensity": 1.25,
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 9,
+            "z": 35
+        },
+        {
+            "id": "carthage_outer_fire",
+            "intensity": 0.9,
+            "persistent": true,
+            "radius": 2.5,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 4,
+            "z": 54
+        },
+        {
+            "id": "north_scout_cache_fire",
+            "intensity": 0.5,
+            "persistent": true,
+            "radius": 1.6,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 45,
+            "z": 26
+        },
+        {
+            "id": "central_gaul_fire",
+            "intensity": 0.75,
+            "persistent": true,
+            "radius": 2.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 53,
+            "z": 56
+        },
+        {
+            "id": "gaul_village_fire",
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 30,
+            "z": 128
+        },
+        {
+            "id": "gaul_grove_fire",
+            "intensity": 0.65,
+            "persistent": true,
+            "radius": 1.8,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 19,
+            "z": 125
+        },
+        {
+            "id": "river_overlook_fire",
+            "intensity": 0.8,
+            "persistent": true,
+            "radius": 2.4,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 78,
+            "z": 84
+        },
+        {
+            "id": "roman_island_fire",
+            "intensity": 0.75,
+            "persistent": true,
+            "radius": 2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 122,
+            "z": 84
+        },
+        {
+            "id": "north_roman_fort_fire",
+            "intensity": 1.1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 151,
+            "z": 29
+        },
+        {
+            "id": "south_roman_fort_fire",
+            "intensity": 1.1500000000000001,
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 144,
+            "z": 133
+        },
+        {
+            "scale": 1,
+            "type": "magic_shrine",
+            "x": 7,
+            "z": 83
+        },
+        {
+            "scale": 1,
+            "type": "magic_shrine",
+            "x": 36,
+            "z": 108
+        },
+        {
+            "scale": 1,
+            "type": "magic_shrine",
+            "x": 11,
+            "z": 133
+        },
+        {
+            "scale": 1,
+            "type": "magic_shrine",
+            "x": 46,
+            "z": 93
+        },
+        {
+            "scale": 1,
+            "type": "tent",
+            "x": 4,
+            "z": 58
+        },
+        {
+            "scale": 1,
+            "type": "tent",
+            "x": 7,
+            "z": 52
+        },
+        {
+            "scale": 1,
+            "type": "tent",
+            "x": 3,
+            "z": 33
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 4,
+            "z": 40
+        },
+        {
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 2,
+            "z": 57
+        },
+        {
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 4,
+            "z": 28
+        },
+        {
+            "scale": 1,
+            "type": "ruins",
+            "x": 10,
+            "z": 17
+        },
+        {
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 20,
+            "z": 64
+        },
+        {
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 20,
+            "z": 22
+        },
+        {
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 174,
+            "z": 94
+        },
+        {
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 122,
+            "z": 107
+        },
+        {
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 72,
+            "z": 135
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 53,
+            "z": 123
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 127,
+            "z": 35
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 124,
+            "z": 9
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 135,
+            "z": 3
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 144,
+            "z": 11
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 134,
+            "z": 127
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 139,
+            "z": 143
+        },
+        {
+            "intensity": 1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 147,
+            "z": 144
         }
-      ]
-    }
-  ]
+    ]
 }

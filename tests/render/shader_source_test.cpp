@@ -69,3 +69,19 @@ TEST(ShaderSource, CombatDustAvoidsUndefinedSmoothstepEdges) {
   EXPECT_NE(vert.find("float inv_smoothstep("), std::string::npos);
   EXPECT_NE(frag.find("float inv_smoothstep("), std::string::npos);
 }
+
+TEST(ShaderSource, InstancedRiggedShaderGuardsRoleColorFetches) {
+  const auto root = find_repo_root();
+  const auto vert =
+      read_text(root / "assets" / "shaders" / "character_skinned_instanced.vert");
+  const auto frag =
+      read_text(root / "assets" / "shaders" / "character_skinned_instanced.frag");
+  ASSERT_FALSE(vert.empty());
+  ASSERT_FALSE(frag.empty());
+
+  EXPECT_NE(vert.find("layout(location = 13) in vec4 i_role_meta;"), std::string::npos);
+  EXPECT_NE(vert.find("flat out int v_role_color_count;"), std::string::npos);
+  EXPECT_NE(frag.find("flat in int v_role_color_count;"), std::string::npos);
+  EXPECT_NE(frag.find("v_color_role > 0 && v_color_role <= v_role_color_count"),
+            std::string::npos);
+}

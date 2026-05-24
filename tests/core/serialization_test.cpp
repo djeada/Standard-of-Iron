@@ -1934,8 +1934,8 @@ TEST_F(SerializationTest, ElephantComponentSerialization) {
   elephant->trample_radius = 3.0F;
   elephant->trample_damage = 50;
   elephant->trample_damage_accumulator = 1.5F;
-  elephant->is_panicked = true;
-  elephant->panic_duration = 2.0F;
+  auto* panic = entity->add_component<ElephantPanicComponent>();
+  panic->duration = 2.0F;
 
   QJsonObject json = Serialization::serialize_entity(entity);
 
@@ -1950,8 +1950,9 @@ TEST_F(SerializationTest, ElephantComponentSerialization) {
   EXPECT_FLOAT_EQ(elephant_obj["trample_radius"].toDouble(), 3.0);
   EXPECT_EQ(elephant_obj["trample_damage"].toInt(), 50);
   EXPECT_FLOAT_EQ(elephant_obj["trample_damage_accumulator"].toDouble(), 1.5);
-  EXPECT_TRUE(elephant_obj["is_panicked"].toBool());
-  EXPECT_FLOAT_EQ(elephant_obj["panic_duration"].toDouble(), 2.0);
+  ASSERT_TRUE(json.contains("elephant_panic"));
+  QJsonObject panic_obj = json["elephant_panic"].toObject();
+  EXPECT_FLOAT_EQ(panic_obj["duration"].toDouble(), 2.0);
 }
 
 TEST_F(SerializationTest, ElephantComponentRoundTrip) {
@@ -1964,8 +1965,6 @@ TEST_F(SerializationTest, ElephantComponentRoundTrip) {
   elephant->trample_radius = 2.8F;
   elephant->trample_damage = 45;
   elephant->trample_damage_accumulator = 2.0F;
-  elephant->is_panicked = false;
-  elephant->panic_duration = 0.0F;
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
 
@@ -1981,8 +1980,7 @@ TEST_F(SerializationTest, ElephantComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->trample_radius, 2.8F);
   EXPECT_EQ(deserialized->trample_damage, 45);
   EXPECT_FLOAT_EQ(deserialized->trample_damage_accumulator, 2.0F);
-  EXPECT_FALSE(deserialized->is_panicked);
-  EXPECT_FLOAT_EQ(deserialized->panic_duration, 0.0F);
+  EXPECT_EQ(new_entity->get_component<ElephantPanicComponent>(), nullptr);
 }
 
 TEST_F(SerializationTest, ElephantStompImpactComponentSerialization) {

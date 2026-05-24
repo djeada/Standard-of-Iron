@@ -18,6 +18,7 @@ layout(location = 9) in vec4 i_world_c3;
 layout(location = 10) in vec4 i_color_alpha;
 layout(location = 11) in vec4 i_variation_material;
 layout(location = 12) in vec4 i_wear_params;
+layout(location = 13) in vec4 i_role_meta;
 
 uniform mat4 u_view_proj;
 
@@ -35,6 +36,7 @@ flat out float v_alpha;
 flat out int v_material_id;
 flat out int v_color_role;
 flat out int v_instance_id;
+flat out int v_role_color_count;
 flat out vec4 v_wear_params;
 
 void main() {
@@ -69,5 +71,6 @@ void main() {
   v_material_id = int(i_variation_material.w);
   v_color_role = int(a_color_role);
   v_instance_id = gl_InstanceID;
+  v_role_color_count = int(i_role_meta.x);
   v_wear_params = i_wear_params;
 }

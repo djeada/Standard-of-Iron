@@ -468,6 +468,11 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh& mesh) -> unsigned
   fn->glVertexAttribPointer(
       12, 4, GL_FLOAT, GL_FALSE, k_inst_stride, reinterpret_cast<void*>(off));
   fn->glVertexAttribDivisor(12, 1);
+  off += sizeof(float) * 4;
+  fn->glEnableVertexAttribArray(13);
+  fn->glVertexAttribPointer(
+      13, 4, GL_FLOAT, GL_FALSE, k_inst_stride, reinterpret_cast<void*>(off));
+  fn->glVertexAttribDivisor(13, 1);
 
   ebo->bind();
 
@@ -521,6 +526,10 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
     ia.wear[1] = c.wear_params.y();
     ia.wear[2] = c.wear_params.z();
     ia.wear[3] = c.wear_params.w();
+    ia.role_meta[0] = static_cast<float>(c.role_color_count);
+    ia.role_meta[1] = 0.0F;
+    ia.role_meta[2] = 0.0F;
+    ia.role_meta[3] = 0.0F;
   }
 
   std::size_t const bytes = count * sizeof(InstanceAttrib);
@@ -677,6 +686,10 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
     ia.wear[1] = c.wear_params.y();
     ia.wear[2] = c.wear_params.z();
     ia.wear[3] = c.wear_params.w();
+    ia.role_meta[0] = static_cast<float>(c.role_color_count);
+    ia.role_meta[1] = 0.0F;
+    ia.role_meta[2] = 0.0F;
+    ia.role_meta[3] = 0.0F;
   }
 
   std::size_t const bytes = count * sizeof(InstanceAttrib);
