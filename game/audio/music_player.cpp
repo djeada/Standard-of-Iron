@@ -133,23 +133,25 @@ void MusicPlayer::register_track(const std::string& track_id,
 }
 
 void MusicPlayer::play(const std::string& id, float v, bool loop) {
-  (void)play(id, v, loop, false);
+  (void)play(id, v, loop, MusicTransition::Immediate);
 }
 
 auto MusicPlayer::play(const std::string& id,
                        float vol,
                        bool loop,
-                       bool crossfade) -> int {
+                       MusicTransition transition) -> int {
   if (!m_initialized || (m_backend == nullptr)) {
     qWarning() << "MusicPlayer not initialized";
     return -1;
   }
+  const bool crossfade = transition == MusicTransition::Crossfade;
 
   int result = -1;
   if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
         this,
-        [this, id, vol, loop, crossfade, &result]() mutable {
+        [this, id, vol, loop, transition, &result]() mutable {
+          const bool crossfade = transition == MusicTransition::Crossfade;
           if (crossfade) {
             int const old_channel = m_current_music_channel;
             int const new_channel = find_free_channel_excluding(old_channel);

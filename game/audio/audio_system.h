@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "audio_constants.h"
+#include "music_transition.h"
 
 class Sound;
 
@@ -89,7 +90,8 @@ public:
                   AudioCategory category = AudioCategory::SFX);
   void play_music(const std::string& music_id,
                   float volume = AudioConstants::DEFAULT_VOLUME,
-                  bool crossfade = true);
+                  Game::Audio::MusicTransition transition =
+                      Game::Audio::MusicTransition::Crossfade);
   void stop_sound(const std::string& sound_id);
   void stop_music();
   void set_master_volume(float volume);
