@@ -5,6 +5,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTemporaryDir>
+#include <QVector2D>
+
+#include <cmath>
 
 #include <gtest/gtest.h>
 
@@ -518,4 +521,107 @@ TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
   EXPECT_DOUBLE_EQ(raw_spawn.value(MapJsonKeys::x).toDouble(), 30.57);
   EXPECT_DOUBLE_EQ(raw_spawn.value(MapJsonKeys::z).toDouble(), 40.12);
   EXPECT_DOUBLE_EQ(raw_spawn.value("strength").toDouble(), 77.78);
+}
+
+// ---------------------------------------------------------------------------
+// compute_min_bridge_width tests
+// ---------------------------------------------------------------------------
+
+namespace {
+
+auto make_river(float x1, float y1, float x2, float y2, float width)
+    -> MapEditor::LinearElement {
+  MapEditor::LinearElement elem;
+  elem.type = "river";
+  elem.start = QVector2D(x1, y1);
+  elem.end = QVector2D(x2, y2);
+  elem.width = width;
+  return elem;
+}
+
+} // namespace
+
+TEST(ComputeMinBridgeWidthTest, NoRiversReturnsAbsoluteMinimum) {
+  QVector<MapEditor::LinearElement> elements;
+  const float result = MapEditor::compute_min_bridge_width(
+      QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
+  EXPECT_FLOAT_EQ(result, 1.0F);
+}
+
+TEST(ComputeMinBridgeWidthTest, NonRiverElementsIgnored) {
+  QVector<MapEditor::LinearElement> elements;
+  MapEditor::LinearElement road;
+  road.type = "road";
+  road.start = QVector2D(5.0F, -5.0F);
+  road.end = QVector2D(5.0F, 5.0F);
+  road.width = 6.0F;
+  elements.append(road);
+
+  const float result = MapEditor::compute_min_bridge_width(
+      QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
+  EXPECT_FLOAT_EQ(result, 1.0F);
+}
+
+TEST(ComputeMinBridgeWidthTest, PerpendicularCrossingRequiresRiverWidth) {
+  // Bridge runs along X axis; river runs along Y axis — crossing at 90 degrees.
+  // Required width == river_width / sin(90°) == river_width.
+  QVector<MapEditor::LinearElement> elements;
+  elements.append(make_river(5.0F, -5.0F, 5.0F, 5.0F, 4.0F));
+
+  const float result = MapEditor::compute_min_bridge_width(
+      QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
+  EXPECT_NEAR(static_cast<double>(result), 4.0, 1e-4);
+}
+
+TEST(ComputeMinBridgeWidthTest, DiagonalCrossingIncreasesRequirement) {
+  // Bridge runs along X axis; river runs diagonally at 45 degrees.
+  // sin(45°) = sqrt(2)/2, so required width = river_width / sin(45°)
+  //          = 4.0 * sqrt(2) ≈ 5.657.
+  QVector<MapEditor::LinearElement> elements;
+  elements.append(make_river(0.0F, 0.0F, 10.0F, 10.0F, 4.0F));
+
+  const float result = MapEditor::compute_min_bridge_width(
+      QVector2D(0.0F, 5.0F), QVector2D(10.0F, 5.0F), elements);
+  const double expected = 4.0 * std::sqrt(2.0);
+  EXPECT_NEAR(static_cast<double>(result), expected, 1e-3);
+}
+
+TEST(ComputeMinBridgeWidthTest, NonIntersectingRiverIgnored) {
+  // River is beside the bridge and does not cross it.
+  QVector<MapEditor::LinearElement> elements;
+  elements.append(make_river(20.0F, -5.0F, 20.0F, 5.0F, 4.0F));
+
+  const float result = MapEditor::compute_min_bridge_width(
+      QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
+  EXPECT_FLOAT_EQ(result, 1.0F);
+}
+
+TEST(ComputeMinBridgeWidthTest, MultipleRiversUsesWidestRequirement) {
+  // Two rivers cross the bridge; the wider river should dominate.
+  QVector<MapEditor::LinearElement> elements;
+  elements.append(make_river(3.0F, -5.0F, 3.0F, 5.0F, 2.0F));
+  elements.append(make_river(7.0F, -5.0F, 7.0F, 5.0F, 6.0F));
+
+  const float result = MapEditor::compute_min_bridge_width(
+      QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
+  EXPECT_NEAR(static_cast<double>(result), 6.0, 1e-4);
+}
+
+TEST(ComputeMinBridgeWidthTest, ParallelRiverIgnored) {
+  // Bridge and river are parallel (both along X) — no meaningful crossing.
+  QVector<MapEditor::LinearElement> elements;
+  elements.append(make_river(0.0F, 1.0F, 10.0F, 1.0F, 4.0F));
+
+  const float result = MapEditor::compute_min_bridge_width(
+      QVector2D(0.0F, 0.0F), QVector2D(10.0F, 0.0F), elements);
+  EXPECT_FLOAT_EQ(result, 1.0F);
+}
+
+TEST(ComputeMinBridgeWidthTest, ZeroLengthBridgeReturnsAbsoluteMinimum) {
+  QVector<MapEditor::LinearElement> elements;
+  elements.append(make_river(0.0F, -5.0F, 0.0F, 5.0F, 4.0F));
+
+  const float result = MapEditor::compute_min_bridge_width(
+      QVector2D(0.0F, 0.0F), QVector2D(0.0F, 0.0F), elements);
+  EXPECT_FLOAT_EQ(result, 1.0F);
 }
