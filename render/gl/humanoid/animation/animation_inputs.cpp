@@ -572,12 +572,12 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
         std::clamp(humanoid_state->hold_pose_progress, 0.0F, 1.0F);
     if (stance.guard) {
       float const enter_duration =
-          std::max(Engine::Core::Defaults::k_hold_kneel_duration, 1.0e-4F);
+          std::max(Engine::Core::Defaults::k_guard_enter_duration, 1.0e-4F);
       guard_pose_progress =
           std::min(1.0F, previous_guard_pose + delta_time / enter_duration);
     } else if (previous_guard_pose > 0.0F) {
       float const exit_duration =
-          std::max(Engine::Core::Defaults::k_hold_stand_up_duration, 1.0e-4F);
+          std::max(Engine::Core::Defaults::k_guard_exit_duration, 1.0e-4F);
       guard_pose_progress =
           std::max(0.0F, previous_guard_pose - delta_time / exit_duration);
       is_exiting_guard = guard_pose_progress > 0.0F;
