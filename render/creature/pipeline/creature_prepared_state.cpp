@@ -94,6 +94,8 @@ auto resolve_humanoid_lod_state(const HumanoidLodStateInputs& inputs)
   CreatureLodDecisionInputs lod_in{};
   if (ctx.force_humanoid_lod) {
     lod_in.forced_lod = ctx.forced_humanoid_lod;
+  } else if (ctx.selected || ctx.hovered) {
+    lod_in.forced_lod = Render::Creature::CreatureLOD::Full;
   }
   lod_in.has_camera = (ctx.camera != nullptr);
   if (ctx.camera != nullptr) {
