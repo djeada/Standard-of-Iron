@@ -51,8 +51,8 @@ auto guard_shield_turn(Render::GL::ShieldFormationPose pose) -> QMatrix4x4 {
     break;
   case Render::GL::ShieldFormationPose::CarthageFront:
     guard_turn.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-    guard_turn.rotate(12.0F, 1.0F, 0.0F, 0.0F);
-    guard_turn.translate(0.0F, 0.01F, 0.10F);
+    guard_turn.rotate(-35.0F, 1.0F, 0.0F, 0.0F);
+    guard_turn.translate(0.0F, 0.12F, 0.04F);
     break;
   case Render::GL::ShieldFormationPose::GuardDefault:
   case Render::GL::ShieldFormationPose::None:

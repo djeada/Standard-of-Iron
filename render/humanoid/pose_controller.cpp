@@ -1605,11 +1605,11 @@ void HumanoidPoseController::guard_sword_and_shield_formation(ShieldFormationPos
     break;
   case ShieldFormationPose::CarthageFront:
     sword_hand_target = QVector3D(0.18F, HP::SHOULDER_Y - 0.10F, 0.24F);
-    shield_hand_target = QVector3D(-0.02F, HP::SHOULDER_Y + 0.02F, 0.48F);
-    shoulder_l_delta = QVector3D(0.0F, 0.02F, 0.14F);
+    shield_hand_target = QVector3D(-0.10F, HP::SHOULDER_Y + 0.22F, 0.38F);
+    shoulder_l_delta = QVector3D(0.0F, 0.05F, 0.16F);
     shoulder_r_delta = QVector3D(0.0F, -0.02F, 0.10F);
-    neck_delta = QVector3D(0.0F, -0.01F, 0.10F);
-    head_delta = QVector3D(0.0F, -0.01F, 0.07F);
+    neck_delta = QVector3D(0.0F, -0.02F, 0.10F);
+    head_delta = QVector3D(0.0F, -0.02F, 0.07F);
     break;
   case ShieldFormationPose::GuardDefault:
   case ShieldFormationPose::None:
