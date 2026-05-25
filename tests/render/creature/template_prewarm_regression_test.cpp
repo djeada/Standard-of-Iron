@@ -437,6 +437,25 @@ TEST(TemplatePrewarmRegression, PreparedHumanoidLodCarriesDistanceCull) {
   EXPECT_EQ(state.decision.reason, CullReason::Billboard);
 }
 
+TEST(TemplatePrewarmRegression, SelectedHumanoidLodStaysFullAtDistance) {
+  Render::GL::Camera camera;
+  camera.set_position(QVector3D(0.0F, 0.0F, 0.0F));
+
+  Render::GL::DrawContext ctx{};
+  ctx.camera = &camera;
+  ctx.selected = true;
+
+  HumanoidLodStateInputs inputs{};
+  inputs.ctx = &ctx;
+  inputs.soldier_world_pos = QVector3D(0.0F, 0.0F, 28.0F);
+  inputs.config = humanoid_lod_config();
+
+  auto const state = resolve_humanoid_lod_state(inputs);
+
+  EXPECT_EQ(state.decision.lod, Render::Creature::CreatureLOD::Full);
+  EXPECT_FALSE(state.decision.culled);
+}
+
 TEST(TemplatePrewarmRegression, PreparedHumanoidShadowRequiresResources) {
   Render::GL::DrawContext const ctx{};
   CreatureGraphOutput const graph{};
