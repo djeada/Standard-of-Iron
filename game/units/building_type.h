@@ -10,7 +10,8 @@ namespace Game::Units {
 enum class BuildingType : std::uint8_t {
   Barracks,
   DefenseTower,
-  Home
+  Home,
+  Marketplace
 };
 
 inline auto building_type_to_q_string(BuildingType type) -> QString {
@@ -21,6 +22,8 @@ inline auto building_type_to_q_string(BuildingType type) -> QString {
     return QStringLiteral("defense_tower");
   case BuildingType::Home:
     return QStringLiteral("home");
+  case BuildingType::Marketplace:
+    return QStringLiteral("marketplace");
   }
 
   return QStringLiteral("barracks");
@@ -42,6 +45,10 @@ inline auto try_parse_building_type(const QString& value, BuildingType& out) -> 
   }
   if (lowered == QStringLiteral("home")) {
     out = BuildingType::Home;
+    return true;
+  }
+  if (lowered == QStringLiteral("marketplace")) {
+    out = BuildingType::Marketplace;
     return true;
   }
   return false;

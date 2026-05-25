@@ -76,6 +76,7 @@ add_library(game_systems STATIC
     systems/healing_beam_system.cpp
     systems/owner_registry.cpp
     systems/troop_count_registry.cpp
+    systems/marketplace_system.cpp
     systems/global_stats_registry.cpp
     systems/victory_service.cpp
     systems/undead_awakening_system.cpp
@@ -133,6 +134,7 @@ add_library(game_systems STATIC
     units/barracks.cpp
     units/defense_tower.cpp
     units/home.cpp
+    units/marketplace.cpp
     units/wall_segment.cpp
     systems/home_system.cpp
 )

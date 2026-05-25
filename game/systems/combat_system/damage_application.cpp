@@ -15,6 +15,7 @@
 #include "../../units/troop_config.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
+#include "../marketplace_system.h"
 #include "../wall_network_service.h"
 
 namespace Game::Systems::Combat {
@@ -437,6 +438,10 @@ DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
 
     if (target->has_component<Engine::Core::BuildingComponent>()) {
       BuildingCollisionRegistry::instance().unregister_building(target->get_id());
+      if (auto* unit = target->get_component<Engine::Core::UnitComponent>();
+          unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Marketplace) {
+        MarketplaceSystem::instance().unregister_marketplace(unit->owner_id);
+      }
     }
     if (world != nullptr &&
         target->get_component<Engine::Core::WallSegmentComponent>() != nullptr) {
