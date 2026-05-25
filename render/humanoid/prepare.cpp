@@ -95,12 +95,19 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent& unit) -> i
 auto infantry_guard_shield_pose(
     const Engine::Core::UnitComponent* unit,
     const Engine::Core::FormationModeComponent* formation_mode,
+    const Engine::Core::GuardModeComponent* guard_mode,
     int row,
     int col,
     int rows,
     int cols) noexcept -> ShieldFormationPose {
-  if (unit == nullptr || formation_mode == nullptr || !formation_mode->active ||
-      unit->spawn_type != Game::Units::SpawnType::Knight) {
+  if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Knight) {
+    return ShieldFormationPose::None;
+  }
+
+  bool const formation_active =
+      (formation_mode != nullptr) && formation_mode->active;
+  bool const guard_active = (guard_mode != nullptr) && guard_mode->active;
+  if (!formation_active && !guard_active) {
     return ShieldFormationPose::None;
   }
 
@@ -880,6 +887,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   if (ctx.entity != nullptr) {
     formation_mode = ctx.entity->get_component<Engine::Core::FormationModeComponent>();
   }
+  Engine::Core::GuardModeComponent* guard_mode_comp = nullptr;
+  if (ctx.entity != nullptr) {
+    guard_mode_comp = ctx.entity->get_component<Engine::Core::GuardModeComponent>();
+  }
 
   float entity_ground_offset =
       owner.resolve_entity_ground_offset(ctx, unit_comp, transform_comp);
@@ -1158,7 +1169,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       int const row = idx / cols;
       int const col = idx % cols;
       soldier_render_anim.shield_formation_pose =
-          infantry_guard_shield_pose(unit_comp, formation_mode, row, col, rows, cols);
+          infantry_guard_shield_pose(unit_comp, formation_mode, guard_mode_comp, row, col, rows, cols);
     }
     float const offset_x = layout.offset_x;
     float const offset_z = layout.offset_z;

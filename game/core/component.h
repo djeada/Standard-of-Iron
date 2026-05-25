@@ -34,6 +34,9 @@ inline constexpr float k_capture_required_time = 15.0F;
 inline constexpr float k_hold_stand_up_duration = 2.0F;
 inline constexpr float k_hold_kneel_duration = 1.5F;
 
+inline constexpr float k_guard_enter_duration = 1.8F;
+inline constexpr float k_guard_exit_duration = 1.4F;
+
 inline constexpr float k_guard_default_radius = 10.0F;
 inline constexpr float k_guard_return_threshold = 1.0F;
 inline constexpr float k_blood_stain_default_radius = 0.6F;
