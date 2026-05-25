@@ -171,6 +171,60 @@ struct OrderedSpawnEntry {
 
 } // namespace
 
+auto compute_min_bridge_width(const QVector2D& bridge_start,
+                               const QVector2D& bridge_end,
+                               const QVector<LinearElement>& elements) -> float {
+  constexpr float k_abs_min = 1.0F;
+  float min_width = k_abs_min;
+
+  const QVector2D bridge_dir = bridge_end - bridge_start;
+  const float bridge_len = bridge_dir.length();
+  if (bridge_len < 1e-6F) {
+    return min_width;
+  }
+
+  for (const auto& elem : elements) {
+    if (elem.type != QLatin1String("river")) {
+      continue;
+    }
+
+    const QVector2D river_dir = elem.end - elem.start;
+    const float cross = bridge_dir.x() * river_dir.y() - bridge_dir.y() * river_dir.x();
+    if (std::abs(cross) < 1e-6F) {
+      continue; // parallel segments
+    }
+
+    const QVector2D diff = elem.start - bridge_start;
+    const float t = (diff.x() * river_dir.y() - diff.y() * river_dir.x()) / cross;
+    const float s = (diff.x() * bridge_dir.y() - diff.y() * bridge_dir.x()) / cross;
+
+    if (t < 0.0F || t > 1.0F || s < 0.0F || s > 1.0F) {
+      continue; // no intersection within segment extents
+    }
+
+    const float river_len = river_dir.length();
+    if (river_len < 1e-6F) {
+      continue;
+    }
+
+    // sin of the angle between bridge and river
+    const float dot = std::clamp(
+        QVector2D::dotProduct(bridge_dir / bridge_len, river_dir / river_len),
+        -1.0F,
+        1.0F);
+    const float sin_angle = std::sqrt(1.0F - dot * dot);
+    if (sin_angle < 1e-4F) {
+      continue; // nearly parallel — cannot meaningfully span
+    }
+
+    // Bridge width must be at least river_width / sin(angle) to span the river
+    const float required = elem.width / sin_angle;
+    min_width = std::max(min_width, required);
+  }
+
+  return min_width;
+}
+
 MapData::MapData(QObject* parent)
     : QObject(parent) {
   clear();
