@@ -95,6 +95,26 @@ void InputCommandHandler::on_right_click(qreal sx,
   }
 }
 
+void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target) {
+  if (m_is_spectator_mode || (m_world == nullptr)) {
+    return;
+  }
+
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return;
+  }
+
+  const auto& selected = selection_system->get_selected_units();
+  if (selected.empty()) {
+    return;
+  }
+
+  auto plan =
+      Game::Systems::CommandService::plan_ground_move(*m_world, selected, world_target);
+  Game::Systems::CommandService::issue_ground_move(*m_world, selected, plan);
+}
+
 void InputCommandHandler::on_right_double_click(qreal sx,
                                                 qreal sy,
                                                 int local_owner_id,
