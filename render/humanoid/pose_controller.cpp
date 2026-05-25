@@ -1579,37 +1579,40 @@ void HumanoidPoseController::guard_sword_and_shield_formation(ShieldFormationPos
     return;
   }
 
-  QVector3D sword_hand_target(0.22F, HP::SHOULDER_Y - 0.18F, 0.28F);
-  QVector3D shield_hand_target(-0.12F, HP::SHOULDER_Y + 0.08F, 0.58F);
-  QVector3D shoulder_l_delta(0.0F, 0.03F, 0.13F);
-  QVector3D shoulder_r_delta(0.0F, -0.03F, 0.07F);
-  QVector3D neck_delta(0.0F, 0.0F, 0.08F);
-  QVector3D head_delta(0.0F, 0.0F, 0.06F);
+  QVector3D sword_hand_target(0.20F, HP::SHOULDER_Y - 0.20F, 0.24F);
+  QVector3D shield_hand_target(-0.12F, HP::SHOULDER_Y + 0.10F, 0.54F);
+  QVector3D shoulder_l_delta(0.0F, 0.04F, 0.14F);
+  QVector3D shoulder_r_delta(0.0F, -0.03F, 0.06F);
+  QVector3D neck_delta(0.0F, -0.01F, 0.09F);
+  QVector3D head_delta(0.0F, -0.01F, 0.07F);
 
   switch (pose) {
   case ShieldFormationPose::RomanTop:
-    sword_hand_target = QVector3D(0.18F, HP::SHOULDER_Y - 0.18F, 0.18F);
-    shield_hand_target = QVector3D(-0.06F, HP::SHOULDER_Y + 0.30F, 0.26F);
-    shoulder_l_delta = QVector3D(0.0F, 0.06F, 0.18F);
-    shoulder_r_delta = QVector3D(0.0F, -0.05F, 0.04F);
-    neck_delta = QVector3D(0.0F, -0.02F, 0.10F);
-    head_delta = QVector3D(0.0F, -0.03F, 0.07F);
+    // Interior soldiers: shield flat overhead, body crouched low
+    sword_hand_target = QVector3D(0.14F, HP::SHOULDER_Y - 0.22F, 0.12F);
+    shield_hand_target = QVector3D(-0.04F, HP::SHOULDER_Y + 0.34F, 0.20F);
+    shoulder_l_delta = QVector3D(0.0F, 0.08F, 0.20F);
+    shoulder_r_delta = QVector3D(0.0F, -0.06F, 0.03F);
+    neck_delta = QVector3D(0.0F, -0.04F, 0.12F);
+    head_delta = QVector3D(0.0F, -0.05F, 0.09F);
     break;
   case ShieldFormationPose::RomanFront:
-    sword_hand_target = QVector3D(0.22F, HP::SHOULDER_Y - 0.17F, 0.24F);
-    shield_hand_target = QVector3D(-0.08F, HP::SHOULDER_Y + 0.12F, 0.52F);
-    shoulder_l_delta = QVector3D(0.0F, 0.05F, 0.15F);
-    shoulder_r_delta = QVector3D(0.0F, -0.04F, 0.06F);
-    neck_delta = QVector3D(0.0F, 0.0F, 0.09F);
-    head_delta = QVector3D(0.0F, -0.01F, 0.06F);
+    // Perimeter soldiers: shield angled forward covering body front
+    sword_hand_target = QVector3D(0.20F, HP::SHOULDER_Y - 0.20F, 0.20F);
+    shield_hand_target = QVector3D(-0.10F, HP::SHOULDER_Y + 0.14F, 0.56F);
+    shoulder_l_delta = QVector3D(0.0F, 0.06F, 0.17F);
+    shoulder_r_delta = QVector3D(0.0F, -0.05F, 0.05F);
+    neck_delta = QVector3D(0.0F, -0.02F, 0.11F);
+    head_delta = QVector3D(0.0F, -0.03F, 0.08F);
     break;
   case ShieldFormationPose::CarthageFront:
-    sword_hand_target = QVector3D(0.18F, HP::SHOULDER_Y - 0.10F, 0.24F);
-    shield_hand_target = QVector3D(-0.02F, HP::SHOULDER_Y + 0.02F, 0.48F);
-    shoulder_l_delta = QVector3D(0.0F, 0.02F, 0.14F);
-    shoulder_r_delta = QVector3D(0.0F, -0.02F, 0.10F);
-    neck_delta = QVector3D(0.0F, -0.01F, 0.10F);
-    head_delta = QVector3D(0.0F, -0.01F, 0.07F);
+    // Carthage: round shield angled outward and skyward, distinctly different stance
+    sword_hand_target = QVector3D(0.20F, HP::SHOULDER_Y - 0.08F, 0.26F);
+    shield_hand_target = QVector3D(-0.14F, HP::SHOULDER_Y + 0.26F, 0.34F);
+    shoulder_l_delta = QVector3D(0.0F, 0.06F, 0.18F);
+    shoulder_r_delta = QVector3D(0.0F, -0.03F, 0.08F);
+    neck_delta = QVector3D(0.0F, -0.02F, 0.09F);
+    head_delta = QVector3D(0.0F, -0.02F, 0.06F);
     break;
   case ShieldFormationPose::GuardDefault:
   case ShieldFormationPose::None:

@@ -138,7 +138,9 @@ inline auto guard_pose_amount(const AnimationInputs& inputs) -> float {
   if (!inputs.is_guarding && !inputs.is_exiting_guard) {
     return 0.0F;
   }
-  return std::clamp(inputs.guard_pose_progress, 0.0F, 1.0F);
+  float const t = std::clamp(inputs.guard_pose_progress, 0.0F, 1.0F);
+  // Smooth ease-in-out for natural transition (matching kneel_transition style)
+  return t * t * (3.0F - 2.0F * t);
 }
 
 struct FormationParams {

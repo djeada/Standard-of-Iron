@@ -638,7 +638,7 @@ TEST_F(HumanoidPoseControllerTest,
 }
 
 TEST_F(HumanoidPoseControllerTest,
-       GuardShieldFormationCarthageFrontKeepsShieldMoreCenteredThanRomanFront) {
+       GuardShieldFormationCarthageFrontRaisesShieldHigherThanRomanFront) {
   HumanoidPose roman_front_pose = pose;
   HumanoidPoseController roman_front_controller(roman_front_pose, anim_ctx);
   roman_front_controller.guard_sword_and_shield_formation(
@@ -649,8 +649,8 @@ TEST_F(HumanoidPoseControllerTest,
   carthage_front_controller.guard_sword_and_shield_formation(
       ShieldFormationPose::CarthageFront, 1.0F);
 
-  EXPECT_GT(carthage_front_pose.hand_l.x(), roman_front_pose.hand_l.x());
-  EXPECT_LT(carthage_front_pose.hand_l.y(), roman_front_pose.hand_l.y());
+  EXPECT_GT(carthage_front_pose.hand_l.y(), roman_front_pose.hand_l.y());
+  EXPECT_LT(carthage_front_pose.hand_l.x(), roman_front_pose.hand_l.x());
 }
 
 TEST_F(HumanoidPoseControllerTest, LookAtMovesHeadTowardTarget) {
