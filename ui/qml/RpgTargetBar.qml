@@ -9,6 +9,8 @@ Item {
     property int target_hp: 0
     property int target_max_hp: 0
     property real target_hp_ratio: 0.0
+    property bool target_staggered: false
+    property bool target_guard_broken: false
 
     property real displayed_ratio: target_hp_ratio
 
@@ -16,8 +18,8 @@ Item {
     property int _prev_max_hp: 0
     property real _flash_opacity: 0.0
 
-    implicitWidth: 360
-    implicitHeight: 54
+    implicitWidth: 400
+    implicitHeight: 64
 
     opacity: target_max_hp > 0 ? 1.0 : 0.0
     visible: opacity > 0.0
@@ -61,7 +63,7 @@ Item {
         interval: 16
         repeat: true
         onTriggered: {
-            root._flash_opacity = Math.max(0.0, root._flash_opacity - 0.07);
+            root._flash_opacity = Math.max(0.0, root._flash_opacity - 0.06);
             if (root._flash_opacity <= 0.0) {
                 flash_decay.stop();
             }
@@ -70,59 +72,101 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: "#d91a1008"
-        radius: 8
-        border.color: Theme.border
-        border.width: 2
+        color: "#e01a1008"
+        radius: 10
+        border.color: root.target_staggered ? "#ffff8800" : (root.target_guard_broken ? "#ffff2200" : Theme.border)
+        border.width: root.target_staggered || root.target_guard_broken ? 3 : 2
 
+        // Damage flash border
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
             color: "transparent"
-            border.color: "#ffcc2200"
-            border.width: 3
+            border.color: "#ffee3300"
+            border.width: 4
             opacity: root._flash_opacity
         }
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 8
-            spacing: 4
+            anchors.margins: 10
+            spacing: 5
 
-            Text {
+            RowLayout {
                 Layout.fillWidth: true
-                text: root.target_name
-                color: Theme.textMain
-                font.pointSize: 11
-                font.bold: true
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideRight
+                spacing: 8
+
+                Text {
+                    Layout.fillWidth: true
+                    text: root.target_name
+                    color: Theme.textMain
+                    font.pointSize: 12
+                    font.bold: true
+                    horizontalAlignment: Text.AlignLeft
+                    elide: Text.ElideRight
+                }
+
+                // Stagger indicator
+                Rectangle {
+                    width: staggerLabel.implicitWidth + 12
+                    height: 18
+                    radius: 4
+                    color: root.target_staggered ? "#88ff8800" : "#88ff2200"
+                    visible: root.target_staggered || root.target_guard_broken
+                    border.width: 1
+                    border.color: root.target_staggered ? "#ccffaa00" : "#ccff4400"
+
+                    Text {
+                        id: staggerLabel
+                        anchors.centerIn: parent
+                        text: root.target_guard_broken ? "BROKEN" : "STAGGERED"
+                        color: "#ffffff"
+                        font.pixelSize: 9
+                        font.bold: true
+                        font.letterSpacing: 0.8
+                    }
+                }
+
+                Text {
+                    text: root.target_hp + " / " + root.target_max_hp
+                    color: "#ccffffff"
+                    font.pointSize: 9
+                    font.bold: true
+                    style: Text.Outline
+                    styleColor: "#66000000"
+                }
             }
 
             Item {
                 Layout.fillWidth: true
-                height: 14
+                height: 16
 
+                // Background
                 Rectangle {
                     anchors.fill: parent
-                    radius: 7
-                    color: "#44000000"
-                    border.color: "#55cc4400"
+                    radius: 8
+                    color: "#55000000"
+                    border.color: "#66cc4400"
                     border.width: 1
                 }
 
+                // Delayed drain (red, shows recent damage)
                 Rectangle {
                     width: parent.width * root.target_hp_ratio
                     height: parent.height
-                    radius: 7
-                    color: "#88cc2200"
+                    radius: 8
+                    color: "#99cc2200"
+                    Behavior on width {
+                        NumberAnimation { duration: 500; easing.type: Easing.OutQuad }
+                    }
                 }
 
+                // Current HP fill
                 Rectangle {
                     id: hp_fill
                     width: parent.width * root.displayed_ratio
                     height: parent.height
-                    radius: 7
+                    radius: 8
                     color: root.displayed_ratio > 0.55 ? "#cc1a7a22" : (root.displayed_ratio > 0.28 ? "#ccbb6600" : "#cccc1a00")
                     Behavior on color  {
                         ColorAnimation {
@@ -131,14 +175,15 @@ Item {
                     }
                 }
 
-                Text {
-                    anchors.centerIn: parent
-                    text: root.target_hp + " / " + root.target_max_hp
-                    color: "white"
-                    font.pointSize: 8
-                    font.bold: true
-                    style: Text.Outline
-                    styleColor: "#88000000"
+                // Damage tick marks
+                Repeater {
+                    model: Math.max(0, Math.floor(root.target_max_hp / 50) - 1)
+                    Rectangle {
+                        x: parent.width * ((index + 1) * 50 / root.target_max_hp) - 1
+                        width: 1
+                        height: parent.height
+                        color: "#33ffffff"
+                    }
                 }
             }
         }

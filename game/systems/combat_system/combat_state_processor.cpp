@@ -40,14 +40,14 @@ auto commander_phase_scale(const Engine::Core::Entity& unit,
     return 1.0F;
   }
 
-  // Amplified durations: larger wind-up for readability, faster strike for impact
+  // Amplified durations: much larger wind-up for readability, fast strike for impact
   switch (state) {
   case CS::Advance:
-    return combat_state.finisher_attack ? 1.65F : 1.30F;
+    return combat_state.finisher_attack ? 1.80F : 1.40F;
   case CS::WindUp:
-    return combat_state.finisher_attack ? 1.60F : 1.35F;
+    return combat_state.finisher_attack ? 1.85F : 1.50F;
   case CS::Strike:
-    return combat_state.finisher_attack ? 1.15F : 1.0F;
+    return combat_state.finisher_attack ? 1.20F : 1.05F;
   case CS::Impact:
     return combat_state.finisher_attack ? 1.30F : 1.12F;
   case CS::Recover:

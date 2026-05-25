@@ -3347,6 +3347,8 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["locked_target_hp"] = 0;
   result["locked_target_max_hp"] = 0;
   result["locked_target_hp_ratio"] = 0.0;
+  result["locked_target_staggered"] = false;
+  result["locked_target_guard_broken"] = false;
 
   Engine::Core::EntityID locked_id = m_commander_control.locked_target_id();
   if (auto* rpg_targets =
@@ -3378,6 +3380,15 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
           result["locked_target_hp_ratio"] =
               lmax > 0 ? static_cast<double>(lhp) / static_cast<double>(lmax) : 0.0;
         }
+        // Target combat state
+        auto* locked_stagger =
+            locked_ent->get_component<Engine::Core::StaggerComponent>();
+        result["locked_target_staggered"] = locked_stagger != nullptr &&
+                                            locked_stagger->remaining > 0.0F;
+        auto* locked_guard =
+            locked_ent->get_component<Engine::Core::CommanderGuardComponent>();
+        result["locked_target_guard_broken"] =
+            locked_guard != nullptr && locked_guard->guard_break_remaining > 0.0F;
       }
     }
   }
