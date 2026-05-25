@@ -124,6 +124,9 @@ add_library(render_gl STATIC
     entity/home_renderer.cpp
     entity/nations/roman/home_renderer.cpp
     entity/nations/carthage/home_renderer.cpp
+    entity/marketplace_renderer.cpp
+    entity/nations/roman/marketplace_renderer.cpp
+    entity/nations/carthage/marketplace_renderer.cpp
     entity/wall_renderer.cpp
     entity/nations/roman/wall_renderer.cpp
     entity/nations/carthage/wall_renderer.cpp

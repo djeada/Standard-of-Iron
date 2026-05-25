@@ -27,10 +27,12 @@ namespace {
 constexpr const char* BUILDING_TYPE_HOME = "home";
 constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
+constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
 
 constexpr float BUILD_TIME_HOME = 20.0F;
 constexpr float BUILD_TIME_DEFENSE_TOWER = 25.0F;
 constexpr float BUILD_TIME_BARRACKS = 30.0F;
+constexpr float BUILD_TIME_MARKETPLACE = 25.0F;
 constexpr float BUILD_TIME_DEFAULT = 20.0F;
 } // namespace
 
@@ -242,6 +244,8 @@ void AICommandApplier::apply(Engine::Core::World& world,
           builder_prod->build_time = BUILD_TIME_DEFENSE_TOWER;
         } else if (ctype == BUILDING_TYPE_BARRACKS) {
           builder_prod->build_time = BUILD_TIME_BARRACKS;
+        } else if (ctype == BUILDING_TYPE_MARKETPLACE) {
+          builder_prod->build_time = BUILD_TIME_MARKETPLACE;
         } else {
           builder_prod->build_time = BUILD_TIME_DEFAULT;
         }
