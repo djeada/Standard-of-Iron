@@ -75,6 +75,7 @@ public:
                             int local_owner_id);
   [[nodiscard]] Engine::Core::EntityID locked_target_id() const;
   [[nodiscard]] Engine::Core::EntityID focus_target_id() const;
+  [[nodiscard]] bool is_dodge_rolling() const { return m_dodge_state == DodgeState::Rolling; }
   [[nodiscard]] Engine::Core::Entity*
   controlled_commander(Engine::Core::World& world,
                        Engine::Core::EntityID commander_id,
@@ -139,6 +140,7 @@ private:
 
   float m_move_speed = 0.0F;
   int m_move_right_axis = 0;
+  int m_move_forward_axis = 0;
   bool m_move_running = false;
 
   float m_hit_trauma = 0.0F;
@@ -149,6 +151,8 @@ private:
   float m_dodge_timer = 0.0F;
   QVector3D m_dodge_direction{0.0F, 0.0F, 1.0F};
   float m_dodge_fov_kick = 0.0F;
+  float m_impact_shake = 0.0F;
+  float m_impact_shake_seed = 0.0F;
   float m_jump_timer = 0.0F;
   bool m_jump_safe_position_valid = false;
   QVector3D m_jump_last_walkable_position{0.0F, 0.0F, 0.0F};
