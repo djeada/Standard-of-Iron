@@ -134,22 +134,9 @@ auto is_construction_position_valid(float pos_x,
     return false;
   }
 
-  Game::Systems::Pathfinding* pathfinder =
-      Game::Systems::CommandService::get_pathfinder();
-  if (pathfinder != nullptr) {
-    Game::Systems::Point const grid =
-        Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
-    if (!pathfinder->is_walkable(grid.x, grid.y)) {
-      return false;
-    }
-    if (auto& terrain_service = Game::Map::TerrainService::instance();
-        terrain_service.is_initialized() &&
-        !terrain_service.is_walkable(grid.x, grid.y)) {
-      return false;
-    }
-  }
-
-  return true;
+  Game::Systems::Point const grid =
+      Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
+  return Game::Systems::CommandService::is_grid_walkable_for_radius(grid, 0.0F);
 }
 
 auto normalize_rotation_degrees(float angle) -> float {
@@ -261,18 +248,13 @@ auto resolve_harvest_work_position(Engine::Core::World* world,
       Game::Systems::CommandService::get_unit_radius(*world, builder_id);
   Game::Systems::Point const tree_grid =
       Game::Systems::CommandService::world_to_grid(target.x, target.z);
-  Game::Systems::Point work_grid =
-      Game::Systems::Pathfinding::find_nearest_walkable_point(
-          tree_grid, k_harvest_work_search_radius, *pathfinder, unit_radius);
-  if (!pathfinder->is_walkable_with_radius(work_grid.x, work_grid.y, unit_radius)) {
-    work_grid = Game::Systems::Pathfinding::find_nearest_walkable_point(
-        tree_grid, k_harvest_work_search_radius, *pathfinder, 0.0F);
-    if (!pathfinder->is_walkable(work_grid.x, work_grid.y)) {
-      return std::nullopt;
-    }
+  auto const work_grid = Game::Systems::CommandService::find_nearest_walkable_grid(
+      tree_grid, k_harvest_work_search_radius, unit_radius);
+  if (!work_grid.has_value()) {
+    return std::nullopt;
   }
 
-  QVector3D work_position = Game::Systems::CommandService::grid_to_world(work_grid);
+  QVector3D work_position = Game::Systems::CommandService::grid_to_world(*work_grid);
   auto& terrain_service = Game::Map::TerrainService::instance();
   work_position.setY(terrain_service.resolve_surface_world_y(
       work_position.x(), work_position.z(), 0.0F, transform->position.y));
@@ -441,7 +423,7 @@ auto find_nearest_resource_cell(Game::Systems::Pathfinding* pathfinder,
     return std::nullopt;
   }
 
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   std::optional<HarvestResourceCell> best_cell;
   int best_distance_sq = std::numeric_limits<int>::max();

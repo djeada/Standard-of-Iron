@@ -367,12 +367,12 @@ void AudioSystem::process_event(const AudioEvent& event) {
       AudioResourceConfig const config = get_resource_config_locked(resource_id);
       float const effective_volume =
           get_effective_volume(AudioCategory::MUSIC, event.volume * config.volume);
-      (void)m_music_player->play(
-          resource_id,
-          effective_volume,
-          true,
-          event.crossfade ? Game::Audio::MusicTransition::Crossfade
-                          : Game::Audio::MusicTransition::Immediate);
+      (void)m_music_player->play(resource_id,
+                                 effective_volume,
+                                 true,
+                                 event.crossfade
+                                     ? Game::Audio::MusicTransition::Crossfade
+                                     : Game::Audio::MusicTransition::Immediate);
     }
     break;
   }

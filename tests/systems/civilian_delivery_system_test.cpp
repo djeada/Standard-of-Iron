@@ -139,7 +139,7 @@ TEST(CivilianDeliverySystemTest, DeliveryTargetOutsideBarracksStillTransfersManp
                                        barracks_transform->position.x,
                                        barracks_transform->position.z,
                                        barracks_unit->owner_id);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   float const civilian_radius = 0.5F;
   QVector3D const delivery_target = App::Utils::barracks_delivery_target_position(
@@ -203,7 +203,7 @@ TEST(CivilianDeliverySystemTest,
                                        barracks_transform->position.x,
                                        barracks_transform->position.z,
                                        barracks_unit->owner_id);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   float const civilian_radius = 0.5F;
   QVector3D const delivery_target = App::Utils::barracks_delivery_target_position(

@@ -35,22 +35,13 @@ constexpr float pathfinding_request_cooldown = 1.0F;
 
 constexpr float target_movement_threshold_sq = 4.0F;
 
-constexpr float k_unit_radius_threshold = 0.5F;
 constexpr int k_recovery_search_radius = 16;
 
 auto is_direct_path_walkable(const QVector3D& from,
                              const QVector3D& to,
-                             const Pathfinding& pathfinder,
                              float unit_radius) -> bool {
-  auto const is_walkable_func = [&pathfinder, unit_radius](int x, int y) -> bool {
-    if (unit_radius <= k_unit_radius_threshold) {
-      return pathfinder.is_walkable(x, y);
-    }
-    return pathfinder.is_walkable_with_radius(x, y, unit_radius);
-  };
-
   Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
-  if (!is_walkable_func(end_grid.x, end_grid.y)) {
+  if (!CommandService::is_grid_walkable_for_radius(end_grid, unit_radius)) {
     return false;
   }
 
@@ -68,7 +59,7 @@ auto is_direct_path_walkable(const QVector3D& from,
     QVector3D const sample_pos = from + direction * t;
     Point const sample_grid =
         CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
-    if (!is_walkable_func(sample_grid.x, sample_grid.y)) {
+    if (!CommandService::is_grid_walkable_for_radius(sample_grid, unit_radius)) {
       return false;
     }
   }
@@ -77,9 +68,7 @@ auto is_direct_path_walkable(const QVector3D& from,
 }
 
 auto are_all_surrounding_cells_invalid(const Point& position,
-                                       const Pathfinding& pathfinder,
                                        float unit_radius) -> bool {
-
   for (int dy = -1; dy <= 1; ++dy) {
     for (int dx = -1; dx <= 1; ++dx) {
       if (dx == 0 && dy == 0) {
@@ -89,14 +78,9 @@ auto are_all_surrounding_cells_invalid(const Point& position,
       int const check_x = position.x + dx;
       int const check_y = position.y + dy;
 
-      if (unit_radius <= k_unit_radius_threshold) {
-        if (pathfinder.is_walkable(check_x, check_y)) {
-          return false;
-        }
-      } else {
-        if (pathfinder.is_walkable_with_radius(check_x, check_y, unit_radius)) {
-          return false;
-        }
+      if (CommandService::is_grid_walkable_for_radius({check_x, check_y},
+                                                      unit_radius)) {
+        return false;
       }
     }
   }
@@ -104,24 +88,17 @@ auto are_all_surrounding_cells_invalid(const Point& position,
   return true;
 }
 
-auto is_walkable_for_radius(const Pathfinding& pathfinder,
-                            int x,
-                            int y,
-                            float unit_radius) -> bool {
-  if (unit_radius <= k_unit_radius_threshold) {
-    return pathfinder.is_walkable(x, y);
-  }
-  return pathfinder.is_walkable_with_radius(x, y, unit_radius);
+auto is_walkable_for_radius(int x, int y, float unit_radius) -> bool {
+  return CommandService::is_grid_walkable_for_radius({x, y}, unit_radius);
 }
 
 auto find_recovery_cell(const Point& origin,
-                        const Pathfinding& pathfinder,
                         float unit_radius,
                         Point& recovery_cell) -> bool {
   std::array<float, 4> const candidate_radii = {
       unit_radius,
-      std::max(k_unit_radius_threshold, unit_radius * 0.85F),
-      k_unit_radius_threshold,
+      std::max(CommandService::k_unit_radius_threshold, unit_radius * 0.85F),
+      CommandService::k_unit_radius_threshold,
       0.0F};
 
   for (float const candidate_radius : candidate_radii) {
@@ -138,7 +115,7 @@ auto find_recovery_cell(const Point& origin,
 
           int const check_x = origin.x + dx;
           int const check_y = origin.y + dy;
-          if (!is_walkable_for_radius(pathfinder, check_x, check_y, candidate_radius)) {
+          if (!is_walkable_for_radius(check_x, check_y, candidate_radius)) {
             continue;
           }
 
@@ -221,50 +198,108 @@ auto CommandService::grid_to_world(const Point& grid_pos) -> QVector3D {
   return {static_cast<float>(grid_pos.x), 0.0F, static_cast<float>(grid_pos.y)};
 }
 
+auto CommandService::is_grid_walkable_for_radius(const Point& grid_pos,
+                                                 float unit_radius) -> bool {
+  if (s_pathfinder != nullptr) {
+    s_pathfinder->update_navigation_grid();
+    if (unit_radius > k_unit_radius_threshold) {
+      return s_pathfinder->is_walkable_with_radius(grid_pos.x, grid_pos.y, unit_radius);
+    }
+    return s_pathfinder->is_walkable(grid_pos.x, grid_pos.y);
+  }
+
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (terrain_service.is_initialized()) {
+    return terrain_service.is_walkable(grid_pos.x, grid_pos.y);
+  }
+
+  return true;
+}
+
+auto CommandService::is_world_position_walkable_for_radius(
+    const QVector3D& world_position, float unit_radius) -> bool {
+  Point const grid = world_to_grid(world_position.x(), world_position.z());
+  return is_grid_walkable_for_radius(grid, unit_radius);
+}
+
+auto CommandService::find_nearest_walkable_grid(const Point& origin,
+                                                int max_search_radius,
+                                                float unit_radius)
+    -> std::optional<Point> {
+  if (max_search_radius < 0) {
+    return std::nullopt;
+  }
+
+  auto is_candidate_walkable = [&](const Point& candidate) -> bool {
+    if (s_pathfinder != nullptr) {
+      if (unit_radius > k_unit_radius_threshold) {
+        return s_pathfinder->is_walkable_with_radius(
+            candidate.x, candidate.y, unit_radius);
+      }
+      return s_pathfinder->is_walkable(candidate.x, candidate.y);
+    }
+    return is_grid_walkable_for_radius(candidate, unit_radius);
+  };
+
+  if (s_pathfinder != nullptr) {
+    s_pathfinder->update_navigation_grid();
+  }
+
+  if (is_candidate_walkable(origin)) {
+    return origin;
+  }
+
+  for (int radius = 1; radius <= max_search_radius; ++radius) {
+    Point best{};
+    int best_distance_sq = std::numeric_limits<int>::max();
+    bool found = false;
+    for (int dz = -radius; dz <= radius; ++dz) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::abs(dx) != radius && std::abs(dz) != radius) {
+          continue;
+        }
+        Point const candidate{origin.x + dx, origin.y + dz};
+        if (!is_candidate_walkable(candidate)) {
+          continue;
+        }
+
+        int const distance_sq = dx * dx + dz * dz;
+        if (!found || distance_sq < best_distance_sq) {
+          best = candidate;
+          best_distance_sq = distance_sq;
+        }
+        found = true;
+      }
+    }
+    if (found) {
+      return best;
+    }
+  }
+
+  return std::nullopt;
+}
+
 auto CommandService::snap_to_walkable_ground(const QVector3D& world_position)
+    -> QVector3D {
+  return snap_to_walkable_ground_for_radius(world_position, 0.0F);
+}
+
+auto CommandService::snap_to_walkable_ground_for_radius(const QVector3D& world_position,
+                                                        float unit_radius,
+                                                        int max_search_radius)
     -> QVector3D {
   QVector3D snapped = world_position;
   auto& terrain_service = Game::Map::TerrainService::instance();
   snapped.setY(terrain_service.resolve_surface_world_y(
       snapped.x(), snapped.z(), 0.0F, snapped.y()));
 
-  auto* pathfinder = get_pathfinder();
-  if (pathfinder == nullptr && !terrain_service.is_initialized()) {
-    return snapped;
-  }
-
   Point const grid = world_to_grid(snapped.x(), snapped.z());
-  auto const is_walkable = [&](int x, int z) {
-    if (terrain_service.is_initialized()) {
-      return terrain_service.is_walkable(x, z);
-    }
-    return pathfinder != nullptr && pathfinder->is_walkable(x, z);
-  };
-  if (is_walkable(grid.x, grid.y)) {
+  auto const nearest = find_nearest_walkable_grid(grid, max_search_radius, unit_radius);
+  if (!nearest.has_value()) {
     return snapped;
   }
 
-  Point nearest = grid;
-  bool found = false;
-  for (int radius = 1; radius <= 24 && !found; ++radius) {
-    for (int dz = -radius; dz <= radius && !found; ++dz) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dz) != radius) {
-          continue;
-        }
-        int const check_x = grid.x + dx;
-        int const check_z = grid.y + dz;
-        if (!is_walkable(check_x, check_z)) {
-          continue;
-        }
-        nearest = {check_x, check_z};
-        found = true;
-        break;
-      }
-    }
-  }
-
-  QVector3D const nearest_world = grid_to_world(found ? nearest : grid);
+  QVector3D const nearest_world = grid_to_world(*nearest);
   snapped.setX(nearest_world.x());
   snapped.setZ(nearest_world.z());
   snapped.setY(terrain_service.resolve_surface_world_y(
@@ -364,15 +399,15 @@ auto CommandService::try_queue_local_recovery_move(
   Point const current_grid = world_to_grid(current_position.x(), current_position.z());
 
   Point recovery_cell{};
-  if (!find_recovery_cell(current_grid, *pathfinder, unit_radius, recovery_cell)) {
+  if (!find_recovery_cell(current_grid, unit_radius, recovery_cell)) {
 
     constexpr int k_emergency_search_radius = 64;
-    Point const nearest = Pathfinding::find_nearest_walkable_point(
-        current_grid, k_emergency_search_radius, *pathfinder, 0.0F);
-    if (!pathfinder->is_walkable(nearest.x, nearest.y)) {
+    auto const nearest =
+        find_nearest_walkable_grid(current_grid, k_emergency_search_radius, 0.0F);
+    if (!nearest.has_value()) {
       return false;
     }
-    recovery_cell = nearest;
+    recovery_cell = *nearest;
   }
 
   QVector3D const safe_pos = grid_to_world(recovery_cell);
@@ -586,7 +621,7 @@ void CommandService::move_unit(Engine::Core::World& world,
     QVector3D const current_pos(transform->position.x, 0.0F, transform->position.z);
     bool const use_direct_path =
         ((dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD) &&
-        is_direct_path_walkable(current_pos, target, *s_pathfinder, unit_radius);
+        is_direct_path_walkable(current_pos, target, unit_radius);
 
     if (use_direct_path) {
       mv->target_x = target_x;
@@ -765,7 +800,7 @@ void CommandService::move_group(Engine::Core::World& world,
 
     OrderService::prepare_for_move(
         entity, options.kind, options.preserve_formation_mode);
-    bool engaged =
+    bool const engaged =
         entity->get_component<Engine::Core::AttackTargetComponent>() != nullptr;
 
     auto* unit_component = entity->get_component<Engine::Core::UnitComponent>();
@@ -826,12 +861,7 @@ void CommandService::move_group(Engine::Core::World& world,
         break;
       }
 
-      bool const target_is_walkable =
-          member.unit_radius <= k_unit_radius_threshold
-              ? s_pathfinder->is_walkable(target_grid.x, target_grid.y)
-              : s_pathfinder->is_walkable_with_radius(
-                    target_grid.x, target_grid.y, member.unit_radius);
-      if (!target_is_walkable) {
+      if (!is_grid_walkable_for_radius(target_grid, member.unit_radius)) {
         any_target_invalid = true;
         break;
       }
@@ -1047,8 +1077,7 @@ void CommandService::move_group(Engine::Core::World& world,
       leader.transform->position.x, 0.0F, leader.transform->position.z);
   bool const use_direct_path =
       ((dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD) &&
-      is_direct_path_walkable(
-          leader_pos, leader_target, *s_pathfinder, shared_path_radius);
+      is_direct_path_walkable(leader_pos, leader_target, shared_path_radius);
 
   if (use_direct_path) {
     for (auto* member : units_needing_new_path) {
@@ -1303,10 +1332,7 @@ void CommandService::process_path_results(Engine::Core::World& world) {
             world_to_grid(member_transform->position.x, member_transform->position.z);
 
         bool const current_cell_invalid =
-            member_unit_radius <= k_unit_radius_threshold
-                ? !s_pathfinder->is_walkable(current_grid.x, current_grid.y)
-                : !s_pathfinder->is_walkable_with_radius(
-                      current_grid.x, current_grid.y, member_unit_radius);
+            !is_grid_walkable_for_radius(current_grid, member_unit_radius);
 
         if (current_cell_invalid) {
           QVector3D const current_position(
@@ -1320,8 +1346,7 @@ void CommandService::process_path_results(Engine::Core::World& world) {
           return;
         }
 
-        if (are_all_surrounding_cells_invalid(
-                current_grid, *s_pathfinder, member_unit_radius)) {
+        if (are_all_surrounding_cells_invalid(current_grid, member_unit_radius)) {
           QVector3D const current_position(
               member_transform->position.x, 0.0F, member_transform->position.z);
           if (try_queue_local_recovery_move(

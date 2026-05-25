@@ -222,7 +222,7 @@ TEST_F(CommandServiceTest,
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   Game::Systems::Point const obstacle =
       Game::Systems::CommandService::world_to_grid(-1.0F, 1.0F);
@@ -307,7 +307,7 @@ TEST_F(CommandServiceTest, GroupMoveRejectsLeaderPathWhenFormationCannotFitThrou
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   for (int world_z = -15; world_z <= 15; ++world_z) {
     if (world_z == 0) {
@@ -366,7 +366,7 @@ TEST_F(CommandServiceTest, GroupMoveFailureNearBoundaryDoesNotTeleportUnits) {
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   for (int world_z = -7; world_z <= 7; ++world_z) {
     Game::Systems::Point const wall_cell =
@@ -415,7 +415,7 @@ TEST_F(CommandServiceTest, GroupMoveCanRetryMembersIndividuallyAfterGroupFailure
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   for (int world_z = -15; world_z <= 15; ++world_z) {
     if (world_z >= -2 && world_z <= 2) {
@@ -468,7 +468,7 @@ TEST_F(CommandServiceTest, GroupMoveKeepsOrdersWhenTargetsOnlyHaveDiagonalObstac
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   Game::Systems::Point const diagonal_block =
       Game::Systems::CommandService::world_to_grid(11.0F, 1.0F);
@@ -536,7 +536,7 @@ TEST_F(CommandServiceTest, PersistentInvalidPositionRetargetsToNearbyRecoveryCel
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   for (int world_x = 0; world_x <= 3; ++world_x) {
     Game::Systems::Point const blocked =
@@ -572,8 +572,8 @@ TEST_F(CommandServiceTest, GroupBridgeCrossingUsesSharedBridgeCenterlineWaypoint
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->mark_obstacles_dirty();
-  pathfinder->update_building_obstacles();
+  pathfinder->mark_navigation_grid_dirty();
+  pathfinder->update_navigation_grid();
 
   Engine::Core::World world;
   auto* left = create_unit(world, -8.0F, -2.0F, Game::Units::SpawnType::Archer);
@@ -664,8 +664,8 @@ TEST_F(CommandServiceTest, UnitApproachingBridgeSnapsToTraversalCenterBeforeDeck
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->mark_obstacles_dirty();
-  pathfinder->update_building_obstacles();
+  pathfinder->mark_navigation_grid_dirty();
+  pathfinder->update_navigation_grid();
 
   Engine::Core::World world;
   auto* unit = create_unit(world, -4.0F, 1.25F, Game::Units::SpawnType::Archer);

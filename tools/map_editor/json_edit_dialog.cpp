@@ -11,11 +11,11 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 
+#include "hill_projection_model.h"
 #include "hill_projection_widget.h"
+#include "map_json_keys.h"
 #include "mountain_projection_widget.h"
 #include "terrain_projection_widget.h"
-#include "hill_projection_model.h"
-#include "map_json_keys.h"
 
 namespace MapEditor {
 
@@ -186,8 +186,7 @@ void JsonEditDialog::sync_editor_from_model() {
     return;
   }
 
-  const QString json_text =
-      QJsonDocument(m_model_json).toJson(QJsonDocument::Indented);
+  const QString json_text = QJsonDocument(m_model_json).toJson(QJsonDocument::Indented);
   if (m_editor->toPlainText() == json_text) {
     return;
   }
@@ -260,8 +259,9 @@ void JsonEditDialog::apply_projection_to_model_json() {
   if (m_projection == nullptr) {
     return;
   }
-  // Reuse the model cached inside the widget (set when set_terrain_json was last called).
-  // Rebuilding from m_model_json would shift the origin after each edit, causing drift.
+  // Reuse the model cached inside the widget (set when set_terrain_json was last
+  // called). Rebuilding from m_model_json would shift the origin after each edit,
+  // causing drift.
   const HillProjection::Model& model = m_projection->get_model();
   m_model_json = HillProjection::apply_projection_to_hill_json(
       m_model_json, model, m_projection->body_cells(), m_projection->entrance_cells());

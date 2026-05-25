@@ -27,7 +27,6 @@ static constexpr float repath_cooldown_seconds = 0.4F;
 
 namespace {
 
-constexpr float radius_aware_walkability_threshold = 0.5F;
 constexpr float hold_mode_turn_speed_degrees = 180.0F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 
@@ -186,23 +185,7 @@ auto is_point_allowed(const QVector3D& pos,
     }
   }
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  Pathfinding* pathfinder = CommandService::get_pathfinder();
-
-  if (pathfinder != nullptr) {
-    Point const grid = CommandService::world_to_grid(pos.x(), pos.z());
-    if (unit_radius <= radius_aware_walkability_threshold) {
-      return pathfinder->is_walkable(grid.x, grid.y);
-    }
-    return pathfinder->is_walkable_with_radius(grid.x, grid.y, unit_radius);
-  }
-  if (terrain_service.is_initialized()) {
-    int const grid_x = static_cast<int>(std::round(pos.x()));
-    int const grid_z = static_cast<int>(std::round(pos.z()));
-    return terrain_service.is_walkable(grid_x, grid_z);
-  }
-
-  return true;
+  return CommandService::is_world_position_walkable_for_radius(pos, unit_radius);
 }
 
 auto is_segment_walkable(const QVector3D& from,
@@ -210,20 +193,8 @@ auto is_segment_walkable(const QVector3D& from,
                          Engine::Core::EntityID ignore_entity,
                          float unit_radius = 0.5F) -> bool {
   (void)ignore_entity;
-  Pathfinding* pathfinder = CommandService::get_pathfinder();
-  if (pathfinder == nullptr) {
-    return true;
-  }
-
   Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
-  auto const is_walkable_func = [pathfinder, unit_radius](int x, int y) {
-    if (unit_radius <= radius_aware_walkability_threshold) {
-      return pathfinder->is_walkable(x, y);
-    }
-    return pathfinder->is_walkable_with_radius(x, y, unit_radius);
-  };
-
-  if (!is_walkable_func(end_grid.x, end_grid.y)) {
+  if (!CommandService::is_grid_walkable_for_radius(end_grid, unit_radius)) {
     return false;
   }
 
@@ -241,7 +212,7 @@ auto is_segment_walkable(const QVector3D& from,
     QVector3D const sample_pos = from + direction * t;
     Point const sample_grid =
         CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
-    if (!is_walkable_func(sample_grid.x, sample_grid.y)) {
+    if (!CommandService::is_grid_walkable_for_radius(sample_grid, unit_radius)) {
       return false;
     }
   }
@@ -538,15 +509,9 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
     bool const escaping_invalid_ground = !current_position_allowed;
     bool const destination_tile_walkable = [&]() -> bool {
-      Pathfinding* pf = CommandService::get_pathfinder();
-      if (pf == nullptr) {
-        return true;
-      }
       Point const d =
           CommandService::world_to_grid(segment_target.x(), segment_target.z());
-      return unit_radius <= radius_aware_walkability_threshold
-                 ? pf->is_walkable(d.x, d.y)
-                 : pf->is_walkable_with_radius(d.x, d.y, unit_radius);
+      return CommandService::is_grid_walkable_for_radius(d, unit_radius);
     }();
 
     if (!(escaping_invalid_ground && destination_tile_walkable) &&
@@ -645,12 +610,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   }
 
   bool was_on_valid_tile = true;
-  Pathfinding* pathfinder_check = CommandService::get_pathfinder();
-  if (pathfinder_check != nullptr) {
-    Point const pre_grid =
-        CommandService::world_to_grid(transform->position.x, transform->position.z);
-    was_on_valid_tile = pathfinder_check->is_walkable(pre_grid.x, pre_grid.y);
-  }
+  Point const pre_grid =
+      CommandService::world_to_grid(transform->position.x, transform->position.z);
+  was_on_valid_tile =
+      CommandService::is_grid_walkable_for_radius(pre_grid, unit_radius);
 
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
@@ -661,10 +624,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     synchronize_with_bridge_centerline(transform, movement, terrain_ctx);
   }
 
-  if (pathfinder_check != nullptr) {
+  {
     Point const new_grid =
         CommandService::world_to_grid(transform->position.x, transform->position.z);
-    if (!pathfinder_check->is_walkable(new_grid.x, new_grid.y)) {
+    if (!CommandService::is_grid_walkable_for_radius(new_grid, unit_radius)) {
       if (was_on_valid_tile) {
 
         transform->position.x -= movement->vx * delta_time;
@@ -690,7 +653,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
             (movement->goal_x != 0.0F || movement->goal_y != 0.0F)) {
           Point const goal_grid =
               CommandService::world_to_grid(movement->goal_x, movement->goal_y);
-          if (pathfinder_check->is_walkable(goal_grid.x, goal_grid.y)) {
+          if (CommandService::is_grid_walkable_for_radius(goal_grid, unit_radius)) {
             CommandService::queue_repath_request(
                 *world,
                 entity->get_id(),

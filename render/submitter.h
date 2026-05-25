@@ -14,6 +14,7 @@ namespace Render::GL {
 class Mesh;
 class Texture;
 struct Material;
+class Renderer;
 } // namespace Render::GL
 
 namespace Render::GL {
@@ -21,6 +22,7 @@ namespace Render::GL {
 class ISubmitter {
 public:
   virtual ~ISubmitter() = default;
+  [[nodiscard]] virtual auto unwrap_submitter() noexcept -> ISubmitter* { return this; }
   virtual void mesh(Mesh* mesh,
                     const QMatrix4x4& model,
                     const QVector3D& color,
@@ -368,6 +370,10 @@ public:
   explicit BatchingSubmitter(ISubmitter* fallback, PrimitiveBatcher* batcher = nullptr)
       : m_fallback(fallback)
       , m_batcher(batcher) {}
+
+  [[nodiscard]] auto unwrap_submitter() noexcept -> ISubmitter* override {
+    return m_fallback != nullptr ? m_fallback->unwrap_submitter() : this;
+  }
 
   [[nodiscard]] ISubmitter* fallback_submitter() const { return m_fallback; }
 
