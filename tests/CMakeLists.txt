@@ -77,6 +77,7 @@ add_executable(standard_of_iron_tests
     systems/elephant_special_processor_test.cpp
     systems/siege_special_processor_test.cpp
     systems/wall_system_test.cpp
+    systems/battle_movement_refactor_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp

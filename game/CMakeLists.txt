@@ -51,6 +51,10 @@ add_library(game_systems STATIC
     systems/guard_system.cpp
     systems/pathfinding.cpp
     systems/spatial_grid.cpp
+    systems/local_avoidance_system.cpp
+    systems/engagement_slot_system.cpp
+    systems/target_commitment_system.cpp
+    systems/cohort_system.cpp
     systems/building_collision_registry.cpp
     systems/wall_network_service.cpp
     systems/selection_system.cpp

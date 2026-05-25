@@ -1102,4 +1102,113 @@ public:
   EntityID target_barracks_id{0};
 };
 
+// ---------------------------------------------------------------------------
+// Battle Movement Refactor Components (Workstreams 1-8)
+// ---------------------------------------------------------------------------
+
+/// Movement intent produced by combat or AI systems; consumed by MovementSystem.
+/// Combat code should write desired movement here instead of editing transforms.
+class MovementIntentComponent : public Component {
+public:
+  MovementIntentComponent() = default;
+
+  float desired_vx{0.0F};
+  float desired_vz{0.0F};
+  float desired_facing{0.0F};
+  bool has_facing_request{false};
+
+  /// Knockback displacement request (one-shot, cleared after application).
+  float knockback_dx{0.0F};
+  float knockback_dz{0.0F};
+
+  /// Priority: higher priority units resist avoidance displacement.
+  /// 0 = default moving unit, 1 = formation member, 2 = braced/stationary,
+  /// 3 = melee-locked, 4 = building/immovable.
+  std::uint8_t priority{0};
+};
+
+/// Engagement slot assigned to a melee attacker around a target.
+class EngagementSlotComponent : public Component {
+public:
+  EngagementSlotComponent() = default;
+
+  EntityID target_id{0};
+
+  /// Slot arc index (0..max_slots-1) around the target perimeter.
+  std::uint8_t slot_index{0};
+  std::uint8_t max_slots{8};
+
+  /// Anchor offset from target center (world-space direction).
+  float anchor_offset_x{0.0F};
+  float anchor_offset_z{0.0F};
+
+  /// Whether this slot assignment is still valid.
+  bool valid{true};
+
+  /// Lease expiry: time remaining before slot must be revalidated.
+  float lease_remaining{2.0F};
+};
+
+/// Target commitment state: prevents rapid target switching during attack phases.
+class TargetCommitmentComponent : public Component {
+public:
+  TargetCommitmentComponent() = default;
+
+  EntityID committed_target_id{0};
+  float cooldown_remaining{0.0F};
+
+  /// Whether the unit is in a committed attack phase (wind-up, strike, impact).
+  bool in_committed_phase{false};
+
+  static constexpr float k_switch_cooldown = 0.8F;
+};
+
+/// Local AI cohort membership for batch defensive response.
+class CohortMembershipComponent : public Component {
+public:
+  CohortMembershipComponent() = default;
+
+  /// Cohort identifier (assigned by CohortSystem).
+  std::uint32_t cohort_id{0};
+  bool cohort_activated{false};
+};
+
+/// Elephant knockback cooldown per victim (stored on elephant entity).
+class ElephantKnockbackCooldownComponent : public Component {
+public:
+  ElephantKnockbackCooldownComponent() = default;
+
+  struct VictimCooldown {
+    EntityID victim_id{0};
+    float remaining{0.0F};
+  };
+
+  std::vector<VictimCooldown> cooldowns;
+  static constexpr float k_knockback_cooldown = 1.0F;
+
+  void tick(float dt) {
+    for (auto it = cooldowns.begin(); it != cooldowns.end();) {
+      it->remaining -= dt;
+      if (it->remaining <= 0.0F) {
+        it = cooldowns.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+
+  [[nodiscard]] auto is_on_cooldown(EntityID victim) const -> bool {
+    for (const auto& cd : cooldowns) {
+      if (cd.victim_id == victim) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void add_cooldown(EntityID victim) {
+    cooldowns.push_back({victim, k_knockback_cooldown});
+  }
+};
+
 } // namespace Engine::Core
