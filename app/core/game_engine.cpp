@@ -2828,8 +2828,7 @@ void GameEngine::on_minimap_right_click(qreal mx,
                                         qreal minimap_width,
                                         qreal minimap_height) {
   ensure_initialized();
-  if (m_level.is_spectator_mode || !m_world || !m_minimap_manager ||
-      !m_minimap_manager->has_minimap()) {
+  if (!m_minimap_manager || !m_minimap_manager->has_minimap()) {
     return;
   }
 
@@ -2855,49 +2854,9 @@ void GameEngine::on_minimap_right_click(qreal mx,
                                          img_height,
                                          m_minimap_manager->get_tile_size());
 
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-  if (selection_system == nullptr) {
-    return;
+  if (m_input_handler) {
+    m_input_handler->on_minimap_right_click(QVector3D(world_x, 0.0F, world_z));
   }
-
-  const auto& selected = selection_system->get_selected_units();
-  if (selected.empty()) {
-    return;
-  }
-
-  const QVector3D target_pos(world_x, 0.0F, world_z);
-  auto formation_result = Game::Systems::FormationPlanner::get_formation_with_facing(
-      *m_world,
-      selected,
-      target_pos,
-      Game::GameConfig::instance().gameplay().formation_spacing_default);
-
-  for (size_t i = 0; i < selected.size(); ++i) {
-    auto* entity = m_world->get_entity(selected[i]);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if ((formation_mode == nullptr) || !formation_mode->active) {
-      continue;
-    }
-
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if ((transform != nullptr) && (i < formation_result.facing_angles.size())) {
-      transform->desired_yaw = formation_result.facing_angles[i];
-      transform->has_desired_yaw = true;
-    }
-  }
-
-  Game::Systems::CommandService::MoveOptions opts;
-  opts.kind = Game::Systems::MoveOrderKind::FormationMove;
-  opts.group_move = selected.size() > 1;
-  opts.retry_individual_on_group_failure = selected.size() > 1;
-  opts.preserve_formation_mode = formation_result.used_tactical_formation;
-  Game::Systems::CommandService::move_units(
-      *m_world, selected, formation_result.positions, opts);
 }
 
 auto GameEngine::selected_units_model() -> QAbstractItemModel* {
