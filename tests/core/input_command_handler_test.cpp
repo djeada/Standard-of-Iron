@@ -255,4 +255,60 @@ TEST_F(InputCommandHandlerTest, RightDoubleClickEnablesRunModeAndDispatchesMove)
   EXPECT_FALSE(input_handler->is_placing_formation());
 }
 
+TEST_F(InputCommandHandlerTest, MinimapRightClickMovesSelectedUnitsToWorldPosition) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F));
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_TRUE(movement->has_target || movement->path_pending);
+}
+
+TEST_F(InputCommandHandlerTest, MinimapRightClickDoesNothingWithNoSelection) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F));
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_FALSE(movement->has_target);
+  EXPECT_FALSE(movement->path_pending);
+}
+
+TEST_F(InputCommandHandlerTest, MinimapRightClickDoesNothingInSpectatorMode) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+
+  input_handler->set_spectator_mode(true);
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F));
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_FALSE(movement->has_target);
+  EXPECT_FALSE(movement->path_pending);
+}
+
+TEST_F(InputCommandHandlerTest, MinimapRightClickMovesMultipleSelectedUnitsToTarget) {
+  auto* unit1 = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* unit2 = create_unit(-1.0F, 0.0F, 1, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(unit1, nullptr);
+  ASSERT_NE(unit2, nullptr);
+  selection_system->select_unit(unit1->get_id());
+  selection_system->select_unit(unit2->get_id());
+
+  input_handler->on_minimap_right_click(QVector3D(4.0F, 0.0F, 2.0F));
+
+  auto* mv1 = unit1->get_component<Engine::Core::MovementComponent>();
+  auto* mv2 = unit2->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(mv1, nullptr);
+  ASSERT_NE(mv2, nullptr);
+  EXPECT_TRUE(mv1->has_target || mv1->path_pending);
+  EXPECT_TRUE(mv2->has_target || mv2->path_pending);
+}
+
 } // namespace
