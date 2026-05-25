@@ -146,7 +146,8 @@ TEST(MapLoaderTest, ParsesHillEntranceRadiusIntoExpandedEntrancePoints) {
            {"width", 10.0},
            {"depth", 10.0},
            {"height", 4.0},
-           {"entrances", QJsonArray{QJsonObject{{"x", 16}, {"z", 10}, {"radius", 1.5}}}},
+           {"entrances",
+            QJsonArray{QJsonObject{{"x", 16}, {"z", 10}, {"radius", 1.5}}}},
        }}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
   temp_file.flush();
@@ -180,7 +181,10 @@ TEST(MapLoaderTest, ParsesBuildingsArrayWithOwnership) {
       {"grid", QJsonObject{{"width", 50}, {"height", 50}, {"tile_size", 1.0}}},
       {"buildings",
        QJsonArray{
-           QJsonObject{{"type", "defense_tower"}, {"x", 10}, {"z", 15}, {"player_id", 1},
+           QJsonObject{{"type", "defense_tower"},
+                       {"x", 10},
+                       {"z", 15},
+                       {"player_id", 1},
                        {"nation", "rome"}},
            QJsonObject{{"type", "home"}, {"x", 20}, {"z", 25}, {"player_id", 2}}}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
@@ -211,14 +215,13 @@ TEST(MapLoaderTest, ParsesWallsArrayWithOwnership) {
       {"name", "Walls Test"},
       {"grid", QJsonObject{{"width", 50}, {"height", 50}, {"tile_size", 1.0}}},
       {"walls",
-       QJsonArray{
-           QJsonObject{{"start", QJsonArray{5, 10}},
-                       {"end", QJsonArray{30, 10}},
-                       {"player_id", 1},
-                       {"nation", "rome"}},
-           QJsonObject{{"start", QJsonArray{5, 40}},
-                       {"end", QJsonArray{30, 40}},
-                       {"player_id", 2}}}}};
+       QJsonArray{QJsonObject{{"start", QJsonArray{5, 10}},
+                              {"end", QJsonArray{30, 10}},
+                              {"player_id", 1},
+                              {"nation", "rome"}},
+                  QJsonObject{{"start", QJsonArray{5, 40}},
+                              {"end", QJsonArray{30, 40}},
+                              {"player_id", 2}}}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
   temp_file.flush();
 

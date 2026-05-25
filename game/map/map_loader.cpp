@@ -532,9 +532,9 @@ void read_terrain(const QJsonArray& arr,
         auto entrance_obj = entrance_val.toObject();
         const float entrance_x = float(entrance_obj.value("x").toDouble(0.0));
         const float entrance_z = float(entrance_obj.value("z").toDouble(0.0));
-        float const entrance_radius_authored = float(
-            entrance_obj.value("radius").toDouble(entrance_obj.value("width").toDouble(0.0) *
-                                                  0.5));
+        float const entrance_radius_authored =
+            float(entrance_obj.value("radius").toDouble(
+                entrance_obj.value("width").toDouble(0.0) * 0.5));
         float world_x = entrance_x;
         float world_z = entrance_z;
         const float tile = std::max(min_tile_size, grid.tile_size);
@@ -555,10 +555,14 @@ void read_terrain(const QJsonArray& arr,
         if (coord_sys == CoordSystem::Grid) {
           const double radius_sq =
               static_cast<double>(entrance_radius_authored * entrance_radius_authored);
-          const int min_grid_x = static_cast<int>(std::floor(entrance_x - entrance_radius_authored));
-          const int max_grid_x = static_cast<int>(std::ceil(entrance_x + entrance_radius_authored));
-          const int min_grid_z = static_cast<int>(std::floor(entrance_z - entrance_radius_authored));
-          const int max_grid_z = static_cast<int>(std::ceil(entrance_z + entrance_radius_authored));
+          const int min_grid_x =
+              static_cast<int>(std::floor(entrance_x - entrance_radius_authored));
+          const int max_grid_x =
+              static_cast<int>(std::ceil(entrance_x + entrance_radius_authored));
+          const int min_grid_z =
+              static_cast<int>(std::floor(entrance_z - entrance_radius_authored));
+          const int max_grid_z =
+              static_cast<int>(std::ceil(entrance_z + entrance_radius_authored));
           for (int grid_x = min_grid_x; grid_x <= max_grid_x; ++grid_x) {
             for (int grid_z = min_grid_z; grid_z <= max_grid_z; ++grid_z) {
               const double dx = static_cast<double>(grid_x) - entrance_x;
@@ -567,10 +571,12 @@ void read_terrain(const QJsonArray& arr,
                 continue;
               }
               const float sampled_world_x =
-                  (float(grid_x) - (grid.width * grid_center_offset - grid_center_offset)) *
+                  (float(grid_x) -
+                   (grid.width * grid_center_offset - grid_center_offset)) *
                   tile;
               const float sampled_world_z =
-                  (float(grid_z) - (grid.height * grid_center_offset - grid_center_offset)) *
+                  (float(grid_z) -
+                   (grid.height * grid_center_offset - grid_center_offset)) *
                   tile;
               feature.entrances.emplace_back(sampled_world_x, 0.0F, sampled_world_z);
             }
@@ -580,15 +586,16 @@ void read_terrain(const QJsonArray& arr,
 
         const float world_radius = entrance_radius_authored;
         const float sample_step = std::max(0.5F, tile * 0.5F);
-        const int radius_steps =
-            std::max(1, int(std::ceil(world_radius / std::max(min_tile_size, sample_step))));
+        const int radius_steps = std::max(
+            1, int(std::ceil(world_radius / std::max(min_tile_size, sample_step))));
         const float radius_sq = world_radius * world_radius;
         for (int dx = -radius_steps; dx <= radius_steps; ++dx) {
           for (int dz = -radius_steps; dz <= radius_steps; ++dz) {
             const float offset_x = float(dx) * sample_step;
             const float offset_z = float(dz) * sample_step;
             if ((offset_x * offset_x + offset_z * offset_z) <= radius_sq) {
-              feature.entrances.emplace_back(world_x + offset_x, 0.0F, world_z + offset_z);
+              feature.entrances.emplace_back(
+                  world_x + offset_x, 0.0F, world_z + offset_z);
             }
           }
         }
@@ -886,11 +893,11 @@ void read_wall_lines(const QJsonArray& arr,
         const float ez = static_cast<float>(end_arr[1].toDouble(0.0));
         if (coord_sys == CoordSystem::Grid) {
           const float tile = std::max(min_tile_size, grid.tile_size);
-          wall.end.setX(
-              (ex - (grid.width * grid_center_offset - grid_center_offset)) * tile);
+          wall.end.setX((ex - (grid.width * grid_center_offset - grid_center_offset)) *
+                        tile);
           wall.end.setY(0.0F);
-          wall.end.setZ(
-              (ez - (grid.height * grid_center_offset - grid_center_offset)) * tile);
+          wall.end.setZ((ez - (grid.height * grid_center_offset - grid_center_offset)) *
+                        tile);
         } else {
           wall.end = QVector3D(ex, 0.0F, ez);
         }

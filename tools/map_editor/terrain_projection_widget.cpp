@@ -80,7 +80,8 @@ void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
 
   if (!m_active) {
     painter.setPen(QColor(160, 175, 182));
-    painter.drawText(rect(), Qt::AlignCenter, "Projection is available for this terrain.");
+    painter.drawText(
+        rect(), Qt::AlignCenter, "Projection is available for this terrain.");
     return;
   }
 
@@ -130,11 +131,13 @@ void TerrainProjectionWidget::paintEvent(QPaintEvent* event) {
   painter.setPen(QPen(grid_color, 1));
   for (int x = 0; x <= m_model.grid_width; ++x) {
     const double px = geometry.rect.left() + (geometry.cell_size * x);
-    painter.drawLine(QPointF(px, geometry.rect.top()), QPointF(px, geometry.rect.bottom()));
+    painter.drawLine(QPointF(px, geometry.rect.top()),
+                     QPointF(px, geometry.rect.bottom()));
   }
   for (int y = 0; y <= m_model.grid_height; ++y) {
     const double py = geometry.rect.top() + (geometry.cell_size * y);
-    painter.drawLine(QPointF(geometry.rect.left(), py), QPointF(geometry.rect.right(), py));
+    painter.drawLine(QPointF(geometry.rect.left(), py),
+                     QPointF(geometry.rect.right(), py));
   }
 }
 
@@ -208,7 +211,8 @@ void TerrainProjectionWidget::mouseReleaseEvent(QMouseEvent* event) {
   QWidget::mouseReleaseEvent(event);
 }
 
-TerrainProjectionWidget::GridGeometry TerrainProjectionWidget::compute_geometry() const {
+TerrainProjectionWidget::GridGeometry
+TerrainProjectionWidget::compute_geometry() const {
   GridGeometry geometry;
   if (!m_active) {
     return geometry;
@@ -237,8 +241,8 @@ TerrainProjectionWidget::GridGeometry TerrainProjectionWidget::compute_geometry(
   return geometry;
 }
 
-std::optional<QPoint> TerrainProjectionWidget::cell_from_position(
-    const QPoint& position) const {
+std::optional<QPoint>
+TerrainProjectionWidget::cell_from_position(const QPoint& position) const {
   const GridGeometry geometry = compute_geometry();
   if (!geometry.valid || !geometry.rect.contains(position)) {
     return std::nullopt;
@@ -286,8 +290,8 @@ void TerrainProjectionWidget::apply_line(const QPoint& from, const QPoint& to) {
 }
 
 void TerrainProjectionWidget::set_cell_marked(const QPoint& cell, bool marked) {
-  if (cell.x() < 0 || cell.x() >= m_model.grid_width ||
-      cell.y() < 0 || cell.y() >= m_model.grid_height) {
+  if (cell.x() < 0 || cell.x() >= m_model.grid_width || cell.y() < 0 ||
+      cell.y() >= m_model.grid_height) {
     return;
   }
 

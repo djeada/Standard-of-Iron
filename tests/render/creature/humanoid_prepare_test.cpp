@@ -390,9 +390,8 @@ auto extra_role_color_count(Render::Creature::ArchetypeId archetype_id)
   return count;
 }
 
-auto render_archer_idle_bone_palette(const char* renderer_id,
-                                     Game::Systems::NationID nation_id)
-    -> const QMatrix4x4* {
+auto render_archer_idle_bone_palette(
+    const char* renderer_id, Game::Systems::NationID nation_id) -> const QMatrix4x4* {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get(renderer_id);
@@ -1037,9 +1036,8 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   using Render::Creature::AnimationStateId;
   auto& registry = Render::Creature::ArchetypeRegistry::instance();
 
-  auto const* roman_idle_palette =
-      render_archer_idle_bone_palette("troops/roman/archer",
-                                      Game::Systems::NationID::RomanRepublic);
+  auto const* roman_idle_palette = render_archer_idle_bone_palette(
+      "troops/roman/archer", Game::Systems::NationID::RomanRepublic);
   auto const roman_id = find_archetype_id("troops/roman/archer");
   ASSERT_NE(roman_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(registry.bpat_clip(roman_id, AnimationStateId::Idle),
@@ -1047,9 +1045,8 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
   EXPECT_EQ(roman_idle_palette, request_idle_bone_palette(roman_id, 0.5F));
   EXPECT_NE(roman_idle_palette, request_idle_bone_palette(roman_id, 0.0F));
 
-  auto const* carthage_idle_palette =
-      render_archer_idle_bone_palette("troops/carthage/archer",
-                                      Game::Systems::NationID::Carthage);
+  auto const* carthage_idle_palette = render_archer_idle_bone_palette(
+      "troops/carthage/archer", Game::Systems::NationID::Carthage);
   auto const carthage_id = find_archetype_id("troops/carthage/archer");
   ASSERT_NE(carthage_id, Render::Creature::k_invalid_archetype);
   EXPECT_EQ(registry.bpat_clip(carthage_id, AnimationStateId::Idle),

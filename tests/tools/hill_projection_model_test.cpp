@@ -42,7 +42,8 @@ TEST(HillProjectionModelTest, AdjacentEntranceCellsCollapseToSingleJsonEntry) {
   const QVector<QPoint> entrance_cells{
       QPoint(10, 10), QPoint(11, 10), QPoint(12, 10), QPoint(12, 11)};
 
-  const QJsonArray entrances = HillProjection::entrances_from_cells(model, entrance_cells);
+  const QJsonArray entrances =
+      HillProjection::entrances_from_cells(model, entrance_cells);
   ASSERT_EQ(entrances.size(), 1);
   const QJsonObject grouped = entrances.first().toObject();
   EXPECT_TRUE(grouped.contains(MapJsonKeys::x));
@@ -53,15 +54,15 @@ TEST(HillProjectionModelTest, AdjacentEntranceCellsCollapseToSingleJsonEntry) {
 }
 
 TEST(HillProjectionModelTest, RadiusEntrancesExpandToMultipleEditableCells) {
-  const QJsonObject hill{
-      {MapJsonKeys::type, "hill"},
-      {MapJsonKeys::x, 40.0},
-      {MapJsonKeys::z, 40.0},
-      {MapJsonKeys::width, 8.0},
-      {MapJsonKeys::depth, 8.0},
-      {MapJsonKeys::entrances,
-       QJsonArray{QJsonObject{
-           {MapJsonKeys::x, 30.0}, {MapJsonKeys::z, 30.0}, {MapJsonKeys::radius, 1.2}}}}};
+  const QJsonObject hill{{MapJsonKeys::type, "hill"},
+                         {MapJsonKeys::x, 40.0},
+                         {MapJsonKeys::z, 40.0},
+                         {MapJsonKeys::width, 8.0},
+                         {MapJsonKeys::depth, 8.0},
+                         {MapJsonKeys::entrances,
+                          QJsonArray{QJsonObject{{MapJsonKeys::x, 30.0},
+                                                 {MapJsonKeys::z, 30.0},
+                                                 {MapJsonKeys::radius, 1.2}}}}};
 
   const HillProjection::Model model = HillProjection::build_model(hill);
   EXPECT_GT(model.entrance_cells.size(), 1);
@@ -72,28 +73,27 @@ TEST(HillProjectionModelTest, GroupedEntranceRadiusRoundTripsToMultipleCells) {
       80, 80, 0.0, 0.0, 40.0, 40.0, 10.0, 10.0, {}, {}, QJsonArray{}};
   const QVector<QPoint> grouped_cells{QPoint(10, 10), QPoint(11, 10)};
 
-  const QJsonArray entrances = HillProjection::entrances_from_cells(model, grouped_cells);
+  const QJsonArray entrances =
+      HillProjection::entrances_from_cells(model, grouped_cells);
   ASSERT_EQ(entrances.size(), 1);
 
-  QJsonObject hill{
-      {MapJsonKeys::type, "hill"},
-      {MapJsonKeys::x, 40.0},
-      {MapJsonKeys::z, 40.0},
-      {MapJsonKeys::width, 8.0},
-      {MapJsonKeys::depth, 8.0},
-      {MapJsonKeys::entrances, entrances}};
+  QJsonObject hill{{MapJsonKeys::type, "hill"},
+                   {MapJsonKeys::x, 40.0},
+                   {MapJsonKeys::z, 40.0},
+                   {MapJsonKeys::width, 8.0},
+                   {MapJsonKeys::depth, 8.0},
+                   {MapJsonKeys::entrances, entrances}};
 
   const HillProjection::Model reloaded = HillProjection::build_model(hill);
   EXPECT_GT(reloaded.entrance_cells.size(), 1);
 }
 
 TEST(HillProjectionModelTest, ProjectionApplyUpdatesHillSizeAndCenter) {
-  const QJsonObject hill{
-      {MapJsonKeys::type, "hill"},
-      {MapJsonKeys::x, 40.0},
-      {MapJsonKeys::z, 40.0},
-      {MapJsonKeys::width, 10.0},
-      {MapJsonKeys::depth, 10.0}};
+  const QJsonObject hill{{MapJsonKeys::type, "hill"},
+                         {MapJsonKeys::x, 40.0},
+                         {MapJsonKeys::z, 40.0},
+                         {MapJsonKeys::width, 10.0},
+                         {MapJsonKeys::depth, 10.0}};
 
   const HillProjection::Model model = HillProjection::build_model(hill);
   const QVector<QPoint> hill_cells{
@@ -109,10 +109,8 @@ TEST(HillProjectionModelTest, ProjectionApplyUpdatesHillSizeAndCenter) {
   ASSERT_TRUE(updated.value(MapJsonKeys::entrances).isArray());
   const QJsonArray entrances = updated.value(MapJsonKeys::entrances).toArray();
   ASSERT_EQ(entrances.size(), 2);
-  EXPECT_TRUE(
-      contains_point(entrances, model.origin_x + 20.0, model.origin_z + 20.0));
-  EXPECT_TRUE(
-      contains_point(entrances, model.origin_x + 22.0, model.origin_z + 21.0));
+  EXPECT_TRUE(contains_point(entrances, model.origin_x + 20.0, model.origin_z + 20.0));
+  EXPECT_TRUE(contains_point(entrances, model.origin_x + 22.0, model.origin_z + 21.0));
 }
 
 } // namespace

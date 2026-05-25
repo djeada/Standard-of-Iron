@@ -294,27 +294,14 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
   }
 
   QJsonObject root = normalize_json_object(doc.object());
-  const QStringList known_root_keys = {MapJsonKeys::name,
-                                       MapJsonKeys::description,
-                                       coord_system_key,
-                                       legacy_coord_system_key,
-                                       max_troops_key,
-                                       legacy_max_troops_key,
-                                       MapJsonKeys::grid,
-                                       MapJsonKeys::biome,
-                                       MapJsonKeys::camera,
-                                       MapJsonKeys::spawns,
-                                       MapJsonKeys::victory,
-                                       MapJsonKeys::rain,
-                                       MapJsonKeys::terrain,
-                                       MapJsonKeys::world_props,
-                                       MapJsonKeys::firecamps,
-                                       MapJsonKeys::rivers,
-                                       MapJsonKeys::roads,
-                                       MapJsonKeys::bridges,
-                                       MapJsonKeys::undead_zones,
-                                       MapJsonKeys::buildings,
-                                       MapJsonKeys::walls};
+  const QStringList known_root_keys = {
+      MapJsonKeys::name,         MapJsonKeys::description, coord_system_key,
+      legacy_coord_system_key,   max_troops_key,           legacy_max_troops_key,
+      MapJsonKeys::grid,         MapJsonKeys::biome,       MapJsonKeys::camera,
+      MapJsonKeys::spawns,       MapJsonKeys::victory,     MapJsonKeys::rain,
+      MapJsonKeys::terrain,      MapJsonKeys::world_props, MapJsonKeys::firecamps,
+      MapJsonKeys::rivers,       MapJsonKeys::roads,       MapJsonKeys::bridges,
+      MapJsonKeys::undead_zones, MapJsonKeys::buildings,   MapJsonKeys::walls};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
@@ -682,11 +669,11 @@ void MapData::parse_buildings_array(const QJsonArray& arr) {
     elem.spawn_order = static_cast<int>(order) + m_next_spawn_order;
 
     const QStringList known_keys = {MapJsonKeys::type,
-                                     MapJsonKeys::x,
-                                     MapJsonKeys::z,
-                                     MapJsonKeys::player_id,
-                                     MapJsonKeys::max_population,
-                                     MapJsonKeys::nation};
+                                    MapJsonKeys::x,
+                                    MapJsonKeys::z,
+                                    MapJsonKeys::player_id,
+                                    MapJsonKeys::max_population,
+                                    MapJsonKeys::nation};
     elem.extra_fields = copyExtraFields(obj, known_keys);
 
     m_structures.append(elem);
@@ -706,10 +693,10 @@ void MapData::parse_walls_array(const QJsonArray& arr) {
     elem.nation = obj[MapJsonKeys::nation].toString();
 
     const QStringList known_keys = {MapJsonKeys::start,
-                                     MapJsonKeys::end,
-                                     MapJsonKeys::width,
-                                     MapJsonKeys::player_id,
-                                     MapJsonKeys::nation};
+                                    MapJsonKeys::end,
+                                    MapJsonKeys::width,
+                                    MapJsonKeys::player_id,
+                                    MapJsonKeys::nation};
     elem.extra_fields = copyExtraFields(obj, known_keys);
 
     m_linear_elements.append(elem);

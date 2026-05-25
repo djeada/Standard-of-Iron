@@ -324,7 +324,8 @@ void MapCanvas::draw_terrain_elements(QPainter& painter) {
     painter.setBrush(Qt::NoBrush);
     painter.translate(pos);
     painter.rotate(static_cast<double>(elem.rotation));
-    painter.drawEllipse(QPointF(0, 0), static_cast<double>(rx), static_cast<double>(ry));
+    painter.drawEllipse(
+        QPointF(0, 0), static_cast<double>(rx), static_cast<double>(ry));
     painter.restore();
 
     if (is_hovered && !is_selected) {
@@ -333,7 +334,8 @@ void MapCanvas::draw_terrain_elements(QPainter& painter) {
       painter.setBrush(Qt::NoBrush);
       painter.translate(pos);
       painter.rotate(static_cast<double>(elem.rotation));
-      painter.drawEllipse(QPointF(0, 0), static_cast<double>(rx + 4), static_cast<double>(ry + 4));
+      painter.drawEllipse(
+          QPointF(0, 0), static_cast<double>(rx + 4), static_cast<double>(ry + 4));
       painter.restore();
     }
   }
@@ -644,8 +646,10 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
       preview.width = 10.0F;
       preview.depth = 10.0F;
       draw_terrain_feature(painter, preview, widget_pos);
-    } else if (type == QStringLiteral("barracks") || type == QStringLiteral("village") ||
-               type == QStringLiteral("defense_tower") || type == QStringLiteral("home")) {
+    } else if (type == QStringLiteral("barracks") ||
+               type == QStringLiteral("village") ||
+               type == QStringLiteral("defense_tower") ||
+               type == QStringLiteral("home")) {
       draw_element(painter, type, widget_pos, m_current_player_id);
     } else {
       draw_element(painter, type, widget_pos);
@@ -730,8 +734,10 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     const auto draw_flame = [&](float ox, float oy_base, float w, float h) {
       QPainterPath flame;
       flame.moveTo(ox, oy_base);
-      flame.cubicTo(ox - w, oy_base - h * 0.5F, ox - w * 0.6F, oy_base - h, ox, oy_base - h);
-      flame.cubicTo(ox + w * 0.6F, oy_base - h, ox + w, oy_base - h * 0.5F, ox, oy_base);
+      flame.cubicTo(
+          ox - w, oy_base - h * 0.5F, ox - w * 0.6F, oy_base - h, ox, oy_base - h);
+      flame.cubicTo(
+          ox + w * 0.6F, oy_base - h, ox + w, oy_base - h * 0.5F, ox, oy_base);
       painter.drawPath(flame);
     };
     painter.setBrush(QColor(255, 230, 80));
@@ -773,7 +779,8 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
     const float arm = s * 0.70F;
-    QPen cross_pen(QColor(210, 210, 220), std::max(2.0F, s * 0.18F), Qt::SolidLine, Qt::RoundCap);
+    QPen cross_pen(
+        QColor(210, 210, 220), std::max(2.0F, s * 0.18F), Qt::SolidLine, Qt::RoundCap);
     painter.setPen(cross_pen);
     painter.drawLine(QPointF(-arm, -arm), QPointF(arm, arm));
     painter.drawLine(QPointF(arm, -arm), QPointF(-arm, arm));
@@ -783,7 +790,8 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
     const float rs = s * 0.65F;
-    QPen rp(QColor(170, 165, 150), std::max(1.5F, s * 0.12F), Qt::SolidLine, Qt::SquareCap);
+    QPen rp(
+        QColor(170, 165, 150), std::max(1.5F, s * 0.12F), Qt::SolidLine, Qt::SquareCap);
     painter.setPen(rp);
     // Broken rectangle: 4 corner L-shapes
     const float gap = rs * 0.35F;
@@ -805,7 +813,8 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     const float inner_r = sr * 0.45F;
     QPolygonF star;
     for (int k = 0; k < points * 2; ++k) {
-      const float angle = static_cast<float>(k) * M_PI / static_cast<float>(points) - M_PI_2;
+      const float angle =
+          static_cast<float>(k) * M_PI / static_cast<float>(points) - M_PI_2;
       const float r = (k % 2 == 0) ? sr : inner_r;
       star << QPointF(r * std::cos(angle), r * std::sin(angle));
     }
@@ -818,7 +827,8 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.setBrush(QColor(111, 86, 67));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(QPointF(0, 0), s, s);
-    QPen tp(QColor(200, 170, 135), std::max(1.5F, s * 0.14F), Qt::SolidLine, Qt::RoundCap);
+    QPen tp(
+        QColor(200, 170, 135), std::max(1.5F, s * 0.14F), Qt::SolidLine, Qt::RoundCap);
     painter.setPen(tp);
     // Trunk
     painter.drawLine(QPointF(0, s * 0.55F), QPointF(0, -s * 0.15F));
@@ -871,8 +881,7 @@ QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
   const float rx = rx_cells * static_cast<float>(grid_cell_size) * m_zoom;
   const float ry = ry_cells * static_cast<float>(grid_cell_size) * m_zoom;
   // Enforce a minimum so tiny features are still clickable / visible
-  return {std::max(static_cast<float>(icon_size), rx),
-          std::max(4.0F, ry)};
+  return {std::max(static_cast<float>(icon_size), rx), std::max(4.0F, ry)};
 }
 
 void MapCanvas::draw_terrain_feature(QPainter& painter,
@@ -937,7 +946,8 @@ int MapCanvas::terrain_marker_radius_px(const TerrainElement& elem) const {
     return icon_size;
   }
   const QSizeF e = terrain_ellipse_px(elem);
-  return std::max(icon_size, static_cast<int>(std::round(std::max(e.width(), e.height()))));
+  return std::max(icon_size,
+                  static_cast<int>(std::round(std::max(e.width(), e.height()))));
 }
 
 float MapCanvas::terrain_hit_radius_px(const TerrainElement& elem) const {
@@ -1465,7 +1475,8 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     int line_width_px = static_cast<int>(elem.width * m_zoom);
     line_width_px = std::max(2, std::min(line_width_px, 20));
     const float line_hit_radius_px = static_cast<float>(line_width_px) * 0.5F + 4.0F;
-    if ((cursor - a).length() <= point_hit_radius_px || (cursor - b).length() <= point_hit_radius_px) {
+    if ((cursor - a).length() <= point_hit_radius_px ||
+        (cursor - b).length() <= point_hit_radius_px) {
       continue;
     }
     consider_hit(2, i, -1, dist, line_hit_radius_px, 5);

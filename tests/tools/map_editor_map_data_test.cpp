@@ -474,14 +474,16 @@ TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
            {MapJsonKeys::x, 10.1299},
            {MapJsonKeys::z, 20.1251},
            {MapJsonKeys::height, 3.9999},
-           {MapJsonKeys::entrances, QJsonArray{QJsonObject{{"x", 11.5555}, {"z", 20.4444}}}},
+           {MapJsonKeys::entrances,
+            QJsonArray{QJsonObject{{"x", 11.5555}, {"z", 20.4444}}}},
        }}},
       {MapJsonKeys::spawns,
        QJsonArray{QJsonObject{{MapJsonKeys::type, "defense_tower"},
                               {MapJsonKeys::x, 30.5678},
                               {MapJsonKeys::z, 40.1234},
                               {"strength", 77.7777}}}},
-      {"custom_meta", QJsonObject{{"wind", 4.3219}, {"gust", QJsonArray{1.1111, 2.9999}}}}};
+      {"custom_meta",
+       QJsonObject{{"wind", 4.3219}, {"gust", QJsonArray{1.1111, 2.9999}}}}};
   write_json(input_path, input);
 
   MapEditor::MapData data;
@@ -493,7 +495,8 @@ TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
 
   ASSERT_TRUE(data.save_to_json(output_path));
   const QJsonObject output = read_json(output_path);
-  const QJsonObject terrain_entry = output.value(MapJsonKeys::terrain).toArray().first().toObject();
+  const QJsonObject terrain_entry =
+      output.value(MapJsonKeys::terrain).toArray().first().toObject();
   EXPECT_DOUBLE_EQ(terrain_entry.value(MapJsonKeys::x).toDouble(), 10.13);
   EXPECT_DOUBLE_EQ(terrain_entry.value(MapJsonKeys::z).toDouble(), 20.13);
   EXPECT_DOUBLE_EQ(terrain_entry.value(MapJsonKeys::height).toDouble(), 4.0);
@@ -510,7 +513,8 @@ TEST(MapEditorMapDataTest, LoadAndSaveRoundFloatingPointValuesToTwoDecimals) {
   EXPECT_DOUBLE_EQ(gust[0].toDouble(), 1.11);
   EXPECT_DOUBLE_EQ(gust[1].toDouble(), 3.0);
 
-  const QJsonObject raw_spawn = output.value(MapJsonKeys::spawns).toArray().first().toObject();
+  const QJsonObject raw_spawn =
+      output.value(MapJsonKeys::spawns).toArray().first().toObject();
   EXPECT_DOUBLE_EQ(raw_spawn.value(MapJsonKeys::x).toDouble(), 30.57);
   EXPECT_DOUBLE_EQ(raw_spawn.value(MapJsonKeys::z).toDouble(), 40.12);
   EXPECT_DOUBLE_EQ(raw_spawn.value("strength").toDouble(), 77.78);

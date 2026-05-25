@@ -102,51 +102,20 @@ auto compute_builder_exit_position(float center_x,
 auto find_guaranteed_valid_exit(float exit_x,
                                 float exit_z,
                                 float unit_radius) -> QVector3D {
-  Pathfinding* pathfinder = CommandService::get_pathfinder();
-  if (pathfinder == nullptr) {
-    return {exit_x, 0.0F, exit_z};
-  }
-
-  auto& terrain_service = Game::Map::TerrainService::instance();
   Point const exit_grid = CommandService::world_to_grid(exit_x, exit_z);
 
-  bool is_valid =
-      pathfinder->is_walkable_with_radius(exit_grid.x, exit_grid.y, unit_radius);
-  if (is_valid && terrain_service.is_initialized()) {
-    is_valid = terrain_service.is_walkable(exit_grid.x, exit_grid.y);
-  }
-
-  if (is_valid) {
+  if (CommandService::is_grid_walkable_for_radius(exit_grid, unit_radius)) {
     return {exit_x, 0.0F, exit_z};
   }
 
   constexpr int k_max_search_radius = 50;
-  Point safe_grid = exit_grid;
-
-  for (int radius = 1; radius <= k_max_search_radius; ++radius) {
-    for (int dy = -radius; dy <= radius; ++dy) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dy) != radius) {
-          continue;
-        }
-
-        int const check_x = exit_grid.x + dx;
-        int const check_y = exit_grid.y + dy;
-
-        bool valid = pathfinder->is_walkable_with_radius(check_x, check_y, unit_radius);
-        if (valid && terrain_service.is_initialized()) {
-          valid = terrain_service.is_walkable(check_x, check_y);
-        }
-
-        if (valid) {
-          safe_grid = {check_x, check_y};
-          return CommandService::grid_to_world(safe_grid);
-        }
-      }
-    }
+  auto const safe_grid = CommandService::find_nearest_walkable_grid(
+      exit_grid, k_max_search_radius, unit_radius);
+  if (safe_grid.has_value()) {
+    return CommandService::grid_to_world(*safe_grid);
   }
 
-  return CommandService::grid_to_world(safe_grid);
+  return CommandService::grid_to_world(exit_grid);
 }
 
 void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
