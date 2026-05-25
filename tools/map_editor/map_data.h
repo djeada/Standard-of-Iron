@@ -50,6 +50,19 @@ struct LinearElement {
   QJsonObject extra_fields;
 };
 
+// Minimum absolute bridge height (prevents zero-height, invisible bridges).
+inline constexpr float k_min_bridge_height = 0.1F;
+
+// Returns the minimum bridge width required for a bridge spanning from
+// bridge_start to bridge_end to cover every river it crosses from bank to
+// bank.  The minimum is computed geometrically: at a crossing angle θ the
+// bridge must be at least (river_width / sin θ) wide.  Returns 1.0 when no
+// rivers are crossed.
+[[nodiscard]] auto compute_min_bridge_width(const QVector2D& bridge_start,
+                                            const QVector2D& bridge_end,
+                                            const QVector<LinearElement>& elements)
+    -> float;
+
 struct StructureElement {
   QString type;
   float x = 0.0F;
