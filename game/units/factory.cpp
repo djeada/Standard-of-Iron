@@ -14,6 +14,7 @@
 #include "healer.h"
 #include "home.h"
 #include "horse_archer.h"
+#include "marketplace.h"
 #include "horse_spearman.h"
 #include "horse_swordsman.h"
 #include "skeleton_archer.h"
@@ -154,6 +155,11 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::WallSegment,
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return WallSegment::create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::Marketplace,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return Marketplace::Create(world, params);
                        });
 }
 

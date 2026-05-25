@@ -157,7 +157,8 @@ auto wall_preview_is_vertical(float angle) -> bool {
 
 auto is_previewable_structure_item(const QString& item_type) -> bool {
   return item_type == QStringLiteral("defense_tower") ||
-         item_type == QStringLiteral("barracks") || item_type == QStringLiteral("home");
+         item_type == QStringLiteral("barracks") || item_type == QStringLiteral("home") ||
+         item_type == QStringLiteral("marketplace");
 }
 
 auto item_supports_preview_rotation(const QString& item_type) -> bool {
@@ -183,6 +184,9 @@ auto spawn_type_for_construction_item(const QString& item_type)
   }
   if (item_type == QStringLiteral("home")) {
     return Game::Units::SpawnType::Home;
+  }
+  if (item_type == QStringLiteral("marketplace")) {
+    return Game::Units::SpawnType::Marketplace;
   }
   return std::nullopt;
 }

@@ -20,12 +20,14 @@ constexpr const char* BUILDING_TYPE_HOME = "home";
 constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
 constexpr const char* BUILDING_TYPE_WALL_SEGMENT = "wall_segment";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
+constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
 constexpr const char* BUILDING_TYPE_CATAPULT = "catapult";
 
 constexpr int MAX_HOMES = 20;
 constexpr int MAX_DEFENSE_TOWERS = 10;
 constexpr int MAX_WALL_SEGMENTS = 12;
 constexpr int MAX_BARRACKS = 6;
+constexpr int MAX_MARKETPLACES = 2;
 constexpr int MAX_CATAPULTS = 5;
 
 constexpr float DEFENSE_TOWER_CLOSE_RADIUS = 25.0F;
@@ -224,6 +226,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
                    {BUILDING_TYPE_DEFENSE_TOWER,
                     context.defense_tower_count,
                     target_towers},
+                   {BUILDING_TYPE_MARKETPLACE, context.marketplace_count, 1},
                    {BUILDING_TYPE_WALL_SEGMENT,
                     context.wall_segment_count,
                     target_walls},
@@ -297,6 +300,8 @@ auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
              std::clamp(context.macro_targets.home_count, 2, MAX_HOMES) ||
          context.barracks_count <
              std::clamp(context.macro_targets.barracks_count, 1, MAX_BARRACKS) ||
+         context.marketplace_count <
+             std::clamp(context.macro_targets.marketplace_count, 0, MAX_MARKETPLACES) ||
          context.defense_tower_count <
              std::clamp(
                  context.macro_targets.defense_tower_count, 0, MAX_DEFENSE_TOWERS) ||
