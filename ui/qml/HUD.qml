@@ -157,6 +157,8 @@ Item {
                     rpgTargetBar.target_hp = s["locked_target_hp"] || 0;
                     rpgTargetBar.target_max_hp = s["locked_target_max_hp"] || 0;
                     rpgTargetBar.target_hp_ratio = s["locked_target_hp_ratio"] || 0.0;
+                    rpgTargetBar.target_staggered = !!s["locked_target_staggered"];
+                    rpgTargetBar.target_guard_broken = !!s["locked_target_guard_broken"];
                 }
             }
         }

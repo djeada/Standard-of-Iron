@@ -25,7 +25,8 @@ enum class EffectType {
   Flame = 1,
   StoneImpact = 2,
   Fireball = 3,
-  BurningFlame = 4
+  BurningFlame = 4,
+  MetalSpark = 5
 };
 
 struct CombatDustData {

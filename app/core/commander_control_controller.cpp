@@ -114,23 +114,62 @@ auto has_clear_building_los(const QVector3D& start,
 constexpr std::uint8_t k_commander_sword_sway_default = 0U;
 constexpr std::uint8_t k_commander_sword_sway_reverse = 1U;
 constexpr std::uint8_t k_commander_sword_sway_finisher = 2U;
+constexpr std::uint8_t k_commander_sword_sway_overhead = 3U;
+constexpr std::uint8_t k_commander_sword_sway_thrust = 4U;
 
 auto select_commander_sword_sway(const Engine::Core::CommanderComponent* commander,
                                  std::uint8_t attack_sequence,
                                  int move_right_axis,
+                                 int move_forward_axis,
                                  bool finisher_attack) -> std::uint8_t {
   if (finisher_attack) {
     return k_commander_sword_sway_finisher;
   }
-  std::uint8_t style = attack_sequence % 2U;
-  if (move_right_axis > 0) {
-    style = (style == k_commander_sword_sway_default) ? k_commander_sword_sway_reverse
-                                                      : k_commander_sword_sway_default;
-  } else if (move_right_axis == 0 && commander != nullptr &&
-             commander->power_strike_active) {
-    style = k_commander_sword_sway_reverse;
+  // Thrust on forward input
+  if (move_forward_axis > 0) {
+    return k_commander_sword_sway_thrust;
   }
-  return style;
+  // Overhead on backward input or power strike
+  if (move_forward_axis < 0 ||
+      (move_right_axis == 0 && commander != nullptr &&
+       commander->power_strike_active)) {
+    return k_commander_sword_sway_overhead;
+  }
+  // More varied directional slash selection based on sequence
+  // Cycles through: left, right, left-high, right-high, overhead-light
+  switch (attack_sequence % 5U) {
+  case 0:
+    return k_commander_sword_sway_default; // Left slash
+  case 1:
+    return k_commander_sword_sway_reverse; // Right slash
+  case 2:
+    return (move_right_axis > 0) ? k_commander_sword_sway_reverse
+                                 : k_commander_sword_sway_default;
+  case 3:
+    return (move_right_axis < 0) ? k_commander_sword_sway_default
+                                 : k_commander_sword_sway_reverse;
+  case 4:
+    return k_commander_sword_sway_overhead; // Occasional overhead in neutral
+  default:
+    return k_commander_sword_sway_default;
+  }
+}
+
+auto attack_direction_from_sway(std::uint8_t sway) -> Engine::Core::AttackDirection {
+  switch (sway) {
+  case k_commander_sword_sway_default:
+    return Engine::Core::AttackDirection::LeftSlash;
+  case k_commander_sword_sway_reverse:
+    return Engine::Core::AttackDirection::RightSlash;
+  case k_commander_sword_sway_overhead:
+    return Engine::Core::AttackDirection::Overhead;
+  case k_commander_sword_sway_finisher:
+    return Engine::Core::AttackDirection::HeavyOverhead;
+  case k_commander_sword_sway_thrust:
+    return Engine::Core::AttackDirection::Thrust;
+  default:
+    return Engine::Core::AttackDirection::LeftSlash;
+  }
 }
 
 auto is_walkable_at(float x, float z) -> bool {
@@ -187,6 +226,7 @@ void CommanderControlController::reset() {
   m_cam_smooth_valid = false;
   m_move_speed = 0.0F;
   m_move_right_axis = 0;
+  m_move_forward_axis = 0;
   m_move_running = false;
   m_hit_trauma = 0.0F;
   m_hit_shake_phase = 0.0F;
@@ -786,6 +826,12 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   if (combat_state != nullptr &&
       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
+    // Input buffering: allow queuing next attack during Recover/Reposition phases
+    if (combat_state->animation_state == Engine::Core::CombatAnimationState::Recover ||
+        combat_state->animation_state ==
+            Engine::Core::CombatAnimationState::Reposition) {
+      combat_state->input_buffered = true;
+    }
     return true;
   }
 
@@ -808,7 +854,7 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     combat_state->state_time = 0.0F;
     combat_state->state_duration =
         Engine::Core::CombatStateComponent::k_advance_duration *
-        (finisher_attack ? 1.55F : 1.22F);
+        (finisher_attack ? 1.70F : 1.35F);
     if (unit != nullptr && attack != nullptr) {
       attack_family = Engine::Core::resolve_combat_attack_family(unit->spawn_type,
                                                                  attack->current_mode);
@@ -837,20 +883,36 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
             select_commander_sword_sway(cmd_comp,
                                         action->melee_attack_sequence,
                                         m_move_right_axis,
+                                        m_move_forward_axis,
                                         finisher_attack);
         combat_state->attack_variant = action->melee_attack_style;
+        combat_state->attack_direction =
+            attack_direction_from_sway(action->melee_attack_style);
         action->melee_attack_sequence =
-            static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 2U);
+            static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 5U);
       }
     }
     if (finisher_attack) {
-      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 12.0F);
+      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 16.0F);
     }
     if (m_primary_held_duration >= 0.4F) {
       cmd_comp->power_strike_active = true;
-      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 10.0F);
+      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 14.0F);
     }
     m_combo_miss_timer = 0.0F;
+  }
+
+  // Consume stamina for the attack
+  if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+    float cost = (cmd_comp != nullptr && cmd_comp->power_strike_active)
+                     ? Engine::Core::CombatStateComponent::k_stamina_cost_heavy_attack
+                     : Engine::Core::CombatStateComponent::k_stamina_cost_light_attack;
+    stamina->stamina = std::max(0.0F, stamina->stamina - cost);
+  }
+
+  // Mark that damage has not been dealt yet for this swing (deferred to Strike phase)
+  if (combat_state != nullptr) {
+    combat_state->damage_dealt_this_swing = false;
   }
 
   const auto target_id = find_primary_target(world, commander_id, local_owner_id);
@@ -859,26 +921,10 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     return true;
   }
 
-  auto* target = world.get_entity(target_id);
-  if (target != nullptr) {
-    int damage = 10;
-    if (attack != nullptr) {
-      damage = std::max(1, attack->get_current_damage());
-      attack->time_since_last = 0.0F;
-    }
-    Game::Systems::RpgCombat::deal_commander_attack_damage(
-        &world, target, damage, commander_id);
-    if (auto* action =
-            commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
-      action->active_target_id = target_id;
-      action->last_hit_target_id = target_id;
-      action->last_damage = damage;
-    }
-    if (auto* rpg_targets = Engine::Core::get_or_add_component<
-            Engine::Core::RpgCommanderTargetComponent>(commander)) {
-      rpg_targets->recent_hit_target_id = target_id;
-      rpg_targets->recent_hit_timer = 1.25F;
-    }
+  // Store pending target for deferred damage at Strike phase
+  if (auto* action =
+          commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
+    action->active_target_id = target_id;
   }
   return true;
 }
@@ -1206,6 +1252,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_input.second_wind_requested = false;
     m_move_speed = 0.0F;
     m_move_right_axis = 0;
+    m_move_forward_axis = 0;
     m_move_running = false;
     m_guard_was_active = false;
     m_view_yaw = wrap_angle_degrees(transform->rotation.y);
@@ -1266,8 +1313,10 @@ auto CommanderControlController::update(Engine::Core::World& world,
   float actual_speed_for_bob = 0.0F;
   bool run_for_bob = false;
 
-  constexpr float k_fov_kick_decay = 30.0F;
+  constexpr float k_fov_kick_decay = 22.0F;
   m_dodge_fov_kick = std::max(0.0F, m_dodge_fov_kick - k_fov_kick_decay * dt);
+  constexpr float k_shake_decay = 18.0F;
+  m_impact_shake = std::max(0.0F, m_impact_shake - k_shake_decay * dt);
   constexpr float k_jump_duration = 0.58F;
   constexpr float k_jump_peak_height = 0.34F;
 
@@ -1287,6 +1336,13 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_jump_safe_position_valid = true;
     m_jump_last_walkable_position =
         QVector3D(transform->position.x, transform->position.y, transform->position.z);
+    // Stamina cost for jump
+    if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+      stamina->stamina = std::max(
+          0.0F,
+          stamina->stamina -
+              Engine::Core::CombatStateComponent::k_stamina_cost_jump);
+    }
   }
 
   float jump_phase = 0.0F;
@@ -1351,9 +1407,16 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_dodge_state = DodgeState::Rolling;
     constexpr float k_dodge_roll_duration = 0.22F;
     m_dodge_timer = k_dodge_roll_duration;
-    m_dodge_fov_kick = 8.0F;
+    m_dodge_fov_kick = 14.0F;
     if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
       rpg->dodge_invincible = true;
+    }
+    // Stamina cost for dodge
+    if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+      stamina->stamina = std::max(
+          0.0F,
+          stamina->stamina -
+              Engine::Core::CombatStateComponent::k_stamina_cost_dodge);
     }
   }
 
@@ -1468,6 +1531,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   m_move_speed = actual_speed_for_bob;
   m_move_right_axis = right_axis;
+  m_move_forward_axis = forward_axis;
   m_move_running = run_for_bob;
   if (cmd_comp != nullptr) {
     cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->vx : 0.0F;
@@ -1515,6 +1579,16 @@ auto CommanderControlController::update(Engine::Core::World& world,
     guard->active = false;
   }
   m_guard_was_active = (guard != nullptr) && guard->active;
+
+  // Stamina drain while guarding
+  if (guard != nullptr && guard->active) {
+    if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+      stamina->stamina = std::max(
+          0.0F,
+          stamina->stamina -
+              Engine::Core::CombatStateComponent::k_stamina_cost_guard_per_second * dt);
+    }
+  }
 
   update_ability_cooldowns(cmd_comp, dt);
   try_activate_shield_bash(world, *commander, commander_id, local_owner_id);
@@ -1648,10 +1722,10 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   constexpr float k_close_camera_up_offset = 0.38F;
   constexpr float k_close_target_distance = 5.2F;
 
-  constexpr float k_bob_freq = 3.2F;
-  constexpr float k_bob_vert_amp = 0.055F;
-  constexpr float k_bob_run_mult = 1.45F;
-  constexpr float k_bob_lat_amp = 0.018F;
+  constexpr float k_bob_freq = 3.5F;
+  constexpr float k_bob_vert_amp = 0.075F;
+  constexpr float k_bob_run_mult = 1.65F;
+  constexpr float k_bob_lat_amp = 0.028F;
   constexpr float k_bob_decay = 5.5F;
 
   constexpr float k_breath_freq = 0.2F;
@@ -1659,12 +1733,12 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
 
   constexpr float k_cam_spring = 14.0F;
 
-  constexpr float k_lean_max_deg = 1.2F;
-  constexpr float k_lean_follow = 5.0F;
+  constexpr float k_lean_max_deg = 2.2F;
+  constexpr float k_lean_follow = 6.5F;
 
   constexpr float k_fov_walk = 75.0F;
-  constexpr float k_fov_run_boost = 4.0F;
-  constexpr float k_fov_lerp = 4.0F;
+  constexpr float k_fov_run_boost = 7.0F;
+  constexpr float k_fov_lerp = 5.0F;
 
   set_view_pitch(m_view_pitch);
 
@@ -1729,6 +1803,14 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   QVector3D eye_desired = pivot - flat_forward * back_offset +
                           QVector3D(0.0F, up_offset + bob_v + breath_v, 0.0F) +
                           flat_right * bob_l;
+  // Combat impact micro-shake for crisp hit feedback
+  if (m_impact_shake > 0.1F) {
+    float const shake_intensity = m_impact_shake * 0.012F;
+    float const shake_t = m_impact_shake_seed + m_impact_shake * 7.0F;
+    float const shake_x = std::sin(shake_t * 23.0F) * shake_intensity;
+    float const shake_y = std::cos(shake_t * 31.0F) * shake_intensity * 0.7F;
+    eye_desired += flat_right * shake_x + QVector3D(0.0F, shake_y, 0.0F);
+  }
   QVector3D target_desired = pivot + forward_vec * target_distance;
 
   const Engine::Core::EntityID focus_id = locked_target_id();
@@ -1788,10 +1870,10 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   const QVector3D up_leaned =
       (world_up + right_world * std::sin(lean_rad)).normalized();
 
-  constexpr float k_shake_freq = 22.0F;
-  constexpr float k_shake_decay = 9.5F;
-  constexpr float k_shake_lateral = 0.14F;
-  constexpr float k_shake_vert = 0.05F;
+  constexpr float k_shake_freq = 28.0F;
+  constexpr float k_shake_decay = 7.5F;
+  constexpr float k_shake_lateral = 0.22F;
+  constexpr float k_shake_vert = 0.09F;
 
   if (auto const* fb = commander.get_component<Engine::Core::HitFeedbackComponent>()) {
 
@@ -1814,14 +1896,33 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   if (auto const* cmd = commander.get_component<Engine::Core::CommanderComponent>()) {
     if (cmd->just_struck_enemy) {
       m_strike_punch_fwd =
-          (last_strike_combo_step >= 3 ? 0.34F : 0.25F) * camera_effect_scale;
+          (last_strike_combo_step >= 3 ? 0.52F : 0.38F) * camera_effect_scale;
+      // Trigger impact micro-shake for crisp hit feedback
+      m_impact_shake = last_strike_combo_step >= 3 ? 5.5F : 3.2F;
+      m_impact_shake_seed = static_cast<float>(last_strike_combo_step) * 1.7F;
     }
   }
-  constexpr float k_punch_decay = 14.0F;
+  constexpr float k_punch_decay = 11.0F;
   m_strike_punch_fwd *= std::exp(-k_punch_decay * std::max(dt, 0.0F));
   const QVector3D punch_offset = forward_vec * m_strike_punch_fwd;
 
+  // Dodge roll camera tilt
+  float dodge_tilt_rad = 0.0F;
+  if (m_dodge_state == DodgeState::Rolling) {
+    const float dodge_progress =
+        1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
+    const float tilt_curve =
+        std::sin(dodge_progress * k_pi) * 0.12F; // ~7 degree roll
+    const float dot_right =
+        m_dodge_direction.x() * flat_right.x() +
+        m_dodge_direction.z() * flat_right.z();
+    dodge_tilt_rad = tilt_curve * (dot_right > 0.0F ? 1.0F : -1.0F);
+  }
+
+  const QVector3D up_final =
+      (up_leaned + right_world * dodge_tilt_rad).normalized();
+
   camera.look_at(m_cam_eye_smooth + shake_offset + punch_offset,
                  m_cam_target_smooth + shake_offset + punch_offset,
-                 up_leaned);
+                 up_final);
 }

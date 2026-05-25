@@ -344,6 +344,26 @@ void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
   }
 }
 
+void add_or_extend_stagger(Engine::Core::Entity* entity,
+                           float duration,
+                           Engine::Core::StaggerTier tier) {
+  if (entity == nullptr || duration <= 0.0F) {
+    return;
+  }
+  if (auto* stagger = entity->get_component<Engine::Core::StaggerComponent>()) {
+    stagger->remaining = std::max(stagger->remaining, duration);
+    if (static_cast<std::uint8_t>(tier) >
+        static_cast<std::uint8_t>(stagger->tier)) {
+      stagger->tier = tier;
+    }
+  } else {
+    auto* new_stagger = entity->add_component<Engine::Core::StaggerComponent>(duration);
+    if (new_stagger != nullptr) {
+      new_stagger->tier = tier;
+    }
+  }
+}
+
 DamageApplicationResult apply_unit_damage(Engine::Core::World* world,
                                           Engine::Core::Entity* target,
                                           int damage,

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../core/component.h"
 #include "../../core/entity.h"
 
 namespace Engine::Core {
@@ -26,5 +27,9 @@ void apply_hit_feedback(Engine::Core::Entity* target,
                         Engine::Core::World* world);
 
 void add_or_extend_stagger(Engine::Core::Entity* entity, float duration);
+
+void add_or_extend_stagger(Engine::Core::Entity* entity,
+                           float duration,
+                           Engine::Core::StaggerTier tier);
 
 } // namespace Game::Systems::Combat
