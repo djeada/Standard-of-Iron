@@ -196,6 +196,9 @@ void PineRenderer::generate_pine_instances() {
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0x92C3B17FU);
+    if (scene.obstacle_influence >= 1.0F) {
+      return false;
+    }
     if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Pine, scene)) {
       return false;
     }
