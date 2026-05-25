@@ -3059,6 +3059,49 @@ TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWal
             registry.bpat_clip(roman_id, AnimationStateId::Walk));
 }
 
+TEST(HumanoidPrepare, GuardStanceForSwordAssetUsesHumanoidCreatureAsset) {
+  class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
+        : spec_(spec) {}
+
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
+
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
+
+  auto const archetype_id = find_archetype_id("troops/roman/swordsman");
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
+
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/guard_sword_asset_switch";
+  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
+  spec.archetype_id = archetype_id;
+  spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+  FixedSpecRenderer const owner(spec);
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Render::GL::AnimationInputs anim{};
+  anim.is_guarding = true;
+  anim.guard_pose_progress = 1.0F;
+  anim.shield_formation_pose = Render::GL::ShieldFormationPose::RomanFront;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_EQ(prep.bodies.requests().size(), 1U);
+  EXPECT_EQ(prep.bodies.requests().front().state, Render::Creature::AnimationStateId::Hold);
+  EXPECT_EQ(prep.bodies.requests().front().creature_asset_id,
+            Render::Creature::Pipeline::k_humanoid_asset);
+}
+
 TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuarding) {
   constexpr std::uint8_t k_base_role = 6;
   std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{
