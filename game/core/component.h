@@ -445,13 +445,13 @@ public:
   bool damage_dealt_this_swing{false};
   bool input_buffered{false};
 
-  static constexpr float k_combat_animation_hit_pause_duration = 0.08F;
-  static constexpr float k_advance_duration = 0.12F;
-  static constexpr float k_wind_up_duration = 0.28F;
-  static constexpr float k_strike_duration = 0.22F;
-  static constexpr float k_impact_duration = 0.12F;
-  static constexpr float k_recover_duration = 0.30F;
-  static constexpr float k_reposition_duration = 0.18F;
+  static constexpr float k_combat_animation_hit_pause_duration = 0.10F;
+  static constexpr float k_advance_duration = 0.22F;
+  static constexpr float k_wind_up_duration = 0.42F;
+  static constexpr float k_strike_duration = 0.34F;
+  static constexpr float k_impact_duration = 0.18F;
+  static constexpr float k_recover_duration = 0.40F;
+  static constexpr float k_reposition_duration = 0.28F;
   static constexpr std::uint8_t k_attack_variant_seed_slots = 8;
 
   static constexpr float k_stamina_cost_light_attack = 12.0F;

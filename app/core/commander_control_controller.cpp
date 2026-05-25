@@ -135,13 +135,24 @@ auto select_commander_sword_sway(const Engine::Core::CommanderComponent* command
        commander->power_strike_active)) {
     return k_commander_sword_sway_overhead;
   }
-  // Directional slashes
-  std::uint8_t style = attack_sequence % 2U;
-  if (move_right_axis > 0) {
-    style = (style == k_commander_sword_sway_default) ? k_commander_sword_sway_reverse
-                                                      : k_commander_sword_sway_default;
+  // More varied directional slash selection based on sequence
+  // Cycles through: left, right, left-high, right-high, overhead-light
+  switch (attack_sequence % 5U) {
+  case 0:
+    return k_commander_sword_sway_default; // Left slash
+  case 1:
+    return k_commander_sword_sway_reverse; // Right slash
+  case 2:
+    return (move_right_axis > 0) ? k_commander_sword_sway_reverse
+                                 : k_commander_sword_sway_default;
+  case 3:
+    return (move_right_axis < 0) ? k_commander_sword_sway_default
+                                 : k_commander_sword_sway_reverse;
+  case 4:
+    return k_commander_sword_sway_overhead; // Occasional overhead in neutral
+  default:
+    return k_commander_sword_sway_default;
   }
-  return style;
 }
 
 auto attack_direction_from_sway(std::uint8_t sway) -> Engine::Core::AttackDirection {
@@ -151,8 +162,9 @@ auto attack_direction_from_sway(std::uint8_t sway) -> Engine::Core::AttackDirect
   case k_commander_sword_sway_reverse:
     return Engine::Core::AttackDirection::RightSlash;
   case k_commander_sword_sway_overhead:
-  case k_commander_sword_sway_finisher:
     return Engine::Core::AttackDirection::Overhead;
+  case k_commander_sword_sway_finisher:
+    return Engine::Core::AttackDirection::HeavyOverhead;
   case k_commander_sword_sway_thrust:
     return Engine::Core::AttackDirection::Thrust;
   default:
@@ -842,7 +854,7 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     combat_state->state_time = 0.0F;
     combat_state->state_duration =
         Engine::Core::CombatStateComponent::k_advance_duration *
-        (finisher_attack ? 1.55F : 1.22F);
+        (finisher_attack ? 1.70F : 1.35F);
     if (unit != nullptr && attack != nullptr) {
       attack_family = Engine::Core::resolve_combat_attack_family(unit->spawn_type,
                                                                  attack->current_mode);
@@ -877,7 +889,7 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
         combat_state->attack_direction =
             attack_direction_from_sway(action->melee_attack_style);
         action->melee_attack_sequence =
-            static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 2U);
+            static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 5U);
       }
     }
     if (finisher_attack) {

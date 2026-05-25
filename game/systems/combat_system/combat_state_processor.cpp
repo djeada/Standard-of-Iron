@@ -41,19 +41,36 @@ auto commander_phase_scale(const Engine::Core::Entity& unit,
   }
 
   // Amplified durations: much larger wind-up for readability, fast strike for impact
+  // Directional variation: thrust is snappy, overhead is slow and heavy
+  float direction_scale = 1.0F;
+  switch (combat_state.attack_direction) {
+  case Engine::Core::AttackDirection::Thrust:
+    direction_scale = 0.80F; // Thrusts are quick and snappy
+    break;
+  case Engine::Core::AttackDirection::Overhead:
+    direction_scale = 1.15F; // Overheads are slow and powerful
+    break;
+  case Engine::Core::AttackDirection::HeavyOverhead:
+    direction_scale = 1.30F; // Heavy overhead is very slow and devastating
+    break;
+  default:
+    direction_scale = 1.0F; // Slashes are normal speed
+    break;
+  }
+
   switch (state) {
   case CS::Advance:
-    return combat_state.finisher_attack ? 1.80F : 1.40F;
+    return (combat_state.finisher_attack ? 1.90F : 1.50F) * direction_scale;
   case CS::WindUp:
-    return combat_state.finisher_attack ? 1.85F : 1.50F;
+    return (combat_state.finisher_attack ? 2.10F : 1.65F) * direction_scale;
   case CS::Strike:
-    return combat_state.finisher_attack ? 1.20F : 1.05F;
+    return (combat_state.finisher_attack ? 1.40F : 1.15F) * direction_scale;
   case CS::Impact:
-    return combat_state.finisher_attack ? 1.30F : 1.12F;
+    return (combat_state.finisher_attack ? 1.50F : 1.25F) * direction_scale;
   case CS::Recover:
-    return combat_state.finisher_attack ? 1.20F : 1.05F;
+    return (combat_state.finisher_attack ? 1.35F : 1.15F) * direction_scale;
   case CS::Reposition:
-    return combat_state.finisher_attack ? 1.10F : 0.90F;
+    return (combat_state.finisher_attack ? 1.20F : 1.0F) * direction_scale;
   case CS::Idle:
   default:
     return 1.0F;
