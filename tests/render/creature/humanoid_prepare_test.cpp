@@ -3059,32 +3059,47 @@ TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWal
             registry.bpat_clip(roman_id, AnimationStateId::Walk));
 }
 
-TEST(HumanoidPrepare, GuardPlaybackFallsBackToIdleWhenHoldClipIsMissing) {
-  using Render::Creature::AnimationStateId;
-  using Render::Creature::ArchetypeDescriptor;
-  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+TEST(HumanoidPrepare, GuardStanceForSwordAssetUsesHumanoidCreatureAsset) {
+  class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
+        : spec_(spec) {}
 
-  auto& registry = Render::Creature::ArchetypeRegistry::instance();
-  auto const* base_desc = registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
-  ASSERT_NE(base_desc, nullptr);
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
 
-  ArchetypeDescriptor guard_desc = *base_desc;
-  guard_desc.debug_name = "tests/guard_missing_hold_clip";
-  guard_desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
-      ArchetypeDescriptor::k_unmapped_clip;
-  guard_desc.bpat_clip_variant_count[static_cast<std::size_t>(AnimationStateId::Hold)] = 0U;
-  guard_desc.snapshot[static_cast<std::size_t>(AnimationStateId::Hold)] = false;
-  auto const guard_archetype = registry.register_archetype(guard_desc);
-  ASSERT_NE(guard_archetype, Render::Creature::k_invalid_archetype);
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
 
-  Render::GL::HumanoidAnimationContext guard_idle{};
-  guard_idle.inputs.is_guarding = true;
-  guard_idle.inputs.guard_pose_progress = 1.0F;
-  guard_idle.gait.state = Render::GL::HumanoidMotionState::Idle;
-  auto const playback = humanoid_bpat_playback_for_anim(
-      guard_archetype, Render::Creature::Bpat::k_species_humanoid, guard_idle);
-  ASSERT_TRUE(playback.has_value());
-  EXPECT_EQ(playback->clip_id, registry.bpat_clip(guard_archetype, AnimationStateId::Idle));
+  auto const archetype_id = find_archetype_id("troops/roman/swordsman");
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
+
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/guard_sword_asset_switch";
+  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
+  spec.archetype_id = archetype_id;
+  spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+  FixedSpecRenderer const owner(spec);
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Render::GL::AnimationInputs anim{};
+  anim.is_guarding = true;
+  anim.guard_pose_progress = 1.0F;
+  anim.shield_formation_pose = Render::GL::ShieldFormationPose::RomanFront;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  ASSERT_EQ(prep.bodies.requests().size(), 1U);
+  EXPECT_EQ(prep.bodies.requests().front().state, Render::Creature::AnimationStateId::Hold);
+  EXPECT_EQ(prep.bodies.requests().front().creature_asset_id,
+            Render::Creature::Pipeline::k_humanoid_asset);
 }
 
 TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuarding) {
