@@ -78,9 +78,16 @@ private:
 [[nodiscard]] auto is_infantry_formation_candidate(
     const Engine::Core::UnitComponent* unit,
     const Engine::Core::FormationModeComponent* formation_mode,
-    bool is_mounted) noexcept -> bool {
-  if (unit == nullptr || formation_mode == nullptr || is_mounted ||
-      !formation_mode->active) {
+    bool is_mounted,
+    const Engine::Core::GuardModeComponent* guard_mode = nullptr) noexcept -> bool {
+  if (unit == nullptr || is_mounted) {
+    return false;
+  }
+
+  bool const formation_active =
+      (formation_mode != nullptr) && formation_mode->active;
+  bool const guard_active = (guard_mode != nullptr) && guard_mode->active;
+  if (!formation_active && !guard_active) {
     return false;
   }
 
@@ -416,9 +423,11 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
 
   anim.visual_movement = movement_state;
   anim.movement_state = anim.visual_movement.movement_state;
+  auto* guard_mode =
+      ctx.entity->get_component<Engine::Core::GuardModeComponent>();
   bool const commander_guarding = animation_policy.is_guarding(commander_guard);
   bool const infantry_formation_guarding =
-      is_infantry_formation_candidate(unit, formation_mode, false);
+      is_infantry_formation_candidate(unit, formation_mode, false, guard_mode);
   bool const raw_target_guarding = commander_guarding || infantry_formation_guarding;
 
   auto* healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
@@ -563,12 +572,12 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
         std::clamp(humanoid_state->hold_pose_progress, 0.0F, 1.0F);
     if (stance.guard) {
       float const enter_duration =
-          std::max(Engine::Core::Defaults::k_hold_kneel_duration, 1.0e-4F);
+          std::max(Engine::Core::Defaults::k_guard_enter_duration, 1.0e-4F);
       guard_pose_progress =
           std::min(1.0F, previous_guard_pose + delta_time / enter_duration);
     } else if (previous_guard_pose > 0.0F) {
       float const exit_duration =
-          std::max(Engine::Core::Defaults::k_hold_stand_up_duration, 1.0e-4F);
+          std::max(Engine::Core::Defaults::k_guard_exit_duration, 1.0e-4F);
       guard_pose_progress =
           std::max(0.0F, previous_guard_pose - delta_time / exit_duration);
       is_exiting_guard = guard_pose_progress > 0.0F;
