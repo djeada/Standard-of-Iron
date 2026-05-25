@@ -41,65 +41,8 @@ inline void clear_patrol_command(Engine::Core::Entity* entity) {
 
 inline auto snap_to_walkable_ground_for_unit(const QVector3D& world_position,
                                              float unit_radius) -> QVector3D {
-  QVector3D snapped = world_position;
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  snapped.setY(terrain_service.resolve_surface_world_y(
-      snapped.x(), snapped.z(), 0.0F, snapped.y()));
-
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
-  if (pathfinder == nullptr && !terrain_service.is_initialized()) {
-    return snapped;
-  }
-
-  auto const is_walkable = [&](int x, int z) {
-    bool path_walkable = true;
-    if (pathfinder != nullptr) {
-      path_walkable = unit_radius > 0.5F
-                          ? pathfinder->is_walkable_with_radius(x, z, unit_radius)
-                          : pathfinder->is_walkable(x, z);
-    }
-    if (!path_walkable) {
-      return false;
-    }
-    if (terrain_service.is_initialized()) {
-      return terrain_service.is_walkable(x, z);
-    }
-    return true;
-  };
-
-  Game::Systems::Point const grid =
-      Game::Systems::CommandService::world_to_grid(snapped.x(), snapped.z());
-  if (is_walkable(grid.x, grid.y)) {
-    return snapped;
-  }
-
-  Game::Systems::Point nearest = grid;
-  bool found = false;
-  for (int radius = 1; radius <= 24 && !found; ++radius) {
-    for (int dz = -radius; dz <= radius && !found; ++dz) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dz) != radius) {
-          continue;
-        }
-        int const check_x = grid.x + dx;
-        int const check_z = grid.y + dz;
-        if (!is_walkable(check_x, check_z)) {
-          continue;
-        }
-        nearest = {check_x, check_z};
-        found = true;
-        break;
-      }
-    }
-  }
-
-  QVector3D const nearest_world =
-      Game::Systems::CommandService::grid_to_world(found ? nearest : grid);
-  snapped.setX(nearest_world.x());
-  snapped.setZ(nearest_world.z());
-  snapped.setY(terrain_service.resolve_surface_world_y(
-      snapped.x(), snapped.z(), 0.0F, snapped.y()));
-  return snapped;
+  return Game::Systems::CommandService::snap_to_walkable_ground_for_radius(
+      world_position, unit_radius);
 }
 
 inline auto barracks_delivery_target_position(const QVector3D& civilian_position,

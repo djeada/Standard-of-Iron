@@ -37,14 +37,74 @@ auto blocked_cell_intersects_footprint(int candidate_x,
          unit_radius * unit_radius;
 }
 
+auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
+                        const Game::Map::TerrainHeightMap* height_map,
+                        int x,
+                        int z) -> Pathfinding::CellValue {
+  if (height_map == nullptr || x < 0 || x >= height_map->get_width() || z < 0 ||
+      z >= height_map->get_height()) {
+    return Pathfinding::CellValue::Blocked;
+  }
+
+  Game::Map::TerrainType const terrain_type = terrain_service.get_terrain_type(x, z);
+  if (terrain_type == Game::Map::TerrainType::Mountain) {
+    return Pathfinding::CellValue::Blocked;
+  }
+
+  if (terrain_type == Game::Map::TerrainType::River) {
+    return height_map->isBridgeCenterline(x, z) ? Pathfinding::CellValue::Walkable
+                                                : Pathfinding::CellValue::Blocked;
+  }
+
+  if (height_map->isBridgeCell(x, z) && !height_map->isBridgeCenterline(x, z)) {
+    return Pathfinding::CellValue::Blocked;
+  }
+
+  return terrain_service.is_walkable(x, z) ? Pathfinding::CellValue::Walkable
+                                           : Pathfinding::CellValue::Blocked;
+}
+
 } // namespace
+
+Pathfinding::NavigationGrid::NavigationGrid(int width, int height) {
+  resize(width, height);
+}
+
+void Pathfinding::NavigationGrid::resize(int width, int height) {
+  m_width = std::max(width, 0);
+  m_height = std::max(height, 0);
+  m_cells.assign(static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height),
+                 static_cast<std::uint8_t>(CellValue::Walkable));
+}
+
+void Pathfinding::NavigationGrid::fill(CellValue value) {
+  std::fill(m_cells.begin(), m_cells.end(), static_cast<std::uint8_t>(value));
+}
+
+auto Pathfinding::NavigationGrid::in_bounds(int x, int y) const -> bool {
+  return x >= 0 && x < m_width && y >= 0 && y < m_height;
+}
+
+auto Pathfinding::NavigationGrid::get(int x, int y) const -> CellValue {
+  if (!in_bounds(x, y)) {
+    return CellValue::Blocked;
+  }
+  return static_cast<CellValue>(m_cells[static_cast<std::size_t>(y * m_width + x)]);
+}
+
+void Pathfinding::NavigationGrid::set(int x, int y, CellValue value) {
+  if (!in_bounds(x, y)) {
+    return;
+  }
+  m_cells[static_cast<std::size_t>(y * m_width + x)] = static_cast<std::uint8_t>(value);
+}
 
 Pathfinding::Pathfinding(int width, int height)
     : m_width(width)
-    , m_height(height) {
-  m_obstacles.resize(height, std::vector<std::uint8_t>(width, 0));
+    , m_height(height)
+    , m_navigation_grid(width, height) {
   ensure_working_buffers();
-  m_obstacles_dirty.store(true, std::memory_order_release);
+  m_navigation_grid_dirty.store(true, std::memory_order_release);
 
   m_worker_thread = std::thread(&Pathfinding::worker_loop, this);
 }
@@ -63,10 +123,7 @@ void Pathfinding::set_grid_offset(float offset_x, float offset_z) {
 }
 
 void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
-  if (x >= 0 && x < m_width && y >= 0 && y < m_height) {
-    m_obstacles[y][x] = static_cast<std::uint8_t>(is_obstacle ? CellValue::Blocked
-                                                              : CellValue::Walkable);
-  }
+  m_navigation_grid.set(x, y, is_obstacle ? CellValue::Blocked : CellValue::Walkable);
 }
 
 auto Pathfinding::is_walkable(int x, int y) const -> bool {
@@ -98,10 +155,7 @@ auto Pathfinding::is_iron_ore(int x, int y) const -> bool {
 }
 
 auto Pathfinding::cell_value(int x, int y) const -> CellValue {
-  if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
-    return CellValue::Blocked;
-  }
-  return static_cast<CellValue>(m_obstacles[y][x]);
+  return m_navigation_grid.get(x, y);
 }
 
 auto Pathfinding::is_walkable_with_radius(int x,
@@ -147,10 +201,10 @@ auto Pathfinding::is_walkable_with_radius(int x,
   return true;
 }
 
-void Pathfinding::mark_obstacles_dirty() {
+void Pathfinding::mark_navigation_grid_dirty() {
   std::lock_guard<std::mutex> const lock(m_dirty_mutex);
   m_full_update_required = true;
-  m_obstacles_dirty.store(true, std::memory_order_release);
+  m_navigation_grid_dirty.store(true, std::memory_order_release);
 }
 
 void Pathfinding::mark_region_dirty(int min_x, int max_x, int min_z, int max_z) {
@@ -166,7 +220,7 @@ void Pathfinding::mark_region_dirty(int min_x, int max_x, int min_z, int max_z) 
 
   std::lock_guard<std::mutex> const lock(m_dirty_mutex);
   m_dirty_regions.emplace_back(min_x, max_x, min_z, max_z);
-  m_obstacles_dirty.store(true, std::memory_order_release);
+  m_navigation_grid_dirty.store(true, std::memory_order_release);
 }
 
 void Pathfinding::mark_building_region_dirty(float center_x,
@@ -199,30 +253,17 @@ void Pathfinding::process_dirty_regions() {
       m_dirty_regions.clear();
       m_full_update_required = false;
 
-      for (auto& row : m_obstacles) {
-        std::fill(row.begin(), row.end(), static_cast<std::uint8_t>(0));
-      }
+      m_navigation_grid.fill(CellValue::Walkable);
 
       auto& terrain_service = Game::Map::TerrainService::instance();
       if (terrain_service.is_initialized()) {
         const Game::Map::TerrainHeightMap* height_map =
             terrain_service.get_height_map();
-        const int terrain_width = (height_map != nullptr) ? height_map->get_width() : 0;
-        const int terrain_height =
-            (height_map != nullptr) ? height_map->get_height() : 0;
 
         for (int z = 0; z < m_height; ++z) {
           for (int x = 0; x < m_width; ++x) {
-            bool blocked = false;
-            if (x < terrain_width && z < terrain_height) {
-              blocked = !terrain_service.is_walkable(x, z);
-            } else {
-              blocked = true;
-            }
-
-            if (blocked) {
-              m_obstacles[z][x] = static_cast<std::uint8_t>(CellValue::Blocked);
-            }
+            m_navigation_grid.set(
+                x, z, terrain_cell_value(terrain_service, height_map, x, z));
           }
         }
       }
@@ -239,7 +280,7 @@ void Pathfinding::process_dirty_regions() {
               static_cast<int>(std::round(cell.second - m_grid_offset_z));
 
           if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
-            m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(CellValue::Blocked);
+            m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
           }
         }
       }
@@ -265,26 +306,18 @@ void Pathfinding::process_dirty_regions() {
 void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   auto& terrain_service = Game::Map::TerrainService::instance();
   const Game::Map::TerrainHeightMap* height_map = nullptr;
-  int terrain_width = 0;
-  int terrain_height = 0;
 
   if (terrain_service.is_initialized()) {
     height_map = terrain_service.get_height_map();
-    terrain_width = (height_map != nullptr) ? height_map->get_width() : 0;
-    terrain_height = (height_map != nullptr) ? height_map->get_height() : 0;
   }
 
   for (int z = min_z; z <= max_z; ++z) {
     for (int x = min_x; x <= max_x; ++x) {
-      bool blocked = false;
-      if (x >= 0 && x < terrain_width && z >= 0 && z < terrain_height) {
-        blocked = !terrain_service.is_walkable(x, z);
-      } else if (terrain_service.is_initialized()) {
-
-        blocked = true;
-      }
-      m_obstacles[z][x] =
-          static_cast<std::uint8_t>(blocked ? CellValue::Blocked : CellValue::Walkable);
+      CellValue const value =
+          terrain_service.is_initialized()
+              ? terrain_cell_value(terrain_service, height_map, x, z)
+              : CellValue::Walkable;
+      m_navigation_grid.set(x, z, value);
     }
   }
 
@@ -300,7 +333,7 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
 
       if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z && grid_z <= max_z &&
           grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
-        m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(CellValue::Blocked);
+        m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
       }
     }
   }
@@ -340,40 +373,44 @@ void Pathfinding::apply_resource_prop_cells(int min_x,
         grid_x < 0 || grid_x >= m_width || grid_z < 0 || grid_z >= m_height) {
       continue;
     }
-    m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(resource_cell);
+    m_navigation_grid.set(grid_x, grid_z, resource_cell);
   }
 }
 
-void Pathfinding::update_building_obstacles() {
+void Pathfinding::update_navigation_grid() {
   auto& terrain_service = Game::Map::TerrainService::instance();
   std::uint64_t const world_props_revision =
       terrain_service.is_initialized() ? terrain_service.world_props_revision() : 0;
   if (world_props_revision !=
       m_applied_world_props_revision.load(std::memory_order_acquire)) {
-    mark_obstacles_dirty();
+    std::lock_guard<std::mutex> const dirty_lock(m_dirty_mutex);
+    if (m_dirty_regions.empty() && !m_full_update_required) {
+      m_full_update_required = true;
+    }
+    m_navigation_grid_dirty.store(true, std::memory_order_release);
   }
 
-  if (!m_obstacles_dirty.load(std::memory_order_acquire)) {
+  if (!m_navigation_grid_dirty.load(std::memory_order_acquire)) {
     return;
   }
 
   std::lock_guard<std::mutex> const lock(m_mutex);
 
-  if (!m_obstacles_dirty.load(std::memory_order_acquire)) {
+  if (!m_navigation_grid_dirty.load(std::memory_order_acquire)) {
     return;
   }
 
   process_dirty_regions();
   m_applied_world_props_revision.store(world_props_revision, std::memory_order_release);
 
-  m_obstacles_dirty.store(false, std::memory_order_release);
+  m_navigation_grid_dirty.store(false, std::memory_order_release);
 }
 
 auto Pathfinding::find_path(const Point& start,
                             const Point& end) -> std::vector<Point> {
 
-  if (m_obstacles_dirty.load(std::memory_order_acquire)) {
-    update_building_obstacles();
+  if (m_navigation_grid_dirty.load(std::memory_order_acquire)) {
+    update_navigation_grid();
   }
 
   std::lock_guard<std::mutex> const lock(m_mutex);
@@ -384,8 +421,8 @@ auto Pathfinding::find_path(const Point& start,
                             const Point& end,
                             float unit_radius) -> std::vector<Point> {
 
-  if (m_obstacles_dirty.load(std::memory_order_acquire)) {
-    update_building_obstacles();
+  if (m_navigation_grid_dirty.load(std::memory_order_acquire)) {
+    update_navigation_grid();
   }
 
   std::lock_guard<std::mutex> const lock(m_mutex);

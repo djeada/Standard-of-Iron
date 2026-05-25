@@ -49,8 +49,6 @@ public:
   }
 
 private:
-  static constexpr float k_walkable_radius_threshold = 0.5F;
-
   struct PlannedSlot {
     size_t original_idx{0};
     Engine::Core::EntityID entity_id{0};
@@ -64,31 +62,9 @@ private:
     float unit_radius{0.0F};
   };
 
-  static auto is_walkable_for_radius(Pathfinding* pathfinder,
-                                     int grid_x,
-                                     int grid_z,
-                                     float unit_radius) -> bool {
-    if (pathfinder == nullptr) {
-      return true;
-    }
-    return unit_radius > k_walkable_radius_threshold
-               ? pathfinder->is_walkable_with_radius(grid_x, grid_z, unit_radius)
-               : pathfinder->is_walkable(grid_x, grid_z);
-  }
-
   static auto is_position_walkable_for_radius(const QVector3D& position,
-                                              Pathfinding* pathfinder,
                                               float unit_radius) -> bool {
-    if (pathfinder == nullptr) {
-      return true;
-    }
-
-    Point const grid = CommandService::world_to_grid(position.x(), position.z());
-    if (grid.x < 0 || grid.y < 0) {
-      return false;
-    }
-
-    return is_walkable_for_radius(pathfinder, grid.x, grid.y, unit_radius);
+    return CommandService::is_world_position_walkable_for_radius(position, unit_radius);
   }
 
   static auto respects_spacing(const QVector3D& candidate,
@@ -106,81 +82,31 @@ private:
   }
 
   static auto find_nearest_walkable(const QVector3D& position,
-                                    Pathfinding* pathfinder,
                                     int max_search_radius = 5) -> QVector3D {
-    return find_nearest_walkable_for_radius(
-        position, pathfinder, 0.0F, max_search_radius);
+    return find_nearest_walkable_for_radius(position, 0.0F, max_search_radius);
   }
 
   static auto find_nearest_walkable_for_radius(const QVector3D& position,
-                                               Pathfinding* pathfinder,
                                                float unit_radius,
                                                int max_search_radius = 5) -> QVector3D {
-    if (pathfinder == nullptr) {
-      return position;
-    }
-
-    float const offset_x = pathfinder->get_grid_offset_x();
-    float const offset_z = pathfinder->get_grid_offset_z();
-
-    int const center_grid_x = static_cast<int>(std::round(position.x() - offset_x));
-    int const center_grid_z = static_cast<int>(std::round(position.z() - offset_z));
-
-    auto const is_walkable = [pathfinder, unit_radius](int grid_x, int grid_z) {
-      return unit_radius > 0.0F
-                 ? pathfinder->is_walkable_with_radius(grid_x, grid_z, unit_radius)
-                 : pathfinder->is_walkable(grid_x, grid_z);
-    };
-
-    if (is_walkable(center_grid_x, center_grid_z)) {
-      return position;
-    }
-
-    for (int radius = 1; radius <= max_search_radius; ++radius) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        for (int dz = -radius; dz <= radius; ++dz) {
-          if (std::abs(dx) != radius && std::abs(dz) != radius) {
-            continue;
-          }
-
-          int const test_x = center_grid_x + dx;
-          int const test_z = center_grid_z + dz;
-
-          if (is_walkable(test_x, test_z)) {
-            return QVector3D(static_cast<float>(test_x) + offset_x,
-                             position.y(),
-                             static_cast<float>(test_z) + offset_z);
-          }
-        }
-      }
-    }
-
-    return position;
+    return CommandService::snap_to_walkable_ground_for_radius(
+        position, unit_radius, max_search_radius);
   }
 
   static auto
   find_nearest_walkable_non_overlapping(const QVector3D& position,
-                                        Pathfinding* pathfinder,
                                         float unit_radius,
                                         const std::vector<OccupiedSlot>& occupied,
                                         int max_search_radius = 5) -> QVector3D {
-    if (pathfinder == nullptr) {
-      return position;
-    }
-
-    if (is_position_walkable_for_radius(position, pathfinder, unit_radius) &&
+    if (is_position_walkable_for_radius(position, unit_radius) &&
         respects_spacing(position, unit_radius, occupied)) {
       return position;
     }
 
-    QVector3D const walkable_fallback = find_nearest_walkable_for_radius(
-        position, pathfinder, unit_radius, max_search_radius);
+    QVector3D const walkable_fallback =
+        find_nearest_walkable_for_radius(position, unit_radius, max_search_radius);
 
-    float const offset_x = pathfinder->get_grid_offset_x();
-    float const offset_z = pathfinder->get_grid_offset_z();
-
-    int const center_grid_x = static_cast<int>(std::round(position.x() - offset_x));
-    int const center_grid_z = static_cast<int>(std::round(position.z() - offset_z));
+    Point const center_grid = CommandService::world_to_grid(position.x(), position.z());
 
     for (int radius = 1; radius <= max_search_radius; ++radius) {
       for (int dx = -radius; dx <= radius; ++dx) {
@@ -189,15 +115,14 @@ private:
             continue;
           }
 
-          int const test_x = center_grid_x + dx;
-          int const test_z = center_grid_z + dz;
-          if (!is_walkable_for_radius(pathfinder, test_x, test_z, unit_radius)) {
+          Point const candidate_grid{center_grid.x + dx, center_grid.y + dz};
+          if (!CommandService::is_grid_walkable_for_radius(candidate_grid,
+                                                           unit_radius)) {
             continue;
           }
 
-          QVector3D const candidate(static_cast<float>(test_x) + offset_x,
-                                    position.y(),
-                                    static_cast<float>(test_z) + offset_z);
+          QVector3D candidate = CommandService::grid_to_world(candidate_grid);
+          candidate.setY(position.y());
           if (respects_spacing(candidate, unit_radius, occupied)) {
             return candidate;
           }
@@ -208,18 +133,8 @@ private:
     return walkable_fallback;
   }
 
-  static auto is_area_mostly_walkable(const QVector3D& center,
-                                      Pathfinding* pathfinder,
-                                      float radius) -> bool {
-    if (pathfinder == nullptr) {
-      return true;
-    }
-
-    float const offset_x = pathfinder->get_grid_offset_x();
-    float const offset_z = pathfinder->get_grid_offset_z();
-
-    int const center_grid_x = static_cast<int>(std::round(center.x() - offset_x));
-    int const center_grid_z = static_cast<int>(std::round(center.z() - offset_z));
+  static auto is_area_mostly_walkable(const QVector3D& center, float radius) -> bool {
+    Point const center_grid = CommandService::world_to_grid(center.x(), center.z());
 
     int const check_radius = static_cast<int>(std::ceil(radius));
     int walkable_count = 0;
@@ -227,11 +142,10 @@ private:
 
     for (int dx = -check_radius; dx <= check_radius; ++dx) {
       for (int dz = -check_radius; dz <= check_radius; ++dz) {
-        int const test_x = center_grid_x + dx;
-        int const test_z = center_grid_z + dz;
+        Point const candidate{center_grid.x + dx, center_grid.y + dz};
 
         ++total_count;
-        if (pathfinder->is_walkable(test_x, test_z)) {
+        if (CommandService::is_grid_walkable_for_radius(candidate, 0.0F)) {
           ++walkable_count;
         }
       }
@@ -253,11 +167,10 @@ private:
 
   static auto
   are_slots_walkable_at_center(const QVector3D& center,
-                               const std::vector<PlannedSlot>& planned_slots,
-                               Pathfinding* pathfinder) -> bool {
+                               const std::vector<PlannedSlot>& planned_slots) -> bool {
     for (const auto& slot : planned_slots) {
-      if (!is_position_walkable_for_radius(
-              center + slot.local_offset, pathfinder, slot.unit_radius)) {
+      if (!is_position_walkable_for_radius(center + slot.local_offset,
+                                           slot.unit_radius)) {
         return false;
       }
     }
@@ -267,18 +180,15 @@ private:
   static auto
   find_coherent_walkable_center(const QVector3D& preferred_center,
                                 const std::vector<PlannedSlot>& planned_slots,
-                                Pathfinding* pathfinder,
                                 int max_search_radius = 15) -> QVector3D {
-    if (pathfinder == nullptr || planned_slots.empty()) {
+    if (planned_slots.empty()) {
       return preferred_center;
     }
 
-    if (are_slots_walkable_at_center(preferred_center, planned_slots, pathfinder)) {
+    if (are_slots_walkable_at_center(preferred_center, planned_slots)) {
       return preferred_center;
     }
 
-    float const offset_x = pathfinder->get_grid_offset_x();
-    float const offset_z = pathfinder->get_grid_offset_z();
     Point const center_grid =
         CommandService::world_to_grid(preferred_center.x(), preferred_center.z());
 
@@ -288,13 +198,12 @@ private:
     bool found_partial_candidate = false;
 
     auto consider_candidate = [&](int grid_x, int grid_z) -> bool {
-      QVector3D const candidate_center(static_cast<float>(grid_x) + offset_x,
-                                       preferred_center.y(),
-                                       static_cast<float>(grid_z) + offset_z);
+      QVector3D candidate_center = CommandService::grid_to_world({grid_x, grid_z});
+      candidate_center.setY(preferred_center.y());
       int valid_count = 0;
       for (const auto& slot : planned_slots) {
-        if (is_position_walkable_for_radius(
-                candidate_center + slot.local_offset, pathfinder, slot.unit_radius)) {
+        if (is_position_walkable_for_radius(candidate_center + slot.local_offset,
+                                            slot.unit_radius)) {
           ++valid_count;
         }
       }
@@ -359,16 +268,12 @@ public:
     result.positions = spread_formation(int(units.size()), center, spacing);
     result.facing_angles.resize(units.size(), 0.0F);
 
-    auto* pathfinder = CommandService::get_pathfinder();
-
     QVector3D adjusted_center = center;
-    if (pathfinder != nullptr) {
-      float const estimated_formation_radius =
-          std::sqrt(static_cast<float>(units.size())) * spacing * 2.0F;
+    float const estimated_formation_radius =
+        std::sqrt(static_cast<float>(units.size())) * spacing * 2.0F;
 
-      if (!is_area_mostly_walkable(center, pathfinder, estimated_formation_radius)) {
-        adjusted_center = find_nearest_walkable(center, pathfinder, 15);
-      }
+    if (!is_area_mostly_walkable(center, estimated_formation_radius)) {
+      adjusted_center = find_nearest_walkable(center, 15);
     }
 
     struct FormationGroup {
@@ -554,7 +459,7 @@ public:
     }
 
     QVector3D const coherent_center =
-        find_coherent_walkable_center(adjusted_center, planned_slots, pathfinder, 18);
+        find_coherent_walkable_center(adjusted_center, planned_slots, 18);
 
     std::stable_sort(
         planned_slots.begin(),
@@ -572,11 +477,8 @@ public:
     std::vector<OccupiedSlot> occupied_slots;
     occupied_slots.reserve(planned_slots.size());
     for (const auto& slot : planned_slots) {
-      QVector3D final_position = coherent_center + slot.local_offset;
-      if (pathfinder != nullptr) {
-        final_position = find_nearest_walkable_non_overlapping(
-            final_position, pathfinder, slot.unit_radius, occupied_slots, 10);
-      }
+      QVector3D final_position = find_nearest_walkable_non_overlapping(
+          coherent_center + slot.local_offset, slot.unit_radius, occupied_slots, 10);
       result.positions[slot.original_idx] = final_position;
       result.facing_angles[slot.original_idx] = slot.facing_angle;
       occupied_slots.push_back({final_position, slot.unit_radius});

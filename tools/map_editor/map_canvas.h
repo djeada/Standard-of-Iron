@@ -56,8 +56,13 @@ private:
   void draw_linear_elements(QPainter& painter);
   void draw_undead_zones(QPainter& painter);
   void draw_current_placement(QPainter& painter);
-  void draw_terrain_feature(QPainter& painter, const TerrainElement& elem, const QPoint& center);
-  void draw_world_prop_icon(QPainter& painter, const QString& type, const QPoint& pos, int size);
+  void draw_terrain_feature(QPainter& painter,
+                            const TerrainElement& elem,
+                            const QPoint& center);
+  void draw_world_prop_icon(QPainter& painter,
+                            const QString& type,
+                            const QPoint& pos,
+                            int size);
   void draw_element(QPainter& painter,
                     const QString& type,
                     const QPoint& pos,

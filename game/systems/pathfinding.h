@@ -52,6 +52,23 @@ public:
     IronOre = 4,
   };
 
+  class NavigationGrid {
+  public:
+    NavigationGrid() = default;
+    NavigationGrid(int width, int height);
+
+    void resize(int width, int height);
+    void fill(CellValue value);
+    [[nodiscard]] auto in_bounds(int x, int y) const -> bool;
+    [[nodiscard]] auto get(int x, int y) const -> CellValue;
+    void set(int x, int y, CellValue value);
+
+  private:
+    int m_width{0};
+    int m_height{0};
+    std::vector<std::uint8_t> m_cells;
+  };
+
   Pathfinding(int width, int height);
   ~Pathfinding();
 
@@ -68,9 +85,9 @@ public:
   auto cell_value(int x, int y) const -> CellValue;
   auto is_walkable_with_radius(int x, int y, float unit_radius) const -> bool;
 
-  void update_building_obstacles();
+  void update_navigation_grid();
 
-  void mark_obstacles_dirty();
+  void mark_navigation_grid_dirty();
 
   void mark_region_dirty(int min_x, int max_x, int min_z, int max_z);
 
@@ -158,10 +175,10 @@ private:
   void apply_resource_prop_cells(int min_x, int max_x, int min_z, int max_z);
 
   int m_width, m_height;
-  std::vector<std::vector<std::uint8_t>> m_obstacles;
+  NavigationGrid m_navigation_grid;
   float m_grid_cell_size{1.0F};
   float m_grid_offset_x{0.0F}, m_grid_offset_z{0.0F};
-  std::atomic<bool> m_obstacles_dirty;
+  std::atomic<bool> m_navigation_grid_dirty;
   mutable std::mutex m_mutex;
   std::atomic<bool> m_stop_worker{false};
   std::thread m_worker_thread;

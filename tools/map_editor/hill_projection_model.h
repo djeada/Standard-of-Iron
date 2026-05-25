@@ -22,11 +22,12 @@ struct Model {
 };
 
 auto build_model(const QJsonObject& hill_json) -> Model;
-auto entrances_from_cells(const Model& model, const QVector<QPoint>& entrance_cells)
-    -> QJsonArray;
+auto entrances_from_cells(const Model& model,
+                          const QVector<QPoint>& entrance_cells) -> QJsonArray;
 auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
                                    const Model& model,
                                    const QVector<QPoint>& hill_cells,
-                                   const QVector<QPoint>& entrance_cells) -> QJsonObject;
+                                   const QVector<QPoint>& entrance_cells)
+    -> QJsonObject;
 
 } // namespace MapEditor::HillProjection

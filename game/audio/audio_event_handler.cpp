@@ -615,11 +615,11 @@ void AudioEventHandler::on_audio_trigger(const Engine::Core::AudioTriggerEvent& 
 }
 
 void AudioEventHandler::on_music_trigger(const Engine::Core::MusicTriggerEvent& event) {
-  AudioSystem::get_instance().play_music(
-      event.music_id,
-      event.volume,
-      event.crossfade ? Game::Audio::MusicTransition::Crossfade
-                      : Game::Audio::MusicTransition::Immediate);
+  AudioSystem::get_instance().play_music(event.music_id,
+                                         event.volume,
+                                         event.crossfade
+                                             ? Game::Audio::MusicTransition::Crossfade
+                                             : Game::Audio::MusicTransition::Immediate);
 }
 
 void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent& event) {

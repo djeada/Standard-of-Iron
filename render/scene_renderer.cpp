@@ -209,6 +209,10 @@ public:
   explicit RiggedBodyProbeSubmitter(ISubmitter& inner)
       : m_inner(inner) {}
 
+  [[nodiscard]] auto unwrap_submitter() noexcept -> ISubmitter* override {
+    return m_inner.unwrap_submitter();
+  }
+
   [[nodiscard]] auto rigged_body_count() const noexcept -> std::uint32_t {
     return m_rigged_body_count;
   }
@@ -1870,6 +1874,12 @@ void Renderer::render_world(Engine::Core::World* world) {
         lod_in.force_batching = batch_config.force_batching;
         lod_in.never_batch = batch_config.never_batch;
 
+        const bool batching_available =
+            !m_force_full_creature_lod && !entry.combat_active && batching_ratio > 0.0F;
+        const auto tier = m_force_full_creature_lod
+                              ? Render::Pipeline::LodTier::Full
+                              : Render::Pipeline::select_lod(lod_in);
+
         if (m_force_full_creature_lod) {
           ctx.force_humanoid_lod = true;
           ctx.forced_humanoid_lod = HumanoidLOD::Full;
@@ -1883,12 +1893,6 @@ void Renderer::render_world(Engine::Core::World* world) {
           ctx.force_horse_lod = true;
           ctx.forced_horse_lod = stable_lod;
         }
-
-        const bool batching_available =
-            !m_force_full_creature_lod && !entry.combat_active && batching_ratio > 0.0F;
-        const auto tier = m_force_full_creature_lod
-                              ? Render::Pipeline::LodTier::Full
-                              : Render::Pipeline::select_lod(lod_in);
 
         const bool use_batching =
             batching_available && (tier == Render::Pipeline::LodTier::Simplified ||

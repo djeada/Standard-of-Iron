@@ -5,8 +5,8 @@
 #include <QThread>
 #include <QVector>
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 #include "audio_constants.h"
 #include "miniaudio_backend.h"

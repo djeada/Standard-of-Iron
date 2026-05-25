@@ -1,10 +1,10 @@
 #include "hill_projection_model.h"
 
 #include <QSet>
+#include <queue>
 
 #include <algorithm>
 #include <cmath>
-#include <queue>
 
 #include "map_json_keys.h"
 
@@ -55,8 +55,8 @@ auto sort_cells(QVector<QPoint>* cells) -> void {
   });
 }
 
-auto unique_in_bounds_cells(const Model& model, const QVector<QPoint>& cells)
-    -> QVector<QPoint> {
+auto unique_in_bounds_cells(const Model& model,
+                            const QVector<QPoint>& cells) -> QVector<QPoint> {
   QSet<quint64> seen;
   QVector<QPoint> normalized;
   normalized.reserve(cells.size());
@@ -212,14 +212,14 @@ auto build_model(const QJsonObject& hill_json) -> Model {
         const double radius_sq = radius * radius;
         const int min_cell_x =
             std::max(0, static_cast<int>(std::floor((x - radius) - model.origin_x)));
-        const int max_cell_x = std::min(
-            model.grid_width - 1,
-            static_cast<int>(std::ceil((x + radius) - model.origin_x)));
+        const int max_cell_x =
+            std::min(model.grid_width - 1,
+                     static_cast<int>(std::ceil((x + radius) - model.origin_x)));
         const int min_cell_z =
             std::max(0, static_cast<int>(std::floor((z - radius) - model.origin_z)));
-        const int max_cell_z = std::min(
-            model.grid_height - 1,
-            static_cast<int>(std::ceil((z + radius) - model.origin_z)));
+        const int max_cell_z =
+            std::min(model.grid_height - 1,
+                     static_cast<int>(std::ceil((z + radius) - model.origin_z)));
         bool has_visible_cell = false;
         for (int cell_z = min_cell_z; cell_z <= max_cell_z; ++cell_z) {
           for (int cell_x = min_cell_x; cell_x <= max_cell_x; ++cell_x) {
@@ -254,9 +254,8 @@ auto build_model(const QJsonObject& hill_json) -> Model {
   }
 
   for (quint64 key : unique_entrances) {
-    model.entrance_cells.append(
-        QPoint(static_cast<int>(key & 0xFFFFFFFFULL),
-               static_cast<int>((key >> 32U) & 0xFFFFFFFFULL)));
+    model.entrance_cells.append(QPoint(static_cast<int>(key & 0xFFFFFFFFULL),
+                                       static_cast<int>((key >> 32U) & 0xFFFFFFFFULL)));
   }
 
   sort_cells(&model.hill_cells);
@@ -265,8 +264,8 @@ auto build_model(const QJsonObject& hill_json) -> Model {
   return model;
 }
 
-auto entrances_from_cells(const Model& model, const QVector<QPoint>& entrance_cells)
-    -> QJsonArray {
+auto entrances_from_cells(const Model& model,
+                          const QVector<QPoint>& entrance_cells) -> QJsonArray {
   QJsonArray entrances = model.preserved_entrances;
   const QVector<QPoint> normalized_cells =
       unique_in_bounds_cells(model, entrance_cells);
@@ -310,7 +309,8 @@ auto entrances_from_cells(const Model& model, const QVector<QPoint>& entrance_ce
 auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
                                    const Model& model,
                                    const QVector<QPoint>& hill_cells,
-                                   const QVector<QPoint>& entrance_cells) -> QJsonObject {
+                                   const QVector<QPoint>& entrance_cells)
+    -> QJsonObject {
   QJsonObject updated = base_hill_json;
 
   const QString terrain_type =
@@ -342,8 +342,9 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
       updated.remove(MapJsonKeys::radius);
     }
   }
-  // For mountains: the game engine derives shape from `radius` (major_radius = radius*1.8,
-  // minor_radius = radius*0.22). Never modify radius/width/depth/x/z — only entrances.
+  // For mountains: the game engine derives shape from `radius` (major_radius =
+  // radius*1.8, minor_radius = radius*0.22). Never modify radius/width/depth/x/z — only
+  // entrances.
 
   const QJsonArray entrances = entrances_from_cells(model, entrance_cells);
   if (entrances.isEmpty()) {

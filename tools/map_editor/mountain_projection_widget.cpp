@@ -3,6 +3,7 @@
 namespace MapEditor {
 
 MountainProjectionWidget::MountainProjectionWidget(QWidget* parent)
-    : TerrainProjectionWidget(parent) {}
+    : TerrainProjectionWidget(parent) {
+}
 
 } // namespace MapEditor
