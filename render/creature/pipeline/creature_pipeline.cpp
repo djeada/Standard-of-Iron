@@ -36,13 +36,7 @@ namespace Render::Creature::Pipeline {
 namespace {
 
 auto resolve_renderer(Render::GL::ISubmitter& out) noexcept -> Render::GL::Renderer* {
-  if (auto* renderer = dynamic_cast<Render::GL::Renderer*>(&out)) {
-    return renderer;
-  }
-  if (auto* batch = dynamic_cast<Render::GL::BatchingSubmitter*>(&out)) {
-    return dynamic_cast<Render::GL::Renderer*>(batch->fallback_submitter());
-  }
-  return nullptr;
+  return dynamic_cast<Render::GL::Renderer*>(out.unwrap_submitter());
 }
 
 auto species_to_bpat_id(CreatureKind kind) noexcept -> std::uint32_t {

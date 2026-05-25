@@ -46,7 +46,7 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
   EXPECT_TRUE(pathfinder->is_tree(4, 4));
 
   std::uint64_t const tree_id = terrain.world_props().front().id;
@@ -88,7 +88,7 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
             25);
   EXPECT_TRUE(terrain.world_props().empty());
 
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
   EXPECT_FALSE(pathfinder->is_tree(4, 4));
   EXPECT_TRUE(pathfinder->is_walkable(4, 4));
 
@@ -116,7 +116,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
   EXPECT_TRUE(pathfinder->is_boulder(4, 4));
 
   std::uint64_t const boulder_id = terrain.world_props().front().id;
@@ -158,7 +158,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
             25);
   EXPECT_TRUE(terrain.world_props().empty());
 
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
   EXPECT_FALSE(pathfinder->is_boulder(4, 4));
   EXPECT_TRUE(pathfinder->is_walkable(4, 4));
 
@@ -186,7 +186,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
   EXPECT_TRUE(pathfinder->is_iron_ore(4, 4));
 
   std::uint64_t const iron_ore_id = terrain.world_props().front().id;
@@ -228,7 +228,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
             25);
   EXPECT_TRUE(terrain.world_props().empty());
 
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
   EXPECT_FALSE(pathfinder->is_iron_ore(4, 4));
   EXPECT_TRUE(pathfinder->is_walkable(4, 4));
 
@@ -261,7 +261,7 @@ TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
     terrain.initialize(map_def);
     ASSERT_EQ(terrain.world_props().size(), 1U);
 
-    pathfinder->update_building_obstacles();
+    pathfinder->update_navigation_grid();
     EXPECT_TRUE((pathfinder->*resource_check)(4, 4));
 
     auto const target_world = Game::Systems::CommandService::grid_to_world({4, 4});

@@ -215,7 +215,7 @@ void BuildingCollisionRegistry::set_grid_padding(float padding) {
   s_grid_padding = padding;
 
   if (auto* pf = CommandService::get_pathfinder()) {
-    pf->mark_obstacles_dirty();
+    pf->mark_navigation_grid_dirty();
   }
 }
 

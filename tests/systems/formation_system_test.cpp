@@ -554,7 +554,7 @@ TEST_F(FormationSystemTest, PlannerSnapsInvalidFormationSlotsToWalkableTargets) 
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   Game::Systems::Point const blocked =
       Game::Systems::CommandService::world_to_grid(1.0F, 10.0F);
@@ -595,7 +595,7 @@ TEST_F(FormationSystemTest, PlannerShiftsWholeFormationCoherentlyAroundBlockedSl
 
   auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  pathfinder->update_building_obstacles();
+  pathfinder->update_navigation_grid();
 
   auto const blocked = Game::Systems::CommandService::world_to_grid(
       baseline.positions[0].x(), baseline.positions[0].z());
