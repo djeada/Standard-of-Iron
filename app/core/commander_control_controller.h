@@ -139,6 +139,7 @@ private:
 
   float m_move_speed = 0.0F;
   int m_move_right_axis = 0;
+  int m_move_forward_axis = 0;
   bool m_move_running = false;
 
   float m_hit_trauma = 0.0F;

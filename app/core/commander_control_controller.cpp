@@ -114,23 +114,50 @@ auto has_clear_building_los(const QVector3D& start,
 constexpr std::uint8_t k_commander_sword_sway_default = 0U;
 constexpr std::uint8_t k_commander_sword_sway_reverse = 1U;
 constexpr std::uint8_t k_commander_sword_sway_finisher = 2U;
+constexpr std::uint8_t k_commander_sword_sway_overhead = 3U;
+constexpr std::uint8_t k_commander_sword_sway_thrust = 4U;
 
 auto select_commander_sword_sway(const Engine::Core::CommanderComponent* commander,
                                  std::uint8_t attack_sequence,
                                  int move_right_axis,
+                                 int move_forward_axis,
                                  bool finisher_attack) -> std::uint8_t {
   if (finisher_attack) {
     return k_commander_sword_sway_finisher;
   }
+  // Thrust on forward input
+  if (move_forward_axis > 0) {
+    return k_commander_sword_sway_thrust;
+  }
+  // Overhead on backward input or power strike
+  if (move_forward_axis < 0 ||
+      (move_right_axis == 0 && commander != nullptr &&
+       commander->power_strike_active)) {
+    return k_commander_sword_sway_overhead;
+  }
+  // Directional slashes
   std::uint8_t style = attack_sequence % 2U;
   if (move_right_axis > 0) {
     style = (style == k_commander_sword_sway_default) ? k_commander_sword_sway_reverse
                                                       : k_commander_sword_sway_default;
-  } else if (move_right_axis == 0 && commander != nullptr &&
-             commander->power_strike_active) {
-    style = k_commander_sword_sway_reverse;
   }
   return style;
+}
+
+auto attack_direction_from_sway(std::uint8_t sway) -> Engine::Core::AttackDirection {
+  switch (sway) {
+  case k_commander_sword_sway_default:
+    return Engine::Core::AttackDirection::LeftSlash;
+  case k_commander_sword_sway_reverse:
+    return Engine::Core::AttackDirection::RightSlash;
+  case k_commander_sword_sway_overhead:
+  case k_commander_sword_sway_finisher:
+    return Engine::Core::AttackDirection::Overhead;
+  case k_commander_sword_sway_thrust:
+    return Engine::Core::AttackDirection::Thrust;
+  default:
+    return Engine::Core::AttackDirection::LeftSlash;
+  }
 }
 
 auto is_walkable_at(float x, float z) -> bool {
@@ -187,6 +214,7 @@ void CommanderControlController::reset() {
   m_cam_smooth_valid = false;
   m_move_speed = 0.0F;
   m_move_right_axis = 0;
+  m_move_forward_axis = 0;
   m_move_running = false;
   m_hit_trauma = 0.0F;
   m_hit_shake_phase = 0.0F;
@@ -786,6 +814,12 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   if (combat_state != nullptr &&
       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
+    // Input buffering: allow queuing next attack during Recover/Reposition phases
+    if (combat_state->animation_state == Engine::Core::CombatAnimationState::Recover ||
+        combat_state->animation_state ==
+            Engine::Core::CombatAnimationState::Reposition) {
+      combat_state->input_buffered = true;
+    }
     return true;
   }
 
@@ -837,8 +871,11 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
             select_commander_sword_sway(cmd_comp,
                                         action->melee_attack_sequence,
                                         m_move_right_axis,
+                                        m_move_forward_axis,
                                         finisher_attack);
         combat_state->attack_variant = action->melee_attack_style;
+        combat_state->attack_direction =
+            attack_direction_from_sway(action->melee_attack_style);
         action->melee_attack_sequence =
             static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 2U);
       }
@@ -853,32 +890,29 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     m_combo_miss_timer = 0.0F;
   }
 
+  // Consume stamina for the attack
+  if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+    float cost = (cmd_comp != nullptr && cmd_comp->power_strike_active)
+                     ? Engine::Core::CombatStateComponent::k_stamina_cost_heavy_attack
+                     : Engine::Core::CombatStateComponent::k_stamina_cost_light_attack;
+    stamina->stamina = std::max(0.0F, stamina->stamina - cost);
+  }
+
+  // Mark that damage has not been dealt yet for this swing (deferred to Strike phase)
+  if (combat_state != nullptr) {
+    combat_state->damage_dealt_this_swing = false;
+  }
+
   const auto target_id = find_primary_target(world, commander_id, local_owner_id);
   if (target_id == 0) {
 
     return true;
   }
 
-  auto* target = world.get_entity(target_id);
-  if (target != nullptr) {
-    int damage = 10;
-    if (attack != nullptr) {
-      damage = std::max(1, attack->get_current_damage());
-      attack->time_since_last = 0.0F;
-    }
-    Game::Systems::RpgCombat::deal_commander_attack_damage(
-        &world, target, damage, commander_id);
-    if (auto* action =
-            commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
-      action->active_target_id = target_id;
-      action->last_hit_target_id = target_id;
-      action->last_damage = damage;
-    }
-    if (auto* rpg_targets = Engine::Core::get_or_add_component<
-            Engine::Core::RpgCommanderTargetComponent>(commander)) {
-      rpg_targets->recent_hit_target_id = target_id;
-      rpg_targets->recent_hit_timer = 1.25F;
-    }
+  // Store pending target for deferred damage at Strike phase
+  if (auto* action =
+          commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
+    action->active_target_id = target_id;
   }
   return true;
 }
@@ -1206,6 +1240,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_input.second_wind_requested = false;
     m_move_speed = 0.0F;
     m_move_right_axis = 0;
+    m_move_forward_axis = 0;
     m_move_running = false;
     m_guard_was_active = false;
     m_view_yaw = wrap_angle_degrees(transform->rotation.y);
@@ -1287,6 +1322,13 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_jump_safe_position_valid = true;
     m_jump_last_walkable_position =
         QVector3D(transform->position.x, transform->position.y, transform->position.z);
+    // Stamina cost for jump
+    if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+      stamina->stamina = std::max(
+          0.0F,
+          stamina->stamina -
+              Engine::Core::CombatStateComponent::k_stamina_cost_jump);
+    }
   }
 
   float jump_phase = 0.0F;
@@ -1354,6 +1396,13 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_dodge_fov_kick = 8.0F;
     if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
       rpg->dodge_invincible = true;
+    }
+    // Stamina cost for dodge
+    if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+      stamina->stamina = std::max(
+          0.0F,
+          stamina->stamina -
+              Engine::Core::CombatStateComponent::k_stamina_cost_dodge);
     }
   }
 
@@ -1468,6 +1517,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   m_move_speed = actual_speed_for_bob;
   m_move_right_axis = right_axis;
+  m_move_forward_axis = forward_axis;
   m_move_running = run_for_bob;
   if (cmd_comp != nullptr) {
     cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->vx : 0.0F;
@@ -1515,6 +1565,16 @@ auto CommanderControlController::update(Engine::Core::World& world,
     guard->active = false;
   }
   m_guard_was_active = (guard != nullptr) && guard->active;
+
+  // Stamina drain while guarding
+  if (guard != nullptr && guard->active) {
+    if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
+      stamina->stamina = std::max(
+          0.0F,
+          stamina->stamina -
+              Engine::Core::CombatStateComponent::k_stamina_cost_guard_per_second * dt);
+    }
+  }
 
   update_ability_cooldowns(cmd_comp, dt);
   try_activate_shield_bash(world, *commander, commander_id, local_owner_id);

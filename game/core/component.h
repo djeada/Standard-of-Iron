@@ -420,12 +420,21 @@ enum class CombatAnimationState : std::uint8_t {
   Reposition
 };
 
+enum class AttackDirection : std::uint8_t {
+  LeftSlash = 0,
+  RightSlash = 1,
+  Overhead = 2,
+  Thrust = 3,
+  HeavyOverhead = 4
+};
+
 class CombatStateComponent : public Component {
 public:
   CombatStateComponent() = default;
 
   CombatAnimationState animation_state{CombatAnimationState::Idle};
   CombatAttackFamily attack_family{CombatAttackFamily::None};
+  AttackDirection attack_direction{AttackDirection::LeftSlash};
   float state_time{0.0F};
   float state_duration{0.0F};
   float attack_offset{0.0F};
@@ -433,15 +442,34 @@ public:
   bool finisher_attack{false};
   bool is_hit_paused{false};
   float hit_pause_remaining{0.0F};
+  bool damage_dealt_this_swing{false};
+  bool input_buffered{false};
 
-  static constexpr float k_combat_animation_hit_pause_duration = 0.05F;
-  static constexpr float k_advance_duration = 0.16F;
-  static constexpr float k_wind_up_duration = 0.22F;
-  static constexpr float k_strike_duration = 0.18F;
-  static constexpr float k_impact_duration = 0.10F;
-  static constexpr float k_recover_duration = 0.36F;
-  static constexpr float k_reposition_duration = 0.24F;
+  static constexpr float k_combat_animation_hit_pause_duration = 0.08F;
+  static constexpr float k_advance_duration = 0.12F;
+  static constexpr float k_wind_up_duration = 0.28F;
+  static constexpr float k_strike_duration = 0.22F;
+  static constexpr float k_impact_duration = 0.12F;
+  static constexpr float k_recover_duration = 0.30F;
+  static constexpr float k_reposition_duration = 0.18F;
   static constexpr std::uint8_t k_attack_variant_seed_slots = 8;
+
+  static constexpr float k_stamina_cost_light_attack = 12.0F;
+  static constexpr float k_stamina_cost_heavy_attack = 25.0F;
+  static constexpr float k_stamina_cost_dodge = 18.0F;
+  static constexpr float k_stamina_cost_guard_per_second = 8.0F;
+  static constexpr float k_stamina_cost_shield_bash = 20.0F;
+  static constexpr float k_stamina_cost_jump = 10.0F;
+  static constexpr float k_low_stamina_threshold = 20.0F;
+  static constexpr float k_low_stamina_damage_penalty = 0.7F;
+};
+
+enum class StaggerTier : std::uint8_t {
+  LightFlinch = 0,
+  HeavyStagger = 1,
+  Knockback = 2,
+  Knockdown = 3,
+  GuardBreak = 4
 };
 
 class HitFeedbackComponent : public Component {
@@ -453,9 +481,33 @@ public:
   float reaction_intensity{0.0F};
   float knockback_x{0.0F};
   float knockback_z{0.0F};
+  StaggerTier stagger_tier{StaggerTier::LightFlinch};
+  float hit_direction_x{0.0F};
+  float hit_direction_z{0.0F};
 
   static constexpr float k_reaction_duration = 0.25F;
   static constexpr float k_max_knockback = 0.15F;
+  static constexpr float k_light_flinch_duration = 0.15F;
+  static constexpr float k_heavy_stagger_duration = 0.40F;
+  static constexpr float k_knockback_duration = 0.55F;
+  static constexpr float k_knockdown_duration = 0.90F;
+  static constexpr float k_guard_break_duration = 0.65F;
+
+  [[nodiscard]] static auto duration_for_tier(StaggerTier tier) noexcept -> float {
+    switch (tier) {
+    case StaggerTier::LightFlinch:
+      return k_light_flinch_duration;
+    case StaggerTier::HeavyStagger:
+      return k_heavy_stagger_duration;
+    case StaggerTier::Knockback:
+      return k_knockback_duration;
+    case StaggerTier::Knockdown:
+      return k_knockdown_duration;
+    case StaggerTier::GuardBreak:
+      return k_guard_break_duration;
+    }
+    return k_reaction_duration;
+  }
 };
 
 class PatrolComponent : public Component {
@@ -674,6 +726,28 @@ public:
   explicit StaggerComponent(float duration = 0.5F)
       : remaining(duration) {}
   float remaining;
+  StaggerTier tier{StaggerTier::LightFlinch};
+};
+
+enum class EnemyTelegraphPhase : std::uint8_t {
+  None,
+  WindUp,
+  Active,
+  Recovery
+};
+
+class EnemyTelegraphComponent : public Component {
+public:
+  EnemyTelegraphComponent() = default;
+
+  EnemyTelegraphPhase phase{EnemyTelegraphPhase::None};
+  float phase_time{0.0F};
+  float wind_up_duration{0.45F};
+  float active_duration{0.20F};
+  float recovery_duration{0.35F};
+  AttackDirection attack_direction{AttackDirection::LeftSlash};
+  bool is_unblockable{false};
+  bool visual_tell_active{false};
 };
 
 enum class RpgEngagementRole : std::uint8_t {

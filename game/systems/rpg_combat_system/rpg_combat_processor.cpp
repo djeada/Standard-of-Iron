@@ -180,7 +180,29 @@ void tick_rpg_combat(Engine::Core::World* world,
       if (fb != nullptr) {
         fb->is_reacting = true;
         fb->reaction_time = 0.0F;
-        fb->reaction_intensity = 1.0F;
+        fb->stagger_tier = stagger->tier;
+        // Scale intensity and knockback based on stagger tier
+        switch (stagger->tier) {
+        case Engine::Core::StaggerTier::LightFlinch:
+          fb->reaction_intensity = 0.4F;
+          break;
+        case Engine::Core::StaggerTier::HeavyStagger:
+          fb->reaction_intensity = 0.75F;
+          break;
+        case Engine::Core::StaggerTier::Knockback:
+          fb->reaction_intensity = 1.0F;
+          fb->knockback_x = fb->hit_direction_x * 0.12F;
+          fb->knockback_z = fb->hit_direction_z * 0.12F;
+          break;
+        case Engine::Core::StaggerTier::Knockdown:
+          fb->reaction_intensity = 1.0F;
+          fb->knockback_x = fb->hit_direction_x * 0.08F;
+          fb->knockback_z = fb->hit_direction_z * 0.08F;
+          break;
+        case Engine::Core::StaggerTier::GuardBreak:
+          fb->reaction_intensity = 0.85F;
+          break;
+        }
       }
     }
   }
@@ -195,6 +217,42 @@ void tick_rpg_combat(Engine::Core::World* world,
   if (rpg != nullptr && rpg->active && rpg->rpg_hp > 0 && unit != nullptr &&
       unit->health <= 0) {
     unit->health = 1;
+  }
+
+  // Tick enemy telegraph phases
+  for (auto* telegraphed :
+       world->get_entities_with<Engine::Core::EnemyTelegraphComponent>()) {
+    auto* telegraph =
+        telegraphed->get_component<Engine::Core::EnemyTelegraphComponent>();
+    if (telegraph == nullptr ||
+        telegraph->phase == Engine::Core::EnemyTelegraphPhase::None) {
+      continue;
+    }
+    telegraph->phase_time += dt;
+    switch (telegraph->phase) {
+    case Engine::Core::EnemyTelegraphPhase::WindUp:
+      telegraph->visual_tell_active = true;
+      if (telegraph->phase_time >= telegraph->wind_up_duration) {
+        telegraph->phase = Engine::Core::EnemyTelegraphPhase::Active;
+        telegraph->phase_time = 0.0F;
+      }
+      break;
+    case Engine::Core::EnemyTelegraphPhase::Active:
+      telegraph->visual_tell_active = false;
+      if (telegraph->phase_time >= telegraph->active_duration) {
+        telegraph->phase = Engine::Core::EnemyTelegraphPhase::Recovery;
+        telegraph->phase_time = 0.0F;
+      }
+      break;
+    case Engine::Core::EnemyTelegraphPhase::Recovery:
+      if (telegraph->phase_time >= telegraph->recovery_duration) {
+        telegraph->phase = Engine::Core::EnemyTelegraphPhase::None;
+        telegraph->phase_time = 0.0F;
+      }
+      break;
+    case Engine::Core::EnemyTelegraphPhase::None:
+      break;
+    }
   }
 }
 

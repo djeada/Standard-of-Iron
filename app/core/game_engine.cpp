@@ -2219,7 +2219,14 @@ void GameEngine::update_commander_control_mode(float dt) {
     auto* cmd = cmd_ent->get_component<Engine::Core::CommanderComponent>();
     if (cmd != nullptr && cmd->just_struck_enemy) {
       cmd->just_struck_enemy = false;
-      m_rpg_hit_stop_timer = 0.10F;
+      // Scale hit-stop based on combo step / power strikes
+      float hit_stop_duration = 0.10F;
+      if (cmd->last_strike_combo_step >= 3) {
+        hit_stop_duration = 0.16F; // Finisher gets stronger hit-stop
+      } else if (cmd->power_strike_active) {
+        hit_stop_duration = 0.13F; // Heavy attack gets moderate hit-stop
+      }
+      m_rpg_hit_stop_timer = hit_stop_duration;
     }
   }
 
