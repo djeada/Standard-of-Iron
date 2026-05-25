@@ -3059,6 +3059,34 @@ TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWal
             registry.bpat_clip(roman_id, AnimationStateId::Walk));
 }
 
+TEST(HumanoidPrepare, GuardPlaybackFallsBackToIdleWhenHoldClipIsMissing) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeDescriptor;
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const* base_desc = registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
+  ASSERT_NE(base_desc, nullptr);
+
+  ArchetypeDescriptor guard_desc = *base_desc;
+  guard_desc.debug_name = "tests/guard_missing_hold_clip";
+  guard_desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
+      ArchetypeDescriptor::k_unmapped_clip;
+  guard_desc.bpat_clip_variant_count[static_cast<std::size_t>(AnimationStateId::Hold)] = 0U;
+  guard_desc.snapshot[static_cast<std::size_t>(AnimationStateId::Hold)] = false;
+  auto const guard_archetype = registry.register_archetype(guard_desc);
+  ASSERT_NE(guard_archetype, Render::Creature::k_invalid_archetype);
+
+  Render::GL::HumanoidAnimationContext guard_idle{};
+  guard_idle.inputs.is_guarding = true;
+  guard_idle.inputs.guard_pose_progress = 1.0F;
+  guard_idle.gait.state = Render::GL::HumanoidMotionState::Idle;
+  auto const playback = humanoid_bpat_playback_for_anim(
+      guard_archetype, Render::Creature::Bpat::k_species_humanoid, guard_idle);
+  ASSERT_TRUE(playback.has_value());
+  EXPECT_EQ(playback->clip_id, registry.bpat_clip(guard_archetype, AnimationStateId::Idle));
+}
+
 TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuarding) {
   constexpr std::uint8_t k_base_role = 6;
   std::array<Render::Creature::StaticAttachmentSpec, 1> attachments{

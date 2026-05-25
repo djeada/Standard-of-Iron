@@ -234,6 +234,15 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
   }
 
   update_clip_id(selection);
+  if (!selection.clip_id.has_value() &&
+      selection.state == Render::Creature::AnimationStateId::Hold &&
+      (anim.inputs.is_guarding || anim.inputs.is_exiting_guard)) {
+    selection.state = Render::Creature::AnimationStateId::Idle;
+    selection.phase = humanoid_phase_for_state(anim, selection.state);
+    selection.clip_variant = humanoid_clip_variant_for_state(
+        selection.resolved_archetype, anim, selection.state);
+    update_clip_id(selection);
+  }
   return selection;
 }
 
