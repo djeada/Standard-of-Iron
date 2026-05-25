@@ -238,8 +238,13 @@ deal_commander_attack_damage(Engine::Core::World* world,
       mark_commander_hit(*commander, combo_step, power_strike_hit);
     }
     if (punish_opening || finisher_hit) {
-      Game::Systems::Combat::add_or_extend_stagger(target,
-                                                   finisher_hit ? 0.75F : 0.45F);
+      auto tier = finisher_hit ? Engine::Core::StaggerTier::Knockback
+                               : Engine::Core::StaggerTier::HeavyStagger;
+      Game::Systems::Combat::add_or_extend_stagger(
+          target, finisher_hit ? 0.75F : 0.45F, tier);
+    } else if (application.applied_damage >= 20) {
+      Game::Systems::Combat::add_or_extend_stagger(
+          target, 0.15F, Engine::Core::StaggerTier::LightFlinch);
     }
   }
 
@@ -276,8 +281,10 @@ CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
   }
 
   if (result.guard_broken || result.killed || has_punish_opening(commander)) {
-    Game::Systems::Combat::add_or_extend_stagger(commander,
-                                                 result.guard_broken ? 0.65F : 0.45F);
+    auto tier = result.guard_broken ? Engine::Core::StaggerTier::GuardBreak
+                                    : Engine::Core::StaggerTier::HeavyStagger;
+    Game::Systems::Combat::add_or_extend_stagger(
+        commander, result.guard_broken ? 0.65F : 0.45F, tier);
   }
   if (!result.blocked) {
     apply_posture_pressure(

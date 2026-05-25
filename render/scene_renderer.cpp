@@ -1251,6 +1251,24 @@ void Renderer::stone_impact(const QVector3D& position,
   }
 }
 
+void Renderer::metal_spark(const QVector3D& position,
+                            const QVector3D& color,
+                            float radius,
+                            float intensity,
+                            float time) {
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::MetalSpark;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  cmd.priority = CommandPriority::High;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(std::move(cmd));
+  }
+}
+
 void Renderer::mode_indicator(const QMatrix4x4& model,
                               int mode_type,
                               const QVector3D& color,

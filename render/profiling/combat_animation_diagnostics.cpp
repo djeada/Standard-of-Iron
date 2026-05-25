@@ -68,23 +68,23 @@ auto attack_phase_window(Render::GL::CombatAnimPhase phase,
   if (amplified_attack) {
     switch (phase) {
     case Render::GL::CombatAnimPhase::Advance:
-      return finisher_attack ? CombatPhaseWindow{0.00F, 0.22F, 0.95F}
-                             : CombatPhaseWindow{0.00F, 0.18F, 0.95F};
+      return finisher_attack ? CombatPhaseWindow{0.00F, 0.14F, 0.95F}
+                             : CombatPhaseWindow{0.00F, 0.10F, 0.95F};
     case Render::GL::CombatAnimPhase::WindUp:
-      return finisher_attack ? CombatPhaseWindow{0.22F, 0.50F, 0.82F}
-                             : CombatPhaseWindow{0.18F, 0.42F, 0.80F};
+      return finisher_attack ? CombatPhaseWindow{0.14F, 0.46F, 0.82F}
+                             : CombatPhaseWindow{0.10F, 0.38F, 0.80F};
     case Render::GL::CombatAnimPhase::Strike:
-      return finisher_attack ? CombatPhaseWindow{0.50F, 0.74F, 0.28F}
-                             : CombatPhaseWindow{0.42F, 0.66F, 0.32F};
+      return finisher_attack ? CombatPhaseWindow{0.46F, 0.68F, 0.22F}
+                             : CombatPhaseWindow{0.38F, 0.58F, 0.26F};
     case Render::GL::CombatAnimPhase::Impact:
-      return finisher_attack ? CombatPhaseWindow{0.74F, 0.84F, 0.18F}
-                             : CombatPhaseWindow{0.66F, 0.74F, 0.18F};
+      return finisher_attack ? CombatPhaseWindow{0.68F, 0.78F, 0.16F}
+                             : CombatPhaseWindow{0.58F, 0.68F, 0.16F};
     case Render::GL::CombatAnimPhase::Recover:
-      return finisher_attack ? CombatPhaseWindow{0.84F, 0.975F, 0.88F}
-                             : CombatPhaseWindow{0.74F, 0.95F, 0.85F};
+      return finisher_attack ? CombatPhaseWindow{0.78F, 0.94F, 0.88F}
+                             : CombatPhaseWindow{0.68F, 0.90F, 0.85F};
     case Render::GL::CombatAnimPhase::Reposition:
-      return finisher_attack ? CombatPhaseWindow{0.975F, 0.995F, 0.70F}
-                             : CombatPhaseWindow{0.95F, 0.995F, 0.70F};
+      return finisher_attack ? CombatPhaseWindow{0.94F, 0.995F, 0.70F}
+                             : CombatPhaseWindow{0.90F, 0.995F, 0.70F};
     case Render::GL::CombatAnimPhase::Idle:
     default:
       break;
