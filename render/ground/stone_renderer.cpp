@@ -128,6 +128,9 @@ void StoneRenderer::generate_stone_instances() {
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0x5D17F2A1U);
+    if (scene.obstacle_influence >= 1.0F) {
+      return false;
+    }
     (void)rand_01(state);
 
     float const sgx = std::clamp(gx, 0.0F, float(m_width - 1));
