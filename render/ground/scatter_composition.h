@@ -56,6 +56,7 @@ struct ScatterCompositionSample {
   float river_influence = 0.0F;
   float road_influence = 0.0F;
   float prop_influence = 0.0F;
+  float obstacle_influence = 0.0F;
   float cluster_bias = 0.0F;
 };
 
@@ -230,6 +231,8 @@ public:
         Detail::point_influence(point, m_camp_anchors, 1.15F, 4.60F);
     sample.prop_influence =
         Detail::point_influence(point, m_structure_anchors, 0.55F, 3.80F);
+    sample.obstacle_influence =
+        Detail::point_influence(point, m_hard_obstacle_anchors, 1.0F, 1.5F);
     sample.river_influence =
         Detail::line_influence(point, m_river_anchors, 0.30F, 3.00F);
     sample.road_influence = Detail::line_influence(point, m_road_anchors, 0.60F, 5.20F);
@@ -318,6 +321,13 @@ private:
         m_structure_anchors.push_back({{world_x, world_z}, radius});
         continue;
       }
+      if (world_prop.type == Game::Map::WorldProp::Type::Ruins ||
+          world_prop.type == Game::Map::WorldProp::Type::MagicShrine) {
+        float const render_s =
+            Game::Map::world_prop_render_scale(world_prop.type);
+        float const obs_radius = std::max(2.0F, world_prop.scale * render_s);
+        m_hard_obstacle_anchors.push_back({{world_x, world_z}, obs_radius});
+      }
       if (world_prop.type != Game::Map::WorldProp::Type::Boulder &&
           world_prop.type != Game::Map::WorldProp::Type::Ruins &&
           world_prop.type != Game::Map::WorldProp::Type::IronOre) {
@@ -372,6 +382,7 @@ private:
   Game::Map::ClimateProfile m_climate_profile;
   std::vector<Detail::PointAnchor> m_camp_anchors;
   std::vector<Detail::PointAnchor> m_structure_anchors;
+  std::vector<Detail::PointAnchor> m_hard_obstacle_anchors;
   std::vector<Detail::LinearAnchor> m_road_anchors;
   std::vector<Detail::LinearAnchor> m_river_anchors;
   std::vector<Detail::LinearAnchor> m_bridge_anchors;
