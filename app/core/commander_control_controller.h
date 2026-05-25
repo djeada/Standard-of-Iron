@@ -151,6 +151,8 @@ private:
   float m_dodge_timer = 0.0F;
   QVector3D m_dodge_direction{0.0F, 0.0F, 1.0F};
   float m_dodge_fov_kick = 0.0F;
+  float m_impact_shake = 0.0F;
+  float m_impact_shake_seed = 0.0F;
   float m_jump_timer = 0.0F;
   bool m_jump_safe_position_valid = false;
   QVector3D m_jump_last_walkable_position{0.0F, 0.0F, 0.0F};

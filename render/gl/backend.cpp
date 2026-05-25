@@ -2525,7 +2525,8 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
         case EffectBatchCmd::Kind::BurningFlame:
         case EffectBatchCmd::Kind::Fireball:
         case EffectBatchCmd::Kind::BloodPool:
-        case EffectBatchCmd::Kind::StoneImpact: {
+        case EffectBatchCmd::Kind::StoneImpact:
+        case EffectBatchCmd::Kind::MetalSpark: {
           if (m_combat_dust_pipeline == nullptr ||
               !m_combat_dust_pipeline->is_initialized()) {
             break;
@@ -2565,6 +2566,8 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
                     ? BackendPipelines::EffectType::Fireball
                 : (eff.kind == EffectBatchCmd::Kind::StoneImpact)
                     ? BackendPipelines::EffectType::StoneImpact
+                : (eff.kind == EffectBatchCmd::Kind::MetalSpark)
+                    ? BackendPipelines::EffectType::MetalSpark
                     : BackendPipelines::EffectType::Dust;
             dust_instances.push_back({eff.position,
                                       eff.color,
@@ -2797,6 +2800,22 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
                                                            impact.intensity,
                                                            impact.time,
                                                            view_proj);
+        m_last_bound_shader = nullptr;
+        break;
+      }
+      case EffectBatchCmd::Kind::MetalSpark: {
+        if (m_combat_dust_pipeline == nullptr ||
+            !m_combat_dust_pipeline->is_initialized()) {
+          break;
+        }
+        BackendPipelines::CombatDustPipeline::DustInstanceData const spark_inst{
+            eff_cmd_.position,
+            eff_cmd_.color,
+            eff_cmd_.radius,
+            eff_cmd_.intensity,
+            eff_cmd_.time,
+            BackendPipelines::EffectType::MetalSpark};
+        m_combat_dust_pipeline->render_dust_batch(&spark_inst, 1U, view_proj);
         m_last_bound_shader = nullptr;
         break;
       }

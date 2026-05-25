@@ -607,7 +607,7 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     float const base_w = m_config.sword_width;
     float const t = (attack_phase - 0.28F) / 0.40F;
     // Trail is bright at start, fades out toward end
-    float const alpha = clamp01(0.50F * std::sin(t * 3.14159F));
+    float const alpha = clamp01(0.60F * std::sin(t * 3.14159F));
     QMatrix4x4 const sword_world =
         hand_basis_transform(ctx.model, grip) * sword_local_pose(sword_dir);
     QVector3D const blade_base = sword_world.column(3).toVector3D();
@@ -621,31 +621,91 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     }
     QVector3D const guard_right = sword_world.column(0).toVector3D();
     // Trail extends along more of the blade length
-    QVector3D const trail_start = blade_base + swing_dir * 0.06F;
-    QVector3D const trail_end = blade_base + swing_dir * (0.50F + 0.30F * t);
-    std::array<QVector3D, 1> const trail_palette{m_config.metal_color * 0.95F};
+    QVector3D const trail_start = blade_base + swing_dir * 0.04F;
+    QVector3D const trail_end = blade_base + swing_dir * (0.55F + 0.35F * t);
+
+    // Hot white-blue core trail (modern RPG style)
+    QVector3D const hot_core_color =
+        lerp(QVector3D(1.0F, 0.95F, 0.85F), m_config.metal_color * 1.3F, t);
+    std::array<QVector3D, 1> const core_palette{hot_core_color};
     append_equipment_archetype(
         batch,
-        single_cone_archetype(base_w * 1.2F, m_config.material_id, "sword_trail"),
+        single_cone_archetype(base_w * 0.8F, m_config.material_id, "sword_trail"),
         oriented_segment_transform(
             ctx.model, trail_start, trail_end - trail_start, guard_right),
-        trail_palette,
+        core_palette,
         nullptr,
-        alpha);
-    // Secondary, wider ghost trail for more visual weight
-    if (attack_phase >= 0.32F && attack_phase < 0.58F) {
-      float const ghost_t = (attack_phase - 0.32F) / 0.26F;
-      float const ghost_alpha = clamp01(0.22F * (1.0F - ghost_t));
-      QVector3D const ghost_end = blade_base + swing_dir * (0.38F + 0.18F * ghost_t);
-      std::array<QVector3D, 1> const ghost_palette{m_config.metal_color * 0.7F};
+        alpha * 0.85F);
+
+    // Outer glow trail (wider, colored)
+    QVector3D const glow_color =
+        lerp(QVector3D(0.7F, 0.85F, 1.0F), m_config.metal_color * 0.8F, t * 0.7F);
+    std::array<QVector3D, 1> const glow_palette{glow_color};
+    append_equipment_archetype(
+        batch,
+        single_cone_archetype(base_w * 1.6F, m_config.material_id, "sword_trail"),
+        oriented_segment_transform(
+            ctx.model, trail_start, trail_end - trail_start, guard_right),
+        glow_palette,
+        nullptr,
+        alpha * 0.45F);
+
+    // Secondary, wider ghost trail for afterimage effect
+    if (attack_phase >= 0.32F && attack_phase < 0.60F) {
+      float const ghost_t = (attack_phase - 0.32F) / 0.28F;
+      float const ghost_alpha = clamp01(0.28F * (1.0F - ghost_t * ghost_t));
+      QVector3D const ghost_end = blade_base + swing_dir * (0.42F + 0.22F * ghost_t);
+      QVector3D const ghost_color =
+          lerp(QVector3D(0.5F, 0.6F, 0.9F), m_config.metal_color * 0.5F, ghost_t);
+      std::array<QVector3D, 1> const ghost_palette{ghost_color};
       append_equipment_archetype(
           batch,
-          single_cone_archetype(base_w * 1.8F, m_config.material_id, "sword_trail"),
+          single_cone_archetype(base_w * 2.4F, m_config.material_id, "sword_trail"),
           oriented_segment_transform(
               ctx.model, trail_start, ghost_end - trail_start, guard_right),
           ghost_palette,
           nullptr,
           ghost_alpha);
+    }
+  }
+
+  // Speed-line afterimage: render ghost swords at previous positions during peak strike
+  if (is_attacking && anim.amplified_attack && attack_phase >= 0.32F &&
+      attack_phase < 0.54F) {
+    // Render 2 afterimage swords at slightly earlier phases for motion blur effect
+    constexpr int k_afterimage_count = 2;
+    constexpr float k_phase_offsets[k_afterimage_count] = {0.04F, 0.09F};
+    constexpr float k_afterimage_alphas[k_afterimage_count] = {0.22F, 0.10F};
+
+    for (int ai = 0; ai < k_afterimage_count; ++ai) {
+      float const prev_phase = attack_phase - k_phase_offsets[ai];
+      if (prev_phase < 0.28F) {
+        continue;
+      }
+      // Recalculate sword direction at previous phase
+      QVector3D prev_dir;
+      if (prev_phase < 0.40F) {
+        float pt = (prev_phase - 0.30F) / 0.10F;
+        pt = pt * pt;
+        prev_dir = nlerp(windup_pos, strike_mid, pt);
+      } else {
+        float pt = (prev_phase - 0.40F) / 0.12F;
+        pt = 1.0F - (1.0F - pt) * (1.0F - pt);
+        prev_dir = nlerp(strike_mid, strike_end, pt);
+      }
+
+      std::array<QVector3D, 4> const ghost_sword_palette{
+          m_config.metal_color * 0.7F,
+          m_config.metal_color * 0.6F,
+          m_config.metal_color * 0.4F,
+          palette.leather * 0.5F};
+      append_equipment_archetype(batch,
+                                 sword_archetype(m_config),
+                                 hand_basis_transform(ctx.model, grip) *
+                                     sword_local_pose(prev_dir),
+                                 ghost_sword_palette,
+                                 nullptr,
+                                 k_afterimage_alphas[ai]);
     }
   }
 }

@@ -885,6 +885,12 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 core_alpha,
                 core_alpha * 0.55F,
                 QVector3D(1.0F, 1.0F, 0.80F));
+    // Emit metal spark particle effect at impact point
+    if (elapsed < 0.08F) {
+      QVector3D const spark_pos(flash.pos.x(), flash.pos.y() + 0.4F, flash.pos.z());
+      QVector3D const spark_color(1.0F, 0.85F, 0.4F);
+      renderer->metal_spark(spark_pos, spark_color, 0.6F, 1.8F, elapsed);
+    }
   }
 
   if (locked_target_id != 0) {

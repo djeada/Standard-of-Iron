@@ -1315,6 +1315,8 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   constexpr float k_fov_kick_decay = 22.0F;
   m_dodge_fov_kick = std::max(0.0F, m_dodge_fov_kick - k_fov_kick_decay * dt);
+  constexpr float k_shake_decay = 18.0F;
+  m_impact_shake = std::max(0.0F, m_impact_shake - k_shake_decay * dt);
   constexpr float k_jump_duration = 0.58F;
   constexpr float k_jump_peak_height = 0.34F;
 
@@ -1801,6 +1803,14 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   QVector3D eye_desired = pivot - flat_forward * back_offset +
                           QVector3D(0.0F, up_offset + bob_v + breath_v, 0.0F) +
                           flat_right * bob_l;
+  // Combat impact micro-shake for crisp hit feedback
+  if (m_impact_shake > 0.1F) {
+    float const shake_intensity = m_impact_shake * 0.012F;
+    float const shake_t = m_impact_shake_seed + m_impact_shake * 7.0F;
+    float const shake_x = std::sin(shake_t * 23.0F) * shake_intensity;
+    float const shake_y = std::cos(shake_t * 31.0F) * shake_intensity * 0.7F;
+    eye_desired += flat_right * shake_x + QVector3D(0.0F, shake_y, 0.0F);
+  }
   QVector3D target_desired = pivot + forward_vec * target_distance;
 
   const Engine::Core::EntityID focus_id = locked_target_id();
@@ -1887,6 +1897,9 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
     if (cmd->just_struck_enemy) {
       m_strike_punch_fwd =
           (last_strike_combo_step >= 3 ? 0.52F : 0.38F) * camera_effect_scale;
+      // Trigger impact micro-shake for crisp hit feedback
+      m_impact_shake = last_strike_combo_step >= 3 ? 5.5F : 3.2F;
+      m_impact_shake_seed = static_cast<float>(last_strike_combo_step) * 1.7F;
     }
   }
   constexpr float k_punch_decay = 11.0F;
