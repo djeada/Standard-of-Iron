@@ -1016,6 +1016,9 @@ auto MapLoader::load_from_json_file(const QString& path,
                  out_map.bridges,
                  out_map.grid,
                  out_map.coordSystem);
+    for (Bridge& bridge : out_map.bridges) {
+      extend_bridge_to_span_riverbanks(bridge, out_map.rivers);
+    }
   }
 
   if (root.contains(BUILDINGS) && root.value(BUILDINGS).isArray()) {

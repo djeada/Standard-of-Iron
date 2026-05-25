@@ -51,17 +51,27 @@ auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
     return Pathfinding::CellValue::Blocked;
   }
 
+  if (height_map->isBridgeCell(x, z)) {
+    return Pathfinding::CellValue::Walkable;
+  }
+
   if (terrain_type == Game::Map::TerrainType::River) {
     return height_map->isBridgeCenterline(x, z) ? Pathfinding::CellValue::Walkable
                                                 : Pathfinding::CellValue::Blocked;
   }
 
-  if (height_map->isBridgeCell(x, z) && !height_map->isBridgeCenterline(x, z)) {
-    return Pathfinding::CellValue::Blocked;
-  }
-
   return terrain_service.is_walkable(x, z) ? Pathfinding::CellValue::Walkable
                                            : Pathfinding::CellValue::Blocked;
+}
+
+auto is_bridge_centerline_cell(int x, int z) -> bool {
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized()) {
+    return false;
+  }
+
+  const auto* height_map = terrain_service.get_height_map();
+  return height_map != nullptr && height_map->isBridgeCenterline(x, z);
 }
 
 } // namespace
@@ -545,8 +555,12 @@ auto Pathfinding::find_path_internal(const Point& start,
       }
 
       if (neighbor.x != current_point.x && neighbor.y != current_point.y) {
-        if (!is_walkableFunc(current_point.x, neighbor.y) ||
-            !is_walkableFunc(neighbor.x, current_point.y)) {
+        bool const bridge_centerline_transition =
+            is_bridge_centerline_cell(current_point.x, current_point.y) ||
+            is_bridge_centerline_cell(neighbor.x, neighbor.y);
+        if (!bridge_centerline_transition &&
+            (!is_walkableFunc(current_point.x, neighbor.y) ||
+             !is_walkableFunc(neighbor.x, current_point.y))) {
           continue;
         }
       }

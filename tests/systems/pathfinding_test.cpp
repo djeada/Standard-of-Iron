@@ -245,7 +245,7 @@ TEST_F(PathfindingTest, RuntimeHarvestPropsAreMarkedAfterTerrainLoads) {
   EXPECT_GT(checked, 0);
 }
 
-TEST_F(PathfindingTest, BridgeDeckEdgesAreBlockedButCenterlineCrossesRiver) {
+TEST_F(PathfindingTest, BridgeDeckIsWalkableAndCrossesRiver) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 21;
   map_def.grid.height = 21;
@@ -273,7 +273,7 @@ TEST_F(PathfindingTest, BridgeDeckEdgesAreBlockedButCenterlineCrossesRiver) {
   auto const edge = to_grid(0.0F, 1.0F);
 
   EXPECT_TRUE(pathfinding.is_walkable(center.x, center.y));
-  EXPECT_FALSE(pathfinding.is_walkable(edge.x, edge.y));
+  EXPECT_TRUE(pathfinding.is_walkable(edge.x, edge.y));
 
   auto const path = pathfinding.find_path({2, center.y}, {18, center.y});
   ASSERT_FALSE(path.empty());
@@ -283,11 +283,50 @@ TEST_F(PathfindingTest, BridgeDeckEdgesAreBlockedButCenterlineCrossesRiver) {
     if (point.x == center.x && point.y == center.y) {
       used_bridge_centerline = true;
     }
-    if (point.x == edge.x && point.y == edge.y) {
-      ADD_FAILURE() << "path used bridge edge cell";
-    }
   }
   EXPECT_TRUE(used_bridge_centerline);
+}
+
+TEST_F(PathfindingTest, DiagonalBridgeCenterlineCanCrossRiver) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  map_def.rivers.push_back(
+      {QVector3D(0.0F, 0.0F, -10.0F), QVector3D(0.0F, 0.0F, 10.0F), 4.0F});
+  map_def.bridges.push_back(
+      {QVector3D(-5.0F, 0.0F, -5.0F), QVector3D(5.0F, 0.0F, 5.0F), 2.0F, 0.6F});
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_navigation_grid();
+
+  auto const to_grid = [&map_def](float world_x, float world_z) {
+    float const half_w = static_cast<float>(map_def.grid.width) * 0.5F - 0.5F;
+    float const half_h = static_cast<float>(map_def.grid.height) * 0.5F - 0.5F;
+    return Game::Systems::Point{
+        static_cast<int>(std::round(world_x / map_def.grid.tile_size + half_w)),
+        static_cast<int>(std::round(world_z / map_def.grid.tile_size + half_h))};
+  };
+
+  auto const path = pathfinding.find_path(to_grid(-8.0F, -8.0F),
+                                          to_grid(8.0F, 8.0F),
+                                          0.6F);
+  ASSERT_FALSE(path.empty());
+
+  bool used_bridge = false;
+  for (const auto& point : path) {
+    if (Game::Map::TerrainService::instance()
+            .get_height_map()
+            ->isBridgeCell(point.x, point.y)) {
+      used_bridge = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(used_bridge);
 }
 
 TEST_F(PathfindingTest, FindPathResolvesBlockedDestinationToNearestWalkableCell) {
