@@ -37,6 +37,11 @@ Rectangle {
             "description": qsTr("Residential building\nAdds +50 population to nearest barracks"),
             "fallback_emoji": "🏠"
         }, {
+            "item_type": "marketplace",
+            "label": qsTr("Marketplace"),
+            "description": qsTr("Trade building\nBuy or sell resources for gold"),
+            "fallback_emoji": "🏪"
+        }, {
             "item_type": "wall_segment",
             "label": qsTr("Wall Segment"),
             "description": qsTr("Wooden defensive wall\nBlocks enemy movement"),
