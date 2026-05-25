@@ -109,6 +109,9 @@ void append_generated_pines(std::vector<WorldProp>& out,
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0x92C3B17FU);
+    if (scene.obstacle_influence >= 1.0F) {
+      return false;
+    }
     if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Pine, scene)) {
       return false;
     }
@@ -260,6 +263,9 @@ void append_generated_olives(std::vector<WorldProp>& out,
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0x16C92A4FU);
+    if (scene.obstacle_influence >= 1.0F) {
+      return false;
+    }
     if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Olive, scene)) {
       return false;
     }
@@ -408,6 +414,9 @@ void append_generated_boulders(std::vector<WorldProp>& out,
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0xE148D9A7U);
+    if (scene.obstacle_influence >= 1.0F) {
+      return false;
+    }
     float const support = std::max(
         scene.rockiness, std::max(scene.prop_influence * 0.90F, scene.dryness * 0.42F));
     if (support < 0.16F && scene.archetype != ScatterSceneArchetype::RockyPatch &&
@@ -506,6 +515,9 @@ void append_generated_iron_ore(std::vector<WorldProp>& out,
     }
 
     auto const scene = composition.sample_grid(gx, gz, state ^ 0xD64E21B7U);
+    if (scene.obstacle_influence >= 1.0F) {
+      return false;
+    }
     float const flat_support = 1.0F - std::clamp(scene.slope / 0.20F, 0.0F, 1.0F);
     float const deposit_support =
         std::max(scene.rockiness * 0.72F,
