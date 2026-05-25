@@ -648,15 +648,15 @@ namespace {
 
 using Engine::Core::CombatAnimationState;
 
-constexpr float k_telegraph_range = 7.5F;
+constexpr float k_telegraph_range = 12.0F;
 constexpr float k_ring_y_offset = 0.025F;
 
-constexpr QVector3D k_danger_red{1.0F, 0.12F, 0.03F};
-constexpr QVector3D k_warning_orange{1.0F, 0.48F, 0.05F};
-constexpr QVector3D k_stagger_cyan{0.2F, 0.85F, 1.0F};
-constexpr QVector3D k_flash_white{1.0F, 0.75F, 0.35F};
-constexpr QVector3D k_lock_gold{1.0F, 0.80F, 0.15F};
-constexpr QVector3D k_lock_white{0.95F, 1.0F, 0.90F};
+constexpr QVector3D k_danger_red{1.0F, 0.08F, 0.02F};
+constexpr QVector3D k_warning_orange{1.0F, 0.55F, 0.08F};
+constexpr QVector3D k_stagger_cyan{0.15F, 0.92F, 1.0F};
+constexpr QVector3D k_flash_white{1.0F, 0.85F, 0.45F};
+constexpr QVector3D k_lock_gold{1.0F, 0.82F, 0.10F};
+constexpr QVector3D k_lock_white{1.0F, 1.0F, 0.95F};
 
 inline float pulse(float t, float hz, float phase = 0.0F) {
   return 0.5F + 0.5F * std::sin(t * 6.2832F * hz + phase);
@@ -783,13 +783,14 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     const float progress = std::clamp(
         csc->state_time / CombatStateComponent::k_wind_up_duration, 0.0F, 1.0F);
 
-    const float inner_r = 0.55F + 0.33F * progress;
+    // Bigger, more visible danger rings that grow as the attack charges
+    const float inner_r = 0.70F + 0.55F * progress;
+    constexpr float outer_r = 1.65F;
 
-    constexpr float outer_r = 1.20F;
-
-    const float inner_alpha = 0.55F + 0.20F * pulse(anim_time, 4.0F);
-
-    const float outer_alpha = 0.20F + 0.10F * pulse(anim_time, 2.0F, 1.047F);
+    // Stronger pulsing with urgency increase as attack charges
+    const float pulse_speed = 4.0F + 6.0F * progress;
+    const float inner_alpha = 0.70F + 0.25F * pulse(anim_time, pulse_speed);
+    const float outer_alpha = 0.35F + 0.18F * pulse(anim_time, 2.5F, 1.047F);
 
     submit_ring(renderer,
                 entry.last_pos_x,
@@ -797,7 +798,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 entry.last_pos_z,
                 inner_r,
                 inner_alpha,
-                inner_alpha * 0.55F,
+                inner_alpha * 0.60F,
                 k_danger_red);
     submit_ring(renderer,
                 entry.last_pos_x,
@@ -805,8 +806,19 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                 entry.last_pos_z,
                 outer_r,
                 outer_alpha,
-                outer_alpha * 0.4F,
+                outer_alpha * 0.45F,
                 k_warning_orange);
+    // Third ring - pulsing danger halo for extra visibility
+    const float halo_r = outer_r + 0.30F + 0.20F * pulse(anim_time, 3.0F, 2.0F);
+    const float halo_alpha = 0.18F * progress;
+    submit_ring(renderer,
+                entry.last_pos_x,
+                entry.base_y,
+                entry.last_pos_z,
+                halo_r,
+                halo_alpha,
+                halo_alpha * 0.3F,
+                k_danger_red);
   }
 
   for (auto* entity : world->get_entities_with<StaggerComponent>()) {
@@ -827,14 +839,23 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     }
 
     const float fade = std::clamp(sc->remaining / 0.5F, 0.0F, 1.0F);
-    const float stagger_alpha = 0.55F * fade * (0.7F + 0.3F * pulse(anim_time, 6.0F));
+    const float stagger_alpha = 0.70F * fade * (0.7F + 0.3F * pulse(anim_time, 6.0F));
     submit_ring(renderer,
                 ex,
                 tf->position.y,
                 ez,
-                0.70F,
+                0.90F,
                 stagger_alpha,
-                stagger_alpha * 0.35F,
+                stagger_alpha * 0.40F,
+                k_stagger_cyan);
+    // Second ring for stagger visibility
+    submit_ring(renderer,
+                ex,
+                tf->position.y,
+                ez,
+                1.20F,
+                stagger_alpha * 0.5F,
+                stagger_alpha * 0.20F,
                 k_stagger_cyan);
   }
 
@@ -842,16 +863,28 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     const float elapsed = anim_time - flash.start_time;
     const float t = elapsed / StrikeFlash::k_duration;
 
-    const float flash_r = 0.8F + 0.6F * t;
-    const float flash_alpha = (1.0F - t) * 0.75F;
+    // Much bigger, brighter strike flash
+    const float flash_r = 1.2F + 1.0F * t;
+    const float flash_alpha = (1.0F - t) * 0.90F;
     submit_ring(renderer,
                 flash.pos.x(),
                 flash.pos.y(),
                 flash.pos.z(),
                 flash_r,
                 flash_alpha,
-                flash_alpha * 0.3F,
+                flash_alpha * 0.45F,
                 k_flash_white);
+    // Inner bright core
+    const float core_r = 0.4F + 0.6F * t;
+    const float core_alpha = (1.0F - t * t) * 0.95F;
+    submit_ring(renderer,
+                flash.pos.x(),
+                flash.pos.y(),
+                flash.pos.z(),
+                core_r,
+                core_alpha,
+                core_alpha * 0.55F,
+                QVector3D(1.0F, 1.0F, 0.80F));
   }
 
   if (locked_target_id != 0) {
@@ -863,12 +896,17 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
         const float lx = lock_tf->position.x;
         const float lz = lock_tf->position.z;
         const float ly = lock_tf->position.y;
-        const float lock_alpha = 0.55F + 0.20F * pulse(anim_time, 3.0F);
-        const float lock_outer = 0.22F + 0.08F * pulse(anim_time, 3.0F, 1.047F);
+        // Bigger, more visible lock-on indicator
+        const float lock_alpha = 0.72F + 0.22F * pulse(anim_time, 3.0F);
+        const float lock_outer = 0.28F + 0.10F * pulse(anim_time, 3.0F, 1.047F);
         submit_ring(
-            renderer, lx, ly, lz, 0.90F, lock_alpha, lock_alpha * 0.40F, k_lock_gold);
+            renderer, lx, ly, lz, 1.10F, lock_alpha, lock_alpha * 0.48F, k_lock_gold);
         submit_ring(
-            renderer, lx, ly, lz, 1.10F, lock_outer, lock_outer * 0.30F, k_lock_white);
+            renderer, lx, ly, lz, 1.35F, lock_outer, lock_outer * 0.35F, k_lock_white);
+        // Tight inner ring for precision
+        const float inner_lock = 0.48F + 0.08F * pulse(anim_time, 4.0F, 0.5F);
+        submit_ring(
+            renderer, lx, ly, lz, 0.60F, inner_lock, inner_lock * 0.40F, k_lock_gold);
       }
     }
   }

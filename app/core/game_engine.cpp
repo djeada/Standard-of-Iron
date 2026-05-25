@@ -2222,11 +2222,12 @@ void GameEngine::update_commander_control_mode(float dt) {
       // Scale hit-stop based on combo step / power strikes
       float hit_stop_duration = 0.10F;
       if (cmd->last_strike_combo_step >= 3) {
-        hit_stop_duration = 0.16F; // Finisher gets stronger hit-stop
+        hit_stop_duration = 0.18F; // Finisher gets massive hit-stop
       } else if (cmd->power_strike_active) {
-        hit_stop_duration = 0.13F; // Heavy attack gets moderate hit-stop
+        hit_stop_duration = 0.14F; // Heavy attack gets strong hit-stop
       }
       m_rpg_hit_stop_timer = hit_stop_duration;
+      m_rpg_hit_stop_total = hit_stop_duration;
     }
   }
 
@@ -2244,7 +2245,11 @@ auto GameEngine::apply_runtime_time_effects(float dt) -> float {
     if (m_rpg_hit_stop_timer < 0.0F) {
       m_rpg_hit_stop_timer = 0.0F;
     } else {
-      dt *= 0.10F;
+      // Near-freeze for the first half, then ease out
+      const float progress =
+          1.0F - std::clamp(m_rpg_hit_stop_timer / m_rpg_hit_stop_total, 0.0F, 1.0F);
+      const float time_scale = progress < 0.5F ? 0.04F : (0.04F + 0.96F * (progress - 0.5F) * 2.0F);
+      dt *= time_scale;
     }
   }
   return dt;
@@ -3182,6 +3187,11 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
   result["perfect_guard_active"] = false;
   result["guard_break_remaining"] = 0.0;
   result["guard_broken"] = false;
+  result["guard_active"] = false;
+  result["combat_phase"] = 0;
+  result["attack_direction"] = 0;
+  result["is_attacking"] = false;
+  result["dodge_active"] = false;
   result["finisher_ready"] = false;
   result["camera_mode"] = QStringLiteral("Chase");
   result["shield_bash_cooldown"] = 3.0;
@@ -3316,7 +3326,22 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
     result["perfect_guard_active"] = guard->perfect_guard_remaining > 0.0F;
     result["guard_break_remaining"] = static_cast<double>(guard->guard_break_remaining);
     result["guard_broken"] = guard->guard_break_remaining > 0.0F;
+    result["guard_active"] = guard->active;
   }
+
+  // Combat state info
+  if (auto* combat_state =
+          commander_entity != nullptr
+              ? commander_entity->get_component<Engine::Core::CombatStateComponent>()
+              : nullptr) {
+    result["combat_phase"] = static_cast<int>(combat_state->animation_state);
+    result["attack_direction"] = static_cast<int>(combat_state->attack_direction);
+    result["is_attacking"] =
+        combat_state->animation_state != Engine::Core::CombatAnimationState::Idle;
+  }
+
+  // Dodge active
+  result["dodge_active"] = m_commander_control.is_dodge_rolling();
 
   result["locked_target_name"] = QString();
   result["locked_target_hp"] = 0;

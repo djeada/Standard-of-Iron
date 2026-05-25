@@ -881,11 +881,11 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
       }
     }
     if (finisher_attack) {
-      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 12.0F);
+      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 16.0F);
     }
     if (m_primary_held_duration >= 0.4F) {
       cmd_comp->power_strike_active = true;
-      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 10.0F);
+      m_dodge_fov_kick = std::max(m_dodge_fov_kick, 14.0F);
     }
     m_combo_miss_timer = 0.0F;
   }
@@ -1301,7 +1301,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
   float actual_speed_for_bob = 0.0F;
   bool run_for_bob = false;
 
-  constexpr float k_fov_kick_decay = 30.0F;
+  constexpr float k_fov_kick_decay = 22.0F;
   m_dodge_fov_kick = std::max(0.0F, m_dodge_fov_kick - k_fov_kick_decay * dt);
   constexpr float k_jump_duration = 0.58F;
   constexpr float k_jump_peak_height = 0.34F;
@@ -1393,7 +1393,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_dodge_state = DodgeState::Rolling;
     constexpr float k_dodge_roll_duration = 0.22F;
     m_dodge_timer = k_dodge_roll_duration;
-    m_dodge_fov_kick = 8.0F;
+    m_dodge_fov_kick = 14.0F;
     if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
       rpg->dodge_invincible = true;
     }
@@ -1708,10 +1708,10 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   constexpr float k_close_camera_up_offset = 0.38F;
   constexpr float k_close_target_distance = 5.2F;
 
-  constexpr float k_bob_freq = 3.2F;
-  constexpr float k_bob_vert_amp = 0.055F;
-  constexpr float k_bob_run_mult = 1.45F;
-  constexpr float k_bob_lat_amp = 0.018F;
+  constexpr float k_bob_freq = 3.5F;
+  constexpr float k_bob_vert_amp = 0.075F;
+  constexpr float k_bob_run_mult = 1.65F;
+  constexpr float k_bob_lat_amp = 0.028F;
   constexpr float k_bob_decay = 5.5F;
 
   constexpr float k_breath_freq = 0.2F;
@@ -1719,12 +1719,12 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
 
   constexpr float k_cam_spring = 14.0F;
 
-  constexpr float k_lean_max_deg = 1.2F;
-  constexpr float k_lean_follow = 5.0F;
+  constexpr float k_lean_max_deg = 2.2F;
+  constexpr float k_lean_follow = 6.5F;
 
   constexpr float k_fov_walk = 75.0F;
-  constexpr float k_fov_run_boost = 4.0F;
-  constexpr float k_fov_lerp = 4.0F;
+  constexpr float k_fov_run_boost = 7.0F;
+  constexpr float k_fov_lerp = 5.0F;
 
   set_view_pitch(m_view_pitch);
 
@@ -1848,10 +1848,10 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   const QVector3D up_leaned =
       (world_up + right_world * std::sin(lean_rad)).normalized();
 
-  constexpr float k_shake_freq = 22.0F;
-  constexpr float k_shake_decay = 9.5F;
-  constexpr float k_shake_lateral = 0.14F;
-  constexpr float k_shake_vert = 0.05F;
+  constexpr float k_shake_freq = 28.0F;
+  constexpr float k_shake_decay = 7.5F;
+  constexpr float k_shake_lateral = 0.22F;
+  constexpr float k_shake_vert = 0.09F;
 
   if (auto const* fb = commander.get_component<Engine::Core::HitFeedbackComponent>()) {
 
@@ -1874,14 +1874,30 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   if (auto const* cmd = commander.get_component<Engine::Core::CommanderComponent>()) {
     if (cmd->just_struck_enemy) {
       m_strike_punch_fwd =
-          (last_strike_combo_step >= 3 ? 0.34F : 0.25F) * camera_effect_scale;
+          (last_strike_combo_step >= 3 ? 0.52F : 0.38F) * camera_effect_scale;
     }
   }
-  constexpr float k_punch_decay = 14.0F;
+  constexpr float k_punch_decay = 11.0F;
   m_strike_punch_fwd *= std::exp(-k_punch_decay * std::max(dt, 0.0F));
   const QVector3D punch_offset = forward_vec * m_strike_punch_fwd;
 
+  // Dodge roll camera tilt
+  float dodge_tilt_rad = 0.0F;
+  if (m_dodge_state == DodgeState::Rolling) {
+    const float dodge_progress =
+        1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
+    const float tilt_curve =
+        std::sin(dodge_progress * k_pi) * 0.12F; // ~7 degree roll
+    const float dot_right =
+        m_dodge_direction.x() * flat_right.x() +
+        m_dodge_direction.z() * flat_right.z();
+    dodge_tilt_rad = tilt_curve * (dot_right > 0.0F ? 1.0F : -1.0F);
+  }
+
+  const QVector3D up_final =
+      (up_leaned + right_world * dodge_tilt_rad).normalized();
+
   camera.look_at(m_cam_eye_smooth + shake_offset + punch_offset,
                  m_cam_target_smooth + shake_offset + punch_offset,
-                 up_leaned);
+                 up_final);
 }

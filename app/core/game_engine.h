@@ -625,6 +625,7 @@ private:
   std::vector<RpgDamageEvent> m_rpg_damage_events;
   std::uint32_t m_rpg_damage_event_sequence{0};
   float m_rpg_hit_stop_timer{0.0F};
+  float m_rpg_hit_stop_total{0.10F};
   EntityCache m_entity_cache;
   RuntimeFrameOrchestrator m_frame_orchestrator;
   std::optional<QVector3D> m_commander_rally_preview_pos;

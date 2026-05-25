@@ -254,6 +254,89 @@ void tick_rpg_combat(Engine::Core::World* world,
       break;
     }
   }
+
+  // ─── Enemy RPG combat AI: circling, spacing, turn-based engagement ───
+  auto* engagement = entity->get_component<Engine::Core::RpgEngagementComponent>();
+  auto* cmd_transform = entity->get_component<Engine::Core::TransformComponent>();
+  if (engagement == nullptr || cmd_transform == nullptr) {
+    return;
+  }
+
+  const float cmd_x = cmd_transform->position.x;
+  const float cmd_z = cmd_transform->position.z;
+
+  // Enemies circle the player and maintain spacing
+  constexpr float k_ideal_engage_distance = 2.8F;
+  constexpr float k_circle_speed = 1.4F;
+  constexpr float k_approach_speed = 2.2F;
+  constexpr float k_back_off_speed = 1.8F;
+
+  for (auto& slot : engagement->engagement_slots) {
+    auto* enemy = world->get_entity(slot.entity_id);
+    if (enemy == nullptr) {
+      continue;
+    }
+    auto* enemy_tf = enemy->get_component<Engine::Core::TransformComponent>();
+    auto* enemy_unit = enemy->get_component<Engine::Core::UnitComponent>();
+    auto* enemy_stagger = enemy->get_component<Engine::Core::StaggerComponent>();
+    if (enemy_tf == nullptr || enemy_unit == nullptr || enemy_unit->health <= 0) {
+      continue;
+    }
+    // Don't move if staggered
+    if (enemy_stagger != nullptr && enemy_stagger->remaining > 0.0F) {
+      continue;
+    }
+
+    float dx = enemy_tf->position.x - cmd_x;
+    float dz = enemy_tf->position.z - cmd_z;
+    float dist = std::sqrt(dx * dx + dz * dz);
+    if (dist < 0.001F) {
+      dist = 0.001F;
+      dx = 0.001F;
+    }
+
+    float const nx = dx / dist;
+    float const nz = dz / dist;
+    // Perpendicular (tangent for circling)
+    float const tx = -nz;
+    float const tz = nx;
+
+    bool const is_active_attacker = slot_is_active(slot);
+
+    if (is_active_attacker) {
+      // Active attackers approach to ideal distance
+      if (dist > k_ideal_engage_distance + 0.5F) {
+        enemy_tf->position.x -= nx * k_approach_speed * dt;
+        enemy_tf->position.z -= nz * k_approach_speed * dt;
+      } else if (dist < k_ideal_engage_distance - 0.3F) {
+        // Too close - back off slightly
+        enemy_tf->position.x += nx * k_back_off_speed * dt;
+        enemy_tf->position.z += nz * k_back_off_speed * dt;
+      }
+      // Face the player
+      float const face_angle =
+          std::atan2(-dx, -dz) * k_radians_to_degrees;
+      enemy_tf->rotation.y = face_angle;
+    } else {
+      // Support enemies circle and maintain outer ring distance
+      constexpr float k_support_ring = 4.5F;
+      if (dist < k_support_ring - 0.5F) {
+        enemy_tf->position.x += nx * k_back_off_speed * 0.6F * dt;
+        enemy_tf->position.z += nz * k_back_off_speed * 0.6F * dt;
+      } else if (dist > k_support_ring + 1.0F) {
+        enemy_tf->position.x -= nx * k_approach_speed * 0.5F * dt;
+        enemy_tf->position.z -= nz * k_approach_speed * 0.5F * dt;
+      }
+      // Circle around player
+      float const circle_dir = (slot.signed_angle_degrees >= 0.0F) ? 1.0F : -1.0F;
+      enemy_tf->position.x += tx * k_circle_speed * circle_dir * dt;
+      enemy_tf->position.z += tz * k_circle_speed * circle_dir * dt;
+      // Face the player
+      float const face_angle =
+          std::atan2(-dx, -dz) * k_radians_to_degrees;
+      enemy_tf->rotation.y = face_angle;
+    }
+  }
 }
 
 } // namespace Game::Systems::RpgCombat
