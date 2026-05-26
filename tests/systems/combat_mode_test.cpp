@@ -314,7 +314,7 @@ TEST_F(CombatModeTest, HoldModeSpearmanStillLocksEnemyInMelee) {
   EXPECT_TRUE(enemy_attack->in_melee_lock);
   EXPECT_EQ(enemy_attack->melee_lock_target_id, spearman->get_id());
   EXPECT_FLOAT_EQ(spearman_transform->position.x, 0.0F);
-  EXPECT_LT(enemy_transform->position.x, 1.5F);
+  EXPECT_FLOAT_EQ(enemy_transform->position.x, 1.5F);
 }
 
 TEST_F(CombatModeTest, BuildingsExcludedFromCombatMode) {
@@ -370,7 +370,7 @@ TEST_F(CombatModeTest, RangedUnitUsesRangedModeWhenNotEngaged) {
   EXPECT_FALSE(attacker_attack->in_melee_lock);
 }
 
-TEST_F(CombatModeTest, BuildingsDoNotMoveInMeleeLock) {
+TEST_F(CombatModeTest, CombatDoesNotDisplaceBuildingMeleeLockParticipants) {
 
   auto* unit = world->create_entity();
   auto* unit_transform = unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -402,12 +402,11 @@ TEST_F(CombatModeTest, BuildingsDoNotMoveInMeleeLock) {
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
 
-  EXPECT_NE(unit_transform->position.x, initial_unit_x);
-
+  EXPECT_EQ(unit_transform->position.x, initial_unit_x);
   EXPECT_EQ(building_transform->position.x, initial_building_x);
 }
 
-TEST_F(CombatModeTest, HomeDoesNotMoveInMeleeLock) {
+TEST_F(CombatModeTest, CombatDoesNotDisplaceHomeMeleeLockParticipants) {
 
   auto* unit = world->create_entity();
   auto* unit_transform = unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -438,12 +437,11 @@ TEST_F(CombatModeTest, HomeDoesNotMoveInMeleeLock) {
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
 
-  EXPECT_NE(unit_transform->position.x, initial_unit_x);
-
+  EXPECT_EQ(unit_transform->position.x, initial_unit_x);
   EXPECT_EQ(home_transform->position.x, initial_home_x);
 }
 
-TEST_F(CombatModeTest, InitialMeleeLockClampsRepositionInsteadOfSnapping) {
+TEST_F(CombatModeTest, InitialMeleeLockDoesNotDirectlyDisplaceTransforms) {
   auto* attacker = world->create_entity();
   auto* attacker_transform =
       attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -472,9 +470,7 @@ TEST_F(CombatModeTest, InitialMeleeLockClampsRepositionInsteadOfSnapping) {
 
   EXPECT_TRUE(attacker_attack->in_melee_lock);
   EXPECT_EQ(attacker_attack->melee_lock_target_id, enemy->get_id());
-  EXPECT_GT(attacker_transform->position.x, 0.0F);
-  EXPECT_LE(attacker_transform->position.x,
-            Game::Systems::Combat::Constants::k_max_displacement_per_frame + 0.0001F);
+  EXPECT_FLOAT_EQ(attacker_transform->position.x, 0.0F);
 }
 
 TEST_F(CombatModeTest, FpvCommanderUsesRpgMeleeRulesInsteadOfRtsLock) {
@@ -643,9 +639,7 @@ TEST_F(CombatModeTest, SurroundedElephantKeepsStableMeleeFacing) {
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
 
-  EXPECT_LT(elephant_transform->position.x, initial_x);
-  EXPECT_LE(initial_x - elephant_transform->position.x,
-            Game::Systems::Combat::Constants::k_max_displacement_per_frame + 0.0001F);
+  EXPECT_FLOAT_EQ(elephant_transform->position.x, initial_x);
   EXPECT_FLOAT_EQ(elephant_transform->position.z, initial_z);
   EXPECT_TRUE(elephant_transform->has_desired_yaw);
   EXPECT_FLOAT_EQ(elephant_transform->desired_yaw, -90.0F);

@@ -94,4 +94,35 @@ TEST(TroopCatalogLoader, IronSepulcherTroopsLoadFromCatalog) {
   EXPECT_EQ(grave_priest->visuals.renderer_id, "troops/iron_sepulcher/grave_priest");
 }
 
+TEST(TroopCatalogLoader, CommandersLoadFromCatalog) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+
+  auto const* fabius = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::RomanLegionOrganizer);
+  auto const* scipio = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::RomanVeteranConsul);
+  auto const* marcellus = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::RomanFieldCommander);
+  auto const* hanno = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::CarthageMercenaryBroker);
+  auto const* hasdrubal = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::CarthageCavalryPatron);
+  auto const* hannibal = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::CarthageElephantMaster);
+  ASSERT_NE(fabius, nullptr);
+  ASSERT_NE(scipio, nullptr);
+  ASSERT_NE(marcellus, nullptr);
+  ASSERT_NE(hanno, nullptr);
+  ASSERT_NE(hasdrubal, nullptr);
+  ASSERT_NE(hannibal, nullptr);
+
+  EXPECT_EQ(fabius->visuals.renderer_id, "troops/roman/commanders/fabius_maximus");
+  EXPECT_EQ(scipio->visuals.renderer_id, "troops/roman/commanders/scipio_africanus");
+  EXPECT_EQ(marcellus->visuals.renderer_id, "troops/roman/commanders/marcellus");
+  EXPECT_EQ(hanno->visuals.renderer_id, "troops/carthage/commanders/hanno_the_great");
+  EXPECT_EQ(hasdrubal->visuals.renderer_id,
+            "troops/carthage/commanders/hasdrubal_barca");
+  EXPECT_EQ(hannibal->visuals.renderer_id, "troops/carthage/commanders/hannibal_barca");
+}
+
 } // namespace

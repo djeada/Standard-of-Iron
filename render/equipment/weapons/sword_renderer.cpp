@@ -472,9 +472,9 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
 
   // Per-direction sword arc keyframes for visually distinct attack types
   // Each direction has: ready position, wind-up apex, strike end, return pos
-  QVector3D ready_pos(0.10F, 0.85F, 0.52F);   // Default rest: sword up-right
-  QVector3D windup_pos(0.0F, 1.0F, 0.0F);     // Wind-up: raised high
-  QVector3D strike_mid(0.0F, 0.50F, 0.87F);   // Mid-strike: forward/down
+  QVector3D ready_pos(0.10F, 0.85F, 0.52F);    // Default rest: sword up-right
+  QVector3D windup_pos(0.0F, 1.0F, 0.0F);      // Wind-up: raised high
+  QVector3D strike_mid(0.0F, 0.50F, 0.87F);    // Mid-strike: forward/down
   QVector3D strike_end(-0.08F, -0.10F, 0.99F); // Strike end: fully extended low
 
   std::uint8_t const variant = anim.inputs.attack_variant;
@@ -579,7 +579,8 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
     } else {
       // Settle: ease into rest
       float const t = ease_in_out_cubic((attack_phase - 0.85F) / 0.15F);
-      QVector3D const almost_ready = nlerp(ready_pos, QVector3D(0.08F, 0.92F, 0.38F), 0.1F);
+      QVector3D const almost_ready =
+          nlerp(ready_pos, QVector3D(0.08F, 0.92F, 0.38F), 0.1F);
       sword_dir = nlerp(almost_ready, ready_pos, t);
       safe_normalize(sword_dir);
     }
@@ -694,11 +695,10 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
         prev_dir = nlerp(strike_mid, strike_end, pt);
       }
 
-      std::array<QVector3D, 4> const ghost_sword_palette{
-          m_config.metal_color * 0.7F,
-          m_config.metal_color * 0.6F,
-          m_config.metal_color * 0.4F,
-          palette.leather * 0.5F};
+      std::array<QVector3D, 4> const ghost_sword_palette{m_config.metal_color * 0.7F,
+                                                         m_config.metal_color * 0.6F,
+                                                         m_config.metal_color * 0.4F,
+                                                         palette.leather * 0.5F};
       append_equipment_archetype(batch,
                                  sword_archetype(m_config),
                                  hand_basis_transform(ctx.model, grip) *

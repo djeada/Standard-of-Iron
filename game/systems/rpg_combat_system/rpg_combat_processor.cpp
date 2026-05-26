@@ -314,8 +314,7 @@ void tick_rpg_combat(Engine::Core::World* world,
         enemy_tf->position.z += nz * k_back_off_speed * dt;
       }
       // Face the player
-      float const face_angle =
-          std::atan2(-dx, -dz) * k_radians_to_degrees;
+      float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
       enemy_tf->rotation.y = face_angle;
     } else {
       // Support enemies circle and maintain outer ring distance
@@ -332,8 +331,7 @@ void tick_rpg_combat(Engine::Core::World* world,
       enemy_tf->position.x += tx * k_circle_speed * circle_dir * dt;
       enemy_tf->position.z += tz * k_circle_speed * circle_dir * dt;
       // Face the player
-      float const face_angle =
-          std::atan2(-dx, -dz) * k_radians_to_degrees;
+      float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
       enemy_tf->rotation.y = face_angle;
     }
   }

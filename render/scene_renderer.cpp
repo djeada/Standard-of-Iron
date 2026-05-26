@@ -1252,10 +1252,10 @@ void Renderer::stone_impact(const QVector3D& position,
 }
 
 void Renderer::metal_spark(const QVector3D& position,
-                            const QVector3D& color,
-                            float radius,
-                            float intensity,
-                            float time) {
+                           const QVector3D& color,
+                           float radius,
+                           float intensity,
+                           float time) {
   EffectBatchCmd cmd;
   cmd.kind = EffectBatchCmd::Kind::MetalSpark;
   cmd.position = position;
@@ -2121,6 +2121,12 @@ void Renderer::prewarm_unit_templates(
     case SpawnType::Archer:
     case SpawnType::Knight:
     case SpawnType::Spearman:
+    case SpawnType::RomanLegionOrganizer:
+    case SpawnType::RomanVeteranConsul:
+    case SpawnType::RomanFieldCommander:
+    case SpawnType::CarthageMercenaryBroker:
+    case SpawnType::CarthageCavalryPatron:
+    case SpawnType::CarthageElephantMaster:
     case SpawnType::SkeletonSwordsman:
     case SpawnType::SkeletonArcher:
     case SpawnType::GravePriest:
@@ -2145,6 +2151,12 @@ void Renderer::prewarm_unit_templates(
     case TroopType::Archer:
     case TroopType::Swordsman:
     case TroopType::Spearman:
+    case TroopType::RomanLegionOrganizer:
+    case TroopType::RomanVeteranConsul:
+    case TroopType::RomanFieldCommander:
+    case TroopType::CarthageMercenaryBroker:
+    case TroopType::CarthageCavalryPatron:
+    case TroopType::CarthageElephantMaster:
     case TroopType::SkeletonSwordsman:
     case TroopType::SkeletonArcher:
     case TroopType::GravePriest:
@@ -2318,6 +2330,12 @@ void Renderer::prewarm_unit_templates(
       for (auto type : {TroopType::Archer,
                         TroopType::Swordsman,
                         TroopType::Spearman,
+                        TroopType::RomanLegionOrganizer,
+                        TroopType::RomanVeteranConsul,
+                        TroopType::RomanFieldCommander,
+                        TroopType::CarthageMercenaryBroker,
+                        TroopType::CarthageCavalryPatron,
+                        TroopType::CarthageElephantMaster,
                         TroopType::SkeletonSwordsman,
                         TroopType::SkeletonArcher,
                         TroopType::GravePriest,

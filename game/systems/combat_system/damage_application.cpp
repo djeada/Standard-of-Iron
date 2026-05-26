@@ -352,8 +352,7 @@ void add_or_extend_stagger(Engine::Core::Entity* entity,
   }
   if (auto* stagger = entity->get_component<Engine::Core::StaggerComponent>()) {
     stagger->remaining = std::max(stagger->remaining, duration);
-    if (static_cast<std::uint8_t>(tier) >
-        static_cast<std::uint8_t>(stagger->tier)) {
+    if (static_cast<std::uint8_t>(tier) > static_cast<std::uint8_t>(stagger->tier)) {
       stagger->tier = tier;
     }
   } else {

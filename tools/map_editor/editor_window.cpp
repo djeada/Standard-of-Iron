@@ -836,8 +836,8 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
         }
 
         // Enforce minimum width to span any crossed rivers from bank to bank
-        const float required_width =
-            compute_min_bridge_width(elem.start, elem.end, m_map_data->linear_elements());
+        const float required_width = compute_min_bridge_width(
+            elem.start, elem.end, m_map_data->linear_elements());
         if (elem.width < required_width) {
           show_action_feedback(
               QString("Bridge width raised to %1 to span crossed river(s) from bank to "

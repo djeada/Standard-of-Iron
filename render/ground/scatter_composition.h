@@ -323,8 +323,7 @@ private:
       }
       if (world_prop.type == Game::Map::WorldProp::Type::Ruins ||
           world_prop.type == Game::Map::WorldProp::Type::MagicShrine) {
-        float const render_s =
-            Game::Map::world_prop_render_scale(world_prop.type);
+        float const render_s = Game::Map::world_prop_render_scale(world_prop.type);
         float const obs_radius = std::max(2.0F, world_prop.scale * render_s);
         m_hard_obstacle_anchors.push_back({{world_x, world_z}, obs_radius});
       }

@@ -103,20 +103,6 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
   }
 }
 
-void clamp_and_apply_displacement(Engine::Core::TransformComponent* transform,
-                                  const QVector3D& direction,
-                                  float displacement) {
-  if (transform == nullptr || displacement <= 0.0F) {
-    return;
-  }
-
-  float const scale = (displacement > Constants::k_max_displacement_per_frame)
-                          ? (Constants::k_max_displacement_per_frame / displacement)
-                          : 1.0F;
-  transform->position.x += direction.x() * displacement * scale;
-  transform->position.z += direction.z() * displacement * scale;
-}
-
 auto should_queue_chase_command(Engine::Core::Entity* attacker,
                                 Engine::Core::Entity* target,
                                 Engine::Core::TransformComponent* attacker_transform,
@@ -435,42 +421,7 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     face_target(tgt_t, att_t);
   }
 
-  float const dx = tgt_t->position.x - att_t->position.x;
-  float const dz = tgt_t->position.z - att_t->position.z;
-  float const dist = std::sqrt(dx * dx + dz * dz);
-
-  if (dist > Constants::k_max_melee_separation) {
-    if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
-      float const pull_amount = (dist - Constants::k_ideal_melee_distance) *
-                                Constants::k_melee_pull_factor * delta_time *
-                                Constants::k_melee_pull_speed;
-
-      if (dist > Constants::k_min_distance) {
-        QVector3D const direction(dx / dist, 0.0F, dz / dist);
-        QVector3D const clamped_offset =
-            direction * std::min(pull_amount, Constants::k_max_displacement_per_frame);
-        float const new_x = att_t->position.x + clamped_offset.x();
-        float const new_z = att_t->position.z + clamped_offset.z();
-
-        auto* pathfinder = CommandService::get_pathfinder();
-        if (pathfinder != nullptr) {
-          Point const new_grid = CommandService::world_to_grid(new_x, new_z);
-          if (pathfinder->is_walkable(new_grid.x, new_grid.y)) {
-            att_t->position.x = new_x;
-            att_t->position.z = new_z;
-          } else {
-
-            attack_comp->in_melee_lock = false;
-            attack_comp->melee_lock_target_id = 0;
-          }
-        } else {
-
-          att_t->position.x = new_x;
-          att_t->position.z = new_z;
-        }
-      }
-    }
-  }
+  (void)delta_time;
 }
 
 auto locked_target_for_attack(Engine::Core::Entity* attacker,
@@ -806,27 +757,6 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
     if (reciprocal_lock || !has_valid_melee_lock(target, world)) {
       face_target(tgt_t, att_t);
     }
-
-    float const dx = tgt_t->position.x - att_t->position.x;
-    float const dz = tgt_t->position.z - att_t->position.z;
-    float const dist = std::sqrt(dx * dx + dz * dz);
-
-    if (dist > Constants::k_ideal_melee_distance + 0.1F) {
-      float const move_amount =
-          (dist - Constants::k_ideal_melee_distance) * Constants::k_move_amount_factor;
-
-      if (dist > Constants::k_min_distance) {
-        QVector3D const direction(dx / dist, 0.0F, dz / dist);
-
-        if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
-          clamp_and_apply_displacement(att_t, direction, move_amount);
-        }
-
-        if (!is_unit_in_hold_mode(target) && !is_large_melee_anchor(target)) {
-          clamp_and_apply_displacement(tgt_t, -direction, move_amount);
-        }
-      }
-    }
   }
 }
 
@@ -1027,6 +957,19 @@ void process_attacks(Engine::Core::World* world,
                 hold_position = true;
               }
             }
+          } else {
+            QVector3D direction = target_pos - attacker_pos;
+            float const distance_sq = direction.lengthSquared();
+            if (distance_sq > 0.000001F) {
+              float const distance = std::sqrt(distance_sq);
+              direction /= distance;
+              float const desired_distance = std::max(range - 0.2F, 0.2F);
+              if (distance > desired_distance + 0.15F) {
+                desired_pos = target_pos - direction * desired_distance;
+              } else {
+                hold_position = true;
+              }
+            }
           }
 
           auto* movement = attacker->get_component<Engine::Core::MovementComponent>();
@@ -1206,6 +1149,7 @@ void process_attacks(Engine::Core::World* world,
     CommandService::MoveOptions options;
     options.kind = MoveOrderKind::AttackChase;
     options.allow_direct_fallback = true;
+    options.group_move = chase_move_intents.size() > 1;
     CommandService::move_units(*world, chase_move_intents, options);
   }
 }

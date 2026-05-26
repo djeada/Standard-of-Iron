@@ -1,6 +1,7 @@
 #include "engagement_slot_system.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 #include <unordered_map>
@@ -17,6 +18,23 @@ namespace {
 
 struct SlotOccupancy {
   std::vector<Engine::Core::EntityID> occupants;
+  std::array<bool, EngagementSlotSystem::k_max_slots_per_target> occupied{};
+
+  [[nodiscard]] auto first_open_slot() const -> std::uint8_t {
+    for (std::uint8_t idx = 0; idx < occupied.size(); ++idx) {
+      if (!occupied[idx]) {
+        return idx;
+      }
+    }
+    return EngagementSlotSystem::k_max_slots_per_target;
+  }
+
+  void reserve(std::uint8_t slot_index, Engine::Core::EntityID occupant) {
+    if (slot_index < occupied.size()) {
+      occupied[slot_index] = true;
+    }
+    occupants.push_back(occupant);
+  }
 };
 
 } // namespace
@@ -30,6 +48,9 @@ void EngagementSlotSystem::update(Engine::Core::World* world, float delta_time) 
 
   // Collect all entities that have attack targets and are in melee mode.
   auto attackers = world->get_entities_with<Engine::Core::AttackComponent>();
+  std::sort(attackers.begin(), attackers.end(), [](auto* lhs, auto* rhs) {
+    return lhs->get_id() < rhs->get_id();
+  });
 
   // Track slot occupancy per target.
   std::unordered_map<Engine::Core::EntityID, SlotOccupancy> target_slots;
@@ -59,9 +80,11 @@ void EngagementSlotSystem::update(Engine::Core::World* world, float delta_time) 
       if (slot->lease_remaining <= 0.0F) {
         slot->valid = false;
         ++m_diagnostics.slots_invalidated;
-      } else {
-        target_slots[slot->target_id].occupants.push_back(attacker->get_id());
+      } else if (!target_slots[slot->target_id].occupied[slot->slot_index]) {
+        target_slots[slot->target_id].reserve(slot->slot_index, attacker->get_id());
         continue;
+      } else {
+        slot->valid = false;
       }
     }
 
@@ -75,8 +98,7 @@ void EngagementSlotSystem::update(Engine::Core::World* world, float delta_time) 
       continue;
     }
 
-    auto* target_transform =
-        target->get_component<Engine::Core::TransformComponent>();
+    auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
     auto* attacker_transform =
         attacker->get_component<Engine::Core::TransformComponent>();
     if (target_transform == nullptr || attacker_transform == nullptr) {
@@ -84,25 +106,19 @@ void EngagementSlotSystem::update(Engine::Core::World* world, float delta_time) 
     }
 
     auto& occupancy = target_slots[target_id];
-    std::uint8_t num_occupied =
-        static_cast<std::uint8_t>(occupancy.occupants.size());
-
-    if (num_occupied >= k_max_slots_per_target) {
+    std::uint8_t slot_idx = occupancy.first_open_slot();
+    if (slot_idx >= k_max_slots_per_target) {
       // Overflow: unit should consider a different target.
       ++m_diagnostics.overflow_redirects;
       continue;
     }
 
-    // Assign next available slot index.
-    std::uint8_t slot_idx = num_occupied;
-
     // Compute anchor offset around target.
-    float const angle = (2.0F * static_cast<float>(std::numbers::pi) *
-                         static_cast<float>(slot_idx)) /
-                        static_cast<float>(k_max_slots_per_target);
+    float const angle =
+        (2.0F * static_cast<float>(std::numbers::pi) * static_cast<float>(slot_idx)) /
+        static_cast<float>(k_max_slots_per_target);
 
-    float const target_radius =
-        CommandService::get_unit_radius(*world, target_id);
+    float const target_radius = CommandService::get_unit_radius(*world, target_id);
     float const offset_dist = target_radius + k_slot_radius_offset;
 
     float const anchor_x = std::cos(angle) * offset_dist;
@@ -121,7 +137,7 @@ void EngagementSlotSystem::update(Engine::Core::World* world, float delta_time) 
       slot->valid = true;
       slot->lease_remaining = k_slot_lease_duration;
 
-      occupancy.occupants.push_back(attacker->get_id());
+      occupancy.reserve(slot_idx, attacker->get_id());
       ++m_diagnostics.slots_allocated;
     }
   }

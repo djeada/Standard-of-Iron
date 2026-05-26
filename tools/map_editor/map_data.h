@@ -58,10 +58,10 @@ inline constexpr float k_min_bridge_height = 0.1F;
 // bank.  The minimum is computed geometrically: at a crossing angle θ the
 // bridge must be at least (river_width / sin θ) wide.  Returns 1.0 when no
 // rivers are crossed.
-[[nodiscard]] auto compute_min_bridge_width(const QVector2D& bridge_start,
-                                            const QVector2D& bridge_end,
-                                            const QVector<LinearElement>& elements)
-    -> float;
+[[nodiscard]] auto
+compute_min_bridge_width(const QVector2D& bridge_start,
+                         const QVector2D& bridge_end,
+                         const QVector<LinearElement>& elements) -> float;
 
 struct StructureElement {
   QString type;
