@@ -192,6 +192,24 @@ void AICommandApplier::apply(Engine::Core::World& world,
       break;
     }
 
+    case AICommandType::TriggerCommanderAura: {
+      for (auto entity_id : command.units) {
+        auto* entity = world.get_entity(entity_id);
+        if (entity == nullptr) {
+          continue;
+        }
+        auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
+          continue;
+        }
+        auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
+        if (commander != nullptr) {
+          commander->aura_ability_requested = true;
+        }
+      }
+      break;
+    }
+
     case AICommandType::StartBuilderConstruction: {
       if (command.units.empty() || command.construction_type == nullptr) {
         break;

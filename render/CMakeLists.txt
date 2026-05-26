@@ -111,6 +111,7 @@ add_library(render_gl STATIC
     entity/healing_beam_renderer.cpp
     entity/healing_waves_renderer.cpp
     entity/healer_aura_renderer.cpp
+    entity/commander_aura_renderer.cpp
     entity/combat_dust_renderer.cpp
     entity/building_archetype_desc.cpp
     entity/building_render_common.cpp
