@@ -45,25 +45,52 @@ Item {
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#cc8b0000" }
-                GradientStop { position: 0.35; color: "#00000000" }
-                GradientStop { position: 0.65; color: "#00000000" }
-                GradientStop { position: 1.0; color: "#cc8b0000" }
+                GradientStop {
+                    position: 0.0
+                    color: "#cc8b0000"
+                }
+                GradientStop {
+                    position: 0.35
+                    color: "#00000000"
+                }
+                GradientStop {
+                    position: 0.65
+                    color: "#00000000"
+                }
+                GradientStop {
+                    position: 1.0
+                    color: "#cc8b0000"
+                }
             }
         }
         Rectangle {
             anchors.fill: parent
             rotation: 90
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#aa6b0000" }
-                GradientStop { position: 0.30; color: "#00000000" }
-                GradientStop { position: 0.70; color: "#00000000" }
-                GradientStop { position: 1.0; color: "#aa6b0000" }
+                GradientStop {
+                    position: 0.0
+                    color: "#aa6b0000"
+                }
+                GradientStop {
+                    position: 0.30
+                    color: "#00000000"
+                }
+                GradientStop {
+                    position: 0.70
+                    color: "#00000000"
+                }
+                GradientStop {
+                    position: 1.0
+                    color: "#aa6b0000"
+                }
             }
         }
 
-        Behavior on opacity {
-            NumberAnimation { duration: 100; easing.type: Easing.OutQuad }
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 100
+                easing.type: Easing.OutQuad
+            }
         }
     }
 
@@ -78,18 +105,40 @@ Item {
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#60ff0000" }
-                GradientStop { position: 0.45; color: "#00000000" }
-                GradientStop { position: 0.55; color: "#00000000" }
-                GradientStop { position: 1.0; color: "#60ff0000" }
+                GradientStop {
+                    position: 0.0
+                    color: "#60ff0000"
+                }
+                GradientStop {
+                    position: 0.45
+                    color: "#00000000"
+                }
+                GradientStop {
+                    position: 0.55
+                    color: "#00000000"
+                }
+                GradientStop {
+                    position: 1.0
+                    color: "#60ff0000"
+                }
             }
         }
 
-        SequentialAnimation on opacity {
+        SequentialAnimation on opacity  {
             running: Number(root.status_value("health_ratio", 1.0)) < 0.30 && Number(root.status_value("health_ratio", 1.0)) > 0.0
             loops: Animation.Infinite
-            NumberAnimation { from: 0.0; to: 0.55; duration: 600; easing.type: Easing.InOutSine }
-            NumberAnimation { from: 0.55; to: 0.0; duration: 600; easing.type: Easing.InOutSine }
+            NumberAnimation {
+                from: 0.0
+                to: 0.55
+                duration: 600
+                easing.type: Easing.InOutSine
+            }
+            NumberAnimation {
+                from: 0.55
+                to: 0.0
+                duration: 600
+                easing.type: Easing.InOutSine
+            }
         }
     }
 
@@ -110,8 +159,10 @@ Item {
             border.color: "#6688ccff"
         }
 
-        Behavior on opacity {
-            NumberAnimation { duration: 120 }
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 120
+            }
         }
     }
 
@@ -123,8 +174,10 @@ Item {
         opacity: root.status_value("perfect_guard_active", false) === true ? 0.25 : 0.0
         visible: opacity > 0.0
 
-        Behavior on opacity {
-            NumberAnimation { duration: 60 }
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 60
+            }
         }
     }
 
@@ -143,8 +196,11 @@ Item {
 
         scale: crossSize
 
-        Behavior on scale {
-            NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+        Behavior on scale  {
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutBack
+            }
         }
 
         // Center dot
@@ -231,8 +287,11 @@ Item {
             radius: 4
             color: "#884a0000"
 
-            Behavior on width {
-                NumberAnimation { duration: 600; easing.type: Easing.OutQuad }
+            Behavior on width  {
+                NumberAnimation {
+                    duration: 600
+                    easing.type: Easing.OutQuad
+                }
             }
         }
 
@@ -248,11 +307,16 @@ Item {
             radius: 4
             color: hpRatio > 0.55 ? "#dd22aa33" : (hpRatio > 0.28 ? "#ddcc8800" : "#ddcc2200")
 
-            Behavior on width {
-                NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
+            Behavior on width  {
+                NumberAnimation {
+                    duration: 180
+                    easing.type: Easing.OutQuad
+                }
             }
-            Behavior on color {
-                ColorAnimation { duration: 300 }
+            Behavior on color  {
+                ColorAnimation {
+                    duration: 300
+                }
             }
         }
 
@@ -297,11 +361,16 @@ Item {
             color: stamRatio > 0.30 ? "#cc44bb66" : "#cccc6622"
             opacity: stamRatio < 0.20 ? (0.5 + 0.5 * Math.sin(Date.now() * 0.008)) : 1.0
 
-            Behavior on width {
-                NumberAnimation { duration: 140; easing.type: Easing.OutQuad }
+            Behavior on width  {
+                NumberAnimation {
+                    duration: 140
+                    easing.type: Easing.OutQuad
+                }
             }
-            Behavior on color {
-                ColorAnimation { duration: 250 }
+            Behavior on color  {
+                ColorAnimation {
+                    duration: 250
+                }
             }
         }
 
@@ -329,8 +398,10 @@ Item {
         visible: Number(root.status_value("combo_step", 0)) > 0
         opacity: visible ? 1.0 : 0.0
 
-        Behavior on opacity {
-            NumberAnimation { duration: 200 }
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 200
+            }
         }
 
         property int combo: Number(root.status_value("combo_step", 0))
@@ -382,8 +453,10 @@ Item {
         visible: Number(root.status_value("posture_ratio", 0.0)) > 0.05
         opacity: visible ? 1.0 : 0.0
 
-        Behavior on opacity {
-            NumberAnimation { duration: 200 }
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 200
+            }
         }
 
         Rectangle {
@@ -404,8 +477,10 @@ Item {
             radius: 2
             color: postureRatio > 0.75 ? "#ccff3300" : (postureRatio > 0.45 ? "#ccff8800" : "#ccffcc00")
 
-            Behavior on width {
-                NumberAnimation { duration: 120 }
+            Behavior on width  {
+                NumberAnimation {
+                    duration: 120
+                }
             }
         }
 
@@ -427,8 +502,10 @@ Item {
         visible: root.status_value("guard_broken", false) === true
         opacity: visible ? 1.0 : 0.0
 
-        Behavior on opacity {
-            NumberAnimation { duration: 150 }
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 150
+            }
         }
 
         Text {
@@ -451,8 +528,10 @@ Item {
         visible: root.status_value("punish_active", false) === true
         opacity: visible ? 1.0 : 0.0
 
-        Behavior on opacity {
-            NumberAnimation { duration: 100 }
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 100
+            }
         }
 
         Text {
@@ -476,11 +555,22 @@ Item {
         spacing: 12
 
         Repeater {
-            model: [
-                { name: "BASH", cdKey: "shield_bash_cooldown_remaining", totalKey: "shield_bash_cooldown", readyKey: "shield_bash_ready" },
-                { name: "RUSH", cdKey: "vanguard_rush_cooldown_remaining", totalKey: "vanguard_rush_cooldown", readyKey: "vanguard_rush_ready" },
-                { name: "HEAL", cdKey: "second_wind_cooldown_remaining", totalKey: "second_wind_cooldown", readyKey: "second_wind_ready" }
-            ]
+            model: [{
+                    "name": "BASH",
+                    "cdKey": "shield_bash_cooldown_remaining",
+                    "totalKey": "shield_bash_cooldown",
+                    "readyKey": "shield_bash_ready"
+                }, {
+                    "name": "RUSH",
+                    "cdKey": "vanguard_rush_cooldown_remaining",
+                    "totalKey": "vanguard_rush_cooldown",
+                    "readyKey": "vanguard_rush_ready"
+                }, {
+                    "name": "HEAL",
+                    "cdKey": "second_wind_cooldown_remaining",
+                    "totalKey": "second_wind_cooldown",
+                    "readyKey": "second_wind_ready"
+                }]
 
             delegate: Item {
                 width: 52

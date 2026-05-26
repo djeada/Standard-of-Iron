@@ -142,6 +142,42 @@ TEST(NationLoader, ArcherProfilesReceiveRangeMultiplierWithoutNationData) {
   EXPECT_FLOAT_EQ(horse_archer.combat.ranged_range, 10.5F);
 }
 
+TEST(NationLoader, CommanderProfilesKeepFallbackRenderersWithoutNationData) {
+  auto& registry = Game::Systems::NationRegistry::instance();
+  registry.clear();
+  registry.clear_player_assignments();
+
+  Game::Units::TroopCatalog::instance().reset_to_defaults();
+
+  auto& profiles = Game::Systems::TroopProfileService::instance();
+  profiles.clear();
+
+  auto const fabius =
+      profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                           Game::Units::TroopType::RomanLegionOrganizer);
+  auto const scipio = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                           Game::Units::TroopType::RomanVeteranConsul);
+  auto const marcellus =
+      profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                           Game::Units::TroopType::RomanFieldCommander);
+  auto const hanno =
+      profiles.get_profile(Game::Systems::NationID::Carthage,
+                           Game::Units::TroopType::CarthageMercenaryBroker);
+  auto const hasdrubal = profiles.get_profile(
+      Game::Systems::NationID::Carthage, Game::Units::TroopType::CarthageCavalryPatron);
+  auto const hannibal =
+      profiles.get_profile(Game::Systems::NationID::Carthage,
+                           Game::Units::TroopType::CarthageElephantMaster);
+
+  EXPECT_EQ(fabius.visuals.renderer_id, "troops/roman/commanders/fabius_maximus");
+  EXPECT_EQ(scipio.visuals.renderer_id, "troops/roman/commanders/scipio_africanus");
+  EXPECT_EQ(marcellus.visuals.renderer_id, "troops/roman/commanders/marcellus");
+  EXPECT_EQ(hanno.visuals.renderer_id, "troops/carthage/commanders/hanno_the_great");
+  EXPECT_EQ(hasdrubal.visuals.renderer_id,
+            "troops/carthage/commanders/hasdrubal_barca");
+  EXPECT_EQ(hannibal.visuals.renderer_id, "troops/carthage/commanders/hannibal_barca");
+}
+
 TEST(NationLoader, ProfilesPreserveConfiguredResourceCostsAcrossNations) {
   ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
   auto const nations = Game::Systems::NationLoader::load_default_nations();

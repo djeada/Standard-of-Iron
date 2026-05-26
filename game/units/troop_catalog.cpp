@@ -266,6 +266,123 @@ void TroopCatalog::register_defaults() {
 
   register_class(std::move(horse_spearman));
 
+  auto register_commander = [this](Game::Units::TroopType unit_type,
+                                   const char* display_name,
+                                   int cost,
+                                   float build_time,
+                                   int priority,
+                                   int health,
+                                   float speed,
+                                   float vision_range,
+                                   int melee_damage,
+                                   float renderer_scale,
+                                   float selection_ring_size,
+                                   const char* renderer_id) {
+    TroopClass commander{};
+    commander.unit_type = unit_type;
+    commander.display_name = display_name;
+    commander.production.cost = cost;
+    commander.production.build_time = build_time;
+    commander.production.priority = priority;
+    commander.production.is_melee = true;
+
+    commander.combat.health = health;
+    commander.combat.max_health = health;
+    commander.combat.speed = speed;
+    commander.combat.vision_range = vision_range;
+    commander.combat.ranged_range = 1.5F;
+    commander.combat.ranged_damage = 4;
+    commander.combat.ranged_cooldown = 2.0F;
+    commander.combat.melee_range = 1.8F;
+    commander.combat.melee_damage = melee_damage;
+    commander.combat.melee_cooldown = 1.0F;
+    commander.combat.can_ranged = false;
+    commander.combat.can_melee = true;
+
+    commander.visuals.render_scale = renderer_scale;
+    commander.visuals.selection_ring_size = selection_ring_size;
+    commander.visuals.selection_ring_ground_offset = 0.0F;
+    commander.visuals.renderer_id = renderer_id;
+
+    commander.individuals_per_unit = 1;
+    commander.max_units_per_row = 1;
+
+    register_class(std::move(commander));
+  };
+
+  register_commander(Game::Units::TroopType::RomanLegionOrganizer,
+                     "Quintus Fabius Maximus",
+                     340,
+                     30.0F,
+                     20,
+                     1180,
+                     2.0F,
+                     18.0F,
+                     14,
+                     0.72F,
+                     1.9F,
+                     "troops/roman/commanders/fabius_maximus");
+  register_commander(Game::Units::TroopType::RomanVeteranConsul,
+                     "Publius Cornelius Scipio",
+                     360,
+                     31.0F,
+                     20,
+                     1120,
+                     2.15F,
+                     18.0F,
+                     14,
+                     0.72F,
+                     1.85F,
+                     "troops/roman/commanders/scipio_africanus");
+  register_commander(Game::Units::TroopType::RomanFieldCommander,
+                     "Marcus Claudius Marcellus",
+                     320,
+                     27.0F,
+                     20,
+                     1040,
+                     2.35F,
+                     18.0F,
+                     14,
+                     0.72F,
+                     1.8F,
+                     "troops/roman/commanders/marcellus");
+  register_commander(Game::Units::TroopType::CarthageMercenaryBroker,
+                     "Hanno the Great",
+                     350,
+                     30.0F,
+                     20,
+                     1160,
+                     2.1F,
+                     18.0F,
+                     14,
+                     0.72F,
+                     1.82F,
+                     "troops/carthage/commanders/hanno_the_great");
+  register_commander(Game::Units::TroopType::CarthageCavalryPatron,
+                     "Hasdrubal Barca",
+                     330,
+                     28.0F,
+                     20,
+                     1080,
+                     2.45F,
+                     18.0F,
+                     14,
+                     0.72F,
+                     1.88F,
+                     "troops/carthage/commanders/hasdrubal_barca");
+  register_commander(Game::Units::TroopType::CarthageElephantMaster,
+                     "Hannibal Barca",
+                     430,
+                     34.0F,
+                     20,
+                     1260,
+                     2.0F,
+                     18.0F,
+                     14,
+                     0.72F,
+                     1.95F,
+                     "troops/carthage/commanders/hannibal_barca");
+
   TroopClass builder{};
   builder.unit_type = Game::Units::TroopType::Builder;
   builder.display_name = "Builder";

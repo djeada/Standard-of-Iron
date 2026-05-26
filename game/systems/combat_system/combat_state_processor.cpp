@@ -129,8 +129,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
           if (commander != nullptr && commander->fpv_controlled) {
             auto const* action =
                 unit->get_component<Engine::Core::RpgCommanderActionComponent>();
-            auto const* attack =
-                unit->get_component<Engine::Core::AttackComponent>();
+            auto const* attack = unit->get_component<Engine::Core::AttackComponent>();
             if (action != nullptr && action->active_target_id != 0) {
               auto* target = world->get_entity(action->active_target_id);
               if (target != nullptr) {
@@ -143,8 +142,8 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
                     unit->get_component<Engine::Core::StaminaComponent>();
                 if (stamina != nullptr &&
                     stamina->stamina < CSC::k_low_stamina_threshold) {
-                  damage = static_cast<int>(
-                      static_cast<float>(damage) * CSC::k_low_stamina_damage_penalty);
+                  damage = static_cast<int>(static_cast<float>(damage) *
+                                            CSC::k_low_stamina_damage_penalty);
                   damage = std::max(1, damage);
                 }
                 Game::Systems::RpgCombat::deal_commander_attack_damage(

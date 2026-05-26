@@ -157,7 +157,8 @@ auto wall_preview_is_vertical(float angle) -> bool {
 
 auto is_previewable_structure_item(const QString& item_type) -> bool {
   return item_type == QStringLiteral("defense_tower") ||
-         item_type == QStringLiteral("barracks") || item_type == QStringLiteral("home") ||
+         item_type == QStringLiteral("barracks") ||
+         item_type == QStringLiteral("home") ||
          item_type == QStringLiteral("marketplace");
 }
 

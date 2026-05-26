@@ -1612,10 +1612,9 @@ void MapCanvas::finish_linear_element(const QPointF& grid_pos) {
     break;
   case ToolType::Bridge:
     elem.type = "bridge";
-    elem.width = std::max(4.0F,
-                          compute_min_bridge_width(elem.start,
-                                                   elem.end,
-                                                   m_map_data->linear_elements()));
+    elem.width = std::max(
+        4.0F,
+        compute_min_bridge_width(elem.start, elem.end, m_map_data->linear_elements()));
     elem.height = 0.5F;
     break;
   case ToolType::Wall:

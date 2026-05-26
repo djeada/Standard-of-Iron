@@ -202,8 +202,8 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
 
           // Validate against terrain before committing.
           QVector3D const candidate(new_x, 0.0F, new_z);
-          if (CommandService::is_world_position_walkable_for_radius(
-                  candidate, ci.radius)) {
+          if (CommandService::is_world_position_walkable_for_radius(candidate,
+                                                                    ci.radius)) {
             transform->position.x = new_x;
             transform->position.z = new_z;
             ++corrections;
