@@ -43,7 +43,8 @@ enum class AICommandType {
   AttackTarget,
   StartProduction,
   StartBuilderConstruction,
-  TriggerCommanderRally
+  TriggerCommanderRally,
+  TriggerCommanderAura
 };
 
 enum class BehaviorPriority {
