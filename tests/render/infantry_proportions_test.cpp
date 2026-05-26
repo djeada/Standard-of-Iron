@@ -232,3 +232,49 @@ TEST(InfantryProportionsTest, RomanAndCarthageHealersStayComparable) {
 
   expect_close_overall_proportions(roman, carthage, k_support_tolerance);
 }
+
+TEST(InfantryProportionsTest, CommanderRenderersEmitGeometry) {
+  struct CommanderRendererExpectation {
+    std::string_view renderer_key;
+    Game::Units::SpawnType spawn_type;
+    Game::Systems::NationID nation_id;
+    uint32_t seed;
+  };
+
+  constexpr std::array<CommanderRendererExpectation, 6> expectations{{
+      {"troops/roman/commanders/fabius_maximus",
+       Game::Units::SpawnType::RomanLegionOrganizer,
+       Game::Systems::NationID::RomanRepublic,
+       101U},
+      {"troops/roman/commanders/scipio_africanus",
+       Game::Units::SpawnType::RomanVeteranConsul,
+       Game::Systems::NationID::RomanRepublic,
+       202U},
+      {"troops/roman/commanders/marcellus",
+       Game::Units::SpawnType::RomanFieldCommander,
+       Game::Systems::NationID::RomanRepublic,
+       303U},
+      {"troops/carthage/commanders/hanno_the_great",
+       Game::Units::SpawnType::CarthageMercenaryBroker,
+       Game::Systems::NationID::Carthage,
+       404U},
+      {"troops/carthage/commanders/hasdrubal_barca",
+       Game::Units::SpawnType::CarthageCavalryPatron,
+       Game::Systems::NationID::Carthage,
+       505U},
+      {"troops/carthage/commanders/hannibal_barca",
+       Game::Units::SpawnType::CarthageElephantMaster,
+       Game::Systems::NationID::Carthage,
+       606U},
+  }};
+
+  for (const auto& expectation : expectations) {
+    SCOPED_TRACE(std::string(expectation.renderer_key));
+    const auto bounds = render_single_soldier_bounds(expectation.renderer_key,
+                                                     expectation.spawn_type,
+                                                     expectation.nation_id,
+                                                     expectation.seed);
+    EXPECT_GT(bounds.height(), 0.0F);
+    EXPECT_GT(bounds.depth(), 0.0F);
+  }
+}

@@ -231,8 +231,10 @@ void main() {
     color = mix(color, cool_red, height * spark_age);
 
     // Glint sparkle
-    float glint = pow(max(0.0, sin(v_texcoord.x * 40.0 + u_time * 25.0) *
-                                sin(v_texcoord.y * 30.0 - u_time * 18.0)), 8.0);
+    float glint = pow(max(0.0,
+                          sin(v_texcoord.x * 40.0 + u_time * 25.0) *
+                              sin(v_texcoord.y * 30.0 - u_time * 18.0)),
+                      8.0);
     color += vec3(2.0, 1.8, 1.2) * glint * (1.0 - spark_age);
 
     color *= v_intensity * 1.4;

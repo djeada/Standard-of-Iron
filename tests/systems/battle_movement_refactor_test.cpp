@@ -3,11 +3,11 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "systems/cohort_system.h"
 #include "systems/command_service.h"
 #include "systems/engagement_slot_system.h"
 #include "systems/local_avoidance_system.h"
 #include "systems/target_commitment_system.h"
-#include "systems/cohort_system.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;
@@ -300,8 +300,7 @@ TEST_F(TargetCommitmentTest, ForcedReleaseOnTargetDeath) {
   enemy_unit->health = 0;
   system.update(world.get(), 0.016F);
 
-  auto* commitment =
-      attacker->get_component<TargetCommitmentComponent>();
+  auto* commitment = attacker->get_component<TargetCommitmentComponent>();
   ASSERT_NE(commitment, nullptr);
   EXPECT_EQ(commitment->committed_target_id, static_cast<EntityID>(0));
   EXPECT_GT(system.diagnostics().forced_releases, 0U);
@@ -364,8 +363,7 @@ TEST_F(CohortSystemTest, CohortActivatesWhenOneDetectsEnemy) {
 
   // All units in the cohort should be activated.
   for (auto* entity : units) {
-    auto* membership =
-        entity->get_component<CohortMembershipComponent>();
+    auto* membership = entity->get_component<CohortMembershipComponent>();
     ASSERT_NE(membership, nullptr);
     EXPECT_TRUE(membership->cohort_activated);
   }

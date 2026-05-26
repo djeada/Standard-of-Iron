@@ -172,8 +172,8 @@ struct OrderedSpawnEntry {
 } // namespace
 
 auto compute_min_bridge_width(const QVector2D& bridge_start,
-                               const QVector2D& bridge_end,
-                               const QVector<LinearElement>& elements) -> float {
+                              const QVector2D& bridge_end,
+                              const QVector<LinearElement>& elements) -> float {
   constexpr float k_abs_min = 1.0F;
   float min_width = k_abs_min;
 

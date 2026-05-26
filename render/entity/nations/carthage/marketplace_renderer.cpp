@@ -47,26 +47,43 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(QVector3D(0.0F, 0.06F, 0.0F), QVector3D(1.2F, 0.06F, 1.2F), c.brick);
 
   float const counter_h = 0.38F * height_multiplier;
-  desc.add_box(QVector3D(-0.35F, counter_h, 0.0F), QVector3D(0.55F, 0.05F, 0.75F), c.wood_medium);
+  desc.add_box(QVector3D(-0.35F, counter_h, 0.0F),
+               QVector3D(0.55F, 0.05F, 0.75F),
+               c.wood_medium);
 
   float const post_h = 0.78F * height_multiplier;
-  desc.add_box(QVector3D(-0.8F, post_h * 0.5F, -0.65F), QVector3D(0.05F, post_h * 0.5F, 0.05F), c.wood_dark);
-  desc.add_box(QVector3D(-0.8F, post_h * 0.5F, 0.65F), QVector3D(0.05F, post_h * 0.5F, 0.05F), c.wood_dark);
-  desc.add_box(QVector3D(0.1F, post_h * 0.5F, -0.65F), QVector3D(0.05F, post_h * 0.5F, 0.05F), c.wood_dark);
-  desc.add_box(QVector3D(0.1F, post_h * 0.5F, 0.65F), QVector3D(0.05F, post_h * 0.5F, 0.05F), c.wood_dark);
+  desc.add_box(QVector3D(-0.8F, post_h * 0.5F, -0.65F),
+               QVector3D(0.05F, post_h * 0.5F, 0.05F),
+               c.wood_dark);
+  desc.add_box(QVector3D(-0.8F, post_h * 0.5F, 0.65F),
+               QVector3D(0.05F, post_h * 0.5F, 0.05F),
+               c.wood_dark);
+  desc.add_box(QVector3D(0.1F, post_h * 0.5F, -0.65F),
+               QVector3D(0.05F, post_h * 0.5F, 0.05F),
+               c.wood_dark);
+  desc.add_box(QVector3D(0.1F, post_h * 0.5F, 0.65F),
+               QVector3D(0.05F, post_h * 0.5F, 0.05F),
+               c.wood_dark);
 
   float const awning_y = post_h + 0.04F;
-  desc.add_box(QVector3D(-0.35F, awning_y, 0.0F), QVector3D(0.52F, 0.02F, 0.75F), c.cloth_purple,
+  desc.add_box(QVector3D(-0.35F, awning_y, 0.0F),
+               QVector3D(0.52F, 0.02F, 0.75F),
+               c.cloth_purple,
                BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
-  desc.add_box(QVector3D(-0.35F, awning_y - 0.03F, 0.73F), QVector3D(0.52F, 0.02F, 0.04F), c.cloth_gold,
+  desc.add_box(QVector3D(-0.35F, awning_y - 0.03F, 0.73F),
+               QVector3D(0.52F, 0.02F, 0.04F),
+               c.cloth_gold,
                BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
   float const wall_h = 0.58F * height_multiplier;
-  desc.add_box(QVector3D(0.78F, wall_h * 0.5F + 0.12F, 0.0F), QVector3D(0.12F, wall_h * 0.5F, 0.85F), c.sandstone);
+  desc.add_box(QVector3D(0.78F, wall_h * 0.5F + 0.12F, 0.0F),
+               QVector3D(0.12F, wall_h * 0.5F, 0.85F),
+               c.sandstone);
 
   desc.add_palette_box(QVector3D(0.92F, 0.48F * height_multiplier, 0.0F),
-                       QVector3D(0.02F, 0.18F, 0.12F), k_marketplace_team_slot,
+                       QVector3D(0.02F, 0.18F, 0.12F),
+                       k_marketplace_team_slot,
                        BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
   return build_building_archetype(desc, state);
@@ -79,8 +96,8 @@ void draw_marketplace(const DrawContext& ctx, ISubmitter& out) {
 
   BuildingState const state = resolve_building_state(ctx);
   const RenderArchetype& archetype = (state == BuildingState::Destroyed) ? destroyed
-                                   : (state == BuildingState::Damaged) ? damaged
-                                   : normal;
+                                     : (state == BuildingState::Damaged) ? damaged
+                                                                         : normal;
   submit_building_instance(out, ctx, archetype);
   draw_building_health_bar(out, ctx, {1.0F, 0.08F, 1.1F});
   draw_building_selection_overlay(out, ctx, {1.5F, 1.5F});

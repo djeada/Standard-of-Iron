@@ -312,16 +312,14 @@ TEST_F(PathfindingTest, DiagonalBridgeCenterlineCanCrossRiver) {
         static_cast<int>(std::round(world_z / map_def.grid.tile_size + half_h))};
   };
 
-  auto const path = pathfinding.find_path(to_grid(-8.0F, -8.0F),
-                                          to_grid(8.0F, 8.0F),
-                                          0.6F);
+  auto const path =
+      pathfinding.find_path(to_grid(-8.0F, -8.0F), to_grid(8.0F, 8.0F), 0.6F);
   ASSERT_FALSE(path.empty());
 
   bool used_bridge = false;
   for (const auto& point : path) {
-    if (Game::Map::TerrainService::instance()
-            .get_height_map()
-            ->isBridgeCell(point.x, point.y)) {
+    if (Game::Map::TerrainService::instance().get_height_map()->isBridgeCell(point.x,
+                                                                             point.y)) {
       used_bridge = true;
       break;
     }

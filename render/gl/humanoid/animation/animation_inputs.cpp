@@ -84,8 +84,7 @@ private:
     return false;
   }
 
-  bool const formation_active =
-      (formation_mode != nullptr) && formation_mode->active;
+  bool const formation_active = (formation_mode != nullptr) && formation_mode->active;
   bool const guard_active = (guard_mode != nullptr) && guard_mode->active;
   if (!formation_active && !guard_active) {
     return false;
@@ -423,8 +422,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
 
   anim.visual_movement = movement_state;
   anim.movement_state = anim.visual_movement.movement_state;
-  auto* guard_mode =
-      ctx.entity->get_component<Engine::Core::GuardModeComponent>();
+  auto* guard_mode = ctx.entity->get_component<Engine::Core::GuardModeComponent>();
   bool const commander_guarding = animation_policy.is_guarding(commander_guard);
   bool const infantry_formation_guarding =
       is_infantry_formation_candidate(unit, formation_mode, false, guard_mode);

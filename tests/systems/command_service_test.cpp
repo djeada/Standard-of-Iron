@@ -1,7 +1,9 @@
 #include <QVector3D>
 
+#include <algorithm>
 #include <chrono>
 #include <gtest/gtest.h>
+#include <limits>
 #include <thread>
 #include <vector>
 
@@ -490,6 +492,135 @@ TEST_F(CommandServiceTest, GroupMoveKeepsOrdersWhenTargetsOnlyHaveDiagonalObstac
   EXPECT_TRUE(left_movement->path_pending || left_movement->has_target);
   EXPECT_TRUE(center_movement->path_pending || center_movement->has_target);
   EXPECT_TRUE(right_movement->path_pending || right_movement->has_target);
+}
+
+TEST_F(CommandServiceTest, GroupMoveExpandsSharedDestinationIntoFormationSlots) {
+  Engine::Core::World world;
+
+  auto* left = create_unit(world, -10.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto* center = create_unit(world, -10.0F, 0.0F, Game::Units::SpawnType::Archer);
+  auto* right = create_unit(world, -10.0F, 2.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(left, nullptr);
+  ASSERT_NE(center, nullptr);
+  ASSERT_NE(right, nullptr);
+
+  auto* left_movement = left->get_component<Engine::Core::MovementComponent>();
+  auto* center_movement = center->get_component<Engine::Core::MovementComponent>();
+  auto* right_movement = right->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(left_movement, nullptr);
+  ASSERT_NE(center_movement, nullptr);
+  ASSERT_NE(right_movement, nullptr);
+
+  Game::Systems::CommandService::MoveOptions options;
+  options.allow_direct_fallback = true;
+  options.group_move = true;
+
+  QVector3D const shared_target(10.0F, 0.0F, 0.0F);
+  Game::Systems::CommandService::move_units(
+      world,
+      {left->get_id(), center->get_id(), right->get_id()},
+      {shared_target, shared_target, shared_target},
+      options);
+
+  auto const distinct_goal_count = [=]() {
+    std::vector<std::pair<float, float>> goals = {
+        {left_movement->goal_x, left_movement->goal_y},
+        {center_movement->goal_x, center_movement->goal_y},
+        {right_movement->goal_x, right_movement->goal_y}};
+    std::sort(goals.begin(), goals.end());
+    goals.erase(std::unique(goals.begin(), goals.end()), goals.end());
+    return goals.size();
+  }();
+
+  EXPECT_EQ(distinct_goal_count, 3U);
+}
+
+TEST_F(CommandServiceTest, GroupMoveUsesLargeUnitFootprintForSharedDestination) {
+  Engine::Core::World world;
+
+  std::vector<Engine::Core::Entity*> units = {
+      create_unit(world, -10.0F, -2.0F, Game::Units::SpawnType::Elephant),
+      create_unit(world, -10.0F, 0.0F, Game::Units::SpawnType::Spearman),
+      create_unit(world, -10.0F, 2.0F, Game::Units::SpawnType::Elephant),
+      create_unit(world, -12.0F, -1.0F, Game::Units::SpawnType::Spearman)};
+  for (auto* unit : units) {
+    ASSERT_NE(unit, nullptr);
+  }
+
+  Game::Systems::CommandService::MoveOptions options;
+  options.allow_direct_fallback = true;
+  options.group_move = true;
+
+  QVector3D const shared_target(10.0F, 0.0F, 0.0F);
+  Game::Systems::CommandService::move_units(
+      world,
+      {units[0]->get_id(), units[1]->get_id(), units[2]->get_id(), units[3]->get_id()},
+      {shared_target, shared_target, shared_target, shared_target},
+      options);
+
+  float min_distance_sq = std::numeric_limits<float>::max();
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    auto* lhs = units[i]->get_component<Engine::Core::MovementComponent>();
+    ASSERT_NE(lhs, nullptr);
+    for (std::size_t j = i + 1; j < units.size(); ++j) {
+      auto* rhs = units[j]->get_component<Engine::Core::MovementComponent>();
+      ASSERT_NE(rhs, nullptr);
+      float const dx = lhs->goal_x - rhs->goal_x;
+      float const dz = lhs->goal_y - rhs->goal_y;
+      min_distance_sq = std::min(min_distance_sq, dx * dx + dz * dz);
+    }
+  }
+
+  EXPECT_GT(min_distance_sq, 3.0F);
+}
+
+TEST_F(CommandServiceTest, AttackTargetAssignsDistinctApproachGoals) {
+  Engine::Core::World world;
+
+  auto* target = create_unit(world, 10.0F, 0.0F, Game::Units::SpawnType::Knight);
+  ASSERT_NE(target, nullptr);
+  auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(target_unit, nullptr);
+  target_unit->owner_id = 2;
+
+  std::vector<Engine::Core::Entity*> attackers = {
+      create_unit(world, 0.0F, -1.0F, Game::Units::SpawnType::Spearman),
+      create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman),
+      create_unit(world, 0.0F, 1.0F, Game::Units::SpawnType::Spearman)};
+  for (auto* attacker : attackers) {
+    ASSERT_NE(attacker, nullptr);
+    auto* unit = attacker->get_component<Engine::Core::UnitComponent>();
+    ASSERT_NE(unit, nullptr);
+    unit->owner_id = 1;
+    auto* attack = attacker->add_component<Engine::Core::AttackComponent>();
+    ASSERT_NE(attack, nullptr);
+    attack->can_melee = true;
+    attack->can_ranged = false;
+    attack->preferred_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  }
+
+  Game::Systems::CommandService::attack_target(
+      world,
+      {attackers[0]->get_id(), attackers[1]->get_id(), attackers[2]->get_id()},
+      target->get_id(),
+      true);
+
+  std::vector<std::pair<float, float>> goals;
+  for (auto* attacker : attackers) {
+    auto* movement = attacker->get_component<Engine::Core::MovementComponent>();
+    auto* attack_target =
+        attacker->get_component<Engine::Core::AttackTargetComponent>();
+    ASSERT_NE(movement, nullptr);
+    ASSERT_NE(attack_target, nullptr);
+    EXPECT_TRUE(movement->has_target);
+    EXPECT_EQ(attack_target->target_id, target->get_id());
+    EXPECT_TRUE(attack_target->should_chase);
+    goals.emplace_back(movement->goal_x, movement->goal_y);
+  }
+
+  std::sort(goals.begin(), goals.end());
+  goals.erase(std::unique(goals.begin(), goals.end()), goals.end());
+  EXPECT_EQ(goals.size(), attackers.size());
 }
 
 TEST_F(CommandServiceTest, LocalRecoveryCanRelaxRadiusToEscapeBoundaryTrap) {

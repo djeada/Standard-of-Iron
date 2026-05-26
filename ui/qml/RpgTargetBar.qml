@@ -156,8 +156,11 @@ Item {
                     height: parent.height
                     radius: 8
                     color: "#99cc2200"
-                    Behavior on width {
-                        NumberAnimation { duration: 500; easing.type: Easing.OutQuad }
+                    Behavior on width  {
+                        NumberAnimation {
+                            duration: 500
+                            easing.type: Easing.OutQuad
+                        }
                     }
                 }
 
